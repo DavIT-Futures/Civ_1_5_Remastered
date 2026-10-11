@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Drawing;
 using System.Collections.Generic;
 using System.IO;
@@ -9,7 +9,7 @@ using Civilization1Remaster.Containers;
 
 namespace Civilization1Remaster
 {
-	public partial class MainForm : Form
+	public partial class MainForm : Form, IGameHost
 	{
 		private delegate void InitializeControlsDelegate();
 		private delegate void ScreenCountChangeDelegate();
@@ -279,6 +279,50 @@ namespace Civilization1Remaster
 		public MouseButtons DisplayPointerClicks
 		{
 			get { return this.pointerClicks; }
+		}
+
+		Point IGameHost.PointerSite => this.pointerSite;
+
+		PointerButtons IGameHost.PointerClicks
+		{
+			get
+			{
+				PointerButtons buttons = PointerButtons.None;
+				if ((this.pointerClicks & MouseButtons.Left) == MouseButtons.Left)
+					buttons |= PointerButtons.Left;
+				if ((this.pointerClicks & MouseButtons.Right) == MouseButtons.Right)
+					buttons |= PointerButtons.Right;
+				if ((this.pointerClicks & MouseButtons.Middle) == MouseButtons.Middle)
+					buttons |= PointerButtons.Middle;
+				return buttons;
+			}
+		}
+
+		public void ShowMessage(string message, string caption)
+		{
+			if (this.InvokeRequired)
+			{
+				this.Invoke(new Action(() => MessageBox.Show(this, message, caption, MessageBoxButtons.OK, MessageBoxIcon.Information)));
+			}
+			else
+			{
+				MessageBox.Show(this, message, caption, MessageBoxButtons.OK, MessageBoxIcon.Information);
+			}
+		}
+
+		public HostDialogResult ShowRetryCancel(string message, string caption)
+		{
+			if (this.InvokeRequired)
+			{
+				return (HostDialogResult)this.Invoke(new Func<HostDialogResult>(() =>
+				{
+					DialogResult res = MessageBox.Show(this, message, caption, MessageBoxButtons.RetryCancel, MessageBoxIcon.Error);
+					return res == DialogResult.Retry ? HostDialogResult.Retry : HostDialogResult.Cancel;
+				}));
+			}
+
+			DialogResult result = MessageBox.Show(this, message, caption, MessageBoxButtons.RetryCancel, MessageBoxIcon.Error);
+			return result == DialogResult.Retry ? HostDialogResult.Retry : HostDialogResult.Cancel;
 		}
 
 		private void PrepareControlsMethod()

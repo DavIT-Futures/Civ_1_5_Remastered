@@ -1,7 +1,5 @@
-﻿using System;
-using System.Drawing.Imaging;
+using System;
 using System.IO;
-using System.Windows.Forms;
 using Civilization1Remaster.Emulation;
 
 namespace Civilization1Remaster
@@ -64,9 +62,11 @@ namespace Civilization1Remaster
 		private readonly ushort beginSection = 0x1000;
 
 		private readonly GameState sessionCondition;
+		private readonly IGameHost? host;
 
-		public GameEngine(MainForm window)
+		public GameEngine(IGameHost? host)
 		{
+			this.host = host;
 			this.journal = new LogWrapper("Log.txt");
 			this.signalJournal = new LogWrapper("InterruptLog.txt");
 			this.videoHandlerJournal = new LogWrapper("VGADriverLog.txt");
@@ -83,7 +83,7 @@ namespace Civilization1Remaster
 
 			#region Initialize Segments
 			this.chrLibc = new CRuntime(this);
-			this.videoHandler = new VGADriver(this, window);
+			this.videoHandler = new VGADriver(this, host);
 			this.audioHandler = new SoundDriver(this);
 
 			this.sessionBoot = new GameStartup(this);
@@ -153,8 +153,7 @@ namespace Civilization1Remaster
 
 			if (assets == null)
 			{
-				MessageBox.Show($"Civilization1Remaster resource BinaryResources is missing.",
-					"Resource missing", MessageBoxButtons.OK, MessageBoxIcon.Stop);
+				this.host?.ShowMessage("Civilization1Remaster resource BinaryResources is missing.", "Resource missing");
 				this.processor.Quit(-1);
 
 				throw new Exception("Embedded resource missing"); // Fool compiler as Exit already throws an exception
@@ -190,9 +189,9 @@ namespace Civilization1Remaster
 			// Check for Default directory and individual Resource files
 			if (!string.IsNullOrEmpty(this.processor.StandardFolder) && !Directory.Exists(this.processor.StandardFolder))
 			{
-				MessageBox.Show($"Civilization1Remaster resource files not found at '{this.processor.StandardFolder}'.\n" +
+				this.host?.ShowMessage($"Civilization1Remaster resource files not found at '{this.processor.StandardFolder}'.\n" +
 					"The Civilization1Remaster depends on Civilization resource files (*.pic, *.pal and *.txt).\nPlease adjust path to these resources.",
-					"Resource path error", MessageBoxButtons.OK, MessageBoxIcon.Stop);
+					"Resource path error");
 				this.processor.Quit(-1);
 			}
 
@@ -204,11 +203,12 @@ namespace Civilization1Remaster
 
 				while (!File.Exists(docfileTrail))
 				{
-					DialogResult outcome = MessageBox.Show($"Missing resource file {docfileTrail}. Plsease ensure that the file exists at specified path.\n" +
-					   "Some File systems are case sensitive, ensure that the file name is in uppercase.",
-					   "Error", MessageBoxButtons.RetryCancel, MessageBoxIcon.Error, MessageBoxDefaultButton.Button1);
+					HostDialogResult outcome = this.host != null
+						? this.host.ShowRetryCancel($"Missing resource file {docfileTrail}. Plsease ensure that the file exists at specified path.\n" +
+						   "Some File systems are case sensitive, ensure that the file name is in uppercase.", "Error")
+						: HostDialogResult.Cancel;
 
-					if (outcome == DialogResult.Cancel)
+					if (outcome == HostDialogResult.Cancel)
 					{
 						this.processor.Quit(-1);
 						break;

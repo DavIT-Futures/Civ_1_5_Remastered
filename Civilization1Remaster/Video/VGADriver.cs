@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Threading;
-using System.Windows.Forms;
 using System.IO.Compression;
 using Civilization1Remaster.Emulation;
 using Civilization1Remaster.Video;
@@ -18,7 +17,7 @@ namespace Civilization1Remaster.Video
 		private readonly GameEngine owner;
 		private readonly CPU processor;
 
-		private readonly MainForm? primaryWindow = null;
+		private readonly IGameHost? primaryHost = null;
 		public object VideoLatch = new object();
 		private readonly BDictionary<int, VGABitmap> displays = new BDictionary<int, VGABitmap>();
 		private int pictureFollowingIdx = 0xb000;
@@ -48,11 +47,11 @@ namespace Civilization1Remaster.Video
 
 		private readonly byte[] glob15d6Staging = new byte[512];
 
-		public VGADriver(GameEngine owner, MainForm window)
+		public VGADriver(GameEngine owner, IGameHost? host)
 		{
 			this.owner = owner;
 			this.processor = owner.Processor;
-			this.primaryWindow = window;
+			this.primaryHost = host;
 
 			this.displays.Add(0, new VGABitmap()); // our Main screen
 
@@ -60,8 +59,7 @@ namespace Civilization1Remaster.Video
 
 			if (typefaces == null)
 			{
-				MessageBox.Show($"Civilization1Remaster resource Fonts is missing.",
-					"Resource missing", MessageBoxButtons.OK, MessageBoxIcon.Stop);
+				this.primaryHost?.ShowMessage("Civilization1Remaster resource Fonts is missing.", "Resource missing");
 				this.processor.Quit(-1);
 
 				throw new Exception("Embedded resource missing"); // Fool compiler as Exit already throws an exception
@@ -96,8 +94,8 @@ namespace Civilization1Remaster.Video
 		{
 			get
 			{
-				if (this.primaryWindow != null)
-					return this.primaryWindow.DisplayPointerSite;
+				if (this.primaryHost != null)
+					return this.primaryHost.PointerSite;
 				else
 					return Point.Empty;
 			}
@@ -107,11 +105,11 @@ namespace Civilization1Remaster.Video
 		{
 			get
 			{
-				if (this.primaryWindow != null)
+				if (this.primaryHost != null)
 				{
 					ushort interim = 0;
-					interim |= (ushort)(((this.primaryWindow.DisplayPointerClicks & MouseButtons.Left) == MouseButtons.Left) ? 1 : 0);
-					interim |= (ushort)(((this.primaryWindow.DisplayPointerClicks & MouseButtons.Right) == MouseButtons.Right) ? 2 : 0);
+					interim |= (ushort)(((this.primaryHost.PointerClicks & PointerButtons.Left) == PointerButtons.Left) ? 1 : 0);
+					interim |= (ushort)(((this.primaryHost.PointerClicks & PointerButtons.Right) == PointerButtons.Right) ? 2 : 0);
 					return interim;
 				}
 				else
@@ -140,8 +138,8 @@ namespace Civilization1Remaster.Video
 					picture.Seen = false; // additional screens are not shown by default
 					this.displays.Add(displayIdx, picture);
 				}
-				if (this.primaryWindow != null)
-					this.primaryWindow.OnDisplayCountChanged();
+				if (this.primaryHost != null)
+					this.primaryHost.OnDisplayCountChanged();
 			}
 
 			this.processor.RegAcc.Value16 = 0xa000; // return something to make underlying code happy
