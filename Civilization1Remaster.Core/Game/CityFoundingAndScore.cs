@@ -612,13 +612,8 @@ namespace Civilization1Remaster.Game
 			goto L0bc6;
 
 		L06f3:
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.Towns[townIdx].TrueExtent;
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegCount.LowByte = 0x4;
-
-		L06fa:
-			this.processor.DivideSignedByte(this.processor.RegAcc, this.processor.RegCount.LowByte);
-			this.owner.World.Towns[townIdx].TrueExtent -= (sbyte)this.processor.RegAcc.LowByte;
+			int popLoss = CityDisasterRules.ComputePlaguePopulationLoss(this.owner.World.Towns[townIdx].TrueExtent);
+			this.owner.World.Towns[townIdx].TrueExtent -= (sbyte)popLoss;
 			goto L0bc6;
 
 		L0703:
@@ -678,10 +673,9 @@ namespace Civilization1Remaster.Game
 			goto L0bc6;
 
 		L079a:
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.Towns[townIdx].TrueExtent;
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegCount.LowByte = 0x3;
-			goto L06fa;
+			int famineLoss = CityDisasterRules.ComputeFaminePopulationLoss(this.owner.World.Towns[townIdx].TrueExtent);
+			this.owner.World.Towns[townIdx].TrueExtent -= (sbyte)famineLoss;
+			goto L0bc6;
 
 		L07a4:
 			this.processor.RegAcc.Value16 = 0x1c;
@@ -707,11 +701,8 @@ namespace Civilization1Remaster.Game
 			this.owner.BlockText.DisplayTextDialog(0x4fa5);
 
 			this.owner.World.Towns[townIdx].GrainTally = 0;
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.Towns[townIdx].TrueExtent;
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegCount.LowByte = 0x3;
-			this.processor.DivideSignedByte(this.processor.RegAcc, this.processor.RegCount.LowByte);
-			this.owner.World.Towns[townIdx].TrueExtent -= (sbyte)this.processor.RegAcc.LowByte;
+			int granaryLoss = CityDisasterRules.ComputeFaminePopulationLoss(this.owner.World.Towns[townIdx].TrueExtent);
+			this.owner.World.Towns[townIdx].TrueExtent -= (sbyte)granaryLoss;
 
 			this.owner.Libc.AppendText(0xba06, "Citizens demand GRANARY.\n");
 
