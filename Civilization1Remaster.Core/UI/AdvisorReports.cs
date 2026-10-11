@@ -151,33 +151,14 @@ namespace Civilization1Remaster.UI
 
 			DisplayReportPreamble(0x4762, 1);
 
-			this.processor.EmitLocalWord(0x2, 0x0);
-			this.processor.RegAcc.Value16 = (ushort)owner.World.HardnessTier;
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.PullGlobalWord(0xd2de));
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x6);
-			this.processor.EmitLocalWord(0xe, this.processor.RegAcc.Value16);
+			bool isHuman = (participantIdx == this.owner.World.PersonParticipantIdx);
+			int totalCost = ScienceRules.ComputeTechnologyCost(
+				isHuman,
+				this.owner.World.HardnessTier,
+				this.owner.World.Participants[participantIdx].FoundScienceTally,
+				this.owner.World.Season < 0);
 
-			this.processor.RegAcc.Value16 = 0xb;
-			this.processor.RegAcc.Value16 -= (ushort)this.owner.World.Participants[participantIdx].FoundScienceTally;
-			this.processor.RegSource.Value16 = this.processor.RegAcc.Value16;
-			this.processor.CompareWord(this.processor.PullLocalWord(0xe), this.processor.RegSource.Value16);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L018b;
-			this.processor.EmitLocalWord(0xe, this.processor.RegSource.Value16);
-
-		L018b:
-			if (this.owner.World.Season >= 0) goto L0197;
-			this.processor.RegCount.Value16 = 0x1;
-			goto L019a;
-
-		L0197:
-			this.processor.RegCount.Value16 = 0x2;
-
-		L019a:
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.Participants[participantIdx].FoundScienceTally;
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.PullLocalWord(0xe));
-			this.processor.EmitLocalWord(0xc, this.processor.RegAcc.Value16);
+			this.processor.EmitLocalWord(0xc, (ushort)totalCost);
 
 			this.owner.Helpers.VerifyValueSpan(
 				2432 / (this.processor.PullLocalSignedWord(0xc) + 1),
