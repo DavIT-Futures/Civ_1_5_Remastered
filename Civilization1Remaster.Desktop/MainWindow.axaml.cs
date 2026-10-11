@@ -94,6 +94,7 @@ public partial class MainWindow : Window, IGameHost
 		if (!this.shutting)
 		{
 			this.shutting = true;
+			this.confirmedExit = true;
 			Dispatcher.UIThread.Post(() => this.Close());
 		}
 	}
@@ -316,10 +317,19 @@ public partial class MainWindow : Window, IGameHost
 			this.pointerClicks &= ~PointerButtons.Right;
 	}
 
+	private bool confirmedExit;
+
 	private void OnWindowClosing(object? sender, WindowClosingEventArgs e)
 	{
 		if (this.shutting)
 			return;
+
+		if (!this.confirmedExit)
+		{
+			e.Cancel = true;
+			this.ExitConfirmOverlay.IsVisible = true;
+			return;
+		}
 
 		this.shutting = true;
 		this.renderTimer?.Stop();
@@ -327,6 +337,18 @@ public partial class MainWindow : Window, IGameHost
 		{
 			this.session.Processor.WhenApplicationQuits();
 		}
+	}
+
+	private void OnConfirmExitClicked(object? sender, RoutedEventArgs e)
+	{
+		this.confirmedExit = true;
+		this.ExitConfirmOverlay.IsVisible = false;
+		this.Close();
+	}
+
+	private void OnCancelExitClicked(object? sender, RoutedEventArgs e)
+	{
+		this.ExitConfirmOverlay.IsVisible = false;
 	}
 
 	#region IGameHost implementation

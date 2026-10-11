@@ -15,8 +15,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Civilization1Remaster.Acous
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Civilization1Remaster.GameModel", "Civilization1Remaster.GameModel\Civilization1Remaster.GameModel.csproj", "{7C870ECC-241B-4543-B42D-E5D04EA2A4AC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Civilization1Remaster", "Civilization1Remaster\Civilization1Remaster.csproj", "{02D26EA2-1ACF-448A-9FF3-EB9DB054432D}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Civilization1Remaster.Desktop", "Civilization1Remaster.Desktop\Civilization1Remaster.Desktop.csproj", "{11E9AB5F-DF6F-4C90-A165-83C849D5C2E2}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Civilization1Remaster.Core", "Civilization1Remaster.Core\Civilization1Remaster.Core.csproj", "{E84E7540-B3D4-4530-B28E-168078EF4E66}"
@@ -103,18 +101,6 @@ Global
 		{7C870ECC-241B-4543-B42D-E5D04EA2A4AC}.Release|x64.Build.0 = Release|Any CPU
 		{7C870ECC-241B-4543-B42D-E5D04EA2A4AC}.Release|x86.ActiveCfg = Release|Any CPU
 		{7C870ECC-241B-4543-B42D-E5D04EA2A4AC}.Release|x86.Build.0 = Release|Any CPU
-		{02D26EA2-1ACF-448A-9FF3-EB9DB054432D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{02D26EA2-1ACF-448A-9FF3-EB9DB054432D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{02D26EA2-1ACF-448A-9FF3-EB9DB054432D}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{02D26EA2-1ACF-448A-9FF3-EB9DB054432D}.Debug|x64.Build.0 = Debug|Any CPU
-		{02D26EA2-1ACF-448A-9FF3-EB9DB054432D}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{02D26EA2-1ACF-448A-9FF3-EB9DB054432D}.Debug|x86.Build.0 = Debug|Any CPU
-		{02D26EA2-1ACF-448A-9FF3-EB9DB054432D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{02D26EA2-1ACF-448A-9FF3-EB9DB054432D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{02D26EA2-1ACF-448A-9FF3-EB9DB054432D}.Release|x64.ActiveCfg = Release|Any CPU
-		{02D26EA2-1ACF-448A-9FF3-EB9DB054432D}.Release|x64.Build.0 = Release|Any CPU
-		{02D26EA2-1ACF-448A-9FF3-EB9DB054432D}.Release|x86.ActiveCfg = Release|Any CPU
-		{02D26EA2-1ACF-448A-9FF3-EB9DB054432D}.Release|x86.Build.0 = Release|Any CPU
 		{11E9AB5F-DF6F-4C90-A165-83C849D5C2E2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{11E9AB5F-DF6F-4C90-A165-83C849D5C2E2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{11E9AB5F-DF6F-4C90-A165-83C849D5C2E2}.Debug|x64.ActiveCfg = Debug|Any CPU

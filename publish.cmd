@@ -7,7 +7,7 @@ rem exe, so the recipient has nothing to copy. These are somebody else's files: 
 rem never publish it. Saved games (*.SVE, *.MAP, *.HP) stay out; "publish.cmd withsaves" takes them too.
 cd /d "%~dp0"
 
-dotnet publish Civilization1Remaster\Civilization1Remaster.csproj -c Release -r win-x64 --self-contained true -o publish\win-x64
+dotnet publish Civilization1Remaster.Desktop\Civilization1Remaster.Desktop.csproj -c Release -r win-x64 --self-contained true -o publish\win-x64
 if errorlevel 1 exit /b 1
 
 if exist publish\win-x64\CIVILIZATION rmdir /s /q publish\win-x64\CIVILIZATION
