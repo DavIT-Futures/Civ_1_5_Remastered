@@ -84,5 +84,87 @@ namespace Civilization1Remaster.Tests
 		{
 			Assert.Equal(expectedLevel, TurnEventRules.ComputePalaceLevel(rating));
 		}
+
+		[Theory]
+		[InlineData(0, 2080)] // Chieftain
+		[InlineData(1, 2060)] // Warlord
+		[InlineData(2, 2040)] // Prince
+		[InlineData(3, 2020)] // King
+		[InlineData(4, 2000)] // Emperor
+		public void ComputeRetirementWarningYear_MatchesCiv1DifficultyFormula(int difficulty, int expectedYear)
+		{
+			Assert.Equal(expectedYear, TurnEventRules.ComputeRetirementWarningYear(difficulty));
+		}
+
+		[Theory]
+		[InlineData(0, 2100)] // Chieftain
+		[InlineData(1, 2080)] // Warlord
+		[InlineData(2, 2060)] // Prince
+		[InlineData(3, 2040)] // King
+		[InlineData(4, 2020)] // Emperor
+		public void ComputeMaxGameYear_MatchesCiv1DifficultyFormula(int difficulty, int expectedYear)
+		{
+			Assert.Equal(expectedYear, TurnEventRules.ComputeMaxGameYear(difficulty));
+		}
+
+		[Fact]
+		public void CheckPalaceUpgradeEligible_ValidatesAllConditions()
+		{
+			// Normal case: eligible
+			Assert.True(TurnEventRules.CheckPalaceUpgradeEligible(
+				palaceScoreRequired: 100,
+				currentScore: 120,
+				currentCastleTier: 5,
+				palaceEnabled: true,
+				starshipMarkers: 0));
+
+			// Score too low
+			Assert.False(TurnEventRules.CheckPalaceUpgradeEligible(
+				palaceScoreRequired: 100,
+				currentScore: 90,
+				currentCastleTier: 5,
+				palaceEnabled: true,
+				starshipMarkers: 0));
+
+			// Max palace tier (37) reached
+			Assert.False(TurnEventRules.CheckPalaceUpgradeEligible(
+				palaceScoreRequired: 100,
+				currentScore: 120,
+				currentCastleTier: 37,
+				palaceEnabled: true,
+				starshipMarkers: 0));
+
+			// Palace disabled in preferences
+			Assert.False(TurnEventRules.CheckPalaceUpgradeEligible(
+				palaceScoreRequired: 100,
+				currentScore: 120,
+				currentCastleTier: 5,
+				palaceEnabled: false,
+				starshipMarkers: 0));
+
+			// Starship arrived (victory bit 0x100 set)
+			Assert.False(TurnEventRules.CheckPalaceUpgradeEligible(
+				palaceScoreRequired: 100,
+				currentScore: 120,
+				currentCastleTier: 5,
+				palaceEnabled: true,
+				starshipMarkers: 0x100));
+		}
+
+		[Fact]
+		public void CheckBankruptcyWarning_TriggersWhenLosingGoldTowardsNegative()
+		{
+			// Safe: only 1 city
+			Assert.False(TurnEventRules.CheckBankruptcyWarning(townTally: 1, currentGold: 20, turnStartGold: 30));
+
+			// Safe: gold >= 100
+			Assert.False(TurnEventRules.CheckBankruptcyWarning(townTally: 3, currentGold: 105, turnStartGold: 120));
+
+			// Safe: positive balance (delta >= 0)
+			Assert.False(TurnEventRules.CheckBankruptcyWarning(townTally: 3, currentGold: 50, turnStartGold: 40));
+
+			// In danger: 3 cities, 50g, lost 10g => projected = 50 + (-10)*10 = -50 < 0
+			Assert.True(TurnEventRules.CheckBankruptcyWarning(townTally: 3, currentGold: 50, turnStartGold: 60));
+		}
 	}
 }

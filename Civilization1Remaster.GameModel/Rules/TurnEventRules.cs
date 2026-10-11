@@ -155,6 +155,41 @@ namespace Civilization1Remaster.Game.Rules
 			int projectedGold = currentGold + (delta * 10);
 			return projectedGold < 0;
 		}
+
+		/// <summary>
+		/// Calculates the year when the retirement warning occurs (20 years before game end).
+		/// Original CIV.EXE: 2080 - (20 * difficultyTier).
+		/// </summary>
+		public static int ComputeRetirementWarningYear(int difficultyTier)
+		{
+			return 2080 - (20 * difficultyTier);
+		}
+
+		/// <summary>
+		/// Calculates the final game year when the dynasty retirement ends the game.
+		/// Original CIV.EXE: 2100 - (20 * difficultyTier).
+		/// </summary>
+		public static int ComputeMaxGameYear(int difficultyTier)
+		{
+			return 2100 - (20 * difficultyTier);
+		}
+
+		/// <summary>
+		/// Checks whether the player is eligible for a palace upgrade.
+		/// Original CIV.EXE: castleTier &lt;= 37, palace enabled in prefs, starship victory not yet achieved, score &gt;= scoreRequired.
+		/// </summary>
+		public static bool CheckPalaceUpgradeEligible(int palaceScoreRequired, int currentScore, int currentCastleTier, bool palaceEnabled, short starshipMarkers)
+		{
+			if (currentCastleTier >= 37)
+			{
+				return false;
+			}
+			if (!palaceEnabled || (starshipMarkers & 0x100) != 0)
+			{
+				return false;
+			}
+			return currentScore >= palaceScoreRequired;
+		}
 	}
 }
 
