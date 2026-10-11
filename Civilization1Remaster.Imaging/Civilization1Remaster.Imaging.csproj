@@ -2,8 +2,7 @@
 
   <!-- Bitmaps with their palettes and the bitmap fonts -->
   <PropertyGroup>
-    <TargetFramework>net10.0-windows</TargetFramework>
-    <UseWindowsForms>true</UseWindowsForms>
+    <TargetFramework>net10.0</TargetFramework>
     <RootNamespace>Civilization1Remaster</RootNamespace>
     <WarningsAsErrors>nullable</WarningsAsErrors>
   </PropertyGroup>

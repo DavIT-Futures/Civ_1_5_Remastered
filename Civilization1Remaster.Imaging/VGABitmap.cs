@@ -1,9 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Drawing.Imaging;
 using System.IO;
-using System.Runtime.InteropServices;
 using Civilization1Remaster.Containers;
 using Civilization1Remaster.Squeeze;
 using Civilization1Remaster.Video;
@@ -14,9 +12,7 @@ namespace Civilization1Remaster.Video
 	{
 		private readonly int pitch;
 		private readonly byte[] pictureStorage;
-		private GCHandle pictureStorageHnd;
-		private IntPtr pictureStorageLocation;
-		private readonly Bitmap picture;
+		private readonly Color[] palette = new Color[256];
 		private Rectangle box;
 		private bool edited = true;
 		private readonly int[] swatchRgba = new int[256];
@@ -187,18 +183,14 @@ namespace Civilization1Remaster.Video
 			// stride has to be a multiple of 4
 			this.pitch = (int)(Math.Ceiling((double)breadth / 4.0) * 4.0);
 			this.pictureStorage = new byte[this.pitch * altitude];
-			this.pictureStorageHnd = GCHandle.Alloc(this.pictureStorage, GCHandleType.Pinned);
-			this.pictureStorageLocation = Marshal.UnsafeAddrOfPinnedArrayElement(this.pictureStorage, 0);
-			this.picture = new Bitmap(breadth, altitude, this.pitch, PixelFormat.Format8bppIndexed, this.pictureStorageLocation);
 			this.box = new Rectangle(0, 0, breadth, altitude);
 
 			// set default palette
-			ColorPalette swatch = this.picture.Palette;
-			for (int idx = 0; idx < StandardSwatch.Length; idx++)
+			for (int idx = 0; idx < StandardSwatch.Length && idx < this.palette.Length; idx++)
 			{
-				swatch.Entries[idx] = StandardSwatch[idx];
+				this.palette[idx] = StandardSwatch[idx];
+				this.swatchRgba[idx] = StandardSwatch[idx].ToArgb();
 			}
-			AssignPictureColors(swatch);
 		}
 
 		#region IDisposable members
@@ -209,18 +201,12 @@ namespace Civilization1Remaster.Video
 
 		public void Dispose()
 		{
-			if (this.pictureStorageLocation != IntPtr.Zero || this.pictureStorageHnd.IsAllocated)
-			{
-				this.picture.Dispose();
-				this.pictureStorageLocation = IntPtr.Zero;
-				this.pictureStorageHnd.Free();
-			}
 		}
 		#endregion
 
-		public Bitmap Picture
+		public Color[] Palette
 		{
-			get { return this.picture; }
+			get { return this.palette; }
 		}
 
 		public int Pitch
@@ -266,22 +252,18 @@ namespace Civilization1Remaster.Video
 		}
 
 		/// <summary>
-		/// Colors of the palette as ARGB values. The window reads them instead of Bitmap.Palette,
-		/// because GDI+ throws when its bitmap is used by two threads at the same time.
+		/// Colors of the palette as ARGB values.
 		/// </summary>
 		public int[] SwatchRgba
 		{
 			get { return this.swatchRgba; }
 		}
 
-		private void AssignPictureColors(ColorPalette swatch)
+		private void AssignPictureColors(Color[] shades)
 		{
-			this.picture.Palette = swatch;
-
-			Color[] shades = swatch.Entries;
-
 			for (int idx = 0; idx < this.swatchRgba.Length && idx < shades.Length; idx++)
 			{
+				this.palette[idx] = shades[idx];
 				this.swatchRgba[idx] = shades[idx].ToArgb();
 			}
 		}
@@ -293,11 +275,8 @@ namespace Civilization1Remaster.Video
 
 		public void AssignHue(int ordinal, Color hue)
 		{
-			ColorPalette swatch = this.picture.Palette;
-
-			swatch.Entries[ordinal] = hue;
-
-			AssignPictureColors(swatch);
+			this.palette[ordinal] = hue;
+			this.swatchRgba[ordinal] = hue.ToArgb();
 			this.edited = true;
 		}
 
@@ -327,27 +306,23 @@ namespace Civilization1Remaster.Video
 
 		public void AssignHuesFromArray(Color[] shades, int originOrdinal, int targetOrdinal, int span)
 		{
-			ColorPalette swatch = this.picture.Palette;
 			for (int idx = 0; idx < span; idx++)
 			{
-				swatch.Entries[targetOrdinal + idx] = shades[originOrdinal + idx];
+				Color shade = shades[originOrdinal + idx];
+				this.palette[targetOrdinal + idx] = shade;
+				this.swatchRgba[targetOrdinal + idx] = shade.ToArgb();
 			}
 
-			AssignPictureColors(swatch);
 			this.edited = true;
 		}
 
 		public void DuplicateColors(VGABitmap picture)
 		{
-			ColorPalette freshSwatch = this.picture.Palette;
-			ColorPalette priorSwatch = picture.Picture.Palette;
-
-			for (int idx = 0; idx < priorSwatch.Entries.Length; idx++)
+			for (int idx = 0; idx < picture.Palette.Length; idx++)
 			{
-				freshSwatch.Entries[idx] = priorSwatch.Entries[idx];
+				this.palette[idx] = picture.Palette[idx];
+				this.swatchRgba[idx] = picture.SwatchRgba[idx];
 			}
-
-			AssignPictureColors(freshSwatch);
 		}
 
 		public void SubstituteHue(Rectangle box, byte priorHue, byte freshHue)
@@ -687,10 +662,9 @@ namespace Civilization1Remaster.Video
 				sink.WriteByte(0); // from index
 				sink.WriteByte(255); // to index
 
-				ColorPalette swatch = this.picture.Palette;
 				for (int idx = 0; idx < 256; idx++)
 				{
-					Color hue = HueToHue18(swatch.Entries[idx]);
+					Color hue = HueToHue18(this.palette[idx]);
 					sink.WriteByte(hue.R);
 					sink.WriteByte(hue.G);
 					sink.WriteByte(hue.B);
@@ -700,9 +674,9 @@ namespace Civilization1Remaster.Video
 			MemoryStream runlenIncoming = new MemoryStream();
 			int pictureLocation = 0;
 
-			for (int idx = 0; idx < this.picture.Height; idx++)
+			for (int idx = 0; idx < this.box.Height; idx++)
 			{
-				for (int jdx = 0; jdx < this.picture.Width; jdx++)
+				for (int jdx = 0; jdx < this.box.Width; jdx++)
 				{
 					runlenIncoming.WriteByte(pictureStorage[pictureLocation + jdx]);
 				}
@@ -731,10 +705,10 @@ namespace Civilization1Remaster.Video
 			sink.WriteByte((byte)((spanInt & 0xff00) >> 8));
 
 			// write bitmap width and height
-			sink.WriteByte((byte)(this.picture.Width & 0xff));
-			sink.WriteByte((byte)((this.picture.Width & 0xff00) >> 8));
-			sink.WriteByte((byte)(this.picture.Height & 0xff));
-			sink.WriteByte((byte)((this.picture.Height & 0xff00) >> 8));
+			sink.WriteByte((byte)(this.box.Width & 0xff));
+			sink.WriteByte((byte)((this.box.Width & 0xff00) >> 8));
+			sink.WriteByte((byte)(this.box.Height & 0xff));
+			sink.WriteByte((byte)((this.box.Height & 0xff00) >> 8));
 
 			// write compressed content
 			sink.Write(staging, 0, staging.Length);
@@ -749,9 +723,9 @@ namespace Civilization1Remaster.Video
 
 			if (picture != null)
 			{
-				for (int idx = 0; idx < picture.Picture.Height; idx++)
+				for (int idx = 0; idx < picture.Box.Height; idx++)
 				{
-					for (int jdx = 0; jdx < picture.Picture.Width; jdx++)
+					for (int jdx = 0; jdx < picture.Box.Width; jdx++)
 					{
 						this.AssignDot(horizLoc + jdx, vertLoc + idx, picture.ObtainDot(jdx, idx));
 					}
@@ -875,12 +849,11 @@ namespace Civilization1Remaster.Video
 							}
 
 							// set bitmap palette
-							ColorPalette pictureSwatch = picture.picture.Palette;
 							for (int idx = 0; idx < colors.Count; idx++)
 							{
-								pictureSwatch.Entries[colors[idx].Token] = colors[idx].Datum;
+								picture.palette[colors[idx].Token] = colors[idx].Datum;
+								picture.swatchRgba[colors[idx].Token] = colors[idx].Datum.ToArgb();
 							}
-							picture.AssignPictureColors(pictureSwatch);
 						}
 						else
 						{
@@ -930,12 +903,11 @@ namespace Civilization1Remaster.Video
 							}
 
 							// set bitmap palette
-							ColorPalette pictureSwatch = picture.picture.Palette;
 							for (int idx = 0; idx < colors.Count; idx++)
 							{
-								pictureSwatch.Entries[colors[idx].Token] = colors[idx].Datum;
+								picture.palette[colors[idx].Token] = colors[idx].Datum;
+								picture.swatchRgba[colors[idx].Token] = colors[idx].Datum.ToArgb();
 							}
-							picture.AssignPictureColors(pictureSwatch);
 						}
 						else
 						{
