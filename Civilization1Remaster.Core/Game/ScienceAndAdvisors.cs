@@ -2568,37 +2568,17 @@ namespace Civilization1Remaster.Game
 			this.processor.EnterFrame(0x8);
 			this.processor.PreserveIndexRegisters();
 
-			this.processor.RegAcc.Value16 = PlayerKnowsTechnology(participantIdx, scienceIdx);
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual)
-				goto L1d4a;
+			if (PlayerKnowsTechnology(participantIdx, scienceIdx) != 0)
+			{
+				goto L22af;
+			}
 
-			goto L22af;
+			if (scienceIdx != 0x47)
+			{
+				this.owner.World.Participants[participantIdx].FoundScienceMarkers[scienceIdx >> 4] |= (ushort)(1 << (scienceIdx & 0xf));
+				this.owner.World.Participants[participantIdx].ScienceObtainedSince[scienceIdx] = participantIdx1;
+			}
 
-		L1d4a:
-			if (scienceIdx == 0x47) goto L1d9e;
-
-			this.processor.RegAcc.Value16 = (ushort)scienceIdx;
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.RegCount.Value16 = 0x10;
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.RegCount.Value16 = this.processor.RegData.Value16;
-			this.processor.RegAcc.Value16 = 0x1;
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
-
-			this.processor.ScaleIndexToBase(0xa, (ushort)participantIdx);
-
-			this.processor.RegAcc.Value16 = (ushort)scienceIdx;
-			this.processor.RegSource.Value16 = this.processor.RegCount.Value16;
-			this.processor.DivideAccumulatorByPowerOfTwo(0x4);
-			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegDest.Value16 = this.processor.ShiftLeftWord(this.processor.RegDest.Value16, 0x1);
-
-			this.owner.World.Participants[participantIdx].FoundScienceMarkers[this.processor.RegAcc.Value16] |= this.processor.RegSource.Value16;
-			this.owner.World.Participants[participantIdx].ScienceObtainedSince[scienceIdx] = participantIdx1;
-
-		L1d9e:
 			if (this.owner.World.RoundTally == 0)
 				goto L22af;
 
@@ -2845,24 +2825,17 @@ namespace Civilization1Remaster.Game
 			this.owner.Briefings.DisplayMilitaryReport();
 
 		L20d9:
-			if (scienceIdx != 0x22 && scienceIdx != 0x25)
+			if (!ScienceRules.DoesTechObsoleteBarracks(scienceIdx))
 				goto L2174;
 
-			this.processor.EmitLocalWord(0x6, 0x0);
-
-		L20ed:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToSource(this.processor.PullLocalWord(0x6));
-
-			if (this.owner.World.Towns[this.processor.PullLocalWord(0x6)].ConditionMarker != 0xff &&
-				this.owner.World.Towns[this.processor.PullLocalWord(0x6)].ParticipantIdx == participantIdx)
+			for (int townIdx = 0; townIdx < 128; townIdx++)
 			{
-				this.owner.World.Towns[this.processor.PullLocalWord(0x6)].StructureMarkers0 &= 0xfffd;
+				if (this.owner.World.Towns[townIdx].ConditionMarker != 0xff &&
+					this.owner.World.Towns[townIdx].ParticipantIdx == participantIdx)
+				{
+					this.owner.World.Towns[townIdx].StructureMarkers0 &= 0xfffd;
+				}
 			}
-
-			this.processor.IncrementLocalWord(0x6);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x6), 0x80);
-			if (this.processor.FlagSet.IsLess) goto L20ed;
 
 			if (participantIdx != this.owner.World.PersonParticipantIdx)
 				goto L2174;
@@ -2946,22 +2919,17 @@ namespace Civilization1Remaster.Game
 			
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsEqual) goto L22af;
-			this.processor.EmitLocalWord(0x4, 0x0);
-			this.processor.EmitLocalWord(0x6, 0x1);
-
-		L227b:
-			this.processor.RegAcc.Value16 = PlayerKnowsTechnology(this.processor.PullLocalSignedWord(0x6), scienceIdx);
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsNotEqual)
+			int civCountWithTech = 0;
+			for (short checkCiv = 1; checkCiv < 8; checkCiv++)
 			{
-				this.processor.IncrementLocalWord(0x4);
+				if (PlayerKnowsTechnology(checkCiv, scienceIdx) != 0)
+				{
+					civCountWithTech++;
+				}
 			}
-		
-			this.processor.IncrementLocalWord(0x6);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x6), 0x8);
-			if (this.processor.FlagSet.IsLess) goto L227b;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), 0x2);
-			if (this.processor.FlagSet.IsLess) goto L22af;
+
+			if (civCountWithTech < 2)
+				goto L22af;
 
 			EarnTechnology(this.processor.PullLocalSignedWord(0x8), scienceIdx, -2);
 
@@ -2981,44 +2949,30 @@ namespace Civilization1Remaster.Game
 		/// <returns></returns>
 		public ushort PlayerKnowsTechnology(short participantIdx, short scienceIdx)
 		{
-			return (ushort)((scienceIdx >= 0 &&
-				(scienceIdx >= 71 || participantIdx == 0 ||
-				(this.owner.World.Participants[participantIdx].FoundScienceMarkers[scienceIdx >> 4] & (1 << (scienceIdx & 0xf))) == 0)) ? 0 : 1);
+			return (ushort)(ScienceRules.PlayerKnowsTechnology(
+				this.owner.World.Participants[participantIdx].FoundScienceMarkers,
+				participantIdx,
+				scienceIdx) ? 1 : 0);
 		}
 
 		/// <summary>
-		/// ?
+		/// Calculates the AI leader preference value for technology research.
 		/// </summary>
-		/// <param name="playerID"></param>
-		/// <param name="param2"></param>
+		/// <param name="participantIdx"></param>
+		/// <param name="arg2"></param>
 		public ushort ObtainTechnologyInfo(short participantIdx, ushort arg2)
 		{
 			this.processor.Journal.OpenScope($"ObtainTechnologyInfo({participantIdx}, {arg2})");
 
-			// function body
-			this.processor.EnterFrame();
-			this.processor.PreserveIndexRegisters();
-			this.processor.RegSource.Value16 = arg2;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0xb0a));
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0xb0b));
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegAcc.Value16 = 0x3a;
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData,
-				(ushort)this.owner.World.Participants[participantIdx].ChiefVisuals);
-			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 + 0x1516));
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegBase.Value16);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.RegCount.Value16);
-			this.processor.RestoreIndexRegisters();
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-			// Far return
-			this.processor.Journal.CloseScope("ObtainTechnologyInfo");
+			sbyte b0 = (sbyte)this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(arg2 * 2 + 0xb0a));
+			sbyte b1 = (sbyte)this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(arg2 * 2 + 0xb0b));
+			int leaderVisuals = this.owner.World.Participants[participantIdx].ChiefVisuals;
+			short leaderFactor = (short)this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(leaderVisuals * 0x3a + 0x1516));
+			ushort result = ScienceRules.CalculateTechnologyInfo(b0, b1, leaderFactor);
+			this.processor.RegAcc.Value16 = result;
 
-			return this.processor.RegAcc.Value16;
+			this.processor.Journal.CloseScope("ObtainTechnologyInfo");
+			return result;
 		}
 	}
 }
