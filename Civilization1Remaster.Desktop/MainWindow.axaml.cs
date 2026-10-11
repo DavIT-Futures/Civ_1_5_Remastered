@@ -96,6 +96,8 @@ public partial class MainWindow : Window, IGameHost
 		}
 		catch (Exception ex)
 		{
+			CrashLogger.Log(ex, "PlayThread");
+
 			if (this.session?.Journal != null)
 			{
 				this.session.Journal.EmitLine("");
