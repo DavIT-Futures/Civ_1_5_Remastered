@@ -200,6 +200,10 @@ public partial class MainWindow : Window, IGameHost
 			{
 				foreach (char c in e.Text)
 				{
+					// Skip control characters that are already enqueued in KeyDown (Enter, Esc, Tab, Backspace)
+					if (c == '\r' || c == '\n' || c == '\t' || c == '\b' || c == 0x1b)
+						continue;
+
 					this.session.VideoCard.Tokens.Enqueue(c);
 				}
 			}
@@ -255,6 +259,12 @@ public partial class MainWindow : Window, IGameHost
 			{
 				switch (e.Key)
 				{
+					case Key.Enter: this.session.VideoCard.Tokens.Enqueue(0x0d); e.Handled = true; break;
+					case Key.Escape: this.session.VideoCard.Tokens.Enqueue(0x1b); e.Handled = true; break;
+					case Key.Space: this.session.VideoCard.Tokens.Enqueue(0x20); e.Handled = true; break;
+					case Key.Tab: this.session.VideoCard.Tokens.Enqueue(0x09); e.Handled = true; break;
+					case Key.Back: this.session.VideoCard.Tokens.Enqueue(0x08); e.Handled = true; break;
+					case Key.Delete: this.session.VideoCard.Tokens.Enqueue(0x5300); e.Handled = true; break;
 					case Key.F1: this.session.VideoCard.Tokens.Enqueue(0x3b00); e.Handled = true; break;
 					case Key.F2: this.session.VideoCard.Tokens.Enqueue(0x3c00); e.Handled = true; break;
 					case Key.F3: this.session.VideoCard.Tokens.Enqueue(0x3d00); e.Handled = true; break;
@@ -274,6 +284,7 @@ public partial class MainWindow : Window, IGameHost
 					case Key.End: this.session.VideoCard.Tokens.Enqueue(0x4f00); e.Handled = true; break;
 					case Key.PageUp: this.session.VideoCard.Tokens.Enqueue(0x4900); e.Handled = true; break;
 					case Key.PageDown: this.session.VideoCard.Tokens.Enqueue(0x5100); e.Handled = true; break;
+					case Key.NumPad0: this.session.VideoCard.Tokens.Enqueue(0x475c); e.Handled = true; break;
 				}
 			}
 		}
