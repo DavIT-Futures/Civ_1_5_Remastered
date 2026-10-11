@@ -5,7 +5,8 @@ using Civilization1Remaster.Game.Rules;
 namespace Civilization1Remaster.Game
 {
 	/// <summary>
-	/// Translated from the original CIV.EXE segment 0x29f3.
+	/// Pure C# domain logic and battle animation integration for unit combat.
+	/// Translated from original CIV.EXE segment 0x29f3.
 	/// </summary>
 	public class UnitCombat
 	{
@@ -18,27 +19,13 @@ namespace Civilization1Remaster.Game
 			this.processor = owner.Processor;
 		}
 
-		// Unit data in memory: 12 bytes per unit, 0x600 bytes (128 units) per player
 		private const int TroopsRoot = 0x81d4;
 		private const int TroopExtent = 0xc;
 		private const int ParticipantTroopsExtent = 0x600;
-		private const int TroopConditionDisplacement = 0;
-		private const int TroopHorizDisplacement = 1;
-		private const int TroopVertDisplacement = 2;
-		private const int TroopKindDisplacement = 3;
-		private const int TroopStepsDisplacement = 4;
-
-		// Unit definitions in memory: 34 bytes per unit type (see UnitDefinition class)
-		private const int TroopSpecsRoot = 0x112a;
-		private const int TroopSpecExtent = 0x22;
-		private const int TroopLandGroupDisplacement = 14;
-		private const int TroopAssaultDisplacement = 20;
-		private const int TroopGuardDisplacement = 22;
 
 		private const int TroopGroupSky = 1;
 		private const int TroopGroupWater = 2;
 
-		// Terrain definitions in memory: 19 bytes per terrain type, this points to the defense factor
 		private const int LandGuardLookup = 0x28f;
 		private const int LandExtent = 0x13;
 
@@ -50,7 +37,7 @@ namespace Civilization1Remaster.Game
 		private int finalAssailantCompleteStrikeMarks = CombatResolver.RegularStrikeMarks;
 		private int finalGuardianCompleteStrikeMarks = CombatResolver.RegularStrikeMarks;
 
-		// Pauses of the battle animation (in timer ticks): before the first round and after each round
+		// Pauses of the battle animation (in timer ticks)
 		private const int FightBeginWait = 20;
 		private const int FightPhaseWait = 18;
 
@@ -61,7 +48,6 @@ namespace Civilization1Remaster.Game
 		private void DisplayBattleRounds(int assailantHoriz, int assailantVert, int guardianHoriz, int guardianVert)
 		{
 			CombatResolver.Battle? fight = this.finalFight;
-
 			if (fight == null)
 				return;
 
@@ -97,55 +83,47 @@ namespace Civilization1Remaster.Game
 			}
 		}
 
-		private int PullUnitByte(int participantIdx, int troopIdx, int displacement)
-		{
-			return (sbyte)this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(TroopsRoot + participantIdx * ParticipantTroopsExtent + troopIdx * TroopExtent + displacement));
-		}
-
-		private int PullUnitDefinitionWord(int troopKind, int displacement)
-		{
-			return (short)this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(TroopSpecsRoot + troopKind * TroopSpecExtent + displacement));
-		}
-
 		private int ObtainUnitAttack(int troopKind)
 		{
-			return PullUnitDefinitionWord(troopKind, TroopAssaultDisplacement);
+			if (troopKind >= 0 && troopKind < this.owner.World.TroopSpecs.Length)
+			{
+				return this.owner.World.TroopSpecs[troopKind].AssaultPower;
+			}
+			return 0;
 		}
 
 		private int ObtainUnitProtection(int troopKind)
 		{
-			return PullUnitDefinitionWord(troopKind, TroopGuardDisplacement);
+			if (troopKind >= 0 && troopKind < this.owner.World.TroopSpecs.Length)
+			{
+				return this.owner.World.TroopSpecs[troopKind].GuardPower;
+			}
+			return 0;
 		}
 
 		private int ObtainUnitTerrainCategory(int troopKind)
 		{
-			return PullUnitDefinitionWord(troopKind, TroopLandGroupDisplacement);
+			if (troopKind >= 0 && troopKind < this.owner.World.TroopSpecs.Length)
+			{
+				return this.owner.World.TroopSpecs[troopKind].LandGroup;
+			}
+			return 0;
 		}
 
 		/// <summary>
-		/// ?
+		/// Resolves a battle between an attacking and defending unit or estimates combat odds.
 		/// </summary>
-		/// <param name="playerID1"></param>
-		/// <param name="unitID1"></param>
-		/// <param name="playerID2"></param>
-		/// <param name="unitID2"></param>
-		/// <param name="flag"></param>
-		/// <returns></returns>
 		public ushort SettleBattle(short participantIdx1, short troopIdx1, short participantIdx2, short troopIdx2, ushort marker)
 		{
 			this.processor.Journal.OpenScope($"SettleBattle({participantIdx1}, {troopIdx1}, {participantIdx2}, {troopIdx2}, {marker})");
 
-			// function body
-			this.processor.EnterFrame(0x26);
-			this.processor.PreserveIndexRegisters();
+			var assailantUnit = this.owner.World.Participants[participantIdx1].Troops[troopIdx1];
+			var guardianUnit = this.owner.World.Participants[participantIdx2].Troops[troopIdx2];
 
-			// Translated from the original assembly, behavior is unchanged.
-			// Original instructions: 0x29f3:0x0019 - 0x29f3:0x02df.
-			// Results are stored to the same stack locals, as the rest of this function still reads them.
-			int assailantKind = PullUnitByte(participantIdx1, troopIdx1, TroopKindDisplacement);
-			int guardianKind = PullUnitByte(participantIdx2, troopIdx2, TroopKindDisplacement);
-			int guardianHoriz = PullUnitByte(participantIdx2, troopIdx2, TroopHorizDisplacement);
-			int guardianVert = PullUnitByte(participantIdx2, troopIdx2, TroopVertDisplacement);
+			int assailantKind = assailantUnit.KindIdx;
+			int guardianKind = guardianUnit.KindIdx;
+			int guardianHoriz = guardianUnit.Place.X;
+			int guardianVert = guardianUnit.Place.Y;
 			int guardianLand = this.owner.MapOps.ObtainTerrainType(guardianHoriz, guardianVert);
 			int landGuard = (sbyte)this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(LandGuardLookup + guardianLand * LandExtent));
 			bool raidersAssaultTown = false;
@@ -153,7 +131,7 @@ namespace Civilization1Remaster.Game
 			// Attack and defense strengths are scaled by 8, terrain defense factor of 2 is the normal (100%) value
 			int assault = ObtainUnitAttack(assailantKind) * 8;
 			bool stronghold = (this.owner.MapOps.ObtainTileImprovements(guardianHoriz, guardianVert) & 0x20) != 0;
-			bool dugin = (PullUnitByte(participantIdx2, troopIdx2, TroopConditionDisplacement) & (int)UnitStatusEnum.Fortified) != 0;
+			bool dugin = (guardianUnit.Condition & (int)UnitStatusEnum.Fortified) != 0;
 			bool townRamparts = false;
 
 			if (participantIdx1 == 0)
@@ -170,7 +148,6 @@ namespace Civilization1Remaster.Game
 			}
 
 			int guardianGroup = ObtainUnitTerrainCategory(guardianKind);
-
 			int townIdx = -1;
 
 			if ((this.owner.MapOps.ObtainTileImprovements(guardianHoriz, guardianVert) & 0x1) != 0)
@@ -200,28 +177,20 @@ namespace Civilization1Remaster.Game
 			}
 
 			// Veteran: +50%
-			if ((PullUnitByte(participantIdx1, troopIdx1, TroopConditionDisplacement) & (int)UnitStatusEnum.Veteran) != 0)
+			if ((assailantUnit.Condition & (int)UnitStatusEnum.Veteran) != 0)
 			{
 				assault += assault / 2;
 			}
 
-			// Terrain, fortified, fortress, City Walls and veteran bonuses, see DefenseStrength
+			// Terrain, fortified, fortress, City Walls and veteran bonuses
 			int guard = DefenseStrength.Compute(ObtainUnitProtection(guardianKind), landGuard, stronghold, dugin,
 				guardianGroup == TroopGroupWater, guardianGroup == TroopGroupSky, townRamparts,
 				ObtainUnitAttack(assailantKind),
-				(PullUnitByte(participantIdx2, troopIdx2, TroopConditionDisplacement) & (int)UnitStatusEnum.Veteran) != 0);
+				(guardianUnit.Condition & (int)UnitStatusEnum.Veteran) != 0);
 
-			// Attacker with less than one full move left attacks with reduced strength (moves are stored * 3)
-			sbyte assailantSteps = (sbyte)PullUnitByte(participantIdx1, troopIdx1, TroopStepsDisplacement);
+			// Attacker with less than one full move left attacks with reduced strength
+			sbyte assailantSteps = (sbyte)assailantUnit.LeftoverSteps;
 			assault = CombatRules.AdjustForRemainingSteps(assault, assailantSteps);
-
-			// Store results for the rest of the function
-			this.processor.EmitLocalWord(0x6, (ushort)townIdx);
-			this.processor.EmitLocalWord(0x8, (ushort)assailantKind);
-			this.processor.EmitLocalWord(0xe, (ushort)guardianKind);
-			this.processor.EmitLocalWord(0x1e, (ushort)(raidersAssaultTown ? 1 : 0));
-			this.processor.EmitLocalWord(0x20, (ushort)guardianLand);
-			this.processor.EmitLocalByte(0x26, (byte)assailantSteps);
 
 			if (marker == 0)
 			{
@@ -229,394 +198,178 @@ namespace Civilization1Remaster.Game
 				var (chances, leftover) = CombatRules.EstimateOdds(assault, guard);
 				this.processor.RegAcc.Value16 = (ushort)chances;
 				this.processor.RegData.Value16 = (ushort)leftover;
-				goto L0b60;
+				this.processor.Journal.CloseScope("ResolveBattle");
+				return (ushort)chances;
 			}
 
 			assault = CombatRules.AdjustAttackerStrength(assault, participantIdx1, participantIdx2,
 				this.owner.World.PersonParticipantIdx, this.owner.World.HardnessTier);
 
-			this.processor.EmitLocalWord(0x10, (ushort)assault);
-			this.processor.EmitLocalWord(0x1a, (ushort)guard);
-
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.CompareWord((ushort)participantIdx1, this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L030f;
-			
-			AffirmBreakTreaty(participantIdx2);
-			
-			this.processor.RegAcc.Value16 = this.processor.IncrementWord(this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L030f;
-			this.processor.ScaleIndexToBase(0xc, (ushort)troopIdx1);
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx1);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81da), 0xff);
-			this.processor.RegAcc.Value16 = 0xffff;
-			goto L0b60;
-
-		L030f:
+			if (participantIdx1 == this.owner.World.PersonParticipantIdx)
 			{
-				// The battle itself. The original game used one roll for each side (higher roll wins),
-				// now the battle is fought in rounds with hit points, see CombatResolver.
-				// Original instructions: 0x29f3:0x030f - 0x29f3:0x0362.
-				ushort assaultAmount = this.processor.PullLocalWord(0x10);
-				ushort guardAmount = this.processor.PullLocalWord(0x1a);
-				bool townAssaultedViaRaiders = this.processor.PullLocalWord(0x1e) != 0;
-				Func<int, int> followingChance = peakAmount => this.owner.Libc.Dice.DrawInt(peakAmount);
-				UnitHealth vitality = this.owner.World.Vitals;
-
-				int assailantTroopKind = PullUnitByte(participantIdx1, troopIdx1, TroopKindDisplacement);
-				int guardianTroopKind = PullUnitByte(participantIdx2, troopIdx2, TroopKindDisplacement);
-				bool assailantSeasoned = (PullUnitByte(participantIdx1, troopIdx1, TroopConditionDisplacement) & (int)UnitStatusEnum.Veteran) != 0;
-				bool guardianSeasoned = (PullUnitByte(participantIdx2, troopIdx2, TroopConditionDisplacement) & (int)UnitStatusEnum.Veteran) != 0;
-				bool assailantAce = vitality.VerifyElite(participantIdx1, troopIdx1, assailantTroopKind);
-				bool guardianAce = vitality.VerifyElite(participantIdx2, troopIdx2, guardianTroopKind);
-
-				// Barbarians have to win twice to win against a city
-				CombatResolver.Battle fight = CombatResolver.Clash(assaultAmount, guardAmount,
-					vitality.ObtainHitPoints(participantIdx1, troopIdx1, assailantTroopKind, assailantSeasoned),
-					vitality.ObtainHitPoints(participantIdx2, troopIdx2, guardianTroopKind, guardianSeasoned),
-					townAssaultedViaRaiders ? 2 : 1, followingChance);
-
-				this.finalFight = fight;
-				this.finalAssailantCompleteStrikeMarks = CombatResolver.TopHitPoints(assailantSeasoned, assailantAce);
-				this.finalGuardianCompleteStrikeMarks = CombatResolver.TopHitPoints(guardianSeasoned, guardianAce);
-
-				// The winner keeps its wounds, a veteran that wins becomes elite. The loser is destroyed.
-				if (fight.AssailantVictories)
+				AffirmBreakTreaty(participantIdx2);
+				if (this.processor.RegAcc.Value16 == 0xffff)
 				{
-					// A battle without rounds (barbarians can't attack the last city of a player) doesn't make a unit elite
-					bool ace = assailantAce || (assailantSeasoned && fight.Phases.Count > 0);
-					vitality.Assign(participantIdx1, troopIdx1, assailantTroopKind,
-						CombatResolver.TopHitPoints(assailantSeasoned, ace) - fight.AssailantStrikeMarks, ace);
-					vitality.Wipe(participantIdx2, troopIdx2);
+					assailantUnit.TravelTowardPlace.X = -1;
+					this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(TroopsRoot + participantIdx1 * ParticipantTroopsExtent + troopIdx1 * TroopExtent + 6), 0xff);
+					this.processor.RegAcc.Value16 = 0xffff;
+					this.processor.Journal.CloseScope("ResolveBattle");
+					return 0xffff;
 				}
-				else
-				{
-					// A battle without rounds (barbarians can't attack the last city of a player) doesn't make a unit elite
-					bool ace = guardianAce || (guardianSeasoned && fight.Phases.Count > 0);
-					vitality.Assign(participantIdx2, troopIdx2, guardianTroopKind,
-						CombatResolver.TopHitPoints(guardianSeasoned, ace) - fight.GuardianStrikeMarks, ace);
-					vitality.Wipe(participantIdx1, troopIdx1);
-				}
-
-				// 0x10 = attacker wins, 0 = defender wins
-				this.processor.EmitLocalWord(0x24, (ushort)(fight.AssailantVictories ? 0x10 : 0));
 			}
 
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.CompareWord((ushort)participantIdx1, this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L03b4;
-			this.processor.CompareWord((ushort)participantIdx2, this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L03b4;
-			this.processor.RegSource.Value16 = 0x1;
-			this.processor.RegCount.LowByte = (byte)(this.owner.World.PersonParticipantIdx & 0xff);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, this.processor.RegCount.LowByte);
-			this.processor.ScaleIndexToBase(0xc, (ushort)troopIdx1);
-			this.processor.ScaleIndex(0x600, (ushort)participantIdx1);
-			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegDest.Value16 + 0x81dd));
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.TestBitsWord(this.processor.RegAcc.Value16, this.processor.RegSource.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L03b4;
-			this.processor.ScaleIndexToBase(0xc, (ushort)troopIdx2);
-			this.processor.ScaleIndex(0x600, (ushort)participantIdx2);
-			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegDest.Value16 + 0x81dd));
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.TestBitsWord(this.processor.RegAcc.Value16, this.processor.RegSource.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L03b4;
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xd806), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L03b4;
-			goto L0721;
+			// Resolve the battle using CombatResolver
+			bool townAssaultedViaRaiders = raidersAssaultTown;
+			Func<int, int> followingChance = peakAmount => this.owner.Libc.Dice.DrawInt(peakAmount);
+			UnitHealth vitality = this.owner.World.Vitals;
 
-		L03b4:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xb278), 0x1);
-			if (this.processor.FlagSet.IsNotEqual) goto L03be;
-			goto L0721;
+			bool assailantSeasoned = (assailantUnit.Condition & (int)UnitStatusEnum.Veteran) != 0;
+			bool guardianSeasoned = (guardianUnit.Condition & (int)UnitStatusEnum.Veteran) != 0;
+			bool assailantAce = vitality.VerifyElite(participantIdx1, troopIdx1, assailantKind);
+			bool guardianAce = vitality.VerifyElite(participantIdx2, troopIdx2, guardianKind);
 
-		L03be:
-			this.processor.RegAcc.Value16 = 0x600;
-			this.processor.ScaleAccumulatorToSource((ushort)participantIdx2);
-			this.processor.AddScaledToSource(0xc, (ushort)troopIdx2);
+			CombatResolver.Battle fight = CombatResolver.Clash((ushort)assault, (ushort)guard,
+				vitality.ObtainHitPoints(participantIdx1, troopIdx1, assailantKind, assailantSeasoned),
+				vitality.ObtainHitPoints(participantIdx2, troopIdx2, guardianKind, guardianSeasoned),
+				townAssaultedViaRaiders ? 2 : 1, followingChance);
 
-			this.owner.UnitOps.PanMapToPosition(this.owner.World.PersonParticipantIdx,
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)),
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6)));
+			this.finalFight = fight;
+			this.finalAssailantCompleteStrikeMarks = CombatResolver.TopHitPoints(assailantSeasoned, assailantAce);
+			this.finalGuardianCompleteStrikeMarks = CombatResolver.TopHitPoints(guardianSeasoned, guardianAce);
 
-			this.owner.Startup.ConcealMouseCursor();
-
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx1);
-			this.processor.AddScaledToSource(0xc, (ushort)troopIdx1);
-
-			this.owner.MapOps.RenderMapTile(this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)),
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6)));
-
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsNotEqual) goto L0416;
-			goto L071c;
-
-		L0416:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x24), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L043f;
-			this.processor.ScaleIndexToBase(0x22, this.processor.PullLocalWord(0x8));
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x113e)), 0x4);
-			if (this.processor.FlagSet.IsGreater) goto L043a;
-			this.processor.ScaleIndexToBase(0x22, this.processor.PullLocalWord(0x8));
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1140)), 0x2);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L045d;
-
-		L043a:
-			this.processor.RegAcc.Value16 = 0x1;
-			goto L045f;
-
-		L043f:
-			this.processor.RegAcc.Value16 = 0x22;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullLocalWord(0xe));
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x113e)), 0x4);
-			if (this.processor.FlagSet.IsGreater) goto L043a;
-			this.processor.ScaleIndexToBase(0x22, this.processor.PullLocalWord(0xe));
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1140)), 0x2);
-			if (this.processor.FlagSet.IsGreater) goto L043a;
-
-		L045d:
-			this.processor.RegAcc.Value16 = 0;
-
-		L045f:
-			this.processor.EmitLocalWord(0x16, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x24), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L0473;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x8), 0xf);
-			if (this.processor.FlagSet.IsNotEqual) goto L0473;
-			this.processor.RegAcc.Value16 = 0x2b;
-			goto L04ad;
-
-		L0473:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x24), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L0481;
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.CompareWord((ushort)participantIdx1, this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L048f;
-
-		L0481:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x24), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L049f;
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.CompareWord((ushort)participantIdx2, this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L049f;
-
-		L048f:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x16), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L049a;
-			this.processor.RegAcc.Value16 = 0x26;
-			goto L04ad;
-
-		L049a:
-			this.processor.RegAcc.Value16 = 0x28;
-			goto L04ad;
-
-		L049f:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x16), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L04aa;
-			this.processor.RegAcc.Value16 = 0x27;
-			goto L04ad;
-
-		L04aa:
-			this.processor.RegAcc.Value16 = 0x29;
-
-		L04ad:
-			this.owner.Services.PerformSound(this.processor.RegAcc.Value16, 0);
-
-			this.owner.MapOps.RenderUnitOnWorldMap(participantIdx2, troopIdx2);
-
-			this.processor.ScaleIndexToBase(0xc, (ushort)troopIdx1);
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx1);
-
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81de));
-			this.processor.EmitLocalByte(0x26, this.processor.RegAcc.LowByte);
-			this.processor.CompareByte(this.processor.RegAcc.LowByte, 0xff);
-			if (this.processor.FlagSet.IsEqual) goto L04ec;
-
-			this.owner.MapOps.RenderUnitOnWorldMap(participantIdx1, this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81de)));
-
-		L04ec:
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0xaa),
-				0x50, 0, 0xf0, 0xc8,
-				this.processor.PullGlobalWord(0x19d4),
-				0x50, 0);
-
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx1);
-			this.processor.AddScaledToSource(0xc, (ushort)troopIdx1);
-
-			this.owner.Routing.TunePosition(
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)) -
-					this.processor.PullGlobalSignedWord(0xd4cc));
-
-			this.processor.RegCount.LowByte = 0x4;
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x50);
-			this.processor.EmitLocalWord(0xa, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6));
-			this.processor.RegAcc.HighByte = 0;
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, this.processor.PullGlobalWord(0xd75e));
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x8);
-			this.processor.EmitLocalWord(0xc, this.processor.RegAcc.Value16);
-			this.processor.ScaleIndex(0x600, (ushort)participantIdx2);
-			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
-			this.processor.ScaleIndex(0xc, (ushort)troopIdx2);
-			this.processor.RegDest.Value16 = this.processor.SumWord(this.processor.RegDest.Value16, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 + 0x81d5));
-			this.processor.RegAcc.HighByte = 0;
-			this.processor.RegCount.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5));
-			this.processor.RegCount.HighByte = 0;
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, this.processor.RegCount.Value16);
-			this.processor.RegAcc.Value16 = (ushort)Math.Sign((short)this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x12, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 + 0x81d6));
-			this.processor.RegAcc.HighByte = 0;
-			this.processor.RegCount.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6));
-			this.processor.RegCount.HighByte = 0;
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, this.processor.RegCount.Value16);
-			this.processor.RegAcc.Value16 = (ushort)Math.Sign((short)this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x18, this.processor.RegAcc.Value16);
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 + 0x81d5)), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L05a3;
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)), 0x4f);
-			if (this.processor.FlagSet.IsEqual) goto L05d1;
-
-		L05a3:
-			this.processor.RegAcc.Value16 = 0xc;
-			this.processor.ScaleAccumulatorToBase((ushort)troopIdx2);
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx2);
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d5)), 0x4f);
-			if (this.processor.FlagSet.IsNotEqual) goto L05d9;
-			this.processor.ScaleIndexToBase(0xc, (ushort)troopIdx1);
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx1);
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d5)), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L05d9;
-
-		L05d1:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x12);
-			this.processor.RegAcc.Value16 = this.processor.NegateWord(this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x12, this.processor.RegAcc.Value16);
-
-		L05d9:
-			this.processor.EmitLocalWord(0x1c, 0x0);
-
-		L05de:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x1c);
-			this.processor.ScaleAccumulatorToSource(this.processor.PullLocalWord(0x12));
-			this.processor.RegSource.Value16 = this.processor.SumWord(this.processor.RegSource.Value16, this.processor.PullLocalWord(0xa));
-
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x1c);
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.PullLocalWord(0x18));
-			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegDest.Value16 = this.processor.SumWord(this.processor.RegDest.Value16, this.processor.PullLocalWord(0xc));
-
-			this.owner.Services.RenderPictureToScreen(
-				this.processor.PullGlobalWord(0xaa),
-				(short)this.processor.RegSource.Value16 + 1,
-				(short)this.processor.RegDest.Value16 + 1,
-				this.processor.PullUInt16(this.processor.SegData.Value16,
-					(ushort)(((this.processor.PullUInt8(this.processor.SegData.Value16,
-						(ushort)(((0x600 * participantIdx1) + (0xc * troopIdx1)) + 0x81d7)) +
-					(participantIdx1 << 5) + 0x40) << 1) + 0xd4ce)));
-
-			this.owner.TextPainter.AwaitTime(2);
-
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0x19d4),
-				this.processor.RegSource.Value16, this.processor.RegDest.Value16, 16, 16,
-				this.processor.PullGlobalWord(0xaa),
-				this.processor.RegSource.Value16, this.processor.RegDest.Value16);
-
-			this.processor.IncrementLocalWord(0x1c);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x1c), 0xa);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L05de;
-
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx1);
-			this.processor.AddScaledToSource(0xc, (ushort)troopIdx1);
-
-			this.owner.MapOps.RepaintMapTile(
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)),
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6)));
-
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx2);
-			this.processor.AddScaledToSource(0xc, (ushort)troopIdx2);
-
-			this.owner.MapOps.RepaintMapTile(
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)),
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6)));
-
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0xaa),
-				0, 0, 0x100, 0xc8,
-				this.processor.PullGlobalWord(0x19d4),
-				0, 0);
-
+			if (fight.AssailantVictories)
 			{
-				int assailantHoriz = this.processor.PullLocalSignedWord(0xa);
-				int assailantVert = this.processor.PullLocalSignedWord(0xc);
-				int guardianDisplayHoriz = assailantHoriz + 16 * this.processor.PullLocalSignedWord(0x12);
-				int guardianDisplayVert = assailantVert + 16 * this.processor.PullLocalSignedWord(0x18);
-
-				DisplayBattleRounds(assailantHoriz, assailantVert, guardianDisplayHoriz, guardianDisplayVert);
+				bool ace = assailantAce || (assailantSeasoned && fight.Phases.Count > 0);
+				vitality.Assign(participantIdx1, troopIdx1, assailantKind,
+					CombatResolver.TopHitPoints(assailantSeasoned, ace) - fight.AssailantStrikeMarks, ace);
+				vitality.Wipe(participantIdx2, troopIdx2);
+			}
+			else
+			{
+				bool ace = guardianAce || (guardianSeasoned && fight.Phases.Count > 0);
+				vitality.Assign(participantIdx2, troopIdx2, guardianKind,
+					CombatResolver.TopHitPoints(guardianSeasoned, ace) - fight.GuardianStrikeMarks, ace);
+				vitality.Wipe(participantIdx1, troopIdx1);
 			}
 
-			this.processor.EmitLocalWord(0x1c, 0x0);
-
-		L06c1:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x24);
-			this.processor.ScaleAccumulatorToSource(this.processor.PullLocalWord(0x12));
-			this.processor.RegSource.Value16 = this.processor.SumWord(this.processor.RegSource.Value16, this.processor.PullLocalWord(0xa));
-
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x24);
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.PullLocalWord(0x18));
-			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegDest.Value16 = this.processor.SumWord(this.processor.RegDest.Value16, this.processor.PullLocalWord(0xc));
-
-			this.owner.Services.RenderPictureToScreen(
-				this.processor.PullGlobalWord(0xaa),
-				(short)this.processor.RegSource.Value16 + 1,
-				(short)this.processor.RegDest.Value16 + 1,
-				this.processor.PullUInt16(this.processor.SegData.Value16,
-					(ushort)(((this.processor.PullLocalWord(0x1c) + 0x20) << 1) + 0xd4ce)));
-
-			this.owner.TextPainter.AwaitTime(4);
-
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0x19d4),
-				this.processor.RegSource.Value16, this.processor.RegDest.Value16, 16, 16,
-				this.processor.PullGlobalWord(0xaa),
-				this.processor.RegSource.Value16, this.processor.RegDest.Value16);
-
-			this.processor.IncrementLocalWord(0x1c);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x1c), 0x8);
-			if (this.processor.FlagSet.IsLess) goto L06c1;
-
+			// Battle visual rendering and sound
+			short humanPlayer = this.owner.World.PersonParticipantIdx;
+			bool shouldAnimate = (participantIdx1 == humanPlayer || participantIdx2 == humanPlayer);
+			if (!shouldAnimate)
 			{
-				// Remove the battle squares of the winner, the map shows its wounds if it has any
-				int victorHoriz = this.processor.PullLocalSignedWord(0xa);
-				int victorVert = this.processor.PullLocalSignedWord(0xc);
+				ushort sightMask = (ushort)(1 << humanPlayer);
+				bool attackerVisible = (assailantUnit.ShownViaParticipant & sightMask) != 0;
+				bool defenderVisible = (guardianUnit.ShownViaParticipant & sightMask) != 0;
+				shouldAnimate = attackerVisible || defenderVisible || (this.processor.PullGlobalWord(0xd806) != 0);
+			}
 
-				if (this.processor.PullLocalWord(0x24) == 0)
+			if (shouldAnimate && this.processor.PullGlobalWord(0xb278) != 1)
+			{
+				int defX = guardianUnit.Place.X;
+				int defY = guardianUnit.Place.Y;
+				int attX = assailantUnit.Place.X;
+				int attY = assailantUnit.Place.Y;
+
+				this.owner.UnitOps.PanMapToPosition(humanPlayer, (sbyte)defX, (sbyte)defY);
+				this.owner.Startup.ConcealMouseCursor();
+
+				if (this.owner.MapOps.RenderMapTile((sbyte)attX, (sbyte)attY) != 0)
 				{
-					victorHoriz += 16 * this.processor.PullLocalSignedWord(0x12);
-					victorVert += 16 * this.processor.PullLocalSignedWord(0x18);
+					bool modernUnitSound = false;
+					if (fight.AssailantVictories)
+					{
+						if (this.owner.World.TroopSpecs[assailantKind].AssaultPower > 4 || this.owner.World.TroopSpecs[assailantKind].GuardPower > 2)
+							modernUnitSound = true;
+					}
+					else
+					{
+						if (this.owner.World.TroopSpecs[guardianKind].AssaultPower > 4 || this.owner.World.TroopSpecs[guardianKind].GuardPower > 2)
+							modernUnitSound = true;
+					}
+
+					short sound;
+					if (assailantKind == 0xf)
+					{
+						sound = 0x2b;
+					}
+					else if (fight.AssailantVictories)
+					{
+						if (participantIdx1 == humanPlayer)
+							sound = modernUnitSound ? (short)0x28 : (short)0x26;
+						else
+							sound = modernUnitSound ? (short)0x29 : (short)0x27;
+					}
+					else
+					{
+						if (participantIdx2 == humanPlayer)
+							sound = modernUnitSound ? (short)0x28 : (short)0x26;
+						else
+							sound = modernUnitSound ? (short)0x29 : (short)0x27;
+					}
+					this.owner.Services.PerformSound((ushort)sound, 0);
+
+					this.owner.MapOps.RenderUnitOnWorldMap(participantIdx2, troopIdx2);
+
+					short followingTroop = assailantUnit.FollowingTroopIdx;
+					if (followingTroop != -1)
+					{
+						this.owner.MapOps.RenderUnitOnWorldMap(participantIdx1, (sbyte)followingTroop);
+					}
+
+					ushort screen0 = this.processor.PullGlobalWord(0xaa);
+					ushort screen1 = this.processor.PullGlobalWord(0x19d4);
+
+					this.owner.VideoCard.RenderImage(screen0, 80, 0, 240, 200, screen1, 80, 0);
+
+					int screenAttX = (this.owner.Routing.TunePosition(attX - this.processor.PullGlobalSignedWord(0xd4cc)) << 4) + 80;
+					int screenAttY = ((attY - this.processor.PullGlobalWord(0xd75e)) << 4) + 8;
+
+					int dirX = Math.Sign(defX - attX);
+					int dirY = Math.Sign(defY - attY);
+
+					if (defX == 0 && attX == 79) dirX = 1;
+					if (defX == 79 && attX == 0) dirX = -1;
+
+					for (int step = 0; step <= 10; step++)
+					{
+						int px = screenAttX + step * dirX;
+						int py = screenAttY + step * dirY;
+
+						ushort spriteOffset = (ushort)(((assailantKind + (participantIdx1 << 5) + 0x40) << 1) + 0xd4ce);
+						ushort sprite = this.processor.PullUInt16(this.processor.SegData.Value16, spriteOffset);
+
+						this.owner.Services.RenderPictureToScreen(screen0, (short)(px + 1), (short)(py + 1), sprite);
+						this.owner.TextPainter.AwaitTime(2);
+						this.owner.VideoCard.RenderImage(screen1, px, py, 16, 16, screen0, px, py);
+					}
+
+					this.owner.MapOps.RepaintMapTile((sbyte)attX, (sbyte)attY);
+					this.owner.MapOps.RepaintMapTile((sbyte)defX, (sbyte)defY);
+					this.owner.VideoCard.RenderImage(screen0, 0, 0, 256, 200, screen1, 0, 0);
+
+					int guardianDisplayX = screenAttX + 16 * dirX;
+					int guardianDisplayY = screenAttY + 16 * dirY;
+					DisplayBattleRounds(screenAttX, screenAttY, guardianDisplayX, guardianDisplayY);
+
+					int explodeX = screenAttX + (fight.AssailantVictories ? 16 : 0) * dirX;
+					int explodeY = screenAttY + (fight.AssailantVictories ? 16 : 0) * dirY;
+
+					for (int step = 0; step < 8; step++)
+					{
+						ushort explosionSprite = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(((step + 0x20) << 1) + 0xd4ce));
+						this.owner.Services.RenderPictureToScreen(screen0, (short)(explodeX + 1), (short)(explodeY + 1), explosionSprite);
+						this.owner.TextPainter.AwaitTime(4);
+						this.owner.VideoCard.RenderImage(screen1, explodeX, explodeY, 16, 16, screen0, explodeX, explodeY);
+					}
+
+					int victorX = screenAttX + (fight.AssailantVictories ? 0 : 16 * dirX);
+					int victorY = screenAttY + (fight.AssailantVictories ? 0 : 16 * dirY);
+					this.owner.VideoCard.RenderImage(screen1, victorX, victorY, 16, 16, screen0, victorX, victorY);
 				}
 
-				this.owner.VideoCard.RenderImage(
-					this.processor.PullGlobalWord(0x19d4),
-					victorHoriz, victorVert, 16, 16,
-					this.processor.PullGlobalWord(0xaa),
-					victorHoriz, victorVert);
+				this.owner.Startup.DisplayMouseCursor();
 			}
 
-		L071c:
-			this.owner.Startup.DisplayMouseCursor();
-
-		L0721:
-			this.processor.RegSource.Value16 = (ushort)participantIdx1;
 			this.owner.World.Participants[participantIdx1].Relations[participantIdx2] |= 0x20;
 			this.owner.World.Participants[participantIdx2].Relations[participantIdx1] |= 0x20;
 
@@ -626,7 +379,6 @@ namespace Civilization1Remaster.Game
 			}
 
 			// Sneak attack / treaty cancellation checks
-			short humanPlayer = this.owner.World.PersonParticipantIdx;
 			if ((participantIdx2 == humanPlayer && (this.owner.World.Participants[participantIdx2].Relations[participantIdx1] & 2) != 0) ||
 				(participantIdx1 != humanPlayer && (this.owner.World.Participants[participantIdx1].Relations[participantIdx2] & 0x200) != 0))
 			{
@@ -668,20 +420,18 @@ namespace Civilization1Remaster.Game
 				this.owner.World.Participants[participantIdx2].Relations[participantIdx1] &= 0xfdff;
 			}
 
-			// Nuclear weapon unit (nuke attack)
+			// Nuclear weapon unit
 			if (assailantKind == 0x19)
 			{
 				ExplodeNuclearWeapon(participantIdx1, (short)guardianHoriz, (short)guardianVert);
 				this.processor.RegAcc.Value16 = 1;
-				goto L0b60;
+				this.processor.Journal.CloseScope("ResolveBattle");
+				return 1;
 			}
 
-			bool attackerVictorious = this.finalFight != null ? this.finalFight.AssailantVictories : (this.processor.PullLocalWord(0x24) != 0);
-
-			if (attackerVictorious)
+			if (fight.AssailantVictories)
 			{
 				// Attacker won:
-				// If defeated barbarian leader (0x1a), capture 100 gold bounty!
 				if (participantIdx2 == 0 && guardianKind == 0x1a)
 				{
 					this.owner.World.Participants[participantIdx1].Gold += 100;
@@ -695,10 +445,8 @@ namespace Civilization1Remaster.Game
 
 				if (townIdx == -1)
 				{
-					// Field battle (outside city): check if tile has fortress (0x20)
 					if ((this.owner.MapOps.ObtainTileImprovements(guardianHoriz, guardianVert) & 0x20) == 0)
 					{
-						// No fortress: stack collapse! All units in stack destroyed
 						this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx2, troopIdx2, 2);
 						int destroyedStackCount = (short)this.processor.RegAcc.Value16;
 						this.owner.World.Participants[participantIdx1].TroopsRuined[participantIdx2] += (short)destroyedStackCount;
@@ -714,17 +462,14 @@ namespace Civilization1Remaster.Game
 					}
 					else
 					{
-						// In fortress: only the defender unit is eliminated
 						this.owner.UnitOps.EliminateUnit(participantIdx2, troopIdx2);
 						this.owner.World.Participants[participantIdx1].TroopsRuined[participantIdx2]++;
 					}
 				}
 				else
 				{
-					// City battle:
-					if (this.owner.World.Participants[participantIdx2].Troops[troopIdx2].FollowingTroopIdx == -1)
+					if (guardianUnit.FollowingTroopIdx == -1)
 					{
-						// Last unit in city defeated! Check if surrounding tiles have defenders
 						for (short d = 8; d >= 0; d--)
 						{
 							short tx = (short)this.owner.Routing.TunePosition(this.owner.TownDeltas[d].X + guardianHoriz);
@@ -748,14 +493,14 @@ namespace Civilization1Remaster.Game
 					this.owner.World.Participants[participantIdx1].TroopsRuined[participantIdx2]++;
 				}
 
-				// Veteran promotion check for attacker (50% chance)
 				if (this.owner.Libc.Dice.DrawInt(2) != 0)
 				{
-					this.owner.World.Participants[participantIdx1].Troops[troopIdx1].Condition |= (short)UnitStatusEnum.Veteran;
+					assailantUnit.Condition |= (short)UnitStatusEnum.Veteran;
 				}
 
 				this.processor.RegAcc.Value16 = 1;
-				goto L0b60;
+				this.processor.Journal.CloseScope("ResolveBattle");
+				return 1;
 			}
 			else
 			{
@@ -763,30 +508,20 @@ namespace Civilization1Remaster.Game
 				this.owner.World.Participants[participantIdx2].TroopsRuined[participantIdx1]++;
 				this.owner.UnitOps.EliminateUnit(participantIdx1, troopIdx1);
 
-				// Veteran promotion check for defender (50% chance)
 				if (this.owner.Libc.Dice.DrawInt(2) != 0)
 				{
-					this.owner.World.Participants[participantIdx2].Troops[troopIdx2].Condition |= (short)UnitStatusEnum.Veteran;
+					guardianUnit.Condition |= (short)UnitStatusEnum.Veteran;
 				}
 
 				this.processor.RegAcc.Value16 = 0;
-				goto L0b60;
+				this.processor.Journal.CloseScope("ResolveBattle");
+				return 0;
 			}
-
-		L0b60:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.RegDest.Value16 = this.processor.UnstackWord();
-			this.processor.LeaveFrame();
-			this.processor.Journal.CloseScope("ResolveBattle");
-			return this.processor.RegAcc.Value16;
 		}
 
 		/// <summary>
-		/// ?
+		/// Adds a unit to a stack headed by anchorTroopIdx.
 		/// </summary>
-		/// <param name="playerID"></param>
-		/// <param name="unitID"></param>
-		/// <param name="param3"></param>
 		public void AttachUnitToStack(short participantIdx, short troopIdx, ushort anchorTroopIdx)
 		{
 			this.processor.Journal.OpenScope($"AttachUnitToStack({participantIdx}, {troopIdx}, {anchorTroopIdx})");
@@ -803,8 +538,6 @@ namespace Civilization1Remaster.Game
 		/// <summary>
 		/// Removes a unit from its stack.
 		/// </summary>
-		/// <param name="participantIdx"></param>
-		/// <param name="troopIdx"></param>
 		public void DiscardUnitFromStack(short participantIdx, short troopIdx)
 		{
 			this.processor.Journal.OpenScope($"DiscardUnitFromStack({participantIdx}, {troopIdx})");
@@ -829,7 +562,7 @@ namespace Civilization1Remaster.Game
 			{
 				this.processor.RegAcc.Value16 = 0;
 				this.processor.Journal.CloseScope("AffirmBreakTreaty");
-				return 0; // No treaty to break
+				return 0;
 			}
 
 			ushort civNamePtr = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((participantIdx << 1) + 0x1992));
@@ -902,7 +635,7 @@ namespace Civilization1Remaster.Game
 						this.owner.Conquest.ObtainCityLabel(townIdx);
 						this.owner.Libc.AppendText(0xba06, ".\n");
 						this.owner.TurnHooks.DisplayDialog(0xba06, 80, 100);
-						unitIdx = -1; // Protected by SDI!
+						unitIdx = -1;
 					}
 				}
 

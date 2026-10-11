@@ -28,157 +28,68 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"CarryOutGoto({participantIdx}, {troopIdx})");
 
-			// function body
-			this.processor.EnterFrame(0x2a);
-			this.processor.PreserveIndexRegisters();
+			int unitOffset = 0x81d4 + participantIdx * 0x600 + troopIdx * 0xc;
+			int unitX = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(unitOffset + 1));  // 0x81d5
+			int unitY = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(unitOffset + 2));  // 0x81d6
+			byte unitType = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(unitOffset + 3)); // 0x81d7
+			int gotoX = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(unitOffset + 6));  // 0x81da
+			int gotoY = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(unitOffset + 7));  // 0x81db
+			byte lastDir = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(unitOffset + 8)); // 0x81dc
 
-			if (participantIdx != this.owner.World.PersonParticipantIdx)
-				goto L00f9;
-
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.AddScaledToSource(0xc, (ushort)troopIdx);
-
-			if (troopIdx < 128)
+			if (participantIdx == this.owner.World.PersonParticipantIdx)
 			{
-				this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81da));
-				this.processor.RegAcc.HighByte = 0;
-				this.processor.RegCount.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5));
-				this.processor.RegCount.HighByte = 0;
-				this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, this.processor.RegCount.Value16);
+				int dx = gotoX - unitX;
+				int dy = gotoY - unitY;
+
+				if (Math.Abs(dx) <= 1 && Math.Abs(dy) <= 1)
+				{
+					if (troopIdx < 128)
+					{
+						this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(unitOffset + 6), 0xff);
+					}
+
+					int stepDir = MovementRules.DirectionTo(0, 0, dx, dy);
+					this.processor.RegAcc.Value16 = (ushort)stepDir;
+					goto L05e0;
+				}
+			}
+
+			ushort unitDomain = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(unitType * 0x22 + 0x1138));
+			if (unitDomain == 1)
+			{
+				this.processor.EmitGlobalWord(0x6590, (ushort)gotoX);
+				this.processor.EmitGlobalWord(0x6592, (ushort)gotoY);
+				goto L0208;
 			}
 			else
 			{
-				this.processor.RegAcc.Value16 = 0;
+				bool fallbackToChart = false;
+				int deltaX = Math.Abs(gotoX - unitX);
+				int deltaY = Math.Abs(gotoY - unitY);
+
+				if (deltaX >= 7 && deltaX <= 73) fallbackToChart = true;
+				else if (deltaY >= 7) fallbackToChart = true;
+
+				if (!fallbackToChart)
+				{
+					this.processor.EmitGlobalWord(0x6590, (ushort)gotoX);
+					this.processor.EmitGlobalWord(0x6592, (ushort)gotoY);
+
+					ShiftToward(participantIdx, troopIdx, 0x3e7);
+					if (this.processor.RegAcc.Value16 != 0xffff)
+					{
+						goto L05e0;
+					}
+				}
+
+				ChartRoute(participantIdx, troopIdx);
+				ShiftToward(participantIdx, troopIdx, 0x3e7);
+				if (this.processor.RegAcc.Value16 != 0xffff)
+				{
+					goto L05e0;
+				}
+				goto L0208;
 			}
-			this.processor.EmitLocalWord(0x1e, this.processor.RegAcc.Value16);
-
-			if (troopIdx < 128)
-			{
-				this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81db));
-				this.processor.RegAcc.HighByte = 0;
-				this.processor.RegCount.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6));
-				this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, this.processor.RegCount.Value16);
-			}
-			else
-			{
-				this.processor.RegAcc.Value16 = 0;
-			}
-			this.processor.EmitLocalWord(0x20, this.processor.RegAcc.Value16);
-			
-			this.owner.Libc.AbsoluteValue((short)this.processor.PullLocalWord(0x1e));
-
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L0064;
-			goto L00f9;
-
-		L0064:
-			this.owner.Libc.AbsoluteValue((short)this.processor.PullLocalWord(0x20));
-
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L0077;
-			goto L00f9;
-
-		L0077:
-			if (troopIdx < 128)
-			{
-				this.processor.ScaleIndexToBase(0xc, (ushort)troopIdx);
-				this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-				this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81da), 0xff);
-			}
-
-			int stepDir = MovementRules.DirectionTo(0, 0, (short)this.processor.PullLocalWord(0x1e), (short)this.processor.PullLocalWord(0x20));
-			this.processor.RegAcc.Value16 = (ushort)stepDir;
-			goto L05e0;
-
-		L00f9:
-			this.processor.RegAcc.Value16 = 0x600;
-			this.processor.ScaleAccumulatorToSource((ushort)participantIdx);
-			this.processor.AddScaledToSource(0xc, (ushort)troopIdx);
-			this.processor.RegAcc.LowByte = 0x22;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d7)));
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1138)), 0x1);
-			if (this.processor.FlagSet.IsNotEqual) goto L012b;
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81da));
-			this.processor.RegAcc.HighByte = 0;
-			this.processor.EmitGlobalWord(0x6590, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81db));
-			this.processor.EmitGlobalWord(0x6592, this.processor.RegAcc.Value16);
-			goto L0208;
-
-		L012b:
-			this.processor.EmitLocalWord(0xe, 0x0);
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.AddScaledToSource(0xc, (ushort)troopIdx);
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81da));
-			this.processor.RegAcc.HighByte = 0;
-			this.processor.RegCount.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5));
-			this.processor.RegCount.HighByte = 0;
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, this.processor.RegCount.Value16);
-			
-			this.owner.Libc.AbsoluteValue((short)this.processor.RegAcc.Value16);
-
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x7);
-			if (this.processor.FlagSet.IsLess) goto L0178;
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81da));
-			this.processor.RegAcc.HighByte = 0;
-			this.processor.RegCount.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5));
-			this.processor.RegCount.HighByte = 0;
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, this.processor.RegCount.Value16);
-			
-			this.owner.Libc.AbsoluteValue((short)this.processor.RegAcc.Value16);
-
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x49);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L01d8;
-
-		L0178:
-			this.processor.RegAcc.Value16 = 0x600;
-			this.processor.ScaleAccumulatorToSource((ushort)participantIdx);
-			this.processor.AddScaledToSource(0xc, (ushort)troopIdx);
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81db));
-			this.processor.RegAcc.HighByte = 0;
-			this.processor.RegCount.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6));
-			this.processor.RegCount.HighByte = 0;
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, this.processor.RegCount.Value16);
-			
-			this.owner.Libc.AbsoluteValue((short)this.processor.RegAcc.Value16);
-
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x7);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L01d8;
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81da));
-			this.processor.RegAcc.HighByte = 0;
-			this.processor.EmitGlobalWord(0x6590, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81db));
-			this.processor.EmitGlobalWord(0x6592, this.processor.RegAcc.Value16);
-
-			ShiftToward(participantIdx, troopIdx, 0x3e7);
-
-			this.processor.EmitLocalWord(0x14, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xffff);
-			if (this.processor.FlagSet.IsEqual) goto L01d3;
-
-		L01cd:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x14);
-			goto L05e0;
-
-		L01d3:
-			this.processor.EmitLocalWord(0xe, 0x1);
-
-		L01d8:
-			ChartRoute(participantIdx, troopIdx);
-
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsNotEqual) goto L01ef;
-			this.processor.CompareWord(this.processor.PullLocalWord(0xe), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L0208;
-
-		L01ef:
-			ShiftToward(participantIdx, troopIdx, 0x3e7);
-
-			this.processor.EmitLocalWord(0x14, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xffff);
-			if (this.processor.FlagSet.IsNotEqual) goto L01cd;
-
 		L0208:
 			this.processor.RegAcc.Value16 = 0x600;
 			this.processor.ScaleAccumulatorToSource((ushort)participantIdx);
@@ -520,8 +431,8 @@ namespace Civilization1Remaster.Game
 			this.processor.RegAcc.LowByte = 0xff;
 			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81dc), this.processor.RegAcc.LowByte);
 			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81da), this.processor.RegAcc.LowByte);
-			this.processor.EmitLocalWord(0x14, 0xffff);
-			goto L01cd;
+			this.processor.RegAcc.Value16 = 0xffff;
+			goto L05e0;
 
 		L05c6:
 			this.processor.RegAcc.Value16 = 0xc;
@@ -529,7 +440,8 @@ namespace Civilization1Remaster.Game
 			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
 			this.processor.RegAcc.LowByte = this.processor.PullLocalByte(0x14);
 			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81dc), this.processor.RegAcc.LowByte);
-			goto L01cd;
+			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x14);
+			goto L05e0;
 
 		L05e0:
 			this.processor.RegSource.Value16 = this.processor.UnstackWord();
