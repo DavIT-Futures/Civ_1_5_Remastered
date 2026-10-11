@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using System.Threading;
 using Civilization1Remaster.Containers;
+using Civilization1Remaster.Video;
 
 namespace Civilization1Remaster
 {

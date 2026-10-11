@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>Civilization1Remaster</RootNamespace>
+    <WarningsAsErrors>nullable</WarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Civilization1Remaster.Foundation\Civilization1Remaster.Foundation.csproj" />
+    <ProjectReference Include="..\Civilization1Remaster.Machine\Civilization1Remaster.Machine.csproj" />
+    <ProjectReference Include="..\Civilization1Remaster.Imaging\Civilization1Remaster.Imaging.csproj" />
+    <ProjectReference Include="..\Civilization1Remaster.Acoustics\Civilization1Remaster.Acoustics.csproj" />
+    <ProjectReference Include="..\Civilization1Remaster.GameModel\Civilization1Remaster.GameModel.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Properties\Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+
+</Project>

@@ -9,3 +9,4 @@ global using Civilization1Remaster.Game.State;
 global using Civilization1Remaster.Acoustics;
 global using Civilization1Remaster.UI;
 global using Civilization1Remaster.Video;
+global using System.Drawing;
