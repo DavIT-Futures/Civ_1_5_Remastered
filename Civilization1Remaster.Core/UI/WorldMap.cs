@@ -740,6 +740,26 @@ namespace Civilization1Remaster.UI
 			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0xc);
 			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
 
+			// Check if wonder effect is obsolete due to discovered technology
+			short wonderId = (short)this.processor.PullLocalWord(0x8);
+			short cancelingTech = this.processor.PullInt16(this.processor.SegData.Value16, (ushort)((wonderId << 1) + 0x10fe));
+			if (cancelingTech >= 0)
+			{
+				bool isObsolete = false;
+				for (short p = 1; p < 8; p++)
+				{
+					if (this.owner.Advisors.PlayerKnowsTechnology(p, cancelingTech) != 0)
+					{
+						isObsolete = true;
+						break;
+					}
+				}
+				if (isObsolete)
+				{
+					this.owner.Libc.AppendText(0xba06, " (Obsolete)");
+				}
+			}
+
 			this.owner.Dialogs.RenderBox(8, this.processor.PullLocalSignedWord(0x6),
 				303, 15,
 				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1946)));
@@ -829,6 +849,126 @@ namespace Civilization1Remaster.UI
 			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("DisplayWondersOfTheWorld");
+		}
+
+		/// <summary>
+		/// Displays which Wonders of the World are obsolete due to discovered technologies.
+		/// </summary>
+		public void DisplayObsoleteWonders()
+		{
+			this.processor.Journal.OpenScope("DisplayObsoleteWonders()");
+
+			this.owner.Startup.ConcealMouseCursor();
+
+			// Save screen background
+			this.owner.VideoCard.RenderImage(
+				this.processor.PullGlobalWord(0xaa),
+				0, 0, 0x140, 0xc8,
+				this.processor.PullGlobalWord(0x19d4),
+				0, 0);
+
+			// Blue background (color 3)
+			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 3);
+
+			// Title
+			this.owner.Libc.CopyText(0xba06, "Obsolete Wonders of the World");
+			this.owner.TextPainter.RenderTextWithShadow(0xba06, 40, 10, 15);
+
+			int yPos = 26;
+			int obsoleteCount = 0;
+
+			for (short wonderIdx = 1; wonderIdx <= 21; wonderIdx++)
+			{
+				short cancelingTech = this.processor.PullInt16(this.processor.SegData.Value16, (ushort)((wonderIdx << 1) + 0x10fe));
+				if (cancelingTech < 0)
+					continue; // Wonder never becomes obsolete
+
+				short discoveringPlayer = 0;
+				for (short p = 1; p < 8; p++)
+				{
+					if (this.owner.Advisors.PlayerKnowsTechnology(p, cancelingTech) != 0)
+					{
+						discoveringPlayer = p;
+						break;
+					}
+				}
+
+				if (discoveringPlayer == 0)
+					continue; // Technology not yet discovered by anyone
+
+				obsoleteCount++;
+
+				if (yPos > 175)
+				{
+					this.owner.Conquest.AwaitForKeyPressOrMouseClick();
+					this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 3);
+					this.owner.Libc.CopyText(0xba06, "Obsolete Wonders of the World (Cont.)");
+					this.owner.TextPainter.RenderTextWithShadow(0xba06, 30, 10, 15);
+					yPos = 26;
+				}
+
+				// Wonder name
+				this.processor.EmitGlobalByte(0xba06, 0x0);
+				if (wonderIdx <= 7)
+				{
+					this.owner.Libc.AppendText(0xba06, "The ");
+				}
+				this.owner.Libc.AppendText(0xba06, (ushort)((wonderIdx * 0x1e) + 0xe6a));
+
+				// Status: built / where or not yet built
+				short townIdx = this.owner.World.MarvelTownIdx[wonderIdx];
+				if (townIdx == -1)
+				{
+					this.owner.Libc.AppendText(0xba06, " (Not yet built)");
+				}
+				else if (townIdx == 128)
+				{
+					this.owner.Libc.AppendText(0xba06, " (Destroyed)");
+				}
+				else if (townIdx >= 0 && townIdx < this.owner.World.Towns.Length)
+				{
+					this.owner.Libc.AppendText(0xba06, " in ");
+					this.owner.Conquest.ObtainCityLabel(townIdx);
+					short ownerParticipant = (short)this.owner.World.Towns[townIdx].ParticipantIdx;
+					this.owner.Libc.AppendText(0xba06, " (");
+					this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((ownerParticipant << 1) + 0x1982)));
+					this.owner.Libc.AppendText(0xba06, ")");
+				}
+
+				this.owner.Libc.AppendText(0xba06, " - Obsolete via ");
+				this.owner.Libc.AppendText(0xba06, (ushort)((cancelingTech * 0x16) + 0x4da));
+
+				// Render line box
+				this.owner.Dialogs.RenderBox(8, (short)yPos, 303, 14, 7);
+
+				// Resource icon for wonder
+				this.owner.CityOps.RenderResourceIcon((short)(wonderIdx + 0x18), 16, (short)(yPos + 2));
+
+				// Render text
+				this.owner.BlockText.ShrinkTextToWidth(0xba06, 270);
+				this.owner.TextPainter.RenderTextToScreen0(0xba06, 38, (short)(yPos + 4), 15);
+
+				yPos += 16;
+			}
+
+			if (obsoleteCount == 0)
+			{
+				this.owner.Libc.CopyText(0xba06, "No Wonders of the World are obsolete at this time.\nAll wonders retain their full effects!");
+				this.owner.Dialogs.RenderBox(24, 70, 272, 40, 7);
+				this.owner.TextPainter.RenderTextToScreen0(0xba06, 32, 80, 15);
+			}
+
+			this.owner.Conquest.AwaitForKeyPressOrMouseClick();
+
+			// Restore screen
+			this.owner.VideoCard.RenderImage(
+				this.processor.PullGlobalWord(0x19d4),
+				0, 0, 0x140, 0xc8,
+				this.processor.PullGlobalWord(0xaa),
+				0, 0);
+
+			this.owner.Startup.DisplayMouseCursor();
+			this.processor.Journal.CloseScope("DisplayObsoleteWonders");
 		}
 
 		/// <summary>

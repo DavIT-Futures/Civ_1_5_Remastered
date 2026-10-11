@@ -53,6 +53,12 @@ namespace Civilization1Remaster.Engine
 			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.PullGlobalWord(0xaa) + 0xa), 0x1);
 		}
 
+		public void RenderTextToScreen0(string text, int horizLoc, int vertLoc, ushort style)
+		{
+			this.owner.Libc.CopyText(0xba06, text);
+			RenderTextToScreen0(0xba06, horizLoc, vertLoc, style);
+		}
+
 		/// <summary>
 		/// Draws a string with shadow at specified coordinates on screen 0
 		/// </summary>
@@ -84,6 +90,12 @@ namespace Civilization1Remaster.Engine
 			RenderText(charsAddr, horizLoc, vertLoc, style);
 
 			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.PullGlobalWord(0xaa) + 0xa), 0x1);
+		}
+
+		public void RenderCenteredTextToScreen0(string text, int horizLoc, int vertLoc, ushort style)
+		{
+			this.owner.Libc.CopyText(0xba06, text);
+			RenderCenteredTextToScreen0(0xba06, horizLoc, vertLoc, style);
 		}
 
 		/// <summary>

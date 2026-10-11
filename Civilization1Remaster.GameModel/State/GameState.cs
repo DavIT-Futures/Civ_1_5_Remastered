@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Drawing;
 
 namespace Civilization1Remaster.Game.State
@@ -140,7 +140,7 @@ namespace Civilization1Remaster.Game.State
 			new UnitDefinition("Caravan", 127, 0, 1, 0, 0, 1, 5, 0, 0, 6, 24)};
 
 		// Map
-		public sbyte[,] ChartSight = new sbyte[80, 50];
+		public ChartSightGrid ChartSight = new ChartSightGrid();
 		public short DirtyCellTally = 0;
 		public short SmogImpactTier = 0;
 		public short WorldHeatingTally = 0;

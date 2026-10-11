@@ -1370,6 +1370,19 @@ namespace Civilization1Remaster.Game
 			// function body
 			this.processor.EnterFrame();
 			this.processor.PreserveIndexRegisters();
+
+			// If the unit has already been eliminated (unitKind == 0xff / -1), exit immediately to prevent re-elimination crashes
+			this.processor.ScaleIndexToBase(0xc, (ushort)troopIdx);
+			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
+			sbyte currentUnitType = (sbyte)this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d7));
+			if (currentUnitType == -1)
+			{
+				this.processor.RestoreIndexRegisters();
+				this.processor.RegFrame.Value16 = this.processor.UnstackWord();
+				this.processor.Journal.CloseScope("EliminateUnit");
+				return;
+			}
+
 			this.processor.CompareWord(this.processor.PullGlobalWord(0x70d8), 0x0);
 			if (this.processor.FlagSet.IsEqual) goto L0f46;
 			this.processor.ScaleIndexToBase(0xc, (ushort)troopIdx);
@@ -1377,7 +1390,10 @@ namespace Civilization1Remaster.Game
 			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d7));
 			this.processor.SignExtendByte(this.processor.RegAcc);
 
-			this.owner.World.Participants[participantIdx].MissingTroops[this.processor.RegAcc.Value16]++;
+			if (this.processor.RegAcc.Value16 >= 0 && this.processor.RegAcc.Value16 < this.owner.World.Participants[participantIdx].MissingTroops.Length)
+			{
+				this.owner.World.Participants[participantIdx].MissingTroops[this.processor.RegAcc.Value16]++;
+			}
 
 		L0f46:
 			this.processor.RegAcc.Value16 = 0x600;
@@ -1428,8 +1444,9 @@ namespace Civilization1Remaster.Game
 			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
 			this.processor.RegDest.Value16 = this.processor.ShiftLeftWord(this.processor.RegDest.Value16, 0x1);
 
-			if (this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d7)) != -1)
-				this.owner.World.Participants[participantIdx].LiveTroops[this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d7))]--;
+			sbyte liveKind = this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d7));
+			if (liveKind >= 0 && liveKind < this.owner.World.Participants[participantIdx].LiveTroops.Length)
+				this.owner.World.Participants[participantIdx].LiveTroops[liveKind]--;
 
 			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d7), 0xff);
 			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d8), 0x0);
@@ -1587,86 +1604,33 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"LocateBestGuardianStep({participantIdx}, {troopIdx})");
 
-			// function body
-			this.processor.EnterFrame(0x6);
-			this.processor.PreserveIndexRegisters();
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.AddScaledToSource(0xc, (ushort)troopIdx);
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d7));
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
+			// Extract unit parameters
+			int unitKind = (sbyte)this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(0x81d7 + participantIdx * 0x600 + troopIdx * 0xc));
+			int horiz = (sbyte)this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(0x81d5 + participantIdx * 0x600 + troopIdx * 0xc));
+			int vert = (sbyte)this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(0x81d6 + participantIdx * 0x600 + troopIdx * 0xc));
+			int terrainType = this.owner.MapOps.ObtainTerrainType(horiz, vert);
 
-			this.owner.MapOps.ObtainTerrainType(
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)),
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6)));
+			int landGroup = (short)this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(0x1138 + unitKind * 0x22));
+			int baseGuardPower = (short)this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(0x1140 + unitKind * 0x22));
+			int terrainDefenseFactor = (sbyte)this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(0x28f + terrainType * 0x13));
 
-			this.processor.EmitLocalWord(0x6, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
-			if (this.processor.FlagSet.IsNotEqual) goto L11b7;
-			this.processor.ScaleIndexToBase(0x22, this.processor.PullLocalWord(0x2));
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1138)), 0x2);
-			if (this.processor.FlagSet.IsEqual) goto L11b7;
-			goto L124b;
+			byte condition = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(0x81d4 + participantIdx * 0x600 + troopIdx * 0xc));
+			bool isFortified = (condition & 0x8) != 0;
+			bool isVeteran = (condition & 0x20) != 0;
 
-		L11b7:
-			this.processor.RegAcc.Value16 = 0x22;
-			this.processor.ScaleAccumulatorToSource(this.processor.PullLocalWord(0x2));
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1138)), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L1202;
-			this.processor.ScaleIndexToBase(0xc, (ushort)troopIdx);
-			this.processor.ScaleIndex(0x600, (ushort)participantIdx);
-			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
-			this.processor.TestBitsByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegDest.Value16 + 0x81d4)), 0x8);
-			if (this.processor.FlagSet.IsEqual) goto L11e2;
-			this.processor.RegAcc.Value16 = 0x3;
-			goto L11e5;
+			int score = CombatRules.ComputeGuardianScore(
+				unitKind, landGroup, baseGuardPower, terrainType, terrainDefenseFactor, isFortified, isVeteran);
 
-		L11e2:
-			this.processor.RegAcc.Value16 = 0x2;
+			if (score >= 0)
+			{
+				int bestScore = (short)this.processor.PullGlobalWord(0x6534);
+				if (score > bestScore)
+				{
+					this.processor.EmitGlobalWord(0x6534, (ushort)score);
+					this.processor.EmitGlobalWord(0x6530, (ushort)troopIdx);
+				}
+			}
 
-		L11e5:
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1140)));
-			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
-			this.processor.ScaleIndexToBase(0x13, this.processor.PullLocalWord(0x6));
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x28f));
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegAcc.Value16 = this.processor.RegCount.Value16;
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegBase.Value16);
-			this.processor.RegCount.LowByte = 0x3;
-			goto L1210;
-
-		L1202:
-			this.processor.RegAcc.Value16 = 0x22;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullLocalWord(0x2));
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1140));
-			this.processor.RegCount.LowByte = 0x4;
-
-		L1210:
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
-			this.processor.ScaleIndexToBase(0xc, (ushort)troopIdx);
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.TestBitsByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d4)), 0x20);
-			if (this.processor.FlagSet.IsEqual) goto L1237;
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x4);
-			this.processor.HalveAccumulator();
-			this.processor.EmitLocalWord(0x4, this.processor.SumWord(this.processor.PullLocalWord(0x4), this.processor.RegAcc.Value16));
-
-		L1237:
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x6534);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L124b;
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x4);
-			this.processor.EmitGlobalWord(0x6534, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = (ushort)troopIdx;
-			this.processor.EmitGlobalWord(0x6530, this.processor.RegAcc.Value16);
-
-		L124b:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.RegDest.Value16 = this.processor.UnstackWord();
-			this.processor.LeaveFrame();
-			// Far return
 			this.processor.Journal.CloseScope("LocateBestGuardianStep");
 		}
 

@@ -1,5 +1,6 @@
 using System;
 using Civilization1Remaster.Emulation;
+using Civilization1Remaster.Game.Rules;
 
 namespace Civilization1Remaster.Game
 {
@@ -27,35 +28,10 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"ObtainCityTileIndex({horizLoc}, {vertLoc})");
 
-			// function body
-			this.processor.EnterFrame(0x2);
+			int index = CitizenSpecialistRules.FindCityTileIndex(horizLoc, vertLoc);
+			this.processor.RegAcc.Value16 = (index >= 0) ? (ushort)index : (ushort)0xffff;
 
-			this.processor.EmitLocalWord(0x2, 0x0);
-			goto L001b;
-
-		L0018:
-			this.processor.EmitLocalWord(0x2, this.processor.IncrementWord(this.processor.PullLocalWord(0x2)));
-
-		L001b:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x14);
-			if (this.processor.FlagSet.IsGreater) goto L003d;
-			
-			if (this.owner.TownDeltas[this.processor.PullLocalWord(0x2)].X != horizLoc ||
-				this.owner.TownDeltas[this.processor.PullLocalWord(0x2)].Y != vertLoc)
-				goto L0018;
-
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x2);
-			goto L0040;
-
-		L003d:
-			this.processor.RegAcc.Value16 = 0xffff;
-
-		L0040:
-			this.processor.RegStack.Value16 = this.processor.RegFrame.Value16;
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-			// Far return
 			this.processor.Journal.CloseScope("ObtainCityTileIndex");
-
 			return this.processor.RegAcc.Value16;
 		}
 
@@ -8961,29 +8937,11 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"AssignCitizenType({arg1}, {arg2})");
 
-			// function body
-			this.processor.EnterFrame();
-			this.processor.PreserveSource();
+			short cityIdx = (short)this.processor.PullGlobalWord(0x653e);
+			ushort currentMarkers = this.owner.World.Towns[cityIdx].LaborerMarkers2;
+			ushort updated = CitizenSpecialistRules.SetSpecialistType(currentMarkers, arg1, (CitizenSpecialistRules.SpecialistType)arg2);
+			this.owner.World.Towns[cityIdx].LaborerMarkers2 = updated;
 
-			this.processor.CompareWord(arg1, 0x8);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L6d9e;
-
-			this.processor.ScaleIndexToSource(0x1c, this.processor.PullGlobalWord(0x653e));
-
-			this.processor.RegAcc.Value16 = 0x3;
-			this.processor.RegCount.LowByte = (byte)(arg1 * 2);
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			this.processor.RegAcc.Value16 = this.processor.InvertWord(this.processor.RegAcc.Value16);
-			this.owner.World.Towns[this.processor.PullGlobalWord(0x653e)].LaborerMarkers2 &= this.processor.RegAcc.Value16;
-			
-			this.processor.RegAcc.Value16 = arg2;
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			this.owner.World.Towns[this.processor.PullGlobalWord(0x653e)].LaborerMarkers2 |= this.processor.RegAcc.Value16;
-
-		L6d9e:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-			// Far return
 			this.processor.Journal.CloseScope("AssignCitizenType");
 		}
 
@@ -8996,26 +8954,12 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"ObtainCitizenType({arg1})");
 
-			// function body
-			this.processor.EnterFrame();
-			this.processor.CompareWord(arg1, 0x8);
-			if (this.processor.FlagSet.IsLess) goto L6daf;
-			this.processor.RegAcc.Value16 = 0x1;
-			goto L6dca;
+			short cityIdx = (short)this.processor.PullGlobalWord(0x653e);
+			ushort markers = this.owner.World.Towns[cityIdx].LaborerMarkers2;
+			var specType = CitizenSpecialistRules.GetSpecialistType(markers, arg1);
+			this.processor.RegAcc.Value16 = (ushort)specType;
 
-		L6daf:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullGlobalWord(0x653e));
-			this.processor.RegAcc.Value16 = this.owner.World.Towns[this.processor.PullGlobalWord(0x653e)].LaborerMarkers2;
-			this.processor.RegCount.LowByte = (byte)(arg1 * 2);
-			this.processor.RegAcc.Value16 = this.processor.ShiftRightSignedWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			this.processor.RegAcc.Value16 = this.processor.BitAndWord(this.processor.RegAcc.Value16, 0x3);
-
-		L6dca:
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-			// Far return
 			this.processor.Journal.CloseScope("ObtainCitizenType");
-
 			return this.processor.RegAcc.Value16;
 		}
 
@@ -9028,27 +8972,12 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"TallySpecialists({arg1})");
 
-			// function body
-			this.processor.EnterFrame(0x4);
-			this.processor.EmitLocalWord(0x2, 0x0);
-			this.processor.EmitLocalWord(0x4, 0x0);
+			short cityIdx = (short)this.processor.PullGlobalWord(0x653e);
+			ushort markers = this.owner.World.Towns[cityIdx].LaborerMarkers2;
+			int tally = CitizenSpecialistRules.CountSpecialists(markers, (CitizenSpecialistRules.SpecialistType)arg1);
+			this.processor.RegAcc.Value16 = (ushort)tally;
 
-		L6ddc:
-			ObtainCitizenType(this.processor.PullLocalWord(0x4));
-
-			this.processor.CompareWord(this.processor.RegAcc.Value16, arg1);
-			if (this.processor.FlagSet.IsNotEqual) goto L6dee;
-			this.processor.IncrementLocalWord(0x2);
-
-		L6dee:
-			this.processor.EmitLocalWord(0x4, this.processor.IncrementWord(this.processor.PullLocalWord(0x4)));
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), 0x8);
-			if (this.processor.FlagSet.IsLess) goto L6ddc;
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x2);
-			this.processor.LeaveFrame();
-			// Far return
 			this.processor.Journal.CloseScope("TallySpecialists");
-
 			return this.processor.RegAcc.Value16;
 		}
 
