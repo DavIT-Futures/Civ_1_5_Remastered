@@ -1,5 +1,6 @@
 using System;
 using Civilization1Remaster.Emulation;
+using Civilization1Remaster.Game.Rules;
 
 namespace Civilization1Remaster.Game
 {
@@ -2544,53 +2545,20 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"ContainsAdjacentForeignUnit({participantIdx}, {horizLoc}, {vertLoc})");
 
-			// function body
-			this.processor.EnterFrame(0x8);
-			this.processor.PreserveSource();
-			this.processor.EmitLocalWord(0x8, 0x1);
-			goto L18e1;
+			// Check the 8 neighboring tiles for any foreign unit (Zone of Control)
+			bool found = MovementRules.HasAdjacentForeignUnit(horizLoc, vertLoc, participantIdx, (x, y) =>
+			{
+				this.owner.MapOps.ObtainTileOwner(x, y);
+				return (int)(short)this.processor.RegAcc.Value16;
+			});
 
-		L18de:
-			this.processor.EmitLocalWord(0x8, this.processor.IncrementWord(this.processor.PullLocalWord(0x8)));
+			ushort result = (ushort)(found ? 1 : 0);
+			this.processor.RegAcc.Value16 = result;
 
-		L18e1:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x8), 0x9);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L192a;
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x8);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-
-			this.owner.Routing.TunePosition(
-				this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1882)) + horizLoc);
-
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x18e4));
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, (ushort)vertLoc);
-			this.processor.EmitLocalWord(0x6, this.processor.RegAcc.Value16);
-
-			this.owner.MapOps.ObtainTileOwner(
-				this.processor.PullLocalSignedWord(0x2),
-				this.processor.PullLocalSignedWord(0x6));
-
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xffff);
-			if (this.processor.FlagSet.IsEqual) goto L18de;
-			
-			if (this.processor.PullLocalSignedWord(0x4) == participantIdx)
-				goto L18de;
-
-			this.processor.RegAcc.Value16 = 0x1;
-			goto L192c;
-
-		L192a:
-			this.processor.RegAcc.Value16 = 0;
-
-		L192c:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("ContainsAdjacentForeignUnit");
 
-			return this.processor.RegAcc.Value16;
+			return result;
 		}
 
 		/// <summary>

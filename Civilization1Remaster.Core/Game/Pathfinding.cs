@@ -1,5 +1,6 @@
 using System;
 using Civilization1Remaster.Emulation;
+using Civilization1Remaster.Game.Rules;
 
 namespace Civilization1Remaster.Game
 {
@@ -78,53 +79,15 @@ namespace Civilization1Remaster.Game
 			goto L00f9;
 
 		L0077:
-			this.owner.Libc.AbsoluteValue((short)this.processor.PullLocalWord(0x1e));
-
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x28);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0094;
-			this.processor.RegAcc.Value16 = (ushort)Math.Sign((short)this.processor.PullLocalWord(0x1e));
-			goto L00a1;
-
-		L0094:
-			this.processor.RegAcc.Value16 = (ushort)Math.Sign((short)this.processor.PullLocalWord(0x1e));
-			this.processor.RegAcc.Value16 = this.processor.NegateWord(this.processor.RegAcc.Value16);
-
-		L00a1:
-			this.processor.EmitLocalWord(0x1e, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = (ushort)Math.Sign((short)this.processor.PullLocalWord(0x20));
-			this.processor.EmitLocalWord(0x20, this.processor.RegAcc.Value16);
-
 			if (troopIdx < 128)
 			{
 				this.processor.ScaleIndexToBase(0xc, (ushort)troopIdx);
-
 				this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-
 				this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81da), 0xff);
 			}
 
-			this.processor.EmitLocalWord(0x18, 0x1);
-			goto L00d1;
-
-		L00ce:
-			this.processor.EmitLocalWord(0x18, this.processor.IncrementWord(this.processor.PullLocalWord(0x18)));
-
-		L00d1:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x18), 0x8);
-			if (this.processor.FlagSet.IsGreater) goto L00f4;
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x18);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x1e);
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1882)), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L00ce;
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x20);
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x18e4)), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L00ce;
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x18);
-			goto L05e0;
-
-		L00f4:
-			this.processor.RegAcc.Value16 = 0;
+			int stepDir = MovementRules.DirectionTo(0, 0, (short)this.processor.PullLocalWord(0x1e), (short)this.processor.PullLocalWord(0x20));
+			this.processor.RegAcc.Value16 = (ushort)stepDir;
 			goto L05e0;
 
 		L00f9:
@@ -1778,21 +1741,9 @@ namespace Civilization1Remaster.Game
 		/// <returns></returns>
 		public int TunePosition(int horizLoc)
 		{
-			int backAmountInt = horizLoc;
-
-			// function body
-			if (horizLoc < 0)
-			{
-				backAmountInt = horizLoc + 80;
-			}
-			else if (horizLoc >= 80)
-			{
-				backAmountInt = horizLoc - 80;
-			}
-
-			this.processor.RegAcc.Value16 = (ushort)((short)backAmountInt);
-
-			return backAmountInt;
+			int wrapped = MovementRules.WrapX(horizLoc);
+			this.processor.RegAcc.Value16 = (ushort)((short)wrapped);
+			return wrapped;
 		}
 	}
 }
