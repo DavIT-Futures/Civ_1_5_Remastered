@@ -246,14 +246,28 @@ public partial class MainWindow : Window, IGameHost
 			{
 				switch (e.Key)
 				{
-					case Key.Down: this.session.VideoCard.Tokens.Enqueue(0x5032); e.Handled = true; break;
-					case Key.Left: this.session.VideoCard.Tokens.Enqueue(0x4b34); e.Handled = true; break;
-					case Key.Right: this.session.VideoCard.Tokens.Enqueue(0x4d36); e.Handled = true; break;
-					case Key.Up: this.session.VideoCard.Tokens.Enqueue(0x4838); e.Handled = true; break;
-					case Key.Home: this.session.VideoCard.Tokens.Enqueue(0x4737); e.Handled = true; break;
-					case Key.End: this.session.VideoCard.Tokens.Enqueue(0x4f31); e.Handled = true; break;
-					case Key.PageUp: this.session.VideoCard.Tokens.Enqueue(0x4939); e.Handled = true; break;
-					case Key.PageDown: this.session.VideoCard.Tokens.Enqueue(0x5133); e.Handled = true; break;
+					case Key.Down:
+					case Key.NumPad2: this.session.VideoCard.Tokens.Enqueue(0x5032); e.Handled = true; break;
+					case Key.Left:
+					case Key.NumPad4: this.session.VideoCard.Tokens.Enqueue(0x4b34); e.Handled = true; break;
+					case Key.Right:
+					case Key.NumPad6: this.session.VideoCard.Tokens.Enqueue(0x4d36); e.Handled = true; break;
+					case Key.Up:
+					case Key.NumPad8: this.session.VideoCard.Tokens.Enqueue(0x4838); e.Handled = true; break;
+					case Key.Home:
+					case Key.NumPad7: this.session.VideoCard.Tokens.Enqueue(0x4737); e.Handled = true; break;
+					case Key.End:
+					case Key.NumPad1: this.session.VideoCard.Tokens.Enqueue(0x4f31); e.Handled = true; break;
+					case Key.PageUp:
+					case Key.NumPad9: this.session.VideoCard.Tokens.Enqueue(0x4939); e.Handled = true; break;
+					case Key.PageDown:
+					case Key.NumPad3: this.session.VideoCard.Tokens.Enqueue(0x5133); e.Handled = true; break;
+					default:
+						if (TryEnqueueAlphanumeric(e.Key, true))
+						{
+							e.Handled = true;
+						}
+						break;
 				}
 			}
 			else
@@ -277,18 +291,74 @@ public partial class MainWindow : Window, IGameHost
 					case Key.F9: this.session.VideoCard.Tokens.Enqueue(0x4300); e.Handled = true; break;
 					case Key.F10: this.session.VideoCard.Tokens.Enqueue(0x4400); e.Handled = true; break;
 					case Key.F11: ToggleFullScreen(); e.Handled = true; break;
-					case Key.Down: this.session.VideoCard.Tokens.Enqueue(0x5000); e.Handled = true; break;
-					case Key.Left: this.session.VideoCard.Tokens.Enqueue(0x4b00); e.Handled = true; break;
-					case Key.Right: this.session.VideoCard.Tokens.Enqueue(0x4d00); e.Handled = true; break;
-					case Key.Up: this.session.VideoCard.Tokens.Enqueue(0x4800); e.Handled = true; break;
-					case Key.Home: this.session.VideoCard.Tokens.Enqueue(0x4700); e.Handled = true; break;
-					case Key.End: this.session.VideoCard.Tokens.Enqueue(0x4f00); e.Handled = true; break;
-					case Key.PageUp: this.session.VideoCard.Tokens.Enqueue(0x4900); e.Handled = true; break;
-					case Key.PageDown: this.session.VideoCard.Tokens.Enqueue(0x5100); e.Handled = true; break;
+					case Key.Down:
+					case Key.NumPad2: this.session.VideoCard.Tokens.Enqueue(0x5000); e.Handled = true; break;
+					case Key.Left:
+					case Key.NumPad4: this.session.VideoCard.Tokens.Enqueue(0x4b00); e.Handled = true; break;
+					case Key.Right:
+					case Key.NumPad6: this.session.VideoCard.Tokens.Enqueue(0x4d00); e.Handled = true; break;
+					case Key.Up:
+					case Key.NumPad8: this.session.VideoCard.Tokens.Enqueue(0x4800); e.Handled = true; break;
+					case Key.Home:
+					case Key.NumPad7: this.session.VideoCard.Tokens.Enqueue(0x4700); e.Handled = true; break;
+					case Key.End:
+					case Key.NumPad1: this.session.VideoCard.Tokens.Enqueue(0x4f00); e.Handled = true; break;
+					case Key.PageUp:
+					case Key.NumPad9: this.session.VideoCard.Tokens.Enqueue(0x4900); e.Handled = true; break;
+					case Key.PageDown:
+					case Key.NumPad3: this.session.VideoCard.Tokens.Enqueue(0x5100); e.Handled = true; break;
+					case Key.NumPad5: this.session.VideoCard.Tokens.Enqueue(0x4c00); e.Handled = true; break;
 					case Key.NumPad0: this.session.VideoCard.Tokens.Enqueue(0x475c); e.Handled = true; break;
+					default:
+						if (TryEnqueueAlphanumeric(e.Key, false))
+						{
+							e.Handled = true;
+						}
+						break;
 				}
 			}
 		}
+	}
+
+	private bool TryEnqueueAlphanumeric(Key key, bool shift)
+	{
+		if (this.session?.VideoCard == null)
+			return false;
+
+		// Letters A-Z
+		if (key >= Key.A && key <= Key.Z)
+		{
+			char c = (char)((shift ? 'A' : 'a') + (key - Key.A));
+			this.session.VideoCard.Tokens.Enqueue(c);
+			return true;
+		}
+
+		// Digits 0-9
+		if (key >= Key.D0 && key <= Key.D9)
+		{
+			string shiftSymbols = ")!@#$%^&*(";
+			char c = shift ? shiftSymbols[key - Key.D0] : (char)('0' + (key - Key.D0));
+			this.session.VideoCard.Tokens.Enqueue(c);
+			return true;
+		}
+
+		// Punctuation and symbols
+		switch (key)
+		{
+			case Key.OemMinus: this.session.VideoCard.Tokens.Enqueue(shift ? '_' : '-'); return true;
+			case Key.OemPlus: this.session.VideoCard.Tokens.Enqueue(shift ? '+' : '='); return true;
+			case Key.OemComma: this.session.VideoCard.Tokens.Enqueue(shift ? '<' : ','); return true;
+			case Key.OemPeriod: this.session.VideoCard.Tokens.Enqueue(shift ? '>' : '.'); return true;
+			case Key.OemQuestion: this.session.VideoCard.Tokens.Enqueue(shift ? '?' : '/'); return true;
+			case Key.OemSemicolon: this.session.VideoCard.Tokens.Enqueue(shift ? ':' : ';'); return true;
+			case Key.OemQuotes: this.session.VideoCard.Tokens.Enqueue(shift ? '"' : '\''); return true;
+			case Key.OemOpenBrackets: this.session.VideoCard.Tokens.Enqueue(shift ? '{' : '['); return true;
+			case Key.OemCloseBrackets: this.session.VideoCard.Tokens.Enqueue(shift ? '}' : ']'); return true;
+			case Key.OemPipe: this.session.VideoCard.Tokens.Enqueue(shift ? '|' : '\\'); return true;
+			case Key.OemTilde: this.session.VideoCard.Tokens.Enqueue(shift ? '~' : '`'); return true;
+		}
+
+		return false;
 	}
 
 	private void OnScreenPointerMoved(object? sender, PointerEventArgs e)
