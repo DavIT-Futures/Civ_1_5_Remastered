@@ -40,6 +40,7 @@ namespace Civilization1Remaster.Game
 
 			if (rebelIdx == -1)
 			{
+				this.owner.Processor.RegAcc.Value16 = 0;
 				this.owner.Processor.Journal.CloseScope("DivideCivilization");
 				return 0;
 			}
@@ -77,6 +78,7 @@ namespace Civilization1Remaster.Game
 
 			if (capitalContinent == -1)
 			{
+				this.owner.Processor.RegAcc.Value16 = 0;
 				this.owner.Processor.Journal.CloseScope("DivideCivilization");
 				return 0;
 			}
@@ -84,9 +86,9 @@ namespace Civilization1Remaster.Game
 			// 3. Initialize the rebel civilization
 			bool isNewCiv = rebelIdx > this.owner.World.BotRivalTally + 1;
 			this.owner.World.LiveRealms &= (short)~(1 << rebelIdx);
-			ushort constructSuccess = this.owner.NewGameWizard.ConstructCivilization(rebelIdx);
+			this.owner.NewGameWizard.ConstructCivilization(rebelIdx);
 
-			if (constructSuccess == 0)
+			if (this.owner.Processor.RegAcc.Value16 == 0)
 			{
 				this.owner.Processor.Journal.CloseScope("DivideCivilization");
 				return 0;
@@ -233,13 +235,13 @@ namespace Civilization1Remaster.Game
 			// 7. Military units in defected cities switch allegiance
 			for (short u = 0; u < 128; u++)
 			{
-				var troop = this.owner.World.Participants[participantIdx].Troops[u];
-				if (troop.KindIdx == 0xff || troop.KindIdx == -1)
+				ushort unitBase = (ushort)((participantIdx * 0x600) + (u * 0xc));
+				byte unitType = this.owner.Processor.PullUInt8(seg, (ushort)(unitBase + 0x81d7));
+				if (unitType == 0xff)
 					continue;
 
-				sbyte unitX = (sbyte)troop.Place.X;
-				sbyte unitY = (sbyte)troop.Place.Y;
-				byte unitType = (byte)troop.KindIdx;
+				sbyte unitX = (sbyte)this.owner.Processor.PullInt8(seg, (ushort)(unitBase + 0x81d5));
+				sbyte unitY = (sbyte)this.owner.Processor.PullInt8(seg, (ushort)(unitBase + 0x81d6));
 
 				// Check if unit is standing in a defected city
 				for (short t = 0; t < 128; t++)
@@ -282,6 +284,7 @@ namespace Civilization1Remaster.Game
 				this.owner.World.Towns[capitalTownIdx].ParticipantIdx = participantIdx;
 			}
 
+			this.owner.Processor.RegAcc.Value16 = 1;
 			this.owner.Processor.Journal.CloseScope("DivideCivilization");
 			return 1;
 		}
@@ -315,8 +318,10 @@ namespace Civilization1Remaster.Game
 				participantIdx,
 				(x1, x2, y1, y2) => this.owner.Helpers.ObtainDistance(x1, x2, y1, y2));
 
+			this.owner.Processor.RegAcc.Value16 = (ushort)(bestCity >= 0 ? bestCity : 0xffff);
+
 			this.owner.Processor.Journal.CloseScope("ObtainDistanceToCapital");
-			return (ushort)(bestCity >= 0 ? bestCity : 0xffff);
+			return this.owner.Processor.RegAcc.Value16;
 		}
 	}
 }

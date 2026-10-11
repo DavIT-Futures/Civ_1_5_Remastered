@@ -79,7 +79,8 @@ namespace Civilization1Remaster.Game
 			bool isBarbarian = (participantIdx == 0);
 			if (isBarbarian)
 			{
-				short attackerUnitIdx = (short)this.owner.MapOps.ObtainUnitAtTile(cityX, cityY);
+				this.owner.MapOps.ObtainUnitAtTile(cityX, cityY);
+				short attackerUnitIdx = (short)this.processor.RegAcc.Value16;
 				if (attackerUnitIdx >= 0 && attackerUnitIdx < this.owner.World.Participants[0].Troops.Length)
 				{
 					int unitKind = this.owner.World.Participants[0].Troops[attackerUnitIdx].KindIdx;
@@ -243,8 +244,8 @@ namespace Civilization1Remaster.Game
 				else
 				{
 					town.PresentMakingIdx = 0;
-					ushort pick = this.owner.Advisors.PickCityProduction(participantIdx, townIdx);
-					town.PresentMakingIdx = (sbyte)(byte)pick;
+					this.owner.Advisors.PickCityProduction(participantIdx, townIdx);
+					town.PresentMakingIdx = (sbyte)this.processor.RegAcc.LowByte;
 					if (town.PresentMakingIdx >= 0)
 					{
 						this.owner.World.Participants[participantIdx].TroopsInsideMaking[town.PresentMakingIdx]++;
@@ -309,9 +310,10 @@ namespace Civilization1Remaster.Game
 			int grandTownExtent = this.owner.World.Participants[participantIdx].GrandTownExtent;
 
 			int plunder = TradeRules.ComputeCityPlunder(victimGold, citySize, grandTownExtent);
+			this.processor.RegAcc.Value16 = (ushort)plunder;
 
 			this.processor.Journal.CloseScope("ComputeCityPlunder");
-			return (ushort)plunder;
+			return this.processor.RegAcc.Value16;
 		}
 
 		/// <summary>
@@ -448,31 +450,33 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope("AwaitForKeyPressOrMouseClick()");
 
+			// function body
 			this.owner.TurnLogic.AwaitForKey();
 
-			while (true)
-			{
-				this.owner.Startup.ObtainMouseState();
-				if (this.owner.GlobDb3a != 0)
-				{
-					break;
-				}
+		L091d:
+			this.owner.Startup.ObtainMouseState();
 
-				this.owner.Libc.KeyAvailable();
-				if (this.processor.RegAcc.Value16 != 0)
-				{
-					if (this.owner.GlobDb3a == 0)
-					{
-						this.owner.Libc.ReadKey();
-						if (this.processor.RegAcc.Value16 == 0)
-						{
-							this.owner.Libc.ReadKey();
-						}
-					}
-					break;
-				}
-			}
+			this.processor.CompareWord(this.owner.GlobDb3a, 0x0);
+			if (this.processor.FlagSet.IsNotEqual) goto L0932;
 
+			this.owner.Libc.KeyAvailable();
+
+			this.processor.TestAccumulator();
+			if (this.processor.FlagSet.IsEqual) goto L091d;
+
+		L0932:
+			this.processor.CompareWord(this.owner.GlobDb3a, 0x0);
+			if (this.processor.FlagSet.IsNotEqual) goto L0947;
+
+			this.owner.Libc.ReadKey();
+
+			this.processor.TestAccumulator();
+			if (this.processor.FlagSet.IsNotEqual) goto L0947;
+
+			this.owner.Libc.ReadKey();
+
+		L0947:
+			// Far return
 			this.processor.Journal.CloseScope("AwaitForKeyPressOrMouseClick");
 		}
 
@@ -495,13 +499,15 @@ namespace Civilization1Remaster.Game
 				this.owner.World.Towns[sourceTownIdx].Place.X,
 				this.owner.World.Towns[sourceTownIdx].Place.Y);
 
-			int sourceContinent = this.owner.MapOps.ObtainContinentID(
+			this.owner.MapOps.ObtainContinentID(
 				this.owner.World.Towns[sourceTownIdx].Place.X,
 				this.owner.World.Towns[sourceTownIdx].Place.Y);
+			int sourceContinent = this.processor.RegAcc.Value16;
 
-			int destContinent = this.owner.MapOps.ObtainContinentID(
+			this.owner.MapOps.ObtainContinentID(
 				this.owner.World.Towns[townIdx].Place.X,
 				this.owner.World.Towns[townIdx].Place.Y);
+			int destContinent = this.processor.RegAcc.Value16;
 
 			int sourceCommerce = this.owner.World.Towns[sourceTownIdx].RootCommerce;
 			int destCommerce = this.owner.World.Towns[townIdx].RootCommerce;
