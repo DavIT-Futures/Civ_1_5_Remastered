@@ -369,3 +369,7 @@ TestResults/
 
 # IDE files (the project is developed in Visual Studio)
 .idea/
+
+# User settings
+settings.json
+

@@ -24,6 +24,7 @@ public partial class MainWindow : Window, IGameHost
 	private readonly int[] rgbBuffer = new int[GameWidth * GameHeight];
 	private readonly int[] colors = new int[256];
 	private DispatcherTimer? renderTimer;
+	private int currentScale = 4;
 
 	private System.Drawing.Point pointerSite = System.Drawing.Point.Empty;
 	private PointerButtons pointerClicks = PointerButtons.None;
@@ -35,6 +36,18 @@ public partial class MainWindow : Window, IGameHost
 	public MainWindow()
 	{
 		InitializeComponent();
+
+		var settings = AppSettings.Load();
+		this.currentScale = settings.Scale > 0 ? settings.Scale : 4;
+		if (settings.FullScreen)
+		{
+			this.WindowState = WindowState.FullScreen;
+		}
+		else
+		{
+			this.Width = GameWidth * this.currentScale;
+			this.Height = (GameHeight * this.currentScale) + 30;
+		}
 
 		this.writeableBitmap = new WriteableBitmap(
 			new PixelSize(GameWidth, GameHeight),
@@ -169,28 +182,54 @@ public partial class MainWindow : Window, IGameHost
 	{
 		if (sender is MenuItem item && item.Tag != null && int.TryParse(item.Tag.ToString(), out int scale))
 		{
-			if (scale == 0)
-			{
-				ToggleFullScreen();
-			}
-			else
-			{
-				if (this.WindowState == WindowState.FullScreen)
-				{
-					this.WindowState = WindowState.Normal;
-				}
+			ApplyScale(scale, save: true);
+		}
+	}
 
-				this.Width = GameWidth * scale;
-				this.Height = (GameHeight * scale) + 30; // + menu height
+	private void ApplyScale(int scale, bool save = true)
+	{
+		if (scale == 0)
+		{
+			this.WindowState = WindowState.FullScreen;
+		}
+		else
+		{
+			if (this.WindowState == WindowState.FullScreen)
+			{
+				this.WindowState = WindowState.Normal;
 			}
+
+			this.currentScale = scale;
+			this.Width = GameWidth * scale;
+			this.Height = (GameHeight * scale) + 30; // + menu height
+		}
+
+		if (save)
+		{
+			SaveCurrentSettings();
 		}
 	}
 
 	private void ToggleFullScreen()
 	{
-		this.WindowState = this.WindowState == WindowState.FullScreen
-			? WindowState.Normal
-			: WindowState.FullScreen;
+		if (this.WindowState == WindowState.FullScreen)
+		{
+			ApplyScale(this.currentScale > 0 ? this.currentScale : 4, save: true);
+		}
+		else
+		{
+			ApplyScale(0, save: true);
+		}
+	}
+
+	private void SaveCurrentSettings()
+	{
+		var settings = new AppSettings
+		{
+			Scale = this.currentScale > 0 ? this.currentScale : 4,
+			FullScreen = this.WindowState == WindowState.FullScreen
+		};
+		settings.Save();
 	}
 
 	private void OnWindowTextInput(object? sender, TextInputEventArgs e)
@@ -402,6 +441,7 @@ public partial class MainWindow : Window, IGameHost
 		}
 
 		this.shutting = true;
+		SaveCurrentSettings();
 		this.renderTimer?.Stop();
 		if (this.session?.Processor != null)
 		{
