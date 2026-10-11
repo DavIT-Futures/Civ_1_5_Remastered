@@ -18,20 +18,81 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// Fortified units heal one lost hit point every turn
+		/// Fortified units and units in cities heal lost hit points every turn.
+		/// - Units in friendly cities heal 2 HP per turn (2x faster).
+		/// - Land units outside cities heal 1 HP per turn if fortified.
+		/// - Ships outside cities heal 1 HP per turn ONLY if fortified, adjacent to coast, and within distance &lt;= 3 from a friendly city.
 		/// </summary>
 		public void MendFortifiedUnits()
 		{
+			// Collect friendly city locations for each participant
+			var friendlyCitiesByPlayer = new System.Collections.Generic.List<System.Drawing.Point>[UnitHealth.ParticipantTally];
+			for (int p = 0; p < UnitHealth.ParticipantTally; p++)
+			{
+				friendlyCitiesByPlayer[p] = new System.Collections.Generic.List<System.Drawing.Point>();
+			}
+
+			for (int c = 0; c < this.owner.World.Towns.Length; c++)
+			{
+				var town = this.owner.World.Towns[c];
+				if (town != null && town.ConditionMarker != 0xff && town.ParticipantIdx >= 0 && town.ParticipantIdx < UnitHealth.ParticipantTally)
+				{
+					friendlyCitiesByPlayer[town.ParticipantIdx].Add(town.Place);
+				}
+			}
+
 			for (int participantIdx = 0; participantIdx < UnitHealth.ParticipantTally; participantIdx++)
 			{
+				var friendlyCities = friendlyCitiesByPlayer[participantIdx];
+
 				for (int troopIdx = 0; troopIdx < UnitHealth.TroopTally; troopIdx++)
 				{
 					ushort troop = (ushort)(0x81d4 + 0x600 * participantIdx + 0xc * troopIdx);
 					int troopKind = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(troop + 3));
 
-					if (troopKind != 0xff && (this.processor.PullUInt8(this.processor.SegData.Value16, troop) & (int)UnitStatusEnum.Fortified) != 0)
+					if (troopKind == 0xff || troopKind < 0 || troopKind >= this.owner.World.TroopSpecs.Length)
+						continue;
+
+					int ux = (sbyte)this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(troop + 1));
+					int uy = (sbyte)this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(troop + 2));
+					byte condition = this.processor.PullUInt8(this.processor.SegData.Value16, troop);
+					bool isFortified = (condition & (int)UnitStatusEnum.Fortified) != 0;
+
+					// Check if unit is in a friendly city
+					bool inFriendlyCity = false;
+					for (int c = 0; c < friendlyCities.Count; c++)
 					{
-						this.owner.World.Vitals.MendOne(participantIdx, troopIdx, troopKind);
+						if (friendlyCities[c].X == ux && friendlyCities[c].Y == uy)
+						{
+							inFriendlyCity = true;
+							break;
+						}
+					}
+
+					short landGroup = this.owner.World.TroopSpecs[troopKind].LandGroup;
+
+					bool isAdjacentToCoast = false;
+					int distToCity = int.MaxValue;
+					if (landGroup == 2 && !inFriendlyCity)
+					{
+						distToCity = HealingRules.ComputeDistanceToNearestFriendlyCity(ux, uy, friendlyCities);
+						if (distToCity <= HealingRules.MaxShipCoastDistanceToCity)
+						{
+							isAdjacentToCoast = HealingRules.IsAdjacentToLand(ux, uy, (nx, ny) =>
+								this.owner.MapOps.ObtainTerrainType(nx, ny) == HealingRules.OceanTerrainType);
+						}
+					}
+
+					int healAmount = HealingRules.CalculateHealAmount(
+						landGroup,
+						inFriendlyCity,
+						isFortified,
+						isAdjacentToCoast,
+						distToCity);
+
+					if (healAmount > 0)
+					{
+						this.owner.World.Vitals.MendAmount(participantIdx, troopIdx, troopKind, healAmount);
 					}
 				}
 			}

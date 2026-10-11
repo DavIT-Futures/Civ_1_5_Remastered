@@ -115,6 +115,24 @@ namespace Civilization1Remaster.Game.Rules
 			return true;
 		}
 
+		/// <summary>
+		/// Heals up to <paramref name="amount"/> hit points. Returns the number of hit points actually healed.
+		/// </summary>
+		public int MendAmount(int participantIdx, int troopIdx, int troopKind, int amount)
+		{
+			if (amount <= 0 || !IsEquivalentTo(participantIdx, troopIdx, troopKind) || this.missingStrikeMarks[participantIdx, troopIdx] == 0)
+				return 0;
+
+			int healed = 0;
+			for (int i = 0; i < amount && this.missingStrikeMarks[participantIdx, troopIdx] > 0; i++)
+			{
+				this.missingStrikeMarks[participantIdx, troopIdx]--;
+				healed++;
+			}
+
+			return healed;
+		}
+
 		public void Store(Stream flow)
 		{
 			flow.Write(DocumentSignature, 0, DocumentSignature.Length);
