@@ -5684,35 +5684,65 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"RepaintTileIfVisible({horizLoc}, {vertLoc})");
 
-			short human = this.owner.World.PersonParticipantIdx;
-			bool isVisibleToHuman = (this.owner.World.ChartSight[horizLoc, vertLoc] & (1 << human)) != 0;
-			bool revealMap = this.processor.PullGlobalWord(0xd806) != 0;
+			// function body
+			this.processor.EnterFrame();
+			this.processor.RegAcc.LowByte = (byte)this.owner.World.ChartSight[horizLoc, vertLoc];
+			this.processor.SignExtendByte(this.processor.RegAcc);
+			this.processor.RegData.Value16 = 0x1;
+			this.processor.RegCount.LowByte = (byte)(this.owner.World.PersonParticipantIdx & 0xff);
+			this.processor.RegData.Value16 = this.processor.ShiftLeftWord(this.processor.RegData.Value16, this.processor.RegCount.LowByte);
+			this.processor.TestBitsWord(this.processor.RegAcc.Value16, this.processor.RegData.Value16);
+			if (this.processor.FlagSet.IsNotEqual) goto L3f03;
+			this.processor.CompareWord(this.processor.PullGlobalWord(0xd806), 0x0);
+			if (this.processor.FlagSet.IsEqual) goto L3f11;
 
-			if (isVisibleToHuman || revealMap)
-			{
-				this.owner.MapOps.RepaintMapTile(horizLoc, vertLoc);
-			}
+		L3f03:
+			this.owner.MapOps.RepaintMapTile(horizLoc, vertLoc);
 
+		L3f11:
+			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
+			// Far return
 			this.processor.Journal.CloseScope("RepaintTileIfVisible");
 		}
 
 		/// <summary>
-		/// Repaints unit's map tile if visible to human player or owned by human player.
+		/// ?
 		/// </summary>
-		/// <param name="participantIdx"></param>
-		/// <param name="troopIdx"></param>
+		/// <param name="playerID"></param>
+		/// <param name="unitID"></param>
 		public void RepaintUnitIfVisible(short participantIdx, short troopIdx)
 		{
 			this.processor.Journal.OpenScope($"RepaintUnitIfVisible({participantIdx}, {troopIdx})");
 
-			short human = this.owner.World.PersonParticipantIdx;
-			var troop = this.owner.World.Participants[participantIdx].Troops[troopIdx];
+			// function body
+			this.processor.EnterFrame();
+			this.processor.PreserveSource();
 
-			if (participantIdx == human || (troop.ShownViaParticipant & (1 << human)) != 0)
-			{
-				this.owner.MapOps.RepaintMapTile(troop.Place.X, troop.Place.Y);
-			}
+			if (participantIdx == this.owner.World.PersonParticipantIdx) goto L3f41;
 
+			this.processor.ScaleIndexToBase(0xc, (ushort)troopIdx);
+			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
+			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81dd));
+			this.processor.SignExtendByte(this.processor.RegAcc);
+			this.processor.RegData.Value16 = 0x1;
+			this.processor.RegCount.LowByte = (byte)(this.owner.World.PersonParticipantIdx & 0xff);
+			this.processor.RegData.Value16 = this.processor.ShiftLeftWord(this.processor.RegData.Value16, this.processor.RegCount.LowByte);
+			this.processor.TestBitsWord(this.processor.RegAcc.Value16, this.processor.RegData.Value16);
+			if (this.processor.FlagSet.IsEqual) goto L3f65;
+
+		L3f41:
+			this.processor.RegAcc.Value16 = 0x600;
+			this.processor.ScaleAccumulatorToSource((ushort)participantIdx);
+			this.processor.AddScaledToSource(0xc, (ushort)troopIdx);
+
+			this.owner.MapOps.RepaintMapTile(
+				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)),
+				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6)));
+
+		L3f65:
+			this.processor.RegSource.Value16 = this.processor.UnstackWord();
+			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
+			// Far return
 			this.processor.Journal.CloseScope("RepaintUnitIfVisible");
 		}
 
@@ -5725,78 +5755,125 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"ObtainTileMoveCost({horizLoc}, {vertLoc})");
 
-			ushort improvements = this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc);
-			if ((improvements & 0x7) != 0)
-			{
-				this.processor.Journal.CloseScope("ObtainTileMoveCost");
-				return 0;
-			}
+			// function body
+			this.processor.EnterFrame(0xc);
 
-			ushort terrain = this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
-			ushort defenseFactor = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(terrain * 0xc + 0x44e));
-			if (defenseFactor > 0xfffd)
-			{
-				this.processor.Journal.CloseScope("ObtainTileMoveCost");
-				return 2;
-			}
+			this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc);
 
-			ushort attackFactor = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(terrain * 0xc + 0x44a));
-			if (attackFactor != 0xfffe)
-			{
-				this.processor.Journal.CloseScope("ObtainTileMoveCost");
-				return 0;
-			}
+			this.processor.TestBitsByte(this.processor.RegAcc.LowByte, 0x7);
+			if (this.processor.FlagSet.IsEqual) goto L3f84;
 
-			ushort isCoastal = VerifyCoastalTile(horizLoc, vertLoc);
-			ushort cost = (ushort)(isCoastal != 0 ? 1 : 0);
+		L3f80:
+			this.processor.RegAcc.Value16 = 0;
+			goto L3fcc;
 
+		L3f84:
+			this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
+
+			this.processor.EmitLocalWord(0xc, this.processor.RegAcc.Value16);
+			this.processor.ScaleIndexToBase(0xc, this.processor.PullLocalWord(0xc));
+			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x44e)), 0xfffd);
+			if (this.processor.FlagSet.IsGreater) goto L3fa9;
+			this.processor.RegAcc.Value16 = 0x2;
+			goto L3fcc;
+
+		L3fa9:
+			this.processor.RegAcc.Value16 = 0xc;
+			this.processor.ScaleAccumulatorToBase(this.processor.PullLocalWord(0xc));
+			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x44a)), 0xfffe);
+			if (this.processor.FlagSet.IsNotEqual) goto L3f80;
+
+			VerifyCoastalTile(horizLoc, vertLoc);
+
+			this.processor.TestAccumulator();
+			if (this.processor.FlagSet.IsEqual) goto L3f80;
+			this.processor.RegAcc.Value16 = 0x1;
+
+		L3fcc:
+			this.processor.RegStack.Value16 = this.processor.RegFrame.Value16;
+			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
+			// Far return
 			this.processor.Journal.CloseScope("ObtainTileMoveCost");
-			return cost;
+
+			return this.processor.RegAcc.Value16;
 		}
 
 		/// <summary>
-		/// Determines whether the specified map tile is coastal (adjacent to ocean / water).
+		/// ?
 		/// </summary>
-		/// <param name="horizLoc"></param>
-		/// <param name="vertLoc"></param>
-		/// <returns>1 if coastal, 0 otherwise.</returns>
+		/// <param name="xPos"></param>
+		/// <param name="yPos"></param>
+		/// <returns></returns>
 		public ushort VerifyCoastalTile(int horizLoc, int vertLoc)
 		{
 			this.processor.Journal.OpenScope($"VerifyCoastalTile({horizLoc}, {vertLoc})");
 
-			ushort centerTerrain = this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
-			if (centerTerrain == 0xb) // River / coastal terrain marker
-			{
-				this.processor.Journal.CloseScope("VerifyCoastalTile");
-				return 1;
-			}
+			// function body
+			this.processor.EnterFrame(0xc);
+			this.processor.PreserveSource();
 
-			for (int dir = 1; dir <= 8; dir += 2)
-			{
-				int nx = horizLoc + (short)this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((dir << 1) + 0x1882));
-				int ny = vertLoc + (short)this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((dir << 1) + 0x18e4));
+			this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
 
-				ushort adjTerrain = this.owner.MapOps.ObtainTerrainType(nx, ny);
-				ushort adjImprovements = this.owner.MapOps.ObtainTileImprovements(nx, ny);
+			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xb);
+			if (this.processor.FlagSet.IsNotEqual) goto L3fef;
 
-				if ((adjImprovements & 1) != 0)
-					continue;
+		L3fea:
+			this.processor.RegAcc.Value16 = 0x1;
+			goto L405b;
 
-				if (adjTerrain == 0xb || adjTerrain == 0xa)
-				{
-					this.processor.Journal.CloseScope("VerifyCoastalTile");
-					return 1;
-				}
+		L3fef:
+			this.processor.EmitLocalWord(0xa, 0x0);
+			this.processor.EmitLocalWord(0x8, 0x1);
+			goto L4005;
 
-				if ((adjImprovements & 2) != 0)
-				{
-					this.processor.Journal.CloseScope("VerifyCoastalTile");
-					return 1;
-				}
-			}
+		L3ffb:
+			this.processor.TestBitsByte(this.processor.PullLocalByte(0xc), 0x2);
+			if (this.processor.FlagSet.IsNotEqual) goto L3fea;
 
+		L4001:
+			this.processor.EmitLocalWord(0x8, this.processor.SumWord(this.processor.PullLocalWord(0x8), 0x2));
+
+		L4005:
+			this.processor.CompareWord(this.processor.PullLocalWord(0x8), 0x8);
+			if (this.processor.FlagSet.IsGreater) goto L4058;
+			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x8);
+			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
+			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1882));
+			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, (ushort)horizLoc);
+			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
+			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x18e4));
+			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, (ushort)vertLoc);
+			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
+
+			this.owner.MapOps.ObtainTerrainType(
+				this.processor.PullLocalSignedWord(0x2),
+				this.processor.PullLocalSignedWord(0x4));
+
+			this.processor.EmitLocalWord(0x6, this.processor.RegAcc.Value16);
+
+			this.owner.MapOps.ObtainTileImprovements(
+				this.processor.PullLocalSignedWord(0x2),
+				this.processor.PullLocalSignedWord(0x4));
+
+			this.processor.EmitLocalWord(0xc, this.processor.RegAcc.Value16);
+			this.processor.TestBitsByte(this.processor.PullLocalByte(0xc), 0x1);
+			if (this.processor.FlagSet.IsNotEqual) goto L4001;
+			this.processor.CompareWord(this.processor.PullLocalWord(0x6), 0xb);
+			if (this.processor.FlagSet.IsEqual) goto L3fea;
+			this.processor.CompareWord(this.processor.PullLocalWord(0x6), 0xa);
+			if (this.processor.FlagSet.IsNotEqual) goto L3ffb;
+			goto L3fea;
+
+		L4058:
+			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xa);
+
+		L405b:
+			this.processor.RegSource.Value16 = this.processor.UnstackWord();
+			this.processor.LeaveFrame();
+			// Far return
 			this.processor.Journal.CloseScope("VerifyCoastalTile");
-			return 0;
+
+			return this.processor.RegAcc.Value16;
 		}
 
 		/// <summary>
@@ -6110,106 +6187,140 @@ namespace Civilization1Remaster.Game
 		{
 			this.owner.Journal.OpenScope($"VerifyPositionOnScreen({horizLoc}, {vertLoc})");
 
-			short scrollX = this.processor.PullGlobalSignedWord(0xd4cc);
-			short scrollY = this.processor.PullGlobalSignedWord(0xd75e);
-
-			if (horizLoc < 16 && scrollX >= 65)
+			// function body
+			if (horizLoc < 16 && this.processor.PullGlobalSignedWord(0xd4cc) >= 65)
 			{
 				horizLoc += 80;
 			}
 
-			ushort result = 1;
-			if (horizLoc < scrollX || horizLoc >= scrollX + 15 ||
-				vertLoc < scrollY || vertLoc >= scrollY + 12)
+			if (horizLoc < this.processor.PullGlobalSignedWord(0xd4cc) ||
+				horizLoc >= this.processor.PullGlobalSignedWord(0xd4cc) + 15 ||
+				vertLoc < this.processor.PullGlobalSignedWord(0xd75e) ||
+				vertLoc >= this.processor.PullGlobalSignedWord(0xd75e) + 12)
 			{
-				result = 0;
+				this.processor.RegAcc.Value16 = 0;
+			}
+			else
+			{
+				this.processor.RegAcc.Value16 = 1;
 			}
 
 			this.owner.Journal.CloseScope("VerifyPositionOnScreen");
-			return result;
+
+			return this.processor.RegAcc.Value16;
 		}
 
 		/// <summary>
-		/// Waits for keypress or mouse event while discarding navigation inputs.
+		/// ?
 		/// </summary>
 		public void AwaitForKey()
 		{
 			this.processor.Journal.OpenScope("AwaitForKey()");
 
-			while (true)
-			{
-				this.owner.Libc.KeyAvailable();
-				if (this.processor.RegAcc.Value16 != 0)
-				{
-					this.owner.Dialogs.ObtainNavigationKey();
-				}
-				else
-				{
-					break;
-				}
-			}
+			// function body
+			goto L454c;
 
-			while (this.owner.GlobDb3a != 0)
-			{
-				this.owner.Startup.ObtainMouseState();
-			}
+		L4547:
+			this.owner.Dialogs.ObtainNavigationKey();
 
+		L454c:
+			this.owner.Libc.KeyAvailable();
+
+			this.processor.TestAccumulator();
+			if (this.processor.FlagSet.IsNotEqual) goto L4547;
+
+		L4555:
+			this.owner.Startup.ObtainMouseState();
+
+			this.processor.CompareWord(this.owner.GlobDb3a, 0x0);
+			if (this.processor.FlagSet.IsNotEqual) goto L4555;
+
+			// Far return
 			this.processor.Journal.CloseScope("AwaitForKey");
 		}
 
 		/// <summary>
-		/// Selects the best defending unit in a stack or tile.
+		/// ?
 		/// </summary>
-		/// <param name="participantIdx"></param>
-		/// <param name="initialTroopIdx"></param>
-		/// <returns>Unit index of best guardian.</returns>
-		public ushort LocateBestGuardian(short participantIdx, ushort initialTroopIdx)
+		/// <param name="playerID"></param>
+		/// <param name="param2"></param>
+		/// <returns></returns>
+		public ushort LocateBestGuardian(short participantIdx, ushort arg2)
 		{
 			this.processor.Journal.OpenScope("LocateBestGuardian()");
 
-			var troops = this.owner.World.Participants[participantIdx].Troops;
-			short nextInStack = (short)troops[initialTroopIdx].FollowingTroopIdx;
-			if (nextInStack == -1)
-			{
-				this.processor.Journal.CloseScope("LocateBestGuardian");
-				return initialTroopIdx;
-			}
+			// function body
+			this.processor.EnterFrame(0xa);
+			this.processor.PreserveSource();
+			this.processor.ScaleIndexToBase(0xc, arg2);
+			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
+			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81de));
+			this.processor.SignExtendByte(this.processor.RegAcc);
+			this.processor.EmitLocalWord(0x6, this.processor.RegAcc.Value16);
+			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xffff);
+			if (this.processor.FlagSet.IsNotEqual) goto L458c;
+			this.processor.RegAcc.Value16 = arg2;
+			goto L4617;
 
-			short bestTroop = (short)initialTroopIdx;
-			int minDiff = 999;
-			short currentTroop = nextInStack;
+		L458c:
+			this.processor.EmitLocalWord(0xa, 0x0);
+			this.processor.RegAcc.Value16 = arg2;
+			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
+			this.processor.EmitLocalWord(0x8, 0x3e7);
 
-			for (int iter = 0; iter < 16; iter++)
-			{
-				int unitType = troops[currentTroop].KindIdx;
-				if (unitType >= 0 && unitType < this.owner.World.TroopSpecs.Length)
-				{
-					// If not air unit (landGroup == 2 is air in Civ1 specs: 0 ground, 1 sea, 2 air)
-					if (this.owner.World.TroopSpecs[unitType].LandGroup != 2)
-					{
-						int diff = currentTroop - (short)initialTroopIdx;
-						if (diff <= 0)
-						{
-							diff += 0x80;
-						}
+		L459c:
+			this.processor.RegAcc.Value16 = 0xc;
+			this.processor.ScaleAccumulatorToBase(this.processor.PullLocalWord(0x6));
+			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
+			this.processor.RegAcc.LowByte = 0x22;
+			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d7)));
+			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
+			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1138)), 0x2);
+			if (this.processor.FlagSet.IsEqual) goto L45eb;
+			this.processor.RegAcc.Value16 = arg2;
+			this.processor.CompareWord(this.processor.PullLocalWord(0x6), this.processor.RegAcc.Value16);
+			if (this.processor.FlagSet.IsLessOrEqual) goto L45cb;
+			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x6);
+			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, arg2);
+			goto L45d4;
 
-						if (diff < minDiff)
-						{
-							minDiff = diff;
-							bestTroop = currentTroop;
-						}
-					}
-				}
+		L45cb:
+			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x6);
+			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, arg2);
+			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x80);
 
-				currentTroop = (short)troops[currentTroop].FollowingTroopIdx;
-				if (currentTroop == (short)initialTroopIdx || currentTroop == -1)
-				{
-					break;
-				}
-			}
+		L45d4:
+			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
+			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x8);
+			this.processor.CompareWord(this.processor.PullLocalWord(0x4), this.processor.RegAcc.Value16);
+			if (this.processor.FlagSet.IsGreaterOrEqual) goto L45eb;
+			this.processor.CopyLocalWord(0x4, 0x8);
+			this.processor.CopyLocalWord(0x6, 0x2);
 
+		L45eb:
+			this.processor.RegAcc.Value16 = 0xc;
+			this.processor.ScaleAccumulatorToBase(this.processor.PullLocalWord(0x6));
+			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
+			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81de));
+			this.processor.SignExtendByte(this.processor.RegAcc);
+			this.processor.EmitLocalWord(0x6, this.processor.RegAcc.Value16);
+			this.processor.RegAcc.Value16 = arg2;
+			this.processor.CompareWord(this.processor.PullLocalWord(0x6), this.processor.RegAcc.Value16);
+			if (this.processor.FlagSet.IsEqual) goto L4614;
+			this.processor.IncrementLocalWord(0xa);
+			this.processor.CompareWord(this.processor.PullLocalWord(0xa), 0x10);
+			if (this.processor.FlagSet.IsLess) goto L459c;
+
+		L4614:
+			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x2);
+
+		L4617:
+			this.processor.RegSource.Value16 = this.processor.UnstackWord();
+			this.processor.LeaveFrame();
+			// Far return
 			this.processor.Journal.CloseScope("LocateBestGuardian");
-			return (ushort)bestTroop;
+
+			return this.processor.RegAcc.Value16;
 		}
 
 		/// <summary>
