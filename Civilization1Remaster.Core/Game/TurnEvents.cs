@@ -375,7 +375,6 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-		L036d:
 			owner.World.RoundTally++;
 			int prevSeason = this.owner.World.Season;
 			int nextSeason = TurnEventRules.ComputeNextSeason(prevSeason, (short)this.owner.World.StarshipMarkers);
@@ -390,7 +389,6 @@ namespace Civilization1Remaster.Game
 
 			this.owner.World.Season = (short)nextSeason;
 
-		L03e9:
 			// Autosave every turn. The original game saved only every 50 turns (when enabled in the game options)
 			// into the saved games 4 - 9, which are now manual saves.
 			MendFortifiedUnits();
@@ -622,7 +620,6 @@ namespace Civilization1Remaster.Game
 				this.owner.Paper.DisplayNewspaper(-1);
 			}
 
-		L0718:
 			int maxGameYear = TurnEventRules.ComputeMaxGameYear(this.owner.World.HardnessTier);
 			if (this.processor.PullGlobalWord(0x1cf6) == 0xffff &&
 				this.processor.PullGlobalWord(0xb884) == 0 &&
@@ -631,7 +628,6 @@ namespace Civilization1Remaster.Game
 				goto L089a;
 			}
 
-		L073b:
 			this.owner.Startup.ConcealMouseCursor();
 
 			this.owner.Libc.CopyText(0xba06, "*** GAME OVER ***\n");
@@ -1887,7 +1883,6 @@ namespace Civilization1Remaster.Game
 				this.owner.World.SmogImpactTier = 0;
 			}
 
-		L17e7:
 			this.processor.EmitLocalWord(0xa, 0x0);
 			goto L18a0;
 

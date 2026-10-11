@@ -101,5 +101,35 @@ namespace Civilization1Remaster.Game.Rules
 			}
 			return -1;
 		}
+
+		/// <summary>
+		/// Evaluates whether industrial sabotage targets a building or current production.
+		/// Returns the building index (1..23) to destroy, or -1 to sabotage current production.
+		/// </summary>
+		public static int PickIndustrialSabotageTarget(
+			bool rollToDirectSabotage,
+			bool hasMaterialsInProduction,
+			uint cityStructuresMask,
+			Func<int> randomBuildingRoll)
+		{
+			if (rollToDirectSabotage && hasMaterialsInProduction)
+			{
+				return -1;
+			}
+
+			for (int attempts = 0; attempts < 99; attempts++)
+			{
+				int cand = randomBuildingRoll();
+				if (cand <= 0) // Palace (0) cannot be destroyed
+					continue;
+
+				if ((cityStructuresMask & (1u << cand)) != 0)
+				{
+					return cand;
+				}
+			}
+
+			return -1;
+		}
 	}
 }

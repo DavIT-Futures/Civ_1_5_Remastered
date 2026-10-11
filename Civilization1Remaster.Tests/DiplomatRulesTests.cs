@@ -90,5 +90,38 @@ namespace Civilization1Remaster.Tests
 			int noTech = DiplomatRules.FindTechnologyToSteal(0, victimTechs.Contains, playerKnowsAll.Contains);
 			Assert.Equal(-1, noTech);
 		}
+
+		[Fact]
+		public void PickIndustrialSabotageTarget_DirectSabotageWithMaterials_ReturnsMinusOne()
+		{
+			// When rollToDirectSabotage is true and materials exist in production, target is current production (-1)
+			int target = DiplomatRules.PickIndustrialSabotageTarget(
+				rollToDirectSabotage: true,
+				hasMaterialsInProduction: true,
+				cityStructuresMask: (1u << 2) | (1u << 4),
+				randomBuildingRoll: () => 2
+			);
+
+			Assert.Equal(-1, target);
+		}
+
+		[Fact]
+		public void PickIndustrialSabotageTarget_DestroysExistingImprovement_IgnoringPalace()
+		{
+			// City has Barracks (1) and Granary (2). Palace is 0.
+			// Sequence rolls: 0 (Palace - must ignore), 5 (not present in city), 2 (Granary - present!)
+			int[] rolls = new int[] { 0, 5, 2 };
+			int callIdx = 0;
+
+			uint structures = (1u << 1) | (1u << 2); // Barracks & Granary
+			int target = DiplomatRules.PickIndustrialSabotageTarget(
+				rollToDirectSabotage: false,
+				hasMaterialsInProduction: true,
+				cityStructuresMask: structures,
+				randomBuildingRoll: () => rolls[callIdx++]
+			);
+
+			Assert.Equal(2, target);
+		}
 	}
 }
