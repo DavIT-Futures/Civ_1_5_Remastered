@@ -103,40 +103,52 @@ public partial class MainWindow : Window, IGameHost
 		if (this.session?.VideoCard == null || this.writeableBitmap == null)
 			return;
 
-		VGABitmap? display = null;
+		bool needsRepaint = false;
 		lock (this.session.VideoCard.VideoLatch)
 		{
-			if (this.session.VideoCard.Displays.IncludesKey(0))
+			// Check screen 0 or active seen screens
+			VGABitmap? display = null;
+			for (int idx = 0; idx < this.session.VideoCard.Displays.Count; idx++)
+			{
+				var entry = this.session.VideoCard.Displays[idx];
+				if (entry.Datum.Seen)
+				{
+					display = entry.Datum;
+					break;
+				}
+			}
+
+			if (display == null && this.session.VideoCard.Displays.IncludesKey(0))
 			{
 				display = this.session.VideoCard.Displays.ObtainValueByKey(0);
-				if (display != null && display.Edited)
-				{
-					Array.Copy(display.SwatchRgba, this.colors, this.colors.Length);
-					byte[] storage = display.PictureStorage;
-					int step = display.Pitch;
-					int width = Math.Min(GameWidth, display.Extent.Width);
-					int height = Math.Min(GameHeight, display.Extent.Height);
+			}
 
-					for (int y = 0; y < height; y++)
+			if (display != null && display.Edited)
+			{
+				Array.Copy(display.SwatchRgba, this.colors, this.colors.Length);
+				byte[] storage = display.PictureStorage;
+				int step = display.Pitch;
+				int width = Math.Min(GameWidth, display.Extent.Width);
+				int height = Math.Min(GameHeight, display.Extent.Height);
+
+				for (int y = 0; y < height; y++)
+				{
+					int srcRow = y * step;
+					int dstRow = y * GameWidth;
+					for (int x = 0; x < width; x++)
 					{
-						int srcRow = y * step;
-						int dstRow = y * GameWidth;
-						for (int x = 0; x < width; x++)
-						{
-							this.rgbBuffer[dstRow + x] = this.colors[storage[srcRow + x]];
-						}
+						int color = this.colors[storage[srcRow + x]];
+						// Ensure full alpha (0xFF000000) for Bgra8888 display
+						this.rgbBuffer[dstRow + x] = (int)(0xff000000 | (uint)(color & 0x00ffffff));
 					}
+				}
 
-					display.Edited = false;
-				}
-				else
-				{
-					display = null; // no repaint needed
-				}
+				display.Edited = false;
+				needsRepaint = true;
 			}
 		}
 
-		if (display != null)
+		if (needsRepaint)
 		{
 			using (var fb = this.writeableBitmap.Lock())
 			{

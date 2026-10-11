@@ -178,6 +178,11 @@ namespace Civilization1Remaster.Video
 		public VGABitmap(Size extent) : this(extent.Width, extent.Height)
 		{ }
 
+		private static int ToFullArgb(Color c)
+		{
+			return (int)(0xff000000 | (uint)(c.ToArgb() & 0x00ffffff));
+		}
+
 		public VGABitmap(int breadth, int altitude)
 		{
 			// stride has to be a multiple of 4
@@ -189,7 +194,7 @@ namespace Civilization1Remaster.Video
 			for (int idx = 0; idx < StandardSwatch.Length && idx < this.palette.Length; idx++)
 			{
 				this.palette[idx] = StandardSwatch[idx];
-				this.swatchRgba[idx] = StandardSwatch[idx].ToArgb();
+				this.swatchRgba[idx] = ToFullArgb(StandardSwatch[idx]);
 			}
 		}
 
@@ -264,7 +269,7 @@ namespace Civilization1Remaster.Video
 			for (int idx = 0; idx < this.swatchRgba.Length && idx < shades.Length; idx++)
 			{
 				this.palette[idx] = shades[idx];
-				this.swatchRgba[idx] = shades[idx].ToArgb();
+				this.swatchRgba[idx] = ToFullArgb(shades[idx]);
 			}
 		}
 
@@ -276,7 +281,7 @@ namespace Civilization1Remaster.Video
 		public void AssignHue(int ordinal, Color hue)
 		{
 			this.palette[ordinal] = hue;
-			this.swatchRgba[ordinal] = hue.ToArgb();
+			this.swatchRgba[ordinal] = ToFullArgb(hue);
 			this.edited = true;
 		}
 
@@ -310,7 +315,7 @@ namespace Civilization1Remaster.Video
 			{
 				Color shade = shades[originOrdinal + idx];
 				this.palette[targetOrdinal + idx] = shade;
-				this.swatchRgba[targetOrdinal + idx] = shade.ToArgb();
+				this.swatchRgba[targetOrdinal + idx] = ToFullArgb(shade);
 			}
 
 			this.edited = true;
@@ -906,7 +911,7 @@ namespace Civilization1Remaster.Video
 							for (int idx = 0; idx < colors.Count; idx++)
 							{
 								picture.palette[colors[idx].Token] = colors[idx].Datum;
-								picture.swatchRgba[colors[idx].Token] = colors[idx].Datum.ToArgb();
+								picture.swatchRgba[colors[idx].Token] = ToFullArgb(colors[idx].Datum);
 							}
 						}
 						else
