@@ -68,6 +68,8 @@ i `MovementRules`. Testy `AssemblyParityDifferentialTests` porównują C# z ręc
 - Miganie aktywnej jednostki (2026-10-12): `ChoreographUnitMove` (jednostka na mapie, kropka na minimapie, ramka kursora;
   ta sama kolejność wywołań `KeyAvailable`, od której zależy klawiatura testów).
 - Przewijanie widoku mapy (2026-10-12): `PanMapToPosition`.
+- Cuda świata (2026-10-12): `ObtainWonderCityID`, `PlayerEnjoysWonderEffect` (+ `IsWonderObsolete`, tablica `0x10fe`).
+- `PlayerTurn` (2026-10-12): `ObtainTileMoveCost`, `RepaintUnitIfVisible`, `RepaintTileIfVisible`.
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 

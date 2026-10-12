@@ -9,11 +9,13 @@ namespace Civilization1Remaster.Game
 	{
 		private readonly GameEngine owner;
 		private readonly CPU processor;
+		private readonly UnitMemory troops;
 
 		public PlayerTurn(GameEngine owner)
 		{
 			this.owner = owner;
 			this.processor = owner.Processor;
+			this.troops = new UnitMemory(owner.Processor);
 		}
 
 		/// <summary>
@@ -5676,126 +5678,79 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// Repaints the tile when the human player has seen it (or everything is shown, 0xd806)
 		/// </summary>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
 		public void RepaintTileIfVisible(int horizLoc, int vertLoc)
 		{
 			this.processor.Journal.OpenScope($"RepaintTileIfVisible({horizLoc}, {vertLoc})");
 
-			// function body
-			this.processor.EnterFrame();
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.ChartSight[horizLoc, vertLoc];
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegData.Value16 = 0x1;
-			this.processor.RegCount.LowByte = (byte)(this.owner.World.PersonParticipantIdx & 0xff);
-			this.processor.RegData.Value16 = this.processor.ShiftLeftWord(this.processor.RegData.Value16, this.processor.RegCount.LowByte);
-			this.processor.TestBitsWord(this.processor.RegAcc.Value16, this.processor.RegData.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L3f03;
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xd806), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L3f11;
+			if ((this.owner.World.ChartSight[horizLoc, vertLoc] & (ushort)(1 << this.owner.World.PersonParticipantIdx)) != 0 ||
+				this.processor.PullGlobalWord(0xd806) != 0)
+			{
+				this.owner.MapOps.RepaintMapTile(horizLoc, vertLoc);
+			}
 
-		L3f03:
-			this.owner.MapOps.RepaintMapTile(horizLoc, vertLoc);
-
-		L3f11:
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-			// Far return
 			this.processor.Journal.CloseScope("RepaintTileIfVisible");
 		}
 
 		/// <summary>
-		/// ?
+		/// Repaints the tile of the unit when the human player sees it (own unit, or the unit is shown to the human)
 		/// </summary>
-		/// <param name="playerID"></param>
-		/// <param name="unitID"></param>
 		public void RepaintUnitIfVisible(short participantIdx, short troopIdx)
 		{
 			this.processor.Journal.OpenScope($"RepaintUnitIfVisible({participantIdx}, {troopIdx})");
 
-			// function body
-			this.processor.EnterFrame();
-			this.processor.PreserveSource();
+			// The original keeps SI for its caller
+			ushort savedSource = this.processor.RegSource.Value16;
+			short human = this.owner.World.PersonParticipantIdx;
 
-			if (participantIdx == this.owner.World.PersonParticipantIdx) goto L3f41;
+			if (participantIdx == human ||
+				(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.ShownToParticipants) & (ushort)(1 << human)) != 0)
+			{
+				this.owner.MapOps.RepaintMapTile(
+					this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
+					this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert));
+			}
 
-			this.processor.ScaleIndexToBase(0xc, (ushort)troopIdx);
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81dd));
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegData.Value16 = 0x1;
-			this.processor.RegCount.LowByte = (byte)(this.owner.World.PersonParticipantIdx & 0xff);
-			this.processor.RegData.Value16 = this.processor.ShiftLeftWord(this.processor.RegData.Value16, this.processor.RegCount.LowByte);
-			this.processor.TestBitsWord(this.processor.RegAcc.Value16, this.processor.RegData.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L3f65;
+			this.processor.RegSource.Value16 = savedSource;
 
-		L3f41:
-			this.processor.RegAcc.Value16 = 0x600;
-			this.processor.ScaleAccumulatorToSource((ushort)participantIdx);
-			this.processor.AddScaledToSource(0xc, (ushort)troopIdx);
-
-			this.owner.MapOps.RepaintMapTile(
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)),
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6)));
-
-		L3f65:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-			// Far return
 			this.processor.Journal.CloseScope("RepaintUnitIfVisible");
 		}
 
 		/// <summary>
-		/// ?
+		/// 0 on a tile with a city, irrigation or a mine (improvement bits 0 - 2). Otherwise from the terrain table at 0x44a
+		/// (12 bytes a terrain): 2 when the word at +4 is -3 or less, 1 when the word at +0 is -2 and the tile is at the coast
+		/// (VerifyCoastalTile), else 0.
 		/// </summary>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
 		public ushort ObtainTileMoveCost(int horizLoc, int vertLoc)
 		{
 			this.processor.Journal.OpenScope($"ObtainTileMoveCost({horizLoc}, {vertLoc})");
 
-			// function body
-			this.processor.EnterFrame(0xc);
+			ushort cost = 0;
 
-			this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc);
+			if ((this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 0x7) == 0)
+			{
+				int terrain = this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
+				ushort terrainRecord = (ushort)(0x44a + 0xc * terrain);
 
-			this.processor.TestBitsByte(this.processor.RegAcc.LowByte, 0x7);
-			if (this.processor.FlagSet.IsEqual) goto L3f84;
+				if ((short)this.processor.PullGlobalWord((ushort)(terrainRecord + 4)) <= -3)
+				{
+					cost = 2;
+				}
+				else if (this.processor.PullGlobalWord(terrainRecord) == 0xfffe)
+				{
+					VerifyCoastalTile(horizLoc, vertLoc);
 
-		L3f80:
-			this.processor.RegAcc.Value16 = 0;
-			goto L3fcc;
+					if (this.processor.RegAcc.Value16 != 0)
+						cost = 1;
+				}
+			}
 
-		L3f84:
-			this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
+			this.processor.RegAcc.Value16 = cost;
 
-			this.processor.EmitLocalWord(0xc, this.processor.RegAcc.Value16);
-			this.processor.ScaleIndexToBase(0xc, this.processor.PullLocalWord(0xc));
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x44e)), 0xfffd);
-			if (this.processor.FlagSet.IsGreater) goto L3fa9;
-			this.processor.RegAcc.Value16 = 0x2;
-			goto L3fcc;
-
-		L3fa9:
-			this.processor.RegAcc.Value16 = 0xc;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullLocalWord(0xc));
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x44a)), 0xfffe);
-			if (this.processor.FlagSet.IsNotEqual) goto L3f80;
-
-			VerifyCoastalTile(horizLoc, vertLoc);
-
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual) goto L3f80;
-			this.processor.RegAcc.Value16 = 0x1;
-
-		L3fcc:
-			this.processor.RegStack.Value16 = this.processor.RegFrame.Value16;
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-			// Far return
 			this.processor.Journal.CloseScope("ObtainTileMoveCost");
 
-			return this.processor.RegAcc.Value16;
+			return cost;
 		}
 
 		/// <summary>
