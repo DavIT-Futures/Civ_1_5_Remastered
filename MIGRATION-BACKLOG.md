@@ -144,6 +144,10 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   w AX), `RenderSpaceScenery` (`SpaceshipScreen`), `ManageMenuBar` (`GameMenus`). Testy w `BatchFourteenDifferentialTests`.
   Uwaga: liczniki taktów cykli kolorów (segment 0x35cf, co 0x66 bajtów od 0x1c) odlicza przerwanie zegara, więc zależą od
   liczby dostępów do pamięci; testy porównują cykle bez nich (`HueCyclesWithoutCounters`).
+- Kolejne 4 moduły (2026-10-12): `ObtainDistanceToCapital` (`CivilizationSchism`, w rzeczywistości najbardziej centralne
+  miasto gracza), `RenderStarField` (`SpaceshipScreen`), `ProduceCloudLayer` (`GameInitAndIntro`), `DisplayConquerorScreen`
+  (`GameReplay`, ramka stosu zostaje: wołana funkcja zostawia zmieniony BP, oryginał kończy z takim stosem). Testy
+  w `BatchFifteenDifferentialTests`.
 
 ## Następny krok
 
@@ -151,9 +155,10 @@ Dalej małe metody (`python Civilization1Remaster.Tests/Differential/Reference/f
 metody z co najmniej 2 liniami `goto L` / `FlagSet` / `Compare…` / `SumWord` itd., od najkrótszej): w `SystemServices` `DeactivateMouse` (dziwny kontrakt rejestrów AX/BX), `PointerEvent`, `RenderCursorToScreen`,
 `RecoverScreenUnderCursor`, `DisplayScreen`, `ImportColorsFromBuffer`, `FloodColors`, `FadeColors`; `SnapHeapPointer` (`VGADriver`),
 `ArrangeTextRow` (`TextBlockRenderer`), `RenderTextInputField`, `DisplayLabelInputBox` (`NewCityScreen`),
-`DisplayWorldMenu`, `DisplayAdvisorMenu` (`GameMenus`), `DisplayRevolutionScreen` (`StartGameMenu`), `DisplayConquerorScreen`
-(`GameReplay`), `RenderStarField` (`SpaceshipScreen`), `ProduceCloudLayer` (`GameInitAndIntro`), `ObtainDistanceToCapital`
-(`CivilizationSchism`), `RenderExplosion` (`DiplomatActions`),
+`DisplayWorldMenu`, `DisplayAdvisorMenu` (`GameMenus`), `DisplayRevolutionScreen` (`StartGameMenu`), `RenderExplosion`
+(`DiplomatActions`), `PrepareTimer`, `RefreshHueCycling`, `AssignHueCycleSpan` (`SystemServices`), `ReshuffleCitizens`
+(`CityManagement`), `VerifyCoastalTile`, `LocateBestGuardian` (`PlayerTurn`), `RepaintUnitTile` (`MapManagement`),
+`AttachStrategicLocation` (`AIPlayer`), `DisplayLabelInputBox` (`NewCityScreen`),
 reszta generatora mapy w `GameInitAndIntro`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)

@@ -861,79 +861,36 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// A cloud layer for the intro: one cloud at a random place (columns 4 - 75, rows 8 - 41) drawn in the area at column 160
+		/// of screen 1, then every pixel of the 80 x 50 area at column 0 under a cloud pixel gets one colour lighter (0x67fe
+		/// counts them)
 		/// </summary>
 		public void ProduceCloudLayer()
 		{
 			this.processor.Journal.OpenScope("ProduceCloudLayer()");
 
-			// function body
-			this.processor.EnterFrame(0x6);
-
 			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 160, 0, 80, 50, 0);
 
-			this.processor.RegAcc.Value16 = (ushort)(this.owner.Libc.Dice.DrawInt(72));
+			short cloudHoriz = (short)(this.owner.Libc.Dice.DrawInt(72) + 4);
+			short cloudVert = (short)(this.owner.Libc.Dice.DrawInt(34) + 8);
 
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x4);
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
+			ProduceCloud(cloudHoriz, cloudVert);
 
-			this.processor.RegAcc.Value16 = (ushort)(this.owner.Libc.Dice.DrawInt(34));
+			for (int horizLoc = 0; horizLoc < 0x50; horizLoc++)
+			{
+				for (int vertLoc = 0; vertLoc < 0x32; vertLoc++)
+				{
+					if (this.owner.VideoCard.ObtainDot(1, horizLoc + 0xa0, vertLoc) != 0)
+					{
+						ushort hue = this.owner.VideoCard.ObtainDot(1, horizLoc, vertLoc);
 
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x8);
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x6, 0x0);
+						this.owner.Services.AssignDot(1, horizLoc, vertLoc, (ushort)(hue + 1));
 
-		L090b:
-			ProduceCloud(
-				this.processor.PullLocalSignedWord(0x2),
-				this.processor.PullLocalSignedWord(0x4));
+						this.processor.EmitGlobalWord(0x67fe, (ushort)(this.processor.PullGlobalWord(0x67fe) + 1));
+					}
+				}
+			}
 
-			this.processor.IncrementLocalWord(0x6);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x6), 0x1);
-			if (this.processor.FlagSet.IsLess) goto L090b;
-
-			this.processor.EmitLocalWord(0x2, 0x0);
-			goto L0977;
-
-		L0928:
-			this.processor.EmitLocalWord(0x4, this.processor.IncrementWord(this.processor.PullLocalWord(0x4)));
-
-		L092b:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), 0x32);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0974;
-			
-			this.owner.VideoCard.ObtainDot(1,
-				this.processor.PullLocalSignedWord(0x2) + 0xa0,
-				this.processor.PullLocalSignedWord(0x4));
-
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual) goto L0928;
-
-			this.owner.VideoCard.ObtainDot(1,
-				this.processor.PullLocalSignedWord(0x2),
-				this.processor.PullLocalSignedWord(0x4));
-
-			this.owner.Services.AssignDot(1, this.processor.PullLocalSignedWord(0x2),
-				this.processor.PullLocalSignedWord(0x4),
-				(ushort)(this.processor.RegAcc.Value16 + 1));
-
-			this.processor.EmitGlobalWord(0x67fe, this.processor.IncrementWord(this.processor.PullGlobalWord(0x67fe)));
-			goto L0928;
-
-		L0974:
-			this.processor.EmitLocalWord(0x2, this.processor.IncrementWord(this.processor.PullLocalWord(0x2)));
-
-		L0977:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x50);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0984;
-
-			this.processor.EmitLocalWord(0x4, 0x0);
-			goto L092b;
-
-		L0984:
-			this.processor.RegStack.Value16 = this.processor.RegFrame.Value16;
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-			// Far return
 			this.processor.Journal.CloseScope("ProduceCloudLayer");
 		}
 

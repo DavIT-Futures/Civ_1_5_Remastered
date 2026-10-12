@@ -812,105 +812,69 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// Moves the 20 stars of the space background one step to the right (0x683e: column, 0x6852: row, 0x6866: drawn):
+		/// every 4th star 2 pixels (colour 7), the next 1 pixel (colour 3), the others 1 pixel every second frame (colour 8,
+		/// frame counter 0x687a); a star past column 239 starts again at column 1 on a random row. A star is drawn only on
+		/// black. The positions are read as signed bytes, like in the original.
 		/// </summary>
 		public void RenderStarField()
 		{
 			this.processor.Journal.OpenScope("RenderStarField()");
 
-			// function body
-			this.processor.EnterFrame(0x6);
-			this.processor.EmitLocalWord(0x4, 0x0);
-			goto L0cff;
+			for (int starIdx = 0; starIdx < 0x14; starIdx++)
+			{
+				ushort column = (ushort)(starIdx + 0x683e), row = (ushort)(starIdx + 0x6852), drawn = (ushort)(starIdx + 0x6866);
 
-		L0c57:
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x4);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x683e), this.processor.SumByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x683e)), 0x2));
-			this.processor.EmitLocalWord(0x6, 0x7);
+				if (this.processor.PullGlobalByte(drawn) != 0)
+				{
+					this.owner.Services.AssignDot((sbyte)this.processor.PullGlobalByte(column), (sbyte)this.processor.PullGlobalByte(row), 0);
+				}
 
-		L0c64:
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x4);
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x683e)), 0xf0);
-			if (this.processor.FlagSet.IsBelow) goto L0c8d;
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x683e), 0x1);
+				ushort hue;
 
-			this.processor.RegAcc.Value16 = (ushort)(this.owner.Libc.Dice.DrawInt(192));
+				switch (starIdx & 3)
+				{
+					case 0:
+						this.processor.EmitGlobalByte(column, (byte)(this.processor.PullGlobalByte(column) + 2));
+						hue = 7;
+						break;
 
-			this.processor.RegAcc.LowByte = this.processor.SumByte(this.processor.RegAcc.LowByte, 0x8);
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x4);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x6852), this.processor.RegAcc.LowByte);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x6866), 0x0);
+					case 1:
+						this.processor.EmitGlobalByte(column, (byte)(this.processor.PullGlobalByte(column) + 1));
+						hue = 3;
+						break;
 
-		L0c8d:
-			this.owner.VideoCard.ObtainDot(0, 
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(0x683e + this.processor.RegBase.Value16)),
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(0x6852 + this.processor.RegBase.Value16)));
+					default:
+						if ((this.processor.PullGlobalByte(0x687a) & 0x1) != 0)
+						{
+							this.processor.EmitGlobalByte(column, (byte)(this.processor.PullGlobalByte(column) + 1));
+						}
 
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsNotEqual) goto L0cf4;
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x4);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x6866), 0x1);
+						hue = 8;
+						break;
+				}
 
-			this.owner.Services.AssignDot(this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x683e)),
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x6852)),
-				this.processor.PullLocalWord(0x6));
+				if (this.processor.PullGlobalByte(column) >= 0xf0)
+				{
+					this.processor.EmitGlobalByte(column, 0x1);
+					this.processor.EmitGlobalByte(row, (byte)(this.owner.Libc.Dice.DrawInt(192) + 8));
+					this.processor.EmitGlobalByte(drawn, 0x0);
+				}
 
-			goto L0cfc;
+				if (this.owner.VideoCard.ObtainDot(0, (sbyte)this.processor.PullGlobalByte(column), (sbyte)this.processor.PullGlobalByte(row)) == 0)
+				{
+					this.processor.EmitGlobalByte(drawn, 0x1);
 
-		L0cd0:
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x4);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x683e), this.processor.IncrementByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x683e))));
-			this.processor.EmitLocalWord(0x6, 0x3);
-			goto L0c64;
+					this.owner.Services.AssignDot((sbyte)this.processor.PullGlobalByte(column), (sbyte)this.processor.PullGlobalByte(row), hue);
+				}
+				else
+				{
+					this.processor.EmitGlobalByte(drawn, 0x0);
+				}
+			}
 
-		L0cde:
-			this.processor.TestBitsByte(this.processor.PullGlobalByte(0x687a), 0x1);
-			if (this.processor.FlagSet.IsEqual) goto L0cec;
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x4);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x683e), this.processor.IncrementByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x683e))));
+			this.processor.EmitGlobalWord(0x687a, (ushort)(this.processor.PullGlobalWord(0x687a) + 1));
 
-		L0cec:
-			this.processor.EmitLocalWord(0x6, 0x8);
-			goto L0c64;
-
-		L0cf4:
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x4);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x6866), 0x0);
-
-		L0cfc:
-			this.processor.EmitLocalWord(0x4, this.processor.IncrementWord(this.processor.PullLocalWord(0x4)));
-
-		L0cff:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), 0x14);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0d47;
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x4);
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x6866)), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L0d2a;
-
-			this.owner.Services.AssignDot(this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x683e)),
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x6852)),
-				0);
-
-		L0d2a:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x4);
-			this.processor.RegAcc.Value16 = this.processor.BitAndWord(this.processor.RegAcc.Value16, 0x3);
-			if (this.processor.FlagSet.IsNotEqual) goto L0d35;
-			goto L0c57;
-
-		L0d35:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1);
-			if (this.processor.FlagSet.IsEqual) goto L0cd0;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x2);
-			if (this.processor.FlagSet.IsEqual) goto L0cde;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x3);
-			if (this.processor.FlagSet.IsEqual) goto L0cde;
-			goto L0c64;
-
-		L0d47:
-			this.processor.EmitGlobalWord(0x687a, this.processor.IncrementWord(this.processor.PullGlobalWord(0x687a)));
-			this.processor.LeaveFrame();
-			// Far return
 			this.processor.Journal.CloseScope("RenderStarField");
 		}
 

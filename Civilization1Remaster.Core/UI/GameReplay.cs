@@ -1162,14 +1162,17 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// The end of a conquest victory: the replay of the game (0x680e set meanwhile, the 14 bytes at 0x3772:0x37c4 cleared to
+		/// 0xff), the leader's music, "The entire world hails ... the CONQUEROR!" until a key or click, then the map screen
+		/// again. The texts have a shadow, in other colours with the colour cycles (0xd762).
+		/// The stack frame stays: a called function leaves BP changed, and the original ends with the stack that gives.
 		/// </summary>
 		public void DisplayConquerorScreen()
 		{
 			this.processor.Journal.OpenScope("DisplayConquerorScreen()");
 
-			// function body
 			this.processor.EnterFrame(0x2);
+
 			this.processor.EmitGlobalWord(0x680e, 0x1);
 
 			this.owner.Helpers.HaltHueCycling();
@@ -1177,70 +1180,34 @@ namespace Civilization1Remaster.UI
 			this.owner.Startup.ConcealMouseCursor();
 
 			this.processor.EmitGlobalByte(0xb1d4, 0x0);
-			this.processor.EmitLocalWord(0x2, 0x0);
 
-		L0dfe:
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x2);
-			this.processor.SegExtra.Value16 = 0x3772; // segment
-			this.processor.EmitUInt8(this.processor.SegExtra.Value16, (ushort)(this.processor.RegBase.Value16 + 0x37c4), 0xff);
-			this.processor.IncrementLocalWord(0x2);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0xe);
-			if (this.processor.FlagSet.IsLess) goto L0dfe;
+			for (int idx = 0; idx < 0xe; idx++)
+			{
+				this.processor.EmitUInt8(0x3772, (ushort)(idx + 0x37c4), 0xff);
+			}
 
 			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 0);
 
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 0x6);
+			this.processor.EmitGlobalWord((ushort)(this.processor.PullGlobalWord(0xaa) + 0x10), 0x6);
 
 			DisplayReplay();
 
-			this.processor.RegAcc.Value16 = 0x3a;
-			this.processor.ScaleAccumulatorToBase((ushort)this.owner.World.Participants[this.owner.World.PersonParticipantIdx].ChiefVisuals);
+			ushort leader = (ushort)(0x3a * this.owner.World.Participants[this.owner.World.PersonParticipantIdx].ChiefVisuals);
+			this.owner.Services.PerformSound(this.processor.PullGlobalWord((ushort)(leader + 0x151a)), 3);
 
-			this.owner.Services.PerformSound(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x151a)), 3);
+			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 18, 150, 284, 32,
+				(ushort)(this.processor.PullGlobalWord(0xd762) != 0 ? 34 : 7));
 
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xd762), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L0e67;
-
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 18, 150, 284, 32, 34);
-
-			goto L0e6a;
-
-		L0e67:
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 18, 150, 284, 32, 7);
-
-		L0e6a:
 			this.owner.Libc.CopyText(0xba06, "The entire world hails");
 
 			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 152, 20);
+			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 151, (ushort)(this.processor.PullGlobalWord(0xd762) != 0 ? 23 : 15));
 
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xd762), 0x0);
-			if (this.processor.FlagSet.IsNotEqual)
-			{
-				this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 151, 23);
-			}
-			else
-			{
-				this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 151, 15);
-			}
-			
-			this.processor.RegBase.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x19a2)));
-
+			this.owner.Libc.CopyText(0xba06, this.processor.PullGlobalWord((ushort)((this.owner.World.PersonParticipantIdx << 1) + 0x19a2)));
 			this.owner.Libc.AppendText(0xba06, " the CONQUEROR!");
 
 			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 168, 20);
-
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xd762), 0x0);
-			if (this.processor.FlagSet.IsNotEqual)
-			{
-				this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 167, 23);
-			}
-			else
-			{
-				this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 167, 15);
-			}
+			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 167, (ushort)(this.processor.PullGlobalWord(0xd762) != 0 ? 23 : 15));
 
 			this.owner.TurnLogic.AwaitForKey();
 
@@ -1248,8 +1215,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Services.PerformSound(1, 0);
 
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 0x1);
+			this.processor.EmitGlobalWord((ushort)(this.processor.PullGlobalWord(0xaa) + 0x10), 0x1);
 
 			this.owner.Startup.QueryForDisk(0, 1);
 
@@ -1258,8 +1224,9 @@ namespace Civilization1Remaster.UI
 			this.owner.TurnHooks.RepaintMainScreen();
 
 			this.processor.EmitGlobalWord(0x680e, 0x0);
+
 			this.processor.LeaveFrame();
-			// Far return
+
 			this.processor.Journal.CloseScope("DisplayConquerorScreen");
 		}
 

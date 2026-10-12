@@ -774,90 +774,48 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// The most central city of the player: the one with the smallest sum of distances to all its cities (a signed word sum,
+		/// the first one of equal sums; sums of 0x7fff and more never count)
 		/// </summary>
-		/// <param name="playerID"></param>
-		/// <returns></returns>
+		/// <returns>City index, 0xffff when none (also in AX)</returns>
 		public ushort ObtainDistanceToCapital(short participantIdx)
 		{
 			this.processor.Journal.OpenScope($"ObtainDistanceToCapital({participantIdx})");
 
-			// function body
-			this.processor.EnterFrame(0xa);
-			this.processor.PreserveIndexRegisters();
-			this.processor.EmitLocalWord(0xa, 0xffff);
-			this.processor.EmitLocalWord(0x2, 0x7fff);
-			this.processor.EmitLocalWord(0x6, 0x0);
-			goto L094c;
+			short smallestSum = 0x7fff;
+			ushort central = 0xffff;
 
-		L08d3:
-			this.processor.EmitLocalWord(0x4, 0x0);
-			this.processor.EmitLocalWord(0x8, 0x0);
-			goto L0913;
+			for (int townIdx = 0; townIdx < 0x80; townIdx++)
+			{
+				City town = this.owner.World.Towns[townIdx];
 
-		L08df:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToSource(this.processor.PullLocalWord(0x6));
-			this.processor.ScaleIndex(0x1c, this.processor.PullLocalWord(0x8));
-			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
+				if (town.ParticipantIdx != participantIdx || town.ConditionMarker == 0xff)
+					continue;
 
-			this.owner.Helpers.ObtainDistance(
-				this.owner.World.Towns[this.processor.PullLocalWord(0x6)].Place.X,
-				this.owner.World.Towns[this.processor.PullLocalWord(0x8)].Place.X,
-				this.owner.World.Towns[this.processor.PullLocalWord(0x6)].Place.Y,
-				this.owner.World.Towns[this.processor.PullLocalWord(0x8)].Place.Y);
+				short sum = 0;
 
-			this.processor.EmitLocalWord(0x4, this.processor.SumWord(this.processor.PullLocalWord(0x4), this.processor.RegAcc.Value16));
+				for (int otherIdx = 0; otherIdx < 0x80; otherIdx++)
+				{
+					City other = this.owner.World.Towns[otherIdx];
 
-		L0910:
-			this.processor.EmitLocalWord(0x8, this.processor.IncrementWord(this.processor.PullLocalWord(0x8)));
+					if (other.ParticipantIdx == participantIdx && other.ConditionMarker != 0xff)
+					{
+						sum = (short)(sum + this.owner.Helpers.ObtainDistance(town.Place.X, other.Place.X, town.Place.Y, other.Place.Y));
+					}
+				}
 
-		L0913:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x8), 0x80);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0935;
+				if (sum < smallestSum)
+				{
+					smallestSum = sum;
+					central = (ushort)townIdx;
+				}
+			}
 
-			this.processor.ScaleIndexToSource(0x1c, this.processor.PullLocalWord(0x8));
-			
-			if (this.owner.World.Towns[this.processor.PullLocalWord(0x8)].ParticipantIdx != participantIdx)
-				goto L0910;
+			this.processor.RegAcc.Value16 = central;
 
-			this.processor.CompareByte(this.owner.World.Towns[this.processor.PullLocalWord(0x8)].ConditionMarker, 0xff);
-			if (this.processor.FlagSet.IsNotEqual) goto L08df;
-
-			goto L0910;
-
-		L0935:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x2);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0949;
-			this.processor.CopyLocalWord(0x4, 0x2);
-			this.processor.CopyLocalWord(0x6, 0xa);
-
-		L0949:
-			this.processor.EmitLocalWord(0x6, this.processor.IncrementWord(this.processor.PullLocalWord(0x6)));
-
-		L094c:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x6), 0x80);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0971;
-			this.processor.ScaleIndexToSource(0x1c, this.processor.PullLocalWord(0x6));
-
-			if (this.owner.World.Towns[this.processor.PullLocalWord(0x6)].ParticipantIdx != participantIdx)
-				goto L0949;
-
-			this.processor.CompareByte(this.owner.World.Towns[this.processor.PullLocalWord(0x6)].ConditionMarker, 0xff);
-			if (this.processor.FlagSet.IsEqual) goto L0949;
-			goto L08d3;
-
-		L0971:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xa);
-
-			this.processor.RestoreIndexRegisters();
-			this.processor.LeaveFrame();
-
-			// Far return
 			this.processor.Journal.CloseScope("ObtainDistanceToCapital");
 
-			return this.processor.RegAcc.Value16;
+			return central;
 		}
 	}
 }
