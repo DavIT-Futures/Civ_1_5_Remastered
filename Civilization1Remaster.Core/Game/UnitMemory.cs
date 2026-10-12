@@ -20,8 +20,19 @@ namespace Civilization1Remaster.Game
 		public const int Vert = 2;
 		/// <summary>Unit type, -1 when the record is empty</summary>
 		public const int Kind = 3;
+		/// <summary>Moves left in this turn, in thirds</summary>
+		public const int LeftoverSteps = 4;
+		/// <summary>Work turns of settlers, fuel (turns left in the air) of planes</summary>
+		public const int UnusualSteps = 5;
+		/// <summary>Target of a "go to" order, -1 when none</summary>
+		public const int TravelHoriz = 6;
+		public const int TravelVert = 7;
+		public const int TravelHeading = 8;
+		/// <summary>Bit mask of the players that see the unit</summary>
+		public const int ShownToParticipants = 9;
 		/// <summary>Next unit in the same stack, -1 when none</summary>
 		public const int FollowingInStack = 0xa;
+		public const int BaseTown = 0xb;
 
 		private readonly CPU processor;
 
@@ -38,6 +49,16 @@ namespace Civilization1Remaster.Game
 		public sbyte PullSigned(int participantIdx, int troopIdx, int offset)
 		{
 			return this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(Address(participantIdx, troopIdx) + offset));
+		}
+
+		public byte Pull(int participantIdx, int troopIdx, int offset)
+		{
+			return this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(Address(participantIdx, troopIdx) + offset));
+		}
+
+		public void Assign(int participantIdx, int troopIdx, int offset, byte amount)
+		{
+			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(Address(participantIdx, troopIdx) + offset), amount);
 		}
 
 		public sbyte TroopKind(int participantIdx, int troopIdx)
@@ -86,6 +107,10 @@ namespace Civilization1Remaster.Game
 
 		// Word fields of a record, after the 12 bytes of the name
 		public const int LandGroup = 0xe;
+		/// <summary>Moves per turn</summary>
+		public const int ShiftTally = 0x10;
+		/// <summary>Turns a plane can stay in the air</summary>
+		public const int RoundsAway = 0x12;
 		public const int AssaultPower = 0x14;
 		public const int GuardPower = 0x16;
 		public const int Price = 0x18;
@@ -94,6 +119,15 @@ namespace Civilization1Remaster.Game
 
 		/// <summary>LandGroup of land units</summary>
 		public const int LandUnits = 0;
+
+		/// <summary>LandGroup of planes</summary>
+		public const int AirUnits = 1;
+
+		/// <summary>LandGroup of ships</summary>
+		public const int SeaUnits = 2;
+
+		/// <summary>Unit type of the Carrier</summary>
+		public const int Carrier = 0x17;
 
 		/// <summary>TroopGroup of defensive units</summary>
 		public const int DefenceTroops = 2;
