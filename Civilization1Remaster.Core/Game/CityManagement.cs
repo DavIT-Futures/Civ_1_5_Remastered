@@ -8803,100 +8803,60 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// Does the player have the effect of the wonder: it stands in a city of the player and is not obsolete
 		/// </summary>
-		/// <param name="playerID"></param>
-		/// <param name="wonderID"></param>
-		/// <returns></returns>
+		/// <returns>1 or 0</returns>
 		public ushort PlayerEnjoysWonderEffect(short participantIdx, short miracleIdent)
 		{
 			this.processor.Journal.OpenScope($"PlayerEnjoysWonderEffect({participantIdx}, {miracleIdent})");
 
-			// function body
-			this.processor.EnterFrame(0x4);
-			this.processor.EmitLocalWord(0x2, 0x1);
-			goto L6ca7;
+			bool enjoys = false;
 
-		L6ca4:
-			this.processor.EmitLocalWord(0x2, this.processor.IncrementWord(this.processor.PullLocalWord(0x2)));
+			if (!IsWonderObsolete(miracleIdent))
+			{
+				ushort townIdx = (ushort)this.owner.World.MarvelTownIdx[miracleIdent];
 
-		L6ca7:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x8);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L6cc9;
+				enjoys = townIdx != 0xffff && this.owner.World.Towns[townIdx].ParticipantIdx == participantIdx;
+			}
 
-			this.processor.RegBase.Value16 = (ushort)miracleIdent;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.owner.Advisors.PlayerKnowsTechnology(this.processor.PullLocalSignedWord(0x2),
-				this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10fe)));
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual)
-				goto L6ca4;
+			this.processor.RegAcc.Value16 = (ushort)(enjoys ? 1 : 0);
 
-		L6cc5:
-			this.processor.RegAcc.Value16 = 0;
-			goto L6cef;
-
-		L6cc9:
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.MarvelTownIdx[miracleIdent];
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xffff);
-			if (this.processor.FlagSet.IsEqual) goto L6cc5;
-			this.processor.ScaleIndexToBase(0x1c, this.processor.PullLocalWord(0x4));
-			if (this.owner.World.Towns[this.processor.PullLocalWord(0x4)].ParticipantIdx != participantIdx) goto L6cc5;
-
-			this.processor.RegAcc.Value16 = 0x1;
-
-		L6cef:
-			this.processor.RegStack.Value16 = this.processor.RegFrame.Value16;
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-			// Far return
 			this.processor.Journal.CloseScope("PlayerEnjoysWonderEffect");
 
 			return this.processor.RegAcc.Value16;
 		}
 
 		/// <summary>
-		/// Returns a CityID that has a Wonder
+		/// The city of the wonder, also when the wonder is not finished (-1)
 		/// </summary>
-		/// <param name="wonderID"></param>
-		/// <returns></returns>
+		/// <returns>City index, or 0xffff when the wonder is obsolete</returns>
 		public ushort ObtainWonderCityID(short miracleIdent)
 		{
 			this.processor.Journal.OpenScope($"ObtainWonderCityID({miracleIdent})");
 
-			// function body
-			this.processor.EnterFrame(0x2);
-			this.processor.EmitLocalWord(0x2, 0x1);
-			goto L6d03;
+			ushort townIdx = IsWonderObsolete(miracleIdent) ? (ushort)0xffff : (ushort)this.owner.World.MarvelTownIdx[miracleIdent];
+			this.processor.RegAcc.Value16 = townIdx;
 
-		L6d00:
-			this.processor.EmitLocalWord(0x2, this.processor.IncrementWord(this.processor.PullLocalWord(0x2)));
-
-		L6d03:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x8);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L6d26;
-
-			this.processor.RegBase.Value16 = (ushort)miracleIdent;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.owner.Advisors.PlayerKnowsTechnology(this.processor.PullLocalSignedWord(0x2),
-				this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10fe)));
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual)
-				goto L6d00;
-
-			this.processor.RegAcc.Value16 = 0xffff;
-			goto L6d2f;
-
-		L6d26:
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.MarvelTownIdx[miracleIdent];
-
-		L6d2f:
-			this.processor.RegStack.Value16 = this.processor.RegFrame.Value16;
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-			// Far return
 			this.processor.Journal.CloseScope("ObtainWonderCityID");
 
-			return this.processor.RegAcc.Value16;
+			return townIdx;
+		}
+
+		/// <summary>
+		/// A wonder has no effect any more when any civilization knows the technology that makes it obsolete
+		/// (word table at 0x10fe of the data segment)
+		/// </summary>
+		private bool IsWonderObsolete(short miracleIdent)
+		{
+			short obsoletingTechnology = this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(0x10fe + (miracleIdent << 1)));
+
+			for (short participantIdx = 1; participantIdx < 8; participantIdx++)
+			{
+				if (this.owner.Advisors.PlayerKnowsTechnology(participantIdx, obsoletingTechnology) != 0)
+					return true;
+			}
+
+			return false;
 		}
 
 		/// <summary>
