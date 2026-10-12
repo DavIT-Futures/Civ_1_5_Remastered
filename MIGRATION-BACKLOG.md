@@ -125,15 +125,20 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   w `BatchTenDifferentialTests`. Wnioski: gdy oryginał rzuca wyjątek, zostawia ramkę i rejestry (gra i tak staje), więc test
   przywraca SP/BP/SI/DI po wyjątku oryginału i nie porównuje AX; pusta nazwa w `DisplayCityFoundedMessage` (odczyt bajtu przed
   tekstem) jest nieosiągalna, bo `PullTextInput` zostawia co najmniej spację.
+- Kolejne 5 modułów (2026-10-12): `RepaintMapTile` (`MapManagement`),
+  `ChooseNationToView` (`SpaceshipScreen`), `RenderReplayPreamble` (`GameReplay`), `DisplayCivilizationScenery` (`TurnEvents`,
+  ramka stosu zostaje jako bufor nazwy pliku), `EliminateSpaceship` (`TradeAndConquest`). Testy w `BatchElevenDifferentialTests`;
+  migawka nie widzi plików, więc test zapisu powtórki kopiuje treść pliku do segmentu danych (0xbc00).
+  `ReimposeStrategicLocations` (`AIPlayer`) wycofane: patrz „Blokady” niżej.
 
 ## Następny krok
 
 Dalej małe metody (`python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 60`:
 metody z co najmniej 2 liniami `goto L` / `FlagSet` / `Compare…` / `SumWord` itd., od najkrótszej): w `SystemServices` `DeactivateMouse` (dziwny kontrakt rejestrów AX/BX), `PointerEvent`, `RenderCursorToScreen`,
 `RecoverScreenUnderCursor`, `DisplayScreen`, `ImportColorsFromBuffer`, `FloodColors`, `FadeColors`; `SnapHeapPointer` (`VGADriver`),
-`ReimposeStrategicLocations` (`AIPlayer`), `RepaintMapTile` (`MapManagement`), `EliminateSpaceship` (`TradeAndConquest`),
-`DisplayNewCityLocation` (`NewCityScreen`), `ImportSpaceScenery` (`SpaceshipScreen`), `AffirmBreakTreaty` (`UnitCombat`),
-`ChooseNationToView` (`SpaceshipScreen`), `RenderReplayPreamble` (`GameReplay`), `DisplayCivilizationScenery` (`TurnEvents`),
+`DisplayNewCityLocation` (`NewCityScreen`), `ImportSpaceScenery`, `FireSpaceship` (`SpaceshipScreen`), `RenderIcon` (`Civilopedia`),
+`ArrangeTextRow` (`TextBlockRenderer`), `DisplayHelpPopup(ForHuman)` (`InGameHelp`), `StoreGame` (`GameLoadAndSave`),
+`AffirmBreakTreaty` (`UnitCombat`), `ReimposeStrategicLocations` (`AIPlayer`, zablokowana, patrz „Blokady”),
 reszta generatora mapy w `GameInitAndIntro`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
@@ -150,6 +155,16 @@ te błędy są odtwarzane jawnie:
   `HandlePlayerTurn` woła `ShiftUnit` i `ShiftAIUnit` z tej samej głębokości stosu, więc dostaje typ terenu zostawiony przez
   `ShiftUnit` (bez tego `IndexOutOfRangeException` w `Towns`). Dlatego `ShiftUnit` zachowuje `EnterFrame(0x16)` i na końcu
   zapisuje w ramce końcowe wartości swoich zmiennych lokalnych (`ShiftUnitFrame`). Po naprawie `ShiftAIUnit` można usunąć ramkę.
+
+## Blokady: śmieci na stosie zależne od przerwania zegara
+
+`ShiftAIUnit` czyta niezainicjowaną zmienną lokalną (patrz wyżej), czyli to, co zostało pod SP. Tam trafiają też rejestry
+odkładane przez obsługę przerwania zegara (`ClockInterrupt`), a w testach przerwanie przychodzi co 10 000 dostępów do pamięci.
+Przepisana `ReimposeStrategicLocations` (wołana z `HandleGameEnd` na tej samej głębokości co `HandlePlayerTurn`) robi mniej
+dostępów, przerwanie wypada gdzie indziej i AUTO07 kończy się `IndexOutOfRangeException` w `ShiftAIUnit` (ok. linii 2143).
+Odtworzenie ramki, SI, AX i CX nie pomaga, porównanie stosu pod SP w teście różnicowym (`Watched` z `(0x3b01, 0xe8c0, 0x800)`)
+pokazuje ramkę przerwania w oryginale. Ta funkcja (i podobne wołane przed ruchem AI) czeka na naprawę `ShiftAIUnit` na końcu
+migracji. Każda przepisana funkcja może trafić na to samo: czerwony AUTO07 z wyjątkiem w `ShiftAIUnit` = ta blokada.
 
 ## Poprawki, które zostają (chronią przed crashami, baseline je ma)
 

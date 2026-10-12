@@ -1444,56 +1444,40 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// When some player 1 - 7 has a spaceship (StarshipMarkers bits 9 - 15), asks which nation's spaceship to show (the
+		/// names at 0x1982 + 2 * player; 0xb276 masks the ones without a spaceship) and shows it
 		/// </summary>
 		public void ChooseNationToView()
 		{
 			this.processor.Journal.OpenScope("ChooseNationToView()");
 
-			// function body
-			this.processor.EnterFrame(0x4);
-			this.processor.TestBitsWord((ushort)this.owner.World.StarshipMarkers, 0xfe00);
-			if (this.processor.FlagSet.IsNotEqual) goto L1538;
-			goto L15bf;
+			if ((this.owner.World.StarshipMarkers & 0xfe00) != 0)
+			{
+				this.owner.Libc.CopyText(0xba06, "Which nation?\n ");
 
-		L1538:
-			this.owner.Libc.CopyText(0xba06, "Which nation?\n ");
+				for (int participantIdx = 1; participantIdx < 8; participantIdx++)
+				{
+					this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1982)));
 
-			this.processor.EmitLocalWord(0x4, 0x1);
+					this.owner.Libc.AppendText(0xba06, "\n ");
+				}
 
-		L154d:
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x4);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1982)));
+				this.processor.EmitGlobalWord(0xb276, (ushort)((ushort)(this.owner.World.StarshipMarkers >> 9) ^ 0xff));
 
-			this.owner.Libc.AppendText(0xba06, "\n ");
+				this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
 
-			this.processor.IncrementLocalWord(0x4);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), 0x8);
-			if (this.processor.FlagSet.IsLess) goto L154d;
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.StarshipMarkers;
-			this.processor.RegCount.LowByte = 0x9;
-			this.processor.RegAcc.Value16 = this.processor.ShiftRightSignedWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			this.processor.RegAcc.LowByte = this.processor.BitXorByte(this.processor.RegAcc.LowByte, 0xff);
-			this.processor.EmitGlobalWord(0xb276, this.processor.RegAcc.Value16);
+				short chosenIdx = (short)(this.processor.RegAcc.Value16 + 1);
 
-			this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+				if (chosenIdx > 0)
+				{
+					RenderSpaceScenery();
 
-			this.processor.RegAcc.Value16 = this.processor.IncrementWord(this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsLessOrEqual) goto L15bf;
+					RenderSpaceship(chosenIdx, -1, 1);
 
-			RenderSpaceScenery();
+					ImportSpaceScenery();
+				}
+			}
 
-			RenderSpaceship(this.processor.PullLocalSignedWord(0x2), -1, 1);
-
-			ImportSpaceScenery();
-
-		L15bf:
-			this.processor.RegStack.Value16 = this.processor.RegFrame.Value16;
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-			// Far return
 			this.processor.Journal.CloseScope("ChooseNationToView");
 		}
 

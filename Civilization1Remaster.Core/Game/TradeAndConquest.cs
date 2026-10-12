@@ -485,61 +485,32 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// The player loses its spaceship: when it was launched (StarshipMarkers bit 8 + player) a message "... spaceship" with
+		/// the text 0x28ca (also built: bit player) or 0x28dd; both bits are cleared and the parts wiped
 		/// </summary>
-		/// <param name="playerID"></param>
 		public void EliminateSpaceship(short participantIdx)
 		{
 			this.processor.Journal.OpenScope($"EliminateSpaceship({participantIdx})");
 
-			// function body
-			this.processor.EnterFrame();
+			ushort built = (ushort)(1 << participantIdx);
+			ushort launched = (ushort)(1 << (participantIdx + 8));
 
-			this.processor.RegBase.Value16 = (ushort)participantIdx;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1982)));
+			this.owner.Libc.CopyText(0xba06, this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1982)));
 
 			this.owner.Libc.AppendText(0xba06, " spaceship\n");
 
-			this.processor.RegAcc.Value16 = 0x1;
-			this.processor.RegCount.LowByte = (byte)participantIdx;
-			this.processor.RegCount.LowByte = this.processor.SumByte(this.processor.RegCount.LowByte, 0x8);
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			this.processor.TestBitsWord(this.processor.RegAcc.Value16, (ushort)this.owner.World.StarshipMarkers);
-			if (this.processor.FlagSet.IsEqual) goto L065e;
-
-			this.processor.RegAcc.Value16 = 0x1;
-			this.processor.RegCount.LowByte = (byte)participantIdx;
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-
-			if ((this.owner.World.StarshipMarkers & this.processor.RegAcc.Value16) != 0)
+			if ((this.owner.World.StarshipMarkers & launched) != 0)
 			{
-				this.owner.Libc.AppendText(0xba06, 0x28ca);
-			}
-			else
-			{
-				this.owner.Libc.AppendText(0xba06, 0x28dd);
+				this.owner.Libc.AppendText(0xba06, (this.owner.World.StarshipMarkers & built) != 0 ? (ushort)0x28ca : (ushort)0x28dd);
+
+				this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
 			}
 
-			this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
-
-		L065e:
-			this.processor.RegAcc.Value16 = 0x1;
-			this.processor.RegCount.LowByte = (byte)participantIdx;
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			this.processor.RegAcc.Value16 = this.processor.InvertWord(this.processor.RegAcc.Value16);
-			this.owner.World.StarshipMarkers &= (short)this.processor.RegAcc.Value16;
-
-			this.processor.RegAcc.Value16 = 0x1;
-			this.processor.RegCount.LowByte = this.processor.SumByte(this.processor.RegCount.LowByte, 0x8);
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			this.processor.RegAcc.Value16 = this.processor.InvertWord(this.processor.RegAcc.Value16);
-			this.owner.World.StarshipMarkers &= (short)this.processor.RegAcc.Value16;
+			this.owner.World.StarshipMarkers &= (short)~built;
+			this.owner.World.StarshipMarkers &= (short)~launched;
 
 			this.owner.NewGameWizard.WipeSpaceshipContent(participantIdx);
-			
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-			// Far return
+
 			this.processor.Journal.CloseScope("EliminateSpaceship");
 		}
 

@@ -1550,56 +1550,34 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// Draws the tile again and, unless units are hidden (0xdcfc), the unit on it: when the human sees it (all units are
+		/// shown with 0xd806, the human's own, or the unit's bit of the human), and the tile has no city
 		/// </summary>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
 		public void RepaintMapTile(int horizLoc, int vertLoc)
 		{
 			this.processor.Journal.OpenScope($"RepaintMapTile({horizLoc}, {vertLoc})");
 
-			// function body
-			this.processor.EnterFrame(0x2);
-			this.processor.PreserveSource();
-
 			RenderMapTile(horizLoc, vertLoc);
 
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xdcfc), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L1256;
+			if (this.processor.PullGlobalWord(0xdcfc) == 0)
+			{
+				ushort troopIdx = ObtainUnitAtTile(horizLoc, vertLoc);
 
-			ObtainUnitAtTile(horizLoc, vertLoc);
+				if (troopIdx != 0xffff)
+				{
+					short ownerIdx = this.processor.PullGlobalSignedWord(0xd20a);
+					short personIdx = this.owner.World.PersonParticipantIdx;
 
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xffff);
-			if (this.processor.FlagSet.IsEqual) goto L1256;
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xd806), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L1237;
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xd20a), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L1237;
-			this.processor.ScaleIndexToBase(0x600, this.processor.PullGlobalWord(0xd20a));
-			this.processor.ScaleIndexToSource(0xc, this.processor.PullLocalWord(0x2));
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81dd));
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegData.Value16 = 0x1;
-			this.processor.RegCount.LowByte = (byte)(this.owner.World.PersonParticipantIdx & 0xff);
-			this.processor.RegData.Value16 = this.processor.ShiftLeftWord(this.processor.RegData.Value16, this.processor.RegCount.LowByte);
-			this.processor.TestBitsWord(this.processor.RegAcc.Value16, this.processor.RegData.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L1256;
+					bool seen = this.processor.PullGlobalWord(0xd806) != 0 || ownerIdx == personIdx ||
+						(this.troops.Pull(ownerIdx, troopIdx, UnitMemory.ShownToParticipants) & (1 << personIdx)) != 0;
 
-		L1237:
-			ObtainTileImprovements(horizLoc, vertLoc);
+					if (seen && (ObtainTileImprovements(horizLoc, vertLoc) & 0x1) == 0)
+					{
+						RepaintUnitTile(this.processor.PullGlobalSignedWord(0xd20a), (short)troopIdx);
+					}
+				}
+			}
 
-			this.processor.TestBitsByte(this.processor.RegAcc.LowByte, 0x1);
-			if (this.processor.FlagSet.IsNotEqual) goto L1256;
-
-			RepaintUnitTile(this.processor.PullGlobalSignedWord(0xd20a),
-				this.processor.PullLocalSignedWord(0x2));
-
-		L1256:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.LeaveFrame();
-			// Far return
 			this.processor.Journal.CloseScope("RepaintMapTile");
 		}
 

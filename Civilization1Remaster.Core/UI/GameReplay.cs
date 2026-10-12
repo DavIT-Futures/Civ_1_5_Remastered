@@ -679,56 +679,43 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// Shows the line of a replay event (the text at 0xba06) at the top of the screen, in capitals for the human's events
+		/// (0x6810), and writes it with CR LF to the replay file (0x680c) in mode 3 of 0x680a; nothing in mode 4. The text is
+		/// drawn, then drawn again shortened to 312 pixels.
 		/// </summary>
 		public void RenderReplayPreamble()
 		{
 			this.processor.Journal.OpenScope("RenderReplayPreamble()");
 
-			// function body
-			this.processor.EnterFrame(0x2);
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x680a), 0x4);
-			if (this.processor.FlagSet.IsNotEqual) goto L08b3;
-			goto L0978;
+			if (this.processor.PullGlobalWord(0x680a) != 4)
+			{
+				if (this.processor.PullGlobalWord(0x6810) == (ushort)this.owner.World.PersonParticipantIdx)
+				{
+					this.owner.Libc.UppercaseText(0xba06);
+				}
 
-		L08b3:
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x6810), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L08c8;
+				this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 8, 15);
 
-			this.owner.Libc.UppercaseText(0xba06);
+				this.owner.TextPainter.RenderTextToScreen0(0xba06, 4, 1, 0);
 
-		L08c8:
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 8, 15);
+				if (this.processor.PullGlobalWord(0x680a) == 3)
+				{
+					ushort length = this.owner.Libc.TextLength(0xba06);
 
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, 4, 1, 0);
+					this.processor.EmitGlobalByte((ushort)(length + 0xba06), 0xd);
+					this.processor.EmitGlobalByte((ushort)(length + 0xba07), 0xa);
+					this.processor.EmitGlobalByte((ushort)(length + 0xba08), 0x0);
 
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x680a), 0x3);
-			if (this.processor.FlagSet.IsNotEqual) goto L0935;
+					this.owner.Libc.WriteHandle((short)this.processor.PullGlobalWord(0x680c), 0xba06, (ushort)(length + 2));
+				}
 
-			this.owner.Libc.TextLength(0xba06);
+				this.owner.BlockText.ShrinkTextToWidth(0xba06, 312);
 
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xba06), 0xd);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xba07), 0xa);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xba08), 0x0);
-			this.processor.RegAcc.Value16 = this.processor.IncrementWord(this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = this.processor.IncrementWord(this.processor.RegAcc.Value16);
+				this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 8, 15);
 
-			this.owner.Libc.WriteHandle((short)this.processor.PullGlobalWord(0x680c), 0xba06, this.processor.RegAcc.Value16);
+				this.owner.TextPainter.RenderTextToScreen0(0xba06, 4, 1, 0);
+			}
 
-		L0935:
-			this.owner.BlockText.ShrinkTextToWidth(0xba06, 312);
-
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 8, 15);
-
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, 4, 1, 0);
-
-		L0978:
-			this.processor.RegStack.Value16 = this.processor.RegFrame.Value16;
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-			// Far return
 			this.processor.Journal.CloseScope("RenderReplayPreamble");
 		}
 

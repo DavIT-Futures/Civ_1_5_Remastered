@@ -2222,57 +2222,50 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// When 0xd762 is set: loads the palette of the human player's government, "backNa.pal" (N is the government / 2, 3 for
+		/// government 3, "m" instead of "a" with technology 20), and the palette 0x1e56, and puts colours 5 on. The file name is
+		/// made in a buffer in the stack frame, like in the original.
 		/// </summary>
 		public void DisplayCivilizationScenery()
 		{
 			this.processor.Journal.OpenScope("DisplayCivilizationScenery()");
 
-			// function body
 			this.processor.EnterFrame(0x10);
 			this.processor.PreserveSource();
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xd762), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L1bfc;
-			goto L1c93;
 
-		L1bfc:
-			this.owner.Helpers.HaltHueCycling();
-
-			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x10), "back0a.pal");
-
-			this.processor.RegSource.Value16 = (ushort)this.owner.World.Participants[this.owner.World.PersonParticipantIdx].RegimeKind;
-			this.processor.RegAcc.Value16 = this.processor.RegSource.Value16;
-			this.processor.HalveAccumulator();
-			this.processor.RegAcc.LowByte = this.processor.SumByte(this.processor.RegAcc.LowByte, 0x30);
-			this.processor.EmitLocalByte(0xc, this.processor.RegAcc.LowByte);
-			this.processor.CompareWord(this.processor.RegSource.Value16, 0x3);
-			if (this.processor.FlagSet.IsNotEqual) goto L1c32;
-			this.processor.EmitLocalByte(0xc, 0x33);
-			goto L1c4a;
-
-		L1c32:
-			this.processor.RegAcc.Value16 = this.owner.Advisors.PlayerKnowsTechnology(this.owner.World.PersonParticipantIdx, 0x14);
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsNotEqual)
+			if (this.processor.PullGlobalWord(0xd762) != 0)
 			{
-				this.processor.EmitLocalByte(0xb, 0x6d);
+				this.owner.Helpers.HaltHueCycling();
+
+				ushort docname = (ushort)(this.processor.RegFrame.Value16 - 0x10);
+				this.owner.Libc.CopyText(docname, "back0a.pal");
+
+				short regime = this.owner.World.Participants[this.owner.World.PersonParticipantIdx].RegimeKind;
+				this.processor.EmitGlobalByte((ushort)(docname + 4), (byte)((regime / 2) + 0x30));
+
+				if (regime == 3)
+				{
+					this.processor.EmitGlobalByte((ushort)(docname + 4), 0x33);
+				}
+				else if (this.owner.Advisors.PlayerKnowsTechnology(this.owner.World.PersonParticipantIdx, 0x14) != 0)
+				{
+					this.processor.EmitGlobalByte((ushort)(docname + 5), 0x6d);
+				}
+
+				this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, docname, 0xc1d6);
+
+				this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, 0x1e56, 0xc5be);
+
+				this.owner.Libc.CopyBytes(0xc744, 0xc35c, 0x180);
+
+				this.owner.Services.ImportColorsFromBuffer(5, 0xc5be);
+
+				this.owner.Helpers.LaunchHueCycling();
 			}
 
-		L1c4a:
-			this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, (ushort)(this.processor.RegFrame.Value16 - 0x10), 0xc1d6);
-
-			this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, 0x1e56, 0xc5be);
-
-			this.owner.Libc.CopyBytes(0xc744, 0xc35c, 0x180);
-
-			this.owner.Services.ImportColorsFromBuffer(5, 0xc5be);
-			
-			this.owner.Helpers.LaunchHueCycling();
-
-		L1c93:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
+			this.processor.RestoreSource();
 			this.processor.LeaveFrame();
-			// Far return
+
 			this.processor.Journal.CloseScope("DisplayCivilizationScenery");
 		}
 
