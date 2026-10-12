@@ -275,45 +275,34 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <summary>
-		/// ?
+		/// Remembers the show level of the mouse pointer (0xdeea) in 0x652e and shows the pointer until the level is at least 1
 		/// </summary>
 		public void DisplayMouseCursorFully()
 		{
 			this.processor.Journal.OpenScope("DisplayMouseCursorFully()");
 
-			// function body
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0xdeea);
-			this.processor.EmitGlobalWord(0x652e, this.processor.RegAcc.Value16);
-			goto L028c;
+			this.processor.EmitGlobalWord(0x652e, this.processor.PullGlobalWord(0xdeea));
 
-		L0288:
-			DisplayMouseCursor();
+			while ((short)this.processor.PullGlobalWord(0xdeea) < 1)
+			{
+				DisplayMouseCursor();
+			}
 
-		L028c:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xdeea), 0x1);
-			if (this.processor.FlagSet.IsLess) goto L0288;
-			// Far return
 			this.processor.Journal.CloseScope("DisplayMouseCursorFully");
 		}
 
 		/// <summary>
-		/// ?
+		/// Hides the mouse pointer back to the show level remembered by DisplayMouseCursorFully (0x652e)
 		/// </summary>
 		public void ConcealMouseCursorToSavedLevel()
 		{
 			this.processor.Journal.OpenScope("ConcealMouseCursorToSavedLevel()");
 
-			// function body
-			goto L029a;
+			while ((short)this.processor.PullGlobalWord(0xdeea) > (short)this.processor.PullGlobalWord(0x652e))
+			{
+				ConcealMouseCursor();
+			}
 
-		L0296:
-			ConcealMouseCursor();
-
-		L029a:
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x652e);
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xdeea), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsGreater) goto L0296;
-			// Far return
 			this.processor.Journal.CloseScope("ConcealMouseCursorToSavedLevel");
 		}
 
