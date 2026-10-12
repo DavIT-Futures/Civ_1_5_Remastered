@@ -1954,44 +1954,25 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// Appends " (n turns)" or " (1 turn)" to the text at 0xba06: the turns the city needs for the production of cost arg2
+		/// (in tens of shields), with the shields per turn 0x70dc - 0xd2f6 (1 - 99); 1 - 999 turns
 		/// </summary>
-		/// <param name="cityID"></param>
-		/// <param name="param2"></param>
 		public void ComposeProductionOption(short townIdx, ushort arg2)
 		{
 			this.processor.Journal.OpenScope($"ComposeProductionOption({townIdx}, {arg2})");
 
-			// function body
-			this.processor.EnterFrame(0x2);
-			
-			this.owner.Helpers.VerifyValueSpan(
-				this.processor.PullGlobalSignedWord(0x70dc) - this.processor.PullGlobalSignedWord(0xd2f6),
-				1, 99);
-			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
+			int perTurn = this.owner.Helpers.VerifyValueSpan(
+				this.processor.PullGlobalSignedWord(0x70dc) - this.processor.PullGlobalSignedWord(0xd2f6), 1, 99);
 
-			this.owner.Helpers.VerifyValueSpan(
-				(((10 * arg2) - this.owner.World.Towns[townIdx].MaterialsTally - 1) / (short)this.processor.RegCount.Value16) + 1,
-				1, 999);
-
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
+			ushort turns = (ushort)this.owner.Helpers.VerifyValueSpan(
+				(((10 * arg2) - this.owner.World.Towns[townIdx].MaterialsTally - 1) / (short)perTurn) + 1, 1, 999);
 
 			this.owner.Libc.AppendText(0xba06, " (");
 
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText((short)this.processor.PullLocalWord(0x2), 10));
+			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText((short)turns, 10));
 
-			if (this.processor.PullLocalWord(0x2) != 1)
-			{
-				this.owner.Libc.AppendText(0xba06, 0x22b2);
-			}
-			else
-			{
-				this.owner.Libc.AppendText(0xba06, 0x22b9);
-			}
+			this.owner.Libc.AppendText(0xba06, (ushort)(turns != 1 ? 0x22b2 : 0x22b9));
 
-			this.processor.LeaveFrame();
-			// Far return
 			this.processor.Journal.CloseScope("ComposeProductionOption");
 		}
 

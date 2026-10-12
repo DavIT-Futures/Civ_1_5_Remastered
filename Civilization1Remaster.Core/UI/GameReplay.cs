@@ -787,84 +787,59 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// Puts the city into the first free entry (first column 0xffff) of the replay city table (segment 0x3725: three word
+		/// columns of 128 entries at 0, 0x100 and 0x200)
 		/// </summary>
-		/// <param name="param1"></param>
-		/// <param name="param2"></param>
-		/// <param name="param3"></param>
 		public void AssignReplayCityContent(ushort arg1, ushort arg2, ushort arg3)
 		{
 			this.processor.Journal.OpenScope($"AssignReplayCityContent({arg1}, {arg2}, {arg3})");
 
-			// function body
-			this.processor.EnterFrame(0x2);
-			this.processor.PreserveSource();
-			this.processor.EmitLocalWord(0x2, 0x0);
-			goto L09ed;
+			this.processor.SegExtra.Value16 = ReplayCitySegment;
 
-		L09ea:
-			this.processor.EmitLocalWord(0x2, this.processor.IncrementWord(this.processor.PullLocalWord(0x2)));
+			for (int idx = 0; idx < 0x80; idx++)
+			{
+				if (PullReplayCity(idx, 0) != 0xffff)
+					continue;
 
-		L09ed:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x80);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0a1d;
+				EmitReplayCity(idx, 0, arg1);
+				EmitReplayCity(idx, 0x100, arg2);
+				EmitReplayCity(idx, 0x200, arg3);
+				break;
+			}
 
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x2);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.SegExtra.Value16 = 0x3725; // segment
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x0)), 0xffff);
-			if (this.processor.FlagSet.IsNotEqual) goto L09ea;
-
-			this.processor.EmitUInt16(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x0), arg1);
-			this.processor.EmitUInt16(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x100), arg2);
-			this.processor.EmitUInt16(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x200), arg3);
-
-		L0a1d:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.LeaveFrame();
-			// Far return
 			this.processor.Journal.CloseScope("AssignReplayCityContent");
 		}
 
+		private const ushort ReplayCitySegment = 0x3725;
+
+		private ushort PullReplayCity(int idx, int column)
+		{
+			return this.processor.PullUInt16(ReplayCitySegment, (ushort)((idx << 1) + column));
+		}
+
+		private void EmitReplayCity(int idx, int column, ushort amount)
+		{
+			this.processor.EmitUInt16(ReplayCitySegment, (ushort)((idx << 1) + column), amount);
+		}
+
 		/// <summary>
-		/// ?
+		/// Sets the first column of the first entry of the replay city table whose second and third columns are arg2 and arg3
 		/// </summary>
-		/// <param name="param1"></param>
-		/// <param name="param2"></param>
-		/// <param name="param3"></param>
 		public void AssignReplayCityContentAlt(ushort arg1, ushort arg2, ushort arg3)
 		{
 			this.processor.Journal.OpenScope($"AssignReplayCityContentAlt({arg1}, {arg2}, {arg3})");
 
-			// function body
-			this.processor.EnterFrame(0x2);
-			this.processor.PreserveSource();
+			this.processor.SegExtra.Value16 = ReplayCitySegment;
 
-			this.processor.EmitLocalWord(0x2, 0x0);
-			goto L0a33;
+			for (int idx = 0; idx < 0x80; idx++)
+			{
+				if (PullReplayCity(idx, 0x100) != arg2 || PullReplayCity(idx, 0x200) != arg3)
+					continue;
 
-		L0a30:
-			this.processor.EmitLocalWord(0x2, this.processor.IncrementWord(this.processor.PullLocalWord(0x2)));
+				EmitReplayCity(idx, 0, arg1);
+				break;
+			}
 
-		L0a33:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x80);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0a5f;
-
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x2);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.SegExtra.Value16 = 0x3725; // segment
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x100)), arg2);
-			if (this.processor.FlagSet.IsNotEqual) goto L0a30;
-
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x200)), arg3);
-			if (this.processor.FlagSet.IsNotEqual) goto L0a30;
-
-			this.processor.EmitUInt16(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x0), arg1);
-
-		L0a5f:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.LeaveFrame();
-			// Far return
 			this.processor.Journal.CloseScope("AssignReplayCityContentAlt");
 		}
 

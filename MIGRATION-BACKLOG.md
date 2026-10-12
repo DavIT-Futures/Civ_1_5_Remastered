@@ -92,11 +92,16 @@ i `MovementRules`. Testy `AssemblyParityDifferentialTests` porównują C# z ręc
   `AwaitForKeyPressOrMouseClick` (`TradeAndConquest`), `AwaitForKey` (`PlayerTurn`), `FreshWorldChoices` (`GameStartup`),
   `ShrinkTextToWidth` (`TextBlockRenderer`). Golden master nie wykonuje `RenewCityScreen` i `FreshWorldChoices`
   (porównane ręcznie).
+- Następne 6 modułów (2026-10-12): `ObtainSpaceshipPartValue` (`SpaceshipScreen`), `AssignReplayCityContent`,
+  `AssignReplayCityContentAlt` (`GameReplay`), `RenderCityResourceBar` (`CityView`), `ComposeProductionOption`
+  (`ScienceAndAdvisors`), `DisplayKingMessage` (`MeetWithKing`), `WipeSpaceshipContent` (`StartGameMenu`). Golden master
+  wykonuje tylko `RenderCityResourceBar` i `ComposeProductionOption`, reszta porównana ręcznie.
 
 ## Następny krok
 
 Dalej małe metody: w `SystemServices` (mysz, kolory: `BlankMouseCursor`, `RenderMouseCursor`, `ActivateHueCycle`, ...),
-`ReflowText` (`TextBlockRenderer`), `BlendTerrainTile` jest już zrobione, w `GameInitAndIntro` reszta generatora mapy;
+`ReflowText` (`TextBlockRenderer`), `ObtainFirstPrerequisite` / `ObtainSecondPrerequisite` / `ObtainTechnologyCategory`
+(`Civilopedia`), `ObtainDistanceToReplayCity` (`GameReplay`), reszta generatora mapy w `GameInitAndIntro`;
 do wyszukania: skrypt z liczbą `goto L` / `EnterFrame` na metodę, posortowany po długości. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180)
 i `AIPlayer` (870). Najmniejsze metody w stylu asm można znaleźć skryptem,
 który szuka `goto L`, `EnterFrame`, `ScaleIndex` itd. i sortuje po liczbie wywołań w kanale `call.` baseline.

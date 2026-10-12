@@ -632,47 +632,36 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// One picture of a row of the city screen into the back screen (0x19d4): pictures below 0x30 from the table at 0x81a2,
+		/// the others from the table at 0x68a0, moved up by their height (segment 0x3767)
 		/// </summary>
-		/// <param name="param1"></param>
-		/// <param name="param2"></param>
-		/// <param name="param3"></param>
 		public void RenderCityResourceBar(ushort arg1, ushort arg2, ushort arg3)
 		{
 			this.processor.Journal.OpenScope($"RenderCityResourceBar({arg1}, {arg2}, {arg3})");
 
-			// function body
-			this.processor.EnterFrame();
+			if ((short)arg3 < 0x30)
+			{
+				int horizLoc = this.owner.Helpers.VerifyValueSpan(((arg2 & 1) * 8) + (arg1 * 16) - 9, 0, 999);
 
-			this.processor.CompareWord(arg3, 0x30);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L10b9;
+				this.owner.Services.RenderPictureToScreenAlternate(this.processor.PullGlobalWord(0x19d4),
+					(short)horizLoc,
+					(short)((short)(arg2 << 3) + 16),
+					this.processor.PullGlobalWord((ushort)((arg3 << 1) + 0x81a2)));
+			}
+			else
+			{
+				this.processor.SegExtra.Value16 = 0x3767;
+				arg3 -= 0x30;
+				arg2 = (ushort)((short)(arg2 << 3) - this.processor.PullInt16(this.processor.SegExtra.Value16, (ushort)((arg3 << 3) + 6)) + 76);
 
-			this.owner.Helpers.VerifyValueSpan(((arg2 & 1) * 8) + (arg1 * 16) - 9, 0, 999);
+				int horizLoc = this.owner.Helpers.VerifyValueSpan(((arg2 & 1) * 8) + (arg1 * 16) - 9, 0, 999);
 
-			this.owner.Services.RenderPictureToScreenAlternate(
-				this.processor.PullGlobalWord(0x19d4),
-				(short)this.processor.RegAcc.Value16,
-				(short)((short)(arg2 << 3) + 16),
-				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((arg3 << 1) + 0x81a2)));
+				this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0x19d4),
+					(short)horizLoc,
+					(short)arg2 - 10,
+					this.processor.PullGlobalWord((ushort)((arg3 << 1) + 0x68a0)));
+			}
 
-			goto L111a;
-
-		L10b9:
-			this.processor.SegExtra.Value16 = 0x3767; // segment
-			arg3 -= 0x30;
-			arg2 = (ushort)((short)(arg2 << 3) - this.processor.PullInt16(this.processor.SegExtra.Value16, (ushort)((arg3 << 3) + 6)) + 76);
-
-			this.owner.Helpers.VerifyValueSpan(((arg2 & 1) * 8) + (arg1 * 16) - 9, 0, 999);
-
-			this.owner.Services.RenderPictureToScreen(
-				this.processor.PullGlobalWord(0x19d4),
-				(short)this.processor.RegAcc.Value16,
-				(short)arg2 - 10,
-				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((arg3 << 1) + 0x68a0)));
-
-		L111a:
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-			// Far return
 			this.processor.Journal.CloseScope("RenderCityResourceBar");
 		}
 

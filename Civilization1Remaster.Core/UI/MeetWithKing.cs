@@ -2155,25 +2155,16 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// The message of the leader of the player to the human player (text 0x3a8c, with the names of both civilizations from
+		/// the table at 0x1982 put into the text parameters 0x30be and 0x30b8)
 		/// </summary>
-		/// <param name="playerID"></param>
 		public void DisplayKingMessage(short participantIdx)
 		{
 			this.processor.Journal.OpenScope($"DisplayKingMessage({participantIdx})");
 
-			// function body
-			this.processor.EnterFrame();
+			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be), CivilizationNameAddr(participantIdx));
 
-			this.processor.RegBase.Value16 = (ushort)participantIdx;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be),
-				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1982)));
-
-			this.processor.RegBase.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30b8),
-				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1982)));
+			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30b8), CivilizationNameAddr(this.owner.World.PersonParticipantIdx));
 
 			this.processor.EmitGlobalWord(0xd76c, 0xc);
 			this.processor.EmitGlobalByte(0xba06, 0x0);
@@ -2181,10 +2172,13 @@ namespace Civilization1Remaster.UI
 			this.owner.BlockText.DisplayTextDialog(0x3a8c);
 
 			DisplayKingDialog(0xba06, 0x14, 0x8b);
-			
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-			// Far return
+
 			this.processor.Journal.CloseScope("DisplayKingMessage");
+		}
+
+		private ushort CivilizationNameAddr(short participantIdx)
+		{
+			return this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1982));
 		}
 
 		/// <summary>

@@ -828,43 +828,26 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// Is the place of the spaceship of the player taken by a part: the byte of the spaceship layout (segment 0x3772,
+		/// 0x16e0 + 0xb4 * player + 0xc * row + column) is not empty (0xff) and below 3
 		/// </summary>
-		/// <param name="playerID"></param>
-		/// <param name="param2"></param>
-		/// <param name="param3"></param>
-		/// <returns></returns>
+		/// <returns>1 or 0, also in AX</returns>
 		public ushort ObtainSpaceshipPartValue(short participantIdx, ushort arg2, ushort arg3)
 		{
 			this.processor.Journal.OpenScope($"ObtainSpaceshipPartValue({participantIdx}, {arg2}, {arg3})");
 
-			// function body
-			this.processor.EnterFrame(0x2);
-			this.processor.ScaleIndexToBase(0xb4, (ushort)participantIdx);
-			this.processor.ScaleIndex(0xc, arg2);
-			this.processor.RegBase.Value16 = this.processor.SumWord(this.processor.RegBase.Value16, this.processor.RegAcc.Value16);
-			this.processor.RegBase.Value16 = this.processor.SumWord(this.processor.RegBase.Value16, arg3);
-			this.processor.SegExtra.Value16 = 0x3772; // segment
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegExtra.Value16, (ushort)(this.processor.RegBase.Value16 + 0x16e0));
-			this.processor.EmitLocalByte(0x2, this.processor.RegAcc.LowByte);
-			this.processor.CompareByte(this.processor.RegAcc.LowByte, 0xff);
-			if (this.processor.FlagSet.IsEqual) goto L0c43;
-			this.processor.CompareByte(this.processor.RegAcc.LowByte, 0x3);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0c43;
-			this.processor.RegAcc.Value16 = 0x1;
-			goto L0c45;
+			this.processor.SegExtra.Value16 = 0x3772;
 
-		L0c43:
-			this.processor.RegAcc.Value16 = 0;
+			sbyte part = (sbyte)this.processor.PullUInt8(this.processor.SegExtra.Value16,
+				(ushort)((0xb4 * participantIdx) + (0xc * arg2) + arg3 + 0x16e0));
 
-		L0c45:
-			this.processor.RegStack.Value16 = this.processor.RegFrame.Value16;
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
+			ushort taken = (ushort)(part != -1 && part < 3 ? 1 : 0);
 
-			// Far return
+			this.processor.RegAcc.Value16 = taken;
+
 			this.processor.Journal.CloseScope("ObtainSpaceshipPartValue");
 
-			return this.processor.RegAcc.Value16;
+			return taken;
 		}
 
 		/// <summary>

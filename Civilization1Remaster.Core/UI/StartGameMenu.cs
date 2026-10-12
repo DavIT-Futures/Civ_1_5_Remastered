@@ -2231,47 +2231,25 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// The player has no spaceship: no arrival, every place of the spaceship layout (15 rows of 12, segment 0x3772) empty
 		/// </summary>
-		/// <param name="playerID"></param>
 		public void WipeSpaceshipContent(short participantIdx)
 		{
 			this.processor.Journal.OpenScope($"WipeSpaceshipContent({participantIdx})");
 
-			// function body
-			this.processor.EnterFrame(0x4);
-
 			this.owner.World.Participants[participantIdx].StarshipArrivalSeason = -1;
-			this.processor.EmitLocalWord(0x2, 0x0);
-			goto L1d5d;
 
-		L1d32:
-			this.processor.EmitLocalWord(0x4, this.processor.IncrementWord(this.processor.PullLocalWord(0x4)));
+			this.processor.SegExtra.Value16 = 0x3772;
 
-		L1d35:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), 0xc);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L1d5a;
-			this.processor.ScaleIndexToBase(0xb4, (ushort)participantIdx);
-			this.processor.ScaleIndex(0xc, this.processor.PullLocalWord(0x2));
-			this.processor.RegBase.Value16 = this.processor.SumWord(this.processor.RegBase.Value16, this.processor.RegAcc.Value16);
-			this.processor.RegBase.Value16 = this.processor.SumWord(this.processor.RegBase.Value16, this.processor.PullLocalWord(0x4));
-			this.processor.SegExtra.Value16 = 0x3772; // segment
-			this.processor.EmitUInt8(this.processor.SegExtra.Value16, (ushort)(this.processor.RegBase.Value16 + 0x16e0), 0xff);
-			goto L1d32;
+			for (int row = 0; row < 0xf; row++)
+			{
+				for (int column = 0; column < 0xc; column++)
+				{
+					this.processor.EmitUInt8(this.processor.SegExtra.Value16,
+						(ushort)((0xb4 * participantIdx) + (0xc * row) + column + 0x16e0), 0xff);
+				}
+			}
 
-		L1d5a:
-			this.processor.EmitLocalWord(0x2, this.processor.IncrementWord(this.processor.PullLocalWord(0x2)));
-
-		L1d5d:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0xf);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L1d6a;
-			this.processor.EmitLocalWord(0x4, 0x0);
-			goto L1d35;
-
-		L1d6a:
-			this.processor.RegStack.Value16 = this.processor.RegFrame.Value16;
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-			// Far return
 			this.processor.Journal.CloseScope("WipeSpaceshipContent");
 		}
 	}
