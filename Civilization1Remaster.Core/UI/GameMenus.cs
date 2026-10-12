@@ -754,38 +754,30 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// The Civilopedia menu: the chosen part is shown (0x654a = -1 afterwards), Escape sets 0x654a to 1
 		/// </summary>
 		public void DisplayCivilopediaMenu()
 		{
 			this.processor.Journal.OpenScope("DisplayCivilopediaMenu()");
 
-			// function body
-			this.processor.EnterFrame(0x2);
-
 			this.owner.Libc.CopyText(0xba06, " Complete\n Civilization Advances\n City Improvements\n Military Units\n Terrain Types\n");
-
 			this.owner.Libc.AppendText(0xba06, " Miscellaneous\n");
 
 			this.owner.Dialogs.DisplayMenu(0xba06, 182, 8, 0);
 
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xffff);
-			if (this.processor.FlagSet.IsEqual) goto L0806;
+			ushort choice = this.processor.RegAcc.Value16;
 
-			this.processor.RegAcc.Value16 = this.processor.DecrementWord(this.processor.RegAcc.Value16);
-			this.owner.Encyclopedia.DisplayCivilopedia(this.processor.RegAcc.Value16);
+			if (choice != 0xffff)
+			{
+				this.owner.Encyclopedia.DisplayCivilopedia((ushort)(choice - 1));
 
-			this.processor.EmitGlobalWord(0x654a, 0xffff);
-			goto L080c;
+				this.processor.EmitGlobalWord(0x654a, 0xffff);
+			}
+			else
+			{
+				this.processor.EmitGlobalWord(0x654a, 0x1);
+			}
 
-		L0806:
-			this.processor.EmitGlobalWord(0x654a, 0x1);
-
-		L080c:
-			this.processor.RegStack.Value16 = this.processor.RegFrame.Value16;
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-			// Far return
 			this.processor.Journal.CloseScope("DisplayCivilopediaMenu");
 		}
 	}

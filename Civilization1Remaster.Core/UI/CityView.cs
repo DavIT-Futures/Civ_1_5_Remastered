@@ -596,29 +596,18 @@ namespace Civilization1Remaster.UI
 		}
 		
 		/// <summary>
-		/// ?
+		/// One picture of the city view (table at 0x817a by picture and kind) into the back screen (0x19d4), in the column and
+		/// row of the view
 		/// </summary>
-		/// <param name="param1"></param>
-		/// <param name="param2"></param>
-		/// <param name="param3"></param>
-		/// <param name="param4"></param>
 		public void RenderCityPictureRegion(ushort arg1, ushort arg2, ushort arg3, ushort arg4)
 		{
 			this.processor.Journal.OpenScope($"RenderCityPictureRegion({arg1}, {arg2}, {arg3}, {arg4})");
 
-			// function body
-			this.processor.EnterFrame();
-			this.processor.PreserveSource();
-
-			this.owner.Services.RenderPictureToScreen(
-				this.processor.PullGlobalWord(0x19d4),
+			this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0x19d4),
 				((arg2 & 1) << 3) + (arg1 << 4),
 				(arg2 << 3) + 26,
-				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((arg3 << 1) + (arg4 << 3) + 0x817a)));
+				this.processor.PullGlobalWord((ushort)((arg3 << 1) + (arg4 << 3) + 0x817a)));
 
-			this.processor.RestoreSource();
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-			// Far return
 			this.processor.Journal.CloseScope("RenderCityPictureRegion");
 		}
 
@@ -1084,54 +1073,41 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// Cuts a picture of the city view out of screen 1. The rectangles (segment 0x3767, records of 4 words: left, top, right,
+		/// bottom) are turned into left, top, width, height once, the first time (when the right of rectangle 1 is above 300).
 		/// </summary>
-		/// <param name="param1"></param>
 		public void SeizeCityScenery(ushort arg1)
 		{
 			this.processor.Journal.OpenScope($"SeizeCityScenery({arg1})");
 
-			// function body
-			this.processor.EnterFrame(0x2);
-			this.processor.PreserveSource();
+			this.processor.SegExtra.Value16 = CitySceneryBoxes;
 
-			this.processor.SegExtra.Value16 = 0x3767; // segment
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegExtra.Value16, 0xc), 0x12c);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L164f;
+			if ((short)this.processor.PullUInt16(CitySceneryBoxes, 0xc) > 0x12c)
+			{
+				for (int boxIdx = 1; boxIdx <= 0x15; boxIdx++)
+				{
+					ushort box = (ushort)(boxIdx << 3);
 
-			this.processor.EmitLocalWord(0x2, 0x1);
+					this.processor.EmitUInt16(CitySceneryBoxes, (ushort)(box + 4),
+						(ushort)(this.processor.PullUInt16(CitySceneryBoxes, (ushort)(box + 4)) - this.processor.PullUInt16(CitySceneryBoxes, box) + 1));
+					this.processor.EmitUInt16(CitySceneryBoxes, (ushort)(box + 6),
+						(ushort)(this.processor.PullUInt16(CitySceneryBoxes, (ushort)(box + 6)) - this.processor.PullUInt16(CitySceneryBoxes, (ushort)(box + 2)) + 1));
+				}
+			}
 
-		L161f:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x2);
-			this.processor.RegSource.Value16 <<= 3;
+			ushort picked = (ushort)(arg1 << 3);
 
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x4));
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, this.processor.PullUInt16(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x0)));
-			this.processor.RegAcc.Value16 = this.processor.IncrementWord(this.processor.RegAcc.Value16);
-			this.processor.EmitUInt16(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x4), this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x6));
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, this.processor.PullUInt16(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x2)));
-			this.processor.RegAcc.Value16 = this.processor.IncrementWord(this.processor.RegAcc.Value16);
-			this.processor.EmitUInt16(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x6), this.processor.RegAcc.Value16);
-
-			this.processor.IncrementLocalWord(0x2);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x15);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L161f;
-
-		L164f:
-			this.processor.RegSource.Value16 = arg1;
-			this.processor.RegSource.Value16 <<= 3;
 			this.owner.VideoCard.ScreenToPicture(1,
-				this.processor.PullUInt16(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x0)),
-				this.processor.PullUInt16(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x2)),
-				this.processor.PullUInt16(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x4)),
-				this.processor.PullUInt16(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x6)));
+				this.processor.PullUInt16(CitySceneryBoxes, picked),
+				this.processor.PullUInt16(CitySceneryBoxes, (ushort)(picked + 2)),
+				this.processor.PullUInt16(CitySceneryBoxes, (ushort)(picked + 4)),
+				this.processor.PullUInt16(CitySceneryBoxes, (ushort)(picked + 6)));
 
-			this.processor.RestoreSource();
-			this.processor.LeaveFrame();
-			// Far return
 			this.processor.Journal.CloseScope("SeizeCityScenery");
 		}
+
+		/// <summary>The segment of the rectangles of the city view pictures</summary>
+		private const ushort CitySceneryBoxes = 0x3767;
 
 		/// <summary>
 		/// ?

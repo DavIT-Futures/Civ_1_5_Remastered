@@ -2091,52 +2091,44 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// Loads the government picture of the human player, "govtNa.pic": N is the government / 2 (3 for government 3), "m"
+		/// instead of "a" with technology 20; the leader part of it goes into the picture 0x19e8. The file name is made in a
+		/// buffer in the stack frame, like in the original.
 		/// </summary>
 		public void ImportGovernmentGraphics()
 		{
 			this.processor.Journal.OpenScope("ImportGovernmentGraphics()");
 
-			// function body
 			this.processor.EnterFrame(0x12);
 			this.processor.PreserveSource();
 
 			this.owner.Startup.QueryForDisk(2, 1);
 
-			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x10), "govt0a.pic");
+			ushort docname = (ushort)(this.processor.RegFrame.Value16 - 0x10);
+			this.owner.Libc.CopyText(docname, "govt0a.pic");
 
-			this.processor.RegSource.Value16 = (ushort)this.owner.World.Participants[this.owner.World.PersonParticipantIdx].RegimeKind;
-			this.processor.RegAcc.Value16 = this.processor.RegSource.Value16;
-			this.processor.HalveAccumulator();
-			this.processor.RegAcc.LowByte = this.processor.SumByte(this.processor.RegAcc.LowByte, 0x30);
-			this.processor.EmitLocalByte(0xc, this.processor.RegAcc.LowByte);
-			this.processor.CompareWord(this.processor.RegSource.Value16, 0x3);
-			if (this.processor.FlagSet.IsNotEqual) goto L1b40;
-			this.processor.EmitLocalByte(0xc, 0x33);
-			goto L1b58;
+			ushort regime = (ushort)this.owner.World.Participants[this.owner.World.PersonParticipantIdx].RegimeKind;
+			this.processor.EmitGlobalByte((ushort)(docname + 4), (byte)(((short)regime / 2) + 0x30));
 
-		L1b40:
-			this.processor.RegAcc.Value16 = this.owner.Advisors.PlayerKnowsTechnology(owner.World.PersonParticipantIdx, 0x14);
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsNotEqual)
+			if (regime == 3)
 			{
-				this.processor.EmitLocalByte(0xb, 0x6d);
+				this.processor.EmitGlobalByte((ushort)(docname + 4), 0x33);
+			}
+			else if (this.owner.Advisors.PlayerKnowsTechnology(this.owner.World.PersonParticipantIdx, 0x14) != 0)
+			{
+				this.processor.EmitGlobalByte((ushort)(docname + 5), 0x6d);
 			}
 
-		L1b58:
-			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, (ushort)(this.processor.RegFrame.Value16 - 0x10), 0);
+			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, docname, 0);
 
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0x19d4),
-				0, 0, 0xa0, 0x3c,
-				this.processor.PullGlobalWord(0x19e8),
-				0xa0, 0x8c);
+			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 0xa0, 0x3c,
+				this.processor.PullGlobalWord(0x19e8), 0xa0, 0x8c);
 
 			this.owner.Startup.QueryForDisk(0, 1);
 
 			this.processor.RestoreSource();
 			this.processor.LeaveFrame();
-			// Far return
+
 			this.processor.Journal.CloseScope("ImportGovernmentGraphics");
 		}
 

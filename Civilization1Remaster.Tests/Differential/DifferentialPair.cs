@@ -190,7 +190,7 @@ namespace Civilization1Remaster.Tests.Differential
 			AddRegister(values, registers, Register.Stack, "sp", processor.RegStack.Value16);
 
 			if (failure != null)
-				values["failure"] = $"{failure.GetType().Name}: {failure.Message}";
+				values["failure"] = $"{failure.GetType().Name}: {failure.Message.Replace(game.Folder, "<game folder>", StringComparison.Ordinal)}";
 
 			return values;
 		}

@@ -1696,19 +1696,12 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// A tutorial hint: a line (colour 15) from the pointed place to the text, then the text at 0xba06 as a dialog
 		/// </summary>
-		/// <param name="xPos1"></param>
-		/// <param name="yPos1"></param>
-		/// <param name="xPos2"></param>
-		/// <param name="yPos2"></param>
 		public void RenderTutorialPointer(int horizSpot1, int vertSpot1, int horizSpot2, int vertSpot2)
 		{
 			this.processor.Journal.OpenScope($"RenderTutorialPointer({horizSpot1}, {vertSpot1}, {horizSpot2}, {vertSpot2})");
 
-			// function body
-			this.processor.EnterFrame();
-			
 			this.owner.VideoCard.RenderLine(this.processor.PullGlobalWord(0xaa), horizSpot1, vertSpot1, horizSpot2, vertSpot2 + 6, 15);
 
 			this.owner.Libc.AppendText(0xba06, "\n");
@@ -1717,8 +1710,6 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Dialogs.DisplayMenu(0xba06, horizSpot2, vertSpot2, 1);
 
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-			// Far return
 			this.processor.Journal.CloseScope("RenderTutorialPointer");
 		}
 	}

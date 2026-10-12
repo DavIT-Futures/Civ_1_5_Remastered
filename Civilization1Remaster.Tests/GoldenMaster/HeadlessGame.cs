@@ -70,6 +70,9 @@ namespace Civilization1Remaster.Tests.GoldenMaster
 		/// <summary>When not null, every call of a game function is added to it with its arguments (the differential tests)</summary>
 		public List<string>? Trace { get; set; }
 
+		/// <summary>The temporary copy of the game folder the game runs in</summary>
+		public string Folder => this.folder;
+
 		/// <summary>The game end flag (0xdc48), not 0 when the game is over or the turn was left</summary>
 		public ushort GameEndFlag => this.processor.PullGlobalWord(0xdc48);
 

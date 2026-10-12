@@ -1143,52 +1143,34 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// The names of the civilization of the player for the replay: its name (leader record 0x1502 + 0x3a * leader) into the
+		/// text at 0x1982 + 2 * player, its plural (0x14f2 + ..., or the name with "s" when empty) into the text at 0x1992 + 2 * player.
+		/// The plural is made in a buffer in the stack frame, like in the original.
 		/// </summary>
-		/// <param name="playerID"></param>
 		public void ObtainReplayPlayerLabel(short participantIdx)
 		{
 			this.processor.Journal.OpenScope($"ObtainReplayPlayerLabel({participantIdx})");
 
-			// function body
 			this.processor.EnterFrame(0x10);
 			this.processor.PreserveSource();
 
-			this.processor.RegSource.Value16 = (ushort)participantIdx;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegAcc.Value16 = 0x3a;
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData,
-				(ushort)this.owner.World.Participants[participantIdx].ChiefVisuals);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x1502);
-			this.owner.Libc.CopyText(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1982)),
-				this.processor.RegAcc.Value16);
+			ushort buffer = (ushort)(this.processor.RegFrame.Value16 - 0x10);
+			ushort leader = (ushort)(0x3a * this.owner.World.Participants[participantIdx].ChiefVisuals);
 
-			this.processor.RegAcc.Value16 = 0x3a;
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData,
-				(ushort)this.owner.World.Participants[participantIdx].ChiefVisuals);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x14f2);
-			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x10), this.processor.RegAcc.Value16);
+			this.owner.Libc.CopyText(this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1982)), (ushort)(leader + 0x1502));
+			this.owner.Libc.CopyText(buffer, (ushort)(leader + 0x14f2));
 
-			this.processor.CompareByte(this.processor.PullLocalByte(0x10), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L0dc4;
+			if (this.processor.PullGlobalByte(buffer) == 0)
+			{
+				this.owner.Libc.CopyText(buffer, (ushort)(leader + 0x1502));
+				this.owner.Libc.AppendText(buffer, "s");
+			}
 
-			this.processor.RegAcc.Value16 = 0x3a;
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData,
-				(ushort)this.owner.World.Participants[participantIdx].ChiefVisuals);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x1502);
-			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x10), this.processor.RegAcc.Value16);
-
-			this.owner.Libc.AppendText((ushort)(this.processor.RegFrame.Value16 - 0x10), "s");
-
-		L0dc4:
-			this.processor.RegBase.Value16 = (ushort)participantIdx;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.CopyText(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1992)),
-				(ushort)(this.processor.RegFrame.Value16 - 0x10));
+			this.owner.Libc.CopyText(this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1992)), buffer);
 
 			this.processor.RestoreSource();
 			this.processor.LeaveFrame();
-			// Far return
+
 			this.processor.Journal.CloseScope("ObtainReplayPlayerLabel");
 		}
 

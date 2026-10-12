@@ -2866,23 +2866,21 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// Ends the meeting music and frees the picture of the king (0x7efe), when one is loaded (0x67ea)
 		/// </summary>
 		public void ReleaseKingResources()
 		{
 			this.processor.Journal.OpenScope("ReleaseKingResources()");
 
-			// function body
 			this.owner.Services.PerformSound(1, 0);
 
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x67ea), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L235b;
+			if (this.processor.PullGlobalWord(0x67ea) != 0)
+			{
+				this.owner.Helpers.ReleaseResource(this.processor.PullGlobalWord(0x7efe), 0);
+			}
 
-			this.owner.Helpers.ReleaseResource(this.processor.PullGlobalWord(0x7efe), 0);
-
-		L235b:
 			this.processor.EmitGlobalWord(0x67ea, 0x0);
-			// Far return
+
 			this.processor.Journal.CloseScope("ReleaseKingResources");
 		}
 
@@ -3046,56 +3044,42 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// A dialog over the bottom part of the king screen (rows 128 - 199, kept in the back screen 0x19d4 and put back);
+		/// column 20 is moved to 36
 		/// </summary>
-		/// <param name="stringPtr"></param>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
-		/// <returns></returns>
+		/// <returns>The answer of DisplayMenu, also in AX</returns>
 		public ushort DisplayKingDialog(ushort charsAddr, ushort horizLoc, ushort vertLoc)
 		{
 			this.processor.Journal.OpenScope($"DisplayKingDialog(0x{charsAddr:x4}, {horizLoc}, {vertLoc})");
 
-			// function body
-			this.processor.EnterFrame(0x2);
-
 			this.owner.Startup.ConcealMouseCursor();
 
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0xaa),
-				0, 0x80, 0x140, 0x48,
-				this.processor.PullGlobalWord(0x19d4),
-				0, 0x80);
+			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), 0, 0x80, 0x140, 0x48,
+				this.processor.PullGlobalWord(0x19d4), 0, 0x80);
 
-			this.processor.CompareWord(horizLoc, 0x14);
-			if (this.processor.FlagSet.IsNotEqual) goto L2559;
-			horizLoc = 0x24;
+			if (horizLoc == 0x14)
+			{
+				horizLoc = 0x24;
+			}
 
-		L2559:
 			this.owner.Startup.DisplayMouseCursorFully();
 
 			this.owner.Dialogs.DisplayMenu(charsAddr, (short)horizLoc, (short)vertLoc, 1);
 
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
+			ushort answer = this.processor.RegAcc.Value16;
 
 			this.owner.Startup.ConcealMouseCursorToSavedLevel();
 
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0x19d4),
-				0, 0x80, 0x140, 0x48,
-				this.processor.PullGlobalWord(0xaa),
-				0, 0x80);
+			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0x80, 0x140, 0x48,
+				this.processor.PullGlobalWord(0xaa), 0, 0x80);
 
 			this.owner.Startup.DisplayMouseCursor();
 
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x2);
+			this.processor.RegAcc.Value16 = answer;
 
-			this.processor.LeaveFrame();
-
-			// Far return
 			this.processor.Journal.CloseScope("DisplayKingDialog");
 
-			return this.processor.RegAcc.Value16;
+			return answer;
 		}
 	}
 }

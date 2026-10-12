@@ -4795,52 +4795,37 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// The city chooses its production again (ScienceAndAdvisors.PickCityProduction); the count of the units of each type
+		/// its player is making (TroopsInsideMaking) follows the change
 		/// </summary>
-		/// <param name="cityID"></param>
 		public void PickNewCityProduction(short townIdx)
 		{
 			this.processor.Journal.OpenScope($"PickNewCityProduction({townIdx})");
 
-			// function body
-			this.processor.EnterFrame(0x2);
-			this.processor.PreserveIndexRegisters();
-			this.processor.ScaleIndexToSource(0x1c, (ushort)townIdx);
-			this.processor.RegAcc.Value16 = (byte)this.owner.World.Towns[townIdx].ParticipantIdx;
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
-			
-			if (this.owner.World.Towns[townIdx].PresentMakingIdx < 0)
-				goto L34ea;
-			this.processor.ScaleIndexToBase(0x38, this.processor.PullLocalWord(0x2));
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.Towns[townIdx].PresentMakingIdx;
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegDest.Value16 = this.processor.ShiftLeftWord(this.processor.RegDest.Value16, 0x1);
+			// The original keeps SI and DI for its caller
+			ushort savedSource = this.processor.RegSource.Value16;
+			ushort savedDest = this.processor.RegDest.Value16;
 
-			this.owner.World.Participants[this.processor.PullLocalWord(0x2)].TroopsInsideMaking[this.owner.World.Towns[townIdx].PresentMakingIdx]--;
+			City town = this.owner.World.Towns[townIdx];
+			ushort participantIdx = (byte)town.ParticipantIdx;
 
-		L34ea:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToSource((ushort)townIdx);
+			if (town.PresentMakingIdx >= 0)
+			{
+				this.owner.World.Participants[participantIdx].TroopsInsideMaking[town.PresentMakingIdx]--;
+			}
 
-			this.owner.Advisors.PickCityProduction(this.processor.PullLocalSignedWord(0x2), townIdx);
-			
-			this.owner.World.Towns[townIdx].PresentMakingIdx = (sbyte)this.processor.RegAcc.LowByte;
+			this.owner.Advisors.PickCityProduction((short)participantIdx, townIdx);
 
-			this.processor.RegAcc.LowByte = this.processor.BitOrByte(this.processor.RegAcc.LowByte, this.processor.RegAcc.LowByte);
-			if (this.processor.FlagSet.IsLess) goto L351b;
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.ScaleIndex(0x38, this.processor.PullLocalWord(0x2));
-			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
-			this.owner.World.Participants[this.processor.PullLocalWord(0x2)].TroopsInsideMaking[this.owner.World.Towns[townIdx].PresentMakingIdx]++;
+			town.PresentMakingIdx = (sbyte)this.processor.RegAcc.LowByte;
 
-		L351b:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.RegDest.Value16 = this.processor.UnstackWord();
-			this.processor.LeaveFrame();
-			// Far return
+			if (town.PresentMakingIdx >= 0)
+			{
+				this.owner.World.Participants[participantIdx].TroopsInsideMaking[town.PresentMakingIdx]++;
+			}
+
+			this.processor.RegSource.Value16 = savedSource;
+			this.processor.RegDest.Value16 = savedDest;
+
 			this.processor.Journal.CloseScope("PickNewCityProduction");
 		}
 
