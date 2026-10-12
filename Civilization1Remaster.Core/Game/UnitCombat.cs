@@ -10,11 +10,13 @@ namespace Civilization1Remaster.Game
 	{
 		private readonly GameEngine owner;
 		private readonly CPU processor;
+		private readonly UnitMemory troops;
 
 		public UnitCombat(GameEngine owner)
 		{
 			this.owner = owner;
 			this.processor = owner.Processor;
+			this.troops = new UnitMemory(owner.Processor);
 		}
 
 		// Unit data in memory: 12 bytes per unit, 0x600 bytes (128 units) per player
@@ -996,130 +998,67 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// Puts the unit into the stack of another unit of the same player, right after it. The units of a stack form a ring
+		/// through the FollowingInStack field; a unit alone has -1 there.
 		/// </summary>
-		/// <param name="playerID"></param>
-		/// <param name="unitID"></param>
-		/// <param name="param3"></param>
-		public void AttachUnitToStack(short participantIdx, short troopIdx, ushort arg3)
+		/// <param name="stackTroopIdx">A unit of the stack</param>
+		public void AttachUnitToStack(short participantIdx, short troopIdx, ushort stackTroopIdx)
 		{
-			this.processor.Journal.OpenScope($"AttachUnitToStack({participantIdx}, {troopIdx}, {arg3})");
+			this.processor.Journal.OpenScope($"AttachUnitToStack({participantIdx}, {troopIdx}, {stackTroopIdx})");
 
-			// function body
-			this.processor.EnterFrame();
-			this.processor.PreserveIndexRegisters();
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.ScaleIndex(0xc, arg3);
-			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegDest.Value16 = this.processor.SumWord(this.processor.RegDest.Value16, this.processor.RegSource.Value16);
-			this.processor.RegDest.Value16 = this.processor.SumWord(this.processor.RegDest.Value16, 0x81de);
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, this.processor.RegDest.Value16), 0xff);
-			if (this.processor.FlagSet.IsNotEqual) goto L0b9c;
-			this.processor.RegAcc.LowByte = (byte)troopIdx;
-			this.processor.EmitUInt8(this.processor.SegData.Value16, this.processor.RegDest.Value16, this.processor.RegAcc.LowByte);
-			this.processor.ScaleIndexToBase(0xc, (ushort)troopIdx);
-			this.processor.RegAcc.LowByte = (byte)arg3;
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81de), this.processor.RegAcc.LowByte);
-			goto L0bc5;
+			if (this.troops.Following(participantIdx, stackTroopIdx) == -1)
+			{
+				// Two units: each follows the other
+				this.troops.AssignFollowing(participantIdx, stackTroopIdx, (byte)troopIdx);
+				this.troops.AssignFollowing(participantIdx, troopIdx, (byte)stackTroopIdx);
+			}
+			else
+			{
+				this.troops.AssignFollowing(participantIdx, troopIdx, (byte)this.troops.Following(participantIdx, stackTroopIdx));
+				this.troops.AssignFollowing(participantIdx, stackTroopIdx, (byte)troopIdx);
+			}
 
-		L0b9c:
-			this.processor.RegAcc.Value16 = 0x600;
-			this.processor.ScaleAccumulatorToSource((ushort)participantIdx);
-			this.processor.ScaleIndex(0xc, arg3);
-			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegDest.Value16 = this.processor.SumWord(this.processor.RegDest.Value16, this.processor.RegSource.Value16);
-			this.processor.RegDest.Value16 = this.processor.SumWord(this.processor.RegDest.Value16, 0x81de);
-			this.processor.ScaleIndexToBase(0xc, (ushort)troopIdx);
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, this.processor.RegDest.Value16);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81de), this.processor.RegAcc.LowByte);
-			this.processor.RegAcc.LowByte = (byte)troopIdx;
-			this.processor.EmitUInt8(this.processor.SegData.Value16, this.processor.RegDest.Value16, this.processor.RegAcc.LowByte);
-
-		L0bc5:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.RegDest.Value16 = this.processor.UnstackWord();
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-			// Far return
 			this.processor.Journal.CloseScope("AttachUnitToStack");
 		}
 
 		/// <summary>
-		/// ?
+		/// Takes the unit out of its stack (the ring of FollowingInStack), the unit stands alone afterwards.
+		/// Like the original, the unit before it is searched in at most 32 steps.
 		/// </summary>
-		/// <param name="playerID"></param>
-		/// <param name="unitID"></param>
 		public void DiscardUnitFromStack(short participantIdx, short troopIdx)
 		{
 			this.processor.Journal.OpenScope($"DiscardUnitFromStack({participantIdx}, {troopIdx})");
 
-			// function body
-			this.processor.EnterFrame(0x4);
-			this.processor.PreserveSource();
-			this.processor.ScaleIndexToBase(0xc, (ushort)troopIdx);
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81de));
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xffff);
-			if (this.processor.FlagSet.IsNotEqual) goto L0bf0;
-			goto L0c99;
+			int following = this.troops.Following(participantIdx, troopIdx);
 
-		L0bf0:
-			this.processor.RegAcc.Value16 = 0x600;
-			this.processor.ScaleAccumulatorToSource((ushort)participantIdx);
-			this.processor.AddScaledToSource(0xc, this.processor.PullLocalWord(0x4));
-			this.processor.RegSource.Value16 = this.processor.SumWord(this.processor.RegSource.Value16, 0x81de);
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, this.processor.RegSource.Value16);
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, (ushort)troopIdx);
-			if (this.processor.FlagSet.IsNotEqual) goto L0c11;
-			this.processor.EmitUInt8(this.processor.SegData.Value16, this.processor.RegSource.Value16, 0xff);
-			goto L0c84;
+			if (following != -1)
+			{
+				if (this.troops.Following(participantIdx, following) == troopIdx)
+				{
+					// A stack of two, the other unit stays alone
+					this.troops.AssignFollowing(participantIdx, following, 0xff);
+				}
+				else
+				{
+					int previous = following;
+					int steps = 0;
 
-		L0c11:
-			this.processor.EmitLocalWord(0x2, 0x0);
+					do
+					{
+						previous = this.troops.Following(participantIdx, previous);
+						steps++;
+					}
+					while (steps < 32 && previous != -1 && this.troops.Following(participantIdx, previous) != troopIdx);
 
-		L0c16:
-			this.processor.RegAcc.Value16 = 0xc;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullLocalWord(0x4));
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81de));
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
-			this.processor.IncrementLocalWord(0x2);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x20);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0c56;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xffff);
-			if (this.processor.FlagSet.IsEqual) goto L0c56;
-			this.processor.ScaleIndexToBase(0xc, this.processor.PullLocalWord(0x4));
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81de));
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, (ushort)troopIdx);
-			if (this.processor.FlagSet.IsNotEqual) goto L0c16;
+					if (steps < 32 && previous != -1)
+					{
+						this.troops.AssignFollowing(participantIdx, previous, (byte)this.troops.Following(participantIdx, troopIdx));
+					}
+				}
 
-		L0c56:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x20);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0c84;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), 0xffff);
-			if (this.processor.FlagSet.IsEqual) goto L0c84;
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.ScaleIndexToBase(0xc, (ushort)troopIdx);
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81de));
-			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
-			this.processor.ScaleIndexToBase(0xc, this.processor.PullLocalWord(0x4));
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81de), this.processor.RegCount.LowByte);
+				this.troops.AssignFollowing(participantIdx, troopIdx, 0xff);
+			}
 
-		L0c84:
-			this.processor.RegAcc.Value16 = 0xc;
-			this.processor.ScaleAccumulatorToBase((ushort)troopIdx);
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81de), 0xff);
-
-		L0c99:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.LeaveFrame();
-			// Far return
 			this.processor.Journal.CloseScope("DiscardUnitFromStack");
 		}
 

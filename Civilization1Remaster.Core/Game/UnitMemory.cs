@@ -40,6 +40,30 @@ namespace Civilization1Remaster.Game
 			return this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(Address(participantIdx, troopIdx) + offset));
 		}
 
+		public sbyte TroopKind(int participantIdx, int troopIdx)
+		{
+			return PullSigned(participantIdx, troopIdx, Kind);
+		}
+
+		/// <summary>Next unit in the same stack (the stack is a ring), -1 when the unit stands alone</summary>
+		public sbyte Following(int participantIdx, int troopIdx)
+		{
+			return PullSigned(participantIdx, troopIdx, FollowingInStack);
+		}
+
+		public void AssignFollowing(int participantIdx, int troopIdx, byte following)
+		{
+			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(Address(participantIdx, troopIdx) + FollowingInStack), following);
+		}
+
+		/// <summary>
+		/// A field of the unit type of the unit, from the unit type table of the data segment (it is saved with the game)
+		/// </summary>
+		public ushort KindField(int participantIdx, int troopIdx, int fieldOffset)
+		{
+			return UnitKindTable.Field(this.processor, TroopKind(participantIdx, troopIdx), fieldOffset);
+		}
+
 		/// <summary>True when the record holds a unit</summary>
 		public bool Exists(int participantIdx, int troopIdx)
 		{
@@ -49,6 +73,40 @@ namespace Civilization1Remaster.Game
 		public bool StandsAt(int participantIdx, int troopIdx, int horizLoc, int vertLoc)
 		{
 			return PullSigned(participantIdx, troopIdx, Horiz) == horizLoc && PullSigned(participantIdx, troopIdx, Vert) == vertLoc;
+		}
+	}
+
+	/// <summary>
+	/// The unit types (records of 0x22 bytes, the layout of GameState.UnitDefinition) in the data segment
+	/// </summary>
+	public static class UnitKindTable
+	{
+		public const ushort Origin = 0x112a;
+		public const int Stride = 0x22;
+
+		// Word fields of a record, after the 12 bytes of the name
+		public const int LandGroup = 0xe;
+		public const int AssaultPower = 0x14;
+		public const int GuardPower = 0x16;
+		public const int Price = 0x18;
+		public const int FerryRoom = 0x1c;
+		public const int TroopGroup = 0x1e;
+
+		/// <summary>LandGroup of land units</summary>
+		public const int LandUnits = 0;
+
+		/// <summary>TroopGroup of defensive units</summary>
+		public const int DefenceTroops = 2;
+
+		/// <summary>TroopGroup of transports (ships carrying units)</summary>
+		public const int TransportTroops = 5;
+
+		/// <summary>
+		/// A word field of a unit type. Like the original (a signed byte multiplication), kind -1 reads the record before the table.
+		/// </summary>
+		public static ushort Field(CPU processor, sbyte kind, int fieldOffset)
+		{
+			return processor.PullGlobalWord((ushort)(Origin + fieldOffset + (Stride * kind)));
 		}
 	}
 }

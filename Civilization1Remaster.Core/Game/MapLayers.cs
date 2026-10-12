@@ -59,6 +59,18 @@ namespace Civilization1Remaster.Game
 			return (Dot(horizLoc, vertLoc + HighImprovementsOffset) << 4) | Dot(horizLoc, vertLoc + LowImprovementsOffset);
 		}
 
+		/// <summary>The layer of the improvement bits 0 - 3</summary>
+		public int LowImprovements(int horizLoc, int vertLoc)
+		{
+			return Dot(horizLoc, vertLoc + LowImprovementsOffset);
+		}
+
+		/// <summary>The layer of the improvement bits 4 - 7, shifted to bits 0 - 3</summary>
+		public int HighImprovements(int horizLoc, int vertLoc)
+		{
+			return Dot(horizLoc, vertLoc + HighImprovementsOffset);
+		}
+
 		/// <summary>Improvements of the tile as the human player saw them last time</summary>
 		public int KnownImprovements(int horizLoc, int vertLoc)
 		{

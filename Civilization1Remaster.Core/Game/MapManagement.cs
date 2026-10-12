@@ -1729,65 +1729,48 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// Puts the unit on the tile: into the stack of the units standing there, and marks the tile as having units of the player
 		/// </summary>
-		/// <param name="playerID"></param>
-		/// <param name="unitID"></param>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
 		public void SituateUnitOnTile(short participantIdx, short troopIdx, int horizLoc, int vertLoc)
 		{
 			this.processor.Journal.OpenScope($"SituateUnitOnTile({participantIdx}, {troopIdx}, {horizLoc}, {vertLoc})");
 
-			// function body
-			this.processor.EnterFrame(0x2);
+			ushort stackTroopIdx = ObtainUnitAtTile(horizLoc, vertLoc);
 
-			ObtainUnitAtTile(horizLoc, vertLoc);
+			if (stackTroopIdx != 0xffff)
+			{
+				this.owner.Combat.AttachUnitToStack(participantIdx, troopIdx, stackTroopIdx);
+			}
 
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xffff);
-			if (this.processor.FlagSet.IsEqual) goto L13f5;
+			AssignChartDot(horizLoc + 160, vertLoc, (ushort)(participantIdx + MapLayers.UnitsPresent));
 
-			this.owner.Combat.AttachUnitToStack(participantIdx, troopIdx, this.processor.RegAcc.Value16);
-
-		L13f5:
-			this.owner.Services.AssignDot(2, horizLoc + 160, vertLoc, (ushort)(participantIdx + 8));
-
-			this.processor.LeaveFrame();
-			// Far return
 			this.processor.Journal.CloseScope("SituateUnitOnTile");
 		}
 
 		/// <summary>
-		/// ?
+		/// Writes a value of a map layer through SystemServices.AssignDot (bounds of the current screen), as the original
 		/// </summary>
-		/// <param name="playerID"></param>
-		/// <param name="unitID"></param>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
+		private void AssignChartDot(int horizLoc, int vertLoc, ushort style)
+		{
+			this.owner.Services.AssignDot(2, horizLoc, vertLoc, style);
+		}
+
+		/// <summary>
+		/// Takes the unit off the tile: out of its stack, or when it stood alone, the tile has no units any more
+		/// </summary>
 		public void DiscardUnitFromTile(short participantIdx, short troopIdx, int horizLoc, int vertLoc)
 		{
 			this.processor.Journal.OpenScope($"DiscardUnitFromTile({participantIdx}, {troopIdx}, {horizLoc}, {vertLoc})");
 
-			// function body
-			this.processor.EnterFrame();
-			this.processor.PreserveSource();
-			this.processor.ScaleIndexToBase(0xc, (ushort)troopIdx);
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81de)), 0xff);
-			if (this.processor.FlagSet.IsEqual) goto L143d;
+			if (this.troops.Following(participantIdx, troopIdx) != -1)
+			{
+				this.owner.Combat.DiscardUnitFromStack(participantIdx, troopIdx);
+			}
+			else
+			{
+				AssignChartDot(horizLoc + 160, vertLoc, (byte)participantIdx);
+			}
 
-			this.owner.Combat.DiscardUnitFromStack(participantIdx, troopIdx);
-			
-			goto L1455;
-
-		L143d:
-			this.owner.Services.AssignDot(2, horizLoc + 160, vertLoc, (byte)participantIdx);
-
-		L1455:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-			// Far return
 			this.processor.Journal.CloseScope("DiscardUnitFromTile");
 		}
 
@@ -1894,41 +1877,34 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// Adds improvements to the tile: 0 removes all, a value from 0x10 sets the high bits, a smaller one the low bits.
+		/// In the turn of the human player the human sees the change at once.
 		/// </summary>
-		/// <param name="param1"></param>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
-		public void AssignTileImprovements(ushort arg1, int horizLoc, int vertLoc)
+		public void AssignTileImprovements(ushort improvements, int horizLoc, int vertLoc)
 		{
-			this.processor.Journal.OpenScope($"AssignTileImprovements({arg1}, {horizLoc}, {vertLoc})");
+			this.processor.Journal.OpenScope($"AssignTileImprovements({improvements}, {horizLoc}, {vertLoc})");
 
-			// function body
-			if (arg1 == 0)
+			if (improvements == 0)
 			{
-				this.owner.Services.AssignDot(2, horizLoc, vertLoc + 100, 0);
-
-				this.owner.Services.AssignDot(2, horizLoc, vertLoc + 150, 0);
+				AssignChartDot(horizLoc, vertLoc + 100, 0);
+				AssignChartDot(horizLoc, vertLoc + 150, 0);
 			}
-			else if (arg1 >= 0x10)
+			else if (improvements >= 0x10)
 			{
-				this.owner.VideoCard.ObtainDot(2, horizLoc, vertLoc + 150);
-
-				this.owner.Services.AssignDot(2, horizLoc, vertLoc + 150, (ushort)((arg1 >> 4) | this.processor.RegAcc.Value16));
+				int high = ReturnAcc(this.chart.HighImprovements(horizLoc, vertLoc));
+				AssignChartDot(horizLoc, vertLoc + 150, (ushort)((improvements >> 4) | high));
 			}
 			else
 			{
-				this.owner.VideoCard.ObtainDot(2, horizLoc, vertLoc + 100);
-
-				this.owner.Services.AssignDot(2, horizLoc, vertLoc + 100, (ushort)(this.processor.RegAcc.Value16 | arg1));
+				int low = ReturnAcc(this.chart.LowImprovements(horizLoc, vertLoc));
+				AssignChartDot(horizLoc, vertLoc + 100, (ushort)(low | improvements));
 			}
 
 			if (this.processor.PullGlobalSignedWord(0x6b90) == this.owner.World.PersonParticipantIdx)
 			{
 				KeepKnownTileImprovements(horizLoc, vertLoc);
 			}
-		
-			// Far return
+
 			this.processor.Journal.CloseScope("AssignTileImprovements");
 		}
 
@@ -1941,57 +1917,40 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// The city on the tile. Sets the player of the tile owner layer into 0xd7f0 and 0xd20a.
+		/// When there is no city, an error message is shown.
 		/// </summary>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
-		/// <returns></returns>
+		/// <returns>City index, or 0xffff</returns>
 		public ushort LocateCityAtTile(int horizLoc, int vertLoc)
 		{
 			this.processor.Journal.OpenScope($"LocateCityAtTile({horizLoc}, {vertLoc})");
 
-			// function body
-			this.processor.EnterFrame(0x4);
-			this.processor.PreserveSource();
+			ushort participantIdx = ObtainTileOwnerBits(horizLoc, vertLoc);
+			ushort found = 0xffff;
 
-			ObtainTileOwnerBits(horizLoc, vertLoc);
+			for (int townIdx = 0; townIdx < this.owner.World.Towns.Length; townIdx++)
+			{
+				City town = this.owner.World.Towns[townIdx];
 
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x4, 0x0);
-			goto L177b;
+				if (town.ConditionMarker != 0xff && town.Place.X == horizLoc && town.Place.Y == vertLoc)
+				{
+					this.processor.EmitGlobalWord(0xd7f0, participantIdx);
+					this.processor.EmitGlobalWord(0xd20a, participantIdx);
+					found = (ushort)townIdx;
+					break;
+				}
+			}
 
-		L1778:
-			this.processor.EmitLocalWord(0x4, this.processor.IncrementWord(this.processor.PullLocalWord(0x4)));
+			if (found == 0xffff)
+			{
+				this.owner.TurnHooks.DisplayDialog(0x2bc6, 100, 80);
+			}
 
-		L177b:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), 0x80);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L17b3;
+			ReturnAcc(found);
 
-			this.processor.ScaleIndexToSource(0x1c, this.processor.PullLocalWord(0x4));
-
-			if (this.owner.World.Towns[this.processor.PullLocalWord(0x4)].ConditionMarker == 0xff ||
-				this.owner.World.Towns[this.processor.PullLocalWord(0x4)].Place.X != horizLoc ||
-				this.owner.World.Towns[this.processor.PullLocalWord(0x4)].Place.Y != vertLoc)
-				goto L1778;
-
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x2);
-			this.processor.EmitGlobalWord(0xd7f0, this.processor.RegAcc.Value16);
-			this.processor.EmitGlobalWord(0xd20a, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x4);
-			goto L17ca;
-
-		L17b3:
-			this.owner.TurnHooks.DisplayDialog(0x2bc6, 100, 80);
-
-			this.processor.RegAcc.Value16 = 0xffff;
-
-		L17ca:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.LeaveFrame();
-			// Far return
 			this.processor.Journal.CloseScope("LocateCityAtTile");
 
-			return this.processor.RegAcc.Value16;
+			return found;
 		}
 
 		/// <summary>

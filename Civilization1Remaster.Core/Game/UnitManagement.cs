@@ -11,11 +11,13 @@ namespace Civilization1Remaster.Game
 	{
 		private readonly GameEngine owner;
 		private readonly CPU processor;
+		private readonly UnitMemory troops;
 
 		public UnitManagement(GameEngine owner)
 		{
 			this.owner = owner;
 			this.processor = owner.Processor;
+			this.troops = new UnitMemory(owner.Processor);
 		}
 
 		/// <summary>
@@ -1653,86 +1655,47 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// Step of TallyUnitsByDomainInStack, adds to the total in 0x6532 what the mode in 0x6536 asks for:
+		/// 0 the price, 1 the defence, 2 one per unit, 3 the attack, 4 one per defensive unit with an index below 0x6538.
 		/// </summary>
-		/// <param name="playerID"></param>
-		/// <param name="unitID"></param>
 		public void TallyUnitsByDomainStep(short participantIdx, short troopIdx)
 		{
 			this.processor.Journal.OpenScope($"TallyUnitsByDomainStep({participantIdx}, {troopIdx})");
 
-			// function body
-			this.processor.EnterFrame();
-			this.processor.PreserveSource();
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x6536);
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual) goto L12a5;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1);
-			if (this.processor.FlagSet.IsEqual) goto L12c7;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x2);
-			if (this.processor.FlagSet.IsNotEqual) goto L1298;
-			goto L132a;
+			switch (this.processor.PullGlobalWord(0x6536))
+			{
+				case 0:
+					AddToGlobal(0x6532, this.troops.KindField(participantIdx, troopIdx, UnitKindTable.Price));
+					break;
 
-		L1298:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x3);
-			if (this.processor.FlagSet.IsEqual) goto L12e5;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x4);
-			if (this.processor.FlagSet.IsEqual) goto L1303;
-			goto L132e;
+				case 1:
+					AddToGlobal(0x6532, this.troops.KindField(participantIdx, troopIdx, UnitKindTable.GuardPower));
+					break;
 
-		L12a5:
-			this.processor.RegAcc.Value16 = 0xc;
-			this.processor.ScaleAccumulatorToBase((ushort)troopIdx);
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.RegAcc.LowByte = 0x22;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d7)));
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1142));
+				case 2:
+					AddToGlobal(0x6532, 1);
+					break;
 
-		L12c1:
-			this.processor.EmitGlobalWord(0x6532, this.processor.SumWord(this.processor.PullGlobalWord(0x6532), this.processor.RegAcc.Value16));
-			goto L132e;
+				case 3:
+					AddToGlobal(0x6532, this.troops.KindField(participantIdx, troopIdx, UnitKindTable.AssaultPower));
+					break;
 
-		L12c7:
-			this.processor.RegAcc.Value16 = 0xc;
-			this.processor.ScaleAccumulatorToBase((ushort)troopIdx);
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.RegAcc.LowByte = 0x22;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d7)));
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1140));
-			goto L12c1;
+				case 4:
+					if (troopIdx < (short)this.processor.PullGlobalWord(0x6538) &&
+						this.troops.KindField(participantIdx, troopIdx, UnitKindTable.TroopGroup) == UnitKindTable.DefenceTroops)
+					{
+						AddToGlobal(0x6532, 1);
+					}
+					break;
+			}
 
-		L12e5:
-			this.processor.RegAcc.Value16 = 0xc;
-			this.processor.ScaleAccumulatorToBase((ushort)troopIdx);
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.RegAcc.LowByte = 0x22;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d7)));
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x113e));
-			goto L12c1;
-
-		L1303:
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x6538);
-			this.processor.CompareWord((ushort)troopIdx, this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L132e;
-			this.processor.ScaleIndexToBase(0xc, (ushort)troopIdx);
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.RegAcc.LowByte = 0x22;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d7)));
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1148)), 0x2);
-			if (this.processor.FlagSet.IsNotEqual) goto L132e;
-
-			L132a:
-			this.processor.EmitGlobalWord(0x6532, this.processor.IncrementWord(this.processor.PullGlobalWord(0x6532)));
-
-		L132e:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-			// Far return
 			this.processor.Journal.CloseScope("TallyUnitsByDomainStep");
+		}
+
+		/// <summary>Adds to a word of the data segment (with the 16 bit overflow of the original)</summary>
+		private void AddToGlobal(ushort address, int amount)
+		{
+			this.processor.EmitGlobalWord(address, (ushort)(this.processor.PullGlobalWord(address) + amount));
 		}
 
 		/// <summary>
@@ -1761,29 +1724,17 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// Step of TallyUnitsOfTypeInStack: counts in 0x653c the units of the type in 0x653a
 		/// </summary>
-		/// <param name="playerID"></param>
-		/// <param name="unitID"></param>
 		public void TallyUnitsOfTypeStep(short participantIdx, short troopIdx)
 		{
 			this.processor.Journal.OpenScope($"TallyUnitsOfTypeStep({participantIdx}, {troopIdx})");
 
-			// function body
-			this.processor.EnterFrame();
-			this.processor.PreserveSource();
-			this.processor.ScaleIndexToBase(0xc, (ushort)troopIdx);
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d7));
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.PullGlobalWord(0x653a));
-			if (this.processor.FlagSet.IsNotEqual) goto L137d;
-			this.processor.EmitGlobalWord(0x653c, this.processor.IncrementWord(this.processor.PullGlobalWord(0x653c)));
+			if ((ushort)this.troops.TroopKind(participantIdx, troopIdx) == this.processor.PullGlobalWord(0x653a))
+			{
+				AddToGlobal(0x653c, 1);
+			}
 
-		L137d:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-			// Far return
 			this.processor.Journal.CloseScope("TallyUnitsOfTypeStep");
 		}
 
@@ -1813,31 +1764,17 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// Step of TallyUnitsWithFlagInStack: counts in 0x653c the units whose TroopGroup is the one in 0x653a
 		/// </summary>
-		/// <param name="playerID"></param>
-		/// <param name="unitID"></param>
 		public void TallyUnitsWithFlagStep(short participantIdx, short troopIdx)
 		{
 			this.processor.Journal.OpenScope($"TallyUnitsWithFlagStep({participantIdx}, {troopIdx})");
 
-			// function body
-			this.processor.EnterFrame();
-			this.processor.PreserveSource();
-			this.processor.ScaleIndexToBase(0xc, (ushort)troopIdx);
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.RegAcc.LowByte = 0x22;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d7)));
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x653a);
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1148)), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L13d2;
-			this.processor.EmitGlobalWord(0x653c, this.processor.IncrementWord(this.processor.PullGlobalWord(0x653c)));
+			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.TroopGroup) == this.processor.PullGlobalWord(0x653a))
+			{
+				AddToGlobal(0x653c, 1);
+			}
 
-		L13d2:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-			// Far return
 			this.processor.Journal.CloseScope("TallyUnitsWithFlagStep");
 		}
 
@@ -1865,134 +1802,91 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// Step of TallySpecialUnitsInStack, the free room on the transports in 0x653c: a land unit takes one place,
+		/// a transport adds its room (FerryRoom)
 		/// </summary>
-		/// <param name="playerID"></param>
-		/// <param name="unitID"></param>
 		public void TallySpecialUnitsStep(short participantIdx, short troopIdx)
 		{
 			this.processor.Journal.OpenScope($"TallySpecialUnitsStep({participantIdx}, {troopIdx})");
 
-			// function body
-			this.processor.EnterFrame();
-			this.processor.PreserveIndexRegisters();
-			this.processor.ScaleIndexToBase(0xc, (ushort)troopIdx);
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.RegAcc.LowByte = 0x22;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d7)));
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1138)), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L1420;
-			this.processor.EmitGlobalWord(0x653c, this.processor.DecrementWord(this.processor.PullGlobalWord(0x653c)));
+			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == UnitKindTable.LandUnits)
+			{
+				AddToGlobal(0x653c, -1);
+			}
 
-		L1420:
-			this.processor.RegAcc.Value16 = 0xc;
-			this.processor.ScaleAccumulatorToBase((ushort)troopIdx);
-			this.processor.ScaleIndex(0x600, (ushort)participantIdx);
-			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegAcc.LowByte = 0x22;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegDest.Value16 + 0x81d7)));
-			this.processor.RegSource.Value16 = this.processor.RegAcc.Value16;
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1148)), 0x5);
-			if (this.processor.FlagSet.IsNotEqual) goto L1447;
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1146));
-			this.processor.EmitGlobalWord(0x653c, this.processor.SumWord(this.processor.PullGlobalWord(0x653c), this.processor.RegAcc.Value16));
+			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.TroopGroup) == UnitKindTable.TransportTroops)
+			{
+				AddToGlobal(0x653c, this.troops.KindField(participantIdx, troopIdx, UnitKindTable.FerryRoom));
+			}
 
-		L1447:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.RegDest.Value16 = this.processor.UnstackWord();
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-			// Far return
 			this.processor.Journal.CloseScope("TallySpecialUnitsStep");
 		}
 
 		/// <summary>
-		/// ?
+		/// Calls a step function for every unit of the stack of the unit, at most for 10 units. The step function is given by
+		/// its address in the original code.
 		/// </summary>
-		/// <param name="playerID"></param>
-		/// <param name="unitID"></param>
-		/// <param name="fnPtr"></param>
-		/// <exception cref="Exception"></exception>
 		public void VisitEachUnitInStack(short participantIdx, short troopIdx, int funcAddr)
 		{
 			this.processor.Journal.OpenScope($"VisitEachUnitInStack({participantIdx}, {troopIdx}, 0x{funcAddr:x4})");
 
-			// function body
-			short priorTroopIdx = troopIdx;
+			Action<short, short> step = StackStep(funcAddr);
+
+			ForEachUnitInStack(participantIdx, troopIdx, (stepParticipantIdx, stepTroopIdx) =>
+			{
+				// The translated original left BX = 0xc * unit and SI = 0x600 * player before every step, so SI = 0x600 * player
+				// after the call. A caller depends on it: AIPlayer divides by SI after TallyUnitsByDomainInStack (L2947),
+				// where the DOS code had kept its own SI. Kept until the end of the migration, see MIGRATION-BACKLOG.md.
+				this.processor.RegBase.Value16 = (ushort)(UnitMemory.TroopStride * stepTroopIdx);
+				this.processor.RegSource.Value16 = (ushort)(UnitMemory.ParticipantStride * stepParticipantIdx);
+
+				step(stepParticipantIdx, stepTroopIdx);
+			});
+
+			this.processor.Journal.CloseScope("VisitEachUnitInStack");
+		}
+
+		/// <summary>
+		/// Calls the action for every unit of the stack of the unit, starting with it, at most for 10 units.
+		/// The following unit is read before the action, so the action may remove the unit from the stack.
+		/// </summary>
+		public void ForEachUnitInStack(short participantIdx, short troopIdx, Action<short, short> visit)
+		{
+			short present = troopIdx;
 
 			for (int idx = 0; idx < 10; idx++)
 			{
-				this.processor.ScaleIndexToBase(0xc, (ushort)priorTroopIdx);
-				this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
+				short following = this.troops.Following(participantIdx, present);
 
-				short freshTroopIdx = this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81de));
+				visit(participantIdx, present);
 
-				switch (funcAddr)
-				{
-					case 0xf10:
-						EliminateUnit(participantIdx, priorTroopIdx);
-						break;
+				present = following;
 
-					case 0x1169:
-						LocateBestGuardianStep(participantIdx, priorTroopIdx);
-						break;
-
-					case 0x1280:
-						TallyUnitsByDomainStep(participantIdx, priorTroopIdx);
-						break;
-
-					case 0x135a:
-						TallyUnitsOfTypeStep(participantIdx, priorTroopIdx);
-						break;
-
-					case 0x13a9:
-						TallyUnitsWithFlagStep(participantIdx, priorTroopIdx);
-						break;
-
-					case 0x13f8:
-						TallySpecialUnitsStep(participantIdx, priorTroopIdx);
-						break;
-
-					case 0x14a2:
-						VerifyUnitTerrainFlag(participantIdx, priorTroopIdx);
-						break;
-
-					case 0x14f6:
-						WipeUnitOrders(participantIdx, priorTroopIdx);
-						break;
-
-					case 0x1560:
-						RestoreUnitOrders(participantIdx, priorTroopIdx);
-						break;
-
-					case 0x1593:
-						RestoreUnitStatus(participantIdx, priorTroopIdx);
-						break;
-
-					case 0x1610:
-						EliminateLandUnit(participantIdx, priorTroopIdx);
-						break;
-
-					case 0x1643:
-						EliminateNonLandUnit(participantIdx, priorTroopIdx);
-						break;
-
-					case 0x1676:
-						EliminateSeaUnit(participantIdx, priorTroopIdx);
-						break;
-
-					default:
-						throw new Exception("Unknown function address");
-				}
-
-				priorTroopIdx = freshTroopIdx;
-
-				if (priorTroopIdx == -1 || priorTroopIdx == troopIdx)
+				if (present == -1 || present == troopIdx)
 					break;
 			}
+		}
 
-			// Far return
-			this.processor.Journal.CloseScope("VisitEachUnitInStack");
+		/// <summary>The step functions of VisitEachUnitInStack by their address in the original code</summary>
+		private Action<short, short> StackStep(int funcAddr)
+		{
+			return funcAddr switch
+			{
+				0xf10 => EliminateUnit,
+				0x1169 => LocateBestGuardianStep,
+				0x1280 => TallyUnitsByDomainStep,
+				0x135a => TallyUnitsOfTypeStep,
+				0x13a9 => TallyUnitsWithFlagStep,
+				0x13f8 => TallySpecialUnitsStep,
+				0x14a2 => VerifyUnitTerrainFlag,
+				0x14f6 => WipeUnitOrders,
+				0x1560 => RestoreUnitOrders,
+				0x1593 => RestoreUnitStatus,
+				0x1610 => EliminateLandUnit,
+				0x1643 => EliminateNonLandUnit,
+				0x1676 => EliminateSeaUnit,
+				_ => throw new Exception("Unknown function address"),
+			};
 		}
 
 		/// <summary>
