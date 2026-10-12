@@ -564,173 +564,124 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// The Advisors menu: City Status, Military (the score list when all units are shown, 0xd806, else the unit counts),
+		/// Intelligence, Attitude, Trade and Science; the screen is put back from 0x19d4 before the chosen report
 		/// </summary>
 		public void DisplayAdvisorMenu()
 		{
 			this.processor.Journal.OpenScope("DisplayAdvisorMenu()");
 
-			// function body
-			this.processor.EnterFrame(0x4);
-
 			this.owner.Libc.CopyText(0xba06, " City Status (F1)\n Military Advisor (F2)\n Intelligence Advisor (F3)\n Attitude Advisor (F4)\n");
-
 			this.owner.Libc.AppendText(0xba06, " Trade Advisor (F5)\n Science Advisor (F6)\n");
 
 			this.owner.Dialogs.DisplayMenu(0xba06, 112, 8, 0);
 
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
+			ushort choice = this.processor.RegAcc.Value16;
 
+			RestoreMenuScreen();
+
+			short personIdx = this.owner.World.PersonParticipantIdx;
+
+			switch (choice)
+			{
+				case 0:
+					this.owner.Briefings.DisplayCityStatusReport(personIdx);
+					break;
+
+				case 1:
+					if (this.processor.PullGlobalWord(0xd806) != 0)
+					{
+						this.owner.RealmInfo.DisplayCivilizationScoreList();
+					}
+					else
+					{
+						this.owner.Briefings.RenderUnitCountsChart(personIdx);
+					}
+
+					break;
+
+				case 2:
+					this.owner.Briefings.DisplayMilitaryReport();
+					break;
+
+				case 3:
+					this.owner.Briefings.DisplayAttitudeReport(personIdx);
+					break;
+
+				case 4:
+					this.owner.Briefings.DisplayTradeReport(personIdx);
+					break;
+
+				case 5:
+					this.owner.Briefings.DisplayScienceReport(personIdx);
+					break;
+			}
+
+			this.processor.Journal.CloseScope("DisplayAdvisorMenu");
+		}
+
+		/// <summary>After a menu of the menu bar: the screen put back from the back screen 0x19d4, 0x654a set to 0xffff</summary>
+		private void RestoreMenuScreen()
+		{
 			this.owner.Startup.ConcealMouseCursor();
 
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0x19d4),
-				0, 0, 0x140, 0xc8,
-				this.processor.PullGlobalWord(0xaa),
-				0, 0);
+			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 0x140, 0xc8,
+				this.processor.PullGlobalWord(0xaa), 0, 0);
 
 			this.owner.Startup.DisplayMouseCursor();
 
 			this.processor.EmitGlobalWord(0x654a, 0xffff);
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x4);
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual) goto L06ca;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1);
-			if (this.processor.FlagSet.IsEqual) goto L0694;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x2);
-			if (this.processor.FlagSet.IsEqual) goto L06b4;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x3);
-			if (this.processor.FlagSet.IsEqual) goto L06bf;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x4);
-			if (this.processor.FlagSet.IsEqual) goto L0689;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x5);
-			if (this.processor.FlagSet.IsEqual) goto L06d5;
-
-			goto L06e0;
-
-		L0689:
-			this.owner.Briefings.DisplayTradeReport(this.owner.World.PersonParticipantIdx);
-
-			goto L06e0;
-
-		L0694:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xd806), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L06a9;
-
-			this.owner.RealmInfo.DisplayCivilizationScoreList();
-
-			goto L06e0;
-
-		L06a9:
-			this.owner.Briefings.RenderUnitCountsChart(this.owner.World.PersonParticipantIdx);
-
-			goto L06e0;
-
-		L06b4:
-			this.owner.Briefings.DisplayMilitaryReport();
-
-			goto L06e0;
-
-		L06bf:
-			this.owner.Briefings.DisplayAttitudeReport(this.owner.World.PersonParticipantIdx);
-
-			goto L06e0;
-
-		L06ca:
-			this.owner.Briefings.DisplayCityStatusReport(this.owner.World.PersonParticipantIdx);
-
-			goto L06e0;
-
-		L06d5:
-			this.owner.Briefings.DisplayScienceReport(this.owner.World.PersonParticipantIdx);
-
-		L06e0:
-			this.processor.RegStack.Value16 = this.processor.RegFrame.Value16;
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-			// Far return
-			this.processor.Journal.CloseScope("DisplayAdvisorMenu");
 		}
 
 		/// <summary>
-		/// ?
+		/// The World menu: Wonders, Top 5 Cities, Civilization Score, World Map, Demographics and SpaceShips (disabled, 0xb276,
+		/// when nobody has a spaceship); the screen is put back from 0x19d4 before the chosen report
 		/// </summary>
 		public void DisplayWorldMenu()
 		{
 			this.processor.Journal.OpenScope("DisplayWorldMenu()");
 
-			// function body
-			this.processor.EnterFrame(0x4);
-			this.processor.TestBitsWord((ushort)this.owner.World.StarshipMarkers, 0xfe00);
-			if (this.processor.FlagSet.IsNotEqual) goto L06f8;
-			this.processor.EmitGlobalWord(0xb276, 0x20);
+			if ((this.owner.World.StarshipMarkers & 0xfe00) == 0)
+			{
+				this.processor.EmitGlobalWord(0xb276, 0x20);
+			}
 
-		L06f8:
 			this.owner.Libc.CopyText(0xba06, " Wonders of the World (F7)\n Top 5 Cities (F8)\n Civilization Score (F9)\n");
-
 			this.owner.Libc.AppendText(0xba06, " World Map (F10)\n Demographics\n SpaceShips\n");
 
 			this.owner.Dialogs.DisplayMenu(0xba06, 144, 8, 0);
 
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
+			ushort choice = this.processor.RegAcc.Value16;
 
-			this.owner.Startup.ConcealMouseCursor();
+			RestoreMenuScreen();
 
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0x19d4),
-				0, 0, 0x140, 0xc8,
-				this.processor.PullGlobalWord(0xaa),
-				0, 0);
+			switch (choice)
+			{
+				case 0:
+					this.owner.Atlas.DisplayWondersOfTheWorld();
+					break;
 
-			this.owner.Startup.DisplayMouseCursor();
+				case 1:
+					this.owner.Legends.DisplayTopCities();
+					break;
 
-			this.processor.EmitGlobalWord(0x654a, 0xffff);
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x4);
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual) goto L0766;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1);
-			if (this.processor.FlagSet.IsEqual) goto L078f;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x2);
-			if (this.processor.FlagSet.IsEqual) goto L077b;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x3);
-			if (this.processor.FlagSet.IsEqual) goto L0796;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x4);
-			if (this.processor.FlagSet.IsEqual) goto L076d;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x5);
-			if (this.processor.FlagSet.IsEqual) goto L07a6;
-			goto L07ab;
+				case 2:
+					this.owner.Founding.DisplayFinalScore(this.owner.World.PersonParticipantIdx, true);
+					break;
 
-		L0766:
-			this.owner.Atlas.DisplayWondersOfTheWorld();
+				case 3:
+					this.owner.Atlas.DisplayWorldMap(1);
+					break;
 
-			goto L07ab;
+				case 4:
+					this.owner.Atlas.DisplayCensus(this.owner.World.PersonParticipantIdx);
+					break;
 
-		L076d:
-			this.owner.Atlas.DisplayCensus(this.owner.World.PersonParticipantIdx);
+				case 5:
+					this.owner.RocketScreen.ChooseNationToView();
+					break;
+			}
 
-			goto L07ab;
-
-		L077b:
-			this.owner.Founding.DisplayFinalScore(this.owner.World.PersonParticipantIdx, true);
-
-			goto L07ab;
-
-		L078f:
-			this.owner.Legends.DisplayTopCities();
-
-			goto L07ab;
-
-		L0796:
-			this.owner.Atlas.DisplayWorldMap(1);
-			
-			goto L07ab;
-
-		L07a6:
-			this.owner.RocketScreen.ChooseNationToView();
-
-		L07ab:
-			this.processor.RegStack.Value16 = this.processor.RegFrame.Value16;
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-			// Far return
 			this.processor.Journal.CloseScope("DisplayWorldMenu");
 		}
 

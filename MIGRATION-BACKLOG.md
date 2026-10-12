@@ -160,16 +160,20 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   bufor komunikatu), `ExplodeNuclearWeapon` (`UnitCombat`), `DisplayUnitInfo` (`ArmySelection`). Testy w
   `BatchEighteenDifferentialTests`. `ExplodeNuclearWeapon` zostawia ramkę, zapis SI i SI = 2 * kierunek w pętli: wołana funkcja
   kopiuje SI do DI, który wraca do wywołującego (rejestry zachowane jak w oryginale, bez tego DI się różni).
+- Kolejne 2 moduły (2026-10-12): `DisplayWorldMenu`, `DisplayAdvisorMenu` (`GameMenus`, wspólne `RestoreMenuScreen`),
+  `RenderScoreListRecord` (`CivilizationInfo`). Testy w `BatchNineteenDifferentialTests`: pozycję, od której startuje menu,
+  ustawia 0x2f9a, więc skrypt klawiszy to samo Enter. Ślad wywołań maskuje teraz adresy stosu także zapisane dziesiętnie
+  (np. `RenderCensusLine`).
 
 ## Następny krok
 
 Dalej małe metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 60`
 (metody z co najmniej 2 liniami `goto L` / `FlagSet` / `Compare…` / `SumWord` itd., od najkrótszej). Kandydaci:
-`DisplayWorldMenu`, `DisplayAdvisorMenu` (`GameMenus`), `DisplayInterfaceTutorial` (`MainIntro`), `PostCityDefenders`,
+`DisplayInterfaceTutorial` (`MainIntro`), `PostCityDefenders`,
 `MayAIEnterTile` (`AIPlayer`),
 `RenderMiniMap` (`CityManagement`), `RenderExplosion` (`DiplomatActions`, kandydat ze „Śmieci na stosie”), `RenderTextChunk`
 (`TextBlockRenderer`), `ImportKingScenery` (`MeetWithKing`), `RenderReplayMapTile`
-(`GameReplay`), `RenderPlayerComparisonChart` (`AdvisorReports`), `RenderScoreListRecord` (`CivilizationInfo`),
+(`GameReplay`), `RenderPlayerComparisonChart` (`AdvisorReports`),
 `EliminateCivilization` (`StartGameMenu`), `AttachHallOfFameRecord` (`HallOfFame`), `DisplayStoreGameDialog` (`GameLoadAndSave`),
 reszta generatora mapy w `GameInitAndIntro`. Funkcje niskopoziomowe `SystemServices` (`DeactivateMouse`, `PointerEvent`,
 `RenderCursorToScreen`, `RecoverScreenUnderCursor`, kolory i zegar: `PrepareTimer`, `RefreshHueCycling`, `AssignHueCycleSpan`,

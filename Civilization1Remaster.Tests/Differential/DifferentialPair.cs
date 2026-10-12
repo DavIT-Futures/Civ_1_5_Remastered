@@ -108,14 +108,15 @@ namespace Civilization1Remaster.Tests.Differential
 		}
 
 		/// <summary>
-		/// Addresses in the stack (0xe8c0 - 0xf0bf, the stack starts at 0xf0c0) passed as arguments, like a text buffer of a
+		/// Addresses in the stack (0xe8c0 - 0xf0bf, the stack starts at 0xf0c0; hex or decimal) passed as arguments, like a text buffer of a
 		/// caller, move when a rewritten function has no stack frame any more; their content is compared with the memory
 		/// </summary>
 		private static string WithoutStackAddresses(string call)
 		{
-			return System.Text.RegularExpressions.Regex.Replace(call, "0x[0-9a-f]{4}", match =>
+			// In hex (0x....) or, in some scopes, in decimal
+			return System.Text.RegularExpressions.Regex.Replace(call, @"0x[0-9a-f]{4}|\b\d{5}\b", match =>
 			{
-				int amount = Convert.ToInt32(match.Value, 16);
+				int amount = match.Value.StartsWith("0x") ? Convert.ToInt32(match.Value, 16) : int.Parse(match.Value);
 
 				return amount >= 0xe8c0 && amount < 0xf0c0 ? "<stack>" : match.Value;
 			});
