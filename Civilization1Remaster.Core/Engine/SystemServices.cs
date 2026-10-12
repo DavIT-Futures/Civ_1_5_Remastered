@@ -1221,7 +1221,7 @@ namespace Civilization1Remaster.Engine
 		/// <param name="mode"></param>
 		public void FloodBox(ushort boxAddr, int horizLoc, int vertLoc, int breadth, int altitude, ushort style)
 		{
-			this.processor.Journal.OpenScope($"FloodBox(0x{boxAddr:4}, {horizLoc}, {vertLoc}, {breadth}, {altitude}, 0x{style:4})");
+			this.processor.Journal.OpenScope($"FloodBox(0x{boxAddr:x4}, {horizLoc}, {vertLoc}, {breadth}, {altitude}, 0x{style:x4})");
 
 			// function body
 			CivRectangle box = new CivRectangle(this.processor, CPU.AsLinearAddress(this.processor.SegData.Value16, boxAddr));

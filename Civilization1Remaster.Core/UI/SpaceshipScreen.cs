@@ -1476,20 +1476,15 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// The player launches its spaceship (StarshipMarkers bit player): a black screen with "... LAUNCH space ship!" and the
+		/// estimated arrival, the launch year is noted, then the spaceship is shown (on the space background, which is left
+		/// again afterwards, for another player than the human)
 		/// </summary>
-		/// <param name="playerID"></param>
 		public void FireSpaceship(short participantIdx)
 		{
 			this.processor.Journal.OpenScope($"FireSpaceship({participantIdx})");
 
-			// function body
-			this.processor.EnterFrame();
-			this.processor.PreserveSource();
-			this.processor.RegAcc.Value16 = 0x1;
-			this.processor.RegCount.LowByte = (byte)participantIdx;
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			this.owner.World.StarshipMarkers |= (short)this.processor.RegAcc.Value16;
+			this.owner.World.StarshipMarkers |= (short)(1 << participantIdx);
 
 			this.owner.Startup.ConcealMouseCursor();
 
@@ -1497,31 +1492,24 @@ namespace Civilization1Remaster.UI
 
 			this.owner.TurnLogic.AwaitForKey();
 
-			this.processor.RegSource.Value16 = (ushort)participantIdx;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1992)));
-
+			this.owner.Libc.CopyText(0xba06, this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1992)));
 			this.owner.Libc.AppendText(0xba06, " LAUNCH space ship!");
 
 			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 92, 15);
 
 			this.owner.Libc.CopyText(0xba06, "Estimate arrival in ");
-
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText(this.owner.World.Participants[participantIdx].StarshipArrivalSeason, 10));
-
+			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(this.owner.World.Participants[participantIdx].StarshipArrivalSeason, 10));
 			this.owner.Libc.AppendText(0xba06, ".\n");
 
 			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 100, 15);
 
-			this.owner.World.Participants[participantIdx].StarshipLiftoffSeason = owner.World.Season;
+			this.owner.World.Participants[participantIdx].StarshipLiftoffSeason = this.owner.World.Season;
 
-			if (participantIdx == this.owner.World.PersonParticipantIdx)
-				goto L16a1;
+			if (participantIdx != this.owner.World.PersonParticipantIdx)
+			{
+				RenderSpaceScenery();
+			}
 
-			RenderSpaceScenery();
-
-		L16a1:
 			this.owner.TurnLogic.AwaitForKey();
 
 			this.owner.Conquest.AwaitForKeyPressOrMouseClick();
@@ -1529,15 +1517,12 @@ namespace Civilization1Remaster.UI
 			RenderSpaceship(participantIdx, -1, 0);
 
 			this.owner.Startup.DisplayMouseCursor();
-			
-			if (participantIdx == this.owner.World.PersonParticipantIdx) goto L16ce;
 
-			ImportSpaceScenery();
+			if (participantIdx != this.owner.World.PersonParticipantIdx)
+			{
+				ImportSpaceScenery();
+			}
 
-		L16ce:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-			// Far return
 			this.processor.Journal.CloseScope("FireSpaceship");
 		}
 	}

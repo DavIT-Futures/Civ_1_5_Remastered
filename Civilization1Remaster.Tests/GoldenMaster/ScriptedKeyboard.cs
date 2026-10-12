@@ -38,6 +38,9 @@ namespace Civilization1Remaster.Tests.GoldenMaster
 			this.script = script;
 		}
 
+		/// <summary>Called just before a key is typed, while the game waits for it (the differential tests note the screen)</summary>
+		public Action? KeyTyping { get; set; }
+
 		/// <summary>Keys typed since the start</summary>
 		public long KeysTyped { get; private set; }
 
@@ -64,6 +67,8 @@ namespace Civilization1Remaster.Tests.GoldenMaster
 
 			if (++this.KeysThisTurn > this.TurnKeyLimit)
 				throw new InvalidOperationException($"The headless game is stuck, it asked for more than {this.TurnKeyLimit} keys in one turn.");
+
+			this.KeyTyping?.Invoke();
 
 			int key = this.script[this.scriptIdx];
 			this.scriptIdx = (this.scriptIdx + 1) % this.script.Length;

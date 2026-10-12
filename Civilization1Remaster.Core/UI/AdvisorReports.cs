@@ -1,4 +1,5 @@
 using Civilization1Remaster.Emulation;
+using Civilization1Remaster.Game.State;
 
 namespace Civilization1Remaster.UI
 {
@@ -41,75 +42,50 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// The head of an advisor report on a screen of the colour: the title, then the kind of state by government / 2
+		/// (0x473c, 0x4743, 0x474b; for the others the text at 0xba06 stays) " of the " civilization, then the ruler's title
+		/// (0x19b2 + 2 * government), the leader's name and the year
 		/// </summary>
-		/// <param name="stringPtr"></param>
-		/// <param name="mode"></param>
 		public void RenderReportPreamble(ushort charsAddr, ushort style)
 		{
 			this.processor.Journal.OpenScope($"RenderReportPreamble(0x{charsAddr:x4}, {style})");
 
-			// function body
-			this.processor.EnterFrame();
+			Player person = this.owner.World.Participants[this.owner.World.PersonParticipantIdx];
+			ushort personSlot = (ushort)(this.owner.World.PersonParticipantIdx << 1);
 
 			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, style);
 
 			this.owner.TextPainter.RenderCenteredTextToScreen0(charsAddr, 160, 2, 15);
 
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.Participants[this.owner.World.PersonParticipantIdx].RegimeKind;
-			this.processor.HalveAccumulator();
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual) goto L0070;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1);
-			if (this.processor.FlagSet.IsEqual) goto L0082;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x2);
-			if (this.processor.FlagSet.IsEqual) goto L0087;
-			goto L008c;
+			switch (person.RegimeKind / 2)
+			{
+				case 0:
+					this.owner.Libc.CopyText(0xba06, 0x473c);
+					break;
 
-		L0070:
-			this.processor.RegAcc.Value16 = 0x473c;
+				case 1:
+					this.owner.Libc.CopyText(0xba06, 0x4743);
+					break;
 
-		L0073:
-			this.owner.Libc.CopyText(0xba06, this.processor.RegAcc.Value16);
+				case 2:
+					this.owner.Libc.CopyText(0xba06, 0x474b);
+					break;
+			}
 
-			goto L008c;
-
-		L0082:
-			this.processor.RegAcc.Value16 = 0x4743;
-			goto L0073;
-
-		L0087:
-			this.processor.RegAcc.Value16 = 0x474b;
-			goto L0073;
-
-		L008c:
 			this.owner.Libc.AppendText(0xba06, " of the ");
-
-			this.processor.RegBase.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1992)));
+			this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)(personSlot + 0x1992)));
 
 			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 10, 15);
 
-			this.processor.RegBase.Value16 = (ushort)this.owner.World.Participants[this.owner.World.PersonParticipantIdx].RegimeKind;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-
-			this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x19b2)));
-
+			this.owner.Libc.CopyText(0xba06, this.processor.PullGlobalWord((ushort)((person.RegimeKind << 1) + 0x19b2)));
 			this.owner.Libc.AppendText(0xba06, " ");
-
-			this.processor.RegBase.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x19a2)));
-
+			this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)(personSlot + 0x19a2)));
 			this.owner.Libc.AppendText(0xba06, ": ");
 
 			this.owner.TurnHooks.ObtainCurrentYearAsText();
 
 			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 18, 15);
 
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-			// Far return
 			this.processor.Journal.CloseScope("RenderReportPreamble");
 		}
 

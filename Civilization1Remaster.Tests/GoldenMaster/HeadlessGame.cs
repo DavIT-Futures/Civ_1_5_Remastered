@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.IO;
 using Civilization1Remaster.Emulation;
@@ -56,6 +57,11 @@ namespace Civilization1Remaster.Tests.GoldenMaster
 			this.keyboard = new ScriptedKeyboard(this.processor, this.Engine.VideoCard.Tokens, this.Engine.VideoCard.VideoLatch,
 				script ?? ScriptedKeyboard.DefaultScript);
 			this.processor.InputStarved = this.keyboard.OnInputStarved;
+
+			// What the player sees when a key is typed goes into the trace: windows and messages that a function takes away
+			// again before it returns are compared too
+			this.keyboard.KeyTyping = () => this.Trace?.Add("screens " + string.Join(" ",
+				this.Engine.VideoCard.Displays.Select(display => GameSnapshot.Fnv(display.Datum.PictureStorage).ToString("x8"))));
 
 			this.Engine.Journal.ScopeListener = CountCall;
 		}

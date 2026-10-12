@@ -17,75 +17,61 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// Asks for the name of the city (question 0x539e, starting from its name) until the answer is not empty; when the
+		/// answer is accepted (PullTextInput not 0) its 13 characters become the city's name. The screen is kept in the back
+		/// screen 0x19d4 meanwhile.
 		/// </summary>
-		/// <param name="cityID"></param>
-		/// <returns></returns>
+		/// <returns>The answer of PullTextInput, also in AX</returns>
 		public ushort DisplayCityLabelPrompt(short townIdx)
 		{
 			this.processor.Journal.OpenScope($"DisplayCityLabelPrompt({townIdx})");
 
-			// function body
-			this.processor.EnterFrame(0x4);
-
 			this.owner.Startup.ConcealMouseCursor();
 
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0xaa),
-				0, 0, 0x140, 0xc8,
-				this.processor.PullGlobalWord(0x19d4),
-				0, 0);
+			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), 0, 0, 0x140, 0xc8,
+				this.processor.PullGlobalWord(0x19d4), 0, 0);
 
-		L0010:
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 80, 80, 160, 32, 15);
+			ushort answer;
 
-			this.owner.Dialogs.RenderBox(80, 80, 160, 32, 11);
-
-			this.owner.TextPainter.RenderTextToScreen0(0x539e, 88, 82, 0);
-
-			this.processor.EmitGlobalByte(0xba06, 0x0);
-			
-			this.owner.Conquest.ObtainCityLabel(townIdx);
-			
-			PullTextInput(0x58, 0x60, 0xc);
-			
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
-
-			this.owner.Libc.TextLength(0xba06);
-
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsNotEqual) goto L0096;
-			goto L0010;
-
-		L0096:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L00c5;
-
-			uint settlementTitleIdent = this.owner.World.Towns[townIdx].LabelIdx;
-			char[] townLabel = this.owner.World.TownLabels[settlementTitleIdent].ToCharArray();
-
-			for (int idx = 0; idx < 0xd; idx++)
+			do
 			{
-				townLabel[idx] = (char)this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(0xba06 + idx));
-			}
-			this.owner.World.TownLabels[settlementTitleIdent] = new string(townLabel);
+				this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 80, 80, 160, 32, 15);
 
-		L00c5:
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0x19d4),
-				0, 0, 0x140, 0xc8,
-				this.processor.PullGlobalWord(0xaa),
-				0, 0);
+				this.owner.Dialogs.RenderBox(80, 80, 160, 32, 11);
+
+				this.owner.TextPainter.RenderTextToScreen0(0x539e, 88, 82, 0);
+
+				this.processor.EmitGlobalByte(0xba06, 0x0);
+
+				this.owner.Conquest.ObtainCityLabel(townIdx);
+
+				answer = PullTextInput(0x58, 0x60, 0xc);
+			}
+			while (this.owner.Libc.TextLength(0xba06) == 0);
+
+			if (answer != 0)
+			{
+				uint labelIdx = this.owner.World.Towns[townIdx].LabelIdx;
+				char[] label = this.owner.World.TownLabels[labelIdx].ToCharArray();
+
+				for (int idx = 0; idx < 0xd; idx++)
+				{
+					label[idx] = (char)this.processor.PullGlobalByte((ushort)(0xba06 + idx));
+				}
+
+				this.owner.World.TownLabels[labelIdx] = new string(label);
+			}
+
+			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 0x140, 0xc8,
+				this.processor.PullGlobalWord(0xaa), 0, 0);
 
 			this.owner.Startup.DisplayMouseCursor();
 
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x2);
-			this.processor.LeaveFrame();
+			this.processor.RegAcc.Value16 = answer;
 
-			// Far return
 			this.processor.Journal.CloseScope("DisplayCityLabelPrompt");
 
-			return this.processor.RegAcc.Value16;
+			return answer;
 		}
 
 		/// <summary>

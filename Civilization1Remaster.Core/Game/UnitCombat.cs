@@ -1,5 +1,6 @@
 using System;
 using Civilization1Remaster.Emulation;
+using Civilization1Remaster.Game.State;
 
 namespace Civilization1Remaster.Game
 {
@@ -1063,70 +1064,51 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// Before the human player attacks a player with whom it has a peace treaty (Relations bit 1): asks whether to break the
+		/// treaty; the Senate overrules it under governments 4 and up
 		/// </summary>
-		/// <param name="playerID"></param>
-		/// <returns></returns>
+		/// <returns>0 without a treaty, 1 when the treaty is broken, 0xffff when the action is cancelled (also in AX)</returns>
 		public ushort AffirmBreakTreaty(short participantIdx)
 		{
 			this.processor.Journal.OpenScope($"AffirmBreakTreaty({participantIdx})");
 
-			// function body
-			this.processor.EnterFrame();
-			this.processor.PreserveSource();
+			Player person = this.owner.World.Participants[this.owner.World.PersonParticipantIdx];
+			ushort affirmed = 0;
 
-			this.processor.RegSource.Value16 = (ushort)participantIdx;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
+			if ((person.Relations[participantIdx] & 2) != 0)
+			{
+				this.owner.Libc.CopyText(0xba06, "We have signed a\npeace treaty with\nthe ");
+				this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1992)));
+				this.owner.Libc.AppendText(0xba06, "!\n Cancel action.\n Break treaty.\n");
 
-			this.processor.RegBase.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.RegCount.LowByte = 0x4;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, this.processor.RegCount.LowByte);
+				this.processor.EmitGlobalWord(0x2f9e, 0x5);
 
-			if ((this.owner.World.Participants[this.owner.World.PersonParticipantIdx].Relations[participantIdx] & 2) == 0)
-				goto L0d48;
+				this.owner.TurnHooks.DisplayDialog(0xba06, 80, 80);
 
-			this.owner.Libc.CopyText(0xba06, "We have signed a\npeace treaty with\nthe ");
+				affirmed = 0xffff;
 
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1992)));
+				if (this.processor.RegAcc.Value16 == 1)
+				{
+					if (person.RegimeKind < 4)
+					{
+						affirmed = 1;
+					}
+					else
+					{
+						this.owner.Libc.CopyText(0xba06, "Overruled by\nthe Senate.\nAction canceled.\n");
 
-			this.owner.Libc.AppendText(0xba06, "!\n Cancel action.\n Break treaty.\n");
+						this.processor.EmitGlobalWord(0x2f9e, 0x4);
 
-			this.processor.EmitGlobalWord(0x2f9e, 0x5);
+						this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+					}
+				}
+			}
 
-			this.owner.TurnHooks.DisplayDialog(0xba06, 80, 80);
+			this.processor.RegAcc.Value16 = affirmed;
 
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1);
-			if (this.processor.FlagSet.IsEqual) goto L0d0a;
-
-		L0d05:
-			this.processor.RegAcc.Value16 = 0xffff;
-			goto L0d4a;
-
-		L0d0a:
-			if (this.owner.World.Participants[this.owner.World.PersonParticipantIdx].RegimeKind < 4) goto L0d43;
-
-			this.owner.Libc.CopyText(0xba06, "Overruled by\nthe Senate.\nAction canceled.\n");
-
-			this.processor.EmitGlobalWord(0x2f9e, 0x4);
-
-			this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
-
-			goto L0d05;
-
-		L0d43:
-			this.processor.RegAcc.Value16 = 0x1;
-			goto L0d4a;
-
-		L0d48:
-			this.processor.RegAcc.Value16 = 0;
-
-		L0d4a:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-			// Far return
 			this.processor.Journal.CloseScope("AffirmBreakTreaty");
 
-			return this.processor.RegAcc.Value16;
+			return affirmed;
 		}
 
 		/// <summary>

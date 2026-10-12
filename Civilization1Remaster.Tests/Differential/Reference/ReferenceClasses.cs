@@ -48,4 +48,6 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 	public sealed partial class MapManagementReference(GameEngine owner) : ReferenceBase(owner);
 	public sealed partial class TurnEventsReference(GameEngine owner) : ReferenceBase(owner);
 	public sealed partial class InGameHelpReference(GameEngine owner) : ReferenceBase(owner);
+	public sealed partial class AdvisorReportsReference(GameEngine owner) : ReferenceBase(owner);
+	public sealed partial class UnitCombatReference(GameEngine owner) : ReferenceBase(owner);
 }
