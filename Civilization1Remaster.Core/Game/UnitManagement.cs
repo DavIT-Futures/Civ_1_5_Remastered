@@ -1749,48 +1749,31 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ??? To be checked - Too many parameters calling CenterMapView
+		/// Scrolls the map view (left column 0xd4cc, top row 0xd75e) so that the tile is in its inner part
+		/// (columns 2 - 13, rows 2 - 9 of the view); otherwise the view stays
 		/// </summary>
-		/// <param name="playerID"></param>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
 		public void PanMapToPosition(short participantIdx, int horizLoc, int vertLoc)
 		{
 			this.processor.Journal.OpenScope($"PanMapToPosition({participantIdx}, {horizLoc}, {vertLoc})");
 
-			// function body
-			this.processor.EnterFrame(0x2);
+			int viewLeft = this.processor.PullGlobalSignedWord(0xd4cc);
 
-			this.processor.EmitLocalWord(0x2, 0x0);
-
-			if (horizLoc < 16 && this.processor.PullGlobalSignedWord(0xd4cc) > 64)
+			// The view may reach over the right edge of the world
+			if (horizLoc < 16 && viewLeft > 64)
 			{
-				horizLoc += 80;
+				horizLoc += MapRules.Width;
 			}
 
-			if (horizLoc < this.processor.PullGlobalSignedWord(0xd4cc) + 2 ||
-				horizLoc > this.processor.PullGlobalSignedWord(0xd4cc) + 13)
+			int viewTop = this.processor.PullGlobalSignedWord(0xd75e);
+			bool outside = horizLoc < viewLeft + 2 || horizLoc > viewLeft + 13 || vertLoc < viewTop + 2 || vertLoc > viewTop + 9;
+
+			if (outside)
 			{
-				this.processor.EmitLocalWord(0x2, 0x1);
+				int left = (short)this.owner.Routing.TunePosition(horizLoc - 8);
+
+				this.owner.MapOps.FocusMapView(participantIdx, left, vertLoc - 6);
 			}
 
-			if (vertLoc < this.processor.PullGlobalSignedWord(0xd75e) + 2 ||
-				vertLoc > this.processor.PullGlobalSignedWord(0xd75e) + 9)
-			{
-				this.processor.EmitLocalWord(0x2, 0x1);
-			}
-		
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L1721;
-
-			this.owner.Routing.TunePosition(horizLoc - 8);
-
-			this.owner.MapOps.FocusMapView(participantIdx, (short)this.processor.RegAcc.Value16, vertLoc - 6);
-
-		L1721:
-			this.processor.RegStack.Value16 = this.processor.RegFrame.Value16;
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-			// Far return
 			this.processor.Journal.CloseScope("PanMapToPosition");
 		}
 
