@@ -144,785 +144,503 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// A unit has come onto the tile. The human player sees the tiles around it (2 tiles far by the sight of the unit type),
+		/// cities next to it give back their kept units, and the unit meets the foreign units around: they see each other, wake up,
+		/// lose their "go to" orders, a peace treaty may be offered and the AI players remember the places (SendUnitToStrategicLocation).
 		/// </summary>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
-		/// <param name="playerID"></param>
-		/// <param name="unitID"></param>
-		/// <param name="flag"></param>
+		/// <param name="marker">Not 0: repaint the tiles around when the human player watches</param>
 		public void ShiftUnit(int horizLoc, int vertLoc, short participantIdx, short troopIdx, ushort marker)
 		{
 			this.processor.Journal.OpenScope($"ShiftUnit({horizLoc}, {vertLoc}, {participantIdx}, {troopIdx}, {marker})");
 
-			// function body
+			// The stack frame of the original stays, see ShiftUnitFrame
 			this.processor.EnterFrame(0x16);
 			this.processor.PreserveIndexRegisters();
 
-			this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
+			ShiftUnitFrame frame = new ShiftUnitFrame();
 
-			this.processor.EmitLocalWord(0xc, this.processor.RegAcc.Value16);
-			
-			if (participantIdx != this.owner.World.PersonParticipantIdx)
-				goto L02af;
-
-			this.processor.EmitLocalWord(0xa, 0x0);
-
-		L0205:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0xa);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-
-			this.owner.Routing.TunePosition(
-				this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1882)) + horizLoc);
-
-			this.processor.EmitLocalWord(0x10, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x18e4));
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, (ushort)vertLoc);
-			this.processor.EmitLocalWord(0x12, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.PullLocalWord(0xa), 0x9);
-			if (this.processor.FlagSet.IsLess) goto L0266;
-			this.processor.ScaleIndexToBase(0xc, (ushort)troopIdx);
-			this.processor.ScaleIndex(0x600, (ushort)participantIdx);
-			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegAcc.LowByte = 0x22;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegDest.Value16 + 0x81d7)));
-			this.processor.RegSource.Value16 = this.processor.RegAcc.Value16;
-			this.processor.TestBitsByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1144)), 0x2);
-			if (this.processor.FlagSet.IsEqual) goto L02a3;
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1138)), 0x2);
-			if (this.processor.FlagSet.IsNotEqual) goto L0266;
-
-			this.owner.MapOps.ObtainTerrainType(
-				this.processor.PullLocalSignedWord(0x10),
-				this.processor.PullLocalSignedWord(0x12));
-
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
-			if (this.processor.FlagSet.IsNotEqual) goto L02a3;
-
-		L0266:
-			this.owner.MapOps.VerifyMapLimits(
-				this.processor.PullLocalSignedWord(0x10),
-				this.processor.PullLocalSignedWord(0x12));
-
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual) goto L02a3;
-			this.processor.RegAcc.LowByte = 0x1;
-			this.processor.RegCount.LowByte = (byte)participantIdx;
-			this.processor.RegAcc.LowByte = this.processor.ShiftLeftByte(this.processor.RegAcc.LowByte, this.processor.RegCount.LowByte);
-			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
-
-			this.owner.World.ChartSight[this.processor.PullLocalWord(0x10),
-				this.processor.PullLocalWord(0x12)] |= (sbyte)this.processor.RegCount.LowByte;
-
-			this.owner.MapOps.KeepKnownTileImprovements(
-				this.processor.PullLocalSignedWord(0x10),
-				this.processor.PullLocalSignedWord(0x12));
-
-		L02a3:
-			this.processor.EmitLocalWord(0xa, this.processor.IncrementWord(this.processor.PullLocalWord(0xa)));
-			this.processor.CompareWord(this.processor.PullLocalWord(0xa), 0x19);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L02af;
-			goto L0205;
-
-		L02af:
-			this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc);
-
-			this.processor.EmitLocalWord(0xe, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0xa, 0x1);
-			goto L0381;
-
-		L02c8:
-			this.processor.RegAcc.Value16 = 0x1;
-
-		L02cb:
-			this.owner.Bot.SendUnitToStrategicLocation(this.processor.PullGlobalSignedWord(0xd7f0),
-				(short)horizLoc, (short)vertLoc, 2, (short)this.processor.RegAcc.Value16);
-
-		L02e2:
-			this.owner.MapOps.ObtainTerrainType(
-				this.processor.PullLocalSignedWord(0x10),
-				this.processor.PullLocalSignedWord(0x12));
-
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
-			if (this.processor.FlagSet.IsNotEqual) goto L0329;
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xd7f0), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L0329;
-
-			this.processor.RegSource.Value16 = (ushort)participantIdx;
-			this.processor.RegCount.LowByte = 0x4;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, this.processor.RegCount.LowByte);
-
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xd7f0);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-
-			if ((this.owner.World.Participants[participantIdx].Relations[this.processor.PullGlobalWord(0xd7f0)] & 2) != 0)
-				goto L0329;
-
-			this.owner.Bot.SendUnitToStrategicLocation(participantIdx,
-				this.processor.PullLocalSignedWord(0x10),
-				this.processor.PullLocalSignedWord(0x12),
-				3, 2);
-
-		L0329:
-			if (marker == 0)
-				goto L037e;
-			
-			if (participantIdx == this.owner.World.PersonParticipantIdx)
-				goto L033e;
-
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xd806), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L037e;
-
-		L033e:
-			this.owner.MapOps.RepaintMapTile(
-				this.processor.PullLocalSignedWord(0x10),
-				this.processor.PullLocalSignedWord(0x12));
-
-			this.owner.VideoCard.ObtainDot(2,
-				this.processor.PullLocalSignedWord(0x10),
-				this.processor.PullLocalSignedWord(0x12));
-
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1);
-			if (this.processor.FlagSet.IsEqual)
-			{
-				this.processor.RegAcc.Value16 = 0x1;
-			}
-			else
-			{
-				this.processor.RegAcc.Value16 = 0x2;
-			}
-		
-			this.owner.Services.AssignDot(2, this.processor.PullLocalSignedWord(0x10) + 0xf0,
-				this.processor.PullLocalSignedWord(0x12),
-				this.processor.RegAcc.Value16);
-
-		L037e:
-			this.processor.EmitLocalWord(0xa, this.processor.IncrementWord(this.processor.PullLocalWord(0xa)));
-
-		L0381:
-			this.processor.CompareWord(this.processor.PullLocalWord(0xa), 0x9);
-			if (this.processor.FlagSet.IsLess) goto L038a;
-			goto L06cc;
-
-		L038a:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0xa);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-
-			this.owner.Routing.TunePosition(
-				this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1882)) + horizLoc);
-
-			this.processor.EmitLocalWord(0x10, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x18e4));
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, (ushort)vertLoc);
-			this.processor.EmitLocalWord(0x12, this.processor.RegAcc.Value16);
-
-			this.owner.MapOps.VerifyMapLimits(
-				this.processor.PullLocalSignedWord(0x10),
-				this.processor.PullLocalSignedWord(0x12));
-
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual) goto L037e;
-
-			if (participantIdx != 0)
-			{
-				this.processor.RegAcc.LowByte = 0x1;
-				this.processor.RegCount.LowByte = (byte)participantIdx;
-				this.processor.RegAcc.LowByte = this.processor.ShiftLeftByte(this.processor.RegAcc.LowByte, this.processor.RegCount.LowByte);
-				this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
-
-				this.owner.World.ChartSight[this.processor.PullLocalWord(0x10),
-					this.processor.PullLocalWord(0x12)] |= (sbyte)this.processor.RegCount.LowByte;
-			}
-
-			this.owner.MapOps.ObtainTileImprovements(
-				this.processor.PullLocalSignedWord(0x10),
-				this.processor.PullLocalSignedWord(0x12));
-
-			this.processor.EmitLocalWord(0x16, this.processor.RegAcc.Value16);
-			this.processor.TestBitsByte(this.processor.PullLocalByte(0x16), 0x1);
-			if (this.processor.FlagSet.IsNotEqual) goto L03f9;
-			goto L04bd;
-
-		L03f9:
-			this.owner.MapOps.ObtainTileOwnerBits(
-				this.processor.PullLocalSignedWord(0x10),
-				this.processor.PullLocalSignedWord(0x12));
-
-			if ((short)this.processor.RegAcc.Value16 == participantIdx)
-				goto L04bd;
-
-			this.owner.MapOps.ObtainTileOwnerBits(
-				this.processor.PullLocalSignedWord(0x10),
-				this.processor.PullLocalSignedWord(0x12));
-
-			this.processor.EmitLocalWord(0x14, this.processor.RegAcc.Value16);
-
-			this.owner.Helpers.LocateCityAtPosition(
-				this.processor.PullLocalSignedWord(0x10),
-				this.processor.PullLocalSignedWord(0x12));
-
-			this.processor.EmitLocalWord(0x8, this.processor.RegAcc.Value16);
-
-			ConstructUnitsFromCityList((short)this.processor.RegAcc.Value16);
+			int startTerrain = this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
+			frame.StartTerrain = (ushort)startTerrain;
 
 			if (participantIdx == this.owner.World.PersonParticipantIdx)
 			{
-				this.processor.ScaleIndexToSource(0x1c, this.processor.PullLocalWord(0x8));
-				this.processor.RegAcc.LowByte = (byte)this.owner.World.Towns[this.processor.PullLocalWord(0x8)].TrueExtent;
-				this.owner.World.Towns[this.processor.PullLocalWord(0x8)].ShownExtent = (sbyte)this.processor.RegAcc.LowByte;
+				RevealSurroundings(participantIdx, troopIdx, horizLoc, vertLoc);
 			}
 
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.AddScaledToSource(0xc, (ushort)troopIdx);
-			this.processor.RegAcc.LowByte = 0x22;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d7)));
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1138)), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L04bd;
-			this.processor.RegAcc.LowByte = 0x1;
-			this.processor.RegCount.LowByte = this.processor.PullLocalByte(0x14);
-			this.processor.RegAcc.LowByte = this.processor.ShiftLeftByte(this.processor.RegAcc.LowByte, this.processor.RegCount.LowByte);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81dd),
-				this.processor.BitOrByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81dd)), this.processor.RegAcc.LowByte));
-
-			this.processor.RegDest.Value16 = (ushort)participantIdx;
-			this.processor.RegCount.LowByte = 0x4;
-			this.processor.RegDest.Value16 = this.processor.ShiftLeftWord(this.processor.RegDest.Value16, this.processor.RegCount.LowByte);
-
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x14);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-
-			if ((this.owner.World.Participants[participantIdx].Relations[this.processor.PullLocalWord(0x14)] & 2) != 0)
-				goto L04bd;
-
-			this.owner.Bot.SendUnitToStrategicLocation(this.processor.PullLocalSignedWord(0x14),
-				this.processor.PullLocalSignedWord(0x10),
-				this.processor.PullLocalSignedWord(0x12),
-				1, 4);
-
-			this.owner.Bot.SendUnitToStrategicLocation(this.processor.PullLocalSignedWord(0x14),
-				this.processor.PullLocalSignedWord(0x10),
-				this.processor.PullLocalSignedWord(0x12),
-				2, 2);
-
-		L04bd:
-			this.owner.MapOps.ObtainUnitAtTile(
-				this.processor.PullLocalSignedWord(0x10),
-				this.processor.PullLocalSignedWord(0x12));
-
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xffff);
-			if (this.processor.FlagSet.IsNotEqual) goto L04d6;
-			goto L0329;
-
-		L04d6:
-			if (participantIdx == this.processor.PullGlobalSignedWord(0xd7f0))
-				goto L0329;
-
-			this.processor.TestBitsByte(this.processor.PullLocalByte(0xe), 0x1);
-			if (this.processor.FlagSet.IsNotEqual) goto L0503;
-			this.processor.ScaleIndexToBase(0xc, (ushort)troopIdx);
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.RegAcc.LowByte = 0x1;
-			this.processor.RegCount.LowByte = this.processor.PullGlobalByte(0xd7f0);
-			this.processor.RegAcc.LowByte = this.processor.ShiftLeftByte(this.processor.RegAcc.LowByte, this.processor.RegCount.LowByte);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81dd),
-				this.processor.BitOrByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81dd)), this.processor.RegAcc.LowByte));
-
-		L0503:
-			VisitEachUnitInStack(this.processor.PullGlobalSignedWord(0xd7f0), this.processor.PullLocalSignedWord(0x2), 0x14a2);
-
-			this.owner.MapOps.ObtainTerrainType(
-				this.processor.PullLocalSignedWord(0x10),
-				this.processor.PullLocalSignedWord(0x12));
-
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
-			if (this.processor.FlagSet.IsEqual) goto L0532;
-			this.processor.CompareWord(this.processor.PullLocalWord(0xc), 0xa);
-			if (this.processor.FlagSet.IsEqual) goto L0548;
-
-		L0532:
-			this.processor.RegAcc.Value16 = 0x600;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullGlobalWord(0xd7f0));
-			this.processor.ScaleIndexToSource(0xc, this.processor.PullLocalWord(0x2));
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81da), 0xff);
-
-		L0548:
-			this.owner.MapOps.ObtainTerrainType(
-				this.processor.PullLocalSignedWord(0x10),
-				this.processor.PullLocalSignedWord(0x12));
-
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
-			if (this.processor.FlagSet.IsNotEqual) goto L0580;
-			this.processor.CompareWord(this.processor.PullLocalWord(0xc), 0xa);
-			if (this.processor.FlagSet.IsEqual) goto L0580;
-			this.processor.ScaleIndexToBase(0xc, (ushort)troopIdx);
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.RegAcc.LowByte = 0x22;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d7)));
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1138)), 0x1);
-			if (this.processor.FlagSet.IsNotEqual) goto L0595;
-
-		L0580:
-			this.processor.RegAcc.Value16 = 0xc;
-			this.processor.ScaleAccumulatorToBase((ushort)troopIdx);
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81da), 0xff);
-
-		L0595:
-			this.processor.TestBitsByte(this.processor.PullLocalByte(0x16), 0x1);
-			if (this.processor.FlagSet.IsNotEqual) goto L05b7;
-			this.processor.ScaleIndexToBase(0x600, this.processor.PullGlobalWord(0xd7f0));
-			this.processor.ScaleIndexToSource(0xc, this.processor.PullLocalWord(0x2));
-			this.processor.RegAcc.LowByte = 0x1;
-			this.processor.RegCount.LowByte = (byte)participantIdx;
-			this.processor.RegAcc.LowByte = this.processor.ShiftLeftByte(this.processor.RegAcc.LowByte, this.processor.RegCount.LowByte);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81dd),
-				this.processor.BitOrByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81dd)), this.processor.RegAcc.LowByte));
-
-		L05b7:
-			this.processor.RegAcc.Value16 = 0x600;
-			this.processor.ScaleAccumulatorToBase((ushort)participantIdx);
-			this.processor.ScaleIndex(0xc, (ushort)troopIdx);
-			this.processor.RegBase.Value16 = this.processor.SumWord(this.processor.RegBase.Value16, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.LowByte = 0x22;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x81d7)));
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1138)), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L05d9;
-			goto L02e2;
-
-		L05d9:
-			this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
-
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
-			if (this.processor.FlagSet.IsNotEqual) goto L05ef;
-			goto L02e2;
-
-		L05ef:
-			this.owner.MapOps.ObtainTerrainType(
-				this.processor.PullLocalSignedWord(0x10),
-				this.processor.PullLocalSignedWord(0x12));
-
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
-			if (this.processor.FlagSet.IsNotEqual) goto L0605;
-			goto L02e2;
-
-		L0605:
-			this.processor.RegAcc.Value16 = 0xc;
-			this.processor.ScaleAccumulatorToSource(this.processor.PullLocalWord(0x2));
-			this.processor.ScaleIndexToBase(0x600, this.processor.PullGlobalWord(0xd7f0));
-			this.processor.RegAcc.LowByte = 0x22;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d7)));
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1138)), 0x1);
-			if (this.processor.FlagSet.IsNotEqual) goto L0628;
-			goto L02e2;
-
-		L0628:
-			this.owner.Politics.BargainPeaceTreaty(participantIdx, this.processor.PullGlobalSignedWord(0xd7f0), horizLoc, vertLoc);
-			
-			this.processor.RegBase.Value16 = (ushort)participantIdx;
-			this.processor.RegCount.LowByte = 0x4;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, this.processor.RegCount.LowByte);
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0xd7f0);
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, 0x1);
-			this.processor.RegBase.Value16 = this.processor.SumWord(this.processor.RegBase.Value16, this.processor.RegAcc.Value16);
-
-			if ((this.owner.World.Participants[participantIdx].Relations[this.processor.PullGlobalWord(0xd7f0)] & 2) != 0)
-				goto L06a3;
-
-			this.processor.EmitLocalWord(0x6, 0x1);
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xd7f0), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L068b;
-			this.processor.ScaleIndex(0x600, this.processor.PullGlobalWord(0xd7f0));
-			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegDest.Value16 = this.processor.SumWord(this.processor.RegDest.Value16, this.processor.RegSource.Value16);
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 + 0x81d7)), 0x1a);
-			if (this.processor.FlagSet.IsEqual) goto L068b;
-			this.processor.TestBitsByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 + 0x81d4)), 0x8);
-			if (this.processor.FlagSet.IsEqual) goto L0686;
-			this.processor.RegAcc.LowByte = 0x22;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 + 0x81d7)));
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1148)), 0x2);
-			if (this.processor.FlagSet.IsEqual) goto L068b;
-
-		L0686:
-			this.processor.EmitLocalWord(0x6, 0x3);
-
-		L068b:
-			this.owner.Bot.SendUnitToStrategicLocation(participantIdx,
-				this.processor.PullLocalSignedWord(0x10),
-				this.processor.PullLocalSignedWord(0x12),
-				1, this.processor.PullLocalSignedWord(0x6));
-
-		L06a3:
-			this.processor.RegAcc.Value16 = 0xc;
-			this.processor.ScaleAccumulatorToBase((ushort)troopIdx);
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d7)), 0x1a);
-			if (this.processor.FlagSet.IsNotEqual) goto L06bd;
-			goto L02e2;
-
-		L06bd:
-			if (participantIdx == 0)
-				goto L02c8;
-
-			this.processor.RegAcc.Value16 = 0x2;
-			goto L02cb;
-
-		L06cc:
-			this.processor.EmitLocalWord(0xa, 0x9);
-			goto L08bc;
-
-		L06d4:
-			this.owner.Services.AssignDot(2, this.processor.PullLocalSignedWord(0x10) + 0xf0,
-				this.processor.PullLocalSignedWord(0x12),
-				2);
-
-		L06ea:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0xffff);
-			if (this.processor.FlagSet.IsNotEqual) goto L06f3;
-			goto L0857;
-
-		L06f3:			
-			if (participantIdx == this.processor.PullGlobalSignedWord(0xd7f0))
-				goto L0857;
-
-			this.processor.ScaleIndexToBase(0xc, (ushort)troopIdx);
-			this.processor.ScaleIndex(0x600, (ushort)participantIdx);
-			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegDest.Value16 + 0x81d7)), 0x16);
-			if (this.processor.FlagSet.IsNotEqual) goto L0718;
-			goto L0857;
-
-		L0718:
-			this.processor.RegAcc.Value16 = 0x600;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullGlobalWord(0xd7f0));
-			this.processor.ScaleIndex(0xc, this.processor.PullLocalWord(0x2));
-			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegDest.Value16 + 0x81d7));
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
-			this.processor.ScaleIndexToSource(0x22, this.processor.PullLocalWord(0x4));
-			this.processor.TestBitsByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1144)), 0x2);
-			if (this.processor.FlagSet.IsNotEqual) goto L0743;
-			goto L07f0;
-
-		L0743:
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1138)), 0x2);
-			if (this.processor.FlagSet.IsNotEqual) goto L0760;
-
-			this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
-
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
-			if (this.processor.FlagSet.IsEqual) goto L0760;
-			goto L07f0;
-
-		L0760:
-			this.processor.RegAcc.Value16 = 0xc;
-			this.processor.ScaleAccumulatorToSource(this.processor.PullLocalWord(0x2));
-			this.processor.AddScaledToSource(0x600, this.processor.PullGlobalWord(0xd7f0));
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d4),
-				this.processor.BitAndByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d4)), 0xfe));
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81da), 0xff);
-			this.processor.TestBitsByte(this.processor.PullLocalByte(0xe), 0x1);
-			if (this.processor.FlagSet.IsNotEqual) goto L079d;
-			this.processor.ScaleIndexToBase(0xc, (ushort)troopIdx);
-			this.processor.ScaleIndex(0x600, (ushort)participantIdx);
-			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegAcc.LowByte = 0x1;
-			this.processor.RegCount.LowByte = this.processor.PullGlobalByte(0xd7f0);
-			this.processor.RegAcc.LowByte = this.processor.ShiftLeftByte(this.processor.RegAcc.LowByte, this.processor.RegCount.LowByte);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegDest.Value16 + 0x81dd),
-				this.processor.BitOrByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegDest.Value16 + 0x81dd)), this.processor.RegAcc.LowByte));
-
-		L079d:
-			this.owner.MapOps.ObtainTerrainType(
-				this.processor.PullLocalSignedWord(0x10),
-				this.processor.PullLocalSignedWord(0x12));
-
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
-			if (this.processor.FlagSet.IsEqual) goto L07b3;
-			goto L0857;
-
-		L07b3:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xd7f0), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L07bd;
-			goto L0857;
-
-		L07bd:
-			this.processor.RegSource.Value16 = (ushort)participantIdx;
-			this.processor.RegCount.LowByte = 0x4;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, this.processor.RegCount.LowByte);
-
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xd7f0);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-
-			if ((this.owner.World.Participants[participantIdx].Relations[this.processor.PullGlobalWord(0xd7f0)] & 2) != 0)
-				goto L0857;
-
-			this.owner.Bot.SendUnitToStrategicLocation(this.processor.PullGlobalSignedWord(0xd7f0),
-				(short)horizLoc, (short)vertLoc, 3, 2);
-
-			goto L0857;
-
-		L07f0:
-			if (this.processor.PullGlobalSignedWord(0xd7f0) != this.owner.World.PersonParticipantIdx)
-				goto L0857;
-
-			this.owner.MapOps.ObtainTileImprovements(
-				this.processor.PullLocalSignedWord(0x10),
-				this.processor.PullLocalSignedWord(0x12));
-
-			this.processor.TestBitsByte(this.processor.RegAcc.LowByte, 0x1);
-			if (this.processor.FlagSet.IsEqual) goto L0857;
-
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.ChartSight[horizLoc, vertLoc];
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegData.Value16 = 0x1;
-			this.processor.RegCount.LowByte = (byte)(this.owner.World.PersonParticipantIdx & 0xff);
-			this.processor.RegData.Value16 = this.processor.ShiftLeftWord(this.processor.RegData.Value16, this.processor.RegCount.LowByte);
-			this.processor.TestBitsWord(this.processor.RegAcc.Value16, this.processor.RegData.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L0857;
-			this.processor.ScaleIndexToBase(0xc, (ushort)troopIdx);
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.RegAcc.LowByte = 0x1;
-			this.processor.RegCount.LowByte = this.processor.PullGlobalByte(0xd7f0);
-			this.processor.RegAcc.LowByte = this.processor.ShiftLeftByte(this.processor.RegAcc.LowByte, this.processor.RegCount.LowByte);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81dd),
-				this.processor.BitOrByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81dd)), this.processor.RegAcc.LowByte));
-
-			this.owner.MapOps.RepaintMapTile(horizLoc, vertLoc);
-
-		L0857:
-			this.processor.TestBitsByte(this.processor.PullLocalByte(0x16), 0x1);
-			if (this.processor.FlagSet.IsEqual) goto L08b9;
-
-			this.owner.MapOps.ObtainTileOwnerBits(
-				this.processor.PullLocalSignedWord(0x10),
-				this.processor.PullLocalSignedWord(0x12));
-
-			if ((short)this.processor.RegAcc.Value16 != this.owner.World.PersonParticipantIdx)
-				goto L08b9;
-
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.ChartSight[horizLoc, vertLoc];
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegData.Value16 = 0x1;
-			this.processor.RegCount.LowByte = (byte)(this.owner.World.PersonParticipantIdx & 0xff);
-			this.processor.RegData.Value16 = this.processor.ShiftLeftWord(this.processor.RegData.Value16, this.processor.RegCount.LowByte);
-			this.processor.TestBitsWord(this.processor.RegAcc.Value16, this.processor.RegData.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L08b9;
-
-			this.processor.ScaleIndexToBase(0xc, (ushort)troopIdx);
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.RegAcc.LowByte = 0x1;
-			this.processor.RegAcc.LowByte = this.processor.ShiftLeftByte(this.processor.RegAcc.LowByte, this.processor.RegCount.LowByte);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81dd),
-				this.processor.BitOrByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81dd)), this.processor.RegAcc.LowByte));
-
-			this.owner.MapOps.RepaintMapTile(horizLoc, vertLoc);
-
-		L08b9:
-			this.processor.EmitLocalWord(0xa, this.processor.IncrementWord(this.processor.PullLocalWord(0xa)));
-
-		L08bc:
-			this.processor.CompareWord(this.processor.PullLocalWord(0xa), 0x19);
-			if (this.processor.FlagSet.IsLess) goto L08c5;
-			goto L0a42;
-
-		L08c5:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0xa);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-
-			this.owner.Routing.TunePosition(
-				this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1882)) + horizLoc);
-
-			this.processor.EmitLocalWord(0x10, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x18e4));
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, (ushort)vertLoc);
-			this.processor.EmitLocalWord(0x12, this.processor.RegAcc.Value16);
-
-			this.owner.MapOps.VerifyMapLimits(
-				this.processor.PullLocalSignedWord(0x10),
-				this.processor.PullLocalSignedWord(0x12));
-
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual) goto L08b9;
-
-			this.owner.MapOps.ObtainUnitAtTile(
-				this.processor.PullLocalSignedWord(0x10),
-				this.processor.PullLocalSignedWord(0x12));
-
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
-
-			this.owner.MapOps.ObtainTileImprovements(
-				this.processor.PullLocalSignedWord(0x10),
-				this.processor.PullLocalSignedWord(0x12));
-
-			this.processor.EmitLocalWord(0x16, this.processor.RegAcc.Value16);
-			this.processor.ScaleIndexToBase(0xc, (ushort)troopIdx);
-			this.processor.ScaleIndex(0x600, (ushort)participantIdx);
-			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegAcc.LowByte = 0x22;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegDest.Value16 + 0x81d7)));
-			this.processor.RegSource.Value16 = this.processor.RegAcc.Value16;
-			this.processor.TestBitsByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1144)), 0x2);
-			if (this.processor.FlagSet.IsNotEqual) goto L093b;
-			goto L06ea;
-
-		L093b:
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1138)), 0x2);
-			if (this.processor.FlagSet.IsNotEqual) goto L0958;
-
-			this.owner.MapOps.ObtainTerrainType(
-				this.processor.PullLocalSignedWord(0x10),
-				this.processor.PullLocalSignedWord(0x12));
-
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
-			if (this.processor.FlagSet.IsEqual) goto L0958;
-			goto L06ea;
-
-		L0958:
-			if (participantIdx != 0)
+			int startImprovements = this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc);
+			frame.StartImprovements = (ushort)startImprovements;
+			bool repaint = marker != 0;
+
+			for (int heading = 1; heading < 9; heading++)
 			{
-				this.processor.RegAcc.LowByte = 0x1;
-				this.processor.RegCount.LowByte = (byte)participantIdx;
-				this.processor.RegAcc.LowByte = this.processor.ShiftLeftByte(this.processor.RegAcc.LowByte, this.processor.RegCount.LowByte);
-				this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
-
-				this.owner.World.ChartSight[this.processor.PullLocalWord(0x10),
-					this.processor.PullLocalWord(0x12)] |= (sbyte)this.processor.RegCount.LowByte;
+				MeetNearTile(frame, participantIdx, troopIdx, horizLoc, vertLoc, heading, startTerrain, startImprovements, repaint);
 			}
 
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0xffff);
-			if (this.processor.FlagSet.IsEqual) goto L09f9;
+			for (int heading = 9; heading < 25; heading++)
+			{
+				MeetFarTile(frame, participantIdx, troopIdx, horizLoc, vertLoc, heading, startImprovements, repaint);
+			}
 
-			if (participantIdx == this.processor.PullGlobalSignedWord(0xd7f0))
-				goto L09f9;
+			frame.Heading = 25;
 
-			this.processor.ScaleIndexToSource(0xc, this.processor.PullLocalWord(0x2));
-			this.processor.AddScaledToSource(0x600, this.processor.PullGlobalWord(0xd7f0));
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d7)), 0x16);
-			if (this.processor.FlagSet.IsEqual) goto L09f9;
-			this.processor.TestBitsByte(this.processor.PullLocalByte(0x16), 0x1);
-			if (this.processor.FlagSet.IsNotEqual) goto L09b2;
-			this.processor.RegAcc.LowByte = 0x1;
-			this.processor.RegCount.LowByte = (byte)participantIdx;
-			this.processor.RegAcc.LowByte = this.processor.ShiftLeftByte(this.processor.RegAcc.LowByte, this.processor.RegCount.LowByte);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81dd),
-				this.processor.BitOrByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81dd)), this.processor.RegAcc.LowByte));
+			if (participantIdx == this.owner.World.PersonParticipantIdx && repaint)
+			{
+				this.owner.MapOps.RepaintMapTile(horizLoc, vertLoc);
 
-		L09b2:
-			this.owner.MapOps.ObtainTerrainType(
-				this.processor.PullLocalSignedWord(0x10),
-				this.processor.PullLocalSignedWord(0x12));
+				for (int heading = 9; heading < 49; heading++)
+				{
+					int ringHoriz = RingHoriz(heading, horizLoc);
+					int ringVert = RingVert(heading, vertLoc);
+					frame.AtRing(ringHoriz, ringVert);
 
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
-			if (this.processor.FlagSet.IsNotEqual) goto L09f9;
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xd7f0), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L09f9;
-			
-			this.processor.RegSource.Value16 = (ushort)participantIdx;
-			this.processor.RegCount.LowByte = 0x4;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, this.processor.RegCount.LowByte);
+					if (this.owner.MapOps.VerifyMapLimits(ringHoriz, ringVert) != 0 && Sees(participantIdx, ringHoriz, ringVert))
+					{
+						this.owner.MapOps.RepaintMapTile(ringHoriz, ringVert);
+					}
+				}
 
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xd7f0);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
+				frame.Heading = 49;
+			}
 
-			if ((this.owner.World.Participants[participantIdx].Relations[this.processor.PullGlobalWord(0xd7f0)] & 2) != 0)
-				goto L09f9;
+			frame.Leave(this.processor);
 
-			this.owner.Bot.SendUnitToStrategicLocation(participantIdx,
-				this.processor.PullLocalSignedWord(0x10),
-				this.processor.PullLocalSignedWord(0x12),
-				3, 2);
-
-		L09f9:
-			this.processor.CompareWord(marker, 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L0a02;
-			goto L06ea;
-
-		L0a02:
-			if (participantIdx != this.owner.World.PersonParticipantIdx &&
-				this.processor.PullGlobalSignedWord(0xd806) == 0)
-				goto L06ea;
-
-			this.owner.MapOps.RepaintMapTile(
-				this.processor.PullLocalSignedWord(0x10),
-				this.processor.PullLocalSignedWord(0x12));
-
-			this.owner.VideoCard.ObtainDot(2,
-				this.processor.PullLocalSignedWord(0x10),
-				this.processor.PullLocalSignedWord(0x12));
-
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1);
-			if (this.processor.FlagSet.IsEqual) goto L0a3c;
-			goto L06d4;
-
-		L0a3c:
-			this.owner.Services.AssignDot(2, this.processor.PullLocalSignedWord(0x10) + 0xf0,
-				this.processor.PullLocalSignedWord(0x12),
-				1);
-
-			goto L06ea;
-
-		L0a42:
-			if (participantIdx != this.owner.World.PersonParticipantIdx)
-				goto L0ad0;
-
-			this.processor.CompareWord(marker, 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L0ad0;
-
-			this.owner.MapOps.RepaintMapTile(horizLoc, vertLoc);
-
-			this.processor.EmitLocalWord(0xa, 0x9);
-
-		L0a66:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0xa);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-
-			this.owner.Routing.TunePosition(
-				this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1882)) + horizLoc);
-
-			this.processor.EmitLocalWord(0x10, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x18e4));
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, (ushort)vertLoc);
-			this.processor.EmitLocalWord(0x12, this.processor.RegAcc.Value16);
-
-			this.owner.MapOps.VerifyMapLimits(
-				this.processor.PullLocalSignedWord(0x10),
-				this.processor.PullLocalSignedWord(0x12));
-
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual) goto L0ac7;
-
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.ChartSight[this.processor.PullLocalWord(0x10),
-				this.processor.PullLocalWord(0x12)];
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegData.Value16 = 0x1;
-			this.processor.RegCount.LowByte = (byte)participantIdx;
-			this.processor.RegData.Value16 = this.processor.ShiftLeftWord(this.processor.RegData.Value16, this.processor.RegCount.LowByte);
-			this.processor.TestBitsWord(this.processor.RegAcc.Value16, this.processor.RegData.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L0ac7;
-
-			this.owner.MapOps.RepaintMapTile(
-				this.processor.PullLocalSignedWord(0x10),
-				this.processor.PullLocalSignedWord(0x12));
-
-		L0ac7:
-			this.processor.EmitLocalWord(0xa, this.processor.IncrementWord(this.processor.PullLocalWord(0xa)));
-			this.processor.CompareWord(this.processor.PullLocalWord(0xa), 0x31);
-			if (this.processor.FlagSet.IsLess) goto L0a66;
-
-		L0ad0:
 			this.processor.RegSource.Value16 = this.processor.UnstackWord();
 			this.processor.RegDest.Value16 = this.processor.UnstackWord();
 			this.processor.LeaveFrame();
-			// Far return
+
 			this.processor.Journal.CloseScope("ShiftUnit");
+		}
+
+		/// <summary>
+		/// The values the original leaves in the locals of its stack frame (offsets from BP). ShiftAIUnit, called later by
+		/// HandlePlayerTurn from the same stack depth, reads its local 0xc (a city index) on a path before setting it and so
+		/// gets the terrain type left here. Kept until the end of the migration, see MIGRATION-BACKLOG.md.
+		/// A local that the original sets only on some paths is null when it was not set: the stack keeps its older value.
+		/// </summary>
+		private sealed class ShiftUnitFrame
+		{
+			public ushort? StackTroopIdx;
+			public ushort? FarKind;
+			public ushort? Strategy;
+			public ushort? TownIdx;
+			public ushort Heading;
+			public ushort StartTerrain;
+			public ushort StartImprovements;
+			public ushort RingHoriz;
+			public ushort RingVert;
+			public ushort? CityParticipantIdx;
+			public ushort? RingImprovements;
+
+			public void AtRing(int ringHoriz, int ringVert)
+			{
+				this.RingHoriz = (ushort)ringHoriz;
+				this.RingVert = (ushort)ringVert;
+			}
+
+			public void Leave(CPU processor)
+			{
+				Emit(processor, 0x2, this.StackTroopIdx);
+				Emit(processor, 0x4, this.FarKind);
+				Emit(processor, 0x6, this.Strategy);
+				Emit(processor, 0x8, this.TownIdx);
+				Emit(processor, 0xa, this.Heading);
+				Emit(processor, 0xc, this.StartTerrain);
+				Emit(processor, 0xe, this.StartImprovements);
+				Emit(processor, 0x10, this.RingHoriz);
+				Emit(processor, 0x12, this.RingVert);
+				Emit(processor, 0x14, this.CityParticipantIdx);
+				Emit(processor, 0x16, this.RingImprovements);
+			}
+
+			private static void Emit(CPU processor, ushort local, ushort? amount)
+			{
+				if (amount.HasValue)
+				{
+					processor.EmitLocalWord(local, amount.Value);
+				}
+			}
+		}
+
+		/// <summary>Bit of Player.Relations: the two players have peace</summary>
+		private const int PeaceRelation = 2;
+
+		/// <summary>Bit of the tile improvements: a city</summary>
+		private const int CityImprovement = 1;
+
+		/// <summary>The player whose unit ObtainUnitAtTile found last (0xd7f0)</summary>
+		private short FoundUnitParticipant => this.processor.PullGlobalSignedWord(0xd7f0);
+
+		/// <summary>The AI players see all units (0xd806, a debug option of the original)</summary>
+		private bool RevealAll => this.processor.PullGlobalWord(0xd806) != 0;
+
+		/// <summary>
+		/// Column of a tile around: the step of the direction table (1 - 8 the tiles next to it, 9 - 24 the ring 2 tiles far,
+		/// 25 - 48 the ring 3 tiles far), wrapped around the world
+		/// </summary>
+		private int RingHoriz(int heading, int horizLoc)
+		{
+			return (short)this.owner.Routing.TunePosition(this.owner.MapOps.Chart.DirectionHoriz(heading) + horizLoc);
+		}
+
+		/// <summary>Row of a tile around, see RingHoriz</summary>
+		private int RingVert(int heading, int vertLoc)
+		{
+			return (short)(this.owner.MapOps.Chart.DirectionVert(heading) + vertLoc);
+		}
+
+		/// <summary>The player sees the tile (GameState.ChartSight)</summary>
+		private bool Sees(short participantIdx, int horizLoc, int vertLoc)
+		{
+			return (this.owner.World.ChartSight[horizLoc, vertLoc] & (1 << participantIdx)) != 0;
+		}
+
+		private void MarkSeen(short participantIdx, int horizLoc, int vertLoc)
+		{
+			this.owner.World.ChartSight[horizLoc, vertLoc] |= (sbyte)(1 << participantIdx);
+		}
+
+		/// <summary>The unit becomes visible to the player</summary>
+		private void ShowUnitTo(short participantIdx, short troopIdx, int viewerIdx)
+		{
+			this.troops.Assign(participantIdx, troopIdx, UnitMemory.ShownToParticipants,
+				(byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.ShownToParticipants) | (1 << viewerIdx)));
+		}
+
+		/// <summary>The unit forgets its "go to" order</summary>
+		private void ClearTravel(short participantIdx, short troopIdx)
+		{
+			this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHoriz, 0xff);
+		}
+
+		private bool AtPeace(short participantIdx, int otherIdx)
+		{
+			return (this.owner.World.Participants[participantIdx].Relations[otherIdx] & PeaceRelation) != 0;
+		}
+
+		/// <summary>
+		/// The unit sees the tile 2 tiles far: its unit type has sight 2, and a ship only over the ocean
+		/// </summary>
+		private bool SeesFarTile(short participantIdx, short troopIdx, int horizLoc, int vertLoc)
+		{
+			if ((this.troops.KindField(participantIdx, troopIdx, UnitKindTable.Sight) & 2) == 0)
+				return false;
+
+			return this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) != UnitKindTable.SeaUnits ||
+				this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) == MapRules.OceanTerrain;
+		}
+
+		/// <summary>
+		/// The human player sees the tile of the unit, the tiles next to it and, by the sight of the unit, the tiles 2 tiles far,
+		/// with their improvements as they are now
+		/// </summary>
+		private void RevealSurroundings(short participantIdx, short troopIdx, int horizLoc, int vertLoc)
+		{
+			for (int heading = 0; heading < 25; heading++)
+			{
+				int ringHoriz = RingHoriz(heading, horizLoc);
+				int ringVert = RingVert(heading, vertLoc);
+
+				if (heading >= 9 && !SeesFarTile(participantIdx, troopIdx, ringHoriz, ringVert))
+					continue;
+
+				if (this.owner.MapOps.VerifyMapLimits(ringHoriz, ringVert) == 0)
+					continue;
+
+				MarkSeen(participantIdx, ringHoriz, ringVert);
+
+				this.owner.MapOps.KeepKnownTileImprovements(ringHoriz, ringVert);
+			}
+		}
+
+		/// <summary>
+		/// A tile next to the unit: the player sees it (not the barbarians), meets the foreign city and the foreign units on it
+		/// </summary>
+		private void MeetNearTile(ShiftUnitFrame frame, short participantIdx, short troopIdx, int horizLoc, int vertLoc, int heading,
+			int startTerrain, int startImprovements, bool repaint)
+		{
+			int nearHoriz = RingHoriz(heading, horizLoc);
+			int nearVert = RingVert(heading, vertLoc);
+			frame.AtRing(nearHoriz, nearVert);
+
+			if (this.owner.MapOps.VerifyMapLimits(nearHoriz, nearVert) == 0)
+				return;
+
+			if (participantIdx != 0)
+			{
+				MarkSeen(participantIdx, nearHoriz, nearVert);
+			}
+
+			int nearImprovements = this.owner.MapOps.ObtainTileImprovements(nearHoriz, nearVert);
+			frame.RingImprovements = (ushort)nearImprovements;
+
+			if ((nearImprovements & CityImprovement) != 0)
+			{
+				MeetNearCity(frame, participantIdx, troopIdx, nearHoriz, nearVert);
+			}
+
+			ushort nearTroopIdx = this.owner.MapOps.ObtainUnitAtTile(nearHoriz, nearVert);
+			frame.StackTroopIdx = nearTroopIdx;
+
+			if (nearTroopIdx != 0xffff && participantIdx != FoundUnitParticipant)
+			{
+				MeetNearUnit(frame, participantIdx, troopIdx, horizLoc, vertLoc, nearHoriz, nearVert, (short)nearTroopIdx,
+					startTerrain, startImprovements, nearImprovements);
+			}
+
+			if (repaint)
+			{
+				RepaintRingTile(participantIdx, nearHoriz, nearVert);
+			}
+		}
+
+		/// <summary>
+		/// A city next to the unit, when it belongs to another player: it gives back its kept units, the human player sees its size,
+		/// the city owner sees a land unit and, without peace, its AI remembers the threat
+		/// </summary>
+		private void MeetNearCity(ShiftUnitFrame frame, short participantIdx, short troopIdx, int nearHoriz, int nearVert)
+		{
+			short cityParticipantIdx = (short)this.owner.MapOps.ObtainTileOwnerBits(nearHoriz, nearVert);
+
+			if (cityParticipantIdx == participantIdx)
+				return;
+
+			frame.CityParticipantIdx = (ushort)cityParticipantIdx;
+
+			ushort townIdx = this.owner.Helpers.LocateCityAtPosition(nearHoriz, nearVert);
+			frame.TownIdx = townIdx;
+
+			ConstructUnitsFromCityList((short)townIdx);
+
+			if (participantIdx == this.owner.World.PersonParticipantIdx)
+			{
+				this.owner.World.Towns[townIdx].ShownExtent = this.owner.World.Towns[townIdx].TrueExtent;
+			}
+
+			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) != UnitKindTable.LandUnits)
+				return;
+
+			ShowUnitTo(participantIdx, troopIdx, cityParticipantIdx);
+
+			if (!AtPeace(participantIdx, cityParticipantIdx))
+			{
+				this.owner.Bot.SendUnitToStrategicLocation(cityParticipantIdx, (short)nearHoriz, (short)nearVert, 1, 4);
+				this.owner.Bot.SendUnitToStrategicLocation(cityParticipantIdx, (short)nearHoriz, (short)nearVert, 2, 2);
+			}
+		}
+
+		/// <summary>
+		/// A foreign stack next to the unit: both see each other (not into a city), the stack wakes up, units lose their
+		/// "go to" orders, and two land units meeting on land may make peace or remember each other
+		/// </summary>
+		private void MeetNearUnit(ShiftUnitFrame frame, short participantIdx, short troopIdx, int horizLoc, int vertLoc, int nearHoriz, int nearVert,
+			short nearTroopIdx, int startTerrain, int startImprovements, int nearImprovements)
+		{
+			if ((startImprovements & CityImprovement) == 0)
+			{
+				ShowUnitTo(participantIdx, troopIdx, FoundUnitParticipant);
+			}
+
+			VisitEachUnitInStack(FoundUnitParticipant, nearTroopIdx, 0x14a2);
+
+			if (this.owner.MapOps.ObtainTerrainType(nearHoriz, nearVert) == MapRules.OceanTerrain || startTerrain != MapRules.OceanTerrain)
+			{
+				ClearTravel(FoundUnitParticipant, nearTroopIdx);
+			}
+
+			// A unit on land next to a foreign ship keeps its order, except a plane
+			if (this.owner.MapOps.ObtainTerrainType(nearHoriz, nearVert) != MapRules.OceanTerrain || startTerrain == MapRules.OceanTerrain ||
+				this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == UnitKindTable.AirUnits)
+			{
+				ClearTravel(participantIdx, troopIdx);
+			}
+
+			if ((nearImprovements & CityImprovement) == 0)
+			{
+				ShowUnitTo(FoundUnitParticipant, nearTroopIdx, participantIdx);
+			}
+
+			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == UnitKindTable.LandUnits &&
+				this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) != MapRules.OceanTerrain &&
+				this.owner.MapOps.ObtainTerrainType(nearHoriz, nearVert) != MapRules.OceanTerrain &&
+				this.troops.KindField(FoundUnitParticipant, nearTroopIdx, UnitKindTable.LandGroup) != UnitKindTable.AirUnits)
+			{
+				ConfrontNearUnit(frame, participantIdx, troopIdx, horizLoc, vertLoc, nearHoriz, nearVert, nearTroopIdx);
+			}
+
+			// A foreign ship next to the unit
+			if (this.owner.MapOps.ObtainTerrainType(nearHoriz, nearVert) == MapRules.OceanTerrain && FoundUnitParticipant != 0 &&
+				!AtPeace(participantIdx, FoundUnitParticipant))
+			{
+				this.owner.Bot.SendUnitToStrategicLocation(participantIdx, (short)nearHoriz, (short)nearVert, 3, 2);
+			}
+		}
+
+		/// <summary>
+		/// Two land units meet on land: a peace treaty may be offered; without peace the player remembers the foreign stack
+		/// (1 for a diplomat, a fortified defender or a barbarian, else 3) and, unless the unit is a diplomat, the other player
+		/// remembers the unit
+		/// </summary>
+		private void ConfrontNearUnit(ShiftUnitFrame frame, short participantIdx, short troopIdx, int horizLoc, int vertLoc, int nearHoriz, int nearVert,
+			short nearTroopIdx)
+		{
+			this.owner.Politics.BargainPeaceTreaty(participantIdx, FoundUnitParticipant, horizLoc, vertLoc);
+
+			if (!AtPeace(participantIdx, FoundUnitParticipant))
+			{
+				short strategy = 1;
+				short nearParticipantIdx = FoundUnitParticipant;
+
+				if (nearParticipantIdx != 0 && this.troops.Pull(nearParticipantIdx, nearTroopIdx, UnitMemory.Kind) != UnitKindTable.Diplomat)
+				{
+					bool fortifiedDefender = (this.troops.Pull(nearParticipantIdx, nearTroopIdx, UnitMemory.Status) & (int)UnitStatusEnum.Fortified) != 0 &&
+						this.troops.KindField(nearParticipantIdx, nearTroopIdx, UnitKindTable.TroopGroup) == UnitKindTable.DefenceTroops;
+
+					if (!fortifiedDefender)
+					{
+						strategy = 3;
+					}
+				}
+
+				frame.Strategy = (ushort)strategy;
+
+				this.owner.Bot.SendUnitToStrategicLocation(participantIdx, (short)nearHoriz, (short)nearVert, 1, strategy);
+			}
+
+			if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) != UnitKindTable.Diplomat)
+			{
+				this.owner.Bot.SendUnitToStrategicLocation(FoundUnitParticipant, (short)horizLoc, (short)vertLoc, 2,
+					(short)(participantIdx == 0 ? 1 : 2));
+			}
+		}
+
+		/// <summary>
+		/// A tile 2 tiles far from the unit: the unit sees it and the foreign units on it (by its sight), the foreign units there
+		/// see the unit (by their sight), and a city of the human player 2 tiles far sees the unit
+		/// </summary>
+		private void MeetFarTile(ShiftUnitFrame frame, short participantIdx, short troopIdx, int horizLoc, int vertLoc, int heading,
+			int startImprovements, bool repaint)
+		{
+			int farHoriz = RingHoriz(heading, horizLoc);
+			int farVert = RingVert(heading, vertLoc);
+			frame.AtRing(farHoriz, farVert);
+
+			if (this.owner.MapOps.VerifyMapLimits(farHoriz, farVert) == 0)
+				return;
+
+			ushort farTroopIdx = this.owner.MapOps.ObtainUnitAtTile(farHoriz, farVert);
+			frame.StackTroopIdx = farTroopIdx;
+			int farImprovements = this.owner.MapOps.ObtainTileImprovements(farHoriz, farVert);
+			frame.RingImprovements = (ushort)farImprovements;
+
+			if (SeesFarTile(participantIdx, troopIdx, farHoriz, farVert))
+			{
+				SpotFarUnit(participantIdx, farHoriz, farVert, farTroopIdx, farImprovements);
+
+				if (repaint)
+				{
+					RepaintRingTile(participantIdx, farHoriz, farVert);
+				}
+			}
+
+			if (farTroopIdx != 0xffff && participantIdx != FoundUnitParticipant &&
+				this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) != UnitKindTable.Submarine)
+			{
+				frame.FarKind = (ushort)this.troops.TroopKind(FoundUnitParticipant, farTroopIdx);
+
+				SpottedByFarUnit(participantIdx, troopIdx, horizLoc, vertLoc, farHoriz, farVert, (short)farTroopIdx, startImprovements);
+			}
+
+			// A city of the human player 2 tiles far, when the human sees the tile of the unit
+			if ((farImprovements & CityImprovement) != 0 &&
+				(short)this.owner.MapOps.ObtainTileOwnerBits(farHoriz, farVert) == this.owner.World.PersonParticipantIdx &&
+				Sees(this.owner.World.PersonParticipantIdx, horizLoc, vertLoc))
+			{
+				ShowUnitTo(participantIdx, troopIdx, this.owner.World.PersonParticipantIdx);
+
+				this.owner.MapOps.RepaintMapTile(horizLoc, vertLoc);
+			}
+		}
+
+		/// <summary>
+		/// The unit sees the tile 2 tiles far (not the barbarians) and the foreign stack on it, except a submarine (not in a city)
+		/// </summary>
+		private void SpotFarUnit(short participantIdx, int farHoriz, int farVert, ushort farTroopIdx, int farImprovements)
+		{
+			if (participantIdx != 0)
+			{
+				MarkSeen(participantIdx, farHoriz, farVert);
+			}
+
+			if (farTroopIdx == 0xffff || participantIdx == FoundUnitParticipant ||
+				this.troops.Pull(FoundUnitParticipant, farTroopIdx, UnitMemory.Kind) == UnitKindTable.Submarine)
+				return;
+
+			if ((farImprovements & CityImprovement) == 0)
+			{
+				ShowUnitTo(FoundUnitParticipant, (short)farTroopIdx, participantIdx);
+			}
+
+			// A foreign ship
+			if (this.owner.MapOps.ObtainTerrainType(farHoriz, farVert) == MapRules.OceanTerrain && FoundUnitParticipant != 0 &&
+				!AtPeace(participantIdx, FoundUnitParticipant))
+			{
+				this.owner.Bot.SendUnitToStrategicLocation(participantIdx, (short)farHoriz, (short)farVert, 3, 2);
+			}
+		}
+
+		/// <summary>
+		/// The foreign stack 2 tiles far sees the unit by its sight (a ship only when the unit is on the ocean): it wakes up, loses
+		/// its "go to" order, sees the unit (not in a city) and remembers it. Otherwise only a human city there sees the unit.
+		/// </summary>
+		private void SpottedByFarUnit(short participantIdx, short troopIdx, int horizLoc, int vertLoc, int farHoriz, int farVert,
+			short farTroopIdx, int startImprovements)
+		{
+			bool farSees = (this.troops.KindField(FoundUnitParticipant, farTroopIdx, UnitKindTable.Sight) & 2) != 0 &&
+				(this.troops.KindField(FoundUnitParticipant, farTroopIdx, UnitKindTable.LandGroup) != UnitKindTable.SeaUnits ||
+				this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) == MapRules.OceanTerrain);
+
+			if (farSees)
+			{
+				this.troops.Assign(FoundUnitParticipant, farTroopIdx, UnitMemory.Status,
+					(byte)(this.troops.Pull(FoundUnitParticipant, farTroopIdx, UnitMemory.Status) & ~(int)UnitStatusEnum.Sentry));
+				ClearTravel(FoundUnitParticipant, farTroopIdx);
+
+				if ((startImprovements & CityImprovement) == 0)
+				{
+					ShowUnitTo(participantIdx, troopIdx, FoundUnitParticipant);
+				}
+
+				// Seen from a ship
+				if (this.owner.MapOps.ObtainTerrainType(farHoriz, farVert) == MapRules.OceanTerrain && FoundUnitParticipant != 0 &&
+					!AtPeace(participantIdx, FoundUnitParticipant))
+				{
+					this.owner.Bot.SendUnitToStrategicLocation(FoundUnitParticipant, (short)horizLoc, (short)vertLoc, 3, 2);
+				}
+			}
+			else if (FoundUnitParticipant == this.owner.World.PersonParticipantIdx &&
+				(this.owner.MapOps.ObtainTileImprovements(farHoriz, farVert) & CityImprovement) != 0 &&
+				Sees(this.owner.World.PersonParticipantIdx, horizLoc, vertLoc))
+			{
+				ShowUnitTo(participantIdx, troopIdx, FoundUnitParticipant);
+
+				this.owner.MapOps.RepaintMapTile(horizLoc, vertLoc);
+			}
+		}
+
+		/// <summary>
+		/// Repaints a tile around the unit when the human player moves or the AI moves are shown, and marks it in the map layer
+		/// at column 240: 1 over the ocean (terrain colour 1), 2 over land
+		/// </summary>
+		private void RepaintRingTile(short participantIdx, int ringHoriz, int ringVert)
+		{
+			if (participantIdx != this.owner.World.PersonParticipantIdx && !RevealAll)
+				return;
+
+			this.owner.MapOps.RepaintMapTile(ringHoriz, ringVert);
+
+			ushort colour = this.owner.VideoCard.ObtainDot(2, ringHoriz, ringVert);
+
+			this.owner.Services.AssignDot(2, ringHoriz + 0xf0, ringVert, (ushort)(colour == 1 ? 1 : 2));
 		}
 
 		/// <summary>

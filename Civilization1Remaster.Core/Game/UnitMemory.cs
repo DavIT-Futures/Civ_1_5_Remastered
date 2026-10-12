@@ -114,6 +114,8 @@ namespace Civilization1Remaster.Game
 		public const int AssaultPower = 0x14;
 		public const int GuardPower = 0x16;
 		public const int Price = 0x18;
+		/// <summary>How far the unit sees: 1 the tiles next to it, 2 also the tiles 2 tiles far</summary>
+		public const int Sight = 0x1a;
 		public const int FerryRoom = 0x1c;
 		public const int TroopGroup = 0x1e;
 
@@ -126,8 +128,14 @@ namespace Civilization1Remaster.Game
 		/// <summary>LandGroup of ships</summary>
 		public const int SeaUnits = 2;
 
+		/// <summary>Unit type of the Submarine</summary>
+		public const int Submarine = 0x16;
+
 		/// <summary>Unit type of the Carrier</summary>
 		public const int Carrier = 0x17;
+
+		/// <summary>Unit type of the Diplomat</summary>
+		public const int Diplomat = 0x1a;
 
 		/// <summary>TroopGroup of defensive units</summary>
 		public const int DefenceTroops = 2;
