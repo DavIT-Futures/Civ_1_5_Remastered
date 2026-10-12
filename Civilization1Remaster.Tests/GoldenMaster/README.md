@@ -111,24 +111,9 @@ When a run hangs (the key script doesn't get through a screen, the limit is 20 0
 The journal of all calls: `CIVILIZATION1REMASTER_LOG=1` writes `Log.txt` next to the test executable; it also reports
 stack leaks ("Stack leak detected in function ...").
 
-## Known divergences of the refactored code (state of 2026-10-12)
+## State
 
-Compared with the baselines, the code of commit 2c9ab40 (+ the build fix) fails all 15 runs, already in turn 1:
-
-1. **Stack frame of `TurnEvents.HandleEndOfTurnEvents`** (commit 3e3210a). The refactoring removed
-   `EnterFrame(0xe)` and `PreserveIndexRegisters()` at the start, but the function still uses its locals
-   (0x2, 0x8, 0xa, 0xc) and still ends with `pop SI, pop DI, LeaveFrame`. Every turn it writes into the frame of
-   `HandleGameEnd` and unwinds the frame of `RunGame` (`cpu.sp: 3b01:f0b4 -> 3b01:f0c0`); in the next turn the stack
-   runs from the bottom of the data segment and 8 of the 15 runs end with "Stack overflow" in turn 2.
-   Putting the two lines back removes the crash.
-2. **Score of citizens** (`ScoreRules.ComputeCitizenScore`, used by `CityFoundingAndScore.DisplayFinalScore`).
-   The original adds `TrueExtent + happy - unhappy` per city, that is 2 * happy + content + **specialists**;
-   the refactored code leaves the specialists out (`state.Participants[n].Tally` 3 lower, `mem.b700`, `mem.d700`).
-   In AUTO14 the lower score also means no palace extension (`state.CastleTier 24 -> 23`).
-3. **Healing of units** (`TurnEvents.MendFortifiedUnits`, commit eed8efb "Implement accelerated healing in cities and
-   ship coastal repair"): a new rule, not a refactoring, so the hit points differ (`state.Vitals.missingStrikeMarks`).
-4. Not analysed yet, seen after 1 and 2 were fixed locally: AI diplomacy in AUTO08 (`Participants[2].Relations`,
-   `AIWeighsTreaty` called twice), units in AUTO12 (`PostCityDefenders`, `RestoreUnitStatus` called once more),
-   city production in AUTO05 (`RefreshCityProduction`) and AUTO01 (`TroopsInsideMaking`).
-
-Also `AdvisorReports` (commit 2c9ab40) no longer sets the local 0x2 to 0, but still adds to it (Science Advisor screen).
+Since 2026-10-12 the code on `main` matches the baselines: the refactorings that changed the game were reverted or
+fixed (see `MIGRATION-BACKLOG.md` in the repository root, also for the improvements that wait for the end of the
+migration and the rules learned: units live in the emulated memory at `0x81d4`, not in `GameState...Troops`; keep the
+register contract of a function; remove a frame only with all its locals).
