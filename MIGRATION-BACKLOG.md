@@ -154,6 +154,25 @@ te błędy są odtwarzane jawnie:
 5. Funkcja, której golden master nie wykonuje (albo nie wszystkie jej gałęzie), dostaje test różnicowy w tym samym
    commicie co przepisanie, ze sprawdzeniem, że scenariusze trafiają każdą gałąź, i z próbą celowego błędu.
 
+## Jak pracować (dla nowej sesji)
+
+Start: przeczytać ten plik, `Civilization1Remaster.Tests/GoldenMaster/README.md` i `Civilization1Remaster.Tests/Differential/README.md`,
+potem wziąć porcję z „Następny krok” (zwykle po 1–2 funkcje z ok. 7 modułów).
+
+- Wąskim gardłem są tokeny, nie czas: po każdej zmianie pełny zestaw testów (ok. 7 min), ale czytać tylko przefiltrowany wynik:
+  `dotnet build Civilization1Remaster.Tests -v q -nologo` i
+  `Civilization1Remaster.Tests/bin/Debug/net10.0/Civilization1Remaster.Tests.exe 2>&1 | grep -E "\[FAIL\]|Total:"`
+  (`dotnet test` mówi „zero testów”). Powtarzalny kod generować skryptami (`extract_reference.py`).
+- Każda przepisana funkcja: test różnicowy (wzory: `Differential/BatchSevenDifferentialTests.cs`, `BatchEightDifferentialTests.cs`),
+  lista gałęzi do trafienia, `Watched` dla tabel spoza segmentu danych 0x3b01, kontrola mutacjami z pracą zabezpieczoną patchem
+  (`git diff -- Civilization1Remaster.Core > batch.patch`, po mutacjach `git checkout -- Civilization1Remaster.Core && git apply batch.patch`).
+- Wiersz `OpenScope` przepisanej funkcji identyczny z oryginałem (ślad wywołań w testach różnicowych porównuje argumenty).
+- Długie heredoki w Bash potrafią się nie sparsować: kod zapisywać narzędziem Write do pliku, metody podmieniać skryptem Pythona
+  (od komentarza `///` metody do zamykającego `\t\t}` po `CloseScope`).
+- Na koniec: ten plik zaktualizowany, commit na main (z `Co-Authored-By`), `dotnet build Civilization1Remaster.sln`
+  (gra: `Civilization1Remaster.Desktop/bin/Debug/net10.0/Civilization1Remaster.Desktop.exe`). Gdy build zgłasza zablokowane
+  pliki, gra jest uruchomiona: poprosić użytkownika o jej zamknięcie, nie zabijać procesu.
+
 ## Zmiany hosta (nie dotyczą logiki gry, zostają)
 
 Okno Avalonia: ustawienia skali i pełnego ekranu, skróty klawiszowe osadników, potwierdzenie zamknięcia, logowanie crashy.
