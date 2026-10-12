@@ -31,4 +31,10 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 	public sealed partial class StartGameMenuReference(GameEngine owner) : ReferenceBase(owner);
 	public sealed partial class GameReplayReference(GameEngine owner) : ReferenceBase(owner);
 	public sealed partial class MeetWithKingReference(GameEngine owner) : ReferenceBase(owner);
+	public sealed partial class CivilopediaReference(GameEngine owner) : ReferenceBase(owner);
+	public sealed partial class SystemServicesReference(GameEngine owner) : ReferenceBase(owner);
+	public sealed partial class HallOfFameReference(GameEngine owner) : ReferenceBase(owner);
+	public sealed partial class CommonUtilitiesReference(GameEngine owner) : ReferenceBase(owner);
+	public sealed partial class CityViewReference(GameEngine owner) : ReferenceBase(owner);
+	public sealed partial class PalaceReference(GameEngine owner) : ReferenceBase(owner);
 }

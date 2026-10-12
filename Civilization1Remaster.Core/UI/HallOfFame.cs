@@ -15,28 +15,19 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// Empties the 6 entries of the Hall of Fame (records of 0x2e bytes at 0x3772:37d2, the first word -1)
 		/// </summary>
 		public void WipeHallOfFame()
 		{
 			this.processor.Journal.OpenScope("WipeHallOfFame()");
 
-			// function body
-			this.processor.EnterFrame(0x4);
-			this.processor.EmitLocalWord(0x2, 0x0);
+			this.processor.SegExtra.Value16 = 0x3772;
 
-		L000b:
-			this.processor.RegAcc.Value16 = 0x2e;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullLocalWord(0x2));
-			this.processor.SegExtra.Value16 = 0x3772; // segment
-			this.processor.EmitUInt16(this.processor.SegExtra.Value16, (ushort)(this.processor.RegBase.Value16 + 0x37d2), 0xffff);
-			this.processor.IncrementLocalWord(0x2);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x6);
-			if (this.processor.FlagSet.IsLess) goto L000b;
+			for (int entryIdx = 0; entryIdx < 6; entryIdx++)
+			{
+				this.processor.EmitUInt16(this.processor.SegExtra.Value16, (ushort)((0x2e * entryIdx) + 0x37d2), 0xffff);
+			}
 
-			this.processor.LeaveFrame();
-
-			// Far return
 			this.processor.Journal.CloseScope("WipeHallOfFame");
 		}
 

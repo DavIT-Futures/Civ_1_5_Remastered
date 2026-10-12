@@ -1211,47 +1211,24 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// One part of the palace: picture (table at 0xb23c, by the part arg2 and its style marker) at column arg3; the row comes
+		/// from the height table at 0x4b36 (records of 15 bytes by arg1, by the place of the part) plus arg4 and arg1
 		/// </summary>
-		/// <param name="param1"></param>
-		/// <param name="param2"></param>
-		/// <param name="param3"></param>
-		/// <param name="param4"></param>
-		/// <param name="flag"></param>
 		public void RenderPalacePart(ushort arg1, ushort arg2, ushort arg3, ushort arg4, ushort marker)
 		{
 			this.processor.Journal.OpenScope($"RenderPalacePart({arg1}, {arg2}, {arg3}, {arg4}, {marker})");
 
-			// function body
-			this.processor.EnterFrame(0x4);
-			this.processor.PreserveIndexRegisters();
-			this.processor.RegSource.Value16 = arg2;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0xd91e));
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0xb222));
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
+			ushort partPlace = this.processor.PullGlobalWord((ushort)((arg2 << 1) + 0xb222));
+			sbyte styleShift = (sbyte)this.processor.PullGlobalByte((ushort)(marker + (arg2 << 1) + 0xb25e));
+			ushort heightIdx = (ushort)(styleShift + (5 * partPlace));
+			sbyte height = (sbyte)this.processor.PullGlobalByte((ushort)((0xf * arg1) + heightIdx + 0x4b36));
+			ushort vertLoc = (ushort)(height + arg4 + arg1);
 
-			this.processor.RegBase.Value16 = marker;
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0xb25e));
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
-			this.processor.ScaleIndex(0x5, this.processor.PullLocalWord(0x4));
-			this.processor.RegDest.Value16 = this.processor.SumWord(this.processor.RegDest.Value16, this.processor.RegAcc.Value16);
-			this.processor.ScaleIndexToBase(0xf, arg1);
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegDest.Value16 + 0x4b36));
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, arg4);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, arg1);
-			this.owner.Services.RenderPictureToScreen(
-				this.processor.PullGlobalWord(0xaa),
+			this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa),
 				(short)arg3,
-				(short)this.processor.RegAcc.Value16,
-				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((marker << 1) + (arg2 << 2) + 0xb23c)));
+				(short)vertLoc,
+				this.processor.PullGlobalWord((ushort)((marker << 1) + (arg2 << 2) + 0xb23c)));
 
-			this.processor.RestoreIndexRegisters();
-			this.processor.LeaveFrame();
-			// Far return
 			this.processor.Journal.CloseScope("RenderPalacePart");
 		}
 

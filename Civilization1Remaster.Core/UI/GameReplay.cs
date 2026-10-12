@@ -844,55 +844,55 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// The entry of the replay city table nearest to the position; its distance goes to 0x6812 (999 when none is nearer).
+		/// Like the original, without an entry nearer than 999 the result is what was left in the stack frame (local 4), so the
+		/// frame stays, and its locals get the values the original leaves there.
 		/// </summary>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
-		/// <returns></returns>
+		/// <returns>Entry, also in AX</returns>
 		public ushort ObtainDistanceToReplayCity(int horizLoc, int vertLoc)
 		{
 			this.processor.Journal.OpenScope($"ObtainDistanceToReplayCity({horizLoc}, {vertLoc})");
 
-			// function body
 			this.processor.EnterFrame(0x6);
 			this.processor.PreserveSource();
 
-			this.processor.EmitGlobalWord(0x6812, 0x3e7);
-			this.processor.EmitLocalWord(0x6, 0x0);
+			ushort nearest = this.processor.PullLocalWord(0x4);
+			ushort? lastDistance = null;
 
-		L0a76:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x6);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.SegExtra.Value16 = 0x3725; // segment
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x0)), 0xffff);
-			if (this.processor.FlagSet.IsEqual) goto L0ab6;
+			this.processor.EmitGlobalWord(0x6812, 999);
+			this.processor.SegExtra.Value16 = ReplayCitySegment;
 
-			this.owner.Helpers.ObtainDistance(
-				horizLoc, this.processor.PullInt16(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x100)),
-				vertLoc, this.processor.PullInt16(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x200)));
+			for (int idx = 0; idx < 0x80; idx++)
+			{
+				if (PullReplayCity(idx, 0) == 0xffff)
+					continue;
 
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x6812);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0ab6;
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x2);
-			this.processor.EmitGlobalWord(0x6812, this.processor.RegAcc.Value16);
-			this.processor.CopyLocalWord(0x6, 0x4);
+				short distance = (short)this.owner.Helpers.ObtainDistance(horizLoc, (short)PullReplayCity(idx, 0x100),
+					vertLoc, (short)PullReplayCity(idx, 0x200));
+				lastDistance = (ushort)distance;
 
-		L0ab6:
-			this.processor.EmitLocalWord(0x6, this.processor.IncrementWord(this.processor.PullLocalWord(0x6)));
-			this.processor.CompareWord(this.processor.PullLocalWord(0x6), 0x80);
-			if (this.processor.FlagSet.IsLess) goto L0a76;
+				if (distance < this.processor.PullGlobalSignedWord(0x6812))
+				{
+					this.processor.EmitGlobalWord(0x6812, (ushort)distance);
+					nearest = (ushort)idx;
+				}
+			}
 
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x4);
+			if (lastDistance.HasValue)
+			{
+				this.processor.EmitLocalWord(0x2, lastDistance.Value);
+			}
+
+			this.processor.EmitLocalWord(0x4, nearest);
+			this.processor.EmitLocalWord(0x6, 0x80);
+			this.processor.RegAcc.Value16 = nearest;
 
 			this.processor.RestoreSource();
 			this.processor.LeaveFrame();
 
-			// Far return
 			this.processor.Journal.CloseScope("ObtainDistanceToReplayCity");
 
-			return this.processor.RegAcc.Value16;
+			return nearest;
 		}
 
 		/// <summary>

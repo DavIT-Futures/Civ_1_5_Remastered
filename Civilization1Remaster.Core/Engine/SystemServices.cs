@@ -383,64 +383,55 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <summary>
-		/// ?
+		/// Starts the colour cycle 1 - 8 (the cycle records of the segment 0x35cf), forwards for a positive number, backwards
+		/// for a negative one (step 3 or -3), from its first colour
 		/// </summary>
-		/// <param name="param1"></param>
 		public void ActivateHueCycle(ushort arg1)
 		{
 			this.processor.Journal.OpenScope($"ActivateHueCycle({arg1})");
 
-			// function body
-			this.processor.EnterFrame();
-			this.processor.StackWord(this.processor.SegData.Value16);
+			// Like the original: AX = |arg1| - 1, DX = the sign of arg1
+			bool backwards = (short)arg1 < 0;
+			ushort cycleIdx = (ushort)(Math.Abs((int)(short)arg1) - 1);
+			this.processor.RegData.Value16 = (ushort)(backwards ? 0xffff : 0);
 
-			this.processor.SegData.Value16 = 0x35cf;
-			this.processor.RegAcc.Value16 = arg1;
-			this.processor.AbsoluteAccumulator();
-			this.processor.RegAcc.Value16 = this.processor.DecrementWord(this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x8);
-			if (this.processor.FlagSet.IsAboveOrEqual) goto L0428;
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.RegBase.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x2));
-			this.processor.RegAcc.Value16 = 0x3;
-			this.processor.RegAcc.Value16 = this.processor.BitXorWord(this.processor.RegAcc.Value16, this.processor.RegData.Value16);
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, this.processor.RegData.Value16);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, this.processor.RegBase.Value16, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x7));
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x8), this.processor.RegAcc.LowByte);
+			if (cycleIdx < 8)
+			{
+				ushort cycle = HueCycleRecord(cycleIdx);
 
-		L0428:
-			this.processor.SegData.Value16 = this.processor.UnstackWord();
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-			// Far return
+				this.processor.EmitUInt16(HueCycleSegment, cycle, (ushort)(backwards ? -3 : 3));
+				this.processor.EmitUInt8(HueCycleSegment, (ushort)(cycle + 8), this.processor.PullUInt8(HueCycleSegment, (ushort)(cycle + 7)));
+			}
+
 			this.processor.Journal.CloseScope("ActivateHueCycle");
 		}
 
+		/// <summary>The segment of the colour cycles (a table of 8 record addresses at 2)</summary>
+		private const ushort HueCycleSegment = 0x35cf;
+
+		private ushort HueCycleRecord(ushort cycleIdx)
+		{
+			ushort cycle = this.processor.PullUInt16(HueCycleSegment, (ushort)((cycleIdx << 1) + 2));
+			this.processor.RegBase.Value16 = cycle;
+
+			return cycle;
+		}
+
 		/// <summary>
-		/// ?
+		/// Stops the colour cycle 1 - 8
 		/// </summary>
-		/// <param name="param1"></param>
 		public void DeactivateHueCycle(ushort arg1)
 		{
 			this.processor.Journal.OpenScope($"DeactivateHueCycle({arg1})");
 
-			// function body
-			this.processor.EnterFrame();
-			this.processor.StackWord(this.processor.SegData.Value16);
-			this.processor.SegData.Value16 = 0x35cf;
-			this.processor.RegBase.Value16 = arg1;
-			this.processor.RegBase.Value16 = this.processor.DecrementWord(this.processor.RegBase.Value16);
-			this.processor.CompareWord(this.processor.RegBase.Value16, 0x8);
-			if (this.processor.FlagSet.IsAboveOrEqual) goto L0447;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.RegBase.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x2));
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x8), 0x0);
+			ushort cycleIdx = (ushort)(arg1 - 1);
+			this.processor.RegBase.Value16 = cycleIdx;
 
-		L0447:
-			this.processor.SegData.Value16 = this.processor.UnstackWord();
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-			// Far return
+			if (cycleIdx < 8)
+			{
+				this.processor.EmitUInt8(HueCycleSegment, (ushort)(HueCycleRecord(cycleIdx) + 8), 0);
+			}
+
 			this.processor.Journal.CloseScope("DeactivateHueCycle");
 		}
 

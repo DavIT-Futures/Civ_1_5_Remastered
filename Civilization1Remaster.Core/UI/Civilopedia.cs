@@ -1531,47 +1531,18 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// Index of the technology in the list of the technologies that lead to others first (72 bytes at 0x371e:0000)
 		/// </summary>
-		/// <param name="technologyID"></param>
-		/// <returns></returns>
+		/// <returns>Index, or 0xffff; also in AX</returns>
 		public ushort ObtainFirstPrerequisite(ushort scienceIdx)
 		{
 			this.processor.Journal.OpenScope($"ObtainFirstPrerequisite({scienceIdx})");
 
-			// function body
-			this.processor.EnterFrame(0x2);
-			this.processor.EmitLocalWord(0x2, 0x0);
-			goto L16d4;
+			ushort found = LocateInScienceList(0x0, 0x48, scienceIdx);
 
-		L16d1:
-			this.processor.EmitLocalWord(0x2, this.processor.IncrementWord(this.processor.PullLocalWord(0x2)));
-
-		L16d4:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x48);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L16f0;
-
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x2);
-			this.processor.SegExtra.Value16 = 0x371e; // segment
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegExtra.Value16, (ushort)(this.processor.RegBase.Value16 + 0x0));
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, scienceIdx);
-			if (this.processor.FlagSet.IsNotEqual) goto L16d1;
-
-			this.processor.RegAcc.Value16 = this.processor.RegBase.Value16;
-			goto L16f3;
-
-		L16f0:
-			this.processor.RegAcc.Value16 = 0xffff;
-
-		L16f3:
-			this.processor.RegStack.Value16 = this.processor.RegFrame.Value16;
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-
-			// Far return
 			this.processor.Journal.CloseScope("ObtainFirstPrerequisite");
 
-			return this.processor.RegAcc.Value16;
+			return found;
 		}
 
 		/// <summary>
@@ -1641,89 +1612,59 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// Index of the technology in the second list of the Civilopedia (28 bytes at 0x371e:0044)
 		/// </summary>
-		/// <param name="technologyID"></param>
-		/// <returns></returns>
+		/// <returns>Index, or 0xffff; also in AX</returns>
 		public ushort ObtainSecondPrerequisite(ushort scienceIdx)
 		{
 			this.processor.Journal.OpenScope($"ObtainSecondPrerequisite({scienceIdx})");
 
-			// function body
-			this.processor.EnterFrame(0x2);
+			ushort found = LocateInScienceList(0x44, 0x1c, scienceIdx);
 
-			this.processor.EmitLocalWord(0x2, 0x0);
-			goto L17a0;
-
-		L179d:
-			this.processor.EmitLocalWord(0x2, this.processor.IncrementWord(this.processor.PullLocalWord(0x2)));
-
-		L17a0:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x1c);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L17bc;
-
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x2);
-			this.processor.SegExtra.Value16 = 0x371e; // segment
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegExtra.Value16, (ushort)(this.processor.RegBase.Value16 + 0x44));
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, scienceIdx);
-			if (this.processor.FlagSet.IsNotEqual) goto L179d;
-			this.processor.RegAcc.Value16 = this.processor.RegBase.Value16;
-			goto L17bf;
-
-		L17bc:
-			this.processor.RegAcc.Value16 = 0xffff;
-
-		L17bf:
-			this.processor.RegStack.Value16 = this.processor.RegFrame.Value16;
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-
-			// Far return
 			this.processor.Journal.CloseScope("ObtainSecondPrerequisite");
 
-			return this.processor.RegAcc.Value16;
+			return found;
 		}
 
 		/// <summary>
-		/// ?
+		/// Index of the technology in the list of the technology categories of the Civilopedia (12 bytes at 0x371e:0061)
 		/// </summary>
-		/// <param name="technologyID"></param>
-		/// <returns></returns>
+		/// <returns>Index, or 0xffff; also in AX</returns>
 		public ushort ObtainTechnologyCategory(ushort scienceIdx)
 		{
 			this.processor.Journal.OpenScope($"ObtainTechnologyCategory({scienceIdx})");
 
-			// function body
-			this.processor.EnterFrame(0x2);
-			this.processor.EmitLocalWord(0x2, 0x0);
-			goto L17d3;
+			ushort found = LocateInScienceList(0x61, 0xc, scienceIdx);
 
-		L17d0:
-			this.processor.EmitLocalWord(0x2, this.processor.IncrementWord(this.processor.PullLocalWord(0x2)));
-
-		L17d3:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0xc);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L17ef;
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x2);
-			this.processor.SegExtra.Value16 = 0x371e; // segment
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegExtra.Value16, (ushort)(this.processor.RegBase.Value16 + 0x61));
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, scienceIdx);
-			if (this.processor.FlagSet.IsNotEqual) goto L17d0;
-			this.processor.RegAcc.Value16 = this.processor.RegBase.Value16;
-			goto L17f2;
-
-		L17ef:
-			this.processor.RegAcc.Value16 = 0xffff;
-
-		L17f2:
-			this.processor.RegStack.Value16 = this.processor.RegFrame.Value16;
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-
-			// Far return
 			this.processor.Journal.CloseScope("ObtainTechnologyCategory");
 
-			return this.processor.RegAcc.Value16;
+			return found;
+		}
+
+		/// <summary>
+		/// The first index of the technology in a list of signed bytes in the segment 0x371e. Like the original, ES is left
+		/// at the segment and BX at the last index looked at.
+		/// </summary>
+		/// <returns>Index, or 0xffff when the technology is not in the list; also in AX</returns>
+		private ushort LocateInScienceList(ushort origin, int tally, ushort scienceIdx)
+		{
+			ushort found = 0xffff;
+
+			for (int idx = 0; idx < tally; idx++)
+			{
+				this.processor.RegBase.Value16 = (ushort)idx;
+				this.processor.SegExtra.Value16 = 0x371e;
+
+				if ((ushort)(sbyte)this.processor.PullUInt8(this.processor.SegExtra.Value16, (ushort)(origin + idx)) == scienceIdx)
+				{
+					found = (ushort)idx;
+					break;
+				}
+			}
+
+			this.processor.RegAcc.Value16 = found;
+
+			return found;
 		}
 	}
 }

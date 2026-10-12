@@ -287,40 +287,26 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <summary>
-		/// Reads the palette from file and applies to screeen 0
+		/// On VGA (0xd762) loads the colours of the picture file into the palette record at 0xbdee, puts back the 48 colour
+		/// bytes kept at 0x6b34 at its start, sets the palette and colour 45
 		/// </summary>
-		/// <param name="filenamePtr"></param>
 		public void PullAndAssignColors(ushort docnameAddr)
 		{
 			this.processor.Journal.OpenScope($"PullAndAssignColors(0x{docnameAddr:x4})");
 
-			// function body
-			this.processor.EnterFrame(0x2);
-			this.processor.PreserveSource();
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xd762), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L04d8;
+			if (this.processor.PullGlobalWord(0xd762) != 0)
+			{
+				this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, docnameAddr, 0xbdee);
 
-			this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, docnameAddr, 0xbdee);
+				for (int idx = 0; idx < 0x30; idx++)
+				{
+					this.processor.EmitGlobalByte((ushort)(0xbdf4 + idx), this.processor.PullGlobalByte((ushort)(0x6b34 + idx)));
+				}
 
-			this.processor.EmitLocalWord(0x2, 0x0);
+				this.owner.VideoCard.AssignHuesFromHueStruct(0xbdee);
+				this.owner.VideoCard.AssignHue(0x2d, VGABitmap.Hue18ToHue(0x33, 0x27, 0x19));
+			}
 
-		L049f:
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x2);
-			this.processor.RegSource.Value16 = this.processor.RegBase.Value16;
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x6b34));
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xbdf4), this.processor.RegAcc.LowByte);
-			this.processor.IncrementLocalWord(0x2);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x30);
-			if (this.processor.FlagSet.IsLess) goto L049f;
-			
-			this.owner.VideoCard.AssignHuesFromHueStruct(0xbdee);
-			
-			this.owner.VideoCard.AssignHue(0x2d, VGABitmap.Hue18ToHue(0x33, 0x27, 0x19));
-
-		L04d8:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.LeaveFrame();
-			// Far return
 			this.processor.Journal.CloseScope("PullAndAssignColors");
 		}
 

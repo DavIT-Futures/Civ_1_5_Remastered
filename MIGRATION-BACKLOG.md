@@ -103,12 +103,17 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   `AssignReplayCityContentAlt` (`GameReplay`), `RenderCityResourceBar` (`CityView`), `ComposeProductionOption`
   (`ScienceAndAdvisors`), `DisplayKingMessage` (`MeetWithKing`), `WipeSpaceshipContent` (`StartGameMenu`). Golden master
   wykonuje tylko `RenderCityResourceBar` i `ComposeProductionOption`, reszta porównana ręcznie.
+- Kolejne 7 modułów (2026-10-12): `ObtainFirstPrerequisite`, `ObtainSecondPrerequisite`, `ObtainTechnologyCategory`
+  (`Civilopedia`), `ObtainDistanceToReplayCity` (`GameReplay`, ramka stosu zostaje: bez miasta bliżej niż 999 oryginał zwraca
+  niezainicjowaną zmienną lokalną), `ActivateHueCycle`, `DeactivateHueCycle` (`SystemServices`), `WipeHallOfFame` (`HallOfFame`),
+  `PullAndAssignColors` (`CommonUtilities`), `RenderCityPicture` (`CityView`), `RenderPalacePart` (`Palace`). Wszystkie z testami
+  różnicowymi. `ReflowText` odłożone: używa bufora tekstu w ramce stosu.
 
 ## Następny krok
 
 Dalej małe metody: w `SystemServices` (mysz, kolory: `BlankMouseCursor`, `RenderMouseCursor`, `ActivateHueCycle`, ...),
-`ReflowText` (`TextBlockRenderer`), `ObtainFirstPrerequisite` / `ObtainSecondPrerequisite` / `ObtainTechnologyCategory`
-(`Civilopedia`), `ObtainDistanceToReplayCity` (`GameReplay`), reszta generatora mapy w `GameInitAndIntro`;
+`ReflowText` (`TextBlockRenderer`, bufor w ramce stosu), `RenderTutorialPointer` (`MainIntro`), `DisplayCivilopediaMenu`
+(`GameMenus`), `DisplayCivilopedia`, reszta generatora mapy w `GameInitAndIntro`;
 do wyszukania: skrypt z liczbą `goto L` / `EnterFrame` na metodę, posortowany po długości. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180)
 i `AIPlayer` (870). Najmniejsze metody w stylu asm można znaleźć skryptem,
 który szuka `goto L`, `EnterFrame`, `ScaleIndex` itd. i sortuje po liczbie wywołań w kanale `call.` baseline.
