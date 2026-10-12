@@ -1,5 +1,6 @@
 using System;
 using Civilization1Remaster.Emulation;
+using Civilization1Remaster.Game.Rules;
 
 namespace Civilization1Remaster.Game
 {
@@ -10,11 +11,31 @@ namespace Civilization1Remaster.Game
 	{
 		private readonly GameEngine owner;
 		private readonly CPU processor;
+		private readonly MapLayers chart;
+		private readonly UnitMemory troops;
 
 		public MapManagement(GameEngine owner)
 		{
 			this.owner = owner;
 			this.processor = owner.Processor;
+			this.chart = new MapLayers(owner);
+			this.troops = new UnitMemory(owner.Processor);
+		}
+
+		/// <summary>The map data (terrain, continents, improvements, tile owners)</summary>
+		public MapLayers Chart
+		{
+			get { return this.chart; }
+		}
+
+		/// <summary>
+		/// Returns the value also in AX, like the original function: the translated callers read it from there.
+		/// </summary>
+		private ushort ReturnAcc(int amount)
+		{
+			this.processor.RegAcc.Value16 = (ushort)amount;
+
+			return this.processor.RegAcc.Value16;
 		}
 
 		/// <summary>
@@ -1661,84 +1682,50 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// Is the position on the map
 		/// </summary>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
-		/// <returns></returns>
+		/// <returns>1 on the map, 0 outside</returns>
 		public ushort VerifyMapLimits(int horizLoc, int vertLoc)
 		{
 			this.processor.Journal.OpenScope($"VerifyMapLimits({horizLoc}, {vertLoc})");
 
-			// function body
-			if (horizLoc < 0 || horizLoc >= 80 || vertLoc < 0 || vertLoc >= 50)
-			{
-				this.processor.RegAcc.Value16 = 0;
-			}
-			else
-			{
-				this.processor.RegAcc.Value16 = 1;
-			}
+			ushort onMap = ReturnAcc(MapRules.IsOnMap(horizLoc, vertLoc) ? 1 : 0);
 
 			this.processor.Journal.CloseScope("VerifyMapLimits");
 
-			return this.processor.RegAcc.Value16;
+			return onMap;
 		}
 
 		/// <summary>
-		/// ?
+		/// Terrain type of the tile (MapRules.OceanTerrain is the ocean)
 		/// </summary>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
-		/// <returns></returns>
 		public ushort ObtainTerrainType(int horizLoc, int vertLoc)
 		{
 			this.processor.Journal.OpenScope($"ObtainTerrainType({horizLoc}, {vertLoc})");
 
-			// function body
-			this.processor.EnterFrame();
+			ushort terrain = ReturnAcc(this.chart.Terrain(horizLoc, vertLoc));
 
-			this.owner.VideoCard.ObtainDot(2, horizLoc, vertLoc);
-
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x2ba6));
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-
-			// Far return
 			this.processor.Journal.CloseScope("ObtainTerrainType");
 
-			return this.processor.RegAcc.Value16;
+			return terrain;
 		}
 
 		/// <summary>
-		/// ?
+		/// The player of the tile owner layer (bits 0 - 2), also when no units stand there
 		/// </summary>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
-		/// <returns></returns>
 		public ushort ObtainTileOwnerBits(int horizLoc, int vertLoc)
 		{
-			// function body
-			this.owner.VideoCard.ObtainDot(2, horizLoc + 160, vertLoc);
-
-			this.processor.RegAcc.Value16 = this.processor.BitAndWord(this.processor.RegAcc.Value16, 0x7);
-
-			return this.processor.RegAcc.Value16;
+			return ReturnAcc(this.chart.OwnerBits(horizLoc, vertLoc) & 0x7);
 		}
 
 		/// <summary>
-		/// Sets the city owner on map
+		/// Sets the player of the tile owner layer (of a city), keeps the units bit
 		/// </summary>
-		/// <param name="playerID"></param>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
 		public void MapAssignCityOwner(short participantIdx, int horizLoc, int vertLoc)
 		{
-			// function body
-			ushort priorAmountShort = this.owner.VideoCard.ObtainDot(2, horizLoc + 160, vertLoc);
+			int bits = ReturnAcc(this.chart.OwnerBits(horizLoc, vertLoc));
 
-			this.owner.VideoCard.AssignDot(2, horizLoc + 160, vertLoc, (byte)((priorAmountShort & 8) + participantIdx), 0);
+			this.chart.AssignOwnerBits(horizLoc, vertLoc, (bits & MapLayers.UnitsPresent) + participantIdx);
 		}
 
 		/// <summary>
@@ -1805,191 +1792,105 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// The first unit standing on the tile. Sets the player of the unit into 0xd7f0 and 0xd20a.
+		/// When the tile owner layer says that units are there but none is found, the layer is cleared.
 		/// </summary>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
-		/// <returns></returns>
+		/// <returns>Unit index, or 0xffff when no unit stands on the tile</returns>
 		public ushort ObtainUnitAtTile(int horizLoc, int vertLoc)
 		{
 			this.processor.Journal.OpenScope($"ObtainUnitAtTile({horizLoc}, {vertLoc})");
 
-			// function body
-			this.processor.EnterFrame(0x4);
-			this.processor.PreserveSource();
+			ushort found = 0xffff;
+			ushort participantIdx = ObtainTileOwner(horizLoc, vertLoc);
 
-			ObtainTileOwner(horizLoc, vertLoc);
+			if (participantIdx != 0xffff)
+			{
+				for (int troopIdx = 0; troopIdx < UnitMemory.TroopTally; troopIdx++)
+				{
+					if (this.troops.Exists(participantIdx, troopIdx) && this.troops.StandsAt(participantIdx, troopIdx, horizLoc, vertLoc))
+					{
+						found = (ushort)troopIdx;
+						break;
+					}
+				}
 
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = this.processor.IncrementWord(this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L1477;
+				if (found != 0xffff)
+				{
+					this.processor.EmitGlobalWord(0xd7f0, participantIdx);
+					this.processor.EmitGlobalWord(0xd20a, participantIdx);
+				}
+				else
+				{
+					this.owner.Services.AssignDot(2, horizLoc + 160, vertLoc, 0);
+				}
+			}
 
-		L1472:
-			this.processor.RegAcc.Value16 = 0xffff;
-			goto L14db;
+			ReturnAcc(found);
 
-		L1477:
-			this.processor.EmitLocalWord(0x4, 0x0);
-			goto L1481;
-
-		L147e:
-			this.processor.EmitLocalWord(0x4, this.processor.IncrementWord(this.processor.PullLocalWord(0x4)));
-
-		L1481:
-			if (this.processor.PullLocalWord(0x4) >= 128)
-				goto L14c1;
-
-			this.processor.ScaleIndexToSource(0x600, this.processor.PullLocalWord(0x2));
-			this.processor.AddScaledToSource(0xc, this.processor.PullLocalWord(0x4));
-
-			if (this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d7)) == -1)
-				goto L147e;
-
-			if (this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)) != horizLoc)
-				goto L147e;
-
-			if (this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6)) != vertLoc)
-				goto L147e;
-
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x2);
-			this.processor.EmitGlobalWord(0xd7f0, this.processor.RegAcc.Value16);
-			this.processor.EmitGlobalWord(0xd20a, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x4);
-			goto L14db;
-
-		L14c1:
-			this.owner.Services.AssignDot(2, horizLoc + 160, vertLoc, 0);
-
-			goto L1472;
-
-		L14db:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.LeaveFrame();
-			// Far return
 			this.processor.Journal.CloseScope("ObtainUnitAtTile");
 
-			return this.processor.RegAcc.Value16;
+			return found;
 		}
 
 		/// <summary>
-		/// ?
+		/// The player whose units stand on the tile
 		/// </summary>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
-		/// <returns></returns>
+		/// <returns>Player, or 0xffff when no units stand on the tile</returns>
 		public ushort ObtainTileOwner(int horizLoc, int vertLoc)
 		{
-			// function body
-			this.owner.VideoCard.ObtainDot(2, horizLoc + 160, vertLoc);
+			int bits = this.chart.OwnerBits(horizLoc, vertLoc);
 
-			if ((this.processor.RegAcc.Value16 & 8) != 0)
-			{
-				this.processor.RegAcc.Value16 = this.processor.BitAndWord(this.processor.RegAcc.Value16, 0x7);
-			}
-			else
-			{
-				this.processor.RegAcc.Value16 = 0xffff;
-			}
-
-			return this.processor.RegAcc.Value16;
+			return ReturnAcc((bits & MapLayers.UnitsPresent) != 0 ? bits & 0x7 : 0xffff);
 		}
 
 		/// <summary>
-		/// ?
+		/// Marks that units stand on the tile, keeps the player
 		/// </summary>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
 		public void TagTileOwned(int horizLoc, int vertLoc)
 		{
-			// function body
-			this.owner.VideoCard.ObtainDot(2, horizLoc + 160, vertLoc);
+			int bits = ReturnAcc(this.chart.OwnerBits(horizLoc, vertLoc));
 
-			this.owner.VideoCard.AssignDot(2, horizLoc + 160, vertLoc, (byte)((this.processor.RegAcc.Value16 & 7) + 8), 0);
+			this.chart.AssignOwnerBits(horizLoc, vertLoc, (bits & 0x7) + MapLayers.UnitsPresent);
 		}
 
 		/// <summary>
-		/// ?
+		/// The road bit (8) of the tile improvements
 		/// </summary>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
-		/// <returns></returns>
 		public ushort ContainsRoad(int horizLoc, int vertLoc)
 		{
-			// function body
-			ObtainTileImprovements(horizLoc, vertLoc);
-			this.processor.RegAcc.Value16 = this.processor.BitAndWord(this.processor.RegAcc.Value16, 0x8);
-
-			return this.processor.RegAcc.Value16;
+			return ReturnAcc(this.chart.Improvements(horizLoc, vertLoc) & 0x8);
 		}
 
 		/// <summary>
-		/// ?
+		/// Improvements of the tile (bit 0 city, 1 irrigation, 2 mine, 3 road, ...)
 		/// </summary>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
-		/// <returns></returns>
 		public ushort ObtainTileImprovements(int horizLoc, int vertLoc)
 		{
-			// function body
-			this.owner.VideoCard.ObtainDot(2, horizLoc, vertLoc + 100);
-
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-
-			this.owner.VideoCard.ObtainDot(2, horizLoc, vertLoc + 150);
-
-			this.processor.RegAcc.Value16 <<= 4;
-			this.processor.RegAcc.Value16 |= this.processor.RegBase.Value16;
-
-			return this.processor.RegAcc.Value16;
+			return ReturnAcc(this.chart.Improvements(horizLoc, vertLoc));
 		}
 
 		/// <summary>
-		/// ?
+		/// Improvements of the tile as the human player saw them last time
 		/// </summary>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
-		/// <returns></returns>
 		public ushort ObtainKnownTileImprovements(int horizLoc, int vertLoc)
 		{
 			this.processor.Journal.OpenScope($"ObtainKnownTileImprovements({horizLoc}, {vertLoc})");
 
-			// function body
-			this.processor.EnterFrame();
-			this.processor.StackWord(this.processor.RegDest.Value16);
+			ushort known = ReturnAcc(this.chart.KnownImprovements(horizLoc, vertLoc));
 
-			this.owner.VideoCard.ObtainDot(2, horizLoc + 80, vertLoc + 100);
-
-			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
-
-			this.owner.VideoCard.ObtainDot(2, horizLoc + 80, vertLoc + 150);
-
-			this.processor.RegCount.LowByte = 0x4;
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.RegDest.Value16);
-			
-			this.processor.RegDest.Value16 = this.processor.UnstackWord();
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-			// Far return
 			this.processor.Journal.CloseScope("ObtainKnownTileImprovements");
 
-			return this.processor.RegAcc.Value16;
+			return known;
 		}
 
 		/// <summary>
-		/// ?
+		/// The human player sees the improvements of the tile as they are now
 		/// </summary>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
 		public void KeepKnownTileImprovements(int horizLoc, int vertLoc)
 		{
-			// function body			
-			this.owner.VideoCard.ObtainDot(2, horizLoc, vertLoc + 100);
+			this.chart.RevealImprovements(horizLoc, vertLoc);
 
-			this.owner.VideoCard.AssignDot(2, horizLoc + 80, vertLoc + 100, (byte)this.processor.RegAcc.Value16, 0);
-
-			this.owner.VideoCard.ObtainDot(2, horizLoc, vertLoc + 150);
-
-			this.owner.VideoCard.AssignDot(2, horizLoc + 80, vertLoc + 150, (byte)this.processor.RegAcc.Value16, 0);
+			ReturnAcc(this.chart.Improvements(horizLoc, vertLoc) >> 4);
 		}
 
 		/// <summary>
@@ -2032,27 +1933,11 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// Removes the improvement bits from the tile
 		/// </summary>
-		/// <param name="param1"></param>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
-		public void DiscardTileImprovements(ushort arg1, int horizLoc, int vertLoc)
+		public void DiscardTileImprovements(ushort improvements, int horizLoc, int vertLoc)
 		{
-			// function body
-			if ((arg1 & 0xf) != 0)
-			{
-				this.owner.VideoCard.ObtainDot(2, horizLoc, vertLoc + 100);
-
-				this.owner.VideoCard.AssignDot(2, horizLoc, vertLoc + 100, (byte)(((~arg1) & this.processor.RegAcc.Value16) & 0xff), 0);
-			}
-
-			if (((arg1 & 0xf0) != 0))
-			{
-				this.owner.VideoCard.ObtainDot(2, horizLoc, vertLoc + 150);
-
-				this.owner.VideoCard.AssignDot(2, horizLoc, vertLoc + 150, (byte)(((~(arg1 >> 4)) & this.processor.RegAcc.Value16) & 0xff), 0);
-			}		
+			this.chart.ClearImprovements(improvements, horizLoc, vertLoc);
 		}
 
 		/// <summary>
@@ -2110,114 +1995,61 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// Does the tile have a special resource (MapRules.HasSpecialResource with the world seed)
 		/// </summary>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
-		/// <returns></returns>
 		public ushort ContainsSpecialResource(int horizLoc, int vertLoc)
 		{
 			this.processor.Journal.OpenScope($"ContainsSpecialResource({horizLoc}, {vertLoc})");
 
-			// function body
-			if (vertLoc <= 0x1 || vertLoc >= 48 ||
-				(((horizLoc & 3) * 4) + (vertLoc & 3)) != ((((horizLoc / 4) * 13) + ((vertLoc / 4) * 11) + this.owner.World.ChanceRoot) & 0xf))
-			{
-				this.processor.RegAcc.Value16 = 0;
-			}
-			else
-			{
-				this.processor.RegAcc.Value16 = 1;
-			}
+			ushort special = ReturnAcc(MapRules.HasSpecialResource(horizLoc, vertLoc, this.owner.World.ChanceRoot) ? 1 : 0);
 
-			// Far return
 			this.processor.Journal.CloseScope("ContainsSpecialResource");
 
-			return this.processor.RegAcc.Value16;
+			return special;
 		}
 
 		/// <summary>
-		/// ?
+		/// Is there a hut (tribal village) on the tile: not on the ocean, on a tile nobody has visited and without a city
 		/// </summary>
-		/// <param name="param1"></param>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
-		public ushort ContainsHut(ushort arg1, int horizLoc, int vertLoc)
+		/// <param name="terrain">Terrain type of the tile</param>
+		public ushort ContainsHut(ushort terrain, int horizLoc, int vertLoc)
 		{
-			this.processor.Journal.OpenScope($"ContainsHut({arg1}, {horizLoc}, {vertLoc})");
+			this.processor.Journal.OpenScope($"ContainsHut({terrain}, {horizLoc}, {vertLoc})");
 
-			// function body
-			if (arg1 == 10 || (this.owner.World.ChartSight[horizLoc, vertLoc] & 1) != 0 ||
-				vertLoc <= 1 || vertLoc >= 48)
-			{
-				this.processor.RegAcc.Value16 = 0;
-			}
-			else
-			{
-				if (((horizLoc & 3) * 4 + (vertLoc & 3)) == ((((horizLoc / 4) * 13) + ((vertLoc / 4) * 11) + this.owner.World.ChanceRoot + 8) & 0x1f) &&
-					(ObtainTileImprovements(horizLoc, vertLoc) & 1) == 0)
-				{
-					this.processor.RegAcc.Value16 = 1;
-				}
-				else
-				{
-					this.processor.RegAcc.Value16 = 0;
-				}
-			}
+			bool hut = terrain != MapRules.OceanTerrain &&
+				(this.owner.World.ChartSight[horizLoc, vertLoc] & 1) == 0 &&
+				MapRules.IsHutPlace(horizLoc, vertLoc, this.owner.World.ChanceRoot) &&
+				(ObtainTileImprovements(horizLoc, vertLoc) & 1) == 0;
 
-			// Far return
+			ushort result = ReturnAcc(hut ? 1 : 0);
+
 			this.processor.Journal.CloseScope("ContainsHut");
 
-			return this.processor.RegAcc.Value16;
+			return result;
 		}
 
 		/// <summary>
-		/// ?
+		/// Number of the continent or the sea of the tile
 		/// </summary>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
-		/// <returns></returns>
 		public ushort ObtainContinentID(int horizLoc, int vertLoc)
 		{
-			this.owner.VideoCard.ObtainDot(2, horizLoc, vertLoc + 50);
-
-			return this.processor.RegAcc.Value16;
+			return ReturnAcc(this.chart.Continent(horizLoc, vertLoc));
 		}
 
 		/// <summary>
-		/// ?
+		/// Size of the continent (land) or the sea (ocean) of the tile, from the word arrays at 0xdcfe and 0xdd7e
 		/// </summary>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
-		/// <returns></returns>
 		public ushort ObtainLandMassSize(int horizLoc, int vertLoc)
 		{
 			this.processor.Journal.OpenScope($"ObtainLandMassSize({horizLoc}, {vertLoc})");
 
-			// function body
-			ObtainTerrainType(horizLoc, vertLoc);
+			ushort sizes = ObtainTerrainType(horizLoc, vertLoc) != MapRules.OceanTerrain ? (ushort)0xdcfe : (ushort)0xdd7e;
+			int continent = ObtainContinentID(horizLoc, vertLoc);
+			ushort size = ReturnAcc(this.processor.PullGlobalWord((ushort)(sizes + (continent << 1))));
 
-			if (this.processor.RegAcc.Value16 != 10)
-			{
-				ObtainContinentID(horizLoc, vertLoc);
-
-				this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-				this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-				this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xdcfe));
-			}
-			else
-			{
-				ObtainContinentID(horizLoc, vertLoc);
-
-				this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-				this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-				this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xdd7e));
-			}
-
-			// Far return
 			this.processor.Journal.CloseScope("ObtainLandMassSize");
 
-			return this.processor.RegAcc.Value16;
+			return size;
 		}
 	}
 }
