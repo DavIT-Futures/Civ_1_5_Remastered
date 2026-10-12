@@ -1582,80 +1582,43 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// Draws the unit shown on the tile of the unit: on terrain 10, a non-ship unit in a stack is drawn as the first ship
+		/// of its stack (following the ring from the unit; itself when there is none); otherwise the best defender of the stack
 		/// </summary>
-		/// <param name="playerID"></param>
-		/// <param name="unitID"></param>
 		public void RepaintUnitTile(short participantIdx, short troopIdx)
 		{
 			this.processor.Journal.OpenScope($"RepaintUnitTile({participantIdx}, {troopIdx})");
 
-			// function body
-			this.processor.EnterFrame(0x6);
-			this.processor.PreserveSource();
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.AddScaledToSource(0xc, (ushort)troopIdx);
+			ushort terrain = ObtainTerrainType(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
+				this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert));
 
-			ObtainTerrainType(
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)),
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6)));
+			if (terrain == 0xa && this.troops.Following(participantIdx, troopIdx) != -1 &&
+				this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) != UnitKindTable.SeaUnits)
+			{
+				short current = troopIdx;
 
-			this.processor.EmitLocalWord(0x6, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
-			if (this.processor.FlagSet.IsNotEqual) goto L1308;
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81de)), 0xff);
-			if (this.processor.FlagSet.IsEqual) goto L1308;
-			this.processor.RegAcc.LowByte = 0x22;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d7)));
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1138)), 0x2);
-			if (this.processor.FlagSet.IsEqual) goto L1308;
-			this.processor.RegAcc.Value16 = (ushort)troopIdx;
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
+				do
+				{
+					current = this.troops.Following(participantIdx, current);
 
-		L12ac:
-			this.processor.RegAcc.Value16 = 0x600;
-			this.processor.ScaleAccumulatorToSource((ushort)participantIdx);
-			this.processor.ScaleIndexToBase(0xc, this.processor.PullLocalWord(0x2));
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81de));
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
-			this.processor.ScaleIndexToBase(0xc, this.processor.PullLocalWord(0x2));
-			this.processor.RegAcc.LowByte = 0x22;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d7)));
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1138)), 0x2);
-			if (this.processor.FlagSet.IsNotEqual) goto L12ed;
+					if (this.troops.KindField(participantIdx, current, UnitKindTable.LandGroup) == UnitKindTable.SeaUnits)
+					{
+						RenderUnitOnWorldMap(participantIdx, current);
+						current = -1;
+					}
+				}
+				while (current != -1 && current != troopIdx);
 
-			RenderUnitOnWorldMap(participantIdx,
-				this.processor.PullLocalSignedWord(0x2));
+				if (current == troopIdx)
+				{
+					RenderUnitOnWorldMap(participantIdx, troopIdx);
+				}
+			}
+			else
+			{
+				RenderUnitOnWorldMap(participantIdx, (short)this.owner.UnitOps.LocateBestGuardianInStack(participantIdx, troopIdx));
+			}
 
-			this.processor.EmitLocalWord(0x2, 0xffff);
-
-		L12ed:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0xffff);
-			if (this.processor.FlagSet.IsEqual) goto L12fb;
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x4);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L12ac;
-
-		L12fb:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x4);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L1321;
-
-			RenderUnitOnWorldMap(participantIdx, troopIdx);
-
-			goto L1321;
-
-		L1308:
-			RenderUnitOnWorldMap(participantIdx, (short)this.owner.UnitOps.LocateBestGuardianInStack(participantIdx, troopIdx));
-
-		L1321:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.LeaveFrame();
-			// Far return
 			this.processor.Journal.CloseScope("RepaintUnitTile");
 		}
 

@@ -148,6 +148,11 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   miasto gracza), `RenderStarField` (`SpaceshipScreen`), `ProduceCloudLayer` (`GameInitAndIntro`), `DisplayConquerorScreen`
   (`GameReplay`, ramka stosu zostaje: wołana funkcja zostawia zmieniony BP, oryginał kończy z takim stosem). Testy
   w `BatchFifteenDifferentialTests`.
+- Kolejne 4 moduły (2026-10-12): `VerifyCoastalTile` (`PlayerTurn`), `RepaintUnitTile` (`MapManagement`),
+  `DisplayRevolutionScreen` (`StartGameMenu`), `DisplayLabelInputBox` (`NewCityScreen`, ramka stosu zostaje jako bufor
+  nazwy do porównania). Testy w `BatchSixteenDifferentialTests` (stosy na morzu budowane przez scenariusze). Uwaga dla testów:
+  `make` scenariusza nie może wołać funkcji gry z dziennikiem na `pair.Original` (zmienia liczniki `call.` tylko jednej gry);
+  do odczytu mapy `Chart.Terrain`.
 
 ## Następny krok
 
@@ -157,8 +162,8 @@ metody z co najmniej 2 liniami `goto L` / `FlagSet` / `Compare…` / `SumWord` i
 `ArrangeTextRow` (`TextBlockRenderer`), `RenderTextInputField`, `DisplayLabelInputBox` (`NewCityScreen`),
 `DisplayWorldMenu`, `DisplayAdvisorMenu` (`GameMenus`), `DisplayRevolutionScreen` (`StartGameMenu`), `RenderExplosion`
 (`DiplomatActions`), `PrepareTimer`, `RefreshHueCycling`, `AssignHueCycleSpan` (`SystemServices`), `ReshuffleCitizens`
-(`CityManagement`), `VerifyCoastalTile`, `LocateBestGuardian` (`PlayerTurn`), `RepaintUnitTile` (`MapManagement`),
-`AttachStrategicLocation` (`AIPlayer`), `DisplayLabelInputBox` (`NewCityScreen`),
+(`CityManagement`), `LocateBestGuardian` (`PlayerTurn`),
+`AttachStrategicLocation` (`AIPlayer`), `RenderTextInputField` (`NewCityScreen`), `ColorsFadeStep` (`SystemServices`),
 reszta generatora mapy w `GameInitAndIntro`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)

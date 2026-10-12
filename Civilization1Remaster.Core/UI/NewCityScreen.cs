@@ -185,15 +185,15 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// Asks for a city name (the question at charsAddr) and looks for it: the first of the 256 city names that starts with
+		/// the answer (any case), and the first city with that name; names without a city are skipped. Each name is copied into
+		/// a buffer in the stack frame for the comparison, like in the original.
 		/// </summary>
-		/// <param name="stringPtr"></param>
-		/// <returns></returns>
+		/// <returns>City index, 0xffff when none (also in AX)</returns>
 		public ushort DisplayLabelInputBox(ushort charsAddr)
 		{
 			this.processor.Journal.OpenScope($"DisplayLabelInputBox(0x{charsAddr:x4})");
 
-			// function body
 			this.processor.EnterFrame(0x14);
 			this.processor.PreserveSource();
 
@@ -206,61 +206,40 @@ namespace Civilization1Remaster.UI
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
 			PullTextInput(0x42, 0x59, 0x10);
-			
-			this.processor.EmitLocalWord(0x14, 0x0);
-			goto L03bc;
 
-		L0390:
-			this.processor.EmitLocalWord(0x12, this.processor.IncrementWord(this.processor.PullLocalWord(0x12)));
+			ushort label = (ushort)(this.processor.RegFrame.Value16 - 0x10);
+			ushort found = 0xffff;
 
-		L0393:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x12), 0x80);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L03b9;
-			this.processor.ScaleIndexToSource(0x1c, this.processor.PullLocalWord(0x12));
-			this.processor.CompareByte(this.owner.World.Towns[this.processor.PullLocalWord(0x12)].ConditionMarker, 0xff);
-			if (this.processor.FlagSet.IsEqual) goto L0390;
-			this.processor.RegAcc.LowByte = this.owner.World.Towns[this.processor.PullLocalWord(0x12)].LabelIdx;
-			this.processor.RegAcc.HighByte = 0;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x14));
-			if (this.processor.FlagSet.IsNotEqual) goto L0390;
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x12);
-			goto L040f;
-
-		L03b9:
-			this.processor.EmitLocalWord(0x14, this.processor.IncrementWord(this.processor.PullLocalWord(0x14)));
-
-		L03bc:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x14), 0x100);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L040c;
-
-			int settlementTitleIdent = this.processor.PullLocalWord(0x14);
-			ushort charsDisplacement = (ushort)(this.processor.RegFrame.Value16 - 0x10);
-
-			for (int idx = 0; idx < 13; idx++)
+			for (int labelIdx = 0; labelIdx < 0x100 && found == 0xffff; labelIdx++)
 			{
-				this.processor.Storage.EmitUInt8(this.processor.SegStack.Value16, (ushort)(charsDisplacement + idx), this.owner.World.TownLabels[settlementTitleIdent][idx]);
+				for (int idx = 0; idx < 13; idx++)
+				{
+					this.processor.Storage.EmitUInt8(this.processor.SegStack.Value16, (ushort)(label + idx), this.owner.World.TownLabels[labelIdx][idx]);
+				}
+
+				if (this.owner.Libc.CompareTextPrefixNoCase(0xba06, label, this.owner.Libc.TextLength(0xba06)) != 0)
+					continue;
+
+				for (int townIdx = 0; townIdx < 0x80; townIdx++)
+				{
+					City town = this.owner.World.Towns[townIdx];
+
+					if (town.ConditionMarker != 0xff && town.LabelIdx == labelIdx)
+					{
+						found = (ushort)townIdx;
+						break;
+					}
+				}
 			}
 
-			this.owner.Libc.TextLength(0xba06);
+			this.processor.RegAcc.Value16 = found;
 
-			this.owner.Libc.CompareTextPrefixNoCase(0xba06, (ushort)(this.processor.RegFrame.Value16 - 0x10), this.processor.RegAcc.Value16);
-
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsNotEqual) goto L03b9;
-			this.processor.EmitLocalWord(0x12, 0x0);
-			goto L0393;
-
-		L040c:
-			this.processor.RegAcc.Value16 = 0xffff;
-
-		L040f:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
+			this.processor.RestoreSource();
 			this.processor.LeaveFrame();
 
-			// Far return
 			this.processor.Journal.CloseScope("DisplayLabelInputBox");
 
-			return this.processor.RegAcc.Value16;
+			return found;
 		}
 
 		/// <summary>

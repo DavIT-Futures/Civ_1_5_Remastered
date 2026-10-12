@@ -2133,92 +2133,58 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// After a revolution of the human player (not to government 0): the newspaper "... government changed to ...!", then
+		/// the advisor screen with the title 0x375a and the 4 advisors (pictures from 0x19e8, names at 0x2fac without their
+		/// last character, every second one lower) until a key or click
 		/// </summary>
 		public void DisplayRevolutionScreen()
 		{
 			this.processor.Journal.OpenScope("DisplayRevolutionScreen()");
 
-			// function body
-			this.processor.EnterFrame(0x2);
-			this.processor.PreserveSource();
-			this.processor.CompareWord((ushort)this.owner.World.Participants[this.owner.World.PersonParticipantIdx].RegimeKind, 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L1bb9;
-			goto L1d15;
+			short regime = this.owner.World.Participants[this.owner.World.PersonParticipantIdx].RegimeKind;
 
-		L1bb9:
-			this.owner.Advisors.RenderAdvisorScenery();
+			if (regime != 0)
+			{
+				this.owner.Advisors.RenderAdvisorScenery();
 
-			this.processor.RegBase.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1982)));
+				this.owner.Libc.CopyText(0xba06, this.processor.PullGlobalWord((ushort)((this.owner.World.PersonParticipantIdx << 1) + 0x1982)));
+				this.owner.Libc.AppendText(0xba06, " government\nchanged to ");
+				this.owner.Libc.AppendText(0xba06,
+					this.processor.PullGlobalWord((ushort)((this.owner.World.Participants[this.owner.World.PersonParticipantIdx].RegimeKind << 1) + 0x1966)));
+				this.owner.Libc.AppendText(0xba06, "!\n");
 
-			this.owner.Libc.AppendText(0xba06, " government\nchanged to ");
+				this.owner.Paper.DisplayNewspaper(-2);
 
-			this.processor.RegBase.Value16 = (ushort)this.owner.World.Participants[this.owner.World.PersonParticipantIdx].RegimeKind;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1966)));
+				this.owner.Startup.ConcealMouseCursor();
 
-			this.owner.Libc.AppendText(0xba06, "!\n");
+				this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 100, 320, 100, 15);
 
-			this.owner.Paper.DisplayNewspaper(-2);
-			
-			this.owner.Startup.ConcealMouseCursor();
+				this.processor.EmitGlobalWord((ushort)(this.processor.PullGlobalWord(0xaa) + 0x10), 0x6);
 
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 100, 320, 100, 15);
+				this.owner.TextPainter.RenderCenteredTextToScreen0(0x375a, 160, 102, 0);
 
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 0x6);
+				this.processor.EmitGlobalWord((ushort)(this.processor.PullGlobalWord(0xaa) + 0x10), 0x2);
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0(0x375a, 160, 102, 0);
+				for (int advisorIdx = 0; advisorIdx < 4; advisorIdx++)
+				{
+					this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19e8), (ushort)((0x28 * advisorIdx) + 0xa0), 0x8c, 0x28, 0x3c,
+						this.processor.PullGlobalWord(0xaa), (ushort)((0x50 * advisorIdx) + 0x14), 0x76);
 
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 0x2);
-			this.processor.EmitLocalWord(0x2, 0x0);
-			goto L1c87;
+					this.owner.Libc.CopyText(0xba06, this.processor.PullGlobalWord((ushort)((advisorIdx << 1) + 0x2fac)));
+					this.processor.EmitGlobalByte((ushort)(this.owner.Libc.TextLength(0xba06) + 0xba05), 0x0);
 
-		L1c87:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x4);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L1cfd;
+					this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, (80 * advisorIdx) + 40, (advisorIdx & 1) != 0 ? 186 : 180, 0);
+				}
 
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0x19e8),
-				(ushort)((0x28 * this.processor.PullLocalWord(0x2)) + 0xa0),
-				0x8c, 0x28, 0x3c,
-				this.processor.PullGlobalWord(0xaa),
-				(ushort)((0x50 * this.processor.PullLocalWord(0x2)) + 0x14), 0x76);
+				this.processor.EmitGlobalWord((ushort)(this.processor.PullGlobalWord(0xaa) + 0x10), 0x1);
 
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x2);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x2fac)));
+				this.owner.Startup.DisplayMouseCursor();
 
-			this.owner.Libc.TextLength(0xba06);
+				this.owner.Conquest.AwaitForKeyPressOrMouseClick();
 
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xba05), 0x0);
+				this.owner.Advisors.RecoverAdvisorScenery();
+			}
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06,
-				(80 * this.processor.PullLocalSignedWord(0x2)) + 40,
-				((this.processor.PullLocalByte(0x2) & 1) != 0) ? 186 : 180, 0);
-
-			this.processor.IncrementLocalWord(0x2);
-
-			goto L1c87;
-
-		L1cfd:
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 0x1);
-
-			this.owner.Startup.DisplayMouseCursor();
-
-			this.owner.Conquest.AwaitForKeyPressOrMouseClick();
-
-			this.owner.Advisors.RecoverAdvisorScenery();
-
-		L1d15:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.LeaveFrame();
-			// Far return
 			this.processor.Journal.CloseScope("DisplayRevolutionScreen");
 		}
 

@@ -5754,81 +5754,44 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// Whether the tile is on the coast: it is terrain 11 itself, or one of the 4 tiles next to it in a straight line
+		/// (headings 1, 3, 5, 7; the column is not wrapped) is terrain 10 or 11 or has improvement bit 1 - but tiles with a city
+		/// do not count
 		/// </summary>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
-		/// <returns></returns>
+		/// <returns>1 on the coast, else 0 (also in AX)</returns>
 		public ushort VerifyCoastalTile(int horizLoc, int vertLoc)
 		{
 			this.processor.Journal.OpenScope($"VerifyCoastalTile({horizLoc}, {vertLoc})");
 
-			// function body
-			this.processor.EnterFrame(0xc);
-			this.processor.PreserveSource();
+			MapLayers chart = this.owner.MapOps.Chart;
+			ushort coastal = 0;
 
-			this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
+			if (this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) == 0xb)
+			{
+				coastal = 1;
+			}
+			else
+			{
+				for (int heading = 1; heading <= 8 && coastal == 0; heading += 2)
+				{
+					short tileHoriz = (short)(chart.DirectionHoriz(heading) + horizLoc);
+					short tileVert = (short)(chart.DirectionVert(heading) + vertLoc);
 
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xb);
-			if (this.processor.FlagSet.IsNotEqual) goto L3fef;
+					ushort terrain = this.owner.MapOps.ObtainTerrainType(tileHoriz, tileVert);
+					ushort improvements = this.owner.MapOps.ObtainTileImprovements(tileHoriz, tileVert);
 
-		L3fea:
-			this.processor.RegAcc.Value16 = 0x1;
-			goto L405b;
+					if ((improvements & 0x1) == 0 && (terrain == 0xb || terrain == 0xa || (improvements & 0x2) != 0))
+					{
+						coastal = 1;
+					}
+				}
+			}
 
-		L3fef:
-			this.processor.EmitLocalWord(0xa, 0x0);
-			this.processor.EmitLocalWord(0x8, 0x1);
-			goto L4005;
+			this.processor.RegAcc.Value16 = coastal;
 
-		L3ffb:
-			this.processor.TestBitsByte(this.processor.PullLocalByte(0xc), 0x2);
-			if (this.processor.FlagSet.IsNotEqual) goto L3fea;
-
-		L4001:
-			this.processor.EmitLocalWord(0x8, this.processor.SumWord(this.processor.PullLocalWord(0x8), 0x2));
-
-		L4005:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x8), 0x8);
-			if (this.processor.FlagSet.IsGreater) goto L4058;
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x8);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1882));
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, (ushort)horizLoc);
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x18e4));
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, (ushort)vertLoc);
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
-
-			this.owner.MapOps.ObtainTerrainType(
-				this.processor.PullLocalSignedWord(0x2),
-				this.processor.PullLocalSignedWord(0x4));
-
-			this.processor.EmitLocalWord(0x6, this.processor.RegAcc.Value16);
-
-			this.owner.MapOps.ObtainTileImprovements(
-				this.processor.PullLocalSignedWord(0x2),
-				this.processor.PullLocalSignedWord(0x4));
-
-			this.processor.EmitLocalWord(0xc, this.processor.RegAcc.Value16);
-			this.processor.TestBitsByte(this.processor.PullLocalByte(0xc), 0x1);
-			if (this.processor.FlagSet.IsNotEqual) goto L4001;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x6), 0xb);
-			if (this.processor.FlagSet.IsEqual) goto L3fea;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x6), 0xa);
-			if (this.processor.FlagSet.IsNotEqual) goto L3ffb;
-			goto L3fea;
-
-		L4058:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xa);
-
-		L405b:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.LeaveFrame();
-			// Far return
 			this.processor.Journal.CloseScope("VerifyCoastalTile");
 
-			return this.processor.RegAcc.Value16;
+			return coastal;
 		}
 
 		/// <summary>
