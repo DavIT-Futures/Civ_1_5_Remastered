@@ -1,0 +1,116 @@
+diff --git a/Civilization1Remaster.Core/Game/UnitManagement.cs b/Civilization1Remaster.Core/Game/UnitManagement.cs
+index a9970c4..55e0e8d 100644
+--- a/Civilization1Remaster.Core/Game/UnitManagement.cs
++++ b/Civilization1Remaster.Core/Game/UnitManagement.cs
+@@ -1376,7 +1376,9 @@ namespace Civilization1Remaster.Game
+ 			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d7));
+ 			this.processor.SignExtendByte(this.processor.RegAcc);
+ 
+-			this.owner.World.Participants[participantIdx].MissingTroops[this.processor.RegAcc.Value16]++;
++			// Crash guard backported from HEAD (a04e786): the original threw IndexOutOfRangeException for an eliminated unit (kind -1)
++			if (this.processor.RegAcc.Value16 < this.owner.World.Participants[participantIdx].MissingTroops.Length)
++				this.owner.World.Participants[participantIdx].MissingTroops[this.processor.RegAcc.Value16]++;
+ 
+ 		L0f46:
+ 			this.processor.RegAcc.Value16 = 0x600;
+diff --git a/Civilization1Remaster.GameModel/State/ChartSightGrid.cs b/Civilization1Remaster.GameModel/State/ChartSightGrid.cs
+new file mode 100644
+index 0000000..7b9d549
+--- /dev/null
++++ b/Civilization1Remaster.GameModel/State/ChartSightGrid.cs
+@@ -0,0 +1,76 @@
++using System;
++
++namespace Civilization1Remaster
++{
++	/// <summary>
++	/// 80x50 map visibility grid with safe coordinate wrapping and pole bounds clamping.
++	/// Prevents out-of-bounds crashes at north and south poles (Y &lt; 0 or Y &gt;= 50)
++	/// while supporting cyclic X wrapping.
++	/// </summary>
++	public sealed class ChartSightGrid
++	{
++		public const int Width = 80;
++		public const int Height = 50;
++
++		private readonly sbyte[,] grid = new sbyte[Width, Height];
++
++		public sbyte this[int x, int y]
++		{
++			get
++			{
++				if (y >= 65500)
++				{
++					y = (short)(ushort)y;
++				}
++
++				while (x < 0) x += Width;
++				while (x >= Width) x -= Width;
++
++				if (y < 0 || y >= Height)
++				{
++					return 0;
++				}
++
++				return this.grid[x, y];
++			}
++			set
++			{
++				if (y >= 65500)
++				{
++					y = (short)(ushort)y;
++				}
++
++				while (x < 0) x += Width;
++				while (x >= Width) x -= Width;
++
++				if (y < 0 || y >= Height)
++				{
++					return;
++				}
++
++				this.grid[x, y] = value;
++			}
++		}
++
++		public int GetLength(int dimension)
++		{
++			return dimension switch
++			{
++				0 => Width,
++				1 => Height,
++				_ => throw new ArgumentOutOfRangeException(nameof(dimension))
++			};
++		}
++
++		public void Clear()
++		{
++			for (int x = 0; x < Width; x++)
++			{
++				for (int y = 0; y < Height; y++)
++				{
++					this.grid[x, y] = 0;
++				}
++			}
++		}
++	}
++}
+diff --git a/Civilization1Remaster.GameModel/State/GameState.cs b/Civilization1Remaster.GameModel/State/GameState.cs
+index d089b15..ed7a261 100644
+--- a/Civilization1Remaster.GameModel/State/GameState.cs
++++ b/Civilization1Remaster.GameModel/State/GameState.cs
+@@ -1,4 +1,4 @@
+-﻿using System;
++using System;
+ using System.Drawing;
+ 
+ namespace Civilization1Remaster.Game.State
+@@ -140,7 +140,7 @@ namespace Civilization1Remaster.Game.State
+ 			new UnitDefinition("Caravan", 127, 0, 1, 0, 0, 1, 5, 0, 0, 6, 24)};
+ 
+ 		// Map
+-		public sbyte[,] ChartSight = new sbyte[80, 50];
++		public ChartSightGrid ChartSight = new ChartSightGrid();
+ 		public short DirtyCellTally = 0;
+ 		public short SmogImpactTier = 0;
+ 		public short WorldHeatingTally = 0;
