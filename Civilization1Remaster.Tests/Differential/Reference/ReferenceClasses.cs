@@ -1,0 +1,34 @@
+using Civilization1Remaster.Emulation;
+using Civilization1Remaster.Game;
+
+namespace Civilization1Remaster.Tests.Differential.Reference
+{
+	// The reference (oracle) classes: the original code of the rewritten functions, one generated file per function
+	// (extract_reference.py). These parts give them what the original classes had.
+
+	public abstract class ReferenceBase
+	{
+		protected readonly GameEngine owner;
+		protected readonly CPU processor;
+		protected readonly UnitMemory troops;
+
+		protected ReferenceBase(GameEngine owner)
+		{
+			this.owner = owner;
+			this.processor = owner.Processor;
+			this.troops = new UnitMemory(owner.Processor);
+		}
+	}
+
+	public sealed partial class UnitManagementReference(GameEngine owner) : ReferenceBase(owner);
+	public sealed partial class CityManagementReference(GameEngine owner) : ReferenceBase(owner);
+	public sealed partial class CityFoundingAndScoreReference(GameEngine owner) : ReferenceBase(owner);
+	public sealed partial class GameInitAndIntroReference(GameEngine owner) : ReferenceBase(owner);
+	public sealed partial class GovernmentAndDiplomacyReference(GameEngine owner) : ReferenceBase(owner);
+	public sealed partial class ScienceAndAdvisorsReference(GameEngine owner) : ReferenceBase(owner);
+	public sealed partial class GameStartupReference(GameEngine owner) : ReferenceBase(owner);
+	public sealed partial class SpaceshipScreenReference(GameEngine owner) : ReferenceBase(owner);
+	public sealed partial class StartGameMenuReference(GameEngine owner) : ReferenceBase(owner);
+	public sealed partial class GameReplayReference(GameEngine owner) : ReferenceBase(owner);
+	public sealed partial class MeetWithKingReference(GameEngine owner) : ReferenceBase(owner);
+}

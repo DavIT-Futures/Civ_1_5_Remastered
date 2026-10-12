@@ -16,12 +16,12 @@ namespace Civilization1Remaster.Tests.Differential
 	/// </summary>
 	public sealed class DifferentialPair : IDisposable
 	{
-		public DifferentialPair(string gameFolder, int bay, uint randomSeed = GoldenMasterTests.RandomSeed)
+		public DifferentialPair(string gameFolder, int bay, uint randomSeed = GoldenMasterTests.RandomSeed, int[]? script = null)
 		{
 			string saves = Path.Combine(GoldenMasterTests.SourceFolder(), "Saves");
 
-			this.Original = new HeadlessGame(gameFolder, saves);
-			this.Rewritten = new HeadlessGame(gameFolder, saves);
+			this.Original = new HeadlessGame(gameFolder, saves, script);
+			this.Rewritten = new HeadlessGame(gameFolder, saves, script);
 
 			this.Original.LoadAutosave(bay, randomSeed);
 			this.Rewritten.LoadAutosave(bay, randomSeed);

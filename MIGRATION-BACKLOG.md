@@ -36,6 +36,13 @@ i `MovementRules`. Testy `AssemblyParityDifferentialTests` porównują C# z ręc
 
 ## Refaktory, które zostały (przechodzą golden master)
 
+Testy różnicowe (`Civilization1Remaster.Tests/Differential`, README tam) porównują z oryginalnym kodem wszystkie przepisane
+funkcje, których golden master nie wykonuje (albo nie wszystkie gałęzie): `VisitHut`, `ShiftUnit`, `DisplayBattleScreen`,
+`LocateNearestFriendlyCity`, `EliminateSeaUnit`, `RestoreUnitOrders`, `AttachSmog`, `RenderScoreIcon`, `BlendTerrainTile`,
+`ObtainTerrainTypeFromScreen`, `LocateNearestCityOfPlayer`, `ObtainSpaceshipPartValue`, `WipeSpaceshipContent`,
+`AssignReplayCityContent(Alt)`, `RenewCityScreen`, `DisplayKingMessage`, `FreshWorldChoices` (2026-10-12; każdy test
+sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wprowadzony błąd).
+
 - `CityFoundingAndScore`: `DisplayFinalScore` (poprawione: specjaliści dają 1 punkt, zachowany kontrakt rejestrów
   SI/AX dla `TurnEvents`), `HandleCityDisasters` (zaraza, głód).
 - `CityManagement`: `ObtainCityTileIndex`, `AssignCitizenType`, `ObtainCitizenType`, `TallySpecialists`.
@@ -98,13 +105,6 @@ i `MovementRules`. Testy `AssemblyParityDifferentialTests` porównują C# z ręc
   wykonuje tylko `RenderCityResourceBar` i `ComposeProductionOption`, reszta porównana ręcznie.
 
 ## Następny krok
-
-Testy różnicowe (`Civilization1Remaster.Tests/Differential`, opis w README tam) dla już przepisanych funkcji, których
-golden master nie wykonuje albo wykonuje tylko częściowo. Jest `VisitHut` (wszystkie wyniki wioski). Do zrobienia:
-`DisplayBattleScreen` (klawisze i mysz), `ShiftUnit` (spotkania jednostek, statki, samoloty), `AttachSmog`, `RenderScoreIcon`,
-`BlendTerrainTile`, `LocateNearestCityOfPlayer`, `ObtainTerrainTypeFromScreen`, `RenewCityScreen`, `FreshWorldChoices`,
-`ObtainSpaceshipPartValue`, `WipeSpaceshipContent`, `AssignReplayCityContent(Alt)`, `DisplayKingMessage`,
-`LocateNearestFriendlyCity`, `EliminateSeaUnit`, `RestoreUnitOrders`. Potem dalsze przepisywanie:
 
 Dalej małe metody: w `SystemServices` (mysz, kolory: `BlankMouseCursor`, `RenderMouseCursor`, `ActivateHueCycle`, ...),
 `ReflowText` (`TextBlockRenderer`), `ObtainFirstPrerequisite` / `ObtainSecondPrerequisite` / `ObtainTechnologyCategory`
