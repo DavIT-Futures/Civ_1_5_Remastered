@@ -12,6 +12,12 @@ namespace Civilization1Remaster.Tests.Differential
 	/// </summary>
 	public class ScreenAndMapDifferentialTests(ITestOutputHelper output)
 	{
+		/// <summary>The spaceship layouts of all players (segment 0x3772)</summary>
+		public static readonly (ushort, ushort, int) SpaceshipLayout = (0x3772, 0x16e0, 8 * 0xb4);
+
+		/// <summary>The replay city table (segment 0x3725)</summary>
+		public static readonly (ushort, ushort, int) ReplayCities = (0x3725, 0, 0x300);
+
 		[Fact]
 		public void AttachSmogMatchesOriginalCode()
 		{
@@ -127,7 +133,7 @@ namespace Civilization1Remaster.Tests.Differential
 					return new Scenario($"WipeSpaceshipContent({participantIdx})", game => { },
 						game => new StartGameMenuReference(game).WipeSpaceshipContent(participantIdx),
 						game => game.NewGameWizard.WipeSpaceshipContent(participantIdx),
-						Register.Kept, game => "wiped");
+						Register.Kept, game => "wiped", [SpaceshipLayout]);
 				}
 
 				ushort row = (ushort)chance.Next(15);
@@ -138,7 +144,7 @@ namespace Civilization1Remaster.Tests.Differential
 					game => game.Processor.EmitUInt8(0x3772, (ushort)(0x16e0 + (0xb4 * participantIdx) + (0xc * row) + column), part),
 					game => new SpaceshipScreenReference(game).ObtainSpaceshipPartValue(participantIdx, row, column),
 					game => game.RocketScreen.ObtainSpaceshipPartValue(participantIdx, row, column),
-					Register.Acc | Register.Kept, game => game.Processor.RegAcc.Value16 != 0 ? "taken" : "free");
+					Register.Acc | Register.Kept, game => game.Processor.RegAcc.Value16 != 0 ? "taken" : "free", [SpaceshipLayout]);
 			}, output, ["wiped", "taken", "free"]);
 		}
 
@@ -178,7 +184,7 @@ namespace Civilization1Remaster.Tests.Differential
 						else
 							game.Replayer.AssignReplayCityContent(first, second, third);
 					},
-					Register.Kept, game => (alternate ? "change" : "add") + (full ? " to a full table" : ""));
+					Register.Kept, game => (alternate ? "change" : "add") + (full ? " to a full table" : ""), [ReplayCities]);
 			}, output, ["change", "add", "add to a full table"]);
 		}
 	}

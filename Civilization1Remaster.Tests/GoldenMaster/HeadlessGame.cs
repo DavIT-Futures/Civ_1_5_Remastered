@@ -67,6 +67,9 @@ namespace Civilization1Remaster.Tests.GoldenMaster
 		/// <summary>How many times each game function was called since the load or the start of the turn</summary>
 		public IReadOnlyDictionary<string, int> Calls => this.calls;
 
+		/// <summary>When not null, every call of a game function is added to it with its arguments (the differential tests)</summary>
+		public List<string>? Trace { get; set; }
+
 		/// <summary>The game end flag (0xdc48), not 0 when the game is over or the turn was left</summary>
 		public ushort GameEndFlag => this.processor.PullGlobalWord(0xdc48);
 
@@ -221,6 +224,7 @@ namespace Civilization1Remaster.Tests.GoldenMaster
 		private void CountCall(string scope)
 		{
 			this.lastScope = scope;
+			this.Trace?.Add(scope.Replace(this.folder, "<game folder>", StringComparison.Ordinal));
 			this.scopeTally++;
 			int end = scope.IndexOf('(');
 			string name = end < 0 ? scope : scope.Substring(0, end);

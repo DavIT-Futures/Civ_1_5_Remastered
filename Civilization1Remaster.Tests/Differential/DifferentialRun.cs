@@ -11,7 +11,7 @@ namespace Civilization1Remaster.Tests.Differential
 	/// <summary>One call of a function in both games: the setup, the original and the rewritten call, what is compared</summary>
 	/// <param name="Branch">Names the branch of the function the scenario took, from the rewritten game after the call</param>
 	public sealed record Scenario(string Name, Action<GameEngine> Prepare, Action<GameEngine> Original, Action<GameEngine> Rewritten,
-		DifferentialPair.Register Registers, Func<GameEngine, string>? Branch = null);
+		DifferentialPair.Register Registers, Func<GameEngine, string>? Branch = null, (ushort Segment, ushort Begin, int Length)[]? Watched = null);
 
 	/// <summary>Runs the scenarios of a differential test one after the other on one pair of games</summary>
 	public static class DifferentialRun
@@ -38,7 +38,7 @@ namespace Civilization1Remaster.Tests.Differential
 				pair.Prepare(scenario.Prepare);
 
 				string? difference = pair.Run($"AUTO{bay:00} scenario {scenarioIdx}: {scenario.Name}", scenario.Original, scenario.Rewritten,
-					scenario.Registers);
+					scenario.Registers, scenario.Watched);
 
 				Assert.True(difference == null, difference);
 

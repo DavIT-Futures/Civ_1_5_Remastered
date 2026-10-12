@@ -26,7 +26,7 @@ namespace Civilization1Remaster.Tests.Differential
 			this.Original.LoadAutosave(bay, randomSeed);
 			this.Rewritten.LoadAutosave(bay, randomSeed);
 
-			string? difference = Compare("after loading", null, null, Register.None);
+			string? difference = Compare("after loading", null, null, Register.None, null);
 
 			if (difference != null)
 				throw new InvalidOperationException(difference);
@@ -67,15 +67,58 @@ namespace Civilization1Remaster.Tests.Differential
 		/// Runs the original code in one game and the rewritten one in the other, and compares them
 		/// </summary>
 		/// <returns>The description of the differences, null when both games are the same</returns>
-		public string? Run(string scenario, Action<GameEngine> original, Action<GameEngine> rewritten, Register registers)
+		public string? Run(string scenario, Action<GameEngine> original, Action<GameEngine> rewritten, Register registers,
+			(ushort Segment, ushort Begin, int Length)[]? watched = null)
 		{
 			this.Original.Keyboard.ResetTurnCounter();
 			this.Rewritten.Keyboard.ResetTurnCounter();
 
+			this.Original.Trace = new List<string>();
+			this.Rewritten.Trace = new List<string>();
+
 			Exception? originalFailure = Invoke(original, this.Original.Engine);
 			Exception? rewrittenFailure = Invoke(rewritten, this.Rewritten.Engine);
 
-			return Compare(scenario, originalFailure, rewrittenFailure, registers);
+			List<string> originalTrace = this.Original.Trace;
+			List<string> rewrittenTrace = this.Rewritten.Trace;
+			this.Original.Trace = null;
+			this.Rewritten.Trace = null;
+
+			return Compare(scenario, originalFailure, rewrittenFailure, registers, watched) ??
+				CompareTraces(scenario, originalTrace, rewrittenTrace);
+		}
+
+		/// <summary>
+		/// The called game functions with their arguments, in their order, must be the same: it also catches different
+		/// arguments of a drawing call when the picture is empty
+		/// </summary>
+		private static string? CompareTraces(string scenario, List<string> original, List<string> rewritten)
+		{
+			int length = Math.Min(original.Count, rewritten.Count);
+
+			for (int idx = 0; idx < length; idx++)
+			{
+				if (original[idx] != rewritten[idx] && WithoutStackAddresses(original[idx]) != WithoutStackAddresses(rewritten[idx]))
+					return $"{scenario}: call {idx} differs from the original: {original[idx]} -> {rewritten[idx]}";
+			}
+
+			return original.Count == rewritten.Count ? null :
+				$"{scenario}: {original.Count} calls in the original, {rewritten.Count} in the rewritten code, the first missing: " +
+				(original.Count > rewritten.Count ? original[length] : rewritten[length]);
+		}
+
+		/// <summary>
+		/// Addresses in the stack (0xe8c0 - 0xf0bf, the stack starts at 0xf0c0) passed as arguments, like a text buffer of a
+		/// caller, move when a rewritten function has no stack frame any more; their content is compared with the memory
+		/// </summary>
+		private static string WithoutStackAddresses(string call)
+		{
+			return System.Text.RegularExpressions.Regex.Replace(call, "0x[0-9a-f]{4}", match =>
+			{
+				int amount = Convert.ToInt32(match.Value, 16);
+
+				return amount >= 0xe8c0 && amount < 0xf0c0 ? "<stack>" : match.Value;
+			});
 		}
 
 		private static Exception? Invoke(Action<GameEngine> action, GameEngine engine)
@@ -91,10 +134,11 @@ namespace Civilization1Remaster.Tests.Differential
 			}
 		}
 
-		private string? Compare(string scenario, Exception? originalFailure, Exception? rewrittenFailure, Register registers)
+		private string? Compare(string scenario, Exception? originalFailure, Exception? rewrittenFailure, Register registers,
+			(ushort Segment, ushort Begin, int Length)[]? watched)
 		{
-			SortedDictionary<string, string> expected = Describe(this.Original, originalFailure, registers);
-			SortedDictionary<string, string> actual = Describe(this.Rewritten, rewrittenFailure, registers);
+			SortedDictionary<string, string> expected = Describe(this.Original, originalFailure, registers, watched);
+			SortedDictionary<string, string> actual = Describe(this.Rewritten, rewrittenFailure, registers, watched);
 
 			List<string> lines = expected.Keys.Union(actual.Keys).OrderBy(key => key, StringComparer.Ordinal)
 				.Where(key => !expected.TryGetValue(key, out string? left) || !actual.TryGetValue(key, out string? right) || left != right)
@@ -114,7 +158,8 @@ namespace Civilization1Remaster.Tests.Differential
 			return text.ToString();
 		}
 
-		private static SortedDictionary<string, string> Describe(HeadlessGame game, Exception? failure, Register registers)
+		private static SortedDictionary<string, string> Describe(HeadlessGame game, Exception? failure, Register registers,
+			(ushort Segment, ushort Begin, int Length)[]? watched)
 		{
 			GameSnapshot snapshot = game.Capture();
 			SortedDictionary<string, string> values = new SortedDictionary<string, string>(snapshot.Values, StringComparer.Ordinal);
@@ -127,6 +172,13 @@ namespace Civilization1Remaster.Tests.Differential
 			}
 
 			CPU processor = game.Engine.Processor;
+
+			// Memory outside the data segment that the GameSnapshot doesn't see (tables in other segments)
+			foreach ((ushort segment, ushort begin, int length) in watched ?? [])
+			{
+				for (int idx = 0; idx < length; idx++)
+					values[$"watch.{segment:x4}:{begin + idx:x4}"] = processor.PullUInt8(segment, (ushort)(begin + idx)).ToString("x2");
+			}
 
 			AddRegister(values, registers, Register.Acc, "ax", processor.RegAcc.Value16);
 			AddRegister(values, registers, Register.Base, "bx", processor.RegBase.Value16);

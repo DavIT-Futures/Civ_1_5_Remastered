@@ -15,6 +15,11 @@ compares it with its original code, in many scenarios that the saves don't reach
   generator, stack pointer, call counts), the pictures of all screens, the registers the callers depend on (SI, DI, BP, SP,
   and AX for a function that returns a value) and an exception, if one is thrown. While both games match, they stay
   identical, so the scenarios run one after the other without loading again.
+- The order of the called game functions with their arguments (the journal scopes) must be the same too; it catches a
+  wrong argument of a drawing call even when the picture is empty. Addresses in the stack (0xe8c0 - 0xf0bf) are left out of
+  it: a buffer of a caller moves when a rewritten function has no stack frame any more.
+- `GameSnapshot` sees only the data segment 0x3b01. A function that writes tables in other segments (the spaceship and the
+  Hall of Fame at 0x3772, the replay at 0x3725, the colour cycles at 0x35cf, ...) names them in `Scenario.Watched`.
 - A test also checks that its scenarios met every branch of the function (for example every outcome of a hut), otherwise
   a green test would not say much.
 
@@ -29,7 +34,8 @@ setting them, see `ShiftUnitFrame` in `UnitManagement`); the golden master is st
 2. Write the scenarios with `DifferentialRun.Check` (see `UnitDifferentialTests.cs`): random inputs with a fixed seed (`new Random(bay)`) plus the edge cases, set up identically in both
    games through `Prepare`, and an assertion that every branch was met.
 3. Check that the test catches a mistake: change the rewritten function a little (for example a constant), the test must
-   fail, then undo it.
+   fail, then undo it. Undo with a patch of the uncommitted work (`git diff > work.patch`, then `git checkout` and
+   `git apply work.patch`), never with a bare `git checkout` of the folder.
 
 ## Running
 
