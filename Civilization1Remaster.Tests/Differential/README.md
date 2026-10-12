@@ -18,6 +18,11 @@ compares it with its original code, in many scenarios that the saves don't reach
 - The order of the called game functions with their arguments (the journal scopes) must be the same too; it catches a
   wrong argument of a drawing call even when the picture is empty. Addresses in the stack (0xe8c0 - 0xf0bf) are left out of
   it: a buffer of a caller moves when a rewritten function has no stack frame any more.
+- Every time the scripted keyboard types a key, the hash of every screen goes into that trace too: windows, messages and
+  pictures that a function takes away again before it returns (the screen is put back from the back screen 0x19d4) are
+  compared as the player saw them.
+- The snapshot does not see files and leaves out the mouse state (0x586e - 0x5873); a test that needs them copies them into
+  the data segment or names them in `Watched` (see `BatchElevenDifferentialTests`, `BatchTwelveDifferentialTests`).
 - `GameSnapshot` sees only the data segment 0x3b01. A function that writes tables in other segments (the spaceship and the
   Hall of Fame at 0x3772, the replay at 0x3725, the colour cycles at 0x35cf, ...) names them in `Scenario.Watched`.
 - A test also checks that its scenarios met every branch of the function (for example every outcome of a hut), otherwise

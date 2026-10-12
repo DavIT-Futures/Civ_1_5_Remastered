@@ -135,15 +135,20 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   zostaje jako bufor nazwy pliku), `DisplayHelpPopupForHuman` (`InGameHelp`), `StoreGame` (`GameLoadAndSave`; test porównuje
   zapisane pliki .SVE/.MAP/.HP przez hasz w segmencie danych, tylko poziomy 0 - 4: wskaźnik nazwy poziomu 5 trafia w śmieci),
   `RenderIcon` (`Civilopedia`). Testy w `BatchTwelveDifferentialTests`.
+- Kolejne 5 modułów (2026-10-12): `DisplayHelpPopup` (`InGameHelp`), `FireSpaceship` (`SpaceshipScreen`),
+  `RenderReportPreamble` (`AdvisorReports`), `DisplayCityLabelPrompt` (`NewCityScreen`), `AffirmBreakTreaty` (`UnitCombat`).
+  Testy w `BatchThirteenDifferentialTests`. Przy okazji: ślad wywołań testów różnicowych zawiera teraz hasze ekranów
+  z chwili każdego naciśnięcia klawisza (okna znikające przed końcem funkcji), a `FloodBox` loguje swoje argumenty
+  szesnastkowo (wcześniej `{style:4}` wypisywało zawsze „4”, więc kolor nie był porównywany).
 
 ## Następny krok
 
 Dalej małe metody (`python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 60`:
 metody z co najmniej 2 liniami `goto L` / `FlagSet` / `Compare…` / `SumWord` itd., od najkrótszej): w `SystemServices` `DeactivateMouse` (dziwny kontrakt rejestrów AX/BX), `PointerEvent`, `RenderCursorToScreen`,
 `RecoverScreenUnderCursor`, `DisplayScreen`, `ImportColorsFromBuffer`, `FloodColors`, `FadeColors`; `SnapHeapPointer` (`VGADriver`),
-`FireSpaceship` (`SpaceshipScreen`), `ArrangeTextRow` (`TextBlockRenderer`), `DisplayHelpPopup` (`InGameHelp`),
-`RenderTextInputField`, `DisplayCityLabelPrompt` (`NewCityScreen`), `RenderReportPreamble` (`AdvisorReports`),
-`AffirmBreakTreaty` (`UnitCombat`),
+`ArrangeTextRow` (`TextBlockRenderer`), `RenderTextInputField`, `DisplayLabelInputBox` (`NewCityScreen`),
+`EnactNuclearFallout` (`UnitCombat`), `ManageMenuBar`, `DisplayWorldMenu` (`GameMenus`), `SwapTechnology` (`GovernmentAndDiplomacy`),
+`RenderSpaceScenery` (`SpaceshipScreen`), `DisplayRevolutionScreen` (`StartGameMenu`), `DisplayConquerorScreen` (`GameReplay`),
 reszta generatora mapy w `GameInitAndIntro`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
