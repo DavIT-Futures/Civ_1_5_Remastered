@@ -377,15 +377,12 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// Opens the city screen from an advisor: the advisor screen is kept, the city is handled with its screen (HandleCity),
+		/// then the advisor screen comes back, or the main screen when the city screen asked for it (0x6b64)
 		/// </summary>
-		/// <param name="cityID"></param>
 		public void RenewCityScreen(short townIdx)
 		{
 			this.processor.Journal.OpenScope($"RenewCityScreen({townIdx})");
-
-			// function body
-			this.processor.EnterFrame(0x2);
 
 			RenderAdvisorScenery();
 
@@ -393,20 +390,15 @@ namespace Civilization1Remaster.Game
 
 			this.owner.CityOps.HandleCity(townIdx, 1);
 
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x6b64), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L0419;
+			if (this.processor.PullGlobalWord(0x6b64) != 0)
+			{
+				this.owner.TurnHooks.RepaintMainScreen();
+			}
+			else
+			{
+				RecoverAdvisorScenery();
+			}
 
-			this.owner.TurnHooks.RepaintMainScreen();
-
-			goto L041d;
-
-		L0419:
-			RecoverAdvisorScenery();
-
-		L041d:
-			this.processor.RegStack.Value16 = this.processor.RegFrame.Value16;
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-			// Far return
 			this.processor.Journal.CloseScope("RenewCityScreen");
 		}
 

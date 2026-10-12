@@ -88,11 +88,15 @@ i `MovementRules`. Testy `AssemblyParityDifferentialTests` porównują C# z ręc
   `FreeStrategicLocation`, `AffixStrategicLocation`, `DisableStrategicLocation` (`AIPlayer`). Golden master nie wykonuje
   `AttachSmog`, `RenderScoreIcon`, `BlendTerrainTile`, `LocateNearestCityOfPlayer` i `ObtainTerrainTypeFromScreen`
   (porównane z oryginałem ręcznie).
+- Kolejne 6 modułów (2026-10-12): `RenewCityScreen` (`ScienceAndAdvisors`), `RefreshCityProduction` (`AIPlayer`),
+  `AwaitForKeyPressOrMouseClick` (`TradeAndConquest`), `AwaitForKey` (`PlayerTurn`), `FreshWorldChoices` (`GameStartup`),
+  `ShrinkTextToWidth` (`TextBlockRenderer`). Golden master nie wykonuje `RenewCityScreen` i `FreshWorldChoices`
+  (porównane ręcznie).
 
 ## Następny krok
 
-Dalej małe metody gry: `RenewCityScreen` (`ScienceAndAdvisors`), `RefreshCityProduction` (`AIPlayer`),
-`AwaitForKeyPressOrMouseClick` (`TradeAndConquest`), `AwaitForKey` (`PlayerTurn`), `FreshWorldChoices` (`GameStartup`);
+Dalej małe metody: w `SystemServices` (mysz, kolory: `BlankMouseCursor`, `RenderMouseCursor`, `ActivateHueCycle`, ...),
+`ReflowText` (`TextBlockRenderer`), `BlendTerrainTile` jest już zrobione, w `GameInitAndIntro` reszta generatora mapy;
 do wyszukania: skrypt z liczbą `goto L` / `EnterFrame` na metodę, posortowany po długości. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180)
 i `AIPlayer` (870). Najmniejsze metody w stylu asm można znaleźć skryptem,
 który szuka `goto L`, `EnterFrame`, `ScaleIndex` itd. i sortuje po liczbie wywołań w kanale `call.` baseline.

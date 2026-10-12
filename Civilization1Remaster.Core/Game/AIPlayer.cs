@@ -4771,47 +4771,26 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// The cities of the player choose their production again (PickNewCityProduction): all of them, or with arg2 not 0xffff
+		/// only the cities on that continent
 		/// </summary>
-		/// <param name="playerID"></param>
-		/// <param name="param2"></param>
 		public void RefreshCityProduction(short participantIdx, ushort arg2)
 		{
 			this.processor.Journal.OpenScope($"RefreshCityProduction({participantIdx}, {arg2})");
 
-			// function body
-			this.processor.EnterFrame(0x2);
-			this.processor.PreserveSource();
-			this.processor.EmitLocalWord(0x2, 0x0);
+			for (short townIdx = 0; townIdx < 0x80; townIdx++)
+			{
+				City town = this.owner.World.Towns[townIdx];
 
-		L3465:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToSource(this.processor.PullLocalWord(0x2));
-			this.processor.RegAcc.Value16 = (byte)this.owner.World.Towns[this.processor.PullLocalWord(0x2)].ParticipantIdx;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, (ushort)participantIdx);
-			if (this.processor.FlagSet.IsNotEqual) goto L34a7;
-			this.processor.CompareByte(this.owner.World.Towns[this.processor.PullLocalWord(0x2)].ConditionMarker, 0xff);
-			if (this.processor.FlagSet.IsEqual) goto L34a7;
-			this.processor.CompareWord(arg2, 0xffff);
-			if (this.processor.FlagSet.IsEqual) goto L349d;
+				if ((byte)town.ParticipantIdx != (ushort)participantIdx || town.ConditionMarker == 0xff)
+					continue;
 
-			this.owner.MapOps.ObtainContinentID(
-				this.owner.World.Towns[this.processor.PullLocalWord(0x2)].Place.X,
-				this.owner.World.Towns[this.processor.PullLocalWord(0x2)].Place.Y);
+				if (arg2 != 0xffff && this.owner.MapOps.ObtainContinentID(town.Place.X, town.Place.Y) != arg2)
+					continue;
 
-			this.processor.CompareWord(this.processor.RegAcc.Value16, arg2);
-			if (this.processor.FlagSet.IsNotEqual) goto L34a7;
+				PickNewCityProduction(townIdx);
+			}
 
-		L349d:
-			PickNewCityProduction(this.processor.PullLocalSignedWord(0x2));
-
-		L34a7:
-			this.processor.EmitLocalWord(0x2, this.processor.IncrementWord(this.processor.PullLocalWord(0x2)));
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x80);
-			if (this.processor.FlagSet.IsLess) goto L3465;
-			this.processor.RestoreSource();
-			this.processor.LeaveFrame();
-			// Far return
 			this.processor.Journal.CloseScope("RefreshCityProduction");
 		}
 

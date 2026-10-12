@@ -706,35 +706,30 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <summary>
-		/// ?
+		/// The choices of a new game (only before the first turn, after the picture 0x1c16) and the government pictures
 		/// </summary>
 		public void FreshWorldChoices()
 		{
 			this.processor.Journal.OpenScope("FreshWorldChoices()");
 
-			// function body
-			this.processor.EnterFrame(0x6);
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x1a3c), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L0899;
+			if (this.processor.PullGlobalWord(0x1a3c) != 0)
+			{
+				this.owner.Services.AssignMouseCursorImage(0, 0, this.processor.PullGlobalWord(0xd4dc));
+			}
 
-			this.owner.Services.AssignMouseCursorImage(0, 0, this.processor.PullGlobalWord(0xd4dc));
+			if (this.owner.World.RoundTally == 0)
+			{
+				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x1c16, 1);
 
-		L0899:
-			if (this.owner.World.RoundTally != 0) goto L08c5;
+				QueryForDisk(0, 1);
 
-			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x1c16, 1);
+				this.owner.NewGameWizard.ConfigureFreshGame();
+			}
 
-			QueryForDisk(0, 1);
-
-			this.owner.NewGameWizard.ConfigureFreshGame();
-
-		L08c5:
 			this.owner.NewGameWizard.ImportGovernmentGraphics();
 
 			QueryForDisk(0, 1);
 
-			this.processor.LeaveFrame();
-			// Far return
 			this.processor.Journal.CloseScope("FreshWorldChoices");
 		}
 	}

@@ -774,39 +774,28 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// Waits for Key press or Mouse click
+		/// Waits for a key or a mouse click; a key is taken (with the second code of an extended key)
 		/// </summary>
 		public void AwaitForKeyPressOrMouseClick()
 		{
 			this.processor.Journal.OpenScope("AwaitForKeyPressOrMouseClick()");
 
-			// function body
 			this.owner.TurnLogic.AwaitForKey();
 
-		L091d:
-			this.owner.Startup.ObtainMouseState();
+			do
+			{
+				this.owner.Startup.ObtainMouseState();
 
-			this.processor.CompareWord(this.owner.GlobDb3a, 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L0932;
+				if (this.owner.GlobDb3a != 0)
+					break;
+			}
+			while (this.owner.Libc.KeyAvailable() == 0);
 
-			this.owner.Libc.KeyAvailable();
+			if (this.owner.GlobDb3a == 0 && this.owner.Libc.ReadKey() == 0)
+			{
+				this.owner.Libc.ReadKey();
+			}
 
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual) goto L091d;
-
-		L0932:
-			this.processor.CompareWord(this.owner.GlobDb3a, 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L0947;
-
-			this.owner.Libc.ReadKey();
-
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsNotEqual) goto L0947;
-
-			this.owner.Libc.ReadKey();
-
-		L0947:
-			// Far return
 			this.processor.Journal.CloseScope("AwaitForKeyPressOrMouseClick");
 		}
 

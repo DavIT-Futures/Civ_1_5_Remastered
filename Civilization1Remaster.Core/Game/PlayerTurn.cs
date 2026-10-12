@@ -6166,31 +6166,23 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// Throws away the keys waiting and waits until the mouse buttons are released
 		/// </summary>
 		public void AwaitForKey()
 		{
 			this.processor.Journal.OpenScope("AwaitForKey()");
 
-			// function body
-			goto L454c;
+			while (this.owner.Libc.KeyAvailable() != 0)
+			{
+				this.owner.Dialogs.ObtainNavigationKey();
+			}
 
-		L4547:
-			this.owner.Dialogs.ObtainNavigationKey();
+			do
+			{
+				this.owner.Startup.ObtainMouseState();
+			}
+			while (this.owner.GlobDb3a != 0);
 
-		L454c:
-			this.owner.Libc.KeyAvailable();
-
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsNotEqual) goto L4547;
-
-		L4555:
-			this.owner.Startup.ObtainMouseState();
-
-			this.processor.CompareWord(this.owner.GlobDb3a, 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L4555;
-
-			// Far return
 			this.processor.Journal.CloseScope("AwaitForKey");
 		}
 

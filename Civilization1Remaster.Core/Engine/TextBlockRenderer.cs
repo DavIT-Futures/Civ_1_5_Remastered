@@ -451,49 +451,23 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <summary>
-		/// ?
+		/// Shortens the text until it fits the width: the last character goes, and the one before becomes a dot (unless the
+		/// character two before the end is a space)
 		/// </summary>
-		/// <param name="stringPtr"></param>
-		/// <param name="maxWidth"></param>
 		public void ShrinkTextToWidth(ushort charsAddr, ushort peakBreadth)
 		{
 			this.processor.Journal.OpenScope($"ShrinkTextToWidth(0x{charsAddr:x4}, {peakBreadth})");
 
-			// function body
-			this.processor.EnterFrame();
-			this.processor.PreserveSource();
-			goto L0537;
+			while ((short)this.owner.TextPainter.ObtainTextWidth(charsAddr) > (short)peakBreadth)
+			{
+				if (this.processor.PullGlobalByte((ushort)(charsAddr + this.owner.Libc.TextLength(charsAddr) - 3)) != 0x20)
+				{
+					this.processor.EmitGlobalByte((ushort)(charsAddr + this.owner.Libc.TextLength(charsAddr) - 2), 0x2e);
+				}
 
-		L04fd:
-			this.owner.Libc.TextLength(charsAddr);
+				this.processor.EmitGlobalByte((ushort)(charsAddr + this.owner.Libc.TextLength(charsAddr) - 1), 0x0);
+			}
 
-			this.processor.RegSource.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegBase.Value16 = charsAddr;
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 - 0x3)), 0x20);
-			if (this.processor.FlagSet.IsEqual) goto L0525;
-
-			this.owner.Libc.TextLength(this.processor.RegBase.Value16);
-
-			this.processor.RegSource.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegBase.Value16 = charsAddr;
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 - 0x2), 0x2e);
-
-		L0525:
-			this.owner.Libc.TextLength(this.processor.RegBase.Value16);
-
-			this.processor.RegSource.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegBase.Value16 = charsAddr;
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 - 0x1), 0x0);
-
-		L0537:
-			this.owner.TextPainter.ObtainTextWidth(charsAddr);
-
-			this.processor.CompareWord(this.processor.RegAcc.Value16, peakBreadth);
-			if (this.processor.FlagSet.IsGreater) goto L04fd;
-
-			this.processor.RestoreSource();
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-			// Far return
 			this.processor.Journal.CloseScope("ShrinkTextToWidth");
 		}
 	}
