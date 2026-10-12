@@ -137,6 +137,20 @@ namespace Civilization1Remaster
 
 		public void Launch()
 		{
+			PrepareMachine();
+
+			// Call our 'short Main()' function
+			this.Startup.RunGame();
+
+			this.Libc.TerminateProgram((short)this.processor.RegAcc.Value16);
+		}
+
+		/// <summary>
+		/// Sets up the memory, the registers and the data of the emulated program, everything before its main function runs.
+		/// A host without a window (the tests) calls this and then the game functions it needs.
+		/// </summary>
+		public void PrepareMachine()
+		{
 			ushort startingStackseg = 0x398d; // oEXE.InitialSS;
 			ushort startingStackptr = 0x0800; // oEXE.InitialSP;
 
@@ -366,11 +380,6 @@ namespace Civilization1Remaster
 			// Defaults are OK, no need to modify bytes at 0x590a - 0x590e
 
 			this.processor.RegFrame.Value16 = 0x0;
-
-			// Call our 'short Main()' function
-			this.Startup.RunGame();
-
-			this.Libc.TerminateProgram((short)this.processor.RegAcc.Value16);
 		}
 
 		public CPU Processor

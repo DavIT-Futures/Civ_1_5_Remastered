@@ -144,7 +144,7 @@ namespace Civilization1Remaster.Engine
 
 			while (this.processor.PullGlobalSignedWord(0x5c) < holdMoment)
 			{
-				Thread.Sleep(1);
+				this.processor.Idle();
 			}
 		}
 	}

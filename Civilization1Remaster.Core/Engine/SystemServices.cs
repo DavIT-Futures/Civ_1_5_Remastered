@@ -549,8 +549,13 @@ namespace Civilization1Remaster.Engine
 			FadeColors(arg1);
 
 		L04c9:
+			// Waits until the timer interrupt has finished the fade
 			this.processor.CompareWord(this.processor.PullGlobalWord(0x68), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L04c9;
+			if (this.processor.FlagSet.IsNotEqual)
+			{
+				this.processor.Idle();
+				goto L04c9;
+			}
 
 			this.processor.RegDest.Value16 = this.processor.UnstackWord();
 			this.processor.RestoreSource();
@@ -595,8 +600,13 @@ namespace Civilization1Remaster.Engine
 			FadeColors(arg1);
 
 		L0501:
+			// Waits until the timer interrupt has finished the fade
 			this.processor.CompareWord(this.processor.PullGlobalWord(0x68), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L0501;
+			if (this.processor.FlagSet.IsNotEqual)
+			{
+				this.processor.Idle();
+				goto L0501;
+			}
 
 			this.processor.RegDest.Value16 = this.processor.UnstackWord();
 			this.processor.RestoreSource();

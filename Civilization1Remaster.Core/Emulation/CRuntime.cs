@@ -27,6 +27,9 @@ namespace Civilization1Remaster.Emulation
 		#region Keyboard operations
 		public short KeyAvailable()
 		{
+			if (this.owner.VideoCard.Tokens.Count == 0)
+				this.processor.InputStarved?.Invoke(false);
+
 			this.processor.RegAcc.Value16 = (ushort)((this.owner.VideoCard.Tokens.Count > 0) ? 0xffff : 0);
 
 			return (short)this.processor.RegAcc.Value16;
@@ -36,6 +39,10 @@ namespace Civilization1Remaster.Emulation
 		{
 			while (this.owner.VideoCard.Tokens.Count == 0)
 			{
+				this.processor.InputStarved?.Invoke(true);
+				if (this.owner.VideoCard.Tokens.Count > 0)
+					break;
+
 				Thread.Sleep(10);
 				this.processor.PumpMessages();
 			}

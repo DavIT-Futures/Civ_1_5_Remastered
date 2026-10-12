@@ -52,7 +52,8 @@ namespace Civilization1Remaster.UI
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 			this.owner.Conquest.ObtainCityLabel(townIdx);
 			string settlementTitle = this.processor.PullText(CPU.AsLinearAddress(this.processor.SegData.Value16, 0xba06));
-			RandomMT19937 dice = new RandomMT19937((uint)settlementTitle.GetHashCode());
+			// string.GetHashCode is different in every run of the program, a stable hash draws the same picture every time
+			RandomMT19937 dice = new RandomMT19937(StableTextHash(settlementTitle));
 
 			horizLoc1 = 9;
 			vertLoc1 = 11;
@@ -1556,6 +1557,22 @@ namespace Civilization1Remaster.UI
 			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("RenderCitySceneryForHuman");
+		}
+
+		/// <summary>
+		/// FNV-1a hash of the text, the same in every run of the program
+		/// </summary>
+		private static uint StableTextHash(string words)
+		{
+			uint hash = 2166136261;
+
+			for (int idx = 0; idx < words.Length; idx++)
+			{
+				hash ^= words[idx];
+				hash *= 16777619;
+			}
+
+			return hash;
 		}
 	}
 }

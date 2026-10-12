@@ -50,6 +50,9 @@ namespace Civilization1Remaster.Emulation
 		// Timer chip divisor, read from the game memory by the game thread (0x4dae is 60 interrupts per second)
 		private volatile int clockDenominator = 0x4dae;
 		private readonly Thread clockWorker;
+		// Test seam: when not 0, the timer interrupts are counted from the memory accesses of the game instead of the real time
+		private int fixedClockSpan = 0;
+		private int fixedClockSteps = 0;
 
 		// The game programs the timer chip (8253) with this divisor, normally for 60 interrupts per second
 		private const ushort ClockContentSection = 0x3b01;
@@ -133,6 +136,50 @@ namespace Civilization1Remaster.Emulation
 			set { this.allowClock = value; this.waitingClockBeats = 0; }
 		}
 
+		/// <summary>
+		/// Test seam for runs without a window that must be reproducible: when not 0, a timer interrupt is due after this many
+		/// memory accesses of the game instead of after the real time, and the timer thread stops counting.
+		/// </summary>
+		public int FixedClockSpan
+		{
+			get { return this.fixedClockSpan; }
+			set { this.fixedClockSpan = value; this.fixedClockSteps = 0; this.waitingClockBeats = 0; }
+		}
+
+		/// <summary>
+		/// Test seam: called when the game looks for a key and none is waiting. The argument is true when the game waits for the key.
+		/// A scripted host puts the next key into the input queue here.
+		/// </summary>
+		public Action<bool>? InputStarved { get; set; }
+
+		/// <summary>
+		/// The game waits for the timer. With the real time clock this sleeps a bit, with the fixed clock (FixedClockSpan)
+		/// the next timer interrupt is due at once, so the waits take no time and don't depend on the speed of the computer.
+		/// </summary>
+		public void Idle()
+		{
+			if (this.fixedClockSpan != 0)
+			{
+				if (this.allowClock)
+				{
+					this.fixedClockSteps = 0;
+					this.waitingClockBeats = 1;
+				}
+			}
+			else
+			{
+				Thread.Sleep(1);
+			}
+		}
+
+		/// <summary>
+		/// Stops the timer thread, for a game that is dropped without leaving through Quit
+		/// </summary>
+		public void Shutdown()
+		{
+			this.appQuit = true;
+		}
+
 		public bool Hold
 		{
 			get { return this.breakActive; }
@@ -165,7 +212,7 @@ namespace Civilization1Remaster.Emulation
 					continue;
 				}
 
-				if (this.allowClock && Volatile.Read(ref this.waitingClockBeats) < PeakWaitingClockBeats)
+				if (this.fixedClockSpan == 0 && this.allowClock && Volatile.Read(ref this.waitingClockBeats) < PeakWaitingClockBeats)
 				{
 					Interlocked.Increment(ref this.waitingClockBeats);
 				}
@@ -206,6 +253,12 @@ namespace Civilization1Remaster.Emulation
 				}
 
 				Thread.Sleep(200);
+			}
+
+			if (this.fixedClockSpan != 0 && this.allowClock && ++this.fixedClockSteps >= this.fixedClockSpan)
+			{
+				this.fixedClockSteps = 0;
+				this.waitingClockBeats = 1;
 			}
 
 			if (this.allowSignal && this.allowClock && Volatile.Read(ref this.waitingClockBeats) > 0 && !this.insideClock)
@@ -1987,6 +2040,10 @@ namespace Civilization1Remaster.Emulation
 		{
 			while (this.host.InputTokens.Count == 0)
 			{
+				this.InputStarved?.Invoke(true);
+				if (this.host.InputTokens.Count > 0)
+					break;
+
 				Thread.Sleep(10);
 				this.PumpMessages();
 			}
@@ -2120,6 +2177,11 @@ namespace Civilization1Remaster.Emulation
 			}
 			else
 			{
+				if (this.host.InputTokens.Count == 0)
+				{
+					this.InputStarved?.Invoke(false);
+				}
+
 				if (this.host.InputTokens.Count > 0)
 				{
 					markers.IsZero = false;

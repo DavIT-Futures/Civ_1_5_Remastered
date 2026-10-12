@@ -25,6 +25,11 @@ namespace Civilization1Remaster
 
 		public static bool On { get; } = Environment.GetEnvironmentVariable("CIVILIZATION1REMASTER_LOG")?.Trim() == "1";
 
+		/// <summary>
+		/// Test seam: receives the text of every opened scope (the called game function), also when the log file is off
+		/// </summary>
+		public Action<string>? ScopeListener { get; set; }
+
 		public IStackProbe? Probe
 		{
 			get { return this.probe; }
@@ -38,6 +43,8 @@ namespace Civilization1Remaster
 
 		public void OpenScope(string words, bool displayLatches)
 		{
+			this.ScopeListener?.Invoke(words);
+
 			if (this.journal != null)
 			{
 				if (this.pile.Count != this.journalIndentTier)
