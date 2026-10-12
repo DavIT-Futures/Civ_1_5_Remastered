@@ -1324,39 +1324,32 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// The next icon of the score screen: 8 pixels right of the last one (0xb25c); after x 292 a new row (0xb2bc grows by
+		/// 0x5116) starting at x 16 or 20. Nothing is drawn below row 160.
 		/// </summary>
-		/// <param name="param1"></param>
+		/// <param name="arg1">Picture of the icon, from the table at 0x6e96</param>
 		public void RenderScoreIcon(ushort arg1)
 		{
 			this.processor.Journal.OpenScope($"RenderScoreIcon({arg1})");
 
-			// function body
-			this.processor.EnterFrame();
-			this.processor.EmitGlobalWord(0xb25c, this.processor.SumWord(this.processor.PullGlobalWord(0xb25c), 0x8));
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xb25c), 0x124);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L141d;
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x5116);
-			this.processor.EmitGlobalWord(0xb2bc, this.processor.SumWord(this.processor.PullGlobalWord(0xb2bc), this.processor.RegAcc.Value16));
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0xb2bc);
-			this.processor.RegAcc.Value16 = this.processor.ShiftRightSignedWord(this.processor.RegAcc.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.BitAndWord(this.processor.RegAcc.Value16, 0x4);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x10);
-			this.processor.EmitGlobalWord(0xb25c, this.processor.RegAcc.Value16);
+			short iconLeft = (short)(this.processor.PullGlobalWord(0xb25c) + 8);
+			this.processor.EmitGlobalWord(0xb25c, (ushort)iconLeft);
 
-		L141d:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xb2bc), 0xa0);
-			if (this.processor.FlagSet.IsGreater) goto L1442;
+			if (iconLeft > 0x124)
+			{
+				short iconTop = (short)(this.processor.PullGlobalWord(0xb2bc) + this.processor.PullGlobalWord(0x5116));
+				this.processor.EmitGlobalWord(0xb2bc, (ushort)iconTop);
+				this.processor.EmitGlobalWord(0xb25c, (ushort)(((iconTop >> 1) & 0x4) + 0x10));
+			}
 
-			this.owner.Services.RenderPictureToScreen(
-				this.processor.PullGlobalWord(0xaa),
-				this.processor.PullGlobalSignedWord(0xb25c),
-				this.processor.PullGlobalSignedWord(0xb2bc),
-				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((arg1 << 1) + 0x6e96)));
+			if (this.processor.PullGlobalSignedWord(0xb2bc) <= 0xa0)
+			{
+				this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa),
+					this.processor.PullGlobalSignedWord(0xb25c),
+					this.processor.PullGlobalSignedWord(0xb2bc),
+					this.processor.PullGlobalWord((ushort)((arg1 << 1) + 0x6e96)));
+			}
 
-		L1442:
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-			// Far return
 			this.processor.Journal.CloseScope("RenderScoreIcon");
 		}
 	}

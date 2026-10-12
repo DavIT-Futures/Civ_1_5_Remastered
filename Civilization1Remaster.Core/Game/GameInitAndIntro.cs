@@ -644,47 +644,24 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// On the map being made (screen 1) the tile becomes land (colour 1) unless one of its four diagonal neighbours is land
 		/// </summary>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
 		public void BlendTerrainTile(short horizLoc, short vertLoc)
 		{
 			this.processor.Journal.OpenScope($"BlendTerrainTile({horizLoc}, {vertLoc})");
 
-			// function body
-			this.processor.EnterFrame();
+			if (this.owner.VideoCard.ObtainDot(1, horizLoc - 1, vertLoc - 1) == 1 ||
+				this.owner.VideoCard.ObtainDot(1, horizLoc - 1, vertLoc + 1) == 1 ||
+				this.owner.VideoCard.ObtainDot(1, horizLoc + 1, vertLoc - 1) == 1 ||
+				this.owner.VideoCard.ObtainDot(1, horizLoc + 1, vertLoc + 1) == 1)
+			{
+				this.processor.RegAcc.Value16 = 0;
+			}
+			else
+			{
+				this.owner.Services.AssignDot(1, horizLoc, vertLoc, 1);
+			}
 
-			this.owner.VideoCard.ObtainDot(1, horizLoc - 1, vertLoc - 1);
-
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1);
-			if (this.processor.FlagSet.IsNotEqual) goto L05f6;
-
-		L05f2:
-			this.processor.RegAcc.Value16 = 0;
-			goto L065a;
-
-		L05f6:
-			this.owner.VideoCard.ObtainDot(1, horizLoc - 1, vertLoc + 1);
-
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1);
-			if (this.processor.FlagSet.IsEqual) goto L05f2;
-
-			this.owner.VideoCard.ObtainDot(1, horizLoc + 1, vertLoc - 1);
-
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1);
-			if (this.processor.FlagSet.IsEqual) goto L05f2;
-
-			this.owner.VideoCard.ObtainDot(1, horizLoc + 1, vertLoc + 1);
-
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1);
-			if (this.processor.FlagSet.IsEqual) goto L05f2;
-
-			this.owner.Services.AssignDot(1, horizLoc, vertLoc, 1);
-
-		L065a:
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-			// Far return
 			this.processor.Journal.CloseScope("BlendTerrainTile");
 		}
 

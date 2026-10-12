@@ -1813,40 +1813,28 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// Score needed for the palace level: the sum of level * (7 - difficulty) for the levels 0 up to the given one, halved,
+		/// plus 1
 		/// </summary>
-		/// <param name="palaceLevel"></param>
+		/// <returns>Score, also in AX</returns>
 		public ushort ObtainPalaceScoreForLevel(short castleTier)
 		{
 			this.processor.Journal.OpenScope($"ObtainPalaceScoreForLevel({castleTier})");
 
-			// function body
-			this.processor.EnterFrame(0x4);
-			this.processor.EmitLocalWord(0x2, 0x0);
-			this.processor.EmitLocalWord(0x4, 0x0);
-			goto L170b;
+			short sum = 0;
 
-		L16f9:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x4);
-			this.processor.RegCount.Value16 = 0x7;
-			this.processor.RegCount.Value16 = this.processor.SubtractWord(this.processor.RegCount.Value16, (ushort)this.owner.World.HardnessTier);
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.EmitLocalWord(0x2, this.processor.SumWord(this.processor.PullLocalWord(0x2), this.processor.RegAcc.Value16));
-			this.processor.IncrementLocalWord(0x4);
+			for (short tier = 0; tier <= castleTier; tier++)
+			{
+				sum = (short)(sum + (tier * (short)(7 - this.owner.World.HardnessTier)));
+			}
 
-		L170b:
-			if (this.processor.PullLocalSignedWord(0x4) <= castleTier)
-				goto L16f9;
+			ushort score = (ushort)((sum / 2) + 1);
 
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x2);
-			this.processor.HalveAccumulator();
-			this.processor.RegAcc.Value16 = this.processor.IncrementWord(this.processor.RegAcc.Value16);
-			this.processor.LeaveFrame();
+			this.processor.RegAcc.Value16 = score;
 
-			// Far return
 			this.processor.Journal.CloseScope("ObtainPalaceScoreForLevel");
 
-			return this.processor.RegAcc.Value16;
+			return score;
 		}
 
 		/// <summary>

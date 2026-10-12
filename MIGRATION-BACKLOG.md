@@ -81,12 +81,19 @@ i `MovementRules`. Testy `AssemblyParityDifferentialTests` porównują C# z ręc
   `DisplayBattleScreen` (lista jednostek stosu do obudzenia; golden master jej nie otwiera, porównana ręcznie, z bilansem
   pokazywania i ukrywania kursora myszy), `RenderBusyIndicator` (w rzeczywistości ramka ekranu z kawałków 8 x 8).
   W `UnitManagement` nie ma już kodu w stylu asm (zostały tylko celowo zachowane ramki stosu).
+- Małe funkcje z kilku modułów (2026-10-12): `ObtainCityLabel` (`TradeAndConquest`), `LocateNearestCityOfPlayer`
+  (`GovernmentAndDiplomacy`, w rzeczywistości odległość do najbliższego miasta z pałacem), `DisplayDialog`, `RepaintMainScreen`,
+  `ObtainPalaceScoreForLevel` (`TurnEvents`), `RenderFrame`, `AttachSmog`, `RenderMiniMapDot` (`CityManagement`),
+  `ObtainTerrainTypeFromScreen`, `BlendTerrainTile` (`GameInitAndIntro`), `RenderScoreIcon` (`CityFoundingAndScore`),
+  `FreeStrategicLocation`, `AffixStrategicLocation`, `DisableStrategicLocation` (`AIPlayer`). Golden master nie wykonuje
+  `AttachSmog`, `RenderScoreIcon`, `BlendTerrainTile`, `LocateNearestCityOfPlayer` i `ObtainTerrainTypeFromScreen`
+  (porównane z oryginałem ręcznie).
 
 ## Następny krok
 
-Małe metody z jednym `EnterFrame` lub kilkoma `goto`: `ObtainCityLabel` (`TradeAndConquest`), `LocateNearestCityOfPlayer`
-(`GovernmentAndDiplomacy`), `DisplayDialog` i `RepaintMainScreen` (`TurnEvents`), `RenderFrame` (`CityManagement`),
-`ObtainTerrainTypeFromScreen` (`GameInitAndIntro`). Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180)
+Dalej małe metody gry: `RenewCityScreen` (`ScienceAndAdvisors`), `RefreshCityProduction` (`AIPlayer`),
+`AwaitForKeyPressOrMouseClick` (`TradeAndConquest`), `AwaitForKey` (`PlayerTurn`), `FreshWorldChoices` (`GameStartup`);
+do wyszukania: skrypt z liczbą `goto L` / `EnterFrame` na metodę, posortowany po długości. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180)
 i `AIPlayer` (870). Najmniejsze metody w stylu asm można znaleźć skryptem,
 który szuka `goto L`, `EnterFrame`, `ScaleIndex` itd. i sortuje po liczbie wywołań w kanale `call.` baseline.
 

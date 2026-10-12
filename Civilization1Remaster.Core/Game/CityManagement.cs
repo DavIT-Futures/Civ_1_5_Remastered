@@ -8860,31 +8860,21 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// Pollution (improvement bit 0x40) appears on the tile, unless it is there already; the human player sees it
 		/// </summary>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
 		public void AttachSmog(int horizLoc, int vertLoc)
 		{
 			this.processor.Journal.OpenScope($"AttachSmog({horizLoc}, {vertLoc})");
 
-			// function body
-			this.processor.EnterFrame();
+			if ((this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 0x40) == 0)
+			{
+				this.owner.MapOps.AssignTileImprovements(0x40, horizLoc, vertLoc);
 
-			this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc);
+				this.owner.MapOps.KeepKnownTileImprovements(horizLoc, vertLoc);
 
-			this.processor.TestBitsByte(this.processor.RegAcc.LowByte, 0x40);
-			if (this.processor.FlagSet.IsNotEqual) goto L6d6c;
+				this.owner.World.DirtyCellTally++;
+			}
 
-			this.owner.MapOps.AssignTileImprovements(0x40, horizLoc, vertLoc);
-
-			this.owner.MapOps.KeepKnownTileImprovements(horizLoc, vertLoc);
-			
-			owner.World.DirtyCellTally++;
-
-		L6d6c:
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-			// Far return
 			this.processor.Journal.CloseScope("AttachSmog");
 		}
 
@@ -9413,29 +9403,22 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// A dot of 2 x 2 pixels on the small world map (only when 0x2496 = 2), the world centred on the start column of the
+		/// human player
 		/// </summary>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
-		/// <param name="mode"></param>
 		public void RenderMiniMapDot(int horizLoc, int vertLoc, ushort style)
 		{
 			this.processor.Journal.OpenScope($"RenderMiniMapDot({horizLoc}, {vertLoc}, {style})");
 
-			// function body
-			this.processor.EnterFrame();
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x2496), 0x2);
-			if (this.processor.FlagSet.IsNotEqual) goto L744c;
+			if (this.processor.PullGlobalWord(0x2496) == 2)
+			{
+				horizLoc = this.owner.Routing.TunePosition(
+					horizLoc - this.owner.World.Participants[this.owner.World.PersonParticipantIdx].HorizBegin + 40);
 
-			horizLoc = this.owner.Routing.TunePosition(
-				horizLoc - this.owner.World.Participants[this.owner.World.PersonParticipantIdx].HorizBegin + 40);
+				this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa),
+					((horizLoc * 3) / 2) + 101, ((vertLoc * 3) / 2) + 118, 2, 2, style);
+			}
 
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa),
-				((horizLoc * 3) / 2) + 101, ((vertLoc * 3) / 2) + 118, 2, 2, style);
-
-		L744c:
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-			// Far return
 			this.processor.Journal.CloseScope("RenderMiniMapDot");
 		}
 	}

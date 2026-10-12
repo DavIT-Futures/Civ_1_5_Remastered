@@ -4599,47 +4599,32 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// Makes room at the place of the list of the player (32 entries a player in the byte arrays at 0xb2be, 0xe2c2, 0xe598
+		/// and 0xe798): the used entries from the place up to 30 move one place on
 		/// </summary>
-		/// <param name="playerID"></param>
-		/// <param name="param2"></param>
 		public void FreeStrategicLocation(short participantIdx, ushort arg2)
 		{
 			this.processor.Journal.OpenScope($"FreeStrategicLocation({participantIdx}, {arg2})");
 
-			// function body
-			this.processor.EnterFrame(0x2);
-			this.processor.PreserveSource();
-			this.processor.EmitLocalWord(0x2, 0x1e);
-			goto L3216;
+			for (int idx = 30; idx >= (short)arg2; idx--)
+			{
+				int entry = (participantIdx << 5) + idx;
 
-		L31e2:
-			this.processor.RegSource.Value16 = (ushort)participantIdx;
-			this.processor.RegCount.LowByte = 0x5;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, this.processor.RegCount.LowByte);
-			this.processor.RegSource.Value16 = this.processor.SumWord(this.processor.RegSource.Value16, this.processor.PullLocalWord(0x2));
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0xb2be)), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L3213;
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0xe598));
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0xe599), this.processor.RegAcc.LowByte);
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0xe798));
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0xe799), this.processor.RegAcc.LowByte);
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0xe2c2));
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0xe2c3), this.processor.RegAcc.LowByte);
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0xb2be));
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0xb2bf), this.processor.RegAcc.LowByte);
+				if (this.processor.PullGlobalByte((ushort)(0xb2be + entry)) == 0)
+					continue;
 
-		L3213:
-			this.processor.EmitLocalWord(0x2, this.processor.DecrementWord(this.processor.PullLocalWord(0x2)));
+				MoveListEntryOn(0xe598, entry);
+				MoveListEntryOn(0xe798, entry);
+				MoveListEntryOn(0xe2c2, entry);
+				MoveListEntryOn(0xb2be, entry);
+			}
 
-		L3216:
-			this.processor.RegAcc.Value16 = arg2;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L31e2;
-			this.processor.RestoreSource();
-			this.processor.LeaveFrame();
-			// Far return
 			this.processor.Journal.CloseScope("FreeStrategicLocation");
+		}
+
+		private void MoveListEntryOn(ushort origin, int entry)
+		{
+			this.processor.EmitGlobalByte((ushort)(origin + entry + 1), this.processor.PullGlobalByte((ushort)(origin + entry)));
 		}
 
 		/// <summary>
@@ -4737,98 +4722,51 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// Makes room at the place of the strategic locations of the player: the used ones from the place up to 14 move one place on
 		/// </summary>
-		/// <param name="playerID"></param>
-		/// <param name="position"></param>
 		public void AffixStrategicLocation(short participantIdx, ushort place)
 		{
 			this.processor.Journal.OpenScope($"AffixStrategicLocation({participantIdx}, {place})");
 
-			// function body
-			this.processor.EnterFrame(0x2);
+			StrategicLocation[] sites = this.owner.World.Participants[participantIdx].TacticalSites;
 
-			this.processor.EmitLocalWord(0x2, 0xe);
+			for (int idx = 14; idx >= (short)place; idx--)
+			{
+				if (sites[idx].Strategy == 0)
+					continue;
 
-			goto L3341;
+				sites[idx + 1].Place.X = sites[idx].Place.X;
+				sites[idx + 1].Place.Y = sites[idx].Place.Y;
+				sites[idx + 1].Live = sites[idx].Live;
+				sites[idx + 1].Strategy = sites[idx].Strategy;
+			}
 
-		L330d:
-			if (this.owner.World.Participants[participantIdx].TacticalSites[this.processor.PullLocalWord(0x2)].Strategy == 0)
-					goto L333e;
-
-			this.owner.World.Participants[participantIdx].TacticalSites[this.processor.PullLocalWord(0x2) + 1].Place.X =
-				this.owner.World.Participants[participantIdx].TacticalSites[this.processor.PullLocalWord(0x2)].Place.X;
-
-			this.owner.World.Participants[participantIdx].TacticalSites[this.processor.PullLocalWord(0x2) + 1].Place.Y =
-				this.owner.World.Participants[participantIdx].TacticalSites[this.processor.PullLocalWord(0x2)].Place.Y;
-
-			this.owner.World.Participants[participantIdx].TacticalSites[this.processor.PullLocalWord(0x2) + 1].Live =
-				this.owner.World.Participants[participantIdx].TacticalSites[this.processor.PullLocalWord(0x2)].Live;
-
-			this.owner.World.Participants[participantIdx].TacticalSites[this.processor.PullLocalWord(0x2) + 1].Strategy =
-				this.owner.World.Participants[participantIdx].TacticalSites[this.processor.PullLocalWord(0x2)].Strategy;
-
-		L333e:
-			this.processor.EmitLocalWord(0x2, this.processor.DecrementWord(this.processor.PullLocalWord(0x2)));
-
-		L3341:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), place);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L330d;
-
-			this.processor.LeaveFrame();
-
-			// Far return
 			this.processor.Journal.CloseScope("AffixStrategicLocation");
 		}
 
 		/// <summary>
-		/// ?
+		/// The strategic locations of the player of the kind (Live = arg2) not farther than arg5 from the position are given up
+		/// (Live = -1)
 		/// </summary>
-		/// <param name="playerID"></param>
-		/// <param name="param2"></param>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
-		/// <param name="param5"></param>
 		public void DisableStrategicLocation(short participantIdx, ushort arg2, int horizLoc, int vertLoc, ushort arg5)
 		{
 			this.processor.Journal.OpenScope($"DisableStrategicLocation({participantIdx}, {arg2}, {horizLoc}, {vertLoc}, {arg5})");
 
-			// function body
-			this.processor.EnterFrame(0x4);
-			this.processor.PreserveSource();
-			this.processor.EmitLocalWord(0x4, 0x0);
+			StrategicLocation[] sites = this.owner.World.Participants[participantIdx].TacticalSites;
 
-		L340d:
-			this.processor.RegSource.Value16 = (ushort)participantIdx;
-			this.processor.RegCount.LowByte = 0x4;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, this.processor.RegCount.LowByte);
-			this.processor.RegSource.Value16 = this.processor.SumWord(this.processor.RegSource.Value16, this.processor.PullLocalWord(0x4));
+			for (int idx = 0; idx < 16; idx++)
+			{
+				if ((ushort)sites[idx].Live != arg2)
+					continue;
 
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.Participants[participantIdx].TacticalSites[this.processor.PullLocalWord(0x4)].Live;
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, arg2);
-			if (this.processor.FlagSet.IsNotEqual) goto L344b;
+				short distance = (short)this.owner.Helpers.ObtainDistance(horizLoc, sites[idx].Place.X, vertLoc, sites[idx].Place.Y);
 
-			this.owner.Helpers.ObtainDistance(
-				horizLoc,
-				this.owner.World.Participants[participantIdx].TacticalSites[this.processor.PullLocalWord(0x4)].Place.X,
-				vertLoc,
-				this.owner.World.Participants[participantIdx].TacticalSites[this.processor.PullLocalWord(0x4)].Place.Y);
+				if (distance <= (short)arg5)
+				{
+					sites[idx].Live = -1;
+				}
+			}
 
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = arg5;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsGreater) goto L344b;
-
-			this.owner.World.Participants[participantIdx].TacticalSites[this.processor.PullLocalWord(0x4)].Live = -1;
-
-		L344b:
-			this.processor.EmitLocalWord(0x4, this.processor.IncrementWord(this.processor.PullLocalWord(0x4)));
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), 0x10);
-			if (this.processor.FlagSet.IsLess) goto L340d;
-			this.processor.RestoreSource();
-			this.processor.LeaveFrame();
-			// Far return
 			this.processor.Journal.CloseScope("DisableStrategicLocation");
 		}
 
