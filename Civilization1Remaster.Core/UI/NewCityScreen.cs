@@ -160,64 +160,41 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// Asks for the name of a city (0x53ce) and centres the map on it when the human player knows its tile (ChartSight);
+		/// otherwise (or when no city is chosen) shows the message 0x53f3 until a key or click. The screen is kept in the back
+		/// screen 0x19d4 meanwhile.
 		/// </summary>
 		public void DisplayNewCityLocation()
 		{
 			this.processor.Journal.OpenScope("DisplayNewCityLocation()");
 
-			// function body
-			this.processor.EnterFrame(0x2);
-			this.processor.PreserveIndexRegisters();
-
 			this.owner.Startup.ConcealMouseCursor();
 
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0xaa),
-				0, 0, 0x140, 0xc8,
-				this.processor.PullGlobalWord(0x19d4),
-				0, 0);
+			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), 0, 0, 0x140, 0xc8,
+				this.processor.PullGlobalWord(0x19d4), 0, 0);
 
-			DisplayLabelInputBox(0x53ce);
+			ushort townIdx = DisplayLabelInputBox(0x53ce);
+			short personIdx = this.owner.World.PersonParticipantIdx;
 
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xffff);
-			if (this.processor.FlagSet.IsEqual) goto L02cd;
+			if (townIdx != 0xffff &&
+				(this.owner.World.ChartSight[this.owner.World.Towns[townIdx].Place.X, this.owner.World.Towns[townIdx].Place.Y] & (1 << personIdx)) != 0)
+			{
+				this.owner.MapOps.FocusMapView(personIdx, this.owner.World.Towns[townIdx].Place.X - 7, this.owner.World.Towns[townIdx].Place.Y - 6);
+			}
+			else
+			{
+				this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 64, 78, 224, 10, 15);
 
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.ChartSight[this.owner.World.Towns[this.processor.PullLocalWord(0x2)].Place.X,
-				this.owner.World.Towns[this.processor.PullLocalWord(0x2)].Place.Y];
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegData.Value16 = 0x1;
-			this.processor.RegCount.LowByte = (byte)(this.owner.World.PersonParticipantIdx & 0xff);
-			this.processor.RegData.Value16 = this.processor.ShiftLeftWord(this.processor.RegData.Value16, this.processor.RegCount.LowByte);
-			this.processor.TestBitsWord(this.processor.RegAcc.Value16, this.processor.RegData.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L02cd;
+				this.owner.TextPainter.RenderTextToScreen0(0x53f3, 82, 80, 0);
 
-			this.owner.MapOps.FocusMapView(this.owner.World.PersonParticipantIdx,
-				this.owner.World.Towns[this.processor.PullLocalWord(0x2)].Place.X - 7,
-				this.owner.World.Towns[this.processor.PullLocalWord(0x2)].Place.Y - 6);
+				this.owner.Conquest.AwaitForKeyPressOrMouseClick();
 
-			goto L030e;
+				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 0x140, 0xc8,
+					this.processor.PullGlobalWord(0xaa), 0, 0);
+			}
 
-		L02cd:
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 64, 78, 224, 10, 15);
-
-			this.owner.TextPainter.RenderTextToScreen0(0x53f3, 82, 80, 0);
-
-			this.owner.Conquest.AwaitForKeyPressOrMouseClick();
-
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0x19d4),
-				0, 0, 0x140, 0xc8,
-				this.processor.PullGlobalWord(0xaa),
-				0, 0);
-
-		L030e:
 			this.owner.Startup.DisplayMouseCursor();
 
-			this.processor.RestoreIndexRegisters();
-			this.processor.LeaveFrame();
-			// Far return
 			this.processor.Journal.CloseScope("DisplayNewCityLocation");
 		}
 

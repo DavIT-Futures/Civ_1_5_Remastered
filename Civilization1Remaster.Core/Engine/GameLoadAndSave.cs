@@ -582,40 +582,26 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <summary>
-		/// ?
+		/// Saves the game into the file: first a message with the file name, the difficulty (0x33a2 + 2 * level), the leader
+		/// (0x19a2 + 2 * player), the civilization (0x1992 + 2 * player) and the year, "... save in progress."
 		/// </summary>
-		/// <param name="filenamePtr"></param>
-		/// <returns></returns>
+		/// <returns>1, also in AX</returns>
 		public ushort StoreGame(ushort docnameAddr)
 		{
 			this.processor.Journal.OpenScope($"StoreGame(0x{docnameAddr:x4})");
 
-			// function body
-			this.processor.EnterFrame(0x8);
+			ushort personSlot = (ushort)(this.owner.World.PersonParticipantIdx << 1);
+
 			this.processor.EmitGlobalWord(0xdb38, 0x1);
 
 			this.owner.Libc.CopyText(0xba06, " ");
-
 			this.owner.Libc.AppendText(0xba06, docnameAddr);
-
 			this.owner.Libc.AppendText(0xba06, "\n ");
-
-			this.processor.RegBase.Value16 = (ushort)this.owner.World.HardnessTier;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x33a2)));
-
+			this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)((this.owner.World.HardnessTier << 1) + 0x33a2)));
 			this.owner.Libc.AppendText(0xba06, " ");
-
-			this.processor.RegBase.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x19a2)));
-
+			this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)(personSlot + 0x19a2)));
 			this.owner.Libc.AppendText(0xba06, "\n ");
-
-			this.processor.RegBase.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1992)));
-
+			this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)(personSlot + 0x1992)));
 			this.owner.Libc.AppendText(0xba06, "/");
 
 			this.owner.TurnHooks.ObtainCurrentYearAsText();
@@ -626,16 +612,13 @@ namespace Civilization1Remaster.Engine
 
 			this.owner.Dialogs.DisplayMenu(0xba06, 64, 86, 1);
 
-			string route = this.processor.PullText(CPU.AsLinearAddress(this.processor.SegData.Value16, docnameAddr));
-			StoreGameContent(route);
+			StoreGameContent(this.processor.PullText(CPU.AsLinearAddress(this.processor.SegData.Value16, docnameAddr)));
 
 			this.processor.RegAcc.Value16 = 0x1;
-			this.processor.LeaveFrame();
 
-			// Far return
 			this.processor.Journal.CloseScope("StoreGame");
 
-			return this.processor.RegAcc.Value16;
+			return 0x1;
 		}
 
 		/// <summary>

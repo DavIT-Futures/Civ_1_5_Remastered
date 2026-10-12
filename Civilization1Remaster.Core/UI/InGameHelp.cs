@@ -322,69 +322,48 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// For the human player only (0x6b90): a help window with the text from the help file (0x3501) for the topic, its codes
+		/// replaced (ReflowText), 6 pixels per line, until a key or click. The screen is kept in the back screen 0x19d4 meanwhile.
 		/// </summary>
-		/// <param name="stringPtr"></param>
 		public void DisplayHelpPopupForHuman(ushort charsAddr)
 		{
 			this.processor.Journal.OpenScope($"DisplayHelpPopupForHuman(0x{charsAddr:x4})");
 
-			// function body
-			this.processor.EnterFrame(0x2);
-			this.processor.PreserveSource();
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x6b90), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L03bd;
-			goto L0474;
+			if (this.processor.PullGlobalWord(0x6b90) == (ushort)this.owner.World.PersonParticipantIdx)
+			{
+				this.processor.EmitGlobalByte(0xba06, 0x0);
 
-		L03bd:
-			this.processor.EmitGlobalByte(0xba06, 0x0);
+				ushort lineTally = this.owner.BlockText.ImportTextFromFile(0x3501, charsAddr);
 
-			this.owner.BlockText.ImportTextFromFile(0x3501, charsAddr);
+				this.owner.BlockText.ReflowText();
 
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
+				this.owner.Startup.ConcealMouseCursor();
 
-			this.owner.BlockText.ReflowText();
+				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), 0, 0, 0x140, 0xc8,
+					this.processor.PullGlobalWord(0x19d4), 0, 0);
 
-			this.owner.Startup.ConcealMouseCursor();
+				short height = (short)((6 * lineTally) + 10);
 
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0xaa),
-				0, 0, 0x140, 0xc8,
-				this.processor.PullGlobalWord(0x19d4),
-				0, 0);
+				this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 56, 16, 208, height, 4);
 
-			this.processor.ScaleIndexToSource(0x6, this.processor.PullLocalWord(0x2));
-			this.processor.RegSource.Value16 = this.processor.SumWord(this.processor.RegSource.Value16, 0xa);
+				this.owner.Dialogs.RenderBox(56, 16, 208, height, 12);
 
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 56, 16, 208, (short)this.processor.RegSource.Value16, 4);
+				this.processor.EmitGlobalWord((ushort)(this.processor.PullGlobalWord(0xaa) + 0x10), 0x2);
 
-			this.owner.Dialogs.RenderBox(56, 16, 208, (short)this.processor.RegSource.Value16, 12);
+				this.owner.TextPainter.RenderCenteredTextToScreen0(0x350b, 160, 19, 0);
 
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 0x2);
+				this.owner.BlockText.RenderTextChunk(32, 64, 25, 15);
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0(0x350b, 160, 19, 0);
+				this.processor.EmitGlobalWord((ushort)(this.processor.PullGlobalWord(0xaa) + 0x10), 0x1);
 
-			this.owner.BlockText.RenderTextChunk(32, 64, 25, 15);
+				this.owner.Conquest.AwaitForKeyPressOrMouseClick();
 
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 0x1);
+				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 0x140, 0xc8,
+					this.processor.PullGlobalWord(0xaa), 0, 0);
 
-			this.owner.Conquest.AwaitForKeyPressOrMouseClick();
+				this.owner.Startup.DisplayMouseCursor();
+			}
 
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0x19d4),
-				0, 0, 0x140, 0xc8,
-				this.processor.PullGlobalWord(0xaa),
-				0, 0);
-
-			this.owner.Startup.DisplayMouseCursor();
-
-		L0474:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.LeaveFrame();
-			// Far return
 			this.processor.Journal.CloseScope("DisplayHelpPopupForHuman");
 		}
 	}

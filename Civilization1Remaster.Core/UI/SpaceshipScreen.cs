@@ -106,47 +106,41 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// Leaves the spaceship screen: frees its picture (0x682a), stops the colour cycles 1 - 5 when 0xd762 is set, loads the
+		/// palette of the human player's government, "backNa.pal" (N is the government / 2, "m" instead of "a" with technology
+		/// 20), and the palette 0x4cea, clears the screen and draws the map screen again. The file name is made in a buffer in
+		/// the stack frame, like in the original.
 		/// </summary>
 		public void ImportSpaceScenery()
 		{
 			this.processor.Journal.OpenScope("ImportSpaceScenery()");
 
-			// function body
 			this.processor.EnterFrame(0x12);
 
 			this.owner.Helpers.ReleaseResource(this.processor.PullGlobalWord(0x682a), 0x4cda);
 
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xd762), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L01a3;
-			this.processor.EmitLocalWord(0x12, 0x1);
+			if (this.processor.PullGlobalWord(0xd762) != 0)
+			{
+				for (ushort cycleIdx = 1; cycleIdx <= 5; cycleIdx++)
+				{
+					this.owner.Services.DeactivateHueCycle(cycleIdx);
+				}
+			}
 
-		L018f:
-			this.owner.Services.DeactivateHueCycle(this.processor.PullLocalWord(0x12));
-			
-			this.processor.IncrementLocalWord(0x12);
-
-			this.processor.CompareWord(this.processor.PullLocalWord(0x12), 0x5);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L018f;
-
-		L01a3:
 			this.owner.Startup.QueryForDisk(0, 1);
 
-			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x10), "back0a.pal");
+			ushort docname = (ushort)(this.processor.RegFrame.Value16 - 0x10);
+			this.owner.Libc.CopyText(docname, "back0a.pal");
 
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.Participants[this.owner.World.PersonParticipantIdx].RegimeKind;
-			this.processor.HalveAccumulator();
-			this.processor.RegAcc.LowByte = this.processor.SumByte(this.processor.RegAcc.LowByte, 0x30);
-			this.processor.EmitLocalByte(0xc, this.processor.RegAcc.LowByte);
+			short regime = this.owner.World.Participants[this.owner.World.PersonParticipantIdx].RegimeKind;
+			this.processor.EmitGlobalByte((ushort)(docname + 4), (byte)((regime / 2) + 0x30));
 
-			this.processor.RegAcc.Value16 = this.owner.Advisors.PlayerKnowsTechnology(this.owner.World.PersonParticipantIdx, 0x14);
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsNotEqual)
+			if (this.owner.Advisors.PlayerKnowsTechnology(this.owner.World.PersonParticipantIdx, 0x14) != 0)
 			{
-				this.processor.EmitLocalByte(0xb, 0x6d);
+				this.processor.EmitGlobalByte((ushort)(docname + 5), 0x6d);
 			}
-		
-			this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, (ushort)(this.processor.RegFrame.Value16 - 0x10), 0xc1d6);
+
+			this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, docname, 0xc1d6);
 
 			this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, 0x4cea, 0xc5be);
 
@@ -155,13 +149,13 @@ namespace Civilization1Remaster.UI
 			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 0);
 
 			this.owner.VideoCard.AssignHuesFromHueStruct(0xc5be);
-			
+
 			this.owner.Helpers.SetupHueCycling();
 
 			this.owner.TurnHooks.RepaintMainScreen();
 
 			this.processor.LeaveFrame();
-			// Far return
+
 			this.processor.Journal.CloseScope("ImportSpaceScenery");
 		}
 

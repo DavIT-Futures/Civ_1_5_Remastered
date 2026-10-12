@@ -131,14 +131,18 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   migawka nie widzi plików, więc test zapisu powtórki kopiuje treść pliku do segmentu danych (0xbc00).
 - `ReimposeStrategicLocations` (`AIPlayer`, 2026-10-12, po przeniesieniu rejestrów przerwań poza stos, patrz „Śmieci na stosie”),
   test w `BatchElevenDifferentialTests`.
+- Kolejne 5 modułów (2026-10-12): `DisplayNewCityLocation` (`NewCityScreen`), `ImportSpaceScenery` (`SpaceshipScreen`, ramka
+  zostaje jako bufor nazwy pliku), `DisplayHelpPopupForHuman` (`InGameHelp`), `StoreGame` (`GameLoadAndSave`; test porównuje
+  zapisane pliki .SVE/.MAP/.HP przez hasz w segmencie danych, tylko poziomy 0 - 4: wskaźnik nazwy poziomu 5 trafia w śmieci),
+  `RenderIcon` (`Civilopedia`). Testy w `BatchTwelveDifferentialTests`.
 
 ## Następny krok
 
 Dalej małe metody (`python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 60`:
 metody z co najmniej 2 liniami `goto L` / `FlagSet` / `Compare…` / `SumWord` itd., od najkrótszej): w `SystemServices` `DeactivateMouse` (dziwny kontrakt rejestrów AX/BX), `PointerEvent`, `RenderCursorToScreen`,
 `RecoverScreenUnderCursor`, `DisplayScreen`, `ImportColorsFromBuffer`, `FloodColors`, `FadeColors`; `SnapHeapPointer` (`VGADriver`),
-`DisplayNewCityLocation` (`NewCityScreen`), `ImportSpaceScenery`, `FireSpaceship` (`SpaceshipScreen`), `RenderIcon` (`Civilopedia`),
-`ArrangeTextRow` (`TextBlockRenderer`), `DisplayHelpPopup(ForHuman)` (`InGameHelp`), `StoreGame` (`GameLoadAndSave`),
+`FireSpaceship` (`SpaceshipScreen`), `ArrangeTextRow` (`TextBlockRenderer`), `DisplayHelpPopup` (`InGameHelp`),
+`RenderTextInputField`, `DisplayCityLabelPrompt` (`NewCityScreen`), `RenderReportPreamble` (`AdvisorReports`),
 `AffirmBreakTreaty` (`UnitCombat`),
 reszta generatora mapy w `GameInitAndIntro`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
 
