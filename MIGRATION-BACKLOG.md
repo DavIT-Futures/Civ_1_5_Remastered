@@ -65,6 +65,8 @@ i `MovementRules`. Testy `AssemblyParityDifferentialTests` porównują C# z ręc
 - Jednostki przechowywane w mieście i powrót samolotów (2026-10-12): `KeepUnitsInCityList`, `ConstructUnitsFromCityList`,
   `LocateNearestFriendlyCity`. Golden master nie wykonuje `LocateNearestFriendlyCity` (samolot wracający do miasta lub
   lotniskowca), porównana z oryginałem ręcznie.
+- Miganie aktywnej jednostki (2026-10-12): `ChoreographUnitMove` (jednostka na mapie, kropka na minimapie, ramka kursora;
+  ta sama kolejność wywołań `KeyAvailable`, od której zależy klawiatura testów).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 

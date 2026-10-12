@@ -926,208 +926,112 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// Blinks the active unit on the map and its dot on the world map, and the cursor frame on a map tile, until a key is
+		/// pressed or the mouse is clicked. A unit index from 128 blinks a text instead (no unit).
 		/// </summary>
-		/// <param name="playerID"></param>
-		/// <param name="unitID"></param>
-		/// <param name="param3"></param>
-		/// <param name="param4"></param>
-		public void ChoreographUnitMove(short participantIdx, short troopIdx, ushort arg3, ushort arg4)
+		/// <param name="cursorHoriz">Map position of the cursor frame, 0xffff for none</param>
+		/// <param name="cursorVert">Map position of the cursor frame</param>
+		public void ChoreographUnitMove(short participantIdx, short troopIdx, ushort cursorHoriz, ushort cursorVert)
 		{
-			this.processor.Journal.OpenScope($"ChoreographUnitMove({participantIdx}, {troopIdx}, {arg3}, {arg4})");
+			this.processor.Journal.OpenScope($"ChoreographUnitMove({participantIdx}, {troopIdx}, {cursorHoriz}, {cursorVert})");
 
-			// function body
-			this.processor.EnterFrame(0xe);
-			this.processor.PreserveSource();
-			this.processor.EmitLocalWord(0x6, 0xffff);
-			this.processor.CompareWord(arg3, 0xffff);
-			if (this.processor.FlagSet.IsEqual) goto L0b2d;
+			// The original keeps SI for its caller
+			ushort savedSource = this.processor.RegSource.Value16;
 
-			this.owner.Routing.TunePosition(
-				(short)arg3 - this.processor.PullGlobalSignedWord(0xd4cc));
+			// Screen position of the cursor frame, -1 when there is none or it is outside the map view
+			short frameHoriz = -1;
+			short frameVert = 0;
 
-			this.processor.RegCount.LowByte = 0x4;
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x50);
-			this.processor.EmitLocalWord(0x6, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = arg4;
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, this.processor.PullGlobalWord(0xd75e));
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x8);
-			this.processor.EmitLocalWord(0x8, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x6), 0x50);
-			if (this.processor.FlagSet.IsLess) goto L0b28;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x6), 0x140);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0b28;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x8);
-			if (this.processor.FlagSet.IsLess) goto L0b28;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xc0);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L0b2d;
-
-		L0b28:
-			this.processor.EmitLocalWord(0x6, 0xffff);
-
-		L0b2d:
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x70ea);
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0b36;
-			this.processor.RegAcc.Value16 = 0;
-
-		L0b36:
-			this.processor.EmitLocalWord(0xe, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, this.processor.PullGlobalWord(0x70ea));
-			this.processor.EmitLocalWord(0xa, this.processor.RegAcc.Value16);
-			
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.AddScaledToSource(0xc, (ushort)troopIdx);
-
-			this.owner.Routing.TunePosition(
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)) -
-					this.processor.PullGlobalSignedWord(0x6ed6));
-
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
-
-			if (troopIdx < 127)
+			if (cursorHoriz != 0xffff)
 			{
-				this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6));
-			}
-			else
-			{
-				this.processor.RegAcc.LowByte = 0xff;
-			}
-			this.processor.RegAcc.HighByte = 0;
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0xe));
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0xa));
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
+				frameHoriz = (short)((this.owner.Routing.TunePosition((short)cursorHoriz - this.processor.PullGlobalSignedWord(0xd4cc)) << 4) + 0x50);
+				frameVert = (short)(((cursorVert - this.processor.PullGlobalWord(0xd75e)) << 4) + 0x8);
 
-		L0b75:
-			this.owner.Startup.ConcealMouseCursor();
-
-			if (troopIdx >= 128)
-				goto L0bc9;
-
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.AddScaledToSource(0xc, (ushort)troopIdx);
-
-			this.owner.MapOps.RenderMapTile(this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)),
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6)));
-
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), 0x0);
-			if (this.processor.FlagSet.IsLess) goto L0be1;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), 0x32);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0be1;
-
-			this.owner.Services.AssignDot(this.processor.PullLocalSignedWord(0x2),
-				this.processor.PullLocalSignedWord(0x4) + 8,
-				15);
-
-			goto L0be1;
-
-		L0bc9:
-			this.owner.TextPainter.RenderTextToScreen0(0x20f6, 4, 124, 7);
-
-		L0be1:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x6), 0xffff);
-			if (this.processor.FlagSet.IsEqual) goto L0bfb;
-
-			this.owner.Dialogs.RenderBox(
-				this.processor.PullLocalSignedWord(0x6),
-				this.processor.PullLocalSignedWord(0x8),
-				15, 15, 15);
-
-		L0bfb:
-			this.owner.Startup.DisplayMouseCursor();
-
-			this.owner.Libc.KeyAvailable();
-
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual) goto L0c0e;
-			this.processor.RegAcc.Value16 = 0x1;
-			goto L0c11;
-
-		L0c0e:
-			this.processor.RegAcc.Value16 = 0xa;
-
-		L0c11:
-			this.owner.TextPainter.AwaitTime((short)this.processor.RegAcc.Value16);
-
-			this.owner.Startup.ConcealMouseCursor();
-
-			if (troopIdx >= 0x80)
-				goto L0c86;
-
-			this.owner.MapOps.RenderUnitOnWorldMap(participantIdx, troopIdx);
-
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), 0x0);
-			if (this.processor.FlagSet.IsLess) goto L0c9d;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), 0x32);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0c9d;
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.AddScaledToSource(0xc, (ushort)troopIdx);
-
-			this.owner.MapOps.ObtainTerrainType(
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)),
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6)));
-
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
-			if (this.processor.FlagSet.IsEqual)
-			{
-				this.processor.RegAcc.Value16 = 0x1;
-			}
-			else
-			{
-				this.processor.RegAcc.Value16 = 0x2;
+				if (frameHoriz < 0x50 || frameHoriz >= 0x140 || frameVert < 0x8 || frameVert > 0xc0)
+					frameHoriz = -1;
 			}
 
-			this.owner.Services.AssignDot(this.processor.PullLocalSignedWord(0x2),
-				this.processor.PullLocalSignedWord(0x4) + 8,
-				this.processor.RegAcc.Value16);
+			// Position of the unit on the world map (top left corner of the screen)
+			short worldMapTop = this.processor.PullGlobalSignedWord(0x70ea);
+			short dotHoriz = (short)this.owner.Routing.TunePosition(
+				this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz) - this.processor.PullGlobalSignedWord(0x6ed6));
+			int unitVert = troopIdx < 127 ? this.troops.Pull(participantIdx, troopIdx, UnitMemory.Vert) : 0xff;
+			short dotVert = (short)(unitVert - worldMapTop);
+			bool dotVisible = dotVert >= 0 && dotVert < 50;
 
-			goto L0c9d;
+			do
+			{
+				// Hidden phase
+				this.owner.Startup.ConcealMouseCursor();
 
-		L0c86:
-			this.owner.TextPainter.RenderTextToScreen0(0x2102, 4, 124, 0);
+				if (troopIdx >= UnitMemory.TroopTally)
+				{
+					this.owner.TextPainter.RenderTextToScreen0(0x20f6, 4, 124, 7);
+				}
+				else
+				{
+					this.owner.MapOps.RenderMapTile(
+						this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
+						this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert));
 
-		L0c9d:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x6), 0xffff);
-			if (this.processor.FlagSet.IsEqual) goto L0cb9;
+					if (dotVisible)
+					{
+						this.owner.Services.AssignDot(dotHoriz, dotVert + 8, 15);
+					}
+				}
 
-			this.owner.Dialogs.RenderBox(
-				this.processor.PullLocalSignedWord(0x6),
-				this.processor.PullLocalSignedWord(0x8),
-				15, 15, 0);
+				if (frameHoriz != -1)
+				{
+					this.owner.Dialogs.RenderBox(frameHoriz, frameVert, 15, 15, 15);
+				}
 
-		L0cb9:
-			this.owner.Startup.DisplayMouseCursor();
+				AwaitBlink();
 
-			this.owner.Libc.KeyAvailable();
+				// Shown phase
+				this.owner.Startup.ConcealMouseCursor();
 
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual) goto L0ccc;
-			this.processor.RegAcc.Value16 = 0x1;
-			goto L0ccf;
+				if (troopIdx >= UnitMemory.TroopTally)
+				{
+					this.owner.TextPainter.RenderTextToScreen0(0x2102, 4, 124, 0);
+				}
+				else
+				{
+					this.owner.MapOps.RenderUnitOnWorldMap(participantIdx, troopIdx);
 
-		L0ccc:
-			this.processor.RegAcc.Value16 = 0xa;
+					if (dotVisible)
+					{
+						ushort dotColour = this.owner.MapOps.ObtainTerrainType(
+							this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
+							this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert)) == MapRules.OceanTerrain ? (ushort)1 : (ushort)2;
 
-		L0ccf:
-			this.owner.TextPainter.AwaitTime((short)this.processor.RegAcc.Value16);
+						this.owner.Services.AssignDot(dotHoriz, dotVert + 8, dotColour);
+					}
+				}
 
-			this.owner.Startup.ObtainMouseState();
+				if (frameHoriz != -1)
+				{
+					this.owner.Dialogs.RenderBox(frameHoriz, frameVert, 15, 15, 0);
+				}
 
-			this.owner.Libc.KeyAvailable();
+				AwaitBlink();
 
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsNotEqual) goto L0cf0;
-			this.processor.CompareWord(this.owner.GlobDb3a, 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L0cf0;
-			goto L0b75;
+				this.owner.Startup.ObtainMouseState();
+			}
+			while (this.owner.Libc.KeyAvailable() == 0 && this.owner.GlobDb3a == 0);
 
-		L0cf0:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.LeaveFrame();
-			// Far return
+			this.processor.RegSource.Value16 = savedSource;
+
 			this.processor.Journal.CloseScope("ChoreographUnitMove");
+		}
+
+		/// <summary>
+		/// Shows the mouse pointer and waits 10 timer ticks, 1 when a key is waiting
+		/// </summary>
+		private void AwaitBlink()
+		{
+			this.owner.Startup.DisplayMouseCursor();
+
+			this.owner.TextPainter.AwaitTime((short)(this.owner.Libc.KeyAvailable() != 0 ? 1 : 10));
 		}
 
 		/// <summary>
