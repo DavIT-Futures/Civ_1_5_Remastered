@@ -44,4 +44,5 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 	public sealed partial class ArmySelectionReference(GameEngine owner) : ReferenceBase(owner);
 	public sealed partial class GameLoadAndSaveReference(GameEngine owner) : ReferenceBase(owner);
 	public sealed partial class TextBlockRendererReference(GameEngine owner) : ReferenceBase(owner);
+	public sealed partial class TradeAndConquestReference(GameEngine owner) : ReferenceBase(owner);
 }

@@ -118,14 +118,16 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// Asks the human player for the name of their civilization in a box with the question at 0x53b8: the plural is typed
+		/// (the text that 0x1992 + 2 * player points to); without its final "s" and cut to 10 characters it is also the name
+		/// (0x1982 + 2 * player)
 		/// </summary>
 		public void DisplayCityFoundedMessage()
 		{
 			this.processor.Journal.OpenScope("DisplayCityFoundedMessage()");
 
-			// function body
-			this.processor.EnterFrame(0x2);
+			ushort nameSlot = (ushort)((this.owner.World.PersonParticipantIdx << 1) + 0x1982);
+			ushort pluralSlot = (ushort)((this.owner.World.PersonParticipantIdx << 1) + 0x1992);
 
 			this.owner.Startup.ConcealMouseCursor();
 
@@ -135,39 +137,25 @@ namespace Civilization1Remaster.UI
 
 			this.owner.TextPainter.RenderTextToScreen0(0x53b8, 166, 90, 0);
 
-			this.processor.RegBase.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1992)));
+			this.owner.Libc.CopyText(0xba06, this.processor.PullGlobalWord(pluralSlot));
 
 			PullTextInput(0xa6, 0x68, 0xb);
 
-			this.processor.RegBase.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.CopyText(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1992)), 0xba06);
+			this.owner.Libc.CopyText(this.processor.PullGlobalWord(pluralSlot), 0xba06);
 
-			this.owner.Libc.TextLength(0xba06);
+			// The last character (the one before the text when it is empty)
+			ushort lastAddr = (ushort)(0xba06 + this.owner.Libc.TextLength(0xba06) - 1);
 
-			this.processor.RegAcc.Value16 = this.processor.DecrementWord(this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xba06)), 0x73);
-			if (this.processor.FlagSet.IsNotEqual) goto L022e;
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xba06), 0x0);
+			if (this.processor.PullGlobalByte(lastAddr) == 's')
+			{
+				this.processor.EmitGlobalByte(lastAddr, 0);
+			}
 
-		L022e:
-			this.processor.RegBase.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.CopyText(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1982)), 0xba06);
-
-			this.processor.RegBase.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.RegBase.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1982));
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xa), 0x0);
+			this.owner.Libc.CopyText(this.processor.PullGlobalWord(nameSlot), 0xba06);
+			this.processor.EmitGlobalByte((ushort)(this.processor.PullGlobalWord(nameSlot) + 0xa), 0);
 
 			this.owner.Startup.DisplayMouseCursor();
 
-			this.processor.LeaveFrame();
-			// Far return
 			this.processor.Journal.CloseScope("DisplayCityFoundedMessage");
 		}
 

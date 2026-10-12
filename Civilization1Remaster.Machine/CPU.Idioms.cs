@@ -1,3 +1,5 @@
+using System;
+
 namespace Civilization1Remaster.Emulation
 {
 	/// <summary>
@@ -59,6 +61,23 @@ namespace Civilization1Remaster.Emulation
 		#endregion
 
 		#region Arithmetic on the accumulator
+
+		/// <summary>
+		/// The quotient of a signed division of words (cwd; idiv), rounded towards zero, with the exceptions of DivideSignedWord:
+		/// a division by zero and a quotient that is not a word (-32768 / -1)
+		/// </summary>
+		public static short SignedQuotient(short dividend, short divisor)
+		{
+			if (divisor == 0)
+				throw new Exception("Division by zero");
+
+			int quotient = dividend / divisor;
+
+			if (quotient != (short)quotient)
+				throw new Exception("Division error");
+
+			return (short)quotient;
+		}
 
 		/// <summary>Sets the flags from the accumulator without changing it (or ax, ax).</summary>
 		public void TestAccumulator()

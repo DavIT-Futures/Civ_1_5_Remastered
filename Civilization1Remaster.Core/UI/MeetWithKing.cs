@@ -1,4 +1,5 @@
 using Civilization1Remaster.Emulation;
+using Civilization1Remaster.Game;
 
 namespace Civilization1Remaster.UI
 {
@@ -6,11 +7,13 @@ namespace Civilization1Remaster.UI
 	{
 		private readonly GameEngine owner;
 		private readonly CPU processor;
+		private readonly UnitMemory troops;
 
 		public MeetWithKing(GameEngine owner)
 		{
 			this.owner = owner;
 			this.processor = owner.Processor;
+			this.troops = new UnitMemory(owner.Processor);
 		}
 
 		/// <summary>
@@ -2182,54 +2185,36 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// After an audience: the player and the human have met (diplomacy flag 2), the player waits 16 turns before the next
+		/// contact. At the easiest level the units of the player whose nearest city is one of the human's, at most 2 away, are
+		/// removed.
 		/// </summary>
-		/// <param name="playerID"></param>
 		public void LogAudience(short participantIdx)
 		{
 			this.processor.Journal.OpenScope($"LogAudience({participantIdx})");
-
-			// function body
-			this.processor.EnterFrame(0x4);
-			this.processor.PreserveSource();
 
 			this.owner.Politics.AssignDiplomacyFlags(this.owner.World.PersonParticipantIdx, participantIdx, 2);
 
 			this.owner.World.Participants[participantIdx].TouchParticipantTimeleft = (short)(this.owner.World.RoundTally + 16);
 
-			if (this.owner.World.HardnessTier != 0) goto L1b2e;
-			this.processor.EmitLocalWord(0x4, 0x0);
+			if (this.owner.World.HardnessTier == 0)
+			{
+				for (short troopIdx = 0; troopIdx < UnitMemory.TroopTally; troopIdx++)
+				{
+					if (!this.troops.Exists(participantIdx, troopIdx))
+						continue;
 
-		L1ace:
-			this.processor.RegAcc.Value16 = 0x600;
-			this.processor.ScaleAccumulatorToSource((ushort)participantIdx);
-			this.processor.AddScaledToSource(0xc, this.processor.PullLocalWord(0x4));
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d7)), 0xff);
-			if (this.processor.FlagSet.IsEqual) goto L1b24;
+					ushort townIdx = this.owner.Helpers.LocateNearestCity(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
+						this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert));
 
-			this.owner.Helpers.LocateNearestCity(
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)),
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6)));
+					if (this.owner.World.Towns[townIdx].ParticipantIdx == this.owner.World.PersonParticipantIdx &&
+						(short)this.processor.PullGlobalWord(0x6c9a) <= 2)
+					{
+						this.owner.UnitOps.EliminateUnit(participantIdx, troopIdx);
+					}
+				}
+			}
 
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
-			this.processor.ScaleIndexToBase(0x1c, this.processor.PullLocalWord(0x2));
-			if (this.owner.World.Towns[this.processor.PullLocalWord(0x2)].ParticipantIdx !=
-				this.owner.World.PersonParticipantIdx) goto L1b24;
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x6c9a), 0x2);
-			if (this.processor.FlagSet.IsGreater) goto L1b24;
-
-			this.owner.UnitOps.EliminateUnit(participantIdx,
-				this.processor.PullLocalSignedWord(0x4));
-
-		L1b24:
-			this.processor.EmitLocalWord(0x4, this.processor.IncrementWord(this.processor.PullLocalWord(0x4)));
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), 0x80);
-			if (this.processor.FlagSet.IsLess) goto L1ace;
-
-		L1b2e:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.LeaveFrame();
-			// Far return
 			this.processor.Journal.CloseScope("LogAudience");
 		}
 

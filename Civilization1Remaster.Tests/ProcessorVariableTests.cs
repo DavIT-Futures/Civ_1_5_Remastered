@@ -390,5 +390,43 @@ namespace Civilization1Remaster.Tests
 				Assert.Equal(original.RegCount.Value16, helper.RegCount.Value16);
 			}
 		}
+
+		[Fact]
+		public void SignedQuotientDividesLikeTheInstructions()
+		{
+			Random random = new Random(17);
+			CPU processor = CreateProcessor(random);
+			short[] edges = { 0, 1, -1, 2, -2, 7, -7, 32000, short.MaxValue, short.MinValue };
+
+			for (int trial = 0; trial < 4000; trial++)
+			{
+				short dividend = trial < 100 ? edges[trial % 10] : (short)random.Next(0x10000);
+				short divisor = trial < 100 ? edges[trial / 10] : (short)random.Next(0x10000);
+				string expected, actual;
+
+				try
+				{
+					processor.RegAcc.Value16 = (ushort)dividend;
+					processor.SignExtendWord(processor.RegAcc, processor.RegData);
+					processor.DivideSignedWord(processor.RegAcc, processor.RegData, (ushort)divisor);
+					expected = processor.RegAcc.Value16.ToString();
+				}
+				catch (Exception failure)
+				{
+					expected = failure.Message;
+				}
+
+				try
+				{
+					actual = ((ushort)CPU.SignedQuotient(dividend, divisor)).ToString();
+				}
+				catch (Exception failure)
+				{
+					actual = failure.Message;
+				}
+
+				Assert.True(expected == actual, $"{dividend} / {divisor}: {expected} -> {actual}");
+			}
+		}
 	}
 }

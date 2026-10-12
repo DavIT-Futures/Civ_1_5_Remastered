@@ -119,14 +119,20 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   `DisplayMouseCursor` i `ReflowText`, wszystkie z testami różnicowymi (`BatchNineDifferentialTests`). Uwaga: stan myszy
   (0x586e - 0x5873) jest poza migawką (`GameSnapshot.IgnoredDataRanges`), test go podaje w `Watched`. Gałąź „dysk gotowy”
   `VerifyDrive` wymaga napędu A: lub B:, sprawdzona raz z tymczasową podróbką napędu A: w `BiosDiskCall`.
+- Kolejne 4 moduły (2026-10-12): `ImportHallOfFame`, `StoreHallOfFame` (`HallOfFame`), `DisplayCityFoundedMessage`
+  (`NewCityScreen`), `LogAudience` (`MeetWithKing`), `ComputeCityPlunder` (`TradeAndConquest`, dzielenie słów ze znakiem przez
+  nowe `CPU.SignedQuotient`, z tymi samymi wyjątkami co `DivideSignedWord`; test `ProcessorVariableTests`). Testy różnicowe
+  w `BatchTenDifferentialTests`. Wnioski: gdy oryginał rzuca wyjątek, zostawia ramkę i rejestry (gra i tak staje), więc test
+  przywraca SP/BP/SI/DI po wyjątku oryginału i nie porównuje AX; pusta nazwa w `DisplayCityFoundedMessage` (odczyt bajtu przed
+  tekstem) jest nieosiągalna, bo `PullTextInput` zostawia co najmniej spację.
 
 ## Następny krok
 
 Dalej małe metody (`python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 60`:
 metody z co najmniej 2 liniami `goto L` / `FlagSet` / `Compare…` / `SumWord` itd., od najkrótszej): w `SystemServices` `DeactivateMouse` (dziwny kontrakt rejestrów AX/BX), `PointerEvent`, `RenderCursorToScreen`,
 `RecoverScreenUnderCursor`, `DisplayScreen`, `ImportColorsFromBuffer`, `FloodColors`, `FadeColors`; `SnapHeapPointer` (`VGADriver`),
-`StoreHallOfFame` / `ImportHallOfFame` (`HallOfFame`), `ReimposeStrategicLocations` (`AIPlayer`), `LogAudience` (`MeetWithKing`),
-`RepaintMapTile` (`MapManagement`), `ComputeCityPlunder` (`TradeAndConquest`), `DisplayCityFoundedMessage` (`NewCityScreen`),
+`ReimposeStrategicLocations` (`AIPlayer`), `RepaintMapTile` (`MapManagement`), `EliminateSpaceship` (`TradeAndConquest`),
+`DisplayNewCityLocation` (`NewCityScreen`), `ImportSpaceScenery` (`SpaceshipScreen`), `AffirmBreakTreaty` (`UnitCombat`),
 `ChooseNationToView` (`SpaceshipScreen`), `RenderReplayPreamble` (`GameReplay`), `DisplayCivilizationScenery` (`TurnEvents`),
 reszta generatora mapy w `GameInitAndIntro`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
 

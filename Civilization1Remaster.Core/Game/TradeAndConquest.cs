@@ -1,4 +1,5 @@
 using Civilization1Remaster.Emulation;
+using Civilization1Remaster.Game.State;
 
 namespace Civilization1Remaster.Game
 {
@@ -543,58 +544,27 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// The gold taken with a city: the owner's gold * city size / (total size of the owner's cities + 1), divided first
+		/// when the product would pass 32000. Signed word arithmetic like in the original (also its division errors).
 		/// </summary>
-		/// <param name="cityID"></param>
-		/// <returns></returns>
+		/// <returns>The gold, also in AX</returns>
 		public ushort ComputeCityPlunder(short townIdx)
 		{
 			this.processor.Journal.OpenScope($"ComputeCityPlunder({townIdx})");
 
-			// function body
-			this.processor.EnterFrame(0x4);
-			this.processor.PreserveIndexRegisters();
-			this.processor.ScaleIndexToSource(0x1c, (ushort)townIdx);
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.Towns[townIdx].ParticipantIdx;
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.Towns[townIdx].TrueExtent;
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = 0x7d00;
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.RegCount.Value16 = this.processor.PullLocalWord(0x4);
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, (ushort)this.owner.World.Participants[this.processor.PullLocalWord(0x2)].Gold);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L06ca;
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.Participants[this.processor.PullLocalWord(0x2)].Gold;
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.RegCount.Value16 = (ushort)this.owner.World.Participants[this.processor.PullLocalWord(0x2)].GrandTownExtent;
-			this.processor.RegCount.Value16 = this.processor.IncrementWord(this.processor.RegCount.Value16);
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			goto L06ec;
+			short size = this.owner.World.Towns[townIdx].TrueExtent;
+			Player victim = this.owner.World.Participants[(ushort)this.owner.World.Towns[townIdx].ParticipantIdx];
+			short divisor = (short)(victim.GrandTownExtent + 1);
 
-		L06ca:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.Towns[townIdx].TrueExtent;
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.Participants[this.processor.PullLocalWord(0x2)].Gold;
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.RegBase.Value16 = (ushort)this.owner.World.Participants[this.processor.PullLocalWord(0x2)].GrandTownExtent;
-			this.processor.RegBase.Value16 = this.processor.IncrementWord(this.processor.RegBase.Value16);
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegBase.Value16);
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
+			short plunder = CPU.SignedQuotient(32000, size) > victim.Gold ?
+				CPU.SignedQuotient((short)(victim.Gold * size), divisor) :
+				(short)(CPU.SignedQuotient(victim.Gold, divisor) * size);
 
-		L06ec:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.RegDest.Value16 = this.processor.UnstackWord();
-			this.processor.LeaveFrame();
-			// Far return
+			this.processor.RegAcc.Value16 = (ushort)plunder;
+
 			this.processor.Journal.CloseScope("ComputeCityPlunder");
 
-			return this.processor.RegAcc.Value16;
+			return (ushort)plunder;
 		}
 
 		/// <summary>

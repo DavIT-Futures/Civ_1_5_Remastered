@@ -32,66 +32,40 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// Wipes the Hall of Fame and reads it from fame.dta (0x114 bytes, through the buffer 0xba06) into 0x3772:0x37d2
 		/// </summary>
 		public void ImportHallOfFame()
 		{
 			this.processor.Journal.OpenScope("ImportHallOfFame()");
 
-			// function body
-			this.processor.EnterFrame(0x2);
-
 			WipeHallOfFame();
 
-			this.owner.Libc.OpenHandle("fame.dta", 0x8102, 0x80);
+			short handle = this.owner.Libc.OpenHandle("fame.dta", 0x8102, 0x80);
 
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
+			this.owner.Libc.ReadHandle(handle, 0xba06, 0x114);
 
-			this.owner.Libc.ReadHandle((short)this.processor.PullLocalWord(0x2), 
-				0xba06, 0x114);
+			this.owner.Libc.MoveFarData(this.processor.SegData.Value16, 0xba06, 0x3772, 0x37d2, 0x114);
 
-			this.owner.Libc.MoveFarData(
-				this.processor.SegData.Value16,
-				0xba06,
-				0x3772,
-				0x37d2,
-				0x114);
+			this.owner.Libc.CloseHandle(handle);
 
-			this.owner.Libc.CloseHandle((short)this.processor.PullLocalWord(0x2));
-
-			this.processor.LeaveFrame();
-			// Far return
 			this.processor.Journal.CloseScope("ImportHallOfFame");
 		}
 
 		/// <summary>
-		/// ?
+		/// Writes the Hall of Fame (0x114 bytes at 0x3772:0x37d2, through the buffer 0xba06) to fame.dta
 		/// </summary>
 		public void StoreHallOfFame()
 		{
 			this.processor.Journal.OpenScope("StoreHallOfFame()");
 
-			// function body
-			this.processor.EnterFrame(0x2);
+			short handle = this.owner.Libc.OpenHandle("fame.dta", 0x8302, 0x80);
 
-			this.owner.Libc.OpenHandle("fame.dta", 0x8302, 0x80);
+			this.owner.Libc.MoveFarData(0x3772, 0x37d2, this.processor.SegData.Value16, 0xba06, 0x114);
 
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
+			this.owner.Libc.WriteHandle(handle, 0xba06, 0x114);
 
-			this.owner.Libc.MoveFarData(
-				0x3772,
-				0x37d2,
-				this.processor.SegData.Value16,
-				0xba06,
-				0x114);
+			this.owner.Libc.CloseHandle(handle);
 
-			this.owner.Libc.WriteHandle((short)this.processor.PullLocalWord(0x2),
-				0xba06, 0x114);
-			
-			this.owner.Libc.CloseHandle((short)this.processor.PullLocalWord(0x2));
-
-			this.processor.LeaveFrame();
-			// Far return
 			this.processor.Journal.CloseScope("StoreHallOfFame");
 		}
 
