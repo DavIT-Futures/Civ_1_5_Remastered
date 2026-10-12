@@ -1,5 +1,5 @@
 # Golden master of AUTO02.SVE: 5 turns, random seed 1991, keys 0x20 0x0d 0x31
-# Source: commit a3b5a3b (game code identical to d175cdb) + crash guards ChartSightGrid and EliminateUnit MissingTroops bounds + test seams
+# Source: commit a3b5a3b (game code identical to d175cdb) + crash guards ChartSightGrid and EliminateUnit MissingTroops bounds + test seams + interrupt registers outside the stack
 # Played 5 turns
 turn 0
 cpu.sp=3b01:f0b4

@@ -4381,53 +4381,31 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// Sets up the strategic locations of the player again: its 32 entries at 0xe2c2 + 32 * player become empty (0xff, with
+		/// 0 at 0xb2be + ...), then a unit is sent to each of its 16 locations that is in use with a state up to 2
 		/// </summary>
-		/// <param name="playerID"></param>
 		public void ReimposeStrategicLocations(short participantIdx)
 		{
 			this.processor.Journal.OpenScope($"ReimposeStrategicLocations({participantIdx})");
 
-			// function body
-			this.processor.EnterFrame(0x2);
-			this.processor.PreserveSource();
-			this.processor.EmitLocalWord(0x2, 0x0);
+			for (int entryIdx = 0; entryIdx < 0x20; entryIdx++)
+			{
+				ushort entry = (ushort)((participantIdx << 5) + entryIdx);
 
-		L2fe3:
-			this.processor.RegSource.Value16 = (ushort)participantIdx;
-			this.processor.RegCount.LowByte = 0x5;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, this.processor.RegCount.LowByte);
-			this.processor.RegSource.Value16 = this.processor.SumWord(this.processor.RegSource.Value16, this.processor.PullLocalWord(0x2));
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0xe2c2), 0xff);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0xb2be), 0x0);
-			this.processor.IncrementLocalWord(0x2);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x20);
-			if (this.processor.FlagSet.IsLess) goto L2fe3;
-			this.processor.EmitLocalWord(0x2, 0x0);
+				this.processor.EmitGlobalByte((ushort)(entry + 0xe2c2), 0xff);
+				this.processor.EmitGlobalByte((ushort)(entry + 0xb2be), 0x0);
+			}
 
-		L3005:
-			this.processor.RegSource.Value16 = (ushort)participantIdx;
-			this.processor.RegCount.LowByte = 0x4;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, this.processor.RegCount.LowByte);
-			this.processor.RegSource.Value16 = this.processor.SumWord(this.processor.RegSource.Value16, this.processor.PullLocalWord(0x2));
+			for (int siteIdx = 0; siteIdx < 0x10; siteIdx++)
+			{
+				StrategicLocation site = this.owner.World.Participants[participantIdx].TacticalSites[siteIdx];
 
-			if (this.owner.World.Participants[participantIdx].TacticalSites[this.processor.PullLocalWord(0x2)].Live == -1 ||
-				this.owner.World.Participants[participantIdx].TacticalSites[this.processor.PullLocalWord(0x2)].Live > 2)
-				goto L303f;
+				if (site.Live != -1 && site.Live <= 2)
+				{
+					SendUnitToStrategicLocation(participantIdx, (short)site.Place.X, (short)site.Place.Y, site.Live, site.Strategy);
+				}
+			}
 
-			SendUnitToStrategicLocation(participantIdx,
-				(short)this.owner.World.Participants[participantIdx].TacticalSites[this.processor.PullLocalWord(0x2)].Place.X,
-				(short)this.owner.World.Participants[participantIdx].TacticalSites[this.processor.PullLocalWord(0x2)].Place.Y,
-				this.owner.World.Participants[participantIdx].TacticalSites[this.processor.PullLocalWord(0x2)].Live,
-				this.owner.World.Participants[participantIdx].TacticalSites[this.processor.PullLocalWord(0x2)].Strategy);
-
-		L303f:
-			this.processor.EmitLocalWord(0x2, this.processor.IncrementWord(this.processor.PullLocalWord(0x2)));
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x10);
-			if (this.processor.FlagSet.IsLess) goto L3005;
-			this.processor.RestoreSource();
-			this.processor.LeaveFrame();
-			// Far return
 			this.processor.Journal.CloseScope("ReimposeStrategicLocations");
 		}
 

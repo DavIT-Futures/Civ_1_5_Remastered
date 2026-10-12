@@ -274,16 +274,12 @@ namespace Civilization1Remaster.Emulation
 						this.journal.EmitLine($"Mouse buttons changed from 0x{this.pointerClicks:x2} to 0x{this.host.PointerClicks:x2}");
 					}
 
-					this.StackWord(this.regAcc.Value16);
-					this.StackWord(this.regCount.Value16);
-					this.StackWord(this.regData.Value16);
-					this.StackWord(this.regBase.Value16);
-					this.StackWord(this.regFrame.Value16);
-					this.StackWord(this.regSource.Value16);
-					this.StackWord(this.regDest.Value16);
-					this.StackWord(this.segData.Value16);
-					this.StackWord(this.segExtra.Value16);
-					this.StackFlags();
+					// The interrupted registers are kept outside the emulated stack: what an interrupt leaves below SP would
+					// depend on when it comes, and the game reads uninitialized locals there (ShiftAIUnit)
+					(ushort acc, ushort count, ushort data, ushort basis, ushort frame, ushort source, ushort dest, ushort dataSection,
+						ushort extraSection, ushort flags) = (this.regAcc.Value16, this.regCount.Value16, this.regData.Value16,
+						this.regBase.Value16, this.regFrame.Value16, this.regSource.Value16, this.regDest.Value16, this.segData.Value16,
+						this.segExtra.Value16, this.markers.Datum);
 
 					this.regAcc.Value16 = 0;
 					if (this.pointerSite != this.host.PointerSite)
@@ -319,24 +315,18 @@ namespace Civilization1Remaster.Emulation
 
 					this.host.OnPointerEvent();
 
-					this.UnstackFlags();
-					this.segExtra.Value16 = this.UnstackWord();
-					this.segData.Value16 = this.UnstackWord();
-					this.regDest.Value16 = this.UnstackWord();
-					this.regSource.Value16 = this.UnstackWord();
-					this.regFrame.Value16 = this.UnstackWord();
-					this.regBase.Value16 = this.UnstackWord();
-					this.regData.Value16 = this.UnstackWord();
-					this.regCount.Value16 = this.UnstackWord();
-					this.regAcc.Value16 = this.UnstackWord();
+					(this.regAcc.Value16, this.regCount.Value16, this.regData.Value16, this.regBase.Value16, this.regFrame.Value16,
+						this.regSource.Value16, this.regDest.Value16, this.segData.Value16, this.segExtra.Value16, this.markers.Datum) =
+						(acc, count, data, basis, frame, source, dest, dataSection, extraSection, flags);
 				}
 
 				LogWrapper journalScratch = this.journal;
 				this.journal = this.host.IrqJournal;
 
-				this.StackFlags();
+				// The flags are kept outside the emulated stack, like the registers in ClockInterrupt
+				ushort interruptedFlags = this.markers.Datum;
 				this.host.OnClockInterrupt();
-				this.UnstackFlags();
+				this.markers.Datum = interruptedFlags;
 
 				// The timer function changes the divisor when the game changes the timer speed
 				int splitter = this.storage.PullUInt16(ClockContentSection, ClockDenominatorDisplacement);

@@ -67,6 +67,13 @@ The original code throws `IndexOutOfRangeException` in 7 of the 15 runs (the map
 Both change only what happens where the original code crashed. HEAD's other change in `EliminateUnit` (leave at once
 for an eliminated unit) is **not** in the baseline, it also changes cases that didn't crash.
 
+Since 2026-10-12 the baselines also have `baseline-interrupt-registers.patch`: the timer interrupt (`CPU`, `ClockInterrupt`)
+and the mouse interrupt keep the interrupted registers and flags in C# variables instead of pushing them onto the stack of
+the game. The game reads some locals before it sets them (`ShiftAIUnit`), so what an interrupt left below SP mattered,
+and it depended on when the interrupt came (after a number of memory accesses): a rewritten function with fewer accesses
+moved it and AUTO07 threw. With the patch the original game plays the 15 saves exactly as before (only the header of the
+baselines changed), and the garbage below SP depends only on the code.
+
 ### Regenerating the baselines
 
 From the code in your working copy (only when a change of the game is intended, otherwise the net is gone):
@@ -87,11 +94,12 @@ git worktree add --detach ../civ1-baseline a3b5a3b
 # the test seams: the commit "Add test seams for a deterministic headless run" of this branch
 git -C ../civ1-baseline cherry-pick --no-commit <seams commit>
 git -C ../civ1-baseline apply "$PWD/Civilization1Remaster.Tests/GoldenMaster/baseline-crash-guards.patch"
+git -C ../civ1-baseline apply "$PWD/Civilization1Remaster.Tests/GoldenMaster/baseline-interrupt-registers.patch"
 cp -r CIVILIZATION ../civ1-baseline/
 cp -r Civilization1Remaster.Tests/GoldenMaster Civilization1Remaster.Tests/Civilization1Remaster.Tests.csproj ../civ1-baseline/Civilization1Remaster.Tests/
 cd ../civ1-baseline/Civilization1Remaster.Tests
 dotnet build
-CIV1_GOLDEN_MASTER_UPDATE=1 CIV1_GOLDEN_MASTER_SOURCE="commit a3b5a3b + crash guards + test seams" ./bin/Debug/net10.0/Civilization1Remaster.Tests.exe -class "*GoldenMasterAuto*"
+CIV1_GOLDEN_MASTER_UPDATE=1 CIV1_GOLDEN_MASTER_SOURCE="commit a3b5a3b + crash guards + test seams + interrupt registers outside the stack" ./bin/Debug/net10.0/Civilization1Remaster.Tests.exe -class "*GoldenMasterAuto*"
 cp GoldenMaster/Baselines/* <repository>/Civilization1Remaster.Tests/GoldenMaster/Baselines/
 ```
 

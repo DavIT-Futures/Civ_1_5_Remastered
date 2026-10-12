@@ -129,7 +129,8 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   `ChooseNationToView` (`SpaceshipScreen`), `RenderReplayPreamble` (`GameReplay`), `DisplayCivilizationScenery` (`TurnEvents`,
   ramka stosu zostaje jako bufor nazwy pliku), `EliminateSpaceship` (`TradeAndConquest`). Testy w `BatchElevenDifferentialTests`;
   migawka nie widzi plików, więc test zapisu powtórki kopiuje treść pliku do segmentu danych (0xbc00).
-  `ReimposeStrategicLocations` (`AIPlayer`) wycofane: patrz „Blokady” niżej.
+- `ReimposeStrategicLocations` (`AIPlayer`, 2026-10-12, po przeniesieniu rejestrów przerwań poza stos, patrz „Śmieci na stosie”),
+  test w `BatchElevenDifferentialTests`.
 
 ## Następny krok
 
@@ -138,7 +139,7 @@ metody z co najmniej 2 liniami `goto L` / `FlagSet` / `Compare…` / `SumWord` i
 `RecoverScreenUnderCursor`, `DisplayScreen`, `ImportColorsFromBuffer`, `FloodColors`, `FadeColors`; `SnapHeapPointer` (`VGADriver`),
 `DisplayNewCityLocation` (`NewCityScreen`), `ImportSpaceScenery`, `FireSpaceship` (`SpaceshipScreen`), `RenderIcon` (`Civilopedia`),
 `ArrangeTextRow` (`TextBlockRenderer`), `DisplayHelpPopup(ForHuman)` (`InGameHelp`), `StoreGame` (`GameLoadAndSave`),
-`AffirmBreakTreaty` (`UnitCombat`), `ReimposeStrategicLocations` (`AIPlayer`, zablokowana, patrz „Blokady”),
+`AffirmBreakTreaty` (`UnitCombat`),
 reszta generatora mapy w `GameInitAndIntro`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
@@ -156,15 +157,17 @@ te błędy są odtwarzane jawnie:
   `ShiftUnit` (bez tego `IndexOutOfRangeException` w `Towns`). Dlatego `ShiftUnit` zachowuje `EnterFrame(0x16)` i na końcu
   zapisuje w ramce końcowe wartości swoich zmiennych lokalnych (`ShiftUnitFrame`). Po naprawie `ShiftAIUnit` można usunąć ramkę.
 
-## Blokady: śmieci na stosie zależne od przerwania zegara
+## Śmieci na stosie (zmienne lokalne czytane przed zapisem)
 
-`ShiftAIUnit` czyta niezainicjowaną zmienną lokalną (patrz wyżej), czyli to, co zostało pod SP. Tam trafiają też rejestry
-odkładane przez obsługę przerwania zegara (`ClockInterrupt`), a w testach przerwanie przychodzi co 10 000 dostępów do pamięci.
-Przepisana `ReimposeStrategicLocations` (wołana z `HandleGameEnd` na tej samej głębokości co `HandlePlayerTurn`) robi mniej
-dostępów, przerwanie wypada gdzie indziej i AUTO07 kończy się `IndexOutOfRangeException` w `ShiftAIUnit` (ok. linii 2143).
-Odtworzenie ramki, SI, AX i CX nie pomaga, porównanie stosu pod SP w teście różnicowym (`Watched` z `(0x3b01, 0xe8c0, 0x800)`)
-pokazuje ramkę przerwania w oryginale. Ta funkcja (i podobne wołane przed ruchem AI) czeka na naprawę `ShiftAIUnit` na końcu
-migracji. Każda przepisana funkcja może trafić na to samo: czerwony AUTO07 z wyjątkiem w `ShiftAIUnit` = ta blokada.
+Kilka przetłumaczonych funkcji czyta zmienną lokalną, zanim ją ustawi, czyli to, co zostało pod SP (`ShiftAIUnit` 0xc,
+`LocateNearestFriendlyCity` 0x14/0x16, `ObtainDistanceToReplayCity`). Do 2026-10-12 trafiały tam też rejestry odkładane przez
+przerwanie zegara, którego moment w testach zależy od liczby dostępów do pamięci, więc przepisana `ReimposeStrategicLocations`
+(mniej dostępów) wywracała AUTO07 w `ShiftAIUnit`. Od tego dnia przerwania (zegar i mysz) trzymają rejestry w zmiennych C#
+(`baseline-interrupt-registers.patch`, baseline'y wygenerowane od nowa z oryginału, zmienił się tylko nagłówek), więc śmieci
+zależą już tylko od kodu na tej samej głębokości. Nadal: usunięta ramka może zmienić to, co przeczyta taka funkcja (golden master
+to wyłapie, testy różnicowe nie porównują stosu pod SP). Kandydaci ze skanu „czytana, nigdy nie zapisana” (część to tablice
+i bufory zapisywane przez adres, do sprawdzenia przy przepisywaniu): `RenderCitizenIcons` 0x2, `ExamineCity` 0x8,
+`RenderExplosion` 0x38, `DisplayTravellersReport` 0x2, `RenderCityScenery` 0x16, `RenderCitySceneryForPlayer/ForHuman` 0x20.
 
 ## Poprawki, które zostają (chronią przed crashami, baseline je ma)
 

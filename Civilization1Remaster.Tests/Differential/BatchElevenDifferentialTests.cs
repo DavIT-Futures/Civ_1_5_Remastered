@@ -9,13 +9,40 @@ using Register = Civilization1Remaster.Tests.Differential.DifferentialPair.Regis
 namespace Civilization1Remaster.Tests.Differential
 {
 	/// <summary>
-	/// The repaint of a map tile, the spaceship to view, the replay line, the government
+	/// The strategic locations of the AI, the repaint of a map tile, the spaceship to view, the replay line, the government
 	/// palette and the loss of a spaceship against their original code
 	/// </summary>
 	public class BatchElevenDifferentialTests(ITestOutputHelper output)
 	{
 		/// <summary>The segment 0x3772: the spaceship parts, layouts and pictures</summary>
 		private static readonly (ushort, ushort, int)[] Spaceships = [(0x3772, 0, 0x8000)];
+
+		[Fact]
+		public void ReimposeStrategicLocationsMatchesOriginalCode()
+		{
+			Check(3, 100, (chance, pair) =>
+			{
+				short participantIdx = (short)chance.Next(1, 8);
+				bool unused = chance.Next(4) == 0;
+				var sites = Enumerable.Range(0, 16).Select(_ => unused || chance.Next(3) == 0 ?
+					((sbyte)-1, 0, 0, (byte)0) : ((sbyte)chance.Next(-2, 6), chance.Next(80), chance.Next(1, 49), (byte)chance.Next(4))).ToArray();
+				int sent = Calls(pair.Rewritten.Engine, pair, "SendUnitToStrategicLocation");
+
+				return new Scenario($"ReimposeStrategicLocations({participantIdx}), none in use {unused}",
+					game =>
+					{
+						for (int siteIdx = 0; siteIdx < sites.Length; siteIdx++)
+						{
+							var site = game.World.Participants[participantIdx].TacticalSites[siteIdx];
+							(site.Live, int horizLoc, int vertLoc, site.Strategy) = sites[siteIdx];
+							site.Place = new System.Drawing.Point(horizLoc, vertLoc);
+						}
+					},
+					game => new AIPlayerReference(game).ReimposeStrategicLocations(participantIdx),
+					game => game.Bot.ReimposeStrategicLocations(participantIdx),
+					Register.Kept, game => Calls(game, pair, "SendUnitToStrategicLocation") > sent ? "units sent" : "none sent");
+			}, output, ["units sent", "none sent"]);
+		}
 
 		[Fact]
 		public void RepaintMapTileMatchesOriginalCode()

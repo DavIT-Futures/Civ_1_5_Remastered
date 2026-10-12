@@ -74,15 +74,13 @@ namespace Civilization1Remaster.Engine
 		{
 			this.processor.Journal.OpenScope("ClockInterrupt()");
 
-			// function body
-			this.processor.StackWord(this.processor.RegFrame.Value16);
-			this.processor.StackWord(this.processor.RegAcc.Value16);
-			this.processor.StackWord(this.processor.RegBase.Value16);
-			this.processor.StackWord(this.processor.RegCount.Value16);
-			this.processor.StackWord(this.processor.RegData.Value16);
-			this.processor.PreserveSource();
-			this.processor.StackWord(this.processor.RegDest.Value16);
-			this.processor.StackWord(this.processor.SegData.Value16);
+			// The interrupted registers are kept outside the emulated stack (the original pushes them onto the stack of the game):
+			// what an interrupt leaves below SP would depend on when it comes, and the game reads uninitialized locals there
+			(ushort frame, ushort acc, ushort basis, ushort count, ushort data, ushort source, ushort dest, ushort dataSection) =
+				(this.processor.RegFrame.Value16, this.processor.RegAcc.Value16, this.processor.RegBase.Value16,
+				this.processor.RegCount.Value16, this.processor.RegData.Value16, this.processor.RegSource.Value16,
+				this.processor.RegDest.Value16, this.processor.SegData.Value16);
+
 			this.processor.RegAcc.Value16 = this.processor.RegStack.Value16;
 			this.processor.RegBase.Value16 = this.processor.SegStack.Value16;
 			this.processor.SegStack.Value16 = 0x1000;
@@ -136,14 +134,10 @@ namespace Civilization1Remaster.Engine
 			this.processor.RegAcc.Value16 = this.processor.UnstackWord();
 			this.processor.SegStack.Value16 = this.processor.UnstackWord();
 			this.processor.RegStack.Value16 = this.processor.RegAcc.Value16;
-			this.processor.SegData.Value16 = this.processor.UnstackWord();
-			this.processor.RegDest.Value16 = this.processor.UnstackWord();
-			this.processor.RestoreSource();
-			this.processor.RegData.Value16 = this.processor.UnstackWord();
-			this.processor.RegCount.Value16 = this.processor.UnstackWord();
-			this.processor.RegBase.Value16 = this.processor.UnstackWord();
-			this.processor.RegAcc.Value16 = this.processor.UnstackWord();
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
+
+			(this.processor.RegFrame.Value16, this.processor.RegAcc.Value16, this.processor.RegBase.Value16,
+				this.processor.RegCount.Value16, this.processor.RegData.Value16, this.processor.RegSource.Value16,
+				this.processor.RegDest.Value16, this.processor.SegData.Value16) = (frame, acc, basis, count, data, source, dest, dataSection);
 			// IRET - Pop flags and Far return
 
 			this.processor.Journal.CloseScope("ClockInterrupt");
@@ -1426,18 +1420,15 @@ namespace Civilization1Remaster.Engine
 		{
 			this.processor.Journal.OpenScope("RenewScreen()");
 
-			// function body
-			this.processor.StackWord(this.processor.RegAcc.Value16);
-			this.processor.StackWord(this.processor.RegData.Value16);
-			this.processor.StackWord(this.processor.SegExtra.Value16);
+			// Called from the mouse interrupt: the registers are kept outside the emulated stack, like in ClockInterrupt
+			(ushort acc, ushort data, ushort extraSection) =
+				(this.processor.RegAcc.Value16, this.processor.RegData.Value16, this.processor.SegExtra.Value16);
 
 			this.processor.SegExtra.Value16 = 0x1000;
 			this.owner.VideoCard.RenderBufferToScreen();
 
-			this.processor.SegExtra.Value16 = this.processor.UnstackWord();
-			this.processor.RegData.Value16 = this.processor.UnstackWord();
-			this.processor.RegAcc.Value16 = this.processor.UnstackWord();
-			// Near return
+			(this.processor.RegAcc.Value16, this.processor.RegData.Value16, this.processor.SegExtra.Value16) = (acc, data, extraSection);
+
 			this.processor.Journal.CloseScope("RenewScreen");
 		}
 
