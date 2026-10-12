@@ -1821,421 +1821,272 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// The attack animation: the unit slides one tile towards the attacked tile in 17 frames, over the next unit of its
+		/// stack. Only when the map view shows both tiles; with 0xb278 = 1 the tile of the unit is only drawn.
 		/// </summary>
-		/// <param name="playerID"></param>
-		/// <param name="unitID"></param>
-		/// <param name="param3"></param>
+		/// <param name="arg3">Direction of the attack (1 - 8)</param>
 		public void ChoreographUnitCombat(short participantIdx, short troopIdx, ushort arg3)
 		{
 			this.processor.Journal.OpenScope($"ChoreographUnitCombat({participantIdx}, {troopIdx}, {arg3})");
 
-			// function body
-			this.processor.EnterFrame(0xc);
-			this.processor.PreserveIndexRegisters();
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xb278), 0x1);
-			if (this.processor.FlagSet.IsNotEqual) goto L1d8b;
+			// The original keeps SI and DI for its caller
+			ushort savedSource = this.processor.RegSource.Value16;
+			ushort savedDest = this.processor.RegDest.Value16;
 
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.AddScaledToSource(0xc, (ushort)troopIdx);
+			int horizLoc = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz);
+			int vertLoc = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert);
 
-			this.owner.MapOps.RenderMapTile(this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)),
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6)));
+			if (this.processor.PullGlobalWord(0xb278) == 1)
+			{
+				this.owner.MapOps.RenderMapTile(horizLoc, vertLoc);
+			}
+			else
+			{
+				this.owner.Startup.ConcealMouseCursor();
 
-			goto L1f63;
+				if (this.owner.MapOps.RenderMapTile(horizLoc, vertLoc) != 0 &&
+					this.owner.TurnLogic.VerifyPositionOnScreen(horizLoc, vertLoc) != 0 &&
+					this.owner.TurnLogic.VerifyPositionOnScreen(this.owner.MapOps.Chart.DirectionHoriz(arg3) + horizLoc,
+						this.owner.MapOps.Chart.DirectionVert(arg3) + vertLoc) != 0)
+				{
+					AnimateAttack(participantIdx, troopIdx, arg3, horizLoc, vertLoc);
+				}
 
-		L1d8b:
-			this.owner.Startup.ConcealMouseCursor();
+				this.owner.Startup.DisplayMouseCursor();
+			}
 
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.ScaleIndex(0xc, (ushort)troopIdx);
-			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegDest.Value16 = this.processor.SumWord(this.processor.RegDest.Value16, this.processor.RegSource.Value16);
+			this.processor.RegSource.Value16 = savedSource;
+			this.processor.RegDest.Value16 = savedDest;
 
-			this.owner.MapOps.RenderMapTile(this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 + 0x81d5)),
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 + 0x81d6)));
-
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsNotEqual) goto L1dbd;
-			goto L1f5e;
-
-		L1dbd:
-			this.owner.TurnLogic.VerifyPositionOnScreen(
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 + 0x81d5)),
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 + 0x81d6)));
-
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsNotEqual) goto L1dd8;
-			goto L1f5e;
-
-		L1dd8:
-			this.processor.RegAcc.Value16 = arg3;
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, 0x1);
-			this.processor.EmitLocalWord(0xc, this.processor.RegAcc.Value16);
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-
-			this.owner.TurnLogic.VerifyPositionOnScreen(
-				this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1882)) + this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 + 0x81d5)),
-				this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x18e4)) + this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 + 0x81d6)));
-
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsNotEqual) goto L1e09;
-			goto L1f5e;
-
-		L1e09:
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 + 0x81de)), 0xff);
-			if (this.processor.FlagSet.IsEqual) goto L1e61;
-
-			this.owner.MapOps.ObtainTerrainType(
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 + 0x81d5)),
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 + 0x81d6)));
-
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
-			if (this.processor.FlagSet.IsNotEqual) goto L1e40;
-			this.processor.RegAcc.LowByte = 0xc;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 + 0x81de)));
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegAcc.LowByte = 0x22;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d7)));
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1138)), 0x2);
-			if (this.processor.FlagSet.IsNotEqual) goto L1e61;
-
-		L1e40:
-			this.processor.RegAcc.Value16 = 0xc;
-			this.processor.ScaleAccumulatorToBase((ushort)troopIdx);
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-
-			this.owner.MapOps.RenderUnitOnWorldMap(participantIdx, this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81de)));
-
-		L1e61:
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0xaa),
-				0x50, 0, 0xf0, 0xc8,
-				this.processor.PullGlobalWord(0x19d4),
-				0x50, 0);
-
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.AddScaledToSource(0xc, (ushort)troopIdx);
-
-			this.owner.Routing.TunePosition(
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)) -
-					this.processor.PullGlobalSignedWord(0xd4cc));
-
-			this.processor.RegCount.LowByte = 0x4;
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x50);
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6));
-			this.processor.RegAcc.HighByte = 0;
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, this.processor.PullGlobalWord(0xd75e));
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x8);
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x8, 0x0);
-
-		L1ecb:
-			this.processor.RegSource.Value16 = (ushort)(arg3 << 1);
-			this.owner.Services.RenderPictureToScreen(
-				this.processor.PullGlobalWord(0xaa),
-				(this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1882)) *
-						this.processor.PullLocalSignedWord(0x8)) +
-					this.processor.PullLocalSignedWord(0x2) + 1,
-				(this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x18e4)) *
-						this.processor.PullLocalSignedWord(0x8)) +
-					this.processor.PullLocalSignedWord(0x4) + 1,
-				this.processor.PullUInt16(this.processor.SegData.Value16,
-					(ushort)(((this.processor.PullUInt8(this.processor.SegData.Value16,
-							(ushort)(((0x600 * participantIdx) + (0xc * troopIdx)) + 0x81d7)) + (participantIdx << 5) + 0x40) << 1) + 0xd4ce)));
-
-			this.owner.TextPainter.AwaitTime(1);
-
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1882));
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.PullLocalWord(0x8));
-			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegDest.Value16 = this.processor.SumWord(this.processor.RegDest.Value16, this.processor.PullLocalWord(0x2));
-
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x18e4));
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.PullLocalWord(0x8));
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x4));
-			this.processor.EmitLocalWord(0xc, this.processor.RegAcc.Value16);
-			
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0x19d4),
-				this.processor.RegDest.Value16,
-				this.processor.PullLocalWord(0xc),
-				0x10, 0x10,
-				this.processor.PullGlobalWord(0xaa),
-				this.processor.RegDest.Value16, this.processor.RegAcc.Value16);
-
-			this.processor.IncrementLocalWord(0x8);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x8), 0x10);
-			if (this.processor.FlagSet.IsGreater) goto L1f5e;
-			goto L1ecb;
-
-		L1f5e:
-			this.owner.Startup.DisplayMouseCursor();
-
-		L1f63:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.RegDest.Value16 = this.processor.UnstackWord();
-			this.processor.LeaveFrame();
-			// Far return
 			this.processor.Journal.CloseScope("ChoreographUnitCombat");
 		}
 
 		/// <summary>
-		/// ?
+		/// Draws the next unit of the stack on the tile (on the ocean only a ship), keeps the map view in the back screen (0x19d4)
+		/// and moves the picture of the unit 16 pixels in the direction, restoring the background after every frame
 		/// </summary>
-		/// <param name="playerID"></param>
-		/// <param name="unitID"></param>
-		public void DisplayBattleScreen(short participantIdx, short troopIdx)
+		private void AnimateAttack(short participantIdx, short troopIdx, int heading, int horizLoc, int vertLoc)
+		{
+			sbyte followingIdx = this.troops.Following(participantIdx, troopIdx);
+
+			if (followingIdx != -1 &&
+				(this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) != MapRules.OceanTerrain ||
+				this.troops.KindField(participantIdx, followingIdx, UnitKindTable.LandGroup) == UnitKindTable.SeaUnits))
+			{
+				this.owner.MapOps.RenderUnitOnWorldMap(participantIdx, followingIdx);
+			}
+
+			ushort screen = this.processor.PullGlobalWord(0xaa);
+			ushort backScreen = this.processor.PullGlobalWord(0x19d4);
+
+			this.owner.VideoCard.RenderImage(screen, 0x50, 0, 0xf0, 0xc8, backScreen, 0x50, 0);
+
+			// Top left pixel of the tile in the map view (16 x 16 pixels a tile, from 80, 8)
+			short tileLeft = (short)((this.owner.Routing.TunePosition(horizLoc - this.processor.PullGlobalSignedWord(0xd4cc)) << 4) + 0x50);
+			short tileTop = (short)(((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Vert) - this.processor.PullGlobalWord(0xd75e)) << 4) + 8);
+
+			int stepHoriz = this.owner.MapOps.Chart.DirectionHoriz(heading);
+			int stepVert = this.owner.MapOps.Chart.DirectionVert(heading);
+
+			for (int frame = 0; frame <= 16; frame++)
+			{
+				ushort picture = this.processor.PullGlobalWord(
+					(ushort)(0xd4ce + ((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) + (participantIdx << 5) + 0x40) << 1)));
+
+				this.owner.Services.RenderPictureToScreen(screen,
+					(stepHoriz * frame) + tileLeft + 1, (stepVert * frame) + tileTop + 1, picture);
+
+				this.owner.TextPainter.AwaitTime(1);
+
+				ushort frameLeft = (ushort)((stepHoriz * frame) + tileLeft);
+				ushort frameTop = (ushort)((stepVert * frame) + tileTop);
+
+				this.owner.VideoCard.RenderImage(backScreen, frameLeft, frameTop, 0x10, 0x10, screen, frameLeft, frameTop);
+			}
+		}
+
+		/// <summary>
+		/// The list of the units of the stack (at most 12): the human player wakes up units (the cursor keys and Enter or Space,
+		/// or a click) and picks the one to go on with. Woken units lose their orders and a settler at work gets its full moves.
+		/// </summary>
+		/// <returns>The picked unit, the stack leader (LocateStackLeader) when none; also in AX</returns>
+		public ushort DisplayBattleScreen(short participantIdx, short troopIdx)
 		{
 			this.processor.Journal.OpenScope($"DisplayBattleScreen({participantIdx}, {troopIdx})");
 
-			// function body
-			this.processor.EnterFrame(0x28);
-			this.processor.PreserveIndexRegisters();
+			// The original keeps SI and DI for its caller
+			ushort savedSource = this.processor.RegSource.Value16;
+			ushort savedDest = this.processor.RegDest.Value16;
+
+			ushort screen = this.processor.PullGlobalWord(0xaa);
+			ushort backScreen = this.processor.PullGlobalWord(0x19d4);
 
 			this.owner.Startup.ConcealMouseCursor();
 
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0xaa),
-				0, 0, 0x140, 0xc8,
-				this.processor.PullGlobalWord(0x19d4),
-				0, 0);
+			this.owner.VideoCard.RenderImage(screen, 0, 0, 0x140, 0xc8, backScreen, 0, 0);
 
-			LocateStackLeader(participantIdx, troopIdx);
+			ushort picked = LocateStackLeader(participantIdx, troopIdx);
+			short[] stack = new short[StackListTally];
+			int stackTally = 0;
+			short present = troopIdx;
 
-			this.processor.EmitLocalWord(0x26, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x28, 0x0);
-			this.processor.RegAcc.Value16 = (ushort)troopIdx;
-			this.processor.EmitLocalWord(0x1e, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x2, 0x0);
+			do
+			{
+				stack[stackTally] = present;
+				present = this.troops.Following(participantIdx, present);
+				stackTally++;
+			}
+			while (stackTally < StackListTally && present != -1 && present != troopIdx);
 
-		L1f9a:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x28);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x1e);
-			this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x1a), this.processor.RegAcc.Value16);
-			this.processor.ScaleIndexToBase(0xc, this.processor.PullLocalWord(0x1e));
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81de));
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.EmitLocalWord(0x1e, this.processor.RegAcc.Value16);
-			this.processor.IncrementLocalWord(0x28);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x28), 0xc);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L1fd3;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xffff);
-			if (this.processor.FlagSet.IsEqual) goto L1fd3;
-			this.processor.RegAcc.Value16 = (ushort)troopIdx;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x1e), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L1f9a;
+			short listTop = (short)(0x60 - (stackTally << 3));
+			int selected = 0;
 
-		L1fd3:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x28);
-			this.processor.RegCount.LowByte = 0x3;
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, 0x60);
-			this.processor.RegAcc.Value16 = this.processor.NegateWord(this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x22, this.processor.RegAcc.Value16);
+			while (true)
+			{
+				stackTally = RenderStackList(participantIdx, troopIdx, listTop, stackTally);
 
-		L1fe2:
-			this.owner.Dialogs.FloodBoxWithDoubleShadow(100, this.processor.PullLocalSignedWord(0x22),
-				120, (this.processor.PullLocalWord(0x28) << 4) + 5, 3);
+				int choice = ChooseFromStackList(listTop, stackTally, ref selected);
 
-			this.processor.EmitLocalWord(0x28, 0x0);
-			this.processor.RegAcc.Value16 = (ushort)troopIdx;
-			this.processor.EmitLocalWord(0x1e, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x22);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x5);
-			this.processor.EmitLocalWord(0x20, this.processor.RegAcc.Value16);
+				if (choice < 0 || choice >= stackTally)
+					break;
 
-		L2018:
-			this.owner.MapOps.RenderUnitSprite(participantIdx,
-				this.processor.PullLocalSignedWord(0x1e),
-				106, this.processor.PullLocalSignedWord(0x20));
+				picked = (ushort)stack[choice];
 
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.AddScaledToSource(0xc, this.processor.PullLocalWord(0x1e));
-			this.processor.RegAcc.LowByte = 0x22;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d7)));
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x112a);
-			this.owner.Libc.CopyText(0xba06, this.processor.RegAcc.Value16);
+				if ((this.troops.Pull(participantIdx, picked, UnitMemory.Status) & (int)UnitStatusEnum.SettlerBuildMask) != 0)
+				{
+					this.troops.Assign(participantIdx, picked, UnitMemory.LeftoverSteps,
+						(byte)(3 * this.troops.KindField(participantIdx, picked, UnitKindTable.ShiftTally)));
+				}
 
-			this.processor.TestBitsByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d4)), 0x20);
-			if (this.processor.FlagSet.IsEqual) goto L206a;
+				// Only Unknown1 and Veteran stay
+				this.troops.Assign(participantIdx, picked, UnitMemory.Status,
+					(byte)(this.troops.Pull(participantIdx, picked, UnitMemory.Status) & 0x30));
+				ClearTravel(participantIdx, (short)picked);
 
-			this.owner.Libc.AppendText(0xba06, " (V)");
+				if (stackTally <= 1)
+					break;
+			}
 
-		L206a:
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, 128, this.processor.PullLocalSignedWord(0x20), 15);
-
-			this.processor.EmitGlobalByte(0xba06, 0x0);
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.AddScaledToSource(0xc, this.processor.PullLocalWord(0x1e));
-
-			this.owner.Conquest.ObtainCityLabel(this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81df)));
-			
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, 128, this.processor.PullLocalSignedWord(0x20) + 8, 14);
-
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81de));
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.EmitLocalWord(0x1e, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x20, this.processor.SumWord(this.processor.PullLocalWord(0x20), 0x10));
-			this.processor.IncrementLocalWord(0x28);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x28), 0xc);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L20e4;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xffff);
-			if (this.processor.FlagSet.IsEqual) goto L20e4;
-			this.processor.RegAcc.Value16 = (ushort)troopIdx;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x1e), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L20e4;
-			goto L2018;
-
-		L20e4:
-			this.owner.Startup.DisplayMouseCursor();
-
-			this.owner.TurnLogic.AwaitForKey();
-
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x1a3c), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L2110;
-
-		L20f5:
-			this.owner.Startup.ObtainMouseState();
-
-			this.processor.CompareWord(this.owner.GlobDb3a, 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L2104;
-			goto L21b7;
-
-		L2104:
-			this.owner.Libc.KeyAvailable();
-
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual) goto L20f5;
-			goto L21b7;
-
-		L2110:
-			this.owner.VideoCard.SubstituteHue(this.processor.PullGlobalWord(0xaa), 
-				105,
-				(this.processor.PullLocalSignedWord(0x2) * 16) +
-					this.processor.PullLocalSignedWord(0x22) + 4,
-				112, 17, 3, 11);
-
-			this.processor.CopyLocalWord(0x2, 0x1c);
-
-			this.owner.Dialogs.ObtainNavigationKey();
-
-			this.processor.EmitLocalWord(0x24, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x4800);
-			if (this.processor.FlagSet.IsEqual) goto L2158;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x5000);
-			if (this.processor.FlagSet.IsEqual) goto L21a0;
-			goto L2161;
-
-		L2158:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L2161;
-			this.processor.DecrementLocalWord(0x2);
-
-		L2161:
-			this.owner.VideoCard.SubstituteHue(this.processor.PullGlobalWord(0xaa), 
-				105,
-				(this.processor.PullLocalSignedWord(0x1c) * 16) +
-					this.processor.PullLocalSignedWord(0x22) + 4,
-				112, 17, 11, 3);
-
-			this.processor.CompareWord(this.processor.PullLocalWord(0x24), 0xd);
-			if (this.processor.FlagSet.IsEqual) goto L219b;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x24), 0x20);
-			if (this.processor.FlagSet.IsNotEqual) goto L21ae;
-
-		L219b:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x2);
-			goto L21ef;
-
-		L21a0:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x28);
-			this.processor.RegAcc.Value16 = this.processor.DecrementWord(this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x2));
-			if (this.processor.FlagSet.IsLessOrEqual) goto L2161;
-			this.processor.IncrementLocalWord(0x2);
-			goto L2161;
-
-		L21ae:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x24), 0x1b);
-			if (this.processor.FlagSet.IsEqual) goto L21b7;
-			goto L2110;
-
-		L21b7:
-			this.owner.Startup.ConcealMouseCursor();
-
-			this.processor.CompareWord(this.owner.GlobDb3a, 0x1);
-			if (this.processor.FlagSet.IsEqual) goto L21c6;
-			goto L2256;
-
-		L21c6:
-			this.processor.CompareWord(this.owner.GlobDb3c, 0x64);
-			if (this.processor.FlagSet.IsGreater) goto L21d0;
-			goto L2256;
-
-		L21d0:
-			this.processor.CompareWord(this.owner.GlobDb3c, 0xdc);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L2256;
-			this.processor.RegAcc.Value16 = this.owner.GlobDb3e;
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x22));
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, 0x5);
-			this.processor.DivideAccumulatorByPowerOfTwo(0x4);
-
-		L21ef:
-			this.processor.EmitLocalWord(0x1e, this.processor.RegAcc.Value16);
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsLess) goto L2256;
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x28);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x1e), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L2256;
-			this.processor.RegDest.Value16 = this.processor.PullLocalWord(0x1e);
-			this.processor.RegDest.Value16 = this.processor.ShiftLeftWord(this.processor.RegDest.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegDest.Value16 - 0x1a));
-			this.processor.EmitLocalWord(0x26, this.processor.RegAcc.Value16);
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.AddScaledToSource(0xc, this.processor.PullLocalWord(0x26));
-			this.processor.TestBitsByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d4)), 0xc2);
-			if (this.processor.FlagSet.IsEqual) goto L2233;
-			this.processor.RegAcc.LowByte = 0x22;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d7)));
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegAcc.Value16 = 0x3;
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x113a)));
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d8), this.processor.RegAcc.LowByte);
-
-		L2233:
-			this.processor.RegAcc.Value16 = 0x600;
-			this.processor.ScaleAccumulatorToSource((ushort)participantIdx);
-			this.processor.AddScaledToSource(0xc, this.processor.PullLocalWord(0x26));
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d4),
-				this.processor.BitAndByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d4)), 0x30));
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81da), 0xff);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x28), 0x1);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L2256;
-			goto L1fe2;
-
-		L2256:
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0x19d4),
-				0, 0, 0x140, 0xc8,
-				this.processor.PullGlobalWord(0xaa),
-				0, 0);
+			this.owner.VideoCard.RenderImage(backScreen, 0, 0, 0x140, 0xc8, screen, 0, 0);
 
 			this.owner.Startup.DisplayMouseCursor();
 
 			this.owner.TurnLogic.AwaitForKey();
 
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x26);
-			this.processor.RestoreIndexRegisters();
-			this.processor.LeaveFrame();
-			// Far return
+			this.processor.RegSource.Value16 = savedSource;
+			this.processor.RegDest.Value16 = savedDest;
+			this.processor.RegAcc.Value16 = picked;
+
 			this.processor.Journal.CloseScope("DisplayBattleScreen");
+
+			return picked;
+		}
+
+		/// <summary>Most units shown in the list of DisplayBattleScreen</summary>
+		private const int StackListTally = 12;
+
+		/// <summary>
+		/// The box with the units of the stack: picture, name with " (V)" for a veteran, home city. The units are counted again
+		/// while drawing, the box has the size of the count before.
+		/// </summary>
+		/// <returns>Number of units in the list</returns>
+		private int RenderStackList(short participantIdx, short troopIdx, short listTop, int boxTally)
+		{
+			this.owner.Dialogs.FloodBoxWithDoubleShadow(100, listTop, 120, (boxTally << 4) + 5, 3);
+
+			int stackTally = 0;
+			short present = troopIdx;
+			int lineTop = listTop + 5;
+
+			do
+			{
+				this.owner.MapOps.RenderUnitSprite(participantIdx, present, 106, lineTop);
+
+				this.owner.Libc.CopyText(0xba06, (ushort)(UnitKindTable.Origin + (UnitKindTable.Stride * this.troops.TroopKind(participantIdx, present))));
+
+				if ((this.troops.Pull(participantIdx, present, UnitMemory.Status) & (int)UnitStatusEnum.Veteran) != 0)
+				{
+					this.owner.Libc.AppendText(0xba06, " (V)");
+				}
+
+				this.owner.TextPainter.RenderTextToScreen0(0xba06, 128, lineTop, 15);
+
+				this.processor.EmitGlobalByte(0xba06, 0x0);
+
+				this.owner.Conquest.ObtainCityLabel(this.troops.PullSigned(participantIdx, present, UnitMemory.BaseTown));
+
+				this.owner.TextPainter.RenderTextToScreen0(0xba06, 128, lineTop + 8, 14);
+
+				present = this.troops.Following(participantIdx, present);
+				lineTop += 0x10;
+				stackTally++;
+			}
+			while (stackTally < StackListTally && present != -1 && present != troopIdx);
+
+			return stackTally;
+		}
+
+		/// <summary>
+		/// Waits for the choice in the list: with the mouse (0x1a3c) a click on a line or a key; without it the cursor keys move
+		/// the highlight, Enter or Space choose, Escape ends. Like the original, the mouse pointer is hidden again except after
+		/// Enter or Space.
+		/// </summary>
+		/// <returns>Line of the list, a negative number or a number past the list when none was chosen</returns>
+		private int ChooseFromStackList(short listTop, int stackTally, ref int selected)
+		{
+			ushort screen = this.processor.PullGlobalWord(0xaa);
+
+			this.owner.Startup.DisplayMouseCursor();
+
+			this.owner.TurnLogic.AwaitForKey();
+
+			if (this.processor.PullGlobalWord(0x1a3c) != 0)
+			{
+				do
+				{
+					this.owner.Startup.ObtainMouseState();
+
+					if (this.owner.GlobDb3a != 0)
+						break;
+				}
+				while (this.owner.Libc.KeyAvailable() == 0);
+			}
+			else
+			{
+				while (true)
+				{
+					this.owner.VideoCard.SubstituteHue(screen, 105, (selected * 16) + listTop + 4, 112, 17, 3, 11);
+
+					int highlighted = selected;
+					ushort key = this.owner.Dialogs.ObtainNavigationKey();
+
+					if (key == 0x4800)
+					{
+						if (selected != 0)
+							selected--;
+					}
+					else if (key == 0x5000)
+					{
+						if (stackTally - 1 > selected)
+							selected++;
+					}
+
+					this.owner.VideoCard.SubstituteHue(screen, 105, (highlighted * 16) + listTop + 4, 112, 17, 11, 3);
+
+					if (key == 0xd || key == 0x20)
+						return selected;
+
+					if (key == 0x1b)
+						break;
+				}
+			}
+
+			this.owner.Startup.ConcealMouseCursor();
+
+			if (this.owner.GlobDb3a == 1 && (short)this.owner.GlobDb3c > 0x64 && (short)this.owner.GlobDb3c < 0xdc)
+				return (short)(this.owner.GlobDb3e - listTop - 5) / 16;
+
+			return -1;
 		}
 
 		/// <summary>
