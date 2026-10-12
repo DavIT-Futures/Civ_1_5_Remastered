@@ -17,17 +17,14 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// Opens a menu of the menu bar (marker 0 - 4: Game, Orders, Advisors, World, Civilopedia; -1: the one under the mouse,
+		/// column / 60), with the screen kept in the back screen 0x19d4. Afterwards, by the menu's result in 0x654a: 1 draws the
+		/// map screen again, 0 puts the screen back.
 		/// </summary>
-		/// <param name="playerID"></param>
-		/// <param name="unitID"></param>
-		/// <param name="flag"></param>
 		public void ManageMenuBar(short participantIdx, short troopIdx, short marker)
 		{
 			this.processor.Journal.OpenScope($"ManageMenuBar({participantIdx}, {troopIdx}, {marker})");
 
-			// function body
-			this.processor.EnterFrame();
 			this.processor.EmitGlobalWord(0xd4ca, 0xffff);
 			this.processor.EmitGlobalWord(0x654a, 0x0);
 
@@ -35,14 +32,11 @@ namespace Civilization1Remaster.UI
 			{
 				marker = (short)this.owner.Helpers.VerifyValueSpan((short)this.owner.GlobDb3c / 60, 0, 4);
 			}
-		
+
 			this.owner.Startup.ConcealMouseCursor();
 
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0xaa),
-				0, 0, 320, 200,
-				this.processor.PullGlobalWord(0x19d4),
-				0, 0);
+			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200,
+				this.processor.PullGlobalWord(0x19d4), 0, 0);
 
 			this.owner.Startup.DisplayMouseCursor();
 
@@ -71,32 +65,19 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Startup.ConcealMouseCursor();
 
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x654a);
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1);
-			if (this.processor.FlagSet.IsNotEqual) goto L0099;
-			this.processor.RegData.Value16 = this.processor.BitOrWord(this.processor.RegData.Value16, this.processor.RegData.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L0099;
+			if (this.processor.PullGlobalWord(0x654a) == 1)
+			{
+				this.owner.TurnHooks.RepaintMainScreen();
+			}
 
-			this.owner.TurnHooks.RepaintMainScreen();
+			if (this.processor.PullGlobalWord(0x654a) == 0)
+			{
+				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 0x140, 0xc8,
+					this.processor.PullGlobalWord(0xaa), 0, 0);
+			}
 
-		L0099:
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x654a);
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.RegData.Value16 = this.processor.BitOrWord(this.processor.RegData.Value16, this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L00a6;
-
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0x19d4),
-				0, 0, 0x140, 0xc8,
-				this.processor.PullGlobalWord(0xaa),
-				0, 0);
-
-		L00a6:
 			this.owner.Startup.DisplayMouseCursor();
 
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-			// Far return
 			this.processor.Journal.CloseScope("ManageMenuBar");
 		}
 

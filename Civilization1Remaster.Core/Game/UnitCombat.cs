@@ -1233,82 +1233,35 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// The fallout of a nuclear attack on the tile and the 8 tiles around it (direction tables 0x1882 and 0x18e4): a city
+		/// there loses half of its size, any other tile gets pollution with chance 2 in 3 (unless its terrain is 10); every tile
+		/// is drawn again
 		/// </summary>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
 		public void EnactNuclearFallout(short horizLoc, short vertLoc)
 		{
 			this.processor.Journal.OpenScope($"EnactNuclearFallout({horizLoc}, {vertLoc})");
 
-			// function body
-			this.processor.EnterFrame(0x8);
-			this.processor.PreserveSource();
-			this.processor.EmitLocalWord(0x8, 0x0);
-			goto L0f13;
+			MapLayers chart = this.owner.MapOps.Chart;
 
-		L0ed1:
-			this.processor.RegAcc.Value16 = (ushort)(this.owner.Libc.Dice.DrawInt(3));
+			for (int heading = 0; heading <= 8; heading++)
+			{
+				int tileHoriz = this.owner.Routing.TunePosition(chart.DirectionHoriz(heading) + horizLoc);
+				int tileVert = (short)(chart.DirectionVert(heading) + vertLoc);
 
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual) goto L0f02;
+				if ((this.owner.MapOps.ObtainTileImprovements(tileHoriz, tileVert) & 0x1) != 0)
+				{
+					City town = this.owner.World.Towns[this.owner.Helpers.LocateCityAtPosition(tileHoriz, tileVert)];
 
-			this.owner.MapOps.ObtainTerrainType(
-				this.processor.PullLocalSignedWord(0x4),
-				this.processor.PullLocalSignedWord(0x6));
+					town.TrueExtent -= (sbyte)(town.TrueExtent / 2);
+				}
+				else if (this.owner.Libc.Dice.DrawInt(3) != 0 && this.owner.MapOps.ObtainTerrainType(tileHoriz, tileVert) != 0xa)
+				{
+					this.owner.CityOps.AttachSmog(tileHoriz, tileVert);
+				}
 
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
-			if (this.processor.FlagSet.IsEqual) goto L0f02;
+				this.owner.MapOps.RepaintMapTile(tileHoriz, tileVert);
+			}
 
-			this.owner.CityOps.AttachSmog(this.processor.PullLocalSignedWord(0x4),
-				this.processor.PullLocalSignedWord(0x6));
-
-		L0f02:
-			this.owner.MapOps.RepaintMapTile(
-				this.processor.PullLocalSignedWord(0x4),
-				this.processor.PullLocalSignedWord(0x6));
-
-			this.processor.IncrementLocalWord(0x8);
-
-		L0f13:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x8), 0x8);
-			if (this.processor.FlagSet.IsGreater) goto L0f73;
-
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x8);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-
-			this.owner.Routing.TunePosition(
-				this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1882)) + horizLoc);
-
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x18e4));
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, (ushort)vertLoc);
-			this.processor.EmitLocalWord(0x6, this.processor.RegAcc.Value16);
-
-			this.owner.MapOps.ObtainTileImprovements(
-				this.processor.PullLocalSignedWord(0x4),
-				this.processor.PullLocalSignedWord(0x6));
-
-			this.processor.TestBitsByte(this.processor.RegAcc.LowByte, 0x1);
-			if (this.processor.FlagSet.IsEqual) goto L0ed1;
-
-			this.owner.Helpers.LocateCityAtPosition(
-				this.processor.PullLocalSignedWord(0x4),
-				this.processor.PullLocalSignedWord(0x6));
-
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
-
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.Towns[this.processor.PullLocalWord(0x2)].TrueExtent;
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegCount.LowByte = 0x2;
-			this.processor.DivideSignedByte(this.processor.RegAcc, this.processor.RegCount.LowByte);
-			this.owner.World.Towns[this.processor.PullLocalWord(0x2)].TrueExtent -= (sbyte)this.processor.RegAcc.LowByte;
-			goto L0f02;
-
-		L0f73:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.LeaveFrame();
-			// Far return
 			this.processor.Journal.CloseScope("EnactNuclearFallout");
 		}
 	}

@@ -17,15 +17,13 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// The space background: a black screen with the picture 0x4bc4, its 10 parts cut out (rectangles of 13 words at 0x4be2,
+		/// the pictures go to 0x682a), 20 stars at random places (0x683e, 0x6852, 0x6866), the colour cycles 1 - 5 set up and,
+		/// when 0xd762 is set, started
 		/// </summary>
 		public void RenderSpaceScenery()
 		{
 			this.processor.Journal.OpenScope("RenderSpaceScenery()");
-
-			// function body
-			this.processor.EnterFrame(0x2);
-			this.processor.PreserveSource();
 
 			this.owner.Startup.ConcealMouseCursor();
 
@@ -37,71 +35,40 @@ namespace Civilization1Remaster.UI
 
 			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x4bc4, 1);
 
-			this.processor.EmitLocalWord(0x2, 0x0);
+			for (int partIdx = 0; partIdx < 0xa; partIdx++)
+			{
+				ushort part = (ushort)(0x1a * partIdx);
 
-		L0055:
-			this.processor.RegAcc.Value16 = 0x1a;
-			this.processor.ScaleAccumulatorToSource(this.processor.PullLocalWord(0x2));
+				ushort picture = this.owner.VideoCard.ScreenToPicture(1, this.processor.PullGlobalWord((ushort)(part + 0x4be2)),
+					this.processor.PullGlobalWord((ushort)(part + 0x4be4)), this.processor.PullGlobalWord((ushort)(part + 0x4be6)),
+					this.processor.PullGlobalWord((ushort)(part + 0x4be8)));
 
-			this.owner.VideoCard.ScreenToPicture(1,
-				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x4be2)),
-				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x4be4)),
-				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x4be6)),
-				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x4be8)));
+				this.processor.EmitGlobalWord((ushort)((partIdx << 1) + 0x682a), picture);
+			}
 
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x2);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x682a), this.processor.RegAcc.Value16);
-			this.processor.IncrementLocalWord(0x2);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0xa);
-			if (this.processor.FlagSet.IsLess) goto L0055;
-
-			this.processor.EmitLocalWord(0x2, 0x0);
-
-		L0095:
-			this.processor.RegAcc.Value16 = (ushort)(this.owner.Libc.Dice.DrawInt(240));
-
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x2);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x683e), this.processor.RegAcc.LowByte);
-
-			this.processor.RegAcc.Value16 = (ushort)(this.owner.Libc.Dice.DrawInt(192));
-
-			this.processor.RegAcc.LowByte = this.processor.SumByte(this.processor.RegAcc.LowByte, 0x8);
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x2);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x6852), this.processor.RegAcc.LowByte);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x6866), 0x0);
-			this.processor.IncrementLocalWord(0x2);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x14);
-			if (this.processor.FlagSet.IsLess) goto L0095;
+			for (int starIdx = 0; starIdx < 0x14; starIdx++)
+			{
+				this.processor.EmitGlobalByte((ushort)(starIdx + 0x683e), (byte)this.owner.Libc.Dice.DrawInt(240));
+				this.processor.EmitGlobalByte((ushort)(starIdx + 0x6852), (byte)(this.owner.Libc.Dice.DrawInt(192) + 8));
+				this.processor.EmitGlobalByte((ushort)(starIdx + 0x6866), 0x0);
+			}
 
 			this.owner.Startup.DisplayMouseCursor();
 
 			this.owner.Services.AssignHueCycleSpan(1, 30, 208, 223);
-
 			this.owner.Services.AssignHueCycleSpan(2, 11, 192, 207);
-
 			this.owner.Services.AssignHueCycleSpan(3, 20, 224, 239);
-
 			this.owner.Services.AssignHueCycleSpan(4, 8, 144, 159);
-
 			this.owner.Services.AssignHueCycleSpan(5, 150, 128, 129);
 
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xd762), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L0168;
-			this.processor.EmitLocalWord(0x2, 0x1);
+			if (this.processor.PullGlobalWord(0xd762) != 0)
+			{
+				for (ushort cycleIdx = 1; cycleIdx <= 5; cycleIdx++)
+				{
+					this.owner.Services.ActivateHueCycle(cycleIdx);
+				}
+			}
 
-		L0154:
-			this.owner.Services.ActivateHueCycle(this.processor.PullLocalWord(0x2));
-			
-			this.processor.IncrementLocalWord(0x2);
-
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x5);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L0154;
-
-		L0168:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.LeaveFrame();
-			// Far return
 			this.processor.Journal.CloseScope("RenderSpaceScenery");
 		}
 

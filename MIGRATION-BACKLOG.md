@@ -140,6 +140,10 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   Testy w `BatchThirteenDifferentialTests`. Przy okazji: ślad wywołań testów różnicowych zawiera teraz hasze ekranów
   z chwili każdego naciśnięcia klawisza (okna znikające przed końcem funkcji), a `FloodBox` loguje swoje argumenty
   szesnastkowo (wcześniej `{style:4}` wypisywało zawsze „4”, więc kolor nie był porównywany).
+- Kolejne 4 moduły (2026-10-12): `EnactNuclearFallout` (`UnitCombat`), `SwapTechnology` (`GovernmentAndDiplomacy`, wynik
+  w AX), `RenderSpaceScenery` (`SpaceshipScreen`), `ManageMenuBar` (`GameMenus`). Testy w `BatchFourteenDifferentialTests`.
+  Uwaga: liczniki taktów cykli kolorów (segment 0x35cf, co 0x66 bajtów od 0x1c) odlicza przerwanie zegara, więc zależą od
+  liczby dostępów do pamięci; testy porównują cykle bez nich (`HueCyclesWithoutCounters`).
 
 ## Następny krok
 
@@ -147,8 +151,9 @@ Dalej małe metody (`python Civilization1Remaster.Tests/Differential/Reference/f
 metody z co najmniej 2 liniami `goto L` / `FlagSet` / `Compare…` / `SumWord` itd., od najkrótszej): w `SystemServices` `DeactivateMouse` (dziwny kontrakt rejestrów AX/BX), `PointerEvent`, `RenderCursorToScreen`,
 `RecoverScreenUnderCursor`, `DisplayScreen`, `ImportColorsFromBuffer`, `FloodColors`, `FadeColors`; `SnapHeapPointer` (`VGADriver`),
 `ArrangeTextRow` (`TextBlockRenderer`), `RenderTextInputField`, `DisplayLabelInputBox` (`NewCityScreen`),
-`EnactNuclearFallout` (`UnitCombat`), `ManageMenuBar`, `DisplayWorldMenu` (`GameMenus`), `SwapTechnology` (`GovernmentAndDiplomacy`),
-`RenderSpaceScenery` (`SpaceshipScreen`), `DisplayRevolutionScreen` (`StartGameMenu`), `DisplayConquerorScreen` (`GameReplay`),
+`DisplayWorldMenu`, `DisplayAdvisorMenu` (`GameMenus`), `DisplayRevolutionScreen` (`StartGameMenu`), `DisplayConquerorScreen`
+(`GameReplay`), `RenderStarField` (`SpaceshipScreen`), `ProduceCloudLayer` (`GameInitAndIntro`), `ObtainDistanceToCapital`
+(`CivilizationSchism`), `RenderExplosion` (`DiplomatActions`),
 reszta generatora mapy w `GameInitAndIntro`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)

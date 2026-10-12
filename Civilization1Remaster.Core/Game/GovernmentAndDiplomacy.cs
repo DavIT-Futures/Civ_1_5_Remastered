@@ -1225,81 +1225,43 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// Two players exchange technologies when each knows one the other does not (the last such of the 72 for each side)
 		/// </summary>
-		/// <param name="playerID1"></param>
-		/// <param name="playerID2"></param>
+		/// <remarks>In AX: 1 when they exchanged, else 0</remarks>
 		public void SwapTechnology(short participantIdx1, short participantIdx2)
 		{
 			this.processor.Journal.OpenScope($"SwapTechnology({participantIdx1}, {participantIdx2})");
 
-			// function body
-			this.processor.EnterFrame(0x8);
+			short firstGains = -1, secondGains = -1;
 
-			this.processor.EmitLocalWord(0x8, 0x0);
-			this.processor.EmitLocalWord(0x6, 0x0);
+			for (short scienceIdx = 0; scienceIdx < 0x48; scienceIdx++)
+			{
+				if (this.owner.Advisors.PlayerKnowsTechnology(participantIdx1, scienceIdx) == 0 &&
+					this.owner.Advisors.PlayerKnowsTechnology(participantIdx2, scienceIdx) != 0)
+				{
+					firstGains = scienceIdx;
+				}
 
-		L0cff:
-			this.processor.RegAcc.Value16 = this.owner.Advisors.PlayerKnowsTechnology(
-				participantIdx1,
-				this.processor.PullLocalSignedWord(0x6));
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsNotEqual)
-				goto L0d2d;
+				if (this.owner.Advisors.PlayerKnowsTechnology(participantIdx2, scienceIdx) == 0 &&
+					this.owner.Advisors.PlayerKnowsTechnology(participantIdx1, scienceIdx) != 0)
+				{
+					secondGains = scienceIdx;
+				}
+			}
 
-			this.processor.RegAcc.Value16 = this.owner.Advisors.PlayerKnowsTechnology(
-				participantIdx2,
-				this.processor.PullLocalSignedWord(0x6));
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual)
-				goto L0d2d;
+			if (firstGains >= 0 && secondGains >= 0)
+			{
+				this.owner.Advisors.EarnTechnology(participantIdx1, firstGains, participantIdx2);
 
-			this.processor.EmitLocalByte(0x8, this.processor.BitOrByte(this.processor.PullLocalByte(0x8), 0x1));
-			this.processor.CopyLocalWord(0x6, 0x2);
+				this.owner.Advisors.EarnTechnology(participantIdx2, secondGains, participantIdx1);
 
-		L0d2d:
-			this.processor.RegAcc.Value16 = this.owner.Advisors.PlayerKnowsTechnology(
-				participantIdx2,
-				this.processor.PullLocalSignedWord(0x6));
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsNotEqual)
-				goto L0d5b;
+				this.processor.RegAcc.Value16 = 0x1;
+			}
+			else
+			{
+				this.processor.RegAcc.Value16 = 0;
+			}
 
-			this.processor.RegAcc.Value16 = this.owner.Advisors.PlayerKnowsTechnology(
-				participantIdx1,
-				this.processor.PullLocalSignedWord(0x6));
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual)
-				goto L0d5b;
-
-			this.processor.EmitLocalByte(0x8, this.processor.BitOrByte(this.processor.PullLocalByte(0x8), 0x2));
-			this.processor.CopyLocalWord(0x6, 0x4);
-
-		L0d5b:
-			this.processor.EmitLocalWord(0x6, this.processor.IncrementWord(this.processor.PullLocalWord(0x6)));
-			this.processor.CompareWord(this.processor.PullLocalWord(0x6), 0x48);
-			if (this.processor.FlagSet.IsLess) goto L0cff;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x8), 0x3);
-			if (this.processor.FlagSet.IsNotEqual) goto L0d91;
-			
-			this.owner.Advisors.EarnTechnology(participantIdx1,
-				this.processor.PullLocalSignedWord(0x2),
-				participantIdx2);
-			
-			this.owner.Advisors.EarnTechnology(participantIdx2,
-				this.processor.PullLocalSignedWord(0x4),
-				participantIdx1);
-			
-			this.processor.RegAcc.Value16 = 0x1;
-			goto L0d93;
-
-		L0d91:
-			this.processor.RegAcc.Value16 = 0;
-
-		L0d93:
-			this.processor.RegStack.Value16 = this.processor.RegFrame.Value16;
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-			// Far return
 			this.processor.Journal.CloseScope("SwapTechnology");
 		}
 
