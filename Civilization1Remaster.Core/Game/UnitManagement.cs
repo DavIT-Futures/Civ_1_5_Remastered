@@ -1371,18 +1371,6 @@ namespace Civilization1Remaster.Game
 			this.processor.EnterFrame();
 			this.processor.PreserveIndexRegisters();
 
-			// If the unit has already been eliminated (unitKind == 0xff / -1), exit immediately to prevent re-elimination crashes
-			this.processor.ScaleIndexToBase(0xc, (ushort)troopIdx);
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			sbyte currentUnitType = (sbyte)this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d7));
-			if (currentUnitType == -1)
-			{
-				this.processor.RestoreIndexRegisters();
-				this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-				this.processor.Journal.CloseScope("EliminateUnit");
-				return;
-			}
-
 			this.processor.CompareWord(this.processor.PullGlobalWord(0x70d8), 0x0);
 			if (this.processor.FlagSet.IsEqual) goto L0f46;
 			this.processor.ScaleIndexToBase(0xc, (ushort)troopIdx);

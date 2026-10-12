@@ -260,14 +260,16 @@ namespace Civilization1Remaster.Tests
 		}
 
 		[Theory]
-		[InlineData(10, 20)]
-		[InlineData(0, 0)]
-		[InlineData(5, 10)]
-		public void Differential_CitizenScore_MatchesDosAssembly(int happy, int content)
+		[InlineData(10, 20, 0, 0)]
+		[InlineData(0, 0, 0, 0)]
+		[InlineData(5, 10, 3, 2)]
+		[InlineData(1, 2, 4, 3)]
+		public void Differential_CitizenScore_MatchesDosAssembly(int happy, int content, int unhappy, int specialists)
 		{
-			// In assembly: happy * 2 + content * 1
-			int asmScore = happy * 2 + content;
-			int csharpScore = ScoreRules.ComputeCitizenScore(happy, content);
+			// In assembly (L0e21): city size + happy - unhappy
+			int citySize = happy + content + unhappy + specialists;
+			int asmScore = citySize + happy - unhappy;
+			int csharpScore = ScoreRules.ComputeCitizenScore(happy, content, specialists);
 			Assert.Equal(asmScore, csharpScore);
 		}
 

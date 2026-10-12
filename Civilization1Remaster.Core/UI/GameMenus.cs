@@ -686,7 +686,7 @@ namespace Civilization1Remaster.UI
 		L06f8:
 			this.owner.Libc.CopyText(0xba06, " Wonders of the World (F7)\n Top 5 Cities (F8)\n Civilization Score (F9)\n");
 
-			this.owner.Libc.AppendText(0xba06, " World Map (F10)\n Demographics\n SpaceShips\n Obsolete Wonders\n");
+			this.owner.Libc.AppendText(0xba06, " World Map (F10)\n Demographics\n SpaceShips\n");
 
 			this.owner.Dialogs.DisplayMenu(0xba06, 144, 8, 0);
 
@@ -716,8 +716,6 @@ namespace Civilization1Remaster.UI
 			if (this.processor.FlagSet.IsEqual) goto L076d;
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x5);
 			if (this.processor.FlagSet.IsEqual) goto L07a6;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x6);
-			if (this.processor.FlagSet.IsEqual) goto L07b0;
 			goto L07ab;
 
 		L0766:
@@ -747,11 +745,6 @@ namespace Civilization1Remaster.UI
 
 		L07a6:
 			this.owner.RocketScreen.ChooseNationToView();
-
-			goto L07ab;
-
-		L07b0:
-			this.owner.Atlas.DisplayObsoleteWonders();
 
 		L07ab:
 			this.processor.RegStack.Value16 = this.processor.RegFrame.Value16;

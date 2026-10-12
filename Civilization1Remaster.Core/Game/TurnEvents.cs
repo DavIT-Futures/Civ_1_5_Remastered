@@ -18,81 +18,20 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// Fortified units and units in cities heal lost hit points every turn.
-		/// - Units in friendly cities heal 2 HP per turn (2x faster).
-		/// - Land units outside cities heal 1 HP per turn if fortified.
-		/// - Ships outside cities heal 1 HP per turn ONLY if fortified, adjacent to coast, and within distance &lt;= 3 from a friendly city.
+		/// Fortified units heal one lost hit point every turn
 		/// </summary>
 		public void MendFortifiedUnits()
 		{
-			// Collect friendly city locations for each participant
-			var friendlyCitiesByPlayer = new System.Collections.Generic.List<System.Drawing.Point>[UnitHealth.ParticipantTally];
-			for (int p = 0; p < UnitHealth.ParticipantTally; p++)
-			{
-				friendlyCitiesByPlayer[p] = new System.Collections.Generic.List<System.Drawing.Point>();
-			}
-
-			for (int c = 0; c < this.owner.World.Towns.Length; c++)
-			{
-				var town = this.owner.World.Towns[c];
-				if (town != null && town.ConditionMarker != 0xff && town.ParticipantIdx >= 0 && town.ParticipantIdx < UnitHealth.ParticipantTally)
-				{
-					friendlyCitiesByPlayer[town.ParticipantIdx].Add(town.Place);
-				}
-			}
-
 			for (int participantIdx = 0; participantIdx < UnitHealth.ParticipantTally; participantIdx++)
 			{
-				var friendlyCities = friendlyCitiesByPlayer[participantIdx];
-
 				for (int troopIdx = 0; troopIdx < UnitHealth.TroopTally; troopIdx++)
 				{
 					ushort troop = (ushort)(0x81d4 + 0x600 * participantIdx + 0xc * troopIdx);
 					int troopKind = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(troop + 3));
 
-					if (troopKind == 0xff || troopKind < 0 || troopKind >= this.owner.World.TroopSpecs.Length)
-						continue;
-
-					int ux = (sbyte)this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(troop + 1));
-					int uy = (sbyte)this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(troop + 2));
-					byte condition = this.processor.PullUInt8(this.processor.SegData.Value16, troop);
-					bool isFortified = (condition & (int)UnitStatusEnum.Fortified) != 0;
-
-					// Check if unit is in a friendly city
-					bool inFriendlyCity = false;
-					for (int c = 0; c < friendlyCities.Count; c++)
+					if (troopKind != 0xff && (this.processor.PullUInt8(this.processor.SegData.Value16, troop) & (int)UnitStatusEnum.Fortified) != 0)
 					{
-						if (friendlyCities[c].X == ux && friendlyCities[c].Y == uy)
-						{
-							inFriendlyCity = true;
-							break;
-						}
-					}
-
-					short landGroup = this.owner.World.TroopSpecs[troopKind].LandGroup;
-
-					bool isAdjacentToCoast = false;
-					int distToCity = int.MaxValue;
-					if (landGroup == 2 && !inFriendlyCity)
-					{
-						distToCity = HealingRules.ComputeDistanceToNearestFriendlyCity(ux, uy, friendlyCities);
-						if (distToCity <= HealingRules.MaxShipCoastDistanceToCity)
-						{
-							isAdjacentToCoast = HealingRules.IsAdjacentToLand(ux, uy, (nx, ny) =>
-								this.owner.MapOps.ObtainTerrainType(nx, ny) == HealingRules.OceanTerrainType);
-						}
-					}
-
-					int healAmount = HealingRules.CalculateHealAmount(
-						landGroup,
-						inFriendlyCity,
-						isFortified,
-						isAdjacentToCoast,
-						distToCity);
-
-					if (healAmount > 0)
-					{
-						this.owner.World.Vitals.MendAmount(participantIdx, troopIdx, troopKind, healAmount);
+						this.owner.World.Vitals.MendOne(participantIdx, troopIdx, troopKind);
 					}
 				}
 			}
@@ -357,38 +296,77 @@ namespace Civilization1Remaster.Game
 		L0306:
 			RefreshPeaceGraphContent();
 
-			if (this.processor.PullGlobalWord(0xdc48) == 0)
-			{
-				short humanPlayer = this.owner.World.PersonParticipantIdx;
-				if (TurnEventRules.CheckBankruptcyWarning(
-					this.owner.World.Participants[humanPlayer].TownTally,
-					this.owner.World.Participants[humanPlayer].Gold,
-					this.processor.PullLocalSignedWord(0x1a)))
-				{
-					if ((this.owner.World.ParticipantMarkers & (1 << humanPlayer)) != 0)
-					{
-						this.processor.EmitGlobalByte(0xba06, 0);
-						this.owner.BlockText.DisplayTextDialog(0x1c2a);
-						this.processor.EmitGlobalWord(0x2f9e, 4);
-						DisplayDialog(0xba06, 80, 80);
-					}
-				}
-			}
+			this.processor.CompareWord(this.processor.PullGlobalWord(0xdc48), 0x0);
+			if (this.processor.FlagSet.IsNotEqual) goto L036d;
+			this.processor.RegSource.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
+			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
+			
+			if (this.owner.World.Participants[this.owner.World.PersonParticipantIdx].TownTally <= 1 ||
+				this.owner.World.Participants[this.owner.World.PersonParticipantIdx].Gold >= 100) goto L036d;
 
+			this.processor.RegAcc.Value16 = (ushort)this.owner.World.Participants[this.owner.World.PersonParticipantIdx].Gold;
+			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x1a));
+			this.processor.RegCount.Value16 = 0xa;
+			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
+			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, (ushort)this.owner.World.Participants[this.owner.World.PersonParticipantIdx].Gold);
+			if (this.processor.FlagSet.IsUnsigned) goto L036d;
+			this.processor.RegAcc.Value16 = 0x1;
+			this.processor.RegCount.LowByte = (byte)(this.owner.World.PersonParticipantIdx & 0xff);
+			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
+			this.processor.TestBitsWord(this.processor.RegAcc.Value16, (ushort)this.owner.World.ParticipantMarkers);
+			if (this.processor.FlagSet.IsEqual) goto L036d;
+			this.processor.EmitGlobalByte(0xba06, 0x0);
+
+			this.owner.BlockText.DisplayTextDialog(0x1c2a);
+
+			this.processor.EmitGlobalWord(0x2f9e, 0x4);
+
+			DisplayDialog(0xba06, 80, 80);
+
+		L036d:
 			owner.World.RoundTally++;
-			int prevSeason = this.owner.World.Season;
-			int nextSeason = TurnEventRules.ComputeNextSeason(prevSeason, (short)this.owner.World.StarshipMarkers);
+			if (this.owner.World.Season >= 1000) goto L0380;
+			this.owner.World.Season += 20;
+			goto L03b8;
 
-			if (prevSeason < 0 && nextSeason >= 1)
-			{
-				for (int p = 0; p < 8; p++)
-				{
-					this.owner.World.Participants[p].InquiryHeadway <<= 1;
-				}
-			}
+		L0380:
+			if (this.owner.World.Season >= 1500) goto L038f;
+			this.owner.World.Season += 10;
+			goto L03b8;
 
-			this.owner.World.Season = (short)nextSeason;
+		L038f:
+			if (this.owner.World.Season >= 1750) goto L039e;
+			this.owner.World.Season += 5;
+			goto L03b8;
 
+		L039e:
+			if (this.owner.World.Season >= 1850) goto L03b4;
+			this.processor.TestBitsByte((byte)(this.owner.World.StarshipMarkers & 0xff), 0xfe);
+			if (this.processor.FlagSet.IsNotEqual) goto L03b4;
+			this.owner.World.Season += 2;
+			goto L03b8;
+
+		L03b4:
+			this.owner.World.Season += 1;
+
+		L03b8:
+			if (owner.World.Season != 0) goto L03dc;
+			this.processor.EmitLocalWord(0x6, 0x0);
+
+		L03c4:
+			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x6);
+			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
+			this.owner.World.Participants[this.processor.PullLocalWord(0x6)].InquiryHeadway <<= 1;
+			this.processor.IncrementLocalWord(0x6);
+			this.processor.CompareWord(this.processor.PullLocalWord(0x6), 0x8);
+			if (this.processor.FlagSet.IsLess) goto L03c4;
+			this.owner.World.Season = 1;
+
+		L03dc:
+			if (this.owner.World.Season != 21) goto L03e9;
+			this.owner.World.Season = 20;
+
+		L03e9:
 			// Autosave every turn. The original game saved only every 50 turns (when enabled in the game options)
 			// into the saved games 4 - 9, which are now manual saves.
 			MendFortifiedUnits();
@@ -566,20 +544,24 @@ namespace Civilization1Remaster.Game
 			if (this.processor.FlagSet.IsLess) goto L05f0;
 			this.processor.CompareWord(this.processor.PullLocalWord(0x8), 0x0);
 			if (this.processor.FlagSet.IsEqual) goto L066e;
+			this.processor.TestBitsByte((byte)(this.owner.World.SessionPrefMarkers & 0xff), 0x80);
+			if (this.processor.FlagSet.IsEqual) goto L066e;
+			this.processor.TestBitsWord((ushort)this.owner.World.StarshipMarkers, 0x100);
+			if (this.processor.FlagSet.IsNotEqual) goto L066e;
 
-			int palaceScoreReq = ObtainPalaceScoreForLevel((short)(this.owner.World.CastleTier + 1));
-			int currentScore = this.owner.Founding.DisplayFinalScore(this.owner.World.PersonParticipantIdx, false);
-			bool palacePrefEnabled = (this.owner.World.SessionPrefMarkers & 0x80) != 0;
+			ObtainPalaceScoreForLevel((short)(this.owner.World.CastleTier + 1));
 
-			if (this.processor.PullLocalWord(0x8) != 0 &&
-				TurnEventRules.CheckPalaceUpgradeEligible(palaceScoreReq, currentScore, this.owner.World.CastleTier, palacePrefEnabled, (short)this.owner.World.StarshipMarkers))
-			{
-				this.owner.World.CastleTier++;
-				if (this.owner.World.CastleTier <= 37)
-				{
-					this.owner.Throne.DisplayPalace();
-				}
-			}
+			this.processor.RegSource.Value16 = this.processor.RegAcc.Value16;
+
+			this.owner.Founding.DisplayFinalScore(this.owner.World.PersonParticipantIdx, false);
+
+			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.RegSource.Value16);
+			if (this.processor.FlagSet.IsLess) goto L066e;
+
+			this.owner.World.CastleTier++;
+			if (this.owner.World.CastleTier > 37) goto L066e;
+			
+			this.owner.Throne.DisplayPalace();
 
 		L066e:
 			RenderStatusBar();
@@ -604,30 +586,41 @@ namespace Civilization1Remaster.Game
 			this.processor.EmitLocalWord(0x6, this.processor.IncrementWord(this.processor.PullLocalWord(0x6)));
 			this.processor.CompareWord(this.processor.PullLocalWord(0x6), 0x8);
 			if (this.processor.FlagSet.IsLess) goto L067d;
+			this.processor.RegAcc.Value16 = 0x14;
+			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, (ushort)this.owner.World.HardnessTier);
+			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, 0x820);
+			this.processor.RegAcc.Value16 = this.processor.NegateWord(this.processor.RegAcc.Value16);
+			if ((short)this.processor.RegAcc.Value16 != this.owner.World.Season) goto L0718;
 
-			int retirementWarningYear = TurnEventRules.ComputeRetirementWarningYear(this.owner.World.HardnessTier);
-			if (this.owner.World.Season == retirementWarningYear)
-			{
-				short regime = (short)this.owner.World.Participants[this.owner.World.PersonParticipantIdx].RegimeKind;
-				ushort regimeTitlePtr = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((regime << 1) + 0x19b2));
-				this.owner.Libc.CopyText(0xba06, regimeTitlePtr);
-				this.owner.Libc.AppendText(0xba06, " ");
+			this.processor.RegBase.Value16 = (ushort)this.owner.World.Participants[this.owner.World.PersonParticipantIdx].RegimeKind;
+			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
+			this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x19b2)));
 
-				ushort leaderTitlePtr = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((this.owner.World.PersonParticipantIdx << 1) + 0x19a2));
-				this.owner.Libc.AppendText(0xba06, leaderTitlePtr);
-				this.owner.Libc.AppendText(0xba06, "\nplans retirement\nin 20 years.\n");
+			this.owner.Libc.AppendText(0xba06, " ");
 
-				this.owner.Paper.DisplayNewspaper(-1);
-			}
+			this.processor.RegBase.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
+			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
+			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x19a2)));
 
-			int maxGameYear = TurnEventRules.ComputeMaxGameYear(this.owner.World.HardnessTier);
-			if (this.processor.PullGlobalWord(0x1cf6) == 0xffff &&
-				this.processor.PullGlobalWord(0xb884) == 0 &&
-				this.owner.World.Season != maxGameYear)
-			{
-				goto L089a;
-			}
+			this.owner.Libc.AppendText(0xba06, "\nplans retirement\nin 20 years.\n");
 
+			this.owner.Paper.DisplayNewspaper(-1);
+
+		L0718:
+			this.processor.CompareWord(this.processor.PullGlobalWord(0x1cf6), 0xffff);
+			if (this.processor.FlagSet.IsNotEqual) goto L073b;
+
+			this.processor.CompareWord(this.processor.PullGlobalWord(0xb884), 0x0);
+			if (this.processor.FlagSet.IsNotEqual) goto L073b;
+
+			this.processor.RegAcc.Value16 = 0x14;
+			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, (ushort)this.owner.World.HardnessTier);
+			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, 0x834);
+			this.processor.RegAcc.Value16 = this.processor.NegateWord(this.processor.RegAcc.Value16);
+			if ((short)this.processor.RegAcc.Value16 == this.owner.World.Season) goto L073b;
+			goto L089a;
+
+		L073b:
 			this.owner.Startup.ConcealMouseCursor();
 
 			this.owner.Libc.CopyText(0xba06, "*** GAME OVER ***\n");
@@ -1839,11 +1832,33 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"ObtainPalaceScoreForLevel({castleTier})");
 
-			ushort score = (ushort)TurnEventRules.ComputePalaceScoreForLevel(castleTier, this.owner.World.HardnessTier);
-			this.processor.RegAcc.Value16 = score;
+			// function body
+			this.processor.EnterFrame(0x4);
+			this.processor.EmitLocalWord(0x2, 0x0);
+			this.processor.EmitLocalWord(0x4, 0x0);
+			goto L170b;
 
+		L16f9:
+			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x4);
+			this.processor.RegCount.Value16 = 0x7;
+			this.processor.RegCount.Value16 = this.processor.SubtractWord(this.processor.RegCount.Value16, (ushort)this.owner.World.HardnessTier);
+			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
+			this.processor.EmitLocalWord(0x2, this.processor.SumWord(this.processor.PullLocalWord(0x2), this.processor.RegAcc.Value16));
+			this.processor.IncrementLocalWord(0x4);
+
+		L170b:
+			if (this.processor.PullLocalSignedWord(0x4) <= castleTier)
+				goto L16f9;
+
+			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x2);
+			this.processor.HalveAccumulator();
+			this.processor.RegAcc.Value16 = this.processor.IncrementWord(this.processor.RegAcc.Value16);
+			this.processor.LeaveFrame();
+
+			// Far return
 			this.processor.Journal.CloseScope("ObtainPalaceScoreForLevel");
-			return score;
+
+			return this.processor.RegAcc.Value16;
 		}
 
 		/// <summary>
@@ -1863,26 +1878,39 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope("HandleEndOfTurnEvents()");
 
-			var (nextSmog, triggerWarning, triggerWarming) = TurnEventRules.ComputeGlobalWarmingStep(
-				this.owner.World.DirtyCellTally,
-				this.owner.World.WorldHeatingTally,
-				this.owner.World.SmogImpactTier);
+			// function body
+			this.processor.EnterFrame(0xe);
+			this.processor.PreserveIndexRegisters();
 
-			this.owner.World.SmogImpactTier = (short)nextSmog;
+			this.processor.RegAcc.Value16 = (ushort)this.owner.World.DirtyCellTally;
+			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, 0x1);
+			this.processor.RegCount.Value16 = (ushort)this.owner.World.WorldHeatingTally;
+			this.processor.RegCount.Value16 = this.processor.ShiftLeftWord(this.processor.RegCount.Value16, 0x2);
+			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, this.processor.RegCount.Value16);
+			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, (ushort)this.owner.World.SmogImpactTier);
+			this.processor.RegAcc.Value16 = (ushort)Math.Sign((short)this.processor.RegAcc.Value16);
+			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, (ushort)this.owner.World.SmogImpactTier);
+			
+			this.owner.Helpers.VerifyValueSpan((short)this.processor.RegAcc.Value16, 0, 99);
 
-			if (triggerWarning)
-			{
-				this.owner.Libc.CopyText(0xba06, "Scientists alarmed by\nrising temperatures.\nGlobal Warming feared!\n");
-				this.owner.Paper.DisplayNewspaper(-1);
-			}
+			owner.World.SmogImpactTier = (short)this.processor.RegAcc.Value16;
+			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xc);
+			if (this.processor.FlagSet.IsNotEqual) goto L17ca;
+			if (this.owner.World.DirtyCellTally <= 6) goto L17ca;
 
-			if (triggerWarming)
-			{
-				this.owner.WorldSetup.EnactGlobalWarming(this.owner.World.WorldHeatingTally);
-				this.owner.World.WorldHeatingTally++;
-				this.owner.World.SmogImpactTier = 0;
-			}
+			this.owner.Libc.CopyText(0xba06, "Scientists alarmed by\nrising temperatures.\nGlobal Warming feared!\n");
 
+			this.owner.Paper.DisplayNewspaper(-1);
+
+		L17ca:
+			if (this.owner.World.SmogImpactTier <= 16) goto L17e7;
+			
+			this.owner.WorldSetup.EnactGlobalWarming(this.owner.World.WorldHeatingTally);
+
+			this.owner.World.WorldHeatingTally++;
+			this.owner.World.SmogImpactTier = 0;
+
+		L17e7:
 			this.processor.EmitLocalWord(0xa, 0x0);
 			goto L18a0;
 
@@ -2278,7 +2306,19 @@ namespace Civilization1Remaster.Game
 		/// <param name="score"></param>
 		public short ObtainPalaceLevel(short rating)
 		{
-			return (short)TurnEventRules.ComputePalaceLevel(rating);
+			// function body
+			short castleTier = 0;
+
+			do
+			{
+				castleTier += 5;
+				rating -= castleTier;
+			} while (rating > 0);
+
+			castleTier /= 5;
+			castleTier--;
+
+			return castleTier;
 		}
 	}
 }

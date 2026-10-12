@@ -1,6 +1,4 @@
 using Civilization1Remaster.Emulation;
-using Civilization1Remaster.Game.Rules;
-using System;
 
 namespace Civilization1Remaster.UI
 {
@@ -151,14 +149,33 @@ namespace Civilization1Remaster.UI
 
 			DisplayReportPreamble(0x4762, 1);
 
-			bool isHuman = (participantIdx == this.owner.World.PersonParticipantIdx);
-			int totalCost = ScienceRules.ComputeTechnologyCost(
-				isHuman,
-				this.owner.World.HardnessTier,
-				this.owner.World.Participants[participantIdx].FoundScienceTally,
-				this.owner.World.Season < 0);
+			this.processor.EmitLocalWord(0x2, 0x0);
+			this.processor.RegAcc.Value16 = (ushort)owner.World.HardnessTier;
+			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, 0x1);
+			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.PullGlobalWord(0xd2de));
+			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x6);
+			this.processor.EmitLocalWord(0xe, this.processor.RegAcc.Value16);
 
-			this.processor.EmitLocalWord(0xc, (ushort)totalCost);
+			this.processor.RegAcc.Value16 = 0xb;
+			this.processor.RegAcc.Value16 -= (ushort)this.owner.World.Participants[participantIdx].FoundScienceTally;
+			this.processor.RegSource.Value16 = this.processor.RegAcc.Value16;
+			this.processor.CompareWord(this.processor.PullLocalWord(0xe), this.processor.RegSource.Value16);
+			if (this.processor.FlagSet.IsGreaterOrEqual) goto L018b;
+			this.processor.EmitLocalWord(0xe, this.processor.RegSource.Value16);
+
+		L018b:
+			if (this.owner.World.Season >= 0) goto L0197;
+			this.processor.RegCount.Value16 = 0x1;
+			goto L019a;
+
+		L0197:
+			this.processor.RegCount.Value16 = 0x2;
+
+		L019a:
+			this.processor.RegAcc.Value16 = (ushort)this.owner.World.Participants[participantIdx].FoundScienceTally;
+			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
+			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.PullLocalWord(0xe));
+			this.processor.EmitLocalWord(0xc, this.processor.RegAcc.Value16);
 
 			this.owner.Helpers.VerifyValueSpan(
 				2432 / (this.processor.PullLocalSignedWord(0xc) + 1),
@@ -216,17 +233,16 @@ namespace Civilization1Remaster.UI
 			
 			if (this.owner.World.Participants[this.owner.World.PersonParticipantIdx].PresentInquiryIdx == -1) goto L02ff;
 
+			this.owner.Libc.CopyText(0xba06, "Researching ");
+
 			this.processor.RegAcc.Value16 = 0x16;
 			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, (ushort)this.owner.World.Participants[this.owner.World.PersonParticipantIdx].PresentInquiryIdx);
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x4da);
-			string techTitle = this.processor.PullText(CPU.AsLinearAddress(this.processor.SegData.Value16, this.processor.RegAcc.Value16));
+			this.owner.Libc.AppendText(0xba06, this.processor.RegAcc.Value16);
 
-			int currentProgress = this.owner.World.Participants[participantIdx].InquiryHeadway;
-			int researchCost = this.processor.PullLocalSignedWord(0xc);
-			string researchHeader = $"Researching {techTitle} ({currentProgress}/{researchCost})";
+			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 161, 26, 0);
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0(researchHeader, 161, 26, 0);
-			this.owner.TextPainter.RenderCenteredTextToScreen0(researchHeader, 160, 26, 15);
+			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 26, 15);
 
 		L02ff:
 			this.processor.EmitLocalWord(0xa, 0x2a);
@@ -285,30 +301,6 @@ namespace Civilization1Remaster.UI
 			goto L0313;
 
 		L03a4:
-			int requiredBeakers = this.processor.PullLocalSignedWord(0xc);
-			int currentBeakers = this.owner.World.Participants[participantIdx].InquiryHeadway;
-
-			int totalSciencePerTurn = 0;
-			for (int cityIdx = 0; cityIdx < 128; cityIdx++)
-			{
-				if (this.owner.World.Towns[cityIdx].ConditionMarker != 0xff &&
-					this.owner.World.Towns[cityIdx].ParticipantIdx == participantIdx)
-				{
-					this.owner.CityOps.HandleCity((short)cityIdx, -1);
-					totalSciencePerTurn += (short)this.processor.PullGlobalWord(0x70e6);
-				}
-			}
-			if (this.owner.CityOps.PlayerEnjoysWonderEffect((short)participantIdx, 0x14) != 0)
-			{
-				totalSciencePerTurn += totalSciencePerTurn / 2;
-			}
-
-			this.owner.VideoCard.RenderLine(this.processor.PullGlobalWord(0xaa), 8, 187, 312, 187, 8);
-			string scienceSummary = (this.owner.World.Participants[this.owner.World.PersonParticipantIdx].PresentInquiryIdx != -1)
-				? AdvisorStatistics.FormatScienceSummary(currentBeakers, requiredBeakers, totalSciencePerTurn)
-				: $"Science: +{totalSciencePerTurn}/turn (No research selected)";
-			this.owner.TextPainter.RenderCenteredTextToScreen0(scienceSummary, 160, 190, 14);
-
 			FinishReportScreen();
 
 			this.processor.RestoreSource();
@@ -612,11 +604,6 @@ namespace Civilization1Remaster.UI
 
 			this.owner.TextPainter.RenderTextToScreen0(0x47ca, 8, 32, 15);
 
-			int totalBaseTrade = 0;
-			int totalLuxuries = 0;
-			int totalFood = 0;
-			int totalProduction = 0;
-
 			this.processor.RegAcc.Value16 = 0;
 			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
 			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
@@ -731,11 +718,6 @@ namespace Civilization1Remaster.UI
 		L0a16:
 			this.owner.CityOps.HandleCity(this.processor.PullLocalSignedWord(0x38), -1);
 
-			totalBaseTrade += (short)this.processor.PullGlobalWord(0x70de);
-			totalLuxuries += (short)this.processor.PullGlobalWord(0x70e0);
-			totalFood += (short)this.processor.PullGlobalWord(0x70da);
-			totalProduction += (short)this.processor.PullGlobalWord(0x70dc);
-
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
 			this.owner.Conquest.ObtainCityLabel(this.processor.PullLocalSignedWord(0x38));
@@ -822,23 +804,6 @@ namespace Civilization1Remaster.UI
 			this.owner.Libc.AppendText(0xba06, " turns");
 
 			this.owner.TextPainter.RenderTextToScreen0(0xba06, 8, this.processor.PullLocalSignedWord(0x36) + 12, 10);
-
-			int tradeInfoY = this.processor.PullLocalSignedWord(0x36) + 12;
-			if (tradeInfoY + 16 <= 192)
-			{
-				string tradeTotalsText = AdvisorStatistics.FormatTradeTotals(
-					totalBaseTrade,
-					(short)this.processor.PullLocalWord(0x2),
-					(short)this.processor.PullLocalWord(0x4),
-					totalLuxuries);
-				this.owner.TextPainter.RenderTextToScreen0(tradeTotalsText, 8, tradeInfoY + 8, 14);
-
-				string tradeYieldsText = AdvisorStatistics.FormatTradeYields(
-					totalFood,
-					totalProduction,
-					totalBaseTrade);
-				this.owner.TextPainter.RenderTextToScreen0(tradeYieldsText, 8, tradeInfoY + 16, 14);
-			}
 
 		L0baf:
 			this.owner.TextPainter.RenderTextToScreen0(0x481f, 160, 32, 15);
@@ -1711,12 +1676,6 @@ namespace Civilization1Remaster.UI
 
 			DisplayReportPreamble(0x49e4, 8);
 
-			int totalCities = 0;
-			int totalPopulation = 0;
-			int totalFood = 0;
-			int totalProduction = 0;
-			int totalTrade = 0;
-
 			this.processor.EmitLocalWord(0x6, 0x20);
 			this.processor.EmitLocalWord(0x4, 0x0);
 			goto L1968;
@@ -1784,12 +1743,6 @@ namespace Civilization1Remaster.UI
 		L19ab:
 			this.owner.CityOps.HandleCity(this.processor.PullLocalSignedWord(0x4), -1);
 
-			totalCities++;
-			totalPopulation += this.owner.World.Towns[this.processor.PullLocalWord(0x4)].TrueExtent;
-			totalFood += (short)this.processor.PullGlobalWord(0x70da);
-			totalProduction += (short)this.processor.PullGlobalWord(0x70dc);
-			totalTrade += (short)this.processor.PullGlobalWord(0x70de);
-
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
 			this.owner.Conquest.ObtainCityLabel(this.processor.PullLocalSignedWord(0x4));
@@ -1852,15 +1805,6 @@ namespace Civilization1Remaster.UI
 			goto L194a;
 
 		L1b69:
-			if (totalCities > 0)
-			{
-				int lastY = this.processor.PullLocalSignedWord(0x6);
-				int sepY = Math.Min(Math.Max(lastY + 3, 182), 187);
-				this.owner.VideoCard.RenderLine(this.processor.PullGlobalWord(0xaa), 8, sepY, 312, sepY, 8);
-				string summaryText = AdvisorStatistics.FormatCityStatusSummary(totalCities, totalPopulation, totalFood, totalProduction, totalTrade);
-				this.owner.TextPainter.RenderTextToScreen0(summaryText, 8, sepY + 3, 14);
-			}
-
 			FinishReportScreen();
 
 			this.processor.RestoreSource();

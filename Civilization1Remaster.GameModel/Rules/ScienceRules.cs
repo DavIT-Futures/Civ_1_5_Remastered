@@ -88,10 +88,16 @@ namespace Civilization1Remaster.Game.Rules
 
 		/// <summary>
 		/// Checks whether a civilization has researched or acquired a given technology.
+		/// A negative technology (-1, "no technology needed") counts as known, as in the original.
 		/// </summary>
 		public static bool PlayerKnowsTechnology(ushort[] markers, short participantIdx, short scienceIdx)
 		{
-			if (scienceIdx < 0 || scienceIdx >= 71 || participantIdx == 0 || markers == null)
+			if (scienceIdx < 0)
+			{
+				return true;
+			}
+
+			if (scienceIdx >= 71 || participantIdx == 0 || markers == null)
 			{
 				return false;
 			}

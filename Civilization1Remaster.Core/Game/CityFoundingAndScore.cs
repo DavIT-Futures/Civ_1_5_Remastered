@@ -1057,6 +1057,9 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"DisplayFinalScore({participantIdx}, {marker})");
 
+			// The original keeps SI for its caller and returns the score in AX (TurnEvents compares them for the palace)
+			ushort savedSource = this.processor.RegSource.Value16;
+
 			if (marker)
 			{
 				ushort screenBufferPtr = this.processor.PullGlobalWord(0xaa);
@@ -1082,6 +1085,8 @@ namespace Civilization1Remaster.Game
 				this.owner.Startup.DisplayMouseCursor();
 				this.owner.TurnHooks.RepaintMainScreen();
 
+				this.processor.RegSource.Value16 = savedSource;
+				this.processor.RegAcc.Value16 = 0;
 				this.processor.Journal.CloseScope("DisplayFinalScore");
 				return 0;
 			}
@@ -1131,7 +1136,7 @@ namespace Civilization1Remaster.Game
 					}
 				}
 
-				totalCitizenScore += ScoreRules.ComputeCitizenScore(happyCount, contentCount);
+				totalCitizenScore += ScoreRules.ComputeCitizenScore(happyCount, contentCount, specialistCount);
 			}
 
 			this.owner.World.Participants[participantIdx].LevyRatio = savedLevyRatio;
@@ -1312,8 +1317,10 @@ namespace Civilization1Remaster.Game
 				this.owner.TurnHooks.RepaintMainScreen();
 			}
 
+			this.processor.RegSource.Value16 = savedSource;
+			this.processor.RegAcc.Value16 = (ushort)this.owner.World.Participants[0].Tally;
 			this.processor.Journal.CloseScope("DisplayFinalScore");
-			return (ushort)this.owner.World.Participants[0].Tally;
+			return this.processor.RegAcc.Value16;
 		}
 
 		/// <summary>

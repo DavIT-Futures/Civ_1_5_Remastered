@@ -10,15 +10,15 @@ namespace Civilization1Remaster.Game.Rules
 	{
 		/// <summary>
 		/// Computes citizen population score points.
-		/// Each citizen contributes:
+		/// The original adds city size + happy - unhappy for every city, so each citizen contributes:
 		/// - Happy citizen: 2 points
 		/// - Content citizen: 1 point
 		/// - Unhappy citizen: 0 points
-		/// - Specialist (Scientist/Taxman/Entertainer): 0 points
+		/// - Specialist (Scientist/Taxman/Entertainer): 1 point
 		/// </summary>
-		public static int ComputeCitizenScore(int happyCitizens, int contentCitizens)
+		public static int ComputeCitizenScore(int happyCitizens, int contentCitizens, int specialists)
 		{
-			return (happyCitizens * 2) + contentCitizens;
+			return (happyCitizens * 2) + contentCitizens + specialists;
 		}
 
 		/// <summary>

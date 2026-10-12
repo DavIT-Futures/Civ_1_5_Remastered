@@ -101,7 +101,8 @@ namespace Civilization1Remaster.Tests
 			Assert.False(ScienceRules.PlayerKnowsTechnology(markers, 1, 16));
 
 			// Negative tech or out-of-bounds tech (>= 71)
-			Assert.False(ScienceRules.PlayerKnowsTechnology(markers, 1, -1));
+			// -1 means "no technology needed", the original counts it as known
+			Assert.True(ScienceRules.PlayerKnowsTechnology(markers, 1, -1));
 			Assert.False(ScienceRules.PlayerKnowsTechnology(markers, 1, 71));
 			Assert.False(ScienceRules.PlayerKnowsTechnology(markers, 1, 100));
 		}

@@ -8,9 +8,9 @@ namespace Civilization1Remaster.Tests
 		[Fact]
 		public void ComputeCitizenScore_CorrectWeights()
 		{
-			// Happy = 2 points each, Content = 1 point each
-			int score = ScoreRules.ComputeCitizenScore(happyCitizens: 5, contentCitizens: 10);
-			Assert.Equal(20, score); // (5 * 2) + 10 = 20
+			// Happy = 2 points each, Content = 1 point each, Specialist = 1 point each
+			int score = ScoreRules.ComputeCitizenScore(happyCitizens: 5, contentCitizens: 10, specialists: 3);
+			Assert.Equal(23, score); // (5 * 2) + 10 + 3 = 23
 		}
 
 		[Fact]
