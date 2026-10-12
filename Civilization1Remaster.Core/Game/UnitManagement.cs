@@ -2325,100 +2325,39 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// Draws the border of the screen (320 x 200) from pieces of 8 x 8 pixels of the picture 0x19e8 (from row 120), in one of
+		/// two styles (DrawInt(2)): the four corners, the left and right edges, then the top and bottom edges
 		/// </summary>
 		public void RenderBusyIndicator()
 		{
 			this.processor.Journal.OpenScope("RenderBusyIndicator()");
 
-			// function body
-			this.processor.EnterFrame(0x6);
-			this.processor.PreserveIndexRegisters();
+			int styleLeft = (this.owner.Libc.Dice.DrawInt(2) << 5) + 0xc0;
 
-			this.processor.RegAcc.Value16 = (ushort)(this.owner.Libc.Dice.DrawInt(2));
+			RenderBorderPiece(styleLeft, 0x78, 0, 0);
+			RenderBorderPiece(styleLeft + 8, 0x78, 0x138, 0);
+			RenderBorderPiece(styleLeft + 0x18, 0x78, 0x138, 0xc0);
+			RenderBorderPiece(styleLeft + 0x10, 0x78, 0, 0xc0);
 
-			this.processor.RegCount.LowByte = 0x5;
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0xc0);
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x6, 0x78);
+			for (int row = 1; row < 0x18; row++)
+			{
+				RenderBorderPiece(styleLeft + 0x18, 0x80, 0, row << 3);
+				RenderBorderPiece(styleLeft + 8, 0x80, 0x138, row << 3);
+			}
 
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0x19e8),
-				this.processor.PullLocalWord(0x4),
-				0x78, 8, 8,
-				this.processor.PullGlobalWord(0xaa),
-				0, 0);
+			for (int column = 1; column < 0x27; column++)
+			{
+				RenderBorderPiece(styleLeft, 0x80, column << 3, 0);
+				RenderBorderPiece(styleLeft + 0x10, 0x80, column << 3, 0xc0);
+			}
 
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0x19e8),
-				(ushort)(this.processor.PullLocalWord(0x4) + 8),
-				0x78, 8, 8,
-				this.processor.PullGlobalWord(0xaa),
-				0x138, 0);
-
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0x19e8),
-				(ushort)(this.processor.PullLocalWord(0x4) + 0x18),
-				0x78, 8, 8,
-				this.processor.PullGlobalWord(0xaa),
-				0x138, 0xc0);
-
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0x19e8),
-				(ushort)(this.processor.PullLocalWord(0x4) + 0x10),
-				0x78, 8, 8,
-				this.processor.PullGlobalWord(0xaa),
-				0, 0xc0);
-
-			this.processor.EmitLocalWord(0x2, 0x1);
-
-		L26cc:
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0x19e8),
-				(ushort)(this.processor.PullLocalWord(0x4) + 0x18),
-				(ushort)(this.processor.PullLocalWord(0x6) + 8),
-				8, 8,
-				this.processor.PullGlobalWord(0xaa),
-				0, (ushort)(this.processor.PullLocalWord(0x2) << 3));
-
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0x19e8),
-				(ushort)(this.processor.PullLocalWord(0x4) + 8),
-				(ushort)(this.processor.PullLocalWord(0x6) + 8),
-				8, 8,
-				this.processor.PullGlobalWord(0xaa),
-				0x138, (ushort)(this.processor.PullLocalWord(0x2) << 3));
-
-			this.processor.IncrementLocalWord(0x2);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x18);
-			if (this.processor.FlagSet.IsLess) goto L26cc;
-			this.processor.EmitLocalWord(0x2, 0x1);
-
-		L272a:
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0x19e8),
-				this.processor.PullLocalWord(0x4),
-				(ushort)(this.processor.PullLocalWord(0x6) + 8),
-				8, 8,
-				this.processor.PullGlobalWord(0xaa),
-				(ushort)(this.processor.PullLocalWord(0x2) << 3), 0);
-
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0x19e8),
-				(ushort)(this.processor.PullLocalWord(0x4) + 0x10),
-				(ushort)(this.processor.PullLocalWord(0x6) + 8),
-				8, 8,
-				this.processor.PullGlobalWord(0xaa),
-				(ushort)(this.processor.PullLocalWord(0x2) << 3), 0xc0);
-
-			this.processor.IncrementLocalWord(0x2);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x27);
-			if (this.processor.FlagSet.IsLess) goto L272a;
-			this.processor.RestoreIndexRegisters();
-			this.processor.LeaveFrame();
-			// Far return
 			this.processor.Journal.CloseScope("RenderBusyIndicator");
+		}
+
+		private void RenderBorderPiece(int pieceLeft, int pieceTop, int horizLoc, int vertLoc)
+		{
+			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19e8), pieceLeft, pieceTop, 8, 8,
+				this.processor.PullGlobalWord(0xaa), horizLoc, vertLoc);
 		}
 	}
 }

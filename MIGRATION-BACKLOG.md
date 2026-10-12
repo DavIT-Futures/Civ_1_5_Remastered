@@ -76,10 +76,18 @@ i `MovementRules`. Testy `AssemblyParityDifferentialTests` porównują C# z ręc
   (sąsiednie pola: oddanie jednostek przechowywanych w mieście, wzajemne zobaczenie, pobudka stosu, kasowanie rozkazów „go to”,
   propozycja pokoju, `SendUnitToStrategicLocation`), `MeetFarTile` / `SpotFarUnit` / `SpottedByFarUnit` (pola 2 dalej)
   i `RepaintRingTile`. Ramka stosu zostaje (patrz błędy zachowane celowo).
+- Reszta `UnitManagement` (2026-10-12): `VisitHut` (zaawansowane plemię, złoto, zwoje, najemnicy, barbarzyńcy; golden master
+  odwiedza wioskę tylko raz, pozostałe wyniki porównane z oryginałem ręcznie), `ChoreographUnitCombat` (animacja ataku),
+  `DisplayBattleScreen` (lista jednostek stosu do obudzenia; golden master jej nie otwiera, porównana ręcznie, z bilansem
+  pokazywania i ukrywania kursora myszy), `RenderBusyIndicator` (w rzeczywistości ramka ekranu z kawałków 8 x 8).
+  W `UnitManagement` nie ma już kodu w stylu asm (zostały tylko celowo zachowane ramki stosu).
 
 ## Następny krok
 
-`VisitHut` w `UnitManagement` (ok. 340 linii, wioska), potem `ChoreographUnitCombat`, `DisplayBattleScreen`. Najmniejsze metody w stylu asm można znaleźć skryptem,
+Małe metody z jednym `EnterFrame` lub kilkoma `goto`: `ObtainCityLabel` (`TradeAndConquest`), `LocateNearestCityOfPlayer`
+(`GovernmentAndDiplomacy`), `DisplayDialog` i `RepaintMainScreen` (`TurnEvents`), `RenderFrame` (`CityManagement`),
+`ObtainTerrainTypeFromScreen` (`GameInitAndIntro`). Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180)
+i `AIPlayer` (870). Najmniejsze metody w stylu asm można znaleźć skryptem,
 który szuka `goto L`, `EnterFrame`, `ScaleIndex` itd. i sortuje po liczbie wywołań w kanale `call.` baseline.
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
