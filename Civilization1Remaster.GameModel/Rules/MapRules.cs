@@ -43,6 +43,46 @@ namespace Civilization1Remaster.Game.Rules
 			return PlaceInBlock(horizLoc, vertLoc) == ((BlockHash(horizLoc, vertLoc, worldSeed) + 8) & 0x1f);
 		}
 
+		/// <summary>
+		/// The distance used to find the nearest city or unit: the larger of the two steps plus half of the smaller one.
+		/// The map wraps horizontally, a horizontal step over 40 goes the other way round.
+		/// </summary>
+		public static int Distance(int horizLoc1, int vertLoc1, int horizLoc2, int vertLoc2)
+		{
+			int horizStep = Math.Abs(horizLoc1 - horizLoc2);
+
+			if (horizStep > Width / 2)
+				horizStep = Width - horizStep;
+
+			int vertStep = Math.Abs(vertLoc1 - vertLoc2);
+
+			return LongerPlusHalfShorter(horizStep, vertStep);
+		}
+
+		/// <summary>The larger of the two steps plus half of the smaller one (16 bit, like the original)</summary>
+		public static int LongerPlusHalfShorter(int horizStep, int vertStep)
+		{
+			horizStep = Math.Abs(horizStep);
+			vertStep = Math.Abs(vertStep);
+
+			return horizStep > vertStep ? (short)((vertStep / 2) + horizStep) : (short)((horizStep / 2) + vertStep);
+		}
+
+		/// <summary>
+		/// A distance from the steps (the horizontal step wraps over 40): twice the larger step plus the smaller one
+		/// </summary>
+		public static int DoubledDistance(int horizStep, int vertStep)
+		{
+			horizStep = Math.Abs(horizStep);
+
+			if (horizStep > Width / 2)
+				horizStep = Width - horizStep;
+
+			vertStep = Math.Abs(vertStep);
+
+			return horizStep > vertStep ? horizStep * 2 + vertStep : vertStep * 2 + horizStep;
+		}
+
 		/// <summary>Index of the tile in its block of 4 x 4 tiles, 0 - 15</summary>
 		private static int PlaceInBlock(int horizLoc, int vertLoc)
 		{

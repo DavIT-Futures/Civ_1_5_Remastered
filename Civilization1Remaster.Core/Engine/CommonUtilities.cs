@@ -10,11 +10,13 @@ namespace Civilization1Remaster.Engine
 	{
 		private readonly GameEngine owner;
 		private readonly CPU processor;
+		private readonly UnitMemory troops;
 
 		public CommonUtilities(GameEngine owner)
 		{
 			this.owner = owner;
 			this.processor = owner.Processor;
+			this.troops = new UnitMemory(owner.Processor);
 		}
 
 		/// <summary>
@@ -51,222 +53,125 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <summary>
-		/// ?
+		/// The city standing on the tile
 		/// </summary>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
-		/// <returns></returns>
+		/// <returns>City index, or 0xffff</returns>
 		public ushort LocateCityAtPosition(int horizLoc, int vertLoc)
 		{
 			this.processor.Journal.OpenScope($"LocateCityAtPosition({horizLoc}, {vertLoc})");
 
-			// function body
-			this.processor.EnterFrame(0x2);
-			this.processor.PreserveSource();
-			this.processor.EmitLocalWord(0x2, 0x0);
-			goto L00cb;
+			ushort found = 0xffff;
 
-		L00c8:
-			this.processor.EmitLocalWord(0x2, this.processor.IncrementWord(this.processor.PullLocalWord(0x2)));
+			for (int townIdx = 0; townIdx < this.owner.World.Towns.Length; townIdx++)
+			{
+				City town = this.owner.World.Towns[townIdx];
 
-		L00cb:
-			if (this.processor.PullLocalWord(0x2) >= 128)
-				goto L00fa;
+				if (town.ConditionMarker != 0xff && town.Place.X == horizLoc && town.Place.Y == vertLoc)
+				{
+					found = (ushort)townIdx;
+					break;
+				}
+			}
 
-			this.processor.ScaleIndexToSource(0x1c, this.processor.PullLocalWord(0x2));
+			this.processor.RegAcc.Value16 = found;
 
-			if (this.owner.World.Towns[this.processor.PullLocalWord(0x2)].ConditionMarker == 0xff ||
-				this.owner.World.Towns[this.processor.PullLocalWord(0x2)].Place.X != horizLoc ||
-				this.owner.World.Towns[this.processor.PullLocalWord(0x2)].Place.Y != vertLoc)
-				goto L00c8;
-
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x2);
-			goto L00fd;
-
-		L00fa:
-			this.processor.RegAcc.Value16 = 0xffff;
-
-		L00fd:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.LeaveFrame();
-			// Far return
 			this.processor.Journal.CloseScope("LocateCityAtPosition");
 
-			return this.processor.RegAcc.Value16;
+			return found;
 		}
 
 		/// <summary>
-		/// ?
+		/// The nearest city of any player (MapRules.Distance, the first one of equally near cities).
+		/// Its distance goes to 0x6c9a, 999 when there is no city.
 		/// </summary>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
-		/// <returns></returns>
+		/// <returns>City index, or 0xffff</returns>
 		public ushort LocateNearestCity(int horizLoc, int vertLoc)
 		{
 			this.processor.Journal.OpenScope($"LocateNearestCity({horizLoc}, {vertLoc})");
 
-			// function body
-			this.processor.EnterFrame(0x8);
-			this.processor.PreserveSource();
-			this.processor.EmitLocalWord(0x4, 0x3e7);
-			this.processor.EmitLocalWord(0x6, 0xffff);
-			this.processor.EmitLocalWord(0x8, 0x0);
+			int nearestDistance = 999;
+			ushort nearest = 0xffff;
 
-		L0118:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullLocalWord(0x8));
-			this.processor.CompareByte(this.owner.World.Towns[this.processor.PullLocalWord(0x8)].ConditionMarker, 0xff);
-			if (this.processor.FlagSet.IsEqual) goto L015f;
-			this.processor.ScaleIndexToSource(0x1c, this.processor.PullLocalWord(0x8));
+			for (int townIdx = 0; townIdx < this.owner.World.Towns.Length; townIdx++)
+			{
+				City town = this.owner.World.Towns[townIdx];
 
-			ObtainDistance(
-				horizLoc, 
-				this.owner.World.Towns[this.processor.PullLocalWord(0x8)].Place.X,
-				vertLoc, 
-				this.owner.World.Towns[this.processor.PullLocalWord(0x8)].Place.Y);
+				if (town.ConditionMarker == 0xff)
+					continue;
 
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x4);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L015f;
-			this.processor.CopyLocalWord(0x2, 0x4);
-			this.processor.CopyLocalWord(0x8, 0x6);
+				int distance = ObtainDistance(horizLoc, town.Place.X, vertLoc, town.Place.Y);
 
-		L015f:
-			this.processor.EmitLocalWord(0x8, this.processor.IncrementWord(this.processor.PullLocalWord(0x8)));
-			this.processor.CompareWord(this.processor.PullLocalWord(0x8), 0x80);
-			if (this.processor.FlagSet.IsLess) goto L0118;
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x4);
-			this.processor.EmitGlobalWord(0x6c9a, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x6);
-			this.processor.RestoreSource();
-			this.processor.LeaveFrame();
-			// Far return
+				if (distance < nearestDistance)
+				{
+					nearestDistance = distance;
+					nearest = (ushort)townIdx;
+				}
+			}
+
+			this.processor.EmitGlobalWord(0x6c9a, (ushort)nearestDistance);
+			this.processor.RegAcc.Value16 = nearest;
+
 			this.processor.Journal.CloseScope("LocateNearestCity");
 
-			return this.processor.RegAcc.Value16;
+			return nearest;
 		}
 
 		/// <summary>
-		/// ?
+		/// The nearest other unit of the player (MapRules.Distance, the first one of equally near units).
+		/// Its distance goes to 0x6c9a, 999 when there is none.
 		/// </summary>
-		/// <param name="playerID"></param>
-		/// <param name="unitID"></param>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
-		/// <returns></returns>
+		/// <param name="troopIdx">The unit itself, it is skipped</param>
+		/// <returns>Unit index, or 0xffff</returns>
 		public ushort LocateNearestUnit(short participantIdx, short troopIdx, int horizLoc, int vertLoc)
 		{
 			this.processor.Journal.OpenScope($"LocateNearestUnit({participantIdx}, {troopIdx}, {horizLoc}, {vertLoc})");
 
-			// function body
-			this.processor.EnterFrame(0x8);
-			this.processor.PreserveSource();
-			this.processor.EmitLocalWord(0x4, 0x3e7);
-			this.processor.EmitLocalWord(0x6, 0xffff);
-			this.processor.EmitLocalWord(0x8, 0x0);
-			goto L01d2;
+			int nearestDistance = 999;
+			ushort nearest = 0xffff;
 
-		L018f:
-			this.processor.RegAcc.Value16 = 0x600;
-			this.processor.ScaleAccumulatorToSource((ushort)participantIdx);
-			this.processor.AddScaledToSource(0xc, this.processor.PullLocalWord(0x8));
+			for (int otherIdx = 0; otherIdx < UnitMemory.TroopTally; otherIdx++)
+			{
+				if (!this.troops.Exists(participantIdx, otherIdx) || otherIdx == troopIdx)
+					continue;
 
-			ObtainDistance(
-				horizLoc, this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)),
-				vertLoc, this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6)));
+				int distance = ObtainDistance(
+					horizLoc, this.troops.PullSigned(participantIdx, otherIdx, UnitMemory.Horiz),
+					vertLoc, this.troops.PullSigned(participantIdx, otherIdx, UnitMemory.Vert));
 
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x4);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L01cf;
-			this.processor.CopyLocalWord(0x2, 0x4);
-			this.processor.CopyLocalWord(0x8, 0x6);
+				if (distance < nearestDistance)
+				{
+					nearestDistance = distance;
+					nearest = (ushort)otherIdx;
+				}
+			}
 
-		L01cf:
-			this.processor.EmitLocalWord(0x8, this.processor.IncrementWord(this.processor.PullLocalWord(0x8)));
+			this.processor.EmitGlobalWord(0x6c9a, (ushort)nearestDistance);
+			this.processor.RegAcc.Value16 = nearest;
 
-		L01d2:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x8), 0x80);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L01fa;
-			this.processor.ScaleIndexToBase(0xc, this.processor.PullLocalWord(0x8));
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d7)), 0xff);
-			if (this.processor.FlagSet.IsEqual) goto L01cf;
-			this.processor.RegAcc.Value16 = (ushort)troopIdx;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x8), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L018f;
-			goto L01cf;
-
-		L01fa:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x4);
-			this.processor.EmitGlobalWord(0x6c9a, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x6);
-			this.processor.RestoreSource();
-			this.processor.LeaveFrame();
-			// Far return
 			this.processor.Journal.CloseScope("LocateNearestUnit");
 
-			return this.processor.RegAcc.Value16;
+			return nearest;
 		}
 
 		/// <summary>
-		/// Combines the X and Y positions
+		/// The larger of the two steps plus half of the smaller one (MapRules.LongerPlusHalfShorter)
 		/// </summary>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
-		/// <returns></returns>
 		public int MergeCoordinates(int horizLoc, int vertLoc)
 		{
-			// function body			
-			horizLoc = Math.Abs(horizLoc);
-			vertLoc = Math.Abs(vertLoc);
+			int merged = MapRules.LongerPlusHalfShorter(horizLoc, vertLoc);
+			this.processor.RegAcc.Value16 = (ushort)((short)merged);
 
-			if (horizLoc > vertLoc)
-			{
-
-				vertLoc = (short)((vertLoc / 2) + horizLoc);
-				this.processor.RegAcc.Value16 = (ushort)((short)vertLoc);
-
-				return vertLoc;
-			}
-			else
-			{
-				horizLoc = (short)((horizLoc / 2) + vertLoc);
-				this.processor.RegAcc.Value16 = (ushort)((short)horizLoc);
-
-				return horizLoc;
-			}
+			return merged;
 		}
 
 		/// <summary>
-		/// ?
+		/// Twice the larger step plus the smaller one (MapRules.DoubledDistance)
 		/// </summary>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
-		/// <returns></returns>
 		public ushort ObtainDistanceFromOffsets(int horizLoc, int vertLoc)
 		{
 			this.owner.Journal.OpenScope($"ObtainDistanceFromOffsets({horizLoc}, {vertLoc})");
 
-			// function body
-			horizLoc = Math.Abs(horizLoc);
-
-			if (horizLoc > 40)
-			{
-				horizLoc = 80 - horizLoc;
-			}
-
-			vertLoc = Math.Abs(vertLoc);
-
-			if (horizLoc > vertLoc)
-			{
-				this.processor.RegAcc.Value16 = (ushort)((short)horizLoc * 2 + vertLoc);
-			}
-			else
-			{
-				this.processor.RegAcc.Value16 = (ushort)((short)vertLoc * 2 + horizLoc);
-			}
+			this.processor.RegAcc.Value16 = (ushort)MapRules.DoubledDistance(horizLoc, vertLoc);
 
 			this.owner.Journal.CloseScope("ObtainDistanceFromOffsets");
 
@@ -274,82 +179,41 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <summary>
-		/// ?
+		/// Distance of two positions (MapRules.Distance)
 		/// </summary>
-		/// <param name="xPos"></param>
-		/// <param name="xPos1"></param>
-		/// <param name="yPos"></param>
-		/// <param name="yPos1"></param>
-		/// <returns></returns>
 		public int ObtainDistance(int horizLoc, int horizSpot1, int vertLoc, int vertSpot1)
 		{
-			// function body
-			int horizLocScratch = Math.Abs(horizLoc - horizSpot1);
+			int distance = MapRules.Distance(horizLoc, vertLoc, horizSpot1, vertSpot1);
+			this.processor.RegAcc.Value16 = (ushort)((short)distance);
 
-			if (horizLocScratch > 40)
-			{
-				horizLocScratch = 0x50 - horizLocScratch;
-			}
-		
-			int vertPointposScratch = Math.Abs(vertLoc - vertSpot1);
-			
-			return MergeCoordinates(horizLocScratch, vertPointposScratch);
+			return distance;
 		}
 
 		/// <summary>
-		/// ?
+		/// Population of the civilization (PopulationRules.CityPopulation of all its cities), also written as text
+		/// by PopulationToText
 		/// </summary>
-		/// <param name="playerID"></param>
-		/// <returns></returns>
 		public ushort ObtainPlayerPopulation(short participantIdx)
 		{
 			this.processor.Journal.OpenScope($"ObtainPlayerPopulation({participantIdx})");
 
-			// function body
-			this.processor.EnterFrame(0x6);
-			this.processor.PreserveSource();
-			this.processor.EmitLocalWord(0x6, 0x0);
-			this.processor.EmitLocalWord(0x2, 0x0);
-			goto L02fe;
+			ushort population = 0;
 
-		L02e0:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x4);
-			this.processor.EmitLocalWord(0x6, this.processor.SumWord(this.processor.PullLocalWord(0x6), this.processor.RegAcc.Value16));
-			this.processor.IncrementLocalWord(0x4);
+			foreach (City town in this.owner.World.Towns)
+			{
+				if (town.ParticipantIdx == participantIdx && town.ConditionMarker != 0xff)
+				{
+					population = (ushort)(population + PopulationRules.CityPopulation(town.TrueExtent));
+				}
+			}
 
-		L02e9:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullLocalWord(0x2));
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.Towns[this.processor.PullLocalWord(0x2)].TrueExtent;
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x4));
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L02e0;
+			PopulationToText((short)population);
 
-		L02fb:
-			this.processor.EmitLocalWord(0x2, this.processor.IncrementWord(this.processor.PullLocalWord(0x2)));
+			this.processor.RegAcc.Value16 = population;
 
-		L02fe:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x80);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0325;
-			this.processor.ScaleIndexToSource(0x1c, this.processor.PullLocalWord(0x2));
-
-			if (this.owner.World.Towns[this.processor.PullLocalWord(0x2)].ParticipantIdx != participantIdx ||
-				this.owner.World.Towns[this.processor.PullLocalWord(0x2)].ConditionMarker == 0xff)
-				goto L02fb;
-
-			this.processor.EmitLocalWord(0x4, 0x1);
-			goto L02e9;
-
-		L0325:
-			PopulationToText(this.processor.PullLocalSignedWord(0x6));
-
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x6);
-			this.processor.RestoreSource();
-			this.processor.LeaveFrame();
-			// Far return
 			this.processor.Journal.CloseScope("ObtainPlayerPopulation");
 
-			return this.processor.RegAcc.Value16;
+			return population;
 		}
 
 		/// <summary>

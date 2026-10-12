@@ -43,6 +43,55 @@ namespace Civilization1Remaster.Tests
 			}
 		}
 
+		/// <summary>
+		/// The expressions of CommonUtilities.ObtainDistance, MergeCoordinates and ObtainDistanceFromOffsets before the refactoring
+		/// </summary>
+		[Fact]
+		public void Distances_MatchTheTranslatedOriginal()
+		{
+			static int Merge(int horizLoc, int vertLoc)
+			{
+				horizLoc = Math.Abs(horizLoc);
+				vertLoc = Math.Abs(vertLoc);
+
+				return horizLoc > vertLoc ? (short)((vertLoc / 2) + horizLoc) : (short)((horizLoc / 2) + vertLoc);
+			}
+
+			for (int horizLoc1 = -2; horizLoc1 < MapRules.Width + 2; horizLoc1 += 3)
+			{
+				for (int horizLoc2 = 0; horizLoc2 < MapRules.Width; horizLoc2++)
+				{
+					for (int vertStep = -55; vertStep <= 55; vertStep += 5)
+					{
+						int horizStep = Math.Abs(horizLoc1 - horizLoc2);
+						if (horizStep > 40)
+							horizStep = 0x50 - horizStep;
+
+						Assert.Equal(Merge(horizStep, Math.Abs(vertStep)), MapRules.Distance(horizLoc1, 10 + vertStep, horizLoc2, 10));
+
+						int offsetHoriz = Math.Abs(horizLoc1 - horizLoc2);
+						if (offsetHoriz > 40)
+							offsetHoriz = 80 - offsetHoriz;
+						int offsetVert = Math.Abs(vertStep);
+						int doubled = offsetHoriz > offsetVert ? (short)offsetHoriz * 2 + offsetVert : (short)offsetVert * 2 + offsetHoriz;
+
+						Assert.Equal(doubled, MapRules.DoubledDistance(horizLoc1 - horizLoc2, vertStep));
+					}
+				}
+			}
+		}
+
+		[Theory]
+		[InlineData(-1, 0)]
+		[InlineData(0, 0)]
+		[InlineData(1, 1)]
+		[InlineData(4, 10)]
+		[InlineData(12, 78)]
+		public void CityPopulation_IsTheSumOneToSize(int citySize, int expected)
+		{
+			Assert.Equal(expected, PopulationRules.CityPopulation(citySize));
+		}
+
 		[Theory]
 		[InlineData(0)]
 		[InlineData(1234)]
