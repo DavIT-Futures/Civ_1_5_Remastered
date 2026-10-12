@@ -17,52 +17,34 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// Asks which civilization's army to show (the names at 0x1982 + 2 * player, players 1 - 7) and shows its list;
+		/// the screen is kept in the back screen 0x19d4 and put back
 		/// </summary>
 		public void DisplayWhichArmy()
 		{
 			this.processor.Journal.OpenScope("DisplayWhichArmy()");
 
-			// function body
-			this.processor.EnterFrame(0x4);
-
 			this.owner.Libc.CopyText(0xba06, "Which army?\n ");
 
-			this.processor.EmitLocalWord(0x4, 0x1);
+			for (int participantIdx = 1; participantIdx < 8; participantIdx++)
+			{
+				this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1982)));
 
-		L001b:
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x4);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1982)));
-
-			this.owner.Libc.AppendText(0xba06, "\n ");
-
-			this.processor.IncrementLocalWord(0x4);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), 0x8);
-			if (this.processor.FlagSet.IsLess) goto L001b;
+				this.owner.Libc.AppendText(0xba06, "\n ");
+			}
 
 			this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
 
-			this.processor.RegAcc.Value16 = this.processor.IncrementWord(this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
+			short chosenIdx = (short)(this.processor.RegAcc.Value16 + 1);
 
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0xaa),
-				0, 0, 0x140, 0xc8,
-				this.processor.PullGlobalWord(0x19d4),
-				0, 0);
+			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), 0, 0, 0x140, 0xc8,
+				this.processor.PullGlobalWord(0x19d4), 0, 0);
 
-			DisplayArmyList((short)this.processor.PullLocalWord(0x2));
+			DisplayArmyList(chosenIdx);
 
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0x19d4),
-				0, 0, 0x140, 0xc8,
-				this.processor.PullGlobalWord(0xaa),
-				0, 0);
+			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 0x140, 0xc8,
+				this.processor.PullGlobalWord(0xaa), 0, 0);
 
-			this.processor.LeaveFrame();
-			// Far return
 			this.processor.Journal.CloseScope("DisplayWhichArmy");
 		}
 

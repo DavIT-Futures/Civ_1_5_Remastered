@@ -798,53 +798,53 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <summary>
-		/// ?
+		/// Whether there is a disk in a floppy drive (0 = A, 1 = B; other drives are always ready): the BIOS verifies one sector
+		/// (head 0, track 0, sector 2), up to 3 times with a reset of the disk system after each failure. The request is in the
+		/// stack frame, like in the original.
 		/// </summary>
-		/// <param name="param1"></param>
-		/// <returns></returns>
-		public ushort VerifyDrive(ushort arg1)
+		/// <returns>1 when the drive is ready, else 0 (also in AX)</returns>
+		public ushort VerifyDrive(ushort driveIdx)
 		{
-			this.processor.Journal.OpenScope($"VerifyDrive({arg1})");
+			this.processor.Journal.OpenScope($"VerifyDrive({driveIdx})");
 
-			// function body
 			this.processor.EnterFrame(0x12);
-			this.processor.CompareWord(arg1, 0x1);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L07e7;
 
-		L07e2:
-			this.processor.RegAcc.Value16 = 0x1;
-			goto L0837;
+			ushort ready = 1;
 
-		L07e7:
-			this.processor.EmitLocalWord(0x12, arg1);
-			this.processor.EmitLocalWord(0x10, 0x0);
-			this.processor.EmitLocalWord(0xe, 0x0);
-			this.processor.EmitLocalWord(0xc, 0x2);
-			this.processor.EmitLocalWord(0xa, 0x1);
-			this.processor.EmitLocalWord(0x2, 0x0);
+			if ((short)driveIdx <= 1)
+			{
+				ushort request = (ushort)(this.processor.RegFrame.Value16 - 0x12);
 
-		L0806:
-			this.owner.Libc.BiosDiskCall(4, (ushort)(this.processor.RegFrame.Value16 - 0x12));
+				this.processor.EmitGlobalWord(request, driveIdx);
+				this.processor.EmitGlobalWord((ushort)(request + 2), 0);
+				this.processor.EmitGlobalWord((ushort)(request + 4), 0);
+				this.processor.EmitGlobalWord((ushort)(request + 6), 2);
+				this.processor.EmitGlobalWord((ushort)(request + 8), 1);
 
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
-			this.processor.TestBitsWord(this.processor.PullLocalWord(0x4), 0xff00);
-			if (this.processor.FlagSet.IsEqual) goto L07e2;
+				ready = 0;
 
-			this.owner.Libc.BiosDiskCall(0, 0);
+				for (int attempt = 0; attempt < 3 && ready == 0; attempt++)
+				{
+					this.owner.Libc.BiosDiskCall(4, request);
 
-			this.processor.IncrementLocalWord(0x2);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x3);
-			if (this.processor.FlagSet.IsLess) goto L0806;
-			this.processor.RegAcc.Value16 = 0;
+					if ((this.processor.RegAcc.Value16 & 0xff00) == 0)
+					{
+						ready = 1;
+					}
+					else
+					{
+						this.owner.Libc.BiosDiskCall(0, 0);
+					}
+				}
+			}
 
-		L0837:
-			this.processor.RegStack.Value16 = this.processor.RegFrame.Value16;
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
+			this.processor.RegAcc.Value16 = ready;
 
-			// Far return
+			this.processor.LeaveFrame();
+
 			this.processor.Journal.CloseScope("VerifyDrive");
 
-			return this.processor.RegAcc.Value16;
+			return ready;
 		}
 
 		/// <summary>

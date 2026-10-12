@@ -89,13 +89,15 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// Asks the human player for a name in a box with the question at 0x53ab: the answer starts as the text that
+		/// 0x19a2 + 2 * player points to, and is written back there
 		/// </summary>
 		public void DisplayFoundCityMessage()
 		{
 			this.processor.Journal.OpenScope("DisplayFoundCityMessage()");
 
-			// function body
+			ushort nameSlot = (ushort)((this.owner.World.PersonParticipantIdx << 1) + 0x19a2);
+
 			this.owner.Startup.ConcealMouseCursor();
 
 			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 158, 88, 160, 32, 15);
@@ -104,19 +106,14 @@ namespace Civilization1Remaster.UI
 
 			this.owner.TextPainter.RenderTextToScreen0(0x53ab, 166, 90, 0);
 
-			this.processor.RegBase.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x19a2)));
+			this.owner.Libc.CopyText(0xba06, this.processor.PullGlobalWord(nameSlot));
 
 			PullTextInput(0xa6, 0x68, 0xd);
 
-			this.processor.RegBase.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.CopyText(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x19a2)), 0xba06);
+			this.owner.Libc.CopyText(this.processor.PullGlobalWord(nameSlot), 0xba06);
 
 			this.owner.Startup.DisplayMouseCursor();
 
-			// Far return
 			this.processor.Journal.CloseScope("DisplayFoundCityMessage");
 		}
 

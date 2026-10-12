@@ -14,39 +14,30 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// The Civilopedia, at the part chosen in its menu: shows pages of the index until one answers 0xfffe (leave);
+		/// 0xffff turns to the next page (78 entries further) when there is one (0x6808), else back to the first
 		/// </summary>
-		/// <param name="param1"></param>
-		public void DisplayCivilopedia(ushort arg1)
+		public void DisplayCivilopedia(ushort part)
 		{
-			this.processor.Journal.OpenScope($"DisplayCivilopedia({arg1})");
-
-			// function body
-			this.processor.EnterFrame(0x4);
+			this.processor.Journal.OpenScope($"DisplayCivilopedia({part})");
 
 			this.owner.Helpers.HaltHueCycling();
 
 			this.owner.Startup.ConcealMouseCursor();
 
-			this.processor.EmitLocalWord(0x4, 0x0);
+			ushort firstEntry = 0;
+			ushort answer;
 
-		L0015:
-			DisplayCivilopediaIndex(this.processor.PullLocalWord(0x4), arg1);
-			
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xffff);
-			if (this.processor.FlagSet.IsNotEqual) goto L003c;
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x6808), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L0037;
-			this.processor.EmitLocalWord(0x4, this.processor.SumWord(this.processor.PullLocalWord(0x4), 0x4e));
-			goto L003c;
+			do
+			{
+				answer = DisplayCivilopediaIndex(firstEntry, part);
 
-		L0037:
-			this.processor.EmitLocalWord(0x4, 0x0);
-
-		L003c:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0xfffe);
-			if (this.processor.FlagSet.IsNotEqual) goto L0015;
+				if (answer == 0xffff)
+				{
+					firstEntry = this.processor.PullGlobalWord(0x6808) != 0 ? (ushort)(firstEntry + 0x4e) : (ushort)0;
+				}
+			}
+			while (answer != 0xfffe);
 
 			this.owner.Startup.QueryForDisk(0, 1);
 
@@ -56,8 +47,6 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Startup.DisplayMouseCursor();
 
-			this.processor.LeaveFrame();
-			// Far return
 			this.processor.Journal.CloseScope("DisplayCivilopedia");
 		}
 

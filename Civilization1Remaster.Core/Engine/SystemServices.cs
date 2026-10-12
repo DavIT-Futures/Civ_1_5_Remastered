@@ -1357,32 +1357,15 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <summary>
-		/// ?
+		/// Moves the mouse pointer to the position (0x586e, 0x5870)
 		/// </summary>
-		/// <param name="param1"></param>
-		/// <param name="param2"></param>
-		public void AssignMousePosition(ushort arg1, ushort arg2)
+		public void AssignMousePosition(ushort horizLoc, ushort vertLoc)
 		{
-			this.processor.Journal.OpenScope($"AssignMousePosition({arg1}, {arg2})");
+			this.processor.Journal.OpenScope($"AssignMousePosition({horizLoc}, {vertLoc})");
 
-			// function body
-			this.processor.EnterFrame();
+			this.processor.EmitGlobalWord(0x586e, horizLoc);
+			this.processor.EmitGlobalWord(0x5870, vertLoc);
 
-			this.processor.RegAcc.Value16 = arg1;
-			this.processor.RegData.Value16 = arg2;
-			this.processor.EmitGlobalWord(0x586e, this.processor.RegAcc.Value16);
-			this.processor.EmitGlobalWord(0x5870, this.processor.RegData.Value16);
-
-			this.processor.CompareByte(this.processor.PullGlobalByte(0x587d), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L16d2;
-			
-			this.processor.RegCount.LowByte = this.processor.PullGlobalByte(0x587c);
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
-
-		L16d2:
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-			// Far return
 			this.processor.Journal.CloseScope("AssignMousePosition");
 		}
 
@@ -1400,49 +1383,39 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <summary>
-		/// ?
+		/// Draws the mouse pointer (picture 0x5876, hot spot 0x5878, 0x587a) at the mouse position (0x586e, 0x5870), when there
+		/// is a picture and the pointer is not drawn yet (0x5403)
 		/// </summary>
 		public void RenderMouseCursor()
 		{
 			this.processor.Journal.OpenScope("RenderMouseCursor()");
 
-			// function body
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x5876), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L170a;
-			this.processor.CompareByte(this.processor.PullGlobalByte(0x5403), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L170a;
+			if (this.processor.PullGlobalWord(0x5876) != 0 && this.processor.PullGlobalByte(0x5403) == 0)
+			{
+				RenderCursorToScreen((short)(this.processor.PullGlobalSignedWord(0x586e) - this.processor.PullGlobalSignedWord(0x5878)),
+					(short)(this.processor.PullGlobalSignedWord(0x5870) - this.processor.PullGlobalSignedWord(0x587a)),
+					this.processor.PullGlobalWord(0x5876));
 
-			RenderCursorToScreen((short)(this.processor.PullGlobalSignedWord(0x586e) - this.processor.PullGlobalSignedWord(0x5878)),
-				(short)(this.processor.PullGlobalSignedWord(0x5870) - this.processor.PullGlobalSignedWord(0x587a)),
-				this.processor.PullGlobalWord(0x5876));
+				this.processor.EmitGlobalByte(0x5403, 0x1);
+			}
 
-			this.processor.EmitGlobalByte(0x5403, 0x1);
-
-		L170a:
-			// Far return
 			this.processor.Journal.CloseScope("RenderMouseCursor");
 		}
 
 		/// <summary>
-		/// ?
+		/// Puts back the screen under the mouse pointer, when the pointer has a picture (0x5876) and is drawn (0x5403)
 		/// </summary>
 		public void BlankMouseCursor()
 		{
 			this.processor.Journal.OpenScope("BlankMouseCursor()");
 
-			// function body
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x5876), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L1723;
+			if (this.processor.PullGlobalWord(0x5876) != 0 && this.processor.PullGlobalByte(0x5403) != 0)
+			{
+				this.processor.EmitGlobalByte(0x5403, 0x0);
 
-			this.processor.CompareByte(this.processor.PullGlobalByte(0x5403), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L1723;
+				RecoverScreenUnderCursor();
+			}
 
-			this.processor.EmitGlobalByte(0x5403, 0x0);
-
-			RecoverScreenUnderCursor();
-
-		L1723:
-			// Far return
 			this.processor.Journal.CloseScope("BlankMouseCursor");
 		}
 

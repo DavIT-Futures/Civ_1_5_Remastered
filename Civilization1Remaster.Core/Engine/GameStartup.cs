@@ -235,23 +235,20 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <summary>
-		/// ?
+		/// Raises the show level of the mouse pointer (0xdeea); the pointer is drawn when the level reaches 1 and there is a
+		/// mouse (0x1a3c)
 		/// </summary>
 		public void DisplayMouseCursor()
 		{
 			this.processor.Journal.OpenScope("DisplayMouseCursor()");
 
-			// function body
-			this.processor.EmitGlobalWord(0xdeea, this.processor.IncrementWord(this.processor.PullGlobalWord(0xdeea)));
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x1a3c), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L0267;
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xdeea), 0x1);
-			if (this.processor.FlagSet.IsNotEqual) goto L0267;
+			this.processor.EmitGlobalWord(0xdeea, (ushort)(this.processor.PullGlobalWord(0xdeea) + 1));
 
-			this.owner.Services.RenderMouseCursor();
+			if (this.processor.PullGlobalWord(0x1a3c) != 0 && this.processor.PullGlobalWord(0xdeea) == 1)
+			{
+				this.owner.Services.RenderMouseCursor();
+			}
 
-		L0267:
-			// Far return
 			this.processor.Journal.CloseScope("DisplayMouseCursor");
 		}
 

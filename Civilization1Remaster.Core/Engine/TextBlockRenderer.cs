@@ -403,50 +403,41 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <summary>
-		/// ?
+		/// Replaces in the text at 0xba06 every occurrence of the 5 codes (texts pointed to by 0x30ae + 2 * code) by their
+		/// texts (0x30b8 + 2 * code), one code after the other. The rest of the text waits in a buffer in the stack frame,
+		/// like in the original.
 		/// </summary>
 		public void ReflowText()
 		{
 			this.processor.Journal.OpenScope("ReflowText()");
 
-			// function body
 			this.processor.EnterFrame(0x204);
-			this.processor.PreserveIndexRegisters();
-			this.processor.EmitLocalWord(0x204, 0x0);
 
-		L0480:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x204);
-			this.processor.RegSource.Value16 <<= 1;
-			this.owner.Libc.FindSubtext(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x30ae)));
+			ushort rest = (ushort)(this.processor.RegFrame.Value16 - 0x202);
 
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual) goto L04e0;
+			for (int codeIdx = 0; codeIdx < 5; codeIdx++)
+			{
+				ushort code = this.processor.PullGlobalWord((ushort)((codeIdx << 1) + 0x30ae));
+				ushort replacement = this.processor.PullGlobalWord((ushort)((codeIdx << 1) + 0x30b8));
 
-			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x202), this.processor.RegAcc.Value16);
+				while (true)
+				{
+					this.owner.Libc.FindSubtext(0xba06, code);
 
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x2);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, this.processor.RegBase.Value16, 0x0);
+					ushort found = this.processor.RegAcc.Value16;
 
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x30b8)));
+					if (found == 0)
+						break;
 
-			this.owner.Libc.TextLength(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x30ae)));
+					this.owner.Libc.CopyText(rest, found);
+					this.processor.EmitGlobalByte(found, 0);
+					this.owner.Libc.AppendText(0xba06, replacement);
+					this.owner.Libc.AppendText(0xba06, (ushort)(rest + this.owner.Libc.TextLength(code)));
+				}
+			}
 
-			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
-			this.owner.Libc.AppendText(0xba06, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegDest.Value16 - 0x202));
-
-		L04e0:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L0480;
-
-			this.processor.IncrementLocalWord(0x204);
-
-			this.processor.CompareWord(this.processor.PullLocalWord(0x204), 0x5);
-			if (this.processor.FlagSet.IsLess) goto L0480;
-
-			this.processor.RestoreIndexRegisters();
 			this.processor.LeaveFrame();
-			// Far return
+
 			this.processor.Journal.CloseScope("ReflowText");
 		}
 

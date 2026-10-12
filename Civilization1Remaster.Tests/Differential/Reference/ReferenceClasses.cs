@@ -40,4 +40,8 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 	public sealed partial class AIPlayerReference(GameEngine owner) : ReferenceBase(owner);
 	public sealed partial class MainIntroReference(GameEngine owner) : ReferenceBase(owner);
 	public sealed partial class GameMenusReference(GameEngine owner) : ReferenceBase(owner);
+	public sealed partial class NewCityScreenReference(GameEngine owner) : ReferenceBase(owner);
+	public sealed partial class ArmySelectionReference(GameEngine owner) : ReferenceBase(owner);
+	public sealed partial class GameLoadAndSaveReference(GameEngine owner) : ReferenceBase(owner);
+	public sealed partial class TextBlockRendererReference(GameEngine owner) : ReferenceBase(owner);
 }
