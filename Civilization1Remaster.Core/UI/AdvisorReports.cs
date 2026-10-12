@@ -222,8 +222,8 @@ namespace Civilization1Remaster.UI
 			string techTitle = this.processor.PullText(CPU.AsLinearAddress(this.processor.SegData.Value16, this.processor.RegAcc.Value16));
 
 			int currentProgress = this.owner.World.Participants[participantIdx].InquiryHeadway;
-			int totalCost = this.processor.PullLocalSignedWord(0xc);
-			string researchHeader = $"Researching {techTitle} ({currentProgress}/{totalCost})";
+			int researchCost = this.processor.PullLocalSignedWord(0xc);
+			string researchHeader = $"Researching {techTitle} ({currentProgress}/{researchCost})";
 
 			this.owner.TextPainter.RenderCenteredTextToScreen0(researchHeader, 161, 26, 0);
 			this.owner.TextPainter.RenderCenteredTextToScreen0(researchHeader, 160, 26, 15);
