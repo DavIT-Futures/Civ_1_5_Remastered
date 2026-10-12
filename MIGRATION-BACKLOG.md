@@ -70,6 +70,13 @@ i `MovementRules`. Testy `AssemblyParityDifferentialTests` porównują C# z ręc
 - Przewijanie widoku mapy (2026-10-12): `PanMapToPosition`.
 - Cuda świata (2026-10-12): `ObtainWonderCityID`, `PlayerEnjoysWonderEffect` (+ `IsWonderObsolete`, tablica `0x10fe`).
 - `PlayerTurn` (2026-10-12): `ObtainTileMoveCost`, `RepaintUnitIfVisible`, `RepaintTileIfVisible`.
+- Kursor myszy (2026-10-12): `DisplayMouseCursorFully`, `ConcealMouseCursorToSavedLevel` (`GameStartup`).
+
+## Następny krok
+
+`ShiftUnit` w `UnitManagement` (ok. 770 linii, ruch jednostki) – rozbić na mniejsze części i przepisywać po kolei.
+Potem `VisitHut`, `ChoreographUnitCombat`, `DisplayBattleScreen`. Najmniejsze metody w stylu asm można znaleźć skryptem,
+który szuka `goto L`, `EnterFrame`, `ScaleIndex` itd. i sortuje po liczbie wywołań w kanale `call.` baseline.
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
