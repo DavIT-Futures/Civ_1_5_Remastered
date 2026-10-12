@@ -1,0 +1,356 @@
+using System;
+using Civilization1Remaster.Emulation;
+
+namespace Civilization1Remaster.Tests.Differential.Reference
+{
+	/// <summary>
+	/// The original (translated asm) code of functions of UnitManagement, copied verbatim from commit e5e4444,
+	/// before they were rewritten. The oracle of the differential tests: only calls of other methods of the class are
+	/// redirected to the current code of the game.
+	/// </summary>
+	public sealed class UnitManagementReference
+	{
+		private readonly GameEngine owner;
+		private readonly CPU processor;
+
+		public UnitManagementReference(GameEngine owner)
+		{
+			this.owner = owner;
+			this.processor = owner.Processor;
+		}
+
+		public void VisitHut(short participantIdx, short troopIdx)
+		{
+			this.processor.Journal.OpenScope($"VisitHut({participantIdx}, {troopIdx})");
+
+			// function body
+			this.processor.EnterFrame(0x12);
+			this.processor.PreserveIndexRegisters();
+
+			if (participantIdx == 0)
+				goto L1d4f;
+
+			this.processor.ScaleIndexToBase(0xc, (ushort)troopIdx);
+
+			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
+
+			this.processor.RegAcc.LowByte = 0x22;
+			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d7)));
+			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
+			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1138)), 0x1);
+			if (this.processor.FlagSet.IsNotEqual) goto L1964;
+			goto L1d4f;
+
+		L1964:
+			this.processor.RegAcc.Value16 = 0x600;
+			this.processor.ScaleAccumulatorToSource((ushort)participantIdx);
+			this.processor.AddScaledToSource(0xc, (ushort)troopIdx);
+
+			this.owner.Helpers.LocateNearestCity(
+				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)),
+				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6)));
+
+			this.processor.EmitLocalWord(0xc, this.processor.RegAcc.Value16);
+			this.processor.ScaleIndex(0x1c, this.processor.PullLocalWord(0xc));
+			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
+
+			this.owner.Helpers.ObtainDistance(
+				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)),
+				// !!! Added if city doesn't exist at that location
+				(this.processor.PullLocalSignedWord(0xc) >= 0 && this.processor.PullLocalSignedWord(0xc) < 128) ?
+					this.owner.World.Towns[this.processor.PullLocalWord(0xc)].Place.X : -1,
+				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6)),
+				// !!! Added if city doesn't exist at that location
+				(this.processor.PullLocalSignedWord(0xc) >= 0 && this.processor.PullLocalSignedWord(0xc) < 128) ?
+					this.owner.World.Towns[this.processor.PullLocalWord(0xc)].Place.Y : -1);
+
+			this.processor.EmitLocalWord(0x8, this.processor.RegAcc.Value16);
+
+			this.processor.RegAcc.Value16 = (ushort)(this.owner.Libc.Dice.DrawInt(4));
+
+			this.processor.TestAccumulator();
+			if (this.processor.FlagSet.IsEqual) goto L19e7;
+			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1);
+			if (this.processor.FlagSet.IsNotEqual) goto L19cc;
+			goto L1a7f;
+
+		L19cc:
+			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x2);
+			if (this.processor.FlagSet.IsNotEqual) goto L19d4;
+			goto L1a8e;
+
+		L19d4:
+			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x3);
+			if (this.processor.FlagSet.IsNotEqual) goto L19dc;
+			goto L1b88;
+
+		L19dc:
+			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x4);
+			if (this.processor.FlagSet.IsNotEqual) goto L19e4;
+			goto L1b9a;
+
+		L19e4:
+			goto L1d4f;
+
+		L19e7:
+			this.processor.RegAcc.Value16 = 0x600;
+			this.processor.ScaleAccumulatorToSource((ushort)participantIdx);
+			this.processor.AddScaledToSource(0xc, (ushort)troopIdx);
+
+			this.owner.VideoCard.ObtainDot(2,
+				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)) + 80,
+				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6)));
+
+			this.processor.RegAcc.Value16 = this.processor.BitAndWord(this.processor.RegAcc.Value16, 0x7);
+			this.processor.EmitLocalWord(0xe, this.processor.RegAcc.Value16);
+			this.processor.CompareWord(this.processor.PullLocalWord(0x8), 0x4);
+			if (this.processor.FlagSet.IsGreaterOrEqual) goto L1a20;
+			goto L1b9a;
+
+		L1a20:
+			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x4);
+			if (this.processor.FlagSet.IsLessOrEqual) goto L1a8e;
+
+			this.owner.Libc.CopyText(0xba06, "You have discovered\nan advanced tribe.\n");
+
+			if (participantIdx != this.owner.World.PersonParticipantIdx)
+				goto L1a51;
+
+			this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+
+		L1a51:
+			this.processor.RegAcc.Value16 = 0x600;
+			this.processor.ScaleAccumulatorToSource((ushort)participantIdx);
+			this.processor.AddScaledToSource(0xc, (ushort)troopIdx);
+			
+			this.owner.Founding.EstablishCity(participantIdx,
+				0,
+				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)),
+				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6)),
+				1);
+
+			goto L1d30;
+
+		L1a7f:
+			if (this.owner.World.RoundTally == 0)
+				goto L1a8e;
+
+			if (this.owner.World.Season <= 1000)
+				goto L1ac7;
+
+			L1a8e:
+			this.owner.Libc.CopyText(0xba06, "You have discovered\nvaluable metal deposits\nworth 50$\n");
+
+			if (participantIdx == this.owner.World.PersonParticipantIdx)
+			{
+				this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+			}
+
+			this.owner.World.Participants[participantIdx].Gold += 50;
+			goto L1d4f;
+
+		L1ac7:
+			this.owner.Libc.CopyText(0xba06, "You have discovered\nscrolls of ancient wisdom.\n");
+
+			if (participantIdx == this.owner.World.PersonParticipantIdx)
+			{
+				this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+			}
+		
+			this.processor.EmitLocalWord(0x2, 0x0);
+
+			this.processor.RegAcc.Value16 = (ushort)(this.owner.Libc.Dice.DrawInt(72));
+
+			this.processor.EmitLocalWord(0x12, this.processor.RegAcc.Value16);
+
+		L1b07:
+			this.processor.RegAcc.Value16 = this.owner.Advisors.PlayerKnowsTechnology(participantIdx,
+				this.processor.PullLocalSignedWord(0x12));
+			this.processor.TestAccumulator();
+			if (this.processor.FlagSet.IsNotEqual)
+				goto L1b63;
+			
+			this.processor.ScaleIndexToSource(0x16, this.processor.PullLocalWord(0x12));
+			this.processor.RegAcc.Value16 = this.owner.Advisors.PlayerKnowsTechnology(participantIdx,
+				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x4ee)));
+			this.processor.TestAccumulator();
+			if (this.processor.FlagSet.IsEqual)
+				goto L1b63;
+
+			this.processor.RegAcc.Value16 = this.owner.Advisors.PlayerKnowsTechnology(participantIdx, this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x4ef)));
+			this.processor.TestAccumulator();
+			if (this.processor.FlagSet.IsEqual)
+				goto L1b63;
+			
+			this.owner.Advisors.EarnTechnology(participantIdx,
+				this.processor.PullLocalSignedWord(0x12),
+				0);
+			
+			this.processor.EmitLocalWord(0x12, 0xffff);
+			goto L1b72;
+
+		L1b63:
+			this.processor.EmitLocalWord(0x12, this.processor.IncrementWord(this.processor.PullLocalWord(0x12)));
+			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x12);
+			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
+			this.processor.RegCount.Value16 = 0x48;
+			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
+			this.processor.EmitLocalWord(0x12, this.processor.RegData.Value16);
+
+		L1b72:
+			this.processor.EmitLocalWord(0x2, this.processor.IncrementWord(this.processor.PullLocalWord(0x2)));
+			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x3e7);
+			if (this.processor.FlagSet.IsLess) goto L1b7f;
+			goto L1d4f;
+
+		L1b7f:
+			this.processor.CompareWord(this.processor.PullLocalWord(0x12), 0xffff);
+			if (this.processor.FlagSet.IsNotEqual) goto L1b07;
+			goto L1d4f;
+
+		L1b88:
+			this.processor.CompareWord(this.processor.PullLocalWord(0x8), 0x4);
+			if (this.processor.FlagSet.IsLess) goto L1b9a;
+			
+			if (this.owner.World.Participants[participantIdx].TownTally != 0) goto L1bff;
+
+		L1b9a:
+			this.owner.Libc.CopyText(0xba06, "You have discovered\na friendly tribe of\nskilled mercenaries.\n");
+
+			if (participantIdx == this.owner.World.PersonParticipantIdx)
+			{
+				this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+			}
+		
+			goto L1d28;
+
+		L1bff:
+			this.owner.Libc.CopyText(0xba06, "You have unleashed\na horde of barbarians!\n");
+
+			if (participantIdx == this.owner.World.PersonParticipantIdx)
+			{
+				this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+			}
+
+			this.processor.EmitLocalWord(0x10, 0x1);
+			goto L1c91;
+
+		L1c32:
+			this.processor.RegAcc.Value16 = 0x6;
+
+		L1c35:
+			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
+
+			this.owner.UnitOps.ConstructUnit(
+				0,
+				this.processor.PullLocalSignedWord(0x4),
+				this.processor.PullLocalSignedWord(0x6),
+				this.processor.PullLocalSignedWord(0xa));
+			
+			this.processor.RegCount.Value16 = 0xc;
+			this.processor.ScaleAccumulatorToBase(this.processor.RegCount.Value16);
+			this.processor.RegAcc.LowByte = 0x1;
+			this.processor.RegCount.LowByte = (byte)participantIdx;
+			this.processor.RegAcc.LowByte = this.processor.ShiftLeftByte(this.processor.RegAcc.LowByte, this.processor.RegCount.LowByte);
+			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x81dd), 
+				this.processor.BitOrByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x81dd)), this.processor.RegAcc.LowByte));
+
+			if (participantIdx == this.owner.World.PersonParticipantIdx)
+			{
+				this.owner.MapOps.RepaintMapTile(
+					this.processor.PullLocalSignedWord(0x6),
+					this.processor.PullLocalSignedWord(0xa));
+			}
+
+		L1c71:
+			this.owner.Helpers.VerifyValueSpan(
+				4 - this.owner.World.Participants[participantIdx].TownTally,	1, 4);
+
+			this.processor.EmitLocalWord(0x10, this.processor.SumWord(this.processor.PullLocalWord(0x10), this.processor.RegAcc.Value16));
+
+		L1c91:
+			this.processor.CompareWord(this.processor.PullLocalWord(0x10), 0x8);
+			if (this.processor.FlagSet.IsLessOrEqual) goto L1c9a;
+			goto L1d4f;
+
+		L1c9a:
+			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x10);
+			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
+			this.processor.ScaleIndex(0x600, (ushort)participantIdx);
+			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
+			this.processor.ScaleIndex(0xc, (ushort)troopIdx);
+			this.processor.RegDest.Value16 = this.processor.SumWord(this.processor.RegDest.Value16, this.processor.RegAcc.Value16);
+			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 + 0x81d5));
+			this.processor.RegAcc.HighByte = 0;
+			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1882)));
+			this.processor.EmitLocalWord(0x6, this.processor.RegAcc.Value16);
+			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 + 0x81d6));
+			this.processor.RegAcc.HighByte = 0;
+			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x18e4)));
+			this.processor.EmitLocalWord(0xa, this.processor.RegAcc.Value16);
+
+			this.owner.MapOps.ObtainTileOwner(
+				this.processor.PullLocalSignedWord(0x6),
+				this.processor.PullLocalSignedWord(0xa));
+
+			this.processor.RegAcc.Value16 = this.processor.IncrementWord(this.processor.RegAcc.Value16);
+			if (this.processor.FlagSet.IsNotEqual) goto L1c71;
+
+			this.owner.MapOps.ObtainTileImprovements(
+				this.processor.PullLocalSignedWord(0x6),
+				this.processor.PullLocalSignedWord(0xa));
+
+			this.processor.TestBitsByte(this.processor.RegAcc.LowByte, 0x1);
+			if (this.processor.FlagSet.IsNotEqual) goto L1c71;
+
+			this.owner.MapOps.ObtainTerrainType(
+				this.processor.PullLocalSignedWord(0x6),
+				this.processor.PullLocalSignedWord(0xa));
+
+			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
+			if (this.processor.FlagSet.IsNotEqual) goto L1d00;
+			goto L1c71;
+
+		L1d00:
+			this.owner.MapOps.ObtainTerrainType(
+				this.processor.PullLocalSignedWord(0x6),
+				this.processor.PullLocalSignedWord(0xa));
+
+			this.processor.RegCount.Value16 = 0x13;
+			this.processor.ScaleAccumulatorToBase(this.processor.RegCount.Value16);
+			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x28e)), 0x2);
+			if (this.processor.FlagSet.IsGreater) goto L1d1f;
+			goto L1c32;
+
+		L1d1f:
+			this.processor.RegAcc.Value16 = 0x3;
+			goto L1c35;
+
+		L1d28:
+			this.processor.RegAcc.Value16 = 0x600;
+			this.processor.ScaleAccumulatorToSource((ushort)participantIdx);
+			this.processor.AddScaledToSource(0xc, (ushort)troopIdx);
+
+			this.owner.UnitOps.ConstructUnit(
+				participantIdx,
+				(short)((this.owner.Libc.Dice.DrawInt(2) != 0) ? 3 : 6),
+				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)),
+				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6)));
+
+		L1d30:
+			if (participantIdx == this.owner.World.PersonParticipantIdx)
+			{
+				this.owner.MapOps.RepaintMapTile(
+					this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)),
+					this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6)));
+			}
+
+		L1d4f:
+			this.processor.RegSource.Value16 = this.processor.UnstackWord();
+			this.processor.RegDest.Value16 = this.processor.UnstackWord();
+			this.processor.LeaveFrame();
+			// Far return
+			this.processor.Journal.CloseScope("VisitHut");
+		}
+	}
+}

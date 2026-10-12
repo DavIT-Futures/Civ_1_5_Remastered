@@ -64,6 +64,9 @@ namespace Civilization1Remaster.Tests.GoldenMaster
 
 		public ScriptedKeyboard Keyboard => this.keyboard;
 
+		/// <summary>How many times each game function was called since the load or the start of the turn</summary>
+		public IReadOnlyDictionary<string, int> Calls => this.calls;
+
 		/// <summary>The game end flag (0xdc48), not 0 when the game is over or the turn was left</summary>
 		public ushort GameEndFlag => this.processor.PullGlobalWord(0xdc48);
 

@@ -99,6 +99,13 @@ i `MovementRules`. Testy `AssemblyParityDifferentialTests` porównują C# z ręc
 
 ## Następny krok
 
+Testy różnicowe (`Civilization1Remaster.Tests/Differential`, opis w README tam) dla już przepisanych funkcji, których
+golden master nie wykonuje albo wykonuje tylko częściowo. Jest `VisitHut` (wszystkie wyniki wioski). Do zrobienia:
+`DisplayBattleScreen` (klawisze i mysz), `ShiftUnit` (spotkania jednostek, statki, samoloty), `AttachSmog`, `RenderScoreIcon`,
+`BlendTerrainTile`, `LocateNearestCityOfPlayer`, `ObtainTerrainTypeFromScreen`, `RenewCityScreen`, `FreshWorldChoices`,
+`ObtainSpaceshipPartValue`, `WipeSpaceshipContent`, `AssignReplayCityContent(Alt)`, `DisplayKingMessage`,
+`LocateNearestFriendlyCity`, `EliminateSeaUnit`, `RestoreUnitOrders`. Potem dalsze przepisywanie:
+
 Dalej małe metody: w `SystemServices` (mysz, kolory: `BlankMouseCursor`, `RenderMouseCursor`, `ActivateHueCycle`, ...),
 `ReflowText` (`TextBlockRenderer`), `ObtainFirstPrerequisite` / `ObtainSecondPrerequisite` / `ObtainTechnologyCategory`
 (`Civilopedia`), `ObtainDistanceToReplayCity` (`GameReplay`), reszta generatora mapy w `GameInitAndIntro`;
@@ -135,6 +142,8 @@ te błędy są odtwarzane jawnie:
    (`ShiftUnit` → `ShiftAIUnit`). Crash albo rozjazd po usunięciu ramki = ramkę trzeba zostawić z tymi samymi wartościami.
 4. Po każdym kroku: `dotnet test` (golden master ok. 2,5 min). Czerwony test = zmiana zachowania. Gdy `dotnet test` mówi
    „Uruchomiono zero testów”, uruchomić `Civilization1Remaster.Tests/bin/Debug/net10.0/Civilization1Remaster.Tests.exe`.
+5. Funkcja, której golden master nie wykonuje (albo nie wszystkie jej gałęzie), dostaje test różnicowy w tym samym
+   commicie co przepisanie, ze sprawdzeniem, że scenariusze trafiają każdą gałąź, i z próbą celowego błędu.
 
 ## Zmiany hosta (nie dotyczą logiki gry, zostają)
 
