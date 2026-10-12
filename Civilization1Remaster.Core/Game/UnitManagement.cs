@@ -1177,187 +1177,137 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// Creates a unit of the type on the tile in the first free record (0 - 126). Its home city is the nearest city when that
+		/// city belongs to the player. When there is no free record, the human player is told once.
 		/// </summary>
-		/// <param name="playerID"></param>
-		/// <param name="unitID"></param>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
-		/// <returns></returns>
-		public ushort ConstructUnit(short participantIdx, short troopIdx, int horizLoc, int vertLoc)
+		/// <param name="kind">Unit type</param>
+		/// <returns>Index of the new unit, or 0xffff</returns>
+		public ushort ConstructUnit(short participantIdx, short kind, int horizLoc, int vertLoc)
 		{
-			this.processor.Journal.OpenScope($"ConstructUnit({participantIdx}, {troopIdx}, {horizLoc}, {vertLoc})");
+			this.processor.Journal.OpenScope($"ConstructUnit({participantIdx}, {kind}, {horizLoc}, {vertLoc})");
 
-			// function body
-			this.processor.EnterFrame(0x4);
-			this.processor.PreserveSource();
-			this.processor.EmitLocalWord(0x2, 0x0);
-			goto L0d06;
+			// The original keeps SI for its caller
+			ushort savedSource = this.processor.RegSource.Value16;
+			short troopIdx = -1;
 
-		L0d03:
-			this.processor.EmitLocalWord(0x2, this.processor.IncrementWord(this.processor.PullLocalWord(0x2)));
-
-		L0d06:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x7f);
-			if (this.processor.FlagSet.IsLess) goto L0d0f;
-			goto L0ec8;
-
-		L0d0f:
-			this.processor.RegAcc.Value16 = 0x600;
-			this.processor.ScaleAccumulatorToSource((ushort)participantIdx);
-			this.processor.AddScaledToSource(0xc, this.processor.PullLocalWord(0x2));
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d7)), 0xff);
-			if (this.processor.FlagSet.IsNotEqual) goto L0d03;
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5), 0xff);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81de), 0xff);
-
-			this.owner.MapOps.MapAssignCityOwner(participantIdx, horizLoc, vertLoc);
-
-			this.owner.MapOps.SituateUnitOnTile(participantIdx, this.processor.PullLocalSignedWord(0x2), horizLoc, vertLoc);
-
-			this.processor.RegAcc.LowByte = 0x1;
-			this.processor.RegCount.LowByte = (byte)participantIdx;
-			this.processor.RegAcc.LowByte = this.processor.ShiftLeftByte(this.processor.RegAcc.LowByte, this.processor.RegCount.LowByte);
-			this.processor.EmitLocalByte(0x4, this.processor.RegAcc.LowByte);
-			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
-			this.owner.World.ChartSight[horizLoc, vertLoc] |= (sbyte)this.processor.RegCount.LowByte;
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d4), 0x0);
-			this.processor.RegAcc.LowByte = (byte)horizLoc;
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5), this.processor.RegAcc.LowByte);
-			this.processor.RegAcc.LowByte = (byte)vertLoc;
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6), this.processor.RegAcc.LowByte);
-			this.processor.RegAcc.LowByte = (byte)troopIdx;
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d7), this.processor.RegAcc.LowByte);
-
-			// A new unit is fully healthy
-			this.owner.World.Vitals.Wipe(participantIdx, this.processor.PullLocalSignedWord(0x2));
-			this.processor.RegAcc.LowByte = this.processor.PullLocalByte(0x4);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81dd), this.processor.RegAcc.LowByte);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81da), 0xff);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81dc), 0xff);
-			this.processor.RegAcc.LowByte = 0x22;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d7)));
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x113c));
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d9), this.processor.RegAcc.LowByte);
-
-			this.owner.Helpers.LocateNearestCity(horizLoc, vertLoc);
-
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81df), this.processor.RegAcc.LowByte);
-			this.processor.RegAcc.LowByte = 0x1c;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81df)));
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			// !!!
-			if (this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81df)) < 128)
+			for (short idx = 0; idx < UnitMemory.TroopTally - 1; idx++)
 			{
-				this.processor.RegAcc.Value16 = (ushort)this.owner.World.Towns[this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81df))].ParticipantIdx;
+				if (this.troops.Pull(participantIdx, idx, UnitMemory.Kind) == 0xff)
+				{
+					troopIdx = idx;
+					break;
+				}
+			}
+
+			ushort result;
+
+			if (troopIdx == -1)
+			{
+				if (participantIdx == this.owner.World.PersonParticipantIdx && this.processor.PullGlobalWord(0xd760) == 0)
+				{
+					this.processor.EmitGlobalWord(0x2f9e, 0x3);
+					this.processor.EmitGlobalByte(0xba06, 0x0);
+
+					this.owner.BlockText.DisplayTextDialog(0x2126);
+
+					this.owner.TurnHooks.DisplayDialog(0xba06, 80, 64);
+
+					this.processor.EmitGlobalWord(0xd760, 0x1);
+				}
+
+				result = 0xffff;
 			}
 			else
 			{
-				this.processor.RegAcc.Value16 = 0xffff;
+				SetUpUnit(participantIdx, troopIdx, kind, horizLoc, vertLoc);
+
+				result = (ushort)troopIdx;
 			}
-			this.processor.CompareWord(this.processor.RegAcc.Value16, (ushort)participantIdx);
-			if (this.processor.FlagSet.IsEqual) goto L0dd9;
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81df), 0xff);
 
-		L0dd9:
-			this.processor.RegAcc.Value16 = 0x600;
-			this.processor.ScaleAccumulatorToSource((ushort)participantIdx);
-			this.processor.AddScaledToSource(0xc, this.processor.PullLocalWord(0x2));
-			this.processor.RegSource.Value16 = this.processor.SumWord(this.processor.RegSource.Value16, 0x81d9);
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, this.processor.RegSource.Value16), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L0df4;
-			this.processor.EmitUInt8(this.processor.SegData.Value16, this.processor.RegSource.Value16, this.processor.DecrementByte(this.processor.PullUInt8(this.processor.SegData.Value16, this.processor.RegSource.Value16)));
+			this.processor.RegSource.Value16 = savedSource;
+			this.processor.RegAcc.Value16 = result;
 
-		L0df4:
-			this.processor.RegAcc.Value16 = 0x38;
-			this.processor.ScaleAccumulatorToSource((ushort)participantIdx);
-			this.processor.RegBase.Value16 = (ushort)troopIdx;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-
-			this.owner.World.Participants[participantIdx].LiveTroops[troopIdx]++;
-
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x20f4), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L0e7d;
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xd806), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L0e3d;
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.CompareWord((ushort)participantIdx, this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L0e3d;
-			this.processor.ScaleIndexToBase(0xc, this.processor.PullLocalWord(0x2));
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81dd));
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegData.Value16 = 0x1;
-			this.processor.RegCount.LowByte = (byte)(this.owner.World.PersonParticipantIdx & 0xff);
-			this.processor.RegData.Value16 = this.processor.ShiftLeftWord(this.processor.RegData.Value16, this.processor.RegCount.LowByte);
-			this.processor.TestBitsWord(this.processor.RegAcc.Value16, this.processor.RegData.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L0e64;
-
-		L0e3d:
-			this.processor.RegAcc.Value16 = 0x600;
-			this.processor.ScaleAccumulatorToSource((ushort)participantIdx);
-			this.processor.AddScaledToSource(0xc, this.processor.PullLocalWord(0x2));
-
-			this.owner.MapOps.RepaintMapTile(
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)),
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6)));
-
-		L0e64:
-			ShiftUnit(
-				horizLoc,
-				vertLoc,
-				participantIdx,
-				this.processor.PullLocalSignedWord(0x2),
-				1);
-
-		L0e7d:
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.CompareWord((ushort)participantIdx, this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L0ec3;
-			if (this.owner.World.RoundTally == 0) goto L0ec3;
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x20f4), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L0ec3;
-
-			if (this.owner.World.Participants[participantIdx].TroopTally != 0) goto L0eab;
-
-			this.owner.HelpSystem.DisplayHelpPopup(0x210e);
-
-		L0eab:
-			if (this.owner.World.Participants[participantIdx].TroopTally != 1) goto L0ec3;
-
-			this.owner.HelpSystem.DisplayHelpPopup(0x211a);
-
-		L0ec3:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x2);
-			goto L0f0b;
-
-		L0ec8:
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.CompareWord((ushort)participantIdx, this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L0f08;
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xd760), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L0f08;
-			this.processor.EmitGlobalWord(0x2f9e, 0x3);
-			this.processor.EmitGlobalByte(0xba06, 0x0);
-
-			this.owner.BlockText.DisplayTextDialog(0x2126);
-
-			this.owner.TurnHooks.DisplayDialog(0xba06, 80, 64);
-
-			this.processor.EmitGlobalWord(0xd760, 0x1);
-
-		L0f08:
-			this.processor.RegAcc.Value16 = 0xffff;
-
-		L0f0b:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.LeaveFrame();
-
-			// Far return
 			this.processor.Journal.CloseScope("ConstructUnit");
 
-			return this.processor.RegAcc.Value16;
+			return result;
+		}
+
+		/// <summary>
+		/// Fills the free record of the new unit, puts it on the map and lets it see around
+		/// </summary>
+		private void SetUpUnit(short participantIdx, short troopIdx, short kind, int horizLoc, int vertLoc)
+		{
+			byte participantBit = (byte)(1 << participantIdx);
+
+			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Horiz, 0xff);
+			this.troops.Assign(participantIdx, troopIdx, UnitMemory.FollowingInStack, 0xff);
+
+			this.owner.MapOps.MapAssignCityOwner(participantIdx, horizLoc, vertLoc);
+			this.owner.MapOps.SituateUnitOnTile(participantIdx, troopIdx, horizLoc, vertLoc);
+
+			this.owner.World.ChartSight[horizLoc, vertLoc] |= (sbyte)participantBit;
+
+			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Status, 0);
+			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Horiz, (byte)horizLoc);
+			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Vert, (byte)vertLoc);
+			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Kind, (byte)kind);
+
+			// A new unit is fully healthy
+			this.owner.World.Vitals.Wipe(participantIdx, troopIdx);
+
+			this.troops.Assign(participantIdx, troopIdx, UnitMemory.ShownToParticipants, participantBit);
+			this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHoriz, 0xff);
+			this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHeading, 0xff);
+			this.troops.Assign(participantIdx, troopIdx, UnitMemory.UnusualSteps,
+				(byte)this.troops.KindField(participantIdx, troopIdx, UnitKindTable.RoundsAway));
+
+			this.owner.Helpers.LocateNearestCity(horizLoc, vertLoc);
+			this.troops.Assign(participantIdx, troopIdx, UnitMemory.BaseTown, this.processor.RegAcc.LowByte);
+
+			byte baseTown = this.troops.Pull(participantIdx, troopIdx, UnitMemory.BaseTown);
+			ushort baseOwner = baseTown < 128 ? (ushort)this.owner.World.Towns[baseTown].ParticipantIdx : (ushort)0xffff;
+
+			if (baseOwner != (ushort)participantIdx)
+			{
+				this.troops.Assign(participantIdx, troopIdx, UnitMemory.BaseTown, 0xff);
+			}
+
+			// Planes start with one turn of fuel used
+			byte fuel = this.troops.Pull(participantIdx, troopIdx, UnitMemory.UnusualSteps);
+
+			if (fuel != 0)
+			{
+				this.troops.Assign(participantIdx, troopIdx, UnitMemory.UnusualSteps, (byte)(fuel - 1));
+			}
+
+			this.owner.World.Participants[participantIdx].LiveTroops[kind]++;
+
+			if (this.processor.PullGlobalWord(0x20f4) == 0)
+			{
+				if (this.processor.PullGlobalWord(0xd806) != 0 || participantIdx == this.owner.World.PersonParticipantIdx ||
+					(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.ShownToParticipants) & (ushort)(1 << this.owner.World.PersonParticipantIdx)) != 0)
+				{
+					this.owner.MapOps.RepaintMapTile(
+						this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
+						this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert));
+				}
+
+				ShiftUnit(horizLoc, vertLoc, participantIdx, troopIdx, 1);
+			}
+
+			if (participantIdx == this.owner.World.PersonParticipantIdx && this.owner.World.RoundTally != 0 &&
+				this.processor.PullGlobalWord(0x20f4) == 0)
+			{
+				if (this.owner.World.Participants[participantIdx].TroopTally == 0)
+				{
+					this.owner.HelpSystem.DisplayHelpPopup(0x210e);
+				}
+
+				if (this.owner.World.Participants[participantIdx].TroopTally == 1)
+				{
+					this.owner.HelpSystem.DisplayHelpPopup(0x211a);
+				}
+			}
 		}
 
 		/// <summary>
@@ -1434,108 +1384,75 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// The best defender of the tile of the unit: the stack of the first unit of the player standing there is searched with
+		/// LocateBestGuardianStep. A unit alone is its own defender.
 		/// </summary>
-		/// <param name="playerID"></param>
-		/// <param name="unitID"></param>
-		/// <returns></returns>
+		/// <returns>Unit index</returns>
 		public ushort LocateStackLeader(short participantIdx, short troopIdx)
 		{
 			this.processor.Journal.OpenScope($"LocateStackLeader({participantIdx}, {troopIdx})");
 
-			// function body
-			this.processor.EnterFrame(0x4);
-			this.processor.PreserveIndexRegisters();
-			this.processor.ScaleIndexToBase(0xc, (ushort)troopIdx);
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81de)), 0xff);
-			if (this.processor.FlagSet.IsNotEqual) goto L10ad;
-			this.processor.RegAcc.Value16 = (ushort)troopIdx;
-			goto L111c;
+			// The original keeps SI and DI for its caller
+			ushort savedSource = this.processor.RegSource.Value16;
+			ushort savedDest = this.processor.RegDest.Value16;
+			ushort leader = (ushort)troopIdx;
 
-		L10ad:
-			this.processor.RegAcc.Value16 = (ushort)troopIdx;
-			this.processor.EmitGlobalWord(0x6530, this.processor.RegAcc.Value16);
-			this.processor.EmitGlobalWord(0x6534, 0x0);
-			this.processor.EmitLocalWord(0x2, 0x0);
-			goto L10c3;
+			if (this.troops.Following(participantIdx, troopIdx) != -1)
+			{
+				this.processor.EmitGlobalWord(0x6530, (ushort)troopIdx);
+				this.processor.EmitGlobalWord(0x6534, 0);
 
-		L10c0:
-			this.processor.EmitLocalWord(0x2, this.processor.IncrementWord(this.processor.PullLocalWord(0x2)));
+				for (short firstIdx = 0; firstIdx < UnitMemory.TroopTally; firstIdx++)
+				{
+					if (this.troops.Pull(participantIdx, firstIdx, UnitMemory.Kind) != 0xff &&
+						this.troops.Pull(participantIdx, firstIdx, UnitMemory.Horiz) == this.troops.Pull(participantIdx, troopIdx, UnitMemory.Horiz) &&
+						this.troops.Pull(participantIdx, firstIdx, UnitMemory.Vert) == this.troops.Pull(participantIdx, troopIdx, UnitMemory.Vert))
+					{
+						VisitEachUnitInStack(participantIdx, firstIdx, 0x1169);
+						break;
+					}
+				}
 
-		L10c3:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x80);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L1119;
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.ScaleIndex(0xc, this.processor.PullLocalWord(0x2));
-			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegDest.Value16 = this.processor.SumWord(this.processor.RegDest.Value16, this.processor.RegSource.Value16);
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 + 0x81d7)), 0xff);
-			if (this.processor.FlagSet.IsEqual) goto L10c0;
-			this.processor.ScaleIndex(0xc, (ushort)troopIdx);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.RegSource.Value16);
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 + 0x81d5));
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x81d5)), this.processor.RegAcc.LowByte);
-			if (this.processor.FlagSet.IsNotEqual) goto L10c0;
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 + 0x81d6));
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x81d6)), this.processor.RegAcc.LowByte);
-			if (this.processor.FlagSet.IsNotEqual) goto L10c0;
+				leader = this.processor.PullGlobalWord(0x6530);
+			}
 
-			VisitEachUnitInStack(participantIdx, this.processor.PullLocalSignedWord(0x2), 0x1169);
+			this.processor.RegSource.Value16 = savedSource;
+			this.processor.RegDest.Value16 = savedDest;
+			this.processor.RegAcc.Value16 = leader;
 
-		L1119:
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x6530);
-
-		L111c:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.RegDest.Value16 = this.processor.UnstackWord();
-			this.processor.LeaveFrame();
-
-			// Far return
 			this.processor.Journal.CloseScope("LocateStackLeader");
 
-			return this.processor.RegAcc.Value16;
+			return leader;
 		}
 
 		/// <summary>
-		/// ?
+		/// The best defender in the stack of the unit (LocateBestGuardianStep). A unit alone is its own defender.
 		/// </summary>
-		/// <param name="playerID"></param>
-		/// <param name="unitID"></param>
-		/// <returns></returns>
+		/// <returns>Unit index</returns>
 		public ushort LocateBestGuardianInStack(short participantIdx, short troopIdx)
 		{
 			this.processor.Journal.OpenScope($"LocateBestGuardianInStack({participantIdx}, {troopIdx})");
 
-			// function body
-			this.processor.EnterFrame();
-			this.processor.PreserveSource();
-			this.processor.ScaleIndexToBase(0xc, (ushort)troopIdx);
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81de)), 0xff);
-			if (this.processor.FlagSet.IsNotEqual) goto L1142;
-			this.processor.RegAcc.Value16 = (ushort)troopIdx;
-			goto L1166;
+			// The original keeps SI for its caller
+			ushort savedSource = this.processor.RegSource.Value16;
+			ushort guardian = (ushort)troopIdx;
 
-		L1142:
-			this.processor.RegAcc.Value16 = (ushort)troopIdx;
-			this.processor.EmitGlobalWord(0x6530, this.processor.RegAcc.Value16);
-			this.processor.EmitGlobalWord(0x6534, 0xffff);
+			if (this.troops.Following(participantIdx, troopIdx) != -1)
+			{
+				this.processor.EmitGlobalWord(0x6530, (ushort)troopIdx);
+				this.processor.EmitGlobalWord(0x6534, 0xffff);
 
-			VisitEachUnitInStack(participantIdx, troopIdx, 0x1169);
+				VisitEachUnitInStack(participantIdx, troopIdx, 0x1169);
 
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x6530);
+				guardian = this.processor.PullGlobalWord(0x6530);
+			}
 
-		L1166:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
+			this.processor.RegSource.Value16 = savedSource;
+			this.processor.RegAcc.Value16 = guardian;
 
-			// Far return
 			this.processor.Journal.CloseScope("LocateBestGuardianInStack");
 
-			return this.processor.RegAcc.Value16;
+			return guardian;
 		}
 
 		/// <summary>
@@ -1578,30 +1495,22 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// Sum over the stack of the unit, the mode chooses what (TallyUnitsByDomainStep: 0 price, 1 defence, 2 units,
+		/// 3 attack, 4 defensive units before the unit). Leaves SI = 0x600 * player like the translated original,
+		/// AIPlayer depends on it (see MIGRATION-BACKLOG.md).
 		/// </summary>
-		/// <param name="playerID"></param>
-		/// <param name="unitID"></param>
-		/// <param name="param3"></param>
-		/// <returns></returns>
-		public ushort TallyUnitsByDomainInStack(short participantIdx, short troopIdx, ushort arg3)
+		public ushort TallyUnitsByDomainInStack(short participantIdx, short troopIdx, ushort mode)
 		{
-			this.processor.Journal.OpenScope($"TallyUnitsByDomainInStack({participantIdx}, {troopIdx}, {arg3})");
+			this.processor.Journal.OpenScope($"TallyUnitsByDomainInStack({participantIdx}, {troopIdx}, {mode})");
 
-			// function body
-			this.processor.EnterFrame();
 			this.processor.EmitGlobalWord(0x6532, 0x0);
-			this.processor.RegAcc.Value16 = arg3;
-			this.processor.EmitGlobalWord(0x6536, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = (ushort)troopIdx;
-			this.processor.EmitGlobalWord(0x6538, this.processor.RegAcc.Value16);
+			this.processor.EmitGlobalWord(0x6536, mode);
+			this.processor.EmitGlobalWord(0x6538, (ushort)troopIdx);
 
 			VisitEachUnitInStack(participantIdx, troopIdx, 0x1280);
 
 			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x6532);
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
 
-			// Far return
 			this.processor.Journal.CloseScope("TallyUnitsByDomainInStack");
 
 			return this.processor.RegAcc.Value16;
@@ -1652,17 +1561,12 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// Number of the units of the type in the stack of the unit. Leaves SI = 0x600 * player like the translated original (VisitEachUnitInStack).
 		/// </summary>
-		/// <param name="playerID"></param>
-		/// <param name="unitID"></param>
-		/// <param name="param3"></param>
-		/// <returns></returns>
 		public ushort TallyUnitsOfTypeInStack(short participantIdx, short troopIdx, ushort arg3)
 		{
 			this.processor.Journal.OpenScope($"TallyUnitsOfTypeInStack({participantIdx}, {troopIdx}, {arg3})");
 
-			// function body			
 			this.processor.EmitGlobalWord(0x653a, arg3);
 			this.processor.EmitGlobalWord(0x653c, 0x0);
 
@@ -1670,7 +1574,6 @@ namespace Civilization1Remaster.Game
 
 			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x653c);
 
-			// Far return
 			this.processor.Journal.CloseScope("TallyUnitsOfTypeInStack");
 
 			return this.processor.RegAcc.Value16;
@@ -1692,17 +1595,12 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// Number of the units with the TroopGroup in the stack of the unit. Leaves SI = 0x600 * player like the translated original (VisitEachUnitInStack).
 		/// </summary>
-		/// <param name="playerID"></param>
-		/// <param name="unitID"></param>
-		/// <param name="param3"></param>
-		/// <returns></returns>
 		public ushort TallyUnitsWithFlagInStack(short participantIdx, short troopIdx, ushort arg3)
 		{
 			this.processor.Journal.OpenScope($"TallyUnitsWithFlagInStack({participantIdx}, {troopIdx}, {arg3})");
 
-			// function body
 			this.processor.EmitGlobalWord(0x653a, arg3);
 			this.processor.EmitGlobalWord(0x653c, 0x0);
 
@@ -1710,7 +1608,6 @@ namespace Civilization1Remaster.Game
 
 			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x653c);
 
-			// Far return
 			this.processor.Journal.CloseScope("TallyUnitsWithFlagInStack");
 
 			return this.processor.RegAcc.Value16;
@@ -1732,23 +1629,19 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// The free room on the transports of the stack of the unit (TallySpecialUnitsStep).
+		/// Leaves SI = 0x600 * player like the translated original (VisitEachUnitInStack).
 		/// </summary>
-		/// <param name="playerID"></param>
-		/// <param name="unitID"></param>
-		/// <returns></returns>
 		public ushort TallySpecialUnitsInStack(short participantIdx, short troopIdx)
 		{
 			this.processor.Journal.OpenScope($"TallySpecialUnitsInStack({participantIdx}, {troopIdx})");
 
-			// function body
 			this.processor.EmitGlobalWord(0x653c, 0x0);
 
 			VisitEachUnitInStack(participantIdx, troopIdx, 0x13f8);
 
 			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x653c);
 
-			// Far return
 			this.processor.Journal.CloseScope("TallySpecialUnitsInStack");
 
 			return this.processor.RegAcc.Value16;
@@ -2044,193 +1937,103 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// Is the move onto the tile blocked by the zone of control: never into a city, otherwise VerifyTileOccupation
 		/// </summary>
-		/// <param name="playerID"></param>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
+		/// <returns>1 when a foreign unit stands next to the tile</returns>
 		public ushort MayOccupyTile(short participantIdx, int horizLoc, int vertLoc)
 		{
 			this.processor.Journal.OpenScope($"MayOccupyTile({participantIdx}, {horizLoc}, {vertLoc})");
 
-			// function body
-			this.processor.EnterFrame();
+			ushort blocked = (this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) != 0 ? (ushort)0 :
+				VerifyTileOccupation(participantIdx, horizLoc, vertLoc);
 
-			this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc);
+			this.processor.RegAcc.Value16 = blocked;
 
-			this.processor.TestBitsByte(this.processor.RegAcc.LowByte, 0x1);
-			if (this.processor.FlagSet.IsEqual) goto L173e;
-			this.processor.RegAcc.Value16 = 0;
-			goto L174e;
-
-		L173e:
-			VerifyTileOccupation(participantIdx, horizLoc, vertLoc);
-
-		L174e:
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-			// Far return
 			this.processor.Journal.CloseScope("MayOccupyTile");
 
-			return this.processor.RegAcc.Value16;
+			return blocked;
 		}
 
 		/// <summary>
-		/// ?
+		/// Does a unit of another player stand on one of the 8 tiles around, on the same kind of tile (land or ocean).
+		/// In the turn of the human player that unit, and its city, become visible to the human.
 		/// </summary>
-		/// <param name="playerID"></param>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
+		/// <returns>1 when a foreign unit stands next to the tile, 0 otherwise</returns>
 		public ushort VerifyTileOccupation(short participantIdx, int horizLoc, int vertLoc)
 		{
 			this.processor.Journal.OpenScope($"VerifyTileOccupation({participantIdx}, {horizLoc}, {vertLoc})");
 
-			// function body
-			this.processor.EnterFrame(0x10);
-			this.processor.PreserveIndexRegisters();
+			// The original keeps SI and DI for its caller
+			ushort savedSource = this.processor.RegSource.Value16;
+			ushort savedDest = this.processor.RegDest.Value16;
 
-			this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
+			bool onOcean = this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) == MapRules.OceanTerrain;
+			ushort found = 0;
 
-			this.processor.EmitLocalWord(0xe, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0xc, 0x1);
-			goto L1795;
+			for (int heading = 1; heading < 9; heading++)
+			{
+				int nearHoriz = this.owner.Routing.TunePosition(this.owner.MapOps.Chart.DirectionHoriz(heading) + horizLoc);
+				int nearVert = (short)(this.owner.MapOps.Chart.DirectionVert(heading) + vertLoc);
 
-		L1770:
-			this.processor.RegAcc.Value16 = 0;
+				bool nearOcean = this.owner.MapOps.ObtainTerrainType(nearHoriz, nearVert) == MapRules.OceanTerrain;
 
-		L1772:
-			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
+				if (nearOcean != onOcean)
+					continue;
 
-			this.owner.MapOps.ObtainTerrainType(
-				this.processor.PullLocalSignedWord(0x6),
-				this.processor.PullLocalSignedWord(0xa));
+				ushort nearParticipantIdx = this.owner.MapOps.ObtainTileOwner(nearHoriz, nearVert);
 
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
-			if (this.processor.FlagSet.IsNotEqual) goto L178c;
-			this.processor.RegAcc.Value16 = 0x1;
-			goto L178e;
+				if (nearParticipantIdx == 0xffff || nearParticipantIdx == (ushort)participantIdx)
+					continue;
 
-		L178c:
-			this.processor.RegAcc.Value16 = 0;
+				if (participantIdx == this.owner.World.PersonParticipantIdx)
+				{
+					RevealToHuman((short)nearParticipantIdx, nearHoriz, nearVert);
+				}
 
-		L178e:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.RegDest.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L17cb;
+				found = 1;
+				break;
+			}
 
-		L1792:
-			this.processor.EmitLocalWord(0xc, this.processor.IncrementWord(this.processor.PullLocalWord(0xc)));
+			this.processor.RegSource.Value16 = savedSource;
+			this.processor.RegDest.Value16 = savedDest;
+			this.processor.RegAcc.Value16 = found;
 
-		L1795:
-			this.processor.CompareWord(this.processor.PullLocalWord(0xc), 0x9);
-			if (this.processor.FlagSet.IsLess) goto L179e;
-			goto L18c8;
-
-		L179e:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0xc);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-
-			this.owner.Routing.TunePosition(
-				this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1882)) + horizLoc);
-
-			this.processor.EmitLocalWord(0x6, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x18e4));
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, (ushort)vertLoc);
-			this.processor.EmitLocalWord(0xa, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.PullLocalWord(0xe), 0xa);
-			if (this.processor.FlagSet.IsNotEqual) goto L1770;
-			this.processor.RegAcc.Value16 = 0x1;
-			goto L1772;
-
-		L17cb:
-			this.owner.MapOps.ObtainTileOwner(
-				this.processor.PullLocalSignedWord(0x6),
-				this.processor.PullLocalSignedWord(0xa));
-
-			this.processor.EmitLocalWord(0x8, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xffff);
-			if (this.processor.FlagSet.IsEqual) goto L1792;
-			this.processor.RegAcc.Value16 = (ushort)participantIdx;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x8), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L1792;
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.CompareWord((ushort)participantIdx, this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L17f4;
-			goto L18c3;
-
-		L17f4:
-			this.owner.MapOps.ObtainUnitAtTile(
-				this.processor.PullLocalSignedWord(0x6),
-				this.processor.PullLocalSignedWord(0xa));
-
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
-			this.processor.ScaleIndexToSource(0x600, this.processor.PullLocalWord(0x8));
-			this.processor.AddScaledToSource(0xc, this.processor.PullLocalWord(0x4));
-			this.processor.RegSource.Value16 = this.processor.SumWord(this.processor.RegSource.Value16, 0x81dd);
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, this.processor.RegSource.Value16);
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegData.Value16 = 0x1;
-			this.processor.RegCount.LowByte = (byte)(this.owner.World.PersonParticipantIdx & 0xff);
-			this.processor.RegData.Value16 = this.processor.ShiftLeftWord(this.processor.RegData.Value16, this.processor.RegCount.LowByte);
-			this.processor.TestBitsWord(this.processor.RegData.Value16, this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L1856;
-			this.processor.RegAcc.LowByte = 0x1;
-			this.processor.RegAcc.LowByte = this.processor.ShiftLeftByte(this.processor.RegAcc.LowByte, this.processor.RegCount.LowByte);
-			this.processor.EmitLocalByte(0x10, this.processor.RegAcc.LowByte);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, this.processor.RegSource.Value16, this.processor.BitOrByte(this.processor.PullUInt8(this.processor.SegData.Value16, this.processor.RegSource.Value16), this.processor.RegAcc.LowByte));
-			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
-			this.owner.World.ChartSight[this.processor.PullLocalWord(0x6),
-				this.processor.PullLocalWord(0xa)] |= (sbyte)this.processor.RegCount.LowByte;
-
-			this.owner.MapOps.RepaintMapTile(
-				this.processor.PullLocalSignedWord(0x6),
-				this.processor.PullLocalSignedWord(0xa));
-
-		L1856:
-			this.owner.MapOps.ObtainTileImprovements(
-				this.processor.PullLocalSignedWord(0x6),
-				this.processor.PullLocalSignedWord(0xa));
-
-			this.processor.TestBitsByte(this.processor.RegAcc.LowByte, 0x1);
-			if (this.processor.FlagSet.IsEqual) goto L18c3;
-
-			this.owner.Helpers.LocateCityAtPosition(
-				this.processor.PullLocalSignedWord(0x6),
-				this.processor.PullLocalSignedWord(0xa));
-
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
-			this.processor.ScaleIndexToSource(0x1c, this.processor.PullLocalWord(0x2));
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.Towns[this.processor.PullLocalWord(0x2)].TrueExtent;
-			this.owner.World.Towns[this.processor.PullLocalWord(0x2)].ShownExtent = (sbyte)this.processor.RegAcc.LowByte;
-			
-			this.owner.MapOps.KeepKnownTileImprovements(
-				this.processor.PullLocalSignedWord(0x6),
-				this.processor.PullLocalSignedWord(0xa));
-
-			this.processor.RegAcc.LowByte = 0x1;
-			this.processor.RegCount.LowByte = (byte)(this.owner.World.PersonParticipantIdx & 0xff);
-			this.processor.RegAcc.LowByte = this.processor.ShiftLeftByte(this.processor.RegAcc.LowByte, this.processor.RegCount.LowByte);
-			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
-			this.owner.World.ChartSight[this.processor.PullLocalWord(0x6),
-				this.processor.PullLocalWord(0xa)] |= (sbyte)this.processor.RegCount.LowByte;
-
-			this.owner.MapOps.RepaintMapTile(
-				this.processor.PullLocalSignedWord(0x6),
-				this.processor.PullLocalSignedWord(0xa));
-
-		L18c3:
-			this.processor.RegAcc.Value16 = 0x1;
-			goto L18ca;
-
-		L18c8:
-			this.processor.RegAcc.Value16 = 0;
-
-		L18ca:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.RegDest.Value16 = this.processor.UnstackWord();
-			this.processor.LeaveFrame();
-			// Far return
 			this.processor.Journal.CloseScope("VerifyTileOccupation");
 
-			return this.processor.RegAcc.Value16;
+			return found;
+		}
+
+		/// <summary>
+		/// The human player sees the foreign unit on the tile, and the city when there is one
+		/// </summary>
+		private void RevealToHuman(short participantIdx, int horizLoc, int vertLoc)
+		{
+			short human = this.owner.World.PersonParticipantIdx;
+			byte humanBit = (byte)(1 << human);
+			ushort troopIdx = this.owner.MapOps.ObtainUnitAtTile(horizLoc, vertLoc);
+
+			// The record of 0xffff (no unit) wraps around in the data segment, like in the original
+			int shownTo = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.ShownToParticipants);
+
+			if ((shownTo & (ushort)(1 << human)) == 0)
+			{
+				this.troops.Assign(participantIdx, troopIdx, UnitMemory.ShownToParticipants,
+					(byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.ShownToParticipants) | humanBit));
+				this.owner.World.ChartSight[horizLoc, vertLoc] |= (sbyte)humanBit;
+
+				this.owner.MapOps.RepaintMapTile(horizLoc, vertLoc);
+			}
+
+			if ((this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) != 0)
+			{
+				ushort townIdx = this.owner.Helpers.LocateCityAtPosition(horizLoc, vertLoc);
+				this.owner.World.Towns[townIdx].ShownExtent = this.owner.World.Towns[townIdx].TrueExtent;
+
+				this.owner.MapOps.KeepKnownTileImprovements(horizLoc, vertLoc);
+				this.owner.World.ChartSight[horizLoc, vertLoc] |= (sbyte)humanBit;
+
+				this.owner.MapOps.RepaintMapTile(horizLoc, vertLoc);
+			}
 		}
 
 		/// <summary>

@@ -101,6 +101,22 @@ namespace Civilization1Remaster.Game
 			}
 		}
 
+		/// <summary>
+		/// Horizontal step of a direction (1 - 8, 0 is no move), from the word table at 0x1882 of the data segment
+		/// </summary>
+		public int DirectionHoriz(int heading)
+		{
+			return (short)this.processor.PullGlobalWord((ushort)(0x1882 + (heading << 1)));
+		}
+
+		/// <summary>
+		/// Vertical step of a direction (1 - 8, 0 is no move), from the word table at 0x18e4 of the data segment
+		/// </summary>
+		public int DirectionVert(int heading)
+		{
+			return (short)this.processor.PullGlobalWord((ushort)(0x18e4 + (heading << 1)));
+		}
+
 		/// <summary>The tile owner layer: bit 3 when units stand on the tile, bits 0 - 2 the player</summary>
 		public int OwnerBits(int horizLoc, int vertLoc)
 		{
