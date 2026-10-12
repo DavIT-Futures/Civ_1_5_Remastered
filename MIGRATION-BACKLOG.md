@@ -156,15 +156,19 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
 - Kolejne 4 moduły (2026-10-12): `ReshuffleCitizens` (`CityManagement`), `AttachStrategicLocation` (`AIPlayer`),
   `LocateBestGuardian` (`PlayerTurn`, w rzeczywistości następna jednostka stosu do aktywowania), `ArrangeTextRow`
   (`TextBlockRenderer`). Testy w `BatchSeventeenDifferentialTests`.
+- Kolejne 4 moduły (2026-10-12): `RenderTextInputField` (`NewCityScreen`), `QueryForDisk` (`GameStartup`, ramka zostaje jako
+  bufor komunikatu), `ExplodeNuclearWeapon` (`UnitCombat`), `DisplayUnitInfo` (`ArmySelection`). Testy w
+  `BatchEighteenDifferentialTests`. `ExplodeNuclearWeapon` zostawia ramkę, zapis SI i SI = 2 * kierunek w pętli: wołana funkcja
+  kopiuje SI do DI, który wraca do wywołującego (rejestry zachowane jak w oryginale, bez tego DI się różni).
 
 ## Następny krok
 
 Dalej małe metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 60`
 (metody z co najmniej 2 liniami `goto L` / `FlagSet` / `Compare…` / `SumWord` itd., od najkrótszej). Kandydaci:
-`RenderTextInputField` (`NewCityScreen`), `DisplayWorldMenu`, `DisplayAdvisorMenu` (`GameMenus`), `QueryForDisk` (`GameStartup`),
-`DisplayInterfaceTutorial` (`MainIntro`), `PostCityDefenders`, `MayAIEnterTile` (`AIPlayer`), `DisplayUnitInfo` (`ArmySelection`),
+`DisplayWorldMenu`, `DisplayAdvisorMenu` (`GameMenus`), `DisplayInterfaceTutorial` (`MainIntro`), `PostCityDefenders`,
+`MayAIEnterTile` (`AIPlayer`),
 `RenderMiniMap` (`CityManagement`), `RenderExplosion` (`DiplomatActions`, kandydat ze „Śmieci na stosie”), `RenderTextChunk`
-(`TextBlockRenderer`), `ImportKingScenery` (`MeetWithKing`), `ExplodeNuclearWeapon` (`UnitCombat`), `RenderReplayMapTile`
+(`TextBlockRenderer`), `ImportKingScenery` (`MeetWithKing`), `RenderReplayMapTile`
 (`GameReplay`), `RenderPlayerComparisonChart` (`AdvisorReports`), `RenderScoreListRecord` (`CivilizationInfo`),
 `EliminateCivilization` (`StartGameMenu`), `AttachHallOfFameRecord` (`HallOfFame`), `DisplayStoreGameDialog` (`GameLoadAndSave`),
 reszta generatora mapy w `GameInitAndIntro`. Funkcje niskopoziomowe `SystemServices` (`DeactivateMouse`, `PointerEvent`,

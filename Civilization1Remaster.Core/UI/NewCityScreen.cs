@@ -480,72 +480,44 @@ namespace Civilization1Remaster.UI
 		}
 		
 		/// <summary>
-		/// ?
+		/// Draws the text of an input field (0xba06) character by character on white boxes of 8 x 8, the field the width in
+		/// characters; at the cursor (0x68cc) the column and the width of its character go to 0x68d0 and 0x68ce
 		/// </summary>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
-		/// <param name="width"></param>
 		public void RenderTextInputField(short horizLoc, short vertLoc, ushort breadth)
 		{
 			this.processor.Journal.OpenScope($"RenderTextInputField({horizLoc}, {vertLoc}, {breadth})");
 
-			// function body
-			this.processor.EnterFrame(0x4);
 			horizLoc += 2;
 			vertLoc += 2;
-			this.processor.EmitLocalWord(0x2, 0x0);
-			goto L0777;
 
-		L06d7:
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), horizLoc, vertLoc, 8, 8, 15);
+			for (short place = 0; place < (short)breadth; place++)
+			{
+				this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), horizLoc, vertLoc, 8, 8, 15);
 
-			this.owner.Libc.TextLength(0xba06);
+				if ((short)this.owner.Libc.TextLength(0xba06) <= place)
+					continue;
 
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x2));
-			if (this.processor.FlagSet.IsLessOrEqual) goto L0774;
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x2);
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xba07));
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xba07), 0x0);
+				// The character alone: the next one is cut off for the drawing
+				ushort next = (ushort)(place + 0xba07);
+				byte cut = this.processor.PullGlobalByte(next);
+				this.processor.EmitGlobalByte(next, 0x0);
 
-			this.owner.TextPainter.RenderText((ushort)(0xba06 + this.processor.RegBase.Value16), horizLoc, vertLoc, 0);
-			
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x2);
-			this.processor.RegAcc.LowByte = this.processor.PullLocalByte(0x4);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xba07), this.processor.RegAcc.LowByte);
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x68cc);
-			this.processor.CompareWord(this.processor.RegBase.Value16, this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L0759;
-			this.processor.RegAcc.Value16 = (ushort)horizLoc;
-			this.processor.EmitGlobalWord(0x68d0, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xba06));
+				this.owner.TextPainter.RenderText((ushort)(0xba06 + place), horizLoc, vertLoc, 0);
 
-			this.owner.VideoCard.ObtainCharWidth(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.PullGlobalWord(0xaa) + 0x10)), this.processor.RegAcc.LowByte);
+				this.processor.EmitGlobalByte(next, cut);
 
-			this.processor.EmitGlobalWord(0x68ce, this.processor.RegAcc.Value16);
+				ushort typeface = this.processor.PullGlobalWord((ushort)(this.processor.PullGlobalWord(0xaa) + 0x10));
+				byte character = this.processor.PullGlobalByte((ushort)(place + 0xba06));
 
-		L0759:
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x2);
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xba06));
-			
-			this.owner.VideoCard.ObtainCharWidth(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.PullGlobalWord(0xaa) + 0x10)), this.processor.RegAcc.LowByte);
+				if (place == (short)this.processor.PullGlobalWord(0x68cc))
+				{
+					this.processor.EmitGlobalWord(0x68d0, (ushort)horizLoc);
+					this.processor.EmitGlobalWord(0x68ce, this.owner.VideoCard.ObtainCharWidth(typeface, character));
+				}
 
-			horizLoc += (short)this.processor.RegAcc.Value16;
+				horizLoc += (short)this.owner.VideoCard.ObtainCharWidth(typeface, character);
+			}
 
-		L0774:
-			this.processor.EmitLocalWord(0x2, this.processor.IncrementWord(this.processor.PullLocalWord(0x2)));
-
-		L0777:
-			this.processor.RegAcc.Value16 = breadth;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0782;
-			goto L06d7;
-
-		L0782:
-			this.processor.RegStack.Value16 = this.processor.RegFrame.Value16;
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-			// Far return
 			this.processor.Journal.CloseScope("RenderTextInputField");
 		}
 	}

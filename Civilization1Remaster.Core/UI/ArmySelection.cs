@@ -1,4 +1,5 @@
 using Civilization1Remaster.Emulation;
+using Civilization1Remaster.Game;
 
 namespace Civilization1Remaster.UI
 {
@@ -9,11 +10,13 @@ namespace Civilization1Remaster.UI
 	{
 		private readonly GameEngine owner;
 		private readonly CPU processor;
+		private readonly UnitMemory troops;
 
 		public ArmySelection(GameEngine owner)
 		{
 			this.owner = owner;
 			this.processor = owner.Processor;
+			this.troops = new UnitMemory(owner.Processor);
 		}
 
 		/// <summary>
@@ -381,111 +384,56 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// A window about the unit: civilization, number, unit type, home city, position, the target of its "go to" order, then
+		/// the types of the other units of its stack (following the ring, while the text is shorter than 512)
 		/// </summary>
-		/// <param name="playerID"></param>
-		/// <param name="unitID"></param>
 		public void DisplayUnitInfo(short participantIdx, short troopIdx)
 		{
 			this.processor.Journal.OpenScope($"DisplayUnitInfo({participantIdx}, {troopIdx})");
 
-			// function body
-			this.processor.EnterFrame(0x2);
-			this.processor.PreserveSource();
-
-			this.processor.RegBase.Value16 = (ushort)participantIdx;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1982)));
-
+			this.owner.Libc.CopyText(0xba06, this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1982)));
+			this.owner.Libc.AppendText(0xba06, "\n");
+			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(troopIdx, 10));
+			this.owner.Libc.AppendText(0xba06, KindLabel(participantIdx, troopIdx));
 			this.owner.Libc.AppendText(0xba06, "\n");
 
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText((short)troopIdx, 10));
-
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.AddScaledToSource(0xc, (ushort)troopIdx);
-
-			this.processor.RegAcc.LowByte = 0x22;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d7)));
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x112a);
-			this.owner.Libc.AppendText(0xba06, this.processor.RegAcc.Value16);
+			this.owner.Conquest.ObtainCityLabel(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.BaseTown));
 
 			this.owner.Libc.AppendText(0xba06, "\n");
-
-			this.owner.Conquest.ObtainCityLabel(this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81df)));
-
-			this.owner.Libc.AppendText(0xba06, "\n");
-
 			this.owner.Libc.AppendText(0xba06, "Loc:");
-
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText(this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)), 10));
-
+			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz), 10));
 			this.owner.Libc.AppendText(0xba06, ",");
-
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText(this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6)), 10));
-
+			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert), 10));
 			this.owner.Libc.AppendText(0xba06, "\n");
 
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81da)), 0xff);
-			if (this.processor.FlagSet.IsEqual) goto L060e;
+			if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.TravelHoriz) != 0xff)
+			{
+				this.owner.Libc.AppendText(0xba06, "To:");
+				this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(this.troops.Pull(participantIdx, troopIdx, UnitMemory.TravelHoriz), 10));
+				this.owner.Libc.AppendText(0xba06, ",");
+				this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(this.troops.Pull(participantIdx, troopIdx, UnitMemory.TravelVert), 10));
+				this.owner.Libc.AppendText(0xba06, "\n");
+			}
 
-			this.owner.Libc.AppendText(0xba06, "To:");
-
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81da)), 10));
-
-			this.owner.Libc.AppendText(0xba06, ",");
-
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81db)), 10));
-
-			this.owner.Libc.AppendText(0xba06, "\n");
-
-		L060e:
 			this.owner.Libc.AppendText(0xba06, "*");
 
-			this.processor.ScaleIndexToBase(0xc, (ushort)troopIdx);
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81de));
-			goto L0687;
+			for (short current = this.troops.Following(participantIdx, troopIdx);
+				current != -1 && current != troopIdx && (short)this.owner.Libc.TextLength(0xba06) < 0x200;
+				current = this.troops.Following(participantIdx, current))
+			{
+				this.owner.Libc.AppendText(0xba06, KindLabel(participantIdx, current));
+				this.owner.Libc.AppendText(0xba06, "\n*");
+			}
 
-		L0634:
-			this.processor.RegAcc.Value16 = (ushort)troopIdx;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L0690;
-
-			this.owner.Libc.TextLength(0xba06);
-
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x200);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0690;
-
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.AddScaledToSource(0xc, this.processor.PullLocalWord(0x2));
-
-			this.processor.RegAcc.LowByte = 0x22;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d7)));
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x112a);
-			this.owner.Libc.AppendText(0xba06, this.processor.RegAcc.Value16);
-
-			this.owner.Libc.AppendText(0xba06, "\n*");
-
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81de));
-
-		L0687:
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xffff);
-			if (this.processor.FlagSet.IsNotEqual) goto L0634;
-
-		L0690:
 			this.owner.TurnHooks.DisplayDialog(0xba06, 10, 10);
 
-			this.processor.RestoreSource();
-			this.processor.LeaveFrame();
-			// Far return
 			this.processor.Journal.CloseScope("DisplayUnitInfo");
+		}
+
+		/// <summary>The name of the unit's type: the start of its record in the unit type table (0x112a + 0x22 * type)</summary>
+		private ushort KindLabel(short participantIdx, short troopIdx)
+		{
+			return (ushort)(UnitKindTable.Origin + (UnitKindTable.Stride * this.troops.TroopKind(participantIdx, troopIdx)));
 		}
 	}
 }

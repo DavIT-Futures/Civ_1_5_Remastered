@@ -304,99 +304,76 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <summary>
-		/// ?
+		/// Makes sure the file that marks game disk "diskIdx" (path at 0x1ace + 2 * disk) is there, asking "Please insert
+		/// Disk ..." until it is; the disk in use goes to 0xe17c. Marker 0: disk 0 instead when the disk is missing, without
+		/// asking; marker 0xffff: ask once even when it is there (then marker 1). The message is made in a buffer in the stack
+		/// frame, like in the original.
 		/// </summary>
-		/// <param name="param1"></param>
-		/// <param name="flag"></param>
-		public void QueryForDisk(ushort arg1, ushort marker)
+		/// <remarks>In AX: 1 when found at once with marker 0, else the marker</remarks>
+		public void QueryForDisk(ushort diskIdx, ushort marker)
 		{
-			this.processor.Journal.OpenScope($"QueryForDisk({arg1}, {marker})");
+			this.processor.Journal.OpenScope($"QueryForDisk({diskIdx}, {marker})");
 
-			// function body
 			this.processor.EnterFrame(0x102);
-			this.processor.CompareWord(marker, 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L02d9;
 
-			this.processor.RegBase.Value16 = arg1;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
+			ushort result;
 
-			this.owner.Services.PathPresent(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1ace)));
-			
-			this.processor.RegAcc.Value16 = this.processor.IncrementWord(this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L02d4;
-			this.processor.RegAcc.Value16 = arg1;
-			this.processor.EmitGlobalWord(0xe17c, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = 0x1;
-			goto L03d5;
+			if (marker == 0 && this.owner.Services.PathPresent(this.processor.PullGlobalWord((ushort)((diskIdx << 1) + 0x1ace))) != 0xffff)
+			{
+				result = 1;
+			}
+			else
+			{
+				if (marker == 0)
+				{
+					diskIdx = 0;
+				}
 
-		L02d4:
-			arg1 = 0;
+				while (this.owner.Services.PathPresent(this.processor.PullGlobalWord((ushort)((diskIdx << 1) + 0x1ace))) == 0xffff ||
+					marker == 0xffff)
+				{
+					this.owner.Services.DisplayScreen(this.processor.PullGlobalWord(this.processor.PullGlobalWord(0xaa)));
 
-		L02d9:
-			this.processor.RegBase.Value16 = arg1;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
+					if (marker == 0xffff)
+					{
+						marker = 1;
+					}
 
-			this.owner.Services.PathPresent(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1ace)));
-			
-			this.processor.RegAcc.Value16 = this.processor.IncrementWord(this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L02f9;
-			this.processor.CompareWord(marker, 0xffff);
-			if (this.processor.FlagSet.IsEqual) goto L02f9;
-			goto L03cc;
+					ConcealMouseCursor();
 
-		L02f9:
-			this.owner.Services.DisplayScreen(this.processor.PullUInt16(this.processor.SegData.Value16, this.processor.PullGlobalWord(0xaa)));
-			
-			this.processor.CompareWord(marker, 0xffff);
-			if (this.processor.FlagSet.IsNotEqual) goto L0312;
+					this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 15);
 
-			marker = 1;
+					this.processor.EmitGlobalByte(0x1ade,
+						(byte)(CPU.SignedQuotient((short)diskIdx, (short)this.processor.PullGlobalWord(0xdeba)) + 0x31));
 
-		L0312:
-			ConcealMouseCursor();
+					ushort message = (ushort)(this.processor.RegFrame.Value16 - 0x100);
+					this.owner.Libc.CopyText(message, "Please insert Disk ");
+					this.owner.Libc.AppendText(message, "A");
+					this.owner.Libc.AppendText(message, ".\n \n    Press Return\n    to continue.\n");
 
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 15);
+					ushort kept = this.processor.PullGlobalWord(0x3936);
+					this.processor.EmitGlobalWord(0x3936, 0xffff);
+					this.processor.EmitGlobalWord(0xd206, 0x1);
 
-			this.processor.RegAcc.Value16 = arg1;
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.RegCount.Value16 = this.processor.PullGlobalWord(0xdeba);
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.RegAcc.LowByte = this.processor.SumByte(this.processor.RegAcc.LowByte, 0x31);
-			this.processor.EmitGlobalByte(0x1ade, this.processor.RegAcc.LowByte);
+					this.owner.Dialogs.DisplayMenu(message, 100, 81, 1);
 
-			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x100), "Please insert Disk ");
+					this.processor.EmitGlobalWord(0x3936, kept);
 
-			this.owner.Libc.AppendText((ushort)(this.processor.RegFrame.Value16 - 0x100), "A");
+					this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 15);
 
-			this.owner.Libc.AppendText((ushort)(this.processor.RegFrame.Value16 - 0x100), ".\n \n    Press Return\n    to continue.\n");
+					this.processor.EmitGlobalWord(0x1ae0, 0x1);
 
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x3936);
-			this.processor.EmitLocalWord(0x102, this.processor.RegAcc.Value16);
-			this.processor.EmitGlobalWord(0x3936, 0xffff);
-			this.processor.EmitGlobalWord(0xd206, 0x1);
+					DisplayMouseCursor();
+				}
 
-			this.owner.Dialogs.DisplayMenu((ushort)(this.processor.RegFrame.Value16 - 0x100), 100, 81, 1);
+				result = marker;
+			}
 
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x102);
-			this.processor.EmitGlobalWord(0x3936, this.processor.RegAcc.Value16);
+			this.processor.EmitGlobalWord(0xe17c, diskIdx);
+			this.processor.RegAcc.Value16 = result;
 
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 15);
+			this.processor.LeaveFrame();
 
-			this.processor.EmitGlobalWord(0x1ae0, 0x1);
-
-			DisplayMouseCursor();
-
-			goto L02d9;
-
-		L03cc:
-			this.processor.RegAcc.Value16 = arg1;
-			this.processor.EmitGlobalWord(0xe17c, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = marker;
-
-		L03d5:
-			this.processor.RegStack.Value16 = this.processor.RegFrame.Value16;
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-			// Far return
 			this.processor.Journal.CloseScope("QueryForDisk");
 		}
 

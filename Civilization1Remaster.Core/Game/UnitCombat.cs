@@ -1112,123 +1112,80 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// A nuclear attack by the player on the tile: a message "... use nuclear weapons!" (unless the human attacks), the
+		/// explosion, then on the tile and the 8 around it (headings 8 down to 0) every unit stack is destroyed (counted in
+		/// TroopsRuined of the attacker, the victim 0xd7f0 turns against it) unless the tile is a city with SDI (structure bit
+		/// 0 of the second word); last the fallout. The stack frame and the saved SI stay, and SI holds 2 * heading in the
+		/// loop, like in the original: a called function copies SI into DI, which the caller gets back.
 		/// </summary>
-		/// <param name="playerID"></param>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
 		public void ExplodeNuclearWeapon(short participantIdx, short horizLoc, short vertLoc)
 		{
 			this.processor.Journal.OpenScope($"ExplodeNuclearWeapon({participantIdx}, {horizLoc}, {vertLoc})");
 
-			// function body
 			this.processor.EnterFrame(0xc);
 			this.processor.PreserveSource();
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.CompareWord((ushort)participantIdx, this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L0d9b;
-			this.processor.EmitGlobalWord(0x2f9e, 0x3);
 
-			this.processor.RegBase.Value16 = (ushort)participantIdx;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1992)));
+			MapLayers chart = this.owner.MapOps.Chart;
 
-			this.owner.Libc.AppendText(0xba06, " use\nnuclear weapons!\n");
+			if (participantIdx != this.owner.World.PersonParticipantIdx)
+			{
+				this.processor.EmitGlobalWord(0x2f9e, 0x3);
 
-			this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+				this.owner.Libc.CopyText(0xba06, this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1992)));
+				this.owner.Libc.AppendText(0xba06, " use\nnuclear weapons!\n");
 
-		L0d9b:
+				this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+			}
+
 			this.owner.Diplomats.RenderExplosion(horizLoc, vertLoc);
-			
-			this.processor.EmitLocalWord(0x8, 0x8);
 
-		L0dae:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x8);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1882));
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, (ushort)horizLoc);
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x18e4));
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, (ushort)vertLoc);
-			this.processor.EmitLocalWord(0x6, this.processor.RegAcc.Value16);
+			for (int heading = 8; heading >= 0; heading--)
+			{
+				this.processor.RegSource.Value16 = (ushort)(heading << 1);
 
-			this.owner.MapOps.ObtainUnitAtTile(
-				this.processor.PullLocalSignedWord(0x4),
-				this.processor.PullLocalSignedWord(0x6));
+				short tileHoriz = (short)(chart.DirectionHoriz(heading) + horizLoc);
+				short tileVert = (short)(chart.DirectionVert(heading) + vertLoc);
 
-			this.processor.EmitLocalWord(0xa, this.processor.RegAcc.Value16);
+				ushort troopIdx = this.owner.MapOps.ObtainUnitAtTile(tileHoriz, tileVert);
 
-			this.owner.MapOps.ObtainTileImprovements(
-				this.processor.PullLocalSignedWord(0x4),
-				this.processor.PullLocalSignedWord(0x6));
+				if ((this.owner.MapOps.ObtainTileImprovements(tileHoriz, tileVert) & 0x1) != 0)
+				{
+					short townIdx = (short)this.owner.Helpers.LocateCityAtPosition(tileHoriz, tileVert);
 
-			this.processor.TestBitsByte(this.processor.RegAcc.LowByte, 0x1);
-			if (this.processor.FlagSet.IsEqual) goto L0e4d;
+					if ((this.owner.World.Towns[(ushort)townIdx].StructureMarkers1 & 0x1) != 0)
+					{
+						this.owner.Libc.CopyText(0xba06, "SDI protects ");
+						this.owner.Conquest.ObtainCityLabel(townIdx);
+						this.owner.Libc.AppendText(0xba06, ".\n");
 
-			this.owner.Helpers.LocateCityAtPosition(
-				this.processor.PullLocalSignedWord(0x4),
-				this.processor.PullLocalSignedWord(0x6));
+						this.owner.TurnHooks.DisplayDialog(0xba06, 80, 100);
 
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
-			this.processor.ScaleIndexToBase(0x1c, this.processor.PullLocalWord(0x2));
-			this.processor.TestBitsWord(this.owner.World.Towns[this.processor.PullLocalWord(0x2)].StructureMarkers1, 0x1);
-			if (this.processor.FlagSet.IsEqual) goto L0e4d;
+						troopIdx = 0xffff;
+					}
+				}
 
-			this.owner.Libc.CopyText(0xba06, "SDI protects ");
+				if (troopIdx == 0xffff)
+					continue;
 
-			this.owner.Conquest.ObtainCityLabel(this.processor.PullLocalSignedWord(0x2));
+				ushort ruined = this.owner.UnitOps.TallyUnitsByDomainInStack(this.processor.PullGlobalSignedWord(0xd7f0), (short)troopIdx, 2);
 
-			this.owner.Libc.AppendText(0xba06, ".\n");
+				this.owner.World.Participants[participantIdx].TroopsRuined[this.processor.PullGlobalWord(0xd7f0)] += (short)ruined;
 
-			this.owner.TurnHooks.DisplayDialog(0xba06, 80, 100);
+				this.owner.UnitOps.VisitEachUnitInStack(this.processor.PullGlobalSignedWord(0xd7f0), (short)troopIdx, 0xf10);
 
-			this.processor.EmitLocalWord(0xa, 0xffff);
+				ushort victimIdx = this.processor.PullGlobalWord(0xd7f0);
 
-		L0e4d:
-			this.processor.CompareWord(this.processor.PullLocalWord(0xa), 0xffff);
-			if (this.processor.FlagSet.IsEqual) goto L0ea9;
+				if ((ushort)participantIdx != victimIdx)
+				{
+					this.owner.World.Participants[victimIdx].Relations[participantIdx] |= 0x88;
+				}
+			}
 
-			this.owner.UnitOps.TallyUnitsByDomainInStack(this.processor.PullGlobalSignedWord(0xd7f0),
-				this.processor.PullLocalSignedWord(0xa), 2);
-
-			this.processor.EmitLocalWord(0xc, this.processor.RegAcc.Value16);
-			
-			this.processor.RegSource.Value16 = (ushort)participantIdx;
-			this.processor.RegCount.LowByte = 0x4;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, this.processor.RegCount.LowByte);
-
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xd7f0);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-
-			this.owner.World.Participants[participantIdx].TroopsRuined[this.processor.PullGlobalWord(0xd7f0)] += (short)this.processor.RegAcc.Value16;
-
-			this.owner.UnitOps.VisitEachUnitInStack(this.processor.PullGlobalSignedWord(0xd7f0),
-				this.processor.PullLocalSignedWord(0xa), 0xf10);
-
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0xd7f0);
-			this.processor.CompareWord((ushort)participantIdx, this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L0ea9;
-			
-			this.processor.RegSource.Value16 = (ushort)participantIdx;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegCount.LowByte = 0x4;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, this.processor.RegCount.LowByte);
-
-			this.owner.World.Participants[this.processor.PullGlobalWord(0xd7f0)].Relations[participantIdx] |= 0x88;
-
-		L0ea9:
-			this.processor.EmitLocalWord(0x8, this.processor.DecrementWord(this.processor.PullLocalWord(0x8)));
-			if (this.processor.FlagSet.IsSigned) goto L0eb1;
-			goto L0dae;
-
-		L0eb1:
 			EnactNuclearFallout(horizLoc, vertLoc);
-			
+
 			this.processor.RestoreSource();
 			this.processor.LeaveFrame();
-			// Far return
+
 			this.processor.Journal.CloseScope("ExplodeNuclearWeapon");
 		}
 
