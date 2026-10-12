@@ -233,6 +233,14 @@ potem wziąć porcję z „Następny krok” (zwykle po 1–2 funkcje z ok. 7 mo
   `dotnet build Civilization1Remaster.Tests -v q -nologo` i
   `Civilization1Remaster.Tests/bin/Debug/net10.0/Civilization1Remaster.Tests.exe 2>&1 | grep -E "\[FAIL\]|Total:"`
   (`dotnet test` mówi „zero testów”). Powtarzalny kod generować skryptami (`extract_reference.py`).
+- Narzędzia w `Civilization1Remaster.Tests/Differential/Reference`: `find_asm_methods.py` (kandydaci), `extract_reference.py`
+  (kopia oryginału, właściwość silnika np. `CityOps`, `MapOps`, `Bot`, `TurnLogic`, `RocketScreen`, `MenuSystem` - patrz
+  `GameEngine.cs`), `replace_methods.py <plik .cs> <plik z nowymi metodami>` (podmienia metody po nazwie, zachowuje końce linii
+  i BOM; nowej metody pomocniczej nie dodaje - wstawić osobno), `mutate.py <plik> <stary> <nowy>` (mutacja, tekst musi być
+  jednoznaczny). Nowe klasy referencyjne dopisać do `Reference/ReferenceClasses.cs`.
+- Pułapki testów: `make` nie może wołać funkcji gry z dziennikiem na `pair.Original` (liczniki `call.` tylko jednej gry), funkcja
+  gałęzi (`Branch`) nie może zmieniać gry (zmienia tylko grę przepisaną); stan zmieniany w `Prepare` zostaje na następne
+  scenariusze (w obu grach). Pliki i stan myszy porównać przez segment danych / `Watched`.
 - Każda przepisana funkcja: test różnicowy (wzory: `Differential/BatchSevenDifferentialTests.cs`, `BatchEightDifferentialTests.cs`),
   lista gałęzi do trafienia, `Watched` dla tabel spoza segmentu danych 0x3b01, kontrola mutacjami z pracą zabezpieczoną patchem
   (`git diff -- Civilization1Remaster.Core > batch.patch`, po mutacjach `git checkout -- Civilization1Remaster.Core && git apply batch.patch`).
