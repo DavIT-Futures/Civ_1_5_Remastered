@@ -6150,87 +6150,46 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// The next unit to activate in the stack of the unit: following the ring (at most 16 steps), the non-ship unit with the
+		/// smallest index after the unit, counting round past 127
 		/// </summary>
-		/// <param name="playerID"></param>
-		/// <param name="param2"></param>
-		/// <returns></returns>
-		public ushort LocateBestGuardian(short participantIdx, ushort arg2)
+		/// <returns>That unit, the unit itself when it stands alone or nothing comes (also in AX)</returns>
+		public ushort LocateBestGuardian(short participantIdx, ushort troopIdx)
 		{
 			this.processor.Journal.OpenScope("LocateBestGuardian()");
 
-			// function body
-			this.processor.EnterFrame(0xa);
-			this.processor.PreserveSource();
-			this.processor.ScaleIndexToBase(0xc, arg2);
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81de));
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.EmitLocalWord(0x6, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xffff);
-			if (this.processor.FlagSet.IsNotEqual) goto L458c;
-			this.processor.RegAcc.Value16 = arg2;
-			goto L4617;
+			ushort best = troopIdx;
+			short current = this.troops.Following(participantIdx, troopIdx);
 
-		L458c:
-			this.processor.EmitLocalWord(0xa, 0x0);
-			this.processor.RegAcc.Value16 = arg2;
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x8, 0x3e7);
+			if (current != -1)
+			{
+				short smallestStep = 999;
 
-		L459c:
-			this.processor.RegAcc.Value16 = 0xc;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullLocalWord(0x6));
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.RegAcc.LowByte = 0x22;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d7)));
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1138)), 0x2);
-			if (this.processor.FlagSet.IsEqual) goto L45eb;
-			this.processor.RegAcc.Value16 = arg2;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x6), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L45cb;
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x6);
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, arg2);
-			goto L45d4;
+				for (int stepIdx = 0; stepIdx < 0x10; stepIdx++)
+				{
+					if (this.troops.KindField(participantIdx, current, UnitKindTable.LandGroup) != UnitKindTable.SeaUnits)
+					{
+						short step = (short)(current > (short)troopIdx ? current - troopIdx : current - troopIdx + 0x80);
 
-		L45cb:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x6);
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, arg2);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x80);
+						if (step < smallestStep)
+						{
+							smallestStep = step;
+							best = (ushort)current;
+						}
+					}
 
-		L45d4:
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x8);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L45eb;
-			this.processor.CopyLocalWord(0x4, 0x8);
-			this.processor.CopyLocalWord(0x6, 0x2);
+					current = this.troops.Following(participantIdx, current);
 
-		L45eb:
-			this.processor.RegAcc.Value16 = 0xc;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullLocalWord(0x6));
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81de));
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.EmitLocalWord(0x6, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = arg2;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x6), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L4614;
-			this.processor.IncrementLocalWord(0xa);
-			this.processor.CompareWord(this.processor.PullLocalWord(0xa), 0x10);
-			if (this.processor.FlagSet.IsLess) goto L459c;
+					if (current == (short)troopIdx)
+						break;
+				}
+			}
 
-		L4614:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x2);
+			this.processor.RegAcc.Value16 = best;
 
-		L4617:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.LeaveFrame();
-			// Far return
 			this.processor.Journal.CloseScope("LocateBestGuardian");
 
-			return this.processor.RegAcc.Value16;
+			return best;
 		}
 
 		/// <summary>

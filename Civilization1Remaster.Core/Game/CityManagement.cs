@@ -8932,79 +8932,53 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// Keeps the specialists of the city in range: entertainers (0x70e2) and taxmen (0x70e4) are clamped to the city size,
+		/// scientists (0x6542) become taxmen while there are fewer taxmen than scientists, then specialists are given up
+		/// (scientists first, then entertainers, and a taxman each time) until all of them fit in the size less the workers
+		/// (clamped to 0 - 99)
 		/// </summary>
-		/// <param name="cityID"></param>
-		/// <param name="param2"></param>
-		public void ReshuffleCitizens(short townIdx, ushort arg2)
+		public void ReshuffleCitizens(short townIdx, ushort workerTally)
 		{
-			this.processor.Journal.OpenScope($"ReshuffleCitizens({townIdx}, {arg2})");
+			this.processor.Journal.OpenScope($"ReshuffleCitizens({townIdx}, {workerTally})");
 
-			// function body
-			this.processor.EnterFrame();
+			City town = this.owner.World.Towns[townIdx];
 
-			this.owner.Helpers.VerifyValueSpan(
-				this.processor.PullGlobalSignedWord(0x70e2),
-				0, this.owner.World.Towns[townIdx].TrueExtent);
+			this.processor.EmitGlobalWord(0x70e2,
+				(ushort)this.owner.Helpers.VerifyValueSpan(this.processor.PullGlobalSignedWord(0x70e2), 0, town.TrueExtent));
 
-			this.processor.EmitGlobalWord(0x70e2, this.processor.RegAcc.Value16);
-			goto L6e34;
+			while (this.processor.PullGlobalWord(0x6542) != 0 &&
+				this.processor.PullGlobalSignedWord(0x70e4) < this.processor.PullGlobalSignedWord(0x6542))
+			{
+				this.processor.EmitGlobalWord(0x6542, (ushort)(this.processor.PullGlobalWord(0x6542) - 1));
+				this.processor.EmitGlobalWord(0x70e4, (ushort)(this.processor.PullGlobalWord(0x70e4) + 1));
+			}
 
-		L6e23:
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x6542);
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x70e4), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L6e3b;
-			this.processor.EmitGlobalWord(0x6542, this.processor.DecrementWord(this.processor.PullGlobalWord(0x6542)));
-			this.processor.EmitGlobalWord(0x70e4, this.processor.IncrementWord(this.processor.PullGlobalWord(0x70e4)));
+			ushort taxmen = (ushort)this.owner.Helpers.VerifyValueSpan(this.processor.PullGlobalSignedWord(0x70e4), 0, town.TrueExtent);
 
-		L6e34:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x6542), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L6e23;
+			while (true)
+			{
+				this.processor.EmitGlobalWord(0x70e4, taxmen);
 
-		L6e3b:
-			this.owner.Helpers.VerifyValueSpan(
-				this.processor.PullGlobalSignedWord(0x70e4),
-				0, this.owner.World.Towns[townIdx].TrueExtent);
+				short room = (short)this.owner.Helpers.VerifyValueSpan(town.TrueExtent - (short)workerTally, 0, 99);
 
-			goto L6e94;
+				if ((short)(this.processor.PullGlobalWord(0x70e2) + this.processor.PullGlobalWord(0x70e4)) <= room)
+					break;
 
-		L6e4e:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x6542), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L6e5b;
-			this.processor.EmitGlobalWord(0x6542, this.processor.DecrementWord(this.processor.PullGlobalWord(0x6542)));
-			goto L6e7f;
+				if (this.processor.PullGlobalWord(0x6542) != 0)
+				{
+					this.processor.EmitGlobalWord(0x6542, (ushort)(this.processor.PullGlobalWord(0x6542) - 1));
+				}
+				else
+				{
+					this.processor.EmitGlobalWord(0x70e2, (ushort)(this.processor.PullGlobalWord(0x70e2) - 1));
+					this.processor.EmitGlobalWord(0x70e2,
+						(ushort)this.owner.Helpers.VerifyValueSpan(this.processor.PullGlobalSignedWord(0x70e2), 0, town.TrueExtent));
+				}
 
-		L6e5b:
-			this.processor.EmitGlobalWord(0x70e2, this.processor.DecrementWord(this.processor.PullGlobalWord(0x70e2)));
-			
-			this.owner.Helpers.VerifyValueSpan(
-				this.processor.PullGlobalSignedWord(0x70e2),
-				0, this.owner.World.Towns[townIdx].TrueExtent);
+				this.processor.EmitGlobalWord(0x70e4, (ushort)(this.processor.PullGlobalWord(0x70e4) - 1));
+				taxmen = (ushort)this.owner.Helpers.VerifyValueSpan(this.processor.PullGlobalSignedWord(0x70e4), 0, town.TrueExtent);
+			}
 
-			this.processor.EmitGlobalWord(0x70e2, this.processor.RegAcc.Value16);
-
-		L6e7f:
-			this.processor.EmitGlobalWord(0x70e4, this.processor.DecrementWord(this.processor.PullGlobalWord(0x70e4)));
-
-			this.owner.Helpers.VerifyValueSpan(
-				this.processor.PullGlobalSignedWord(0x70e4),
-				0, this.owner.World.Towns[townIdx].TrueExtent);
-
-		L6e94:
-			this.processor.EmitGlobalWord(0x70e4, this.processor.RegAcc.Value16);
-
-			this.owner.Helpers.VerifyValueSpan(
-				this.owner.World.Towns[townIdx].TrueExtent - (short)arg2, 0, 99);
-
-			this.processor.RegCount.Value16 = this.processor.PullGlobalWord(0x70e2);
-			this.processor.RegCount.Value16 = this.processor.SumWord(this.processor.RegCount.Value16, this.processor.PullGlobalWord(0x70e4));
-			this.processor.CompareWord(this.processor.RegCount.Value16, this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L6ed2;
-			goto L6e4e;
-
-		L6ed2:
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-			// Far return
 			this.processor.Journal.CloseScope("ReshuffleCitizens");
 		}
 

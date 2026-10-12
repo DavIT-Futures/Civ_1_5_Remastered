@@ -17,65 +17,44 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <summary>
-		/// ?
+		/// Breaks the text at 0xba06 into lines of the width (in characters): a space after the width becomes a line break
+		/// (unless a space follows), "^" becomes a space with a line break after it (over the next character); a line break
+		/// is added at the end of a text that does not end with one
 		/// </summary>
-		/// <param name="param1"></param>
-		public void ArrangeTextRow(short arg1)
+		public void ArrangeTextRow(short breadth)
 		{
-			this.processor.Journal.OpenScope($"ArrangeTextRow({arg1})");
+			this.processor.Journal.OpenScope($"ArrangeTextRow({breadth})");
 
-			// function body
-			this.processor.EnterFrame(0x4);
+			short column = 0;
 
-			this.processor.EmitLocalWord(0x2, 0x0);
-			this.processor.EmitLocalWord(0x4, 0x0);
-			goto L005d;
+			for (ushort place = 0xba06; (short)this.owner.Libc.TextLength(0xba06) > (short)(place - 0xba06); place++)
+			{
+				if (this.processor.PullGlobalByte(place) == '^')
+				{
+					this.processor.EmitGlobalByte(place, 0x20);
+					this.processor.EmitGlobalByte((ushort)(place + 1), 0xa);
+					column = -1;
+				}
 
-		L0012:
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x4);
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xba06)), 0x5e);
-			if (this.processor.FlagSet.IsNotEqual) goto L002b;
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xba06), 0x20);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xba07), 0xa);
-			this.processor.EmitLocalWord(0x2, 0xffff);
+				if (this.processor.PullGlobalByte(place) == 0xa)
+				{
+					column = -1;
+				}
 
-		L002b:
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xba06)), 0xa);
-			if (this.processor.FlagSet.IsNotEqual) goto L0037;
-			this.processor.EmitLocalWord(0x2, 0xffff);
+				column++;
 
-		L0037:
-			this.processor.EmitLocalWord(0x2, this.processor.IncrementWord(this.processor.PullLocalWord(0x2)));
-			
-			if (this.processor.PullLocalSignedWord(0x2) <= arg1)
-				goto L005a;
+				if (column > breadth && this.processor.PullGlobalByte(place) == 0x20 && this.processor.PullGlobalByte((ushort)(place + 1)) != 0x20)
+				{
+					this.processor.EmitGlobalByte(place, 0xa);
+					column = 0;
+				}
+			}
 
-			if (this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xba06)) != 0x20)
-				goto L005a;
+			if (column > 0)
+			{
+				this.owner.Libc.AppendText(0xba06, "\n");
+			}
 
-			if (this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xba07)) == 0x20)
-				goto L005a;
-
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xba06), 0xa);
-			this.processor.EmitLocalWord(0x2, 0x0);
-
-		L005a:
-			this.processor.EmitLocalWord(0x4, this.processor.IncrementWord(this.processor.PullLocalWord(0x4)));
-
-		L005d:
-			this.owner.Libc.TextLength(0xba06);
-
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x4));
-			if (this.processor.FlagSet.IsGreater) goto L0012;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x0);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L0084;
-
-			this.owner.Libc.AppendText(0xba06, "\n");
-
-		L0084:
-			this.processor.RegStack.Value16 = this.processor.RegFrame.Value16;
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-			// Far return
 			this.processor.Journal.CloseScope("ArrangeTextRow");
 		}
 

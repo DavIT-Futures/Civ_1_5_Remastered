@@ -4619,83 +4619,36 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// Notes a strategic location of the player (the 16 places are sorted by strategy, highest first): nothing when it is
+		/// already there with the same state and at least the strategy; otherwise it goes in before the first free place or
+		/// the first place with a lower strategy (AffixStrategicLocation moves the rest down); no room, no change
 		/// </summary>
-		/// <param name="playerID"></param>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
-		/// <param name="active"></param>
-		/// <param name="policy"></param>
 		public void AttachStrategicLocation(short participantIdx, ushort horizLoc, ushort vertLoc, ushort live, ushort strategy)
 		{
 			this.processor.Journal.OpenScope($"AttachStrategicLocation({participantIdx}, {horizLoc}, {vertLoc}, {live}, {strategy})");
 
-			// function body
-			this.processor.EnterFrame(0x2);
-			this.processor.PreserveSource();
+			StrategicLocation[] sites = this.owner.World.Participants[participantIdx].TacticalSites;
 
-			this.processor.EmitLocalWord(0x2, 0x0);
-			goto L3262;
+			bool known = sites.Take(0x10).Any(site => (ushort)(sbyte)site.Place.X == horizLoc && (ushort)(sbyte)site.Place.Y == vertLoc &&
+				(ushort)site.Live == live && (sbyte)site.Strategy <= (short)strategy);
 
-		L325f:
-			this.processor.EmitLocalWord(0x2, this.processor.IncrementWord(this.processor.PullLocalWord(0x2)));
+			if (!known)
+			{
+				for (ushort place = 0; place < 0x10; place++)
+				{
+					if (sites[place].Live == -1 || (sbyte)sites[place].Strategy < (short)strategy)
+					{
+						AffixStrategicLocation(participantIdx, place);
 
-		L3262:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x10);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L329c;
+						sites[place].Place.X = (sbyte)horizLoc;
+						sites[place].Place.Y = (sbyte)vertLoc;
+						sites[place].Live = (sbyte)live;
+						sites[place].Strategy = (byte)strategy;
+						break;
+					}
+				}
+			}
 
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.Participants[participantIdx].TacticalSites[this.processor.PullLocalWord(0x2)].Place.X;
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, horizLoc);
-			if (this.processor.FlagSet.IsNotEqual) goto L325f;
-
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.Participants[participantIdx].TacticalSites[this.processor.PullLocalWord(0x2)].Place.Y;
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, vertLoc);
-			if (this.processor.FlagSet.IsNotEqual) goto L325f;
-
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.Participants[participantIdx].TacticalSites[this.processor.PullLocalWord(0x2)].Live;
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, live);
-			if (this.processor.FlagSet.IsNotEqual) goto L325f;
-
-			this.processor.RegAcc.LowByte = this.owner.World.Participants[participantIdx].TacticalSites[this.processor.PullLocalWord(0x2)].Strategy;
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, strategy);
-			if (this.processor.FlagSet.IsGreater) goto L325f;
-			goto L32fa;
-
-		L329c:
-			this.processor.EmitLocalWord(0x2, 0x0);
-			goto L32a6;
-
-		L32a3:
-			this.processor.EmitLocalWord(0x2, this.processor.IncrementWord(this.processor.PullLocalWord(0x2)));
-
-		L32a6:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x10);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L32fa;
-
-			if (this.owner.World.Participants[participantIdx].TacticalSites[this.processor.PullLocalWord(0x2)].Live == -1)
-				goto L32c7;
-
-			this.processor.RegAcc.LowByte = this.owner.World.Participants[participantIdx].TacticalSites[this.processor.PullLocalWord(0x2)].Strategy;
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, strategy);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L32a3;
-
-		L32c7:
-			AffixStrategicLocation(participantIdx, this.processor.PullLocalWord(0x2));
-
-			this.owner.World.Participants[participantIdx].TacticalSites[this.processor.PullLocalWord(0x2)].Place.X = (sbyte)horizLoc;
-			this.owner.World.Participants[participantIdx].TacticalSites[this.processor.PullLocalWord(0x2)].Place.Y = (sbyte)vertLoc;
-			this.owner.World.Participants[participantIdx].TacticalSites[this.processor.PullLocalWord(0x2)].Live = (sbyte)live;
-			this.owner.World.Participants[participantIdx].TacticalSites[this.processor.PullLocalWord(0x2)].Strategy = (byte)strategy;
-
-		L32fa:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.LeaveFrame();
-			// Far return
 			this.processor.Journal.CloseScope("AttachStrategicLocation");
 		}
 

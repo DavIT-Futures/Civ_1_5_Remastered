@@ -153,18 +153,24 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   nazwy do porównania). Testy w `BatchSixteenDifferentialTests` (stosy na morzu budowane przez scenariusze). Uwaga dla testów:
   `make` scenariusza nie może wołać funkcji gry z dziennikiem na `pair.Original` (zmienia liczniki `call.` tylko jednej gry);
   do odczytu mapy `Chart.Terrain`.
+- Kolejne 4 moduły (2026-10-12): `ReshuffleCitizens` (`CityManagement`), `AttachStrategicLocation` (`AIPlayer`),
+  `LocateBestGuardian` (`PlayerTurn`, w rzeczywistości następna jednostka stosu do aktywowania), `ArrangeTextRow`
+  (`TextBlockRenderer`). Testy w `BatchSeventeenDifferentialTests`.
 
 ## Następny krok
 
-Dalej małe metody (`python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 60`:
-metody z co najmniej 2 liniami `goto L` / `FlagSet` / `Compare…` / `SumWord` itd., od najkrótszej): w `SystemServices` `DeactivateMouse` (dziwny kontrakt rejestrów AX/BX), `PointerEvent`, `RenderCursorToScreen`,
-`RecoverScreenUnderCursor`, `DisplayScreen`, `ImportColorsFromBuffer`, `FloodColors`, `FadeColors`; `SnapHeapPointer` (`VGADriver`),
-`ArrangeTextRow` (`TextBlockRenderer`), `RenderTextInputField`, `DisplayLabelInputBox` (`NewCityScreen`),
-`DisplayWorldMenu`, `DisplayAdvisorMenu` (`GameMenus`), `DisplayRevolutionScreen` (`StartGameMenu`), `RenderExplosion`
-(`DiplomatActions`), `PrepareTimer`, `RefreshHueCycling`, `AssignHueCycleSpan` (`SystemServices`), `ReshuffleCitizens`
-(`CityManagement`), `LocateBestGuardian` (`PlayerTurn`),
-`AttachStrategicLocation` (`AIPlayer`), `RenderTextInputField` (`NewCityScreen`), `ColorsFadeStep` (`SystemServices`),
-reszta generatora mapy w `GameInitAndIntro`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
+Dalej małe metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 60`
+(metody z co najmniej 2 liniami `goto L` / `FlagSet` / `Compare…` / `SumWord` itd., od najkrótszej). Kandydaci:
+`RenderTextInputField` (`NewCityScreen`), `DisplayWorldMenu`, `DisplayAdvisorMenu` (`GameMenus`), `QueryForDisk` (`GameStartup`),
+`DisplayInterfaceTutorial` (`MainIntro`), `PostCityDefenders`, `MayAIEnterTile` (`AIPlayer`), `DisplayUnitInfo` (`ArmySelection`),
+`RenderMiniMap` (`CityManagement`), `RenderExplosion` (`DiplomatActions`, kandydat ze „Śmieci na stosie”), `RenderTextChunk`
+(`TextBlockRenderer`), `ImportKingScenery` (`MeetWithKing`), `ExplodeNuclearWeapon` (`UnitCombat`), `RenderReplayMapTile`
+(`GameReplay`), `RenderPlayerComparisonChart` (`AdvisorReports`), `RenderScoreListRecord` (`CivilizationInfo`),
+`EliminateCivilization` (`StartGameMenu`), `AttachHallOfFameRecord` (`HallOfFame`), `DisplayStoreGameDialog` (`GameLoadAndSave`),
+reszta generatora mapy w `GameInitAndIntro`. Funkcje niskopoziomowe `SystemServices` (`DeactivateMouse`, `PointerEvent`,
+`RenderCursorToScreen`, `RecoverScreenUnderCursor`, kolory i zegar: `PrepareTimer`, `RefreshHueCycling`, `AssignHueCycleSpan`,
+`ColorsFadeStep`, `FadeColors`, `FloodColors`, `ImportColorsFromBuffer`) i `SnapHeapPointer` (`VGADriver`) na koniec: działają
+w przerwaniach albo na rejestrach. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
