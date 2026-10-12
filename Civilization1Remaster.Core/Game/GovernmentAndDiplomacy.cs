@@ -1304,54 +1304,33 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// Distance from the position to the nearest city of the player with a palace (structure bit 0), at most 16
 		/// </summary>
-		/// <param name="playerID"></param>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
-		/// <returns></returns>
+		/// <returns>Distance, also in AX</returns>
 		public ushort LocateNearestCityOfPlayer(short participantIdx, int horizLoc, int vertLoc)
 		{
 			this.processor.Journal.OpenScope($"LocateNearestCityOfPlayer({participantIdx}, {horizLoc}, {vertLoc})");
 
-			// function body
-			this.processor.EnterFrame(0x6);
+			short nearest = 16;
 
-			this.processor.EmitLocalWord(0x4, 0x10);
-			this.processor.EmitLocalWord(0x6, 0x0);
-
-			do
+			foreach (City town in this.owner.World.Towns)
 			{
-				if (this.owner.World.Towns[this.processor.PullLocalWord(0x6)].ConditionMarker != 0xff &&
-					this.owner.World.Towns[this.processor.PullLocalWord(0x6)].ParticipantIdx == participantIdx &&
-					(this.owner.World.Towns[this.processor.PullLocalWord(0x6)].StructureMarkers0 & 0x1) != 0)
+				if (town.ConditionMarker == 0xff || town.ParticipantIdx != participantIdx || (town.StructureMarkers0 & 0x1) == 0)
+					continue;
+
+				short distance = (short)this.owner.Helpers.ObtainDistance(town.Place.X, horizLoc, town.Place.Y, vertLoc);
+
+				if (distance < nearest)
 				{
-					this.owner.Helpers.ObtainDistance(
-						this.owner.World.Towns[this.processor.PullLocalWord(0x6)].Place.X,
-						horizLoc,
-						this.owner.World.Towns[this.processor.PullLocalWord(0x6)].Place.Y,
-						vertLoc);
-
-					this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
-					this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x4);
-					this.processor.CompareWord(this.processor.PullLocalWord(0x2), this.processor.RegAcc.Value16);
-					if (this.processor.FlagSet.IsLess)
-					{
-						this.processor.EmitLocalWord(0x4, this.processor.PullLocalWord(0x2));
-					}
+					nearest = distance;
 				}
-
-				this.processor.IncrementLocalWord(0x6);
 			}
-			while (this.processor.PullLocalWord(0x6) < 128);
 
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x4);
+			this.processor.RegAcc.Value16 = (ushort)nearest;
 
-			this.processor.LeaveFrame();
-			// Far return
 			this.processor.Journal.CloseScope("LocateNearestCityOfPlayer");
 
-			return this.processor.RegAcc.Value16;
+			return (ushort)nearest;
 		}
 	}
 }

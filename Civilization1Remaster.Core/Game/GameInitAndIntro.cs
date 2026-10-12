@@ -2459,31 +2459,22 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// Terrain type of the pixel of the current screen (the screen of the box at 0xaa), by the terrain colour table at 0x2ba6
 		/// </summary>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
-		/// <returns></returns>
+		/// <returns>Terrain type, also in AX</returns>
 		public ushort ObtainTerrainTypeFromScreen(short horizLoc, short vertLoc)
 		{
 			this.processor.Journal.OpenScope($"ObtainTerrainTypeFromScreen({horizLoc}, {vertLoc})");
 
-			// function body
-			this.processor.EnterFrame();
+			ushort displayIdx = this.processor.PullGlobalWord(this.processor.PullGlobalWord(0xaa));
+			ushort colour = this.owner.VideoCard.ObtainDot(displayIdx, horizLoc, vertLoc);
+			ushort terrain = this.processor.PullGlobalWord((ushort)(0x2ba6 + (colour << 1)));
 
-			this.owner.VideoCard.ObtainDot(
-				this.processor.PullUInt16(this.processor.SegData.Value16, this.processor.PullGlobalWord(0xaa)),
-				horizLoc, vertLoc);
+			this.processor.RegAcc.Value16 = terrain;
 
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x2ba6));
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-
-			// Far return
 			this.processor.Journal.CloseScope("ObtainTerrainTypeFromScreen");
 
-			return this.processor.RegAcc.Value16;
+			return terrain;
 		}
 
 		/// <summary>

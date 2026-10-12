@@ -38,45 +38,33 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// Shows the text as a dialog (DisplayMenu) and puts back the screen as it was before (kept in the back screen 0x19d4);
+		/// the answer of DisplayMenu stays in AX
 		/// </summary>
-		/// <param name="stringPtr"></param>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
 		public void DisplayDialog(ushort charsAddr, int horizLoc, int vertLoc)
 		{
 			this.processor.Journal.OpenScope($"DisplayDialog(0x{charsAddr:x4}, {horizLoc}, {vertLoc})");
 
-			// function body
-			this.processor.EnterFrame(0x2);
-
 			this.owner.Startup.ConcealMouseCursor();
 
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0xaa),
-				0, 0, 320, 200,
-				this.processor.PullGlobalWord(0x19d4),
-				0, 0);
+			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200,
+				this.processor.PullGlobalWord(0x19d4), 0, 0);
 
 			this.owner.Startup.DisplayMouseCursor();
 
-			this.owner.Dialogs.DisplayMenu(charsAddr, horizLoc,	vertLoc, 1);
+			this.owner.Dialogs.DisplayMenu(charsAddr, horizLoc, vertLoc, 1);
 
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
+			ushort answer = this.processor.RegAcc.Value16;
 
 			this.owner.Startup.ConcealMouseCursor();
 
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0x19d4),
-				0, 0, 0x140, 0xc8,
-				this.processor.PullGlobalWord(0xaa),
-				0, 0);
+			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 320, 200,
+				this.processor.PullGlobalWord(0xaa), 0, 0);
 
 			this.owner.Startup.DisplayMouseCursor();
 
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x2);
-			this.processor.LeaveFrame();
-			// Far return
+			this.processor.RegAcc.Value16 = answer;
+
 			this.processor.Journal.CloseScope("DisplayDialog");
 		}
 
@@ -2194,22 +2182,22 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// Draws the main screen again: the map view, the box of the left column and the civilization panels, with the colour
+		/// cycling stopped meanwhile (0x1c28 = 1 while drawing)
 		/// </summary>
 		public void RepaintMainScreen()
 		{
 			this.processor.Journal.OpenScope("RepaintMainScreen()");
 
-			// function body
 			this.owner.Helpers.HaltHueCycling();
 
 			this.processor.EmitGlobalWord(0x1c28, 0x1);
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xd762), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L1b6e;
 
-			this.owner.Services.FloodColors(5, 0, 0, 0);
+			if (this.processor.PullGlobalWord(0xd762) != 0)
+			{
+				this.owner.Services.FloodColors(5, 0, 0, 0);
+			}
 
-		L1b6e:
 			this.owner.Startup.ConcealMouseCursor();
 
 			this.owner.MapOps.FocusMapView(this.owner.World.PersonParticipantIdx,

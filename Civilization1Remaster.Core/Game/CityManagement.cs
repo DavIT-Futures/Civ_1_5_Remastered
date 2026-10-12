@@ -9204,28 +9204,19 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// A box from one corner to the other: the background pattern (FloodBoxWithMotif) and the frame (RenderBox, style 1)
 		/// </summary>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
-		/// <param name="xPos1"></param>
-		/// <param name="yPos1"></param>
 		public void RenderFrame(int horizLoc, int vertLoc, int horizSpot1, int vertSpot1)
 		{
 			this.processor.Journal.OpenScope($"RenderFrame({horizLoc}, {vertLoc}, {horizSpot1}, {vertSpot1})");
 
-			// function body
-			this.processor.EnterFrame(0x4);
-			
-			int breadthInt = horizSpot1 - horizLoc;
-			int elevation = vertSpot1 - vertLoc;
+			int breadth = horizSpot1 - horizLoc;
+			int altitude = vertSpot1 - vertLoc;
 
-			FloodBoxWithMotif(horizLoc, vertLoc, breadthInt, elevation);
+			FloodBoxWithMotif(horizLoc, vertLoc, breadth, altitude);
 
-			this.owner.Dialogs.RenderBox(horizLoc, vertLoc, breadthInt, elevation, 1);
+			this.owner.Dialogs.RenderBox(horizLoc, vertLoc, breadth, altitude, 1);
 
-			this.processor.LeaveFrame();
-			// Far return
 			this.processor.Journal.CloseScope("RenderFrame");
 		}
 

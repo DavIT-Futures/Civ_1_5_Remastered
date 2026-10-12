@@ -749,15 +749,11 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// Appends buffer at 0xba06 with city name
+		/// Appends the name of the city (13 characters of GameState.TownLabels) to the text at 0xba06, "NONE" for city -1
 		/// </summary>
-		/// <param name="cityID"></param>
 		public void ObtainCityLabel(short townIdx)
 		{
 			this.processor.Journal.OpenScope($"ObtainCityLabel({townIdx})");
-
-			// function body
-			this.processor.EnterFrame();
 
 			if (townIdx != -1)
 			{
@@ -774,9 +770,6 @@ namespace Civilization1Remaster.Game
 				this.owner.Libc.AppendText(0xba06, "NONE");
 			}
 
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-
-			// Far return
 			this.processor.Journal.CloseScope("ObtainCityLabel");
 		}
 
