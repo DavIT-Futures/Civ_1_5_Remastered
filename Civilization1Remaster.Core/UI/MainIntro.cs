@@ -1425,14 +1425,15 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// The opening news of a new game: the picture 0x332e and, with the human player's leader name in capitals (code text
+		/// 0x30b8) and the last technology the player knows ("Irrigation" without any, code text 0x30be), the text 0x3342 of
+		/// file 0x3348 shown part after part ("^" ends a part; the last part is not shown), each in a band at row 8 (colour 14
+		/// with a shadow when 0xd762 is set, else 9), waiting 200 between parts unless a part ends with "!" or a key is waiting;
+		/// then the leader's sound and the screen of the civilization
 		/// </summary>
 		public void DisplayTerrainTutorial()
 		{
 			this.processor.Journal.OpenScope("DisplayTerrainTutorial()");
-
-			// function body
-			this.processor.EnterFrame(0x8);
 
 			this.owner.Helpers.HaltHueCycling();
 
@@ -1446,136 +1447,79 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Startup.QueryForDisk(0, 1);
 
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0x19d4),
-				0, 0, 0x140, 0xc8,
-				this.processor.PullGlobalWord(0xaa),
-				0, 0);
+			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0xaa), 0, 0);
 
-			this.processor.RegBase.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x19a2)));
+			short humanIdx = this.owner.World.PersonParticipantIdx;
 
+			this.owner.Libc.CopyText(0xba06, this.processor.PullGlobalWord((ushort)((humanIdx << 1) + 0x19a2)));
 			this.owner.Libc.UppercaseText(0xba06);
-
 			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30b8), 0xba06);
 
 			this.owner.Libc.CopyText(0xba06, "Irrigation");
 
-			this.processor.EmitLocalWord(0x6, 0x0);
-
-		L15f6:
-			this.processor.RegAcc.Value16 = this.owner.Advisors.PlayerKnowsTechnology(this.owner.World.PersonParticipantIdx, this.processor.PullLocalSignedWord(0x6));
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual)
-				goto L161f;
-
-			this.processor.ScaleIndex(0x16, this.processor.PullLocalWord(0x6));
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x4da);
-			this.owner.Libc.CopyText(0xba06, this.processor.RegAcc.Value16);
-
-		L161f:
-			this.processor.EmitLocalWord(0x6, this.processor.IncrementWord(this.processor.PullLocalWord(0x6)));
-			this.processor.CompareWord(this.processor.PullLocalWord(0x6), 0x48);
-			if (this.processor.FlagSet.IsLess) goto L15f6;
+			for (short technologyIdx = 0; technologyIdx < 0x48; technologyIdx++)
+			{
+				if (this.owner.Advisors.PlayerKnowsTechnology(humanIdx, technologyIdx) != 0)
+				{
+					this.owner.Libc.CopyText(0xba06, (ushort)((technologyIdx * 0x16) + 0x4da));
+				}
+			}
 
 			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be), 0xba06);
 
-			this.processor.EmitGlobalByte(0xba06, 0x0);
+			this.processor.EmitGlobalByte(0xba06, 0);
 
 			this.owner.BlockText.ImportTextFromFile(0x3348, 0x3342);
 
 			this.owner.BlockText.ReflowText();
 
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 0x6);
-			this.processor.RegAcc.Value16 = 0xffff;
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
+			this.processor.EmitGlobalWord((ushort)(this.processor.PullGlobalWord(0xaa) + 0x10), 6);
 
-			this.owner.Libc.TextLength(0xba06);
+			short end = (short)this.owner.Libc.TextLength(0xba06);
+			short place = -1;
 
-			this.processor.EmitLocalWord(0x8, this.processor.RegAcc.Value16);
+			do
+			{
+				ushort partAddr = (ushort)(0xba06 + place + 1);
 
-		L1673:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x2);
-			this.processor.RegAcc.Value16 = this.processor.IncrementWord(this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
+				do
+				{
+					place++;
+				} while (this.processor.PullGlobalByte((ushort)(0xba06 + place)) != 0x5e && place < end);
 
-		L167a:
-			this.processor.EmitLocalWord(0x2, this.processor.IncrementWord(this.processor.PullLocalWord(0x2)));
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x2);
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xba06)), 0x5e);
-			if (this.processor.FlagSet.IsEqual) goto L168e;
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x8);
-			this.processor.CompareWord(this.processor.RegBase.Value16, this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsLess) goto L167a;
+				if (place >= end)
+					break;
 
-		L168e:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x8);
-			this.processor.CompareWord(this.processor.RegBase.Value16, this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L169a;
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xba06), 0x0);
+				this.processor.EmitGlobalByte((ushort)(0xba06 + place), 0);
 
-		L169a:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x8);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsLess) goto L16a5;
-			goto L1762;
+				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 6, 0x140, 0x14, this.processor.PullGlobalWord(0xaa), 0, 6);
 
-		L16a5:
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0x19d4),
-				0, 0x6, 0x140, 0x14,
-				this.processor.PullGlobalWord(0xaa),
-				0, 6);
+				ushort hue = 9;
 
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xd762), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L170d;
+				if (this.processor.PullGlobalWord(0xd762) != 0)
+				{
+					this.owner.TextPainter.RenderCenteredTextToScreen0(partAddr, 160, 7, 15);
+					this.owner.TextPainter.RenderCenteredTextToScreen0(partAddr, 160, 9, 13);
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0((ushort)(0xba06 + this.processor.PullLocalWord(0x4)),
-				160, 7, 15);
+					hue = 14;
+				}
+				else
+				{
+					this.owner.TextPainter.RenderCenteredTextToScreen0(partAddr, 160, 9, 1);
+				}
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0((ushort)(0xba06 + this.processor.PullLocalWord(0x4)),
-				160, 9, 13);
+				this.owner.TextPainter.RenderCenteredTextToScreen0(partAddr, 160, 8, hue);
 
-			this.processor.RegAcc.Value16 = 0xe;
-			goto L172b;
+				if (this.processor.PullGlobalByte((ushort)(0xba05 + place)) != 0x21 && this.owner.Libc.KeyAvailable() == 0)
+				{
+					this.owner.TextPainter.AwaitTime(200);
+				}
+			} while (place < end);
 
-		L170d:
-			this.owner.TextPainter.RenderCenteredTextToScreen0((ushort)(0xba06 + this.processor.PullLocalWord(0x4)),
-				160, 9, 1);
-
-			this.processor.RegAcc.Value16 = 0x9;
-
-		L172b:
-			this.owner.TextPainter.RenderCenteredTextToScreen0((ushort)(0xba06 + this.processor.PullLocalWord(0x4)),
-				160, 8, this.processor.RegAcc.Value16);
-
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x2);
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xba05)), 0x21);
-			if (this.processor.FlagSet.IsEqual) goto L1762;
-
-			this.owner.Libc.KeyAvailable();
-
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsNotEqual) goto L1762;
-
-			this.owner.TextPainter.AwaitTime(200);
-
-		L1762:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x8);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L176d;
-			goto L1673;
-
-		L176d:
 			this.owner.Services.PerformSound(1, 0);
 
-			this.processor.RegAcc.Value16 = 0x3a;
-			this.processor.ScaleAccumulatorToBase((ushort)this.owner.World.Participants[this.owner.World.PersonParticipantIdx].ChiefVisuals);
-
-			this.owner.Services.PerformSound(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1518)), 0);
+			this.owner.Services.PerformSound(this.processor.PullGlobalWord(
+				(ushort)((this.owner.World.Participants[humanIdx].ChiefVisuals * 0x3a) + 0x1518)), 0);
 
 			this.owner.TextPainter.AwaitTime(300);
 
@@ -1585,10 +1529,8 @@ namespace Civilization1Remaster.UI
 
 			this.owner.TurnHooks.DisplayCivilizationScenery();
 
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 0x1);
-			this.processor.LeaveFrame();
-			// Far return
+			this.processor.EmitGlobalWord((ushort)(this.processor.PullGlobalWord(0xaa) + 0x10), 1);
+
 			this.processor.Journal.CloseScope("DisplayTerrainTutorial");
 		}
 

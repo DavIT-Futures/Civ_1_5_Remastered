@@ -1311,152 +1311,75 @@ namespace Civilization1Remaster.Game
 			}
 		}
 
+		/// <summary>
+		/// Draws the unit's picture at the position with the marks of its status: the fortification (status bit 8), the
+		/// mark 0x2ba0 (bit 4), the "go to" mark 0x2ba2 of the human player's units, a letter in a box for
+		/// the orders of a unit that is not a plane (bits 0xc2: "R", "I"/"?" for bit 0x40, "M"/"F" for bit 0x80, "P" for bit 2
+		/// with 0x80), faded colours when sleeping (bit 1), and its hit points. AX is left 0x600 * participantIdx (from the address
+		/// of the unit), like in the original.
+		/// </summary>
 		public void RenderUnitSprite(short participantIdx, short troopIdx, int horizLoc, int vertLoc)
 		{
 			this.processor.Journal.OpenScope($"RenderUnitSprite({participantIdx}, {troopIdx}, {horizLoc}, {vertLoc})");
 
-			// function body
-			this.processor.EnterFrame(0x4);
-			this.processor.PreserveSource();
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.AddScaledToSource(0xc, (ushort)troopIdx);
+			byte kind = this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind);
+			ushort markHue = (ushort)(participantIdx == 1 ? 9 : 15);
 
-			this.owner.Services.RenderPictureToScreen(
-				this.processor.PullGlobalWord(0xaa),
-				horizLoc, vertLoc,
-				this.processor.PullUInt16(this.processor.SegData.Value16,
-					(ushort)(((this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d7)) +
-						(participantIdx << 5) + 0x40) << 1) + 0xd4ce)));
+			this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa), horizLoc, vertLoc,
+				this.processor.PullGlobalWord((ushort)(((kind + (participantIdx << 5) + 0x40) << 1) + 0xd4ce)));
 
-			this.processor.TestBitsByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d4)), 0x8);
-			if (this.processor.FlagSet.IsEqual) goto L1005;
+			if ((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 8) != 0)
+			{
+				this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa), horizLoc, vertLoc, this.processor.PullGlobalWord((0x1d << 1) + 0xd4ce));
+			}
+			else if ((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 4) != 0)
+			{
+				this.owner.TextPainter.RenderTextWithShadow(0x2ba0, horizLoc + 4, vertLoc + 7, markHue);
+			}
 
-			this.owner.Services.RenderPictureToScreen(
-				this.processor.PullGlobalWord(0xaa),
-				horizLoc, vertLoc,
-				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((0x1d << 1) + 0xd4ce)));
-			goto L1045;
+			if (participantIdx == this.owner.World.PersonParticipantIdx && this.troops.Pull(participantIdx, troopIdx, UnitMemory.TravelHoriz) != 0xff)
+			{
+				this.owner.TextPainter.RenderTextWithShadow(0x2ba2, horizLoc + 4, vertLoc + 7, markHue);
+			}
 
-		L1005:
-			this.processor.RegAcc.Value16 = 0xc;
-			this.processor.ScaleAccumulatorToBase((ushort)troopIdx);
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.TestBitsByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d4)), 0x4);
-			if (this.processor.FlagSet.IsEqual) goto L1045;
-			this.processor.CompareWord((ushort)participantIdx, 0x1);
-			if (this.processor.FlagSet.IsNotEqual) goto L1027;
-			this.processor.RegAcc.Value16 = 0x9;
-			goto L102a;
+			if ((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 0xc2) != 0 &&
+				UnitKindTable.Field(this.processor, (sbyte)kind, UnitKindTable.LandGroup) != UnitKindTable.AirUnits)
+			{
+				byte status = this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status);
+				byte letter = 0x52;
 
-		L1027:
-			this.processor.RegAcc.Value16 = 0xf;
+				if ((status & 0x40) != 0)
+				{
+					letter = (byte)(kind == 0 ? 0x49 : 0x3f);
+				}
 
-		L102a:
-			this.owner.TextPainter.RenderTextWithShadow(0x2ba0,	horizLoc + 4, vertLoc + 7, this.processor.RegAcc.Value16);
+				if ((status & 0x80) != 0)
+				{
+					letter = (byte)((status & 0x40) != 0 ? 0x46 : 0x4d);
 
-		L1045:
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.CompareWord((ushort)participantIdx, this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L108d;
-			this.processor.ScaleIndexToBase(0xc, (ushort)troopIdx);
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81da)), 0xff);
-			if (this.processor.FlagSet.IsEqual) goto L108d;
-			this.processor.CompareWord((ushort)participantIdx, 0x1);
-			if (this.processor.FlagSet.IsNotEqual) goto L106f;
-			this.processor.RegAcc.Value16 = 0x9;
-			goto L1072;
+					if ((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 2) != 0)
+					{
+						letter = 0x50;
+					}
+				}
 
-		L106f:
-			this.processor.RegAcc.Value16 = 0xf;
+				this.owner.Libc.CopyText(0xba06, " ");
+				this.processor.EmitGlobalByte(0xba06, letter);
 
-		L1072:
-			this.owner.TextPainter.RenderTextWithShadow(0x2ba2, horizLoc + 4, vertLoc + 7, this.processor.RegAcc.Value16);
+				this.owner.TextPainter.RenderTextWithShadow(0xba06, horizLoc + 4, vertLoc + 7, markHue);
 
-		L108d:
-			this.processor.RegAcc.Value16 = 0x600;
-			this.processor.ScaleAccumulatorToSource((ushort)participantIdx);
-			this.processor.AddScaledToSource(0xc, (ushort)troopIdx);
-			this.processor.TestBitsByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d4)), 0xc2);
-			if (this.processor.FlagSet.IsNotEqual) goto L10a7;
-			goto L117a;
+				this.owner.Dialogs.RenderBox(horizLoc - 1, vertLoc - 1, 15, 15, 7);
+			}
 
-		L10a7:
-			this.processor.RegAcc.LowByte = 0x22;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d7)));
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1138)), 0x1);
-			if (this.processor.FlagSet.IsNotEqual) goto L10b9;
-			goto L117a;
+			this.processor.RegAcc.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride);
 
-		L10b9:
-			this.processor.EmitLocalWord(0x2, 0x52);
-			this.processor.TestBitsByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d4)), 0x40);
-			if (this.processor.FlagSet.IsEqual) goto L10d7;
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d7)), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L10d1;
-			this.processor.RegAcc.Value16 = 0x3f;
-			goto L10d4;
+			if ((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 1) != 0)
+			{
+				this.owner.VideoCard.SubstituteHue(this.processor.PullGlobalWord(0xaa), horizLoc, vertLoc, 16, 16, 5, 7);
 
-		L10d1:
-			this.processor.RegAcc.Value16 = 0x49;
+				this.owner.VideoCard.SubstituteHue(this.processor.PullGlobalWord(0xaa), horizLoc, vertLoc, 16, 16, 8, 7);
+			}
 
-		L10d4:
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
-
-		L10d7:
-			this.processor.RegAcc.Value16 = 0xc;
-			this.processor.ScaleAccumulatorToBase((ushort)troopIdx);
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d4));
-			this.processor.EmitLocalByte(0x4, this.processor.RegAcc.LowByte);
-			this.processor.TestBitsByte(this.processor.PullLocalByte(0x4), 0x80);
-			if (this.processor.FlagSet.IsEqual) goto L1120;
-			this.processor.EmitLocalWord(0x2, 0x4d);
-			this.processor.TestBitsByte(this.processor.PullLocalByte(0x4), 0x40);
-			if (this.processor.FlagSet.IsEqual) goto L1104;
-			this.processor.EmitLocalWord(0x2, 0x46);
-
-		L1104:
-			this.processor.RegAcc.Value16 = 0xc;
-			this.processor.ScaleAccumulatorToBase((ushort)troopIdx);
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.TestBitsByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d4)), 0x2);
-			if (this.processor.FlagSet.IsEqual) goto L1120;
-			this.processor.EmitLocalWord(0x2, 0x50);
-
-		L1120:
-			this.owner.Libc.CopyText(0xba06, " ");
-
-			this.processor.RegAcc.LowByte = this.processor.PullLocalByte(0x2);
-			this.processor.EmitGlobalByte(0xba06, this.processor.RegAcc.LowByte);
-			this.processor.CompareWord((ushort)participantIdx, 0x1);
-			if (this.processor.FlagSet.IsNotEqual) goto L1141;
-			this.processor.RegAcc.Value16 = 0x9;
-			goto L1144;
-
-		L1141:
-			this.processor.RegAcc.Value16 = 0xf;
-
-		L1144:
-			this.owner.TextPainter.RenderTextWithShadow(0xba06, horizLoc + 4, vertLoc + 7, this.processor.RegAcc.Value16);
-
-			this.owner.Dialogs.RenderBox(horizLoc - 1, vertLoc - 1, 15, 15, 7);
-
-		L117a:
-			this.processor.RegAcc.Value16 = 0xc;
-			this.processor.ScaleAccumulatorToBase((ushort)troopIdx);
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.TestBitsByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d4)), 0x1);
-			if (this.processor.FlagSet.IsEqual) goto L11cf;
-
-			this.owner.VideoCard.SubstituteHue(this.processor.PullGlobalWord(0xaa),
-				horizLoc, vertLoc, 16, 16, 5, 7);
-
-			this.owner.VideoCard.SubstituteHue(this.processor.PullGlobalWord(0xaa),
-				horizLoc, vertLoc, 16, 16, 8, 7);
-
-		L11cf:
 			{
 				// Every unit shows its hit points: green squares, and gray squares for lost hit points until it heals
 				int troopKind = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(0x600 * participantIdx + 0xc * troopIdx + 0x81d7));
@@ -1471,9 +1394,6 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			this.processor.RestoreSource();
-			this.processor.LeaveFrame();
-			// Far return
 			this.processor.Journal.CloseScope("RenderUnitSprite");
 		}
 
