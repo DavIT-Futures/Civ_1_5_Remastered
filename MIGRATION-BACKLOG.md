@@ -215,17 +215,24 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   `BatchTwentyNineDifferentialTests` (pliki zapisu przez `BatchTwelveDifferentialTests.ShowSavedFiles`, teraz `internal`
   z miejscem w 0xbc00). `extract_reference.py` nie kwalifikuje stałych klasy (`HandBayTally`, `GameLoadAndSave.FetchSessionAsk`):
   w kopii referencyjnej dopisać nazwę klasy / przestrzeni nazw.
+- Kolejne 4 moduły (2026-10-13): `ImportGame` (`GameLoadAndSave`, ramka zostaje jako bufor nazw; `fetchingBackup` jest teraz
+  publiczną właściwością `FetchingBackup`, żeby test i kopia referencyjna mogły ją ustawić), `RenderPalaceSection` (`Palace`,
+  z `LeftNeighbourHigher`), `SendUnitToStrategicLocation` (`AIPlayer`, z `SendUnitOfRole`), `ImportTextFromFile`
+  (`TextBlockRenderer`, ramka zostaje: linia i wpis indeksu w ramce, końcowe wartości zmiennych zapisane; bajt 0x101 to starszy
+  bajt hasza 0x102, więc hasz = młodszy bajt sumy). Testy w `BatchThirtyDifferentialTests`: zapis z rokiem p.n.e. kopiowany
+  w `Prepare` z AUTO00.SVE, gałęzie tekstu rozpoznawane po zmiennych zostawionych w ramce pod SP (SP - 2 - offset), wyszukiwanie
+  bez indeksu na syntetycznym pliku `MADE.TXT` (pliki gry mają pusty indeks „00” i pustą linię zaraz po nim).
 
 ## Następny krok
 
 Dalej małe metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 60`
 (metody z co najmniej 2 liniami `goto L` / `FlagSet` / `Compare…` / `SumWord` itd., od najkrótszej). Kandydaci:
-`ImportGame`, `QueryForStoreDrive` (`GameLoadAndSave`), `ChooseTechnologyToTake` (`TradeAndConquest`, patrz wyżej),
+`QueryForStoreDrive` (`GameLoadAndSave`), `ChooseTechnologyToTake` (`TradeAndConquest`, patrz wyżej),
 `RenderCitizenIcons` (`CityManagement`, kandydat ze „Śmieci na stosie”),
 reszta generatora mapy w `GameInitAndIntro`. Funkcje niskopoziomowe `SystemServices` (`DeactivateMouse`, `PointerEvent`,
 `RenderCursorToScreen`, `RecoverScreenUnderCursor`, kolory i zegar: `PrepareTimer`, `RefreshHueCycling`, `AssignHueCycleSpan`,
 `ColorsFadeStep`, `FadeColors`, `FloodColors`, `ImportColorsFromBuffer`) i `SnapHeapPointer` (`VGADriver`) na koniec: działają
-w przerwaniach albo na rejestrach. Stan 2026-10-13: 104 metody w stylu asm, ok. 53,0 tys. z 71,7 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
+w przerwaniach albo na rejestrach. Stan 2026-10-13: 100 metod w stylu asm, ok. 52,4 tys. z 71,5 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
@@ -243,6 +250,15 @@ te błędy są odtwarzane jawnie:
   `HandlePlayerTurn` woła `ShiftUnit` i `ShiftAIUnit` z tej samej głębokości stosu, więc dostaje typ terenu zostawiony przez
   `ShiftUnit` (bez tego `IndexOutOfRangeException` w `Towns`). Dlatego `ShiftUnit` zachowuje `EnterFrame(0x16)` i na końcu
   zapisuje w ramce końcowe wartości swoich zmiennych lokalnych (`ShiftUnitFrame`). Po naprawie `ShiftAIUnit` można usunąć ramkę.
+
+- `ImportTextFromFile` (`TextBlockRenderer`): znaleziony bez indeksu temat zapisuje swoje miejsce w indeksie pod
+  `((hash >> (5 + hash)) << 1` zamiast `(((hash >> 5) + hash) << 1` (pierwszeństwo operatorów w tłumaczeniu), więc indeks się nie
+  uzupełnia. Do tego emulowany `fscanf("%[^
+]
+")` (`CRuntime.ScanStream`) zwraca -1 dla pustej linii (DOS-owy `
+` w formacie
+  pomija wszystkie białe znaki), więc szukanie od 0x200 kończy się na pustej linii za indeksem: w plikach gry temat bez wpisu
+  w indeksie nigdy się nie znajduje. Po naprawie: zmiana plików tekstowych (zapis indeksu) i może tekstów pomocy.
 
 ## Śmieci na stosie (zmienne lokalne czytane przed zapisem)
 

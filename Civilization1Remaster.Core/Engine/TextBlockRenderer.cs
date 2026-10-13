@@ -124,183 +124,161 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <summary>
-		/// ?
+		/// Appends the text of the topic charsAddr from the text file (lines after the "*TOPIC" line up to the next "*" line,
+		/// joined with spaces, without trailing spaces and '^') to 0xba06. The file starts with an index of 256 words, by a
+		/// hash of the topic (the low byte of the sum of character * position): a word above 0x1ff (not "00") is the offset of the
+		/// topic line, a wrong topic tries the next hash. Without an index entry, the topic is searched from 0x200 and its offset
+		/// written into the index.
 		/// </summary>
-		/// <param name="filenamePtr"></param>
-		/// <param name="stringPtr"></param>
-		/// <returns></returns>
+		/// <returns>The number of lines of the text, 0xffff when the topic is missing, also in AX</returns>
+		/// <remarks>
+		/// The index is written at ((hash >> (5 + hash)) * 2, not at the place it is read from ((hash >> 5) + hash) * 2: an
+		/// operator precedence mistake of the translation, kept (see MIGRATION-BACKLOG.md).
+		/// </remarks>
 		public ushort ImportTextFromFile(ushort docnameAddr, ushort charsAddr)
 		{
 			this.processor.Journal.OpenScope($"ImportTextFromFile(0x{docnameAddr:x4}, 0x{charsAddr:x4})");
 
-			// function body
+			// The line and the index entry are in the stack frame, like in the original; the final values of the locals stay there
 			this.processor.EnterFrame(0x110);
 			this.processor.PreserveSource();
-			this.processor.RegAcc.Value16 = 0;
-			this.processor.EmitLocalWord(0x10e, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x102, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x106, this.processor.RegAcc.Value16);
-			goto L01d9;
 
-		L01c5:
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x106);
-			this.processor.RegSource.Value16 = charsAddr;
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16));
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegBase.Value16);
-			this.processor.EmitLocalWord(0x102, this.processor.SumWord(this.processor.PullLocalWord(0x102), this.processor.RegAcc.Value16));
-			this.processor.IncrementLocalWord(0x106);
+			ushort line = (ushort)(this.processor.RegFrame.Value16 - 0x100);
+			ushort entry = (ushort)(this.processor.RegFrame.Value16 - 0x104);
 
-		L01d9:
-			this.owner.Libc.TextLength(charsAddr);
+			ushort hash = 0;
+			ushort charIdx = 0;
 
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x106));
-			if (this.processor.FlagSet.IsGreater) goto L01c5;
-			this.processor.EmitLocalByte(0x101, 0x0);
+			while (true)
+			{
+				this.owner.Libc.TextLength(charsAddr);
 
-		L01ef:
-			this.owner.Libc.OpenStream(docnameAddr, "rb");
+				if ((short)this.processor.RegAcc.Value16 <= (short)charIdx)
+					break;
 
-			this.processor.EmitLocalWord(0x110, this.processor.RegAcc.Value16);
+				hash += (ushort)((sbyte)this.processor.PullGlobalByte((ushort)(charIdx + charsAddr)) * (short)charIdx);
+				charIdx++;
+			}
 
-			this.owner.Libc.SeekStream((short)this.processor.PullLocalWord(0x110),
-				(((int)((short)this.processor.PullLocalWord(0x102)) >> 5) +
-					this.processor.PullLocalWord(0x102)) << 1,
-				0);
+			// The high byte of the hash is cleared (it is written as a byte in the original)
+			hash &= 0xff;
 
-			this.owner.Libc.ReadStream((ushort)(this.processor.RegFrame.Value16 - 0x104), 2, 1, 
-				(short)this.processor.PullLocalWord(0x110));
-			
-			this.owner.Libc.CloseStream((short)this.processor.PullLocalWord(0x110));
-			
-			this.owner.Libc.OpenStream(docnameAddr, "rt");
+			bool indexed = false;
+			ushort handle;
 
-			this.processor.EmitLocalWord(0x110, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x104), 0x1ff);
-			if (this.processor.FlagSet.IsBelowOrEqual) goto L02bc;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x104), 0x3030);
-			if (this.processor.FlagSet.IsEqual) goto L02bc;
+			while (true)
+			{
+				this.owner.Libc.OpenStream(docnameAddr, "rb");
 
-			this.owner.Libc.SeekStream((short)this.processor.PullLocalWord(0x110),
-				this.processor.PullLocalWord(0x104), 0);
+				handle = this.processor.RegAcc.Value16;
 
-			this.owner.Libc.ScanStream((short)this.processor.PullLocalWord(0x110),
-				"%[^\n]\n", (ushort)(this.processor.RegFrame.Value16 - 0x100));
+				this.owner.Libc.SeekStream((short)handle, (((int)(short)hash >> 5) + hash) << 1, 0);
 
-			this.owner.Libc.CompareTextNoCase((ushort)(this.processor.RegFrame.Value16 - 0x100), charsAddr);
+				this.owner.Libc.ReadStream(entry, 2, 1, (short)handle);
 
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual) goto L02b6;
-			goto L0392;
+				this.owner.Libc.CloseStream((short)handle);
 
-		L02b6:
-			this.processor.EmitLocalWord(0x10e, 0x1);
+				this.owner.Libc.OpenStream(docnameAddr, "rt");
 
-		L02bc:
-			this.processor.RegAcc.Value16 = 0;
-			this.processor.EmitLocalWord(0x10a, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x10c, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x10e), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L0323;
+				handle = this.processor.RegAcc.Value16;
 
-			this.owner.Libc.SeekStream((short)this.processor.PullLocalWord(0x110),
-				0x200, (short)this.processor.RegAcc.Value16);
+				ushort offset = this.processor.PullGlobalWord(entry);
 
-		L02df:
-			this.owner.Libc.TellStream((short)this.processor.PullLocalWord(0x110));
+				if (offset <= 0x1ff || offset == 0x3030)
+					break;
 
-			this.processor.EmitLocalWord(0x104, this.processor.RegAcc.Value16);
+				this.owner.Libc.SeekStream((short)handle, offset, 0);
 
-			this.owner.Libc.ScanStream((short)this.processor.PullLocalWord(0x110),
-				"%[^\n]\n", (ushort)(this.processor.RegFrame.Value16 - 0x100));
+				this.owner.Libc.ScanStream((short)handle, "%[^\n]\n", line);
 
-			this.processor.EmitLocalWord(0x10a, this.processor.RegAcc.Value16);
+				this.owner.Libc.CompareTextNoCase(line, charsAddr);
 
-			this.owner.Libc.CompareTextNoCase((ushort)(this.processor.RegFrame.Value16 - 0x100), charsAddr);
+				if (this.processor.RegAcc.Value16 == 0)
+				{
+					indexed = true;
+					break;
+				}
 
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual) goto L0323;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x10a), 0xffff);
-			if (this.processor.FlagSet.IsNotEqual) goto L02df;
+				hash = (ushort)((hash + 1) & 0xff);
 
-		L0323:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x10a), 0xffff);
-			if (this.processor.FlagSet.IsNotEqual) goto L032d;
-			goto L03af;
+				this.owner.Libc.CloseStream((short)handle);
+			}
 
-		L032d:
-			this.owner.Libc.ScanStream((short)this.processor.PullLocalWord(0x110),
-				"%[^\n]\n", (ushort)(this.processor.RegFrame.Value16 - 0x100));
+			ushort scanned = 0;
+			ushort lines = 0;
 
-			this.processor.CompareByte(this.processor.PullLocalByte(0x100), 0x2a);
-			if (this.processor.FlagSet.IsEqual) goto L032d;
+			if (!indexed)
+			{
+				this.owner.Libc.SeekStream((short)handle, 0x200, 0);
 
-		L0349:
-			this.owner.Libc.AppendText(0xba06, (ushort)(this.processor.RegFrame.Value16 - 0x100));
+				do
+				{
+					this.owner.Libc.TellStream((short)handle);
 
-			this.owner.Libc.AppendText(0xba06, " ");
+					this.processor.EmitGlobalWord(entry, this.processor.RegAcc.Value16);
 
-			this.owner.Libc.ScanStream((short)this.processor.PullLocalWord(0x110),
-				"%[^\n]\n", (ushort)(this.processor.RegFrame.Value16 - 0x100));
+					this.owner.Libc.ScanStream((short)handle, "%[^\n]\n", line);
 
-			this.processor.IncrementLocalWord(0x10c);
-			this.processor.CompareByte(this.processor.PullLocalByte(0x100), 0x2a);
-			if (this.processor.FlagSet.IsNotEqual) goto L0349;
+					scanned = this.processor.RegAcc.Value16;
 
-			// Let's try to trim the dialog text, and fix the bug with unecessary lines in dialogs
-			string feed = this.processor.PullText(CPU.AsLinearAddress(this.owner.Processor.SegData.Value16, 0xba06));
-			feed = feed.TrimEnd(new char[] {' ', '^'});
-			this.processor.EmitText(CPU.AsLinearAddress(this.owner.Processor.SegData.Value16, 0xba06), feed, feed.Length);
+					this.owner.Libc.CompareTextNoCase(line, charsAddr);
+				}
+				while (this.processor.RegAcc.Value16 != 0 && scanned != 0xffff);
+			}
 
-			this.processor.EmitLocalWord(0x108, 0x1);
-			goto L03b5;
+			bool found = scanned != 0xffff;
 
-		L0392:
-			this.processor.EmitLocalWord(0x102, this.processor.IncrementWord(this.processor.PullLocalWord(0x102)));
-			this.processor.RegAcc.LowByte = this.processor.PullLocalByte(0x102);
-			this.processor.RegAcc.HighByte = 0;
-			this.processor.EmitLocalWord(0x102, this.processor.RegAcc.Value16);
-			
-			this.owner.Libc.CloseStream((short)this.processor.PullLocalWord(0x110));
-			goto L01ef;
+			if (found)
+			{
+				do
+				{
+					this.owner.Libc.ScanStream((short)handle, "%[^\n]\n", line);
+				}
+				while (this.processor.PullGlobalByte(line) == '*');
 
-		L03af:
-			this.processor.EmitLocalWord(0x108, 0x0);
+				do
+				{
+					this.owner.Libc.AppendText(0xba06, line);
 
-		L03b5:
-			this.owner.Libc.CloseStream((short)this.processor.PullLocalWord(0x110));
+					this.owner.Libc.AppendText(0xba06, " ");
 
-			this.processor.CompareWord(this.processor.PullLocalWord(0x10e), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L043a;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x108), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L043a;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x10a), 0xffff);
-			if (this.processor.FlagSet.IsEqual) goto L043a;
+					this.owner.Libc.ScanStream((short)handle, "%[^\n]\n", line);
 
-			this.owner.Libc.OpenStream(docnameAddr, "r+b");
+					lines++;
+				}
+				while (this.processor.PullGlobalByte(line) != '*');
 
-			this.processor.EmitLocalWord(0x110, this.processor.RegAcc.Value16);
+				// Let's try to trim the dialog text, and fix the bug with unecessary lines in dialogs
+				string feed = this.processor.PullText(CPU.AsLinearAddress(this.owner.Processor.SegData.Value16, 0xba06));
+				feed = feed.TrimEnd(new char[] { ' ', '^' });
+				this.processor.EmitText(CPU.AsLinearAddress(this.owner.Processor.SegData.Value16, 0xba06), feed, feed.Length);
+			}
 
-			this.owner.Libc.SeekStream((short)this.processor.PullLocalWord(0x110),
-				((int)((short)this.processor.PullLocalWord(0x102)) >> 5 +
-					this.processor.PullLocalWord(0x102)) << 1,
-				0);
+			this.owner.Libc.CloseStream((short)handle);
 
-			this.owner.Libc.WriteStream((ushort)(this.processor.RegFrame.Value16 - 0x104), 2, 1,
-				(short)this.processor.PullLocalWord(0x110));
-			
-			this.owner.Libc.CloseStream((short)this.processor.PullLocalWord(0x110));
+			if (!indexed && found)
+			{
+				this.owner.Libc.OpenStream(docnameAddr, "r+b");
 
-		L043a:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x108), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L0447;
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x10c);
-			goto L044a;
+				handle = this.processor.RegAcc.Value16;
 
-		L0447:
-			this.processor.RegAcc.Value16 = 0xffff;
+				this.owner.Libc.SeekStream((short)handle, ((int)(short)hash >> (5 + hash)) << 1, 0);
 
-		L044a:
+				this.owner.Libc.WriteStream(entry, 2, 1, (short)handle);
+
+				this.owner.Libc.CloseStream((short)handle);
+			}
+
+			this.processor.EmitLocalWord(0x102, hash);
+			this.processor.EmitLocalWord(0x106, charIdx);
+			this.processor.EmitLocalWord(0x108, (ushort)(found ? 1 : 0));
+			this.processor.EmitLocalWord(0x10a, scanned);
+			this.processor.EmitLocalWord(0x10c, lines);
+			this.processor.EmitLocalWord(0x10e, (ushort)(indexed ? 1 : 0));
+			this.processor.EmitLocalWord(0x110, handle);
+
+			this.processor.RegAcc.Value16 = found ? lines : (ushort)0xffff;
+
 			this.processor.RegSource.Value16 = this.processor.UnstackWord();
 			this.processor.LeaveFrame();
 			// Far return

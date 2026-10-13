@@ -4413,170 +4413,87 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// Puts the place into the list of strategic locations of the player (32 entries a player in the byte arrays at 0xe598
+		/// horizontal, 0xe798 vertical, 0xe2c2 role, 0xb2be strategy), unless it is there already for the role with no higher
+		/// strategy. On the turn of an AI player (0x6b90), for the roles 3 and 4 the first unit of the role on the same continent
+		/// with enough moves left (twice the distance) goes there. The place takes the first free entry or the first one with a
+		/// lower strategy (the rest move one on); with none, it is not listed.
 		/// </summary>
-		/// <param name="playerID"></param>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
-		/// <param name="active"></param>
-		/// <param name="policy"></param>
 		public void SendUnitToStrategicLocation(short participantIdx, short horizLoc, short vertLoc, short live, short strategy)
 		{
 			this.processor.Journal.OpenScope($"SendUnitToStrategicLocation({participantIdx}, {horizLoc}, {vertLoc}, {live}, {strategy})");
-			
-			// function body
-			this.processor.EnterFrame(0x4);
-			this.processor.PreserveIndexRegisters();
-			this.processor.EmitLocalWord(0x4, 0x0);
-			goto L305f;
 
-		L305c:
-			this.processor.EmitLocalWord(0x4, this.processor.IncrementWord(this.processor.PullLocalWord(0x4)));
+			for (int placeIdx = 0; placeIdx < 0x20; placeIdx++)
+			{
+				ushort place = (ushort)((participantIdx << 5) + placeIdx);
 
-		L305f:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), 0x20);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L309a;
-			this.processor.RegSource.Value16 = (ushort)participantIdx;
-			this.processor.RegCount.LowByte = 0x5;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, this.processor.RegCount.LowByte);
-			this.processor.RegSource.Value16 = this.processor.SumWord(this.processor.RegSource.Value16, this.processor.PullLocalWord(0x4));
+				if (this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(place + 0xe598)) == horizLoc &&
+					this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(place + 0xe798)) == vertLoc &&
+					this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(place + 0xe2c2)) == live &&
+					this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(place + 0xb2be)) <= strategy)
+				{
+					this.processor.Journal.CloseScope("SendUnitToStrategicLocation");
+					return;
+				}
+			}
 
-			if (this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0xe598)) != horizLoc)
-				goto L305c;
+			if (participantIdx == this.processor.PullGlobalSignedWord(0x6b90) && participantIdx != this.owner.World.PersonParticipantIdx &&
+				(live == 3 || live == 4))
+			{
+				SendUnitOfRole(participantIdx, horizLoc, vertLoc, live);
+			}
 
-			if (this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0xe798)) != vertLoc)
-				goto L305c;
+			for (int placeIdx = 0; placeIdx < 0x20; placeIdx++)
+			{
+				ushort place = (ushort)((participantIdx << 5) + placeIdx);
 
-			if (this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0xe2c2)) != live)
-				goto L305c;
+				if (this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(place + 0xe2c2)) != 0xff &&
+					this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(place + 0xb2be)) >= strategy)
+					continue;
 
-			if (this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0xb2be)) > strategy)
-				goto L305c;
+				FreeStrategicLocation(participantIdx, (ushort)placeIdx);
 
-			goto L31ce;
+				this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(place + 0xe598), (byte)horizLoc);
+				this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(place + 0xe798), (byte)vertLoc);
+				this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(place + 0xe2c2), (byte)live);
+				this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(place + 0xb2be), (byte)strategy);
+				break;
+			}
 
-		L309a:
-			if (participantIdx == this.processor.PullGlobalSignedWord(0x6b90))
-				goto L30a5;
-
-			goto L3170;
-
-		L30a5:
-			if (participantIdx != this.owner.World.PersonParticipantIdx)
-				goto L30b0;
-
-			goto L3170;
-
-		L30b0:
-			if (live == 3 || live == 4)
-				goto L30bf;
-
-			goto L3170;
-
-		L30bf:
-			this.processor.EmitLocalWord(0x4, 0x0);
-			goto L30c9;
-
-		L30c6:
-			this.processor.EmitLocalWord(0x4, this.processor.IncrementWord(this.processor.PullLocalWord(0x4)));
-
-		L30c9:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), 0x80);
-			if (this.processor.FlagSet.IsLess) goto L30d3;
-			goto L3170;
-
-		L30d3:
-			this.processor.RegAcc.Value16 = 0x600;
-			this.processor.ScaleAccumulatorToSource((ushort)participantIdx);
-			this.processor.AddScaledToSource(0xc, this.processor.PullLocalWord(0x4));
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d7)), 0xff);
-			if (this.processor.FlagSet.IsEqual) goto L30c6;
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d8)), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L30c6;
-			this.processor.RegAcc.LowByte = 0x22;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d7)));
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegAcc.Value16 = (ushort)live;
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1148)), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L30c6;
-
-			this.owner.MapOps.ObtainContinentID(horizLoc, vertLoc);
-
-			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
-
-			this.owner.MapOps.ObtainContinentID(
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)),
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6)));
-
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.RegDest.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L30c6;
-
-			this.owner.Helpers.ObtainDistance(
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)),
-				horizLoc,
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6)),
-				vertLoc);
-
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d8));
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegCount.Value16 = this.processor.PullLocalWord(0x2);
-			this.processor.RegCount.Value16 = this.processor.ShiftLeftWord(this.processor.RegCount.Value16, 0x1);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.RegCount.Value16);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L3158;
-			goto L30c6;
-
-		L3158:
-			this.processor.RegAcc.LowByte = (byte)((sbyte)horizLoc);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81da), this.processor.RegAcc.LowByte);
-			this.processor.RegAcc.LowByte = (byte)((sbyte)vertLoc);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81db), this.processor.RegAcc.LowByte);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d4), 
-				this.processor.BitOrByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d4)), 0x10));
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d4),
-				this.processor.BitAndByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d4)), 0xf0));
-
-		L3170:
-			this.processor.EmitLocalWord(0x4, 0x0);
-			goto L317a;
-
-		L3177:
-			this.processor.EmitLocalWord(0x4, this.processor.IncrementWord(this.processor.PullLocalWord(0x4)));
-
-		L317a:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), 0x20);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L31ce;
-			this.processor.RegSource.Value16 = (ushort)participantIdx;
-			this.processor.RegCount.LowByte = 0x5;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, this.processor.RegCount.LowByte);
-			this.processor.RegSource.Value16 = this.processor.SumWord(this.processor.RegSource.Value16, this.processor.PullLocalWord(0x4));
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0xe2c2)), 0xff);
-			if (this.processor.FlagSet.IsEqual) goto L319b;
-
-			if (this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0xb2be)) >= strategy) goto L3177;
-
-		L319b:
-			FreeStrategicLocation(participantIdx, this.processor.PullLocalWord(0x4));
-
-			this.processor.RegSource.Value16 = (ushort)participantIdx;
-			this.processor.RegCount.LowByte = 0x5;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, this.processor.RegCount.LowByte);
-			this.processor.RegSource.Value16 = this.processor.SumWord(this.processor.RegSource.Value16, this.processor.PullLocalWord(0x4));
-			this.processor.RegAcc.LowByte = (byte)((sbyte)horizLoc);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0xe598), this.processor.RegAcc.LowByte);
-			this.processor.RegAcc.LowByte = (byte)((sbyte)vertLoc);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0xe798), this.processor.RegAcc.LowByte);
-			this.processor.RegAcc.LowByte = (byte)((sbyte)live);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0xe2c2), this.processor.RegAcc.LowByte);
-			this.processor.RegAcc.LowByte = (byte)((sbyte)strategy);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0xb2be), this.processor.RegAcc.LowByte);
-
-		L31ce:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.RegDest.Value16 = this.processor.UnstackWord();
-			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("SendUnitToStrategicLocation");
+		}
+
+		/// <summary>
+		/// The first unit of the role with moves left, on the continent of the place and with at least twice the distance in
+		/// moves, gets the place as its goal (status 0x10, no orders)
+		/// </summary>
+		private void SendUnitOfRole(short participantIdx, short horizLoc, short vertLoc, short live)
+		{
+			for (int troopIdx = 0; troopIdx < UnitMemory.TroopTally; troopIdx++)
+			{
+				if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) == 0xff ||
+					this.troops.Pull(participantIdx, troopIdx, UnitMemory.LeftoverSteps) == 0 ||
+					this.troops.KindField(participantIdx, troopIdx, UnitKindTable.TroopGroup) != (ushort)live)
+					continue;
+
+				sbyte troopHoriz = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz);
+				sbyte troopVert = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert);
+
+				if (this.owner.MapOps.ObtainContinentID(horizLoc, vertLoc) != this.owner.MapOps.ObtainContinentID(troopHoriz, troopVert))
+					continue;
+
+				int distance = this.owner.Helpers.ObtainDistance(troopHoriz, horizLoc, troopVert, vertLoc);
+
+				if (this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.LeftoverSteps) < (short)(distance << 1))
+					continue;
+
+				this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHoriz, (byte)horizLoc);
+				this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelVert, (byte)vertLoc);
+				this.troops.Assign(participantIdx, troopIdx, UnitMemory.Status,
+					(byte)((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) | 0x10) & 0xf0));
+				return;
+			}
 		}
 
 		/// <summary>

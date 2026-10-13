@@ -1060,154 +1060,83 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// The look of the palace section arg1 (0 - 7, levels in the words at 0xd91c...) by its neighbours: the style (0xb25e
+		/// + 2 * section) and the shape (0xb25f + 2 * section). Section 4 is the middle; a left section (0 - 3) without a
+		/// built neighbour to the left (or section 1) is the left end, a right section (5 - 7) without one to the right (or
+		/// section 7) the right end.
 		/// </summary>
-		/// <param name="param1"></param>
-		/// <param name="flag"></param>
 		public void RenderPalaceSection(ushort arg1, ushort marker)
 		{
 			this.processor.Journal.OpenScope($"RenderPalaceSection({arg1}, {marker})");
 
-			// function body
-			this.processor.EnterFrame(0x4);
-			this.processor.PreserveSource();
-			this.processor.RegSource.Value16 = arg1;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0xd91e));
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x2, 0x2);
-			this.processor.CompareWord(arg1, 0x4);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0d33;
-			this.processor.EmitLocalWord(0x2, 0x1);
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0xd91c)), 0xffff);
-			if (this.processor.FlagSet.IsEqual) goto L0d2e;
-			this.processor.CompareWord(arg1, 0x1);
-			if (this.processor.FlagSet.IsNotEqual) goto L0d33;
+			short section = (short)arg1;
+			ushort levels = (ushort)(arg1 << 1);
+			ushort style = (ushort)(levels + 0xb25e);
+			ushort shape = (ushort)(levels + 0xb25f);
+			ushort level = this.processor.PullGlobalWord((ushort)(levels + 0xd91e));
 
-		L0d2e:
-			this.processor.EmitLocalWord(0x2, 0x0);
+			// 0: left end, 1: inner section, 2: middle, 3: right end
+			int place = 2;
 
-		L0d33:
-			this.processor.CompareWord(arg1, 0x4);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L0d55;
-			this.processor.EmitLocalWord(0x2, 0x1);
-			this.processor.RegBase.Value16 = arg1;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xd920)), 0xffff);
-			if (this.processor.FlagSet.IsEqual) goto L0d50;
-			this.processor.CompareWord(arg1, 0x7);
-			if (this.processor.FlagSet.IsNotEqual) goto L0d55;
+			if (section < 4)
+			{
+				place = 1;
 
-		L0d50:
-			this.processor.EmitLocalWord(0x2, 0x3);
+				if (this.processor.PullGlobalWord((ushort)(levels + 0xd91c)) == 0xffff || arg1 == 1)
+				{
+					place = 0;
+				}
+			}
 
-		L0d55:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x2);
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual) goto L0d6e;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1);
-			if (this.processor.FlagSet.IsEqual) goto L0d9f;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x2);
-			if (this.processor.FlagSet.IsEqual) goto L0ddd;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x3);
-			if (this.processor.FlagSet.IsEqual) goto L0de9;
-			goto L0e2a;
+			if (section > 4)
+			{
+				place = 1;
 
-		L0d6e:
-			this.processor.RegBase.Value16 = arg1;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xb25e), 0x3);
-			this.processor.CompareWord(arg1, 0x3);
-			if (this.processor.FlagSet.IsEqual) goto L0d87;
-			this.processor.CompareWord(marker, 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L0d87;
-			goto L0e2a;
+				if (this.processor.PullGlobalWord((ushort)(levels + 0xd920)) == 0xffff || arg1 == 7)
+				{
+					place = 3;
+				}
+			}
 
-		L0d87:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L0d91;
-			this.processor.RegAcc.LowByte = 0x1;
-			goto L0d93;
+			switch (place)
+			{
+				case 0:
+					this.processor.EmitGlobalByte(style, 0x3);
 
-		L0d91:
-			this.processor.RegAcc.LowByte = 0x2;
+					if (arg1 == 3 || marker == 0)
+					{
+						this.processor.EmitGlobalByte(shape, (byte)(level != 0 ? 1 : 2));
+					}
+					break;
 
-		L0d93:
-			this.processor.RegBase.Value16 = arg1;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xb25f), this.processor.RegAcc.LowByte);
-			goto L0e2a;
+				case 1:
+					this.processor.EmitGlobalByte(style, (byte)(LeftNeighbourHigher(levels) || arg1 == 5 ||
+						this.processor.PullGlobalWord((ushort)(levels + 0xd91a)) == 0xffff ? 1 : 2));
+					this.processor.EmitGlobalByte(shape, 0x2);
+					break;
 
-		L0d9f:
-			this.processor.RegSource.Value16 = arg1;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0xd91e));
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0xd91c)), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsGreater) goto L0dbb;
-			this.processor.CompareWord(arg1, 0x5);
-			if (this.processor.FlagSet.IsEqual) goto L0dbb;
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0xd91a)), 0xffff);
-			if (this.processor.FlagSet.IsNotEqual) goto L0dc7;
+				case 2:
+					this.processor.EmitGlobalByte(style, 0x0);
+					break;
 
-		L0dbb:
-			this.processor.RegBase.Value16 = arg1;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xb25e), 0x1);
-			goto L0dd1;
+				case 3:
+					if (arg1 == 5 || marker == 0)
+					{
+						this.processor.EmitGlobalByte(style, (byte)(LeftNeighbourHigher(levels) || arg1 == 5 ? 1 : 2));
+					}
 
-		L0dc7:
-			this.processor.RegBase.Value16 = arg1;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xb25e), 0x2);
+					this.processor.EmitGlobalByte(shape, 0x4);
+					break;
+			}
 
-		L0dd1:
-			this.processor.RegBase.Value16 = arg1;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xb25f), 0x2);
-			goto L0e2a;
-
-		L0ddd:
-			this.processor.RegBase.Value16 = arg1;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xb25e), 0x0);
-			goto L0e2a;
-
-		L0de9:
-			this.processor.CompareWord(arg1, 0x5);
-			if (this.processor.FlagSet.IsEqual) goto L0df5;
-			this.processor.CompareWord(marker, 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L0e20;
-
-		L0df5:
-			this.processor.RegSource.Value16 = arg1;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0xd91e));
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0xd91c)), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsGreater) goto L0e0a;
-			this.processor.CompareWord(arg1, 0x5);
-			if (this.processor.FlagSet.IsNotEqual) goto L0e16;
-
-		L0e0a:
-			this.processor.RegBase.Value16 = arg1;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xb25e), 0x1);
-			goto L0e20;
-
-		L0e16:
-			this.processor.RegBase.Value16 = arg1;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xb25e), 0x2);
-
-		L0e20:
-			this.processor.RegBase.Value16 = arg1;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xb25f), 0x4);
-
-		L0e2a:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("RenderPalaceSection");
+		}
+
+		/// <summary>The section to the left (levels at 0xd91c) is higher than the section (0xd91e)</summary>
+		private bool LeftNeighbourHigher(ushort levels)
+		{
+			return (short)this.processor.PullGlobalWord((ushort)(levels + 0xd91c)) > (short)this.processor.PullGlobalWord((ushort)(levels + 0xd91e));
 		}
 
 		/// <summary>

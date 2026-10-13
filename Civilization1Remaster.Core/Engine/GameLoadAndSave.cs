@@ -43,7 +43,8 @@ namespace Civilization1Remaster.Engine
 
 		// The load list remembers which tab was open
 		private bool displayBackups = false;
-		private bool fetchingBackup = false;
+		/// <summary>An autosave is being loaded (ImportGame continues it like the original autosaves)</summary>
+		public bool FetchingBackup { get; set; } = false;
 
 		/// <summary>
 		/// Saves the game into the next autosave, called once every turn
@@ -260,11 +261,11 @@ namespace Civilization1Remaster.Engine
 			if ((bay & BackupBayMarker) != 0)
 			{
 				AssignAutosaveFileLabel(bay & 0xff);
-				this.fetchingBackup = true;
+				this.FetchingBackup = true;
 
 				outcome = ImportGame(0x41c6, 0);
 
-				this.fetchingBackup = false;
+				this.FetchingBackup = false;
 				AssignManualFileLabel(Math.Clamp((int)this.processor.PullGlobalWord(0xe168), 0, HandBayTally - 1));
 			}
 			else
@@ -320,139 +321,111 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <summary>
-		/// ?
+		/// Marker 0: loads the saved game (the extension of the file name becomes SVE), the continents are counted again and
+		/// the game continues in the middle of the turn (0xdf60: 2 for an autosave, 1 for a manual save). Otherwise appends the
+		/// line of the file to the list of saved games at 0xba06: " (EMPTY)", or the difficulty, the leader and the civilization
+		/// of the human player and the year.
 		/// </summary>
-		/// <param name="filenamePtr"></param>
-		/// <param name="flag"></param>
-		/// <returns></returns>
+		/// <returns>1, 0 for a missing file in the list, also in AX</returns>
 		public ushort ImportGame(ushort docnameAddr, ushort marker)
 		{
 			this.processor.Journal.OpenScope($"ImportGame(0x{docnameAddr:x4}, {marker})");
 
-			// function body
+			// The names are read into a buffer in the stack frame, like in the original
 			this.processor.EnterFrame(0x10);
 
 			this.owner.Libc.CopyText((ushort)(docnameAddr + 9), "SVE");
 
-			this.processor.CompareWord(marker, 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L0125;
-			goto L02fd;
+			ushort result = 1;
 
-		L0125:
-			this.owner.Libc.OpenHandle(docnameAddr, 0x8000);
-
-			this.processor.EmitGlobalWord(0x681e, this.processor.RegAcc.Value16);
-			
-			if (this.processor.RegAcc.Value16 == 0xffff)
+			if (marker != 0)
 			{
-				this.owner.Libc.AppendText(0xba06, " (EMPTY)\n");
-			}
-			else
-			{
-				this.owner.Libc.SeekHandle((short)this.processor.PullGlobalWord(0x681e), 2, 0);
+				this.owner.Libc.OpenHandle(docnameAddr, 0x8000);
 
-				this.owner.Libc.ReadHandle((short)this.processor.PullGlobalWord(0x681e), 0x6822, 2);
+				this.processor.EmitGlobalWord(0x681e, this.processor.RegAcc.Value16);
 
-				this.owner.Libc.SeekHandle((short)this.processor.PullGlobalWord(0x681e), 8, 0);
+				short handle = (short)this.processor.PullGlobalWord(0x681e);
 
-				this.owner.Libc.ReadHandle((short)this.processor.PullGlobalWord(0x681e), 0x6826, 2);
-
-				this.owner.Libc.AppendText(0xba06, " ");
-
-				this.owner.Libc.SeekHandle((short)this.processor.PullGlobalWord(0x681e), 10, 0);
-
-				this.owner.Libc.ReadHandle((short)this.processor.PullGlobalWord(0x681e), 0x6824, 2);
-
-				this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0x6824);
-				this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-				this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x33a2)));
-
-				this.owner.Libc.AppendText(0xba06, " ");
-
-				this.owner.Libc.SeekHandle((short)this.processor.PullGlobalWord(0x681e),
-					((14 * (int)((short)this.processor.PullGlobalWord(0x6822))) + 16), 0);
-
-				this.owner.Libc.ReadHandle((short)this.processor.PullGlobalWord(0x681e), (ushort)(this.processor.RegFrame.Value16 - 0x10), 14);
-
-				this.owner.Libc.AppendText(0xba06, (ushort)(this.processor.RegFrame.Value16 - 0x10));
-
-				this.owner.Libc.SeekHandle((short)this.processor.PullGlobalWord(0x681e),
-					((12 * (int)((short)this.processor.PullGlobalWord(0x6822))) + 0x80), 0);
-
-				this.owner.Libc.ReadHandle((short)this.processor.PullGlobalWord(0x681e), (ushort)(this.processor.RegFrame.Value16 - 0x10), 0xc);
-
-				this.owner.Libc.AppendText(0xba06, ", ");
-
-				this.owner.Libc.AppendText(0xba06, (ushort)(this.processor.RegFrame.Value16 - 0x10));
-
-				this.owner.Libc.AppendText(0xba06, "/");
-
-				this.owner.Libc.AppendText(0xba06,
-					this.owner.Libc.IntegerToText(Math.Abs((short)this.processor.PullGlobalWord(0x6826)), 10));
-
-				if (this.processor.PullGlobalSignedWord(0x6826) < 0)
+				if (handle == -1)
 				{
-					this.owner.Libc.AppendText(0xba06, " BC\n");
+					this.owner.Libc.AppendText(0xba06, " (EMPTY)\n");
 				}
 				else
 				{
-					this.owner.Libc.AppendText(0xba06, " AD\n");
+					ushort names = (ushort)(this.processor.RegFrame.Value16 - 0x10);
+
+					// The human player (0x6822), the year (0x6826) and the difficulty (0x6824)
+					this.owner.Libc.SeekHandle(handle, 2, 0);
+					this.owner.Libc.ReadHandle(handle, 0x6822, 2);
+
+					this.owner.Libc.SeekHandle(handle, 8, 0);
+					this.owner.Libc.ReadHandle(handle, 0x6826, 2);
+
+					this.owner.Libc.AppendText(0xba06, " ");
+
+					this.owner.Libc.SeekHandle(handle, 10, 0);
+					this.owner.Libc.ReadHandle(handle, 0x6824, 2);
+
+					this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)((this.processor.PullGlobalWord(0x6824) << 1) + 0x33a2)));
+
+					this.owner.Libc.AppendText(0xba06, " ");
+
+					this.owner.Libc.SeekHandle(handle, (14 * (int)(short)this.processor.PullGlobalWord(0x6822)) + 16, 0);
+					this.owner.Libc.ReadHandle(handle, names, 14);
+
+					this.owner.Libc.AppendText(0xba06, names);
+
+					this.owner.Libc.SeekHandle(handle, (12 * (int)(short)this.processor.PullGlobalWord(0x6822)) + 0x80, 0);
+					this.owner.Libc.ReadHandle(handle, names, 0xc);
+
+					this.owner.Libc.AppendText(0xba06, ", ");
+
+					this.owner.Libc.AppendText(0xba06, names);
+
+					this.owner.Libc.AppendText(0xba06, "/");
+
+					short year = (short)this.processor.PullGlobalWord(0x6826);
+
+					this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(Math.Abs(year), 10));
+
+					this.owner.Libc.AppendText(0xba06, year < 0 ? " BC\n" : " AD\n");
+				}
+
+				this.owner.Libc.CloseHandle(handle);
+
+				if (handle == -1)
+				{
+					result = 0;
 				}
 			}
-		
-			this.owner.Libc.CloseHandle((short)this.processor.PullGlobalWord(0x681e));
+			else
+			{
+				ImportGameContent(this.processor.PullText(CPU.AsLinearAddress(this.processor.SegData.Value16, docnameAddr)));
 
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x681e), 0xffff);
-			if (this.processor.FlagSet.IsEqual) goto L02f9;
+				this.owner.Startup.QueryForDisk(0, 1);
 
-			L02f4:
-			this.processor.RegAcc.Value16 = 0x1;
-			goto L0366;
+				this.processor.EmitGlobalWord(this.processor.PullGlobalWord(0xaa), 0x2);
 
-		L02f9:
-			this.processor.RegAcc.Value16 = 0;
-			goto L0366;
+				this.owner.WorldSetup.ReckonContinentSizes(0);
 
-		L02fd:
-			string route = this.processor.PullText(CPU.AsLinearAddress(this.processor.SegData.Value16, docnameAddr));
+				this.processor.EmitGlobalWord(this.processor.PullGlobalWord(0xaa), 0x0);
+				this.processor.EmitGlobalWord(0x6820, 0x8);
 
-			ImportGameContent(route);
+				// The original game had 4 manual saves and saved slots 4 - 9 automatically, at the start of a turn.
+				// Autosaves now have their own files, all manual saves continue in the middle of the turn.
+				this.processor.EmitGlobalWord(0xdf60, (ushort)(this.FetchingBackup ? 0x2 : 0x1));
+				this.processor.EmitGlobalWord(0x3484, 0xfffd);
+				this.owner.World.StarshipMarkers &= 0x7ffe;
+			}
 
-			this.owner.Startup.QueryForDisk(0, 1);
+			this.processor.RegAcc.Value16 = result;
 
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, this.processor.RegBase.Value16, 0x2);
-
-			this.owner.WorldSetup.ReckonContinentSizes(0);
-
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, this.processor.RegBase.Value16, 0x0);
-			this.processor.EmitGlobalWord(0x6820, 0x1);
-			goto L0340;
-
-		L033c:
-			this.processor.EmitGlobalWord(0x6820, this.processor.IncrementWord(this.processor.PullGlobalWord(0x6820)));
-
-		L0340:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x6820), 0x8);
-			if (this.processor.FlagSet.IsLess) goto L033c;
-
-			// The original game had 4 manual saves and saved slots 4 - 9 automatically, at the start of a turn.
-			// Autosaves now have their own files, all manual saves continue in the middle of the turn.
-			this.processor.RegAcc.Value16 = (ushort)(this.fetchingBackup ? 0x2 : 0x1);
-			this.processor.EmitGlobalWord(0xdf60, this.processor.RegAcc.Value16);
-			this.processor.EmitGlobalWord(0x3484, 0xfffd);
-			this.owner.World.StarshipMarkers &= 0x7ffe;
-			goto L02f4;
-
-		L0366:
-			this.processor.RegStack.Value16 = this.processor.RegFrame.Value16;
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
+			this.processor.LeaveFrame();
 
 			// Far return
 			this.processor.Journal.CloseScope("ImportGame");
 
-			return this.processor.RegAcc.Value16;
+			return result;
 		}
 
 		/// <summary>
