@@ -338,6 +338,11 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
 ` w `mutations.json` nie trafia w tekst
   (lepiej mutować warunki). `DisplayPalace` odłożona: przekazuje argumenty przez stos i w gałęzi „jeden sąsiad” czyta
   nieaktualne SI / DI (adresy obrazków), trzeba odtworzyć rejestry dokładnie. Testy w `BatchFortyFiveDifferentialTests`.
+- Porcja 46, jedna funkcja (2026-10-13): `EstablishCity` (`CityFoundingAndScore`, założenie miasta: wolne miejsce, nazwa
+  z puli przywódcy, pole, flagi wybrzeża i rzeki, mapa sił na ekranie 2). Zachowuje tylko SI, więc SI ustawiane jak w oryginale
+  (okna zostawiają je w DI). `WipeCitySquare` zrobiona publiczną (kopia referencyjna ją woła). Wnioski: przywódca 0 daje nazwę
+  0xfff0 (porównanie ze znakiem, zachowane – wyjątek w obu); odwołane nazwanie zostawia nazwę zajętą. Testy w
+  `BatchFortySixDifferentialTests`. Pełny zestaw po porcji 46: 596 testów zielonych.
 
 ## Następny krok
 
@@ -345,13 +350,13 @@ Dalej małe metody: `python Civilization1Remaster.Tests/Differential/Reference/f
 (metody z co najmniej 2 liniami `goto L` / `FlagSet` / `Compare…` / `SumWord` itd., od najkrótszej). Kandydaci
 (`GameLoadAndSave` i `Newspaper` nie mają już metod w stylu asm): `ChooseTechnologyToTake` (`TradeAndConquest`, patrz wyżej),
 `TitleLogoAndMainChoices` (`GameStartup`), `DisplayStoryIntro`, `ProduceTerrain` (`GameInitAndIntro`),
-`DisplayTribeSelection` (`StartGameMenu`), `EstablishCity` (`CityFoundingAndScore`),
+`DisplayTribeSelection` (`StartGameMenu`),
 `OperateMenu`, `DisplayMenu` (`DialogDrawing`),
 `DisplayCivilopediaIndex` (`Civilopedia`), `DisplayCivilizationScreen` (`MainIntro`),
 `ConstructCivilization`, `ConfigureFreshGame` (`StartGameMenu`), `DisplayPalace` (`Palace`, patrz porcja 45), reszta generatora mapy w `GameInitAndIntro`. Funkcje niskopoziomowe `SystemServices` (`DeactivateMouse`, `PointerEvent`,
 `RenderCursorToScreen`, `RecoverScreenUnderCursor`, kolory i zegar: `PrepareTimer`, `RefreshHueCycling`, `AssignHueCycleSpan`,
 `ColorsFadeStep`, `FadeColors`, `FloodColors`, `ImportColorsFromBuffer`) i `SnapHeapPointer` (`VGADriver`) na koniec: działają
-w przerwaniach albo na rejestrach. Stan 2026-10-13 (po porcji 45): 50 metod w stylu asm, ok. 37,3 tys. z 65,6 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
+w przerwaniach albo na rejestrach. Stan 2026-10-13 (po porcji 46): 49 metod w stylu asm, ok. 36,9 tys. z 65,5 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 

@@ -25,7 +25,7 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		/// <param name="xPos"></param>
 		/// <param name="yPos"></param>
-		private void WipeCitySquare(int horizLoc, int vertLoc)
+		public void WipeCitySquare(int horizLoc, int vertLoc)
 		{
 			ushort landKind = this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
 			short freshLand = (short)this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(landKind * 12 + 0x44a));
@@ -40,123 +40,95 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// Founds a city of the player at the place in the first free city slot (none: -1, the human player is told). Its name
+		/// is the next free one of the leader's 16 names (then of the shared names 0xe0 - 0xff, then any); the human player may
+		/// rename it (cancelled: -1, the name stays taken). The tile loses its improvements and gets city and road (and
+		/// irrigation where the terrain allows); production settlers (militia 4 with technology 0x22, 5 with 0x40); the first
+		/// city gets the palace; coastal (2, ocean of more than 256 tiles or for the human player) and river/hills (8) flags;
+		/// its 21 tiles marked in the owner's colour on the power map (screen 2) and the outer ones made at most colour 8; a
+		/// human neighbour learns of an AI city next to his city or with wonder 0x13. Returns the city. SI gets the values of
+		/// the original before the calls (dialogs leave it in DI).
 		/// </summary>
-		/// <param name="playerID"></param>
-		/// <param name="param2"></param>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
-		/// <param name="citySize"></param>
-		/// <returns></returns>
 		public ushort EstablishCity(short participantIdx, ushort arg2, int horizLoc, int vertLoc, ushort townExtent)
 		{
 			this.processor.Journal.OpenScope($"EstablishCity({participantIdx}, {arg2}, {horizLoc}, {vertLoc}, {townExtent})");
 
-			// function body
+			// The final values of the locals stay in the stack frame, like in the original
 			this.processor.EnterFrame(0x14);
 			this.processor.PreserveSource();
 
 			this.owner.Bot.DisableStrategicLocation(participantIdx, 0, horizLoc, vertLoc, 4);
 
-			this.processor.EmitLocalWord(0x8, 0x0);
-			goto L0029;
+			ushort townIdx;
 
-		L0026:
-			this.processor.EmitLocalWord(0x8, this.processor.IncrementWord(this.processor.PullLocalWord(0x8)));
-
-		L0029:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x8), 0x80);
-			if (this.processor.FlagSet.IsLess) goto L0033;
-			goto L0502;
-
-		L0033:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullLocalWord(0x8));
-			this.processor.CompareByte(this.owner.World.Towns[this.processor.PullLocalWord(0x8)].ConditionMarker, 0xff);
-			if (this.processor.FlagSet.IsNotEqual) goto L0026;
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.Participants[participantIdx].ChiefVisuals;
-			this.processor.RegAcc.Value16 = this.processor.DecrementWord(this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x10, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x7);
-			if (this.processor.FlagSet.IsLess) goto L0057;
-			this.processor.DecrementLocalWord(0x10);
-
-		L0057:
-			this.processor.RegCount.LowByte = 0x4;
-			this.processor.EmitLocalWord(0x10, this.processor.ShiftLeftWord(this.processor.PullLocalWord(0x10), this.processor.RegCount.LowByte));
-			this.processor.CopyLocalWord(0x10, 0x2);
-
-		L0062:
-			this.processor.EmitLocalWord(0xa, 0x1);
-
-			if (this.owner.World.TownPlaces[this.processor.PullLocalWord(0x10)].X == -1)
-				goto L00ab;
-
-			this.processor.EmitLocalWord(0xa, 0x0);
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x2);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x10);
-			this.processor.IncrementLocalWord(0x10);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x10));
-			if (this.processor.FlagSet.IsNotEqual) goto L008e;
-			this.processor.EmitLocalWord(0x10, 0xe0);
-
-		L008e:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x10), 0x100);
-			if (this.processor.FlagSet.IsNotEqual) goto L00ab;
-			this.processor.EmitLocalWord(0x10, 0x0);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x3e7);
-			if (this.processor.FlagSet.IsNotEqual) goto L00a6;
-			this.processor.EmitLocalWord(0xa, 0x1);
-
-		L00a6:
-			this.processor.EmitLocalWord(0x2, 0x3e7);
-
-		L00ab:
-			this.processor.CompareWord(this.processor.PullLocalWord(0xa), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L0062;
-			this.processor.ScaleIndexToBase(0x1c, this.processor.PullLocalWord(0x8));
-			this.processor.RegAcc.LowByte = this.processor.PullLocalByte(0x10);
-			this.owner.World.Towns[this.processor.PullLocalWord(0x8)].LabelIdx = this.processor.RegAcc.LowByte;
-
-			this.owner.World.TownPlaces[this.processor.PullLocalWord(0x10)] = new Point(horizLoc, vertLoc);
-
-			this.processor.RegAcc.Value16 = 0x1;
-			this.processor.RegCount.LowByte = (byte)participantIdx;
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			this.processor.TestBitsWord(this.processor.RegAcc.Value16, (ushort)this.owner.World.ParticipantMarkers);
-			if (this.processor.FlagSet.IsEqual) goto L0118;
-			
-			this.owner.CityNaming.DisplayCityLabelPrompt(this.processor.PullLocalSignedWord(0x8));
-			
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsNotEqual) goto L00fe;
-
-		L00f8:
-			this.processor.RegAcc.Value16 = 0xffff;
-			goto L053b;
-
-		L00fe:
-			byte townLabelIdx = this.owner.World.Towns[this.processor.PullLocalWord(0x8)].LabelIdx;
-			char[] townLabel = this.owner.World.TownLabels[townLabelIdx].ToCharArray();
-			townLabel[12] = '\0';
-			this.owner.World.TownLabels[townLabelIdx] = new string(townLabel);
-
-		L0118:
-			townLabelIdx = this.owner.World.Towns[this.processor.PullLocalWord(0x8)].LabelIdx;
-			this.processor.EmitLocalWord(0xc, 0xb);
-
-			while (this.processor.PullLocalWord(0xc) > 0 &&
-				this.owner.World.TownLabels[townLabelIdx][this.processor.PullLocalWord(0xc)] == ' ')
+			for (townIdx = 0; townIdx < 0x80; townIdx++)
 			{
-				townLabel = this.owner.World.TownLabels[townLabelIdx].ToCharArray();
-				townLabel[this.processor.PullLocalWord(0xc)] = '\0';
-				this.owner.World.TownLabels[townLabelIdx] = new string(townLabel);
-				this.processor.DecrementLocalWord(0xc);
+				this.processor.EmitLocalWord(0x8, townIdx);
+
+				if (this.owner.World.Towns[townIdx].ConditionMarker == 0xff)
+					break;
 			}
 
-			this.owner.UnitOps.AttachReplayContent(1, (byte)participantIdx,
-				this.owner.World.Towns[this.processor.PullLocalWord(0x8)].LabelIdx,
-				(byte)horizLoc, (byte)vertLoc);
+			ushort result;
+
+			if (townIdx == 0x80)
+			{
+				this.processor.EmitLocalWord(0x8, townIdx);
+
+				if (participantIdx == this.owner.World.PersonParticipantIdx)
+				{
+					this.processor.EmitGlobalWord(0x2f9e, 0x4);
+					this.processor.EmitGlobalByte(0xba06, 0);
+
+					this.owner.BlockText.DisplayTextDialog(0x4f74);
+
+					this.owner.TurnHooks.DisplayDialog(0xba06, 64, 80);
+				}
+
+				result = 0xffff;
+			}
+			else
+			{
+				result = FoundCity(participantIdx, (short)townIdx, horizLoc, vertLoc, townExtent);
+			}
+
+			this.processor.RegAcc.Value16 = result;
+
+			this.processor.RestoreSource();
+			this.processor.LeaveFrame();
+			// Far return
+			this.processor.Journal.CloseScope("EstablishCity");
+
+			return result;
+		}
+
+		/// <summary>The city in the free slot (see EstablishCity); -1 when the human player cancels its name</summary>
+		private ushort FoundCity(short participantIdx, short townIdx, int horizLoc, int vertLoc, ushort townExtent)
+		{
+			short person = this.owner.World.PersonParticipantIdx;
+			City town = this.owner.World.Towns[townIdx];
+
+			ushort labelIdx = ChooseCityLabel(participantIdx);
+
+			town.LabelIdx = (byte)labelIdx;
+
+			this.owner.World.TownPlaces[labelIdx] = new Point(horizLoc, vertLoc);
+
+			if (((1 << (byte)participantIdx) & (ushort)this.owner.World.ParticipantMarkers) != 0)
+			{
+				this.owner.CityNaming.DisplayCityLabelPrompt(townIdx);
+
+				if (this.processor.RegAcc.Value16 == 0)
+					return 0xffff;
+
+				char[] label = this.owner.World.TownLabels[town.LabelIdx].ToCharArray();
+				label[12] = '\0';
+				this.owner.World.TownLabels[town.LabelIdx] = new string(label);
+			}
+
+			TrimCityLabel(town.LabelIdx);
+
+			this.owner.UnitOps.AttachReplayContent(1, (byte)participantIdx, town.LabelIdx, (byte)horizLoc, (byte)vertLoc);
 
 			this.owner.MapOps.DiscardTileImprovements(0x24, horizLoc, vertLoc);
 
@@ -168,290 +140,261 @@ namespace Civilization1Remaster.Game
 
 			this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
 
-			this.processor.RegCount.Value16 = 0xc;
-			this.processor.ScaleAccumulatorToBase(this.processor.RegCount.Value16);
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x44a)), 0xffff);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L01c9;
-
-			this.owner.MapOps.AssignTileImprovements(2, horizLoc, vertLoc);
-
-		L01c9:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToSource(this.processor.PullLocalWord(0x8));
-			this.owner.World.Towns[this.processor.PullLocalWord(0x8)].ConditionMarker = 0;
-			this.owner.World.Towns[this.processor.PullLocalWord(0x8)].Place.X = horizLoc;
-			this.owner.World.Towns[this.processor.PullLocalWord(0x8)].Place.Y = vertLoc;
-			this.owner.World.Towns[this.processor.PullLocalWord(0x8)].TrueExtent = (sbyte)townExtent;
-			this.processor.RegAcc.LowByte = 0;
-			this.owner.World.Towns[this.processor.PullLocalWord(0x8)].ShownExtent = 0;
-			
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.owner.World.Towns[this.processor.PullLocalWord(0x8)].LaborerMarkers0 = this.processor.RegAcc.Value16;
-			this.owner.World.Towns[this.processor.PullLocalWord(0x8)].LaborerMarkers1 = this.processor.RegData.Value16;
-			this.owner.World.Towns[this.processor.PullLocalWord(0x8)].RootCommerce = (sbyte)this.processor.RegAcc.LowByte;
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.owner.World.Towns[this.processor.PullLocalWord(0x8)].GrainTally = (short)this.processor.RegAcc.Value16;
-			this.owner.World.Towns[this.processor.PullLocalWord(0x8)].MaterialsTally = (short)this.processor.RegAcc.Value16;
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.owner.World.Towns[this.processor.PullLocalWord(0x8)].StructureMarkers0 = this.processor.RegAcc.Value16;
-			this.owner.World.Towns[this.processor.PullLocalWord(0x8)].StructureMarkers1 = this.processor.RegData.Value16;
-			this.owner.World.Towns[this.processor.PullLocalWord(0x8)].PresentMakingIdx = 1;
-
-			this.processor.RegAcc.Value16 = this.owner.Advisors.PlayerKnowsTechnology(participantIdx, 0x22);
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsNotEqual)
+			if ((short)this.processor.PullGlobalWord((ushort)((ushort)(this.processor.RegAcc.Value16 * 0xc) + 0x44a)) < -1)
 			{
-				this.owner.World.Towns[this.processor.PullLocalWord(0x8)].PresentMakingIdx = 4;
+				this.owner.MapOps.AssignTileImprovements(2, horizLoc, vertLoc);
 			}
-		
-			this.processor.RegAcc.Value16 = this.owner.Advisors.PlayerKnowsTechnology(participantIdx, 0x40);
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsNotEqual)
+
+			ushort townOffset = (ushort)(0x1c * townIdx);
+			this.processor.RegSource.Value16 = townOffset;
+
+			town.ConditionMarker = 0;
+			town.Place.X = horizLoc;
+			town.Place.Y = vertLoc;
+			town.TrueExtent = (sbyte)townExtent;
+			town.ShownExtent = 0;
+			town.LaborerMarkers0 = 0;
+			town.LaborerMarkers1 = 0;
+			town.RootCommerce = 0;
+			town.GrainTally = 0;
+			town.MaterialsTally = 0;
+			town.StructureMarkers0 = 0;
+			town.StructureMarkers1 = 0;
+			town.PresentMakingIdx = 1;
+
+			if (this.owner.Advisors.PlayerKnowsTechnology(participantIdx, 0x22) != 0)
+				town.PresentMakingIdx = 4;
+
+			if (this.owner.Advisors.PlayerKnowsTechnology(participantIdx, 0x40) != 0)
+				town.PresentMakingIdx = 5;
+
+			this.processor.RegSource.Value16 = townOffset;
+
+			town.Unfamiliar[0] = -1;
+			town.Unfamiliar[1] = -1;
+
+			bool first = true;
+
+			for (ushort otherIdx = 0; otherIdx < 0x80; otherIdx++)
 			{
-				this.processor.ScaleIndexToBase(0x1c, this.processor.PullLocalWord(0x8));
-				this.owner.World.Towns[this.processor.PullLocalWord(0x8)].PresentMakingIdx = 5;
+				if (this.owner.World.Towns[otherIdx].ParticipantIdx == participantIdx && otherIdx != (ushort)townIdx)
+					first = false;
 			}
-		
-			this.processor.ScaleIndexToSource(0x1c, this.processor.PullLocalWord(0x8));
-			this.owner.World.Towns[this.processor.PullLocalWord(0x8)].Unfamiliar[0] = -1;
-			this.owner.World.Towns[this.processor.PullLocalWord(0x8)].Unfamiliar[1] = -1;
-			this.processor.EmitLocalWord(0x6, 0x1);
-			this.processor.EmitLocalWord(0xc, 0x0);
 
-		L026a:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullLocalWord(0xc));
+			this.processor.EmitLocalWord(0x6, first ? (ushort)1 : (ushort)0);
 
-			if (this.owner.World.Towns[this.processor.PullLocalWord(0xc)].ParticipantIdx != participantIdx) goto L0289;
+			if (first)
+			{
+				town.StructureMarkers0 = 1;
+				town.StructureMarkers1 = 0;
+			}
 
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x8);
-			this.processor.CompareWord(this.processor.PullLocalWord(0xc), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L0289;
-			this.processor.EmitLocalWord(0x6, 0x0);
+			this.processor.RegSource.Value16 = townOffset;
 
-		L0289:
-			this.processor.EmitLocalWord(0xc, this.processor.IncrementWord(this.processor.PullLocalWord(0xc)));
-			this.processor.CompareWord(this.processor.PullLocalWord(0xc), 0x80);
-			if (this.processor.FlagSet.IsLess) goto L026a;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x6), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L02ad;
-			this.processor.ScaleIndexToBase(0x1c, this.processor.PullLocalWord(0x8));
-			this.owner.World.Towns[this.processor.PullLocalWord(0x8)].StructureMarkers0 = 1;
-			this.owner.World.Towns[this.processor.PullLocalWord(0x8)].StructureMarkers1 = 0;
+			town.RootCommerce = 0;
+			town.ParticipantIdx = participantIdx;
 
-		L02ad:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToSource(this.processor.PullLocalWord(0x8));
-			this.owner.World.Towns[this.processor.PullLocalWord(0x8)].RootCommerce = 0;
-			this.owner.World.Towns[this.processor.PullLocalWord(0x8)].ParticipantIdx = participantIdx;
-			this.processor.EmitLocalWord(0xc, 0x0);
+			for (int routeIdx = 0; routeIdx < 3; routeIdx++)
+				town.CommerceTownIndices[routeIdx] = -1;
 
-		L02c6:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToSource(this.processor.PullLocalWord(0x8));
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0xc);
-			this.owner.World.Towns[this.processor.PullLocalWord(0x8)].CommerceTownIndices[this.processor.PullLocalWord(0xc)] = -1;
-			this.processor.IncrementLocalWord(0xc);
-			this.processor.CompareWord(this.processor.PullLocalWord(0xc), 0x3);
-			if (this.processor.FlagSet.IsLess) goto L02c6;
+			town.LaborerMarkers2 = 0;
 
-			this.processor.ScaleIndexToBase(0x1c, this.processor.PullLocalWord(0x8));
-			this.owner.World.Towns[this.processor.PullLocalWord(0x8)].LaborerMarkers2 = 0;
-			this.processor.EmitLocalWord(0xc, 0x1);
+			MarkCityNeighbourhood(participantIdx, town, horizLoc, vertLoc);
 
-		L02f2:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0xc);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
+			if (first && participantIdx == person)
+			{
+				this.owner.HelpSystem.DisplayHelpPopup(0x4f66);
+			}
 
-			this.owner.MapOps.ObtainTerrainType(
-				this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1882)) + horizLoc,
-				this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x18e4)) + vertLoc);
+			MarkCityPowerArea(participantIdx, town, horizLoc, vertLoc);
 
-			this.processor.EmitLocalWord(0xe, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
-			if (this.processor.FlagSet.IsNotEqual) goto L0349;
+			if (participantIdx == person)
+			{
+				// Sound of chopping wood while the new city is built
+				this.owner.Services.PerformCityFoundedSound();
 
-			this.owner.MapOps.ObtainLandMassSize(
-				this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1882)) + horizLoc,
-				this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x18e4)) + vertLoc);
+				if ((this.owner.World.SessionPrefMarkers & 8) != 0)
+				{
+					this.owner.Startup.QueryForDisk(1, 0);
 
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x100);
-			if (this.processor.FlagSet.IsGreater) goto L033c;
+					if (this.processor.RegAcc.Value16 != 0)
+						this.owner.Diplomats.ExamineCity(townIdx);
+				}
 
-			if (participantIdx != this.owner.World.PersonParticipantIdx)
-				goto L0349;
+				this.owner.Advisors.RenewCityScreen(townIdx);
 
-		L033c:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullLocalWord(0x8));
-			this.owner.World.Towns[this.processor.PullLocalWord(0x8)].ConditionMarker |= 2;
+				this.owner.TurnHooks.RepaintMainScreen();
+			}
+			else
+			{
+				this.processor.RegSource.Value16 = townOffset;
 
-		L0349:
-			this.processor.CompareWord(this.processor.PullLocalWord(0xe), 0xb);
-			if (this.processor.FlagSet.IsEqual) goto L0355;
-			this.processor.CompareWord(this.processor.PullLocalWord(0xe), 0x5);
-			if (this.processor.FlagSet.IsNotEqual) goto L0362;
+				this.owner.Advisors.PickCityProduction(participantIdx, townIdx);
 
-		L0355:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullLocalWord(0x8));
-			this.owner.World.Towns[this.processor.PullLocalWord(0x8)].ConditionMarker |= 8;
+				town.PresentMakingIdx = (sbyte)this.processor.RegAcc.LowByte;
 
-		L0362:
-			this.processor.EmitLocalWord(0xc, this.processor.IncrementWord(this.processor.PullLocalWord(0xc)));
-			this.processor.CompareWord(this.processor.PullLocalWord(0xc), 0x8);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L02f2;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x6), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L0385;
+				this.owner.CityOps.PlayerEnjoysWonderEffect(person, 0x13);
 
-			if (participantIdx != this.owner.World.PersonParticipantIdx) goto L0385;
+				if (this.processor.RegAcc.Value16 != 0)
+				{
+					this.owner.World.ChartSight[town.Place.X, town.Place.Y] |= (sbyte)(byte)(1 << (byte)person);
 
-			this.owner.HelpSystem.DisplayHelpPopup(0x4f66);
+					town.ShownExtent = 1;
 
-		L0385:
-			this.processor.EmitLocalWord(0xc, 0x0);
-			goto L0411;
+					this.owner.MapOps.KeepKnownTileImprovements(town.Place.X, town.Place.Y);
+				}
+			}
 
-		L038d:
-			this.owner.VideoCard.ObtainDot(2, 
-				this.processor.PullLocalSignedWord(0x2) + 0x50,
-				this.processor.PullLocalSignedWord(0x4));
+			return (ushort)townIdx;
+		}
 
-			this.processor.EmitLocalWord(0x10, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x8);
-			if (this.processor.FlagSet.IsLess) goto L03bf;
+		/// <summary>
+		/// The next free name of the leader's 16 (16 * (ChiefVisuals - 1), one less from the 8th leader on), then the shared
+		/// names 0xe0 - 0xff, then from 0 on; all taken: name 0
+		/// </summary>
+		private ushort ChooseCityLabel(short participantIdx)
+		{
+			ushort labelIdx = (ushort)(this.owner.World.Participants[participantIdx].ChiefVisuals - 1);
 
-			this.owner.Services.AssignDot(2, this.processor.PullLocalSignedWord(0x2) + 0x50,
-				this.processor.PullLocalSignedWord(0x4),
-				8);
+			if ((short)labelIdx >= 7)
+				labelIdx--;
 
-		L03bf:
-			if (participantIdx == this.owner.World.PersonParticipantIdx) goto L040e;
+			labelIdx <<= 4;
 
-			this.processor.CompareWord(this.processor.PullLocalWord(0xc), 0x18);
-			if (this.processor.FlagSet.IsGreater) goto L040e;
+			ushort first = labelIdx;
+			bool found;
 
-			this.owner.MapOps.ObtainTileImprovements(
-				this.processor.PullLocalSignedWord(0x2),
-				this.processor.PullLocalSignedWord(0x4));
+			do
+			{
+				found = true;
 
-			this.processor.TestBitsByte(this.processor.RegAcc.LowByte, 0x1);
-			if (this.processor.FlagSet.IsEqual) goto L040e;
+				if (this.owner.World.TownPlaces[labelIdx].X == -1)
+					break;
 
-			this.owner.MapOps.ObtainTileOwnerBits(
-				this.processor.PullLocalSignedWord(0x2),
-				this.processor.PullLocalSignedWord(0x4));
+				found = false;
 
-			this.processor.CompareWord(this.processor.RegAcc.Value16, (ushort)this.owner.World.PersonParticipantIdx);
-			if (this.processor.FlagSet.IsNotEqual) goto L040e;
-			this.processor.ScaleIndexToBase(0x1c, this.processor.PullLocalWord(0x8));
-			this.owner.World.Towns[this.processor.PullLocalWord(0x8)].ShownExtent = 1;
-			
-			this.owner.MapOps.KeepKnownTileImprovements(horizLoc, vertLoc);
+				ushort end = (ushort)(first + 0x10);
+				labelIdx++;
 
-		L040e:
-			this.processor.EmitLocalWord(0xc, this.processor.IncrementWord(this.processor.PullLocalWord(0xc)));
+				if (end == labelIdx)
+					labelIdx = 0xe0;
 
-		L0411:
-			this.processor.CompareWord(this.processor.PullLocalWord(0xc), 0x2d);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0456;
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0xc);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
+				if (labelIdx == 0x100)
+				{
+					labelIdx = 0;
 
-			this.owner.Routing.TunePosition(
-				this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1882)) + horizLoc);
+					if (first == 0x3e7)
+						found = true;
 
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x18e4));
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, (ushort)vertLoc);
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.PullLocalWord(0xc), 0x14);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L0442;
-			goto L038d;
+					first = 0x3e7;
+				}
+			}
+			while (!found);
 
-		L0442:
-			this.owner.Services.AssignDot(2, this.processor.PullLocalSignedWord(0x2) + 0x50,
-				this.processor.PullLocalSignedWord(0x4),
-				(ushort)participantIdx);
+			this.processor.EmitLocalWord(0x10, labelIdx);
+			this.processor.EmitLocalWord(0x2, first);
+			this.processor.EmitLocalWord(0xa, found ? (ushort)1 : (ushort)0);
 
-			goto L03bf;
+			return labelIdx;
+		}
 
-		L0456:
-			if (participantIdx != this.owner.World.PersonParticipantIdx) goto L0499;
+		/// <summary>The trailing spaces of the name (from its 12th letter back) become ends of text</summary>
+		private void TrimCityLabel(byte labelIdx)
+		{
+			ushort letterIdx = 0xb;
 
-			// Sound of chopping wood while the new city is built
-			this.owner.Services.PerformCityFoundedSound();
+			while (letterIdx > 0 && this.owner.World.TownLabels[labelIdx][letterIdx] == ' ')
+			{
+				char[] label = this.owner.World.TownLabels[labelIdx].ToCharArray();
+				label[letterIdx] = '\0';
+				this.owner.World.TownLabels[labelIdx] = new string(label);
+				letterIdx--;
+			}
 
-			this.processor.TestBitsByte((byte)(this.owner.World.SessionPrefMarkers & 0xff), 0x8);
-			if (this.processor.FlagSet.IsEqual) goto L0484;
+			this.processor.EmitLocalWord(0xc, letterIdx);
+		}
 
-			this.owner.Startup.QueryForDisk(1, 0);
+		/// <summary>The flags of the city's neighbours: 2 coastal (big ocean, or any for the human player), 8 river or hills</summary>
+		private void MarkCityNeighbourhood(short participantIdx, City town, int horizLoc, int vertLoc)
+		{
+			ushort neighbourIdx;
 
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual) goto L0484;
-			
-			this.owner.Diplomats.ExamineCity(this.processor.PullLocalSignedWord(0x8));
+			for (neighbourIdx = 1; neighbourIdx <= 8; neighbourIdx++)
+			{
+				this.processor.EmitLocalWord(0xc, neighbourIdx);
+				this.processor.RegSource.Value16 = (ushort)(neighbourIdx << 1);
 
-		L0484:
-			this.owner.Advisors.RenewCityScreen(this.processor.PullLocalSignedWord(0x8));
+				int tileHoriz = (short)this.processor.PullGlobalWord((ushort)((neighbourIdx << 1) + 0x1882)) + horizLoc;
+				int tileVert = (short)this.processor.PullGlobalWord((ushort)((neighbourIdx << 1) + 0x18e4)) + vertLoc;
 
-			this.owner.TurnHooks.RepaintMainScreen();
+				ushort terrain = this.owner.MapOps.ObtainTerrainType(tileHoriz, tileVert);
+				this.processor.EmitLocalWord(0xe, terrain);
 
-			goto L04fd;
+				if (terrain == 0xa &&
+					((short)this.owner.MapOps.ObtainLandMassSize(tileHoriz, tileVert) > 0x100 || participantIdx == this.owner.World.PersonParticipantIdx))
+				{
+					town.ConditionMarker |= 2;
+				}
 
-		L0499:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToSource(this.processor.PullLocalWord(0x8));
+				if (terrain == 0xb || terrain == 5)
+				{
+					town.ConditionMarker |= 8;
+				}
+			}
 
-			this.owner.Advisors.PickCityProduction(participantIdx,
-				this.processor.PullLocalSignedWord(0x8));
-			
-			this.owner.World.Towns[this.processor.PullLocalWord(0x8)].PresentMakingIdx = (sbyte)this.processor.RegAcc.LowByte;
+			this.processor.EmitLocalWord(0xc, neighbourIdx);
+		}
 
-			this.owner.CityOps.PlayerEnjoysWonderEffect(this.owner.World.PersonParticipantIdx, 0x13);
-			
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual) goto L04fd;
-			this.processor.RegAcc.LowByte = 0x1;
-			this.processor.RegCount.LowByte = (byte)this.owner.World.PersonParticipantIdx;
-			this.processor.RegAcc.LowByte = this.processor.ShiftLeftByte(this.processor.RegAcc.LowByte, this.processor.RegCount.LowByte);
-			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
+		/// <summary>
+		/// The power map (screen 2, 0x50 to the right): the 21 tiles of the city in the owner's colour, the next ones at most
+		/// colour 8; an AI city next to a city of the human player becomes known to him
+		/// </summary>
+		private void MarkCityPowerArea(short participantIdx, City town, int horizLoc, int vertLoc)
+		{
+			short person = this.owner.World.PersonParticipantIdx;
+			ushort tileIdx;
 
-			this.owner.World.ChartSight[this.owner.World.Towns[this.processor.PullLocalWord(0x8)].Place.X,
-				this.owner.World.Towns[this.processor.PullLocalWord(0x8)].Place.Y] |= (sbyte)this.processor.RegCount.LowByte;
+			for (tileIdx = 0; tileIdx < 0x2d; tileIdx++)
+			{
+				this.processor.EmitLocalWord(0xc, tileIdx);
+				this.processor.RegSource.Value16 = (ushort)(tileIdx << 1);
 
-			this.owner.World.Towns[this.processor.PullLocalWord(0x8)].ShownExtent = 1;
+				this.owner.Routing.TunePosition((short)this.processor.PullGlobalWord((ushort)((tileIdx << 1) + 0x1882)) + horizLoc);
 
-			this.owner.MapOps.KeepKnownTileImprovements(
-				this.owner.World.Towns[this.processor.PullLocalWord(0x8)].Place.X,
-				this.owner.World.Towns[this.processor.PullLocalWord(0x8)].Place.Y);
+				short tileHoriz = (short)this.processor.RegAcc.Value16;
+				short tileVert = (short)(this.processor.PullGlobalWord((ushort)((tileIdx << 1) + 0x18e4)) + (ushort)vertLoc);
 
-		L04fd:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x8);
-			goto L053b;
+				this.processor.EmitLocalWord(0x2, (ushort)tileHoriz);
+				this.processor.EmitLocalWord(0x4, (ushort)tileVert);
 
-		L0502:
-			if (participantIdx != this.owner.World.PersonParticipantIdx)
-				goto L00f8;
+				if (tileIdx <= 0x14)
+				{
+					this.owner.Services.AssignDot(2, tileHoriz + 0x50, tileVert, (ushort)participantIdx);
+				}
+				else
+				{
+					this.owner.VideoCard.ObtainDot(2, tileHoriz + 0x50, tileVert);
 
-			this.processor.EmitGlobalWord(0x2f9e, 0x4);
-			this.processor.EmitGlobalByte(0xba06, 0x0);
+					ushort colour = this.processor.RegAcc.Value16;
+					this.processor.EmitLocalWord(0x10, colour);
 
-			this.owner.BlockText.DisplayTextDialog(0x4f74);
+					if ((short)colour >= 8)
+						this.owner.Services.AssignDot(2, tileHoriz + 0x50, tileVert, 8);
+				}
 
-			this.owner.TurnHooks.DisplayDialog(0xba06, 64, 80);
+				if (participantIdx == person || tileIdx > 0x18)
+					continue;
 
-			goto L00f8;
+				if ((this.owner.MapOps.ObtainTileImprovements(tileHoriz, tileVert) & 1) == 0 ||
+					this.owner.MapOps.ObtainTileOwnerBits(tileHoriz, tileVert) != (ushort)person)
+					continue;
 
-		L053b:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.LeaveFrame();
+				town.ShownExtent = 1;
 
-			// Far return
-			this.processor.Journal.CloseScope("EstablishCity");
+				this.owner.MapOps.KeepKnownTileImprovements(horizLoc, vertLoc);
+			}
 
-			return this.processor.RegAcc.Value16;
+			this.processor.EmitLocalWord(0xc, tileIdx);
 		}
 
 		/// <summary>
