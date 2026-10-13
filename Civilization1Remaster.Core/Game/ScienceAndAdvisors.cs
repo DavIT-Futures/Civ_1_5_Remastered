@@ -1859,247 +1859,303 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// The player's research is done (participantIdx1: where it came from, see EarnTechnology). An AI player (and the
+		/// human player in turn 0) takes the researchable technology with the highest random draw of 4 * ObtainTechnologyInfo
+		/// (not the human player's current research for himself); on the easiest level a technology the human player doesn't
+		/// know only one time in 2; returns it (-1 for none or barbarians). The human player gets his research (the discovery
+		/// picture with its icon, or the newspaper), the science advisor's recommendation (easiest level, preference 1) and
+		/// chooses the next research from the menu (on harder levels from the third on only every third one; asking for the
+		/// Civilopedia shows it and asks again with the same choices; none left: future technology 71); returns the choice.
+		/// The list of the choices and the file name are in the stack frame, and SI gets the values of the original before the
+		/// calls (DisplayMenu leaves it in DI), like in the original.
 		/// </summary>
-		/// <param name="playerID"></param>
-		/// <param name="playerID1"></param>
 		public ushort UncoverTechnology(short participantIdx, short participantIdx1)
 		{
 			this.processor.Journal.OpenScope($"UncoverTechnology({participantIdx}, {participantIdx1})");
 
-			// function body
 			this.processor.EnterFrame(0x46);
 			this.processor.PreserveSource();
 
-			if (participantIdx != 0)
-				goto L1597;
+			ushort result = participantIdx == 0 ? (ushort)0xffff : UncoverTechnologyOf(participantIdx, participantIdx1);
 
-		L1591:
-			this.processor.RegAcc.Value16 = 0xffff;
-			goto L1d29;
+			this.processor.RegAcc.Value16 = result;
 
-		L1597:
-			this.processor.EmitLocalWord(0x16, 0x0);
-			this.processor.RegAcc.Value16 = 0xffff;
-			this.processor.EmitLocalWord(0x14, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x3c, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x46, 0x0);
+			this.processor.RestoreSource();
+			this.processor.LeaveFrame();
+			// Far return
+			this.processor.Journal.CloseScope("UncoverTechnology");
 
-		L15aa:
-			this.processor.RegAcc.Value16 = PlayerKnowsTechnology(participantIdx, this.processor.PullLocalSignedWord(0x46));
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsNotEqual)
-				goto L162c;
+			return result;
+		}
 
-			this.processor.ScaleIndexToSource(0x16, this.processor.PullLocalWord(0x46));
-			this.processor.RegAcc.Value16 = PlayerKnowsTechnology(participantIdx, (short)this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x4ee)));
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual)
-				goto L162c;
+		/// <summary>The choice of an AI player, or the discovery and the next choice of the human player (see UncoverTechnology)</summary>
+		private ushort UncoverTechnologyOf(short participantIdx, short participantIdx1)
+		{
+			short person = this.owner.World.PersonParticipantIdx;
+			Player human = this.owner.World.Participants[person];
 
-			this.processor.RegAcc.Value16 = PlayerKnowsTechnology(participantIdx, (short)this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x4ef)));
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual) 
-				goto L162c;
+			this.processor.EmitLocalWord(0x16, 0);
 
-			ObtainTechnologyInfo(participantIdx, this.processor.PullLocalWord(0x46));
+			short pick = -1;
+			short highest = -1;
 
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, 0x1);
-			
-			this.processor.RegAcc.Value16 = (ushort)(this.owner.Libc.Dice.DrawInt(this.processor.RegAcc.Value16));
+			this.processor.EmitLocalWord(0x14, 0xffff);
+			this.processor.EmitLocalWord(0x3c, 0xffff);
 
-			this.processor.EmitLocalWord(0x40, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x3c);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x40), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L162c;
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.Participants[this.owner.World.PersonParticipantIdx].PresentInquiryIdx;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x46), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L1620;
-			
-			if (participantIdx == this.owner.World.PersonParticipantIdx)
-				goto L162c;
-
-		L1620:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x40);
-			this.processor.EmitLocalWord(0x3c, this.processor.RegAcc.Value16);
-			this.processor.CopyLocalWord(0x46, 0x14);
-
-		L162c:
-			this.processor.EmitLocalWord(0x46, this.processor.IncrementWord(this.processor.PullLocalWord(0x46)));
-			this.processor.CompareWord(this.processor.PullLocalWord(0x46), 0x48);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L1638;
-			goto L15aa;
-
-		L1638:			
-			if (participantIdx != this.owner.World.PersonParticipantIdx)
-				goto L1647;
-
-			if (this.owner.World.RoundTally != 0) 
-				goto L16a5;
-
-		L1647:
-			if (this.owner.World.RoundTally == 0) goto L167a;
-			if (this.owner.World.HardnessTier != 0) goto L167a;
-
-			this.processor.RegAcc.Value16 = PlayerKnowsTechnology(this.owner.World.PersonParticipantIdx, this.processor.PullLocalSignedWord(0x14));
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsNotEqual) 
-				goto L167a;
-
-			this.processor.RegAcc.Value16 = (ushort)(this.owner.Libc.Dice.DrawInt(2));
-
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual) goto L167a;
-			goto L1591;
-
-		L167a:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x3c), 0xffff);
-			if (this.processor.FlagSet.IsEqual) goto L169f;
-
-			EarnTechnology(participantIdx,
-				this.processor.PullLocalSignedWord(0x14),
-				participantIdx1);
-			
-			this.owner.Bot.RefreshCityProduction(participantIdx, 0xffff);
-
-		L169f:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x14);
-			goto L1d29;
-
-		L16a5:
-			if (this.owner.World.Participants[this.owner.World.PersonParticipantIdx].PresentInquiryIdx != -1) goto L16af;
-			goto L19d4;
-
-		L16af:
-			this.owner.Encyclopedia.ObtainFirstPrerequisite((ushort)this.owner.World.Participants[this.owner.World.PersonParticipantIdx].PresentInquiryIdx);
-			
-			this.processor.EmitLocalWord(0x44, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x42, 0x0);
-			
-			if (this.owner.World.Participants[this.owner.World.PersonParticipantIdx].PresentInquiryIdx == 71) goto L16f1;
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xdeba), 0x3);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L16f1;
-
-			this.owner.Startup.QueryForDisk(1, 0);
-
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual) goto L16f1;
-			this.processor.TestBitsByte((byte)(this.owner.World.SessionPrefMarkers & 0xff), 0x8);
-			if (this.processor.FlagSet.IsEqual) goto L16f1;
-			this.processor.EmitLocalWord(0x42, 0x1);
-
-		L16f1:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x42), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L16fa;
-			goto L178c;
-
-		L16fa:
-			this.owner.Startup.ConcealMouseCursor();
-
-			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x10), "discovr1.pic");
-
-			this.processor.EmitLocalWord(0x12, 0x0);
-
-			this.processor.RegAcc.Value16 = PlayerKnowsTechnology(this.owner.World.PersonParticipantIdx, 0x36);
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual) 
-				goto L1730;
-
-			this.processor.EmitLocalByte(0x9, 0x32);
-			this.processor.EmitLocalWord(0x12, 0x1);
-
-		L1730:
-			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, (ushort)(this.processor.RegFrame.Value16 - 0x10), 0);
-
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 0);
-
-			this.owner.Helpers.HaltHueCycling();
-
-			this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, (ushort)(this.processor.RegFrame.Value16 - 0x10), 1);
-
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0x19d4),
-				0, 0, 0x140, 0xc8,
-				this.processor.PullGlobalWord(0xaa),
-				0, 0);
-
-		L178c:
-			this.processor.RegBase.Value16 = (ushort)participantIdx;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1982)));
-
-			this.processor.RegAcc.Value16 = PlayerKnowsTechnology(this.owner.World.PersonParticipantIdx, 0x14);
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsNotEqual)
+			for (short scienceIdx = 0; scienceIdx < 0x48; scienceIdx++)
 			{
-				this.owner.Libc.AppendText(0xba06, 0x22cc);
+				this.processor.EmitLocalWord(0x46, (ushort)scienceIdx);
+
+				if (!MayResearch(participantIdx, scienceIdx))
+					continue;
+
+				ObtainTechnologyInfo(participantIdx, (ushort)scienceIdx);
+
+				short draw = (short)this.owner.Libc.Dice.DrawInt((ushort)(this.processor.RegAcc.Value16 << 2));
+				this.processor.EmitLocalWord(0x40, (ushort)draw);
+
+				if (draw <= highest || (scienceIdx == human.PresentInquiryIdx && participantIdx == person))
+					continue;
+
+				highest = draw;
+				pick = scienceIdx;
+
+				this.processor.EmitLocalWord(0x3c, (ushort)highest);
+				this.processor.EmitLocalWord(0x14, (ushort)pick);
 			}
-			else
+
+			this.processor.EmitLocalWord(0x46, 0x48);
+
+			if (participantIdx == person && this.owner.World.RoundTally != 0)
+				return ChooseNextResearch(participantIdx, participantIdx1, pick);
+
+			if (this.owner.World.RoundTally != 0 && this.owner.World.HardnessTier == 0 &&
+				PlayerKnowsTechnology(person, pick) == 0 && this.owner.Libc.Dice.DrawInt(2) != 0)
+				return 0xffff;
+
+			if (highest != -1)
 			{
-				this.owner.Libc.AppendText(0xba06, 0x22d8);
+				EarnTechnology(participantIdx, pick, participantIdx1);
+
+				this.owner.Bot.RefreshCityProduction(participantIdx, 0xffff);
 			}
+
+			return (ushort)pick;
+		}
+
+		/// <summary>
+		/// Whether the player can research the technology: unknown, with both prerequisites (0x4ee / 0x4ef + 0x16 * technology)
+		/// known; SI points at its entry when it is unknown, like in the original
+		/// </summary>
+		private bool MayResearch(short participantIdx, short scienceIdx)
+		{
+			if (PlayerKnowsTechnology(participantIdx, scienceIdx) != 0)
+				return false;
+
+			ushort science = (ushort)(0x16 * scienceIdx);
+			this.processor.RegSource.Value16 = science;
+
+			return PlayerKnowsTechnology(participantIdx, (sbyte)this.processor.PullGlobalByte((ushort)(science + 0x4ee))) != 0 &&
+				PlayerKnowsTechnology(participantIdx, (sbyte)this.processor.PullGlobalByte((ushort)(science + 0x4ef))) != 0;
+		}
+
+		/// <summary>The human player's discovery and his choice of the next research (see UncoverTechnology)</summary>
+		private ushort ChooseNextResearch(short participantIdx, short participantIdx1, short pick)
+		{
+			Player human = this.owner.World.Participants[this.owner.World.PersonParticipantIdx];
+			bool again = false;
+
+			while (true)
+			{
+				if (human.PresentInquiryIdx != -1)
+				{
+					AnnounceDiscovery(participantIdx, participantIdx1);
+				}
+
+				if (this.owner.World.Participants[participantIdx].FoundScienceTally <= 1)
+				{
+					this.owner.HelpSystem.DisplayHelpPopup(0x231d);
+				}
+
+				this.owner.Startup.ConcealMouseCursor();
+
+				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0x19d4), 0, 0);
+
+				this.owner.Startup.DisplayMouseCursor();
+
+				if ((this.owner.World.SessionPrefMarkers & 1) != 0 && pick != -1 && this.owner.World.HardnessTier == 0)
+				{
+					RecommendResearch(pick);
+				}
+
+				ushort choices = ListResearchChoices(participantIdx, again);
+
+				this.processor.EmitGlobalWord(0x2f9e, 0x6);
+
+				if (choices == 0)
+				{
+					this.owner.Libc.AppendText(0xba06, " Future Technology ");
+
+					this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText((short)(human.ComingScienceTally + 1), 10));
+
+					this.owner.Libc.AppendText(0xba06, "\n");
+
+					this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+
+					human.PresentInquiryIdx = 71;
+
+					return this.processor.PullLocalWord(0x46);
+				}
+
+				this.processor.EmitGlobalWord(0x2fa0, 0x1);
+
+				this.owner.Dialogs.DisplayMenu(0xba06, 80, 64, 1);
+
+				ushort choice = this.processor.RegAcc.Value16;
+
+				this.owner.Startup.ConcealMouseCursor();
+
+				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0xaa), 0, 0);
+
+				this.owner.Startup.DisplayMouseCursor();
+
+				if (choice == 0xffff)
+					choice = 0;
+
+				this.processor.RegSource.Value16 = (ushort)(choice << 1);
+
+				ushort scienceIdx = this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + (choice << 1) - 0x3a));
+				this.processor.EmitLocalWord(0x46, scienceIdx);
+
+				if (this.processor.PullGlobalWord(0x2f9c) == 0)
+				{
+					human.PresentInquiryIdx = (short)scienceIdx;
+
+					return scienceIdx;
+				}
+
+				this.owner.Encyclopedia.DisplayCivilopediaRecord(scienceIdx, 0);
+
+				this.owner.TurnHooks.RepaintMainScreen();
+
+				// Asked again, with the same choices
+				this.processor.EmitLocalWord(0x16, 1);
+				again = true;
+			}
+		}
+
+		/// <summary>
+		/// The human player's research is done: the discovery picture (discovr1 / discovr2 with technology 0x36, VGA, disk 1,
+		/// preference 8, not for future technology) with the message and the icon of its first prerequisite, else the newspaper;
+		/// then he learns it and the research is -1
+		/// </summary>
+		private void AnnounceDiscovery(short participantIdx, short participantIdx1)
+		{
+			short person = this.owner.World.PersonParticipantIdx;
+			Player human = this.owner.World.Participants[person];
+			ushort pictureName = (ushort)(this.processor.RegFrame.Value16 - 0x10);
+
+			this.owner.Encyclopedia.ObtainFirstPrerequisite((ushort)human.PresentInquiryIdx);
+
+			short first = (short)this.processor.RegAcc.Value16;
+			this.processor.EmitLocalWord(0x44, (ushort)first);
+
+			bool picture = false;
+			this.processor.EmitLocalWord(0x42, 0);
+
+			if (human.PresentInquiryIdx != 71 && (short)this.processor.PullGlobalWord(0xdeba) > 3)
+			{
+				this.owner.Startup.QueryForDisk(1, 0);
+
+				if (this.processor.RegAcc.Value16 != 0 && (this.owner.World.SessionPrefMarkers & 8) != 0)
+				{
+					picture = true;
+					this.processor.EmitLocalWord(0x42, 1);
+				}
+			}
+
+			bool advanced = false;
+
+			if (picture)
+			{
+				this.owner.Startup.ConcealMouseCursor();
+
+				this.owner.Libc.CopyText(pictureName, "discovr1.pic");
+
+				this.processor.EmitLocalWord(0x12, 0);
+
+				if (PlayerKnowsTechnology(person, 0x36) != 0)
+				{
+					this.processor.EmitGlobalByte((ushort)(pictureName + 7), 0x32);
+					this.processor.EmitLocalWord(0x12, 1);
+					advanced = true;
+				}
+
+				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, pictureName, 0);
+
+				this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 0);
+
+				this.owner.Helpers.HaltHueCycling();
+
+				this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, pictureName, 1);
+
+				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0xaa), 0, 0);
+			}
+
+			this.owner.Libc.CopyText(0xba06, this.processor.PullGlobalWord((ushort)(((ushort)participantIdx << 1) + 0x1982)));
+
+			this.owner.Libc.AppendText(0xba06, PlayerKnowsTechnology(person, 0x14) != 0 ? (ushort)0x22cc : (ushort)0x22d8);
 
 			this.owner.Libc.AppendText(0xba06, "\ndiscover the secret\nof ");
 
-			this.processor.RegAcc.Value16 = 0x16;
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, (ushort)this.owner.World.Participants[this.owner.World.PersonParticipantIdx].PresentInquiryIdx);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x4da);
-			this.owner.Libc.AppendText(0xba06, this.processor.RegAcc.Value16);
+			this.owner.Libc.AppendText(0xba06, (ushort)((ushort)(0x16 * human.PresentInquiryIdx) + 0x4da));
 
-			if (this.owner.World.Participants[this.owner.World.PersonParticipantIdx].PresentInquiryIdx != 71) goto L182c;
+			if (human.PresentInquiryIdx == 71)
+			{
+				this.owner.Libc.AppendText(0xba06, " ");
 
-			this.owner.Libc.AppendText(0xba06, " ");
+				human.ComingScienceTally++;
 
-			this.owner.World.Participants[this.owner.World.PersonParticipantIdx].ComingScienceTally++;
+				this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(human.ComingScienceTally, 10));
+			}
 
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText(this.owner.World.Participants[this.owner.World.PersonParticipantIdx].ComingScienceTally, 10));
-
-		L182c:
 			this.owner.Libc.AppendText(0xba06, "!\n");
 
-			this.processor.RegAcc.Value16 = 0x3a;
-			this.processor.ScaleAccumulatorToBase((ushort)this.owner.World.Participants[participantIdx].ChiefVisuals);
-			
 			// The original plays only a short fanfare (table at 0x1518, one to five seconds),
 			// the national anthem (table at 0x151a, as in the palace and the throne room) plays until the next research is chosen
-			this.owner.Services.PerformSound(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x151a)), 3);
+			this.owner.Services.PerformSound(this.processor.PullGlobalWord((ushort)((ushort)(0x3a * this.owner.World.Participants[participantIdx].ChiefVisuals) + 0x151a)), 3);
 
-			this.processor.CompareWord(this.processor.PullLocalWord(0x42), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L185f;
-			goto L19a5;
+			if (picture)
+			{
+				ShowDiscoveryPicture(pictureName, first, advanced);
+			}
+			else
+			{
+				this.owner.Paper.DisplayNewspaper(-1);
+			}
 
-		L185f:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x12), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L186e;
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 0x6);
+			EarnTechnology(participantIdx, human.PresentInquiryIdx, participantIdx1);
 
-		L186e:
+			this.owner.Services.PerformSound(1, 0);
+
+			human.PresentInquiryIdx = -1;
+		}
+
+		/// <summary>The discovery message on the picture and the icon of the first prerequisite (iconpgN.pic, N = first / 9)</summary>
+		private void ShowDiscoveryPicture(ushort pictureName, short first, bool advanced)
+		{
+			if (!advanced)
+				this.processor.EmitGlobalWord((ushort)(this.processor.PullGlobalWord(0xaa) + 0x10), 0x6);
+
 			this.processor.EmitGlobalWord(0xdb38, 0x1);
 
-			this.processor.CompareWord(this.processor.PullLocalWord(0x12), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L187f;
-			this.processor.RegAcc.Value16 = 25;
-			goto L1882;
+			this.owner.Dialogs.DisplayMenu(0xba06, 96, advanced ? (short)25 : (short)1, 1);
 
-		L187f:
-			this.processor.RegAcc.Value16 = 1;
-
-		L1882:
-			this.owner.Dialogs.DisplayMenu(0xba06, 96, (short)this.processor.RegAcc.Value16, 1);
-
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 0x1);
+			this.processor.EmitGlobalWord((ushort)(this.processor.PullGlobalWord(0xaa) + 0x10), 0x1);
 
 			this.owner.Libc.CopyText(0xba06, "iconpg1.pic");
 
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x44);
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.RegCount.Value16 = 0x9;
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.EmitGlobalByte(0xba0c, this.processor.SumByte(this.processor.PullGlobalByte(0xba0c), this.processor.RegAcc.LowByte));
+			this.processor.EmitGlobalByte(0xba0c, (byte)(this.processor.PullGlobalByte(0xba0c) + CPU.SignedQuotient(first, 9)));
 
 			this.owner.Startup.QueryForDisk(3, 1);
 
@@ -2107,306 +2163,139 @@ namespace Civilization1Remaster.Game
 
 			this.owner.Startup.QueryForDisk(0, 1);
 
-			this.owner.Encyclopedia.RenderIcon(
-				(ushort)(((this.processor.PullLocalSignedWord(0x44) % 3) * 111) + 1),
-				(ushort)((((this.processor.PullLocalSignedWord(0x44) % 9) / 3) * 69) + 1),
-				110,
-				68,
-				174,
-				(ushort)(this.processor.PullLocalWord(0x12) != 0 ? 87 : 96));
+			this.owner.Encyclopedia.RenderIcon((ushort)(((first % 3) * 111) + 1), (ushort)((((first % 9) / 3) * 69) + 1), 110, 68, 174, advanced ? (ushort)87 : (ushort)96);
 
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xd762), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L1994;
+			if (this.processor.PullGlobalWord(0xd762) != 0)
+			{
+				this.owner.Libc.CopyText((ushort)(pictureName + 8), ".pal");
 
-			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x8), ".pal");
+				this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, pictureName, 0xc1d6);
 
-			this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, (ushort)(this.processor.RegFrame.Value16 - 0x10), 0xc1d6);
+				this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, 0x2311, 0xc5be);
 
-			this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, 0x2311, 0xc5be);
+				this.owner.Libc.CopyBytes(0xc5c4, 0xc1dc, 0xff);
 
-			this.owner.Libc.CopyBytes(0xc5c4, 0xc1dc, 0xff);
+				this.owner.Services.ImportColorsFromBuffer(30, 0xc5be);
+			}
 
-			this.owner.Services.ImportColorsFromBuffer(30, 0xc5be);
-
-		L1994:
 			this.owner.Conquest.AwaitForKeyPressOrMouseClick();
 
 			this.owner.Startup.DisplayMouseCursor();
 
 			this.owner.Helpers.LaunchHueCycling();
+		}
 
-			goto L19b1;
-
-		L19a5:
-			this.owner.Paper.DisplayNewspaper(-1);
-
-		L19b1:
-			EarnTechnology(participantIdx,
-				this.owner.World.Participants[this.owner.World.PersonParticipantIdx].PresentInquiryIdx,
-				participantIdx1);
-			
-			this.owner.Services.PerformSound(1, 0);
-
-			this.owner.World.Participants[this.owner.World.PersonParticipantIdx].PresentInquiryIdx = -1;
-
-		L19d4:
-			if (this.owner.World.Participants[participantIdx].FoundScienceTally <= 1)
-			{
-				this.owner.HelpSystem.DisplayHelpPopup(0x231d);
-			}
-
-			this.owner.Startup.ConcealMouseCursor();
-
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0xaa),
-				0, 0, 0x140, 0xc8,
-				this.processor.PullGlobalWord(0x19d4),
-				0, 0);
-
-			this.owner.Startup.DisplayMouseCursor();
-
-			this.processor.TestBitsByte((byte)(this.owner.World.SessionPrefMarkers & 0xff), 0x1);
-			if (this.processor.FlagSet.IsNotEqual) goto L1a05;
-			goto L1b3d;
-
-		L1a05:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x14), 0xffff);
-			if (this.processor.FlagSet.IsNotEqual) goto L1a0e;
-			goto L1b3d;
-
-		L1a0e:
-			if (this.owner.World.HardnessTier == 0) goto L1a18;
-			goto L1b3d;
-
-		L1a18:
+		/// <summary>The science advisor recommends the technology with the units and wonders it allows</summary>
+		private void RecommendResearch(short pick)
+		{
 			this.owner.Libc.CopyText(0xba06, "Science Advisor:\nI recommend we\ndevelop ");
 
-			this.processor.ScaleIndex(0x16, this.processor.PullLocalWord(0x14));
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x4da);
-			this.owner.Libc.AppendText(0xba06, this.processor.RegAcc.Value16);
+			this.owner.Libc.AppendText(0xba06, (ushort)((ushort)(0x16 * pick) + 0x4da));
 
 			this.owner.Libc.AppendText(0xba06, ".\n");
 
 			this.owner.Libc.TextLength(0xba06);
 
-			this.processor.EmitLocalWord(0x40, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x12, 0x0);
+			ushort length = this.processor.RegAcc.Value16;
+			this.processor.EmitLocalWord(0x40, length);
+
+			ushort allowed = 0;
 
 			this.owner.Libc.AppendText(0xba06, "So we can build:\n-");
 
-			this.processor.EmitLocalWord(0x18, 0x0);
+			for (ushort kindIdx = 0; kindIdx < 0x1c; kindIdx++)
+			{
+				this.processor.RegSource.Value16 = (ushort)(0x22 * kindIdx);
 
-		L1a77:
-			this.processor.RegAcc.Value16 = 0x22;
-			this.processor.ScaleAccumulatorToSource(this.processor.PullLocalWord(0x18));
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x14);
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x114a)), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L1aad;
+				if (this.processor.PullGlobalWord((ushort)(this.processor.RegSource.Value16 + 0x114a)) != (ushort)pick)
+					continue;
 
-			this.processor.RegAcc.Value16 = this.processor.RegSource.Value16;
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x112a);
-			this.owner.Libc.AppendText(0xba06, this.processor.RegAcc.Value16);
+				this.owner.Libc.AppendText(0xba06, (ushort)(this.processor.RegSource.Value16 + 0x112a));
 
-			this.owner.Libc.AppendText(0xba06, "\n-");
+				this.owner.Libc.AppendText(0xba06, "\n-");
 
-			this.processor.IncrementLocalWord(0x12);
+				allowed++;
+			}
 
-		L1aad:
-			this.processor.EmitLocalWord(0x18, this.processor.IncrementWord(this.processor.PullLocalWord(0x18)));
-			this.processor.CompareWord(this.processor.PullLocalWord(0x18), 0x1c);
-			if (this.processor.FlagSet.IsLess) goto L1a77;
-			this.processor.EmitLocalWord(0x18, 0x0);
+			for (ushort wonderIdx = 0; wonderIdx < 0x18; wonderIdx++)
+			{
+				this.processor.RegSource.Value16 = (ushort)(0x1e * wonderIdx);
 
-		L1abb:
-			this.processor.RegAcc.Value16 = 0x1e;
-			this.processor.ScaleAccumulatorToSource(this.processor.PullLocalWord(0x18));
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x14);
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0xbb6)), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L1af1;
+				if (this.processor.PullGlobalWord((ushort)(this.processor.RegSource.Value16 + 0xbb6)) != (ushort)pick)
+					continue;
 
-			this.processor.RegAcc.Value16 = this.processor.RegSource.Value16;
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0xb9a);
-			this.owner.Libc.AppendText(0xba06, this.processor.RegAcc.Value16);
+				this.owner.Libc.AppendText(0xba06, (ushort)(this.processor.RegSource.Value16 + 0xb9a));
 
-			this.owner.Libc.AppendText(0xba06, "\n-");
+				this.owner.Libc.AppendText(0xba06, "\n-");
 
-			this.processor.IncrementLocalWord(0x12);
+				allowed++;
+			}
 
-		L1af1:
-			this.processor.EmitLocalWord(0x18, this.processor.IncrementWord(this.processor.PullLocalWord(0x18)));
-			this.processor.CompareWord(this.processor.PullLocalWord(0x18), 0x18);
-			if (this.processor.FlagSet.IsLess) goto L1abb;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x12), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L1b08;
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x40);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xba06), 0x0);
+			this.processor.EmitLocalWord(0x12, allowed);
+			this.processor.EmitLocalWord(0x18, 0x18);
 
-		L1b08:
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 0x2);
+			if (allowed == 0)
+				this.processor.EmitGlobalByte((ushort)(length + 0xba06), 0);
+
+			this.processor.EmitGlobalWord((ushort)(this.processor.PullGlobalWord(0xaa) + 0x10), 0x2);
 			this.processor.EmitGlobalWord(0xdb38, 0x1);
 
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x12);
-			this.processor.RegCount.LowByte = 0x3;
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, 0xa8);
-			this.processor.RegAcc.Value16 = this.processor.NegateWord(this.processor.RegAcc.Value16);
-			this.owner.Dialogs.DisplayMenu(0xba06, 8, (short)this.processor.RegAcc.Value16, 1);
+			this.owner.Dialogs.DisplayMenu(0xba06, 8, (short)-((allowed << 3) - 0xa8), 1);
 
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 0x1);
+			this.processor.EmitGlobalWord((ushort)(this.processor.PullGlobalWord(0xaa) + 0x10), 0x1);
+		}
 
-		L1b3d:
+		/// <summary>
+		/// The menu of the researchable technologies (their list in the stack frame at -0x3a): from the third on, on the harder
+		/// levels only those (technology - known technologies) divisible by 3; again: only the same choices in the same order;
+		/// the number of choices
+		/// </summary>
+		private ushort ListResearchChoices(short participantIdx, bool again)
+		{
 			this.owner.Libc.CopyText(0xba06, "Which discovery should our\n");
 
-			this.processor.RegAcc.Value16 = PlayerKnowsTechnology(this.owner.World.PersonParticipantIdx, 0x14);
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsNotEqual)
-			{
-				this.owner.Libc.AppendText(0xba06, 0x2388);
-			}
-			else
-			{
-				this.owner.Libc.AppendText(0xba06, 0x2393);
-			}
+			this.owner.Libc.AppendText(0xba06, PlayerKnowsTechnology(this.owner.World.PersonParticipantIdx, 0x14) != 0 ? (ushort)0x2388 : (ushort)0x2393);
 
 			this.owner.Libc.AppendText(0xba06, " be pursuing, sire?\nPick one...\n ");
 
-			this.processor.EmitLocalWord(0x12, 0x0);
-			this.processor.EmitLocalWord(0x46, 0x0);
+			ushort choices = 0;
+			ushort choiceList = (ushort)(this.processor.RegFrame.Value16 - 0x3a);
 
-		L1b8f:
-			this.processor.RegAcc.Value16 = PlayerKnowsTechnology(participantIdx, this.processor.PullLocalSignedWord(0x46));
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual)
-				goto L1ba3;
+			for (short scienceIdx = 0; scienceIdx < 0x48; scienceIdx++)
+			{
+				this.processor.EmitLocalWord(0x46, (ushort)scienceIdx);
 
-			goto L1c46;
+				if (!MayResearch(participantIdx, scienceIdx))
+					continue;
 
-		L1ba3:
-			this.processor.RegAcc.Value16 = 0x16;
-			this.processor.ScaleAccumulatorToSource(this.processor.PullLocalWord(0x46));
-			this.processor.RegAcc.Value16 = PlayerKnowsTechnology(participantIdx, this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x4ee)));
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsNotEqual)
-				goto L1bc2;
+				if (!again)
+				{
+					if ((short)choices > 1 && (short)(scienceIdx - this.owner.World.Participants[participantIdx].FoundScienceTally) % 3 == 0 &&
+						this.owner.World.HardnessTier != 0)
+						continue;
+				}
+				else
+				{
+					this.processor.RegSource.Value16 = (ushort)(choices << 1);
 
-			goto L1c46;
+					if (this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(choiceList + (choices << 1))) != (ushort)scienceIdx)
+						continue;
+				}
 
-		L1bc2:
-			this.processor.RegAcc.Value16 = PlayerKnowsTechnology(participantIdx, this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x4ef)));
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual)
-				goto L1c46;
+				this.owner.Libc.AppendText(0xba06, (ushort)((ushort)(0x16 * scienceIdx) + 0x4da));
 
-			this.processor.CompareWord(this.processor.PullLocalWord(0x16), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L1bff;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x12), 0x1);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L1c12;
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x46);
-			this.processor.RegAcc.Value16 -= (ushort)this.owner.World.Participants[participantIdx].FoundScienceTally;
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.RegCount.Value16 = 0x3;
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.RegData.Value16 = this.processor.BitOrWord(this.processor.RegData.Value16, this.processor.RegData.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L1c12;
-			if (this.owner.World.HardnessTier == 0) goto L1c12;
+				this.owner.Libc.AppendText(0xba06, "\n ");
 
-		L1bff:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x16), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L1c46;
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x12);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x46);
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x3a)), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L1c46;
+				this.processor.RegSource.Value16 = (ushort)(choices << 1);
+				this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(choiceList + (choices << 1)), (ushort)scienceIdx);
+				choices++;
+				this.processor.EmitLocalWord(0x12, choices);
+			}
 
-		L1c12:
-			this.processor.RegAcc.Value16 = 0x16;
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.PullLocalWord(0x46));
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x4da);
-			this.owner.Libc.AppendText(0xba06, this.processor.RegAcc.Value16);
+			this.processor.EmitLocalWord(0x12, choices);
+			this.processor.EmitLocalWord(0x46, 0x48);
 
-			this.owner.Libc.AppendText(0xba06, "\n ");
-
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x12);
-			this.processor.IncrementLocalWord(0x12);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x46);
-			this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x3a), this.processor.RegAcc.Value16);
-
-		L1c46:
-			this.processor.EmitLocalWord(0x46, this.processor.IncrementWord(this.processor.PullLocalWord(0x46)));
-			this.processor.CompareWord(this.processor.PullLocalWord(0x46), 0x48);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L1c52;
-			goto L1b8f;
-
-		L1c52:
-			this.processor.EmitGlobalWord(0x2f9e, 0x6);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x12), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L1cca;
-			this.processor.EmitGlobalWord(0x2fa0, 0x1);
-
-			this.owner.Dialogs.DisplayMenu(0xba06, 80, 64, 1);
-
-			this.processor.EmitLocalWord(0x46, this.processor.RegAcc.Value16);
-
-			this.owner.Startup.ConcealMouseCursor();
-
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0x19d4),
-				0, 0, 0x140, 0xc8,
-				this.processor.PullGlobalWord(0xaa),
-				0, 0);
-
-			this.owner.Startup.DisplayMouseCursor();
-
-			this.processor.CompareWord(this.processor.PullLocalWord(0x46), 0xffff);
-			if (this.processor.FlagSet.IsNotEqual) goto L1c95;
-			this.processor.EmitLocalWord(0x46, 0x0);
-
-		L1c95:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x46);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x3a));
-			this.processor.EmitLocalWord(0x46, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x2f9c), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L1cc2;
-
-			this.owner.Encyclopedia.DisplayCivilopediaRecord(this.processor.PullLocalWord(0x46), 0);
-			
-			this.owner.TurnHooks.RepaintMainScreen();
-
-			this.processor.EmitLocalWord(0x16, 0x1);
-			goto L1638;
-
-		L1cc2:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x46);
-			this.owner.World.Participants[this.owner.World.PersonParticipantIdx].PresentInquiryIdx = (short)this.processor.RegAcc.Value16;
-			goto L1d26;
-
-		L1cca:
-			this.owner.Libc.AppendText(0xba06, " Future Technology ");
-
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText((short)(this.owner.World.Participants[this.owner.World.PersonParticipantIdx].ComingScienceTally + 1), 10));
-
-			this.owner.Libc.AppendText(0xba06, "\n");
-
-			this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
-
-			this.owner.World.Participants[this.owner.World.PersonParticipantIdx].PresentInquiryIdx = 71;
-
-		L1d26:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x46);
-
-		L1d29:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.LeaveFrame();
-			// Far return
-			this.processor.Journal.CloseScope("UncoverTechnology");
-
-			return this.processor.RegAcc.Value16;
+			return choices;
 		}
 
 		/// <summary>

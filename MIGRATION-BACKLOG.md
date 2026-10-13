@@ -321,6 +321,14 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   liczy też wszystkie 16 – 31, 16 – 23 nigdy) – zachowane w `CityHasBuilding`; `ShiftToward` po wyborze lepszego kroku liczy tłok
   + odległość drugi raz (gałąź „równy koszt”), zachowane. Testy w `BatchFortyThreeDifferentialTests`: wybory menu dyplomaty przez
   skrypt strzałek w dół i Enter, losowe bity `ConditionMarker` (mutacja bitu 0x04 przeżywała, bo w zapisach go nie ma).
+- Porcja 44, dwie duże funkcje (2026-10-13): `CarryOutGoto` (`Pathfinding`, krok jednostki do celu: obok celu, okno 16 x 16,
+  długa droga, najtańszy sąsiad z karą za skręt), `UncoverTechnology` (`ScienceAndAdvisors`, wybór technologii AI, odkrycie
+  i menu następnego badania człowieka). `UncoverTechnology` zachowuje tylko SI, a `DisplayMenu` zostawia w DI wartość SI, więc
+  SI ustawiane w pętlach dokładnie jak w oryginale (DI po wyjściu zależy od SI przy ostatnim menu). Lista wyborów menu w ramce
+  (ponowne menu po Civilopedii czyta te same wpisy). `AbsoluteValue` nie ma zakresu w dzienniku ani skutków ubocznych – liczone
+  wprost przez `Math.Abs`. Wnioski: test `UncoverTechnology` z 100 scenariuszami zawieszał się w 82. także przy oryginale
+  w obu grach (artefakt klawiatury skryptowej) – ograniczony do 80; mutacja `turn > 3` przy karze za skręt jest równoważna
+  (8 - 4 = 4), wybrana inna. Testy w `BatchFortyFourDifferentialTests`.
 
 ## Następny krok
 
@@ -330,12 +338,12 @@ Dalej małe metody: `python Civilization1Remaster.Tests/Differential/Reference/f
 `TitleLogoAndMainChoices` (`GameStartup`), `DisplayStoryIntro`, `ProduceTerrain` (`GameInitAndIntro`),
 `CharacterizeStartLocation`, `DisplayTribeSelection` (`StartGameMenu`), `EstablishCity` (`CityFoundingAndScore`),
 `OperateMenu`, `DisplayMenu` (`DialogDrawing`),
-`DisplayCivilopediaIndex` (`Civilopedia`), `CarryOutGoto` (`Pathfinding`), `DisplayCivilizationScreen` (`MainIntro`),
-`ConstructCivilization`, `ConfigureFreshGame` (`StartGameMenu`), `UncoverTechnology` (`ScienceAndAdvisors`), `DisplayPalace`,
+`DisplayCivilopediaIndex` (`Civilopedia`), `DisplayCivilizationScreen` (`MainIntro`),
+`ConstructCivilization`, `ConfigureFreshGame` (`StartGameMenu`), `DisplayPalace`,
 `HandleCityDisasters` (`CityFoundingAndScore`), reszta generatora mapy w `GameInitAndIntro`. Funkcje niskopoziomowe `SystemServices` (`DeactivateMouse`, `PointerEvent`,
 `RenderCursorToScreen`, `RecoverScreenUnderCursor`, kolory i zegar: `PrepareTimer`, `RefreshHueCycling`, `AssignHueCycleSpan`,
 `ColorsFadeStep`, `FadeColors`, `FloodColors`, `ImportColorsFromBuffer`) i `SnapHeapPointer` (`VGADriver`) na koniec: działają
-w przerwaniach albo na rejestrach. Stan 2026-10-13 (po porcji 43): 54 metody w stylu asm, ok. 39,4 tys. z 66,2 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
+w przerwaniach albo na rejestrach. Stan 2026-10-13 (po porcji 44): 52 metody w stylu asm, ok. 38,3 tys. z 65,9 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
