@@ -870,206 +870,82 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// Cuts the pictures of the city view out of screen 1: from 0x4ec8 the 5 x 4 land pieces (0x817a) and the 16 wall pieces
+		/// (0x6880, the second set with technology 0x3a), from 0x4ed5 (technology 0x25) or 0x4ee2 the buildings 0 - 22 the city has
+		/// (StructureMarkers bit index + 1), arg1 - 1 and 21 - 22 (0x81a2), and the city's wonders (0x68a0): from 0x4eef those
+		/// outside mask 0x808a, from 0x4efb those in it
 		/// </summary>
-		/// <param name="param1"></param>
-		/// <param name="playerID"></param>
-		/// <param name="cityID"></param>
 		public void RenderCityBuildings(ushort arg1, short participantIdx, short townIdx)
 		{
 			this.processor.Journal.OpenScope($"RenderCityBuildings({arg1}, {participantIdx}, {townIdx})");
 
-			// function body
-			this.processor.EnterFrame(0x8);
-			this.processor.PreserveIndexRegisters();
-
 			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x4ec8, 0);
 
-			this.processor.EmitLocalWord(0x4, 0x0);
-
-		L13a1:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x4);
-			this.processor.RegCount.LowByte = 0x6;
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			this.processor.EmitLocalWord(0x6, this.processor.RegAcc.Value16);
-
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x4);
-			this.processor.RegCount.LowByte = 0x3;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, this.processor.RegCount.LowByte);
-
-			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegDest.Value16 = this.processor.IncrementWord(this.processor.RegDest.Value16);
-
-			this.owner.VideoCard.ScreenToPicture(1, this.processor.RegDest.Value16, 1, 0x1f, 0x1f);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x817a), this.processor.RegAcc.Value16);
-			
-			this.owner.VideoCard.ScreenToPicture(1, this.processor.RegDest.Value16, 0x21, 0x1f, 0x1f);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x817e), this.processor.RegAcc.Value16);
-
-			this.processor.RegDest.Value16 = this.processor.PullLocalWord(0x6);
-			this.processor.RegDest.Value16 = this.processor.SumWord(this.processor.RegDest.Value16, 0x21);
-
-			this.owner.VideoCard.ScreenToPicture(1, this.processor.RegDest.Value16, 1, 0x1f, 0x1f);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x817c), this.processor.RegAcc.Value16);
-
-			this.owner.VideoCard.ScreenToPicture(1, this.processor.RegDest.Value16, 0x21, 0x1f, 0x1f);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x8180), this.processor.RegAcc.Value16);
-
-			this.processor.IncrementLocalWord(0x4);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), 0x4);
-			if (this.processor.FlagSet.IsGreater) goto L1429;
-			goto L13a1;
-
-		L1429:
-			this.processor.EmitLocalWord(0x4, 0x0);
-			goto L1473;
-
-		L1433:
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x4);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x6880), this.processor.RegAcc.Value16);
-			this.processor.IncrementLocalWord(0x4);
-
-		L1473:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), 0x10);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L1499;
-
-			this.processor.RegAcc.Value16 = this.owner.Advisors.PlayerKnowsTechnology(participantIdx, 0x3a);
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual)
+			for (int pieceIdx = 0; pieceIdx <= 4; pieceIdx++)
 			{
-				this.owner.VideoCard.ScreenToPicture(1,
-					(ushort)((this.processor.PullLocalWord(0x4) & 0x7) * 0x18),
-					(ushort)(((this.processor.PullLocalWord(0x4) >> 3) << 3) + 0x41),
-					0x18, 0x8);
+				ushort horizLoc = (ushort)(pieceIdx << 6);
+				ushort pictures = (ushort)((pieceIdx << 3) + 0x817a);
+
+				this.processor.EmitGlobalWord(pictures, this.owner.VideoCard.ScreenToPicture(1, (ushort)(horizLoc + 1), 1, 0x1f, 0x1f));
+				this.processor.EmitGlobalWord((ushort)(pictures + 4), this.owner.VideoCard.ScreenToPicture(1, (ushort)(horizLoc + 1), 0x21, 0x1f, 0x1f));
+				this.processor.EmitGlobalWord((ushort)(pictures + 2), this.owner.VideoCard.ScreenToPicture(1, (ushort)(horizLoc + 0x21), 1, 0x1f, 0x1f));
+				this.processor.EmitGlobalWord((ushort)(pictures + 6), this.owner.VideoCard.ScreenToPicture(1, (ushort)(horizLoc + 0x21), 0x21, 0x1f, 0x1f));
 			}
-			else
+
+			for (int wallIdx = 0; wallIdx < 0x10; wallIdx++)
 			{
-				this.owner.VideoCard.ScreenToPicture(1,
-					(ushort)((this.processor.PullLocalWord(0x4) & 0x7) * 0x18),
-					(ushort)(((this.processor.PullLocalWord(0x4) >> 3) << 3) + 0x51),
-					0x18, 0x8);
+				ushort top = (ushort)(((wallIdx >> 3) << 3) + (this.owner.Advisors.PlayerKnowsTechnology(participantIdx, 0x3a) == 0 ? 0x41 : 0x51));
+
+				this.processor.EmitGlobalWord((ushort)((wallIdx << 1) + 0x6880),
+					this.owner.VideoCard.ScreenToPicture(1, (ushort)((wallIdx & 7) * 0x18), top, 0x18, 0x8));
 			}
-			goto L1433;
 
-		L1499:
-			this.processor.RegAcc.Value16 = this.owner.Advisors.PlayerKnowsTechnology(participantIdx, 0x25);
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual)
-				goto L14b1;
+			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, (ushort)(this.owner.Advisors.PlayerKnowsTechnology(participantIdx, 0x25) != 0 ? 0x4ed5 : 0x4ee2), 0);
 
-			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x4ed5, 0);
+			City town = this.owner.World.Towns[townIdx];
 
-			this.processor.EmitLocalWord(0x4, 0x0);
-			goto L14c6;
+			for (int structureIdx = 0; structureIdx < 0x17; structureIdx++)
+			{
+				uint mask = 1u << (structureIdx + 1);
+				bool built = ((mask & town.StructureMarkers0) | ((mask >> 16) & town.StructureMarkers1)) != 0;
 
-		L14b1:
-			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x4ee2, 0);
+				if (built || (ushort)(arg1 - 1) == structureIdx || structureIdx > 0x14)
+				{
+					this.processor.EmitGlobalWord((ushort)((structureIdx << 1) + 0x81a2),
+						this.owner.VideoCard.ScreenToPicture(1, (ushort)(((structureIdx >> 2) * 0x32) + 1), (ushort)(((structureIdx & 3) * 0x32) + 1), 0x31, 0x31));
+				}
+			}
 
-			this.processor.EmitLocalWord(0x4, 0x0);
+			CutWonderPictures(townIdx, false, 0x4eef);
+			CutWonderPictures(townIdx, true, 0x4efb);
 
-		L14c6:
-			this.processor.RegAcc.Value16 = 0x1;
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.RegCount.LowByte = this.processor.PullLocalByte(0x4);
-			this.processor.RegCount.LowByte = this.processor.IncrementByte(this.processor.RegCount.LowByte);
-			this.processor.SplitDoubleWord(this.processor.RegAcc, this.processor.RegData, this.processor.JoinDoubleWord(this.processor.RegAcc.Value16, this.processor.RegData.Value16) << this.processor.RegCount.LowByte);
-
-			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.RegBase.Value16 = this.processor.RegData.Value16;
-			this.processor.ScaleAccumulatorToSource((ushort)townIdx);
-			this.processor.RegCount.Value16 = this.processor.BitAndWord(this.processor.RegCount.Value16, this.owner.World.Towns[townIdx].StructureMarkers0);
-			this.processor.RegBase.Value16 = this.processor.BitAndWord(this.processor.RegBase.Value16, this.owner.World.Towns[townIdx].StructureMarkers1);
-			this.processor.RegBase.Value16 = this.processor.BitOrWord(this.processor.RegBase.Value16, this.processor.RegCount.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L14fb;
-
-			this.processor.RegAcc.Value16 = arg1;
-			this.processor.RegAcc.Value16 = this.processor.DecrementWord(this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x4));
-			if (this.processor.FlagSet.IsEqual) goto L14fb;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), 0x14);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L153a;
-
-		L14fb:
-			this.owner.VideoCard.ScreenToPicture(1,
-				(ushort)(((this.processor.PullLocalWord(0x4) >> 2) * 0x32) + 1),
-				(ushort)(((this.processor.PullLocalWord(0x4) & 0x3) * 0x32) + 1),
-				0x31, 0x31);
-
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x4);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x81a2), this.processor.RegAcc.Value16);
-
-		L153a:
-			this.processor.EmitLocalWord(0x4, this.processor.IncrementWord(this.processor.PullLocalWord(0x4)));
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), 0x17);
-			if (this.processor.FlagSet.IsLess) goto L14c6;
-			this.processor.EmitLocalWord(0x2, 0x0);
-			this.processor.EmitLocalWord(0x4, 0x1);
-
-		L154d:
-			this.processor.RegAcc.Value16 = (ushort)townIdx;
-			this.processor.CompareWord((ushort)this.owner.World.MarvelTownIdx[this.processor.PullLocalWord(0x4)], this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L1596;
-			this.processor.RegAcc.Value16 = 0x1;
-			this.processor.RegCount.LowByte = this.processor.PullLocalByte(0x4);
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			this.processor.TestBitsWord(this.processor.RegAcc.Value16, 0x808a);
-			if (this.processor.FlagSet.IsNotEqual) goto L1596;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L157e;
-
-			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x4eef, 0);
-
-		L157e:
-			this.processor.EmitLocalWord(0x2, 0x1);
-
-			SeizeCityScenery(this.processor.PullLocalWord(0x4));
-
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x4);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x68a0), this.processor.RegAcc.Value16);
-
-		L1596:
-			this.processor.EmitLocalWord(0x4, this.processor.IncrementWord(this.processor.PullLocalWord(0x4)));
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), 0x15);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L154d;
-			this.processor.EmitLocalWord(0x2, 0x0);
-			this.processor.EmitLocalWord(0x4, 0x1);
-
-		L15a9:
-			this.processor.RegAcc.Value16 = (ushort)townIdx;
-			this.processor.CompareWord((ushort)this.owner.World.MarvelTownIdx[this.processor.PullLocalWord(0x4)], this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L15f2;
-			this.processor.RegAcc.Value16 = 0x1;
-			this.processor.RegCount.LowByte = this.processor.PullLocalByte(0x4);
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			this.processor.TestBitsWord(this.processor.RegAcc.Value16, 0x808a);
-			if (this.processor.FlagSet.IsEqual) goto L15f2;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L15da;
-
-			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x4efb, 0);
-
-		L15da:
-			this.processor.EmitLocalWord(0x2, 0x1);
-
-			SeizeCityScenery(this.processor.PullLocalWord(0x4));
-
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x4);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x68a0), this.processor.RegAcc.Value16);
-
-		L15f2:
-			this.processor.EmitLocalWord(0x4, this.processor.IncrementWord(this.processor.PullLocalWord(0x4)));
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), 0x15);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L15a9;
-
-			this.processor.RestoreIndexRegisters();
-			this.processor.LeaveFrame();
-			// Far return
 			this.processor.Journal.CloseScope("RenderCityBuildings");
+		}
+
+		/// <summary>
+		/// The wonder pictures of RenderCityBuildings: for each wonder of the city inside (or outside) mask 0x808a the picture
+		/// cut by SeizeCityScenery (AX) goes to 0x68a0 + 2 * wonder; the picture file is loaded before the first one
+		/// </summary>
+		private void CutWonderPictures(short townIdx, bool inMask, ushort docnameAddr)
+		{
+			bool loaded = false;
+
+			for (int wonderIdx = 1; wonderIdx <= 0x15; wonderIdx++)
+			{
+				if (this.owner.World.MarvelTownIdx[wonderIdx] != townIdx || (((1 << wonderIdx) & 0x808a) != 0) != inMask)
+					continue;
+
+				if (!loaded)
+				{
+					this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, docnameAddr, 0);
+				}
+
+				loaded = true;
+
+				SeizeCityScenery((ushort)wonderIdx);
+
+				this.processor.EmitGlobalWord((ushort)((wonderIdx << 1) + 0x68a0), this.processor.RegAcc.Value16);
+			}
 		}
 
 		/// <summary>

@@ -203,6 +203,10 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   (`HallOfFame`, z `PullRankTitle`), `BuyUnit` (`DiplomatActions`, z `OfferBribe`; ramka i zapis SI/DI zostają, bo
   `TallyUnitsByDomainInStack` zmienia SI). Testy w `BatchTwentySevenDifferentialTests`. `ComputeSpaceshipSuccess` (`SpaceshipScreen`)
   odłożone: rozmieszczanie części statku AI, splątane skoki między pętlami.
+- Kolejne 4 moduły (2026-10-13): `DisplayTopCities` (`HallOfFame`, lista 5 miast w ramce stosu jak w oryginale, ramka zostaje
+  też dla `RenderCitizenIcons`), `RenderCityBuildings` (`CityView`, z `CutWonderPictures`), `DisplayCivilizationGraph` (`WorldMap`,
+  z `InGraph`, `HistoryScore`; nazwy graczy 1 - 8, gracz 8 czyta następną tabelę jak w oryginale), `DisplayCivilizationScoreList`
+  (`CivilizationInfo`, z `AnyPlayerHasUnits`). Testy w `BatchTwentyEightDifferentialTests`.
 
 ## Następny krok
 
@@ -214,7 +218,7 @@ Dalej małe metody: `python Civilization1Remaster.Tests/Differential/Reference/f
 reszta generatora mapy w `GameInitAndIntro`. Funkcje niskopoziomowe `SystemServices` (`DeactivateMouse`, `PointerEvent`,
 `RenderCursorToScreen`, `RecoverScreenUnderCursor`, kolory i zegar: `PrepareTimer`, `RefreshHueCycling`, `AssignHueCycleSpan`,
 `ColorsFadeStep`, `FadeColors`, `FloodColors`, `ImportColorsFromBuffer`) i `SnapHeapPointer` (`VGADriver`) na koniec: działają
-w przerwaniach albo na rejestrach. Stan 2026-10-13: 112 metod w stylu asm, ok. 56 tys. z 73 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
+w przerwaniach albo na rejestrach. Stan 2026-10-13: 108 metod w stylu asm, ok. 53,5 tys. z 72 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
