@@ -2026,134 +2026,60 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// The greeting of the king at 0xba06: the opening (0x39b1 with relations bit 8 towards the human player, else 0x39e8),
+		/// one of 4 random titles with the government (0x19b2) and the leader's name (0x19a2), "of the" civilization (0x1992),
+		/// and the nuclear threat when the player has nuclear units (type 25)
 		/// </summary>
-		/// <param name="playerID"></param>
 		public void ObtainKingSalutation(short participantIdx)
 		{
 			this.processor.Journal.OpenScope($"ObtainKingSalutation({participantIdx})");
 
-			// function body
-			this.processor.EnterFrame(0x2);
-			this.processor.PreserveSource();
+			ushort leader = (ushort)((participantIdx << 1) + 0x19a2);
+			ushort Regime() => this.processor.PullGlobalWord((ushort)((this.owner.World.Participants[participantIdx].RegimeKind << 1) + 0x19b2));
 
-			this.processor.RegSource.Value16 = (ushort)participantIdx;
-			this.processor.RegCount.LowByte = 0x4;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, this.processor.RegCount.LowByte);
+			this.owner.Libc.CopyText(0xba06, (this.owner.World.Participants[participantIdx].Relations[this.owner.World.PersonParticipantIdx] & 8) != 0 ? (ushort)0x39b1 : (ushort)0x39e8);
 
-			this.processor.RegBase.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-
-			if ((this.owner.World.Participants[participantIdx].Relations[this.owner.World.PersonParticipantIdx] & 8) != 0)
+			switch (this.owner.Libc.Dice.DrawInt(4))
 			{
-				this.processor.RegAcc.Value16 = 0x39b1;
+				case 0:
+					this.owner.Libc.AppendText(0xba06, "the most exalted\n");
+					this.owner.Libc.AppendText(0xba06, Regime());
+					this.owner.Libc.AppendText(0xba06, ": ");
+					this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord(leader));
+					this.owner.Libc.AppendText(0xba06, " ");
+					break;
+
+				case 1:
+					this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord(leader));
+					this.owner.Libc.AppendText(0xba06, ", ruler\nand ");
+					this.owner.Libc.AppendText(0xba06, Regime());
+					this.owner.Libc.AppendText(0xba06, " ");
+					break;
+
+				case 2:
+					this.owner.Libc.AppendText(0xba06, "our most wise\n");
+					this.owner.Libc.AppendText(0xba06, Regime());
+					this.owner.Libc.AppendText(0xba06, ": ");
+					this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord(leader));
+					this.owner.Libc.AppendText(0xba06, " ");
+					break;
+
+				case 3:
+					this.owner.Libc.AppendText(0xba06, "he who makes mortals\ntremble: ");
+					this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord(leader));
+					this.owner.Libc.AppendText(0xba06, " ");
+					break;
 			}
-			else
-			{
-				this.processor.RegAcc.Value16 = 0x39e8;
-			}
 
-			this.owner.Libc.CopyText(0xba06, this.processor.RegAcc.Value16);
-
-			this.processor.RegAcc.Value16 = (ushort)(this.owner.Libc.Dice.DrawInt(4));
-
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual) goto L18cc;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1);
-			if (this.processor.FlagSet.IsEqual) goto L192a;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x2);
-			if (this.processor.FlagSet.IsNotEqual) goto L18c1;
-			goto L196a;
-
-		L18c1:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x3);
-			if (this.processor.FlagSet.IsNotEqual) goto L18c9;
-			goto L19bb;
-
-		L18c9:
-			goto L19e6;
-
-		L18cc:
-			this.owner.Libc.AppendText(0xba06, "the most exalted\n");
-
-			this.processor.RegSource.Value16 = (ushort)participantIdx;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-
-			this.processor.RegBase.Value16 = (ushort)this.owner.World.Participants[participantIdx].RegimeKind;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x19b2)));
-
-			this.owner.Libc.AppendText(0xba06, ": ");
-
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x19a2)));
-
-			this.owner.Libc.AppendText(0xba06, " ");
-
-			goto L19e6;
-
-		L192a:
-			this.processor.RegSource.Value16 = (ushort)participantIdx;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x19a2)));
-
-			this.owner.Libc.AppendText(0xba06, ", ruler\nand ");
-
-			this.processor.RegBase.Value16 = (ushort)this.owner.World.Participants[participantIdx].RegimeKind;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x19b2)));
-
-			this.owner.Libc.AppendText(0xba06, " ");
-
-			goto L19e6;
-
-		L196a:
-			this.owner.Libc.AppendText(0xba06, "our most wise\n");
-
-			this.processor.RegSource.Value16 = (ushort)participantIdx;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-
-			this.processor.RegBase.Value16 = (ushort)this.owner.World.Participants[participantIdx].RegimeKind;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x19b2)));
-
-			this.owner.Libc.AppendText(0xba06, ": ");
-
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x19a2)));
-
-			this.owner.Libc.AppendText(0xba06, " ");
-
-			goto L19e6;
-
-		L19bb:
-			this.owner.Libc.AppendText(0xba06, "he who makes mortals\ntremble: ");
-
-			this.processor.RegBase.Value16 = (ushort)participantIdx;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x19a2)));
-
-			this.owner.Libc.AppendText(0xba06, " ");
-
-			goto L19e6;
-
-		L19e6:
 			this.owner.Libc.AppendText(0xba06, "of the ");
-
-			this.processor.RegBase.Value16 = (ushort)participantIdx;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1992)));
-
+			this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1992)));
 			this.owner.Libc.AppendText(0xba06, "...\n");
-
-			this.processor.ScaleIndexToBase(0x38, (ushort)participantIdx);
 
 			if (this.owner.World.Participants[participantIdx].LiveTroops[25] != 0)
 			{
 				this.owner.Libc.AppendText(0xba06, "Our words are backed\nwith NUCLEAR WEAPONS!\n");
 			}
 
-			this.processor.RestoreSource();
-			this.processor.LeaveFrame();
-			// Far return
 			this.processor.Journal.CloseScope("ObtainKingSalutation");
 		}
 

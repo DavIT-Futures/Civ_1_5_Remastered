@@ -935,128 +935,55 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// Writes the map into the replay file (handle 0x680c) as text, a line of 80 characters and CR LF for each of the 50 rows:
+		/// " " ocean, "." land, "+" a city ("*" with city walls, improvement bit 1) followed by its name (as far as the line goes)
 		/// </summary>
 		public void DumpReplayCities()
 		{
 			this.processor.Journal.OpenScope("DumpReplayCities()");
 
-			// function body
-			this.processor.EnterFrame(0x8);
-			this.processor.PreserveSource();
-			this.processor.EmitLocalWord(0x6, 0x0);
-			goto L0d3b;
+			for (int vertLoc = 0; vertLoc < 50; vertLoc++)
+			{
+				this.processor.EmitGlobalByte(0xba56, 0xd);
+				this.processor.EmitGlobalByte(0xba57, 0xa);
+				this.processor.EmitGlobalByte(0xba58, 0);
 
-		L0c3f:
-			this.processor.RegAcc.LowByte = 0x2e;
+				for (int horizLoc = 0; horizLoc < 80; horizLoc++)
+				{
+					bool ocean = this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) == MapRules.OceanTerrain;
+					this.processor.EmitGlobalByte((ushort)(0xba06 + horizLoc), (byte)(ocean ? 0x20 : 0x2e));
+				}
 
-		L0c41:
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x4);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xba06), this.processor.RegAcc.LowByte);
-			this.processor.IncrementLocalWord(0x4);
+				for (int horizLoc = 0; horizLoc < 80; horizLoc++)
+				{
+					if (this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) == MapRules.OceanTerrain)
+						continue;
 
-		L0c4b:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), 0x50);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0c68;
+					for (int labelIdx = 0; labelIdx < 0x100; labelIdx++)
+					{
+						if ((sbyte)this.owner.World.TownPlaces[labelIdx].X != horizLoc || (sbyte)this.owner.World.TownPlaces[labelIdx].Y != vertLoc)
+							continue;
 
-			this.owner.MapOps.ObtainTerrainType(
-				this.processor.PullLocalSignedWord(0x4),
-				this.processor.PullLocalSignedWord(0x6));
+						bool walls = (this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) != 0;
+						this.processor.EmitGlobalByte((ushort)(0xba06 + horizLoc), (byte)(walls ? 0x2a : 0x2b));
 
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
-			if (this.processor.FlagSet.IsNotEqual) goto L0c3f;
-			this.processor.RegAcc.LowByte = 0x20;
-			goto L0c41;
+						// The name after it: at least its first character, then while the line goes on and the name does
+						int place = 0;
 
-		L0c68:
-			this.processor.EmitLocalWord(0x4, 0x0);
-			goto L0cbf;
+						do
+						{
+							this.processor.EmitGlobalByte((ushort)(0xba07 + horizLoc + place),
+								(byte)this.owner.World.TownLabels[labelIdx][place]);
+							place++;
+						} while (horizLoc + place + 1 < 0x50 && this.owner.World.TownLabels[labelIdx][place] != '\0');
 
-		L0c6f:
-			this.processor.RegAcc.LowByte = 0x2b;
+						break;
+					}
+				}
 
-		L0c71:
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x4);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xba06), this.processor.RegAcc.LowByte);
-			this.processor.EmitLocalWord(0x2, 0x0);
+				this.owner.Libc.WriteHandle((short)this.processor.PullGlobalWord(0x680c), 0xba06, 0x52);
+			}
 
-		L0c7d:
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.TownLabels[this.processor.PullLocalWord(0x8)][this.processor.PullLocalWord(0x2)];
-
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x4);
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x2);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0xba07), this.processor.RegAcc.LowByte);
-			this.processor.IncrementLocalWord(0x2);
-			this.processor.RegAcc.Value16 = this.processor.RegSource.Value16;
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x2));
-			this.processor.RegAcc.Value16 = this.processor.IncrementWord(this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x50);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0cbc;
-
-			if (this.owner.World.TownLabels[this.processor.PullLocalWord(0x8)][this.processor.PullLocalWord(0x2)] != '\0')
-				goto L0c7d;
-
-		L0cbc:
-			this.processor.EmitLocalWord(0x4, this.processor.IncrementWord(this.processor.PullLocalWord(0x4)));
-
-		L0cbf:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), 0x50);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0d24;
-
-			this.owner.MapOps.ObtainTerrainType(
-				this.processor.PullLocalSignedWord(0x4),
-				this.processor.PullLocalSignedWord(0x6));
-
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
-			if (this.processor.FlagSet.IsEqual) goto L0cbc;
-			this.processor.EmitLocalWord(0x8, 0x0);
-			goto L0ce2;
-
-		L0cdf:
-			this.processor.EmitLocalWord(0x8, this.processor.IncrementWord(this.processor.PullLocalWord(0x8)));
-
-		L0ce2:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x8), 0x100);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0cbc;
-			this.processor.RegAcc.LowByte = (byte)((sbyte)this.owner.World.TownPlaces[this.processor.PullLocalWord(0x8)].X);
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x4));
-			if (this.processor.FlagSet.IsNotEqual) goto L0cdf;
-			this.processor.RegAcc.LowByte = (byte)((sbyte)this.owner.World.TownPlaces[this.processor.PullLocalWord(0x8)].Y);
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x6));
-			if (this.processor.FlagSet.IsNotEqual) goto L0cdf;
-
-			this.owner.MapOps.ObtainTileImprovements(
-				this.processor.PullLocalSignedWord(0x4),
-				this.processor.PullLocalSignedWord(0x6));
-
-			this.processor.TestBitsByte(this.processor.RegAcc.LowByte, 0x1);
-			if (this.processor.FlagSet.IsNotEqual) goto L0d1f;
-			goto L0c6f;
-
-		L0d1f:
-			this.processor.RegAcc.LowByte = 0x2a;
-			goto L0c71;
-
-		L0d24:
-			this.owner.Libc.WriteHandle((short)this.processor.PullGlobalWord(0x680c), 0xba06, 0x52);
-
-			this.processor.IncrementLocalWord(0x6);
-
-		L0d3b:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x6), 0x32);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0d58;
-			this.processor.EmitGlobalByte(0xba56, 0xd);
-			this.processor.EmitGlobalByte(0xba57, 0xa);
-			this.processor.EmitGlobalByte(0xba58, 0x0);
-			this.processor.EmitLocalWord(0x4, 0x0);
-			goto L0c4b;
-
-		L0d58:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.LeaveFrame();
-			// Far return
 			this.processor.Journal.CloseScope("DumpReplayCities");
 		}
 
