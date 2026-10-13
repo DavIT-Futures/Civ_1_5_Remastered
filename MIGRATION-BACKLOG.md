@@ -268,30 +268,39 @@ i bufory zapisywane przez adres, do sprawdzenia przy przepisywaniu): `RenderCiti
 
 ## Jak pracować (dla nowej sesji)
 
-Start: przeczytać ten plik, `Civilization1Remaster.Tests/GoldenMaster/README.md` i `Civilization1Remaster.Tests/Differential/README.md`,
-potem wziąć porcję z „Następny krok” (zwykle po 1–2 funkcje z ok. 7 modułów).
+Start: przeczytać ten plik, `CLAUDE.md`, skill `.claude/skills/migrate-batch/SKILL.md` (procedura porcji krok po kroku),
+`Civilization1Remaster.Tests/GoldenMaster/README.md` i `Civilization1Remaster.Tests/Differential/README.md`, potem wziąć porcję
+z „Następny krok” (zwykle 4 funkcje z różnych modułów).
 
-- Wąskim gardłem są tokeny, nie czas: po każdej zmianie pełny zestaw testów (ok. 7 min), ale czytać tylko przefiltrowany wynik:
-  `dotnet build Civilization1Remaster.Tests -v q -nologo` i
-  `Civilization1Remaster.Tests/bin/Debug/net10.0/Civilization1Remaster.Tests.exe 2>&1 | grep -E "\[FAIL\]|Total:"`
-  (`dotnet test` mówi „zero testów”). Powtarzalny kod generować skryptami (`extract_reference.py`).
+- Testy w **Release** z `-parallelMode all` (2026-10-13: ok. 7 razy szybciej niż Debug, wyniki te same, golden master też):
+  `dotnet build Civilization1Remaster.Tests -c Release -v q -nologo`,
+  `Civilization1Remaster.Tests/bin/Release/net10.0/Civilization1Remaster.Tests.exe -parallelMode all 2>&1 | grep -E "\[FAIL\]|Total:"`
+  (`dotnet test` mówi „zero testów”). Pełny zestaw ok. 5,5 min (Debug: 12–14 min); po każdej porcji wystarcza golden master + testy
+  porcji (`-class "*GoldenMaster*" -class "*BatchNN*"`, ok. 30 s), pełny zestaw co 4 porcje, na koniec sesji i po zmianie wspólnego
+  kodu. Testy różnicowe to ok. 88% czasu, najdłuższe: `PickNewCityProduction`, `DisplayCivilopedia`, `MayCityWorkTile`.
 - Narzędzia w `Civilization1Remaster.Tests/Differential/Reference`: `find_asm_methods.py` (kandydaci), `extract_reference.py`
-  (kopia oryginału, właściwość silnika np. `CityOps`, `MapOps`, `Bot`, `TurnLogic`, `RocketScreen`, `MenuSystem` - patrz
-  `GameEngine.cs`), `replace_methods.py <plik .cs> <plik z nowymi metodami>` (podmienia metody po nazwie, zachowuje końce linii
-  i BOM; nowej metody pomocniczej nie dodaje - wstawić osobno), `mutate.py <plik> <stary> <nowy>` (mutacja, tekst musi być
-  jednoznaczny). Nowe klasy referencyjne dopisać do `Reference/ReferenceClasses.cs`.
-- Pułapki testów: `make` nie może wołać funkcji gry z dziennikiem na `pair.Original` (liczniki `call.` tylko jednej gry), funkcja
-  gałęzi (`Branch`) nie może zmieniać gry (zmienia tylko grę przepisaną); stan zmieniany w `Prepare` zostaje na następne
-  scenariusze (w obu grach). Pliki i stan myszy porównać przez segment danych / `Watched`.
-- Każda przepisana funkcja: test różnicowy (wzory: `Differential/BatchSevenDifferentialTests.cs`, `BatchEightDifferentialTests.cs`),
-  lista gałęzi do trafienia, `Watched` dla tabel spoza segmentu danych 0x3b01, kontrola mutacjami z pracą zabezpieczoną patchem
-  (`git diff -- Civilization1Remaster.Core > batch.patch`, po mutacjach `git checkout -- Civilization1Remaster.Core && git apply batch.patch`).
+  (kopia oryginału; właściwość silnika: `grep -n "public <Klasa> " Civilization1Remaster.Core/GameEngine.cs`),
+  `replace_methods.py <plik .cs> <plik z nowymi metodami>` (podmienia metody po nazwie, nowe pomocnicze wstawia za poprzednią),
+  `check_mutations.py <mutations.json>` (wszystkie mutacje porcji z zabezpieczeniem pracy patchem, Release), `mutate.py`.
+  Nowe klasy referencyjne dopisać do `Reference/ReferenceClasses.cs`.
+- Pułapki testów: losować tylko w `make`, nigdy w `Prepare` (wykonuje się w obu grach); `make` nie może wołać funkcji gry
+  z dziennikiem na `pair.Original` (liczniki `call.` tylko jednej gry); funkcja gałęzi (`Branch`) nie może zmieniać gry; stan
+  zmieniany w `Prepare` zostaje na następne scenariusze. Pliki i stan myszy porównać przez segment danych / `Watched` / hasz w 0xbc00.
+  Dane spoza zakresu gry (tekst od wiersza > 192, ustrój 6, raport z ponad ok. 20 wierszami) rzucają wyjątek w obu wersjach, ale
+  oryginał zostawia ramkę, więc rejestry się różnią – ograniczać do realnych. Rzadkie gałęzie wymuszać w scenariuszach (np. małe
+  miasta, wartość warstwy 2 mapy). Zegar testów tyka co 10 000 dostępów do pamięci: wartości pochodne zegara (0x6800) wyzerować.
+  Mutacja nieosiągalnej wartości (wiersz 16 * k + 8 nigdy nie jest 0xc0) przeżywa – wybrać inną.
+- Zachowanie rejestrów i stosu: AX zostawiony przez oryginał bywa ważny (`RenderUnitSprite`: 0x600 * gracz, `RenderUnitOnWorldMap`:
+  0xc * jednostka); `DisplayMenu`/`DisplayDialog` zostawiają w DI wartość z SI – ustawić SI jak oryginał; `VisitEachUnitInStack`
+  i `TallyUnits…InStack` zmieniają SI – zostawić `PreserveIndexRegisters`; funkcje czytające śmieci spod stosu (`RenderCitizenIcons`,
+  `ObtainDistanceToReplayCity`) wołać na tej samej głębokości – zostawić ramkę. Wartości `GameState` czytać tylko tam, gdzie oryginał.
 - Wiersz `OpenScope` przepisanej funkcji identyczny z oryginałem (ślad wywołań w testach różnicowych porównuje argumenty).
-- Długie heredoki w Bash potrafią się nie sparsować: kod zapisywać narzędziem Write do pliku, metody podmieniać skryptem Pythona
-  (od komentarza `///` metody do zamykającego `\t\t}` po `CloseScope`).
+- Długie heredoki w Bash potrafią się nie sparsować: kod zapisywać narzędziem Write do pliku w scratchpadzie.
 - Na koniec: ten plik zaktualizowany, commit na main (z `Co-Authored-By`), `dotnet build Civilization1Remaster.sln`
   (gra: `Civilization1Remaster.Desktop/bin/Debug/net10.0/Civilization1Remaster.Desktop.exe`). Gdy build zgłasza zablokowane
   pliki, gra jest uruchomiona: poprosić użytkownika o jej zamknięcie, nie zabijać procesu.
+- Praca bez użytkownika: laptop zasypia po zamknięciu klapy (keep-awake blokuje tylko bezczynność) – potrzebny otwarty laptop na
+  zasilaniu albo „Nic nie rób” dla pokrywy. W pętli nie używać `clear_session("self")` (kasuje zaplanowane wybudzenie).
 
 ## Zmiany hosta (nie dotyczą logiki gry, zostają)
 

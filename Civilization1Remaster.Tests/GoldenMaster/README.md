@@ -107,8 +107,10 @@ A change of the harness that changes the snapshots (other keys, other saves, mor
 
 ## Running
 
-`dotnet test` runs them with the other tests (each autosave is its own class, so they run in parallel; about
-2 minutes on 16 cores in Debug). Without the `CIVILIZATION` folder they are skipped. One autosave:
+Run the test executable (`dotnet test` finds no tests): each autosave is its own class, so they run in parallel. In Release
+with `-parallelMode all` the 15 autosaves take about 30 seconds on 16 cores (Debug: several minutes, the same results):
+`./bin/Release/net10.0/Civilization1Remaster.Tests.exe -parallelMode all -class "*GoldenMaster*"`.
+Without the `CIVILIZATION` folder they are skipped. One autosave:
 
 ```bash
 ./bin/Debug/net10.0/Civilization1Remaster.Tests.exe -class "*GoldenMasterAuto03"

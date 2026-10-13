@@ -44,8 +44,12 @@ setting them, see `ShiftUnitFrame` in `UnitManagement`); the golden master is st
 
 ## Running
 
+In Release (about 7 times faster than Debug, the same results), all tests in parallel:
+
 ```bash
-./bin/Debug/net10.0/Civilization1Remaster.Tests.exe -class "*Differential*"
+dotnet build -c Release
+./bin/Release/net10.0/Civilization1Remaster.Tests.exe -parallelMode all -class "*Differential*"
 ```
 
-They run with `dotnet test` too, and are skipped without the `CIVILIZATION` folder.
+They are skipped without the `CIVILIZATION` folder. `-method "*SomeTest"` runs one test; several `-class` filters add up.
+`Reference/check_mutations.py` runs the mutation check of a batch (see the skill `.claude/skills/migrate-batch`).
