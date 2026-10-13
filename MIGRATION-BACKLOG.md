@@ -312,6 +312,15 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   zwraca w AX wiersz celu (bajt 0x81db), nie 0. `HandlePeaceTreaties` ustawia SI / DI jak oryginał; groźba emisariusza bierze
   nazwę z 0x1992 + 16 * gracz (DI = gracz << 4, patrz błędy). Testy w `BatchFortyTwoDifferentialTests` ustawiają te słowa pod
   SP. Pełny zestaw po porcji 42.
+- Porcja 43, trzy duże funkcje (2026-10-13): `SeizeCity` (`TradeAndConquest`, zdobycie miasta), `DiplomatArrivesAtCity`
+  (`DiplomatActions`, menu dyplomaty: ambasada, śledztwo, kradzież, sabotaż, podburzanie, audiencja), `ShiftToward`
+  (`Pathfinding`, koszt drogi w oknie 16 x 16 wokół celu z pamięcią 0x6796 / 0x6798). Ramki zostają, zmienne lokalne lustrowane do
+  ramki przy przypisaniu (`ShiftToward` ma ich ok. 25 na różnych ścieżkach – prościej niż śledzić „niezapisane” na końcu). SI / DI
+  ustawiane przed wywołaniami jak w oryginale: `SeizeCity` woła `HandleCity`, która czyta śmieci spod stosu, a tam trafiają SI / DI
+  odkładane przez wcześniej wywołane funkcje. Wnioski: sabotaż czyta budynek b przez 16-bitową maskę rozszerzoną znakiem (budynek 15
+  liczy też wszystkie 16 – 31, 16 – 23 nigdy) – zachowane w `CityHasBuilding`; `ShiftToward` po wyborze lepszego kroku liczy tłok
+  + odległość drugi raz (gałąź „równy koszt”), zachowane. Testy w `BatchFortyThreeDifferentialTests`: wybory menu dyplomaty przez
+  skrypt strzałek w dół i Enter, losowe bity `ConditionMarker` (mutacja bitu 0x04 przeżywała, bo w zapisach go nie ma).
 
 ## Następny krok
 
@@ -320,13 +329,13 @@ Dalej małe metody: `python Civilization1Remaster.Tests/Differential/Reference/f
 (`GameLoadAndSave` i `Newspaper` nie mają już metod w stylu asm): `ChooseTechnologyToTake` (`TradeAndConquest`, patrz wyżej),
 `TitleLogoAndMainChoices` (`GameStartup`), `DisplayStoryIntro`, `ProduceTerrain` (`GameInitAndIntro`),
 `CharacterizeStartLocation`, `DisplayTribeSelection` (`StartGameMenu`), `EstablishCity` (`CityFoundingAndScore`),
-`OperateMenu`, `DisplayMenu` (`DialogDrawing`), `SeizeCity` (`TradeAndConquest`), `DiplomatArrivesAtCity` (`DiplomatActions`),
-`DisplayCivilopediaIndex` (`Civilopedia`), `ShiftToward`, `CarryOutGoto` (`Pathfinding`), `DisplayCivilizationScreen` (`MainIntro`),
+`OperateMenu`, `DisplayMenu` (`DialogDrawing`),
+`DisplayCivilopediaIndex` (`Civilopedia`), `CarryOutGoto` (`Pathfinding`), `DisplayCivilizationScreen` (`MainIntro`),
 `ConstructCivilization`, `ConfigureFreshGame` (`StartGameMenu`), `UncoverTechnology` (`ScienceAndAdvisors`), `DisplayPalace`,
 `HandleCityDisasters` (`CityFoundingAndScore`), reszta generatora mapy w `GameInitAndIntro`. Funkcje niskopoziomowe `SystemServices` (`DeactivateMouse`, `PointerEvent`,
 `RenderCursorToScreen`, `RecoverScreenUnderCursor`, kolory i zegar: `PrepareTimer`, `RefreshHueCycling`, `AssignHueCycleSpan`,
 `ColorsFadeStep`, `FadeColors`, `FloodColors`, `ImportColorsFromBuffer`) i `SnapHeapPointer` (`VGADriver`) na koniec: działają
-w przerwaniach albo na rejestrach. Stan 2026-10-13 (po porcji 42): 57 metod w stylu asm, ok. 40,8 tys. z 66,6 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
+w przerwaniach albo na rejestrach. Stan 2026-10-13 (po porcji 43): 54 metody w stylu asm, ok. 39,4 tys. z 66,2 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
