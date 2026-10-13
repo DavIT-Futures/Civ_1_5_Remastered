@@ -851,419 +851,46 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// Numbers the continents (pass 0) and the seas (pass 1) of the screen map: the tiles of the kind are labelled row by row
+		/// in ChartSight (joined with the touching labels of the row above, a label's size in 0xdcfe + 0x80 * pass + 2 * label),
+		/// the 15 largest get the numbers 1 - 15 by size (drawn at y + 50, the others 15) and their sizes; label 0 has size 0
+		/// and 15 size 1. Then the terrain map, the block links, the special resources and the polar rows (lines and 4 * 20
+		/// random tundra dots). The terrain counts of pass 0 and the ranking are in the stack frame, like in the original; the
+		/// story goes on after every row and every join.
 		/// </summary>
 		public void ProduceTerrain()
 		{
 			this.processor.Journal.OpenScope("ProduceTerrain()");
 
-			// function body
+			// The final values of the locals stay in the stack frame, like in the original
 			this.processor.EnterFrame(0xd4);
 			this.processor.PreserveIndexRegisters();
-			this.processor.EmitLocalWord(0x24, 0x0);
 
-		L0a41:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x24);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x20), 0x0);
-			this.processor.IncrementLocalWord(0x24);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x24), 0xc);
-			if (this.processor.FlagSet.IsLess) goto L0a41;
-			this.processor.EmitLocalWord(0x8, 0x0);
-			goto L0de2;
+			ushort frame = this.processor.RegFrame.Value16;
+			ushort terrainCounts = (ushort)(frame - 0x20);
 
-		L0a5c:
-			this.processor.EmitLocalWord(0xa8, this.processor.IncrementWord(this.processor.PullLocalWord(0xa8)));
-
-		L0a60:
-			this.processor.CompareWord(this.processor.PullLocalWord(0xa8), 0x32);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0a7f;
-
-			this.owner.World.ChartSight[this.processor.PullLocalWord(0x24),
-				this.processor.PullLocalWord(0xa8)] = 0;
-			goto L0a5c;
-
-		L0a7f:
-			this.processor.EmitLocalWord(0x24, this.processor.IncrementWord(this.processor.PullLocalWord(0x24)));
-
-		L0a82:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x24), 0x50);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0a90;
-			this.processor.EmitLocalWord(0xa8, 0x0);
-			goto L0a60;
-
-		L0a90:
-			this.processor.EmitLocalWord(0xae, 0x0);
-			this.processor.EmitLocalWord(0xa8, 0x0);
-			goto L0c46;
-
-		L0a9f:
-			this.processor.RegAcc.Value16 = 0;
-
-		L0aa1:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x8), 0x1);
-			this.processor.RegCount.Value16 = this.processor.SubtractBorrowWord(this.processor.RegCount.Value16, this.processor.RegCount.Value16);
-			this.processor.RegCount.Value16 = this.processor.NegateWord(this.processor.RegCount.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.RegCount.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L0ab0;
-			goto L0bfc;
-
-		L0ab0:
-			this.processor.CompareWord(this.processor.PullLocalWord(0xa8), 0x0);
-			if (this.processor.FlagSet.IsGreater) goto L0aba;
-			goto L0b9a;
-
-		L0aba:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x24), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L0ac5;
-			this.processor.RegAcc.Value16 = 0xffff;
-			goto L0ac7;
-
-		L0ac5:
-			this.processor.RegAcc.Value16 = 0;
-
-		L0ac7:
-			this.processor.EmitLocalWord(0xac, this.processor.RegAcc.Value16);
-			goto L0b8b;
-
-		L0ace:
-			this.processor.RegAcc.Value16 = 0;
-
-		L0ad0:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0xac));
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0ad9;
-			goto L0b9a;
-
-		L0ad9:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x24);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0xac));
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0xa8);
-			if (this.processor.RegBase.Value16 > 0)
+			for (ushort terrain = 0; terrain < 0xc; terrain++)
 			{
-				this.processor.RegBase.Value16--;
+				this.processor.RegSource.Value16 = (ushort)(terrain << 1);
+				this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(terrainCounts + (terrain << 1)), 0);
 			}
-			else
+
+			ushort pass;
+
+			for (pass = 0; pass < 2; pass++)
 			{
-				this.processor.RegAcc.Value16--;
-				this.processor.RegBase.Value16 = 49;
+				this.processor.EmitLocalWord(0x8, pass);
+
+				LabelLandOrSea(pass, terrainCounts);
+
+				RankLandOrSea(pass);
 			}
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.ChartSight[this.processor.RegAcc.Value16, this.processor.RegBase.Value16];
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.EmitLocalWord(0xd0, this.processor.RegAcc.Value16);
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsNotEqual) goto L0b00;
-			goto L0b87;
 
-		L0b00:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x22), 0xffff);
-			if (this.processor.FlagSet.IsEqual) goto L0b7c;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x22), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L0b7c;
-			this.processor.EmitLocalWord(0x4, 0x0);
-			goto L0b6c;
-
-		L0b12:
-			this.processor.EmitLocalWord(0x2, this.processor.IncrementWord(this.processor.PullLocalWord(0x2)));
-
-		L0b15:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x50);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0b69;
-			
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.ChartSight[this.processor.PullLocalWord(0x2),
-				this.processor.PullLocalWord(0x4)];
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x22));
-			if (this.processor.FlagSet.IsNotEqual) goto L0b45;
-			this.processor.RegAcc.LowByte = this.processor.PullLocalByte(0xd0);
-			this.owner.World.ChartSight[this.processor.PullLocalWord(0x2),
-				this.processor.PullLocalWord(0x4)] = (sbyte)this.processor.RegAcc.LowByte;
-
-		L0b45:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x8);
-			this.processor.RegCount.LowByte = 0x7;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, this.processor.RegCount.LowByte);
-			this.processor.RegDest.Value16 = this.processor.PullLocalWord(0x22);
-			this.processor.RegDest.Value16 = this.processor.ShiftLeftWord(this.processor.RegDest.Value16, 0x1);
-			this.processor.RegDest.Value16 = this.processor.SumWord(this.processor.RegDest.Value16, this.processor.RegSource.Value16);
-			this.processor.RegDest.Value16 = this.processor.SumWord(this.processor.RegDest.Value16, 0xdcfe);
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0xd0);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, this.processor.RegDest.Value16);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0xdcfe),
-				this.processor.SumWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0xdcfe)), this.processor.RegAcc.Value16));
-			this.processor.EmitUInt16(this.processor.SegData.Value16, this.processor.RegDest.Value16, 0x0);
-			goto L0b12;
-
-		L0b69:
-			this.processor.EmitLocalWord(0x4, this.processor.IncrementWord(this.processor.PullLocalWord(0x4)));
-
-		L0b6c:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xa8);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsGreater) goto L0b7c;
-			this.processor.EmitLocalWord(0x2, 0x0);
-			goto L0b15;
-
-		L0b7c:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xd0);
-			this.processor.EmitLocalWord(0x22, this.processor.RegAcc.Value16);
+			this.processor.EmitLocalWord(0x8, pass);
 
 			DisplayStoryIntro();
 
-		L0b87:
-			this.processor.EmitLocalWord(0xac, this.processor.IncrementWord(this.processor.PullLocalWord(0xac)));
-
-		L0b8b:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x24), 0x4f);
-			if (this.processor.FlagSet.IsLess) goto L0b94;
-			goto L0ace;
-
-		L0b94:
-			this.processor.RegAcc.Value16 = 0x1;
-			goto L0ad0;
-
-		L0b9a:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x22), 0xffff);
-			if (this.processor.FlagSet.IsNotEqual) goto L0bcb;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x6), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L0bc4;
-			this.processor.EmitLocalWord(0xae, 0x0);
-
-		L0bac:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x8);
-			this.processor.RegCount.LowByte = 0x7;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, this.processor.RegCount.LowByte);
-			this.processor.IncrementLocalWord(0xae);
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0xae);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0xdcfe)), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L0bac;
-
-		L0bc4:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xae);
-			this.processor.EmitLocalWord(0x22, this.processor.RegAcc.Value16);
-
-		L0bcb:
-			this.processor.RegAcc.LowByte = this.processor.PullLocalByte(0x22);
-			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
-
-			this.owner.World.ChartSight[this.processor.PullLocalWord(0x24),
-				this.processor.PullLocalWord(0xa8)] = (sbyte)this.processor.RegCount.LowByte;
-
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x8);
-			this.processor.RegCount.LowByte = 0x7;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, this.processor.RegCount.LowByte);
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x22);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0xdcfe), 
-				this.processor.IncrementWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0xdcfe))));
-			this.processor.EmitLocalWord(0x6, 0x1);
-			goto L0c06;
-
-		L0bfc:
-			this.processor.EmitLocalWord(0x6, 0x0);
-			this.processor.EmitLocalWord(0x22, 0xffff);
-
-		L0c06:
-			this.processor.EmitLocalWord(0x24, this.processor.IncrementWord(this.processor.PullLocalWord(0x24)));
-
-		L0c09:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x24), 0x50);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0c3e;
-
-			ObtainTerrainTypeFromScreen(
-				this.processor.PullLocalSignedWord(0x24),
-				this.processor.PullLocalSignedWord(0xa8));
-			
-			this.processor.EmitLocalWord(0xaa, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x8), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L0c2e;
-			this.processor.RegSource.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x20), 
-				this.processor.IncrementWord(this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x20))));
-
-		L0c2e:
-			this.processor.CompareWord(this.processor.PullLocalWord(0xaa), 0xa);
-			if (this.processor.FlagSet.IsNotEqual) goto L0c38;
-			goto L0a9f;
-
-		L0c38:
-			this.processor.RegAcc.Value16 = 0x1;
-			goto L0aa1;
-
-		L0c3e:
-			DisplayStoryIntro();
-
-			this.processor.IncrementLocalWord(0xa8);
-
-		L0c46:
-			this.processor.CompareWord(this.processor.PullLocalWord(0xa8), 0x32);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0c5e;
-			this.processor.EmitLocalWord(0x22, 0xffff);
-			this.processor.EmitLocalWord(0x6, 0x0);
-			this.processor.EmitLocalWord(0x24, 0x0);
-			goto L0c09;
-
-		L0c5e:
-			this.processor.EmitLocalWord(0x24, 0x0);
-
-		L0c63:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x24);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0xce), 0x0);
-			this.processor.IncrementLocalWord(0x24);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x24), 0x10);
-			if (this.processor.FlagSet.IsLess) goto L0c63;
-			this.processor.EmitLocalWord(0xa4, 0x0);
-			this.processor.EmitLocalWord(0x24, 0x1);
-			goto L0cc9;
-
-		L0c84:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0xac);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegSource.Value16 = this.processor.SumWord(this.processor.RegSource.Value16, this.processor.RegFrame.Value16);
-			this.processor.RegDest.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0xd0));
-			this.processor.RegDest.Value16 = this.processor.ShiftLeftWord(this.processor.RegDest.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xac);
-			this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegDest.Value16 - 0xa4), this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0xd0));
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0xce), this.processor.RegAcc.Value16);
-			this.processor.DecrementLocalWord(0xac);
-
-		L0ca6:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xa8);
-			this.processor.CompareWord(this.processor.PullLocalWord(0xac), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsGreater) goto L0c84;
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x24);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0xa4), this.processor.RegAcc.Value16);
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0xa8);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x24);
-			this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0xce), this.processor.RegAcc.Value16);
-
-		L0cc6:
-			this.processor.EmitLocalWord(0x24, this.processor.IncrementWord(this.processor.PullLocalWord(0x24)));
-
-		L0cc9:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x24), 0x40);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0d17;
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x24);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0xa4), 0xf);
-			this.processor.EmitLocalWord(0xa8, 0x1);
-			goto L0ce6;
-
-		L0ce2:
-			this.processor.EmitLocalWord(0xa8, this.processor.IncrementWord(this.processor.PullLocalWord(0xa8)));
-
-		L0ce6:
-			this.processor.CompareWord(this.processor.PullLocalWord(0xa8), 0xf);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0cc6;
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x8);
-			this.processor.RegCount.LowByte = 0x7;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, this.processor.RegCount.LowByte);
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x24);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0xdcfe));
-			this.processor.RegDest.Value16 = this.processor.PullLocalWord(0xa8);
-			this.processor.RegDest.Value16 = this.processor.ShiftLeftWord(this.processor.RegDest.Value16, 0x1);
-			this.processor.RegBase.Value16 = this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegDest.Value16 - 0xce));
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0xdcfe)), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0ce2;
-			this.processor.EmitLocalWord(0xac, 0xf);
-			goto L0ca6;
-
-		L0d17:
-			this.processor.EmitLocalWord(0xa4, 0x0);
-			this.processor.EmitLocalWord(0x24, 0x0);
-			goto L0d74;
-
-		L0d24:
-			this.processor.EmitLocalWord(0xa8, this.processor.IncrementWord(this.processor.PullLocalWord(0xa8)));
-
-		L0d28:
-			this.processor.CompareWord(this.processor.PullLocalWord(0xa8), 0x32);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0d71;
-
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.ChartSight[this.processor.PullLocalWord(0x24),
-				this.processor.PullLocalWord(0xa8)];
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegSource.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0xa4));
-			this.processor.EmitLocalWord(0xa6, this.processor.RegAcc.Value16);
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual) goto L0d24;
-
-			this.owner.Services.AssignDot(this.processor.PullLocalSignedWord(0x24),
-				this.processor.PullLocalSignedWord(0xa8) + 0x32,
-				this.processor.RegAcc.Value16);
-
-			goto L0d24;
-
-		L0d71:
-			this.processor.EmitLocalWord(0x24, this.processor.IncrementWord(this.processor.PullLocalWord(0x24)));
-
-		L0d74:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x24), 0x50);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0d82;
-			this.processor.EmitLocalWord(0xa8, 0x0);
-			goto L0d28;
-
-		L0d82:
-			this.processor.EmitLocalWord(0x24, 0x1);
-
-		L0d87:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x24);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegSource.Value16 = this.processor.SumWord(this.processor.RegSource.Value16, this.processor.RegFrame.Value16);
-			this.processor.RegSource.Value16 = this.processor.SubtractWord(this.processor.RegSource.Value16, 0xce);
-			this.processor.RegDest.Value16 = this.processor.PullLocalWord(0x8);
-			this.processor.RegCount.LowByte = 0x7;
-			this.processor.RegDest.Value16 = this.processor.ShiftLeftWord(this.processor.RegDest.Value16, this.processor.RegCount.LowByte);
-			this.processor.RegBase.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, this.processor.RegSource.Value16);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegDest.Value16 + 0xdcfe));
-			this.processor.EmitUInt16(this.processor.SegData.Value16, this.processor.RegSource.Value16, this.processor.RegAcc.Value16);
-			this.processor.IncrementLocalWord(0x24);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x24), 0xf);
-			if (this.processor.FlagSet.IsLess) goto L0d87;
-			this.processor.EmitLocalWord(0x24, 0x1);
-
-		L0db1:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x24);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0xce));
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x8);
-			this.processor.RegCount.LowByte = 0x7;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, this.processor.RegCount.LowByte);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0xdcfe), this.processor.RegAcc.Value16);
-			this.processor.IncrementLocalWord(0x24);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x24), 0xf);
-			if (this.processor.FlagSet.IsLess) goto L0db1;
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x8);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, this.processor.RegCount.LowByte);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0xdcfe), 0x0);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0xdd1c), 0x1);
-			this.processor.IncrementLocalWord(0x8);
-
-		L0de2:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x8), 0x2);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0df0;
-			this.processor.EmitLocalWord(0x24, 0x0);
-			goto L0a82;
-
-		L0df0:
-			DisplayStoryIntro();
-
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0xaa),
-				0, 0, 0x140, 0xc8,
-				this.processor.PullGlobalWord(0x19e8),
-				0, 0);
+			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0x19e8), 0, 0);
 
 			LabelLandmasses();
 
@@ -1274,31 +901,298 @@ namespace Civilization1Remaster.Game
 			SituateSpecialTerrain();
 
 			this.owner.VideoCard.RenderLine(this.processor.PullGlobalWord(0xaa), 0, 0, 79, 0, 15);
-
 			this.owner.VideoCard.RenderLine(this.processor.PullGlobalWord(0xaa), 0, 49, 79, 49, 15);
 
-			this.processor.EmitLocalWord(0x24, 0x0);
+			ushort dotIdx;
 
-		L0e75:
-			this.owner.Services.AssignDot(this.owner.Libc.Dice.DrawInt(80), 0, 7);
+			for (dotIdx = 0; dotIdx < 0x14; dotIdx++)
+			{
+				this.owner.Services.AssignDot(this.owner.Libc.Dice.DrawInt(80), 0, 7);
+				this.owner.Services.AssignDot(this.owner.Libc.Dice.DrawInt(80), 1, 7);
+				this.owner.Services.AssignDot(this.owner.Libc.Dice.DrawInt(80), 48, 7);
+				this.owner.Services.AssignDot(this.owner.Libc.Dice.DrawInt(80), 49, 7);
+			}
 
-			this.owner.Services.AssignDot(this.owner.Libc.Dice.DrawInt(80), 1, 7);
+			this.processor.EmitLocalWord(0x24, dotIdx);
 
-			this.owner.Services.AssignDot(this.owner.Libc.Dice.DrawInt(80), 48, 7);
-
-			this.owner.Services.AssignDot(this.owner.Libc.Dice.DrawInt(80), 49, 7);
-
-			this.processor.IncrementLocalWord(0x24);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x24), 0x14);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0f04;
-			goto L0e75;
-
-		L0f04:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.RegDest.Value16 = this.processor.UnstackWord();
+			this.processor.RestoreIndexRegisters();
 			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("ProduceTerrain");
+		}
+
+		/// <summary>The size of a label of the pass (0xdcfe + 0x80 * pass + 2 * label)</summary>
+		private ushort LabelSizeAddress(ushort pass, int label)
+		{
+			return (ushort)((ushort)(label << 1) + (ushort)(pass << 7) + 0xdcfe);
+		}
+
+		/// <summary>
+		/// Labels the tiles of the pass's kind (land in pass 0, ocean in pass 1) in ChartSight, row by row: a run takes the
+		/// label of a touching tile of the row above (joining two labels moves the old one's tiles and size to the new one)
+		/// or a new free label (counts the terrains in pass 0)
+		/// </summary>
+		private void LabelLandOrSea(ushort pass, ushort terrainCounts)
+		{
+			ushort horizLoc, vertLoc;
+
+			for (horizLoc = 0; horizLoc < 0x50; horizLoc++)
+			{
+				for (vertLoc = 0; vertLoc < 0x32; vertLoc++)
+					this.owner.World.ChartSight[horizLoc, vertLoc] = 0;
+
+				this.processor.EmitLocalWord(0xa8, vertLoc);
+			}
+
+			this.processor.EmitLocalWord(0x24, horizLoc);
+
+			ushort newLabel = 0;
+			this.processor.EmitLocalWord(0xae, newLabel);
+
+			for (vertLoc = 0; vertLoc < 0x32; vertLoc++)
+			{
+				this.processor.EmitLocalWord(0xa8, vertLoc);
+
+				short run = -1;
+				bool inRun = false;
+
+				this.processor.EmitLocalWord(0x22, 0xffff);
+				this.processor.EmitLocalWord(0x6, 0);
+
+				for (horizLoc = 0; horizLoc < 0x50; horizLoc++)
+				{
+					this.processor.EmitLocalWord(0x24, horizLoc);
+
+					ushort terrain = ObtainTerrainTypeFromScreen((short)horizLoc, (short)vertLoc);
+					terrain = this.processor.RegAcc.Value16;
+					this.processor.EmitLocalWord(0xaa, terrain);
+
+					if (pass == 0)
+					{
+						ushort count = (ushort)(terrainCounts + (terrain << 1));
+						this.processor.RegSource.Value16 = (ushort)(terrain << 1);
+						this.processor.EmitUInt16(this.processor.SegStack.Value16, count, (ushort)(this.processor.PullUInt16(this.processor.SegStack.Value16, count) + 1));
+					}
+
+					if ((terrain != 0xa) != (pass == 0))
+					{
+						inRun = false;
+						run = -1;
+
+						this.processor.EmitLocalWord(0x6, 0);
+						this.processor.EmitLocalWord(0x22, 0xffff);
+						continue;
+					}
+
+					if ((short)vertLoc > 0)
+						run = JoinRowAbove(pass, (short)horizLoc, (short)vertLoc, run);
+
+					if (run == -1)
+					{
+						if (!inRun)
+						{
+							newLabel = 0;
+
+							do
+							{
+								newLabel++;
+								this.processor.RegSource.Value16 = (ushort)(pass << 7);
+							}
+							while (this.processor.PullGlobalWord(LabelSizeAddress(pass, newLabel)) != 0);
+
+							this.processor.EmitLocalWord(0xae, newLabel);
+						}
+
+						run = (short)newLabel;
+						this.processor.EmitLocalWord(0x22, (ushort)run);
+					}
+
+					this.owner.World.ChartSight[horizLoc, vertLoc] = (sbyte)(byte)run;
+
+					this.processor.RegSource.Value16 = (ushort)(pass << 7);
+
+					ushort size = LabelSizeAddress(pass, run);
+					this.processor.EmitGlobalWord(size, (ushort)(this.processor.PullGlobalWord(size) + 1));
+
+					inRun = true;
+					this.processor.EmitLocalWord(0x6, 1);
+				}
+
+				this.processor.EmitLocalWord(0x24, horizLoc);
+
+				DisplayStoryIntro();
+			}
+
+			this.processor.EmitLocalWord(0xa8, vertLoc);
+		}
+
+		/// <summary>
+		/// The tiles above-left, above and above-right of the tile: a labelled one joins the run (the run's earlier label is
+		/// replaced in the rows so far and its size moved, then the story goes on); the run's label
+		/// </summary>
+		private short JoinRowAbove(ushort pass, short horizLoc, short vertLoc, short run)
+		{
+			short shift;
+			short last = horizLoc < 0x4f ? (short)1 : (short)0;
+
+			for (shift = horizLoc != 0 ? (short)-1 : (short)0; last >= shift; shift++)
+			{
+				this.processor.EmitLocalWord(0xac, (ushort)shift);
+
+				short label = this.owner.World.ChartSight[(ushort)(horizLoc + shift), (ushort)(vertLoc - 1)];
+				this.processor.EmitLocalWord(0xd0, (ushort)label);
+
+				if (label == 0)
+					continue;
+
+				if (run != -1 && run != label)
+				{
+					ushort row;
+
+					for (row = 0; (short)row <= vertLoc; row++)
+					{
+						this.processor.EmitLocalWord(0x4, row);
+
+						ushort column;
+
+						for (column = 0; column < 0x50; column++)
+						{
+							if (this.owner.World.ChartSight[column, row] == run)
+								this.owner.World.ChartSight[column, row] = (sbyte)(byte)label;
+
+							ushort from = LabelSizeAddress(pass, run);
+							ushort to = LabelSizeAddress(pass, label);
+
+							this.processor.RegSource.Value16 = (ushort)(pass << 7);
+							this.processor.RegDest.Value16 = (ushort)(from);
+
+							this.processor.EmitGlobalWord(to, (ushort)(this.processor.PullGlobalWord(to) + this.processor.PullGlobalWord(from)));
+							this.processor.EmitGlobalWord(from, 0);
+						}
+
+						this.processor.EmitLocalWord(0x2, column);
+					}
+
+					this.processor.EmitLocalWord(0x4, row);
+				}
+
+				run = label;
+				this.processor.EmitLocalWord(0x22, (ushort)run);
+
+				DisplayStoryIntro();
+			}
+
+			this.processor.EmitLocalWord(0xac, (ushort)shift);
+
+			return run;
+		}
+
+		/// <summary>
+		/// The 15 largest labels of the pass get the numbers 1 - 15 by size (the rest 15; ranking in the frame from -0xce, the
+		/// numbers from -0xa4), drawn at (x, y + 50); the sizes 1 - 14 become those of the ranks, 0 gets size 0 and 15 size 1
+		/// </summary>
+		private void RankLandOrSea(ushort pass)
+		{
+			ushort frame = this.processor.RegFrame.Value16;
+			ushort ranking = (ushort)(frame - 0xce);
+			ushort numbers = (ushort)(frame - 0xa4);
+
+			for (ushort rank = 0; rank < 0x10; rank++)
+			{
+				this.processor.RegSource.Value16 = (ushort)(rank << 1);
+				this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(ranking + (rank << 1)), 0);
+			}
+
+			this.processor.EmitLocalWord(0xa4, 0);
+
+			ushort label;
+
+			for (label = 1; label < 0x40; label++)
+			{
+				this.processor.EmitLocalWord(0x24, label);
+				this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(numbers + (label << 1)), 0xf);
+
+				ushort size = this.processor.PullGlobalWord(LabelSizeAddress(pass, label));
+				ushort rank;
+
+				for (rank = 1; rank < 0xf; rank++)
+				{
+					this.processor.RegSource.Value16 = (ushort)(pass << 7);
+
+					ushort ranked = this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(ranking + (rank << 1)));
+
+					if ((short)this.processor.PullGlobalWord(LabelSizeAddress(pass, ranked)) >= (short)size)
+						continue;
+
+					// The smaller ones move down a rank
+					ushort lower;
+
+					for (lower = 0xf; (short)lower > (short)rank; lower--)
+					{
+						ushort moved = this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(ranking + (lower << 1) - 2));
+
+						this.processor.RegSource.Value16 = (ushort)((lower << 1) + frame);
+						this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(numbers + (moved << 1)), lower);
+						this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(ranking + (lower << 1)), moved);
+					}
+
+					this.processor.EmitLocalWord(0xac, lower);
+
+					this.processor.RegSource.Value16 = (ushort)(rank << 1);
+					this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(numbers + (label << 1)), rank);
+					this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(ranking + (rank << 1)), label);
+					break;
+				}
+
+				this.processor.EmitLocalWord(0xa8, rank);
+			}
+
+			this.processor.EmitLocalWord(0xa4, 0);
+
+			ushort horizLoc, vertLoc = 0;
+
+			// A label from 0x40 on reads past the numbers, the locals of the frame (x at 0x24, y at 0xa8, ...), like in the original
+			for (horizLoc = 0; horizLoc < 0x50; horizLoc++)
+			{
+				this.processor.EmitLocalWord(0x24, horizLoc);
+
+				for (vertLoc = 0; vertLoc < 0x32; vertLoc++)
+				{
+					this.processor.EmitLocalWord(0xa8, vertLoc);
+
+					short tileLabel = this.owner.World.ChartSight[horizLoc, vertLoc];
+					this.processor.RegSource.Value16 = (ushort)(tileLabel << 1);
+
+					ushort number = this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(numbers + (tileLabel << 1)));
+					this.processor.EmitLocalWord(0xa6, number);
+
+					if (number != 0)
+						this.owner.Services.AssignDot((short)horizLoc, (short)vertLoc + 0x32, number);
+				}
+			}
+
+			this.processor.EmitLocalWord(0xa8, vertLoc);
+
+			for (ushort rank = 1; rank < 0xf; rank++)
+			{
+				ushort entry = (ushort)(ranking + (rank << 1));
+
+				this.processor.RegSource.Value16 = entry;
+				this.processor.RegDest.Value16 = (ushort)(pass << 7);
+				this.processor.EmitUInt16(this.processor.SegStack.Value16, entry, this.processor.PullGlobalWord(LabelSizeAddress(pass, this.processor.PullUInt16(this.processor.SegStack.Value16, entry))));
+			}
+
+			for (ushort rank = 1; rank < 0xf; rank++)
+			{
+				this.processor.RegSource.Value16 = (ushort)(rank << 1);
+				this.processor.EmitGlobalWord(LabelSizeAddress(pass, rank), this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(ranking + (rank << 1))));
+			}
+
+			this.processor.EmitLocalWord(0x24, 0xf);
+
+			this.processor.RegSource.Value16 = (ushort)(pass << 7);
+			this.processor.EmitGlobalWord(LabelSizeAddress(pass, 0), 0);
+			this.processor.EmitGlobalWord(LabelSizeAddress(pass, 0xf), 1);
 		}
 
 		/// <summary>

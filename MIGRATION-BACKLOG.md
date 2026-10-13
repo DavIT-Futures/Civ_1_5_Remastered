@@ -343,20 +343,28 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   (okna zostawiają je w DI). `WipeCitySquare` zrobiona publiczną (kopia referencyjna ją woła). Wnioski: przywódca 0 daje nazwę
   0xfff0 (porównanie ze znakiem, zachowane – wyjątek w obu); odwołane nazwanie zostawia nazwę zajętą. Testy w
   `BatchFortySixDifferentialTests`. Pełny zestaw po porcji 46: 596 testów zielonych.
+- Porcja 47, jedna funkcja (2026-10-13): `ProduceTerrain` (`GameInitAndIntro`, numeracja kontynentów i mórz nowej mapy:
+  etykiety w `ChartSight`, rozmiary w 0xdcfe / 0xdd7e, ranking 15 największych w ramce). Ramka zostaje, zmienne lustrowane
+  przy przypisaniu. Wnioski: etykieta od 0x40 (przy zajętych rozmiarach) czyta „numer” spoza tablicy w ramce, czyli zmienne
+  lokalne (x 0x24, y 0xa8, liczniki terenów…) zmieniane w pętli rysowania – pierwsza wersja ich nie zapisywała w tej pętli
+  i test to złapał; łączenie etykiet przenosi rozmiar w każdym kroku wewnętrznej pętli (80 * wierszy razy, zachowane).
+  Test: `DisplayStoryIntro` zależy od zegara testów (tyka z dostępami do pamięci), więc test zamraża opowieść (0x3b62 = 1,
+  0x6802 = 0, 0x6806 = 0x7fff). `DivideCivilization` (`CivilizationSchism`, ok. 740 linii) odłożona na początek nowego
+  kontekstu. Testy w `BatchFortySevenDifferentialTests`.
 
 ## Następny krok
 
 Dalej małe metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 60`
 (metody z co najmniej 2 liniami `goto L` / `FlagSet` / `Compare…` / `SumWord` itd., od najkrótszej). Kandydaci
 (`GameLoadAndSave` i `Newspaper` nie mają już metod w stylu asm): `ChooseTechnologyToTake` (`TradeAndConquest`, patrz wyżej),
-`TitleLogoAndMainChoices` (`GameStartup`), `DisplayStoryIntro`, `ProduceTerrain` (`GameInitAndIntro`),
+`TitleLogoAndMainChoices` (`GameStartup`), `DisplayStoryIntro` (`GameInitAndIntro`), `DivideCivilization` (`CivilizationSchism`),
 `DisplayTribeSelection` (`StartGameMenu`),
 `OperateMenu`, `DisplayMenu` (`DialogDrawing`),
 `DisplayCivilopediaIndex` (`Civilopedia`), `DisplayCivilizationScreen` (`MainIntro`),
 `ConstructCivilization`, `ConfigureFreshGame` (`StartGameMenu`), `DisplayPalace` (`Palace`, patrz porcja 45), reszta generatora mapy w `GameInitAndIntro`. Funkcje niskopoziomowe `SystemServices` (`DeactivateMouse`, `PointerEvent`,
 `RenderCursorToScreen`, `RecoverScreenUnderCursor`, kolory i zegar: `PrepareTimer`, `RefreshHueCycling`, `AssignHueCycleSpan`,
 `ColorsFadeStep`, `FadeColors`, `FloodColors`, `ImportColorsFromBuffer`) i `SnapHeapPointer` (`VGADriver`) na koniec: działają
-w przerwaniach albo na rejestrach. Stan 2026-10-13 (po porcji 46): 49 metod w stylu asm, ok. 36,9 tys. z 65,5 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
+w przerwaniach albo na rejestrach. Stan 2026-10-13 (po porcji 47): 48 metod w stylu asm, ok. 36,4 tys. z 65,4 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
