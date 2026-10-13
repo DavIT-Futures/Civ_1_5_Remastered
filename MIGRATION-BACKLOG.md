@@ -285,18 +285,27 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   trzymany przycisk myszy (0x5872) zapętla `AwaitForKey` w obu wersjach – kliknięcie dawać jednorazowo przez 0x5874; klawisz do
   `ReadKey` można włożyć wprost do `VideoCard.Tokens` w `Prepare`; mutacja na granicy równości dwóch odległości przeżyła
   (losowe zapełnienie nie daje remisów) – wybrana inna.
+- Porcja 40 (2026-10-13): `ChoreographKingSpeaking` (`MeetWithKing`, klatka animacji władcy), `DisplayCivilizationDestroyedScreen`
+  (`GameReplay`, ekran zniszczonej cywilizacji ze ścianą przywódców), `LabelLandmasses` (`GameInitAndIntro`, połączenia bloków 4 x 4
+  nowej mapy), `DisplayTravellersReport` (`TurnEvents`, barbarzyńcy z morza i najazd na miasto). Ramki zostają (nazwy plików
+  w ramce, końcowe wartości zmiennych zapisane; w `LabelLandmasses` zmienne ustawiane tylko na niektórych ścieżkach śledzone jako
+  `null` = niezapisane). Potwierdzone śmieci: `DisplayTravellersReport` przekazuje niezapisaną zmienną 0x2 jako gracza do
+  `VerifyTileOccupation` (zachowane, test ustawia słowo pod SP) i czyta ES:0x4f4 przy ES zostawionym przez wywołane funkcje.
+  Testy w `BatchFortyDifferentialTests`: najazd wymaga złota gracza (szansa = łup %), więc test daje mu złoto i część miast;
+  `LabelLandmasses` czyta mapę z ekranu (kolory oceanu z tabeli 0x2ba6), test rysuje losowy ląd. Mutacja pozy 2 przy kroku 6
+  przeżyła (krok 6 nie kończy gestu, a przy 0x67f0 = 1 poza nie jest rysowana) – wybrana inna.
 
 ## Następny krok
 
 Dalej małe metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 60`
 (metody z co najmniej 2 liniami `goto L` / `FlagSet` / `Compare…` / `SumWord` itd., od najkrótszej). Kandydaci
 (`GameLoadAndSave` i `Newspaper` nie mają już metod w stylu asm): `ChooseTechnologyToTake` (`TradeAndConquest`, patrz wyżej),
-`DisplayTravellersReport`, `HandleEndOfTurnEvents` (`TurnEvents`), `LabelLandmasses` (`GameInitAndIntro`),
-`ChoreographKingSpeaking`, `DisplayKingScreen` (`MeetWithKing`),
+`HandleEndOfTurnEvents` (`TurnEvents`), `DisplayKingScreen` (`MeetWithKing`), `DisplayWorldMap` (`WorldMap`),
+`TitleLogoAndMainChoices` (`GameStartup`), `DisplayStoryIntro`, `ReckonContinentSizes` (`GameInitAndIntro`), `EarnTechnology` (`ScienceAndAdvisors`),
 reszta generatora mapy w `GameInitAndIntro`. Funkcje niskopoziomowe `SystemServices` (`DeactivateMouse`, `PointerEvent`,
 `RenderCursorToScreen`, `RecoverScreenUnderCursor`, kolory i zegar: `PrepareTimer`, `RefreshHueCycling`, `AssignHueCycleSpan`,
 `ColorsFadeStep`, `FadeColors`, `FloodColors`, `ImportColorsFromBuffer`) i `SnapHeapPointer` (`VGADriver`) na koniec: działają
-w przerwaniach albo na rejestrach. Stan 2026-10-13 (po porcji 39): 69 metod w stylu asm, ok. 45,0 tys. z 68,3 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
+w przerwaniach albo na rejestrach. Stan 2026-10-13 (po porcji 40): 65 metod w stylu asm, ok. 43,8 tys. z 67,8 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
@@ -340,7 +349,7 @@ przerwanie zegara, którego moment w testach zależy od liczby dostępów do pam
 zależą już tylko od kodu na tej samej głębokości. Potwierdzone w golden master: `HandleCity` (`CityManagement`) – funkcja, która ją
 woła, zostawia ramkę (`HandleAllCities`, `DisplayTopCities`). Nadal: usunięta ramka może zmienić to, co przeczyta taka funkcja (golden master
 to wyłapie, testy różnicowe nie porównują stosu pod SP). Kandydaci ze skanu „czytana, nigdy nie zapisana” (część to tablice
-i bufory zapisywane przez adres, do sprawdzenia przy przepisywaniu): `RenderCitizenIcons` 0x2 (potwierdzone, zachowane), `ExamineCity` 0x8, `DisplayTravellersReport` 0x2, `RenderCityScenery` 0x16.
+i bufory zapisywane przez adres, do sprawdzenia przy przepisywaniu): `RenderCitizenIcons` 0x2 (potwierdzone, zachowane), `ExamineCity` 0x8, `DisplayTravellersReport` 0x2 (potwierdzone, zachowane), `RenderCityScenery` 0x16 (obrazek zapisywany przez adres).
 
 ## Poprawki, które zostają (chronią przed crashami, baseline je ma)
 

@@ -1424,327 +1424,151 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// The links between the 20 x 13 blocks of 4 x 4 tiles (bits at 0xdb44 + 13 * column + row): a block with land (the
+		/// first of its tiles (1, 1), (2, 1), (1, 2), (2, 2) that isn't ocean on the screen map) gets bit direction - 1, and its
+		/// neighbour in the direction 1 - 4 (0x1882 / 0x18e4) bit (direction + 3) &amp; 7, when the neighbour's land is the same
+		/// continent and a route of less than 20 (ComputeRouteCost) joins them. The final values of the locals stay in the
+		/// stack frame, like in the original.
 		/// </summary>
 		public void LabelLandmasses()
 		{
 			this.processor.Journal.OpenScope("LabelLandmasses()");
 
-			// function body
 			this.processor.EnterFrame(0x26);
 			this.processor.PreserveIndexRegisters();
 
 			this.owner.Libc.FillBytes(0xdb44, 0, 0x104);
 
-			this.processor.EmitLocalWord(0x14, 0x0);
-			goto L142c;
+			// The last values of the locals (null: never set), written into the frame at the end
+			(short, short)? neighbour = null, origin = null, land = null, neighbourLand = null;
+			short? lastDirection = null, lastNeighbourContinent = null, lastCost = null, lastContinent = null;
+			short column, row = 0;
 
-		L11ab:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x8);
-			this.processor.RegSource.Value16 = this.processor.IncrementWord(this.processor.RegSource.Value16);
+			for (column = 0; column < 0x14; column++)
+			{
+				for (row = 0; row < 0xd; row++)
+				{
+					short horizLoc = (short)((column << 2) + 1), vertLoc = (short)((row << 2) + 1);
 
-			ObtainTerrainTypeFromScreen(
-				(short)this.processor.RegSource.Value16,
-				this.processor.PullLocalSignedWord(0xc));
-			
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
-			if (this.processor.FlagSet.IsEqual) goto L11d4;
+					origin = (horizLoc, vertLoc);
 
-			this.owner.MapOps.ObtainContinentID(
-				(short)this.processor.RegSource.Value16,
-				this.processor.PullLocalSignedWord(0xc));
+					short continent = FindBlockLand(horizLoc, vertLoc, ref land);
+					lastContinent = continent;
 
-			this.processor.EmitLocalWord(0x18, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x20, this.processor.RegSource.Value16);
-			goto L125a;
+					if (continent == -1)
+						continue;
 
-		L11d4:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0xc);
-			this.processor.RegSource.Value16 = this.processor.IncrementWord(this.processor.RegSource.Value16);
+					for (short direction = 1; direction <= 4; direction++)
+					{
+						lastDirection = direction;
 
-			ObtainTerrainTypeFromScreen(
-				this.processor.PullLocalSignedWord(0x8),
-				(short)this.processor.RegSource.Value16);
-			
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
-			if (this.processor.FlagSet.IsEqual) goto L1262;
+						short nextHoriz = (short)((this.processor.PullGlobalWord((ushort)((direction << 1) + 0x1882)) << 2) + horizLoc);
+						short nextVert = (short)((this.processor.PullGlobalWord((ushort)((direction << 1) + 0x18e4)) << 2) + vertLoc);
 
-			this.owner.MapOps.ObtainContinentID(
-				this.processor.PullLocalSignedWord(0x8),
-				(short)this.processor.RegSource.Value16);
+						neighbour = (nextHoriz, nextVert);
 
-			this.processor.EmitLocalWord(0x18, this.processor.RegAcc.Value16);
-			this.processor.CopyLocalWord(0x8, 0x20);
-			this.processor.EmitLocalWord(0x24, this.processor.RegSource.Value16);
+						short nextContinent = FindBlockLand(nextHoriz, nextVert, ref neighbourLand);
+						lastNeighbourContinent = nextContinent;
 
-		L1200:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x18), 0xffff);
-			if (this.processor.FlagSet.IsEqual) goto L1209;
-			goto L128e;
+						if (continent != nextContinent)
+							continue;
 
-		L1209:
-			this.processor.EmitLocalWord(0x1a, this.processor.IncrementWord(this.processor.PullLocalWord(0x1a)));
+						short cost = (short)this.owner.Routing.ComputeRouteCost(land!.Value.Item1, land.Value.Item2,
+							neighbourLand!.Value.Item1, neighbourLand.Value.Item2, 0, 20);
+						lastCost = cost;
 
-		L120c:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x1a), 0xd);
-			if (this.processor.FlagSet.IsLess) goto L1215;
-			goto L1429;
+						if (cost == -1 || cost >= 0x14)
+							continue;
 
-		L1215:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x14);
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.IncrementWord(this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x8, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x1a);
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.IncrementWord(this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0xc, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x18, 0xffff);
+						LinkLandmassBlock(column, row, direction - 1);
 
-			ObtainTerrainTypeFromScreen(
-				this.processor.PullLocalSignedWord(0x8),
-				(short)this.processor.RegAcc.Value16);
-			
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
-			if (this.processor.FlagSet.IsNotEqual) goto L1243;
-			goto L11ab;
+						short nextColumn = (short)(this.processor.PullGlobalWord((ushort)((direction << 1) + 0x1882)) + column);
+						short nextRow = (short)(this.processor.PullGlobalWord((ushort)((direction << 1) + 0x18e4)) + row);
 
-		L1243:
-			this.owner.MapOps.ObtainContinentID(
-				this.processor.PullLocalSignedWord(0x8),
-				this.processor.PullLocalSignedWord(0xc));
+						neighbour = (nextColumn, nextRow);
 
-			this.processor.EmitLocalWord(0x18, this.processor.RegAcc.Value16);
-			this.processor.CopyLocalWord(0x8, 0x20);
+						if (nextColumn < 0 || nextColumn >= 0x14 || nextRow < 0 || nextRow >= 0xd)
+							continue;
 
-		L125a:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xc);
-			this.processor.EmitLocalWord(0x24, this.processor.RegAcc.Value16);
-			goto L1200;
+						LinkLandmassBlock(nextColumn, nextRow, (direction + 3) & 7);
+					}
 
-		L1262:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x8);
-			this.processor.RegSource.Value16 = this.processor.IncrementWord(this.processor.RegSource.Value16);
-			this.processor.RegDest.Value16 = this.processor.PullLocalWord(0xc);
-			this.processor.RegDest.Value16 = this.processor.IncrementWord(this.processor.RegDest.Value16);
+					lastDirection = 5;
+				}
+			}
 
-			ObtainTerrainTypeFromScreen((short)this.processor.RegSource.Value16, (short)this.processor.RegDest.Value16);
-			
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
-			if (this.processor.FlagSet.IsEqual) goto L1200;
+			if (neighbour is (short nextHorizLoc, short nextVertLoc))
+			{
+				this.processor.EmitLocalWord(0x2, (ushort)nextHorizLoc);
+				this.processor.EmitLocalWord(0x4, (ushort)nextVertLoc);
+			}
 
-			this.owner.MapOps.ObtainContinentID(
-				(short)this.processor.RegSource.Value16,
-				(short)this.processor.RegDest.Value16);
+			if (origin is (short originHoriz, short originVert))
+			{
+				this.processor.EmitLocalWord(0x8, (ushort)originHoriz);
+				this.processor.EmitLocalWord(0xc, (ushort)originVert);
+			}
 
-			this.processor.EmitLocalWord(0x18, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x20, this.processor.RegSource.Value16);
-			this.processor.EmitLocalWord(0x24, this.processor.RegDest.Value16);
-			goto L1200;
+			if (lastDirection is short directionLeft)
+				this.processor.EmitLocalWord(0xa, (ushort)directionLeft);
 
-		L128e:
-			this.processor.EmitLocalWord(0xa, 0x1);
-			goto L12fb;
+			if (lastNeighbourContinent is short neighbourContinent)
+				this.processor.EmitLocalWord(0xe, (ushort)neighbourContinent);
 
-		L1295:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x2);
-			this.processor.RegSource.Value16 = this.processor.IncrementWord(this.processor.RegSource.Value16);
+			if (lastCost is short costLeft)
+				this.processor.EmitLocalWord(0x10, (ushort)costLeft);
 
-			ObtainTerrainTypeFromScreen(
-				(short)this.processor.RegSource.Value16,
-				this.processor.PullLocalSignedWord(0x4));
-			
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
-			if (this.processor.FlagSet.IsEqual) goto L12be;
+			this.processor.EmitLocalWord(0x14, (ushort)column);
 
-			this.owner.MapOps.ObtainContinentID(
-				(short)this.processor.RegSource.Value16,
-				this.processor.PullLocalSignedWord(0x4));
+			if (neighbourLand is (short neighbourHoriz, short neighbourVert))
+			{
+				this.processor.EmitLocalWord(0x16, (ushort)neighbourHoriz);
+				this.processor.EmitLocalWord(0x1c, (ushort)neighbourVert);
+			}
 
-			this.processor.EmitLocalWord(0xe, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x16, this.processor.RegSource.Value16);
-			goto L1354;
+			if (lastContinent is short continentLeft)
+				this.processor.EmitLocalWord(0x18, (ushort)continentLeft);
 
-		L12be:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x4);
-			this.processor.RegSource.Value16 = this.processor.IncrementWord(this.processor.RegSource.Value16);
+			this.processor.EmitLocalWord(0x1a, (ushort)row);
 
-			ObtainTerrainTypeFromScreen(
-				this.processor.PullLocalSignedWord(0x2),
-				(short)this.processor.RegSource.Value16);
-			
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
-			if (this.processor.FlagSet.IsNotEqual) goto L12d5;
-			goto L135c;
+			if (land is (short landHoriz, short landVert))
+			{
+				this.processor.EmitLocalWord(0x20, (ushort)landHoriz);
+				this.processor.EmitLocalWord(0x24, (ushort)landVert);
+			}
 
-		L12d5:
-			this.owner.MapOps.ObtainContinentID(
-				this.processor.PullLocalSignedWord(0x2),
-				(short)this.processor.RegSource.Value16);
-
-			this.processor.EmitLocalWord(0xe, this.processor.RegAcc.Value16);
-			this.processor.CopyLocalWord(0x2, 0x16);
-			this.processor.EmitLocalWord(0x1c, this.processor.RegSource.Value16);
-
-		L12ed:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xe);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x18), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L12f8;
-			goto L138b;
-
-		L12f8:
-			this.processor.EmitLocalWord(0xa, this.processor.IncrementWord(this.processor.PullLocalWord(0xa)));
-
-		L12fb:
-			this.processor.CompareWord(this.processor.PullLocalWord(0xa), 0x4);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L1304;
-			goto L1209;
-
-		L1304:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0xa);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1882));
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x8));
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x18e4));
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0xc));
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0xe, 0xffff);
-
-			ObtainTerrainTypeFromScreen(
-				this.processor.PullLocalSignedWord(0x2),
-				(short)this.processor.RegAcc.Value16);
-			
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
-			if (this.processor.FlagSet.IsNotEqual) goto L133d;
-			goto L1295;
-
-		L133d:
-			this.owner.MapOps.ObtainContinentID(
-				this.processor.PullLocalSignedWord(0x2),
-				this.processor.PullLocalSignedWord(0x4));
-
-			this.processor.EmitLocalWord(0xe, this.processor.RegAcc.Value16);
-			this.processor.CopyLocalWord(0x2, 0x16);
-
-		L1354:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x4);
-			this.processor.EmitLocalWord(0x1c, this.processor.RegAcc.Value16);
-			goto L12ed;
-
-		L135c:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x2);
-			this.processor.RegSource.Value16 = this.processor.IncrementWord(this.processor.RegSource.Value16);
-			this.processor.RegDest.Value16 = this.processor.PullLocalWord(0x4);
-			this.processor.RegDest.Value16 = this.processor.IncrementWord(this.processor.RegDest.Value16);
-
-			ObtainTerrainTypeFromScreen((short)this.processor.RegSource.Value16, (short)this.processor.RegDest.Value16);
-			
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
-			if (this.processor.FlagSet.IsNotEqual) goto L1375;
-			goto L12ed;
-
-		L1375:
-			this.owner.MapOps.ObtainContinentID(
-				(short)this.processor.RegSource.Value16,
-				(short)this.processor.RegDest.Value16);
-
-			this.processor.EmitLocalWord(0xe, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x16, this.processor.RegSource.Value16);
-			this.processor.EmitLocalWord(0x1c, this.processor.RegDest.Value16);
-			goto L12ed;
-
-		L138b:
-			this.owner.Routing.ComputeRouteCost(
-				this.processor.PullLocalSignedWord(0x20),
-				this.processor.PullLocalSignedWord(0x24),
-				this.processor.PullLocalSignedWord(0x16),
-				this.processor.PullLocalSignedWord(0x1c),
-				0, 20);
-
-			this.processor.EmitLocalWord(0x10, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xffff);
-			if (this.processor.FlagSet.IsNotEqual) goto L13b1;
-			goto L12f8;
-
-		L13b1:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x14);
-			if (this.processor.FlagSet.IsLess) goto L13b9;
-			goto L12f8;
-
-		L13b9:
-			this.processor.RegAcc.Value16 = 0xd;
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.PullLocalWord(0x14));
-			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x1a);
-			this.processor.RegAcc.LowByte = 0x1;
-			this.processor.RegCount.LowByte = this.processor.PullLocalByte(0xa);
-			this.processor.RegCount.LowByte = this.processor.DecrementByte(this.processor.RegCount.LowByte);
-			this.processor.RegAcc.LowByte = this.processor.ShiftLeftByte(this.processor.RegAcc.LowByte, this.processor.RegCount.LowByte);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegDest.Value16 + 0xdb44),
-				this.processor.BitOrByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegDest.Value16 + 0xdb44)), this.processor.RegAcc.LowByte));
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0xa);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1882));
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x14));
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x18e4));
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.RegBase.Value16);
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x0);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L13f2;
-			goto L12f8;
-
-		L13f2:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x14);
-			if (this.processor.FlagSet.IsLess) goto L13fb;
-			goto L12f8;
-
-		L13fb:
-			this.processor.RegAcc.Value16 = this.processor.BitOrWord(this.processor.RegAcc.Value16, this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L1402;
-			goto L12f8;
-
-		L1402:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xd);
-			if (this.processor.FlagSet.IsLess) goto L140a;
-			goto L12f8;
-
-		L140a:
-			this.processor.RegAcc.Value16 = 0xd;
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.PullLocalWord(0x2));
-			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x4);
-			this.processor.RegAcc.LowByte = 0x1;
-			this.processor.RegCount.LowByte = this.processor.PullLocalByte(0xa);
-			this.processor.RegCount.LowByte = this.processor.SumByte(this.processor.RegCount.LowByte, 0x3);
-			this.processor.RegCount.LowByte = this.processor.BitAndByte(this.processor.RegCount.LowByte, 0x7);
-			this.processor.RegAcc.LowByte = this.processor.ShiftLeftByte(this.processor.RegAcc.LowByte, this.processor.RegCount.LowByte);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegDest.Value16 + 0xdb44),
-				this.processor.BitOrByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegDest.Value16 + 0xdb44)), this.processor.RegAcc.LowByte));
-			goto L12f8;
-
-		L1429:
-			this.processor.EmitLocalWord(0x14, this.processor.IncrementWord(this.processor.PullLocalWord(0x14)));
-
-		L142c:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x14), 0x14);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L143a;
-			this.processor.EmitLocalWord(0x1a, 0x0);
-			goto L120c;
-
-		L143a:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.RegDest.Value16 = this.processor.UnstackWord();
+			this.processor.RestoreIndexRegisters();
 			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("LabelLandmasses");
+		}
+
+		/// <summary>
+		/// The continent of the first tile of (x, y), (x + 1, y), (x, y + 1), (x + 1, y + 1) that isn't ocean on the screen map
+		/// (land gets that tile), else -1 (land unchanged)
+		/// </summary>
+		private short FindBlockLand(short horizLoc, short vertLoc, ref (short, short)? land)
+		{
+			foreach ((short tileHoriz, short tileVert) in new[] { (horizLoc, vertLoc), ((short)(horizLoc + 1), vertLoc),
+				(horizLoc, (short)(vertLoc + 1)), ((short)(horizLoc + 1), (short)(vertLoc + 1)) })
+			{
+				if (ObtainTerrainTypeFromScreen(tileHoriz, tileVert) == 0xa)
+					continue;
+
+				land = (tileHoriz, tileVert);
+
+				return (short)this.owner.MapOps.ObtainContinentID(tileHoriz, tileVert);
+			}
+
+			return -1;
+		}
+
+		/// <summary>Sets bit bitIdx of the block's links (0xdb44 + 13 * column + row)</summary>
+		private void LinkLandmassBlock(short column, short row, int bitIdx)
+		{
+			ushort links = (ushort)((0xd * column) + row + 0xdb44);
+
+			this.processor.EmitGlobalByte(links, (byte)(this.processor.PullGlobalByte(links) | (1 << bitIdx)));
 		}
 
 		/// <summary>

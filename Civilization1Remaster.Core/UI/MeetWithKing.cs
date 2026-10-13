@@ -2118,232 +2118,159 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// One frame of the king's animation. While he speaks (0xd76c counts down) and stands still (step 0x67f4 = 0), the mouth
+		/// moves: eyes 5 or -1, mouth 0, 9 or (every 4th frame) 8, then a pause of 4 frames (0x67f6). Otherwise the step goes on
+		/// along table 0x3ab8 (positive: next step, -1, -2, -3: back to step 0, 6, 14); at the end of a gesture (0) the mood
+		/// 0x3936 picks the next one (0: step 3, the eyes colour 0x3a9a; 1: step 0; 2: step 12, the colours 0x3ab4 / 0x3ab7)
+		/// and 0x7ef4 says which pose he holds (0, 1 at step 14, 2 at step 6); without a pause one time in 12 a still pose
+		/// starts a short gesture. The eyes and the mouth come from the tables 0x3a94 and 0x3aa6.
 		/// </summary>
 		public void ChoreographKingSpeaking()
 		{
 			this.processor.Journal.OpenScope("ChoreographKingSpeaking()");
 
-			// function body
+			// The final values of the locals stay in the stack frame, like in the original
 			this.processor.EnterFrame(0x6);
+
 			this.processor.EmitGlobalWord(0x7ef4, 0xffff);
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xd76c), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L1b50;
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x67f4), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L1b50;
-			goto L1cc0;
 
-		L1b50:
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0x67f4);
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x3ab8)), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L1b9a;
-			if (this.processor.FlagSet.IsLessOrEqual) goto L1b64;
+			short eyes, mouth;
 
-		L1b5d:
-			this.processor.EmitGlobalWord(0x67f4, this.processor.IncrementWord(this.processor.PullGlobalWord(0x67f4)));
-			goto L1c64;
+			if (this.processor.PullGlobalWord(0xd76c) != 0 && this.processor.PullGlobalWord(0x67f4) == 0)
+			{
+				eyes = this.processor.PullGlobalWord(0x67f4) != 0 ? (short)5 : (short)-1;
 
-		L1b64:
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0x67f4);
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x3ab8));
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xfffd);
-			if (this.processor.FlagSet.IsEqual) goto L1b91;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xfffe);
-			if (this.processor.FlagSet.IsEqual) goto L1b88;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xffff);
-			if (this.processor.FlagSet.IsEqual) goto L1b7f;
-			goto L1c64;
+				mouth = this.owner.Libc.Dice.DrawInt(2) != 0 ? (short)9 : (short)0;
 
-		L1b7f:
-			this.processor.EmitGlobalWord(0x67f4, 0x0);
-			goto L1c64;
+				if ((this.processor.PullGlobalByte(0xd76c) & 3) == 0)
+					mouth = 8;
 
-		L1b88:
-			this.processor.EmitGlobalWord(0x67f4, 0x6);
-			goto L1c64;
+				this.processor.EmitGlobalWord(0xd76c, (ushort)(this.processor.PullGlobalWord(0xd76c) - 1));
+				this.processor.EmitGlobalWord(0x67f6, 4);
+			}
+			else
+			{
+				AdvanceKingGesture();
 
-		L1b91:
-			this.processor.EmitGlobalWord(0x67f4, 0xe);
-			goto L1c64;
+				if (this.processor.PullGlobalWord(0x67f6) == 0 && this.owner.Libc.Dice.DrawInt(12) == 0 && KingGestureStep() == 0)
+				{
+					switch (this.processor.PullGlobalWord(0x67f4))
+					{
+						case 0:
+							this.processor.EmitGlobalWord(0x67f4, 1);
+							break;
 
-		L1b9a:
-			this.processor.EmitLocalWord(0x6, 0xffff);
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x3936);
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual) goto L1bb2;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1);
-			if (this.processor.FlagSet.IsEqual) goto L1c08;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x2);
-			if (this.processor.FlagSet.IsEqual) goto L1c16;
-			goto L1bce;
+						case 6:
+							this.processor.EmitGlobalWord(0x67f4, 0xa);
+							break;
 
-		L1bb2:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x6b8e), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L1bbd;
-			this.processor.RegAcc.LowByte = 0x4;
-			goto L1bbf;
+						case 0xe:
+							this.processor.EmitGlobalWord(0x67f4, 0x11);
+							break;
+					}
+				}
 
-		L1bbd:
-			this.processor.RegAcc.LowByte = 0x2;
+				ushort step = this.processor.PullGlobalWord(0x67f4);
 
-		L1bbf:
-			this.processor.EmitGlobalByte(0x3a9a, this.processor.RegAcc.LowByte);
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x67f4), 0x6);
-			if (this.processor.FlagSet.IsEqual) goto L1bce;
-			this.processor.EmitLocalWord(0x6, 0x3);
+				eyes = (sbyte)this.processor.PullGlobalByte((ushort)(step + 0x3a94));
+				mouth = (sbyte)this.processor.PullGlobalByte((ushort)(step + 0x3aa6));
+			}
 
-		L1bce:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xd76c), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L1be1;
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x67f4), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L1be1;
-			this.processor.EmitLocalWord(0x6, 0x0);
+			if (this.processor.PullGlobalWord(0x67f6) != 0)
+				this.processor.EmitGlobalWord(0x67f6, (ushort)(this.processor.PullGlobalWord(0x67f6) - 1));
 
-		L1be1:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x6), 0xffff);
-			if (this.processor.FlagSet.IsEqual) goto L1c44;
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x67f4), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L1bf4;
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x6);
-			this.processor.EmitGlobalWord(0x67f4, this.processor.RegAcc.Value16);
+			this.processor.EmitLocalWord(0x2, (ushort)mouth);
+			this.processor.EmitLocalWord(0x4, (ushort)eyes);
 
-		L1bf4:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x67f4), 0x6);
-			if (this.processor.FlagSet.IsNotEqual) goto L1bfe;
-			goto L1b5d;
-
-		L1bfe:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x67f4), 0xe);
-			if (this.processor.FlagSet.IsNotEqual) goto L1c64;
-			goto L1b5d;
-
-		L1c08:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x67f4), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L1bce;
-			this.processor.EmitLocalWord(0x6, 0x0);
-			goto L1bce;
-
-		L1c16:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x6b8e), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L1c21;
-			this.processor.RegAcc.LowByte = 0xb;
-			goto L1c23;
-
-		L1c21:
-			this.processor.RegAcc.LowByte = 0x7;
-
-		L1c23:
-			this.processor.EmitGlobalByte(0x3ab4, this.processor.RegAcc.LowByte);
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x6b8e), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L1c31;
-			this.processor.RegAcc.LowByte = 0xb;
-			goto L1c33;
-
-		L1c31:
-			this.processor.RegAcc.LowByte = 0x7;
-
-		L1c33:
-			this.processor.EmitGlobalByte(0x3ab7, this.processor.RegAcc.LowByte);
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x67f4), 0xe);
-			if (this.processor.FlagSet.IsEqual) goto L1bce;
-			this.processor.EmitLocalWord(0x6, 0xc);
-			goto L1bce;
-
-		L1c44:
-			this.processor.EmitGlobalWord(0x7ef4, 0x0);
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x67f4), 0xe);
-			if (this.processor.FlagSet.IsNotEqual) goto L1c57;
-			this.processor.EmitGlobalWord(0x7ef4, 0x1);
-
-		L1c57:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x67f4), 0x6);
-			if (this.processor.FlagSet.IsNotEqual) goto L1c64;
-			this.processor.EmitGlobalWord(0x7ef4, 0x2);
-
-		L1c64:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x67f6), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L1caa;
-
-			this.processor.RegAcc.Value16 = (ushort)(this.owner.Libc.Dice.DrawInt(12));
-
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsNotEqual) goto L1caa;
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0x67f4);
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x3ab8)), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L1caa;
-			this.processor.RegBase.Value16 = this.processor.BitOrWord(this.processor.RegBase.Value16, this.processor.RegBase.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L1c90;
-			this.processor.EmitGlobalWord(0x67f4, 0x1);
-
-		L1c90:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x67f4), 0x6);
-			if (this.processor.FlagSet.IsNotEqual) goto L1c9d;
-			this.processor.EmitGlobalWord(0x67f4, 0xa);
-
-		L1c9d:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x67f4), 0xe);
-			if (this.processor.FlagSet.IsNotEqual) goto L1caa;
-			this.processor.EmitGlobalWord(0x67f4, 0x11);
-
-		L1caa:
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0x67f4);
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x3a94));
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x3aa6));
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
-			goto L1d02;
-
-		L1cc0:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x67f4), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L1ccc;
-			this.processor.RegAcc.Value16 = 0x5;
-			goto L1ccf;
-
-		L1ccc:
-			this.processor.RegAcc.Value16 = 0xffff;
-
-		L1ccf:
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
-
-			this.processor.RegAcc.Value16 = (ushort)(this.owner.Libc.Dice.DrawInt(2));
-
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual) goto L1ce7;
-			this.processor.RegAcc.Value16 = 0x9;
-			goto L1ce9;
-
-		L1ce7:
-			this.processor.RegAcc.Value16 = 0;
-
-		L1ce9:
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
-			this.processor.TestBitsByte(this.processor.PullGlobalByte(0xd76c), 0x3);
-			if (this.processor.FlagSet.IsNotEqual) goto L1cf8;
-			this.processor.EmitLocalWord(0x2, 0x8);
-
-		L1cf8:
-			this.processor.EmitGlobalWord(0xd76c, this.processor.DecrementWord(this.processor.PullGlobalWord(0xd76c)));
-			this.processor.EmitGlobalWord(0x67f6, 0x4);
-
-		L1d02:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x67f6), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L1d0d;
-			this.processor.EmitGlobalWord(0x67f6, this.processor.DecrementWord(this.processor.PullGlobalWord(0x67f6)));
-
-		L1d0d:
-			ChoreographKingLikeness(
-				this.processor.PullLocalWord(0x4),
-				this.processor.PullLocalWord(0x2),
-				this.processor.PullGlobalWord(0x7ef4));
+			ChoreographKingLikeness((ushort)eyes, (ushort)mouth, this.processor.PullGlobalWord(0x7ef4));
 
 			this.owner.TextPainter.AwaitTime(10);
 
 			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("ChoreographKingSpeaking");
+		}
+
+		/// <summary>The entry of table 0x3ab8 for the king's step 0x67f4</summary>
+		private sbyte KingGestureStep()
+		{
+			return (sbyte)this.processor.PullGlobalByte((ushort)(this.processor.PullGlobalWord(0x67f4) + 0x3ab8));
+		}
+
+		/// <summary>The next step of the king's gesture (see ChoreographKingSpeaking)</summary>
+		private void AdvanceKingGesture()
+		{
+			sbyte next = KingGestureStep();
+
+			if (next > 0)
+			{
+				this.processor.EmitGlobalWord(0x67f4, (ushort)(this.processor.PullGlobalWord(0x67f4) + 1));
+				return;
+			}
+
+			if (next < 0)
+			{
+				switch (next)
+				{
+					case -3:
+						this.processor.EmitGlobalWord(0x67f4, 0xe);
+						break;
+
+					case -2:
+						this.processor.EmitGlobalWord(0x67f4, 6);
+						break;
+
+					case -1:
+						this.processor.EmitGlobalWord(0x67f4, 0);
+						break;
+				}
+
+				return;
+			}
+
+			short gesture = -1;
+
+			switch (this.processor.PullGlobalWord(0x3936))
+			{
+				case 0:
+					this.processor.EmitGlobalByte(0x3a9a, this.processor.PullGlobalWord(0x6b8e) != 0 ? (byte)4 : (byte)2);
+
+					if (this.processor.PullGlobalWord(0x67f4) != 6)
+						gesture = 3;
+					break;
+
+				case 1:
+					if (this.processor.PullGlobalWord(0x67f4) != 0)
+						gesture = 0;
+					break;
+
+				case 2:
+					this.processor.EmitGlobalByte(0x3ab4, this.processor.PullGlobalWord(0x6b8e) != 0 ? (byte)0xb : (byte)7);
+					this.processor.EmitGlobalByte(0x3ab7, this.processor.PullGlobalWord(0x6b8e) != 0 ? (byte)0xb : (byte)7);
+
+					if (this.processor.PullGlobalWord(0x67f4) != 0xe)
+						gesture = 0xc;
+					break;
+			}
+
+			if (this.processor.PullGlobalWord(0xd76c) != 0 && this.processor.PullGlobalWord(0x67f4) != 0)
+				gesture = 0;
+
+			this.processor.EmitLocalWord(0x6, (ushort)gesture);
+
+			if (gesture == -1)
+			{
+				ushort step = this.processor.PullGlobalWord(0x67f4);
+
+				this.processor.EmitGlobalWord(0x7ef4, step == 0xe ? (ushort)1 : step == 6 ? (ushort)2 : (ushort)0);
+				return;
+			}
+
+			if (this.processor.PullGlobalWord(0x67f4) == 0)
+				this.processor.EmitGlobalWord(0x67f4, (ushort)gesture);
+
+			if (this.processor.PullGlobalWord(0x67f4) is 6 or 0xe)
+				this.processor.EmitGlobalWord(0x67f4, (ushort)(this.processor.PullGlobalWord(0x67f4) + 1));
 		}
 
 		/// <summary>
