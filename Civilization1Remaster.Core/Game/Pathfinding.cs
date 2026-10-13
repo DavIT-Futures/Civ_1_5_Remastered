@@ -974,228 +974,95 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// The next block of 4 x 4 tiles on the way to the place (land blocks 0xdb44, marker 0, or sea blocks 0x7f38, marker 1;
+		/// 13 bytes a column): the block of the place itself when it is marked, else the marked neighbouring block (directions
+		/// 1 - 8) nearest to the place that has a corner tile of the right kind (ocean for the marker 1) with a route
+		/// (ComputeRouteCost) to the place. The block goes to 0x6590 / 0x6592.
 		/// </summary>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
-		/// <param name="flag"></param>
-		/// <returns></returns>
+		/// <returns>1 when a block was found, else 0, also in AX</returns>
 		public ushort LocateRouteStep(int horizLoc, int vertLoc, ushort marker)
 		{
 			this.processor.Journal.OpenScope($"LocateRouteStep({horizLoc}, {vertLoc}, {marker})");
 
-			// function body
-			this.processor.EnterFrame(0x14);
-			this.processor.PreserveIndexRegisters();
-			this.processor.RegAcc.Value16 = (ushort)((short)horizLoc);
-			this.processor.DivideAccumulatorByPowerOfTwo(0x2);
-			this.processor.EmitLocalWord(0x12, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = (ushort)((short)vertLoc);
-			this.processor.AbsoluteAccumulator();
-			this.processor.RegAcc.Value16 = this.processor.ShiftRightSignedWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			this.processor.RegAcc.Value16 = this.processor.BitXorWord(this.processor.RegAcc.Value16, this.processor.RegData.Value16);
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, this.processor.RegData.Value16);
-			this.processor.EmitLocalWord(0x14, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0xe, 0xffff);
+			short blockHoriz = DivideByFour((short)horizLoc);
+			short blockVert = DivideByFour((short)vertLoc);
+			ushort blocks = marker != 0 ? (ushort)0x7f38 : (ushort)0xdb44;
+			int found = -1;
 
-			if (marker != 0)
+			if (BlockMarked(blocks, blockHoriz, blockVert))
 			{
-				this.processor.ScaleIndexToSource(0xd, this.processor.PullLocalWord(0x12));
-				this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x14);
-
-				if (this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x7f38)) != 0)
-				{
-					this.processor.EmitLocalWord(0xe, 0x0);
-				}
+				found = 0;
 			}
 			else
 			{
-				this.processor.ScaleIndexToSource(0xd, this.processor.PullLocalWord(0x12));
-				this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x14);
-				
-				if (this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0xdb44)) != 0x0)
+				short nearest = 0x63;
+
+				for (int directionIdx = 1; directionIdx <= 8; directionIdx++)
 				{
-					this.processor.EmitLocalWord(0xe, 0x0);
+					short nextHoriz = (short)(this.processor.PullGlobalWord((ushort)((directionIdx << 1) + 0x1882)) + blockHoriz);
+					short nextVert = (short)(this.processor.PullGlobalWord((ushort)((directionIdx << 1) + 0x18e4)) + blockVert);
+
+					if (!BlockMarked(blocks, nextHoriz, nextVert))
+						continue;
+
+					short distance = (short)this.owner.Helpers.MergeCoordinates(horizLoc - (nextHoriz * 4) - 1, vertLoc - (nextVert * 4) - 1);
+
+					if (distance >= nearest)
+						continue;
+
+					// The corners of the block: (1, 1), (2, 1), (2, 2), (1, 2)
+					short cornerHoriz = (short)((nextHoriz << 2) + 1);
+					short cornerVert = (short)((nextVert << 2) + 1);
+
+					if (!CornerMatches(cornerHoriz, cornerVert, marker) && !CornerMatches(++cornerHoriz, cornerVert, marker) &&
+						!CornerMatches(cornerHoriz, ++cornerVert, marker) && !CornerMatches(--cornerHoriz, cornerVert, marker))
+						continue;
+
+					ComputeRouteCost(cornerHoriz, cornerVert, horizLoc, vertLoc, marker, 18);
+
+					if (this.processor.RegAcc.Value16 != 0xffff)
+					{
+						nearest = distance;
+						found = directionIdx;
+					}
 				}
 			}
 
-			this.processor.CompareWord(this.processor.PullLocalWord(0xe), 0xffff);
-			if (this.processor.FlagSet.IsEqual) goto L0a96;
-			goto L0bf1;
+			ushort result = 0;
 
-		L0a96:
-			this.processor.EmitLocalWord(0x6, 0x63);
-			this.processor.EmitLocalWord(0x10, 0x1);
-			goto L0ad8;
+			if (found != -1)
+			{
+				this.processor.EmitGlobalWord(0x6590, (ushort)(this.processor.PullGlobalWord((ushort)((found << 1) + 0x1882)) + blockHoriz));
+				this.processor.EmitGlobalWord(0x6592, (ushort)(this.processor.PullGlobalWord((ushort)((found << 1) + 0x18e4)) + blockVert));
+				result = 1;
+			}
 
-		L0aa2:
-			this.processor.RegAcc.Value16 = 0;
+			this.processor.RegAcc.Value16 = result;
 
-		L0aa4:
-			if (this.processor.RegAcc.Value16 != marker)
-				goto L0b7f;
-
-		L0aac:
-			ComputeRouteCost(
-				this.processor.PullLocalSignedWord(0x2),
-				this.processor.PullLocalSignedWord(0x8),
-				horizLoc, vertLoc, marker, 18);
-
-			this.processor.RegAcc.Value16 = this.processor.IncrementWord(this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L0ad5;
-			this.processor.CopyLocalWord(0x4, 0x6);
-			this.processor.CopyLocalWord(0x10, 0xe);
-
-		L0ad5:
-			this.processor.EmitLocalWord(0x10, this.processor.IncrementWord(this.processor.PullLocalWord(0x10)));
-
-		L0ad8:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x10), 0x8);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L0ae1;
-			goto L0bf1;
-
-		L0ae1:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x10);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1882));
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x12));
-			this.processor.EmitLocalWord(0xa, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x18e4));
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x14));
-			this.processor.EmitLocalWord(0xc, this.processor.RegAcc.Value16);
-
-			if (marker == 0) goto L0b12;
-			this.processor.ScaleIndex(0xd, this.processor.PullLocalWord(0xa));
-			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0xc);
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegDest.Value16 + 0x7f38)), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L0b2a;
-
-		L0b12:
-			if (marker != 0) goto L0ad5;
-			this.processor.ScaleIndexToSource(0xd, this.processor.PullLocalWord(0xa));
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0xc);
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0xdb44)), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L0ad5;
-
-		L0b2a:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0xa);
-			this.processor.RegSource.Value16 <<= 2;
-
-			this.processor.RegDest.Value16 = this.processor.PullLocalWord(0xc);
-			this.processor.RegDest.Value16 <<= 2;
-
-			this.owner.Helpers.MergeCoordinates(
-				horizLoc - (this.processor.PullLocalSignedWord(0xa) * 4) - 1,
-				vertLoc - (this.processor.PullLocalSignedWord(0xc) * 4) - 1);
-
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
-
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x6);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsLess) goto L0b59;
-			goto L0ad5;
-
-		L0b59:
-			// LEA
-			this.processor.RegAcc.Value16 = (ushort)(this.processor.RegSource.Value16 + 0x1);
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
-			// LEA
-			this.processor.RegAcc.Value16 = (ushort)(this.processor.RegDest.Value16 + 0x1);
-			this.processor.EmitLocalWord(0x8, this.processor.RegAcc.Value16);
-
-			this.owner.MapOps.ObtainTerrainType(
-				this.processor.PullLocalSignedWord(0x2),
-				this.processor.PullLocalSignedWord(0x8));
-
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
-			if (this.processor.FlagSet.IsEqual) goto L0b79;
-			goto L0aa2;
-
-		L0b79:
-			this.processor.RegAcc.Value16 = 0x1;
-			goto L0aa4;
-
-		L0b7f:
-			this.processor.EmitLocalWord(0x2, this.processor.IncrementWord(this.processor.PullLocalWord(0x2)));
-
-			this.owner.MapOps.ObtainTerrainType(
-				this.processor.PullLocalSignedWord(0x2),
-				this.processor.PullLocalSignedWord(0x8));
-
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
-			if (this.processor.FlagSet.IsNotEqual) goto L0b9a;
-			this.processor.RegAcc.Value16 = 0x1;
-			goto L0b9c;
-
-		L0b9a:
-			this.processor.RegAcc.Value16 = 0;
-
-		L0b9c:
-			if (this.processor.RegAcc.Value16 == marker)
-				goto L0aac;
-
-			this.processor.IncrementLocalWord(0x8);
-
-			this.owner.MapOps.ObtainTerrainType(
-				this.processor.PullLocalSignedWord(0x2),
-				this.processor.PullLocalSignedWord(0x8));
-
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
-			if (this.processor.FlagSet.IsNotEqual) goto L0bbf;
-			this.processor.RegAcc.Value16 = 0x1;
-			goto L0bc1;
-
-		L0bbf:
-			this.processor.RegAcc.Value16 = 0;
-
-		L0bc1:
-			if (this.processor.RegAcc.Value16 == marker)
-				goto L0aac;
-
-			this.processor.DecrementLocalWord(0x2);
-
-			this.owner.MapOps.ObtainTerrainType(
-				this.processor.PullLocalSignedWord(0x2),
-				this.processor.PullLocalSignedWord(0x8));
-
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
-			if (this.processor.FlagSet.IsNotEqual) goto L0be4;
-			this.processor.RegAcc.Value16 = 0x1;
-			goto L0be6;
-
-		L0be4:
-			this.processor.RegAcc.Value16 = 0;
-
-		L0be6:
-			if (this.processor.RegAcc.Value16 == marker) goto L0aac;
-			goto L0ad5;
-
-		L0bf1:
-			this.processor.CompareWord(this.processor.PullLocalWord(0xe), 0xffff);
-			if (this.processor.FlagSet.IsEqual) goto L0c15;
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0xe);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1882));
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x12));
-			this.processor.EmitGlobalWord(0x6590, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x18e4));
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x14));
-			this.processor.EmitGlobalWord(0x6592, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = 0x1;
-			goto L0c17;
-
-		L0c15:
-			this.processor.RegAcc.Value16 = 0;
-
-		L0c17:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.RegDest.Value16 = this.processor.UnstackWord();
-			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("LocateRouteStep");
 
-			return this.processor.RegAcc.Value16;
+			return result;
+		}
+
+		/// <summary>The block is marked in the table of blocks (13 bytes a column)</summary>
+		private bool BlockMarked(ushort blocks, short blockHoriz, short blockVert)
+		{
+			return this.processor.PullGlobalByte((ushort)(blockVert + (0xd * blockHoriz) + blocks)) != 0;
+		}
+
+		/// <summary>The tile is ocean for the marker 1, land for the marker 0</summary>
+		private bool CornerMatches(short horizLoc, short vertLoc, ushort marker)
+		{
+			return (this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) == 0xa ? 1 : 0) == marker;
+		}
+
+		/// <summary>Signed division by 4 toward zero, like the original (-32768 gives a positive quotient)</summary>
+		private static short DivideByFour(short amount)
+		{
+			short quotient = (short)((short)Math.Abs((int)amount) >> 2);
+
+			return amount < 0 ? (short)-quotient : quotient;
 		}
 
 		/// <summary>

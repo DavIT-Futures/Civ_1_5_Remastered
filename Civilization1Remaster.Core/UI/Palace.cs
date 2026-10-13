@@ -1162,212 +1162,106 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// Cuts the pictures of the palace sections 1 - 7 from the castle pictures castle0 - castle4.pic (each one in the mask
+		/// arg1): with arg2 the sections of that level (0xd91e) from the place of the section (0xb222: bit 0 the column, bit 1 the
+		/// row), without arg2 all sections from the place of the section before. Each section has two parts (styles at 0xb25e:
+		/// 0 the whole wall, 1 and 2 left and right pieces, 3 and 4 the ends, cut from the middle picture for section 2 or a
+		/// section at the place 1), the picture goes to 0xb23c + 4 * section + 2 * part, the first one also to 0x6828 when unset.
 		/// </summary>
-		/// <param name="param1"></param>
-		/// <param name="param2"></param>
 		public void ImportPalaceCastle(ushort arg1, ushort arg2)
 		{
 			this.processor.Journal.OpenScope($"ImportPalaceCastle({arg1}, {arg2})");
 
-			// function body
+			// The file name is in the stack frame, like in the original, and the final values of the locals stay there
 			this.processor.EnterFrame(0x1a);
 			this.processor.PreserveSource();
-			this.processor.EmitLocalWord(0x1a, 0x0);
-			goto L104e;
 
-		L0ea4:
-			this.owner.VideoCard.ScreenToPicture(1,
-				this.processor.PullLocalWord(0x16),
-				(ushort)(this.processor.PullLocalWord(0x18) + 1),
-				0x34, 0x63);
+			ushort docname = (ushort)(this.processor.RegFrame.Value16 - 0x10);
+			ushort level;
 
-		L0eb4:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x12);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x14);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0xb23c), this.processor.RegAcc.Value16);
+			for (level = 0; level < 5; level++)
+			{
+				if (((1 << level) & arg1) == 0)
+					continue;
 
-		L0ed0:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x12);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x14);
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0xb25e)), 0xff);
-			if (this.processor.FlagSet.IsEqual) goto L0ef6;
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x6828), 0xffff);
-			if (this.processor.FlagSet.IsNotEqual) goto L0ef6;
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x12);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0xb23c));
-			this.processor.EmitGlobalWord(0x6828, this.processor.RegAcc.Value16);
+				this.owner.Libc.CopyText(docname, "castle0.pic");
+				this.processor.EmitLocalByte(0xa, (byte)(level + 0x30));
 
-		L0ef6:
-			this.processor.EmitLocalWord(0x14, this.processor.IncrementWord(this.processor.PullLocalWord(0x14)));
+				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, docname, 0);
 
-		L0ef9:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x14), 0x2);
-			if (this.processor.FlagSet.IsLess) goto L0f02;
-			goto L0fdf;
+				ushort section;
 
-		L0f02:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x12);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x14);
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0xb25e));
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual) goto L0ea4;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1);
-			if (this.processor.FlagSet.IsEqual) goto L0f29;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x2);
-			if (this.processor.FlagSet.IsEqual) goto L0f40;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x3);
-			if (this.processor.FlagSet.IsEqual) goto L0f55;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x4);
-			if (this.processor.FlagSet.IsEqual) goto L0f99;
-			goto L0ed0;
+				for (section = 1; section < 8; section++)
+				{
+					if (this.processor.PullGlobalWord((ushort)((section << 1) + 0xd91e)) != level && arg2 != 0)
+						continue;
 
-		L0f29:
-			this.owner.VideoCard.ScreenToPicture(1,
-				(ushort)(this.processor.PullLocalWord(0x16) + 0x35),
-				(ushort)(this.processor.PullLocalWord(0x18) + 1),
-				0x18, 0x63);
+					ushort place = this.processor.PullGlobalWord((ushort)((section << 1) + 0xb222));
 
-		L0f3c:
-			goto L0eb4;
+					if (arg2 == 0)
+					{
+						place = (ushort)(section - 1);
+					}
 
-		L0f40:
-			this.owner.VideoCard.ScreenToPicture(1,
-				(ushort)(this.processor.PullLocalWord(0x16) + 0x4e),
-				(ushort)(this.processor.PullLocalWord(0x18) + 1),
-				0x18, 0x63);
-			goto L0f3c;
+					ushort horizLoc = (ushort)((place & 1) * 0xa0);
+					ushort vertLoc = (ushort)((place & 2) * 0x32);
 
-		L0f55:
-			this.processor.CompareWord(arg2, 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L0f67;
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x12);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xb222)), 0x1);
-			if (this.processor.FlagSet.IsNotEqual) goto L0f73;
+					for (ushort partIdx = 0; partIdx < 2; partIdx++)
+					{
+						ushort picture = (ushort)((section << 2) + (partIdx << 1) + 0xb23c);
+						sbyte style = (sbyte)this.processor.PullGlobalByte((ushort)((section << 1) + 0xb25e + partIdx));
+						bool middle = arg2 != 0 ? this.processor.PullGlobalWord((ushort)((section << 1) + 0xb222)) == 1 : section == 2;
 
-		L0f67:
-			this.processor.CompareWord(arg2, 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L0f88;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x12), 0x2);
-			if (this.processor.FlagSet.IsEqual) goto L0f88;
+						switch (style)
+						{
+							case 0:
+								this.owner.VideoCard.ScreenToPicture(1, horizLoc, (ushort)(vertLoc + 1), 0x34, 0x63);
+								break;
 
-		L0f73:
-			this.owner.VideoCard.ScreenToPicture(1,
-				(ushort)(this.processor.PullLocalWord(0x16) + 0x67),
-				(ushort)(this.processor.PullLocalWord(0x18) + 1),
-				0x1c, 0x63);
-			goto L0f3c;
+							case 1:
+								this.owner.VideoCard.ScreenToPicture(1, (ushort)(horizLoc + 0x35), (ushort)(vertLoc + 1), 0x18, 0x63);
+								break;
 
-		L0f88:
-			this.owner.VideoCard.ScreenToPicture(1, 0xa0, 0x65, 0x23, 0x63);
-			goto L0f3c;
+							case 2:
+								this.owner.VideoCard.ScreenToPicture(1, (ushort)(horizLoc + 0x4e), (ushort)(vertLoc + 1), 0x18, 0x63);
+								break;
 
-		L0f99:
-			this.processor.CompareWord(arg2, 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L0fab;
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x12);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xb222)), 0x1);
-			if (this.processor.FlagSet.IsNotEqual) goto L0fb7;
+							case 3:
+								if (middle)
+									this.owner.VideoCard.ScreenToPicture(1, 0xa0, 0x65, 0x23, 0x63);
+								else
+									this.owner.VideoCard.ScreenToPicture(1, (ushort)(horizLoc + 0x67), (ushort)(vertLoc + 1), 0x1c, 0x63);
+								break;
 
-		L0fab:
-			this.processor.CompareWord(arg2, 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L0fcd;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x12), 0x2);
-			if (this.processor.FlagSet.IsEqual) goto L0fcd;
+							case 4:
+								if (middle)
+									this.owner.VideoCard.ScreenToPicture(1, 0xc4, 0x65, 0x23, 0x63);
+								else
+									this.owner.VideoCard.ScreenToPicture(1, (ushort)(horizLoc + 0x84), (ushort)(vertLoc + 1), 0x1b, 0x63);
+								break;
+						}
 
-		L0fb7:
-			this.owner.VideoCard.ScreenToPicture(1,
-				(ushort)(this.processor.PullLocalWord(0x16) + 0x84),
-				(ushort)(this.processor.PullLocalWord(0x18) + 1),
-				0x1b, 0x63);
-			goto L0f3c;
+						if (style is >= 0 and <= 4)
+						{
+							this.processor.EmitGlobalWord(picture, this.processor.RegAcc.Value16);
+						}
 
-		L0fcd:
-			this.owner.VideoCard.ScreenToPicture(1, 0xc4, 0x65, 0x23, 0x63);
-			goto L0f3c;
+						if (style != -1 && this.processor.PullGlobalWord(0x6828) == 0xffff)
+						{
+							this.processor.EmitGlobalWord(0x6828, this.processor.PullGlobalWord(picture));
+						}
+					}
 
-		L0fdf:
-			this.processor.EmitLocalWord(0x12, this.processor.IncrementWord(this.processor.PullLocalWord(0x12)));
+					this.processor.EmitLocalWord(0x14, 0x2);
+					this.processor.EmitLocalWord(0x16, horizLoc);
+					this.processor.EmitLocalWord(0x18, vertLoc);
+				}
 
-		L0fe2:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x12), 0x8);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L104b;
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x12);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x1a);
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xd91e)), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L0ffc;
-			this.processor.CompareWord(arg2, 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L0fdf;
+				this.processor.EmitLocalWord(0x12, section);
+			}
 
-		L0ffc:
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x12);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.RegSource.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xb222));
-			this.processor.RegAcc.Value16 = this.processor.RegSource.Value16;
-			this.processor.RegAcc.Value16 = this.processor.BitAndWord(this.processor.RegAcc.Value16, 0x1);
-			this.processor.RegCount.Value16 = 0xa0;
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.EmitLocalWord(0x16, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = this.processor.RegSource.Value16;
-			this.processor.RegAcc.Value16 = this.processor.BitAndWord(this.processor.RegAcc.Value16, 0x2);
-			this.processor.RegCount.Value16 = 0x32;
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.EmitLocalWord(0x18, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(arg2, 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L1043;
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x12);
-			this.processor.RegSource.Value16 = this.processor.DecrementWord(this.processor.RegSource.Value16);
-			this.processor.RegAcc.Value16 = this.processor.RegSource.Value16;
-			this.processor.RegAcc.Value16 = this.processor.BitAndWord(this.processor.RegAcc.Value16, 0x1);
-			this.processor.RegCount.Value16 = 0xa0;
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.EmitLocalWord(0x16, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = this.processor.RegSource.Value16;
-			this.processor.RegAcc.Value16 = this.processor.BitAndWord(this.processor.RegAcc.Value16, 0x2);
-			this.processor.RegCount.Value16 = 0x32;
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.EmitLocalWord(0x18, this.processor.RegAcc.Value16);
+			this.processor.EmitLocalWord(0x1a, level);
 
-		L1043:
-			this.processor.EmitLocalWord(0x14, 0x0);
-			goto L0ef9;
-
-		L104b:
-			this.processor.EmitLocalWord(0x1a, this.processor.IncrementWord(this.processor.PullLocalWord(0x1a)));
-
-		L104e:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x1a), 0x5);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L1091;
-			this.processor.RegAcc.Value16 = 0x1;
-			this.processor.RegCount.LowByte = this.processor.PullLocalByte(0x1a);
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			this.processor.TestBitsWord(this.processor.RegAcc.Value16, arg1);
-			if (this.processor.FlagSet.IsEqual) goto L104b;
-
-			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x10), "castle0.pic");
-
-			this.processor.RegAcc.LowByte = this.processor.PullLocalByte(0x1a);
-			this.processor.RegAcc.LowByte = this.processor.SumByte(this.processor.RegAcc.LowByte, 0x30);
-			this.processor.EmitLocalByte(0xa, this.processor.RegAcc.LowByte);
-
-			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, (ushort)(this.processor.RegFrame.Value16 - 0x10), 0);
-
-			this.processor.EmitLocalWord(0x12, 0x1);
-			goto L0fe2;
-
-		L1091:
 			this.processor.RegSource.Value16 = this.processor.UnstackWord();
 			this.processor.LeaveFrame();
 			// Far return

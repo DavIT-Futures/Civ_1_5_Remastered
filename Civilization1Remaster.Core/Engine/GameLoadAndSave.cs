@@ -560,162 +560,106 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <summary>
-		/// ?
+		/// Asks for the drive of the saved games (0x4384, the current drive the first time): a letter A - F chooses it, Return
+		/// takes it, Escape cancels. A floppy drive without a disk gives the message "No Disk in Drive ...". The drive letter
+		/// goes into the file name at 0x41c6.
 		/// </summary>
-		/// <returns></returns>
+		/// <returns>The drive (0 = A), or 0xffff when cancelled or without a disk, also in AX</returns>
 		public ushort QueryForStoreDrive()
 		{
 			this.processor.Journal.OpenScope("QueryForStoreDrive()");
 
-			// function body
-			this.processor.EnterFrame(0x6);
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x4384), 0xffff);
-			if (this.processor.FlagSet.IsNotEqual) goto L0615;
+			if (this.processor.PullGlobalWord(0x4384) == 0xffff)
+			{
+				this.owner.Libc.DosQueryDrive(0x4384);
 
-			this.owner.Libc.DosQueryDrive(0x4384);
+				this.processor.EmitGlobalWord(0x4384, (ushort)(this.processor.PullGlobalWord(0x4384) - 1));
+			}
 
-			this.processor.EmitGlobalWord(0x4384, this.processor.DecrementWord(this.processor.PullGlobalWord(0x4384)));
-
-		L0615:
 			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 15);
 
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x681a), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L063d;
+			if (this.processor.PullGlobalWord(0x681a) == 0)
+			{
+				this.owner.UnitOps.RenderBusyIndicator();
+			}
 
-			this.owner.UnitOps.RenderBusyIndicator();
+			ushort key;
 
-		L063d:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x681a), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L0649;
-			this.owner.Libc.CopyText(0xba06, "  Which drive contains your\n    saved game files?\n\n            ");
-			goto L064c;
+			do
+			{
+				this.owner.Libc.CopyText(0xba06, this.processor.PullGlobalWord(0x681a) != 0 ?
+					"  Which drive contains your\n    saved game files?\n\n            " :
+					"  Which drive contains your\n     Save Game disk?\n\n            ");
 
-		L0649:
-			this.owner.Libc.CopyText(0xba06, "  Which drive contains your\n     Save Game disk?\n\n            ");
+				AppendDriveLetter(0xba05);
 
-		L064c:
-			this.owner.Libc.TextLength(0xba06);
+				this.owner.Libc.AppendText(0xba06, ":\n\n    Press drive letter and\nReturn when disk is inserted.\n");
 
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegAcc.LowByte = this.processor.PullGlobalByte(0x4384);
-			this.processor.RegAcc.LowByte = this.processor.SumByte(this.processor.RegAcc.LowByte, 0x41);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xba05), this.processor.RegAcc.LowByte);
+				this.owner.Libc.AppendText(0xba06, "    Press Escape to cancel.\n");
 
-			this.owner.Libc.AppendText(0xba06, ":\n\n    Press drive letter and\nReturn when disk is inserted.\n");
+				this.owner.BlockText.RenderTextChunk(99, 80, 72, 0);
 
-			this.owner.Libc.AppendText(0xba06, "    Press Escape to cancel.\n");
+				this.owner.Dialogs.ObtainNavigationKey();
 
-			this.owner.BlockText.RenderTextChunk(99, 80, 72, 0);
+				key = this.processor.RegAcc.Value16;
 
-			this.owner.Dialogs.ObtainNavigationKey();
+				for (ushort driveIdx = 0; driveIdx < 6; driveIdx++)
+				{
+					if (key == 'A' + driveIdx || key == 'a' + driveIdx)
+					{
+						this.processor.EmitGlobalWord(0x4384, driveIdx);
+					}
+				}
 
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x41);
-			if (this.processor.FlagSet.IsEqual) goto L06b9;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x61);
-			if (this.processor.FlagSet.IsNotEqual) goto L06bf;
+				if (key == 0x1b)
+				{
+					this.processor.EmitGlobalWord(0x4384, 0xffff);
+				}
 
-		L06b9:
-			this.processor.EmitGlobalWord(0x4384, 0x0);
+				this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 80, 88, 160, 24, 15);
+			}
+			while (key != 0xd && key != 0x1b);
 
-		L06bf:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x42);
-			if (this.processor.FlagSet.IsEqual) goto L06cb;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x62);
-			if (this.processor.FlagSet.IsNotEqual) goto L06d1;
-
-			L06cb:
-			this.processor.EmitGlobalWord(0x4384, 0x1);
-
-		L06d1:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x43);
-			if (this.processor.FlagSet.IsEqual) goto L06dd;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x63);
-			if (this.processor.FlagSet.IsNotEqual) goto L06e3;
-
-		L06dd:
-			this.processor.EmitGlobalWord(0x4384, 0x2);
-
-		L06e3:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x44);
-			if (this.processor.FlagSet.IsEqual) goto L06ef;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x64);
-			if (this.processor.FlagSet.IsNotEqual) goto L06f5;
-
-		L06ef:
-			this.processor.EmitGlobalWord(0x4384, 0x3);
-
-		L06f5:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x45);
-			if (this.processor.FlagSet.IsEqual) goto L0701;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x65);
-			if (this.processor.FlagSet.IsNotEqual) goto L0707;
-
-		L0701:
-			this.processor.EmitGlobalWord(0x4384, 0x4);
-
-		L0707:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x46);
-			if (this.processor.FlagSet.IsEqual) goto L0713;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x66);
-			if (this.processor.FlagSet.IsNotEqual) goto L0719;
-
-		L0713:
-			this.processor.EmitGlobalWord(0x4384, 0x5);
-
-		L0719:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x1b);
-			if (this.processor.FlagSet.IsNotEqual) goto L0725;
-			this.processor.EmitGlobalWord(0x4384, 0xffff);
-
-		L0725:
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 80, 88, 160, 24, 15);
-
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0xd);
-			if (this.processor.FlagSet.IsEqual) goto L0754;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x1b);
-			if (this.processor.FlagSet.IsEqual) goto L0754;
-			goto L063d;
-
-		L0754:
 			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 8, 8, 304, 184, 15);
 
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x4384), 0xffff);
-			if (this.processor.FlagSet.IsEqual) goto L07c7;
+			ushort drive = this.processor.PullGlobalWord(0x4384);
 
-			VerifyDrive(this.processor.PullGlobalWord(0x4384));
+			if (drive != 0xffff)
+			{
+				VerifyDrive(drive);
 
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsNotEqual) goto L07c7;
+				if (this.processor.RegAcc.Value16 == 0)
+				{
+					this.owner.Libc.CopyText(0xba06, "No Disk in Drive A.\n");
 
-			this.owner.Libc.CopyText(0xba06, "No Disk in Drive A.\n");
+					AppendDriveLetter(0xba03);
 
-			this.owner.Libc.TextLength(0xba06);
+					this.owner.Dialogs.DisplayMenu(0xba06, 100, 80, 1);
 
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegAcc.LowByte = this.processor.PullGlobalByte(0x4384);
-			this.processor.RegAcc.LowByte = this.processor.SumByte(this.processor.RegAcc.LowByte, 0x41);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xba03), this.processor.RegAcc.LowByte);
+					this.processor.RegAcc.Value16 = 0xffff;
+					this.processor.Journal.CloseScope("QueryForStoreDrive");
 
-			this.owner.Dialogs.DisplayMenu(0xba06, 100, 80, 1);
+					return 0xffff;
+				}
+			}
 
-			this.processor.RegAcc.Value16 = 0xffff;
-			goto L07d2;
+			this.processor.EmitGlobalByte(0x41c6, (byte)(this.processor.PullGlobalByte(0x4384) + 0x61));
 
-		L07c7:
-			this.processor.RegAcc.LowByte = this.processor.PullGlobalByte(0x4384);
-			this.processor.RegAcc.LowByte = this.processor.SumByte(this.processor.RegAcc.LowByte, 0x61);
-			this.processor.EmitGlobalByte(0x41c6, this.processor.RegAcc.LowByte);
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x4384);
-
-		L07d2:
-			this.processor.RegStack.Value16 = this.processor.RegFrame.Value16;
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
+			drive = this.processor.PullGlobalWord(0x4384);
+			this.processor.RegAcc.Value16 = drive;
 
 			// Far return
 			this.processor.Journal.CloseScope("QueryForStoreDrive");
 
-			return this.processor.RegAcc.Value16;
+			return drive;
+		}
+
+		/// <summary>The letter of the drive (0x4384) is written at the end of the text at 0xba06, place: 0xba05 the last character</summary>
+		private void AppendDriveLetter(ushort place)
+		{
+			this.owner.Libc.TextLength(0xba06);
+
+			this.processor.EmitGlobalByte((ushort)(this.processor.RegAcc.Value16 + place), (byte)(this.processor.PullGlobalByte(0x4384) + 0x41));
 		}
 
 		/// <summary>
