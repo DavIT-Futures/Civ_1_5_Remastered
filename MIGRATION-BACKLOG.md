@@ -263,20 +263,25 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   Wnioski: **oryginał kontra oryginał** (obie lambdy z kopią referencyjną) szybko pokazuje artefakt testu – tu tekst dłuższy niż
   ok. 40 znaków nadpisuje w buforze 0xba06 ścieżkę CIV.EXE, inną w każdej grze testowej (krótkie nazwy w scenariuszach),
   a poziom trudności 5 rekordu Hall of Fame wskazuje tytuł poza tabelą (gra zapisuje tylko 0–4).
+- Kolejne 4 moduły (2026-10-13): `RenderUnitInfo` (`PlayerTurn`, z `RenderUnitPanel`; jednostki wspierane przez miasto rysowane
+  przez jednostkę 127 jak w oryginale), `DisplayOrdersMenu` (`GameMenus`, z `ChooseOrder`, `AppendChangeOfTerrain`; klawisze
+  w liście C#, SI/DI oddawane z zmiennych C#), `DisplayTradeReport` (`AdvisorReports`, ramka zostaje: woła `HandleCity`, koszty
+  budynków w ramce), `DisplayArmyList` (`ArmySelection`, z `RenderStrategicTile`; nieznana rola zostawia tekst poprzedniej
+  jak w oryginale). Testy w `BatchThirtySixDifferentialTests`.
 
 ## Następny krok
 
 Dalej małe metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 60`
 (metody z co najmniej 2 liniami `goto L` / `FlagSet` / `Compare…` / `SumWord` itd., od najkrótszej). Kandydaci
 (`GameLoadAndSave` i `Newspaper` nie mają już metod w stylu asm): `ChooseTechnologyToTake` (`TradeAndConquest`, patrz wyżej),
-`RenderCityScenery*` (`CityView`), `AttachSpaceshipPart` (`SpaceshipScreen`), `RenderUnitInfo` (`PlayerTurn`),
-`DisplayTradeReport`, `DisplayMilitaryReport` (`AdvisorReports`), `DisplayArmyList` (`ArmySelection`), `DisplayOrdersMenu` (`GameMenus`),
+`RenderCityScenery*` (`CityView`), `AttachSpaceshipPart` (`SpaceshipScreen`), `DisplayMilitaryReport` (`AdvisorReports`),
+`DisplayTravellersReport`, `HandleEndOfTurnEvents` (`TurnEvents`), `LabelLandmasses` (`GameInitAndIntro`),
 `ChoreographKingSpeaking`, `DisplayKingScreen` (`MeetWithKing`),
 `RenderCitizenIcons` (`CityManagement`, kandydat ze „Śmieci na stosie”),
 reszta generatora mapy w `GameInitAndIntro`. Funkcje niskopoziomowe `SystemServices` (`DeactivateMouse`, `PointerEvent`,
 `RenderCursorToScreen`, `RecoverScreenUnderCursor`, kolory i zegar: `PrepareTimer`, `RefreshHueCycling`, `AssignHueCycleSpan`,
 `ColorsFadeStep`, `FadeColors`, `FloodColors`, `ImportColorsFromBuffer`) i `SnapHeapPointer` (`VGADriver`) na koniec: działają
-w przerwaniach albo na rejestrach. Stan 2026-10-13: 80 metod w stylu asm, ok. 47,7 tys. z 69,5 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
+w przerwaniach albo na rejestrach. Stan 2026-10-13: 76 metod w stylu asm, ok. 46,5 tys. z 68,9 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
