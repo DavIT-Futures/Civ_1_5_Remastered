@@ -303,25 +303,38 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   i test to złapał); `AppendText` / `CopyText` zostawiają w AX adres celu, więc test AX po nich jest zawsze prawdziwy; obrazki
   z `ScreenToPicture` test rysuje po wywołaniu (inaczej mutacja położenia twarzy przeżywa). Testy w
   `BatchFortyOneDifferentialTests`.
+- Porcja 42 (2026-10-13): `ChartRoute` (`Pathfinding`, przeszukiwanie wszerz po blokach 4 x 4), `HandlePeaceTreaties`
+  (`GovernmentAndDiplomacy`), `ImportPalaceGraphics` (`Palace`), `ReckonContinentSizes` (`GameInitAndIntro`, morskie połączenia
+  bloków). Ramki zostają. Śmieci ze stosu potwierdzone i zachowane: `ChartRoute` porównuje zmienną 0xa, zanim ją ustawi, gdy cel
+  jest w bloku jednostki (tylko przy remisie 0x63); `ImportPalaceGraphics` czyta 0x18 (najdalszy zbudowany segment, niezapisany,
+  gdy segment 8 jest zbudowany) i 0x12 (ostatni lewy koniec, niezapisany bez lewego końca); `ReckonContinentSizes` nie zeruje
+  0xe (morze sąsiada) przed próbkowaniem, więc sąsiad bez morza porównuje poprzednią wartość z ramki. `ChartRoute` bez kroku
+  zwraca w AX wiersz celu (bajt 0x81db), nie 0. `HandlePeaceTreaties` ustawia SI / DI jak oryginał; groźba emisariusza bierze
+  nazwę z 0x1992 + 16 * gracz (DI = gracz << 4, patrz błędy). Testy w `BatchFortyTwoDifferentialTests` ustawiają te słowa pod
+  SP. Pełny zestaw po porcji 42.
 
 ## Następny krok
 
 Dalej małe metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 60`
 (metody z co najmniej 2 liniami `goto L` / `FlagSet` / `Compare…` / `SumWord` itd., od najkrótszej). Kandydaci
 (`GameLoadAndSave` i `Newspaper` nie mają już metod w stylu asm): `ChooseTechnologyToTake` (`TradeAndConquest`, patrz wyżej),
-`TitleLogoAndMainChoices` (`GameStartup`), `DisplayStoryIntro`, `ReckonContinentSizes`, `ProduceTerrain` (`GameInitAndIntro`),
-`ChartRoute` (`Pathfinding`), `CharacterizeStartLocation`, `DisplayTribeSelection` (`StartGameMenu`), `EstablishCity` (`CityFoundingAndScore`),
-`HandlePeaceTreaties` (`GovernmentAndDiplomacy`), `OperateMenu`, `DisplayMenu` (`DialogDrawing`), `ImportPalaceGraphics` (`Palace`),
-reszta generatora mapy w `GameInitAndIntro`. Funkcje niskopoziomowe `SystemServices` (`DeactivateMouse`, `PointerEvent`,
+`TitleLogoAndMainChoices` (`GameStartup`), `DisplayStoryIntro`, `ProduceTerrain` (`GameInitAndIntro`),
+`CharacterizeStartLocation`, `DisplayTribeSelection` (`StartGameMenu`), `EstablishCity` (`CityFoundingAndScore`),
+`OperateMenu`, `DisplayMenu` (`DialogDrawing`), `SeizeCity` (`TradeAndConquest`), `DiplomatArrivesAtCity` (`DiplomatActions`),
+`DisplayCivilopediaIndex` (`Civilopedia`), `ShiftToward`, `CarryOutGoto` (`Pathfinding`), `DisplayCivilizationScreen` (`MainIntro`),
+`ConstructCivilization`, `ConfigureFreshGame` (`StartGameMenu`), `UncoverTechnology` (`ScienceAndAdvisors`), `DisplayPalace`,
+`HandleCityDisasters` (`CityFoundingAndScore`), reszta generatora mapy w `GameInitAndIntro`. Funkcje niskopoziomowe `SystemServices` (`DeactivateMouse`, `PointerEvent`,
 `RenderCursorToScreen`, `RecoverScreenUnderCursor`, kolory i zegar: `PrepareTimer`, `RefreshHueCycling`, `AssignHueCycleSpan`,
 `ColorsFadeStep`, `FadeColors`, `FloodColors`, `ImportColorsFromBuffer`) i `SnapHeapPointer` (`VGADriver`) na koniec: działają
-w przerwaniach albo na rejestrach. Stan 2026-10-13 (po porcji 41): 61 metod w stylu asm, ok. 42,5 tys. z 67,3 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
+w przerwaniach albo na rejestrach. Stan 2026-10-13 (po porcji 42): 57 metod w stylu asm, ok. 40,8 tys. z 66,6 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
 Kod C# przetłumaczony z asm ma miejscami inne zachowanie niż DOS-owy CIV.EXE. Testy porównują z tłumaczeniem, więc na razie
 te błędy są odtwarzane jawnie:
 
+- `HandlePeaceTreaties`: groźba emisariusza (L0468) bierze nazwę gracza z `word[0x1992 + DI]`, gdzie DI = gracz << 4 (ustawione
+  dla relacji), czyli spoza tablicy nazw – tekst z przypadkowego wskaźnika. Po naprawie: 0x1992 + 2 * gracz.
 - `EarnTechnology`: pierwsze odkrycie technologii, która dezaktualizuje cud (tabela 0x10fe), czyta `Towns[MarvelTownIdx[cud]]`
   także dla niezbudowanego cudu (-1) albo zniszczonego miasta (128), więc rzuca `IndexOutOfRangeException` (DOS czytał pamięć
   przed tablicą). Do potwierdzenia w grze; po naprawie: sprawdzić -1 / 128 przed odczytem.

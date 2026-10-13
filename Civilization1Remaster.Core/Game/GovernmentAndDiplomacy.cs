@@ -18,422 +18,251 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// The treaties of a player each turn. Anarchy ends (the human player every 4th turn, others every 4th turn or with
+		/// the wonder effect 1) in despotism, with the revolution flag 4 of the relation 0 (an AI player with it goes back to
+		/// its government). For every other player: a broken treaty (0x100) is forgotten one time in 3 (war again, 0x200);
+		/// every 16th turn the peace of a war (1 without 2) ends with a message when the human player knows one of them,
+		/// and the flags 1 and 0x10 are cleared both ways. Every 32nd turn (the player's turn, 4 * player) an AI player that
+		/// asked for help (0x20) against a player at war with the human player sends an emissary: a much weaker one pays
+		/// tribute for an alliance, a stronger one threatens (the name read at 0x1992 + 16 * player, not of the player, like
+		/// in the original). SI and DI get the values of the original before the calls.
 		/// </summary>
-		/// <param name="playerID"></param>
 		public void HandlePeaceTreaties(short participantIdx)
 		{
 			this.processor.Journal.OpenScope($"HandlePeaceTreaties({participantIdx})");
 
-			// function body
+			// The final values of the locals stay in the stack frame, like in the original
 			this.processor.EnterFrame(0x6);
 			this.processor.PreserveIndexRegisters();
-			
-			if (this.owner.World.Participants[participantIdx].RegimeKind != 0)
-				goto L0088;
 
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.CompareWord((ushort)participantIdx, this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L004c;
-
-			this.processor.TestBitsByte((byte)(this.owner.World.RoundTally & 0xff), 0x3);
-			if (this.processor.FlagSet.IsNotEqual) goto L004c;
-
-			this.processor.RegSource.Value16 = (ushort)participantIdx;
-			this.processor.RegCount.LowByte = 0x4;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, this.processor.RegCount.LowByte);
-			
-			if ((this.owner.World.Participants[participantIdx].Relations[0] & 4) == 0)
-				goto L003c;
-
-			this.owner.World.Participants[participantIdx].Relations[0] &= 0xfffb;
-			goto L0088;
-
-		L003c:
-			SwitchGovernment(participantIdx, 1);
-			
-			goto L0088;
-
-		L004c:
-			this.processor.TestBitsByte((byte)(this.owner.World.RoundTally & 0xff), 0x3);
-			if (this.processor.FlagSet.IsEqual) goto L0066;
-
-			this.owner.CityOps.PlayerEnjoysWonderEffect(participantIdx, 1);
-			
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual) goto L0088;
-
-		L0066:
-			SwitchGovernment(participantIdx, 1);
-			
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.CompareWord((ushort)participantIdx, this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L0088;
-			
-			this.processor.RegBase.Value16 = (ushort)participantIdx;
-			this.processor.RegCount.LowByte = 0x4;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, this.processor.RegCount.LowByte);
-
-			this.owner.World.Participants[participantIdx].Relations[0] &= 0xfffb;
-
-		L0088:
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.CompareWord((ushort)participantIdx, this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L00b1;
-			
-			this.processor.RegBase.Value16 = (ushort)participantIdx;
-			this.processor.RegCount.LowByte = 0x4;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, this.processor.RegCount.LowByte);
-
-			if ((this.owner.World.Participants[participantIdx].Relations[0] & 4) == 0)
-				goto L00b1;
-
-			SwitchGovernment(participantIdx, this.owner.World.Participants[participantIdx].RegimeKind);
-
-		L00b1:
-			this.processor.EmitLocalWord(0x2, 0x1);
-
-		L00b6:
-			this.processor.RegSource.Value16 = (ushort)participantIdx;
-			this.processor.RegCount.LowByte = 0x4;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, this.processor.RegCount.LowByte);
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x2);
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, 0x1);
-			this.processor.RegSource.Value16 = this.processor.SumWord(this.processor.RegSource.Value16, this.processor.RegAcc.Value16);
-
-			if ((this.owner.World.Participants[participantIdx].Relations[this.processor.PullLocalWord(0x2)] & 0x100) == 0)
-				goto L00e9;
-
-			this.processor.RegAcc.Value16 = (ushort)(this.owner.Libc.Dice.DrawInt(3));
-
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsNotEqual) goto L00e9;
-
-			this.owner.World.Participants[participantIdx].Relations[this.processor.PullLocalWord(0x2)] &= 0xfefd;
-			this.owner.World.Participants[participantIdx].Relations[this.processor.PullLocalWord(0x2)] |= 0x200;
-			
-		L00e9:
-			this.processor.TestBitsByte((byte)(this.owner.World.RoundTally & 0xff), 0xf);
-			if (this.processor.FlagSet.IsEqual) goto L00f3;
-			goto L0202;
-
-		L00f3:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x2);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-
-			this.processor.RegBase.Value16 = (ushort)participantIdx;
-			this.processor.RegCount.LowByte = 0x4;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, this.processor.RegCount.LowByte);
-
-			if ((this.owner.World.Participants[participantIdx].Relations[this.processor.PullLocalWord(0x2)] & 0x10) != 0)
-				goto L01e2;
-
-			if ((this.owner.World.Participants[participantIdx].Relations[this.processor.PullLocalWord(0x2)] & 1) == 0)
-				goto L01c2;
-
-			if ((this.owner.World.Participants[participantIdx].Relations[this.processor.PullLocalWord(0x2)] & 2) != 0)
-				goto L01c2;
-
-			this.processor.RegDest.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.RegCount.LowByte = 0x4;
-			this.processor.RegDest.Value16 = this.processor.ShiftLeftWord(this.processor.RegDest.Value16, this.processor.RegCount.LowByte);
-
-			this.processor.RegBase.Value16 = (ushort)participantIdx;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-
-			if ((this.owner.World.Participants[this.owner.World.PersonParticipantIdx].Relations[participantIdx] & 0x40) != 0)
-				goto L0141;
-
-			this.processor.RegBase.Value16 = this.processor.RegSource.Value16;
-			this.processor.RegBase.Value16 = this.processor.SumWord(this.processor.RegBase.Value16, this.processor.RegDest.Value16);
-
-			if ((this.owner.World.Participants[this.owner.World.PersonParticipantIdx].Relations[this.processor.PullLocalWord(0x2)] & 0x40) == 0)
-				goto L01c2;
-
-		L0141:
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.CompareWord((ushort)participantIdx, this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L01c2;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L01c2;
-
-			this.owner.Libc.CopyText(0xba06, "The war between\nthe ");
-
-			this.processor.RegBase.Value16 = (ushort)participantIdx;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1992)));
-
-			this.owner.Libc.AppendText(0xba06, " and the\n");
-
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x2);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1992)));
-
-			this.owner.Libc.AppendText(0xba06, " has ended.\n");
-
-			this.processor.EmitGlobalWord(0x2f9e, 0x1);
-
-			this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
-
-		L01c2:
-			this.processor.RegSource.Value16 = (ushort)participantIdx;
-			this.processor.RegCount.LowByte = 0x4;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, this.processor.RegCount.LowByte);
-
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x2);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-
-			this.owner.World.Participants[participantIdx].Relations[this.processor.PullLocalWord(0x2)] &= 0xfffe;
-
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x2);
-			this.processor.RegCount.LowByte = 0x4;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, this.processor.RegCount.LowByte);
-
-			this.processor.RegBase.Value16 = (ushort)participantIdx;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-
-			this.owner.World.Participants[this.processor.PullLocalWord(0x2)].Relations[participantIdx] &= 0xfffe;
-
-		L01e2:
-			this.processor.RegSource.Value16 = (ushort)participantIdx;
-			this.processor.RegCount.LowByte = 0x4;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, this.processor.RegCount.LowByte);
-
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x2);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-
-			this.owner.World.Participants[participantIdx].Relations[this.processor.PullLocalWord(0x2)] &= 0xffef;
-
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x2);
-			this.processor.RegCount.LowByte = 0x4;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, this.processor.RegCount.LowByte);
-
-			this.processor.RegBase.Value16 = (ushort)participantIdx;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-
-			this.owner.World.Participants[this.processor.PullLocalWord(0x2)].Relations[participantIdx] &= 0xffef;
-
-		L0202:
-			this.processor.EmitLocalWord(0x2, this.processor.IncrementWord(this.processor.PullLocalWord(0x2)));
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x8);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L020e;
-			goto L00b6;
-
-		L020e:
-			this.processor.CompareWord((ushort)participantIdx, 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L0217;
-			goto L049b;
-
-		L0217:
-			this.processor.RegAcc.LowByte = (byte)(this.owner.World.RoundTally & 0xff);
-			this.processor.RegAcc.HighByte = 0;
-			this.processor.RegAcc.Value16 = this.processor.BitAndWord(this.processor.RegAcc.Value16, 0x1f);
-			this.processor.RegCount.Value16 = (ushort)participantIdx;
-			this.processor.RegCount.Value16 = this.processor.ShiftLeftWord(this.processor.RegCount.Value16, 0x1);
-			this.processor.RegCount.Value16 = this.processor.ShiftLeftWord(this.processor.RegCount.Value16, 0x1);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.RegCount.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L022d;
-			goto L049b;
-
-		L022d:
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.CompareWord((ushort)participantIdx, this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L0238;
-			goto L049b;
-
-		L0238:
-			this.processor.EmitLocalWord(0x2, 0x1);
-			goto L02db;
-
-		L0240:
-			this.processor.RegAcc.Value16 = 0x299b;
-
-		L0243:
-			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be), this.processor.RegAcc.Value16);
-
-			this.owner.BlockText.DisplayTextDialog(0x29a6);
-
-			this.processor.EmitGlobalWord(0x3936, 0x1);
-			this.processor.EmitGlobalWord(0xd76c, 0xc);
-
-			this.processor.StackWord(0); // stack management - push return segment, ignored
-			this.processor.StackWord(0x0279); // stack management - push return offset
-			this.owner.Audience.DisplayKingDialog(0xba06, 0x14, 0x8b);
-			this.processor.UnstackDoubleWord(); // stack management - pop return offset and segment
-
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1);
-			if (this.processor.FlagSet.IsNotEqual) goto L02c2;
-
-			AssignDiplomacyFlags(participantIdx, this.owner.World.PersonParticipantIdx, 2);
-
-			WipeDiplomacyFlags(this.processor.PullLocalSignedWord(0x2), this.owner.World.PersonParticipantIdx, 2);
-
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x2);
-			this.processor.RegCount.LowByte = 0x4;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, this.processor.RegCount.LowByte);
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, 0x1);
-			this.processor.RegBase.Value16 = this.processor.SumWord(this.processor.RegBase.Value16, this.processor.RegAcc.Value16);
-
-			this.owner.World.Participants[this.processor.PullLocalWord(0x2)].Relations[this.owner.World.PersonParticipantIdx] |= 8;
-
-			this.owner.World.Participants[participantIdx].TouchParticipantTimeleft = 
-				(short)(owner.World.RoundTally + 16);
-
-		L02c2:
-			this.owner.Audience.FinishAudience();
-
-		L02c7:
-			this.processor.RegSource.Value16 = (ushort)participantIdx;
-			this.processor.RegCount.LowByte = 0x4;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, this.processor.RegCount.LowByte);
-
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x2);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-
-			this.owner.World.Participants[participantIdx].Relations[this.processor.PullLocalWord(0x2)] &= 0xffdf;
-
-			this.processor.IncrementLocalWord(0x2);
-
-		L02db:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x8);
-			if (this.processor.FlagSet.IsLess) goto L02e4;
-			goto L049b;
-
-		L02e4:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x2);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-
-			this.processor.RegDest.Value16 = (ushort)participantIdx;
-			this.processor.RegCount.LowByte = 0x4;
-			this.processor.RegDest.Value16 = this.processor.ShiftLeftWord(this.processor.RegDest.Value16, this.processor.RegCount.LowByte);
-
-			this.processor.RegBase.Value16 = this.processor.RegDest.Value16;
-			this.processor.RegBase.Value16 = this.processor.SumWord(this.processor.RegBase.Value16, this.processor.RegSource.Value16);
-
-			if ((this.owner.World.Participants[participantIdx].Relations[this.processor.PullLocalWord(0x2)] & 0x20) == 0)
-				goto L02c7;
-
-			this.processor.RegBase.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.RegCount.LowByte = 0x4;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, this.processor.RegCount.LowByte);
-
-			if ((this.owner.World.Participants[this.owner.World.PersonParticipantIdx].Relations[this.processor.PullLocalWord(0x2)] & 2) == 0)
-				goto L02c7;
-
-			this.processor.RegBase.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-
-			if ((this.owner.World.Participants[participantIdx].Relations[this.owner.World.PersonParticipantIdx] & 0x20) != 0)
-				goto L02c7;
-
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.Participants[participantIdx].MartialMight;
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, 0x1);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, (ushort)this.owner.World.Participants[this.processor.PullLocalWord(0x2)].MartialMight);
-			if (this.processor.FlagSet.IsLess) goto L0329;
-			goto L042d;
-
-		L0329:
-			this.owner.Audience.WelcomeEmissary(participantIdx, -1, 0);
-			
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual) goto L0342;
-			goto L042d;
-
-		L0342:
-			this.owner.Helpers.VerifyValueSpan(this.owner.World.Participants[participantIdx].Gold / 100, 1, 10);
-
-			this.processor.RegCount.Value16 = 0x32;
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
-
-			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30ba),
-				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1992)));
-
-			this.processor.EmitGlobalByte(0xba06, 0x0);
-
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText((short)this.processor.PullLocalWord(0x4), 10));
-
-			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30bc), 0xba06);
-
-			this.processor.EmitGlobalByte(0xba06, 0x0);
-
-			this.owner.BlockText.DisplayTextDialog(0x2988);
-
-			this.processor.EmitGlobalWord(0x3936, 0x1);
-			this.processor.EmitGlobalWord(0xd76c, 0xc);
-
-			this.processor.StackWord(0); // stack management - push return segment, ignored
-			this.processor.StackWord(0x03d8); // stack management - push return offset
-			this.owner.Audience.DisplayKingDialog(0xba06, 0x14, 0x8b);
-			this.processor.UnstackDoubleWord(); // stack management - pop return offset and segment
-			
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1);
-			if (this.processor.FlagSet.IsNotEqual) goto L0428;
-
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x4);
-			this.owner.World.Participants[this.owner.World.PersonParticipantIdx].Gold += (short)this.processor.RegAcc.Value16;
-			this.owner.World.Participants[participantIdx].Gold += (short)this.processor.RegAcc.Value16;
-
-			AssignDiplomacyFlags(participantIdx, this.owner.World.PersonParticipantIdx, 2);
-
-			WipeDiplomacyFlags(this.processor.PullLocalSignedWord(0x2), this.owner.World.PersonParticipantIdx, 2);
-			
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x2);
-			this.processor.RegCount.LowByte = 0x4;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, this.processor.RegCount.LowByte);
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, 0x1);
-			this.processor.RegBase.Value16 = this.processor.SumWord(this.processor.RegBase.Value16, this.processor.RegAcc.Value16);
-
-			this.owner.World.Participants[this.processor.PullLocalWord(0x2)].Relations[this.owner.World.PersonParticipantIdx] |= 8;
-
-		L0428:
-			this.owner.Audience.FinishAudience();
-
-		L042d:
-			if (this.owner.World.Participants[this.processor.PullLocalWord(0x2)].MartialMight <=
-				this.owner.World.Participants[participantIdx].MartialMight)
-				goto L02c7;
-
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.Participants[participantIdx].MartialMight;
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, 0x1);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, (ushort)this.owner.World.Participants[this.processor.PullLocalWord(0x2)].MartialMight);
-			if (this.processor.FlagSet.IsLess)
-				goto L02c7;
-
-			this.owner.Audience.WelcomeEmissary(participantIdx, -1, 0);
-			
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual) goto L0468;
-			goto L02c7;
-
-		L0468:
-			this.processor.EmitGlobalByte(0xba06, 0x0);
-
-			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30ba),
-				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 + 0x1992)));
-
-			this.processor.RegBase.Value16 = (ushort)participantIdx;
-			this.processor.RegCount.LowByte = 0x4;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, this.processor.RegCount.LowByte);
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, 0x1);
-			this.processor.RegBase.Value16 = this.processor.SumWord(this.processor.RegBase.Value16, this.processor.RegAcc.Value16);
-
-			if ((this.owner.World.Participants[participantIdx].Relations[this.owner.World.PersonParticipantIdx] & 2) == 0)
-				goto L0240;
-
-			this.processor.RegAcc.Value16 = 0x2990;
-			goto L0243;
-
-		L049b:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.RegDest.Value16 = this.processor.UnstackWord();
+			short person = this.owner.World.PersonParticipantIdx;
+			Player player = this.owner.World.Participants[participantIdx];
+
+			if (player.RegimeKind == 0)
+			{
+				if (participantIdx == person && (this.owner.World.RoundTally & 3) == 0)
+				{
+					this.processor.RegSource.Value16 = (ushort)(participantIdx << 4);
+
+					if ((player.Relations[0] & 4) != 0)
+					{
+						player.Relations[0] &= 0xfffb;
+					}
+					else
+					{
+						SwitchGovernment(participantIdx, 1);
+					}
+				}
+				else if ((this.owner.World.RoundTally & 3) == 0 || EnjoysWonderEffectOne(participantIdx))
+				{
+					SwitchGovernment(participantIdx, 1);
+
+					if (participantIdx == person)
+						player.Relations[0] &= 0xfffb;
+				}
+			}
+
+			if (participantIdx != person && (player.Relations[0] & 4) != 0)
+			{
+				SwitchGovernment(participantIdx, player.RegimeKind);
+			}
+
+			for (ushort otherIdx = 1; otherIdx < 8; otherIdx++)
+			{
+				this.processor.EmitLocalWord(0x2, otherIdx);
+				EndOldTreaties(participantIdx, otherIdx);
+			}
+
+			this.processor.EmitLocalWord(0x2, 8);
+
+			if (participantIdx != 0 && (this.owner.World.RoundTally & 0x1f) == (ushort)(participantIdx << 2) && participantIdx != person)
+			{
+				ushort otherIdx;
+
+				for (otherIdx = 1; otherIdx < 8; otherIdx++)
+				{
+					this.processor.EmitLocalWord(0x2, otherIdx);
+					SendWarEmissary(participantIdx, otherIdx);
+
+					this.processor.RegSource.Value16 = (ushort)(participantIdx << 4);
+					player.Relations[otherIdx] &= 0xffdf;
+				}
+
+				this.processor.EmitLocalWord(0x2, otherIdx);
+			}
+
+			this.processor.RestoreIndexRegisters();
 			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("HandlePeaceTreaties");
+		}
+
+		/// <summary>The wonder effect 1 for the player (AX of PlayerEnjoysWonderEffect)</summary>
+		private bool EnjoysWonderEffectOne(short participantIdx)
+		{
+			this.owner.CityOps.PlayerEnjoysWonderEffect(participantIdx, 1);
+
+			return this.processor.RegAcc.Value16 != 0;
+		}
+
+		/// <summary>The forgotten broken treaty and, every 16th turn, the end of a peace between the two (see HandlePeaceTreaties)</summary>
+		private void EndOldTreaties(short participantIdx, ushort otherIdx)
+		{
+			short person = this.owner.World.PersonParticipantIdx;
+			ushort[] relations = this.owner.World.Participants[participantIdx].Relations;
+			ushort[] others = this.owner.World.Participants[otherIdx].Relations;
+
+			this.processor.RegSource.Value16 = (ushort)((participantIdx << 4) + (otherIdx << 1));
+
+			if ((relations[otherIdx] & 0x100) != 0 && this.owner.Libc.Dice.DrawInt(3) == 0)
+			{
+				relations[otherIdx] &= 0xfefd;
+				relations[otherIdx] |= 0x200;
+			}
+
+			if ((this.owner.World.RoundTally & 0xf) != 0)
+				return;
+
+			this.processor.RegSource.Value16 = (ushort)(otherIdx << 1);
+
+			if ((relations[otherIdx] & 0x10) == 0)
+			{
+				if ((relations[otherIdx] & 1) != 0 && (relations[otherIdx] & 2) == 0)
+				{
+					this.processor.RegDest.Value16 = (ushort)(person << 4);
+
+					ushort[] known = this.owner.World.Participants[person].Relations;
+
+					if (((known[participantIdx] & 0x40) != 0 || (known[otherIdx] & 0x40) != 0) &&
+						participantIdx != person && otherIdx != (ushort)person)
+					{
+						this.owner.Libc.CopyText(0xba06, "The war between\nthe ");
+
+						this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)(((ushort)participantIdx << 1) + 0x1992)));
+
+						this.owner.Libc.AppendText(0xba06, " and the\n");
+
+						this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)((otherIdx << 1) + 0x1992)));
+
+						this.owner.Libc.AppendText(0xba06, " has ended.\n");
+
+						this.processor.EmitGlobalWord(0x2f9e, 0x1);
+
+						this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+					}
+				}
+
+				relations[otherIdx] &= 0xfffe;
+				others[participantIdx] &= 0xfffe;
+			}
+
+			this.processor.RegSource.Value16 = (ushort)(otherIdx << 4);
+			relations[otherIdx] &= 0xffef;
+			others[participantIdx] &= 0xffef;
+		}
+
+		/// <summary>
+		/// The emissary of an AI player that asked for help (0x20) against a player at war with the human player: a much weaker
+		/// one offers tribute (the treasury / 100 times 50, 50 - 500) for an alliance, a stronger one (not twice as strong)
+		/// threatens; an accepted offer makes them allies against the other (see HandlePeaceTreaties)
+		/// </summary>
+		private void SendWarEmissary(short participantIdx, ushort otherIdx)
+		{
+			short person = this.owner.World.PersonParticipantIdx;
+			Player player = this.owner.World.Participants[participantIdx];
+			Player other = this.owner.World.Participants[otherIdx];
+
+			this.processor.RegSource.Value16 = (ushort)(otherIdx << 1);
+			this.processor.RegDest.Value16 = (ushort)(participantIdx << 4);
+
+			if ((player.Relations[otherIdx] & 0x20) == 0 ||
+				(this.owner.World.Participants[person].Relations[otherIdx] & 2) == 0 ||
+				(player.Relations[person] & 0x20) != 0)
+				return;
+
+			if ((short)((ushort)player.MartialMight << 1) < other.MartialMight)
+			{
+				this.owner.Audience.WelcomeEmissary(participantIdx, -1, 0);
+
+				if (this.processor.RegAcc.Value16 == 0)
+				{
+					this.owner.Helpers.VerifyValueSpan(player.Gold / 100, 1, 10);
+
+					short tribute = (short)(this.processor.RegAcc.Value16 * 0x32);
+					this.processor.EmitLocalWord(0x4, (ushort)tribute);
+
+					this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30ba), this.processor.PullGlobalWord((ushort)(this.processor.RegSource.Value16 + 0x1992)));
+
+					this.processor.EmitGlobalByte(0xba06, 0);
+
+					this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(tribute, 10));
+
+					this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30bc), 0xba06);
+
+					this.processor.EmitGlobalByte(0xba06, 0);
+
+					if (AskKing(0x2988, 0x03d8))
+					{
+						this.owner.World.Participants[person].Gold += tribute;
+						player.Gold += tribute;
+
+						AllyAgainst(participantIdx, otherIdx);
+					}
+
+					this.owner.Audience.FinishAudience();
+				}
+			}
+
+			if (other.MartialMight <= player.MartialMight || (short)((ushort)player.MartialMight << 1) < other.MartialMight)
+				return;
+
+			this.owner.Audience.WelcomeEmissary(participantIdx, -1, 0);
+
+			if (this.processor.RegAcc.Value16 != 0)
+				return;
+
+			this.processor.EmitGlobalByte(0xba06, 0);
+
+			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30ba), this.processor.PullGlobalWord((ushort)(this.processor.RegDest.Value16 + 0x1992)));
+
+			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be), (player.Relations[person] & 2) == 0 ? (ushort)0x299b : (ushort)0x2990);
+
+			if (AskKing(0x29a6, 0x0279))
+			{
+				AllyAgainst(participantIdx, otherIdx);
+
+				player.TouchParticipantTimeleft = (short)(this.owner.World.RoundTally + 16);
+			}
+
+			this.owner.Audience.FinishAudience();
+		}
+
+		/// <summary>The emissary's text, then the king's answer: true for the first choice</summary>
+		private bool AskKing(ushort charsAddr, ushort returnOffset)
+		{
+			this.owner.BlockText.DisplayTextDialog(charsAddr);
+
+			this.processor.EmitGlobalWord(0x3936, 0x1);
+			this.processor.EmitGlobalWord(0xd76c, 0xc);
+
+			this.processor.StackWord(0); // stack management - push return segment, ignored
+			this.processor.StackWord(returnOffset); // stack management - push return offset
+			this.owner.Audience.DisplayKingDialog(0xba06, 0x14, 0x8b);
+			this.processor.UnstackDoubleWord(); // stack management - pop return offset and segment
+
+			return this.processor.RegAcc.Value16 == 1;
+		}
+
+		/// <summary>The human player and the AI player become allies against the other one (flag 8 of the other's relation)</summary>
+		private void AllyAgainst(short participantIdx, ushort otherIdx)
+		{
+			short person = this.owner.World.PersonParticipantIdx;
+
+			AssignDiplomacyFlags(participantIdx, person, 2);
+
+			WipeDiplomacyFlags((short)otherIdx, person, 2);
+
+			this.owner.World.Participants[otherIdx].Relations[person] |= 8;
 		}
 
 		/// <summary>
