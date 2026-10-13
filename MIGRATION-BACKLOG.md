@@ -268,20 +268,25 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   w liście C#, SI/DI oddawane z zmiennych C#), `DisplayTradeReport` (`AdvisorReports`, ramka zostaje: woła `HandleCity`, koszty
   budynków w ramce), `DisplayArmyList` (`ArmySelection`, z `RenderStrategicTile`; nieznana rola zostawia tekst poprzedniej
   jak w oryginale). Testy w `BatchThirtySixDifferentialTests`.
+- Mała porcja 2 funkcji (2026-10-13): `RenderCitySceneryForPlayer`, `RenderCitySceneryForHuman` (`CityView`, parady obywateli,
+  ze wspólnymi `CutParadePictures`, `ParadeInterrupted`; ramka zostaje: obrazki w ramce, końcowe wartości zmiennych zapisane;
+  zmienna 0x20 z listy „Śmieci na stosie” to pierwszy obrazek zapisywany przez adres). Testy w
+  `BatchThirtySevenDifferentialTests`: skryptowa klawiatura kończy paradę po dwóch klatkach, więc test przesuwa kolumny postaci
+  (0x4f42) na ekran.
 
 ## Następny krok
 
 Dalej małe metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 60`
 (metody z co najmniej 2 liniami `goto L` / `FlagSet` / `Compare…` / `SumWord` itd., od najkrótszej). Kandydaci
 (`GameLoadAndSave` i `Newspaper` nie mają już metod w stylu asm): `ChooseTechnologyToTake` (`TradeAndConquest`, patrz wyżej),
-`RenderCityScenery*` (`CityView`), `AttachSpaceshipPart` (`SpaceshipScreen`), `DisplayMilitaryReport` (`AdvisorReports`),
+`RenderCityScenery` (`CityView`), `AttachSpaceshipPart` (`SpaceshipScreen`), `DisplayMilitaryReport` (`AdvisorReports`),
 `DisplayTravellersReport`, `HandleEndOfTurnEvents` (`TurnEvents`), `LabelLandmasses` (`GameInitAndIntro`),
 `ChoreographKingSpeaking`, `DisplayKingScreen` (`MeetWithKing`),
 `RenderCitizenIcons` (`CityManagement`, kandydat ze „Śmieci na stosie”),
 reszta generatora mapy w `GameInitAndIntro`. Funkcje niskopoziomowe `SystemServices` (`DeactivateMouse`, `PointerEvent`,
 `RenderCursorToScreen`, `RecoverScreenUnderCursor`, kolory i zegar: `PrepareTimer`, `RefreshHueCycling`, `AssignHueCycleSpan`,
 `ColorsFadeStep`, `FadeColors`, `FloodColors`, `ImportColorsFromBuffer`) i `SnapHeapPointer` (`VGADriver`) na koniec: działają
-w przerwaniach albo na rejestrach. Stan 2026-10-13: 76 metod w stylu asm, ok. 46,5 tys. z 68,9 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
+w przerwaniach albo na rejestrach. Stan 2026-10-13: 74 metody w stylu asm, ok. 46,2 tys. z 68,8 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
@@ -319,7 +324,7 @@ przerwanie zegara, którego moment w testach zależy od liczby dostępów do pam
 zależą już tylko od kodu na tej samej głębokości. Potwierdzone w golden master: `HandleCity` (`CityManagement`) – funkcja, która ją
 woła, zostawia ramkę (`HandleAllCities`, `DisplayTopCities`). Nadal: usunięta ramka może zmienić to, co przeczyta taka funkcja (golden master
 to wyłapie, testy różnicowe nie porównują stosu pod SP). Kandydaci ze skanu „czytana, nigdy nie zapisana” (część to tablice
-i bufory zapisywane przez adres, do sprawdzenia przy przepisywaniu): `RenderCitizenIcons` 0x2, `ExamineCity` 0x8, `DisplayTravellersReport` 0x2, `RenderCityScenery` 0x16, `RenderCitySceneryForPlayer/ForHuman` 0x20.
+i bufory zapisywane przez adres, do sprawdzenia przy przepisywaniu): `RenderCitizenIcons` 0x2, `ExamineCity` 0x8, `DisplayTravellersReport` 0x2, `RenderCityScenery` 0x16.
 
 ## Poprawki, które zostają (chronią przed crashami, baseline je ma)
 

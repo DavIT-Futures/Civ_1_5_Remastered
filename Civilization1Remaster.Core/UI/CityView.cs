@@ -986,173 +986,83 @@ namespace Civilization1Remaster.UI
 		private const ushort CitySceneryBoxes = 0x3767;
 
 		/// <summary>
-		/// ?
+		/// The parade of the player's people over the bottom of the screen until a key or a click (frame by frame, 10 timer
+		/// ticks each): with technology 0x22 the 10 pictures of 0x4f08 (with 0x3a) or 0x4f15, else 0x4f22; 8 figures 0x30
+		/// apart moving right, all with the same picture. The pictures are cut into the stack frame, like in the original.
 		/// </summary>
-		/// <param name="playerID"></param>
 		public void RenderCitySceneryForPlayer(short participantIdx)
 		{
 			this.processor.Journal.OpenScope($"RenderCitySceneryForPlayer({participantIdx})");
 
-			// function body
+			// The pictures are in the stack frame, like in the original, and the final values of the locals stay there
 			this.processor.EnterFrame(0x28);
 			this.processor.PreserveSource();
 
+			ushort pictures = (ushort)(this.processor.RegFrame.Value16 - 0x20);
+
 			this.owner.Helpers.HaltHueCycling();
 
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xd762), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L16a0;
+			if (this.processor.PullGlobalWord(0xd762) != 0)
+			{
+				this.owner.VideoCard.AssignHue(0xfd, VGABitmap.Hue18ToHue(3, 3, 3));
+			}
 
-			this.owner.VideoCard.AssignHue(0xfd, VGABitmap.Hue18ToHue(3, 3, 3));
-
-		L16a0:
 			this.owner.Startup.ConcealMouseCursor();
 
-			this.processor.RegAcc.Value16 = this.owner.Advisors.PlayerKnowsTechnology(participantIdx, 0x22);
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsNotEqual)
-				goto L16c0;
+			if (this.owner.Advisors.PlayerKnowsTechnology(participantIdx, 0x22) != 0)
+			{
+				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, this.owner.Advisors.PlayerKnowsTechnology(participantIdx, 0x3a) != 0 ? (ushort)0x4f08 : (ushort)0x4f15, 0);
 
-			goto L1743;
+				CutParadePictures(pictures, 0, 0x3d, 2, 0x3c);
+			}
+			else
+			{
+				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x4f22, 0);
 
-		L16c0:
-			this.processor.RegAcc.Value16 = this.owner.Advisors.PlayerKnowsTechnology(participantIdx, 0x3a);
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual)
-				goto L16d8;
+				CutParadePictures(pictures, 1, 0x42, 1, 0x41);
+			}
 
-			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x4f08, 0);
+			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), 0, 0x64, 0x140, 0x64, this.processor.PullGlobalWord(0x19d4), 0, 0);
 
-			this.processor.EmitLocalWord(0x24, 0x0);
-			goto L16f2;
+			ushort frameIdx = 0;
+			short offset;
+			short figureHoriz = 0;
 
-		L16d8:
-			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x4f15, 0);
+			for (offset = 0; offset < 0x294; offset += 3)
+			{
+				this.owner.Services.RestoreTimer();
 
-			this.processor.EmitLocalWord(0x24, 0x0);
-			goto L16f2;
+				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 0x140, 0x64, this.processor.PullGlobalWord(0x19d4), 0, 0x64);
 
-		L16ef:
-			this.processor.EmitLocalWord(0x24, this.processor.IncrementWord(this.processor.PullLocalWord(0x24)));
+				for (short figureIdx = 7; figureIdx >= 0; figureIdx--)
+				{
+					figureHoriz = (short)(offset - (0x30 * figureIdx));
 
-		L16f2:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x24), 0xa);
-			if (this.processor.FlagSet.IsLess) goto L16fb;
-			goto L17a7;
+					if (figureHoriz >= 0x140 || figureHoriz <= -0x30)
+						continue;
 
-		L16fb:
-			this.owner.VideoCard.ScreenToPicture(1,
-				(ushort)((this.processor.PullLocalWord(0x24) % 4) * 0x4f),
-				(ushort)(((this.processor.PullLocalWord(0x24) >> 2) * 0x3d) + 2),
-				0x4e, 0x3c);
+					this.owner.Services.RenderPictureToScreenAlternate(this.processor.PullGlobalWord(0x19d4), figureHoriz, 132,
+						this.processor.PullGlobalWord((ushort)(pictures + (((short)frameIdx % 10) << 1))));
+				}
 
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x24);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x20), this.processor.RegAcc.Value16);
-			goto L16ef;
+				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0x64, 0x140, 0x64, this.processor.PullGlobalWord(0xaa), 0, 0x64);
 
-		L1743:
-			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x4f22, 0);
+				frameIdx++;
 
-			this.processor.EmitLocalWord(0x24, 0x0);
+				if (ParadeInterrupted())
+					break;
+			}
 
-		L1758:
-			this.owner.VideoCard.ScreenToPicture(1,
-				(ushort)(((this.processor.PullLocalWord(0x24) % 4) * 0x4f) + 1),
-				(ushort)(((this.processor.PullLocalWord(0x24) >> 2) * 0x42) + 1),
-				0x4e, 0x41);
+			this.processor.EmitLocalWord(0x22, (ushort)offset);
+			this.processor.EmitLocalWord(0x24, 0xffff);
+			this.processor.EmitLocalWord(0x26, (ushort)figureHoriz);
+			this.processor.EmitLocalWord(0x28, frameIdx);
 
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x24);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x20), this.processor.RegAcc.Value16);
-			this.processor.IncrementLocalWord(0x24);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x24), 0xa);
-			if (this.processor.FlagSet.IsLess) goto L1758;
-
-		L17a7:
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0xaa),
-				0, 0x64, 0x140, 0x64,
-				this.processor.PullGlobalWord(0x19d4),
-				0, 0);
-
-			this.processor.EmitLocalWord(0x28, 0x0);
-			this.processor.EmitLocalWord(0x22, 0x0);
-			goto L17df;
-
-		L17db:
-			this.processor.EmitLocalWord(0x22, this.processor.SumWord(this.processor.PullLocalWord(0x22), 0x3));
-
-		L17df:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x22), 0x294);
-			if (this.processor.FlagSet.IsLess) goto L17e9;
-			goto L18a2;
-
-		L17e9:
-			this.owner.Services.RestoreTimer();
-			
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0x19d4),
-				0, 0, 0x140, 0x64,
-				this.processor.PullGlobalWord(0x19d4),
-				0, 0x64);
-
-			this.processor.EmitLocalWord(0x24, 0x7);
-
-		L1816:
-			this.processor.RegAcc.Value16 = 0x30;
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.PullLocalWord(0x24));
-			this.processor.RegCount.Value16 = this.processor.PullLocalWord(0x22);
-			this.processor.RegCount.Value16 = this.processor.SubtractWord(this.processor.RegCount.Value16, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x26, this.processor.RegCount.Value16);
-			this.processor.CompareWord(this.processor.RegCount.Value16, 0x140);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L1852;
-			this.processor.CompareWord(this.processor.RegCount.Value16, 0xffd0);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L1852;
-
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x28);
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.RegCount.Value16 = 0xa;
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.RegSource.Value16 = this.processor.RegData.Value16;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.owner.Services.RenderPictureToScreenAlternate(this.processor.PullGlobalWord(0x19d4),
-				this.processor.PullLocalSignedWord(0x26),
-				132,
-				this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x20)));
-
-		L1852:
-			this.processor.EmitLocalWord(0x24, this.processor.DecrementWord(this.processor.PullLocalWord(0x24)));
-			if (this.processor.FlagSet.IsUnsigned) goto L1816;
-			
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0x19d4),
-				0, 0x64, 0x140, 0x64,
-				this.processor.PullGlobalWord(0xaa),
-				0, 0x64);
-
-			this.processor.IncrementLocalWord(0x28);
-
-		L1880:
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x5c);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
-			if (this.processor.FlagSet.IsLess) goto L1880;
-
-			this.owner.Startup.ObtainMouseState();
-
-			this.owner.Libc.KeyAvailable();
-
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsNotEqual) goto L18a2;
-			this.processor.CompareWord(this.owner.GlobDb3a, 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L18a2;
-			goto L17db;
-
-		L18a2:
 			this.owner.Startup.DisplayMouseCursor();
 
 			this.owner.TurnLogic.AwaitForKey();
 
-			this.owner.Helpers.ReleaseResource(this.processor.PullLocalWord(0x20), 0);
+			this.owner.Helpers.ReleaseResource(this.processor.PullGlobalWord(pictures), 0);
 
 			this.owner.Helpers.LaunchHueCycling();
 
@@ -1160,6 +1070,33 @@ namespace Civilization1Remaster.UI
 			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("RenderCitySceneryForPlayer");
+		}
+
+		/// <summary>
+		/// The 10 pictures of the parade cut from screen 1 (4 a row, 0x4f apart) into the frame
+		/// </summary>
+		private void CutParadePictures(ushort pictures, ushort left, ushort rowHeight, ushort top, ushort altitude)
+		{
+			for (int pictureIdx = 0; pictureIdx < 0xa; pictureIdx++)
+			{
+				this.owner.VideoCard.ScreenToPicture(1, (ushort)(((pictureIdx % 4) * 0x4f) + left), (ushort)(((pictureIdx >> 2) * rowHeight) + top), 0x4e, altitude);
+
+				this.processor.EmitGlobalWord((ushort)(pictures + (pictureIdx << 1)), this.processor.RegAcc.Value16);
+			}
+		}
+
+		/// <summary>Waits for 10 timer ticks (since RestoreTimer), then a key or a click ends the parade</summary>
+		private bool ParadeInterrupted()
+		{
+			while ((short)this.processor.PullGlobalWord(0x5c) < 0xa)
+			{
+			}
+
+			this.owner.Startup.ObtainMouseState();
+
+			this.owner.Libc.KeyAvailable();
+
+			return this.processor.RegAcc.Value16 != 0 || this.owner.GlobDb3a != 0;
 		}
 		
 		/// <summary>
@@ -1254,136 +1191,70 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// The parade of the human player's people (the 10 pictures of 0x4f5c with technology 0x23, else 0x4f52): 4 figures
+		/// (columns 0x4f42, rows 0x4f4a) moving left, each with its own picture, until a key or a click.
 		/// </summary>
 		public void RenderCitySceneryForHuman()
 		{
 			this.processor.Journal.OpenScope("RenderCitySceneryForHuman()");
 
-			// function body
+			// The pictures are in the stack frame, like in the original, and the final values of the locals stay there
 			this.processor.EnterFrame(0x28);
 			this.processor.PreserveSource();
 
+			ushort pictures = (ushort)(this.processor.RegFrame.Value16 - 0x20);
+
 			this.owner.Helpers.HaltHueCycling();
 
-			this.processor.RegAcc.Value16 = this.owner.Advisors.PlayerKnowsTechnology(this.owner.World.PersonParticipantIdx, 0x23);
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsNotEqual)
-				goto L1b0b;
+			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0,
+				this.owner.Advisors.PlayerKnowsTechnology(this.owner.World.PersonParticipantIdx, 0x23) != 0 ? (ushort)0x4f5c : (ushort)0x4f52, 0);
 
-			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x4f52, 0);
-
-			this.processor.EmitLocalWord(0x24, 0x0);
-			goto L1b20;
-
-		L1b0b:
-			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x4f5c, 0);
-
-			this.processor.EmitLocalWord(0x24, 0x0);
-
-		L1b20:
-			this.owner.VideoCard.ScreenToPicture(1,
-				(ushort)(((this.processor.PullLocalWord(0x24) % 4) * 0x4f) + 1),
-				(ushort)(((this.processor.PullLocalWord(0x24) >> 2) * 0x42) + 1),
-				0x4e, 0x41);
-
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x24);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x20), this.processor.RegAcc.Value16);
-			this.processor.IncrementLocalWord(0x24);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x24), 0xa);
-			if (this.processor.FlagSet.IsLess) goto L1b20;
+			CutParadePictures(pictures, 1, 0x42, 1, 0x41);
 
 			this.owner.Startup.ConcealMouseCursor();
 
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0xaa),
-				0,0x64,0x140,0x64,
-				this.processor.PullGlobalWord(0x19d4),
-				0,0);
+			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), 0, 0x64, 0x140, 0x64, this.processor.PullGlobalWord(0x19d4), 0, 0);
 
-			this.processor.EmitLocalWord(0x28, 0x0);
-			this.processor.EmitLocalWord(0x22, 0x1a4);
-			goto L1bac;
+			ushort frameIdx = 0;
+			short offset;
+			short figureHoriz = 0;
 
-		L1ba8:
-			this.processor.EmitLocalWord(0x22, this.processor.SubtractWord(this.processor.PullLocalWord(0x22), 0x3));
+			for (offset = 0x1a4; offset > -0x30; offset -= 3)
+			{
+				this.owner.Services.RestoreTimer();
 
-		L1bac:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x22), 0xffd0);
-			if (this.processor.FlagSet.IsGreater) goto L1bb5;
-			goto L1c89;
+				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 0x140, 0x64, this.processor.PullGlobalWord(0x19d4), 0, 0x64);
 
-		L1bb5:
-			this.owner.Services.RestoreTimer();
+				for (short figureIdx = 0; figureIdx < 4; figureIdx++)
+				{
+					figureHoriz = (short)(((short)(3 * this.processor.PullGlobalWord((ushort)((figureIdx << 1) + 0x4f42))) / 2) + offset);
 
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0x19d4),
-				0,0,0x140,0x64,
-				this.processor.PullGlobalWord(0x19d4),
-				0,0x64);
+					if (figureHoriz >= 0x140 || figureHoriz <= -0x30)
+						continue;
 
-			this.processor.EmitLocalWord(0x24, 0x0);
+					this.owner.Services.RenderPictureToScreenAlternate(this.processor.PullGlobalWord(0x19d4), figureHoriz,
+						this.processor.PullInt16(this.processor.SegData.Value16, (ushort)((figureIdx << 1) + 0x4f4a)) + 132,
+						this.processor.PullGlobalWord((ushort)(pictures + (((short)((3 * figureIdx) + frameIdx) % 10) << 1))));
+				}
 
-		L1be2:
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x24);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.RegAcc.Value16 = 0x3;
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x4f42)));
-			this.processor.HalveAccumulator();
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x22));
-			this.processor.EmitLocalWord(0x26, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x140);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L1c35;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xffd0);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L1c35;
+				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0x64, 0x140, 0x64, this.processor.PullGlobalWord(0xaa), 0, 0x64);
 
-			this.processor.ScaleIndex(0x3, this.processor.PullLocalWord(0x24));
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x28));
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.RegCount.Value16 = 0xa;
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.RegSource.Value16 = this.processor.RegData.Value16;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.owner.Services.RenderPictureToScreenAlternate(this.processor.PullGlobalWord(0x19d4),
-				this.processor.PullLocalSignedWord(0x26),
-				this.processor.PullInt16(this.processor.SegData.Value16, (ushort)((this.processor.PullLocalWord(0x24) << 1) + 0x4f4a)) + 132,
-				this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x20)));
+				frameIdx++;
 
-		L1c35:
-			this.processor.EmitLocalWord(0x24, this.processor.IncrementWord(this.processor.PullLocalWord(0x24)));
-			this.processor.CompareWord(this.processor.PullLocalWord(0x24), 0x4);
-			if (this.processor.FlagSet.IsLess) goto L1be2;
+				if (ParadeInterrupted())
+					break;
+			}
 
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0x19d4),
-				0, 0x64, 0x140, 0x64,
-				this.processor.PullGlobalWord(0xaa),
-				0, 0x64);
+			this.processor.EmitLocalWord(0x22, (ushort)offset);
+			this.processor.EmitLocalWord(0x24, 0x4);
+			this.processor.EmitLocalWord(0x26, (ushort)figureHoriz);
+			this.processor.EmitLocalWord(0x28, frameIdx);
 
-			this.processor.IncrementLocalWord(0x28);
-
-		L1c67:
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x5c);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
-			if (this.processor.FlagSet.IsLess) goto L1c67;
-
-			this.owner.Startup.ObtainMouseState();
-
-			this.owner.Libc.KeyAvailable();
-
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsNotEqual) goto L1c89;
-			this.processor.CompareWord(this.owner.GlobDb3a, 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L1c89;
-			goto L1ba8;
-
-		L1c89:
 			this.owner.Startup.DisplayMouseCursor();
 
 			this.owner.TurnLogic.AwaitForKey();
-			
-			this.owner.Helpers.ReleaseResource(this.processor.PullLocalWord(0x20), 0);
+
+			this.owner.Helpers.ReleaseResource(this.processor.PullGlobalWord(pictures), 0);
 
 			this.processor.RestoreSource();
 			this.processor.LeaveFrame();
