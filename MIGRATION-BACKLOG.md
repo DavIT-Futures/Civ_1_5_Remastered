@@ -222,6 +222,15 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   bajt hasza 0x102, więc hasz = młodszy bajt sumy). Testy w `BatchThirtyDifferentialTests`: zapis z rokiem p.n.e. kopiowany
   w `Prepare` z AUTO00.SVE, gałęzie tekstu rozpoznawane po zmiennych zostawionych w ramce pod SP (SP - 2 - offset), wyszukiwanie
   bez indeksu na syntetycznym pliku `MADE.TXT` (pliki gry mają pusty indeks „00” i pustą linię zaraz po nim).
+- Kolejne 4 moduły (2026-10-13): `ChoreographKingLikeness` (`MeetWithKing`, tabele w segmencie 0x36fa, ES zostawiony tam jak
+  w oryginale), `ExamineCity` (`DiplomatActions`, w rzeczywistości śledztwo w mieście; 4 obrazki w ramce, końcowe wartości
+  liczników zapisane), `FoundTradeRoute` (`TradeAndConquest`, z `RouteTrade`; kontynent miasta macierzystego czytany pod (x, x)
+  jak w oryginale; SI/DI oddawane wołającemu z zmiennych C#, bo `DisplayDialog` zostawia SI w DI), `RefreshPeaceGraphContent`
+  (`TurnEvents`, ranking potęgi; ramka zostaje: potęgi w ramce, a ranking bez potęgi > -1 bierze gracza z poprzedniego miejsca
+  albo zmienną 0x1a z ramki; `DivideByPowerOfTwo` odtwarza `DivideAccumulatorByPowerOfTwo` także dla -32768). Testy
+  w `BatchThirtyOneDifferentialTests`. Wnioski: okno `Watched` w segmencie 0x3772 nie może sięgać 0x3932 (to już segment danych
+  0x3b01 ze zmiennymi zegara, które zależą od liczby dostępów do pamięci); ekran miasta po śledztwie jest nieosiągalny ze
+  skryptową klawiaturą (animacja kończy się tylko klawiszem, który zostaje w buforze).
 
 ## Następny krok
 
@@ -232,7 +241,7 @@ Dalej małe metody: `python Civilization1Remaster.Tests/Differential/Reference/f
 reszta generatora mapy w `GameInitAndIntro`. Funkcje niskopoziomowe `SystemServices` (`DeactivateMouse`, `PointerEvent`,
 `RenderCursorToScreen`, `RecoverScreenUnderCursor`, kolory i zegar: `PrepareTimer`, `RefreshHueCycling`, `AssignHueCycleSpan`,
 `ColorsFadeStep`, `FadeColors`, `FloodColors`, `ImportColorsFromBuffer`) i `SnapHeapPointer` (`VGADriver`) na koniec: działają
-w przerwaniach albo na rejestrach. Stan 2026-10-13: 100 metod w stylu asm, ok. 52,4 tys. z 71,5 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
+w przerwaniach albo na rejestrach. Stan 2026-10-13: 96 metod w stylu asm, ok. 51,6 tys. z 71,2 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 

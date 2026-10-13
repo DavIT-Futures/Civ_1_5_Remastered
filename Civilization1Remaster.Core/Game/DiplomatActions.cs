@@ -983,178 +983,130 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// A diplomat establishes an embassy... in fact investigates the city: the title "... founded: year." over a picture with
+		/// four walking figures (cut from 0x536e into the stack frame) moving to the right until a key or a click (frame by
+		/// frame, 10 timer ticks each), then the city screen (unless a key is still waiting).
 		/// </summary>
-		/// <param name="cityID"></param>
 		public void ExamineCity(short townIdx)
 		{
 			this.processor.Journal.OpenScope($"ExamineCity({townIdx})");
 
-			// function body
+			// The pictures of the figures and the counters stay in the stack frame, like in the original
 			this.processor.EnterFrame(0x10);
 			this.processor.PreserveSource();
 
 			this.owner.Startup.QueryForDisk(1, 0);
 
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsNotEqual) goto L0ecd;
-			goto L114d;
+			if (this.processor.RegAcc.Value16 != 0)
+			{
+				ushort figures = (ushort)(this.processor.RegFrame.Value16 - 0x8);
 
-		L0ecd:
-			this.owner.Helpers.HaltHueCycling();
+				this.owner.Helpers.HaltHueCycling();
 
-			this.owner.Startup.ConcealMouseCursor();
+				this.owner.Startup.ConcealMouseCursor();
 
-			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x536e, 0);
+				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x536e, 0);
 
-			this.processor.EmitLocalWord(0xc, 0x0);
+				for (int figureIdx = 0; figureIdx < 4; figureIdx++)
+				{
+					this.owner.VideoCard.ScreenToPicture(1, 1, (ushort)((figureIdx << 4) + 1), 0x2f, 0xf);
 
-		L0ef1:
-			this.owner.VideoCard.ScreenToPicture(1, 1,
-				(ushort)((this.processor.PullLocalWord(0xc) << 4) + 1),
-				0x2f, 0xf);
+					this.processor.EmitGlobalWord((ushort)(figures + (figureIdx << 1)), this.processor.RegAcc.Value16);
+				}
 
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0xc);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x8), this.processor.RegAcc.Value16);
-			this.processor.IncrementLocalWord(0xc);
-			this.processor.CompareWord(this.processor.PullLocalWord(0xc), 0x4);
-			if (this.processor.FlagSet.IsLess) goto L0ef1;
+				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x537b, 0);
 
-			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x537b, 0);
+				this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 0);
 
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 0);
+				this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, 0x5384, 1);
 
-			this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, 0x5384, 1);
+				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0xaa), 0, 0);
 
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0x19d4),
-				0, 0, 0x140, 0xc8,
-				this.processor.PullGlobalWord(0xaa),
-				0, 0);
+				this.processor.EmitGlobalByte(0xba06, 0x0);
 
-			this.processor.EmitGlobalByte(0xba06, 0x0);
+				this.owner.Conquest.ObtainCityLabel(townIdx);
 
-			this.owner.Conquest.ObtainCityLabel(townIdx);
+				this.owner.Libc.AppendText(0xba06, " founded: ");
 
-			this.owner.Libc.AppendText(0xba06, " founded: ");
+				this.owner.TurnHooks.ObtainCurrentYearAsText();
 
-			this.owner.TurnHooks.ObtainCurrentYearAsText();
+				this.owner.Libc.AppendText(0xba06, ".");
 
-			this.owner.Libc.AppendText(0xba06, ".");
+				this.processor.EmitGlobalWord((ushort)(this.processor.PullGlobalWord(0xaa) + 0x10), 0x6);
 
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 0x6);
+				this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 4, 0);
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 4, 0);
+				this.processor.EmitGlobalWord((ushort)(this.processor.PullGlobalWord(0xaa) + 0x10), 0x1);
 
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 0x1);
+				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0x78, 0x140, 0x28, this.processor.PullGlobalWord(0x19d4), 0, 0);
 
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0x19d4),
-				0, 0x78, 0x140, 0x28,
-				this.processor.PullGlobalWord(0x19d4),
-				0, 0);
+				ushort steps = 0;
 
-			this.processor.EmitLocalWord(0x10, 0x0);
+				this.owner.TurnLogic.AwaitForKey();
 
-			this.owner.TurnLogic.AwaitForKey();
+				short horizLoc = 0x50;
 
-			this.processor.EmitLocalWord(0xa, 0x50);
-			goto L1011;
+				for (; horizLoc < 0x78; horizLoc++)
+				{
+					this.owner.Services.RestoreTimer();
 
-		L100e:
-			this.processor.EmitLocalWord(0xa, this.processor.IncrementWord(this.processor.PullLocalWord(0xa)));
+					this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 0x140, 0x28, this.processor.PullGlobalWord(0x19d4), 0, 0x78);
 
-		L1011:
-			this.processor.CompareWord(this.processor.PullLocalWord(0xa), 0x78);
-			if (this.processor.FlagSet.IsLess) goto L101a;
-			goto L10cc;
+					for (short figureIdx = 0; figureIdx < 4; figureIdx++)
+					{
+						this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0x19d4), (13 * figureIdx) + horizLoc,
+							((10 * figureIdx) & 0xf) + 120, this.processor.PullGlobalWord((ushort)(figures + (((figureIdx + horizLoc) & 3) << 1))));
+					}
 
-		L101a:
-			this.owner.Services.RestoreTimer();
+					this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0x78, 0x140, 0x28, this.processor.PullGlobalWord(0xaa), 0, 0x78);
 
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0x19d4),
-				0, 0, 0x140, 0x28,
-				this.processor.PullGlobalWord(0x19d4),
-				0, 0x78);
+					steps++;
 
-			this.processor.EmitLocalWord(0xc, 0x0);
+					while ((short)this.processor.PullGlobalWord(0x5c) < 0xa)
+					{
+					}
 
-		L1047:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0xc);
-			this.processor.RegSource.Value16 = this.processor.SumWord(this.processor.RegSource.Value16, this.processor.PullLocalWord(0xa));
-			this.processor.RegSource.Value16 = this.processor.BitAndWord(this.processor.RegSource.Value16, 0x3);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.owner.Services.RenderPictureToScreen(
-				this.processor.PullGlobalWord(0x19d4),
-				(13 * this.processor.PullLocalSignedWord(0xc)) +
-					this.processor.PullLocalSignedWord(0xa),
-				((10 * this.processor.PullLocalWord(0xc)) & 0xf) + 120,
-				this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x8)));
+					this.owner.Startup.ObtainMouseState();
 
-			this.processor.IncrementLocalWord(0xc);
-			this.processor.CompareWord(this.processor.PullLocalWord(0xc), 0x4);
-			if (this.processor.FlagSet.IsLess) goto L1047;
+					this.owner.Libc.KeyAvailable();
 
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0x19d4),
-				0, 0x78, 0x140, 0x28,
-				this.processor.PullGlobalWord(0xaa),
-				0, 0x78);
+					if (this.processor.RegAcc.Value16 != 0 || this.owner.GlobDb3a != 0)
+						break;
+				}
 
-			this.processor.IncrementLocalWord(0x10);
+				this.processor.EmitLocalWord(0xa, (ushort)horizLoc);
+				this.processor.EmitLocalWord(0xc, 0x4);
+				this.processor.EmitLocalWord(0x10, steps);
 
-		L10aa:
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x5c); 
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
-			if (this.processor.FlagSet.IsLess) goto L10aa;
+				this.owner.Helpers.ReleaseResource(this.processor.PullGlobalWord(figures), 0x539a);
 
-			this.owner.Startup.ObtainMouseState();
+				this.owner.Startup.QueryForDisk(0, 1);
 
-			this.owner.Libc.KeyAvailable();
+				if (this.processor.PullGlobalWord(0xd762) != 0)
+				{
+					this.owner.Services.FloodColors(10, 0, 0, 0);
+				}
 
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsNotEqual) goto L10cc;
-			this.processor.CompareWord(this.owner.GlobDb3a, 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L10cc;
-			goto L100e;
+				this.processor.EmitGlobalByte(0xba06, 0x0);
 
-		L10cc:
-			this.owner.Helpers.ReleaseResource(this.processor.PullLocalWord(0x8), 0x539a);
+				this.owner.Libc.KeyAvailable();
 
-			this.owner.Startup.QueryForDisk(0, 1);
+				if (this.processor.RegAcc.Value16 == 0)
+				{
+					this.owner.CityScene.DisplayCityScreen(townIdx, -3);
+				}
+				else
+				{
+					this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 0);
 
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xd762), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L1104;
+					this.owner.TurnHooks.DisplayCivilizationScenery();
+				}
 
-			this.owner.Services.FloodColors(10, 0, 0, 0);
+				this.owner.Startup.DisplayMouseCursor();
 
-		L1104:
-			this.processor.EmitGlobalByte(0xba06, 0x0);
+				this.owner.TurnLogic.AwaitForKey();
+			}
 
-			this.owner.Libc.KeyAvailable();
-
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsNotEqual) goto L1123;
-
-			this.owner.CityScene.DisplayCityScreen(townIdx, -3);
-
-			goto L1143;
-
-		L1123:
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 0);
-
-			this.owner.TurnHooks.DisplayCivilizationScenery();
-
-		L1143:
-			this.owner.Startup.DisplayMouseCursor();
-
-			this.owner.TurnLogic.AwaitForKey();
-
-		L114d:
 			this.processor.RegSource.Value16 = this.processor.UnstackWord();
 			this.processor.LeaveFrame();
 			// Far return

@@ -741,223 +741,123 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// A caravan enters a city: the revenue ((distance + 10) * (trade of both cities) / 24, halved on the same continent and
+		/// for an own city, less a third each with the technologies 0x31 and 0x26 of the city's owner) goes to the gold and the
+		/// science of the player (a message for the human player), the caravan is removed and the city becomes a trade route of
+		/// its home city, in place of the route with the least trade (an empty slot first), unless that one has more.
 		/// </summary>
-		/// <param name="playerID"></param>
-		/// <param name="unitID"></param>
-		/// <param name="cityID"></param>
-		/// <returns></returns>
+		/// <remarks>The continent of the home city is looked up at (x, x), like in the original.</remarks>
+		/// <returns>1, also in AX</returns>
 		public ushort FoundTradeRoute(short participantIdx, short troopIdx, short townIdx)
 		{
 			this.processor.Journal.OpenScope($"FoundTradeRoute({participantIdx}, {troopIdx}, {townIdx})");
 
-			// function body
-			this.processor.EnterFrame(0x12);
-			this.processor.PreserveIndexRegisters();
-			this.processor.ScaleIndexToBase(0x600, (ushort)participantIdx);
-			this.processor.ScaleIndex(0xc, (ushort)troopIdx);
-			this.processor.RegBase.Value16 = this.processor.SumWord(this.processor.RegBase.Value16, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x81df));
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.EmitLocalWord(0x6, this.processor.RegAcc.Value16);
+			// DisplayDialog leaves SI in DI: both are given back to the caller as they were
+			ushort source = this.processor.RegSource.Value16;
+			ushort dest = this.processor.RegDest.Value16;
 
-			this.processor.ScaleIndexToSource(0x1c, (ushort)townIdx);
+			UnitMemory troops = new UnitMemory(this.processor);
+			ushort homeIdx = (ushort)troops.PullSigned(participantIdx, troopIdx, UnitMemory.BaseTown);
+			City town = this.owner.World.Towns[townIdx];
+			City home = this.owner.World.Towns[homeIdx];
 
-			this.processor.ScaleIndex(0x1c, this.processor.PullLocalWord(0x6));
-			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
+			int distance = this.owner.Helpers.ObtainDistance(town.Place.X, home.Place.X, town.Place.Y, home.Place.Y);
+			short revenue = (short)((home.RootCommerce + town.RootCommerce) * (short)(distance + 0xa));
+			revenue = (short)(revenue / 0x18);
 
-			this.owner.Helpers.ObtainDistance(
-				this.owner.World.Towns[townIdx].Place.X,
-				this.owner.World.Towns[this.processor.PullLocalWord(0x6)].Place.X,
-				this.owner.World.Towns[townIdx].Place.Y,
-				this.owner.World.Towns[this.processor.PullLocalWord(0x6)].Place.Y);
+			short homeHoriz = (short)home.Place.X;
 
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0xa);
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.Towns[this.processor.PullLocalWord(0x6)].RootCommerce;
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.Towns[townIdx].RootCommerce;
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.RegCount.Value16);
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.PullLocalWord(0x2));
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
-			this.processor.RegCount.Value16 = 0x18;
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = (ushort)((short)this.owner.World.Towns[this.processor.PullLocalWord(0x6)].Place.X);
-			this.processor.EmitLocalWord(0x10, this.processor.RegAcc.Value16);
+			if (this.owner.MapOps.ObtainContinentID(homeHoriz, homeHoriz) == this.owner.MapOps.ObtainContinentID(town.Place.X, town.Place.Y))
+			{
+				revenue = (short)(revenue / 2);
+			}
 
-			this.owner.MapOps.ObtainContinentID(
-				this.processor.PullLocalSignedWord(0x10),
-				this.processor.PullLocalSignedWord(0x10));
+			if (town.ParticipantIdx == participantIdx)
+			{
+				revenue = (short)(revenue / 2);
+			}
 
-			this.processor.EmitLocalWord(0x12, this.processor.RegAcc.Value16);
+			if (this.owner.Advisors.PlayerKnowsTechnology(town.ParticipantIdx, 0x31) != 0)
+			{
+				revenue = (short)(revenue - (revenue / 3));
+			}
 
-			this.owner.MapOps.ObtainContinentID(
-				this.owner.World.Towns[townIdx].Place.X,
-				this.owner.World.Towns[townIdx].Place.Y);
+			if (this.owner.Advisors.PlayerKnowsTechnology(town.ParticipantIdx, 0x26) != 0)
+			{
+				revenue = (short)(revenue - (revenue / 3));
+			}
 
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x12));
-			if (this.processor.FlagSet.IsNotEqual) goto L09f4;
-			this.processor.RegCount.Value16 = 0x2;
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x2);
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
+			this.owner.World.Participants[participantIdx].Gold += revenue;
+			this.owner.World.Participants[participantIdx].InquiryHeadway += revenue;
 
-		L09f4:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
+			if (participantIdx == this.owner.World.PersonParticipantIdx)
+			{
+				this.owner.Libc.CopyText(0xba06, this.processor.PullGlobalWord((ushort)(((troopIdx & 7) << 1) + 0x1972)));
 
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.Towns[townIdx].ParticipantIdx;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, (ushort)participantIdx);
-			if (this.processor.FlagSet.IsNotEqual) goto L0a12;
-			this.processor.RegCount.Value16 = 0x2;
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x2);
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
+				this.owner.Libc.AppendText(0xba06, " caravan from ");
 
-		L0a12:
-			this.processor.RegAcc.Value16 = this.owner.Advisors.PlayerKnowsTechnology(this.owner.World.Towns[townIdx].ParticipantIdx, 0x31);
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual)
-				goto L0a3c;
+				ObtainCityLabel((short)homeIdx);
 
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x2);
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.RegCount.Value16 = 0x3;
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.EmitLocalWord(0x2, this.processor.SubtractWord(this.processor.PullLocalWord(0x2), this.processor.RegAcc.Value16));
+				this.owner.Libc.AppendText(0xba06, "\narrives in ");
 
-		L0a3c:
-			this.processor.RegAcc.Value16 = this.owner.Advisors.PlayerKnowsTechnology(this.owner.World.Towns[townIdx].ParticipantIdx, 0x26);
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual)
-				goto L0a66;
+				ObtainCityLabel(townIdx);
 
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x2);
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.RegCount.Value16 = 0x3;
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.EmitLocalWord(0x2, this.processor.SubtractWord(this.processor.PullLocalWord(0x2), this.processor.RegAcc.Value16));
+				this.owner.Libc.AppendText(0xba06, "\nTrade route established\nRevenue: $");
 
-		L0a66:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x2);
-			this.owner.World.Participants[participantIdx].Gold += (short)this.processor.RegAcc.Value16;
-			this.owner.World.Participants[participantIdx].InquiryHeadway += (short)this.processor.RegAcc.Value16;
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.CompareWord((ushort)participantIdx, this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L0a81;
-			goto L0b23;
+				this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(revenue, 10));
 
-		L0a81:
-			this.processor.RegBase.Value16 = (ushort)troopIdx;
-			this.processor.RegBase.Value16 = this.processor.BitAndWord(this.processor.RegBase.Value16, 0x7);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1972)));
+				this.owner.Libc.AppendText(0xba06, ".\n");
 
-			this.owner.Libc.AppendText(0xba06, " caravan from ");
+				this.owner.TurnHooks.DisplayDialog(0xba06, 80, 80);
 
-			ObtainCityLabel(this.processor.PullLocalSignedWord(0x6));
+				this.owner.TurnHooks.RenderStatusBar();
+			}
 
-			this.owner.Libc.AppendText(0xba06, "\narrives in ");
-
-			ObtainCityLabel(townIdx);
-
-			this.owner.Libc.AppendText(0xba06, "\nTrade route established\nRevenue: $");
-
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText((short)this.processor.PullLocalWord(0x2), 10));
-
-			this.owner.Libc.AppendText(0xba06, ".\n");
-
-			this.owner.TurnHooks.DisplayDialog(0xba06, 80, 80);
-
-			this.owner.TurnHooks.RenderStatusBar();
-
-		L0b23:
 			this.owner.UnitOps.EliminateUnit(participantIdx, troopIdx);
-			
-			this.processor.ScaleIndexToSource(0x1c, (ushort)townIdx);
 
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.Towns[townIdx].RootCommerce;
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
+			short trade = RouteTrade(townIdx, participantIdx);
+			int replacedIdx = -1;
 
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.Towns[townIdx].ParticipantIdx;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, (ushort)participantIdx);
-			if (this.processor.FlagSet.IsEqual) goto L0b4e;
-			this.processor.EmitLocalWord(0x4, this.processor.ShiftLeftWord(this.processor.PullLocalWord(0x4), 0x1));
+			for (int routeIdx = 0; routeIdx < 3; routeIdx++)
+			{
+				ushort routeTownIdx = (byte)home.CommerceTownIndices[routeIdx];
 
-		L0b4e:
-			this.processor.EmitLocalWord(0xe, 0xffff);
-			this.processor.EmitLocalWord(0xa, 0x0);
-			goto L0b9c;
+				if (routeTownIdx == (ushort)townIdx)
+				{
+					replacedIdx = -1;
+					break;
+				}
 
-		L0b5a:
-			this.processor.CompareWord(this.processor.PullLocalWord(0xc), 0xff);
-			if (this.processor.FlagSet.IsNotEqual) goto L0b68;
-			this.processor.EmitLocalWord(0x8, 0xffff);
-			goto L0b85;
+				short routeTrade = routeTownIdx == 0xff ? (short)-1 : RouteTrade((short)routeTownIdx, participantIdx);
 
-		L0b68:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToSource(this.processor.PullLocalWord(0xc));
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.Towns[this.processor.PullLocalWord(0xc)].RootCommerce;
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.EmitLocalWord(0x8, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.Towns[this.processor.PullLocalWord(0xc)].ParticipantIdx;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, (ushort)participantIdx);
-			if (this.processor.FlagSet.IsEqual) goto L0b85;
-			this.processor.EmitLocalWord(0x8, this.processor.ShiftLeftWord(this.processor.PullLocalWord(0x8), 0x1));
+				if (routeTrade < trade)
+				{
+					trade = routeTrade;
+					replacedIdx = routeIdx;
+				}
+			}
 
-		L0b85:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x4);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x8), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0b99;
-			this.processor.CopyLocalWord(0x8, 0x4);
-			this.processor.CopyLocalWord(0xa, 0xe);
+			if (replacedIdx != -1)
+			{
+				home.CommerceTownIndices[replacedIdx] = (sbyte)townIdx;
+			}
 
-		L0b99:
-			this.processor.EmitLocalWord(0xa, this.processor.IncrementWord(this.processor.PullLocalWord(0xa)));
+			this.processor.RegSource.Value16 = source;
+			this.processor.RegDest.Value16 = dest;
+			this.processor.RegAcc.Value16 = 1;
 
-		L0b9c:
-			this.processor.CompareWord(this.processor.PullLocalWord(0xa), 0x3);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0bc3;
-			this.processor.ScaleIndexToSource(0x1c, this.processor.PullLocalWord(0x6));
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0xa);
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.Towns[this.processor.PullLocalWord(0x6)].CommerceTownIndices[this.processor.PullLocalWord(0xa)];
-			this.processor.RegAcc.HighByte = 0;
-			this.processor.EmitLocalWord(0xc, this.processor.RegAcc.Value16);
-
-			this.processor.RegAcc.Value16 = (ushort)townIdx;
-			this.processor.CompareWord(this.processor.PullLocalWord(0xc), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L0b5a;
-
-		L0bbe:
-			this.processor.RegAcc.Value16 = 0x1;
-			goto L0bdd;
-
-		L0bc3:
-			this.processor.CompareWord(this.processor.PullLocalWord(0xe), 0xffff);
-			if (this.processor.FlagSet.IsEqual) goto L0bbe;
-			this.processor.ScaleIndexToSource(0x1c, this.processor.PullLocalWord(0x6));
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0xe);
-			this.processor.RegAcc.LowByte = (byte)townIdx;
-			this.owner.World.Towns[this.processor.PullLocalWord(0x6)].CommerceTownIndices[this.processor.PullLocalWord(0xe)] = (sbyte)this.processor.RegAcc.LowByte;
-			goto L0bbe;
-
-		L0bdd:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.RegDest.Value16 = this.processor.UnstackWord();
-			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("FoundTradeRoute");
 
-			return this.processor.RegAcc.Value16;
+			return 1;
+		}
+
+		/// <summary>The trade of the city as a trade route of the player: doubled for a foreign city</summary>
+		private short RouteTrade(short townIdx, short participantIdx)
+		{
+			short trade = this.owner.World.Towns[townIdx].RootCommerce;
+
+			return this.owner.World.Towns[townIdx].ParticipantIdx == participantIdx ? trade : (short)(trade << 1);
 		}
 	}
 }
