@@ -1361,215 +1361,145 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// The status panel (not on the world map, 0xb278 = 1): peace bar, palace, free memory (with 0xd806), population, year,
+		/// research bulb (progress * 4 / (cost + 1), 0 - 3), pollution sun, gold and the tax / luxury / science rates; then, while
+		/// 0x1c28 is 0, tells when the population passes the next mark (0x1c24: tens below 100, then hundreds + 9). The stack
+		/// frame, the saved SI, the return address pushed for ObtainFreeStorage and SI = the new mark before DisplayDialog stay
+		/// like in the original (DisplayDialog leaves a value made from SI in DI).
 		/// </summary>
 		public void RenderStatusBar()
 		{
 			this.processor.Journal.OpenScope("RenderStatusBar()");
 
-			// function body
 			this.processor.EnterFrame(0x8);
 			this.processor.PreserveSource();
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xb278), 0x1);
-			if (this.processor.FlagSet.IsNotEqual) goto L108f;
-			goto L149e;
 
-		L108f:
-			FloodBoxWithShadow(0, 58, 80, 39);
-
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 3, 60, 74, 11, 11);
-
-			if (this.owner.World.TruceRoundTally <= 1) goto L10fb;
-
-			this.owner.Helpers.VerifyValueSpan(this.owner.World.TruceRoundTally * 2, 0, 60);
-
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 3, 60, (short)this.processor.RegAcc.Value16, 2, 15);
-
-		L10fb:
-			RenderPalace(this.owner.World.PersonParticipantIdx, this.owner.World.CastleTier, 8, 58);
-
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xd806), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L115d;
-			this.processor.StackWord(0); // stack management - push return segment, ignored
-			this.processor.StackWord(0x111e); // stack management - push return offset
-			this.owner.VideoCard.ObtainFreeStorage();
-			this.processor.UnstackDoubleWord(); // stack management - pop return offset and segment
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
-			this.processor.EmitGlobalByte(0xba06, 0x0);
-
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText((short)this.processor.PullLocalWord(0x4), 10));
-
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, 2, 59, 0);
-
-		L115d:
-			this.processor.EmitGlobalByte(0xba06, 0x0);
-			
-			this.owner.Helpers.ObtainPlayerPopulation(this.owner.World.PersonParticipantIdx);
-
-			this.processor.EmitLocalWord(0x8, this.processor.RegAcc.Value16);
-
-			this.owner.Libc.AppendText(0xba06, "#");
-
-			this.processor.CompareWord(this.processor.PullLocalWord(0x8), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L119e;
-
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, 2, 73, 0);
-
-		L119e:
-			this.processor.EmitGlobalByte(0xba06, 0x0);
-
-			ObtainCurrentYearAsText();
-
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, 2, 81, 0);
-
-			if (this.owner.World.Season < 0)
+			if (this.processor.PullGlobalWord(0xb278) != 1)
 			{
-				this.processor.RegCount.Value16 = 0x1;
+				Player human = this.owner.World.Participants[this.owner.World.PersonParticipantIdx];
+
+				FloodBoxWithShadow(0, 58, 80, 39);
+
+				this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 3, 60, 74, 11, 11);
+
+				if (this.owner.World.TruceRoundTally > 1)
+				{
+					int peace = this.owner.Helpers.VerifyValueSpan(this.owner.World.TruceRoundTally * 2, 0, 60);
+
+					this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 3, 60, (short)peace, 2, 15);
+				}
+
+				RenderPalace(this.owner.World.PersonParticipantIdx, this.owner.World.CastleTier, 8, 58);
+
+				if (this.processor.PullGlobalWord(0xd806) != 0)
+				{
+					this.processor.StackWord(0); // stack management - push return segment, ignored
+					this.processor.StackWord(0x111e); // stack management - push return offset
+					this.owner.VideoCard.ObtainFreeStorage();
+					this.processor.UnstackDoubleWord(); // stack management - pop return offset and segment
+
+					short storage = (short)this.processor.RegAcc.Value16;
+
+					this.processor.EmitGlobalByte(0xba06, 0);
+					this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(storage, 10));
+					this.owner.TextPainter.RenderTextToScreen0(0xba06, 2, 59, 0);
+				}
+
+				this.processor.EmitGlobalByte(0xba06, 0);
+				short population = (short)this.owner.Helpers.ObtainPlayerPopulation(this.owner.World.PersonParticipantIdx);
+				this.owner.Libc.AppendText(0xba06, "#");
+
+				if (population != 0)
+				{
+					this.owner.TextPainter.RenderTextToScreen0(0xba06, 2, 73, 0);
+				}
+
+				this.processor.EmitGlobalByte(0xba06, 0);
+				ObtainCurrentYearAsText();
+				this.owner.TextPainter.RenderTextToScreen0(0xba06, 2, 81, 0);
+
+				short cost = (short)(((this.owner.World.HardnessTier << 1) + this.processor.PullGlobalWord(0xd2de) + 6) *
+					human.FoundScienceTally * (this.owner.World.Season < 0 ? 1 : 2));
+				short progress = CPU.SignedQuotient((short)(human.InquiryHeadway << 2), (short)(cost + 1));
+				int bulb = this.owner.Helpers.VerifyValueSpan(progress, 0, 3);
+
+				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19e8), (ushort)((bulb << 3) + 0xa0), 0x78, 8, 8,
+					this.processor.PullGlobalWord(0xaa), 0x30, 0x50);
+
+				if (this.owner.World.SmogImpactTier != 0)
+				{
+					int smog = this.owner.Helpers.VerifyValueSpan(this.owner.World.SmogImpactTier / 4, 0, 3);
+
+					this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19e8), (ushort)((smog << 3) + 0xa0), 0x80, 8, 8,
+						this.processor.PullGlobalWord(0xaa), 0x38, 0x50);
+				}
+
+				this.processor.EmitGlobalByte(0xba06, 0);
+				this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(human.Gold, 10));
+				this.owner.Libc.AppendText(0xba06, "$");
+				this.owner.Libc.AppendText(0xba06, " ");
+				this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText((short)(-(human.LevyRatio + human.ResearchLevyRatio - 10)), 10));
+				this.owner.Libc.AppendText(0xba06, ".");
+				this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(human.LevyRatio, 10));
+				this.owner.Libc.AppendText(0xba06, ".");
+				this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(human.ResearchLevyRatio, 10));
+				this.owner.TextPainter.RenderTextToScreen0(0xba06, 2, 89, 0);
+
+				if (this.processor.PullGlobalWord(0x1c28) == 0)
+				{
+					AnnouncePopulationMark(population);
+				}
 			}
-			else
-			{
-				this.processor.RegCount.Value16 = 0x2;
-			}
 
-			this.processor.RegAcc.Value16 = (ushort)owner.World.HardnessTier;
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.PullGlobalWord(0xd2de));
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x6);
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, (ushort)this.owner.World.Participants[this.owner.World.PersonParticipantIdx].FoundScienceTally);
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegCount.Value16 = this.processor.IncrementWord(this.processor.RegCount.Value16);
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.Participants[this.owner.World.PersonParticipantIdx].InquiryHeadway;
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, 2);
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
-			
-			this.owner.Helpers.VerifyValueSpan(
-				this.processor.PullLocalSignedWord(0x4), 0, 3);
+			this.processor.RestoreSource();
+			this.processor.LeaveFrame();
 
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0x19e8),
-				(ushort)((this.processor.RegAcc.Value16 << 3) + 0xa0),
-				0x78, 8, 8,
-				this.processor.PullGlobalWord(0xaa),
-				0x30, 0x50);
+			this.processor.Journal.CloseScope("RenderStatusBar");
+		}
 
-			if (this.owner.World.SmogImpactTier == 0) goto L1288;
-
-			this.owner.Helpers.VerifyValueSpan(
-				this.owner.World.SmogImpactTier / 4, 0, 3);
-
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
-
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0x19e8),
-				(ushort)((this.processor.PullLocalWord(0x4) << 3) + 0xa0),
-				0x80, 8, 8,
-				this.processor.PullGlobalWord(0xaa),
-				0x38, 0x50);
-
-		L1288:
-			this.processor.EmitGlobalByte(0xba06, 0x0);
-
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText(this.owner.World.Participants[this.owner.World.PersonParticipantIdx].Gold, 10));
-
-			this.owner.Libc.AppendText(0xba06, "$");
-
-			this.owner.Libc.AppendText(0xba06, " ");
-
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText((short)(-(this.owner.World.Participants[this.owner.World.PersonParticipantIdx].LevyRatio +
-					this.owner.World.Participants[this.owner.World.PersonParticipantIdx].ResearchLevyRatio - 10)), 10));
-
-			this.owner.Libc.AppendText(0xba06, ".");
-
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText(this.owner.World.Participants[this.owner.World.PersonParticipantIdx].LevyRatio, 10));
-
-			this.owner.Libc.AppendText(0xba06, ".");
-
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText(this.owner.World.Participants[this.owner.World.PersonParticipantIdx].ResearchLevyRatio, 10));
-
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, 2, 89, 0);
-
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x1c28), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L1394;
-			goto L149e;
-
-		L1394:
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x1c24);
-			this.processor.EmitLocalWord(0x6, this.processor.RegAcc.Value16);
+		/// <summary>
+		/// The population mark of RenderStatusBar: when the population passes the next mark 0x1c24 (in tens below 100, then in
+		/// hundreds with 9 added), the mark moves and, unless 0x3484 is below -1, a dialog tells "...exceeds N00,000 citizens"
+		/// </summary>
+		private void AnnouncePopulationMark(short population)
+		{
+			short previousMark = (short)this.processor.PullGlobalWord(0x1c24);
 
 			this.owner.Libc.CopyText(0xba06, "The population of the\nfertile ");
-
-			this.processor.RegBase.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1982)));
-
+			this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)((this.owner.World.PersonParticipantIdx << 1) + 0x1982)));
 			this.owner.Libc.AppendText(0xba06, " empire now\nexceeds ");
 
-			this.processor.CompareWord(this.processor.PullLocalWord(0x8), 0x64);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L1413;
-			this.processor.ScaleIndex(0xa, this.processor.PullGlobalWord(0x1c24));
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x8));
-			if (this.processor.FlagSet.IsLess) goto L13e5;
-			goto L1466;
+			if (population < 100)
+			{
+				if ((short)(this.processor.PullGlobalWord(0x1c24) * 10) < population)
+				{
+					short mark = (short)(population / 10);
+					this.processor.RegSource.Value16 = (ushort)mark;
 
-		L13e5:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x8);
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, 10);
-			this.processor.RegSource.Value16 = this.processor.RegAcc.Value16;
+					this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(mark, 10));
 
-			this.owner.Libc.AppendText(0xba06, 
-				this.owner.Libc.IntegerToText((short)this.processor.RegSource.Value16, 10));
+					this.processor.EmitGlobalWord(0x1c24, (ushort)mark);
+				}
+			}
+			else if ((short)((this.processor.PullGlobalWord(0x1c24) - 9) * 100) < population)
+			{
+				short hundreds = (short)(population / 100);
+				this.processor.RegSource.Value16 = (ushort)hundreds;
 
-			this.processor.EmitGlobalWord(0x1c24, this.processor.RegSource.Value16);
-			goto L1466;
+				this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(hundreds, 10));
+				this.owner.Libc.AppendText(0xba06, ",0");
 
-		L1413:
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x1c24);
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, 0x9);
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
-			this.processor.ScaleIndex(0x64, this.processor.PullLocalWord(0x4));
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x8));
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L1466;
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x8);
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, 0x64);
-			this.processor.RegSource.Value16 = this.processor.RegAcc.Value16;
+				this.processor.EmitGlobalWord(0x1c24, (ushort)(hundreds + 9));
+			}
 
-			this.owner.Libc.AppendText(0xba06, 
-				this.owner.Libc.IntegerToText((short)this.processor.RegSource.Value16, 10));
+			if (previousMark < (short)this.processor.PullGlobalWord(0x1c24) && (short)this.processor.PullGlobalWord(0x3484) >= -1)
+			{
+				this.owner.Libc.AppendText(0xba06, "00,000 citizens.\n");
 
-			this.owner.Libc.AppendText(0xba06, ",0");
+				this.processor.EmitGlobalWord(0x2f9e, 4);
 
-			// LEA
-			this.processor.RegAcc.Value16 = (ushort)(this.processor.RegSource.Value16 + 0x9);
-			this.processor.EmitGlobalWord(0x1c24, this.processor.RegAcc.Value16);
-
-		L1466:
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x1c24);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x6), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L149e;
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x3484), 0xffff);
-			if (this.processor.FlagSet.IsLess) goto L149e;
-
-			this.owner.Libc.AppendText(0xba06, "00,000 citizens.\n");
-
-			this.processor.EmitGlobalWord(0x2f9e, 0x4);
-
-			DisplayDialog(0xba06, 100, 80);
-
-		L149e:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.LeaveFrame();
-			// Far return
-			this.processor.Journal.CloseScope("RenderStatusBar");
+				DisplayDialog(0xba06, 100, 80);
+			}
 		}
 
 		/// <summary>

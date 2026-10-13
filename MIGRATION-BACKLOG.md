@@ -197,6 +197,12 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   (`InGameHelp`, z `DisplayImprovementHints`), `ProduceElevation` (`GameInitAndIntro`, w rzeczywistości rzeki nowej mapy).
   Testy w `BatchTwentySixDifferentialTests`. Uwaga dla testów: `DisplayStoryIntro` zapisuje zegar / 60 pod 0x6800, a zegar
   testów zależy od liczby dostępów do pamięci, więc test rzek zeruje 0x6800 po wywołaniu.
+- Kolejne 4 moduły (2026-10-13): `MayCityWorkTile` (`CityManagement`, w rzeczywistości plon pola: żywność, tarcze, handel;
+  ustrój gracza 0x6548 czytany tylko tam, gdzie oryginał go czyta), `RenderStatusBar` (`TurnEvents`, z `AnnouncePopulationMark`;
+  ramka, zapis SI, adres powrotu przy `ObtainFreeStorage` i SI = nowy próg przed `DisplayDialog` zostają), `DisplayGameResultsScreen`
+  (`HallOfFame`, z `PullRankTitle`), `BuyUnit` (`DiplomatActions`, z `OfferBribe`; ramka i zapis SI/DI zostają, bo
+  `TallyUnitsByDomainInStack` zmienia SI). Testy w `BatchTwentySevenDifferentialTests`. `ComputeSpaceshipSuccess` (`SpaceshipScreen`)
+  odłożone: rozmieszczanie części statku AI, splątane skoki między pętlami.
 
 ## Następny krok
 
@@ -208,7 +214,7 @@ Dalej małe metody: `python Civilization1Remaster.Tests/Differential/Reference/f
 reszta generatora mapy w `GameInitAndIntro`. Funkcje niskopoziomowe `SystemServices` (`DeactivateMouse`, `PointerEvent`,
 `RenderCursorToScreen`, `RecoverScreenUnderCursor`, kolory i zegar: `PrepareTimer`, `RefreshHueCycling`, `AssignHueCycleSpan`,
 `ColorsFadeStep`, `FadeColors`, `FloodColors`, `ImportColorsFromBuffer`) i `SnapHeapPointer` (`VGADriver`) na koniec: działają
-w przerwaniach albo na rejestrach. Stan 2026-10-13: 116 metod w stylu asm, ok. 56 tys. z 73 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
+w przerwaniach albo na rejestrach. Stan 2026-10-13: 112 metod w stylu asm, ok. 56 tys. z 73 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 

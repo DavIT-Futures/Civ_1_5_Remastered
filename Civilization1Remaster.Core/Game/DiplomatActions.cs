@@ -501,203 +501,122 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// A diplomat of participantIdx1 bribes the unit (only a unit without others in its stack): the price is (gold + 750) /
+		/// (distance to the owner's capital + 2) * the unit's cost, halved for all but settlers. The AI pays when it has twice the
+		/// price; the human player is asked ("Forget it." / "Pay" when the treasury covers it). The unit changes sides (seen by its
+		/// former owner) and the human player, if bribed, is told. The stack frame and the saved SI and DI stay like in the
+		/// original: TallyUnitsByDomainInStack changes SI.
 		/// </summary>
-		/// <param name="playerID"></param>
-		/// <param name="unitID"></param>
-		/// <param name="playerID1"></param>
 		public void BuyUnit(short participantIdx, short troopIdx, short participantIdx1)
 		{
 			this.processor.Journal.OpenScope($"BuyUnit({participantIdx}, {troopIdx}, {participantIdx1})");
 
-			// function body
 			this.processor.EnterFrame(0xc);
 			this.processor.PreserveIndexRegisters();
 
-			this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, troopIdx, 2);
+			short humanIdx = this.owner.World.PersonParticipantIdx;
+			UnitMemory troops = new UnitMemory(this.processor);
 
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L065b;
-			goto L0961;
+			if ((short)this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, troopIdx, 2) <= 1)
+			{
+				short distance = (short)this.owner.Politics.LocateNearestCityOfPlayer(participantIdx,
+					troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz), troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert));
+				sbyte kind = troops.TroopKind(participantIdx, troopIdx);
+				short price = (short)(CPU.SignedQuotient((short)(this.owner.World.Participants[participantIdx].Gold + 0x2ee), (short)(distance + 2)) *
+					UnitKindTable.Field(this.processor, kind, UnitKindTable.Price));
 
-		L065b:
-			this.processor.RegAcc.Value16 = 0x600;
-			this.processor.ScaleAccumulatorToSource((ushort)participantIdx);
-			this.processor.AddScaledToSource(0xc, (ushort)troopIdx);
+				if (kind != 0)
+				{
+					price = CPU.SignedQuotient(price, 2);
+				}
 
-			this.owner.Politics.LocateNearestCityOfPlayer(participantIdx,
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)),
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6)));
+				if (participantIdx1 == humanIdx || this.owner.World.Participants[participantIdx1].Gold / 2 >= price)
+				{
+					OfferBribe(participantIdx, troopIdx, participantIdx1, price);
+				}
+			}
 
-			this.processor.EmitLocalWord(0x8, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.LowByte = 0x22;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d7)));
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.Participants[participantIdx].Gold;
-			this.processor.RegAcc.Value16 += 0x2ee;
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.RegCount.Value16 = this.processor.PullLocalWord(0x8);
-			this.processor.RegCount.Value16 = this.processor.IncrementWord(this.processor.RegCount.Value16);
-			this.processor.RegCount.Value16 = this.processor.IncrementWord(this.processor.RegCount.Value16);
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1142)));
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d7)), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L06b8;
-			this.processor.RegCount.Value16 = 0x2;
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
+			this.processor.RestoreIndexRegisters();
+			this.processor.LeaveFrame();
 
-		L06b8:
-			if (participantIdx1 == this.owner.World.PersonParticipantIdx) goto L06d6;
+			this.processor.Journal.CloseScope("BuyUnit");
+		}
 
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.Participants[participantIdx1].Gold;
-			this.processor.HalveAccumulator();
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x4));
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L06d6;
-			goto L0961;
+		/// <summary>The offer of BuyUnit and, when it is taken, the unit changing sides</summary>
+		private void OfferBribe(short participantIdx, short troopIdx, short participantIdx1, short price)
+		{
+			short humanIdx = this.owner.World.PersonParticipantIdx;
+			UnitMemory troops = new UnitMemory(this.processor);
+			ushort kindName = (ushort)((troops.TroopKind(participantIdx, troopIdx) * UnitKindTable.Stride) + UnitKindTable.Origin);
 
-		L06d6:
-			this.processor.RegBase.Value16 = (ushort)participantIdx;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1982)));
-
+			this.owner.Libc.CopyText(0xba06, this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1982)));
 			this.owner.Libc.AppendText(0xba06, " ");
-
-			this.processor.ScaleIndexToBase(0xc, (ushort)troopIdx);
-			this.processor.ScaleIndex(0x600, (ushort)participantIdx);
-			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
-
-			this.processor.RegAcc.LowByte = 0x22;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegDest.Value16 + 0x81d7)));
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x112a);
-
-			this.owner.Libc.AppendText(0xba06, this.processor.RegAcc.Value16);
-
+			this.owner.Libc.AppendText(0xba06, kindName);
 			this.owner.Libc.AppendText(0xba06, "\nwill desert for ");
-
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText((short)this.processor.PullLocalWord(0x4), 10));
-
+			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(price, 10));
 			this.owner.Libc.AppendText(0xba06, "$.\nTreasury: ");
-
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText(this.owner.World.Participants[participantIdx1].Gold, 10));
-
+			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(this.owner.World.Participants[participantIdx1].Gold, 10));
 			this.owner.Libc.AppendText(0xba06, "$\n");
 
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.Participants[participantIdx1].Gold;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsGreater) goto L07b0;
+			if (price <= this.owner.World.Participants[participantIdx1].Gold)
+			{
+				this.owner.Libc.AppendText(0xba06, " Forget it.\n Pay\n");
+			}
 
-			this.owner.Libc.AppendText(0xba06, " Forget it.\n Pay\n");
+			if (participantIdx1 == humanIdx)
+			{
+				this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
 
-		L07b0:
-			if (participantIdx1 != this.owner.World.PersonParticipantIdx) goto L07d4;
+				if (this.processor.RegAcc.Value16 != 1)
+					return;
+			}
 
-			this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+			if (participantIdx == humanIdx)
+			{
+				this.owner.MapOps.FocusMapView(participantIdx, troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz) - 8,
+					troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert) - 6);
 
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1);
-			if (this.processor.FlagSet.IsEqual) goto L07d4;
-			goto L0961;
+				this.owner.Libc.CopyText(0xba06, this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1982)));
+				this.owner.Libc.AppendText(0xba06, " ");
+				this.owner.Libc.AppendText(0xba06, kindName);
+				this.owner.Libc.AppendText(0xba06, " unit\nbribed by ");
+				this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)((participantIdx1 << 1) + 0x1992)));
+				this.owner.Libc.AppendText(0xba06, "!\n");
 
-		L07d4:
-			if (participantIdx != this.owner.World.PersonParticipantIdx)
-				goto L0898;
+				this.processor.EmitGlobalWord(0x2f9e, 0);
 
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.AddScaledToSource(0xc, (ushort)troopIdx);
+				this.owner.TurnHooks.DisplayDialog(0xba06, 80, 40);
+			}
 
-			this.owner.MapOps.FocusMapView(participantIdx,
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)) - 8,
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6)) - 6);
+			short kind = troops.TroopKind(participantIdx, troopIdx);
 
-			this.processor.RegBase.Value16 = (ushort)participantIdx;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1982)));
-
-			this.owner.Libc.AppendText(0xba06, " ");
-
-			this.processor.RegAcc.LowByte = 0x22;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d7)));
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x112a);
-			this.owner.Libc.AppendText(0xba06, this.processor.RegAcc.Value16);
-
-			this.owner.Libc.AppendText(0xba06, " unit\nbribed by ");
-
-			this.processor.RegBase.Value16 = (ushort)participantIdx1;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1992)));
-
-			this.owner.Libc.AppendText(0xba06, "!\n");
-
-			this.processor.EmitGlobalWord(0x2f9e, 0x0);
-
-			this.owner.TurnHooks.DisplayDialog(0xba06, 80, 40);
-
-		L0898:
-			this.processor.RegAcc.Value16 = 0x600;
-			this.processor.ScaleAccumulatorToSource((ushort)participantIdx);
-			this.processor.AddScaledToSource(0xc, (ushort)troopIdx);
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d7));
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
-			
 			this.owner.UnitOps.EliminateUnit(participantIdx, troopIdx);
 
-			this.processor.RegDest.Value16 = this.processor.PullLocalWord(0x2);
-			this.processor.RegDest.Value16 = this.processor.ShiftLeftWord(this.processor.RegDest.Value16, 0x1);
-			this.processor.ScaleIndexToBase(0x38, (ushort)participantIdx);
-			
-			this.owner.World.Participants[participantIdx].LiveTroops[this.processor.PullLocalWord(0x2)]--;
+			this.owner.World.Participants[participantIdx].LiveTroops[kind]--;
 
-			this.owner.UnitOps.ConstructUnit(
-				participantIdx1,
-				this.processor.PullLocalSignedWord(0x2),
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)),
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6)));
+			// The record keeps its position after EliminateUnit
+			ushort bribedIdx = this.owner.UnitOps.ConstructUnit(participantIdx1, kind,
+				troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz), troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert));
 
-			this.processor.EmitLocalWord(0xa, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xffff);
-			if (this.processor.FlagSet.IsEqual) goto L0918;
-			this.processor.ScaleIndexToBase(0x38, (ushort)participantIdx1);
+			if (bribedIdx != 0xffff)
+			{
+				this.owner.World.Participants[participantIdx1].LiveTroops[kind]++;
 
-			this.owner.World.Participants[participantIdx1].LiveTroops[this.processor.PullLocalWord(0x2)]++;
+				troops.Assign(participantIdx1, bribedIdx, UnitMemory.ShownToParticipants,
+					(byte)(troops.Pull(participantIdx1, bribedIdx, UnitMemory.ShownToParticipants) | (1 << participantIdx)));
+			}
 
-			this.processor.ScaleIndexToBase(0x600, (ushort)participantIdx1);
-			this.processor.ScaleIndex(0xc, this.processor.PullLocalWord(0xa));
-			this.processor.RegBase.Value16 = this.processor.SumWord(this.processor.RegBase.Value16, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.LowByte = 0x1;
-			this.processor.RegCount.LowByte = (byte)participantIdx;
-			this.processor.RegAcc.LowByte = this.processor.ShiftLeftByte(this.processor.RegAcc.LowByte, this.processor.RegCount.LowByte);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x81dd),
-				this.processor.BitOrByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x81dd)), this.processor.RegAcc.LowByte));
+			this.owner.World.Participants[participantIdx1].Gold -= price;
 
-		L0918:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x4);
-			this.owner.World.Participants[participantIdx1].Gold -= (short)this.processor.RegAcc.Value16;
+			if (participantIdx == humanIdx)
+			{
+				this.owner.MapOps.RepaintMapTile(troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
+					troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert));
 
-			if (participantIdx != this.owner.World.PersonParticipantIdx)
-				goto L0961;
+				this.owner.TurnHooks.RenderStatusBar();
 
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.AddScaledToSource(0xc, (ushort)troopIdx);
-
-			this.owner.MapOps.RepaintMapTile(
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)),
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6)));
-
-			this.owner.TurnHooks.RenderStatusBar();
-
-			this.owner.TextPainter.AwaitTime(30);
-
-		L0961:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.RegDest.Value16 = this.processor.UnstackWord();
-			this.processor.LeaveFrame();
-			// Far return
-			this.processor.Journal.CloseScope("BuyUnit");
+				this.owner.TextPainter.AwaitTime(30);
+			}
 		}
 
 		/// <summary>

@@ -408,218 +408,113 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// The ranking of the ruler among the 20 titles of 0x36d4 (0x19 bytes each, from the last): rank arg1, or with a score
+		/// percentage arg2 * (difficulty + 1) / 50 the highest k - 1 (k = 1 - 20) with k * k / 3 below it ("...% exceeds even");
+		/// nothing for a negative rank. The titles up to the rank are listed upwards, the rank highlighted, until a key or a click.
 		/// </summary>
-		/// <param name="param1"></param>
-		/// <param name="param2"></param>
 		public void DisplayGameResultsScreen(ushort arg1, ushort arg2)
 		{
 			this.processor.Journal.OpenScope($"DisplayGameResultsScreen({arg1}, {arg2})");
 
-			// function body
-			this.processor.EnterFrame(0xa);
+			short rank = (short)arg1;
+			short percentage = 0;
 
-			this.processor.CompareWord(arg2, 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L06a6;
-			this.processor.RegCount.Value16 = (ushort)this.owner.World.HardnessTier;
-			this.processor.RegCount.Value16 = this.processor.IncrementWord(this.processor.RegCount.Value16);
-			this.processor.RegAcc.Value16 = arg2;
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.RegCount.Value16 = 0x32;
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
-			arg1 = 0xffff;
-			this.processor.EmitLocalWord(0x4, 0x1);
+			if (arg2 != 0)
+			{
+				percentage = CPU.SignedQuotient((short)(arg2 * (this.owner.World.HardnessTier + 1)), 0x32);
+				rank = -1;
 
-		L0686:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x4);
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegAcc.Value16);
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.RegCount.Value16 = 0x3;
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x2));
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L069d;
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x4);
-			this.processor.RegAcc.Value16 = this.processor.DecrementWord(this.processor.RegAcc.Value16);
-			arg1 = this.processor.RegAcc.Value16;
+				for (short level = 1; level <= 0x14; level++)
+				{
+					if (CPU.SignedQuotient((short)(level * level), 3) < percentage)
+					{
+						rank = (short)(level - 1);
+					}
+				}
+			}
 
-		L069d:
-			this.processor.EmitLocalWord(0x4, this.processor.IncrementWord(this.processor.PullLocalWord(0x4)));
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), 0x14);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L0686;
+			if (rank >= 0)
+			{
+				if (rank > 0x13)
+				{
+					rank = 0x13;
+				}
 
-		L06a6:
-			this.processor.CompareWord(arg1, 0x0);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L06af;
-			goto L09a8;
+				this.owner.Startup.ConcealMouseCursor();
 
-		L06af:
-			this.processor.CompareWord(arg1, 0x13);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L06ba;
+				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0x19d4), 0, 0);
 
-			arg1 = 0x13;
+				this.owner.Services.PerformSound(0x22, 0);
 
-		L06ba:
-			this.owner.Startup.ConcealMouseCursor();
+				this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 15);
 
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0xaa),
-				0, 0, 0x140, 0xc8,
-				this.processor.PullGlobalWord(0x19d4),
-				0, 0);
+				this.owner.UnitOps.RenderBusyIndicator();
 
-			this.owner.Services.PerformSound(0x22, 0);
+				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19e8), 0xc8, 0x8c, 0x28, 0x3c, this.processor.PullGlobalWord(0xaa), 10, 10);
 
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 15);
+				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19e8), 0xf0, 0x8c, 0x28, 0x3c, this.processor.PullGlobalWord(0xaa), 0x10e, 10);
 
-			this.owner.UnitOps.RenderBusyIndicator();
+				this.processor.EmitGlobalWord((ushort)(this.processor.PullGlobalWord(0xaa) + 0x10), 7);
 
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0x19e8),
-				0xc8, 0x8c, 0x28, 0x3c,
-				this.processor.PullGlobalWord(0xaa),
-				10, 10);
+				this.owner.Helpers.FloodBoxWithMotif(80, 4, 160, 27);
 
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0x19e8),
-				0xf0, 0x8c, 0x28, 0x3c,
-				this.processor.PullGlobalWord(0xaa),
-				0x10e, 10);
+				this.owner.Dialogs.RenderShadowBox(80, 4, 159, 26, 11, 8);
 
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 0x7);
+				ushort ending;
 
-			this.owner.Helpers.FloodBoxWithMotif(80, 4, 160, 27);
+				if (arg2 == 0)
+				{
+					PullRankTitle(0x1f4);
+					this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 6, 15);
 
-			this.owner.Dialogs.RenderShadowBox(80, 4, 159, 26, 11, 8);
+					PullRankTitle(0x20d);
+					this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 14, 15);
 
-			this.processor.CompareWord(arg2, 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L0788;
-			goto L0814;
+					ending = 0x3471;
+				}
+				else
+				{
+					PullRankTitle(0x226);
+					this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 6, 15);
 
-		L0788:
-			this.owner.Libc.MoveFarData(
-				0x36d4,
-				0x1f4,
-				this.processor.SegData.Value16,
-				0xba06,
-				0x20);
+					PullRankTitle(0x23f);
+					this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(percentage, 10));
+					this.owner.Libc.AppendText(0xba06, "% exceeds even");
+					this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 14, 15);
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 6, 15);
+					ending = 0x3482;
+				}
 
-			this.owner.Libc.MoveFarData(
-				0x36d4,
-				0x20d,
-				this.processor.SegData.Value16,
-				0xba06,
-				0x20);
+				PullRankTitle((ushort)((0x13 - rank) * 0x19));
+				this.owner.Libc.AppendText(0xba06, ending);
+				this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 22, 15);
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 14, 15);
+				for (short level = 0; level <= rank; level++)
+				{
+					PullRankTitle((ushort)((0x13 - level) * 0x19));
+					this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, -((level * 8) - 184), (ushort)(level == rank ? 0 : 7));
+				}
 
-			this.owner.Libc.MoveFarData(
-				0x36d4,
-				(ushort)((0x13 - arg1) * 0x19),
-				this.processor.SegData.Value16,
-				0xba06,
-				0x20);
+				this.owner.VideoCard.SubstituteHue(this.processor.PullGlobalWord(0xaa), 80, 183 - rank * 8, 160, 8, 15, 14);
 
-			this.processor.RegAcc.Value16 = 0x3471;
-			goto L08cd;
+				this.owner.Conquest.AwaitForKeyPressOrMouseClick();
 
-		L0814:
-			this.owner.Libc.MoveFarData(
-				0x36d4,
-				0x226,
-				this.processor.SegData.Value16,
-				0xba06,
-				0x20);
+				this.owner.Services.PerformSound(1, 0);
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 6, 15);
+				this.processor.EmitGlobalWord((ushort)(this.processor.PullGlobalWord(0xaa) + 0x10), 1);
 
-			this.owner.Libc.MoveFarData(
-				0x36d4,
-				0x23f,
-				this.processor.SegData.Value16,
-				0xba06,
-				0x20);
+				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0xaa), 0, 0);
 
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText((short)this.processor.PullLocalWord(0x2), 10));
+				this.owner.Startup.DisplayMouseCursor();
+			}
 
-			this.owner.Libc.AppendText(0xba06, "% exceeds even");
-
-			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 14, 15);
-
-			this.owner.Libc.MoveFarData(
-				0x36d4,
-				(ushort)((0x13 - arg1) * 0x19),
-				this.processor.SegData.Value16,
-				0xba06,
-				0x20);
-
-			this.processor.RegAcc.Value16 = 0x3482;
-
-		L08cd:
-			this.owner.Libc.AppendText(0xba06, this.processor.RegAcc.Value16);
-
-			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 22, 15);
-
-			this.processor.EmitLocalWord(0x4, 0x0);
-			goto L091d;
-
-		L08f9:
-			this.processor.RegAcc.Value16 = 0x7;
-
-		L08fc:
-			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160,
-				-((this.processor.PullLocalSignedWord(0x4) * 8) - 184), this.processor.RegAcc.Value16);
-
-			this.processor.IncrementLocalWord(0x4);
-
-		L091d:
-			this.processor.RegAcc.Value16 = arg1;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsGreater) goto L0957;
-
-			this.owner.Libc.MoveFarData(
-				0x36d4,
-				(ushort)((0x13 - this.processor.PullLocalWord(0x4)) * 0x19),
-				this.processor.SegData.Value16,
-				0xba06,
-				0x20);
-
-			this.processor.RegAcc.Value16 = arg1;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L08f9;
-			this.processor.RegAcc.Value16 = 0;
-			goto L08fc;
-
-		L0957:
-			this.owner.VideoCard.SubstituteHue(this.processor.PullGlobalWord(0xaa), 
-				80, 183 - (short)arg1 * 8,
-				160, 8, 15, 14);
-
-			this.owner.Conquest.AwaitForKeyPressOrMouseClick();
-
-			this.owner.Services.PerformSound(1, 0);
-
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 0x1);
-
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0x19d4),
-				0, 0, 0x140, 0xc8,
-				this.processor.PullGlobalWord(0xaa),
-				0, 0);
-
-			this.owner.Startup.DisplayMouseCursor();
-
-		L09a8:
-			this.processor.RegStack.Value16 = this.processor.RegFrame.Value16;
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-			// Far return
 			this.processor.Journal.CloseScope("DisplayGameResultsScreen");
+		}
+
+		/// <summary>Copies the text (0x20 bytes) at 0x36d4:offset, the ranking titles, to 0xba06</summary>
+		private void PullRankTitle(ushort offset)
+		{
+			this.owner.Libc.MoveFarData(0x36d4, offset, this.processor.SegData.Value16, 0xba06, 0x20);
 		}
 
 		/// <summary>
