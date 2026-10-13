@@ -82,149 +82,119 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// The Game menu: Tax Rate, Luxuries Rate, FindCity, Save Game, REVOLUTION!, Retire and QUIT to DOS are passed to the
+		/// turn as commands (0xd4ca, the last two with 0xdc48), Load Game chooses the saved game to load after the turn, Options
+		/// toggles the options until Escape, View Replay (after the end of the game, 0x100 of the spaceships) shows the replay.
 		/// </summary>
 		public void DisplayGameMenu()
 		{
 			this.processor.Journal.OpenScope("DisplayGameMenu()");
 
-			// function body
-			this.processor.EnterFrame(0x6);
+			if (owner.World.RoundTally == 0)
+			{
+				this.processor.EmitGlobalWord(0xb276, 0x10);
+			}
 
-			if (owner.World.RoundTally != 0) goto L00c0;
-			this.processor.EmitGlobalWord(0xb276, 0x10);
-
-		L00c0:
 			this.owner.Libc.CopyText(0xba06, " Tax Rate\n Luxuries Rate\n FindCity\n Options\n Save Game\n Load Game\n REVOLUTION!\n \n Retire\n QUIT to DOS\n");
 
-			this.processor.TestBitsWord((ushort)this.owner.World.StarshipMarkers, 0x100);
-			if (this.processor.FlagSet.IsEqual) goto L00e8;
+			if ((this.owner.World.StarshipMarkers & 0x100) != 0)
+			{
+				this.owner.Libc.AppendText(0xba06, " View Replay\n");
+			}
 
-			this.owner.Libc.AppendText(0xba06, " View Replay\n");
-
-		L00e8:
 			this.owner.Dialogs.DisplayMenu(0xba06, 16, 8, 0);
 
-			this.processor.EmitLocalWord(0x6, this.processor.RegAcc.Value16);
+			ushort choice = this.processor.RegAcc.Value16;
 
 			this.owner.TurnLogic.AwaitForKey();
 
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x6);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
-			if (this.processor.FlagSet.IsBelowOrEqual) goto L010f;
-			goto L01d4;
-
-		L010f:
 			// Load Game (5) is new, the items after it moved down by one
-			switch(this.processor.RegAcc.Value16)
+			switch (choice)
 			{
 				case 0:
-					goto L0120;
+					this.processor.EmitGlobalWord(0xd4ca, 0x3d);
+					break;
+
 				case 1:
-					goto L0129;
+					this.processor.EmitGlobalWord(0xd4ca, 0x2d);
+					break;
+
 				case 2:
-					goto L0132;
+					this.processor.EmitGlobalWord(0xd4ca, 0x3f);
+					break;
+
 				case 3:
-					goto L013b;
+					ChooseOptions();
+					break;
+
 				case 4:
-					goto L019b;
+					this.processor.EmitGlobalWord(0xd4ca, 0x53);
+					break;
+
 				case 5:
-					goto LoadGame;
+					// The saved game is chosen now and loaded by the main loop after the turn is left,
+					// the same way Quit leaves the turn
+					this.owner.SaveLoad.FetchBay = this.owner.SaveLoad.ChooseGameToImport();
+
+					if (this.owner.SaveLoad.FetchBay != 0xffff)
+					{
+						this.processor.EmitGlobalWord(0xdc48, GameLoadAndSave.FetchSessionAsk);
+						this.processor.EmitGlobalWord(0xd4ca, 0x1000);
+					}
+					break;
+
 				case 6:
-					goto L0117;
-				case 7:
-					goto L01d4;
+					this.processor.EmitGlobalWord(0xd4ca, 0xfffe);
+					break;
+
 				case 8:
-					goto L01a3;
+					this.processor.EmitGlobalWord(0xdc48, 0x2);
+					this.processor.EmitGlobalWord(0xd4ca, 0x1000);
+					break;
+
 				case 9:
-					goto L01b1;
+					this.processor.EmitGlobalWord(0xdc48, 0x1);
+					this.processor.EmitGlobalWord(0xd4ca, 0x1000);
+					break;
+
 				case 10:
-					goto L01b9;
+					this.owner.Replayer.DisplayReplay();
+					break;
 			}
 
-		LoadGame:
-			// The saved game is chosen now and loaded by the main loop after the turn is left,
-			// the same way Quit leaves the turn
-			this.owner.SaveLoad.FetchBay = this.owner.SaveLoad.ChooseGameToImport();
-
-			if (this.owner.SaveLoad.FetchBay != 0xffff)
-			{
-				this.processor.EmitGlobalWord(0xdc48, GameLoadAndSave.FetchSessionAsk);
-				this.processor.EmitGlobalWord(0xd4ca, 0x1000);
-			}
-			goto L01d4;
-
-		L0117:
-			this.processor.EmitGlobalWord(0xd4ca, 0xfffe);
-			goto L01d4;
-
-		L0120:
-			this.processor.EmitGlobalWord(0xd4ca, 0x3d);
-			goto L01d4;
-
-		L0129:
-			this.processor.EmitGlobalWord(0xd4ca, 0x2d);
-			goto L01d4;
-
-		L0132:
-			this.processor.EmitGlobalWord(0xd4ca, 0x3f);
-			goto L01d4;
-
-		L013b:
-			this.owner.Libc.CopyText(0xba06, "Options:\n Instant Advice\n AutoSave\n End of Turn\n Animations\n Sound\n Enemy Moves\n Civilopedia Text\n Palace\n");
-
-		L014b:
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.SessionPrefMarkers;
-			this.processor.EmitGlobalWord(0xd7f2, this.processor.RegAcc.Value16);
-
-			this.owner.Dialogs.DisplayMenu(0xba06, 24, 16, 0);
-
-			this.processor.EmitLocalWord(0x6, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xffff);
-			if (this.processor.FlagSet.IsEqual) goto L0180;
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x2f9c), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L0180;
-			this.processor.RegAcc.Value16 = 0x1;
-			this.processor.RegCount.LowByte = this.processor.PullLocalByte(0x6);
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			owner.World.SessionPrefMarkers ^= (short)this.processor.RegAcc.Value16;
-
-		L0180:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x6), 0xffff);
-			if (this.processor.FlagSet.IsEqual) goto L018c;
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x6);
-			this.processor.EmitGlobalWord(0x2f9a, this.processor.RegAcc.Value16);
-
-		L018c:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x6), 0xffff);
-			if (this.processor.FlagSet.IsNotEqual) goto L014b;
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x2f9c), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L014b;
-			goto L01d4;
-
-		L019b:
-			this.processor.EmitGlobalWord(0xd4ca, 0x53);
-			goto L01d4;
-
-		L01a3:
-			this.processor.EmitGlobalWord(0xdc48, 0x2);
-
-		L01a9:
-			this.processor.EmitGlobalWord(0xd4ca, 0x1000);
-			goto L01d4;
-
-		L01b1:
-			this.processor.EmitGlobalWord(0xdc48, 0x1);
-			goto L01a9;
-
-		L01b9:
-			this.owner.Replayer.DisplayReplay();
-
-		L01d4:
-			this.processor.RegStack.Value16 = this.processor.RegFrame.Value16;
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
 			// Far return
 			this.processor.Journal.CloseScope("DisplayGameMenu");
+		}
+
+		/// <summary>
+		/// The Options menu: each chosen option is toggled (0xd7f2 shows the options) and the menu stays on it, until Escape
+		/// (while 0x2f9c is set, the menu comes back even after Escape and toggles nothing)
+		/// </summary>
+		private void ChooseOptions()
+		{
+			this.owner.Libc.CopyText(0xba06, "Options:\n Instant Advice\n AutoSave\n End of Turn\n Animations\n Sound\n Enemy Moves\n Civilopedia Text\n Palace\n");
+
+			ushort choice;
+
+			do
+			{
+				this.processor.EmitGlobalWord(0xd7f2, (ushort)this.owner.World.SessionPrefMarkers);
+
+				this.owner.Dialogs.DisplayMenu(0xba06, 24, 16, 0);
+
+				choice = this.processor.RegAcc.Value16;
+
+				if (choice != 0xffff)
+				{
+					if (this.processor.PullGlobalWord(0x2f9c) == 0)
+					{
+						this.owner.World.SessionPrefMarkers ^= (short)(1 << (byte)choice);
+					}
+
+					this.processor.EmitGlobalWord(0x2f9a, choice);
+				}
+			}
+			while (choice != 0xffff || this.processor.PullGlobalWord(0x2f9c) != 0);
 		}
 
 		/// <summary>

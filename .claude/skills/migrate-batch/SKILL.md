@@ -13,7 +13,7 @@ C# o **identycznym zachowaniu** (pamięć, ekrany, ślad wywołań, rejestry, wy
 Narzędzia (`Civilization1Remaster.Tests/Differential/Reference`, uruchamiać z katalogu głównego repo):
 - `find_asm_methods.py Civilization1Remaster.Core 60` – kandydaci od najkrótszych;
 - `extract_reference.py <commit HEAD> <plik .cs> <właściwość GameEngine> <metody…>` – kopia oryginału do testu (właściwości:
-  `grep -n "public <Klasa> " Civilization1Remaster.Core/GameEngine.cs`; nową klasę `XReference` dopisać do `ReferenceClasses.cs`);
+  `grep -n "public <Klasa> " Civilization1Remaster.Core/GameEngine.cs`; nową klasę `XReference` dopisać do `ReferenceClasses.cs`; stałe klasy, np. `HandBayTally`, trzeba w kopii poprzedzić nazwą klasy);
 - `replace_methods.py <plik .cs> <plik z metodami>` – podmienia metody po nazwie, nowe pomocnicze wstawia za poprzednią;
 - `check_mutations.py <mutations.json>` – kontrola mutacjami z zabezpieczeniem pracy patchem.
 
@@ -35,7 +35,7 @@ Testy zawsze w **Release** z `-parallelMode all` (ok. 7 razy szybciej niż Debug
      `IsAbove`); `HalveAccumulator` = dzielenie ze znakiem w stronę zera; dzielenie słów przez `CPU.SignedQuotient`.
    - Rejestry: AX zwracany (i AX zostawiany przez oryginał, np. `0x600 * gracz` z liczenia adresu – sprawdza test z `Register.Acc`),
      SI/DI zachowane. **Ramkę stosu (`EnterFrame`, `Preserve…`) zostawić**, gdy funkcja woła coś, co czyta śmieci spod stosu
-     (`RenderCitizenIcons`, `ObtainDistanceToReplayCity`, …) albo zmienia SI (`VisitEachUnitInStack`, `TallyUnits…InStack`), oraz
+     (`RenderCitizenIcons`, `ObtainDistanceToReplayCity`, `HandleCity`, …) albo zmienia SI (`VisitEachUnitInStack`, `TallyUnits…InStack`), oraz
      gdy bufor (nazwa pliku, lista) jest w ramce. `DisplayMenu` / `DisplayDialog` zostawiają w DI wartość z SI – ustawić SI jak oryginał.
    - Jednostki: `UnitMemory` (pamięć 0x81d4), typy: `UnitKindTable`, mapa: `MapOps.Chart` (`MapLayers`), stałe: `MapRules`.
 4. `extract_reference.py` (z commita HEAD, **przed** podmianą), potem `replace_methods.py`, build Release (jak wyżej).

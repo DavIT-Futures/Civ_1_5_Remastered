@@ -456,127 +456,92 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <summary>
-		/// ?
+		/// Save Game: the drive, the list of the 10 save files (the slot -1 asks the player, starting at the last one, 0xe168),
+		/// the game stored into the chosen file and the message whether it was saved (with write access denied, 0xd, or disk
+		/// full, 0x1c, from the error 0x681c).
 		/// </summary>
-		/// <param name="param1"></param>
 		public void DisplayStoreGameDialog(ushort arg1)
 		{
 			this.processor.Journal.OpenScope($"DisplayStoreGameDialog({arg1})");
-
-			// function body
-			this.processor.EnterFrame(0x4);
 
 			this.processor.EmitGlobalWord(0x681c, 0);
 			this.processor.EmitGlobalWord(0x681a, 0);
 
 			this.owner.Startup.ConcealMouseCursor();
 
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0xaa),
-				0, 0, 0x140, 0xc8,
-				this.processor.PullGlobalWord(0x19d4),
-				0, 0);
+			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0x19d4), 0, 0);
 
 			QueryForStoreDrive();
 
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xffff);
-			if (this.processor.FlagSet.IsNotEqual) goto L0391;
-			goto L04d0;
+			if (this.processor.RegAcc.Value16 != 0xffff)
+			{
+				this.owner.Libc.CopyText(0xba06, "\x008cSelect Save File...\n");
 
-		L0391:
-			this.owner.Libc.CopyText(0xba06, "\x008cSelect Save File...\n");
+				for (int bayIdx = 0; bayIdx < HandBayTally; bayIdx++)
+				{
+					this.processor.EmitGlobalByte(0x41cd, (byte)(bayIdx + 0x30));
 
-			this.processor.EmitLocalWord(0x2, 0x0);
+					ImportGame(0x41c6, 1);
+				}
 
-		L03a6:
-			this.processor.RegAcc.LowByte = this.processor.PullLocalByte(0x2);
-			this.processor.RegAcc.LowByte = this.processor.SumByte(this.processor.RegAcc.LowByte, 0x30);
-			this.processor.EmitGlobalByte(0x41cd, this.processor.RegAcc.LowByte);
+				this.processor.EmitGlobalWord(0x2f9a, (ushort)this.owner.Helpers.VerifyValueSpan(this.processor.PullGlobalSignedWord(0xe168), 0, HandBayTally - 1));
 
-			ImportGame(0x41c6, 1);
-			
-			this.processor.IncrementLocalWord(0x2);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), HandBayTally);
-			if (this.processor.FlagSet.IsLess) goto L03a6;
+				if (arg1 == 0xffff)
+				{
+					this.owner.Startup.DisplayMouseCursor();
 
-			this.owner.Helpers.VerifyValueSpan(this.processor.PullGlobalSignedWord(0xe168), 0, HandBayTally - 1);
+					this.owner.Dialogs.DisplayMenu(0xba06, 48, 33, 1);
 
-			this.processor.EmitGlobalWord(0x2f9a, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(arg1, 0xffff);
-			if (this.processor.FlagSet.IsNotEqual) goto L0405;
+					arg1 = this.processor.RegAcc.Value16;
 
-			this.owner.Startup.DisplayMouseCursor();
+					this.owner.Startup.ConcealMouseCursor();
+				}
 
-			this.owner.Dialogs.DisplayMenu(0xba06, 48, 33, 1);
+				if (arg1 != 0xffff)
+				{
+					this.processor.EmitGlobalWord(0xe168, arg1);
+					this.processor.EmitGlobalByte(0x41cd, (byte)(arg1 + 0x30));
 
-			arg1 = this.processor.RegAcc.Value16;
+					StoreGame(0x41c6);
 
-			this.owner.Startup.ConcealMouseCursor();
+					if (this.processor.RegAcc.Value16 != 0)
+					{
+						if (this.processor.PullGlobalWord(0x681c) == 0)
+						{
+							this.owner.Libc.CopyText(0xba06, " Game has been saved.\n");
+						}
+						else
+						{
+							this.owner.Libc.CopyText(0xba06, " Game NOT saved.\n");
 
-		L0405:
-			this.processor.CompareWord(arg1, 0xffff);
-			if (this.processor.FlagSet.IsNotEqual) goto L040e;
-			goto L04d0;
+							this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 64, 127, 192, 34, 12);
+						}
 
-		L040e:
-			this.processor.EmitGlobalWord(0xe168, arg1);
-			this.processor.RegAcc.LowByte = (byte)arg1;
-			this.processor.RegAcc.LowByte = this.processor.SumByte(this.processor.RegAcc.LowByte, 0x30);
-			this.processor.EmitGlobalByte(0x41cd, this.processor.RegAcc.LowByte);
+						if (this.processor.PullGlobalWord(0x681c) == 0xd)
+						{
+							this.owner.Libc.AppendText(0xba06, " Write access denied.\n");
+						}
 
-			StoreGame(0x41c6);
-			
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsNotEqual) goto L042e;
-			goto L04d0;
+						if (this.processor.PullGlobalWord(0x681c) == 0x1c)
+						{
+							this.owner.Libc.AppendText(0xba06, " Disk Full.\n");
+						}
 
-		L042e:
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x681c);
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.RegData.Value16 = this.processor.BitOrWord(this.processor.RegData.Value16, this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L0448;
+						this.owner.Libc.AppendText(0xba06, " Press key to continue.\n");
 
-			this.owner.Libc.CopyText(0xba06, " Game has been saved.\n");
+						this.processor.EmitGlobalWord(0xd206, 0x1);
 
-			goto L0478;
+						this.owner.Dialogs.DisplayMenu(0xba06, 64, 127, 1);
+					}
+				}
+			}
 
-		L0448:
-			this.owner.Libc.CopyText(0xba06, " Game NOT saved.\n");
-
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 64, 127, 192, 34, 12);
-
-		L0478:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x681c), 0xd);
-			if (this.processor.FlagSet.IsNotEqual) goto L048f;
-
-			this.owner.Libc.AppendText(0xba06, " Write access denied.\n");
-
-		L048f:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x681c), 0x1c);
-			if (this.processor.FlagSet.IsNotEqual) goto L04a6;
-
-			this.owner.Libc.AppendText(0xba06, " Disk Full.\n");
-
-		L04a6:
-			this.owner.Libc.AppendText(0xba06, " Press key to continue.\n");
-
-			this.processor.EmitGlobalWord(0xd206, 0x1);
-
-			this.owner.Dialogs.DisplayMenu(0xba06, 64, 127, 1);
-
-		L04d0:
 			this.owner.Startup.QueryForDisk(0, 1);
 
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0x19d4),
-				0, 0, 0x140, 0xc8,
-				this.processor.PullGlobalWord(0xaa),
-				0, 0);
+			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0xaa), 0, 0);
 
 			this.owner.Startup.DisplayMouseCursor();
 
-			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("DisplayStoreGameDialog");
 		}

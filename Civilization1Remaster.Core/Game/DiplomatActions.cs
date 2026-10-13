@@ -620,112 +620,66 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// The nuclear explosion on the tile: 28 pictures cut from the explosion picture (0x5318) into the stack frame, the
+		/// sound, then 35 steps of the animation (the last 7 repeat the pictures 21 - 27), each put on the screen for a while and
+		/// taken away again from the back screen.
 		/// </summary>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
 		public void RenderExplosion(short horizLoc, short vertLoc)
 		{
 			this.processor.Journal.OpenScope($"RenderExplosion({horizLoc}, {vertLoc})");
 
-			// function body
+			// The pictures and the step counter stay in the stack frame, like in the original
 			this.processor.EnterFrame(0x3a);
 			this.processor.PreserveSource();
 
 			this.owner.Startup.QueryForDisk(1, 0);
 
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsNotEqual) goto L0985;
-			goto L0af0;
+			if (this.processor.RegAcc.Value16 != 0)
+			{
+				ushort pictures = (ushort)(this.processor.RegFrame.Value16 - 0x38);
 
-		L0985:
-			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x5318, 1);
+				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x5318, 1);
 
-			this.processor.EmitLocalWord(0x3a, 0x0);
+				for (int pictureIdx = 0; pictureIdx < 0x1c; pictureIdx++)
+				{
+					this.owner.VideoCard.ScreenToPicture(1, (ushort)(((pictureIdx % 7) * 0x2d) + 1), (ushort)(((pictureIdx / 7) * 0x2d) + 1), 0x2c, 0x2c);
 
-		L099f:
-			this.owner.VideoCard.ScreenToPicture(1,
-				(ushort)(((this.processor.PullLocalWord(0x3a) % 7) * 0x2d) + 1),
-				(ushort)(((this.processor.PullLocalWord(0x3a) / 7) * 0x2d) + 1),
-				0x2c, 0x2c);
+					this.processor.EmitGlobalWord((ushort)(pictures + (pictureIdx << 1)), this.processor.RegAcc.Value16);
+				}
 
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x3a);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x38), this.processor.RegAcc.Value16);
-			this.processor.IncrementLocalWord(0x3a);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x3a), 0x1c);
-			if (this.processor.FlagSet.IsLess) goto L099f;
+				horizLoc = (short)((this.owner.Routing.TunePosition(horizLoc - this.processor.PullGlobalSignedWord(0xd4cc)) << 4) + 0x42);
+				vertLoc = (short)(((vertLoc - this.processor.PullGlobalWord(0xd75e)) << 4) - 6);
 
-			this.owner.Routing.TunePosition(
-				horizLoc - this.processor.PullGlobalSignedWord(0xd4cc));
+				horizLoc = (short)this.owner.Helpers.VerifyValueSpan(horizLoc, 80, 276);
+				vertLoc = (short)this.owner.Helpers.VerifyValueSpan(vertLoc, 8, 0x9c);
 
-			this.processor.RegCount.LowByte = 0x4;
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x42);
-			horizLoc = (short)this.processor.RegAcc.Value16;
-			this.processor.RegAcc.Value16 = (ushort)vertLoc;
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, this.processor.PullGlobalWord(0xd75e));
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, 0x6);
-			vertLoc = (short)this.processor.RegAcc.Value16;
+				this.owner.Services.PerformSound(0x2a, 0);
 
-			this.owner.Helpers.VerifyValueSpan(horizLoc, 80, 276);
+				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), horizLoc, vertLoc, 0x2c, 0x2c,
+					this.processor.PullGlobalWord(0x19d4), horizLoc, vertLoc);
 
-			horizLoc = (short)this.processor.RegAcc.Value16;
+				for (int stepIdx = 0; stepIdx < 0x23; stepIdx++)
+				{
+					int pictureIdx = stepIdx < 0x1c ? stepIdx : stepIdx - 7;
 
-			this.owner.Helpers.VerifyValueSpan(vertLoc, 8, 0x9c);
+					this.owner.Services.RenderPictureToScreenAlternate(this.processor.PullGlobalWord(0xaa), horizLoc, vertLoc,
+						this.processor.PullGlobalWord((ushort)(pictures + (pictureIdx << 1))));
 
-			vertLoc = (short)this.processor.RegAcc.Value16;
+					this.owner.TextPainter.AwaitTime(5);
 
-			this.owner.Services.PerformSound(0x2a, 0);
+					this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), horizLoc, vertLoc, 0x2c, 0x2c,
+						this.processor.PullGlobalWord(0xaa), horizLoc, vertLoc);
+				}
 
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0xaa),
-				horizLoc, vertLoc,
-				0x2c, 0x2c,
-				this.processor.PullGlobalWord(0x19d4),
-				horizLoc, vertLoc);
+				this.processor.EmitLocalWord(0x3a, 0x23);
 
-			this.processor.EmitLocalWord(0x3a, 0x0);
-			goto L0abe;
+				this.owner.Helpers.ReleaseResource(this.processor.PullGlobalWord(pictures), 0);
 
-		L0a71:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x3a);
-			this.processor.RegSource.Value16 = this.processor.SubtractWord(this.processor.RegSource.Value16, 0x7);
+				this.owner.Startup.QueryForDisk(0, 1);
 
-		L0a77:
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.owner.Services.RenderPictureToScreenAlternate(this.processor.PullGlobalWord(0xaa),
-				horizLoc, vertLoc,
-				this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x38)));
+				this.owner.TurnHooks.DisplayCivilizationScenery();
+			}
 
-			this.owner.TextPainter.AwaitTime(5);
-
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0x19d4),
-				horizLoc, vertLoc,
-				0x2c, 0x2c,
-				this.processor.PullGlobalWord(0xaa),
-				horizLoc, vertLoc);
-
-			this.processor.IncrementLocalWord(0x3a);
-
-		L0abe:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x3a), 0x23);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0acf;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x3a), 0x1c);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0a71;
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x3a);
-			goto L0a77;
-
-		L0acf:
-			this.owner.Helpers.ReleaseResource(this.processor.PullLocalWord(0x38), 0);
-
-			this.owner.Startup.QueryForDisk(0, 1);
-
-			this.owner.TurnHooks.DisplayCivilizationScenery();
-
-		L0af0:
 			this.processor.RegSource.Value16 = this.processor.UnstackWord();
 			this.processor.LeaveFrame();
 			// Far return

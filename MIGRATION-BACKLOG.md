@@ -207,18 +207,25 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   też dla `RenderCitizenIcons`), `RenderCityBuildings` (`CityView`, z `CutWonderPictures`), `DisplayCivilizationGraph` (`WorldMap`,
   z `InGraph`, `HistoryScore`; nazwy graczy 1 - 8, gracz 8 czyta następną tabelę jak w oryginale), `DisplayCivilizationScoreList`
   (`CivilizationInfo`, z `AnyPlayerHasUnits`). Testy w `BatchTwentyEightDifferentialTests`.
+- Kolejne 4 moduły (2026-10-13): `RenderExplosion` (`DiplomatActions`, 28 obrazków wybuchu w ramce stosu jak w oryginale, z końcową
+  wartością licznika; zmienna 0x38 to pierwszy obrazek, zapisywany przez adres, nie śmieci), `DisplayStoreGameDialog`
+  (`GameLoadAndSave`; „Game NOT saved” i błędy 0x681c są nieosiągalne, nic w C# nie ustawia 0x681c), `DisplayGameMenu`
+  (`GameMenus`, z `ChooseOptions`), `HandleAllCities` (`ScienceAndAdvisors`, ramka zostaje: **`HandleCity` czyta śmieci spod
+  stosu** – bez ramki AUTO11 rozjechał się w 4. turze, plon miasta 2; końcowe wartości zmiennych zapisane w ramce). Testy w
+  `BatchTwentyNineDifferentialTests` (pliki zapisu przez `BatchTwelveDifferentialTests.ShowSavedFiles`, teraz `internal`
+  z miejscem w 0xbc00). `extract_reference.py` nie kwalifikuje stałych klasy (`HandBayTally`, `GameLoadAndSave.FetchSessionAsk`):
+  w kopii referencyjnej dopisać nazwę klasy / przestrzeni nazw.
 
 ## Następny krok
 
 Dalej małe metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 60`
 (metody z co najmniej 2 liniami `goto L` / `FlagSet` / `Compare…` / `SumWord` itd., od najkrótszej). Kandydaci:
-`RenderExplosion` (`DiplomatActions`, kandydat ze „Śmieci na stosie”),
-`DisplayStoreGameDialog`, `ImportGame` (`GameLoadAndSave`), `ChooseTechnologyToTake` (`TradeAndConquest`, patrz wyżej),
+`ImportGame`, `QueryForStoreDrive` (`GameLoadAndSave`), `ChooseTechnologyToTake` (`TradeAndConquest`, patrz wyżej),
 `RenderCitizenIcons` (`CityManagement`, kandydat ze „Śmieci na stosie”),
 reszta generatora mapy w `GameInitAndIntro`. Funkcje niskopoziomowe `SystemServices` (`DeactivateMouse`, `PointerEvent`,
 `RenderCursorToScreen`, `RecoverScreenUnderCursor`, kolory i zegar: `PrepareTimer`, `RefreshHueCycling`, `AssignHueCycleSpan`,
 `ColorsFadeStep`, `FadeColors`, `FloodColors`, `ImportColorsFromBuffer`) i `SnapHeapPointer` (`VGADriver`) na koniec: działają
-w przerwaniach albo na rejestrach. Stan 2026-10-13: 108 metod w stylu asm, ok. 53,5 tys. z 72 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
+w przerwaniach albo na rejestrach. Stan 2026-10-13: 104 metody w stylu asm, ok. 53,0 tys. z 71,7 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
@@ -244,10 +251,10 @@ Kilka przetłumaczonych funkcji czyta zmienną lokalną, zanim ją ustawi, czyli
 przerwanie zegara, którego moment w testach zależy od liczby dostępów do pamięci, więc przepisana `ReimposeStrategicLocations`
 (mniej dostępów) wywracała AUTO07 w `ShiftAIUnit`. Od tego dnia przerwania (zegar i mysz) trzymają rejestry w zmiennych C#
 (`baseline-interrupt-registers.patch`, baseline'y wygenerowane od nowa z oryginału, zmienił się tylko nagłówek), więc śmieci
-zależą już tylko od kodu na tej samej głębokości. Nadal: usunięta ramka może zmienić to, co przeczyta taka funkcja (golden master
+zależą już tylko od kodu na tej samej głębokości. Potwierdzone w golden master: `HandleCity` (`CityManagement`) – funkcja, która ją
+woła, zostawia ramkę (`HandleAllCities`, `DisplayTopCities`). Nadal: usunięta ramka może zmienić to, co przeczyta taka funkcja (golden master
 to wyłapie, testy różnicowe nie porównują stosu pod SP). Kandydaci ze skanu „czytana, nigdy nie zapisana” (część to tablice
-i bufory zapisywane przez adres, do sprawdzenia przy przepisywaniu): `RenderCitizenIcons` 0x2, `ExamineCity` 0x8,
-`RenderExplosion` 0x38, `DisplayTravellersReport` 0x2, `RenderCityScenery` 0x16, `RenderCitySceneryForPlayer/ForHuman` 0x20.
+i bufory zapisywane przez adres, do sprawdzenia przy przepisywaniu): `RenderCitizenIcons` 0x2, `ExamineCity` 0x8, `DisplayTravellersReport` 0x2, `RenderCityScenery` 0x16, `RenderCitySceneryForPlayer/ForHuman` 0x20.
 
 ## Poprawki, które zostają (chronią przed crashami, baseline je ma)
 
