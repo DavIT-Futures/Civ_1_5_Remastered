@@ -30,6 +30,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 	public sealed partial class SpaceshipScreenReference(GameEngine owner) : ReferenceBase(owner);
 	public sealed partial class StartGameMenuReference(GameEngine owner) : ReferenceBase(owner);
 	public sealed partial class GameReplayReference(GameEngine owner) : ReferenceBase(owner);
+	public sealed partial class DialogDrawingReference(GameEngine owner) : ReferenceBase(owner);
 	public sealed partial class MeetWithKingReference(GameEngine owner) : ReferenceBase(owner);
 	public sealed partial class CivilopediaReference(GameEngine owner) : ReferenceBase(owner);
 	public sealed partial class SystemServicesReference(GameEngine owner) : ReferenceBase(owner);

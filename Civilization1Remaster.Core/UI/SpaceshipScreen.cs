@@ -1074,15 +1074,18 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// A new part of the player's spaceship: arg2 0 a structure, 1 a component (dialog 0x4df9: the kind 0 or 1 becomes 3 or 4,
+		/// unless all 3 are there, 0x687c), 2 a module (dialog 0x4e12: kind 6 - 8, unless all 7 are there, 0x687e); a cancelled
+		/// dialog leaves without a part. The part goes into a free slot of its kind in the grid 0x3772:0x16e0 + 0xb4 * player
+		/// (slots: table 0x375a of row, column and kind, ending with row 0xff); a structure into the first free one of the inner
+		/// 0x21 slots or of the outer ones, whichever side has the shorter span to the last built part. The first spaceship
+		/// part of the player (StarshipMarkers bit 8 + player) clears TouchParticipantTimeleft of every player 1 - 7 with one.
 		/// </summary>
-		/// <param name="playerID"></param>
-		/// <param name="param2"></param>
 		public void AttachSpaceshipPart(short participantIdx, ushort arg2)
 		{
 			this.processor.Journal.OpenScope($"AttachSpaceshipPart({participantIdx}, {arg2})");
 
-			// function body
+			// The final values of the locals stay in the stack frame, like in the original
 			this.processor.EnterFrame(0x16);
 			this.processor.PreserveSource();
 
@@ -1094,270 +1097,116 @@ namespace Civilization1Remaster.UI
 
 			this.owner.TurnLogic.AwaitForKey();
 
-		L0fc0:
-			this.processor.EmitLocalWord(0x16, 0x2);
+			bool attach = false;
 
-			this.owner.Startup.DisplayMouseCursor();
-
-			this.processor.CompareWord(arg2, 0x1);
-			if (this.processor.FlagSet.IsNotEqual) goto L1000;
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x687c);
-			this.processor.EmitGlobalWord(0xb276, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x3);
-			if (this.processor.FlagSet.IsNotEqual) goto L0fde;
-			goto L12c2;
-
-		L0fde:
-			this.owner.TurnHooks.DisplayDialog(0x4df9, 100, 80);
-
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x3);
-			this.processor.EmitLocalWord(0x16, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x2);
-			if (this.processor.FlagSet.IsNotEqual) goto L1000;
-			goto L12de;
-
-		L1000:
-			this.processor.CompareWord(arg2, 0x2);
-			if (this.processor.FlagSet.IsNotEqual) goto L1036;
-
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x687e);
-			this.processor.EmitGlobalWord(0xb276, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x7);
-			if (this.processor.FlagSet.IsNotEqual) goto L1014;
-			goto L12c2;
-
-		L1014:
-			this.owner.TurnHooks.DisplayDialog(0x4e12, 100, 80);
-
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x6);
-			this.processor.EmitLocalWord(0x16, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x5);
-			if (this.processor.FlagSet.IsNotEqual) goto L1036;
-			goto L12de;
-
-		L1036:
-			this.owner.Startup.ConcealMouseCursor();
-
-			this.processor.CompareWord(arg2, 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L1044;
-			goto L1169;
-
-		L1044:
-			this.processor.EmitLocalWord(0x14, 0x63);
-			this.processor.EmitLocalWord(0x6, 0xffff);
-			this.processor.EmitLocalWord(0xc, 0x0);
-			goto L1078;
-
-		L1055:
-			this.processor.RegAcc.Value16 = 0x3;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullLocalWord(0xc));
-			this.processor.SegExtra.Value16 = 0x375a; // segment
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegExtra.Value16, (ushort)(this.processor.RegBase.Value16 + 0x2)), 0x3);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L1075;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x14), 0x63);
-			if (this.processor.FlagSet.IsNotEqual) goto L1075;
-			this.processor.CopyLocalWord(0xc, 0x14);
-
-		L1075:
-			this.processor.EmitLocalWord(0xc, this.processor.IncrementWord(this.processor.PullLocalWord(0xc)));
-
-		L1078:
-			this.processor.CompareWord(this.processor.PullLocalWord(0xc), 0x21);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L10c3;
-			this.processor.ScaleIndexToSource(0x3, this.processor.PullLocalWord(0xc));
-			this.processor.SegExtra.Value16 = 0x375a; // segment
-			this.processor.RegAcc.LowByte = 0xc;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x0)));
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1));
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegBase.Value16 = this.processor.SumWord(this.processor.RegBase.Value16, this.processor.RegAcc.Value16);
-			this.processor.ScaleIndex(0xb4, (ushort)participantIdx);
-			this.processor.RegBase.Value16 = this.processor.SumWord(this.processor.RegBase.Value16, this.processor.RegAcc.Value16);
-			this.processor.SegExtra.Value16 = 0x3772; // segment
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegExtra.Value16, (ushort)(this.processor.RegBase.Value16 + 0x16e0)), 0xff);
-			if (this.processor.FlagSet.IsEqual) goto L1055;
-			this.processor.SegExtra.Value16 = 0x375a; // segment
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x2)), 0x3);
-			if (this.processor.FlagSet.IsLess) goto L1075;
-			this.processor.CopyLocalWord(0xc, 0x6);
-			goto L1075;
-
-		L10c3:
-			this.processor.EmitLocalWord(0x2, 0x63);
-			this.processor.EmitLocalWord(0x8, 0xffff);
-			this.processor.EmitLocalWord(0xc, 0x21);
-
-		L10d2:
-			this.processor.RegAcc.Value16 = 0x3;
-			this.processor.ScaleAccumulatorToSource(this.processor.PullLocalWord(0xc));
-			this.processor.SegExtra.Value16 = 0x375a; // segment
-			this.processor.RegAcc.LowByte = 0xc;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x0)));
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1));
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegBase.Value16 = this.processor.SumWord(this.processor.RegBase.Value16, this.processor.RegAcc.Value16);
-			this.processor.ScaleIndex(0xb4, (ushort)participantIdx);
-			this.processor.RegBase.Value16 = this.processor.SumWord(this.processor.RegBase.Value16, this.processor.RegAcc.Value16);
-			this.processor.SegExtra.Value16 = 0x3772; // segment
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegExtra.Value16, (ushort)(this.processor.RegBase.Value16 + 0x16e0)), 0xff);
-			if (this.processor.FlagSet.IsEqual) goto L1117;
-			this.processor.SegExtra.Value16 = 0x375a; // segment
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x2)), 0x3);
-			if (this.processor.FlagSet.IsLess) goto L1137;
-			this.processor.CopyLocalWord(0xc, 0x8);
-			goto L1137;
-
-		L1117:
-			this.processor.RegAcc.Value16 = 0x3;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullLocalWord(0xc));
-			this.processor.SegExtra.Value16 = 0x375a; // segment
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegExtra.Value16, (ushort)(this.processor.RegBase.Value16 + 0x2)), 0x3);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L1137;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x63);
-			if (this.processor.FlagSet.IsNotEqual) goto L1137;
-			this.processor.CopyLocalWord(0xc, 0x2);
-
-		L1137:
-			this.processor.EmitLocalWord(0xc, this.processor.IncrementWord(this.processor.PullLocalWord(0xc)));
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xc);
-			this.processor.RegCount.Value16 = 0x3;
-			this.processor.ScaleAccumulatorToBase(this.processor.RegCount.Value16);
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegExtra.Value16, (ushort)(this.processor.RegBase.Value16 + 0x0)), 0xff);
-			if (this.processor.FlagSet.IsNotEqual) goto L10d2;
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x8);
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x2));
-			this.processor.RegCount.Value16 = this.processor.PullLocalWord(0x6);
-			this.processor.RegCount.Value16 = this.processor.SubtractWord(this.processor.RegCount.Value16, this.processor.PullLocalWord(0x14));
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.RegCount.Value16);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L1164;
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x14);
-
-		L115f:
-			this.processor.EmitLocalWord(0xc, this.processor.RegAcc.Value16);
-			goto L11cf;
-
-		L1164:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x2);
-			goto L115f;
-
-		L1169:
-			this.processor.EmitLocalWord(0xc, 0x0);
-
-		L116e:
-			this.processor.RegAcc.Value16 = 0x3;
-			this.processor.ScaleAccumulatorToSource(this.processor.PullLocalWord(0xc));
-			this.processor.SegExtra.Value16 = 0x375a; // segment
-			this.processor.RegAcc.LowByte = 0xc;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x0)));
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1));
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegBase.Value16 = this.processor.SumWord(this.processor.RegBase.Value16, this.processor.RegAcc.Value16);
-			this.processor.ScaleIndex(0xb4, (ushort)participantIdx);
-			this.processor.RegBase.Value16 = this.processor.SumWord(this.processor.RegBase.Value16, this.processor.RegAcc.Value16);
-			this.processor.SegExtra.Value16 = 0x3772; // segment
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegExtra.Value16, (ushort)(this.processor.RegBase.Value16 + 0x16e0)), 0xff);
-			if (this.processor.FlagSet.IsNotEqual) goto L11b6;
-			this.processor.ScaleIndexToBase(0x3, this.processor.PullLocalWord(0xc));
-			this.processor.SegExtra.Value16 = 0x375a; // segment
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegExtra.Value16, (ushort)(this.processor.RegBase.Value16 + 0x2));
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x16));
-			if (this.processor.FlagSet.IsEqual) goto L11cf;
-
-		L11b6:
-			this.processor.EmitLocalWord(0xc, this.processor.IncrementWord(this.processor.PullLocalWord(0xc)));
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xc);
-			this.processor.RegCount.Value16 = 0x3;
-			this.processor.ScaleAccumulatorToBase(this.processor.RegCount.Value16);
-			this.processor.SegExtra.Value16 = 0x375a; // segment
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegExtra.Value16, (ushort)(this.processor.RegBase.Value16 + 0x0)), 0xff);
-			if (this.processor.FlagSet.IsNotEqual) goto L116e;
-
-		L11cf:
-			this.processor.CompareWord(this.processor.PullLocalWord(0xc), 0xffff);
-			if (this.processor.FlagSet.IsEqual) goto L120c;
-			this.processor.ScaleIndexToSource(0x3, this.processor.PullLocalWord(0xc));
-			this.processor.SegExtra.Value16 = 0x375a; // segment
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x2));
-			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegAcc.LowByte = 0xc;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x0)));
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1));
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegBase.Value16 = this.processor.SumWord(this.processor.RegBase.Value16, this.processor.RegAcc.Value16);
-			this.processor.ScaleIndex(0xb4, (ushort)participantIdx);
-			this.processor.RegBase.Value16 = this.processor.SumWord(this.processor.RegBase.Value16, this.processor.RegAcc.Value16);
-			this.processor.SegExtra.Value16 = 0x3772; // segment
-			this.processor.EmitUInt8(this.processor.SegExtra.Value16, (ushort)(this.processor.RegBase.Value16 + 0x16e0), this.processor.RegCount.LowByte);
-			goto L1278;
-
-		L120c:
-			this.processor.CompareWord(arg2, 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L1278;
-			this.processor.RegBase.Value16 = arg2;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.RegAcc.Value16 = 0x1;
-			this.processor.RegCount.LowByte = this.processor.PullLocalByte(0x16);
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x687a), this.processor.BitOrWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x687a)), this.processor.RegAcc.Value16));
-
-			this.owner.Libc.CopyText(0xba06, "No further ");
-
-			this.processor.ScaleIndex(0x3, arg2);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x16));
-			this.processor.RegCount.Value16 = 0x1a;
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x4bd0);
-
-			this.owner.Libc.AppendText(0xba06, this.processor.RegAcc.Value16);
-
-			this.owner.Libc.AppendText(0xba06, " required.\n");
-
-			this.owner.TurnHooks.DisplayDialog(0xba06, 120, 80);
-
-			goto L0fc0;
-
-		L1278:
-			this.processor.RegAcc.Value16 = 0x1;
-			this.processor.RegCount.LowByte = (byte)participantIdx;
-			this.processor.RegCount.LowByte = this.processor.SumByte(this.processor.RegCount.LowByte, 0x8);
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			this.processor.TestBitsWord(this.processor.RegAcc.Value16, (ushort)this.owner.World.StarshipMarkers);
-			if (this.processor.FlagSet.IsNotEqual) goto L12c2;
-			this.processor.EmitLocalWord(0x4, 0x1);
-
-		L128e:
-			this.processor.RegAcc.Value16 = 0x1;
-			this.processor.RegCount.LowByte = this.processor.PullLocalByte(0x4);
-			this.processor.RegCount.LowByte = this.processor.SumByte(this.processor.RegCount.LowByte, 0x8);
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			this.processor.TestBitsWord(this.processor.RegAcc.Value16, (ushort)this.owner.World.StarshipMarkers);
-			if (this.processor.FlagSet.IsNotEqual)
+			while (true)
 			{
-				this.owner.World.Participants[this.processor.PullLocalWord(0x4)].TouchParticipantTimeleft = 0;
+				short kind = 2;
+
+				this.processor.EmitLocalWord(0x16, (ushort)kind);
+
+				this.owner.Startup.DisplayMouseCursor();
+
+				if (arg2 == 1)
+				{
+					ushort complete = this.processor.PullGlobalWord(0x687c);
+					this.processor.EmitGlobalWord(0xb276, complete);
+
+					if (complete == 3)
+						break;
+
+					this.owner.TurnHooks.DisplayDialog(0x4df9, 100, 80);
+
+					kind = (short)(this.processor.RegAcc.Value16 + 3);
+					this.processor.EmitLocalWord(0x16, (ushort)kind);
+
+					if (kind == 2)
+					{
+						LeaveAttachSpaceshipPart();
+						return;
+					}
+				}
+
+				if (arg2 == 2)
+				{
+					ushort complete = this.processor.PullGlobalWord(0x687e);
+					this.processor.EmitGlobalWord(0xb276, complete);
+
+					if (complete == 7)
+						break;
+
+					this.owner.TurnHooks.DisplayDialog(0x4e12, 100, 80);
+
+					kind = (short)(this.processor.RegAcc.Value16 + 6);
+					this.processor.EmitLocalWord(0x16, (ushort)kind);
+
+					if (kind == 5)
+					{
+						LeaveAttachSpaceshipPart();
+						return;
+					}
+				}
+
+				this.owner.Startup.ConcealMouseCursor();
+
+				ushort slotIdx = arg2 == 0 ? ChooseSpaceshipStructureSlot(participantIdx) : FindSpaceshipSlot(participantIdx, kind);
+
+				this.processor.EmitLocalWord(0xc, slotIdx);
+
+				if (slotIdx != 0xffff)
+				{
+					this.processor.EmitUInt8(0x3772, SpaceshipGridOffset(participantIdx, slotIdx), this.processor.PullUInt8(0x375a, (ushort)((3 * slotIdx) + 2)));
+
+					attach = true;
+					break;
+				}
+
+				if (arg2 == 0)
+				{
+					attach = true;
+					break;
+				}
+
+				// Never reached: a full kind ends at the end of the table, not at 0xffff (see the backlog)
+				this.processor.EmitGlobalWord((ushort)((arg2 << 1) + 0x687a), (ushort)(this.processor.PullGlobalWord((ushort)((arg2 << 1) + 0x687a)) | (1 << (byte)kind)));
+
+				this.owner.Libc.CopyText(0xba06, "No further ");
+
+				this.owner.Libc.AppendText(0xba06, (ushort)((((3 * arg2) + kind) * 0x1a) + 0x4bd0));
+
+				this.owner.Libc.AppendText(0xba06, " required.\n");
+
+				this.owner.TurnHooks.DisplayDialog(0xba06, 120, 80);
 			}
 
-			this.processor.IncrementLocalWord(0x4);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), 0x8);
-			if (this.processor.FlagSet.IsLess) goto L128e;
-			this.processor.RegAcc.Value16 = 0x1;
-			this.processor.RegCount.LowByte = (byte)participantIdx;
-			this.processor.RegCount.LowByte = this.processor.SumByte(this.processor.RegCount.LowByte, 0x8);
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			this.owner.World.StarshipMarkers |= (short)this.processor.RegAcc.Value16;
+			if (attach && (this.owner.World.StarshipMarkers & (1 << (byte)(participantIdx + 8))) == 0)
+			{
+				short rivalIdx;
 
-		L12c2:
+				for (rivalIdx = 1; rivalIdx < 8; rivalIdx++)
+				{
+					if ((this.owner.World.StarshipMarkers & (1 << (rivalIdx + 8))) != 0)
+					{
+						this.owner.World.Participants[rivalIdx].TouchParticipantTimeleft = 0;
+					}
+				}
+
+				this.processor.EmitLocalWord(0x4, (ushort)rivalIdx);
+
+				this.owner.World.StarshipMarkers |= (short)(ushort)(1 << (byte)(participantIdx + 8));
+			}
+
 			this.owner.Startup.DisplayMouseCursor();
 
 			RenderSpaceship(participantIdx, -1, 1);
-			
+
 			this.owner.World.Participants[this.owner.World.PersonParticipantIdx].StarshipVictoryRatio = (short)this.processor.RegAcc.Value16;
 
-		L12de:
+			LeaveAttachSpaceshipPart();
+		}
+
+		private void LeaveAttachSpaceshipPart()
+		{
 			this.owner.Startup.ConcealMouseCursor();
 
 			ImportSpaceScenery();
@@ -1366,6 +1215,88 @@ namespace Civilization1Remaster.UI
 			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("AttachSpaceshipPart");
+		}
+
+		/// <summary>The offset of the slot slotIdx (table 0x375a) in the player's spaceship grid, segment 0x3772</summary>
+		private ushort SpaceshipGridOffset(short participantIdx, ushort slotIdx)
+		{
+			ushort slot = (ushort)(3 * slotIdx);
+
+			return (ushort)((12 * (sbyte)this.processor.PullUInt8(0x375a, slot)) + (sbyte)this.processor.PullUInt8(0x375a, (ushort)(slot + 1)) + (0xb4 * participantIdx) + 0x16e0);
+		}
+
+		/// <summary>Whether the slot is free (0xff) and the kind of the slot of table 0x375a</summary>
+		private bool SpaceshipSlotFree(short participantIdx, ushort slotIdx, out sbyte kind)
+		{
+			bool free = this.processor.PullUInt8(0x3772, SpaceshipGridOffset(participantIdx, slotIdx)) == 0xff;
+
+			kind = (sbyte)this.processor.PullUInt8(0x375a, (ushort)((3 * slotIdx) + 2));
+
+			return free;
+		}
+
+		/// <summary>The first free slot of the kind, else the end of table 0x375a</summary>
+		private ushort FindSpaceshipSlot(short participantIdx, short kind)
+		{
+			ushort slotIdx = 0;
+
+			do
+			{
+				if (SpaceshipSlotFree(participantIdx, slotIdx, out sbyte slotKind) && slotKind == kind)
+					break;
+
+				slotIdx++;
+			}
+			while (this.processor.PullUInt8(0x375a, (ushort)(3 * slotIdx)) != 0xff);
+
+			return slotIdx;
+		}
+
+		/// <summary>
+		/// The slot of a new structure (kinds 0 - 2): the first free one of the inner 0x21 slots or of the outer ones (else 0x63),
+		/// on the side where it is closer to the last built part (kinds 3 and more)
+		/// </summary>
+		private ushort ChooseSpaceshipStructureSlot(short participantIdx)
+		{
+			ushort innerFree = 0x63, innerBuilt = 0xffff;
+			ushort slotIdx;
+
+			for (slotIdx = 0; (short)slotIdx < 0x21; slotIdx++)
+			{
+				NoteSpaceshipStructureSlot(participantIdx, slotIdx, ref innerFree, ref innerBuilt);
+			}
+
+			ushort outerFree = 0x63, outerBuilt = 0xffff;
+
+			slotIdx = 0x21;
+
+			do
+			{
+				NoteSpaceshipStructureSlot(participantIdx, slotIdx, ref outerFree, ref outerBuilt);
+
+				slotIdx++;
+			}
+			while (this.processor.PullUInt8(0x375a, (ushort)(3 * slotIdx)) != 0xff);
+
+			this.processor.EmitLocalWord(0x2, outerFree);
+			this.processor.EmitLocalWord(0x6, innerBuilt);
+			this.processor.EmitLocalWord(0x8, outerBuilt);
+			this.processor.EmitLocalWord(0x14, innerFree);
+
+			return (short)(outerBuilt - outerFree) < (short)(innerBuilt - innerFree) ? innerFree : outerFree;
+		}
+
+		private void NoteSpaceshipStructureSlot(short participantIdx, ushort slotIdx, ref ushort firstFree, ref ushort lastBuilt)
+		{
+			if (SpaceshipSlotFree(participantIdx, slotIdx, out sbyte slotKind))
+			{
+				if (slotKind < 3 && firstFree == 0x63)
+					firstFree = slotIdx;
+			}
+			else if (slotKind >= 3)
+			{
+				lastBuilt = slotIdx;
+			}
 		}
 
 		/// <summary>

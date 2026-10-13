@@ -276,25 +276,39 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
 - Jedna funkcja (2026-10-13): `RenderCitizenIcons` (`CityManagement`, z `RenderCitizen`). Ramka zostaje: odstęp po zadowolonych
   zależy od słowa 0x2 ramki, którego funkcja nigdy nie zapisuje (prawdopodobnie miało być 0x6) – czytane jak w oryginale; test
   ustawia to słowo pod SP (SP - 4), żeby trafić obie gałęzie. Testy w `BatchThirtyEightDifferentialTests`.
+- Porcja 39 (2026-10-13): `RenderCityScenery` (`CityView`, obywatele w widoku miasta), `AttachSpaceshipPart`
+  (`SpaceshipScreen`, nowa część statku), `DisplayMilitaryReport` (`AdvisorReports`, raport ministra spraw zagranicznych),
+  `ObtainNavigationKey` (`DialogDrawing`, kody klawiszy nawigacji jako `switch`). Ramki zostają we wszystkich czterech: obrazki
+  i lista graczy wierszy są w ramce, końcowe wartości zmiennych zapisane („0x16” z listy śmieci w `RenderCityScenery` to pierwszy
+  obrazek zapisywany przez adres). Testy w `BatchThirtyNineDifferentialTests`. Wnioski: okno `Watched` segmentu 0x3772 tylko do
+  0x38f0 (dalej jest segment danych 0x3b01 ze słowami zegara, (0x3772, 0, 0x8000) dawało różnice zależne od liczby dostępów);
+  trzymany przycisk myszy (0x5872) zapętla `AwaitForKey` w obu wersjach – kliknięcie dawać jednorazowo przez 0x5874; klawisz do
+  `ReadKey` można włożyć wprost do `VideoCard.Tokens` w `Prepare`; mutacja na granicy równości dwóch odległości przeżyła
+  (losowe zapełnienie nie daje remisów) – wybrana inna.
 
 ## Następny krok
 
 Dalej małe metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 60`
 (metody z co najmniej 2 liniami `goto L` / `FlagSet` / `Compare…` / `SumWord` itd., od najkrótszej). Kandydaci
 (`GameLoadAndSave` i `Newspaper` nie mają już metod w stylu asm): `ChooseTechnologyToTake` (`TradeAndConquest`, patrz wyżej),
-`RenderCityScenery` (`CityView`), `AttachSpaceshipPart` (`SpaceshipScreen`), `DisplayMilitaryReport` (`AdvisorReports`),
 `DisplayTravellersReport`, `HandleEndOfTurnEvents` (`TurnEvents`), `LabelLandmasses` (`GameInitAndIntro`),
 `ChoreographKingSpeaking`, `DisplayKingScreen` (`MeetWithKing`),
 reszta generatora mapy w `GameInitAndIntro`. Funkcje niskopoziomowe `SystemServices` (`DeactivateMouse`, `PointerEvent`,
 `RenderCursorToScreen`, `RecoverScreenUnderCursor`, kolory i zegar: `PrepareTimer`, `RefreshHueCycling`, `AssignHueCycleSpan`,
 `ColorsFadeStep`, `FadeColors`, `FloodColors`, `ImportColorsFromBuffer`) i `SnapHeapPointer` (`VGADriver`) na koniec: działają
-w przerwaniach albo na rejestrach. Stan 2026-10-13: 73 metody w stylu asm, ok. 46,0 tys. z 68,8 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
+w przerwaniach albo na rejestrach. Stan 2026-10-13 (po porcji 39): 69 metod w stylu asm, ok. 45,0 tys. z 68,3 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
 Kod C# przetłumaczony z asm ma miejscami inne zachowanie niż DOS-owy CIV.EXE. Testy porównują z tłumaczeniem, więc na razie
 te błędy są odtwarzane jawnie:
 
+- `AttachSpaceshipPart`: gdy nie ma wolnego miejsca danego rodzaju, komponent lub moduł trafia na koniec tabeli 0x375a (wiersz
+  0xff, czyli 12 bajtów przed siatką gracza), a struktura w slot 0x63 (poza tabelą); komunikat „No further … required” jest
+  nieosiągalny (szukanie nigdy nie kończy się na 0xffff). Po naprawie: komunikat i bit w 0x687a + 2 * rodzaj.
+- `DisplayMilitaryReport`: wiersz gracza bez kontaktu nie zapisuje swojego wpisu listy w ramce, więc klawisz 1 – 7 albo kliknięcie
+  w ten wiersz czyta śmieci ze stosu; śmieci ≥ 8 dają `IndexOutOfRangeException` w `Relations` (DOS czytał pamięć). Po naprawie:
+  wpis 0xffff / pominięcie wiersza.
 - `VisitEachUnitInStack` zostawia SI = `0x600 * gracz` (tłumaczenie nie zachowywało SI). `AIPlayer` (L2947, ok. linii 4330)
   trzyma w SI sumę ataku stosu, woła `TallyUnitsByDomainInStack(…, 1)` i dzieli przez SI, więc dzieli przez `0x600 * gracz`
   zamiast przez atak. Po naprawie: AI inaczej ocenia ataki (zmiana baseline).
