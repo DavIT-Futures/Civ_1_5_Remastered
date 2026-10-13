@@ -246,19 +246,26 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   Testy w `BatchThirtyThreeDifferentialTests` (klawisze rozszerzone w skrypcie jako 0 i kod skanowania, np. 0, 0x4b = w lewo;
   powtórka przez `Watched` (0x3725, 0, 0x3dc0)). Wniosek: funkcja, która zachowuje tylko SI (`PreserveSource`) i woła
   `DisplayMenu`/`DisplayDialog`, oddaje wołającemu w DI swoje SI – trzeba odtworzyć SI z oryginału.
+- Kolejne 4 moduły (2026-10-13): `RenderPalace` (`TurnEvents`, mały pałac na ekranach wyników; ramka zostaje: poziomy i style
+  w ramce, lewy sąsiad sekcji 0 to nigdy niezapisane słowo 0x34 ramki, prawy sąsiad sekcji 8 to styl sekcji 0; końcowe
+  wartości zmiennych zapisane), `FocusMapView` (`MapManagement`), `BargainPeaceTreaty` (`GovernmentAndDiplomacy`, z `Bargain`,
+  `WantsWar`, `AppendPair`), `DisplayCivilizationOverview` (`CivilizationInfo`). Testy w `BatchThirtyFourDifferentialTests`.
+  Wnioski: zanegowany warunek (`L15e3` w `RenderPalace`: skok przy „<= 3” omija zerowanie) łatwo odwrócić – test różnicowy
+  złapał to od razu (golden master tej funkcji nie wykonuje); mutacja ostatniego wiersza mapki w `FocusMapView` jest równoważna
+  (ramka `RenderShadowBox` go zasłania).
 
 ## Następny krok
 
 Dalej małe metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 60`
 (metody z co najmniej 2 liniami `goto L` / `FlagSet` / `Compare…` / `SumWord` itd., od najkrótszej). Kandydaci
 (`GameLoadAndSave` i `Newspaper` nie mają już metod w stylu asm): `ChooseTechnologyToTake` (`TradeAndConquest`, patrz wyżej),
-`BargainPeaceTreaty` (`GovernmentAndDiplomacy`), `RenderCityScenery*` (`CityView`), `RenderPalace` (`TurnEvents`),
+`RenderCityScenery*` (`CityView`), `SituateSpecialTerrain` (`GameInitAndIntro`), `AttachSpaceshipPart` (`SpaceshipScreen`),
 `ChoreographKingSpeaking`, `DisplayKingScreen` (`MeetWithKing`), `DisplayHallOfFame` (`HallOfFame`), `DisplayEpicChronicle` (`WorldMap`),
 `RenderCitizenIcons` (`CityManagement`, kandydat ze „Śmieci na stosie”),
 reszta generatora mapy w `GameInitAndIntro`. Funkcje niskopoziomowe `SystemServices` (`DeactivateMouse`, `PointerEvent`,
 `RenderCursorToScreen`, `RecoverScreenUnderCursor`, kolory i zegar: `PrepareTimer`, `RefreshHueCycling`, `AssignHueCycleSpan`,
 `ColorsFadeStep`, `FadeColors`, `FloodColors`, `ImportColorsFromBuffer`) i `SnapHeapPointer` (`VGADriver`) na koniec: działają
-w przerwaniach albo na rejestrach. Stan 2026-10-13: 88 metod w stylu asm, ok. 49,9 tys. z 70,4 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
+w przerwaniach albo na rejestrach. Stan 2026-10-13: 84 metody w stylu asm, ok. 48,8 tys. z 69,9 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 

@@ -1427,243 +1427,158 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// The small palace of a player with cities, on a line at (horizLoc, vertLoc): the human player's from its palace
+		/// (levels 0xd91e, styles 0xb222), an AI player's built from castleTier + 3 parts (3 - 36) by a generator seeded with
+		/// player * ChanceRoot (levels up to 3 and parts / 5, a section only next to a higher one, its style player % 3). Each built
+		/// section is drawn from the pictures at 0xd21c by its style, level and place (ends and middle).
 		/// </summary>
-		/// <param name="playerID"></param>
-		/// <param name="palaceLevel"></param>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
 		public void RenderPalace(short participantIdx, short castleTier, short horizLoc, short vertLoc)
 		{
 			this.processor.Journal.OpenScope($"RenderPalace({participantIdx}, {castleTier}, {horizLoc}, {vertLoc})");
 
-			// function body
+			// The levels and the styles of the sections are in the stack frame, like in the original: the left neighbour of
+			// section 0 is the frame word 0x34 (never written), the right neighbour of section 8 the style of section 0; the
+			// final values of the locals stay there
 			this.processor.EnterFrame(0x36);
 			this.processor.PreserveIndexRegisters();
 
-			this.owner.VideoCard.RenderLine(this.processor.PullGlobalWord(0xaa), 
-				horizLoc - 5, vertLoc + 13, horizLoc + 68, vertLoc + 13, 2);
+			this.owner.VideoCard.RenderLine(this.processor.PullGlobalWord(0xaa), horizLoc - 5, vertLoc + 13, horizLoc + 68, vertLoc + 13, 2);
 
-			if (this.owner.World.Participants[participantIdx].TownTally != 0) goto L14dc;
-			goto L16e1;
+			if (this.owner.World.Participants[participantIdx].TownTally != 0)
+			{
+				ushort levels = (ushort)(this.processor.RegFrame.Value16 - 0x32);
+				ushort styles = (ushort)(this.processor.RegFrame.Value16 - 0x20);
 
-		L14dc:
-			this.owner.Helpers.VerifyValueSpan(castleTier + 3, 3, 36);
+				short parts = (short)this.owner.Helpers.VerifyValueSpan(castleTier + 3, 3, 36);
+				short highest = (short)(parts / 5);
 
-			this.processor.EmitLocalWord(0x36, this.processor.RegAcc.Value16);
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.RegCount.Value16 = 0x5;
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.EmitLocalWord(0x6, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x8, 0x0);
+				for (int sectionIdx = 0; sectionIdx < 9; sectionIdx++)
+				{
+					SetSectionWord(levels, sectionIdx, sectionIdx is >= 3 and <= 5 ? (ushort)0 : (ushort)0xffff);
+				}
 
-		L1504:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x8);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x32), 0xffff);
-			this.processor.IncrementLocalWord(0x8);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x8), 0x9);
-			if (this.processor.FlagSet.IsLess) goto L1504;
-			this.processor.EmitLocalWord(0x8, 0x3);
+				ushort seed = (ushort)(participantIdx * this.owner.World.ChanceRoot);
+				short built = 0;
+				(ushort attempts, ushort fits, ushort level, ushort chosen) last = (0, 0, 0, 0);
+				bool generated = false;
 
-		L151c:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x8);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x32), 0x0);
-			this.processor.IncrementLocalWord(0x8);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x8), 0x5);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L151c;
+				if (participantIdx == this.owner.World.PersonParticipantIdx)
+				{
+					for (int sectionIdx = 0; sectionIdx < 9; sectionIdx++)
+					{
+						SetSectionWord(levels, sectionIdx, this.processor.PullGlobalWord((ushort)((sectionIdx << 1) + 0xd91e)));
+						SetSectionWord(styles, sectionIdx, this.processor.PullGlobalWord((ushort)((sectionIdx << 1) + 0xb222)));
+					}
 
-			this.processor.RegAcc.Value16 = (ushort)participantIdx;
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.owner.World.ChanceRoot);
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
-			
-			if (participantIdx != this.owner.World.PersonParticipantIdx)
-				goto L1569;
+					built = 9;
+				}
+				else
+				{
+					for (built = 0; built < parts; built++)
+					{
+						ushort attempts = 0;
+						bool fits;
+						short chosen;
+						short level;
 
-			this.processor.EmitLocalWord(0x8, 0x0);
-			goto L154b;
+						while (true)
+						{
+							fits = true;
+							seed = (ushort)((seed * 5) + 1);
+							chosen = (short)((byte)seed % 9);
+							level = (short)(SectionWord(levels, chosen) + 1);
 
-		L1548:
-			this.processor.EmitLocalWord(0x8, this.processor.IncrementWord(this.processor.PullLocalWord(0x8)));
+							if (chosen < 4 && ((short)SectionWord(levels, chosen + 1) < level || SectionWord(levels, 7 - chosen) == 0xffff))
+							{
+								fits = false;
+							}
 
-		L154b:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x8), 0x9);
-			if (this.processor.FlagSet.IsLess) goto L1554;
-			goto L1630;
+							if (chosen > 4 && ((short)SectionWord(levels, chosen - 1) < level || SectionWord(levels, 9 - chosen) == 0xffff))
+							{
+								fits = false;
+							}
 
-		L1554:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x8);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0xd91e));
-			this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x32), this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0xb222));
-			this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x20), this.processor.RegAcc.Value16);
-			goto L1548;
+							if (level > highest || level > 3)
+							{
+								fits = false;
+							}
 
-		L1569:
-			this.processor.EmitLocalWord(0x8, 0x0);
-			goto L1625;
+							if (fits || ++attempts >= 0x3e7)
+								break;
+						}
 
-		L1571:
-			this.processor.EmitLocalWord(0x2, 0x0);
+						SetSectionWord(levels, chosen, (ushort)level);
+						SetSectionWord(styles, chosen, (ushort)(participantIdx % 3));
+						last = (attempts, (ushort)(fits ? 1 : 0), (ushort)level, (ushort)chosen);
+						generated = true;
+					}
+				}
 
-		L1576:
-			this.processor.EmitLocalWord(0xa, 0x1);
-			this.processor.ScaleIndex(0x5, this.processor.PullLocalWord(0x4));
-			this.processor.RegAcc.Value16 = this.processor.IncrementWord(this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.LowByte = this.processor.PullLocalByte(0x4);
-			this.processor.RegAcc.HighByte = 0;
-			this.processor.RegData.Value16 = 0;
-			this.processor.RegCount.Value16 = 0x9;
-			this.processor.DivideWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.EmitLocalWord(0xe, this.processor.RegData.Value16);
-			this.processor.RegSource.Value16 = this.processor.RegData.Value16;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegSource.Value16 = this.processor.SumWord(this.processor.RegSource.Value16, this.processor.RegFrame.Value16);
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0x32));
-			this.processor.RegAcc.Value16 = this.processor.IncrementWord(this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0xc, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegData.Value16, 0x4);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L15bd;
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0x30)), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsLess) goto L15b8;
-			this.processor.RegDest.Value16 = 0x7;
-			this.processor.RegDest.Value16 = this.processor.SubtractWord(this.processor.RegDest.Value16, this.processor.RegData.Value16);
-			this.processor.RegDest.Value16 = this.processor.ShiftLeftWord(this.processor.RegDest.Value16, 0x1);
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegDest.Value16 - 0x32)), 0xffff);
-			if (this.processor.FlagSet.IsNotEqual) goto L15bd;
+				// The frame word 0xc: the last level generated, then the shape of each drawn section
+				ushort? lastShape = generated ? last.level : null;
 
-		L15b8:
-			this.processor.EmitLocalWord(0xa, 0x0);
+				for (int sectionIdx = 0; sectionIdx < 9; sectionIdx++)
+				{
+					short sectionLevel = (short)SectionWord(levels, sectionIdx);
 
-		L15bd:
-			this.processor.CompareWord(this.processor.PullLocalWord(0xe), 0x4);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L15e3;
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0xe);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xc);
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x34)), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsLess) goto L15de;
-			this.processor.RegSource.Value16 = 0x9;
-			this.processor.RegSource.Value16 = this.processor.SubtractWord(this.processor.RegSource.Value16, this.processor.PullLocalWord(0xe));
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x32)), 0xffff);
-			if (this.processor.FlagSet.IsNotEqual) goto L15e3;
+					if (sectionLevel <= 0)
+						continue;
 
-		L15de:
-			this.processor.EmitLocalWord(0xa, 0x0);
+					// 0: left end, 1: left, 2: middle, 3: right, 4: right end
+					ushort shape = 2;
 
-		L15e3:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x6);
-			this.processor.CompareWord(this.processor.PullLocalWord(0xc), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsGreater) goto L15f1;
-			this.processor.CompareWord(this.processor.PullLocalWord(0xc), 0x3);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L15f6;
+					if (sectionIdx < 4)
+					{
+						shape = (ushort)(SectionWord(levels, sectionIdx - 1) == 0xffff || sectionIdx == 1 ? 0 : 1);
+					}
 
-		L15f1:
-			this.processor.EmitLocalWord(0xa, 0x0);
+					if (sectionIdx > 4)
+					{
+						shape = (ushort)(SectionWord(levels, sectionIdx + 1) == 0xffff || sectionIdx == 7 ? 4 : 3);
+					}
 
-		L15f6:
-			this.processor.CompareWord(this.processor.PullLocalWord(0xa), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L1609;
-			this.processor.IncrementLocalWord(0x2);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x3e7);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L1609;
-			goto L1576;
+					lastShape = shape;
 
-		L1609:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0xe);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegSource.Value16 = this.processor.SumWord(this.processor.RegSource.Value16, this.processor.RegFrame.Value16);
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xc);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0x32), this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = (ushort)participantIdx;
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.RegCount.Value16 = 0x3;
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0x20), this.processor.RegData.Value16);
-			this.processor.IncrementLocalWord(0x8);
+					int height = this.owner.Helpers.VerifyValueSpan(sectionLevel - 1, 0, 3);
 
-		L1625:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x36);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x8), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L1630;
-			goto L1571;
+					this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa), (7 * sectionIdx) + horizLoc, vertLoc - 1,
+						this.processor.PullGlobalWord((ushort)((0x28 * SectionWord(styles, sectionIdx)) + ((((short)height * 5) + shape) << 1) + 0xd21c)));
+				}
 
-		L1630:
-			this.processor.EmitLocalWord(0x8, 0x0);
+				this.processor.EmitLocalWord(0x36, (ushort)parts);
+				this.processor.EmitLocalWord(0x6, (ushort)highest);
+				this.processor.EmitLocalWord(0x4, seed);
+				this.processor.EmitLocalWord(0x8, 0x9);
 
-		L1635:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x8);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegSource.Value16 = this.processor.SumWord(this.processor.RegSource.Value16, this.processor.RegFrame.Value16);
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0x32)), 0x0);
-			if (this.processor.FlagSet.IsGreater) goto L1645;
-			goto L16d5;
+				if (lastShape != null)
+				{
+					this.processor.EmitLocalWord(0xc, lastShape.Value);
+				}
 
-		L1645:
-			this.processor.EmitLocalWord(0xc, 0x2);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x8), 0x4);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L1666;
-			this.processor.EmitLocalWord(0xc, 0x1);
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0x34)), 0xffff);
-			if (this.processor.FlagSet.IsEqual) goto L1661;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x8), 0x1);
-			if (this.processor.FlagSet.IsNotEqual) goto L1666;
+				if (generated)
+				{
+					this.processor.EmitLocalWord(0x2, last.attempts);
+					this.processor.EmitLocalWord(0xa, last.fits);
+					this.processor.EmitLocalWord(0xe, last.chosen);
+				}
+			}
 
-		L1661:
-			this.processor.EmitLocalWord(0xc, 0x0);
-
-		L1666:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x8), 0x4);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L1687;
-			this.processor.EmitLocalWord(0xc, 0x3);
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x8);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x30)), 0xffff);
-			if (this.processor.FlagSet.IsEqual) goto L1682;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x8), 0x7);
-			if (this.processor.FlagSet.IsNotEqual) goto L1687;
-
-		L1682:
-			this.processor.EmitLocalWord(0xc, 0x4);
-
-		L1687:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x8);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegSource.Value16 = this.processor.SumWord(this.processor.RegSource.Value16, this.processor.RegFrame.Value16);
-
-			this.owner.Helpers.VerifyValueSpan(
-				this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0x32)) - 1, 0, 3);
-			
-			this.processor.RegCount.Value16 = 0x5;
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegDest.Value16 = this.processor.SumWord(this.processor.RegDest.Value16, this.processor.PullLocalWord(0xc));
-			this.processor.RegDest.Value16 = this.processor.ShiftLeftWord(this.processor.RegDest.Value16, 0x1);
-			this.processor.RegAcc.Value16 = 0x28;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0x20)));
-
-			this.owner.Services.RenderPictureToScreen(
-				this.processor.PullGlobalWord(0xaa),
-				(7 * this.processor.PullLocalSignedWord(0x8)) + horizLoc,
-				vertLoc - 1,
-				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegDest.Value16 + 0xd21c)));
-
-		L16d5:
-			this.processor.EmitLocalWord(0x8, this.processor.IncrementWord(this.processor.PullLocalWord(0x8)));
-			this.processor.CompareWord(this.processor.PullLocalWord(0x8), 0x9);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L16e1;
-			goto L1635;
-
-		L16e1:
 			this.processor.RegSource.Value16 = this.processor.UnstackWord();
 			this.processor.RegDest.Value16 = this.processor.UnstackWord();
 			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("RenderPalace");
+		}
+
+		/// <summary>A word of a table of the sections in the stack frame (the index may be -1 or 9, like in the original)</summary>
+		private ushort SectionWord(ushort table, int sectionIdx)
+		{
+			return this.processor.PullGlobalWord((ushort)(table + (sectionIdx << 1)));
+		}
+
+		private void SetSectionWord(ushort table, int sectionIdx, ushort amount)
+		{
+			this.processor.EmitGlobalWord((ushort)(table + (sectionIdx << 1)), amount);
 		}
 
 		/// <summary>
