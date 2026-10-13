@@ -594,35 +594,33 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// A historian's ranking of the living civilizations by one of five measures (random): 0 gold, 1 might, 2 technologies,
+		/// 3 the size plus the happy minus the unhappy citizens of the cities, 4 the size of the cities. The places go into
+		/// RunningSagaStanding (7 - place, the barbarians +1); known civilizations (all on the easiest level) are shown with
+		/// their small palace.
 		/// </summary>
 		public void DisplayEpicChronicle()
 		{
 			this.processor.Journal.OpenScope("DisplayEpicChronicle()");
 
-			// function body
+			// The values of the players are in the stack frame (the barbarians' one never set for the measures 3 and 4), like in the
+			// original: HandleCity and RenderPalace read leftovers under the stack; the final values of the locals stay there
 			this.processor.EnterFrame(0x20);
 			this.processor.PreserveIndexRegisters();
 
+			ushort values = (ushort)(this.processor.RegFrame.Value16 - 0x1c);
+
 			this.owner.Startup.ConcealMouseCursor();
 
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0xaa),
-				0, 0, 0x140, 0xc8,
-				this.processor.PullGlobalWord(0x19d4),
-				0, 0);
+			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0x19d4), 0, 0);
 
-			this.processor.RegAcc.Value16 = (ushort)(this.owner.Libc.Dice.DrawInt(5));
+			ushort measure = (ushort)this.owner.Libc.Dice.DrawInt(5);
 
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
+			this.processor.EmitLocalWord(0x4, measure);
 
 			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 3);
 
-			this.processor.RegAcc.Value16 = (ushort)(this.owner.Libc.Dice.DrawInt(4));
-
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x4516)));
+			this.owner.Libc.CopyText(0xba06, this.processor.PullGlobalWord((ushort)((this.owner.Libc.Dice.DrawInt(4) << 1) + 0x4516)));
 
 			this.owner.Libc.AppendText(0xba06, " completes his epic history:");
 
@@ -630,246 +628,149 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Libc.CopyText(0xba06, "'The ");
 
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x4);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x452c)));
+			this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)((measure << 1) + 0x452c)));
 
 			this.owner.Libc.AppendText(0xba06, " Civilizations in the World'");
 
 			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 12, 15);
-			
-			this.processor.EmitLocalWord(0xc, 0x1);
 
-		L0ab9:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0xc);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x1c), 0x0);
-			this.processor.IncrementLocalWord(0xc);
-			this.processor.CompareWord(this.processor.PullLocalWord(0xc), 0x8);
-			if (this.processor.FlagSet.IsLess) goto L0ab9;
-			this.processor.EmitLocalWord(0xc, 0x0);
+			for (int participantIdx = 1; participantIdx < 8; participantIdx++)
+			{
+				this.processor.EmitGlobalWord((ushort)(values + (participantIdx << 1)), 0x0);
+			}
 
-		L0ad1:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToSource(this.processor.PullLocalWord(0xc));
-			if (this.owner.World.Towns[this.processor.PullLocalWord(0xc)].ParticipantIdx == -1) goto L0b36;
-			this.processor.CompareByte(this.owner.World.Towns[this.processor.PullLocalWord(0xc)].ConditionMarker, 0xff);
-			if (this.processor.FlagSet.IsEqual) goto L0b36;
+			for (short townIdx = 0; townIdx < 0x80; townIdx++)
+			{
+				City town = this.owner.World.Towns[townIdx];
 
-			this.owner.CityOps.HandleCity(this.processor.PullLocalSignedWord(0xc), -1);
+				if (town.ParticipantIdx == -1 || town.ConditionMarker == 0xff)
+					continue;
 
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), 0x3);
-			if (this.processor.FlagSet.IsNotEqual) goto L0b17;
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.Towns[this.processor.PullLocalWord(0xc)].TrueExtent;
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.PullGlobalWord(0x70e2));
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, this.processor.PullGlobalWord(0x70e4));
-			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegDest.Value16 = (ushort)this.owner.World.Towns[this.processor.PullLocalWord(0xc)].ParticipantIdx;
-			this.processor.RegDest.Value16 = this.processor.ShiftLeftWord(this.processor.RegDest.Value16, 0x1);
-			this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegDest.Value16 - 0x1c), 
-				this.processor.SumWord(this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegDest.Value16 - 0x1c)), this.processor.RegCount.Value16));
+				this.owner.CityOps.HandleCity(townIdx, -1);
 
-		L0b17:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), 0x4);
-			if (this.processor.FlagSet.IsNotEqual) goto L0b36;
-			this.processor.ScaleIndexToSource(0x1c, this.processor.PullLocalWord(0xc));
-			this.processor.RegDest.Value16 = (ushort)this.owner.World.Towns[this.processor.PullLocalWord(0xc)].ParticipantIdx;
-			this.processor.RegDest.Value16 = this.processor.ShiftLeftWord(this.processor.RegDest.Value16, 0x1);
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.Towns[this.processor.PullLocalWord(0xc)].TrueExtent;
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegDest.Value16 - 0x1c), 
-				this.processor.SumWord(this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegDest.Value16 - 0x1c)), this.processor.RegAcc.Value16));
+				ushort place = (ushort)(values + (town.ParticipantIdx << 1));
 
-		L0b36:
-			this.processor.EmitLocalWord(0xc, this.processor.IncrementWord(this.processor.PullLocalWord(0xc)));
-			this.processor.CompareWord(this.processor.PullLocalWord(0xc), 0x80);
-			if (this.processor.FlagSet.IsLess) goto L0ad1;
-			this.processor.EmitLocalWord(0x2, 0x0);
-			goto L0b56;
+				if (measure == 3)
+				{
+					this.processor.EmitGlobalWord(place, (ushort)(this.processor.PullGlobalWord(place) +
+						town.TrueExtent + this.processor.PullGlobalWord(0x70e2) - this.processor.PullGlobalWord(0x70e4)));
+				}
 
-		L0b47:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x2);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.Participants[this.processor.PullLocalWord(0x2)].Gold;
+				if (measure == 4)
+				{
+					this.processor.EmitGlobalWord(place, (ushort)(this.processor.PullGlobalWord(place) + town.TrueExtent));
+				}
+			}
 
-		L0b50:
-			this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x1c), this.processor.RegAcc.Value16);
+			for (short participantIdx = 0; participantIdx < 8; participantIdx++)
+			{
+				ushort place = (ushort)(values + (participantIdx << 1));
 
-		L0b53:
-			this.processor.EmitLocalWord(0x2, this.processor.IncrementWord(this.processor.PullLocalWord(0x2)));
+				switch (measure)
+				{
+					case 0:
+						this.processor.EmitGlobalWord(place, (ushort)this.owner.World.Participants[participantIdx].Gold);
+						break;
 
-		L0b56:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x8);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0bb0;
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x4);
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual) goto L0b47;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1);
-			if (this.processor.FlagSet.IsEqual) goto L0b6f;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x2);
-			if (this.processor.FlagSet.IsEqual) goto L0b7a;
-			goto L0b53;
+					case 1:
+						this.processor.EmitGlobalWord(place, (ushort)this.owner.World.Participants[participantIdx].MartialMight);
+						break;
 
-		L0b6f:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x2);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.Participants[this.processor.PullLocalWord(0x2)].MartialMight;
-			goto L0b50;
+					case 2:
+						this.processor.EmitGlobalWord(place, 0x0);
 
-		L0b7a:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x2);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x1c), 0x0);
-			this.processor.EmitLocalWord(0xc, 0x0);
-			goto L0b8e;
+						for (short scienceIdx = 0; scienceIdx < 0x48; scienceIdx++)
+						{
+							if (this.owner.Advisors.PlayerKnowsTechnology(participantIdx, scienceIdx) != 0)
+							{
+								this.processor.EmitGlobalWord(place, (ushort)(this.processor.PullGlobalWord(place) + 1));
+							}
+						}
+						break;
+				}
+			}
 
-		L0b8b:
-			this.processor.EmitLocalWord(0xc, this.processor.IncrementWord(this.processor.PullLocalWord(0xc)));
+			short vertLoc = 0x20;
+			short rank = 0;
+			short best = -1;
+			short bestValue = 0;
+			bool ranked = false;
 
-		L0b8e:
-			this.processor.CompareWord(this.processor.PullLocalWord(0xc), 0x48);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0b53;
+			for (short placeIdx = 1; placeIdx < 8; placeIdx++)
+			{
+				if (((1 << (byte)placeIdx) & (ushort)this.owner.World.LiveRealms) == 0)
+					continue;
 
-			this.processor.RegAcc.Value16 = this.owner.Advisors.PlayerKnowsTechnology(
-				this.processor.PullLocalSignedWord(0x2),
-				this.processor.PullLocalSignedWord(0xc));
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual)
-				goto L0b8b;
+				bestValue = 0;
+				best = -1;
+				ranked = true;
 
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x2);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x1c), 
-				this.processor.IncrementWord(this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x1c))));
-			goto L0b8b;
+				for (short participantIdx = 1; participantIdx < 8; participantIdx++)
+				{
+					short value = (short)this.processor.PullGlobalWord((ushort)(values + (participantIdx << 1)));
 
-		L0bb0:
-			this.processor.EmitLocalWord(0xa, 0x20);
-			this.processor.EmitLocalWord(0x20, 0x0);
-			this.processor.EmitLocalWord(0xc, 0x1);
-			goto L0d29;
+					if (value >= bestValue && ((1 << (byte)participantIdx) & (ushort)this.owner.World.LiveRealms) != 0)
+					{
+						bestValue = value;
+						best = participantIdx;
+					}
+				}
 
-		L0bc2:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x2);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x1c));
-			this.processor.EmitLocalWord(0x6, this.processor.RegAcc.Value16);
-			this.processor.CopyLocalWord(0x2, 0x1e);
+				if (best == -1)
+					continue;
 
-		L0bd3:
-			this.processor.EmitLocalWord(0x2, this.processor.IncrementWord(this.processor.PullLocalWord(0x2)));
+				this.processor.EmitGlobalByte(0xba06, 0x0);
 
-		L0bd6:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x8);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0bf9;
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x2);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x6);
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x1c)), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsLess) goto L0bd3;
-			this.processor.RegAcc.Value16 = 0x1;
-			this.processor.RegCount.LowByte = this.processor.PullLocalByte(0x2);
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			this.processor.TestBitsWord(this.processor.RegAcc.Value16, (ushort)this.owner.World.LiveRealms);
-			if (this.processor.FlagSet.IsNotEqual) goto L0bc2;
-			goto L0bd3;
+				this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText((short)(rank + 1), 10));
 
-		L0bf9:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x1e), 0xffff);
-			if (this.processor.FlagSet.IsNotEqual) goto L0c02;
-			goto L0d26;
+				this.owner.Libc.AppendText(0xba06, ". The ");
 
-		L0c02:
-			this.processor.EmitGlobalByte(0xba06, 0x0);
+				this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)((rank << 1) + 0x451e)));
 
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText((short)(this.processor.PullLocalWord(0x20) + 1), 10));
+				this.owner.Libc.AppendText(0xba06, " Civilization of the ");
 
-			this.owner.Libc.AppendText(0xba06, ". The ");
+				this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)((best << 1) + 0x1992)));
 
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x20);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x451e)));
+				this.owner.Libc.AppendText(0xba06, ".");
 
-			this.owner.Libc.AppendText(0xba06, " Civilization of the ");
+				short humanIdx = this.owner.World.PersonParticipantIdx;
 
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x1e);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
+				if ((this.owner.World.Participants[humanIdx].Relations[best] & 0x40) != 0 || best == humanIdx || this.owner.World.HardnessTier == 0)
+				{
+					this.owner.TextPainter.AwaitTime(60);
 
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1992)));
+					this.owner.TurnHooks.RenderPalace(best, this.owner.TurnHooks.ObtainPalaceLevel(this.owner.World.Participants[best].Tally), 128, (short)(vertLoc - 13));
 
-			this.owner.Libc.AppendText(0xba06, ".");
+					this.owner.Dialogs.RenderBox(8, vertLoc, 303, 15, this.processor.PullGlobalWord((ushort)((best << 1) + 0x1946)));
 
-			this.processor.RegBase.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.RegCount.LowByte = 0x4;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, this.processor.RegCount.LowByte);
+					this.owner.TextPainter.RenderTextToScreen0(0xba06, 40, vertLoc + 5, 15);
 
-			if ((this.owner.World.Participants[this.owner.World.PersonParticipantIdx].Relations[this.processor.PullLocalWord(0x1e)] & 0x40) != 0)
-				goto L0ca1;
+					vertLoc += 0x18;
+				}
 
-			this.processor.RegAcc.Value16 = (ushort)owner.World.PersonParticipantIdx;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x1e), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L0ca1;
+				this.owner.World.Participants[best].RunningSagaStanding += (short)(7 - rank);
+				rank++;
+				this.processor.EmitGlobalWord((ushort)(values + (best << 1)), 0xffff);
+			}
 
-			if (this.owner.World.HardnessTier != 0)
-				goto L0d0f;
+			this.processor.EmitLocalWord(0x2, 0x8);
+			this.processor.EmitLocalWord(0xa, (ushort)vertLoc);
+			this.processor.EmitLocalWord(0xc, 0x8);
+			this.processor.EmitLocalWord(0x20, (ushort)rank);
 
-		L0ca1:
-			this.owner.TextPainter.AwaitTime(60);
+			if (ranked)
+			{
+				this.processor.EmitLocalWord(0x6, (ushort)bestValue);
+				this.processor.EmitLocalWord(0x1e, (ushort)best);
+			}
 
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x1e);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-
-			this.owner.TurnHooks.RenderPalace(this.processor.PullLocalSignedWord(0x1e),
-				this.owner.TurnHooks.ObtainPalaceLevel(this.owner.World.Participants[this.processor.PullLocalWord(0x1e)].Tally),
-				128, 
-				(short)(this.processor.PullLocalSignedWord(0xa) - 13));
-
-			this.owner.Dialogs.RenderBox(8, this.processor.PullLocalSignedWord(0xa),
-				303, 15, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1946)));
-
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, 40, this.processor.PullLocalSignedWord(0xa) + 5, 15);
-
-			this.processor.EmitLocalWord(0xa, this.processor.SumWord(this.processor.PullLocalWord(0xa), 0x18));
-
-		L0d0f:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x1e);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegAcc.Value16 = 0x7;
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x20));
-			this.owner.World.Participants[this.processor.PullLocalWord(0x1e)].RunningSagaStanding += (short)this.processor.RegAcc.Value16;
-			this.processor.IncrementLocalWord(0x20);
-			this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x1c), 0xffff);
-
-		L0d26:
-			this.processor.EmitLocalWord(0xc, this.processor.IncrementWord(this.processor.PullLocalWord(0xc)));
-
-		L0d29:
-			this.processor.CompareWord(this.processor.PullLocalWord(0xc), 0x8);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0d4f;
-			this.processor.RegAcc.Value16 = 0x1;
-			this.processor.RegCount.LowByte = this.processor.PullLocalByte(0xc);
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			this.processor.TestBitsWord(this.processor.RegAcc.Value16, (ushort)this.owner.World.LiveRealms);
-			if (this.processor.FlagSet.IsEqual) goto L0d26;
-			this.processor.EmitLocalWord(0x6, 0x0);
-			this.processor.EmitLocalWord(0x1e, 0xffff);
-			this.processor.EmitLocalWord(0x2, 0x1);
-			goto L0bd6;
-
-		L0d4f:
 			this.owner.World.Participants[0].RunningSagaStanding++;
 
 			this.owner.TurnLogic.AwaitForKey();
 
 			this.owner.Conquest.AwaitForKeyPressOrMouseClick();
 
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0x19d4),
-				0, 0, 0x140, 0xc8,
-				this.processor.PullGlobalWord(0xaa),
-				0, 0);
+			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0xaa), 0, 0);
 
 			this.owner.Startup.DisplayMouseCursor();
 

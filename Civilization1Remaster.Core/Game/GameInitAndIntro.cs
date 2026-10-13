@@ -1302,259 +1302,125 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// The value of every land tile as a city site (in the map screen): the weights of the 12 terrains and their specials
+		/// (3 * food + trade, + 2 * shields except on 2 and 11, + the bonus of irrigation 0x44e or twice of mining 0x44a), summed
+		/// over the 21 tiles of a city (the inner 8 twice, the centre four times, +2 for rivers on terrains 2 and 11), less 16 off
+		/// the river pattern unless on terrain 1; the value 8 - 15 is drawn at (x + 80, y) and (x + 80, y + 50), the other tiles
+		/// get 0. Every site counts for its continent (ConstructionSpotTally).
 		/// </summary>
 		public void SituateSpecialTerrain()
 		{
 			this.processor.Journal.OpenScope("SituateSpecialTerrain()");
 
-			// function body
-			this.processor.EnterFrame(0x42);
-			this.processor.PreserveIndexRegisters();
-			
-			this.processor.EmitLocalWord(0x40, 0x0);
+			for (int continentIdx = 0; continentIdx < 0x10; continentIdx++)
+			{
+				this.owner.World.Landmasses[continentIdx].ConstructionSpotTally = 0;
+			}
 
-		L0f17:
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x40);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			
-			this.owner.World.Landmasses[this.processor.PullLocalWord(0x40)].ConstructionSpotTally = 0;
+			ushort[] weights = new ushort[0x18];
 
-			this.processor.IncrementLocalWord(0x40);
+			for (int terrainIdx = 0; terrainIdx < 0x18; terrainIdx++)
+			{
+				ushort terrain = (ushort)(0x13 * terrainIdx);
+				int kind = terrainIdx % 12;
 
-			this.processor.CompareWord(this.processor.PullLocalWord(0x40), 0x10);
-			if (this.processor.FlagSet.IsLess) goto L0f17;
+				weights[terrainIdx] = (ushort)((3 * (sbyte)this.processor.PullGlobalByte((ushort)(terrain + 0x290))) +
+					(sbyte)this.processor.PullGlobalByte((ushort)(terrain + 0x292)));
 
-			this.processor.EmitLocalWord(0x40, 0x0);
-			goto L0f54;
+				if (kind != 2 && kind != 11)
+				{
+					weights[terrainIdx] += (ushort)((sbyte)this.processor.PullGlobalByte((ushort)(terrain + 0x291)) << 1);
+				}
 
-		L0f32:
-			this.processor.RegAcc.Value16 = 0xc;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullLocalWord(0x2));
-			this.processor.RegSource.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x44a));
-			this.processor.RegSource.Value16 = this.processor.BitOrWord(this.processor.RegSource.Value16, this.processor.RegSource.Value16);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0f51;
-			this.processor.RegDest.Value16 = this.processor.PullLocalWord(0x40);
-			this.processor.RegDest.Value16 = this.processor.ShiftLeftWord(this.processor.RegDest.Value16, 0x1);
-			this.processor.RegAcc.Value16 = 0xffff;
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, this.processor.RegSource.Value16);
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, 0x1);
+				short irrigation = (short)this.processor.PullGlobalWord((ushort)((0xc * kind) + 0x44e));
 
-		L0f4e:
-			this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegDest.Value16 - 0x38), 
-				this.processor.SumWord(this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegDest.Value16 - 0x38)), this.processor.RegAcc.Value16));
+				if (irrigation < 0)
+				{
+					weights[terrainIdx] += (ushort)(0xffff - irrigation);
+				}
+				else
+				{
+					short mining = (short)this.processor.PullGlobalWord((ushort)((0xc * kind) + 0x44a));
 
-		L0f51:
-			this.processor.EmitLocalWord(0x40, this.processor.IncrementWord(this.processor.PullLocalWord(0x40)));
+					if (mining < 0)
+					{
+						weights[terrainIdx] += (ushort)((0xffff - mining) << 1);
+					}
+				}
+			}
 
-		L0f54:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x40), 0x18);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0fb8;
-			this.processor.ScaleIndexToSource(0x13, this.processor.PullLocalWord(0x40));
-			this.processor.RegDest.Value16 = this.processor.PullLocalWord(0x40);
-			this.processor.RegDest.Value16 = this.processor.ShiftLeftWord(this.processor.RegDest.Value16, 0x1);
-			this.processor.RegDest.Value16 = this.processor.SumWord(this.processor.RegDest.Value16, this.processor.RegFrame.Value16);
-			this.processor.RegDest.Value16 = this.processor.SubtractWord(this.processor.RegDest.Value16, 0x38);
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x292));
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegAcc.LowByte = 0x3;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x290)));
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.RegCount.Value16);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, this.processor.RegDest.Value16, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x40);
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.RegCount.Value16 = 0xc;
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.EmitLocalWord(0x2, this.processor.RegData.Value16);
-			this.processor.CompareWord(this.processor.RegData.Value16, 0x2);
-			if (this.processor.FlagSet.IsEqual) goto L0f9c;
-			this.processor.CompareWord(this.processor.RegData.Value16, 0xb);
-			if (this.processor.FlagSet.IsEqual) goto L0f9c;
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x291));
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, 0x1);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, this.processor.RegDest.Value16, this.processor.SumWord(this.processor.PullUInt16(this.processor.SegData.Value16, this.processor.RegDest.Value16), this.processor.RegAcc.Value16));
+			for (short horizLoc = 2; horizLoc < 0x4e; horizLoc++)
+			{
+				for (short vertLoc = 2; vertLoc < 0x30; vertLoc++)
+				{
+					ushort terrain = ObtainTerrainTypeFromScreen(horizLoc, vertLoc);
 
-		L0f9c:
-			this.processor.RegAcc.Value16 = 0xc;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullLocalWord(0x2));
-			this.processor.RegSource.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x44e));
-			this.processor.RegSource.Value16 = this.processor.BitOrWord(this.processor.RegSource.Value16, this.processor.RegSource.Value16);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0f32;
-			this.processor.RegDest.Value16 = this.processor.PullLocalWord(0x40);
-			this.processor.RegDest.Value16 = this.processor.ShiftLeftWord(this.processor.RegDest.Value16, 0x1);
-			this.processor.RegAcc.Value16 = 0xffff;
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, this.processor.RegSource.Value16);
-			goto L0f4e;
+					if (terrain != 0xb && terrain != 2 && terrain != 1)
+					{
+						this.owner.Services.AssignDot(horizLoc + 80, vertLoc, 0);
+						this.owner.Services.AssignDot(horizLoc + 80, vertLoc + 0x32, 0);
+						continue;
+					}
 
-		L0fb8:
-			this.processor.EmitLocalWord(0x3c, 0x2);
-			goto L1174;
+					short total = 0;
 
-		L0fc0:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x3c);
-			this.processor.RegSource.Value16 = this.processor.SumWord(this.processor.RegSource.Value16, 0x50);
+					for (int deltaIdx = 0; deltaIdx <= 0x14; deltaIdx++)
+					{
+						short value = 0;
+						short tileHoriz = (short)(this.owner.TownDeltas[deltaIdx].X + horizLoc);
+						short tileVert = (short)(this.owner.TownDeltas[deltaIdx].Y + vertLoc);
 
-			this.owner.Services.AssignDot(this.processor.PullLocalSignedWord(0x3c) + 80,
-				this.processor.PullLocalSignedWord(0x3e), 0);
+						ushort tile = ObtainTerrainTypeFromScreen(tileHoriz, tileVert);
 
-			this.owner.Services.AssignDot(this.processor.PullLocalSignedWord(0x3c) + 80,
-				this.processor.PullLocalSignedWord(0x3e) + 0x32, 0);
+						if ((tile == 2 || tile == 0xb) && !OffRiverPattern(tileHoriz, tileVert))
+						{
+							value += 2;
+						}
 
-		L0ff4:
-			this.processor.EmitLocalWord(0x3e, this.processor.IncrementWord(this.processor.PullLocalWord(0x3e)));
+						this.owner.MapOps.ContainsSpecialResource(tileHoriz, tileVert);
 
-		L0ff7:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x3e), 0x30);
-			if (this.processor.FlagSet.IsLess) goto L1000;
-			goto L1171;
+						if (this.processor.RegAcc.Value16 != 0)
+						{
+							tile += 0xc;
+						}
 
-		L1000:
-			ObtainTerrainTypeFromScreen(
-				this.processor.PullLocalSignedWord(0x3c),
-				this.processor.PullLocalSignedWord(0x3e));
-			
-			this.processor.EmitLocalWord(0x42, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xb);
-			if (this.processor.FlagSet.IsEqual) goto L101f;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x2);
-			if (this.processor.FlagSet.IsEqual) goto L101f;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1);
-			if (this.processor.FlagSet.IsNotEqual) goto L0fc0;
+						value += (short)weights[tile];
 
-		L101f:
-			this.processor.EmitLocalWord(0x6, 0x0);
-			this.processor.EmitLocalWord(0x40, 0x0);
+						if (deltaIdx < 9)
+						{
+							value += value;
+						}
 
-		L1029:
-			this.processor.EmitLocalWord(0x4, 0x0);
+						if (deltaIdx == 0)
+						{
+							value += value;
+						}
 
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x40);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
+						total += value;
+					}
 
-			this.processor.RegAcc.Value16 = (ushort)((short)(this.owner.TownDeltas[this.processor.PullLocalWord(0x40)].X +
-				this.processor.PullLocalSignedWord(0x3c)));
-			this.processor.EmitLocalWord(0x8, this.processor.RegAcc.Value16);
+					if (ObtainTerrainTypeFromScreen(horizLoc, vertLoc) != 1 && OffRiverPattern(horizLoc, vertLoc))
+					{
+						total -= 0x10;
+					}
 
-			this.processor.RegAcc.Value16 = (ushort)((short)(this.owner.TownDeltas[this.processor.PullLocalWord(0x40)].Y +
-				this.processor.PullLocalSignedWord(0x3e)));
-			this.processor.EmitLocalWord(0x3a, this.processor.RegAcc.Value16);
+					short worth = (short)(((short)this.owner.Helpers.VerifyValueSpan((total - 120) / 8, 1, 15) / 2) + 8);
 
-			ObtainTerrainTypeFromScreen(
-				this.processor.PullLocalSignedWord(0x8),
-				(short)this.processor.RegAcc.Value16);
-			
-			this.processor.EmitLocalWord(0x42, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x2);
-			if (this.processor.FlagSet.IsEqual) goto L105f;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xb);
-			if (this.processor.FlagSet.IsNotEqual) goto L1078;
+					this.owner.Services.AssignDot(horizLoc + 80, vertLoc, (ushort)worth);
+					this.owner.Services.AssignDot(horizLoc + 80, vertLoc + 0x32, (ushort)worth);
 
-		L105f:
-			this.processor.RegAcc.Value16 = 0x7;
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.PullLocalWord(0x8));
-			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
-			this.processor.ScaleIndex(0xb, this.processor.PullLocalWord(0x3a));
-			this.processor.RegCount.LowByte = this.processor.SumByte(this.processor.RegCount.LowByte, this.processor.RegAcc.LowByte);
-			this.processor.TestBitsByte(this.processor.RegCount.LowByte, 0x2);
-			if (this.processor.FlagSet.IsNotEqual) goto L1078;
-			this.processor.EmitLocalWord(0x4, this.processor.SumWord(this.processor.PullLocalWord(0x4), 0x2));
+					this.owner.World.Landmasses[ObtainContinentIDFromScreen(horizLoc, vertLoc)].ConstructionSpotTally++;
+				}
+			}
 
-		L1078:
-			this.owner.MapOps.ContainsSpecialResource(
-				this.processor.PullLocalSignedWord(0x8),
-				this.processor.PullLocalSignedWord(0x3a));
-
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual) goto L1091;
-			this.processor.EmitLocalWord(0x42, this.processor.SumWord(this.processor.PullLocalWord(0x42), 0xc));
-
-		L1091:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x42);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x38));
-			this.processor.EmitLocalWord(0x4, this.processor.SumWord(this.processor.PullLocalWord(0x4), this.processor.RegAcc.Value16));
-			this.processor.CompareWord(this.processor.PullLocalWord(0x40), 0x9);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L10a8;
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x4);
-			this.processor.EmitLocalWord(0x4, this.processor.SumWord(this.processor.PullLocalWord(0x4), this.processor.RegAcc.Value16));
-
-		L10a8:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x40), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L10b4;
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x4);
-			this.processor.EmitLocalWord(0x4, this.processor.SumWord(this.processor.PullLocalWord(0x4), this.processor.RegAcc.Value16));
-
-		L10b4:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x4);
-			this.processor.EmitLocalWord(0x6, this.processor.SumWord(this.processor.PullLocalWord(0x6), this.processor.RegAcc.Value16));
-			this.processor.IncrementLocalWord(0x40);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x40), 0x14);
-			if (this.processor.FlagSet.IsGreater) goto L10c6;
-			goto L1029;
-
-		L10c6:
-			ObtainTerrainTypeFromScreen(
-				this.processor.PullLocalSignedWord(0x3c),
-				this.processor.PullLocalSignedWord(0x3e));
-			
-			this.processor.EmitLocalWord(0x42, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1);
-			if (this.processor.FlagSet.IsEqual) goto L10f4;
-			this.processor.ScaleIndex(0x7, this.processor.PullLocalWord(0x3c));
-			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
-			this.processor.ScaleIndex(0xb, this.processor.PullLocalWord(0x3e));
-			this.processor.RegCount.LowByte = this.processor.SumByte(this.processor.RegCount.LowByte, this.processor.RegAcc.LowByte);
-			this.processor.TestBitsByte(this.processor.RegCount.LowByte, 0x2);
-			if (this.processor.FlagSet.IsEqual) goto L10f4;
-			this.processor.EmitLocalWord(0x6, this.processor.SubtractWord(this.processor.PullLocalWord(0x6), 0x10));
-
-		L10f4:
-			this.owner.Helpers.VerifyValueSpan(
-				(this.processor.PullLocalSignedWord(0x6) - 120) / 8,
-				1, 15);
-
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
-			this.processor.HalveAccumulator();
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x8);
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
-
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x3c);
-			this.processor.RegSource.Value16 = this.processor.SumWord(this.processor.RegSource.Value16, 0x50);
-
-			this.owner.Services.AssignDot(this.processor.PullLocalSignedWord(0x3c) + 80,
-				this.processor.PullLocalSignedWord(0x3e), this.processor.RegAcc.Value16);
-
-			this.owner.Services.AssignDot(this.processor.PullLocalSignedWord(0x3c) + 80,
-				this.processor.PullLocalSignedWord(0x3e) + 0x32,
-				this.processor.PullLocalWord(0x4));
-
-			ObtainContinentIDFromScreen(
-				this.processor.PullLocalSignedWord(0x3c),
-				this.processor.PullLocalSignedWord(0x3e));
-
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.World.Landmasses[this.processor.RegAcc.Value16].ConstructionSpotTally++;
-
-			goto L0ff4;
-
-		L1171:
-			this.processor.EmitLocalWord(0x3c, this.processor.IncrementWord(this.processor.PullLocalWord(0x3c)));
-
-		L1174:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x3c), 0x4e);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L1182;
-			this.processor.EmitLocalWord(0x3e, 0x2);
-			goto L0ff7;
-
-		L1182:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.RegDest.Value16 = this.processor.UnstackWord();
-			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("SituateSpecialTerrain");
+		}
+
+		/// <summary>The tile is off the pattern of 7 * x + 11 * y (bit 1 of the low byte set)</summary>
+		private static bool OffRiverPattern(short horizLoc, short vertLoc)
+		{
+			return (((7 * horizLoc) + (0xb * vertLoc)) & 2) != 0;
 		}
 
 		/// <summary>
