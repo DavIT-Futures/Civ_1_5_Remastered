@@ -666,197 +666,104 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// Rivers of the new map (in fact not the elevation): up to 256 attempts, until there are more than 2 * (0x7ef6 + 0x7efa)
+		/// + 6 rivers. An attempt starts at a random hill (screen 1 value 12) and flows (colour 9) in one of 4 directions, turning
+		/// by 45 degrees at random, until it reaches a tile next to the ocean (1), a river (9) or a value 13 or 1; it stays when
+		/// it got next to the ocean or into a river after at least 5 steps (and the grassland, 2, around its spring becomes 11),
+		/// else the map is put back from the copy at column 160. The story of the intro goes on after each attempt.
 		/// </summary>
 		public void ProduceElevation()
 		{
 			this.processor.Journal.OpenScope($"ProduceElevation()");
 
-			// function body
-			this.processor.EnterFrame(0x18);
-			this.processor.PreserveSource();
-			this.processor.RegAcc.Value16 = 0;
-			this.processor.EmitLocalWord(0x12, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x14, this.processor.RegAcc.Value16);
+			MapLayers chart = this.owner.MapOps.Chart;
+			short riverTally = 0;
+			short attemptTally = 0;
 
-		L066b:
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0xaa),
-				0, 0, 0xa0, 0x64,
-				this.processor.PullGlobalWord(0xaa),
-				0xa0, 0);
+			while (true)
+			{
+				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), 0, 0, 0xa0, 0x64, this.processor.PullGlobalWord(0xaa), 0xa0, 0);
 
-			this.processor.EmitLocalWord(0x16, 0x0);
+				short horizLoc;
+				short vertLoc;
 
-		L0693:
-			this.processor.RegAcc.Value16 = (ushort)(this.owner.Libc.Dice.DrawInt(80));
-			this.processor.EmitLocalWord(0x6, this.processor.RegAcc.Value16);
+				do
+				{
+					horizLoc = (short)this.owner.Libc.Dice.DrawInt(80);
+					vertLoc = (short)this.owner.Libc.Dice.DrawInt(50);
+				} while (this.owner.VideoCard.ObtainDot(1, horizLoc, vertLoc) != 0xc);
 
-			this.processor.RegAcc.Value16 = (ushort)(this.owner.Libc.Dice.DrawInt(50));
-			this.processor.EmitLocalWord(0xa, this.processor.RegAcc.Value16);
+				short springHoriz = horizLoc;
+				short springVert = vertLoc;
+				short heading = (short)(this.owner.Libc.Dice.DrawInt(4) << 1);
+				short length = 0;
+				bool nearOcean;
+				ushort reached;
 
-			this.owner.VideoCard.ObtainDot(1,
-				this.processor.PullLocalSignedWord(0x6),
-				this.processor.PullLocalSignedWord(0xa));
+				do
+				{
+					this.owner.Services.AssignDot(1, horizLoc, vertLoc, 9);
 
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xc);
-			if (this.processor.FlagSet.IsNotEqual) goto L0693;
-			this.processor.CopyLocalWord(0x6, 0x8);
-			this.processor.CopyLocalWord(0xa, 0xe);
+					nearOcean = false;
 
-			this.processor.RegAcc.Value16 = (ushort)(this.owner.Libc.Dice.DrawInt(4));
+					for (int side = 1; side <= 8; side += 2)
+					{
+						if (this.owner.VideoCard.ObtainDot(1, chart.DirectionHoriz(side) + horizLoc, chart.DirectionVert(side) + vertLoc) == 1)
+						{
+							nearOcean = true;
+						}
+					}
 
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, 0x1);
-			this.processor.EmitLocalWord(0x18, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x10, this.processor.RegAcc.Value16);
+					short previousHeading = heading;
+					heading = (short)(((((short)this.owner.Libc.Dice.DrawInt(2) - (length & 1)) << 1) + heading) & 7);
 
-		L06e6:
-			this.owner.Services.AssignDot(1, this.processor.PullLocalSignedWord(0x6),
-				this.processor.PullLocalSignedWord(0xa),
-				9);
+					if ((previousHeading ^ 4) > heading)
+					{
+						this.owner.Services.AssignDot(1, horizLoc, vertLoc + 0x32, 8);
+					}
 
-			this.processor.EmitLocalWord(0x4, 0x0);
-			this.processor.EmitLocalWord(0xc, 0x1);
+					// The steps of the headings 0 - 7 are the directions 1 - 8
+					horizLoc += (short)chart.DirectionHoriz(heading + 1);
+					vertLoc += (short)chart.DirectionVert(heading + 1);
 
-		L0706:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0xc);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			
-			this.owner.VideoCard.ObtainDot(1,
-				this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1882)) +
-					this.processor.PullLocalSignedWord(0x6),
-				this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x18e4)) +
-					this.processor.PullLocalSignedWord(0xa));
+					reached = this.owner.VideoCard.ObtainDot(1, horizLoc, vertLoc);
 
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1);
-			if (this.processor.FlagSet.IsNotEqual) goto L0731;
-			this.processor.EmitLocalWord(0x4, 0x1);
+					length++;
+				} while (!nearOcean && reached != 0xd && reached != 1 && reached != 9);
 
-		L0731:
-			this.processor.EmitLocalWord(0xc, this.processor.SumWord(this.processor.PullLocalWord(0xc), 0x2));
-			this.processor.CompareWord(this.processor.PullLocalWord(0xc), 0x8);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L0706;
-			this.processor.CopyLocalWord(0x18, 0x10);
+				if ((nearOcean || reached == 9) && length >= 5)
+				{
+					riverTally++;
 
-			this.processor.RegAcc.Value16 = (ushort)(this.owner.Libc.Dice.DrawInt(2));
+					for (int spotIdx = 1; spotIdx <= 0x15; spotIdx++)
+					{
+						horizLoc = (short)(chart.DirectionHoriz(spotIdx) + springHoriz);
+						vertLoc = (short)(chart.DirectionVert(spotIdx) + springVert);
 
-			this.processor.RegCount.Value16 = this.processor.PullLocalWord(0x16);
-			this.processor.RegCount.Value16 = this.processor.BitAndWord(this.processor.RegCount.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, this.processor.RegCount.Value16);
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x18));
-			this.processor.RegAcc.Value16 = this.processor.BitAndWord(this.processor.RegAcc.Value16, 0x7);
-			this.processor.EmitLocalWord(0x18, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x10);
-			this.processor.RegAcc.LowByte = this.processor.BitXorByte(this.processor.RegAcc.LowByte, 0x4);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x18));
-			if (this.processor.FlagSet.IsLessOrEqual) goto L0784;
+						if (this.owner.VideoCard.ObtainDot(1, horizLoc, vertLoc) == 2)
+						{
+							this.owner.Services.AssignDot(1, horizLoc, vertLoc, 11);
+						}
+					}
+				}
+				else
+				{
+					this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), 0xa0, 0, 0xa0, 0x64, this.processor.PullGlobalWord(0xaa), 0, 0);
+				}
 
-			this.owner.Services.AssignDot(1, this.processor.PullLocalSignedWord(0x6),
-				this.processor.PullLocalSignedWord(0xa) + 0x32,
-				8);
+				DisplayStoryIntro();
 
-		L0784:
-			this.processor.RegSource.Value16 = (ushort)(this.processor.PullLocalWord(0x18) << 1);
+				attemptTally++;
 
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1884));
-			this.processor.EmitLocalWord(0x6, this.processor.SumWord(this.processor.PullLocalWord(0x6), this.processor.RegAcc.Value16));
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x18e6));
-			this.processor.EmitLocalWord(0xa, this.processor.SumWord(this.processor.PullLocalWord(0xa), this.processor.RegAcc.Value16));
+				if (attemptTally >= 0x100 ||
+					(short)(((this.processor.PullGlobalWord(0x7ef6) + this.processor.PullGlobalWord(0x7efa)) << 1) + 6) <= riverTally)
+					break;
+			}
 
-			this.owner.VideoCard.ObtainDot(1,
-				this.processor.PullLocalSignedWord(0x6),
-				this.processor.PullLocalSignedWord(0xa));
-
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
-			this.processor.IncrementLocalWord(0x16);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L07c7;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xd);
-			if (this.processor.FlagSet.IsEqual) goto L07c7;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1);
-			if (this.processor.FlagSet.IsEqual) goto L07c7;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x9);
-			if (this.processor.FlagSet.IsEqual) goto L07c7;
-			goto L06e6;
-
-		L07c7:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L07d3;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x9);
-			if (this.processor.FlagSet.IsNotEqual) goto L07d9;
-
-		L07d3:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x16), 0x5);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L07fe;
-
-		L07d9:
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0xaa),
-				0xa0, 0, 0xa0, 0x64,
-				this.processor.PullGlobalWord(0xaa),
-				0, 0);
-
-			goto L0853;
-
-		L07fe:
-			this.processor.EmitLocalWord(0x12, this.processor.IncrementWord(this.processor.PullLocalWord(0x12)));
-			this.processor.EmitLocalWord(0xc, 0x1);
-
-		L0806:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0xc);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1882));
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x8));
-			this.processor.EmitLocalWord(0x6, this.processor.RegAcc.Value16);
-
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x18e4));
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0xe));
-			this.processor.EmitLocalWord(0xa, this.processor.RegAcc.Value16);
-
-			this.owner.VideoCard.ObtainDot(1,
-				this.processor.PullLocalSignedWord(0x6),
-				this.processor.PullLocalSignedWord(0xa));
-
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x2);
-			if (this.processor.FlagSet.IsNotEqual) goto L084a;
-
-			this.owner.Services.AssignDot(1, this.processor.PullLocalSignedWord(0x6),
-				this.processor.PullLocalSignedWord(0xa),
-				11);
-
-		L084a:
-			this.processor.EmitLocalWord(0xc, this.processor.IncrementWord(this.processor.PullLocalWord(0xc)));
-			this.processor.CompareWord(this.processor.PullLocalWord(0xc), 0x15);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L0806;
-
-		L0853:
-			DisplayStoryIntro();
-
-			this.processor.IncrementLocalWord(0x14);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x14), 0x100);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0875;
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x7ef6);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.PullGlobalWord(0x7efa));
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x6);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x12));
-			if (this.processor.FlagSet.IsLessOrEqual) goto L0875;
-			goto L066b;
-
-		L0875:
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0xaa),
-				0, 0x32, 0x50, 0x32,
-				this.processor.PullGlobalWord(0xaa),
-				0, 0x96);
+			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), 0, 0x32, 0x50, 0x32, this.processor.PullGlobalWord(0xaa), 0, 0x96);
 
 			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 50, 80, 50, 0);
 
-			this.processor.RestoreSource();
-			this.processor.LeaveFrame();
-			// Far return
 			this.processor.Journal.CloseScope("ProduceElevation");
 		}
 

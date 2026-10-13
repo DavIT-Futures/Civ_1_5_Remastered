@@ -69,184 +69,90 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// Hints for the unit's tile: a good place for a city (food + shields of the terrain at least 2, map layer 2 value at
+		/// least 10 and not lower than around it) shows 0x34bb; else, on a tile next to (distance 1, 0x6c9a) a city of the
+		/// player: irrigation for terrain 4 (0x34c6) or a coastal terrain 1 (0x34ce) without irrigation or mine, or a mine
+		/// (0x34d8) where the terrain allows it (0x28e) and the player has less than 2 settlers
 		/// </summary>
-		/// <param name="playerID"></param>
-		/// <param name="param2"></param>
 		public void DisplayTileInfo(short participantIdx, ushort arg2)
 		{
 			this.processor.Journal.OpenScope($"DisplayTileInfo({participantIdx}, {arg2})");
 
-			// function body
-			this.processor.EnterFrame(0xc);
-			this.processor.PreserveIndexRegisters();
-			this.processor.CompareWord(arg2, 0x80);
-			if (this.processor.FlagSet.IsLess) goto L00c1;
-			goto L02cd;
+			if ((short)arg2 < 0x80)
+			{
+				UnitMemory troops = new UnitMemory(this.processor);
+				sbyte horizLoc = troops.PullSigned(participantIdx, (short)arg2, UnitMemory.Horiz);
+				sbyte vertLoc = troops.PullSigned(participantIdx, (short)arg2, UnitMemory.Vert);
+				ushort terrain = this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
 
-		L00c1:
-			this.processor.RegAcc.Value16 = 0x600;
-			this.processor.ScaleAccumulatorToSource((ushort)participantIdx);
-			this.processor.AddScaledToSource(0xc, arg2);
+				// Terrain records of 0x13 bytes: food at 0x290, shields at 0x291, mining at 0x28e
+				ushort terrainRecord = (ushort)(terrain * 0x13);
+				bool cityPlace = (short)((sbyte)this.processor.PullGlobalByte((ushort)(terrainRecord + 0x290)) +
+					(sbyte)this.processor.PullGlobalByte((ushort)(terrainRecord + 0x291))) >= 2;
 
-			this.owner.MapOps.ObtainTerrainType(
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)),
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6)));
+				short worth = (short)this.owner.VideoCard.ObtainDot(2, horizLoc + 80, vertLoc);
 
-			this.processor.EmitLocalWord(0xc, this.processor.RegAcc.Value16);
-			this.processor.ScaleIndex(0x13, this.processor.PullLocalWord(0xc));
-			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 + 0x291));
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 + 0x290));
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.RegCount.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x2);
-			if (this.processor.FlagSet.IsLess) goto L0108;
-			this.processor.RegAcc.Value16 = 0x1;
-			goto L010a;
+				if (worth < 0xa)
+				{
+					cityPlace = false;
+				}
 
-		L0108:
-			this.processor.RegAcc.Value16 = 0;
+				MapLayers chart = this.owner.MapOps.Chart;
 
-		L010a:
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
+				for (int heading = 1; heading <= 8; heading++)
+				{
+					if ((short)this.owner.VideoCard.ObtainDot(2, horizLoc + chart.DirectionHoriz(heading) + 80, vertLoc + chart.DirectionVert(heading)) > worth)
+					{
+						cityPlace = false;
+					}
+				}
 
-			this.owner.VideoCard.ObtainDot(2,
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)) + 80,
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6)));
+				if (cityPlace)
+				{
+					this.owner.MapOps.FocusMapView(this.owner.World.PersonParticipantIdx, horizLoc - 7, vertLoc - 6);
 
-			this.processor.EmitLocalWord(0x6, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0135;
-			this.processor.EmitLocalWord(0x2, 0x0);
+					DisplayHelpPopup(0x34bb);
+				}
+				else
+				{
+					DisplayImprovementHints(participantIdx, horizLoc, vertLoc, terrain);
+				}
+			}
 
-		L0135:
-			this.processor.EmitLocalWord(0x8, 0x1);
+			this.processor.Journal.CloseScope("DisplayTileInfo");
+		}
 
-		L013a:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x8);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.ScaleIndex(0x600, (ushort)participantIdx);
-			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
-			this.processor.ScaleIndex(0xc, arg2);
-			this.processor.RegDest.Value16 = this.processor.SumWord(this.processor.RegDest.Value16, this.processor.RegAcc.Value16);
+		/// <summary>The hints of DisplayTileInfo for a tile next to a city of the player (the city's name in code text 0x30b8)</summary>
+		private void DisplayImprovementHints(short participantIdx, int horizLoc, int vertLoc, ushort terrain)
+		{
+			ushort townIdx = this.owner.Helpers.LocateNearestCity(horizLoc, vertLoc);
 
-			this.owner.VideoCard.ObtainDot(2,
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(0x81d5 + this.processor.RegDest.Value16)) +
-					this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(0x1882 + this.processor.RegSource.Value16)) + 80,
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(0x81d6 + this.processor.RegDest.Value16)) +
-					this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x18e4)));
+			if (townIdx == 0xffff || (ushort)this.owner.World.Towns[townIdx].ParticipantIdx != (ushort)participantIdx ||
+				this.processor.PullGlobalWord(0x6c9a) != 1)
+				return;
 
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x6));
-			if (this.processor.FlagSet.IsLessOrEqual) goto L017e;
-			this.processor.EmitLocalWord(0x2, 0x0);
+			byte improvements = (byte)this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc);
 
-		L017e:
-			this.processor.EmitLocalWord(0x8, this.processor.IncrementWord(this.processor.PullLocalWord(0x8)));
-			this.processor.CompareWord(this.processor.PullLocalWord(0x8), 0x8);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L013a;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L01c3;
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.AddScaledToSource(0xc, arg2);
-
-			this.owner.MapOps.FocusMapView(this.owner.World.PersonParticipantIdx,
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)) - 7,
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6)) - 6);
-
-			DisplayHelpPopup(0x34bb);
-
-			goto L02cd;
-
-		L01c3:
-			this.processor.RegAcc.Value16 = 0x600;
-			this.processor.ScaleAccumulatorToSource((ushort)participantIdx);
-			this.processor.AddScaledToSource(0xc, arg2);
-
-			this.owner.Helpers.LocateNearestCity(
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)),
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6)));
-
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xffff);
-			if (this.processor.FlagSet.IsNotEqual) goto L01f2;
-			goto L02cd;
-
-		L01f2:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullLocalWord(0x4));
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.Towns[this.processor.PullLocalWord(0x4)].ParticipantIdx;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, (ushort)participantIdx);
-			if (this.processor.FlagSet.IsEqual) goto L0207;
-			goto L02cd;
-
-		L0207:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x6c9a), 0x1);
-			if (this.processor.FlagSet.IsEqual) goto L0211;
-			goto L02cd;
-
-		L0211:
-			this.owner.MapOps.ObtainTileImprovements(
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)),
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6)));
-
-			this.processor.EmitLocalWord(0xa, this.processor.RegAcc.Value16);
-			this.processor.EmitGlobalByte(0xba06, 0x0);
-
-			this.owner.Conquest.ObtainCityLabel(this.processor.PullLocalSignedWord(0x4));
-
+			this.processor.EmitGlobalByte(0xba06, 0);
+			this.owner.Conquest.ObtainCityLabel((short)townIdx);
 			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30b8), 0xba06);
 
-			this.processor.CompareWord(this.processor.PullLocalWord(0xc), 0x4);
-			if (this.processor.FlagSet.IsNotEqual) goto L025f;
-			this.processor.TestBitsByte(this.processor.PullLocalByte(0xa), 0x6);
-			if (this.processor.FlagSet.IsNotEqual) goto L025f;
+			if (terrain == 4 && (improvements & 6) == 0)
+			{
+				DisplayHelpPopup(0x34c6);
+			}
 
-			DisplayHelpPopup(0x34c6);
+			if (terrain == 1 && this.owner.TurnLogic.VerifyCoastalTile(horizLoc, vertLoc) != 0 && (improvements & 6) == 0)
+			{
+				DisplayHelpPopup(0x34ce);
+				return;
+			}
 
-		L025f:
-			this.processor.CompareWord(this.processor.PullLocalWord(0xc), 0x1);
-			if (this.processor.FlagSet.IsNotEqual) goto L0298;
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.AddScaledToSource(0xc, arg2);
-
-			this.owner.TurnLogic.VerifyCoastalTile(
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)),
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6)));
-
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual) goto L0298;
-			this.processor.TestBitsByte(this.processor.PullLocalByte(0xa), 0x6);
-			if (this.processor.FlagSet.IsNotEqual) goto L0298;
-
-			DisplayHelpPopup(0x34ce);
-
-			goto L02cd;
-
-		L0298:
-			this.processor.RegAcc.Value16 = 0x13;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullLocalWord(0xc));
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x28e)), 0x1);
-			if (this.processor.FlagSet.IsNotEqual) goto L02cd;
-			this.processor.TestBitsByte(this.processor.PullLocalByte(0xa), 0x8);
-			if (this.processor.FlagSet.IsNotEqual) goto L02cd;
-			this.processor.CompareWord(this.processor.PullLocalWord(0xc), 0xb);
-			if (this.processor.FlagSet.IsEqual) goto L02cd;
-			this.processor.ScaleIndexToBase(0x38, (ushort)participantIdx);
-			
-			if (this.owner.World.Participants[participantIdx].LiveTroops[0] >= 2)
-				goto L02cd;
-
-			DisplayHelpPopup(0x34d8);
-
-		L02cd:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.RegDest.Value16 = this.processor.UnstackWord();
-			this.processor.LeaveFrame();
-			// Far return
-			this.processor.Journal.CloseScope("DisplayTileInfo");
+			if (this.processor.PullGlobalByte((ushort)((terrain * 0x13) + 0x28e)) == 1 && (improvements & 8) == 0 && terrain != 0xb &&
+				this.owner.World.Participants[participantIdx].LiveTroops[0] < 2)
+			{
+				DisplayHelpPopup(0x34d8);
+			}
 		}
 
 		/// <summary>

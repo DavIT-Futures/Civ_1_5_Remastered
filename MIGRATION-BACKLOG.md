@@ -192,6 +192,11 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   ramka zostaje: `RenderCitizenIcons` czyta śmieci spod stosu, bez ramki rysowała obywateli 2 piksele dalej),
   `DisplayTerrainTutorial` (`MainIntro`, wiadomości na początku gry), `RenderUnitSprite` (`MapManagement`, AX na końcu
   0x600 * gracz jak w oryginale). Testy w `BatchTwentyFiveDifferentialTests`.
+- Kolejne 4 moduły (2026-10-13): `DisplayScienceReport` (`AdvisorReports`), `FinalizeProduction` (`ScienceAndAdvisors`,
+  w rzeczywistości zniszczenie miasta; ramka i zapis SI/DI zostają, bo `VisitEachUnitInStack` zmienia SI), `DisplayTileInfo`
+  (`InGameHelp`, z `DisplayImprovementHints`), `ProduceElevation` (`GameInitAndIntro`, w rzeczywistości rzeki nowej mapy).
+  Testy w `BatchTwentySixDifferentialTests`. Uwaga dla testów: `DisplayStoryIntro` zapisuje zegar / 60 pod 0x6800, a zegar
+  testów zależy od liczby dostępów do pamięci, więc test rzek zeruje 0x6800 po wywołaniu.
 
 ## Następny krok
 
@@ -203,7 +208,7 @@ Dalej małe metody: `python Civilization1Remaster.Tests/Differential/Reference/f
 reszta generatora mapy w `GameInitAndIntro`. Funkcje niskopoziomowe `SystemServices` (`DeactivateMouse`, `PointerEvent`,
 `RenderCursorToScreen`, `RecoverScreenUnderCursor`, kolory i zegar: `PrepareTimer`, `RefreshHueCycling`, `AssignHueCycleSpan`,
 `ColorsFadeStep`, `FadeColors`, `FloodColors`, `ImportColorsFromBuffer`) i `SnapHeapPointer` (`VGADriver`) na koniec: działają
-w przerwaniach albo na rejestrach. Stan 2026-10-13: 120 metod w stylu asm, ok. 56 tys. z 73 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
+w przerwaniach albo na rejestrach. Stan 2026-10-13: 116 metod w stylu asm, ok. 56 tys. z 73 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 

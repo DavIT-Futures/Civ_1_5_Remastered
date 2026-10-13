@@ -112,176 +112,84 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// The science report: the bar of the research (cost = known technologies * (1 before year 0, else 2) * the larger of
+		/// 2 * difficulty + 0xd2de + 6 and 11 - known technologies), filled with a bulb icon per step of progress, the human
+		/// player's current research, and the known technologies in 3 columns (white when the player found it first, else cyan)
 		/// </summary>
-		/// <param name="playerID"></param>
 		public void DisplayScienceReport(short participantIdx)
 		{
 			this.processor.Journal.OpenScope($"DisplayScienceReport({participantIdx})");
 
-			// function body
-			this.processor.EnterFrame(0x12);
-			this.processor.PreserveSource();
-
 			DisplayReportPreamble(0x4762, 1);
 
-			this.processor.EmitLocalWord(0x2, 0x0);
-			this.processor.RegAcc.Value16 = (ushort)owner.World.HardnessTier;
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.PullGlobalWord(0xd2de));
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x6);
-			this.processor.EmitLocalWord(0xe, this.processor.RegAcc.Value16);
+			short knownTally = this.owner.World.Participants[participantIdx].FoundScienceTally;
+			short costFactor = (short)((this.owner.World.HardnessTier << 1) + this.processor.PullGlobalWord(0xd2de) + 6);
 
-			this.processor.RegAcc.Value16 = 0xb;
-			this.processor.RegAcc.Value16 -= (ushort)this.owner.World.Participants[participantIdx].FoundScienceTally;
-			this.processor.RegSource.Value16 = this.processor.RegAcc.Value16;
-			this.processor.CompareWord(this.processor.PullLocalWord(0xe), this.processor.RegSource.Value16);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L018b;
-			this.processor.EmitLocalWord(0xe, this.processor.RegSource.Value16);
+			if (costFactor < (short)(0xb - knownTally))
+			{
+				costFactor = (short)(0xb - knownTally);
+			}
 
-		L018b:
-			if (this.owner.World.Season >= 0) goto L0197;
-			this.processor.RegCount.Value16 = 0x1;
-			goto L019a;
+			short cost = (short)(knownTally * (this.owner.World.Season >= 0 ? 2 : 1) * costFactor);
+			int step = this.owner.Helpers.VerifyValueSpan(2432 / (cost + 1), 1, 64);
+			int barBreadth = this.owner.Helpers.VerifyValueSpan(((step * cost) / 8) + 8, 8, 304);
+			short barLeft = (short)(160 - (barBreadth / 2));
 
-		L0197:
-			this.processor.RegCount.Value16 = 0x2;
+			if (barLeft > 0x28)
+			{
+				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19e8), 0x118, 0x8c, 0x28, 0x3c, this.processor.PullGlobalWord(0xaa), 0x116, 0x2);
+			}
 
-		L019a:
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.Participants[participantIdx].FoundScienceTally;
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.PullLocalWord(0xe));
-			this.processor.EmitLocalWord(0xc, this.processor.RegAcc.Value16);
+			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), barLeft, 25, barBreadth, 16, 9);
 
-			this.owner.Helpers.VerifyValueSpan(
-				2432 / (this.processor.PullLocalSignedWord(0xc) + 1),
-				1, 64);
+			short progress = 0;
 
-			this.processor.EmitLocalWord(0x12, this.processor.RegAcc.Value16);
+			for (short bulbIdx = 0; (short)this.owner.Helpers.VerifyValueSpan(this.owner.World.Participants[participantIdx].InquiryHeadway, 0, cost) > bulbIdx; bulbIdx++)
+			{
+				this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa), (progress / 8) + barLeft, 33,
+					this.processor.PullGlobalWord((0xc << 1) + 0xd4ce));
 
-			this.owner.Helpers.VerifyValueSpan(
-				((this.processor.PullLocalSignedWord(0x12) *
-					this.processor.PullLocalSignedWord(0xc)) / 8) + 8,
-				8, 304);
+				progress += (short)step;
+			}
 
-			this.processor.EmitLocalWord(0x8, this.processor.RegAcc.Value16);
-			this.processor.HalveAccumulator();
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, 0xa0);
-			this.processor.RegAcc.Value16 = this.processor.NegateWord(this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x28);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L022e;
-			
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0x19e8),
-				0x118, 0x8c, 0x28, 0x3c,
-				this.processor.PullGlobalWord(0xaa),
-				0x116, 0x2);
+			short inquiry = this.owner.World.Participants[this.owner.World.PersonParticipantIdx].PresentInquiryIdx;
 
-		L022e:
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa),
-				this.processor.PullLocalSignedWord(0x4), 25,
-				this.processor.PullLocalSignedWord(0x8), 16, 9);
+			if (inquiry != -1)
+			{
+				this.owner.Libc.CopyText(0xba06, "Researching ");
+				this.owner.Libc.AppendText(0xba06, (ushort)((inquiry * 0x16) + 0x4da));
 
-			this.processor.EmitLocalWord(0x6, 0x0);
-			goto L0281;
+				this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 161, 26, 0);
+				this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 26, 15);
+			}
 
-		L0253:
-			this.owner.Services.RenderPictureToScreen(
-				this.processor.PullGlobalWord(0xaa),
-				(this.processor.PullLocalSignedWord(0x2) / 8) +
-					this.processor.PullLocalSignedWord(0x4),
-				33,
-				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((0xc << 1) + 0xd4ce)));
+			short vertLoc = 0x2a;
+			short shown = 0;
 
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x12);
-			this.processor.EmitLocalWord(0x2, this.processor.SumWord(this.processor.PullLocalWord(0x2), this.processor.RegAcc.Value16));
-			this.processor.IncrementLocalWord(0x6);
+			for (short technologyIdx = 0; technologyIdx < 0x48; technologyIdx++)
+			{
+				if (this.owner.Advisors.PlayerKnowsTechnology(participantIdx, technologyIdx) == 0)
+					continue;
 
-		L0281:
-			this.owner.Helpers.VerifyValueSpan(
-				this.owner.World.Participants[participantIdx].InquiryHeadway,
-				0, this.processor.PullLocalSignedWord(0xc));
+				this.owner.Libc.CopyText(0xba06, (ushort)((technologyIdx * 0x16) + 0x4da));
 
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x6));
-			if (this.processor.FlagSet.IsGreater) goto L0253;
-			this.processor.EmitLocalWord(0xa, 0x1a);
-			
-			if (this.owner.World.Participants[this.owner.World.PersonParticipantIdx].PresentInquiryIdx == -1) goto L02ff;
+				ushort hue = (ushort)((this.owner.World.ScienceLeadingFoundVia[technologyIdx] & 7) == participantIdx ? 0xf : 0xb);
 
-			this.owner.Libc.CopyText(0xba06, "Researching ");
+				this.owner.TextPainter.RenderTextToScreen0(0xba06, ((shown % 3) * 100) + 8, vertLoc, hue);
 
-			this.processor.RegAcc.Value16 = 0x16;
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, (ushort)this.owner.World.Participants[this.owner.World.PersonParticipantIdx].PresentInquiryIdx);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x4da);
-			this.owner.Libc.AppendText(0xba06, this.processor.RegAcc.Value16);
+				shown++;
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 161, 26, 0);
+				if (shown % 3 == 0)
+				{
+					vertLoc += 7;
+				}
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 26, 15);
+				if (vertLoc > 0xc0)
+					break;
+			}
 
-		L02ff:
-			this.processor.EmitLocalWord(0xa, 0x2a);
-			this.processor.EmitLocalWord(0x10, 0x0);
-			this.processor.EmitLocalWord(0x6, 0x0);
-			goto L0355;
-
-		L0310:
-			this.processor.RegAcc.Value16 = 0xb;
-
-		L0313:
-			this.owner.TextPainter.RenderTextToScreen0(0xba06,
-				((this.processor.PullLocalSignedWord(0x10) % 3) * 100) + 8,
-				this.processor.PullLocalSignedWord(0xa),
-				this.processor.RegAcc.Value16);
-
-			this.processor.IncrementLocalWord(0x10);
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x10);
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.RegCount.Value16 = 0x3;
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.RegData.Value16 = this.processor.BitOrWord(this.processor.RegData.Value16, this.processor.RegData.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L034b;
-			this.processor.EmitLocalWord(0xa, this.processor.SumWord(this.processor.PullLocalWord(0xa), 0x7));
-
-		L034b:
-			this.processor.CompareWord(this.processor.PullLocalWord(0xa), 0xc0);
-			if (this.processor.FlagSet.IsGreater) goto L03a4;
-
-		L0352:
-			this.processor.EmitLocalWord(0x6, this.processor.IncrementWord(this.processor.PullLocalWord(0x6)));
-
-		L0355:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x6), 0x48);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L03a4;
-
-			this.processor.RegAcc.Value16 = this.owner.Advisors.PlayerKnowsTechnology(participantIdx,
-				this.processor.PullLocalSignedWord(0x6));
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual)
-				goto L0352;
-
-			this.processor.ScaleIndex(0x16, this.processor.PullLocalWord(0x6));
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x4da);
-			this.owner.Libc.CopyText(0xba06, this.processor.RegAcc.Value16);
-
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.ScienceLeadingFoundVia[this.processor.PullLocalWord(0x6)];
-			this.processor.RegAcc.HighByte = 0;
-			this.processor.RegAcc.Value16 = this.processor.BitAndWord(this.processor.RegAcc.Value16, 0x7);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, (ushort)participantIdx);
-			if (this.processor.FlagSet.IsEqual) goto L039e;
-			goto L0310;
-
-		L039e:
-			this.processor.RegAcc.Value16 = 0xf;
-			goto L0313;
-
-		L03a4:
 			FinishReportScreen();
 
-			this.processor.RestoreSource();
-			this.processor.LeaveFrame();
-			// Far return
 			this.processor.Journal.CloseScope("DisplayScienceReport");
 		}
 
