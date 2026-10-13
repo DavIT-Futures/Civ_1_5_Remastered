@@ -8470,137 +8470,78 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// A tile of the city (TownDeltas[townTile] from the city): with marker 1 draws it on the city screen with the icons of
+		/// its food, shields and trade (MayCityWorkTile 0 - 2; closer together the more there are, a mark when there are none),
+		/// else puts the city's player on the tile in map layer 2 (0x2494 set meanwhile). Either way the amounts are added to the
+		/// totals at 0x70da.
 		/// </summary>
-		/// <param name="cityID"></param>
-		/// <param name="cityCell"></param>
-		/// <param name="flag"></param>
 		public void RenderCityTile(short townIdx, ushort townTile, short marker)
 		{
-
 			this.processor.Journal.OpenScope($"RenderCityTile({townIdx}, {townTile}, {marker})");
 
-			// function body
-			this.processor.EnterFrame(0x10);
+			short horizLoc = (short)(this.owner.World.Towns[townIdx].Place.X + this.owner.TownDeltas[townTile].X);
+			short vertLoc = (short)(this.owner.World.Towns[townIdx].Place.Y + this.owner.TownDeltas[townTile].Y);
+			bool shown = marker == 1;
+			short total = 0;
+			short spacing = 0;
 
-			this.processor.RegAcc.Value16 = (ushort)((short)(this.owner.World.Towns[townIdx].Place.X + this.owner.TownDeltas[townTile].X));
-			this.processor.EmitLocalWord(0x6, this.processor.RegAcc.Value16);
+			if (shown)
+			{
+				this.owner.MapOps.RenderMapTile(horizLoc, vertLoc);
 
-			this.processor.RegAcc.Value16 = (ushort)((short)(this.owner.World.Towns[townIdx].Place.Y + this.owner.TownDeltas[townTile].Y));
-			this.processor.EmitLocalWord(0xa, this.processor.RegAcc.Value16);
+				for (ushort resource = 0; resource < 3; resource++)
+				{
+					total += (short)MayCityWorkTile(horizLoc, vertLoc, resource);
+				}
 
-			if (marker != 1 || marker < 0)
-				goto L69bb;
+				spacing = (short)(total <= 4 ? 8 : total <= 6 ? 5 : 3);
+			}
+			else
+			{
+				this.processor.EmitGlobalWord(0x2494, 1);
 
-			this.owner.MapOps.RenderMapTile(this.processor.PullLocalSignedWord(0x6),
-				this.processor.PullLocalSignedWord(0xa));
+				this.owner.Services.AssignDot(2, horizLoc + 0x50, vertLoc, (ushort)this.owner.World.Towns[townIdx].ParticipantIdx);
+			}
 
-			this.processor.EmitLocalWord(0x10, 0x0);
-			this.processor.EmitLocalWord(0x2, 0x0);
+			short iconHoriz = 0;
+			short iconVert = 0;
 
-		L6981:
-			MayCityWorkTile(this.processor.PullLocalSignedWord(0x6),
-				this.processor.PullLocalSignedWord(0xa),
-				this.processor.PullLocalWord(0x2));
+			for (ushort resource = 0; resource < 3; resource++)
+			{
+				short amount = (short)MayCityWorkTile(horizLoc, vertLoc, resource);
 
-			this.processor.EmitLocalWord(0x10, this.processor.SumWord(this.processor.PullLocalWord(0x10), this.processor.RegAcc.Value16));
-			this.processor.IncrementLocalWord(0x2);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x3);
-			if (this.processor.FlagSet.IsLess) goto L6981;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x10), 0x4);
-			if (this.processor.FlagSet.IsGreater) goto L69a8;
-			this.processor.RegAcc.Value16 = 0x8;
-			goto L69b6;
+				this.processor.EmitGlobalWord((ushort)((resource << 1) + 0x70da), (ushort)(this.processor.PullGlobalWord((ushort)((resource << 1) + 0x70da)) + amount));
 
-		L69a8:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x10), 0x6);
-			if (this.processor.FlagSet.IsGreater) goto L69b3;
-			this.processor.RegAcc.Value16 = 0x5;
-			goto L69b6;
+				for (; amount > 0; amount--)
+				{
+					if (!shown)
+						continue;
 
-		L69b3:
-			this.processor.RegAcc.Value16 = 0x3;
+					this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa),
+						161 + (this.owner.TownDeltas[townTile].X * 16) + iconHoriz, 57 + (this.owner.TownDeltas[townTile].Y * 16) + iconVert,
+						this.processor.PullGlobalWord((ushort)(((resource + 8) << 1) + 0xd4ce)));
 
-		L69b6:
-			this.processor.EmitLocalWord(0xe, this.processor.RegAcc.Value16);
-			goto L69e5;
+					if (iconHoriz < 8)
+					{
+						iconHoriz += spacing;
+					}
+					else
+					{
+						iconHoriz = 0;
+						iconVert += 8;
+					}
+				}
+			}
 
-		L69bb:
-			this.processor.EmitGlobalWord(0x2494, 0x1);
+			if (shown && total == 0)
+			{
+				this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa),
+					165 + (this.owner.TownDeltas[townTile].X * 16), 61 + (this.owner.TownDeltas[townTile].Y * 16),
+					this.processor.PullGlobalWord((0xd << 1) + 0xd4ce));
+			}
 
-			this.owner.Services.AssignDot(2, this.processor.PullLocalSignedWord(0x6) + 0x50,
-				this.processor.PullLocalSignedWord(0xa),
-				(ushort)this.owner.World.Towns[townIdx].ParticipantIdx);
+			this.processor.EmitGlobalWord(0x2494, 0);
 
-		L69e5:
-			this.processor.RegAcc.Value16 = 0;
-			this.processor.EmitLocalWord(0x8, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
-			goto L6a00;
-
-		L69f2:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xe);
-			this.processor.EmitLocalWord(0x4, this.processor.SumWord(this.processor.PullLocalWord(0x4), this.processor.RegAcc.Value16));
-
-		L69f8:
-			this.processor.EmitLocalWord(0xc, this.processor.DecrementWord(this.processor.PullLocalWord(0xc)));
-			goto L6a22;
-
-		L69fd:
-			this.processor.EmitLocalWord(0x2, this.processor.IncrementWord(this.processor.PullLocalWord(0x2)));
-
-		L6a00:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x3);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L6a76;
-
-			MayCityWorkTile(this.processor.PullLocalSignedWord(0x6),
-				this.processor.PullLocalSignedWord(0xa),
-				this.processor.PullLocalWord(0x2));
-
-			this.processor.EmitLocalWord(0xc, this.processor.RegAcc.Value16);
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x2);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x70da), 
-				this.processor.SumWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x70da)), this.processor.RegAcc.Value16));
-
-		L6a22:
-			this.processor.CompareWord(this.processor.PullLocalWord(0xc), 0x0);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L69fd;
-
-			if (marker != 1 || marker < 0)
-				goto L69fd;
-
-			this.owner.Services.RenderPictureToScreen(
-				this.processor.PullGlobalWord(0xaa),
-				161 + (this.owner.TownDeltas[townTile].X * 16) + this.processor.PullLocalSignedWord(0x4),
-				57 + (this.owner.TownDeltas[townTile].Y * 16) + this.processor.PullLocalSignedWord(0x8),
-				this.processor.PullUInt16(this.processor.SegData.Value16,
-					(ushort)(((this.processor.PullLocalWord(0x2) + 0x8) << 1) + 0xd4ce)));
-
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), 0x8);
-			if (this.processor.FlagSet.IsLess) goto L69f2;
-			this.processor.EmitLocalWord(0x4, 0x0);
-			this.processor.EmitLocalWord(0x8, this.processor.SumWord(this.processor.PullLocalWord(0x8), 0x8));
-			goto L69f8;
-
-		L6a76:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x10), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L6ab0;
-
-			if (marker != 1 || marker < 0)
-				goto L6ab0;
-
-			this.owner.Services.RenderPictureToScreen(
-				this.processor.PullGlobalWord(0xaa),
-				165 + (this.owner.TownDeltas[townTile].X * 16),
-				61 + (this.owner.TownDeltas[townTile].Y * 16),
-				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((0xd << 1) + 0xd4ce)));
-
-		L6ab0:
-			this.processor.EmitGlobalWord(0x2494, 0x0);
-			this.processor.LeaveFrame();
-			// Far return
 			this.processor.Journal.CloseScope("RenderCityTile");
 		}
 

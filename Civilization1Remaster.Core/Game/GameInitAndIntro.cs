@@ -2747,147 +2747,64 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// Global warming (worldHeatingTally times so far): after the newspaper, changes the land tiles of terrain 0 - 3 that have
+		/// at least 7 - worldHeatingTally ocean tiles around them (map layer 2 colour 11 for terrain 3, else 3; improvement bits 6
+		/// discarded) and, of the others, those where (11 * column + 13 * row) mod 8 is worldHeatingTally
+		/// (colour 14 for terrain 0 - 1, else 6). A changed tile becomes visible to player 0 and is repainted when the human
+		/// player sees it.
 		/// </summary>
-		/// <param name="globalWarmingCount"></param>
 		public void EnactGlobalWarming(short worldHeatingTally)
 		{
 			this.processor.Journal.OpenScope($"EnactGlobalWarming({worldHeatingTally})");
 
-			// function body
-			this.processor.EnterFrame(0xe);
-			this.processor.PreserveSource();
-
 			this.owner.Libc.CopyText(0xba06, "Global temperature\nrises! Icecaps melt.\nSevere Drought.\n");
 
 			this.owner.Paper.DisplayNewspaper(-1);
-			
-			this.processor.EmitLocalWord(0x2, 0x0);
-			goto L1d45;
 
-		L1c11:
-			this.owner.MapOps.DiscardTileImprovements(6,
-				this.processor.PullLocalSignedWord(0x2),
-				this.processor.PullLocalSignedWord(0x6));
+			MapLayers chart = this.owner.MapOps.Chart;
 
-			goto L1c8a;
-
-		L1c34:
-			this.processor.RegAcc.Value16 = 0xb;
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.PullLocalWord(0x2));
-			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
-			this.processor.ScaleIndex(0xd, this.processor.PullLocalWord(0x6));
-			this.processor.RegCount.LowByte = this.processor.SumByte(this.processor.RegCount.LowByte, this.processor.RegAcc.LowByte);
-			this.processor.RegCount.HighByte = 0;
-			this.processor.RegCount.Value16 = this.processor.BitAndWord(this.processor.RegCount.Value16, 0x7);
-			this.processor.CompareWord(this.processor.RegCount.Value16, (ushort)worldHeatingTally);
-			if (this.processor.FlagSet.IsNotEqual) goto L1cac;
-
-			this.owner.World.ChartSight[this.processor.PullLocalWord(0x2),
-				this.processor.PullLocalWord(0x6)] |= 1;
-
-			this.processor.CompareWord(this.processor.PullLocalWord(0x8), 0x1);
-			if (this.processor.FlagSet.IsLessOrEqual)
+			for (int horizLoc = 0; horizLoc < 80; horizLoc++)
 			{
-				this.owner.Services.AssignDot(2, this.processor.PullLocalSignedWord(0x2),
-					this.processor.PullLocalSignedWord(0x6),
-					14);
+				for (int vertLoc = 0; vertLoc < 50; vertLoc++)
+				{
+					ushort terrain = this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
+
+					if ((short)terrain > 3)
+						continue;
+
+					short oceanTally = 0;
+
+					for (int heading = 1; heading <= 8; heading++)
+					{
+						if (this.owner.MapOps.ObtainTerrainType(chart.DirectionHoriz(heading) + horizLoc, chart.DirectionVert(heading) + vertLoc) == MapRules.OceanTerrain)
+						{
+							oceanTally++;
+						}
+					}
+
+					if (7 - worldHeatingTally <= oceanTally)
+					{
+						this.owner.World.ChartSight[horizLoc, vertLoc] |= 1;
+						this.owner.Services.AssignDot(2, horizLoc, vertLoc, (ushort)(terrain != 3 ? 3 : 11));
+						this.owner.MapOps.DiscardTileImprovements(6, horizLoc, vertLoc);
+					}
+					else if ((((11 * horizLoc) + (13 * vertLoc)) & 7) == (ushort)worldHeatingTally)
+					{
+						this.owner.World.ChartSight[horizLoc, vertLoc] |= 1;
+						this.owner.Services.AssignDot(2, horizLoc, vertLoc, (ushort)((short)terrain <= 1 ? 14 : 6));
+					}
+					else
+					{
+						continue;
+					}
+
+					if ((this.owner.World.ChartSight[horizLoc, vertLoc] & (1 << this.owner.World.PersonParticipantIdx)) != 0)
+					{
+						this.owner.MapOps.RepaintMapTile(horizLoc, vertLoc);
+					}
+				}
 			}
-			else
-			{
-				this.owner.Services.AssignDot(2, this.processor.PullLocalSignedWord(0x2),
-					this.processor.PullLocalSignedWord(0x6),
-					6);
-			}
 
-		L1c8a:
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.ChartSight[this.processor.PullLocalWord(0x2),
-				this.processor.PullLocalWord(0x6)];
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegData.Value16 = 0x1;
-			this.processor.RegCount.LowByte = (byte)(this.owner.World.PersonParticipantIdx & 0xff);
-			this.processor.RegData.Value16 = this.processor.ShiftLeftWord(this.processor.RegData.Value16, this.processor.RegCount.LowByte);
-			this.processor.TestBitsWord(this.processor.RegAcc.Value16, this.processor.RegData.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L1cac;
-
-			this.owner.MapOps.RepaintMapTile(
-				this.processor.PullLocalSignedWord(0x2),
-				this.processor.PullLocalSignedWord(0x6));
-
-		L1cac:
-			this.processor.EmitLocalWord(0x6, this.processor.IncrementWord(this.processor.PullLocalWord(0x6)));
-
-		L1caf:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x6), 0x32);
-			if (this.processor.FlagSet.IsLess) goto L1cb8;
-			goto L1d42;
-
-		L1cb8:
-			this.owner.MapOps.ObtainTerrainType(
-				this.processor.PullLocalSignedWord(0x2),
-				this.processor.PullLocalSignedWord(0x6));
-
-			this.processor.EmitLocalWord(0x8, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x3);
-			if (this.processor.FlagSet.IsGreater) goto L1cac;
-			this.processor.EmitLocalWord(0xa, 0x0);
-			this.processor.EmitLocalWord(0x4, 0x1);
-
-		L1cd8:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x4);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-
-			this.owner.MapOps.ObtainTerrainType(
-				this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1882)) + this.processor.PullLocalSignedWord(0x2),
-				this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x18e4)) + this.processor.PullLocalSignedWord(0x6));
-
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
-			if (this.processor.FlagSet.IsNotEqual) goto L1cfd;
-			this.processor.IncrementLocalWord(0xa);
-
-		L1cfd:
-			this.processor.EmitLocalWord(0x4, this.processor.IncrementWord(this.processor.PullLocalWord(0x4)));
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), 0x8);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L1cd8;
-			this.processor.RegAcc.Value16 = 0x7;
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, (ushort)worldHeatingTally);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0xa));
-			if (this.processor.FlagSet.IsLessOrEqual) goto L1d14;
-			goto L1c34;
-
-		L1d14:
-			this.owner.World.ChartSight[this.processor.PullLocalWord(0x2),
-				this.processor.PullLocalWord(0x6)] |= 1;
-
-			this.processor.CompareWord(this.processor.PullLocalWord(0x8), 0x3);
-			if (this.processor.FlagSet.IsNotEqual)
-			{
-				this.owner.Services.AssignDot(2, this.processor.PullLocalSignedWord(0x2),
-					this.processor.PullLocalSignedWord(0x6),
-					3);
-			}
-			else
-			{
-				this.owner.Services.AssignDot(2, this.processor.PullLocalSignedWord(0x2),
-					this.processor.PullLocalSignedWord(0x6),
-					11);
-			}
-			goto L1c11;
-
-		L1d42:
-			this.processor.EmitLocalWord(0x2, this.processor.IncrementWord(this.processor.PullLocalWord(0x2)));
-
-		L1d45:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x50);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L1d53;
-
-			this.processor.EmitLocalWord(0x6, 0x0);
-			goto L1caf;
-
-		L1d53:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.LeaveFrame();
-			// Far return
 			this.processor.Journal.CloseScope("EnactGlobalWarming");
 		}
 	}

@@ -184,18 +184,22 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   z pamięci na bieżąco, bo pętla neguje je także dla człowieka), `RenderUnitOnWorldMap` (`MapManagement`; na mapie świata
   oryginał zwraca w AX 0xc * jednostka, zostawione przez adres jednostki). Testy w `BatchTwentyThreeDifferentialTests`.
   Wniosek: mutacja granicy, której nie da się osiągnąć (wiersz 16 * k + 8 nigdy nie jest 0xc0), nie jest dowodem słabego testu.
+- Kolejne 3 moduły (2026-10-13): `DisplayGameFigures`, `DisplayWondersOfTheWorld` (`WorldMap`), `RenderCityTile`
+  (`CityManagement`), `EnactGlobalWarming` (`GameInitAndIntro`). Testy w `BatchTwentyFourDifferentialTests`.
+  `ChooseTechnologyToTake` (`TradeAndConquest`) odłożone: lista technologii w ramce stosu, adresy powrotu odkładane na stos
+  przed `DisplayKingDialog` i niezainicjowana zmienna 4, gdy żadna technologia nie ma wartości > -1.
 
 ## Następny krok
 
 Dalej małe metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 60`
 (metody z co najmniej 2 liniami `goto L` / `FlagSet` / `Compare…` / `SumWord` itd., od najkrótszej). Kandydaci:
 `RenderExplosion` (`DiplomatActions`, kandydat ze „Śmieci na stosie”),
-`DisplayStoreGameDialog`, `ImportGame` (`GameLoadAndSave`), `DisplayWondersOfTheWorld`, `DisplayGameFigures` (`WorldMap`),
-`RenderCityTile`, `RenderCitizenIcons` (`CityManagement`, kandydat ze „Śmieci na stosie”),
+`DisplayStoreGameDialog`, `ImportGame` (`GameLoadAndSave`), `ChooseTechnologyToTake` (`TradeAndConquest`, patrz wyżej),
+`RenderCitizenIcons` (`CityManagement`, kandydat ze „Śmieci na stosie”),
 reszta generatora mapy w `GameInitAndIntro`. Funkcje niskopoziomowe `SystemServices` (`DeactivateMouse`, `PointerEvent`,
 `RenderCursorToScreen`, `RecoverScreenUnderCursor`, kolory i zegar: `PrepareTimer`, `RefreshHueCycling`, `AssignHueCycleSpan`,
 `ColorsFadeStep`, `FadeColors`, `FloodColors`, `ImportColorsFromBuffer`) i `SnapHeapPointer` (`VGADriver`) na koniec: działają
-w przerwaniach albo na rejestrach. Stan 2026-10-13: 128 metod w stylu asm, ok. 58 tys. z 74 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
+w przerwaniach albo na rejestrach. Stan 2026-10-13: 124 metody w stylu asm, ok. 56 tys. z 73 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
@@ -207,6 +211,8 @@ te błędy są odtwarzane jawnie:
   zamiast przez atak. Po naprawie: AI inaczej ocenia ataki (zmiana baseline).
 - `LocateNearestFriendlyCity`: bez własnego miasta i lotniskowca cel kroku to niezainicjowane zmienne lokalne (śmieci ze stosu).
   Odtworzone przez odczyt ramki stosu. Po naprawie: np. kierunek 0 (brak ruchu).
+- `DisplayWondersOfTheWorld`: cud zniszczonego miasta (`MarvelTownIdx` = 128) daje odczyt `Towns[128]` przed sprawdzeniem 128,
+  więc ekran cudów rzuca `IndexOutOfRangeException` (DOS czytał tam śmieci). Po naprawie: właściciel czytany dopiero dla miasta < 128.
 - `ShiftAIUnit` (`AIPlayer`, ok. linii 2143) na jednej ścieżce czyta zmienną lokalną 0xc (indeks miasta) przed jej ustawieniem.
   `HandlePlayerTurn` woła `ShiftUnit` i `ShiftAIUnit` z tej samej głębokości stosu, więc dostaje typ terenu zostawiony przez
   `ShiftUnit` (bez tego `IndexOutOfRangeException` w `Towns`). Dlatego `ShiftUnit` zachowuje `EnterFrame(0x16)` i na końcu
