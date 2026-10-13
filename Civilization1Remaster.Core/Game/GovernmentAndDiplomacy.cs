@@ -437,230 +437,134 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// The player's government becomes regimeKind. A human player (ParticipantMarkers) chooses it from the governments it
+		/// may have (all with the wonder effect 1, else despotism plus those of the technologies 5, 0x2b, 0x2c and 4; regimeKind 0
+		/// gives anarchy without asking), then the revolution screen. For an AI player a known civilization (0x40 of the human's
+		/// relation) is announced as overthrown (anarchy, 4 of the relation 0) or as changed to the new government after it;
+		/// the luxuries become 4 - government / 2. A new government goes into the replay and ends the 8 of every relation.
 		/// </summary>
-		/// <param name="playerID"></param>
-		/// <param name="governmentType"></param>
 		public void SwitchGovernment(short participantIdx, short regimeKind)
 		{
 			this.processor.Journal.OpenScope($"SwitchGovernment({participantIdx}, {regimeKind})");
 
-			// function body
-			this.processor.EnterFrame(0x14);
-			this.processor.PreserveIndexRegisters();
+			// DisplayDialog leaves SI in DI: both are given back to the caller as they were
+			ushort source = this.processor.RegSource.Value16;
+			ushort dest = this.processor.RegDest.Value16;
 
-			this.processor.EmitLocalWord(0x12, (ushort)this.owner.World.Participants[participantIdx].RegimeKind);
+			Player participant = this.owner.World.Participants[participantIdx];
+			short formerRegime = participant.RegimeKind;
 
-			this.processor.RegAcc.Value16 = 0x1;
-			this.processor.RegCount.LowByte = (byte)participantIdx;
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			this.processor.TestBitsWord(this.processor.RegAcc.Value16, (ushort)this.owner.World.ParticipantMarkers);
-			if (this.processor.FlagSet.IsNotEqual) goto L04c6;
-			goto L05e9;
+			if (((1 << (byte)participantIdx) & (ushort)this.owner.World.ParticipantMarkers) != 0)
+			{
+				short chosen;
 
-		L04c6:
-			this.owner.Libc.CopyText(0xba06, "Select type of\nGovernment...\n ");
+				while (true)
+				{
+					this.owner.Libc.CopyText(0xba06, "Select type of\nGovernment...\n ");
 
-			this.processor.RegAcc.Value16 = 0;
-			this.processor.EmitLocalWord(0x14, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x10, 0x1);
+					List<short> regimes = new List<short>();
 
-		L04e3:
-			this.owner.CityOps.PlayerEnjoysWonderEffect(participantIdx, 1);
-			
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsNotEqual) goto L055a;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x10), 0x2);
-			if (this.processor.FlagSet.IsNotEqual) goto L050f;
+					for (short regime = 1; regime < 6; regime++)
+					{
+						this.owner.CityOps.PlayerEnjoysWonderEffect(participantIdx, 1);
 
-			this.processor.RegAcc.Value16 = this.owner.Advisors.PlayerKnowsTechnology(participantIdx, 5);
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual)
-				goto L058d;
+						if (this.processor.RegAcc.Value16 == 0 && !RegimeKnown(participantIdx, regime))
+							continue;
 
-		L050f:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x10), 0x3);
-			if (this.processor.FlagSet.IsNotEqual) goto L0528;
+						regimes.Add(regime);
 
-			this.processor.RegAcc.Value16 = this.owner.Advisors.PlayerKnowsTechnology(participantIdx, 0x2b);
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual)
-				goto L058d;
+						this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)((regime << 1) + 0x1966)));
 
-		L0528:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x10), 0x4);
-			if (this.processor.FlagSet.IsNotEqual) goto L0541;
+						this.owner.Libc.AppendText(0xba06, "\n ");
+					}
 
-			this.processor.RegAcc.Value16 = this.owner.Advisors.PlayerKnowsTechnology(participantIdx, 0x2c);
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual)
-				goto L058d;
+					if (regimeKind == 0)
+					{
+						chosen = 0;
+						break;
+					}
 
-		L0541:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x10), 0x5);
-			if (this.processor.FlagSet.IsNotEqual) goto L055a;
+					this.owner.TurnHooks.DisplayDialog(0xba06, 100, 64);
 
-			this.processor.RegAcc.Value16 = this.owner.Advisors.PlayerKnowsTechnology(participantIdx, 4);
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual)
-				goto L058d;
+					short choice = (short)this.processor.RegAcc.Value16;
 
-		L055a:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x2);
-			this.processor.IncrementLocalWord(0x2);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x10);
-			this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0xe), this.processor.RegAcc.Value16);
+					if (choice >= 0)
+					{
+						chosen = regimes[choice];
+						break;
+					}
+				}
 
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x10);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1966)));
+				participant.RegimeKind = chosen;
 
-			this.owner.Libc.AppendText(0xba06, "\n ");
+				this.owner.NewGameWizard.ImportGovernmentGraphics();
 
-		L058d:
-			this.processor.EmitLocalWord(0x10, this.processor.IncrementWord(this.processor.PullLocalWord(0x10)));
-			this.processor.CompareWord(this.processor.PullLocalWord(0x10), 0x6);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0599;
-			goto L04e3;
+				this.owner.TurnHooks.RepaintMainScreen();
 
-		L0599:
-			this.processor.CompareWord((ushort)regimeKind, 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L05cb;
+				this.owner.NewGameWizard.DisplayRevolutionScreen();
+			}
+			else
+			{
+				if ((participant.RegimeKind != regimeKind || (participant.Relations[0] & 4) != 0) &&
+					(this.owner.World.Participants[this.owner.World.PersonParticipantIdx].Relations[participantIdx] & 0x40) != 0)
+				{
+					this.processor.EmitGlobalByte(0xba06, 0x0);
 
-			this.owner.TurnHooks.DisplayDialog(0xba06, 100, 64);
+					if ((participant.Relations[0] & 4) != 0)
+					{
+						this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1982)));
 
-			this.processor.EmitLocalWord(0x14, this.processor.RegAcc.Value16);
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L05bd;
-			goto L04c6;
+						this.owner.Libc.AppendText(0xba06, " government\nchanged to ");
 
-		L05bd:
-			this.processor.RegSource.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0xe));
-			goto L05d3;
+						this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)((regimeKind << 1) + 0x1966)));
 
-		L05cb:
-			this.processor.RegAcc.Value16 = (ushort)regimeKind;
+						this.owner.Libc.AppendText(0xba06, "!\n");
 
-		L05d3:
-			this.owner.World.Participants[participantIdx].RegimeKind = (short)this.processor.RegAcc.Value16;
+						participant.Relations[0] &= 0xfffb;
+					}
+					else
+					{
+						this.owner.Libc.AppendText(0xba06, "The ");
 
-			this.owner.NewGameWizard.ImportGovernmentGraphics();
+						this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1982)));
 
-			this.owner.TurnHooks.RepaintMainScreen();
+						this.owner.Libc.AppendText(0xba06, " government\nhas been overthrown!\n");
 
-			this.owner.NewGameWizard.DisplayRevolutionScreen();
+						participant.Relations[0] |= 4;
+					}
 
-			goto L06f0;
+					this.processor.EmitGlobalWord(0x2f9e, 0x1);
 
-		L05e9:
-			this.processor.RegAcc.Value16 = (ushort)regimeKind;
-			this.processor.CompareWord((ushort)this.owner.World.Participants[participantIdx].RegimeKind, this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L0608;
+					this.owner.TurnHooks.DisplayDialog(0xba06, 80, 64);
+				}
 
-			this.processor.RegBase.Value16 = (ushort)participantIdx;
-			this.processor.RegCount.LowByte = 0x4;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, this.processor.RegCount.LowByte);
+				participant.RegimeKind = regimeKind;
+				participant.LevyRatio = (short)(4 - (regimeKind / 2));
+			}
 
-			if ((this.owner.World.Participants[participantIdx].Relations[0] & 4) == 0)
-				goto L06d6;
+			if (formerRegime != participant.RegimeKind)
+			{
+				this.owner.UnitOps.AttachReplayContent(8, (byte)participantIdx, (byte)participant.RegimeKind);
 
-		L0608:
-			this.processor.RegSource.Value16 = (ushort)participantIdx;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
+				for (int otherIdx = 0; otherIdx < 8; otherIdx++)
+				{
+					participant.Relations[otherIdx] &= 0xfff7;
+				}
+			}
 
-			this.processor.RegBase.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.RegCount.LowByte = 0x4;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, this.processor.RegCount.LowByte);
+			this.processor.RegSource.Value16 = source;
+			this.processor.RegDest.Value16 = dest;
 
-			if ((this.owner.World.Participants[this.owner.World.PersonParticipantIdx].Relations[participantIdx] & 0x40) == 0)
-				goto L06d6;
-
-			this.processor.EmitGlobalByte(0xba06, 0x0);
-
-			this.processor.RegDest.Value16 = (ushort)participantIdx;
-			this.processor.RegCount.LowByte = 0x4;
-			this.processor.RegDest.Value16 = this.processor.ShiftLeftWord(this.processor.RegDest.Value16, this.processor.RegCount.LowByte);
-
-			if ((this.owner.World.Participants[participantIdx].Relations[0] & 4) == 0)
-				goto L067c;
-
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1982)));
-
-			this.owner.Libc.AppendText(0xba06, " government\nchanged to ");
-
-			this.processor.RegBase.Value16 = (ushort)regimeKind;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1966)));
-
-			this.owner.Libc.AppendText(0xba06, "!\n");
-
-			this.owner.World.Participants[participantIdx].Relations[0] &= 0xfffb;
-
-			goto L06bc;
-
-		L067c:
-			this.owner.Libc.AppendText(0xba06, "The ");
-
-			this.processor.RegBase.Value16 = (ushort)participantIdx;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1982)));
-
-			this.owner.Libc.AppendText(0xba06, " government\nhas been overthrown!\n");
-
-			this.processor.RegBase.Value16 = (ushort)participantIdx;
-			this.processor.RegCount.LowByte = 0x4;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, this.processor.RegCount.LowByte);
-
-			this.owner.World.Participants[participantIdx].Relations[0] |= 4;
-
-		L06bc:
-			this.processor.EmitGlobalWord(0x2f9e, 0x1);
-
-			this.owner.TurnHooks.DisplayDialog(0xba06, 80, 64);
-
-		L06d6:
-			this.processor.RegAcc.Value16 = (ushort)regimeKind;
-			this.owner.World.Participants[participantIdx].RegimeKind = (short)this.processor.RegAcc.Value16;
-			this.processor.HalveAccumulator();
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, 0x4);
-			this.processor.RegAcc.Value16 = this.processor.NegateWord(this.processor.RegAcc.Value16);
-			this.owner.World.Participants[participantIdx].LevyRatio = (short)this.processor.RegAcc.Value16;
-
-		L06f0:
-			this.processor.RegSource.Value16 = (ushort)this.owner.World.Participants[participantIdx].RegimeKind;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x12), this.processor.RegSource.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L0731;
-
-			this.owner.UnitOps.AttachReplayContent(8, (byte)participantIdx, (byte)this.owner.World.Participants[participantIdx].RegimeKind);
-
-			this.processor.EmitLocalWord(0x10, 0x0);
-
-		L0717:
-			this.processor.RegSource.Value16 = (ushort)participantIdx;
-			this.processor.RegCount.LowByte = 0x4;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, this.processor.RegCount.LowByte);
-
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x10);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-
-			this.owner.World.Participants[participantIdx].Relations[this.processor.PullLocalWord(0x10)] &= 0xfff7;
-
-			this.processor.IncrementLocalWord(0x10);
-
-			this.processor.CompareWord(this.processor.PullLocalWord(0x10), 0x8);
-			if (this.processor.FlagSet.IsLess) goto L0717;
-
-		L0731:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.RegDest.Value16 = this.processor.UnstackWord();
-			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("SwitchGovernment");
+		}
+
+		/// <summary>The player knows the technology of the government: despotism always, monarchy 5, communism 0x2b, democracy 0x2c, republic 4</summary>
+		private bool RegimeKnown(short participantIdx, short regime)
+		{
+			short scienceIdx = regime switch { 2 => 5, 3 => 0x2b, 4 => 0x2c, 5 => 4, _ => -1 };
+
+			return scienceIdx < 0 || this.owner.Advisors.PlayerKnowsTechnology(participantIdx, scienceIdx) != 0;
 		}
 
 		/// <summary>

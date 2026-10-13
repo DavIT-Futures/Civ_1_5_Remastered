@@ -56,4 +56,5 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 	public sealed partial class WorldMapReference(GameEngine owner) : ReferenceBase(owner);
 	public sealed partial class DiplomatActionsReference(GameEngine owner) : ReferenceBase(owner);
 	public sealed partial class PathfindingReference(GameEngine owner) : ReferenceBase(owner);
+	public sealed partial class NewspaperReference(GameEngine owner) : ReferenceBase(owner);
 }

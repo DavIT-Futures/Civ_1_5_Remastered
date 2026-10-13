@@ -17,69 +17,58 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// The newspaper of the city (a negative city: the human player's palace city, for -1 else its first city): the
+		/// title (one of four headlines with the city's name, " News" when too wide, ornaments when narrow), "10 cents", the
+		/// date and a random story *NEWSA - *NEWSN of the text file 0x5178. Unless townIdx is -2 (drawn on the current screen,
+		/// without waiting): a crowd of people under it, the screen kept and put back after a key.
 		/// </summary>
-		/// <param name="cityID"></param>
 		public void DisplayNewspaper(short townIdx)
 		{
 			this.processor.Journal.OpenScope($"DisplayNewspaper({townIdx})");
 
-			// function body
+			// The topic of the story is in the stack frame, like in the original, and the final values of the locals stay there
 			this.processor.EnterFrame(0x10);
 			this.processor.PreserveSource();
 
-			this.processor.RegAcc.Value16 = (ushort)townIdx;
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L004d;
-			this.processor.EmitLocalWord(0x2, 0x0);
+			short givenIdx = townIdx;
+			bool shown = townIdx != -2;
 
-		L0016:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToSource(this.processor.PullLocalWord(0x2));
-			this.processor.CompareByte(this.owner.World.Towns[this.processor.PullLocalWord(0x2)].ConditionMarker, 0xff);
-			if (this.processor.FlagSet.IsEqual) goto L0043;
-			if (this.owner.World.Towns[this.processor.PullLocalWord(0x2)].ParticipantIdx !=
-				this.owner.World.PersonParticipantIdx) goto L0043;
-			this.processor.TestBitsWord(this.owner.World.Towns[this.processor.PullLocalWord(0x2)].StructureMarkers0, 0x1);
-			if (this.processor.FlagSet.IsNotEqual) goto L003d;
-			
-			if (townIdx != -1)
-				goto L0043;
+			if (townIdx < 0)
+			{
+				for (short cityIdx = 0; cityIdx < 0x80; cityIdx++)
+				{
+					City town = this.owner.World.Towns[cityIdx];
 
-		L003d:
-			townIdx = this.processor.PullLocalSignedWord(0x2);
+					if (town.ConditionMarker == 0xff || town.ParticipantIdx != this.owner.World.PersonParticipantIdx)
+						continue;
 
-		L0043:
-			this.processor.EmitLocalWord(0x2, this.processor.IncrementWord(this.processor.PullLocalWord(0x2)));
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x80);
-			if (this.processor.FlagSet.IsLess) goto L0016;
+					if ((town.StructureMarkers0 & 1) != 0 || townIdx == -1)
+					{
+						townIdx = cityIdx;
+					}
+				}
 
-		L004d:
+				// The search leaves 0x1c * 127 in SI, and DisplayMenu leaves SI in DI, which goes back to the caller
+				this.processor.RegSource.Value16 = 0x1c * 0x7f;
+			}
+
 			this.owner.Startup.ConcealMouseCursor();
 
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), 0xfffe);
-			if (this.processor.FlagSet.IsEqual) goto L0078;
+			if (shown)
+			{
+				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0x19d4), 0, 0);
+			}
 
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0xaa),
-				0, 0, 0x140, 0xc8,
-				this.processor.PullGlobalWord(0x19d4),
-				0, 0);
-
-		L0078:
 			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 100, 15);
 
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 0x4);
+			this.processor.EmitGlobalWord((ushort)(this.processor.PullGlobalWord(0xaa) + 0x10), 0x4);
 
 			this.owner.VideoCard.RenderLine(this.processor.PullGlobalWord(0xaa), 1, 1, 318, 1, 0);
 
 			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 8, 3, 304, 20, 15);
 
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xe), 0xf);
-			
+			this.processor.EmitGlobalWord((ushort)(this.processor.PullGlobalWord(0xaa) + 0xe), 0xf);
+
 			this.owner.VideoCard.RenderLine(this.processor.PullGlobalWord(0xaa), 0, 35, 319, 35, 0);
 
 			this.owner.VideoCard.RenderLine(this.processor.PullGlobalWord(0xaa), 1, 1, 1, 35, 0);
@@ -88,127 +77,80 @@ namespace Civilization1Remaster.UI
 
 			this.owner.VideoCard.RenderLine(this.processor.PullGlobalWord(0xaa), 0, 97, 319, 97, 0);
 
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), 0xfffe);
-			if (this.processor.FlagSet.IsEqual) goto L017f;
-			this.processor.EmitLocalWord(0x10, 0x0);
+			if (shown)
+			{
+				for (short personIdx = 0; personIdx < 0x10; personIdx++)
+				{
+					this.owner.Services.RenderPictureToScreenAlternate(this.processor.PullGlobalWord(0xaa), 20 * personIdx,
+						100 - this.owner.Libc.Dice.DrawInt(2), this.processor.PullGlobalWord(0xdf0c));
+				}
+			}
 
-		L014d:
-			this.owner.Services.RenderPictureToScreenAlternate(this.processor.PullGlobalWord(0xaa),
-				20 * this.processor.PullLocalSignedWord(0x10),
-				100 - this.owner.Libc.Dice.DrawInt(2),
-				this.processor.PullGlobalWord(0xdf0c));
-
-			this.processor.IncrementLocalWord(0x10);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x10), 0x10);
-			if (this.processor.FlagSet.IsLess) goto L014d;
-
-		L017f:
 			this.owner.BlockText.RenderTextChunk(40, 16, 40, 0);
 
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 0x5);
+			this.processor.EmitGlobalWord((ushort)(this.processor.PullGlobalWord(0xaa) + 0x10), 0x5);
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
-			this.processor.RegAcc.Value16 = (ushort)(this.owner.Libc.Dice.DrawInt(4));
+			switch (this.owner.Libc.Dice.DrawInt(4))
+			{
+				case 0:
+					this.owner.Conquest.ObtainCityLabel(townIdx);
+					this.owner.Libc.AppendText(0xba06, 0x5118);
+					break;
 
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual) goto L01ce;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1);
-			if (this.processor.FlagSet.IsNotEqual) goto L01bc;
-			goto L028d;
+				case 1:
+					this.owner.Conquest.ObtainCityLabel(townIdx);
+					this.owner.Libc.AppendText(0xba06, 0x5120);
+					break;
 
-		L01bc:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x2);
-			if (this.processor.FlagSet.IsNotEqual) goto L01c4;
-			goto L029e;
+				case 2:
+					this.owner.Libc.CopyText(0xba06, "The ");
+					this.owner.Conquest.ObtainCityLabel(townIdx);
+					this.owner.Libc.AppendText(0xba06, 0x512c);
+					break;
 
-		L01c4:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x3);
-			if (this.processor.FlagSet.IsNotEqual) goto L01cc;
-			goto L02bf;
-
-		L01cc:
-			goto L01e9;
-
-		L01ce:
-			this.owner.Conquest.ObtainCityLabel(townIdx);
-
-			this.owner.Libc.AppendText(0xba06, 0x5118);
-
-		L01e9:
-			this.owner.TextPainter.ObtainTextWidth(0xba06);
-
-			this.processor.EmitLocalWord(0xe, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x12c);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L022c;
-			this.processor.EmitGlobalByte(0xba06, 0x0);
-
-			this.owner.Conquest.ObtainCityLabel(townIdx);
-
-			this.owner.Libc.AppendText(0xba06, " News");
+				case 3:
+					this.owner.Libc.CopyText(0xba06, "The ");
+					this.owner.Conquest.ObtainCityLabel(townIdx);
+					this.owner.Libc.AppendText(0xba06, 0x5138);
+					break;
+			}
 
 			this.owner.TextPainter.ObtainTextWidth(0xba06);
 
-			this.processor.EmitLocalWord(0xe, this.processor.RegAcc.Value16);
+			short width = (short)this.processor.RegAcc.Value16;
 
-		L022c:
-			this.processor.CompareWord(this.processor.PullLocalWord(0xe), 0xc8);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0261;
+			if (width > 0x12c)
+			{
+				this.processor.EmitGlobalByte(0xba06, 0x0);
 
-			this.owner.TextPainter.RenderText(0x5147, 8, 11, 0);
+				this.owner.Conquest.ObtainCityLabel(townIdx);
 
-			this.owner.TextPainter.RenderText(0x514b, 268, 11, 0);
+				this.owner.Libc.AppendText(0xba06, " News");
 
-		L0261:
+				this.owner.TextPainter.ObtainTextWidth(0xba06);
+
+				width = (short)this.processor.RegAcc.Value16;
+			}
+
+			if (width < 0xc8)
+			{
+				this.owner.TextPainter.RenderText(0x5147, 8, 11, 0);
+
+				this.owner.TextPainter.RenderText(0x514b, 268, 11, 0);
+			}
+
 			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 11, 0);
 
-			this.processor.RegAcc.Value16 = (ushort)(this.owner.Libc.Dice.DrawInt(2));
+			this.owner.Libc.CopyText(0xba06, this.owner.Libc.Dice.DrawInt(2) != 0 ? (ushort)0x514f : (ushort)0x5156);
 
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual) goto L02e0;
-			this.processor.RegAcc.Value16 = 0x514f;
-			goto L02e3;
-
-		L028d:
-			this.owner.Conquest.ObtainCityLabel(townIdx);
-			
-			this.owner.Libc.AppendText(0xba06, 0x5120);
-
-			goto L01e9;
-
-		L029e:
-			this.owner.Libc.CopyText(0xba06, "The ");
-
-			this.owner.Conquest.ObtainCityLabel(townIdx);
-			
-			this.owner.Libc.AppendText(0xba06, 0x512c);
-
-			goto L01e9;
-
-		L02bf:
-			this.owner.Libc.CopyText(0xba06, "The ");
-
-			this.owner.Conquest.ObtainCityLabel(townIdx);
-			
-			this.owner.Libc.AppendText(0xba06, 0x5138);
-
-			goto L01e9;
-
-		L02e0:
-			this.processor.RegAcc.Value16 = 0x5156;
-
-		L02e3:
-			this.owner.Libc.CopyText(0xba06, this.processor.RegAcc.Value16);
-
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 0x3);
+			this.processor.EmitGlobalWord((ushort)(this.processor.PullGlobalWord(0xaa) + 0x10), 0x3);
 
 			this.owner.TextPainter.RenderText(0xba06, 6, 3, 0);
 
 			this.owner.TextPainter.RenderText(0xba06, 272, 3, 0);
-			
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 0x1);
+
+			this.processor.EmitGlobalWord((ushort)(this.processor.PullGlobalWord(0xaa) + 0x10), 0x1);
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
 			this.owner.Libc.AppendText(0xba06, "10 cents");
@@ -221,35 +163,42 @@ namespace Civilization1Remaster.UI
 
 			this.owner.TextPainter.RenderTextToScreen0(0xba06, 8, 28, 0);
 
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 0x2);
+			this.processor.EmitGlobalWord((ushort)(this.processor.PullGlobalWord(0xaa) + 0x10), 0x2);
 
-			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0xc), "*NEWSA");
+			ushort topic = (ushort)(this.processor.RegFrame.Value16 - 0xc);
 
-			this.processor.RegAcc.Value16 = (ushort)(this.owner.Libc.Dice.DrawInt(14));
+			this.owner.Libc.CopyText(topic, "*NEWSA");
 
-			this.processor.EmitLocalByte(0x7, this.processor.SumByte(this.processor.PullLocalByte(0x7), this.processor.RegAcc.LowByte));
+			this.processor.EmitLocalByte(0x7, (byte)(this.processor.PullLocalByte(0x7) + this.owner.Libc.Dice.DrawInt(14)));
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
-			this.owner.BlockText.ImportTextFromFile(0x5178, (ushort)(this.processor.RegFrame.Value16 - 0xc));
+			this.owner.BlockText.ImportTextFromFile(0x5178, topic);
 
 			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 3, 0);
 
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 0x1);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), 0xfffe);
-			if (this.processor.FlagSet.IsEqual) goto L041f;
+			this.processor.EmitGlobalWord((ushort)(this.processor.PullGlobalWord(0xaa) + 0x10), 0x1);
 
-			this.owner.Dialogs.DisplayMenu(0x5181, 80, 128, 1);
+			if (shown)
+			{
+				this.owner.Dialogs.DisplayMenu(0x5181, 80, 128, 1);
 
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0x19d4),
-				0, 0, 0x140, 0xc8,
-				this.processor.PullGlobalWord(0xaa),
-				0, 0);
+				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0xaa), 0, 0);
+			}
 
-		L041f:
 			this.owner.Startup.DisplayMouseCursor();
+
+			this.processor.EmitLocalWord(0x4, (ushort)givenIdx);
+			this.processor.EmitLocalWord(0xe, (ushort)width);
+
+			if (givenIdx < 0)
+			{
+				this.processor.EmitLocalWord(0x2, 0x80);
+			}
+
+			if (shown)
+			{
+				this.processor.EmitLocalWord(0x10, 0x10);
+			}
 
 			this.processor.RestoreSource();
 			this.processor.LeaveFrame();
