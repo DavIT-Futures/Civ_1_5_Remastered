@@ -1,5 +1,6 @@
 using System;
 using Civilization1Remaster.Emulation;
+using Civilization1Remaster.Game.Rules;
 
 namespace Civilization1Remaster.UI
 {
@@ -883,123 +884,53 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// Unless 0x680a is 4: colours the land tiles of the replay map around the position (5 tiles in every direction, columns
+		/// 0 - 79, rows 2 - 48) by the nearest replay city: grey (8) when it is 6 or more tiles away or on another continent,
+		/// else 7 or 15 (the city's player is 1 or not) on its own tile, else the colour of its player (0x1946). The stack frame
+		/// stays: ObtainDistanceToReplayCity reads what is left below it, so it must be called at the same depth as in the original.
 		/// </summary>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
 		public void RenderReplayMapTile(int horizLoc, int vertLoc)
 		{
 			this.processor.Journal.OpenScope($"RenderReplayMapTile({horizLoc}, {vertLoc})");
 
-			// function body
 			this.processor.EnterFrame(0xc);
 			this.processor.PreserveIndexRegisters();
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x680a), 0x4);
-			if (this.processor.FlagSet.IsNotEqual) goto L0ada;
-			goto L0c2a;
 
-		L0ada:
-			this.owner.Helpers.VerifyValueSpan(horizLoc - 5, 0, 80);
+			if (this.processor.PullGlobalWord(0x680a) != 4)
+			{
+				int left = this.owner.Helpers.VerifyValueSpan(horizLoc - 5, 0, 80);
+				int right = this.owner.Helpers.VerifyValueSpan(horizLoc + 5, 0, 80);
+				int top = this.owner.Helpers.VerifyValueSpan(vertLoc - 5, 2, 49);
+				int bottom = this.owner.Helpers.VerifyValueSpan(vertLoc + 5, 2, 49);
 
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
+				for (int tileVert = top; tileVert < bottom; tileVert++)
+				{
+					for (int tileHoriz = left; tileHoriz < right; tileHoriz++)
+					{
+						if (this.owner.MapOps.ObtainTerrainType(tileHoriz, tileVert) == MapRules.OceanTerrain)
+							continue;
 
-			this.owner.Helpers.VerifyValueSpan(horizLoc + 5, 0, 80);
+						ushort cityIdx = ObtainDistanceToReplayCity(tileHoriz, tileVert);
+						ushort hue = 8;
 
-			this.processor.EmitLocalWord(0x6, this.processor.RegAcc.Value16);
+						if (this.processor.PullGlobalSignedWord(0x6812) < 6 &&
+							this.owner.MapOps.ObtainContinentID((short)PullReplayCity(cityIdx, 0x100), (short)PullReplayCity(cityIdx, 0x200)) ==
+							this.owner.MapOps.ObtainContinentID(tileHoriz, tileVert))
+						{
+							ushort cityOwner = PullReplayCity(cityIdx, 0);
 
-			this.owner.Helpers.VerifyValueSpan(vertLoc - 5, 2, 49);
+							hue = this.processor.PullGlobalWord(0x6812) == 0 ? (ushort)(cityOwner == 1 ? 7 : 15) :
+								this.processor.PullGlobalWord((ushort)((cityOwner << 1) + 0x1946));
+						}
 
-			this.processor.EmitLocalWord(0x8, this.processor.RegAcc.Value16);
+						this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), tileHoriz * 4, (tileVert * 4) + 4, 4, 4, hue);
+					}
+				}
+			}
 
-			this.owner.Helpers.VerifyValueSpan(vertLoc + 5, 2, 49);
-
-			this.processor.EmitLocalWord(0xa, this.processor.RegAcc.Value16);
-
-			vertLoc = this.processor.PullLocalSignedWord(0x8);
-
-			goto L0c19;
-
-		L0b49:
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x4);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.SegExtra.Value16 = 0x3725; // segment
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegExtra.Value16, (ushort)(this.processor.RegBase.Value16 + 0x0)), 0x1);
-			if (this.processor.FlagSet.IsNotEqual) goto L0b5f;
-
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), horizLoc * 4, (vertLoc * 4) + 4, 4, 4, 7);
-			goto L0b8c;
-
-		L0b5f:
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), horizLoc * 4, (vertLoc * 4) + 4, 4, 4, 15);
-			goto L0b8c;
-
-		L0b64:
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), horizLoc * 4, (vertLoc * 4) + 4, 4, 4, 8);
-
-		L0b8c:
-			horizLoc++;
-
-		L0b8f:
-			if (horizLoc >= this.processor.PullLocalSignedWord(0x6))
-				goto L0c16;
-
-			this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
-
-			this.processor.EmitLocalWord(0xc, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
-			if (this.processor.FlagSet.IsEqual) goto L0b8c;
-
-			ObtainDistanceToReplayCity(horizLoc, vertLoc);
-
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x6812), 0x6);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0b64;
-			this.processor.RegSource.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.SegExtra.Value16 = 0x3725; // segment
-
-			this.owner.MapOps.ObtainContinentID(
-				this.processor.PullInt16(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x100)),
-				this.processor.PullInt16(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x200)));
-
-			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
-
-			this.owner.MapOps.ObtainContinentID(horizLoc, vertLoc);
-
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.RegDest.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L0bf5;
-			goto L0b64;
-
-		L0bf5:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x6812), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L0bff;
-			goto L0b49;
-
-		L0bff:
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x4);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.SegExtra.Value16 = 0x3725; // segment
-			this.processor.RegBase.Value16 = this.processor.PullUInt16(this.processor.SegExtra.Value16, (ushort)(this.processor.RegBase.Value16 + 0x0));
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), horizLoc * 4, (vertLoc * 4) + 4, 4, 4, 
-				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1946)));
-			goto L0b8c;
-
-		L0c16:
-			vertLoc++;
-
-		L0c19:
-			if (vertLoc >= this.processor.PullLocalSignedWord(0xa))
-				goto L0c2a;
-
-			horizLoc = this.processor.PullLocalSignedWord(0x2);
-			goto L0b8f;
-
-		L0c2a:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.RegDest.Value16 = this.processor.UnstackWord();
+			this.processor.RestoreIndexRegisters();
 			this.processor.LeaveFrame();
-			// Far return
+
 			this.processor.Journal.CloseScope("RenderReplayMapTile");
 		}
 

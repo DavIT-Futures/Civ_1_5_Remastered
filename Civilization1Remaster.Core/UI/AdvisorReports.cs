@@ -421,123 +421,78 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// The report of the units lost: a row for every unit type (0 - 26) that some player lost, with the unit's picture (of
+		/// the player), its name, the losses of the player (colour 12) and of the players 1 - 7 in their colours, 28 pixels apart
 		/// </summary>
-		/// <param name="playerID"></param>
 		public void RenderPlayerComparisonChart(short participantIdx)
 		{
 			this.processor.Journal.OpenScope($"RenderPlayerComparisonChart({participantIdx})");
 
-			// function body
-			this.processor.EnterFrame(0xc);
-			this.processor.PreserveSource();
-
 			DisplayReportPreamble(0x47ad, 4);
 
-			this.processor.EmitLocalWord(0xc, 0x0);
-			this.processor.EmitLocalWord(0x8, 0x1c);
-			this.processor.EmitLocalWord(0x6, 0x0);
+			int rowIdx = 0;
+			int vertLoc = 0x1c;
 
-		L0644:
-			this.processor.EmitLocalWord(0x2, 0x0);
-			this.processor.EmitLocalWord(0xa, 0x0);
+			for (int kind = 0; kind < 0x1b; kind++)
+			{
+				bool lost = false;
 
-		L064e:
-			this.processor.CompareWord((ushort)this.owner.World.Participants[this.processor.PullLocalWord(0xa)].MissingTroops[this.processor.PullLocalWord(0x6)], 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L066e;
-			this.processor.EmitLocalWord(0x2, 0x1);
+				for (int playerIdx = 0; playerIdx < 8; playerIdx++)
+				{
+					if (this.owner.World.Participants[playerIdx].MissingTroops[kind] != 0)
+					{
+						lost = true;
+					}
+				}
 
-		L066e:
-			this.processor.EmitLocalWord(0xa, this.processor.IncrementWord(this.processor.PullLocalWord(0xa)));
-			this.processor.CompareWord(this.processor.PullLocalWord(0xa), 0x8);
-			if (this.processor.FlagSet.IsLess) goto L064e;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L0680;
-			goto L07b7;
+				if (!lost)
+					continue;
 
-		L0680:
-			this.owner.VideoCard.RenderLine(this.processor.PullGlobalWord(0xaa),
-				36, this.processor.PullLocalSignedWord(0x8) - 1,
-				319, this.processor.PullLocalSignedWord(0x8) - 1, 8);
+				this.owner.VideoCard.RenderLine(this.processor.PullGlobalWord(0xaa), 36, vertLoc - 1, 319, vertLoc - 1, 8);
 
-			this.owner.Services.RenderPictureToScreen(
-				this.processor.PullGlobalWord(0xaa),
-				((this.processor.PullLocalWord(0xc) & 1) << 4) + 2,
-				this.processor.PullLocalSignedWord(0x8) - 4,
-				this.processor.PullUInt16(this.processor.SegData.Value16,
-					(ushort)((((participantIdx << 5) + this.processor.PullLocalWord(0x6) + 0x40) << 1) + 0xd4ce)));
+				this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa), ((rowIdx & 1) << 4) + 2, vertLoc - 4,
+					this.processor.PullGlobalWord((ushort)((((participantIdx << 5) + kind + 0x40) << 1) + 0xd4ce)));
 
-			this.processor.IncrementLocalWord(0xc);
+				rowIdx++;
 
-			this.owner.TextPainter.RenderTextToScreen0(
-				(ushort)((this.processor.PullLocalWord(0x6) * 0x22) + 0x112a),
-				36,
-				this.processor.PullLocalSignedWord(0x8),
-				15);
+				this.owner.TextPainter.RenderTextToScreen0((ushort)((kind * 0x22) + 0x112a), 36, vertLoc, 15);
 
-			this.processor.EmitLocalWord(0x4, 0x68);
+				short losses = this.owner.World.Participants[participantIdx].MissingTroops[kind];
 
-			this.processor.RegSource.Value16 = (ushort)this.owner.World.Participants[participantIdx].MissingTroops[this.processor.PullLocalWord(0x6)];
-			this.processor.RegSource.Value16 = this.processor.BitOrWord(this.processor.RegSource.Value16, this.processor.RegSource.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L073f;
-			this.processor.EmitGlobalByte(0xba06, 0x0);
+				if (losses != 0)
+				{
+					this.processor.EmitGlobalByte(0xba06, 0);
+					this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(losses, 10));
+					this.owner.TextPainter.RenderTextToScreen0(0xba06, 104, vertLoc, 12);
+				}
 
-			this.owner.Libc.AppendText(0xba06, 
-				this.owner.Libc.IntegerToText((short)this.processor.RegSource.Value16, 10));
+				int horizLoc = 0x68;
 
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, 104, this.processor.PullLocalSignedWord(0x8), 12);
+				for (short playerIdx = 1; playerIdx < 8; playerIdx++)
+				{
+					if (playerIdx == participantIdx)
+						continue;
 
-		L073f:
-			this.processor.EmitLocalWord(0xa, 0x1);
+					horizLoc += 0x1c;
+					losses = this.owner.World.Participants[playerIdx].MissingTroops[kind];
 
-		L0744:
-			this.processor.RegAcc.Value16 = (ushort)participantIdx;
-			this.processor.CompareWord(this.processor.PullLocalWord(0xa), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L07aa;
-			this.processor.EmitLocalWord(0x4, this.processor.SumWord(this.processor.PullLocalWord(0x4), 0x1c));
+					if (losses != 0)
+					{
+						this.processor.EmitGlobalByte(0xba06, 0);
+						this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(losses, 10));
+						this.owner.TextPainter.RenderTextToScreen0(0xba06, horizLoc, vertLoc,
+							this.processor.PullGlobalWord((ushort)((playerIdx << 1) + 0x1946)));
+					}
+				}
 
-			this.processor.RegSource.Value16 = (ushort)this.owner.World.Participants[this.processor.PullLocalWord(0xa)].MissingTroops[this.processor.PullLocalWord(0x6)];
-			this.processor.RegSource.Value16 = this.processor.BitOrWord(this.processor.RegSource.Value16, this.processor.RegSource.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L07aa;
-			this.processor.EmitGlobalByte(0xba06, 0x0);
+				vertLoc += 7;
+			}
 
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText((short)this.processor.RegSource.Value16, 10));
-
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0xa);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-
-			this.owner.TextPainter.RenderTextToScreen0(
-				0xba06,
-				this.processor.PullLocalSignedWord(0x4),
-				this.processor.PullLocalSignedWord(0x8),
-				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1946)));
-
-		L07aa:
-			this.processor.EmitLocalWord(0xa, this.processor.IncrementWord(this.processor.PullLocalWord(0xa)));
-			this.processor.CompareWord(this.processor.PullLocalWord(0xa), 0x8);
-			if (this.processor.FlagSet.IsLess) goto L0744;
-			this.processor.EmitLocalWord(0x8, this.processor.SumWord(this.processor.PullLocalWord(0x8), 0x7));
-
-		L07b7:
-			this.processor.EmitLocalWord(0x6, this.processor.IncrementWord(this.processor.PullLocalWord(0x6)));
-			this.processor.CompareWord(this.processor.PullLocalWord(0x6), 0x1b);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L07c3;
-			goto L0644;
-
-		L07c3:
-			this.processor.RegBase.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-
-			this.owner.Dialogs.RenderBox(100, 25,
-				18, this.processor.PullLocalSignedWord(0x8) - 25,
-				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1946)));
+			this.owner.Dialogs.RenderBox(100, 25, 18, vertLoc - 25,
+				this.processor.PullGlobalWord((ushort)((this.owner.World.PersonParticipantIdx << 1) + 0x1946)));
 
 			FinishReportScreen();
 
-			this.processor.RestoreSource();
-			this.processor.LeaveFrame();
-			// Far return
 			this.processor.Journal.CloseScope("RenderPlayerComparisonChart");
 		}
 

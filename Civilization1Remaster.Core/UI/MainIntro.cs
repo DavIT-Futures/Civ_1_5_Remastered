@@ -1,4 +1,5 @@
 using Civilization1Remaster.Emulation;
+using Civilization1Remaster.Game;
 
 namespace Civilization1Remaster.UI
 {
@@ -1592,87 +1593,48 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// The tutorial of the screen: points at the 8 tiles around the centre of the map window (0xd4cc + 7, 0xd75e + 6) with
+		/// the names of their terrain (of the special resource, or "Village"), then at the menu bar, the map window and the
+		/// active unit, and waits for a key or a click. SI holds 2 * direction at the pointers, like in the original: DisplayMenu
+		/// leaves a value made from it in DI, which goes back to the caller.
 		/// </summary>
 		public void DisplayInterfaceTutorial()
 		{
 			this.processor.Journal.OpenScope("DisplayInterfaceTutorial()");
 
-			// function body
-			this.processor.EnterFrame(0xc);
 			this.processor.PreserveSource();
 
 			this.owner.Startup.ConcealMouseCursor();
 
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0xd4cc);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x7);
-			this.processor.EmitLocalWord(0xa, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0xd75e);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x6);
-			this.processor.EmitLocalWord(0xc, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x6, 0x1);
+			short centreHoriz = (short)(this.processor.PullGlobalWord(0xd4cc) + 7);
+			short centreVert = (short)(this.processor.PullGlobalWord(0xd75e) + 6);
+			MapLayers chart = this.owner.MapOps.Chart;
 
-		L17fc:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x6);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
+			for (int heading = 1; heading <= 8; heading++)
+			{
+				int horizLoc = this.owner.Routing.TunePosition(chart.DirectionHoriz(heading) + centreHoriz);
+				short vertLoc = (short)(chart.DirectionVert(heading) + centreVert);
+				ushort terrain = this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
 
-			this.owner.Routing.TunePosition(
-				this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1882)) + 
-					this.processor.PullLocalSignedWord(0xa));
+				// Terrain names of 0x13 bytes at 0x282, names of their special resources at 0x366
+				this.owner.Libc.CopyText(0xba06, (ushort)((terrain * 0x13) + 0x282));
 
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x18e4));
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0xc));
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
+				if (this.owner.MapOps.ContainsSpecialResource(horizLoc, vertLoc) != 0)
+				{
+					this.owner.Libc.CopyText(0xba06, (ushort)((terrain * 0x13) + 0x366));
+				}
 
-			this.owner.MapOps.ObtainTerrainType(
-				this.processor.PullLocalSignedWord(0x2),
-				this.processor.PullLocalSignedWord(0x4));
+				if (this.owner.MapOps.ContainsHut(terrain, horizLoc, vertLoc) != 0)
+				{
+					this.owner.Libc.CopyText(0xba06, "Village");
+				}
 
-			this.processor.EmitLocalWord(0x8, this.processor.RegAcc.Value16);
+				this.processor.RegSource.Value16 = (ushort)(heading << 1);
 
-			this.processor.ScaleIndexToSource(0x13, this.processor.PullLocalWord(0x8));
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x282);
-			this.owner.Libc.CopyText(0xba06, this.processor.RegAcc.Value16);
+				RenderTutorialPointer((chart.DirectionHoriz(heading) << 4) + 200, (chart.DirectionVert(heading) << 4) + 112,
+					(chart.DirectionHoriz(heading) << 6) + 170, (chart.DirectionVert(heading) * 48) + 100);
+			}
 
-			this.owner.MapOps.ContainsSpecialResource(
-				this.processor.PullLocalSignedWord(0x2),
-				this.processor.PullLocalSignedWord(0x4));
-
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual) goto L186c;
-
-			this.processor.RegAcc.Value16 = this.processor.RegSource.Value16;
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x366);
-			this.owner.Libc.CopyText(0xba06, this.processor.RegAcc.Value16);
-
-		L186c:
-			this.owner.MapOps.ContainsHut(
-				this.processor.PullLocalWord(0x8),
-				this.processor.PullLocalSignedWord(0x2),
-				this.processor.PullLocalSignedWord(0x4));
-
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual) goto L1891;
-
-			this.owner.Libc.CopyText(0xba06, "Village");
-
-		L1891:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x6);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-
-			RenderTutorialPointer(
-				(this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1882)) << 4) + 200,
-				(this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x18e4)) << 4) + 112,
-				(this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1882)) << 6) + 170,
-				(this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x18e4)) * 48) + 100);
-
-			this.processor.IncrementLocalWord(0x6);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x6), 0x8);
-			if (this.processor.FlagSet.IsGreater) goto L18d6;
-			goto L17fc;
-
-		L18d6:
 			this.owner.Libc.CopyText(0xba06, "Menu Bar");
 
 			RenderTutorialPointer(160, 6, 200, 16);
@@ -1684,14 +1646,13 @@ namespace Civilization1Remaster.UI
 			this.owner.Libc.CopyText(0xba06, "Active Unit");
 
 			RenderTutorialPointer(40, 128, 88, 170);
-			
+
 			this.owner.Startup.DisplayMouseCursor();
 
 			this.owner.Conquest.AwaitForKeyPressOrMouseClick();
 
 			this.processor.RestoreSource();
-			this.processor.LeaveFrame();
-			// Far return
+
 			this.processor.Journal.CloseScope("DisplayInterfaceTutorial");
 		}
 

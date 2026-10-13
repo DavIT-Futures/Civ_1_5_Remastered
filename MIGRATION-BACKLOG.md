@@ -169,19 +169,23 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   `MayAIEnterTile` (`AIPlayer`, w rzeczywistości kierunek pola oceanu do wyładunku z największą liczbą pustych pól lądu wokół).
   Testy w `BatchTwentyDifferentialTests`. Dane spoza gry rzucają wyjątek w obu wersjach, a rejestry po wyjątku się różnią
   (oryginał zostawia ramkę): tekst od wiersza > 192 rysuje się poza ekranem, ustrój 6 z technologią 20 to brakujący `back3m.pic`.
+- Kolejne 4 moduły (2026-10-13): `PostCityDefenders` (`AIPlayer`, w rzeczywistości wysyła do miasta załadowane transportowce
+  AI na morzu; `AIPlayer` ma teraz `UnitMemory`), `RenderReplayMapTile` (`GameReplay`, ramka zostaje: woła
+  `ObtainDistanceToReplayCity`, która czyta śmieci spod stosu, więc musi być wołana na tej samej głębokości),
+  `RenderPlayerComparisonChart` (`AdvisorReports`, raport straconych jednostek), `DisplayInterfaceTutorial` (`MainIntro`, SI = 2 *
+  kierunek przy wskaźnikach jak w oryginale: `DisplayMenu` zostawia w DI wartość z SI, DI wraca do wołającego). Testy w
+  `BatchTwentyOneDifferentialTests`; raport strat z więcej niż ok. 23 typami jednostek wychodzi poza ekran (wyjątek w obu).
 
 ## Następny krok
 
 Dalej małe metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 60`
 (metody z co najmniej 2 liniami `goto L` / `FlagSet` / `Compare…` / `SumWord` itd., od najkrótszej). Kandydaci:
-`DisplayInterfaceTutorial` (`MainIntro`), `PostCityDefenders` (`AIPlayer`),
-`RenderExplosion` (`DiplomatActions`, kandydat ze „Śmieci na stosie”), `RenderReplayMapTile`
-(`GameReplay`), `RenderPlayerComparisonChart` (`AdvisorReports`),
+`RenderExplosion` (`DiplomatActions`, kandydat ze „Śmieci na stosie”),
 `EliminateCivilization` (`StartGameMenu`), `AttachHallOfFameRecord` (`HallOfFame`), `DisplayStoreGameDialog` (`GameLoadAndSave`),
 reszta generatora mapy w `GameInitAndIntro`. Funkcje niskopoziomowe `SystemServices` (`DeactivateMouse`, `PointerEvent`,
 `RenderCursorToScreen`, `RecoverScreenUnderCursor`, kolory i zegar: `PrepareTimer`, `RefreshHueCycling`, `AssignHueCycleSpan`,
 `ColorsFadeStep`, `FadeColors`, `FloodColors`, `ImportColorsFromBuffer`) i `SnapHeapPointer` (`VGADriver`) na koniec: działają
-w przerwaniach albo na rejestrach. Stan 2026-10-13: 140 metod w stylu asm, ok. 58 tys. z 74 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
+w przerwaniach albo na rejestrach. Stan 2026-10-13: 136 metod w stylu asm, ok. 58 tys. z 74 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 

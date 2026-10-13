@@ -11,11 +11,13 @@ namespace Civilization1Remaster.Game
 	{
 		private readonly GameEngine owner;
 		private readonly CPU processor;
+		private readonly UnitMemory troops;
 
 		public AIPlayer(GameEngine owner)
 		{
 			this.owner = owner;
 			this.processor = owner.Processor;
+			this.troops = new UnitMemory(owner.Processor);
 		}
 
 		/// <summary>
@@ -5584,107 +5586,45 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// Sends to the city the loaded transports at sea of the players 1 - 7 (not the human player, and only those without
+		/// relations bit 2 towards the human player) that are closer to it than 3 turns of moves
 		/// </summary>
-		/// <param name="cityID"></param>
 		public void PostCityDefenders(short townIdx)
 		{
 			this.processor.Journal.OpenScope($"PostCityDefenders({townIdx})");
 
-			// function body
-			this.processor.EnterFrame(0x8);
-			this.processor.PreserveSource();
-			this.processor.ScaleIndexToSource(0x1c, (ushort)townIdx);
-			this.processor.RegAcc.Value16 = (ushort)((short)this.owner.World.Towns[townIdx].Place.X);
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = (ushort)((short)this.owner.World.Towns[townIdx].Place.Y);
-			this.processor.EmitLocalWord(0x6, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x2, 0x1);
-			goto L3f63;
+			short townHoriz = (short)this.owner.World.Towns[townIdx].Place.X;
+			short townVert = (short)this.owner.World.Towns[townIdx].Place.Y;
 
-		L3ec3:
-			this.processor.EmitLocalWord(0x8, 0x0);
-			goto L3ecd;
+			for (short participantIdx = 1; participantIdx < 8; participantIdx++)
+			{
+				if (participantIdx == this.owner.World.PersonParticipantIdx ||
+					(this.owner.World.Participants[participantIdx].Relations[this.owner.World.PersonParticipantIdx] & 2) != 0)
+					continue;
 
-		L3eca:
-			this.processor.EmitLocalWord(0x8, this.processor.IncrementWord(this.processor.PullLocalWord(0x8)));
+				for (int troopIdx = 0; troopIdx < UnitMemory.TroopTally; troopIdx++)
+				{
+					if (!this.troops.Exists(participantIdx, troopIdx) ||
+						this.troops.KindField(participantIdx, troopIdx, UnitKindTable.FerryRoom) == 0 ||
+						this.troops.Following(participantIdx, troopIdx) == -1)
+						continue;
 
-		L3ecd:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x8), 0x80);
-			if (this.processor.FlagSet.IsLess) goto L3ed7;
-			goto L3f60;
+					sbyte horizLoc = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz);
+					sbyte vertLoc = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert);
 
-		L3ed7:
-			this.processor.RegAcc.Value16 = 0x600;
-			this.processor.ScaleAccumulatorToSource(this.processor.PullLocalWord(0x2));
-			this.processor.AddScaledToSource(0xc, this.processor.PullLocalWord(0x8));
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d7)), 0xff);
-			if (this.processor.FlagSet.IsEqual) goto L3eca;
-			this.processor.RegAcc.LowByte = 0x22;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d7)));
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1146)), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L3eca;
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81de)), 0xff);
-			if (this.processor.FlagSet.IsEqual) goto L3eca;
+					if (this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) != MapRules.OceanTerrain)
+						continue;
 
-			this.owner.MapOps.ObtainTerrainType(
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)),
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6)));
+					int distance = this.owner.Helpers.ObtainDistance(horizLoc, townHoriz, vertLoc, townVert);
 
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
-			if (this.processor.FlagSet.IsNotEqual) goto L3eca;
+					if ((short)(3 * this.troops.KindField(participantIdx, troopIdx, UnitKindTable.ShiftTally)) > distance)
+					{
+						this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHoriz, (byte)townHoriz);
+						this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelVert, (byte)townVert);
+					}
+				}
+			}
 
-			this.owner.Helpers.ObtainDistance(
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)),
-				this.processor.PullLocalSignedWord(0x4),
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6)),
-				this.processor.PullLocalSignedWord(0x6));
-
-			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegAcc.LowByte = 0x22;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d7)));
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegAcc.Value16 = 0x3;
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x113a)));
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.RegCount.Value16);
-			if (this.processor.FlagSet.IsGreater) goto L3f4f;
-			goto L3eca;
-
-		L3f4f:
-			this.processor.RegAcc.LowByte = this.processor.PullLocalByte(0x4);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81da), this.processor.RegAcc.LowByte);
-			this.processor.RegAcc.LowByte = this.processor.PullLocalByte(0x6);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81db), this.processor.RegAcc.LowByte);
-			goto L3eca;
-
-		L3f60:
-			this.processor.EmitLocalWord(0x2, this.processor.IncrementWord(this.processor.PullLocalWord(0x2)));
-
-		L3f63:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x8);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L3f88;
-
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L3f60;
-
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x2);
-			this.processor.RegCount.LowByte = 0x4;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, this.processor.RegCount.LowByte);
-
-			this.processor.RegBase.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-
-			if ((this.owner.World.Participants[this.processor.PullLocalWord(0x2)].Relations[this.owner.World.PersonParticipantIdx] & 2) == 0)
-				goto L3ec3;
-
-			goto L3f60;
-
-		L3f88:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.LeaveFrame();
-			// Far return
 			this.processor.Journal.CloseScope("PostCityDefenders");
 		}
 	}
