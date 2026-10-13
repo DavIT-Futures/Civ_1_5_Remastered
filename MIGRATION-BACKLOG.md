@@ -294,24 +294,37 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   Testy w `BatchFortyDifferentialTests`: najazd wymaga złota gracza (szansa = łup %), więc test daje mu złoto i część miast;
   `LabelLandmasses` czyta mapę z ekranu (kolory oceanu z tabeli 0x2ba6), test rysuje losowy ląd. Mutacja pozy 2 przy kroku 6
   przeżyła (krok 6 nie kończy gestu, a przy 0x67f0 = 1 poza nie jest rysowana) – wybrana inna.
+- Porcja 41 (2026-10-13): `DisplayKingScreen` (`MeetWithKing`), `DisplayWorldMap` (`WorldMap`), `HandleEndOfTurnEvents`
+  (`TurnEvents`, zanieczyszczenie i cuda budowane przez rywali), `EarnTechnology` (`ScienceAndAdvisors`, nowa technologia). Ramki
+  zostają (nazwa pliku w ramce, końcowe wartości zmiennych). `EarnTechnology` ustawia SI / DI przed wywołaniami jak oryginał
+  (wywoływane funkcje mogą je widzieć) i zostawia odkładanie adresu powrotu wokół `DisplayKingDialog`; martwy kod wymiany
+  ambasadorów (warunek `((Relations == 0) & 0x40)` zawsze fałszywy) usunięty, zostały tylko zapisy SI / DI. Wnioski:
+  `PlayerKnowsTechnology` nie ustawia AX – oryginał zapisuje jej wynik (0x67ee), nie AX (pierwsza wersja zapisywała AX
+  i test to złapał); `AppendText` / `CopyText` zostawiają w AX adres celu, więc test AX po nich jest zawsze prawdziwy; obrazki
+  z `ScreenToPicture` test rysuje po wywołaniu (inaczej mutacja położenia twarzy przeżywa). Testy w
+  `BatchFortyOneDifferentialTests`.
 
 ## Następny krok
 
 Dalej małe metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 60`
 (metody z co najmniej 2 liniami `goto L` / `FlagSet` / `Compare…` / `SumWord` itd., od najkrótszej). Kandydaci
 (`GameLoadAndSave` i `Newspaper` nie mają już metod w stylu asm): `ChooseTechnologyToTake` (`TradeAndConquest`, patrz wyżej),
-`HandleEndOfTurnEvents` (`TurnEvents`), `DisplayKingScreen` (`MeetWithKing`), `DisplayWorldMap` (`WorldMap`),
-`TitleLogoAndMainChoices` (`GameStartup`), `DisplayStoryIntro`, `ReckonContinentSizes` (`GameInitAndIntro`), `EarnTechnology` (`ScienceAndAdvisors`),
+`TitleLogoAndMainChoices` (`GameStartup`), `DisplayStoryIntro`, `ReckonContinentSizes`, `ProduceTerrain` (`GameInitAndIntro`),
+`ChartRoute` (`Pathfinding`), `CharacterizeStartLocation`, `DisplayTribeSelection` (`StartGameMenu`), `EstablishCity` (`CityFoundingAndScore`),
+`HandlePeaceTreaties` (`GovernmentAndDiplomacy`), `OperateMenu`, `DisplayMenu` (`DialogDrawing`), `ImportPalaceGraphics` (`Palace`),
 reszta generatora mapy w `GameInitAndIntro`. Funkcje niskopoziomowe `SystemServices` (`DeactivateMouse`, `PointerEvent`,
 `RenderCursorToScreen`, `RecoverScreenUnderCursor`, kolory i zegar: `PrepareTimer`, `RefreshHueCycling`, `AssignHueCycleSpan`,
 `ColorsFadeStep`, `FadeColors`, `FloodColors`, `ImportColorsFromBuffer`) i `SnapHeapPointer` (`VGADriver`) na koniec: działają
-w przerwaniach albo na rejestrach. Stan 2026-10-13 (po porcji 40): 65 metod w stylu asm, ok. 43,8 tys. z 67,8 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
+w przerwaniach albo na rejestrach. Stan 2026-10-13 (po porcji 41): 61 metod w stylu asm, ok. 42,5 tys. z 67,3 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
 Kod C# przetłumaczony z asm ma miejscami inne zachowanie niż DOS-owy CIV.EXE. Testy porównują z tłumaczeniem, więc na razie
 te błędy są odtwarzane jawnie:
 
+- `EarnTechnology`: pierwsze odkrycie technologii, która dezaktualizuje cud (tabela 0x10fe), czyta `Towns[MarvelTownIdx[cud]]`
+  także dla niezbudowanego cudu (-1) albo zniszczonego miasta (128), więc rzuca `IndexOutOfRangeException` (DOS czytał pamięć
+  przed tablicą). Do potwierdzenia w grze; po naprawie: sprawdzić -1 / 128 przed odczytem.
 - `AttachSpaceshipPart`: gdy nie ma wolnego miejsca danego rodzaju, komponent lub moduł trafia na koniec tabeli 0x375a (wiersz
   0xff, czyli 12 bajtów przed siatką gracza), a struktura w slot 0x63 (poza tabelą); komunikat „No further … required” jest
   nieosiągalny (szukanie nigdy nie kończy się na 0xffff). Po naprawie: komunikat i bit w 0x687a + 2 * rodzaj.

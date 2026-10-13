@@ -2410,200 +2410,151 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// The player learns a technology (from participantIdx1: himself or 0 by research, -2 the Great Library, else a player);
+		/// 0x47 (future technology) is only counted. After turn 0: the human player and the players he has contact with
+		/// announce it (with the wonders and units it allows, for the others), a player without contact may send an emissary
+		/// the first time anybody learns it (technology 8, one time in 3); the human player sees the Civilopedia, the new
+		/// governments with 0x14, the help with 5; technologies that make barracks obsolete sell them; the first player to learn
+		/// a technology cancels the effect of the human player's wonders it makes obsolete; the owner of the Great Library
+		/// (wonder 5) learns it when two players know it. SI and DI get the values of the original before the calls.
 		/// </summary>
-		/// <param name="playerID"></param>
-		/// <param name="technologyID"></param>
-		/// <param name="playerID1"></param>
 		public void EarnTechnology(short participantIdx, short scienceIdx, short participantIdx1)
 		{
 			this.processor.Journal.OpenScope($"EarnTechnology({participantIdx}, {scienceIdx}, {participantIdx1})");
 
-			// function body
+			// The final values of the locals stay in the stack frame, like in the original
 			this.processor.EnterFrame(0x8);
 			this.processor.PreserveIndexRegisters();
 
-			if (PlayerKnowsTechnology(participantIdx, scienceIdx) != 0)
+			if (PlayerKnowsTechnology(participantIdx, scienceIdx) == 0)
 			{
-				goto L22af;
+				if (scienceIdx != 0x47)
+				{
+					this.owner.World.Participants[participantIdx].FoundScienceMarkers[scienceIdx >> 4] |= (ushort)(1 << (scienceIdx & 0xf));
+					this.owner.World.Participants[participantIdx].ScienceObtainedSince[scienceIdx] = participantIdx1;
+				}
+
+				if (this.owner.World.RoundTally != 0)
+				{
+					this.owner.World.Participants[participantIdx].FoundScienceTally++;
+
+					AnnounceTechnology(participantIdx, scienceIdx, participantIdx1);
+
+					ApplyTechnology(participantIdx, scienceIdx);
+				}
 			}
 
-			if (scienceIdx != 0x47)
+			this.processor.RestoreIndexRegisters();
+			this.processor.LeaveFrame();
+			// Far return
+			this.processor.Journal.CloseScope("EarnTechnology");
+		}
+
+		/// <summary>The message about a new technology, or the emissary of a player without contact (see EarnTechnology)</summary>
+		private void AnnounceTechnology(short participantIdx, short scienceIdx, short participantIdx1)
+		{
+			short person = this.owner.World.PersonParticipantIdx;
+
+			if (participantIdx != person)
 			{
-				this.owner.World.Participants[participantIdx].FoundScienceMarkers[scienceIdx >> 4] |= (ushort)(1 << (scienceIdx & 0xf));
-				this.owner.World.Participants[participantIdx].ScienceObtainedSince[scienceIdx] = participantIdx1;
+				this.processor.RegSource.Value16 = (ushort)(participantIdx << 1);
+
+				if ((this.owner.World.Participants[person].Relations[participantIdx] & 0x40) == 0)
+				{
+					SendTechnologyEmissary(participantIdx, scienceIdx);
+					return;
+				}
 			}
 
-			if (this.owner.World.RoundTally == 0)
-				goto L22af;
+			this.processor.EmitGlobalByte(0xba06, 0);
 
-			this.owner.World.Participants[participantIdx].FoundScienceTally++;
+			this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)(((ushort)participantIdx << 1) + 0x1992)));
 
-			if (participantIdx == this.owner.World.PersonParticipantIdx) goto L1dce;
+			this.owner.Libc.AppendText(0xba06, participantIdx == participantIdx1 || participantIdx1 == 0 ? (ushort)0x23d7 : (ushort)0x23e1);
 
-			this.processor.RegSource.Value16 = (ushort)participantIdx;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
+			this.owner.Libc.AppendText(0xba06, (ushort)((ushort)(0x16 * scienceIdx) + 0x4da));
 
-			this.processor.RegBase.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.RegCount.LowByte = 0x4;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, this.processor.RegCount.LowByte);
-
-			if ((this.owner.World.Participants[this.owner.World.PersonParticipantIdx].Relations[participantIdx] & 0x40) == 0)
-				goto L1f47;
-
-		L1dce:
-			this.processor.EmitGlobalByte(0xba06, 0x0);
-
-			this.processor.RegBase.Value16 = (ushort)participantIdx;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1992)));
-
-			if (participantIdx == participantIdx1 ||
-				participantIdx1 == 0)
+			// AX is 0xba06 here (the original tested it)
+			if (participantIdx != participantIdx1)
 			{
-				this.owner.Libc.AppendText(0xba06, 0x23d7);
-			}
-			else
-			{
-				this.owner.Libc.AppendText(0xba06, 0x23e1);
+				this.owner.Libc.AppendText(0xba06, " from\nthe ");
+
+				if (participantIdx1 == -2)
+				{
+					this.owner.Libc.AppendText(0xba06, "Great Library");
+				}
+				else
+				{
+					this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)(((ushort)participantIdx1 << 1) + 0x1992)));
+				}
 			}
 
-			this.processor.ScaleIndex(0x16, (ushort)scienceIdx);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x4da);
-			this.owner.Libc.AppendText(0xba06, this.processor.RegAcc.Value16);
-
-			if (participantIdx == participantIdx1) goto L1e5c;
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual) goto L1e5c;
-
-			this.owner.Libc.AppendText(0xba06, " from\nthe ");
-
-			if (participantIdx1 != -2) goto L1e47;
-
-			this.owner.Libc.AppendText(0xba06, "Great Library");
-			goto L1e5c;
-
-		L1e47:
-			this.processor.RegBase.Value16 = (ushort)participantIdx1;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1992)));
-
-		L1e5c:
 			this.owner.Libc.AppendText(0xba06, "!\n ");
 
-			if (participantIdx == this.owner.World.PersonParticipantIdx)
-				goto L1ef9;
+			if (participantIdx != person)
+			{
+				// The wonders (0xbb6, names 0xb9a) and the units (0x114a, names 0x112a) the technology allows
+				for (ushort wonderIdx = 0; wonderIdx < 0x18; wonderIdx++)
+				{
+					this.processor.RegSource.Value16 = (ushort)(0x1e * wonderIdx);
 
-			this.processor.EmitLocalWord(0x2, 0x0);
+					if (this.processor.PullGlobalWord((ushort)(this.processor.RegSource.Value16 + 0xbb6)) == (ushort)scienceIdx)
+					{
+						this.owner.Libc.AppendText(0xba06, (ushort)(this.processor.RegSource.Value16 + 0xb9a));
 
-		L1e7c:
-			this.processor.RegAcc.Value16 = 0x1e;
-			this.processor.ScaleAccumulatorToSource(this.processor.PullLocalWord(0x2));
-			this.processor.RegAcc.Value16 = (ushort)scienceIdx;
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0xbb6)), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L1eaf;
+						this.owner.Libc.AppendText(0xba06, "\n ");
+					}
+				}
 
-			this.processor.RegAcc.Value16 = this.processor.RegSource.Value16;
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0xb9a);
-			this.owner.Libc.AppendText(0xba06, this.processor.RegAcc.Value16);
+				for (ushort kindIdx = 0; kindIdx < 0x1c; kindIdx++)
+				{
+					this.processor.RegSource.Value16 = (ushort)(0x22 * kindIdx);
 
-			this.owner.Libc.AppendText(0xba06, "\n ");
+					if (this.processor.PullGlobalWord((ushort)(this.processor.RegSource.Value16 + 0x114a)) == (ushort)scienceIdx)
+					{
+						this.owner.Libc.AppendText(0xba06, (ushort)(this.processor.RegSource.Value16 + 0x112a));
 
-		L1eaf:
-			this.processor.EmitLocalWord(0x2, this.processor.IncrementWord(this.processor.PullLocalWord(0x2)));
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x18);
-			if (this.processor.FlagSet.IsLess) goto L1e7c;
-			this.processor.EmitLocalWord(0x2, 0x0);
+						this.owner.Libc.AppendText(0xba06, "\n ");
+					}
+				}
 
-		L1ebd:
-			this.processor.RegAcc.Value16 = 0x22;
-			this.processor.ScaleAccumulatorToSource(this.processor.PullLocalWord(0x2));
-			this.processor.RegAcc.Value16 = (ushort)scienceIdx;
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x114a)), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L1ef0;
-			this.processor.RegAcc.Value16 = this.processor.RegSource.Value16;
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x112a);
+				this.processor.EmitLocalWord(0x2, 0x1c);
+			}
 
-			this.owner.Libc.AppendText(0xba06, this.processor.RegAcc.Value16);
+			if ((participantIdx != person || participantIdx1 == -2) && this.processor.PullGlobalWord(0x3934) == 0xffff)
+			{
+				this.processor.EmitGlobalWord(0xd206, 1);
 
-			this.owner.Libc.AppendText(0xba06, "\n ");
+				this.processor.EmitGlobalWord(0x2f9e, participantIdx == person ? (ushort)6 : (ushort)0);
 
-		L1ef0:
-			this.processor.EmitLocalWord(0x2, this.processor.IncrementWord(this.processor.PullLocalWord(0x2)));
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x1c);
-			if (this.processor.FlagSet.IsLess) goto L1ebd;
+				this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+			}
+		}
 
-		L1ef9:
-			if (participantIdx != this.owner.World.PersonParticipantIdx) goto L1f0a;
-
-			if (participantIdx1 != -2)
-				goto L2013;
-
-		L1f0a:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x3934), 0xffff);
-			if (this.processor.FlagSet.IsEqual) goto L1f14;
-			goto L2013;
-
-		L1f14:
-			this.processor.EmitGlobalWord(0xd206, 0x1);
-
-			if (participantIdx == this.owner.World.PersonParticipantIdx) goto L1f2a;
-
-			this.processor.EmitGlobalWord(0x2f9e, 0x0);
-			goto L1f30;
-
-		L1f2a:
-			this.processor.EmitGlobalWord(0x2f9e, 0x6);
-
-		L1f30:
-			this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
-
-			goto L2013;
-
-		L1f47:
-			this.processor.TestBitsByte((byte)this.owner.World.ScienceLeadingFoundVia[scienceIdx], 0x7);
-			if (this.processor.FlagSet.IsEqual) goto L1f5b;
-			goto L2013;
-
-		L1f5b:
-			this.processor.RegAcc.Value16 = PlayerKnowsTechnology(participantIdx, 8);
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsNotEqual)
-				goto L1f70;
-
-			goto L2013;
-
-		L1f70:
-			this.processor.RegAcc.Value16 = PlayerKnowsTechnology(this.owner.World.PersonParticipantIdx, scienceIdx);
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual)
-				goto L1f85;
-
-			goto L2013;
-
-		L1f85:
-			this.processor.RegAcc.Value16 = (ushort)(this.owner.Libc.Dice.DrawInt(3));
-
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsNotEqual) goto L2013;
+		/// <summary>
+		/// The first time anybody learns the technology, a player without contact who knows technology 8 sends an emissary to
+		/// the human player who doesn't know it, one time in 3; when he is received the king tells about it (0x240e)
+		/// </summary>
+		private void SendTechnologyEmissary(short participantIdx, short scienceIdx)
+		{
+			if (((byte)this.owner.World.ScienceLeadingFoundVia[scienceIdx] & 7) != 0 ||
+				PlayerKnowsTechnology(participantIdx, 8) == 0 ||
+				PlayerKnowsTechnology(this.owner.World.PersonParticipantIdx, scienceIdx) != 0 ||
+				this.owner.Libc.Dice.DrawInt(3) != 0)
+				return;
 
 			this.owner.Audience.WelcomeEmissary(participantIdx, -1, 0);
-			
-			this.processor.RegAcc.Value16 = this.processor.IncrementWord(this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L2013;
-			this.processor.RegAcc.Value16 = 0;
-			this.processor.EmitGlobalWord(0x3934, this.processor.RegAcc.Value16);
-			this.processor.EmitGlobalWord(0xd804, this.processor.RegAcc.Value16);
-			this.processor.EmitGlobalByte(0xba06, 0x0);
 
-			this.processor.RegBase.Value16 = (ushort)participantIdx;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30b8),
-				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1992)));
+			if (this.processor.RegAcc.Value16 == 0xffff)
+				return;
 
-			this.processor.ScaleIndex(0x16, (ushort)scienceIdx);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x4da);
-			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be), this.processor.RegAcc.Value16);
+			this.processor.EmitGlobalWord(0x3934, 0);
+			this.processor.EmitGlobalWord(0xd804, 0);
+			this.processor.EmitGlobalByte(0xba06, 0);
+
+			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30b8), this.processor.PullGlobalWord((ushort)(((ushort)participantIdx << 1) + 0x1992)));
+
+			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be), (ushort)((ushort)(0x16 * scienceIdx) + 0x4da));
 
 			this.owner.BlockText.DisplayTextDialog(0x240e);
 
@@ -2616,184 +2567,129 @@ namespace Civilization1Remaster.Game
 			this.processor.UnstackDoubleWord(); // stack management - pop return offset and segment
 
 			this.owner.Audience.FinishAudience();
+		}
 
-		L2013:
-			if (participantIdx != this.owner.World.PersonParticipantIdx) goto L2065;
+		/// <summary>What a new technology does after its message (see EarnTechnology)</summary>
+		private void ApplyTechnology(short participantIdx, short scienceIdx)
+		{
+			short person = this.owner.World.PersonParticipantIdx;
 
-			if (scienceIdx == 0x47) goto L202f;
-
-			this.owner.Encyclopedia.DisplayCivilopediaRecord((ushort)scienceIdx, 0);
-
-		L202f:
-			if (scienceIdx != 0x14) goto L203f;
-
-			this.owner.NewGameWizard.ImportGovernmentGraphics();
-
-			this.owner.TurnHooks.RepaintMainScreen();
-
-		L203f:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x3934), 0xffff);
-			if (this.processor.FlagSet.IsEqual) goto L2049;
-			goto L20d9;
-
-		L2049:
-			this.owner.TurnHooks.RepaintMainScreen();
-			
-			if (scienceIdx != 0x5)
-				goto L20d9;
-
-			this.owner.HelpSystem.DisplayHelpPopup(0x2414);
-			
-			goto L20d9;
-
-		L2065:
-			if (this.owner.World.HardnessTier != 0 ||
-				scienceIdx != 0x16) goto L20d9;
-
-			this.processor.RegSource.Value16 = (ushort)participantIdx;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-
-			this.processor.RegDest.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.RegCount.LowByte = 0x4;
-			this.processor.RegDest.Value16 = this.processor.ShiftLeftWord(this.processor.RegDest.Value16, this.processor.RegCount.LowByte);
-			this.processor.RegDest.Value16 = this.processor.SumWord(this.processor.RegDest.Value16, this.processor.RegSource.Value16);
-
-			// Exchange of Ambassadors, rule is never invoked!
-			// This piece of code is always skipped, as the result is always 0 or 1, and bit 0x40 is always 0!
-			//
-			if (((this.owner.World.Participants[this.owner.World.PersonParticipantIdx].Relations[participantIdx] == 0 ? 1 : 0) & 0x40) == 0)
-				goto L20d9;
-
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x3934), 0xffff);
-			if (this.processor.FlagSet.IsNotEqual) goto L20d9;
-
-			this.owner.World.Participants[this.owner.World.PersonParticipantIdx].Relations[participantIdx] |= 0x40;
-
-			this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1992)));
-
-			this.owner.Libc.AppendText(0xba06, " agree to\nan exchange of ambassadors.\n");
-
-			this.processor.EmitGlobalWord(0x2f9e, 0x1);
-
-			this.owner.TurnHooks.DisplayDialog(0xba06, 80, 100);
-
-			this.owner.Briefings.DisplayMilitaryReport();
-
-		L20d9:
-			if (!ScienceRules.DoesTechObsoleteBarracks(scienceIdx))
-				goto L2174;
-
-			for (int townIdx = 0; townIdx < 128; townIdx++)
+			if (participantIdx == person)
 			{
-				if (this.owner.World.Towns[townIdx].ConditionMarker != 0xff &&
-					this.owner.World.Towns[townIdx].ParticipantIdx == participantIdx)
+				if (scienceIdx != 0x47)
 				{
-					this.owner.World.Towns[townIdx].StructureMarkers0 &= 0xfffd;
+					this.owner.Encyclopedia.DisplayCivilopediaRecord((ushort)scienceIdx, 0);
+				}
+
+				if (scienceIdx == 0x14)
+				{
+					this.owner.NewGameWizard.ImportGovernmentGraphics();
+
+					this.owner.TurnHooks.RepaintMainScreen();
+				}
+
+				if (this.processor.PullGlobalWord(0x3934) == 0xffff)
+				{
+					this.owner.TurnHooks.RepaintMainScreen();
+
+					if (scienceIdx == 0x5)
+					{
+						this.owner.HelpSystem.DisplayHelpPopup(0x2414);
+					}
+				}
+			}
+			else if (this.owner.World.HardnessTier == 0 && scienceIdx == 0x16)
+			{
+				// The exchange of ambassadors that followed never happens: the test of the original, ((Relations == 0) & 0x40),
+				// is always false
+				this.processor.RegSource.Value16 = (ushort)(participantIdx << 1);
+				this.processor.RegDest.Value16 = (ushort)(((ushort)person << 4) + this.processor.RegSource.Value16);
+			}
+
+			if (ScienceRules.DoesTechObsoleteBarracks(scienceIdx))
+			{
+				for (int townIdx = 0; townIdx < 128; townIdx++)
+				{
+					if (this.owner.World.Towns[townIdx].ConditionMarker != 0xff &&
+						this.owner.World.Towns[townIdx].ParticipantIdx == participantIdx)
+					{
+						this.owner.World.Towns[townIdx].StructureMarkers0 &= 0xfffd;
+					}
+				}
+
+				if (participantIdx == person && this.processor.PullGlobalWord(0x3934) == 0xffff)
+				{
+					this.owner.Libc.CopyText(0xba06, "Development of ");
+
+					this.owner.Libc.AppendText(0xba06, (ushort)((ushort)(0x16 * scienceIdx) + 0x4da));
+
+					this.owner.Libc.AppendText(0xba06, "\nmakes existing Barracks\nobsolete.\n");
+
+					this.processor.EmitGlobalWord(0x2f9e, 0x3);
+
+					this.owner.TurnHooks.DisplayDialog(0xba06, 80, 100);
 				}
 			}
 
-			if (participantIdx != this.owner.World.PersonParticipantIdx)
-				goto L2174;
-
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x3934), 0xffff);
-			if (this.processor.FlagSet.IsNotEqual) goto L2174;
-
-			this.owner.Libc.CopyText(0xba06, "Development of ");
-
-			this.processor.ScaleIndex(0x16, (ushort)scienceIdx);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x4da);
-			this.owner.Libc.AppendText(0xba06, this.processor.RegAcc.Value16);
-
-			this.owner.Libc.AppendText(0xba06, "\nmakes existing Barracks\nobsolete.\n");
-
-			this.processor.EmitGlobalWord(0x2f9e, 0x3);
-
-			this.owner.TurnHooks.DisplayDialog(0xba06, 80, 100);
-
-		L2174:
-			this.processor.TestBitsByte((byte)this.owner.World.ScienceLeadingFoundVia[scienceIdx], 0x7);
-			if (this.processor.FlagSet.IsEqual) goto L2188;
-			goto L2234;
-
-		L2188:
-			this.owner.World.ScienceLeadingFoundVia[scienceIdx] = participantIdx;
-
-			this.owner.UnitOps.AttachReplayContent(5, (byte)participantIdx, (byte)scienceIdx);
-
-			this.processor.EmitLocalWord(0x6, 0x1);
-
-		L21ae:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x6);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegAcc.Value16 = (ushort)scienceIdx;
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x10fe)), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L2228;
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)this.owner.World.MarvelTownIdx[this.processor.PullLocalWord(0x6)]);
-
-			if (this.owner.World.Towns[this.owner.World.MarvelTownIdx[this.processor.PullLocalWord(0x6)]].ParticipantIdx != 
-				this.owner.World.PersonParticipantIdx)
-				goto L2228;
-
-			this.processor.ScaleIndex(0x16, (ushort)scienceIdx);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x4da);
-			this.owner.Libc.CopyText(0xba06, this.processor.RegAcc.Value16);
-
-			this.owner.Libc.AppendText(0xba06, " cancels\nthe effect of\n");
-
-			this.processor.ScaleIndex(0x1e, this.processor.PullLocalWord(0x6));
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0xe6a);
-			this.owner.Libc.AppendText(0xba06, this.processor.RegAcc.Value16);
-
-			this.owner.Libc.AppendText(0xba06, ".\n");
-
-			this.owner.Paper.DisplayNewspaper(-1);
-
-		L2228:
-			this.processor.EmitLocalWord(0x6, this.processor.IncrementWord(this.processor.PullLocalWord(0x6)));
-
-			this.processor.CompareWord(this.processor.PullLocalWord(0x6), 0x15);
-			if (this.processor.FlagSet.IsGreater) goto L2234;
-			goto L21ae;
-
-		L2234:
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.MarvelTownIdx[5];
-			this.processor.EmitLocalWord(0x8, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xffff);
-			if (this.processor.FlagSet.IsEqual) goto L22af;
-
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.Towns[this.processor.PullLocalWord(0x8)].ParticipantIdx;
-			this.processor.EmitLocalWord(0x8, this.processor.RegAcc.Value16);
-
-			this.processor.RegAcc.Value16 = PlayerKnowsTechnology((short)this.processor.RegAcc.Value16, scienceIdx);
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsNotEqual)
-				goto L22af;
-
-			this.owner.CityOps.PlayerEnjoysWonderEffect(this.processor.PullLocalSignedWord(0x8), 5);
-			
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual) goto L22af;
-			int civCountWithTech = 0;
-			for (short checkCiv = 1; checkCiv < 8; checkCiv++)
+			if (((byte)this.owner.World.ScienceLeadingFoundVia[scienceIdx] & 7) == 0)
 			{
-				if (PlayerKnowsTechnology(checkCiv, scienceIdx) != 0)
+				this.owner.World.ScienceLeadingFoundVia[scienceIdx] = participantIdx;
+
+				this.owner.UnitOps.AttachReplayContent(5, (byte)participantIdx, (byte)scienceIdx);
+
+				// The human player's wonders (0x10fe: the technology that makes each obsolete) lose their effect
+				for (ushort wonderIdx = 1; wonderIdx <= 0x15; wonderIdx++)
 				{
-					civCountWithTech++;
+					this.processor.RegSource.Value16 = (ushort)(wonderIdx << 1);
+
+					if (this.processor.PullGlobalWord((ushort)(this.processor.RegSource.Value16 + 0x10fe)) != (ushort)scienceIdx ||
+						this.owner.World.Towns[this.owner.World.MarvelTownIdx[wonderIdx]].ParticipantIdx != person)
+						continue;
+
+					this.owner.Libc.CopyText(0xba06, (ushort)((ushort)(0x16 * scienceIdx) + 0x4da));
+
+					this.owner.Libc.AppendText(0xba06, " cancels\nthe effect of\n");
+
+					this.owner.Libc.AppendText(0xba06, (ushort)((ushort)(0x1e * wonderIdx) + 0xe6a));
+
+					this.owner.Libc.AppendText(0xba06, ".\n");
+
+					this.owner.Paper.DisplayNewspaper(-1);
 				}
+
+				this.processor.EmitLocalWord(0x6, 0x16);
 			}
 
-			if (civCountWithTech < 2)
-				goto L22af;
+			// The Great Library (wonder 5) gives a technology that two players know
+			ushort libraryOwner = (ushort)this.owner.World.MarvelTownIdx[5];
+			this.processor.EmitLocalWord(0x8, libraryOwner);
 
-			EarnTechnology(this.processor.PullLocalSignedWord(0x8), scienceIdx, -2);
+			if (libraryOwner == 0xffff)
+				return;
 
-		L22af:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.RegDest.Value16 = this.processor.UnstackWord();
-			this.processor.LeaveFrame();
-			// Far return
-			this.processor.Journal.CloseScope("EarnTechnology");
+			libraryOwner = (ushort)this.owner.World.Towns[libraryOwner].ParticipantIdx;
+			this.processor.EmitLocalWord(0x8, libraryOwner);
+
+			if (PlayerKnowsTechnology((short)libraryOwner, scienceIdx) != 0)
+				return;
+
+			this.owner.CityOps.PlayerEnjoysWonderEffect((short)libraryOwner, 5);
+
+			if (this.processor.RegAcc.Value16 == 0)
+				return;
+
+			int knowing = 0;
+
+			for (short otherIdx = 1; otherIdx < 8; otherIdx++)
+			{
+				if (PlayerKnowsTechnology(otherIdx, scienceIdx) != 0)
+					knowing++;
+			}
+
+			if (knowing < 2)
+				return;
+
+			EarnTechnology((short)libraryOwner, scienceIdx, -2);
 		}
 
 		/// <summary>
