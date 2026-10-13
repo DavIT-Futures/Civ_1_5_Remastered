@@ -1,5 +1,6 @@
 using System;
 using Civilization1Remaster.Emulation;
+using Civilization1Remaster.Game.Rules;
 
 namespace Civilization1Remaster.Game
 {
@@ -4761,128 +4762,60 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// The direction (0 - 8, 0 is the tile itself) of the ocean tile at or around (horizLoc, vertLoc), without units
+		/// unless it is the tile itself, with the most empty land tiles around it (with relations bit 2 towards the human
+		/// player, land of the human player, map layer 2 at column + 80, does not count); -1 without such an ocean tile
 		/// </summary>
-		/// <param name="playerID"></param>
-		/// <param name="param2"></param>
-		/// <param name="param3"></param>
-		/// <returns></returns>
-		public ushort MayAIEnterTile(short participantIdx, ushort arg2, ushort arg3)
+		public ushort MayAIEnterTile(short participantIdx, ushort horizLoc, ushort vertLoc)
 		{
-			this.processor.Journal.OpenScope($"MayAIEnterTile({participantIdx}, {arg2}, {arg3})");
+			this.processor.Journal.OpenScope($"MayAIEnterTile({participantIdx}, {horizLoc}, {vertLoc})");
 
-			// function body
-			this.processor.EnterFrame(0x12);
-			this.processor.PreserveIndexRegisters();
-			this.processor.RegAcc.Value16 = 0xffff;
-			this.processor.EmitLocalWord(0x12, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x6, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0xa, 0x0);
-			goto L35d0;
+			short bestHeading = -1;
+			short bestShore = -1;
+			MapLayers chart = this.owner.MapOps.Chart;
 
-		L353a:
-			this.processor.EmitLocalWord(0xc, 0x1);
+			for (short heading = 0; heading <= 8; heading++)
+			{
+				short oceanHoriz = (short)(chart.DirectionHoriz(heading) + horizLoc);
+				short oceanVert = (short)(chart.DirectionVert(heading) + vertLoc);
 
-		L353f:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0xc);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1882));
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0xe));
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x18e4));
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x10));
-			this.processor.EmitLocalWord(0x8, this.processor.RegAcc.Value16);
+				if (this.owner.MapOps.ObtainTerrainType(oceanHoriz, oceanVert) != MapRules.OceanTerrain)
+					continue;
 
-			this.owner.MapOps.ObtainTerrainType(
-				this.processor.PullLocalSignedWord(0x4),
-				this.processor.PullLocalSignedWord(0x8));
+				if (heading != 0 && this.owner.MapOps.ObtainTileOwner(oceanHoriz, oceanVert) != 0xffff)
+					continue;
 
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
-			if (this.processor.FlagSet.IsEqual) goto L35b0;
+				short shore = 0;
 
-			this.owner.MapOps.ObtainTileOwner(
-				this.processor.PullLocalSignedWord(0x4),
-				this.processor.PullLocalSignedWord(0x8));
+				for (int around = 1; around <= 8; around++)
+				{
+					short landHoriz = (short)(chart.DirectionHoriz(around) + oceanHoriz);
+					short landVert = (short)(chart.DirectionVert(around) + oceanVert);
 
-			this.processor.RegAcc.Value16 = this.processor.IncrementWord(this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L35b0;
-			this.processor.IncrementLocalWord(0x2);
-			
-			this.processor.RegDest.Value16 = (ushort)participantIdx;
-			this.processor.RegCount.LowByte = 0x4;
-			this.processor.RegDest.Value16 = this.processor.ShiftLeftWord(this.processor.RegDest.Value16, this.processor.RegCount.LowByte);
+					if (this.owner.MapOps.ObtainTerrainType(landHoriz, landVert) == MapRules.OceanTerrain ||
+						this.owner.MapOps.ObtainTileOwner(landHoriz, landVert) != 0xffff)
+						continue;
 
-			this.processor.RegBase.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
+					shore++;
 
-			if ((this.owner.World.Participants[participantIdx].Relations[this.owner.World.PersonParticipantIdx] & 2) == 0)
-				goto L35b0;
+					if ((this.owner.World.Participants[participantIdx].Relations[this.owner.World.PersonParticipantIdx] & 2) != 0 &&
+						this.owner.VideoCard.ObtainDot(2, landHoriz + 0x50, landVert) == (ushort)this.owner.World.PersonParticipantIdx)
+					{
+						shore--;
+					}
+				}
 
-			this.owner.VideoCard.ObtainDot(2,
-				this.processor.PullLocalSignedWord(0x4) + 0x50,
-				this.processor.PullLocalSignedWord(0x8));
+				if (shore > bestShore)
+				{
+					bestShore = shore;
+					bestHeading = heading;
+				}
+			}
 
-			this.processor.CompareWord(this.processor.RegAcc.Value16, (ushort)this.owner.World.PersonParticipantIdx);
-			if (this.processor.FlagSet.IsNotEqual) goto L35b0;
-			this.processor.DecrementLocalWord(0x2);
-
-		L35b0:
-			this.processor.EmitLocalWord(0xc, this.processor.IncrementWord(this.processor.PullLocalWord(0xc)));
-			this.processor.CompareWord(this.processor.PullLocalWord(0xc), 0x8);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L353f;
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x6);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L35cd;
-			this.processor.CopyLocalWord(0x2, 0x6);
-			this.processor.CopyLocalWord(0xa, 0x12);
-
-		L35cd:
-			this.processor.EmitLocalWord(0xa, this.processor.IncrementWord(this.processor.PullLocalWord(0xa)));
-
-		L35d0:
-			this.processor.CompareWord(this.processor.PullLocalWord(0xa), 0x8);
-			if (this.processor.FlagSet.IsGreater) goto L3624;
-			this.processor.EmitLocalWord(0x2, 0x0);
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0xa);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1882));
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, arg2);
-			this.processor.EmitLocalWord(0xe, this.processor.RegAcc.Value16);
-
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x18e4));
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, arg3);
-			this.processor.EmitLocalWord(0x10, this.processor.RegAcc.Value16);
-
-			this.owner.MapOps.ObtainTerrainType(
-				this.processor.PullLocalSignedWord(0xe),
-				this.processor.PullLocalSignedWord(0x10));
-
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
-			if (this.processor.FlagSet.IsNotEqual) goto L35cd;
-			this.processor.CompareWord(this.processor.PullLocalWord(0xa), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L360e;
-			goto L353a;
-
-		L360e:
-			this.owner.MapOps.ObtainTileOwner(
-				this.processor.PullLocalSignedWord(0xe),
-				this.processor.PullLocalSignedWord(0x10));
-
-			this.processor.RegAcc.Value16 = this.processor.IncrementWord(this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L3622;
-			goto L353a;
-
-		L3622:
-			goto L35cd;
-
-		L3624:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x12);
-			this.processor.RestoreIndexRegisters();
-			this.processor.LeaveFrame();
-			// Far return
+			this.processor.RegAcc.Value16 = (ushort)bestHeading;
 			this.processor.Journal.CloseScope("MayAIEnterTile");
 
-			return this.processor.RegAcc.Value16;
+			return (ushort)bestHeading;
 		}
 
 		/// <summary>

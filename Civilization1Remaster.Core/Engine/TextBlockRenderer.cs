@@ -59,118 +59,65 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <summary>
-		/// Draws a text in a block of maximum width
+		/// Draws the text at 0xba06 in lines of at most peakBreadth * 8 pixels, from vertLoc down while the lines start at most at
+		/// row 192: a line ends at the last space, line break or "^" before it gets too wide (or at a line break or "^", which also
+		/// skips the character after a "^"). Returns the row below the last drawn line.
 		/// </summary>
-		/// <param name="maxWidth"></param>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
-		/// <param name="mode"></param>
-		/// <returns></returns>
 		public int RenderTextChunk(int peakBreadth, int horizLoc, int vertLoc, ushort style)
 		{
 			this.processor.Journal.OpenScope($"RenderTextChunk({peakBreadth}, {horizLoc}, {vertLoc}, {style})");
 
-			// function body
-			this.processor.EnterFrame(0xc);
-			this.processor.RegAcc.Value16 = 0;
-			this.processor.EmitLocalWord(0x6, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0xc, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
+			ushort lastBreak = 0;
+			ushort lineStart = 0;
+			short lineBreadth = 0;
+			ushort lineHeight = this.owner.VideoCard.ObtainTextHeight(this.processor.PullGlobalWord((ushort)(this.processor.PullGlobalWord(0xaa) + 0x10)));
 
-			this.owner.VideoCard.ObtainTextHeight(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.PullGlobalWord(0xaa) + 0x10)));
+			for (ushort place = 0; (short)this.owner.Libc.TextLength(0xba06) > (short)place; place++)
+			{
+				byte chr = this.processor.PullGlobalByte((ushort)(0xba06 + place));
 
-			this.processor.EmitLocalWord(0xa, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x8, 0x0);
-			goto L00b5;
+				lineBreadth += (short)this.owner.VideoCard.ObtainCharWidth(this.processor.PullGlobalWord((ushort)(this.processor.PullGlobalWord(0xaa) + 0x10)), chr);
 
-		L00b2:
-			this.processor.EmitLocalWord(0x8, this.processor.IncrementWord(this.processor.PullLocalWord(0x8)));
+				if (chr == 0x20 || chr == 0xa || chr == 0x5e)
+				{
+					lastBreak = place;
+				}
 
-		L00b5:
-			this.owner.Libc.TextLength(0xba06);
+				if (chr != 0xa && chr != 0x5e && peakBreadth * 8 >= lineBreadth)
+					continue;
 
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x8));
-			if (this.processor.FlagSet.IsGreater) goto L00c9;
-			goto L017b;
+				// The line ends at the last break: draw it alone
+				ushort breakAddr = (ushort)(0xba06 + lastBreak);
+				byte broken = this.processor.PullGlobalByte(breakAddr);
 
-		L00c9:
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x8);
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xba06));
+				this.processor.EmitGlobalByte(breakAddr, 0);
+				this.owner.TextPainter.RenderTextToScreen0((ushort)(0xba06 + lineStart), horizLoc, vertLoc, style);
+				this.processor.EmitGlobalByte(breakAddr, broken);
 
-			this.owner.VideoCard.ObtainCharWidth(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.PullGlobalWord(0xaa) + 0x10)), this.processor.RegAcc.LowByte);
+				vertLoc += (short)lineHeight;
+				lineBreadth = 0;
+				lineStart = (ushort)(lastBreak + 1);
 
-			this.processor.EmitLocalWord(0x4, this.processor.SumWord(this.processor.PullLocalWord(0x4), this.processor.RegAcc.Value16));
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x8);
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xba06)), 0x20);
-			if (this.processor.FlagSet.IsEqual) goto L00fc;
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xba06)), 0xa);
-			if (this.processor.FlagSet.IsEqual) goto L00fc;
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xba06)), 0x5e);
-			if (this.processor.FlagSet.IsNotEqual) goto L0101;
+				if (this.processor.PullGlobalByte((ushort)(0xba06 + place)) == 0x5e)
+				{
+					lineStart++;
+				}
 
-		L00fc:
-			this.processor.RegAcc.Value16 = this.processor.RegBase.Value16;
-			this.processor.EmitLocalWord(0x6, this.processor.RegAcc.Value16);
+				place = lastBreak;
 
-		L0101:
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xba06)), 0xa);
-			if (this.processor.FlagSet.IsEqual) goto L011b;
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xba06)), 0x5e);
-			if (this.processor.FlagSet.IsEqual) goto L011b;
+				if (vertLoc > 192)
+					break;
+			}
 
-			if (peakBreadth * 8 >= this.processor.PullLocalSignedWord(0x4))
-				goto L00b2;
+			// The rest (lineBreadth is 0 after a full page)
+			if (lineBreadth > 0 && vertLoc <= 192)
+			{
+				this.owner.TextPainter.RenderTextToScreen0((ushort)(0xba06 + lineStart), horizLoc, vertLoc, style);
 
-		L011b:
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x6);
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xba06));
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xba06), 0x0);
+				vertLoc += (short)lineHeight;
+			}
 
-			this.owner.TextPainter.RenderTextToScreen0(
-				(ushort)(0xba06 + this.processor.PullLocalWord(0xc)),
-				horizLoc, vertLoc, style);
-
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x6);
-			this.processor.RegAcc.LowByte = this.processor.PullLocalByte(0x2);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xba06), this.processor.RegAcc.LowByte);
-
-			vertLoc += this.processor.PullLocalSignedWord(0xa);
-
-			this.processor.EmitLocalWord(0x4, 0x0);
-			this.processor.RegAcc.Value16 = this.processor.RegBase.Value16;
-			this.processor.RegAcc.Value16 = this.processor.IncrementWord(this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0xc, this.processor.RegAcc.Value16);
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x8);
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xba06)), 0x5e);
-			if (this.processor.FlagSet.IsNotEqual) goto L016b;
-			this.processor.IncrementLocalWord(0xc);
-
-		L016b:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x6);
-			this.processor.EmitLocalWord(0x8, this.processor.RegAcc.Value16);
-
-			if (vertLoc <= 192)
-				goto L00b2;
-
-		L017b:
-			if (this.processor.PullLocalSignedWord(0x4) <= 0)
-				goto L01a6;
-			
-			if (vertLoc > 192)
-				goto L01a6;
-
-			this.owner.TextPainter.RenderTextToScreen0(
-				(ushort)(0xba06 + this.processor.PullLocalWord(0xc)),
-				horizLoc, vertLoc, style);
-
-			vertLoc += this.processor.PullLocalSignedWord(0xa);
-
-		L01a6:
-			this.processor.RegAcc.Value16 = (ushort)((short)vertLoc);
-			this.processor.LeaveFrame();
-			// Far return
+			this.processor.RegAcc.Value16 = (ushort)vertLoc;
 			this.processor.Journal.CloseScope("RenderTextChunk");
 
 			return vertLoc;

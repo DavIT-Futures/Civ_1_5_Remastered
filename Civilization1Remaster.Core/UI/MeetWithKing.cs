@@ -2736,117 +2736,87 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// Unless 0x67f0 is set: shows the throne room of the player, the background "backNa.pic" (N is the government / 2, 3 for
+		/// government 3, "m" instead of "a" when 0x67ee is set) with (Standing + 1) / 2 figures (columns at 0x3afe, pictures at
+		/// 0x804e) and the king (0xb1e6), with the colours of "kingNN.pal" (NN is 0x67f8) and of the background. The file names are
+		/// made in buffers in the stack frame, like in the original.
 		/// </summary>
-		/// <param name="playerID"></param>
 		public void ImportKingScenery(short participantIdx)
 		{
 			this.processor.Journal.OpenScope($"ImportKingScenery({participantIdx})");
 
-			// function body
 			this.processor.EnterFrame(0x1e);
 			this.processor.PreserveSource();
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x67f0), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L21bd;
-			goto L2337;
 
-		L21bd:
-			this.owner.Startup.ConcealMouseCursor();
+			if (this.processor.PullGlobalWord(0x67f0) == 0)
+			{
+				this.owner.Startup.ConcealMouseCursor();
 
-			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0xe), "back0a.pic");
+				ushort sceneryName = (ushort)(this.processor.RegFrame.Value16 - 0xe);
+				this.owner.Libc.CopyText(sceneryName, "back0a.pic");
 
-			this.processor.RegSource.Value16 = (ushort)this.owner.World.Participants[participantIdx].RegimeKind;
-			this.processor.RegAcc.Value16 = this.processor.RegSource.Value16;
-			this.processor.HalveAccumulator();
-			this.processor.RegAcc.LowByte = this.processor.SumByte(this.processor.RegAcc.LowByte, 0x30);
-			this.processor.EmitLocalByte(0xa, this.processor.RegAcc.LowByte);
-			this.processor.CompareWord(this.processor.RegSource.Value16, 0x3);
-			if (this.processor.FlagSet.IsNotEqual) goto L21f2;
-			this.processor.EmitLocalByte(0xa, 0x33);
-			goto L21fd;
+				short regime = this.owner.World.Participants[participantIdx].RegimeKind;
+				this.processor.EmitGlobalByte((ushort)(sceneryName + 4), (byte)((regime / 2) + 0x30));
 
-		L21f2:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x67ee), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L21fd;
-			this.processor.EmitLocalByte(0x9, 0x6d);
+				if (regime == 3)
+				{
+					this.processor.EmitGlobalByte((ushort)(sceneryName + 4), 0x33);
+				}
+				else if (this.processor.PullGlobalWord(0x67ee) != 0)
+				{
+					this.processor.EmitGlobalByte((ushort)(sceneryName + 5), 0x6d);
+				}
 
-		L21fd:
-			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, (ushort)(this.processor.RegFrame.Value16 - 0xe), 0);
+				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, sceneryName, 0);
 
-			this.processor.EmitLocalWord(0x1e, 0x0);
-			goto L2244;
+				for (int figureIdx = 0; (short)((this.owner.World.Participants[participantIdx].Standing + 1) >> 1) > figureIdx; figureIdx++)
+				{
+					this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0x19d4),
+						(short)this.processor.PullGlobalWord((ushort)((figureIdx << 1) + 0x3afe)), 34,
+						this.processor.PullGlobalWord((ushort)((((figureIdx + participantIdx) & 3) * 6) + 0x804e)));
+				}
 
-		L2214:
-			this.owner.Services.RenderPictureToScreen(
-				this.processor.PullGlobalWord(0x19d4),
-				this.processor.PullInt16(this.processor.SegData.Value16,
-					(ushort)((this.processor.PullLocalWord(0x1e) << 1) + 0x3afe)),
-				34,
-				this.processor.PullUInt16(this.processor.SegData.Value16,
-					(ushort)((((this.processor.PullLocalWord(0x1e) +
-					participantIdx) & 3) * 6) + 0x804e)));
+				this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0x19d4), 90, 0, this.processor.PullGlobalWord(0xb1e6));
 
-			this.processor.IncrementLocalWord(0x1e);
+				this.processor.EmitGlobalWord(0x67f4, 0);
 
-		L2244:
-			this.processor.RegAcc.Value16 = (ushort)((this.owner.World.Participants[participantIdx].Standing + 1) >> 1);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x1e));
-			if (this.processor.FlagSet.IsGreater) goto L2214;
-			
-			this.owner.Services.RenderPictureToScreen(
-				this.processor.PullGlobalWord(0x19d4),
-				90, 0,
-				this.processor.PullGlobalWord(0xb1e6));
+				// The background's colours: "backNa.pal"
+				this.owner.Libc.CopyText((ushort)(sceneryName + 7), "pal");
 
-			this.processor.EmitGlobalWord(0x67f4, 0x0);
+				ushort hueName = (ushort)(this.processor.RegFrame.Value16 - 0x1c);
+				this.owner.Libc.CopyText(hueName, "king00.pal");
 
-			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x7), "pal");
+				short king = (short)this.processor.PullGlobalWord(0x67f8);
+				this.processor.EmitGlobalByte((ushort)(hueName + 5), (byte)(this.processor.PullGlobalByte((ushort)(hueName + 5)) + king % 10));
+				this.processor.EmitGlobalByte((ushort)(hueName + 4), (byte)(this.processor.PullGlobalByte((ushort)(hueName + 4)) + king / 10));
 
-			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x1c), "king00.pal");
+				this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, hueName, 0xc1d6);
 
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x67f8);
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.RegCount.Value16 = 0xa;
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.EmitLocalByte(0x17, this.processor.SumByte(this.processor.PullLocalByte(0x17), this.processor.RegData.LowByte));
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x67f8);
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.EmitLocalByte(0x18, this.processor.SumByte(this.processor.PullLocalByte(0x18), this.processor.RegAcc.LowByte));
+				this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, sceneryName, 0xbdee);
 
-			this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, (ushort)(this.processor.RegFrame.Value16 - 0x1c), 0xc1d6);
+				// The colours 0x40 - 0x8f of the king over the background's
+				for (ushort place = 0xc0; place < 0x1b0; place++)
+				{
+					this.processor.EmitGlobalByte((ushort)(place + 0xbdf4), this.processor.PullGlobalByte((ushort)(place + 0xc1dc)));
+				}
 
-			this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, (ushort)(this.processor.RegFrame.Value16 - 0xe), 0xbdee);
+				// The loop counter's last value stays in the frame, like in the original
+				this.processor.EmitLocalWord(0x1e, 0x1b0);
 
-			this.processor.EmitLocalWord(0x1e, 0xc0);
+				this.owner.Helpers.HaltHueCycling();
 
-		L22cf:
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x1e);
-			this.processor.RegSource.Value16 = this.processor.RegBase.Value16;
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0xc1dc));
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xbdf4), this.processor.RegAcc.LowByte);
-			this.processor.IncrementLocalWord(0x1e);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x1e), 0x1b0);
-			if (this.processor.FlagSet.IsLess) goto L22cf;
+				this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 0);
 
-			this.owner.Helpers.HaltHueCycling();
+				this.owner.VideoCard.AssignHuesFromHueStruct(0xbdee);
 
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 0);
-			
-			this.owner.VideoCard.AssignHuesFromHueStruct(0xbdee);
-			
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0x19d4),
-				0, 0, 0x140, 0xc8,
-				this.processor.PullGlobalWord(0xaa),
-				0, 0);
+				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0xaa), 0, 0);
 
-			this.owner.Startup.DisplayMouseCursor();
+				this.owner.Startup.DisplayMouseCursor();
+			}
 
-		L2337:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
+			this.processor.RestoreSource();
 			this.processor.LeaveFrame();
-			// Far return
+
 			this.processor.Journal.CloseScope("'LoadKingBackground'");
 		}
 
