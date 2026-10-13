@@ -179,19 +179,23 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   mapa z nazwami miast jako tekst do pliku powtórki; test porównuje długość i hasz pliku w segmencie danych),
   `ObtainKingSalutation` (`MeetWithKing`), `EliminateCivilization` (`StartGameMenu`, z pomocniczym `OwnsCity`). Testy w
   `BatchTwentyTwoDifferentialTests`.
+- Kolejne 4 moduły (2026-10-13): `AttachHallOfFameRecord` (`HallOfFame`, zwraca teraz miejsce także w C#), `WelcomeEmissary`
+  (`MeetWithKing`, z `AskToReceiveEmissary`, `ReceiveEmissary`, `LeaderRecord`), `RenderCensusLine` (`WorldMap`, wartości czytane
+  z pamięci na bieżąco, bo pętla neguje je także dla człowieka), `RenderUnitOnWorldMap` (`MapManagement`; na mapie świata
+  oryginał zwraca w AX 0xc * jednostka, zostawione przez adres jednostki). Testy w `BatchTwentyThreeDifferentialTests`.
+  Wniosek: mutacja granicy, której nie da się osiągnąć (wiersz 16 * k + 8 nigdy nie jest 0xc0), nie jest dowodem słabego testu.
 
 ## Następny krok
 
 Dalej małe metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 60`
 (metody z co najmniej 2 liniami `goto L` / `FlagSet` / `Compare…` / `SumWord` itd., od najkrótszej). Kandydaci:
 `RenderExplosion` (`DiplomatActions`, kandydat ze „Śmieci na stosie”),
-`AttachHallOfFameRecord` (`HallOfFame`), `DisplayStoreGameDialog`, `ImportGame` (`GameLoadAndSave`), `WelcomeEmissary`
-(`MeetWithKing`), `RenderUnitOnWorldMap` (`MapManagement`), `RenderCensusLine`, `DisplayWondersOfTheWorld`, `DisplayGameFigures`
-(`WorldMap`), `RenderCityTile`, `RenderCitizenIcons` (`CityManagement`, kandydat ze „Śmieci na stosie”),
+`DisplayStoreGameDialog`, `ImportGame` (`GameLoadAndSave`), `DisplayWondersOfTheWorld`, `DisplayGameFigures` (`WorldMap`),
+`RenderCityTile`, `RenderCitizenIcons` (`CityManagement`, kandydat ze „Śmieci na stosie”),
 reszta generatora mapy w `GameInitAndIntro`. Funkcje niskopoziomowe `SystemServices` (`DeactivateMouse`, `PointerEvent`,
 `RenderCursorToScreen`, `RecoverScreenUnderCursor`, kolory i zegar: `PrepareTimer`, `RefreshHueCycling`, `AssignHueCycleSpan`,
 `ColorsFadeStep`, `FadeColors`, `FloodColors`, `ImportColorsFromBuffer`) i `SnapHeapPointer` (`VGADriver`) na koniec: działają
-w przerwaniach albo na rejestrach. Stan 2026-10-13: 132 metody w stylu asm, ok. 58 tys. z 74 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
+w przerwaniach albo na rejestrach. Stan 2026-10-13: 128 metod w stylu asm, ok. 58 tys. z 74 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 

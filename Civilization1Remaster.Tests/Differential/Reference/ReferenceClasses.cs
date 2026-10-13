@@ -53,4 +53,5 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 	public sealed partial class PlayerTurnReference(GameEngine owner) : ReferenceBase(owner);
 	public sealed partial class CivilizationInfoReference(GameEngine owner) : ReferenceBase(owner);
 	public sealed partial class CivilizationSchismReference(GameEngine owner) : ReferenceBase(owner);
+	public sealed partial class WorldMapReference(GameEngine owner) : ReferenceBase(owner);
 }

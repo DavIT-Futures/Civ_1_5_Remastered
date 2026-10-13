@@ -1890,135 +1890,67 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// A line of the demographics: the human player's rank ("1st" ...) among the living players 1 - 7 by the words at arg1
+		/// (one per player; with a negative row they are negated first, a lower value is better), and the best player's value
+		/// "(civilization: value text)" in its colour when the human player has relations bit 0x40 towards it. The values are
+		/// read from memory as they change, like in the original: the human player's own value is negated in the loop too.
 		/// </summary>
-		/// <param name="param1"></param>
-		/// <param name="yPos"></param>
-		/// <param name="stringPtr"></param>
 		public void RenderCensusLine(ushort arg1, short vertLoc, ushort charsAddr)
 		{
 			this.processor.Journal.OpenScope($"RenderCensusLine({arg1}, {vertLoc}, 0x{charsAddr:x4})");
 
-			// function body
-			this.processor.EnterFrame(0x8);
-			this.processor.PreserveIndexRegisters();
-			this.processor.EmitLocalWord(0x2, 0x1);
-			this.processor.EmitLocalWord(0x4, 0xd8f1);
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.EmitLocalWord(0x8, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x6, 0x1);
+			short humanIdx = this.owner.World.PersonParticipantIdx;
+			short rank = 1;
+			short best = -9999;
+			short bestIdx = humanIdx;
 
-		L1985:
-			this.processor.RegAcc.Value16 = 0x1;
-			this.processor.RegCount.LowByte = this.processor.PullLocalByte(0x6);
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			this.processor.TestBitsWord(this.processor.RegAcc.Value16, (ushort)this.owner.World.LiveRealms);
-			if (this.processor.FlagSet.IsEqual) goto L19d9;
-			
-			if (vertLoc >= 0)
-				goto L19a7;
+			short Amount(int participantIdx) => (short)this.processor.PullGlobalWord((ushort)(arg1 + (participantIdx << 1)));
 
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x6);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegSource.Value16 = this.processor.SumWord(this.processor.RegSource.Value16, arg1);
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, this.processor.RegSource.Value16);
-			this.processor.RegAcc.Value16 = this.processor.NegateWord(this.processor.RegAcc.Value16);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, this.processor.RegSource.Value16, this.processor.RegAcc.Value16);
-
-		L19a7:
-			this.processor.RegBase.Value16 = arg1;
-			this.processor.RegSource.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16));
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x6);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.RegSource.Value16 = arg1;
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16)), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L19c1;
-			this.processor.IncrementLocalWord(0x2);
-
-		L19c1:
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x6);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.RegDest.Value16 = arg1;
-			this.processor.RegSource.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegDest.Value16));
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), this.processor.RegSource.Value16);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L19d9;
-			this.processor.EmitLocalWord(0x4, this.processor.RegSource.Value16);
-			this.processor.CopyLocalWord(0x6, 0x8);
-
-		L19d9:
-			this.processor.EmitLocalWord(0x6, this.processor.IncrementWord(this.processor.PullLocalWord(0x6)));
-			this.processor.CompareWord(this.processor.PullLocalWord(0x6), 0x8);
-			if (this.processor.FlagSet.IsLess) goto L1985;
-			this.processor.EmitGlobalByte(0xba06, 0x0);
-
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText((short)this.processor.PullLocalWord(0x2), 10));
-
-			switch (this.processor.PullLocalWord(0x2))
+			for (short participantIdx = 1; participantIdx < 8; participantIdx++)
 			{
-				case 1:
-					this.owner.Libc.AppendText(0xba06, 0x4670);
-					break;
+				if (((1 << participantIdx) & this.owner.World.LiveRealms) == 0)
+					continue;
 
-				case 2:
-					this.owner.Libc.AppendText(0xba06, 0x4673);
-					break;
+				if (vertLoc < 0)
+				{
+					this.processor.EmitGlobalWord((ushort)(arg1 + (participantIdx << 1)), (ushort)-Amount(participantIdx));
+				}
 
-				case 3:
-					this.owner.Libc.AppendText(0xba06, 0x4676);
-					break;
+				if (Amount(participantIdx) > Amount(humanIdx))
+				{
+					rank++;
+				}
 
-				default:
-					this.owner.Libc.AppendText(0xba06, 0x4679);
-					break;
+				if (best < Amount(participantIdx))
+				{
+					best = Amount(participantIdx);
+					bestIdx = participantIdx;
+				}
 			}
 
-			this.owner.VideoCard.RenderLine(this.processor.PullGlobalWord(0xaa),
-				4, Math.Abs(vertLoc) - 3, 316, Math.Abs(vertLoc) - 3, 9);
+			this.processor.EmitGlobalByte(0xba06, 0);
+			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(rank, 10));
+
+			// "st", "nd", "rd", "th"
+			this.owner.Libc.AppendText(0xba06, rank switch { 1 => (ushort)0x4670, 2 => (ushort)0x4673, 3 => (ushort)0x4676, _ => (ushort)0x4679 });
+
+			this.owner.VideoCard.RenderLine(this.processor.PullGlobalWord(0xaa), 4, Math.Abs(vertLoc) - 3, 316, Math.Abs(vertLoc) - 3, 9);
 
 			this.owner.TextPainter.RenderTextWithShadow(0xba06, 192, Math.Abs(vertLoc), 15);
 
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x8), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L1a97;
-			goto L1b52;
+			if (bestIdx != humanIdx && (this.owner.World.Participants[humanIdx].Relations[bestIdx] & 0x40) != 0)
+			{
+				this.owner.Libc.CopyText(0xba06, "(");
+				this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)((bestIdx << 1) + 0x1992)));
+				this.owner.Libc.AppendText(0xba06, ": ");
+				this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(Math.Abs(best), 10));
+				this.owner.Libc.AppendText(0xba06, charsAddr);
+				this.owner.Libc.AppendText(0xba06, ")");
 
-		L1a97:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x8);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
+				this.owner.TextPainter.RenderTextToScreen0(0xba06, -(this.owner.TextPainter.ObtainTextWidth(0xba06) - 318), Math.Abs(vertLoc),
+					this.processor.PullGlobalWord((ushort)((bestIdx << 1) + 0x1946)));
+			}
 
-			this.processor.RegBase.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.RegCount.LowByte = 0x4;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, this.processor.RegCount.LowByte);
-
-			if ((this.owner.World.Participants[this.owner.World.PersonParticipantIdx].Relations[this.processor.PullLocalWord(0x8)] & 0x40) == 0)
-				goto L1b52;
-
-			this.owner.Libc.CopyText(0xba06, "(");
-
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1992)));
-
-			this.owner.Libc.AppendText(0xba06, ": ");
-
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText(Math.Abs((short)this.processor.PullLocalWord(0x4)), 10));
-
-			this.owner.Libc.AppendText(0xba06, charsAddr);
-
-			this.owner.Libc.AppendText(0xba06, ")");
-
-			this.owner.TextPainter.RenderTextToScreen0(0xba06,
-				-(this.owner.TextPainter.ObtainTextWidth(0xba06) - 318),
-				Math.Abs(vertLoc),
-				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1946)));
-
-		L1b52:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.RegDest.Value16 = this.processor.UnstackWord();
-			this.processor.LeaveFrame();
-			// Far return
 			this.processor.Journal.CloseScope("RenderCensusLine");
 		}
 	}

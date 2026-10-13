@@ -347,128 +347,64 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// Puts the human player's game into the Hall of Fame (6 records of 0x2e bytes at 0x3772:0x37d2, ordered by score 0xb77e
+		/// times difficulty + 2; a game not better than the first 5 takes the last place), moving the worse records down, and
+		/// shows it. When DisplayHallOfFame returns non-zero the Hall of Fame is wiped and the game put in again.
 		/// </summary>
-		public void AttachHallOfFameRecord()
+		/// <returns>The place of the game (also in AX)</returns>
+		public ushort AttachHallOfFameRecord()
 		{
 			this.processor.Journal.OpenScope("AttachHallOfFameRecord()");
 
-			// function body
-			this.processor.EnterFrame(0xe);
-			this.processor.PreserveSource();
-			this.processor.EmitLocalWord(0x2, 0x0);
+			ushort place = 0xffff;
 
-		L051f:
-			this.processor.EmitLocalWord(0x4, 0x0);
-			goto L061a;
+			for (int slotIdx = 0; slotIdx < 6; slotIdx++)
+			{
+				ushort record = (ushort)((slotIdx * 0x2e) + 0x37d2);
+				short rating = (short)((this.processor.PullUInt16(0x3772, (ushort)(record + 2)) + 2) * this.processor.PullUInt16(0x3772, record));
+				short gameRating = (short)((this.owner.World.HardnessTier + 2) * this.processor.PullGlobalWord(0xb77e));
 
-		L0527:
-			this.processor.RegAcc.Value16 = 0x2e;
-			this.processor.ScaleAccumulatorToSource(this.processor.PullLocalWord(0x6));
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x37d2);
-			this.processor.EmitLocalWord(0xa, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x8, 0x3772);
-			this.processor.RegAcc.Value16 = this.processor.RegSource.Value16;
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x37a4);
-			this.processor.EmitLocalWord(0xe, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0xc, 0x3772);
+				if (rating >= gameRating && slotIdx != 5)
+					continue;
 
-			this.owner.Libc.MoveFarData(
-				this.processor.PullLocalWord(0xc),
-				this.processor.PullLocalWord(0xe),
-				this.processor.PullLocalWord(0x8),
-				this.processor.PullLocalWord(0xa),
-				0x2e);
+				for (int laterIdx = 5; laterIdx > slotIdx; laterIdx--)
+				{
+					this.owner.Libc.MoveFarData(0x3772, (ushort)((laterIdx * 0x2e) + 0x37a4), 0x3772, (ushort)((laterIdx * 0x2e) + 0x37d2), 0x2e);
+				}
 
-			this.processor.DecrementLocalWord(0x6);
+				short humanIdx = this.owner.World.PersonParticipantIdx;
 
-		L0562:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x4);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x6), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsGreater) goto L0527;
-			this.processor.ScaleIndexToSource(0x2e, this.processor.PullLocalWord(0x4));
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0xb77e);
-			this.processor.SegExtra.Value16 = 0x3772; // segment
-			this.processor.EmitUInt16(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x37d2), this.processor.RegAcc.Value16);
-			
-			this.owner.Libc.MoveFarData(
-				this.processor.SegData.Value16,
-				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((this.owner.World.PersonParticipantIdx << 1) + 0x19a2)),
-				0x3772,
-				(ushort)(this.processor.RegSource.Value16 + 0x37e0),
-				0xe);
+				this.processor.EmitUInt16(0x3772, record, this.processor.PullGlobalWord(0xb77e));
+				this.owner.Libc.MoveFarData(this.processor.SegData.Value16, this.processor.PullGlobalWord((ushort)((humanIdx << 1) + 0x19a2)),
+					0x3772, (ushort)(record + 0xe), 0xe);
+				this.owner.Libc.MoveFarData(this.processor.SegData.Value16, this.processor.PullGlobalWord((ushort)((humanIdx << 1) + 0x1992)),
+					0x3772, (ushort)(record + 0x1e), 0x10);
+				this.processor.EmitUInt16(0x3772, (ushort)(record + 2), (ushort)this.owner.World.HardnessTier);
+				this.processor.EmitUInt16(0x3772, (ushort)(record + 4), this.processor.PullGlobalWord(0xdc6a));
+				this.processor.EmitUInt16(0x3772, (ushort)(record + 8), this.processor.PullGlobalWord(0xd764));
+				this.processor.EmitUInt16(0x3772, (ushort)(record + 0xa), this.processor.PullGlobalWord(0xd766));
+				this.processor.EmitInt16(0x3772, (ushort)(record + 6), this.owner.World.Season);
 
-			this.owner.Libc.MoveFarData(
-				this.processor.SegData.Value16,
-				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((this.owner.World.PersonParticipantIdx << 1) + 0x1992)),
-				0x3772,
-				(ushort)(this.processor.RegSource.Value16 + 0x37f0),
-				0x10);
+				ushort population = this.owner.Helpers.ObtainPlayerPopulation(humanIdx);
 
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.HardnessTier;
-			this.processor.SegExtra.Value16 = 0x3772; // segment
-			this.processor.EmitUInt16(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x37d4), this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0xdc6a);
-			this.processor.EmitUInt16(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x37d6), this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0xd764);
-			this.processor.EmitUInt16(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x37da), this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0xd766);
-			this.processor.EmitUInt16(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x37dc), this.processor.RegAcc.Value16);
-			this.processor.EmitInt16(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x37d8), owner.World.Season);
-			
-			this.owner.Helpers.ObtainPlayerPopulation(this.owner.World.PersonParticipantIdx);
+				this.processor.SegExtra.Value16 = 0x3772;
+				this.processor.EmitUInt16(0x3772, (ushort)(record + 0xc), population);
 
-			this.processor.SegExtra.Value16 = 0x3772; // segment
-			this.processor.EmitUInt16(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x37de), this.processor.RegAcc.Value16);
+				if (DisplayHallOfFame((ushort)slotIdx) == 0)
+				{
+					place = (ushort)slotIdx;
+					break;
+				}
 
-			DisplayHallOfFame(this.processor.PullLocalWord(0x4));
+				WipeHallOfFame();
 
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual) goto L0612;
+				slotIdx = -1;
+			}
 
-			WipeHallOfFame();
-
-			goto L051f;
-
-		L0612:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x4);
-			goto L0658;
-
-		L0617:
-			this.processor.EmitLocalWord(0x4, this.processor.IncrementWord(this.processor.PullLocalWord(0x4)));
-
-		L061a:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), 0x6);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0655;
-
-			this.processor.ScaleIndexToSource(0x2e, this.processor.PullLocalWord(0x4));
-			this.processor.SegExtra.Value16 = 0x3772; // segment
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x37d4));
-			this.processor.RegAcc.Value16 = this.processor.IncrementWord(this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = this.processor.IncrementWord(this.processor.RegAcc.Value16);
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.PullUInt16(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x37d2)));
-			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.HardnessTier;
-			this.processor.RegAcc.Value16 = this.processor.IncrementWord(this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = this.processor.IncrementWord(this.processor.RegAcc.Value16);
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.PullGlobalWord(0xb77e));
-			this.processor.CompareWord(this.processor.RegCount.Value16, this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsLess) goto L064d;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), 0x5);
-			if (this.processor.FlagSet.IsNotEqual) goto L0617;
-
-		L064d:
-			this.processor.EmitLocalWord(0x6, 0x5);
-			goto L0562;
-
-		L0655:
-			this.processor.RegAcc.Value16 = 0xffff;
-
-		L0658:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.LeaveFrame();
-			// Far return
+			this.processor.RegAcc.Value16 = place;
 			this.processor.Journal.CloseScope("AttachHallOfFameRecord");
+
+			return place;
 		}
 
 		/// <summary>

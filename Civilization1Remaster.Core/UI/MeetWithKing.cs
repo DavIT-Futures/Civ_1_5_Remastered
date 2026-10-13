@@ -1895,134 +1895,107 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// The audience with the player's emissary, once a turn (0xd804): unless the answer 0x3934 is known, shows the map at
+		/// the position (horizLoc -1: not moved) and asks whether to receive the emissary (with "Check Intelligence" when the human player
+		/// has relations bit 0x40 towards the player, which shows the report and asks again); 0x3934 is minus the choice. Unless
+		/// refused (-1), shows the king and his greeting in the player's font (0x36fa).
 		/// </summary>
-		/// <param name="playerID"></param>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
-		/// <returns></returns>
+		/// <returns>0x3934, also in AX</returns>
 		public ushort WelcomeEmissary(short participantIdx, int horizLoc, int vertLoc)
 		{
 			this.processor.Journal.OpenScope($"WelcomeEmissary({participantIdx}, {horizLoc}, {vertLoc})");
 
-			// function body
-			this.processor.EnterFrame();
-			this.processor.PreserveSource();
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xd804), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L16de;
+			if (this.processor.PullGlobalWord(0xd804) == 0)
+			{
+				this.processor.EmitGlobalWord(0xd804, 1);
 
-		L16d8:
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x3934);
-			goto L1871;
+				if (this.processor.PullGlobalWord(0x3934) == 0)
+				{
+					AskToReceiveEmissary(participantIdx, horizLoc, vertLoc);
+				}
 
-		L16de:
-			this.processor.EmitGlobalWord(0xd804, 0x1);
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x3934), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L16ee;
-			goto L17c7;
+				if (this.processor.PullGlobalWord(0x3934) != 0xffff)
+				{
+					ReceiveEmissary(participantIdx);
+				}
+			}
 
-		L16ee:
-			if (horizLoc == -1)
-				goto L170d;
+			ushort answer = this.processor.PullGlobalWord(0x3934);
+			this.processor.RegAcc.Value16 = answer;
 
-			this.owner.MapOps.FocusMapView(owner.World.PersonParticipantIdx, horizLoc - 8, vertLoc - 2);
+			this.processor.Journal.CloseScope("WelcomeEmissary");
 
-		L170d:
-			this.owner.Libc.CopyText(0xba06, "An emissary from the\n");
+			return answer;
+		}
 
-			this.processor.RegSource.Value16 = (ushort)participantIdx;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
+		/// <summary>The question of WelcomeEmissary: 0x3934 becomes minus the chosen line (-2 shows the intelligence report first)</summary>
+		private void AskToReceiveEmissary(short participantIdx, int horizLoc, int vertLoc)
+		{
+			if (horizLoc != -1)
+			{
+				this.owner.MapOps.FocusMapView(this.owner.World.PersonParticipantIdx, horizLoc - 8, vertLoc - 2);
+			}
 
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1992)));
+			while (true)
+			{
+				this.owner.Libc.CopyText(0xba06, "An emissary from the\n");
+				this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1992)));
+				this.owner.Libc.AppendText(0xba06, " wishes to\nspeak with you.\n");
+				this.owner.Libc.AppendText(0xba06, "Will you receive him?\n Yes.\n No.\n");
 
-			this.owner.Libc.AppendText(0xba06, " wishes to\nspeak with you.\n");
+				if ((this.owner.World.Participants[this.owner.World.PersonParticipantIdx].Relations[participantIdx] & 0x40) != 0)
+				{
+					this.owner.Libc.AppendText(0xba06, " Check Intelligence\n");
+				}
 
-			this.owner.Libc.AppendText(0xba06, "Will you receive him?\n Yes.\n No.\n");
+				this.owner.Services.PerformSound(this.processor.PullGlobalWord(LeaderRecord(participantIdx, 0x1518)), 3);
 
-			this.processor.RegBase.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.RegCount.LowByte = 0x4;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, this.processor.RegCount.LowByte);
+				this.owner.Startup.DisplayMouseCursorFully();
 
-			if ((this.owner.World.Participants[this.owner.World.PersonParticipantIdx].Relations[participantIdx] & 0x40) == 0)
-				goto L1771;
+				this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
 
-			this.owner.Libc.AppendText(0xba06, " Check Intelligence\n");
+				this.processor.EmitGlobalWord(0x3934, (ushort)-this.processor.RegAcc.Value16);
 
-		L1771:
-			this.processor.RegAcc.Value16 = 0x3a;
-			this.processor.ScaleAccumulatorToBase((ushort)this.owner.World.Participants[participantIdx].ChiefVisuals);
+				this.owner.Startup.ConcealMouseCursorToSavedLevel();
 
-			this.owner.Services.PerformSound(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1518)), 3);
+				if (this.processor.PullGlobalWord(0x3934) != 0xfffe)
+					break;
 
-			this.owner.Startup.DisplayMouseCursorFully();
+				this.owner.Briefings.DisplayIntelligenceReport(participantIdx);
+			}
+		}
 
-			this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
-
-			this.processor.RegAcc.Value16 = this.processor.NegateWord(this.processor.RegAcc.Value16);
-			this.processor.EmitGlobalWord(0x3934, this.processor.RegAcc.Value16);
-
-			this.owner.Startup.ConcealMouseCursorToSavedLevel();
-
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x3934), 0xfffe);
-			if (this.processor.FlagSet.IsNotEqual) goto L17c7;
-			
-			this.owner.Briefings.DisplayIntelligenceReport(participantIdx);
-			
-			goto L170d;
-
-		L17c7:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x3934), 0xffff);
-			if (this.processor.FlagSet.IsNotEqual) goto L17d1;
-			goto L16d8;
-
-		L17d1:
+		/// <summary>The audience of WelcomeEmissary: the king's screen, his greeting and dialog</summary>
+		private void ReceiveEmissary(short participantIdx)
+		{
 			this.owner.Startup.ConcealMouseCursor();
-			
+
 			DisplayKingScreen(participantIdx);
 
-			this.processor.RegAcc.Value16 = 0x3a;
-			this.processor.ScaleAccumulatorToBase((ushort)this.owner.World.Participants[participantIdx].ChiefVisuals);
-
-			this.owner.Services.PerformSound(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x151a)), 3);
+			this.owner.Services.PerformSound(this.processor.PullGlobalWord(LeaderRecord(participantIdx, 0x151a)), 3);
 
 			this.owner.Startup.DisplayMouseCursor();
 
-			this.processor.RegBase.Value16 = (ushort)this.owner.World.Participants[participantIdx].ChiefVisuals;
-			this.processor.SegExtra.Value16 = 0x36fa; // segment
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegExtra.Value16, (ushort)(this.processor.RegBase.Value16 + 0x0));
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x8);
-			this.processor.EmitGlobalWord(0x67ec, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
-			if (this.processor.FlagSet.IsEqual)
-			{
-				this.processor.EmitGlobalWord(0x67ec, 0x3);
-			}
-		
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x67ec);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = 0x1;
-			this.processor.EmitGlobalWord(0xd2dc, this.processor.RegAcc.Value16);
-			this.processor.EmitGlobalWord(0x3936, this.processor.RegAcc.Value16);
+			// The font of the leader (table at 0x36fa), font 3 instead of 10
+			ushort typeface = (ushort)((sbyte)this.processor.PullUInt8(0x36fa, (ushort)this.owner.World.Participants[participantIdx].ChiefVisuals) + 8);
+			this.processor.EmitGlobalWord(0x67ec, typeface == 0xa ? (ushort)3 : typeface);
+
+			this.processor.EmitGlobalWord((ushort)(this.processor.PullGlobalWord(0xaa) + 0x10), this.processor.PullGlobalWord(0x67ec));
+			this.processor.EmitGlobalWord(0xd2dc, 1);
+			this.processor.EmitGlobalWord(0x3936, 1);
 			this.processor.EmitGlobalWord(0x67e8, 0xffff);
-			this.processor.EmitGlobalWord(0x7ef4, 0x0);
+			this.processor.EmitGlobalWord(0x7ef4, 0);
 			this.processor.EmitGlobalWord(0xd76c, 0xc);
 
 			ObtainKingSalutation(participantIdx);
-			
+
 			DisplayKingDialog(0xba06, 0x14, 0x8b);
-			
-			goto L16d8;
+		}
 
-		L1871:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-
-			// Far return
-			this.processor.Journal.CloseScope("WelcomeEmissary");
-
-			return this.processor.RegAcc.Value16;
+		/// <summary>A word of the player's leader record (0x3a bytes per leader)</summary>
+		private ushort LeaderRecord(short participantIdx, ushort field)
+		{
+			return (ushort)((this.owner.World.Participants[participantIdx].ChiefVisuals * 0x3a) + field);
 		}
 
 		/// <summary>
