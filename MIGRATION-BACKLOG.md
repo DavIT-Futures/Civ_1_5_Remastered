@@ -351,26 +351,37 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   Test: `DisplayStoryIntro` zależy od zegara testów (tyka z dostępami do pamięci), więc test zamraża opowieść (0x3b62 = 1,
   0x6802 = 0, 0x6806 = 0x7fff). `DivideCivilization` (`CivilizationSchism`, ok. 740 linii) odłożona na początek nowego
   kontekstu. Testy w `BatchFortySevenDifferentialTests`.
+- Porcja 48, jedna funkcja (2026-10-13): `DivideCivilization` (`CivilizationSchism`, wojna domowa: nowa cywilizacja w wolnym
+  slocie, podział kontynentów albo najdalszych miast, przejście jednostek ze stosami). Ramka zostaje. Wnioski: jednostka bez
+  miasta macierzystego (0xff) wyrzuca `IndexOutOfRangeException` na `Towns[255]`, a nieznaleziona stolica na `Towns[0xffff]` –
+  zachowane, z AX jak w oryginale (0x1c * indeks, wyliczane tuż przed odczytem; test to sprawdza w rejestrach); technologie
+  „kopiowane” na samego gracza, druga relacja wojny w wierszu gracza (patrz błędy). Test: ponowny podział tych samych
+  cywilizacji (i losowe 0xdc6a) zapętla oryginał na zawsze (najdalsze miasto nieaktualne, rozmiar 0) – tylko 5 scenariuszy,
+  „brak wolnego slotu” przez licznik jednostek 1. Testy w `BatchFortyEightDifferentialTests`.
 
 ## Następny krok
 
 Dalej małe metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 60`
 (metody z co najmniej 2 liniami `goto L` / `FlagSet` / `Compare…` / `SumWord` itd., od najkrótszej). Kandydaci
 (`GameLoadAndSave` i `Newspaper` nie mają już metod w stylu asm): `ChooseTechnologyToTake` (`TradeAndConquest`, patrz wyżej),
-`TitleLogoAndMainChoices` (`GameStartup`), `DisplayStoryIntro` (`GameInitAndIntro`), `DivideCivilization` (`CivilizationSchism`),
+`TitleLogoAndMainChoices` (`GameStartup`), `DisplayStoryIntro` (`GameInitAndIntro`),
 `DisplayTribeSelection` (`StartGameMenu`),
 `OperateMenu`, `DisplayMenu` (`DialogDrawing`),
 `DisplayCivilopediaIndex` (`Civilopedia`), `DisplayCivilizationScreen` (`MainIntro`),
 `ConstructCivilization`, `ConfigureFreshGame` (`StartGameMenu`), `DisplayPalace` (`Palace`, patrz porcja 45), reszta generatora mapy w `GameInitAndIntro`. Funkcje niskopoziomowe `SystemServices` (`DeactivateMouse`, `PointerEvent`,
 `RenderCursorToScreen`, `RecoverScreenUnderCursor`, kolory i zegar: `PrepareTimer`, `RefreshHueCycling`, `AssignHueCycleSpan`,
 `ColorsFadeStep`, `FadeColors`, `FloodColors`, `ImportColorsFromBuffer`) i `SnapHeapPointer` (`VGADriver`) na koniec: działają
-w przerwaniach albo na rejestrach. Stan 2026-10-13 (po porcji 47): 48 metod w stylu asm, ok. 36,4 tys. z 65,4 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
+w przerwaniach albo na rejestrach. Stan 2026-10-13 (po porcji 48): 47 metod w stylu asm, ok. 35,7 tys. z 65,3 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
 Kod C# przetłumaczony z asm ma miejscami inne zachowanie niż DOS-owy CIV.EXE. Testy porównują z tłumaczeniem, więc na razie
 te błędy są odtwarzane jawnie:
 
+- `DivideCivilization`: technologie przepisywane z gracza na niego samego (nowa cywilizacja zaczyna bez technologii), flaga 9
+  wojny ustawiana drugi raz w relacji gracza zamiast nowej cywilizacji, jednostka bez miasta macierzystego (0xff) poza miastem
+  rzuca wyjątek (`Towns[255]`), brak miasta do oddania zapętla podział. Po naprawie: kopia technologii, relacja obustronna,
+  sprawdzenie 0xff i warunek końca pętli.
 - `HandlePeaceTreaties`: groźba emisariusza (L0468) bierze nazwę gracza z `word[0x1992 + DI]`, gdzie DI = gracz << 4 (ustawione
   dla relacji), czyli spoza tablicy nazw – tekst z przypadkowego wskaźnika. Po naprawie: 0x1992 + 2 * gracz.
 - `EarnTechnology`: pierwsze odkrycie technologii, która dezaktualizuje cud (tabela 0x10fe), czyta `Towns[MarvelTownIdx[cud]]`
