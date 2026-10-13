@@ -8841,144 +8841,87 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// The citizens of the city from (horizLoc, vertLoc): the happy (0x70e2), the content, the unhappy (0x70e4, the first
+		/// 0x6542 of them marked) and the arg4 specialists (ObtainCitizenType), 7 pixels apart or narrower to fit in arg5, with
+		/// gaps between the groups.
 		/// </summary>
-		/// <param name="cityID"></param>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
-		/// <param name="param4"></param>
-		/// <param name="param5"></param>
-		/// <returns></returns>
+		/// <returns>The distance of the icons, also in AX</returns>
 		public ushort RenderCitizenIcons(short townIdx, short horizLoc, short vertLoc, ushort arg4, ushort arg5)
 		{
 			this.processor.Journal.OpenScope($"RenderCitizenIcons({townIdx}, {horizLoc}, {vertLoc}, {arg4}, {arg5})");
 
-			// function body
+			// The gap after the happy citizens depends on the frame word 0x2, which is never written (the leftovers of the
+			// functions called before at this depth), like in the original; the final values of the locals stay in the frame
 			this.processor.EnterFrame(0xa);
-			this.processor.ScaleIndexToBase(0x1c, (ushort)townIdx);
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.Towns[townIdx].TrueExtent;
-			this.processor.EmitLocalByte(0xa, this.processor.RegAcc.LowByte);
-			this.processor.RegAcc.LowByte = 0x7;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullLocalByte(0xa));
-			this.processor.CompareWord(this.processor.RegAcc.Value16, arg5);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L6f04;
-			this.processor.RegAcc.LowByte = this.processor.PullLocalByte(0xa);
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegAcc.Value16 = arg5;
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.EmitLocalWord(0x8, this.processor.RegAcc.Value16);
-			goto L6f09;
 
-		L6f04:
-			this.processor.EmitLocalWord(0x8, 0x7);
+			sbyte size = this.owner.World.Towns[townIdx].TrueExtent;
 
-		L6f09:
-			this.processor.EmitLocalWord(0x6, 0x0);
-			goto L6f37;
+			this.processor.EmitLocalByte(0xa, (byte)size);
 
-		L6f10:
-			this.owner.Services.RenderPictureToScreen(
-				this.processor.PullGlobalWord(0xaa),
-				horizLoc, vertLoc,
-				this.processor.PullUInt16(this.processor.SegData.Value16,
-					(ushort)(((this.processor.PullLocalWord(0x6) & 1) << 1) + 0x6e96)));
+			ushort step = (short)(7 * size) > (short)arg5 ? (ushort)CPU.SignedQuotient((short)arg5, size) : (ushort)7;
+			short citizenIdx;
 
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x8);
-			horizLoc += (short)this.processor.RegAcc.Value16;
-			this.processor.IncrementLocalWord(0x6);
+			for (citizenIdx = 0; citizenIdx < (short)this.processor.PullGlobalWord(0x70e2); citizenIdx++)
+			{
+				horizLoc = RenderCitizen(horizLoc, vertLoc, this.processor.PullGlobalWord((ushort)(((citizenIdx & 1) << 1) + 0x6e96)), step);
+			}
 
-		L6f37:
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x70e2);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x6), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsLess) goto L6f10;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L6f49;
-			horizLoc += 2;
+			if (this.processor.PullLocalWord(0x2) != 0)
+			{
+				horizLoc += 2;
+			}
 
-		L6f49:
-			this.processor.EmitLocalWord(0x6, 0x0);
-			goto L6f77;
+			for (citizenIdx = 0; (short)(this.owner.World.Towns[townIdx].TrueExtent - arg4 - this.processor.PullGlobalWord(0x70e2) -
+				this.processor.PullGlobalWord(0x70e4)) > citizenIdx; citizenIdx++)
+			{
+				horizLoc = RenderCitizen(horizLoc, vertLoc, this.processor.PullGlobalWord((ushort)(((citizenIdx & 1) << 1) + 0x6e9a)), step);
+			}
 
-		L6f50:
-			this.owner.Services.RenderPictureToScreen(
-				this.processor.PullGlobalWord(0xaa),
-				horizLoc, vertLoc,
-				this.processor.PullUInt16(this.processor.SegData.Value16,
-					(ushort)(((this.processor.PullLocalWord(0x6) & 1) << 1) + 0x6e9a)));
+			if (citizenIdx != 0)
+			{
+				horizLoc += 2;
+			}
 
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x8);
-			horizLoc += (short)this.processor.RegAcc.Value16;
-			this.processor.IncrementLocalWord(0x6);
+			for (citizenIdx = 0; citizenIdx < (short)this.processor.PullGlobalWord(0x70e4); citizenIdx++)
+			{
+				this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa), horizLoc, vertLoc,
+					this.processor.PullGlobalWord((ushort)(((citizenIdx & 1) << 1) + 0x6e9e)));
 
-		L6f77:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.Towns[townIdx].TrueExtent;
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, arg4);
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, this.processor.PullGlobalWord(0x70e2));
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, this.processor.PullGlobalWord(0x70e4));
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x6));
-			if (this.processor.FlagSet.IsGreater) goto L6f50;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x6), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L6f9e;
-			horizLoc += 2;
+				if (citizenIdx < (short)this.processor.PullGlobalWord(0x6542))
+				{
+					this.owner.VideoCard.SubstituteHue(this.processor.PullGlobalWord(0xaa), horizLoc, vertLoc, 12, 14, 5, 12);
+				}
 
-		L6f9e:
-			this.processor.EmitLocalWord(0x6, 0x0);
-			goto L6ff6;
+				horizLoc += (short)step;
+			}
 
-		L6fa5:
-			this.owner.Services.RenderPictureToScreen(
-				this.processor.PullGlobalWord(0xaa),
-				horizLoc, vertLoc,
-				this.processor.PullUInt16(this.processor.SegData.Value16,
-					(ushort)(((this.processor.PullLocalWord(0x6) & 1) << 1) + 0x6e9e)));
-
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x6542);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x6), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L6fed;
-
-			this.owner.VideoCard.SubstituteHue(this.processor.PullGlobalWord(0xaa),
-				horizLoc, vertLoc,	12, 14, 5, 12);
-
-		L6fed:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x8);
-			horizLoc += (short)this.processor.RegAcc.Value16;
-			this.processor.IncrementLocalWord(0x6);
-
-		L6ff6:
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x70e4);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x6), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsLess) goto L6fa5;
 			horizLoc += 4;
-			this.processor.EmitLocalWord(0x6, 0x0);
-			goto L7036;
 
-		L7009:
-			ObtainCitizenType(this.processor.PullLocalWord(0x6));
+			for (citizenIdx = 0; citizenIdx < (short)arg4; citizenIdx++)
+			{
+				ObtainCitizenType((ushort)citizenIdx);
 
-			this.owner.Services.RenderPictureToScreen(
-				this.processor.PullGlobalWord(0xaa),
-				horizLoc, vertLoc,
-				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((this.processor.RegAcc.Value16 << 1) + 0x6ea0)));
+				horizLoc = RenderCitizen(horizLoc, vertLoc, this.processor.PullGlobalWord((ushort)((this.processor.RegAcc.Value16 << 1) + 0x6ea0)), step);
+			}
 
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x8);
-			horizLoc += (short)this.processor.RegAcc.Value16;
-			this.processor.IncrementLocalWord(0x6);
+			this.processor.EmitLocalWord(0x6, (ushort)citizenIdx);
+			this.processor.EmitLocalWord(0x8, step);
 
-		L7036:
-			this.processor.RegAcc.Value16 = arg4;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x6), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsLess) goto L7009;
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x8);
+			this.processor.RegAcc.Value16 = step;
 			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("RenderCitizenIcons");
 
-			return this.processor.RegAcc.Value16;
+			return step;
+		}
+
+		/// <summary>One citizen icon at the place</summary>
+		/// <returns>The place of the next one</returns>
+		private short RenderCitizen(short horizLoc, short vertLoc, ushort picture, ushort step)
+		{
+			this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa), horizLoc, vertLoc, picture);
+
+			return (short)(horizLoc + step);
 		}
 
 		/// <summary>

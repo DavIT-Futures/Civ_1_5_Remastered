@@ -273,6 +273,9 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   zmienna 0x20 z listy „Śmieci na stosie” to pierwszy obrazek zapisywany przez adres). Testy w
   `BatchThirtySevenDifferentialTests`: skryptowa klawiatura kończy paradę po dwóch klatkach, więc test przesuwa kolumny postaci
   (0x4f42) na ekran.
+- Jedna funkcja (2026-10-13): `RenderCitizenIcons` (`CityManagement`, z `RenderCitizen`). Ramka zostaje: odstęp po zadowolonych
+  zależy od słowa 0x2 ramki, którego funkcja nigdy nie zapisuje (prawdopodobnie miało być 0x6) – czytane jak w oryginale; test
+  ustawia to słowo pod SP (SP - 4), żeby trafić obie gałęzie. Testy w `BatchThirtyEightDifferentialTests`.
 
 ## Następny krok
 
@@ -282,11 +285,10 @@ Dalej małe metody: `python Civilization1Remaster.Tests/Differential/Reference/f
 `RenderCityScenery` (`CityView`), `AttachSpaceshipPart` (`SpaceshipScreen`), `DisplayMilitaryReport` (`AdvisorReports`),
 `DisplayTravellersReport`, `HandleEndOfTurnEvents` (`TurnEvents`), `LabelLandmasses` (`GameInitAndIntro`),
 `ChoreographKingSpeaking`, `DisplayKingScreen` (`MeetWithKing`),
-`RenderCitizenIcons` (`CityManagement`, kandydat ze „Śmieci na stosie”),
 reszta generatora mapy w `GameInitAndIntro`. Funkcje niskopoziomowe `SystemServices` (`DeactivateMouse`, `PointerEvent`,
 `RenderCursorToScreen`, `RecoverScreenUnderCursor`, kolory i zegar: `PrepareTimer`, `RefreshHueCycling`, `AssignHueCycleSpan`,
 `ColorsFadeStep`, `FadeColors`, `FloodColors`, `ImportColorsFromBuffer`) i `SnapHeapPointer` (`VGADriver`) na koniec: działają
-w przerwaniach albo na rejestrach. Stan 2026-10-13: 74 metody w stylu asm, ok. 46,2 tys. z 68,8 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
+w przerwaniach albo na rejestrach. Stan 2026-10-13: 73 metody w stylu asm, ok. 46,0 tys. z 68,8 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
@@ -324,7 +326,7 @@ przerwanie zegara, którego moment w testach zależy od liczby dostępów do pam
 zależą już tylko od kodu na tej samej głębokości. Potwierdzone w golden master: `HandleCity` (`CityManagement`) – funkcja, która ją
 woła, zostawia ramkę (`HandleAllCities`, `DisplayTopCities`). Nadal: usunięta ramka może zmienić to, co przeczyta taka funkcja (golden master
 to wyłapie, testy różnicowe nie porównują stosu pod SP). Kandydaci ze skanu „czytana, nigdy nie zapisana” (część to tablice
-i bufory zapisywane przez adres, do sprawdzenia przy przepisywaniu): `RenderCitizenIcons` 0x2, `ExamineCity` 0x8, `DisplayTravellersReport` 0x2, `RenderCityScenery` 0x16.
+i bufory zapisywane przez adres, do sprawdzenia przy przepisywaniu): `RenderCitizenIcons` 0x2 (potwierdzone, zachowane), `ExamineCity` 0x8, `DisplayTravellersReport` 0x2, `RenderCityScenery` 0x16.
 
 ## Poprawki, które zostają (chronią przed crashami, baseline je ma)
 
