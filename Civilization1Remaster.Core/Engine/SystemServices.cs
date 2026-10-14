@@ -965,77 +965,28 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <summary>
-		/// ?
+		/// Copies the screen buffer to the screen (over the mouse pointer) and clears the pointer latch (0x5402) when the
+		/// pointer is drawn
 		/// </summary>
 		public void RecoverScreenUnderCursor()
 		{
 			this.processor.Journal.OpenScope("RecoverScreenUnderCursor()");
 
-			// function body
 			this.owner.VideoCard.RenderBufferToScreen();
-
-			if (this.processor.PullGlobalByte(0x5403) != 0)
-			{
-				this.processor.EmitGlobalByte(0x5402, 0x1);
-
-			L075e:
-				this.processor.EmitGlobalByte(0x5402, this.processor.DecrementByte(this.processor.PullGlobalByte(0x5402)));
-				if (this.processor.FlagSet.IsEqual) goto L0769;
-
-				this.processor.StackWord(this.processor.RegAcc.Value16);
-				this.processor.StackWord(this.processor.RegData.Value16);
-				this.processor.StackWord(this.processor.SegExtra.Value16);
-
-				this.processor.SegExtra.Value16 = 0x1000;
-				this.owner.VideoCard.RenderBufferToScreen();
-
-				this.processor.SegExtra.Value16 = this.processor.UnstackWord();
-				this.processor.RegData.Value16 = this.processor.UnstackWord();
-				this.processor.RegAcc.Value16 = this.processor.UnstackWord();
-				goto L075e;
-
-			L0769:
-				this.processor.RegAcc.Value16 |= 0;
-			}
+			ClearPointerLatch();
 
 			this.processor.Journal.CloseScope("RecoverScreenUnderCursor");
 		}
 
 		/// <summary>
-		/// ?
+		/// Only clears the pointer latch (0x5402) when the pointer is drawn: the pointer itself is drawn by the host, the
+		/// position and the picture are not used
 		/// </summary>
-		/// <param name="param1"></param>
-		/// <param name="param2"></param>
-		/// <param name="param3"></param>
 		public void RenderCursorToScreen(short arg1, short arg2, ushort arg3)
 		{
 			this.processor.Journal.OpenScope($"RenderCursorToScreen({arg1}, {arg2}, {arg3})");
 
-			// function body
-
-			if (this.processor.PullGlobalByte(0x5403) != 0)
-			{
-				this.processor.EmitGlobalByte(0x5402, 0x1);
-
-			L075e:
-				this.processor.EmitGlobalByte(0x5402, this.processor.DecrementByte(this.processor.PullGlobalByte(0x5402)));
-				if (this.processor.FlagSet.IsEqual) goto L0769;
-
-				this.processor.StackWord(this.processor.RegAcc.Value16);
-				this.processor.StackWord(this.processor.RegData.Value16);
-				this.processor.StackWord(this.processor.SegExtra.Value16);
-
-				this.processor.SegExtra.Value16 = 0x1000;
-				this.owner.VideoCard.RenderBufferToScreen();
-
-				this.processor.SegExtra.Value16 = this.processor.UnstackWord();
-				this.processor.RegData.Value16 = this.processor.UnstackWord();
-				this.processor.RegAcc.Value16 = this.processor.UnstackWord();
-				goto L075e;
-
-			L0769:
-				this.processor.RegAcc.Value16 |= 0;
-			}
+			ClearPointerLatch();
 
 			this.processor.Journal.CloseScope("RenderCursorToScreen");
 		}
