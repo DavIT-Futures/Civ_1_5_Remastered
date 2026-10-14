@@ -382,6 +382,10 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   i 5), więc jest stałą. Działa przed `AllowClock = true`, dlatego test woła ją z wyłączonym zegarem (inna liczba dostępów
   niż w oryginale przesuwałaby tyknięcia w następnych scenariuszach). Zmienne zegara 0x42 – 0x5b porównuje `Watched`,
   rekordy cykli kolorów (segment 0x35cf) też. Rejestry jak w oryginale (AX, BX, CX, DX). Testy w `BatchFiftyTwoDifferentialTests`.
+- Porcja 53 (2026-10-14): usunięty martwy kod sterty `VGADriver` (`PrepareHeap`, `SnapHeapPointer`, `ReserveFromHeap` i ich
+  pola `glob89e` – `glob8b0`): nic ich nie woła (zostały z tłumaczenia sterownika). Bez testu różnicowego (nie ma czego
+  porównać), golden master i pełny zestaw. Uwaga na przyszłość: `RenderBufferToScreen` też nic nie robi (znacznik
+  `glob15d2StagingMarker` nigdy nie jest ustawiany), ale jest wołany – usunąć dopiero na końcu, razem ze śladem wideo.
 
 ## Następny krok
 
@@ -393,8 +397,8 @@ Dalej małe metody: `python Civilization1Remaster.Tests/Differential/Reference/f
 `OperateMenu`, `DisplayMenu` (`DialogDrawing`),
 `DisplayCivilopediaIndex` (`Civilopedia`), `DisplayCivilizationScreen` (`MainIntro`),
 `ConstructCivilization`, `ConfigureFreshGame` (`StartGameMenu`), `DisplayPalace` (`Palace`, patrz porcja 45), reszta generatora mapy w `GameInitAndIntro`. Funkcje niskopoziomowe `SystemServices` (`DeactivateMouse`, `PointerEvent`,
-przerwanie zegara: `OnClockBeat`, `RefreshHueCycling`, `ColorsFadeStep`, `ColorsFadeStepInterrupt`, `AssignColors`) i `SnapHeapPointer` (`VGADriver`) na koniec: działają
-w przerwaniach albo na rejestrach. Stan 2026-10-14 (po porcji 52): 38 metod w stylu asm, ok. 35,7 tys. z 65,3 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
+przerwanie zegara: `OnClockBeat`, `RefreshHueCycling`, `ColorsFadeStep`, `ColorsFadeStepInterrupt`, `AssignColors`) na koniec: działają
+w przerwaniach albo na rejestrach. Stan 2026-10-14 (po porcji 53): 36 metod w stylu asm, ok. 35,7 tys. z 65,3 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
