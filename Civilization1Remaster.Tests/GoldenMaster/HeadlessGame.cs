@@ -54,6 +54,9 @@ namespace Civilization1Remaster.Tests.GoldenMaster
 			this.processor.StandardFolder = this.folder + Path.DirectorySeparatorChar;
 			this.processor.FixedClockSpan = ClockSpan;
 
+			// The baselines were recorded before HealingRules (healing in cities, ships at the coast)
+			this.Engine.TurnHooks.ClassicHealing = true;
+
 			this.keyboard = new ScriptedKeyboard(this.processor, this.Engine.VideoCard.Tokens, this.Engine.VideoCard.VideoLatch,
 				script ?? ScriptedKeyboard.DefaultScript);
 			this.processor.InputStarved = this.keyboard.OnInputStarved;

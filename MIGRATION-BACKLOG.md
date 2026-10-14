@@ -8,7 +8,7 @@ kodem gry). Usprawnienia i zmiany reguł gry wchodzą dopiero na sam koniec, gdy
 
 | Usprawnienie | Skąd (commit) | Co zostało w kodzie |
 |---|---|---|
-| Szybsze leczenie: 2 HP na turę w mieście, okręty naprawiane przy wybrzeżu (do 3 pól od miasta) | eed8efb | `HealingRules`, `UnitHealth.MendAmount` (nieużywane), testy `HealingRulesTests` |
+| ~~Szybsze leczenie~~ – **włączone 2026-10-14** na prośbę użytkownika (wyjątek od zasady): 2 HP na turę w mieście (wszystkie jednostki), lądowe poza miastem 1 HP ufortyfikowane, okręty poza miastem 1 HP przy lądzie, do 3 pól od własnego miasta, gdy Sentry albo bez ruchu w tej turze (okręty nie mogą się fortyfikować, wersja z eed8efb wymagała fortyfikacji, więc nie działała), samoloty tylko w mieście | eed8efb | `TurnEvents.MendFortifiedUnits` + `HealingRules`; stare leczenie za przełącznikiem `TurnEvents.ClassicHealing`, który `HeadlessGame` włącza, bo baseline golden master nagrano ze starym; testy `HealingRulesTests`, `HealingInGameTests` |
 | Ekran „Obsolete Wonders” w menu raportów i dopisek „(Obsolete)” na liście cudów | a04e786 | nic (`WorldMap`, `GameMenus` przywrócone) |
 | Rozszerzone raporty doradców: postęp badań „(x/y)”, nauka na turę, sumy handlu i plonów, podsumowanie miast | a04e786, 2c9ab40 | `AdvisorStatistics` (nieużywane). Uwaga: wersja z refaktora wołała `HandleCity`, które ma skutki uboczne, więc nowa wersja musi liczyć bez zmiany stanu |
 | `EliminateUnit`: natychmiastowe wyjście dla już usuniętej jednostki | a04e786 | nic (zostało tylko sprawdzenie zakresu, jak w baseline) |

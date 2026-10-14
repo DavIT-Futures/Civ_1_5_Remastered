@@ -17,7 +17,7 @@ namespace Civilization1Remaster.Tests
 			int landHeal = HealingRules.CalculateHealAmount(
 				landGroup: LandGroupLand,
 				inFriendlyCity: true,
-				isFortified: false,
+				isResting: false,
 				isAdjacentToLand: false,
 				distToNearestFriendlyCity: 0);
 
@@ -27,7 +27,7 @@ namespace Civilization1Remaster.Tests
 			int seaHeal = HealingRules.CalculateHealAmount(
 				landGroup: LandGroupSea,
 				inFriendlyCity: true,
-				isFortified: false,
+				isResting: false,
 				isAdjacentToLand: false,
 				distToNearestFriendlyCity: 0);
 
@@ -37,7 +37,7 @@ namespace Civilization1Remaster.Tests
 			int airHeal = HealingRules.CalculateHealAmount(
 				landGroup: LandGroupAir,
 				inFriendlyCity: true,
-				isFortified: false,
+				isResting: false,
 				isAdjacentToLand: false,
 				distToNearestFriendlyCity: 0);
 
@@ -50,7 +50,7 @@ namespace Civilization1Remaster.Tests
 			int fortified = HealingRules.CalculateHealAmount(
 				landGroup: LandGroupLand,
 				inFriendlyCity: false,
-				isFortified: true,
+				isResting: true,
 				isAdjacentToLand: true,
 				distToNearestFriendlyCity: 10);
 
@@ -59,7 +59,7 @@ namespace Civilization1Remaster.Tests
 			int notFortified = HealingRules.CalculateHealAmount(
 				landGroup: LandGroupLand,
 				inFriendlyCity: false,
-				isFortified: false,
+				isResting: false,
 				isAdjacentToLand: true,
 				distToNearestFriendlyCity: 10);
 
@@ -73,7 +73,7 @@ namespace Civilization1Remaster.Tests
 			int validHeal = HealingRules.CalculateHealAmount(
 				landGroup: LandGroupSea,
 				inFriendlyCity: false,
-				isFortified: true,
+				isResting: true,
 				isAdjacentToLand: true,
 				distToNearestFriendlyCity: 3);
 
@@ -83,7 +83,7 @@ namespace Civilization1Remaster.Tests
 			int tooFar = HealingRules.CalculateHealAmount(
 				landGroup: LandGroupSea,
 				inFriendlyCity: false,
-				isFortified: true,
+				isResting: true,
 				isAdjacentToLand: true,
 				distToNearestFriendlyCity: 4);
 
@@ -93,7 +93,7 @@ namespace Civilization1Remaster.Tests
 			int deepOcean = HealingRules.CalculateHealAmount(
 				landGroup: LandGroupSea,
 				inFriendlyCity: false,
-				isFortified: true,
+				isResting: true,
 				isAdjacentToLand: false,
 				distToNearestFriendlyCity: 2);
 
@@ -103,7 +103,7 @@ namespace Civilization1Remaster.Tests
 			int notFortified = HealingRules.CalculateHealAmount(
 				landGroup: LandGroupSea,
 				inFriendlyCity: false,
-				isFortified: false,
+				isResting: false,
 				isAdjacentToLand: true,
 				distToNearestFriendlyCity: 1);
 

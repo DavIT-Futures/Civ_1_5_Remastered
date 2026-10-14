@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Drawing;
 using Civilization1Remaster.Emulation;
 
 namespace Civilization1Remaster.Game
@@ -18,9 +20,88 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// Fortified units heal one lost hit point every turn
+		/// The healing before HealingRules: only fortified units, 1 hit point a turn. The golden master and differential tests
+		/// turn it on (HeadlessGame), so they still compare with baselines recorded from the original code.
+		/// </summary>
+		public bool ClassicHealing { get; set; }
+
+		/// <summary>
+		/// Units heal lost hit points every turn (HealingRules): 2 in an own city; outside cities 1 for a fortified land unit
+		/// and for a resting ship (sentry or not moved this turn) next to land, at most 3 tiles from an own city.
+		/// Runs at the end of the game turn, so the moves left (reset at the start of each player's turn) show whether the
+		/// unit moved. Reads the memory without journal entries or registers, like the rest of the hit points (host only).
 		/// </summary>
 		public void MendFortifiedUnits()
+		{
+			if (this.ClassicHealing)
+			{
+				MendOnlyFortifiedUnits();
+				return;
+			}
+
+			UnitMemory troops = new UnitMemory(this.processor);
+
+			for (int participantIdx = 0; participantIdx < UnitHealth.ParticipantTally; participantIdx++)
+			{
+				List<Point> ownTowns = new List<Point>();
+
+				foreach (City town in this.owner.World.Towns)
+				{
+					if (town.ConditionMarker != 0xff && town.ParticipantIdx == participantIdx)
+						ownTowns.Add(town.Place);
+				}
+
+				for (int troopIdx = 0; troopIdx < UnitHealth.TroopTally; troopIdx++)
+				{
+					int troopKind = troops.Pull(participantIdx, troopIdx, UnitMemory.Kind);
+
+					if (troopKind == 0xff || this.owner.World.Vitals.ObtainLostHitPoints(participantIdx, troopIdx, troopKind) == 0)
+						continue;
+
+					int horizLoc = troops.Pull(participantIdx, troopIdx, UnitMemory.Horiz);
+					int vertLoc = troops.Pull(participantIdx, troopIdx, UnitMemory.Vert);
+					int status = troops.Pull(participantIdx, troopIdx, UnitMemory.Status);
+					int landGroup = troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup);
+					bool inOwnTown = ownTowns.Contains(new Point(horizLoc, vertLoc));
+					bool resting;
+					bool nextToLand = false;
+					int townDistance = int.MaxValue;
+
+					if (landGroup == UnitKindTable.SeaUnits)
+					{
+						int fullSteps = 3 * troops.KindField(participantIdx, troopIdx, UnitKindTable.ShiftTally);
+
+						resting = (status & (int)UnitStatusEnum.Sentry) != 0 ||
+							troops.Pull(participantIdx, troopIdx, UnitMemory.LeftoverSteps) >= fullSteps;
+
+						if (!inOwnTown)
+						{
+							townDistance = HealingRules.ComputeDistanceToNearestFriendlyCity(horizLoc, vertLoc, ownTowns);
+
+							if (townDistance <= HealingRules.MaxShipCoastDistanceToCity)
+							{
+								nextToLand = HealingRules.IsAdjacentToLand(horizLoc, vertLoc,
+									(tileHoriz, tileVert) => this.owner.MapOps.Chart.Terrain(tileHoriz, tileVert) == MapRules.OceanTerrain);
+							}
+						}
+					}
+					else
+					{
+						resting = (status & (int)UnitStatusEnum.Fortified) != 0;
+					}
+
+					int amount = HealingRules.CalculateHealAmount(landGroup, inOwnTown, resting, nextToLand, townDistance);
+
+					this.owner.World.Vitals.MendAmount(participantIdx, troopIdx, troopKind, amount);
+				}
+			}
+		}
+
+		/// <summary>
+		/// The healing before HealingRules (the golden master baselines have it): fortified units heal one lost hit point every
+		/// turn, ships and planes never heal. Kept for the tests, see <see cref="ClassicHealing"/>.
+		/// </summary>
+		private void MendOnlyFortifiedUnits()
 		{
 			for (int participantIdx = 0; participantIdx < UnitHealth.ParticipantTally; participantIdx++)
 			{

@@ -8,7 +8,9 @@ namespace Civilization1Remaster.Game.Rules
 	/// Pure C# domain rules for unit healing per turn.
 	/// - Units in friendly cities heal 2 HP per turn (2x faster).
 	/// - Land units outside cities heal 1 HP per turn if fortified.
-	/// - Ships outside cities heal 1 HP per turn ONLY if adjacent to coast (land) AND within distance &lt;= 3 of a friendly city.
+	/// - Ships outside cities heal 1 HP per turn ONLY if resting (sentry or not moved this turn: ships cannot fortify),
+	///   adjacent to coast (land) AND within distance &lt;= 3 of a friendly city.
+	/// - Air units heal only in cities.
 	/// </summary>
 	public static class HealingRules
 	{
@@ -67,14 +69,14 @@ namespace Civilization1Remaster.Game.Rules
 		/// </summary>
 		/// <param name="landGroup">0 = Land, 1 = Air, 2 = Sea / Naval</param>
 		/// <param name="inFriendlyCity">Whether the unit is inside a friendly city</param>
-		/// <param name="isFortified">Whether the unit is fortified</param>
+		/// <param name="isResting">Whether the unit rests: fortified for a land unit, sentry or not moved this turn for a ship</param>
 		/// <param name="isAdjacentToLand">Whether the sea tile has adjacent land (coast)</param>
 		/// <param name="distToNearestFriendlyCity">Distance to nearest friendly city</param>
 		/// <returns>HP amount to heal (0, 1, or 2)</returns>
 		public static int CalculateHealAmount(
 			int landGroup,
 			bool inFriendlyCity,
-			bool isFortified,
+			bool isResting,
 			bool isAdjacentToLand,
 			int distToNearestFriendlyCity)
 		{
@@ -85,10 +87,10 @@ namespace Civilization1Remaster.Game.Rules
 			}
 
 			// Outside city, naval unit:
-			// Must be fortified/resting, adjacent to coast, and within distance <= 3 from a friendly city
+			// Must be resting, adjacent to coast, and within distance <= 3 from a friendly city
 			if (landGroup == 2)
 			{
-				if (isFortified && isAdjacentToLand && distToNearestFriendlyCity <= MaxShipCoastDistanceToCity)
+				if (isResting && isAdjacentToLand && distToNearestFriendlyCity <= MaxShipCoastDistanceToCity)
 				{
 					return 1;
 				}
@@ -98,7 +100,7 @@ namespace Civilization1Remaster.Game.Rules
 			// Land unit outside city: heals 1 HP per turn if fortified
 			if (landGroup == 0)
 			{
-				return isFortified ? 1 : 0;
+				return isResting ? 1 : 0;
 			}
 
 			// Air unit: heals only in city
