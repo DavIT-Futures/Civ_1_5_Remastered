@@ -1041,82 +1041,40 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <summary>
-		/// ?
+		/// Copies the screen buffer to the main screen and clears the pointer latch (0x5402) when the pointer is drawn
 		/// </summary>
-		/// <param name="screenID"></param>
+		/// <param name="displayIdx">The screen buffer</param>
 		public void DisplayScreen(ushort displayIdx)
 		{
 			this.processor.Journal.OpenScope($"DisplayScreen({displayIdx})");
 
-			// function body
 			this.owner.VideoCard.DuplicateScreenToMainScreen(displayIdx);
-
-			if (this.processor.PullGlobalByte(0x5403) != 0)
-			{
-				this.processor.EmitGlobalByte(0x5402, 0x1);
-
-			L075e:
-				this.processor.EmitGlobalByte(0x5402, this.processor.DecrementByte(this.processor.PullGlobalByte(0x5402)));
-				if (this.processor.FlagSet.IsEqual) goto L0769;
-
-				this.processor.StackWord(this.processor.RegAcc.Value16);
-				this.processor.StackWord(this.processor.RegData.Value16);
-				this.processor.StackWord(this.processor.SegExtra.Value16);
-				
-				this.processor.SegExtra.Value16 = 0x1000;
-				this.owner.VideoCard.RenderBufferToScreen();
-
-				this.processor.SegExtra.Value16 = this.processor.UnstackWord();
-				this.processor.RegData.Value16 = this.processor.UnstackWord();
-				this.processor.RegAcc.Value16 = this.processor.UnstackWord();
-				goto L075e;
-
-			L0769:
-				this.processor.RegAcc.Value16 |= 0;
-			}
+			ClearPointerLatch();
 
 			this.processor.Journal.CloseScope("DisplayScreen");
 		}
 
 		/// <summary>
-		/// ?
+		/// Draws a picture on the screen and clears the pointer latch (0x5402) when the pointer is drawn
 		/// </summary>
-		/// <param name="rectPtr"></param>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
-		/// <param name="bitmapPtr"></param>
 		public void RenderPictureToScreenAlternate(ushort boxAddr, int horizLoc, int vertLoc, ushort pictureAddr)
 		{
 			this.processor.Journal.OpenScope($"RenderPictureToScreenAlternate(0x{boxAddr:x4}, {horizLoc}, {vertLoc}, 0x{pictureAddr:x4})");
 
-			// function body
 			this.owner.VideoCard.RenderPictureToScreen(boxAddr, horizLoc, vertLoc, pictureAddr);
-
-			if (this.processor.PullGlobalByte(0x5403) != 0)
-			{
-				this.processor.EmitGlobalByte(0x5402, 0x1);
-
-			L075e:
-				this.processor.EmitGlobalByte(0x5402, this.processor.DecrementByte(this.processor.PullGlobalByte(0x5402)));
-				if (this.processor.FlagSet.IsEqual) goto L0769;
-
-				this.processor.StackWord(this.processor.RegAcc.Value16);
-				this.processor.StackWord(this.processor.RegData.Value16);
-				this.processor.StackWord(this.processor.SegExtra.Value16);
-				
-				this.processor.SegExtra.Value16 = 0x1000;
-				this.owner.VideoCard.RenderBufferToScreen();
-
-				this.processor.SegExtra.Value16 = this.processor.UnstackWord();
-				this.processor.RegData.Value16 = this.processor.UnstackWord();
-				this.processor.RegAcc.Value16 = this.processor.UnstackWord();
-				goto L075e;
-
-			L0769:
-				this.processor.RegAcc.Value16 |= 0;
-			}
+			ClearPointerLatch();
 
 			this.processor.Journal.CloseScope("RenderPictureToScreenAlternate");
+		}
+
+		/// <summary>
+		/// When the mouse pointer is drawn (0x5403), clears the pointer latch (0x5402). The original loop sets the latch to 1 and
+		/// counts it down to 0 at once, so its screen refresh never runs.
+		/// </summary>
+		private void ClearPointerLatch()
+		{
+			if (this.processor.PullGlobalByte(0x5403) != 0)
+				this.processor.EmitGlobalByte(0x5402, 0x0);
 		}
 
 		/// <summary>

@@ -358,6 +358,11 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   „kopiowane” na samego gracza, druga relacja wojny w wierszu gracza (patrz błędy). Test: ponowny podział tych samych
   cywilizacji (i losowe 0xdc6a) zapętla oryginał na zawsze (najdalsze miasto nieaktualne, rozmiar 0) – tylko 5 scenariuszy,
   „brak wolnego slotu” przez licznik jednostek 1. Testy w `BatchFortyEightDifferentialTests`.
+- Porcja 49, mała (2026-10-14): `DisplayScreen` i `RenderPictureToScreenAlternate` (`SystemServices`), wspólny ogon w
+  `ClearPointerLatch`. Wnioski: pętla asm ustawia zatrzask wskaźnika 0x5402 na 1 i od razu zmniejsza do 0, więc jej
+  `RenderBufferToScreen` nigdy się nie wykonuje – zostaje tylko zapis 0 przy narysowanym wskaźniku (0x5403). Ten sam ogon mają
+  `RenderCursorToScreen` i `RecoverScreenUnderCursor` (odłożone, przerwania). Obrazek do testu z `ScreenToPicture` w `Prepare`.
+  Testy w `BatchFortyNineDifferentialTests`.
 
 ## Następny krok
 
@@ -371,7 +376,7 @@ Dalej małe metody: `python Civilization1Remaster.Tests/Differential/Reference/f
 `ConstructCivilization`, `ConfigureFreshGame` (`StartGameMenu`), `DisplayPalace` (`Palace`, patrz porcja 45), reszta generatora mapy w `GameInitAndIntro`. Funkcje niskopoziomowe `SystemServices` (`DeactivateMouse`, `PointerEvent`,
 `RenderCursorToScreen`, `RecoverScreenUnderCursor`, kolory i zegar: `PrepareTimer`, `RefreshHueCycling`, `AssignHueCycleSpan`,
 `ColorsFadeStep`, `FadeColors`, `FloodColors`, `ImportColorsFromBuffer`) i `SnapHeapPointer` (`VGADriver`) na koniec: działają
-w przerwaniach albo na rejestrach. Stan 2026-10-13 (po porcji 48): 47 metod w stylu asm, ok. 35,7 tys. z 65,3 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
+w przerwaniach albo na rejestrach. Stan 2026-10-14 (po porcji 49): 45 metod w stylu asm, ok. 35,7 tys. z 65,3 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
