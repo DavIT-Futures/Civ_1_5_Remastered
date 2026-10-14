@@ -37,6 +37,9 @@ Testy zawsze w **Release** z `-parallelMode all` (ok. 7 razy szybciej niż Debug
      SI/DI zachowane. **Ramkę stosu (`EnterFrame`, `Preserve…`) zostawić**, gdy funkcja woła coś, co czyta śmieci spod stosu
      (`RenderCitizenIcons`, `ObtainDistanceToReplayCity`, `HandleCity`, …) albo zmienia SI (`VisitEachUnitInStack`, `TallyUnits…InStack`), oraz
      gdy bufor (nazwa pliku, lista) jest w ramce. `DisplayMenu` / `DisplayDialog` zostawiają w DI wartość z SI – ustawić SI jak oryginał.
+   - Zegar testów tyka co N dostępów `CPU.Pull…/Emit…` (stos, `Storage` i `rep movsb` się nie liczą). Kopię `rep movs` robić
+     przez `processor.Storage`; w kodzie, w którym liczy się moment tyknięcia (palety, cykle kolorów, oczekiwanie na zegar),
+     zachować liczbę dostępów do pamięci (porcja 51).
    - Jednostki: `UnitMemory` (pamięć 0x81d4), typy: `UnitKindTable`, mapa: `MapOps.Chart` (`MapLayers`), stałe: `MapRules`.
 4. `extract_reference.py` (z commita HEAD, **przed** podmianą), potem `replace_methods.py`, build Release (jak wyżej).
 5. Test różnicowy `BatchNNDifferentialTests.cs` (wzory: poprzednie Batch*): scenariusze z `new Random(bay)`, lista gałęzi, które muszą

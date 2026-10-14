@@ -368,6 +368,20 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   czekać na koniec. Wnioski: `VGADriver.RenderBufferToScreen` nic nie rysuje – znacznik bufora `glob15d2StagingMarker` nigdy
   nie jest ustawiany – więc mutacja „bez wywołania” przeżywa (równoważna; wywołanie zostaje, bo jest w śladzie wideo).
   `RenderCursorToScreen` nie rysuje wskaźnika (robi to host). Testy w `BatchFiftyDifferentialTests`.
+- Porcja 51 (2026-10-14): `ImportColorsFromBuffer`, `FloodColors` (wspólne `FadeToTargetColors`) i `FadeColors` (`SystemServices`).
+  Wnioski: **liczba kroków zegara ma znaczenie**. Zegar testów (`FixedClockSpan`) liczy tylko dostępy przez `CPU.Pull…/Emit…`;
+  `rep movsb` (`RepeatCopyStringByte`), stos i `Storage` ich nie liczą. Kopia palety przez `PullGlobalByte/EmitGlobalByte`
+  dodała 1536 kroków, tyknięcie z aktywnym cyklem kolorów wypadało przed `PullCurrentColors` i inna paleta trafiała do
+  0xbd06 (wykrył to pełny zestaw: `DisplayCivilizationDestroyedScreen` w porcji 40). Kopie jak `rep movsb` robić przez
+  `processor.Storage`, a w funkcjach zależnych od zegara zachować liczbę dostępów do pamięci (zapis, odczyt i negacja 0x62
+  w `FadeColors`). Test ma scenariusze z cyklem kolorów. Prędkość 0x66 < 0xe00 (mniej niż 256 kolorów na tyknięcie) jest
+  spoza zakresu gry (`GaugeColorsPerformance` daje zawsze 65530): przerwanie `AssignColors` wychodzi wtedy poza kolor 255
+  i rzuca wyjątek tam, gdzie wypadnie tyknięcie. Testy w `BatchFiftyOneDifferentialTests`.
+- Porcja 52 (2026-10-14): `LaunchTimer`, `HaltTimer`, `PrepareTimer`, `AssignHueCycleSpan` (`SystemServices`). Wnioski:
+  kalibracja `PrepareTimer` w emulatorze zawsze mierzy to samo (0xff9c do czasu 0x42, tempo 0 → wartości domyślne 0x4dae
+  i 5), więc jest stałą. Działa przed `AllowClock = true`, dlatego test woła ją z wyłączonym zegarem (inna liczba dostępów
+  niż w oryginale przesuwałaby tyknięcia w następnych scenariuszach). Zmienne zegara 0x42 – 0x5b porównuje `Watched`,
+  rekordy cykli kolorów (segment 0x35cf) też. Rejestry jak w oryginale (AX, BX, CX, DX). Testy w `BatchFiftyTwoDifferentialTests`.
 
 ## Następny krok
 
@@ -379,9 +393,8 @@ Dalej małe metody: `python Civilization1Remaster.Tests/Differential/Reference/f
 `OperateMenu`, `DisplayMenu` (`DialogDrawing`),
 `DisplayCivilopediaIndex` (`Civilopedia`), `DisplayCivilizationScreen` (`MainIntro`),
 `ConstructCivilization`, `ConfigureFreshGame` (`StartGameMenu`), `DisplayPalace` (`Palace`, patrz porcja 45), reszta generatora mapy w `GameInitAndIntro`. Funkcje niskopoziomowe `SystemServices` (`DeactivateMouse`, `PointerEvent`,
-kolory i zegar: `PrepareTimer`, `RefreshHueCycling`, `AssignHueCycleSpan`,
-`ColorsFadeStep`, `FadeColors`, `FloodColors`, `ImportColorsFromBuffer`) i `SnapHeapPointer` (`VGADriver`) na koniec: działają
-w przerwaniach albo na rejestrach. Stan 2026-10-14 (po porcji 50): 43 metody w stylu asm, ok. 35,7 tys. z 65,3 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
+przerwanie zegara: `OnClockBeat`, `RefreshHueCycling`, `ColorsFadeStep`, `ColorsFadeStepInterrupt`, `AssignColors`) i `SnapHeapPointer` (`VGADriver`) na koniec: działają
+w przerwaniach albo na rejestrach. Stan 2026-10-14 (po porcji 52): 38 metod w stylu asm, ok. 35,7 tys. z 65,3 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 

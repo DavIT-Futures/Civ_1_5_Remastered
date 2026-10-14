@@ -20,50 +20,42 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <summary>
-		/// ?
+		/// Starts the timer (0x5a = 1) unless it runs already: the beat counters (0x4c, 0x54), the time (0x42) and the
+		/// calibration (PrepareTimer), then the clock interrupt is allowed. AL = the old 0x5a, like the original.
 		/// </summary>
 		public void LaunchTimer()
 		{
 			this.processor.Journal.OpenScope("LaunchTimer()");
 
-			// function body
-			this.processor.RegAcc.LowByte = 0x1;
-			this.processor.Scratch.LowByte = this.processor.PullGlobalByte(0x5a);
-			this.processor.EmitGlobalByte(0x5a, this.processor.RegAcc.LowByte);
-			this.processor.RegAcc.LowByte = this.processor.Scratch.LowByte;
-			this.processor.RegAcc.LowByte = this.processor.BitOrByte(this.processor.RegAcc.LowByte, this.processor.RegAcc.LowByte);
-			if (this.processor.FlagSet.IsNotEqual) goto L004f;
-			this.processor.EmitGlobalWord(0x4c, 0x1);
-			this.processor.EmitGlobalWord(0x54, 0x1);
-			this.processor.EmitGlobalWord(0x42, 0x0);
-			this.processor.EmitGlobalWord(0x44, 0x0);
+			byte running = this.processor.PullGlobalByte(0x5a);
+			this.processor.EmitGlobalByte(0x5a, 0x1);
+			this.processor.RegAcc.LowByte = running;
 
-			PrepareTimer();
-			
-			this.processor.AllowClock = true;
+			if (running == 0)
+			{
+				this.processor.EmitGlobalWord(0x4c, 0x1);
+				this.processor.EmitGlobalWord(0x54, 0x1);
+				this.processor.EmitGlobalWord(0x42, 0x0);
+				this.processor.EmitGlobalWord(0x44, 0x0);
 
-		L004f:
-			// Far return
+				PrepareTimer();
+
+				this.processor.AllowClock = true;
+			}
+
 			this.processor.Journal.CloseScope("LaunchTimer");
 		}
 
 		/// <summary>
-		/// ?
+		/// Stops the timer (0x5a = 0); AL = the old 0x5a, like the original
 		/// </summary>
 		public void HaltTimer()
 		{
 			this.processor.Journal.OpenScope("HaltTimer()");
 
-			// function body
-			this.processor.RegAcc.LowByte = 0x0;
-			this.processor.Scratch.LowByte = this.processor.PullGlobalByte(0x5a);
-			this.processor.EmitGlobalByte(0x5a, this.processor.RegAcc.LowByte);
-			this.processor.RegAcc.LowByte = this.processor.Scratch.LowByte;
-			this.processor.RegAcc.LowByte = this.processor.BitOrByte(this.processor.RegAcc.LowByte, this.processor.RegAcc.LowByte);
-			if (this.processor.FlagSet.IsEqual) goto L0075;
+			this.processor.RegAcc.LowByte = this.processor.PullGlobalByte(0x5a);
+			this.processor.EmitGlobalByte(0x5a, 0x0);
 
-		L0075:
-			// Far return
 			this.processor.Journal.CloseScope("HaltTimer");
 		}
 
@@ -144,74 +136,42 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <summary>
-		/// ?
+		/// The timer calibration. The original measures the timer 16 times (100 - 200 the first time, 200 - 200 after), so in
+		/// the emulator it always adds 0xff9c to the time (0x42, 32 bit), gets the rate 0 (not 4 - 6) and falls back to the
+		/// default: the beat length 0x4dae (0x50), the rate 5 (0x4e, also 0x4c unless it is 1), the beat counters
+		/// 0x46 = 0x48 = 0x4dae / 0x4c; 0x58 = 0, 0x59 = 1. The registers as the original leaves them.
 		/// </summary>
 		public void PrepareTimer()
 		{
 			this.processor.Journal.OpenScope("PrepareTimer()");
 
-			// function body
-			this.processor.StackFlags();
+			const ushort measured = 0xff9c;
+			const ushort beatLength = 0x4dae;
+			const ushort rate = 5;
+
 			this.processor.EmitGlobalByte(0x59, 0x1);
-			this.processor.RegAcc.Value16 = 0x0;
-			this.processor.EmitGlobalByte(0x58, 0x1);
-			this.processor.EmitGlobalWord(0x50, this.processor.RegAcc.Value16);
-			this.processor.EmitGlobalWord(0x52, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = 100;
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegCount.Value16 = 0x10;
-
-		L0292:
-			this.processor.StackWord(this.processor.RegBase.Value16);
-			this.processor.RegAcc.Value16 = 200;
-			this.processor.RegBase.Value16 = this.processor.UnstackWord();
-			this.processor.RegBase.Value16 = this.processor.SubtractWord(this.processor.RegBase.Value16, this.processor.RegAcc.Value16);
-			this.processor.EmitGlobalWord(0x50, this.processor.SumWord(this.processor.PullGlobalWord(0x50), this.processor.RegBase.Value16));
-			this.processor.EmitUInt16(this.processor.SegData.Value16, 0x52, this.processor.SumCarryWord(this.processor.PullGlobalWord(0x52), 0x0));
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			if (this.processor.RepeatLoop(this.processor.RegCount)) goto L0292;
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x50);
-			this.processor.RegData.Value16 = this.processor.PullGlobalWord(0x52);
-			this.processor.EmitGlobalWord(0x42, this.processor.SumWord(this.processor.PullGlobalWord(0x42), this.processor.RegAcc.Value16));
-			this.processor.EmitUInt16(this.processor.SegData.Value16, 0x44, this.processor.SumCarryWord(this.processor.PullGlobalWord(0x44), this.processor.RegData.Value16));
-			this.processor.RegCount.Value16 = 0x10;
-			this.processor.DivideWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.RegAcc.Value16 = this.processor.ShiftRightWord(this.processor.RegAcc.Value16, 0x1);
-			this.processor.EmitGlobalWord(0x50, this.processor.RegAcc.Value16);
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegBase.Value16 = this.processor.ShiftRightWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.RegBase.Value16 = this.processor.ShiftRightWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.RegBase.Value16 = this.processor.ShiftRightWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.RegBase.Value16 = this.processor.ShiftRightWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.RegBase.Value16);
-			this.processor.RegData.Value16 = 0x0;
-			this.processor.RegBase.Value16 = 0xf89;
-			this.processor.DivideWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegBase.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x4);
-			if (this.processor.FlagSet.IsBelow) goto L02df;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x6);
-			if (this.processor.FlagSet.IsAbove) goto L02df;
-			goto L02ed;
-
-		L02df:
 			this.processor.EmitGlobalByte(0x58, 0x0);
-			this.processor.EmitGlobalWord(0x50, 0x4dae);
-			this.processor.RegAcc.Value16 = 0x5;
+			this.processor.EmitGlobalWord(0x52, 0x0);
+			this.processor.EmitUInt32(this.processor.SegData.Value16, 0x42, this.processor.PullUInt32(this.processor.SegData.Value16, 0x42) + measured);
+			this.processor.EmitGlobalWord(0x50, beatLength);
+			this.processor.EmitGlobalWord(0x4e, rate);
 
-		L02ed:
-			this.processor.EmitGlobalWord(0x4e, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x4c), 0x1);
-			if (this.processor.FlagSet.IsEqual) goto L02fa;
-			this.processor.EmitGlobalWord(0x4c, this.processor.RegAcc.Value16);
+			if (this.processor.PullGlobalWord(0x4c) != 0x1)
+			{
+				this.processor.EmitGlobalWord(0x4c, rate);
+			}
 
-		L02fa:
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x50);
-			this.processor.RegData.Value16 = 0x0;
-			this.processor.DivideWord(this.processor.RegAcc, this.processor.RegData, this.processor.PullGlobalWord(0x4c));
-			this.processor.EmitGlobalWord(0x48, this.processor.RegAcc.Value16);
-			this.processor.EmitGlobalWord(0x46, this.processor.RegAcc.Value16);
-			this.processor.UnstackFlags();
-			// Near return
+			ushort divisor = this.processor.PullGlobalWord(0x4c);
+			ushort beats = (ushort)(beatLength / divisor);
+
+			this.processor.EmitGlobalWord(0x48, beats);
+			this.processor.EmitGlobalWord(0x46, beats);
+
+			this.processor.RegAcc.Value16 = beats;
+			this.processor.RegData.Value16 = (ushort)(beatLength % divisor);
+			this.processor.RegBase.Value16 = 0xf89;
+			this.processor.RegCount.Value16 = 0x10;
+
 			this.processor.Journal.CloseScope("PrepareTimer");
 		}
 
@@ -287,92 +247,80 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <summary>
-		/// ?
+		/// Sets the colour cycle 1 - 8 (a record of the segment 0x35cf, see ActivateHueCycle) to the colours first - last (at
+		/// most 16), with the delay in beats; the current colours are kept twice in the record, so that a cycle is one copy.
+		/// Also writes 0xffff to 0x35cf:0. The registers as the original leaves them.
 		/// </summary>
-		/// <param name="param1"></param>
-		/// <param name="param2"></param>
-		/// <param name="param3"></param>
-		/// <param name="param4"></param>
-		/// <exception cref="Exception"></exception>
 		public void AssignHueCycleSpan(ushort arg1, ushort arg2, ushort arg3, ushort arg4)
 		{
 			this.processor.Journal.OpenScope($"AssignHueCycleSpan({arg1}, {arg2}, {arg3}, {arg4})");
 
-			// function body
-			this.processor.EnterFrame();
-			this.processor.PreserveSource();
-			this.processor.StackWord(this.processor.RegDest.Value16);
-			this.processor.StackWord(this.processor.SegData.Value16);
-
-			this.processor.SegData.Value16 = 0x35cf;
+			this.processor.EmitUInt16(HueCycleSegment, 0x0, 0xffff);
 			this.processor.RegAcc.Value16 = 0xffff;
-			this.processor.EmitGlobalWord(0x0, this.processor.RegAcc.Value16);
-			this.processor.RegBase.Value16 = arg1;
-			this.processor.RegBase.Value16 = this.processor.DecrementWord(this.processor.RegBase.Value16);
-			this.processor.CompareWord(this.processor.RegBase.Value16, 0x8);
-			if (this.processor.FlagSet.IsAboveOrEqual) goto L03f5;
 
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.RegBase.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x2));
+			ushort cycleIdx = (ushort)(arg1 - 1);
+			this.processor.RegBase.Value16 = cycleIdx;
 
-			this.processor.RegAcc.Value16 = arg3;
-			this.processor.RegData.Value16 = arg4;
-			this.processor.RegData.Value16 = this.processor.SubtractWord(this.processor.RegData.Value16, this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsBelowOrEqual) goto L03f5;
-
-			this.processor.RegData.Value16 = this.processor.IncrementWord(this.processor.RegData.Value16);
-
-			if (this.processor.RegData.Value16 > 0x10)
+			if (cycleIdx < 8)
 			{
-				this.processor.RegData.Value16 = 0x10;
-			}
+				ushort cycle = HueCycleRecord(cycleIdx);
+				ushort span = (ushort)(arg4 - arg3);
 
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x4), (ushort)(this.processor.RegData.Value16 * 3));
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x6), this.processor.RegAcc.LowByte);
+				this.processor.RegAcc.Value16 = arg3;
+				this.processor.RegData.Value16 = span;
 
-			this.processor.DisableInterrupts();
-			if (this.owner.VideoCard.Displays.IncludesKey(0))
-			{
-				lock (this.owner.VideoCard.VideoLatch)
+				if (arg4 > arg3)
 				{
-					VGABitmap display = this.owner.VideoCard.Displays.ObtainValueByKey(0);
-					uint stagingLoc = CPU.AsLinearAddress(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x9));
+					ushort colours = (ushort)Math.Min(span + 1, 0x10);
+					byte first = (byte)arg3;
 
-					for (int idx = 0; idx < this.processor.RegData.Value16; idx++)
+					this.processor.EmitUInt16(HueCycleSegment, (ushort)(cycle + 4), (ushort)(colours * 3));
+					this.processor.EmitUInt8(HueCycleSegment, (ushort)(cycle + 6), first);
+
+					this.processor.DisableInterrupts();
+
+					if (!this.owner.VideoCard.Displays.IncludesKey(0))
+						throw new Exception($"The screen {0} is not allocated");
+
+					lock (this.owner.VideoCard.VideoLatch)
 					{
-						Color hue = VGABitmap.HueToHue18(display.ObtainHue(idx + this.processor.RegAcc.LowByte));
+						VGABitmap display = this.owner.VideoCard.Displays.ObtainValueByKey(0);
+						uint stagingLoc = CPU.AsLinearAddress(HueCycleSegment, (ushort)(cycle + 0x9));
 
-						this.processor.Storage.EmitUInt8(stagingLoc++, hue.R);
-						this.processor.Storage.EmitUInt8(stagingLoc++, hue.G);
-						this.processor.Storage.EmitUInt8(stagingLoc++, hue.B);
+						for (int idx = 0; idx < colours; idx++)
+						{
+							Color hue = VGABitmap.HueToHue18(display.ObtainHue(idx + first));
+
+							this.processor.Storage.EmitUInt8(stagingLoc++, hue.R);
+							this.processor.Storage.EmitUInt8(stagingLoc++, hue.G);
+							this.processor.Storage.EmitUInt8(stagingLoc++, hue.B);
+						}
 					}
+
+					this.processor.EnableInterrupts();
+
+					// The colours again after them, but the last one (rep movsb with ES = the cycle segment, straight in the memory
+					// without clock steps)
+					ushort hues = (ushort)(cycle + 0x9);
+					ushort copyLength = (ushort)(this.processor.PullUInt16(HueCycleSegment, (ushort)(cycle + 4)) - 3);
+
+					for (int idx = 0; idx < copyLength; idx++)
+					{
+						this.processor.Storage.EmitUInt8(HueCycleSegment, (ushort)(hues + (colours * 3) + idx),
+							this.processor.Storage.PullUInt8(HueCycleSegment, (ushort)(hues + idx)));
+					}
+
+					this.processor.EmitUInt8(HueCycleSegment, (ushort)(cycle + 0x7), (byte)arg2);
+					this.processor.EmitUInt8(HueCycleSegment, (ushort)(cycle + 0x8), 0x0);
+					this.processor.EmitUInt16(HueCycleSegment, (ushort)(cycle + 0x2), 0x0);
+
+					this.processor.SegExtra.Value16 = HueCycleSegment;
+					this.processor.RegAcc.Value16 = arg2;
+					this.processor.RegData.Value16 = colours;
+					this.processor.RegCount.Value16 = 0;
 				}
 			}
-			else
-			{
-				throw new Exception($"The screen {0} is not allocated");
-			}
-			this.processor.EnableInterrupts();
 
-			this.processor.SegExtra.Value16 = this.processor.SegData.Value16;
-			this.processor.RegDest.Value16 = (ushort)(this.processor.RegBase.Value16 + 0x9 + (this.processor.RegData.Value16 * 3));
-
-			this.processor.RegCount.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x4));
-			this.processor.RegCount.Value16 = this.processor.SubtractWord(this.processor.RegCount.Value16, 0x3);
-			// LEA
-			this.processor.RegSource.Value16 = (ushort)(this.processor.RegBase.Value16 + 0x9);
-			this.processor.RepeatCopyStringByte(this.processor.SegData, this.processor.RegSource, this.processor.SegExtra, this.processor.RegDest, this.processor.RegCount);
-			this.processor.RegAcc.Value16 = arg2;
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x7), this.processor.RegAcc.LowByte);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x8), 0x0);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x2), 0x0);
-
-		L03f5:
-			this.processor.SegData.Value16 = this.processor.UnstackWord();
-			this.processor.RegDest.Value16 = this.processor.UnstackWord();
-			this.processor.RestoreSource();
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-			// Far return
 			this.processor.Journal.CloseScope("AssignHueCycleSpan");
 		}
 
@@ -507,145 +455,117 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <summary>
-		/// ?
+		/// Fades the colours to the palette of a picture (the 0x300 colour bytes after the 6 byte header at swatchAddr) in
+		/// steps * 6 timer beats and waits until the fade is done
 		/// </summary>
-		/// <param name="param1"></param>
-		/// <param name="palettePtr"></param>
 		public void ImportColorsFromBuffer(ushort arg1, ushort swatchAddr)
 		{
 			this.processor.Journal.OpenScope($"ImportColorsFromBuffer({arg1}, 0x{swatchAddr:x4})");
 
-			// function body
-			this.processor.EnterFrame();
-			this.processor.PreserveSource();
-			this.processor.StackWord(this.processor.RegDest.Value16);
+			// The target palette goes to 0xba06 (rep movsb with ES = DS, which the original leaves in ES). Copied straight in the
+			// memory like rep movsb, without clock steps: with a colour cycle on, an earlier timer beat would change the
+			// colours that PullCurrentColors takes
+			this.processor.SegExtra.Value16 = this.processor.SegData.Value16;
 
-			this.processor.StackWord(this.processor.SegData.Value16);
-			this.processor.SegExtra.Value16 = this.processor.UnstackWord();
-			this.processor.RegCount.Value16 = 0x300;
-			this.processor.RegSource.Value16 = swatchAddr;
-			this.processor.RegSource.Value16 = this.processor.SumWord(this.processor.RegSource.Value16, 0x6);
-			// LEA
-			this.processor.RegDest.Value16 = 0xba06;
-			this.processor.RepeatCopyStringByte(this.processor.SegData, this.processor.RegSource, this.processor.SegExtra, this.processor.RegDest, this.processor.RegCount);
-
-			PullCurrentColors();
-
-			FadeColors(arg1);
-
-		L04c9:
-			// Waits until the timer interrupt has finished the fade
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x68), 0x0);
-			if (this.processor.FlagSet.IsNotEqual)
+			for (int idx = 0; idx < 0x300; idx++)
 			{
-				this.processor.Idle();
-				goto L04c9;
+				this.processor.Storage.EmitUInt8(this.processor.SegData.Value16, (ushort)(0xba06 + idx),
+					this.processor.Storage.PullUInt8(this.processor.SegData.Value16, (ushort)(swatchAddr + 6 + idx)));
 			}
 
-			this.processor.RegDest.Value16 = this.processor.UnstackWord();
-			this.processor.RestoreSource();
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-			// Far return
+			FadeToTargetColors(arg1);
+
 			this.processor.Journal.CloseScope("ImportColorsFromBuffer");
 		}
 
 		/// <summary>
-		/// ?
+		/// Fades all 256 colours to one colour (red, green, blue: 0 - 63) in steps * 6 timer beats and waits until the fade
+		/// is done
 		/// </summary>
-		/// <param name="param1"></param>
-		/// <param name="param2"></param>
-		/// <param name="param3"></param>
-		/// <param name="param4"></param>
 		public void FloodColors(ushort arg1, byte arg2, byte arg3, byte arg4)
 		{
 			this.processor.Journal.OpenScope($"FloodColors({arg1}, {arg2}, {arg3}, {arg4})");
 
-			// function body
-			this.processor.EnterFrame();
-			this.processor.PreserveSource();
-			this.processor.StackWord(this.processor.RegDest.Value16);
+			// The original leaves DS in ES
+			this.processor.SegExtra.Value16 = this.processor.SegData.Value16;
 
-			this.processor.StackWord(this.processor.SegData.Value16);
-			this.processor.SegExtra.Value16 = this.processor.UnstackWord();
-
-			// LEA
-			this.processor.RegDest.Value16 = 0xba06;
-			this.processor.RegCount.Value16 = 0x100;
-
-		L04eb:
-			this.processor.EmitUInt8(this.processor.SegData.Value16, this.processor.RegDest.Value16, arg2);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 + 0x1), arg3);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 + 0x2), arg4);
-
-			this.processor.RegDest.Value16 = this.processor.SumWord(this.processor.RegDest.Value16, 0x3);
-			if (this.processor.RepeatLoop(this.processor.RegCount)) goto L04eb;
-
-			PullCurrentColors();
-
-			FadeColors(arg1);
-
-		L0501:
-			// Waits until the timer interrupt has finished the fade
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x68), 0x0);
-			if (this.processor.FlagSet.IsNotEqual)
+			for (int idx = 0; idx < 0x100; idx++)
 			{
-				this.processor.Idle();
-				goto L0501;
+				ushort colour = (ushort)(0xba06 + (3 * idx));
+
+				this.processor.EmitGlobalByte(colour, arg2);
+				this.processor.EmitGlobalByte((ushort)(colour + 1), arg3);
+				this.processor.EmitGlobalByte((ushort)(colour + 2), arg4);
 			}
 
-			this.processor.RegDest.Value16 = this.processor.UnstackWord();
-			this.processor.RestoreSource();
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-			// Far return
+			FadeToTargetColors(arg1);
+
 			this.processor.Journal.CloseScope("FloodColors");
 		}
 
 		/// <summary>
-		/// ?
+		/// The common part of ImportColorsFromBuffer and FloodColors: the current colours to 0xbd06, the fade to the colours
+		/// at 0xba06, then waiting until the timer interrupt has finished it (0x68 = 0)
 		/// </summary>
-		/// <param name="param1"></param>
+		private void FadeToTargetColors(ushort steps)
+		{
+			PullCurrentColors();
+
+			FadeColors(steps);
+
+			while (this.processor.PullGlobalWord(0x68) != 0)
+			{
+				this.processor.Idle();
+			}
+		}
+
+		/// <summary>
+		/// Starts a fade from the colours at 0xbd06 to the colours at 0xba06 in arg1 * 6 timer beats (0x68): the colours per
+		/// beat (0x64, from the measured speed 0x66 / 14, at most 0x100), the first colour (0x62), the mix step (0x6c) and the
+		/// mix (0x6a); the first step is done at once
+		/// </summary>
 		public void FadeColors(ushort arg1)
 		{
 			this.processor.Journal.OpenScope($"FadeColors({arg1})");
 
-			// function body
-			arg1 *= 6;
-			
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x66);
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsNotEqual) goto L051f;
+			ushort beats = (ushort)(arg1 * 6);
+			ushort speed = this.processor.PullGlobalWord(0x66);
 
-			GaugeColorsPerformance();
+			if (speed == 0)
+			{
+				speed = GaugeColorsPerformance();
+				this.processor.EmitGlobalWord(0x66, speed);
+			}
 
-			this.processor.EmitGlobalWord(0x66, this.processor.RegAcc.Value16);
+			ushort colours = (ushort)(speed / 0xe);
 
-		L051f:
-			this.processor.RegData.Value16 = 0x0;
-			this.processor.RegCount.Value16 = 0xe;
-			this.processor.DivideWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.RegAcc.HighByte = this.processor.BitOrByte(this.processor.RegAcc.HighByte, this.processor.RegAcc.HighByte);
-			if (this.processor.FlagSet.IsEqual) goto L052d;
-			this.processor.RegAcc.Value16 = 0x100;
+			if (colours > 0xff)
+				colours = 0x100;
 
-		L052d:
-			this.processor.EmitGlobalWord(0x64, this.processor.RegAcc.Value16);
-			this.processor.EmitGlobalWord(0x62, this.processor.RegAcc.Value16);
-			this.processor.EmitGlobalWord(0x62, this.processor.NegateWord(this.processor.PullGlobalWord(0x62)));
-			this.processor.MultiplyWord(this.processor.RegData, this.processor.RegAcc, arg1);
-			this.processor.RegCount.HighByte = this.processor.RegData.LowByte;
-			this.processor.RegCount.LowByte = this.processor.RegAcc.HighByte;
-			this.processor.RegCount.Value16 = this.processor.DecrementWord(this.processor.RegCount.Value16);
-			this.processor.RegData.Value16 = 0x1;
-			this.processor.RegAcc.Value16 = 0x0;
-			this.processor.DivideWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.EmitGlobalWord(0x6c, this.processor.RegAcc.Value16);
-			this.processor.EmitGlobalWord(0x6a, this.processor.RegAcc.Value16);
+			this.processor.EmitGlobalWord(0x64, colours);
+
+			// Written, read back and negated like the original: the same number of clock steps before the fade starts (0x68)
+			this.processor.EmitGlobalWord(0x62, colours);
+			this.processor.EmitGlobalWord(0x62, (ushort)-this.processor.PullGlobalWord(0x62));
+
+			// 0x10000 / (colours * beats / 0x100 - 1), a 32 / 16 bit division like the original (and its errors)
+			ushort divisor = (ushort)(((uint)colours * beats >> 8) - 1);
+
+			if (divisor == 0)
+				throw new Exception("Division by zero");
+
+			if (divisor == 1)
+				throw new Exception("Division error");
+
+			ushort mixStep = (ushort)(0x10000 / divisor);
+
+			this.processor.EmitGlobalWord(0x6c, mixStep);
+			this.processor.EmitGlobalWord(0x6a, mixStep);
 
 			ColorsFadeStep();
 
-			this.processor.EmitGlobalWord(0x68, arg1);
+			this.processor.EmitGlobalWord(0x68, beats);
 
-			// Near return
 			this.processor.Journal.CloseScope("FadeColors");
 		}
 
