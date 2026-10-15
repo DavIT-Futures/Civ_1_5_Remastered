@@ -445,6 +445,12 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   nazw w ramce). Test: `Theory` po skryptach klawiszy, w każdym losowe części / strony / tryb myszy. Granica „linia tuż za
   ostatnim wpisem” (zwraca 0) jest osiągalna tylko kliknięciem myszy, a testy nie mają kliknięć – mutacja `<=` → `<` tam
   przeżywa. Wpis 0 też zwraca 0 (nieodróżnialny od „brak wpisu” po AX). Testy w `BatchFiftyNineDifferentialTests`.
+- Porcja 60, mała (2026-10-15): końcówka `GameEngine.PrepareMachine` (kod startowy programu: stos na końcu segmentu
+  danych, granice stosu 0x5890 / 0x588c, wolna pamięć 0x588a, zmiana rozmiaru bloku programu jak DOS – CF / AX / BX, segment
+  programu 0x5901, DS = ES = SS) bez arytmetyki rejestrów; rejestry na wyjściu jak w oryginale. Usunięta pętla „czyszcząca”
+  segment danych: jej warunek (`idx < 0x70ec && idx > 0x70ec + 0xdff`) nigdy nie jest prawdziwy. Bez testu różnicowego
+  (funkcja przygotowuje maszynę przed wczytaniem gry); sprawdza ją golden master (baseline z oryginału, każdy test ładuje
+  grę przez nią) – mutacje 0x588a i 0x5901 łapie `PlayedTurnsMatchBaseline`.
 
 ## Następny krok
 
@@ -455,7 +461,7 @@ Dalej małe metody: `python Civilization1Remaster.Tests/Differential/Reference/f
 `DisplayCivilizationScreen` (`MainIntro`, patrz porcja 57),
 `DisplayPalace` (`Palace`, patrz porcja 45), reszta generatora mapy w `GameInitAndIntro`. Funkcje niskopoziomowe `SystemServices` (`DeactivateMouse`, `PointerEvent`,
 przerwanie zegara: `OnClockBeat`, `RefreshHueCycling`, `ColorsFadeStep`, `ColorsFadeStepInterrupt`, `AssignColors`) na koniec: działają
-w przerwaniach albo na rejestrach. Stan 2026-10-15 (po porcji 59): 30 metod w stylu asm, ok. 35,7 tys. z 65,3 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
+w przerwaniach albo na rejestrach. Stan 2026-10-15 (po porcji 60): 29 metod w stylu asm, ok. 35,7 tys. z 65,3 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 

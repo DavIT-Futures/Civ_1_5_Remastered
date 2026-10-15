@@ -239,53 +239,46 @@ namespace Civilization1Remaster
 			this.processor.SegData.Value16 = this.processor.UnstackWord();
 			this.processor.SegExtra.Value16 = this.processor.SegData.Value16;
 
-			this.processor.RegSource.Value16 = (ushort)(this.processor.Storage.UnusedStorage.Finish >> 4); // top of memory
-			this.processor.RegSource.Value16 = this.processor.SubtractWord(this.processor.RegSource.Value16, contentSection);
+			// The start-up code of the program: the stack goes to the end of the data segment (SS:SP = 0x3b01:0xf0c0), the
+			// stack limits (0x5890, 0x588c) and the size of the free memory above the data segment in bytes - 1 (0x588a) are
+			// noted, the memory block of the program is resized up to the top of memory (DOS: CF / AX = 0 or 8, BX), the
+			// program segment (0x5901), then DS = ES = SS. The registers stay as the start-up code leaves them.
+			ushort topSection = (ushort)(this.processor.Storage.UnusedStorage.Finish >> 4);
 
-			// Init SS:SP
 			this.processor.DisableInterrupts();
 			this.processor.SegStack.Value16 = contentSection;
-			this.processor.RegStack.Value16 = this.processor.SumWord(this.processor.RegStack.Value16, 0xe8c0);
+			this.processor.RegStack.Value16 = (ushort)(this.processor.RegStack.Value16 + 0xe8c0);
 			this.processor.EnableInterrupts();
 
-			// Align SP
-			this.processor.RegStack.Value16 = this.processor.BitAndWord(this.processor.RegStack.Value16, 0xfffe);
+			this.processor.RegStack.Value16 &= 0xfffe;
 
-			this.processor.EmitUInt16(this.processor.SegStack.Value16, 0x5890, this.processor.RegStack.Value16);
-			this.processor.EmitUInt16(this.processor.SegStack.Value16, 0x588c, this.processor.RegStack.Value16);
+			this.processor.EmitUInt16(contentSection, 0x5890, this.processor.RegStack.Value16);
+			this.processor.EmitUInt16(contentSection, 0x588c, this.processor.RegStack.Value16);
+			this.processor.EmitUInt16(contentSection, 0x588a, (ushort)(((topSection - contentSection) << 4) - 1));
 
-			this.processor.RegAcc.Value16 = this.processor.RegSource.Value16;
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, 4);
-			this.processor.RegAcc.Value16 = this.processor.DecrementWord(this.processor.RegAcc.Value16);
-			this.processor.EmitUInt16(this.processor.SegStack.Value16, 0x588a, this.processor.RegAcc.Value16);
+			ushort programSection = this.processor.SegExtra.Value16;
+			ushort blockSize = (ushort)(topSection - programSection);
 
-			this.processor.RegSource.Value16 = this.processor.SumWord(this.processor.RegSource.Value16, contentSection);
-			this.processor.RegBase.Value16 = this.processor.SegExtra.Value16;
-			this.processor.RegBase.Value16 = this.processor.SubtractWord(this.processor.RegBase.Value16, this.processor.RegSource.Value16);
-			this.processor.RegBase.Value16 = this.processor.NegateWord(this.processor.RegBase.Value16);
-			if (this.processor.Storage.RescaleStorageChunk(this.processor.SegExtra.Value16, this.processor.RegBase.Value16))
+			this.processor.RegSource.Value16 = topSection;
+			this.processor.RegBase.Value16 = blockSize;
+
+			bool resized = this.processor.Storage.RescaleStorageChunk(programSection, blockSize);
+
+			this.processor.FlagSet.IsCarry = !resized;
+			this.processor.RegAcc.Value16 = (ushort)(resized ? 0 : 8);
+
+			if (!resized)
 			{
-				this.processor.FlagSet.IsCarry = false;
-				this.processor.RegAcc.Value16 = 0;
-			}
-			else
-			{
-				this.processor.FlagSet.IsCarry = true;
-				this.processor.RegAcc.Value16 = 8;
 				this.processor.RegBase.Value16 = 0;
 			}
 
-			this.processor.EmitUInt16(this.processor.SegStack.Value16, 0x5901, this.processor.SegData.Value16);
+			this.processor.EmitUInt16(contentSection, 0x5901, this.processor.SegData.Value16);
 
-			this.processor.SegExtra.Value16 = this.processor.SegStack.Value16;
-			this.processor.SegData.Value16 = this.processor.SegStack.Value16;
+			this.processor.SegExtra.Value16 = contentSection;
+			this.processor.SegData.Value16 = contentSection;
 
-			// Clear the rest of data and stack segment 0x652e - 0xe8c0
-			for (int idx = 0x652e; idx < this.processor.RegStack.Value16; idx++)
-			{
-				if (idx < 0x70ec && idx > 0x70ec + 0xdff)
-					this.processor.EmitUInt8(contentSection, (ushort)idx, 0);
-			}
+			// The original clears the data and stack segment from 0x652e on except the block 0x70ec - 0x7eeb, but its
+			// condition is never true, so nothing is cleared
 
 			#region Protect already mapped data objects
 
