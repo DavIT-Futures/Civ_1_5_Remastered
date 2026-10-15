@@ -1705,127 +1705,128 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// One step of the story told while the new world is made (called again and again by the map generator); the stage
+		/// 0x3b62: 0 = not started (opens story.txt, handle 0x6804), 1 = telling, 2 - 4 = told (the line under the picture is
+		/// wiped at 5), 5 = "press a key" (0x3b28) blinking with the clock (0x5c / 60). While telling, a step waits until the
+		/// music (0x6800, song position from the second line on) reaches the time of the line (0x6806), then shows the next
+		/// line of story.txt; a short line (at most 3 characters) instead shows the next picture birthN.pic (0x3b64) and,
+		/// with VGA colours (0xd762), its palette and colour cycles (records of first colour, last colour and speed in
+		/// 0x3710:0x3b66, cycle count 0x3b68). The end of the file or a key (when 0x67fc allows it) ends the story.
+		/// The screen is marked as changed ([0xaa] = 1) and AX is 1 while waiting for the music, else 0.
 		/// </summary>
 		public void DisplayStoryIntro()
 		{
 			this.processor.Journal.OpenScope("DisplayStoryIntro()");
 
-			// function body
+			// The frame keeps the picture file name (bp - 0x10) like the original
 			this.processor.EnterFrame(0x1a);
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, this.processor.RegBase.Value16, 0x0);
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x3b62), 0x2);
-			if (this.processor.FlagSet.IsLess) goto L185a;
+			ushort fileName = (ushort)(this.processor.RegFrame.Value16 - 0x10);
 
-			this.owner.Libc.KeyAvailable();
+			this.processor.EmitUInt16(this.processor.SegData.Value16, this.processor.PullGlobalWord(0xaa), 0x0);
 
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsNotEqual) goto L185a;
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x3b62), 0x5);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L1820;
-			this.processor.EmitGlobalWord(0x3b62, this.processor.IncrementWord(this.processor.PullGlobalWord(0x3b62)));
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x3b62), 0x5);
-			if (this.processor.FlagSet.IsNotEqual) goto L184f;
+			bool waiting = StoryStep(fileName);
 
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 40, 160, 240, 8, 0);
+			this.processor.RegAcc.Value16 = (ushort)(waiting ? 1 : 0);
 
-			goto L184f;
+			this.processor.LeaveFrame();
 
-		L1820:
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x5c);
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.RegCount.Value16 = 0x3c;
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.EmitGlobalWord(0x6800, this.processor.RegAcc.Value16);
-			this.processor.TestBitsByte(this.processor.PullGlobalByte(0x6800), 0x1);
-			if (this.processor.FlagSet.IsEqual) goto L183a;
-			this.processor.RegAcc.Value16 = 0xf;
-			goto L183d;
+			this.processor.Journal.CloseScope("DisplayStoryIntro");
+		}
 
-		L183a:
-			this.processor.RegAcc.Value16 = 0x3;
+		/// <summary>
+		/// The step of DisplayStoryIntro, true while waiting for the music
+		/// </summary>
+		private bool StoryStep(ushort fileName)
+		{
+			if ((short)this.processor.PullGlobalWord(0x3b62) >= 2 && this.owner.Libc.KeyAvailable() == 0)
+			{
+				// The story is told: the "press a key" line
+				if ((short)this.processor.PullGlobalWord(0x3b62) < 5)
+				{
+					this.processor.EmitGlobalWord(0x3b62, (ushort)(this.processor.PullGlobalWord(0x3b62) + 1));
 
-		L183d:
-			this.owner.TextPainter.RenderCenteredTextToScreen0(0x3b28, 160, 160, this.processor.RegAcc.Value16);
+					if (this.processor.PullGlobalWord(0x3b62) == 5)
+					{
+						this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 40, 160, 240, 8, 0);
+					}
+				}
+				else
+				{
+					this.processor.EmitGlobalWord(0x6800, (ushort)CPU.SignedQuotient(this.processor.PullGlobalSignedWord(0x5c), 0x3c));
 
-		L184f:
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, this.processor.RegBase.Value16, 0x1);
-			goto L1bdd;
+					ushort colour = (ushort)((this.processor.PullGlobalByte(0x6800) & 1) != 0 ? 0xf : 0x3);
 
-		L185a:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x3b62), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L18a1;
+					this.owner.TextPainter.RenderCenteredTextToScreen0(0x3b28, 160, 160, colour);
+				}
 
-			this.owner.Libc.OpenStream("story.txt", "rt");
+				MarkScreenChanged();
 
-			this.processor.EmitGlobalWord(0x6804, this.processor.RegAcc.Value16);
-			this.processor.EmitGlobalWord(0x3b62, 0x1);
-			this.processor.RegAcc.Value16 = 0;
-			this.processor.EmitGlobalWord(0x6806, this.processor.RegAcc.Value16);
-			this.processor.EmitGlobalWord(0x6800, this.processor.RegAcc.Value16);
+				return false;
+			}
 
-			this.owner.Libc.CopyText(0xba06, "");
+			if (this.processor.PullGlobalWord(0x3b62) == 0)
+			{
+				this.processor.EmitGlobalWord(0x6804, (ushort)this.owner.Libc.OpenStream("story.txt", "rt"));
+				this.processor.EmitGlobalWord(0x3b62, 0x1);
+				this.processor.EmitGlobalWord(0x6806, 0);
+				this.processor.EmitGlobalWord(0x6800, 0);
 
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 0x7);
-			this.processor.EmitGlobalWord(0x6802, 0x0);
+				this.owner.Libc.CopyText(0xba06, "");
 
-		L18a1:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x6802), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L18b0;
+				this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.PullGlobalWord(0xaa) + 0x10), 0x7);
+				this.processor.EmitGlobalWord(0x6802, 0x0);
+			}
 
-			this.owner.Services.ObtainSongPosition();
+			if (this.processor.PullGlobalWord(0x6802) != 0)
+			{
+				this.processor.EmitGlobalWord(0x6800, this.owner.Services.ObtainSongPosition());
+			}
 
-			this.processor.EmitGlobalWord(0x6800, this.processor.RegAcc.Value16);
+			if (this.processor.PullGlobalSignedWord(0x6800) < this.processor.PullGlobalSignedWord(0x6806))
+			{
+				MarkScreenChanged();
 
-		L18b0:
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x6806);
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x6800), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L18c4;
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, this.processor.RegBase.Value16, 0x1);
-			goto L1bd8;
+				return true;
+			}
 
-		L18c4:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x3b62), 0x2);
-			if (this.processor.FlagSet.IsEqual) goto L18f3;
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x6802), 0x28);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L18f3;
+			if (this.processor.PullGlobalWord(0x3b62) != 2 && this.processor.PullGlobalSignedWord(0x6802) < 0x28)
+			{
+				this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 160, 3);
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 160, 3);
+				this.owner.TextPainter.AwaitTime(5);
+			}
 
-			this.owner.TextPainter.AwaitTime(5);
+			short lineRead = this.owner.Libc.ScanStream((short)this.processor.PullGlobalWord(0x6804), "%[^\n]\n", 0xba06);
 
-		L18f3:
-			this.owner.Libc.ScanStream((short)this.processor.PullGlobalWord(0x6804), "%[^\n]\n", 0xba06);
+			if (lineRead == -1 || (this.owner.Libc.KeyAvailable() != 0 && this.processor.PullGlobalWord(0x67fc) != 0))
+			{
+				EndStory(lineRead == -1);
+			}
+			else
+			{
+				TellStoryLine(fileName);
+			}
 
-			this.processor.EmitLocalWord(0x18, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xffff);
-			if (this.processor.FlagSet.IsNotEqual) goto L1912;
-			goto L1b6a;
+			this.owner.Services.DisplayScreen(0);
 
-		L1912:
-			this.owner.Libc.KeyAvailable();
+			MarkScreenChanged();
 
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual) goto L1925;
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x67fc), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L1925;
-			goto L1b6a;
+			return this.processor.PullGlobalWord(0x3b62) != 2;
+		}
 
-		L1925:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x3b64), 0x1);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L1952;
+		/// <summary>
+		/// The line just read from story.txt (0xba06): shown under the picture, or the next picture for a short line; then the
+		/// time of the next line (0x6806) from the music table 0x3710:0x83
+		/// </summary>
+		private void TellStoryLine(ushort fileName)
+		{
+			if (this.processor.PullGlobalSignedWord(0x3b64) > 1)
+			{
+				// The line under the picture is wiped with the picture
+				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19e8), 0, 0xa0, 0x140, 8,
+					this.processor.PullGlobalWord(0xaa), 0, 0xa0);
+			}
 
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0x19e8),
-				0, 0xa0, 0x140, 8,
-				this.processor.PullGlobalWord(0xaa),
-				0, 0xa0);
-
-		L1952:
 			this.owner.TextPainter.AwaitTime(10);
 
 			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 160, 3);
@@ -1836,186 +1837,149 @@ namespace Civilization1Remaster.Game
 
 			this.processor.EmitGlobalWord(0x6806, 0x0);
 
-			this.owner.Libc.TextLength(0xba06);
+			if ((short)this.owner.Libc.TextLength(0xba06) > 3)
+			{
+				if (this.processor.PullGlobalWord(0x6802) == 0)
+				{
+					// The first line starts the music
+					this.owner.Services.RestoreTimer();
 
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x3);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L19db;
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x6802), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L19cf;
+					this.owner.Services.PerformSound(1, 0);
 
-			this.owner.Services.RestoreTimer();
+					this.owner.Services.PerformSound(4, 0);
+				}
 
-			this.owner.Services.PerformSound(1, 0);
+				this.processor.EmitGlobalWord(0x6806, (ushort)(this.processor.PullGlobalWord(0x6806) + 2));
+				this.processor.EmitGlobalWord(0x6802, (ushort)(this.processor.PullGlobalWord(0x6802) + 1));
+			}
+			else
+			{
+				ShowStoryPicture(fileName);
+			}
 
-			this.owner.Services.PerformSound(4, 0);
+			if ((short)this.owner.Libc.TextLength(0xba06) > 0x13)
+			{
+				this.processor.EmitGlobalWord(0x6806, (ushort)(this.processor.PullGlobalWord(0x6806) + 1));
+			}
 
-		L19cf:
-			this.processor.EmitGlobalWord(0x6806, this.processor.SumWord(this.processor.PullGlobalWord(0x6806), 0x2));
-			this.processor.EmitGlobalWord(0x6802, this.processor.IncrementWord(this.processor.PullGlobalWord(0x6802)));
-			goto L1b29;
-
-		L19db:
-			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x10), "birth0.pic");
-
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x3b64);
-			this.processor.EmitGlobalWord(0x3b64, this.processor.IncrementWord(this.processor.PullGlobalWord(0x3b64)));
-			this.processor.EmitLocalByte(0xb, this.processor.SumByte(this.processor.PullLocalByte(0xb), this.processor.RegAcc.LowByte));
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xd762), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L1a19;
-			this.processor.EmitLocalWord(0x16, 0x1);
-			goto L1a11;
-
-		L1a03:
-			this.owner.Services.DeactivateHueCycle(this.processor.PullLocalWord(0x16));
-
-			this.processor.IncrementLocalWord(0x16);
-
-		L1a11:
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x3b68);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x16), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L1a03;
-
-		L1a19:
-			this.owner.ImageToolkit.ImportPictureOrColors(2, 0, 0, (ushort)(this.processor.RegFrame.Value16 - 0x10), 0);
-
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xd762), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L1a41;
-
-			this.owner.Services.FloodColors(8, 0, 0, 0);
-
-		L1a41:
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0x19e8),
-				0, 0, 0x140, 0xc8,
-				this.processor.PullGlobalWord(0xaa),
-				0, 0);
-
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xd762), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L1a6b;
-			goto L1b29;
-
-		L1a6b:
-			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x9), "pal");
-
-			this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, (ushort)(this.processor.RegFrame.Value16 - 0x10), 0xc5be);
-
-			this.owner.Services.ImportColorsFromBuffer(8, 0xc5be);
-
-			this.processor.EmitGlobalWord(0x3b68, 0x0);
-			goto L1af8;
-
-		L1aa3:
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0x3b66);
-			this.processor.EmitGlobalWord(0x3b66, this.processor.IncrementWord(this.processor.PullGlobalWord(0x3b66)));
-			this.processor.SegExtra.Value16 = 0x3710; // segment
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegExtra.Value16, (ushort)(this.processor.RegBase.Value16 + 0x0));
-			this.processor.RegAcc.HighByte = 0;
-			this.processor.EmitLocalWord(0x12, this.processor.RegAcc.Value16);
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0x3b66);
-			this.processor.EmitGlobalWord(0x3b66, this.processor.IncrementWord(this.processor.PullGlobalWord(0x3b66)));
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegExtra.Value16, (ushort)(this.processor.RegBase.Value16 + 0x0));
-			this.processor.EmitLocalWord(0x14, this.processor.RegAcc.Value16);
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0x3b66);
-			this.processor.EmitGlobalWord(0x3b66, this.processor.IncrementWord(this.processor.PullGlobalWord(0x3b66)));
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegExtra.Value16, (ushort)(this.processor.RegBase.Value16 + 0x0));
-			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegAcc.Value16 = 0x12c;
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.DivideWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.EmitLocalWord(0x1a, this.processor.RegAcc.Value16);
-
-			this.processor.EmitGlobalWord(0x3b68, this.processor.IncrementWord(this.processor.PullGlobalWord(0x3b68)));
-
-			this.owner.Services.AssignHueCycleSpan(
-				this.processor.PullGlobalWord(0x3b68),
-				this.processor.RegAcc.Value16,
-				this.processor.PullLocalWord(0x12),
-				this.processor.PullLocalWord(0x14));
-
-		L1af8:
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0x3b66);
-			this.processor.SegExtra.Value16 = 0x3710; // segment
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegExtra.Value16, (ushort)(this.processor.RegBase.Value16 + 0x0)), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L1aa3;
-			this.processor.EmitGlobalWord(0x3b66, this.processor.IncrementWord(this.processor.PullGlobalWord(0x3b66)));
-			this.processor.EmitLocalWord(0x16, 0x1);
-			goto L1b21;
-
-		L1b13:
-			this.owner.Services.ActivateHueCycle(this.processor.PullLocalWord(0x16));
-
-			this.processor.IncrementLocalWord(0x16);
-
-		L1b21:
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x3b68);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x16), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L1b13;
-
-		L1b29:
-			this.owner.Libc.TextLength(0xba06);
-
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x13);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L1b3e;
-			this.processor.EmitGlobalWord(0x6806, this.processor.IncrementWord(this.processor.PullGlobalWord(0x6806)));
-
-		L1b3e:
 			this.owner.Helpers.VerifyValueSpan(
 				this.processor.PullInt16(0x3710, (ushort)((this.processor.PullGlobalWord(0x6802) << 1) + 0x83)),
 				(45 * this.processor.PullGlobalSignedWord(0x6806)) + this.processor.PullGlobalSignedWord(0x6800),
 				32767);
 
 			this.processor.EmitGlobalWord(0x6806, this.processor.RegAcc.Value16);
-			goto L1bbe;
+		}
 
-		L1b6a:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x18), 0xffff);
-			if (this.processor.FlagSet.IsNotEqual) goto L1b7c;
+		/// <summary>
+		/// The next picture birthN.pic (N = 0x3b64), with VGA colours faded in with its palette birthN.pal and its colour cycles
+		/// </summary>
+		private void ShowStoryPicture(ushort fileName)
+		{
+			this.owner.Libc.CopyText(fileName, "birth0.pic");
 
-			this.owner.TextPainter.AwaitTime(180);
+			// The digit of the name (bp - 0xb)
+			byte pictureIdx = (byte)this.processor.PullGlobalWord(0x3b64);
+			this.processor.EmitGlobalWord(0x3b64, (ushort)(this.processor.PullGlobalWord(0x3b64) + 1));
+			this.processor.EmitGlobalByte((ushort)(fileName + 5), (byte)(this.processor.PullGlobalByte((ushort)(fileName + 5)) + pictureIdx));
 
-		L1b7c:
+			bool colours = this.processor.PullGlobalWord(0xd762) != 0;
+
+			if (colours)
+			{
+				StopStoryColourCycles();
+			}
+
+			this.owner.ImageToolkit.ImportPictureOrColors(2, 0, 0, fileName, 0);
+
+			if (this.processor.PullGlobalWord(0xd762) != 0)
+			{
+				this.owner.Services.FloodColors(8, 0, 0, 0);
+			}
+
+			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19e8), 0, 0, 0x140, 0xc8,
+				this.processor.PullGlobalWord(0xaa), 0, 0);
+
+			if (this.processor.PullGlobalWord(0xd762) == 0)
+				return;
+
+			this.owner.Libc.CopyText((ushort)(fileName + 7), "pal");
+
+			this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, fileName, 0xc5be);
+
+			this.owner.Services.ImportColorsFromBuffer(8, 0xc5be);
+
+			// The colour cycles of the picture: first colour, last colour, speed (300 / speed beats a step), 0 at the end
+			this.processor.EmitGlobalWord(0x3b68, 0x0);
+
+			while (this.processor.PullUInt8(0x3710, this.processor.PullGlobalWord(0x3b66)) != 0)
+			{
+				ushort first = NextStoryCycleByte();
+				ushort last = NextStoryCycleByte();
+				ushort speed = NextStoryCycleByte();
+
+				if (speed == 0)
+					throw new Exception("Division by zero");
+
+				ushort delay = (ushort)(0x12c / speed);
+
+				this.processor.EmitGlobalWord(0x3b68, (ushort)(this.processor.PullGlobalWord(0x3b68) + 1));
+
+				this.owner.Services.AssignHueCycleSpan(this.processor.PullGlobalWord(0x3b68), delay, first, last);
+			}
+
+			this.processor.EmitGlobalWord(0x3b66, (ushort)(this.processor.PullGlobalWord(0x3b66) + 1));
+
+			for (short cycleIdx = 1; cycleIdx <= this.processor.PullGlobalSignedWord(0x3b68); cycleIdx++)
+			{
+				this.owner.Services.ActivateHueCycle((ushort)cycleIdx);
+			}
+		}
+
+		/// <summary>The next byte of the colour cycle records of the story pictures (0x3710:0x3b66)</summary>
+		private ushort NextStoryCycleByte()
+		{
+			ushort spot = this.processor.PullGlobalWord(0x3b66);
+			this.processor.EmitGlobalWord(0x3b66, (ushort)(this.processor.PullGlobalWord(0x3b66) + 1));
+
+			return this.processor.PullUInt8(0x3710, spot);
+		}
+
+		/// <summary>
+		/// The end of the story (the end of story.txt, then a pause of 180, or a key): closes the file, stops the music and the
+		/// colour cycles, stage 2
+		/// </summary>
+		private void EndStory(bool endOfFile)
+		{
+			if (endOfFile)
+			{
+				this.owner.TextPainter.AwaitTime(180);
+			}
+
 			this.owner.Libc.CloseStream((short)this.processor.PullGlobalWord(0x6804));
 
 			this.owner.Services.PerformSound(1, 0);
 
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xd762), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L1bb8;
-			this.processor.EmitLocalWord(0x16, 0x1);
-			goto L1bb0;
+			if (this.processor.PullGlobalWord(0xd762) != 0)
+			{
+				StopStoryColourCycles();
+			}
 
-		L1ba2:
-			this.owner.Services.DeactivateHueCycle(this.processor.PullLocalWord(0x16));
-
-			this.processor.IncrementLocalWord(0x16);
-
-		L1bb0:
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x3b68);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x16), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L1ba2;
-
-		L1bb8:
 			this.processor.EmitGlobalWord(0x3b62, 0x2);
+		}
 
-		L1bbe:
-			this.owner.Services.DisplayScreen(0);
+		/// <summary>Stops the colour cycles 1 - 0x3b68 of the story picture</summary>
+		private void StopStoryColourCycles()
+		{
+			for (short cycleIdx = 1; cycleIdx <= this.processor.PullGlobalSignedWord(0x3b68); cycleIdx++)
+			{
+				this.owner.Services.DeactivateHueCycle((ushort)cycleIdx);
+			}
+		}
 
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, this.processor.RegBase.Value16, 0x1);
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x3b62), 0x2);
-			if (this.processor.FlagSet.IsEqual) goto L1bdd;
-
-		L1bd8:
-			this.processor.RegAcc.Value16 = 0x1;
-			goto L1bdf;
-
-		L1bdd:
-			this.processor.RegAcc.Value16 = 0;
-
-		L1bdf:
-			this.processor.RegStack.Value16 = this.processor.RegFrame.Value16;
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-			// Far return
-			this.processor.Journal.CloseScope("DisplayStoryIntro");
+		/// <summary>Marks the screen as changed ([0xaa] = 1)</summary>
+		private void MarkScreenChanged()
+		{
+			this.processor.EmitUInt16(this.processor.SegData.Value16, this.processor.PullGlobalWord(0xaa), 0x1);
 		}
 
 		/// <summary>
