@@ -378,84 +378,148 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <summary>
-		/// ?
+		/// The main menu after the title (the choice in 0x6b32, asked when it is -1): 0 = a new game (all world options 1,
+		/// the world is made with the story), 1 = a saved game, 2 = EARTH (0xd76a = 1), 3 = a new game with the world options
+		/// asked (land mass, temperature, climate, age in 0x7ef6 - 0x7efc), 4 = the Hall of Fame and the menu again. The choice
+		/// is played at a measure of the title music. Then the tribe is chosen and the game screen prepared.
 		/// </summary>
 		public void TitleLogoAndMainChoices()
 		{
 			this.processor.Journal.OpenScope("TitleLogoAndMainChoices()");
 
-			// function body
+			// The frame like the original (the song position is kept at bp - 2)
 			this.processor.EnterFrame(0x6);
 			this.processor.EmitGlobalWord(0xd76a, 0x0);
-			goto L04bb;
 
-		L0494:
-			this.owner.Libc.CopyText(0xba06, " Start a New Game\n Load a Saved Game\n EARTH\n Customize World\n View Hall of Fame\n");
+			bool chosen = false;
 
-			this.owner.Dialogs.DisplayMenu(0xba06, 100, 140, 1);
+			while (!chosen)
+			{
+				while (this.processor.PullGlobalWord(0x6b32) == 0xffff)
+				{
+					this.owner.Libc.CopyText(0xba06, " Start a New Game\n Load a Saved Game\n EARTH\n Customize World\n View Hall of Fame\n");
 
-			this.processor.EmitGlobalWord(0x6b32, this.processor.RegAcc.Value16);
+					this.owner.Dialogs.DisplayMenu(0xba06, 100, 140, 1);
 
-		L04bb:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x6b32), 0xffff);
-			if (this.processor.FlagSet.IsEqual) goto L0494;
+					this.processor.EmitGlobalWord(0x6b32, this.processor.RegAcc.Value16);
+				}
 
-		L04c2:
-			this.owner.Services.ObtainSongPosition();
+				AwaitTitleSongMeasure();
 
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1495);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L04dc;
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, 0x1495);
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.RegCount.Value16 = 0x120;
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.RegData.Value16 = this.processor.BitOrWord(this.processor.RegData.Value16, this.processor.RegData.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L04c2;
+				this.owner.Services.PerformSound(1, 0);
 
-			L04dc:
-			this.owner.Services.PerformSound(1, 0);
+				switch (this.processor.PullGlobalWord(0x6b32))
+				{
+					case 0:
+						ConcealMouseCursor();
 
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x6b32);
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual) goto L0511;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1);
-			if (this.processor.FlagSet.IsNotEqual) goto L04f6;
-			goto L07bd;
+						// The default world: all options 1
+						for (int optionIdx = 0; optionIdx < 4; optionIdx++)
+						{
+							this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(0x7ef6 + (optionIdx << 1)), 0x1);
+						}
 
-		L04f6:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x2);
-			if (this.processor.FlagSet.IsNotEqual) goto L04fe;
-			goto L0795;
+						MakeNewWorld();
+						chosen = true;
+						break;
 
-		L04fe:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x3);
-			if (this.processor.FlagSet.IsNotEqual) goto L0506;
-			goto L0591;
+					case 1:
+						this.owner.SaveLoad.ImportGameFromMenu(0xffff);
 
-		L0506:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x4);
-			if (this.processor.FlagSet.IsNotEqual) goto L050e;
-			goto L07ee;
+						if (this.processor.RegAcc.Value16 == 0xffff)
+						{
+							// No game loaded: the menu again
+							this.processor.EmitGlobalWord(0x6b32, 0xffff);
+							break;
+						}
 
-		L050e:
-			goto L0810;
+						ConcealMouseCursor();
 
-		L0511:
-			ConcealMouseCursor();
+						this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 7);
+						chosen = true;
+						break;
 
-			this.processor.EmitLocalWord(0x4, 0x0);
+					case 2:
+						ConcealMouseCursor();
 
-		L051a:
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x4);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x7ef6), 0x1);
-			this.processor.IncrementLocalWord(0x4);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), 0x4);
-			if (this.processor.FlagSet.IsLess) goto L051a;
+						this.processor.EmitGlobalWord(0xd76a, 0x1);
 
-			L052e:
-			// Intro...
+						this.owner.WorldSetup.OpeningSequence();
+
+						ShowMadeWorld(0x1c02);
+						chosen = true;
+						break;
+
+					case 3:
+						CustomizeWorld();
+
+						MakeNewWorld();
+						chosen = true;
+						break;
+
+					case 4:
+						ConcealMouseCursor();
+
+						this.owner.Legends.ImportHallOfFame();
+
+						this.owner.Legends.DisplayHallOfFame(0xffff);
+
+						DisplayMouseCursor();
+
+						this.processor.EmitGlobalWord(0x6b32, 0xffff);
+						break;
+
+					default:
+						chosen = true;
+						break;
+				}
+			}
+
+			this.owner.NewGameWizard.DisplayTribeSelection();
+
+			this.processor.EmitGlobalWord(0x2f98, 0x1);
+
+			if (this.processor.PullGlobalWord(0xd762) != 0 && (this.processor.PullGlobalWord(0x6b32) == 0 ||
+				this.processor.PullGlobalWord(0x6b32) == 2 || this.processor.PullGlobalWord(0x6b32) == 3))
+			{
+				this.owner.Services.FloodColors(5, 0, 0, 0);
+			}
+
+			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 0);
+
+			this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, 0x1c0c, 1);
+
+			this.owner.Helpers.SetupHueCycling();
+
+			DisplayMouseCursor();
+
+			this.processor.LeaveFrame();
+
+			this.processor.Journal.CloseScope("TitleLogoAndMainChoices");
+		}
+
+		/// <summary>
+		/// Waits until the title music is at the start (up to 0x1495) or at a measure (0x120 after it); the position is kept
+		/// in the frame, like the original (a memory access every round, so the timer of the tests goes on)
+		/// </summary>
+		private void AwaitTitleSongMeasure()
+		{
+			short position;
+
+			do
+			{
+				position = (short)this.owner.Services.ObtainSongPosition();
+
+				this.processor.EmitLocalWord(0x2, (ushort)position);
+			}
+			while (position > 0x1495 && (short)(position - 0x1495) % 0x120 != 0);
+		}
+
+		/// <summary>
+		/// Makes the new world with the story (OpeningSequence, its own journal) and shows it
+		/// </summary>
+		private void MakeNewWorld()
+		{
 			this.processor.Journal = this.owner.PrologueJournal;
 			this.processor.Journal.OpenScope("'Intro start'");
 			this.owner.VideoJournal.OpenScope("'Intro start'");
@@ -468,215 +532,87 @@ namespace Civilization1Remaster.Engine
 			this.processor.Journal.CloseScope("'Intro end'");
 			this.processor.Journal = this.owner.Journal;
 
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, this.processor.RegBase.Value16, 0x0);
-			
+			ShowMadeWorld(0x1b33);
+		}
+
+		/// <summary>
+		/// The made world on the screen, with the right half of the picture (file name at pictureName) over it
+		/// </summary>
+		private void ShowMadeWorld(ushort pictureName)
+		{
+			this.processor.EmitUInt16(this.processor.SegData.Value16, this.processor.PullGlobalWord(0xaa), 0x0);
+
 			this.owner.Services.DisplayScreen(0);
 
-			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x1b33, 0);
+			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, pictureName, 0);
 
-		L0549:
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0x19d4),
-				0xa0, 0x32, 0xa0, 0x96,
-				this.processor.PullGlobalWord(0x19e8),
-				0xa0, 0x32);
+			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0xa0, 0x32, 0xa0, 0x96,
+				this.processor.PullGlobalWord(0x19e8), 0xa0, 0x32);
 
 			QueryForDisk(0, 1);
+		}
 
-			goto L0810;
-
-		L0591:
+		/// <summary>
+		/// The world options of "Customize World" on their picture: land mass, temperature, climate and age
+		/// </summary>
+		private void CustomizeWorld()
+		{
 			ConcealMouseCursor();
 
 			QueryForDisk(7, 1);
 
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xd762), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L05be;
+			if (this.processor.PullGlobalWord(0xd762) != 0)
+			{
+				this.owner.Services.FloodColors(5, 0, 0, 0);
+			}
 
-			this.owner.Services.FloodColors(5, 0, 0, 0);
-
-		L05be:
 			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 0);
 
 			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x1b3d, 1);
 
 			QueryForDisk(0, 1);
 
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0x19d4),
-				0, 0, 0x140, 0xc8,
-				this.processor.PullGlobalWord(0xaa),
-				0, 0);
+			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 0x140, 0xc8,
+				this.processor.PullGlobalWord(0xaa), 0, 0);
 
 			DisplayMouseCursor();
 
-			this.processor.EmitGlobalWord(0x2f9a, 0x1);
-
-		L0623:
-			this.owner.Services.AssignMousePosition(210, 11);
-
-			this.owner.Libc.CopyText(0xba06, "LAND MASS:\n Small\n Normal\n Large\n");
-
-			this.owner.Dialogs.DisplayMenu(0xba06, 200, 1, 1);
-
-			this.processor.EmitGlobalWord(0x7ef6, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xffff);
-			if (this.processor.FlagSet.IsEqual) goto L0623;
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x2f9c), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L067a;
-
-			this.owner.HelpSystem.DisplayHelpTopic(0x1b6a);
-
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x7ef6);
-			this.processor.EmitGlobalWord(0x2f9a, this.processor.RegAcc.Value16);
-			goto L0623;
-
-		L067a:
-			this.processor.EmitGlobalWord(0x2f9a, 0x1);
-
-		L0680:
-			this.owner.Services.AssignMousePosition(210, 61);
-
-			this.owner.Libc.CopyText(0xba06, "TEMPERATURE:\n Cool\n Temperate\n Warm\n");
-
-			this.owner.Dialogs.DisplayMenu(0xba06, 200, 51, 1);
-
-			this.processor.EmitGlobalWord(0x7ef8, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xffff);
-			if (this.processor.FlagSet.IsEqual) goto L0680;
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x2f9c), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L06d7;
-
-			this.owner.HelpSystem.DisplayHelpTopic(0x1b94);
-			
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x7ef8);
-			this.processor.EmitGlobalWord(0x2f9a, this.processor.RegAcc.Value16);
-			goto L0680;
-
-		L06d7:
-			this.processor.EmitGlobalWord(0x2f9a, 0x1);
-
-		L06dd:
-			this.owner.Services.AssignMousePosition(210, 111);
-
-			this.owner.Libc.CopyText(0xba06, "CLIMATE:\n Arid\n Normal\n Wet\n");
-
-			this.owner.Dialogs.DisplayMenu(0xba06, 200, 101, 1);
-
-			this.processor.EmitGlobalWord(0x7efa, this.processor.RegAcc.Value16);
-
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xffff);
-			if (this.processor.FlagSet.IsEqual) goto L06dd;
-
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x2f9c), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L0734;
-
-			this.owner.HelpSystem.DisplayHelpTopic(0x1bbd);
-			
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x7efa);
-
-		L072f:
-			this.processor.EmitGlobalWord(0x2f9a, this.processor.RegAcc.Value16);
-			goto L06dd;
-
-		L0734:
-			this.processor.EmitGlobalWord(0x2f9a, 0x1);
-
-		L073a:
-			this.owner.Services.AssignMousePosition(210, 161);
-
-			this.owner.Libc.CopyText(0xba06, "AGE:\n 3 billion years\n 4 billion years\n 5 billion years\n");
-
-			this.owner.Dialogs.DisplayMenu(0xba06, 200, 151, 1);
-
-			this.processor.EmitGlobalWord(0x7efc, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xffff);
-			if (this.processor.FlagSet.IsEqual) goto L073a;
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x2f9c), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L078e;
-
-			this.owner.HelpSystem.DisplayHelpTopic(0x1bfe);
-			
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x7efc);
-			goto L072f;
-
-		L078e:
-			ConcealMouseCursor();
-
-			goto L052e;
-
-		L0795:
-			ConcealMouseCursor();
-
-			this.processor.EmitGlobalWord(0xd76a, 0x1);
-
-			this.owner.WorldSetup.OpeningSequence();
-
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, this.processor.RegBase.Value16, 0x0);
-
-			this.owner.Services.DisplayScreen(0);
-
-			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x1c02, 0);
-
-			goto L0549;
-
-		L07bd:
-			this.owner.SaveLoad.ImportGameFromMenu(0xffff);
-			
-			this.processor.RegAcc.Value16 = this.processor.IncrementWord(this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L0807;
+			ChooseWorldOption(0x7ef6, 1, "LAND MASS:\n Small\n Normal\n Large\n", 0x1b6a);
+			ChooseWorldOption(0x7ef8, 51, "TEMPERATURE:\n Cool\n Temperate\n Warm\n", 0x1b94);
+			ChooseWorldOption(0x7efa, 101, "CLIMATE:\n Arid\n Normal\n Wet\n", 0x1bbd);
+			ChooseWorldOption(0x7efc, 151, "AGE:\n 3 billion years\n 4 billion years\n 5 billion years\n", 0x1bfe);
 
 			ConcealMouseCursor();
+		}
 
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 7);
-			goto L0810;
+		/// <summary>
+		/// One world option (menu at 200, menuVert, the mouse on its second line, the default line 0x2f9a starts at 1): asked
+		/// again for no answer, and after the help topic (0x2f9c, then the answer is the default line)
+		/// </summary>
+		private void ChooseWorldOption(ushort optionAddr, short menuVert, string choices, ushort helpTopic)
+		{
+			this.processor.EmitGlobalWord(0x2f9a, 0x1);
 
-		L07ee:
-			ConcealMouseCursor();
+			while (true)
+			{
+				this.owner.Services.AssignMousePosition(210, (ushort)(menuVert + 10));
 
-			this.owner.Legends.ImportHallOfFame();
+				this.owner.Libc.CopyText(0xba06, choices);
 
-			this.owner.Legends.DisplayHallOfFame(0xffff);
+				this.owner.Dialogs.DisplayMenu(0xba06, 200, menuVert, 1);
 
-			DisplayMouseCursor();
+				this.processor.EmitGlobalWord(optionAddr, this.processor.RegAcc.Value16);
 
-		L0807:
-			this.processor.EmitGlobalWord(0x6b32, 0xffff);
-			goto L04bb;
+				if (this.processor.RegAcc.Value16 == 0xffff)
+					continue;
 
-		L0810:
-			this.owner.NewGameWizard.DisplayTribeSelection();
+				if (this.processor.PullGlobalWord(0x2f9c) == 0)
+					break;
 
-			this.processor.EmitGlobalWord(0x2f98, 0x1);
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xd762), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L0848;
+				this.owner.HelpSystem.DisplayHelpTopic(helpTopic);
 
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x6b32), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L0837;
-
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x6b32), 0x2);
-			if (this.processor.FlagSet.IsEqual) goto L0837;
-
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x6b32), 0x3);
-			if (this.processor.FlagSet.IsNotEqual) goto L0848;
-
-		L0837:
-			this.owner.Services.FloodColors(5, 0, 0, 0);
-
-		L0848:
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 0);
-
-			this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, 0x1c0c, 1);
-
-			this.owner.Helpers.SetupHueCycling();
-
-			DisplayMouseCursor();
-
-			this.processor.LeaveFrame();
-			// Far return
-			this.processor.Journal.CloseScope("TitleLogoAndMainChoices");
+				this.processor.EmitGlobalWord(0x2f9a, this.processor.PullGlobalWord(optionAddr));
+			}
 		}
 
 		/// <summary>

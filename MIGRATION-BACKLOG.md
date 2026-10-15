@@ -394,19 +394,29 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   „brak klawisza” trzeba przygotować w `Prepare` (wyczyścić kolejkę zaraz po podanym klawiszu). Odczyty pamięci w `make`
   i w funkcji gałęzi tylko przez `Processor.Storage` (`PullGlobalWord` liczy krok zegara jednej gry). W STORY.TXT nie ma linii
   o długości 20, więc mutacja granicy `> 0x13` jest równoważna. Testy w `BatchFiftyFourDifferentialTests`.
+- Porcja 55 (2026-10-15): `TitleLogoAndMainChoices` (`GameStartup`, menu główne po tytule), rozbita na
+  `AwaitTitleSongMeasure`, `MakeNewWorld`, `ShowMadeWorld`, `CustomizeWorld`, `ChooseWorldOption` (4 opcje świata jedną
+  funkcją). Ramka zostaje: pozycja muzyki w bp - 2 to jedyny dostęp do pamięci w pętli czekania na takt, a bez dostępów zegar
+  testów nie tyka i pozycja nie rośnie. Wnioski do testów: każdy wybór na **świeżej parze gier** (`Theory`). W jednej grze
+  świat po świecie test się zawiesza w obu wersjach: muzyka zatrzymana za 0x1495 (czekanie na takt bez końca – pozycję
+  ustawia `Audio.Prepare` + `PerformNextStep` w `Prepare`), opowieść zostawiona w połowie (`OpeningSequence` czeka na jej
+  koniec) albo `ProduceElevation` bez pola wzgórza (12) na ekranie 1 po Hall of Fame – menu tytułowe w grze jest raz.
+  Diagnoza zawieszenia: `HeadlessGame.StartProbe` widzi tylko `Engine.Journal`; `OpeningSequence` pisze do `PrologueJournal`
+  (podpiąć `ScopeListener` też tam). Zmienne zegara (0x42 – 0x5b) w `Watched` pokazują, jak długo czekało. Nazwy obrazków
+  pod 0x1b33 i 0x1c02 to ten sam tekst (scope `ImportPictureOrColors` zapisuje nazwę), więc ich zamiana jest równoważna.
+  Testy w `BatchFiftyFiveDifferentialTests`.
 
 ## Następny krok
 
 Dalej małe metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 60`
 (metody z co najmniej 2 liniami `goto L` / `FlagSet` / `Compare…` / `SumWord` itd., od najkrótszej). Kandydaci
 (`GameLoadAndSave` i `Newspaper` nie mają już metod w stylu asm): `ChooseTechnologyToTake` (`TradeAndConquest`, patrz wyżej),
-`TitleLogoAndMainChoices` (`GameStartup`),
 `DisplayTribeSelection` (`StartGameMenu`),
 `OperateMenu`, `DisplayMenu` (`DialogDrawing`),
 `DisplayCivilopediaIndex` (`Civilopedia`), `DisplayCivilizationScreen` (`MainIntro`),
 `ConstructCivilization`, `ConfigureFreshGame` (`StartGameMenu`), `DisplayPalace` (`Palace`, patrz porcja 45), reszta generatora mapy w `GameInitAndIntro`. Funkcje niskopoziomowe `SystemServices` (`DeactivateMouse`, `PointerEvent`,
 przerwanie zegara: `OnClockBeat`, `RefreshHueCycling`, `ColorsFadeStep`, `ColorsFadeStepInterrupt`, `AssignColors`) na koniec: działają
-w przerwaniach albo na rejestrach. Stan 2026-10-14 (po porcji 54): 35 metod w stylu asm, ok. 35,7 tys. z 65,3 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
+w przerwaniach albo na rejestrach. Stan 2026-10-14 (po porcji 55): 34 metody w stylu asm, ok. 35,7 tys. z 65,3 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
