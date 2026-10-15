@@ -16,667 +16,417 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// The replay of the game (the events in RerunContent): the mode 0x680a is asked (dialog 0x3fb0; 4 without asking
+		/// when 0x680e, at the end of the game): 1 slow, 2 a key per event (Esc stops), 3 into replay.txt, 4 only the
+		/// destruction screens. The leaders are set as at the start of the game (the identity bits) and put back afterwards,
+		/// the map is drawn in miniature, and every event written at the top (and its city on the map). Asked again until
+		/// mode 3 or more, or none.
 		/// </summary>
 		public void DisplayReplay()
 		{
 			this.processor.Journal.OpenScope("DisplayReplay()");
 
-			// function body
+			// The frame like the original (the functions called see the stack at the same depth)
 			this.processor.EnterFrame(0x24);
 			this.processor.PreserveSource();
 
-		L0007:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x680e), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L0027;
+			while (true)
+			{
+				if (this.processor.PullGlobalWord(0x680e) == 0)
+				{
+					this.owner.TurnHooks.DisplayDialog(0x3fb0, 100, 80);
 
-			this.owner.TurnHooks.DisplayDialog(0x3fb0, 100, 80);
+					this.processor.EmitGlobalWord(0x680a, this.processor.RegAcc.Value16);
+				}
+				else
+				{
+					this.processor.EmitGlobalWord(0x680a, 0x4);
+				}
 
-			this.processor.EmitGlobalWord(0x680a, this.processor.RegAcc.Value16);
-			goto L002d;
+				if ((short)this.processor.PullGlobalWord(0x680a) <= 0)
+					break;
 
-		L0027:
-			this.processor.EmitGlobalWord(0x680a, 0x4);
+				if (this.processor.PullGlobalWord(0x680a) == 3)
+				{
+					ushort handle = (ushort)this.owner.Libc.OpenHandle("replay.txt", 0x8301, 0x80);
 
-		L002d:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x680a), 0x0);
-			if (this.processor.FlagSet.IsGreater) goto L0037;
-			goto L089e;
+					this.processor.EmitGlobalWord(0x680c, handle);
 
-		L0037:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x680a), 0x3);
-			if (this.processor.FlagSet.IsNotEqual) goto L0085;
+					if (handle == 0xffff)
+					{
+						this.owner.Libc.CopyText(0xba06, "File Error\n");
 
-			this.owner.Libc.OpenHandle("replay.txt", 0x8301, 0x80);
+						this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
 
-			this.processor.EmitGlobalWord(0x680c, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xffff);
-			if (this.processor.FlagSet.IsNotEqual) goto L0081;
+						break;
+					}
 
-			this.owner.Libc.CopyText(0xba06, "File Error\n");
+					DumpReplayCities();
+				}
 
-			this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+				ReplayGame();
 
-			goto L089e;
+				if (this.processor.PullGlobalWord(0x680a) == 3)
+				{
+					this.owner.Libc.CloseHandle((short)this.processor.PullGlobalWord(0x680c));
+				}
 
-		L0081:
-			DumpReplayCities();
+				if ((short)this.processor.PullGlobalWord(0x680a) >= 3)
+					break;
+			}
 
-		L0085:
+			this.processor.RestoreSource();
+			this.processor.LeaveFrame();
+
+			this.processor.Journal.CloseScope("DisplayReplay");
+		}
+
+		/// <summary>
+		/// One replay: the screen kept, the leaders as at the start (put back at the end), the miniature map (not in mode 4),
+		/// all events
+		/// </summary>
+		private void ReplayGame()
+		{
 			this.owner.Startup.ConcealMouseCursor();
 
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0xaa),
-				0, 0, 0x140, 0xc8,
-				this.processor.PullGlobalWord(0x19d4),
-				0, 0);
+			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0x19d4), 0, 0);
 
-			this.processor.EmitLocalWord(0xe, 0x0);
+			// No city shown on the replay map yet (segment 0x3725, 128 cities)
+			for (int townIdx = 0; townIdx < 0x80; townIdx++)
+			{
+				this.processor.EmitUInt16(0x3725, (ushort)(townIdx << 1), 0xffff);
+			}
 
-		L0094:
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0xe);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.SegExtra.Value16 = 0x3725; // segment
-			this.processor.EmitUInt16(this.processor.SegExtra.Value16, (ushort)(this.processor.RegBase.Value16 + 0x0), 0xffff);
-			this.processor.IncrementLocalWord(0xe);
-			this.processor.CompareWord(this.processor.PullLocalWord(0xe), 0x80);
-			if (this.processor.FlagSet.IsLess) goto L0094;
-			this.processor.EmitLocalWord(0xe, 0x1);
+			short[] leaders = new short[8];
 
-		L00b3:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0xe);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
+			for (int participantIdx = 1; participantIdx < 8; participantIdx++)
+			{
+				leaders[participantIdx] = this.owner.World.Participants[participantIdx].ChiefVisuals;
+			}
 
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.Participants[this.processor.PullLocalWord(0xe)].ChiefVisuals;
-			this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x20), this.processor.RegAcc.Value16);
-			this.processor.IncrementLocalWord(0xe);
-			this.processor.CompareWord(this.processor.PullLocalWord(0xe), 0x8);
-			if (this.processor.FlagSet.IsLess) goto L00b3;
-			this.processor.EmitLocalWord(0xe, 0x1);
-			goto L00e8;
+			for (short participantIdx = 1; participantIdx < 8; participantIdx++)
+			{
+				if (participantIdx == this.owner.World.PersonParticipantIdx)
+					continue;
 
-		L00cf:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xe);
+				bool secondLeader = (this.owner.World.ParticipantIdentMarkers & (1 << participantIdx)) != 0;
 
-		L00d2:
-			this.owner.World.Participants[this.processor.PullLocalWord(0xe)].ChiefVisuals = (short)this.processor.RegAcc.Value16;
+				this.owner.World.Participants[participantIdx].ChiefVisuals = (short)(secondLeader ? participantIdx + 8 : participantIdx);
 
-			ObtainReplayPlayerLabel(this.processor.PullLocalSignedWord(0xe));
+				ObtainReplayPlayerLabel(participantIdx);
+			}
 
-		L00e5:
-			this.processor.EmitLocalWord(0xe, this.processor.IncrementWord(this.processor.PullLocalWord(0xe)));
+			if (this.processor.PullGlobalWord(0x680a) != 4)
+			{
+				this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 0);
 
-		L00e8:
-			this.processor.CompareWord(this.processor.PullLocalWord(0xe), 0x8);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L010c;
+				for (short vertLoc = 1; vertLoc < 0x31; vertLoc++)
+				{
+					for (short horizLoc = 0; horizLoc < 0x50; horizLoc++)
+					{
+						bool ocean = this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) == MapRules.OceanTerrain;
 
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.CompareWord(this.processor.PullLocalWord(0xe), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L00e5;
-			this.processor.RegAcc.Value16 = 0x1;
-			this.processor.RegCount.LowByte = this.processor.PullLocalByte(0xe);
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			this.processor.TestBitsWord(this.processor.RegAcc.Value16, (ushort)this.owner.World.ParticipantIdentMarkers);
-			if (this.processor.FlagSet.IsEqual) goto L00cf;
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xe);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x8);
-			goto L00d2;
+						this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), horizLoc * 4, (vertLoc * 4) + 4, 4, 4, (ushort)(ocean ? 1 : 8));
+					}
+				}
+			}
 
-		L010c:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x680a), 0x4);
-			if (this.processor.FlagSet.IsEqual) goto L0191;
+			ushort spot = 0;
 
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 0);
+			while ((short)spot < this.owner.World.RerunContentSpan)
+			{
+				spot = ReplayEvent(spot);
 
-			this.processor.EmitLocalWord(0xc, 0x1);
-			goto L0184;
+				if (this.processor.PullGlobalWord(0x680a) == 2 && this.owner.Libc.ReadKey() == 0x1b)
+					break;
+			}
 
-		L0135:
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa),
-				this.processor.PullLocalSignedWord(0xa) * 4,
-				(this.processor.PullLocalSignedWord(0xc) * 4) + 4,
-				4, 4, 8);
+			for (int participantIdx = 1; participantIdx < 8; participantIdx++)
+			{
+				this.owner.World.Participants[participantIdx].ChiefVisuals = leaders[participantIdx];
+			}
 
-		L0138:
-			this.processor.EmitLocalWord(0xa, this.processor.IncrementWord(this.processor.PullLocalWord(0xa)));
+			for (short participantIdx = 1; participantIdx < 8; participantIdx++)
+			{
+				if (participantIdx != this.owner.World.PersonParticipantIdx)
+				{
+					ObtainReplayPlayerLabel(participantIdx);
+				}
+			}
 
-		L0160:
-			this.processor.CompareWord(this.processor.PullLocalWord(0xa), 0x50);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0181;
+			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0xaa), 0, 0);
 
-			this.owner.MapOps.ObtainTerrainType(
-				this.processor.PullLocalSignedWord(0xa),
-				this.processor.PullLocalSignedWord(0xc));
+			this.owner.Startup.DisplayMouseCursor();
+		}
 
-			this.processor.EmitLocalWord(0x22, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
-			if (this.processor.FlagSet.IsNotEqual) goto L0135;
+		/// <summary>The next byte of the replay</summary>
+		private byte ReplayByte(ref ushort spot)
+		{
+			return this.owner.World.RerunContent[spot++];
+		}
 
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa),
-				this.processor.PullLocalSignedWord(0xa) * 4,
-				(this.processor.PullLocalSignedWord(0xc) * 4) + 4,
-				4, 4, 1);
+		/// <summary>The plural name (0x1992) of the player</summary>
+		private ushort ReplayPlural(int participantIdx)
+		{
+			return this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1992));
+		}
 
-			goto L0138;
+		/// <summary>
+		/// One event: the kind (high 4 bits) and the turn (low 4 bits and the next byte), the year ("x BC: " / "x AD: "), then
+		/// the event; the acting player in 0x6810 (-1: none)
+		/// </summary>
+		/// <returns>The spot of the next event</returns>
+		private ushort ReplayEvent(ushort spot)
+		{
+			byte head = ReplayByte(ref spot);
+			ushort kind = (ushort)(head >> 4);
+			ushort turn = (ushort)(((head & 0xf) << 8) + ReplayByte(ref spot));
 
-		L0181:
-			this.processor.EmitLocalWord(0xc, this.processor.IncrementWord(this.processor.PullLocalWord(0xc)));
+			short year = (short)ObtainReplayYear(turn);
 
-		L0184:
-			this.processor.CompareWord(this.processor.PullLocalWord(0xc), 0x31);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0191;
-			this.processor.EmitLocalWord(0xa, 0x0);
-			goto L0160;
-
-		L0191:
-			this.processor.EmitLocalWord(0x2, 0x0);
-
-		L0196:
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.RerunContentSpan;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsLess) goto L01a1;
-			goto L083d;
-
-		L01a1:
-			this.processor.RegAcc.LowByte = this.owner.World.RerunContent[this.processor.PullLocalWord(0x2)];
-			this.processor.RegAcc.HighByte = 0;
-			this.processor.RegAcc.Value16 = this.processor.BitAndWord(this.processor.RegAcc.Value16, 0xf);
-			this.processor.EmitLocalWord(0x24, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.LowByte = this.owner.World.RerunContent[this.processor.PullLocalWord(0x2)];
-			this.processor.RegAcc.HighByte = 0;
-			this.processor.RegCount.LowByte = 0x4;
-			this.processor.RegAcc.Value16 = this.processor.ShiftRightWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			this.processor.EmitLocalWord(0x6, this.processor.RegAcc.Value16);
-			this.processor.IncrementLocalWord(0x2);
-
-			this.processor.RegAcc.LowByte = this.owner.World.RerunContent[this.processor.PullLocalWord(0x2)];
-			this.processor.RegAcc.HighByte = 0;
-			this.processor.RegCount.HighByte = this.processor.PullLocalByte(0x24);
-			this.processor.RegCount.LowByte = 0;
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.RegCount.Value16);
-			this.processor.EmitLocalWord(0x24, this.processor.RegAcc.Value16);
-			this.processor.IncrementLocalWord(0x2);
-
-			ObtainReplayYear(this.processor.RegAcc.Value16);
-
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
 			this.processor.EmitGlobalWord(0x6810, 0xffff);
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText(Math.Abs((short)this.processor.PullLocalWord(0x4)), 10));
+			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(Math.Abs(year), 10));
 
-			if (this.processor.PullLocalSignedWord(0x4) < 0)
+			this.owner.Libc.AppendText(0xba06, year < 0 ? " BC" : " AD");
+
+			this.owner.Libc.AppendText(0xba06, ": ");
+
+			switch (kind)
 			{
-				this.owner.Libc.AppendText(0xba06, " BC");
+				case 1:
+				case 9:
+					ReplayCityEvent(ref spot, kind);
+					break;
+
+				case 2:
+				case 3:
+				{
+					byte pair = ReplayByte(ref spot);
+
+					this.owner.Libc.AppendText(0xba06, ReplayPlural(pair >> 4));
+
+					this.owner.Libc.AppendText(0xba06, kind == 2 ? " declare war on " : " make peace with ");
+
+					this.owner.Libc.AppendText(0xba06, ReplayPlural(pair & 0xf));
+
+					RenderReplayPreamble();
+					break;
+				}
+
+				case 5:
+				case 6:
+				case 8:
+				case 10:
+				{
+					ushort actor = ReplayByte(ref spot);
+
+					this.processor.EmitGlobalWord(0x6810, actor);
+
+					ushort thing = ReplayByte(ref spot);
+
+					this.owner.Libc.AppendText(0xba06, ReplayPlural(this.processor.PullGlobalWord(0x6810)));
+
+					switch (kind)
+					{
+						case 5:
+							this.owner.Libc.AppendText(0xba06, " discover ");
+							this.owner.Libc.AppendText(0xba06, (ushort)((0x16 * thing) + 0x4da));
+							break;
+
+						case 6:
+							this.owner.Libc.AppendText(0xba06, " produce first ");
+							this.owner.Libc.AppendText(0xba06, (ushort)((0x22 * thing) + 0x112a));
+							break;
+
+						case 8:
+							this.owner.Libc.AppendText(0xba06, " form ");
+							this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)((thing << 1) + 0x1966)));
+							break;
+
+						default:
+							this.owner.Libc.AppendText(0xba06, " build ");
+
+							if ((short)thing <= 7)
+							{
+								this.owner.Libc.AppendText(0xba06, "the ");
+							}
+
+							this.owner.Libc.AppendText(0xba06, (ushort)((0x1e * thing) + 0xe6a));
+							break;
+					}
+
+					RenderReplayPreamble();
+					break;
+				}
+
+				case 11:
+				{
+					// The status of the human player: cities, population (two parts)
+					this.processor.EmitGlobalWord(0x6810, (ushort)this.owner.World.PersonParticipantIdx);
+
+					short towns = ReplayByte(ref spot);
+					sbyte populationHigh = (sbyte)ReplayByte(ref spot);
+					short populationLow = ReplayByte(ref spot);
+
+					this.owner.Libc.AppendText(0xba06, ReplayPlural(this.owner.World.PersonParticipantIdx));
+
+					this.owner.Libc.AppendText(0xba06, ": ");
+
+					this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(towns, 10));
+
+					this.owner.Libc.AppendText(0xba06, " cities; ");
+
+					this.owner.Helpers.PopulationToText(populationHigh + populationLow);
+
+					this.owner.Libc.AppendText(0xba06, " population");
+
+					RenderReplayPreamble();
+					break;
+				}
+
+				case 12:
+					ReplayRanking(ref spot);
+					break;
+
+				case 13:
+				{
+					ushort fallen = ReplayByte(ref spot);
+
+					this.processor.EmitGlobalWord(0x6810, fallen);
+
+					short destroyer = ReplayByte(ref spot);
+
+					this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)((this.processor.PullGlobalWord(0x6810) << 1) + 0x1982)));
+
+					this.owner.Libc.AppendText(0xba06, " civilization destroyed by ");
+
+					this.owner.Libc.AppendText(0xba06, ReplayPlural(destroyer));
+
+					if (this.processor.PullGlobalWord(0x680a) == 4 && destroyer == this.owner.World.PersonParticipantIdx)
+					{
+						DisplayCivilizationDestroyedScreen((short)this.processor.PullGlobalWord(0x6810), (ushort)year);
+					}
+
+					this.owner.World.Participants[this.processor.PullGlobalWord(0x6810)].ChiefVisuals ^= 8;
+
+					ObtainReplayPlayerLabel((short)this.processor.PullGlobalWord(0x6810));
+
+					RenderReplayPreamble();
+					break;
+				}
+			}
+
+			return spot;
+		}
+
+		/// <summary>
+		/// A city founded (kind 1) or captured (kind 9) by the player, or destroyed (player 0xff): the text with the city name
+		/// (13 bytes of TownLabels), the city on the replay map, a pause in mode 1
+		/// </summary>
+		private void ReplayCityEvent(ref ushort spot, ushort kind)
+		{
+			ushort actor = ReplayByte(ref spot);
+
+			this.processor.EmitGlobalWord(0x6810, actor);
+
+			ushort labelIdx = ReplayByte(ref spot);
+			ushort horizLoc = ReplayByte(ref spot);
+			ushort vertLoc = ReplayByte(ref spot);
+
+			if (this.processor.PullGlobalWord(0x6810) != 0xff)
+			{
+				this.owner.Libc.AppendText(0xba06, ReplayPlural(this.processor.PullGlobalWord(0x6810)));
+
+				if (kind == 1)
+				{
+					this.owner.Libc.AppendText(0xba06, " found the city of ");
+
+					AssignReplayCityContent(this.processor.PullGlobalWord(0x6810), horizLoc, vertLoc);
+				}
+				else
+				{
+					this.owner.Libc.AppendText(0xba06, " capture ");
+
+					AssignReplayCityContentAlt(this.processor.PullGlobalWord(0x6810), horizLoc, vertLoc);
+				}
+
+				AppendReplayCityName(labelIdx);
+
+				RenderReplayPreamble();
 			}
 			else
 			{
-				this.owner.Libc.AppendText(0xba06, " AD");
+				AppendReplayCityName(labelIdx);
+
+				this.owner.Libc.AppendText(0xba06, " destroyed");
+
+				RenderReplayPreamble();
+
+				AssignReplayCityContentAlt(0xffff, horizLoc, vertLoc);
 			}
 
-			this.owner.Libc.AppendText(0xba06, ": ");
+			RenderReplayMapTile(horizLoc, vertLoc);
 
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x6);
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, 0x1);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xc);
-			if (this.processor.FlagSet.IsBelowOrEqual) goto L0255;
-			goto L0826;
-
-		L0255:
-			switch(this.processor.RegAcc.Value16)
+			if (this.processor.PullGlobalWord(0x680a) == 1)
 			{
-				case 0:
-					goto L025d;
-				case 1:
-					goto L03ae;
-				case 2:
-					goto L0414;
-				case 3:
-					goto L0826;
-				case 4:
-					goto L0453;
-				case 5:
-					goto L04a8;
-				case 6:
-					goto L0826;
-				case 7:
-					goto L04fb;
-				case 8:
-					goto L025d;
-				case 9:
-					goto L054f;
-				case 10:
-					goto L05b9;
-				case 11:
-					goto L065c;
-				case 12:
-					goto L0779;
+				this.owner.TextPainter.AwaitTime(30);
 			}
+		}
 
-		L025d:
-			this.processor.RegAcc.LowByte = this.owner.World.RerunContent[this.processor.PullLocalWord(0x2)];
-			this.processor.RegAcc.HighByte = 0;
-			this.processor.EmitGlobalWord(0x6810, this.processor.RegAcc.Value16);
-			this.processor.IncrementLocalWord(0x2);
-
-			this.processor.RegAcc.LowByte = this.owner.World.RerunContent[this.processor.PullLocalWord(0x2)];
-			this.processor.EmitLocalWord(0x8, this.processor.RegAcc.Value16);
-			this.processor.IncrementLocalWord(0x2);
-
-			this.processor.RegAcc.LowByte = this.owner.World.RerunContent[this.processor.PullLocalWord(0x2)];
-			this.processor.EmitLocalWord(0xa, this.processor.RegAcc.Value16);
-			this.processor.IncrementLocalWord(0x2);
-
-			this.processor.RegAcc.LowByte = this.owner.World.RerunContent[this.processor.PullLocalWord(0x2)];
-			this.processor.EmitLocalWord(0xc, this.processor.RegAcc.Value16);
-			this.processor.IncrementLocalWord(0x2);
-
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x6810), 0xff);
-			if (this.processor.FlagSet.IsNotEqual) goto L02a6;
-			goto L0336;
-
-		L02a6:
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0x6810);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1992)));
-
-			this.processor.CompareWord(this.processor.PullLocalWord(0x6), 0x1);
-			if (this.processor.FlagSet.IsNotEqual) goto L02e2;
-
-			this.owner.Libc.AppendText(0xba06, " found the city of ");
-
-			AssignReplayCityContent(
-				this.processor.PullGlobalWord(0x6810),
-				this.processor.PullLocalWord(0xa),
-				this.processor.PullLocalWord(0xc));
-
-			goto L0300;
-
-		L02e2:
-			this.owner.Libc.AppendText(0xba06, " capture ");
-
-			AssignReplayCityContentAlt(
-				this.processor.PullGlobalWord(0x6810),
-				this.processor.PullLocalWord(0xa),
-				this.processor.PullLocalWord(0xc));
-
-		L0300:
-			uint settlementTitleIdent = this.processor.PullLocalWord(0x8);
-			ushort charsDisplacement = (ushort)(0xba06 + this.owner.Libc.TextLength(0xba06));
+		/// <summary>The 13 bytes of the city name (TownLabels) after the text at 0xba06</summary>
+		private void AppendReplayCityName(ushort labelIdx)
+		{
+			ushort end = (ushort)(0xba06 + this.owner.Libc.TextLength(0xba06));
 
 			for (int idx = 0; idx < 0xd; idx++)
 			{
-				this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(charsDisplacement + idx), (byte)this.owner.World.TownLabels[settlementTitleIdent][idx]);
+				this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(end + idx), (byte)this.owner.World.TownLabels[labelIdx][idx]);
 			}
+		}
 
-			RenderReplayPreamble();
-
-			goto L0388;
-
-		L0336:
-			settlementTitleIdent = this.processor.PullLocalWord(0x8);
-			charsDisplacement = (ushort)(0xba06 + this.owner.Libc.TextLength(0xba06));
-
-			for (int idx = 0; idx < 0xd; idx++)
-			{
-				this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(charsDisplacement + idx), (byte)this.owner.World.TownLabels[settlementTitleIdent][idx]);
-			}
-
-			this.owner.Libc.AppendText(0xba06, " destroyed");
-
-			RenderReplayPreamble();
-
-			AssignReplayCityContentAlt(
-				0xffff,
-				this.processor.PullLocalWord(0xa),
-				this.processor.PullLocalWord(0xc));
-
-		L0388:
-			RenderReplayMapTile(
-				this.processor.PullLocalWord(0xa),
-				this.processor.PullLocalWord(0xc));
-
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x680a), 0x1);
-			if (this.processor.FlagSet.IsEqual) goto L039f;
-			goto L0826;
-
-		L039f:
-			this.owner.TextPainter.AwaitTime(30);
-
-			goto L0826;
-
-		L03ae:
-			this.processor.RegAcc.LowByte = this.owner.World.RerunContent[this.processor.PullLocalWord(0x2)];
-			this.processor.RegAcc.HighByte = 0;
-			this.processor.RegCount.LowByte = 0x4;
-			this.processor.RegAcc.Value16 = this.processor.ShiftRightWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			this.processor.EmitLocalWord(0xa, this.processor.RegAcc.Value16);
-
-			this.processor.RegAcc.LowByte = this.owner.World.RerunContent[this.processor.PullLocalWord(0x2)];
-			this.processor.RegAcc.HighByte = 0;
-			this.processor.RegAcc.Value16 = this.processor.BitAndWord(this.processor.RegAcc.Value16, 0xf);
-			this.processor.EmitLocalWord(0xc, this.processor.RegAcc.Value16);
-			this.processor.IncrementLocalWord(0x2);
-
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0xa);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1992)));
-
-			this.owner.Libc.AppendText(0xba06, " declare war on ");
-
-		L03eb:
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0xc);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1992)));
-
-		L040d:
-			RenderReplayPreamble();
-
-			goto L0826;
-
-		L0414:
-			this.processor.RegAcc.LowByte = this.owner.World.RerunContent[this.processor.PullLocalWord(0x2)];
-			this.processor.RegAcc.HighByte = 0;
-			this.processor.RegCount.LowByte = 0x4;
-			this.processor.RegAcc.Value16 = this.processor.ShiftRightWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			this.processor.EmitLocalWord(0xa, this.processor.RegAcc.Value16);
-
-			this.processor.RegAcc.LowByte = this.owner.World.RerunContent[this.processor.PullLocalWord(0x2)];
-			this.processor.RegAcc.HighByte = 0;
-			this.processor.RegAcc.Value16 = this.processor.BitAndWord(this.processor.RegAcc.Value16, 0xf);
-			this.processor.EmitLocalWord(0xc, this.processor.RegAcc.Value16);
-
-			this.processor.IncrementLocalWord(0x2);
-
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0xa);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1992)));
-
-			this.owner.Libc.AppendText(0xba06, " make peace with ");
-
-			goto L03eb;
-
-		L0453:
-			this.processor.RegAcc.LowByte = this.owner.World.RerunContent[this.processor.PullLocalWord(0x2)];
-			this.processor.RegAcc.HighByte = 0;
-			this.processor.EmitGlobalWord(0x6810, this.processor.RegAcc.Value16);
-			this.processor.IncrementLocalWord(0x2);
-
-			this.processor.RegAcc.LowByte = this.owner.World.RerunContent[this.processor.PullLocalWord(0x2)];
-			this.processor.EmitLocalWord(0xc, this.processor.RegAcc.Value16);
-			this.processor.IncrementLocalWord(0x2);
-
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0x6810);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1992)));
-
-			this.owner.Libc.AppendText(0xba06, " discover ");
-
-			this.processor.ScaleIndex(0x16, this.processor.PullLocalWord(0xc));
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x4da);
-			this.owner.Libc.AppendText(0xba06, this.processor.RegAcc.Value16);
-
-			goto L040d;
-
-		L04a8:
-			this.processor.RegAcc.LowByte = this.owner.World.RerunContent[this.processor.PullLocalWord(0x2)];
-			this.processor.RegAcc.HighByte = 0;
-			this.processor.EmitGlobalWord(0x6810, this.processor.RegAcc.Value16);
-			this.processor.IncrementLocalWord(0x2);
-
-			this.processor.RegAcc.LowByte = this.owner.World.RerunContent[this.processor.PullLocalWord(0x2)];
-			this.processor.EmitLocalWord(0xc, this.processor.RegAcc.Value16);
-			this.processor.IncrementLocalWord(0x2);
-
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0x6810);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1992)));
-
-			this.owner.Libc.AppendText(0xba06, " produce first ");
-
-			this.processor.ScaleIndex(0x22, this.processor.PullLocalWord(0xc));
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x112a);
-			this.owner.Libc.AppendText(0xba06, this.processor.RegAcc.Value16);
-
-			goto L040d;
-
-		L04fb:
-			this.processor.RegAcc.LowByte = this.owner.World.RerunContent[this.processor.PullLocalWord(0x2)];
-			this.processor.RegAcc.HighByte = 0;
-			this.processor.EmitGlobalWord(0x6810, this.processor.RegAcc.Value16);
-			this.processor.IncrementLocalWord(0x2);
-
-			this.processor.RegAcc.LowByte = this.owner.World.RerunContent[this.processor.PullLocalWord(0x2)];
-			this.processor.EmitLocalWord(0xc, this.processor.RegAcc.Value16);
-			this.processor.IncrementLocalWord(0x2);
-
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0x6810);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1992)));
-
-			this.owner.Libc.AppendText(0xba06, " form ");
-
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0xc);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1966)));
-			goto L040d;
-
-		L054f:
-			this.processor.RegAcc.LowByte = this.owner.World.RerunContent[this.processor.PullLocalWord(0x2)];
-			this.processor.RegAcc.HighByte = 0;
-			this.processor.EmitGlobalWord(0x6810, this.processor.RegAcc.Value16);
-			this.processor.IncrementLocalWord(0x2);
-
-			this.processor.RegAcc.LowByte = this.owner.World.RerunContent[this.processor.PullLocalWord(0x2)];
-			this.processor.EmitLocalWord(0xc, this.processor.RegAcc.Value16);
-			this.processor.IncrementLocalWord(0x2);
-
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0x6810);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1992)));
-
-			this.owner.Libc.AppendText(0xba06, " build ");
-
-			this.processor.CompareWord(this.processor.PullLocalWord(0xc), 0x7);
-			if (this.processor.FlagSet.IsGreater) goto L05ad;
-
-			this.owner.Libc.AppendText(0xba06, "the ");
-
-		L05ad:
-			this.processor.RegAcc.Value16 = 0x1e;
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.PullLocalWord(0xc));
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0xe6a);
-			this.owner.Libc.AppendText(0xba06, this.processor.RegAcc.Value16);
-
-			goto L040d;
-
-		L05b9:
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.EmitGlobalWord(0x6810, this.processor.RegAcc.Value16);
-
-			this.processor.RegAcc.LowByte = this.owner.World.RerunContent[this.processor.PullLocalWord(0x2)];
-			this.processor.RegAcc.HighByte = 0;
-			this.processor.EmitLocalWord(0xa, this.processor.RegAcc.Value16);
-			this.processor.IncrementLocalWord(0x2);
-
-			this.processor.RegAcc.LowByte = this.owner.World.RerunContent[this.processor.PullLocalWord(0x2)];
-			this.processor.EmitLocalWord(0xc, this.processor.RegAcc.Value16);
-			this.processor.IncrementLocalWord(0x2);
-
-			this.processor.RegAcc.LowByte = this.owner.World.RerunContent[this.processor.PullLocalWord(0x2)];
-			this.processor.EmitLocalWord(0x10, this.processor.RegAcc.Value16);
-			this.processor.IncrementLocalWord(0x2);
-
-			this.processor.RegBase.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1992)));
-
-			this.owner.Libc.AppendText(0xba06, ": ");
-
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText((short)this.processor.PullLocalWord(0xa), 10));
-
-			this.owner.Libc.AppendText(0xba06, " cities; ");
-
-			this.owner.Helpers.PopulationToText(
-				this.processor.PullLocalSignedByte(0xc) + this.processor.PullLocalSignedWord(0x10));
-
-			this.owner.Libc.AppendText(0xba06, " population");
-
-			goto L040d;
-
-		L065c:
+		/// <summary>
+		/// The ranking ("*** 1:x 2:y ..."): 4 bytes of two places each (high and low 4 bits, 0 = none); written only into the
+		/// replay file (mode 3)
+		/// </summary>
+		private void ReplayRanking(ref ushort spot)
+		{
 			this.owner.Libc.CopyText(0xba06, "*** ");
 
-			this.processor.EmitLocalWord(0xa, 0x0);
+			for (short pairIdx = 0; pairIdx < 4; pairIdx++)
+			{
+				byte places = this.owner.World.RerunContent[spot];
 
-		L0671:
-			this.processor.TestBitsByte(this.owner.World.RerunContent[this.processor.PullLocalWord(0x2)], 0xf0);
-			if (this.processor.FlagSet.IsEqual) goto L06e8;
+				if ((places & 0xf0) != 0)
+				{
+					this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText((short)((pairIdx << 1) + 1), 10));
 
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText((short)((short)(this.processor.PullLocalWord(0xa) << 1) + 1), 10));
+					this.owner.Libc.AppendText(0xba06, ":");
 
-			this.owner.Libc.AppendText(0xba06, ":");
+					this.owner.Libc.AppendText(0xba06, ReplayPlural(places >> 4));
 
-			this.processor.RegBase.LowByte = this.owner.World.RerunContent[this.processor.PullLocalWord(0x2)];
-			this.processor.RegBase.HighByte = 0;
-			this.processor.RegCount.LowByte = 0x4;
-			this.processor.RegBase.Value16 = this.processor.ShiftRightWord(this.processor.RegBase.Value16, this.processor.RegCount.LowByte);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1992)));
+					this.owner.Libc.AppendText(0xba06, " ");
+				}
 
-			this.owner.Libc.AppendText(0xba06, " ");
+				if ((places & 0xf) != 0)
+				{
+					this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText((short)((pairIdx << 1) + 2), 10));
 
-		L06e8:
-			this.processor.TestBitsByte(this.owner.World.RerunContent[this.processor.PullLocalWord(0x2)], 0xf);
-			if (this.processor.FlagSet.IsEqual) goto L075d;
+					this.owner.Libc.AppendText(0xba06, ":");
 
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText((short)((short)(this.processor.PullLocalWord(0xa) << 1) + 2), 10));
+					this.owner.Libc.AppendText(0xba06, ReplayPlural(places & 0xf));
 
-			this.owner.Libc.AppendText(0xba06, ":");
+					this.owner.Libc.AppendText(0xba06, " ");
+				}
 
-			this.processor.RegBase.LowByte = this.owner.World.RerunContent[this.processor.PullLocalWord(0x2)];
-			this.processor.RegBase.Value16 = this.processor.BitAndWord(this.processor.RegBase.Value16, 0xf);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1992)));
+				spot++;
+			}
 
-			this.owner.Libc.AppendText(0xba06, " ");
-
-		L075d:
-			this.processor.EmitLocalWord(0x2, this.processor.IncrementWord(this.processor.PullLocalWord(0x2)));
-			this.processor.IncrementLocalWord(0xa);
-			this.processor.CompareWord(this.processor.PullLocalWord(0xa), 0x4);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L076c;
-			goto L0671;
-
-		L076c:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x680a), 0x3);
-			if (this.processor.FlagSet.IsEqual) goto L0776;
-			goto L0826;
-
-		L0776:
-			goto L040d;
-
-		L0779:
-			this.processor.RegAcc.LowByte = this.owner.World.RerunContent[this.processor.PullLocalWord(0x2)];
-			this.processor.RegAcc.HighByte = 0;
-			this.processor.EmitGlobalWord(0x6810, this.processor.RegAcc.Value16);
-			this.processor.IncrementLocalWord(0x2);
-
-			this.processor.RegAcc.LowByte = this.owner.World.RerunContent[this.processor.PullLocalWord(0x2)];
-			this.processor.EmitLocalWord(0xa, this.processor.RegAcc.Value16);
-			this.processor.IncrementLocalWord(0x2);
-
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0x6810);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1982)));
-
-			this.owner.Libc.AppendText(0xba06, " civilization destroyed by ");
-
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0xa);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1992)));
-
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x680a), 0x4);
-			if (this.processor.FlagSet.IsNotEqual) goto L07f3;
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.CompareWord(this.processor.PullLocalWord(0xa), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L07f3;
-
-			DisplayCivilizationDestroyedScreen(this.processor.PullGlobalSignedWord(0x6810),
-				this.processor.PullLocalWord(0x4));
-
-		L07f3:
-			this.owner.World.Participants[this.processor.PullGlobalWord(0x6810)].ChiefVisuals ^= 8;
-
-			ObtainReplayPlayerLabel(this.processor.PullGlobalSignedWord(0x6810));
-			
-			goto L040d;
-
-		L0826:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x680a), 0x2);
-			if (this.processor.FlagSet.IsEqual) goto L0830;
-			goto L0196;
-
-		L0830:
-			this.owner.Libc.ReadKey();
-
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1b);
-			if (this.processor.FlagSet.IsEqual) goto L083d;
-			goto L0196;
-
-		L083d:
-			this.processor.EmitLocalWord(0xe, 0x1);
-
-		L0842:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0xe);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x20));
-			this.owner.World.Participants[this.processor.PullLocalWord(0xe)].ChiefVisuals = (short)this.processor.RegAcc.Value16;
-
-			this.processor.IncrementLocalWord(0xe);
-			this.processor.CompareWord(this.processor.PullLocalWord(0xe), 0x8);
-			if (this.processor.FlagSet.IsLess) goto L0842;
-			this.processor.EmitLocalWord(0xe, 0x1);
-
-		L085c:
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.CompareWord(this.processor.PullLocalWord(0xe), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L086e;
-
-			ObtainReplayPlayerLabel(this.processor.PullLocalSignedWord(0xe));
-
-		L086e:
-			this.processor.EmitLocalWord(0xe, this.processor.IncrementWord(this.processor.PullLocalWord(0xe)));
-			this.processor.CompareWord(this.processor.PullLocalWord(0xe), 0x8);
-			if (this.processor.FlagSet.IsLess) goto L085c;
-
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0x19d4),
-				0, 0, 0x140, 0xc8,
-				this.processor.PullGlobalWord(0xaa),
-				0, 0);
-
-			this.owner.Startup.DisplayMouseCursor();
-
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x680a), 0x3);
-			if (this.processor.FlagSet.IsNotEqual) goto L0894;
-			
-			this.owner.Libc.CloseHandle((short)this.processor.PullGlobalWord(0x680c));
-
-		L0894:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x680a), 0x3);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L089e;
-			goto L0007;
-
-		L089e:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.LeaveFrame();
-			// Far return
-			this.processor.Journal.CloseScope("DisplayReplay");
+			if (this.processor.PullGlobalWord(0x680a) == 3)
+			{
+				RenderReplayPreamble();
+			}
 		}
 
 		/// <summary>
