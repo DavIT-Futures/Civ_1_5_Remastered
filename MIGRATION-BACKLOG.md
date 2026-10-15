@@ -419,6 +419,16 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   mutacje współrzędnych wycinania przeżywały). **Ścieżka EGA (`CutEgaUnitSprites`) bez testu**: gry testowe działają
   w VGA bez ekranu 3, arkusz EGA rzuca wyjątek w obu wersjach (oryginał zostawia ramkę, inne SP). Sprawdzona tylko
   czytaniem; do sprawdzenia, jeśli kiedyś będzie gra EGA w testach. Testy w `BatchFiftySixDifferentialTests`.
+- Porcja 57 (2026-10-15): `ConstructCivilization` (`StartGameMenu`, nowa cywilizacja: wymazanie gracza, technologie
+  w toczącej się grze, lider, miejsce startu, nazwy, osadnik, usunięcie barbarzyńców w promieniu 8), rozbita na
+  `RemakeCivilization`, `ShareKnownTechnologies`, `SettleCivilization`, `ChooseFreeLeader`, `ChooseStartPlace`,
+  `NameCivilization`. Ramka zostaje (wołane funkcje widzą stos na tej samej głębokości), liczniki miast innych graczy na
+  kontynentach (w oryginale tablica w ramce bp - 0x32) w tablicy C#. Wnioski do testów: granice trzeba wymuszać – runda
+  dokładnie na granicy trudności (350 - 50 * trudność), barbarzyńcy rozstawieni gęsto na mapie (w zapisie żadnych w pobliżu
+  miejsca startu); lider 8 ma tylko gracz 0 (nie dostaje lidera), więc mutacja `>= 8` → `> 8` jest równoważna.
+  Odłożona `DisplayCivilizationScreen` (`MainIntro`, lądowanie na Alfa Centauri): przewijanie zależy od liczby tyknięć zegara
+  na klatkę (0x5c), czyli od liczby dostępów do pamięci – wierne przepisanie wymagałoby odtworzenia każdego dostępu.
+  Testy w `BatchFiftySevenDifferentialTests`.
 
 ## Następny krok
 
@@ -426,10 +436,10 @@ Dalej małe metody: `python Civilization1Remaster.Tests/Differential/Reference/f
 (metody z co najmniej 2 liniami `goto L` / `FlagSet` / `Compare…` / `SumWord` itd., od najkrótszej). Kandydaci
 (`GameLoadAndSave` i `Newspaper` nie mają już metod w stylu asm): `ChooseTechnologyToTake` (`TradeAndConquest`, patrz wyżej),
 `OperateMenu`, `DisplayMenu` (`DialogDrawing`),
-`DisplayCivilopediaIndex` (`Civilopedia`), `DisplayCivilizationScreen` (`MainIntro`),
-`ConstructCivilization`, `ConfigureFreshGame` (`StartGameMenu`), `DisplayPalace` (`Palace`, patrz porcja 45), reszta generatora mapy w `GameInitAndIntro`. Funkcje niskopoziomowe `SystemServices` (`DeactivateMouse`, `PointerEvent`,
+`DisplayCivilopediaIndex` (`Civilopedia`), `DisplayCivilizationScreen` (`MainIntro`, patrz porcja 57),
+`ConfigureFreshGame` (`StartGameMenu`), `DisplayPalace` (`Palace`, patrz porcja 45), reszta generatora mapy w `GameInitAndIntro`. Funkcje niskopoziomowe `SystemServices` (`DeactivateMouse`, `PointerEvent`,
 przerwanie zegara: `OnClockBeat`, `RefreshHueCycling`, `ColorsFadeStep`, `ColorsFadeStepInterrupt`, `AssignColors`) na koniec: działają
-w przerwaniach albo na rejestrach. Stan 2026-10-15 (po porcji 56): 33 metody w stylu asm, ok. 35,7 tys. z 65,3 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
+w przerwaniach albo na rejestrach. Stan 2026-10-15 (po porcji 57): 32 metody w stylu asm, ok. 35,7 tys. z 65,3 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 

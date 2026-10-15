@@ -604,543 +604,382 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// Makes the civilization of the player anew (at the start of a game, for a new civilization in a free slot, or after a
+		/// civil war; for the human player only at the start): everything of the player is wiped (units, relations, cities,
+		/// money; government 1, rates 4 / 4; in a running game it gets the technologies the human player knows and that were
+		/// first found by a third player, each with chance 1/2). A living player other than 0 then gets a leader (a free one
+		/// of its colour at the start, else the other leader of its colour), a start place and its names, a settler there, the
+		/// barbarian units within 8 tiles removed. The start place is random on land: not too close to cities and earlier
+		/// players, on good land (screen 2 value), on a continent with room for cities and without cities of others after the
+		/// start of the game, not on a hut; the demands get lower with the attempts (0x34), after 2000 attempts it takes the
+		/// last place. EARTH (0xd76a) uses the start place of the leader at the start. A new civilization in a running game
+		/// with no place, or too late for the difficulty, does not come: the player is dead (0, and the game ends 0xdc48 when
+		/// only the human player is left).
 		/// </summary>
-		/// <param name="playerID"></param>
-		/// <returns></returns>
+		/// <returns>1 when made (also when it was not made anew), 0 when it does not come; also in AX</returns>
 		public ushort ConstructCivilization(short participantIdx)
 		{
 			this.processor.Journal.OpenScope($"ConstructCivilization({participantIdx})");
 
-			// function body
+			// The frame like the original (the functions called see the stack at the same depth)
 			this.processor.EnterFrame(0x34);
 			this.processor.PreserveIndexRegisters();
 
 			if (participantIdx != this.owner.World.PersonParticipantIdx || this.owner.World.RoundTally == 0)
 			{
-				this.owner.World.Participants[participantIdx].StarshipInhabitants = 0;
-				this.owner.World.Participants[participantIdx].RunningSagaStanding = 0;
-				this.owner.World.Participants[participantIdx].FoundScienceTally = 0;
-				this.owner.World.Participants[participantIdx].InquiryHeadway = 0;
-				this.owner.World.Participants[participantIdx].Gold = 0;
-				this.owner.World.Participants[participantIdx].RegimeKind = 1;
-				this.owner.World.Participants[participantIdx].LevyRatio = 4;
-				this.owner.World.Participants[participantIdx].ResearchLevyRatio = 4;
+				ushort result = RemakeCivilization(participantIdx);
 
-				for (int idx = 0; idx < 16; idx++)
+				this.processor.RegAcc.Value16 = result;
+			}
+
+			this.processor.RestoreIndexRegisters();
+			this.processor.LeaveFrame();
+
+			this.processor.Journal.CloseScope("ConstructCivilization");
+
+			return this.processor.RegAcc.Value16;
+		}
+
+		/// <summary>The work of ConstructCivilization; 0 when the civilization does not come</summary>
+		private ushort RemakeCivilization(short participantIdx)
+		{
+			Player player = this.owner.World.Participants[participantIdx];
+
+			player.StarshipInhabitants = 0;
+			player.RunningSagaStanding = 0;
+			player.FoundScienceTally = 0;
+			player.InquiryHeadway = 0;
+			player.Gold = 0;
+			player.RegimeKind = 1;
+			player.LevyRatio = 4;
+			player.ResearchLevyRatio = 4;
+
+			// The cities of the other players (1 - 7) on each continent
+			ushort[] foreignTowns = new ushort[16];
+
+			for (int continentIdx = 0; continentIdx < 16; continentIdx++)
+			{
+				player.Landmasses[continentIdx].Approach = 0;
+
+				for (int otherIdx = 1; otherIdx < 8; otherIdx++)
 				{
-					this.processor.RegSource.Value16 = (ushort)idx;
-					this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-					this.owner.World.Participants[participantIdx].Landmasses[idx].Approach = 0;
-					this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x32), 0x0);
-
-					for (int jdx = 1; jdx < 8; jdx++)
-					{
-						this.processor.RegSource.Value16 = (ushort)idx;
-						this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-						this.processor.RegBase.Value16 = (ushort)jdx;
-						this.processor.RegCount.LowByte = 0x5;
-						this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, this.processor.RegCount.LowByte);
-
-						this.processor.RegAcc.Value16 = (ushort)this.owner.World.Participants[jdx].Landmasses[idx].TownTally;
-
-						this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x32),
-							this.processor.SumWord(this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x32)), this.processor.RegAcc.Value16));
-					}
+					foreignTowns[continentIdx] += (ushort)this.owner.World.Participants[otherIdx].Landmasses[continentIdx].TownTally;
 				}
+			}
 
-				this.owner.World.Participants[participantIdx].TownTally = 0;
-				this.owner.World.Participants[participantIdx].TroopTally = 0;
-				this.owner.World.Participants[participantIdx].SoilTally = 1;
-				this.owner.World.Participants[participantIdx].ColonistTally = 1;
-				this.owner.World.Participants[participantIdx].TouchParticipantTimeleft = -1;
+			player.TownTally = 0;
+			player.TroopTally = 0;
+			player.SoilTally = 1;
+			player.ColonistTally = 1;
+			player.TouchParticipantTimeleft = -1;
 
-				for (int idx = 0; idx < this.owner.World.Participants[participantIdx].ScienceObtainedSince.Length; idx++)
-				{
-					this.owner.World.Participants[participantIdx].ScienceObtainedSince[idx] = -1;
-				}
+			for (int idx = 0; idx < player.ScienceObtainedSince.Length; idx++)
+			{
+				player.ScienceObtainedSince[idx] = -1;
+			}
 
-				this.processor.EmitLocalWord(0xc, 0x0);
+			for (int troopIdx = 0; troopIdx < 0x80; troopIdx++)
+			{
+				ushort troop = (ushort)((0x600 * participantIdx) + (0xc * troopIdx));
 
-			L08a3:
-				this.processor.RegAcc.Value16 = 0x600;
-				this.processor.ScaleAccumulatorToSource((ushort)participantIdx);
-				this.processor.AddScaledToSource(0xc, this.processor.PullLocalWord(0xc));
-				this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d7), 0xff);
-				this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d4), 0x0);
-				this.processor.IncrementLocalWord(0xc);
-				this.processor.CompareWord(this.processor.PullLocalWord(0xc), 0x80);
-				if (this.processor.FlagSet.IsLess) goto L08a3;
-				this.processor.RegSource.Value16 = (ushort)participantIdx;
-				this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-				this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0xd20c), 0);
-				this.owner.World.Participants[participantIdx].Tally = 0;
+				this.processor.EmitGlobalByte((ushort)(troop + 0x81d7), 0xff);
+				this.processor.EmitGlobalByte((ushort)(troop + 0x81d4), 0x0);
+			}
 
-				this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-				this.processor.CompareWord((ushort)participantIdx, this.processor.RegAcc.Value16);
-				if (this.processor.FlagSet.IsNotEqual) goto L08fc;
+			this.processor.EmitGlobalWord((ushort)(0xd20c + (participantIdx << 1)), 0);
+			player.Tally = 0;
 
+			if (participantIdx == this.owner.World.PersonParticipantIdx)
+			{
 				this.owner.Services.FloodBox(this.processor.PullGlobalWord(0x19e8), 240, 0, 80, 50, 0);
+			}
 
-			L08fc:
-				this.owner.Bot.WipeStrategicLocations(participantIdx);
-				
-				this.processor.EmitLocalWord(0xc, 0x0);
+			this.owner.Bot.WipeStrategicLocations(participantIdx);
 
-			L090c:
-				this.processor.RegSource.Value16 = (ushort)participantIdx;
-				this.processor.RegCount.LowByte = 0x4;
-				this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, this.processor.RegCount.LowByte);
+			for (int otherIdx = 0; otherIdx < 8; otherIdx++)
+			{
+				player.Relations[otherIdx] = 0;
+				this.owner.World.Participants[otherIdx].Relations[participantIdx] = 0;
+			}
 
-				this.processor.RegBase.Value16 = this.processor.PullLocalWord(0xc);
-				this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-				
-				this.owner.World.Participants[participantIdx].Relations[this.processor.PullLocalWord(0xc)] = 0;
+			for (int idx = 0; idx < 5; idx++)
+			{
+				player.FoundScienceMarkers[idx] = 0;
+			}
 
-				this.processor.RegSource.Value16 = this.processor.PullLocalWord(0xc);
-				this.processor.RegCount.LowByte = 0x4;
-				this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, this.processor.RegCount.LowByte);
+			if (this.owner.World.RoundTally != 0)
+			{
+				ShareKnownTechnologies(participantIdx);
+			}
 
-				this.processor.RegBase.Value16 = (ushort)participantIdx;
-				this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
+			if (participantIdx != 0 && (this.owner.World.LiveRealms & (1 << participantIdx)) != 0)
+			{
+				if (!SettleCivilization(participantIdx, foreignTowns))
+					return 0;
 
-				this.owner.World.Participants[this.processor.PullLocalWord(0xc)].Relations[participantIdx] = 0;
+				player.FoundScienceTally = 1;
+			}
 
-				this.processor.IncrementLocalWord(0xc);
+			for (int kind = 0; kind < 28; kind++)
+			{
+				player.MissingTroops[kind] = 0;
+				player.LiveTroops[kind] = 0;
+				player.TroopsInsideMaking[kind] = 0;
+			}
 
-				this.processor.CompareWord(this.processor.PullLocalWord(0xc), 0x8);
-				if (this.processor.FlagSet.IsLess) goto L090c;
+			return 1;
+		}
 
-				this.processor.EmitLocalWord(0xc, 0);
+		/// <summary>
+		/// In a running game the new civilization gets, each with chance 1/2, the technologies (0 - 0x47) that the human
+		/// player knows and that were first found by a player other than the human player
+		/// </summary>
+		private void ShareKnownTechnologies(short participantIdx)
+		{
+			short personIdx = this.owner.World.PersonParticipantIdx;
 
-			L0938:
-				this.processor.RegAcc.Value16 = 0xa;
-				this.processor.ScaleAccumulatorToSource((ushort)participantIdx);
+			for (short scienceIdx = 0; scienceIdx < 0x48; scienceIdx++)
+			{
+				if (this.owner.Advisors.PlayerKnowsTechnology(personIdx, scienceIdx) == 0)
+					continue;
 
-				this.processor.RegBase.Value16 = this.processor.PullLocalWord(0xc);
-				this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
+				int finder = (byte)this.owner.World.ScienceLeadingFoundVia[scienceIdx] & 7;
 
-				this.owner.World.Participants[participantIdx].FoundScienceMarkers[this.processor.PullLocalWord(0xc)] = 0;
+				if (finder == 0 || finder == (ushort)personIdx)
+					continue;
 
-				this.processor.IncrementLocalWord(0xc);
-				this.processor.CompareWord(this.processor.PullLocalWord(0xc), 0x5);
-				if (this.processor.FlagSet.IsLess) goto L0938;
-
-				if (this.owner.World.RoundTally == 0) goto L09c3;
-				this.processor.EmitLocalWord(0xc, 0x0);
-
-			L0960:
-				this.processor.RegAcc.Value16 = this.owner.Advisors.PlayerKnowsTechnology(this.owner.World.PersonParticipantIdx,
-					this.processor.PullLocalSignedWord(0xc));
-				this.processor.TestAccumulator();
-				if (this.processor.FlagSet.IsEqual)
-					goto L09ba;
-
-				this.processor.TestBitsByte((byte)this.owner.World.ScienceLeadingFoundVia[this.processor.PullLocalWord(0xc)], 0x7);
-				if (this.processor.FlagSet.IsEqual) goto L09ba;
-				this.processor.RegAcc.LowByte = (byte)this.owner.World.ScienceLeadingFoundVia[this.processor.PullLocalWord(0xc)];
-				this.processor.RegAcc.HighByte = 0;
-				this.processor.RegAcc.Value16 = this.processor.BitAndWord(this.processor.RegAcc.Value16, 0x7);
-				this.processor.CompareWord(this.processor.RegAcc.Value16, (ushort)this.owner.World.PersonParticipantIdx);
-				if (this.processor.FlagSet.IsEqual) goto L09ba;
-
-				this.processor.RegAcc.Value16 = (ushort)(this.owner.Libc.Dice.DrawInt(2));
-
-				this.processor.TestAccumulator();
-				if (this.processor.FlagSet.IsNotEqual) goto L09ba;
-
-				this.owner.Advisors.EarnTechnology(participantIdx,
-					this.processor.PullLocalSignedWord(0xc),
-					participantIdx);
-
-			L09ba:
-				this.processor.EmitLocalWord(0xc, this.processor.IncrementWord(this.processor.PullLocalWord(0xc)));
-				this.processor.CompareWord(this.processor.PullLocalWord(0xc), 0x48);
-				if (this.processor.FlagSet.IsLess) goto L0960;
-
-				L09c3:
-				this.processor.CompareWord((ushort)participantIdx, 0x0);
-				if (this.processor.FlagSet.IsNotEqual) goto L09cc;
-				goto L0e35;
-
-			L09cc:
-				this.processor.RegAcc.Value16 = 0x1;
-				this.processor.RegCount.LowByte = (byte)(participantIdx & 0xff);
-				this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-				this.processor.TestBitsWord(this.processor.RegAcc.Value16, (ushort)this.owner.World.LiveRealms);
-				if (this.processor.FlagSet.IsNotEqual) goto L09dd;
-				goto L0e35;
-
-			L09dd:
-				this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-				this.processor.CompareWord((ushort)participantIdx, this.processor.RegAcc.Value16);
-				if (this.processor.FlagSet.IsEqual) goto L0a59;
-				if (this.owner.World.RoundTally != 0) goto L0a4f;
-
-			L09ec:
-				this.owner.World.Participants[participantIdx].ChiefVisuals = (short)this.owner.Libc.Dice.DrawInt(16);
-				this.processor.EmitLocalWord(0xe, 0x1);
-
-				if ((this.owner.World.Participants[participantIdx].ChiefVisuals & 7) != participantIdx)
+				if (this.owner.Libc.Dice.DrawInt(2) == 0)
 				{
-					this.processor.EmitLocalWord(0xe, 0x0);
+					this.owner.Advisors.EarnTechnology(participantIdx, scienceIdx, participantIdx);
+				}
+			}
+		}
+
+		/// <summary>
+		/// The leader, the start place, the names and the settler of a living player (not 0); false when a new civilization
+		/// in a running game does not come (then the player is dead)
+		/// </summary>
+		private bool SettleCivilization(short participantIdx, ushort[] foreignTowns)
+		{
+			Player player = this.owner.World.Participants[participantIdx];
+
+			if (participantIdx != this.owner.World.PersonParticipantIdx)
+			{
+				if (this.owner.World.RoundTally == 0)
+				{
+					ChooseFreeLeader(participantIdx);
+				}
+				else
+				{
+					player.ChiefVisuals ^= 8;
+				}
+			}
+
+			(short horizLoc, short vertLoc, ushort attemptTally) = ChooseStartPlace(participantIdx, foreignTowns);
+
+			if (this.owner.World.RoundTally == 0 && this.processor.PullGlobalWord(0xd76a) != 0)
+			{
+				// EARTH: the start place of the leader
+				ushort place = (ushort)(player.ChiefVisuals << 1);
+
+				horizLoc = (sbyte)this.processor.PullGlobalByte((ushort)(place + 0x35da));
+				vertLoc = (sbyte)this.processor.PullGlobalByte((ushort)(place + 0x35db));
+				attemptTally = 0;
+			}
+
+			if (this.owner.World.RoundTally != 0)
+			{
+				// A new civilization must have the other leader of its slot than the one there before (identity bit)
+				bool identity = (this.owner.World.ParticipantIdentMarkers & (1 << participantIdx)) != 0;
+
+				if (player.ChiefVisuals >= 8 && identity)
+				{
+					attemptTally = 0x7d0;
 				}
 
-				this.processor.EmitLocalWord(0xc, 0x0);
-
-			L0a1e:
-				if (this.processor.PullLocalSignedWord(0xc) != participantIdx &&
-					this.owner.World.Participants[this.processor.PullLocalWord(0xc)].ChiefVisuals ==
-					this.owner.World.Participants[participantIdx].ChiefVisuals)
+				if (player.ChiefVisuals < 8 && !identity)
 				{
-					this.processor.EmitLocalWord(0xe, 0x0);
+					attemptTally = 0x7d0;
 				}
+			}
 
-				this.processor.IncrementLocalWord(0xc);
-				this.processor.CompareWord(this.processor.PullLocalWord(0xc), 0x8);
-				if (this.processor.FlagSet.IsLess) goto L0a1e;
-				this.processor.CompareWord(this.processor.PullLocalWord(0xe), 0x0);
-				if (this.processor.FlagSet.IsEqual) goto L09ec;
-				goto L0a59;
+			if (participantIdx != this.owner.World.PersonParticipantIdx)
+			{
+				player.ResearchLevyRatio = (short)(this.processor.PullGlobalWord((ushort)((0x3a * player.ChiefVisuals) + 0x1516)) + 3);
+				player.LevyRatio = (short)(9 - player.ResearchLevyRatio);
+			}
 
-			L0a4f:
-				this.owner.World.Participants[participantIdx].ChiefVisuals ^= 8;
+			ushort latestRound = (ushort)(0x15e - (0x32 * this.owner.World.HardnessTier));
 
-			L0a59:
-				this.processor.EmitLocalWord(0x34, 0x0);
+			if ((latestRound < this.owner.World.RoundTally || attemptTally >= 0x7d0) &&
+				participantIdx != this.owner.World.PersonParticipantIdx)
+			{
+				// It does not come: the other leader back, the player dead
+				player.ChiefVisuals ^= 8;
+				this.owner.World.LiveRealms &= (short)~(1 << participantIdx);
 
-			L0a5e:
-				this.processor.RegAcc.Value16 = (ushort)(this.owner.Libc.Dice.DrawInt(64));
-
-				this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x8);
-				this.processor.EmitLocalWord(0x8, this.processor.RegAcc.Value16);
-
-				this.processor.RegAcc.Value16 = (ushort)(this.owner.Libc.Dice.DrawInt(34));
-				this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x8);
-				this.processor.EmitLocalWord(0xa, this.processor.RegAcc.Value16);
-
-				this.owner.Helpers.LocateNearestCity(
-					this.processor.PullLocalSignedWord(0x8),
-					this.processor.PullLocalSignedWord(0xa));
-
-				this.processor.EmitLocalWord(0x6, this.processor.RegAcc.Value16);
-				this.processor.CompareWord(this.processor.RegAcc.Value16, 0xffff);
-				if (this.processor.FlagSet.IsNotEqual) goto L0a9b;
-				this.processor.RegAcc.Value16 = 0x1e;
-				goto L0ac7;
-
-			L0a9b:
-				this.owner.Helpers.ObtainDistance(
-					this.processor.PullLocalSignedWord(0x8),
-					this.owner.World.Towns[this.processor.PullLocalWord(0x6)].Place.X,
-					this.processor.PullLocalSignedWord(0xa),
-					this.owner.World.Towns[this.processor.PullLocalWord(0x6)].Place.Y);
-
-			L0ac7:
-				this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
-				if (owner.World.RoundTally != 0) goto L0b16;
-				this.processor.EmitLocalWord(0x2, 0x1);
-				goto L0b0e;
-
-			L0ad8:
-				this.processor.RegAcc.Value16 = 0x600;
-				this.processor.ScaleAccumulatorToSource(this.processor.PullLocalWord(0x2));
-
-				this.owner.Helpers.ObtainDistance(
-					this.processor.PullLocalSignedWord(0x8),
-					this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)),
-					this.processor.PullLocalSignedWord(0xa),
-					this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6)));
-
-				this.processor.EmitLocalWord(0x12, this.processor.RegAcc.Value16);
-				this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x4);
-				this.processor.CompareWord(this.processor.PullLocalWord(0x12), this.processor.RegAcc.Value16);
-				if (this.processor.FlagSet.IsGreaterOrEqual) goto L0b0b;
-				this.processor.CopyLocalWord(0x12, 0x4);
-
-			L0b0b:
-				this.processor.EmitLocalWord(0x2, this.processor.IncrementWord(this.processor.PullLocalWord(0x2)));
-
-			L0b0e:
-				this.processor.RegAcc.Value16 = (ushort)participantIdx;
-				this.processor.CompareWord(this.processor.PullLocalWord(0x2), this.processor.RegAcc.Value16);
-				if (this.processor.FlagSet.IsLess) goto L0ad8;
-
-				L0b16:
-				this.owner.VideoCard.ObtainDot(2,
-					this.processor.PullLocalSignedWord(0x8) + 0x50,
-					this.processor.PullLocalSignedWord(0xa));
-
-				this.processor.EmitLocalWord(0x10, this.processor.RegAcc.Value16);
-				this.processor.IncrementLocalWord(0x34);
-				this.processor.CompareWord(this.processor.PullLocalWord(0x34), 0x7d0);
-				if (this.processor.FlagSet.IsLessOrEqual) goto L0b4e;
-				this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-				this.processor.CompareWord((ushort)participantIdx, this.processor.RegAcc.Value16);
-				if (this.processor.FlagSet.IsEqual) goto L0b44;
-				goto L0c1b;
-
-			L0b44:
-				if (owner.World.RoundTally == 0) goto L0b4e;
-				goto L0c1b;
-
-			L0b4e:
-				this.owner.MapOps.ObtainTerrainType(
-					this.processor.PullLocalSignedWord(0x8),
-					this.processor.PullLocalSignedWord(0xa));
-
-				this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
-				if (this.processor.FlagSet.IsNotEqual) goto L0b64;
-				goto L0a5e;
-
-			L0b64:
-				this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x34);
-				this.processor.DivideAccumulatorByPowerOfTwo(0x5);
-				this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, 0xc);
-				this.processor.RegAcc.Value16 = this.processor.NegateWord(this.processor.RegAcc.Value16);
-				this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x10));
-				if (this.processor.FlagSet.IsLessOrEqual) goto L0b82;
-				goto L0a5e;
-
-			L0b82:
-				this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x34);
-				this.processor.DivideAccumulatorByPowerOfTwo(0x6);
-				this.processor.RegSource.Value16 = this.processor.RegAcc.Value16;
-				this.processor.RegAcc.Value16 = 0xa;
-				this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, this.processor.RegSource.Value16);
-				this.processor.CompareWord(this.processor.PullLocalWord(0x4), this.processor.RegAcc.Value16);
-				if (this.processor.FlagSet.IsGreaterOrEqual) goto L0ba2;
-				goto L0a5e;
-
-			L0ba2:
-				this.owner.MapOps.ObtainContinentID(
-					this.processor.PullLocalSignedWord(0x8),
-					this.processor.PullLocalSignedWord(0xa));
-
-				this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-
-				this.processor.RegAcc.Value16 = (ushort)owner.World.RoundTally;
-				this.processor.DivideAccumulatorByPowerOfTwo(0x4);
-				this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.RegSource.Value16);
-				this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, 0x20);
-				this.processor.RegAcc.Value16 = this.processor.NegateWord(this.processor.RegAcc.Value16);
-
-				this.processor.CompareWord((ushort)this.owner.World.Landmasses[this.processor.RegBase.Value16].ConstructionSpotTally, this.processor.RegAcc.Value16);
-				if (this.processor.FlagSet.IsLess)
-					goto L0a5e;
-
-				if (this.owner.World.Season <= 0)
-					goto L0bf7;
-
-				this.owner.MapOps.ObtainContinentID(
-					this.processor.PullLocalSignedWord(0x8),
-					this.processor.PullLocalSignedWord(0xa));
-
-				this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
-				this.processor.RegDest.Value16 = this.processor.ShiftLeftWord(this.processor.RegDest.Value16, 0x1);
-				this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegDest.Value16 - 0x32)), 0x0);
-				if (this.processor.FlagSet.IsEqual) goto L0bf7;
-				goto L0a5e;
-
-			L0bf7:
-				this.owner.MapOps.ObtainTerrainType(
-					this.processor.PullLocalSignedWord(0x8),
-					this.processor.PullLocalSignedWord(0xa));
-
-				this.owner.MapOps.ContainsHut(
-					this.processor.RegAcc.Value16,
-					this.processor.PullLocalSignedWord(0x8),
-					this.processor.PullLocalSignedWord(0xa));
-
-				this.processor.TestAccumulator();
-				if (this.processor.FlagSet.IsEqual) goto L0c1b;
-				goto L0a5e;
-
-			L0c1b:
-				if (this.owner.World.RoundTally != 0) goto L0c49;
-				this.processor.CompareWord(this.processor.PullGlobalWord(0xd76a), 0x0);
-				if (this.processor.FlagSet.IsEqual) goto L0c49;
-				this.processor.RegSource.Value16 = (ushort)this.owner.World.Participants[participantIdx].ChiefVisuals;
-				this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-				this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x35da));
-				this.processor.SignExtendByte(this.processor.RegAcc);
-				this.processor.EmitLocalWord(0x8, this.processor.RegAcc.Value16);
-				this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x35db));
-				this.processor.SignExtendByte(this.processor.RegAcc);
-				this.processor.EmitLocalWord(0xa, this.processor.RegAcc.Value16);
-				this.processor.EmitLocalWord(0x34, 0x0);
-
-			L0c49:
-				if (this.owner.World.RoundTally == 0) goto L0c8e;
-				this.processor.CompareWord((ushort)this.owner.World.Participants[participantIdx].ChiefVisuals, 0x8);
-				if (this.processor.FlagSet.IsLess) goto L0c6f;
-				this.processor.RegAcc.Value16 = 0x1;
-				this.processor.RegCount.LowByte = (byte)(participantIdx & 0xff);
-				this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-				this.processor.TestBitsWord(this.processor.RegAcc.Value16, (ushort)this.owner.World.ParticipantIdentMarkers);
-				if (this.processor.FlagSet.IsEqual) goto L0c6f;
-				this.processor.EmitLocalWord(0x34, 0x7d0);
-
-			L0c6f:
-				this.processor.CompareWord((ushort)this.owner.World.Participants[participantIdx].ChiefVisuals, 0x8);
-				if (this.processor.FlagSet.IsGreaterOrEqual) goto L0c8e;
-				this.processor.RegAcc.Value16 = 0x1;
-				this.processor.RegCount.LowByte = (byte)(participantIdx & 0xff);
-				this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-				this.processor.TestBitsWord(this.processor.RegAcc.Value16, (ushort)this.owner.World.ParticipantIdentMarkers);
-				if (this.processor.FlagSet.IsNotEqual) goto L0c8e;
-				this.processor.EmitLocalWord(0x34, 0x7d0);
-
-			L0c8e:
-				this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-				this.processor.CompareWord((ushort)participantIdx, this.processor.RegAcc.Value16);
-				if (this.processor.FlagSet.IsEqual) goto L0cba;
-				this.processor.RegSource.Value16 = (ushort)participantIdx;
-				this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-				this.processor.RegAcc.Value16 = 0x3a;
-				this.processor.ScaleAccumulatorToBase((ushort)this.owner.World.Participants[participantIdx].ChiefVisuals);
-				this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1516));
-				this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x3);
-				this.owner.World.Participants[participantIdx].ResearchLevyRatio = (short)this.processor.RegAcc.Value16;
-				this.processor.RegAcc.Value16 = 0x9;
-				this.processor.RegAcc.Value16 -= (ushort)this.owner.World.Participants[participantIdx].ResearchLevyRatio;
-				this.owner.World.Participants[participantIdx].LevyRatio = (short)this.processor.RegAcc.Value16;
-
-			L0cba:
-				this.processor.RegAcc.Value16 = 0x32;
-				this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, (ushort)this.owner.World.HardnessTier);
-				this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, 0x15e);
-				this.processor.RegAcc.Value16 = this.processor.NegateWord(this.processor.RegAcc.Value16);
-				if (this.processor.RegAcc.Value16 < this.owner.World.RoundTally) goto L0cd3;
-				if (this.processor.PullLocalWord(0x34) < 0x7d0) goto L0d12;
-
-			L0cd3:
-				if (participantIdx == this.owner.World.PersonParticipantIdx) goto L0d12;
-
-				this.owner.World.Participants[participantIdx].ChiefVisuals ^= 8;
-				this.processor.RegAcc.Value16 = 0x1;
-				this.processor.RegCount.LowByte = (byte)(participantIdx & 0xff);
-				this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-				this.processor.RegAcc.Value16 = this.processor.InvertWord(this.processor.RegAcc.Value16);
-				owner.World.LiveRealms &= (short)this.processor.RegAcc.Value16;
-				this.processor.RegAcc.Value16 = 0x1;
-				this.processor.RegCount.LowByte = (byte)(this.owner.World.PersonParticipantIdx & 0xff);
-				this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-				this.processor.RegAcc.LowByte = this.processor.BitOrByte(this.processor.RegAcc.LowByte, 0x1);
-
-				if (this.processor.RegAcc.Value16 == (ushort)this.owner.World.LiveRealms)
+				if ((ushort)((1 << this.owner.World.PersonParticipantIdx) | 1) == (ushort)this.owner.World.LiveRealms)
 				{
 					this.processor.EmitGlobalWord(0xdc48, 1);
 					this.processor.EmitGlobalWord(0xb884, 1);
 				}
 
-				this.processor.RegAcc.Value16 = 0;
-				goto L0e66;
-
-			L0d12:
-				this.processor.RegSource.Value16 = (ushort)participantIdx;
-				this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-				this.processor.RegAcc.Value16 = 0x3a;
-				this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData,
-					(ushort)this.owner.World.Participants[participantIdx].ChiefVisuals);
-				this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x14e2);
-				this.owner.Libc.CopyText(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x19a2)),
-					this.processor.RegAcc.Value16);
-
-				this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-				this.processor.CompareWord((ushort)participantIdx, this.processor.RegAcc.Value16);
-				if (this.processor.FlagSet.IsNotEqual) goto L0d3f;
-				this.processor.RegBase.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1982));
-				this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, this.processor.RegBase.Value16), 0x0);
-				if (this.processor.FlagSet.IsNotEqual) goto L0dae;
-
-				L0d3f:
-				this.processor.RegSource.Value16 = (ushort)participantIdx;
-				this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-				this.processor.RegAcc.Value16 = 0x3a;
-				this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData,
-					(ushort)this.owner.World.Participants[participantIdx].ChiefVisuals);
-				this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x1502);
-				this.owner.Libc.CopyText(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1982)),
-					this.processor.RegAcc.Value16);
-
-				this.processor.RegAcc.Value16 = 0x3a;
-				this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData,
-					(ushort)this.owner.World.Participants[participantIdx].ChiefVisuals);
-				this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x14f2);
-				this.owner.Libc.CopyText(0xba06, this.processor.RegAcc.Value16);
-
-				this.processor.CompareByte(this.processor.PullGlobalByte(0xba06), 0x0);
-				if (this.processor.FlagSet.IsNotEqual) goto L0d99;
-
-				this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1982)));
-
-				this.owner.Libc.AppendText(0xba06, "s");
-
-			L0d99:
-				this.processor.RegBase.Value16 = (ushort)participantIdx;
-				this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-				this.owner.Libc.CopyText(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1992)), 0xba06);
-
-			L0dae:
-				this.owner.MapOps.MapAssignCityOwner(participantIdx,
-					this.processor.PullLocalSignedWord(0x8),
-					this.processor.PullLocalSignedWord(0xa));
-
-				this.owner.UnitOps.ConstructUnit(
-					participantIdx,
-					0,
-					this.processor.PullLocalSignedWord(0x8),
-					this.processor.PullLocalSignedWord(0xa));
-				
-				this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x8);
-				this.owner.World.Participants[participantIdx].HorizBegin = (short)this.processor.RegAcc.Value16;
-
-				this.processor.EmitLocalWord(0xc, 0x0);
-
-			L0de4:
-				this.processor.RegAcc.Value16 = 0xc;
-				this.processor.ScaleAccumulatorToSource(this.processor.PullLocalWord(0xc));
-				this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d7)), 0xff);
-				if (this.processor.FlagSet.IsEqual) goto L0e20;
-
-				this.owner.Helpers.ObtainDistance(
-					this.processor.PullLocalSignedWord(0x8),
-					this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)),
-					this.processor.PullLocalSignedWord(0xa),
-					this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6)));
-
-				this.processor.CompareWord(this.processor.RegAcc.Value16, 0x8);
-				if (this.processor.FlagSet.IsGreater) goto L0e20;
-				
-				this.owner.UnitOps.EliminateUnit(0, this.processor.PullLocalSignedWord(0xc));
-
-			L0e20:
-				this.processor.EmitLocalWord(0xc, this.processor.IncrementWord(this.processor.PullLocalWord(0xc)));
-				this.processor.CompareWord(this.processor.PullLocalWord(0xc), 0x80);
-				if (this.processor.FlagSet.IsLess) goto L0de4;
-
-				this.owner.World.Participants[participantIdx].FoundScienceTally = 1;
-
-			L0e35:
-				for (int idx = 0; idx < 28; idx++)
-				{
-					this.owner.World.Participants[participantIdx].MissingTroops[idx] = 0;
-					this.owner.World.Participants[participantIdx].LiveTroops[idx] = 0;
-					this.owner.World.Participants[participantIdx].TroopsInsideMaking[idx] = 0;
-				}
-				this.processor.RegAcc.Value16 = 0x1;
+				return false;
 			}
 
-		L0e66:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.RegDest.Value16 = this.processor.UnstackWord();
-			this.processor.LeaveFrame();
+			NameCivilization(participantIdx);
 
-			// Far return
-			this.processor.Journal.CloseScope("ConstructCivilization");
+			this.owner.MapOps.MapAssignCityOwner(participantIdx, horizLoc, vertLoc);
 
-			return this.processor.RegAcc.Value16;
+			this.owner.UnitOps.ConstructUnit(participantIdx, 0, horizLoc, vertLoc);
+
+			player.HorizBegin = horizLoc;
+
+			// The barbarian units near the start place are removed
+			for (short troopIdx = 0; troopIdx < 0x80; troopIdx++)
+			{
+				ushort troop = (ushort)(0xc * troopIdx);
+
+				if (this.processor.PullGlobalByte((ushort)(troop + 0x81d7)) == 0xff)
+					continue;
+
+				short distance = (short)this.owner.Helpers.ObtainDistance(horizLoc, (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d5)),
+					vertLoc, (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d6)));
+
+				if (distance <= 8)
+				{
+					this.owner.UnitOps.EliminateUnit(0, troopIdx);
+				}
+			}
+
+			return true;
+		}
+
+		/// <summary>
+		/// At the start of a game: a random leader (0 - 15) of the player's colour (leader & 7) that no other player has
+		/// </summary>
+		private void ChooseFreeLeader(short participantIdx)
+		{
+			Player player = this.owner.World.Participants[participantIdx];
+			bool free;
+
+			do
+			{
+				player.ChiefVisuals = (short)this.owner.Libc.Dice.DrawInt(16);
+
+				free = (player.ChiefVisuals & 7) == participantIdx;
+
+				for (int otherIdx = 0; otherIdx < 8; otherIdx++)
+				{
+					if (otherIdx != participantIdx && this.owner.World.Participants[otherIdx].ChiefVisuals == player.ChiefVisuals)
+					{
+						free = false;
+					}
+				}
+			}
+			while (!free);
+		}
+
+		/// <summary>
+		/// A random start place (x 8 - 71, y 8 - 41) on land, tried again while: the screen 2 value of the place is below
+		/// 12 - attempts / 32; it is nearer than 10 - attempts / 64 to a city (30 without cities) or, at the start of the game,
+		/// to the first unit of an earlier player; its continent has fewer city sites than 32 - round / 16 - attempts / 64;
+		/// after the start of the game other players have cities on the continent; there is a hut. After 2000 attempts the
+		/// last place is taken (for the human player at the start of the game it goes on trying).
+		/// </summary>
+		private (short HorizLoc, short VertLoc, ushort AttemptTally) ChooseStartPlace(short participantIdx, ushort[] foreignTowns)
+		{
+			ushort attemptTally = 0;
+
+			while (true)
+			{
+				short horizLoc = (short)(this.owner.Libc.Dice.DrawInt(64) + 8);
+				short vertLoc = (short)(this.owner.Libc.Dice.DrawInt(34) + 8);
+
+				ushort townIdx = this.owner.Helpers.LocateNearestCity(horizLoc, vertLoc);
+				short nearest = townIdx == 0xffff ? (short)0x1e : (short)this.owner.Helpers.ObtainDistance(horizLoc,
+					this.owner.World.Towns[townIdx].Place.X, vertLoc, this.owner.World.Towns[townIdx].Place.Y);
+
+				if (this.owner.World.RoundTally == 0)
+				{
+					for (int otherIdx = 1; otherIdx < participantIdx; otherIdx++)
+					{
+						ushort troop = (ushort)(0x600 * otherIdx);
+
+						short distance = (short)this.owner.Helpers.ObtainDistance(horizLoc, (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d5)),
+							vertLoc, (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d6)));
+
+						if (distance < nearest)
+						{
+							nearest = distance;
+						}
+					}
+				}
+
+				short landValue = (short)this.owner.VideoCard.ObtainDot(2, horizLoc + 0x50, vertLoc);
+
+				attemptTally++;
+
+				if ((short)attemptTally > 0x7d0 &&
+					(participantIdx != this.owner.World.PersonParticipantIdx || this.owner.World.RoundTally != 0))
+				{
+					return (horizLoc, vertLoc, attemptTally);
+				}
+
+				if (this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) == MapRules.OceanTerrain)
+					continue;
+
+				if ((short)(0xc - ((short)attemptTally / 32)) > landValue)
+					continue;
+
+				short relief = (short)((short)attemptTally / 64);
+
+				if (nearest < (short)(0xa - relief))
+					continue;
+
+				ushort continentIdx = this.owner.MapOps.ObtainContinentID(horizLoc, vertLoc);
+				short siteDemand = (short)(0x20 - (this.owner.World.RoundTally / 16) - relief);
+
+				if (this.owner.World.Landmasses[continentIdx].ConstructionSpotTally < siteDemand)
+					continue;
+
+				if (this.owner.World.Season > 0 && foreignTowns[this.owner.MapOps.ObtainContinentID(horizLoc, vertLoc)] != 0)
+					continue;
+
+				if (this.owner.MapOps.ContainsHut(this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc), horizLoc, vertLoc) != 0)
+					continue;
+
+				return (horizLoc, vertLoc, attemptTally);
+			}
+		}
+
+		/// <summary>
+		/// The leader name (0x19a2) and, unless the human player has named it, the civilization name (0x1982) and its plural
+		/// (0x1992; the name + "s" when the leader has none) of the player's leader record (0x14e2 + 0x3a * leader)
+		/// </summary>
+		private void NameCivilization(short participantIdx)
+		{
+			ushort leader = (ushort)(0x3a * this.owner.World.Participants[participantIdx].ChiefVisuals);
+			ushort names = (ushort)(participantIdx << 1);
+
+			this.owner.Libc.CopyText(this.processor.PullGlobalWord((ushort)(names + 0x19a2)), (ushort)(leader + 0x14e2));
+
+			if (participantIdx == this.owner.World.PersonParticipantIdx &&
+				this.processor.PullGlobalByte(this.processor.PullGlobalWord((ushort)(names + 0x1982))) != 0)
+				return;
+
+			this.owner.Libc.CopyText(this.processor.PullGlobalWord((ushort)(names + 0x1982)), (ushort)(leader + 0x1502));
+
+			this.owner.Libc.CopyText(0xba06, (ushort)(leader + 0x14f2));
+
+			if (this.processor.PullGlobalByte(0xba06) == 0)
+			{
+				this.owner.Libc.CopyText(0xba06, this.processor.PullGlobalWord((ushort)(names + 0x1982)));
+
+				this.owner.Libc.AppendText(0xba06, "s");
+			}
+
+			this.owner.Libc.CopyText(this.processor.PullGlobalWord((ushort)(names + 0x1992)), 0xba06);
 		}
 
 		/// <summary>
