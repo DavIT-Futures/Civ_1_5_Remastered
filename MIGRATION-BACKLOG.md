@@ -405,18 +405,24 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   (podpiąć `ScopeListener` też tam). Zmienne zegara (0x42 – 0x5b) w `Watched` pokazują, jak długo czekało. Nazwy obrazków
   pod 0x1b33 i 0x1c02 to ten sam tekst (scope `ImportPictureOrColors` zapisuje nazwę), więc ich zamiana jest równoważna.
   Testy w `BatchFiftyFiveDifferentialTests`.
+- Porcja 56 (2026-10-15): `DisplayTribeSelection` (`StartGameMenu`) – mimo nazwy wycina sprite'y gry z arkuszy do tablic
+  obrazków (numery obrazków zależą od kolejności `ScreenToPicture`); rozbita na `StorePicture`, `CutVgaUnitSprites`,
+  `CutEgaUnitSprites`, `CutPlayerCitySprites`. Nazwy nie zmieniono (scope w śladzie). Bez ramki. Wnioski: migawka widzi tylko
+  numery obrazków, nie ich treść – test rysuje każdy wycięty obrazek w rogu ekranu 0 i zapisuje hasz pod 0xbc00 (bez tego
+  mutacje współrzędnych wycinania przeżywały). **Ścieżka EGA (`CutEgaUnitSprites`) bez testu**: gry testowe działają
+  w VGA bez ekranu 3, arkusz EGA rzuca wyjątek w obu wersjach (oryginał zostawia ramkę, inne SP). Sprawdzona tylko
+  czytaniem; do sprawdzenia, jeśli kiedyś będzie gra EGA w testach. Testy w `BatchFiftySixDifferentialTests`.
 
 ## Następny krok
 
 Dalej małe metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 60`
 (metody z co najmniej 2 liniami `goto L` / `FlagSet` / `Compare…` / `SumWord` itd., od najkrótszej). Kandydaci
 (`GameLoadAndSave` i `Newspaper` nie mają już metod w stylu asm): `ChooseTechnologyToTake` (`TradeAndConquest`, patrz wyżej),
-`DisplayTribeSelection` (`StartGameMenu`),
 `OperateMenu`, `DisplayMenu` (`DialogDrawing`),
 `DisplayCivilopediaIndex` (`Civilopedia`), `DisplayCivilizationScreen` (`MainIntro`),
 `ConstructCivilization`, `ConfigureFreshGame` (`StartGameMenu`), `DisplayPalace` (`Palace`, patrz porcja 45), reszta generatora mapy w `GameInitAndIntro`. Funkcje niskopoziomowe `SystemServices` (`DeactivateMouse`, `PointerEvent`,
 przerwanie zegara: `OnClockBeat`, `RefreshHueCycling`, `ColorsFadeStep`, `ColorsFadeStepInterrupt`, `AssignColors`) na koniec: działają
-w przerwaniach albo na rejestrach. Stan 2026-10-14 (po porcji 55): 34 metody w stylu asm, ok. 35,7 tys. z 65,3 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
+w przerwaniach albo na rejestrach. Stan 2026-10-15 (po porcji 56): 33 metody w stylu asm, ok. 35,7 tys. z 65,3 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
