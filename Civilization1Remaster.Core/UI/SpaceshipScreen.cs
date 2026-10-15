@@ -127,665 +127,431 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// The spaceship of the player: its parts on the layout (segment 0x3772, 0x16e0 + 0xb4 * player; places in the table
+		/// 0x375a), counted per kind in 0xdea2 when connected to a neighbour (structures always), the mass (part masses 0x4be0),
+		/// the colonists (0xdeae), support, energy, fuel, flight time and the chance of success; the arrival year of a ship
+		/// not launched yet. Shown (with a key awaited and the stars moving until a key, a click or arg2 frames) for the human
+		/// player, or for all with the spaceship option (0x20); the human player may launch it ("l" or the button) when arg3
+		/// and arg2 &lt; 0.
 		/// </summary>
-		/// <param name="playerID"></param>
-		/// <param name="param2"></param>
-		/// <param name="param3"></param>
-		/// <returns></returns>
+		/// <returns>The chance of success in percent, also in AX</returns>
 		public ushort RenderSpaceship(short participantIdx, short arg2, short arg3)
 		{
 			this.processor.Journal.OpenScope($"RenderSpaceship({participantIdx}, {arg2}, {arg3})");
 
-			// function body
+			// The frame keeps the key of the star animation (bp - 0x16) like the original: without a key (a click) the old
+			// stack value is read
 			this.processor.EnterFrame(0x20);
 			this.processor.PreserveIndexRegisters();
 
 			this.owner.Startup.ConcealMouseCursor();
 
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.CompareWord((ushort)participantIdx, this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L0275;
-			this.processor.TestBitsByte((byte)(this.owner.World.SessionPrefMarkers & 0xff), 0x20);
-			if (this.processor.FlagSet.IsEqual) goto L027a;
+			bool shown = participantIdx == this.owner.World.PersonParticipantIdx || (this.owner.World.SessionPrefMarkers & 0x20) != 0;
 
-		L0275:
-			this.processor.RegAcc.Value16 = 0x1;
-			goto L027c;
+			if (shown)
+			{
+				RenderSpaceshipTitle(participantIdx);
+			}
 
-		L027a:
-			this.processor.RegAcc.Value16 = 0;
+			CountSpaceshipParts(participantIdx, shown);
 
-		L027c:
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsNotEqual) goto L0286;
-			goto L0325;
+			ushort mass = 0;
 
-		L0286:
+			for (int kind = 0; kind < 0xa; kind++)
+			{
+				mass += (ushort)(this.processor.PullGlobalWord((ushort)((0x1a * kind) + 0x4be0)) *
+					this.processor.PullGlobalWord((ushort)((kind << 1) + 0xdea2)));
+			}
+
+			if ((short)mass >= 0x50 && shown)
+			{
+				this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa), 152, 88, this.processor.PullGlobalWord(0x6834));
+			}
+
+			if (shown)
+			{
+				ushort colour = (ushort)((participantIdx << 1) + 0x1946);
+
+				this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 240, 8, 80, 192, this.processor.PullGlobalWord(colour));
+
+				this.owner.VideoCard.RenderLine(this.processor.PullGlobalWord(0xaa), 0, 8, 0, 199, this.processor.PullGlobalWord(colour));
+
+				this.owner.VideoCard.RenderLine(this.processor.PullGlobalWord(0xaa), 0, 199, 240, 199, this.processor.PullGlobalWord(colour));
+			}
+
+			(short success, short flightTime, short vertLoc) = RenderSpaceshipFigures(shown, mass);
+
+			if (this.processor.PullGlobalWord(0xdeae) == 0)
+			{
+				arg3 = 0;
+			}
+
+			if ((this.owner.World.StarshipMarkers & (1 << (byte)participantIdx)) != 0)
+			{
+				if (shown)
+				{
+					Player player = this.owner.World.Participants[participantIdx];
+
+					this.owner.TextPainter.RenderTextToScreen0((ushort)(player.StarshipArrivalSeason < this.owner.World.Season ? 0x4d7c : 0x4d84),
+						242, vertLoc, 0);
+				}
+			}
+			else
+			{
+				this.owner.World.Participants[participantIdx].StarshipArrivalSeason =
+					(short)(CPU.SignedQuotient(flightTime, 0xa) + this.owner.World.Season);
+
+				if (participantIdx == this.owner.World.PersonParticipantIdx && arg2 < 0 && arg3 != 0)
+				{
+					this.owner.TextPainter.RenderTextToScreen0(0x4d8e, 256, 190, 0);
+
+					this.owner.Dialogs.RenderBox(242, 188, 76, 9, 0);
+				}
+			}
+
+			if (shown)
+			{
+				this.owner.TurnLogic.AwaitForKey();
+			}
+
+			this.owner.Startup.DisplayMouseCursor();
+
+			if (shown)
+			{
+				MoveSpaceshipStars(participantIdx, arg2, arg3, success);
+			}
+
+			this.owner.World.Participants[participantIdx].StarshipInhabitants = (short)this.processor.PullGlobalWord(0xdeae);
+
+			this.processor.RegAcc.Value16 = (ushort)success;
+
+			this.processor.RestoreIndexRegisters();
+			this.processor.LeaveFrame();
+
+			this.processor.Journal.CloseScope("RenderSpaceship");
+
+			return this.processor.RegAcc.Value16;
+		}
+
+		/// <summary>
+		/// The title: "civilization SpaceShip: X.S.S. leader" (X = the first letter of the civilization) on a band of the
+		/// player's colour
+		/// </summary>
+		private void RenderSpaceshipTitle(short participantIdx)
+		{
+			ushort names = (ushort)(participantIdx << 1);
+
 			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 0);
 
-			this.processor.RegSource.Value16 = (ushort)(participantIdx << 1);
+			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 8, this.processor.PullGlobalWord((ushort)(names + 0x1946)));
 
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 8,
-				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1946)));
-
-			this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1982)));
+			this.owner.Libc.CopyText(0xba06, this.processor.PullGlobalWord((ushort)(names + 0x1982)));
 
 			this.owner.Libc.AppendText(0xba06, " SpaceShip: X.S.S. ");
 
-			this.owner.Libc.TextLength(0xba06);
+			ushort length = this.owner.Libc.TextLength(0xba06);
 
-			this.processor.EmitLocalWord(0x14, this.processor.RegAcc.Value16);
+			this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)(names + 0x19a2)));
 
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x19a2)));
-
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x14);
-			this.processor.RegDest.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1982));
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, this.processor.RegDest.Value16);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xb9ff), this.processor.RegAcc.LowByte);
+			// The "X" of "X.S.S." becomes the first letter of the civilization
+			this.processor.EmitGlobalByte((ushort)(length + 0xb9ff),
+				this.processor.PullGlobalByte(this.processor.PullGlobalWord((ushort)(names + 0x1982))));
 
 			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 1, 0);
+		}
 
-		L0325:
-			this.processor.EmitLocalWord(0xe, 0x0);
+		/// <summary>
+		/// The parts on the layout (the places of table 0x375a, column, row, kind of place; 0xff ends it): each part is drawn
+		/// (when shown) and counted in 0xdea2 by kind when a neighbouring place of it is taken (structures 0 - 2 always);
+		/// a part without a neighbour gets a red frame
+		/// </summary>
+		private void CountSpaceshipParts(short participantIdx, bool shown)
+		{
+			for (int kind = 0; kind < 0xa; kind++)
+			{
+				this.processor.EmitGlobalWord((ushort)((kind << 1) + 0xdea2), 0x0);
+			}
 
-		L032a:
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0xe);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xdea2), 0x0);
-			this.processor.IncrementLocalWord(0xe);
-			this.processor.CompareWord(this.processor.PullLocalWord(0xe), 0xa);
-			if (this.processor.FlagSet.IsLess) goto L032a;
-			this.processor.EmitLocalWord(0xe, 0x0);
+			int placeIdx = 0;
 
-		L0343:
-			this.processor.RegAcc.Value16 = 0x3;
-			this.processor.ScaleAccumulatorToSource(this.processor.PullLocalWord(0xe));
-			this.processor.SegExtra.Value16 = 0x375a; // segment
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x0));
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.EmitLocalWord(0xa, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1));
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.EmitLocalWord(0x10, this.processor.RegAcc.Value16);
-			this.processor.ScaleIndexToBase(0xb4, (ushort)participantIdx);
-			this.processor.ScaleIndex(0xc, this.processor.PullLocalWord(0xa));
-			this.processor.RegBase.Value16 = this.processor.SumWord(this.processor.RegBase.Value16, this.processor.RegAcc.Value16);
-			this.processor.RegBase.Value16 = this.processor.SumWord(this.processor.RegBase.Value16, this.processor.PullLocalWord(0x10));
-			this.processor.SegExtra.Value16 = 0x3772; // segment
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegExtra.Value16, (ushort)(this.processor.RegBase.Value16 + 0x16e0));
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.EmitLocalWord(0x8, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xffff);
-			if (this.processor.FlagSet.IsNotEqual) goto L0389;
-			goto L04b0;
+			do
+			{
+				ushort place = (ushort)(3 * placeIdx);
+				short column = (sbyte)this.processor.PullUInt8(0x375a, place);
+				short row = (sbyte)this.processor.PullUInt8(0x375a, (ushort)(place + 1));
+				short part = (sbyte)this.processor.PullUInt8(0x3772, (ushort)((0xb4 * participantIdx) + (0xc * column) + row + 0x16e0));
 
-		L0389:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L03b7;
+				if (part != -1)
+				{
+					if (shown)
+					{
+						// The original computes the picture address as part << 1 + 0x682a, which C# reads as part << 0x682b,
+						// a shift by 11 (the count is masked to 5 bits)
+						this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa), (column * 16) - 16, (row * 16) + 8,
+							this.processor.PullGlobalWord((ushort)((ushort)part << 0xb)));
+					}
 
-			this.owner.Services.RenderPictureToScreen(
-				this.processor.PullGlobalWord(0xaa),
-				(this.processor.PullLocalSignedWord(0xa) * 16) - 16,
-				(this.processor.PullLocalSignedWord(0x10) * 16) + 8,
-				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegAcc.Value16 << 1 + 0x682a)));
+					short breadth = (short)(part >= 6 || part == 3 ? 2 : 1);
+					short altitude = (short)(part >= 6 ? 2 : 1);
+					short neighbours = (short)(part >= 3 ? 0 : 1);
 
-		L03b7:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x8), 0x6);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L03c8;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x8), 0x3);
-			if (this.processor.FlagSet.IsEqual) goto L03c8;
-			this.processor.RegAcc.Value16 = 0x1;
-			goto L03cb;
+					for (short across = 0; across < breadth; across++)
+					{
+						for (short down = 0; down < altitude; down++)
+						{
+							ushort horiz = (ushort)(column + across);
+							ushort vert = (ushort)(row + down);
 
-		L03c8:
-			this.processor.RegAcc.Value16 = 0x2;
+							neighbours += (short)ObtainSpaceshipPartValue(participantIdx, (ushort)(horiz + 1), vert);
+							neighbours += (short)ObtainSpaceshipPartValue(participantIdx, (ushort)(horiz - 1), vert);
+							neighbours += (short)ObtainSpaceshipPartValue(participantIdx, horiz, (ushort)(vert + 1));
+							neighbours += (short)ObtainSpaceshipPartValue(participantIdx, horiz, (ushort)(vert - 1));
+						}
+					}
 
-		L03cb:
-			this.processor.EmitLocalWord(0x1a, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x8), 0x6);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L03d9;
-			this.processor.RegAcc.Value16 = 0x1;
-			goto L03dc;
+					if (neighbours != 0)
+					{
+						ushort tally = (ushort)((part << 1) + 0xdea2);
 
-		L03d9:
-			this.processor.RegAcc.Value16 = 0x2;
+						this.processor.EmitGlobalWord(tally, (ushort)(this.processor.PullGlobalWord(tally) + 1));
+					}
+					else if (shown)
+					{
+						this.owner.Dialogs.RenderBox((column << 4) - 16, (row << 4) + 8, (breadth << 4) - 1, (altitude << 4) - 1, 12);
+					}
+				}
+				else
+				{
+					// The original reads the kind of the empty place here (and forgets it)
+					this.processor.PullUInt8(0x375a, (ushort)(place + 2));
+				}
 
-		L03dc:
-			this.processor.EmitLocalWord(0x1e, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x8), 0x3);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L03ea;
-			this.processor.RegAcc.Value16 = 0x1;
-			goto L03ec;
+				placeIdx++;
+			}
+			while (this.processor.PullUInt8(0x375a, (ushort)(3 * placeIdx)) != 0xff);
+		}
 
-		L03ea:
-			this.processor.RegAcc.Value16 = 0;
-
-		L03ec:
-			this.processor.EmitLocalWord(0x12, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x18, 0x0);
-			goto L045a;
-
-		L03f6:
-			this.processor.EmitLocalWord(0x1c, this.processor.IncrementWord(this.processor.PullLocalWord(0x1c)));
-
-		L03f9:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x1e);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x1c), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0457;
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0xa);
-			this.processor.RegSource.Value16 = this.processor.SumWord(this.processor.RegSource.Value16, this.processor.PullLocalWord(0x18));
-			this.processor.RegDest.Value16 = this.processor.PullLocalWord(0x10);
-			this.processor.RegDest.Value16 = this.processor.SumWord(this.processor.RegDest.Value16, this.processor.PullLocalWord(0x1c));
-			
-			ObtainSpaceshipPartValue(participantIdx, (ushort)(this.processor.RegSource.Value16 + 0x1), this.processor.RegDest.Value16);
-			
-			this.processor.EmitLocalWord(0x12, this.processor.SumWord(this.processor.PullLocalWord(0x12), this.processor.RegAcc.Value16));
-
-			ObtainSpaceshipPartValue(participantIdx, (ushort)(this.processor.RegSource.Value16 - 0x1), this.processor.RegDest.Value16);
-			
-			this.processor.EmitLocalWord(0x12, this.processor.SumWord(this.processor.PullLocalWord(0x12), this.processor.RegAcc.Value16));
-			
-			ObtainSpaceshipPartValue(participantIdx, this.processor.RegSource.Value16, (ushort)(this.processor.RegDest.Value16 + 0x1));
-			
-			this.processor.EmitLocalWord(0x12, this.processor.SumWord(this.processor.PullLocalWord(0x12), this.processor.RegAcc.Value16));
-			
-			ObtainSpaceshipPartValue(participantIdx, this.processor.RegSource.Value16, (ushort)(this.processor.RegDest.Value16 - 0x1));
-			
-			this.processor.EmitLocalWord(0x12, this.processor.SumWord(this.processor.PullLocalWord(0x12), this.processor.RegAcc.Value16));
-
-			goto L03f6;
-
-		L0457:
-			this.processor.EmitLocalWord(0x18, this.processor.IncrementWord(this.processor.PullLocalWord(0x18)));
-
-		L045a:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x1a);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x18), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0469;
-			this.processor.EmitLocalWord(0x1c, 0x0);
-			goto L03f9;
-
-		L0469:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x12), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L047a;
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x8);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xdea2), 
-				this.processor.IncrementWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xdea2))));
-			goto L04c9;
-
-		L047a:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L04c9;
-
-			this.owner.Dialogs.RenderBox(
-				(this.processor.PullLocalWord(0xa) << 4) - 16,
-				(this.processor.PullLocalWord(0x10) << 4) + 8,
-				(this.processor.PullLocalWord(0x1a) << 4) - 1,
-				(this.processor.PullLocalWord(0x1e) << 4) - 1,
-				12);
-
-			goto L04c9;
-
-		L04b0:
-			this.processor.RegAcc.Value16 = 0x3;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullLocalWord(0xe));
-			this.processor.SegExtra.Value16 = 0x375a; // segment
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegExtra.Value16, (ushort)(this.processor.RegBase.Value16 + 0x2)), 0x3);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L04c9;
-			this.processor.EmitLocalWord(0x12, 0x0);
-
-		L04c9:
-			this.processor.EmitLocalWord(0xe, this.processor.IncrementWord(this.processor.PullLocalWord(0xe)));
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xe);
-			this.processor.RegCount.Value16 = 0x3;
-			this.processor.ScaleAccumulatorToBase(this.processor.RegCount.Value16);
-			this.processor.SegExtra.Value16 = 0x375a; // segment
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegExtra.Value16, (ushort)(this.processor.RegBase.Value16 + 0x0)), 0xff);
-			if (this.processor.FlagSet.IsEqual) goto L04e5;
-			goto L0343;
-
-		L04e5:
-			this.processor.EmitLocalWord(0x6, 0x0);
-			this.processor.EmitLocalWord(0xe, 0x0);
-
-		L04ef:
-			this.processor.RegAcc.Value16 = 0x1a;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullLocalWord(0xe));
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x4be0));
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0xe);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xdea2)));
-			this.processor.EmitLocalWord(0x6, this.processor.SumWord(this.processor.PullLocalWord(0x6), this.processor.RegAcc.Value16));
-			this.processor.IncrementLocalWord(0xe);
-			this.processor.CompareWord(this.processor.PullLocalWord(0xe), 0xa);
-			if (this.processor.FlagSet.IsLess) goto L04ef;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x6), 0x50);
-			if (this.processor.FlagSet.IsLess) goto L0534;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L0534;
-
-			this.owner.Services.RenderPictureToScreen(
-				this.processor.PullGlobalWord(0xaa),
-				152, 88,
-				this.processor.PullGlobalWord(0x6834));
-
-		L0534:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L0592;
-
-			this.processor.RegSource.Value16 = (ushort)((participantIdx << 1) + 0x1946);
-
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 240, 8, 80, 192,
-				this.processor.PullUInt16(this.processor.SegData.Value16, this.processor.RegSource.Value16));
-
-			this.owner.VideoCard.RenderLine(this.processor.PullGlobalWord(0xaa),
-				0, 8, 0, 199, this.processor.PullUInt16(this.processor.SegData.Value16, this.processor.RegSource.Value16));
-
-			this.owner.VideoCard.RenderLine(this.processor.PullGlobalWord(0xaa),
-				0, 199, 240, 199, this.processor.PullUInt16(this.processor.SegData.Value16, this.processor.RegSource.Value16));
-
-		L0592:
-			this.processor.EmitLocalWord(0xc, 0x64);
-			this.processor.EmitLocalWord(0x10, 0x10);
+		/// <summary>
+		/// The figures of the spaceship on the right (each line drawn only when shown, except the title and the support):
+		/// colonists (0xdeae) * 10,000, support (0xdeb0 per colonist module), energy (0xdeb2 per support and colonist module),
+		/// mass, fuel (0xdeaa per propulsion 0xdea8), flight time, the chance of success from them
+		/// </summary>
+		/// <returns>The chance of success, the flight time (in tenths of years) and the row for the status line</returns>
+		private (short Success, short FlightTime, short StatusRow) RenderSpaceshipFigures(bool shown, ushort mass)
+		{
+			short success = 0x64;
+			short vertLoc = 0x10;
 
 			this.owner.TextPainter.RenderTextToScreen0(0x4d08, 242, 16, 0);
 
-			this.processor.EmitLocalWord(0x10, this.processor.SumWord(this.processor.PullLocalWord(0x10), 0x8));
+			vertLoc += 8;
+
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText((short)this.processor.PullGlobalWord(0xdeae), 10));
+			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText((short)this.processor.PullGlobalWord(0xdeae), 10));
 
 			this.owner.Libc.AppendText(0xba06, "0,000");
 
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L0609;
+			if (shown)
+			{
+				this.owner.TextPainter.RenderTextToScreen0(0xba06, 242, vertLoc, 0);
+			}
 
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, 242, this.processor.PullLocalSignedWord(0x10), 0);
+			vertLoc += 8;
 
-		L0609:
-			this.processor.EmitLocalWord(0x10, this.processor.SumWord(this.processor.PullLocalWord(0x10), 0x8));
-
-			this.owner.Helpers.VerifyValueSpan(this.processor.PullGlobalSignedWord(0xdeae), 1, 99);
-
-			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
-			this.processor.ScaleIndex(0x64, this.processor.PullGlobalWord(0xdeb0));
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.EmitLocalWord(0x14, this.processor.RegAcc.Value16);
+			// Support: life support per colonist module
+			short colonists = (short)this.owner.Helpers.VerifyValueSpan(this.processor.PullGlobalSignedWord(0xdeae), 1, 99);
+			short support = CPU.SignedQuotient((short)(0x64 * this.processor.PullGlobalWord(0xdeb0)), colonists);
 
 			this.owner.Libc.CopyText(0xba06, "Support: ");
 
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText((short)this.processor.PullLocalWord(0x14), 10));
+			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(support, 10));
 
 			this.owner.Libc.AppendText(0xba06, "%");
 
-			this.processor.CompareWord(this.processor.PullLocalWord(0x14), 0x64);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L067b;
-			this.processor.RegAcc.Value16 = 0x4;
-			goto L067d;
+			this.owner.TextPainter.RenderTextToScreen0(0xba06, 242, vertLoc, (ushort)(support < 0x64 ? 4 : 0));
 
-		L067b:
-			this.processor.RegAcc.Value16 = 0;
+			vertLoc += 8;
 
-		L067d:
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, 
-				242, 
-				this.processor.PullLocalSignedWord(0x10), 
-				this.processor.RegAcc.Value16);
+			if (shown)
+			{
+				success = CPU.SignedQuotient((short)(this.owner.Helpers.VerifyValueSpan(support, 0, 100) * success), 0x64);
+			}
 
-			this.processor.EmitLocalWord(0x10, this.processor.SumWord(this.processor.PullLocalWord(0x10), 0x8));
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L06b9;
-
-			this.owner.Helpers.VerifyValueSpan(
-				this.processor.PullLocalSignedWord(0x14), 0, 100);
-
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.PullLocalWord(0xc));
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.RegCount.Value16 = 0x64;
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.EmitLocalWord(0xc, this.processor.RegAcc.Value16);
-
-		L06b9:
-			this.owner.Helpers.VerifyValueSpan(
-				this.processor.PullGlobalSignedWord(0xdeae) + this.processor.PullGlobalSignedWord(0xdeb0), 
-				1, 99);
-
-			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
-			this.processor.ScaleIndex(0xc8, this.processor.PullGlobalWord(0xdeb2));
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.EmitLocalWord(0x14, this.processor.RegAcc.Value16);
+			// Energy: power per support and colonist module
+			short modules = (short)this.owner.Helpers.VerifyValueSpan(
+				this.processor.PullGlobalSignedWord(0xdeae) + this.processor.PullGlobalSignedWord(0xdeb0), 1, 99);
+			short energy = CPU.SignedQuotient((short)(0xc8 * this.processor.PullGlobalWord(0xdeb2)), modules);
 
 			this.owner.Libc.CopyText(0xba06, "Energy: ");
 
-			this.owner.Libc.AppendText(0xba06, 
-				this.owner.Libc.IntegerToText((short)this.processor.PullLocalWord(0x14), 10));
+			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(energy, 10));
 
 			this.owner.Libc.AppendText(0xba06, "%");
 
-			this.owner.Helpers.VerifyValueSpan(
-				this.processor.PullLocalSignedWord(0x14), 0, 100);
+			success = CPU.SignedQuotient((short)(this.owner.Helpers.VerifyValueSpan(energy, 0, 100) * success), 0x64);
 
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.PullLocalWord(0xc));
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.RegCount.Value16 = 0x64;
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.EmitLocalWord(0xc, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L0764;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x14), this.processor.RegCount.Value16);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L074e;
-			this.processor.RegAcc.Value16 = 0x4;
-			goto L0750;
+			if (shown)
+			{
+				this.owner.TextPainter.RenderTextToScreen0(0xba06, 242, vertLoc, (ushort)(energy < 0x64 ? 4 : 0));
+			}
 
-		L074e:
-			this.processor.RegAcc.Value16 = 0;
+			vertLoc += 0x10;
 
-		L0750:
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, 
-				242,
-				this.processor.PullLocalSignedWord(0x10), 
-				this.processor.RegAcc.Value16);
+			if (shown)
+			{
+				this.owner.TextPainter.RenderTextToScreen0(0x4d31, 242, vertLoc, 0);
+			}
 
-		L0764:
-			this.processor.EmitLocalWord(0x10, this.processor.SumWord(this.processor.PullLocalWord(0x10), 0x10));
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L0784;
-			
-			this.owner.TextPainter.RenderTextToScreen0(0x4d31, 242, this.processor.PullLocalSignedWord(0x10), 0);
+			vertLoc += 8;
 
-		L0784:
-			this.processor.EmitLocalWord(0x10, this.processor.SumWord(this.processor.PullLocalWord(0x10), 0x8));
+			// Mass: the original writes mass / 10 twice ("x,x00 tons")
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText((short)((short)this.processor.PullLocalWord(0x6) / 10), 10));
+			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText((short)((short)mass / 10), 10));
 
 			this.owner.Libc.AppendText(0xba06, ",");
 
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText((short)((short)this.processor.PullLocalWord(0x6) / 10), 10));
+			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText((short)((short)mass / 10), 10));
 
 			this.owner.Libc.AppendText(0xba06, "00 tons");
 
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L0817;
+			if (shown)
+			{
+				this.owner.TextPainter.RenderTextToScreen0(0xba06, 242, vertLoc, 0);
+			}
 
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, 242, this.processor.PullLocalSignedWord(0x10), 0);
+			vertLoc += 8;
 
-		L0817:
-			this.processor.EmitLocalWord(0x10, this.processor.SumWord(this.processor.PullLocalWord(0x10), 0x8));
-
-			this.owner.Helpers.VerifyValueSpan(this.processor.PullGlobalSignedWord(0xdea8), 1, 99);
-
-			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
-			this.processor.ScaleIndex(0x64, this.processor.PullGlobalWord(0xdeaa));
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.EmitLocalWord(0x14, this.processor.RegAcc.Value16);
+			// Fuel: fuel per propulsion
+			short propulsion = (short)this.owner.Helpers.VerifyValueSpan(this.processor.PullGlobalSignedWord(0xdea8), 1, 99);
+			short fuel = CPU.SignedQuotient((short)(0x64 * this.processor.PullGlobalWord(0xdeaa)), propulsion);
 
 			this.owner.Libc.CopyText(0xba06, "Fuel: ");
 
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText((short)this.processor.PullLocalWord(0x14), 10));
+			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(fuel, 10));
 
 			this.owner.Libc.AppendText(0xba06, "%");
 
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L08a5;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x14), 0x64);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L088f;
-			this.processor.RegAcc.Value16 = 0x4;
-			goto L0891;
+			if (shown)
+			{
+				this.owner.TextPainter.RenderTextToScreen0(0xba06, 242, vertLoc, (ushort)(fuel < 0x64 ? 4 : 0));
+			}
 
-		L088f:
-			this.processor.RegAcc.Value16 = 0;
+			vertLoc += 8;
 
-		L0891:
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, 242,
-				this.processor.PullLocalSignedWord(0x10), this.processor.RegAcc.Value16);
+			if (shown)
+			{
+				this.owner.TextPainter.RenderTextToScreen0(0x4d4a, 242, vertLoc, 0);
+			}
 
-		L08a5:
-			this.processor.EmitLocalWord(0x10, this.processor.SumWord(this.processor.PullLocalWord(0x10), 0x8));
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L08c5;
+			vertLoc += 8;
 
-			this.owner.TextPainter.RenderTextToScreen0(0x4d4a, 242, this.processor.PullLocalSignedWord(0x10), 0);
+			// Flight time (tenths of years): 50 * mass / (thrust + 1), over 15 years less success
+			short thrust = (short)this.owner.Helpers.VerifyValueSpan(10 * this.processor.PullGlobalSignedWord(0xdea8), 0,
+				10 * this.processor.PullGlobalSignedWord(0xdeaa));
+			short flightTime = CPU.SignedQuotient((short)(0x32 * mass), (short)(thrust + 1));
 
-		L08c5:
-			this.processor.EmitLocalWord(0x10, this.processor.SumWord(this.processor.PullLocalWord(0x10), 0x8));
+			if (flightTime > 0x96)
+			{
+				success -= CPU.SignedQuotient((short)(flightTime - 0x96), 0xa);
+			}
 
-			this.owner.Helpers.VerifyValueSpan(
-				10 * this.processor.PullGlobalSignedWord(0xdea8), 
-				0, 10 * this.processor.PullGlobalSignedWord(0xdeaa));
-
-			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegCount.Value16 = this.processor.IncrementWord(this.processor.RegCount.Value16);
-			this.processor.ScaleIndex(0x32, this.processor.PullLocalWord(0x6));
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.EmitLocalWord(0x14, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x96);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L0904;
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, 0x96);
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.RegCount.Value16 = 0xa;
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.EmitLocalWord(0xc, this.processor.SubtractWord(this.processor.PullLocalWord(0xc), this.processor.RegAcc.Value16));
-
-		L0904:
+			// The original writes the time / 10 twice ("x.x Years")
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText((short)((short)this.processor.PullLocalWord(0x14) / 10), 10));
+			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText((short)(flightTime / 10), 10));
 
 			this.owner.Libc.AppendText(0xba06, ".");
 
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText((short)((short)this.processor.PullLocalWord(0x14) / 10), 10));
+			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText((short)(flightTime / 10), 10));
 
 			this.owner.Libc.AppendText(0xba06, " Years");
 
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L0993;
+			if (shown)
+			{
+				this.owner.TextPainter.RenderTextToScreen0(0xba06, 242, vertLoc, 0);
+			}
 
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, 242, this.processor.PullLocalSignedWord(0x10), 0);
+			vertLoc += 0x10;
 
-		L0993:
-			this.processor.EmitLocalWord(0x10, this.processor.SumWord(this.processor.PullLocalWord(0x10), 0x10));
+			success = (short)this.owner.Helpers.VerifyValueSpan(success, 0, 100);
 
-			this.owner.Helpers.VerifyValueSpan(
-				this.processor.PullLocalSignedWord(0xc), 0, 100);
+			if (shown)
+			{
+				this.owner.TextPainter.RenderTextToScreen0(0x4d60, 242, vertLoc, 0);
+			}
 
-			this.processor.EmitLocalWord(0xc, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L09c8;
-
-			this.owner.TextPainter.RenderTextToScreen0(0x4d60, 242, this.processor.PullLocalSignedWord(0x10), 0);
-
-		L09c8:
-			this.processor.EmitLocalWord(0x10, this.processor.SumWord(this.processor.PullLocalWord(0x10), 0x8));
+			vertLoc += 8;
 
 			this.owner.Libc.CopyText(0xba06, "--- ");
 
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText((short)this.processor.PullLocalWord(0xc), 10));
+			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(success, 10));
 
 			this.owner.Libc.AppendText(0xba06, "% ---");
 
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L0a28;
+			if (shown)
+			{
+				this.owner.TextPainter.RenderTextToScreen0(0xba06, 242, vertLoc, 0);
+			}
 
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, 242, this.processor.PullLocalSignedWord(0x10), 0);
+			return (success, flightTime, (short)(vertLoc + 0x10));
+		}
 
-		L0a28:
-			this.processor.EmitLocalWord(0x10, this.processor.SumWord(this.processor.PullLocalWord(0x10), 0x10));
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xdeae), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L0a38;
-			arg3 = 0;
+		/// <summary>
+		/// The stars move (every 2 beats after the launch, else 4) until a key, a click or arg2 frames; the key is taken. The
+		/// human player launches a ship not launched yet with "l" or a click on the launch button (when arg3 and arg2 &lt; 0),
+		/// after confirming it.
+		/// </summary>
+		private void MoveSpaceshipStars(short participantIdx, short arg2, short arg3, short success)
+		{
+			do
+			{
+				this.owner.Startup.ConcealMouseCursor();
 
-		L0a38:
-			this.processor.RegAcc.Value16 = 0x1;
-			this.processor.RegCount.LowByte = (byte)participantIdx;
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			this.processor.TestBitsWord(this.processor.RegAcc.Value16, (ushort)this.owner.World.StarshipMarkers);
-			if (this.processor.FlagSet.IsEqual) goto L0a7e;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L0a4f;
-			goto L0ada;
+				RenderStarField();
 
-		L0a4f:
-			this.owner.TextPainter.RenderTextToScreen0(
-				(ushort)((this.owner.World.Participants[participantIdx].StarshipArrivalSeason < owner.World.Season) ? 0x4d7c : 0x4d84),
-				242,
-				this.processor.PullLocalSignedWord(0x10),
-				0);
+				this.owner.Startup.DisplayMouseCursor();
 
-			this.processor.EmitLocalWord(0x10, this.processor.SumWord(this.processor.PullLocalWord(0x10), 0x10));
-			goto L0ada;
+				this.owner.TextPainter.AwaitTime((short)((this.owner.World.StarshipMarkers & (1 << (byte)participantIdx)) != 0 ? 2 : 4));
 
-		L0a7e:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x14);
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.RegCount.Value16 = 0xa;
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, (ushort)this.owner.World.Season);
-			this.owner.World.Participants[participantIdx].StarshipArrivalSeason = (short)this.processor.RegAcc.Value16;
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.CompareWord((ushort)participantIdx, this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L0ada;
-			
-			if (arg2 >= 0) goto L0ada;
-			
-			if (arg3 == 0) goto L0ada;
+				this.owner.Startup.ObtainMouseState();
 
-			this.owner.TextPainter.RenderTextToScreen0(0x4d8e, 256, 190, 0);
+				if (this.owner.Libc.KeyAvailable() != 0)
+					break;
 
-			this.owner.Dialogs.RenderBox(242, 188, 76, 9, 0);
+				arg2--;
+			}
+			while (arg2 != 0 && this.owner.GlobDb3a == 0);
 
-		L0ada:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L0ae5;
+			if (arg2 != 0 && this.owner.GlobDb3a == 0)
+			{
+				this.processor.EmitLocalWord(0x16, this.owner.Dialogs.ObtainNavigationKey());
+			}
 
-			this.owner.TurnLogic.AwaitForKey();
+			if (participantIdx != this.owner.World.PersonParticipantIdx || arg3 == 0 || arg2 >= 0)
+				return;
 
-		L0ae5:
-			this.owner.Startup.DisplayMouseCursor();
+			bool launchClick = this.owner.GlobDb3a != 0 && (short)this.owner.GlobDb3c > 0xf2 && (short)this.owner.GlobDb3e >= 0xbe;
 
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L0af3;
-			goto L0bfc;
+			if (!launchClick && this.processor.PullLocalWord(0x16) != 0x6c)
+				return;
 
-		L0af3:
-			this.owner.Startup.ConcealMouseCursor();
-
-			RenderStarField();
-
-			this.owner.Startup.DisplayMouseCursor();
-
-			this.processor.RegAcc.Value16 = 0x1;
-			this.processor.RegCount.LowByte = (byte)participantIdx;
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			this.processor.TestBitsWord(this.processor.RegAcc.Value16, (ushort)this.owner.World.StarshipMarkers);
-			if (this.processor.FlagSet.IsEqual) goto L0b14;
-			this.processor.RegAcc.Value16 = 0x2;
-			goto L0b17;
-
-		L0b14:
-			this.processor.RegAcc.Value16 = 0x4;
-
-		L0b17:
-			this.owner.TextPainter.AwaitTime((short)this.processor.RegAcc.Value16);
-
-			this.owner.Startup.ObtainMouseState();
-
-			this.owner.Libc.KeyAvailable();
-
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsNotEqual) goto L0b3a;
-
-			arg2--;
-			if (arg2 == 0) goto L0b3a;
-
-			this.processor.CompareWord(this.owner.GlobDb3a, 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L0af3;
-
-		L0b3a:
-			if (arg2 == 0) goto L0b4f;
-
-			this.processor.CompareWord(this.owner.GlobDb3a, 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L0b4f;
-
-			this.owner.Dialogs.ObtainNavigationKey();
-
-			this.processor.EmitLocalWord(0x16, this.processor.RegAcc.Value16);
-
-		L0b4f:
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.CompareWord((ushort)participantIdx, this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L0b5a;
-			goto L0bfc;
-
-		L0b5a:
-			if (arg3 != 0) goto L0b63;
-			goto L0bfc;
-
-		L0b63:
-			if (arg2 < 0) goto L0b6c;
-			goto L0bfc;
-
-		L0b6c:
-			this.processor.CompareWord(this.owner.GlobDb3a, 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L0b83;
-			this.processor.CompareWord(this.owner.GlobDb3c, 0xf2);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L0b83;
-			this.processor.CompareWord(this.owner.GlobDb3e, 0xbe);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0b89;
-
-		L0b83:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x16), 0x6c);
-			if (this.processor.FlagSet.IsNotEqual) goto L0bfc;
-
-		L0b89:
-			this.processor.RegAcc.Value16 = 0x1;
-			this.processor.RegCount.LowByte = (byte)(this.owner.World.PersonParticipantIdx & 0xff);
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			this.processor.TestBitsWord(this.processor.RegAcc.Value16, (ushort)this.owner.World.StarshipMarkers);
-			if (this.processor.FlagSet.IsNotEqual) goto L0bfc;
+			if ((this.owner.World.StarshipMarkers & (1 << (byte)this.owner.World.PersonParticipantIdx)) != 0)
+				return;
 
 			this.owner.Libc.CopyText(0xba06, "Confirm spaceship launch.\n(");
 
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText((short)this.processor.PullLocalWord(0xc), 10));
+			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(success, 10));
 
 			this.owner.Libc.AppendText(0xba06, "% chance of success)\n No Launch\n Launch CONFIRMED!\n");
 
 			this.owner.TurnHooks.DisplayDialog(0xba06, 80, 100);
 
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1);
-			if (this.processor.FlagSet.IsNotEqual) goto L0bfc;
-
-			FireSpaceship(this.owner.World.PersonParticipantIdx);
-
-		L0bfc:
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0xdeae);
-			this.owner.World.Participants[participantIdx].StarshipInhabitants = (short)this.processor.RegAcc.Value16;
-
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xc);
-
-			this.processor.RestoreIndexRegisters();
-			this.processor.LeaveFrame();
-
-			// Far return
-			this.processor.Journal.CloseScope("RenderSpaceship");
-
-			return this.processor.RegAcc.Value16;
+			if (this.processor.RegAcc.Value16 == 1)
+			{
+				FireSpaceship(this.owner.World.PersonParticipantIdx);
+			}
 		}
 
 		/// <summary>

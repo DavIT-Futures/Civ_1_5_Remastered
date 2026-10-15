@@ -451,6 +451,13 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   segment danych: jej warunek (`idx < 0x70ec && idx > 0x70ec + 0xdff`) nigdy nie jest prawdziwy. Bez testu różnicowego
   (funkcja przygotowuje maszynę przed wczytaniem gry); sprawdza ją golden master (baseline z oryginału, każdy test ładuje
   grę przez nią) – mutacje 0x588a i 0x5901 łapie `PlayedTurnsMatchBaseline`.
+- Porcja 61 (2026-10-15): `RenderSpaceship` (`SpaceshipScreen`, ekran statku: części, liczniki, masa, zaopatrzenie,
+  energia, paliwo, czas lotu, szansa, rok przylotu, animacja gwiazd, potwierdzenie startu), rozbita na
+  `RenderSpaceshipTitle`, `CountSpaceshipParts`, `RenderSpaceshipFigures`, `MoveSpaceshipStars`. Ramka zostaje: klawisz
+  animacji (bp - 0x16) jest czytany także wtedy, gdy kliknięcie go nie ustawiło (śmieci ze stosu). Błędy tłumaczenia
+  zachowane (patrz lista błędów). Wnioski do testów: próg czasu lotu (15 lat) jest w testach niewidoczny – przy losowych
+  układach lot jest krótki albo szansa i tak spada do 0 (`VerifyValueSpan`), więc mutacja progu przeżywa; testowane
+  mutacjami wzoru szansy i czasu. Testy w `BatchSixtyOneDifferentialTests`.
 
 ## Następny krok
 
@@ -461,13 +468,18 @@ Dalej małe metody: `python Civilization1Remaster.Tests/Differential/Reference/f
 `DisplayCivilizationScreen` (`MainIntro`, patrz porcja 57),
 `DisplayPalace` (`Palace`, patrz porcja 45), reszta generatora mapy w `GameInitAndIntro`. Funkcje niskopoziomowe `SystemServices` (`DeactivateMouse`, `PointerEvent`,
 przerwanie zegara: `OnClockBeat`, `RefreshHueCycling`, `ColorsFadeStep`, `ColorsFadeStepInterrupt`, `AssignColors`) na koniec: działają
-w przerwaniach albo na rejestrach. Stan 2026-10-15 (po porcji 60): 29 metod w stylu asm, ok. 35,7 tys. z 65,3 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
+w przerwaniach albo na rejestrach. Stan 2026-10-15 (po porcji 61): 28 metod w stylu asm, ok. 35,7 tys. z 65,3 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
 Kod C# przetłumaczony z asm ma miejscami inne zachowanie niż DOS-owy CIV.EXE. Testy porównują z tłumaczeniem, więc na razie
 te błędy są odtwarzane jawnie:
 
+- `RenderSpaceship`: obrazek części statku spod `word[część << 1 + 0x682a]` – w C# to przesunięcie o 0x682b, czyli o 11 bitów,
+  więc adres jest zły (obrazek zwykle nie istnieje i nic się nie rysuje); masa i czas lotu wypisywane jako „x/10,x/10” zamiast
+  „x/10,x%10”. Po naprawie: `word[0x682a + 2 * część]`, reszta z dzielenia.
+- `ConfigureFreshGame`: zerowanie `TroopsRuined` po każdej `ConstructCivilization` dotyczy zawsze gracza 6 (licznik innej
+  pętli). Po naprawie: gracz z pętli (albo usunąć, jeśli `ConstructCivilization` to robi).
 - `DivideCivilization`: technologie przepisywane z gracza na niego samego (nowa cywilizacja zaczyna bez technologii), flaga 9
   wojny ustawiana drugi raz w relacji gracza zamiast nowej cywilizacji, jednostka bez miasta macierzystego (0xff) poza miastem
   rzuca wyjątek (`Towns[255]`), brak miasta do oddania zapętla podział. Po naprawie: kopia technologii, relacja obustronna,
