@@ -429,6 +429,16 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   Odłożona `DisplayCivilizationScreen` (`MainIntro`, lądowanie na Alfa Centauri): przewijanie zależy od liczby tyknięć zegara
   na klatkę (0x5c), czyli od liczby dostępów do pamięci – wierne przepisanie wymagałoby odtworzenia każdego dostępu.
   Testy w `BatchFiftySevenDifferentialTests`.
+- Porcja 58 (2026-10-15): `ConfigureFreshGame` (`StartGameMenu`, wybory nowej gry i jej start), rozbita na
+  `ChooseDifficulty`, `RenderDifficultyPortrait`, `ChooseCompetition`, `WipeWorld`, `ChooseTribe`, `StartCivilizations`,
+  `WelcomeHumanPlayer`. Ramka zostaje. Błąd tłumaczenia zachowany: pętla zerująca `TroopsRuined` przy tworzeniu cywilizacji
+  używa licznika wcześniejszej pętli (zawsze gracz 6). Wnioski do testów: `DisplayMenu` zeruje linię domyślną 0x2f9a po
+  każdym menu, więc linie wybiera skrypt klawiszy (k razy 0x5000 = strzałka w dół, potem Enter; pierwszy klawisz skryptu
+  idzie przed pierwsze menu); Esc w menu plemienia daje losowe plemię. Nowa gra zakłada świeżą mapę: na mapie zapisu są
+  miasta, których nowa gra już nie zna, a osadnik obok takiego pola rzuca w `ConstructUnitsFromCityList` w obu wersjach –
+  `Prepare` czyści bit miasta na mapie (`MapLayers.ClearImprovements(1, …)`), każdy scenariusz na świeżej parze gier.
+  Różnica tylko w SI (oryginał ustawia SI w ciele funkcji) to znak, że obie wersje rzuciły wyjątek w środku.
+  Testy w `BatchFiftyEightDifferentialTests`.
 
 ## Następny krok
 
@@ -437,9 +447,9 @@ Dalej małe metody: `python Civilization1Remaster.Tests/Differential/Reference/f
 (`GameLoadAndSave` i `Newspaper` nie mają już metod w stylu asm): `ChooseTechnologyToTake` (`TradeAndConquest`, patrz wyżej),
 `OperateMenu`, `DisplayMenu` (`DialogDrawing`),
 `DisplayCivilopediaIndex` (`Civilopedia`), `DisplayCivilizationScreen` (`MainIntro`, patrz porcja 57),
-`ConfigureFreshGame` (`StartGameMenu`), `DisplayPalace` (`Palace`, patrz porcja 45), reszta generatora mapy w `GameInitAndIntro`. Funkcje niskopoziomowe `SystemServices` (`DeactivateMouse`, `PointerEvent`,
+`DisplayPalace` (`Palace`, patrz porcja 45), reszta generatora mapy w `GameInitAndIntro`. Funkcje niskopoziomowe `SystemServices` (`DeactivateMouse`, `PointerEvent`,
 przerwanie zegara: `OnClockBeat`, `RefreshHueCycling`, `ColorsFadeStep`, `ColorsFadeStepInterrupt`, `AssignColors`) na koniec: działają
-w przerwaniach albo na rejestrach. Stan 2026-10-15 (po porcji 57): 32 metody w stylu asm, ok. 35,7 tys. z 65,3 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
+w przerwaniach albo na rejestrach. Stan 2026-10-15 (po porcji 58): 31 metod w stylu asm, ok. 35,7 tys. z 65,3 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
