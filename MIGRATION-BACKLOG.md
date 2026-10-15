@@ -397,13 +397,20 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
 - Porcja 55 (2026-10-15): `TitleLogoAndMainChoices` (`GameStartup`, menu główne po tytule), rozbita na
   `AwaitTitleSongMeasure`, `MakeNewWorld`, `ShowMadeWorld`, `CustomizeWorld`, `ChooseWorldOption` (4 opcje świata jedną
   funkcją). Ramka zostaje: pozycja muzyki w bp - 2 to jedyny dostęp do pamięci w pętli czekania na takt, a bez dostępów zegar
-  testów nie tyka i pozycja nie rośnie. Wnioski do testów: każdy wybór na **świeżej parze gier** (`Theory`). W jednej grze
-  świat po świecie test się zawiesza w obu wersjach: muzyka zatrzymana za 0x1495 (czekanie na takt bez końca – pozycję
-  ustawia `Audio.Prepare` + `PerformNextStep` w `Prepare`), opowieść zostawiona w połowie (`OpeningSequence` czeka na jej
-  koniec) albo `ProduceElevation` bez pola wzgórza (12) na ekranie 1 po Hall of Fame – menu tytułowe w grze jest raz.
-  Diagnoza zawieszenia: `HeadlessGame.StartProbe` widzi tylko `Engine.Journal`; `OpeningSequence` pisze do `PrologueJournal`
-  (podpiąć `ScopeListener` też tam). Zmienne zegara (0x42 – 0x5b) w `Watched` pokazują, jak długo czekało. Nazwy obrazków
-  pod 0x1b33 i 0x1c02 to ten sam tekst (scope `ImportPictureOrColors` zapisuje nazwę), więc ich zamiana jest równoważna.
+  testów nie tyka i pozycja nie rośnie. Wnioski do testów: menu tytułowe i generator świata działają **raz na uruchomienie
+  programu** (`RunGame`) i zakładają stan świeżego programu: licznik lądu chmur 0x67fe = 0 (nie jest zerowany; drugi świat
+  dostaje od razu ~1000, więc bez lądu i wzgórz – `ProduceElevation` losuje pole wzgórza w nieskończoność), opowieść od
+  początku, pusty ekran generatora i ekran mapy bez numerów kontynentów (inaczej `SituateSpecialTerrain` rzuca na
+  `Landmasses`). W grze to nieosiągalne (Hall of Fame → nowa gra też działa), ale drugi świat w jednej grze testowej wisi lub
+  rzuca w obu wersjach – dlatego każdy wybór na **świeżej parze gier** (`Theory`). Tylko VGA: wybór w trybie EGA kończy się
+  wyjątkiem w `DisplayTribeSelection` (brak ekranu 3, porcja 56) w obu wersjach, a test uznaje to za zgodność i zostawia grę
+  w połowie (przełączony dziennik itd.), więc następny scenariusz zachowuje się dziwnie. Diagnoza zawieszenia: nasłuch
+  `ScopeListener` na wszystkich dziennikach (`Journal`, `PrologueJournal`, `VideoJournal`, `IrqJournal`), a dokładne
+  miejsce: zegar w osobnym wątku wołający `Processor.WhenApplicationQuits()` (wyjątek ze stosem przy następnym dostępie do
+  pamięci; w `DifferentialPair` wyjątek jest przechwytywany – odtworzyć sekwencję na jednej `HeadlessGame`). Pozycję
+  muzyki ustawia `Audio.Prepare` + `PerformNextStep` w `Prepare`; zmienne zegara (0x42 – 0x5b) w `Watched` pokazują, jak
+  długo czekało. Nazwy obrazków pod 0x1b33 i 0x1c02 to ten sam tekst (scope `ImportPictureOrColors` zapisuje nazwę), więc
+  ich zamiana jest równoważna.
   Testy w `BatchFiftyFiveDifferentialTests`.
 - Porcja 56 (2026-10-15): `DisplayTribeSelection` (`StartGameMenu`) – mimo nazwy wycina sprite'y gry z arkuszy do tablic
   obrazków (numery obrazków zależą od kolejności `ScreenToPicture`); rozbita na `StorePicture`, `CutVgaUnitSprites`,
