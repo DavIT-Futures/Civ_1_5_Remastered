@@ -439,6 +439,12 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   `Prepare` czyści bit miasta na mapie (`MapLayers.ClearImprovements(1, …)`), każdy scenariusz na świeżej parze gier.
   Różnica tylko w SI (oryginał ustawia SI w ciele funkcji) to znak, że obie wersje rzuciły wyjątek w środku.
   Testy w `BatchFiftyEightDifferentialTests`.
+- Porcja 59 (2026-10-15): `DisplayCivilopediaIndex` (`Civilopedia`, strona indeksu: alfabetyczne scalanie 5 list nazw
+  w kolumny, wybór myszą albo klawiszami), rozbita na `ListCivilopediaEntries`, `FindNextCivilopediaEntry`,
+  `ChooseCivilopediaEntryWithMouse`, `ChooseCivilopediaEntryWithKeys`, `ShowCivilopediaChoice`. Ramka zostaje (trzy bufory
+  nazw w ramce). Test: `Theory` po skryptach klawiszy, w każdym losowe części / strony / tryb myszy. Granica „linia tuż za
+  ostatnim wpisem” (zwraca 0) jest osiągalna tylko kliknięciem myszy, a testy nie mają kliknięć – mutacja `<=` → `<` tam
+  przeżywa. Wpis 0 też zwraca 0 (nieodróżnialny od „brak wpisu” po AX). Testy w `BatchFiftyNineDifferentialTests`.
 
 ## Następny krok
 
@@ -446,10 +452,10 @@ Dalej małe metody: `python Civilization1Remaster.Tests/Differential/Reference/f
 (metody z co najmniej 2 liniami `goto L` / `FlagSet` / `Compare…` / `SumWord` itd., od najkrótszej). Kandydaci
 (`GameLoadAndSave` i `Newspaper` nie mają już metod w stylu asm): `ChooseTechnologyToTake` (`TradeAndConquest`, patrz wyżej),
 `OperateMenu`, `DisplayMenu` (`DialogDrawing`),
-`DisplayCivilopediaIndex` (`Civilopedia`), `DisplayCivilizationScreen` (`MainIntro`, patrz porcja 57),
+`DisplayCivilizationScreen` (`MainIntro`, patrz porcja 57),
 `DisplayPalace` (`Palace`, patrz porcja 45), reszta generatora mapy w `GameInitAndIntro`. Funkcje niskopoziomowe `SystemServices` (`DeactivateMouse`, `PointerEvent`,
 przerwanie zegara: `OnClockBeat`, `RefreshHueCycling`, `ColorsFadeStep`, `ColorsFadeStepInterrupt`, `AssignColors`) na koniec: działają
-w przerwaniach albo na rejestrach. Stan 2026-10-15 (po porcji 58): 31 metod w stylu asm, ok. 35,7 tys. z 65,3 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
+w przerwaniach albo na rejestrach. Stan 2026-10-15 (po porcji 59): 30 metod w stylu asm, ok. 35,7 tys. z 65,3 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 

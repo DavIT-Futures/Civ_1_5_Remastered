@@ -51,22 +51,30 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// One page of the Civilopedia index: the entries of the part (0 technologies, 1 improvements and wonders, 2 units,
+		/// 3 terrains, 4 concepts, -1 all of them) in alphabetical order, from entry firstEntry on, in columns of 26 (wider for
+		/// one part) until the page is full (0x6808 = 1: there is a next page); the entry kind and number of each line go to
+		/// 0x3772:0x36fc and 0x1c80. The entry is chosen with the mouse or the arrows (Enter, space); its record is shown and
+		/// a key awaited.
 		/// </summary>
-		/// <param name="param1"></param>
-		/// <param name="param2"></param>
-		/// <returns></returns>
+		/// <returns>0 for no entry under the choice; 0xffff for the next page ("m", a click on the top right); 0xfffe to
+		/// leave (Esc, "x", a click on the top left); else the line number; also in AX</returns>
 		public ushort DisplayCivilopediaIndex(ushort arg1, ushort arg2)
 		{
 			this.processor.Journal.OpenScope($"DisplayCivilopediaIndex({arg1}, {arg2})");
 
-			// function body
+			// The frame keeps the names like the original: the last listed (bp - 0x4c), the next one (bp - 0x32) and its
+			// shortened copy (bp - 0x18)
 			this.processor.EnterFrame(0x5c);
 			this.processor.PreserveIndexRegisters();
 
+			ushort lastName = (ushort)(this.processor.RegFrame.Value16 - 0x4c);
+			ushort nextName = (ushort)(this.processor.RegFrame.Value16 - 0x32);
+			ushort shortName = (ushort)(this.processor.RegFrame.Value16 - 0x18);
+
 			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 14);
 
-			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x4c), "a");
+			this.owner.Libc.CopyText(lastName, "a");
 
 			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 60, 2, 200, 9, 15);
 
@@ -75,490 +83,273 @@ namespace Civilization1Remaster.UI
 			this.owner.TextPainter.RenderCenteredTextToScreen0(0x3cae, 160, 3, 10);
 
 			this.owner.TextPainter.RenderTextToScreen0(0x3ccc, 286, 4, 12);
-			
-			this.processor.CompareWord(arg2, 0xffff);
-			if (this.processor.FlagSet.IsNotEqual) goto L011f;
 
-			this.owner.TextPainter.RenderTextToScreen0(0x3cd1, 8, 4, 12);
+			if (arg2 == 0xffff)
+			{
+				this.owner.TextPainter.RenderTextToScreen0(0x3cd1, 8, 4, 12);
+			}
 
-		L011f:
 			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 2, 14, 316, 184, 15);
 
-			this.processor.CompareWord(arg2, 0x0);
-			if (this.processor.FlagSet.IsGreater) goto L014a;
-			this.processor.RegAcc.Value16 = 0x64;
-			goto L014d;
+			short width = (short)((short)arg2 > 0 ? 0x96 : 0x64);
+			ushort entryTally = ListCivilopediaEntries(arg1, arg2, width, lastName, nextName, shortName);
 
-		L014a:
-			this.processor.RegAcc.Value16 = 0x96;
+			ushort answer = (ushort)(this.processor.PullGlobalWord(0x1a3c) != 0
+				? ChooseCivilopediaEntryWithMouse(arg1, width, entryTally)
+				: ChooseCivilopediaEntryWithKeys(arg1, width, entryTally));
 
-		L014d:
-			this.processor.EmitLocalWord(0x1a, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x4e, 0xa);
-			this.processor.EmitLocalWord(0x50, 0x10);
-			this.processor.EmitLocalWord(0x58, 0x0);
+			this.processor.RegAcc.Value16 = answer;
 
-		L015f:
-			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x32), "zzz");
-
-			this.processor.EmitLocalWord(0x5a, 0xffff);
-			this.processor.EmitLocalWord(0x34, 0xffff);
-			this.processor.CompareWord(arg2, 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L0185;
-			this.processor.CompareWord(arg2, 0xffff);
-			if (this.processor.FlagSet.IsNotEqual) goto L01d9;
-
-		L0185:
-			this.processor.EmitLocalWord(0x52, 0x0);
-
-		L018a:
-			this.processor.RegAcc.Value16 = 0x16;
-			this.processor.ScaleAccumulatorToSource(this.processor.PullLocalWord(0x52));
-			this.processor.RegSource.Value16 = this.processor.SumWord(this.processor.RegSource.Value16, 0x4da);
-			this.owner.Libc.CompareTextNoCase(this.processor.RegSource.Value16, (ushort)(this.processor.RegFrame.Value16 - 0x4c));
-
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsLessOrEqual) goto L01d0;
-
-			this.owner.Libc.CompareTextNoCase(this.processor.RegSource.Value16, (ushort)(this.processor.RegFrame.Value16 - 0x32));
-
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L01d0;
-			this.processor.CopyLocalWord(0x52, 0x5a);
-			this.processor.EmitLocalWord(0x34, 0x0);
-
-			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x32), this.processor.RegSource.Value16);
-
-		L01d0:
-			this.processor.EmitLocalWord(0x52, this.processor.IncrementWord(this.processor.PullLocalWord(0x52)));
-			this.processor.CompareWord(this.processor.PullLocalWord(0x52), 0x43);
-			if (this.processor.FlagSet.IsLess) goto L018a;
-
-		L01d9:
-			this.processor.CompareWord(arg2, 0x1);
-			if (this.processor.FlagSet.IsEqual) goto L01e5;
-			this.processor.CompareWord(arg2, 0xffff);
-			if (this.processor.FlagSet.IsNotEqual) goto L0239;
-
-		L01e5:
-			this.processor.EmitLocalWord(0x52, 0x1);
-
-		L01ea:
-			this.processor.RegAcc.Value16 = 0x1e;
-			this.processor.ScaleAccumulatorToSource(this.processor.PullLocalWord(0x52));
-			this.processor.RegSource.Value16 = this.processor.SumWord(this.processor.RegSource.Value16, 0xb9a);
-			this.owner.Libc.CompareTextNoCase(this.processor.RegSource.Value16, (ushort)(this.processor.RegFrame.Value16 - 0x4c));
-
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsLessOrEqual) goto L0230;
-
-			this.owner.Libc.CompareTextNoCase(this.processor.RegSource.Value16, (ushort)(this.processor.RegFrame.Value16 - 0x32));
-
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0230;
-			this.processor.CopyLocalWord(0x52, 0x5a);
-			this.processor.EmitLocalWord(0x34, 0x1);
-
-			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x32), this.processor.RegSource.Value16);
-
-		L0230:
-			this.processor.EmitLocalWord(0x52, this.processor.IncrementWord(this.processor.PullLocalWord(0x52)));
-			this.processor.CompareWord(this.processor.PullLocalWord(0x52), 0x2d);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L01ea;
-
-		L0239:
-			this.processor.CompareWord(arg2, 0x2);
-			if (this.processor.FlagSet.IsEqual) goto L0245;
-			this.processor.CompareWord(arg2, 0xffff);
-			if (this.processor.FlagSet.IsNotEqual) goto L0299;
-
-		L0245:
-			this.processor.EmitLocalWord(0x52, 0x0);
-
-		L024a:
-			this.processor.RegAcc.Value16 = 0x22;
-			this.processor.ScaleAccumulatorToSource(this.processor.PullLocalWord(0x52));
-			this.processor.RegSource.Value16 = this.processor.SumWord(this.processor.RegSource.Value16, 0x112a);
-			this.owner.Libc.CompareTextNoCase(this.processor.RegSource.Value16, (ushort)(this.processor.RegFrame.Value16 - 0x4c));
-
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsLessOrEqual) goto L0290;
-
-			this.owner.Libc.CompareTextNoCase(this.processor.RegSource.Value16, (ushort)(this.processor.RegFrame.Value16 - 0x32));
-
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0290;
-			this.processor.CopyLocalWord(0x52, 0x5a);
-			this.processor.EmitLocalWord(0x34, 0x2);
-
-			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x32), this.processor.RegSource.Value16);
-
-		L0290:
-			this.processor.EmitLocalWord(0x52, this.processor.IncrementWord(this.processor.PullLocalWord(0x52)));
-			this.processor.CompareWord(this.processor.PullLocalWord(0x52), 0x1c);
-			if (this.processor.FlagSet.IsLess) goto L024a;
-
-		L0299:
-			this.processor.CompareWord(arg2, 0x3);
-			if (this.processor.FlagSet.IsEqual) goto L02a5;
-			this.processor.CompareWord(arg2, 0xffff);
-			if (this.processor.FlagSet.IsNotEqual) goto L02f9;
-
-		L02a5:
-			this.processor.EmitLocalWord(0x52, 0x0);
-
-		L02aa:
-			this.processor.RegAcc.Value16 = 0x13;
-			this.processor.ScaleAccumulatorToSource(this.processor.PullLocalWord(0x52));
-			this.processor.RegSource.Value16 = this.processor.SumWord(this.processor.RegSource.Value16, 0x282);
-			this.owner.Libc.CompareTextNoCase(this.processor.RegSource.Value16, (ushort)(this.processor.RegFrame.Value16 - 0x4c));
-
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsLessOrEqual) goto L02f0;
-
-			this.owner.Libc.CompareTextNoCase(this.processor.RegSource.Value16, (ushort)(this.processor.RegFrame.Value16 - 0x32));
-
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L02f0;
-			this.processor.CopyLocalWord(0x52, 0x5a);
-			this.processor.EmitLocalWord(0x34, 0x3);
-
-			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x32), this.processor.RegSource.Value16);
-
-		L02f0:
-			this.processor.EmitLocalWord(0x52, this.processor.IncrementWord(this.processor.PullLocalWord(0x52)));
-			this.processor.CompareWord(this.processor.PullLocalWord(0x52), 0xc);
-			if (this.processor.FlagSet.IsLess) goto L02aa;
-
-		L02f9:
-			this.processor.CompareWord(arg2, 0x4);
-			if (this.processor.FlagSet.IsEqual) goto L0305;
-			this.processor.CompareWord(arg2, 0xffff);
-			if (this.processor.FlagSet.IsNotEqual) goto L0359;
-
-		L0305:
-			this.processor.EmitLocalWord(0x52, 0x0);
-
-		L030a:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x52);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegSource.Value16 = this.processor.SumWord(this.processor.RegSource.Value16, 0x3c64);
-			this.owner.Libc.CompareTextNoCase(this.processor.PullUInt16(this.processor.SegData.Value16, this.processor.RegSource.Value16), (ushort)(this.processor.RegFrame.Value16 - 0x4c));
-
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsLessOrEqual) goto L0350;
-
-			this.owner.Libc.CompareTextNoCase(this.processor.PullUInt16(this.processor.SegData.Value16, this.processor.RegSource.Value16), (ushort)(this.processor.RegFrame.Value16 - 0x32));
-
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0350;
-			this.processor.CopyLocalWord(0x52, 0x5a);
-			this.processor.EmitLocalWord(0x34, 0x4);
-
-			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x32), this.processor.PullUInt16(this.processor.SegData.Value16, this.processor.RegSource.Value16));
-
-		L0350:
-			this.processor.EmitLocalWord(0x52, this.processor.IncrementWord(this.processor.PullLocalWord(0x52)));
-			this.processor.CompareWord(this.processor.PullLocalWord(0x52), 0x15);
-			if (this.processor.FlagSet.IsLess) goto L030a;
-
-		L0359:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x34), 0xffff);
-			if (this.processor.FlagSet.IsNotEqual) goto L0362;
-			goto L03f1;
-
-		L0362:
-			this.processor.RegAcc.Value16 = arg1;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x58), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsLess) goto L03d4;
-
-			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x18), (ushort)(this.processor.RegFrame.Value16 - 0x32));
-
-			this.owner.BlockText.ShrinkTextToWidth(
-				(ushort)(this.processor.RegFrame.Value16 - 0x18),
-				this.processor.PullLocalWord(0x1a));
-
-			this.owner.TextPainter.RenderTextToScreen0(
-				(ushort)(this.processor.RegFrame.Value16 - 0x18),
-				this.processor.PullLocalSignedWord(0x4e),
-				this.processor.PullLocalSignedWord(0x50),
-				0);
-
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x58);
-			this.processor.RegSource.Value16 = this.processor.SubtractWord(this.processor.RegSource.Value16, arg1);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x5a);
-			this.processor.SegExtra.Value16 = 0x3772; // segment
-			this.processor.EmitUInt16(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1c80), this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x34);
-			this.processor.SegExtra.Value16 = 0x3772; // segment
-			this.processor.EmitUInt16(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x36fc), this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x50, this.processor.SumWord(this.processor.PullLocalWord(0x50), 0x7));
-			this.processor.CompareWord(this.processor.PullLocalWord(0x50), 0xc0);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L03d4;
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x1a);
-			this.processor.EmitLocalWord(0x4e, this.processor.SumWord(this.processor.PullLocalWord(0x4e), this.processor.RegAcc.Value16));
-			this.processor.EmitLocalWord(0x50, 0x10);
-
-		L03d4:
-			this.processor.EmitLocalWord(0x58, this.processor.IncrementWord(this.processor.PullLocalWord(0x58)));
-
-			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x4c), (ushort)(this.processor.RegFrame.Value16 - 0x32));
-
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4e), 0x12c);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L03f1;
-			goto L015f;
-
-		L03f1:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4e), 0x12c);
-			if (this.processor.FlagSet.IsLess) goto L03fd;
-			this.processor.RegAcc.Value16 = 0x1;
-			goto L03ff;
-
-		L03fd:
-			this.processor.RegAcc.Value16 = 0;
-
-		L03ff:
-			this.processor.EmitGlobalWord(0x6808, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x1a3c), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L040c;
-			goto L0492;
-
-		L040c:
-			this.owner.Startup.DisplayMouseCursor();
-
-		L0411:
-			this.owner.Startup.ObtainMouseState();
-
-			this.processor.CompareWord(this.owner.GlobDb3a, 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L0426;
-
-			this.owner.Libc.KeyAvailable();
-
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual) goto L0411;
-
-		L0426:
-			this.processor.RegAcc.Value16 = this.owner.GlobDb3c;
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, 0xa);
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.RegCount.Value16 = this.processor.PullLocalWord(0x1a);
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.EmitLocalWord(0x4e, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.owner.GlobDb3e, 0x10);
-			if (this.processor.FlagSet.IsLess) goto L044d;
-			this.processor.RegAcc.Value16 = this.owner.GlobDb3e;
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, 0x10);
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.RegCount.Value16 = 0x7;
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.EmitLocalWord(0x50, this.processor.RegAcc.Value16);
-			goto L0452;
-
-		L044d:
-			this.processor.EmitLocalWord(0x50, 0xffff);
-
-		L0452:
-			this.processor.RegAcc.Value16 = 0x1a;
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.PullLocalWord(0x4e));
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x50));
-			this.processor.EmitLocalWord(0x56, this.processor.RegAcc.Value16);
-
-			this.owner.Startup.ConcealMouseCursor();
-
-			this.processor.CompareWord(this.owner.GlobDb3a, 0x2);
-			if (this.processor.FlagSet.IsNotEqual) goto L0474;
-			this.processor.EmitLocalWord(0x50, 0xffff);
-			this.processor.EmitLocalWord(0x4e, 0x2);
-
-		L0474:
-			this.owner.Libc.KeyAvailable();
-
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsNotEqual) goto L0480;
-			goto L05b7;
-
-		L0480:
-			this.owner.Dialogs.ObtainNavigationKey();
-
-			this.processor.EmitLocalWord(0x50, 0xffff);
-			this.processor.EmitLocalWord(0x4e, 0x2);
-			goto L05b7;
-
-		L0492:
-			this.processor.RegAcc.Value16 = 0;
-			this.processor.EmitLocalWord(0x50, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x4e, this.processor.RegAcc.Value16);
-
-		L049a:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x4e);
-			this.processor.ScaleAccumulatorToSource(this.processor.PullLocalWord(0x1a));
-			this.processor.RegSource.Value16 = this.processor.SumWord(this.processor.RegSource.Value16, 0x8);
-			
-			this.processor.ScaleIndex(0x7, this.processor.PullLocalWord(0x50));
-			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegDest.Value16 = this.processor.SumWord(this.processor.RegDest.Value16, 0xf);
-
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x1a);
-			this.processor.RegAcc.Value16 = this.processor.DecrementWord(this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = this.processor.DecrementWord(this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x5c, this.processor.RegAcc.Value16);
-
-			this.owner.VideoCard.SubstituteHue(this.processor.PullGlobalWord(0xaa), 
-				(short)this.processor.RegSource.Value16, (short)this.processor.RegDest.Value16,
-				this.processor.PullLocalSignedWord(0x5c), 8, 15, 10);
-
-			this.owner.Dialogs.ObtainNavigationKey();
-
-			this.processor.EmitLocalWord(0x54, this.processor.RegAcc.Value16);
-
-			this.owner.VideoCard.SubstituteHue(this.processor.PullGlobalWord(0xaa), 
-				(short)this.processor.RegSource.Value16, (short)this.processor.RegDest.Value16,
-				this.processor.PullLocalSignedWord(0x5c), 8, 10, 15);
-
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x54);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x4800);
-			if (this.processor.FlagSet.IsEqual) goto L0513;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x4b00);
-			if (this.processor.FlagSet.IsEqual) goto L057f;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x4d00);
-			if (this.processor.FlagSet.IsEqual) goto L0538;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x5000);
-			if (this.processor.FlagSet.IsEqual) goto L0553;
-			goto L052c;
-
-		L0513:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x50), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L051e;
-			this.processor.DecrementLocalWord(0x50);
-			goto L052c;
-
-		L051e:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4e), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L052c;
-			this.processor.DecrementLocalWord(0x4e);
-			this.processor.EmitLocalWord(0x50, 0x19);
-
-		L052c:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x54), 0x6d);
-			if (this.processor.FlagSet.IsNotEqual) goto L058a;
-			this.processor.RegAcc.Value16 = 0xffff;
-			goto L0624;
-
-		L0538:
-			this.processor.RegAcc.Value16 = 0x1a;
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.PullLocalWord(0x4e));
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x50));
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x1a);
-			this.processor.RegCount.Value16 = this.processor.PullLocalWord(0x58);
-			this.processor.RegCount.Value16 = this.processor.SubtractWord(this.processor.RegCount.Value16, arg1);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.RegCount.Value16);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L052c;
-
-		L054e:
-			this.processor.EmitLocalWord(0x4e, this.processor.IncrementWord(this.processor.PullLocalWord(0x4e)));
-			goto L052c;
-
-		L0553:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x58);
-			this.processor.RegSource.Value16 = this.processor.SubtractWord(this.processor.RegSource.Value16, arg1);
-			this.processor.ScaleIndex(0x1a, this.processor.PullLocalWord(0x4e));
-			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegDest.Value16 = this.processor.SumWord(this.processor.RegDest.Value16, this.processor.PullLocalWord(0x50));
-			this.processor.RegDest.Value16 = this.processor.IncrementWord(this.processor.RegDest.Value16);
-			this.processor.CompareWord(this.processor.RegDest.Value16, this.processor.RegSource.Value16);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L052c;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x50), 0x19);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0578;
-			this.processor.CompareWord(this.processor.RegDest.Value16, this.processor.RegSource.Value16);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0578;
-			this.processor.IncrementLocalWord(0x50);
-			goto L052c;
-
-		L0578:
-			this.processor.EmitLocalWord(0x50, 0x0);
-			goto L054e;
-
-		L057f:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4e), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L052c;
-			this.processor.DecrementLocalWord(0x4e);
-			goto L052c;
-
-		L058a:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x54), 0x1b);
-			if (this.processor.FlagSet.IsEqual) goto L0596;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x54), 0x78);
-			if (this.processor.FlagSet.IsNotEqual) goto L059c;
-
-		L0596:
-			this.processor.RegAcc.Value16 = 0xfffe;
-			goto L0624;
-
-		L059c:
-			this.processor.RegAcc.Value16 = 0x1a;
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.PullLocalWord(0x4e));
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x50));
-			this.processor.EmitLocalWord(0x56, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x54), 0xd);
-			if (this.processor.FlagSet.IsEqual) goto L05b7;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x54), 0x20);
-			if (this.processor.FlagSet.IsEqual) goto L05b7;
-			goto L049a;
-
-		L05b7:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x50), 0x0);
-			if (this.processor.FlagSet.IsLess) goto L05cc;
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x58);
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, arg1);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x56));
-			if (this.processor.FlagSet.IsGreater) goto L05cc;
-			this.processor.RegAcc.Value16 = 0;
-			goto L0624;
-
-		L05cc:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x50), 0x0);
-			if (this.processor.FlagSet.IsLess) goto L060b;
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xe17c), 0x3);
-			if (this.processor.FlagSet.IsEqual) goto L05eb;
-
-			this.owner.Startup.QueryForDisk(3, 1);
-
-		L05eb:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x56);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-
-			this.processor.SegExtra.Value16 = 0x3772; // segment
-			DisplayCivilopediaRecord(this.processor.PullUInt16(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1c80)),
-				this.processor.PullUInt16(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x36fc)));
-			
-			goto L061c;
-
-		L060b:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4e), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L0616;
-			this.processor.RegAcc.Value16 = 0xfffe;
-			goto L0619;
-
-		L0616:
-			this.processor.RegAcc.Value16 = 0xffff;
-
-		L0619:
-			this.processor.EmitLocalWord(0x56, this.processor.RegAcc.Value16);
-
-		L061c:
-			this.owner.TurnLogic.AwaitForKey();
-
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x56);
-
-		L0624:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.RegDest.Value16 = this.processor.UnstackWord();
+			this.processor.RestoreIndexRegisters();
 			this.processor.LeaveFrame();
-			// Far return
+
 			this.processor.Journal.CloseScope("DisplayCivilopediaIndex");
 
 			return this.processor.RegAcc.Value16;
+		}
+
+		/// <summary>
+		/// Lists the entries after "a" in alphabetical order (each round the smallest name after the last one), the entries
+		/// from firstEntry on in columns of the width from (10, 16), 7 a line, until column 300; 0x6808 = 1 when the page is
+		/// full. The number of entries passed (including those before firstEntry).
+		/// </summary>
+		private ushort ListCivilopediaEntries(ushort firstEntry, ushort part, short width, ushort lastName, ushort nextName, ushort shortName)
+		{
+			short horizLoc = 0xa;
+			short vertLoc = 0x10;
+			ushort entryTally = 0;
+
+			while (true)
+			{
+				this.owner.Libc.CopyText(nextName, "zzz");
+
+				ushort nextIdx = 0xffff;
+				ushort nextKind = 0xffff;
+
+				// Technologies, improvements and wonders (1 - 0x2d), units, terrains, concepts (names through 0x3c64)
+				FindNextCivilopediaEntry(part, 0, 0, 0x43, idx => (ushort)((0x16 * idx) + 0x4da), lastName, nextName, ref nextIdx, ref nextKind);
+				FindNextCivilopediaEntry(part, 1, 1, 0x2e, idx => (ushort)((0x1e * idx) + 0xb9a), lastName, nextName, ref nextIdx, ref nextKind);
+				FindNextCivilopediaEntry(part, 2, 0, 0x1c, idx => (ushort)((0x22 * idx) + 0x112a), lastName, nextName, ref nextIdx, ref nextKind);
+				FindNextCivilopediaEntry(part, 3, 0, 0xc, idx => (ushort)((0x13 * idx) + 0x282), lastName, nextName, ref nextIdx, ref nextKind);
+				FindNextCivilopediaEntry(part, 4, 0, 0x15, idx => this.processor.PullGlobalWord((ushort)((idx << 1) + 0x3c64)), lastName, nextName, ref nextIdx, ref nextKind);
+
+				if (nextKind == 0xffff)
+					break;
+
+				if ((short)entryTally >= (short)firstEntry)
+				{
+					this.owner.Libc.CopyText(shortName, nextName);
+
+					this.owner.BlockText.ShrinkTextToWidth(shortName, (ushort)width);
+
+					this.owner.TextPainter.RenderTextToScreen0(shortName, horizLoc, vertLoc, 0);
+
+					ushort line = (ushort)((entryTally - firstEntry) << 1);
+
+					this.processor.EmitUInt16(0x3772, (ushort)(line + 0x1c80), nextIdx);
+					this.processor.EmitUInt16(0x3772, (ushort)(line + 0x36fc), nextKind);
+
+					vertLoc += 7;
+
+					if (vertLoc > 0xc0)
+					{
+						horizLoc += width;
+						vertLoc = 0x10;
+					}
+				}
+
+				entryTally++;
+
+				this.owner.Libc.CopyText(lastName, nextName);
+
+				if (horizLoc >= 0x12c)
+					break;
+			}
+
+			this.processor.EmitGlobalWord(0x6808, (ushort)(horizLoc >= 0x12c ? 1 : 0));
+
+			return entryTally;
+		}
+
+		/// <summary>
+		/// For the part (or all parts, -1): the entry first - end - 1 whose name comes after the last listed name and before the
+		/// next found so far becomes the next one
+		/// </summary>
+		private void FindNextCivilopediaEntry(ushort part, ushort kind, short first, short end, System.Func<short, ushort> nameOf,
+			ushort lastName, ushort nextName, ref ushort nextIdx, ref ushort nextKind)
+		{
+			if (part != kind && part != 0xffff)
+				return;
+
+			for (short idx = first; idx < end; idx++)
+			{
+				if (this.owner.Libc.CompareTextNoCase(nameOf(idx), lastName) <= 0)
+					continue;
+
+				if (this.owner.Libc.CompareTextNoCase(nameOf(idx), nextName) >= 0)
+					continue;
+
+				nextIdx = (ushort)idx;
+				nextKind = kind;
+
+				this.owner.Libc.CopyText(nextName, nameOf(idx));
+			}
+		}
+
+		/// <summary>
+		/// The mouse: waits for a click or a key; the line under the click (above the list: row -1, column 2 for a right click
+		/// or a key, which is taken), then ShowCivilopediaChoice
+		/// </summary>
+		private ushort ChooseCivilopediaEntryWithMouse(ushort firstEntry, short width, ushort entryTally)
+		{
+			this.owner.Startup.DisplayMouseCursor();
+
+			do
+			{
+				this.owner.Startup.ObtainMouseState();
+
+				if (this.owner.GlobDb3a != 0)
+					break;
+			}
+			while (this.owner.Libc.KeyAvailable() == 0);
+
+			short column = CPU.SignedQuotient((short)(this.owner.GlobDb3c - 0xa), width);
+			short row = (short)this.owner.GlobDb3e < 0x10 ? (short)-1 : CPU.SignedQuotient((short)(this.owner.GlobDb3e - 0x10), 7);
+			ushort chosen = (ushort)((0x1a * column) + row);
+
+			this.owner.Startup.ConcealMouseCursor();
+
+			if (this.owner.GlobDb3a == 2)
+			{
+				row = -1;
+				column = 2;
+			}
+
+			if (this.owner.Libc.KeyAvailable() != 0)
+			{
+				this.owner.Dialogs.ObtainNavigationKey();
+
+				row = -1;
+				column = 2;
+			}
+
+			return ShowCivilopediaChoice(chosen, row, column, firstEntry, entryTally);
+		}
+
+		/// <summary>
+		/// The keys: the line is highlighted (colour 15 to 10 while waiting for a key) and moved with the arrows; "m" = the next
+		/// page, Esc or "x" = leave, Enter or space = ShowCivilopediaChoice
+		/// </summary>
+		private ushort ChooseCivilopediaEntryWithKeys(ushort firstEntry, short width, ushort entryTally)
+		{
+			short column = 0;
+			short row = 0;
+			short shown = (short)(entryTally - firstEntry);
+			ushort chosen;
+
+			while (true)
+			{
+				short horizLoc = (short)((column * width) + 8);
+				short vertLoc = (short)((7 * row) + 0xf);
+
+				this.owner.VideoCard.SubstituteHue(this.processor.PullGlobalWord(0xaa), horizLoc, vertLoc, width - 2, 8, 15, 10);
+
+				ushort key = this.owner.Dialogs.ObtainNavigationKey();
+
+				this.owner.VideoCard.SubstituteHue(this.processor.PullGlobalWord(0xaa), horizLoc, vertLoc, width - 2, 8, 10, 15);
+
+				switch (key)
+				{
+					case 0x4800:
+						if (row != 0)
+						{
+							row--;
+						}
+						else if (column != 0)
+						{
+							column--;
+							row = 0x19;
+						}
+
+						break;
+
+					case 0x4b00:
+						if (column != 0)
+						{
+							column--;
+						}
+
+						break;
+
+					case 0x4d00:
+						if ((short)((0x1a * column) + row + 0x1a) < shown)
+						{
+							column++;
+						}
+
+						break;
+
+					case 0x5000:
+						if ((short)((0x1a * column) + row + 1) < shown)
+						{
+							if (row >= 0x19)
+							{
+								row = 0;
+								column++;
+							}
+							else
+							{
+								row++;
+							}
+						}
+
+						break;
+				}
+
+				if (key == 0x6d)
+					return 0xffff;
+
+				if (key == 0x1b || key == 0x78)
+					return 0xfffe;
+
+				chosen = (ushort)((0x1a * column) + row);
+
+				if (key == 0xd || key == 0x20)
+					break;
+			}
+
+			return ShowCivilopediaChoice(chosen, row, column, firstEntry, entryTally);
+		}
+
+		/// <summary>
+		/// The chosen line: 0 when no entry is there; above the list 0xfffe (column not 0) or 0xffff; else the record of the
+		/// entry (the Civilopedia disk 3 first). Then a key is awaited.
+		/// </summary>
+		private ushort ShowCivilopediaChoice(ushort chosen, short row, short column, ushort firstEntry, ushort entryTally)
+		{
+			if (row >= 0 && (short)(entryTally - firstEntry) <= (short)chosen)
+				return 0;
+
+			if (row >= 0)
+			{
+				if (this.processor.PullGlobalWord(0xe17c) != 3)
+				{
+					this.owner.Startup.QueryForDisk(3, 1);
+				}
+
+				ushort line = (ushort)(chosen << 1);
+
+				DisplayCivilopediaRecord(this.processor.PullUInt16(0x3772, (ushort)(line + 0x1c80)),
+					this.processor.PullUInt16(0x3772, (ushort)(line + 0x36fc)));
+			}
+			else
+			{
+				chosen = (ushort)(column != 0 ? 0xfffe : 0xffff);
+			}
+
+			this.owner.TurnLogic.AwaitForKey();
+
+			return chosen;
 		}
 
 		/// <summary>
