@@ -473,6 +473,17 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   tego tryby 1 i 2 się nie wykonywały, a mutacje w nich przeżywały); zmienne zegara nie nadają się do `Watched` po długim
   odtwarzaniu (inna liczba dostępów do pamięci), więc pauza trybu 1 (`AwaitTime(30)`) jest dla testu niewidoczna; tryb 2
   bez Esc w skrypcie wyczerpuje limit klawiszy („headless game is stuck”). Testy w `BatchSixtyThreeDifferentialTests`.
+- Porcja 64 (2026-10-15): `HandleGameEnd` (`TurnEvents`, cała tura gry: gracze po kolei, zdarzenia końca tury, rok,
+  autozapis, co 50 tur status i ranking do historii, kronika, punkty za cuda i zanieczyszczenia, pałac, koniec gry), rozbita
+  na `PlayTurnOfPlayers`, `PlayTurnOfPlayer`, `FinishTurn`, `StrikeRandomCities`, `WarnOfBankruptcy`, `AdvanceYear`,
+  `NoteStatusInReplay`, `ScoreWondersAndPollution`, `GrowPalace`, `ChooseGameEnd`, `EndGame`. Ramka zostaje (`HandleCity`
+  przez `HandleAllCities` czyta śmieci spod stosu; ranking budowany w ramce bp - 0x14). Błędy tłumaczenia zachowane (patrz
+  lista): wpis 11 historii ze starszym bajtem populacji zawsze 0, pętla katastrof z licznikiem = numer miasta + 1. Ranking
+  (wpis 12) podawany od ostatniego słowa ramki – tak jest w oryginale. Wnioski do testów: ze skryptem [Enter] tura człowieka
+  nigdy się nie kończy, obie wersje stają na limicie klawiszy, a że ramka zostaje w obu, rejestry się zgadzają i test
+  „przechodzi” (mutacje przeżywały) – etykieta gałęzi musi potwierdzać, że funkcja doszła do końca; skrypt domyślny
+  (golden master) kończy turę. `DirtyCellTally` jest w zapisach zerem – ustawiony w `Prepare`. Pięć wybranych scenariuszy
+  (ok. 17 s). Testy w `BatchSixtyFourDifferentialTests`.
 
 ## Następny krok
 
@@ -483,13 +494,16 @@ Dalej małe metody: `python Civilization1Remaster.Tests/Differential/Reference/f
 `DisplayCivilizationScreen` (`MainIntro`, patrz porcja 57),
 `DisplayPalace` (`Palace`, patrz porcja 45), reszta generatora mapy w `GameInitAndIntro`. Funkcje niskopoziomowe `SystemServices` (`DeactivateMouse`, `PointerEvent`,
 przerwanie zegara: `OnClockBeat`, `RefreshHueCycling`, `ColorsFadeStep`, `ColorsFadeStepInterrupt`, `AssignColors`) na koniec: działają
-w przerwaniach albo na rejestrach. Stan 2026-10-15 (po porcji 63): 26 metod w stylu asm, ok. 35,7 tys. z 65,3 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
+w przerwaniach albo na rejestrach. Stan 2026-10-15 (po porcji 64): 25 metod w stylu asm, ok. 35,7 tys. z 65,3 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
 Kod C# przetłumaczony z asm ma miejscami inne zachowanie niż DOS-owy CIV.EXE. Testy porównują z tłumaczeniem, więc na razie
 te błędy są odtwarzane jawnie:
 
+- `HandleGameEnd`: co 50 tur wpis 11 historii dostaje jako starszy bajt populacji `(bajt & 0xff00) >> 8`, czyli zawsze 0;
+  losowe katastrofy miast: licznik pętli to numer wylosowanego miasta + 1 (pętla kończy się po pierwszym mieście, chyba
+  że wylosowano miasto 0). Po naprawie: starszy bajt populacji, dwa losowania.
 - `DisplayCensus`: wielkość rodziny wypisywana jako „x/10.x/10” zamiast „x/10.x%10”. Po naprawie: reszta z dzielenia.
 - `RenderSpaceship`: obrazek części statku spod `word[część << 1 + 0x682a]` – w C# to przesunięcie o 0x682b, czyli o 11 bitów,
   więc adres jest zły (obrazek zwykle nie istnieje i nic się nie rysuje); masa i czas lotu wypisywane jako „x/10,x/10” zamiast

@@ -51,6 +51,8 @@ Testy zawsze w **Release** z `-parallelMode all` (ok. 7 razy szybciej niż Debug
    Test wisi: odtworzyć sekwencję na jednej `HeadlessGame` (w `DifferentialPair` wyjątki są przechwytywane), z zegarem
    wołającym `Processor.WhenApplicationQuits()` (wyjątek ze stosem) i `ScopeListener` na wszystkich dziennikach; scenariusz,
    w którym obie wersje rzucają wyjątek, zostawia grę w połowie – następne scenariusze mogą wtedy wisieć (porcja 55).
+   Gdy obie wersje rzucą ten sam wyjątek, a ramka zostaje, test wygląda na zgodny – etykieta gałęzi powinna potwierdzać,
+   że funkcja doszła do końca (porcja 64: tura człowieka ze skryptem [Enter] nigdy się nie kończy).
    Różnica, której nie da się wyjaśnić: tymczasowo obie lambdy z kopią referencyjną (oryginał kontra oryginał) – jeśli dalej
    jest, to artefakt testu (np. ścieżka CIV.EXE w buforze 0xba06 nadpisana długim tekstem, dane spoza zakresu gry).
 6. Mutacje: `mutations.json` z jedną mutacją na funkcję (w gałęzi trudnej do trafienia), `python …/check_mutations.py mutations.json`.
