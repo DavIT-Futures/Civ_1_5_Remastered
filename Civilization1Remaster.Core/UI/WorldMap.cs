@@ -628,775 +628,431 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// The demographics of the player: statistics of all cities (each computed by HandleCity) and land tiles per player,
+		/// then 13 lines with the player's value and rank (RenderCensusLine): approval, population, GNP, manufacturing goods,
+		/// land area, literacy, disease, pollution, life expectancy, family size, military service, annual income, productivity.
+		/// The values shown are kept in the frame (bp - 0xa8, read by RenderCensusLine) like the original.
 		/// </summary>
-		/// <param name="playerID"></param>
 		public void DisplayCensus(short participantIdx)
 		{
 			this.processor.Journal.OpenScope($"DisplayCensus({participantIdx})");
 
-			// function body
 			this.processor.EnterFrame(0xba);
 			this.processor.PreserveIndexRegisters();
 
 			this.owner.Startup.ConcealMouseCursor();
 
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0xaa),
-				0, 0, 0x140, 0xc8,
-				this.processor.PullGlobalWord(0x19d4),
-				0, 0);
+			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0x19d4), 0, 0);
 
 			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 1);
 
-			this.processor.RegBase.Value16 = (ushort)participantIdx;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1982)));
+			this.owner.Libc.CopyText(0xba06, this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1982)));
 
 			this.owner.Libc.AppendText(0xba06, " Demographics");
 
 			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 4, 15);
 
-			this.processor.EmitLocalWord(0x56, 0x0);
+			CensusTally tally = GatherCensus();
 
-		L0dde:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x56);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegSource.Value16 = this.processor.SumWord(this.processor.RegSource.Value16, this.processor.RegFrame.Value16);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0x98), 0x1);
-			this.processor.RegAcc.Value16 = 0;
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0x40), this.processor.RegAcc.Value16);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0xb8), this.processor.RegAcc.Value16);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0x78), this.processor.RegAcc.Value16);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0x52), this.processor.RegAcc.Value16);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0x10), this.processor.RegAcc.Value16);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0x88), this.processor.RegAcc.Value16);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0x20), this.processor.RegAcc.Value16);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0x30), this.processor.RegAcc.Value16);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0x66), this.processor.RegAcc.Value16);
-			this.processor.IncrementLocalWord(0x56);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x56), 0x8);
-			if (this.processor.FlagSet.IsLess) goto L0dde;
-			this.processor.EmitLocalWord(0x42, this.processor.RegAcc.Value16);
-			goto L0e4f;
-
-		L0e18:
-			this.processor.EmitLocalWord(0x54, this.processor.IncrementWord(this.processor.PullLocalWord(0x54)));
-
-		L0e1b:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x54), 0x30);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0e4c;
-
-			this.owner.MapOps.ObtainTerrainType(
-				this.processor.PullLocalSignedWord(0x42),
-				this.processor.PullLocalSignedWord(0x54));
-
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
-			if (this.processor.FlagSet.IsEqual) goto L0e18;
-
-			this.owner.MapOps.ObtainTileOwnerBits(
-				this.processor.PullLocalSignedWord(0x42),
-				this.processor.PullLocalSignedWord(0x54));
-
-			this.processor.RegSource.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0xb8), 
-				this.processor.IncrementWord(this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0xb8))));
-			goto L0e18;
-
-		L0e4c:
-			this.processor.EmitLocalWord(0x42, this.processor.IncrementWord(this.processor.PullLocalWord(0x42)));
-
-		L0e4f:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x42), 0x50);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0e5c;
-			this.processor.EmitLocalWord(0x54, 0x2);
-			goto L0e1b;
-
-		L0e5c:
-			this.processor.EmitLocalWord(0x56, 0x0);
-			goto L0f84;
-
-		L0e64:
-			this.owner.CityOps.HandleCity(this.processor.PullLocalSignedWord(0x56), -1);
-
-			this.processor.ScaleIndexToSource(0x1c, this.processor.PullLocalWord(0x56));
-			this.processor.RegDest.Value16 = (ushort)this.owner.World.Towns[this.processor.PullLocalWord(0x56)].ParticipantIdx;
-			this.processor.RegDest.Value16 = this.processor.ShiftLeftWord(this.processor.RegDest.Value16, 0x1);
-			this.processor.RegDest.Value16 = this.processor.SumWord(this.processor.RegDest.Value16, this.processor.RegFrame.Value16);
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.Towns[this.processor.PullLocalWord(0x56)].TrueExtent;
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.EmitLocalWord(0xba, this.processor.RegAcc.Value16);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 - 0x98), this.processor.SumWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 - 0x98)), this.processor.RegAcc.Value16));
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.PullGlobalWord(0x70e2));
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, this.processor.PullGlobalWord(0x70e4));
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 - 0x20), this.processor.SumWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 - 0x20)), this.processor.RegAcc.Value16));
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x70e0);
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.PullGlobalWord(0xe17a));
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 - 0x78), this.processor.SumWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 - 0x78)), this.processor.RegAcc.Value16));
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x70da);
-			this.processor.RegCount.Value16 = this.processor.PullLocalWord(0xba);
-			this.processor.RegCount.Value16 = this.processor.ShiftLeftWord(this.processor.RegCount.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, this.processor.RegCount.Value16);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 - 0x40), this.processor.SumWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 - 0x40)), this.processor.RegAcc.Value16));
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x70da);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.PullGlobalWord(0x70dc));
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.PullGlobalWord(0x70de));
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 - 0x30), this.processor.SumWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 - 0x30)), this.processor.RegAcc.Value16));
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x70dc);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 - 0x66), this.processor.SumWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 - 0x66)), this.processor.RegAcc.Value16));
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.RegCount.Value16 = this.processor.PullGlobalWord(0x6c98);
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, 0x14);
-			this.processor.EmitLocalWord(0x68, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xba);
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.PullGlobalWord(0xb882));
-			this.processor.DivideAccumulatorByPowerOfTwo(0x2);
-			this.processor.EmitLocalWord(0x68, this.processor.SumWord(this.processor.PullLocalWord(0x68), this.processor.RegAcc.Value16));
-			this.processor.CompareWord(this.processor.PullLocalWord(0x68), 0x0);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L0eff;
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x68);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 - 0x88), this.processor.SumWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 - 0x88)), this.processor.RegAcc.Value16));
-
-		L0eff:
-			this.processor.RegAcc.Value16 = 28;
-			this.processor.ScaleAccumulatorToSource(this.processor.PullLocalWord(0x56));
-			this.processor.TestBitsWord(this.owner.World.Towns[this.processor.PullLocalWord(0x56)].StructureMarkers0, 0x4);
-			if (this.processor.FlagSet.IsEqual) goto L0f1f;
-			this.processor.RegDest.Value16 = (ushort)this.owner.World.Towns[this.processor.PullLocalWord(0x56)].ParticipantIdx;
-			this.processor.RegDest.Value16 = this.processor.ShiftLeftWord(this.processor.RegDest.Value16, 0x1);
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.Towns[this.processor.PullLocalWord(0x56)].TrueExtent;
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegDest.Value16 - 0x10), 
-				this.processor.SumWord(this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegDest.Value16 - 0x10)), this.processor.RegAcc.Value16));
-
-		L0f1f:
-			this.processor.RegAcc.Value16 = 28;
-			this.processor.ScaleAccumulatorToSource(this.processor.PullLocalWord(0x56));
-			this.processor.TestBitsWord(this.owner.World.Towns[this.processor.PullLocalWord(0x56)].StructureMarkers0, 0x100);
-			if (this.processor.FlagSet.IsEqual) goto L0f40;
-			this.processor.RegDest.Value16 = (ushort)this.owner.World.Towns[this.processor.PullLocalWord(0x56)].ParticipantIdx;
-			this.processor.RegDest.Value16 = this.processor.ShiftLeftWord(this.processor.RegDest.Value16, 0x1);
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.Towns[this.processor.PullLocalWord(0x56)].TrueExtent;
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegDest.Value16 - 0x10), 
-				this.processor.SumWord(this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegDest.Value16 - 0x10)), this.processor.RegAcc.Value16));
-
-		L0f40:
-			this.processor.RegAcc.Value16 = 28;
-			this.processor.ScaleAccumulatorToSource(this.processor.PullLocalWord(0x56));
-			this.processor.TestBitsWord(this.owner.World.Towns[this.processor.PullLocalWord(0x56)].StructureMarkers0, 0x20);
-			if (this.processor.FlagSet.IsEqual) goto L0f60;
-			this.processor.RegDest.Value16 = (ushort)this.owner.World.Towns[this.processor.PullLocalWord(0x56)].ParticipantIdx;
-			this.processor.RegDest.Value16 = this.processor.ShiftLeftWord(this.processor.RegDest.Value16, 0x1);
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.Towns[this.processor.PullLocalWord(0x56)].TrueExtent;
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegDest.Value16 - 0x52), 
-				this.processor.SumWord(this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegDest.Value16 - 0x52)), this.processor.RegAcc.Value16));
-
-		L0f60:
-			this.processor.RegAcc.Value16 = 28;
-			this.processor.ScaleAccumulatorToSource(this.processor.PullLocalWord(0x56));
-			this.processor.TestBitsWord(this.owner.World.Towns[this.processor.PullLocalWord(0x56)].StructureMarkers0, 0x800);
-			if (this.processor.FlagSet.IsEqual) goto L0f81;
-			this.processor.RegDest.Value16 = (ushort)this.owner.World.Towns[this.processor.PullLocalWord(0x56)].ParticipantIdx;
-			this.processor.RegDest.Value16 = this.processor.ShiftLeftWord(this.processor.RegDest.Value16, 0x1);
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.Towns[this.processor.PullLocalWord(0x56)].TrueExtent;
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegDest.Value16 - 0x52), 
-				this.processor.SumWord(this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegDest.Value16 - 0x52)), this.processor.RegAcc.Value16));
-
-		L0f81:
-			this.processor.EmitLocalWord(0x56, this.processor.IncrementWord(this.processor.PullLocalWord(0x56)));
-
-		L0f84:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x56), 0x80);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0fa6;
-			this.processor.ScaleIndexToSource(0x1c, this.processor.PullLocalWord(0x56));
-			if (this.owner.World.Towns[this.processor.PullLocalWord(0x56)].ParticipantIdx == -1) goto L0f81;
-			this.processor.CompareByte(this.owner.World.Towns[this.processor.PullLocalWord(0x56)].ConditionMarker, 0xff);
-			if (this.processor.FlagSet.IsEqual) goto L0fa4;
-			goto L0e64;
-
-		L0fa4:
-			goto L0f81;
-
-		L0fa6:
-			this.processor.EmitLocalWord(0x54, 0x18);
-
-			this.owner.TextPainter.RenderTextWithShadow(0x4544, 8, 24, 15);
-
-			this.processor.EmitLocalWord(0x56, 0x1);
-
-		L0fc8:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x56);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegSource.Value16 = this.processor.SumWord(this.processor.RegSource.Value16, this.processor.RegFrame.Value16);
-			this.processor.RegAcc.Value16 = 0x32;
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0x20)));
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.RegCount.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0x98));
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0xa8), this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = (ushort)participantIdx;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x56), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L1035;
-			this.processor.EmitGlobalByte(0xba06, 0x0);
-
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText((short)this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0xa8)), 10));
-
-			this.owner.Libc.AppendText(0xba06, "%");
-
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, 104, this.processor.PullLocalSignedWord(0x54), 15);
-
-		L1035:
-			this.processor.EmitLocalWord(0x56, this.processor.IncrementWord(this.processor.PullLocalWord(0x56)));
-			this.processor.CompareWord(this.processor.PullLocalWord(0x56), 0x8);
-			if (this.processor.FlagSet.IsLess) goto L0fc8;
-
-			RenderCensusLine((ushort)(this.processor.RegFrame.Value16 - 0xa8), this.processor.PullLocalSignedWord(0x54), 0x4557);
-
-			this.processor.EmitLocalWord(0x54, this.processor.SumWord(this.processor.PullLocalWord(0x54), 0xc));
-
-			this.owner.TextPainter.RenderTextWithShadow(0x4559, 8, this.processor.PullLocalSignedWord(0x54), 15);
-
-			this.processor.EmitLocalWord(0x56, 0x1);
-
-		L1071:
-			this.processor.EmitGlobalByte(0xba06, 0x0);
-
-			this.owner.Helpers.ObtainPlayerPopulation(
-				this.processor.PullLocalSignedWord(0x56));
-
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x56);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0xa8), this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = (ushort)participantIdx;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x56), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L10a9;
-
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, 104, this.processor.PullLocalSignedWord(0x54), 15);
-
-		L10a9:
-			this.processor.EmitLocalWord(0x56, this.processor.IncrementWord(this.processor.PullLocalWord(0x56)));
-			this.processor.CompareWord(this.processor.PullLocalWord(0x56), 0x8);
-			if (this.processor.FlagSet.IsLess) goto L1071;
-
-			RenderCensusLine((ushort)(this.processor.RegFrame.Value16 - 0xa8), this.processor.PullLocalSignedWord(0x54), 0x4565);
-
-			this.processor.EmitLocalWord(0x54, this.processor.SumWord(this.processor.PullLocalWord(0x54), 0xc));
-
-			this.owner.TextPainter.RenderTextWithShadow(0x456a, 8, this.processor.PullLocalSignedWord(0x54), 15);
-
-			this.processor.EmitLocalWord(0x56, 0x1);
-
-		L10e5:
-			this.processor.EmitGlobalByte(0xba06, 0x0);
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x56);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegSource.Value16 = this.processor.SumWord(this.processor.RegSource.Value16, this.processor.RegFrame.Value16);
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0x78));
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0xa8), this.processor.RegAcc.Value16);
-			this.processor.EmitGlobalByte(0xba06, 0x0);
-
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText((short)this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0xa8)), 10));
-
-			this.owner.Libc.AppendText(0xba06, " million $");
-
-			this.processor.RegAcc.Value16 = (ushort)participantIdx;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x56), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L114d;
-
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, 104, this.processor.PullLocalSignedWord(0x54), 15);
-
-		L114d:
-			this.processor.EmitLocalWord(0x56, this.processor.IncrementWord(this.processor.PullLocalWord(0x56)));
-			this.processor.CompareWord(this.processor.PullLocalWord(0x56), 0x8);
-			if (this.processor.FlagSet.IsLess) goto L10e5;
-
-			RenderCensusLine((ushort)(this.processor.RegFrame.Value16 - 0xa8), this.processor.PullLocalSignedWord(0x54), 0x457a);
-
-			this.processor.EmitLocalWord(0x54, this.processor.SumWord(this.processor.PullLocalWord(0x54), 0xc));
-
-			this.owner.TextPainter.RenderTextWithShadow(0x457d, 8, this.processor.PullLocalSignedWord(0x54), 15);
-
-			this.processor.EmitLocalWord(0x56, 0x1);
-
-		L1189:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x56);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegSource.Value16 = this.processor.SumWord(this.processor.RegSource.Value16, this.processor.RegFrame.Value16);
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0x66));
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0xa8), this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = (ushort)participantIdx;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x56), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L11ec;
-			this.processor.EmitGlobalByte(0xba06, 0x0);
-
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText((short)this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0xa8)), 10));
-
-			this.owner.Libc.AppendText(0xba06, " Mtons");
-
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, 104, this.processor.PullLocalSignedWord(0x54), 15);
-
-		L11ec:
-			this.processor.EmitLocalWord(0x56, this.processor.IncrementWord(this.processor.PullLocalWord(0x56)));
-			this.processor.CompareWord(this.processor.PullLocalWord(0x56), 0x8);
-			if (this.processor.FlagSet.IsLess) goto L1189;
-
-			RenderCensusLine((ushort)(this.processor.RegFrame.Value16 - 0xa8), this.processor.PullLocalSignedWord(0x54), 0x4590);
-
-			this.processor.EmitLocalWord(0x54, this.processor.SumWord(this.processor.PullLocalWord(0x54), 0xc));
-
-			this.owner.TextPainter.RenderTextWithShadow(0x4597, 8, this.processor.PullLocalSignedWord(0x54), 15);
-
-			this.processor.EmitLocalWord(0x56, 0x1);
-
-		L1228:
-			this.processor.EmitGlobalByte(0xba06, 0x0);
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x56);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegSource.Value16 = this.processor.SumWord(this.processor.RegSource.Value16, this.processor.RegFrame.Value16);
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0xb8));
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0xa8), this.processor.RegAcc.Value16);
-			this.processor.EmitGlobalByte(0xba06, 0x0);
-
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText((short)this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0xa8)), 10));
-
-			this.owner.Libc.AppendText(0xba06, ",000 sq.miles");
-
-			this.processor.RegAcc.Value16 = (ushort)participantIdx;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x56), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L1291;
-
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, 104, this.processor.PullLocalSignedWord(0x54), 15);
-
-		L1291:
-			this.processor.EmitLocalWord(0x56, this.processor.IncrementWord(this.processor.PullLocalWord(0x56)));
-			this.processor.CompareWord(this.processor.PullLocalWord(0x56), 0x8);
-			if (this.processor.FlagSet.IsLess) goto L1228;
-
-			RenderCensusLine((ushort)(this.processor.RegFrame.Value16 - 0xa8), this.processor.PullLocalSignedWord(0x54), 0x45b0);
-
-			this.processor.EmitLocalWord(0x54, this.processor.SumWord(this.processor.PullLocalWord(0x54), 0xc));
-
-			this.owner.TextPainter.RenderTextWithShadow(0x45b5, 8, this.processor.PullLocalSignedWord(0x54), 15);
-
-			this.processor.EmitLocalWord(0x56, 0x1);
-
-		L12cd:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x56);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegSource.Value16 = this.processor.SumWord(this.processor.RegSource.Value16, this.processor.RegFrame.Value16);
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0x98));
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0x52)));
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, 0x1);
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.RegCount.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0x98));
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0xa8), this.processor.RegAcc.Value16);
-
-			this.processor.RegAcc.Value16 = this.owner.Advisors.PlayerKnowsTechnology(
-				this.processor.PullLocalSignedWord(0x56), 0);
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsNotEqual)
-			{
-				this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0xa8), this.processor.ShiftLeftWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0xa8)), 0x1));
-			}
-
-			this.processor.RegAcc.Value16 = this.owner.Advisors.PlayerKnowsTechnology(
-				this.processor.PullLocalSignedWord(0x56), 0x16);
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsNotEqual)
-			{
-				this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x56);
-				this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-				this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0xa8), 
-					this.processor.ShiftLeftWord(this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0xa8)), 0x1));
-			}
-		
-			this.processor.RegAcc.Value16 = this.owner.Advisors.PlayerKnowsTechnology(
-				this.processor.PullLocalSignedWord(0x56), 0x1e);
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsNotEqual)
-			{
-				this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x56);
-				this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-				this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0xa8), 
-					this.processor.ShiftLeftWord(this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0xa8)), 0x1));
-			}
-		
-			this.processor.RegAcc.Value16 = this.owner.Advisors.PlayerKnowsTechnology(
-				this.processor.PullLocalSignedWord(0x56), 0xd);
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsNotEqual)
-			{
-				this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x56);
-				this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-				this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0xa8), 
-					this.processor.ShiftLeftWord(this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0xa8)), 0x1));
-			}
-		
-			this.processor.RegSource.Value16 = (ushort)((this.processor.PullLocalWord(0x56) << 1) + 
-				this.processor.RegFrame.Value16 - 0xa8);
-			this.owner.Helpers.VerifyValueSpan(this.processor.PullInt16(this.processor.SegData.Value16, this.processor.RegSource.Value16), 0, 100);
-
-			this.processor.EmitUInt16(this.processor.SegData.Value16, this.processor.RegSource.Value16, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = (ushort)participantIdx;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x56), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L13c5;
-			this.processor.EmitGlobalByte(0xba06, 0x0);
-
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText((short)this.processor.PullUInt16(this.processor.SegData.Value16, this.processor.RegSource.Value16), 10));
-
-			this.owner.Libc.AppendText(0xba06, "%");
-
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, 104, this.processor.PullLocalSignedWord(0x54), 15);
-
-		L13c5:
-			this.processor.EmitLocalWord(0x56, this.processor.IncrementWord(this.processor.PullLocalWord(0x56)));
-			this.processor.CompareWord(this.processor.PullLocalWord(0x56), 0x8);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L13d1;
-			goto L12cd;
-
-		L13d1:
-			RenderCensusLine((ushort)(this.processor.RegFrame.Value16 - 0xa8), this.processor.PullLocalSignedWord(0x54), 0x45c1);
-
-			this.processor.EmitLocalWord(0x54, this.processor.SumWord(this.processor.PullLocalWord(0x54), 0xc));
-
-			this.owner.TextPainter.RenderTextWithShadow(0x45c3, 8, this.processor.PullLocalSignedWord(0x54), 15);
-
-			this.processor.EmitLocalWord(0x56, 0x1);
-
-		L1404:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x56);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegSource.Value16 = this.processor.SumWord(this.processor.RegSource.Value16, this.processor.RegFrame.Value16);
-			this.processor.RegAcc.Value16 = 0x32;
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0x98)));
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.RegCount.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0x98));
-			this.processor.RegCount.Value16 = this.processor.SumWord(this.processor.RegCount.Value16, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0x10)));
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0xa8), this.processor.RegAcc.Value16);
-
-			this.processor.RegAcc.Value16 = this.owner.Advisors.PlayerKnowsTechnology(
-				this.processor.PullLocalSignedWord(0x56), 10);
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsNotEqual)
-			{
-				this.processor.RegCount.Value16 = 0x2;
-				this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0xa8));
-				this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-				this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-				this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0xa8), this.processor.RegAcc.Value16);
-			}
-		
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x56);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegSource.Value16 = this.processor.SumWord(this.processor.RegSource.Value16, this.processor.RegFrame.Value16);
-			this.processor.RegAcc.Value16 = 0x5dc;
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.RegCount.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0xa8));
-			this.processor.RegCount.Value16 = this.processor.SumWord(this.processor.RegCount.Value16, 0x14);
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0x10), this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = (ushort)participantIdx;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x56), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L14ad;
-			this.processor.EmitGlobalByte(0xba06, 0x0);
-
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText((short)this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0xa8)), 10));
-
-			this.owner.Libc.AppendText(0xba06, "%");
-
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, 104, this.processor.PullLocalSignedWord(0x54), 15);
-
-		L14ad:
-			this.processor.EmitLocalWord(0x56, this.processor.IncrementWord(this.processor.PullLocalWord(0x56)));
-			this.processor.CompareWord(this.processor.PullLocalWord(0x56), 0x8);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L14b9;
-			goto L1404;
-
-		L14b9:
-			RenderCensusLine((ushort)(this.processor.RegFrame.Value16 - 0xa8), (short)(-this.processor.PullLocalSignedWord(0x54)), 0x45ce);
-
-			this.processor.EmitLocalWord(0x54, this.processor.SumWord(this.processor.PullLocalWord(0x54), 0xc));
-
-			this.owner.TextPainter.RenderTextWithShadow(0x45d0, 8, this.processor.PullLocalSignedWord(0x54), 15);
-
-			this.processor.EmitLocalWord(0x56, 0x1);
-
-		L14ef:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x56);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegSource.Value16 = this.processor.SumWord(this.processor.RegSource.Value16, this.processor.RegFrame.Value16);
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0x88));
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0xa8), this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = 0xa;
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0x88)));
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.RegCount.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0x98));
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0x10), this.processor.SubtractWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0x10)), this.processor.RegAcc.Value16));
-			this.processor.RegAcc.Value16 = (ushort)participantIdx;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x56), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L1564;
-			this.processor.EmitGlobalByte(0xba06, 0x0);
-
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText((short)this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0xa8)), 10));
-
-			this.owner.Libc.AppendText(0xba06, "0 tons/year");
-
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, 104, this.processor.PullLocalSignedWord(0x54), 15);
-
-		L1564:
-			this.processor.EmitLocalWord(0x56, this.processor.IncrementWord(this.processor.PullLocalWord(0x56)));
-			this.processor.CompareWord(this.processor.PullLocalWord(0x56), 0x8);
-			if (this.processor.FlagSet.IsLess) goto L14ef;
-
-			RenderCensusLine((ushort)(this.processor.RegFrame.Value16 - 0xa8), (short)(-this.processor.PullLocalSignedWord(0x54)), 0x45e7);
-
-			this.processor.EmitLocalWord(0x54, this.processor.SumWord(this.processor.PullLocalWord(0x54), 0xc));
-
-			this.owner.TextPainter.RenderTextWithShadow(0x45ee, 8, this.processor.PullLocalSignedWord(0x54), 15);
-
-			this.processor.EmitLocalWord(0x56, 0x1);
-
-		L15a3:
-			this.processor.RegSource.Value16 = (ushort)((this.processor.PullLocalWord(0x56) << 1) +
-				this.processor.RegFrame.Value16);
-
-			this.owner.Helpers.VerifyValueSpan(
-				this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0x10)), 20, 99);
-
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0xa8), this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = (ushort)participantIdx;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x56), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L1616;
-			this.processor.EmitGlobalByte(0xba06, 0x0);
-
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText((short)this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0xa8)), 10));
-
-			this.owner.Libc.AppendText(0xba06, " years");
-
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, 104, this.processor.PullLocalSignedWord(0x54), 15);
-
-		L1616:
-			this.processor.EmitLocalWord(0x56, this.processor.IncrementWord(this.processor.PullLocalWord(0x56)));
-			this.processor.CompareWord(this.processor.PullLocalWord(0x56), 0x8);
-			if (this.processor.FlagSet.IsLess) goto L15a3;
-
-			RenderCensusLine((ushort)(this.processor.RegFrame.Value16 - 0xa8), this.processor.PullLocalSignedWord(0x54), 0x4606);
-
-			this.processor.EmitLocalWord(0x54, this.processor.SumWord(this.processor.PullLocalWord(0x54), 0xc));
-
-			this.owner.TextPainter.RenderTextWithShadow(0x460b, 8, this.processor.PullLocalSignedWord(0x54), 15);
-
-			this.processor.EmitLocalWord(0x56, 0x1);
-
-		L1652:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x56);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegSource.Value16 = this.processor.SumWord(this.processor.RegSource.Value16, this.processor.RegFrame.Value16);
-			this.processor.RegAcc.Value16 = 0x28;
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0x40)));
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.RegCount.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0x98));
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x14);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0xa8), this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = (ushort)participantIdx;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x56), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L1678;
-			goto L1704;
-
-		L1678:
-			this.processor.EmitGlobalByte(0xba06, 0x0);
-
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText((short)((short)this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0xa8)) / 10), 10));
-
-			this.owner.Libc.AppendText(0xba06, ".");
-
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText((short)((short)this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0xa8)) / 10), 10));
-
-			this.owner.Libc.AppendText(0xba06, " children");
-
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, 104, this.processor.PullLocalSignedWord(0x54), 15);
-
-		L1704:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x56);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegCount.Value16 = 0xa;
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0xa8));
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0xa8), this.processor.RegAcc.Value16);
-			this.processor.IncrementLocalWord(0x56);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x56), 0x8);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L1723;
-			goto L1652;
-
-		L1723:
-			RenderCensusLine((ushort)(this.processor.RegFrame.Value16 - 0xa8), this.processor.PullLocalSignedWord(0x54), 0x4624);
-
-			this.processor.EmitLocalWord(0x54, this.processor.SumWord(this.processor.PullLocalWord(0x54), 0xc));
-
-			this.owner.TextPainter.RenderTextWithShadow(0x4625, 8, this.processor.PullLocalSignedWord(0x54), 15);
-
-			this.processor.EmitLocalWord(0x56, 0x1);
-
-		L1756:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x56);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegAcc.Value16 = 0xa;
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, 
-				(ushort)this.owner.World.Participants[this.processor.PullLocalWord(0x56)].TroopTally);
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.RegCount.Value16 = this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x98));
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0xa8), this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = (ushort)participantIdx;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x56), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L17c2;
-			this.processor.EmitGlobalByte(0xba06, 0x0);
-
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText((short)this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0xa8)), 10));
-
-			this.owner.Libc.AppendText(0xba06, " years");
-
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, 104, this.processor.PullLocalSignedWord(0x54), 15);
-
-		L17c2:
-			this.processor.EmitLocalWord(0x56, this.processor.IncrementWord(this.processor.PullLocalWord(0x56)));
-			this.processor.CompareWord(this.processor.PullLocalWord(0x56), 0x8);
-			if (this.processor.FlagSet.IsLess) goto L1756;
-
-			RenderCensusLine((ushort)(this.processor.RegFrame.Value16 - 0xa8), this.processor.PullLocalSignedWord(0x54), 0x463e);
-
-			this.processor.EmitLocalWord(0x54, this.processor.SumWord(this.processor.PullLocalWord(0x54), 0xc));
-
-			this.owner.TextPainter.RenderTextWithShadow(0x4643, 8, this.processor.PullLocalSignedWord(0x54), 15);
-
-			this.processor.EmitLocalWord(0x56, 0x1);
-			goto L1874;
-
-		L1800:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x56);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x78));
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.RegCount.Value16 = this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x98));
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, 
-				(ushort)this.owner.World.Participants[this.processor.PullLocalWord(0x56)].FoundScienceTally);
-
-		L1813:
-			this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0xa8), this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = (ushort)participantIdx;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x56), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L1871;
-			this.processor.EmitGlobalByte(0xba06, 0x0);
-
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText((short)this.processor.PullUInt16(this.processor.SegStack.Value16,
-					(ushort)((this.processor.RegFrame.Value16 + (this.processor.PullLocalWord(0x56) << 1) - 0xa8) & 0xffff)), 10));
-
-			this.owner.Libc.AppendText(0xba06, "$ per capita");
-
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, 104, this.processor.PullLocalSignedWord(0x54), 15);
-
-		L1871:
-			this.processor.EmitLocalWord(0x56, this.processor.IncrementWord(this.processor.PullLocalWord(0x56)));
-
-		L1874:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x56), 0x8);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L18a3;
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x56);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegAcc.Value16 = 0x7530;
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.RegCount.Value16 = (ushort)(this.owner.World.Participants[this.processor.PullLocalWord(0x56)].FoundScienceTally + 1);
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x78)));
-			if (this.processor.FlagSet.IsGreater) goto L1892;
-			goto L1800;
-
-		L1892:
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x78));
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, 
-				(ushort)this.owner.World.Participants[this.processor.PullLocalWord(0x56)].FoundScienceTally);
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.RegCount.Value16 = this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x98));
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			goto L1813;
-
-		L18a3:
-			RenderCensusLine((ushort)(this.processor.RegFrame.Value16 - 0xa8), this.processor.PullLocalSignedWord(0x54), 0x465f);
-
-			this.processor.EmitLocalWord(0x54, this.processor.SumWord(this.processor.PullLocalWord(0x54), 0xc));
-
-			this.owner.TextPainter.RenderTextWithShadow(0x4661, 8, this.processor.PullLocalSignedWord(0x54), 15);
-
-			this.processor.EmitLocalWord(0x56, 0x1);
-
-		L18d6:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x56);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegSource.Value16 = this.processor.SumWord(this.processor.RegSource.Value16, this.processor.RegFrame.Value16);
-			this.processor.RegAcc.Value16 = 0xa;
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0x30)));
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.RegCount.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0x98));
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0xa8), this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = (ushort)participantIdx;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x56), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L1933;
-			this.processor.EmitGlobalByte(0xba06, 0x0);
-
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText((short)this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0xa8)), 10));
-
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, 104, this.processor.PullLocalSignedWord(0x54), 15);
-
-		L1933:
-			this.processor.EmitLocalWord(0x56, this.processor.IncrementWord(this.processor.PullLocalWord(0x56)));
-			this.processor.CompareWord(this.processor.PullLocalWord(0x56), 0x8);
-			if (this.processor.FlagSet.IsLess) goto L18d6;
-
-			RenderCensusLine((ushort)(this.processor.RegFrame.Value16 - 0xa8), this.processor.PullLocalSignedWord(0x54), 0x466f);
-
-			this.processor.EmitLocalWord(0x54, this.processor.SumWord(this.processor.PullLocalWord(0x54), 0xc));
+			RenderCensus(participantIdx, tally);
 
 			this.owner.Conquest.AwaitForKeyPressOrMouseClick();
 
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0x19d4),
-				0, 0, 0x140, 0xc8,
-				this.processor.PullGlobalWord(0xaa),
-				0, 0);
+			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0xaa), 0, 0);
 
 			this.owner.Startup.DisplayMouseCursor();
 
 			this.processor.RestoreIndexRegisters();
 			this.processor.LeaveFrame();
-			// Far return
+
 			this.processor.Journal.CloseScope("DisplayCensus");
+		}
+
+		/// <summary>The sums of the demographics per player 0 - 7</summary>
+		private sealed class CensusTally
+		{
+			/// <summary>City sizes (+1, so never 0)</summary>
+			public readonly short[] Size = { 1, 1, 1, 1, 1, 1, 1, 1 };
+
+			/// <summary>Land tiles owned</summary>
+			public readonly short[] Land = new short[8];
+
+			/// <summary>Taxes * 2 + 0xe17a of the cities</summary>
+			public readonly short[] Money = new short[8];
+
+			/// <summary>Sizes of the cities with the improvements 0x20 and 0x800 (each counts)</summary>
+			public readonly short[] Learning = new short[8];
+
+			/// <summary>Sizes of the cities with the improvements 0x4 and 0x100; later the life expectancy</summary>
+			public readonly short[] Health = new short[8];
+
+			/// <summary>Luxury (0x70da) - 2 * size</summary>
+			public readonly short[] Unrest = new short[8];
+
+			/// <summary>Size + happy (0x70e2) - unhappy (0x70e4)</summary>
+			public readonly short[] Approval = new short[8];
+
+			/// <summary>Luxury + shields + trade (0x70da, 0x70dc, 0x70de)</summary>
+			public readonly short[] Output = new short[8];
+
+			/// <summary>Shields (0x70dc)</summary>
+			public readonly short[] Shields = new short[8];
+
+			/// <summary>Pollution: shields / 0x6c98 - 20 + size * 0xb882 / 4, when above 0</summary>
+			public readonly short[] Pollution = new short[8];
+		}
+
+		/// <summary>
+		/// The land tiles of each player (rows 2 - 47) and the statistics of every city (HandleCity with -1 fills the city
+		/// figures 0x70da - 0x70e4)
+		/// </summary>
+		private CensusTally GatherCensus()
+		{
+			CensusTally tally = new CensusTally();
+
+			for (short horizLoc = 0; horizLoc < 0x50; horizLoc++)
+			{
+				for (short vertLoc = 2; vertLoc < 0x30; vertLoc++)
+				{
+					if (this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) == MapRules.OceanTerrain)
+						continue;
+
+					tally.Land[this.owner.MapOps.ObtainTileOwnerBits(horizLoc, vertLoc)]++;
+				}
+			}
+
+			for (short townIdx = 0; townIdx < 0x80; townIdx++)
+			{
+				City town = this.owner.World.Towns[townIdx];
+
+				if (town.ParticipantIdx == -1 || town.ConditionMarker == 0xff)
+					continue;
+
+				this.owner.CityOps.HandleCity(townIdx, -1);
+
+				int owner = town.ParticipantIdx;
+				short size = (sbyte)town.TrueExtent;
+
+				tally.Size[owner] += size;
+				tally.Approval[owner] += (short)(size + this.processor.PullGlobalWord(0x70e2) - this.processor.PullGlobalWord(0x70e4));
+				tally.Money[owner] += (short)((this.processor.PullGlobalWord(0x70e0) << 1) + this.processor.PullGlobalWord(0xe17a));
+				tally.Unrest[owner] += (short)(this.processor.PullGlobalWord(0x70da) - (size << 1));
+				tally.Output[owner] += (short)(this.processor.PullGlobalWord(0x70da) + this.processor.PullGlobalWord(0x70dc) + this.processor.PullGlobalWord(0x70de));
+
+				short shields = (short)this.processor.PullGlobalWord(0x70dc);
+
+				tally.Shields[owner] += shields;
+
+				short pollution = (short)(CPU.SignedQuotient(shields, (short)this.processor.PullGlobalWord(0x6c98)) - 0x14);
+				pollution += (short)((short)(size * this.processor.PullGlobalWord(0xb882)) / 4);
+
+				if (pollution > 0)
+				{
+					tally.Pollution[owner] += pollution;
+				}
+
+				if ((town.StructureMarkers0 & 0x4) != 0)
+				{
+					tally.Health[owner] += size;
+				}
+
+				if ((town.StructureMarkers0 & 0x100) != 0)
+				{
+					tally.Health[owner] += size;
+				}
+
+				if ((town.StructureMarkers0 & 0x20) != 0)
+				{
+					tally.Learning[owner] += size;
+				}
+
+				if ((town.StructureMarkers0 & 0x800) != 0)
+				{
+					tally.Learning[owner] += size;
+				}
+			}
+
+			return tally;
+		}
+
+		/// <summary>The value of the player for the current line (the frame, bp - 0xa8)</summary>
+		private ushort CensusValueAddress(int participantIdx)
+		{
+			return (ushort)(this.processor.RegFrame.Value16 + (participantIdx << 1) - 0xa8);
+		}
+
+		private short CensusValue(int participantIdx)
+		{
+			return (short)this.processor.PullGlobalWord(CensusValueAddress(participantIdx));
+		}
+
+		private void SetCensusValue(int participantIdx, short value)
+		{
+			this.processor.EmitGlobalWord(CensusValueAddress(participantIdx), (ushort)value);
+		}
+
+		/// <summary>
+		/// One line: the title, the values of the players 1 - 7 (the player's one written at 104), the rank (a negative row:
+		/// a lower value is better)
+		/// </summary>
+		private void RenderCensusRow(ushort title, ref short vertLoc, bool lowerIsBetter, ushort unit, Action<short> valueOfPlayer)
+		{
+			this.owner.TextPainter.RenderTextWithShadow(title, 8, vertLoc, 15);
+
+			for (short participantIdx = 1; participantIdx < 8; participantIdx++)
+			{
+				valueOfPlayer(participantIdx);
+			}
+
+			RenderCensusLine((ushort)(this.processor.RegFrame.Value16 - 0xa8), (short)(lowerIsBetter ? -vertLoc : vertLoc), unit);
+
+			vertLoc += 0xc;
+		}
+
+		/// <summary>The value with the unit text, written at (104, row) for the player itself</summary>
+		private void RenderCensusFigure(short value, string unit, short vertLoc)
+		{
+			this.processor.EmitGlobalByte(0xba06, 0x0);
+
+			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(value, 10));
+
+			if (unit.Length > 0)
+			{
+				this.owner.Libc.AppendText(0xba06, unit);
+			}
+
+			this.owner.TextPainter.RenderTextToScreen0(0xba06, 104, vertLoc, 15);
+		}
+
+		/// <summary>The 13 lines of the demographics</summary>
+		private void RenderCensus(short shownIdx, CensusTally tally)
+		{
+			short vertLoc = 0x18;
+			short row = vertLoc;
+
+			// Approval rating
+			RenderCensusRow(0x4544, ref vertLoc, false, 0x4557, participantIdx =>
+			{
+				SetCensusValue(participantIdx, CPU.SignedQuotient((short)(0x32 * tally.Approval[participantIdx]), tally.Size[participantIdx]));
+
+				if (participantIdx == shownIdx)
+				{
+					RenderCensusFigure(CensusValue(participantIdx), "%", row);
+				}
+			});
+
+			// Population (the text of ObtainPlayerPopulation)
+			row = vertLoc;
+
+			RenderCensusRow(0x4559, ref vertLoc, false, 0x4565, participantIdx =>
+			{
+				this.processor.EmitGlobalByte(0xba06, 0x0);
+
+				SetCensusValue(participantIdx, (short)this.owner.Helpers.ObtainPlayerPopulation(participantIdx));
+
+				if (participantIdx == shownIdx)
+				{
+					this.owner.TextPainter.RenderTextToScreen0(0xba06, 104, row, 15);
+				}
+			});
+
+			// GNP (the text is made for every player)
+			row = vertLoc;
+
+			RenderCensusRow(0x456a, ref vertLoc, false, 0x457a, participantIdx =>
+			{
+				this.processor.EmitGlobalByte(0xba06, 0x0);
+
+				SetCensusValue(participantIdx, tally.Money[participantIdx]);
+
+				this.processor.EmitGlobalByte(0xba06, 0x0);
+
+				this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(CensusValue(participantIdx), 10));
+
+				this.owner.Libc.AppendText(0xba06, " million $");
+
+				if (participantIdx == shownIdx)
+				{
+					this.owner.TextPainter.RenderTextToScreen0(0xba06, 104, row, 15);
+				}
+			});
+
+			// Manufacturing goods
+			row = vertLoc;
+
+			RenderCensusRow(0x457d, ref vertLoc, false, 0x4590, participantIdx =>
+			{
+				SetCensusValue(participantIdx, tally.Shields[participantIdx]);
+
+				if (participantIdx == shownIdx)
+				{
+					RenderCensusFigure(CensusValue(participantIdx), " Mtons", row);
+				}
+			});
+
+			// Land area (the text is made for every player)
+			row = vertLoc;
+
+			RenderCensusRow(0x4597, ref vertLoc, false, 0x45b0, participantIdx =>
+			{
+				this.processor.EmitGlobalByte(0xba06, 0x0);
+
+				SetCensusValue(participantIdx, tally.Land[participantIdx]);
+
+				this.processor.EmitGlobalByte(0xba06, 0x0);
+
+				this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(CensusValue(participantIdx), 10));
+
+				this.owner.Libc.AppendText(0xba06, ",000 sq.miles");
+
+				if (participantIdx == shownIdx)
+				{
+					this.owner.TextPainter.RenderTextToScreen0(0xba06, 104, row, 15);
+				}
+			});
+
+			// Literacy: (2 * size + learning) * 2 / size, doubled for each of the technologies 0, 0x16, 0x1e, 0xd, at most 100
+			row = vertLoc;
+
+			RenderCensusRow(0x45b5, ref vertLoc, false, 0x45c1, participantIdx =>
+			{
+				SetCensusValue(participantIdx, CPU.SignedQuotient(
+					(short)(((tally.Size[participantIdx] << 1) + tally.Learning[participantIdx]) << 1), tally.Size[participantIdx]));
+
+				foreach (short scienceIdx in new short[] { 0, 0x16, 0x1e, 0xd })
+				{
+					if (this.owner.Advisors.PlayerKnowsTechnology(participantIdx, scienceIdx) != 0)
+					{
+						SetCensusValue(participantIdx, (short)(CensusValue(participantIdx) << 1));
+					}
+				}
+
+				SetCensusValue(participantIdx, (short)this.owner.Helpers.VerifyValueSpan(CensusValue(participantIdx), 0, 100));
+
+				if (participantIdx == shownIdx)
+				{
+					RenderCensusFigure(CensusValue(participantIdx), "%", row);
+				}
+			});
+
+			// Disease: 50 * size / (size + health), halved with technology 10; the life expectancy from it (1500 / (disease + 20))
+			row = vertLoc;
+
+			RenderCensusRow(0x45c3, ref vertLoc, true, 0x45ce, participantIdx =>
+			{
+				SetCensusValue(participantIdx, CPU.SignedQuotient((short)(0x32 * tally.Size[participantIdx]),
+					(short)(tally.Size[participantIdx] + tally.Health[participantIdx])));
+
+				if (this.owner.Advisors.PlayerKnowsTechnology(participantIdx, 10) != 0)
+				{
+					SetCensusValue(participantIdx, CPU.SignedQuotient(CensusValue(participantIdx), 2));
+				}
+
+				tally.Health[participantIdx] = CPU.SignedQuotient(0x5dc, (short)(CensusValue(participantIdx) + 0x14));
+
+				if (participantIdx == shownIdx)
+				{
+					RenderCensusFigure(CensusValue(participantIdx), "%", row);
+				}
+			});
+
+			// Pollution, which shortens the life expectancy
+			row = vertLoc;
+
+			RenderCensusRow(0x45d0, ref vertLoc, true, 0x45e7, participantIdx =>
+			{
+				SetCensusValue(participantIdx, tally.Pollution[participantIdx]);
+
+				tally.Health[participantIdx] -= CPU.SignedQuotient((short)(0xa * tally.Pollution[participantIdx]), tally.Size[participantIdx]);
+
+				if (participantIdx == shownIdx)
+				{
+					RenderCensusFigure(CensusValue(participantIdx), "0 tons/year", row);
+				}
+			});
+
+			// Life expectancy (20 - 99)
+			row = vertLoc;
+
+			RenderCensusRow(0x45ee, ref vertLoc, false, 0x4606, participantIdx =>
+			{
+				SetCensusValue(participantIdx, (short)this.owner.Helpers.VerifyValueSpan(tally.Health[participantIdx], 20, 99));
+
+				if (participantIdx == shownIdx)
+				{
+					RenderCensusFigure(CensusValue(participantIdx), " years", row);
+				}
+			});
+
+			// Family size: 40 * unrest / size + 20 tenths (the original writes the tenths as value / 10 twice)
+			row = vertLoc;
+
+			RenderCensusRow(0x460b, ref vertLoc, false, 0x4624, participantIdx =>
+			{
+				SetCensusValue(participantIdx, (short)(CPU.SignedQuotient((short)(0x28 * tally.Unrest[participantIdx]), tally.Size[participantIdx]) + 0x14));
+
+				if (participantIdx == shownIdx)
+				{
+					this.processor.EmitGlobalByte(0xba06, 0x0);
+
+					this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText((short)(CensusValue(participantIdx) / 10), 10));
+
+					this.owner.Libc.AppendText(0xba06, ".");
+
+					this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText((short)(CensusValue(participantIdx) / 10), 10));
+
+					this.owner.Libc.AppendText(0xba06, " children");
+
+					this.owner.TextPainter.RenderTextToScreen0(0xba06, 104, row, 15);
+				}
+
+				SetCensusValue(participantIdx, CPU.SignedQuotient(CensusValue(participantIdx), 0xa));
+			});
+
+			// Military service: 10 * units / size
+			row = vertLoc;
+
+			RenderCensusRow(0x4625, ref vertLoc, false, 0x463e, participantIdx =>
+			{
+				SetCensusValue(participantIdx, CPU.SignedQuotient((short)(0xa * this.owner.World.Participants[participantIdx].TroopTally),
+					tally.Size[participantIdx]));
+
+				if (participantIdx == shownIdx)
+				{
+					RenderCensusFigure(CensusValue(participantIdx), " years", row);
+				}
+			});
+
+			// Annual income: money * technologies / size (divided first when the product would overflow)
+			row = vertLoc;
+
+			RenderCensusRow(0x4643, ref vertLoc, false, 0x465f, participantIdx =>
+			{
+				short sciences = this.owner.World.Participants[participantIdx].FoundScienceTally;
+				short money = tally.Money[participantIdx];
+
+				SetCensusValue(participantIdx, CPU.SignedQuotient(0x7530, (short)(sciences + 1)) > money
+					? CPU.SignedQuotient((short)(money * sciences), tally.Size[participantIdx])
+					: (short)(CPU.SignedQuotient(money, tally.Size[participantIdx]) * sciences));
+
+				if (participantIdx == shownIdx)
+				{
+					RenderCensusFigure(CensusValue(participantIdx), "$ per capita", row);
+				}
+			});
+
+			// Productivity: 10 * output / size
+			row = vertLoc;
+
+			RenderCensusRow(0x4661, ref vertLoc, false, 0x466f, participantIdx =>
+			{
+				SetCensusValue(participantIdx, CPU.SignedQuotient((short)(0xa * tally.Output[participantIdx]), tally.Size[participantIdx]));
+
+				if (participantIdx == shownIdx)
+				{
+					RenderCensusFigure(CensusValue(participantIdx), "", row);
+				}
+			});
 		}
 
 		/// <summary>

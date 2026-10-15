@@ -458,6 +458,13 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   zachowane (patrz lista błędów). Wnioski do testów: próg czasu lotu (15 lat) jest w testach niewidoczny – przy losowych
   układach lot jest krótki albo szansa i tak spada do 0 (`VerifyValueSpan`), więc mutacja progu przeżywa; testowane
   mutacjami wzoru szansy i czasu. Testy w `BatchSixtyOneDifferentialTests`.
+- Porcja 62 (2026-10-15): `DisplayCensus` (`WorldMap`, demografia: statystyki miast z `HandleCity(…, -1)` i pól lądu,
+  13 wierszy rankingu), rozbita na `GatherCensus` (sumy w klasie `CensusTally` zamiast tablic w ramce), `RenderCensus`,
+  `RenderCensusRow`, `RenderCensusFigure`. Ramka zostaje: wartości wiersza w bp - 0xa8 czyta `RenderCensusLine`, a
+  `HandleCity` czyta śmieci spod stosu. Błąd tłumaczenia zachowany: wielkość rodziny wypisywana jako „x/10.x/10”.
+  `replace_methods.py` nie obsługuje zagnieżdżonej klasy w pliku z metodami – wstawić ją osobno. Wnioski do testów:
+  zanieczyszczenie miasta w zapisach z wczesnej gry jest zawsze ujemne (dodatnie dopiero przy dużej produkcji), więc mutacje
+  jego wzoru przeżywają; sam wiersz jest obserwowany (mutacja warunku `> 0` złapana). Testy w `BatchSixtyTwoDifferentialTests`.
 
 ## Następny krok
 
@@ -468,13 +475,14 @@ Dalej małe metody: `python Civilization1Remaster.Tests/Differential/Reference/f
 `DisplayCivilizationScreen` (`MainIntro`, patrz porcja 57),
 `DisplayPalace` (`Palace`, patrz porcja 45), reszta generatora mapy w `GameInitAndIntro`. Funkcje niskopoziomowe `SystemServices` (`DeactivateMouse`, `PointerEvent`,
 przerwanie zegara: `OnClockBeat`, `RefreshHueCycling`, `ColorsFadeStep`, `ColorsFadeStepInterrupt`, `AssignColors`) na koniec: działają
-w przerwaniach albo na rejestrach. Stan 2026-10-15 (po porcji 61): 28 metod w stylu asm, ok. 35,7 tys. z 65,3 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
+w przerwaniach albo na rejestrach. Stan 2026-10-15 (po porcji 62): 27 metod w stylu asm, ok. 35,7 tys. z 65,3 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
 Kod C# przetłumaczony z asm ma miejscami inne zachowanie niż DOS-owy CIV.EXE. Testy porównują z tłumaczeniem, więc na razie
 te błędy są odtwarzane jawnie:
 
+- `DisplayCensus`: wielkość rodziny wypisywana jako „x/10.x/10” zamiast „x/10.x%10”. Po naprawie: reszta z dzielenia.
 - `RenderSpaceship`: obrazek części statku spod `word[część << 1 + 0x682a]` – w C# to przesunięcie o 0x682b, czyli o 11 bitów,
   więc adres jest zły (obrazek zwykle nie istnieje i nic się nie rysuje); masa i czas lotu wypisywane jako „x/10,x/10” zamiast
   „x/10,x%10”. Po naprawie: `word[0x682a + 2 * część]`, reszta z dzielenia.
