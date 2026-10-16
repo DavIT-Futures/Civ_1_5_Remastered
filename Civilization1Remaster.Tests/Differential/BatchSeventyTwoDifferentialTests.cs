@@ -139,7 +139,7 @@ public sealed class BatchSeventyTwoDifferentialTests(ITestOutputHelper output)
 					string driver = Calls(game, pair, "ActivateHueCycle") > cycles ? "vga" : "cga";
 					string credits = Calls(game, pair, "FloodBox") - boxes > 300 ? "credits to the end" : "credits cut";
 					string end = Calls(game, pair, "AwaitForKey") > logos ? "logo"
-						: Calls(game, pair, "ObtainNavigationKey") > choices ? $"choice {(short)game.Processor.PullGlobalWord(0x6b32)}" : "nothing";
+						: Calls(game, pair, "ObtainNavigationKey") > choices ? $"choice {(short)game.Processor.Storage.PullUInt16(0x3b01, 0x6b32)}" : "nothing";
 
 					return $"{driver}, {credits}, {end}";
 				});

@@ -568,12 +568,26 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   Pełny zestaw wisiał przez pierwszą wersję intro (czekanie na muzykę bez końca w testach, które wołają intro / ekran
   cywilizacji: `TitleLogoAndMainChoices`, `ConfigureFreshGame`, `RenderSpaceship`, `DisplayReplay`, …).
 
+- Porcja 74 (2026-10-17): `OperateAITurn` (`AIPlayer`, przegląd gracza co turę: jednostki i miasta na kontynentach, bloki
+  4 x 4 mapy w 0x3772:0x2438, podejście do każdego kontynentu, rząd, porzucanie przestarzałych jednostek, wysyłanie jednostek do
+  miejsc strategicznych), rozbita na `CountUnits` / `CountUnit`, `CountCities` / `CountOwnCity` / `MayAimAtCity`,
+  `CountUsedBlocks`, `ChooseContinentApproaches` / `ChooseContinentApproach`, `ChooseGovernment`, `DirectUnits`,
+  `GiveUpObsoleteUnit`, `SendUnitToBestLocation`, `LocationFits`, `WeighLocation`, `MayTakeLocation`. Ramka zostaje i zmienne
+  lokalne dostają te same wartości co w oryginale (zapis przy każdym przypisaniu, czytane są zmienne C#); tablica „wysłanych”
+  jednostek miejsc strategicznych zostaje w ramce (bp - 0x44). Błąd tłumaczenia zachowany: jednostki znane w mieście gracza
+  (`Unfamiliar`) przypisują (`=`, nie `+=`) siłę gracza i atak kontynentu. Pola `Assault` / `Guard` kontynentu dostają moc
+  obrony / ataku (nazwy odwrotnie niż w tabeli typów jednostek) – zachowane. Wnioski do testów: funkcja etykiet gałęzi czyta
+  pamięć przez `Processor.Storage` (odczyt przez `CPU.Pull…` liczy się do zegara testów tylko w jednej grze; poprawione też
+  w testach 72 i 73); scenariusze wymuszają rzadkie gałęzie: jednostki z rozkazami (bity 2, 3) przy miejscach o priorytecie 2,
+  bombowiec z dwoma miejscami ważonymi na remis (mnożnik 2 / 4 zmienia wybór), gracz z dokładnie 10 / 11 miastami w turze
+  rządu, gracz bez miast i jednostek na końcu (eliminacja). Testy w `BatchSeventyFourDifferentialTests`.
+
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
-(`OperateAITurn`, `PickCityProduction`, `LaunchAudience`, `ShiftAIUnit`, `HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
+(`PickCityProduction`, `LaunchAudience`, `ShiftAIUnit`, `HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-17 (po porcji 73): 6 metod w stylu asm, ok. 21,8 tys. z 60,7 tys. linii Core, 3788 linii z `goto`.
+Stan 2026-10-17 (po porcji 74): 5 metod w stylu asm, ok. 20,6 tys. z 60,2 tys. linii Core, 3641 linii z `goto`.
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 

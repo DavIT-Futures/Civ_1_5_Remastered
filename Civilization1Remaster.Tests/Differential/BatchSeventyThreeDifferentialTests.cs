@@ -49,12 +49,12 @@ public sealed class BatchSeventyThreeDifferentialTests(ITestOutputHelper output)
 				// horizontal position stored shifted or not
 				game =>
 				{
-					byte marker = game.Processor.PullGlobalByte(0x5402);
+					byte marker = game.Processor.Storage.PullUInt8(0x3b01, 0x5402);
 					string screen = Calls(game, pair, "RenewScreen") > renewals ? "renewed"
 						: marker == 2 && busy != 2 ? "busy" : "ignored";
 
 					// RenewScreen draws the pointer again and stores its position itself
-					return screen == "renewed" ? screen : screen + (game.Processor.PullGlobalWord(0x586e) != horiz ? ", shifted" : "");
+					return screen == "renewed" ? screen : screen + (game.Processor.Storage.PullUInt16(0x3b01, 0x586e) != horiz ? ", shifted" : "");
 				},
 				[(0x3b01, 0x586e, 8)]);
 		}, output, ["renewed", "busy", "busy, shifted", "ignored", "ignored, shifted"]);
@@ -103,14 +103,14 @@ public sealed class BatchSeventyThreeDifferentialTests(ITestOutputHelper output)
 					{
 						label = "beat";
 
-						if (game.Processor.PullGlobalByte(0x59) == 0x14)
+						if (game.Processor.Storage.PullUInt8(0x3b01, 0x59) == 0x14)
 						{
-							label += flag58 != 0 && game.Processor.PullGlobalByte(0x58) == 0 ? ", flag cleared"
-								: game.Processor.PullGlobalWord(0x4a) == (ushort)(turns4a + 1) ? ", new tempo" : ", same tempo";
+							label += flag58 != 0 && game.Processor.Storage.PullUInt8(0x3b01, 0x58) == 0 ? ", flag cleared"
+								: game.Processor.Storage.PullUInt16(0x3b01, 0x4a) == (ushort)(turns4a + 1) ? ", new tempo" : ", same tempo";
 						}
 					}
 
-					return label + (game.Processor.PullGlobalWord(0x44) != count44 ? ", countdown" : "");
+					return label + (game.Processor.Storage.PullUInt16(0x3b01, 0x44) != count44 ? ", countdown" : "");
 				},
 				ClockVariables);
 		}, output, ["no beat", "no beat, countdown", "beat", "beat, countdown", "beat, flag cleared", "beat, new tempo", "beat, same tempo"]);
@@ -145,9 +145,9 @@ public sealed class BatchSeventyThreeDifferentialTests(ITestOutputHelper output)
 				// the position moved by 3 or wrapped around the colours)
 				game =>
 				{
-					ushort cycle = game.Processor.PullUInt16(0x35cf, 2);
-					int timerAfter = game.Processor.PullUInt8(0x35cf, (ushort)(cycle + 8));
-					int positionAfter = game.Processor.PullUInt16(0x35cf, (ushort)(cycle + 2));
+					ushort cycle = game.Processor.Storage.PullUInt16(0x35cf, 2);
+					int timerAfter = game.Processor.Storage.PullUInt8(0x35cf, (ushort)(cycle + 8));
+					int positionAfter = game.Processor.Storage.PullUInt16(0x35cf, (ushort)(cycle + 2));
 
 					if (timer == 0)
 						return timerAfter == 0 ? "inactive" : "?";
