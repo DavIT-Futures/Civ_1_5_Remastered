@@ -484,17 +484,23 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   „przechodzi” (mutacje przeżywały) – etykieta gałęzi musi potwierdzać, że funkcja doszła do końca; skrypt domyślny
   (golden master) kończy turę. `DirtyCellTally` jest w zapisach zerem – ustawiony w `Prepare`. Pięć wybranych scenariuszy
   (ok. 17 s). Testy w `BatchSixtyFourDifferentialTests`.
+- Porcja 65 (2026-10-16): `ComputeSpaceshipSuccess` (`SpaceshipScreen`, AI buduje część statku), rozbita na
+  `ShipArrivesFirstSoon`, `SpaceshipPlaceAddress`, `SpaceshipPlaceCell`, `BuildSpaceshipPart`; „splątane skoki” to jedna
+  pętla szukania z trzema wyjściami. Ramka zostaje. Wnioski: pola tabeli 0x375a są ułożone rosnąco według rodzaju, więc
+  pasujące pole zawsze leży przed pierwszym wolnym polem wyższej klasy – „rezygnacja 4 pola po pierwszym wolnym, gdy gracz
+  zna technologię części” daje ten sam wynik (1, bez budowy) co dojście do końca tabeli; mutacje tej logiki przeżywają
+  (równoważne dla tej tabeli). Technologia części −1 liczy się jako znana (test). Testy w `BatchSixtyFiveDifferentialTests`.
 
 ## Następny krok
 
 Dalej małe metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 60`
 (metody z co najmniej 2 liniami `goto L` / `FlagSet` / `Compare…` / `SumWord` itd., od najkrótszej). Kandydaci
-(`GameLoadAndSave` i `Newspaper` nie mają już metod w stylu asm): `ChooseTechnologyToTake` (`TradeAndConquest`, patrz wyżej),
+(`GameLoadAndSave` i `Newspaper` nie mają już metod w stylu asm): `ChooseTechnologyToTake` (`TradeAndConquest`, patrz wyżej), `SettleBattle`, `RenderMapTile`, `OpeningSequence`, `DisplayMainIntro`, `DisplayCivilopediaRecord`,
 `OperateMenu`, `DisplayMenu` (`DialogDrawing`),
 `DisplayCivilizationScreen` (`MainIntro`, patrz porcja 57),
 `DisplayPalace` (`Palace`, patrz porcja 45), reszta generatora mapy w `GameInitAndIntro`. Funkcje niskopoziomowe `SystemServices` (`DeactivateMouse`, `PointerEvent`,
 przerwanie zegara: `OnClockBeat`, `RefreshHueCycling`, `ColorsFadeStep`, `ColorsFadeStepInterrupt`, `AssignColors`) na koniec: działają
-w przerwaniach albo na rejestrach. Stan 2026-10-15 (po porcji 64): 25 metod w stylu asm, ok. 35,7 tys. z 65,3 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
+w przerwaniach albo na rejestrach. Stan 2026-10-15 (po porcji 65): 24 metody w stylu asm, ok. 35,7 tys. z 65,3 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 

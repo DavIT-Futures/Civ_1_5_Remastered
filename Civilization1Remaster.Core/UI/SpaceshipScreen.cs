@@ -645,148 +645,131 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// The AI decides about a spaceship part of the kind arg2 (0 structure, 1 component, 2 module): the places of the table
+		/// 0x375a are searched from the first one (from 0x21 for modules, or when the player's ship arrives within 15 years and
+		/// before the human player's) for an empty place of a part of this kind; the first empty place that would take a part
+		/// of the kind is remembered, and the search gives up 4 places after it (not for modules) when the player knows the
+		/// technology of the part (0xe68 + 0x1e * kind). An empty place of this kind is built (shown with the space scenery,
+		/// the ship redrawn, its chance of success in BotStarshipVictoryRatio, the ship bit 8 + player set).
 		/// </summary>
-		/// <param name="playerID"></param>
-		/// <param name="param2"></param>
-		/// <returns></returns>
+		/// <returns>0 when a part was built, 1 when not (none found but a later place exists), 2 when no place at all; also in AX</returns>
 		public ushort ComputeSpaceshipSuccess(short participantIdx, short arg2)
 		{
 			this.processor.Journal.OpenScope($"ComputeSpaceshipSuccess({participantIdx}, {arg2})");
 
-			// function body
+			// The frame like the original (the functions called see the stack at the same depth)
 			this.processor.EnterFrame(0x6);
 			this.processor.PreserveIndexRegisters();
-			this.processor.RegAcc.Value16 = 0;
-			this.owner.World.BotStarshipVictoryRatio = (short)this.processor.RegAcc.Value16;
-			this.processor.EmitLocalWord(0x6, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x4, 0x1);
-			this.processor.EmitLocalWord(0x2, 0x3e7);
-			this.processor.CompareWord((ushort)arg2, 0x2);
-			if (this.processor.FlagSet.IsEqual) goto L0d9b;
-			this.processor.RegSource.Value16 = (ushort)this.owner.World.Participants[participantIdx].StarshipArrivalSeason;
-			this.processor.CompareWord(this.processor.RegSource.Value16, 0xffff);
-			if (this.processor.FlagSet.IsEqual) goto L0da0;
-			this.processor.RegAcc.Value16 = this.processor.RegSource.Value16;
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, (ushort)this.owner.World.Season);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xf);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0da0;
-			this.processor.RegDest.Value16 = (ushort)this.owner.World.Participants[this.owner.World.PersonParticipantIdx].StarshipArrivalSeason;
-			this.processor.CompareWord(this.processor.RegSource.Value16, this.processor.RegDest.Value16);
-			if (this.processor.FlagSet.IsLess) goto L0d9b;
-			this.processor.CompareWord(this.processor.RegDest.Value16, 0xffff);
-			if (this.processor.FlagSet.IsNotEqual) goto L0da0;
 
-		L0d9b:
-			this.processor.EmitLocalWord(0x6, 0x21);
+			this.owner.World.BotStarshipVictoryRatio = 0;
 
-		L0da0:
-			this.processor.RegAcc.Value16 = 0x3;
-			this.processor.ScaleAccumulatorToSource(this.processor.PullLocalWord(0x6));
-			this.processor.SegExtra.Value16 = 0x375a; // segment
-			this.processor.RegAcc.LowByte = 0xc;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x0)));
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1));
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegBase.Value16 = this.processor.SumWord(this.processor.RegBase.Value16, this.processor.RegAcc.Value16);
-			this.processor.ScaleIndex(0xb4, (ushort)participantIdx);
-			this.processor.RegBase.Value16 = this.processor.SumWord(this.processor.RegBase.Value16, this.processor.RegAcc.Value16);
-			this.processor.SegExtra.Value16 = 0x3772; // segment
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegExtra.Value16, (ushort)(this.processor.RegBase.Value16 + 0x16e0)), 0xff);
-			if (this.processor.FlagSet.IsNotEqual) goto L0e1a;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x3e7);
-			if (this.processor.FlagSet.IsNotEqual) goto L0df7;
-			this.processor.ScaleIndex(0x3, (ushort)arg2);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x3);
-			this.processor.SegExtra.Value16 = 0x375a; // segment
-			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x2));
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.RegCount.Value16);
-			if (this.processor.FlagSet.IsLess) goto L0df7;
-			this.processor.CopyLocalWord(0x6, 0x2);
+			ushort placeIdx = (ushort)(arg2 == 2 || ShipArrivesFirstSoon(participantIdx) ? 0x21 : 0);
+			ushort firstFree = 0x3e7;
+			bool found = false;
 
-		L0df7:
-			this.processor.RegAcc.Value16 = 0x3;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullLocalWord(0x6));
-			this.processor.SegExtra.Value16 = 0x375a; // segment
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegExtra.Value16, (ushort)(this.processor.RegBase.Value16 + 0x2));
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegCount.LowByte = 0x3;
-			this.processor.DivideSignedByte(this.processor.RegAcc, this.processor.RegCount.LowByte);
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, (ushort)arg2);
-			if (this.processor.FlagSet.IsNotEqual) goto L0e1a;
-			this.processor.EmitLocalWord(0x4, 0x0);
-			goto L0e68;
+			while (true)
+			{
+				if (SpaceshipPlaceCell(participantIdx, placeIdx) == 0xff)
+				{
+					ushort place = (ushort)(3 * placeIdx);
 
-		L0e1a:
-			this.processor.EmitLocalWord(0x6, this.processor.IncrementWord(this.processor.PullLocalWord(0x6)));
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x6);
-			this.processor.RegCount.Value16 = 0x3;
-			this.processor.ScaleAccumulatorToBase(this.processor.RegCount.Value16);
-			this.processor.SegExtra.Value16 = 0x375a; // segment
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegExtra.Value16, (ushort)(this.processor.RegBase.Value16 + 0x0)), 0xff);
-			if (this.processor.FlagSet.IsEqual) goto L0e68;
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x6);
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x2));
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x4);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0e41;
-			goto L0da0;
+					if (firstFree == 0x3e7 && (sbyte)this.processor.PullUInt8(0x375a, (ushort)(place + 2)) >= (short)((3 * arg2) + 3))
+					{
+						firstFree = placeIdx;
+					}
 
-		L0e41:
-			this.processor.CompareWord((ushort)arg2, 0x2);
-			if (this.processor.FlagSet.IsNotEqual) goto L0e4a;
-			goto L0da0;
+					if ((sbyte)this.processor.PullUInt8(0x375a, (ushort)(place + 2)) / 3 == arg2)
+					{
+						found = true;
+						break;
+					}
+				}
 
-		L0e4a:
-			this.processor.RegAcc.Value16 = 0x1e;
-			this.processor.ScaleAccumulatorToBase((ushort)arg2);
-			this.processor.RegAcc.Value16 = this.owner.Advisors.PlayerKnowsTechnology(participantIdx, this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xe68)));
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsNotEqual)
-				goto L0e68;
+				placeIdx++;
 
-			goto L0da0;
+				if (this.processor.PullUInt8(0x375a, (ushort)(3 * placeIdx)) == 0xff)
+					break;
 
-		L0e68:
-			this.processor.RegAcc.Value16 = 0x3;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullLocalWord(0x6));
-			this.processor.SegExtra.Value16 = 0x375a; // segment
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegExtra.Value16, (ushort)(this.processor.RegBase.Value16 + 0x0)), 0xff);
-			if (this.processor.FlagSet.IsNotEqual) goto L0e89;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x3e7);
-			if (this.processor.FlagSet.IsNotEqual) goto L0e89;
-			this.processor.RegAcc.Value16 = 0x2;
-			goto L0f7d;
+				if ((short)(placeIdx - firstFree) < 4 || arg2 == 2)
+					continue;
 
-		L0e89:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L0e95;
+				if (this.owner.Advisors.PlayerKnowsTechnology(participantIdx,
+					(short)this.processor.PullGlobalWord((ushort)((0x1e * arg2) + 0xe68))) != 0)
+					break;
+			}
 
-		L0e8f:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x4);
-			goto L0f7d;
+			ushort result;
+			bool atEnd = this.processor.PullUInt8(0x375a, (ushort)(3 * placeIdx)) == 0xff;
 
-		L0e95:
-			this.processor.RegAcc.Value16 = 0x3;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullLocalWord(0x6));
-			this.processor.SegExtra.Value16 = 0x375a; // segment
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegExtra.Value16, (ushort)(this.processor.RegBase.Value16 + 0x0)), 0xff);
-			if (this.processor.FlagSet.IsNotEqual) goto L0eb6;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x3e7);
-			if (this.processor.FlagSet.IsEqual) goto L0eb6;
+			if (atEnd && firstFree == 0x3e7)
+			{
+				result = 2;
+			}
+			else if (!found)
+			{
+				result = 1;
+			}
+			else if (this.processor.PullUInt8(0x375a, (ushort)(3 * placeIdx)) == 0xff && firstFree != 0x3e7)
+			{
+				result = 1;
+			}
+			else
+			{
+				BuildSpaceshipPart(participantIdx, placeIdx);
 
-			this.processor.RegAcc.Value16 = 0x1;
-			goto L0f7d;
+				result = 0;
+			}
 
-		L0eb6:
+			this.processor.RegAcc.Value16 = result;
+
+			this.processor.RestoreIndexRegisters();
+			this.processor.LeaveFrame();
+
+			this.processor.Journal.CloseScope("ComputeSpaceshipSuccess");
+
+			return this.processor.RegAcc.Value16;
+		}
+
+		/// <summary>
+		/// The player's ship arrives within 15 years, and before the human player's (or the human player has none)
+		/// </summary>
+		private bool ShipArrivesFirstSoon(short participantIdx)
+		{
+			ushort arrival = (ushort)this.owner.World.Participants[participantIdx].StarshipArrivalSeason;
+
+			if (arrival == 0xffff || (short)(arrival - this.owner.World.Season) >= 0xf)
+				return false;
+
+			ushort humanArrival = (ushort)this.owner.World.Participants[this.owner.World.PersonParticipantIdx].StarshipArrivalSeason;
+
+			return (short)arrival < (short)humanArrival || humanArrival == 0xffff;
+		}
+
+		/// <summary>The address of the cell of the place (table 0x375a: column, row) in the player's spaceship (0x3772:0x16e0)</summary>
+		private ushort SpaceshipPlaceAddress(short participantIdx, ushort placeIdx)
+		{
+			ushort place = (ushort)(3 * placeIdx);
+			short column = (sbyte)this.processor.PullUInt8(0x375a, place);
+			short row = (sbyte)this.processor.PullUInt8(0x375a, (ushort)(place + 1));
+
+			return (ushort)((0xc * column) + row + (0xb4 * participantIdx) + 0x16e0);
+		}
+
+		/// <summary>The cell of the place in the player's spaceship (0xff: empty)</summary>
+		private byte SpaceshipPlaceCell(short participantIdx, ushort placeIdx)
+		{
+			return this.processor.PullUInt8(0x3772, SpaceshipPlaceAddress(participantIdx, placeIdx));
+		}
+
+		/// <summary>
+		/// The AI builds a part at the place: the news on the space scenery, the part of the place's kind, the ship redrawn
+		/// (its chance of success into BotStarshipVictoryRatio), the ship bit (8 + player)
+		/// </summary>
+		private void BuildSpaceshipPart(short participantIdx, ushort placeIdx)
+		{
 			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 0);
 
-			this.processor.RegBase.Value16 = (ushort)participantIdx;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1992)));
+			this.owner.Libc.CopyText(0xba06, this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1992)));
 
 			this.owner.Libc.AppendText(0xba06, " build space ship.\n");
 
@@ -798,45 +781,17 @@ namespace Civilization1Remaster.UI
 
 			this.owner.TurnLogic.AwaitForKey();
 
-			this.processor.ScaleIndexToSource(0x3, this.processor.PullLocalWord(0x6));
-			this.processor.SegExtra.Value16 = 0x375a; // segment
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x2));
-			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegAcc.LowByte = 0xc;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x0)));
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1));
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegBase.Value16 = this.processor.SumWord(this.processor.RegBase.Value16, this.processor.RegAcc.Value16);
-			this.processor.ScaleIndex(0xb4, (ushort)participantIdx);
-			this.processor.RegBase.Value16 = this.processor.SumWord(this.processor.RegBase.Value16, this.processor.RegAcc.Value16);
-			this.processor.SegExtra.Value16 = 0x3772; // segment
-			this.processor.EmitUInt8(this.processor.SegExtra.Value16, (ushort)(this.processor.RegBase.Value16 + 0x16e0), this.processor.RegCount.LowByte);
-			
-			RenderSpaceship(participantIdx, -1, 0);
+			byte kind = this.processor.PullUInt8(0x375a, (ushort)((3 * placeIdx) + 2));
 
-			this.owner.World.BotStarshipVictoryRatio = (short)this.processor.RegAcc.Value16;
-			this.processor.RegAcc.Value16 = 0x1;
-			this.processor.RegCount.LowByte = (byte)participantIdx;
-			this.processor.RegCount.LowByte = this.processor.SumByte(this.processor.RegCount.LowByte, 0x8);
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			this.owner.World.StarshipMarkers |= (short)this.processor.RegAcc.Value16;
+			this.processor.EmitUInt8(0x3772, SpaceshipPlaceAddress(participantIdx, placeIdx), kind);
+
+			this.owner.World.BotStarshipVictoryRatio = (short)RenderSpaceship(participantIdx, -1, 0);
+
+			this.owner.World.StarshipMarkers |= (short)(1 << (byte)(participantIdx + 8));
 
 			this.owner.TurnLogic.AwaitForKey();
 
 			ImportSpaceScenery();
-
-			goto L0e8f;
-
-		L0f7d:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.RegDest.Value16 = this.processor.UnstackWord();
-			this.processor.LeaveFrame();
-
-			// Far return
-			this.processor.Journal.CloseScope("ComputeSpaceshipSuccess");
-
-			return this.processor.RegAcc.Value16;
 		}
 
 		/// <summary>
