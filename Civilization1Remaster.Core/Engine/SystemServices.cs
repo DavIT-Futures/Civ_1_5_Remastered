@@ -659,165 +659,114 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <summary>
-		/// ?
+		/// The first step of a colour fade (FadeColors); see MixFadeColours
 		/// </summary>
 		public void ColorsFadeStep()
 		{
 			this.processor.Journal.OpenScope("ColorsFadeStep()");
 
-			// function body
-			this.processor.DisableInterrupts();
-			this.processor.PreserveSource();
-			this.processor.StackWord(this.processor.RegDest.Value16);
-			this.processor.StackWord(this.processor.RegFrame.Value16);
-			this.processor.StackWord(this.processor.SegExtra.Value16);
+			MixFadeColours();
 
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x62);
-			this.processor.RegCount.Value16 = this.processor.PullGlobalWord(0x64);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.RegCount.Value16);
-			this.processor.RegAcc.HighByte = 0x0;
-			this.processor.EmitGlobalWord(0x62, this.processor.RegAcc.Value16);
-			this.processor.RegSource.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegSource.Value16 = this.processor.SumWord(this.processor.RegSource.Value16, this.processor.RegAcc.Value16);
-			this.processor.RegSource.Value16 = this.processor.SumWord(this.processor.RegSource.Value16, this.processor.RegAcc.Value16);
-			// LEA
-			this.processor.RegDest.Value16 = 0xc006;
-
-			this.processor.StackWord(this.processor.SegData.Value16);
-			this.processor.SegExtra.Value16 = this.processor.UnstackWord();
-
-			this.processor.RegAcc.Value16 = this.processor.RegCount.Value16;
-			this.processor.RegCount.Value16 = this.processor.SumWord(this.processor.RegCount.Value16, this.processor.RegAcc.Value16);
-			this.processor.RegCount.Value16 = this.processor.SumWord(this.processor.RegCount.Value16, this.processor.RegAcc.Value16);
-
-		L05db:
-			this.processor.RegBase.Value16 = 0x0;
-			this.processor.RegFrame.Value16 = 0x0;
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0xbd06));
-			this.processor.RegAcc.HighByte = 0x0;
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual) goto L05f7;
-			this.processor.RegData.Value16 = this.processor.PullGlobalWord(0x6a);
-			this.processor.RegData.Value16 = this.processor.InvertWord(this.processor.RegData.Value16);
-			this.processor.MultiplyWord(this.processor.RegData, this.processor.RegAcc, this.processor.RegData.Value16);
-			this.processor.RegFrame.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegBase.Value16 = this.processor.RegData.Value16;
-
-		L05f7:
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0xba06));
-			this.processor.RegAcc.HighByte = 0x0;
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual) goto L0609;
-			this.processor.MultiplyWord(this.processor.RegData, this.processor.RegAcc, this.processor.PullGlobalWord(0x6a));
-			this.processor.RegFrame.Value16 = this.processor.SumWord(this.processor.RegFrame.Value16, this.processor.RegAcc.Value16);
-			this.processor.RegBase.Value16 = this.processor.SumCarryWord(this.processor.RegBase.Value16, this.processor.RegData.Value16);
-
-		L0609:
-			this.processor.RegFrame.Value16 = this.processor.ShiftLeftWord(this.processor.RegFrame.Value16, 0x1);
-			this.processor.RegBase.Value16 = this.processor.SumCarryWord(this.processor.RegBase.Value16, 0x0);
-			this.processor.RegAcc.LowByte = this.processor.RegBase.LowByte;
-			this.processor.StoreStringByte();
-			this.processor.RegSource.Value16 = this.processor.IncrementWord(this.processor.RegSource.Value16);
-			this.processor.CompareWord(this.processor.RegSource.Value16, 0x300);
-			if (this.processor.FlagSet.IsBelow) goto L062a;
-			this.processor.RegSource.Value16 = 0x0;
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x6c);
-			this.processor.EmitGlobalWord(0x6a, this.processor.SumWord(this.processor.PullGlobalWord(0x6a), this.processor.RegAcc.Value16));
-			if (this.processor.FlagSet.IsAboveOrEqual) goto L062a;
-			this.processor.EmitGlobalWord(0x6a, 0xffff);
-
-		L062a:
-			if (this.processor.RepeatLoop(this.processor.RegCount)) goto L05db;
-
-			this.processor.SegExtra.Value16 = this.processor.UnstackWord();
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-			this.processor.RegDest.Value16 = this.processor.UnstackWord();
-			this.processor.RestoreSource();
-			this.processor.EnableInterrupts();
-
-			// Near return
 			this.processor.Journal.CloseScope("ColorsFadeStep");
 		}
 
 		/// <summary>
-		/// ?
+		/// A step of a colour fade from the timer (AssignColors); see MixFadeColours
 		/// </summary>
 		public void ColorsFadeStepInterrupt()
 		{
 			this.processor.Journal.OpenScope("ColorsFadeStepInterrupt()");
 
-			// function body
-			this.processor.DisableInterrupts();
-			this.processor.PreserveSource();
-			this.processor.StackWord(this.processor.RegDest.Value16);
-			this.processor.StackWord(this.processor.RegFrame.Value16);
-			this.processor.StackWord(this.processor.SegExtra.Value16);
+			MixFadeColours();
 
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x62);
-			this.processor.RegCount.Value16 = this.processor.PullGlobalWord(0x64);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.RegCount.Value16);
-			this.processor.RegAcc.HighByte = 0x0;
-			this.processor.EmitGlobalWord(0x62, this.processor.RegAcc.Value16);
-			this.processor.RegSource.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegSource.Value16 = this.processor.SumWord(this.processor.RegSource.Value16, this.processor.RegAcc.Value16);
-			this.processor.RegSource.Value16 = this.processor.SumWord(this.processor.RegSource.Value16, this.processor.RegAcc.Value16);
-			// LEA
-			this.processor.RegDest.Value16 = 0xc006;
-
-			this.processor.StackWord(this.processor.SegData.Value16);
-			this.processor.SegExtra.Value16 = this.processor.UnstackWord();
-
-			this.processor.RegAcc.Value16 = this.processor.RegCount.Value16;
-			this.processor.RegCount.Value16 = this.processor.SumWord(this.processor.RegCount.Value16, this.processor.RegAcc.Value16);
-			this.processor.RegCount.Value16 = this.processor.SumWord(this.processor.RegCount.Value16, this.processor.RegAcc.Value16);
-
-		L05db:
-			this.processor.RegBase.Value16 = 0x0;
-			this.processor.RegFrame.Value16 = 0x0;
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0xbd06));
-			this.processor.RegAcc.HighByte = 0x0;
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual) goto L05f7;
-			this.processor.RegData.Value16 = this.processor.PullGlobalWord(0x6a);
-			this.processor.RegData.Value16 = this.processor.InvertWord(this.processor.RegData.Value16);
-			this.processor.MultiplyWord(this.processor.RegData, this.processor.RegAcc, this.processor.RegData.Value16);
-			this.processor.RegFrame.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegBase.Value16 = this.processor.RegData.Value16;
-
-		L05f7:
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0xba06));
-			this.processor.RegAcc.HighByte = 0x0;
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual) goto L0609;
-			this.processor.MultiplyWord(this.processor.RegData, this.processor.RegAcc, this.processor.PullGlobalWord(0x6a));
-			this.processor.RegFrame.Value16 = this.processor.SumWord(this.processor.RegFrame.Value16, this.processor.RegAcc.Value16);
-			this.processor.RegBase.Value16 = this.processor.SumCarryWord(this.processor.RegBase.Value16, this.processor.RegData.Value16);
-
-		L0609:
-			this.processor.RegFrame.Value16 = this.processor.ShiftLeftWord(this.processor.RegFrame.Value16, 0x1);
-			this.processor.RegBase.Value16 = this.processor.SumCarryWord(this.processor.RegBase.Value16, 0x0);
-			this.processor.RegAcc.LowByte = this.processor.RegBase.LowByte;
-			this.processor.StoreStringByte();
-			this.processor.RegSource.Value16 = this.processor.IncrementWord(this.processor.RegSource.Value16);
-			this.processor.CompareWord(this.processor.RegSource.Value16, 0x300);
-			if (this.processor.FlagSet.IsBelow) goto L062a;
-			this.processor.RegSource.Value16 = 0x0;
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x6c);
-			this.processor.EmitGlobalWord(0x6a, this.processor.SumWord(this.processor.PullGlobalWord(0x6a), this.processor.RegAcc.Value16));
-			if (this.processor.FlagSet.IsAboveOrEqual) goto L062a;
-			this.processor.EmitGlobalWord(0x6a, 0xffff);
-
-		L062a:
-			if (this.processor.RepeatLoop(this.processor.RegCount)) goto L05db;
-
-			this.processor.SegExtra.Value16 = this.processor.UnstackWord();
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
-			this.processor.RegDest.Value16 = this.processor.UnstackWord();
-			this.processor.RestoreSource();
-			this.processor.EnableInterrupts();
-
-			// Near return
 			this.processor.Journal.CloseScope("ColorsFadeStepInterrupt");
+		}
+
+		/// <summary>
+		/// The next 0x64 colours of a fade (from colour 0x62, wrapping at 256) into 0xc006: each colour byte is the mix of the
+		/// colours at 0xbd06 (from) and 0xba06 (to), (from * ~mix + to * mix) / 0x10000 rounded, with the mix 0x6a; after the last colour
+		/// the mix grows by 0x6c (at most 0xffff). The memory accesses are those of the original (the beats of the test timer
+		/// depend on them; the colours are written straight into memory like stosb), and AX, BX, CX, DX are left as it leaves
+		/// them; SI, DI, BP and ES are kept.
+		/// </summary>
+		private void MixFadeColours()
+		{
+			this.processor.DisableInterrupts();
+
+			ushort previous = this.processor.PullGlobalWord(0x62);
+			ushort count = this.processor.PullGlobalWord(0x64);
+			ushort first = (ushort)((previous + count) & 0xff);
+
+			this.processor.EmitGlobalWord(0x62, first);
+
+			ushort source = (ushort)(3 * first);
+			ushort target = 0xc006;
+			ushort bytes = (ushort)(3 * count);
+			ushort acc = first;
+			ushort data = this.processor.RegData.Value16;
+			ushort sum = 0;
+
+			do
+			{
+				uint mixed = 0;
+
+				byte from = this.processor.PullGlobalByte((ushort)(source + 0xbd06));
+
+				if (from != 0)
+				{
+					uint product = (uint)from * (ushort)~this.processor.PullGlobalWord(0x6a);
+
+					mixed = product;
+					acc = (ushort)product;
+					data = (ushort)(product >> 16);
+				}
+
+				byte to = this.processor.PullGlobalByte((ushort)(source + 0xba06));
+
+				acc = to;
+
+				if (to != 0)
+				{
+					uint product = (uint)to * this.processor.PullGlobalWord(0x6a);
+
+					mixed += product;
+					acc = (ushort)product;
+					data = (ushort)(product >> 16);
+				}
+
+				// The high word, rounded with the top bit of the low word
+				sum = (ushort)((mixed >> 16) + ((mixed >> 15) & 1));
+				acc = (ushort)((acc & 0xff00) | (sum & 0xff));
+
+				this.processor.Storage.EmitUInt8(this.processor.SegData.Value16, target++, (byte)sum);
+
+				source++;
+
+				if (source >= 0x300)
+				{
+					source = 0;
+					acc = this.processor.PullGlobalWord(0x6c);
+
+					uint mix = (uint)this.processor.PullGlobalWord(0x6a) + acc;
+
+					this.processor.EmitGlobalWord(0x6a, (ushort)mix);
+
+					if (mix > 0xffff)
+					{
+						this.processor.EmitGlobalWord(0x6a, 0xffff);
+					}
+				}
+
+				bytes--;
+			}
+			while (bytes != 0);
+
+			this.processor.RegAcc.Value16 = acc;
+			this.processor.RegBase.Value16 = sum;
+			this.processor.RegCount.Value16 = 0;
+			this.processor.RegData.Value16 = data;
+
+			this.processor.EnableInterrupts();
 		}
 
 		/// <summary>

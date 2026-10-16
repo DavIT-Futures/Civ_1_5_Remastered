@@ -495,6 +495,11 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   (od nich zależą tyknięcia zegara testów); golden master, testy zależne od zegara (porcje 51, 55) i pełny zestaw zielone.
   Krok muzyki w emulatorze zawsze zwraca 0, więc zmiany szybkości po nim są nieosiągalne w testach (zachowane).
   Testy w `BatchSixtySixDifferentialTests`.
+- Porcja 67, mała (2026-10-16): `ColorsFadeStep` i `ColorsFadeStepInterrupt` (`SystemServices`, dwie identyczne kopie
+  kroku przejścia kolorów) – jedna implementacja `MixFadeColours`. Kolor = górne słowo (z * ~mix + do * mix), zaokrąglone
+  bitem 15 dolnego słowa (przesunięcie BP z przeniesieniem do BX, nie przesunięcie całości). Dostępy do pamięci jak
+  w oryginale (zapis kolorów bezpośrednio, jak stosb), AX / BX / CX / DX na wyjściu jak w oryginale (test porcji 51 je
+  porównuje). Mutacja `> 0xffff` → `> 0xfffe` równoważna. Testy w `BatchSixtySevenDifferentialTests`.
 
 ## Następny krok
 
@@ -504,8 +509,8 @@ Dalej małe metody: `python Civilization1Remaster.Tests/Differential/Reference/f
 `OperateMenu`, `DisplayMenu` (`DialogDrawing`),
 `DisplayCivilizationScreen` (`MainIntro`, patrz porcja 57),
 `DisplayPalace` (`Palace`, patrz porcja 45), reszta generatora mapy w `GameInitAndIntro`. Funkcje niskopoziomowe `SystemServices` (`DeactivateMouse`, `PointerEvent`,
-przerwanie zegara: `RefreshHueCycling`, `ColorsFadeStep`, `ColorsFadeStepInterrupt`, `AssignColors`) na koniec: działają
-w przerwaniach albo na rejestrach. Stan 2026-10-15 (po porcji 66): 23 metody w stylu asm, ok. 35,7 tys. z 65,3 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
+przerwanie zegara: `RefreshHueCycling`, `AssignColors`) na koniec: działają
+w przerwaniach albo na rejestrach. Stan 2026-10-15 (po porcji 67): 21 metod w stylu asm, ok. 35,7 tys. z 65,3 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
