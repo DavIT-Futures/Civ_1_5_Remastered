@@ -581,13 +581,27 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   w testach 72 i 73); scenariusze wymuszają rzadkie gałęzie: jednostki z rozkazami (bity 2, 3) przy miejscach o priorytecie 2,
   bombowiec z dwoma miejscami ważonymi na remis (mnożnik 2 / 4 zmienia wybór), gracz z dokładnie 10 / 11 miastami w turze
   rządu, gracz bez miast i jednostek na końcu (eliminacja). Testy w `BatchSeventyFourDifferentialTests`.
+- Porcja 75 (2026-10-17): `PickCityProduction` (`ScienceAndAdvisors`, wybór produkcji miasta: tekst menu i lista wyborów
+  w ramce, ocena potrzeb miasta, punktacja wyborów, wybór komputera, doradcy, menu, Civilopedia, strony „more...”), rozbita na
+  `ListProductionChoices` / `ListUnitChoices` / `ListImprovementChoices` / `ListWonderChoices`, `AssessCityNeeds`,
+  `AssessCityDefence`, `ScoreProductionChoices` / `ScoreImprovementChoice` / `ScoreDiplomatChoice` / `ScoreUnitChoice`,
+  `DecideProduction`, `ShowProductionAdvice`. Zmienne lokalne są właściwościami czytającymi i zapisującymi ramkę (te same
+  wartości zostają pod SP, lista wyborów jest w ramce); pętla `while` zastępuje skoki do L0447 (strony, doradcy, Civilopedia).
+  Zachowane: wczesne odpowiedzi (milicja 1, barbarzyńcy 3 / 7) nie przywracają `TroopTally` przeliczonego od nowa. Wnioski do
+  testów: test porównuje ramkę funkcji (`Watched` od SP - 2 - 0x14a) – mutacje punktacji są widoczne tylko w najlepszych
+  wynikach i liście, które tam zostają; menu w testach idzie ścieżką myszy, jeśli 0x1a3c ≠ 0 (stan przycisków z zapisu) –
+  scenariusze wyłączają mysz i wpisują klawisze przez własne `InputStarved` (kolejka klawiszy scenariusza, co drugie zapytanie
+  bez klawisza, limit), bo klawisze wpisane z góry do `VideoCard.Tokens` zużywa wcześniej `HandleCity`. Mutacja nie złapana:
+  dolna granica wyniku karawany (`Score < 3`) – wymaga miasta z handlem ≥ 16, takiego nie ma w zapisach 1, 11, 14; próg
+  stronicowania (dokładnie 31 pozycji) też niesprawdzony (mutacja zastąpiona warunkiem miasta budującego samo). Testy w
+  `BatchSeventyFiveDifferentialTests`.
 
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
-(`PickCityProduction`, `LaunchAudience`, `ShiftAIUnit`, `HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
+(`LaunchAudience`, `ShiftAIUnit`, `HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-17 (po porcji 74): 5 metod w stylu asm, ok. 20,6 tys. z 60,2 tys. linii Core, 3641 linii z `goto`.
+Stan 2026-10-17 (po porcji 75): 4 metody w stylu asm, ok. 19,1 tys. z 59,6 tys. linii Core, 3343 linie z `goto`.
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
