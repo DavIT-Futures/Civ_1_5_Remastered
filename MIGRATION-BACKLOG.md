@@ -526,15 +526,21 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   `EliminateUnit`. Wnioski do testów: `RenderMapTile` przy `0xd762 == 0` (grafika bez animacji cykli kolorów) odwołuje się do
   prostokąta pod `0x19fc` operującego na ekranie 3, dlatego w testach należy zarezerwować ekran 3 (`game.VideoCard.ReserveScreen(3)`).
   Kolor oceanu na warstwie terenu to `1` (mapowany przez tabelę `0x2ba6` na teren `0xa`). Testy w `BatchSeventyDifferentialTests`.
+- Porcja 71 (2026-10-16): `DisplayPalace` (`Palace`, ekran pałacu z prezentacją graficzną, interaktywną rozbudową skrzydeł, wież,
+  zamku i ogrodów) oraz `DisplayCivilopediaRecord` (`Civilopedia`, wyświetlanie szczegółów encyklopedii dla technologii, budynków/cudów,
+  jednostek wojskowych, ukształtowania terenu i ogólnych pojęć cywilizacyjnych). W `Palace` i `Civilopedia` nie ma już metod w stylu asm (100% czyste C#).
+  Ramki zostają: zachowanie i odtworzenie rejestrów indeksowych (`PreserveIndexRegisters` / `RestoreIndexRegisters`) oraz ramki lokalne.
+  Wnioski do testów: `DisplayPalace` korzysta z `ScriptedKeyboard` do wyboru sekcji i stylów ('1' = 0x31) oraz zatwierdzania dialogów (0x0d).
+  Testy w `BatchSeventyOneDifferentialTests`.
 
 ## Następny krok
 
 Dalej małe i średnie metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 60`
 (metody z co najmniej 2 liniami `goto L` / `FlagSet` / `Compare…` / `SumWord` itd., od najkrótszej). Kandydaci
-(`GameLoadAndSave`, `Newspaper`, `InGameHelp`, `TradeAndConquest`, `DialogDrawing`, `GameInitAndIntro`, `UnitCombat` i `MapManagement` nie mają już metod w stylu asm): `DisplayCivilopediaRecord`, `DisplayPalace`, `DisplayMainIntro`,
-`DisplayCivilizationScreen` (`MainIntro`, patrz porcja 57). Funkcje niskopoziomowe `SystemServices` (`DeactivateMouse`, `PointerEvent`,
-przerwanie zegara: `RefreshHueCycling`, `AssignColors`) na koniec: działają
-w przerwaniach albo na rejestrach. Stan 2026-10-16 (po porcji 70): 14 metod w stylu asm. Najwięcej `goto` mają `CityManagement` (ok. 1460), `PlayerTurn` (1144) i `AIPlayer` (670).
+(`GameLoadAndSave`, `Newspaper`, `InGameHelp`, `TradeAndConquest`, `DialogDrawing`, `GameInitAndIntro`, `UnitCombat`, `MapManagement`, `Palace` i `Civilopedia` nie mają już metod w stylu asm): `DisplayCivilizationScreen`, `DisplayMainIntro`
+(`MainIntro`, patrz porcja 57). Funkcje niskopoziomowe `SystemServices` (`PointerEvent`, przerwanie zegara: `ClockInterrupt`,
+`RefreshHueCycling`, `AssignColors`) na koniec: działają
+w przerwaniach albo na rejestrach. Stan 2026-10-16 (po porcji 71): 12 metod w stylu asm. Najwięcej `goto` mają `CityManagement` (ok. 1460), `PlayerTurn` (1144) i `AIPlayer` (670).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
