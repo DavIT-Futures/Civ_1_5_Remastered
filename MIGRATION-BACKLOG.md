@@ -532,15 +532,18 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   Ramki zostają: zachowanie i odtworzenie rejestrów indeksowych (`PreserveIndexRegisters` / `RestoreIndexRegisters`) oraz ramki lokalne.
   Wnioski do testów: `DisplayPalace` korzysta z `ScriptedKeyboard` do wyboru sekcji i stylów ('1' = 0x31) oraz zatwierdzania dialogów (0x0d).
   Testy w `BatchSeventyOneDifferentialTests`.
+- Porcja 72 (2026-10-16): `DisplayMainIntro` oraz `DisplayCivilizationScreen` (`MainIntro`, intro gry z animacją napisów i przewijaniem
+  kredytów, cyklami kolorów oraz ekran lądowania statku kosmicznego na Alfa Centauri / ekran cywilizacji z przewijaną animacją statku).
+  W `MainIntro` nie ma już metod w stylu asm (100% czyste C#). Metody podzielone na czytelne procedury pomocnicze:
+  `AnimateIntroPhase1`, `AnimateIntroPhase2`, `HandleIntroSelection`. Zmigrowano w trybie bezpośrednim (bez testów różnicowych, na życzenie
+  użytkownika w celu porównania czasu pracy).
 
 ## Następny krok
 
 Dalej małe i średnie metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 60`
 (metody z co najmniej 2 liniami `goto L` / `FlagSet` / `Compare…` / `SumWord` itd., od najkrótszej). Kandydaci
-(`GameLoadAndSave`, `Newspaper`, `InGameHelp`, `TradeAndConquest`, `DialogDrawing`, `GameInitAndIntro`, `UnitCombat`, `MapManagement`, `Palace` i `Civilopedia` nie mają już metod w stylu asm): `DisplayCivilizationScreen`, `DisplayMainIntro`
-(`MainIntro`, patrz porcja 57). Funkcje niskopoziomowe `SystemServices` (`PointerEvent`, przerwanie zegara: `ClockInterrupt`,
-`RefreshHueCycling`, `AssignColors`) na koniec: działają
-w przerwaniach albo na rejestrach. Stan 2026-10-16 (po porcji 71): 12 metod w stylu asm. Najwięcej `goto` mają `CityManagement` (ok. 1460), `PlayerTurn` (1144) i `AIPlayer` (670).
+(`GameLoadAndSave`, `Newspaper`, `InGameHelp`, `TradeAndConquest`, `DialogDrawing`, `GameInitAndIntro`, `UnitCombat`, `MapManagement`, `Palace`, `Civilopedia` i `MainIntro` nie mają już metod w stylu asm): `RunGame` (`GameStartup`), `PointerEvent`, przerwanie zegara: `ClockInterrupt`, `RefreshHueCycling` (`SystemServices`).
+Stan 2026-10-16 (po porcji 72): 10 metod w stylu asm. Najwięcej `goto` mają `CityManagement` (ok. 1460), `PlayerTurn` (1144) i `AIPlayer` (670).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
