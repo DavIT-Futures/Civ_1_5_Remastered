@@ -131,6 +131,9 @@ namespace Civilization1Remaster.Tests.Differential
 				ushort hardness = (ushort)chance.Next(4);
 				ushort rngSeed = (ushort)chance.Next(1, 0x7fff);
 
+				Dictionary<string, int> before = new Dictionary<string, int>(pair.Rewritten.Calls);
+				int gold = pair.Rewritten.Engine.World.Participants[participant1].Gold;
+
 				return new Scenario(
 					$"SettleBattle(mode={mode}, p1={participant1}, p2={participant2}, k1={kind1}, k2={kind2}, marker={marker})",
 					game =>
@@ -150,21 +153,23 @@ namespace Civilization1Remaster.Tests.Differential
 							}
 						}
 
-						for (int c = 0; c < 128; c++)
-						{
-							game.World.Towns[c].ConditionMarker = 0xff;
-						}
+						// The city of the defender lives in a slot of its own: the other cities stay, because the map still shows
+						// them and drawing a city tile without its city throws in both versions (the scenario would say nothing)
+						int townSlot = Array.FindIndex(game.World.Towns, town => town.ConditionMarker != 0xff && town.Place.X == x2 && town.Place.Y == y2);
+						if (townSlot < 0)
+							townSlot = Array.FindIndex(game.World.Towns, town => town.ConditionMarker == 0xff);
 
+						game.World.Towns[townSlot].ConditionMarker = 0xff;
 						game.MapOps.DiscardTileImprovements(0xff, x2, y2);
 						if (inCity)
 						{
 							game.MapOps.AssignTileImprovements(0x1, x2, y2);
-							game.World.Towns[0].ConditionMarker = 0;
-							game.World.Towns[0].Place = new System.Drawing.Point(x2, y2);
-							game.World.Towns[0].ParticipantIdx = participant2;
-							game.World.Towns[0].TrueExtent = 4;
-							game.World.Towns[0].StructureMarkers0 = 0x81;
-							game.World.Towns[0].StructureMarkers1 = 0;
+							game.World.Towns[townSlot].ConditionMarker = 0;
+							game.World.Towns[townSlot].Place = new System.Drawing.Point(x2, y2);
+							game.World.Towns[townSlot].ParticipantIdx = participant2;
+							game.World.Towns[townSlot].TrueExtent = 4;
+							game.World.Towns[townSlot].StructureMarkers0 = 0x81;
+							game.World.Towns[townSlot].StructureMarkers1 = 0;
 							game.World.Participants[participant2].TownTally = 2;
 						}
 						else if (inFortress)
@@ -198,13 +203,26 @@ namespace Civilization1Remaster.Tests.Differential
 					Register.Kept | Register.Acc,
 					game =>
 					{
+						// Confirmed by what the function did (its calls and its result), not by the parameters of the scenario
 						ushort ax = game.Processor.RegAcc.Value16;
-						if (marker == 0) return "estimate";
-						if (ax == 0xffff) return "cancelled";
-						if (kind1 == 0x19) return "nuclear";
-						if (ax == 1 && participant2 == 0 && kind2 == 0x1a) return "ransom";
-						if (ax == 1 && stackedDefender) return "stackDestroyed";
-						if (ax == 1 && inCity) return "cityDefender";
+						int Delta(string name) => Calls(game, pair, name) - before.GetValueOrDefault(name);
+
+						if (Delta("SettleBattle") != 1)
+							return "not called";
+						// A fought battle always marks the contact (0x20) in the relation, an estimate or a cancelled attack does not
+						bool fought = (game.World.Participants[participant1].Relations[participant2] & 0x20) != 0;
+						if (!fought && ax == 0xffff && Delta("AffirmBreakTreaty") > 0)
+							return "cancelled";
+						if (!fought && Delta("EliminateUnit") == 0)
+							return "estimate";
+						if (Delta("ExplodeNuclearWeapon") > 0)
+							return "nuclear";
+						if (ax == 1 && game.World.Participants[participant1].Gold == gold + 100)
+							return "ransom";
+						if (ax == 1 && Delta("TallyUnitsByDomainInStack") > 0 && Delta("EliminateUnit") > 1)
+							return "stackDestroyed";
+						if (ax == 1 && Delta("ObtainUnitAtTile") >= 9)
+							return "cityDefender";
 						return ax == 1 ? "attackerWins" : "defenderWins";
 					});
 			}, output, ["estimate", "cancelled", "nuclear", "ransom", "stackDestroyed", "cityDefender", "attackerWins", "defenderWins"],

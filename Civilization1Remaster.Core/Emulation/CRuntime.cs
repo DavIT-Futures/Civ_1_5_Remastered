@@ -1002,9 +1002,15 @@ namespace Civilization1Remaster.Emulation
 				(uint)CurrentTime(CPU.AsLinearAddress(this.processor.SegData.Value16, this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegStack.Value16 + 0x4)))));
 		}
 
+		/// <summary>
+		/// The clock of time(): the wall clock of the computer; a test sets a fixed moment, so that the random seed taken from
+		/// it (SeedRandomizer) is the same in both games it compares
+		/// </summary>
+		public Func<DateTime> Clock { get; set; } = () => DateTime.Now;
+
 		public int CurrentTime(uint momentAddr)
 		{
-			int grandSecs = (int)Math.Floor((DateTime.Now - (new DateTime(1970, 1, 1, 0, 0, 0))).TotalSeconds);
+			int grandSecs = (int)Math.Floor((this.Clock() - (new DateTime(1970, 1, 1, 0, 0, 0))).TotalSeconds);
 
 			if (momentAddr != 0)
 				this.processor.Storage.EmitUInt32(momentAddr, (uint)grandSecs);
