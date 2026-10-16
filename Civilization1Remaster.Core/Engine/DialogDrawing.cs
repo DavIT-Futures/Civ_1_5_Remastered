@@ -28,103 +28,78 @@ namespace Civilization1Remaster.Engine
 		public bool ChoicesIndentTokenDown = false;
 
 		/// <summary>
-		/// ?
+		/// Displays a menu or dialog box from the text at charsAddr at (horizLoc, vertLoc), handles keyboard and mouse navigation,
+		/// and returns the chosen option index (or 0xffff when cancelled)
 		/// </summary>
-		/// <param name="stringPtr"></param>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
-		/// <param name="flag"></param>
-		/// <returns></returns>
 		public ushort DisplayMenu(ushort charsAddr, int horizLoc, int vertLoc, ushort marker)
 		{
 			this.processor.Journal.OpenScope($"DisplayMenu(0x{charsAddr:x4}, {horizLoc}, {vertLoc}, {marker})");
 
-			// function body
+			// The stack frame stays so called functions (OperateMenu, ChoreographKingSpeaking) run at the same stack depth
 			this.processor.EnterFrame(0x12);
 			this.processor.PreserveSource();
 
-			this.processor.CompareWord(marker, 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L0043;
+			if (marker != 0)
+			{
+				this.owner.TurnLogic.AwaitForKey();
+			}
 
-			this.owner.TurnLogic.AwaitForKey();
+			ushort previousChoice = 0xffff;
+			ushort currentChoice = 0;
+			this.processor.EmitLocalWord(0x2, 0xffff);
+			this.processor.EmitLocalWord(0x4, 0);
+			this.processor.EmitGlobalWord(0x2fa2, 0);
+			this.processor.EmitGlobalWord(0x2f9c, 0);
 
-		L0043:
-			this.processor.RegAcc.Value16 = 0xffff;
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = 0;
-			this.processor.EmitGlobalWord(0x2fa2, this.processor.RegAcc.Value16);
-			this.processor.EmitGlobalWord(0x2f9c, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x1a3c), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L006f;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), 0xffff);
-			if (this.processor.FlagSet.IsNotEqual) goto L006f;
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x8066), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L006f;
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xd206), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L006f;
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
+			if (this.processor.PullGlobalWord(0x2f9a) != 0xffff)
+			{
+				currentChoice = this.processor.PullGlobalWord(0x2f9a);
+				this.processor.EmitLocalWord(0x4, currentChoice);
+			}
 
-		L006f:
-			this.processor.EmitLocalWord(0x4, 0x0);
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x2f9a), 0xffff);
-			if (this.processor.FlagSet.IsEqual) goto L0081;
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x2f9a);
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
-
-		L0081:
 			this.processor.EmitGlobalWord(0xb1ec, 0xffff);
 			this.processor.EmitGlobalWord(0xd2e2, 0x1);
 
-			this.owner.VideoCard.ObtainTextHeight(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.PullGlobalWord(0xaa) + 0x10)));
+			ushort fontId = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.PullGlobalWord(0xaa) + 0x10));
+			ushort lineHeight = this.owner.VideoCard.ObtainTextHeight(fontId);
 
-			this.processor.EmitGlobalWord(0x2fa4, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x9);
-			if (this.processor.FlagSet.IsNotEqual) goto L00a8;
-			this.processor.EmitGlobalWord(0x2fa4, this.processor.DecrementWord(this.processor.PullGlobalWord(0x2fa4)));
-
-		L00a8:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x3936), 0xffff);
-			if (this.processor.FlagSet.IsEqual) goto L00b5;
-			this.processor.EmitGlobalWord(0x2fa4, 0x8);
-
-		L00b5:
-			this.processor.EmitLocalWord(0xc, 0x7);
-			this.processor.EmitLocalWord(0xe, 0x16);
-
-			if (vertLoc == 139)
+			if (lineHeight == 9)
 			{
-				this.processor.EmitLocalWord(0xe, 0x8);
+				lineHeight--;
 			}
+
+			if (this.processor.PullGlobalWord(0x3936) != 0xffff)
+			{
+				lineHeight = 8;
+			}
+
+			this.processor.EmitGlobalWord(0x2fa4, lineHeight);
+
+			ushort backHue = 7;
+			ushort shadowHue = (ushort)(vertLoc == 139 ? 8 : 0x16);
 
 			if ((vertLoc & 1) != 0 && vertLoc != 139)
 			{
-				this.owner.VideoCard.ObtainDot(0, horizLoc, vertLoc);
-
-				this.processor.EmitLocalWord(0xc, this.processor.RegAcc.Value16);
-				this.processor.EmitLocalWord(0xe, 0xffff);
+				backHue = this.owner.VideoCard.ObtainDot(0, horizLoc, vertLoc);
+				shadowHue = 0xffff;
 			}
 
-			this.processor.CompareWord(this.processor.PullLocalWord(0xc), 0xf);
-			if (this.processor.FlagSet.IsNotEqual) goto L00fc;
-			this.processor.RegAcc.Value16 = 0x3;
-			goto L00ff;
+			this.processor.EmitLocalWord(0xc, backHue);
+			this.processor.EmitGlobalWord(0x654c, (ushort)(backHue == 15 ? 3 : 15));
 
-		L00fc:
-			this.processor.RegAcc.Value16 = 0xf;
+			if (this.processor.PullGlobalWord(0xd762) == 0)
+			{
+				shadowHue = 0xffff;
+			}
 
-		L00ff:
-			this.processor.EmitGlobalWord(0x654c, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xd762), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L010e;
-			this.processor.EmitLocalWord(0xe, 0xffff);
+			this.processor.EmitLocalWord(0xe, shadowHue);
 
-		L010e:
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x2fa4);
-			this.processor.EmitLocalWord(0x10, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = 0;
-			this.processor.EmitLocalWord(0x12, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x8, this.processor.RegAcc.Value16);
+			ushort highlightHeight = this.processor.PullGlobalWord(0x2fa4);
+			ushort mouseUsed = 0;
+			ushort done = 0;
+			this.processor.EmitLocalWord(0x10, highlightHeight);
+			this.processor.EmitLocalWord(0x12, 0);
+			this.processor.EmitLocalWord(0x8, 0);
 
 			this.owner.Startup.ConcealMouseCursor();
 
@@ -132,339 +107,210 @@ namespace Civilization1Remaster.Engine
 
 			this.owner.Startup.DisplayMouseCursor();
 
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xdb38), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L014d;
-			this.processor.EmitGlobalWord(0xdb38, 0x0);
-			this.processor.RegAcc.Value16 = 0xffff;
-			goto L0470;
-
-		L014d:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x3936), 0xffff);
-			if (this.processor.FlagSet.IsEqual) goto L0159;
-
-			this.owner.Audience.ChoreographKingSpeaking();
-
-		L0159:
-			this.processor.EmitGlobalWord(0xd2e2, 0x0);
-			this.owner.GlobDb3a = 0x0;
-
-			this.owner.Startup.ObtainMouseState();
-
-			this.processor.CompareWord(this.owner.GlobDb3a, 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L0177;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x12), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L01db;
-
-		L0177:
-			this.processor.RegAcc.Value16 = 0x1;
-			this.processor.EmitGlobalWord(0x2fa2, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x12, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.owner.GlobDb3a, 0x2);
-			if (this.processor.FlagSet.IsNotEqual) goto L018a;
-			this.processor.EmitGlobalWord(0x2f9c, this.processor.RegAcc.Value16);
-
-		L018a:
-			this.processor.RegAcc.Value16 = this.owner.GlobDb3e;
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, (ushort)((short)vertLoc));
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, 0x4);
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.RegCount.Value16 = this.processor.PullGlobalWord(0x2fa4);
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, this.processor.PullGlobalWord(0xb1ec));
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
-
-			if (horizLoc > (short)this.owner.GlobDb3c)
+			if (this.processor.PullGlobalWord(0xdb38) != 0)
 			{
-				this.processor.EmitLocalWord(0x4, 0xffff);
+				this.processor.EmitGlobalWord(0xdb38, 0);
+				this.processor.RegAcc.Value16 = 0xffff;
 			}
 			else
 			{
-				if ((short)this.owner.GlobDb3c > this.processor.PullGlobalSignedWord(0xde0e))
+				while (done == 0)
 				{
-					this.processor.EmitLocalWord(0x4, 0xffff);
+					if (this.processor.PullGlobalWord(0x3936) != 0xffff)
+					{
+						this.owner.Audience.ChoreographKingSpeaking();
+					}
+
+					this.processor.EmitGlobalWord(0xd2e2, 0);
+					this.owner.GlobDb3a = 0;
+
+					this.owner.Startup.ObtainMouseState();
+
+					if (this.owner.GlobDb3a != 0 || mouseUsed != 0)
+					{
+						this.processor.EmitGlobalWord(0x2fa2, 1);
+						mouseUsed = 1;
+						this.processor.EmitLocalWord(0x12, 1);
+
+						if (this.owner.GlobDb3a == 2)
+						{
+							this.processor.EmitGlobalWord(0x2f9c, 1);
+						}
+
+						ushort rawLine = (ushort)((short)this.owner.GlobDb3e - (short)vertLoc - 4);
+						this.processor.RegAcc.Value16 = rawLine;
+						this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
+						this.processor.RegCount.Value16 = this.processor.PullGlobalWord(0x2fa4);
+						this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
+
+						currentChoice = (ushort)(this.processor.RegAcc.Value16 - this.processor.PullGlobalWord(0xb1ec));
+
+						if (horizLoc > (short)this.owner.GlobDb3c || (short)this.owner.GlobDb3c > this.processor.PullGlobalSignedWord(0xde0e))
+						{
+							currentChoice = 0xffff;
+						}
+
+						this.processor.EmitLocalWord(0x4, currentChoice);
+						this.processor.RegCount.LowByte = (byte)(currentChoice & 0xff);
+
+						if (((1 << (currentChoice & 0x1f)) & this.processor.PullGlobalWord(0xb276)) != 0)
+						{
+							currentChoice = previousChoice;
+							this.processor.EmitLocalWord(0x4, currentChoice);
+						}
+						else if (this.owner.GlobDb3a == 0)
+						{
+							done = 1;
+							this.processor.EmitLocalWord(0x8, 1);
+						}
+					}
+					else if (this.owner.Libc.KeyAvailable() != 0)
+					{
+						ushort key = ObtainNavigationKey();
+						this.processor.EmitLocalWord(0x6, key);
+
+						if (this.ChoicesIndentTokens && (key == 0x9 || key == 0x4b00 || key == 0x4d00))
+						{
+							this.ChoicesIndentTokenDown = true;
+							currentChoice = 0xffff;
+							done = 1;
+							this.processor.EmitLocalWord(0x4, 0xffff);
+							this.processor.EmitLocalWord(0x8, 1);
+						}
+						else if (key == 0x20 || key == 0xd)
+						{
+							this.processor.RegCount.LowByte = (byte)(currentChoice & 0xff);
+
+							if (((1 << (currentChoice & 0x1f)) & this.processor.PullGlobalWord(0xb276)) == 0)
+							{
+								done = 1;
+								this.processor.EmitLocalWord(0x8, 1);
+							}
+						}
+						else if (key == 0x1b)
+						{
+							currentChoice = 0xffff;
+							done = 1;
+							this.processor.EmitLocalWord(0x4, 0xffff);
+							this.processor.EmitLocalWord(0x8, 1);
+						}
+						else if (key == 0x2300)
+						{
+							this.processor.EmitGlobalWord(0x2f9c, 1);
+							done = 1;
+							this.processor.EmitLocalWord(0x8, 1);
+						}
+						else if (key == 0x2f00)
+						{
+							this.owner.World.SessionPrefMarkers ^= 0x10;
+
+							if ((this.owner.World.SessionPrefMarkers & 0x10) == 0)
+							{
+								this.owner.Services.PerformSound(1, 0);
+							}
+						}
+						else if (key == 0x4800)
+						{
+							if ((short)currentChoice > 0)
+							{
+								currentChoice--;
+								this.processor.EmitLocalWord(0x4, currentChoice);
+							}
+						}
+						else if (key == 0x5000)
+						{
+							if ((short)currentChoice < (short)(this.processor.PullGlobalWord(0xd208) - 1))
+							{
+								currentChoice++;
+								this.processor.EmitLocalWord(0x4, currentChoice);
+							}
+						}
+						else
+						{
+							ushort searchIdx = (ushort)(currentChoice + 1);
+							this.processor.EmitLocalWord(0xa, searchIdx);
+
+							while ((short)searchIdx < 0x20)
+							{
+								this.processor.RegBase.Value16 = searchIdx;
+								byte hotkey = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(searchIdx + 0xdc4a));
+
+								if (hotkey != 0xff)
+								{
+									this.processor.RegCount.LowByte = (byte)(key & 0x1f);
+
+									if ((hotkey & 0x1f) == (key & 0x1f))
+									{
+										currentChoice = searchIdx;
+										this.processor.EmitLocalWord(0x4, currentChoice);
+										break;
+									}
+								}
+
+								searchIdx++;
+								this.processor.EmitLocalWord(0xa, searchIdx);
+							}
+						}
+					}
+
+					if ((short)currentChoice < 0 ||
+						(short)currentChoice >= this.processor.PullGlobalSignedWord(0xd208) ||
+						this.processor.PullGlobalWord(0x8066) != 0 ||
+						this.processor.PullGlobalWord(0xd206) != 0)
+					{
+						currentChoice = 0xffff;
+						this.processor.EmitLocalWord(0x4, 0xffff);
+					}
+
+					if (currentChoice != previousChoice)
+					{
+						this.owner.Startup.ConcealMouseCursor();
+
+						SwapMenuOptionHue(horizLoc, vertLoc, previousChoice, highlightHeight, backHue, shadowHue, false);
+						SwapMenuOptionHue(horizLoc, vertLoc, currentChoice, highlightHeight, backHue, shadowHue, true);
+
+						previousChoice = currentChoice;
+						this.processor.EmitLocalWord(0x2, previousChoice);
+
+						this.owner.Startup.DisplayMouseCursor();
+					}
 				}
-			}
-		
-			this.processor.RegAcc.Value16 = 0x1;
-			this.processor.RegCount.LowByte = this.processor.PullLocalByte(0x4);
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			this.processor.TestBitsWord(this.processor.RegAcc.Value16, this.processor.PullGlobalWord(0xb276));
-			if (this.processor.FlagSet.IsEqual) goto L01cd;
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x2);
 
-		L01c8:
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
-			goto L0217;
+				if (currentChoice == 0xffff)
+				{
+					this.processor.EmitGlobalWord(0x2f9c, 0);
+				}
+				else
+				{
+					this.owner.Startup.ConcealMouseCursor();
 
-		L01cd:
-			this.processor.CompareWord(this.owner.GlobDb3a, 0x0);
+					if (this.processor.PullGlobalWord(0xd762) == 0)
+					{
+						byte flashHue = (byte)(this.processor.PullGlobalWord(0x2f9c) != 0 ? 11 : this.processor.PullGlobalWord(0x654c));
 
-		L01d2:
-			if (this.processor.FlagSet.IsNotEqual) goto L0217;
+						this.owner.VideoCard.SubstituteHue(this.processor.PullGlobalWord(0xaa),
+							horizLoc + 3,
+							(((short)currentChoice + this.processor.PullGlobalSignedWord(0xb1ec)) *
+								this.processor.PullGlobalSignedWord(0x2fa4)) + vertLoc + 4,
+							this.processor.PullGlobalSignedWord(0xd4c8) + 5,
+							(short)highlightHeight,
+							11,
+							flashHue);
+					}
 
-		L01d4:
-			this.processor.EmitLocalWord(0x8, 0x1);
-			goto L0217;
+					this.owner.TextPainter.AwaitTime(20);
+					this.owner.Startup.DisplayMouseCursor();
+				}
 
-		L01db:
-			this.owner.Libc.KeyAvailable();
-
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual) goto L0217;
-
-			ObtainNavigationKey();
-
-			this.processor.EmitLocalWord(0x6, this.processor.RegAcc.Value16);
-
-			if (this.ChoicesIndentTokens && (this.processor.RegAcc.Value16 == 0x9 || this.processor.RegAcc.Value16 == 0x4b00 || this.processor.RegAcc.Value16 == 0x4d00))
-			{
-				this.ChoicesIndentTokenDown = true;
-				goto L0392;
+				this.processor.EmitGlobalWord(0x2f9e, 0xffff);
+				this.processor.EmitGlobalWord(0x2f9a, 0xffff);
+				this.processor.EmitGlobalWord(0x2fa0, 0);
+				this.processor.EmitGlobalWord(0xd206, 0);
+				this.processor.EmitGlobalWord(0xb276, 0);
+				this.processor.EmitGlobalWord(0xd7f2, 0);
+				this.processor.RegAcc.Value16 = currentChoice;
 			}
 
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x20);
-			if (this.processor.FlagSet.IsNotEqual) goto L01f3;
-			goto L0377;
-
-		L01f3:
-			if (this.processor.FlagSet.IsLessOrEqual) goto L01f8;
-			goto L03e3;
-
-		L01f8:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xd);
-			if (this.processor.FlagSet.IsNotEqual) goto L0200;
-			goto L0377;
-
-		L0200:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1b);
-			if (this.processor.FlagSet.IsNotEqual) goto L0208;
-			goto L0392;
-
-		L0208:
-			goto L03fd;
-
-		L020b:
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0xd208);
-			this.processor.RegAcc.Value16 = this.processor.DecrementWord(this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0217;
-			this.processor.IncrementLocalWord(0x4);
-
-		L0217:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), 0x0);
-			if (this.processor.FlagSet.IsLess) goto L0233;
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0xd208);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0233;
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x8066), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L0233;
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xd206), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L0238;
-
-		L0233:
-			this.processor.EmitLocalWord(0x4, 0xffff);
-
-		L0238:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x2);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L0243;
-			goto L0337;
-
-		L0243:
-			this.owner.Startup.ConcealMouseCursor();
-
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0xffff);
-			if (this.processor.FlagSet.IsEqual) goto L02ba;
-
-			this.owner.VideoCard.SubstituteHue(this.processor.PullGlobalWord(0xaa),
-				horizLoc + 3,
-				((this.processor.PullLocalSignedWord(0x2) + this.processor.PullGlobalSignedWord(0xb1ec)) *
-					this.processor.PullGlobalSignedWord(0x2fa4)) + vertLoc + 4,
-				this.processor.PullGlobalSignedWord(0xd4c8) + 5,
-				this.processor.PullLocalSignedWord(0x10),
-				11, (byte)this.processor.PullLocalWord(0xc));
-
-			this.processor.CompareWord(this.processor.PullLocalWord(0xe), 0xffff);
-			if (this.processor.FlagSet.IsEqual) goto L02ba;
-
-			this.owner.VideoCard.SubstituteHue(this.processor.PullGlobalWord(0xaa),
-				horizLoc + 3,
-				((this.processor.PullLocalSignedWord(0x2) + this.processor.PullGlobalSignedWord(0xb1ec)) *
-					this.processor.PullGlobalSignedWord(0x2fa4)) + vertLoc + 4,
-				this.processor.PullGlobalSignedWord(0xd4c8) + 5,
-				this.processor.PullLocalSignedWord(0x10),
-				3, (byte)this.processor.PullLocalWord(0xe));
-
-		L02ba:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), 0xffff);
-			if (this.processor.FlagSet.IsEqual) goto L032c;
-
-			this.owner.VideoCard.SubstituteHue(this.processor.PullGlobalWord(0xaa),
-				horizLoc + 3,
-				((this.processor.PullLocalSignedWord(0x4) + this.processor.PullGlobalSignedWord(0xb1ec)) *
-					this.processor.PullGlobalSignedWord(0x2fa4)) + vertLoc + 4,
-				this.processor.PullGlobalSignedWord(0xd4c8) + 5,
-				this.processor.PullLocalSignedWord(0x10),
-				(byte)this.processor.PullLocalWord(0xc),
-				11);
-
-			this.processor.CompareWord(this.processor.PullLocalWord(0xe), 0xffff);
-			if (this.processor.FlagSet.IsEqual) goto L032c;
-
-			this.owner.VideoCard.SubstituteHue(this.processor.PullGlobalWord(0xaa),
-				horizLoc + 3,
-				((this.processor.PullLocalSignedWord(0x4) + this.processor.PullGlobalSignedWord(0xb1ec)) *
-					this.processor.PullGlobalSignedWord(0x2fa4)) + vertLoc + 4,
-				this.processor.PullGlobalSignedWord(0xd4c8) + 5,
-				this.processor.PullLocalSignedWord(0x10),
-				(byte)this.processor.PullLocalWord(0xe),
-				3);
-
-		L032c:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x4);
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
-
-			this.owner.Startup.DisplayMouseCursor();
-
-		L0337:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x8), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L0340;
-			goto L014d;
-
-		L0340:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), 0xffff);
-			if (this.processor.FlagSet.IsNotEqual) goto L0349;
-			goto L0450;
-
-		L0349:
-			this.owner.Startup.ConcealMouseCursor();
-
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xd762), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L0358;
-			goto L043d;
-
-		L0358:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x2f9c), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L0362;
-			goto L0406;
-
-		L0362:
-			this.processor.RegAcc.Value16 = 0xb;
-			goto L0409;
-
-		L0368:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), 0x0);
-			if (this.processor.FlagSet.IsGreater) goto L0371;
-			goto L0217;
-
-		L0371:
-			this.processor.EmitLocalWord(0x4, this.processor.DecrementWord(this.processor.PullLocalWord(0x4)));
-			goto L0217;
-
-		L0377:
-			this.processor.RegAcc.Value16 = 0x1;
-			this.processor.RegCount.LowByte = this.processor.PullLocalByte(0x4);
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			this.processor.TestBitsWord(this.processor.RegAcc.Value16, this.processor.PullGlobalWord(0xb276));
-			goto L01d2;
-
-		L0386:
-			this.processor.RegAcc.Value16 = 0x1;
-			this.processor.EmitGlobalWord(0x2f9c, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x8, this.processor.RegAcc.Value16);
-			goto L0217;
-
-		L0392:
-			this.processor.EmitLocalWord(0x4, 0xffff);
-			goto L01d4;
-
-		L039a:
-			this.owner.World.SessionPrefMarkers ^= 0x10;
-			this.processor.TestBitsByte((byte)(this.owner.World.SessionPrefMarkers & 0xff), 0x10);
-			if (this.processor.FlagSet.IsEqual) goto L03a9;
-			goto L0217;
-
-		L03a9:
-			this.owner.Services.PerformSound(1, 0);
-
-			goto L0217;
-
-		L03b8:
-			this.processor.EmitLocalWord(0xa, this.processor.IncrementWord(this.processor.PullLocalWord(0xa)));
-
-		L03bb:
-			this.processor.CompareWord(this.processor.PullLocalWord(0xa), 0x20);
-			if (this.processor.FlagSet.IsLess) goto L03c4;
-			goto L0217;
-
-		L03c4:
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0xa);
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xdc4a)), 0xff);
-			if (this.processor.FlagSet.IsEqual) goto L03b8;
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xdc4a));
-			this.processor.RegAcc.LowByte = this.processor.BitAndByte(this.processor.RegAcc.LowByte, 0x1f);
-			this.processor.RegCount.LowByte = this.processor.PullLocalByte(0x6);
-			this.processor.RegCount.LowByte = this.processor.BitAndByte(this.processor.RegCount.LowByte, 0x1f);
-			this.processor.CompareByte(this.processor.RegAcc.LowByte, this.processor.RegCount.LowByte);
-			if (this.processor.FlagSet.IsNotEqual) goto L03b8;
-			this.processor.RegAcc.Value16 = this.processor.RegBase.Value16;
-			goto L01c8;
-
-		L03e3:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x2300);
-			if (this.processor.FlagSet.IsEqual) goto L0386;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x2f00);
-			if (this.processor.FlagSet.IsEqual) goto L039a;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x4800);
-			if (this.processor.FlagSet.IsNotEqual) goto L03f5;
-			goto L0368;
-
-		L03f5:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x5000);
-			if (this.processor.FlagSet.IsNotEqual) goto L03fd;
-			goto L020b;
-
-		L03fd:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x4);
-			this.processor.RegAcc.Value16 = this.processor.IncrementWord(this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0xa, this.processor.RegAcc.Value16);
-			goto L03bb;
-
-		L0406:
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x654c);
-
-		L0409:
-			this.owner.VideoCard.SubstituteHue(this.processor.PullGlobalWord(0xaa),
-				horizLoc + 3,
-				((this.processor.PullLocalSignedWord(0x4) + this.processor.PullGlobalSignedWord(0xb1ec)) *
-					this.processor.PullGlobalSignedWord(0x2fa4)) + vertLoc + 4,
-				this.processor.PullGlobalSignedWord(0xd4c8) + 5,
-				this.processor.PullLocalSignedWord(0x10),
-				11,
-				this.processor.RegAcc.LowByte);
-
-		L043d:
-			this.owner.TextPainter.AwaitTime(20);
-
-			this.owner.Startup.DisplayMouseCursor();
-
-			goto L0456;
-
-		L0450:
-			this.processor.EmitGlobalWord(0x2f9c, 0x0);
-
-		L0456:
-			this.processor.RegAcc.Value16 = 0xffff;
-			this.processor.EmitGlobalWord(0x2f9e, this.processor.RegAcc.Value16);
-			this.processor.EmitGlobalWord(0x2f9a, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = 0;
-			this.processor.EmitGlobalWord(0x2fa0, this.processor.RegAcc.Value16);
-			this.processor.EmitGlobalWord(0xd206, this.processor.RegAcc.Value16);
-			this.processor.EmitGlobalWord(0xb276, this.processor.RegAcc.Value16);
-			this.processor.EmitGlobalWord(0xd7f2, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x4);
-
-		L0470:
 			this.processor.RegSource.Value16 = this.processor.UnstackWord();
 			this.processor.LeaveFrame();
 			// Far return
@@ -473,436 +319,369 @@ namespace Civilization1Remaster.Engine
 			return this.processor.RegAcc.Value16;
 		}
 
+		private void SwapMenuOptionHue(int horizLoc, int vertLoc, ushort choice, ushort highlightHeight, ushort backHue, ushort shadowHue, bool highlight)
+		{
+			if (choice == 0xffff)
+			{
+				return;
+			}
+
+			int rowTop = (((short)choice + this.processor.PullGlobalSignedWord(0xb1ec)) *
+				this.processor.PullGlobalSignedWord(0x2fa4)) + vertLoc + 4;
+			int width = this.processor.PullGlobalSignedWord(0xd4c8) + 5;
+
+			this.owner.VideoCard.SubstituteHue(this.processor.PullGlobalWord(0xaa),
+				horizLoc + 3, rowTop, width, (short)highlightHeight,
+				highlight ? (byte)backHue : (byte)11,
+				highlight ? (byte)11 : (byte)backHue);
+
+			if (shadowHue != 0xffff)
+			{
+				this.owner.VideoCard.SubstituteHue(this.processor.PullGlobalWord(0xaa),
+					horizLoc + 3, rowTop, width, (short)highlightHeight,
+					highlight ? (byte)shadowHue : (byte)3,
+					highlight ? (byte)3 : (byte)shadowHue);
+			}
+		}
+
 		/// <summary>
-		/// ?
+		/// Layouts and renders the menu or dialog box for charsAddr at (horizLoc, vertLoc): on the first pass (0xd2e2 == 1) measures
+		/// the lines, records their offsets (0x654e) and hotkeys (0xdc4a), and draws the frame and advisor portrait (0x2f9e); then
+		/// renders the text lines
 		/// </summary>
-		/// <param name="stringPtr"></param>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
-		/// <param name="param4"></param>
 		public void OperateMenu(ushort charsAddr, int horizLoc, int vertLoc, ushort arg4)
 		{
 			this.processor.Journal.OpenScope($"OperateMenu(0x{charsAddr:x4}, {horizLoc}, {vertLoc}, {arg4})");
 
-			// function body
+			// The stack frame stays: the advisor title buffer is at bp - 0x50
 			this.processor.EnterFrame(0x5c);
 			this.processor.PreserveIndexRegisters();
-			this.processor.EmitGlobalWord(0x654e, 0x0);
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xd2e2), 0x1);
-			if (this.processor.FlagSet.IsEqual) goto L048d;
-			goto L07df;
 
-		L048d:
-			this.owner.VideoCard.ObtainTextHeight(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.PullGlobalWord(0xaa) + 0x10)));
+			this.processor.EmitGlobalWord(0x654e, 0);
 
-			this.processor.EmitGlobalWord(0x2fa4, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x9);
-			if (this.processor.FlagSet.IsNotEqual) goto L04a8;
-			this.processor.EmitGlobalWord(0x2fa4, this.processor.DecrementWord(this.processor.PullGlobalWord(0x2fa4)));
-
-		L04a8:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x3936), 0xffff);
-			if (this.processor.FlagSet.IsEqual) goto L04b5;
-			this.processor.EmitGlobalWord(0x2fa4, 0x8);
-
-		L04b5:
-			this.processor.EmitLocalWord(0x56, 0x0);
-
-		L04ba:
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x56);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xdc4a), 0xff);
-			this.processor.IncrementLocalWord(0x56);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x56), 0x20);
-			if (this.processor.FlagSet.IsLess) goto L04ba;
-			this.processor.RegAcc.Value16 = 0;
-			this.processor.EmitLocalWord(0x5a, this.processor.RegAcc.Value16);
-			this.processor.EmitGlobalWord(0x658e, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x54, this.processor.RegAcc.Value16);
-			this.processor.EmitGlobalWord(0xd4c8, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x56, this.processor.RegAcc.Value16);
-			goto L053b;
-
-		L04de:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x54), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L051c;
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x56);
-			this.processor.RegSource.Value16 = charsAddr;
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16));
-			this.processor.EmitLocalByte(0x5c, this.processor.RegAcc.LowByte);
-			this.processor.CompareByte(this.processor.RegAcc.LowByte, 0x20);
-			if (this.processor.FlagSet.IsEqual) goto L04f7;
-			this.processor.CompareByte(this.processor.RegAcc.LowByte, 0x5f);
-			if (this.processor.FlagSet.IsNotEqual) goto L051c;
-
-		L04f7:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x5a), 0x20);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L050c;
-			this.processor.RegSource.Value16 = this.processor.RegBase.Value16;
-			this.processor.RegBase.Value16 = charsAddr;
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x1));
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x5a);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xdc4a), this.processor.RegAcc.LowByte);
-
-		L050c:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xb1ec), 0xffff);
-			if (this.processor.FlagSet.IsNotEqual) goto L0519;
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x658e);
-			this.processor.EmitGlobalWord(0xb1ec, this.processor.RegAcc.Value16);
-
-		L0519:
-			this.processor.EmitLocalWord(0x5a, this.processor.IncrementWord(this.processor.PullLocalWord(0x5a)));
-
-		L051c:
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x56);
-			this.processor.RegSource.Value16 = charsAddr;
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16));
-
-			this.owner.VideoCard.ObtainCharWidth(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.PullGlobalWord(0xaa) + 0x10)), this.processor.RegAcc.LowByte);
-
-			this.processor.EmitLocalWord(0x54, this.processor.SumWord(this.processor.PullLocalWord(0x54), this.processor.RegAcc.Value16));
-
-		L0538:
-			this.processor.EmitLocalWord(0x56, this.processor.IncrementWord(this.processor.PullLocalWord(0x56)));
-
-		L053b:
-			this.owner.Libc.TextLength(charsAddr);
-
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x56));
-			if (this.processor.FlagSet.IsLessOrEqual) goto L057d;
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x56);
-			this.processor.RegSource.Value16 = charsAddr;
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16)), 0xa);
-			if (this.processor.FlagSet.IsNotEqual) goto L04de;
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0xd4c8);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x54), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L0564;
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x54);
-			this.processor.EmitGlobalWord(0xd4c8, this.processor.RegAcc.Value16);
-
-		L0564:
-			this.processor.EmitLocalWord(0x54, 0x0);
-			this.processor.EmitGlobalWord(0x658e, this.processor.IncrementWord(this.processor.PullGlobalWord(0x658e)));
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0x658e);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x56);
-			this.processor.RegAcc.Value16 = this.processor.IncrementWord(this.processor.RegAcc.Value16);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x654e), this.processor.RegAcc.Value16);
-			goto L0538;
-
-		L057d:
-			this.owner.Helpers.VerifyValueSpan(
-				this.processor.PullGlobalSignedWord(0x658e),
-				0, (192 - vertLoc) / this.processor.PullGlobalSignedWord(0x2fa4));
-
-			this.processor.EmitGlobalWord(0x658e, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = (ushort)horizLoc;
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.PullGlobalWord(0xd4c8));
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x8);
-			this.processor.EmitGlobalWord(0xde0e, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x658e);
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.PullGlobalWord(0x2fa4));
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, (ushort)vertLoc);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x6);
-			this.processor.EmitLocalWord(0x52, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x2fa0), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L05c5;
-			this.processor.EmitLocalWord(0x52, this.processor.SumWord(this.processor.PullLocalWord(0x52), 0x2));
-
-		L05c5:
-			this.owner.Libc.TextLength(charsAddr);
-
-			this.processor.RegSource.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegBase.Value16 = charsAddr;
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 - 0x1)), 0xa);
-			if (this.processor.FlagSet.IsEqual) goto L05de;
-			this.processor.DecrementLocalWord(0x5a);
-
-		L05de:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x5a);
-			this.processor.EmitGlobalWord(0xd208, this.processor.RegAcc.Value16);
-
-			if ((vertLoc & 1) == 0)
-				goto L05ed;
-
-			goto L075b;
-
-		L05ed:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x2f9e), 0xffff);
-			if (this.processor.FlagSet.IsNotEqual) goto L0613;
-
-			FloodBoxWithDoubleShadow(horizLoc, vertLoc,
-				this.processor.PullGlobalSignedWord(0xde0e) - horizLoc, this.processor.PullLocalSignedWord(0x52) - vertLoc, 7);
-
-			goto L075b;
-
-		L0613:
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0x2f9e);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x50),
-				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x2fa6)));
-
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x2f9e), 0x2);
-			if (this.processor.FlagSet.IsGreater) goto L0640;
-
-			this.owner.Libc.AppendText((ushort)(this.processor.RegFrame.Value16 - 0x50), " report:");
-
-		L0640:
-			this.owner.TextPainter.ObtainTextWidth((ushort)(this.processor.RegFrame.Value16 - 0x50));
-
-			this.processor.EmitLocalWord(0x58, this.processor.RegAcc.Value16);
-			this.processor.RegSource.Value16 = (ushort)horizLoc;
-			this.processor.RegSource.Value16 = this.processor.SumWord(this.processor.RegSource.Value16, this.processor.RegAcc.Value16);
-			this.processor.RegSource.Value16 = this.processor.SumWord(this.processor.RegSource.Value16, 0x8);
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xde0e), this.processor.RegSource.Value16);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0661;
-			this.processor.EmitGlobalWord(0xde0e, this.processor.RegSource.Value16);
-
-		L0661:
-			this.processor.RegSource.Value16 = (ushort)((short)(this.processor.PullLocalSignedWord(0x52) - vertLoc));
-
-			this.owner.Helpers.VerifyValueSpan((short)this.processor.RegSource.Value16 + 8, 61, 999);
-
-			FloodBoxWithDoubleShadow(horizLoc - 42, vertLoc - 8,
-				(this.processor.PullGlobalSignedWord(0xde0e) - horizLoc) + 42, (short)this.processor.RegAcc.Value16, 7);
-
-			// LEA
-			this.processor.RegAcc.Value16 = (ushort)(this.processor.RegSource.Value16 - 0x34);
-			this.processor.EmitLocalWord(0x58, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x2f9e), 0x2);
-			if (this.processor.FlagSet.IsGreater) goto L06d2;
-			
-			this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa),
-				horizLoc - 40, vertLoc - 5,
-				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((this.processor.PullGlobalWord(0x2f9e) << 1) + 0xdf62)));
-			goto L0715;
-
-		L06d2:
-			// ??? This is dialog image being drawn for future reference
-			if (this.processor.PullLocalSignedWord(0x58) > 0)
+			if (this.processor.PullGlobalWord(0xd2e2) == 1)
 			{
-				this.owner.VideoCard.RenderImage(
-					this.processor.PullGlobalWord(0x19e8),
-					(40 * this.processor.PullGlobalSignedWord(0x2f9e)) + 40, 140, 40, 60,
-					this.processor.PullGlobalWord(0xaa),
-					horizLoc - 40,
-					((this.processor.PullLocalSignedWord(0x58) - 1) + vertLoc) - 6);
-			}
-			else
-			{
-				this.owner.VideoCard.RenderImage(
-					this.processor.PullGlobalWord(0x19e8),
-					(40 * this.processor.PullGlobalWord(0x2f9e)) + 40, 140, 40, 60,
-					this.processor.PullGlobalWord(0xaa),
-					horizLoc - 40, vertLoc - 6);
+				MeasureAndDrawMenuFrame(charsAddr, horizLoc, vertLoc);
 			}
 
-		L0715:
-			this.owner.TextPainter.RenderTextToScreen0((ushort)(this.processor.RegFrame.Value16 - 0x50),
-				horizLoc + 5, vertLoc - 4, 15);
+			RenderMenuLines(charsAddr, horizLoc, vertLoc, arg4);
 
-			this.owner.TextPainter.ObtainTextWidth((ushort)(this.processor.RegFrame.Value16 - 0x50));
-
-			this.owner.VideoCard.RenderLine(this.processor.PullGlobalWord(0xaa),
-				horizLoc + 5, vertLoc + 3, horizLoc + 5, vertLoc + 3, 11);
-
-		L075b:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x2fa0), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L0799;
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10));
-			this.processor.EmitLocalWord(0x56, this.processor.RegAcc.Value16);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 0x2);
-			
-			this.owner.TextPainter.RenderTextToScreen0(0x2fbd,
-				this.processor.PullGlobalSignedWord(0xde0e) - 74,
-				this.processor.PullLocalSignedWord(0x52) - 4,
-				10);
-
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x56);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), this.processor.RegAcc.Value16);
-
-		L0799:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x8066), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L07df;
-
-			this.owner.TextPainter.RenderText(0x2fce, 
-				(ushort)(this.processor.PullGlobalWord(0xde0e) - 0x11),
-				(ushort)(this.processor.PullLocalWord(0x52) - 8),
-				11);
-			
-			RenderBox(
-				this.processor.PullGlobalSignedWord(0xde0e) - 20,
-				this.processor.PullLocalSignedWord(0x52) - 10,
-				20, 10, 11);
-
-		L07df:
-			this.processor.RegBase.Value16 = charsAddr;
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, this.processor.RegBase.Value16), 0x20);
-			if (this.processor.FlagSet.IsEqual) goto L07ec;
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, this.processor.RegBase.Value16), 0x5f);
-			if (this.processor.FlagSet.IsNotEqual) goto L07f0;
-
-		L07ec:
-			this.processor.RegAcc.Value16 = 0;
-			goto L07f3;
-
-		L07f0:
-			this.processor.RegAcc.Value16 = 0xffff;
-
-		L07f3:
-			this.processor.EmitLocalWord(0x5a, this.processor.RegAcc.Value16);
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x654c);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xc), this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x56, 0x0);
-			goto L08fd;
-
-		L0808:
-			this.processor.RegAcc.Value16 = 0x1;
-			this.processor.RegCount.LowByte = this.processor.PullLocalByte(0x5a);
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			this.processor.TestBitsWord(this.processor.RegAcc.Value16, this.processor.PullGlobalWord(0xb276));
-			if (this.processor.FlagSet.IsEqual) goto L081b;
-			this.processor.RegAcc.Value16 = 0x3;
-			goto L081d;
-
-		L081b:
-			this.processor.RegAcc.Value16 = 0;
-
-		L081d:
-			this.owner.TextPainter.RenderTextToScreen0(this.processor.RegDest.Value16,
-				horizLoc + 5,
-				(this.processor.PullLocalSignedWord(0x56) * this.processor.PullGlobalSignedWord(0x2fa4)) + vertLoc + 5,
-				this.processor.RegAcc.Value16);
-
-			this.processor.RegBase.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x654e));
-			this.processor.RegBase.Value16 = this.processor.SumWord(this.processor.RegBase.Value16, charsAddr);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, this.processor.RegBase.Value16, 0x20);
-			goto L08ce;
-
-		L0849:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x5a), 0x0);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0883;
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x2fa4), 0x9);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L0883;
-			
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x56);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-
-			this.owner.TextPainter.RenderTextToScreen0(
-				(ushort)(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x654e)) +
-					charsAddr),
-				horizLoc + 5,
-				(this.processor.PullLocalSignedWord(0x56) * this.processor.PullGlobalSignedWord(0x2fa4)) + vertLoc + 6,
-				0);
-
-		L0883:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x5a), 0x0);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L088e;
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x654c);
-			goto L08a3;
-
-		L088e:
-			this.processor.RegAcc.Value16 = 0x1;
-			this.processor.RegCount.LowByte = this.processor.PullLocalByte(0x5a);
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			this.processor.TestBitsWord(this.processor.RegAcc.Value16, this.processor.PullGlobalWord(0xb276));
-			if (this.processor.FlagSet.IsEqual) goto L08a1;
-			this.processor.RegAcc.Value16 = 0x3;
-			goto L08a3;
-
-		L08a1:
-			this.processor.RegAcc.Value16 = 0;
-
-		L08a3:
-			this.processor.StackWord(this.processor.RegAcc.Value16);
-
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x56);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-
-			this.owner.TextPainter.RenderTextToScreen0(
-				(ushort)(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x654e)) +
-					charsAddr),
-				horizLoc + 5,
-				(this.processor.PullLocalSignedWord(0x56) * this.processor.PullGlobalSignedWord(0x2fa4)) + vertLoc + 5,
-				this.processor.RegAcc.Value16);
-
-		L08ce:
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x56);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.RegSource.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x6550));
-			this.processor.RegBase.Value16 = charsAddr;
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 - 0x1), 0xa);
-
-		L08de:
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x56);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.processor.RegBase.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x6550));
-			this.processor.RegSource.Value16 = charsAddr;
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16));
-			this.processor.EmitLocalByte(0x5c, this.processor.RegAcc.LowByte);
-			this.processor.CompareByte(this.processor.RegAcc.LowByte, 0x20);
-			if (this.processor.FlagSet.IsEqual) goto L08f7;
-			this.processor.CompareByte(this.processor.RegAcc.LowByte, 0x5f);
-			if (this.processor.FlagSet.IsNotEqual) goto L08fa;
-
-		L08f7:
-			this.processor.EmitLocalWord(0x5a, this.processor.IncrementWord(this.processor.PullLocalWord(0x5a)));
-
-		L08fa:
-			this.processor.EmitLocalWord(0x56, this.processor.IncrementWord(this.processor.PullLocalWord(0x56)));
-
-		L08fd:
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x658e);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x56), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0963;
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xd2e2), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L0920;
-			this.processor.RegAcc.Value16 = arg4;
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x5a));
-			
-			this.owner.Libc.AbsoluteValue((short)this.processor.RegAcc.Value16);
-
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x2);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L08de;
-
-		L0920:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x56);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegBase.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x6550));
-			this.processor.RegBase.Value16 = this.processor.SumWord(this.processor.RegBase.Value16, charsAddr);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 - 0x1), 0x0);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x5a), 0x0);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0939;
-			goto L0849;
-
-		L0939:
-			this.processor.RegAcc.Value16 = 0x1;
-			this.processor.RegCount.LowByte = this.processor.PullLocalByte(0x5a);
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			this.processor.TestBitsWord(this.processor.RegAcc.Value16, this.processor.PullGlobalWord(0xd7f2));
-			if (this.processor.FlagSet.IsNotEqual) goto L094a;
-			goto L0849;
-
-		L094a:
-			this.processor.RegDest.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x654e));
-			this.processor.RegDest.Value16 = this.processor.SumWord(this.processor.RegDest.Value16, charsAddr);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, this.processor.RegDest.Value16, 0x5e);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x5a), 0x0);
-			if (this.processor.FlagSet.IsLess) goto L095d;
-			goto L0808;
-
-		L095d:
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x654c);
-			goto L081d;
-
-		L0963:
 			this.processor.RegAcc.Value16 = arg4;
 			this.processor.RestoreIndexRegisters();
 			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("OperateMenu");
+		}
+
+		private void MeasureAndDrawMenuFrame(ushort charsAddr, int horizLoc, int vertLoc)
+		{
+			ushort fontId = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.PullGlobalWord(0xaa) + 0x10));
+			ushort lineHeight = this.owner.VideoCard.ObtainTextHeight(fontId);
+
+			if (lineHeight == 9)
+			{
+				lineHeight--;
+			}
+
+			if (this.processor.PullGlobalWord(0x3936) != 0xffff)
+			{
+				lineHeight = 8;
+			}
+
+			this.processor.EmitGlobalWord(0x2fa4, lineHeight);
+
+			for (ushort idx = 0; idx < 0x20; idx++)
+			{
+				this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(idx + 0xdc4a), 0xff);
+			}
+
+			ushort choiceCount = 0;
+			ushort lineWidth = 0;
+			ushort charIdx = 0;
+			this.processor.EmitLocalWord(0x5a, 0);
+			this.processor.EmitGlobalWord(0x658e, 0);
+			this.processor.EmitLocalWord(0x54, 0);
+			this.processor.EmitGlobalWord(0xd4c8, 0);
+			this.processor.EmitLocalWord(0x56, 0);
+
+			while (this.owner.Libc.TextLength(charsAddr) > charIdx)
+			{
+				byte ch = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(charsAddr + charIdx));
+
+				if (ch == 0xa)
+				{
+					if ((short)lineWidth > this.processor.PullGlobalSignedWord(0xd4c8))
+					{
+						this.processor.EmitGlobalWord(0xd4c8, lineWidth);
+					}
+
+					lineWidth = 0;
+					this.processor.EmitLocalWord(0x54, 0);
+
+					ushort lineCount = (ushort)(this.processor.PullGlobalWord(0x658e) + 1);
+					this.processor.EmitGlobalWord(0x658e, lineCount);
+					this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)((lineCount << 1) + 0x654e), (ushort)(charIdx + 1));
+				}
+				else
+				{
+					if (lineWidth == 0)
+					{
+						this.processor.EmitLocalByte(0x5c, ch);
+
+						if (ch == 0x20 || ch == 0x5f)
+						{
+							if ((short)choiceCount < 0x20)
+							{
+								byte nextCh = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(charsAddr + charIdx + 1));
+								this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(choiceCount + 0xdc4a), nextCh);
+							}
+
+							if (this.processor.PullGlobalWord(0xb1ec) == 0xffff)
+							{
+								this.processor.EmitGlobalWord(0xb1ec, this.processor.PullGlobalWord(0x658e));
+							}
+
+							choiceCount++;
+							this.processor.EmitLocalWord(0x5a, choiceCount);
+						}
+					}
+
+					ushort currentFont = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.PullGlobalWord(0xaa) + 0x10));
+					lineWidth = (ushort)(lineWidth + this.owner.VideoCard.ObtainCharWidth(currentFont, ch));
+					this.processor.EmitLocalWord(0x54, lineWidth);
+				}
+
+				charIdx++;
+				this.processor.EmitLocalWord(0x56, charIdx);
+			}
+
+			short clampedLines = (short)this.owner.Helpers.VerifyValueSpan(
+				this.processor.PullGlobalSignedWord(0x658e),
+				0, (192 - vertLoc) / this.processor.PullGlobalSignedWord(0x2fa4));
+			this.processor.EmitGlobalWord(0x658e, (ushort)clampedLines);
+
+			ushort rightEdge = (ushort)(horizLoc + this.processor.PullGlobalWord(0xd4c8) + 8);
+			this.processor.EmitGlobalWord(0xde0e, rightEdge);
+
+			this.processor.RegAcc.Value16 = (ushort)clampedLines;
+			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.PullGlobalWord(0x2fa4));
+			ushort bottomEdge = (ushort)(this.processor.RegAcc.Value16 + vertLoc + 6);
+
+			if (this.processor.PullGlobalWord(0x2fa0) != 0)
+			{
+				bottomEdge += 2;
+			}
+
+			this.processor.EmitLocalWord(0x52, bottomEdge);
+
+			ushort totalLen = this.owner.Libc.TextLength(charsAddr);
+
+			if (this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(charsAddr + totalLen - 1)) != 0xa)
+			{
+				choiceCount--;
+				this.processor.EmitLocalWord(0x5a, choiceCount);
+			}
+
+			this.processor.EmitGlobalWord(0xd208, choiceCount);
+
+			if ((vertLoc & 1) == 0)
+			{
+				ushort advisor = this.processor.PullGlobalWord(0x2f9e);
+
+				if (advisor == 0xffff)
+				{
+					FloodBoxWithDoubleShadow(horizLoc, vertLoc,
+						this.processor.PullGlobalSignedWord(0xde0e) - horizLoc, (short)bottomEdge - vertLoc, 7);
+				}
+				else
+				{
+					ushort titleAddr = (ushort)(this.processor.RegFrame.Value16 - 0x50);
+					this.owner.Libc.CopyText(titleAddr, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((advisor << 1) + 0x2fa6)));
+
+					if ((short)advisor <= 2)
+					{
+						this.owner.Libc.AppendText(titleAddr, " report:");
+					}
+
+					ushort titleWidth = (ushort)this.owner.TextPainter.ObtainTextWidth(titleAddr);
+					this.processor.EmitLocalWord(0x58, titleWidth);
+
+					ushort minRight = (ushort)(horizLoc + titleWidth + 8);
+
+					if ((short)this.processor.PullGlobalWord(0xde0e) < (short)minRight)
+					{
+						this.processor.EmitGlobalWord(0xde0e, minRight);
+					}
+
+					ushort boxSpan = (ushort)((short)bottomEdge - vertLoc);
+					short boxHeight = (short)this.owner.Helpers.VerifyValueSpan((short)boxSpan + 8, 61, 999);
+
+					FloodBoxWithDoubleShadow(horizLoc - 42, vertLoc - 8,
+						(this.processor.PullGlobalSignedWord(0xde0e) - horizLoc) + 42, boxHeight, 7);
+
+					short portraitExtra = (short)(boxSpan - 0x34);
+					this.processor.EmitLocalWord(0x58, (ushort)portraitExtra);
+
+					if ((short)advisor <= 2)
+					{
+						this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa),
+							horizLoc - 40, vertLoc - 5,
+							this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((advisor << 1) + 0xdf62)));
+					}
+					else if (portraitExtra > 0)
+					{
+						this.owner.VideoCard.RenderImage(
+							this.processor.PullGlobalWord(0x19e8),
+							(40 * (short)advisor) + 40, 140, 40, 60,
+							this.processor.PullGlobalWord(0xaa),
+							horizLoc - 40,
+							(portraitExtra - 1 + vertLoc) - 6);
+					}
+					else
+					{
+						this.owner.VideoCard.RenderImage(
+							this.processor.PullGlobalWord(0x19e8),
+							(40 * advisor) + 40, 140, 40, 60,
+							this.processor.PullGlobalWord(0xaa),
+							horizLoc - 40, vertLoc - 6);
+					}
+
+					this.owner.TextPainter.RenderTextToScreen0(titleAddr, horizLoc + 5, vertLoc - 4, 15);
+					this.owner.TextPainter.ObtainTextWidth(titleAddr);
+					this.owner.VideoCard.RenderLine(this.processor.PullGlobalWord(0xaa),
+						horizLoc + 5, vertLoc + 3, horizLoc + 5, vertLoc + 3, 11);
+				}
+			}
+
+			if (this.processor.PullGlobalWord(0x2fa0) != 0)
+			{
+				ushort screenStruct = this.processor.PullGlobalWord(0xaa);
+				ushort savedFont = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(screenStruct + 0x10));
+				this.processor.EmitLocalWord(0x56, savedFont);
+				this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(screenStruct + 0x10), 2);
+
+				this.owner.TextPainter.RenderTextToScreen0(0x2fbd,
+					this.processor.PullGlobalSignedWord(0xde0e) - 74,
+					(short)bottomEdge - 4,
+					10);
+
+				this.processor.EmitUInt16(this.processor.SegData.Value16,
+					(ushort)(this.processor.PullGlobalWord(0xaa) + 0x10), savedFont);
+			}
+
+			if (this.processor.PullGlobalWord(0x8066) != 0)
+			{
+				this.owner.TextPainter.RenderText(0x2fce,
+					(ushort)(this.processor.PullGlobalWord(0xde0e) - 0x11),
+					(ushort)(bottomEdge - 8),
+					11);
+
+				RenderBox(
+					this.processor.PullGlobalSignedWord(0xde0e) - 20,
+					(short)bottomEdge - 10,
+					20, 10, 11);
+			}
+		}
+
+		private void RenderMenuLines(ushort charsAddr, int horizLoc, int vertLoc, ushort arg4)
+		{
+			byte firstCh = this.processor.PullUInt8(this.processor.SegData.Value16, charsAddr);
+			short optionIdx = (firstCh == 0x20 || firstCh == 0x5f) ? (short)0 : (short)-1;
+			this.processor.EmitLocalWord(0x5a, (ushort)optionIdx);
+
+			this.processor.EmitUInt16(this.processor.SegData.Value16,
+				(ushort)(this.processor.PullGlobalWord(0xaa) + 0xc), this.processor.PullGlobalWord(0x654c));
+
+			ushort lineIdx = 0;
+			this.processor.EmitLocalWord(0x56, 0);
+
+			while ((short)lineIdx < this.processor.PullGlobalSignedWord(0x658e))
+			{
+				bool drawLine = true;
+
+				if (this.processor.PullGlobalWord(0xd2e2) == 0)
+				{
+					short diff = (short)this.owner.Libc.AbsoluteValue((short)(arg4 - (ushort)optionIdx));
+
+					if (diff >= 2)
+					{
+						drawLine = false;
+					}
+				}
+
+				if (drawLine)
+				{
+					ushort lineSlot = (ushort)(lineIdx << 1);
+					ushort nextLineStart = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(lineSlot + 0x6550));
+					this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(charsAddr + nextLineStart - 1), 0);
+
+					bool checkedOption = optionIdx >= 0 &&
+						((1 << (optionIdx & 0x1f)) & this.processor.PullGlobalWord(0xd7f2)) != 0;
+
+					if (checkedOption)
+					{
+						ushort lineAddr = (ushort)(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(lineSlot + 0x654e)) + charsAddr);
+						this.processor.EmitUInt8(this.processor.SegData.Value16, lineAddr, 0x5e);
+
+						ushort hue = (ushort)(((1 << (optionIdx & 0x1f)) & this.processor.PullGlobalWord(0xb276)) != 0 ? 3 : 0);
+
+						this.owner.TextPainter.RenderTextToScreen0(lineAddr,
+							horizLoc + 5,
+							((short)lineIdx * this.processor.PullGlobalSignedWord(0x2fa4)) + vertLoc + 5,
+							hue);
+
+						ushort restoreAddr = (ushort)(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(lineSlot + 0x654e)) + charsAddr);
+						this.processor.EmitUInt8(this.processor.SegData.Value16, restoreAddr, 0x20);
+					}
+					else
+					{
+						if (optionIdx < 0 && (short)this.processor.PullGlobalWord(0x2fa4) > 9)
+						{
+							this.owner.TextPainter.RenderTextToScreen0(
+								(ushort)(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(lineSlot + 0x654e)) + charsAddr),
+								horizLoc + 5,
+								((short)lineIdx * this.processor.PullGlobalSignedWord(0x2fa4)) + vertLoc + 6,
+								0);
+						}
+
+						ushort hue;
+
+						if (optionIdx < 0)
+						{
+							hue = this.processor.PullGlobalWord(0x654c);
+						}
+						else
+						{
+							hue = (ushort)(((1 << (optionIdx & 0x1f)) & this.processor.PullGlobalWord(0xb276)) != 0 ? 3 : 0);
+						}
+
+						// The original pushes AX before calling RenderTextToScreen0 without popping it (leaves SP -= 2 per non-checked line)
+						this.processor.StackWord(hue);
+
+						this.owner.TextPainter.RenderTextToScreen0(
+							(ushort)(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(lineSlot + 0x654e)) + charsAddr),
+							horizLoc + 5,
+							((short)lineIdx * this.processor.PullGlobalSignedWord(0x2fa4)) + vertLoc + 5,
+							hue);
+					}
+
+					ushort endOffset = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(lineSlot + 0x6550));
+					this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(charsAddr + endOffset - 1), 0xa);
+				}
+
+				ushort nextOffset = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((lineIdx << 1) + 0x6550));
+				byte nextLineChar = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(charsAddr + nextOffset));
+				this.processor.EmitLocalByte(0x5c, nextLineChar);
+
+				if (nextLineChar == 0x20 || nextLineChar == 0x5f)
+				{
+					optionIdx++;
+					this.processor.EmitLocalWord(0x5a, (ushort)optionIdx);
+				}
+
+				lineIdx++;
+				this.processor.EmitLocalWord(0x56, lineIdx);
+			}
 		}
 
 		/// <summary>

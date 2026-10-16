@@ -433,150 +433,130 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// Lets participantIdx1 take a technology known by participantIdx2 that participantIdx1 does not know yet: the human player
+		/// chooses from a dialog (king dialog when 0x3934 != -1), an AI takes the technology with the highest ObtainTechnologyInfo
+		/// value (showing a notice when taken from the human player)
 		/// </summary>
-		/// <param name="playerID1"></param>
-		/// <param name="playerID2"></param>
 		public void ChooseTechnologyToTake(short participantIdx1, short participantIdx2)
 		{
 			this.processor.Journal.OpenScope($"ChooseTechnologyToTake({participantIdx1}, {participantIdx2})");
 
-			// function body
+			// The frame stays: the list of up to 72 technologies is at bp - 0x94, and local 0x4 (best technology for the AI) is read
+			// uninitialized when no technology has ObtainTechnologyInfo > -1
 			this.processor.EnterFrame(0x9a);
 			this.processor.PreserveSource();
-			this.processor.CompareWord((ushort)participantIdx1, 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L0703;
-			goto L08c1;
 
-		L0703:
-			this.processor.CompareWord((ushort)participantIdx2, 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L070c;
-			goto L08c1;
+			if (participantIdx1 != 0 && participantIdx2 != 0)
+			{
+				ushort count = 0;
+				this.processor.EmitLocalWord(0x2, 0);
 
-		L070c:
-			this.processor.EmitLocalWord(0x2, 0x0);
+				this.owner.Libc.CopyText(0xba06, "Select one...\n ");
 
-			this.owner.Libc.CopyText(0xba06, "Select one...\n ");
+				short bestScore = -1;
+				this.processor.EmitLocalWord(0x96, 0xffff);
+				this.processor.EmitLocalWord(0x98, 0x47);
 
-			this.processor.EmitLocalWord(0x96, 0xffff);
-			this.processor.EmitLocalWord(0x98, 0x47);
+				for (short techId = 0x47; techId >= 0; techId--)
+				{
+					this.processor.EmitLocalWord(0x98, (ushort)techId);
 
-		L072d:
-			this.processor.RegAcc.Value16 = this.owner.Advisors.PlayerKnowsTechnology(participantIdx1,
-				this.processor.PullLocalSignedWord(0x98));
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsNotEqual)
-				goto L07b9;
+					if (this.owner.Advisors.PlayerKnowsTechnology(participantIdx1, techId) == 0 &&
+						this.owner.Advisors.PlayerKnowsTechnology(participantIdx2, techId) != 0)
+					{
+						this.owner.Libc.AppendText(0xba06, (ushort)((0x16 * techId) + 0x4da));
+						this.owner.Libc.AppendText(0xba06, "\n ");
 
-			this.processor.RegAcc.Value16 = this.owner.Advisors.PlayerKnowsTechnology(participantIdx2,
-				this.processor.PullLocalSignedWord(0x98));
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual)
-				goto L07b9;
+						ushort slotOffset = (ushort)(count << 1);
+						count++;
+						this.processor.EmitLocalWord(0x2, count);
+						this.processor.RegSource.Value16 = slotOffset;
+						this.processor.EmitUInt16(this.processor.SegStack.Value16,
+							(ushort)(this.processor.RegFrame.Value16 + slotOffset - 0x94), (ushort)techId);
 
-			this.processor.ScaleIndex(0x16, this.processor.PullLocalWord(0x98));
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x4da);
-			this.owner.Libc.AppendText(0xba06, this.processor.RegAcc.Value16);
+						this.owner.Advisors.ObtainTechnologyInfo(participantIdx1, (ushort)techId);
 
-			this.owner.Libc.AppendText(0xba06, "\n ");
+						if ((short)this.processor.RegAcc.Value16 > bestScore)
+						{
+							this.owner.Advisors.ObtainTechnologyInfo(participantIdx1, (ushort)techId);
 
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x2);
-			this.processor.IncrementLocalWord(0x2);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x98);
-			this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x94), this.processor.RegAcc.Value16);
+							bestScore = (short)this.processor.RegAcc.Value16;
+							this.processor.EmitLocalWord(0x96, (ushort)bestScore);
+							this.processor.EmitLocalWord(0x4, (ushort)techId);
+						}
+					}
+				}
 
-			this.owner.Advisors.ObtainTechnologyInfo(participantIdx1, this.processor.PullLocalWord(0x98));
+				this.processor.EmitLocalWord(0x98, 0xffff);
 
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x96));
-			if (this.processor.FlagSet.IsLessOrEqual) goto L07b9;
+				if (count != 0)
+				{
+					if (participantIdx1 == this.owner.World.PersonParticipantIdx)
+					{
+						ushort choice;
 
-			this.owner.Advisors.ObtainTechnologyInfo(participantIdx1, this.processor.PullLocalWord(0x98));
+						do
+						{
+							if (this.processor.PullGlobalWord(0x3934) == 0xffff)
+							{
+								this.owner.TurnHooks.DisplayDialog(0xba06, 80, 32);
+							}
+							else
+							{
+								this.processor.StackWord(0);
+								this.processor.StackWord(0x07fe);
+								this.owner.Audience.DisplayKingDialog(0xba06, 0x14, 0x8b);
+								this.processor.UnstackDoubleWord();
+							}
 
-			this.processor.EmitLocalWord(0x96, this.processor.RegAcc.Value16);
-			this.processor.CopyLocalWord(0x98, 0x4);
+							choice = this.processor.RegAcc.Value16;
+							this.processor.EmitLocalWord(0x9a, choice);
+						}
+						while (choice == 0xffff);
 
-		L07b9:
-			this.processor.EmitLocalWord(0x98, this.processor.DecrementWord(this.processor.PullLocalWord(0x98)));
-			if (this.processor.FlagSet.IsSigned) goto L07c2;
-			goto L072d;
+						this.processor.RegSource.Value16 = (ushort)(choice << 1);
+						short chosenTech = this.processor.PullInt16(this.processor.SegStack.Value16,
+							(ushort)(this.processor.RegFrame.Value16 + (choice << 1) - 0x94));
 
-		L07c2:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L07cb;
-			goto L08c1;
+						this.owner.Advisors.EarnTechnology(participantIdx1, chosenTech, participantIdx2);
+					}
+					else
+					{
+						if (participantIdx2 == this.owner.World.PersonParticipantIdx)
+						{
+							this.owner.Libc.CopyText(0xba06,
+								this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((participantIdx1 << 1) + 0x1992)));
+							this.owner.Libc.AppendText(0xba06, " take\n");
+							this.owner.Libc.AppendText(0xba06, (ushort)((0x16 * this.processor.PullLocalWord(0x4)) + 0x4da));
+							this.owner.Libc.AppendText(0xba06, ".\n");
 
-		L07cb:
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.CompareWord((ushort)participantIdx1, this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L0823;
+							if (this.processor.PullGlobalWord(0x3934) == 0xffff)
+							{
+								this.owner.TurnHooks.DisplayDialog(0xba06, 80, 80);
+							}
+							else
+							{
+								this.processor.StackWord(0);
+								this.processor.StackWord(0x089e);
+								this.owner.Audience.DisplayKingDialog(0xba06, 0x14, 0x8b);
+								this.processor.UnstackDoubleWord();
+							}
+						}
 
-		L07d3:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x3934), 0xffff);
-			if (this.processor.FlagSet.IsNotEqual) goto L07ed;
+						this.owner.Advisors.EarnTechnology(participantIdx1, this.processor.PullLocalSignedWord(0x4), participantIdx2);
+						this.owner.Bot.RefreshCityProduction(participantIdx1, 0xffff);
+					}
+				}
+				else
+				{
+					this.processor.RegAcc.Value16 = 0x47;
+				}
+			}
+			else
+			{
+				this.processor.RegAcc.Value16 = 0;
+			}
 
-			this.owner.TurnHooks.DisplayDialog(0xba06, 80, 32);
-
-			goto L07fe;
-
-		L07ed:
-			this.processor.StackWord(0); // stack management - push return segment, ignored
-			this.processor.StackWord(0x07fe); // stack management - push return offset
-			this.owner.Audience.DisplayKingDialog(0xba06, 0x14, 0x8b);
-			this.processor.UnstackDoubleWord(); // stack management - pop return offset and segment
-
-		L07fe:
-			this.processor.EmitLocalWord(0x9a, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xffff);
-			if (this.processor.FlagSet.IsEqual) goto L07d3;
-
-			this.processor.RegSource.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-
-			this.owner.Advisors.EarnTechnology(participantIdx1,
-				this.processor.PullInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x94)),
-				participantIdx2);
-			
-			goto L08c1;
-
-		L0823:
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.CompareWord((ushort)participantIdx2, this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L08a1;
-
-			this.processor.RegBase.Value16 = (ushort)participantIdx1;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1992)));
-
-			this.owner.Libc.AppendText(0xba06, " take\n");
-
-			this.processor.ScaleIndex(0x16, this.processor.PullLocalWord(0x4));
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x4da);
-			this.owner.Libc.AppendText(0xba06, this.processor.RegAcc.Value16);
-
-			this.owner.Libc.AppendText(0xba06, ".\n");
-
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x3934), 0xffff);
-			if (this.processor.FlagSet.IsNotEqual) goto L088d;
-
-			this.owner.TurnHooks.DisplayDialog(0xba06, 80, 80);
-
-			goto L08a1;
-
-		L088d:
-			this.processor.StackWord(0); // stack management - push return segment, ignored
-			this.processor.StackWord(0x089e); // stack management - push return offset
-			this.owner.Audience.DisplayKingDialog(0xba06, 0x14, 0x8b);
-			this.processor.UnstackDoubleWord(); // stack management - pop return offset and segment
-
-		L08a1:
-			this.owner.Advisors.EarnTechnology(participantIdx1,
-				this.processor.PullLocalSignedWord(0x4),
-				participantIdx2);
-			
-			this.owner.Bot.RefreshCityProduction(participantIdx1, 0xffff);
-
-		L08c1:
 			this.processor.RegSource.Value16 = this.processor.UnstackWord();
 			this.processor.LeaveFrame();
 			// Far return

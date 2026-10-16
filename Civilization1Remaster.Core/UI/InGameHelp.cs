@@ -14,54 +14,48 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// ?
+		/// Shows the help text for a topic from HELP.TXT (0x34b2): prefixes the uppercase topic with '*' in the stack frame, draws the
+		/// text on a blue background when found and restores the screen after a key press or mouse click
 		/// </summary>
-		/// <param name="stringPtr"></param>
 		public void DisplayHelpTopic(ushort charsAddr)
 		{
 			this.processor.Journal.OpenScope($"DisplayHelpTopic(0x{charsAddr:x4})");
 
-			// function body
+			// The topic buffer stays in the stack frame at bp - 0x18
 			this.processor.EnterFrame(0x18);
 
-			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x18), "*");
+			ushort topicAddr = (ushort)(this.processor.RegFrame.Value16 - 0x18);
 
+			this.owner.Libc.CopyText(topicAddr, "*");
 			this.owner.Libc.UppercaseText(charsAddr);
-
-			this.owner.Libc.AppendText((ushort)(this.processor.RegFrame.Value16 - 0x18), this.processor.RegAcc.Value16);
+			this.owner.Libc.AppendText(topicAddr, this.processor.RegAcc.Value16);
 
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
-			this.owner.BlockText.ImportTextFromFile(0x34b2, (ushort)(this.processor.RegFrame.Value16 - 0x18));
+			if (this.owner.BlockText.ImportTextFromFile(0x34b2, topicAddr) != 0)
+			{
+				this.owner.Startup.ConcealMouseCursor();
 
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual) goto L00a5;
+				this.owner.VideoCard.RenderImage(
+					this.processor.PullGlobalWord(0xaa),
+					0, 0, 0x140, 0xc8,
+					this.processor.PullGlobalWord(0x19d4),
+					0, 0);
 
-			this.owner.Startup.ConcealMouseCursor();
+				this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 2);
+				this.owner.TextPainter.RenderCenteredTextToScreen0(topicAddr, 160, 192, 0);
+				this.owner.BlockText.RenderTextChunk(32, 32, 32, 15);
+				this.owner.Conquest.AwaitForKeyPressOrMouseClick();
 
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0xaa),
-				0, 0, 0x140, 0xc8,
-				this.processor.PullGlobalWord(0x19d4),
-				0, 0);
+				this.owner.VideoCard.RenderImage(
+					this.processor.PullGlobalWord(0x19d4),
+					0, 0, 0x140, 0xc8,
+					this.processor.PullGlobalWord(0xaa),
+					0, 0);
 
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 2);
+				this.owner.Startup.DisplayMouseCursor();
+			}
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0((ushort)(this.processor.RegFrame.Value16 - 0x18), 160, 192, 0);
-
-			this.owner.BlockText.RenderTextChunk(32, 32, 32, 15);
-
-			this.owner.Conquest.AwaitForKeyPressOrMouseClick();
-
-			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0x19d4),
-				0, 0, 0x140, 0xc8,
-				this.processor.PullGlobalWord(0xaa),
-				0, 0);
-
-			this.owner.Startup.DisplayMouseCursor();
-
-		L00a5:
 			this.processor.EmitGlobalWord(0x2f9c, 0x0);
 			this.processor.LeaveFrame();
 			// Far return

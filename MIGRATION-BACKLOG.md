@@ -500,17 +500,25 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   bitem 15 dolnego słowa (przesunięcie BP z przeniesieniem do BX, nie przesunięcie całości). Dostępy do pamięci jak
   w oryginale (zapis kolorów bezpośrednio, jak stosb), AX / BX / CX / DX na wyjściu jak w oryginale (test porcji 51 je
   porównuje). Mutacja `> 0xffff` → `> 0xfffe` równoważna. Testy w `BatchSixtySevenDifferentialTests`.
+- Porcja 68 (2026-10-16): `DisplayHelpTopic` (`InGameHelp`), `ChooseTechnologyToTake` (`TradeAndConquest`, wybór technologii po
+  zdobyciu miasta albo w dyplomacji), `OperateMenu` i `DisplayMenu` (`DialogDrawing`, układ i obsługa menu). W `InGameHelp`,
+  `TradeAndConquest` i `DialogDrawing` nie ma już metod w stylu asm. Ramki zostają: w `DisplayHelpTopic` bufor tematu w bp - 0x18;
+  w `ChooseTechnologyToTake` lista 72 technologii w bp - 0x94, zmienna 0x4 (najlepsza dla AI, niezapisana gdy żadna nie ma
+  wartości > -1) i odkładanie adresu powrotu przed `DisplayKingDialog`; w `OperateMenu` tytuł doradcy w bp - 0x50 oraz
+  niezdejmowane `StackWord(hue)` przed `RenderTextToScreen0` na liniach bez znacznika wyboru. Wnioski: gdy dwie funkcje z tej
+  samej klasy są przepisywane razem i jedna woła drugą (`DisplayMenu` → `OperateMenu`), w kopii referencyjnej trzeba zmienić
+  wywołanie na `new DialogDrawingReference(this.owner).OperateMenu(...)`, inaczej obie strony testu wołają nową wersję. Testy w
+  `BatchSixtyEightDifferentialTests`.
 
 ## Następny krok
 
 Dalej małe metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 60`
 (metody z co najmniej 2 liniami `goto L` / `FlagSet` / `Compare…` / `SumWord` itd., od najkrótszej). Kandydaci
-(`GameLoadAndSave` i `Newspaper` nie mają już metod w stylu asm): `ChooseTechnologyToTake` (`TradeAndConquest`, patrz wyżej), `SettleBattle`, `RenderMapTile`, `OpeningSequence`, `DisplayMainIntro`, `DisplayCivilopediaRecord`,
-`OperateMenu`, `DisplayMenu` (`DialogDrawing`),
+(`GameLoadAndSave`, `Newspaper`, `InGameHelp`, `TradeAndConquest` i `DialogDrawing` nie mają już metod w stylu asm): `SettleBattle`, `RenderMapTile`, `OpeningSequence`, `ManageBarbarianUnit`, `DisplayMainIntro`, `DisplayCivilopediaRecord`,
 `DisplayCivilizationScreen` (`MainIntro`, patrz porcja 57),
-`DisplayPalace` (`Palace`, patrz porcja 45), reszta generatora mapy w `GameInitAndIntro`. Funkcje niskopoziomowe `SystemServices` (`DeactivateMouse`, `PointerEvent`,
+`DisplayPalace` (`Palace`, patrz porcja 45). Funkcje niskopoziomowe `SystemServices` (`DeactivateMouse`, `PointerEvent`,
 przerwanie zegara: `RefreshHueCycling`, `AssignColors`) na koniec: działają
-w przerwaniach albo na rejestrach. Stan 2026-10-15 (po porcji 67): 21 metod w stylu asm, ok. 35,7 tys. z 65,3 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
+w przerwaniach albo na rejestrach. Stan 2026-10-16 (po porcji 68): 18 metod w stylu asm. Najwięcej `goto` mają `CityManagement` (ok. 1460), `PlayerTurn` (1144) i `AIPlayer` (788).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
