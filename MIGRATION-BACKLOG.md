@@ -490,6 +490,11 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   pasujące pole zawsze leży przed pierwszym wolnym polem wyższej klasy – „rezygnacja 4 pola po pierwszym wolnym, gdy gracz
   zna technologię części” daje ten sam wynik (1, bez budowy) co dojście do końca tabeli; mutacje tej logiki przeżywają
   (równoważne dla tej tabeli). Technologia części −1 liczy się jako znana (test). Testy w `BatchSixtyFiveDifferentialTests`.
+- Porcja 66, mała (2026-10-16): `OnClockBeat` (`SystemServices`, tyknięcie zegara z przerwania: licznik 0x5c, kolory,
+  muzyka; przy tempie 4 co 7. tyknięcie bez muzyki) – pierwsza funkcja przerwania. Dostępy do pamięci jak w oryginale
+  (od nich zależą tyknięcia zegara testów); golden master, testy zależne od zegara (porcje 51, 55) i pełny zestaw zielone.
+  Krok muzyki w emulatorze zawsze zwraca 0, więc zmiany szybkości po nim są nieosiągalne w testach (zachowane).
+  Testy w `BatchSixtySixDifferentialTests`.
 
 ## Następny krok
 
@@ -499,8 +504,8 @@ Dalej małe metody: `python Civilization1Remaster.Tests/Differential/Reference/f
 `OperateMenu`, `DisplayMenu` (`DialogDrawing`),
 `DisplayCivilizationScreen` (`MainIntro`, patrz porcja 57),
 `DisplayPalace` (`Palace`, patrz porcja 45), reszta generatora mapy w `GameInitAndIntro`. Funkcje niskopoziomowe `SystemServices` (`DeactivateMouse`, `PointerEvent`,
-przerwanie zegara: `OnClockBeat`, `RefreshHueCycling`, `ColorsFadeStep`, `ColorsFadeStepInterrupt`, `AssignColors`) na koniec: działają
-w przerwaniach albo na rejestrach. Stan 2026-10-15 (po porcji 65): 24 metody w stylu asm, ok. 35,7 tys. z 65,3 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
+przerwanie zegara: `RefreshHueCycling`, `ColorsFadeStep`, `ColorsFadeStepInterrupt`, `AssignColors`) na koniec: działają
+w przerwaniach albo na rejestrach. Stan 2026-10-15 (po porcji 66): 23 metody w stylu asm, ok. 35,7 tys. z 65,3 tys. linii `Civilization1Remaster.Core`. Najwięcej `goto` mają `CityManagement` (ok. 1540), `PlayerTurn` (1180) i `AIPlayer` (870).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 

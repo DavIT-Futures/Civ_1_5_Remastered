@@ -194,55 +194,63 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <summary>
-		/// ?
+		/// A beat of the timer (from ClockInterrupt): the beat counter 0x5c, the colour fade and cycles, then the music. With the
+		/// rate 4 (0x4e) the music skips every 7th beat (counter 0x5e). The music step tells a new speed: below 0 the normal one
+		/// (rate 1, beat length 0x50), above 0 the rate 0x4e (beat length 0x50 / rate); the beat counters 0x46 and 0x59 restart.
+		/// The memory accesses are those of the original (the beats of the test timer depend on them).
 		/// </summary>
 		public void OnClockBeat()
 		{
 			this.processor.Journal.OpenScope("OnClockBeat()");
 
-			// function body
-			this.processor.EmitGlobalWord(0x5c, this.processor.IncrementWord(this.processor.PullGlobalWord(0x5c)));
+			this.processor.EmitGlobalWord(0x5c, (ushort)(this.processor.PullGlobalWord(0x5c) + 1));
 
 			AssignColors();
 
 			RefreshHueCycling();
 
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x4e), 0x4);
-			if (this.processor.FlagSet.IsNotEqual) goto L036c;
-			this.processor.EmitGlobalByte(0x5e, this.processor.SubtractByte(this.processor.PullGlobalByte(0x5e), 0x1));
-			if (this.processor.FlagSet.IsGreater) goto L036c;
-			this.processor.EmitGlobalByte(0x5e, 0x7);
+			if (this.processor.PullGlobalWord(0x4e) == 4)
+			{
+				sbyte skip = (sbyte)this.processor.PullGlobalByte(0x5e);
 
-			goto ExitFn;
+				this.processor.EmitGlobalByte(0x5e, (byte)(skip - 1));
 
-		L036c:
-			// sound driver call
-			AdvanceSong();
+				if (skip - 1 <= 0)
+				{
+					this.processor.EmitGlobalByte(0x5e, 0x7);
 
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsSigned) goto L0378;
-			if (this.processor.FlagSet.IsNotEqual) goto L037d;
+					this.processor.Journal.CloseScope("OnClockBeat");
+					return;
+				}
+			}
 
-			goto ExitFn;
+			short speed = (short)AdvanceSong();
 
-		L0378:
-			this.processor.EmitGlobalWord(0x4c, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x50);
-			this.processor.EmitGlobalWord(0x46, this.processor.RegAcc.Value16);
-			this.processor.EmitGlobalByte(0x59, 0x1);
+			if (speed < 0)
+			{
+				this.processor.EmitGlobalWord(0x4c, 0x1);
+				this.processor.EmitGlobalWord(0x46, this.processor.PullGlobalWord(0x50));
+				this.processor.EmitGlobalByte(0x59, 0x1);
+			}
+			else if (speed > 0)
+			{
+				ushort rate = this.processor.PullGlobalWord(0x4e);
 
-			goto ExitFn;
+				this.processor.EmitGlobalWord(0x4c, rate);
 
-		L037d:
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0x4e);
-			this.processor.EmitGlobalWord(0x4c, this.processor.RegBase.Value16);
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x50);
-			this.processor.RegData.Value16 = 0x0;
-			this.processor.DivideWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegBase.Value16);
-			this.processor.EmitGlobalWord(0x46, this.processor.RegAcc.Value16);
-			this.processor.EmitGlobalByte(0x59, 0x1);
+				ushort beatLength = this.processor.PullGlobalWord(0x50);
 
-		ExitFn:
+				if (rate == 0)
+					throw new Exception("Division by zero");
+
+				this.processor.RegBase.Value16 = rate;
+				this.processor.RegData.Value16 = (ushort)(beatLength % rate);
+				this.processor.RegAcc.Value16 = (ushort)(beatLength / rate);
+
+				this.processor.EmitGlobalWord(0x46, this.processor.RegAcc.Value16);
+				this.processor.EmitGlobalByte(0x59, 0x1);
+			}
+
 			this.processor.Journal.CloseScope("OnClockBeat");
 		}
 
