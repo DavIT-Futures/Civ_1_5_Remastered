@@ -17,13 +17,14 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <summary>
-		/// Main game entry
+		/// Main game entry: the intro, the check of the free memory (a warning below 8000 paragraphs with VGA, 4000 without;
+		/// 0x1a3e set below 9150 with VGA), the mouse cursor, the main menu and the new world, then the turns of the game
+		/// until it ends (a game loaded during play starts the turns again)
 		/// </summary>
 		public void RunGame()
 		{
 			this.processor.Journal.OpenScope("RunGame()");
 
-			// function body
 			this.processor.EnterFrame(0xa);
 
 			// Main menu selection
@@ -38,51 +39,38 @@ namespace Civilization1Remaster.Engine
 
 			QueryForDisk(0, 1);
 
+			// The free memory stays in the frame (bp - 4) like in the original: the timer of the tests counts the accesses to memory
 			this.processor.StackWord(0); // stack management - push return segment, ignored
 			this.processor.StackWord(0x0055); // stack management - push return offset
 			this.owner.VideoCard.ObtainFreeStorage();
 			this.processor.UnstackDoubleWord(); // stack management - pop return offset and segment
 			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x6dfc), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L0064;
-			this.processor.EmitLocalWord(0x4, 0x0);
 
-		L0064:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xd762), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L0070;
-			this.processor.RegAcc.Value16 = 0x1f40;
-			goto L0073;
+			if (this.processor.PullGlobalWord(0x6dfc) != 0)
+			{
+				// A screen could not be reserved
+				this.processor.EmitLocalWord(0x4, 0);
+			}
 
-		L0070:
-			this.processor.RegAcc.Value16 = 0xfa0;
+			this.processor.RegAcc.Value16 = (ushort)(this.processor.PullGlobalWord(0xd762) != 0 ? 0x1f40 : 0xfa0);
 
-		L0073:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x4));
-			if (this.processor.FlagSet.IsLessOrEqual) goto L00ee;
+			if ((short)this.processor.RegAcc.Value16 > (short)this.processor.PullLocalWord(0x4))
+			{
+				// Not enough memory: the amount in the text 0x270, then a menu with it
+				this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 12);
 
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 12);
+				this.processor.EmitGlobalByte(0xba06, 0);
+				this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText((short)this.processor.PullLocalWord(0x4), 10));
+				this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be), 0xba06);
+				this.processor.EmitGlobalByte(0xba06, 0);
 
-			this.processor.EmitGlobalByte(0xba06, 0x0);
+				this.owner.BlockText.DisplayTextDialog(0x270);
+				this.owner.Dialogs.DisplayMenu(0xba06, 64, 49, 1);
+			}
 
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText((short)this.processor.PullLocalWord(0x4), 10));
+			if (this.processor.PullGlobalWord(0xd762) != 0 && (short)this.processor.PullLocalWord(0x4) < 0x23be)
+				this.processor.EmitGlobalWord(0x1a3e, 1);
 
-			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be), 0xba06);
-
-			this.processor.EmitGlobalByte(0xba06, 0x0);
-
-			this.owner.BlockText.DisplayTextDialog(0x270);
-
-			this.owner.Dialogs.DisplayMenu(0xba06, 64, 49, 1);
-
-		L00ee:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xd762), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L0102;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), 0x23be);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0102;
-			this.processor.EmitGlobalWord(0x1a3e, 0x1);
-
-		L0102:
 			this.processor.StackWord(0); // stack management - push return segment, ignored
 			this.processor.StackWord(0x0110); // stack management - push return offset
 			this.owner.ImageToolkit.ImportIcon(0x277);
@@ -90,22 +78,18 @@ namespace Civilization1Remaster.Engine
 
 			this.processor.EmitGlobalWord(0x6e92, this.processor.RegAcc.Value16);
 
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x1a3c), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L012a;
+			if (this.processor.PullGlobalWord(0x1a3c) != 0)
+			{
+				this.owner.Services.PrepareMouse();
+				this.processor.EmitGlobalWord(0x1a3c, this.processor.RegAcc.Value16);
+			}
 
-			this.owner.Services.PrepareMouse();
+			if (this.processor.PullGlobalWord(0x1a3c) != 0)
+			{
+				this.owner.Services.AssignMouseCursorImage(0, 0, this.processor.PullGlobalWord(0x6e92));
+				DisplayMouseCursor();
+			}
 
-			this.processor.EmitGlobalWord(0x1a3c, this.processor.RegAcc.Value16);
-
-		L012a:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x1a3c), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L0145;
-
-			this.owner.Services.AssignMouseCursorImage(0, 0, this.processor.PullGlobalWord(0x6e92));
-			
-			DisplayMouseCursor();
-
-		L0145:
 			// Game type, load, etc. menu
 			// And then after menu Intro
 			TitleLogoAndMainChoices();
@@ -113,48 +97,43 @@ namespace Civilization1Remaster.Engine
 			// Start Game menu, level, tribe, name
 			FreshWorldChoices();
 
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x6b32), 0x1);
-			if (this.processor.FlagSet.IsNotEqual) goto L016f;
+			if (this.processor.PullGlobalWord(0x6b32) == 1)
+			{
+				// A loaded game: the map view around the first city of the human player
+				this.processor.RegAcc.Value16 = (ushort)(this.owner.World.Participants[this.owner.World.PersonParticipantIdx].HorizBegin - 7);
+				this.processor.EmitGlobalWord(0xd4cc, this.processor.RegAcc.Value16);
+				this.processor.EmitGlobalWord(0xd75e, 0x13);
 
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.Participants[this.owner.World.PersonParticipantIdx].HorizBegin;
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, 0x7);
-			this.processor.EmitGlobalWord(0xd4cc, this.processor.RegAcc.Value16);
-			this.processor.EmitGlobalWord(0xd75e, 0x13);
+				this.owner.TurnHooks.RepaintMainScreen();
+			}
 
-			this.owner.TurnHooks.RepaintMainScreen();
-
-		L016f:
 			// Mouse pointer show/hide level at the start of the game, a game loaded during play starts with the same level
 			ushort arrowTier = this.processor.PullGlobalWord(0xdeea);
 
-		LoadedGame:
-			this.processor.EmitGlobalWord(0xdc48, 0x0);
-
-		L0175:
-			this.owner.TurnHooks.HandleGameEnd();
-
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xdc48), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L0175;
-
-			if (this.processor.PullGlobalWord(0xdc48) == GameLoadAndSave.FetchSessionAsk)
+			while (true)
 			{
+				this.processor.EmitGlobalWord(0xdc48, 0);
+
+				do
+				{
+					this.owner.TurnHooks.HandleGameEnd();
+				}
+				while (this.processor.PullGlobalWord(0xdc48) == 0);
+
+				if (this.processor.PullGlobalWord(0xdc48) != GameLoadAndSave.FetchSessionAsk)
+					break;
+
 				ImportGameDuringPlay(arrowTier);
-				goto LoadedGame;
 			}
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x1a3c), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L018d;
 
-			this.owner.Services.DeactivateMouse();
+			if (this.processor.PullGlobalWord(0x1a3c) != 0)
+				this.owner.Services.DeactivateMouse();
 
-		L018d:
 			this.owner.Services.PerformSound(0, 0);
-
 			this.owner.Services.HaltSound();
-
 			this.owner.Services.HaltTimer();
-			
+
 			this.processor.LeaveFrame();
-			// Far return
 			this.processor.Journal.CloseScope("RunGame");
 		}
 
@@ -163,7 +142,7 @@ namespace Civilization1Remaster.Engine
 		/// It does the same steps as Load a Saved Game in the start menu.
 		/// </summary>
 		/// <param name="pointerLevel">Mouse pointer show/hide level at the start of the game</param>
-		private void ImportGameDuringPlay(ushort arrowTier)
+		public void ImportGameDuringPlay(ushort arrowTier)
 		{
 			this.processor.Journal.OpenScope($"ImportGameDuringPlay({arrowTier})");
 

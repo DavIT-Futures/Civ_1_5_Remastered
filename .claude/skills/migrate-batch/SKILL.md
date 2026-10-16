@@ -37,7 +37,9 @@ Testy zawsze w **Release** z `-parallelMode all` (ok. 7 razy szybciej niż Debug
      SI/DI zachowane. **Ramkę stosu (`EnterFrame`, `Preserve…`) zostawić**, gdy funkcja woła coś, co czyta śmieci spod stosu
      (`RenderCitizenIcons`, `ObtainDistanceToReplayCity`, `HandleCity`, …) albo zmienia SI (`VisitEachUnitInStack`, `TallyUnits…InStack`), oraz
      gdy bufor (nazwa pliku, lista) jest w ramce. `DisplayMenu` / `DisplayDialog` zostawiają w DI wartość z SI – ustawić SI jak oryginał.
-   - Zegar testów tyka co N dostępów `CPU.Pull…/Emit…` (stos, `Storage` i `rep movsb` się nie liczą). Kopię `rep movs` robić
+   - Zegar testów tyka co N dostępów `CPU.Pull…/Emit…` (`StackWord`/`Unstack…`, `Storage` i `rep movsb` się nie liczą, ale
+     zmienne lokalne `PullLocalWord`/`EmitLocalWord` tak – kod czekający na muzykę albo 0x5c zostawia je w ramce i czyta tyle
+     razy co oryginał, porcje 72 – 73). Kopię `rep movs` robić
      przez `processor.Storage`; w kodzie, w którym liczy się moment tyknięcia (palety, cykle kolorów, oczekiwanie na zegar),
      zachować liczbę dostępów do pamięci (porcja 51).
    - Jednostki: `UnitMemory` (pamięć 0x81d4), typy: `UnitKindTable`, mapa: `MapOps.Chart` (`MapLayers`), stałe: `MapRules`.
@@ -47,6 +49,10 @@ Testy zawsze w **Release** z `-parallelMode all` (ok. 7 razy szybciej niż Debug
    `pair.Original`; dane spoza zakresu gry (tekst poniżej wiersza 192, ustrój 6, za dużo wierszy raportu) rzucają wyjątek w obu
    wersjach z różnymi rejestrami – ograniczyć do realnych; pliki i tabele spoza segmentu 0x3b01 przez `Watched` (okno w 0x3772 najwyżej do 0x3931, dalej jest segment danych
    ze zmiennymi zegara) albo hasz w 0xbc00; obrazki z `ScreenToPicture` (poza migawką i śladem) narysować na ekranie po wywołaniu.
+   `GameSnapshot` pomija zmienne zegara 0x40 – 0x6f, stan myszy 0x586e – 0x5873 i stos – co funkcja tam pisze, idzie do `Watched`.
+   Ziarno losowania z zegara ściennego (`SeedRandomizer`, `time()`): w `Prepare` ustawić `game.Libc.Clock` na stały moment.
+   Ekrany w trakcie (przewijanie, animacja) widać w śladzie tylko przy `keyboard.KeyTyping` – można go wołać z własnego
+   `game.Processor.InputStarved` przy każdym zapytaniu o klawisz (porcja 72).
    Uruchomić: `$T -parallelMode all -class "*BatchNN*" 2>&1 | grep -E "\[FAIL\]|Total:|differs|^\s+(reg|cpu|mem|state|screen|trace|call)[.:]|No scenario"`.
    Test wisi: odtworzyć sekwencję na jednej `HeadlessGame` (w `DifferentialPair` wyjątki są przechwytywane), z zegarem
    wołającym `Processor.WhenApplicationQuits()` (wyjątek ze stosem) i `ScopeListener` na wszystkich dziennikach; scenariusz,
@@ -56,7 +62,9 @@ Testy zawsze w **Release** z `-parallelMode all` (ok. 7 razy szybciej niż Debug
    Różnica, której nie da się wyjaśnić: tymczasowo obie lambdy z kopią referencyjną (oryginał kontra oryginał) – jeśli dalej
    jest, to artefakt testu (np. ścieżka CIV.EXE w buforze 0xba06 nadpisana długim tekstem, dane spoza zakresu gry).
 6. Mutacje: `mutations.json` z jedną mutacją na funkcję (w gałęzi trudnej do trafienia), `python …/check_mutations.py mutations.json`.
-   Każda musi być CAUGHT; SURVIVED = albo słaby test (dodać scenariusze), albo mutacja nieosiągalna (zmienić).
+   Każda musi być CAUGHT; SURVIVED = albo słaby test (dodać scenariusze), albo mutacja nieosiągalna (zmienić). Mutacja musi
+   leżeć w funkcji, którą sprawdza podany test (porcje 68 / 70: mutacje w `SeizeCity` / `FocusMapView` „przeżywały” w testach
+   innych funkcji).
 7. Po każdej porcji: golden master + testy porcji (ok. 30 s):
    `$T -parallelMode all -class "*GoldenMaster*" -class "*BatchNN*" 2>&1 | grep -E "\[FAIL\]|Total:"`.
    Pełny zestaw (ok. 5,5 min w Release): co 4 porcje, przed końcem sesji i po każdej zmianie wspólnego kodu (`Civilization1Remaster.Machine`,

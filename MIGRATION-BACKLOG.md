@@ -532,18 +532,48 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   Ramki zostają: zachowanie i odtworzenie rejestrów indeksowych (`PreserveIndexRegisters` / `RestoreIndexRegisters`) oraz ramki lokalne.
   Wnioski do testów: `DisplayPalace` korzysta z `ScriptedKeyboard` do wyboru sekcji i stylów ('1' = 0x31) oraz zatwierdzania dialogów (0x0d).
   Testy w `BatchSeventyOneDifferentialTests`.
-- Porcja 72 (2026-10-16): `DisplayMainIntro` oraz `DisplayCivilizationScreen` (`MainIntro`, intro gry z animacją napisów i przewijaniem
-  kredytów, cyklami kolorów oraz ekran lądowania statku kosmicznego na Alfa Centauri / ekran cywilizacji z przewijaną animacją statku).
-  W `MainIntro` nie ma już metod w stylu asm (100% czyste C#). Metody podzielone na czytelne procedury pomocnicze:
-  `AnimateIntroPhase1`, `AnimateIntroPhase2`, `HandleIntroSelection`. Zmigrowano w trybie bezpośrednim (bez testów różnicowych, na życzenie
-  użytkownika w celu porównania czasu pracy).
+- Porcja 72 (2026-10-16, poprawiona 2026-10-17): `DisplayMainIntro` oraz `DisplayCivilizationScreen` (`MainIntro`, intro gry
+  z przewijaniem napisów (credits.txt) i planety w takt muzyki, logo i wybór z menu klawiszem z intro; ekran lądowania statku
+  na Alfa Centauri). W `MainIntro` nie ma już metod w stylu asm. Pierwsza wersja (inny model, „bez testów”) miała błędy:
+  czekanie na muzykę w złą stronę, inny odczyt klatki statku (0xb226 zamiast 0xb23b), brak zapisu 0x32d6, mniej dostępów do
+  pamięci. Przepisane od nowa wiernie: zmienne lokalne zostają w ramce i są czytane tyle razy co w oryginale (od liczby dostępów
+  zależą tyknięcia zegara testów, a od nich muzyka i 0x5c), podział na `FindIntroDisks`, `DetectGraphicsDriver`,
+  `ReserveIntroScreens`, `LoadIntroPictures`, `ScrollCredits`, `ScrollPlanet`, `TakeIntroChoice`, `ShowTitleLogo`, `CloseIntro`
+  oraz `ImportShipPictures`, `PrepareLandingText`, `FlyShip`, `RenderShipFrame`, `CutNextTextPart`, `ShowLanding`,
+  `RenderClosingText`, `CloseLanding`. Licznik klatek statku (bp - 0x208) nie jest ustawiany przed pierwszym odczytem (śmieci ze
+  stosu) – zachowane. Wnioski do testów: „ChanceRoot o 1 większy” to nie dodatkowe losowanie, tylko ziarno z zegara ściennego
+  (`SeedRandomizer` → `time()` w sekundach) – test ustawia `game.Libc.Clock` (nowy szew w `CRuntime`) na stały moment w obu
+  grach; poprzednie maskowanie (ChanceRoot / SeedRandom po przebiegu) usunięte. Intro do końca: `InputStarved` w `Prepare`
+  podmieniony tak, że zapytania o klawisz (KeyAvailable) nie dostają klawisza, a każde wywołuje `keyboard.KeyTyping`, więc ekrany
+  każdej kolumny trafiają do śladu (bez tego zmiana napisów była niewidoczna); klawisz czekający w `VideoCard.Tokens` daje wybór.
+  Klawisz, który przerwie intro, zostaje w buforze, więc ścieżka „przerwane napisy + logo” nie istnieje. Mutacja równoważna:
+  `MusicReachedColumn` `<=` → `<` (jeden krok muzyki dłużej na kolumnę; kolumny i ekrany te same, przed logo intro czeka na
+  pozycję 0xd00). Testy w `BatchSeventyTwoDifferentialTests`.
+- Porcja 73 (2026-10-17): `RunGame` (`GameStartup`, wejście do gry: intro, kontrola pamięci, kursor myszy, menu, nowy świat,
+  pętla tur), `ClockInterrupt`, `RefreshHueCycling`, `PointerEvent` (`SystemServices`, przerwania zegara i myszy, krok cykli
+  kolorów). Zaczęta przez inny model; poprawione: porównania ze znakiem w `RunGame` (oryginał: `jle` / `jge`), zmienna 0x4
+  i odkładanie adresów powrotu zostają w ramce / na stosie, w `ClockInterrupt` i `RefreshHueCycling` przywrócone podwójne odczyty
+  (0x46, 0x44, licznik cyklu) i kolejność odczytów, zawijanie cyklu jak `jge` po `sub` (pozycja < krok, nie wynik < 0). Testy
+  różnicowe z etykietami z efektów; `GameSnapshot` pomija zmienne zegara 0x40 – 0x6f i stan myszy 0x586e – 0x5873, a cykle
+  kolorów są w segmencie 0x35cf – wszystko przez `Watched` (wcześniejszy test `ClockInterrupt` nic nie porównywał).
+  `RunGame` testowany do wyjątku limitu klawiszy (`TurnKeyLimit` = 300): obie wersje grają intro, menu, nowy świat i tury, a
+  ślad, stan i ekrany do tego miejsca muszą się zgadzać. Mutacja `pozycja < krok` → `<=` równoważna (przy równości wynik 0
+  w obu). Testy w `BatchSeventyThreeDifferentialTests`.
+- Poprawki po porcjach 68 – 72 (2026-10-17): `SettleBattle` AUTO02/0 – obie wersje rzucały ten sam
+  `IndexOutOfRangeException` (scenariusz kasował wszystkie miasta, a mapa nadal je pokazywała; `RenderCityOnTile` nie znajdował
+  miasta), różnił się tylko SI zostawiony przez oryginał w połowie. Scenariusz używa teraz wolnego slotu miasta; etykiety gałęzi
+  z efektów (kontakt 0x20 w relacji, wywołania `EliminateUnit` / `ExplodeNuclearWeapon` / `TallyUnitsByDomainInStack`, złoto
+  za wodza). „Przeżyłe” mutacje porcji 68 / 70 były wstawione w `SeizeCity` (DrawInt(2)) i `FocusMapView` (kropki miast), a
+  sprawdzane testami `ChooseTechnologyToTake` / `RenderMapTile` – właściwe testy (`SeizeCity…`, `FocusMapView…`) je łapią.
+  Pełny zestaw wisiał przez pierwszą wersję intro (czekanie na muzykę bez końca w testach, które wołają intro / ekran
+  cywilizacji: `TitleLogoAndMainChoices`, `ConfigureFreshGame`, `RenderSpaceship`, `DisplayReplay`, …).
 
 ## Następny krok
 
-Dalej małe i średnie metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 60`
-(metody z co najmniej 2 liniami `goto L` / `FlagSet` / `Compare…` / `SumWord` itd., od najkrótszej). Kandydaci
-(`GameLoadAndSave`, `Newspaper`, `InGameHelp`, `TradeAndConquest`, `DialogDrawing`, `GameInitAndIntro`, `UnitCombat`, `MapManagement`, `Palace`, `Civilopedia` i `MainIntro` nie mają już metod w stylu asm): `RunGame` (`GameStartup`), `PointerEvent`, przerwanie zegara: `ClockInterrupt`, `RefreshHueCycling` (`SystemServices`).
-Stan 2026-10-16 (po porcji 72): 10 metod w stylu asm. Najwięcej `goto` mają `CityManagement` (ok. 1460), `PlayerTurn` (1144) i `AIPlayer` (670).
+Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
+(`OperateAITurn`, `PickCityProduction`, `LaunchAudience`, `ShiftAIUnit`, `HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
+wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
+Stan 2026-10-17 (po porcji 73): 6 metod w stylu asm, ok. 21,8 tys. z 60,7 tys. linii Core, 3788 linii z `goto`.
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 

@@ -81,29 +81,32 @@ namespace Civilization1Remaster.Engine
 			this.processor.StackWord(this.processor.RegAcc.Value16);
 			this.processor.SegData.Value16 = 0x3b01;
 
-			this.processor.EmitUInt32(this.processor.SegData.Value16, 0x42, (uint)(this.processor.PullUInt32(this.processor.SegData.Value16, 0x42) +
-				this.processor.PullGlobalWord(0x48)));
+			uint oldTime = this.processor.PullUInt32(this.processor.SegData.Value16, 0x42);
+			this.processor.EmitUInt32(this.processor.SegData.Value16, 0x42, oldTime + this.processor.PullGlobalWord(0x48));
 
-			this.processor.EmitGlobalWord(0x54, this.processor.DecrementWord(this.processor.PullGlobalWord(0x54)));
-			if (this.processor.FlagSet.IsEqual)
+			ushort counter54 = (ushort)(this.processor.PullGlobalWord(0x54) - 1);
+			this.processor.EmitGlobalWord(0x54, counter54);
+			if (counter54 == 0)
 			{
 				this.processor.EmitGlobalWord(0x54, this.processor.PullGlobalWord(0x4c));
 
-				this.processor.EmitGlobalByte(0x59, this.processor.DecrementByte(this.processor.PullGlobalByte(0x59)));
-				if (this.processor.FlagSet.IsEqual)
+				byte counter59 = (byte)(this.processor.PullGlobalByte(0x59) - 1);
+				this.processor.EmitGlobalByte(0x59, counter59);
+				if (counter59 == 0)
 				{
 					this.processor.EmitGlobalByte(0x59, 0x14);
 
 					if (this.processor.PullGlobalByte(0x58) != 0)
 					{
-						this.processor.EmitGlobalByte(0x58, 0x0);
+						this.processor.EmitGlobalByte(0x58, 0);
 					}
 					else
 					{
+						// The new tempo (0x46) is read again when it is taken: the accesses to memory are counted by the timer of the tests
 						if (this.processor.PullGlobalWord(0x46) != this.processor.PullGlobalWord(0x48))
 						{
 							this.processor.EmitGlobalWord(0x48, this.processor.PullGlobalWord(0x46));
-							this.processor.EmitGlobalWord(0x4a, this.processor.IncrementWord(this.processor.PullGlobalWord(0x4a)));
+							this.processor.EmitGlobalWord(0x4a, (ushort)(this.processor.PullGlobalWord(0x4a) + 1));
 							this.processor.EmitGlobalWord(0x56, 0x20);
 						}
 					}
@@ -112,15 +115,15 @@ namespace Civilization1Remaster.Engine
 				OnClockBeat();
 			}
 
-			if (this.processor.PullGlobalWord(0x4c) != 0x1)
+			if (this.processor.PullGlobalWord(0x4c) != 1)
 			{
 				// sound driver call
 				RefreshSoundEffects();
 			}
 
-			if (this.processor.PullGlobalWord(0x44) != 0x0)
+			if (this.processor.PullGlobalWord(0x44) != 0)
 			{
-				this.processor.EmitGlobalWord(0x44, this.processor.DecrementWord(this.processor.PullGlobalWord(0x44)));
+				this.processor.EmitGlobalWord(0x44, (ushort)(this.processor.PullGlobalWord(0x44) - 1));
 			}
 
 			this.processor.RegAcc.Value16 = this.processor.UnstackWord();
@@ -393,72 +396,96 @@ namespace Civilization1Remaster.Engine
 		{
 			this.processor.Journal.OpenScope("RefreshHueCycling()");
 
-			// function body
 			this.processor.PreserveSource();
 			this.processor.StackWord(this.processor.RegDest.Value16);
 			this.processor.StackWord(this.processor.SegData.Value16);
 			this.processor.SegData.Value16 = 0x35cf;
-			// LEA
-			this.processor.RegDest.Value16 = 0x2;
+			this.processor.RegDest.Value16 = 2;
 
-		L0456:
-			this.processor.RegBase.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, this.processor.RegDest.Value16);
-			this.processor.RegDest.Value16 = this.processor.SumWord(this.processor.RegDest.Value16, 0x2);
-			this.processor.CompareWord(this.processor.RegBase.Value16, 0xffff);
-			if (this.processor.FlagSet.IsEqual) goto L04a5;
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x8)), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L0456;
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x8), this.processor.DecrementByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x8))));
-			if (this.processor.FlagSet.IsNotEqual) goto L0456;
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x7));
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x8), this.processor.RegAcc.LowByte);
-			this.processor.RegCount.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x4));
-			this.processor.RegSource.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x2));
-			this.processor.RegSource.Value16 = this.processor.SubtractWord(this.processor.RegSource.Value16, this.processor.PullUInt16(this.processor.SegData.Value16, this.processor.RegBase.Value16));
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L047d;
-			this.processor.RegSource.Value16 = this.processor.SumWord(this.processor.RegSource.Value16, this.processor.RegCount.Value16);
-
-		L047d:
-			this.processor.CompareWord(this.processor.RegSource.Value16, this.processor.RegCount.Value16);
-			if (this.processor.FlagSet.IsLess) goto L0484;
-			this.processor.RegSource.Value16 = 0x0;
-
-		L0484:
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x2), this.processor.RegSource.Value16);
-			// LEA
-			this.processor.RegAcc.Value16 = (ushort)(this.processor.RegBase.Value16 + 0x9);
-			this.processor.RegSource.Value16 = this.processor.SumWord(this.processor.RegSource.Value16, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x6));
-
-			if (this.owner.VideoCard.Displays.IncludesKey(0))
+			while (true)
 			{
-				lock (this.owner.VideoCard.VideoLatch)
+				ushort cycle = this.processor.PullUInt16(this.processor.SegData.Value16, this.processor.RegDest.Value16);
+				this.processor.RegBase.Value16 = cycle;
+				this.processor.RegDest.Value16 = (ushort)(this.processor.RegDest.Value16 + 2);
+
+				if (cycle == 0xffff)
 				{
-					VGABitmap display = this.owner.VideoCard.Displays.ObtainValueByKey(0);
-					uint stagingLoc = CPU.AsLinearAddress(this.processor.SegData.Value16, this.processor.RegSource.Value16);
-					int total = this.processor.RegCount.Value16 / 3;
+					break;
+				}
 
-					for (int idx = 0; idx < total; idx++)
+				// Inactive cycle (timer 0), or not yet time for the next step: the timer is read again to count it down, as in the original
+				if (this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(cycle + 8)) == 0)
+				{
+					continue;
+				}
+
+				byte timer = (byte)(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(cycle + 8)) - 1);
+				this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(cycle + 8), timer);
+				if (timer != 0)
+				{
+					continue;
+				}
+
+				byte initialDelay = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(cycle + 7));
+				this.processor.RegAcc.LowByte = initialDelay;
+				this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(cycle + 8), initialDelay);
+
+				ushort count = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(cycle + 4));
+				this.processor.RegCount.Value16 = count;
+
+				// One step back (forward for a backward cycle), wrapped around the colours of the cycle
+				short position = (short)this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(cycle + 2));
+				short step = (short)this.processor.PullUInt16(this.processor.SegData.Value16, cycle);
+				short source = (short)(position - step);
+
+				if (position < step)
+				{
+					source += (short)count;
+				}
+
+				if (source >= (short)count)
+				{
+					source = 0;
+				}
+
+				this.processor.RegSource.Value16 = (ushort)source;
+				this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(cycle + 2), (ushort)source);
+
+				ushort paletteOffset = (ushort)(cycle + 9);
+				this.processor.RegAcc.Value16 = paletteOffset;
+				this.processor.RegSource.Value16 = (ushort)(this.processor.RegSource.Value16 + paletteOffset);
+
+				byte startHue = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(cycle + 6));
+				this.processor.RegAcc.LowByte = startHue;
+
+				if (this.owner.VideoCard.Displays.IncludesKey(0))
+				{
+					lock (this.owner.VideoCard.VideoLatch)
 					{
-						byte crimson = this.processor.Storage.PullUInt8(stagingLoc++);
-						byte emerald = this.processor.Storage.PullUInt8(stagingLoc++);
-						byte azure = this.processor.Storage.PullUInt8(stagingLoc++);
+						VGABitmap display = this.owner.VideoCard.Displays.ObtainValueByKey(0);
+						uint stagingLoc = CPU.AsLinearAddress(this.processor.SegData.Value16, this.processor.RegSource.Value16);
+						int total = count / 3;
 
-						display.AssignHue(idx + this.processor.RegAcc.LowByte, VGABitmap.Hue18ToHue(crimson, emerald, azure));
+						for (int idx = 0; idx < total; idx++)
+						{
+							byte crimson = this.processor.Storage.PullUInt8(stagingLoc++);
+							byte emerald = this.processor.Storage.PullUInt8(stagingLoc++);
+							byte azure = this.processor.Storage.PullUInt8(stagingLoc++);
+
+							display.AssignHue(idx + startHue, VGABitmap.Hue18ToHue(crimson, emerald, azure));
+						}
 					}
 				}
+				else
+				{
+					throw new Exception($"The screen 0 is not allocated");
+				}
 			}
-			else
-			{
-				throw new Exception($"The screen {0} is not allocated");
-			}
-			goto L0456;
 
-		L04a5:
 			this.processor.SegData.Value16 = this.processor.UnstackWord();
 			this.processor.RegDest.Value16 = this.processor.UnstackWord();
 			this.processor.RestoreSource();
-			// Far return
+
 			this.processor.Journal.CloseScope("RefreshHueCycling");
 		}
 
@@ -1223,37 +1250,37 @@ namespace Civilization1Remaster.Engine
 		/// </summary>
 		public void PointerEvent()
 		{
-			// function body
 			this.processor.SegData.Value16 = 0x3b01;
 			this.processor.RegFrame.Value16 = this.processor.RegCount.Value16;
 
-			this.processor.RegCount.LowByte = this.processor.PullGlobalByte(0x587c);
-			this.processor.RegFrame.Value16 = this.processor.ShiftRightWord(this.processor.RegFrame.Value16, this.processor.RegCount.LowByte);
+			byte shift = this.processor.PullGlobalByte(0x587c);
+			this.processor.RegCount.LowByte = shift;
+			this.processor.RegFrame.Value16 >>= shift;
 			this.processor.RegCount.Value16 = this.processor.RegFrame.Value16;
-			this.processor.EmitGlobalWord(0x5874, this.processor.BitOrWord(this.processor.PullGlobalWord(0x5874), this.processor.RegBase.Value16));
-			this.processor.EmitGlobalWord(0x5872, this.processor.RegBase.Value16);
+
+			ushort buttons = this.processor.RegBase.Value16;
+			this.processor.EmitGlobalWord(0x5874, (ushort)(this.processor.PullGlobalWord(0x5874) | buttons));
+			this.processor.EmitGlobalWord(0x5872, buttons);
 			this.processor.EmitGlobalWord(0x586e, this.processor.RegCount.Value16);
 			this.processor.EmitGlobalWord(0x5870, this.processor.RegData.Value16);
 
-			this.processor.RegFrame.Value16 = this.processor.RegAcc.Value16;
-			this.processor.TestBitsWord(this.processor.RegFrame.Value16, 0x1);
-			if (this.processor.FlagSet.IsEqual) goto L1829;
-			this.processor.CompareByte(this.processor.PullGlobalByte(0x5403), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L1829;
-			this.processor.RegAcc.LowByte = 0x2;
-			this.processor.Scratch.LowByte = this.processor.PullGlobalByte(0x5402);
-			this.processor.EmitGlobalByte(0x5402, this.processor.RegAcc.LowByte);
-			this.processor.RegAcc.LowByte = this.processor.Scratch.LowByte;
-			this.processor.RegAcc.LowByte = this.processor.BitOrByte(this.processor.RegAcc.LowByte, this.processor.RegAcc.LowByte);
-			if (this.processor.FlagSet.IsNotEqual) goto L1829;
+			ushort condition = this.processor.RegAcc.Value16;
+			this.processor.RegFrame.Value16 = condition;
 
-			RenewScreen();
+			if ((condition & 1) != 0 && this.processor.PullGlobalByte(0x5403) != 0)
+			{
+				this.processor.RegAcc.LowByte = 2;
+				byte prev = this.processor.PullGlobalByte(0x5402);
+				this.processor.EmitGlobalByte(0x5402, 2);
+				this.processor.Scratch.LowByte = prev;
+				this.processor.RegAcc.LowByte = prev;
 
-			this.processor.EmitGlobalByte(0x5402, 0x0);
-
-		L1829:
-			// Far return
-			this.processor.RegAcc.LowByte = this.processor.RegAcc.LowByte;
+				if (prev == 0)
+				{
+					RenewScreen();
+					this.processor.EmitGlobalByte(0x5402, 0);
+				}
+			}
 		}
 	}
 }
