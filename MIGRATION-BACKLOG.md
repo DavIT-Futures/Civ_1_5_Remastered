@@ -509,16 +509,24 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   samej klasy są przepisywane razem i jedna woła drugą (`DisplayMenu` → `OperateMenu`), w kopii referencyjnej trzeba zmienić
   wywołanie na `new DialogDrawingReference(this.owner).OperateMenu(...)`, inaczej obie strony testu wołają nową wersję. Testy w
   `BatchSixtyEightDifferentialTests`.
+- Porcja 69 (2026-10-16): `OpeningSequence` (`GameInitAndIntro`, generowanie świata / ładowanie `earth.mp` z opowieścią) oraz
+  `SettleBattle` (`UnitCombat`, rozstrzyganie i animacja bitwy, dyplomacja po ataku, okup za wodza barbarzyńców, zniszczenie stosu
+  i obrońcy miasta). W `GameInitAndIntro` i `UnitCombat` nie ma już metod w stylu asm. Ramki zostają: w `OpeningSequence` zmienne
+  lokalne 0x2–0xe i wywołanie `ProduceTerrain` na tej samej głębokości stosu; w `SettleBattle` wywołania `VisitEachUnitInStack` /
+  `TallyUnitsByDomainInStack` (zmieniają SI) i `DisplayDialog` (kopiuje SI do DI). Wnioski do testów: `OpeningSequence` nie zeruje
+  globalnego licznika pikseli chmur `0x67fe`, więc w kolejnych scenariuszach trzeba go zerować w `Prepare` (inaczej powstaje tylko
+  jedna chmura, brak wzgórz `0xc` i `ProduceElevation` losuje źródło rzeki w nieskończoność). Testy w
+  `BatchSixtyNineDifferentialTests`.
 
 ## Następny krok
 
-Dalej małe metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 60`
+Dalej małe i średnie metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 60`
 (metody z co najmniej 2 liniami `goto L` / `FlagSet` / `Compare…` / `SumWord` itd., od najkrótszej). Kandydaci
-(`GameLoadAndSave`, `Newspaper`, `InGameHelp`, `TradeAndConquest` i `DialogDrawing` nie mają już metod w stylu asm): `SettleBattle`, `RenderMapTile`, `OpeningSequence`, `ManageBarbarianUnit`, `DisplayMainIntro`, `DisplayCivilopediaRecord`,
+(`GameLoadAndSave`, `Newspaper`, `InGameHelp`, `TradeAndConquest`, `DialogDrawing`, `GameInitAndIntro` i `UnitCombat` nie mają już metod w stylu asm): `RenderMapTile`, `ManageBarbarianUnit`, `DisplayMainIntro`, `DisplayCivilopediaRecord`,
 `DisplayCivilizationScreen` (`MainIntro`, patrz porcja 57),
 `DisplayPalace` (`Palace`, patrz porcja 45). Funkcje niskopoziomowe `SystemServices` (`DeactivateMouse`, `PointerEvent`,
 przerwanie zegara: `RefreshHueCycling`, `AssignColors`) na koniec: działają
-w przerwaniach albo na rejestrach. Stan 2026-10-16 (po porcji 68): 18 metod w stylu asm. Najwięcej `goto` mają `CityManagement` (ok. 1460), `PlayerTurn` (1144) i `AIPlayer` (788).
+w przerwaniach albo na rejestrach. Stan 2026-10-16 (po porcji 69): 16 metod w stylu asm. Najwięcej `goto` mają `CityManagement` (ok. 1460), `PlayerTurn` (1144) i `AIPlayer` (788).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
