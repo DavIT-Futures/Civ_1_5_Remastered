@@ -647,13 +647,18 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   (różne rejestry). Sztuczne stosy budowane przez `SituateUnitOnTile` w mieście zapętlały oryginał – test bierze istniejące stosy
   z zapisów. Niezłapana mutacja: bit 0 stanu zwalnianego członka (`& 0xf7` → `& 0xf6`) – w scenariuszach bez wpływu na wynik.
   Testy w `BatchEightyOneDifferentialTests`.
+- Porcja 82 (2026-10-17): szósty kawałek `ShiftAIUnit` – transportowiec z małym ładunkiem (`ChooseStagingCity`): najbliższe
+  nadmorskie miasto gracza na kontynencie z siłą ataku ≥ 16 (puste miasto z atakującymi +16, przy podejściu 5 −obrona / 4,
+  inaczej +16) jest celem, a przy podejściu 5 i małej odległości oznacza tam miejsca strategiczne. Mutacja równoważna:
+  `approach != 0` → `!= 1` (oznaczanie zachodzi tylko przy podejściu 5). Test (transportowce z zapisów, siła i podejście na
+  kontynentach) w `BatchEightyTwoDifferentialTests`.
 
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
 (`ShiftAIUnit`, `HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-17 (po porcji 81): 3 metody w stylu asm; `ShiftAIUnit` przepisywana kawałkami (następny: L1752 – cele ataku i transportu).
+Stan 2026-10-17 (po porcji 82): 3 metody w stylu asm; `ShiftAIUnit` przepisywana kawałkami (następny: L198e – rola 5 dalej, L1c37).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
