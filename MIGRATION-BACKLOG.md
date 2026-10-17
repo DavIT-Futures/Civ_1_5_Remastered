@@ -595,13 +595,25 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   dolna granica wyniku karawany (`Score < 3`) – wymaga miasta z handlem ≥ 16, takiego nie ma w zapisach 1, 11, 14; próg
   stronicowania (dokładnie 31 pozycji) też niesprawdzony (mutacja zastąpiona warunkiem miasta budującego samo). Testy w
   `BatchSeventyFiveDifferentialTests`.
+- Porcja 76 (2026-10-17): `LaunchAudience` (`MeetWithKing`, audiencja u przywódcy komputera: siła na kontynentach,
+  broń jądrowa, cuda, wrogowie, potem wymiana technologii, sojusz, trybut, żądanie technologii, groźba, pokój i jego oferty,
+  wypowiedzenie wojny, rozmowa w czasie pokoju, rada doradcy), rozbita na `WeighContinents`, `WeighNuclearWeapons`,
+  `WeighEnemies`, `ExchangeTechnologies`, `AskForAlliance`, `DemandTribute`, `DemandTechnology`, `Threaten`, `OfferTreaty`
+  / `OfferTechnologyForPeace` / `OfferGoldForPeace` / `OfferEverythingForPeace`, `DeclareWar`, `WelcomeFriendship`,
+  `NegotiateUnderPeace` / `DemandGoldUnderPeace` / `AskToAttack`, `AdviseAboutLeader`. Zmienne lokalne w ramce (jak porcja 75).
+  Błędy tłumaczenia zachowane: złoto za pokój jest odejmowane od słowa pod SI (= gracz << 4, ustawiane tam, gdzie oryginał je
+  ustawia), a nie od przywódcy; przy żądaniu złota w czasie pokoju człowiek dostaje odpowiedź dialogu zamiast kwoty. SI / DI
+  ustawiane tylko tam, gdzie oryginał potem z nich czyta (nazwy w „declare war”). Test porównuje ramkę, wpisuje odpowiedzi
+  dialogów przez `InputStarved` i wymusza tryby: wojna z zagrożonym przywódcą (pokój, technologia, złoto, wszystko, ostrzeżenie
+  doradcy przy 5 miastach), pokój z wymianą technologii (tylko dwóch graczy przy życiu, czasem zagrożony przywódca, który nie
+  negocjuje). Testy w `BatchSeventySixDifferentialTests`.
 
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
-(`LaunchAudience`, `ShiftAIUnit`, `HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
+(`ShiftAIUnit`, `HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-17 (po porcji 75): 4 metody w stylu asm, ok. 19,1 tys. z 59,6 tys. linii Core, 3343 linie z `goto`.
+Stan 2026-10-17 (po porcji 76): 3 metody w stylu asm, ok. 17,2 tys. z 58,7 tys. linii Core, 3135 linii z `goto`.
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
