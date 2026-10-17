@@ -659,13 +659,21 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   w rzędach 2 i 0x2f, więc test zamienia tam jedno pole w ląd (granice biegunów), przenosi stos do zatoczki (najlepszy kierunek 0
   z `MayAIEnterTile`) i stawia obok 2 jednostki gracza albo ulepszone pola człowieka. Wszystkie mutacje złapane. Test w
   `BatchEightyThreeDifferentialTests`.
+- Porcja 84 (2026-10-17): ósmy kawałek `ShiftAIUnit` – cel jednostki bez celu (`ChooseTransportDestination`): najbliższe
+  wrogie miasto (co ósme od tury, bez partnerów pod pokojem, przy silnym człowieku tylko jego), inaczej najbliższe własne
+  miasto ≥ 8 pól dalej na innym kontynencie (ładunek nie pasujący do podejścia liczy się podwójnie), inaczej losowe pole lądu
+  bez miast gracza. Docierają tu tylko transportowce i okręty atakujące na morzu (rola 3 na lądzie i w mieście kończy
+  wcześniej), dlatego test bierze takie jednostki poza miastami, siłę ≥ 16 na kontynentach (bez lądowania), pokój ze
+  wszystkimi, osadników z inną jednostką na żaglowcu i obcą jednostkę obok (0x4c). Niezłapane: `0x4a == 0x10` → `== 0xffff`
+  (0x10 jest kontynentem tylko dla jednostki na lądzie, a ta tu nie dociera – w żadnym scenariuszu z zapisów); równoważna:
+  SI = `p * 0x600` przed losowym polem (kod po L1f44 ustawia SI przed odczytem). Test w `BatchEightyFourDifferentialTests`.
 
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
 (`ShiftAIUnit`, `HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-17 (po porcji 83): 3 metody w stylu asm; `ShiftAIUnit` przepisywana kawałkami (następny: L1c37 – wybór celu, L1f44).
+Stan 2026-10-17 (po porcji 84): 3 metody w stylu asm; `ShiftAIUnit` przepisywana kawałkami (następny: L1f44 – osadnicy, L2520).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
