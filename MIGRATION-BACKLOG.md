@@ -607,13 +607,23 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   dialogów przez `InputStarved` i wymusza tryby: wojna z zagrożonym przywódcą (pokój, technologia, złoto, wszystko, ostrzeżenie
   doradcy przy 5 miastach), pokój z wymianą technologii (tylko dwóch graczy przy życiu, czasem zagrożony przywódca, który nie
   negocjuje). Testy w `BatchSeventySixDifferentialTests`.
+- Porcja 77 (2026-10-17): pierwszy kawałek `ShiftAIUnit` (`AIPlayer`, ok. 3150 linii, ruch jednostki komputera). Wydzielone i
+  przepisane: początek (barbarzyńcy → `ManageBarbarianUnit`; `PlanAirUnit`: bombowiec bez paliwa i myśliwiec bez ruchów
+  czekają 0x68; `SendFighter`: najbliższy widziany bombowiec człowieka w zasięgu albo własne miasto najbliższe temu bombowcowi,
+  0x20 bez miasta) i rozpoznanie otoczenia (`SurveyAIUnit`: zmienne lokalne 0x4c, 0x30, 0x36, 0x8, 0x34, 0x2a, 0x4, 0x32, 0x42,
+  0x56, 0x1a, 0x2, 0x50 jak w oryginale, SI i AX na końcu też). Wszystkie skoki do tego fragmentu były wewnątrz niego; reszta
+  funkcji (L0ff1 i dalej) zostaje w stylu asm na następne porcje. Zachowane: warunek „za blisko” sprawdza ostatnią zmierzoną
+  odległość do bombowca (0x12), a nie najmniejszą. Test (cała `ShiftAIUnit` z kopią referencyjną, porównanie ramki) wymusza
+  bombowce, myśliwce z małą liczbą ruchów, bombowiec człowieka blisko i daleko, gracza bez miast i myśliwca w mieście.
+  Niesprawdzona granica: miasto dokładnie w zasięgu myśliwca (mutacja zamieniona na odwrócenie warunku). Testy w
+  `BatchSeventySevenDifferentialTests`.
 
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
 (`ShiftAIUnit`, `HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-17 (po porcji 76): 3 metody w stylu asm, ok. 17,2 tys. z 58,7 tys. linii Core, 3135 linii z `goto`.
+Stan 2026-10-17 (po porcji 77): 3 metody w stylu asm, ok. 17,0 tys. z 58,6 tys. linii Core, 3106 linii z `goto`; `ShiftAIUnit` przepisywana kawałkami od początku (następny: L0ff1 – broń jądrowa i dalej).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
