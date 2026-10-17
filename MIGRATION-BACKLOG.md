@@ -667,13 +667,20 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   wszystkimi, osadników z inną jednostką na żaglowcu i obcą jednostkę obok (0x4c). Niezłapane: `0x4a == 0x10` → `== 0xffff`
   (0x10 jest kontynentem tylko dla jednostki na lądzie, a ta tu nie dociera – w żadnym scenariuszu z zapisów); równoważna:
   SI = `p * 0x600` przed losowym polem (kod po L1f44 ustawia SI przed odczytem). Test w `BatchEightyFourDifferentialTests`.
+- Porcja 85 (2026-10-17): dziewiąty kawałek `ShiftAIUnit` – `StandsOnHumanFields` (wolna jednostka przy mieście człowieka
+  bez pokoju na nawadnianym / górniczym polu: 0x50) i osadnicy (`DirectSettlers` z `ImproveSettlersTile`,
+  `ChooseSettlersTile`, `BuildSettlersRoad`): nawadnianie / kopalnia wg kosztu ruchu, drogi, twierdza (bit 0x40), pole przy
+  małym mieście, wędrówka wg wzoru 0x3772:0x2438. DI i ES odtworzone jak w oryginale (L2520 ich nie ustawia). Test przenosi
+  osadników obok własnych miast, a wolne jednostki obok miast człowieka, losuje ulepszenia pól 5 x 5, technologie 5 / 0x13 /
+  0x31, bit 2 markerów, wodza, liczby miast i miejsc, wielkości miast, wzór wędrówki i obcą jednostkę obok. Wszystkie
+  mutacje złapane. Test w `BatchEightyFiveDifferentialTests`.
 
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
 (`ShiftAIUnit`, `HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-17 (po porcji 84): 3 metody w stylu asm; `ShiftAIUnit` przepisywana kawałkami (następny: L1f44 – osadnicy, L2520).
+Stan 2026-10-17 (po porcji 85): 3 metody w stylu asm; `ShiftAIUnit` przepisywana kawałkami (następny: L2520 – przed walką, L2643 – szukanie walki).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
