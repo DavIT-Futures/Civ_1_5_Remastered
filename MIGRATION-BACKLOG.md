@@ -617,13 +617,21 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   bombowce, myśliwce z małą liczbą ruchów, bombowiec człowieka blisko i daleko, gracza bez miast i myśliwca w mieście.
   Niesprawdzona granica: miasto dokładnie w zasięgu myśliwca (mutacja zamieniona na odwrócenie warunku). Testy w
   `BatchSeventySevenDifferentialTests`.
+- Porcja 78 (2026-10-17): drugi kawałek `ShiftAIUnit` – broń jądrowa komputera (`AimNuclearWeapon`, `IsNuclearTarget`,
+  `ScoreNuclearTarget`, `HasCityNear`): cel to miasto wroga (bit 0x80 bez pokoju) większe niż 4, gdy gracz nie jest dużo
+  silniejszy, wróg jest ostrzeżony albo nie ma własnej broni; wynik z pól wokół (+1 wroga, −2 własne, −99 innych) i połowy
+  wielkości, z własnym miastem w 16 polach; przy wyniku ≥ 10 i co najmniej dwóch broniach bomba staje na wolnym polu obok
+  (odpowiedź: kierunek ^ 4), inaczej 0x20. Zachowane: dla martwego miasta albo z bitem 0 drugiego słowa „wynik” porównywany z
+  najlepszym to numer właściciela (zmienna 0x3a jest najpierw właścicielem). Test (scenariusze z relacjami, siłami, bronią
+  wrogów i rosnącymi miastami, porównanie ramki; etykieta „za mało broni” z wyniku 0x28 w ramce) w
+  `BatchSeventyEightDifferentialTests`.
 
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
 (`ShiftAIUnit`, `HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-17 (po porcji 77): 3 metody w stylu asm, ok. 17,0 tys. z 58,6 tys. linii Core, 3106 linii z `goto`; `ShiftAIUnit` przepisywana kawałkami od początku (następny: L0ff1 – broń jądrowa i dalej).
+Stan 2026-10-17 (po porcji 78): 3 metody w stylu asm, ok. 16,8 tys. z 58,5 tys. linii Core, 3070 linii z `goto`; `ShiftAIUnit` przepisywana kawałkami (następny: L12a3 – dyplomaci i dalej).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
