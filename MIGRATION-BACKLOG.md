@@ -680,13 +680,19 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   0x2c, 0x5c, kierunek zapomniany przy wrogu, milicja przy podejściu 1 liczy się jako obrońca). Atakujący na lądzie tu nie
   docierają, więc test bierze okręty atakujące (obcy statek obok), obrońców w stosie poza miastem, na morzu i 3 pola od
   miasta. Wszystkie mutacje złapane. Test w `BatchEightySixDifferentialTests`.
+- Porcja 87 (2026-10-17): jedenasty kawałek `ShiftAIUnit` – koniec pętli szukania walki: `ScoreSurroundings` (bez wroga
+  obok: +8 za nieoznaczone pole lądu 4 kroki dalej wg wzoru 0x2438, +2 za nieznane graczowi pola wokół, -2 za jednostki,
+  wartość terenu dla osadników; przy wrogu i < 3 ruchach skalowanie udziałem atakujących w stosie; najlepszy wynik 0x28 /
+  kierunek 0x2c / znacznik wroga 0x52) i `ChooseHeading` (L2f94). Pułapka: oryginał dzieli przez SI zostawione przez
+  drugie `TallyUnitsByDomainInStack`, nie przez liczbę ograniczoną `VerifyValueSpan` (pierwsza wersja dzieliła przez tę
+  liczbę i golden master to złapał). Wszystkie mutacje złapane. Test w `BatchEightySevenDifferentialTests`.
 
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
 (`ShiftAIUnit`, `HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-17 (po porcji 86): 3 metody w stylu asm; `ShiftAIUnit` przepisywana kawałkami (następny: pętla szukania walki L2643 – L2f94).
+Stan 2026-10-17 (po porcji 87): 3 metody w stylu asm; `ShiftAIUnit` przepisywana kawałkami (następny: pętla szukania walki L2643 – L2dbd, ocena pola i walki).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
