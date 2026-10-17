@@ -652,13 +652,20 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   inaczej +16) jest celem, a przy podejściu 5 i małej odległości oznacza tam miejsca strategiczne. Mutacja równoważna:
   `approach != 0` → `!= 1` (oznaczanie zachodzi tylko przy podejściu 5). Test (transportowce z zapisów, siła i podejście na
   kontynentach) w `BatchEightyTwoDifferentialTests`.
+- Porcja 83 (2026-10-17): siódmy kawałek `ShiftAIUnit` – transportowiec z ładunkiem przy lądzie (`PlanTransportLanding`):
+  pole lądu obok (wolne albo własne z mniej niż 2 jednostkami, nie ulepszone pole człowieka przy pokoju) na kontynencie, gdzie
+  ładunek jest potrzebny, z ≥ 5 miejscami pod miasta i z dala od biegunów; z ruchami > 3 wejście (`MayAIEnterTile`), inaczej
+  rozładunek (0x75); bez pola co czwartą turę zapomina cel, bez ruchów oznacza pół drogi do celu. Mapy z zapisów nie mają lądu
+  w rzędach 2 i 0x2f, więc test zamienia tam jedno pole w ląd (granice biegunów), przenosi stos do zatoczki (najlepszy kierunek 0
+  z `MayAIEnterTile`) i stawia obok 2 jednostki gracza albo ulepszone pola człowieka. Wszystkie mutacje złapane. Test w
+  `BatchEightyThreeDifferentialTests`.
 
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
 (`ShiftAIUnit`, `HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-17 (po porcji 82): 3 metody w stylu asm; `ShiftAIUnit` przepisywana kawałkami (następny: L198e – rola 5 dalej, L1c37).
+Stan 2026-10-17 (po porcji 83): 3 metody w stylu asm; `ShiftAIUnit` przepisywana kawałkami (następny: L1c37 – wybór celu, L1f44).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
