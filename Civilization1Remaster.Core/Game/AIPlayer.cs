@@ -828,162 +828,20 @@ namespace Civilization1Remaster.Game
 			goto L2fd0;
 
 		L14ac:
-			this.owner.MapOps.ObtainTileImprovements(
-				this.processor.PullLocalSignedWord(0x30),
-				this.processor.PullLocalSignedWord(0x36));
+			switch (GuardCity(participantIdx, troopIdx))
+			{
+				case CityGuard.NotDefender:
+					goto L168f;
 
-			this.processor.TestBitsByte(this.processor.RegAcc.LowByte, 0x1);
-			if (this.processor.FlagSet.IsNotEqual) goto L14c1;
+				case CityGuard.Stays:
+					goto L14e1;
+			}
+
 			goto L166c;
-
-		L14c1:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x56), 0x2);
-			if (this.processor.FlagSet.IsEqual) goto L14ca;
-			goto L168f;
-
-		L14ca:
-			this.processor.RegAcc.Value16 = 0xc;
-			this.processor.ScaleAccumulatorToBase((ushort)troopIdx);
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81de)), 0xff);
-			if (this.processor.FlagSet.IsNotEqual) goto L14e7;
 
 		L14e1:
 			this.processor.RegAcc.Value16 = 0x66;
 			goto L2fd0;
-
-		L14e7:
-			this.processor.RegAcc.Value16 = 0x600;
-			this.processor.ScaleAccumulatorToSource((ushort)participantIdx);
-			this.processor.ScaleIndex(0xc, (ushort)troopIdx);
-			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegDest.Value16 = this.processor.SumWord(this.processor.RegDest.Value16, this.processor.RegSource.Value16);
-			this.processor.RegDest.Value16 = this.processor.SumWord(this.processor.RegDest.Value16, 0x81d7);
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, this.processor.RegDest.Value16);
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.EmitLocalWord(0x3a, this.processor.RegAcc.Value16);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, this.processor.RegDest.Value16, 0x1a);
-
-			this.owner.UnitOps.LocateStackLeader(participantIdx, troopIdx);
-
-			this.processor.EmitLocalWord(0x20, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.LowByte = this.processor.PullLocalByte(0x3a);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, this.processor.RegDest.Value16, this.processor.RegAcc.LowByte);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x20), 0xffff);
-			if (this.processor.FlagSet.IsEqual) goto L1545;
-			this.processor.RegAcc.LowByte = 0x22;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullLocalByte(0x3a));
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1140));
-			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
-			this.processor.ScaleIndexToBase(0xc, this.processor.PullLocalWord(0x20));
-			this.processor.RegAcc.LowByte = 0x22;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d7)));
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1140)), this.processor.RegCount.Value16);
-			if (this.processor.FlagSet.IsLess) goto L14e1;
-
-		L1545:
-			this.owner.UnitOps.VerifyTileOccupation(participantIdx,
-				this.processor.PullLocalSignedWord(0x30),
-				this.processor.PullLocalSignedWord(0x36));
-
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual) goto L155f;
-			this.processor.RegAcc.Value16 = 0x3;
-			goto L1562;
-
-		L155f:
-			this.processor.RegAcc.Value16 = 0x4;
-
-		L1562:
-			this.processor.EmitLocalWord(0x6, this.processor.RegAcc.Value16);
-			this.processor.ScaleIndexToBase(0x1c, this.processor.PullLocalWord(0x34));
-			this.processor.TestBitsWord(this.owner.World.Towns[this.processor.PullLocalWord(0x34)].StructureMarkers0, 0x1);
-			if (this.processor.FlagSet.IsEqual) goto L1579;
-			this.processor.DecrementLocalWord(0x6);
-			goto L1582;
-
-		L1579:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L1582;
-			this.processor.IncrementLocalWord(0x6);
-
-		L1582:
-			this.owner.UnitOps.TallyUnitsWithFlagInStack(participantIdx, troopIdx, 2);
-
-			this.processor.EmitLocalWord(0x3a, this.processor.RegAcc.Value16);
-			this.processor.ScaleIndexToBase(0x1c, this.processor.PullLocalWord(0x34));
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.Towns[this.processor.PullLocalWord(0x34)].TrueExtent;
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.RegCount.Value16 = this.processor.PullLocalWord(0x6);
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.RegAcc.Value16 = this.processor.IncrementWord(this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x3a));
-			if (this.processor.FlagSet.IsLessOrEqual) goto L15c5;
-
-			SendUnitToStrategicLocation(participantIdx,
-				this.processor.PullLocalSignedWord(0x30),
-				this.processor.PullLocalSignedWord(0x36),
-				2, 2);
-
-		L15c5:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullLocalWord(0x34));
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.Towns[this.processor.PullLocalWord(0x34)].TrueExtent;
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.RegCount.Value16 = this.processor.PullLocalWord(0x6);
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.RegAcc.Value16 = this.processor.IncrementWord(this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x3a));
-			if (this.processor.FlagSet.IsLess) goto L15e1;
-			goto L14e1;
-
-		L15e1:
-			this.processor.RegAcc.Value16 = 0x600;
-			this.processor.ScaleAccumulatorToSource((ushort)participantIdx);
-			this.processor.AddScaledToSource(0xc, (ushort)troopIdx);
-			this.processor.RegSource.Value16 = this.processor.SumWord(this.processor.RegSource.Value16, 0x81d4);
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, this.processor.RegSource.Value16);
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.EmitLocalWord(0x3a, this.processor.RegAcc.Value16);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, this.processor.RegSource.Value16, this.processor.BitOrByte(this.processor.PullUInt8(this.processor.SegData.Value16, this.processor.RegSource.Value16), 0x8));
-
-			this.owner.UnitOps.LocateStackLeader(participantIdx, troopIdx);
-
-			this.processor.CompareWord(this.processor.RegAcc.Value16, (ushort)troopIdx);
-			if (this.processor.FlagSet.IsNotEqual) goto L1645;
-
-			this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, troopIdx, 4);
-
-			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
-			this.processor.ScaleIndexToBase(0x1c, this.processor.PullLocalWord(0x34));
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.Towns[this.processor.PullLocalWord(0x34)].TrueExtent;
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x6);
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegBase.Value16);
-			this.processor.RegAcc.Value16 = this.processor.IncrementWord(this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.RegCount.Value16);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L1645;
-			this.processor.RegAcc.LowByte = this.processor.PullLocalByte(0x3a);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, this.processor.RegSource.Value16, this.processor.RegAcc.LowByte);
-			goto L14e1;
-
-		L1645:
-			this.processor.RegAcc.Value16 = 0x600;
-			this.processor.ScaleAccumulatorToSource((ushort)participantIdx);
-			this.processor.AddScaledToSource(0xc, (ushort)troopIdx);
-			this.processor.RegSource.Value16 = this.processor.SumWord(this.processor.RegSource.Value16, 0x81d4);
-			this.processor.RegAcc.LowByte = this.processor.PullLocalByte(0x3a);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, this.processor.RegSource.Value16, this.processor.RegAcc.LowByte);
-			this.processor.RegAcc.LowByte = (byte)((sbyte)troopIdx);
-			this.processor.RegAcc.LowByte = this.processor.SumByte(this.processor.RegAcc.LowByte, (byte)(this.owner.World.RoundTally & 0xff));
-			this.processor.TestBitsByte(this.processor.RegAcc.LowByte, 0x7);
-			if (this.processor.FlagSet.IsNotEqual) goto L166c;
-			this.processor.EmitUInt8(this.processor.SegData.Value16, this.processor.RegSource.Value16, this.processor.BitAndByte(this.processor.PullUInt8(this.processor.SegData.Value16, this.processor.RegSource.Value16), 0xf2));
 
 		L166c:
 			this.processor.CompareWord(this.processor.PullLocalWord(0x56), 0x5);
@@ -3280,6 +3138,103 @@ namespace Civilization1Remaster.Game
 			this.processor.Journal.CloseScope("ShiftAIUnit");
 
 			return this.processor.RegAcc.Value16;
+		}
+
+		private enum CityGuard
+		{
+			/// <summary>Not in a city, or a defender that goes on (L166c)</summary>
+			GoesOn,
+
+			/// <summary>In a city, but not a defender (L168f)</summary>
+			NotDefender,
+
+			/// <summary>The defender stays (0x66)</summary>
+			Stays,
+		}
+
+		/// <summary>
+		/// A defender (role 2) in a city: alone, or better than the leader of its stack, it stays; it calls for more defenders
+		/// when the city (size / need + 1; need 4, 3 with a unit of another player next to it, one less with the palace, one more
+		/// on a continent at peace) has fewer, and stays while they are too few; the leader of the stack fortifies (bit 3) while
+		/// the units there are too few; every eighth turn the unit loses its orders (bits 0, 2, 3)
+		/// </summary>
+		private CityGuard GuardCity(short participantIdx, short troopIdx)
+		{
+			short horizLoc = (short)this.processor.PullLocalWord(0x30);
+			short vertLoc = (short)this.processor.PullLocalWord(0x36);
+
+			if ((this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) == 0)
+				return CityGuard.GoesOn;
+
+			if (this.processor.PullLocalWord(0x56) != 2)
+				return CityGuard.NotDefender;
+
+			if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.FollowingInStack) == 0xff)
+				return CityGuard.Stays;
+
+			// The leader of the stack without this unit (it counts as a diplomat while looking)
+			this.processor.EmitLocalWord(0x3a, (ushort)this.troops.TroopKind(participantIdx, troopIdx));
+			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Kind, 0x1a);
+			this.owner.UnitOps.LocateStackLeader(participantIdx, troopIdx);
+			this.processor.EmitLocalWord(0x20, this.processor.RegAcc.Value16);
+			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Kind, this.processor.PullLocalByte(0x3a));
+
+			if (this.processor.PullLocalWord(0x20) != 0xffff)
+			{
+				short defence = (short)UnitKindTable.Field(this.processor, (sbyte)this.processor.PullLocalByte(0x3a), UnitKindTable.GuardPower);
+				short leader = (short)this.processor.PullLocalWord(0x20);
+
+				if ((short)UnitKindTable.Field(this.processor, this.troops.TroopKind(participantIdx, leader), UnitKindTable.GuardPower) < defence)
+					return CityGuard.Stays;
+			}
+
+			this.owner.UnitOps.VerifyTileOccupation(participantIdx, horizLoc, vertLoc);
+			this.processor.EmitLocalWord(0x6, (ushort)(this.processor.RegAcc.Value16 != 0 ? 3 : 4));
+
+			Game.State.City town = this.owner.World.Towns[this.processor.PullLocalWord(0x34)];
+
+			if ((town.StructureMarkers0 & 1) != 0)
+				this.processor.DecrementLocalWord(0x6);
+			else if (this.processor.PullLocalWord(0x2) == 0)
+				this.processor.IncrementLocalWord(0x6);
+
+			this.owner.UnitOps.TallyUnitsWithFlagInStack(participantIdx, troopIdx, 2);
+			this.processor.EmitLocalWord(0x3a, this.processor.RegAcc.Value16);
+
+			short wanted = (short)(CPU.SignedQuotient(town.TrueExtent, (short)this.processor.PullLocalWord(0x6)) + 1);
+
+			if (wanted > (short)this.processor.PullLocalWord(0x3a))
+				SendUnitToStrategicLocation(participantIdx, horizLoc, vertLoc, 2, 2);
+
+			if (wanted >= (short)this.processor.PullLocalWord(0x3a))
+				return CityGuard.Stays;
+
+			// The leader of the stack fortifies while the units there are too few
+			ushort status = (ushort)(UnitMemory.Address(participantIdx, troopIdx) + UnitMemory.Status);
+			this.processor.EmitLocalWord(0x3a, (ushort)(sbyte)this.processor.PullUInt8(this.processor.SegData.Value16, status));
+			this.processor.EmitUInt8(this.processor.SegData.Value16, status, (byte)(this.processor.PullUInt8(this.processor.SegData.Value16, status) | 8));
+
+			if (this.owner.UnitOps.LocateStackLeader(participantIdx, troopIdx) == (ushort)troopIdx)
+			{
+				short units = (short)this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, troopIdx, 4);
+
+				if ((short)(CPU.SignedQuotient(town.TrueExtent, (short)this.processor.PullLocalWord(0x6)) + 1) > units)
+				{
+					// A translation slip: the status is put back at SI, which the count of the stack has left at 0x600 * player
+					this.processor.EmitUInt8(this.processor.SegData.Value16, this.processor.RegSource.Value16, this.processor.PullLocalByte(0x3a));
+					return CityGuard.Stays;
+				}
+			}
+
+			this.processor.EmitUInt8(this.processor.SegData.Value16, status, this.processor.PullLocalByte(0x3a));
+
+			if ((((byte)troopIdx + (byte)this.owner.World.RoundTally) & 7) == 0)
+				this.processor.EmitUInt8(this.processor.SegData.Value16, status, (byte)(this.processor.PullUInt8(this.processor.SegData.Value16, status) & 0xf2));
+
+			// The original leaves SI at the status of the unit
+			this.processor.RegSource.Value16 = status;
+
+			return CityGuard.GoesOn;
 		}
 
 		/// <summary>

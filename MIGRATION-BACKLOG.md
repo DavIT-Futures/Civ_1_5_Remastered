@@ -633,13 +633,20 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   `VideoCard.AssignDot(2, x + 0x50, y, …)`; wioski z `MapRules.IsHutPlace` i nieodwiedzone pole w `ChartSight`; tryb „pierwsza
   tura” zostawiał `RoundTally = 0` i 0xd76a dla kolejnych scenariuszy (fałszywe gałęzie) – każdy scenariusz ustawia 0xd76a.
   Testy w `BatchSeventyNineDifferentialTests`.
+- Porcja 80 (2026-10-17): czwarty kawałek `ShiftAIUnit` – obrońca w mieście (`GuardCity`): sam albo lepszy od przywódcy
+  stosu zostaje (0x66); wzywa obrońców, gdy jest ich mniej niż wielkość miasta / potrzeba + 1 (potrzeba 4, 3 z jednostką
+  innego gracza obok, −1 z pałacem, +1 przy pokojowym podejściu na kontynencie); przywódca stosu fortyfikuje się, póki jednostek
+  za mało; co ósma tura jednostka traci rozkazy. Błąd tłumaczenia zachowany: po `TallyUnitsByDomainInStack` (zostawia SI =
+  0x600 × gracz) stan jednostki jest przywracany „pod SI”, czyli zapisywany pod 0x600 × gracz zamiast do jednostki – golden master
+  to złapał (pamięć 0x0c00). Test buduje stosy 1 – 4 obrońców w mieście (pierścień `FollowingInStack`, `SituateUnitOnTile`),
+  z losową wielkością, pałacem i stanem. Testy w `BatchEightyDifferentialTests`.
 
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
 (`ShiftAIUnit`, `HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-17 (po porcji 79): 3 metody w stylu asm, ok. 16,6 tys. z 58,5 tys. linii Core, 3043 linie z `goto`; `ShiftAIUnit` przepisywana kawałkami (następny: L14ac – jednostka w mieście i dalej).
+Stan 2026-10-17 (po porcji 80): 3 metody w stylu asm; `ShiftAIUnit` przepisywana kawałkami (następny: L166c / L168f – role 3 i 5, transport, i dalej).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
