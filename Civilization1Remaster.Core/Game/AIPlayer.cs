@@ -844,19 +844,12 @@ namespace Civilization1Remaster.Game
 			goto L2fd0;
 
 		L166c:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x56), 0x5);
-			if (this.processor.FlagSet.IsEqual) goto L167b;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x56), 0x3);
-			if (this.processor.FlagSet.IsEqual) goto L167b;
-			goto L1f44;
+			// Only the attackers (role 3) and the transports (role 5) go on here, after a look at their stack
+			if (this.processor.PullLocalWord(0x56) != 5 && this.processor.PullLocalWord(0x56) != 3)
+				goto L1f44;
 
-		L167b:
-			this.processor.RegAcc.Value16 = 0;
-			this.processor.EmitLocalWord(0x2c, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x1e, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x54, this.processor.RegAcc.Value16);
-			this.processor.ScaleIndex(0xc, (ushort)troopIdx);
-			goto L1738;
+			SurveyStack(participantIdx, troopIdx);
+			goto L1752;
 
 		L168f:
 			this.processor.CompareWord(this.processor.PullLocalWord(0x32), 0x0);
@@ -872,64 +865,6 @@ namespace Civilization1Remaster.Game
 		L16b3:
 			this.processor.RegAcc.Value16 = 0x20;
 			goto L2fd0;
-
-		L16b9:
-			this.processor.RegAcc.Value16 = (ushort)troopIdx;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x20), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L16c4;
-			goto L1752;
-
-		L16c4:
-			this.processor.RegAcc.Value16 = 0x600;
-			this.processor.ScaleAccumulatorToSource((ushort)participantIdx);
-			this.processor.AddScaledToSource(0xc, this.processor.PullLocalWord(0x20));
-			this.processor.TestBitsByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d4)), 0x8);
-			if (this.processor.FlagSet.IsNotEqual) goto L16f8;
-			this.processor.RegAcc.LowByte = 0x22;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d7)));
-			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegAcc.Value16 = 0x1;
-			this.processor.RegCount.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 + 0x1148));
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			this.processor.EmitLocalWord(0x1e, this.processor.BitOrWord(this.processor.PullLocalWord(0x1e), this.processor.RegAcc.Value16));
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 + 0x1138)), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L1732;
-			goto L172f;
-
-		L16f8:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x5);
-			if (this.processor.FlagSet.IsNotEqual) goto L1732;
-			this.processor.ScaleIndexToBase(0x1c, this.processor.PullLocalWord(0xc));
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.Towns[this.processor.PullLocalWord(0xc)].TrueExtent;
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegCount.LowByte = 0x5;
-			this.processor.DivideSignedByte(this.processor.RegAcc, this.processor.RegCount.LowByte);
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegCount.Value16 = this.processor.PullLocalWord(0x2c);
-			this.processor.IncrementLocalWord(0x2c);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.RegCount.Value16);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L1732;
-			this.processor.ScaleIndexToBase(0xc, this.processor.PullLocalWord(0x20));
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d4),
-				this.processor.BitAndByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d4)), 0xf7));
-
-		L172f:
-			this.processor.EmitLocalWord(0x54, this.processor.IncrementWord(this.processor.PullLocalWord(0x54)));
-
-		L1732:
-			this.processor.RegAcc.Value16 = 0xc;
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.PullLocalWord(0x20));
-
-		L1738:
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81de));
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.EmitLocalWord(0x20, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xffff);
-			if (this.processor.FlagSet.IsEqual) goto L1752;
-			goto L16b9;
 
 		L1752:
 			this.processor.CompareWord(this.processor.PullLocalWord(0x2a), 0x0);
@@ -3138,6 +3073,60 @@ namespace Civilization1Remaster.Game
 			this.processor.Journal.CloseScope("ShiftAIUnit");
 
 			return this.processor.RegAcc.Value16;
+		}
+
+		/// <summary>
+		/// The other units of the stack (the ring of FollowingInStack): the roles of the ones that are not fortified (bits
+		/// 0x1e) and the land units among them (0x54); on an attacked continent (approach 5) the fortified ones beyond a fifth of
+		/// the size of the city 0xc leave their fortification and count too (0x2c counts them). The local 0xc is the one ShiftAIUnit
+		/// may not have set (it reads what is left on the stack), as in the original.
+		/// </summary>
+		private void SurveyStack(short participantIdx, short troopIdx)
+		{
+			this.processor.EmitLocalWord(0x2c, 0);
+			this.processor.EmitLocalWord(0x1e, 0);
+			this.processor.EmitLocalWord(0x54, 0);
+
+			short current = troopIdx;
+
+			while (true)
+			{
+				this.processor.EmitLocalWord(0x20, (ushort)this.troops.Following(participantIdx, current));
+
+				if (this.processor.PullLocalWord(0x20) == 0xffff || (short)this.processor.PullLocalWord(0x20) == troopIdx)
+					break;
+
+				short member = (short)this.processor.PullLocalWord(0x20);
+				ushort status = (ushort)(UnitMemory.Address(participantIdx, member) + UnitMemory.Status);
+
+				if ((this.processor.PullUInt8(this.processor.SegData.Value16, status) & 8) == 0)
+				{
+					sbyte kind = this.troops.TroopKind(participantIdx, member);
+					byte role = (byte)UnitKindTable.Field(this.processor, kind, UnitKindTable.TroopGroup);
+					this.processor.EmitLocalWord(0x1e, (ushort)(this.processor.PullLocalWord(0x1e) | (ushort)(1 << role)));
+
+					if (UnitKindTable.Field(this.processor, kind, UnitKindTable.LandGroup) == UnitKindTable.LandUnits)
+						this.processor.EmitLocalWord(0x54, (ushort)(this.processor.PullLocalWord(0x54) + 1));
+				}
+				else if (this.processor.PullLocalWord(0x2) == 5)
+				{
+					short fifth = (short)(this.owner.World.Towns[this.processor.PullLocalWord(0xc)].TrueExtent / 5);
+					short counted = (short)this.processor.PullLocalWord(0x2c);
+					this.processor.IncrementLocalWord(0x2c);
+
+					if (fifth < counted)
+					{
+						this.processor.EmitUInt8(this.processor.SegData.Value16, status, (byte)(this.processor.PullUInt8(this.processor.SegData.Value16, status) & 0xf7));
+						this.processor.EmitLocalWord(0x54, (ushort)(this.processor.PullLocalWord(0x54) + 1));
+					}
+				}
+
+				current = member;
+			}
+
+			// The registers as the original leaves them
+			this.processor.RegBase.Value16 = (ushort)(current * UnitMemory.TroopStride);
+			this.processor.RegSource.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride);
 		}
 
 		private enum CityGuard

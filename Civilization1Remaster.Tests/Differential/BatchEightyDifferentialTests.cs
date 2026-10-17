@@ -62,10 +62,15 @@ public sealed class BatchEightyDifferentialTests(ITestOutputHelper output)
 			Dictionary<string, int> before = new Dictionary<string, int>(pair.Rewritten.Calls);
 			ushort frame = (ushort)(engine.Processor.RegStack.Value16 - 2);
 
+			// ShiftAIUnit reads its local 0xc before setting it: in the game ShiftUnit leaves a terrain type there
+			ushort terrainLeft = (ushort)(troopIdx % 12);
+
 			return new Scenario(
 				$"ShiftAIUnit({participantIdx}, {troopIdx}) in city {townIdx}, stack {stack}, size {size}, palace {palace}",
 				game =>
 				{
+					game.Processor.EmitUInt16(0x3b01, (ushort)(frame - 0xc), terrainLeft);
+
 					var place = game.World.Towns[townIdx];
 					place.TrueExtent = size;
 					place.StructureMarkers0 = (ushort)(palace ? place.StructureMarkers0 | 1 : place.StructureMarkers0 & ~1);

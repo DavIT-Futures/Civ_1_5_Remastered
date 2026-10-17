@@ -72,10 +72,15 @@ public sealed class BatchSeventySevenDifferentialTests(ITestOutputHelper output)
 			ushort frame = (ushort)(engine.Processor.RegStack.Value16 - 2);
 			Dictionary<string, int> before = new Dictionary<string, int>(pair.Rewritten.Calls);
 
+			// ShiftAIUnit reads its local 0xc before setting it: in the game ShiftUnit leaves a terrain type there
+			ushort terrainLeft = (ushort)(troopIdx % 12);
+
 			return new Scenario(
 				$"ShiftAIUnit({participantIdx}, {troopIdx}), mode {mode}, fuel {fuel}, moves {moves}, bomber {bomberDistance}, no city {noCity}",
 				game =>
 				{
+					game.Processor.EmitUInt16(0x3b01, (ushort)(frame - 0xc), terrainLeft);
+
 					ushort unit = UnitMemory.Address(participantIdx, troopIdx);
 
 					void Set(int offset, byte amount) => game.Processor.EmitUInt8(0x3b01, (ushort)(unit + offset), amount);

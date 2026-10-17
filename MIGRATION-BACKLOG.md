@@ -640,13 +640,20 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   0x600 × gracz) stan jednostki jest przywracany „pod SI”, czyli zapisywany pod 0x600 × gracz zamiast do jednostki – golden master
   to złapał (pamięć 0x0c00). Test buduje stosy 1 – 4 obrońców w mieście (pierścień `FollowingInStack`, `SituateUnitOnTile`),
   z losową wielkością, pałacem i stanem. Testy w `BatchEightyDifferentialTests`.
+- Porcja 81 (2026-10-17): piąty kawałek `ShiftAIUnit` – przegląd stosu atakującego / transportowca (`SurveyStack`: role
+  nieufortyfikowanych członków w 0x1e, jednostki lądowe w 0x54, przy podejściu 5 zwalnianie ufortyfikowanych ponad piątą część
+  wielkości miasta 0xc). Zmienna 0xc jest czytana bez ustawienia (śmieci ze stosu) – w testach `ShiftAIUnit` (77 – 81) ramka
+  dostaje w 0xc typ terenu, jak w grze po `ShiftUnit`; bez tego obie wersje rzucały ten sam wyjątek w różnych miejscach
+  (różne rejestry). Sztuczne stosy budowane przez `SituateUnitOnTile` w mieście zapętlały oryginał – test bierze istniejące stosy
+  z zapisów. Niezłapana mutacja: bit 0 stanu zwalnianego członka (`& 0xf7` → `& 0xf6`) – w scenariuszach bez wpływu na wynik.
+  Testy w `BatchEightyOneDifferentialTests`.
 
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
 (`ShiftAIUnit`, `HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-17 (po porcji 80): 3 metody w stylu asm; `ShiftAIUnit` przepisywana kawałkami (następny: L166c / L168f – role 3 i 5, transport, i dalej).
+Stan 2026-10-17 (po porcji 81): 3 metody w stylu asm; `ShiftAIUnit` przepisywana kawałkami (następny: L1752 – cele ataku i transportu).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 

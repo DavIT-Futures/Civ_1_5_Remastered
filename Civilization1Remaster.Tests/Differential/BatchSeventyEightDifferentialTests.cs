@@ -55,10 +55,15 @@ public sealed class BatchSeventyEightDifferentialTests(ITestOutputHelper output)
 			int growth = chance.Next(0, 8);
 			ushort frame = (ushort)(engine.Processor.RegStack.Value16 - 2);
 
+			// ShiftAIUnit reads its local 0xc before setting it: in the game ShiftUnit leaves a terrain type there
+			ushort terrainLeft = (ushort)(troopIdx % 12);
+
 			return new Scenario(
 				$"ShiftAIUnit({participantIdx}, {troopIdx}) nuclear, weapons {weapons}, might {might}, growth {growth}",
 				game =>
 				{
+					game.Processor.EmitUInt16(0x3b01, (ushort)(frame - 0xc), terrainLeft);
+
 					var player = game.World.Participants[participantIdx];
 					ushort unit = UnitMemory.Address(participantIdx, troopIdx);
 
