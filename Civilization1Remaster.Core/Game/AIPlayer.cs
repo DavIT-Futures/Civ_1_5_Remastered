@@ -907,99 +907,14 @@ namespace Civilization1Remaster.Game
 			}
 
 		L2520:
-			this.processor.RegAcc.Value16 = 0xc;
-			this.processor.ScaleAccumulatorToBase((ushort)troopIdx);
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81da)), 0xff);
-			if (this.processor.FlagSet.IsEqual) goto L2558;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x56), 0x3);
-			if (this.processor.FlagSet.IsEqual) goto L2540;
-			goto L12c0;
+			// A unit with a destination goes there; defenders stay, settlers found or join cities
+			ushort? stayAnswer = DecideBeforeFight(participantIdx, troopIdx);
 
-		L2540:
-			this.owner.UnitOps.ContainsAdjacentForeignUnit(participantIdx,
-				this.processor.PullLocalSignedWord(0x30),
-				this.processor.PullLocalSignedWord(0x36));
-
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsNotEqual) goto L2558;
-			goto L12c0;
-
-		L2558:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x56), 0x2);
-			if (this.processor.FlagSet.IsNotEqual) goto L2594;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x42), 0xa);
-			if (this.processor.FlagSet.IsEqual) goto L2594;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x32), 0x1);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L2585;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2a), 0x3);
-			if (this.processor.FlagSet.IsGreater) goto L2585;
-			this.processor.ScaleIndexToBase(0x1c, this.processor.PullLocalWord(0x34));
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.Towns[this.processor.PullLocalWord(0x34)].ParticipantIdx;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, (ushort)participantIdx);
-			if (this.processor.FlagSet.IsNotEqual) goto L2585;
-			goto L14e1;
-
-		L2585:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4c), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L2594;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x32), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L2594;
-			goto L14e1;
-
-		L2594:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x56), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L25f2;
-
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x1a);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.Landmasses[this.processor.PullLocalWord(0x1a)].ConstructionSpotTally;
-			this.processor.DivideAccumulatorByPowerOfTwo(0x3);
-			this.processor.CompareWord((ushort)this.owner.World.Participants[participantIdx].Landmasses[this.processor.PullLocalWord(0x1a)].TownTally, this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L25f2;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2a), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L25d6;
-			this.processor.ScaleIndexToBase(0x1c, this.processor.PullLocalWord(0x34));
-			this.processor.CompareByte((byte)this.owner.World.Towns[this.processor.PullLocalWord(0x34)].TrueExtent, 0xa);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L25d6;
-			goto L1417;
-
-		L25d6:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToSource(this.processor.PullLocalWord(0x34));
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.Towns[this.processor.PullLocalWord(0x34)].ParticipantIdx;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, (ushort)participantIdx);
-			if (this.processor.FlagSet.IsNotEqual) goto L25f2;
-			this.processor.CompareByte((byte)this.owner.World.Towns[this.processor.PullLocalWord(0x34)].TrueExtent, 0xa);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L25f2;
-			goto L12d7;
-
-		L25f2:
-			this.processor.EmitLocalWord(0x28, 0xfc19);
-			this.processor.EmitLocalWord(0x2c, 0x0);
-			this.processor.EmitLocalWord(0x5c, 0x0);
-
-			this.owner.UnitOps.VerifyTileOccupation(participantIdx,
-				this.processor.PullLocalSignedWord(0x30),
-				this.processor.PullLocalSignedWord(0x36));
-
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual) goto L262d;
-			this.processor.ScaleIndexToBase(0xc, (ushort)troopIdx);
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81dc), 0xff);
-			goto L2632;
-
-		L262d:
-			this.processor.EmitLocalWord(0x5c, 0x1);
-
-		L2632:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x8), 0x1);
-			if (this.processor.FlagSet.IsNotEqual) goto L2643;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x1);
-			if (this.processor.FlagSet.IsNotEqual) goto L2643;
-			this.processor.EmitLocalWord(0x56, 0x1);
+			if (stayAnswer != null)
+			{
+				this.processor.RegAcc.Value16 = stayAnswer.Value;
+				goto L2fd0;
+			}
 
 		L2643:
 			this.processor.EmitLocalWord(0x40, 0x1);
@@ -1859,6 +1774,77 @@ namespace Civilization1Remaster.Game
 			this.processor.Journal.CloseScope("ShiftAIUnit");
 
 			return this.processor.RegAcc.Value16;
+		}
+
+		/// <summary>
+		/// Before the look around for a fight: a unit with a destination goes on (0), an attacker only when no foreign unit
+		/// stands next to it; a defender (role 2) on land fortifies (0x66) next to its own city or with an enemy around; settlers
+		/// on a continent with enough cities (more than an eighth of the places) build a city in a small city (0x62) or go
+		/// to their small city (0). Else the look starts (0x28 the best -999, 0x2c, 0x5c: no enemy around; the heading of the
+		/// unit is forgotten when there is one) and a militia under approach 1 counts as a defender (0x56 = 1); null.
+		/// The locals of ShiftAIUnit are used as in the original.
+		/// </summary>
+		private ushort? DecideBeforeFight(short participantIdx, short troopIdx)
+		{
+			ushort role = this.processor.PullLocalWord(0x56);
+			short horizLoc = (short)this.processor.PullLocalWord(0x30);
+			short vertLoc = (short)this.processor.PullLocalWord(0x36);
+
+			if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.TravelHoriz) != 0xff &&
+				(role != 3 || this.owner.UnitOps.ContainsAdjacentForeignUnit(participantIdx, horizLoc, vertLoc) == 0))
+			{
+				return 0;
+			}
+
+			if (role == 2 && this.processor.PullLocalWord(0x42) != MapRules.OceanTerrain)
+			{
+				if ((short)this.processor.PullLocalWord(0x32) > 1 && (short)this.processor.PullLocalWord(0x2a) <= 3 &&
+					this.owner.World.Towns[this.processor.PullLocalWord(0x34)].ParticipantIdx == participantIdx)
+				{
+					return 0x66;
+				}
+
+				if (this.processor.PullLocalWord(0x4c) != 0 && this.processor.PullLocalWord(0x32) != 0)
+					return 0x66;
+			}
+
+			if (role == 0)
+			{
+				ushort continent = this.processor.PullLocalWord(0x1a);
+				this.processor.RegAcc.Value16 = (ushort)this.owner.World.Landmasses[continent].ConstructionSpotTally;
+				this.processor.DivideAccumulatorByPowerOfTwo(3);
+
+				if (this.owner.World.Participants[participantIdx].Landmasses[continent].TownTally > (short)this.processor.RegAcc.Value16)
+				{
+					Game.State.City town = this.owner.World.Towns[this.processor.PullLocalWord(0x34)];
+
+					if (this.processor.PullLocalWord(0x2a) == 0 && (sbyte)town.TrueExtent < 10)
+						return 0x62;
+
+					if (town.ParticipantIdx == participantIdx && (sbyte)town.TrueExtent < 10)
+					{
+						this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHoriz, (byte)(sbyte)town.Place.X);
+						this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelVert, (byte)(sbyte)town.Place.Y);
+						this.processor.RegDest.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride + troopIdx * UnitMemory.TroopStride);
+
+						return 0;
+					}
+				}
+			}
+
+			this.processor.EmitLocalWord(0x28, 0xfc19);
+			this.processor.EmitLocalWord(0x2c, 0);
+			this.processor.EmitLocalWord(0x5c, 0);
+
+			if (this.owner.UnitOps.VerifyTileOccupation(participantIdx, horizLoc, vertLoc) != 0)
+				this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHeading, 0xff);
+			else
+				this.processor.EmitLocalWord(0x5c, 1);
+
+			if (this.processor.PullLocalWord(0x8) == 1 && this.processor.PullLocalWord(0x2) == 1)
+				this.processor.EmitLocalWord(0x56, 1);
+
+			return null;
 		}
 
 		/// <summary>

@@ -674,13 +674,19 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   osadników obok własnych miast, a wolne jednostki obok miast człowieka, losuje ulepszenia pól 5 x 5, technologie 5 / 0x13 /
   0x31, bit 2 markerów, wodza, liczby miast i miejsc, wielkości miast, wzór wędrówki i obcą jednostkę obok. Wszystkie
   mutacje złapane. Test w `BatchEightyFiveDifferentialTests`.
+- Porcja 86 (2026-10-17): dziesiąty kawałek `ShiftAIUnit` – `DecideBeforeFight` (L2520): jednostka z celem idzie dalej
+  (atakujący tylko bez obcej jednostki obok), obrońca na lądzie fortyfikuje się przy własnym mieście albo przy wrogu, osadnicy
+  na kontynencie z dość miastami budują miasto w małym mieście (0x62) albo do niego idą; inaczej start rozglądania (0x28,
+  0x2c, 0x5c, kierunek zapomniany przy wrogu, milicja przy podejściu 1 liczy się jako obrońca). Atakujący na lądzie tu nie
+  docierają, więc test bierze okręty atakujące (obcy statek obok), obrońców w stosie poza miastem, na morzu i 3 pola od
+  miasta. Wszystkie mutacje złapane. Test w `BatchEightySixDifferentialTests`.
 
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
 (`ShiftAIUnit`, `HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-17 (po porcji 85): 3 metody w stylu asm; `ShiftAIUnit` przepisywana kawałkami (następny: L2520 – przed walką, L2643 – szukanie walki).
+Stan 2026-10-17 (po porcji 86): 3 metody w stylu asm; `ShiftAIUnit` przepisywana kawałkami (następny: pętla szukania walki L2643 – L2f94).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
