@@ -625,13 +625,21 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   najlepszym to numer właściciela (zmienna 0x3a jest najpierw właścicielem). Test (scenariusze z relacjami, siłami, bronią
   wrogów i rosnącymi miastami, porównanie ramki; etykieta „za mało broni” z wyniku 0x28 w ramce) w
   `BatchSeventyEightDifferentialTests`.
+- Porcja 79 (2026-10-17): trzeci kawałek `ShiftAIUnit` – dyplomaci (z celem idą dalej, obok cudzego miasta idą do niego,
+  we własnym mieście są rozwiązywani; wspólne wyjścia L12c0 / L12d7 zostają, bo skacze do nich reszta funkcji) i eksploracja
+  (`ExploreAround`: kierunek z największą liczbą nieznanych pól na warstwie ekranu 2, wioski, wędrówka w pierwszej turze z
+  0xd76a, oznaczenie miejsca strategicznego; `VisitAsAmbassador`: osadnicy przy mieście człowieka, który ma więcej technologii).
+  L1417 (odpowiedź 0x62) zostaje jako cel z dalszej części. Wnioski do testów: wartości warstwy nieznanych pól ustawiane wprost
+  `VideoCard.AssignDot(2, x + 0x50, y, …)`; wioski z `MapRules.IsHutPlace` i nieodwiedzone pole w `ChartSight`; tryb „pierwsza
+  tura” zostawiał `RoundTally = 0` i 0xd76a dla kolejnych scenariuszy (fałszywe gałęzie) – każdy scenariusz ustawia 0xd76a.
+  Testy w `BatchSeventyNineDifferentialTests`.
 
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
 (`ShiftAIUnit`, `HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-17 (po porcji 78): 3 metody w stylu asm, ok. 16,8 tys. z 58,5 tys. linii Core, 3070 linii z `goto`; `ShiftAIUnit` przepisywana kawałkami (następny: L12a3 – dyplomaci i dalej).
+Stan 2026-10-17 (po porcji 79): 3 metody w stylu asm, ok. 16,6 tys. z 58,5 tys. linii Core, 3043 linie z `goto`; `ShiftAIUnit` przepisywana kawałkami (następny: L14ac – jednostka w mieście i dalej).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 

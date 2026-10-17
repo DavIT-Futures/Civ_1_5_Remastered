@@ -780,23 +780,25 @@ namespace Civilization1Remaster.Game
 			goto L2fd0;
 
 		L12a3:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x8), 0x1a);
-			if (this.processor.FlagSet.IsNotEqual) goto L1307;
-			this.processor.ScaleIndexToBase(0xc, (ushort)troopIdx);
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81da)), 0xff);
-			if (this.processor.FlagSet.IsEqual) goto L12c5;
+			if (this.processor.PullLocalWord(0x8) == 0x1a)
+			{
+				// A diplomat with a destination goes on, one near another player's city goes there, one in an own city is given up
+				if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.TravelHoriz) != 0xff)
+					goto L12c0;
+
+				this.processor.RegSource.Value16 = (ushort)(this.processor.PullLocalWord(0x34) * 0x1c);
+
+				if (this.owner.World.Towns[this.processor.PullLocalWord(0x34)].ParticipantIdx != participantIdx)
+					goto L12d7;
+
+				this.owner.UnitOps.EliminateUnit(participantIdx, troopIdx);
+			}
+
+			goto L1307;
 
 		L12c0:
 			this.processor.RegAcc.Value16 = 0;
 			goto L2fd0;
-
-		L12c5:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToSource(this.processor.PullLocalWord(0x34));
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.Towns[this.processor.PullLocalWord(0x34)].ParticipantIdx;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, (ushort)participantIdx);
-			if (this.processor.FlagSet.IsEqual) goto L12f9;
 
 		L12d7:
 			this.processor.RegAcc.Value16 = 0x600;
@@ -810,158 +812,20 @@ namespace Civilization1Remaster.Game
 			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 + 0x81db), this.processor.RegAcc.LowByte);
 			goto L12c0;
 
-		L12f9:
-			this.owner.UnitOps.EliminateUnit(participantIdx, troopIdx);
-
 		L1307:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x56), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L1321;
+			ushort? explored = ExploreAround(participantIdx, troopIdx);
 
-			DisableStrategicLocation(participantIdx, 0,
-				this.processor.PullLocalSignedWord(0x30),
-				this.processor.PullLocalSignedWord(0x36),
-				0);
+			if (explored != null)
+			{
+				this.processor.RegAcc.Value16 = explored.Value;
+				goto L2fd0;
+			}
 
-		L1321:
-			this.owner.VideoCard.ObtainDot(2,
-				this.processor.PullLocalSignedWord(0x30) + 0x50,
-				this.processor.PullLocalSignedWord(0x36));
-
-			this.processor.EmitLocalWord(0x28, this.processor.RegAcc.Value16);
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsNotEqual) goto L1341;
-			goto L1434;
-
-		L1341:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x56), 0x3);
-			if (this.processor.FlagSet.IsLess) goto L134a;
-			goto L1434;
-
-		L134a:
-			this.processor.EmitLocalWord(0x2c, 0x0);
-			this.processor.EmitLocalWord(0x40, 0x1);
-			goto L1359;
-
-		L1356:
-			this.processor.EmitLocalWord(0x40, this.processor.IncrementWord(this.processor.PullLocalWord(0x40)));
-
-		L1359:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x40), 0x8);
-			if (this.processor.FlagSet.IsGreater) goto L13d9;
-
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x40);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-
-			this.owner.Routing.TunePosition(
-				this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1882)) +
-					this.processor.PullLocalSignedWord(0x30));
-
-			this.processor.EmitLocalWord(0x26, this.processor.RegAcc.Value16);
-
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x18e4));
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x36));
-			this.processor.EmitLocalWord(0x2e, this.processor.RegAcc.Value16);
-
-			this.owner.VideoCard.ObtainDot(2,
-				this.processor.PullLocalSignedWord(0x26) + 0x50,
-				this.processor.PullLocalSignedWord(0x2e));
-
-			this.processor.EmitLocalWord(0x10, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x28);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x10), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L13ac;
-			this.processor.CopyLocalWord(0x10, 0x28);
-			this.processor.CopyLocalWord(0x40, 0x2c);
-
-		L13ac:
-			this.owner.MapOps.ObtainTerrainType(
-				this.processor.PullLocalSignedWord(0x26),
-				this.processor.PullLocalSignedWord(0x2e));
-
-			this.owner.MapOps.ContainsHut(
-				this.processor.RegAcc.Value16,
-				this.processor.PullLocalSignedWord(0x26),
-				this.processor.PullLocalSignedWord(0x2e));
-
-			this.processor.TestAccumulator();
-			if (this.processor.FlagSet.IsEqual) goto L1356;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x56), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L1356;
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x40);
-			goto L2fd0;
-
-		L13d9:
-			if (this.owner.World.RoundTally != 0) goto L13f1;
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xd76a), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L13f1;
-			this.processor.EmitLocalWord(0x28, 0xf);
-			this.processor.EmitLocalWord(0x2c, 0x0);
-
-		L13f1:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x28), 0x8);
-			if (this.processor.FlagSet.IsLess) goto L1434;
-			this.processor.RegAcc.Value16 = 0xf;
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x2a));
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x28));
-			if (this.processor.FlagSet.IsGreater) goto L1434;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4c), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L1434;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x56), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L141d;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2c), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L1417;
-			goto L2fcd;
+			goto L14ac;
 
 		L1417:
 			this.processor.RegAcc.Value16 = 0x62;
 			goto L2fd0;
-
-		L141d:
-			AttachStrategicLocation(participantIdx, 
-				this.processor.PullLocalWord(0x30),
-				this.processor.PullLocalWord(0x36),
-				0, 2);
-
-		L1434:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x56), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L14ac;
-			if (this.owner.World.HardnessTier == 0) goto L14ac;
-
-			if (this.processor.PullLocalWord(0x34) < 128)
-			{
-				this.processor.RegSource.Value16 = (ushort)this.owner.World.Towns[this.processor.PullLocalWord(0x34)].ParticipantIdx;
-			}
-			else
-			{
-				this.processor.RegSource.Value16 = 0xffff;
-			}
-			this.processor.CompareWord((ushort)this.owner.World.PersonParticipantIdx, this.processor.RegSource.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L14ac;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4c), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L14ac;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2a), 0x1);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L14ac;
-			this.processor.CompareWord((ushort)participantIdx, this.processor.RegSource.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L14ac;
-			
-			this.processor.RegDest.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.RegDest.Value16 = this.processor.ShiftLeftWord(this.processor.RegDest.Value16, 0x1);
-
-			if (this.owner.World.Participants[participantIdx].FoundScienceTally >= this.owner.World.Participants[this.owner.World.PersonParticipantIdx].FoundScienceTally)
-				goto L14ac;
-
-			this.owner.VideoCard.ObtainDot(2,
-				this.processor.PullLocalSignedWord(0x30) + 0x50,
-				this.processor.PullLocalSignedWord(0x36) + 0x32);
-
-			this.processor.EmitLocalWord(0x3a, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x9);
-			if (this.processor.FlagSet.IsLess) goto L14ac;
-			this.processor.RegAcc.Value16 = 0xe;
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x2a));
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x3a));
-			if (this.processor.FlagSet.IsGreater) goto L14ac;
-			goto L1417;
 
 		L14ac:
 			this.owner.MapOps.ObtainTileImprovements(
@@ -3416,6 +3280,103 @@ namespace Civilization1Remaster.Game
 			this.processor.Journal.CloseScope("ShiftAIUnit");
 
 			return this.processor.RegAcc.Value16;
+		}
+
+		/// <summary>
+		/// A unit that may explore (role below 3) next to unknown land (the visibility layer): the direction with the most
+		/// unknown around (0x2c, count 0x28), or straight to a hut (settlers excepted: role 0); in the first turn with 0xd76a
+		/// it wanders; with enough unknown it explores (0x62 or the direction), a military unit there marks a strategic location
+		/// instead. A settler next to the human player's city, with the human player ahead in technology, goes there as an
+		/// ambassador (0x62). Null: the unit goes on (L14ac). The locals of ShiftAIUnit are used as in the original.
+		/// </summary>
+		private ushort? ExploreAround(short participantIdx, short troopIdx)
+		{
+			short horizLoc = (short)this.processor.PullLocalWord(0x30);
+			short vertLoc = (short)this.processor.PullLocalWord(0x36);
+
+			if (this.processor.PullLocalWord(0x56) == 0)
+				DisableStrategicLocation(participantIdx, 0, horizLoc, vertLoc, 0);
+
+			this.owner.VideoCard.ObtainDot(2, horizLoc + 0x50, vertLoc);
+			this.processor.EmitLocalWord(0x28, this.processor.RegAcc.Value16);
+
+			if (this.processor.PullLocalWord(0x28) != 0 && (short)this.processor.PullLocalWord(0x56) < 3)
+			{
+				this.processor.EmitLocalWord(0x2c, 0);
+
+				for (this.processor.EmitLocalWord(0x40, 1); (short)this.processor.PullLocalWord(0x40) <= 8;
+					this.processor.EmitLocalWord(0x40, (ushort)(this.processor.PullLocalWord(0x40) + 1)))
+				{
+					ushort direction = this.processor.PullLocalWord(0x40);
+
+					this.owner.Routing.TunePosition(this.processor.PullInt16(this.processor.SegData.Value16, (ushort)((direction << 1) + 0x1882)) + horizLoc);
+					this.processor.EmitLocalWord(0x26, this.processor.RegAcc.Value16);
+					this.processor.EmitLocalWord(0x2e, (ushort)(this.processor.PullGlobalWord((ushort)((direction << 1) + 0x18e4)) + this.processor.PullLocalWord(0x36)));
+
+					short nextHoriz = (short)this.processor.PullLocalWord(0x26);
+					short nextVert = (short)this.processor.PullLocalWord(0x2e);
+
+					this.owner.VideoCard.ObtainDot(2, nextHoriz + 0x50, nextVert);
+					this.processor.EmitLocalWord(0x10, this.processor.RegAcc.Value16);
+
+					if ((short)this.processor.PullLocalWord(0x10) > (short)this.processor.PullLocalWord(0x28))
+					{
+						this.processor.CopyLocalWord(0x10, 0x28);
+						this.processor.CopyLocalWord(0x40, 0x2c);
+					}
+
+					this.owner.MapOps.ObtainTerrainType(nextHoriz, nextVert);
+					this.owner.MapOps.ContainsHut(this.processor.RegAcc.Value16, nextHoriz, nextVert);
+
+					if (this.processor.RegAcc.Value16 != 0 && this.processor.PullLocalWord(0x56) != 0)
+						return this.processor.PullLocalWord(0x40);
+				}
+
+				if (this.owner.World.RoundTally == 0 && this.processor.PullGlobalWord(0xd76a) != 0)
+				{
+					this.processor.EmitLocalWord(0x28, 0xf);
+					this.processor.EmitLocalWord(0x2c, 0);
+				}
+
+				if ((short)this.processor.PullLocalWord(0x28) >= 8 &&
+					(short)(0xf - this.processor.PullLocalWord(0x2a)) <= (short)this.processor.PullLocalWord(0x28) &&
+					this.processor.PullLocalWord(0x4c) == 0)
+				{
+					if (this.processor.PullLocalWord(0x56) == 0)
+						return this.processor.PullLocalWord(0x2c) == 0 ? (ushort)0x62 : this.processor.PullLocalWord(0x2c);
+
+					AttachStrategicLocation(participantIdx, this.processor.PullLocalWord(0x30), this.processor.PullLocalWord(0x36), 0, 2);
+				}
+			}
+
+			return VisitAsAmbassador(participantIdx) ? (ushort)0x62 : null;
+		}
+
+		/// <summary>
+		/// A settler (role 0) that may move on, near the nearest city of the human player (distance 0x2a above 1), with the
+		/// human player ahead in technology and land known around it (the layer 0x32 below)
+		/// </summary>
+		private bool VisitAsAmbassador(short participantIdx)
+		{
+			if (this.processor.PullLocalWord(0x56) != 0 || this.owner.World.HardnessTier == 0)
+				return false;
+
+			ushort nearest = this.processor.PullLocalWord(0x34);
+			this.processor.RegSource.Value16 = nearest < 128 ? (ushort)this.owner.World.Towns[nearest].ParticipantIdx : (ushort)0xffff;
+			short person = this.owner.World.PersonParticipantIdx;
+
+			if ((ushort)person != this.processor.RegSource.Value16 || this.processor.PullLocalWord(0x4c) != 0 ||
+				(short)this.processor.PullLocalWord(0x2a) <= 1 || (ushort)participantIdx == this.processor.RegSource.Value16 ||
+				this.owner.World.Participants[participantIdx].FoundScienceTally >= this.owner.World.Participants[person].FoundScienceTally)
+			{
+				return false;
+			}
+
+			this.owner.VideoCard.ObtainDot(2, (short)this.processor.PullLocalWord(0x30) + 0x50, (short)this.processor.PullLocalWord(0x36) + 0x32);
+			this.processor.EmitLocalWord(0x3a, this.processor.RegAcc.Value16);
+
+			return (short)this.processor.RegAcc.Value16 >= 9 &&
+				(short)(0xe - this.processor.PullLocalWord(0x2a)) <= (short)this.processor.PullLocalWord(0x3a);
 		}
 
 		/// <summary>
