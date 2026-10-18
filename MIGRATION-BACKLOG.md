@@ -825,13 +825,23 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   ruszająca się jednostka człowieka w wybranym miejscu (ląd / morze), cel obok: własny transportowiec, puste morze, obca
   jednostka (bombowiec dla trybu samolotu), tryby dyplomaty, myśliwca, okrętu podwodnego. Niesprawdzone: miejsce na statku
   dokładnie 1 (`<= 0` → `<= 1`), bit 2 statusu pod 0x600 x gracz (`& 0xf3` → `& 0xf7`), komputer z atakiem 1 (`== 0` → `== 1`).
+- Porcja 101 (2026-10-19): dwunasty kawałek `HandlePlayerTurn` – atak: `ConfirmAttack` (poniżej 3 ruchów człowiek
+  potwierdza „Attack at x/3 strength?” – anulowanie zapomina cel – komputer atakuje tylko z 2 ruchami) i `FightAt`
+  (najlepszy obrońca stosu, widok na jednostkę człowieka, 0x70d8 w czasie bitwy z człowiekiem, `SettleBattle`; atakujący
+  traci 3 ruchy – bombowiec wszystkie – albo ginie (skok do L3c40); zaatakowane miasto: bit 0x10 dla komputera, maleje bez
+  murów, nie z morza, na najłatwiejszym poziomie nie miasto człowieka; wielkość 0 – zniszczenie i może eliminacja
+  cywilizacji; człowiek widzi nową wielkość; pole bez jednostek komputera – nowa produkcja na kontynencie). Test
+  (`BatchHundredOneDifferentialTests`): pierwsza ruszająca się jednostka człowieka obok obcej jednostki albo miasta (obrońca
+  wprowadzony, mury, wielkość 1 – 3, poziom 0 / 1, rodzaj atakującego, bombowiec), ruchy 1 – 6 przy 0xdf60 = 1 (tura nie daje
+  nowych ruchów), odpowiedzi w dialogu. Niesprawdzone: komputer z 1 ruchem (`>= 2` → `>= 1`), poziom trudności przy ataku
+  komputera na miasto człowieka – oba też w testach tur komputera.
 
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
 (`HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-18 (po porcji 100): 2 metody w stylu asm (`HandlePlayerTurn`, `HandleCity`); `ShiftAIUnit` gotowa. `HandlePlayerTurn` przepisywana kawałkami od początku (następny: walka L2329 – L267b, ruch L267b – L3365; testy z `HumanTurnScript`). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
+Stan 2026-10-18 (po porcji 101): 2 metody w stylu asm (`HandlePlayerTurn`, `HandleCity`); `ShiftAIUnit` gotowa. `HandlePlayerTurn` przepisywana kawałkami od początku (następny: ruch L267b – L3365, potem L3365 – koniec; testy z `HumanTurnScript`). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
