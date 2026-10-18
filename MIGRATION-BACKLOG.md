@@ -737,13 +737,27 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   (skrypt klawiszy bez końca, ok. 40 s na turę albo zawieszenie); `check_mutations.py` ma teraz limit czasu (900 s,
   zawieszony mutant = CAUGHT (hang)). Mutacja niezłapana: 'h' samolotu → 'i' (samolot z celem idzie najpierw do celu, klucz
   nie ma znaczenia; samolot z bitami rozkazów zawiesza turę testu). Test w `BatchNinetyOneDifferentialTests`.
+- Porcja 92 (2026-10-18): trzeci kawałek `HandlePlayerTurn` – wybór człowieka (L05cc – L0d00): `TakeHumanOrder` (panel
+  jednostki, pomoc pierwszej tury i dla osadników, migająca jednostka, klawisz – Enter przy zaznaczonym polu działa jak
+  kliknięcie – albo kliknięcie: pasek menu, mapa świata, pałac, panel pod nim przy braku jednostki = koniec tury),
+  `LocateClickedTile`, `ShowPalace`, `TakeHeldClick` (przytrzymane kliknięcie obok jednostki = cel, także przez linię
+  zmiany daty; na widzianym polu Civilopedia terenu), `TakeClick` (wskaźnik GoTo: cel osiągalny dla jednostki; miasto
+  człowieka: ekran miasta; własna jednostka: wybór ze stosu; inaczej przesunięcie widoku) i `ForgetMarkedTile`; wynik
+  `HumanOrder` mówi, dokąd skacze reszta funkcji. Test (`BatchNinetyTwoDifferentialTests`): tura człowieka z własnym
+  `InputStarved` – klawisze (Space, Enter, 'g') i kliknięcia (0x586e / 0x5870 / 0x5874 przy 0x1a3c = 1 od kliknięcia do
+  następnego klawisza; przytrzymane obok aktywnej jednostki z lokalnej 0x32 ramki), kliknięcia na krawędziach pól, tura 0,
+  jednostki-wartownicy, 0xd806, potem Space, Enter, '1', Escape. Pułapki: mysz włączona na stałe zawiesza ekran miasta,
+  wyłączona zaraz po kliknięciu zeruje pozycję puszczonego przycisku (`ObtainMouseState`); bez Escape tura utyka (limit
+  klawiszy). Niesprawdzone (mutacje przeżywają): linia zmiany daty przy przytrzymanym kliknięciu, cel GoTo okrętu na morzu,
+  tryb GoTo 2 (0x36 = 2, 'g' przełącza tylko 0 / 1), kliknięta własna jednostka-wartownik (bit 0 kontra 3). Test w
+  `BatchNinetyTwoDifferentialTests`.
 
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
 (`HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-18 (po porcji 91): 2 metody w stylu asm (`HandlePlayerTurn`, `HandleCity`); `ShiftAIUnit` gotowa. `HandlePlayerTurn` przepisywana kawałkami od początku (następny: interakcja człowieka od L05cc, potem rozdział klawiszy L0d0a). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
+Stan 2026-10-18 (po porcji 92): 2 metody w stylu asm (`HandlePlayerTurn`, `HandleCity`); `ShiftAIUnit` gotowa. `HandlePlayerTurn` przepisywana kawałkami od początku (następny: obsługa klawiszy L0d0a – L1b5e: ' ' L0f1f, w L0f37, s L0f44, u L0f6f, g L0ffd, h L10bb, p L1180, f L1283, r L1400, i L158c, m L17c4, b L19bf, D L0d75, P L0d9b; test wzorem `BatchNinetyTwoDifferentialTests`). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 

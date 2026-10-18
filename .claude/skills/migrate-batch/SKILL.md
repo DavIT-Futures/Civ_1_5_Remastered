@@ -61,7 +61,12 @@ Testy zawsze w **Release** z `-parallelMode all` (ok. 7 razy szybciej niż Debug
    że funkcja doszła do końca (porcja 64: tura człowieka ze skryptem [Enter] nigdy się nie kończy).
    Różnica, której nie da się wyjaśnić: tymczasowo obie lambdy z kopią referencyjną (oryginał kontra oryginał) – jeśli dalej
    jest, to artefakt testu (np. ścieżka CIV.EXE w buforze 0xba06 nadpisana długim tekstem, dane spoza zakresu gry).
-6. Mutacje: `mutations.json` z jedną mutacją na funkcję (w gałęzi trudnej do trafienia), `python …/check_mutations.py mutations.json`.
+   Tura gracza (`HandlePlayerTurn`, porcje 90 – 92): cała tura w obu grach; tura człowieka przez własne `InputStarved`
+   (klawisze i kliknięcia: 0x586e / 0x5870 / 0x5874 przy 0x1a3c = 1 tylko na czas jednego kliknięcia, potem klawisze
+   Space, Enter, '1', Escape – bez Escape wskaźnik GoTo albo wybrana jednostka czeka na klawisze bez końca); rozkazy, których
+   jednostka nie wykona (rozkazy osadników dla innych, bity rozkazów samolotu), zapętlają turę (limit 20000 klawiszy, ok.
+   40 s). Porównywać ramkę i 0x80 bajtów stosu pod nią (`ShiftUnit` zostawia tam SI dla `ShiftAIUnit`).
+6. Mutacje: `mutations.json` z jedną mutacją na funkcję (w gałęzi trudnej do trafienia), `python …/check_mutations.py mutations.json` (limit 900 s na test: zawieszony mutant = CAUGHT (hang)).
    Każda musi być CAUGHT; SURVIVED = albo słaby test (dodać scenariusze), albo mutacja nieosiągalna (zmienić). Mutacja musi
    leżeć w funkcji, którą sprawdza podany test (porcje 68 / 70: mutacje w `SeizeCity` / `FocusMapView` „przeżywały” w testach
    innych funkcji).
