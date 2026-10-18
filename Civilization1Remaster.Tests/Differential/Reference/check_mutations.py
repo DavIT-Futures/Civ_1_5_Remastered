@@ -17,7 +17,7 @@ import json, os, re, subprocess, sys, tempfile
 SOURCES = ['Civilization1Remaster.Core', 'Civilization1Remaster.Machine']
 EXE = os.path.join('Civilization1Remaster.Tests', 'bin', 'Release', 'net10.0', 'Civilization1Remaster.Tests.exe')
 # Seconds a test may run before the mutant counts as hanging (caught)
-TIMEOUT = 900
+TIMEOUT = 600
 
 
 def run(args, **kwargs):

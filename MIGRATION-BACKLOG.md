@@ -734,7 +734,7 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   komputera i komputera granego przez człowieka (bit w `ParticipantMarkers`), losowy widok mapy, tura 0, 0xb278, rozkazy
   osadników (0x40, 0x80, 0xc0, 0x82, 0x02), cele, bombowiec z celem; porównuje ramkę i 0x80 bajtów stosu pod nią. Pułapki:
   rozkazy osadników dla innych jednostek albo bity rozkazów samolotu sprawiają, że tura człowieka nigdy się nie kończy
-  (skrypt klawiszy bez końca, ok. 40 s na turę albo zawieszenie); `check_mutations.py` ma teraz limit czasu (900 s,
+  (skrypt klawiszy bez końca, ok. 40 s na turę albo zawieszenie); `check_mutations.py` ma teraz limit czasu (600 s,
   zawieszony mutant = CAUGHT (hang)). Mutacja niezłapana: 'h' samolotu → 'i' (samolot z celem idzie najpierw do celu, klucz
   nie ma znaczenia; samolot z bitami rozkazów zawiesza turę testu). Test w `BatchNinetyOneDifferentialTests`.
 - Porcja 92 (2026-10-18): trzeci kawałek `HandlePlayerTurn` – wybór człowieka (L05cc – L0d00): `TakeHumanOrder` (panel
@@ -751,13 +751,27 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   klawiszy). Niesprawdzone (mutacje przeżywają): linia zmiany daty przy przytrzymanym kliknięciu, cel GoTo okrętu na morzu,
   tryb GoTo 2 (0x36 = 2, 'g' przełącza tylko 0 / 1), kliknięta własna jednostka-wartownik (bit 0 kontra 3). Test w
   `BatchNinetyTwoDifferentialTests`.
+- Porcja 93 (2026-10-18): czwarty kawałek `HandlePlayerTurn` – wstęp rozkazu i proste klawisze: `PrepareOrder` (L0d0a:
+  jednostka z celem albo bez jednostki idzie dalej przez `CarryOutGoto`, inaczej zapomina kierunek; miejsce 0x2c / 0x30),
+  `DisbandUnit` ('D'), `PillageTile` ('P': jednostka lądowa – nie dyplomata, karawana, myśliwiec – poza miastem z ruchami
+  niszczy nawadnianie i kopalnię, inaczej kolej, inaczej drogę; pole widziane przez człowieka zapamiętane, traktat z
+  właścicielem najbliższego miasta, miejsce strategiczne dla gracza w DI – jak w oryginale), `SkipUnit` (Space), czekanie
+  ('w', bez metody), `SentryUnit` ('s'), `UnloadUnit` ('u': transportowiec albo lotniskowiec w stosie budzi ładunek) i
+  `ToggleGoTo` ('g', zmiana hosta z kwadratowym kursorem). Etykiety rozdziału (L0d75, L0d9b, L0f1f, …) zostają do zamiany na
+  `switch` na końcu. Test (`BatchNinetyThreeDifferentialTests`, wzór 92): tura człowieka z losowymi klawiszami, ulepszenia
+  pól pod jednostkami, cele jednostek lądowych, pierwsza jednostka stosu zamieniona w transportowiec (zapisy nie mają statków
+  z ładunkiem) i 'u' na początku. Pułapki: 's', 'g', Enter zapętla oryginał bez pytania o klawisze (GoTo bez aktywnej
+  jednostki), więc 'g' tylko parami; cele okrętów na lądzie też zawieszały turę. `DiscardTileImprovements` nie ma wpisu w
+  dzienniku – etykieta grabieży z `WipeDiplomacyFlags`. Mutacje równoważne / nieosiągalne: ruchy 0 przed `EliminateUnit`
+  ('D'), typ < 0x1a → < 0x19 (broń jądrowa człowieka), `LeftoverSteps == 0` → `== 1` w grabieży (aktywna jednostka ma ruchy;
+  1 tylko po ruchu po drodze), lotniskowiec w 'u' (brak w zapisach), `0x36 ^ 1` → `^ 3` (0x36 porównywane tylko z 0 i 2).
 
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
 (`HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-18 (po porcji 92): 2 metody w stylu asm (`HandlePlayerTurn`, `HandleCity`); `ShiftAIUnit` gotowa. `HandlePlayerTurn` przepisywana kawałkami od początku (następny: obsługa klawiszy L0d0a – L1b5e: ' ' L0f1f, w L0f37, s L0f44, u L0f6f, g L0ffd, h L10bb, p L1180, f L1283, r L1400, i L158c, m L17c4, b L19bf, D L0d75, P L0d9b; test wzorem `BatchNinetyTwoDifferentialTests`). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
+Stan 2026-10-18 (po porcji 93): 2 metody w stylu asm (`HandlePlayerTurn`, `HandleCity`); `ShiftAIUnit` gotowa. `HandlePlayerTurn` przepisywana kawałkami od początku (następny: klawisze h L10bb, p L1180, f L1283, potem r L1400, i L158c, m L17c4, b L19bf, potem rozdział L1aed jako `switch`; test wzorem `BatchNinetyThreeDifferentialTests`). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 

@@ -66,7 +66,7 @@ Testy zawsze w **Release** z `-parallelMode all` (ok. 7 razy szybciej niż Debug
    Space, Enter, '1', Escape – bez Escape wskaźnik GoTo albo wybrana jednostka czeka na klawisze bez końca); rozkazy, których
    jednostka nie wykona (rozkazy osadników dla innych, bity rozkazów samolotu), zapętlają turę (limit 20000 klawiszy, ok.
    40 s). Porównywać ramkę i 0x80 bajtów stosu pod nią (`ShiftUnit` zostawia tam SI dla `ShiftAIUnit`).
-6. Mutacje: `mutations.json` z jedną mutacją na funkcję (w gałęzi trudnej do trafienia), `python …/check_mutations.py mutations.json` (limit 900 s na test: zawieszony mutant = CAUGHT (hang)).
+6. Mutacje: `mutations.json` z jedną mutacją na funkcję (w gałęzi trudnej do trafienia), `python …/check_mutations.py mutations.json` (limit 600 s na test: zawieszony mutant = CAUGHT (hang)).
    Każda musi być CAUGHT; SURVIVED = albo słaby test (dodać scenariusze), albo mutacja nieosiągalna (zmienić). Mutacja musi
    leżeć w funkcji, którą sprawdza podany test (porcje 68 / 70: mutacje w `SeizeCity` / `FocusMapView` „przeżywały” w testach
    innych funkcji).

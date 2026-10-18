@@ -125,294 +125,40 @@ namespace Civilization1Remaster.Game
 			goto L1b5e;
 
 		L0d0a:
-			if (this.processor.PullLocalWord(0x32) > 127)
-				goto L0d24;
-
-			this.processor.ScaleIndexToBase(0xc, this.processor.PullLocalWord(0x32));
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81da)), 0xff);
-			if (this.processor.FlagSet.IsNotEqual) goto L0d24;
-
-			goto L0d38;
-
-		L0d24:
-			this.owner.Routing.CarryOutGoto(participantIdx, this.processor.PullLocalSignedWord(0x32));
-			
-			this.processor.EmitLocalWord(0x44, this.processor.RegAcc.Value16);
-			goto L0d4d;
-
-		L0d38:
-			this.processor.RegAcc.Value16 = 0xc;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullLocalWord(0x32));
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81dc), 0xff);
-
-		L0d4d:
-			this.processor.RegAcc.Value16 = 0x600;
-			this.processor.ScaleAccumulatorToSource((ushort)participantIdx);
-			this.processor.AddScaledToSource(0xc, this.processor.PullLocalWord(0x32));
-
-			if (this.processor.PullLocalWord(0x32) < 128)
-			{
-				this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5));
-				this.processor.RegAcc.HighByte = 0;
-				this.processor.EmitLocalWord(0x2c, this.processor.RegAcc.Value16);
-				this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6));
-				this.processor.RegAcc.HighByte = 0;
-				this.processor.EmitLocalWord(0x30, this.processor.RegAcc.Value16);
-			}
-			else
-			{
-				this.processor.EmitLocalWord(0x2c, 0);
-				this.processor.EmitLocalWord(0x30, 0);
-			}
-
+			// The unit goes on to its destination (or forgets its heading), then the order 0x44 is carried out
+			PrepareOrder(participantIdx);
 			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x44);
 			goto L1aed;
 
 		L0d75:
-			this.processor.RegAcc.Value16 = 0xc;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullLocalWord(0x32));
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d8), 0x0);
-			
-			this.owner.UnitOps.EliminateUnit(participantIdx, this.processor.PullLocalSignedWord(0x32));
-			
+			DisbandUnit(participantIdx);
 			goto L1b5e;
 
 		L0d9b:
-			this.owner.MapOps.ObtainTileImprovements(
-				this.processor.PullLocalSignedWord(0x2c),
-				this.processor.PullLocalSignedWord(0x30));
-
-			this.processor.TestBitsByte(this.processor.RegAcc.LowByte, 0x1);
-			if (this.processor.FlagSet.IsEqual) goto L0db0;
-			goto L0dd9;
-
-		L0db0:
-			this.processor.RegAcc.Value16 = 0xc;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullLocalWord(0x32));
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d7));
-			this.processor.EmitLocalByte(0x4e, this.processor.RegAcc.LowByte);
-			this.processor.CompareByte(this.processor.PullLocalByte(0x4e), 0x1a);
-			if (this.processor.FlagSet.IsLess) goto L0dd0;
-			goto L0dd9;
-
-		L0dd0:
-			this.processor.CompareByte(this.processor.PullLocalByte(0x4e), 0xe);
-			if (this.processor.FlagSet.IsEqual) goto L0dd9;
-			goto L0deb;
-
-		L0dd9:
-			DisplayHelpForHuman(0x1e83);
-
-			goto L1b5e;
-
-		L0deb:
-			this.owner.Helpers.LocateNearestCity(
-				this.processor.PullLocalSignedWord(0x2c),
-				this.processor.PullLocalSignedWord(0x30));
-
-			this.processor.EmitLocalWord(0x10, this.processor.RegAcc.Value16);
-			this.processor.ScaleIndexToBase(0xc, this.processor.PullLocalWord(0x32));
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d8)), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L0e16;
-			goto L0f1c;
-
-		L0e16:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullLocalWord(0x10));
-			
-			this.owner.Combat.AffirmBreakTreaty(this.owner.World.Towns[this.processor.PullLocalWord(0x10)].ParticipantIdx);
-			
-			this.processor.RegAcc.Value16 = this.processor.IncrementWord(this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L0e32;
-			goto L0f1c;
-
-		L0e32:
-			this.owner.MapOps.ObtainTileImprovements(
-				this.processor.PullLocalSignedWord(0x2c),
-				this.processor.PullLocalSignedWord(0x30));
-
-			this.processor.EmitLocalWord(0x3a, this.processor.RegAcc.Value16);
-			this.processor.TestBitsByte(this.processor.PullLocalByte(0x3a), 0x6);
-			if (this.processor.FlagSet.IsNotEqual) goto L0e4c;
-			goto L0e61;
-
-		L0e4c:
-			this.owner.MapOps.DiscardTileImprovements(6,
-				this.processor.PullLocalSignedWord(0x2c),
-				this.processor.PullLocalSignedWord(0x30));
-
-			goto L0e91;
-
-		L0e61:
-			this.processor.TestBitsByte(this.processor.PullLocalByte(0x3a), 0x10);
-			if (this.processor.FlagSet.IsNotEqual) goto L0e6a;
-			goto L0e7f;
-
-		L0e6a:
-			this.owner.MapOps.DiscardTileImprovements(0x10,
-				this.processor.PullLocalSignedWord(0x2c),
-				this.processor.PullLocalSignedWord(0x30));
-
-			goto L0e91;
-
-		L0e7f:
-			this.owner.MapOps.DiscardTileImprovements(8,
-				this.processor.PullLocalSignedWord(0x2c),
-				this.processor.PullLocalSignedWord(0x30));
-
-		L0e91:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullLocalWord(0x10));
-			if (this.owner.World.Towns[this.processor.PullLocalWord(0x10)].ParticipantIdx == this.owner.World.PersonParticipantIdx)
-				goto L0ea7;
-			goto L0eb5;
-
-		L0ea7:
-			this.owner.MapOps.KeepKnownTileImprovements(
-				this.processor.PullLocalSignedWord(0x2c),
-				this.processor.PullLocalSignedWord(0x30));
-
-		L0eb5:
-			RepaintTileIfVisible(this.processor.PullLocalWord(0x2c),
-				this.processor.PullLocalWord(0x30));
-
-			this.processor.ScaleIndexToSource(0x1c, this.processor.PullLocalWord(0x10));
-
-			this.owner.Politics.WipeDiplomacyFlags(this.owner.World.PersonParticipantIdx,
-				this.owner.World.Towns[this.processor.PullLocalWord(0x10)].ParticipantIdx,
-				2);
-
-			if (participantIdx == this.owner.World.Towns[this.processor.PullLocalWord(0x10)].ParticipantIdx)
-				goto L0f07;
-
-			this.owner.Bot.SendUnitToStrategicLocation((short)this.processor.RegDest.Value16,
-				this.processor.PullLocalSignedWord(0x2c),
-				this.processor.PullLocalSignedWord(0x30),
-				1, 4);
-
-		L0f07:
-			this.processor.RegAcc.Value16 = 0xc;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullLocalWord(0x32));
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d8), 0x0);
-
-		L0f1c:
+			PillageTile(participantIdx);
 			goto L1b5e;
 
 		L0f1f:
-			this.processor.RegAcc.Value16 = 0xc;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullLocalWord(0x32));
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d8), 0x0);
+			SkipUnit(participantIdx);
 			goto L1b5e;
 
 		L0f37:
+			// Wait: the unit comes again in the second pass
 			this.processor.EmitLocalWord(0x28, 0x1);
 			this.processor.EmitLocalWord(0x2e, 0x1);
 			goto L1b5e;
 
 		L0f44:
-			this.processor.RegAcc.Value16 = 0x600;
-			this.processor.ScaleAccumulatorToSource((ushort)participantIdx);
-			this.processor.AddScaledToSource(0xc, this.processor.PullLocalWord(0x32));
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d4),
-				this.processor.BitOrByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d4)), 0x1));
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d8), 0x0);
-
-			RepaintUnitIfVisible(participantIdx, this.processor.PullLocalSignedWord(0x32));
-			
+			SentryUnit(participantIdx);
 			goto L1b5e;
 
 		L0f6f:
-			this.processor.RegAcc.Value16 = 0xc;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullLocalWord(0x32));
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d7));
-			this.processor.EmitLocalByte(0x4e, this.processor.RegAcc.LowByte);
-			this.processor.RegAcc.LowByte = 0x22;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullLocalByte(0x4e));
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1146)), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L0f97;
-			goto L0fa0;
-
-		L0f97:
-			this.processor.CompareByte(this.processor.PullLocalByte(0x4e), 0x17);
-			if (this.processor.FlagSet.IsEqual) goto L0fa0;
-			goto L0ffa;
-
-		L0fa0:
-			this.processor.RegAcc.Value16 = 0xc;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullLocalWord(0x32));
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81de)), 0xff);
-			if (this.processor.FlagSet.IsNotEqual) goto L0fba;
-			goto L0ffa;
-
-		L0fba:
-			this.owner.UnitOps.VisitEachUnitInStack(participantIdx, this.processor.PullLocalSignedWord(0x32), 0x14f6);
-
-			this.processor.EmitLocalWord(0x1e, 0x0);
-			this.processor.EmitLocalWord(0x28, 0x1);
-
-			LocateBestGuardian(participantIdx, this.processor.PullLocalWord(0x32));
-
-			this.processor.RegAcc.Value16 = this.processor.DecrementWord(this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x32, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x32);
-			this.processor.RegAcc.Value16 = this.processor.BitAndWord(this.processor.RegAcc.Value16, 0x7f);
-			this.processor.EmitLocalWord(0x46, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x2e, 0x0);
-
-		L0ffa:
+			UnloadUnit(participantIdx);
 			goto L1b5e;
 
 		L0ffd:
-			// GoTo. The original game showed the square cursor (moved with the arrow keys, Enter picks the destination)
-			// only when there was no mouse, with a mouse it only changed the mouse pointer, which was easy to miss.
-			// The square cursor is now shown in both cases, so the destination can be picked with the keyboard or the mouse.
-			if (this.processor.PullLocalWord(0x36) == 0)
-			{
-				if (this.processor.PullLocalWord(0x4) == 0)
-				{
-					this.processor.EmitLocalWord(0x4, 0x1);
-					this.processor.RegSource.Value16 = (ushort)(participantIdx * 0x600 + this.processor.PullLocalWord(0x32) * 0xc);
-					this.processor.EmitLocalWord(0xe, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)));
-					this.processor.EmitLocalWord(0x12, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6)));
-				}
-			}
-			else if (this.processor.PullLocalWord(0x4) != 0)
-			{
-				// GoTo cancelled, remove the square cursor
-				this.processor.EmitLocalWord(0x4, 0x0);
-
-				if ((this.owner.World.ChartSight[this.processor.PullLocalWord(0xe),
-					this.processor.PullLocalWord(0x12)] & (1 << participantIdx)) != 0)
-				{
-					this.owner.MapOps.RepaintMapTile(
-						this.processor.PullLocalSignedWord(0xe),
-						this.processor.PullLocalSignedWord(0x12));
-				}
-
-				this.processor.EmitLocalWord(0xe, 0xffff);
-			}
-
-			if (this.processor.PullGlobalWord(0x1a3c) != 0)
-			{
-				// GoTo mouse pointer, or the normal one when GoTo is cancelled
-				this.processor.RegBase.Value16 = (ushort)((this.processor.PullLocalWord(0x36) != 0) ? 7 : 2);
-				this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-				this.owner.Services.AssignMouseCursorImage(0, 0, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xd4ce)));
-			}
-
-			this.processor.EmitLocalWord(0x36, this.processor.BitXorWord(this.processor.PullLocalWord(0x36), 0x1));
+			ToggleGoTo(participantIdx);
 			goto L1b5e;
-
 		L10bb:
 			this.owner.Helpers.LocateNearestCity(
 				this.processor.PullLocalSignedWord(0x2c),
@@ -5259,6 +5005,200 @@ namespace Civilization1Remaster.Game
 			}
 
 			this.processor.EmitLocalWord(0xe, 0xffff);
+		}
+
+		/// <summary>
+		/// Before an order: a unit with a destination (or no unit, 0x32 from 128) goes on with GoTo (CarryOutGoto gives the
+		/// order 0x44), else it forgets its heading; 0x2c / 0x30 are its place (0 without a unit). The locals of HandlePlayerTurn
+		/// are used as in the original, SI as the original leaves it.
+		/// </summary>
+		private void PrepareOrder(short participantIdx)
+		{
+			short troopIdx = (short)this.processor.PullLocalWord(0x32);
+
+			if (this.processor.PullLocalWord(0x32) > 127 || this.troops.Pull(participantIdx, troopIdx, UnitMemory.TravelHoriz) != 0xff)
+			{
+				this.processor.EmitLocalWord(0x44, this.owner.Routing.CarryOutGoto(participantIdx, troopIdx));
+			}
+			else
+			{
+				this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHeading, 0xff);
+			}
+
+			this.processor.RegSource.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride + this.processor.PullLocalWord(0x32) * UnitMemory.TroopStride);
+
+			if (this.processor.PullLocalWord(0x32) < UnitMemory.TroopTally)
+			{
+				this.processor.EmitLocalWord(0x2c, this.troops.Pull(participantIdx, troopIdx, UnitMemory.Horiz));
+				this.processor.EmitLocalWord(0x30, this.troops.Pull(participantIdx, troopIdx, UnitMemory.Vert));
+			}
+			else
+			{
+				this.processor.EmitLocalWord(0x2c, 0);
+				this.processor.EmitLocalWord(0x30, 0);
+			}
+		}
+
+		/// <summary>'D': the unit is disbanded</summary>
+		private void DisbandUnit(short participantIdx)
+		{
+			this.troops.Assign(participantIdx, (short)this.processor.PullLocalWord(0x32), UnitMemory.LeftoverSteps, 0);
+
+			this.owner.UnitOps.EliminateUnit(participantIdx, this.processor.PullLocalSignedWord(0x32));
+		}
+
+		/// <summary>
+		/// 'P': a land unit (not a diplomat, caravan or fighter) outside a city with moves left pillages the tile: irrigation and
+		/// mine, else a railroad, else a road go (a human seen tile is remembered, the treaty with the owner of the nearest city
+		/// may break and he gets the place as a strategic location); else the help message. The locals of HandlePlayerTurn are
+		/// used as in the original.
+		/// </summary>
+		private void PillageTile(short participantIdx)
+		{
+			short troopIdx = (short)this.processor.PullLocalWord(0x32);
+			short horizLoc = (short)this.processor.PullLocalWord(0x2c);
+			short vertLoc = (short)this.processor.PullLocalWord(0x30);
+
+			bool may = (this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) == 0;
+
+			if (may)
+			{
+				this.processor.EmitLocalByte(0x4e, this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind));
+				may = (sbyte)this.processor.PullLocalByte(0x4e) < 0x1a && this.processor.PullLocalByte(0x4e) != 0xe;
+			}
+
+			if (!may)
+			{
+				DisplayHelpForHuman(0x1e83);
+				return;
+			}
+
+			this.processor.EmitLocalWord(0x10, this.owner.Helpers.LocateNearestCity(horizLoc, vertLoc));
+
+			if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.LeftoverSteps) == 0)
+				return;
+
+			// (no when the human keeps the treaty)
+			if (this.owner.Combat.AffirmBreakTreaty(this.owner.World.Towns[this.processor.PullLocalWord(0x10)].ParticipantIdx) == 0xffff)
+				return;
+
+			this.processor.EmitLocalWord(0x3a, this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc));
+
+			if ((this.processor.PullLocalByte(0x3a) & 6) != 0)
+				this.owner.MapOps.DiscardTileImprovements(6, horizLoc, vertLoc);
+			else if ((this.processor.PullLocalByte(0x3a) & 0x10) != 0)
+				this.owner.MapOps.DiscardTileImprovements(0x10, horizLoc, vertLoc);
+			else
+				this.owner.MapOps.DiscardTileImprovements(8, horizLoc, vertLoc);
+
+			if (this.owner.World.Towns[this.processor.PullLocalWord(0x10)].ParticipantIdx == this.owner.World.PersonParticipantIdx)
+				this.owner.MapOps.KeepKnownTileImprovements(horizLoc, vertLoc);
+
+			RepaintTileIfVisible(this.processor.PullLocalWord(0x2c), this.processor.PullLocalWord(0x30));
+
+			this.processor.RegSource.Value16 = (ushort)(this.processor.PullLocalWord(0x10) * 0x1c);
+
+			this.owner.Politics.WipeDiplomacyFlags(this.owner.World.PersonParticipantIdx,
+				this.owner.World.Towns[this.processor.PullLocalWord(0x10)].ParticipantIdx,
+				2);
+
+			// (the player of the strategic location is DI as the original leaves it)
+			if (participantIdx != this.owner.World.Towns[this.processor.PullLocalWord(0x10)].ParticipantIdx)
+				this.owner.Bot.SendUnitToStrategicLocation((short)this.processor.RegDest.Value16, horizLoc, vertLoc, 1, 4);
+
+			this.troops.Assign(participantIdx, troopIdx, UnitMemory.LeftoverSteps, 0);
+		}
+
+		/// <summary>Space: the unit does nothing this turn</summary>
+		private void SkipUnit(short participantIdx)
+		{
+			short troopIdx = (short)this.processor.PullLocalWord(0x32);
+			this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
+			this.processor.RegSource.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride);
+			this.troops.Assign(participantIdx, troopIdx, UnitMemory.LeftoverSteps, 0);
+		}
+
+		/// <summary>'s': the unit is sentried</summary>
+		private void SentryUnit(short participantIdx)
+		{
+			short troopIdx = (short)this.processor.PullLocalWord(0x32);
+			this.processor.RegSource.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride + troopIdx * UnitMemory.TroopStride);
+			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Status, (byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) | 1));
+			this.troops.Assign(participantIdx, troopIdx, UnitMemory.LeftoverSteps, 0);
+
+			RepaintUnitIfVisible(participantIdx, troopIdx);
+		}
+
+		/// <summary>
+		/// 'u': a ship that carries units (or a carrier) in a stack wakes the units on board; the best defender of the stack
+		/// is the next unit (0x32 one before it). The locals of HandlePlayerTurn are used as in the original.
+		/// </summary>
+		private void UnloadUnit(short participantIdx)
+		{
+			short troopIdx = (short)this.processor.PullLocalWord(0x32);
+			this.processor.EmitLocalByte(0x4e, this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind));
+
+			if (UnitKindTable.Field(this.processor, (sbyte)this.processor.PullLocalByte(0x4e), UnitKindTable.FerryRoom) == 0 &&
+				this.processor.PullLocalByte(0x4e) != UnitKindTable.Carrier)
+			{
+				return;
+			}
+
+			if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.FollowingInStack) == 0xff)
+				return;
+
+			this.owner.UnitOps.VisitEachUnitInStack(participantIdx, troopIdx, 0x14f6);
+
+			this.processor.EmitLocalWord(0x1e, 0);
+			this.processor.EmitLocalWord(0x28, 1);
+
+			this.processor.EmitLocalWord(0x32, (ushort)(LocateBestGuardian(participantIdx, this.processor.PullLocalWord(0x32)) - 1));
+			this.processor.EmitLocalWord(0x46, (ushort)(this.processor.PullLocalWord(0x32) & 0x7f));
+			this.processor.EmitLocalWord(0x2e, 0);
+		}
+
+		/// <summary>
+		/// 'g': GoTo on (0x36), with the square cursor on the unit (0x4 at 0xe / 0x12), or off, the cursor removed; with a
+		/// mouse its pointer changes. The original game showed the square cursor (moved with the arrow keys, Enter picks the
+		/// destination) only when there was no mouse, with a mouse it only changed the mouse pointer, which was easy to miss.
+		/// The square cursor is now shown in both cases, so the destination can be picked with the keyboard or the mouse.
+		/// </summary>
+		private void ToggleGoTo(short participantIdx)
+		{
+			if (this.processor.PullLocalWord(0x36) == 0)
+			{
+				if (this.processor.PullLocalWord(0x4) == 0)
+				{
+					this.processor.EmitLocalWord(0x4, 0x1);
+					this.processor.RegSource.Value16 = (ushort)(participantIdx * 0x600 + this.processor.PullLocalWord(0x32) * 0xc);
+					this.processor.EmitLocalWord(0xe, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)));
+					this.processor.EmitLocalWord(0x12, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6)));
+				}
+			}
+			else if (this.processor.PullLocalWord(0x4) != 0)
+			{
+				// GoTo cancelled, remove the square cursor
+				this.processor.EmitLocalWord(0x4, 0x0);
+
+				if ((this.owner.World.ChartSight[this.processor.PullLocalWord(0xe),
+					this.processor.PullLocalWord(0x12)] & (1 << participantIdx)) != 0)
+				{
+					this.owner.MapOps.RepaintMapTile(
+						this.processor.PullLocalSignedWord(0xe),
+						this.processor.PullLocalSignedWord(0x12));
+				}
+
+				this.processor.EmitLocalWord(0xe, 0xffff);
+			}
+
+			if (this.processor.PullGlobalWord(0x1a3c) != 0)
+			{
+				// GoTo mouse pointer, or the normal one when GoTo is cancelled
+				this.processor.RegBase.Value16 = (ushort)((this.processor.PullLocalWord(0x36) != 0 ? 7 : 2) << 1);
+				this.owner.Services.AssignMouseCursorImage(0, 0, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xd4ce)));
+			}
+
+			this.processor.EmitLocalWord(0x36, (ushort)(this.processor.PullLocalWord(0x36) ^ 1));
 		}
 
 		/// <summary>
