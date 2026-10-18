@@ -871,13 +871,20 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   rozkazy (zostają bity 4, 5); pole wychodzi z cudzego terytorium; u celu jednostka zapomina cel i kierunek (komputer traci
   ruchy). Testy: istniejące testy tur (komputera i terytorium). Równoważna: `& 0x30` → `& 0x31` (bit 0 ruszającej się jednostki
   jest 0); niesprawdzone: statki komputera z bitami rozkazów (`!= Air` → `!= Sea`).
+- Porcja 107 (2026-10-19): osiemnasty kawałek `HandlePlayerTurn` – `TakeCargoAlong` z `CarryUnit` (L2deb – L2ff4):
+  jednostka (nie samolot) schodząca z morza na ląd traci ruchy; statek z ładunkiem (albo lotniskowiec) zabiera ładunek
+  (0x14 – następna jednostka starego stosu, 0x4a – licznik do 20, 0x3c – zabrane): jednostki lądowe (samoloty dla
+  lotniskowca – wybór przez sztuczkę `cmp`/`sbb`/`neg` oryginału: grupa 1, gdy statek nie ma ładowności), wartownicy, z morza
+  albo (komputer) bez rozkazów w stosie płyną razem, na transportowcu jako wartownicy, samoloty z rundą paliwa mniej; do
+  zapełnienia (lotniskowiec i barbarzyńcy biorą wszystko). Testy: istniejące testy tur komputera. Niesprawdzone: lotniskowce
+  (brak w zapisach), ładunek z bitem 3, pełna ładowność (`<=` → `<`) i barbarzyńcy (`!= 0` → `!= 1`).
 
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
 (`HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-18 (po porcji 106): 2 metody w stylu asm (`HandlePlayerTurn`, `HandleCity`); `ShiftAIUnit` gotowa. `HandlePlayerTurn` przepisywana kawałkami od początku (następny: ruch L2deb – L3365 – ląd z morza, stos, miasto – potem L3365 – koniec; testy z `HumanTurnScript`). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
+Stan 2026-10-18 (po porcji 107): 2 metody w stylu asm (`HandlePlayerTurn`, `HandleCity`); `ShiftAIUnit` gotowa. `HandlePlayerTurn` przepisywana kawałkami od początku (następny: ruch L2ff4 – L3365 – wejście do miasta – potem L3365 – koniec; testy z `HumanTurnScript`). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 

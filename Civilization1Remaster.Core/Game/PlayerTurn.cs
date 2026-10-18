@@ -215,197 +215,8 @@ namespace Civilization1Remaster.Game
 			// The unit moves
 			MoveUnit(participantIdx);
 		L2deb:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x34), 0xa);
-			if (this.processor.FlagSet.IsEqual) goto L2df4;
-			goto L2e24;
-
-		L2df4:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x3e), 0xa);
-			if (this.processor.FlagSet.IsNotEqual) goto L2dfd;
-			goto L2e24;
-
-		L2dfd:
-			this.processor.RegAcc.Value16 = 0x600;
-			this.processor.ScaleAccumulatorToSource((ushort)participantIdx);
-			this.processor.AddScaledToSource(0xc, this.processor.PullLocalWord(0x32));
-			this.processor.RegAcc.LowByte = 0x22;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d7)));
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1138)), 0x1);
-			if (this.processor.FlagSet.IsNotEqual) goto L2e1f;
-			goto L2e24;
-
-		L2e1f:
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d8), 0x0);
-
-		L2e24:
-			this.processor.RegAcc.Value16 = 0xc;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullLocalWord(0x32));
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d7));
-			this.processor.EmitLocalByte(0x52, this.processor.RegAcc.LowByte);
-			this.processor.RegAcc.LowByte = 0x22;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullLocalByte(0x52));
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1146)), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L2e4c;
-			goto L2e55;
-
-		L2e4c:
-			this.processor.CompareByte(this.processor.PullLocalByte(0x52), 0x17);
-			if (this.processor.FlagSet.IsEqual) goto L2e55;
-			goto L2ff4;
-
-		L2e55:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x14), 0xffff);
-			if (this.processor.FlagSet.IsNotEqual) goto L2e5e;
-			goto L2ff4;
-
-		L2e5e:
-			this.processor.RegAcc.Value16 = 0x0;
-			this.processor.EmitLocalWord(0x4a, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x3c, this.processor.RegAcc.Value16);
-
-		L2e67:
-			this.processor.RegAcc.Value16 = 0x600;
-			this.processor.ScaleAccumulatorToSource((ushort)participantIdx);
-			this.processor.ScaleIndex(0xc, this.processor.PullLocalWord(0x14));
-			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegDest.Value16 = this.processor.SumWord(this.processor.RegDest.Value16, this.processor.RegSource.Value16);
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 + 0x81de));
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.EmitLocalWord(0x4c, this.processor.RegAcc.Value16);
-			this.processor.ScaleIndexToBase(0xc, this.processor.PullLocalWord(0x32));
-			this.processor.RegAcc.LowByte = 0x22;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d7)));
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1146)), 0x1);
-			this.processor.RegAcc.Value16 = this.processor.SubtractBorrowWord(this.processor.RegAcc.Value16, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = this.processor.NegateWord(this.processor.RegAcc.Value16);
-			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegAcc.LowByte = 0x22;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 + 0x81d7)));
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.CompareWord(this.processor.RegCount.Value16, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1138)));
-			if (this.processor.FlagSet.IsEqual) goto L2ead;
-			goto L2f9d;
-
-		L2ead:
-			this.processor.TestBitsByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 + 0x81d4)), 0x1);
-			if (this.processor.FlagSet.IsEqual) goto L2eb7;
-			goto L2eef;
-
-		L2eb7:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x34), 0xa);
-			if (this.processor.FlagSet.IsNotEqual) goto L2ec0;
-			goto L2eef;
-
-		L2ec0:
-			if (participantIdx == this.owner.World.PersonParticipantIdx)
-				goto L2f9d;
-
-			this.processor.TestBitsByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 + 0x81d4)), 0xc);
-			if (this.processor.FlagSet.IsEqual) goto L2ed5;
-			goto L2f9d;
-
-		L2ed5:
-			this.processor.RegAcc.Value16 = 0xc;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullLocalWord(0x14));
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81de)), 0xff);
-			if (this.processor.FlagSet.IsNotEqual) goto L2eef;
-			goto L2f9d;
-
-		L2eef:
-			this.owner.MapOps.DiscardUnitFromTile(participantIdx,
-				this.processor.PullLocalSignedWord(0x14),
-				this.processor.PullLocalSignedWord(0x22),
-				this.processor.PullLocalSignedWord(0x2a));
-
-			this.owner.MapOps.SituateUnitOnTile(participantIdx,
-				this.processor.PullLocalSignedWord(0x14),
-				this.processor.PullLocalSignedWord(0x1c),
-				this.processor.PullLocalSignedWord(0x26));
-
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.AddScaledToSource(0xc, this.processor.PullLocalWord(0x14));
-			this.processor.RegAcc.LowByte = this.processor.PullLocalByte(0x1c);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5), this.processor.RegAcc.LowByte);
-			this.processor.RegAcc.LowByte = this.processor.PullLocalByte(0x26);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6), this.processor.RegAcc.LowByte);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81dd), 0x0);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81dc), 0xff);
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.ScaleIndexToBase(0xc, this.processor.PullLocalWord(0x32));
-			this.processor.RegAcc.LowByte = 0x22;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d7)));
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1146)), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L2f61;
-			goto L2f6e;
-
-		L2f61:
-			this.processor.RegAcc.Value16 = 0xc;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullLocalWord(0x14));
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d4),
-				this.processor.BitOrByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d4)), 0x1));
-
-		L2f6e:
-			this.processor.RegAcc.Value16 = 0x600;
-			this.processor.ScaleAccumulatorToSource((ushort)participantIdx);
-			this.processor.AddScaledToSource(0xc, this.processor.PullLocalWord(0x14));
-			this.processor.RegAcc.LowByte = 0x22;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d7)));
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegDest.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x113c));
-			this.processor.CompareWord(this.processor.RegDest.Value16, 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L2f92;
-			goto L2f9a;
-
-		L2f92:
-			this.processor.RegAcc.Value16 = this.processor.RegDest.Value16;
-			this.processor.RegAcc.LowByte = this.processor.DecrementByte(this.processor.RegAcc.LowByte);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d9), this.processor.RegAcc.LowByte);
-
-		L2f9a:
-			this.processor.EmitLocalWord(0x3c, this.processor.IncrementWord(this.processor.PullLocalWord(0x3c)));
-
-		L2f9d:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x4c);
-			this.processor.EmitLocalWord(0x14, this.processor.RegAcc.Value16);
-			this.processor.IncrementLocalWord(0x4a);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4a), 0x14);
-			if (this.processor.FlagSet.IsLess) goto L2faf;
-			goto L2ff4;
-
-		L2faf:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x14), 0xffff);
-			if (this.processor.FlagSet.IsNotEqual) goto L2fb8;
-			goto L2ff4;
-
-		L2fb8:
-			this.processor.RegAcc.Value16 = 0xc;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullLocalWord(0x32));
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d7));
-			this.processor.EmitLocalByte(0x52, this.processor.RegAcc.LowByte);
-			this.processor.RegAcc.LowByte = 0x22;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullLocalByte(0x52));
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x3c);
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1146)), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L2fe2;
-			goto L2e67;
-
-		L2fe2:
-			this.processor.CompareByte(this.processor.PullLocalByte(0x52), 0x17);
-			if (this.processor.FlagSet.IsNotEqual) goto L2feb;
-			goto L2e67;
-
-		L2feb:
-			if (participantIdx == 0)
-				goto L2e67;
-
+			// Landing ends the moves; a ship takes its cargo along
+			TakeCargoAlong(participantIdx);
 		L2ff4:
 			this.processor.TestBitsByte(this.processor.PullLocalByte(0x40), 0x1);
 			if (this.processor.FlagSet.IsNotEqual) goto L2ffd;
@@ -4261,6 +4072,133 @@ namespace Civilization1Remaster.Game
 				if (participantIdx != person)
 					this.troops.Assign(participantIdx, troopIdx, UnitMemory.LeftoverSteps, 0);
 			}
+		}
+
+		/// <summary>
+		/// After the move: a unit (not a plane) coming from the sea onto land has no moves left; a ship that carries units (or a
+		/// carrier) takes its cargo along (0x14 the next unit of its old stack, 0x4a counts up to 20, 0x3c the units taken): land
+		/// units (planes for a carrier) that are sentried, or come from the sea, or (computer) without orders and in a stack move
+		/// with it, sentried on a transport, the planes with one round of fuel less; until the room is full (a carrier and the
+		/// barbarians take all). The locals of HandlePlayerTurn are used as in the original.
+		/// </summary>
+		private void TakeCargoAlong(short participantIdx)
+		{
+			short troopIdx = (short)this.processor.PullLocalWord(0x32);
+			ushort unit = (ushort)(participantIdx * UnitMemory.ParticipantStride + troopIdx * UnitMemory.TroopStride);
+			ushort player = (ushort)(participantIdx * UnitMemory.ParticipantStride);
+
+			if (this.processor.PullLocalWord(0x34) == MapRules.OceanTerrain && this.processor.PullLocalWord(0x3e) != MapRules.OceanTerrain)
+			{
+				this.processor.RegSource.Value16 = unit;
+				this.processor.RegBase.Value16 = (ushort)(this.troops.TroopKind(participantIdx, troopIdx) * UnitKindTable.Stride);
+
+				if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) != UnitKindTable.AirUnits)
+					this.troops.Assign(participantIdx, troopIdx, UnitMemory.LeftoverSteps, 0);
+			}
+
+			this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
+			this.processor.RegSource.Value16 = player;
+			this.processor.EmitLocalByte(0x52, this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind));
+
+			if ((UnitKindTable.Field(this.processor, (sbyte)this.processor.PullLocalByte(0x52), UnitKindTable.FerryRoom) == 0 &&
+				this.processor.PullLocalByte(0x52) != UnitKindTable.Carrier) || this.processor.PullLocalWord(0x14) == 0xffff)
+			{
+				return;
+			}
+
+			this.processor.RegAcc.Value16 = 0;
+			this.processor.EmitLocalWord(0x4a, 0);
+			this.processor.EmitLocalWord(0x3c, 0);
+
+			while (true)
+			{
+				short member = (short)this.processor.PullLocalWord(0x14);
+				this.processor.RegSource.Value16 = player;
+				this.processor.RegDest.Value16 = (ushort)(member * UnitMemory.TroopStride + player);
+				this.processor.EmitLocalWord(0x4c, (ushort)this.troops.PullSigned(participantIdx, member, UnitMemory.FollowingInStack));
+
+				// A transport takes land units, a carrier (no room) planes
+				ushort cargoGroup = (ushort)(this.troops.KindField(participantIdx, troopIdx, UnitKindTable.FerryRoom) == 0 ? 1 : 0);
+				this.processor.RegCount.Value16 = cargoGroup;
+				this.processor.RegBase.Value16 = (ushort)(this.troops.TroopKind(participantIdx, member) * UnitKindTable.Stride);
+
+				if (cargoGroup == this.troops.KindField(participantIdx, member, UnitKindTable.LandGroup))
+				{
+					byte status = this.troops.Pull(participantIdx, member, UnitMemory.Status);
+					bool taken = (status & 1) != 0 || this.processor.PullLocalWord(0x34) == MapRules.OceanTerrain;
+
+					if (!taken && participantIdx != this.owner.World.PersonParticipantIdx && (status & 0xc) == 0)
+					{
+						this.processor.RegBase.Value16 = (ushort)(member * UnitMemory.TroopStride);
+						this.processor.RegSource.Value16 = player;
+						taken = this.troops.Pull(participantIdx, member, UnitMemory.FollowingInStack) != 0xff;
+					}
+
+					if (taken)
+						CarryUnit(participantIdx, troopIdx, member, player);
+				}
+
+				this.processor.EmitLocalWord(0x14, this.processor.PullLocalWord(0x4c));
+				this.processor.EmitLocalWord(0x4a, (ushort)(this.processor.PullLocalWord(0x4a) + 1));
+
+				if ((short)this.processor.PullLocalWord(0x4a) >= 0x14 || this.processor.PullLocalWord(0x14) == 0xffff)
+					return;
+
+				this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
+				this.processor.RegSource.Value16 = player;
+				this.processor.EmitLocalByte(0x52, this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind));
+				this.processor.RegBase.Value16 = (ushort)((sbyte)this.processor.PullLocalByte(0x52) * UnitKindTable.Stride);
+				this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x3c);
+
+				if ((short)UnitKindTable.Field(this.processor, (sbyte)this.processor.PullLocalByte(0x52), UnitKindTable.FerryRoom) <= (short)this.processor.PullLocalWord(0x3c) &&
+					this.processor.PullLocalByte(0x52) != UnitKindTable.Carrier && participantIdx != 0)
+				{
+					return;
+				}
+			}
+		}
+
+		/// <summary>One unit of the cargo moves along with the ship (see TakeCargoAlong)</summary>
+		private void CarryUnit(short participantIdx, short troopIdx, short member, ushort player)
+		{
+			this.owner.MapOps.DiscardUnitFromTile(participantIdx,
+				this.processor.PullLocalSignedWord(0x14),
+				this.processor.PullLocalSignedWord(0x22),
+				this.processor.PullLocalSignedWord(0x2a));
+
+			this.owner.MapOps.SituateUnitOnTile(participantIdx,
+				this.processor.PullLocalSignedWord(0x14),
+				this.processor.PullLocalSignedWord(0x1c),
+				this.processor.PullLocalSignedWord(0x26));
+
+			this.processor.RegSource.Value16 = (ushort)(player + member * UnitMemory.TroopStride);
+			this.troops.Assign(participantIdx, member, UnitMemory.Horiz, this.processor.PullLocalByte(0x1c));
+			this.troops.Assign(participantIdx, member, UnitMemory.Vert, this.processor.PullLocalByte(0x26));
+			this.troops.Assign(participantIdx, member, UnitMemory.ShownToParticipants, 0);
+			this.troops.Assign(participantIdx, member, UnitMemory.TravelHeading, 0xff);
+
+			this.processor.RegSource.Value16 = player;
+			this.processor.RegBase.Value16 = (ushort)(this.troops.TroopKind(participantIdx, troopIdx) * UnitKindTable.Stride);
+
+			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.FerryRoom) != 0)
+			{
+				this.processor.RegBase.Value16 = (ushort)(member * UnitMemory.TroopStride);
+				this.troops.Assign(participantIdx, member, UnitMemory.Status, (byte)(this.troops.Pull(participantIdx, member, UnitMemory.Status) | 1));
+			}
+
+			// A plane on a carrier: a round of fuel less
+			this.processor.RegSource.Value16 = (ushort)(player + member * UnitMemory.TroopStride);
+			this.processor.RegBase.Value16 = (ushort)(this.troops.TroopKind(participantIdx, member) * UnitKindTable.Stride);
+			this.processor.RegDest.Value16 = this.troops.KindField(participantIdx, member, UnitKindTable.RoundsAway);
+
+			if (this.processor.RegDest.Value16 != 0)
+			{
+				this.processor.RegAcc.Value16 = this.processor.RegDest.Value16;
+				this.processor.RegAcc.LowByte = (byte)(this.processor.RegAcc.LowByte - 1);
+				this.troops.Assign(participantIdx, member, UnitMemory.UnusualSteps, this.processor.RegAcc.LowByte);
+			}
+
+			this.processor.EmitLocalWord(0x3c, (ushort)(this.processor.PullLocalWord(0x3c) + 1));
 		}
 
 		/// <summary>
