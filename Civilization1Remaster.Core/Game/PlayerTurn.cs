@@ -201,105 +201,9 @@ namespace Civilization1Remaster.Game
 			if (!PayForMove(participantIdx))
 				goto L3365;
 		L2884:
-			if (participantIdx == this.owner.World.PersonParticipantIdx)
-				goto L28ff;
-
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.AddScaledToSource(0xc, this.processor.PullLocalWord(0x32));
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81dc)), 0xff);
-			if (this.processor.FlagSet.IsNotEqual) goto L28a9;
-			goto L28e8;
-
-		L28a9:
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81dc));
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegAcc.Value16 = this.processor.BitXorWord(this.processor.RegAcc.Value16, 0x4);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x24));
-			if (this.processor.FlagSet.IsEqual) goto L28b9;
-			goto L28e8;
-
-		L28b9:
-			this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, this.processor.PullLocalSignedWord(0x32), 2);
-
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x2);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L28d3;
-			goto L28e8;
-
-		L28d3:
-			this.processor.RegAcc.LowByte = 0xff;
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81dc), this.processor.RegAcc.LowByte);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81da), this.processor.RegAcc.LowByte);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d8), 0x0);
-			goto L3365;
-
-		L28e8:
-			this.processor.RegAcc.Value16 = 0xc;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullLocalWord(0x32));
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.RegAcc.LowByte = this.processor.PullLocalByte(0x24);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81dc), this.processor.RegAcc.LowByte);
-
-		L28ff:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x18), 0xffff);
-			if (this.processor.FlagSet.IsNotEqual) goto L2908;
-			goto L29a0;
-
-		L2908:
-			if (participantIdx != this.processor.PullGlobalSignedWord(0xd20a) ||
-				participantIdx == this.owner.World.PersonParticipantIdx)
-				goto L29a0;
-
-			this.processor.TestBitsByte(this.processor.PullLocalByte(0x40), 0x1);
-			if (this.processor.FlagSet.IsEqual) goto L2927;
-			goto L29a0;
-
-		L2927:
-			this.processor.RegAcc.Value16 = 0x600;
-			this.processor.ScaleAccumulatorToSource((ushort)participantIdx);
-			this.processor.AddScaledToSource(0xc, this.processor.PullLocalWord(0x32));
-			this.processor.RegAcc.LowByte = 0x22;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d7)));
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegDest.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1138));
-			this.processor.CompareWord(this.processor.RegDest.Value16, 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L294b;
-			goto L295d;
-
-		L294b:
-			this.processor.CompareWord(this.processor.RegDest.Value16, 0x1);
-			if (this.processor.FlagSet.IsEqual) goto L2953;
-			goto L29a0;
-
-		L2953:
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d9)), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L295d;
-			goto L29a0;
-
-		L295d:
-			this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, this.processor.PullLocalSignedWord(0x18), 2);
-
-			this.processor.EmitLocalWord(0x3a, this.processor.RegAcc.Value16);
-			this.processor.ScaleIndexToBase(0xc, this.processor.PullLocalWord(0x32));
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d8)), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L298c;
-			goto L2992;
-
-		L298c:
-			this.processor.RegAcc.Value16 = 0x4;
-			goto L2995;
-
-		L2992:
-			this.processor.RegAcc.Value16 = 0x2;
-
-		L2995:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x3a));
-			if (this.processor.FlagSet.IsLessOrEqual) goto L299d;
-			goto L29a0;
-
-		L299d:
-			goto L3365;
-
+			// A computer unit does not turn back nor crowd an own stack
+			if (!ComputerMayMove(participantIdx))
+				goto L3365;
 		L29a0:
 			this.owner.VideoCard.ObtainDot(2, 
 				this.processor.PullLocalSignedWord(0x1c) + 80,
@@ -4448,6 +4352,65 @@ namespace Civilization1Remaster.Game
 				this.troops.Assign(participantIdx, troopIdx, UnitMemory.LeftoverSteps, 0);
 
 			return true;
+		}
+
+		/// <summary>
+		/// The moves of a computer unit: one that would turn back (the opposite of its last heading) in a stack of up to 2 units
+		/// forgets its heading and destination and stops (written through SI as TallyUnitsByDomainInStack leaves it, as the
+		/// original does); else the direction 0x24 becomes its heading. A computer land unit (or a plane with fuel) does not join
+		/// an own stack outside a city of 4 units or more (2 or more without moves). False: no move (L3365). The locals of
+		/// HandlePlayerTurn are used as in the original.
+		/// </summary>
+		private bool ComputerMayMove(short participantIdx)
+		{
+			short troopIdx = (short)this.processor.PullLocalWord(0x32);
+			ushort unit = (ushort)(participantIdx * UnitMemory.ParticipantStride + troopIdx * UnitMemory.TroopStride);
+			short person = this.owner.World.PersonParticipantIdx;
+
+			if (participantIdx != person)
+			{
+				this.processor.RegSource.Value16 = unit;
+
+				if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.TravelHeading) != 0xff &&
+					(ushort)(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.TravelHeading) ^ 4) == this.processor.PullLocalWord(0x24) &&
+					(short)this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, this.processor.PullLocalSignedWord(0x32), 2) <= 2)
+				{
+					this.processor.RegAcc.LowByte = 0xff;
+					this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + UnitMemory.Origin + UnitMemory.TravelHeading), 0xff);
+					this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + UnitMemory.Origin + UnitMemory.TravelHoriz), 0xff);
+					this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + UnitMemory.Origin + UnitMemory.LeftoverSteps), 0);
+
+					return false;
+				}
+
+				this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
+				this.processor.RegSource.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride);
+				this.processor.RegAcc.LowByte = this.processor.PullLocalByte(0x24);
+				this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHeading, this.processor.PullLocalByte(0x24));
+			}
+
+			if (this.processor.PullLocalWord(0x18) == 0xffff || participantIdx != this.processor.PullGlobalSignedWord(0xd20a) || participantIdx == person ||
+				(this.processor.PullLocalByte(0x40) & 1) != 0)
+			{
+				return true;
+			}
+
+			this.processor.RegSource.Value16 = unit;
+			this.processor.RegBase.Value16 = (ushort)(this.troops.TroopKind(participantIdx, troopIdx) * UnitKindTable.Stride);
+			this.processor.RegDest.Value16 = this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup);
+
+			if (this.processor.RegDest.Value16 != UnitKindTable.LandUnits &&
+				(this.processor.RegDest.Value16 != UnitKindTable.AirUnits || this.troops.Pull(participantIdx, troopIdx, UnitMemory.UnusualSteps) == 0))
+			{
+				return true;
+			}
+
+			this.processor.EmitLocalWord(0x3a, this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, this.processor.PullLocalSignedWord(0x18), 2));
+			this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
+			this.processor.RegSource.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride);
+			this.processor.RegAcc.Value16 = (ushort)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.LeftoverSteps) != 0 ? 4 : 2);
+
+			return (short)this.processor.RegAcc.Value16 > (short)this.processor.PullLocalWord(0x3a);
 		}
 
 		/// <summary>

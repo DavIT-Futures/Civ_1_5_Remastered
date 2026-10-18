@@ -843,13 +843,19 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   polach, ruchy 1 – 9 przy 0xdf60 = 1, transportowiec na ląd, broń jądrowa do obcego miasta, bombowiec do pustego obcego
   miasta. Klawisze po ruchu zerują ruchy jednostki (etykieta darmowego ruchu z konfiguracji, mutacje go sprawdzają);
   koszt 3 dla statków i dolną granicę 0 łapie test tur komputera.
+- Porcja 103 (2026-10-19): czternasty kawałek `HandlePlayerTurn` – `ComputerMayMove` (L2884 – L29a0): jednostka komputera,
+  która zawróciłaby (przeciwny kierunek do ostatniego) w stosie do 2 jednostek, zapomina kierunek i cel i stoi (zapis przez SI
+  zostawione przez `TallyUnitsByDomainInStack`, jak w oryginale), inaczej kierunek 0x24 staje się jej kierunkiem; jednostka
+  lądowa komputera (albo samolot z paliwem) nie dołącza do własnego stosu poza miastem z 4 jednostkami (2 bez ruchów). Test:
+  istniejące testy tur komputera (`HandlePlayerTurnOrdersMatchOriginalCode`) łapią mutacje; niesprawdzona granica stosu 4
+  (`? 4 : 2` → `? 5 : 2`).
 
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
 (`HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-18 (po porcji 102): 2 metody w stylu asm (`HandlePlayerTurn`, `HandleCity`); `ShiftAIUnit` gotowa. `HandlePlayerTurn` przepisywana kawałkami od początku (następny: ruch L2884 – L3365, potem L3365 – koniec; testy z `HumanTurnScript`). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
+Stan 2026-10-18 (po porcji 103): 2 metody w stylu asm (`HandlePlayerTurn`, `HandleCity`); `ShiftAIUnit` gotowa. `HandlePlayerTurn` przepisywana kawałkami od początku (następny: ruch L29a0 – L3365, potem L3365 – koniec; testy z `HumanTurnScript`). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
