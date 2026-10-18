@@ -129,198 +129,34 @@ namespace Civilization1Remaster.Game
 			if (CarryOutOrder(participantIdx))
 				goto L1c10;
 		L1b5e:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x32), 0x80);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L1b68;
-			goto L1b71;
+			// Without a unit only the marked tile moves
+			if ((short)this.processor.PullLocalWord(0x32) >= 0x80 && this.processor.PullLocalWord(0x4) == 0)
+				goto L3365;
 
-		L1b68:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L1b71;
-			goto L3365;
-
-		L1b71:
+			// A move: the direction of the order (1 - 8 from GoTo and the computer, the arrows, the keypad); 'c' centers the view
 			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x44);
-			goto L32e4;
 
-		L1b77:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L1b80;
-			goto L1b9c;
+			if (this.processor.PullLocalWord(0x44) == 'c')
+			{
+				CenterView(participantIdx);
+				goto L3365;
+			}
 
-		L1b80:
-			this.owner.MapOps.FocusMapView(participantIdx,
-				this.processor.PullLocalSignedWord(0xe) - 7,
-				this.processor.PullLocalSignedWord(0x12) - 6);
+			if (KeyDirection(this.processor.PullLocalWord(0x44)) == 0)
+				goto L3365;
 
-			goto L1bb5;
-
-		L1b9c:
-			this.owner.MapOps.FocusMapView(participantIdx,
-				this.processor.PullLocalSignedWord(0x2c) - 7,
-				this.processor.PullLocalSignedWord(0x30) - 6);
-
-		L1bb5:
-			goto L3365;
-
-		L1bb8:
-			this.processor.EmitLocalWord(0x24, 0x8);
-			goto L1c10;
-
-		L1bc3:
-			this.processor.EmitLocalWord(0x24, 0x1);
-			goto L1c10;
-
-		L1bce:
-			this.processor.EmitLocalWord(0x24, 0x2);
-			goto L1c10;
-
-		L1bd9:
-			this.processor.EmitLocalWord(0x24, 0x7);
-			goto L1c10;
-
-		L1be4:
-			this.processor.EmitLocalWord(0x24, 0x3);
-			goto L1c10;
-
-		L1bef:
-			this.processor.EmitLocalWord(0x24, 0x6);
-			goto L1c10;
-
-		L1bfa:
-			this.processor.EmitLocalWord(0x24, 0x5);
-			goto L1c10;
-
-		L1c05:
-			this.processor.EmitLocalWord(0x24, 0x4);
+			this.processor.EmitLocalWord(0x24, KeyDirection(this.processor.PullLocalWord(0x44)));
 
 		L1c10:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L1c19;
-			goto L1cb0;
+			// The marked tile moves, or a barbarian pillages a tile of the human on its way, or the unit moves
+			if (this.processor.PullLocalWord(0x4) != 0)
+			{
+				MoveMarkedTile(participantIdx);
+				goto L3365;
+			}
 
-		L1c19:
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.ChartSight[this.processor.PullLocalWord(0xe),
-				this.processor.PullLocalWord(0x12)];
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegData.Value16 = 0x1;
-			this.processor.RegCount.LowByte = (byte)participantIdx;
-			this.processor.RegData.Value16 = this.processor.ShiftLeftWord(this.processor.RegData.Value16, this.processor.RegCount.LowByte);
-			this.processor.TestBitsWord(this.processor.RegAcc.Value16, this.processor.RegData.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L1c3d;
-			goto L1c4b;
-
-		L1c3d:
-			this.owner.MapOps.RepaintMapTile(
-				this.processor.PullLocalSignedWord(0xe),
-				this.processor.PullLocalSignedWord(0x12));
-
-		L1c4b:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x24);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-
-			this.owner.Routing.TunePosition(
-				this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1882)) + 
-					this.processor.PullLocalSignedWord(0xe));
-
-			this.processor.EmitLocalWord(0xe, this.processor.RegAcc.Value16);
-			
-			this.owner.Helpers.VerifyValueSpan(
-				this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x18e4)) +
-					this.processor.PullLocalSignedWord(0x12),
-				0, 49);
-
-			this.processor.EmitLocalWord(0x12, this.processor.RegAcc.Value16);
-
-			VerifyPositionOnScreen(this.processor.PullLocalSignedWord(0xe),
-				this.processor.PullLocalSignedWord(0x12));
-
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L1c94;
-			goto L1cad;
-
-		L1c94:
-			this.owner.MapOps.FocusMapView(participantIdx,
-				this.processor.PullLocalSignedWord(0xe) - 8,
-				this.processor.PullLocalSignedWord(0x12) - 7);
-
-		L1cad:
-			goto L3365;
-
-		L1cb0:
-			if (participantIdx != 0)
-				goto L1d96;
-
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.AddScaledToSource(0xc, this.processor.PullLocalWord(0x32));
-			this.processor.RegSource.Value16 = this.processor.SumWord(this.processor.RegSource.Value16, 0x81d7);
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, this.processor.RegSource.Value16), 0x1a);
-			if (this.processor.FlagSet.IsNotEqual) goto L1cd5;
-			goto L1d96;
-
-		L1cd5:
-			this.owner.MapOps.ObtainTileImprovements(
-				this.processor.PullLocalSignedWord(0x2c),
-				this.processor.PullLocalSignedWord(0x30));
-
-			this.processor.EmitLocalWord(0x40, this.processor.RegAcc.Value16);
-			this.processor.TestBitsByte(this.processor.PullLocalByte(0x40), 0x1);
-			if (this.processor.FlagSet.IsEqual) goto L1cef;
-			goto L1d96;
-
-		L1cef:
-			this.processor.TestBitsByte(this.processor.PullLocalByte(0x40), 0x6);
-			if (this.processor.FlagSet.IsNotEqual) goto L1cf8;
-			goto L1d96;
-
-		L1cf8:
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, this.processor.RegSource.Value16), 0x3);
-			if (this.processor.FlagSet.IsNotEqual) goto L1d00;
-			goto L1d96;
-
-		L1d00:
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, this.processor.RegSource.Value16), 0x7);
-			if (this.processor.FlagSet.IsNotEqual) goto L1d08;
-			goto L1d96;
-
-		L1d08:
-			this.owner.Helpers.LocateNearestCity(
-				this.processor.PullLocalSignedWord(0x2c),
-				this.processor.PullLocalSignedWord(0x30));
-
-			if (this.owner.World.Towns[this.processor.RegAcc.Value16].ParticipantIdx == this.owner.World.PersonParticipantIdx) goto L1d2b;
-			goto L1d96;
-
-		L1d2b:
-			this.owner.MapOps.DiscardTileImprovements(6,
-				this.processor.PullLocalSignedWord(0x2c),
-				this.processor.PullLocalSignedWord(0x30));
-
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.ChartSight[this.processor.PullLocalWord(0x2c),
-				this.processor.PullLocalWord(0x30)];
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegData.Value16 = 0x1;
-			this.processor.RegCount.LowByte = (byte)(this.owner.World.PersonParticipantIdx & 0xff);
-			this.processor.RegData.Value16 = this.processor.ShiftLeftWord(this.processor.RegData.Value16, this.processor.RegCount.LowByte);
-			this.processor.TestBitsWord(this.processor.RegAcc.Value16, this.processor.RegData.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L1d62;
-			goto L1d7e;
-
-		L1d62:
-			this.owner.MapOps.KeepKnownTileImprovements(
-				this.processor.PullLocalSignedWord(0x2c),
-				this.processor.PullLocalSignedWord(0x30));
-
-			this.owner.MapOps.RepaintMapTile(
-				this.processor.PullLocalSignedWord(0x2c),
-				this.processor.PullLocalSignedWord(0x30));
-
-		L1d7e:
-			this.processor.RegAcc.Value16 = 0xc;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullLocalWord(0x32));
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d8), 0x0);
-			goto L3365;
-
+			if (BarbarianPillages(participantIdx))
+				goto L3365;
 		L1d96:
 			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x24);
 			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
@@ -2237,91 +2073,6 @@ namespace Civilization1Remaster.Game
 		L32e1:
 			goto L3365;
 
-		L32e4:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x8);
-			if (this.processor.FlagSet.IsNotEqual) goto L32ec;
-			goto L1bb8;
-
-		L32ec:
-			if (this.processor.FlagSet.IsLessOrEqual) goto L32f1;
-			goto L3312;
-
-		L32f1:
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, 0x1);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x6);
-			if (this.processor.FlagSet.IsBelowOrEqual) goto L32fc;
-			goto L3365;
-
-		L32fc:
-			switch(this.processor.RegAcc.Value16)
-			{
-				case 0:
-					goto L1bc3;
-				case 1:
-					goto L1bce;
-				case 2:
-					goto L1be4;
-				case 3:
-					goto L1c05;
-				case 4:
-					goto L1bfa;
-				case 5:
-					goto L1bef;
-				case 6:
-					goto L1bd9;
-			}
-
-		L3312:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x4900);
-			if (this.processor.FlagSet.IsNotEqual) goto L331a;
-			goto L1bce;
-
-		L331a:
-			if (this.processor.FlagSet.IsLessOrEqual) goto L331f;
-			goto L333a;
-
-		L331f:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x63);
-			if (this.processor.FlagSet.IsNotEqual) goto L3327;
-			goto L1b77;
-
-		L3327:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x4700);
-			if (this.processor.FlagSet.IsNotEqual) goto L332f;
-			goto L1bb8;
-
-		L332f:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x4800);
-			if (this.processor.FlagSet.IsNotEqual) goto L3337;
-			goto L1bc3;
-
-		L3337:
-			goto L3365;
-
-		L333a:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x4b00);
-			if (this.processor.FlagSet.IsNotEqual) goto L3342;
-			goto L1bd9;
-
-		L3342:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x4d00);
-			if (this.processor.FlagSet.IsNotEqual) goto L334a;
-			goto L1be4;
-
-		L334a:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x4f00);
-			if (this.processor.FlagSet.IsNotEqual) goto L3352;
-			goto L1bef;
-
-		L3352:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x5000);
-			if (this.processor.FlagSet.IsNotEqual) goto L335a;
-			goto L1bfa;
-
-		L335a:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x5100);
-			if (this.processor.FlagSet.IsNotEqual) goto L3365;
-			goto L1c05;
 
 		L3365:
 			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x44);
@@ -4867,6 +4618,122 @@ namespace Civilization1Remaster.Game
 
 				RepaintUnitIfVisible(participantIdx, this.processor.PullLocalSignedWord(0x32));
 			}
+		}
+
+		/// <summary>
+		/// The direction (1 - 8) of a move order: the numbers 1 - 8 (GoTo and the computer), Home / Up / PgUp / Right / PgDn /
+		/// Down / End / Left; 0 for other keys (the signed comparisons of the original: no direction from 0x8000 on)
+		/// </summary>
+		private static ushort KeyDirection(ushort key)
+		{
+			return (short)key switch
+			{
+				>= 1 and <= 8 => key,
+				0x4700 => 8,
+				0x4800 => 1,
+				0x4900 => 2,
+				0x4d00 => 3,
+				0x5100 => 4,
+				0x5000 => 5,
+				0x4f00 => 6,
+				0x4b00 => 7,
+				_ => 0,
+			};
+		}
+
+		/// <summary>'c': the view centers on the marked tile (0x4, at 0xe / 0x12) or on the unit (0x2c / 0x30)</summary>
+		private void CenterView(short participantIdx)
+		{
+			if (this.processor.PullLocalWord(0x4) != 0)
+			{
+				this.owner.MapOps.FocusMapView(participantIdx,
+					this.processor.PullLocalSignedWord(0xe) - 7,
+					this.processor.PullLocalSignedWord(0x12) - 6);
+			}
+			else
+			{
+				this.owner.MapOps.FocusMapView(participantIdx,
+					this.processor.PullLocalSignedWord(0x2c) - 7,
+					this.processor.PullLocalSignedWord(0x30) - 6);
+			}
+		}
+
+		/// <summary>
+		/// The marked tile (0xe / 0x12) moves one step in the direction 0x24 (repainted where it was when the player sees it,
+		/// kept off the poles); off the map view the view moves. SI as the original leaves it.
+		/// </summary>
+		private void MoveMarkedTile(short participantIdx)
+		{
+			if (((sbyte)this.owner.World.ChartSight[this.processor.PullLocalWord(0xe), this.processor.PullLocalWord(0x12)] & (1 << (byte)participantIdx)) != 0)
+			{
+				this.owner.MapOps.RepaintMapTile(
+					this.processor.PullLocalSignedWord(0xe),
+					this.processor.PullLocalSignedWord(0x12));
+			}
+
+			this.processor.RegSource.Value16 = (ushort)(this.processor.PullLocalWord(0x24) << 1);
+
+			this.owner.Routing.TunePosition(
+				this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1882)) +
+					this.processor.PullLocalSignedWord(0xe));
+
+			this.processor.EmitLocalWord(0xe, this.processor.RegAcc.Value16);
+
+			this.owner.Helpers.VerifyValueSpan(
+				this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x18e4)) +
+					this.processor.PullLocalSignedWord(0x12),
+				0, 49);
+
+			this.processor.EmitLocalWord(0x12, this.processor.RegAcc.Value16);
+
+			if (VerifyPositionOnScreen(this.processor.PullLocalSignedWord(0xe), this.processor.PullLocalSignedWord(0x12)) == 0)
+			{
+				this.owner.MapOps.FocusMapView(participantIdx,
+					this.processor.PullLocalSignedWord(0xe) - 8,
+					this.processor.PullLocalSignedWord(0x12) - 7);
+			}
+		}
+
+		/// <summary>
+		/// A barbarian land unit (not a diplomat, legion or knights) leaving an irrigated or mined tile outside a city nearest
+		/// to a city of the human pillages it and has no moves left (true). The locals of HandlePlayerTurn are used as in the
+		/// original.
+		/// </summary>
+		private bool BarbarianPillages(short participantIdx)
+		{
+			if (participantIdx != 0)
+				return false;
+
+			short troopIdx = (short)this.processor.PullLocalWord(0x32);
+			this.processor.RegSource.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride + UnitMemory.Origin + UnitMemory.Kind);
+			byte kind = this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind);
+
+			if (kind == UnitKindTable.Diplomat)
+				return false;
+
+			short horizLoc = (short)this.processor.PullLocalWord(0x2c);
+			short vertLoc = (short)this.processor.PullLocalWord(0x30);
+			this.processor.EmitLocalWord(0x40, this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc));
+
+			if ((this.processor.PullLocalByte(0x40) & 1) != 0 || (this.processor.PullLocalByte(0x40) & 6) == 0 || kind == 3 || kind == 7)
+				return false;
+
+			if (this.owner.World.Towns[this.owner.Helpers.LocateNearestCity(horizLoc, vertLoc)].ParticipantIdx != this.owner.World.PersonParticipantIdx)
+				return false;
+
+			this.owner.MapOps.DiscardTileImprovements(6, horizLoc, vertLoc);
+
+			if (((sbyte)this.owner.World.ChartSight[this.processor.PullLocalWord(0x2c), this.processor.PullLocalWord(0x30)] & (1 << (this.owner.World.PersonParticipantIdx & 0xff))) != 0)
+			{
+				this.owner.MapOps.KeepKnownTileImprovements(horizLoc, vertLoc);
+				this.owner.MapOps.RepaintMapTile(horizLoc, vertLoc);
+			}
+
+			this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
+			this.processor.RegSource.Value16 = 0;
+			this.troops.Assign(participantIdx, troopIdx, UnitMemory.LeftoverSteps, 0);
+
+			return true;
 		}
 
 		/// <summary>

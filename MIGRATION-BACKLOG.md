@@ -790,13 +790,21 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   etykiety obsługi klawiszy L0d75 – L19bf. Test (`BatchNinetySixDifferentialTests`, `HumanTurnScript`): wszystkie klawisze
   rozkazów (bez 'g' i 'D'), wielkości miast 7 – 11, pierwsza ruszająca się jednostka jako osadnicy (czasem w mieście).
   Niesprawdzone: rząd 0x2f (`>= 0x30` → `>= 0x2f`; mapy z zapisów nie mają tam lądu).
+- Porcja 97 (2026-10-19): ósmy kawałek `HandlePlayerTurn` – klawisze ruchu: L1b5e (bez jednostki porusza się tylko
+  zaznaczone pole), rozdział L32e4 jako `KeyDirection` (kierunki 1 – 8 od GoTo i komputera, strzałki i klawiatura
+  numeryczna; porównania ze znakiem jak w oryginale – od 0x8000 brak kierunku) i 'c' (`CenterView`), znikają etykiety
+  kierunków L1bb8 – L1c05; L1c10: `MoveMarkedTile` (zaznaczone pole o krok, widok przesuwa się poza ekranem) i
+  `BarbarianPillages` (jednostka barbarzyńców – nie dyplomata, legion ani rycerze – schodząca z nawadnianego / górniczego pola
+  poza miastem, najbliżej miasta człowieka, niszczy je i traci ruchy). Test (`BatchNinetySevenDifferentialTests`):
+  strzałki, klawiatura numeryczna, 'c', 'g' – strzałki – 'g', tura barbarzyńców z jedną jednostką na ulepszonym polu obok
+  miasta człowieka. Niesprawdzone: aktywna jednostka 127 (`>= 0x80` → `>= 0x7f`), zaznaczone pole w rzędzie 49.
 
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
 (`HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-18 (po porcji 96): 2 metody w stylu asm (`HandlePlayerTurn`, `HandleCity`); `ShiftAIUnit` gotowa. `HandlePlayerTurn` przepisywana kawałkami od początku (następny: L1b5e i dalej – ruch jednostki po rozkazie, L1c10…; testy z `HumanTurnScript`). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
+Stan 2026-10-18 (po porcji 97): 2 metody w stylu asm (`HandlePlayerTurn`, `HandleCity`); `ShiftAIUnit` gotowa. `HandlePlayerTurn` przepisywana kawałkami od początku (następny: ruch jednostki L1d96 – L3365: pole docelowe, walka, dyplomaci, karawany, wejście do miasta; testy z `HumanTurnScript`). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
