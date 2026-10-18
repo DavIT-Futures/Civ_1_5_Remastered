@@ -765,13 +765,23 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   dzienniku – etykieta grabieży z `WipeDiplomacyFlags`. Mutacje równoważne / nieosiągalne: ruchy 0 przed `EliminateUnit`
   ('D'), typ < 0x1a → < 0x19 (broń jądrowa człowieka), `LeftoverSteps == 0` → `== 1` w grabieży (aktywna jednostka ma ruchy;
   1 tylko po ruchu po drodze), lotniskowiec w 'u' (brak w zapisach), `0x36 ^ 1` → `^ 3` (0x36 porównywane tylko z 0 i 2).
+- Porcja 94 (2026-10-18): piąty kawałek `HandlePlayerTurn` – klawisze 'h' (`OrderHome`: w mieście miasto macierzyste,
+  samolot leci do najbliższego własnego miasta – skok do L1c10 – a bez niego człowiek zapomina rozkaz, komputer traci
+  samolot), 'p' (`CleanPollution`: osadnicy sprzątają skażenie przez 4 tury, bez skażenia rozkaz zapomniany, inni –
+  pomoc) i 'f' (`FortifyOrBuildFortress`: jednostka lądowa fortyfikuje się – komputer w mieście bierze je jako macierzyste –
+  osadnicy z Construction budują twierdzę do obrony terenu 0x3e + 4; 0x3e to teren ostatnio klikniętego / sprawdzanego
+  pola, jak czyta oryginał). Test (`BatchNinetyFourDifferentialTests`, wzór 93): skażenie albo twierdza pod osadnikami,
+  ich licznik pracy, Construction, jednostki w miastach bez miasta macierzystego, pierwsza ruszająca się jednostka jako
+  bombowiec z 'h' na początku. Mutacje: równoważna `& 0xfd` → `& 0xfc` (bit 0 aktywnej jednostki jest 0); fortyfikacja
+  komputera w mieście łapie test tur komputera (`HandlePlayerTurnOrdersMatchOriginalCode`); niesprawdzona granica
+  `work > licznik` → `>=` (teren 0x3e nieznany w scenariuszu).
 
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
 (`HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-18 (po porcji 93): 2 metody w stylu asm (`HandlePlayerTurn`, `HandleCity`); `ShiftAIUnit` gotowa. `HandlePlayerTurn` przepisywana kawałkami od początku (następny: klawisze h L10bb, p L1180, f L1283, potem r L1400, i L158c, m L17c4, b L19bf, potem rozdział L1aed jako `switch`; test wzorem `BatchNinetyThreeDifferentialTests`). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
+Stan 2026-10-18 (po porcji 94): 2 metody w stylu asm (`HandlePlayerTurn`, `HandleCity`); `ShiftAIUnit` gotowa. `HandlePlayerTurn` przepisywana kawałkami od początku (następny: klawisze r L1400, i L158c, m L17c4, b L19bf, potem rozdział L1aed jako `switch`; test wzorem `BatchNinetyFourDifferentialTests`). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
