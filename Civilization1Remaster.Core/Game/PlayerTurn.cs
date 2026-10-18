@@ -205,142 +205,9 @@ namespace Civilization1Remaster.Game
 			if (!ComputerMayMove(participantIdx))
 				goto L3365;
 		L29a0:
-			this.owner.VideoCard.ObtainDot(2, 
-				this.processor.PullLocalSignedWord(0x1c) + 80,
-				this.processor.PullLocalSignedWord(0x26));
-
-			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L29c2;
-			goto L2b06;
-
-		L29c2:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x8);
-			if (this.processor.FlagSet.IsLess) goto L29cb;
-			goto L2b06;
-
-		L29cb:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x3e), 0xa);
-			if (this.processor.FlagSet.IsNotEqual) goto L29d4;
-			goto L2acb;
-
-		L29d4:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x34), 0xa);
-			if (this.processor.FlagSet.IsNotEqual) goto L29dd;
-			goto L2acb;
-
-		L29dd:
-			this.processor.RegAcc.Value16 = 0xc;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullLocalWord(0x32));
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d7)), 0x1a);
-			if (this.processor.FlagSet.IsLess) goto L29f7;
-			goto L2acb;
-
-		L29f7:
-			this.processor.TestBitsByte(this.processor.PullLocalByte(0x40), 0xf);
-			if (this.processor.FlagSet.IsNotEqual) goto L2a00;
-			goto L2acb;
-
-		L2a00:
-			this.processor.RegAcc.Value16 = (ushort)participantIdx;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L2a0b;
-			goto L2acb;
-
-		L2a0b:
-			if (participantIdx == this.owner.World.PersonParticipantIdx)
-				goto L2a21;
-
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L2a21;
-			goto L2acb;
-
-		L2a21:
-			this.processor.RegAcc.Value16 = 0x600;
-			this.processor.ScaleAccumulatorToSource((ushort)participantIdx);
-			this.processor.AddScaledToSource(0xc, this.processor.PullLocalWord(0x32));
-			this.processor.RegAcc.LowByte = 0x22;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d7)));
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1138)), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L2a43;
-			goto L2acb;
-
-		L2a43:
-			this.owner.MapOps.ObtainTileOwner(
-				this.processor.PullLocalSignedWord(0x1c),
-				this.processor.PullLocalSignedWord(0x26));
-
-			this.processor.CompareWord(this.processor.RegAcc.Value16, (ushort)participantIdx);
-			if (this.processor.FlagSet.IsNotEqual) goto L2a59;
-			goto L2acb;
-
-		L2a59:
-			if (participantIdx != this.owner.World.PersonParticipantIdx)
-				goto L2a92;
-
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81da), 0xff);
-			
-			this.owner.Combat.AffirmBreakTreaty(this.processor.PullLocalSignedWord(0x2));
-			
-			this.processor.RegAcc.Value16 = this.processor.IncrementWord(this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L2a7a;
-			goto L2a7d;
-
-		L2a7a:
-			goto L3365;
-
-		L2a7d:
-			this.owner.Politics.WipeDiplomacyFlags(participantIdx, this.processor.PullLocalSignedWord(0x2), 2);
-			
-			goto L2acb;
-
-		L2a92:
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x2), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L2a9d;
-			goto L2acb;
-
-		L2a9d:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x2);
-			this.processor.RegCount.LowByte = 0x4;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, this.processor.RegCount.LowByte);
-
-			this.processor.RegBase.Value16 = (ushort)participantIdx;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-
-			if ((this.owner.World.Participants[this.processor.PullLocalWord(0x2)].Relations[participantIdx] & 2) == 0)
-				goto L2acb;
-
-			this.processor.ScaleIndexToBase(0xc, this.processor.PullLocalWord(0x32));
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d8), 0x0);
-			goto L3365;
-
-		L2acb:
-			if (participantIdx == this.processor.PullLocalSignedWord(0x2))
-				goto L2b06;
-
-			this.owner.MapOps.ObtainTileImprovements(
-				this.processor.PullLocalSignedWord(0x1c),
-				this.processor.PullLocalSignedWord(0x26));
-
-			this.processor.TestBitsByte(this.processor.RegAcc.LowByte, 0xe);
-			if (this.processor.FlagSet.IsNotEqual) goto L2aeb;
-			goto L2b06;
-
-		L2aeb:
-			this.processor.RegAcc.Value16 = 0xc;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullLocalWord(0x32));
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.RegAcc.LowByte = 0x1;
-			this.processor.RegCount.LowByte = this.processor.PullLocalByte(0x2);
-			this.processor.RegAcc.LowByte = this.processor.ShiftLeftByte(this.processor.RegAcc.LowByte, this.processor.RegCount.LowByte);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81dd),
-				this.processor.BitOrByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81dd)), this.processor.RegAcc.LowByte));
-
+			// The territory of the tile: a treaty may stop the move
+			if (!EnterTerritory(participantIdx))
+				goto L3365;
 		L2b06:
 			this.owner.MapOps.ObtainTileOwnerBits(
 				this.processor.PullLocalSignedWord(0x1c),
@@ -4411,6 +4278,91 @@ namespace Civilization1Remaster.Game
 			this.processor.RegAcc.Value16 = (ushort)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.LeftoverSteps) != 0 ? 4 : 2);
 
 			return (short)this.processor.RegAcc.Value16 > (short)this.processor.PullLocalWord(0x3a);
+		}
+
+		/// <summary>
+		/// The territory of the tile of the move (0x2: the player on the map layer 2 at x + 80): a land unit (not a diplomat
+		/// or caravan) going on land onto an improved tile of another player's territory, between the human and another player,
+		/// where no own unit is: the human may break the treaty (the destination forgotten; kept: no move), a computer unit at
+		/// peace with the human stops (no moves). On an improved tile of another territory the unit is shown to that player.
+		/// False: no move (L3365). The locals of HandlePlayerTurn are used as in the original.
+		/// </summary>
+		private bool EnterTerritory(short participantIdx)
+		{
+			short troopIdx = (short)this.processor.PullLocalWord(0x32);
+			ushort unit = (ushort)(participantIdx * UnitMemory.ParticipantStride + troopIdx * UnitMemory.TroopStride);
+			short person = this.owner.World.PersonParticipantIdx;
+			short horizLoc = (short)this.processor.PullLocalWord(0x1c);
+			short vertLoc = (short)this.processor.PullLocalWord(0x26);
+
+			this.owner.VideoCard.ObtainDot(2, horizLoc + 80, vertLoc);
+			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
+
+			if (this.processor.PullLocalWord(0x2) == 0 || (short)this.processor.PullLocalWord(0x2) >= 8)
+				return true;
+
+			short owner = (short)this.processor.PullLocalWord(0x2);
+
+			if (this.processor.PullLocalWord(0x3e) != MapRules.OceanTerrain && this.processor.PullLocalWord(0x34) != MapRules.OceanTerrain &&
+				MayTreatyStop(participantIdx, troopIdx, unit, owner, person))
+			{
+				if (participantIdx == person)
+				{
+					this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHoriz, 0xff);
+
+					if (this.owner.Combat.AffirmBreakTreaty(this.processor.PullLocalSignedWord(0x2)) == 0xffff)
+						return false;
+
+					this.owner.Politics.WipeDiplomacyFlags(participantIdx, this.processor.PullLocalSignedWord(0x2), 2);
+				}
+				else if (this.processor.PullLocalWord(0x2) == (ushort)person)
+				{
+					this.processor.RegSource.Value16 = (ushort)(owner << 4);
+					this.processor.RegBase.Value16 = (ushort)(participantIdx << 1);
+
+					if ((this.owner.World.Participants[this.processor.PullLocalWord(0x2)].Relations[participantIdx] & 2) != 0)
+					{
+						this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
+						this.processor.RegSource.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride);
+						this.troops.Assign(participantIdx, troopIdx, UnitMemory.LeftoverSteps, 0);
+
+						return false;
+					}
+				}
+			}
+
+			if (participantIdx != (short)this.processor.PullLocalWord(0x2) && (this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 0xe) != 0)
+			{
+				this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
+				this.processor.RegSource.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride);
+				this.processor.RegAcc.LowByte = (byte)(1 << (this.processor.PullLocalByte(0x2) & 0x1f));
+				this.troops.Assign(participantIdx, troopIdx, UnitMemory.ShownToParticipants,
+					(byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.ShownToParticipants) | this.processor.RegAcc.LowByte));
+			}
+
+			return true;
+		}
+
+		/// <summary>
+		/// The conditions of EnterTerritory after the terrains: a land unit (not a diplomat or caravan) onto an improved tile of
+		/// another player's territory, between the human and another player, not onto a tile of its own player
+		/// </summary>
+		private bool MayTreatyStop(short participantIdx, short troopIdx, ushort unit, short owner, short person)
+		{
+			this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
+			this.processor.RegSource.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride);
+
+			if (this.troops.TroopKind(participantIdx, troopIdx) >= UnitKindTable.Diplomat || (this.processor.PullLocalByte(0x40) & 0xf) == 0 ||
+				owner == participantIdx || (participantIdx != person && owner != person))
+			{
+				return false;
+			}
+
+			this.processor.RegSource.Value16 = unit;
+			this.processor.RegBase.Value16 = (ushort)(this.troops.TroopKind(participantIdx, troopIdx) * UnitKindTable.Stride);
+
+			return this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == UnitKindTable.LandUnits &&
+				this.owner.MapOps.ObtainTileOwner((short)this.processor.PullLocalWord(0x1c), (short)this.processor.PullLocalWord(0x26)) != (ushort)participantIdx;
 		}
 
 		/// <summary>

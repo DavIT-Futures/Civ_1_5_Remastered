@@ -849,13 +849,21 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   lądowa komputera (albo samolot z paliwem) nie dołącza do własnego stosu poza miastem z 4 jednostkami (2 bez ruchów). Test:
   istniejące testy tur komputera (`HandlePlayerTurnOrdersMatchOriginalCode`) łapią mutacje; niesprawdzona granica stosu 4
   (`? 4 : 2` → `? 5 : 2`).
+- Porcja 104 (2026-10-19): piętnasty kawałek `HandlePlayerTurn` – terytorium (`EnterTerritory` z `MayTreatyStop`,
+  L29a0 – L2b06): gracz terytorium pola z warstwy 2 (x + 80) do 0x2; jednostka lądowa (nie dyplomata ani karawana) z lądu
+  na ulepszone pole cudzego terytorium, między człowiekiem a innym graczem, bez własnej jednostki tam: człowiek może zerwać
+  traktat (cel zapomniany; dotrzymany – brak ruchu), komputer w pokoju z człowiekiem staje (ruchy 0); na ulepszonym polu
+  cudzego terytorium jednostka zostaje pokazana jego graczowi. Test (`BatchHundredFourDifferentialTests`): pierwsza
+  ruszająca się jednostka człowieka obok ulepszonego pola terytorium komputera, pokój / wojna, odpowiedzi w dialogu
+  traktatu. Równoważne: bit pokazania (`& 0xe` → `& 0x6`, `1 <<` → `2 <<`) – ruch potem liczy widoczność od nowa;
+  niesprawdzone: warunek „człowiek albo terytorium człowieka” dla dwóch graczy komputera.
 
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
 (`HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-18 (po porcji 103): 2 metody w stylu asm (`HandlePlayerTurn`, `HandleCity`); `ShiftAIUnit` gotowa. `HandlePlayerTurn` przepisywana kawałkami od początku (następny: ruch L29a0 – L3365, potem L3365 – koniec; testy z `HumanTurnScript`). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
+Stan 2026-10-18 (po porcji 104): 2 metody w stylu asm (`HandlePlayerTurn`, `HandleCity`); `ShiftAIUnit` gotowa. `HandlePlayerTurn` przepisywana kawałkami od początku (następny: ruch L2b06 – L3365, potem L3365 – koniec; testy z `HumanTurnScript`). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
