@@ -713,13 +713,24 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   jednostką na lądzie, okręty i transportowce przy wybrzeżu z obcą jednostką na lądzie (i znakiem obcego statku obok, inaczej
   płyną do celu), łódź podwodna, okręt w mieście, samotny atakujący w pustym własnym mieście z własną jednostką obok (0x32 = 1:
   miejsce strategiczne). Wszystkie mutacje złapane. Test w `BatchEightyNineDifferentialTests`.
+- Porcja 90 (2026-10-18): pierwszy kawałek `HandlePlayerTurn` (`PlayerTurn`, ok. 5650 linii, tura gracza): początek tury
+  (`PrepareTurn`: 0x6b90, 0x20, 0xe, 0x4, dla człowieka tylko on grany przez człowieka i pomoc w turach 20 / 60 i 40 / 80,
+  ruchy jednostek – 3 na pole typu, statki +3 z cudem 4 albo 8, bez ruchów przy 0xdf60 = 1 – i zmienne 0x6, 0x8, 0x28,
+  0x2e, 0x46) i początek ruchu jednostki (`StartUnitMove`: pusty slot, wartownik / ufortyfikowana, bez ruchów – następna;
+  typ od 0x1c staje się milicją, w pierwszym przebiegu `ShiftUnit` w miejscu, fortyfikująca się staje się ufortyfikowana:
+  jednostka komputera w mieście ≥ 3 dostaje je jako macierzyste, w macierzystym bez obcej jednostki obok trafia na listę
+  obrońców). SI odtworzone jak w oryginale (gracz albo jednostka). Kopia referencyjna `PlayerTurnReference.HandlePlayerTurn`
+  wymagała ręcznej poprawki (pełna nazwa `Civilization1Remaster.Engine.GameLoadAndSave`, inna przestrzeń nazw). Test: cała
+  tura gracza (komputera albo człowieka ze skryptem klawiszy) z turą 20 / 40 / 60 / 80, 0xdf60, fortyfikującymi się
+  jednostkami (z miastem macierzystym albo bez), typem od 0x1c, cudem 4 / 8 w mieście gracza i wielkościami miast; 72 tury
+  w ok. 10 s. Wszystkie mutacje złapane. Test w `BatchNinetyDifferentialTests`.
 
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
 (`HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-18 (po porcji 89): 2 metody w stylu asm (`HandlePlayerTurn`, `HandleCity`); `ShiftAIUnit` gotowa. Następny: `HandlePlayerTurn` kawałkami.
+Stan 2026-10-18 (po porcji 90): 2 metody w stylu asm (`HandlePlayerTurn`, `HandleCity`); `ShiftAIUnit` gotowa. `HandlePlayerTurn` przepisywana kawałkami od początku (następny: pętla jednostek od L013c, L0356 – L04ed i dalej). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
