@@ -701,13 +701,25 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   jednostką komputera dla zakupu w pokoju. Mutacje: równoważna `Tally(…, 3) << 1` → `<< 2` (dzielenie przez 0x600 x gracz daje
   0); niesprawdzona granica `6 <= 0x5a` (mutacja na 7 przeżywa, odwrócenie warunku i 3 złapane). Test w
   `BatchEightyEightDifferentialTests`.
+- Porcja 89 (2026-10-18): ostatni kawałek `ShiftAIUnit` – filtr kierunku (`MayAimAtDirection`, L2643 – L2857: poza
+  mapą, morze dla jednostki lądowej, dyplomata przed stosem zastępuje następna jednostka stosu, wolne pole, które jednostka
+  może zająć, dla jednostki lądowej przy obcej jednostce (0x4c), obca jednostka dla jednostki lądowej na morzu, ląd dla okrętu
+  – poza obcą jednostką dla okrętu na morzu, nie łodzi podwodnej – i własny stos ≥ 2) oraz zamiana szkieletu metody na
+  `ShiftAIUnit` (ramka, barbarzyńcy) + `DecideAIUnitMove` (zwykłe `return` zamiast skoków do L2fd0, pętla `for` po 8
+  kierunkach). `ShiftAIUnit` nie ma już kodu w stylu asm. W `WeighUnitAtTile` / `BuyUnitAtPeace` odtworzone SI przed
+  `SettleBattle` i DI w ścieżce zakupu: test porcji 83 trafia scenariusz, w którym `SettleBattle` rzuca `Towns[-1]` w obu
+  wersjach (znak miasta bez miasta) i różnił się tylko SI. Test: stos obok obcego stosu z dyplomatą z przodu (albo z samych
+  dyplomatów), obok własnego stosu, stos lądowy przeniesiony na morze (zapisy nie mają jednostek lądowych na morzu) z obcą
+  jednostką na lądzie, okręty i transportowce przy wybrzeżu z obcą jednostką na lądzie (i znakiem obcego statku obok, inaczej
+  płyną do celu), łódź podwodna, okręt w mieście, samotny atakujący w pustym własnym mieście z własną jednostką obok (0x32 = 1:
+  miejsce strategiczne). Wszystkie mutacje złapane. Test w `BatchEightyNineDifferentialTests`.
 
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
-(`ShiftAIUnit`, `HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
+(`HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-18 (po porcji 88): 3 metody w stylu asm; `ShiftAIUnit` przepisywana kawałkami (następny: filtr kierunku L2643 – L2857 i pętla `for` zamiast skoków).
+Stan 2026-10-18 (po porcji 89): 2 metody w stylu asm (`HandlePlayerTurn`, `HandleCity`); `ShiftAIUnit` gotowa. Następny: `HandlePlayerTurn` kawałkami.
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
