@@ -784,13 +784,19 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   Space, Enter, '1', Escape) – wzór dla następnych testów tury. Test (`BatchNinetyFiveDifferentialTests`): ulepszenia pól
   osadników (też sama kolej), liczniki pracy, bit wody, Railroad, Bridge Building, osadnicy w miastach. Niesprawdzone:
   kolej w mieście (pola miast nie mają bitu drogi, więc warunek miasta nie decyduje), granica licznika kopalni (`<= 5`).
+- Porcja 96 (2026-10-18): siódmy kawałek `HandlePlayerTurn` – `BuildCity` ('b': osadnicy na lądzie poza rzędami
+  biegunowymi dołączają do miasta < 10 albo zakładają miasto – `EstablishCity` z lokalną 0x24, jak w oryginale) i rozdział
+  rozkazu jako `switch` w `CarryOutOrder` (zamiast porównań i tabeli skoków L1aed / L1b38; L1b5e nie czyta AX); znikają
+  etykiety obsługi klawiszy L0d75 – L19bf. Test (`BatchNinetySixDifferentialTests`, `HumanTurnScript`): wszystkie klawisze
+  rozkazów (bez 'g' i 'D'), wielkości miast 7 – 11, pierwsza ruszająca się jednostka jako osadnicy (czasem w mieście).
+  Niesprawdzone: rząd 0x2f (`>= 0x30` → `>= 0x2f`; mapy z zapisów nie mają tam lądu).
 
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
 (`HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-18 (po porcji 95): 2 metody w stylu asm (`HandlePlayerTurn`, `HandleCity`); `ShiftAIUnit` gotowa. `HandlePlayerTurn` przepisywana kawałkami od początku (następny: klawisz b L19bf i rozdział L1aed jako `switch` w `CarryOutOrder`, potem L1b5e i dalej; testy z `HumanTurnScript`). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
+Stan 2026-10-18 (po porcji 96): 2 metody w stylu asm (`HandlePlayerTurn`, `HandleCity`); `ShiftAIUnit` gotowa. `HandlePlayerTurn` przepisywana kawałkami od początku (następny: L1b5e i dalej – ruch jednostki po rozkazie, L1c10…; testy z `HumanTurnScript`). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 

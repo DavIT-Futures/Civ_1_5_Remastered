@@ -125,247 +125,9 @@ namespace Civilization1Remaster.Game
 			goto L1b5e;
 
 		L0d0a:
-			// The unit goes on to its destination (or forgets its heading), then the order 0x44 is carried out
-			PrepareOrder(participantIdx);
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x44);
-			goto L1aed;
-
-		L0d75:
-			DisbandUnit(participantIdx);
-			goto L1b5e;
-
-		L0d9b:
-			PillageTile(participantIdx);
-			goto L1b5e;
-
-		L0f1f:
-			SkipUnit(participantIdx);
-			goto L1b5e;
-
-		L0f37:
-			// Wait: the unit comes again in the second pass
-			this.processor.EmitLocalWord(0x28, 0x1);
-			this.processor.EmitLocalWord(0x2e, 0x1);
-			goto L1b5e;
-
-		L0f44:
-			SentryUnit(participantIdx);
-			goto L1b5e;
-
-		L0f6f:
-			UnloadUnit(participantIdx);
-			goto L1b5e;
-
-		L0ffd:
-			ToggleGoTo(participantIdx);
-			goto L1b5e;
-		L10bb:
-			// A plane flying home moves at once
-			if (OrderHome(participantIdx))
+			// The order 0x44 of the unit (a plane flying home moves at once)
+			if (CarryOutOrder(participantIdx))
 				goto L1c10;
-
-			goto L1b5e;
-
-		L1180:
-			CleanPollution(participantIdx);
-			goto L1b5e;
-
-		L1283:
-			FortifyOrBuildFortress(participantIdx);
-			goto L1b5e;
-		L1400:
-			BuildRoad(participantIdx);
-			goto L1b5e;
-
-		L158c:
-			IrrigateTile(participantIdx);
-			goto L1b5e;
-
-		L17c4:
-			MineTile(participantIdx);
-			goto L1b5e;
-		L19bf:
-			this.processor.RegAcc.Value16 = 0xc;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullLocalWord(0x32));
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d7)), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L19d9;
-			goto L19e8;
-
-		L19d9:
-			DisplayHelpForHuman(0x1ecc);
-
-			goto L1b5e;
-
-		L19e8:
-			this.owner.MapOps.ObtainTerrainType(
-				this.processor.PullLocalSignedWord(0x2c),
-				this.processor.PullLocalSignedWord(0x30));
-
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
-			if (this.processor.FlagSet.IsNotEqual) goto L19fe;
-			goto L1a10;
-
-		L19fe:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x30), 0x2);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L1a07;
-			goto L1a10;
-
-		L1a07:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x30), 0x30);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L1a10;
-			goto L1a13;
-
-		L1a10:
-			goto L1b5e;
-
-		L1a13:
-			this.owner.MapOps.ObtainTileImprovements(
-				this.processor.PullLocalSignedWord(0x2c),
-				this.processor.PullLocalSignedWord(0x30));
-
-			this.processor.TestBitsByte(this.processor.RegAcc.LowByte, 0x1);
-			if (this.processor.FlagSet.IsNotEqual) goto L1a28;
-			goto L1a92;
-
-		L1a28:
-			this.owner.MapOps.LocateCityAtTile(
-				this.processor.PullLocalSignedWord(0x2c),
-				this.processor.PullLocalSignedWord(0x30));
-
-			this.processor.EmitLocalWord(0x10, this.processor.RegAcc.Value16);
-
-			this.processor.CompareByte((byte)this.owner.World.Towns[this.processor.PullLocalWord(0x10)].TrueExtent, 0xa);
-			if (this.processor.FlagSet.IsLess) goto L1a4d;
-			goto L1a83;
-
-		L1a4d:
-			this.owner.World.Towns[this.processor.PullLocalWord(0x10)].TrueExtent++;
-			this.processor.ScaleIndexToBase(0xc, this.processor.PullLocalWord(0x32));
-			this.processor.ScaleIndex(0x600, (ushort)participantIdx);
-			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegDest.Value16 + 0x81d8), 0x0);
-			
-			this.owner.UnitOps.EliminateUnit(participantIdx, this.processor.PullLocalSignedWord(0x32));
-			
-			RepaintUnitIfVisible(participantIdx, this.processor.PullLocalSignedWord(0x32));
-			
-			goto L1a8f;
-
-		L1a83:
-			DisplayHelpForHuman(0x1ed6);
-
-		L1a8f:
-			goto L1b5e;
-
-		L1a92:
-			this.processor.RegAcc.Value16 = 0xc;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullLocalWord(0x32));
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d8), 0x0);
-			
-			this.owner.Founding.EstablishCity(participantIdx,
-				this.processor.PullLocalWord(0x24),
-				this.processor.PullLocalSignedWord(0x2c),
-				this.processor.PullLocalSignedWord(0x30),
-				1);
-
-			this.processor.EmitLocalWord(0x3a, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x3a), 0xffff);
-			if (this.processor.FlagSet.IsNotEqual) goto L1acb;
-			goto L1ae7;
-
-		L1acb:
-			this.owner.UnitOps.EliminateUnit(participantIdx, this.processor.PullLocalSignedWord(0x32));
-
-			RepaintUnitIfVisible(participantIdx, this.processor.PullLocalSignedWord(0x32));
-
-		L1ae7:
-			goto L1b5e;
-
-		L1aed:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x68);
-			if (this.processor.FlagSet.IsNotEqual) goto L1af5;
-			goto L10bb;
-
-		L1af5:
-			if (this.processor.FlagSet.IsLessOrEqual) goto L1afa;
-			goto L1b2d;
-
-		L1afa:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x20);
-			if (this.processor.FlagSet.IsNotEqual) goto L1b02;
-			goto L0f1f;
-
-		L1b02:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x44);
-			if (this.processor.FlagSet.IsNotEqual) goto L1b0a;
-			goto L0d75;
-
-		L1b0a:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x50);
-			if (this.processor.FlagSet.IsNotEqual) goto L1b12;
-			goto L0d9b;
-
-		L1b12:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x62);
-			if (this.processor.FlagSet.IsNotEqual) goto L1b1a;
-			goto L19bf;
-
-		L1b1a:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x66);
-			if (this.processor.FlagSet.IsNotEqual) goto L1b22;
-			goto L1283;
-
-		L1b22:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x67);
-			if (this.processor.FlagSet.IsNotEqual) goto L1b2a;
-			goto L0ffd;
-
-		L1b2a:
-			goto L1b5e;
-
-		L1b2d:
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, 0x69);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xe);
-			if (this.processor.FlagSet.IsBelowOrEqual) goto L1b38;
-			goto L1b5e;
-
-		L1b38:
-			switch(this.processor.RegAcc.Value16)
-			{
-				case 0:
-					goto L158c;
-				case 1:
-					goto L1b5e;
-				case 2:
-					goto L1b5e;
-				case 3:
-					goto L1b5e;
-				case 4:
-					goto L17c4;
-				case 5:
-					goto L1b5e;
-				case 6:
-					goto L1b5e;
-				case 7:
-					goto L1180;
-				case 8:
-					goto L1b5e;
-				case 9:
-					goto L1400;
-				case 10:
-					goto L0f44;
-				case 11:
-					goto L1b5e;
-				case 12:
-					goto L0f6f;
-				case 13:
-					goto L1b5e;
-				case 14:
-					goto L0f37;
-			}
-
 		L1b5e:
 			this.processor.CompareWord(this.processor.PullLocalWord(0x32), 0x80);
 			if (this.processor.FlagSet.IsGreaterOrEqual) goto L1b68;
@@ -4970,6 +4732,141 @@ namespace Civilization1Remaster.Game
 			this.processor.RegSource.Value16 = unit;
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Status, (byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & mask));
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.UnusualSteps, 0);
+		}
+
+		/// <summary>
+		/// The order 0x44 of the unit 0x32 (a key of the human, the answer of ShiftAIUnit or a standing order), after the unit
+		/// went on to its destination: true when the unit moves now (a plane flying home, L1c10). The locals of
+		/// HandlePlayerTurn are used as in the original.
+		/// </summary>
+		private bool CarryOutOrder(short participantIdx)
+		{
+			PrepareOrder(participantIdx);
+
+			switch (this.processor.PullLocalWord(0x44))
+			{
+				case 0x20:
+					SkipUnit(participantIdx);
+					break;
+
+				case 'D':
+					DisbandUnit(participantIdx);
+					break;
+
+				case 'P':
+					PillageTile(participantIdx);
+					break;
+
+				case 'b':
+					BuildCity(participantIdx);
+					break;
+
+				case 'f':
+					FortifyOrBuildFortress(participantIdx);
+					break;
+
+				case 'g':
+					ToggleGoTo(participantIdx);
+					break;
+
+				case 'h':
+					return OrderHome(participantIdx);
+
+				case 'i':
+					IrrigateTile(participantIdx);
+					break;
+
+				case 'm':
+					MineTile(participantIdx);
+					break;
+
+				case 'p':
+					CleanPollution(participantIdx);
+					break;
+
+				case 'r':
+					BuildRoad(participantIdx);
+					break;
+
+				case 's':
+					SentryUnit(participantIdx);
+					break;
+
+				case 'u':
+					UnloadUnit(participantIdx);
+					break;
+
+				case 'w':
+					// Wait: the unit comes again in the second pass
+					this.processor.EmitLocalWord(0x28, 0x1);
+					this.processor.EmitLocalWord(0x2e, 0x1);
+					break;
+			}
+
+			return false;
+		}
+
+		/// <summary>
+		/// 'b': settlers on land (not in the polar rows) join a city smaller than 10 or found one (EstablishCity, with the
+		/// local 0x24 as the original passes it); the settlers are gone. A city of 10 or more: the help message; other units: the
+		/// help message. The locals of HandlePlayerTurn are used as in the original.
+		/// </summary>
+		private void BuildCity(short participantIdx)
+		{
+			short troopIdx = (short)this.processor.PullLocalWord(0x32);
+			short horizLoc = (short)this.processor.PullLocalWord(0x2c);
+			short vertLoc = (short)this.processor.PullLocalWord(0x30);
+			this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
+			this.processor.RegSource.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride);
+
+			if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) != 0)
+			{
+				DisplayHelpForHuman(0x1ecc);
+				return;
+			}
+
+			if (this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) == MapRules.OceanTerrain || vertLoc < 2 || vertLoc >= 0x30)
+				return;
+
+			if ((this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) != 0)
+			{
+				// The settlers join the city
+				this.processor.EmitLocalWord(0x10, this.owner.MapOps.LocateCityAtTile(horizLoc, vertLoc));
+
+				if ((sbyte)this.owner.World.Towns[this.processor.PullLocalWord(0x10)].TrueExtent >= 0xa)
+				{
+					DisplayHelpForHuman(0x1ed6);
+					return;
+				}
+
+				this.owner.World.Towns[this.processor.PullLocalWord(0x10)].TrueExtent++;
+				this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
+				this.processor.ScaleIndex(0x600, (ushort)participantIdx);
+				this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
+				this.troops.Assign(participantIdx, troopIdx, UnitMemory.LeftoverSteps, 0);
+
+				this.owner.UnitOps.EliminateUnit(participantIdx, this.processor.PullLocalSignedWord(0x32));
+
+				RepaintUnitIfVisible(participantIdx, this.processor.PullLocalSignedWord(0x32));
+
+				return;
+			}
+
+			this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
+			this.processor.RegSource.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride);
+			this.troops.Assign(participantIdx, troopIdx, UnitMemory.LeftoverSteps, 0);
+
+			this.processor.EmitLocalWord(0x3a, this.owner.Founding.EstablishCity(participantIdx,
+				this.processor.PullLocalWord(0x24),
+				horizLoc, vertLoc,
+				1));
+
+			if (this.processor.PullLocalWord(0x3a) != 0xffff)
+			{
+				this.owner.UnitOps.EliminateUnit(participantIdx, this.processor.PullLocalSignedWord(0x32));
+
+				RepaintUnitIfVisible(participantIdx, this.processor.PullLocalSignedWord(0x32));
+			}
 		}
 
 		/// <summary>
