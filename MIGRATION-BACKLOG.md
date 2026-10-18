@@ -775,13 +775,22 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   bombowiec z 'h' na początku. Mutacje: równoważna `& 0xfd` → `& 0xfc` (bit 0 aktywnej jednostki jest 0); fortyfikacja
   komputera w mieście łapie test tur komputera (`HandlePlayerTurnOrdersMatchOriginalCode`); niesprawdzona granica
   `work > licznik` → `>=` (teren 0x3e nieznany w scenariuszu).
+- Porcja 95 (2026-10-18): szósty kawałek `HandlePlayerTurn` – praca osadników: `BuildRoad` ('r': droga, na drodze kolej z
+  Railroad poza miastem, nie na kolei, rzeka 0xb tylko z Bridge Building; licznik w bajcie 5 do 2 – 4 dla kolei – razy
+  bajt 0x28e terenu), `IrrigateTile` ('i': przy wodzie – bit 1 0xd7fa – nienawadniane pole; tabela 0x44a, 12 bajtów na
+  teren: słowo +0 nowy teren / -1 niemożliwe / -2 tylko przy wybrzeżu, +2 licznik), `MineTile` ('m': słowo +4 / +6; zmiana
+  terenu dopiero po drugim zwiększeniu licznika ponad 5) i wspólne `StopWork`, `DoTileWork`, `ChangeTerrain`,
+  `FinishTileWork`, `TerrainWorkByte`. Nowy pomocnik testów `HumanTurnScript` (klawisze i kliknięcia tury człowieka, potem
+  Space, Enter, '1', Escape) – wzór dla następnych testów tury. Test (`BatchNinetyFiveDifferentialTests`): ulepszenia pól
+  osadników (też sama kolej), liczniki pracy, bit wody, Railroad, Bridge Building, osadnicy w miastach. Niesprawdzone:
+  kolej w mieście (pola miast nie mają bitu drogi, więc warunek miasta nie decyduje), granica licznika kopalni (`<= 5`).
 
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
 (`HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-18 (po porcji 94): 2 metody w stylu asm (`HandlePlayerTurn`, `HandleCity`); `ShiftAIUnit` gotowa. `HandlePlayerTurn` przepisywana kawałkami od początku (następny: klawisze r L1400, i L158c, m L17c4, b L19bf, potem rozdział L1aed jako `switch`; test wzorem `BatchNinetyFourDifferentialTests`). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
+Stan 2026-10-18 (po porcji 95): 2 metody w stylu asm (`HandlePlayerTurn`, `HandleCity`); `ShiftAIUnit` gotowa. `HandlePlayerTurn` przepisywana kawałkami od początku (następny: klawisz b L19bf i rozdział L1aed jako `switch` w `CarryOutOrder`, potem L1b5e i dalej; testy z `HumanTurnScript`). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
