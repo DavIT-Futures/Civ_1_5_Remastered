@@ -9,12 +9,15 @@ The uncommitted work of Civilization1Remaster.Core and Civilization1Remaster.Mac
 after every mutation (git checkout + git apply), then the test project is built again from the unchanged work.
 Everything runs in Release (about 7 times faster than Debug, same results).
 Prints CAUGHT / SURVIVED / BUILD ERROR per mutation; exit code 1 when one was not caught.
+A test that runs longer than TIMEOUT seconds (a hanging mutant) counts as CAUGHT (hang).
 A survivor can be an equivalent mutation (a value the code never reaches): then choose a mutation that changes behaviour.
 """
 import json, os, re, subprocess, sys, tempfile
 
 SOURCES = ['Civilization1Remaster.Core', 'Civilization1Remaster.Machine']
 EXE = os.path.join('Civilization1Remaster.Tests', 'bin', 'Release', 'net10.0', 'Civilization1Remaster.Tests.exe')
+# Seconds a test may run before the mutant counts as hanging (caught)
+TIMEOUT = 900
 
 
 def run(args, **kwargs):
@@ -56,7 +59,13 @@ def main():
                     failed = True
                     continue
 
-                out = run([EXE, '-method', '*' + m['test']]).stdout
+                try:
+                    out = run([EXE, '-method', '*' + m['test']], timeout=TIMEOUT).stdout
+                except subprocess.TimeoutExpired:
+                    # A test that hangs (an endless loop of the mutant) catches the mutation too
+                    print(f"CAUGHT (hang) {m['test']}", flush=True)
+                    continue
+
                 total = re.search(r'Total: (\d+), Errors: (\d+), Failed: (\d+)', out)
 
                 if total is None or total.group(1) == '0':

@@ -724,13 +724,26 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   tura gracza (komputera albo człowieka ze skryptem klawiszy) z turą 20 / 40 / 60 / 80, 0xdf60, fortyfikującymi się
   jednostkami (z miastem macierzystym albo bez), typem od 0x1c, cudem 4 / 8 w mieście gracza i wielkościami miast; 72 tury
   w ok. 10 s. Wszystkie mutacje złapane. Test w `BatchNinetyDifferentialTests`.
+- Porcja 91 (2026-10-18): drugi kawałek `HandlePlayerTurn`: `FocusOnUnit` (L0356: jednostka człowieka bez rozkazów poza
+  widokiem mapy 0xd4cc / 0xd75e czeka na drugi przebieg, inaczej widok przesuwa się do niej, 0x46, panel jednostki w turze 0),
+  L043b – L047f bez skoków (czekanie na klawisz dla gracza granego przez człowieka, kursor myszy, 0xa / 0xc / 0x36 / 0x28),
+  `ObtainAIOrder` (rozkaz z `ShiftAIUnit`, po > 4 próbach 0x20 i zapomniany cel) i `ObtainStandingOrder` (jednostka z
+  rozkazami albo celem: 'r', 'i' / 'm', 'f', 'p', 'h' dla samolotu). Poprawka porcji 90: `ShiftUnit` odkłada SI na stos
+  (tam, gdzie potem szuka go `ShiftAIUnit`), a oryginał woła go z SI = adres jednostki – test 91 to złapał w ramce
+  (słowo pod BP-0x1a: 0x1908 zamiast 0x1800), test porcji 90 nie. Test (`BatchNinetyOneDifferentialTests`): tury człowieka,
+  komputera i komputera granego przez człowieka (bit w `ParticipantMarkers`), losowy widok mapy, tura 0, 0xb278, rozkazy
+  osadników (0x40, 0x80, 0xc0, 0x82, 0x02), cele, bombowiec z celem; porównuje ramkę i 0x80 bajtów stosu pod nią. Pułapki:
+  rozkazy osadników dla innych jednostek albo bity rozkazów samolotu sprawiają, że tura człowieka nigdy się nie kończy
+  (skrypt klawiszy bez końca, ok. 40 s na turę albo zawieszenie); `check_mutations.py` ma teraz limit czasu (900 s,
+  zawieszony mutant = CAUGHT (hang)). Mutacja niezłapana: 'h' samolotu → 'i' (samolot z celem idzie najpierw do celu, klucz
+  nie ma znaczenia; samolot z bitami rozkazów zawiesza turę testu). Test w `BatchNinetyOneDifferentialTests`.
 
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
 (`HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-18 (po porcji 90): 2 metody w stylu asm (`HandlePlayerTurn`, `HandleCity`); `ShiftAIUnit` gotowa. `HandlePlayerTurn` przepisywana kawałkami od początku (następny: pętla jednostek od L013c, L0356 – L04ed i dalej). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
+Stan 2026-10-18 (po porcji 91): 2 metody w stylu asm (`HandlePlayerTurn`, `HandleCity`); `ShiftAIUnit` gotowa. `HandlePlayerTurn` przepisywana kawałkami od początku (następny: interakcja człowieka od L05cc, potem rozdział klawiszy L0d0a). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
