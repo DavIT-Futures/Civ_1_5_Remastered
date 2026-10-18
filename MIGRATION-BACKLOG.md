@@ -686,13 +686,28 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   kierunek 0x2c / znacznik wroga 0x52) i `ChooseHeading` (L2f94). Pułapka: oryginał dzieli przez SI zostawione przez
   drugie `TallyUnitsByDomainInStack`, nie przez liczbę ograniczoną `VerifyValueSpan` (pierwsza wersja dzieliła przez tę
   liczbę i golden master to złapał). Wszystkie mutacje złapane. Test w `BatchEightySevenDifferentialTests`.
+- Porcja 88 (2026-10-18): dwunasty kawałek `ShiftAIUnit` – ocena pola i walki w pętli szukania walki (L2857 – L2dbd):
+  `ScoreTile` (pierwszy wynik pola: osadnicy 0, na statku pomijają pole bez obcej jednostki obok; niewidoczna jednostka na
+  lądzie kość 3 minus obrona terenu, inaczej kość 5 i siła własnego stosu – dzielona przez SI zostawione przez
+  `TallyUnitsByDomainInStack`, jak w oryginale – albo 4 x obrona terenu; samoloty kość 3; kara za odległość od kierunku
+  jednostki), `WeighUnitAtTile` (wolne pole: obce miasto 999, wioska +20; własna jednostka minus obrona; obca w wojnie:
+  najlepszy obrońca, `SettleBattle` x liczba jednostek / cena, x3 w mieście, x3 milicja przy podejściu 1, x2 przy słabym
+  stosie, od 6 wynik x4, inaczej -999 i możliwy zakup `BuyUnit`) i `BuyUnitAtPeace`. Test: milicja (rola 1 przy podejściu 1)
+  i obrońcy w stosach, okręty, osadnicy, bombowiec (zapisy nie mają samolotów: jednostka stosu staje się bombowcem z paliwem,
+  myśliwiec bez celu tu nie dochodzi) z obcym samolotem obok, stos przeniesiony obok obcego miasta w wojnie, obca jednostka
+  obok (status, relacje, mocny teren), własna jednostka, sztuczne obce miasto bez jednostek (usuwane w następnym scenariuszu),
+  wioska. Pułapki testu: walki wcześniejszych scenariuszy zostawiają znak miasta bez miasta (`SettleBattle` rzucał
+  `Towns[-1]` w obu wersjach, różnił się tylko SI) – każdy scenariusz czyści takie znaki; obca jednostka obok musi być
+  jednostką komputera dla zakupu w pokoju. Mutacje: równoważna `Tally(…, 3) << 1` → `<< 2` (dzielenie przez 0x600 x gracz daje
+  0); niesprawdzona granica `6 <= 0x5a` (mutacja na 7 przeżywa, odwrócenie warunku i 3 złapane). Test w
+  `BatchEightyEightDifferentialTests`.
 
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
 (`ShiftAIUnit`, `HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-17 (po porcji 87): 3 metody w stylu asm; `ShiftAIUnit` przepisywana kawałkami (następny: pętla szukania walki L2643 – L2dbd, ocena pola i walki).
+Stan 2026-10-18 (po porcji 88): 3 metody w stylu asm; `ShiftAIUnit` przepisywana kawałkami (następny: filtr kierunku L2643 – L2857 i pętla `for` zamiast skoków).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
