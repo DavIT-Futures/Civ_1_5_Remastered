@@ -865,13 +865,19 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   (`BatchHundredFiveDifferentialTests`): tury komputera i barbarzyńców z 0xd806, opcją 0x20 / 0x10, ambasadami człowieka i całą
   mapą widzianą przez człowieka. Niesprawdzone: bity widoczności (barbarzyńca przy mieście człowieka, ambasada, pole morskie) –
   zerowane zaraz po ruchu (L2cdd), decydują tylko o rzadkiej animacji.
+- Porcja 106 (2026-10-19): siedemnasty kawałek `HandlePlayerTurn` – `MoveUnit` (L2cdd – L2deb): jednostka przechodzi na
+  0x1c / 0x26 (0x14 – następna jednostka starego stosu, 0x22 / 0x2a – stare miejsce; położenie i widoczność 0 zapisywane przez
+  SI zostawione przez `DiscardUnitFromTile` / `SituateUnitOnTile`, jak w oryginale); jednostka komputera (nie samolot) traci
+  rozkazy (zostają bity 4, 5); pole wychodzi z cudzego terytorium; u celu jednostka zapomina cel i kierunek (komputer traci
+  ruchy). Testy: istniejące testy tur (komputera i terytorium). Równoważna: `& 0x30` → `& 0x31` (bit 0 ruszającej się jednostki
+  jest 0); niesprawdzone: statki komputera z bitami rozkazów (`!= Air` → `!= Sea`).
 
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
 (`HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-18 (po porcji 105): 2 metody w stylu asm (`HandlePlayerTurn`, `HandleCity`); `ShiftAIUnit` gotowa. `HandlePlayerTurn` przepisywana kawałkami od początku (następny: ruch L2cdd – L3365 – przeniesienie jednostki, stos, miasto – potem L3365 – koniec; testy z `HumanTurnScript`). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
+Stan 2026-10-18 (po porcji 106): 2 metody w stylu asm (`HandlePlayerTurn`, `HandleCity`); `ShiftAIUnit` gotowa. `HandlePlayerTurn` przepisywana kawałkami od początku (następny: ruch L2deb – L3365 – ląd z morza, stos, miasto – potem L3365 – koniec; testy z `HumanTurnScript`). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
