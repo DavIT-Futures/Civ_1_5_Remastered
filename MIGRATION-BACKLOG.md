@@ -806,13 +806,23 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   ustawiony na nią, inaczej czeka na drugi przebieg), strzałki w stronę pól przy obcej jednostce, opcja pomocy. Piknięcie
   (`PerformSound`) nie ma wpisu w dzienniku – etykieta z pomocy. Niesprawdzone: jednostka lądowa na morzu (0x34 = ocean),
   samolot traktowany jak jednostka lądowa (brak samolotów w zapisach).
+- Porcja 99 (2026-10-19): dziesiąty kawałek `HandlePlayerTurn` – dyplomata i karawana przy mieście
+  (`EnterCityAsDiplomatOrCaravan`, L1ed2 – L2157, wynik `MoveStep`): z morza nie do obcego miasta; dyplomata w obcym mieście
+  działa (`DiplomatArrivesAtCity`; w mieście człowieka widoczny, widok i animacja ruchu); karawana pyta (we własnym mieście
+  z cudem – produkcja poniżej -24 – też „Help build WONDER”, 0xb276 = 2 bliżej niż 10), chyba że miasto jest własne, bez cudu,
+  bliżej niż 10 od miasta macierzystego i na tym samym kontynencie; szlak handlowy albo pomoc (10 x cena do materiałów)
+  kończą rozkaz. Test (`BatchNinetyNineDifferentialTests`): pierwsza ruszająca się jednostka (człowieka albo komputera
+  przy mieście człowieka) jako dyplomata / karawana obok miasta, strzałka do miasta, odpowiedzi w dialogu, produkcja miasta
+  -30 … 3, miasto macierzyste blisko / daleko. Pułapka: przed ruchem jednostki gra opróżnia klawiaturę (`AwaitForKey`) i
+  pierwszy klawisz przepada – potrzebny klawisz-ofiara ('1'); dopisane w `HumanTurnScript`. Niesprawdzone: odległość od
+  miasta macierzystego dokładnie 9 (`< 10` → `< 9`).
 
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
 (`HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-18 (po porcji 98): 2 metody w stylu asm (`HandlePlayerTurn`, `HandleCity`); `ShiftAIUnit` gotowa. `HandlePlayerTurn` przepisywana kawałkami od początku (następny: ruch jednostki L1ed2 – L3365: dyplomaci i karawany przy mieście, walka, wejście do miasta, statki; testy z `HumanTurnScript`). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
+Stan 2026-10-18 (po porcji 99): 2 metody w stylu asm (`HandlePlayerTurn`, `HandleCity`); `ShiftAIUnit` gotowa. `HandlePlayerTurn` przepisywana kawałkami od początku (następny: ruch jednostki L2157 – L3365: walka, wejście do miasta, statki; testy z `HumanTurnScript`). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
