@@ -175,177 +175,18 @@ namespace Civilization1Remaster.Game
 					goto L3365;
 			}
 		L2157:
-			this.processor.RegAcc.Value16 = 0x600;
-			this.processor.ScaleAccumulatorToSource((ushort)participantIdx);
-			this.processor.AddScaledToSource(0xc, this.processor.PullLocalWord(0x32));
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d7)), 0x1a);
-			if (this.processor.FlagSet.IsEqual) goto L2171;
-			goto L219c;
-
-		L2171:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x18), 0xffff);
-			if (this.processor.FlagSet.IsNotEqual) goto L217a;
-			goto L219c;
-
-		L217a:
-			if (participantIdx == this.processor.PullGlobalSignedWord(0xd20a))
-				goto L219c;
-
-			this.owner.Diplomats.BuyUnit(this.processor.PullGlobalSignedWord(0xd20a),
-				this.processor.PullLocalSignedWord(0x18),
-				participantIdx);
-			
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81da), 0xff);
+			BribeUnitOnTheWay(participantIdx);
 
 		L219c:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x3e), 0xa);
-			if (this.processor.FlagSet.IsEqual) goto L21a5;
-			goto L2209;
+			// The tile of the move: boarding a ship, the cases without an attack, an attack below (L2329)
+			switch (CheckMoveTile(participantIdx))
+			{
+				case MoveCheck.Moves:
+					goto L267b;
 
-		L21a5:
-			this.processor.RegAcc.Value16 = 0x600;
-			this.processor.ScaleAccumulatorToSource((ushort)participantIdx);
-			this.processor.AddScaledToSource(0xc, this.processor.PullLocalWord(0x32));
-			this.processor.RegAcc.LowByte = 0x22;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d7)));
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1138)), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L21c7;
-			goto L2209;
-
-		L21c7:
-			if (participantIdx != this.processor.PullGlobalSignedWord(0xd20a))
-				goto L2203;
-
-			this.processor.CompareWord(this.processor.PullLocalWord(0x18), 0xffff);
-			if (this.processor.FlagSet.IsNotEqual) goto L21db;
-			goto L2203;
-
-		L21db:
-			this.owner.UnitOps.TallySpecialUnitsInStack(participantIdx, this.processor.PullLocalSignedWord(0x18));
-
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x0);
-			if (this.processor.FlagSet.IsGreater) goto L21f1;
-			goto L2203;
-
-		L21f1:
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d4), 
-				this.processor.BitOrByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d4)), 0x1));
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d4),
-				this.processor.BitAndByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d4)), 0xf3));
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d8), 0x3);
-			goto L2206;
-
-		L2203:
-			goto L3365;
-
-		L2206:
-			goto L267b;
-
-		L2209:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x18), 0xffff);
-			if (this.processor.FlagSet.IsNotEqual) goto L2212;
-			goto L267b;
-
-		L2212:
-			if (participantIdx == this.processor.PullGlobalSignedWord(0xd20a))
-				goto L267b;
-
-			this.processor.CompareWord(this.processor.PullLocalWord(0x34), 0xa);
-			if (this.processor.FlagSet.IsEqual) goto L2226;
-			goto L225c;
-
-		L2226:
-			this.processor.RegAcc.Value16 = 0x600;
-			this.processor.ScaleAccumulatorToSource((ushort)participantIdx);
-			this.processor.AddScaledToSource(0xc, this.processor.PullLocalWord(0x32));
-			this.processor.RegAcc.LowByte = 0x22;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d7)));
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1138)), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L2248;
-			goto L225c;
-
-		L2248:
-			DisplayHelpForHuman(0x1f28);
-
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81da), 0xff);
-			goto L3365;
-
-		L225c:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x3e), 0xa);
-			if (this.processor.FlagSet.IsNotEqual) goto L2265;
-			goto L2282;
-
-		L2265:
-			this.processor.RegAcc.Value16 = 0xc;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullLocalWord(0x32));
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d7)), 0x16);
-			if (this.processor.FlagSet.IsEqual) goto L227f;
-			goto L2282;
-
-		L227f:
-			goto L3365;
-
-		L2282:
-			if (participantIdx == this.owner.World.PersonParticipantIdx)
-				goto L22b2;
-
-			this.processor.ScaleIndexToBase(0xc, this.processor.PullLocalWord(0x32));
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.RegAcc.LowByte = 0x22;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d7)));
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x113e)), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L22af;
-			goto L22b2;
-
-		L22af:
-			goto L3365;
-
-		L22b2:
-			this.processor.RegAcc.Value16 = 0xc;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullLocalWord(0x32));
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d7)), 0x1a);
-			if (this.processor.FlagSet.IsEqual) goto L22cc;
-			goto L22cf;
-
-		L22cc:
-			goto L3365;
-
-		L22cf:
-			this.processor.RegAcc.Value16 = 0x600;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullGlobalWord(0xd20a));
-			this.processor.ScaleIndex(0xc, this.processor.PullLocalWord(0x18));
-			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegAcc.LowByte = 0x22;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegDest.Value16 + 0x81d7)));
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1138)), 0x1);
-			if (this.processor.FlagSet.IsEqual) goto L22f2;
-			goto L2329;
-
-		L22f2:
-			this.processor.RegAcc.Value16 = 0x600;
-			this.processor.ScaleAccumulatorToSource((ushort)participantIdx);
-			this.processor.AddScaledToSource(0xc, this.processor.PullLocalWord(0x32));
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d7)), 0xe);
-			if (this.processor.FlagSet.IsNotEqual) goto L230c;
-			goto L2329;
-
-		L230c:
-			this.processor.TestBitsByte(this.processor.PullLocalByte(0x40), 0x1);
-			if (this.processor.FlagSet.IsEqual) goto L2315;
-			goto L2329;
-
-		L2315:
-			DisplayHelpForHuman(0x1f30);
-
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81da), 0xff);
-			goto L3365;
-
+				case MoveCheck.Done:
+					goto L3365;
+			}
 		L2329:
 			this.processor.RegAcc.Value16 = 0x600;
 			this.processor.ScaleAccumulatorToSource((ushort)participantIdx);
@@ -4654,6 +4495,135 @@ namespace Civilization1Remaster.Game
 			this.owner.UnitOps.EliminateUnit(participantIdx, this.processor.PullLocalSignedWord(0x32));
 
 			return MoveStep.Done;
+		}
+
+		/// <summary>Where the move goes on after CheckMoveTile</summary>
+		private enum MoveCheck
+		{
+			/// <summary>The unit moves (L267b)</summary>
+			Moves,
+
+			/// <summary>No move, the order is done (L3365)</summary>
+			Done,
+
+			/// <summary>A foreign unit there is attacked (L2329)</summary>
+			Attacks,
+		}
+
+		/// <summary>
+		/// A diplomat next to a foreign unit where no city is bribes it (BuyUnit) and forgets its destination (written through
+		/// SI as the original leaves it). The locals of HandlePlayerTurn are used as in the original.
+		/// </summary>
+		private void BribeUnitOnTheWay(short participantIdx)
+		{
+			short troopIdx = (short)this.processor.PullLocalWord(0x32);
+			this.processor.RegSource.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride + troopIdx * UnitMemory.TroopStride);
+
+			if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) != UnitKindTable.Diplomat || this.processor.PullLocalWord(0x18) == 0xffff ||
+				participantIdx == this.processor.PullGlobalSignedWord(0xd20a))
+			{
+				return;
+			}
+
+			this.owner.Diplomats.BuyUnit(this.processor.PullGlobalSignedWord(0xd20a),
+				this.processor.PullLocalSignedWord(0x18),
+				participantIdx);
+
+			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + UnitMemory.Origin + UnitMemory.TravelHoriz), 0xff);
+		}
+
+		/// <summary>
+		/// The tile of the move: a land unit to the sea boards an own ship with room (sentried, 3 moves – written through SI as
+		/// TallySpecialUnitsInStack leaves it, as the original does) or stays; a foreign unit there: no attack from a ship by a
+		/// land unit (help), by a submarine on land, by a computer unit without attack, by a diplomat, on a plane outside a
+		/// city except by a fighter (help); else it is attacked. The locals of HandlePlayerTurn are used as in the original.
+		/// </summary>
+		private MoveCheck CheckMoveTile(short participantIdx)
+		{
+			short troopIdx = (short)this.processor.PullLocalWord(0x32);
+			ushort unit = (ushort)(participantIdx * UnitMemory.ParticipantStride + troopIdx * UnitMemory.TroopStride);
+			short owner = this.processor.PullGlobalSignedWord(0xd20a);
+
+			if (this.processor.PullLocalWord(0x3e) == MapRules.OceanTerrain)
+			{
+				this.processor.RegSource.Value16 = unit;
+				this.processor.RegBase.Value16 = (ushort)(this.troops.TroopKind(participantIdx, troopIdx) * UnitKindTable.Stride);
+
+				if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == UnitKindTable.LandUnits)
+				{
+					// A land unit boards an own ship with room
+					if (participantIdx != this.processor.PullGlobalSignedWord(0xd20a) || this.processor.PullLocalWord(0x18) == 0xffff ||
+						(short)this.owner.UnitOps.TallySpecialUnitsInStack(participantIdx, this.processor.PullLocalSignedWord(0x18)) <= 0)
+					{
+						return MoveCheck.Done;
+					}
+
+					ushort status = (ushort)(this.processor.RegSource.Value16 + UnitMemory.Origin + UnitMemory.Status);
+					this.processor.EmitUInt8(this.processor.SegData.Value16, status, (byte)(this.processor.PullUInt8(this.processor.SegData.Value16, status) | 1));
+					this.processor.EmitUInt8(this.processor.SegData.Value16, status, (byte)(this.processor.PullUInt8(this.processor.SegData.Value16, status) & 0xf3));
+					this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + UnitMemory.Origin + UnitMemory.LeftoverSteps), 3);
+
+					return MoveCheck.Moves;
+				}
+			}
+
+			if (this.processor.PullLocalWord(0x18) == 0xffff || participantIdx == this.processor.PullGlobalSignedWord(0xd20a))
+				return MoveCheck.Moves;
+
+			if (this.processor.PullLocalWord(0x34) == MapRules.OceanTerrain)
+			{
+				this.processor.RegSource.Value16 = unit;
+				this.processor.RegBase.Value16 = (ushort)(this.troops.TroopKind(participantIdx, troopIdx) * UnitKindTable.Stride);
+
+				if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == UnitKindTable.LandUnits)
+				{
+					// (a land unit on a ship does not attack)
+					DisplayHelpForHuman(0x1f28);
+					this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + UnitMemory.Origin + UnitMemory.TravelHoriz), 0xff);
+
+					return MoveCheck.Done;
+				}
+			}
+
+			this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
+			this.processor.RegSource.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride);
+
+			if (this.processor.PullLocalWord(0x3e) != MapRules.OceanTerrain && this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) == UnitKindTable.Submarine)
+				return MoveCheck.Done;
+
+			if (participantIdx != this.owner.World.PersonParticipantIdx)
+			{
+				this.processor.RegBase.Value16 = (ushort)(this.troops.TroopKind(participantIdx, troopIdx) * UnitKindTable.Stride);
+
+				if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.AssaultPower) == 0)
+					return MoveCheck.Done;
+			}
+
+			this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
+			this.processor.RegSource.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride);
+
+			if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) == UnitKindTable.Diplomat)
+				return MoveCheck.Done;
+
+			// A plane outside a city is attacked only by a fighter
+			short guardian = (short)this.processor.PullLocalWord(0x18);
+			this.processor.RegDest.Value16 = (ushort)(guardian * UnitMemory.TroopStride);
+			this.processor.RegBase.Value16 = (ushort)(this.troops.TroopKind(owner, guardian) * UnitKindTable.Stride);
+
+			if (this.troops.KindField(owner, guardian, UnitKindTable.LandGroup) == UnitKindTable.AirUnits)
+			{
+				this.processor.RegSource.Value16 = unit;
+
+				if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) != 0xe && (this.processor.PullLocalByte(0x40) & 1) == 0)
+				{
+					DisplayHelpForHuman(0x1f30);
+					this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + UnitMemory.Origin + UnitMemory.TravelHoriz), 0xff);
+
+					return MoveCheck.Done;
+				}
+			}
+
+			return MoveCheck.Attacks;
 		}
 
 		/// <summary>
