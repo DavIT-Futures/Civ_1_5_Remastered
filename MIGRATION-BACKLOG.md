@@ -967,13 +967,19 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
 - Strategia testów (2026-10-19, po wielogodzinnych zawieszeniach): limit czasu scenariusza w `DifferentialPair` (120 s,
   zawieszenie = błąd testu z nazwą scenariusza), `fresh: true` dla testów zmieniających stan, mutacje równolegle w `.mutants/`,
   budżet 15 – 25 mutacji na porcję, po zmianie testu powtarzać tylko ocalałe. Szczegóły w skillu `migrate-batch`.
+- Porcja 121 (2026-10-19): dziewiąty kawałek `HandleCity` – `ProduceInCity` (L14de – L174b, wynik `ProductionStep`): żywność i
+  tarcze tury (flaga 1: bez tarcz), jednostka gotowa przy cenie x 0x4a (osadnicy miasta rozmiaru 1 na najłatwiejszym poziomie
+  czekają, komputer nie buduje dyplomatów, pierwsza jednostka rodzaju do powtórki, koszary = weteran, osadnicy zmniejszają
+  miasto, miasto rozmiaru 1 ginie, chyba że to ostatnie miasto właściciela). Przy `TrueExtent--` flaga pochodzi z porównania
+  rozmiaru z 1 – to samo co zero po zmniejszeniu, więc tu bez błędu. Nowy test `HandleCityProductionMatchesOriginalCode` w
+  `BatchHundredThirteen` (osobny, bo warianty produkcji wypierały warianty żywności z jednego testu). Wszystkie mutacje złapane.
 
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
 (`HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-19 (po porcji 120): 1 metoda w stylu asm (`HandleCity`, 8428 linii); `ShiftAIUnit` i `HandlePlayerTurn` gotowe. `HandleCity(miasto, znacznik)`: -1 tylko liczy, 0 tura miasta, 1 ekran miasta; przepisywać kawałkami od początku (po porcji 120: następny od L14de – tura miasta: żywność, tarcze, produkcja). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
+Stan 2026-10-19 (po porcji 121): 1 metoda w stylu asm (`HandleCity`, 8428 linii); `ShiftAIUnit` i `HandlePlayerTurn` gotowe. `HandleCity(miasto, znacznik)`: -1 tylko liczy, 0 tura miasta, 1 ekran miasta; przepisywać kawałkami od początku (po porcji 121: następny od L174b – jednostka komputera po zbudowaniu). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 

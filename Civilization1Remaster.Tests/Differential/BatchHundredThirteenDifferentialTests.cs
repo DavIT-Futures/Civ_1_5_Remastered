@@ -26,7 +26,21 @@ public sealed class BatchHundredThirteenDifferentialTests(ITestOutputHelper outp
 			Assert.True(ways.Contains(way), $"No city met '{way}' (met: {string.Join(", ", ways.Order())})");
 	}
 
-	private void CheckCities(int bay, HashSet<string> ways)
+	[Fact]
+	public void HandleCityProductionMatchesOriginalCode()
+	{
+		// Cities in their turn with a unit ready (settlers, also of a city of size 1 or the last city, a diplomat of a computer
+		// player, others; the barracks, the first unit of its kind, the shields exactly the price)
+		HashSet<string> ways = [];
+
+		foreach (int bay in new[] { 5, 9, 13 })
+			CheckCities(bay, ways, true);
+
+		foreach (string way in new[] { "unit built", "city lost" })
+			Assert.True(ways.Contains(way), $"No city met '{way}' (met: {string.Join(", ", ways.Order())})");
+	}
+
+	private void CheckCities(int bay, HashSet<string> ways, bool production = false)
 	{
 		Check(bay, 40, (chance, pair) =>
 		{
@@ -42,6 +56,9 @@ public sealed class BatchHundredThirteenDifferentialTests(ITestOutputHelper outp
 			short townIdx = (short)(capitals.Count > 0 && chance.Next(4) == 0 ? capitals[chance.Next(capitals.Count)] : towns[chance.Next(towns.Count)]);
 			bool human = engine.World.Towns[townIdx].ParticipantIdx == person;
 			short marker = (short)(human && chance.Next(4) == 0 ? 1 : chance.Next(2) - 1);
+
+			if (production)
+				marker = 0;
 			short materials = (short)new[] { -1, -5, 0, 1000, 1500 }[chance.Next(5)];
 			bool badMaterials = chance.Next(3) == 0;
 			// The advances that make citizens content: 0 kept, 1 taken away, 2 all given
@@ -95,6 +112,25 @@ public sealed class BatchHundredThirteenDifferentialTests(ITestOutputHelper outp
 			// The wonder 15 in this city or in another city of the owner (maybe on another continent)
 			bool marvel = !screen && chance.Next(3) == 0;
 			int marvelPick = chance.Next(1000);
+			// A unit ready in the turn: the settlers (sometimes of a city of size 1, the last of its owner), a diplomat, others;
+			// the barracks, the first unit of its kind for the replay
+			bool produce = marker == 0 && chance.Next(4) != 0 && production;
+			sbyte produced = (sbyte)new[] { 0, 0, 0x1a, 0, 0xe }[chance.Next(5)];
+			bool smallCity = chance.Next(2) == 0;
+			bool lastCity = chance.Next(3) == 0;
+			bool barracks = chance.Next(2) == 0;
+			bool firstOfKind = chance.Next(2) == 0;
+			// (the shields exactly the price, or one less; the easiest level)
+			int exactCost = chance.Next(3);
+			bool easiest = chance.Next(2) == 0;
+			sbyte smallSize = (sbyte)chance.Next(1, 3);
+
+			// (no food variants with production, which changes the size; a full store at size 10 or 11 for the aqueduct)
+			if (produce)
+				food = 0;
+
+			if (food == 2 && size == 0)
+				size = 10;
 
 			if (close)
 			{
@@ -106,10 +142,11 @@ public sealed class BatchHundredThirteenDifferentialTests(ITestOutputHelper outp
 				regime = -1;
 				buildings = false;
 				marvel = false;
+				produce = false;
 			}
 
 			return new Scenario(
-				$"HandleCity({townIdx}, {marker}), materials {(badMaterials ? materials : "kept")}, advances {advances}, no palaces {noPalaces}, close {close}, level {hardness}, leader {leader}, flag {flag}, food {food}, size {size}, granary {granary}, aqueduct {aqueduct}, diag {diag}, flag 0x80 {unrest}, slots {(slotsSet ? string.Join("/", slots) : "kept")}, unit kind {supportedKind}, government {regime}, diag 2 {diag2}, barbarian {barbarian}, free city tile {freeCityTile}, mixed workers {(mixWorkers ? mixed : 0)}, unseen {unseen}, buildings {(buildings ? buildingBits : -1)}, wonder 15 {marvel}",
+				$"HandleCity({townIdx}, {marker}), materials {(badMaterials ? materials : "kept")}, advances {advances}, no palaces {noPalaces}, close {close}, level {hardness}, leader {leader}, flag {flag}, food {food}, size {size}, granary {granary}, aqueduct {aqueduct}, diag {diag}, flag 0x80 {unrest}, slots {(slotsSet ? string.Join("/", slots) : "kept")}, unit kind {supportedKind}, government {regime}, diag 2 {diag2}, barbarian {barbarian}, free city tile {freeCityTile}, mixed workers {(mixWorkers ? mixed : 0)}, unseen {unseen}, buildings {(buildings ? buildingBits : -1)}, wonder 15 {marvel}, produce {(produce ? produced : -1)} small {(smallCity ? smallSize : 0)} last {lastCity} barracks {barracks} first {firstOfKind} exact {exactCost} easiest {easiest}",
 				game =>
 				{
 					HumanTurnScript.Install(game, [new HumanTurnScript.Input(0x1b), new HumanTurnScript.Input(0x1b)]);
@@ -211,6 +248,40 @@ public sealed class BatchHundredThirteenDifferentialTests(ITestOutputHelper outp
 						game.World.MarvelTownIdx[15] = (short)(marvelPick % 2 == 0 ? townIdx : ownTowns[marvelPick % ownTowns.Count]);
 					}
 
+					if (produce)
+					{
+						var making = game.World.Towns[townIdx];
+						making.PresentMakingIdx = produced;
+						making.MaterialsTally = 990;
+
+						if (exactCost > 0)
+						{
+							// The price x the box of the turn (10 for the human, else 16 - 2 x the level, 2 less for the leader)
+							int level = easiest ? 0 : Math.Max(1, (int)game.World.HardnessTier);
+							int box = making.ParticipantIdx == person ? 10 : 16 - 2 * level -
+								(game.World.Season >= 0 && game.World.Participants[person].Standing == 7 && level > 1 ? 2 : 0);
+							int price = game.Processor.Storage.PullUInt16(0x3b01, (ushort)(UnitKindTable.Origin + produced * UnitKindTable.Stride + UnitKindTable.Price));
+							making.MaterialsTally = (short)(price * box - (exactCost - 1));
+						}
+
+						// (the easiest level, or one above it)
+						game.World.HardnessTier = (short)(easiest ? 0 : Math.Max((short)1, game.World.HardnessTier));
+						making.StructureMarkers0 = (ushort)(barracks ? making.StructureMarkers0 | 2 : making.StructureMarkers0 & ~2);
+
+						if (smallCity)
+						{
+							// (no food, so it does not grow first)
+							making.TrueExtent = smallSize;
+							making.GrainTally = 0;
+						}
+
+						if (lastCity)
+							game.World.Participants[making.ParticipantIdx].TownTally = 1;
+
+						if (firstOfKind)
+							game.World.ScienceLeadingFoundVia[produced] &= ~8;
+					}
+
 					if (freeCityTile)
 						game.Processor.Storage.EmitUInt16(game.Processor.SegStack.Value16, (ushort)(frame - 0x16), 0);
 
@@ -266,6 +337,9 @@ public sealed class BatchHundredThirteenDifferentialTests(ITestOutputHelper outp
 						met.Add("computer turn");
 
 					int Delta(string name) => Calls(game, pair, name) - before.GetValueOrDefault(name);
+
+					if (Delta("ConstructUnit") > 0)
+						met.Add("unit built");
 
 					if (Delta("FinalizeProduction") > 0)
 						met.Add("city lost");
