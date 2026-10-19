@@ -224,889 +224,15 @@ namespace Civilization1Remaster.Game
 			// The end of the move: the unit shown, a plane lands
 			FinishMove(participantIdx);
 		L3365:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x44);
-			goto L3abd;
-
-		L336b:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xd806), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L3375;
-			goto L337d;
-
-		L3375:
-			this.owner.ArmyPicker.DisplayWhichArmy();
-
-			goto L3c40;
-
-		L337d:
-			this.owner.Briefings.DisplayCityStatusReport(this.owner.World.PersonParticipantIdx);
-
-			goto L3c40;
-
-		L338c:
-			this.owner.Briefings.RenderUnitCountsChart(this.owner.World.PersonParticipantIdx);
-			
-			goto L3c40;
-
-		L339b:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xd806), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L33a5;
-			goto L33cf;
-
-		L33a5:
-			this.owner.Startup.ConcealMouseCursor();
-			
-			this.owner.Services.DisplayScreen(2);
-			
-			this.owner.Libc.ReadKey();
-
-			this.owner.Services.DisplayScreen(0);
-			
-			this.owner.Startup.DisplayMouseCursor();
-
-			goto L33db;
-
-		L33cf:
-			this.owner.Briefings.DisplayMilitaryReport();
-
-		L33db:
-			goto L3c40;
-
-		L33de:
-			this.owner.Briefings.DisplayAttitudeReport(this.owner.World.PersonParticipantIdx);
-
-			goto L3c40;
-
-		L33ed:
-			this.owner.Briefings.DisplayTradeReport(this.owner.World.PersonParticipantIdx);
-			
-			goto L3c40;
-
-		L33fc:
-			this.owner.Briefings.DisplayScienceReport(this.owner.World.PersonParticipantIdx);
-
-			goto L3c40;
-
-		L340b:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xd806), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L3415;
-			goto L343a;
-
-		L3415:
-			this.processor.EmitLocalWord(0x3c, 0x1);
-			goto L3420;
-
-		L341d:
-			this.processor.EmitLocalWord(0x3c, this.processor.IncrementWord(this.processor.PullLocalWord(0x3c)));
-
-		L3420:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x3c), 0x8);
-			if (this.processor.FlagSet.IsLess) goto L3429;
-			goto L3437;
-
-		L3429:
-			this.owner.RealmInfo.DisplayCivilizationOverview(this.processor.PullLocalSignedWord(0x3c));
-			
-			goto L341d;
-
-		L3437:
-			goto L343f;
-
-		L343a:
-			this.owner.Atlas.DisplayWondersOfTheWorld();
-
-		L343f:
-			goto L3c40;
-
-		L3442:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xd806), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L344c;
-			goto L3459;
-
-		L344c:
-			this.owner.Atlas.DisplayCivilizationGraph();
-
-			this.owner.Replayer.DisplayReplay();
-
-			goto L345e;
-
-		L3459:
-			this.owner.Legends.DisplayTopCities();
-
-		L345e:
-			goto L3c40;
-
-		L3461:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xd806), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L346b;
-			goto L3473;
-
-		L346b:
-			this.owner.Atlas.DisplayGameFigures();
-
-			goto L3c40;
-
-		L3473:
-			this.owner.Founding.DisplayFinalScore(this.owner.World.PersonParticipantIdx, true);
-
-			goto L3c40;
-
-		L348a:
-			this.owner.Atlas.DisplayWorldMap(1);
-
-			goto L3c40;
-
-		L349d:
-			this.processor.EmitLocalWord(0x24, 0x1);
-			goto L34dd;
-
-		L34a5:
-			this.processor.EmitLocalWord(0x24, 0x2);
-			goto L34dd;
-
-		L34ad:
-			this.processor.EmitLocalWord(0x24, 0x3);
-			goto L34dd;
-
-		L34b5:
-			this.processor.EmitLocalWord(0x24, 0x4);
-			goto L34dd;
-
-		L34bd:
-			this.processor.EmitLocalWord(0x24, 0x5);
-			goto L34dd;
-
-		L34c5:
-			this.processor.EmitLocalWord(0x24, 0x6);
-			goto L34dd;
-
-		L34cd:
-			this.processor.EmitLocalWord(0x24, 0x7);
-			goto L34dd;
-
-		L34d5:
-			this.processor.EmitLocalWord(0x24, 0x8);
-
-		L34dd:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x24);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1882));
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, 0x1);
-			this.processor.EmitGlobalWord(0xd4cc, this.processor.SumWord(this.processor.PullGlobalWord(0xd4cc), this.processor.RegAcc.Value16));
-
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x18e4));
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, 0x1);
-			this.processor.EmitGlobalWord(0xd75e, this.processor.SumWord(this.processor.PullGlobalWord(0xd75e), this.processor.RegAcc.Value16));
-
-			this.owner.MapOps.FocusMapView(this.owner.World.PersonParticipantIdx,
-				this.processor.PullGlobalSignedWord(0xd4cc),
-				this.processor.PullGlobalSignedWord(0xd75e));
-
-			goto L3c40;
-
-		L3511:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x32), 0x80);
-			if (this.processor.FlagSet.IsEqual) goto L351b;
-			goto L351e;
-
-		L351b:
-			goto L3ea1;
-
-		L351e:
-			goto L3c40;
-
-		L3521:
-			this.owner.CityNaming.DisplayNewCityLocation();
-
-			goto L3c40;
-
-		L3529:
-			if (this.owner.World.RoundTally != 0) goto L3533;
-			goto L353f;
-
-		L3533:
-			this.owner.SaveLoad.DisplayStoreGameDialog(0xffff);
-
-		L353f:
-			goto L3c40;
-
-		L3542:
-			this.processor.EmitGlobalByte(0xba06, 0x0);
-
-			this.owner.BlockText.DisplayTextDialog(0x1f6a);
-
-			this.owner.TurnHooks.DisplayDialog(0xba06, 64, 80);
-
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1);
-			if (this.processor.FlagSet.IsNotEqual) goto L356f;
-			goto L3572;
-
-		L356f:
-			goto L3c40;
-
-		L3572:
-			this.processor.RegSource.Value16 = (ushort)participantIdx;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.owner.World.Participants[participantIdx].RegimeKind = 0;
-
-			this.owner.Libc.CopyText(0xba06, "The ");
-
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1992)));
-
-			this.owner.Libc.AppendText(0xba06, " are\nrevolting! Citizens\ndemand new govt.\n");
-
-			this.owner.Paper.DisplayNewspaper(-1);
-			
-			this.owner.NewGameWizard.ImportGovernmentGraphics();
-
-			this.owner.TurnHooks.RepaintMainScreen();
-
-			goto L3c40;
-
-		L35c6:
-			this.owner.Services.PrepareMouse();
-
-			goto L3c40;
-
-		L35ce:
-			this.owner.Libc.CopyText(0xba06, "Select new Tax rate:\n ");
-
-			this.processor.EmitLocalWord(0x3a, 0x0);
-			goto L35e9;
-
-		L35e6:
-			this.processor.EmitLocalWord(0x3a, this.processor.IncrementWord(this.processor.PullLocalWord(0x3a)));
-
-		L35e9:
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.Participants[participantIdx].LevyRatio;
-			this.processor.RegAcc.Value16 += (ushort)this.owner.World.Participants[participantIdx].ResearchLevyRatio;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x3a));
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L35fe;
-			goto L3673;
-
-		L35fe:
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText((short)(10 * (short)this.processor.PullLocalWord(0x3a)), 10));
-
-			this.owner.Libc.AppendText(0xba06, "% Tax, (");
-
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText((short)((this.owner.World.Participants[participantIdx].LevyRatio +
-					this.owner.World.Participants[participantIdx].ResearchLevyRatio -
-					(short)this.processor.PullLocalWord(0x3a)) * 10), 10));
-
-			this.owner.Libc.AppendText(0xba06, "% Science)\n ");
-			goto L35e6;
-
-		L3673:
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.Participants[participantIdx].LevyRatio;
-			this.processor.EmitGlobalWord(0x2f9a, this.processor.RegAcc.Value16);
-
-			this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
-
-			this.processor.EmitLocalWord(0x3a, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x3a), 0xffff);
-			if (this.processor.FlagSet.IsNotEqual) goto L369f;
-			goto L36b6;
-
-		L369f:
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.Participants[participantIdx].LevyRatio;
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x3a));
-			this.owner.World.Participants[participantIdx].ResearchLevyRatio += 
-				(short)this.processor.RegAcc.Value16;
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x3a);
-			this.owner.World.Participants[participantIdx].LevyRatio = (short)this.processor.RegAcc.Value16;
-
-			this.owner.TurnHooks.RenderStatusBar();
-
-		L36b6:
-			goto L3c40;
-
-		L36b9:
-			this.owner.Libc.CopyText(0xba06, "Select new Luxuries rate:\n ");
-
-			this.processor.EmitLocalWord(0x3a, 0x0);
-			goto L36d4;
-
-		L36d1:
-			this.processor.EmitLocalWord(0x3a, this.processor.IncrementWord(this.processor.PullLocalWord(0x3a)));
-
-		L36d4:
-			this.processor.RegAcc.Value16 = 10;
-			this.processor.RegAcc.Value16 -= (ushort)this.owner.World.Participants[participantIdx].LevyRatio;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x3a));
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L36ea;
-			goto L375e;
-
-		L36ea:
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText((short)(10 * (short)this.processor.PullLocalWord(0x3a)), 10));
-
-			this.owner.Libc.AppendText(0xba06, "% Luxuries, (");
-
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText((short)(-((short)this.processor.PullLocalWord(0x3a) +
-				this.owner.World.Participants[participantIdx].LevyRatio - 10) * 10), 10));
-
-			this.owner.Libc.AppendText(0xba06, "% Science)\n ");
-			goto L36d1;
-
-		L375e:
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.Participants[participantIdx].LevyRatio;
-			this.processor.RegAcc.Value16 += (ushort)this.owner.World.Participants[participantIdx].ResearchLevyRatio;
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, 0xa);
-			this.processor.RegAcc.Value16 = this.processor.NegateWord(this.processor.RegAcc.Value16);
-			this.processor.EmitGlobalWord(0x2f9a, this.processor.RegAcc.Value16);
-
-			this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
-
-			this.processor.EmitLocalWord(0x3a, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x3a), 0xffff);
-			if (this.processor.FlagSet.IsNotEqual) goto L3793;
-			goto L37a8;
-
-		L3793:
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.Participants[participantIdx].LevyRatio;
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x3a));
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, 10);
-			this.processor.RegAcc.Value16 = this.processor.NegateWord(this.processor.RegAcc.Value16);
-			this.owner.World.Participants[participantIdx].ResearchLevyRatio = (short)this.processor.RegAcc.Value16;
-
-			this.owner.TurnHooks.RenderStatusBar();
-
-		L37a8:
-			goto L3c40;
-
-		L37ab:
-			this.processor.EmitGlobalWord(0xdcfc, 0x1);
-
-			this.owner.MapOps.FocusMapView(participantIdx,
-				this.processor.PullGlobalSignedWord(0xd4cc),
-				this.processor.PullGlobalSignedWord(0xd75e));
-
-			this.owner.Conquest.AwaitForKeyPressOrMouseClick();
-
-			this.processor.EmitGlobalWord(0xdcfc, 0x0);
-
-			this.owner.MapOps.FocusMapView(participantIdx,
-				this.processor.PullGlobalSignedWord(0xd4cc),
-				this.processor.PullGlobalSignedWord(0xd75e));
-
-			goto L3c40;
-
-		L37e5:
-			this.processor.EmitLocalWord(0x3a, 0x0);
-			goto L37f0;
-
-		L37ed:
-			this.processor.EmitLocalWord(0x3a, this.processor.IncrementWord(this.processor.PullLocalWord(0x3a)));
-
-		L37f0:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x3a), 0x10);
-			if (this.processor.FlagSet.IsLess) goto L37f9;
-			goto L3837;
-
-		L37f9:
-			this.processor.RegAcc.Value16 = 0x3a;
-			this.processor.ScaleAccumulatorToSource(this.processor.PullLocalWord(0x3a));
-
-			this.processor.RegAcc.Value16 = (ushort)(this.owner.Libc.Dice.DrawInt(3));
-
-			this.processor.RegAcc.Value16 = this.processor.DecrementWord(this.processor.RegAcc.Value16);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1512), this.processor.RegAcc.Value16);
-
-			this.processor.RegAcc.Value16 = (ushort)(this.owner.Libc.Dice.DrawInt(3));
-
-			this.processor.RegAcc.Value16 = this.processor.DecrementWord(this.processor.RegAcc.Value16);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1514), this.processor.RegAcc.Value16);
-
-			this.processor.RegAcc.Value16 = (ushort)(this.owner.Libc.Dice.DrawInt(3));
-
-			this.processor.RegAcc.Value16 = this.processor.DecrementWord(this.processor.RegAcc.Value16);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1516), this.processor.RegAcc.Value16);
-			goto L37ed;
-
-		L3837:
-			this.owner.TurnHooks.DisplayDialog(0x2003, 100, 80);
-
-			goto L3c40;
-
-		L384e:
-			this.owner.World.SessionPrefMarkers ^= 0x10;
-
-			this.owner.Libc.CopyText(0xba06, "Sounds ");
-
-			if ((this.owner.World.SessionPrefMarkers & 0x10) != 0)
+			// The keys of the reports, the menus, the rates and the view
+			switch (CarryOutKey(participantIdx))
 			{
-				this.owner.Libc.AppendText(0xba06, 0x2020);
+				case KeyStep.MenuOrder:
+					goto L0d0a;
+
+				case KeyStep.EndOfTurn:
+					goto L3ea1;
 			}
-			else
-			{
-				this.owner.Libc.AppendText(0xba06, 0x2024);
-			}
-		
-			this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
-
-			goto L3c40;
-
-		L389b:
-			this.owner.HelpSystem.DisplayHelpPopup(0x2029);
-			
-			this.owner.HelpSystem.DisplayHelpPopup(0x2030);
-			
-			goto L3c40;
-
-		L38b6:
-			// Load Game from the GAME menu leaves the turn without asking
-			if (this.processor.PullGlobalWord(0xdc48) == GameLoadAndSave.FetchSessionAsk) goto L38fb;
-
-			this.owner.Libc.CopyText(0xba06, "Are you sure you\nwant to Quit?\n Keep Playing\n Yes, Quit\n");
-
-			this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
-
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1);
-			if (this.processor.FlagSet.IsNotEqual) goto L38e2;
-			goto L38eb;
-
-		L38e2:
-			this.processor.EmitGlobalWord(0xdc48, 0x0);
-			goto L3c40;
-
-		L38eb:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xdc48), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L38f5;
-			goto L38fb;
-
-		L38f5:
-			this.processor.EmitGlobalWord(0xdc48, 0x1);
-
-		L38fb:
-			this.processor.EmitLocalWord(0x32, 0x80);
-			goto L3c40;
-
-		L3903:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x1a3c), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L390d;
-			goto L3952;
-
-		L390d:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L3916;
-			goto L3952;
-
-		L3916:
-			this.processor.EmitLocalWord(0x4, 0x0);
-
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.ChartSight[this.processor.PullLocalWord(0xe),
-				this.processor.PullLocalWord(0x12)];
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegData.Value16 = 0x1;
-			this.processor.RegCount.LowByte = (byte)participantIdx;
-			this.processor.RegData.Value16 = this.processor.ShiftLeftWord(this.processor.RegData.Value16, this.processor.RegCount.LowByte);
-			this.processor.TestBitsWord(this.processor.RegAcc.Value16, this.processor.RegData.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L393f;
-			goto L394d;
-
-		L393f:
-			this.owner.MapOps.RepaintMapTile(
-				this.processor.PullLocalSignedWord(0xe),
-				this.processor.PullLocalSignedWord(0x12));
-
-		L394d:
-			this.processor.EmitLocalWord(0xe, 0xffff);
-
-		L3952:
-			goto L3c40;
-
-		L3955:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x1a3c), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L395f;
-			goto L3a38;
-
-		L395f:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L3968;
-			goto L39a2;
-
-		L3968:
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.ChartSight[this.processor.PullLocalWord(0xe),
-				this.processor.PullLocalWord(0x12)];
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegData.Value16 = 0x1;
-			this.processor.RegCount.LowByte = (byte)participantIdx;
-			this.processor.RegData.Value16 = this.processor.ShiftLeftWord(this.processor.RegData.Value16, this.processor.RegCount.LowByte);
-			this.processor.TestBitsWord(this.processor.RegAcc.Value16, this.processor.RegData.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L398c;
-			goto L399a;
-
-		L398c:
-			this.owner.MapOps.RepaintMapTile(
-				this.processor.PullLocalSignedWord(0xe),
-				this.processor.PullLocalSignedWord(0x12));
-
-		L399a:
-			this.processor.EmitLocalWord(0xe, 0xffff);
-			goto L3a33;
-
-		L39a2:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x32), 0x80);
-			if (this.processor.FlagSet.IsNotEqual) goto L39ac;
-			goto L39ef;
-
-		L39ac:
-			this.processor.RegAcc.Value16 = 0x600;
-			this.processor.ScaleAccumulatorToSource((ushort)participantIdx);
-			this.processor.AddScaledToSource(0xc, this.processor.PullLocalWord(0x32));
-
-			VerifyPositionOnScreen(
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)),
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6)));
-
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L39da;
-			goto L39ef;
-
-		L39da:
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5));
-			this.processor.RegAcc.HighByte = 0;
-			this.processor.EmitLocalWord(0xe, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6));
-			this.processor.RegAcc.HighByte = 0;
-			this.processor.EmitLocalWord(0x12, this.processor.RegAcc.Value16);
-			goto L3a01;
-
-		L39ef:
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0xd4cc);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x7);
-			this.processor.EmitLocalWord(0xe, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0xd75e);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x6);
-			this.processor.EmitLocalWord(0x12, this.processor.RegAcc.Value16);
-
-		L3a01:
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.ChartSight[this.processor.PullLocalWord(0xe),
-				this.processor.PullLocalWord(0x12)];
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegData.Value16 = 0x1;
-			this.processor.RegCount.LowByte = (byte)participantIdx;
-			this.processor.RegData.Value16 = this.processor.ShiftLeftWord(this.processor.RegData.Value16, this.processor.RegCount.LowByte);
-			this.processor.TestBitsWord(this.processor.RegAcc.Value16, this.processor.RegData.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L3a25;
-			goto L3a33;
-
-		L3a25:
-			this.owner.MapOps.RepaintMapTile(
-				this.processor.PullLocalSignedWord(0xe),
-				this.processor.PullLocalSignedWord(0x12));
-
-		L3a33:
-			this.processor.EmitLocalWord(0x4, this.processor.BitXorWord(this.processor.PullLocalWord(0x4), 0x1));
-
-		L3a38:
-			goto L3c40;
-
-		L3a3b:
-			this.owner.MenuSystem.ManageMenuBar(participantIdx, this.processor.PullLocalSignedWord(0x32), 0);
-
-			goto L3aa4;
-
-		L3a50:
-			this.owner.MenuSystem.ManageMenuBar(participantIdx, this.processor.PullLocalSignedWord(0x32), 1);
-
-			goto L3aa4;
-
-		L3a65:
-			this.owner.MenuSystem.ManageMenuBar(participantIdx, this.processor.PullLocalSignedWord(0x32), 2);
-
-			goto L3aa4;
-
-		L3a7a:
-			this.owner.MenuSystem.ManageMenuBar(participantIdx, this.processor.PullLocalSignedWord(0x32), 3);
-
-			goto L3aa4;
-
-		L3a8f:
-			this.owner.MenuSystem.ManageMenuBar(participantIdx, this.processor.PullLocalSignedWord(0x32), 4);
-
-			goto L3aa4;
-
-		ToggleDebugMode:
-			this.processor.EmitGlobalWord(0xd806, (ushort)(~this.processor.PullGlobalWord(0xd806)));
-			this.processor.EmitLocalWord(0x24, 0x0);
-			goto L34dd;
-
-		L3aa4:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xd4ca), 0xffff);
-			if (this.processor.FlagSet.IsNotEqual) goto L3aae;
-			goto L3ab7;
-
-		L3aae:
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0xd4ca);
-			this.processor.EmitLocalWord(0x44, this.processor.RegAcc.Value16);
-			goto L0d0a;
-
-		L3ab7:
-			goto L3c40;
-
-		L3abd:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x2300); // Alt + H
-			if (this.processor.FlagSet.IsNotEqual) goto L3ac5;
-			goto L389b;
-
-		L3ac5:
-			if (this.processor.FlagSet.IsLessOrEqual) goto L3aca;
-			goto L3b7d;
-
-		L3aca:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x3d); // '='
-			if (this.processor.FlagSet.IsNotEqual) goto L3ad2;
-			goto L35ce;
-
-		L3ad2:
-			if (this.processor.FlagSet.IsLessOrEqual) goto L3ad7;
-			goto L3b22;
-
-		L3ad7:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1b); // ESC
-			if (this.processor.FlagSet.IsNotEqual) goto L3adf;
-			goto L3903;
-
-		L3adf:
-			if (this.processor.FlagSet.IsLessOrEqual) goto L3ae4;
-			goto L3aff;
-
-		L3ae4:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xfffe); // ??
-			if (this.processor.FlagSet.IsNotEqual) goto L3aec;
-			goto L3542;
-
-		L3aec:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x9); // Tab
-			if (this.processor.FlagSet.IsNotEqual) goto L3af4;
-			goto L3955;
-
-		L3af4:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xd); // Enter
-			if (this.processor.FlagSet.IsNotEqual) goto L3afc;
-			goto L3511;
-
-		L3afc:
-			goto L3c40;
-
-		L3aff:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x20); // Space
-			if (this.processor.FlagSet.IsNotEqual) goto L3b07;
-			goto L3511;
-
-		L3b07:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x2b); // '+'
-			if (this.processor.FlagSet.IsNotEqual) goto L3b0f;
-			goto L35ce;
-
-		L3b0f:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x2d); // '-'
-			if (this.processor.FlagSet.IsNotEqual) goto L3b17;
-			goto L36b9;
-
-		L3b17:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x2f); // '/'
-			if (this.processor.FlagSet.IsNotEqual) goto L3b1f;
-			goto L3521;
-
-		L3b1f:
-			goto L3c40;
-
-		L3b22:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1000); // Alt + Q
-			if (this.processor.FlagSet.IsNotEqual) goto L3b2a;
-			goto L38b6;
-
-		L3b2a:
-			if (this.processor.FlagSet.IsLessOrEqual) goto L3b2f;
-			goto L3b52;
-
-		L3b2f:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x3f); // '?'
-			if (this.processor.FlagSet.IsNotEqual) goto L3b37;
-			goto L3521;
-
-		L3b37:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x53); // 'S'
-			if (this.processor.FlagSet.IsNotEqual) goto L3b3f;
-			goto L3529;
-
-		L3b3f:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x5f); // '_'
-			if (this.processor.FlagSet.IsNotEqual) goto L3b47;
-			goto L36b9;
-
-		L3b47:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x74); // 't'
-			if (this.processor.FlagSet.IsNotEqual) goto L3b4f;
-			goto L37ab;
-
-		L3b4f:
-			goto L3c40;
-
-		L3b52:
-			if (this.processor.RegAcc.Value16 == 0x2000) // Alt + D
-				goto ToggleDebugMode;
-
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1100); // Alt + W
-			if (this.processor.FlagSet.IsNotEqual) goto L3b5a;
-			goto L3a7a;
-
-		L3b5a:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1300); // Alt + R
-			if (this.processor.FlagSet.IsNotEqual) goto L3b62;
-			goto L37e5;
-
-		L3b62:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1800); // Alt + O
-			if (this.processor.FlagSet.IsNotEqual) goto L3b6a;
-			goto L3a50;
-
-		L3b6a:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1e00); // Alt + A
-			if (this.processor.FlagSet.IsNotEqual) goto L3b72;
-			goto L3a65;
-
-		L3b72:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x2200); // Alt + G
-			if (this.processor.FlagSet.IsNotEqual) goto L3b7a;
-			goto L3a3b;
-
-		L3b7a:
-			goto L3c40;
-
-		L3b7d:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x4100); // F7
-			if (this.processor.FlagSet.IsNotEqual) goto L3b85;
-			goto L340b;
-
-		L3b85:
-			if (this.processor.FlagSet.IsLessOrEqual) goto L3b8a;
-			goto L3bdd;
-
-		L3b8a:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x3b00); // F1
-			if (this.processor.FlagSet.IsNotEqual) goto L3b92;
-			goto L336b;
-
-		L3b92:
-			if (this.processor.FlagSet.IsLessOrEqual) goto L3b97;
-			goto L3bb2;
-
-		L3b97:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x2e00); // Alt + C
-			if (this.processor.FlagSet.IsNotEqual) goto L3b9f;
-			goto L3a8f;
-
-		L3b9f:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x2f00); // Alt + V
-			if (this.processor.FlagSet.IsNotEqual) goto L3ba7;
-			goto L384e;
-
-		L3ba7:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x3200); // Alt + M
-			if (this.processor.FlagSet.IsNotEqual) goto L3baf;
-			goto L35c6;
-
-		L3baf:
-			goto L3c40;
-
-		L3bb2:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x3c00); // F2
-			if (this.processor.FlagSet.IsNotEqual) goto L3bba;
-			goto L338c;
-
-		L3bba:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x3d00); // F3
-			if (this.processor.FlagSet.IsNotEqual) goto L3bc2;
-			goto L339b;
-
-		L3bc2:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x3e00); // F4
-			if (this.processor.FlagSet.IsNotEqual) goto L3bca;
-			goto L33de;
-
-		L3bca:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x3f00); // F5
-			if (this.processor.FlagSet.IsNotEqual) goto L3bd2;
-			goto L33ed;
-
-		L3bd2:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x4000); // F6
-			if (this.processor.FlagSet.IsNotEqual) goto L3bda;
-			goto L33fc;
-
-		L3bda:
-			goto L3c40;
-
-		L3bdd:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x4838); // Shift + Up
-			if (this.processor.FlagSet.IsNotEqual) goto L3be5;
-			goto L349d;
-
-		L3be5:
-			if (this.processor.FlagSet.IsLessOrEqual) goto L3bea;
-			goto L3c0d;
-
-		L3bea:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x4200); // F8
-			if (this.processor.FlagSet.IsNotEqual) goto L3bf2;
-			goto L3442;
-
-		L3bf2:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x4300); // F9
-			if (this.processor.FlagSet.IsNotEqual) goto L3bfa;
-			goto L3461;
-
-		L3bfa:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x4400); // F10
-			if (this.processor.FlagSet.IsNotEqual) goto L3c02;
-			goto L348a;
-
-		L3c02:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x4737); // Shift + Home
-			if (this.processor.FlagSet.IsNotEqual) goto L3c0a;
-			goto L34d5;
-
-		L3c0a:
-			goto L3c40;
-
-		L3c0d:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x4939); // Shift + PageUp
-			if (this.processor.FlagSet.IsNotEqual) goto L3c15;
-			goto L34a5;
-
-		L3c15:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x4b34); // Shift + Left
-			if (this.processor.FlagSet.IsNotEqual) goto L3c1d;
-			goto L34cd;
-
-		L3c1d:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x4d36); // Shift + Right
-			if (this.processor.FlagSet.IsNotEqual) goto L3c25;
-			goto L34ad;
-
-		L3c25:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x4f31); // Shift + End
-			if (this.processor.FlagSet.IsNotEqual) goto L3c2d;
-			goto L34c5;
-
-		L3c2d:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x5032); // Shift + Down
-			if (this.processor.FlagSet.IsNotEqual) goto L3c35;
-			goto L34bd;
-
-		L3c35:
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x5133); // Shift + PageDown
-			if (this.processor.FlagSet.IsNotEqual) goto L3c40;
-			goto L34b5;
-
 		L3c40:
 			this.processor.CompareWord(this.processor.PullLocalWord(0x32), 0x80);
 			if (this.processor.FlagSet.IsLess) goto L3c4a;
@@ -4105,6 +3231,458 @@ namespace Civilization1Remaster.Game
 			this.processor.RegBase.Value16 = (ushort)(kind * UnitKindTable.Stride);
 			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + UnitKindTable.Origin + UnitKindTable.RoundsAway));
 			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + UnitMemory.Origin + UnitMemory.UnusualSteps), this.processor.RegAcc.LowByte);
+		}
+
+		/// <summary>Where HandlePlayerTurn goes on after a key (CarryOutKey)</summary>
+		private enum KeyStep
+		{
+			/// <summary>The next look at the unit (L3c40)</summary>
+			NextLook,
+
+			/// <summary>The menu bar chose the order 0x44 of the unit (L0d0a)</summary>
+			MenuOrder,
+
+			/// <summary>Enter or Space without a unit: the end of the turn (L3ea1)</summary>
+			EndOfTurn,
+		}
+
+		/// <summary>
+		/// The key 0x44 that is neither an order nor a move: the reports (F1 - F10, other ones with everything shown, 0xd806),
+		/// the view moved by Shift and an arrow (Alt+D toggles 0xd806), Enter and Space (without a unit the end of the turn),
+		/// the tax and luxuries rates, the revolution (0xfffe), the save, the sound, the quit, Escape and Tab (the marked tile)
+		/// and the menus of the menu bar (Alt and a letter; a chosen order goes to L0d0a). The locals of HandlePlayerTurn and
+		/// SI are used as in the original.
+		/// </summary>
+		private KeyStep CarryOutKey(short participantIdx)
+		{
+			ushort key = this.processor.PullLocalWord(0x44);
+			short person = this.owner.World.PersonParticipantIdx;
+			bool everythingShown = this.processor.PullGlobalWord(0xd806) != 0;
+
+			this.processor.RegAcc.Value16 = key;
+
+			switch (key)
+			{
+				case 0x3b00: // F1
+					if (everythingShown)
+						this.owner.ArmyPicker.DisplayWhichArmy();
+					else
+						this.owner.Briefings.DisplayCityStatusReport(person);
+					break;
+
+				case 0x3c00: // F2
+					this.owner.Briefings.RenderUnitCountsChart(person);
+					break;
+
+				case 0x3d00: // F3
+					if (everythingShown)
+					{
+						this.owner.Startup.ConcealMouseCursor();
+						this.owner.Services.DisplayScreen(2);
+						this.owner.Libc.ReadKey();
+						this.owner.Services.DisplayScreen(0);
+						this.owner.Startup.DisplayMouseCursor();
+					}
+					else
+					{
+						this.owner.Briefings.DisplayMilitaryReport();
+					}
+					break;
+
+				case 0x3e00: // F4
+					this.owner.Briefings.DisplayAttitudeReport(person);
+					break;
+
+				case 0x3f00: // F5
+					this.owner.Briefings.DisplayTradeReport(person);
+					break;
+
+				case 0x4000: // F6
+					this.owner.Briefings.DisplayScienceReport(person);
+					break;
+
+				case 0x4100: // F7
+					if (everythingShown)
+					{
+						for (short civ = 1; civ < 8; civ++)
+						{
+							this.processor.EmitLocalWord(0x3c, (ushort)civ);
+							this.owner.RealmInfo.DisplayCivilizationOverview(civ);
+						}
+
+						this.processor.EmitLocalWord(0x3c, 8);
+					}
+					else
+					{
+						this.owner.Atlas.DisplayWondersOfTheWorld();
+					}
+					break;
+
+				case 0x4200: // F8
+					if (everythingShown)
+					{
+						this.owner.Atlas.DisplayCivilizationGraph();
+						this.owner.Replayer.DisplayReplay();
+					}
+					else
+					{
+						this.owner.Legends.DisplayTopCities();
+					}
+					break;
+
+				case 0x4300: // F9
+					if (everythingShown)
+						this.owner.Atlas.DisplayGameFigures();
+					else
+						this.owner.Founding.DisplayFinalScore(person, true);
+					break;
+
+				case 0x4400: // F10
+					this.owner.Atlas.DisplayWorldMap(1);
+					break;
+
+				case 0x4838: // Shift + Up
+				case 0x4939: // Shift + PageUp
+				case 0x4d36: // Shift + Right
+				case 0x5133: // Shift + PageDown
+				case 0x5032: // Shift + Down
+				case 0x4f31: // Shift + End
+				case 0x4b34: // Shift + Left
+				case 0x4737: // Shift + Home
+					this.processor.EmitLocalWord(0x24, ShiftedKeyDirection(key));
+					PanViewByDirection();
+					break;
+
+				case 0x2000: // Alt + D
+					this.processor.EmitGlobalWord(0xd806, (ushort)~this.processor.PullGlobalWord(0xd806));
+					this.processor.EmitLocalWord(0x24, 0);
+					PanViewByDirection();
+					break;
+
+				case 0xd: // Enter
+				case 0x20: // Space
+					if (this.processor.PullLocalWord(0x32) == 0x80)
+						return KeyStep.EndOfTurn;
+					break;
+
+				case 0x2f: // '/'
+				case 0x3f: // '?'
+					this.owner.CityNaming.DisplayNewCityLocation();
+					break;
+
+				case 0x53: // 'S'
+					if (this.owner.World.RoundTally != 0)
+						this.owner.SaveLoad.DisplayStoreGameDialog(0xffff);
+					break;
+
+				case 0xfffe: // The revolution
+					StartRevolution(participantIdx);
+					break;
+
+				case 0x3200: // Alt + M
+					this.owner.Services.PrepareMouse();
+					break;
+
+				case 0x3d: // '='
+				case 0x2b: // '+'
+					SelectTaxRate(participantIdx);
+					break;
+
+				case 0x2d: // '-'
+				case 0x5f: // '_'
+					SelectLuxuriesRate(participantIdx);
+					break;
+
+				case 0x74: // 't'
+					this.processor.EmitGlobalWord(0xdcfc, 1);
+					this.owner.MapOps.FocusMapView(participantIdx, this.processor.PullGlobalSignedWord(0xd4cc), this.processor.PullGlobalSignedWord(0xd75e));
+					this.owner.Conquest.AwaitForKeyPressOrMouseClick();
+					this.processor.EmitGlobalWord(0xdcfc, 0);
+					this.owner.MapOps.FocusMapView(participantIdx, this.processor.PullGlobalSignedWord(0xd4cc), this.processor.PullGlobalSignedWord(0xd75e));
+					break;
+
+				case 0x1300: // Alt + R
+					// Three random words of each of 16 records of 0x3a bytes, then the dialog 0x2003
+					for (ushort record = 0; record < 0x10; record++)
+					{
+						this.processor.EmitLocalWord(0x3a, record);
+						this.processor.RegAcc.Value16 = 0x3a;
+						this.processor.ScaleAccumulatorToSource(record);
+
+						for (ushort word = 0; word < 6; word += 2)
+						{
+							this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1512 + word),
+								(ushort)(this.owner.Libc.Dice.DrawInt(3) - 1));
+						}
+					}
+
+					this.processor.EmitLocalWord(0x3a, 0x10);
+					this.owner.TurnHooks.DisplayDialog(0x2003, 100, 80);
+					break;
+
+				case 0x2f00: // Alt + V
+					this.owner.World.SessionPrefMarkers ^= 0x10;
+					this.owner.Libc.CopyText(0xba06, "Sounds ");
+					this.owner.Libc.AppendText(0xba06, (ushort)((this.owner.World.SessionPrefMarkers & 0x10) != 0 ? 0x2020 : 0x2024));
+					this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+					break;
+
+				case 0x2300: // Alt + H
+					this.owner.HelpSystem.DisplayHelpPopup(0x2029);
+					this.owner.HelpSystem.DisplayHelpPopup(0x2030);
+					break;
+
+				case 0x1000: // Alt + Q
+					ConfirmQuit();
+					break;
+
+				case 0x1b: // Escape
+					if (this.processor.PullGlobalWord(0x1a3c) == 0 && this.processor.PullLocalWord(0x4) != 0)
+					{
+						this.processor.EmitLocalWord(0x4, 0);
+						ForgetMarkedTileOnScreen(participantIdx);
+					}
+					break;
+
+				case 0x9: // Tab
+					if (this.processor.PullGlobalWord(0x1a3c) == 0)
+						ToggleMarkedTile(participantIdx);
+					break;
+
+				case 0x2200: // Alt + G
+					return ManageMenu(participantIdx, 0);
+
+				case 0x1800: // Alt + O
+					return ManageMenu(participantIdx, 1);
+
+				case 0x1e00: // Alt + A
+					return ManageMenu(participantIdx, 2);
+
+				case 0x1100: // Alt + W
+					return ManageMenu(participantIdx, 3);
+
+				case 0x2e00: // Alt + C
+					return ManageMenu(participantIdx, 4);
+			}
+
+			return KeyStep.NextLook;
+		}
+
+		/// <summary>The direction 1 - 8 of Shift and an arrow (the keypad digits in the low byte)</summary>
+		private static ushort ShiftedKeyDirection(ushort key)
+		{
+			switch (key)
+			{
+				case 0x4838: return 1;
+				case 0x4939: return 2;
+				case 0x4d36: return 3;
+				case 0x5133: return 4;
+				case 0x5032: return 5;
+				case 0x4f31: return 6;
+				case 0x4b34: return 7;
+				default: return 8;
+			}
+		}
+
+		/// <summary>The view moves four tiles in the direction 0x24 (SI = 2 * the direction, as in the original)</summary>
+		private void PanViewByDirection()
+		{
+			this.processor.RegSource.Value16 = (ushort)(this.processor.PullLocalWord(0x24) << 1);
+
+			ushort horiz = (ushort)(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1882)) << 2);
+			this.processor.EmitGlobalWord(0xd4cc, (ushort)(this.processor.PullGlobalWord(0xd4cc) + horiz));
+
+			ushort vert = (ushort)(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x18e4)) << 2);
+			this.processor.EmitGlobalWord(0xd75e, (ushort)(this.processor.PullGlobalWord(0xd75e) + vert));
+
+			this.owner.MapOps.FocusMapView(this.owner.World.PersonParticipantIdx,
+				this.processor.PullGlobalSignedWord(0xd4cc),
+				this.processor.PullGlobalSignedWord(0xd75e));
+		}
+
+		/// <summary>
+		/// The revolution: after the dialog 0x1f6a, answer 1 makes the government anarchy, with the newspaper and the new
+		/// government graphics (SI = 2 * the player, as in the original)
+		/// </summary>
+		private void StartRevolution(short participantIdx)
+		{
+			this.processor.EmitGlobalByte(0xba06, 0);
+			this.owner.BlockText.DisplayTextDialog(0x1f6a);
+			this.owner.TurnHooks.DisplayDialog(0xba06, 64, 80);
+
+			if (this.processor.RegAcc.Value16 != 1)
+				return;
+
+			this.processor.RegSource.Value16 = (ushort)(participantIdx << 1);
+			this.owner.World.Participants[participantIdx].RegimeKind = 0;
+
+			this.owner.Libc.CopyText(0xba06, "The ");
+			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1992)));
+			this.owner.Libc.AppendText(0xba06, " are\nrevolting! Citizens\ndemand new govt.\n");
+			this.owner.Paper.DisplayNewspaper(-1);
+			this.owner.NewGameWizard.ImportGovernmentGraphics();
+			this.owner.TurnHooks.RepaintMainScreen();
+		}
+
+		/// <summary>
+		/// The tax rate: a dialog of every split of tax and science (the luxuries stay); 0x3a the choice, -1 keeps the rates
+		/// </summary>
+		private void SelectTaxRate(short participantIdx)
+		{
+			ref var participant = ref this.owner.World.Participants[participantIdx];
+
+			this.owner.Libc.CopyText(0xba06, "Select new Tax rate:\n ");
+
+			short rate = 0;
+
+			for (; (short)(participant.LevyRatio + participant.ResearchLevyRatio) >= rate; rate++)
+			{
+				this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText((short)(10 * rate), 10));
+				this.owner.Libc.AppendText(0xba06, "% Tax, (");
+				this.owner.Libc.AppendText(0xba06,
+					this.owner.Libc.IntegerToText((short)((participant.LevyRatio + participant.ResearchLevyRatio - rate) * 10), 10));
+				this.owner.Libc.AppendText(0xba06, "% Science)\n ");
+			}
+
+			this.processor.EmitLocalWord(0x3a, (ushort)rate);
+			this.processor.EmitGlobalWord(0x2f9a, (ushort)participant.LevyRatio);
+
+			this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+
+			this.processor.EmitLocalWord(0x3a, this.processor.RegAcc.Value16);
+
+			if (this.processor.PullLocalWord(0x3a) == 0xffff)
+				return;
+
+			participant.ResearchLevyRatio += (short)(participant.LevyRatio - (short)this.processor.PullLocalWord(0x3a));
+			participant.LevyRatio = (short)this.processor.PullLocalWord(0x3a);
+			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x3a);
+
+			this.owner.TurnHooks.RenderStatusBar();
+		}
+
+		/// <summary>
+		/// The luxuries rate: a dialog of every split of luxuries and science (the tax stays); 0x3a the choice, -1 keeps the
+		/// rates
+		/// </summary>
+		private void SelectLuxuriesRate(short participantIdx)
+		{
+			ref var participant = ref this.owner.World.Participants[participantIdx];
+
+			this.owner.Libc.CopyText(0xba06, "Select new Luxuries rate:\n ");
+
+			short rate = 0;
+
+			for (; (short)(10 - participant.LevyRatio) >= rate; rate++)
+			{
+				this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText((short)(10 * rate), 10));
+				this.owner.Libc.AppendText(0xba06, "% Luxuries, (");
+				this.owner.Libc.AppendText(0xba06,
+					this.owner.Libc.IntegerToText((short)(-(rate + participant.LevyRatio - 10) * 10), 10));
+				this.owner.Libc.AppendText(0xba06, "% Science)\n ");
+			}
+
+			this.processor.EmitLocalWord(0x3a, (ushort)rate);
+			this.processor.EmitGlobalWord(0x2f9a, (ushort)-(participant.LevyRatio + participant.ResearchLevyRatio - 10));
+
+			this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+
+			this.processor.EmitLocalWord(0x3a, this.processor.RegAcc.Value16);
+
+			if (this.processor.PullLocalWord(0x3a) == 0xffff)
+				return;
+
+			participant.ResearchLevyRatio = (short)-(participant.LevyRatio + (short)this.processor.PullLocalWord(0x3a) - 10);
+			this.processor.RegAcc.Value16 = (ushort)participant.ResearchLevyRatio;
+
+			this.owner.TurnHooks.RenderStatusBar();
+		}
+
+		/// <summary>
+		/// The quit: Load Game from the GAME menu (0xdc48) leaves at once, else the dialog; Keep Playing clears 0xdc48, Yes
+		/// sets it to 1 (when it was 0); leaving ends the moves of the units (0x32 = 0x80)
+		/// </summary>
+		private void ConfirmQuit()
+		{
+			if (this.processor.PullGlobalWord(0xdc48) != GameLoadAndSave.FetchSessionAsk)
+			{
+				this.owner.Libc.CopyText(0xba06, "Are you sure you\nwant to Quit?\n Keep Playing\n Yes, Quit\n");
+				this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+
+				if (this.processor.RegAcc.Value16 != 1)
+				{
+					this.processor.EmitGlobalWord(0xdc48, 0);
+					return;
+				}
+
+				if (this.processor.PullGlobalWord(0xdc48) == 0)
+					this.processor.EmitGlobalWord(0xdc48, 1);
+			}
+
+			this.processor.EmitLocalWord(0x32, 0x80);
+		}
+
+		/// <summary>The marked tile (0xe, 0x12) is repainted when the player has seen it, and forgotten (0xe = -1)</summary>
+		private void ForgetMarkedTileOnScreen(short participantIdx)
+		{
+			if ((this.owner.World.ChartSight[this.processor.PullLocalWord(0xe), this.processor.PullLocalWord(0x12)] & (1 << (participantIdx & 0xff))) != 0)
+				this.owner.MapOps.RepaintMapTile(this.processor.PullLocalSignedWord(0xe), this.processor.PullLocalSignedWord(0x12));
+
+			this.processor.EmitLocalWord(0xe, 0xffff);
+		}
+
+		/// <summary>
+		/// Tab: the marked tile goes away, or comes on the unit (when it is on the screen; SI the unit, as in the original)
+		/// or else in the middle of the view; the tile is repainted when the player has seen it; 0x4 toggles
+		/// </summary>
+		private void ToggleMarkedTile(short participantIdx)
+		{
+			if (this.processor.PullLocalWord(0x4) != 0)
+			{
+				ForgetMarkedTileOnScreen(participantIdx);
+			}
+			else
+			{
+				bool onUnit = false;
+
+				if (this.processor.PullLocalWord(0x32) != 0x80)
+				{
+					this.processor.RegSource.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride + this.processor.PullLocalWord(0x32) * UnitMemory.TroopStride);
+					ushort place = (ushort)(this.processor.RegSource.Value16 + UnitMemory.Origin);
+
+					if (VerifyPositionOnScreen(
+						this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(place + UnitMemory.Horiz)),
+						this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(place + UnitMemory.Vert))) != 0)
+					{
+						this.processor.EmitLocalWord(0xe, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(place + UnitMemory.Horiz)));
+						this.processor.EmitLocalWord(0x12, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(place + UnitMemory.Vert)));
+						onUnit = true;
+					}
+				}
+
+				if (!onUnit)
+				{
+					this.processor.EmitLocalWord(0xe, (ushort)(this.processor.PullGlobalWord(0xd4cc) + 7));
+					this.processor.EmitLocalWord(0x12, (ushort)(this.processor.PullGlobalWord(0xd75e) + 6));
+				}
+
+				if ((this.owner.World.ChartSight[this.processor.PullLocalWord(0xe), this.processor.PullLocalWord(0x12)] & (1 << (participantIdx & 0xff))) != 0)
+					this.owner.MapOps.RepaintMapTile(this.processor.PullLocalSignedWord(0xe), this.processor.PullLocalSignedWord(0x12));
+			}
+
+			this.processor.EmitLocalWord(0x4, (ushort)(this.processor.PullLocalWord(0x4) ^ 1));
+		}
+
+		/// <summary>The menu of the menu bar; a chosen order (0xd4ca) becomes the order 0x44 of the unit</summary>
+		private KeyStep ManageMenu(short participantIdx, short menu)
+		{
+			this.owner.MenuSystem.ManageMenuBar(participantIdx, this.processor.PullLocalSignedWord(0x32), menu);
+
+			if (this.processor.PullGlobalWord(0xd4ca) == 0xffff)
+				return KeyStep.NextLook;
+
+			this.processor.EmitLocalWord(0x44, this.processor.PullGlobalWord(0xd4ca));
+			return KeyStep.MenuOrder;
 		}
 
 		/// <summary>

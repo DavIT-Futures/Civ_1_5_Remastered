@@ -888,13 +888,23 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   0x20, krótkie czekanie przy ruchu komputera bez 0xb278); 0xa = 0; samolot w mieście ląduje (bez rozkazów, ruchów i celu),
   samolot na lotniskowcu dostaje paliwo (zapis przez SI zostawione przez `TallyUnitsOfTypeInStack`, jak w oryginale). Cały
   ruch jednostki (L1d96 – L3365) jest już metodami. Testy: istniejące testy tur; wszystkie mutacje złapane.
+- Porcja 110 (2026-10-19): dwudziesty pierwszy kawałek `HandlePlayerTurn` – `CarryOutKey` (L3365 – L3c40, drzewo porównań
+  zastąpione `switch`, bo szuka tylko równości): raporty F1 – F10 (inne przy 0xd806), widok przesuwany Shift+strzałką
+  (`PanViewByDirection`, Alt+D przełącza 0xd806), Enter/Spacja bez jednostki kończą turę, stawki podatku i luksusów
+  (`SelectTaxRate`, `SelectLuxuriesRate`), rewolucja 0xfffe (`StartRevolution`), zapis, dźwięk, wyjście (`ConfirmQuit`),
+  Escape i Tab (pole zaznaczone: `ForgetMarkedTileOnScreen`, `ToggleMarkedTile`), menu paska (`ManageMenu`). Test
+  `BatchHundredTenDifferentialTests` (klawisze z `HumanTurnScript`; przed klawiszem '1' dla `AwaitForKey` i Escape dla panelu
+  osadnika `DisplayTileInfo`, który zjada klawisz; rewolucja z menu GAME, po którym `AwaitForKey` zjada jeszcze jeden
+  klawisz; Tab też w turze bez ruchów, 0xdf60). Ocalałe: 0xdcfc = 2 (równoważne: tylko `== 0` i zaraz zerowane), 0x4 `^ 3`
+  (równoważne: tylko porównanie z zerem, po turze martwe), SI `<< 2` przy nazwie w gazecie rewolucji (tekst widać tylko na
+  ekranie gazety, test go nie łapie).
 
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
 (`HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-18 (po porcji 109): 2 metody w stylu asm (`HandlePlayerTurn`, `HandleCity`); `ShiftAIUnit` gotowa. `HandlePlayerTurn` przepisywana kawałkami od początku (następny: L3365 – koniec: L3abd (menu i klawisze bez jednostki), L3c40 (następne spojrzenie), L3e4e / L3ea1 (koniec tury); testy z `HumanTurnScript`). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
+Stan 2026-10-19 (po porcji 110): 2 metody w stylu asm (`HandlePlayerTurn`, `HandleCity`); `ShiftAIUnit` gotowa. `HandlePlayerTurn` przepisywana kawałkami od początku (następny: L3c40 (następne spojrzenie: paliwo samolotów, trirema), L3e4e / L3ea1 (koniec tury); testy z `HumanTurnScript`). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
