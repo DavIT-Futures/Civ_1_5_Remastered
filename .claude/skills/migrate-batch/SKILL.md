@@ -24,6 +24,23 @@ Testy zawsze w **Release** z `-parallelMode all` (ok. 7 razy szybciej niż Debug
 `T=Civilization1Remaster.Tests/bin/Release/net10.0/Civilization1Remaster.Tests.exe`. Filtry: kilka `-class "*X*"` = suma;
 `-method "*NazwaTestu"` (wzorzec `*Klasa*.Metoda` nie działa); `-namespace` z `-class` = iloczyn (zwykle 0 testów).
 
+## Strategia testów (od 2026-10-19, po partii 125)
+
+- **Porcja = 3 – 4 kawałki** (funkcje albo fragmenty dużej metody). Po każdym kawałku tylko jego test różnicowy
+  (`$T -method "*NazwaTestu"`, 20 – 60 s). Golden master, mutacje, commit – raz na porcję (jeden commit na kawałek albo na
+  porcję, wpisy w backlogu dla każdego kawałka).
+- **Testy z tabel przypadków, nie z losowania.** Nowe testy: jawna lista przypadków (rekord z parametrami), każdy scenariusz
+  z punktu kontrolnego (`fresh: true`), więc dopisanie przypadku nie zmienia pozostałych i wcześniej złapane mutacje nie trzeba
+  powtarzać. Przypadki dobierać do gałęzi nowego kodu. Istniejące testy losowe są zamrożone – nie dopisywać do nich wariantów
+  (każda zmiana przesuwa losowanie); nowe pokrycie przez nowe metody testowe z tabelami. `HandleCity`: `CityCases`
+  (`BatchHundredTwentySixDifferentialTests`).
+- **Mutacje: 8 – 12 na porcję**, tylko w rozgałęzieniach i zapisach stanu (bez każdej granicy `<`/`<=`), jedna runda,
+  `--jobs 6`. Ocalała: jeden celowany przypadek w tabeli albo opis (nieosiągalna / równoważna / martwy zapis) – bez kolejnych
+  rund.
+- **Pełny zestaw tylko przy kamieniach milowych:** po zmianie wspólnego kodu (`Civilization1Remaster.Machine`, harness,
+  `UnitMemory`, `MapLayers`, `CommonUtilities`), po skończeniu dużego fragmentu (np. całej metody) i na koniec sesji.
+  Między nimi golden master (16 s) na porcję.
+
 ## Kroki
 
 1. `get_usage`: 5-godzinny ≥ 95% → czekać na reset; tygodniowy ≥ 92% → skończyć z podsumowaniem.
@@ -77,7 +94,7 @@ Testy zawsze w **Release** z `-parallelMode all` (ok. 7 razy szybciej niż Debug
    40 s). Porównywać ramkę i 0x80 bajtów stosu pod nią (`ShiftUnit` zostawia tam SI dla `ShiftAIUnit`).
 6. Mutacje: `mutations.json` z jedną mutacją na funkcję (w gałęzi trudnej do trafienia), `python …/check_mutations.py mutations.json`
    (zawieszony scenariusz pada po 120 s = CAUGHT; proces dłuższy niż 400 s jest zabijany z dziećmi = CAUGHT (hang)).
-   Budżet: 15 – 25 mutacji na porcję (jedna mutacja ≈ 10 s budowania + czas testu; 4 workery). Po zmianie testu powtarzać tylko
+   Budżet: 8 – 12 mutacji na porcję (patrz „Strategia testów”) (jedna mutacja ≈ 10 s budowania + czas testu; 4 workery). Po zmianie testu powtarzać tylko
    ocalałe i mutacje gałęzi, których dotyczy zmiana – nigdy całego zbioru z poprzednich porcji (godziny, porcje 116 – 119).
    Długie polecenia zawsze w tle (`run_in_background`), nie przez `timeout` w Bash na pierwszym planie.
    Każda musi być CAUGHT; SURVIVED = albo słaby test (dodać scenariusze), albo mutacja nieosiągalna (zmienić). Mutacja musi
@@ -85,7 +102,7 @@ Testy zawsze w **Release** z `-parallelMode all` (ok. 7 razy szybciej niż Debug
    innych funkcji).
 7. Po każdej porcji: golden master + testy porcji (ok. 30 s):
    `$T -parallelMode all -class "*GoldenMaster*" -class "*BatchNN*" 2>&1 | grep -E "\[FAIL\]|Total:"`.
-   Pełny zestaw (ok. 5,5 min w Release): co 4 porcje, przed końcem sesji i po każdej zmianie wspólnego kodu (`Civilization1Remaster.Machine`,
+   Pełny zestaw (ok. 13 min w Release): przy kamieniach milowych (wyżej), przed końcem sesji i po każdej zmianie wspólnego kodu (`Civilization1Remaster.Machine`,
    `MapLayers`, `UnitMemory`, `CommonUtilities`, `GameSnapshot`/harness): `$T -parallelMode all 2>&1 | grep -E "\[FAIL\]|Total:"`.
    Uzasadnienie: test różnicowy funkcji G woła bieżący kod innych funkcji w obu grach, więc błąd w przepisanej F wykrywa test F
    i golden master, nie stare testy.

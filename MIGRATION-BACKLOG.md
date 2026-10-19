@@ -997,13 +997,23 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   miast właściciela; człowiek słyszy o przeniesieniu (u komputera tylko z ambasadą 0x40) i wtedy stolicą zostaje to miasto
   (`HorizBegin`, bit pałacu znowu; bez komunikatu zostaje zgaszony – jak w tłumaczeniu); cud 0x26 daje dwa odkrycia; cud 0x2b
   człowieka pokazuje wszystkie obce miasta. Test: produkcji. Ocalałe: 0x2f9e = 1 (nadpisywane wartością 5 przed dialogiem).
+- Strategia testów od porcji 126 (2026-10-19): porcja = 3 – 4 kawałki, testy z tabel przypadków (`BatchHundredTwentySix`,
+  rekord `CityCase`, każdy przypadek z punktu kontrolnego; losowe testy `BatchHundredThirteen` zamrożone), 8 – 15 mutacji na
+  porcję w jednej rundzie (`--jobs 6`), pełny zestaw tylko przy kamieniach milowych. Szczegóły w skillu.
+- Porcja 126 (2026-10-19), cztery kawałki `HandleCity` (L220f – L28d9): `AdviseHumanProduction` (miasto człowieka z doradcą
+  0x10 wybiera produkcję, gdy nie ma tarcz albo budynek, który już ma; 0x63 gasi flagę), `BuyForComputerCity` z `BuyShortfall`
+  (miasto komputera dokupuje tarcze za złoto według roli kontynentu, statku człowieka, flag 1 i 0x10, produkcji -1, warunku
+  0x19 – porównanie `ConditionMarker`, jak w tłumaczeniu – i bogactwa), `RenderCityScreenFrames` (ramki i zakładki ekranu
+  miasta, minimapa), `CountCorruptionAndTradeRoutes` (korupcja wg odległości od pałacu i ustroju, sąd / pałac połowią,
+  demokracja zeruje; szlaki handlowe: 1/8 albo 1/16). Test `BatchHundredTwentySix` (25 przypadków, ok. 10 s). Mutacje: 15,
+  ocalała jedna – połowienie przy pałacu (w wybranym mieście komputera handel za mały, korupcja przy komunizmie < 2).
 
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
 (`HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-19 (po porcji 125): 1 metoda w stylu asm (`HandleCity`, 8428 linii); `ShiftAIUnit` i `HandlePlayerTurn` gotowe. `HandleCity(miasto, znacznik)`: -1 tylko liczy, 0 tura miasta, 1 ekran miasta; przepisywać kawałkami od początku (po porcji 125: następny od L220f). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
+Stan 2026-10-19 (po porcji 126): 1 metoda w stylu asm (`HandleCity`, 8428 linii); `ShiftAIUnit` i `HandlePlayerTurn` gotowe. `HandleCity(miasto, znacznik)`: -1 tylko liczy, 0 tura miasta, 1 ekran miasta; przepisywać kawałkami od początku (po porcji 126: następny od L28d9 – podatki, luksusy, nauka). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
