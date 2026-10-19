@@ -4061,6 +4061,84 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
+		/// The celebration of the city ("We love the ... day", the flag 0x40): no unhappy citizens (0x70e4), bigger than 2, at
+		/// least half of the citizens happy (0x70e2), not in anarchy. It starts with a message for a human (the city view with
+		/// the option 8, else the newspaper); going on under republic or democracy the city grows while it has food to spare
+		/// (from 10 only with an aqueduct, 0x100); it ends (without disorder, 0xe8 not below 0) with "celebration canceled".
+		/// </summary>
+		private void ApplyCelebration(short townIdx)
+		{
+			City town = this.owner.World.Towns[townIdx];
+			short owner = (short)this.processor.PullGlobalWord(0x6548);
+			Player player = this.owner.World.Participants[owner];
+			bool human = ((ushort)(1 << (owner & 0xff)) & (ushort)this.owner.World.ParticipantMarkers) != 0;
+
+			bool celebrates = this.processor.PullGlobalWord(0x70e4) == 0 && town.TrueExtent > 2 &&
+				(short)((town.TrueExtent + 1) / 2) <= this.processor.PullGlobalSignedWord(0x70e2) && player.RegimeKind != 0;
+
+			if (celebrates)
+			{
+				if ((town.ConditionMarker & 0x40) == 0)
+				{
+					// The celebration starts
+					if (human && player.RegimeKind != 0)
+					{
+						this.owner.Libc.CopyText(0xba06, "'We love the ");
+						this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((player.RegimeKind << 1) + 0x19b2)));
+						this.owner.Libc.AppendText(0xba06, "'\nday celebrated in\n");
+						this.owner.Conquest.ObtainCityLabel(townIdx);
+						this.owner.Libc.AppendText(0xba06, "!\n");
+						this.owner.Services.PerformSound(0x22, 0);
+
+						if ((this.owner.World.SessionPrefMarkers & 8) != 0)
+						{
+							this.owner.CityScene.DisplayCityScreen(townIdx, -2);
+							this.owner.CityScene.RenderCitySceneryForHuman();
+							this.owner.Startup.QueryForDisk(0, 1);
+							this.owner.TurnHooks.RepaintMainScreen();
+						}
+						else
+						{
+							this.owner.Paper.DisplayNewspaper(townIdx);
+						}
+
+						this.owner.Services.PerformSound(1, 0);
+					}
+
+					town.ConditionMarker |= 0x40;
+				}
+				else if (player.RegimeKind >= 4)
+				{
+					// Growth while it goes on under republic or democracy, with food to spare
+					short eaten = (short)((town.TrueExtent * 2) + (this.processor.PullLocalSignedWord(0x48) * this.processor.PullGlobalSignedWord(0xe3c6)));
+
+					if (eaten < this.processor.PullGlobalSignedWord(0x70da) && (town.TrueExtent < 10 || (town.StructureMarkers0 & 0x100) != 0))
+						town.TrueExtent++;
+				}
+
+				return;
+			}
+
+			if ((short)this.processor.PullLocalWord(0xe8) < 0 || (town.ConditionMarker & 0x40) == 0)
+				return;
+
+			// The celebration ends
+			if (human && player.RegimeKind != 0)
+			{
+				this.owner.Services.PerformSound(0x23, 0);
+				this.owner.Libc.CopyText(0xba06, "'We love the ");
+				this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((player.RegimeKind << 1) + 0x19b2)));
+				this.owner.Libc.AppendText(0xba06, "'\ncelebration canceled\nin ");
+				this.owner.Conquest.ObtainCityLabel(townIdx);
+				this.owner.Libc.AppendText(0xba06, ".\n");
+				this.owner.Paper.DisplayNewspaper(townIdx);
+				this.owner.Services.PerformSound(1, 0);
+			}
+
+			town.ConditionMarker &= 0xbf;
+		}
+
+		/// <summary>
 		/// The start of HandleCity: the locals 0xb8, 0xda, 0xfe, 0xca and 0x2496 cleared, the mouse hidden, the 5 x 5 array
 		/// of the tiles around (BP-0xa6) cleared; 0x653e the city; the materials outside 0 - 999 cleared. Over the other
 		/// cities: 0xb2 the distance to the nearest one (at most 7), 0x6b30 the distance to the nearest palace of the owner
@@ -4518,179 +4596,8 @@ namespace Civilization1Remaster.Game
 			// The turn of the city: civil disorder, order restored, the taxes
 			ApplyCivilOrder(townIdx);
 
-		L606c:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x70e4), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L6076;
-			goto L6213;
-
-		L6076:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.processor.CompareByte((byte)this.owner.World.Towns[townIdx].TrueExtent, 0x2);
-			if (this.processor.FlagSet.IsGreater) goto L6088;
-			goto L6213;
-
-		L6088:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.Towns[townIdx].TrueExtent;
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegAcc.Value16 = this.processor.IncrementWord(this.processor.RegAcc.Value16);
-			this.processor.HalveAccumulator();
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.PullGlobalWord(0x70e2));
-			if (this.processor.FlagSet.IsLessOrEqual) goto L60a4;
-			goto L6213;
-
-		L60a4:
-			if (this.owner.World.Participants[this.processor.PullGlobalWord(0x6548)].RegimeKind != 0) goto L60b4;
-			goto L6213;
-
-		L60b4:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.processor.TestBitsByte(this.owner.World.Towns[townIdx].ConditionMarker, 0x40);
-			if (this.processor.FlagSet.IsEqual) goto L60c6;
-			goto L61ac;
-
-		L60c6:
-			this.processor.RegAcc.Value16 = 0x1;
-			this.processor.RegCount.LowByte = this.processor.PullGlobalByte(0x6548);
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			this.processor.TestBitsWord(this.processor.RegAcc.Value16, (ushort)this.owner.World.ParticipantMarkers);
-			if (this.processor.FlagSet.IsNotEqual) goto L60d8;
-			goto L619c;
-
-		L60d8:
-			if (this.owner.World.Participants[this.processor.PullGlobalWord(0x6548)].RegimeKind != 0) goto L60e8;
-			goto L619c;
-
-		L60e8:
-			this.owner.Libc.CopyText(0xba06, "'We love the ");
-
-			this.processor.RegBase.Value16 = (ushort)this.owner.World.Participants[this.processor.PullGlobalWord(0x6548)].RegimeKind;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x19b2)));
-
-			this.owner.Libc.AppendText(0xba06, "'\nday celebrated in\n");
-
-			this.owner.Conquest.ObtainCityLabel(townIdx);
-
-			this.owner.Libc.AppendText(0xba06, "!\n");
-
-			this.owner.Services.PerformSound(0x22, 0);
-
-			this.processor.TestBitsByte((byte)(this.owner.World.SessionPrefMarkers & 0xff), 0x8);
-			if (this.processor.FlagSet.IsNotEqual) goto L6155;
-			goto L6185;
-
-		L6155:
-			this.owner.CityScene.DisplayCityScreen(townIdx, -2);
-			
-			this.owner.CityScene.RenderCitySceneryForHuman();
-
-			this.owner.Startup.QueryForDisk(0, 1);
-
-			this.owner.TurnHooks.RepaintMainScreen();
-
-			goto L6190;
-
-		L6185:
-			this.owner.Paper.DisplayNewspaper(townIdx);
-
-		L6190:
-			this.owner.Services.PerformSound(1, 0);
-
-		L619c:
-			this.owner.World.Towns[townIdx].ConditionMarker |= 0x40;
-			goto L6210;
-
-		L61ac:
-			if (this.owner.World.Participants[this.processor.PullGlobalWord(0x6548)].RegimeKind >= 4) goto L61bc;
-			goto L6210;
-
-		L61bc:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.Towns[townIdx].TrueExtent;
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, 0x1);
-			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x48);
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.PullGlobalWord(0xe3c6));
-			this.processor.RegCount.Value16 = this.processor.SumWord(this.processor.RegCount.Value16, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegCount.Value16, this.processor.PullGlobalWord(0x70da));
-			if (this.processor.FlagSet.IsLess) goto L61df;
-			goto L6210;
-
-		L61df:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.processor.CompareByte((byte)this.owner.World.Towns[townIdx].TrueExtent, 0xa);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L61f1;
-			goto L6204;
-
-		L61f1:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.processor.TestBitsWord(this.owner.World.Towns[townIdx].StructureMarkers0, 0x100);
-			if (this.processor.FlagSet.IsNotEqual) goto L6204;
-			goto L6210;
-
-		L6204:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.owner.World.Towns[townIdx].TrueExtent++;
-
-		L6210:
-			goto L62d8;
-
-		L6213:
-			this.processor.CompareWord(this.processor.PullLocalWord(0xe8), 0x0);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L621d;
-			goto L62d8;
-
-		L621d:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.processor.TestBitsByte(this.owner.World.Towns[townIdx].ConditionMarker, 0x40);
-			if (this.processor.FlagSet.IsNotEqual) goto L622f;
-			goto L62d8;
-
-		L622f:
-			this.processor.RegAcc.Value16 = 0x1;
-			this.processor.RegCount.LowByte = this.processor.PullGlobalByte(0x6548);
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			this.processor.TestBitsWord(this.processor.RegAcc.Value16, (ushort)this.owner.World.ParticipantMarkers);
-			if (this.processor.FlagSet.IsNotEqual) goto L6241;
-			goto L62cb;
-
-		L6241:
-			if (this.owner.World.Participants[this.processor.PullGlobalWord(0x6548)].RegimeKind != 0) goto L6251;
-			goto L62cb;
-
-		L6251:
-			this.owner.Services.PerformSound(0x23, 0);
-
-			this.owner.Libc.CopyText(0xba06, "'We love the ");
-
-			this.processor.RegBase.Value16 = (ushort)this.owner.World.Participants[this.processor.PullGlobalWord(0x6548)].RegimeKind;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x19b2)));
-
-			this.owner.Libc.AppendText(0xba06, "'\ncelebration canceled\nin ");
-
-			this.owner.Conquest.ObtainCityLabel(townIdx);
-
-			this.owner.Libc.AppendText(0xba06, ".\n");
-
-			this.owner.Paper.DisplayNewspaper(townIdx);
-			
-			this.owner.Services.PerformSound(1, 0);
-
-		L62cb:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.owner.World.Towns[townIdx].ConditionMarker &= 0xbf;
+			// The celebration
+			ApplyCelebration(townIdx);
 
 		L62d8:
 			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x70e6);

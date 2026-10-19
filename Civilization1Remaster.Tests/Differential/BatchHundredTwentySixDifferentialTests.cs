@@ -817,6 +817,40 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 			CheckCases(bay, OrderCases, ways);
 	}
 
+	private static Action<GameEngine, short> Celebrating(bool on) => (game, town) => game.World.Towns[town].ConditionMarker =
+		(byte)(on ? game.World.Towns[town].ConditionMarker | 0x40 : game.World.Towns[town].ConditionMarker & ~0x40);
+
+	private static Action<GameEngine, short> Happy(sbyte size, short regime) => Then(Size(size), Level(1, regime), Rates(0, 0), Buildings(0x2408, 0), Disorder(false));
+
+	private static readonly CityCase[] CelebrationCases =
+	{
+		new("human, the celebration starts", true, 0, Then(Happy(4, 2), Celebrating(false), Options(0, 8)), Choice.Biggest),
+		new("human, the celebration starts, the city view", true, 0, Then(Happy(4, 2), Celebrating(false), Options(8, 0)), Choice.Last),
+		new("computer, the celebration starts", false, 0, Then(Happy(4, 2), Celebrating(false)), Choice.Biggest),
+		new("human, republic, the celebration goes on", true, 0, Then(Happy(5, 4), Celebrating(true)), Choice.Biggest),
+		new("computer, democracy, the celebration goes on, size 12", false, 0, Then(Happy(12, 5), Celebrating(true), Buildings(0, 0x100)), Choice.Biggest),
+		new("human, democracy, size 12 with an aqueduct", true, 0, Then(Happy(12, 5), Celebrating(true), Buildings(0x100, 0)), Choice.First),
+		new("human, democracy, size 9", true, 0, Then(Happy(9, 5), Celebrating(true), Buildings(0, 0x100)), Choice.Last),
+		new("human, monarchy, the celebration goes on", true, 0, Then(Happy(6, 2), Celebrating(true)), Choice.Biggest),
+		new("human, the celebration ends", true, 0, Then(Size(8), Level(1, 2), Rates(10, 0), Buildings(0x2408, 0), Celebrating(true), Disorder(false)), Choice.Biggest),
+		new("computer, the celebration ends", false, 0, Then(Size(8), Level(1, 2), Rates(10, 0), Buildings(0x2408, 0), Celebrating(true), Disorder(false)), Choice.Biggest),
+		new("human, the celebration ends in disorder", true, 0, Then(Unhappy, Celebrating(true), Disorder(false)), Choice.Biggest),
+		new("human, communism, the celebration goes on", true, 0, Then(Happy(6, 3), Celebrating(true)), Choice.Biggest),
+		new("human, democracy, size 10 without an aqueduct", true, 0, Then(Happy(10, 5), Celebrating(true), Buildings(0, 0x100)), Choice.Biggest),
+		new("human, anarchy, celebrating", true, 0, Then(Happy(6, 0), Celebrating(true)), Choice.Biggest),
+		new("human, size 2, happy", true, 0, Then(Happy(2, 2), Celebrating(true)), Choice.First),
+		new("human, size 3, happy", true, 0, Then(Happy(3, 2), Celebrating(false)), Choice.First),
+	};
+
+	[Fact]
+	public void HandleCityCelebrationCasesMatchOriginalCode()
+	{
+		HashSet<string> ways = [];
+
+		foreach (int bay in new[] { 5, 9 })
+			CheckCases(bay, CelebrationCases, ways);
+	}
+
 	[Fact]
 	public void HandleCityTurnCasesMatchOriginalCode()
 	{

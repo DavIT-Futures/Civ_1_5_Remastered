@@ -1096,13 +1096,20 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   `RepickCityProduction` i `ReadCityScreenInput` (jak w porcji 138 – inaczej różnił się stos pod ramką). Test
   `HandleCityOrderCasesMatchOriginalCode`. Mutacje: 16; ocalały numer dźwięku (testy nie słyszą `PerformSound`) i
   `ConditionMarker |= 3` zamiast 1 (bit 2 jest dalej w turze liczony od nowa).
+- Porcja 140 (2026-10-19), kawałek `HandleCity` L606c – L62d8: `ApplyCelebration` (święto „We love the ...”, flaga 0x40:
+  bez nieszczęśliwych, większe niż 2, co najmniej połowa szczęśliwych, nie w anarchii; początek z wiadomością dla człowieka,
+  trwające w republice i demokracji – wzrost przy nadwyżce żywności, od 10 tylko z akweduktem; koniec – „celebration
+  canceled”). Test `HandleCityCelebrationCasesMatchOriginalCode`. Mutacje: 13; ocalały numer dźwięku, brak
+  `RenderCitySceneryForHuman` (widok miasta zaraz zamalowany przez `RepaintMainScreen`), `0xe8 < -1` (0xe8 równe -1
+  wymagałoby dokładnie jednego nieszczęśliwego ponad szczęśliwych) i `&= 0xbe` (bit 1 jest tu zawsze 0: porządek
+  przywrócony wcześniej go kasuje).
 
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
 (`HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-19 (po porcji 139): 1 metoda w stylu asm (`HandleCity`, 8428 linii); `ShiftAIUnit` i `HandlePlayerTurn` gotowe. `HandleCity(miasto, znacznik)`: -1 tylko liczy, 0 tura miasta, 1 ekran miasta; przepisywać kawałkami od początku (po porcji 139: następny od L606c – święto „We love the ...”). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
+Stan 2026-10-19 (po porcji 140): 1 metoda w stylu asm (`HandleCity`, 8428 linii); `ShiftAIUnit` i `HandlePlayerTurn` gotowe. `HandleCity(miasto, znacznik)`: -1 tylko liczy, 0 tura miasta, 1 ekran miasta; przepisywać kawałkami od początku (po porcji 140: następny od L62d8 – nauka). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
