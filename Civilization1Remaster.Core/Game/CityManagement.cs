@@ -1393,6 +1393,106 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
+		/// What some completed improvements do (0xe8): the palace (1) leaves every city of the owner; the human hears of the
+		/// move (of a computer player only with an embassy, 0x40): then the capital is this city (HorizBegin, the palace bit
+		/// set again; without the message it stays off, as translated); the wonder 0x26 gives two advances; the wonder 0x2b of
+		/// the human shows every foreign city (its size, the tile seen). The locals of HandleCity and BX, CX, SI are used as in
+		/// the original.
+		/// </summary>
+		private void ApplyImprovement(short townIdx)
+		{
+			City town = this.owner.World.Towns[townIdx];
+			short owner = (short)this.processor.PullGlobalWord(0x6548);
+			short person = this.owner.World.PersonParticipantIdx;
+			short built = (short)this.processor.PullLocalWord(0xe8);
+
+			if (built == 1)
+			{
+				// The palace leaves every city of the owner
+				for (ushort otherIdx = 0; otherIdx < 0x80; otherIdx++)
+				{
+					this.processor.EmitLocalWord(0x4c, otherIdx);
+					this.processor.RegBase.Value16 = (ushort)(otherIdx * 0x1c);
+					City other = this.owner.World.Towns[otherIdx];
+
+					if (other.ParticipantIdx == owner)
+					{
+						other.StructureMarkers0 &= 0xfffe;
+						other.StructureMarkers1 &= 0xffff;
+					}
+				}
+
+				this.processor.EmitLocalWord(0x4c, 0x80);
+
+				bool told = owner == person;
+
+				if (!told)
+				{
+					this.processor.RegSource.Value16 = (ushort)(person << 4);
+					this.processor.RegCount.LowByte = 4;
+					this.processor.RegBase.Value16 = (ushort)(owner << 1);
+					told = (this.owner.World.Participants[person].Relations[owner] & 0x40) != 0;
+				}
+
+				if (told)
+				{
+					this.processor.EmitGlobalByte(0xba06, 0);
+
+					if (owner != person)
+					{
+						this.owner.Libc.CopyText(0xba06, "Diplomats report:\n");
+						this.processor.EmitGlobalWord(0x2f9e, 1);
+					}
+
+					this.processor.RegBase.Value16 = (ushort)(owner << 1);
+					this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1982)));
+					this.owner.Libc.AppendText(0xba06, " capital\nmoved to ");
+					this.owner.Conquest.ObtainCityLabel(townIdx);
+					this.owner.Libc.AppendText(0xba06, ".\n");
+					this.processor.EmitGlobalWord(0x2f9e, 5);
+					this.owner.TurnHooks.DisplayDialog(0xba06, 80, 80);
+
+					this.owner.World.Participants[owner].HorizBegin = (short)town.Place.X;
+					this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
+					town.StructureMarkers0 |= 1;
+					town.StructureMarkers1 |= 0;
+				}
+			}
+
+			if (built == 0x26)
+			{
+				// Two advances
+				this.owner.Startup.DisplayMouseCursorFully();
+				this.owner.Advisors.UncoverTechnology(owner, 0);
+				this.owner.Advisors.UncoverTechnology(owner, 0);
+				this.owner.Startup.ConcealMouseCursorToSavedLevel();
+			}
+
+			if (built != 0x2b || owner != person)
+				return;
+
+			// Every foreign city shown to the human
+			for (ushort otherIdx = 0; otherIdx < 0x80; otherIdx++)
+			{
+				this.processor.EmitLocalWord(0x4c, otherIdx);
+				this.processor.RegBase.Value16 = (ushort)(otherIdx * 0x1c);
+				City other = this.owner.World.Towns[otherIdx];
+
+				if (other.ConditionMarker == 0xff || other.ParticipantIdx == owner)
+					continue;
+
+				this.processor.RegSource.Value16 = (ushort)(otherIdx * 0x1c);
+				other.ShownExtent = other.TrueExtent;
+
+				this.processor.RegCount.Value16 = (ushort)(byte)(1 << (owner & 0x1f));
+				this.owner.World.ChartSight[other.Place.X, other.Place.Y] |= (sbyte)this.processor.RegCount.LowByte;
+				this.owner.MapOps.KeepKnownTileImprovements(other.Place.X, other.Place.Y);
+			}
+
+			this.processor.EmitLocalWord(0x4c, 0x80);
+		}
+
+		/// <summary>
 		/// The start of HandleCity: the locals 0xb8, 0xda, 0xfe, 0xca and 0x2496 cleared, the mouse hidden, the 5 x 5 array
 		/// of the tiles around (BP-0xa6) cleared; 0x653e the city; the materials outside 0 - 999 cleared. Over the other
 		/// cities: 0xb2 the distance to the nearest one (at most 7), 0x6b30 the distance to the nearest palace of the owner
@@ -1661,163 +1761,8 @@ namespace Civilization1Remaster.Game
 			// A spaceship part
 			BuildSpaceshipPart(townIdx);
 
-			this.processor.CompareWord(this.processor.PullLocalWord(0xe8), 0x1);
-			if (this.processor.FlagSet.IsEqual) goto L201a;
-			goto L212c;
-
-		L201a:
-			this.processor.EmitLocalWord(0x4c, 0x0);
-			goto L2025;
-
-		L2022:
-			this.processor.EmitLocalWord(0x4c, this.processor.IncrementWord(this.processor.PullLocalWord(0x4c)));
-
-		L2025:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4c), 0x80);
-			if (this.processor.FlagSet.IsLess) goto L202f;
-			goto L205a;
-
-		L202f:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullLocalWord(0x4c));
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.Towns[this.processor.PullLocalWord(0x4c)].ParticipantIdx;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.PullGlobalWord(0x6548));
-			if (this.processor.FlagSet.IsEqual) goto L2045;
-			goto L2057;
-
-		L2045:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullLocalWord(0x4c));
-			this.owner.World.Towns[this.processor.PullLocalWord(0x4c)].StructureMarkers0 &= 0xfffe;
-			this.owner.World.Towns[this.processor.PullLocalWord(0x4c)].StructureMarkers1 &= 0xffff;
-
-		L2057:
-			goto L2022;
-
-		L205a:
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x6548), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L2066;
-			goto L207e;
-
-		L2066:
-			this.processor.RegSource.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.RegCount.LowByte = 0x4;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, this.processor.RegCount.LowByte);
-
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0x6548);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-
-			if ((this.owner.World.Participants[this.owner.World.PersonParticipantIdx].Relations[this.processor.PullGlobalWord(0x6548)] & 0x40) == 0)
-				goto L212c;
-
-		L207e:
-			this.processor.EmitGlobalByte(0xba06, 0x0);
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x6548), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L208f;
-			goto L20a5;
-
-		L208f:
-			this.owner.Libc.CopyText(0xba06, "Diplomats report:\n");
-
-			this.processor.EmitGlobalWord(0x2f9e, 0x1);
-
-		L20a5:
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0x6548);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1982)));
-
-			this.owner.Libc.AppendText(0xba06, " capital\nmoved to ");
-
-			this.owner.Conquest.ObtainCityLabel(townIdx);
-
-			this.owner.Libc.AppendText(0xba06, ".\n");
-
-			this.processor.EmitGlobalWord(0x2f9e, 0x5);
-
-			this.owner.TurnHooks.DisplayDialog(0xba06, 80, 80);
-
-			this.owner.World.Participants[this.processor.PullGlobalWord(0x6548)].HorizBegin = 
-				(short)this.owner.World.Towns[townIdx].Place.X;
-
-			this.processor.ScaleIndexToBase(0x1c, (ushort)townIdx);
-			this.owner.World.Towns[townIdx].StructureMarkers0 |= 1;
-			this.owner.World.Towns[townIdx].StructureMarkers1 |= 0;
-
-		L212c:
-			this.processor.CompareWord(this.processor.PullLocalWord(0xe8), 0x26);
-			if (this.processor.FlagSet.IsEqual) goto L2136;
-			goto L2160;
-
-		L2136:
-			this.owner.Startup.DisplayMouseCursorFully();
-			
-			this.owner.Advisors.UncoverTechnology(this.processor.PullGlobalSignedWord(0x6548), 0);
-			
-			this.owner.Advisors.UncoverTechnology(this.processor.PullGlobalSignedWord(0x6548), 0);
-			
-			this.owner.Startup.ConcealMouseCursorToSavedLevel();
-
-		L2160:
-			this.processor.CompareWord(this.processor.PullLocalWord(0xe8), 0x2b);
-			if (this.processor.FlagSet.IsEqual) goto L216a;
-			goto L220f;
-
-		L216a:
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x6548), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L2176;
-			goto L220f;
-
-		L2176:
-			this.processor.EmitLocalWord(0x4c, 0x0);
-			goto L2181;
-
-		L217e:
-			this.processor.EmitLocalWord(0x4c, this.processor.IncrementWord(this.processor.PullLocalWord(0x4c)));
-
-		L2181:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4c), 0x80);
-			if (this.processor.FlagSet.IsLess) goto L218b;
-			goto L220f;
-
-		L218b:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullLocalWord(0x4c));
-			this.processor.CompareByte(this.owner.World.Towns[this.processor.PullLocalWord(0x4c)].ConditionMarker, 0xff);
-			if (this.processor.FlagSet.IsNotEqual) goto L219d;
-			goto L220c;
-
-		L219d:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullLocalWord(0x4c));
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.Towns[this.processor.PullLocalWord(0x4c)].ParticipantIdx;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.PullGlobalWord(0x6548));
-			if (this.processor.FlagSet.IsNotEqual) goto L21b3;
-			goto L220c;
-
-		L21b3:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToSource(this.processor.PullLocalWord(0x4c));
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.Towns[this.processor.PullLocalWord(0x4c)].TrueExtent;
-			this.owner.World.Towns[this.processor.PullLocalWord(0x4c)].ShownExtent = (sbyte)this.processor.RegAcc.LowByte;
-
-			this.processor.ScaleIndexToSource(0x1c, this.processor.PullLocalWord(0x4c));
-			this.processor.RegAcc.LowByte = 0x1;
-			this.processor.RegCount.LowByte = this.processor.PullGlobalByte(0x6548);
-			this.processor.RegAcc.LowByte = this.processor.ShiftLeftByte(this.processor.RegAcc.LowByte, this.processor.RegCount.LowByte);
-			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
-			this.owner.World.ChartSight[this.owner.World.Towns[this.processor.PullLocalWord(0x4c)].Place.X,
-				this.owner.World.Towns[this.processor.PullLocalWord(0x4c)].Place.Y] |= (sbyte)this.processor.RegCount.LowByte;
-			this.processor.ScaleIndexToSource(0x1c, this.processor.PullLocalWord(0x4c));
-
-			this.owner.MapOps.KeepKnownTileImprovements(
-				this.owner.World.Towns[this.processor.PullLocalWord(0x4c)].Place.X,
-				this.owner.World.Towns[this.processor.PullLocalWord(0x4c)].Place.Y);
-
-		L220c:
-			goto L217e;
+			// What some improvements do: the palace moves, two advances, the foreign cities shown
+			ApplyImprovement(townIdx);
 
 		L220f:
 			this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;

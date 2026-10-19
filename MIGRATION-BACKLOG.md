@@ -993,13 +993,17 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   zwrot tarcz i decyzja o starcie (13 mutacji) – `ComputeSpaceshipSuccess` liczy od nowa `BotStarshipVictoryRatio` (zawsze 0)
   i zwraca niezerowy wynik tylko przy zapełnionym statku komputera (miejsca w 0x375a), a takiego stanu nie ma w zapisach gier;
   do zrobienia: scenariusz ze statkiem komputera prawie pełnym. Test produkcji wrócił do losowań z porcji 123.
+- Porcja 125 (2026-10-19): trzynasty kawałek `HandleCity` – `ApplyImprovement` (L2010 – L220f): pałac (1) znika ze wszystkich
+  miast właściciela; człowiek słyszy o przeniesieniu (u komputera tylko z ambasadą 0x40) i wtedy stolicą zostaje to miasto
+  (`HorizBegin`, bit pałacu znowu; bez komunikatu zostaje zgaszony – jak w tłumaczeniu); cud 0x26 daje dwa odkrycia; cud 0x2b
+  człowieka pokazuje wszystkie obce miasta. Test: produkcji. Ocalałe: 0x2f9e = 1 (nadpisywane wartością 5 przed dialogiem).
 
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
 (`HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-19 (po porcji 124): 1 metoda w stylu asm (`HandleCity`, 8428 linii); `ShiftAIUnit` i `HandlePlayerTurn` gotowe. `HandleCity(miasto, znacznik)`: -1 tylko liczy, 0 tura miasta, 1 ekran miasta; przepisywać kawałkami od początku (po porcji 124: następny L2010 – L220f – skutki pałacu i cudów 0x26, 0x2b). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
+Stan 2026-10-19 (po porcji 125): 1 metoda w stylu asm (`HandleCity`, 8428 linii); `ShiftAIUnit` i `HandlePlayerTurn` gotowe. `HandleCity(miasto, znacznik)`: -1 tylko liczy, 0 tura miasta, 1 ekran miasta; przepisywać kawałkami od początku (po porcji 125: następny od L220f). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
