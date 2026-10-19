@@ -1103,13 +1103,19 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   `RenderCitySceneryForHuman` (widok miasta zaraz zamalowany przez `RepaintMainScreen`), `0xe8 < -1` (0xe8 równe -1
   wymagałoby dokładnie jednego nieszczęśliwego ponad szczęśliwych) i `&= 0xbe` (bit 1 jest tu zawsze 0: porządek
   przywrócony wcześniej go kasuje).
+- Porcja 141 (2026-10-19), kawałek `HandleCity` L62d8 – L64b8: `ApplyResearch` z `UncoverTechnologyWhenFlagged` (nauka
+  miasta do badań właściciela: dla człowieka znany albo pusty cel zaczyna nowy, na najłatwiejszym poziomie podwójnie dla
+  postępu znalezionego przez innych, cud 0x14 dodaje połowę; koszt 0xf4 razy liczba postępów, po przekroczeniu badania od
+  nowa). Test `HandleCityScienceCasesMatchOriginalCode` (pomocnik `AtCost`). Mutacje: 16; ocalały trzy progi kosztu
+  (`12 - postępy`, bez 0xd2de, `>=`): przypadki z kosztem wyliczonym w teście nie trafiły dokładnie w próg – w turze miasta
+  coś jeszcze zmienia badania albo 0xd2de (do sprawdzenia).
 
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
 (`HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-19 (po porcji 140): 1 metoda w stylu asm (`HandleCity`, 8428 linii); `ShiftAIUnit` i `HandlePlayerTurn` gotowe. `HandleCity(miasto, znacznik)`: -1 tylko liczy, 0 tura miasta, 1 ekran miasta; przepisywać kawałkami od początku (po porcji 140: następny od L62d8 – nauka). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
+Stan 2026-10-19 (po porcji 141): 1 metoda w stylu asm (`HandleCity`, 8428 linii); `ShiftAIUnit` i `HandlePlayerTurn` gotowe. `HandleCity(miasto, znacznik)`: -1 tylko liczy, 0 tura miasta, 1 ekran miasta; przepisywać kawałkami od początku (po porcji 141: następny od L64b8 – punkty, zanieczyszczenie, awaria elektrowni). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 

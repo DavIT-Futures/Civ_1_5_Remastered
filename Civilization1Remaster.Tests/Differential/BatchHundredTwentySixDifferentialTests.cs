@@ -851,6 +851,78 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 			CheckCases(bay, CelebrationCases, ways);
 	}
 
+	/// <summary>The research of the owner of the city (the goal of the human player when the owner is human)</summary>
+	private static Action<GameEngine, short> Research(short goal, short headway, short found) => (game, town) =>
+	{
+		var player = game.World.Participants[game.World.Towns[town].ParticipantIdx];
+		player.PresentInquiryIdx = goal;
+		player.InquiryHeadway = headway;
+		player.FoundScienceTally = found;
+	};
+
+	private static Action<GameEngine, short> Word(ushort address, ushort value) => (game, town) => game.Processor.EmitUInt16(0x3b01, address, value);
+
+	private static Action<GameEngine, short> DiagEight(bool on) => (game, town) =>
+		game.World.DiagMarkers = (short)(on ? game.World.DiagMarkers | 8 : game.World.DiagMarkers & ~8);
+
+	/// <summary>No science from the city; the research of the human set to the cost of an advance times two, more the extra</summary>
+	private static Action<GameEngine, short> AtCost(short hardness, short found, short extra) => (game, town) =>
+	{
+		var player = game.World.Participants[game.World.Towns[town].ParticipantIdx];
+		bool human = game.World.Towns[town].ParticipantIdx == game.World.PersonParticipantIdx;
+		game.World.HardnessTier = hardness;
+		game.World.Season = 100;
+		short cost = (short)((human ? hardness * 2 + 6 : 14 - hardness) + (short)game.Processor.Storage.PullUInt16(0x3b01, 0xd2de));
+
+		if (human)
+			cost = Math.Max(cost, (short)(11 - found));
+
+		player.FoundScienceTally = found;
+		player.InquiryHeadway = (short)(2 * found * cost + extra);
+	};
+
+	private static readonly CityCase[] ScienceCases =
+	{
+		new("human, no goal, research 1", true, 0, Then(Research(-1, 1, 20), DiagEight(false)), Choice.Last),
+		new("human, the easiest level, found by others (4)", true, 0, Then(Level(0, 2), Rates(0, 10), Knows(0x30, false), Research(0x30, 10, 20),
+			(game, town) => game.World.ScienceLeadingFoundVia[0x30] = 4), Choice.Biggest),
+		new("human, level 1, found by others", true, 0, Then(Level(1, 2), Rates(0, 10), Knows(0x30, false), Research(0x30, 10, 20),
+			(game, town) => game.World.ScienceLeadingFoundVia[0x30] = 4), Choice.Biggest),
+		new("human, the goal 0 not found", true, 0, Then(Knows(0, false), Research(0, 40, 20), DiagEight(false)), Choice.Biggest),
+		new("human, research at the cost", true, 0, Then(Rates(10, 0), Knows(0x30, false), Research(0x30, 0, 0), AtCost(2, 20, 0), DiagEight(false)), Choice.Biggest),
+		new("human, research just past the cost", true, 0, Then(Rates(10, 0), Knows(0x30, false), Research(0x30, 0, 0), AtCost(2, 20, 2), DiagEight(false)), Choice.Biggest),
+		new("human, one advance, just past the least cost", true, 0, Then(Rates(10, 0), Knows(0x30, false), Research(0x30, 0, 0), AtCost(0, 1, 2), DiagEight(false)), Choice.Last),
+		new("computer, research past the cost, 0xb1e8", false, 0, Then(Research(0x30, 30000, 20), Word(0xb1e8, 1), DiagEight(false)), Choice.Biggest),
+		new("human, the goal found already", true, 0, Then(Knows(3, true), Research(3, 40, 20), DiagEight(false)), Choice.Biggest),
+		new("human, the goal found already, uncovered", true, 0, Then(Knows(3, true), Research(3, 40, 20), DiagEight(true)), Choice.Biggest),
+		new("human, no goal, research done", true, 0, Then(Research(-1, 40, 20), DiagEight(false)), Choice.Last),
+		new("human, no goal, nothing done", true, 0, Then(Research(-1, 0, 20), DiagEight(false)), Choice.Last),
+		new("human, a goal, a little research", true, 0, Then(Knows(0x30, false), Research(0x30, 10, 20)), Choice.Biggest),
+		new("human, a goal, research past the cost", true, 0, Then(Knows(0x30, false), Research(0x30, 30000, 20), DiagEight(false)), Choice.Biggest),
+		new("human, research past the cost, uncovered", true, 0, Then(Knows(0x30, false), Research(0x30, 30000, 20), DiagEight(true)), Choice.First),
+		new("human, research past the cost, 0xb1e8", true, 0, Then(Knows(0x30, false), Research(0x30, 30000, 20), Word(0xb1e8, 1)), Choice.Biggest),
+		new("computer, a little research", false, 0, Research(0x30, 10, 20), Choice.Biggest),
+		new("computer, research past the cost", false, 0, Then(Research(0x30, 30000, 20), DiagEight(false)), Choice.Biggest),
+		new("human, anarchy", true, 0, Then(Level(1, 0), Knows(0x30, false), Research(0x30, 10, 20)), Choice.Biggest),
+		new("human, the easiest level, an advance found by others", true, 0, Then(Level(0, 2), Knows(0x30, false), Research(0x30, 10, 20),
+			(game, town) => game.World.ScienceLeadingFoundVia[0x30] = 3), Choice.Biggest),
+		new("human, the easiest level, a new advance", true, 0, Then(Level(0, 2), Knows(0x30, false), Research(0x30, 10, 20),
+			(game, town) => game.World.ScienceLeadingFoundVia[0x30] = 8), Choice.Last),
+		new("human, the wonder 20", true, 0, Then(Wonder(0x14, true), Knows(0x30, false), Research(0x30, 10, 20)), Choice.Biggest),
+		new("human, before Christ, few advances, at the cost", true, 0, Then(Knows(0x30, false), Research(0x30, 150, 2),
+			(game, town) => game.World.Season = -500, Level(4, 2)), Choice.Biggest),
+		new("computer, before Christ, few advances", false, 0, Then(Research(0x30, 100, 2), (game, town) => game.World.Season = -500), Choice.Biggest),
+	};
+
+	[Fact]
+	public void HandleCityScienceCasesMatchOriginalCode()
+	{
+		HashSet<string> ways = [];
+
+		foreach (int bay in new[] { 5, 9 })
+			CheckCases(bay, ScienceCases, ways);
+	}
+
 	[Fact]
 	public void HandleCityTurnCasesMatchOriginalCode()
 	{

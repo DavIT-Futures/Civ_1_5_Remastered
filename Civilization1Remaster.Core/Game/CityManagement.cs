@@ -4139,6 +4139,84 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
+		/// The science of the city (0xe8, from 0x70e6; none in anarchy) goes to the research of its owner (InquiryHeadway):
+		/// for the human a finished or empty goal first starts a new one (with the flag 8 of DiagMarkers the advance is
+		/// uncovered), on the easiest level the science counts twice for an advance others found, the wonder 0x14 adds half.
+		/// The cost (0xf4: 14 less the level for the computer, 6 and twice the level for the human, more 0xd2de; for the human
+		/// at least 11 less its advances) by the advances found; past it the research starts again (the advance uncovered with
+		/// the flag 8), not for the human while 0xb1e8 is set.
+		/// </summary>
+		private void ApplyResearch()
+		{
+			short owner = (short)this.processor.PullGlobalWord(0x6548);
+			short person = this.owner.World.PersonParticipantIdx;
+			Player player = this.owner.World.Participants[owner];
+			Player human = this.owner.World.Participants[person];
+
+			this.processor.EmitLocalWord(0xe8, this.processor.PullGlobalWord(0x70e6));
+
+			if (owner == person)
+			{
+				bool finished = human.PresentInquiryIdx != -1 ?
+					this.owner.Advisors.PlayerKnowsTechnology(owner, human.PresentInquiryIdx) != 0 :
+					player.InquiryHeadway != 0;
+
+				if (finished)
+				{
+					human.PresentInquiryIdx = -1;
+					UncoverTechnologyWhenFlagged(owner);
+					player.InquiryHeadway = 0;
+				}
+			}
+
+			if (player.RegimeKind == 0)
+				this.processor.EmitLocalWord(0xe8, 0);
+
+			player.InquiryHeadway += (short)this.processor.PullLocalWord(0xe8);
+
+			// On the easiest level an advance others found costs half
+			if (owner == person && this.owner.World.HardnessTier == 0 && human.PresentInquiryIdx >= 0 &&
+				(this.owner.World.ScienceLeadingFoundVia[human.PresentInquiryIdx] & 7) != 0)
+			{
+				player.InquiryHeadway += this.processor.PullLocalSignedWord(0xe8);
+			}
+
+			PlayerEnjoysWonderEffect(owner, 0x14);
+
+			if (this.processor.RegAcc.Value16 != 0)
+				player.InquiryHeadway += (short)(this.processor.PullLocalSignedWord(0xe8) / 2);
+
+			// The cost of an advance
+			this.processor.EmitLocalWord(0xf4, (ushort)(owner != person ? 14 - this.owner.World.HardnessTier : (this.owner.World.HardnessTier << 1) + 6));
+			this.processor.EmitLocalWord(0xf4, (ushort)(this.processor.PullLocalWord(0xf4) + this.processor.PullGlobalWord(0xd2de)));
+
+			if (owner == person && (short)(11 - player.FoundScienceTally) > (short)this.processor.PullLocalWord(0xf4))
+				this.processor.EmitLocalWord(0xf4, (ushort)(11 - player.FoundScienceTally));
+
+			if (owner == person && this.processor.PullGlobalWord(0xb1e8) != 0)
+				return;
+
+			short progress = (short)(player.InquiryHeadway / (this.owner.World.Season < 0 ? 1 : 2));
+
+			if (progress > (short)(player.FoundScienceTally * this.processor.PullLocalSignedWord(0xf4)))
+			{
+				player.InquiryHeadway = 0;
+				UncoverTechnologyWhenFlagged(owner);
+			}
+		}
+
+		/// <summary>With the flag 8 of DiagMarkers the player uncovers an advance (the mouse shown meanwhile)</summary>
+		private void UncoverTechnologyWhenFlagged(short participant)
+		{
+			if ((this.owner.World.DiagMarkers & 8) == 0)
+				return;
+
+			this.owner.Startup.DisplayMouseCursorFully();
+			this.owner.Advisors.UncoverTechnology(participant, 0);
+			this.owner.Startup.ConcealMouseCursorToSavedLevel();
+		}
+
+		/// <summary>
 		/// The start of HandleCity: the locals 0xb8, 0xda, 0xfe, 0xca and 0x2496 cleared, the mouse hidden, the 5 x 5 array
 		/// of the tiles around (BP-0xa6) cleared; 0x653e the city; the materials outside 0 - 999 cleared. Over the other
 		/// cities: 0xb2 the distance to the nearest one (at most 7), 0x6b30 the distance to the nearest palace of the owner
@@ -4600,167 +4678,8 @@ namespace Civilization1Remaster.Game
 			ApplyCelebration(townIdx);
 
 		L62d8:
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x70e6);
-			this.processor.EmitLocalWord(0xe8, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x6548), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L62eb;
-			goto L635d;
-
-		L62eb:
-			if (this.owner.World.Participants[this.owner.World.PersonParticipantIdx].PresentInquiryIdx != -1) goto L62f5;
-			goto L630d;
-
-		L62f5:
-			this.processor.RegAcc.Value16 = this.owner.Advisors.PlayerKnowsTechnology(this.processor.PullGlobalSignedWord(0x6548),
-				this.owner.World.Participants[this.owner.World.PersonParticipantIdx].PresentInquiryIdx);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x0);
-			if (this.processor.FlagSet.IsEqual)
-				goto L630d;
-
-			goto L6327;
-
-		L630d:
-			if (this.owner.World.Participants[this.owner.World.PersonParticipantIdx].PresentInquiryIdx == -1) goto L6317;
-			goto L635d;
-
-		L6317:
-			if (this.owner.World.Participants[this.processor.PullGlobalWord(0x6548)].InquiryHeadway != 0) goto L6327;
-			goto L635d;
-
-		L6327:
-			this.owner.World.Participants[this.owner.World.PersonParticipantIdx].PresentInquiryIdx = -1;
-			this.processor.TestBitsByte((byte)(this.owner.World.DiagMarkers & 0xff), 0x8);
-			if (this.processor.FlagSet.IsNotEqual) goto L6337;
-			goto L6351;
-
-		L6337:
-			this.owner.Startup.DisplayMouseCursorFully();
-			
-			this.owner.Advisors.UncoverTechnology(this.processor.PullGlobalSignedWord(0x6548), 0);
-			
-			this.owner.Startup.ConcealMouseCursorToSavedLevel();
-
-		L6351:
-			this.owner.World.Participants[this.processor.PullGlobalWord(0x6548)].InquiryHeadway = 0;
-
-		L635d:
-			if (this.owner.World.Participants[this.processor.PullGlobalWord(0x6548)].RegimeKind == 0)
-			{
-				this.processor.EmitLocalWord(0xe8, 0x0);
-			}
-
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xe8);
-			this.owner.World.Participants[this.processor.PullGlobalWord(0x6548)].InquiryHeadway += (short)this.processor.RegAcc.Value16;
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x6548), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L638d;
-			goto L63ba;
-
-		L638d:
-			if (this.owner.World.HardnessTier == 0) goto L6397;
-			goto L63ba;
-
-		L6397:
-			if (this.owner.World.Participants[this.owner.World.PersonParticipantIdx].PresentInquiryIdx >= 0 &&
-				(this.owner.World.ScienceLeadingFoundVia[this.owner.World.Participants[this.owner.World.PersonParticipantIdx].PresentInquiryIdx] & 7) != 0)
-			{
-				this.owner.World.Participants[this.processor.PullGlobalWord(0x6548)].InquiryHeadway +=
-					this.processor.PullLocalSignedWord(0xe8);
-			}
-
-		L63ba:
-			PlayerEnjoysWonderEffect(this.processor.PullGlobalSignedWord(0x6548), 0x14);
-			
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L63d2;
-			goto L63e5;
-
-		L63d2:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xe8);
-			this.processor.HalveAccumulator();
-			this.owner.World.Participants[this.processor.PullGlobalWord(0x6548)].InquiryHeadway += (short)this.processor.RegAcc.Value16;
-
-		L63e5:
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x6548), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L63f1;
-			goto L63fb;
-
-		L63f1:
-			this.processor.RegAcc.Value16 = 0xe;
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, (ushort)this.owner.World.HardnessTier);
-			goto L6403;
-
-		L63fb:
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.HardnessTier;
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x6);
-
-		L6403:
-			this.processor.EmitLocalWord(0xf4, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0xd2de);
-			this.processor.EmitLocalWord(0xf4, this.processor.SumWord(this.processor.PullLocalWord(0xf4), this.processor.RegAcc.Value16));
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x6548), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L641a;
-			goto L6441;
-
-		L641a:
-			this.processor.RegAcc.Value16 = 0xb;
-			this.processor.RegAcc.Value16 -= (ushort)this.owner.World.Participants[this.processor.PullGlobalWord(0x6548)].FoundScienceTally;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0xf4));
-			if (this.processor.FlagSet.IsGreater) goto L6430;
-			goto L6441;
-
-		L6430:
-			this.processor.RegAcc.Value16 = 0xb;
-			this.processor.RegAcc.Value16 -= (ushort)this.owner.World.Participants[this.processor.PullGlobalWord(0x6548)].FoundScienceTally;
-			this.processor.EmitLocalWord(0xf4, this.processor.RegAcc.Value16);
-
-		L6441:
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x6548), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L644d;
-			goto L6457;
-
-		L644d:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xb1e8), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L6457;
-			goto L64b8;
-
-		L6457:
-			if (this.owner.World.Season < 0)
-			{
-				this.processor.RegCount.Value16 = 0x1;
-			}
-			else
-			{
-				this.processor.RegCount.Value16 = 0x2;
-			}
-
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.Participants[this.processor.PullGlobalWord(0x6548)].InquiryHeadway;
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.Participants[this.processor.PullGlobalWord(0x6548)].FoundScienceTally;
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.PullLocalWord(0xf4));
-			this.processor.CompareWord(this.processor.RegCount.Value16, this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsGreater) goto L6488;
-			goto L64b8;
-
-		L6488:
-			this.owner.World.Participants[this.processor.PullGlobalWord(0x6548)].InquiryHeadway = 0;
-			this.processor.TestBitsByte((byte)(this.owner.World.DiagMarkers & 0xff), 0x8);
-			if (this.processor.FlagSet.IsNotEqual) goto L649e;
-			goto L64b8;
-
-		L649e:
-			this.owner.Startup.DisplayMouseCursorFully();
-
-			this.owner.Advisors.UncoverTechnology(this.processor.PullGlobalSignedWord(0x6548), 0);
-			
-			this.owner.Startup.ConcealMouseCursorToSavedLevel();
+			// The science
+			ApplyResearch();
 
 		L64b8:
 			this.processor.RegAcc.Value16 = 0x1c;
