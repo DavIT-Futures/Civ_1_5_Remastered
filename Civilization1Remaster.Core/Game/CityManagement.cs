@@ -488,6 +488,220 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
+		/// The new workers of the city (0x50 the workers still to place): the city tile first (once, 0x16); while the food
+		/// (0x70da + half the workers left) does not feed the citizens (2 per size) and the settlers (0x48 each), or the city
+		/// is below size 3, the tile with the most food (then the most shields x 2 + trade; none without shields for the last
+		/// worker of a city without shields, 0x70dc) is taken while more than the specialists 0xe8b8 are to place and the
+		/// last search found one (0x108). Then (a computer city with the flag 1 keeps one more specialist) the tiles with the
+		/// best weighted yield: food x 16 / the food left over, shields x (3 x size) / the shields left over (0x70dc less
+		/// 0xd2f6), trade x (2 x size) / the trade (0x70de), each divisor kept within 1 - 99. The workers 0xee / 0xec and the
+		/// specialists (0x50 in bits 26 - 31) are stored, 0xae = -0x50. The locals of HandleCity and AX, BX, CX, DX, SI are
+		/// used as in the original.
+		/// </summary>
+		private void PickWorkers(short townIdx, short marker, bool pick)
+		{
+			City town = this.owner.World.Towns[townIdx];
+
+			if (pick)
+			{
+				if ((short)this.processor.PullLocalWord(0x50) > 0 && this.processor.PullLocalWord(0x16) == 0)
+				{
+					// The city tile
+					this.processor.EmitLocalWord(0x16, 1);
+					RenderCityTile(townIdx, 20, marker);
+					this.processor.EmitLocalWord(0xee, this.processor.PullLocalWord(0xee));
+					this.processor.EmitLocalWord(0xec, (ushort)(this.processor.PullLocalWord(0xec) | 0x10));
+					this.processor.EmitLocalWord(0x50, (ushort)(this.processor.PullLocalWord(0x50) - 1));
+				}
+
+				// Food first
+				while (true)
+				{
+					this.processor.RegCount.Value16 = (ushort)((short)this.processor.PullLocalWord(0x50) / 2 + this.processor.PullGlobalWord(0x70da));
+					this.processor.RegAcc.Value16 = (ushort)((short)this.processor.PullLocalWord(0x48) * (short)this.processor.PullGlobalWord(0xe3c6));
+					this.processor.RegBase.Value16 = (ushort)(town.TrueExtent * 2 + this.processor.RegAcc.Value16);
+
+					bool hungry = (short)this.processor.RegBase.Value16 > (short)this.processor.RegCount.Value16 || town.TrueExtent < 3;
+
+					if (!hungry || (short)this.processor.PullLocalWord(0x50) <= (short)this.processor.PullGlobalWord(0xe8b8) ||
+						this.processor.PullLocalWord(0x108) == 0xffff)
+					{
+						break;
+					}
+
+					this.processor.EmitLocalWord(0x108, 0xffff);
+					this.processor.RegAcc.Value16 = 0;
+					this.processor.EmitLocalWord(0xd6, 0);
+					this.processor.EmitLocalWord(0xce, 0);
+					ushort tile = 0;
+
+					for (; (short)tile < (short)this.processor.PullGlobalWord(0x6540); tile++)
+					{
+						this.processor.EmitLocalWord(0xea, tile);
+
+						if (!LocateFreeTile(townIdx, tile))
+							continue;
+
+						short horizLoc = this.processor.PullLocalSignedWord(0xc6);
+						short vertLoc = this.processor.PullLocalSignedWord(0xd2);
+
+						this.processor.EmitLocalWord(0xcc, MayCityWorkTile(horizLoc, vertLoc, 0));
+						this.processor.EmitLocalWord(0xd4, (ushort)(MayCityWorkTile(horizLoc, vertLoc, 1) << 1));
+						this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xd4);
+
+						if (this.processor.PullLocalWord(0x50) == 1 && this.processor.PullGlobalWord(0x70dc) == 0 && this.processor.PullLocalWord(0xd4) == 0)
+							continue;
+
+						this.processor.EmitLocalWord(0xd4, (ushort)(this.processor.PullLocalWord(0xd4) + MayCityWorkTile(horizLoc, vertLoc, 2)));
+
+						short food = (short)this.processor.PullLocalWord(0xcc);
+						short best = (short)this.processor.PullLocalWord(0xce);
+						this.processor.RegAcc.Value16 = (ushort)best;
+
+						if (food > best || (food == best && (short)this.processor.PullLocalWord(0xd4) > (short)this.processor.PullLocalWord(0xd6)))
+						{
+							this.processor.EmitLocalWord(0xce, (ushort)food);
+							this.processor.CopyLocalWord(0xd4, 0xd6);
+							this.processor.CopyLocalWord(0xea, 0x108);
+						}
+					}
+
+					this.processor.EmitLocalWord(0xea, tile);
+
+					if (this.processor.PullLocalWord(0x108) == 0xffff)
+						break;
+
+					TakeWorker(townIdx, marker);
+				}
+
+				// A computer city with the flag 1 keeps one more specialist
+				if (this.processor.PullGlobalWord(0x6548) != (ushort)this.owner.World.PersonParticipantIdx)
+				{
+					this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
+
+					if ((town.ConditionMarker & 1) != 0)
+						this.processor.EmitGlobalWord(0xe8b8, (ushort)(this.processor.PullGlobalWord(0xe8b8) + 1));
+				}
+
+				// The best weighted yield
+				while ((short)this.processor.PullLocalWord(0x50) > (short)this.processor.PullGlobalWord(0xe8b8))
+				{
+					this.processor.EmitLocalWord(0x108, 0xffff);
+					this.processor.RegAcc.Value16 = 0;
+					this.processor.EmitLocalWord(0xe2, 0);
+					this.processor.EmitLocalWord(0xd6, 0);
+					this.processor.EmitLocalWord(0xce, 0);
+					ushort tile = 0;
+
+					for (; (short)tile < (short)this.processor.PullGlobalWord(0x6540); tile++)
+					{
+						this.processor.EmitLocalWord(0xea, tile);
+
+						if (!LocateFreeTile(townIdx, tile))
+							continue;
+
+						short horizLoc = this.processor.PullLocalSignedWord(0xc6);
+						short vertLoc = this.processor.PullLocalSignedWord(0xd2);
+
+						// Food
+						short divisor = (short)this.owner.Helpers.VerifyValueSpan(
+							this.processor.PullGlobalSignedWord(0x70da) - (town.TrueExtent * 2) - (this.processor.PullLocalSignedWord(0x48) * this.processor.PullGlobalSignedWord(0xe3c6)), 1, 99);
+						short weight = (short)(16 / divisor);
+						this.processor.RegCount.Value16 = (ushort)weight;
+						this.processor.RegSource.Value16 = (ushort)weight;
+
+						short yield = (short)MayCityWorkTile(horizLoc, vertLoc, 0);
+						this.processor.EmitLocalWord(0x4, (ushort)yield);
+						this.processor.EmitLocalWord(0xd4, (ushort)(yield * weight));
+
+						// Shields
+						yield = (short)MayCityWorkTile(horizLoc, vertLoc, 1);
+						this.processor.RegSource.Value16 = (ushort)yield;
+						this.processor.EmitLocalWord(0xc, (ushort)yield);
+
+						divisor = (short)this.owner.Helpers.VerifyValueSpan(this.processor.PullGlobalSignedWord(0x70dc) - this.processor.PullGlobalSignedWord(0xd2f6), 1, 99);
+						this.processor.RegCount.Value16 = (ushort)divisor;
+						this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
+						this.processor.EmitLocalWord(0xd4, (ushort)(this.processor.PullLocalWord(0xd4) + (short)(3 * town.TrueExtent) / divisor * yield));
+
+						// Trade
+						yield = (short)MayCityWorkTile(horizLoc, vertLoc, 2);
+						this.processor.RegSource.Value16 = (ushort)yield;
+						this.processor.EmitLocalWord(0x46, (ushort)yield);
+
+						divisor = (short)this.owner.Helpers.VerifyValueSpan(this.processor.PullGlobalSignedWord(0x70de), 1, 99);
+						this.processor.RegCount.Value16 = (ushort)divisor;
+						this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
+						int product = (short)(town.TrueExtent * 2) / divisor * yield;
+						this.processor.RegAcc.Value16 = (ushort)product;
+						this.processor.RegData.Value16 = (ushort)(product >> 16);
+						this.processor.EmitLocalWord(0xd4, (ushort)(this.processor.PullLocalWord(0xd4) + this.processor.RegAcc.Value16));
+						this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xd6);
+
+						if ((short)this.processor.PullLocalWord(0xd4) > (short)this.processor.PullLocalWord(0xd6))
+						{
+							this.processor.EmitLocalWord(0xd6, this.processor.PullLocalWord(0xd4));
+							this.processor.CopyLocalWord(0xea, 0x108);
+							this.processor.RegAcc.Value16 = (ushort)(((this.processor.PullLocalWord(0x4) + this.processor.PullLocalWord(0xc)) << 1) + this.processor.PullLocalWord(0x46));
+							this.processor.EmitLocalWord(0xe2, this.processor.RegAcc.Value16);
+						}
+					}
+
+					this.processor.EmitLocalWord(0xea, tile);
+
+					if (this.processor.PullLocalWord(0x108) == 0xffff)
+						break;
+
+					TakeWorker(townIdx, marker);
+				}
+			}
+
+			// The workers and the specialists (bits 26 - 31) stored
+			uint workers = (uint)((int)(short)this.processor.PullLocalWord(0x50) << 0x1a) +
+				(((uint)this.processor.PullLocalWord(0xec) << 16) | this.processor.PullLocalWord(0xee));
+			this.processor.RegCount.Value16 = (ushort)workers;
+			this.processor.RegBase.Value16 = (ushort)(workers >> 16);
+			this.processor.RegSource.Value16 = (ushort)(townIdx * 0x1c);
+			town.LaborerMarkers0 = this.processor.RegCount.Value16;
+			town.LaborerMarkers1 = this.processor.RegBase.Value16;
+			this.processor.RegAcc.Value16 = (ushort)-(short)this.processor.PullLocalWord(0x50);
+			this.processor.EmitLocalWord(0xae, this.processor.RegAcc.Value16);
+		}
+
+		/// <summary>A tile around the city still free for a worker (the array at BP-0x3e); 0xc6 / 0xd2 its place</summary>
+		private bool LocateFreeTile(short townIdx, ushort tile)
+		{
+			City town = this.owner.World.Towns[townIdx];
+
+			this.processor.RegSource.Value16 = (ushort)(tile << 1);
+
+			if (this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x3e)) != 0)
+				return false;
+
+			this.processor.EmitLocalWord(0xc6, (ushort)(short)(town.Place.X + this.owner.TownDeltas[tile].X));
+			this.processor.EmitLocalWord(0xd2, (ushort)(short)(town.Place.Y + this.owner.TownDeltas[tile].Y));
+			return true;
+		}
+
+		/// <summary>The tile 0x108 gets a worker: marked, drawn, in 0xee / 0xec; 0x50 one less</summary>
+		private void TakeWorker(short townIdx, short marker)
+		{
+			ushort tile = this.processor.PullLocalWord(0x108);
+
+			this.processor.RegSource.Value16 = (ushort)(tile << 1);
+			this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x3e), 1);
+
+			RenderCityTile(townIdx, tile, marker);
+
+			uint mask = 1u << (tile & 0xff);
+			this.processor.RegAcc.Value16 = (ushort)mask;
+			this.processor.RegData.Value16 = (ushort)(mask >> 16);
+			this.processor.EmitLocalWord(0xee, (ushort)(this.processor.PullLocalWord(0xee) | this.processor.RegAcc.Value16));
+			this.processor.EmitLocalWord(0xec, (ushort)(this.processor.PullLocalWord(0xec) | this.processor.RegData.Value16));
+			this.processor.EmitLocalWord(0x50, (ushort)(this.processor.PullLocalWord(0x50) - 1));
+		}
+
+		/// <summary>
 		/// The start of HandleCity: the locals 0xb8, 0xda, 0xfe, 0xca and 0x2496 cleared, the mouse hidden, the 5 x 5 array
 		/// of the tiles around (BP-0xa6) cleared; 0x653e the city; the materials outside 0 - 999 cleared. Over the other
 		/// cities: 0xb2 the distance to the nearest one (at most 7), 0x6b30 the distance to the nearest palace of the owner
@@ -716,359 +930,8 @@ namespace Civilization1Remaster.Game
 			// The tiles the city cannot work
 			MarkUnavailableTiles(townIdx);
 
-			// The workers the city keeps (more are picked below)
-			if (!KeepWorkers(townIdx, marker))
-				goto L1292;
-
-		L0e91:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x50), 0x0);
-			if (this.processor.FlagSet.IsGreater) goto L0e9a;
-			goto L0ec9;
-
-		L0e9a:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x16), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L0ea3;
-			goto L0ec9;
-
-		L0ea3:
-			this.processor.EmitLocalWord(0x16, 0x1);
-
-			RenderCityTile(townIdx, 20, marker);
-
-			this.processor.EmitLocalWord(0xee, this.processor.BitOrWord(this.processor.PullLocalWord(0xee), 0x0));
-			this.processor.EmitLocalWord(0xec, this.processor.BitOrWord(this.processor.PullLocalWord(0xec), 0x10));
-			this.processor.DecrementLocalWord(0x50);
-
-		L0ec9:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x50);
-			this.processor.HalveAccumulator();
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.PullGlobalWord(0x70da));
-			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
-			this.processor.ScaleIndexToBase(0x1c, (ushort)townIdx);
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.Towns[townIdx].TrueExtent;
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, 0x1);
-			this.processor.RegData.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x48);
-			this.processor.RegBase.Value16 = this.processor.RegData.Value16;
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.PullGlobalWord(0xe3c6));
-			this.processor.RegBase.Value16 = this.processor.SumWord(this.processor.RegBase.Value16, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegBase.Value16, this.processor.RegCount.Value16);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L0efa;
-			goto L0f0c;
-
-		L0efa:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.processor.CompareByte((byte)this.owner.World.Towns[townIdx].TrueExtent, 0x3);
-			if (this.processor.FlagSet.IsLess) goto L0f0c;
-			goto L1088;
-
-		L0f0c:
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0xe8b8);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x50), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsGreater) goto L0f17;
-			goto L1088;
-
-		L0f17:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x108), 0xffff);
-			if (this.processor.FlagSet.IsNotEqual) goto L0f21;
-			goto L1088;
-
-		L0f21:
-			this.processor.EmitLocalWord(0x108, 0xffff);
-			this.processor.RegAcc.Value16 = 0x0;
-			this.processor.EmitLocalWord(0xd6, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0xce, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0xea, 0x0);
-			goto L0f3f;
-
-		L0f3b:
-			this.processor.EmitLocalWord(0xea, this.processor.IncrementWord(this.processor.PullLocalWord(0xea)));
-
-		L0f3f:
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x6540);
-			this.processor.CompareWord(this.processor.PullLocalWord(0xea), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsLess) goto L0f4b;
-			goto L103e;
-
-		L0f4b:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0xea);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x3e)), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L0f5a;
-			goto L103b;
-
-		L0f5a:
-			this.processor.RegAcc.Value16 = (ushort)((short)(this.owner.World.Towns[townIdx].Place.X +
-				this.owner.TownDeltas[this.processor.PullLocalWord(0xea)].X));
-			this.processor.EmitLocalWord(0xc6, this.processor.RegAcc.Value16);
-
-			this.processor.RegAcc.Value16 = (ushort)((short)(this.owner.World.Towns[townIdx].Place.Y +
-				this.owner.TownDeltas[this.processor.PullLocalWord(0xea)].Y));
-			this.processor.EmitLocalWord(0xd2, this.processor.RegAcc.Value16);
-
-			MayCityWorkTile(this.processor.PullLocalSignedWord(0xc6),
-				this.processor.PullLocalSignedWord(0xd2), 0);
-
-			this.processor.EmitLocalWord(0xcc, this.processor.RegAcc.Value16);
-
-			MayCityWorkTile(this.processor.PullLocalSignedWord(0xc6),
-				this.processor.PullLocalSignedWord(0xd2), 1);
-
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, 0x1);
-			this.processor.EmitLocalWord(0xd4, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x50), 0x1);
-			if (this.processor.FlagSet.IsEqual) goto L0fcd;
-			goto L0fe4;
-
-		L0fcd:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x70dc), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L0fd7;
-			goto L0fe4;
-
-		L0fd7:
-			this.processor.CompareWord(this.processor.PullLocalWord(0xd4), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L0fe1;
-			goto L0fe4;
-
-		L0fe1:
-			goto L0f3b;
-
-		L0fe4:
-			MayCityWorkTile(this.processor.PullLocalSignedWord(0xc6),
-				this.processor.PullLocalSignedWord(0xd2), 2);
-
-			this.processor.EmitLocalWord(0xd4, this.processor.SumWord(this.processor.PullLocalWord(0xd4), this.processor.RegAcc.Value16));
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xce);
-			this.processor.CompareWord(this.processor.PullLocalWord(0xcc), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L1009;
-			goto L1023;
-
-		L1009:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xce);
-			this.processor.CompareWord(this.processor.PullLocalWord(0xcc), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L1016;
-			goto L103b;
-
-		L1016:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xd6);
-			this.processor.CompareWord(this.processor.PullLocalWord(0xd4), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsGreater) goto L1023;
-			goto L103b;
-
-		L1023:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xcc);
-			this.processor.EmitLocalWord(0xce, this.processor.RegAcc.Value16);
-			this.processor.CopyLocalWord(0xd4, 0xd6);
-			this.processor.CopyLocalWord(0xea, 0x108);
-
-		L103b:
-			goto L0f3b;
-
-		L103e:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x108), 0xffff);
-			if (this.processor.FlagSet.IsNotEqual) goto L1048;
-			goto L1082;
-
-		L1048:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x108);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x3e), 0x1);
-
-			RenderCityTile(townIdx, this.processor.PullLocalWord(0x108), marker);
-
-			this.processor.RegAcc.Value16 = 0x1;
-			this.processor.RegData.Value16 = 0x0;
-			this.processor.RegCount.LowByte = this.processor.PullLocalByte(0x108);
-			this.processor.SplitDoubleWord(this.processor.RegAcc, this.processor.RegData, this.processor.JoinDoubleWord(this.processor.RegAcc.Value16, this.processor.RegData.Value16) << this.processor.RegCount.LowByte);
-
-			this.processor.EmitLocalWord(0xee, this.processor.BitOrWord(this.processor.PullLocalWord(0xee), this.processor.RegAcc.Value16));
-			this.processor.EmitLocalWord(0xec, this.processor.BitOrWord(this.processor.PullLocalWord(0xec), this.processor.RegData.Value16));
-			this.processor.DecrementLocalWord(0x50);
-			goto L1085;
-
-		L1082:
-			goto L1088;
-
-		L1085:
-			goto L0ec9;
-
-		L1088:
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x6548), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L1094;
-			goto L10aa;
-
-		L1094:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.processor.TestBitsByte(this.owner.World.Towns[townIdx].ConditionMarker, 0x1);
-			if (this.processor.FlagSet.IsNotEqual) goto L10a6;
-			goto L10aa;
-
-		L10a6:
-			this.processor.EmitGlobalWord(0xe8b8, this.processor.IncrementWord(this.processor.PullGlobalWord(0xe8b8)));
-
-		L10aa:
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0xe8b8);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x50), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsGreater) goto L10b5;
-			goto L1292;
-
-		L10b5:
-			this.processor.EmitLocalWord(0x108, 0xffff);
-			this.processor.RegAcc.Value16 = 0x0;
-			this.processor.EmitLocalWord(0xe2, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0xd6, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0xce, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0xea, 0x0);
-			goto L10d7;
-
-		L10d3:
-			this.processor.EmitLocalWord(0xea, this.processor.IncrementWord(this.processor.PullLocalWord(0xea)));
-
-		L10d7:
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x6540);
-			this.processor.CompareWord(this.processor.PullLocalWord(0xea), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsLess) goto L10e3;
-			goto L1248;
-
-		L10e3:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0xea);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x3e)), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L10f2;
-			goto L1245;
-
-		L10f2:
-			this.processor.RegAcc.Value16 = (ushort)((short)(this.owner.World.Towns[townIdx].Place.X +
-				this.owner.TownDeltas[this.processor.PullLocalWord(0xea)].X));
-			this.processor.EmitLocalWord(0xc6, this.processor.RegAcc.Value16);
-
-			this.processor.RegAcc.Value16 = (ushort)((short)(this.owner.World.Towns[townIdx].Place.Y +
-				this.owner.TownDeltas[this.processor.PullLocalWord(0xea)].Y));
-			this.processor.EmitLocalWord(0xd2, this.processor.RegAcc.Value16);
-
-			this.owner.Helpers.VerifyValueSpan(
-				this.processor.PullGlobalSignedWord(0x70da) - (this.owner.World.Towns[townIdx].TrueExtent * 2) -
-					(this.processor.PullLocalSignedWord(0x48) *
-					this.processor.PullGlobalSignedWord(0xe3c6)), 
-				1, 99);
-
-			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegAcc.Value16 = 0x10;
-			this.processor.RegData.Value16 = 0x0;
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegSource.Value16 = this.processor.RegCount.Value16;
-
-			MayCityWorkTile(this.processor.PullLocalSignedWord(0xc6),
-				this.processor.PullLocalSignedWord(0xd2), 0);
-
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegSource.Value16);
-			this.processor.EmitLocalWord(0xd4, this.processor.RegAcc.Value16);
-
-			MayCityWorkTile(this.processor.PullLocalSignedWord(0xc6),
-				this.processor.PullLocalSignedWord(0xd2), 1);
-
-			this.processor.RegSource.Value16 = this.processor.RegAcc.Value16;
-			this.processor.EmitLocalWord(0xc, this.processor.RegSource.Value16);
-
-			this.owner.Helpers.VerifyValueSpan(
-				this.processor.PullGlobalSignedWord(0x70dc) - this.processor.PullGlobalSignedWord(0xd2f6),
-				1, 99);
-
-			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
-			this.processor.ScaleIndexToBase(0x1c, (ushort)townIdx);
-			this.processor.RegAcc.LowByte = 0x3;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, (byte)this.owner.World.Towns[townIdx].TrueExtent);
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegSource.Value16);
-			this.processor.EmitLocalWord(0xd4, this.processor.SumWord(this.processor.PullLocalWord(0xd4), this.processor.RegAcc.Value16));
-
-			MayCityWorkTile(this.processor.PullLocalSignedWord(0xc6),
-				this.processor.PullLocalSignedWord(0xd2), 2);
-
-			this.processor.RegSource.Value16 = this.processor.RegAcc.Value16;
-			this.processor.EmitLocalWord(0x46, this.processor.RegSource.Value16);
-
-			this.owner.Helpers.VerifyValueSpan(this.processor.PullGlobalSignedWord(0x70de), 1, 99);
-
-			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
-			this.processor.ScaleIndexToBase(0x1c, (ushort)townIdx);
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.Towns[townIdx].TrueExtent;
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, 0x1);
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegSource.Value16);
-			this.processor.EmitLocalWord(0xd4, this.processor.SumWord(this.processor.PullLocalWord(0xd4), this.processor.RegAcc.Value16));
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xd6);
-			this.processor.CompareWord(this.processor.PullLocalWord(0xd4), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsGreater) goto L1226;
-			goto L1245;
-
-		L1226:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xd4);
-			this.processor.EmitLocalWord(0xd6, this.processor.RegAcc.Value16);
-			this.processor.CopyLocalWord(0xea, 0x108);
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x4);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0xc));
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x46));
-			this.processor.EmitLocalWord(0xe2, this.processor.RegAcc.Value16);
-
-		L1245:
-			goto L10d3;
-
-		L1248:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x108), 0xffff);
-			if (this.processor.FlagSet.IsNotEqual) goto L1252;
-			goto L128c;
-
-		L1252:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x108);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x3e), 0x1);
-
-			RenderCityTile(townIdx, this.processor.PullLocalWord(0x108), marker);
-
-			this.processor.RegAcc.Value16 = 0x1;
-			this.processor.RegData.Value16 = 0x0;
-			this.processor.RegCount.LowByte = this.processor.PullLocalByte(0x108);
-			this.processor.SplitDoubleWord(this.processor.RegAcc, this.processor.RegData, this.processor.JoinDoubleWord(this.processor.RegAcc.Value16, this.processor.RegData.Value16) << this.processor.RegCount.LowByte);
-
-			this.processor.EmitLocalWord(0xee, this.processor.BitOrWord(this.processor.PullLocalWord(0xee), this.processor.RegAcc.Value16));
-			this.processor.EmitLocalWord(0xec, this.processor.BitOrWord(this.processor.PullLocalWord(0xec), this.processor.RegData.Value16));
-			this.processor.DecrementLocalWord(0x50);
-			goto L128f;
-
-		L128c:
-			goto L1292;
-
-		L128f:
-			goto L10aa;
-
-		L1292:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x50);
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.RegCount.LowByte = 0x1a;
-			this.processor.SplitDoubleWord(this.processor.RegAcc, this.processor.RegData, this.processor.JoinDoubleWord(this.processor.RegAcc.Value16, this.processor.RegData.Value16) << this.processor.RegCount.LowByte);
-
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0xee));
-			this.processor.RegData.Value16 = this.processor.SumCarryWord(this.processor.RegData.Value16, this.processor.PullLocalWord(0xec));
-			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.RegBase.Value16 = this.processor.RegData.Value16;
-			this.processor.ScaleAccumulatorToSource((ushort)townIdx);
-			this.owner.World.Towns[townIdx].LaborerMarkers0 = this.processor.RegCount.Value16;
-			this.owner.World.Towns[townIdx].LaborerMarkers1 = this.processor.RegBase.Value16;
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x50);
-			this.processor.RegAcc.Value16 = this.processor.NegateWord(this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0xae, this.processor.RegAcc.Value16);
+			// The workers the city keeps and the new ones, the specialists
+			PickWorkers(townIdx, marker, KeepWorkers(townIdx, marker));
 
 		L12c2:
 			this.processor.RegAcc.Value16 = 0x1c;

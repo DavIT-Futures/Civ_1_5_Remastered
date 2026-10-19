@@ -952,13 +952,19 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   miasta. Ocalałe: pominięcie 0x50 == 0 w pętli (równoważne: robotników jest najwyżej 0x50), 0xb1e8 = 2 (tylko zapisywana,
   potem nadpisywana), warunek powrotu bez `0x50 != 0xe8b8` (przy równości 0x16 jest w testach zawsze 1) i bez `0x50 != 0`
   (zmienia tylko 0xe8b8, nadpisywane dalej).
+- Porcja 119 (2026-10-19): siódmy kawałek `HandleCity` – `PickWorkers` (L0e91 – L12c2, z `LocateFreeTile`, `TakeWorker`):
+  pole miasta (raz, lokalna 0x16), potem póki żywność nie wystarcza (albo miasto mniejsze niż 3) pole z największą żywnością
+  (potem tarcze x 2 + handel), potem (miasto komputera z flagą 1 trzyma jednego specjalistę więcej) pola z najlepszą ważoną
+  sumą: żywność x 16 / nadwyżka żywności, tarcze x (3 x rozmiar) / tarcze, handel x (2 x rozmiar) / handel (dzielniki 1 – 99);
+  robotnicy i specjaliści (bity 26 – 31) zapisywani, 0xae = -0x50. Test: `BatchHundredThirteen`. Ocalałe: górny limit 99
+  nadwyżki żywności (nieosiągalny w grze) i dolny limit 1 handlu (handel 0 – 1 przy doborze robotników nie wystąpił).
 
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
 (`HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-19 (po porcji 118): 1 metoda w stylu asm (`HandleCity`, 8428 linii); `ShiftAIUnit` i `HandlePlayerTurn` gotowe. `HandleCity(miasto, znacznik)`: -1 tylko liczy, 0 tura miasta, 1 ekran miasta; przepisywać kawałkami od początku (po porcji 118: następny od L0e91 – dobór robotników). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
+Stan 2026-10-19 (po porcji 119): 1 metoda w stylu asm (`HandleCity`, 8428 linii); `ShiftAIUnit` i `HandlePlayerTurn` gotowe. `HandleCity(miasto, znacznik)`: -1 tylko liczy, 0 tura miasta, 1 ekran miasta; przepisywać kawałkami od początku (po porcji 119: następny od L12c2 – obywatele i fabryki). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
