@@ -436,6 +436,34 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 			CheckCases(bay, SupportCases, ways);
 	}
 
+	private static readonly CityCase[] ListCases =
+	{
+		// CountSupportCosts
+		new("turn, units above the shields, a library", false, 0, Then(Size(1), Buildings(0x10, 0), Supported(12, 2, false), UnitAway)),
+		new("turn, units away, no library", false, 0, Then(Level(1, 4), Buildings(0, 0x10), Supported(6, 2, false), UnitAway), Choice.Biggest),
+
+		// RenderImprovementList, FinishImprovementList
+		new("city screen, wonders and a few improvements", true, 1, Then(Wonder(2, true), Wonder(11, true), Wonder(0x15, true),
+			(game, town) => game.World.Towns[town].StructureMarkers0 = 0x0019), Choice.Biggest),
+		new("city screen, every improvement (a second page)", true, 1, Then(Wonder(5, true), (game, town) =>
+		{
+			game.World.Towns[town].StructureMarkers0 = 0xfffe;
+			game.World.Towns[town].StructureMarkers1 = 0x00ff;
+		}), Choice.Biggest),
+		new("city screen, an improvement in production", true, 1, (game, town) => game.World.Towns[town].PresentMakingIdx = -5, Choice.Biggest),
+		new("city screen, a unit in production", true, 1, (game, town) => game.World.Towns[town].PresentMakingIdx = 3, Choice.Biggest),
+		new("city screen, settlers in production", true, 1, (game, town) => game.World.Towns[town].PresentMakingIdx = 0, Choice.Biggest),
+	};
+
+	[Fact]
+	public void HandleCityListCasesMatchOriginalCode()
+	{
+		HashSet<string> ways = [];
+
+		foreach (int bay in new[] { 5, 9 })
+			CheckCases(bay, ListCases, ways);
+	}
+
 	[Fact]
 	public void HandleCityTurnCasesMatchOriginalCode()
 	{

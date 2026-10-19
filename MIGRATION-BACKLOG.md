@@ -1029,13 +1029,19 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   niezadowolenie jednostki poza miastem, jednostka i kropka minimapy), `DrawUnitInCity` (jednostki stojące w mieście z
   miastem domowym, lista w BP-0x74). Test `HandleCitySupportCasesMatchOriginalCode` (11 przypadków). Mutacje: 15, wszystkie
   złapane (3 po celowanych przypadkach).
+- Porcja 130 (2026-10-19), cztery kawałki `HandleCity` (L39ef – L3d54): `CountSupportCosts` (w turze: niezapłacone utrzymanie
+  +5 do 0xe3c2, jednostki do rozmiaru +1, 0xdb42 spada o jednostki poza miastem x (5 z biblioteką, inaczej 7, minus słowo 2
+  rekordu przywódcy pod 0x1516)), `RenderImprovementList` z `RenderImprovementName` (lista na ekranie miasta: cuda miasta,
+  potem budynki od 0xda; pełna lista – 16 wierszy – kończy się na 0xfe i włącza następną stronę), `FinishImprovementList`
+  (ramka, „więcej”, 0xde cena produkcji). Test `HandleCityListCasesMatchOriginalCode`. Mutacje: 13; ocalała jedna – czyszczenie
+  bitu 0 w 0xca (w jednym przebiegu ekranu bit 0 jest zawsze 0: 0xca zerowane na starcie `HandleCity`).
 
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
 (`HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-19 (po porcji 129): 1 metoda w stylu asm (`HandleCity`, 8428 linii); `ShiftAIUnit` i `HandlePlayerTurn` gotowe. `HandleCity(miasto, znacznik)`: -1 tylko liczy, 0 tura miasta, 1 ekran miasta; przepisywać kawałkami od początku (po porcji 129: następny od L39ef). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
+Stan 2026-10-19 (po porcji 130): 1 metoda w stylu asm (`HandleCity`, 8428 linii); `ShiftAIUnit` i `HandlePlayerTurn` gotowe. `HandleCity(miasto, znacznik)`: -1 tylko liczy, 0 tura miasta, 1 ekran miasta; przepisywać kawałkami od początku (po porcji 130: następny od L3d54). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
