@@ -538,6 +538,54 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 			CheckCases(bay, ShortfallCases, ways);
 	}
 
+	private static Action<GameEngine, short> Keys(params HumanTurnScript.Input[] inputs) => (game, town) => HumanTurnScript.Install(game,
+		[.. inputs, new HumanTurnScript.Input(0x1b), new HumanTurnScript.Input(0x1b)]);
+
+	private static Action<GameEngine, short> Advisor(bool on) => (game, town) => game.World.Towns[town].ConditionMarker =
+		(byte)(on ? game.World.Towns[town].ConditionMarker | 0x10 : game.World.Towns[town].ConditionMarker & ~0x10);
+
+	private static HumanTurnScript.Input Held(int horiz, int vert) => new HumanTurnScript.Input(0, 2, horiz, vert);
+
+	private static readonly CityCase[] ButtonCases =
+	{
+		new("city screen, an improvement it has (blinks)", true, 1, Then(Stock(5, 5, -3), Buildings(4, 0)), Choice.Biggest),
+		new("city screen, an improvement it lacks", true, 1, Then(Stock(5, 5, -3), Buildings(0, 4)), Choice.First),
+		new("city screen, the improvement 21 it has", true, 1, Then(Stock(5, 5, -21), (game, town) => game.World.Towns[town].StructureMarkers1 |= 0x10), Choice.Last),
+		new("city screen, a spaceship part, launched", true, 1, Then(Stock(5, 5, -22),
+			(game, town) => game.World.StarshipMarkers |= (short)(1 << game.World.Towns[town].ParticipantIdx)), Choice.Biggest),
+		new("city screen, a spaceship part, not launched", true, 1, Then(Stock(5, 5, -24),
+			(game, town) => game.World.StarshipMarkers &= (short)~(1 << game.World.Towns[town].ParticipantIdx)), Choice.Biggest),
+		new("city screen, a wonder built", true, 1, Then(Stock(5, 5, -0x1d), Wonder(0x1d - 24, true)), Choice.Biggest),
+		new("city screen, a wonder not built", true, 1, Then(Stock(5, 5, -0x19), Wonder(1, false)), Choice.Last),
+		new("city screen, a unit with 127 units", true, 1, Then(Stock(5, 5, 2),
+			(game, town) => game.World.Participants[game.World.Towns[town].ParticipantIdx].TroopTally = 127), Choice.Biggest),
+		new("city screen, a unit with 126 units", true, 1, Then(Stock(5, 5, 2),
+			(game, town) => game.World.Participants[game.World.Towns[town].ParticipantIdx].TroopTally = 126), Choice.Biggest),
+		new("city screen, A switches the advisor on, a unit", true, 1, Then(Stock(5, 5, 2), Advisor(false), Keys(new HumanTurnScript.Input(0x41))), Choice.Biggest),
+		new("city screen, A switches the advisor on, an improvement", true, 1, Then(Stock(5, 5, -3), Advisor(false), Keys(new HumanTurnScript.Input(0x41))), Choice.Last),
+		new("city screen, A switches the advisor on, settlers", true, 1, Then(Stock(5, 5, 0), Advisor(false), Keys(new HumanTurnScript.Input(0x41))), Choice.First),
+		new("city screen, the last spaceship part, launched", true, 1, Then(Stock(5, 5, -24),
+			(game, town) => game.World.StarshipMarkers |= (short)(1 << game.World.Towns[town].ParticipantIdx)), Choice.Last),
+		new("city screen, A switches the advisor off", true, 1, Then(Stock(5, 5, 2), Advisor(true), Keys(new HumanTurnScript.Input(0x41))), Choice.Biggest),
+		new("city screen, Change held at its corner", true, 1, Then(Stock(5, 5, 2), Advisor(false), Keys(Held(230, 106))), Choice.Biggest),
+		new("city screen, Change held at its bottom", true, 1, Then(Stock(5, 5, 2), Advisor(false), Keys(Held(269, 116))), Choice.First),
+		new("city screen, held right of Change", true, 1, Then(Stock(5, 5, 2), Advisor(false), Keys(Held(270, 110))), Choice.Biggest),
+		new("city screen, held below Change", true, 1, Then(Stock(5, 5, 2), Advisor(false), Keys(Held(250, 117))), Choice.Biggest),
+		new("city screen, held above Change", true, 1, Then(Stock(5, 5, 2), Advisor(false), Keys(Held(250, 105))), Choice.Biggest),
+		new("city screen, held left of Change", true, 1, Then(Stock(5, 5, 2), Advisor(false), Keys(Held(229, 110))), Choice.Biggest),
+		new("city screen, Change clicked", true, 1, Then(Stock(5, 5, 2), Advisor(false), Keys(new HumanTurnScript.Input(0, 1, 250, 110))), Choice.Biggest),
+		new("computer city screen", false, 1, Stock(5, 5, 2), Choice.Biggest),
+	};
+
+	[Fact]
+	public void HandleCityButtonCasesMatchOriginalCode()
+	{
+		HashSet<string> ways = [];
+
+		foreach (int bay in new[] { 5, 9 })
+			CheckCases(bay, ButtonCases, ways);
+	}
+
 	[Fact]
 	public void HandleCityTurnCasesMatchOriginalCode()
 	{

@@ -1052,13 +1052,19 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   ćwierć rozmiaru razy postępy 0xb882). Test `HandleCityShortfallCasesMatchOriginalCode`. Mutacje: 13, wszystkie złapane
   (dwie dopiero po przypadku z czterema postępami zanieczyszczenia). Ćwiartka liczona zwykłym dzieleniem: oryginał bierze
   wartość bezwzględną, różnica tylko dla -32768.
+- Porcja 134 (2026-10-19), trzy kawałki `HandleCity` (L4852 – L4bba): `RenderExitAndBuyButtons` (przyciski i czy Change
+  miga: budynek, który miasto ma, część wysłanego statku, zbudowany cud, jednostka przy 127), `AwaitCityScreenInput`
+  (puszczenie przycisku myszy, potem klik, klawisz albo flaga 0xb8; miganie co 10 tyknięć), `ReadCityScreenInput` z
+  `ChangeStep` (klawisz albo -1, przycisk Change albo A przełącza doradcę; doradca wybiera produkcję, 99 – od początku
+  miasta). Test `HandleCityButtonCasesMatchOriginalCode`. Mutacje: 14; ocalały dwie – kolory migania (ekran miasta jest
+  zamalowany po wyjściu, a test porównuje ekran tylko na końcu; liczba mignięć 0xc0 jest sprawdzana).
 
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
 (`HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-19 (po porcji 133): 1 metoda w stylu asm (`HandleCity`, 8428 linii); `ShiftAIUnit` i `HandlePlayerTurn` gotowe. `HandleCity(miasto, znacznik)`: -1 tylko liczy, 0 tura miasta, 1 ekran miasta; przepisywać kawałkami od początku (po porcji 133: następny od L4852 – przyciski ekranu miasta człowieka). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
+Stan 2026-10-19 (po porcji 134): 1 metoda w stylu asm (`HandleCity`, 8428 linii); `ShiftAIUnit` i `HandlePlayerTurn` gotowe. `HandleCity(miasto, znacznik)`: -1 tylko liczy, 0 tura miasta, 1 ekran miasta; przepisywać kawałkami od początku (po porcji 134: następny od L4bba – przycisk Buy). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 

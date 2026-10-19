@@ -3113,6 +3113,158 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
+		/// The buttons Exit and Buy of the city screen of the human, and whether its Change button blinks (0xc0): the city makes
+		/// an improvement it has or a part of the spaceship that was launched, a wonder that is built, or a unit when the owner
+		/// has 127 of them.
+		/// </summary>
+		private void RenderExitAndBuyButtons(short townIdx)
+		{
+			City town = this.owner.World.Towns[townIdx];
+			short owner = (short)this.processor.PullGlobalWord(0x6548);
+
+			RenderLabelBox(284, 190, 316, 198, 0x2662, 12);
+			RenderLabelBox(231, 190, 272, 198, 0x2667, 9);
+			this.processor.EmitLocalWord(0xc0, 0);
+
+			sbyte making = town.PresentMakingIdx;
+
+			// An improvement the city has (-1 - -21)
+			if (making < 0 && making >= -21)
+			{
+				uint built = ((uint)town.StructureMarkers1 << 16) | town.StructureMarkers0;
+
+				if ((built & (1u << (-making - 1))) != 0)
+					this.processor.EmitLocalWord(0xc0, 1);
+			}
+
+			// A part of the spaceship (-22 - -24) when the spaceship is on its way
+			if (making < -21 && making >= -24 && ((ushort)(1 << (owner & 0xff)) & (ushort)this.owner.World.StarshipMarkers) != 0)
+				this.processor.EmitLocalWord(0xc0, 1);
+
+			// A wonder that is built
+			if (making < -24 && this.owner.World.MarvelTownIdx[Math.Abs(making) - 24] != -1)
+				this.processor.EmitLocalWord(0xc0, 1);
+
+			// A unit when there are 127 of them
+			if (making >= 0 && this.owner.World.Participants[owner].TroopTally >= 127)
+				this.processor.EmitLocalWord(0xc0, 1);
+		}
+
+		/// <summary>
+		/// Waits until the mouse button is let go, then for a click, a key or the flag 0xb8; meanwhile a blinking Change button
+		/// (0xc0, counted up) changes its colours every 10 ticks.
+		/// </summary>
+		private void AwaitCityScreenInput()
+		{
+			this.owner.Startup.DisplayMouseCursor();
+
+			while (this.owner.GlobDb3a != 0)
+				this.owner.Startup.ObtainMouseState();
+
+			while (this.owner.GlobDb3a == 0)
+			{
+				this.owner.Libc.KeyAvailable();
+
+				if (this.processor.RegAcc.Value16 != 0 || this.processor.PullLocalWord(0xb8) != 0)
+					break;
+
+				this.owner.Startup.ObtainMouseState();
+
+				if (this.processor.PullLocalWord(0xc0) == 0)
+					continue;
+
+				this.owner.Startup.ConcealMouseCursor();
+				this.processor.EmitLocalWord(0xc0, (ushort)(this.processor.PullLocalWord(0xc0) + 1));
+
+				if ((this.processor.PullLocalByte(0xc0) & 1) != 0)
+					this.owner.VideoCard.SubstituteHue(this.processor.PullGlobalWord(0xaa), 231, 106, 32, 8, 14, 9);
+				else
+					this.owner.VideoCard.SubstituteHue(this.processor.PullGlobalWord(0xaa), 231, 106, 32, 8, 9, 14);
+
+				this.owner.Startup.DisplayMouseCursor();
+				this.owner.TextPainter.AwaitTime(10);
+			}
+		}
+
+		/// <summary>What the city screen does after the Change button</summary>
+		private enum ChangeStep
+		{
+			/// <summary>The button wasn't used: the other buttons</summary>
+			Others,
+			/// <summary>The city screen again from the citizens (the production changed or the advisor was switched off)</summary>
+			Redraw,
+			/// <summary>The advisor gave up (99): the city from its start</summary>
+			Restart,
+		}
+
+		/// <summary>
+		/// The input of the city screen (0xf0: the key, -1 for a click, 0x70 with the flag 0xb8) and the Change button (a click
+		/// on it or A): the advisor flag 0x10 switched; switched on, the advisor picks the production (0x102), the units in making
+		/// of the owner are counted over again. 0x70dc and 0x70de get back the words 0x10a and 0xa of the frame.
+		/// </summary>
+		private ChangeStep ReadCityScreenInput(short townIdx)
+		{
+			City town = this.owner.World.Towns[townIdx];
+
+			this.processor.EmitLocalWord(0xf0, 0xffff);
+			this.owner.Libc.KeyAvailable();
+
+			if (this.processor.RegAcc.Value16 != 0)
+			{
+				this.owner.Dialogs.ObtainNavigationKey();
+				this.processor.EmitLocalWord(0xf0, this.processor.RegAcc.Value16);
+				this.processor.RegAcc.Value16 = 0;
+				this.owner.GlobDb3e = 0;
+				this.owner.GlobDb3c = 0;
+			}
+			else if (this.processor.PullLocalWord(0xb8) != 0)
+			{
+				this.processor.EmitLocalWord(0xf0, 0x70);
+			}
+
+			this.owner.Startup.ConcealMouseCursor();
+
+			bool clicked = this.owner.GlobDb3a == 2 && (short)this.owner.GlobDb3c >= 0xe6 && (short)this.owner.GlobDb3c < 0x10e &&
+				(short)this.owner.GlobDb3e >= 0x6a && (short)this.owner.GlobDb3e <= 0x74;
+
+			if (!clicked && this.processor.PullLocalWord(0xf0) != 0x41)
+				return ChangeStep.Others;
+
+			town.ConditionMarker ^= 0x10;
+
+			if ((town.ConditionMarker & 0x10) != 0)
+			{
+				short owner = (short)this.processor.PullGlobalWord(0x6548);
+
+				this.owner.Advisors.PickCityProduction(owner, townIdx);
+				this.processor.EmitLocalWord(0x102, this.processor.RegAcc.Value16);
+				this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
+				this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 2);
+
+				if (this.processor.PullLocalWord(0x102) == 0x63)
+					return ChangeStep.Restart;
+
+				this.processor.EmitGlobalWord(0xb1e8, 0);
+
+				if (town.PresentMakingIdx >= 0)
+					this.owner.World.Participants[owner].TroopsInsideMaking[town.PresentMakingIdx]--;
+
+				town.PresentMakingIdx = (sbyte)this.processor.PullLocalByte(0x102);
+
+				if (town.PresentMakingIdx >= 0)
+					this.owner.World.Participants[owner].TroopsInsideMaking[town.PresentMakingIdx]++;
+
+				this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 230, 99, 90, 100, 0);
+			}
+
+			this.processor.EmitGlobalWord(0x70dc, this.processor.PullLocalWord(0x10a));
+			this.processor.EmitGlobalWord(0x70de, this.processor.PullLocalWord(0xa));
+			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xa);
+
+			return ChangeStep.Redraw;
+		}
+
+		/// <summary>
 		/// The start of HandleCity: the locals 0xb8, 0xda, 0xfe, 0xca and 0x2496 cleared, the mouse hidden, the 5 x 5 array
 		/// of the tiles around (BP-0xa6) cleared; 0x653e the city; the materials outside 0 - 999 cleared. Over the other
 		/// cities: 0xb2 the distance to the nearest one (at most 7), 0x6b30 the distance to the nearest palace of the owner
@@ -3453,304 +3605,20 @@ namespace Civilization1Remaster.Game
 			RenderCitizensAndRoutes(townIdx);
 			RenderCityDotAndPollution(townIdx);
 
-		L4852:
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x6548), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L485e;
-			goto L5cbd;
+			// The city screen of the human: the buttons, the input, the Change button
+			if (this.processor.PullGlobalWord(0x6548) != (ushort)this.owner.World.PersonParticipantIdx)
+				goto L5cbd;
 
-		L485e:
-			RenderLabelBox(284, 190, 316, 198, 0x2662, 12);
+			RenderExitAndBuyButtons(townIdx);
+			AwaitCityScreenInput();
 
-			RenderLabelBox(231, 190, 272, 198, 0x2667, 9);
-
-			this.processor.EmitLocalWord(0xc0, 0x0);
-			this.processor.ScaleIndexToBase(0x1c, (ushort)townIdx);
-			this.processor.CompareByte((byte)this.owner.World.Towns[townIdx].PresentMakingIdx, 0x0);
-			if (this.processor.FlagSet.IsLess) goto L48b6;
-			goto L48fb;
-
-		L48b6:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.processor.CompareByte((byte)this.owner.World.Towns[townIdx].PresentMakingIdx, 0xeb);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L48c8;
-			goto L48fb;
-
-		L48c8:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToSource((ushort)townIdx);
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.Towns[townIdx].PresentMakingIdx;
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegCount.Value16 = this.processor.NegateWord(this.processor.RegCount.Value16);
-			this.processor.RegCount.LowByte = this.processor.DecrementByte(this.processor.RegCount.LowByte);
-			this.processor.RegAcc.Value16 = 0x1;
-			this.processor.RegData.Value16 = 0x0;
-			this.processor.SplitDoubleWord(this.processor.RegAcc, this.processor.RegData, this.processor.JoinDoubleWord(this.processor.RegAcc.Value16, this.processor.RegData.Value16) << this.processor.RegCount.LowByte);
-
-			this.processor.RegAcc.Value16 = this.processor.BitAndWord(this.processor.RegAcc.Value16,
-				this.owner.World.Towns[townIdx].StructureMarkers0);
-			this.processor.RegData.Value16 = this.processor.BitAndWord(this.processor.RegData.Value16,
-				this.owner.World.Towns[townIdx].StructureMarkers1);
-			this.processor.RegData.Value16 = this.processor.BitOrWord(this.processor.RegData.Value16, this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L48f5;
-			goto L48fb;
-
-		L48f5:
-			this.processor.EmitLocalWord(0xc0, 0x1);
-
-		L48fb:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.processor.CompareByte((byte)this.owner.World.Towns[townIdx].PresentMakingIdx, 0xeb);
-			if (this.processor.FlagSet.IsLess) goto L490d;
-			goto L4937;
-
-		L490d:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.processor.CompareByte((byte)this.owner.World.Towns[townIdx].PresentMakingIdx, 0xe8);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L491f;
-			goto L4937;
-
-		L491f:
-			this.processor.RegAcc.Value16 = 0x1;
-			this.processor.RegCount.LowByte = this.processor.PullGlobalByte(0x6548);
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			this.processor.TestBitsWord(this.processor.RegAcc.Value16, (ushort)this.owner.World.StarshipMarkers);
-			if (this.processor.FlagSet.IsNotEqual) goto L4931;
-			goto L4937;
-
-		L4931:
-			this.processor.EmitLocalWord(0xc0, 0x1);
-
-		L4937:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.processor.CompareByte((byte)this.owner.World.Towns[townIdx].PresentMakingIdx, 0xe8);
-			if (this.processor.FlagSet.IsLess) goto L4949;
-			goto L496c;
-
-		L4949:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.Towns[townIdx].PresentMakingIdx;
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegBase.Value16 = this.processor.NegateWord(this.processor.RegBase.Value16);
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-
-			if (this.owner.World.MarvelTownIdx[Math.Abs(this.owner.World.Towns[townIdx].PresentMakingIdx) - 24] == -1)
-				goto L496c;
-
-			this.processor.EmitLocalWord(0xc0, 0x1);
-
-		L496c:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.processor.CompareByte((byte)this.owner.World.Towns[townIdx].PresentMakingIdx, 0x0);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L497e;
-			goto L4994;
-
-		L497e:
-			if (this.owner.World.Participants[this.processor.PullGlobalWord(0x6548)].TroopTally >= 127)
+			switch (ReadCityScreenInput(townIdx))
 			{
-				this.processor.EmitLocalWord(0xc0, 0x1);
+				case ChangeStep.Redraw:
+					goto L12c2;
+				case ChangeStep.Restart:
+					goto L045f;
 			}
-
-		L4994:
-			this.owner.Startup.DisplayMouseCursor();
-
-		L4999:
-			this.processor.CompareWord(this.owner.GlobDb3a, 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L49a3;
-			goto L49ab;
-
-		L49a3:
-			this.owner.Startup.ObtainMouseState();
-
-			goto L4999;
-
-		L49ab:
-			this.processor.CompareWord(this.owner.GlobDb3a, 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L49b5;
-			goto L4a4e;
-
-		L49b5:
-			this.owner.Libc.KeyAvailable();
-
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L49c2;
-			goto L4a4e;
-
-		L49c2:
-			this.processor.CompareWord(this.processor.PullLocalWord(0xb8), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L49cc;
-			goto L4a4e;
-
-		L49cc:
-			this.owner.Startup.ObtainMouseState();
-
-			this.processor.CompareWord(this.processor.PullLocalWord(0xc0), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L49db;
-			goto L4a4b;
-
-		L49db:
-			this.owner.Startup.ConcealMouseCursor();
-
-			this.processor.IncrementLocalWord(0xc0);
-			this.processor.RegAcc.LowByte = this.processor.PullLocalByte(0xc0);
-			this.processor.TestBitsByte(this.processor.RegAcc.LowByte, 0x1);
-			if (this.processor.FlagSet.IsNotEqual) goto L49ef;
-			goto L4a16;
-
-		L49ef:
-			this.owner.VideoCard.SubstituteHue(this.processor.PullGlobalWord(0xaa), 231, 106, 32, 8, 14, 9);
-
-			goto L4a3a;
-
-		L4a16:
-			this.owner.VideoCard.SubstituteHue(this.processor.PullGlobalWord(0xaa), 231, 106, 32, 8, 9, 14);
-
-		L4a3a:
-			this.owner.Startup.DisplayMouseCursor();
-
-			this.owner.TextPainter.AwaitTime(10);
-
-		L4a4b:
-			goto L49ab;
-
-		L4a4e:
-			this.processor.EmitLocalWord(0xf0, 0xffff);
-
-			this.owner.Libc.KeyAvailable();
-
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L4a61;
-			goto L4a76;
-
-		L4a61:
-			this.owner.Dialogs.ObtainNavigationKey();
-
-			this.processor.EmitLocalWord(0xf0, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = 0x0;
-			this.owner.GlobDb3e = 0;
-			this.owner.GlobDb3c = 0;
-			goto L4a86;
-
-		L4a76:
-			this.processor.CompareWord(this.processor.PullLocalWord(0xb8), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L4a80;
-			goto L4a86;
-
-		L4a80:
-			this.processor.EmitLocalWord(0xf0, 0x70);
-
-		L4a86:
-			this.owner.Startup.ConcealMouseCursor();
-
-			this.processor.CompareWord(this.owner.GlobDb3a, 0x2);
-			if (this.processor.FlagSet.IsEqual) goto L4a95;
-			goto L4abf;
-
-		L4a95:
-			this.processor.CompareWord(this.owner.GlobDb3c, 0xe6);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L4aa0;
-			goto L4abf;
-
-		L4aa0:
-			this.processor.CompareWord(this.owner.GlobDb3c, 0x10e);
-			if (this.processor.FlagSet.IsLess) goto L4aab;
-			goto L4abf;
-
-		L4aab:
-			this.processor.CompareWord(this.owner.GlobDb3e, 0x6a);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L4ab5;
-			goto L4abf;
-
-		L4ab5:
-			this.processor.CompareWord(this.owner.GlobDb3e, 0x74);
-			if (this.processor.FlagSet.IsGreater) goto L4abf;
-			goto L4ac9;
-
-		L4abf:
-			this.processor.CompareWord(this.processor.PullLocalWord(0xf0), 0x41);
-			if (this.processor.FlagSet.IsEqual) goto L4ac9;
-			goto L4bba;
-
-		L4ac9:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.owner.World.Towns[townIdx].ConditionMarker ^= 0x10;
-			this.processor.ScaleIndexToBase(0x1c, (ushort)townIdx);
-			this.processor.TestBitsByte(this.owner.World.Towns[townIdx].ConditionMarker, 0x10);
-			if (this.processor.FlagSet.IsNotEqual) goto L4ae8;
-			goto L4baa;
-
-		L4ae8:
-			this.owner.Advisors.PickCityProduction(this.processor.PullGlobalSignedWord(0x6548), townIdx);
-			
-			this.processor.EmitLocalWord(0x102, this.processor.RegAcc.Value16);
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 0x2);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x102), 0x63);
-			if (this.processor.FlagSet.IsNotEqual) goto L4b0e;
-			goto L4ba7;
-
-		L4b0e:
-			this.processor.EmitGlobalWord(0xb1e8, 0x0);
-			this.processor.ScaleIndexToBase(0x1c, (ushort)townIdx);
-			this.processor.CompareByte((byte)this.owner.World.Towns[townIdx].PresentMakingIdx, 0x0);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L4b26;
-			goto L4b44;
-
-		L4b26:			
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.Towns[townIdx].PresentMakingIdx;
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegSource.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			
-			this.processor.ScaleIndexToBase(0x38, this.processor.PullGlobalWord(0x6548));
-			
-			this.owner.World.Participants[this.processor.PullGlobalWord(0x6548)].TroopsInsideMaking[this.owner.World.Towns[townIdx].PresentMakingIdx]--;
-
-		L4b44:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.processor.RegAcc.LowByte = this.processor.PullLocalByte(0x102);
-			this.owner.World.Towns[townIdx].PresentMakingIdx = (sbyte)this.processor.RegAcc.LowByte;
-
-			this.processor.ScaleIndexToBase(0x1c, (ushort)townIdx);
-			this.processor.CompareByte((byte)this.owner.World.Towns[townIdx].PresentMakingIdx, 0x0);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L4b66;
-			goto L4b84;
-
-		L4b66:
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.Towns[townIdx].PresentMakingIdx;
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegSource.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			
-			this.processor.ScaleIndexToBase(0x38, this.processor.PullGlobalWord(0x6548));
-			
-			this.owner.World.Participants[this.processor.PullGlobalWord(0x6548)].TroopsInsideMaking[this.owner.World.Towns[townIdx].PresentMakingIdx]++;
-
-		L4b84:
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 230, 99, 90, 100, 0);
-
-			goto L4baa;
-
-		L4ba7:
-			goto L045f;
-
-		L4baa:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x10a);
-			this.processor.EmitGlobalWord(0x70dc, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xa);
-			this.processor.EmitGlobalWord(0x70de, this.processor.RegAcc.Value16);
-			goto L12c2;
 
 		L4bba:
 			this.processor.CompareWord(this.processor.PullLocalWord(0xf0), 0xffff);
