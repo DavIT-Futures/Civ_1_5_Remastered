@@ -1045,13 +1045,20 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   `RenderTradeIcons` (wiersz luksusów, podatków i nauki). Test `HandleCityRowCasesMatchOriginalCode`. Mutacje: 12; ocalała
   jedna – krok `116 / (x + 1)` wiersza tarcz i handlu (różni się od `x + 2` tylko przy wartościach, których przypadki nie
   ustawiają wprost, np. 15 albo 18).
+- Porcja 133 (2026-10-19), trzy kawałki `HandleCity` (L439e – L4852): `RenderShortfalls` (brakująca żywność i tarcze
+  utrzymania za wierszem, zacieniowane; korupcja w wierszu handlu), `RenderCitizensAndRoutes` (obywatele u góry ekranu,
+  szlaki handlowe: nazwa i handel – ósma część z miastem obcym, szesnasta z własnym – na pierwszej zakładce, kropka na
+  minimapie), `RenderCityDotAndPollution` (samo miasto na minimapie, zanieczyszczenie: tarcze przez dzielnik 0x6c98 mniej 20,
+  ćwierć rozmiaru razy postępy 0xb882). Test `HandleCityShortfallCasesMatchOriginalCode`. Mutacje: 13, wszystkie złapane
+  (dwie dopiero po przypadku z czterema postępami zanieczyszczenia). Ćwiartka liczona zwykłym dzieleniem: oryginał bierze
+  wartość bezwzględną, różnica tylko dla -32768.
 
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
 (`HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-19 (po porcji 132): 1 metoda w stylu asm (`HandleCity`, 8428 linii); `ShiftAIUnit` i `HandlePlayerTurn` gotowe. `HandleCity(miasto, znacznik)`: -1 tylko liczy, 0 tura miasta, 1 ekran miasta; przepisywać kawałkami od początku (po porcji 132: następny od L439e – brakująca żywność). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
+Stan 2026-10-19 (po porcji 133): 1 metoda w stylu asm (`HandleCity`, 8428 linii); `ShiftAIUnit` i `HandlePlayerTurn` gotowe. `HandleCity(miasto, znacznik)`: -1 tylko liczy, 0 tura miasta, 1 ekran miasta; przepisywać kawałkami od początku (po porcji 133: następny od L4852 – przyciski ekranu miasta człowieka). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using Civilization1Remaster.Game;
@@ -510,6 +510,32 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 
 		foreach (int bay in new[] { 5, 9 })
 			CheckCases(bay, RowCases, ways);
+	}
+
+	private static readonly Action<GameEngine, short> MiniMapTab = (game, town) => HumanTurnScript.Install(game,
+		[new HumanTurnScript.Input(0, 1, 177, 110), new HumanTurnScript.Input(0x1b), new HumanTurnScript.Input(0x1b)]);
+
+	private static readonly CityCase[] ShortfallCases =
+	{
+		new("city screen, settlers eat more than the food", true, 1, Then(Size(1), Supported(8, 0, false)), Choice.First),
+		new("city screen, republic, settlers eat more than the food", true, 1, Then(Level(1, 4), Size(2), Supported(6, 0, false)), Choice.Last),
+		new("city screen, support above the production", true, 1, Then(Level(1, 4), Size(1), Supported(12, 2, false)), Choice.First),
+		new("city screen, corruption far from the palace", true, 1, Then(Level(1, 1), Buildings(0, 0x41)), Choice.Biggest),
+		new("city screen, trade routes", true, 1, Routes(true, true), Choice.Biggest),
+		new("city screen, trade routes on the mini map", true, 1, Then(Routes(true, true), MiniMapTab), Choice.Biggest),
+		new("city screen, a big city with factories", true, 1, Then(Size(25), Buildings(0xc000, 0x1000)), Choice.Biggest),
+		new("city screen, a middle city with a factory", true, 1, Then(Size(12), Buildings(0x4000, 0x1000)), Choice.Last),
+		new("city screen, pollution of the advances", true, 1, Then(Size(20), Buildings(0xc000, 0x1000), Knows(0x23, true), Knows(0x3a, true),
+			Knows(0x29, true), Knows(0x3c, true)), Choice.Biggest),
+	};
+
+	[Fact]
+	public void HandleCityShortfallCasesMatchOriginalCode()
+	{
+		HashSet<string> ways = [];
+
+		foreach (int bay in new[] { 5, 9 })
+			CheckCases(bay, ShortfallCases, ways);
 	}
 
 	[Fact]
