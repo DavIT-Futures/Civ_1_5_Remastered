@@ -3186,14 +3186,14 @@ namespace Civilization1Remaster.Game
 			}
 		}
 
-		/// <summary>What the city screen does after the Change button</summary>
-		private enum ChangeStep
+		/// <summary>What the city screen does after a button</summary>
+		private enum CityScreenStep
 		{
-			/// <summary>The button wasn't used: the other buttons</summary>
+			/// <summary>The button wasn't used: the buttons after it</summary>
 			Others,
-			/// <summary>The city screen again from the citizens (the production changed or the advisor was switched off)</summary>
+			/// <summary>The city screen again from the citizens (the advisor switched, another tab)</summary>
 			Redraw,
-			/// <summary>The advisor gave up (99): the city from its start</summary>
+			/// <summary>The city from its start (the advisor gave up with 99, a purchase, a change, the view of the city)</summary>
 			Restart,
 		}
 
@@ -3202,7 +3202,7 @@ namespace Civilization1Remaster.Game
 		/// on it or A): the advisor flag 0x10 switched; switched on, the advisor picks the production (0x102), the units in making
 		/// of the owner are counted over again. 0x70dc and 0x70de get back the words 0x10a and 0xa of the frame.
 		/// </summary>
-		private ChangeStep ReadCityScreenInput(short townIdx)
+		private CityScreenStep ReadCityScreenInput(short townIdx)
 		{
 			City town = this.owner.World.Towns[townIdx];
 
@@ -3228,7 +3228,7 @@ namespace Civilization1Remaster.Game
 				(short)this.owner.GlobDb3e >= 0x6a && (short)this.owner.GlobDb3e <= 0x74;
 
 			if (!clicked && this.processor.PullLocalWord(0xf0) != 0x41)
-				return ChangeStep.Others;
+				return CityScreenStep.Others;
 
 			town.ConditionMarker ^= 0x10;
 
@@ -3242,7 +3242,7 @@ namespace Civilization1Remaster.Game
 				this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 2);
 
 				if (this.processor.PullLocalWord(0x102) == 0x63)
-					return ChangeStep.Restart;
+					return CityScreenStep.Restart;
 
 				this.processor.EmitGlobalWord(0xb1e8, 0);
 
@@ -3261,7 +3261,149 @@ namespace Civilization1Remaster.Game
 			this.processor.EmitGlobalWord(0x70de, this.processor.PullLocalWord(0xa));
 			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xa);
 
-			return ChangeStep.Redraw;
+			return CityScreenStep.Redraw;
+		}
+
+		/// <summary>
+		/// The other buttons of the city screen (0xf0 the key, -1 for a click; a click only in the row of the buttons, 0x6a -
+		/// 0x74): Buy (right of 0x128 or B), Change (0xe6 - 0x10e or C), the tabs (I, H, M, V or a click at 0x60 - 0xe0, 0x2496;
+		/// the view of the city (3) is shown at once). Others: none of them.
+		/// </summary>
+		private CityScreenStep HandleCityScreenButtons(short townIdx)
+		{
+			ushort key = this.processor.PullLocalWord(0xf0);
+			short horiz = (short)this.owner.GlobDb3c;
+			short vert = (short)this.owner.GlobDb3e;
+
+			if (key == 0xffff && !(this.owner.GlobDb3a == 1 && vert >= 0x6a && vert <= 0x74))
+				return CityScreenStep.Others;
+
+			if (horiz >= 0x128 || key == 0x62)
+			{
+				BuyCityProduction(townIdx);
+				return CityScreenStep.Restart;
+			}
+
+			if ((horiz >= 0xe6 && horiz < 0x10e) || key == 0x63)
+			{
+				ChangeCityProduction(townIdx);
+				return CityScreenStep.Restart;
+			}
+
+			ushort tab;
+
+			if (key == 0x69)
+				tab = 0;
+			else if (key == 0x68)
+				tab = 1;
+			else if (key == 0x6d)
+				tab = 2;
+			else if (key == 0x76)
+				tab = 3;
+			else if (horiz >= 0x60 && horiz < 0xe0)
+				tab = (ushort)((horiz - 0x60) >> 5);
+			else
+				return CityScreenStep.Others;
+
+			this.processor.EmitGlobalWord(0x2496, tab);
+			this.processor.EmitGlobalWord(0x70dc, this.processor.PullLocalWord(0x10a));
+			this.processor.EmitGlobalWord(0x70de, this.processor.PullLocalWord(0xa));
+			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xa);
+
+			if (this.processor.PullGlobalWord(0x2496) != 3)
+				return CityScreenStep.Redraw;
+
+			// The view of the city
+			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
+			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 1);
+			this.processor.EmitGlobalByte(0xba06, 0);
+			this.owner.CityScene.DisplayCityScreen(townIdx, -1);
+			this.processor.EmitGlobalWord(0x6b64, 1);
+			this.processor.EmitGlobalWord(0x2496, 0);
+
+			return CityScreenStep.Restart;
+		}
+
+		/// <summary>
+		/// Buy: 0x106 the price, 0xe8 the cost of the shields missing (0 - 999 of them): a unit their double and a twentieth
+		/// of their square, an improvement their double, a wonder (or a spaceship part) four times them; twice that with no
+		/// shields. A menu with the cost and the treasury (in civil disorder a unit can't be bought); Yes buys it.
+		/// </summary>
+		private void BuyCityProduction(short townIdx)
+		{
+			City town = this.owner.World.Towns[townIdx];
+			short owner = (short)this.processor.PullGlobalWord(0x6548);
+			sbyte making = town.PresentMakingIdx;
+
+			if (making >= 0)
+			{
+				this.processor.EmitLocalWord(0x106, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((making * 0x22) + 0x1142)));
+				this.owner.Helpers.VerifyValueSpan((10 * this.processor.PullLocalSignedWord(0x106)) - town.MaterialsTally, 0, 999);
+				short missing = (short)this.processor.RegAcc.Value16;
+				this.processor.EmitLocalWord(0xe8, (ushort)((short)(missing * missing) / 20 + (missing * 2)));
+			}
+			else
+			{
+				this.processor.EmitLocalWord(0x106, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((-making * 0x1e) + 0xbb2)));
+				this.owner.Helpers.VerifyValueSpan((10 * this.processor.PullLocalSignedWord(0x106)) - town.MaterialsTally, 0, 999);
+				this.processor.EmitLocalWord(0xe8, (ushort)(this.processor.RegAcc.Value16 << 1));
+
+				if (-making > 0x15)
+					this.processor.EmitLocalWord(0xe8, (ushort)(this.processor.PullLocalWord(0xe8) << 1));
+			}
+
+			if (town.MaterialsTally == 0)
+				this.processor.EmitLocalWord(0xe8, (ushort)(this.processor.PullLocalWord(0xe8) << 1));
+
+			short cost = (short)this.processor.PullLocalWord(0xe8);
+
+			this.owner.Libc.CopyText(0xba06, "Cost to complete\n");
+			this.owner.Libc.AppendText(0xba06, (ushort)(making >= 0 ? (making * 0x22) + 0x112a : (-making * 0x1e) + 0xb9a));
+			this.owner.Libc.AppendText(0xba06, ": $");
+			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(cost, 10));
+			this.owner.Libc.AppendText(0xba06, "\nTreasury: $");
+			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(this.owner.World.Participants[owner].Gold, 10));
+			this.owner.Libc.AppendText(0xba06, "\n");
+
+			if (making >= 0 && (town.ConditionMarker & 1) != 0)
+				this.owner.Libc.AppendText(0xba06, "CIVIL DISORDER\n");
+			else if (this.owner.World.Participants[owner].Gold >= cost)
+				this.owner.Libc.AppendText(0xba06, " Yes\n No\n");
+
+			this.owner.Startup.DisplayMouseCursor();
+			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
+			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 1);
+			this.owner.Dialogs.DisplayMenu(0xba06, 100, 80, 1);
+
+			if (this.processor.RegAcc.Value16 == 0 && this.owner.World.Participants[owner].Gold >= (short)this.processor.PullLocalWord(0xe8))
+			{
+				town.MaterialsTally = (short)(10 * this.processor.PullLocalSignedWord(0x106));
+				this.owner.World.Participants[owner].Gold -= (short)this.processor.PullLocalWord(0xe8);
+			}
+
+			this.owner.Startup.ConcealMouseCursor();
+		}
+
+		/// <summary>Change: the advisor flag 0x10 off, the human picks the production, the units in making counted over again</summary>
+		private void ChangeCityProduction(short townIdx)
+		{
+			City town = this.owner.World.Towns[townIdx];
+			short owner = (short)this.processor.PullGlobalWord(0x6548);
+
+			town.ConditionMarker &= 0xef;
+			this.owner.Startup.DisplayMouseCursor();
+
+			if (town.PresentMakingIdx >= 0)
+				this.owner.World.Participants[owner].TroopsInsideMaking[town.PresentMakingIdx]--;
+
+			this.owner.Advisors.PickCityProduction(owner, townIdx);
+			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
+			town.PresentMakingIdx = (sbyte)this.processor.RegCount.LowByte;
+
+			if (town.PresentMakingIdx >= 0)
+				this.owner.World.Participants[owner].TroopsInsideMaking[town.PresentMakingIdx]++;
+
+			this.owner.Startup.ConcealMouseCursor();
 		}
 
 		/// <summary>
@@ -3614,349 +3756,20 @@ namespace Civilization1Remaster.Game
 
 			switch (ReadCityScreenInput(townIdx))
 			{
-				case ChangeStep.Redraw:
+				case CityScreenStep.Redraw:
 					goto L12c2;
-				case ChangeStep.Restart:
+				case CityScreenStep.Restart:
 					goto L045f;
 			}
 
-		L4bba:
-			this.processor.CompareWord(this.processor.PullLocalWord(0xf0), 0xffff);
-			if (this.processor.FlagSet.IsEqual) goto L4bc4;
-			goto L4be2;
-
-		L4bc4:
-			this.processor.CompareWord(this.owner.GlobDb3a, 0x1);
-			if (this.processor.FlagSet.IsEqual) goto L4bce;
-			goto L4ff5;
-
-		L4bce:
-			this.processor.CompareWord(this.owner.GlobDb3e, 0x6a);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L4bd8;
-			goto L4ff5;
-
-		L4bd8:
-			this.processor.CompareWord(this.owner.GlobDb3e, 0x74);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L4be2;
-			goto L4ff5;
-
-		L4be2:
-			this.processor.CompareWord(this.owner.GlobDb3c, 0x128);
-			if (this.processor.FlagSet.IsLess) goto L4bed;
-			goto L4bf7;
-
-		L4bed:
-			this.processor.CompareWord(this.processor.PullLocalWord(0xf0), 0x62);
-			if (this.processor.FlagSet.IsEqual) goto L4bf7;
-			goto L4e80;
-
-		L4bf7:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.processor.CompareByte((byte)this.owner.World.Towns[townIdx].PresentMakingIdx, 0x0);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L4c09;
-			goto L4c66;
-
-		L4c09:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.processor.RegAcc.LowByte = 0x22;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, (byte)this.owner.World.Towns[townIdx].PresentMakingIdx);
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1142));
-			this.processor.EmitLocalWord(0x106, this.processor.RegAcc.Value16);
-
-			this.owner.Helpers.VerifyValueSpan(
-				(10 * this.processor.PullLocalSignedWord(0x106)) -
-					this.owner.World.Towns[townIdx].MaterialsTally,
-				0, 999);
-
-			this.processor.EmitLocalWord(0xe8, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xe8);
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.PullLocalWord(0xe8));
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.RegCount.Value16 = 0x14;
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.RegCount.Value16 = this.processor.PullLocalWord(0xe8);
-			this.processor.RegCount.Value16 = this.processor.ShiftLeftWord(this.processor.RegCount.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.RegCount.Value16);
-			this.processor.EmitLocalWord(0xe8, this.processor.RegAcc.Value16);
-			goto L4cc9;
-
-		L4c66:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.Towns[townIdx].PresentMakingIdx;
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegAcc.Value16 = this.processor.NegateWord(this.processor.RegAcc.Value16);
-			this.processor.RegCount.Value16 = 0x1e;
-			this.processor.ScaleAccumulatorToBase(this.processor.RegCount.Value16);
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xbb2));
-			this.processor.EmitLocalWord(0x106, this.processor.RegAcc.Value16);
-
-			this.owner.Helpers.VerifyValueSpan(
-				(10 * this.processor.PullLocalSignedWord(0x106)) -
-					this.owner.World.Towns[townIdx].MaterialsTally,
-				0, 999);
-
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, 0x1);
-			this.processor.EmitLocalWord(0xe8, this.processor.RegAcc.Value16);
-			this.processor.ScaleIndexToBase(0x1c, (ushort)townIdx);
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.Towns[townIdx].PresentMakingIdx;
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegAcc.Value16 = this.processor.NegateWord(this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x15);
-			if (this.processor.FlagSet.IsGreater) goto L4cc5;
-			goto L4cc9;
-
-		L4cc5:
-			this.processor.EmitLocalWord(0xe8, this.processor.ShiftLeftWord(this.processor.PullLocalWord(0xe8), 0x1));
-
-		L4cc9:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.processor.CompareWord((ushort)this.owner.World.Towns[townIdx].MaterialsTally, 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L4cdb;
-			goto L4cdf;
-
-		L4cdb:
-			this.processor.EmitLocalWord(0xe8, this.processor.ShiftLeftWord(this.processor.PullLocalWord(0xe8), 0x1));
-
-		L4cdf:
-			this.owner.Libc.CopyText(0xba06, "Cost to complete\n");
-
-			this.processor.ScaleIndexToBase(0x1c, (ushort)townIdx);
-			this.processor.CompareByte((byte)this.owner.World.Towns[townIdx].PresentMakingIdx, 0x0);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L4d01;
-			goto L4d22;
-
-		L4d01:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.processor.RegAcc.LowByte = 0x22;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, (byte)this.owner.World.Towns[townIdx].PresentMakingIdx);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x112a);
-			this.owner.Libc.AppendText(0xba06, this.processor.RegAcc.Value16);
-			goto L4d46;
-
-		L4d22:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.Towns[townIdx].PresentMakingIdx;
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegAcc.Value16 = this.processor.NegateWord(this.processor.RegAcc.Value16);
-			this.processor.RegCount.Value16 = 0x1e;
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0xb9a);
-			this.owner.Libc.AppendText(0xba06, this.processor.RegAcc.Value16);
-
-		L4d46:
-			this.owner.Libc.AppendText(0xba06, ": $");
-
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText((short)this.processor.PullLocalWord(0xe8), 10));
-
-			this.owner.Libc.AppendText(0xba06, "\nTreasury: $");
-
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText(this.owner.World.Participants[this.processor.PullGlobalWord(0x6548)].Gold, 10));
-
-			this.owner.Libc.AppendText(0xba06, "\n");
-
-			this.processor.ScaleIndexToBase(0x1c, (ushort)townIdx);
-			this.processor.CompareByte((byte)this.owner.World.Towns[townIdx].PresentMakingIdx, 0x0);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L4dd0;
-			goto L4df5;
-
-		L4dd0:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.processor.TestBitsByte(this.owner.World.Towns[townIdx].ConditionMarker, 0x1);
-			if (this.processor.FlagSet.IsNotEqual) goto L4de2;
-			goto L4df5;
-
-		L4de2:
-			this.owner.Libc.AppendText(0xba06, "CIVIL DISORDER\n");
-			goto L4e18;
-
-		L4df5:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xe8);
-			this.processor.CompareWord((ushort)this.owner.World.Participants[this.processor.PullGlobalWord(0x6548)].Gold, this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L4e08;
-			goto L4e18;
-
-		L4e08:
-			this.owner.Libc.AppendText(0xba06, " Yes\n No\n");
-
-		L4e18:
-			this.owner.Startup.DisplayMouseCursor();
-
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 0x1);
-
-			this.owner.Dialogs.DisplayMenu(0xba06, 100, 80, 1);
-
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L4e42;
-			goto L4e78;
-
-		L4e42:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xe8);
-			this.processor.CompareWord((ushort)this.owner.World.Participants[this.processor.PullGlobalWord(0x6548)].Gold, this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L4e55;
-			goto L4e78;
-
-		L4e55:
-			this.processor.RegAcc.Value16 = 0xa;
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.PullLocalWord(0x106));
-			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
-			this.owner.World.Towns[townIdx].MaterialsTally = (short)this.processor.RegCount.Value16;
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xe8);
-			this.owner.World.Participants[this.processor.PullGlobalWord(0x6548)].Gold -= (short)this.processor.RegAcc.Value16;
-
-		L4e78:
-			this.owner.Startup.ConcealMouseCursor();
-
-			goto L045f;
-
-		L4e80:
-			this.processor.CompareWord(this.owner.GlobDb3c, 0xe6);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L4e8b;
-			goto L4e96;
-
-		L4e8b:
-			this.processor.CompareWord(this.owner.GlobDb3c, 0x10e);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L4e96;
-			goto L4ea0;
-
-		L4e96:
-			this.processor.CompareWord(this.processor.PullLocalWord(0xf0), 0x63);
-			if (this.processor.FlagSet.IsEqual) goto L4ea0;
-			goto L4f37;
-
-		L4ea0:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.owner.World.Towns[townIdx].ConditionMarker &= 0xef;
-
-			this.owner.Startup.DisplayMouseCursor();
-
-			this.processor.ScaleIndexToBase(0x1c, (ushort)townIdx);
-			this.processor.CompareByte((byte)this.owner.World.Towns[townIdx].PresentMakingIdx, 0x0);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L4ec4;
-			goto L4ee2;
-
-		L4ec4:			
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.Towns[townIdx].PresentMakingIdx;
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegSource.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			
-			this.processor.ScaleIndexToBase(0x38, this.processor.PullGlobalWord(0x6548));
-			
-			this.owner.World.Participants[this.processor.PullGlobalWord(0x6548)].TroopsInsideMaking[this.owner.World.Towns[townIdx].PresentMakingIdx]--;
-
-		L4ee2:
-			this.owner.Advisors.PickCityProduction(this.processor.PullGlobalSignedWord(0x6548), townIdx);
-			
-			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
-			this.processor.ScaleIndexToBase(0x1c, (ushort)townIdx);
-			this.owner.World.Towns[townIdx].PresentMakingIdx = (sbyte)this.processor.RegCount.LowByte;
-
-			this.processor.ScaleIndexToBase(0x1c, (ushort)townIdx);
-			this.processor.CompareByte((byte)this.owner.World.Towns[townIdx].PresentMakingIdx, 0x0);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L4f11;
-			goto L4f2f;
-
-		L4f11:			
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.Towns[townIdx].PresentMakingIdx;
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegSource.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-
-			this.processor.ScaleIndexToBase(0x38, this.processor.PullGlobalWord(0x6548));
-
-			this.owner.World.Participants[this.processor.PullGlobalWord(0x6548)].TroopsInsideMaking[this.owner.World.Towns[townIdx].PresentMakingIdx]++;
-
-		L4f2f:
-			this.owner.Startup.ConcealMouseCursor();
-
-			goto L045f;
-
-		L4f37:
-			this.processor.CompareWord(this.processor.PullLocalWord(0xf0), 0x69);
-			if (this.processor.FlagSet.IsEqual) goto L4f41;
-			goto L4f4a;
-
-		L4f41:
-			this.processor.EmitGlobalWord(0x2496, 0x0);
-			goto L4faf;
-
-		L4f4a:
-			this.processor.CompareWord(this.processor.PullLocalWord(0xf0), 0x68);
-			if (this.processor.FlagSet.IsEqual) goto L4f54;
-			goto L4f5d;
-
-		L4f54:
-			this.processor.EmitGlobalWord(0x2496, 0x1);
-			goto L4faf;
-
-		L4f5d:
-			this.processor.CompareWord(this.processor.PullLocalWord(0xf0), 0x6d);
-			if (this.processor.FlagSet.IsEqual) goto L4f67;
-			goto L4f70;
-
-		L4f67:
-			this.processor.EmitGlobalWord(0x2496, 0x2);
-			goto L4faf;
-
-		L4f70:
-			this.processor.CompareWord(this.processor.PullLocalWord(0xf0), 0x76);
-			if (this.processor.FlagSet.IsEqual) goto L4f7a;
-			goto L4f83;
-
-		L4f7a:
-			this.processor.EmitGlobalWord(0x2496, 0x3);
-			goto L4faf;
-
-		L4f83:
-			this.processor.CompareWord(this.owner.GlobDb3c, 0x60);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L4f8d;
-			goto L4ff5;
-
-		L4f8d:
-			this.processor.CompareWord(this.owner.GlobDb3c, 0xe0);
-			if (this.processor.FlagSet.IsLess) goto L4f98;
-			goto L4ff5;
-
-		L4f98:
-			this.processor.RegAcc.Value16 = this.owner.GlobDb3c;
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, 0x60);
-			this.processor.DivideAccumulatorByPowerOfTwo(0x5);
-			this.processor.EmitGlobalWord(0x2496, this.processor.RegAcc.Value16);
-
-		L4faf:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x10a);
-			this.processor.EmitGlobalWord(0x70dc, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xa);
-			this.processor.EmitGlobalWord(0x70de, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x2496), 0x3);
-			if (this.processor.FlagSet.IsEqual) goto L4fc6;
-			goto L4ff2;
-
-		L4fc6:
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 0x1);
-			this.processor.EmitGlobalByte(0xba06, 0x0);
-
-			this.owner.CityScene.DisplayCityScreen(townIdx, -1);
-			
-			this.processor.EmitGlobalWord(0x6b64, 0x1);
-			this.processor.EmitGlobalWord(0x2496, 0x0);
-			goto L045f;
-
-		L4ff2:
-			goto L12c2;
+			// The other buttons: Buy, Change, the tabs, the view of the city
+			switch (HandleCityScreenButtons(townIdx))
+			{
+				case CityScreenStep.Redraw:
+					goto L12c2;
+				case CityScreenStep.Restart:
+					goto L045f;
+			}
 
 		L4ff5:
 			this.processor.CompareWord(this.processor.PullLocalWord(0xf0), 0x61);

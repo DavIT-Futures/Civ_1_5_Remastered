@@ -1058,13 +1058,19 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   `ChangeStep` (klawisz albo -1, przycisk Change albo A przełącza doradcę; doradca wybiera produkcję, 99 – od początku
   miasta). Test `HandleCityButtonCasesMatchOriginalCode`. Mutacje: 14; ocalały dwie – kolory migania (ekran miasta jest
   zamalowany po wyjściu, a test porównuje ekran tylko na końcu; liczba mignięć 0xc0 jest sprawdzana).
+- Porcja 135 (2026-10-19), trzy kawałki `HandleCity` (L4bba – L4ff5): `HandleCityScreenButtons` (Buy, Change, zakładki I H M V
+  albo klik 0x60 – 0xe0, widok miasta od razu), `BuyCityProduction` (koszt brakujących tarcz 0 – 999: jednostka podwojone
+  plus dwudziesta część kwadratu, budynek podwojone, cud i część statku poczwórne, bez tarcz jeszcze razy dwa; w niepokojach
+  jednostki nie kupi), `ChangeCityProduction`; `ChangeStep` przemianowany na `CityScreenStep`. Test
+  `HandleCityPurchaseCasesMatchOriginalCode`. Mutacje: 16, wszystkie złapane (trzy po przypadkach na brzegach: klik tuż za
+  zakładkami, dół przycisku Buy, złota równo na koszt).
 
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
 (`HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-19 (po porcji 134): 1 metoda w stylu asm (`HandleCity`, 8428 linii); `ShiftAIUnit` i `HandlePlayerTurn` gotowe. `HandleCity(miasto, znacznik)`: -1 tylko liczy, 0 tura miasta, 1 ekran miasta; przepisywać kawałkami od początku (po porcji 134: następny od L4bba – przycisk Buy). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
+Stan 2026-10-19 (po porcji 135): 1 metoda w stylu asm (`HandleCity`, 8428 linii); `ShiftAIUnit` i `HandlePlayerTurn` gotowe. `HandleCity(miasto, znacznik)`: -1 tylko liczy, 0 tura miasta, 1 ekran miasta; przepisywać kawałkami od początku (po porcji 135: następny od L4ff5 – klawisz A, jednostki w mieście). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 

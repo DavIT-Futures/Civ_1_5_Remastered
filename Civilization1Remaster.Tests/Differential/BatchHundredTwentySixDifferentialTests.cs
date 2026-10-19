@@ -586,6 +586,55 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 			CheckCases(bay, ButtonCases, ways);
 	}
 
+	private static Action<GameEngine, short> Gold(short gold) => (game, town) =>
+		game.World.Participants[game.World.Towns[town].ParticipantIdx].Gold = gold;
+
+	private static HumanTurnScript.Input Key(int key) => new HumanTurnScript.Input(key);
+
+	private static HumanTurnScript.Input Click(int horiz, int vert) => new HumanTurnScript.Input(0, 1, horiz, vert);
+
+	private static readonly CityCase[] PurchaseCases =
+	{
+		new("B, a unit, bought", true, 1, Then(Stock(5, 5, 2), Gold(30000), Keys(Key(0x62), Key(0x0d))), Choice.Biggest),
+		new("B, a unit, too little gold", true, 1, Then(Stock(5, 5, 2), Gold(3), Keys(Key(0x62), Key(0x0d))), Choice.Biggest),
+		new("B, a unit, refused", true, 1, Then(Stock(5, 5, 2), Gold(30000), Keys(Key(0x62), Key(0x1b))), Choice.Last),
+		new("B, a dear unit without shields", true, 1, Then(Stock(0, 5, 0xe), Gold(30000), Keys(Key(0x62), Key(0x0d))), Choice.First),
+		new("B, a unit with all its shields", true, 1, Then(Stock(400, 5, 2), Gold(100), Keys(Key(0x62), Key(0x0d))), Choice.Biggest),
+		new("B, a unit in civil disorder", true, 1, Then(Stock(5, 5, 2), Gold(30000), (game, town) => game.World.Towns[town].ConditionMarker |= 1,
+			Keys(Key(0x62), Key(0x0d))), Choice.Biggest),
+		new("B, an improvement, bought", true, 1, Then(Stock(7, 5, -3), Buildings(0, 4), Gold(30000), Keys(Key(0x62), Key(0x0d))), Choice.Biggest),
+		new("B, an improvement without shields", true, 1, Then(Stock(0, 5, -4), Gold(30000), Keys(Key(0x62), Key(0x0d))), Choice.Last),
+		new("B, the improvement 21", true, 1, Then(Stock(9, 5, -21), Gold(30000), Keys(Key(0x62), Key(0x0d))), Choice.Biggest),
+		new("B, a spaceship part", true, 1, Then(Stock(9, 5, -22), Gold(30000), Keys(Key(0x62), Key(0x0d))), Choice.Biggest),
+		new("B, a wonder, in civil disorder", true, 1, Then(Stock(30, 5, -0x1d), Wonder(0x1d - 24, false), Gold(30000),
+			(game, town) => game.World.Towns[town].ConditionMarker |= 1, Keys(Key(0x62), Key(0x0d))), Choice.Biggest),
+		new("Buy clicked at its left", true, 1, Then(Stock(5, 5, 2), Gold(30000), Keys(Click(296, 106), Key(0x0d))), Choice.Biggest),
+		new("clicked left of Buy", true, 1, Then(Stock(5, 5, 2), Gold(30000), Keys(Click(295, 116))), Choice.Biggest),
+		new("clicked below Buy", true, 1, Then(Stock(5, 5, 2), Gold(30000), Keys(Click(300, 117))), Choice.Biggest),
+		new("C, the production changed", true, 1, Then(Stock(5, 5, 2), Keys(Key(0x63), Key(0x0d))), Choice.Biggest),
+		new("C, an improvement changed", true, 1, Then(Stock(5, 5, -3), Advisor(true), Keys(Key(0x63), Key(0x0d))), Choice.Last),
+		new("Change clicked at its right", true, 1, Then(Stock(5, 5, 0), Keys(Click(269, 110), Key(0x0d))), Choice.First),
+		new("clicked right of Change", true, 1, Then(Stock(5, 5, 2), Keys(Click(270, 110))), Choice.Biggest),
+		new("I, H, M, V", true, 1, Keys(Key(0x69), Key(0x68), Key(0x6d), Key(0x76)), Choice.Biggest),
+		new("V alone", true, 1, Keys(Key(0x76)), Choice.Last),
+		new("the tabs clicked", true, 1, Keys(Click(96, 110), Click(127, 110), Click(128, 110), Click(160, 110), Click(223, 110)), Choice.Biggest),
+		new("clicked just right of the tabs", true, 1, Keys(Click(224, 110)), Choice.Last),
+		new("Buy clicked at its bottom", true, 1, Then(Stock(5, 5, 2), Gold(30000), Keys(Click(300, 116), Key(0x0d))), Choice.Last),
+		new("B, an improvement, the gold just enough", true, 1, Then(Stock(10, 5, -3), Buildings(0, 4), (game, town) =>
+			game.World.Participants[game.World.Towns[town].ParticipantIdx].Gold =
+				(short)((10 * game.Processor.Storage.PullUInt16(0x3b01, 3 * 0x1e + 0xbb2) - 10) * 2), Keys(Key(0x62), Key(0x0d))), Choice.Biggest),
+		new("clicked left and right of the tabs", true, 1, Keys(Click(95, 110), Click(224, 110), Key(0x6d)), Choice.Biggest),
+	};
+
+	[Fact]
+	public void HandleCityPurchaseCasesMatchOriginalCode()
+	{
+		HashSet<string> ways = [];
+
+		foreach (int bay in new[] { 5, 9 })
+			CheckCases(bay, PurchaseCases, ways);
+	}
+
 	[Fact]
 	public void HandleCityTurnCasesMatchOriginalCode()
 	{
