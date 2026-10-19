@@ -1078,13 +1078,24 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   (zamalowana zaraz po narysowaniu – niewidoczne), dół listy `vert < 0x5e` (klik na 94 daje tę samą linię co 93) i
   warunek „już sprzedano” przy kliknięciu linii (przypadek z flagą 0x80 i Yes go nie rozróżnił – do sprawdzenia).
   Uwaga: `CopyLocalWord(źródło, cel)` – przy pierwszej wersji odwróciłem argumenty, test od razu złapał.
+- Porcja 138 (2026-10-19), trzy kawałki `HandleCity` (L58ac – L5cba): `ClickCitizen` (klik w obywateli u góry: specjalista
+  pod nim, przez szerokość 0xf4 ikony), `ClickUnitOfCity` (klik w jednostki miasta, sześć w rzędzie po 16: budzi jednostkę),
+  `ToggleCityTile` (L5aa6: pole mapy miasta – środek zdejmuje wszystkich robotników, pole widziane dostaje robotnika albo go
+  traci; wolne tylko, gdy słowo ramki dla niego jest 0; 0xae, 0x50, 0xe8b8 i górne sześć bitów robotników). Wspólne
+  `CycleSpecialist`, `RefuseSpecialists` (też w `ToggleSpecialist`) i `WakeUnitOfCity` (też w `ActivateUnitsInCity`). Test
+  `HandleCityClickCasesMatchOriginalCode`. **SI/DI**: `ToggleCityTile` odtwarza SI i DI oryginału – menu (`OperateMenu`,
+  `PreserveIndexRegisters`) odkłada je na stos pod ramką HandleCity, a test porównuje ten obszar (bez tego dwa przypadki się
+  różniły). Mutacje: 18; po jednej rundzie ocalały: granica liczby jednostek przy kliknięciu (`>=` 0x4e – przypadki nie
+  znają liczby jednostek w mieście), `0xae > 0` (żaden przypadek nie kończy z 0xae równym 0), słowo ramki `- 0x8e`
+  (brak pola zajętego przez kogoś innego) i zerowanie `LaborerMarkers1` przy kliknięciu środka (gra i tak przydziela
+  robotników od nowa i nadpisuje oba słowa).
 
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
 (`HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-19 (po porcji 137): 1 metoda w stylu asm (`HandleCity`, 8428 linii); `ShiftAIUnit` i `HandlePlayerTurn` gotowe. `HandleCity(miasto, znacznik)`: -1 tylko liczy, 0 tura miasta, 1 ekran miasta; przepisywać kawałkami od początku (po porcji 137: następny od L58ac – kliknięcia w obywateli i mapę). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
+Stan 2026-10-19 (po porcji 138): 1 metoda w stylu asm (`HandleCity`, 8428 linii); `ShiftAIUnit` i `HandlePlayerTurn` gotowe. `HandleCity(miasto, znacznik)`: -1 tylko liczy, 0 tura miasta, 1 ekran miasta; przepisywać kawałkami od początku (po porcji 138: następny od L5cba – koniec ekranu miasta, niepokoje). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 

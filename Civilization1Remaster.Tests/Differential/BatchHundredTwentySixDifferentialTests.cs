@@ -753,6 +753,37 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 			CheckCases(bay, ListCases2, ways);
 	}
 
+	private static readonly CityCase[] ClickCases =
+	{
+		new("the specialists clicked", true, 1, Then(Size(12), Specialists(3), Keys(Click(79, 10), Click(87, 19), Click(94, 5), Click(99, 0), Click(80, 10))), Choice.Biggest),
+		new("just past the specialists", true, 1, Then(Size(12), Specialists(3), Keys(Click(100, 10), Click(86, 10))), Choice.Biggest),
+		new("just below the specialists", true, 1, Then(Size(12), Specialists(3), Keys(Click(90, 20))), Choice.Biggest),
+		new("the last row of a unit", true, 1, Then(Garrison(1, 8, 0), Keys(Click(105, 131))), Choice.Biggest),
+		new("just below the map", true, 1, Keys(Click(160, 104)), Choice.Biggest),
+		new("just inside the bottom of the map", true, 1, Keys(Click(160, 103)), Choice.Last),
+		new("the workers clicked", true, 1, Then(Size(10), Specialists(2), Keys(Click(16, 10), Click(40, 10))), Choice.Biggest),
+		new("around the citizens", true, 1, Then(Size(10), Specialists(2), Keys(Click(200, 10), Click(190, 20))), Choice.Biggest),
+		new("a citizen of a small city", true, 1, Then(Size(4), Specialists(1), Keys(Click(60, 10), Key(0x0d))), Choice.First),
+		new("a unit in the city clicked", true, 1, Then(Garrison(1, 8, 0), Keys(Click(100, 116))), Choice.Biggest),
+		new("the second row of units", true, 1, Then(Garrison(0, 0, 0, 0, 0, 0, 1, 8), Keys(Click(115, 135), Click(131, 140))), Choice.Biggest),
+		new("past the units", true, 1, Then(Garrison(1, 8), Keys(Click(150, 150), Click(99, 120))), Choice.Biggest),
+		new("the middle of the map", true, 1, Keys(Click(160, 56)), Choice.Biggest),
+		new("squares of the map", true, 1, Keys(Click(176, 56), Click(176, 72), Click(144, 40), Click(128, 24), Click(207, 103)), Choice.Biggest),
+		new("squares of the map, a small city", true, 1, Then(Size(2), Keys(Click(176, 56), Click(144, 72), Click(160, 88), Click(192, 40))), Choice.First),
+		new("an unseen square", true, 1, Then(UnseenEast, Keys(Click(176, 56))), Choice.Biggest),
+		new("above and below the map", true, 1, Keys(Click(160, 23), Click(160, 104)), Choice.Biggest),
+		new("squares with specialists", true, 1, Then(Size(8), Specialists(4), Keys(Click(176, 56), Click(144, 56), Click(160, 40))), Choice.Last),
+	};
+
+	[Fact]
+	public void HandleCityClickCasesMatchOriginalCode()
+	{
+		HashSet<string> ways = [];
+
+		foreach (int bay in new[] { 5, 9 })
+			CheckCases(bay, ClickCases, ways);
+	}
+
 	[Fact]
 	public void HandleCityTurnCasesMatchOriginalCode()
 	{
