@@ -36,6 +36,99 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
+		/// The city screen, first part: the units of the city listed, the screen cleared, the title "NAME (Pop:...)" (0xe8
+		/// the population sum 1 + 2 + ... + size), the map of the city (the view 0xd4cc / 0xd75e on it): each of the 0x6540
+		/// tiles around that the owner has seen (all for a computer player) is drawn, a tile of another player only repainted,
+		/// a tile worked by a neighbouring city (the array at BP-0x8e) framed. The locals of HandleCity and BX, SI, DI are used
+		/// as in the original.
+		/// </summary>
+		private void RenderCityHeaderAndMap(short townIdx)
+		{
+			City town = this.owner.World.Towns[townIdx];
+
+			this.owner.UnitOps.ConstructUnitsFromCityList(townIdx);
+			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 0);
+			RenderFrame(2, 1, 208, 21);
+
+			// The population: 1 + 2 + ... + the size
+			this.processor.EmitLocalWord(0xe8, 0);
+			ushort citizen = 1;
+
+			for (; town.TrueExtent >= (short)citizen; citizen++)
+			{
+				this.processor.EmitLocalWord(0xea, citizen);
+				this.processor.EmitLocalWord(0xe8, (ushort)(this.processor.PullLocalWord(0xe8) + citizen));
+			}
+
+			this.processor.EmitLocalWord(0xea, citizen);
+			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
+			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 2);
+
+			this.processor.EmitGlobalByte(0xba06, 0);
+			this.owner.Conquest.ObtainCityLabel(townIdx);
+			this.owner.Libc.UppercaseText(0xba06);
+			this.owner.Libc.AppendText(0xba06, " (Pop:");
+			this.owner.Helpers.PopulationToText(this.processor.PullLocalSignedWord(0xe8));
+			this.owner.Libc.AppendText(0xba06, ")");
+			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 104, 2, 15);
+
+			RenderFrame(127, 23, 208, 104);
+
+			// The map of the city
+			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
+			this.processor.EmitGlobalWord(0xd4cc, (ushort)((short)town.Place.X - 5));
+			this.processor.EmitGlobalWord(0xd75e, (ushort)((short)town.Place.Y - 3));
+			this.processor.RegSource.Value16 = (ushort)(townIdx * 0x1c);
+
+			this.owner.MapOps.RenderMapTile(town.Place.X, town.Place.Y);
+
+			ushort tile = 0;
+
+			for (; (short)tile < (short)this.processor.PullGlobalWord(0x6540); tile++)
+			{
+				this.processor.EmitLocalWord(0xea, tile);
+				short horizLoc = (short)(town.Place.X + this.owner.TownDeltas[tile].X);
+				short vertLoc = (short)(town.Place.Y + this.owner.TownDeltas[tile].Y);
+				this.processor.EmitLocalWord(0xc6, (ushort)horizLoc);
+				this.processor.EmitLocalWord(0xd2, (ushort)vertLoc);
+
+				short owner = (short)this.processor.PullGlobalWord(0x6548);
+
+				if (owner == this.owner.World.PersonParticipantIdx &&
+					(this.owner.World.ChartSight[(ushort)horizLoc, (ushort)vertLoc] & (1 << (owner & 0xff))) == 0)
+				{
+					continue;
+				}
+
+				this.owner.MapOps.ObtainTileOwner(horizLoc, vertLoc);
+				this.processor.EmitLocalWord(0xe8, this.processor.RegAcc.Value16);
+
+				if (this.processor.PullLocalWord(0xe8) != 0xffff && this.processor.PullLocalWord(0xe8) != (ushort)owner)
+				{
+					// A tile of another player
+					this.owner.MapOps.RepaintMapTile(horizLoc, vertLoc);
+					continue;
+				}
+
+				this.owner.MapOps.RenderMapTile(horizLoc, vertLoc);
+
+				this.processor.RegSource.Value16 = (ushort)(tile << 1);
+				this.processor.RegDest.Value16 = (ushort)(short)(10 * this.owner.TownDeltas[tile].X + this.owner.TownDeltas[tile].Y * 2);
+
+				if (this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegDest.Value16 - 0x8e)) != 0)
+				{
+					// A tile worked by a neighbouring city
+					this.owner.Dialogs.RenderBox(
+						(horizLoc - this.processor.PullGlobalSignedWord(0xd4cc)) * 16 + 80,
+						(vertLoc - this.processor.PullGlobalSignedWord(0xd75e)) * 16 + 8,
+						15, 15, 12);
+				}
+			}
+
+			this.processor.EmitLocalWord(0xea, tile);
+		}
+
+		/// <summary>
 		/// The start of HandleCity: the locals 0xb8, 0xda, 0xfe, 0xca and 0x2496 cleared, the mouse hidden, the 5 x 5 array
 		/// of the tiles around (BP-0xa6) cleared; 0x653e the city; the materials outside 0 - 999 cleared. Over the other
 		/// cities: 0xb2 the distance to the nearest one (at most 7), 0x6b30 the distance to the nearest palace of the owner
@@ -247,144 +340,8 @@ namespace Civilization1Remaster.Game
 			if (marker != 1)
 				goto L0701;
 
-		L0497:
-			this.owner.UnitOps.ConstructUnitsFromCityList(townIdx);
-
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 0);
-
-			RenderFrame(2, 1, 208, 21);
-
-			this.processor.EmitLocalWord(0xe8, 0x0);
-			this.processor.EmitLocalWord(0xea, 0x1);
-			goto L04ed;
-
-		L04e9:
-			this.processor.EmitLocalWord(0xea, this.processor.IncrementWord(this.processor.PullLocalWord(0xea)));
-
-		L04ed:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.Towns[townIdx].TrueExtent;
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0xea));
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0503;
-			goto L050e;
-
-		L0503:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xea);
-			this.processor.EmitLocalWord(0xe8, this.processor.SumWord(this.processor.PullLocalWord(0xe8), this.processor.RegAcc.Value16));
-			goto L04e9;
-
-		L050e:
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 0x2);
-			this.processor.EmitGlobalByte(0xba06, 0x0);
-
-			this.owner.Conquest.ObtainCityLabel(townIdx);
-
-			this.owner.Libc.UppercaseText(0xba06);
-
-			this.owner.Libc.AppendText(0xba06, " (Pop:");
-
-			this.owner.Helpers.PopulationToText(this.processor.PullLocalSignedWord(0xe8));
-
-			this.owner.Libc.AppendText(0xba06, ")");
-
-			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 104, 2, 15);
-
-			RenderFrame(127, 23, 208, 104);
-
-			this.processor.ScaleIndexToBase(0x1c, (ushort)townIdx);
-			this.processor.RegAcc.Value16 = (ushort)((short)this.owner.World.Towns[townIdx].Place.X);
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, 0x5);
-			this.processor.EmitGlobalWord(0xd4cc, this.processor.RegAcc.Value16);
-			this.processor.ScaleIndexToBase(0x1c, (ushort)townIdx);
-			this.processor.RegAcc.Value16 = (ushort)((short)this.owner.World.Towns[townIdx].Place.Y);
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, 0x3);
-			this.processor.EmitGlobalWord(0xd75e, this.processor.RegAcc.Value16);
-			this.processor.ScaleIndexToSource(0x1c, (ushort)townIdx);
-
-			this.owner.MapOps.RenderMapTile(this.owner.World.Towns[townIdx].Place.X,
-				this.owner.World.Towns[townIdx].Place.Y);
-
-			this.processor.EmitLocalWord(0xea, 0x0);
-			goto L05e2;
-
-		L05de:
-			this.processor.EmitLocalWord(0xea, this.processor.IncrementWord(this.processor.PullLocalWord(0xea)));
-
-		L05e2:
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x6540);
-			this.processor.CompareWord(this.processor.PullLocalWord(0xea), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsLess) goto L05ee;
-			goto L0701;
-
-		L05ee:
-			this.processor.RegAcc.Value16 = (ushort)((short)(this.owner.World.Towns[townIdx].Place.X +
-				this.owner.TownDeltas[this.processor.PullLocalWord(0xea)].X));
-			this.processor.EmitLocalWord(0xc6, this.processor.RegAcc.Value16);
-
-			this.processor.RegAcc.Value16 = (ushort)((short)(this.owner.World.Towns[townIdx].Place.Y +
-				this.owner.TownDeltas[this.processor.PullLocalWord(0xea)].Y));
-			this.processor.EmitLocalWord(0xd2, this.processor.RegAcc.Value16);
-
-			if (this.processor.PullGlobalSignedWord(0x6548) != this.owner.World.PersonParticipantIdx)
-				goto L065c;
-
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.ChartSight[this.processor.PullLocalWord(0xc6),
-				this.processor.PullLocalWord(0xd2)];
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegData.Value16 = 0x1;
-			this.processor.RegCount.LowByte = this.processor.PullGlobalByte(0x6548);
-			this.processor.RegData.Value16 = this.processor.ShiftLeftWord(this.processor.RegData.Value16, this.processor.RegCount.LowByte);
-			this.processor.TestBitsWord(this.processor.RegAcc.Value16, this.processor.RegData.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L05de;
-
-		L065c:
-			this.owner.MapOps.ObtainTileOwner(
-				this.processor.PullLocalSignedWord(0xc6),
-				this.processor.PullLocalSignedWord(0xd2));
-
-			this.processor.EmitLocalWord(0xe8, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.PullLocalWord(0xe8), 0xffff);
-			if (this.processor.FlagSet.IsNotEqual) goto L067a;
-			goto L0699;
-
-		L067a:
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x6548);
-			this.processor.CompareWord(this.processor.PullLocalWord(0xe8), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L0686;
-			goto L0699;
-
-		L0686:
-			this.owner.MapOps.RepaintMapTile(
-				this.processor.PullLocalSignedWord(0xc6),
-				this.processor.PullLocalSignedWord(0xd2));
-
-			goto L05de;
-
-		L0699:
-			this.owner.MapOps.RenderMapTile(this.processor.PullLocalSignedWord(0xc6),
-				this.processor.PullLocalSignedWord(0xd2));
-
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0xea);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-
-			this.processor.RegDest.Value16 = (ushort)((short)((10 * this.owner.TownDeltas[this.processor.PullLocalWord(0xea)].X) +
-				(this.owner.TownDeltas[this.processor.PullLocalWord(0xea)].Y * 2)));
-
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegDest.Value16 - 0x8e)), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L06ca;
-			goto L06fe;
-
-		L06ca:
-			this.owner.Dialogs.RenderBox(
-				(this.processor.PullLocalSignedWord(0xc6) - this.processor.PullGlobalSignedWord(0xd4cc)) * 16 + 80,
-				(this.processor.PullLocalSignedWord(0xd2) - this.processor.PullGlobalSignedWord(0xd75e)) * 16 + 8,
-				15, 15, 12);
-
-		L06fe:
-			goto L05de;
+			// The city screen: the title and the map of the city
+			RenderCityHeaderAndMap(townIdx);
 
 		L0701:
 			this.processor.RegAcc.Value16 = (ushort)marker;

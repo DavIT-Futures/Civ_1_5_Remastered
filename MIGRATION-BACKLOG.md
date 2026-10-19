@@ -924,13 +924,17 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   Ocalałe (martwe zapisy albo równoważne): końcowe 0xe4 = 5, 0xea = 21, 0x4c = 0x80 i SI przed `ObtainDistance` (nadpisywane
   przed odczytem), 0xb2 = 7 (nadpisywana przed odczytem w L34dd), `<=` zamiast `<` przy 0xb2 i 0x6b30 (przy równej odległości
   ta sama wartość), brak warunku odległości 0 (dwa miasta na jednym polu niemożliwe).
+- Porcja 114 (2026-10-19): drugi kawałek `HandleCity` – `RenderCityHeaderAndMap` (L0497 – L0701, ekran miasta): jednostki
+  miasta, tytuł „NAZWA (Pop:…)” (0xe8 = 1 + 2 + … + rozmiar), mapa miasta (widok na nim; pola niewidziane przez człowieka
+  pomijane, pole innego gracza tylko odświeżane, pole obrabiane przez sąsiednie miasto w ramce). Test: `BatchHundredThirteen`.
+  Ocalałe: końcowe 0xea (nadpisywane przed odczytem).
 
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
 (`HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-19 (po porcji 113): 1 metoda w stylu asm (`HandleCity`, 8428 linii); `ShiftAIUnit` i `HandlePlayerTurn` gotowe. `HandleCity(miasto, znacznik)`: -1 tylko liczy, 0 tura miasta, 1 ekran miasta; przepisywać kawałkami od początku (po porcji 113: następny L0497 – L0701 nagłówek i mapa ekranu miasta, potem L0701 – L0965 głód i wzrost). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
+Stan 2026-10-19 (po porcji 114): 1 metoda w stylu asm (`HandleCity`, 8428 linii); `ShiftAIUnit` i `HandlePlayerTurn` gotowe. `HandleCity(miasto, znacznik)`: -1 tylko liczy, 0 tura miasta, 1 ekran miasta; przepisywać kawałkami od początku (po porcji 114: następny L0701 – L0965 głód i wzrost). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
