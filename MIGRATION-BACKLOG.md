@@ -914,13 +914,23 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   zlecenie stałe ma zawsze jednostkę), po walce `Key` zamiast `NextLook` (równoważne: klawisz ruchu nic nie robi w
   `CarryOutKey`), `continue` zamiast `break` po końcu tury w pętli jednostek i 0x32 przy wyjściu w `VisitUnit` (nieosiągalne:
   turę kończą tylko klawisze przy 0x80, a każde wyjście samo ustawia 0x32 = 0x80).
+- Porcja 113 (2026-10-19): pierwszy kawałek `HandleCity` – `PrepareCity` (początek do L045f): lokalne i tablica 5 x 5 pól
+  wokół (BP-0xa6) zerowane, materiały spoza 0 – 999 zerowane, po innych miastach 0xb2 (najbliższe), 0x6b30 (najbliższy pałac
+  właściciela), pola w promieniu 2 obrabiane przez miasta do 5 pól dalej (i samo bliskie miasto, pole 20) w tablicy; 0x6548,
+  0x48 (marnotrawstwo wg ustroju), 0xb882 (odkrycia zadowolenia bez cudu 0x1000), 0x4a (zadowoleni; dla komputera wg poziomu),
+  0xe8b8 (specjaliści; w turze komputera miasto bez flagi 1 nie ma ich, z flagą robotnicy zdejmowani). L045f (powrót z ekranu
+  miasta) zostaje etykietą. Test `BatchHundredThirteenDifferentialTests` (`HandleCity(miasto, -1 / 0 / 1)`, odkrycia zabrane
+  albo nadane, bez pałaców, przesunięte bliskie miasto, poziom i lider, flaga 1; patrzy na ramkę i 0x180 bajtów pod nią).
+  Ocalałe (martwe zapisy albo równoważne): końcowe 0xe4 = 5, 0xea = 21, 0x4c = 0x80 i SI przed `ObtainDistance` (nadpisywane
+  przed odczytem), 0xb2 = 7 (nadpisywana przed odczytem w L34dd), `<=` zamiast `<` przy 0xb2 i 0x6b30 (przy równej odległości
+  ta sama wartość), brak warunku odległości 0 (dwa miasta na jednym polu niemożliwe).
 
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
 (`HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-19 (po porcji 112): 1 metoda w stylu asm (`HandleCity`, 8428 linii); `ShiftAIUnit` i `HandlePlayerTurn` gotowe. `HandleCity(miasto, znacznik)`: -1 tylko liczy, 0 tura miasta, 1 ekran miasta; przepisywać kawałkami od początku (porcja 113: przygotowanie do L045f). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
+Stan 2026-10-19 (po porcji 113): 1 metoda w stylu asm (`HandleCity`, 8428 linii); `ShiftAIUnit` i `HandlePlayerTurn` gotowe. `HandleCity(miasto, znacznik)`: -1 tylko liczy, 0 tura miasta, 1 ekran miasta; przepisywać kawałkami od początku (po porcji 113: następny L0497 – L0701 nagłówek i mapa ekranu miasta, potem L0701 – L0965 głód i wzrost). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
