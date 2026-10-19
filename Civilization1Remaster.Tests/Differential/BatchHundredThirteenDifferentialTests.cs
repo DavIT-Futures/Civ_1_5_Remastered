@@ -124,6 +124,14 @@ public sealed class BatchHundredThirteenDifferentialTests(ITestOutputHelper outp
 			int exactCost = chance.Next(3);
 			bool easiest = chance.Next(2) == 0;
 			sbyte smallSize = (sbyte)chance.Next(1, 3);
+			// (also a caravan, or a nuclear unit, maybe the only one of its owner)
+			int alternative = chance.Next(4);
+			bool onlyNuclear = chance.Next(3) != 0;
+
+			if (alternative == 1)
+				produced = 0x1b;
+			else if (alternative == 2)
+				produced = 0x19;
 
 			// (no food variants with production, which changes the size; a full store at size 10 or 11 for the aqueduct)
 			if (produce)
@@ -280,6 +288,13 @@ public sealed class BatchHundredThirteenDifferentialTests(ITestOutputHelper outp
 
 						if (firstOfKind)
 							game.World.ScienceLeadingFoundVia[produced] &= ~8;
+
+						if (produced == 0x19)
+						{
+							// (the count grows with the new unit; the timer of the human set, so its reset shows)
+							game.World.Participants[making.ParticipantIdx].LiveTroops[25] = (short)(onlyNuclear ? 0 : 3);
+							game.World.Participants[person].TouchParticipantTimeleft = 7;
+						}
 					}
 
 					if (freeCityTile)

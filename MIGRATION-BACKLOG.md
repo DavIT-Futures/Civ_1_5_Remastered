@@ -973,13 +973,19 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   miasto, miasto rozmiaru 1 ginie, chyba że to ostatnie miasto właściciela). Przy `TrueExtent--` flaga pochodzi z porównania
   rozmiaru z 1 – to samo co zero po zmniejszeniu, więc tu bez błędu. Nowy test `HandleCityProductionMatchesOriginalCode` w
   `BatchHundredThirteen` (osobny, bo warianty produkcji wypierały warianty żywności z jednego testu). Wszystkie mutacje złapane.
+- Porcja 122 (2026-10-19): dziesiąty kawałek `HandleCity` – `FinishUnitOfCity` (L174b – L1b60, z `SendDiplomat`): miasto
+  człowieka (albo bez jednostki) nie trzyma tarcz i pokazuje „X builds Y” dla osadników, dyplomatów i karawan; miasto komputera
+  wysyła karawanę do obcego miasta z największym handlem (nie człowieka), ostatnia broń atomowa komputera zeruje licznik
+  kontaktu człowieka, potem nowa produkcja. Test produkcji: karawana, broń atomowa (`ConstructUnit` zwiększa `LiveTroops`;
+  licznik człowieka ustawiony, bo zwykle już jest -1). Ocalałe: gałąź dyplomaty komputera (`SendDiplomat`) – nieosiągalna:
+  `ProduceInCity` nie buduje dyplomatów dla komputera, więc 0xba = -1 i kod idzie ścieżką człowieka.
 
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
 (`HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-19 (po porcji 121): 1 metoda w stylu asm (`HandleCity`, 8428 linii); `ShiftAIUnit` i `HandlePlayerTurn` gotowe. `HandleCity(miasto, znacznik)`: -1 tylko liczy, 0 tura miasta, 1 ekran miasta; przepisywać kawałkami od początku (po porcji 121: następny od L174b – jednostka komputera po zbudowaniu). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
+Stan 2026-10-19 (po porcji 122): 1 metoda w stylu asm (`HandleCity`, 8428 linii); `ShiftAIUnit` i `HandlePlayerTurn` gotowe. `HandleCity(miasto, znacznik)`: -1 tylko liczy, 0 tura miasta, 1 ekran miasta; przepisywać kawałkami od początku (po porcji 122: następny od L1b60 – budynki i cuda). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
