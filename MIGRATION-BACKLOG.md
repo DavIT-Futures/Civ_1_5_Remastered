@@ -1114,13 +1114,20 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   atomowej w niepokojach), `CountPollution` (też w `RenderCityDotAndPollution`). Test
   `HandleCityPollutionCasesMatchOriginalCode`. Mutacje: 14; ocalały `DrawInt(21)` zamiast 20 (losowanie daje to samo poza
   rzadkim 20) i postęp 0x41 zamiast 0x42 (trzy przypadki ze znanym 0x41 nie wylosowały awarii).
+- Porcja 143 (2026-10-19), kawałek `HandleCity` L672d – L6927: `PayImprovementUpkeep` (utrzymanie budynków miasta
+  człowieka, nie w anarchii; pałac droższy od poziomu 2 i 4 i z postępami 0x22, 0x25; brak pieniędzy sprzedaje budynek –
+  „can't maintain”), `FinishHandleCity` (L68cc: flaga 4 bez obcych jednostek obok – lista jednostek miasta zostaje; mysz;
+  AX szczęśliwi mniej nieszczęśliwi). Test `HandleCityUpkeepCasesMatchOriginalCode`; `CheckCases` porównuje teraz także AX
+  (`Register.Kept | Register.Acc` – wynik HandleCity). Mutacje: 16; ocalało `Gold >= -1` (żaden przypadek nie kończy
+  dokładnie na -1). **Wszystkie kawałki asm `HandleCity` przepisane**: zostaje szkielet 296 linii z 38 `goto` między
+  wywołaniami metod – do uporządkowania w strukturę (pętle i warunki) w kolejnych porcjach.
 
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
 (`HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-19 (po porcji 142): 1 metoda w stylu asm (`HandleCity`, 8428 linii); `ShiftAIUnit` i `HandlePlayerTurn` gotowe. `HandleCity(miasto, znacznik)`: -1 tylko liczy, 0 tura miasta, 1 ekran miasta; przepisywać kawałkami od początku (po porcji 142: następny od L672d – utrzymanie budynków i koniec). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
+Stan 2026-10-19 (po porcji 143): 1 metoda w stylu asm (`HandleCity`, 8428 linii); `ShiftAIUnit` i `HandlePlayerTurn` gotowe. `HandleCity(miasto, znacznik)`: -1 tylko liczy, 0 tura miasta, 1 ekran miasta; przepisywać kawałkami od początku (po porcji 143: wszystkie kawałki asm przepisane; zostaje szkielet z `goto` do uporządkowania). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 

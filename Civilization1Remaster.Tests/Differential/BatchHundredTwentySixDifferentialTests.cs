@@ -957,6 +957,33 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 			CheckCases(bay, PollutionCases, ways);
 	}
 
+	private static readonly CityCase[] UpkeepCases =
+	{
+		new("human, poor, every improvement", true, 0, Then(AllBuildings, Gold(0), Level(1, 2)), Choice.Biggest),
+		new("human, a little money, level 2", true, 0, Then(AllBuildings, Gold(12), Level(2, 2), Knows(0x22, false), Knows(0x25, false)), Choice.Biggest),
+		new("human, a little money, level 4, both advances", true, 0, Then(AllBuildings, Gold(12), Level(4, 2), Knows(0x22, true), Knows(0x25, true)), Choice.Last),
+		new("human, just the barracks, money for it", true, 0, Then(Buildings(0x2, 0xfffd), Gold(1), Level(1, 2), Knows(0x22, false), Knows(0x25, false)), Choice.First),
+		new("human, just the barracks, level 2, advance 0x22", true, 0, Then(Buildings(0x2, 0xfffd), Gold(2), Level(2, 2), Knows(0x22, true), Knows(0x25, false)), Choice.First),
+		new("human, just the barracks, advance 0x25", true, 0, Then(Buildings(0x2, 0xfffd), Gold(2), Level(1, 2), Knows(0x22, false), Knows(0x25, true)), Choice.Biggest),
+		new("human, just the barracks, no money", true, 0, Then(Buildings(0x2, 0xfffd), Gold(0), Level(1, 2), Knows(0x22, false), Knows(0x25, false)), Choice.Last),
+		new("human, rich", true, 0, Then(AllBuildings, Gold(30000)), Choice.Biggest),
+		new("human, anarchy, poor", true, 0, Then(AllBuildings, Gold(0), Level(1, 0)), Choice.Biggest),
+		new("computer, poor", false, 0, Then(AllBuildings, Gold(0)), Choice.Biggest),
+		new("human, the flag 4", true, 0, (game, town) => game.World.Towns[town].ConditionMarker |= 4, Choice.Biggest),
+		new("computer, the flag 4", false, 0, (game, town) => game.World.Towns[town].ConditionMarker |= 4, Choice.Last),
+		new("city screen, the flag 4", true, 1, (game, town) => game.World.Towns[town].ConditionMarker |= 4, Choice.Biggest),
+		new("counting, the flag 4", true, -1, (game, town) => game.World.Towns[town].ConditionMarker |= 4, Choice.First),
+	};
+
+	[Fact]
+	public void HandleCityUpkeepCasesMatchOriginalCode()
+	{
+		HashSet<string> ways = [];
+
+		foreach (int bay in new[] { 5, 9 })
+			CheckCases(bay, UpkeepCases, ways);
+	}
+
 	[Fact]
 	public void HandleCityTurnCasesMatchOriginalCode()
 	{
@@ -1008,7 +1035,7 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 				},
 				game => new CityManagementReference(game).HandleCity(townIdx, current.Marker),
 				game => game.CityOps.HandleCity(townIdx, current.Marker),
-				Register.Kept,
+				Register.Kept | Register.Acc,
 				// What the turn did, from the calls and the gold
 				game =>
 				{
