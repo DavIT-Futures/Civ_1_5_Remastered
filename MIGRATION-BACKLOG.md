@@ -945,13 +945,20 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   przy polu człowieka), obrabiane przez sąsiednie miasto; ich robotnicy zdejmowani; 4 słowa pod 0x70da zerowane. Test
   `BatchHundredThirteen`: miasto barbarzyńców (przy -1, osobno od bliskiego miasta – razem oryginał się zapętla). Ocalałe:
   czwarte słowo pod 0x70da i końcowe 0xea (nadpisywane przed odczytem).
+- Porcja 118 (2026-10-19): szósty kawałek `HandleCity` – `KeepWorkers` (L0cd4 – L0e91, z `TestWorker`): miasto komputera
+  co czwartą turę (bez flagi 1 i bez pola człowieka obok) wybiera robotników od nowa; inaczej 0x50 = rozmiar + 1 minus
+  robotnicy: gdy nie za dużo, zostają (rysowani, w BP-0x3e i 0xee / 0xec), gdy za dużo, wszyscy schodzą (człowiek dostaje
+  komunikat w turze). Test: przemieszani robotnicy, wyzerowana lokalna 0x16 (śmieci ze stosu), niewidziane pola na ekranie
+  miasta. Ocalałe: pominięcie 0x50 == 0 w pętli (równoważne: robotników jest najwyżej 0x50), 0xb1e8 = 2 (tylko zapisywana,
+  potem nadpisywana), warunek powrotu bez `0x50 != 0xe8b8` (przy równości 0x16 jest w testach zawsze 1) i bez `0x50 != 0`
+  (zmienia tylko 0xe8b8, nadpisywane dalej).
 
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
 (`HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-19 (po porcji 117): 1 metoda w stylu asm (`HandleCity`, 8428 linii); `ShiftAIUnit` i `HandlePlayerTurn` gotowe. `HandleCity(miasto, znacznik)`: -1 tylko liczy, 0 tura miasta, 1 ekran miasta; przepisywać kawałkami od początku (po porcji 117: następny od L0cd4). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
+Stan 2026-10-19 (po porcji 118): 1 metoda w stylu asm (`HandleCity`, 8428 linii); `ShiftAIUnit` i `HandlePlayerTurn` gotowe. `HandleCity(miasto, znacznik)`: -1 tylko liczy, 0 tura miasta, 1 ekran miasta; przepisywać kawałkami od początku (po porcji 118: następny od L0e91 – dobór robotników). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 

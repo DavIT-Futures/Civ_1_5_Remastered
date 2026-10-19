@@ -390,6 +390,104 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
+		/// The workers the city keeps: a computer city every fourth turn (without the flag 1 and with no tile of the human
+		/// around, 0x70e8) drops them all and picks anew (true). Else 0x50 = size + 1 less the workers: not too many, they are
+		/// kept (drawn, marked in the array at BP-0x3e and in 0xee / 0xec); too many, all go (the human is told in the turn).
+		/// True when workers are still to be picked (0x50 neither the specialists 0xe8b8 nor 0). The locals of HandleCity and
+		/// AX, BX, CX, DX, SI are used as in the original.
+		/// </summary>
+		private bool KeepWorkers(short townIdx, short marker)
+		{
+			City town = this.owner.World.Towns[townIdx];
+			short owner = (short)this.processor.PullGlobalWord(0x6548);
+
+			this.processor.RegAcc.Value16 = 0;
+			this.processor.EmitLocalWord(0xec, 0);
+			this.processor.EmitLocalWord(0xee, 0);
+
+			if ((this.owner.World.ParticipantMarkers & (1 << (owner & 0xff))) == 0 && ((townIdx + this.owner.World.RoundTally) & 3) == 0)
+			{
+				this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
+
+				if ((town.ConditionMarker & 1) == 0 && this.processor.PullGlobalWord(0x70e8) == 0)
+					return true;
+			}
+
+			// 0x50: the size + 1 less the workers
+			ushort tile = 0;
+
+			for (; (short)tile < (short)this.processor.PullGlobalWord(0x6540); tile++)
+			{
+				this.processor.EmitLocalWord(0xea, tile);
+
+				if (TestWorker(townIdx, tile))
+					this.processor.EmitLocalWord(0x50, (ushort)(this.processor.PullLocalWord(0x50) - 1));
+			}
+
+			this.processor.EmitLocalWord(0xea, tile);
+
+			if ((short)this.processor.PullLocalWord(0x50) >= 0)
+			{
+				// Not too many: the workers are kept
+				this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
+				this.processor.EmitLocalWord(0x50, (ushort)(town.TrueExtent + 1));
+
+				for (tile = 0; (short)tile < (short)this.processor.PullGlobalWord(0x6540); tile++)
+				{
+					this.processor.EmitLocalWord(0xea, tile);
+
+					if (this.processor.PullLocalWord(0x50) == 0 || !TestWorker(townIdx, tile))
+						continue;
+
+					this.processor.RegSource.Value16 = (ushort)(tile << 1);
+					this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x3e), 1);
+
+					RenderCityTile(townIdx, tile, marker);
+
+					this.processor.EmitLocalWord(0x50, (ushort)(this.processor.PullLocalWord(0x50) - 1));
+					uint mask = 1u << (tile & 0xff);
+					this.processor.RegAcc.Value16 = (ushort)mask;
+					this.processor.RegData.Value16 = (ushort)(mask >> 16);
+					this.processor.EmitLocalWord(0xee, (ushort)(this.processor.PullLocalWord(0xee) | this.processor.RegAcc.Value16));
+					this.processor.EmitLocalWord(0xec, (ushort)(this.processor.PullLocalWord(0xec) | this.processor.RegData.Value16));
+				}
+
+				this.processor.EmitLocalWord(0xea, tile);
+			}
+			else
+			{
+				// Too many: all go
+				if (marker == 0 && owner == this.owner.World.PersonParticipantIdx)
+				{
+					this.owner.Libc.CopyText(0xba06, "Population decrease\nin ");
+					this.owner.Conquest.ObtainCityLabel(townIdx);
+					this.owner.Libc.AppendText(0xba06, ".\n");
+					this.processor.EmitGlobalWord(0x2f9e, 4);
+					this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+					this.processor.EmitGlobalWord(0xb1e8, 1);
+				}
+
+				this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
+				this.processor.EmitLocalWord(0x50, (ushort)(town.TrueExtent + 1));
+			}
+
+			return this.processor.PullLocalWord(0x50) != this.processor.PullGlobalWord(0xe8b8) && this.processor.PullLocalWord(0x50) != 0;
+		}
+
+		/// <summary>Whether the tile is worked by the city (CX, BX the masked words of the workers, SI the city, as in the original)</summary>
+		private bool TestWorker(short townIdx, ushort tile)
+		{
+			City town = this.owner.World.Towns[townIdx];
+			uint mask = 1u << (tile & 0xff);
+
+			this.processor.RegCount.Value16 = (ushort)(mask & town.LaborerMarkers0);
+			this.processor.RegBase.Value16 = (ushort)(((mask >> 16) & town.LaborerMarkers1) | this.processor.RegCount.Value16);
+			this.processor.RegSource.Value16 = (ushort)(townIdx * 0x1c);
+
+			return this.processor.RegBase.Value16 != 0;
+		}
+
+		/// <summary>
 		/// The start of HandleCity: the locals 0xb8, 0xda, 0xfe, 0xca and 0x2496 cleared, the mouse hidden, the 5 x 5 array
 		/// of the tiles around (BP-0xa6) cleared; 0x653e the city; the materials outside 0 - 999 cleared. Over the other
 		/// cities: 0xb2 the distance to the nearest one (at most 7), 0x6b30 the distance to the nearest palace of the owner
@@ -618,184 +716,9 @@ namespace Civilization1Remaster.Game
 			// The tiles the city cannot work
 			MarkUnavailableTiles(townIdx);
 
-		L0cd4:
-			this.processor.RegAcc.Value16 = 0x0;
-			this.processor.EmitLocalWord(0xec, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0xee, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = 0x1;
-			this.processor.RegCount.LowByte = this.processor.PullGlobalByte(0x6548);
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			this.processor.TestBitsWord(this.processor.RegAcc.Value16, (ushort)this.owner.World.ParticipantMarkers);
-			if (this.processor.FlagSet.IsEqual) goto L0cf1;
-			goto L0d1b;
-
-		L0cf1:
-			if (((townIdx + this.owner.World.RoundTally) & 0x3) == 0)
-				goto L0cff;
-
-			goto L0d1b;
-
-		L0cff:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.processor.TestBitsByte(this.owner.World.Towns[townIdx].ConditionMarker, 0x1);
-			if (this.processor.FlagSet.IsEqual) goto L0d11;
-			goto L0d1b;
-
-		L0d11:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x70e8), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L0d1b;
-			goto L0e91;
-
-		L0d1b:
-			this.processor.EmitLocalWord(0xea, 0x0);
-			goto L0d28;
-
-		L0d24:
-			this.processor.EmitLocalWord(0xea, this.processor.IncrementWord(this.processor.PullLocalWord(0xea)));
-
-		L0d28:
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x6540);
-			this.processor.CompareWord(this.processor.PullLocalWord(0xea), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsLess) goto L0d34;
-			goto L0d64;
-
-		L0d34:
-			this.processor.RegAcc.Value16 = 0x1;
-			this.processor.RegData.Value16 = 0x0;
-			this.processor.RegCount.LowByte = this.processor.PullLocalByte(0xea);
-			this.processor.SplitDoubleWord(this.processor.RegAcc, this.processor.RegData, this.processor.JoinDoubleWord(this.processor.RegAcc.Value16, this.processor.RegData.Value16) << this.processor.RegCount.LowByte);
-
-			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.RegBase.Value16 = this.processor.RegData.Value16;
-			this.processor.ScaleAccumulatorToSource((ushort)townIdx);
-			this.processor.RegCount.Value16 &= this.owner.World.Towns[townIdx].LaborerMarkers0;
-			this.processor.RegBase.Value16 &= this.owner.World.Towns[townIdx].LaborerMarkers1;
-			this.processor.RegBase.Value16 = this.processor.BitOrWord(this.processor.RegBase.Value16, this.processor.RegCount.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L0d5e;
-			goto L0d61;
-
-		L0d5e:
-			this.processor.EmitLocalWord(0x50, this.processor.DecrementWord(this.processor.PullLocalWord(0x50)));
-
-		L0d61:
-			goto L0d24;
-
-		L0d64:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x50), 0x0);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0d6d;
-			goto L0e07;
-
-		L0d6d:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.Towns[townIdx].TrueExtent;
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegAcc.Value16 = this.processor.IncrementWord(this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x50, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0xea, 0x0);
-			goto L0d8b;
-
-		L0d87:
-			this.processor.EmitLocalWord(0xea, this.processor.IncrementWord(this.processor.PullLocalWord(0xea)));
-
-		L0d8b:
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x6540);
-			this.processor.CompareWord(this.processor.PullLocalWord(0xea), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsLess) goto L0d97;
-			goto L0e04;
-
-		L0d97:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x50), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L0da0;
-			goto L0e01;
-
-		L0da0:
-			this.processor.RegAcc.Value16 = 0x1;
-			this.processor.RegData.Value16 = 0x0;
-			this.processor.RegCount.LowByte = this.processor.PullLocalByte(0xea);
-			this.processor.SplitDoubleWord(this.processor.RegAcc, this.processor.RegData, this.processor.JoinDoubleWord(this.processor.RegAcc.Value16, this.processor.RegData.Value16) << this.processor.RegCount.LowByte);
-
-			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.RegBase.Value16 = this.processor.RegData.Value16;
-			this.processor.ScaleAccumulatorToSource((ushort)townIdx);
-			this.processor.RegCount.Value16 &= this.owner.World.Towns[townIdx].LaborerMarkers0;
-			this.processor.RegBase.Value16 &= this.owner.World.Towns[townIdx].LaborerMarkers1;
-			this.processor.RegBase.Value16 = this.processor.BitOrWord(this.processor.RegBase.Value16, this.processor.RegCount.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L0dca;
-			goto L0e01;
-
-		L0dca:
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0xea);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x3e), 0x1);
-
-			RenderCityTile(townIdx, this.processor.PullLocalWord(0xea), marker);
-
-			this.processor.DecrementLocalWord(0x50);
-			this.processor.RegAcc.Value16 = 0x1;
-			this.processor.RegData.Value16 = 0x0;
-			this.processor.RegCount.LowByte = this.processor.PullLocalByte(0xea);
-			this.processor.SplitDoubleWord(this.processor.RegAcc, this.processor.RegData, this.processor.JoinDoubleWord(this.processor.RegAcc.Value16, this.processor.RegData.Value16) << this.processor.RegCount.LowByte);
-
-			this.processor.EmitLocalWord(0xee, this.processor.BitOrWord(this.processor.PullLocalWord(0xee), this.processor.RegAcc.Value16));
-			this.processor.EmitLocalWord(0xec, this.processor.BitOrWord(this.processor.PullLocalWord(0xec), this.processor.RegData.Value16));
-
-		L0e01:
-			goto L0d87;
-
-		L0e04:
-			goto L0e7a;
-
-		L0e07:
-			this.processor.RegAcc.Value16 = (ushort)marker;
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.RegData.Value16 = this.processor.BitOrWord(this.processor.RegData.Value16, this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L0e12;
-			goto L0e69;
-
-		L0e12:
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x6548), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L0e1e;
-			goto L0e69;
-
-		L0e1e:
-			this.owner.Libc.CopyText(0xba06, "Population decrease\nin ");
-
-			this.owner.Conquest.ObtainCityLabel(townIdx);
-
-			this.owner.Libc.AppendText(0xba06, ".\n");
-
-			this.processor.EmitGlobalWord(0x2f9e, 0x4);
-
-			this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
-
-			this.processor.EmitGlobalWord(0xb1e8, 0x1);
-
-		L0e69:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.Towns[townIdx].TrueExtent;
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegAcc.Value16 = this.processor.IncrementWord(this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x50, this.processor.RegAcc.Value16);
-
-		L0e7a:
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0xe8b8);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x50), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L0e85;
-			goto L0e8e;
-
-		L0e85:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x50), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L0e8e;
-			goto L0e91;
-
-		L0e8e:
-			goto L1292;
+			// The workers the city keeps (more are picked below)
+			if (!KeepWorkers(townIdx, marker))
+				goto L1292;
 
 		L0e91:
 			this.processor.CompareWord(this.processor.PullLocalWord(0x50), 0x0);
