@@ -934,13 +934,19 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   bez akweduktu (przy bicie 4 `DiagMarkers`) nie rośnie i człowiek dostaje komunikat. `CityManagement` dostało `UnitMemory`.
   Test `BatchHundredThirteen` dostał warianty żywności (poniżej zera, dość, dokładnie na granicy i o 1 mniej, rozmiar 10 – 11,
   spichlerz, akwedukt, bit 4, flaga 0x80). Wszystkie mutacje złapane.
+- Porcja 116 (2026-10-19): czwarty kawałek `HandleCity` – `CountCityUnits` (L0965 – L0b4e): 0x50 = rozmiar + 1, 0xdeb8
+  zajęte sloty `Unfamiliar` i utrzymywane jednostki (bez dyplomatów i karawan), 0xd2f6 te ponad rozmiar (wszystkie przy
+  ustroju powyżej monarchii i bicie 2 `DiagMarkers`), 0x6546 jednostki atakujące poza miastem (samoloty zawsze), 0xe3c6
+  osadnicy. Test `BatchHundredThirteen`: sloty (w małych miastach), jednostka miasta wybranego rodzaju, ustrój, bit 2; warianty
+  stanu tylko poza ekranem miasta (znacznik 1 wtedy czeka bez końca), przesunięte bliskie miasto tylko przy -1 (w turze
+  miasta oryginał może się zapętlić). Ocalałe: `<=` przy slotach (przy równości różnica 0), CX i końcowe 0xea (martwe zapisy).
 
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
 (`HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-19 (po porcji 115): 1 metoda w stylu asm (`HandleCity`, 8428 linii); `ShiftAIUnit` i `HandlePlayerTurn` gotowe. `HandleCity(miasto, znacznik)`: -1 tylko liczy, 0 tura miasta, 1 ekran miasta; przepisywać kawałkami od początku (po porcji 115: następny od L0965). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
+Stan 2026-10-19 (po porcji 116): 1 metoda w stylu asm (`HandleCity`, 8428 linii); `ShiftAIUnit` i `HandlePlayerTurn` gotowe. `HandleCity(miasto, znacznik)`: -1 tylko liczy, 0 tura miasta, 1 ekran miasta; przepisywać kawałkami od początku (po porcji 116: następny od L0b4e). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
