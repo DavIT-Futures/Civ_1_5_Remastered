@@ -635,6 +635,69 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 			CheckCases(bay, PurchaseCases, ways);
 	}
 
+	/// <summary>The first units of the owner put into the city with these states and no moves left (the others there awake)</summary>
+	private static Action<GameEngine, short> Garrison(params byte[] states) => (game, town) =>
+	{
+		var city = game.World.Towns[town];
+
+		for (int idx = 0; idx < 128; idx++)
+		{
+			ushort other = UnitMemory.Address(city.ParticipantIdx, idx);
+
+			if (game.Processor.Storage.PullUInt8(0x3b01, (ushort)(other + UnitMemory.Horiz)) == (byte)city.Place.X &&
+				game.Processor.Storage.PullUInt8(0x3b01, (ushort)(other + UnitMemory.Vert)) == (byte)city.Place.Y)
+				game.Processor.EmitUInt8(0x3b01, (ushort)(other + UnitMemory.Status), 0);
+		}
+
+		var units = Enumerable.Range(0, 128).Where(idx => game.Processor.Storage.PullUInt8(0x3b01, (ushort)(UnitMemory.Address(city.ParticipantIdx, idx) + UnitMemory.Kind)) != 0xff).Take(states.Length).ToList();
+
+		for (int idx = 0; idx < units.Count; idx++)
+		{
+			ushort unit = UnitMemory.Address(city.ParticipantIdx, units[idx]);
+			game.Processor.EmitUInt8(0x3b01, (ushort)(unit + UnitMemory.Horiz), (byte)city.Place.X);
+			game.Processor.EmitUInt8(0x3b01, (ushort)(unit + UnitMemory.Vert), (byte)city.Place.Y);
+			game.Processor.EmitUInt8(0x3b01, (ushort)(unit + UnitMemory.Status), states[idx]);
+			game.Processor.EmitUInt8(0x3b01, (ushort)(unit + UnitMemory.LeftoverSteps), 0);
+		}
+	};
+
+	/// <summary>The number of specialists (the top six bits of the workers)</summary>
+	private static Action<GameEngine, short> Specialists(int count) => (game, town) =>
+		game.World.Towns[town].LaborerMarkers1 = (ushort)((game.World.Towns[town].LaborerMarkers1 & 0x3ff) | (count << 10));
+
+	private static readonly CityCase[] KeyCases =
+	{
+		new("A, nothing sleeps", true, 1, Then(Garrison(0, 0, 0), Keys(Key(0x61))), Choice.Biggest),
+		new("A, a sentry woken", true, 1, Then(Garrison(0, 1, 0), Keys(Key(0x61), Key(0x0d))), Choice.Biggest),
+		new("A, fortified ones moved and woken", true, 1, Then(Garrison(8, 8, 0, 0, 0, 0, 0, 0, 1),
+			Keys(Key(0x61), Key(0x4d00), Key(0x20), Key(0x5000), Key(0x0d), Key(0x4800), Key(0x4b00), Key(0x0d), Key(0x41), Key(0x0d))), Choice.Last),
+		new("A, a busy unit", true, 1, Then(Garrison(0, 0x32, 0x40), Keys(Key(0x61), Key(0x4d00), Key(0x0d), Key(0x4d00), Key(0x0d))), Choice.First),
+		new("A, the last ones", true, 1, Then(Garrison(0, 0, 0, 0, 0, 0, 0, 8), Keys(Key(0x61), Key(0x5000), Key(0x4d00), Key(0x0d))), Choice.Biggest),
+		new("A, a sentry with flags woken", true, 1, Then(Garrison(0x31, 0), Keys(Key(0x61), Key(0x0d))), Choice.Biggest),
+		new("A, the sixth one woken", true, 1, Then(Garrison(0, 0, 0, 0, 0, 1, 0, 0), Keys(Key(0x61), Key(0x20))), Choice.Biggest),
+		new("A, to the sixth place", true, 1, Then(Garrison(0, 0, 0, 0, 0, 0, 0, 0),
+			Keys(Key(0x61), Key(0x4d00), Key(0x4d00), Key(0x4d00), Key(0x4d00), Key(0x4d00), Key(0x0d))), Choice.Last),
+		new("1, 2, a small city with specialists", true, 1, Then(Size(4), Specialists(2), Keys(Key(0x31), Key(0x0d), Key(0x32), Key(0x0d))), Choice.First),
+		new("1, 1, a city of five with specialists", true, 1, Then(Size(5), Specialists(2), Keys(Key(0x31), Key(0x31), Key(0x31), Key(0x32))), Choice.Biggest),
+		new("S, given up", true, 1, Keys(Key(0x73), Key(0x1b)), Choice.Biggest),
+		new("S, moved, sold", true, 1, Keys(Key(0x73), Key(0x5000), Key(0x5000), Key(0x4800), Key(0x0d), Key(0x0d)), Choice.Biggest),
+		new("S, Space, the last one", true, 1, Keys(Key(0x73), Key(0x5000), Key(0x5000), Key(0x5000), Key(0x5000), Key(0x5000), Key(0x5000),
+			Key(0x5000), Key(0x5000), Key(0x41), Key(0x20), Key(0x0d)), Choice.Last),
+		new("S, sold this turn already", true, 1, Then((game, town) => game.World.Towns[town].ConditionMarker |= 0x80, Keys(Key(0x73))), Choice.Biggest),
+		new("1 - 4, a big city", true, 1, Then(Size(12), Keys(Key(0x31), Key(0x31), Key(0x31), Key(0x32), Key(0x34))), Choice.Biggest),
+		new("1, a small city", true, 1, Then(Size(4), Keys(Key(0x31), Key(0x0d))), Choice.First),
+		new("9, past the specialists", true, 1, Keys(Key(0x39)), Choice.Biggest),
+	};
+
+	[Fact]
+	public void HandleCityKeyCasesMatchOriginalCode()
+	{
+		HashSet<string> ways = [];
+
+		foreach (int bay in new[] { 5, 9 })
+			CheckCases(bay, KeyCases, ways);
+	}
+
 	[Fact]
 	public void HandleCityTurnCasesMatchOriginalCode()
 	{

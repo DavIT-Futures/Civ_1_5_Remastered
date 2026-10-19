@@ -1064,13 +1064,19 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   jednostki nie kupi), `ChangeCityProduction`; `ChangeStep` przemianowany na `CityScreenStep`. Test
   `HandleCityPurchaseCasesMatchOriginalCode`. Mutacje: 16, wszystkie złapane (trzy po przypadkach na brzegach: klik tuż za
   zakładkami, dół przycisku Buy, złota równo na koszt).
+- Porcja 136 (2026-10-19), trzy kawałki `HandleCity` (L4ff5 – L53c8): `ActivateUnitsInCity` z `UnitOfCityList` (A: kursor
+  po jednostkach w mieście od pierwszej śpiącej lub zajętej, strzałki, Enter albo spacja budzi – śpiąca lub ufortyfikowana
+  dostaje ruchy – i kasuje cel; Escape kończy), `PickImprovementToSell` (S, gdy w tej turze nic nie sprzedano: migający
+  budynek, strzałki, Enter albo spacja sprzedaje – L5740), `ToggleSpecialist` (1 – 9: kolejny typ specjalisty, miasto
+  mniejsze niż pięć dostaje komunikat). Test `HandleCityKeyCasesMatchOriginalCode` (pomocnicy `Garrison`, `Specialists`).
+  Mutacje: 17, wszystkie złapane (sześć po drugim zestawie przypadków: jednostki bez ruchów, szóste miejsce, specjaliści).
 
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
 (`HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-19 (po porcji 135): 1 metoda w stylu asm (`HandleCity`, 8428 linii); `ShiftAIUnit` i `HandlePlayerTurn` gotowe. `HandleCity(miasto, znacznik)`: -1 tylko liczy, 0 tura miasta, 1 ekran miasta; przepisywać kawałkami od początku (po porcji 135: następny od L4ff5 – klawisz A, jednostki w mieście). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
+Stan 2026-10-19 (po porcji 136): 1 metoda w stylu asm (`HandleCity`, 8428 linii); `ShiftAIUnit` i `HandlePlayerTurn` gotowe. `HandleCity(miasto, znacznik)`: -1 tylko liczy, 0 tura miasta, 1 ekran miasta; przepisywać kawałkami od początku (po porcji 136: następny od L53c8 – kursor na mapie miasta, P). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
