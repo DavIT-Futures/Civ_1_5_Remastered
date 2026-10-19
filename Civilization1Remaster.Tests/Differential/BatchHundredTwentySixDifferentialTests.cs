@@ -923,6 +923,40 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 			CheckCases(bay, ScienceCases, ways);
 	}
 
+	private static readonly Action<GameEngine, short> Smoky = Then(Size(25), Buildings(0xc000, 0x1000), Knows(0x23, true), Knows(0x3a, true),
+		Knows(0x29, true), Knows(0x3c, true));
+
+	private static Action<GameEngine, short> NuclearPlant(bool known) => Then((game, town) => game.World.Towns[town].StructureMarkers1 |= 0x10,
+		Disorder(true), Knows(0x42, known));
+
+	private static readonly CityCase[] PollutionCases =
+	{
+		new("human, a smoky big city", true, 0, Smoky, Choice.Biggest),
+		new("human, a smoky big city, the last", true, 0, Smoky, Choice.Last),
+		new("human, a smoky big city, the first", true, 0, Smoky, Choice.First),
+		new("human, a smoky city, hard level, many advances", true, 0, Then(Smoky, Level(4, 2), Research(0x30, 0, 60)), Choice.Biggest),
+		new("human, a small clean city", true, 0, Size(2), Choice.First),
+		new("computer, a smoky big city", false, 0, Smoky, Choice.Biggest),
+		new("human, a nuclear plant in disorder", true, 0, NuclearPlant(false), Choice.Biggest),
+		new("human, a nuclear plant in disorder, the last", true, 0, NuclearPlant(false), Choice.Last),
+		new("human, a nuclear plant in disorder, the first", true, 0, NuclearPlant(false), Choice.First),
+		new("human, a nuclear plant in disorder, smoky", true, 0, Then(Smoky, NuclearPlant(false)), Choice.Last),
+		new("human, a nuclear plant, the advance 0x41 known", true, 0, Then(NuclearPlant(false), Knows(0x41, true)), Choice.Biggest),
+		new("human, a nuclear plant, the advance 0x41 known, the last", true, 0, Then(NuclearPlant(false), Knows(0x41, true)), Choice.Last),
+		new("human, a nuclear plant, the advance 0x41 known, the first", true, 0, Then(NuclearPlant(false), Knows(0x41, true)), Choice.First),
+		new("human, a nuclear plant, fusion known", true, 0, NuclearPlant(true), Choice.Biggest),
+		new("human, a nuclear plant, no disorder", true, 0, Then(NuclearPlant(false), Rates(0, 0), Size(3), Disorder(false)), Choice.Biggest),
+	};
+
+	[Fact]
+	public void HandleCityPollutionCasesMatchOriginalCode()
+	{
+		HashSet<string> ways = [];
+
+		foreach (int bay in new[] { 5, 9 })
+			CheckCases(bay, PollutionCases, ways);
+	}
+
 	[Fact]
 	public void HandleCityTurnCasesMatchOriginalCode()
 	{

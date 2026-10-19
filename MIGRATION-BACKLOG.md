@@ -1109,13 +1109,18 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   nowa). Test `HandleCityScienceCasesMatchOriginalCode` (pomocnik `AtCost`). Mutacje: 16; ocalały trzy progi kosztu
   (`12 - postępy`, bez 0xd2de, `>=`): przypadki z kosztem wyliczonym w teście nie trafiły dokładnie w próg – w turze miasta
   coś jeszcze zmienia badania albo 0xd2de (do sprawdzenia).
+- Porcja 142 (2026-10-19), kawałek `HandleCity` L64b8 – L672d: `ApplyScoreAndPollution` (punkty właściciela; tylko dla
+  człowieka – inaczej skok do L68cc z pominięciem utrzymania budynków: zanieczyszczenie na polu miasta i awaria elektrowni
+  atomowej w niepokojach), `CountPollution` (też w `RenderCityDotAndPollution`). Test
+  `HandleCityPollutionCasesMatchOriginalCode`. Mutacje: 14; ocalały `DrawInt(21)` zamiast 20 (losowanie daje to samo poza
+  rzadkim 20) i postęp 0x41 zamiast 0x42 (trzy przypadki ze znanym 0x41 nie wylosowały awarii).
 
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
 (`HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-19 (po porcji 141): 1 metoda w stylu asm (`HandleCity`, 8428 linii); `ShiftAIUnit` i `HandlePlayerTurn` gotowe. `HandleCity(miasto, znacznik)`: -1 tylko liczy, 0 tura miasta, 1 ekran miasta; przepisywać kawałkami od początku (po porcji 141: następny od L64b8 – punkty, zanieczyszczenie, awaria elektrowni). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
+Stan 2026-10-19 (po porcji 142): 1 metoda w stylu asm (`HandleCity`, 8428 linii); `ShiftAIUnit` i `HandlePlayerTurn` gotowe. `HandleCity(miasto, znacznik)`: -1 tylko liczy, 0 tura miasta, 1 ekran miasta; przepisywać kawałkami od początku (po porcji 142: następny od L672d – utrzymanie budynków i koniec). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 

@@ -3080,19 +3080,7 @@ namespace Civilization1Remaster.Game
 			if (this.processor.PullGlobalWord(0x2496) != 0)
 				return;
 
-			short divisor = this.processor.PullGlobalSignedWord(0x6c98);
-
-			if (divisor == 0)
-				throw new Exception("Division by zero");
-
-			int quotient = this.processor.PullGlobalSignedWord(0x70dc) / divisor;
-
-			if (quotient != (short)quotient)
-				throw new Exception("Division error");
-
-			// A quarter rounded towards zero (the original takes the absolute value: -32768 can't come out of the size)
-			short pollution = (short)((short)(quotient - 20) + ((short)(town.TrueExtent * this.processor.PullGlobalSignedWord(0xb882)) / 4));
-			this.processor.EmitLocalWord(0xe0, (ushort)pollution);
+			short pollution = CountPollution(town);
 
 			this.owner.Helpers.VerifyValueSpan(pollution, 1, 99);
 			this.owner.Helpers.VerifyValueSpan(100 / (short)this.processor.RegAcc.Value16, 1, 8);
@@ -4217,6 +4205,97 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
+		/// The pollution of the city (0xe0): the shields over the divisor 0x6c98 less 20, a quarter of the size by the
+		/// advances 0xb882 more (a quarter rounded towards zero; the original takes the absolute value, -32768 can't come out
+		/// of the size)
+		/// </summary>
+		private short CountPollution(City town)
+		{
+			short divisor = this.processor.PullGlobalSignedWord(0x6c98);
+
+			if (divisor == 0)
+				throw new Exception("Division by zero");
+
+			int quotient = this.processor.PullGlobalSignedWord(0x70dc) / divisor;
+
+			if (quotient != (short)quotient)
+				throw new Exception("Division error");
+
+			short pollution = (short)((short)(quotient - 20) + ((short)(town.TrueExtent * this.processor.PullGlobalSignedWord(0xb882)) / 4));
+			this.processor.EmitLocalWord(0xe0, (ushort)pollution);
+
+			return pollution;
+		}
+
+		/// <summary>
+		/// The end of the turn of a city: the score of the owner grows by the size and the happy less the unhappy. For the human
+		/// only (false: not the human): the pollution may land on a square of the city (twice 0xe0 against a draw below 256 less
+		/// half the advances by the level; 0xe8 the square, 0xc6 / 0xd2 its place: not polluted, not the sea, not the city);
+		/// a city in disorder with a nuclear plant (0x10 of the second word) may melt down, one time in three, until the
+		/// advance 0x42.
+		/// </summary>
+		private bool ApplyScoreAndPollution(short townIdx)
+		{
+			City town = this.owner.World.Towns[townIdx];
+			short owner = (short)this.processor.PullGlobalWord(0x6548);
+			Player player = this.owner.World.Participants[owner];
+			short person = this.owner.World.PersonParticipantIdx;
+
+			player.Tally += (short)(town.TrueExtent + this.processor.PullGlobalWord(0x70e2) - this.processor.PullGlobalWord(0x70e4));
+
+			if (owner != person)
+				return false;
+
+			// The pollution
+			short pollution = CountPollution(town);
+			ushort chance = (ushort)(0x100 - (short)((short)(player.FoundScienceTally * this.owner.World.HardnessTier) / 2));
+
+			if ((short)(pollution << 1) > (short)(ushort)this.owner.Libc.Dice.DrawInt(chance))
+			{
+				this.processor.EmitLocalWord(0xe8, (ushort)this.owner.Libc.Dice.DrawInt(20));
+				var delta = this.owner.TownDeltas[this.processor.PullLocalWord(0xe8)];
+				this.processor.EmitLocalWord(0xc6, (ushort)(short)(delta.X + this.processor.PullLocalSignedWord(0xd8)));
+				this.processor.EmitLocalWord(0xd2, (ushort)(short)(delta.Y + this.processor.PullLocalSignedWord(0xe4)));
+				short horiz = this.processor.PullLocalSignedWord(0xc6);
+				short vert = this.processor.PullLocalSignedWord(0xd2);
+
+				if ((this.owner.MapOps.ObtainTileImprovements(horiz, vert) & 0x40) == 0 && this.owner.MapOps.ObtainTerrainType(horiz, vert) != 0xa &&
+					(this.owner.MapOps.ObtainTileImprovements(horiz, vert) & 1) == 0)
+				{
+					AttachSmog(horiz, vert);
+					this.owner.MapOps.FocusMapView(person, horiz - 8, vert - 6);
+					this.owner.MapOps.RepaintMapTile(horiz, vert);
+					this.processor.EmitGlobalWord(0x2f9e, 6);
+					this.owner.Libc.CopyText(0xba06, "Pollution near ");
+					this.owner.Conquest.ObtainCityLabel(townIdx);
+					this.owner.Libc.AppendText(0xba06, ".\n");
+					this.owner.TurnHooks.DisplayDialog(0xba06, 80, 64);
+				}
+			}
+
+			// The nuclear plant melts down
+			if ((town.ConditionMarker & 1) != 0 && (town.StructureMarkers1 & 0x10) != 0 && this.owner.Libc.Dice.DrawInt(3) == 0 &&
+				this.owner.Advisors.PlayerKnowsTechnology(owner, 0x42) == 0)
+			{
+				short horiz = this.processor.PullLocalSignedWord(0xd8);
+				short vert = this.processor.PullLocalSignedWord(0xe4);
+
+				this.owner.MapOps.FocusMapView(person, horiz - 8, vert - 6);
+				this.owner.Diplomats.RenderExplosion(horiz, vert);
+				this.owner.Combat.EnactNuclearFallout(horiz, vert);
+				town.StructureMarkers1 &= 0xffef;
+				this.owner.Services.PerformSound(0x24, 0);
+				this.owner.Libc.CopyText(0xba06, "Nuclear Catastrophe\nin ");
+				this.owner.Conquest.ObtainCityLabel(townIdx);
+				this.owner.Libc.AppendText(0xba06, "!\nContamination feared!\n");
+				this.owner.Paper.DisplayNewspaper(townIdx);
+				this.owner.Services.PerformSound(1, 0);
+			}
+
+			return true;
+		}
+
+		/// <summary>
 		/// The start of HandleCity: the locals 0xb8, 0xda, 0xfe, 0xca and 0x2496 cleared, the mouse hidden, the 5 x 5 array
 		/// of the tiles around (BP-0xa6) cleared; 0x653e the city; the materials outside 0 - 999 cleared. Over the other
 		/// cities: 0xb2 the distance to the nearest one (at most 7), 0x6b30 the distance to the nearest palace of the owner
@@ -4681,164 +4760,9 @@ namespace Civilization1Remaster.Game
 			// The science
 			ApplyResearch();
 
-		L64b8:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.Towns[townIdx].TrueExtent;
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.PullGlobalWord(0x70e2));
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, this.processor.PullGlobalWord(0x70e4));
-			this.owner.World.Participants[this.processor.PullGlobalWord(0x6548)].Tally += (short)this.processor.RegAcc.Value16;
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x6548), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L64e3;
-			goto L68cc;
-
-		L64e3:
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x70dc);
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.RegCount.Value16 = this.processor.PullGlobalWord(0x6c98);
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, 0x14);
-			this.processor.EmitLocalWord(0xe0, this.processor.RegAcc.Value16);
-			this.processor.ScaleIndexToBase(0x1c, (ushort)townIdx);
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.Towns[townIdx].TrueExtent;
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.PullGlobalWord(0xb882));
-			this.processor.DivideAccumulatorByPowerOfTwo(0x2);
-			this.processor.EmitLocalWord(0xe0, this.processor.SumWord(this.processor.PullLocalWord(0xe0), this.processor.RegAcc.Value16));
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.Participants[this.processor.PullGlobalWord(0x6548)].FoundScienceTally;
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, (ushort)this.owner.World.HardnessTier);
-			this.processor.HalveAccumulator();
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, 0x100);
-			this.processor.RegAcc.Value16 = this.processor.NegateWord(this.processor.RegAcc.Value16);
-
-			this.processor.RegAcc.Value16 = (ushort)(this.owner.Libc.Dice.DrawInt(this.processor.RegAcc.Value16));
-
-			this.processor.RegCount.Value16 = this.processor.PullLocalWord(0xe0);
-			this.processor.RegCount.Value16 = this.processor.ShiftLeftWord(this.processor.RegCount.Value16, 0x1);
-			this.processor.CompareWord(this.processor.RegCount.Value16, this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsGreater) goto L6545;
-			goto L6640;
-
-		L6545:
-			this.processor.RegAcc.Value16 = (ushort)(this.owner.Libc.Dice.DrawInt(20));
-
-			this.processor.EmitLocalWord(0xe8, this.processor.RegAcc.Value16);
-
-			this.processor.RegAcc.Value16 = (ushort)((short)(this.owner.TownDeltas[this.processor.PullLocalWord(0xe8)].X +
-				this.processor.PullLocalSignedWord(0xd8)));
-			this.processor.EmitLocalWord(0xc6, this.processor.RegAcc.Value16);
-
-			this.processor.RegAcc.Value16 = (ushort)((short)(this.owner.TownDeltas[this.processor.PullLocalWord(0xe8)].Y +
-				this.processor.PullLocalSignedWord(0xe4)));
-			this.processor.EmitLocalWord(0xd2, this.processor.RegAcc.Value16);
-
-			this.owner.MapOps.ObtainTileImprovements(
-				this.processor.PullLocalSignedWord(0xc6),
-				this.processor.PullLocalSignedWord(0xd2));
-
-			this.processor.TestBitsByte(this.processor.RegAcc.LowByte, 0x40);
-			if (this.processor.FlagSet.IsEqual) goto L6590;
-			goto L6640;
-
-		L6590:
-			this.owner.MapOps.ObtainTerrainType(
-				this.processor.PullLocalSignedWord(0xc6),
-				this.processor.PullLocalSignedWord(0xd2));
-
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
-			if (this.processor.FlagSet.IsNotEqual) goto L65a8;
-			goto L6640;
-
-		L65a8:
-			this.owner.MapOps.ObtainTileImprovements(
-				this.processor.PullLocalSignedWord(0xc6),
-				this.processor.PullLocalSignedWord(0xd2));
-
-			this.processor.TestBitsByte(this.processor.RegAcc.LowByte, 0x1);
-			if (this.processor.FlagSet.IsEqual) goto L65bf;
-			goto L6640;
-
-		L65bf:
-			AttachSmog(this.processor.PullLocalSignedWord(0xc6),
-				this.processor.PullLocalSignedWord(0xd2));
-
-			this.owner.MapOps.FocusMapView(this.owner.World.PersonParticipantIdx,
-				this.processor.PullLocalSignedWord(0xc6) - 8,
-				this.processor.PullLocalSignedWord(0xd2) - 6);
-
-			this.owner.MapOps.RepaintMapTile(
-				this.processor.PullLocalSignedWord(0xc6),
-				this.processor.PullLocalSignedWord(0xd2));
-
-			this.processor.EmitGlobalWord(0x2f9e, 0x6);
-
-			this.owner.Libc.CopyText(0xba06, "Pollution near ");
-
-			this.owner.Conquest.ObtainCityLabel(townIdx);
-
-			this.owner.Libc.AppendText(0xba06, ".\n");
-
-			this.owner.TurnHooks.DisplayDialog(0xba06, 80, 64);
-
-		L6640:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.processor.TestBitsByte(this.owner.World.Towns[townIdx].ConditionMarker, 0x1);
-			if (this.processor.FlagSet.IsNotEqual) goto L6652;
-			goto L672d;
-
-		L6652:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.processor.TestBitsWord(this.owner.World.Towns[townIdx].StructureMarkers1, 0x10);
-			if (this.processor.FlagSet.IsNotEqual) goto L6665;
-			goto L672d;
-
-		L6665:
-			this.processor.RegAcc.Value16 = (ushort)(this.owner.Libc.Dice.DrawInt(3));
-
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L6679;
-			goto L672d;
-
-		L6679:
-			this.processor.RegAcc.Value16 = this.owner.Advisors.PlayerKnowsTechnology(this.processor.PullGlobalSignedWord(0x6548), 0x42);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x0);
-			if (this.processor.FlagSet.IsEqual)
-				goto L6691;
-
-			goto L672d;
-
-		L6691:
-			this.owner.MapOps.FocusMapView(this.owner.World.PersonParticipantIdx,
-				this.processor.PullLocalSignedWord(0xd8) - 8,
-				this.processor.PullLocalSignedWord(0xe4) - 6);
-
-			this.owner.Diplomats.RenderExplosion(
-				this.processor.PullLocalSignedWord(0xd8),
-				this.processor.PullLocalSignedWord(0xe4));
-
-			this.owner.Combat.EnactNuclearFallout(
-				this.processor.PullLocalSignedWord(0xd8),
-				this.processor.PullLocalSignedWord(0xe4));
-			
-			this.processor.ScaleIndexToBase(0x1c, (ushort)townIdx);
-			this.owner.World.Towns[townIdx].StructureMarkers0 &= 0xffff;
-			this.owner.World.Towns[townIdx].StructureMarkers1 &= 0xffef;
-
-			this.owner.Services.PerformSound(0x24, 0);
-
-			this.owner.Libc.CopyText(0xba06, "Nuclear Catastrophe\nin ");
-
-			this.owner.Conquest.ObtainCityLabel(townIdx);
-
-			this.owner.Libc.AppendText(0xba06, "!\nContamination feared!\n");
-
-			this.owner.Paper.DisplayNewspaper(townIdx);
-			
-			this.owner.Services.PerformSound(1, 0);
+			// The score, the pollution, the nuclear plant
+			if (!ApplyScoreAndPollution(townIdx))
+				goto L68cc;
 
 		L672d:
 			this.processor.EmitLocalWord(0xbc, 0x1);
