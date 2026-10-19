@@ -464,6 +464,35 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 			CheckCases(bay, ListCases, ways);
 	}
 
+	private static Action<GameEngine, short> Stock(short shields, short food, sbyte making) => (game, town) =>
+	{
+		var city = game.World.Towns[town];
+		city.MaterialsTally = shields;
+		city.GrainTally = food;
+		city.PresentMakingIdx = making;
+	};
+
+	private static readonly CityCase[] BoxCases =
+	{
+		new("city screen, no shields, no food, a unit", true, 1, Stock(0, 0, 3), Choice.Biggest),
+		new("city screen, some shields, a dear unit", true, 1, Stock(37, 15, 0xe), Choice.Biggest),
+		new("city screen, many shields, an improvement", true, 1, Stock(450, 60, -7), Choice.Biggest),
+		new("city screen, a wonder in production, 990 shields", true, 1, Then(Stock(990, 5, -0x1d), Wonder(0x1d - 24, false)), Choice.Biggest),
+		new("city screen, the advisor flag", true, 1, Then(Stock(12, 5, 2), (game, town) => game.World.Towns[town].ConditionMarker |= 0x10), Choice.Biggest),
+		new("city screen, a granary, small city", true, 1, Then(Stock(5, 8, 2), Buildings(4, 0), Size(1)), Choice.First),
+		new("city screen, a big city, full store", true, 1, Then(Stock(5, 300, 2), Buildings(0, 4), Size(20)), Choice.Biggest),
+		new("city screen, size 9, food above the box", true, 1, Then(Stock(5, 999, 2), Size(9)), Choice.Last),
+	};
+
+	[Fact]
+	public void HandleCityBoxCasesMatchOriginalCode()
+	{
+		HashSet<string> ways = [];
+
+		foreach (int bay in new[] { 5, 9 })
+			CheckCases(bay, BoxCases, ways);
+	}
+
 	[Fact]
 	public void HandleCityTurnCasesMatchOriginalCode()
 	{
