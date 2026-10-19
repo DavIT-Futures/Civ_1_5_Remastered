@@ -906,13 +906,21 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   `BatchHundredElevenDifferentialTests` (samolot na lądzie / w mieście / na lotniskowcu, trirema na pełnym morzu / przy lądzie,
   jednostka lądowa czekająca 'w' z ruchami z 0xdf60); `BatchHundredTen` dostał losową opcję „End of Turn”. Wszystkie mutacje
   złapane (pusty slot `Kind == 0xff` łapie test rozkazów i ruchów).
+- Porcja 112 (2026-10-19): ostatni kawałek `HandlePlayerTurn` – szkielet bez skoków: pętla przebiegów (nowy przebieg, gdy
+  jakaś jednostka czekała; spojrzenie bez jednostki na koniec tury), `VisitUnit` (jednostka w przebiegu), `LookAtUnit`
+  (spojrzenie: rozkazy aż do końca ruchów, mała maszyna stanów `LookStep`), `ObtainOrder`, `ChooseDirection`, `MoveTheUnit`
+  (łańcuch ruchu bez etykiet). `HandlePlayerTurn` jest gotowa. `BatchHundredTen` dostał klawisze końca tury bez jednostek
+  (klik w pasek menu, strzałka, Tab+strzałka, wyjście). Ocalałe: zlecenie stałe → `Order` zamiast `OrderOrKey` (równoważne:
+  zlecenie stałe ma zawsze jednostkę), po walce `Key` zamiast `NextLook` (równoważne: klawisz ruchu nic nie robi w
+  `CarryOutKey`), `continue` zamiast `break` po końcu tury w pętli jednostek i 0x32 przy wyjściu w `VisitUnit` (nieosiągalne:
+  turę kończą tylko klawisze przy 0x80, a każde wyjście samo ustawia 0x32 = 0x80).
 
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
 (`HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-19 (po porcji 111): 2 metody w stylu asm (`HandlePlayerTurn`, `HandleCity`); `ShiftAIUnit` gotowa. `HandlePlayerTurn` przepisywana kawałkami od początku (zostaje szkielet pętli L013c – L0d0a z etykietami: przebiegi po jednostkach). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
+Stan 2026-10-19 (po porcji 112): 1 metoda w stylu asm (`HandleCity`, 8428 linii); `ShiftAIUnit` i `HandlePlayerTurn` gotowe. `HandleCity(miasto, znacznik)`: -1 tylko liczy, 0 tura miasta, 1 ekran miasta; przepisywać kawałkami od początku (porcja 113: przygotowanie do L045f). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 

@@ -19,68 +19,149 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// The turn of a player: passes over his units (another pass while some unit waited or was off the view), each unit
+		/// gets its orders (from ShiftAIUnit, its standing orders or the keys and clicks of the human) and carries them out
+		/// or moves; the human gets a last look without a unit at the end of the turn. The locals (frame 0x52) are shared by
+		/// the methods it calls, as in the original.
 		/// </summary>
-		/// <param name="playerID"></param>
 		public void HandlePlayerTurn(short participantIdx)
 		{
 			this.processor.Journal.OpenScope($"HandlePlayerTurn({participantIdx})");
 
-			// function body
 			this.processor.EnterFrame(0x52);
 			this.processor.PreserveIndexRegisters();
+
 			// The player, the help of some turns, the moves of the units
 			PrepareTurn(participantIdx);
 
-		L013c:
-			this.processor.EmitLocalWord(0x1e, 0x1);
-			this.processor.EmitLocalWord(0x32, 0x0);
-			goto L014c;
+			bool newPass = true;
 
-		L0149:
-			this.processor.EmitLocalWord(0x32, this.processor.IncrementWord(this.processor.PullLocalWord(0x32)));
+			while (true)
+			{
+				if (newPass)
+				{
+					// A pass over the units (0x1e stays 1 unless a unit is left with moves)
+					this.processor.EmitLocalWord(0x1e, 1);
+					this.processor.EmitLocalWord(0x32, 0);
+				}
 
-		L014c:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x32), 0x80);
-			if (this.processor.FlagSet.IsLess) goto L0156;
-			goto L3e4e;
+				bool endOfTurn = false;
 
-		L0156:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x1ae0), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L0160;
-			goto L0165;
+				while ((short)this.processor.PullLocalWord(0x32) < UnitMemory.TroopTally)
+				{
+					if (!VisitUnit(participantIdx))
+					{
+						endOfTurn = true;
+						break;
+					}
 
-		L0160:
-			this.owner.TurnHooks.RepaintMainScreen();
+					this.processor.EmitLocalWord(0x32, (ushort)(this.processor.PullLocalWord(0x32) + 1));
+				}
 
-		L0165:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xdc48), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L016f;
-			goto L0177;
+				if (endOfTurn)
+					break;
 
-		L016f:
-			this.processor.EmitLocalWord(0x32, 0x80);
-			goto L0149;
+				// After all units: another pass while units still move, else the look at the end of the turn of the human
+				// (no unit of his took a key, or the option 4), else the end
+				newPass = true;
 
-		L0177:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x46);
-			this.processor.CompareWord(this.processor.PullLocalWord(0x32), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L0182;
-			goto L0187;
+				if (this.processor.PullLocalWord(0x1e) == 0 && this.processor.PullGlobalWord(0xdc48) == 0)
+					continue;
 
-		L0182:
-			this.processor.EmitLocalWord(0x2e, 0x1);
+				if (this.processor.PullGlobalWord(0xdc48) != 0 || (this.owner.World.ParticipantMarkers & (1 << participantIdx)) == 0 ||
+					(this.processor.PullLocalWord(0x6) != 0 && (this.owner.World.SessionPrefMarkers & 4) == 0))
+				{
+					break;
+				}
 
-		L0187:
+				this.processor.EmitLocalWord(0x32, UnitMemory.TroopTally);
+				this.processor.EmitLocalWord(0x1e, 0);
+				this.processor.EmitLocalWord(0x8, 1);
+
+				if (!LookAtUnit(participantIdx))
+					break;
+
+				this.processor.EmitLocalWord(0x32, (ushort)(this.processor.PullLocalWord(0x32) + 1));
+				newPass = false;
+			}
+
+			// The end of the turn: the human's "end of turn" line goes away
+			if (participantIdx == this.owner.World.PersonParticipantIdx)
+			{
+				this.owner.Startup.ConcealMouseCursor();
+				this.owner.TurnHooks.FloodBoxWithShadow(0, 97, 80, 103);
+				this.owner.Startup.DisplayMouseCursor();
+			}
+
+			this.processor.RegSource.Value16 = this.processor.UnstackWord();
+			this.processor.RegDest.Value16 = this.processor.UnstackWord();
+			this.processor.LeaveFrame();
+			this.processor.Journal.CloseScope("HandlePlayerTurn");
+		}
+
+		/// <summary>Where the look at a unit goes on (LookAtUnit)</summary>
+		private enum LookStep
+		{
+			/// <summary>The order 0x44 is carried out (L0d0a)</summary>
+			Order,
+
+			/// <summary>The order of a unit, or the key without a unit (L0d00)</summary>
+			OrderOrKey,
+
+			/// <summary>The direction of a move from the order (L1b5e)</summary>
+			Direction,
+
+			/// <summary>The marked tile or the unit moves in the direction 0x24 (L1c10)</summary>
+			Move,
+
+			/// <summary>The key that is neither an order nor a move (L3365)</summary>
+			Key,
+
+			/// <summary>The unit goes on or its move ends (L3c40)</summary>
+			NextLook,
+
+			/// <summary>The end of the turn (L3ea1)</summary>
+			EndOfTurn,
+		}
+
+		/// <summary>
+		/// The unit 0x32 in a pass: the screen repainted when asked (0x1ae0); the quit leaves the units; the unit 0x46 sets
+		/// 0x2e; skipped units and units of the human off the view go to the next one, else the look at the unit. False at
+		/// the end of the turn.
+		/// </summary>
+		private bool VisitUnit(short participantIdx)
+		{
+			if (this.processor.PullGlobalWord(0x1ae0) != 0)
+				this.owner.TurnHooks.RepaintMainScreen();
+
+			if (this.processor.PullGlobalWord(0xdc48) != 0)
+			{
+				// The quit leaves the units
+				this.processor.EmitLocalWord(0x32, UnitMemory.TroopTally);
+				return true;
+			}
+
+			if (this.processor.PullLocalWord(0x32) == this.processor.PullLocalWord(0x46))
+				this.processor.EmitLocalWord(0x2e, 1);
+
 			// Empty slots, sentried and fortified units and units without moves are skipped; fortifying ones are fortified now
 			if (!StartUnitMove(participantIdx))
-				goto L0149;
-		L0356:
+				return true;
+
 			// A unit of the human player without orders off the map view waits for the second pass, else the view moves to it
 			if (!FocusOnUnit(participantIdx))
-				goto L0149;
+				return true;
 
-		L043b:
+			return LookAtUnit(participantIdx);
+		}
+
+		/// <summary>
+		/// The look at the unit 0x32 (or at no unit, 0x80): the keyboard emptied for the human, then orders until the unit
+		/// has no moves left (each order: the order, the move in its direction or the key that is neither). False at the end
+		/// of the turn.
+		/// </summary>
+		private bool LookAtUnit(short participantIdx)
+		{
 			if ((this.owner.World.ParticipantMarkers & (1 << participantIdx)) != 0)
 				AwaitForKey();
 
@@ -94,181 +175,160 @@ namespace Civilization1Remaster.Game
 			this.processor.EmitLocalWord(0x36, 0);
 			this.processor.EmitLocalWord(0x28, 0);
 
-		L047f:
-			// A computer unit gets its order from ShiftAIUnit, a unit with orders goes on with them, else the human chooses
+			while (true)
+			{
+				LookStep step = ObtainOrder(participantIdx);
+
+				while (step != LookStep.NextLook && step != LookStep.EndOfTurn)
+				{
+					switch (step)
+					{
+						case LookStep.OrderOrKey:
+							step = (short)this.processor.PullLocalWord(0x32) < UnitMemory.TroopTally ? LookStep.Order : LookStep.Direction;
+							break;
+
+						case LookStep.Order:
+							// The order 0x44 of the unit (a plane flying home moves at once)
+							step = CarryOutOrder(participantIdx) ? LookStep.Move : LookStep.Direction;
+							break;
+
+						case LookStep.Direction:
+							step = ChooseDirection(participantIdx);
+							break;
+
+						case LookStep.Move:
+							step = MoveTheUnit(participantIdx);
+							break;
+
+						default:
+							// The keys of the reports, the menus, the rates and the view
+							step = CarryOutKey(participantIdx) switch
+							{
+								KeyStep.MenuOrder => LookStep.Order,
+								KeyStep.EndOfTurn => LookStep.EndOfTurn,
+								_ => LookStep.NextLook,
+							};
+							break;
+					}
+				}
+
+				if (step == LookStep.EndOfTurn)
+					return false;
+
+				// A unit with moves left goes on; else its move ends: a plane burns fuel, a trireme may be lost at sea
+				if (!ContinueOrFinishUnit(participantIdx))
+					return true;
+			}
+		}
+
+		/// <summary>
+		/// The order of the unit: a computer unit gets it from ShiftAIUnit, a unit with orders goes on with them, else the
+		/// human chooses with a key or a click
+		/// </summary>
+		private LookStep ObtainOrder(short participantIdx)
+		{
 			if ((this.owner.World.ParticipantMarkers & (1 << participantIdx)) == 0)
 			{
 				ObtainAIOrder(participantIdx);
-				goto L0d0a;
+				return LookStep.Order;
 			}
 
 			if (ObtainStandingOrder(participantIdx))
-				goto L0d00;
-			// The human chooses: a key or a click
-			switch (TakeHumanOrder(participantIdx))
+				return LookStep.OrderOrKey;
+
+			return TakeHumanOrder(participantIdx) switch
 			{
-				case HumanOrder.MenuOrder:
-					goto L0d0a;
+				HumanOrder.MenuOrder => LookStep.Order,
+				HumanOrder.MenuWithoutUnit => LookStep.Key,
+				HumanOrder.NextLook => LookStep.NextLook,
+				HumanOrder.EndOfTurn => LookStep.EndOfTurn,
+				_ => LookStep.OrderOrKey,
+			};
+		}
 
-				case HumanOrder.MenuWithoutUnit:
-					goto L3365;
+		/// <summary>
+		/// The direction of a move from the order 0x44 (1 - 8 from GoTo and the computer, the arrows, the keypad) into 0x24;
+		/// without a unit only the marked tile moves; 'c' centers the view; other keys go on as keys
+		/// </summary>
+		private LookStep ChooseDirection(short participantIdx)
+		{
+			if ((short)this.processor.PullLocalWord(0x32) >= UnitMemory.TroopTally && this.processor.PullLocalWord(0x4) == 0)
+				return LookStep.Key;
 
-				case HumanOrder.NextLook:
-					goto L3c40;
-
-				case HumanOrder.EndOfTurn:
-					goto L3ea1;
-			}
-		L0d00:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x32), 0x80);
-			if (this.processor.FlagSet.IsLess) goto L0d0a;
-			goto L1b5e;
-
-		L0d0a:
-			// The order 0x44 of the unit (a plane flying home moves at once)
-			if (CarryOutOrder(participantIdx))
-				goto L1c10;
-		L1b5e:
-			// Without a unit only the marked tile moves
-			if ((short)this.processor.PullLocalWord(0x32) >= 0x80 && this.processor.PullLocalWord(0x4) == 0)
-				goto L3365;
-
-			// A move: the direction of the order (1 - 8 from GoTo and the computer, the arrows, the keypad); 'c' centers the view
 			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x44);
 
 			if (this.processor.PullLocalWord(0x44) == 'c')
 			{
 				CenterView(participantIdx);
-				goto L3365;
+				return LookStep.Key;
 			}
 
 			if (KeyDirection(this.processor.PullLocalWord(0x44)) == 0)
-				goto L3365;
+				return LookStep.Key;
 
 			this.processor.EmitLocalWord(0x24, KeyDirection(this.processor.PullLocalWord(0x44)));
+			return LookStep.Move;
+		}
 
-		L1c10:
-			// The marked tile moves, or a barbarian pillages a tile of the human on its way, or the unit moves
+		/// <summary>
+		/// The move in the direction 0x24: the marked tile moves, or a barbarian pillages a tile of the human on its way, or
+		/// the unit moves (the checks of the target tile, an attack, the cost, the territory, the move and the arrival).
+		/// After a won or lost attack the next look comes at once, else the key of the order.
+		/// </summary>
+		private LookStep MoveTheUnit(short participantIdx)
+		{
 			if (this.processor.PullLocalWord(0x4) != 0)
 			{
 				MoveMarkedTile(participantIdx);
-				goto L3365;
+				return LookStep.Key;
 			}
 
 			if (BarbarianPillages(participantIdx))
-				goto L3365;
-		L1d96:
-			// The tile of the move; a land unit may be stopped by a zone of control, other units go on below (L219c)
-			if (!LocateMoveTarget(participantIdx))
-				goto L219c;
+				return LookStep.Key;
 
-			if (StoppedByZoneOfControl(participantIdx))
-				goto L3365;
-		L1ed2:
-			// A diplomat or caravan at a city
-			switch (EnterCityAsDiplomatOrCaravan(participantIdx))
+			// The tile of the move; a land unit may be stopped by a zone of control, a diplomat or caravan acts at a city
+			if (LocateMoveTarget(participantIdx))
 			{
-				case MoveStep.GoesOn:
-					goto L219c;
+				if (StoppedByZoneOfControl(participantIdx))
+					return LookStep.Key;
 
-				case MoveStep.Done:
-					goto L3365;
+				switch (EnterCityAsDiplomatOrCaravan(participantIdx))
+				{
+					case MoveStep.Done:
+						return LookStep.Key;
+
+					case MoveStep.NoCity:
+						BribeUnitOnTheWay(participantIdx);
+						break;
+				}
 			}
-		L2157:
-			BribeUnitOnTheWay(participantIdx);
 
-		L219c:
-			// The tile of the move: boarding a ship, the cases without an attack, an attack below (L2329)
+			// The tile of the move: boarding a ship, the cases without an attack, an attack (the unit may be lost)
 			switch (CheckMoveTile(participantIdx))
 			{
-				case MoveCheck.Moves:
-					goto L267b;
-
 				case MoveCheck.Done:
-					goto L3365;
+					return LookStep.Key;
+
+				case MoveCheck.Attacks:
+					if (!ConfirmAttack(participantIdx))
+						return LookStep.Key;
+
+					return FightAt(participantIdx) ? LookStep.NextLook : LookStep.Key;
 			}
-		L2329:
-			// The attack (the unit may be lost)
-			if (!ConfirmAttack(participantIdx))
-				goto L3365;
 
-			if (FightAt(participantIdx))
-				goto L3c40;
+			// The cost of the move (a ship on land, a plane or ship into a foreign city, no moves: no move); a computer unit
+			// does not turn back nor crowd an own stack; a treaty may stop the move into a territory
+			if (!PayForMove(participantIdx) || !ComputerMayMove(participantIdx) || !EnterTerritory(participantIdx))
+				return LookStep.Key;
 
-			goto L3365;
-		L267b:
-			// The cost of the move (a ship on land, a plane or ship into a foreign city, no moves: no move)
-			if (!PayForMove(participantIdx))
-				goto L3365;
-		L2884:
-			// A computer unit does not turn back nor crowd an own stack
-			if (!ComputerMayMove(participantIdx))
-				goto L3365;
-		L29a0:
-			// The territory of the tile: a treaty may stop the move
-			if (!EnterTerritory(participantIdx))
-				goto L3365;
-		L2b06:
-			// Who sees the move, and the move on the screen
+			// Who sees the move, the move, landing and the cargo of ships, the arrival, the unit shown and a plane landing
 			ShowMove(participantIdx);
-		L2cdd:
-			// The unit moves
 			MoveUnit(participantIdx);
-		L2deb:
-			// Landing ends the moves; a ship takes its cargo along
 			TakeCargoAlong(participantIdx);
-		L2ff4:
-			// The unit arrives: a city seized, the look around, a hut
 			ArriveAtTile(participantIdx);
-		L3184:
-			// The end of the move: the unit shown, a plane lands
 			FinishMove(participantIdx);
-		L3365:
-			// The keys of the reports, the menus, the rates and the view
-			switch (CarryOutKey(participantIdx))
-			{
-				case KeyStep.MenuOrder:
-					goto L0d0a;
 
-				case KeyStep.EndOfTurn:
-					goto L3ea1;
-			}
-		L3c40:
-			// A unit with moves left goes on; else its move ends: a plane burns fuel, a trireme may be lost at sea
-			if (ContinueOrFinishUnit(participantIdx))
-				goto L047f;
-
-			goto L0149;
-
-		L3e4e:
-			// After all units: another pass while units still move, else the look at the end of the turn of the human (no
-			// unit of his took a key, or the option 4), else the end
-			if (this.processor.PullLocalWord(0x1e) == 0 && this.processor.PullGlobalWord(0xdc48) == 0)
-				goto L013c;
-
-			if (this.processor.PullGlobalWord(0xdc48) == 0 && (this.owner.World.ParticipantMarkers & (1 << participantIdx)) != 0 &&
-				(this.processor.PullLocalWord(0x6) == 0 || (this.owner.World.SessionPrefMarkers & 4) != 0))
-			{
-				this.processor.EmitLocalWord(0x32, 0x80);
-				this.processor.EmitLocalWord(0x1e, 0);
-				this.processor.EmitLocalWord(0x8, 1);
-				goto L043b;
-			}
-
-		L3ea1:
-			// The end of the turn: the human's "end of turn" line goes away
-			if (participantIdx == this.owner.World.PersonParticipantIdx)
-			{
-				this.owner.Startup.ConcealMouseCursor();
-				this.owner.TurnHooks.FloodBoxWithShadow(0, 97, 80, 103);
-				this.owner.Startup.DisplayMouseCursor();
-			}
-
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.RegDest.Value16 = this.processor.UnstackWord();
-			this.processor.LeaveFrame();
-			// Far return
-			this.processor.Journal.CloseScope("HandlePlayerTurn");
+			return LookStep.Key;
 		}
 
 		/// <summary>

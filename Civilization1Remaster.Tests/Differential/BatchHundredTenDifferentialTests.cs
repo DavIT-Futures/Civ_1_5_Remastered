@@ -29,6 +29,12 @@ public sealed class BatchHundredTenDifferentialTests(ITestOutputHelper output)
 		new[] { 0x2200, 0x1b }, new[] { 0x1800, 0x0d }, new[] { 0x1e00, 0x1b }, new[] { 0x1100, 0x0d }, new[] { 0x2e00, 0x0d }, new[] { 0x2200, 0x0d },
 	};
 
+	// Keys at the end of the turn without units (-1 is a click on the GAME menu of the menu bar)
+	private static readonly int[][] EndKeys =
+	{
+		new[] { -1, 0x0d }, new[] { -1, 0x1b }, new[] { 0x4800 }, new[] { 0x09, 0x4800 }, new[] { 0x1000, 0x5000, 0x0d }, new[] { 0x09 },
+	};
+
 	private static readonly string[] Screens =
 	{
 		"DisplayWhichArmy", "DisplayCityStatusReport", "RenderUnitCountsChart", "DisplayScreen", "DisplayMilitaryReport",
@@ -55,15 +61,16 @@ public sealed class BatchHundredTenDifferentialTests(ITestOutputHelper output)
 
 	private void CheckKeys(int bay, HashSet<string> ways, Func<int> next)
 	{
-		Check(bay, 34, (chance, pair) =>
+		Check(bay, 37, (chance, pair) =>
 		{
 			GameEngine engine = pair.Rewritten.Engine;
 			short person = engine.World.PersonParticipantIdx;
 			int turn = next();
-			int[] keys = Keys[turn % Keys.Length];
-			bool everything = turn / Keys.Length % 2 == 0;
-			// Sometimes no unit of the human moves (0xdf60: no new moves), so Tab comes at the end of the turn
-			bool unitless = keys[0] == 0x09 && chance.Next(2) == 0;
+			int all = Keys.Length + EndKeys.Length;
+			int[] keys = turn % all < Keys.Length ? Keys[turn % all] : EndKeys[turn % all - Keys.Length];
+			bool everything = turn / all % 2 == 0;
+			// Sometimes no unit of the human moves (0xdf60: no new moves), so the keys come at the end of the turn
+			bool unitless = turn % all >= Keys.Length || (keys[0] == 0x09 && chance.Next(2) == 0);
 			// The option "End of Turn" (4) mostly on: without it the turn of the human ends at once once a unit took a key
 			bool endOfTurn = unitless || chance.Next(3) != 0;
 			ushort frame = (ushort)(engine.Processor.RegStack.Value16 - 2);
@@ -95,7 +102,8 @@ public sealed class BatchHundredTenDifferentialTests(ITestOutputHelper output)
 					markers = game.World.SessionPrefMarkers;
 					debug = game.Processor.PullUInt16(0x3b01, 0xd806);
 					records = Enumerable.Range(0, 0x3a * 0x10).Select(at => game.Processor.Storage.PullUInt8(0x3b01, (ushort)(0x1512 + at))).ToArray();
-					HumanTurnScript.Install(game, (unitless ? new[] { 0x31 } : new[] { 0x31, 0x1b }).Concat(keys).Select(key => new HumanTurnScript.Input(key)));
+					HumanTurnScript.Install(game, (unitless ? new[] { 0x31 } : new[] { 0x31, 0x1b }).Concat(keys)
+						.Select(key => key < 0 ? new HumanTurnScript.Input(0, 1, 10, 3) : new HumanTurnScript.Input(key)));
 				},
 				game => new PlayerTurnReference(game).HandlePlayerTurn(person),
 				game => game.TurnLogic.HandlePlayerTurn(person),
