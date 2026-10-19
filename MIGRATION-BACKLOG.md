@@ -883,13 +883,18 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   się (`ShiftUnit`), wioska (`VisitHut`, znacznik w `ChartSight`), jednostka (nie statek) na morzu budzi stos (0x1560),
   barbarzyńca widziany przez człowieka przy jego mieście. Testy: istniejące testy tur. Niesprawdzone: znacznik wioski
   (`|= 1` → `|= 2`) i barbarzyńca przy mieście człowieka (rzadkie w turach testowych).
+- Porcja 109 (2026-10-19): dwudziesty kawałek `HandlePlayerTurn` – `FinishMove` (L3184 – L3365): ruch widziany przez
+  człowieka (albo jego, albo komputera przy 0xd806) pokazuje jednostkę na mapie (widok na niej dla człowieka albo przy opcji
+  0x20, krótkie czekanie przy ruchu komputera bez 0xb278); 0xa = 0; samolot w mieście ląduje (bez rozkazów, ruchów i celu),
+  samolot na lotniskowcu dostaje paliwo (zapis przez SI zostawione przez `TallyUnitsOfTypeInStack`, jak w oryginale). Cały
+  ruch jednostki (L1d96 – L3365) jest już metodami. Testy: istniejące testy tur; wszystkie mutacje złapane.
 
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
 (`HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-18 (po porcji 108): 2 metody w stylu asm (`HandlePlayerTurn`, `HandleCity`); `ShiftAIUnit` gotowa. `HandlePlayerTurn` przepisywana kawałkami od początku (następny: koniec ruchu L3184 – L3365 – pokazanie ruchu – potem L3365 – koniec; testy z `HumanTurnScript`). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
+Stan 2026-10-18 (po porcji 109): 2 metody w stylu asm (`HandlePlayerTurn`, `HandleCity`); `ShiftAIUnit` gotowa. `HandlePlayerTurn` przepisywana kawałkami od początku (następny: L3365 – koniec: L3abd (menu i klawisze bez jednostki), L3c40 (następne spojrzenie), L3e4e / L3ea1 (koniec tury); testy z `HumanTurnScript`). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
