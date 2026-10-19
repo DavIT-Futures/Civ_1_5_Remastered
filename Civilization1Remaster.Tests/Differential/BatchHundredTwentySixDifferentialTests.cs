@@ -493,6 +493,25 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 			CheckCases(bay, BoxCases, ways);
 	}
 
+	private static readonly CityCase[] RowCases =
+	{
+		new("city screen, settlers and units supported", true, 1, Then(Level(1, 2), Supported(10, 2, true)), Choice.Biggest),
+		new("city screen, despotism far from the palace", true, 1, Then(Level(1, 1), Buildings(0, 0x41)), Choice.Last),
+		new("city screen, luxuries only", true, 1, Rates(0, 0), Choice.Biggest),
+		new("city screen, taxes only", true, 1, Rates(10, 0), Choice.Biggest),
+		new("city screen, science only", true, 1, Rates(0, 10), Choice.Biggest),
+		new("city screen, a small city", true, 1, Then(Size(1), Rates(4, 4)), Choice.First),
+	};
+
+	[Fact]
+	public void HandleCityRowCasesMatchOriginalCode()
+	{
+		HashSet<string> ways = [];
+
+		foreach (int bay in new[] { 5, 9 })
+			CheckCases(bay, RowCases, ways);
+	}
+
 	[Fact]
 	public void HandleCityTurnCasesMatchOriginalCode()
 	{

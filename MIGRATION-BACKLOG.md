@@ -1040,13 +1040,18 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   (siatka tarcz), `RenderFoodBox` (pole żywności, linia spichlerza, zapas najwyżej do wzrostu). Test
   `HandleCityBoxCasesMatchOriginalCode`. Mutacje: 12; ocalała jedna – `80 / pudełko` vs `81 / pudełko` (równoważne dla każdego
   możliwego pudełka: 10 człowieka, parzyste 8 – 16 komputera).
+- Porcja 132 (2026-10-19), dwa kawałki `HandleCity` (L40ba – L439e): `RenderResourceRows` (pole zasobów ekranu miasta: wiersze
+  żywności, tarcz i handlu z przerwami po zjedzonej żywności, po opłaconym utrzymaniu i przed korupcją), `RenderTradeRow` z
+  `RenderTradeIcons` (wiersz luksusów, podatków i nauki). Test `HandleCityRowCasesMatchOriginalCode`. Mutacje: 12; ocalała
+  jedna – krok `116 / (x + 1)` wiersza tarcz i handlu (różni się od `x + 2` tylko przy wartościach, których przypadki nie
+  ustawiają wprost, np. 15 albo 18).
 
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
 (`HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-19 (po porcji 131): 1 metoda w stylu asm (`HandleCity`, 8428 linii); `ShiftAIUnit` i `HandlePlayerTurn` gotowe. `HandleCity(miasto, znacznik)`: -1 tylko liczy, 0 tura miasta, 1 ekran miasta; przepisywać kawałkami od początku (po porcji 131: następny od L40ba). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
+Stan 2026-10-19 (po porcji 132): 1 metoda w stylu asm (`HandleCity`, 8428 linii); `ShiftAIUnit` i `HandlePlayerTurn` gotowe. `HandleCity(miasto, znacznik)`: -1 tylko liczy, 0 tura miasta, 1 ekran miasta; przepisywać kawałkami od początku (po porcji 132: następny od L439e – brakująca żywność). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
