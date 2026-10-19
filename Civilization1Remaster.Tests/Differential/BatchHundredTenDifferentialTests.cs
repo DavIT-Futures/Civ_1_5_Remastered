@@ -64,6 +64,8 @@ public sealed class BatchHundredTenDifferentialTests(ITestOutputHelper output)
 			bool everything = turn / Keys.Length % 2 == 0;
 			// Sometimes no unit of the human moves (0xdf60: no new moves), so Tab comes at the end of the turn
 			bool unitless = keys[0] == 0x09 && chance.Next(2) == 0;
+			// The option "End of Turn" (4) mostly on: without it the turn of the human ends at once once a unit took a key
+			bool endOfTurn = unitless || chance.Next(3) != 0;
 			ushort frame = (ushort)(engine.Processor.RegStack.Value16 - 2);
 			Dictionary<string, int> before = new Dictionary<string, int>(pair.Rewritten.Calls);
 			short levy = 0, research = 0, markers = 0;
@@ -71,13 +73,13 @@ public sealed class BatchHundredTenDifferentialTests(ITestOutputHelper output)
 			byte[] records = [];
 
 			return new Scenario(
-				$"HandlePlayerTurn({person}), keys {string.Join(" ", keys.Select(key => key.ToString("x")))}, everything {everything}, unitless {unitless}",
+				$"HandlePlayerTurn({person}), keys {string.Join(" ", keys.Select(key => key.ToString("x")))}, everything {everything}, unitless {unitless}, end of turn {endOfTurn}",
 				game =>
 				{
-					// No quit left from an earlier turn; the end of the turn waits for a key (option 4) also without units
+					// No quit left from an earlier turn
 					game.Processor.EmitUInt16(0x3b01, 0xd806, (ushort)(everything ? 1 : 0));
 					game.Processor.EmitUInt16(0x3b01, 0xdc48, 0);
-					game.World.SessionPrefMarkers |= 4;
+					game.World.SessionPrefMarkers = (short)(endOfTurn ? game.World.SessionPrefMarkers | 4 : game.World.SessionPrefMarkers & ~4);
 					game.Processor.EmitUInt16(0x3b01, 0xdf60, (ushort)(unitless ? 1 : 0));
 
 					for (int troop = 0; unitless && troop < 128; troop++)

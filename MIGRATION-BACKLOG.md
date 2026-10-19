@@ -898,13 +898,21 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   klawisz; Tab też w turze bez ruchów, 0xdf60). Ocalałe: 0xdcfc = 2 (równoważne: tylko `== 0` i zaraz zerowane), 0x4 `^ 3`
   (równoważne: tylko porównanie z zerem, po turze martwe), SI `<< 2` przy nazwie w gazecie rewolucji (tekst widać tylko na
   ekranie gazety, test go nie łapie).
+- Porcja 111 (2026-10-19): dwudziesty drugi kawałek `HandlePlayerTurn` – koniec spojrzenia na jednostkę i koniec tury
+  (L3c40 – koniec): `ContinueOrFinishUnit` (jednostka z ruchami idzie dalej, chyba że 0x28 albo wyjście; inaczej koniec ruchu,
+  0x1e = 0 przy czekaniu), `BurnPlaneFuel` (paliwo w mieście / na lotniskowcu, spalanie, utrata), `MayLoseTrireme` (trirema
+  człowieka bez lądu wokół ginie raz na dwa); koniec przebiegu (drugi przebieg, spojrzenie na koniec tury przy opcji 4 albo
+  bez klawisza jednostki, linia „end of turn” znika) zostaje w `HandlePlayerTurn` jako kilka linii. Test
+  `BatchHundredElevenDifferentialTests` (samolot na lądzie / w mieście / na lotniskowcu, trirema na pełnym morzu / przy lądzie,
+  jednostka lądowa czekająca 'w' z ruchami z 0xdf60); `BatchHundredTen` dostał losową opcję „End of Turn”. Wszystkie mutacje
+  złapane (pusty slot `Kind == 0xff` łapie test rozkazów i ruchów).
 
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
 (`HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-19 (po porcji 110): 2 metody w stylu asm (`HandlePlayerTurn`, `HandleCity`); `ShiftAIUnit` gotowa. `HandlePlayerTurn` przepisywana kawałkami od początku (następny: L3c40 (następne spojrzenie: paliwo samolotów, trirema), L3e4e / L3ea1 (koniec tury); testy z `HumanTurnScript`). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
+Stan 2026-10-19 (po porcji 111): 2 metody w stylu asm (`HandlePlayerTurn`, `HandleCity`); `ShiftAIUnit` gotowa. `HandlePlayerTurn` przepisywana kawałkami od początku (zostaje szkielet pętli L013c – L0d0a z etykietami: przebiegi po jednostkach). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
