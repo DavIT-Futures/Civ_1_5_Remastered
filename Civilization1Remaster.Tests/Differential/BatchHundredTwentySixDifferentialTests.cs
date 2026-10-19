@@ -296,6 +296,88 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 			CheckCases(bay, SplitCases, ways);
 	}
 
+	private static Action<GameEngine, short> Diag(bool on) => (game, town) =>
+		game.World.DiagMarkers = (short)(on ? game.World.DiagMarkers | 2 : game.World.DiagMarkers & ~2);
+
+	private static Action<GameEngine, short> Knows(int advance, bool known) => (game, town) =>
+	{
+		ushort[] science = game.World.Participants[game.World.Towns[town].ParticipantIdx].FoundScienceMarkers;
+		science[advance >> 4] = (ushort)(known ? science[advance >> 4] | (1 << (advance & 0xf)) : science[advance >> 4] & ~(1 << (advance & 0xf)));
+	};
+
+	private static Action<GameEngine, short> Wonder(int wonder, bool here) => (game, town) =>
+		game.World.MarvelTownIdx[wonder] = (short)(here ? town : -1);
+
+	private static Action<GameEngine, short> Size(sbyte size) => (game, town) => game.World.Towns[town].TrueExtent = size;
+
+	private static readonly Action<GameEngine, short> TabOne = (game, town) => HumanTurnScript.Install(game,
+		[new HumanTurnScript.Input(0, 1, 144, 110), new HumanTurnScript.Input(0x1b), new HumanTurnScript.Input(0x1b)]);
+
+	/// <summary>The first unit of the owner made an attack unit of the city, away from it</summary>
+	private static readonly Action<GameEngine, short> UnitAway = (game, town) =>
+	{
+		var city = game.World.Towns[town];
+		int troop = Enumerable.Range(0, 128).First(idx => game.Processor.Storage.PullUInt8(0x3b01, (ushort)(UnitMemory.Address(city.ParticipantIdx, idx) + UnitMemory.Kind)) != 0xff);
+		ushort unit = UnitMemory.Address(city.ParticipantIdx, troop);
+		game.Processor.EmitUInt8(0x3b01, (ushort)(unit + UnitMemory.Kind), 2);
+		game.Processor.EmitUInt8(0x3b01, (ushort)(unit + UnitMemory.BaseTown), (byte)town);
+
+		if (game.Processor.Storage.PullUInt8(0x3b01, (ushort)(unit + UnitMemory.Horiz)) == (byte)city.Place.X)
+			game.Processor.EmitUInt8(0x3b01, (ushort)(unit + UnitMemory.Horiz), (byte)((city.Place.X + 10) % 80));
+	};
+
+	private static readonly CityCase[] HappinessCases =
+	{
+		// ApplyContentImprovements
+		new("colosseum", false, -1, Then(Diag(true), Size(12), Buildings(0x2000, 0x408)), Choice.Biggest),
+		new("cathedral, 0x1d known", false, -1, Then(Diag(true), Size(12), Buildings(0x400, 0x2008), Knows(0x1d, true), Wonder(9, false)), Choice.Biggest),
+		new("cathedral, 0x1d known, the wonder 9", false, -1, Then(Diag(true), Size(12), Buildings(0x400, 0x2008), Knows(0x1d, true), Wonder(9, true)), Choice.Biggest),
+		new("cathedral, 0x1d unknown", false, -1, Then(Diag(true), Size(12), Buildings(0x400, 0x2008), Knows(0x1d, false)), Choice.Biggest),
+		new("temple, 0x1a known", false, -1, Then(Diag(true), Size(12), Buildings(8, 0x2400), Knows(0x1a, true), Wonder(6, false)), Choice.Biggest),
+		new("temple, 0x19 known", false, -1, Then(Diag(true), Size(12), Buildings(8, 0x2400), Knows(0x1a, false), Knows(0x19, true), Wonder(6, false)), Choice.Biggest),
+		new("temple, neither", false, -1, Then(Diag(true), Size(12), Buildings(8, 0x2400), Knows(0x1a, false), Knows(0x19, false), Wonder(6, false)), Choice.Biggest),
+		new("temple and the wonder 6, 0x1a known", false, -1, Then(Diag(true), Size(12), Buildings(8, 0x2400), Knows(0x1a, true), Wonder(6, true)), Choice.Biggest),
+		new("temple and the wonder 6, 0x1a unknown", false, -1, Then(Diag(true), Size(12), Buildings(8, 0x2400), Knows(0x1a, false), Wonder(6, true)), Choice.Biggest),
+		new("city screen, tab 1, the temple alone", true, 1, Then(Diag(true), Buildings(8, 0x2400), Knows(0x1a, true), TabOne), Choice.Biggest),
+		new("city screen, tab 1, all three", true, 1, Then(Diag(true), Buildings(0x2408, 0), Knows(0x1d, true), Knows(0x1a, true), TabOne), Choice.Biggest),
+
+		// ApplyMilitaryHappiness
+		new("despotism, units in the city", false, -1, Then(Diag(true), Size(12), Level(1, 1)), Choice.Biggest),
+		new("communism, units in the slots", false, -1, Then(Diag(true), Size(12), Level(1, 3), (game, town) =>
+		{
+			game.World.Towns[town].Unfamiliar[0] = 2;
+			game.World.Towns[town].Unfamiliar[1] = 0xe;
+		}), Choice.Biggest),
+		new("republic, units away", false, -1, Then(Diag(true), Size(12), Level(1, 4), Wonder(16, false), UnitAway), Choice.Biggest),
+		new("republic, units away, the wonder 16", false, -1, Then(Diag(true), Size(12), Level(1, 4), Wonder(16, true), UnitAway), Choice.Biggest),
+		new("democracy, units away", false, -1, Then(Diag(true), Size(12), Level(1, 5), Wonder(16, false), UnitAway), Choice.Biggest),
+		new("communism, units in the slots, last city", false, -1, Then(Diag(true), Size(12), Level(1, 3), (game, town) =>
+		{
+			game.World.Towns[town].Unfamiliar[0] = 2;
+			game.World.Towns[town].Unfamiliar[1] = 0xe;
+		}), Choice.Last),
+		new("human, despotism, city screen tab 1", true, 1, Then(Diag(true), Level(1, 1), TabOne), Choice.Biggest),
+		new("human, democracy, city screen tab 1", true, 1, Then(Diag(true), Level(1, 5), Wonder(16, false), TabOne), Choice.Biggest),
+
+		// ApplyWonderHappiness
+		new("the wonders 2 and 0x15", false, -1, Then(Diag(true), Wonder(2, true), Wonder(0x15, true)), Choice.Biggest),
+		new("the city of the wonder 11", false, -1, Then(Diag(true), Size(12), Wonder(11, true)), Choice.Biggest),
+		new("the wonder 13 on its continent", false, -1, Then(Diag(true), Size(12), Wonder(13, true)), Choice.Biggest),
+		new("the wonder 13 elsewhere", false, -1, Then(Diag(true), Size(12), (game, town) =>
+			game.World.MarvelTownIdx[13] = (short)OtherCity(game, town, true)), Choice.Biggest),
+		new("without the bit 2", false, -1, Then(Diag(false), Size(12)), Choice.Biggest),
+		new("city screen, tab 1, the wonders", true, 1, Then(Diag(true), Wonder(2, true), Wonder(11, true), TabOne), Choice.Biggest),
+	};
+
+	[Fact]
+	public void HandleCityHappinessCasesMatchOriginalCode()
+	{
+		HashSet<string> ways = [];
+
+		foreach (int bay in new[] { 5, 9 })
+			CheckCases(bay, HappinessCases, ways);
+	}
+
 	[Fact]
 	public void HandleCityTurnCasesMatchOriginalCode()
 	{

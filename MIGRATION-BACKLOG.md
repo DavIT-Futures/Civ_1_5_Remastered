@@ -1013,13 +1013,21 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   podwaja; zadowoleni 0x70e4: człowiek wg poziomu, ustroju, liczby miast i numeru miasta, komputer rozmiar - 3; 0x6542 nadmiar;
   przetasowanie), `ApplyLuxuries` (0x70e2 = połowa luksusów, drugie przetasowanie, obywatele na zakładce 1 ekranu miasta).
   `CityCase` dostał wybór miasta (pierwsze / ostatnie / największe). Mutacje: 14, wszystkie złapane (4 po celowanych przypadkach).
+- Porcja 128 (2026-10-19), trzy kawałki `HandleCity` (L2cce – L32e0): `ApplyContentImprovements` z `DrawContentIcon`
+  (koloseum 3; katedra przy odkryciu 0x1d 4, z cudem 9 6; świątynia 2 przy 0x1a, inaczej 1 przy 0x19, cud 6 tyle samo
+  jeszcze raz; ikony na zakładce 1), `ApplyMilitaryHappiness` (poniżej republiki do 3 jednostek atakujących w mieście – stos
+  najwyżej 32 kroki i sloty – uspokaja; w republice i demokracji każda jednostka atakująca poza miastem niezadowala, w
+  demokracji podwójnie, w republice nie z cudem 16), `ApplyWonderHappiness` (cuda 2 i 0x15 +1 szczęśliwy, miasto cudu 11 bez
+  niezadowolonych, cud 13 -2 na swoim kontynencie; bez bitu 2 `DiagMarkers` zadowolenie i luksusy zerowane). Test
+  `HandleCityHappinessCasesMatchOriginalCode` (27 przypadków). Mutacje: 15, ocalała jedna – cud 6 (2 albo 1 zależnie od 0x1a):
+  cud nie zadziałał w żadnym przypadku (prawdopodobnie przestarzały w zapisach gier).
 
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
 (`HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-19 (po porcji 127): 1 metoda w stylu asm (`HandleCity`, 8428 linii); `ShiftAIUnit` i `HandlePlayerTurn` gotowe. `HandleCity(miasto, znacznik)`: -1 tylko liczy, 0 tura miasta, 1 ekran miasta; przepisywać kawałkami od początku (po porcji 127: następny od L2cce – świątynie i zadowolenie). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
+Stan 2026-10-19 (po porcji 128): 1 metoda w stylu asm (`HandleCity`, 8428 linii); `ShiftAIUnit` i `HandlePlayerTurn` gotowe. `HandleCity(miasto, znacznik)`: -1 tylko liczy, 0 tura miasta, 1 ekran miasta; przepisywać kawałkami od początku (po porcji 128: następny od L32e0). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
