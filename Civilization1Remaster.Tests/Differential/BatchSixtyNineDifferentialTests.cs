@@ -18,6 +18,7 @@ namespace Civilization1Remaster.Tests.Differential
 		{
 			int step = 0;
 
+			// (making a world takes minutes while the whole suite runs in parallel: a longer limit of a scenario)
 			Check(1, 2, (chance, pair) =>
 			{
 				bool earthMap = step++ == 0;
@@ -61,7 +62,7 @@ namespace Civilization1Remaster.Tests.Differential
 					},
 					Register.Kept,
 					game => earthMap ? "earth" : "generated");
-			}, output, ["earth", "generated"]);
+			}, output, ["earth", "generated"], runSeconds: 900);
 		}
 
 		[Fact]

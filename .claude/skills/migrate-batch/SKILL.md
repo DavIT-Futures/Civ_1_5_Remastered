@@ -15,7 +15,9 @@ Narzędzia (`Civilization1Remaster.Tests/Differential/Reference`, uruchamiać z 
 - `extract_reference.py <commit HEAD> <plik .cs> <właściwość GameEngine> <metody…>` – kopia oryginału do testu (właściwości:
   `grep -n "public <Klasa> " Civilization1Remaster.Core/GameEngine.cs`; nową klasę `XReference` dopisać do `ReferenceClasses.cs`; stałe klasy, np. `HandBayTally`, trzeba w kopii poprzedzić nazwą klasy);
 - `replace_methods.py <plik .cs> <plik z metodami>` – podmienia metody po nazwie, nowe pomocnicze wstawia za poprzednią;
-- `check_mutations.py <mutations.json>` – kontrola mutacjami z zabezpieczeniem pracy patchem.
+- `check_mutations.py <mutations.json> [--jobs N]` – kontrola mutacjami, równolegle (domyślnie 4) w trwałych kopiach repo
+  `.mutants/w1…` (git worktree, budowanie przyrostowe); drzewo robocze nietknięte, więc można dalej pracować (nie budować
+  tylko `Civilization1Remaster.Tests` w drzewie, gdy biegnie pełny zestaw).
 
 Testy zawsze w **Release** z `-parallelMode all` (ok. 7 razy szybciej niż Debug, te same wyniki, także golden master):
 `dotnet build Civilization1Remaster.Tests -c Release -v q -nologo`, potem
@@ -54,7 +56,14 @@ Testy zawsze w **Release** z `-parallelMode all` (ok. 7 razy szybciej niż Debug
    Ekrany w trakcie (przewijanie, animacja) widać w śladzie tylko przy `keyboard.KeyTyping` – można go wołać z własnego
    `game.Processor.InputStarved` przy każdym zapytaniu o klawisz (porcja 72).
    Uruchomić: `$T -parallelMode all -class "*BatchNN*" 2>&1 | grep -E "\[FAIL\]|Total:|differs|^\s+(reg|cpu|mem|state|screen|trace|call)[.:]|No scenario"`.
-   Test wisi: odtworzyć sekwencję na jednej `HeadlessGame` (w `DifferentialPair` wyjątki są przechwytywane), z zegarem
+   **Zawieszenia:** `DifferentialPair.Run` przerywa scenariusz po `RunSeconds` (120 s; 30 s nie starczało tworzeniu świata przy pełnym zestawie) na grę (`ScenarioHangException` z
+   dziennika albo z pulsu CPU co 0x40000 odczytów pamięci) i test pada z nazwą scenariusza i ostatnią funkcją – nie wisi
+   godzinami. Test, który zmienia stan (budynki, jednostki, ustrój, przesunięte miasta), uruchamiać z `fresh: true` w `Check`:
+   każdy scenariusz startuje z punktu kontrolnego po wczytaniu (`GameCheckpoint`: głęboka kopia `GameState`, pamięć, rejestry,
+   ekrany; ok. 0,1 s); bez tego zmiany kumulują się i oryginał zapętla się na nienaturalnym stanie (porcja 120).
+   Nowe losowania dopisywać na końcu `make`, żeby nie przesuwać scenariuszy, które już łapały mutacje.
+   Szukanie miejsca pętli: `HeadlessGame.StartProbe(plik)` (co 2 s liczba wywołań i ostatnia funkcja; stały licznik = pętla
+   bez wywołań funkcji gry). Dawniej: odtworzyć sekwencję na jednej `HeadlessGame` (w `DifferentialPair` wyjątki są przechwytywane), z zegarem
    wołającym `Processor.WhenApplicationQuits()` (wyjątek ze stosem) i `ScopeListener` na wszystkich dziennikach; scenariusz,
    w którym obie wersje rzucają wyjątek, zostawia grę w połowie – następne scenariusze mogą wtedy wisieć (porcja 55).
    Gdy obie wersje rzucą ten sam wyjątek, a ramka zostaje, test wygląda na zgodny – etykieta gałęzi powinna potwierdzać,
@@ -66,7 +75,11 @@ Testy zawsze w **Release** z `-parallelMode all` (ok. 7 razy szybciej niż Debug
    Space, Enter, '1', Escape – bez Escape wskaźnik GoTo albo wybrana jednostka czeka na klawisze bez końca); rozkazy, których
    jednostka nie wykona (rozkazy osadników dla innych, bity rozkazów samolotu), zapętlają turę (limit 20000 klawiszy, ok.
    40 s). Porównywać ramkę i 0x80 bajtów stosu pod nią (`ShiftUnit` zostawia tam SI dla `ShiftAIUnit`).
-6. Mutacje: `mutations.json` z jedną mutacją na funkcję (w gałęzi trudnej do trafienia), `python …/check_mutations.py mutations.json` (limit 600 s na test: zawieszony mutant = CAUGHT (hang)).
+6. Mutacje: `mutations.json` z jedną mutacją na funkcję (w gałęzi trudnej do trafienia), `python …/check_mutations.py mutations.json`
+   (zawieszony scenariusz pada po 120 s = CAUGHT; proces dłuższy niż 400 s jest zabijany z dziećmi = CAUGHT (hang)).
+   Budżet: 15 – 25 mutacji na porcję (jedna mutacja ≈ 10 s budowania + czas testu; 4 workery). Po zmianie testu powtarzać tylko
+   ocalałe i mutacje gałęzi, których dotyczy zmiana – nigdy całego zbioru z poprzednich porcji (godziny, porcje 116 – 119).
+   Długie polecenia zawsze w tle (`run_in_background`), nie przez `timeout` w Bash na pierwszym planie.
    Każda musi być CAUGHT; SURVIVED = albo słaby test (dodać scenariusze), albo mutacja nieosiągalna (zmienić). Mutacja musi
    leżeć w funkcji, którą sprawdza podany test (porcje 68 / 70: mutacje w `SeizeCity` / `FocusMapView` „przeżywały” w testach
    innych funkcji).

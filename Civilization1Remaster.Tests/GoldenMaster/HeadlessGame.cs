@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.IO;
@@ -67,6 +67,7 @@ namespace Civilization1Remaster.Tests.GoldenMaster
 				this.Engine.VideoCard.Displays.Select(display => GameSnapshot.Fnv(display.Datum.PictureStorage).ToString("x8"))));
 
 			this.Engine.Journal.ScopeListener = CountCall;
+			this.processor.Heartbeat = CheckDeadline;
 		}
 
 		public GameEngine Engine { get; }
@@ -219,6 +220,12 @@ namespace Civilization1Remaster.Tests.GoldenMaster
 
 		private string lastScope = "";
 		private long scopeTally = 0;
+
+		/// <summary>
+		/// When set (Environment.TickCount64), a game function called after it stops the run with a ScenarioHangException:
+		/// an endless loop of the original or of a mutant fails the differential test at once instead of running for hours
+		/// </summary>
+		public long Deadline { get; set; }
 		private System.Threading.Timer? probe;
 
 		/// <summary>Diagnostics: writes the last called function every few seconds into a file (CIV1_GOLDEN_MASTER_TRACE=1)</summary>
@@ -233,8 +240,18 @@ namespace Civilization1Remaster.Tests.GoldenMaster
 
 		public string LastScope => this.lastScope;
 
+		private void CheckDeadline()
+		{
+			if (this.Deadline != 0 && Environment.TickCount64 > this.Deadline)
+			{
+				this.Deadline = 0;
+				throw new ScenarioHangException(this.lastScope);
+			}
+		}
+
 		private void CountCall(string scope)
 		{
+			CheckDeadline();
 			this.lastScope = scope;
 			this.Trace?.Add(scope.Replace(this.folder, "<game folder>", StringComparison.Ordinal));
 			this.scopeTally++;
@@ -262,5 +279,10 @@ namespace Civilization1Remaster.Tests.GoldenMaster
 			{
 			}
 		}
+	}
+
+	/// <summary>A run of a differential scenario took longer than its deadline (an endless loop)</summary>
+	public sealed class ScenarioHangException(string lastScope) : Exception($"the run took too long (endless loop?), last call: {lastScope}")
+	{
 	}
 }

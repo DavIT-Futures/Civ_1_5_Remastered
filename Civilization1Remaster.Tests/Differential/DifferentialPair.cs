@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -18,25 +18,64 @@ namespace Civilization1Remaster.Tests.Differential
 	{
 		public DifferentialPair(string gameFolder, int bay, uint randomSeed = GoldenMasterTests.RandomSeed, int[]? script = null)
 		{
+			this.gameFolder = gameFolder;
+			this.bay = bay;
+			this.randomSeed = randomSeed;
+			this.script = script;
+
+			Load();
+		}
+
+		private readonly string gameFolder;
+		private readonly int bay;
+		private readonly uint randomSeed;
+		private readonly int[]? script;
+
+		/// <summary>The game that runs the original code</summary>
+		public HeadlessGame Original { get; private set; } = null!;
+
+		/// <summary>The game that runs the rewritten code</summary>
+		public HeadlessGame Rewritten { get; private set; } = null!;
+
+		private GameCheckpoint? checkpoint;
+
+		/// <summary>
+		/// Both games back to the state after loading (the first call takes the checkpoint): a scenario that changes the state
+		/// then starts from the saved game, not from what the scenarios before it left (their changes add up to states the
+		/// original may loop on)
+		/// </summary>
+		public void Restore()
+		{
+			if (this.checkpoint == null)
+			{
+				this.checkpoint = new GameCheckpoint(this.Original);
+				return;
+			}
+
+			this.checkpoint.Restore(this.Original);
+			this.checkpoint.Restore(this.Rewritten);
+
+			string? difference = Compare("after the checkpoint", null, null, Register.None, null);
+
+			if (difference != null)
+				throw new InvalidOperationException(difference);
+		}
+
+		private void Load()
+		{
 			string saves = Path.Combine(GoldenMasterTests.SourceFolder(), "Saves");
 
-			this.Original = new HeadlessGame(gameFolder, saves, script);
-			this.Rewritten = new HeadlessGame(gameFolder, saves, script);
+			this.Original = new HeadlessGame(this.gameFolder, saves, this.script);
+			this.Rewritten = new HeadlessGame(this.gameFolder, saves, this.script);
 
-			this.Original.LoadAutosave(bay, randomSeed);
-			this.Rewritten.LoadAutosave(bay, randomSeed);
+			this.Original.LoadAutosave(this.bay, this.randomSeed);
+			this.Rewritten.LoadAutosave(this.bay, this.randomSeed);
 
 			string? difference = Compare("after loading", null, null, Register.None, null);
 
 			if (difference != null)
 				throw new InvalidOperationException(difference);
 		}
-
-		/// <summary>The game that runs the original code</summary>
-		public HeadlessGame Original { get; }
-
-		/// <summary>The game that runs the rewritten code</summary>
-		public HeadlessGame Rewritten { get; }
 
 		/// <summary>Registers that a function leaves for its caller</summary>
 		[Flags]
@@ -55,6 +94,13 @@ namespace Civilization1Remaster.Tests.Differential
 			/// <summary>What every function of the original keeps: SI, DI, BP, SP</summary>
 			Kept = Source | Dest | Frame | Stack,
 		}
+
+		/// <summary>
+		/// The longest a run of one scenario may take in one game (a scenario takes well under a second; making a world or the
+		/// opening tens of seconds while the whole suite runs in parallel): an endless loop then fails the test with the
+		/// scenario and the last call instead of hanging for hours
+		/// </summary>
+		public int RunSeconds { get; set; } = 120;
 
 		/// <summary>Changes both games in the same way (the setup of a scenario)</summary>
 		public void Prepare(Action<GameEngine> setup)
@@ -76,8 +122,22 @@ namespace Civilization1Remaster.Tests.Differential
 			this.Original.Trace = new List<string>();
 			this.Rewritten.Trace = new List<string>();
 
+			this.Original.Deadline = Environment.TickCount64 + RunSeconds * 1000L;
 			Exception? originalFailure = Invoke(original, this.Original.Engine);
+			this.Original.Deadline = 0;
+
+			this.Rewritten.Deadline = Environment.TickCount64 + RunSeconds * 1000L;
 			Exception? rewrittenFailure = Invoke(rewritten, this.Rewritten.Engine);
+			this.Rewritten.Deadline = 0;
+
+			if (originalFailure is ScenarioHangException || rewrittenFailure is ScenarioHangException)
+			{
+				this.Original.Trace = null;
+				this.Rewritten.Trace = null;
+
+				return $"{scenario}: hangs (more than {RunSeconds} s) – original: {originalFailure?.Message ?? "finished"}; " +
+					$"rewritten: {rewrittenFailure?.Message ?? "finished"}";
+			}
 
 			List<string> originalTrace = this.Original.Trace;
 			List<string> rewrittenTrace = this.Rewritten.Trace;

@@ -238,8 +238,22 @@ namespace Civilization1Remaster.Emulation
 			this.allowSignal = false;
 		}
 
+		/// <summary>
+		/// When set, called every 0x40000 memory reads (the tests check the time of a scenario in it: endless loops that call
+		/// no game function fail then too). It must not change the state of the game.
+		/// </summary>
+		public Action? Heartbeat { get; set; }
+
+		private int heartbeatSteps;
+
 		public void PumpMessages()
 		{
+			if (this.Heartbeat != null && ++this.heartbeatSteps >= 0x40000)
+			{
+				this.heartbeatSteps = 0;
+				this.Heartbeat();
+			}
+
 			if (this.appQuit)
 			{
 				throw new ApplicationExitException();

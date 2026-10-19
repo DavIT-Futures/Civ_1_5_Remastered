@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using Civilization1Remaster.Game;
@@ -18,18 +18,24 @@ namespace Civilization1Remaster.Tests.Differential
 	{
 		/// <param name="make">Makes the next scenario (from the state of the original game), or null to skip one</param>
 		/// <param name="branches">Every one of them must be met by some scenario</param>
+		/// <param name="fresh">Every scenario starts from the saved game (for scenarios that change the state)</param>
+		/// <param name="runSeconds">The longest a scenario may run in one game before it counts as hanging</param>
 		public static void Check(int bay, int scenarioTally, Func<Random, DifferentialPair, Scenario?> make, ITestOutputHelper output,
-			string[] branches, int[]? script = null)
+			string[] branches, int[]? script = null, bool fresh = false, int runSeconds = 120)
 		{
 			string? gameFolder = GoldenMasterTests.FindGameFolder();
 			Assert.SkipWhen(gameFolder == null, "The CIVILIZATION game folder (the original game files) was not found");
 
-			using DifferentialPair pair = new DifferentialPair(gameFolder!, bay, script: script);
+			using DifferentialPair pair = new DifferentialPair(gameFolder!, bay, script: script) { RunSeconds = runSeconds };
 			Dictionary<string, int> met = new Dictionary<string, int>(StringComparer.Ordinal);
 			Random chance = new Random(bay);
 
 			for (int scenarioIdx = 0; scenarioIdx < scenarioTally; scenarioIdx++)
 			{
+				// (fresh: every scenario starts from the state after loading)
+				if (fresh)
+					pair.Restore();
+
 				Scenario? scenario = make(chance, pair);
 
 				if (scenario == null)
