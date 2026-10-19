@@ -378,6 +378,64 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 			CheckCases(bay, HappinessCases, ways);
 	}
 
+	/// <summary>The first units of the owner made units of the city (the kind; settlers every third one when asked)</summary>
+	private static Action<GameEngine, short> Supported(int count, byte kind, bool settlers) => (game, town) =>
+	{
+		var city = game.World.Towns[town];
+		var units = Enumerable.Range(0, 128).Where(idx => game.Processor.Storage.PullUInt8(0x3b01, (ushort)(UnitMemory.Address(city.ParticipantIdx, idx) + UnitMemory.Kind)) != 0xff).Take(count).ToList();
+
+		for (int idx = 0; idx < units.Count; idx++)
+		{
+			ushort unit = UnitMemory.Address(city.ParticipantIdx, units[idx]);
+			game.Processor.EmitUInt8(0x3b01, (ushort)(unit + UnitMemory.Kind), (byte)(settlers && idx % 3 == 0 ? 0 : kind));
+			game.Processor.EmitUInt8(0x3b01, (ushort)(unit + UnitMemory.BaseTown), (byte)town);
+		}
+	};
+
+	private static readonly CityCase[] SupportCases =
+	{
+		new("computer, small city, many units", false, 0, Then(Size(1), Supported(12, 2, false))),
+		new("human, small city, many units", true, 0, Then(Size(1), Supported(12, 2, false))),
+		new("computer, republic, flag 1, units", false, 0, Then(Level(1, 4), (game, town) => game.World.Towns[town].ConditionMarker |= 1,
+			Supported(10, 2, true)), Choice.Biggest),
+		new("computer, democracy, flag 1, behind the human (0x8078)", false, 0, Then(Level(1, 5), (game, town) =>
+		{
+			game.World.Towns[town].ConditionMarker |= 1;
+			game.Processor.EmitUInt16(0x3b01, 0x8078, 1);
+			game.World.Participants[game.World.Towns[town].ParticipantIdx].FoundScienceTally = 0;
+		}, Supported(10, 2, false)), Choice.Biggest),
+		new("computer, monarchy, bit 2, units", false, 0, Then(Level(1, 2), Diag(true), Supported(8, 2, true)), Choice.Biggest),
+		new("city screen, units and settlers", true, 1, Then(Level(1, 2), Supported(8, 2, true)), Choice.Biggest),
+		new("city screen, democracy, units away", true, 1, Then(Level(1, 5), Wonder(16, false), Supported(8, 2, false), UnitAway), Choice.Biggest),
+		new("city screen, despotism, settlers", true, 1, Then(Level(1, 1), Supported(6, 0, false)), Choice.Biggest),
+		new("computer, republic, flag 1, settlers only", false, 0, Then(Level(1, 4), (game, town) => game.World.Towns[town].ConditionMarker |= 1,
+			Supported(10, 0, false)), Choice.Biggest),
+		new("city screen, many units in the city", true, 1, (game, town) =>
+		{
+			// Eight units of the human moved into the city
+			var city = game.World.Towns[town];
+			var units = Enumerable.Range(0, 128).Where(idx => game.Processor.Storage.PullUInt8(0x3b01, (ushort)(UnitMemory.Address(city.ParticipantIdx, idx) + UnitMemory.Kind)) != 0xff).Take(8);
+
+			foreach (int troop in units)
+			{
+				ushort unit = UnitMemory.Address(city.ParticipantIdx, troop);
+				game.Processor.EmitUInt8(0x3b01, (ushort)(unit + UnitMemory.Horiz), (byte)city.Place.X);
+				game.Processor.EmitUInt8(0x3b01, (ushort)(unit + UnitMemory.Vert), (byte)city.Place.Y);
+			}
+		}, Choice.Biggest),
+		new("city screen, the supported units tab", true, 1, Then(Supported(8, 2, true), (game, town) => HumanTurnScript.Install(game,
+			[new HumanTurnScript.Input(0, 1, 110, 110), new HumanTurnScript.Input(0x1b), new HumanTurnScript.Input(0x1b)])), Choice.Biggest),
+	};
+
+	[Fact]
+	public void HandleCitySupportCasesMatchOriginalCode()
+	{
+		HashSet<string> ways = [];
+
+		foreach (int bay in new[] { 5, 9 })
+			CheckCases(bay, SupportCases, ways);
+	}
+
 	[Fact]
 	public void HandleCityTurnCasesMatchOriginalCode()
 	{

@@ -2235,6 +2235,321 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
+		/// The start of the units of the city (again after a unit was disbanded): 0x4e the units drawn in the city, 0xdeb8
+		/// the support (the special slots in use first), 0xdeb6, 0xd2f6 the support above the size; the places on the city
+		/// screen (0xf6 / 0xfc the supported units, 0xfa / 0x100 the units in the city). The locals of HandleCity and BX, CX,
+		/// SI are used as in the original.
+		/// </summary>
+		private void StartUnitSupport(short townIdx)
+		{
+			City town = this.owner.World.Towns[townIdx];
+
+			this.processor.RegAcc.Value16 = 0;
+			this.processor.EmitLocalWord(0x4e, 0);
+			this.processor.EmitGlobalWord(0xdeb8, 0);
+			this.processor.EmitGlobalWord(0xdeb6, 0);
+			this.processor.EmitGlobalWord(0xd2f6, 0);
+
+			for (ushort slot = 0; slot < 2; slot++)
+			{
+				this.processor.EmitLocalWord(0xea, slot);
+				this.processor.RegSource.Value16 = (ushort)(townIdx * 0x1c);
+				this.processor.RegBase.Value16 = slot;
+
+				if ((byte)town.Unfamiliar[slot] != 0xff)
+					this.processor.EmitGlobalWord(0xdeb8, (ushort)(this.processor.PullGlobalWord(0xdeb8) + 1));
+			}
+
+			this.processor.EmitLocalWord(0xea, 2);
+			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
+
+			if (town.TrueExtent < (short)this.processor.PullGlobalWord(0xdeb8))
+			{
+				this.processor.RegCount.Value16 = (ushort)(this.processor.PullGlobalWord(0xdeb8) - town.TrueExtent);
+				this.processor.EmitGlobalWord(0xd2f6, this.processor.RegCount.Value16);
+			}
+
+			this.processor.EmitLocalWord(0xf6, 8);
+			this.processor.EmitLocalWord(0xfc, 0x45);
+			this.processor.EmitLocalWord(0xfa, 0x64);
+			this.processor.EmitLocalWord(0x100, 0x74);
+		}
+
+		/// <summary>
+		/// The unit 0xea of the owner: one supported by the city adds its support (but diplomats and caravans: above the size,
+		/// or every one for a government above monarchy with the bit 2 of DiagMarkers), may be disbanded in the turn and is
+		/// drawn among the supported units of the city screen; every unit in the city is drawn in its list. True when a unit
+		/// was disbanded for lack of shields (all the units are counted again).
+		/// </summary>
+		private bool SupportUnit(short townIdx, short marker)
+		{
+			City town = this.owner.World.Towns[townIdx];
+			short owner = (short)this.processor.PullGlobalWord(0x6548);
+			short troopIdx = (short)this.processor.PullLocalWord(0xea);
+
+			this.processor.RegBase.Value16 = (ushort)(owner * UnitMemory.ParticipantStride);
+			this.processor.RegSource.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
+
+			if (this.troops.Pull(owner, troopIdx, UnitMemory.Kind) != 0xff && this.troops.PullSigned(owner, troopIdx, UnitMemory.BaseTown) == townIdx)
+			{
+				if (this.troops.PullSigned(owner, troopIdx, UnitMemory.Kind) < 0x1a)
+				{
+					this.processor.EmitGlobalWord(0xdeb8, (ushort)(this.processor.PullGlobalWord(0xdeb8) + 1));
+
+					if (town.TrueExtent < (short)this.processor.PullGlobalWord(0xdeb8) ||
+						(this.owner.World.Participants[owner].RegimeKind > 1 && (this.owner.World.DiagMarkers & 2) != 0))
+					{
+						this.processor.EmitGlobalWord(0xd2f6, (ushort)(this.processor.PullGlobalWord(0xd2f6) + 1));
+					}
+				}
+
+				if (marker == 0 && DisbandUnsupportedUnit(townIdx))
+					return true;
+
+				if (marker == 1)
+					DrawSupportedUnit(townIdx);
+			}
+
+			DrawUnitInCity(marker);
+			return false;
+		}
+
+		/// <summary>
+		/// In the turn: without shields for the support (or for a computer player in a republic or democracy, its city with
+		/// the flag 1, every eighth turn), the unit of the city farthest away (but diplomats and caravans) goes: for lack of
+		/// shields it is disbanded (the human is told) and true is returned; else a land unit other than settlers is disbanded
+		/// and the flag 1 cleared, unless 0x8078 and the owner knows fewer advances than the human (then 0xdb42 = -999). The
+		/// locals of HandleCity (0x108 the unit, 0xc8 its distance) and DI, SI are used as in the original.
+		/// </summary>
+		private bool DisbandUnsupportedUnit(short townIdx)
+		{
+			City town = this.owner.World.Towns[townIdx];
+			short owner = (short)this.processor.PullGlobalWord(0x6548);
+			short person = this.owner.World.PersonParticipantIdx;
+			bool enoughShields = (short)this.processor.PullGlobalWord(0x70dc) >= (short)this.processor.PullGlobalWord(0xd2f6);
+
+			if (enoughShields)
+			{
+				this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
+
+				if ((town.ConditionMarker & 1) == 0 || ((byte)(this.processor.PullLocalByte(0xea) + (byte)(this.owner.World.RoundTally & 0xff)) & 7) != 0 ||
+					owner == person || this.owner.World.Participants[owner].RegimeKind < 4)
+				{
+					return false;
+				}
+			}
+
+			// The unit of the city farthest away
+			this.processor.RegAcc.Value16 = 0xffff;
+			this.processor.EmitLocalWord(0x108, 0xffff);
+			this.processor.EmitLocalWord(0xc8, 0xffff);
+
+			for (ushort otherIdx = 0; otherIdx < 0x80; otherIdx++)
+			{
+				this.processor.EmitLocalWord(0x106, otherIdx);
+				short other = (short)otherIdx;
+				this.processor.RegBase.Value16 = (ushort)(owner * UnitMemory.ParticipantStride);
+				this.processor.RegSource.Value16 = (ushort)(otherIdx * UnitMemory.TroopStride);
+
+				if (this.troops.Pull(owner, other, UnitMemory.Kind) == 0xff || this.troops.PullSigned(owner, other, UnitMemory.BaseTown) != townIdx ||
+					this.troops.PullSigned(owner, other, UnitMemory.Kind) >= 0x1a)
+				{
+					continue;
+				}
+
+				this.processor.RegSource.Value16 = (ushort)(townIdx * 0x1c);
+				this.processor.RegDest.Value16 = (ushort)(otherIdx * UnitMemory.TroopStride + owner * UnitMemory.ParticipantStride);
+
+				this.owner.Helpers.ObtainDistance(town.Place.X, this.troops.PullSigned(owner, other, UnitMemory.Horiz),
+					town.Place.Y, this.troops.PullSigned(owner, other, UnitMemory.Vert));
+				this.processor.EmitLocalWord(0xb2, this.processor.RegAcc.Value16);
+				this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xc8);
+
+				if ((short)this.processor.PullLocalWord(0xb2) > (short)this.processor.PullLocalWord(0xc8))
+				{
+					this.processor.EmitLocalWord(0xc8, this.processor.PullLocalWord(0xb2));
+					this.processor.CopyLocalWord(0x106, 0x108);
+				}
+			}
+
+			this.processor.EmitLocalWord(0x106, 0x80);
+			short farthest = (short)this.processor.PullLocalWord(0x108);
+
+			if (enoughShields)
+			{
+				if (this.processor.PullGlobalWord(0x8078) != 0 &&
+					this.owner.World.Participants[owner].FoundScienceTally < this.owner.World.Participants[person].FoundScienceTally)
+				{
+					this.processor.EmitGlobalWord(0xdb42, 0xfc19);
+				}
+				else if ((short)this.processor.PullLocalWord(0xc8) > 0)
+				{
+					this.processor.RegBase.Value16 = (ushort)(owner * UnitMemory.ParticipantStride);
+					this.processor.RegSource.Value16 = (ushort)(farthest * UnitMemory.TroopStride);
+
+					if (this.troops.KindField(owner, farthest, UnitKindTable.LandGroup) == UnitKindTable.LandUnits && this.troops.Pull(owner, farthest, UnitMemory.Kind) != 0)
+					{
+						this.owner.UnitOps.EliminateUnit(owner, farthest);
+						this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
+						town.ConditionMarker &= 0xfe;
+					}
+				}
+
+				return false;
+			}
+
+			// No shields for the support: the unit is disbanded
+			if (owner == person)
+			{
+				this.processor.EmitGlobalByte(0xba06, 0);
+				this.owner.Conquest.ObtainCityLabel(townIdx);
+				this.owner.Libc.AppendText(0xba06, " can't support\n");
+				this.processor.RegBase.Value16 = (ushort)(owner * UnitMemory.ParticipantStride);
+				this.processor.RegSource.Value16 = (ushort)(farthest * UnitMemory.TroopStride);
+				this.processor.RegAcc.Value16 = (ushort)(this.troops.TroopKind(owner, farthest) * UnitKindTable.Stride + UnitKindTable.Origin);
+				this.owner.Libc.AppendText(0xba06, this.processor.RegAcc.Value16);
+				this.owner.Libc.AppendText(0xba06, ".\n Unit Disbanded.\n");
+				this.processor.EmitGlobalWord(0x2f9e, 3);
+				this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+			}
+
+			this.owner.UnitOps.EliminateUnit(owner, (short)this.processor.PullLocalWord(0x108));
+			return true;
+		}
+
+		/// <summary>
+		/// A unit supported by the city on the city screen (0xf6 / 0xfc its place, 8 a row, 3 rows): the shield of its support
+		/// (when some is paid), the food of settlers (two for a government above anarchy), the unhappy faces of an attack unit
+		/// away in a republic or democracy (two in a democracy; none in a republic with the wonder 16), the unit and its dot on
+		/// the mini map
+		/// </summary>
+		private void DrawSupportedUnit(short townIdx)
+		{
+			City town = this.owner.World.Towns[townIdx];
+			short owner = (short)this.processor.PullGlobalWord(0x6548);
+			short troopIdx = (short)this.processor.PullLocalWord(0xea);
+			Player player = this.owner.World.Participants[owner];
+
+			this.processor.RegBase.Value16 = (ushort)(owner * UnitMemory.ParticipantStride);
+			this.processor.RegSource.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
+
+			if (this.troops.PullSigned(owner, troopIdx, UnitMemory.Kind) < 0x1a)
+			{
+				if (this.processor.PullGlobalWord(0xd2f6) != 0)
+				{
+					this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa), this.processor.PullLocalSignedWord(0xf6) + 8,
+						this.processor.PullLocalSignedWord(0xfc) + 12, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((0x9 << 1) + 0xd4ce)));
+				}
+
+				if (this.troops.Pull(owner, troopIdx, UnitMemory.Kind) == 0)
+				{
+					// The food of settlers
+					this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa), this.processor.PullLocalSignedWord(0xf6),
+						this.processor.PullLocalSignedWord(0xfc) + 12, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((0x8 << 1) + 0xd4ce)));
+
+					if (player.RegimeKind >= 2)
+					{
+						this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa), this.processor.PullLocalSignedWord(0xf6) + 2,
+							this.processor.PullLocalSignedWord(0xfc) + 12, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((0x8 << 1) + 0xd4ce)));
+					}
+				}
+				else
+				{
+					// The unhappy faces of an attack unit away
+					PlayerEnjoysWonderEffect(owner, 16);
+					this.processor.RegCount.Value16 = (ushort)(this.processor.RegAcc.Value16 < 1 ? 1 : 0);
+					this.processor.EmitLocalWord(0xe8, this.processor.RegCount.Value16);
+
+					if (player.RegimeKind == 5)
+						this.processor.EmitLocalWord(0xe8, (ushort)(this.processor.PullLocalWord(0xe8) + 1));
+
+					if (player.RegimeKind >= 4 && this.troops.KindField(owner, troopIdx, UnitKindTable.AssaultPower) != 0 && this.processor.PullLocalWord(0xe8) != 0 &&
+						(this.troops.KindField(owner, troopIdx, UnitKindTable.LandGroup) == UnitKindTable.AirUnits ||
+							this.troops.Pull(owner, troopIdx, UnitMemory.Horiz) != (byte)(sbyte)town.Place.X ||
+							this.troops.Pull(owner, troopIdx, UnitMemory.Vert) != (byte)(sbyte)town.Place.Y))
+					{
+						this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa), this.processor.PullLocalSignedWord(0xf6),
+							this.processor.PullLocalSignedWord(0xfc) + 12, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((0xd << 1) + 0xd4ce)));
+
+						if ((short)this.processor.PullLocalWord(0xe8) > 1)
+						{
+							this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa), this.processor.PullLocalSignedWord(0xf6) + 2,
+								this.processor.PullLocalSignedWord(0xfc) + 12, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((0xd << 1) + 0xd4ce)));
+						}
+					}
+				}
+			}
+
+			// The unit and its dot on the mini map
+			this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa), this.processor.PullLocalSignedWord(0xf6), this.processor.PullLocalSignedWord(0xfc),
+				this.processor.PullUInt16(this.processor.SegData.Value16,
+					(ushort)(((this.troops.Pull(owner, troopIdx, UnitMemory.Kind) + (owner << 5) + 0x40) << 1) + 0xd4ce)));
+
+			this.processor.RegSource.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride + owner * UnitMemory.ParticipantStride);
+			RenderMiniMapDot(this.troops.Pull(owner, troopIdx, UnitMemory.Horiz), this.troops.Pull(owner, troopIdx, UnitMemory.Vert), 7);
+
+			this.processor.EmitLocalWord(0xf6, (ushort)(this.processor.PullLocalWord(0xf6) + 0x10));
+
+			if ((short)this.processor.PullLocalWord(0xf6) >= 0x70)
+			{
+				this.processor.EmitLocalWord(0xf6, 8);
+				this.processor.EmitLocalWord(0xfc, (ushort)(this.processor.PullLocalWord(0xfc) + 0x10));
+
+				if ((short)this.processor.PullLocalWord(0xfc) > 0x55)
+					this.processor.EmitLocalWord(0xfc, (ushort)(this.processor.PullLocalWord(0xfc) - 0x18));
+			}
+		}
+
+		/// <summary>
+		/// A unit standing in the city on the city screen with the tab 0 (at most 18, 6 a row; 0xfa / 0x100 the place): the unit
+		/// and the abbreviation of its home city; its number goes into the list at BP-0x74 (0x4e the count)
+		/// </summary>
+		private void DrawUnitInCity(short marker)
+		{
+			short owner = (short)this.processor.PullGlobalWord(0x6548);
+			short troopIdx = (short)this.processor.PullLocalWord(0xea);
+
+			if ((short)this.processor.PullLocalWord(0x4e) >= 0x12 || this.processor.PullGlobalWord(0x2496) != 0)
+				return;
+
+			this.processor.RegBase.Value16 = (ushort)(owner * UnitMemory.ParticipantStride);
+			this.processor.RegSource.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
+
+			if (this.troops.Pull(owner, troopIdx, UnitMemory.Kind) == 0xff || marker != 1 ||
+				this.troops.Pull(owner, troopIdx, UnitMemory.Horiz) != this.processor.PullLocalWord(0xd8) ||
+				this.troops.Pull(owner, troopIdx, UnitMemory.Vert) != this.processor.PullLocalWord(0xe4))
+			{
+				return;
+			}
+
+			this.owner.MapOps.RenderUnitSprite(owner, troopIdx, this.processor.PullLocalSignedWord(0xfa), this.processor.PullLocalSignedWord(0x100));
+
+			// The abbreviation of the home city (3 letters and a dot)
+			this.processor.EmitGlobalByte(0xba06, 0);
+			this.processor.RegBase.Value16 = (ushort)(owner * UnitMemory.ParticipantStride);
+			this.processor.RegSource.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
+			this.owner.Conquest.ObtainCityLabel(this.troops.PullSigned(owner, troopIdx, UnitMemory.BaseTown));
+			this.processor.EmitGlobalByte(0xba09, 0x2e);
+			this.processor.EmitGlobalByte(0xba0a, 0);
+			this.owner.TextPainter.RenderTextToScreen0(0xba06, this.processor.PullLocalSignedWord(0xfa), this.processor.PullLocalSignedWord(0x100) + 15, 0);
+
+			ushort drawn = this.processor.PullLocalWord(0x4e);
+			this.processor.EmitLocalWord(0x4e, (ushort)(drawn + 1));
+			this.processor.RegSource.Value16 = (ushort)(drawn << 1);
+			this.processor.RegAcc.Value16 = (ushort)troopIdx;
+			this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x74), this.processor.RegAcc.Value16);
+			this.processor.EmitLocalWord(0xfa, (ushort)(this.processor.PullLocalWord(0xfa) + 0x12));
+
+			this.processor.RegCount.Value16 = 6;
+
+			if ((short)this.processor.PullLocalWord(0x4e) % 6 == 0)
+			{
+				this.processor.EmitLocalWord(0xfa, 0x64);
+				this.processor.EmitLocalWord(0x100, (ushort)(this.processor.PullLocalWord(0x100) + 0x10));
+			}
+		}
+
+		/// <summary>
 		/// The start of HandleCity: the locals 0xb8, 0xda, 0xfe, 0xca and 0x2496 cleared, the mouse hidden, the 5 x 5 array
 		/// of the tiles around (BP-0xa6) cleared; 0x653e the city; the materials outside 0 - 999 cleared. Over the other
 		/// cities: 0xb2 the distance to the nearest one (at most 7), 0x6b30 the distance to the nearest palace of the owner
@@ -2540,573 +2855,15 @@ namespace Civilization1Remaster.Game
 			ApplyWonderHappiness(townIdx, marker);
 
 		L32e0:
-			this.processor.RegAcc.Value16 = 0x0;
-			this.processor.EmitLocalWord(0x4e, this.processor.RegAcc.Value16);
-			this.processor.EmitGlobalWord(0xdeb8, this.processor.RegAcc.Value16);
-			this.processor.EmitGlobalWord(0xdeb6, this.processor.RegAcc.Value16);
-			this.processor.EmitGlobalWord(0xd2f6, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0xea, 0x0);
-			goto L32fc;
+			// The units of the city: the support, disbanding (then all are counted again), the units on the city screen
+			StartUnitSupport(townIdx);
 
-		L32f8:
-			this.processor.EmitLocalWord(0xea, this.processor.IncrementWord(this.processor.PullLocalWord(0xea)));
-
-		L32fc:
-			this.processor.CompareWord(this.processor.PullLocalWord(0xea), 0x2);
-			if (this.processor.FlagSet.IsLess) goto L3306;
-			goto L3323;
-
-		L3306:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToSource((ushort)townIdx);
-			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0xea);
-			this.processor.CompareByte((byte)this.owner.World.Towns[townIdx].Unfamiliar[this.processor.PullLocalWord(0xea)], 0xff);
-			if (this.processor.FlagSet.IsNotEqual) goto L331c;
-			goto L3320;
-
-		L331c:
-			this.processor.EmitGlobalWord(0xdeb8, this.processor.IncrementWord(this.processor.PullGlobalWord(0xdeb8)));
-
-		L3320:
-			goto L32f8;
-
-		L3323:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.Towns[townIdx].TrueExtent;
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.PullGlobalWord(0xdeb8));
-			if (this.processor.FlagSet.IsLess) goto L3339;
-			goto L3350;
-
-		L3339:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.Towns[townIdx].TrueExtent;
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegCount.Value16 = this.processor.PullGlobalWord(0xdeb8);
-			this.processor.RegCount.Value16 = this.processor.SubtractWord(this.processor.RegCount.Value16, this.processor.RegAcc.Value16);
-			this.processor.EmitGlobalWord(0xd2f6, this.processor.RegCount.Value16);
-
-		L3350:
-			this.processor.EmitLocalWord(0xf6, 0x8);
-			this.processor.EmitLocalWord(0xfc, 0x45);
-			this.processor.EmitLocalWord(0xfa, 0x64);
-			this.processor.EmitLocalWord(0x100, 0x74);
-			this.processor.EmitLocalWord(0xea, 0x0);
-			goto L3375;
-
-		L3371:
-			this.processor.EmitLocalWord(0xea, this.processor.IncrementWord(this.processor.PullLocalWord(0xea)));
-
-		L3375:
-			this.processor.CompareWord(this.processor.PullLocalWord(0xea), 0x80);
-			if (this.processor.FlagSet.IsLess) goto L3380;
-			goto L39ef;
-
-		L3380:
-			this.processor.RegAcc.Value16 = 0x600;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullGlobalWord(0x6548));
-			this.processor.ScaleIndexToSource(0xc, this.processor.PullLocalWord(0xea));
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d7)), 0xff);
-			if (this.processor.FlagSet.IsNotEqual) goto L339c;
-			goto L38d4;
-
-		L339c:
-			this.processor.RegAcc.Value16 = 0x600;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullGlobalWord(0x6548));
-			this.processor.ScaleIndexToSource(0xc, this.processor.PullLocalWord(0xea));
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81df));
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, (ushort)townIdx);
-			if (this.processor.FlagSet.IsEqual) goto L33bb;
-			goto L38d4;
-
-		L33bb:
-			this.processor.RegAcc.Value16 = 0x600;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullGlobalWord(0x6548));
-			this.processor.ScaleIndexToSource(0xc, this.processor.PullLocalWord(0xea));
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d7)), 0x1a);
-			if (this.processor.FlagSet.IsLess) goto L33d7;
-			goto L340f;
-
-		L33d7:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.Towns[townIdx].TrueExtent;
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.EmitGlobalWord(0xdeb8, this.processor.IncrementWord(this.processor.PullGlobalWord(0xdeb8)));
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.PullGlobalWord(0xdeb8));
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L33f1;
-			goto L340b;
-
-		L33f1:
-			if (this.owner.World.Participants[this.processor.PullGlobalWord(0x6548)].RegimeKind > 1) goto L3401;
-			goto L340f;
-
-		L3401:
-			this.processor.TestBitsByte((byte)(this.owner.World.DiagMarkers & 0xff), 0x2);
-			if (this.processor.FlagSet.IsNotEqual) goto L340b;
-			goto L340f;
-
-		L340b:
-			this.processor.EmitGlobalWord(0xd2f6, this.processor.IncrementWord(this.processor.PullGlobalWord(0xd2f6)));
-
-		L340f:
-			this.processor.RegAcc.Value16 = (ushort)marker;
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.RegData.Value16 = this.processor.BitOrWord(this.processor.RegData.Value16, this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L341a;
-			goto L3672;
-
-		L341a:
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0xd2f6);
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x70dc), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L3426;
-			goto L3463;
-
-		L3426:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.processor.TestBitsByte(this.owner.World.Towns[townIdx].ConditionMarker, 0x1);
-			if (this.processor.FlagSet.IsNotEqual) goto L3438;
-			goto L3672;
-
-		L3438:
-			this.processor.RegAcc.LowByte = this.processor.PullLocalByte(0xea);
-			this.processor.RegAcc.LowByte = this.processor.SumByte(this.processor.RegAcc.LowByte, (byte)(this.owner.World.RoundTally & 0xff));
-			this.processor.TestBitsByte(this.processor.RegAcc.LowByte, 0x7);
-			if (this.processor.FlagSet.IsEqual) goto L3447;
-			goto L3672;
-
-		L3447:
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x6548), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L3453;
-			goto L3672;
-
-		L3453:
-			if (this.owner.World.Participants[this.processor.PullGlobalWord(0x6548)].RegimeKind >= 4) goto L3463;
-			goto L3672;
-
-		L3463:
-			this.processor.RegAcc.Value16 = 0xffff;
-			this.processor.EmitLocalWord(0x108, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0xc8, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0x106, 0x0);
-			goto L347b;
-
-		L3477:
-			this.processor.EmitLocalWord(0x106, this.processor.IncrementWord(this.processor.PullLocalWord(0x106)));
-
-		L347b:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x106), 0x80);
-			if (this.processor.FlagSet.IsLess) goto L3486;
-			goto L353f;
-
-		L3486:
-			this.processor.RegAcc.Value16 = 0x600;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullGlobalWord(0x6548));
-			this.processor.ScaleIndexToSource(0xc, this.processor.PullLocalWord(0x106));
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d7)), 0xff);
-			if (this.processor.FlagSet.IsNotEqual) goto L34a2;
-			goto L353c;
-
-		L34a2:
-			this.processor.RegAcc.Value16 = 0x600;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullGlobalWord(0x6548));
-			this.processor.ScaleIndexToSource(0xc, this.processor.PullLocalWord(0x106));
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81df));
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, (ushort)townIdx);
-			if (this.processor.FlagSet.IsEqual) goto L34c1;
-			goto L353c;
-
-		L34c1:
-			this.processor.RegAcc.Value16 = 0x600;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullGlobalWord(0x6548));
-			this.processor.ScaleIndexToSource(0xc, this.processor.PullLocalWord(0x106));
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d7)), 0x1a);
-			if (this.processor.FlagSet.IsLess) goto L34dd;
-			goto L353c;
-
-		L34dd:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToSource((ushort)townIdx);
-
-			this.processor.ScaleIndex(0xc, this.processor.PullLocalWord(0x106));
-			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
-			this.processor.ScaleIndex(0x600, this.processor.PullGlobalWord(0x6548));
-			this.processor.RegDest.Value16 = this.processor.SumWord(this.processor.RegDest.Value16, this.processor.RegAcc.Value16);
-
-			this.owner.Helpers.ObtainDistance(
-				this.owner.World.Towns[townIdx].Place.X,
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 + 0x81d5)),
-				this.owner.World.Towns[townIdx].Place.Y,
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 + 0x81d6)));
-
-			this.processor.EmitLocalWord(0xb2, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xc8);
-			this.processor.CompareWord(this.processor.PullLocalWord(0xb2), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsGreater) goto L352c;
-			goto L353c;
-
-		L352c:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xb2);
-			this.processor.EmitLocalWord(0xc8, this.processor.RegAcc.Value16);
-			this.processor.CopyLocalWord(0x106, 0x108);
-
-		L353c:
-			goto L3477;
-
-		L353f:
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0xd2f6);
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x70dc), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L354b;
-			goto L35e1;
-
-		L354b:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x8078), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L3555;
-			goto L3577;
-
-		L3555:
-			if (this.owner.World.Participants[this.processor.PullGlobalWord(0x6548)].FoundScienceTally < 
-				this.owner.World.Participants[this.owner.World.PersonParticipantIdx].FoundScienceTally)
-				goto L356e;
-
-			goto L3577;
-
-		L356e:
-			this.processor.EmitGlobalWord(0xdb42, 0xfc19);
-			goto L35de;
-
-		L3577:
-			this.processor.CompareWord(this.processor.PullLocalWord(0xc8), 0x0);
-			if (this.processor.FlagSet.IsGreater) goto L3581;
-			goto L35de;
-
-		L3581:
-			this.processor.RegAcc.Value16 = 0x600;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullGlobalWord(0x6548));
-			this.processor.ScaleIndexToSource(0xc, this.processor.PullLocalWord(0x108));
-			this.processor.RegAcc.LowByte = 0x22;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d7)));
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1138)), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L35a5;
-			goto L35de;
-
-		L35a5:
-			this.processor.RegAcc.Value16 = 0x600;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullGlobalWord(0x6548));
-			this.processor.ScaleIndexToSource(0xc, this.processor.PullLocalWord(0x108));
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d7)), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L35c1;
-			goto L35de;
-
-		L35c1:
-			this.owner.UnitOps.EliminateUnit(this.processor.PullGlobalSignedWord(0x6548),
-				this.processor.PullLocalSignedWord(0x108));
-			
-			this.processor.ScaleIndexToBase(0x1c, (ushort)townIdx);
-			this.owner.World.Towns[townIdx].ConditionMarker &= 0xfe;
-
-		L35de:
-			goto L3672;
-
-		L35e1:
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x6548), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L35ed;
-			goto L365f;
-
-		L35ed:
-			this.processor.EmitGlobalByte(0xba06, 0x0);
-
-			this.owner.Conquest.ObtainCityLabel(townIdx);
-
-			this.owner.Libc.AppendText(0xba06, " can't support\n");
-
-			this.processor.ScaleIndexToBase(0x600, this.processor.PullGlobalWord(0x6548));
-			this.processor.ScaleIndexToSource(0xc, this.processor.PullLocalWord(0x108));
-			this.processor.RegAcc.LowByte = 0x22;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d7)));
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x112a);
-			this.owner.Libc.AppendText(0xba06, this.processor.RegAcc.Value16);
-
-			this.owner.Libc.AppendText(0xba06, ".\n Unit Disbanded.\n");
-
-			this.processor.EmitGlobalWord(0x2f9e, 0x3);
-
-			this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
-
-		L365f:
-			this.owner.UnitOps.EliminateUnit(this.processor.PullGlobalSignedWord(0x6548),
-				this.processor.PullLocalSignedWord(0x108));
-			
-			goto L32e0;
-
-		L3672:
-			this.processor.RegAcc.Value16 = (ushort)marker;
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1);
-			if (this.processor.FlagSet.IsEqual) goto L367e;
-			goto L38d4;
-
-		L367e:
-			this.processor.CompareWord(this.processor.RegData.Value16, 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L3686;
-			goto L38d4;
-
-		L3686:
-			this.processor.RegAcc.Value16 = 0x600;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullGlobalWord(0x6548));
-			this.processor.ScaleIndexToSource(0xc, this.processor.PullLocalWord(0xea));
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d7)), 0x1a);
-			if (this.processor.FlagSet.IsLess) goto L36a2;
-			goto L384a;
-
-		L36a2:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0xd2f6), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L36ac;
-			goto L36c8;
-
-		L36ac:
-			this.owner.Services.RenderPictureToScreen(
-				this.processor.PullGlobalWord(0xaa),
-				this.processor.PullLocalSignedWord(0xf6) + 8,
-				this.processor.PullLocalSignedWord(0xfc) + 12,
-				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((0x9 << 1) + 0xd4ce)));
-
-		L36c8:
-			this.processor.RegAcc.Value16 = 0x600;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullGlobalWord(0x6548));
-			this.processor.ScaleIndexToSource(0xc, this.processor.PullLocalWord(0xea));
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d7)), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L36e4;
-			goto L372a;
-
-		L36e4:
-			this.owner.Services.RenderPictureToScreen(
-				this.processor.PullGlobalWord(0xaa),
-				this.processor.PullLocalSignedWord(0xf6),
-				this.processor.PullLocalSignedWord(0xfc) + 12,
-				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((0x8 << 1) + 0xd4ce)));
-
-			if (this.owner.World.Participants[this.processor.PullGlobalWord(0x6548)].RegimeKind >= 2)
+			for (this.processor.EmitLocalWord(0xea, 0); (short)this.processor.PullLocalWord(0xea) < 0x80;
+				this.processor.EmitLocalWord(0xea, (ushort)(this.processor.PullLocalWord(0xea) + 1)))
 			{
-				this.owner.Services.RenderPictureToScreen(
-					this.processor.PullGlobalWord(0xaa),
-					this.processor.PullLocalSignedWord(0xf6) + 2,
-					this.processor.PullLocalSignedWord(0xfc) + 12,
-					this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((0x8 << 1) + 0xd4ce)));
+				if (SupportUnit(townIdx, marker))
+					goto L32e0;
 			}
-			goto L384a;
-
-		L372a:
-			PlayerEnjoysWonderEffect(this.processor.PullGlobalSignedWord(0x6548), 16);
-			
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1);
-			this.processor.RegCount.Value16 = this.processor.SubtractBorrowWord(this.processor.RegCount.Value16, this.processor.RegCount.Value16);
-			this.processor.RegCount.Value16 = this.processor.NegateWord(this.processor.RegCount.Value16);
-			this.processor.EmitLocalWord(0xe8, this.processor.RegCount.Value16);
-
-			if (this.owner.World.Participants[this.processor.PullGlobalWord(0x6548)].RegimeKind == 5)
-			{
-				this.processor.IncrementLocalWord(0xe8);
-			}
-
-			if (this.owner.World.Participants[this.processor.PullGlobalWord(0x6548)].RegimeKind >= 4) goto L3769;
-			goto L384a;
-
-		L3769:
-			this.processor.RegAcc.Value16 = 0x600;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullGlobalWord(0x6548));
-			this.processor.ScaleIndexToSource(0xc, this.processor.PullLocalWord(0xea));
-			this.processor.RegAcc.LowByte = 0x22;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d7)));
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x113e)), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L378d;
-			goto L384a;
-
-		L378d:
-			this.processor.CompareWord(this.processor.PullLocalWord(0xe8), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L3797;
-			goto L384a;
-
-		L3797:
-			this.processor.RegAcc.Value16 = 0x600;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullGlobalWord(0x6548));
-			this.processor.ScaleIndexToSource(0xc, this.processor.PullLocalWord(0xea));
-			this.processor.RegAcc.LowByte = 0x22;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d7)));
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1138)), 0x1);
-			if (this.processor.FlagSet.IsNotEqual) goto L37bb;
-			goto L380d;
-
-		L37bb:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.processor.RegCount.LowByte = (byte)((sbyte)this.owner.World.Towns[townIdx].Place.X);
-			this.processor.ScaleIndexToBase(0x600, this.processor.PullGlobalWord(0x6548));
-			this.processor.ScaleIndexToSource(0xc, this.processor.PullLocalWord(0xea));
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d5)), this.processor.RegCount.LowByte);
-			if (this.processor.FlagSet.IsEqual) goto L37e4;
-			goto L380d;
-
-		L37e4:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.processor.RegCount.LowByte = (byte)((sbyte)this.owner.World.Towns[townIdx].Place.Y);
-			this.processor.ScaleIndexToBase(0x600, this.processor.PullGlobalWord(0x6548));
-			this.processor.ScaleIndexToSource(0xc, this.processor.PullLocalWord(0xea));
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d6)), this.processor.RegCount.LowByte);
-			if (this.processor.FlagSet.IsNotEqual) goto L380d;
-			goto L384a;
-
-		L380d:
-			this.owner.Services.RenderPictureToScreen(
-				this.processor.PullGlobalWord(0xaa),
-				this.processor.PullLocalSignedWord(0xf6),
-				this.processor.PullLocalSignedWord(0xfc) + 12,
-				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((0xd << 1) + 0xd4ce)));
-
-			this.processor.CompareWord(this.processor.PullLocalWord(0xe8), 0x1);
-			if (this.processor.FlagSet.IsGreater) goto L382f;
-			goto L384a;
-
-		L382f:
-			this.owner.Services.RenderPictureToScreen(
-				this.processor.PullGlobalWord(0xaa),
-				this.processor.PullLocalSignedWord(0xf6) + 2,
-				this.processor.PullLocalSignedWord(0xfc) + 12,
-				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((0xd << 1) + 0xd4ce)));
-
-		L384a:
-			this.owner.Services.RenderPictureToScreen(
-				this.processor.PullGlobalWord(0xaa),
-				this.processor.PullLocalSignedWord(0xf6),
-				this.processor.PullLocalSignedWord(0xfc),
-				this.processor.PullUInt16(this.processor.SegData.Value16,
-					(ushort)(((this.processor.PullUInt8(this.processor.SegData.Value16,
-						(ushort)((0x600 * this.processor.PullGlobalWord(0x6548)) +
-							(0xc * this.processor.PullLocalWord(0xea)) + 0x81d7)) +
-						(this.processor.PullGlobalWord(0x6548) << 5) + 0x40) << 1) + 0xd4ce)));
-
-			this.processor.ScaleIndexToSource(0xc, this.processor.PullLocalWord(0xea));
-			this.processor.AddScaledToSource(0x600, this.processor.PullGlobalWord(0x6548));
-
-			RenderMiniMapDot(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)),
-				this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6)), 7);
-
-			this.processor.EmitLocalWord(0xf6, this.processor.SumWord(this.processor.PullLocalWord(0xf6), 0x10));
-			this.processor.CompareWord(this.processor.PullLocalWord(0xf6), 0x70);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L38ba;
-			goto L38d4;
-
-		L38ba:
-			this.processor.EmitLocalWord(0xf6, 0x8);
-			this.processor.EmitLocalWord(0xfc, this.processor.SumWord(this.processor.PullLocalWord(0xfc), 0x10));
-			this.processor.CompareWord(this.processor.PullLocalWord(0xfc), 0x55);
-			if (this.processor.FlagSet.IsGreater) goto L38cf;
-			goto L38d4;
-
-		L38cf:
-			this.processor.EmitLocalWord(0xfc, this.processor.SubtractWord(this.processor.PullLocalWord(0xfc), 0x18));
-
-		L38d4:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x4e), 0x12);
-			if (this.processor.FlagSet.IsLess) goto L38dd;
-			goto L39ec;
-
-		L38dd:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x2496), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L38e7;
-			goto L39ec;
-
-		L38e7:
-			this.processor.RegAcc.Value16 = 0x600;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullGlobalWord(0x6548));
-			this.processor.ScaleIndexToSource(0xc, this.processor.PullLocalWord(0xea));
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d7)), 0xff);
-			if (this.processor.FlagSet.IsNotEqual) goto L3903;
-			goto L39ec;
-
-		L3903:
-			this.processor.RegAcc.Value16 = (ushort)marker;
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1);
-			if (this.processor.FlagSet.IsEqual) goto L390f;
-			goto L39ec;
-
-		L390f:
-			this.processor.CompareWord(this.processor.RegData.Value16, 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L3917;
-			goto L39ec;
-
-		L3917:
-			this.processor.RegAcc.Value16 = 0x600;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullGlobalWord(0x6548));
-			this.processor.ScaleIndexToSource(0xc, this.processor.PullLocalWord(0xea));
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d5));
-			this.processor.RegAcc.HighByte = 0;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0xd8));
-			if (this.processor.FlagSet.IsEqual) goto L3938;
-			goto L39ec;
-
-		L3938:
-			this.processor.RegAcc.Value16 = 0x600;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullGlobalWord(0x6548));
-			this.processor.ScaleIndexToSource(0xc, this.processor.PullLocalWord(0xea));
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d6));
-			this.processor.RegAcc.HighByte = 0;
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0xe4));
-			if (this.processor.FlagSet.IsEqual) goto L3959;
-			goto L39ec;
-
-		L3959:
-			this.owner.MapOps.RenderUnitSprite(this.processor.PullGlobalSignedWord(0x6548),
-				this.processor.PullLocalSignedWord(0xea),
-				this.processor.PullLocalSignedWord(0xfa),
-				this.processor.PullLocalSignedWord(0x100));
-
-			this.processor.EmitGlobalByte(0xba06, 0x0);
-			this.processor.ScaleIndexToBase(0x600, this.processor.PullGlobalWord(0x6548));
-			this.processor.ScaleIndexToSource(0xc, this.processor.PullLocalWord(0xea));
-
-			this.owner.Conquest.ObtainCityLabel(this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81df)));
-			
-			this.processor.EmitGlobalByte(0xba09, 0x2e);
-			this.processor.EmitGlobalByte(0xba0a, 0x0);
-
-			this.owner.TextPainter.RenderTextToScreen0(0xba06,
-				this.processor.PullLocalSignedWord(0xfa),
-				this.processor.PullLocalSignedWord(0x100) + 15,
-				0);
-
-			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x4e);
-			this.processor.IncrementLocalWord(0x4e);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xea);
-			this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x74), this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0xfa, this.processor.SumWord(this.processor.PullLocalWord(0xfa), 0x12));
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x4e);
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.RegCount.Value16 = 0x6;
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-			this.processor.CompareWord(this.processor.RegData.Value16, 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L39e1;
-			goto L39ec;
-
-		L39e1:
-			this.processor.EmitLocalWord(0xfa, 0x64);
-			this.processor.EmitLocalWord(0x100, this.processor.SumWord(this.processor.PullLocalWord(0x100), 0x10));
-
-		L39ec:
-			goto L3371;
 
 		L39ef:
 			this.processor.RegAcc.Value16 = (ushort)marker;
