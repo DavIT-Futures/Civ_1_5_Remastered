@@ -434,9 +434,8 @@ namespace Civilization1Remaster.Game
 			this.processor.EmitLocalWord(0xa, neighbourIdx);
 			this.processor.EmitLocalWord(0xc, terrains);
 
-			this.processor.EmitGlobalByte(0xba06, 0);
-
-			this.owner.Conquest.ObtainCityLabel(townIdx);
+			EmptyMessage()
+				.City(townIdx);
 
 			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be), 0xba06);
 
@@ -449,15 +448,11 @@ namespace Civilization1Remaster.Game
 					{
 						ushort buildingIdx = DestroyRandomBuilding(town);
 
-						this.owner.Libc.CopyText(0xba06, "Earthquake in ");
-
-						this.owner.Conquest.ObtainCityLabel(townIdx);
-
-						this.owner.Libc.AppendText(0xba06, "!\n");
-
-						this.owner.Libc.AppendText(0xba06, (ushort)((ushort)(0x1e * buildingIdx) + 0xbb8));
-
-						this.owner.Libc.AppendText(0xba06, " destroyed.\n");
+						Message("Earthquake in ")
+							.City(townIdx)
+							.Text("!\n")
+							.Text((ushort)((ushort)(0x1e * buildingIdx) + 0xbb8))
+							.Text(" destroyed.\n");
 					}
 					break;
 
@@ -707,17 +702,12 @@ namespace Civilization1Remaster.Game
 
 			if ((this.owner.World.ChartSight[town.Place.X, town.Place.Y] & (1 << (byte)this.owner.World.PersonParticipantIdx)) != 0)
 			{
-				this.owner.Libc.CopyText(0xba06, "Residents of ");
-
-				this.owner.Conquest.ObtainCityLabel(townIdx);
-
-				this.owner.Libc.AppendText(0xba06, " admire\nthe prosperity of ");
-
-				this.owner.Conquest.ObtainCityLabel(rivalIdx);
-
-				this.owner.Libc.AppendText(0xba06, ".\n");
-
-				this.owner.TurnHooks.DisplayDialog(0xba06, 80, 80);
+				Message("Residents of ")
+					.City(townIdx)
+					.Text(" admire\nthe prosperity of ")
+					.City(rivalIdx)
+					.Text(".\n")
+					.Dialog(80, 80);
 			}
 
 			this.owner.Diplomats.ComputeInciteCost(townIdx, this.owner.World.Towns[rivalIdx].ParticipantIdx);
@@ -863,10 +853,10 @@ namespace Civilization1Remaster.Game
 			this.processor.EmitGlobalWord(0xd766, (ushort)totalCitizenScore);
 
 			ushort civNamePtr = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((participantIdx << 1) + 0x1982));
-			this.owner.Libc.CopyText(0xba06, civNamePtr);
-			this.owner.Libc.AppendText(0xba06, " Citizens (");
-			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText((short)totalCitizenScore, 10));
-			this.owner.Libc.AppendText(0xba06, ")");
+			Message(civNamePtr)
+				.Text(" Citizens (")
+				.Number((short)totalCitizenScore)
+				.Text(")");
 
 			if (marker)
 			{
@@ -905,10 +895,10 @@ namespace Civilization1Remaster.Game
 			}
 
 			this.processor.EmitGlobalWord(0xd764, (ushort)totalWonderScore);
-			this.owner.Libc.CopyText(0xba06, civNamePtr);
-			this.owner.Libc.AppendText(0xba06, " Achievements (");
-			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText((short)totalWonderScore, 10));
-			this.owner.Libc.AppendText(0xba06, ")");
+			Message(civNamePtr)
+				.Text(" Achievements (")
+				.Number((short)totalWonderScore)
+				.Text(")");
 
 			if (marker)
 			{
@@ -926,8 +916,8 @@ namespace Civilization1Remaster.Game
 			{
 				int spaceshipBonus = ScoreRules.ComputeSpaceshipScore(victoryRatio, starshipInhabitants);
 
-				this.owner.Libc.CopyText(0xba06, "SpaceShip: (");
-				this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText((short)spaceshipBonus, 10));
+				Message("SpaceShip: (")
+					.Number((short)spaceshipBonus);
 
 				if (this.owner.World.Participants[humanPlayer].StarshipArrivalSeason == this.owner.World.Season)
 				{
@@ -953,9 +943,9 @@ namespace Civilization1Remaster.Game
 			if (this.owner.World.DirtyCellTally > 0)
 			{
 				int penalty = ScoreRules.ComputePollutionPenalty(this.owner.World.DirtyCellTally);
-				this.owner.Libc.CopyText(0xba06, "Pollution: (");
-				this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText((short)(-penalty), 10));
-				this.owner.Libc.AppendText(0xba06, ")   ");
+				Message("Pollution: (")
+					.Number((short)(-penalty))
+					.Text(")   ");
 				this.owner.World.Participants[0].Tally -= (short)penalty;
 			}
 
@@ -996,14 +986,14 @@ namespace Civilization1Remaster.Game
 
 			if (conquestBonus != -1 && conquestBonus > this.owner.World.Participants[0].Tally)
 			{
-				this.owner.Libc.CopyText(0xba06, "Bonus Score: ");
-				this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText((short)conquestBonus, 10));
+				Message("Bonus Score: ")
+					.Number((short)conquestBonus);
 				this.owner.World.Participants[0].Tally = (short)conquestBonus;
 			}
 			else
 			{
-				this.owner.Libc.CopyText(0xba06, "Total Score: ");
-				this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(this.owner.World.Participants[0].Tally, 10));
+				Message("Total Score: ")
+					.Number(this.owner.World.Participants[0].Tally);
 			}
 
 			if (marker && wondersY < 0xba)

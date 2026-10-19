@@ -528,15 +528,15 @@ namespace Civilization1Remaster.Engine
 
 			this.processor.EmitGlobalWord(0xdb38, 0x1);
 
-			this.owner.Libc.CopyText(0xba06, " ");
-			this.owner.Libc.AppendText(0xba06, docnameAddr);
-			this.owner.Libc.AppendText(0xba06, "\n ");
-			this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)((this.owner.World.HardnessTier << 1) + 0x33a2)));
-			this.owner.Libc.AppendText(0xba06, " ");
-			this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)(personSlot + 0x19a2)));
-			this.owner.Libc.AppendText(0xba06, "\n ");
-			this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)(personSlot + 0x1992)));
-			this.owner.Libc.AppendText(0xba06, "/");
+			Message(" ")
+				.Text(docnameAddr)
+				.Text("\n ")
+				.Text(this.processor.PullGlobalWord((ushort)((this.owner.World.HardnessTier << 1) + 0x33a2)))
+				.Text(" ")
+				.Text(this.processor.PullGlobalWord((ushort)(personSlot + 0x19a2)))
+				.Text("\n ")
+				.Text(this.processor.PullGlobalWord((ushort)(personSlot + 0x1992)))
+				.Text("/");
 
 			this.owner.TurnHooks.ObtainCurrentYearAsText();
 
@@ -1106,9 +1106,8 @@ namespace Civilization1Remaster.Engine
 			}
 			catch (Exception extra)
 			{
-				this.owner.Libc.CopyText(0xba06, extra.Message);
-
-				this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+				Message(extra.Message)
+					.Dialog(100, 80);
 
 				victory = false;
 			}

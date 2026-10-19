@@ -148,11 +148,9 @@ namespace Civilization1Remaster.UI
 				if (continent.Assault == 0)
 					continue;
 
-				this.processor.EmitGlobalByte(0xba06, 0x0);
-
-				this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(continentIdx, 10));
-
-				this.owner.Libc.AppendText(0xba06, "/");
+				EmptyMessage()
+					.Number(continentIdx)
+					.Text("/");
 
 				foreach ((short approach, string letter) in new[] { ((short)0, "S"), ((short)2, "D"), ((short)1, "A"), ((short)5, "T") })
 				{
@@ -228,20 +226,18 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope($"DisplayUnitInfo({participantIdx}, {troopIdx})");
 
-			this.owner.Libc.CopyText(0xba06, this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1982)));
-			this.owner.Libc.AppendText(0xba06, "\n");
-			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(troopIdx, 10));
-			this.owner.Libc.AppendText(0xba06, KindLabel(participantIdx, troopIdx));
-			this.owner.Libc.AppendText(0xba06, "\n");
-
-			this.owner.Conquest.ObtainCityLabel(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.BaseTown));
-
-			this.owner.Libc.AppendText(0xba06, "\n");
-			this.owner.Libc.AppendText(0xba06, "Loc:");
-			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz), 10));
-			this.owner.Libc.AppendText(0xba06, ",");
-			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert), 10));
-			this.owner.Libc.AppendText(0xba06, "\n");
+			Message(this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1982)))
+				.Text("\n")
+				.Number(troopIdx)
+				.Text(KindLabel(participantIdx, troopIdx))
+				.Text("\n")
+				.City(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.BaseTown))
+				.Text("\n")
+				.Text("Loc:")
+				.Number(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz))
+				.Text(",")
+				.Number(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert))
+				.Text("\n");
 
 			if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.TravelHoriz) != 0xff)
 			{

@@ -137,11 +137,9 @@ namespace Civilization1Remaster.UI
 				return (short)(vertLoc + 0x1a);
 			}
 
-			this.processor.EmitGlobalByte(0xba06, 0x0);
-
-			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText((short)(placeIdx + 1), 10));
-
-			this.owner.Libc.AppendText(0xba06, ". ");
+			EmptyMessage()
+				.Number((short)(placeIdx + 1))
+				.Text(". ");
 
 			this.owner.Libc.MoveFarData(0x3772, (ushort)(record + 0x37e0), this.processor.SegData.Value16, (ushort)(0xba06 + this.owner.Libc.TextLength(0xba06)), 16);
 
@@ -465,13 +463,13 @@ namespace Civilization1Remaster.UI
 
 				short townIdx = (short)this.processor.PullGlobalWord((ushort)(towns + (placeIdx << 1)));
 
-				this.processor.EmitGlobalByte(0xba06, 0);
-				this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText((short)(placeIdx + 1), 10));
-				this.owner.Libc.AppendText(0xba06, ". ");
-				this.owner.Conquest.ObtainCityLabel(townIdx);
-				this.owner.Libc.AppendText(0xba06, " (");
-				this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)((this.owner.World.Towns[townIdx].ParticipantIdx << 1) + 0x1982)));
-				this.owner.Libc.AppendText(0xba06, ")");
+				EmptyMessage()
+					.Number((short)(placeIdx + 1))
+					.Text(". ")
+					.City(townIdx)
+					.Text(" (")
+					.Text(this.processor.PullGlobalWord((ushort)((this.owner.World.Towns[townIdx].ParticipantIdx << 1) + 0x1982)))
+					.Text(")");
 
 				this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, vertLoc + 3,
 					this.processor.PullGlobalWord((ushort)((this.owner.World.Towns[townIdx].ParticipantIdx << 1) + 0x1946)));

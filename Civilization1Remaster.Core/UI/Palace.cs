@@ -74,8 +74,8 @@ namespace Civilization1Remaster.UI
 					 level >= 0))
 				{
 					short labelX = (short)(0x30 * (short)sec - 0x24);
-					this.processor.EmitGlobalByte(0xba06, 0x0);
-					this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText((short)sec, 10));
+					EmptyMessage()
+						.Number((short)sec);
 					this.owner.TextPainter.RenderTextWithShadow(0xba06, labelX, 144, 14);
 					hasOptions = 1;
 				}
@@ -334,8 +334,8 @@ namespace Civilization1Remaster.UI
 						break;
 				}
 
-				this.processor.EmitGlobalByte(0xba06, 0x0);
-				this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText((short)optIdx, 10));
+				EmptyMessage()
+					.Number((short)optIdx);
 				this.owner.TextPainter.RenderTextWithShadow(0xba06, (short)optIdx * 100 - 44, 12, 15);
 			}
 

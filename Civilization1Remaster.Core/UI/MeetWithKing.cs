@@ -504,8 +504,8 @@ namespace Civilization1Remaster.UI
 				return;
 			}
 
-			this.processor.EmitGlobalByte(0xba06, 0);
-			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText((short)FrameWord(TributeLocal), 10));
+			EmptyMessage()
+				.Number((short)FrameWord(TributeLocal));
 			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30bc), 0xba06);
 			this.processor.EmitGlobalByte(0xba06, 0);
 			this.owner.BlockText.DisplayTextDialog(0x3797);
@@ -711,8 +711,8 @@ namespace Civilization1Remaster.UI
 			if (FrameWord(AmountLocal) == 0)
 				return;
 
-			this.processor.EmitGlobalByte(0xba06, 0);
-			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText((short)FrameWord(AmountLocal), 10));
+			EmptyMessage()
+				.Number((short)FrameWord(AmountLocal));
 			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30bc), 0xba06);
 			this.processor.EmitGlobalByte(0xba06, 0);
 			this.owner.BlockText.DisplayTextDialog(0x380e);
@@ -739,8 +739,8 @@ namespace Civilization1Remaster.UI
 		{
 			short personIdx = this.owner.World.PersonParticipantIdx;
 
-			this.processor.EmitGlobalByte(0xba06, 0);
-			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(Leader(participantIdx).Gold, 10));
+			EmptyMessage()
+				.Number(Leader(participantIdx).Gold);
 			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30bc), 0xba06);
 			this.processor.EmitGlobalByte(0xba06, 0);
 			this.owner.BlockText.DisplayTextDialog(0x3818);
@@ -819,13 +819,13 @@ namespace Civilization1Remaster.UI
 
 				this.processor.EmitGlobalWord(0x3936, 0);
 				this.processor.EmitGlobalWord(0xd76c, 0xc);
-				this.owner.Libc.CopyText(0xba06, "We welcome the friendship of the\n");
-				this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((personIdx << 1) + 0x1982)));
-				this.owner.Libc.AppendText(0xba06, " people and their most\nwise and munificent leader:\n");
-				this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((Person.RegimeKind << 1) + 0x19b2)));
-				this.owner.Libc.AppendText(0xba06, " ");
-				this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((personIdx << 1) + 0x19a2)));
-				this.owner.Libc.AppendText(0xba06, ".\n");
+				Message("We welcome the friendship of the\n")
+					.Text(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((personIdx << 1) + 0x1982)))
+					.Text(" people and their most\nwise and munificent leader:\n")
+					.Text(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((Person.RegimeKind << 1) + 0x19b2)))
+					.Text(" ")
+					.Text(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((personIdx << 1) + 0x19a2)))
+					.Text(".\n");
 			}
 
 			DisplayKingDialog(0xba06, 0x14, 0x8b);
@@ -872,8 +872,8 @@ namespace Civilization1Remaster.UI
 
 			if (FrameWord(AmountLocal) != 0)
 			{
-				this.processor.EmitGlobalByte(0xba06, 0);
-				this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText((short)FrameWord(AmountLocal), 10));
+				EmptyMessage()
+					.Number((short)FrameWord(AmountLocal));
 				this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30bc), 0xba06);
 				this.processor.EmitGlobalByte(0xba06, 0);
 				this.owner.BlockText.DisplayTextDialog(0x3897);
@@ -970,8 +970,8 @@ namespace Civilization1Remaster.UI
 			this.owner.Helpers.VerifyValueSpan(((Leader(enemyIdx).MartialMight / 2) * (Leader(participantIdx).Gold / 100)) / 50, 2, 9999);
 			FrameWord(AmountLocal, (ushort)(this.processor.RegAcc.Value16 * 0x32));
 
-			this.processor.EmitGlobalByte(0xba06, 0);
-			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText((short)FrameWord(AmountLocal), 10));
+			EmptyMessage()
+				.Number((short)FrameWord(AmountLocal));
 			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30bc), 0xba06);
 			this.processor.EmitGlobalByte(0xba06, 0);
 			this.owner.BlockText.DisplayTextDialog(0x38fb);
@@ -991,10 +991,10 @@ namespace Civilization1Remaster.UI
 				Leader(participantIdx).Gold += amount;
 				Person.Gold -= amount;
 
-				this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1992)));
-				this.owner.Libc.AppendText(0xba06, " declare war\non the ");
-				this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 + 0x1992)));
-				this.owner.Libc.AppendText(0xba06, ".\n");
+				Message(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1992)))
+					.Text(" declare war\non the ")
+					.Text(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 + 0x1992)))
+					.Text(".\n");
 			}
 
 			DisplayKingDialog(0xba06, 0x14, 0x8b);
@@ -1084,10 +1084,10 @@ namespace Civilization1Remaster.UI
 
 			while (true)
 			{
-				this.owner.Libc.CopyText(0xba06, "An emissary from the\n");
-				this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1992)));
-				this.owner.Libc.AppendText(0xba06, " wishes to\nspeak with you.\n");
-				this.owner.Libc.AppendText(0xba06, "Will you receive him?\n Yes.\n No.\n");
+				Message("An emissary from the\n")
+					.Text(this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1992)))
+					.Text(" wishes to\nspeak with you.\n")
+					.Text("Will you receive him?\n Yes.\n No.\n");
 
 				if ((this.owner.World.Participants[this.owner.World.PersonParticipantIdx].Relations[participantIdx] & 0x40) != 0)
 				{
@@ -1617,17 +1617,12 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Dialogs.RenderShadowBox(0, 128, 319, 71, 15, 8);
 
-			this.owner.Libc.CopyText(0xba06, this.processor.PullGlobalWord((ushort)(((ushort)participantIdx << 1) + 0x19a2)));
-
-			this.owner.Libc.AppendText(0xba06, ": ");
-
-			this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)(((ushort)this.owner.World.Participants[participantIdx].RegimeKind << 1) + 0x19b2)));
-
-			this.owner.Libc.AppendText(0xba06, " of the ");
-
-			this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)(((ushort)participantIdx << 1) + 0x1992)));
-
-			this.owner.Libc.AppendText(0xba06, ".");
+			Message(this.processor.PullGlobalWord((ushort)(((ushort)participantIdx << 1) + 0x19a2)))
+				.Text(": ")
+				.Text(this.processor.PullGlobalWord((ushort)(((ushort)this.owner.World.Participants[participantIdx].RegimeKind << 1) + 0x19b2)))
+				.Text(" of the ")
+				.Text(this.processor.PullGlobalWord((ushort)(((ushort)participantIdx << 1) + 0x1992)))
+				.Text(".");
 
 			this.owner.TextPainter.RenderTextToScreen0(0xba06, 8, 130, 15);
 

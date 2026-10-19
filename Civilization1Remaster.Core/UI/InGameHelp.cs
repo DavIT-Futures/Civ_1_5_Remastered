@@ -123,8 +123,8 @@ namespace Civilization1Remaster.UI
 
 			byte improvements = (byte)this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc);
 
-			this.processor.EmitGlobalByte(0xba06, 0);
-			this.owner.Conquest.ObtainCityLabel((short)townIdx);
+			EmptyMessage()
+				.City((short)townIdx);
 			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30b8), 0xba06);
 
 			if (terrain == 4 && (improvements & 6) == 0)

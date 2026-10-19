@@ -305,9 +305,8 @@ namespace Civilization1Remaster.Game
 
 			this.processor.RegSource.Value16 = (ushort)(participantIdx << 1);
 
-			this.owner.Libc.CopyText(0xba06, this.processor.PullGlobalWord((ushort)(this.processor.RegSource.Value16 + 0x1992)));
-
-			this.owner.Libc.AppendText(0xba06, " capture\n");
+			Message(this.processor.PullGlobalWord((ushort)(this.processor.RegSource.Value16 + 0x1992)))
+				.Text(" capture\n");
 
 			ObtainCityLabel(townIdx);
 
@@ -357,15 +356,11 @@ namespace Civilization1Remaster.Game
 
 			this.processor.EmitGlobalWord(0x2f9e, 0x0);
 
-			this.owner.Libc.CopyText(0xba06, "Spies report:\n");
-
-			this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)(((ushort)participantIdx << 1) + 0x1992)));
-
-			this.owner.Libc.AppendText(0xba06, this.owner.World.Towns[townIdx].TrueExtent != 0 ? (ushort)0x2893 : (ushort)0x28a1);
-
-			this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)(((ushort)formerIdx << 1) + 0x1982)));
-
-			this.owner.Libc.AppendText(0xba06, " city\nof ");
+			Message("Spies report:\n")
+				.Text(this.processor.PullGlobalWord((ushort)(((ushort)participantIdx << 1) + 0x1992)))
+				.Text(this.owner.World.Towns[townIdx].TrueExtent != 0 ? (ushort)0x2893 : (ushort)0x28a1)
+				.Text(this.processor.PullGlobalWord((ushort)(((ushort)formerIdx << 1) + 0x1982)))
+				.Text(" city\nof ");
 
 			ObtainCityLabel(townIdx);
 
@@ -385,9 +380,8 @@ namespace Civilization1Remaster.Game
 			ushort built = (ushort)(1 << participantIdx);
 			ushort launched = (ushort)(1 << (participantIdx + 8));
 
-			this.owner.Libc.CopyText(0xba06, this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1982)));
-
-			this.owner.Libc.AppendText(0xba06, " spaceship\n");
+			Message(this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1982)))
+				.Text(" spaceship\n");
 
 			if ((this.owner.World.StarshipMarkers & launched) != 0)
 			{
@@ -662,9 +656,8 @@ namespace Civilization1Remaster.Game
 
 			if (participantIdx == this.owner.World.PersonParticipantIdx)
 			{
-				this.owner.Libc.CopyText(0xba06, this.processor.PullGlobalWord((ushort)(((troopIdx & 7) << 1) + 0x1972)));
-
-				this.owner.Libc.AppendText(0xba06, " caravan from ");
+				Message(this.processor.PullGlobalWord((ushort)(((troopIdx & 7) << 1) + 0x1972)))
+					.Text(" caravan from ");
 
 				ObtainCityLabel((short)homeIdx);
 

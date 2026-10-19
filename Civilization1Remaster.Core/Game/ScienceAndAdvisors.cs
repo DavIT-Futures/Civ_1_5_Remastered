@@ -418,9 +418,9 @@ namespace Civilization1Remaster.Game
 			ChoiceCount = 1;
 			FrameWord(ChoiceTable, (ushort)(short)town.PresentMakingIdx);
 
-			this.owner.Libc.CopyText(0xba06, "What shall we build in ");
-			this.owner.Conquest.ObtainCityLabel(townIdx);
-			this.owner.Libc.AppendText(0xba06, "?\n ");
+			Message("What shall we build in ")
+				.City(townIdx)
+				.Text("?\n ");
 
 			if (PageState != 2)
 				ListUnitChoices(participantIdx, townIdx);
@@ -1432,13 +1432,10 @@ namespace Civilization1Remaster.Game
 				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0xaa), 0, 0);
 			}
 
-			this.owner.Libc.CopyText(0xba06, this.processor.PullGlobalWord((ushort)(((ushort)participantIdx << 1) + 0x1982)));
-
-			this.owner.Libc.AppendText(0xba06, PlayerKnowsTechnology(person, 0x14) != 0 ? (ushort)0x22cc : (ushort)0x22d8);
-
-			this.owner.Libc.AppendText(0xba06, "\ndiscover the secret\nof ");
-
-			this.owner.Libc.AppendText(0xba06, (ushort)((ushort)(0x16 * human.PresentInquiryIdx) + 0x4da));
+			Message(this.processor.PullGlobalWord((ushort)(((ushort)participantIdx << 1) + 0x1982)))
+				.Text(PlayerKnowsTechnology(person, 0x14) != 0 ? (ushort)0x22cc : (ushort)0x22d8)
+				.Text("\ndiscover the secret\nof ")
+				.Text((ushort)((ushort)(0x16 * human.PresentInquiryIdx) + 0x4da));
 
 			if (human.PresentInquiryIdx == 71)
 			{
@@ -1518,11 +1515,9 @@ namespace Civilization1Remaster.Game
 		/// <summary>The science advisor recommends the technology with the units and wonders it allows</summary>
 		private void RecommendResearch(short pick)
 		{
-			this.owner.Libc.CopyText(0xba06, "Science Advisor:\nI recommend we\ndevelop ");
-
-			this.owner.Libc.AppendText(0xba06, (ushort)((ushort)(0x16 * pick) + 0x4da));
-
-			this.owner.Libc.AppendText(0xba06, ".\n");
+			Message("Science Advisor:\nI recommend we\ndevelop ")
+				.Text((ushort)((ushort)(0x16 * pick) + 0x4da))
+				.Text(".\n");
 
 			this.owner.Libc.TextLength(0xba06);
 
@@ -1582,11 +1577,9 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private ushort ListResearchChoices(short participantIdx, bool again)
 		{
-			this.owner.Libc.CopyText(0xba06, "Which discovery should our\n");
-
-			this.owner.Libc.AppendText(0xba06, PlayerKnowsTechnology(this.owner.World.PersonParticipantIdx, 0x14) != 0 ? (ushort)0x2388 : (ushort)0x2393);
-
-			this.owner.Libc.AppendText(0xba06, " be pursuing, sire?\nPick one...\n ");
+			Message("Which discovery should our\n")
+				.Text(PlayerKnowsTechnology(this.owner.World.PersonParticipantIdx, 0x14) != 0 ? (ushort)0x2388 : (ushort)0x2393)
+				.Text(" be pursuing, sire?\nPick one...\n ");
 
 			ushort choices = 0;
 			ushort choiceList = (ushort)(this.processor.RegFrame.Value16 - 0x3a);
@@ -1685,13 +1678,10 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			this.processor.EmitGlobalByte(0xba06, 0);
-
-			this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)(((ushort)participantIdx << 1) + 0x1992)));
-
-			this.owner.Libc.AppendText(0xba06, participantIdx == participantIdx1 || participantIdx1 == 0 ? (ushort)0x23d7 : (ushort)0x23e1);
-
-			this.owner.Libc.AppendText(0xba06, (ushort)((ushort)(0x16 * scienceIdx) + 0x4da));
+			EmptyMessage()
+				.Text(this.processor.PullGlobalWord((ushort)(((ushort)participantIdx << 1) + 0x1992)))
+				.Text(participantIdx == participantIdx1 || participantIdx1 == 0 ? (ushort)0x23d7 : (ushort)0x23e1)
+				.Text((ushort)((ushort)(0x16 * scienceIdx) + 0x4da));
 
 			// AX is 0xba06 here (the original tested it)
 			if (participantIdx != participantIdx1)
@@ -1838,15 +1828,11 @@ namespace Civilization1Remaster.Game
 
 				if (participantIdx == person && this.processor.PullGlobalWord(0x3934) == 0xffff)
 				{
-					this.owner.Libc.CopyText(0xba06, "Development of ");
-
-					this.owner.Libc.AppendText(0xba06, (ushort)((ushort)(0x16 * scienceIdx) + 0x4da));
-
-					this.owner.Libc.AppendText(0xba06, "\nmakes existing Barracks\nobsolete.\n");
-
-					this.processor.EmitGlobalWord(0x2f9e, 0x3);
-
-					this.owner.TurnHooks.DisplayDialog(0xba06, 80, 100);
+					Message("Development of ")
+						.Text((ushort)((ushort)(0x16 * scienceIdx) + 0x4da))
+						.Text("\nmakes existing Barracks\nobsolete.\n")
+						.Style(0x3)
+						.Dialog(80, 100);
 				}
 			}
 
@@ -1865,13 +1851,10 @@ namespace Civilization1Remaster.Game
 						this.owner.World.Towns[this.owner.World.MarvelTownIdx[wonderIdx]].ParticipantIdx != person)
 						continue;
 
-					this.owner.Libc.CopyText(0xba06, (ushort)((ushort)(0x16 * scienceIdx) + 0x4da));
-
-					this.owner.Libc.AppendText(0xba06, " cancels\nthe effect of\n");
-
-					this.owner.Libc.AppendText(0xba06, (ushort)((ushort)(0x1e * wonderIdx) + 0xe6a));
-
-					this.owner.Libc.AppendText(0xba06, ".\n");
+					Message((ushort)((ushort)(0x16 * scienceIdx) + 0x4da))
+						.Text(" cancels\nthe effect of\n")
+						.Text((ushort)((ushort)(0x1e * wonderIdx) + 0xe6a))
+						.Text(".\n");
 
 					this.owner.Paper.DisplayNewspaper(-1);
 				}

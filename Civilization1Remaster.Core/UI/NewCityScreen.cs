@@ -37,9 +37,8 @@ namespace Civilization1Remaster.UI
 
 				this.owner.TextPainter.RenderTextToScreen0(0x539e, 88, 82, 0);
 
-				this.processor.EmitGlobalByte(0xba06, 0x0);
-
-				this.owner.Conquest.ObtainCityLabel(townIdx);
+				EmptyMessage()
+					.City(townIdx);
 
 				answer = PullTextInput(0x58, 0x60, 0xc);
 			}

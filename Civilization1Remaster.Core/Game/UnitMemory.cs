@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Civilization1Remaster.Emulation;
 
 namespace Civilization1Remaster.Game
@@ -39,6 +39,12 @@ namespace Civilization1Remaster.Game
 		public UnitMemory(CPU processor)
 		{
 			this.processor = processor;
+		}
+
+		/// <summary>The place of the unit in the table of units, from its start (Origin)</summary>
+		public static ushort Offset(int participantIdx, int troopIdx)
+		{
+			return (ushort)((ParticipantStride * participantIdx) + (TroopStride * troopIdx));
 		}
 
 		public static ushort Address(int participantIdx, int troopIdx)

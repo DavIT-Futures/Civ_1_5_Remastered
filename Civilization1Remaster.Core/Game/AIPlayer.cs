@@ -792,7 +792,7 @@ namespace Civilization1Remaster.Game
 				if (town.ParticipantIdx != participantIdx)
 				{
 					// (DI and DX as the original leaves them: the unit and the high word of its multiplications)
-					this.processor.RegDest.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride + troopIdx * UnitMemory.TroopStride);
+					this.processor.RegDest.Value16 = UnitMemory.Offset(participantIdx, troopIdx);
 					this.processor.RegData.Value16 = 0;
 					this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHoriz, (byte)(sbyte)town.Place.X);
 					this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelVert, (byte)(sbyte)town.Place.Y);
@@ -1358,7 +1358,7 @@ namespace Civilization1Remaster.Game
 					{
 						this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHoriz, (byte)(sbyte)town.Place.X);
 						this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelVert, (byte)(sbyte)town.Place.Y);
-						this.processor.RegDest.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride + troopIdx * UnitMemory.TroopStride);
+						this.processor.RegDest.Value16 = UnitMemory.Offset(participantIdx, troopIdx);
 
 						return 0;
 					}
@@ -1713,7 +1713,7 @@ namespace Civilization1Remaster.Game
 				return;
 
 			Game.State.Player player = this.owner.World.Participants[participantIdx];
-			ushort unit = (ushort)(participantIdx * UnitMemory.ParticipantStride + troopIdx * UnitMemory.TroopStride);
+			ushort unit = UnitMemory.Offset(participantIdx, troopIdx);
 			byte roles = this.processor.PullLocalByte(0x1e);
 
 			if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.TravelHoriz) == 0xff && ((roles & 2) != 0 || (roles & 1) == 0) &&
@@ -1937,7 +1937,7 @@ namespace Civilization1Remaster.Game
 
 				this.troops.Assign(participantIdx, troopIdx, UnitMemory.LeftoverSteps, 0);
 				this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHoriz, 0xff);
-				this.processor.RegSource.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride + troopIdx * UnitMemory.TroopStride);
+				this.processor.RegSource.Value16 = UnitMemory.Offset(participantIdx, troopIdx);
 
 				return 0x75;
 			}
@@ -1945,7 +1945,7 @@ namespace Civilization1Remaster.Game
 			if (forgets && (this.owner.World.RoundTally & 3) == 0)
 				this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHoriz, 0xff);
 
-			this.processor.RegSource.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride + troopIdx * UnitMemory.TroopStride);
+			this.processor.RegSource.Value16 = UnitMemory.Offset(participantIdx, troopIdx);
 
 			if (this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.LeftoverSteps) > 3)
 				return null;
@@ -2036,21 +2036,21 @@ namespace Civilization1Remaster.Game
 			ushort approach = this.processor.PullLocalWord(0x3a);
 			short horizLoc = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.TravelHoriz);
 			short vertLoc = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.TravelVert);
-			this.processor.RegSource.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride + troopIdx * UnitMemory.TroopStride);
+			this.processor.RegSource.Value16 = UnitMemory.Offset(participantIdx, troopIdx);
 
 			if (approach != 0)
 				SendUnitToStrategicLocation(participantIdx, horizLoc, vertLoc, 0, (short)this.processor.PullLocalWord(0x12));
 
 			if (this.processor.PullLocalWord(0x3a) != 2)
 			{
-				this.processor.RegSource.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride + troopIdx * UnitMemory.TroopStride);
+				this.processor.RegSource.Value16 = UnitMemory.Offset(participantIdx, troopIdx);
 				SendUnitToStrategicLocation(participantIdx, this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.TravelHoriz),
 					this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.TravelVert), 2, (short)this.processor.PullLocalWord(0x12));
 			}
 
 			if (this.processor.PullLocalWord(0x3a) != 1)
 			{
-				this.processor.RegSource.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride + troopIdx * UnitMemory.TroopStride);
+				this.processor.RegSource.Value16 = UnitMemory.Offset(participantIdx, troopIdx);
 				SendUnitToStrategicLocation(participantIdx, this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.TravelHoriz),
 					this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.TravelVert), 1, (short)this.processor.PullLocalWord(0x12));
 			}
@@ -2604,7 +2604,7 @@ namespace Civilization1Remaster.Game
 			this.processor.EmitLocalWord(0x50, (ushort)(1 << (byte)participantIdx));
 
 			// The registers as the original leaves them for the code that follows
-			this.processor.RegSource.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride + troopIdx * UnitMemory.TroopStride);
+			this.processor.RegSource.Value16 = UnitMemory.Offset(participantIdx, troopIdx);
 			this.processor.RegAcc.Value16 = (ushort)(1 << (byte)participantIdx);
 		}
 

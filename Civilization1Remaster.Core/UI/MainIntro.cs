@@ -619,8 +619,8 @@ namespace Civilization1Remaster.UI
 		private void PrepareLandingText(short participantIdx)
 		{
 			ushort regime = (ushort)this.owner.World.Participants[this.owner.World.PersonParticipantIdx].RegimeKind;
-			this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((regime << 1) + 0x19b2)));
-			this.owner.Libc.AppendText(0xba06, " ");
+			Message(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((regime << 1) + 0x19b2)))
+				.Text(" ");
 
 			ushort person = (ushort)this.owner.World.PersonParticipantIdx;
 			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((person << 1) + 0x19a2)));
@@ -629,16 +629,16 @@ namespace Civilization1Remaster.UI
 			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30ba),
 				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(((ushort)participantIdx << 1) + 0x1982)));
 
-			this.processor.EmitGlobalByte(0xba06, 0);
-			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(this.owner.World.Participants[participantIdx].StarshipInhabitants, 10));
+			EmptyMessage()
+				.Number(this.owner.World.Participants[participantIdx].StarshipInhabitants);
 			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30bc), 0xba06);
 
-			this.processor.EmitGlobalByte(0xba06, 0);
-			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(this.owner.World.Participants[participantIdx].StarshipLiftoffSeason, 10));
+			EmptyMessage()
+				.Number(this.owner.World.Participants[participantIdx].StarshipLiftoffSeason);
 			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be), 0xba06);
 
-			this.processor.EmitGlobalByte(0xba06, 0);
-			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(this.owner.World.Season, 10));
+			EmptyMessage()
+				.Number(this.owner.World.Season);
 			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30c0), 0xba06);
 
 			this.owner.BlockText.ImportTextFromFile(0x3301,

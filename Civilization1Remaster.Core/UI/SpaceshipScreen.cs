@@ -241,9 +241,8 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 8, this.processor.PullGlobalWord((ushort)(names + 0x1946)));
 
-			this.owner.Libc.CopyText(0xba06, this.processor.PullGlobalWord((ushort)(names + 0x1982)));
-
-			this.owner.Libc.AppendText(0xba06, " SpaceShip: X.S.S. ");
+			Message(this.processor.PullGlobalWord((ushort)(names + 0x1982)))
+				.Text(" SpaceShip: X.S.S. ");
 
 			ushort length = this.owner.Libc.TextLength(0xba06);
 
@@ -342,11 +341,9 @@ namespace Civilization1Remaster.UI
 
 			vertLoc += 8;
 
-			this.processor.EmitGlobalByte(0xba06, 0x0);
-
-			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText((short)this.processor.PullGlobalWord(0xdeae), 10));
-
-			this.owner.Libc.AppendText(0xba06, "0,000");
+			EmptyMessage()
+				.Number((short)this.processor.PullGlobalWord(0xdeae))
+				.Text("0,000");
 
 			if (shown)
 			{
@@ -359,11 +356,9 @@ namespace Civilization1Remaster.UI
 			short colonists = (short)this.owner.Helpers.VerifyValueSpan(this.processor.PullGlobalSignedWord(0xdeae), 1, 99);
 			short support = CPU.SignedQuotient((short)(0x64 * this.processor.PullGlobalWord(0xdeb0)), colonists);
 
-			this.owner.Libc.CopyText(0xba06, "Support: ");
-
-			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(support, 10));
-
-			this.owner.Libc.AppendText(0xba06, "%");
+			Message("Support: ")
+				.Number(support)
+				.Text("%");
 
 			this.owner.TextPainter.RenderTextToScreen0(0xba06, 242, vertLoc, (ushort)(support < 0x64 ? 4 : 0));
 
@@ -379,11 +374,9 @@ namespace Civilization1Remaster.UI
 				this.processor.PullGlobalSignedWord(0xdeae) + this.processor.PullGlobalSignedWord(0xdeb0), 1, 99);
 			short energy = CPU.SignedQuotient((short)(0xc8 * this.processor.PullGlobalWord(0xdeb2)), modules);
 
-			this.owner.Libc.CopyText(0xba06, "Energy: ");
-
-			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(energy, 10));
-
-			this.owner.Libc.AppendText(0xba06, "%");
+			Message("Energy: ")
+				.Number(energy)
+				.Text("%");
 
 			success = CPU.SignedQuotient((short)(this.owner.Helpers.VerifyValueSpan(energy, 0, 100) * success), 0x64);
 
@@ -402,15 +395,11 @@ namespace Civilization1Remaster.UI
 			vertLoc += 8;
 
 			// Mass: the original writes mass / 10 twice ("x,x00 tons")
-			this.processor.EmitGlobalByte(0xba06, 0x0);
-
-			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText((short)((short)mass / 10), 10));
-
-			this.owner.Libc.AppendText(0xba06, ",");
-
-			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText((short)((short)mass / 10), 10));
-
-			this.owner.Libc.AppendText(0xba06, "00 tons");
+			EmptyMessage()
+				.Number((short)((short)mass / 10))
+				.Text(",")
+				.Number((short)((short)mass / 10))
+				.Text("00 tons");
 
 			if (shown)
 			{
@@ -423,11 +412,9 @@ namespace Civilization1Remaster.UI
 			short propulsion = (short)this.owner.Helpers.VerifyValueSpan(this.processor.PullGlobalSignedWord(0xdea8), 1, 99);
 			short fuel = CPU.SignedQuotient((short)(0x64 * this.processor.PullGlobalWord(0xdeaa)), propulsion);
 
-			this.owner.Libc.CopyText(0xba06, "Fuel: ");
-
-			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(fuel, 10));
-
-			this.owner.Libc.AppendText(0xba06, "%");
+			Message("Fuel: ")
+				.Number(fuel)
+				.Text("%");
 
 			if (shown)
 			{
@@ -454,15 +441,11 @@ namespace Civilization1Remaster.UI
 			}
 
 			// The original writes the time / 10 twice ("x.x Years")
-			this.processor.EmitGlobalByte(0xba06, 0x0);
-
-			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText((short)(flightTime / 10), 10));
-
-			this.owner.Libc.AppendText(0xba06, ".");
-
-			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText((short)(flightTime / 10), 10));
-
-			this.owner.Libc.AppendText(0xba06, " Years");
+			EmptyMessage()
+				.Number((short)(flightTime / 10))
+				.Text(".")
+				.Number((short)(flightTime / 10))
+				.Text(" Years");
 
 			if (shown)
 			{
@@ -480,11 +463,9 @@ namespace Civilization1Remaster.UI
 
 			vertLoc += 8;
 
-			this.owner.Libc.CopyText(0xba06, "--- ");
-
-			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(success, 10));
-
-			this.owner.Libc.AppendText(0xba06, "% ---");
+			Message("--- ")
+				.Number(success)
+				.Text("% ---");
 
 			if (shown)
 			{
@@ -536,13 +517,10 @@ namespace Civilization1Remaster.UI
 			if ((this.owner.World.StarshipMarkers & (1 << (byte)this.owner.World.PersonParticipantIdx)) != 0)
 				return;
 
-			this.owner.Libc.CopyText(0xba06, "Confirm spaceship launch.\n(");
-
-			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(success, 10));
-
-			this.owner.Libc.AppendText(0xba06, "% chance of success)\n No Launch\n Launch CONFIRMED!\n");
-
-			this.owner.TurnHooks.DisplayDialog(0xba06, 80, 100);
+			Message("Confirm spaceship launch.\n(")
+				.Number(success)
+				.Text("% chance of success)\n No Launch\n Launch CONFIRMED!\n")
+				.Dialog(80, 100);
 
 			if (this.processor.RegAcc.Value16 == 1)
 			{
@@ -765,9 +743,8 @@ namespace Civilization1Remaster.UI
 		{
 			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 0);
 
-			this.owner.Libc.CopyText(0xba06, this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1992)));
-
-			this.owner.Libc.AppendText(0xba06, " build space ship.\n");
+			Message(this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1992)))
+				.Text(" build space ship.\n");
 
 			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 96, 15);
 
@@ -887,13 +864,10 @@ namespace Civilization1Remaster.UI
 				// Never reached: a full kind ends at the end of the table, not at 0xffff (see the backlog)
 				this.processor.EmitGlobalWord((ushort)((arg2 << 1) + 0x687a), (ushort)(this.processor.PullGlobalWord((ushort)((arg2 << 1) + 0x687a)) | (1 << (byte)kind)));
 
-				this.owner.Libc.CopyText(0xba06, "No further ");
-
-				this.owner.Libc.AppendText(0xba06, (ushort)((((3 * arg2) + kind) * 0x1a) + 0x4bd0));
-
-				this.owner.Libc.AppendText(0xba06, " required.\n");
-
-				this.owner.TurnHooks.DisplayDialog(0xba06, 120, 80);
+				Message("No further ")
+					.Text((ushort)((((3 * arg2) + kind) * 0x1a) + 0x4bd0))
+					.Text(" required.\n")
+					.Dialog(120, 80);
 			}
 
 			if (attach && (this.owner.World.StarshipMarkers & (1 << (byte)(participantIdx + 8))) == 0)
@@ -1071,14 +1045,14 @@ namespace Civilization1Remaster.UI
 
 			this.owner.TurnLogic.AwaitForKey();
 
-			this.owner.Libc.CopyText(0xba06, this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1992)));
-			this.owner.Libc.AppendText(0xba06, " LAUNCH space ship!");
+			Message(this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1992)))
+				.Text(" LAUNCH space ship!");
 
 			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 92, 15);
 
-			this.owner.Libc.CopyText(0xba06, "Estimate arrival in ");
-			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(this.owner.World.Participants[participantIdx].StarshipArrivalSeason, 10));
-			this.owner.Libc.AppendText(0xba06, ".\n");
+			Message("Estimate arrival in ")
+				.Number(this.owner.World.Participants[participantIdx].StarshipArrivalSeason)
+				.Text(".\n");
 
 			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 100, 15);
 

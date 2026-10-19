@@ -35,9 +35,8 @@ namespace Civilization1Remaster.UI
 			this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa), 16, 4,
 				this.processor.PullGlobalWord((ushort)((((participantIdx << 5) + 0x40) << 1) + 0xd4ce)));
 
-			this.owner.Libc.CopyText(0xba06, "Government: ");
-
-			this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)((participant.RegimeKind << 1) + 0x1966)));
+			Message("Government: ")
+				.Text(this.processor.PullGlobalWord((ushort)((participant.RegimeKind << 1) + 0x1966)));
 
 			this.owner.TextPainter.RenderTextToScreen0(0xba06, 16, 24, 15);
 
@@ -47,17 +46,12 @@ namespace Civilization1Remaster.UI
 
 			this.owner.TextPainter.RenderTextToScreen0(0xba06, 16, 32, 15);
 
-			this.owner.Libc.CopyText(0xba06, "Treasury: $");
-
-			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(participant.Gold, 10));
-
-			this.owner.Libc.AppendText(0xba06, ", Taxes/Science: ");
-
-			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(participant.LevyRatio, 10));
-
-			this.owner.Libc.AppendText(0xba06, "/");
-
-			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(participant.ResearchLevyRatio, 10));
+			Message("Treasury: $")
+				.Number(participant.Gold)
+				.Text(", Taxes/Science: ")
+				.Number(participant.LevyRatio)
+				.Text("/")
+				.Number(participant.ResearchLevyRatio);
 
 			this.owner.TextPainter.RenderTextToScreen0(0xba06, 16, 40, 15);
 
@@ -220,8 +214,8 @@ namespace Civilization1Remaster.UI
 
 			for (short participantIdx = 0; participantIdx < 8; participantIdx++)
 			{
-				this.processor.EmitGlobalByte(0xba06, 0);
-				this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(this.owner.World.Participants[participantIdx].Standing, 10));
+				EmptyMessage()
+					.Number(this.owner.World.Participants[participantIdx].Standing);
 
 				if (this.processor.PullGlobalWord(0xd806) != 0)
 				{
@@ -245,10 +239,10 @@ namespace Civilization1Remaster.UI
 
 					if (participant.LiveTroops[kind] != 0 || participant.TroopsInsideMaking[kind] != 0)
 					{
-						this.owner.Libc.CopyText(0xba06, "");
-						this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(participant.LiveTroops[kind], 10));
-						this.owner.Libc.AppendText(0xba06, "/");
-						this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(participant.TroopsInsideMaking[kind], 10));
+						Message("")
+							.Number(participant.LiveTroops[kind])
+							.Text("/")
+							.Number(participant.TroopsInsideMaking[kind]);
 						this.owner.TextPainter.RenderTextToScreen0(0xba06, (participantIdx * 30) + 88, vertLoc, 15);
 					}
 
@@ -321,10 +315,10 @@ namespace Civilization1Remaster.UI
 					if (this.processor.PullGlobalWord(0xd806) == 0 && rowIdx != personIdx && columnIdx != personIdx)
 						continue;
 
-					this.processor.EmitGlobalByte(0xba06, 0x0);
-					this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(this.owner.World.Participants[rowIdx].TroopsRuined[columnIdx], 10));
-					this.owner.Libc.AppendText(0xba06, "/");
-					this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(this.owner.World.Participants[columnIdx].TroopsRuined[rowIdx], 10));
+					EmptyMessage()
+						.Number(this.owner.World.Participants[rowIdx].TroopsRuined[columnIdx])
+						.Text("/")
+						.Number(this.owner.World.Participants[columnIdx].TroopsRuined[rowIdx]);
 
 					this.owner.TextPainter.RenderTextToScreen0(0xba06, rowIdx * 40, (columnIdx * 12) + 32,
 						this.processor.PullGlobalWord((ushort)((rowIdx << 1) + 0x1946)));

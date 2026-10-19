@@ -101,15 +101,15 @@ namespace Civilization1Remaster.UI
 					break;
 
 				case 2:
-					this.owner.Libc.CopyText(0xba06, "The ");
-					this.owner.Conquest.ObtainCityLabel(townIdx);
-					this.owner.Libc.AppendText(0xba06, 0x512c);
+					Message("The ")
+						.City(townIdx)
+						.Text(0x512c);
 					break;
 
 				case 3:
-					this.owner.Libc.CopyText(0xba06, "The ");
-					this.owner.Conquest.ObtainCityLabel(townIdx);
-					this.owner.Libc.AppendText(0xba06, 0x5138);
+					Message("The ")
+						.City(townIdx)
+						.Text(0x5138);
 					break;
 			}
 
@@ -119,11 +119,9 @@ namespace Civilization1Remaster.UI
 
 			if (width > 0x12c)
 			{
-				this.processor.EmitGlobalByte(0xba06, 0x0);
-
-				this.owner.Conquest.ObtainCityLabel(townIdx);
-
-				this.owner.Libc.AppendText(0xba06, " News");
+				EmptyMessage()
+					.City(townIdx)
+					.Text(" News");
 
 				this.owner.TextPainter.ObtainTextWidth(0xba06);
 
@@ -148,9 +146,8 @@ namespace Civilization1Remaster.UI
 			this.owner.TextPainter.RenderText(0xba06, 272, 3, 0);
 
 			this.processor.EmitGlobalWord((ushort)(this.processor.PullGlobalWord(0xaa) + 0x10), 0x1);
-			this.processor.EmitGlobalByte(0xba06, 0x0);
-
-			this.owner.Libc.AppendText(0xba06, "10 cents");
+			EmptyMessage()
+				.Text("10 cents");
 
 			this.owner.TextPainter.RenderTextToScreen0(0xba06, 272, 28, 0);
 

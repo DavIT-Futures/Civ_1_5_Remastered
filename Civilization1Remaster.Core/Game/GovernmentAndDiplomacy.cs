@@ -133,19 +133,13 @@ namespace Civilization1Remaster.Game
 					if (((known[participantIdx] & 0x40) != 0 || (known[otherIdx] & 0x40) != 0) &&
 						participantIdx != person && otherIdx != (ushort)person)
 					{
-						this.owner.Libc.CopyText(0xba06, "The war between\nthe ");
-
-						this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)(((ushort)participantIdx << 1) + 0x1992)));
-
-						this.owner.Libc.AppendText(0xba06, " and the\n");
-
-						this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)((otherIdx << 1) + 0x1992)));
-
-						this.owner.Libc.AppendText(0xba06, " has ended.\n");
-
-						this.processor.EmitGlobalWord(0x2f9e, 0x1);
-
-						this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+						Message("The war between\nthe ")
+							.Text(this.processor.PullGlobalWord((ushort)(((ushort)participantIdx << 1) + 0x1992)))
+							.Text(" and the\n")
+							.Text(this.processor.PullGlobalWord((ushort)((otherIdx << 1) + 0x1992)))
+							.Text(" has ended.\n")
+							.Style(0x1)
+							.Dialog(100, 80);
 					}
 				}
 
@@ -190,9 +184,8 @@ namespace Civilization1Remaster.Game
 
 					this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30ba), this.processor.PullGlobalWord((ushort)(this.processor.RegSource.Value16 + 0x1992)));
 
-					this.processor.EmitGlobalByte(0xba06, 0);
-
-					this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(tribute, 10));
+					EmptyMessage()
+						.Number(tribute);
 
 					this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30bc), 0xba06);
 
@@ -509,11 +502,9 @@ namespace Civilization1Remaster.Game
 		/// <summary>"X and\nY" of the two civilizations at 0xba06</summary>
 		private void AppendPair(short participantIdx1, short participantIdx2)
 		{
-			this.owner.Libc.CopyText(0xba06, this.processor.PullGlobalWord((ushort)((participantIdx1 << 1) + 0x1992)));
-
-			this.owner.Libc.AppendText(0xba06, " and\n");
-
-			this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)((participantIdx2 << 1) + 0x1992)));
+			Message(this.processor.PullGlobalWord((ushort)((participantIdx1 << 1) + 0x1992)))
+				.Text(" and\n")
+				.Text(this.processor.PullGlobalWord((ushort)((participantIdx2 << 1) + 0x1992)));
 		}
 
 		/// <summary>

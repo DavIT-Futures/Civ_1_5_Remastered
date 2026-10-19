@@ -223,9 +223,8 @@ namespace Civilization1Remaster.Game
 
 			if (this.processor.PullGlobalByte(0xba06) == 0)
 			{
-				this.owner.Libc.CopyText(0xba06, this.processor.PullGlobalWord((ushort)(names + 0x1982)));
-
-				this.owner.Libc.AppendText(0xba06, "s");
+				Message(this.processor.PullGlobalWord((ushort)(names + 0x1982)))
+					.Text("s");
 			}
 
 			this.processor.RegSource.Value16 = names;

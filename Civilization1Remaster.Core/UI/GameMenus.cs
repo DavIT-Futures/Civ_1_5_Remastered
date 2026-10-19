@@ -388,8 +388,8 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope("DisplayAdvisorMenu()");
 
-			this.owner.Libc.CopyText(0xba06, " City Status (F1)\n Military Advisor (F2)\n Intelligence Advisor (F3)\n Attitude Advisor (F4)\n");
-			this.owner.Libc.AppendText(0xba06, " Trade Advisor (F5)\n Science Advisor (F6)\n");
+			Message(" City Status (F1)\n Military Advisor (F2)\n Intelligence Advisor (F3)\n Attitude Advisor (F4)\n")
+				.Text(" Trade Advisor (F5)\n Science Advisor (F6)\n");
 
 			this.owner.Dialogs.DisplayMenu(0xba06, 112, 8, 0);
 
@@ -463,8 +463,8 @@ namespace Civilization1Remaster.UI
 				this.processor.EmitGlobalWord(0xb276, 0x20);
 			}
 
-			this.owner.Libc.CopyText(0xba06, " Wonders of the World (F7)\n Top 5 Cities (F8)\n Civilization Score (F9)\n");
-			this.owner.Libc.AppendText(0xba06, " World Map (F10)\n Demographics\n SpaceShips\n");
+			Message(" Wonders of the World (F7)\n Top 5 Cities (F8)\n Civilization Score (F9)\n")
+				.Text(" World Map (F10)\n Demographics\n SpaceShips\n");
 
 			this.owner.Dialogs.DisplayMenu(0xba06, 144, 8, 0);
 
@@ -509,8 +509,8 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope("DisplayCivilopediaMenu()");
 
-			this.owner.Libc.CopyText(0xba06, " Complete\n Civilization Advances\n City Improvements\n Military Units\n Terrain Types\n");
-			this.owner.Libc.AppendText(0xba06, " Miscellaneous\n");
+			Message(" Complete\n Civilization Advances\n City Improvements\n Military Units\n Terrain Types\n")
+				.Text(" Miscellaneous\n");
 
 			this.owner.Dialogs.DisplayMenu(0xba06, 182, 8, 0);
 

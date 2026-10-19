@@ -50,9 +50,8 @@ namespace Civilization1Remaster.UI
 
 					if (handle == 0xffff)
 					{
-						this.owner.Libc.CopyText(0xba06, "File Error\n");
-
-						this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+						Message("File Error\n")
+							.Dialog(100, 80);
 
 						break;
 					}
@@ -181,13 +180,10 @@ namespace Civilization1Remaster.UI
 			short year = (short)ObtainReplayYear(turn);
 
 			this.processor.EmitGlobalWord(0x6810, 0xffff);
-			this.processor.EmitGlobalByte(0xba06, 0x0);
-
-			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(Math.Abs(year), 10));
-
-			this.owner.Libc.AppendText(0xba06, year < 0 ? " BC" : " AD");
-
-			this.owner.Libc.AppendText(0xba06, ": ");
+			EmptyMessage()
+				.Number(Math.Abs(year))
+				.Text(year < 0 ? " BC" : " AD")
+				.Text(": ");
 
 			switch (kind)
 			{
@@ -807,8 +803,8 @@ namespace Civilization1Remaster.UI
 			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 152, 20);
 			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 151, (ushort)(this.processor.PullGlobalWord(0xd762) != 0 ? 23 : 15));
 
-			this.owner.Libc.CopyText(0xba06, this.processor.PullGlobalWord((ushort)((this.owner.World.PersonParticipantIdx << 1) + 0x19a2)));
-			this.owner.Libc.AppendText(0xba06, " the CONQUEROR!");
+			Message(this.processor.PullGlobalWord((ushort)((this.owner.World.PersonParticipantIdx << 1) + 0x19a2)))
+				.Text(" the CONQUEROR!");
 
 			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 168, 20);
 			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 167, (ushort)(this.processor.PullGlobalWord(0xd762) != 0 ? 23 : 15));
@@ -980,9 +976,8 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Libc.CopyText(0xba06, "the ");
 
-			this.owner.Libc.CopyText(0xba06, this.processor.PullGlobalWord((ushort)(((ushort)participantIdx << 1) + 0x1982)));
-
-			this.owner.Libc.AppendText(0xba06, " civilization!");
+			Message(this.processor.PullGlobalWord((ushort)(((ushort)participantIdx << 1) + 0x1982)))
+				.Text(" civilization!");
 
 			RenderShadowedCentredLine(168);
 

@@ -574,8 +574,8 @@ namespace Civilization1Remaster.UI
 							106, 77, 76, 46);
 					}
 
-					this.processor.EmitGlobalByte(0xba06, 0);
-					this.owner.Libc.AppendText(0xba06, (ushort)(0x13 * scienceIdx + 0x282));
+					EmptyMessage()
+						.Text((ushort)(0x13 * scienceIdx + 0x282));
 					this.owner.TextPainter.RenderCenteredTextToScreen0(0x3d7f, titleX, 36, 7);
 					break;
 
@@ -595,8 +595,8 @@ namespace Civilization1Remaster.UI
 			byte req1 = this.processor.PullUInt8(dataSeg, (ushort)(techSpecAddr + 0x4ee));
 			if (req1 != 0xff)
 			{
-				this.owner.Libc.CopyText(0xba06, "Requires ");
-				this.owner.Libc.AppendText(0xba06, (ushort)((short)(sbyte)0x16 * (short)(sbyte)req1 + 0x4da));
+				Message("Requires ")
+					.Text((ushort)((short)(sbyte)0x16 * (short)(sbyte)req1 + 0x4da));
 			}
 
 			byte req2 = this.processor.PullUInt8(dataSeg, (ushort)(techSpecAddr + 0x4ef));
@@ -662,8 +662,8 @@ namespace Civilization1Remaster.UI
 							dataSeg,
 							(ushort)((((unitIdx + (this.owner.World.PersonParticipantIdx << 5)) + 0x40) << 1) + 0xd4ce)));
 
-					this.owner.Libc.CopyText(0xba06, (ushort)(unitSpec + 0x112a));
-					this.owner.Libc.AppendText(0xba06, " unit");
+					Message((ushort)(unitSpec + 0x112a))
+						.Text(" unit");
 					this.owner.TextPainter.RenderTextToScreen0(0xba06, 60, cursorY, 12);
 					cursorY = (short)(cursorY + 0xc);
 				}
@@ -675,8 +675,8 @@ namespace Civilization1Remaster.UI
 				if (this.processor.PullUInt16(dataSeg, (ushort)(impSpec + 0xbb6)) == scienceIdx)
 				{
 					this.owner.CityOps.RenderResourceIcon((short)impIdx, 40, (short)(cursorY - 2));
-					this.owner.Libc.CopyText(0xba06, (ushort)(impSpec + 0xb9a));
-					this.owner.Libc.AppendText(0xba06, (short)impIdx > 0x18 ? " Wonder" : " improvement");
+					Message((ushort)(impSpec + 0xb9a))
+						.Text((short)impIdx > 0x18 ? " Wonder" : " improvement");
 					this.owner.TextPainter.RenderTextToScreen0(0xba06, 60, cursorY, 2);
 					cursorY = (short)(cursorY + 0xc);
 				}
@@ -702,9 +702,9 @@ namespace Civilization1Remaster.UI
 			}
 			else
 			{
-				this.owner.Libc.CopyText(0xba06, "(Taken from ");
-				this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(dataSeg, (ushort)((obtainedFrom << 1) + 0x1992)));
-				this.owner.Libc.AppendText(0xba06, ")");
+				Message("(Taken from ")
+					.Text(this.processor.PullUInt16(dataSeg, (ushort)((obtainedFrom << 1) + 0x1992)))
+					.Text(")");
 			}
 
 			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, titleX, 48, 7);
@@ -795,8 +795,8 @@ namespace Civilization1Remaster.UI
 				short irrigEffect = (short)this.processor.PullUInt16(dataSeg, (ushort)(0xc * scienceIdx + 0x44a));
 				if (foodVal != 0 || irrigEffect < -1)
 				{
-					this.owner.Libc.CopyText(0xba06, "Food: ");
-					this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(foodVal, 10));
+					Message("Food: ")
+						.Number(foodVal);
 					if (foodVal >= 3)
 					{
 						this.owner.Libc.AppendText(0xba06, "*");
@@ -851,8 +851,8 @@ namespace Civilization1Remaster.UI
 				sbyte tradeVal = (sbyte)this.processor.PullUInt8(dataSeg, (ushort)(varSpec + 0x292));
 				if (tradeVal != 0 || (short)scienceIdx <= 2)
 				{
-					this.owner.Libc.CopyText(0xba06, "Trade: ");
-					this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(tradeVal, 10));
+					Message("Trade: ")
+						.Number(tradeVal);
 					if (tradeVal != 0)
 					{
 						this.owner.Libc.AppendText(0xba06, "%");

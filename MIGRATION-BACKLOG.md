@@ -1133,6 +1133,8 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   n + 1 z listy gry – sprawdzone z tabelą w CIV.EXE; recykling, nie metro, daje 0x6c98 = 3), `City.HasStructureSignExtended`
   zamiast dwóch prywatnych kopii, `Player.StopMaking` / `StartMaking`, `StopMakingUnit` / `StartMakingUnit`,
   `RestoreShieldsAndTrade`, klasa bazowa `GameModule` dla 43 klas. Pełny zestaw zielony.
+- Porządki po migracji, porcja 2 (2026-10-19, część A punkty 4 i 6): `GameMessage` (176 łańcuchów wiadomości), `WriteReplayEntry`,
+  `MaskNeighbours`, `UnitMemory.Offset`, `StartTerrainWork`, `CountSpecialSlots`. Pełny zestaw zielony.
 
 ## Następny krok
 

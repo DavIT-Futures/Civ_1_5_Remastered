@@ -105,9 +105,8 @@ namespace Civilization1Remaster.Game
 				if (this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(place + 0x6e3e)) >= 0xb8)
 					continue;
 
-				this.processor.EmitGlobalByte(0xba06, 0x0);
-
-				this.owner.Conquest.ObtainCityLabel(this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(place + 0xdf20)));
+				EmptyMessage()
+					.City(this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(place + 0xdf20)));
 
 				this.owner.BlockText.ShrinkTextToWidth(0xba06, (ushort)(327 - this.processor.PullGlobalWord((ushort)(place + 0x6dac))));
 
@@ -323,41 +322,13 @@ namespace Civilization1Remaster.Game
 			return 0x2;
 		}
 
-		private void RenderOceanTile(int horizLoc, int vertLoc, short screenX, short screenY)
+		/// <summary>
+		/// The neighbours of the square that fit (the directions 1 - 8 of the tables 0x1882 / 0x18e4, each or every second):
+		/// one bit each, shifted in from the bit given (0xc the direction, 0x12 the mask as it grows, 0xc 9 at the end)
+		/// </summary>
+		private ushort MaskNeighbours(int horizLoc, int vertLoc, ushort mask, ushort step, ushort bit, Func<ushort, bool> fits)
 		{
-			ushort mask = 0;
-			this.processor.EmitLocalWord(0x12, 0);
-
-			if (this.processor.PullGlobalWord(0xd762) == 0)
-			{
-				for (ushort dir = 1; dir < 9; dir += 2)
-				{
-					this.processor.EmitLocalWord(0xc, dir);
-					mask = (ushort)((short)mask >> 1);
-					this.processor.EmitLocalWord(0x12, mask);
-
-					ushort adjX = (ushort)this.owner.Routing.TunePosition(
-						this.processor.PullInt16(this.processor.SegData.Value16, (ushort)((dir << 1) + 0x1882)) + horizLoc);
-					int adjY = this.processor.PullInt16(this.processor.SegData.Value16, (ushort)((dir << 1) + 0x18e4)) + vertLoc;
-
-					if (ObtainTerrainType((short)adjX, adjY) != 0xa && VerifyMapLimits(0, adjY) != 0)
-					{
-						mask |= 0x8;
-						this.processor.EmitLocalByte(0x12, (byte)mask);
-					}
-				}
-
-				this.processor.EmitLocalWord(0xc, 9);
-
-				this.owner.VideoCard.RenderImage(
-					this.processor.PullGlobalWord(0x19fc),
-					(ushort)(mask << 4), 0x40, 16, 16,
-					this.processor.PullGlobalWord(0xaa),
-					(ushort)screenX, (ushort)screenY);
-				return;
-			}
-
-			for (ushort dir = 1; dir < 9; dir++)
+			for (ushort dir = 1; dir < 9; dir += step)
 			{
 				this.processor.EmitLocalWord(0xc, dir);
 				mask = (ushort)((short)mask >> 1);
@@ -367,14 +338,35 @@ namespace Civilization1Remaster.Game
 					this.processor.PullInt16(this.processor.SegData.Value16, (ushort)((dir << 1) + 0x1882)) + horizLoc);
 				int adjY = this.processor.PullInt16(this.processor.SegData.Value16, (ushort)((dir << 1) + 0x18e4)) + vertLoc;
 
-				if (ObtainTerrainType((short)adjX, adjY) != 0xa && VerifyMapLimits(0, adjY) != 0)
+				if (fits(ObtainTerrainType((short)adjX, adjY)) && VerifyMapLimits(0, adjY) != 0)
 				{
-					mask |= 0x80;
+					mask |= bit;
 					this.processor.EmitLocalByte(0x12, (byte)mask);
 				}
 			}
 
 			this.processor.EmitLocalWord(0xc, 9);
+			return mask;
+		}
+
+		private void RenderOceanTile(int horizLoc, int vertLoc, short screenX, short screenY)
+		{
+			ushort mask = 0;
+			this.processor.EmitLocalWord(0x12, 0);
+
+			if (this.processor.PullGlobalWord(0xd762) == 0)
+			{
+				mask = MaskNeighbours(horizLoc, vertLoc, mask, 2, 0x8, terrainType => terrainType != 0xa);
+
+				this.owner.VideoCard.RenderImage(
+					this.processor.PullGlobalWord(0x19fc),
+					(ushort)(mask << 4), 0x40, 16, 16,
+					this.processor.PullGlobalWord(0xaa),
+					(ushort)screenX, (ushort)screenY);
+				return;
+			}
+
+			mask = MaskNeighbours(horizLoc, vertLoc, mask, 1, 0x80, terrainType => terrainType != 0xa);
 			ushort rawMask = mask;
 			this.processor.EmitLocalWord(0xe, rawMask);
 
@@ -481,24 +473,7 @@ namespace Civilization1Remaster.Game
 				ushort mask = 0;
 				this.processor.EmitLocalWord(0x12, 0);
 
-				for (ushort dir = 1; dir < 9; dir += 2)
-				{
-					this.processor.EmitLocalWord(0xc, dir);
-					mask = (ushort)((short)mask >> 1);
-					this.processor.EmitLocalWord(0x12, mask);
-
-					ushort adjX = (ushort)this.owner.Routing.TunePosition(
-						this.processor.PullInt16(this.processor.SegData.Value16, (ushort)((dir << 1) + 0x1882)) + horizLoc);
-					int adjY = this.processor.PullInt16(this.processor.SegData.Value16, (ushort)((dir << 1) + 0x18e4)) + vertLoc;
-
-					if (ObtainTerrainType((short)adjX, adjY) == terrain && VerifyMapLimits(0, adjY) != 0)
-					{
-						mask |= 0x8;
-						this.processor.EmitLocalByte(0x12, (byte)mask);
-					}
-				}
-
-				this.processor.EmitLocalWord(0xc, 9);
+				mask = MaskNeighbours(horizLoc, vertLoc, mask, 2, 0x8, terrainType => terrainType == terrain);
 
 				this.owner.Services.RenderPictureToScreen(
 					this.processor.PullGlobalWord(0xaa),
@@ -691,8 +666,8 @@ namespace Civilization1Remaster.Game
 				: (short)town.ShownExtent;
 			this.processor.EmitLocalWord(0xe, (ushort)displayedSize);
 
-			this.processor.EmitGlobalByte(0xba06, 0x0);
-			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(displayedSize, 10));
+			EmptyMessage()
+				.Number(displayedSize);
 
 			if ((town.ConditionMarker & 0x1) != 0)
 			{

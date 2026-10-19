@@ -1,4 +1,4 @@
-using Civilization1Remaster.Emulation;
+﻿using Civilization1Remaster.Emulation;
 
 namespace Civilization1Remaster
 {
@@ -13,5 +13,14 @@ namespace Civilization1Remaster
 			this.owner = owner;
 			this.processor = owner.Processor;
 		}
+
+		/// <summary>A message in the buffer 0xba06 that starts with the text</summary>
+		protected GameMessage Message(string text) => GameMessage.Start(this.owner, text);
+
+		/// <summary>A message in the buffer 0xba06 that starts with the text at the address</summary>
+		protected GameMessage Message(ushort textAddr) => GameMessage.Start(this.owner, textAddr);
+
+		/// <summary>A message in the buffer 0xba06 that starts empty</summary>
+		protected GameMessage EmptyMessage() => GameMessage.Empty(this.owner);
 	}
 }

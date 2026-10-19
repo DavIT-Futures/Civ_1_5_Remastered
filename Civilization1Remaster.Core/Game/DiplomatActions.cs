@@ -37,13 +37,10 @@ namespace Civilization1Remaster.Game
 			this.processor.EmitLocalWord(0x26, (ushort)ownerIdx);
 			this.processor.EmitGlobalByte((ushort)(troop + 0x81da), 0xff);
 
-			this.owner.Libc.CopyText(0xba06, this.processor.PullGlobalWord((ushort)(((ushort)participantIdx << 1) + 0x1982)));
-
-			this.owner.Libc.AppendText(0xba06, " diplomat arrives\nin ");
-
-			this.owner.Conquest.ObtainCityLabel(townIdx);
-
-			this.owner.Libc.AppendText(0xba06, "...\n Establish Embassy\n Investigate City\n Steal Technology\n Industrial Sabotage\n Incite a Revolt\n Meet with King\n");
+			Message(this.processor.PullGlobalWord((ushort)(((ushort)participantIdx << 1) + 0x1982)))
+				.Text(" diplomat arrives\nin ")
+				.City(townIdx)
+				.Text("...\n Establish Embassy\n Investigate City\n Steal Technology\n Industrial Sabotage\n Incite a Revolt\n Meet with King\n");
 
 			ushort choice;
 
@@ -189,17 +186,12 @@ namespace Civilization1Remaster.Game
 
 				this.owner.Advisors.EarnTechnology(participantIdx, scienceIdx, ownerIdx);
 
-				this.owner.Libc.CopyText(0xba06, this.processor.PullGlobalWord((ushort)(((ushort)participantIdx << 1) + 0x1992)));
-
-				this.owner.Libc.AppendText(0xba06, " steal\n");
-
-				this.owner.Libc.AppendText(0xba06, (ushort)((ushort)(0x16 * scienceIdx) + 0x4da));
-
-				this.owner.Libc.AppendText(0xba06, ".\n");
-
-				this.processor.EmitGlobalWord(0x2f9e, 0x0);
-
-				this.owner.TurnHooks.DisplayDialog(0xba06, 80, 80);
+				Message(this.processor.PullGlobalWord((ushort)(((ushort)participantIdx << 1) + 0x1992)))
+					.Text(" steal\n")
+					.Text((ushort)((ushort)(0x16 * scienceIdx) + 0x4da))
+					.Text(".\n")
+					.Style(0x0)
+					.Dialog(80, 80);
 
 				town.ConditionMarker |= 0x20;
 				break;
@@ -255,9 +247,8 @@ namespace Civilization1Remaster.Game
 					town.StructureMarkers0 &= keep;
 					town.StructureMarkers1 &= (keep & 0x8000) != 0 ? (ushort)0xffff : (ushort)0;
 
-					this.owner.Libc.CopyText(0xba06, (ushort)((ushort)(0x1e * buildingIdx) + 0xbb8));
-
-					this.owner.Libc.AppendText(0xba06, " destroyed\n");
+					Message((ushort)((ushort)(0x1e * buildingIdx) + 0xbb8))
+						.Text(" destroyed\n");
 
 					destroyed = true;
 				}
@@ -271,10 +262,8 @@ namespace Civilization1Remaster.Game
 
 				town.MaterialsTally = 0;
 
-				this.owner.Libc.CopyText(0xba06, town.PresentMakingIdx >= 0 ? (ushort)((ushort)(0x22 * town.PresentMakingIdx) + 0x112a) :
-					(ushort)((ushort)(0x1e * -town.PresentMakingIdx) + 0xb9a));
-
-				this.owner.Libc.AppendText(0xba06, " production sabotaged\n");
+				Message(town.PresentMakingIdx >= 0 ? (ushort)((ushort)(0x22 * town.PresentMakingIdx) + 0x112a) : (ushort)((ushort)(0x1e * -town.PresentMakingIdx) + 0xb9a))
+					.Text(" production sabotaged\n");
 			}
 
 			this.owner.Libc.AppendText(0xba06, "in ");
@@ -316,15 +305,11 @@ namespace Civilization1Remaster.Game
 
 			this.processor.EmitLocalWord(0x8, (ushort)cost);
 
-			this.owner.Libc.CopyText(0xba06, "Dissidents in ");
-
-			this.owner.Conquest.ObtainCityLabel(townIdx);
-
-			this.owner.Libc.AppendText(0xba06, "\nwill revolt for $");
-
-			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(cost, 10));
-
-			this.owner.Libc.AppendText(0xba06, ".\n");
+			Message("Dissidents in ")
+				.City(townIdx)
+				.Text("\nwill revolt for $")
+				.Number(cost)
+				.Text(".\n");
 
 			if (cost <= this.owner.World.Participants[participantIdx].Gold)
 			{
@@ -425,14 +410,14 @@ namespace Civilization1Remaster.Game
 			UnitMemory troops = new UnitMemory(this.processor);
 			ushort kindName = (ushort)((troops.TroopKind(participantIdx, troopIdx) * UnitKindTable.Stride) + UnitKindTable.Origin);
 
-			this.owner.Libc.CopyText(0xba06, this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1982)));
-			this.owner.Libc.AppendText(0xba06, " ");
-			this.owner.Libc.AppendText(0xba06, kindName);
-			this.owner.Libc.AppendText(0xba06, "\nwill desert for ");
-			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(price, 10));
-			this.owner.Libc.AppendText(0xba06, "$.\nTreasury: ");
-			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(this.owner.World.Participants[participantIdx1].Gold, 10));
-			this.owner.Libc.AppendText(0xba06, "$\n");
+			Message(this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1982)))
+				.Text(" ")
+				.Text(kindName)
+				.Text("\nwill desert for ")
+				.Number(price)
+				.Text("$.\nTreasury: ")
+				.Number(this.owner.World.Participants[participantIdx1].Gold)
+				.Text("$\n");
 
 			if (price <= this.owner.World.Participants[participantIdx1].Gold)
 			{
@@ -452,16 +437,14 @@ namespace Civilization1Remaster.Game
 				this.owner.MapOps.FocusMapView(participantIdx, troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz) - 8,
 					troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert) - 6);
 
-				this.owner.Libc.CopyText(0xba06, this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1982)));
-				this.owner.Libc.AppendText(0xba06, " ");
-				this.owner.Libc.AppendText(0xba06, kindName);
-				this.owner.Libc.AppendText(0xba06, " unit\nbribed by ");
-				this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)((participantIdx1 << 1) + 0x1992)));
-				this.owner.Libc.AppendText(0xba06, "!\n");
-
-				this.processor.EmitGlobalWord(0x2f9e, 0);
-
-				this.owner.TurnHooks.DisplayDialog(0xba06, 80, 40);
+				Message(this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1982)))
+					.Text(" ")
+					.Text(kindName)
+					.Text(" unit\nbribed by ")
+					.Text(this.processor.PullGlobalWord((ushort)((participantIdx1 << 1) + 0x1992)))
+					.Text("!\n")
+					.Style(0)
+					.Dialog(80, 40);
 			}
 
 			short kind = troops.TroopKind(participantIdx, troopIdx);
@@ -669,11 +652,9 @@ namespace Civilization1Remaster.Game
 					this.owner.MapOps.FocusMapView(humanIdx, town.Place.X - 8, town.Place.Y - 5);
 				}
 
-				this.owner.Libc.CopyText(0xba06, this.processor.PullGlobalWord((ushort)((ownerIdx << 1) + 0x1992)));
-
-				this.owner.Libc.AppendText(0xba06, participantIdx == 0 ? (ushort)0x5322 : (ushort)0x533c);
-
-				this.owner.Conquest.ObtainCityLabel(townIdx);
+				Message(this.processor.PullGlobalWord((ushort)((ownerIdx << 1) + 0x1992)))
+					.Text(participantIdx == 0 ? (ushort)0x5322 : (ushort)0x533c)
+					.City(townIdx);
 
 				if (participantIdx == 0)
 				{
@@ -806,11 +787,9 @@ namespace Civilization1Remaster.Game
 
 				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0xaa), 0, 0);
 
-				this.processor.EmitGlobalByte(0xba06, 0x0);
-
-				this.owner.Conquest.ObtainCityLabel(townIdx);
-
-				this.owner.Libc.AppendText(0xba06, " founded: ");
+				EmptyMessage()
+					.City(townIdx)
+					.Text(" founded: ");
 
 				this.owner.TurnHooks.ObtainCurrentYearAsText();
 

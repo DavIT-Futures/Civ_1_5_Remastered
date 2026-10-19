@@ -553,11 +553,10 @@ namespace Civilization1Remaster.Game
 			{
 				this.processor.EmitGlobalWord(0x2f9e, 0x3);
 
-				this.owner.Libc.CopyText(0xba06, "Sneak attack by\n");
-				this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((participantIdx1 << 1) + 0x1982)));
-				this.owner.Libc.AppendText(0xba06, " forces!\n");
-
-				this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+				Message("Sneak attack by\n")
+					.Text(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((participantIdx1 << 1) + 0x1982)))
+					.Text(" forces!\n")
+					.Dialog(100, 80);
 
 				this.owner.World.Participants[participantIdx1].Relations[participantIdx2] &= 0xfdff;
 			}
@@ -569,12 +568,11 @@ namespace Civilization1Remaster.Game
 				{
 					this.processor.EmitGlobalWord(0x2f9e, 0x5);
 
-					this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((participantIdx2 << 1) + 0x1992)));
-					this.owner.Libc.AppendText(0xba06, " cancel\npeace treaty\nwith ");
-					this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((participantIdx1 << 1) + 0x1992)));
-					this.owner.Libc.AppendText(0xba06, ".\n");
-
-					this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+					Message(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((participantIdx2 << 1) + 0x1992)))
+						.Text(" cancel\npeace treaty\nwith ")
+						.Text(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((participantIdx1 << 1) + 0x1992)))
+						.Text(".\n")
+						.Dialog(100, 80);
 				}
 
 				if (participantIdx1 == personIdx && (this.owner.World.Participants[participantIdx2].Relations[participantIdx1] & 2) != 0)
@@ -619,10 +617,10 @@ namespace Civilization1Remaster.Game
 				if ((short)destroyedCount > 1 &&
 					(participantIdx1 == this.owner.World.PersonParticipantIdx || participantIdx2 == this.owner.World.PersonParticipantIdx))
 				{
-					this.processor.EmitGlobalByte(0xba06, 0x0);
-					this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText((short)destroyedCount, 10));
-					this.owner.Libc.AppendText(0xba06, " units destroyed.\n");
-					this.owner.TurnHooks.DisplayDialog(0xba06, 80, 80);
+					EmptyMessage()
+						.Number((short)destroyedCount)
+						.Text(" units destroyed.\n")
+						.Dialog(80, 80);
 				}
 			}
 			else
@@ -756,13 +754,11 @@ namespace Civilization1Remaster.Game
 
 			if ((person.Relations[participantIdx] & 2) != 0)
 			{
-				this.owner.Libc.CopyText(0xba06, "We have signed a\npeace treaty with\nthe ");
-				this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1992)));
-				this.owner.Libc.AppendText(0xba06, "!\n Cancel action.\n Break treaty.\n");
-
-				this.processor.EmitGlobalWord(0x2f9e, 0x5);
-
-				this.owner.TurnHooks.DisplayDialog(0xba06, 80, 80);
+				Message("We have signed a\npeace treaty with\nthe ")
+					.Text(this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1992)))
+					.Text("!\n Cancel action.\n Break treaty.\n")
+					.Style(0x5)
+					.Dialog(80, 80);
 
 				affirmed = 0xffff;
 
@@ -774,11 +770,9 @@ namespace Civilization1Remaster.Game
 					}
 					else
 					{
-						this.owner.Libc.CopyText(0xba06, "Overruled by\nthe Senate.\nAction canceled.\n");
-
-						this.processor.EmitGlobalWord(0x2f9e, 0x4);
-
-						this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+						Message("Overruled by\nthe Senate.\nAction canceled.\n")
+							.Style(0x4)
+							.Dialog(100, 80);
 					}
 				}
 			}
@@ -810,10 +804,9 @@ namespace Civilization1Remaster.Game
 			{
 				this.processor.EmitGlobalWord(0x2f9e, 0x3);
 
-				this.owner.Libc.CopyText(0xba06, this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1992)));
-				this.owner.Libc.AppendText(0xba06, " use\nnuclear weapons!\n");
-
-				this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+				Message(this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1992)))
+					.Text(" use\nnuclear weapons!\n")
+					.Dialog(100, 80);
 			}
 
 			this.owner.Diplomats.RenderExplosion(horizLoc, vertLoc);
@@ -833,11 +826,10 @@ namespace Civilization1Remaster.Game
 
 					if (this.owner.World.Towns[(ushort)townIdx].Has(CityStructure.SdiDefense))
 					{
-						this.owner.Libc.CopyText(0xba06, "SDI protects ");
-						this.owner.Conquest.ObtainCityLabel(townIdx);
-						this.owner.Libc.AppendText(0xba06, ".\n");
-
-						this.owner.TurnHooks.DisplayDialog(0xba06, 80, 100);
+						Message("SDI protects ")
+							.City(townIdx)
+							.Text(".\n")
+							.Dialog(80, 100);
 
 						troopIdx = 0xffff;
 					}

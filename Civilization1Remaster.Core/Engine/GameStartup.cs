@@ -55,8 +55,8 @@ namespace Civilization1Remaster.Engine
 				// Not enough memory: the amount in the text 0x270, then a menu with it
 				this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 12);
 
-				this.processor.EmitGlobalByte(0xba06, 0);
-				this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText((short)this.processor.PullLocalWord(0x4), 10));
+				EmptyMessage()
+					.Number((short)this.processor.PullLocalWord(0x4));
 				this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be), 0xba06);
 				this.processor.EmitGlobalByte(0xba06, 0);
 

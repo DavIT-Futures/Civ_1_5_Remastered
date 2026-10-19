@@ -2008,9 +2008,8 @@ namespace Civilization1Remaster.Game
 
 				this.owner.TextPainter.RenderTextToScreen0(0xba06, 128, lineTop, 15);
 
-				this.processor.EmitGlobalByte(0xba06, 0x0);
-
-				this.owner.Conquest.ObtainCityLabel(this.troops.PullSigned(participantIdx, present, UnitMemory.BaseTown));
+				EmptyMessage()
+					.City(this.troops.PullSigned(participantIdx, present, UnitMemory.BaseTown));
 
 				this.owner.TextPainter.RenderTextToScreen0(0xba06, 128, lineTop + 8, 14);
 
@@ -2192,132 +2191,51 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// An entry of the replay of the game: the kind and the turn (4 and 12 bits, high byte first), then its bytes; nothing
+		/// when the 0x1000 bytes of the replay have no room for all of it
 		/// </summary>
-		/// <param name="replayID"></param>
-		/// <param name="data1"></param>
+		private void WriteReplayEntry(ushort rerunIdx, params byte[] content)
+		{
+			if (this.owner.World.RerunContentSpan + 2 + content.Length >= 0x1000)
+				return;
+
+			ushort interim = (ushort)((rerunIdx << 12) | ((ushort)this.owner.World.RoundTally & 0xfff));
+			this.owner.World.RerunContent[this.owner.World.RerunContentSpan++] = (byte)((interim & 0xff00) >> 8);
+			this.owner.World.RerunContent[this.owner.World.RerunContentSpan++] = (byte)(interim & 0xff);
+
+			foreach (byte entry in content)
+				this.owner.World.RerunContent[this.owner.World.RerunContentSpan++] = entry;
+		}
+
+		/// <summary>An entry of the replay with 1 byte(s): the kind rerunIdx, the turn, the bytes</summary>
 		public void AttachReplayContent(ushort rerunIdx, byte content1)
 		{
 			this.processor.Journal.OpenScope($"AttachReplayContent({rerunIdx}, {content1})");
-
-			// function body
-			if (this.owner.World.RerunContentSpan + 3 < 0x1000)
-			{
-				ushort interim = (ushort)((rerunIdx << 12) | ((ushort)this.owner.World.RoundTally & 0xfff));
-
-				this.owner.World.RerunContent[this.owner.World.RerunContentSpan] = (byte)((interim & 0xff00) >> 8);
-				this.owner.World.RerunContentSpan++;
-
-				this.owner.World.RerunContent[this.owner.World.RerunContentSpan] = (byte)(interim & 0xff);
-				this.owner.World.RerunContentSpan++;
-
-				this.owner.World.RerunContent[this.owner.World.RerunContentSpan] = content1;
-				this.owner.World.RerunContentSpan++;
-			}
-
-			// Far return
+			WriteReplayEntry(rerunIdx, content1);
 			this.processor.Journal.CloseScope("AttachReplayContent");
 		}
 
-		/// <summary>
-		/// ?
-		/// </summary>
-		/// <param name="replayID"></param>
-		/// <param name="data1"></param>
-		/// <param name="data2"></param>
+		/// <summary>An entry of the replay with 2 byte(s): the kind rerunIdx, the turn, the bytes</summary>
 		public void AttachReplayContent(ushort rerunIdx, byte content1, byte content2)
 		{
 			this.processor.Journal.OpenScope($"AttachReplayContent({rerunIdx}, {content1}, {content2})");
-
-			// function body
-			if (this.owner.World.RerunContentSpan + 4 < 0x1000)
-			{
-				ushort interim = (ushort)((rerunIdx << 12) | ((ushort)this.owner.World.RoundTally & 0xfff));
-
-				this.owner.World.RerunContent[this.owner.World.RerunContentSpan] = (byte)((interim & 0xff00) >> 8);
-				this.owner.World.RerunContentSpan++;
-
-				this.owner.World.RerunContent[this.owner.World.RerunContentSpan] = (byte)(interim & 0xff);
-				this.owner.World.RerunContentSpan++;
-
-				this.owner.World.RerunContent[this.owner.World.RerunContentSpan] = content1;
-				this.owner.World.RerunContentSpan++;
-				this.owner.World.RerunContent[this.owner.World.RerunContentSpan] = content2;
-				this.owner.World.RerunContentSpan++;
-			}
-
-			// Far return
+			WriteReplayEntry(rerunIdx, content1, content2);
 			this.processor.Journal.CloseScope("AttachReplayContent");
 		}
 
-		/// <summary>
-		/// ?
-		/// </summary>
-		/// <param name="replayID"></param>
-		/// <param name="data1"></param>
-		/// <param name="data2"></param>
-		/// <param name="data3"></param>
+		/// <summary>An entry of the replay with 3 byte(s): the kind rerunIdx, the turn, the bytes</summary>
 		public void AttachReplayContent(ushort rerunIdx, byte content1, byte content2, byte content3)
 		{
 			this.processor.Journal.OpenScope($"AttachReplayContent({rerunIdx}, {content1}, {content2}, {content3})");
-
-			// function body
-			if (this.owner.World.RerunContentSpan + 5 < 0x1000)
-			{
-				ushort interim = (ushort)((rerunIdx << 12) | ((ushort)this.owner.World.RoundTally & 0xfff));
-
-				this.owner.World.RerunContent[this.owner.World.RerunContentSpan] = (byte)((interim & 0xff00) >> 8);
-				this.owner.World.RerunContentSpan++;
-
-				this.owner.World.RerunContent[this.owner.World.RerunContentSpan] = (byte)(interim & 0xff);
-				this.owner.World.RerunContentSpan++;
-
-				this.owner.World.RerunContent[this.owner.World.RerunContentSpan] = content1;
-				this.owner.World.RerunContentSpan++;
-				this.owner.World.RerunContent[this.owner.World.RerunContentSpan] = content2;
-				this.owner.World.RerunContentSpan++;
-				this.owner.World.RerunContent[this.owner.World.RerunContentSpan] = content3;
-				this.owner.World.RerunContentSpan++;
-			}
-
-			// Far return
+			WriteReplayEntry(rerunIdx, content1, content2, content3);
 			this.processor.Journal.CloseScope("AttachReplayContent");
 		}
 
-		/// <summary>
-		/// ?
-		/// </summary>
-		/// <param name="replayID"></param>
-		/// <param name="data1"></param>
-		/// <param name="data2"></param>
-		/// <param name="data3"></param>
-		/// <param name="data4"></param>
+		/// <summary>An entry of the replay with 4 byte(s): the kind rerunIdx, the turn, the bytes</summary>
 		public void AttachReplayContent(ushort rerunIdx, byte content1, byte content2, byte content3, byte content4)
 		{
 			this.processor.Journal.OpenScope($"AttachReplayContent({rerunIdx}, {content1}, {content2}, {content3}, {content4})");
-
-			// function body
-			if (this.owner.World.RerunContentSpan + 6 < 0x1000)
-			{
-				ushort interim = (ushort)((rerunIdx << 12) | ((ushort)this.owner.World.RoundTally & 0xfff));
-
-				this.owner.World.RerunContent[this.owner.World.RerunContentSpan] = (byte)((interim & 0xff00) >> 8);
-				this.owner.World.RerunContentSpan++;
-
-				this.owner.World.RerunContent[this.owner.World.RerunContentSpan] = (byte)(interim & 0xff);
-				this.owner.World.RerunContentSpan++;
-
-				this.owner.World.RerunContent[this.owner.World.RerunContentSpan] = content1;
-				this.owner.World.RerunContentSpan++;
-				this.owner.World.RerunContent[this.owner.World.RerunContentSpan] = content2;
-				this.owner.World.RerunContentSpan++;
-				this.owner.World.RerunContent[this.owner.World.RerunContentSpan] = content3;
-				this.owner.World.RerunContentSpan++;
-				this.owner.World.RerunContent[this.owner.World.RerunContentSpan] = content4;
-				this.owner.World.RerunContentSpan++;
-			}
-
-			// Far return
+			WriteReplayEntry(rerunIdx, content1, content2, content3, content4);
 			this.processor.Journal.CloseScope("AttachReplayContent");
 		}
 

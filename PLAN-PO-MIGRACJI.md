@@ -54,6 +54,13 @@ Dokładnych kopii (6+ takich samych linii) jest mało, 24 grupy. Dużo za to tyc
 3 (`Player.StopMaking` / `StartMaking`, w CityManagement `StopMakingUnit` / `StartMakingUnit` z rejestrami jak w oryginale),
 5 (`RestoreShieldsAndTrade`, 7 miejsc; para myszy jeszcze nie), 7 (`GameModule`, 43 klasy; VGADriver ma inny konstruktor).
 
+**Zrobione 2026-10-19 (druga porcja):** 4 (`GameMessage` z `Message` / `EmptyMessage` w `GameModule`: 176 łańcuchów
+tekst – miasto – styl – okienko w 31 plikach; zostało ok. 500 pojedynczych wywołań przerywanych ustawianiem rejestrów
+albo obliczeniami – dojdą po B1), 6 (`WriteReplayEntry` dla czterech `AttachReplayContent`, `MaskNeighbours` dla trzech
+pętli po sąsiadach w MapManagement, `UnitMemory.Offset` zamiast 35 wyliczeń miejsca jednostki, `StartTerrainWork` dla
+drogi, nawadniania i kopalni, `CountSpecialSlots` w CityManagement). Pozostałe pary z listy różnią się szczegółami
+(CityView, StartGameMenu, CRuntime) – zostawione.
+
 Kolejność: 1, 2, 3, 5 i 7 są najtańsze i od razu skracają kod; 4 daje najwięcej (ok. 1000 linii); 6 przy okazji.
 Szacunek: 6–10 porcji.
 

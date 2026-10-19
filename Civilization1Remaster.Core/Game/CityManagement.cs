@@ -64,8 +64,8 @@ namespace Civilization1Remaster.Game
 			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
 			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 2);
 
-			this.processor.EmitGlobalByte(0xba06, 0);
-			this.owner.Conquest.ObtainCityLabel(townIdx);
+			EmptyMessage()
+				.City(townIdx);
 			this.owner.Libc.UppercaseText(0xba06);
 			this.owner.Libc.AppendText(0xba06, " (Pop:");
 			this.owner.Helpers.PopulationToText(this.processor.PullLocalSignedWord(0xe8));
@@ -167,9 +167,9 @@ namespace Civilization1Remaster.Game
 
 				if (owner == this.owner.World.PersonParticipantIdx)
 				{
-					this.owner.Libc.CopyText(0xba06, "Food storage exhausted\nin ");
-					this.owner.Conquest.ObtainCityLabel(townIdx);
-					this.owner.Libc.AppendText(0xba06, (ushort)(this.processor.PullLocalWord(0xe8) != 0xffff ? 0x2510 : 0x2522));
+					Message("Food storage exhausted\nin ")
+						.City(townIdx)
+						.Text((ushort)(this.processor.PullLocalWord(0xe8) != 0xffff ? 0x2510 : 0x2522));
 					this.owner.Services.PerformSound(0x24, 0);
 					this.owner.Paper.DisplayNewspaper(townIdx);
 					this.owner.Services.PerformSound(1, 0);
@@ -218,10 +218,10 @@ namespace Civilization1Remaster.Game
 				if (this.processor.PullGlobalWord(0x6548) == (ushort)this.owner.World.PersonParticipantIdx)
 				{
 					this.processor.EmitGlobalWord(0x2f9e, 4);
-					this.processor.EmitGlobalByte(0xba06, 0);
-					this.owner.Conquest.ObtainCityLabel(townIdx);
-					this.owner.Libc.AppendText(0xba06, " requires an AQUEDUCT\nfor further growth.\n");
-					this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+					EmptyMessage()
+						.City(townIdx)
+						.Text(" requires an AQUEDUCT\nfor further growth.\n")
+						.Dialog(100, 80);
 				}
 			}
 
@@ -249,24 +249,7 @@ namespace Civilization1Remaster.Game
 			this.processor.EmitGlobalWord(0xe3c6, 0);
 
 			// The special slots of the city
-			for (ushort slot = 0; slot < 2; slot++)
-			{
-				this.processor.EmitLocalWord(0xea, slot);
-				this.processor.RegSource.Value16 = (ushort)(townIdx * 0x1c);
-				this.processor.RegBase.Value16 = slot;
-
-				if ((byte)town.Unfamiliar[slot] != 0xff)
-					this.processor.EmitGlobalWord(0xdeb8, (ushort)(this.processor.PullGlobalWord(0xdeb8) + 1));
-			}
-
-			this.processor.EmitLocalWord(0xea, 2);
-			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
-
-			if (town.TrueExtent < (short)this.processor.PullGlobalWord(0xdeb8))
-			{
-				this.processor.RegCount.Value16 = (ushort)(this.processor.PullGlobalWord(0xdeb8) - town.TrueExtent);
-				this.processor.EmitGlobalWord(0xd2f6, this.processor.RegCount.Value16);
-			}
+			CountSpecialSlots(townIdx);
 
 			// The units the city supports
 			for (ushort troop = 0; troop < UnitMemory.TroopTally; troop++)
@@ -457,11 +440,11 @@ namespace Civilization1Remaster.Game
 				// Too many: all go
 				if (marker == 0 && owner == this.owner.World.PersonParticipantIdx)
 				{
-					this.owner.Libc.CopyText(0xba06, "Population decrease\nin ");
-					this.owner.Conquest.ObtainCityLabel(townIdx);
-					this.owner.Libc.AppendText(0xba06, ".\n");
-					this.processor.EmitGlobalWord(0x2f9e, 4);
-					this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+					Message("Population decrease\nin ")
+						.City(townIdx)
+						.Text(".\n")
+						.Style(4)
+						.Dialog(100, 80);
 					this.processor.EmitGlobalWord(0xb1e8, 1);
 				}
 
@@ -952,9 +935,9 @@ namespace Civilization1Remaster.Game
 					return;
 
 				this.processor.EmitGlobalWord(0xb1e8, 1);
-				this.processor.EmitGlobalByte(0xba06, 0);
-				this.owner.Conquest.ObtainCityLabel(townIdx);
-				this.owner.Libc.AppendText(0xba06, " builds ");
+				EmptyMessage()
+					.City(townIdx)
+					.Text(" builds ");
 				this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 				this.processor.RegAcc.Value16 = (ushort)(town.PresentMakingIdx * UnitKindTable.Stride + UnitKindTable.Origin);
 				this.owner.Libc.AppendText(0xba06, this.processor.RegAcc.Value16);
@@ -1178,9 +1161,9 @@ namespace Civilization1Remaster.Game
 
 			if (built == 0x29)
 			{
-				this.owner.Libc.CopyText(0xba06, "Sensors report a\nNUCLEAR WEAPONS test\nnear ");
-				this.owner.Conquest.ObtainCityLabel(townIdx);
-				this.owner.Libc.AppendText(0xba06, "!\n");
+				Message("Sensors report a\nNUCLEAR WEAPONS test\nnear ")
+					.City(townIdx)
+					.Text("!\n");
 				this.owner.Services.PerformSound(0x24, 0);
 				this.owner.Paper.DisplayNewspaper(-1);
 				this.owner.Services.PerformSound(1, 0);
@@ -1236,9 +1219,9 @@ namespace Civilization1Remaster.Game
 				this.owner.World.ChartSight[town.Place.X, town.Place.Y] = -1;
 			}
 
-			this.processor.EmitGlobalByte(0xba06, 0);
-			this.owner.Conquest.ObtainCityLabel(townIdx);
-			this.owner.Libc.AppendText(0xba06, " builds\n");
+			EmptyMessage()
+				.City(townIdx)
+				.Text(" builds\n");
 			this.processor.RegAcc.Value16 = (ushort)(built * 0x1e + 0xb9a);
 			this.owner.Libc.AppendText(0xba06, this.processor.RegAcc.Value16);
 			this.owner.Libc.AppendText(0xba06, ".\n");
@@ -1433,8 +1416,8 @@ namespace Civilization1Remaster.Game
 
 					if (owner != person)
 					{
-						this.owner.Libc.CopyText(0xba06, "Diplomats report:\n");
-						this.processor.EmitGlobalWord(0x2f9e, 1);
+						Message("Diplomats report:\n")
+							.Style(1);
 					}
 
 					this.processor.RegBase.Value16 = (ushort)(owner << 1);
@@ -2231,24 +2214,7 @@ namespace Civilization1Remaster.Game
 			this.processor.EmitGlobalWord(0xdeb6, 0);
 			this.processor.EmitGlobalWord(0xd2f6, 0);
 
-			for (ushort slot = 0; slot < 2; slot++)
-			{
-				this.processor.EmitLocalWord(0xea, slot);
-				this.processor.RegSource.Value16 = (ushort)(townIdx * 0x1c);
-				this.processor.RegBase.Value16 = slot;
-
-				if ((byte)town.Unfamiliar[slot] != 0xff)
-					this.processor.EmitGlobalWord(0xdeb8, (ushort)(this.processor.PullGlobalWord(0xdeb8) + 1));
-			}
-
-			this.processor.EmitLocalWord(0xea, 2);
-			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
-
-			if (town.TrueExtent < (short)this.processor.PullGlobalWord(0xdeb8))
-			{
-				this.processor.RegCount.Value16 = (ushort)(this.processor.PullGlobalWord(0xdeb8) - town.TrueExtent);
-				this.processor.EmitGlobalWord(0xd2f6, this.processor.RegCount.Value16);
-			}
+			CountSpecialSlots(townIdx);
 
 			this.processor.EmitLocalWord(0xf6, 8);
 			this.processor.EmitLocalWord(0xfc, 0x45);
@@ -2382,9 +2348,9 @@ namespace Civilization1Remaster.Game
 			// No shields for the support: the unit is disbanded
 			if (owner == person)
 			{
-				this.processor.EmitGlobalByte(0xba06, 0);
-				this.owner.Conquest.ObtainCityLabel(townIdx);
-				this.owner.Libc.AppendText(0xba06, " can't support\n");
+				EmptyMessage()
+					.City(townIdx)
+					.Text(" can't support\n");
 				this.processor.RegBase.Value16 = (ushort)(owner * UnitMemory.ParticipantStride);
 				this.processor.RegSource.Value16 = (ushort)(farthest * UnitMemory.TroopStride);
 				this.processor.RegAcc.Value16 = (ushort)(this.troops.TroopKind(owner, farthest) * UnitKindTable.Stride + UnitKindTable.Origin);
@@ -3025,9 +2991,9 @@ namespace Civilization1Remaster.Game
 				if (partner == 0xff)
 					continue;
 
-				this.processor.EmitGlobalByte(0xba06, 0);
-				this.owner.Conquest.ObtainCityLabel((short)partner);
-				this.owner.Libc.AppendText(0xba06, ":+");
+				EmptyMessage()
+					.City((short)partner)
+					.Text(":+");
 				City other = this.owner.World.Towns[partner];
 				int shift = (ushort)other.ParticipantIdx != this.processor.PullGlobalWord(0x6548) ? 3 : 4;
 				this.owner.Libc.AppendText(0xba06,
@@ -3320,13 +3286,13 @@ namespace Civilization1Remaster.Game
 
 			short cost = (short)this.processor.PullLocalWord(0xe8);
 
-			this.owner.Libc.CopyText(0xba06, "Cost to complete\n");
-			this.owner.Libc.AppendText(0xba06, (ushort)(making >= 0 ? (making * 0x22) + 0x112a : (-making * 0x1e) + 0xb9a));
-			this.owner.Libc.AppendText(0xba06, ": $");
-			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(cost, 10));
-			this.owner.Libc.AppendText(0xba06, "\nTreasury: $");
-			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(this.owner.World.Participants[owner].Gold, 10));
-			this.owner.Libc.AppendText(0xba06, "\n");
+			Message("Cost to complete\n")
+				.Text((ushort)(making >= 0 ? (making * 0x22) + 0x112a : (-making * 0x1e) + 0xb9a))
+				.Text(": $")
+				.Number(cost)
+				.Text("\nTreasury: $")
+				.Number(this.owner.World.Participants[owner].Gold)
+				.Text("\n");
 
 			if (making >= 0 && (town.ConditionMarker & 1) != 0)
 				this.owner.Libc.AppendText(0xba06, "CIVIL DISORDER\n");
@@ -3656,11 +3622,11 @@ namespace Civilization1Remaster.Game
 
 				ushort price = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(0x1e * improvement + 0xbd0));
 
-				this.owner.Libc.CopyText(0xba06, "Do you want to sell\nyour ");
-				this.owner.Libc.AppendText(0xba06, (ushort)(0x1e * improvement + 0xbb8));
-				this.owner.Libc.AppendText(0xba06, " for ");
-				this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText((short)(0xa * (short)price), 10));
-				this.owner.Libc.AppendText(0xba06, "$?\n No.\n Yes.\n");
+				Message("Do you want to sell\nyour ")
+					.Text((ushort)(0x1e * improvement + 0xbb8))
+					.Text(" for ")
+					.Number((short)(0xa * (short)price))
+					.Text("$?\n No.\n Yes.\n");
 				this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
 				this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 1);
 				this.owner.Startup.DisplayMouseCursor();
@@ -3875,6 +3841,34 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
+		/// The two special slots of the city (Unfamiliar, 0xff empty) counted in 0xdeb8 (0xea the slot); 0xd2f6 how many
+		/// more of them there are than citizens. SI, BX and CX as the original leaves them.
+		/// </summary>
+		private void CountSpecialSlots(short townIdx)
+		{
+			City town = this.owner.World.Towns[townIdx];
+
+			for (ushort slot = 0; slot < 2; slot++)
+			{
+				this.processor.EmitLocalWord(0xea, slot);
+				this.processor.RegSource.Value16 = (ushort)(townIdx * 0x1c);
+				this.processor.RegBase.Value16 = slot;
+
+				if ((byte)town.Unfamiliar[slot] != 0xff)
+					this.processor.EmitGlobalWord(0xdeb8, (ushort)(this.processor.PullGlobalWord(0xdeb8) + 1));
+			}
+
+			this.processor.EmitLocalWord(0xea, 2);
+			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
+
+			if (town.TrueExtent < (short)this.processor.PullGlobalWord(0xdeb8))
+			{
+				this.processor.RegCount.Value16 = (ushort)(this.processor.PullGlobalWord(0xdeb8) - town.TrueExtent);
+				this.processor.EmitGlobalWord(0xd2f6, this.processor.RegCount.Value16);
+			}
+		}
+
+		/// <summary>
 		/// The shields and the trade of the city back as they were before the factories and the power (0x70dc / 0x70de from
 		/// the words 0x10a / 0xa of the frame) before the city screen counts them again; AX the trade
 		/// </summary>
@@ -3947,9 +3941,9 @@ namespace Civilization1Remaster.Game
 			{
 				if (human)
 				{
-					this.owner.Libc.CopyText(0xba06, "Civil Disorder in\n");
-					this.owner.Conquest.ObtainCityLabel(townIdx);
-					this.owner.Libc.AppendText(0xba06, "! Mayor\nflees in panic.\n");
+					Message("Civil Disorder in\n")
+						.City(townIdx)
+						.Text("! Mayor\nflees in panic.\n");
 					this.owner.Services.PerformSound(0x24, 0);
 
 					if ((this.owner.World.SessionPrefMarkers & 8) != 0 && (town.ConditionMarker & 1) == 0 && this.processor.PullGlobalWord(0x6b92) == 0)
@@ -3991,9 +3985,9 @@ namespace Civilization1Remaster.Game
 				{
 					// The disorder goes on under democracy
 					this.owner.Services.PerformSound(0x24, 0);
-					this.owner.Libc.CopyText(0xba06, "Discontented citizens of\n");
-					this.owner.Conquest.ObtainCityLabel(townIdx);
-					this.owner.Libc.AppendText(0xba06, " revolt:\nGovernment Collapses!\n");
+					Message("Discontented citizens of\n")
+						.City(townIdx)
+						.Text(" revolt:\nGovernment Collapses!\n");
 
 					if (owner == this.owner.World.PersonParticipantIdx)
 					{
@@ -4015,10 +4009,10 @@ namespace Civilization1Remaster.Game
 				if (human)
 				{
 					this.processor.EmitGlobalWord(0x2f9e, 4);
-					this.owner.Libc.CopyText(0xba06, "Order restored\nin ");
-					this.owner.Conquest.ObtainCityLabel(townIdx);
-					this.owner.Libc.AppendText(0xba06, ".\n");
-					this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+					Message("Order restored\nin ")
+						.City(townIdx)
+						.Text(".\n")
+						.Dialog(100, 80);
 				}
 				else
 				{
@@ -4056,11 +4050,11 @@ namespace Civilization1Remaster.Game
 					// The celebration starts
 					if (human && player.RegimeKind != 0)
 					{
-						this.owner.Libc.CopyText(0xba06, "'We love the ");
-						this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((player.RegimeKind << 1) + 0x19b2)));
-						this.owner.Libc.AppendText(0xba06, "'\nday celebrated in\n");
-						this.owner.Conquest.ObtainCityLabel(townIdx);
-						this.owner.Libc.AppendText(0xba06, "!\n");
+						Message("'We love the ")
+							.Text(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((player.RegimeKind << 1) + 0x19b2)))
+							.Text("'\nday celebrated in\n")
+							.City(townIdx)
+							.Text("!\n");
 						this.owner.Services.PerformSound(0x22, 0);
 
 						if ((this.owner.World.SessionPrefMarkers & 8) != 0)
@@ -4099,11 +4093,11 @@ namespace Civilization1Remaster.Game
 			if (human && player.RegimeKind != 0)
 			{
 				this.owner.Services.PerformSound(0x23, 0);
-				this.owner.Libc.CopyText(0xba06, "'We love the ");
-				this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((player.RegimeKind << 1) + 0x19b2)));
-				this.owner.Libc.AppendText(0xba06, "'\ncelebration canceled\nin ");
-				this.owner.Conquest.ObtainCityLabel(townIdx);
-				this.owner.Libc.AppendText(0xba06, ".\n");
+				Message("'We love the ")
+					.Text(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((player.RegimeKind << 1) + 0x19b2)))
+					.Text("'\ncelebration canceled\nin ")
+					.City(townIdx)
+					.Text(".\n");
 				this.owner.Paper.DisplayNewspaper(townIdx);
 				this.owner.Services.PerformSound(1, 0);
 			}
@@ -4251,10 +4245,10 @@ namespace Civilization1Remaster.Game
 					this.owner.MapOps.FocusMapView(person, horiz - 8, vert - 6);
 					this.owner.MapOps.RepaintMapTile(horiz, vert);
 					this.processor.EmitGlobalWord(0x2f9e, 6);
-					this.owner.Libc.CopyText(0xba06, "Pollution near ");
-					this.owner.Conquest.ObtainCityLabel(townIdx);
-					this.owner.Libc.AppendText(0xba06, ".\n");
-					this.owner.TurnHooks.DisplayDialog(0xba06, 80, 64);
+					Message("Pollution near ")
+						.City(townIdx)
+						.Text(".\n")
+						.Dialog(80, 64);
 				}
 			}
 
@@ -4270,9 +4264,9 @@ namespace Civilization1Remaster.Game
 				this.owner.Combat.EnactNuclearFallout(horiz, vert);
 				town.Remove(CityStructure.NuclearPlant);
 				this.owner.Services.PerformSound(0x24, 0);
-				this.owner.Libc.CopyText(0xba06, "Nuclear Catastrophe\nin ");
-				this.owner.Conquest.ObtainCityLabel(townIdx);
-				this.owner.Libc.AppendText(0xba06, "!\nContamination feared!\n");
+				Message("Nuclear Catastrophe\nin ")
+					.City(townIdx)
+					.Text("!\nContamination feared!\n");
 				this.owner.Paper.DisplayNewspaper(townIdx);
 				this.owner.Services.PerformSound(1, 0);
 			}
@@ -4324,13 +4318,13 @@ namespace Civilization1Remaster.Game
 				// Sold for the debt
 				player.Gold = 0;
 				town.Structures &= ~bit;
-				this.processor.EmitGlobalByte(0xba06, 0);
-				this.owner.Conquest.ObtainCityLabel(townIdx);
-				this.owner.Libc.AppendText(0xba06, "\ncan't maintain\n");
-				this.owner.Libc.AppendText(0xba06, (ushort)(improvement * 0x1e + 0xbb8));
-				this.owner.Libc.AppendText(0xba06, ".\n");
-				this.processor.EmitGlobalWord(0x2f9e, 4);
-				this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+				EmptyMessage()
+					.City(townIdx)
+					.Text("\ncan't maintain\n")
+					.Text((ushort)(improvement * 0x1e + 0xbb8))
+					.Text(".\n")
+					.Style(4)
+					.Dialog(100, 80);
 				player.Gold += (short)(0xa * this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(improvement * 0x1e + 0xbd0)));
 			}
 

@@ -609,13 +609,10 @@ namespace Civilization1Remaster.Game
 			{
 				Player person = this.owner.World.Participants[this.owner.World.PersonParticipantIdx];
 
-				this.owner.Libc.CopyText(0xba06, this.processor.PullGlobalWord((ushort)((person.RegimeKind << 1) + 0x19b2)));
-
-				this.owner.Libc.AppendText(0xba06, " ");
-
-				this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)((this.owner.World.PersonParticipantIdx << 1) + 0x19a2)));
-
-				this.owner.Libc.AppendText(0xba06, "\nplans retirement\nin 20 years.\n");
+				Message(this.processor.PullGlobalWord((ushort)((person.RegimeKind << 1) + 0x19b2)))
+					.Text(" ")
+					.Text(this.processor.PullGlobalWord((ushort)((this.owner.World.PersonParticipantIdx << 1) + 0x19a2)))
+					.Text("\nplans retirement\nin 20 years.\n");
 
 				this.owner.Paper.DisplayNewspaper(-1);
 			}
@@ -651,18 +648,16 @@ namespace Civilization1Remaster.Game
 
 				RepaintMainScreen();
 
-				this.owner.Libc.CopyText(0xba06, this.processor.PullGlobalWord((ushort)((this.processor.PullGlobalWord(0x1cf6) << 1) + 0x1982)));
-
-				this.owner.Libc.AppendText(0xba06, " spaceship\narrives at Alpha Centauri.\n");
+				Message(this.processor.PullGlobalWord((ushort)((this.processor.PullGlobalWord(0x1cf6) << 1) + 0x1982)))
+					.Text(" spaceship\narrives at Alpha Centauri.\n");
 
 				this.owner.Paper.DisplayNewspaper(-1);
 			}
 
 			if ((short)(0x834 - (0x14 * this.owner.World.HardnessTier)) == this.owner.World.Season)
 			{
-				this.owner.Libc.CopyText(0xba06, this.processor.PullGlobalWord((ushort)((this.owner.World.PersonParticipantIdx << 1) + 0x19a2)));
-
-				this.owner.Libc.AppendText(0xba06, " dynasty\nends after glorious\n6000 year reign!\n");
+				Message(this.processor.PullGlobalWord((ushort)((this.owner.World.PersonParticipantIdx << 1) + 0x19a2)))
+					.Text(" dynasty\nends after glorious\n6000 year reign!\n");
 
 				ushort leader = (ushort)(0x3a * this.owner.World.Participants[this.owner.World.PersonParticipantIdx].ChiefVisuals);
 
@@ -1177,8 +1172,8 @@ namespace Civilization1Remaster.Game
 
 					short storage = (short)this.processor.RegAcc.Value16;
 
-					this.processor.EmitGlobalByte(0xba06, 0);
-					this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(storage, 10));
+					EmptyMessage()
+						.Number(storage);
 					this.owner.TextPainter.RenderTextToScreen0(0xba06, 2, 59, 0);
 				}
 
@@ -1211,15 +1206,15 @@ namespace Civilization1Remaster.Game
 						this.processor.PullGlobalWord(0xaa), 0x38, 0x50);
 				}
 
-				this.processor.EmitGlobalByte(0xba06, 0);
-				this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(human.Gold, 10));
-				this.owner.Libc.AppendText(0xba06, "$");
-				this.owner.Libc.AppendText(0xba06, " ");
-				this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText((short)(-(human.LevyRatio + human.ResearchLevyRatio - 10)), 10));
-				this.owner.Libc.AppendText(0xba06, ".");
-				this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(human.LevyRatio, 10));
-				this.owner.Libc.AppendText(0xba06, ".");
-				this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(human.ResearchLevyRatio, 10));
+				EmptyMessage()
+					.Number(human.Gold)
+					.Text("$")
+					.Text(" ")
+					.Number((short)(-(human.LevyRatio + human.ResearchLevyRatio - 10)))
+					.Text(".")
+					.Number(human.LevyRatio)
+					.Text(".")
+					.Number(human.ResearchLevyRatio);
 				this.owner.TextPainter.RenderTextToScreen0(0xba06, 2, 89, 0);
 
 				if (this.processor.PullGlobalWord(0x1c28) == 0)
@@ -1242,9 +1237,9 @@ namespace Civilization1Remaster.Game
 		{
 			short previousMark = (short)this.processor.PullGlobalWord(0x1c24);
 
-			this.owner.Libc.CopyText(0xba06, "The population of the\nfertile ");
-			this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)((this.owner.World.PersonParticipantIdx << 1) + 0x1982)));
-			this.owner.Libc.AppendText(0xba06, " empire now\nexceeds ");
+			Message("The population of the\nfertile ")
+				.Text(this.processor.PullGlobalWord((ushort)((this.owner.World.PersonParticipantIdx << 1) + 0x1982)))
+				.Text(" empire now\nexceeds ");
 
 			if (population < 100)
 			{
@@ -1594,19 +1589,13 @@ namespace Civilization1Remaster.Game
 
 			this.owner.UnitOps.AttachReplayContent(10, (byte)rivalIdx, (byte)wonderIdx);
 
-			this.processor.EmitGlobalByte(0xba06, 0);
-
-			this.owner.Conquest.ObtainCityLabel((short)cityIdx);
-
-			this.owner.Libc.AppendText(0xba06, " (");
-
-			this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)((rivalIdx << 1) + 0x1982)));
-
-			this.owner.Libc.AppendText(0xba06, ")\nbuilds ");
-
-			this.owner.Libc.AppendText(0xba06, (ushort)(wonder + 0xe6a));
-
-			this.owner.Libc.AppendText(0xba06, ".\n");
+			EmptyMessage()
+				.City((short)cityIdx)
+				.Text(" (")
+				.Text(this.processor.PullGlobalWord((ushort)((rivalIdx << 1) + 0x1982)))
+				.Text(")\nbuilds ")
+				.Text((ushort)(wonder + 0xe6a))
+				.Text(".\n");
 
 			this.owner.Helpers.VerifyValueSpan(this.owner.World.Participants[rivalIdx].Gold / 3, 0,
 				(10 * (short)this.processor.PullGlobalWord((ushort)(wonder + 0xe82))) - this.owner.World.Towns[cityIdx].MaterialsTally);

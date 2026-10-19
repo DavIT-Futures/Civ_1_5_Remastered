@@ -302,9 +302,8 @@ namespace Civilization1Remaster.UI
 
 				if (this.processor.PullGlobalByte(0xba06) == 0)
 				{
-					this.owner.Libc.CopyText(0xba06, this.processor.PullGlobalWord((ushort)(names + 0x1982)));
-
-					this.owner.Libc.AppendText(0xba06, "s");
+					Message(this.processor.PullGlobalWord((ushort)(names + 0x1982)))
+						.Text("s");
 				}
 
 				this.owner.Libc.CopyText(this.processor.PullGlobalWord((ushort)(names + 0x1992)), 0xba06);
@@ -793,9 +792,8 @@ namespace Civilization1Remaster.UI
 
 			if (this.processor.PullGlobalByte(0xba06) == 0)
 			{
-				this.owner.Libc.CopyText(0xba06, this.processor.PullGlobalWord((ushort)(names + 0x1982)));
-
-				this.owner.Libc.AppendText(0xba06, "s");
+				Message(this.processor.PullGlobalWord((ushort)(names + 0x1982)))
+					.Text("s");
 			}
 
 			this.owner.Libc.CopyText(this.processor.PullGlobalWord((ushort)(names + 0x1992)), 0xba06);
@@ -813,10 +811,10 @@ namespace Civilization1Remaster.UI
 
 			if (participantIdx != 0 && participantIdx != this.owner.World.PersonParticipantIdx && !OwnsCity(participantIdx))
 			{
-				this.owner.Libc.CopyText(0xba06, this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1982)));
-				this.owner.Libc.AppendText(0xba06, "\ncivilization\ndestroyed\nby ");
-				this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)((participantIdx1 << 1) + 0x1992)));
-				this.owner.Libc.AppendText(0xba06, "!\n");
+				Message(this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1982)))
+					.Text("\ncivilization\ndestroyed\nby ")
+					.Text(this.processor.PullGlobalWord((ushort)((participantIdx1 << 1) + 0x1992)))
+					.Text("!\n");
 
 				short humanIdx = this.owner.World.PersonParticipantIdx;
 				this.processor.EmitGlobalWord(0x2f9e, (ushort)((this.owner.World.Participants[humanIdx].Relations[participantIdx] & 0x40) != 0 ? 5 : 2));
@@ -1473,8 +1471,8 @@ namespace Civilization1Remaster.UI
 			{
 				this.owner.Advisors.RenderAdvisorScenery();
 
-				this.owner.Libc.CopyText(0xba06, this.processor.PullGlobalWord((ushort)((this.owner.World.PersonParticipantIdx << 1) + 0x1982)));
-				this.owner.Libc.AppendText(0xba06, " government\nchanged to ");
+				Message(this.processor.PullGlobalWord((ushort)((this.owner.World.PersonParticipantIdx << 1) + 0x1982)))
+					.Text(" government\nchanged to ");
 				this.owner.Libc.AppendText(0xba06,
 					this.processor.PullGlobalWord((ushort)((this.owner.World.Participants[this.owner.World.PersonParticipantIdx].RegimeKind << 1) + 0x1966)));
 				this.owner.Libc.AppendText(0xba06, "!\n");

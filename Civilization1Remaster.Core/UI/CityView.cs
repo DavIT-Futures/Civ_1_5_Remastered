@@ -46,8 +46,8 @@ namespace Civilization1Remaster.UI
 			}
 
 			// RNG based on city name
-			this.processor.EmitGlobalByte(0xba06, 0x0);
-			this.owner.Conquest.ObtainCityLabel(townIdx);
+			EmptyMessage()
+				.City(townIdx);
 			string settlementTitle = this.processor.PullText(CPU.AsLinearAddress(this.processor.SegData.Value16, 0xba06));
 			// string.GetHashCode is different in every run of the program, a stable hash draws the same picture every time
 			RandomMT19937 dice = new RandomMT19937(StableTextHash(settlementTitle));
@@ -456,9 +456,8 @@ namespace Civilization1Remaster.UI
 
 				if (this.owner.Libc.TextLength((ushort)(this.processor.RegFrame.Value16 - 0x80)) == 0)
 				{
-					this.processor.EmitGlobalByte(0xba06, 0x0);
-
-					this.owner.Conquest.ObtainCityLabel(townIdx);
+					EmptyMessage()
+						.City(townIdx);
 
 					this.owner.TextPainter.RenderCenteredTextWithShadowToScreen0(0xba06, 160, 2, 15);
 
