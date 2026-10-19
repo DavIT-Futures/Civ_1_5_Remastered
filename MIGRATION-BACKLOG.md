@@ -1007,13 +1007,19 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   miasta, minimapa), `CountCorruptionAndTradeRoutes` (korupcja wg odległości od pałacu i ustroju, sąd / pałac połowią,
   demokracja zeruje; szlaki handlowe: 1/8 albo 1/16). Test `BatchHundredTwentySix` (25 przypadków, ok. 10 s). Mutacje: 15,
   ocalała jedna – połowienie przy pałacu (w wybranym mieście komputera handel za mały, korupcja przy komunizmie < 2).
+- Porcja 127 (2026-10-19), trzy kawałki `HandleCity` (L28d9 – L2cce): `SplitTrade` (korupcja całego handlu, podział na luksusy
+  0x70e0, podatki 0xe17a i naukę 0x70e6 wg stawek, specjaliści po 2, biblioteka i uniwersytet dodają po połowie luksusów i
+  podatków – jak w tłumaczeniu), `CountScienceAndContent` (rynek i bank po połowie nauki, cud 0xc po 1/3, miasto cudu 10
+  podwaja; zadowoleni 0x70e4: człowiek wg poziomu, ustroju, liczby miast i numeru miasta, komputer rozmiar - 3; 0x6542 nadmiar;
+  przetasowanie), `ApplyLuxuries` (0x70e2 = połowa luksusów, drugie przetasowanie, obywatele na zakładce 1 ekranu miasta).
+  `CityCase` dostał wybór miasta (pierwsze / ostatnie / największe). Mutacje: 14, wszystkie złapane (4 po celowanych przypadkach).
 
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
 (`HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-19 (po porcji 126): 1 metoda w stylu asm (`HandleCity`, 8428 linii); `ShiftAIUnit` i `HandlePlayerTurn` gotowe. `HandleCity(miasto, znacznik)`: -1 tylko liczy, 0 tura miasta, 1 ekran miasta; przepisywać kawałkami od początku (po porcji 126: następny od L28d9 – podatki, luksusy, nauka). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
+Stan 2026-10-19 (po porcji 127): 1 metoda w stylu asm (`HandleCity`, 8428 linii); `ShiftAIUnit` i `HandlePlayerTurn` gotowe. `HandleCity(miasto, znacznik)`: -1 tylko liczy, 0 tura miasta, 1 ekran miasta; przepisywać kawałkami od początku (po porcji 127: następny od L2cce – świątynie i zadowolenie). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 

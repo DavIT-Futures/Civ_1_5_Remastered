@@ -16,8 +16,16 @@ namespace Civilization1Remaster.Tests.Differential;
 /// </summary>
 public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper output)
 {
-	/// <summary>A case: its name, which city (the owner: human or computer), the marker, the changes before the call</summary>
-	public sealed record CityCase(string Name, bool Human, short Marker, Action<GameEngine, short> Setup);
+	/// <summary>Which city of the owner a case takes</summary>
+	public enum Choice
+	{
+		First,
+		Last,
+		Biggest,
+	}
+
+	/// <summary>A case: its name, which city (the owner: human or computer; the first, last or biggest), the marker, the changes</summary>
+	public sealed record CityCase(string Name, bool Human, short Marker, Action<GameEngine, short> Setup, Choice Pick = Choice.First);
 
 	/// <summary>The shields of a unit kind (its price x the box of the turn of the city)</summary>
 	public static int UnitPrice(GameEngine game, int kind) =>
@@ -213,6 +221,81 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 			CheckCases(bay, TradeCases, ways);
 	}
 
+	private static Action<GameEngine, short> Rates(short levy, short research) => (game, town) =>
+	{
+		var player = game.World.Participants[game.World.Towns[town].ParticipantIdx];
+		player.LevyRatio = levy;
+		player.ResearchLevyRatio = research;
+	};
+
+	private static Action<GameEngine, short> Buildings(ushort set, ushort clear) => (game, town) =>
+	{
+		var city = game.World.Towns[town];
+		city.StructureMarkers0 = (ushort)((city.StructureMarkers0 & ~clear) | set);
+	};
+
+	private static Action<GameEngine, short> Then(params Action<GameEngine, short>[] steps) => (game, town) =>
+	{
+		foreach (var step in steps)
+			step(game, town);
+	};
+
+	private static Action<GameEngine, short> Level(short hardness, short regime) => (game, town) =>
+	{
+		game.World.HardnessTier = hardness;
+		game.World.Participants[game.World.Towns[town].ParticipantIdx].RegimeKind = regime;
+	};
+
+	private static readonly CityCase[] SplitCases =
+	{
+		// SplitTrade
+		new("taxes 3, science 4 (luxuries 3)", false, -1, Rates(3, 4)),
+		new("taxes 10", false, -1, Rates(10, 0)),
+		new("science 10", true, -1, Rates(0, 10)),
+		new("democracy, a courthouse", false, -1, Then(Level(1, 5), Buildings(0x40, 0))),
+		new("library", false, -1, Then(Rates(3, 3), Buildings(0x10, 0x200))),
+		new("library and university", false, -1, Then(Rates(3, 3), Buildings(0x210, 0))),
+		new("biggest city, library", false, -1, Then(Rates(3, 3), Buildings(0x10, 0x200)), Choice.Biggest),
+		new("biggest city, library and university", false, -1, Then(Rates(3, 3), Buildings(0x210, 0)), Choice.Biggest),
+		new("scientists", false, -1, (game, town) =>
+		{
+			// No workers listed, all specialists scientists (2 bits a slot)
+			var city = game.World.Towns[town];
+			city.LaborerMarkers0 = 0;
+			city.LaborerMarkers1 = (ushort)(Math.Min((int)city.TrueExtent, 8) << 10);
+			city.LaborerMarkers2 = 0xaaaa;
+		}, Choice.Biggest),
+
+		// CountScienceAndContent
+		new("marketplace", false, -1, Buildings(0x20, 0x800)),
+		new("marketplace and bank", false, -1, Buildings(0x820, 0)),
+		new("marketplace and the wonder 0xc", false, -1, Then(Buildings(0x20, 0x800),
+			(game, town) => game.World.MarvelTownIdx[0xc] = town)),
+		new("bank and the wonder 0xc", false, -1, Then(Buildings(0x800, 0x20),
+			(game, town) => game.World.MarvelTownIdx[0xc] = town)),
+		new("the city of the wonder 10", false, -1, (game, town) => game.World.MarvelTownIdx[10] = town),
+		new("human, level 0, despotism", true, -1, Level(0, 1)),
+		new("human, level 4, republic", true, -1, Level(4, 4)),
+		new("human, level 2, democracy", true, -1, Level(2, 5)),
+		new("human, last city, level 1, monarchy", true, -1, Level(1, 2), Choice.Last),
+		new("human, small city, many content", true, -1, Then(Level(0, 6), (game, town) => game.World.Towns[town].TrueExtent = 1)),
+
+		// ApplyLuxuries (the tab 1 of the city screen clicked)
+		new("city screen, tab 1, luxuries", true, 1, Then(Rates(2, 2), (game, town) => HumanTurnScript.Install(game,
+			[new HumanTurnScript.Input(0, 1, 144, 110), new HumanTurnScript.Input(0x1b), new HumanTurnScript.Input(0x1b)]))),
+		new("city screen, tab 1, no luxuries", true, 1, Then(Rates(5, 5), (game, town) => HumanTurnScript.Install(game,
+			[new HumanTurnScript.Input(0, 1, 144, 110), new HumanTurnScript.Input(0x1b), new HumanTurnScript.Input(0x1b)]))),
+	};
+
+	[Fact]
+	public void HandleCitySplitCasesMatchOriginalCode()
+	{
+		HashSet<string> ways = [];
+
+		foreach (int bay in new[] { 5, 9 })
+			CheckCases(bay, SplitCases, ways);
+	}
+
 	[Fact]
 	public void HandleCityTurnCasesMatchOriginalCode()
 	{
@@ -235,9 +318,15 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 			CityCase current = cases[caseIdx++];
 			GameEngine engine = pair.Rewritten.Engine;
 			short person = engine.World.PersonParticipantIdx;
-			int found = Enumerable.Range(0, 128).FirstOrDefault(town => engine.World.Towns[town].ConditionMarker != 0xff &&
+			var fitting = Enumerable.Range(0, 128).Where(town => engine.World.Towns[town].ConditionMarker != 0xff &&
 				(engine.World.Towns[town].ParticipantIdx == person) == current.Human && engine.World.Towns[town].ParticipantIdx != 0 &&
-				(current.Human || (engine.World.ParticipantMarkers & (1 << engine.World.Towns[town].ParticipantIdx)) == 0), -1);
+				(current.Human || (engine.World.ParticipantMarkers & (1 << engine.World.Towns[town].ParticipantIdx)) == 0)).ToList();
+			int found = fitting.Count == 0 ? -1 : current.Pick switch
+			{
+				Choice.Last => fitting[^1],
+				Choice.Biggest => fitting.OrderByDescending(town => engine.World.Towns[town].TrueExtent).ThenBy(town => town).First(),
+				_ => fitting[0],
+			};
 
 			if (found < 0)
 				return null;
