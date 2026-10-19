@@ -4559,46 +4559,94 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// ?
+		/// The work of a city: marker -1 only counts (food, shields, trade, the citizens), 0 is the city's turn (growth,
+		/// production, disorder, celebration, science, pollution, upkeep), 1 the city screen with its input. AX gives back
+		/// the happy less the unhappy citizens. The frame of 0x10c bytes holds the locals of all the parts.
 		/// </summary>
-		/// <param name="cityID"></param>
-		/// <param name="flag"></param>
 		public void HandleCity(short townIdx, short marker)
 		{
 			this.processor.Journal.OpenScope($"HandleCity({townIdx}, {marker})");
 
-			// function body
 			this.processor.EnterFrame(0x10c);
 			this.processor.PreserveIndexRegisters();
 
 			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 
-			if (this.owner.World.Towns[townIdx].ConditionMarker == 0xff)
-				goto L6927;
+			if (this.owner.World.Towns[townIdx].ConditionMarker != 0xff)
+				RunCity(townIdx, marker);
 
+			this.processor.RegSource.Value16 = this.processor.UnstackWord();
+			this.processor.RegDest.Value16 = this.processor.UnstackWord();
+			this.processor.LeaveFrame();
+			this.processor.Journal.CloseScope("HandleCity");
+		}
+
+		/// <summary>
+		/// HandleCity on a city that exists: the round from the start (again after most buttons of the city screen), the
+		/// economy (again from the citizens after the others), the city screen while it is open, then the end of the turn.
+		/// </summary>
+		private void RunCity(short townIdx, short marker)
+		{
 			// The neighbouring cities, the palace, the governments, the content citizens
 			PrepareCity(townIdx, marker);
 
-		L045f:
+			bool fromStart = true;
+
+			while (true)
+			{
+				if (fromStart && !StartCityRound(townIdx, marker))
+					return;
+
+				if (!CountCityEconomy(townIdx, marker))
+					return;
+
+				if (marker != 1)
+					break;
+
+				CityScreenStep step = RunCityScreen(townIdx, marker);
+
+				if (step == CityScreenStep.Leave)
+				{
+					// The end of the city screen
+					this.processor.EmitGlobalWord(0xd4cc, this.processor.PullLocalWord(0xc2));
+					this.processor.EmitGlobalWord(0xd75e, this.processor.PullLocalWord(0xd0));
+					break;
+				}
+
+				fromStart = step == CityScreenStep.Restart;
+			}
+
+			this.processor.RegAcc.Value16 = (ushort)marker;
+			this.processor.RegData.Value16 = (ushort)((marker < 0 ? 0xffff : 0) | (ushort)marker);
+
+			if (marker == 0)
+				EndCityTurn(townIdx);
+
+			FinishHandleCity(townIdx);
+		}
+
+		/// <summary>
+		/// The start of a round of HandleCity: the place of the city (0xd8 / 0xe4), the title and the map on the city screen;
+		/// in the turn the starvation and the growth (false: the city is gone); the units, the tiles it cannot work, the workers.
+		/// </summary>
+		private bool StartCityRound(short townIdx, short marker)
+		{
 			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 			this.processor.EmitLocalWord(0xd8, (ushort)(short)this.owner.World.Towns[townIdx].Place.X);
 			this.processor.EmitLocalWord(0xe4, (ushort)(short)this.owner.World.Towns[townIdx].Place.Y);
 			this.processor.RegAcc.Value16 = (ushort)marker;
 			this.processor.RegData.Value16 = (ushort)(marker < 0 ? 0xffff : 0);
 
-			if (marker != 1)
-				goto L0701;
-
 			// The city screen: the title and the map of the city
-			RenderCityHeaderAndMap(townIdx);
+			if (marker == 1)
+				RenderCityHeaderAndMap(townIdx);
 
-		L0701:
 			// In the turn of the city: starvation and growth
 			this.processor.RegAcc.Value16 = (ushort)marker;
 			this.processor.RegData.Value16 = (ushort)((marker < 0 ? 0xffff : 0) | (ushort)marker);
 
 			if (marker == 0 && !FeedCity(townIdx))
-				goto L6927;
+				return false;
 
 			// The units the city supports
 			CountCityUnits(townIdx);
@@ -4609,56 +4657,22 @@ namespace Civilization1Remaster.Game
 			// The workers the city keeps and the new ones, the specialists
 			PickWorkers(townIdx, marker, KeepWorkers(townIdx, marker));
 
-		L12c2:
+			return true;
+		}
+
+		/// <summary>
+		/// The economy of the city from its citizens: the factories and the power, in the turn the production (false: the
+		/// city is gone), the trade, the luxuries, taxes and science, the content and happy citizens, the units it supports
+		/// (counted again after a disbanded one) and in the turn their costs.
+		/// </summary>
+		private bool CountCityEconomy(short townIdx, short marker)
+		{
 			// The citizen icons, the factories and the power
 			PrepareCitizensAndFactories(townIdx, marker);
 
-			if (marker != 0)
-				goto L2673;
+			if (marker == 0 && !ProduceInTurn(townIdx))
+				return false;
 
-			// The food and the shields of the turn, a unit built
-			switch (ProduceInCity(townIdx))
-			{
-				case ProductionStep.NotEnough:
-					goto L1b60;
-
-				case ProductionStep.Improvement:
-					goto L1b63;
-
-				case ProductionStep.SettlersWait:
-					goto L2307;
-
-				case ProductionStep.CityLost:
-					goto L6927;
-			}
-
-			// After the unit: the human is told, a computer city sends its caravan and picks a new production
-			FinishUnitOfCity(townIdx);
-
-		L1b60:
-			goto L220f;
-
-		L1b63:
-			// An improvement or a wonder completed
-			if (!CompleteImprovement(townIdx))
-				goto L220f;
-
-			// A spaceship part
-			BuildSpaceshipPart(townIdx);
-
-			// What some improvements do: the palace moves, two advances, the foreign cities shown
-			ApplyImprovement(townIdx);
-
-		L220f:
-			// A human city with the advisor picks its production again
-			AdviseHumanProduction(townIdx);
-
-		L2307:
-			// A computer city buys shields with gold
-			if ((this.owner.World.ParticipantMarkers & (1 << (this.processor.PullGlobalWord(0x6548) & 0xff))) == 0)
-				BuyForComputerCity(townIdx);
-
-		L2673:
 			// The city screen: the frames and the tabs
 			if (marker == 1)
 				RenderCityScreenFrames();
@@ -4682,182 +4696,190 @@ namespace Civilization1Remaster.Game
 			// The wonders and the citizens
 			ApplyWonderHappiness(townIdx, marker);
 
-		L32e0:
 			// The units of the city: the support, disbanding (then all are counted again), the units on the city screen
-			StartUnitSupport(townIdx);
+			bool disbanded;
 
-			for (this.processor.EmitLocalWord(0xea, 0); (short)this.processor.PullLocalWord(0xea) < 0x80;
-				this.processor.EmitLocalWord(0xea, (ushort)(this.processor.PullLocalWord(0xea) + 1)))
+			do
 			{
-				if (SupportUnit(townIdx, marker))
-					goto L32e0;
+				StartUnitSupport(townIdx);
+				disbanded = false;
+
+				for (this.processor.EmitLocalWord(0xea, 0); (short)this.processor.PullLocalWord(0xea) < 0x80;
+					this.processor.EmitLocalWord(0xea, (ushort)(this.processor.PullLocalWord(0xea) + 1)))
+				{
+					if (SupportUnit(townIdx, marker))
+					{
+						disbanded = true;
+						break;
+					}
+				}
 			}
+			while (disbanded);
 
 			// In the turn: the costs of the support
 			if (marker == 0)
 				CountSupportCosts(townIdx);
 
-			if (marker != 1)
-				goto L5cd0;
+			return true;
+		}
 
-			// The city screen: the list of improvements
+		/// <summary>
+		/// The production of the turn: a unit built (the human is told, a computer city sends its caravan and picks again), an
+		/// improvement or wonder completed (a spaceship part, what the improvement does), the advisor of a human city; a
+		/// computer city buys shields with gold. False: the city is gone.
+		/// </summary>
+		private bool ProduceInTurn(short townIdx)
+		{
+			// The food and the shields of the turn, a unit built
+			switch (ProduceInCity(townIdx))
+			{
+				case ProductionStep.CityLost:
+					return false;
+
+				case ProductionStep.SettlersWait:
+					break;
+
+				case ProductionStep.Improvement:
+					// An improvement or a wonder completed: a spaceship part, what some improvements do
+					if (CompleteImprovement(townIdx))
+					{
+						BuildSpaceshipPart(townIdx);
+						ApplyImprovement(townIdx);
+					}
+
+					AdviseHumanProduction(townIdx);
+					break;
+
+				case ProductionStep.NotEnough:
+					AdviseHumanProduction(townIdx);
+					break;
+
+				default:
+					FinishUnitOfCity(townIdx);
+					AdviseHumanProduction(townIdx);
+					break;
+			}
+
+			// A computer city buys shields with gold
+			if ((this.owner.World.ParticipantMarkers & (1 << (this.processor.PullGlobalWord(0x6548) & 0xff))) == 0)
+				BuyForComputerCity(townIdx);
+
+			return true;
+		}
+
+		/// <summary>
+		/// The city screen once: everything drawn, then (for the human) one input handled. Redraw: from the citizens again;
+		/// Restart: the city from the start; Leave: the screen ends (a computer city's screen waits for a key or a click).
+		/// </summary>
+		private CityScreenStep RunCityScreen(short townIdx, short marker)
+		{
+			// The list of improvements
 			RenderImprovementList(townIdx);
 			FinishImprovementList(townIdx);
 
-			// The city screen: the production box, its shields, the food box
+			// The production box, its shields, the food box
 			RenderProductionBox(townIdx);
 			RenderShieldsInBox(townIdx);
 			RenderFoodBox(townIdx);
 
-			// The city screen: the resources box and the row of luxuries, taxes and science
+			// The resources box and the row of luxuries, taxes and science
 			RenderResourceRows(townIdx);
 			RenderTradeRow();
 
-			// The city screen: the shortfalls, the citizens, the trade routes, the pollution
+			// The shortfalls, the citizens, the trade routes, the pollution
 			RenderShortfalls(townIdx);
 			RenderCitizensAndRoutes(townIdx);
 			RenderCityDotAndPollution(townIdx);
 
-			// The city screen of the human: the buttons, the input, the Change button
 			if (this.processor.PullGlobalWord(0x6548) != (ushort)this.owner.World.PersonParticipantIdx)
-				goto L5cbd;
+			{
+				this.owner.Conquest.AwaitForKeyPressOrMouseClick();
+				return CityScreenStep.Leave;
+			}
 
+			// The buttons, the input, the Change button
 			RenderExitAndBuyButtons(townIdx);
 			AwaitCityScreenInput();
+			CityScreenStep step = ReadCityScreenInput(townIdx);
 
-			switch (ReadCityScreenInput(townIdx))
-			{
-				case CityScreenStep.Redraw:
-					goto L12c2;
-				case CityScreenStep.Restart:
-					goto L045f;
-			}
+			if (step != CityScreenStep.Others)
+				return step;
 
 			// The other buttons: Buy, Change, the tabs, the view of the city
-			switch (HandleCityScreenButtons(townIdx))
-			{
-				case CityScreenStep.Redraw:
-					goto L12c2;
-				case CityScreenStep.Restart:
-					goto L045f;
-			}
+			step = HandleCityScreenButtons(townIdx);
 
-			// The keys of the city screen: A (the units in the city), S (sell an improvement), 1 - 9 (the specialists)
+			if (step != CityScreenStep.Others)
+				return step;
+
+			// A: the units in the city
 			if (this.processor.PullLocalWord(0xf0) == 0x61)
 			{
 				ActivateUnitsInCity();
-				goto L12c2;
+				return CityScreenStep.Redraw;
 			}
 
-			if (PickImprovementToSell(townIdx))
-				goto L5740;
-
-			switch (ToggleSpecialist(townIdx))
+			// S: an improvement to sell, else the specialists, P (the cursor on the map), M, R and the clicks on the list
+			if (!PickImprovementToSell(townIdx))
 			{
-				case CityScreenStep.Redraw:
-					goto L12c2;
-				case CityScreenStep.Restart:
-					goto L045f;
+				step = ToggleSpecialist(townIdx);
+
+				if (step != CityScreenStep.Others)
+					return step;
+
+				if (this.processor.PullLocalWord(0xf0) == 0x70)
+					return MoveCityMapCursor(townIdx) ? ToggleCityTile(townIdx, marker) : CityScreenStep.Restart;
+
+				step = HandleListAndRename(townIdx);
+
+				if (step == CityScreenStep.Others)
+					return HandleCityScreenClicks(townIdx, marker);
+
+				if (step != CityScreenStep.Sell)
+					return step;
 			}
 
-			// P: the cursor on the map of the city
-			if (this.processor.PullLocalWord(0xf0) == 0x70)
-			{
-				if (MoveCityMapCursor(townIdx))
-					goto L5aa6;
-
-				goto L045f;
-			}
-
-			// M, R and the clicks on the list
-			switch (HandleListAndRename(townIdx))
-			{
-				case CityScreenStep.Redraw:
-					goto L12c2;
-				case CityScreenStep.Restart:
-					goto L045f;
-				case CityScreenStep.Leave:
-					goto L5cba;
-				case CityScreenStep.Others:
-					goto L58ac;
-			}
-
-		L5740:
 			if (SellImprovement(townIdx))
-				goto L045f;
+				return CityScreenStep.Restart;
 
-		L58ac:
-			// The clicks: the citizens at the top, the units in the city, the map of the city
+			return HandleCityScreenClicks(townIdx, marker);
+		}
+
+		/// <summary>The clicks on the city screen: the citizens at the top, the units in the city, the map of the city</summary>
+		private CityScreenStep HandleCityScreenClicks(short townIdx, short marker)
+		{
 			if ((short)this.owner.GlobDb3c < 0xc8 && (short)this.owner.GlobDb3e < 0x14)
-			{
-				if (ClickCitizen(townIdx) == CityScreenStep.Redraw)
-					goto L12c2;
-
-				goto L045f;
-			}
+				return ClickCitizen(townIdx);
 
 			if ((short)this.owner.GlobDb3c >= 0x64 && (short)this.owner.GlobDb3c < 0x2580 && (short)this.owner.GlobDb3e >= 0x74 && ClickUnitOfCity())
-				goto L12c2;
+				return CityScreenStep.Redraw;
 
 			if ((short)this.owner.GlobDb3e < 0x18 || (short)this.owner.GlobDb3e >= 0x68)
-				goto L5cba;
+				return CityScreenStep.Leave;
 
 			this.processor.EmitLocalWord(0xf6, (ushort)((short)this.owner.GlobDb3c / 16 - 10));
 			this.processor.EmitLocalWord(0xfc, (ushort)((short)(this.owner.GlobDb3e - 0x18) / 16 - 2));
 
-		L5aa6:
-			if (ToggleCityTile(townIdx, marker) == CityScreenStep.Redraw)
-				goto L12c2;
+			return ToggleCityTile(townIdx, marker);
+		}
 
-			goto L045f;
+		/// <summary>
+		/// The end of the city's turn: civil disorder and the celebration (not for the barbarians), the science, the score and
+		/// the pollution, for the human the upkeep of the improvements
+		/// </summary>
+		private void EndCityTurn(short townIdx)
+		{
+			if (this.processor.PullGlobalWord(0x6548) != 0)
+			{
+				// Civil disorder, order restored, the taxes; the celebration
+				ApplyCivilOrder(townIdx);
+				ApplyCelebration(townIdx);
+			}
 
-		L5cba:
-			goto L5cc2;
-
-		L5cbd:
-			this.owner.Conquest.AwaitForKeyPressOrMouseClick();
-
-		L5cc2:
-			// The end of the city screen
-			this.processor.EmitGlobalWord(0xd4cc, this.processor.PullLocalWord(0xc2));
-			this.processor.EmitGlobalWord(0xd75e, this.processor.PullLocalWord(0xd0));
-
-		L5cd0:
-			this.processor.RegAcc.Value16 = (ushort)marker;
-			this.processor.RegData.Value16 = (ushort)((marker < 0 ? 0xffff : 0) | (ushort)marker);
-
-			if (marker != 0)
-				goto L68cc;
-
-			if (this.processor.PullGlobalWord(0x6548) == 0)
-				goto L62d8;
-
-			// The turn of the city: civil disorder, order restored, the taxes
-			ApplyCivilOrder(townIdx);
-
-			// The celebration
-			ApplyCelebration(townIdx);
-
-		L62d8:
-			// The science
 			ApplyResearch();
 
-			// The score, the pollution, the nuclear plant
-			if (!ApplyScoreAndPollution(townIdx))
-				goto L68cc;
-
-			// The upkeep of the improvements
-			PayImprovementUpkeep(townIdx);
-
-		L68cc:
-			FinishHandleCity(townIdx);
-
-		L6927:
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.RegDest.Value16 = this.processor.UnstackWord();
-			this.processor.LeaveFrame();
-			// Far return
-			this.processor.Journal.CloseScope("HandleCity");
+			// The score, the pollution, the nuclear plant; the upkeep of the improvements
+			if (ApplyScoreAndPollution(townIdx))
+				PayImprovementUpkeep(townIdx);
 		}
 
 		/// <summary>

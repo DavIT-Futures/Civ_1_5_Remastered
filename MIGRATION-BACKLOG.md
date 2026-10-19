@@ -1121,13 +1121,18 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   (`Register.Kept | Register.Acc` – wynik HandleCity). Mutacje: 16; ocalało `Gold >= -1` (żaden przypadek nie kończy
   dokładnie na -1). **Wszystkie kawałki asm `HandleCity` przepisane**: zostaje szkielet 296 linii z 38 `goto` między
   wywołaniami metod – do uporządkowania w strukturę (pętle i warunki) w kolejnych porcjach.
+- Porcja 144 (2026-10-19): szkielet `HandleCity` ułożony bez `goto`: `HandleCity` (ramka, `RunCity` dla istniejącego miasta),
+  `RunCity` (pętla: runda od początku – `StartCityRound`, ekonomia – `CountCityEconomy`, ekran miasta – `RunCityScreen` z
+  `HandleCityScreenClicks`; potem `EndCityTurn` i `FinishHandleCity`), `ProduceInTurn`. Mutacje przepływu: 12 na testach
+  tabel + 3 dopasowane; po przypadkach z miastem barbarzyńców złapane wszystkie poza krokiem `SettlersWait` (doradca
+  w tym przypadku i tak nic nie zmienia – do sprawdzenia). Pełny zestaw zielony. **Koniec migracji asm → C#:**
+  `find_asm_methods.py` nie znajduje już żadnej metody w stylu asm.
 
 ## Następny krok
 
-Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
-(`HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
-wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-19 (po porcji 143): 1 metoda w stylu asm (`HandleCity`, 8428 linii); `ShiftAIUnit` i `HandlePlayerTurn` gotowe. `HandleCity(miasto, znacznik)`: -1 tylko liczy, 0 tura miasta, 1 ekran miasta; przepisywać kawałkami od początku (po porcji 143: wszystkie kawałki asm przepisane; zostaje szkielet z `goto` do uporządkowania). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
+Stan 2026-10-19 (po porcji 144): żadnej metody w stylu asm (`find_asm_methods.py Civilization1Remaster.Core 99999` pusty).
+Migracja asm → C# zakończona; dalej: usuwanie śladów emulacji (rejestry, ramki, adresy pamięci zamiast pól) i dopiero
+potem poprawki zachowania z listy niżej – po decyzji użytkownika.
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 

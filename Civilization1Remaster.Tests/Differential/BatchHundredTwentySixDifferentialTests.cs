@@ -802,6 +802,8 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 		new("human, disorder goes on under democracy", true, 0, Then(Unhappy, Level(4, 5), Rates(10, 0), Disorder(true)), Choice.Biggest),
 		new("computer, disorder breaks out", false, 0, Then(Unhappy, Disorder(false)), Choice.Biggest),
 		new("computer, disorder goes on under democracy", false, 0, Then(Unhappy, Level(4, 5), Rates(10, 0), Disorder(true)), Choice.Biggest),
+		new("a barbarian city in disorder", false, 0, Then(Unhappy, Disorder(false), (game, town) => game.World.Towns[town].ParticipantIdx = 0), Choice.Biggest),
+		new("human, settlers of a city of one wait, the advisor", true, 0, Then(Size(1), Level(0, 2), Stock(100, 5, 0), Advisor(true)), Choice.First),
 		new("human, order restored", true, 0, Then(Size(1), Disorder(true)), Choice.First),
 		new("computer, order restored", false, 0, Then(Size(1), Disorder(true)), Choice.First),
 		new("human, anarchy, no taxes", true, 0, Then(Size(2), Level(1, 0), Disorder(false)), Choice.First),
