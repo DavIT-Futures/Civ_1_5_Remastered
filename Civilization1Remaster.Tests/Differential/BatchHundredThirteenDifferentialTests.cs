@@ -88,9 +88,28 @@ public sealed class BatchHundredThirteenDifferentialTests(ITestOutputHelper outp
 			uint mixed = (uint)chance.Next(1 << 20);
 			bool unseen = screen && chance.Next(2) == 0;
 			int unseenSeed = chance.Next(1000);
+			// The factory, the manufacturing plant (0x4000, 0x8000) and the mass transit, power, hydro and nuclear plants
+			// (0x2, 0x4, 0x8, 0x10 of the second word) set by chance (not on the city screen)
+			bool buildings = !screen && chance.Next(2) == 0;
+			int buildingBits = chance.Next(64);
+			// The wonder 15 in this city or in another city of the owner (maybe on another continent)
+			bool marvel = !screen && chance.Next(3) == 0;
+			int marvelPick = chance.Next(1000);
+
+			if (close)
+			{
+				// With the city moved next to another one nothing else changes (the original may then loop without end)
+				food = 0;
+				size = 0;
+				slotsSet = false;
+				supportedKind = 0xff;
+				regime = -1;
+				buildings = false;
+				marvel = false;
+			}
 
 			return new Scenario(
-				$"HandleCity({townIdx}, {marker}), materials {(badMaterials ? materials : "kept")}, advances {advances}, no palaces {noPalaces}, close {close}, level {hardness}, leader {leader}, flag {flag}, food {food}, size {size}, granary {granary}, aqueduct {aqueduct}, diag {diag}, flag 0x80 {unrest}, slots {(slotsSet ? string.Join("/", slots) : "kept")}, unit kind {supportedKind}, government {regime}, diag 2 {diag2}, barbarian {barbarian}, free city tile {freeCityTile}, mixed workers {(mixWorkers ? mixed : 0)}, unseen {unseen}",
+				$"HandleCity({townIdx}, {marker}), materials {(badMaterials ? materials : "kept")}, advances {advances}, no palaces {noPalaces}, close {close}, level {hardness}, leader {leader}, flag {flag}, food {food}, size {size}, granary {granary}, aqueduct {aqueduct}, diag {diag}, flag 0x80 {unrest}, slots {(slotsSet ? string.Join("/", slots) : "kept")}, unit kind {supportedKind}, government {regime}, diag 2 {diag2}, barbarian {barbarian}, free city tile {freeCityTile}, mixed workers {(mixWorkers ? mixed : 0)}, unseen {unseen}, buildings {(buildings ? buildingBits : -1)}, wonder 15 {marvel}",
 				game =>
 				{
 					HumanTurnScript.Install(game, [new HumanTurnScript.Input(0x1b), new HumanTurnScript.Input(0x1b)]);
@@ -179,6 +198,19 @@ public sealed class BatchHundredThirteenDifferentialTests(ITestOutputHelper outp
 					if (barbarian)
 						game.World.Towns[townIdx].ParticipantIdx = 0;
 
+					if (buildings)
+					{
+						var built = game.World.Towns[townIdx];
+						built.StructureMarkers0 = (ushort)((built.StructureMarkers0 & 0x3fff) | ((buildingBits & 3) << 14));
+						built.StructureMarkers1 = (ushort)((built.StructureMarkers1 & ~0x1e) | ((buildingBits >> 1) & 0x1e));
+					}
+
+					if (marvel)
+					{
+						var ownTowns = towns.Where(other => game.World.Towns[other].ParticipantIdx == game.World.Towns[townIdx].ParticipantIdx).ToList();
+						game.World.MarvelTownIdx[15] = (short)(marvelPick % 2 == 0 ? townIdx : ownTowns[marvelPick % ownTowns.Count]);
+					}
+
 					if (freeCityTile)
 						game.Processor.Storage.EmitUInt16(game.Processor.SegStack.Value16, (ushort)(frame - 0x16), 0);
 
@@ -251,6 +283,6 @@ public sealed class BatchHundredThirteenDifferentialTests(ITestOutputHelper outp
 					return string.Join("+", met);
 				},
 				[(0x3b01, (ushort)(frame - 0x180), 0x180)]);
-		}, output, [], null);
+		}, output, [], null, fresh: true);
 	}
 }

@@ -958,13 +958,22 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   sumą: żywność x 16 / nadwyżka żywności, tarcze x (3 x rozmiar) / tarcze, handel x (2 x rozmiar) / handel (dzielniki 1 – 99);
   robotnicy i specjaliści (bity 26 – 31) zapisywani, 0xae = -0x50. Test: `BatchHundredThirteen`. Ocalałe: górny limit 99
   nadwyżki żywności (nieosiągalny w grze) i dolny limit 1 handlu (handel 0 – 1 przy doborze robotników nie wystąpił).
+- Porcja 120 (2026-10-19): ósmy kawałek `HandleCity` – `PrepareCitizensAndFactories` (L12c2 – L14de, L12c2 zostaje etykietą
+  powrotu z ekranu miasta): ikony obywateli (typ 3 dla specjalistów bez typu, reszta 0), fabryka / zakład (0xf8), zasilanie
+  (0xac: elektrownie i cud 15 na tym samym kontynencie), czynnik zanieczyszczeń 0x6c98, tarcze 0x70dc powiększone o ćwierć
+  zasilania i premii fabryki. Test `BatchHundredThirteen` przeszedł na `fresh: true` (punkt kontrolny przed każdym
+  scenariuszem; wcześniej zmiany stanu kumulowały się i oryginał zapętlał się godzinami) i dostał warianty budynków i cudu 15.
+  Wszystkie 21 mutacji złapane (równoległy `check_mutations.py`, 3 min).
+- Strategia testów (2026-10-19, po wielogodzinnych zawieszeniach): limit czasu scenariusza w `DifferentialPair` (120 s,
+  zawieszenie = błąd testu z nazwą scenariusza), `fresh: true` dla testów zmieniających stan, mutacje równolegle w `.mutants/`,
+  budżet 15 – 25 mutacji na porcję, po zmianie testu powtarzać tylko ocalałe. Szczegóły w skillu `migrate-batch`.
 
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
 (`HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-19 (po porcji 119): 1 metoda w stylu asm (`HandleCity`, 8428 linii); `ShiftAIUnit` i `HandlePlayerTurn` gotowe. `HandleCity(miasto, znacznik)`: -1 tylko liczy, 0 tura miasta, 1 ekran miasta; przepisywać kawałkami od początku (po porcji 119: następny od L12c2 – obywatele i fabryki). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
+Stan 2026-10-19 (po porcji 120): 1 metoda w stylu asm (`HandleCity`, 8428 linii); `ShiftAIUnit` i `HandlePlayerTurn` gotowe. `HandleCity(miasto, znacznik)`: -1 tylko liczy, 0 tura miasta, 1 ekran miasta; przepisywać kawałkami od początku (po porcji 120: następny od L14de – tura miasta: żywność, tarcze, produkcja). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 

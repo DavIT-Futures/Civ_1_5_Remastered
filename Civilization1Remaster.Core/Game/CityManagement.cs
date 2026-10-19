@@ -702,6 +702,112 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
+		/// After the workers: 0x8 the specialists; the first 0x8 citizen icons without a type become type 3, the rest of the
+		/// 8 type 0. The factories: 0xf8 the factory bonus (2 the factory, 4 the manufacturing plant), 0xac the power (2 the
+		/// power plant, hydro plant, nuclear plant or the wonder 15 on the same continent), 0x6c98 the pollution factor (1;
+		/// 2 for the clean plants, 3 the mass transit); the shields 0x70dc (kept in 0x10a, the trade in 0xa) grow by a
+		/// quarter of the factory bonus and of the power within it. The locals of HandleCity and AX - DX, SI, DI are used
+		/// as in the original.
+		/// </summary>
+		private void PrepareCitizensAndFactories(short townIdx, short marker)
+		{
+			City town = this.owner.World.Towns[townIdx];
+
+			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
+			this.processor.EmitLocalWord(0xd8, (ushort)(short)town.Place.X);
+			this.processor.EmitLocalWord(0xe4, (ushort)(short)town.Place.Y);
+			this.processor.CopyLocalWord(0x50, 0x8);
+
+			// The citizen icons
+			ushort citizen = 0;
+
+			for (; (short)citizen < (short)this.processor.PullLocalWord(0x8); citizen++)
+			{
+				this.processor.EmitLocalWord(0xea, citizen);
+
+				if (ObtainCitizenType(citizen) == 0)
+					AssignCitizenType(citizen, 3);
+			}
+
+			for (citizen = this.processor.PullLocalWord(0x8); (short)citizen < 8; citizen++)
+			{
+				this.processor.EmitLocalWord(0xea, citizen);
+				AssignCitizenType(citizen, 0);
+			}
+
+			this.processor.EmitLocalWord(0xea, citizen);
+
+			// The factories and the power
+			this.processor.RegAcc.Value16 = 0;
+			this.processor.EmitLocalWord(0xac, 0);
+			this.processor.EmitLocalWord(0xf8, 0);
+			this.processor.EmitGlobalWord(0x6c98, 1);
+			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
+
+			if ((town.StructureMarkers0 & 0x4000) != 0)
+				this.processor.EmitLocalWord(0xf8, 2);
+
+			if ((town.StructureMarkers0 & 0x8000) != 0)
+				this.processor.EmitLocalWord(0xf8, 4);
+
+			if ((town.StructureMarkers1 & 0x4) != 0)
+				this.processor.EmitLocalWord(0xac, 2);
+
+			if ((town.StructureMarkers1 & 0x8) != 0)
+			{
+				this.processor.EmitGlobalWord(0x6c98, 2);
+				this.processor.EmitLocalWord(0xac, 2);
+			}
+
+			if ((town.StructureMarkers1 & 0x10) != 0)
+			{
+				this.processor.EmitGlobalWord(0x6c98, 2);
+				this.processor.EmitLocalWord(0xac, 2);
+			}
+
+			if (PlayerEnjoysWonderEffect((short)this.processor.PullGlobalWord(0x6548), 15) != 0)
+			{
+				// The wonder powers the cities on its continent
+				short marvelIdx = this.owner.World.MarvelTownIdx[15];
+				this.processor.RegSource.Value16 = (ushort)(marvelIdx * 0x1c);
+				this.processor.RegDest.Value16 = (ushort)(townIdx * 0x1c);
+
+				this.owner.MapOps.ObtainContinentID(this.owner.World.Towns[marvelIdx].Place.X, this.owner.World.Towns[marvelIdx].Place.Y);
+				this.processor.EmitLocalWord(0x10c, this.processor.RegAcc.Value16);
+
+				this.owner.MapOps.ObtainContinentID(town.Place.X, town.Place.Y);
+
+				if (this.processor.RegAcc.Value16 == this.processor.PullLocalWord(0x10c))
+				{
+					this.processor.EmitGlobalWord(0x6c98, 2);
+					this.processor.EmitLocalWord(0xac, 2);
+				}
+			}
+
+			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
+
+			if ((town.StructureMarkers1 & 0x2) != 0)
+				this.processor.EmitGlobalWord(0x6c98, 3);
+
+			this.processor.EmitLocalWord(0xac, (ushort)this.owner.Helpers.VerifyValueSpan(this.processor.PullLocalSignedWord(0xac), 0, this.processor.PullLocalSignedWord(0xf8)));
+			this.processor.EmitLocalWord(0x10a, this.processor.PullGlobalWord(0x70dc));
+			this.processor.EmitLocalWord(0xa, this.processor.PullGlobalWord(0x70de));
+
+			// The shields grow by a quarter of the power and of the factory bonus
+			short shields = (short)this.processor.PullGlobalWord(0x70dc);
+			short power = (short)((short)((short)this.processor.PullLocalWord(0xac) * shields) / 4);
+			short factory = (short)((short)this.processor.PullLocalWord(0xf8) * shields);
+			this.processor.RegBase.Value16 = (ushort)power;
+			this.processor.RegCount.Value16 = 2;
+			this.processor.RegData.Value16 = (ushort)(factory < 0 ? 0xffff : 0);
+			this.processor.RegAcc.Value16 = (ushort)(factory / 4 + power);
+			this.processor.EmitGlobalWord(0x70dc, (ushort)(this.processor.PullGlobalWord(0x70dc) + this.processor.RegAcc.Value16));
+
+			this.processor.RegAcc.Value16 = (ushort)marker;
+			this.processor.RegData.Value16 = (ushort)((marker < 0 ? 0xffff : 0) | (ushort)marker);
+		}
+
+		/// <summary>
 		/// The start of HandleCity: the locals 0xb8, 0xda, 0xfe, 0xca and 0x2496 cleared, the mouse hidden, the 5 x 5 array
 		/// of the tiles around (BP-0xa6) cleared; 0x653e the city; the materials outside 0 - 999 cleared. Over the other
 		/// cities: 0xb2 the distance to the nearest one (at most 7), 0x6b30 the distance to the nearest palace of the owner
@@ -934,179 +1040,11 @@ namespace Civilization1Remaster.Game
 			PickWorkers(townIdx, marker, KeepWorkers(townIdx, marker));
 
 		L12c2:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.processor.RegAcc.Value16 = (ushort)((short)this.owner.World.Towns[townIdx].Place.X);
-			this.processor.EmitLocalWord(0xd8, this.processor.RegAcc.Value16);
-			this.processor.ScaleIndexToBase(0x1c, (ushort)townIdx);
-			this.processor.RegAcc.Value16 = (ushort)((short)this.owner.World.Towns[townIdx].Place.Y);
-			this.processor.EmitLocalWord(0xe4, this.processor.RegAcc.Value16);
-			this.processor.CopyLocalWord(0x50, 0x8);
-			this.processor.EmitLocalWord(0xea, 0x0);
-			goto L12f9;
+			// The citizen icons, the factories and the power
+			PrepareCitizensAndFactories(townIdx, marker);
 
-		L12f5:
-			this.processor.EmitLocalWord(0xea, this.processor.IncrementWord(this.processor.PullLocalWord(0xea)));
-
-		L12f9:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x8);
-			this.processor.CompareWord(this.processor.PullLocalWord(0xea), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsLess) goto L1305;
-			goto L132c;
-
-		L1305:
-			ObtainCitizenType(this.processor.PullLocalWord(0xea));
-
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L1319;
-			goto L1329;
-
-		L1319:
-			AssignCitizenType(this.processor.PullLocalWord(0xea), 3);
-
-		L1329:
-			goto L12f5;
-
-		L132c:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x8);
-			this.processor.EmitLocalWord(0xea, this.processor.RegAcc.Value16);
-			goto L133a;
-
-		L1336:
-			this.processor.EmitLocalWord(0xea, this.processor.IncrementWord(this.processor.PullLocalWord(0xea)));
-
-		L133a:
-			this.processor.CompareWord(this.processor.PullLocalWord(0xea), 0x8);
-			if (this.processor.FlagSet.IsLess) goto L1344;
-			goto L1357;
-
-		L1344:
-			AssignCitizenType(this.processor.PullLocalWord(0xea), 0);
-
-			goto L1336;
-
-		L1357:
-			this.processor.RegAcc.Value16 = 0x0;
-			this.processor.EmitLocalWord(0xac, this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0xf8, this.processor.RegAcc.Value16);
-			this.processor.EmitGlobalWord(0x6c98, 0x1);
-			this.processor.ScaleIndexToBase(0x1c, (ushort)townIdx);
-			this.processor.TestBitsWord(this.owner.World.Towns[townIdx].StructureMarkers0, 0x4000);
-			if (this.processor.FlagSet.IsNotEqual) goto L137b;
-			goto L1381;
-
-		L137b:
-			this.processor.EmitLocalWord(0xf8, 0x2);
-
-		L1381:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.processor.TestBitsWord(this.owner.World.Towns[townIdx].StructureMarkers0, 0x8000);
-			if (this.processor.FlagSet.IsNotEqual) goto L1394;
-			goto L139a;
-
-		L1394:
-			this.processor.EmitLocalWord(0xf8, 0x4);
-
-		L139a:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.processor.TestBitsWord(this.owner.World.Towns[townIdx].StructureMarkers1, 0x4);
-			if (this.processor.FlagSet.IsNotEqual) goto L13ad;
-			goto L13b3;
-
-		L13ad:
-			this.processor.EmitLocalWord(0xac, 0x2);
-
-		L13b3:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.processor.TestBitsWord(this.owner.World.Towns[townIdx].StructureMarkers1, 0x8);
-			if (this.processor.FlagSet.IsNotEqual) goto L13c6;
-			goto L13d2;
-
-		L13c6:
-			this.processor.EmitGlobalWord(0x6c98, 0x2);
-			this.processor.EmitLocalWord(0xac, 0x2);
-
-		L13d2:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.processor.TestBitsWord(this.owner.World.Towns[townIdx].StructureMarkers1, 0x10);
-			if (this.processor.FlagSet.IsNotEqual) goto L13e5;
-			goto L13f1;
-
-		L13e5:
-			this.processor.EmitGlobalWord(0x6c98, 0x2);
-			this.processor.EmitLocalWord(0xac, 0x2);
-
-		L13f1:
-			PlayerEnjoysWonderEffect(this.processor.PullGlobalSignedWord(0x6548), 15);
-			
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L1409;
-			goto L145f;
-
-		L1409:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToSource((ushort)this.owner.World.MarvelTownIdx[15]);
-			this.processor.ScaleIndex(0x1c, (ushort)townIdx);
-			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
-
-			this.owner.MapOps.ObtainContinentID(
-				this.owner.World.Towns[this.owner.World.MarvelTownIdx[15]].Place.X,
-				this.owner.World.Towns[this.owner.World.MarvelTownIdx[15]].Place.Y);
-
-			this.processor.EmitLocalWord(0x10c, this.processor.RegAcc.Value16);
-
-			this.owner.MapOps.ObtainContinentID(
-				this.owner.World.Towns[townIdx].Place.X,
-				this.owner.World.Towns[townIdx].Place.Y);
-
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x10c));
-			if (this.processor.FlagSet.IsEqual) goto L1453;
-			goto L145f;
-
-		L1453:
-			this.processor.EmitGlobalWord(0x6c98, 0x2);
-			this.processor.EmitLocalWord(0xac, 0x2);
-
-		L145f:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.processor.TestBitsWord(this.owner.World.Towns[townIdx].StructureMarkers1, 0x2);
-			if (this.processor.FlagSet.IsNotEqual) goto L1472;
-			goto L1478;
-
-		L1472:
-			this.processor.EmitGlobalWord(0x6c98, 0x3);
-
-		L1478:
-			this.owner.Helpers.VerifyValueSpan(
-				this.processor.PullLocalSignedWord(0xac),
-				0,
-				this.processor.PullLocalSignedWord(0xf8));
-
-			this.processor.EmitLocalWord(0xac, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x70dc);
-			this.processor.EmitLocalWord(0x10a, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x70de);
-			this.processor.EmitLocalWord(0xa, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xac);
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.PullGlobalWord(0x70dc));
-			this.processor.DivideAccumulatorByPowerOfTwo(0x2);
-			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xf8);
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.PullGlobalWord(0x70dc));
-			this.processor.RegBase.Value16 = this.processor.RegCount.Value16;
-			this.processor.DivideAccumulatorByPowerOfTwo(0x2);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.RegBase.Value16);
-			this.processor.EmitGlobalWord(0x70dc, this.processor.SumWord(this.processor.PullGlobalWord(0x70dc), this.processor.RegAcc.Value16));
-			this.processor.RegAcc.Value16 = (ushort)marker;
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.RegData.Value16 = this.processor.BitOrWord(this.processor.RegData.Value16, this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L14de;
-			goto L2673;
+			if (marker != 0)
+				goto L2673;
 
 		L14de:
 			this.processor.RegAcc.Value16 = 0x1c;
