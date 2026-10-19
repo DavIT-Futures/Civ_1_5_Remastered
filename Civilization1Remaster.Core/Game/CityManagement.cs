@@ -1288,6 +1288,111 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
+		/// A spaceship part (0xe8 0x16 - 0x18) of a player whose spaceship has not left: the human adds it on the spaceship
+		/// screen; a computer player (0xc8 = the success it computes) gets the shields back for the structures and modules it
+		/// can use and keeps building them, then launches when the success says so, or (with 40 percent of the computer
+		/// victories, 0x28 known by the human) when it is sure, the human is ahead, or arrives later, or a third player is rich
+		/// (the gold of the player 0x... LiveRealms, as translated). The locals of HandleCity and AX, BX, CX, SI are used as in
+		/// the original.
+		/// </summary>
+		private void BuildSpaceshipPart(short townIdx)
+		{
+			City town = this.owner.World.Towns[townIdx];
+			short owner = (short)this.processor.PullGlobalWord(0x6548);
+			short person = this.owner.World.PersonParticipantIdx;
+			short part = (short)this.processor.PullLocalWord(0xe8);
+
+			if (part < 0x16 || part > 0x18 || (this.owner.World.StarshipMarkers & (1 << (owner & 0xff))) != 0)
+				return;
+
+			if (owner == person)
+			{
+				this.owner.RocketScreen.AttachSpaceshipPart(owner, (ushort)(part - 22));
+				return;
+			}
+
+			this.processor.RegAcc.Value16 = (ushort)(part - 0x16);
+			this.owner.RocketScreen.ComputeSpaceshipSuccess(owner, (short)this.processor.RegAcc.Value16);
+			this.processor.EmitLocalWord(0xc8, this.processor.RegAcc.Value16);
+
+			if (this.processor.PullLocalWord(0xc8) != 0 && part < 0x18)
+			{
+				// The shields come back, the city builds the part again
+				this.processor.RegBase.Value16 = (ushort)(part * 0x1e);
+				this.processor.RegCount.Value16 = (ushort)((short)this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xbb2)) *
+					(short)this.processor.PullLocalWord(0x4a));
+				this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
+				town.MaterialsTally += (short)this.processor.RegCount.Value16;
+
+				if (town.PresentMakingIdx <= -0x16 && town.PresentMakingIdx >= -0x18)
+				{
+					this.processor.RegAcc.Value16 = (ushort)-part;
+					this.processor.RegAcc.LowByte = (byte)(this.processor.RegAcc.LowByte - 1);
+					town.PresentMakingIdx = (sbyte)this.processor.RegAcc.LowByte;
+				}
+
+				this.processor.EmitLocalWord(0xc8, (ushort)(this.processor.PullLocalWord(0xc8) - 1));
+			}
+
+			bool launch;
+			short success = (short)this.processor.PullLocalWord(0xc8);
+
+			if ((this.owner.World.StarshipMarkers & (1 << (owner & 0xff))) != 0 || this.owner.World.BotStarshipVictoryRatio < 40 || success != 0)
+			{
+				launch = success != 0;
+			}
+			else if (this.owner.Advisors.PlayerKnowsTechnology(person, 0x28) == 0)
+			{
+				launch = false;
+			}
+			else if (this.owner.World.BotStarshipVictoryRatio > 75)
+			{
+				launch = true;
+			}
+			else
+			{
+				this.processor.RegSource.Value16 = (ushort)(owner << 1);
+				Player ahead = this.owner.World.Participants[person];
+				Player computer = this.owner.World.Participants[owner];
+
+				if (ahead.Standing > computer.Standing)
+				{
+					launch = true;
+				}
+				else
+				{
+					launch = false;
+					bool decided = false;
+
+					if ((this.owner.World.StarshipMarkers & (1 << (person & 0xff))) != 0)
+					{
+						// Both spaceships fly: the computer launches when it arrives first
+						this.processor.RegAcc.Value16 = (ushort)(computer.StarshipArrivalSeason - this.owner.World.Season);
+						this.processor.RegCount.Value16 = (ushort)(ahead.StarshipArrivalSeason - this.owner.World.Season);
+
+						if ((short)this.processor.RegAcc.Value16 <= (short)this.processor.RegCount.Value16)
+						{
+							launch = true;
+							decided = true;
+						}
+					}
+
+					if (!decided)
+					{
+						this.processor.RegAcc.Value16 = 1;
+						this.processor.RegCount.LowByte = (byte)(((person & 0xff) + 8) & 0xff);
+
+						launch = ((ushort)this.owner.World.StarshipMarkers & (ushort)(1 << this.processor.RegCount.LowByte)) != 0 &&
+							this.owner.World.Participants[this.owner.World.LiveRealms].Gold > 1000;
+					}
+				}
+			}
+
+			if (launch)
+				this.owner.RocketScreen.FireSpaceship(owner);
+		}
+
+		/// <summary>
 		/// The start of HandleCity: the locals 0xb8, 0xda, 0xfe, 0xca and 0x2496 cleared, the mouse hidden, the 5 x 5 array
 		/// of the tiles around (BP-0xa6) cleared; 0x653e the city; the materials outside 0 - 999 cleared. Over the other
 		/// cities: 0xb2 the distance to the nearest one (at most 7), 0x6b30 the distance to the nearest palace of the owner
@@ -1553,156 +1658,9 @@ namespace Civilization1Remaster.Game
 			if (!CompleteImprovement(townIdx))
 				goto L220f;
 
-		L1e60:
-			this.processor.CompareWord(this.processor.PullLocalWord(0xe8), 0x16);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L1e6a;
-			goto L2010;
+			// A spaceship part
+			BuildSpaceshipPart(townIdx);
 
-		L1e6a:
-			this.processor.CompareWord(this.processor.PullLocalWord(0xe8), 0x18);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L1e74;
-			goto L2010;
-
-		L1e74:
-			this.processor.RegAcc.Value16 = 0x1;
-			this.processor.RegCount.LowByte = this.processor.PullGlobalByte(0x6548);
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			this.processor.TestBitsWord(this.processor.RegAcc.Value16, (ushort)this.owner.World.StarshipMarkers);
-			if (this.processor.FlagSet.IsEqual) goto L1e86;
-			goto L2010;
-
-		L1e86:
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x6548), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L1e92;
-			goto L1ea9;
-
-		L1e92:
-			this.owner.RocketScreen.AttachSpaceshipPart(
-				this.processor.PullGlobalSignedWord(0x6548),
-				(ushort)(this.processor.PullLocalWord(0xe8) - 22));
-			
-			goto L2010;
-
-		L1ea9:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xe8);
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, 0x16);
-
-			this.owner.RocketScreen.ComputeSpaceshipSuccess(this.processor.PullGlobalSignedWord(0x6548), (short)this.processor.RegAcc.Value16);
-
-			this.processor.EmitLocalWord(0xc8, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.PullLocalWord(0xc8), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L1ecb;
-			goto L1f2f;
-
-		L1ecb:
-			this.processor.CompareWord(this.processor.PullLocalWord(0xe8), 0x18);
-			if (this.processor.FlagSet.IsLess) goto L1ed5;
-			goto L1f2f;
-
-		L1ed5:
-			this.processor.RegAcc.Value16 = 0x1e;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullLocalWord(0xe8));
-			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xbb2));
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.PullLocalWord(0x4a));
-			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
-			this.processor.ScaleIndexToBase(0x1c, (ushort)townIdx);
-			this.owner.World.Towns[townIdx].MaterialsTally += (short)this.processor.RegCount.Value16;
-			this.processor.ScaleIndexToBase(0x1c, (ushort)townIdx);
-			this.processor.CompareByte((byte)this.owner.World.Towns[townIdx].PresentMakingIdx, 0xea);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L1f05;
-			goto L1f2b;
-
-		L1f05:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.processor.CompareByte((byte)this.owner.World.Towns[townIdx].PresentMakingIdx, 0xe8);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L1f17;
-			goto L1f2b;
-
-		L1f17:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xe8);
-			this.processor.RegAcc.Value16 = this.processor.NegateWord(this.processor.RegAcc.Value16);
-			this.processor.RegAcc.LowByte = this.processor.DecrementByte(this.processor.RegAcc.LowByte);
-			this.owner.World.Towns[townIdx].PresentMakingIdx = (sbyte)this.processor.RegAcc.LowByte;
-
-		L1f2b:
-			this.processor.EmitLocalWord(0xc8, this.processor.DecrementWord(this.processor.PullLocalWord(0xc8)));
-
-		L1f2f:
-			this.processor.RegAcc.Value16 = 0x1;
-			this.processor.RegCount.LowByte = this.processor.PullGlobalByte(0x6548);
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			this.processor.TestBitsWord(this.processor.RegAcc.Value16, (ushort)this.owner.World.StarshipMarkers);
-			if (this.processor.FlagSet.IsEqual) goto L1f41;
-			goto L1ffa;
-
-		L1f41:
-			if (this.owner.World.BotStarshipVictoryRatio >= 40) goto L1f4b;
-			goto L1ffa;
-
-		L1f4b:
-			this.processor.CompareWord(this.processor.PullLocalWord(0xc8), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L1f55;
-			goto L1feb;
-
-		L1f55:
-			this.processor.RegAcc.Value16 = this.owner.Advisors.PlayerKnowsTechnology(this.owner.World.PersonParticipantIdx, 0x28);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x0);
-			if (this.processor.FlagSet.IsNotEqual)
-				goto L1f6d;
-
-			goto L1ff7;
-
-		L1f6d:
-			if (this.owner.World.BotStarshipVictoryRatio <= 75) goto L1f77;
-			goto L1feb;
-
-		L1f77:
-			this.processor.RegSource.Value16 = this.processor.PullGlobalWord(0x6548);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			if (this.owner.World.Participants[this.owner.World.PersonParticipantIdx].Standing >
-				this.owner.World.Participants[this.processor.PullGlobalWord(0x6548)].Standing) goto L1feb;
-
-			this.processor.RegAcc.Value16 = 0x1;
-			this.processor.RegCount.LowByte = (byte)(this.owner.World.PersonParticipantIdx & 0xff);
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			this.processor.TestBitsWord(this.processor.RegAcc.Value16, (ushort)this.owner.World.StarshipMarkers);
-			if (this.processor.FlagSet.IsEqual) goto L1fc5;
-
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.Participants[this.processor.PullGlobalWord(0x6548)].StarshipArrivalSeason;
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, (ushort)this.owner.World.Season);
-			this.processor.RegCount.Value16 = (ushort)this.owner.World.Participants[this.owner.World.PersonParticipantIdx].StarshipArrivalSeason;
-			this.processor.RegCount.Value16 = this.processor.SubtractWord(this.processor.RegCount.Value16, (ushort)this.owner.World.Season);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.RegCount.Value16);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L1feb;
-
-		L1fc5:
-			this.processor.RegAcc.Value16 = 0x1;
-			this.processor.RegCount.LowByte = (byte)(this.owner.World.PersonParticipantIdx & 0xff);
-			this.processor.RegCount.LowByte = this.processor.SumByte(this.processor.RegCount.LowByte, 0x8);
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			this.processor.TestBitsWord(this.processor.RegAcc.Value16, (ushort)this.owner.World.StarshipMarkers);
-			if (this.processor.FlagSet.IsEqual) goto L1ff7;
-			if (this.owner.World.Participants[this.owner.World.LiveRealms].Gold <= 1000) goto L1ff7;
-
-		L1feb:
-			this.owner.RocketScreen.FireSpaceship(this.processor.PullGlobalSignedWord(0x6548));
-
-		L1ff7:
-			goto L2010;
-
-		L1ffa:
-			this.processor.CompareWord(this.processor.PullLocalWord(0xc8), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L2004;
-			goto L2010;
-
-		L2004:
-			this.owner.RocketScreen.FireSpaceship(this.processor.PullGlobalSignedWord(0x6548));
-
-		L2010:
 			this.processor.CompareWord(this.processor.PullLocalWord(0xe8), 0x1);
 			if (this.processor.FlagSet.IsEqual) goto L201a;
 			goto L212c;

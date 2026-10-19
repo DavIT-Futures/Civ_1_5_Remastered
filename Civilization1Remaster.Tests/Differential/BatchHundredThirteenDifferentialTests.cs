@@ -40,7 +40,23 @@ public sealed class BatchHundredThirteenDifferentialTests(ITestOutputHelper outp
 			Assert.True(ways.Contains(way), $"No city met '{way}' (met: {string.Join(", ", ways.Order())})");
 	}
 
-	private void CheckCities(int bay, HashSet<string> ways, bool production = false)
+	[Fact]
+	public void HandleCitySpaceshipMatchesOriginalCode()
+	{
+		// Cities of computer players in their turn with a spaceship part ready: spaceships already flying, 0x28 known by the
+		// human, the standing of the human, the arrival of the human's spaceship, a rich third player (the share of computer
+		// victories is computed again by ComputeSpaceshipSuccess)
+		HashSet<string> ways = [];
+
+		foreach (int bay in new[] { 5, 9, 13 })
+			CheckCities(bay, ways, true, true);
+
+		// (a launch needs a computer spaceship with its places filled, which the saved games lack: not required)
+		foreach (string way in new[] { "not launched" })
+			Assert.True(ways.Contains(way), $"No city met '{way}' (met: {string.Join(", ", ways.Order())})");
+	}
+
+	private void CheckCities(int bay, HashSet<string> ways, bool production = false, bool spaceship = false)
 	{
 		Check(bay, production ? 70 : 40, (chance, pair) =>
 		{
@@ -54,6 +70,18 @@ public sealed class BatchHundredThirteenDifferentialTests(ITestOutputHelper outp
 			// (sometimes a capital)
 			var capitals = towns.Where(town => (engine.World.Towns[town].StructureMarkers0 & 1) != 0).ToList();
 			short townIdx = (short)(capitals.Count > 0 && chance.Next(4) == 0 ? capitals[chance.Next(capitals.Count)] : towns[chance.Next(towns.Count)]);
+
+			if (spaceship)
+			{
+				// (a city of a computer player)
+				var computerTowns = towns.Where(town => engine.World.Towns[town].ParticipantIdx != person && engine.World.Towns[town].ParticipantIdx != 0).ToList();
+
+				if (computerTowns.Count == 0)
+					return null;
+
+				townIdx = (short)computerTowns[chance.Next(computerTowns.Count)];
+			}
+
 			bool human = engine.World.Towns[townIdx].ParticipantIdx == person;
 			short marker = (short)(human && chance.Next(4) == 0 ? 1 : chance.Next(2) - 1);
 
@@ -139,6 +167,23 @@ public sealed class BatchHundredThirteenDifferentialTests(ITestOutputHelper outp
 			bool alreadyBuilt = chance.Next(3) == 0;
 			bool cityScreenOption = chance.Next(2) == 0;
 			int elsewhere = chance.Next(1000);
+			// The spaceship (only in its own test, so the draws of the other tests stay)
+			short ratio = 0, arrival = 0;
+			bool knows28 = false, ownerFlying = false, personFlying = false, personAhead = false, richThird = false;
+
+			if (spaceship)
+			{
+				improvement = true;
+				improvementIdx = (short)chance.Next(0x16, 0x19);
+				alreadyBuilt = false;
+				ratio = (short)new[] { 0, 40, 60, 76, 80 }[chance.Next(5)];
+				knows28 = chance.Next(3) != 0;
+				ownerFlying = chance.Next(5) == 0;
+				personFlying = chance.Next(2) == 0;
+				personAhead = chance.Next(2) == 0;
+				arrival = (short)chance.Next(-3, 4);
+				richThird = chance.Next(2) == 0;
+			}
 
 			// (no food variants with production, which changes the size; a full store at size 10 or 11 for the aqueduct)
 			if (produce)
@@ -321,6 +366,23 @@ public sealed class BatchHundredThirteenDifferentialTests(ITestOutputHelper outp
 								game.World.MarvelTownIdx[improvementIdx - 24] = -1;
 
 							game.World.SessionPrefMarkers = (short)(cityScreenOption ? game.World.SessionPrefMarkers | 8 : game.World.SessionPrefMarkers & ~8);
+
+							if (spaceship)
+							{
+								var computer = game.World.Participants[making.ParticipantIdx];
+								var human = game.World.Participants[person];
+								game.World.BotStarshipVictoryRatio = ratio;
+								ushort[] science = human.FoundScienceMarkers;
+								science[0x28 >> 4] = (ushort)(knows28 ? science[0x28 >> 4] | (1 << (0x28 & 0xf)) : science[0x28 >> 4] & ~(1 << (0x28 & 0xf)));
+								int flags = game.World.StarshipMarkers & ~((1 << making.ParticipantIdx) | (1 << person) | (1 << (person + 8)));
+								flags |= (ownerFlying ? 1 << making.ParticipantIdx : 0) | (personFlying ? (1 << person) | (1 << (person + 8)) : 0);
+								game.World.StarshipMarkers = (short)flags;
+								human.Standing = (short)(personAhead ? computer.Standing + 1 : computer.Standing);
+								human.StarshipArrivalSeason = (short)(computer.StarshipArrivalSeason + arrival);
+
+								if (game.World.LiveRealms >= 0 && game.World.LiveRealms < 8)
+									game.World.Participants[game.World.LiveRealms].Gold = (short)(richThird ? 2000 : 100);
+							}
 						}
 
 						if (produced == 0x19 && !improvement)
@@ -389,6 +451,9 @@ public sealed class BatchHundredThirteenDifferentialTests(ITestOutputHelper outp
 
 					if (Delta("ConstructUnit") > 0)
 						met.Add("unit built");
+
+					if (spaceship)
+						met.Add(Delta("FireSpaceship") > 0 ? "launched" : "not launched");
 
 					if (Delta("FinalizeProduction") > 0)
 						met.Add("city lost");

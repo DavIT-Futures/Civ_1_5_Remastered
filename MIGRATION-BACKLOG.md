@@ -985,13 +985,21 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   miasto; ekran miasta przy opcji 8 i dysku), tarcze zerowane; miasto komputera wybiera następną produkcję (po pałacu -2).
   Test produkcji: budynki i cuda (także zbudowane), opcja 8, 70 scenariuszy na grę. Ocalałe: `>= 0` przy liczeniu jednostki w
   produkcji po budynku (AI w grach testowych nie wybrało wtedy osadników), gałąź dyplomaty (nieosiągalna, porcja 122).
+- Porcja 124 (2026-10-19): dwunasty kawałek `HandleCity` – `BuildSpaceshipPart` (L1e60 – L2010): część statku (0x16 – 0x18)
+  gracza, którego statek nie odleciał: człowiek dokłada ją na ekranie statku, komputer (0xc8 = wynik `ComputeSpaceshipSuccess`)
+  dostaje zwrot tarcz i buduje dalej, potem startuje według wyniku albo (przy 40 % zwycięstw komputera i 0x28 u człowieka),
+  gdy jest pewny, człowiek prowadzi, przylatuje później albo trzeci gracz jest bogaty (złoto gracza o numerze `LiveRealms`,
+  jak w tłumaczeniu). Nowy test `HandleCitySpaceshipMatchesOriginalCode` (miasta komputera z gotową częścią). **Niepokryte:**
+  zwrot tarcz i decyzja o starcie (13 mutacji) – `ComputeSpaceshipSuccess` liczy od nowa `BotStarshipVictoryRatio` (zawsze 0)
+  i zwraca niezerowy wynik tylko przy zapełnionym statku komputera (miejsca w 0x375a), a takiego stanu nie ma w zapisach gier;
+  do zrobienia: scenariusz ze statkiem komputera prawie pełnym. Test produkcji wrócił do losowań z porcji 123.
 
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
 (`HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-19 (po porcji 123): 1 metoda w stylu asm (`HandleCity`, 8428 linii); `ShiftAIUnit` i `HandlePlayerTurn` gotowe. `HandleCity(miasto, znacznik)`: -1 tylko liczy, 0 tura miasta, 1 ekran miasta; przepisywać kawałkami od początku (po porcji 123: następny od L1e60 – części statku kosmicznego, potem L2010 – L220f). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
+Stan 2026-10-19 (po porcji 124): 1 metoda w stylu asm (`HandleCity`, 8428 linii); `ShiftAIUnit` i `HandlePlayerTurn` gotowe. `HandleCity(miasto, znacznik)`: -1 tylko liczy, 0 tura miasta, 1 ekran miasta; przepisywać kawałkami od początku (po porcji 124: następny L2010 – L220f – skutki pałacu i cudów 0x26, 0x2b). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
