@@ -52,6 +52,8 @@ public sealed class BatchHundredThirteenDifferentialTests(ITestOutputHelper outp
 			// game; the flag 1 of the city
 			// (only counted: in the turn of the city the original may then loop without end)
 			bool close = marker == -1 && chance.Next(2) == 0;
+			// A city of the barbarians (only counted)
+			bool barbarian = marker == -1 && !close && chance.Next(3) == 0;
 			int closeIdx = chance.Next(1000);
 			(int Horiz, int Vert) offset = (chance.Next(-2, 3), chance.Next(1, 3));
 			short hardness = (short)(screen ? 1 : chance.Next(5));
@@ -67,7 +69,7 @@ public sealed class BatchHundredThirteenDifferentialTests(ITestOutputHelper outp
 			// and the bit 2 of DiagMarkers (not on the city screen, which then waits without end)
 			sbyte[] slots = Enumerable.Range(0, 2).Select(_ => (sbyte)(chance.Next(4) == 0 ? -1 : chance.Next(6))).ToArray();
 			// (mostly in small cities, so the slots count above the size)
-			bool slotsSet = marker != 1 && chance.Next(engine.World.Towns[townIdx].TrueExtent <= 2 ? 1 : 4) == 0;
+			bool slotsSet = marker != 1 && chance.Next(engine.World.Towns[townIdx].TrueExtent <= 2 ? 1 : 2) == 0;
 			int supported = chance.Next(1000);
 			byte supportedKind = marker == 1 ? (byte)0xff : (byte)new[] { 0x19, 0x1a, 0x1b, 0, 0xe, 2, -1 }[chance.Next(7)];
 			short regime = (short)(marker == 1 ? -1 : chance.Next(-1, 7));
@@ -79,9 +81,16 @@ public sealed class BatchHundredThirteenDifferentialTests(ITestOutputHelper outp
 			bool alive = true;
 			Dictionary<string, int> before = new Dictionary<string, int>(pair.Rewritten.Calls);
 			ushort frame = (ushort)(engine.Processor.RegStack.Value16 - 2);
+			// The local 0x16 of HandleCity (left on the stack by earlier calls) cleared, so the city tile is taken anew; the
+			// workers of the city mixed up (not on the city screen); tiles around a city of the human unseen (on the screen)
+			bool freeCityTile = chance.Next(2) == 0;
+			bool mixWorkers = !screen && chance.Next(3) == 0;
+			uint mixed = (uint)chance.Next(1 << 20);
+			bool unseen = screen && chance.Next(2) == 0;
+			int unseenSeed = chance.Next(1000);
 
 			return new Scenario(
-				$"HandleCity({townIdx}, {marker}), materials {(badMaterials ? materials : "kept")}, advances {advances}, no palaces {noPalaces}, close {close}, level {hardness}, leader {leader}, flag {flag}, food {food}, size {size}, granary {granary}, aqueduct {aqueduct}, diag {diag}, flag 0x80 {unrest}, slots {(slotsSet ? string.Join("/", slots) : "kept")}, unit kind {supportedKind}, government {regime}, diag 2 {diag2}",
+				$"HandleCity({townIdx}, {marker}), materials {(badMaterials ? materials : "kept")}, advances {advances}, no palaces {noPalaces}, close {close}, level {hardness}, leader {leader}, flag {flag}, food {food}, size {size}, granary {granary}, aqueduct {aqueduct}, diag {diag}, flag 0x80 {unrest}, slots {(slotsSet ? string.Join("/", slots) : "kept")}, unit kind {supportedKind}, government {regime}, diag 2 {diag2}, barbarian {barbarian}, free city tile {freeCityTile}, mixed workers {(mixWorkers ? mixed : 0)}, unseen {unseen}",
 				game =>
 				{
 					HumanTurnScript.Install(game, [new HumanTurnScript.Input(0x1b), new HumanTurnScript.Input(0x1b)]);
@@ -165,6 +174,37 @@ public sealed class BatchHundredThirteenDifferentialTests(ITestOutputHelper outp
 						game.World.DiagMarkers = (short)(diag ? game.World.DiagMarkers | 4 : game.World.DiagMarkers & ~4);
 						sizeBefore = city.TrueExtent;
 						alive = true;
+					}
+
+					if (barbarian)
+						game.World.Towns[townIdx].ParticipantIdx = 0;
+
+					if (freeCityTile)
+						game.Processor.Storage.EmitUInt16(game.Processor.SegStack.Value16, (ushort)(frame - 0x16), 0);
+
+					if (mixWorkers)
+					{
+						var mixedCity = game.World.Towns[townIdx];
+						uint workers = ((uint)mixedCity.LaborerMarkers1 << 16) | mixedCity.LaborerMarkers0;
+						workers = (workers & 0xfc000000) | mixed;
+						mixedCity.LaborerMarkers0 = (ushort)workers;
+						mixedCity.LaborerMarkers1 = (ushort)(workers >> 16);
+					}
+
+					if (unseen)
+					{
+						var unseenCity = game.World.Towns[townIdx];
+						Random pickUnseen = new Random(unseenSeed);
+
+						for (int tile = 0; tile < 20; tile++)
+						{
+							if (pickUnseen.Next(3) == 0)
+							{
+								int horizLoc = (unseenCity.Place.X + game.TownDeltas[tile].X + 80) % 80;
+								int vertLoc = unseenCity.Place.Y + game.TownDeltas[tile].Y;
+								game.World.ChartSight[horizLoc, vertLoc] &= (sbyte)~(1 << person);
+							}
+						}
 					}
 
 					// The owner without any palace

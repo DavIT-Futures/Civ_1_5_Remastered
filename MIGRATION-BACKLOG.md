@@ -940,13 +940,18 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   osadnicy. Test `BatchHundredThirteen`: sloty (w małych miastach), jednostka miasta wybranego rodzaju, ustrój, bit 2; warianty
   stanu tylko poza ekranem miasta (znacznik 1 wtedy czeka bez końca), przesunięte bliskie miasto tylko przy -1 (w turze
   miasta oryginał może się zapętlić). Ocalałe: `<=` przy slotach (przy równości różnica 0), CX i końcowe 0xea (martwe zapisy).
+- Porcja 117 (2026-10-19): piąty kawałek `HandleCity` – `MarkUnavailableTiles` (L0b4e – L0cd4): pola niedostępne dla
+  robotników (tablica BP-0x3e): niewidziane przez właściciela (nie dla barbarzyńców), innego gracza (także w BP-0x8e; 0x70e8 = 1
+  przy polu człowieka), obrabiane przez sąsiednie miasto; ich robotnicy zdejmowani; 4 słowa pod 0x70da zerowane. Test
+  `BatchHundredThirteen`: miasto barbarzyńców (przy -1, osobno od bliskiego miasta – razem oryginał się zapętla). Ocalałe:
+  czwarte słowo pod 0x70da i końcowe 0xea (nadpisywane przed odczytem).
 
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
 (`HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-19 (po porcji 116): 1 metoda w stylu asm (`HandleCity`, 8428 linii); `ShiftAIUnit` i `HandlePlayerTurn` gotowe. `HandleCity(miasto, znacznik)`: -1 tylko liczy, 0 tura miasta, 1 ekran miasta; przepisywać kawałkami od początku (po porcji 116: następny od L0b4e). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
+Stan 2026-10-19 (po porcji 117): 1 metoda w stylu asm (`HandleCity`, 8428 linii); `ShiftAIUnit` i `HandlePlayerTurn` gotowe. `HandleCity(miasto, znacznik)`: -1 tylko liczy, 0 tura miasta, 1 ekran miasta; przepisywać kawałkami od początku (po porcji 117: następny od L0cd4). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
