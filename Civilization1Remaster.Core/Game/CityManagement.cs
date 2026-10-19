@@ -11,11 +11,13 @@ namespace Civilization1Remaster.Game
 	{
 		private readonly GameEngine owner;
 		private readonly CPU processor;
+		private readonly UnitMemory troops;
 
 		public CityManagement(GameEngine owner)
 		{
 			this.owner = owner;
 			this.processor = owner.Processor;
+			this.troops = new UnitMemory(owner.Processor);
 		}
 
 		/// <summary>
@@ -126,6 +128,107 @@ namespace Civilization1Remaster.Game
 			}
 
 			this.processor.EmitLocalWord(0xea, tile);
+		}
+
+		/// <summary>
+		/// The food of the city in its turn: the flag 0x80 cleared; with the food storage below zero a settler of the city
+		/// starves (the human is told), else the city is lost (the translated code tests the flags of the earlier comparison
+		/// instead of the size, so it is always lost: kept, see the backlog); with the storage at (size + 1) x 0x4a the city
+		/// grows (a granary keeps 5 x size + 5), above 10 without an aqueduct it stays (with the bit 4 of DiagMarkers; the human
+		/// is told). False when the city is lost. The locals of HandleCity and BX, SI are used as in the original.
+		/// </summary>
+		private bool FeedCity(short townIdx)
+		{
+			City town = this.owner.World.Towns[townIdx];
+			short owner = (short)this.processor.PullGlobalWord(0x6548);
+
+			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
+			town.ConditionMarker &= 0x7f;
+
+			if (town.GrainTally < 0)
+			{
+				// Starvation: a settler of the city, or the city
+				this.processor.EmitLocalWord(0xe8, 0xffff);
+				ushort troop = 0;
+
+				for (; troop < UnitMemory.TroopTally; troop++)
+				{
+					this.processor.EmitLocalWord(0xea, troop);
+					this.processor.RegBase.Value16 = (ushort)(owner * UnitMemory.ParticipantStride);
+					this.processor.RegSource.Value16 = (ushort)(troop * UnitMemory.TroopStride);
+
+					if (this.troops.Pull(owner, troop, UnitMemory.Kind) == 0 && this.troops.PullSigned(owner, troop, UnitMemory.BaseTown) == townIdx)
+					{
+						this.processor.EmitLocalWord(0xe8, troop);
+						break;
+					}
+				}
+
+				if (troop == UnitMemory.TroopTally)
+					this.processor.EmitLocalWord(0xea, troop);
+
+				if (owner == this.owner.World.PersonParticipantIdx)
+				{
+					this.owner.Libc.CopyText(0xba06, "Food storage exhausted\nin ");
+					this.owner.Conquest.ObtainCityLabel(townIdx);
+					this.owner.Libc.AppendText(0xba06, (ushort)(this.processor.PullLocalWord(0xe8) != 0xffff ? 0x2510 : 0x2522));
+					this.owner.Services.PerformSound(0x24, 0);
+					this.owner.Paper.DisplayNewspaper(townIdx);
+					this.owner.Services.PerformSound(1, 0);
+				}
+
+				if (this.processor.PullLocalWord(0xe8) != 0xffff)
+				{
+					this.owner.UnitOps.EliminateUnit(owner, this.processor.PullLocalSignedWord(0xe8));
+				}
+				else
+				{
+					// The city is lost (whatever its size, as the translated code does)
+					this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
+					town.TrueExtent--;
+					this.processor.RegSource.Value16 = (ushort)(townIdx * 0x1c);
+					this.owner.Advisors.FinalizeProduction(townIdx, (ushort)(short)town.Place.X, (ushort)(short)town.Place.Y);
+					this.owner.NewGameWizard.EliminateCivilization((short)this.processor.PullGlobalWord(0x6548), 0);
+					this.owner.Startup.DisplayMouseCursor();
+					return false;
+				}
+
+				this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
+				town.GrainTally = 0;
+				this.owner.TurnLogic.RepaintTileIfVisible(this.processor.PullLocalWord(0xd8), this.processor.PullLocalWord(0xe4));
+			}
+
+			// Growth
+			this.processor.RegSource.Value16 = (ushort)(townIdx * 0x1c);
+
+			if ((short)((town.TrueExtent + 1) * (short)this.processor.PullLocalWord(0x4a)) > town.GrainTally)
+				return true;
+
+			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
+			town.TrueExtent++;
+			this.processor.RegSource.Value16 = (ushort)(townIdx * 0x1c);
+
+			// A granary keeps half of the food
+			town.GrainTally = (short)((town.StructureMarkers0 & 4) != 0 ? (short)(5 * town.TrueExtent) + 5 : 0);
+			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
+
+			if (town.TrueExtent > 10 && (town.StructureMarkers0 & 0x100) == 0 && (this.owner.World.DiagMarkers & 4) != 0)
+			{
+				// No growth above 10 without an aqueduct
+				town.TrueExtent--;
+
+				if (this.processor.PullGlobalWord(0x6548) == (ushort)this.owner.World.PersonParticipantIdx)
+				{
+					this.processor.EmitGlobalWord(0x2f9e, 4);
+					this.processor.EmitGlobalByte(0xba06, 0);
+					this.owner.Conquest.ObtainCityLabel(townIdx);
+					this.owner.Libc.AppendText(0xba06, " requires an AQUEDUCT\nfor further growth.\n");
+					this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+				}
+			}
+
+			this.owner.TurnLogic.RepaintTileIfVisible(this.processor.PullLocalWord(0xd8), this.processor.PullLocalWord(0xe4));
+			return true;
 		}
 
 		/// <summary>
@@ -344,199 +447,12 @@ namespace Civilization1Remaster.Game
 			RenderCityHeaderAndMap(townIdx);
 
 		L0701:
+			// In the turn of the city: starvation and growth
 			this.processor.RegAcc.Value16 = (ushort)marker;
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.RegData.Value16 = this.processor.BitOrWord(this.processor.RegData.Value16, this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L070c;
-			goto L0965;
+			this.processor.RegData.Value16 = (ushort)((marker < 0 ? 0xffff : 0) | (ushort)marker);
 
-		L070c:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.owner.World.Towns[townIdx].ConditionMarker &= 0x7f;
-			this.processor.ScaleIndexToBase(0x1c, (ushort)townIdx);
-			this.processor.CompareWord((ushort)this.owner.World.Towns[townIdx].GrainTally, 0x0);
-			if (this.processor.FlagSet.IsLess) goto L072b;
-			goto L0881;
-
-		L072b:
-			this.processor.EmitLocalWord(0xe8, 0xffff);
-			this.processor.EmitLocalWord(0xea, 0x0);
-			goto L073e;
-
-		L073a:
-			this.processor.EmitLocalWord(0xea, this.processor.IncrementWord(this.processor.PullLocalWord(0xea)));
-
-		L073e:
-			this.processor.CompareWord(this.processor.PullLocalWord(0xea), 0x80);
-			if (this.processor.FlagSet.IsLess) goto L0749;
-			goto L0792;
-
-		L0749:
-			this.processor.RegAcc.Value16 = 0x600;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullGlobalWord(0x6548));
-			this.processor.ScaleIndexToSource(0xc, this.processor.PullLocalWord(0xea));
-			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d7)), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L0765;
-			goto L078f;
-
-		L0765:
-			this.processor.RegAcc.Value16 = 0x600;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullGlobalWord(0x6548));
-			this.processor.ScaleIndexToSource(0xc, this.processor.PullLocalWord(0xea));
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81df));
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.CompareWord(this.processor.RegAcc.Value16, (ushort)townIdx);
-			if (this.processor.FlagSet.IsEqual) goto L0784;
-			goto L078f;
-
-		L0784:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xea);
-			this.processor.EmitLocalWord(0xe8, this.processor.RegAcc.Value16);
-			goto L0792;
-
-		L078f:
-			goto L073a;
-
-		L0792:
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x6548), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L079e;
-			goto L07fc;
-
-		L079e:
-			this.owner.Libc.CopyText(0xba06, "Food storage exhausted\nin ");
-
-			this.owner.Conquest.ObtainCityLabel(townIdx);
-			
-			if (this.processor.PullLocalWord(0xe8) != 0xffff)
-			{
-				this.owner.Libc.AppendText(0xba06, 0x2510);
-			}
-			else
-			{
-				this.owner.Libc.AppendText(0xba06, 0x2522);
-			}
-
-			this.owner.Services.PerformSound(0x24, 0);
-
-			this.owner.Paper.DisplayNewspaper(townIdx);
-			
-			this.owner.Services.PerformSound(1, 0);
-
-		L07fc:
-			this.processor.CompareWord(this.processor.PullLocalWord(0xe8), 0xffff);
-			if (this.processor.FlagSet.IsNotEqual) goto L0806;
-			goto L0819;
-
-		L0806:
-			this.owner.UnitOps.EliminateUnit(this.processor.PullGlobalSignedWord(0x6548),
-				this.processor.PullLocalSignedWord(0xe8));
-			
-			goto L0863;
-
-		L0819:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.owner.World.Towns[townIdx].TrueExtent--;
-			if (this.processor.FlagSet.IsEqual) goto L082a;
-			goto L0863;
-
-		L082a:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToSource((ushort)townIdx);
-
-			this.owner.Advisors.FinalizeProduction(
-				townIdx,
-				(ushort)((short)this.owner.World.Towns[townIdx].Place.X),
-				(ushort)((short)this.owner.World.Towns[townIdx].Place.Y));
-
-			this.owner.NewGameWizard.EliminateCivilization(this.processor.PullGlobalSignedWord(0x6548), 0);
-
-			this.owner.Startup.DisplayMouseCursor();
-
-			goto L6927;
-
-		L0863:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.owner.World.Towns[townIdx].GrainTally = 0;
-
-			this.owner.TurnLogic.RepaintTileIfVisible(this.processor.PullLocalWord(0xd8),
-				this.processor.PullLocalWord(0xe4));
-
-		L0881:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToSource((ushort)townIdx);
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.Towns[townIdx].TrueExtent;
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegAcc.Value16 = this.processor.IncrementWord(this.processor.RegAcc.Value16);
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.PullLocalWord(0x4a));
-			this.processor.CompareWord(this.processor.RegAcc.Value16, (ushort)this.owner.World.Towns[townIdx].GrainTally);
-			if (this.processor.FlagSet.IsLessOrEqual) goto L089b;
-			goto L0965;
-
-		L089b:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.owner.World.Towns[townIdx].TrueExtent++;
-			this.processor.ScaleIndexToSource(0x1c, (ushort)townIdx);
-			this.processor.TestBitsWord(this.owner.World.Towns[townIdx].StructureMarkers0, 0x4);
-			if (this.processor.FlagSet.IsNotEqual) goto L08b9;
-			goto L08cd;
-
-		L08b9:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.processor.RegAcc.LowByte = 0x5;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, (byte)this.owner.World.Towns[townIdx].TrueExtent);
-			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x5);
-			goto L08d0;
-
-		L08cd:
-			this.processor.RegAcc.Value16 = 0x0;
-
-		L08d0:
-			this.owner.World.Towns[townIdx].GrainTally = (short)this.processor.RegAcc.Value16;
-			this.processor.ScaleIndexToBase(0x1c, (ushort)townIdx);
-			this.processor.CompareByte((byte)this.owner.World.Towns[townIdx].TrueExtent, 0xa);
-			if (this.processor.FlagSet.IsGreater) goto L08e6;
-			goto L0955;
-
-		L08e6:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.processor.TestBitsWord(this.owner.World.Towns[townIdx].StructureMarkers0, 0x100);
-			if (this.processor.FlagSet.IsEqual) goto L08f9;
-			goto L0955;
-
-		L08f9:
-			this.processor.TestBitsByte((byte)(this.owner.World.DiagMarkers & 0xff), 0x4);
-			if (this.processor.FlagSet.IsNotEqual) goto L0903;
-			goto L0955;
-
-		L0903:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.owner.World.Towns[townIdx].TrueExtent--;
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x6548), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L091b;
-			goto L0955;
-
-		L091b:
-			this.processor.EmitGlobalWord(0x2f9e, 0x4);
-			this.processor.EmitGlobalByte(0xba06, 0x0);
-
-			this.owner.Conquest.ObtainCityLabel(townIdx);
-
-			this.owner.Libc.AppendText(0xba06, " requires an AQUEDUCT\nfor further growth.\n");
-
-			this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
-
-		L0955:
-			this.owner.TurnLogic.RepaintTileIfVisible(this.processor.PullLocalWord(0xd8),
-				this.processor.PullLocalWord(0xe4));
+			if (marker == 0 && !FeedCity(townIdx))
+				goto L6927;
 
 		L0965:
 			this.processor.RegAcc.Value16 = 0x1c;

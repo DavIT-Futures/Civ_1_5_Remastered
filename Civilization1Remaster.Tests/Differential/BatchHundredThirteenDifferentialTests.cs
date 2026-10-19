@@ -22,13 +22,13 @@ public sealed class BatchHundredThirteenDifferentialTests(ITestOutputHelper outp
 		foreach (int bay in new[] { 5, 9, 13 })
 			CheckCities(bay, ways);
 
-		foreach (string way in new[] { "own palace", "palace near", "no palace near", "shared tiles", "content advances", "materials reset", "computer turn" })
+		foreach (string way in new[] { "own palace", "palace near", "no palace near", "shared tiles", "content advances", "materials reset", "computer turn", "city lost", "grew", "held", "settler starved" })
 			Assert.True(ways.Contains(way), $"No city met '{way}' (met: {string.Join(", ", ways.Order())})");
 	}
 
 	private void CheckCities(int bay, HashSet<string> ways)
 	{
-		Check(bay, 30, (chance, pair) =>
+		Check(bay, 40, (chance, pair) =>
 		{
 			GameEngine engine = pair.Rewritten.Engine;
 			short person = engine.World.PersonParticipantIdx;
@@ -53,10 +53,22 @@ public sealed class BatchHundredThirteenDifferentialTests(ITestOutputHelper outp
 			short hardness = (short)chance.Next(5);
 			bool leader = chance.Next(2) == 0;
 			bool flag = chance.Next(2) == 0;
+			// The food: 0 kept, 1 below zero, 2 enough to grow (sometimes at size 10 or 11), with a granary, an aqueduct and the
+			// bit 4 of DiagMarkers by chance
+			// (3 exactly the food to grow, 4 one less)
+			int food = chance.Next(5);
+			sbyte size = (sbyte)(chance.Next(3) != 0 ? chance.Next(10, 12) : 0);
+			bool unrest = chance.Next(2) == 0;
+			bool granary = chance.Next(2) == 0;
+			bool aqueduct = chance.Next(2) == 0;
+			bool diag = chance.Next(2) == 0;
+			sbyte sizeBefore = 0;
+			bool alive = true;
+			Dictionary<string, int> before = new Dictionary<string, int>(pair.Rewritten.Calls);
 			ushort frame = (ushort)(engine.Processor.RegStack.Value16 - 2);
 
 			return new Scenario(
-				$"HandleCity({townIdx}, {marker}), materials {(badMaterials ? materials : "kept")}, advances {advances}, no palaces {noPalaces}, close {close}, level {hardness}, leader {leader}, flag {flag}",
+				$"HandleCity({townIdx}, {marker}), materials {(badMaterials ? materials : "kept")}, advances {advances}, no palaces {noPalaces}, close {close}, level {hardness}, leader {leader}, flag {flag}, food {food}, size {size}, granary {granary}, aqueduct {aqueduct}, diag {diag}, flag 0x80 {unrest}",
 				game =>
 				{
 					HumanTurnScript.Install(game, [new HumanTurnScript.Input(0x1b), new HumanTurnScript.Input(0x1b)]);
@@ -91,6 +103,31 @@ public sealed class BatchHundredThirteenDifferentialTests(ITestOutputHelper outp
 					game.World.Participants[person].Standing = (short)(leader ? 7 : game.World.Participants[person].Standing == 7 ? 6 : game.World.Participants[person].Standing);
 					game.World.Towns[townIdx].ConditionMarker = (byte)(flag ? game.World.Towns[townIdx].ConditionMarker | 1 : game.World.Towns[townIdx].ConditionMarker & 0xfe);
 
+					var city = game.World.Towns[townIdx];
+
+					if (size != 0)
+						city.TrueExtent = size;
+
+					if (food == 1)
+						city.GrainTally = -1;
+					else if (food == 2)
+						city.GrainTally = 900;
+					else if (food >= 3)
+					{
+						// The food box: 10 for the human, else 16 - 2 x the level (2 less for the leader of a later game)
+						int box = city.ParticipantIdx == person ? 10 : 16 - 2 * hardness -
+							(game.World.Season >= 0 && game.World.Participants[person].Standing == 7 && hardness > 1 ? 2 : 0);
+						city.GrainTally = (short)((city.TrueExtent + 1) * box - (food - 3));
+					}
+
+					city.ConditionMarker = (byte)(unrest ? city.ConditionMarker | 0x80 : city.ConditionMarker & 0x7f);
+
+					city.StructureMarkers0 = (ushort)(granary ? city.StructureMarkers0 | 4 : city.StructureMarkers0 & ~4);
+					city.StructureMarkers0 = (ushort)(aqueduct ? city.StructureMarkers0 | 0x100 : city.StructureMarkers0 & ~0x100);
+					game.World.DiagMarkers = (short)(diag ? game.World.DiagMarkers | 4 : game.World.DiagMarkers & ~4);
+					sizeBefore = city.TrueExtent;
+					alive = true;
+
 					// The owner without any palace
 					foreach (var town in game.World.Towns.Where(town => noPalaces && town.ConditionMarker != 0xff && town.ParticipantIdx == owner))
 						town.StructureMarkers0 &= 0xfffe;
@@ -116,6 +153,18 @@ public sealed class BatchHundredThirteenDifferentialTests(ITestOutputHelper outp
 
 					if (!human && marker == 0)
 						met.Add("computer turn");
+
+					int Delta(string name) => Calls(game, pair, name) - before.GetValueOrDefault(name);
+
+					if (Delta("FinalizeProduction") > 0)
+						met.Add("city lost");
+					else if (marker == 0 && game.World.Towns[townIdx].TrueExtent > sizeBefore)
+						met.Add("grew");
+					else if (marker == 0 && food == 2 && game.World.Towns[townIdx].TrueExtent == sizeBefore)
+						met.Add("held");
+
+					if (food == 1 && marker == 0 && Delta("EliminateUnit") > 0)
+						met.Add("settler starved");
 
 					foreach (string way in met)
 						ways.Add(way);

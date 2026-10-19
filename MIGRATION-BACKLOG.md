@@ -928,18 +928,28 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   miasta, tytuł „NAZWA (Pop:…)” (0xe8 = 1 + 2 + … + rozmiar), mapa miasta (widok na nim; pola niewidziane przez człowieka
   pomijane, pole innego gracza tylko odświeżane, pole obrabiane przez sąsiednie miasto w ramce). Test: `BatchHundredThirteen`.
   Ocalałe: końcowe 0xea (nadpisywane przed odczytem).
+- Porcja 115 (2026-10-19): trzeci kawałek `HandleCity` – `FeedCity` (L0701 – L0965, tylko w turze miasta): flaga 0x80
+  zdejmowana; przy zapasie żywności poniżej zera głoduje osadnik miasta (człowiek dostaje gazetę), a bez osadnika miasto ginie
+  (błąd tłumaczenia, niżej); przy zapasie (rozmiar + 1) x 0x4a miasto rośnie (spichlerz zostawia 5 x rozmiar + 5), powyżej 10
+  bez akweduktu (przy bicie 4 `DiagMarkers`) nie rośnie i człowiek dostaje komunikat. `CityManagement` dostało `UnitMemory`.
+  Test `BatchHundredThirteen` dostał warianty żywności (poniżej zera, dość, dokładnie na granicy i o 1 mniej, rozmiar 10 – 11,
+  spichlerz, akwedukt, bit 4, flaga 0x80). Wszystkie mutacje złapane.
 
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
 (`HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-19 (po porcji 114): 1 metoda w stylu asm (`HandleCity`, 8428 linii); `ShiftAIUnit` i `HandlePlayerTurn` gotowe. `HandleCity(miasto, znacznik)`: -1 tylko liczy, 0 tura miasta, 1 ekran miasta; przepisywać kawałkami od początku (po porcji 114: następny L0701 – L0965 głód i wzrost). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
+Stan 2026-10-19 (po porcji 115): 1 metoda w stylu asm (`HandleCity`, 8428 linii); `ShiftAIUnit` i `HandlePlayerTurn` gotowe. `HandleCity(miasto, znacznik)`: -1 tylko liczy, 0 tura miasta, 1 ekran miasta; przepisywać kawałkami od początku (po porcji 115: następny od L0965). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
 Kod C# przetłumaczony z asm ma miejscami inne zachowanie niż DOS-owy CIV.EXE. Testy porównują z tłumaczeniem, więc na razie
 te błędy są odtwarzane jawnie:
+
+- `FeedCity` (`HandleCity`, L0819): po `TrueExtent--` przetłumaczony kod sprawdzał flagę Z z wcześniejszego porównania
+  (0xe8 == -1, zawsze prawda), a nie wynik zmniejszenia, więc głodujące miasto bez osadnika zawsze ginie (w oryginale tylko przy
+  rozmiarze 1; inaczej traci mieszkańca i zeruje zapas).
 
 - `HandleGameEnd`: co 50 tur wpis 11 historii dostaje jako starszy bajt populacji `(bajt & 0xff00) >> 8`, czyli zawsze 0;
   losowe katastrofy miast: licznik pętli to numer wylosowanego miasta + 1 (pętla kończy się po pierwszym mieście, chyba
