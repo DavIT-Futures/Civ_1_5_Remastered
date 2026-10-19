@@ -52,6 +52,20 @@ namespace Civilization1Remaster.Game.State
 		public short StarshipLiftoffSeason = 0;
 		public short StarshipVictoryRatio = 0;
 
+		/// <summary>A city stops making the unit kind (an improvement, a negative kind, isn't counted)</summary>
+		public void StopMaking(sbyte kind)
+		{
+			if (kind >= 0)
+				this.TroopsInsideMaking[kind]--;
+		}
+
+		/// <summary>A city starts making the unit kind (an improvement, a negative kind, isn't counted)</summary>
+		public void StartMaking(sbyte kind)
+		{
+			if (kind >= 0)
+				this.TroopsInsideMaking[kind]++;
+		}
+
 		public Player()
 		{
 			for (int idx = 0; idx < this.Relations.Length; idx++)

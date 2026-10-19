@@ -24,6 +24,38 @@ namespace Civilization1Remaster.Game.State
 		public sbyte[] CommerceTownIndices = new sbyte[3];
 		public sbyte[] Unfamiliar = new sbyte[2];
 
+		/// <summary>Both structure words as one 32-bit mask (bit n: CityStructure n)</summary>
+		public uint Structures
+		{
+			get => ((uint)this.StructureMarkers1 << 16) | this.StructureMarkers0;
+			set
+			{
+				this.StructureMarkers0 = (ushort)value;
+				this.StructureMarkers1 = (ushort)(value >> 16);
+			}
+		}
+
+		/// <summary>Whether the city has the improvement</summary>
+		public bool Has(CityStructure structure) => (this.Structures & (1u << (int)structure)) != 0;
+
+		/// <summary>The improvement built</summary>
+		public void Add(CityStructure structure) => this.Structures |= 1u << (int)structure;
+
+		/// <summary>The improvement gone</summary>
+		public void Remove(CityStructure structure) => this.Structures &= ~(1u << (int)structure);
+
+		/// <summary>
+		/// The bit of a structure read the way the original reads it: a 16-bit mask sign extended to 32 bits, so the bit 15
+		/// also counts any of 16 - 31 and the bits 16 - 23 never count
+		/// </summary>
+		public bool HasStructureSignExtended(ushort structureIdx)
+		{
+			ushort mask = (ushort)(1 << (byte)structureIdx);
+			ushort high = (mask & 0x8000) != 0 ? (ushort)0xffff : (ushort)0;
+
+			return ((this.StructureMarkers0 & mask) | (this.StructureMarkers1 & high)) != 0;
+		}
+
 		public City()
 		{
 			for (int idx = 0; idx < this.CommerceTownIndices.Length; idx++)

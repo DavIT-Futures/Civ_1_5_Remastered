@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Civilization1Remaster.Emulation;
 
 namespace Civilization1Remaster.Game
@@ -15,7 +15,7 @@ namespace Civilization1Remaster.Game
 	/// </code>
 	/// "Known" improvements are what the human player saw last time. Like VGADriver.ObtainDot, reading outside the picture gives 0.
 	/// </summary>
-	public sealed class MapLayers
+	public sealed class MapLayers : GameModule
 	{
 		private const ushort ChartDisplay = 2;
 		private const int KnownOffset = 80;
@@ -30,13 +30,10 @@ namespace Civilization1Remaster.Game
 		/// <summary>Bit of the tile owner layer: units stand on the tile</summary>
 		public const int UnitsPresent = 8;
 
-		private readonly GameEngine owner;
-		private readonly CPU processor;
 
 		public MapLayers(GameEngine owner)
+			: base(owner)
 		{
-			this.owner = owner;
-			this.processor = owner.Processor;
 		}
 
 		/// <summary>Terrain type (0 - 10, 10 = ocean) of the tile</summary>

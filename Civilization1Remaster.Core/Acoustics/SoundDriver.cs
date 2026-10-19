@@ -1,13 +1,11 @@
-using System;
+﻿using System;
 using Civilization1Remaster.Emulation;
 using Civilization1Remaster.Acoustics;
 
 namespace Civilization1Remaster.Acoustics
 {
-	public class SoundDriver
+	public class SoundDriver : GameModule
 	{
-		private readonly GameEngine owner;
-		private readonly CPU processor;
 		private ushort stagingPlace = 0;
 
 		// The original sound driver from the game folder (RSOUND.CVL, ASOUND.CVL or ISOUND.CVL) and the audio or MIDI output.
@@ -18,9 +16,8 @@ namespace Civilization1Remaster.Acoustics
 		private IDisposable? participant = null;
 
 		public SoundDriver(GameEngine owner)
+			: base(owner)
 		{
-			this.owner = owner;
-			this.processor = owner.Processor;
 		}
 
 		private SoundDriverHost? Handler

@@ -1,17 +1,14 @@
-using Civilization1Remaster.Emulation;
+﻿using Civilization1Remaster.Emulation;
 using System;
+using Civilization1Remaster.Game.State;
 
 namespace Civilization1Remaster.UI
 {
-	public class CityView
+	public class CityView : GameModule
 	{
-		private readonly GameEngine owner;
-		private readonly CPU processor;
-
 		public CityView(GameEngine owner)
+			: base(owner)
 		{
-			this.owner = owner;
-			this.processor = owner.Processor;
 		}
 		
 		/// <summary>
@@ -251,7 +248,7 @@ namespace Civilization1Remaster.UI
 				}
 			}
 
-			if ((settlement.StructureMarkers1 & 8) != 0)
+			if (settlement.Has(CityStructure.HydroPlant))
 			{
 				townArrangement[17, 7] = 34;
 				townArrangement[17, 8] = 15;
@@ -259,7 +256,7 @@ namespace Civilization1Remaster.UI
 				townArrangement[18, 8] = 15;
 			}
 
-			if ((settlement.StructureMarkers0 & 0x100) != 0)
+			if (settlement.Has(CityStructure.Aqueduct))
 			{
 				townArrangement[0, idx8 - 1] = 23;
 				townArrangement[0, idx8] = 15;
@@ -308,7 +305,7 @@ namespace Civilization1Remaster.UI
 					}
 				}
 
-				if ((settlement.StructureMarkers1 & 0x4) != 0 && arg2 != 19)
+				if (settlement.Has(CityStructure.PowerPlant) && arg2 != 19)
 				{
 					for (int idx = (townIdx == this.owner.World.MarvelTownIdx[7]) ? 69 : 0; idx < 310; idx += 45)
 					{
@@ -424,7 +421,7 @@ namespace Civilization1Remaster.UI
 					}
 				}
 				
-				if ((settlement.StructureMarkers0 & 0x80) != 0 && arg2 != 8)
+				if (settlement.Has(CityStructure.CityWalls) && arg2 != 8)
 				{
 					for (int idx = 0; idx < 320; idx += 43)
 					{
@@ -441,7 +438,7 @@ namespace Civilization1Remaster.UI
 						142, 108, this.processor.PullGlobalWord(0x81ae));
 				}
 
-				if ((settlement.StructureMarkers0 & 0x1000) != 0 && arg2 != 13)
+				if (settlement.Has(CityStructure.MassTransit) && arg2 != 13)
 				{
 					for (int idx = 0; idx < 310; idx += 46)
 					{

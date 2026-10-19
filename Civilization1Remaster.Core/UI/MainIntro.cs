@@ -1,17 +1,13 @@
-using Civilization1Remaster.Emulation;
+﻿using Civilization1Remaster.Emulation;
 using Civilization1Remaster.Game;
 
 namespace Civilization1Remaster.UI
 {
-	public class MainIntro
+	public class MainIntro : GameModule
 	{
-		private readonly GameEngine owner;
-		private readonly CPU processor;
-
 		public MainIntro(GameEngine owner)
+			: base(owner)
 		{
-			this.owner = owner;
-			this.processor = owner.Processor;
 		}
 
 		// Local variables of DisplayMainIntro in its stack frame. The intro waits for the music and the timer, and the timer of

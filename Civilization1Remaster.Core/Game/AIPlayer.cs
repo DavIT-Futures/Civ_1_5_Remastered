@@ -1,22 +1,20 @@
 ﻿using System;
 using Civilization1Remaster.Emulation;
 using Civilization1Remaster.Game.Rules;
+using Civilization1Remaster.Game.State;
 
 namespace Civilization1Remaster.Game
 {
 	/// <summary>
 	/// Translated from the original CIV.EXE segment 0x25fb.
 	/// </summary>
-	public class AIPlayer
+	public class AIPlayer : GameModule
 	{
-		private readonly GameEngine owner;
-		private readonly CPU processor;
 		private readonly UnitMemory troops;
 
 		public AIPlayer(GameEngine owner)
+			: base(owner)
 		{
-			this.owner = owner;
-			this.processor = owner.Processor;
 			this.troops = new UnitMemory(owner.Processor);
 		}
 
@@ -40,7 +38,7 @@ namespace Civilization1Remaster.Game
 			CountUsedBlocks(participantIdx);
 			ChooseContinentApproaches(participantIdx);
 
-			if (participantIdx != 0 && (this.owner.World.ParticipantMarkers & (1 << participantIdx)) == 0)
+			if (participantIdx != 0 && !this.owner.World.IsHuman(participantIdx))
 			{
 				Player player = this.owner.World.Participants[participantIdx];
 
@@ -243,7 +241,7 @@ namespace Civilization1Remaster.Game
 					{
 						// A city of another player: a target (3 with city walls, else 5)
 						SendUnitToStrategicLocation(participantIdx, (short)town.Place.X, (short)town.Place.Y, 1,
-							(short)((town.StructureMarkers0 & 0x80) != 0 ? 3 : 5));
+							(short)(town.Has(CityStructure.CityWalls) ? 3 : 5));
 					}
 
 					// A city without a unit and without known units: one unit to defend it (own) or to take it
@@ -267,8 +265,7 @@ namespace Civilization1Remaster.Game
 			player.Landmasses[this.owner.MapOps.ObtainContinentID(town.Place.X, town.Place.Y)].TownTally++;
 			player.GrandTownExtent += town.TrueExtent;
 
-			if (town.PresentMakingIdx >= 0)
-				player.TroopsInsideMaking[town.PresentMakingIdx]++;
+			player.StartMaking(town.PresentMakingIdx);
 
 			this.processor.EmitLocalWord(SurveyHoriz, (ushort)((ushort)(short)town.Place.X >> 2));
 			this.processor.EmitLocalWord(SurveyVert, (ushort)((ushort)(short)town.Place.Y >> 2));
@@ -478,7 +475,7 @@ namespace Civilization1Remaster.Game
 			if ((short)this.processor.PullLocalWord(SurveyMostTowns) < own.TownTally)
 				this.processor.EmitLocalWord(SurveyMostTowns, (ushort)own.TownTally);
 
-			if (own.Approach != approach && (this.owner.World.ParticipantMarkers & (1 << participantIdx)) == 0)
+			if (own.Approach != approach && !this.owner.World.IsHuman(participantIdx))
 				RefreshCityProduction(participantIdx, continentIdx);
 
 			if (own.Assault != 0 && this.owner.World.Participants[this.owner.World.PersonParticipantIdx].Landmasses[continentIdx].TownTally > 1)
@@ -2168,7 +2165,7 @@ namespace Civilization1Remaster.Game
 
 			Game.State.City town = this.owner.World.Towns[this.processor.PullLocalWord(0x34)];
 
-			if ((town.StructureMarkers0 & 1) != 0)
+			if (town.Has(CityStructure.Palace))
 				this.processor.DecrementLocalWord(0x6);
 			else if (this.processor.PullLocalWord(0x2) == 0)
 				this.processor.IncrementLocalWord(0x6);
@@ -2330,7 +2327,7 @@ namespace Civilization1Remaster.Game
 				// The score starts as the owner: a dead city or one with bit 0 of the second word is compared with that
 				this.processor.EmitLocalWord(0x3a, (ushort)town.ParticipantIdx);
 
-				if (town.ConditionMarker != 0xff && (town.StructureMarkers1 & 1) == 0 && IsNuclearTarget(participantIdx, town))
+				if (town.ConditionMarker != 0xff && !town.Has(CityStructure.SdiDefense) && IsNuclearTarget(participantIdx, town))
 					ScoreNuclearTarget(participantIdx, town);
 
 				if ((short)this.processor.PullLocalWord(0x3a) > (short)this.processor.PullLocalWord(0x28) && HasCityNear(participantIdx, town))
@@ -2888,19 +2885,10 @@ namespace Civilization1Remaster.Game
 			City town = this.owner.World.Towns[townIdx];
 			ushort participantIdx = (byte)town.ParticipantIdx;
 
-			if (town.PresentMakingIdx >= 0)
-			{
-				this.owner.World.Participants[participantIdx].TroopsInsideMaking[town.PresentMakingIdx]--;
-			}
-
+			this.owner.World.Participants[participantIdx].StopMaking(town.PresentMakingIdx);
 			this.owner.Advisors.PickCityProduction((short)participantIdx, townIdx);
-
 			town.PresentMakingIdx = (sbyte)this.processor.RegAcc.LowByte;
-
-			if (town.PresentMakingIdx >= 0)
-			{
-				this.owner.World.Participants[participantIdx].TroopsInsideMaking[town.PresentMakingIdx]++;
-			}
+			this.owner.World.Participants[participantIdx].StartMaking(town.PresentMakingIdx);
 
 			this.processor.RegSource.Value16 = savedSource;
 			this.processor.RegDest.Value16 = savedDest;

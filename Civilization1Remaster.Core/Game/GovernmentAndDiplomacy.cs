@@ -1,20 +1,17 @@
-using Civilization1Remaster.Emulation;
+﻿using Civilization1Remaster.Emulation;
 using System.Runtime.InteropServices;
+using Civilization1Remaster.Game.State;
 
 namespace Civilization1Remaster.Game
 {
 	/// <summary>
 	/// Translated from the original CIV.EXE segment 0x2517.
 	/// </summary>
-	public class GovernmentAndDiplomacy
+	public class GovernmentAndDiplomacy : GameModule
 	{
-		private readonly GameEngine owner;
-		private readonly CPU processor;
-
 		public GovernmentAndDiplomacy(GameEngine owner)
+			: base(owner)
 		{
-			this.owner = owner;
-			this.processor = owner.Processor;
 		}
 
 		/// <summary>
@@ -283,7 +280,7 @@ namespace Civilization1Remaster.Game
 			Player participant = this.owner.World.Participants[participantIdx];
 			short formerRegime = participant.RegimeKind;
 
-			if (((1 << (byte)participantIdx) & (ushort)this.owner.World.ParticipantMarkers) != 0)
+			if (this.owner.World.IsHuman(participantIdx))
 			{
 				short chosen;
 
@@ -715,7 +712,7 @@ namespace Civilization1Remaster.Game
 
 			foreach (City town in this.owner.World.Towns)
 			{
-				if (town.ConditionMarker == 0xff || town.ParticipantIdx != participantIdx || (town.StructureMarkers0 & 0x1) == 0)
+				if (town.ConditionMarker == 0xff || town.ParticipantIdx != participantIdx || !town.Has(CityStructure.Palace))
 					continue;
 
 				short distance = (short)this.owner.Helpers.ObtainDistance(town.Place.X, horizLoc, town.Place.Y, vertLoc);

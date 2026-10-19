@@ -1,19 +1,15 @@
-using Civilization1Remaster.Emulation;
+﻿using Civilization1Remaster.Emulation;
 
 namespace Civilization1Remaster.UI
 {
 	/// <summary>
 	/// Translated from the original CIV.EXE overlay 13.
 	/// </summary>
-	public class CivilizationInfo
+	public class CivilizationInfo : GameModule
 	{
-		private readonly GameEngine owner;
-		private readonly CPU processor;
-
 		public CivilizationInfo(GameEngine owner)
+			: base(owner)
 		{
-			this.owner = owner;
-			this.processor = owner.Processor;
 		}
 
 		/// <summary>

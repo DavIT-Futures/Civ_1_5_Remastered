@@ -1,4 +1,4 @@
-using Civilization1Remaster.Emulation;
+﻿using Civilization1Remaster.Emulation;
 using Civilization1Remaster.Game;
 
 namespace Civilization1Remaster.UI
@@ -6,16 +6,13 @@ namespace Civilization1Remaster.UI
 	/// <summary>
 	/// Translated from the original CIV.EXE overlay 10.
 	/// </summary>
-	public class ArmySelection
+	public class ArmySelection : GameModule
 	{
-		private readonly GameEngine owner;
-		private readonly CPU processor;
 		private readonly UnitMemory troops;
 
 		public ArmySelection(GameEngine owner)
+			: base(owner)
 		{
-			this.owner = owner;
-			this.processor = owner.Processor;
 			this.troops = new UnitMemory(owner.Processor);
 		}
 

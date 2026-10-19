@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -6,16 +6,13 @@ using Civilization1Remaster.Emulation;
 
 namespace Civilization1Remaster.Emulation
 {
-	public class CRuntime
+	public class CRuntime : GameModule
 	{
-		private readonly GameEngine owner;
-		private readonly CPU processor;
 		private RandomMT19937 dice = new RandomMT19937();
 
 		public CRuntime(GameEngine owner)
+			: base(owner)
 		{
-			this.owner = owner;
-			this.processor = owner.Processor;
 		}
 
 		public void TerminateProgram(short cipher)

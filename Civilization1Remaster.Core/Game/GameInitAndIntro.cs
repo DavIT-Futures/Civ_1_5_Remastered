@@ -1,17 +1,13 @@
-using System;
+﻿using System;
 using Civilization1Remaster.Emulation;
 
 namespace Civilization1Remaster.Game
 {
-	public class GameInitAndIntro
+	public class GameInitAndIntro : GameModule
 	{
-		private readonly GameEngine owner;
-		private readonly CPU processor;
-
 		public GameInitAndIntro(GameEngine owner)
+			: base(owner)
 		{
-			this.owner = owner;
-			this.processor = owner.Processor;
 		}
 
 		/// <summary>

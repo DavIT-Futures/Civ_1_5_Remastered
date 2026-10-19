@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Civilization1Remaster.Emulation;
 
 namespace Civilization1Remaster.Engine
@@ -6,16 +6,13 @@ namespace Civilization1Remaster.Engine
 	/// <summary>
 	/// Translated from the original CIV.EXE segment 0x2dc4.
 	/// </summary>
-	public class CommonUtilities
+	public class CommonUtilities : GameModule
 	{
-		private readonly GameEngine owner;
-		private readonly CPU processor;
 		private readonly UnitMemory troops;
 
 		public CommonUtilities(GameEngine owner)
+			: base(owner)
 		{
-			this.owner = owner;
-			this.processor = owner.Processor;
 			this.troops = new UnitMemory(owner.Processor);
 		}
 

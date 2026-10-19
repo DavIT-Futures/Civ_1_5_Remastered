@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Drawing;
 
 namespace Civilization1Remaster.Game.State
@@ -155,6 +155,9 @@ namespace Civilization1Remaster.Game.State
 		// Spaceships
 		public short StarshipMarkers = 0;
 		public short BotStarshipVictoryRatio = 0;
+
+		/// <summary>Whether a human plays the player: its bit in ParticipantMarkers (the players 0 - 7)</summary>
+		public bool IsHuman(int participantIdx) => (this.ParticipantMarkers & (1 << (participantIdx & 0xff))) != 0;
 
 		public GameState()
 		{

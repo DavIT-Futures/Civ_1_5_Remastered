@@ -1,17 +1,13 @@
-using System;
+﻿using System;
 using Civilization1Remaster.Emulation;
 
 namespace Civilization1Remaster.UI
 {
-	public class HallOfFame
+	public class HallOfFame : GameModule
 	{
-		private readonly GameEngine owner;
-		private readonly CPU processor;
-
 		public HallOfFame(GameEngine owner)
+			: base(owner)
 		{
-			this.owner = owner;
-			this.processor = owner.Processor;
 		}
 
 		/// <summary>

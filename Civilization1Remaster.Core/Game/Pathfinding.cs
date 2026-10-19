@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Civilization1Remaster.Emulation;
 
 namespace Civilization1Remaster.Game
@@ -6,15 +6,11 @@ namespace Civilization1Remaster.Game
 	/// <summary>
 	/// Translated from the original CIV.EXE segment 0x2e31.
 	/// </summary>
-	public class Pathfinding
+	public class Pathfinding : GameModule
 	{
-		private readonly GameEngine owner;
-		private readonly CPU processor;
-
 		public Pathfinding(GameEngine owner)
+			: base(owner)
 		{
-			this.owner = owner;
-			this.processor = owner.Processor;
 		}
 
 		/// <summary>

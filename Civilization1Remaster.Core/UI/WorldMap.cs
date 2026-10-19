@@ -1,18 +1,14 @@
-using System;
+﻿using System;
 using Civilization1Remaster.Emulation;
 using Civilization1Remaster.Game.State;
 
 namespace Civilization1Remaster.UI
 {
-	public class WorldMap
+	public class WorldMap : GameModule
 	{
-		private readonly GameEngine owner;
-		private readonly CPU processor;
-
 		public WorldMap(GameEngine owner)
+			: base(owner)
 		{
-			this.owner = owner;
-			this.processor = owner.Processor;
 		}
 
 		/// <summary>
@@ -751,22 +747,22 @@ namespace Civilization1Remaster.UI
 					tally.Pollution[owner] += pollution;
 				}
 
-				if ((town.StructureMarkers0 & 0x4) != 0)
+				if (town.Has(CityStructure.Granary))
 				{
 					tally.Health[owner] += size;
 				}
 
-				if ((town.StructureMarkers0 & 0x100) != 0)
+				if (town.Has(CityStructure.Aqueduct))
 				{
 					tally.Health[owner] += size;
 				}
 
-				if ((town.StructureMarkers0 & 0x20) != 0)
+				if (town.Has(CityStructure.Library))
 				{
 					tally.Learning[owner] += size;
 				}
 
-				if ((town.StructureMarkers0 & 0x800) != 0)
+				if (town.Has(CityStructure.University))
 				{
 					tally.Learning[owner] += size;
 				}

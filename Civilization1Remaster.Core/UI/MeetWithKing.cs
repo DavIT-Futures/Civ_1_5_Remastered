@@ -1,18 +1,15 @@
-using Civilization1Remaster.Emulation;
+﻿using Civilization1Remaster.Emulation;
 using Civilization1Remaster.Game;
 
 namespace Civilization1Remaster.UI
 {
-	public class MeetWithKing
+	public class MeetWithKing : GameModule
 	{
-		private readonly GameEngine owner;
-		private readonly CPU processor;
 		private readonly UnitMemory troops;
 
 		public MeetWithKing(GameEngine owner)
+			: base(owner)
 		{
-			this.owner = owner;
-			this.processor = owner.Processor;
 			this.troops = new UnitMemory(owner.Processor);
 		}
 

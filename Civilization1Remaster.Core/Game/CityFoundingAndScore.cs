@@ -1,21 +1,18 @@
-using System.Drawing;
+﻿using System.Drawing;
 using Civilization1Remaster.Emulation;
 using Civilization1Remaster.Game.Rules;
+using Civilization1Remaster.Game.State;
 
 namespace Civilization1Remaster.Game
 {
 	/// <summary>
 	/// Translated from the original CIV.EXE overlay 20.
 	/// </summary>
-	public class CityFoundingAndScore
+	public class CityFoundingAndScore : GameModule
 	{
-		private readonly GameEngine owner;
-		private readonly CPU processor;
-
 		public CityFoundingAndScore(GameEngine owner)
+			: base(owner)
 		{
-			this.owner = owner;
-			this.processor = owner.Processor;
 		}
 
 		/// <summary>
@@ -114,7 +111,7 @@ namespace Civilization1Remaster.Game
 
 			this.owner.World.TownPlaces[labelIdx] = new Point(horizLoc, vertLoc);
 
-			if (((1 << (byte)participantIdx) & (ushort)this.owner.World.ParticipantMarkers) != 0)
+			if (this.owner.World.IsHuman(participantIdx))
 			{
 				this.owner.CityNaming.DisplayCityLabelPrompt(townIdx);
 
@@ -467,7 +464,7 @@ namespace Civilization1Remaster.Game
 				case 1:
 					this.processor.RegSource.Value16 = townOffset;
 
-					if (this.owner.Advisors.PlayerKnowsTechnology(town.ParticipantIdx, 10) == 0 && (town.StructureMarkers0 & 0x100) == 0 &&
+					if (this.owner.Advisors.PlayerKnowsTechnology(town.ParticipantIdx, 10) == 0 && !town.Has(CityStructure.Aqueduct) &&
 						this.owner.Advisors.PlayerKnowsTechnology(town.ParticipantIdx, (short)this.processor.PullGlobalWord(0xcc4)) != 0)
 					{
 						this.owner.BlockText.DisplayTextDialog(0x4f99);
@@ -482,7 +479,7 @@ namespace Civilization1Remaster.Game
 					{
 						this.processor.RegSource.Value16 = townOffset;
 
-						if ((town.StructureMarkers0 & 0x80) == 0 && this.owner.Advisors.PlayerKnowsTechnology(town.ParticipantIdx, (short)this.processor.PullGlobalWord(0xca6)) != 0)
+						if (!town.Has(CityStructure.CityWalls) && this.owner.Advisors.PlayerKnowsTechnology(town.ParticipantIdx, (short)this.processor.PullGlobalWord(0xca6)) != 0)
 						{
 							this.owner.BlockText.DisplayTextDialog(0x4f9d);
 
@@ -497,7 +494,7 @@ namespace Civilization1Remaster.Game
 					{
 						this.processor.RegSource.Value16 = townOffset;
 
-						if ((town.StructureMarkers0 & 0x8) == 0 && this.owner.Advisors.PlayerKnowsTechnology(town.ParticipantIdx, (short)this.processor.PullGlobalWord(0xc2e)) != 0)
+						if (!town.Has(CityStructure.Temple) && this.owner.Advisors.PlayerKnowsTechnology(town.ParticipantIdx, (short)this.processor.PullGlobalWord(0xc2e)) != 0)
 						{
 							this.owner.BlockText.DisplayTextDialog(0x4fa1);
 
@@ -510,7 +507,7 @@ namespace Civilization1Remaster.Game
 				case 4:
 					this.processor.RegSource.Value16 = townOffset;
 
-					if (town.TrueExtent != 0 && (town.StructureMarkers0 & 0x4) == 0 &&
+					if (town.TrueExtent != 0 && !town.Has(CityStructure.Granary) &&
 						this.owner.Advisors.PlayerKnowsTechnology(town.ParticipantIdx, (short)this.processor.PullGlobalWord(0xc10)) != 0)
 					{
 						this.owner.BlockText.DisplayTextDialog(0x4fa5);
@@ -525,7 +522,7 @@ namespace Civilization1Remaster.Game
 				case 5:
 					this.processor.RegSource.Value16 = townOffset;
 
-					if ((town.StructureMarkers0 & 0xfffe) != 0 && (town.StructureMarkers0 & 0x100) == 0 &&
+					if ((town.StructureMarkers0 & 0xfffe) != 0 && !town.Has(CityStructure.Aqueduct) &&
 						this.owner.Advisors.PlayerKnowsTechnology(town.ParticipantIdx, (short)this.processor.PullGlobalWord(0xcc4)) != 0)
 					{
 						ushort buildingIdx = DestroyRandomBuilding(town);
@@ -541,7 +538,7 @@ namespace Civilization1Remaster.Game
 					{
 						this.processor.RegSource.Value16 = townOffset;
 
-						if ((town.StructureMarkers0 & 0x2) == 0)
+						if (!town.Has(CityStructure.Barracks))
 						{
 							this.owner.BlockText.DisplayTextDialog(0x4fc7);
 
@@ -577,7 +574,7 @@ namespace Civilization1Remaster.Game
 				buildingIdx = (ushort)this.owner.Libc.Dice.DrawInt(24);
 				this.processor.EmitLocalWord(0x10, buildingIdx);
 			}
-			while (buildingIdx == 0 || !CityHasStructure(town, buildingIdx));
+			while (buildingIdx == 0 || !town.HasStructureSignExtended(buildingIdx));
 
 			ushort keep = (ushort)~(ushort)(1 << (byte)buildingIdx);
 
@@ -585,15 +582,6 @@ namespace Civilization1Remaster.Game
 			town.StructureMarkers1 &= (keep & 0x8000) != 0 ? (ushort)0xffff : (ushort)0;
 
 			return buildingIdx;
-		}
-
-		/// <summary>Bit b of the structures read like the original: a 16-bit mask sign extended to 32 bits</summary>
-		private static bool CityHasStructure(City town, ushort buildingIdx)
-		{
-			ushort mask = (ushort)(1 << (byte)buildingIdx);
-			ushort high = (mask & 0x8000) != 0 ? (ushort)0xffff : (ushort)0;
-
-			return ((town.StructureMarkers0 & mask) | (town.StructureMarkers1 & high)) != 0;
 		}
 
 		/// <summary>
@@ -633,15 +621,15 @@ namespace Civilization1Remaster.Game
 
 			this.owner.Libc.AppendText(0xba06, "!\nCitizens demand ");
 
-			if ((town.StructureMarkers0 & 0x8) == 0)
+			if (!town.Has(CityStructure.Temple))
 			{
 				this.owner.Libc.AppendText(0xba06, "TEMPLE\n");
 			}
-			else if ((town.StructureMarkers0 & 0x40) == 0)
+			else if (!town.Has(CityStructure.Courthouse))
 			{
 				this.owner.Libc.AppendText(0xba06, 0x500d);
 			}
-			else if ((town.StructureMarkers0 & 0x10) == 0)
+			else if (!town.Has(CityStructure.Marketplace))
 			{
 				this.owner.Libc.AppendText(0xba06, 0x5019);
 			}
@@ -650,12 +638,12 @@ namespace Civilization1Remaster.Game
 				this.processor.RegSource.Value16 = townOffset;
 
 				this.owner.Libc.AppendText(0xba06, this.owner.Advisors.PlayerKnowsTechnology(town.ParticipantIdx, 0x1d) != 0 &&
-					(town.StructureMarkers0 & 0x400) == 0 ? (ushort)0x5026 : (ushort)0x5031);
+					!town.Has(CityStructure.Cathedral) ? (ushort)0x5026 : (ushort)0x5031);
 			}
 
 			this.processor.RegSource.Value16 = townOffset;
 
-			if (((1 << (byte)town.ParticipantIdx) & (ushort)this.owner.World.ParticipantMarkers) != 0)
+			if (this.owner.World.IsHuman(town.ParticipantIdx))
 			{
 				this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
 
@@ -676,7 +664,7 @@ namespace Civilization1Remaster.Game
 			this.processor.EmitLocalWord(0xe, 0xffff);
 
 			if ((short)this.processor.PullGlobalWord(0x70e2) > (short)this.processor.PullGlobalWord(0x70e4) ||
-				(town.StructureMarkers0 & 1) != 0 || this.owner.World.Participants[town.ParticipantIdx].TownTally <= 3)
+				town.Has(CityStructure.Palace) || this.owner.World.Participants[town.ParticipantIdx].TownTally <= 3)
 				return;
 
 			ushort otherIdx;
@@ -750,7 +738,7 @@ namespace Civilization1Remaster.Game
 
 			this.processor.RegSource.Value16 = (ushort)(0x1c * townIdx);
 
-			if (((1 << (byte)town.ParticipantIdx) & (ushort)this.owner.World.ParticipantMarkers) != 0)
+			if (this.owner.World.IsHuman(town.ParticipantIdx))
 			{
 				this.processor.EmitGlobalWord(0x2f9e, 0x4);
 

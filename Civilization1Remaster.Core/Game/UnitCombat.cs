@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Civilization1Remaster.Emulation;
 using Civilization1Remaster.Game.State;
 
@@ -7,16 +7,13 @@ namespace Civilization1Remaster.Game
 	/// <summary>
 	/// Translated from the original CIV.EXE segment 0x29f3.
 	/// </summary>
-	public class UnitCombat
+	public class UnitCombat : GameModule
 	{
-		private readonly GameEngine owner;
-		private readonly CPU processor;
 		private readonly UnitMemory troops;
 
 		public UnitCombat(GameEngine owner)
+			: base(owner)
 		{
-			this.owner = owner;
-			this.processor = owner.Processor;
 			this.troops = new UnitMemory(owner.Processor);
 		}
 
@@ -834,7 +831,7 @@ namespace Civilization1Remaster.Game
 				{
 					short townIdx = (short)this.owner.Helpers.LocateCityAtPosition(tileHoriz, tileVert);
 
-					if ((this.owner.World.Towns[(ushort)townIdx].StructureMarkers1 & 0x1) != 0)
+					if (this.owner.World.Towns[(ushort)townIdx].Has(CityStructure.SdiDefense))
 					{
 						this.owner.Libc.CopyText(0xba06, "SDI protects ");
 						this.owner.Conquest.ObtainCityLabel(townIdx);

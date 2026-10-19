@@ -1,19 +1,15 @@
-using Civilization1Remaster.Emulation;
+﻿using Civilization1Remaster.Emulation;
 
 namespace Civilization1Remaster.UI
 {
 	/// <summary>
 	/// Translated from the original CIV.EXE segment 0x2c84.
 	/// </summary>
-	public class GameMenus
+	public class GameMenus : GameModule
 	{
-		private readonly GameEngine owner;
-		private readonly CPU processor;
-
 		public GameMenus(GameEngine owner)
+			: base(owner)
 		{
-			this.owner = owner;
-			this.processor = owner.Processor;
 		}
 
 		/// <summary>

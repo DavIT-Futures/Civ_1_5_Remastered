@@ -1,4 +1,4 @@
-using Civilization1Remaster.Emulation;
+﻿using Civilization1Remaster.Emulation;
 using Civilization1Remaster.Game.State;
 
 namespace Civilization1Remaster.Game
@@ -6,15 +6,11 @@ namespace Civilization1Remaster.Game
 	/// <summary>
 	/// Translated from the original CIV.EXE segment 0x2459.
 	/// </summary>
-	public class TradeAndConquest
+	public class TradeAndConquest : GameModule
 	{
-		private readonly GameEngine owner;
-		private readonly CPU processor;
-
 		public TradeAndConquest(GameEngine owner)
+			: base(owner)
 		{
-			this.owner = owner;
-			this.processor = owner.Processor;
 		}
 
 		/// <summary>
@@ -57,7 +53,7 @@ namespace Civilization1Remaster.Game
 			{
 				this.processor.RegSource.Value16 = townOffset;
 
-				if (((town.StructureMarkers0 & 1) != 0 || (byte)town.PresentMakingIdx == 0xff) && marker == 0 && (town.StructureMarkers0 & 1) != 0)
+				if ((town.Has(CityStructure.Palace) || (byte)town.PresentMakingIdx == 0xff) && marker == 0 && town.Has(CityStructure.Palace))
 				{
 					this.processor.RegDest.Value16 = (ushort)(formerIdx << 1);
 
@@ -69,7 +65,7 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			if ((town.StructureMarkers0 & 1) != 0)
+			if (town.Has(CityStructure.Palace))
 			{
 				EliminateSpaceship((short)formerIdx);
 			}

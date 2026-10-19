@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using Civilization1Remaster.Emulation;
 
@@ -7,15 +7,11 @@ namespace Civilization1Remaster.Engine
 	/// <summary>
 	/// Image loading functions - RLE and LZW compression was used
 	/// </summary>
-	public class ImageTools
+	public class ImageTools : GameModule
 	{
-		private readonly GameEngine owner;
-		private readonly CPU processor;
-
 		public ImageTools(GameEngine owner)
+			: base(owner)
 		{
-			this.owner = owner;
-			this.processor = owner.Processor;
 		}
 
 		#region New Image loading functions

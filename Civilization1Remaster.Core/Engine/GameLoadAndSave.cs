@@ -1,19 +1,15 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using Civilization1Remaster.Emulation;
 
 namespace Civilization1Remaster.Engine
 {
-	public class GameLoadAndSave
+	public class GameLoadAndSave : GameModule
 	{
-		private readonly GameEngine owner;
-		private readonly CPU processor;
-
 		public GameLoadAndSave(GameEngine owner)
+			: base(owner)
 		{
-			this.owner = owner;
-			this.processor = owner.Processor;
 		}
 
 		/// <summary>

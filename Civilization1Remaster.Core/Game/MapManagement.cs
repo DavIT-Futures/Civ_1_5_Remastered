@@ -1,23 +1,21 @@
-using System;
+﻿using System;
 using Civilization1Remaster.Emulation;
 using Civilization1Remaster.Game.Rules;
+using Civilization1Remaster.Game.State;
 
 namespace Civilization1Remaster.Game
 {
 	/// <summary>
 	/// Translated from the original CIV.EXE segment 0x2aea.
 	/// </summary>
-	public class MapManagement
+	public class MapManagement : GameModule
 	{
-		private readonly GameEngine owner;
-		private readonly CPU processor;
 		private readonly MapLayers chart;
 		private readonly UnitMemory troops;
 
 		public MapManagement(GameEngine owner)
+			: base(owner)
 		{
-			this.owner = owner;
-			this.processor = owner.Processor;
 			this.chart = new MapLayers(owner);
 			this.troops = new UnitMemory(owner.Processor);
 		}
@@ -717,7 +715,7 @@ namespace Civilization1Remaster.Game
 				this.owner.Dialogs.RenderBox(screenX, screenY, 15, 15, 0);
 			}
 
-			if ((town.StructureMarkers0 & 0x80) != 0)
+			if (town.Has(CityStructure.CityWalls))
 			{
 				this.owner.Services.RenderPictureToScreen(
 					this.processor.PullGlobalWord(0xaa),

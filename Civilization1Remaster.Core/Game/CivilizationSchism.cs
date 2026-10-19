@@ -1,19 +1,16 @@
-using Civilization1Remaster.Emulation;
+﻿using Civilization1Remaster.Emulation;
+using Civilization1Remaster.Game.State;
 
 namespace Civilization1Remaster.Game
 {
 	/// <summary>
 	/// Translated from the original CIV.EXE overlay 15.
 	/// </summary>
-	public class CivilizationSchism
+	public class CivilizationSchism : GameModule
 	{
-		private readonly GameEngine owner;
-		private readonly CPU processor;
-
 		public CivilizationSchism(GameEngine owner)
+			: base(owner)
 		{
-			this.owner = owner;
-			this.processor = owner.Processor;
 		}
 
 		/// <summary>
@@ -101,7 +98,7 @@ namespace Civilization1Remaster.Game
 				this.processor.RegDest.Value16 = (ushort)(this.processor.RegAcc.Value16 << 1);
 				this.processor.EmitUInt16(this.processor.SegStack.Value16, share, (ushort)(this.processor.PullUInt16(this.processor.SegStack.Value16, share) + town.TrueExtent));
 
-				if ((town.StructureMarkers0 & 1) == 0)
+				if (!town.Has(CityStructure.Palace))
 					continue;
 
 				if (this.processor.PullLocalWord(0x24) != 0xffff && (ushort)this.owner.World.Participants[participantIdx].HorizBegin != (ushort)(short)town.Place.X)

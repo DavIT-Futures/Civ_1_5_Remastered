@@ -1,22 +1,19 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
 using Civilization1Remaster.Emulation;
+using Civilization1Remaster.Game.State;
 
 namespace Civilization1Remaster.Game
 {
 	/// <summary>
 	/// Translated from the original CIV.EXE segment 0x1238.
 	/// </summary>
-	public class TurnEvents
+	public class TurnEvents : GameModule
 	{
-		private readonly GameEngine owner;
-		private readonly CPU processor;
-
 		public TurnEvents(GameEngine owner)
+			: base(owner)
 		{
-			this.owner = owner;
-			this.processor = owner.Processor;
 		}
 
 		/// <summary>
@@ -421,7 +418,7 @@ namespace Civilization1Remaster.Game
 			if ((short)((10 * (person.Gold - startGold)) + person.Gold) >= 0)
 				return;
 
-			if ((this.owner.World.ParticipantMarkers & (1 << (byte)this.owner.World.PersonParticipantIdx)) == 0)
+			if (!this.owner.World.IsHuman(this.owner.World.PersonParticipantIdx))
 				return;
 
 			this.processor.EmitGlobalByte(0xba06, 0x0);
@@ -567,7 +564,7 @@ namespace Civilization1Remaster.Game
 				City town = this.owner.World.Towns[townIdx];
 
 				if (town.ConditionMarker != 0xff && town.ParticipantIdx == this.owner.World.PersonParticipantIdx &&
-					(town.StructureMarkers0 & 0x1) != 0)
+					town.Has(CityStructure.Palace))
 				{
 					palace = true;
 				}

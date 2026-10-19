@@ -1,19 +1,15 @@
-using Civilization1Remaster.Emulation;
+﻿using Civilization1Remaster.Emulation;
 
 namespace Civilization1Remaster.Engine
 {
 	/// <summary>
 	/// Translated from the original CIV.EXE segment 0x2f4d.
 	/// </summary>
-	public class TextBlockRenderer
+	public class TextBlockRenderer : GameModule
 	{
-		private readonly GameEngine owner;
-		private readonly CPU processor;
-
 		public TextBlockRenderer(GameEngine owner)
+			: base(owner)
 		{
-			this.owner = owner;
-			this.processor = owner.Processor;
 		}
 
 		/// <summary>

@@ -1,19 +1,16 @@
-using Civilization1Remaster.Emulation;
+﻿using Civilization1Remaster.Emulation;
+using Civilization1Remaster.Game.State;
 
 namespace Civilization1Remaster.UI
 {
 	/// <summary>
 	/// Translated from the original CIV.EXE overlay 21.
 	/// </summary>
-	public class Newspaper
+	public class Newspaper : GameModule
 	{
-		private readonly GameEngine owner;
-		private readonly CPU processor;
-
 		public Newspaper(GameEngine owner)
+			: base(owner)
 		{
-			this.owner = owner;
-			this.processor = owner.Processor;
 		}
 
 		/// <summary>
@@ -42,7 +39,7 @@ namespace Civilization1Remaster.UI
 					if (town.ConditionMarker == 0xff || town.ParticipantIdx != this.owner.World.PersonParticipantIdx)
 						continue;
 
-					if ((town.StructureMarkers0 & 1) != 0 || townIdx == -1)
+					if (town.Has(CityStructure.Palace) || townIdx == -1)
 					{
 						townIdx = cityIdx;
 					}

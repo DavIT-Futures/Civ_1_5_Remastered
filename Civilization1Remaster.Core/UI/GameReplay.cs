@@ -1,18 +1,14 @@
-using System;
+﻿using System;
 using Civilization1Remaster.Emulation;
 using Civilization1Remaster.Game.Rules;
 
 namespace Civilization1Remaster.UI
 {
-	public class GameReplay
+	public class GameReplay : GameModule
 	{
-		private readonly GameEngine owner;
-		private readonly CPU processor;
-
 		public GameReplay(GameEngine owner)
+			: base(owner)
 		{
-			this.owner = owner;
-			this.processor = owner.Processor;
 		}
 
 		/// <summary>

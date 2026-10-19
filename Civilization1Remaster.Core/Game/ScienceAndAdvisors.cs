@@ -1,20 +1,18 @@
-using Civilization1Remaster.Emulation;
+﻿using Civilization1Remaster.Emulation;
+using Civilization1Remaster.Game.State;
 
 namespace Civilization1Remaster.Game
 {
 	/// <summary>
 	/// Translated from the original CIV.EXE segment 0x1ade.
 	/// </summary>
-	public class ScienceAndAdvisors
+	public class ScienceAndAdvisors : GameModule
 	{
-		private readonly GameEngine owner;
-		private readonly CPU processor;
 		private readonly UnitMemory troops;
 
 		public ScienceAndAdvisors(GameEngine owner)
+			: base(owner)
 		{
-			this.owner = owner;
-			this.processor = owner.Processor;
 			this.troops = new UnitMemory(owner.Processor);
 		}
 
@@ -143,10 +141,7 @@ namespace Civilization1Remaster.Game
 
 			this.owner.UnitOps.AttachReplayContent(1, 0xff, town.LabelIdx, (byte)horizLoc, (byte)vertLoc);
 
-			if (town.PresentMakingIdx >= 0)
-			{
-				this.owner.World.Participants[town.ParticipantIdx].TroopsInsideMaking[town.PresentMakingIdx]--;
-			}
+			this.owner.World.Participants[town.ParticipantIdx].StopMaking(town.PresentMakingIdx);
 
 			this.owner.World.Participants[town.ParticipantIdx].TownTally--;
 			town.ConditionMarker = 0xff;
@@ -540,16 +535,16 @@ namespace Civilization1Remaster.Game
 				if (improvementIdx == 7 && (this.processor.PullLocalByte(BuiltLowLocal) & 1) != 0)
 					continue;
 
-				if (improvementIdx == 0xf && (town.StructureMarkers0 & 0x8000) != 0)
+				if (improvementIdx == 0xf && town.Has(CityStructure.ManufacturingPlant))
 					continue;
 
-				if (improvementIdx == 0xa && (town.StructureMarkers0 & 0x10) == 0 &&
+				if (improvementIdx == 0xa && !town.Has(CityStructure.Marketplace) &&
 					PlayerKnowsTechnology(participantIdx, this.processor.PullGlobalSignedWord(0xc4c)) != 0)
 				{
 					continue;
 				}
 
-				if (improvementIdx == 0xc && (town.StructureMarkers0 & 0x20) == 0 &&
+				if (improvementIdx == 0xc && !town.Has(CityStructure.Library) &&
 					PlayerKnowsTechnology(participantIdx, this.processor.PullGlobalSignedWord(0xc6a)) != 0)
 				{
 					continue;
@@ -558,7 +553,7 @@ namespace Civilization1Remaster.Game
 				if (improvementIdx == 0x14 && (town.ConditionMarker & 8) == 0)
 					continue;
 
-				if (improvementIdx == 0x13 && (town.StructureMarkers0 & 0x4000) == 0)
+				if (improvementIdx == 0x13 && !town.Has(CityStructure.Factory))
 					continue;
 
 				if (improvementIdx is 0x13 or 0x14 or 0x15 && (FrameWord(SharedWallLocal) != 0 || (town.StructureMarkers1 & 0x1c) != 0))
@@ -852,7 +847,7 @@ namespace Civilization1Remaster.Game
 				case 35:
 					Score = (short)-(town.TrueExtent / 2 - 10);
 
-					if ((town.StructureMarkers0 & 1) != 0)
+					if (town.Has(CityStructure.Palace))
 						Score -= 4;
 
 					FrameWord(DefensiveImprovementLocal, 1);
@@ -923,7 +918,7 @@ namespace Civilization1Remaster.Game
 				Score = CPU.SignedQuotient((short)(3 * Score), character);
 			}
 
-			if ((town.StructureMarkers0 & 2) != 0)
+			if (town.Has(CityStructure.Barracks))
 				Score += CPU.SignedQuotient(Score, 4);
 		}
 
@@ -1034,7 +1029,7 @@ namespace Civilization1Remaster.Game
 			}
 
 			short weight = choice == 0
-				? (short)(((town.StructureMarkers0 & 4) != 0 ? 4 : 6) -
+				? (short)((town.Has(CityStructure.Granary) ? 4 : 6) -
 					this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(0x1516 + 0x3a * player.ChiefVisuals)))
 				: (short)0x10;
 
@@ -1074,7 +1069,7 @@ namespace Civilization1Remaster.Game
 
 			this.owner.World.Participants[participantIdx].TroopTally = (short)FrameWord(UnitTallyLocal);
 
-			if ((this.owner.World.ParticipantMarkers & (1 << participantIdx)) == 0)
+			if (!this.owner.World.IsHuman(participantIdx))
 			{
 				if ((byte)town.PresentMakingIdx == 0xff)
 					return 0xffff;

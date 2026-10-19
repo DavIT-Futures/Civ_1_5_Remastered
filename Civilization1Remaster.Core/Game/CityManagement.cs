@@ -1,22 +1,20 @@
 ﻿using System;
 using Civilization1Remaster.Emulation;
 using Civilization1Remaster.Game.Rules;
+using Civilization1Remaster.Game.State;
 
 namespace Civilization1Remaster.Game
 {
 	/// <summary>
 	/// Translated from the original CIV.EXE segment 0x1d12.
 	/// </summary>
-	public class CityManagement
+	public class CityManagement : GameModule
 	{
-		private readonly GameEngine owner;
-		private readonly CPU processor;
 		private readonly UnitMemory troops;
 
 		public CityManagement(GameEngine owner)
+			: base(owner)
 		{
-			this.owner = owner;
-			this.processor = owner.Processor;
 			this.troops = new UnitMemory(owner.Processor);
 		}
 
@@ -209,10 +207,10 @@ namespace Civilization1Remaster.Game
 			this.processor.RegSource.Value16 = (ushort)(townIdx * 0x1c);
 
 			// A granary keeps half of the food
-			town.GrainTally = (short)((town.StructureMarkers0 & 4) != 0 ? (short)(5 * town.TrueExtent) + 5 : 0);
+			town.GrainTally = (short)(town.Has(CityStructure.Granary) ? (short)(5 * town.TrueExtent) + 5 : 0);
 			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 
-			if (town.TrueExtent > 10 && (town.StructureMarkers0 & 0x100) == 0 && (this.owner.World.DiagMarkers & 4) != 0)
+			if (town.TrueExtent > 10 && !town.Has(CityStructure.Aqueduct) && (this.owner.World.DiagMarkers & 4) != 0)
 			{
 				// No growth above 10 without an aqueduct
 				town.TrueExtent--;
@@ -405,7 +403,7 @@ namespace Civilization1Remaster.Game
 			this.processor.EmitLocalWord(0xec, 0);
 			this.processor.EmitLocalWord(0xee, 0);
 
-			if ((this.owner.World.ParticipantMarkers & (1 << (owner & 0xff))) == 0 && ((townIdx + this.owner.World.RoundTally) & 3) == 0)
+			if (!this.owner.World.IsHuman(owner) && ((townIdx + this.owner.World.RoundTally) & 3) == 0)
 			{
 				this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 
@@ -705,7 +703,7 @@ namespace Civilization1Remaster.Game
 		/// After the workers: 0x8 the specialists; the first 0x8 citizen icons without a type become type 3, the rest of the
 		/// 8 type 0. The factories: 0xf8 the factory bonus (2 the factory, 4 the manufacturing plant), 0xac the power (2 the
 		/// power plant, hydro plant, nuclear plant or the wonder 15 on the same continent), 0x6c98 the pollution factor (1;
-		/// 2 for the clean plants, 3 the mass transit); the shields 0x70dc (kept in 0x10a, the trade in 0xa) grow by a
+		/// 2 for the clean plants, 3 the recycling center); the shields 0x70dc (kept in 0x10a, the trade in 0xa) grow by a
 		/// quarter of the factory bonus and of the power within it. The locals of HandleCity and AX - DX, SI, DI are used
 		/// as in the original.
 		/// </summary>
@@ -744,22 +742,22 @@ namespace Civilization1Remaster.Game
 			this.processor.EmitGlobalWord(0x6c98, 1);
 			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 
-			if ((town.StructureMarkers0 & 0x4000) != 0)
+			if (town.Has(CityStructure.Factory))
 				this.processor.EmitLocalWord(0xf8, 2);
 
-			if ((town.StructureMarkers0 & 0x8000) != 0)
+			if (town.Has(CityStructure.ManufacturingPlant))
 				this.processor.EmitLocalWord(0xf8, 4);
 
-			if ((town.StructureMarkers1 & 0x4) != 0)
+			if (town.Has(CityStructure.PowerPlant))
 				this.processor.EmitLocalWord(0xac, 2);
 
-			if ((town.StructureMarkers1 & 0x8) != 0)
+			if (town.Has(CityStructure.HydroPlant))
 			{
 				this.processor.EmitGlobalWord(0x6c98, 2);
 				this.processor.EmitLocalWord(0xac, 2);
 			}
 
-			if ((town.StructureMarkers1 & 0x10) != 0)
+			if (town.Has(CityStructure.NuclearPlant))
 			{
 				this.processor.EmitGlobalWord(0x6c98, 2);
 				this.processor.EmitLocalWord(0xac, 2);
@@ -786,7 +784,7 @@ namespace Civilization1Remaster.Game
 
 			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 
-			if ((town.StructureMarkers1 & 0x2) != 0)
+			if (town.Has(CityStructure.RecyclingCenter))
 				this.processor.EmitGlobalWord(0x6c98, 3);
 
 			this.processor.EmitLocalWord(0xac, (ushort)this.owner.Helpers.VerifyValueSpan(this.processor.PullLocalSignedWord(0xac), 0, this.processor.PullLocalSignedWord(0xf8)));
@@ -893,7 +891,7 @@ namespace Civilization1Remaster.Game
 
 			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 
-			if ((town.StructureMarkers0 & 2) != 0 && this.processor.PullLocalWord(0xba) != 0xffff)
+			if (town.Has(CityStructure.Barracks) && this.processor.PullLocalWord(0xba) != 0xffff)
 			{
 				// The barracks make it veteran
 				short troopIdx = (short)this.processor.PullLocalWord(0xba);
@@ -1207,7 +1205,7 @@ namespace Civilization1Remaster.Game
 				(short)this.processor.PullLocalWord(0x4a));
 			this.processor.RegCount.LowByte = this.processor.PullGlobalByte(0x6548);
 
-			bool humanPlayed = (this.owner.World.ParticipantMarkers & (1 << (owner & 0xff))) != 0;
+			bool humanPlayed = this.owner.World.IsHuman(owner);
 
 			if (!humanPlayed && built <= 0x18)
 			{
@@ -1222,12 +1220,7 @@ namespace Civilization1Remaster.Game
 				this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 				town.PresentMakingIdx = (sbyte)this.processor.RegCount.LowByte;
 
-				if (town.PresentMakingIdx >= 0)
-				{
-					this.processor.RegSource.Value16 = (ushort)(town.PresentMakingIdx << 1);
-					this.processor.RegBase.Value16 = (ushort)(owner * 0x38);
-					this.owner.World.Participants[owner].TroopsInsideMaking[town.PresentMakingIdx]++;
-				}
+				StartMakingUnit(town, owner, true);
 
 				return true;
 			}
@@ -1528,22 +1521,10 @@ namespace Civilization1Remaster.Game
 			this.processor.EmitGlobalWord(0xb1e8, 0);
 			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 
-			if (town.PresentMakingIdx >= 0)
-			{
-				this.processor.RegSource.Value16 = (ushort)(town.PresentMakingIdx << 1);
-				this.processor.RegBase.Value16 = (ushort)(owner * 0x38);
-				this.owner.World.Participants[owner].TroopsInsideMaking[town.PresentMakingIdx]--;
-			}
-
+			StopMakingUnit(town, owner, true);
 			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 			town.PresentMakingIdx = (sbyte)this.processor.PullLocalByte(0xe8);
-
-			if (town.PresentMakingIdx >= 0)
-			{
-				this.processor.RegSource.Value16 = (ushort)(town.PresentMakingIdx << 1);
-				this.processor.RegBase.Value16 = (ushort)(owner * 0x38);
-				this.owner.World.Participants[owner].TroopsInsideMaking[town.PresentMakingIdx]++;
-			}
+			StartMakingUnit(town, owner, true);
 		}
 
 		/// <summary>
@@ -1723,7 +1704,7 @@ namespace Civilization1Remaster.Game
 			short corruption = (short)((short)((short)this.processor.PullGlobalWord(0x70de) * (short)this.processor.PullGlobalWord(0x6b30)) * 3);
 			this.processor.EmitGlobalWord(0xd2e0, (ushort)(corruption / (short)this.processor.RegCount.Value16));
 
-			if ((town.StructureMarkers0 & 0x40) != 0 || (town.StructureMarkers0 & 1) != 0)
+			if (town.Has(CityStructure.Courthouse) || town.Has(CityStructure.Palace))
 			{
 				// A courthouse or the palace
 				this.processor.RegCount.Value16 = 2;
@@ -1775,7 +1756,7 @@ namespace Civilization1Remaster.Game
 			if (player.RegimeKind == 5)
 				this.processor.EmitGlobalWord(0xd2e0, 0);
 
-			if ((town.StructureMarkers0 & 0x40) != 0)
+			if (town.Has(CityStructure.Courthouse))
 			{
 				this.processor.RegCount.Value16 = 2;
 				this.processor.EmitGlobalWord(0xd2e0, (ushort)((short)this.processor.PullGlobalWord(0xd2e0) / 2));
@@ -1966,7 +1947,7 @@ namespace Civilization1Remaster.Game
 			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 
 			// The colosseum
-			if ((town.StructureMarkers0 & 0x2000) != 0)
+			if (town.Has(CityStructure.Colosseum))
 			{
 				this.processor.EmitGlobalWord(0x70e4, (ushort)(this.processor.PullGlobalWord(0x70e4) - 3));
 
@@ -1979,7 +1960,7 @@ namespace Civilization1Remaster.Game
 			{
 				this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 
-				if ((town.StructureMarkers0 & 0x400) != 0)
+				if (town.Has(CityStructure.Cathedral))
 					this.processor.RegAcc.Value16 = (ushort)(PlayerEnjoysWonderEffect(owner, 9) != 0 ? 6 : 4);
 				else
 					this.processor.RegAcc.Value16 = 0;
@@ -1990,7 +1971,7 @@ namespace Civilization1Remaster.Game
 				{
 					this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 
-					if ((town.StructureMarkers0 & 0x400) != 0)
+					if (town.Has(CityStructure.Cathedral))
 						DrawContentIcon(11);
 				}
 			}
@@ -1998,7 +1979,7 @@ namespace Civilization1Remaster.Game
 			// The temple (the advances 0x1a and 0x19; the wonder 6)
 			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 
-			if ((town.StructureMarkers0 & 8) != 0)
+			if (town.Has(CityStructure.Temple))
 			{
 				if (this.owner.Advisors.PlayerKnowsTechnology(owner, 0x1a) != 0)
 					this.processor.EmitGlobalWord(0x70e4, (ushort)(this.processor.PullGlobalWord(0x70e4) - 2));
@@ -2570,7 +2551,7 @@ namespace Civilization1Remaster.Game
 			this.processor.EmitGlobalWord(0xe3c2, (ushort)(this.processor.PullGlobalWord(0xe3c2) + this.processor.RegAcc.Value16));
 
 			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
-			this.processor.RegCount.Value16 = (ushort)((town.StructureMarkers0 & 0x10) != 0 ? 5 : 7);
+			this.processor.RegCount.Value16 = (ushort)(town.Has(CityStructure.Marketplace) ? 5 : 7);
 			this.processor.RegBase.Value16 = (ushort)(player.ChiefVisuals * 0x3a);
 
 			short factor = (short)(this.processor.RegCount.Value16 - this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1516)));
@@ -2814,7 +2795,7 @@ namespace Civilization1Remaster.Game
 			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 
 			// The granary
-			if ((town.StructureMarkers0 & 4) != 0)
+			if (town.Has(CityStructure.Granary))
 			{
 				this.owner.VideoCard.RenderLine(this.processor.PullGlobalWord(0xaa), 5, 155,
 					(town.TrueExtent * this.processor.PullLocalSignedWord(0xe8)) + 9, 155, 1);
@@ -3119,9 +3100,7 @@ namespace Civilization1Remaster.Game
 			// An improvement the city has (-1 - -21)
 			if (making < 0 && making >= -21)
 			{
-				uint built = ((uint)town.StructureMarkers1 << 16) | town.StructureMarkers0;
-
-				if ((built & (1u << (-making - 1))) != 0)
+				if (town.Has((CityStructure)(-making - 1)))
 					this.processor.EmitLocalWord(0xc0, 1);
 			}
 
@@ -3238,26 +3217,14 @@ namespace Civilization1Remaster.Game
 
 				this.processor.EmitGlobalWord(0xb1e8, 0);
 
-				if (town.PresentMakingIdx >= 0)
-				{
-					this.processor.RegSource.Value16 = (ushort)(town.PresentMakingIdx << 1);
-					this.owner.World.Participants[owner].TroopsInsideMaking[town.PresentMakingIdx]--;
-				}
-
+				StopMakingUnit(town, owner, false);
 				town.PresentMakingIdx = (sbyte)this.processor.PullLocalByte(0x102);
-
-				if (town.PresentMakingIdx >= 0)
-				{
-					this.processor.RegSource.Value16 = (ushort)(town.PresentMakingIdx << 1);
-					this.owner.World.Participants[owner].TroopsInsideMaking[town.PresentMakingIdx]++;
-				}
+				StartMakingUnit(town, owner, false);
 
 				this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 230, 99, 90, 100, 0);
 			}
 
-			this.processor.EmitGlobalWord(0x70dc, this.processor.PullLocalWord(0x10a));
-			this.processor.EmitGlobalWord(0x70de, this.processor.PullLocalWord(0xa));
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xa);
+			RestoreShieldsAndTrade();
 
 			return CityScreenStep.Redraw;
 		}
@@ -3304,9 +3271,7 @@ namespace Civilization1Remaster.Game
 				return CityScreenStep.Others;
 
 			this.processor.EmitGlobalWord(0x2496, tab);
-			this.processor.EmitGlobalWord(0x70dc, this.processor.PullLocalWord(0x10a));
-			this.processor.EmitGlobalWord(0x70de, this.processor.PullLocalWord(0xa));
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xa);
+			RestoreShieldsAndTrade();
 
 			if (this.processor.PullGlobalWord(0x2496) != 3)
 				return CityScreenStep.Redraw;
@@ -3458,9 +3423,7 @@ namespace Civilization1Remaster.Game
 					break;
 			}
 
-			this.processor.EmitGlobalWord(0x70dc, this.processor.PullLocalWord(0x10a));
-			this.processor.EmitGlobalWord(0x70de, this.processor.PullLocalWord(0xa));
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xa);
+			RestoreShieldsAndTrade();
 		}
 
 		/// <summary>
@@ -3664,9 +3627,7 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.EmitLocalWord(0xca, (ushort)(this.processor.PullLocalWord(0xca) ^ 1));
 			this.processor.CopyLocalWord(0xfe, 0xda);
-			this.processor.EmitGlobalWord(0x70dc, this.processor.PullLocalWord(0x10a));
-			this.processor.EmitGlobalWord(0x70de, this.processor.PullLocalWord(0xa));
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xa);
+			RestoreShieldsAndTrade();
 			return CityScreenStep.Redraw;
 		}
 
@@ -3684,7 +3645,7 @@ namespace Civilization1Remaster.Game
 				this.processor.EmitLocalWord(0xbc, improvement);
 				uint bit = 1u << (byte)improvement;
 
-				if (((((uint)town.StructureMarkers1 << 16) | town.StructureMarkers0) & bit) == 0)
+				if ((town.Structures & bit) == 0)
 					continue;
 
 				ushort line = this.processor.PullLocalWord(0x106);
@@ -3708,9 +3669,7 @@ namespace Civilization1Remaster.Game
 				if (this.processor.RegAcc.Value16 == 1)
 				{
 					this.owner.World.Participants[this.processor.PullGlobalWord(0x6548)].Gold += (short)(0xa * price);
-					uint built = (((uint)town.StructureMarkers1 << 16) | town.StructureMarkers0) - bit;
-					town.StructureMarkers0 = (ushort)built;
-					town.StructureMarkers1 = (ushort)(built >> 16);
+					town.Structures -= bit;
 					town.ConditionMarker |= 0x80;
 
 					if (improvement + 1 == 8)
@@ -3733,9 +3692,7 @@ namespace Civilization1Remaster.Game
 			AssignCitizenType(this.processor.PullLocalWord(0xea),
 				(ushort)((short)this.processor.PullLocalWord(0xe8) < 3 ? this.processor.PullLocalWord(0xe8) + 1 : 1));
 
-			this.processor.EmitGlobalWord(0x70dc, this.processor.PullLocalWord(0x10a));
-			this.processor.EmitGlobalWord(0x70de, this.processor.PullLocalWord(0xa));
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xa);
+			RestoreShieldsAndTrade();
 
 			return CityScreenStep.Redraw;
 		}
@@ -3807,9 +3764,7 @@ namespace Civilization1Remaster.Game
 			short owner = (short)this.processor.PullGlobalWord(0x6548);
 			WakeUnitOfCity(UnitMemory.Address(owner, UnitOfCityList(this.processor.PullLocalWord(0x106))));
 
-			this.processor.EmitGlobalWord(0x70dc, this.processor.PullLocalWord(0x10a));
-			this.processor.EmitGlobalWord(0x70de, this.processor.PullLocalWord(0xa));
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xa);
+			RestoreShieldsAndTrade();
 
 			return true;
 		}
@@ -3855,8 +3810,7 @@ namespace Civilization1Remaster.Game
 			if ((this.owner.World.ChartSight[(ushort)(short)horiz, (ushort)(short)vert] & (short)(1 << this.processor.PullGlobalByte(0x6548))) == 0)
 				return CityScreenStep.Restart;
 
-			this.processor.EmitGlobalWord(0x70dc, this.processor.PullLocalWord(0x10a));
-			this.processor.EmitGlobalWord(0x70de, this.processor.PullLocalWord(0xa));
+			RestoreShieldsAndTrade();
 
 			uint bit = 1u << (byte)tile;
 			uint Workers() => ((uint)town.LaborerMarkers1 << 16) | town.LaborerMarkers0;
@@ -3920,28 +3874,59 @@ namespace Civilization1Remaster.Game
 			return (short)this.processor.PullLocalWord(0xae) > 0 ? CityScreenStep.Restart : CityScreenStep.Redraw;
 		}
 
+		/// <summary>
+		/// The shields and the trade of the city back as they were before the factories and the power (0x70dc / 0x70de from
+		/// the words 0x10a / 0xa of the frame) before the city screen counts them again; AX the trade
+		/// </summary>
+		private void RestoreShieldsAndTrade()
+		{
+			this.processor.EmitGlobalWord(0x70dc, this.processor.PullLocalWord(0x10a));
+			this.processor.EmitGlobalWord(0x70de, this.processor.PullLocalWord(0xa));
+			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xa);
+		}
+
+		/// <summary>
+		/// The city stops making its unit (the owner's count of units in making); SI (and with the base flag BX) as the
+		/// original leaves them, the menus keep them on the stack
+		/// </summary>
+		private void StopMakingUnit(City town, short owner, bool withBase)
+		{
+			if (town.PresentMakingIdx >= 0)
+			{
+				this.processor.RegSource.Value16 = (ushort)(town.PresentMakingIdx << 1);
+
+				if (withBase)
+					this.processor.RegBase.Value16 = (ushort)(owner * 0x38);
+			}
+
+			this.owner.World.Participants[owner].StopMaking(town.PresentMakingIdx);
+		}
+
+		/// <summary>The city starts making its unit (the owner's count of units in making); SI and BX as in StopMakingUnit</summary>
+		private void StartMakingUnit(City town, short owner, bool withBase)
+		{
+			if (town.PresentMakingIdx >= 0)
+			{
+				this.processor.RegSource.Value16 = (ushort)(town.PresentMakingIdx << 1);
+
+				if (withBase)
+					this.processor.RegBase.Value16 = (ushort)(owner * 0x38);
+			}
+
+			this.owner.World.Participants[owner].StartMaking(town.PresentMakingIdx);
+		}
+
 		/// <summary>The advisor picks the production of the city; the units in making of the owner counted over again</summary>
 		private void RepickCityProduction(short townIdx)
 		{
 			City town = this.owner.World.Towns[townIdx];
 			short owner = (short)this.processor.PullGlobalWord(0x6548);
 
-			// SI as in the original (the menus keep it on the stack)
-			if (town.PresentMakingIdx >= 0)
-			{
-				this.processor.RegSource.Value16 = (ushort)(town.PresentMakingIdx << 1);
-				this.owner.World.Participants[owner].TroopsInsideMaking[town.PresentMakingIdx]--;
-			}
-
+			StopMakingUnit(town, owner, false);
 			this.owner.Advisors.PickCityProduction(owner, townIdx);
 			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
 			town.PresentMakingIdx = (sbyte)this.processor.RegCount.LowByte;
-
-			if (town.PresentMakingIdx >= 0)
-			{
-				this.processor.RegSource.Value16 = (ushort)(town.PresentMakingIdx << 1);
-				this.owner.World.Participants[owner].TroopsInsideMaking[town.PresentMakingIdx]++;
-			}
+			StartMakingUnit(town, owner, false);
 		}
 
 		/// <summary>
@@ -3954,7 +3939,7 @@ namespace Civilization1Remaster.Game
 		{
 			City town = this.owner.World.Towns[townIdx];
 			short owner = (short)this.processor.PullGlobalWord(0x6548);
-			bool human = ((ushort)(1 << (owner & 0xff)) & (ushort)this.owner.World.ParticipantMarkers) != 0;
+			bool human = this.owner.World.IsHuman(owner);
 
 			this.processor.EmitLocalWord(0xe8, (ushort)(this.processor.PullGlobalWord(0x70e2) - this.processor.PullGlobalWord(0x70e4)));
 
@@ -4059,7 +4044,7 @@ namespace Civilization1Remaster.Game
 			City town = this.owner.World.Towns[townIdx];
 			short owner = (short)this.processor.PullGlobalWord(0x6548);
 			Player player = this.owner.World.Participants[owner];
-			bool human = ((ushort)(1 << (owner & 0xff)) & (ushort)this.owner.World.ParticipantMarkers) != 0;
+			bool human = this.owner.World.IsHuman(owner);
 
 			bool celebrates = this.processor.PullGlobalWord(0x70e4) == 0 && town.TrueExtent > 2 &&
 				(short)((town.TrueExtent + 1) / 2) <= this.processor.PullGlobalSignedWord(0x70e2) && player.RegimeKind != 0;
@@ -4100,7 +4085,7 @@ namespace Civilization1Remaster.Game
 					// Growth while it goes on under republic or democracy, with food to spare
 					short eaten = (short)((town.TrueExtent * 2) + (this.processor.PullLocalSignedWord(0x48) * this.processor.PullGlobalSignedWord(0xe3c6)));
 
-					if (eaten < this.processor.PullGlobalSignedWord(0x70da) && (town.TrueExtent < 10 || (town.StructureMarkers0 & 0x100) != 0))
+					if (eaten < this.processor.PullGlobalSignedWord(0x70da) && (town.TrueExtent < 10 || town.Has(CityStructure.Aqueduct)))
 						town.TrueExtent++;
 				}
 
@@ -4274,7 +4259,7 @@ namespace Civilization1Remaster.Game
 			}
 
 			// The nuclear plant melts down
-			if ((town.ConditionMarker & 1) != 0 && (town.StructureMarkers1 & 0x10) != 0 && this.owner.Libc.Dice.DrawInt(3) == 0 &&
+			if ((town.ConditionMarker & 1) != 0 && town.Has(CityStructure.NuclearPlant) && this.owner.Libc.Dice.DrawInt(3) == 0 &&
 				this.owner.Advisors.PlayerKnowsTechnology(owner, 0x42) == 0)
 			{
 				short horiz = this.processor.PullLocalSignedWord(0xd8);
@@ -4283,7 +4268,7 @@ namespace Civilization1Remaster.Game
 				this.owner.MapOps.FocusMapView(person, horiz - 8, vert - 6);
 				this.owner.Diplomats.RenderExplosion(horiz, vert);
 				this.owner.Combat.EnactNuclearFallout(horiz, vert);
-				town.StructureMarkers1 &= 0xffef;
+				town.Remove(CityStructure.NuclearPlant);
 				this.owner.Services.PerformSound(0x24, 0);
 				this.owner.Libc.CopyText(0xba06, "Nuclear Catastrophe\nin ");
 				this.owner.Conquest.ObtainCityLabel(townIdx);
@@ -4313,7 +4298,7 @@ namespace Civilization1Remaster.Game
 				this.processor.RegSource.Value16 = (ushort)(townIdx * 0x1c);
 				uint bit = 1u << (byte)improvement;
 
-				if (((((uint)town.StructureMarkers1 << 16) | town.StructureMarkers0) & bit) == 0 || player.RegimeKind == 0)
+				if ((town.Structures & bit) == 0 || player.RegimeKind == 0)
 					continue;
 
 				player.Gold -= (short)this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(improvement * 0x1e + 0xbd2));
@@ -4338,9 +4323,7 @@ namespace Civilization1Remaster.Game
 
 				// Sold for the debt
 				player.Gold = 0;
-				uint kept = ~bit;
-				town.StructureMarkers0 &= (ushort)kept;
-				town.StructureMarkers1 &= (ushort)(kept >> 16);
+				town.Structures &= ~bit;
 				this.processor.EmitGlobalByte(0xba06, 0);
 				this.owner.Conquest.ObtainCityLabel(townIdx);
 				this.owner.Libc.AppendText(0xba06, "\ncan't maintain\n");
@@ -4422,7 +4405,7 @@ namespace Civilization1Remaster.Game
 			this.processor.EmitGlobalWord(0x653e, (ushort)townIdx);
 			this.processor.EmitLocalWord(0xb2, 7);
 			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
-			this.processor.EmitGlobalWord(0x6b30, (ushort)((town.StructureMarkers0 & 1) != 0 ? 0 : 0x20));
+			this.processor.EmitGlobalWord(0x6b30, (ushort)(town.Has(CityStructure.Palace) ? 0 : 0x20));
 
 			if (town.MaterialsTally > 999 || town.MaterialsTally < 0)
 				town.MaterialsTally = 0;
@@ -4446,7 +4429,7 @@ namespace Civilization1Remaster.Game
 				if (distance < (short)this.processor.PullLocalWord(0xb2) && distance != 0)
 					this.processor.EmitLocalWord(0xb2, (ushort)distance);
 
-				if (other.ParticipantIdx == town.ParticipantIdx && (other.StructureMarkers0 & 1) != 0 && distance < (short)this.processor.PullGlobalWord(0x6b30))
+				if (other.ParticipantIdx == town.ParticipantIdx && other.Has(CityStructure.Palace) && distance < (short)this.processor.PullGlobalWord(0x6b30))
 				{
 					// The nearest palace of the owner
 					this.processor.RegBase.Value16 = (ushort)(otherIdx * 0x1c);
@@ -4510,7 +4493,7 @@ namespace Civilization1Remaster.Game
 			// The advances that make citizens content, unless the wonder 0x1000 is in the city
 			this.processor.EmitGlobalWord(0xb882, 0);
 
-			if ((town.StructureMarkers0 & 0x1000) == 0)
+			if (!town.Has(CityStructure.MassTransit))
 			{
 				foreach (short advance in new short[] { 0x23, 0x3a, 0x29, 0x3c })
 				{
@@ -4761,7 +4744,7 @@ namespace Civilization1Remaster.Game
 			}
 
 			// A computer city buys shields with gold
-			if ((this.owner.World.ParticipantMarkers & (1 << (this.processor.PullGlobalWord(0x6548) & 0xff))) == 0)
+			if (!this.owner.World.IsHuman(this.processor.PullGlobalWord(0x6548)))
 				BuyForComputerCity(townIdx);
 
 			return true;

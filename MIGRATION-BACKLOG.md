@@ -1128,6 +1128,12 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   w tym przypadku i tak nic nie zmienia – do sprawdzenia). Pełny zestaw zielony. **Koniec migracji asm → C#:**
   `find_asm_methods.py` nie znajduje już żadnej metody w stylu asm.
 
+- Porządki po migracji, porcja 1 (2026-10-19, plan w `PLAN-PO-MIGRACJI.md`, część A): `World.IsHuman` (17 miejsc z 4 różnymi
+  zapisami), `CityStructure` z `City.Has` / `Add` / `Remove` / `Structures` (66 testów bitów budynków; bit n = budynek
+  n + 1 z listy gry – sprawdzone z tabelą w CIV.EXE; recykling, nie metro, daje 0x6c98 = 3), `City.HasStructureSignExtended`
+  zamiast dwóch prywatnych kopii, `Player.StopMaking` / `StartMaking`, `StopMakingUnit` / `StartMakingUnit`,
+  `RestoreShieldsAndTrade`, klasa bazowa `GameModule` dla 43 klas. Pełny zestaw zielony.
+
 ## Następny krok
 
 Stan 2026-10-19 (po porcji 144): żadnej metody w stylu asm (`find_asm_methods.py Civilization1Remaster.Core 99999` pusty).

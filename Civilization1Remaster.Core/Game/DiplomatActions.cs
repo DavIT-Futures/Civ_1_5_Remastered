@@ -1,19 +1,16 @@
-using Civilization1Remaster.Emulation;
+﻿using Civilization1Remaster.Emulation;
+using Civilization1Remaster.Game.State;
 
 namespace Civilization1Remaster.Game
 {
 	/// <summary>
 	/// Translated from the original CIV.EXE overlay 22.
 	/// </summary>
-	public class DiplomatActions
+	public class DiplomatActions : GameModule
 	{
-		private readonly GameEngine owner;
-		private readonly CPU processor;
-
 		public DiplomatActions(GameEngine owner)
+			: base(owner)
 		{
-			this.owner = owner;
-			this.processor = owner.Processor;
 		}
 
 		/// <summary>
@@ -60,7 +57,7 @@ namespace Civilization1Remaster.Game
 				if ((town.ConditionMarker & 0x20) != 0)
 					this.processor.EmitGlobalByte(0xb276, (byte)(this.processor.PullGlobalByte(0xb276) | 4));
 
-				if ((town.StructureMarkers0 & 1) != 0)
+				if (town.Has(CityStructure.Palace))
 					this.processor.EmitGlobalByte(0xb276, (byte)(this.processor.PullGlobalByte(0xb276) | 0x10));
 
 				if (ownerIdx == 0)
@@ -247,7 +244,7 @@ namespace Civilization1Remaster.Game
 					if ((short)tries >= 0x63)
 						break;
 				}
-				while (buildingIdx == 0 || !CityHasBuilding(town, buildingIdx));
+				while (buildingIdx == 0 || !town.HasStructureSignExtended(buildingIdx));
 
 				this.processor.EmitLocalWord(0x22, buildingIdx);
 
@@ -291,18 +288,6 @@ namespace Civilization1Remaster.Game
 			this.owner.TurnHooks.DisplayDialog(0xba06, 80, 80);
 
 			this.owner.UnitOps.EliminateUnit(participantIdx, troopIdx);
-		}
-
-		/// <summary>
-		/// Whether the city has the building: bit b of the structures, read like the original (a 16-bit mask sign extended, so
-		/// building 15 also counts any of 16 - 31 and the buildings 16 - 23 never count)
-		/// </summary>
-		private static bool CityHasBuilding(City town, ushort buildingIdx)
-		{
-			ushort mask = (ushort)(1 << (byte)buildingIdx);
-			ushort high = (mask & 0x8000) != 0 ? (ushort)0xffff : (ushort)0;
-
-			return ((town.StructureMarkers0 & mask) | (town.StructureMarkers1 & high)) != 0;
 		}
 
 		/// <summary>

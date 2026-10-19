@@ -1,16 +1,12 @@
-using Civilization1Remaster.Emulation;
+﻿using Civilization1Remaster.Emulation;
 
 namespace Civilization1Remaster.UI
 {
-	public class Palace
+	public class Palace : GameModule
 	{
-		private readonly GameEngine owner;
-		private readonly CPU processor;
-
 		public Palace(GameEngine owner)
+			: base(owner)
 		{
-			this.owner = owner;
-			this.processor = owner.Processor;
 		}
 
 /// <summary>

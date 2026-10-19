@@ -1,20 +1,18 @@
 ﻿using Civilization1Remaster.Emulation;
+using Civilization1Remaster.Game.State;
 
 namespace Civilization1Remaster.Game
 {
 	/// <summary>
 	/// Translated from the original CIV.EXE segment 0x1403.
 	/// </summary>
-	public class PlayerTurn
+	public class PlayerTurn : GameModule
 	{
-		private readonly GameEngine owner;
-		private readonly CPU processor;
 		private readonly UnitMemory troops;
 
 		public PlayerTurn(GameEngine owner)
+			: base(owner)
 		{
-			this.owner = owner;
-			this.processor = owner.Processor;
 			this.troops = new UnitMemory(owner.Processor);
 		}
 
@@ -68,7 +66,7 @@ namespace Civilization1Remaster.Game
 				if (this.processor.PullLocalWord(0x1e) == 0 && this.processor.PullGlobalWord(0xdc48) == 0)
 					continue;
 
-				if (this.processor.PullGlobalWord(0xdc48) != 0 || (this.owner.World.ParticipantMarkers & (1 << participantIdx)) == 0 ||
+				if (this.processor.PullGlobalWord(0xdc48) != 0 || !this.owner.World.IsHuman(participantIdx) ||
 					(this.processor.PullLocalWord(0x6) != 0 && (this.owner.World.SessionPrefMarkers & 4) == 0))
 				{
 					break;
@@ -162,7 +160,7 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private bool LookAtUnit(short participantIdx)
 		{
-			if ((this.owner.World.ParticipantMarkers & (1 << participantIdx)) != 0)
+			if (this.owner.World.IsHuman(participantIdx))
 				AwaitForKey();
 
 			this.processor.EmitLocalWord(0xa, 0);
@@ -227,7 +225,7 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private LookStep ObtainOrder(short participantIdx)
 		{
-			if ((this.owner.World.ParticipantMarkers & (1 << participantIdx)) == 0)
+			if (!this.owner.World.IsHuman(participantIdx))
 			{
 				ObtainAIOrder(participantIdx);
 				return LookStep.Order;
@@ -2340,7 +2338,7 @@ namespace Civilization1Remaster.Game
 			this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
 			this.processor.RegSource.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride);
 
-			if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) != 0xff && (town.StructureMarkers0 & 0x80) == 0 &&
+			if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) != 0xff && !town.Has(CityStructure.CityWalls) &&
 				this.processor.PullLocalWord(0x34) != MapRules.OceanTerrain &&
 				(this.owner.World.HardnessTier != 0 || this.processor.PullGlobalWord(0xd20a) != (ushort)person))
 			{
@@ -3580,7 +3578,7 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			if ((this.owner.World.ParticipantMarkers & (1 << participantIdx)) != 0)
+			if (this.owner.World.IsHuman(participantIdx))
 				RenderUnitInfo(participantIdx, this.processor.PullLocalWord(0x32));
 
 			return false;

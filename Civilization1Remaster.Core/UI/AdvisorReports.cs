@@ -1,4 +1,4 @@
-using Civilization1Remaster.Emulation;
+﻿using Civilization1Remaster.Emulation;
 using Civilization1Remaster.Game.State;
 
 namespace Civilization1Remaster.UI
@@ -6,15 +6,11 @@ namespace Civilization1Remaster.UI
 	/// <summary>
 	/// Translated from the original CIV.EXE overlay 14.
 	/// </summary>
-	public class AdvisorReports
+	public class AdvisorReports : GameModule
 	{
-		private readonly GameEngine owner;
-		private readonly CPU processor;
-
 		public AdvisorReports(GameEngine owner)
+			: base(owner)
 		{
-			this.owner = owner;
-			this.processor = owner.Processor;
 		}
 
 		/// <summary>
@@ -729,7 +725,7 @@ namespace Civilization1Remaster.UI
 			{
 				if ((ushort)this.owner.World.Towns[townIdx].ParticipantIdx == participantIdx &&
 					this.owner.World.Towns[townIdx].ConditionMarker != 0xff &&
-					(this.owner.World.Towns[townIdx].StructureMarkers0 & 1) != 0)
+					this.owner.World.Towns[townIdx].Has(CityStructure.Palace))
 				{
 					capitalIdx = townIdx;
 				}
@@ -862,7 +858,7 @@ namespace Civilization1Remaster.UI
 			{
 				City town = this.owner.World.Towns[townIdx];
 
-				if (town.ParticipantIdx == participantIdx && town.ConditionMarker != 0xff && (town.StructureMarkers0 & 1) != 0)
+				if (town.ParticipantIdx == participantIdx && town.ConditionMarker != 0xff && town.Has(CityStructure.Palace))
 				{
 					capitalIdx = townIdx;
 				}

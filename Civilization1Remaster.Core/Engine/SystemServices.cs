@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Drawing;
 using System.IO;
 using Civilization1Remaster.Emulation;
@@ -8,15 +8,11 @@ namespace Civilization1Remaster.Engine
 	/// <summary>
 	/// Translated from the original CIV.EXE segment 0x1000.
 	/// </summary>
-	public class SystemServices
+	public class SystemServices : GameModule
 	{
-		private readonly GameEngine owner;
-		private readonly CPU processor;
-
 		public SystemServices(GameEngine owner)
+			: base(owner)
 		{
-			this.owner = owner;
-			this.processor = owner.Processor;
 		}
 
 		/// <summary>
