@@ -784,6 +784,39 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 			CheckCases(bay, ClickCases, ways);
 	}
 
+	private static readonly Action<GameEngine, short> Unhappy = Then(Size(14), Buildings(0, 0x2408), Level(4, 1), Rates(10, 0));
+
+	private static Action<GameEngine, short> Disorder(bool on) => (game, town) => game.World.Towns[town].ConditionMarker =
+		(byte)(on ? game.World.Towns[town].ConditionMarker | 1 : game.World.Towns[town].ConditionMarker & ~1);
+
+	private static Action<GameEngine, short> Options(short set, short clear) => (game, town) =>
+		game.World.SessionPrefMarkers = (short)((game.World.SessionPrefMarkers & ~clear) | set);
+
+	private static readonly CityCase[] OrderCases =
+	{
+		new("human, disorder breaks out", true, 0, Then(Unhappy, Disorder(false), Options(0, 9)), Choice.Biggest),
+		new("human, disorder breaks out, the help", true, 0, Then(Unhappy, Disorder(false), Options(1, 8)), Choice.Last),
+		new("human, disorder breaks out, the riot", true, 0, Then(Unhappy, Disorder(false), Options(8, 1), (game, town) => game.Processor.EmitUInt16(0x3b01, 0x6b92, 0)), Choice.Biggest),
+		new("human, disorder breaks out, the riot seen", true, 0, Then(Unhappy, Disorder(false), Options(8, 1), (game, town) => game.Processor.EmitUInt16(0x3b01, 0x6b92, 1)), Choice.First),
+		new("human, disorder goes on", true, 0, Then(Unhappy, Disorder(true), Options(8, 1)), Choice.Biggest),
+		new("human, disorder goes on under democracy", true, 0, Then(Unhappy, Level(4, 5), Rates(10, 0), Disorder(true)), Choice.Biggest),
+		new("computer, disorder breaks out", false, 0, Then(Unhappy, Disorder(false)), Choice.Biggest),
+		new("computer, disorder goes on under democracy", false, 0, Then(Unhappy, Level(4, 5), Rates(10, 0), Disorder(true)), Choice.Biggest),
+		new("human, order restored", true, 0, Then(Size(1), Disorder(true)), Choice.First),
+		new("computer, order restored", false, 0, Then(Size(1), Disorder(true)), Choice.First),
+		new("human, anarchy, no taxes", true, 0, Then(Size(2), Level(1, 0), Disorder(false)), Choice.First),
+		new("computer, monarchy, taxes", false, 0, Then(Size(3), Level(1, 2), Disorder(false)), Choice.Last),
+	};
+
+	[Fact]
+	public void HandleCityOrderCasesMatchOriginalCode()
+	{
+		HashSet<string> ways = [];
+
+		foreach (int bay in new[] { 5, 9 })
+			CheckCases(bay, OrderCases, ways);
+	}
+
 	[Fact]
 	public void HandleCityTurnCasesMatchOriginalCode()
 	{

@@ -3251,12 +3251,18 @@ namespace Civilization1Remaster.Game
 				this.processor.EmitGlobalWord(0xb1e8, 0);
 
 				if (town.PresentMakingIdx >= 0)
+				{
+					this.processor.RegSource.Value16 = (ushort)(town.PresentMakingIdx << 1);
 					this.owner.World.Participants[owner].TroopsInsideMaking[town.PresentMakingIdx]--;
+				}
 
 				town.PresentMakingIdx = (sbyte)this.processor.PullLocalByte(0x102);
 
 				if (town.PresentMakingIdx >= 0)
+				{
+					this.processor.RegSource.Value16 = (ushort)(town.PresentMakingIdx << 1);
 					this.owner.World.Participants[owner].TroopsInsideMaking[town.PresentMakingIdx]++;
+				}
 
 				this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 230, 99, 90, 100, 0);
 			}
@@ -3392,21 +3398,10 @@ namespace Civilization1Remaster.Game
 		private void ChangeCityProduction(short townIdx)
 		{
 			City town = this.owner.World.Towns[townIdx];
-			short owner = (short)this.processor.PullGlobalWord(0x6548);
 
 			town.ConditionMarker &= 0xef;
 			this.owner.Startup.DisplayMouseCursor();
-
-			if (town.PresentMakingIdx >= 0)
-				this.owner.World.Participants[owner].TroopsInsideMaking[town.PresentMakingIdx]--;
-
-			this.owner.Advisors.PickCityProduction(owner, townIdx);
-			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
-			town.PresentMakingIdx = (sbyte)this.processor.RegCount.LowByte;
-
-			if (town.PresentMakingIdx >= 0)
-				this.owner.World.Participants[owner].TroopsInsideMaking[town.PresentMakingIdx]++;
-
+			RepickCityProduction(townIdx);
 			this.owner.Startup.ConcealMouseCursor();
 		}
 
@@ -3937,6 +3932,134 @@ namespace Civilization1Remaster.Game
 			return (short)this.processor.PullLocalWord(0xae) > 0 ? CityScreenStep.Restart : CityScreenStep.Redraw;
 		}
 
+		/// <summary>The advisor picks the production of the city; the units in making of the owner counted over again</summary>
+		private void RepickCityProduction(short townIdx)
+		{
+			City town = this.owner.World.Towns[townIdx];
+			short owner = (short)this.processor.PullGlobalWord(0x6548);
+
+			// SI as in the original (the menus keep it on the stack)
+			if (town.PresentMakingIdx >= 0)
+			{
+				this.processor.RegSource.Value16 = (ushort)(town.PresentMakingIdx << 1);
+				this.owner.World.Participants[owner].TroopsInsideMaking[town.PresentMakingIdx]--;
+			}
+
+			this.owner.Advisors.PickCityProduction(owner, townIdx);
+			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
+			town.PresentMakingIdx = (sbyte)this.processor.RegCount.LowByte;
+
+			if (town.PresentMakingIdx >= 0)
+			{
+				this.processor.RegSource.Value16 = (ushort)(town.PresentMakingIdx << 1);
+				this.owner.World.Participants[owner].TroopsInsideMaking[town.PresentMakingIdx]++;
+			}
+		}
+
+		/// <summary>
+		/// The order of the city at the end of its turn (0xe8 the happy less the unhappy, 0x70e2 - 0x70e4): fewer happy than
+		/// unhappy is civil disorder (the flag 1; a human hears of it – with the riot of the city view when the option 8 is on,
+		/// the first time – the computer picks another production), under democracy a disorder that goes on overthrows the
+		/// government; otherwise a disorder ends ("Order restored") and the taxes 0xe17a are paid, but not in anarchy.
+		/// </summary>
+		private void ApplyCivilOrder(short townIdx)
+		{
+			City town = this.owner.World.Towns[townIdx];
+			short owner = (short)this.processor.PullGlobalWord(0x6548);
+			bool human = ((ushort)(1 << (owner & 0xff)) & (ushort)this.owner.World.ParticipantMarkers) != 0;
+
+			this.processor.EmitLocalWord(0xe8, (ushort)(this.processor.PullGlobalWord(0x70e2) - this.processor.PullGlobalWord(0x70e4)));
+
+			if ((short)this.processor.PullLocalWord(0xe8) < 0)
+			{
+				if (human)
+				{
+					this.owner.Libc.CopyText(0xba06, "Civil Disorder in\n");
+					this.owner.Conquest.ObtainCityLabel(townIdx);
+					this.owner.Libc.AppendText(0xba06, "! Mayor\nflees in panic.\n");
+					this.owner.Services.PerformSound(0x24, 0);
+
+					if ((this.owner.World.SessionPrefMarkers & 8) != 0 && (town.ConditionMarker & 1) == 0 && this.processor.PullGlobalWord(0x6b92) == 0)
+					{
+						// The riot in the view of the city, once
+						this.owner.CityScene.DisplayCityScreen(townIdx, -2);
+						this.owner.CityScene.RiotAnimation();
+						this.owner.Startup.QueryForDisk(0, 1);
+						this.owner.TurnHooks.RepaintMainScreen();
+						this.processor.EmitGlobalWord(0x6b92, 1);
+					}
+					else
+					{
+						this.processor.EmitGlobalWord(0x2f9e, 4);
+						this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+					}
+
+					this.owner.Services.PerformSound(1, 0);
+
+					if ((town.ConditionMarker & 1) == 0)
+					{
+						this.processor.EmitGlobalWord(0xb1e8, 1);
+
+						if ((this.owner.World.SessionPrefMarkers & 1) != 0)
+							this.owner.HelpSystem.DisplayHelpPopup(0x2708);
+					}
+				}
+
+				if ((town.ConditionMarker & 1) == 0)
+				{
+					town.ConditionMarker |= 1;
+
+					if (!human)
+						RepickCityProduction(townIdx);
+
+					this.owner.TurnLogic.RepaintTileIfVisible(this.processor.PullLocalWord(0xd8), this.processor.PullLocalWord(0xe4));
+				}
+				else if (this.owner.World.Participants[owner].RegimeKind == 5)
+				{
+					// The disorder goes on under democracy
+					this.owner.Services.PerformSound(0x24, 0);
+					this.owner.Libc.CopyText(0xba06, "Discontented citizens of\n");
+					this.owner.Conquest.ObtainCityLabel(townIdx);
+					this.owner.Libc.AppendText(0xba06, " revolt:\nGovernment Collapses!\n");
+
+					if (owner == this.owner.World.PersonParticipantIdx)
+					{
+						this.owner.Paper.DisplayNewspaper(townIdx);
+						this.owner.World.Participants[owner].Relations[0] |= 4;
+					}
+
+					this.owner.Politics.SwitchGovernment(owner, 0);
+					this.owner.Services.PerformSound(1, 0);
+				}
+
+				return;
+			}
+
+			if ((town.ConditionMarker & 1) != 0)
+			{
+				town.ConditionMarker &= 0xfe;
+
+				if (human)
+				{
+					this.processor.EmitGlobalWord(0x2f9e, 4);
+					this.owner.Libc.CopyText(0xba06, "Order restored\nin ");
+					this.owner.Conquest.ObtainCityLabel(townIdx);
+					this.owner.Libc.AppendText(0xba06, ".\n");
+					this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+				}
+				else
+				{
+					RepickCityProduction(townIdx);
+				}
+
+				this.owner.TurnLogic.RepaintTileIfVisible(this.processor.PullLocalWord(0xd8), this.processor.PullLocalWord(0xe4));
+			}
+
+			// The taxes, but not in anarchy
+			if (this.owner.World.Participants[owner].RegimeKind != 0)
+				this.owner.World.Participants[owner].Gold += (short)this.processor.PullGlobalWord(0xe17a);
+		}
+
 		/// <summary>
 		/// The start of HandleCity: the locals 0xb8, 0xda, 0xfe, 0xca and 0x2496 cleared, the mouse hidden, the 5 x 5 array
 		/// of the tiles around (BP-0xa6) cleared; 0x653e the city; the materials outside 0 - 999 cleared. Over the other
@@ -4378,282 +4501,22 @@ namespace Civilization1Remaster.Game
 			this.owner.Conquest.AwaitForKeyPressOrMouseClick();
 
 		L5cc2:
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xc2);
-			this.processor.EmitGlobalWord(0xd4cc, this.processor.RegAcc.Value16);
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xd0);
-			this.processor.EmitGlobalWord(0xd75e, this.processor.RegAcc.Value16);
+			// The end of the city screen
+			this.processor.EmitGlobalWord(0xd4cc, this.processor.PullLocalWord(0xc2));
+			this.processor.EmitGlobalWord(0xd75e, this.processor.PullLocalWord(0xd0));
 
 		L5cd0:
 			this.processor.RegAcc.Value16 = (ushort)marker;
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.RegData.Value16 = this.processor.BitOrWord(this.processor.RegData.Value16, this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L5cdb;
-			goto L68cc;
+			this.processor.RegData.Value16 = (ushort)((marker < 0 ? 0xffff : 0) | (ushort)marker);
 
-		L5cdb:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x6548), 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L5ce5;
-			goto L62d8;
+			if (marker != 0)
+				goto L68cc;
 
-		L5ce5:
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x70e2);
-			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, this.processor.PullGlobalWord(0x70e4));
-			this.processor.EmitLocalWord(0xe8, this.processor.RegAcc.Value16);
-			this.processor.CompareWord(this.processor.PullLocalWord(0xe8), 0x0);
-			if (this.processor.FlagSet.IsLess) goto L5cfa;
-			goto L5f3f;
+			if (this.processor.PullGlobalWord(0x6548) == 0)
+				goto L62d8;
 
-		L5cfa:
-			this.processor.RegAcc.Value16 = 0x1;
-			this.processor.RegCount.LowByte = this.processor.PullGlobalByte(0x6548);
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			this.processor.TestBitsWord(this.processor.RegAcc.Value16, (ushort)this.owner.World.ParticipantMarkers);
-			if (this.processor.FlagSet.IsNotEqual) goto L5d0c;
-			goto L5df3;
-
-		L5d0c:
-			this.owner.Libc.CopyText(0xba06, "Civil Disorder in\n");
-
-			this.owner.Conquest.ObtainCityLabel(townIdx);
-
-			this.owner.Libc.AppendText(0xba06, "! Mayor\nflees in panic.\n");
-
-			this.owner.Services.PerformSound(0x24, 0);
-
-			this.processor.TestBitsByte((byte)(this.owner.World.SessionPrefMarkers & 0xff), 0x8);
-			if (this.processor.FlagSet.IsNotEqual) goto L5d4d;
-			goto L5d9f;
-
-		L5d4d:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.processor.TestBitsByte(this.owner.World.Towns[townIdx].ConditionMarker, 0x1);
-			if (this.processor.FlagSet.IsEqual) goto L5d5f;
-			goto L5d9f;
-
-		L5d5f:
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x6b92), 0x0);
-			if (this.processor.FlagSet.IsEqual) goto L5d69;
-			goto L5d9f;
-
-		L5d69:
-			this.owner.CityScene.DisplayCityScreen(townIdx, -2);
-			
-			this.owner.CityScene.RiotAnimation();
-
-			this.owner.Startup.QueryForDisk(0, 1);
-
-			this.owner.TurnHooks.RepaintMainScreen();
-
-			this.processor.EmitGlobalWord(0x6b92, 0x1);
-			goto L5db9;
-
-		L5d9f:
-			this.processor.EmitGlobalWord(0x2f9e, 0x4);
-
-			this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
-
-		L5db9:
-			this.owner.Services.PerformSound(1, 0);
-
-			this.processor.ScaleIndexToBase(0x1c, (ushort)townIdx);
-			this.processor.TestBitsByte(this.owner.World.Towns[townIdx].ConditionMarker, 0x1);
-			if (this.processor.FlagSet.IsEqual) goto L5dd7;
-			goto L5df3;
-
-		L5dd7:
-			this.processor.EmitGlobalWord(0xb1e8, 0x1);
-			this.processor.TestBitsByte((byte)(this.owner.World.SessionPrefMarkers & 0xff), 0x1);
-			if (this.processor.FlagSet.IsNotEqual) goto L5de7;
-			goto L5df3;
-
-		L5de7:
-			this.owner.HelpSystem.DisplayHelpPopup(0x2708);
-
-		L5df3:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.processor.TestBitsByte(this.owner.World.Towns[townIdx].ConditionMarker, 0x1);
-			if (this.processor.FlagSet.IsEqual) goto L5e05;
-			goto L5eb4;
-
-		L5e05:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.owner.World.Towns[townIdx].ConditionMarker |= 1;
-			this.processor.RegAcc.Value16 = 0x1;
-			this.processor.RegCount.LowByte = this.processor.PullGlobalByte(0x6548);
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			this.processor.TestBitsWord(this.processor.RegAcc.Value16, (ushort)this.owner.World.ParticipantMarkers);
-			if (this.processor.FlagSet.IsEqual) goto L5e24;
-			goto L5ea1;
-
-		L5e24:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.processor.CompareByte((byte)this.owner.World.Towns[townIdx].PresentMakingIdx, 0x0);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L5e36;
-			goto L5e54;
-
-		L5e36:			
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.Towns[townIdx].PresentMakingIdx;
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegSource.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			
-			this.processor.ScaleIndexToBase(0x38, this.processor.PullGlobalWord(0x6548));
-			
-			this.owner.World.Participants[this.processor.PullGlobalWord(0x6548)].TroopsInsideMaking[this.owner.World.Towns[townIdx].PresentMakingIdx]--;
-
-		L5e54:
-			this.owner.Advisors.PickCityProduction(this.processor.PullGlobalSignedWord(0x6548), townIdx);
-			
-			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
-			this.processor.ScaleIndexToBase(0x1c, (ushort)townIdx);
-			this.owner.World.Towns[townIdx].PresentMakingIdx = (sbyte)this.processor.RegCount.LowByte;
-
-			this.processor.ScaleIndexToBase(0x1c, (ushort)townIdx);
-			this.processor.CompareByte((byte)this.owner.World.Towns[townIdx].PresentMakingIdx, 0x0);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L5e83;
-			goto L5ea1;
-
-		L5e83:
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.Towns[townIdx].PresentMakingIdx;
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegSource.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-
-			this.processor.ScaleIndexToBase(0x38, this.processor.PullGlobalWord(0x6548));
-			
-			this.owner.World.Participants[this.processor.PullGlobalWord(0x6548)].TroopsInsideMaking[this.owner.World.Towns[townIdx].PresentMakingIdx]++;
-
-		L5ea1:
-			this.owner.TurnLogic.RepaintTileIfVisible(this.processor.PullLocalWord(0xd8),
-				this.processor.PullLocalWord(0xe4));
-
-			goto L5f3c;
-
-		L5eb4:
-			if (this.owner.World.Participants[this.processor.PullGlobalWord(0x6548)].RegimeKind == 5) goto L5ec4;
-			goto L5f3c;
-
-		L5ec4:
-			this.owner.Services.PerformSound(0x24, 0);
-
-			this.owner.Libc.CopyText(0xba06, "Discontented citizens of\n");
-
-			this.owner.Conquest.ObtainCityLabel(townIdx);
-
-			this.owner.Libc.AppendText(0xba06, " revolt:\nGovernment Collapses!\n");
-
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
-			this.processor.CompareWord(this.processor.PullGlobalWord(0x6548), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L5f07;
-			goto L5f20;
-
-		L5f07:
-			this.owner.Paper.DisplayNewspaper(townIdx);
-
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0x6548);
-			this.processor.RegCount.LowByte = 0x4;
-			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, this.processor.RegCount.LowByte);
-
-			this.owner.World.Participants[this.processor.PullGlobalWord(0x6548)].Relations[0] |= 4;
-
-		L5f20:
-			this.owner.Politics.SwitchGovernment(this.processor.PullGlobalSignedWord(0x6548), 0);
-			
-			this.owner.Services.PerformSound(1, 0);
-
-		L5f3c:
-			goto L606c;
-
-		L5f3f:
-			this.processor.CompareWord(this.processor.PullLocalWord(0xe8), 0x0);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L5f49;
-			goto L604f;
-
-		L5f49:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.processor.TestBitsByte(this.owner.World.Towns[townIdx].ConditionMarker, 0x1);
-			if (this.processor.FlagSet.IsNotEqual) goto L5f5b;
-			goto L604f;
-
-		L5f5b:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.owner.World.Towns[townIdx].ConditionMarker &= 0xfe;
-			this.processor.RegAcc.Value16 = 0x1;
-			this.processor.RegCount.LowByte = this.processor.PullGlobalByte(0x6548);
-			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
-			this.processor.TestBitsWord(this.processor.RegAcc.Value16, (ushort)this.owner.World.ParticipantMarkers);
-			if (this.processor.FlagSet.IsNotEqual) goto L5f7a;
-			goto L5fc2;
-
-		L5f7a:
-			this.processor.EmitGlobalWord(0x2f9e, 0x4);
-
-			this.owner.Libc.CopyText(0xba06, "Order restored\nin ");
-
-			this.owner.Conquest.ObtainCityLabel(townIdx);
-
-			this.owner.Libc.AppendText(0xba06, ".\n");
-
-			this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
-
-			goto L603f;
-
-		L5fc2:
-			this.processor.RegAcc.Value16 = 0x1c;
-			this.processor.ScaleAccumulatorToBase((ushort)townIdx);
-			this.processor.CompareByte((byte)this.owner.World.Towns[townIdx].PresentMakingIdx, 0x0);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L5fd4;
-			goto L5ff2;
-
-		L5fd4:
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.Towns[townIdx].PresentMakingIdx;
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegSource.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			
-			this.processor.ScaleIndexToBase(0x38, this.processor.PullGlobalWord(0x6548));
-			
-			this.owner.World.Participants[this.processor.PullGlobalWord(0x6548)].TroopsInsideMaking[this.owner.World.Towns[townIdx].PresentMakingIdx]--;
-
-		L5ff2:
-			this.owner.Advisors.PickCityProduction(this.processor.PullGlobalSignedWord(0x6548), townIdx);
-
-			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
-			this.processor.ScaleIndexToBase(0x1c, (ushort)townIdx);
-			this.owner.World.Towns[townIdx].PresentMakingIdx = (sbyte)this.processor.RegCount.LowByte;
-
-			this.processor.ScaleIndexToBase(0x1c, (ushort)townIdx);
-			this.processor.CompareByte((byte)this.owner.World.Towns[townIdx].PresentMakingIdx, 0x0);
-			if (this.processor.FlagSet.IsGreaterOrEqual) goto L6021;
-			goto L603f;
-
-		L6021:			
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.Towns[townIdx].PresentMakingIdx;
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.RegSource.Value16 = this.processor.RegAcc.Value16;
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			
-			this.processor.ScaleIndexToBase(0x38, this.processor.PullGlobalWord(0x6548));
-
-			this.owner.World.Participants[this.processor.PullGlobalWord(0x6548)].TroopsInsideMaking[this.owner.World.Towns[townIdx].PresentMakingIdx]++;
-
-		L603f:
-			this.owner.TurnLogic.RepaintTileIfVisible(this.processor.PullLocalWord(0xd8),
-				this.processor.PullLocalWord(0xe4));
-
-		L604f:
-			if (this.owner.World.Participants[this.processor.PullGlobalWord(0x6548)].RegimeKind != 0) goto L605f;
-			goto L606c;
-
-		L605f:
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0xe17a);
-			this.owner.World.Participants[this.processor.PullGlobalWord(0x6548)].Gold += (short)this.processor.RegAcc.Value16;
+			// The turn of the city: civil disorder, order restored, the taxes
+			ApplyCivilOrder(townIdx);
 
 		L606c:
 			this.processor.CompareWord(this.processor.PullGlobalWord(0x70e4), 0x0);
