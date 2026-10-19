@@ -42,7 +42,7 @@ public sealed class BatchHundredThirteenDifferentialTests(ITestOutputHelper outp
 
 	private void CheckCities(int bay, HashSet<string> ways, bool production = false)
 	{
-		Check(bay, 40, (chance, pair) =>
+		Check(bay, production ? 70 : 40, (chance, pair) =>
 		{
 			GameEngine engine = pair.Rewritten.Engine;
 			short person = engine.World.PersonParticipantIdx;
@@ -133,6 +133,13 @@ public sealed class BatchHundredThirteenDifferentialTests(ITestOutputHelper outp
 			else if (alternative == 2)
 				produced = 0x19;
 
+			// An improvement or a wonder instead (maybe one the city or the world has already), the option 8 (city screen)
+			bool improvement = chance.Next(2) == 0;
+			short improvementIdx = (short)new[] { 1, 3, 5, 0xc, 0x15, 0x16, 0x18, 0x19, 0x1d, 0x26, 0x29, 0x2b }[chance.Next(12)];
+			bool alreadyBuilt = chance.Next(3) == 0;
+			bool cityScreenOption = chance.Next(2) == 0;
+			int elsewhere = chance.Next(1000);
+
 			// (no food variants with production, which changes the size; a full store at size 10 or 11 for the aqueduct)
 			if (produce)
 				food = 0;
@@ -154,7 +161,7 @@ public sealed class BatchHundredThirteenDifferentialTests(ITestOutputHelper outp
 			}
 
 			return new Scenario(
-				$"HandleCity({townIdx}, {marker}), materials {(badMaterials ? materials : "kept")}, advances {advances}, no palaces {noPalaces}, close {close}, level {hardness}, leader {leader}, flag {flag}, food {food}, size {size}, granary {granary}, aqueduct {aqueduct}, diag {diag}, flag 0x80 {unrest}, slots {(slotsSet ? string.Join("/", slots) : "kept")}, unit kind {supportedKind}, government {regime}, diag 2 {diag2}, barbarian {barbarian}, free city tile {freeCityTile}, mixed workers {(mixWorkers ? mixed : 0)}, unseen {unseen}, buildings {(buildings ? buildingBits : -1)}, wonder 15 {marvel}, produce {(produce ? produced : -1)} small {(smallCity ? smallSize : 0)} last {lastCity} barracks {barracks} first {firstOfKind} exact {exactCost} easiest {easiest}",
+				$"HandleCity({townIdx}, {marker}), materials {(badMaterials ? materials : "kept")}, advances {advances}, no palaces {noPalaces}, close {close}, level {hardness}, leader {leader}, flag {flag}, food {food}, size {size}, granary {granary}, aqueduct {aqueduct}, diag {diag}, flag 0x80 {unrest}, slots {(slotsSet ? string.Join("/", slots) : "kept")}, unit kind {supportedKind}, government {regime}, diag 2 {diag2}, barbarian {barbarian}, free city tile {freeCityTile}, mixed workers {(mixWorkers ? mixed : 0)}, unseen {unseen}, buildings {(buildings ? buildingBits : -1)}, wonder 15 {marvel}, produce {(produce ? produced : -1)} small {(smallCity ? smallSize : 0)} last {lastCity} barracks {barracks} first {firstOfKind} exact {exactCost} easiest {easiest}, improvement {(improvement ? improvementIdx : 0)} built {alreadyBuilt} screen option {cityScreenOption}",
 				game =>
 				{
 					HumanTurnScript.Install(game, [new HumanTurnScript.Input(0x1b), new HumanTurnScript.Input(0x1b)]);
@@ -289,7 +296,34 @@ public sealed class BatchHundredThirteenDifferentialTests(ITestOutputHelper outp
 						if (firstOfKind)
 							game.World.ScienceLeadingFoundVia[produced] &= ~8;
 
-						if (produced == 0x19)
+						if (improvement)
+						{
+							making.PresentMakingIdx = (sbyte)-improvementIdx;
+
+							if (exactCost > 0)
+							{
+								int level = easiest ? 0 : Math.Max(1, (int)game.World.HardnessTier);
+								int box = making.ParticipantIdx == person ? 10 : 16 - 2 * level -
+									(game.World.Season >= 0 && game.World.Participants[person].Standing == 7 && level > 1 ? 2 : 0);
+								int price = game.Processor.Storage.PullUInt16(0x3b01, (ushort)(0xbb2 + improvementIdx * 0x1e));
+								making.MaterialsTally = (short)(price * box - (exactCost - 1));
+							}
+
+							if (alreadyBuilt && improvementIdx > 0x18)
+								game.World.MarvelTownIdx[improvementIdx - 24] = (short)towns[elsewhere % towns.Count];
+							else if (alreadyBuilt)
+							{
+								uint bit = 1u << (improvementIdx - 1);
+								making.StructureMarkers0 |= (ushort)bit;
+								making.StructureMarkers1 |= (ushort)(bit >> 16);
+							}
+							else if (improvementIdx > 0x18)
+								game.World.MarvelTownIdx[improvementIdx - 24] = -1;
+
+							game.World.SessionPrefMarkers = (short)(cityScreenOption ? game.World.SessionPrefMarkers | 8 : game.World.SessionPrefMarkers & ~8);
+						}
+
+						if (produced == 0x19 && !improvement)
 						{
 							// (the count grows with the new unit; the timer of the human set, so its reset shows)
 							game.World.Participants[making.ParticipantIdx].LiveTroops[25] = (short)(onlyNuclear ? 0 : 3);

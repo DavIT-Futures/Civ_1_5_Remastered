@@ -979,13 +979,19 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   kontaktu człowieka, potem nowa produkcja. Test produkcji: karawana, broń atomowa (`ConstructUnit` zwiększa `LiveTroops`;
   licznik człowieka ustawiony, bo zwykle już jest -1). Ocalałe: gałąź dyplomaty komputera (`SendDiplomat`) – nieosiągalna:
   `ProduceInCity` nie buduje dyplomatów dla komputera, więc 0xba = -1 i kod idzie ścieżką człowieka.
+- Porcja 123 (2026-10-19): jedenasty kawałek `HandleCity` – `CompleteImprovement` (L1b63 – L1e60, z `TestImprovement`):
+  budynek albo cud gotowy przy cenie x 0x4a; cud zbudowany gdzie indziej albo budynek, który miasto ma, nic nie robi; test
+  atomowy (0x29) w gazecie, budynek dopisany, cena zapłacona; miasto człowieka i każdy cud ogłaszane (cud komputera odsłania
+  miasto; ekran miasta przy opcji 8 i dysku), tarcze zerowane; miasto komputera wybiera następną produkcję (po pałacu -2).
+  Test produkcji: budynki i cuda (także zbudowane), opcja 8, 70 scenariuszy na grę. Ocalałe: `>= 0` przy liczeniu jednostki w
+  produkcji po budynku (AI w grach testowych nie wybrało wtedy osadników), gałąź dyplomaty (nieosiągalna, porcja 122).
 
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
 (`HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-19 (po porcji 122): 1 metoda w stylu asm (`HandleCity`, 8428 linii); `ShiftAIUnit` i `HandlePlayerTurn` gotowe. `HandleCity(miasto, znacznik)`: -1 tylko liczy, 0 tura miasta, 1 ekran miasta; przepisywać kawałkami od początku (po porcji 122: następny od L1b60 – budynki i cuda). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
+Stan 2026-10-19 (po porcji 123): 1 metoda w stylu asm (`HandleCity`, 8428 linii); `ShiftAIUnit` i `HandlePlayerTurn` gotowe. `HandleCity(miasto, znacznik)`: -1 tylko liczy, 0 tura miasta, 1 ekran miasta; przepisywać kawałkami od początku (po porcji 123: następny od L1e60 – części statku kosmicznego, potem L2010 – L220f). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
