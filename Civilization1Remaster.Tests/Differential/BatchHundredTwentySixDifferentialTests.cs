@@ -698,6 +698,61 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 			CheckCases(bay, KeyCases, ways);
 	}
 
+	/// <summary>The square right of the city unseen by the human</summary>
+	private static readonly Action<GameEngine, short> UnseenEast = (game, town) =>
+	{
+		var city = game.World.Towns[town];
+		game.World.ChartSight[city.Place.X + 1, city.Place.Y] = (sbyte)(game.World.ChartSight[city.Place.X + 1, city.Place.Y] & ~(1 << game.World.PersonParticipantIdx));
+	};
+
+	/// <summary>Every improvement but the palace and the wonders of the first word</summary>
+	private static readonly Action<GameEngine, short> AllBuildings = (game, town) =>
+	{
+		game.World.Towns[town].StructureMarkers0 = 0xfffe;
+		game.World.Towns[town].StructureMarkers1 |= 0x7f;
+	};
+
+	private static readonly CityCase[] ListCases2 =
+	{
+		new("P, moved, picked", true, 1, Keys(Key(0x70), Key(0x4800), Key(0x4d00), Key(0x0d)), Choice.Biggest),
+		new("P, all ways, given up", true, 1, Keys(Key(0x70), Key(0x4700), Key(0x4900), Key(0x4f00), Key(0x5100), Key(0x4b00), Key(0x5000),
+			Key(0x5000), Key(0x5000), Key(0x5000), Key(0x1b)), Choice.Biggest),
+		new("P, to the corner, Space", true, 1, Keys(Key(0x70), Key(0x5100), Key(0x5100), Key(0x5100), Key(0x41), Key(0x20)), Choice.Last),
+		new("P, up and left to the edge", true, 1, Keys(Key(0x70), Key(0x4800), Key(0x4800), Key(0x4800), Key(0x4b00), Key(0x4b00), Key(0x4b00), Key(0x1b)), Choice.First),
+		new("P, an unseen square", true, 1, Then(UnseenEast, Keys(Key(0x70), Key(0x4d00), Key(0x0d))), Choice.Biggest),
+		new("M, a long list", true, 1, Then(Buildings(0x7ffe, 0), Keys(Key(0x4d), Key(0x4d))), Choice.Biggest),
+		new("M, a short list", true, 1, Then(Buildings(0, 0xfffe), Keys(Key(0x4d))), Choice.Biggest),
+		new("the arrow of a long list", true, 1, Then(Buildings(0x7ffe, 0), Keys(Click(288, 89), Click(300, 95))), Choice.Biggest),
+		new("around the arrow of a long list", true, 1, Then(Buildings(0x7ffe, 0), Keys(Click(287, 92), Click(300, 88), Click(300, 96))), Choice.Last),
+		new("R, renamed", true, 1, Keys(Key(0x72), Key(0x20), Key(0x41), Key(0x0d)), Choice.Biggest),
+		new("the name clicked", true, 1, Keys(Click(231, 191), Key(0x20), Key(0x42), Key(0x0d), Click(269, 199), Key(0x20), Key(0x0d)), Choice.Biggest),
+		new("around the name", true, 1, Keys(Click(230, 191), Click(250, 190), Click(270, 195)), Choice.Biggest),
+		new("a line of the list, sold", true, 1, Then(Gold(100), Keys(Click(300, 8), Key(0x5000), Key(0x0d))), Choice.Biggest),
+		new("a line of the list, kept", true, 1, Keys(Click(310, 14), Key(0x0d)), Choice.Last),
+		new("left of the list, its bottom", true, 1, Keys(Click(299, 20), Click(310, 93), Key(0x0d), Click(310, 94)), Choice.Biggest),
+		new("the walls sold", true, 1, Then(Buildings(0x80, 0xff7f), Keys(Key(0x73), Key(0x0d), Key(0x5000), Key(0x0d))), Choice.Biggest),
+		new("a line, sold this turn already", true, 1, Then((game, town) => game.World.Towns[town].ConditionMarker |= 0x80, Keys(Click(310, 8))), Choice.Biggest),
+		new("P, up right, picked", true, 1, Keys(Key(0x70), Key(0x4900), Key(0x0d)), Choice.Biggest),
+		new("P, three right, picked", true, 1, Keys(Key(0x70), Key(0x4d00), Key(0x4d00), Key(0x4d00), Key(0x0d)), Choice.Biggest),
+		new("the arrow of a full list", true, 1, Then(AllBuildings, Keys(Click(288, 89), Click(300, 95))), Choice.Biggest),
+		new("just above the arrow of a full list", true, 1, Then(AllBuildings, Keys(Click(300, 88))), Choice.Biggest),
+		new("the bottom line of a full list, sold", true, 1, Then(AllBuildings, Keys(Click(310, 94), Key(0x5000), Key(0x0d))), Choice.Biggest),
+		new("a line between two, sold", true, 1, Then(Gold(100), Keys(Click(310, 13), Key(0x5000), Key(0x0d))), Choice.Biggest),
+		new("just above the name, then a key", true, 1, Keys(Click(250, 190), Key(0x20), Key(0x43), Key(0x0d)), Choice.Biggest),
+		new("a line, sold this turn already, Yes", true, 1, Then((game, town) => game.World.Towns[town].ConditionMarker |= 0x80,
+			Keys(Click(310, 8), Key(0x5000), Key(0x0d))), Choice.Biggest),
+		new("a line of the second page", true, 1, Then(Buildings(0x7ffe, 0), Keys(Key(0x4d), Click(310, 8), Key(0x5000), Key(0x0d))), Choice.Biggest),
+	};
+
+	[Fact]
+	public void HandleCityListClickCasesMatchOriginalCode()
+	{
+		HashSet<string> ways = [];
+
+		foreach (int bay in new[] { 5, 9 })
+			CheckCases(bay, ListCases2, ways);
+	}
+
 	[Fact]
 	public void HandleCityTurnCasesMatchOriginalCode()
 	{

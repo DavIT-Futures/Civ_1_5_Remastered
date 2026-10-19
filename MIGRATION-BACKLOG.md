@@ -1070,13 +1070,21 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   budynek, strzałki, Enter albo spacja sprzedaje – L5740), `ToggleSpecialist` (1 – 9: kolejny typ specjalisty, miasto
   mniejsze niż pięć dostaje komunikat). Test `HandleCityKeyCasesMatchOriginalCode` (pomocnicy `Garrison`, `Specialists`).
   Mutacje: 17, wszystkie złapane (sześć po drugim zestawie przypadków: jednostki bez ruchów, szóste miejsce, specjaliści).
+- Porcja 137 (2026-10-19), cztery kawałki `HandleCity` (L53c8 – L58ac): `MoveCityMapCursor` (P albo flaga 0xb8: migająca
+  ramka na mapie miasta, osiem kierunków w obszarze miasta na pola widziane przez człowieka, Enter – L5aa6, Escape kasuje
+  flagę), `HandleListAndRename` z `TurnListPage` (M albo strzałka listy – druga strona, R albo klik w nazwę – zmiana nazwy,
+  klik w linię listy – sprzedaż), `SellImprovement` (L5740: menu z ceną, Yes sprzedaje). `CityScreenStep` dostał `Leave` i
+  `Sell`. Test `HandleCityListClickCasesMatchOriginalCode`. Mutacje: 17; po jednej rundzie przypadków ocalały: kolor ramki
+  (zamalowana zaraz po narysowaniu – niewidoczne), dół listy `vert < 0x5e` (klik na 94 daje tę samą linię co 93) i
+  warunek „już sprzedano” przy kliknięciu linii (przypadek z flagą 0x80 i Yes go nie rozróżnił – do sprawdzenia).
+  Uwaga: `CopyLocalWord(źródło, cel)` – przy pierwszej wersji odwróciłem argumenty, test od razu złapał.
 
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
 (`HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-19 (po porcji 136): 1 metoda w stylu asm (`HandleCity`, 8428 linii); `ShiftAIUnit` i `HandlePlayerTurn` gotowe. `HandleCity(miasto, znacznik)`: -1 tylko liczy, 0 tura miasta, 1 ekran miasta; przepisywać kawałkami od początku (po porcji 136: następny od L53c8 – kursor na mapie miasta, P). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
+Stan 2026-10-19 (po porcji 137): 1 metoda w stylu asm (`HandleCity`, 8428 linii); `ShiftAIUnit` i `HandlePlayerTurn` gotowe. `HandleCity(miasto, znacznik)`: -1 tylko liczy, 0 tura miasta, 1 ekran miasta; przepisywać kawałkami od początku (po porcji 137: następny od L58ac – kliknięcia w obywateli i mapę). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 
