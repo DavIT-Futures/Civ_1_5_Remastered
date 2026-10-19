@@ -878,13 +878,18 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   albo (komputer) bez rozkazów w stosie płyną razem, na transportowcu jako wartownicy, samoloty z rundą paliwa mniej; do
   zapełnienia (lotniskowiec i barbarzyńcy biorą wszystko). Testy: istniejące testy tur komputera. Niesprawdzone: lotniskowce
   (brak w zapisach), ładunek z bitem 3, pełna ładowność (`<=` → `<`) i barbarzyńcy (`!= 0` → `!= 1`).
+- Porcja 108 (2026-10-19): dziewiętnasty kawałek `HandlePlayerTurn` – `ArriveAtTile` (L2ff4 – L3184): zdobycie obcego
+  miasta (`SeizeCity`, jednostka pokazana jego graczowi, `TagTileOwned`), pole dla gracza (`MapAssignCityOwner`), rozejrzenie
+  się (`ShiftUnit`), wioska (`VisitHut`, znacznik w `ChartSight`), jednostka (nie statek) na morzu budzi stos (0x1560),
+  barbarzyńca widziany przez człowieka przy jego mieście. Testy: istniejące testy tur. Niesprawdzone: znacznik wioski
+  (`|= 1` → `|= 2`) i barbarzyńca przy mieście człowieka (rzadkie w turach testowych).
 
 ## Następny krok
 
 Zostały duże metody: `python Civilization1Remaster.Tests/Differential/Reference/find_asm_methods.py Civilization1Remaster.Core 99999`
 (`HandlePlayerTurn`, `HandleCity`). Dzielić na kawałki:
 wydzielać fragmenty jako osobne metody z własnymi testami, jedna sensowna porcja na commit.
-Stan 2026-10-18 (po porcji 107): 2 metody w stylu asm (`HandlePlayerTurn`, `HandleCity`); `ShiftAIUnit` gotowa. `HandlePlayerTurn` przepisywana kawałkami od początku (następny: ruch L2ff4 – L3365 – wejście do miasta – potem L3365 – koniec; testy z `HumanTurnScript`). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
+Stan 2026-10-18 (po porcji 108): 2 metody w stylu asm (`HandlePlayerTurn`, `HandleCity`); `ShiftAIUnit` gotowa. `HandlePlayerTurn` przepisywana kawałkami od początku (następny: koniec ruchu L3184 – L3365 – pokazanie ruchu – potem L3365 – koniec; testy z `HumanTurnScript`). Test: cała tura gracza (`BatchNinetyDifferentialTests` jako wzór).
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 

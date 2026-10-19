@@ -218,130 +218,8 @@ namespace Civilization1Remaster.Game
 			// Landing ends the moves; a ship takes its cargo along
 			TakeCargoAlong(participantIdx);
 		L2ff4:
-			this.processor.TestBitsByte(this.processor.PullLocalByte(0x40), 0x1);
-			if (this.processor.FlagSet.IsNotEqual) goto L2ffd;
-			goto L3054;
-
-		L2ffd:
-			this.processor.RegAcc.Value16 = (ushort)participantIdx;
-			this.processor.CompareWord(this.processor.PullLocalWord(0x48), this.processor.RegAcc.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L3008;
-			goto L3054;
-
-		L3008:
-			this.processor.RegAcc.Value16 = 0xc;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullLocalWord(0x32));
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.RegAcc.LowByte = 0x1;
-			this.processor.RegCount.LowByte = this.processor.PullLocalByte(0x48);
-			this.processor.RegAcc.LowByte = this.processor.ShiftLeftByte(this.processor.RegAcc.LowByte, this.processor.RegCount.LowByte);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81dd),
-				this.processor.BitOrByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81dd)), this.processor.RegAcc.LowByte));
-
-			this.owner.Helpers.LocateCityAtPosition(
-				this.processor.PullLocalSignedWord(0x1c),
-				this.processor.PullLocalSignedWord(0x26));
-
-			this.processor.EmitLocalWord(0x10, this.processor.RegAcc.Value16);
-
-			this.owner.Conquest.SeizeCity(participantIdx, this.processor.PullLocalSignedWord(0x10), 0);
-
-			this.owner.MapOps.TagTileOwned(
-				this.processor.PullLocalSignedWord(0x1c),
-				this.processor.PullLocalSignedWord(0x26));
-
-		L3054:
-			this.owner.MapOps.MapAssignCityOwner(participantIdx,
-				this.processor.PullLocalSignedWord(0x1c),
-				this.processor.PullLocalSignedWord(0x26));
-
-			this.owner.UnitOps.ShiftUnit(
-				this.processor.PullLocalSignedWord(0x1c),
-				this.processor.PullLocalSignedWord(0x26),
-				participantIdx,
-				this.processor.PullLocalSignedWord(0x32),
-				1);
-			
-			this.owner.MapOps.ContainsHut(
-				this.processor.PullLocalWord(0x3e),
-				this.processor.PullLocalSignedWord(0x1c),
-				this.processor.PullLocalSignedWord(0x26));
-
-			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x0);
-			if (this.processor.FlagSet.IsNotEqual) goto L309a;
-			goto L30bd;
-
-		L309a:
-			this.owner.UnitOps.VisitHut(participantIdx, this.processor.PullLocalSignedWord(0x32));
-			
-			this.owner.World.ChartSight[this.processor.PullLocalWord(0x1c),
-				this.processor.PullLocalWord(0x26)] |= 1;
-
-		L30bd:
-			this.processor.CompareWord(this.processor.PullLocalWord(0x3e), 0xa);
-			if (this.processor.FlagSet.IsEqual) goto L30c6;
-			goto L30fe;
-
-		L30c6:
-			this.processor.RegAcc.Value16 = 0xc;
-			this.processor.ScaleAccumulatorToBase(this.processor.PullLocalWord(0x32));
-			this.processor.ScaleIndexToSource(0x600, (ushort)participantIdx);
-			this.processor.RegAcc.LowByte = 0x22;
-			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d7)));
-			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
-			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1138)), 0x2);
-			if (this.processor.FlagSet.IsNotEqual) goto L30e8;
-			goto L30fe;
-
-		L30e8:
-			this.owner.UnitOps.VisitEachUnitInStack(participantIdx, this.processor.PullLocalSignedWord(0x32), 0x1560);
-
-		L30fe:
-			if (participantIdx != 0)
-				goto L3184;
-
-			this.processor.CompareWord(this.processor.PullLocalWord(0x3e), 0xa);
-			if (this.processor.FlagSet.IsNotEqual) goto L3110;
-			goto L3184;
-
-		L3110:
-			this.processor.RegSource.Value16 = 0x1;
-			this.processor.RegCount.LowByte = (byte)(this.owner.World.PersonParticipantIdx & 0xff);
-			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, this.processor.RegCount.LowByte);
-
-			this.processor.RegAcc.LowByte = (byte)this.owner.World.ChartSight[this.processor.PullLocalWord(0x1c),
-				this.processor.PullLocalWord(0x26)];
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.TestBitsWord(this.processor.RegAcc.Value16, this.processor.RegSource.Value16);
-			if (this.processor.FlagSet.IsNotEqual) goto L313b;
-			goto L3184;
-
-		L313b:
-			this.processor.RegAcc.Value16 = 0x600;
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, (ushort)participantIdx);
-			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
-			this.processor.ScaleIndex(0xc, this.processor.PullLocalWord(0x32));
-			this.processor.RegDest.Value16 = this.processor.SumWord(this.processor.RegDest.Value16, this.processor.RegAcc.Value16);
-			this.processor.RegDest.Value16 = this.processor.SumWord(this.processor.RegDest.Value16, 0x81dd);
-			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, this.processor.RegDest.Value16);
-			this.processor.SignExtendByte(this.processor.RegAcc);
-			this.processor.TestBitsWord(this.processor.RegAcc.Value16, this.processor.RegSource.Value16);
-			if (this.processor.FlagSet.IsEqual) goto L3159;
-			goto L3184;
-
-		L3159:
-			this.owner.Helpers.LocateNearestCity(
-				this.processor.PullLocalSignedWord(0x1c),
-				this.processor.PullLocalSignedWord(0x26));
-
-			if (this.owner.World.Towns[this.processor.RegAcc.Value16].ParticipantIdx == this.owner.World.PersonParticipantIdx)
-			{
-				this.processor.RegAcc.LowByte = (byte)this.owner.World.ChartSight[this.processor.PullLocalWord(0x1c),
-					this.processor.PullLocalWord(0x26)];
-
-				this.processor.EmitUInt8(this.processor.SegData.Value16, this.processor.RegDest.Value16, this.processor.BitOrByte(this.processor.PullUInt8(this.processor.SegData.Value16, this.processor.RegDest.Value16), this.processor.RegAcc.LowByte));
-			}
-
+			// The unit arrives: a city seized, the look around, a hut
+			ArriveAtTile(participantIdx);
 		L3184:
 			this.processor.RegAcc.Value16 = 0xc;
 			this.processor.ScaleAccumulatorToBase(this.processor.PullLocalWord(0x32));
@@ -4199,6 +4077,80 @@ namespace Civilization1Remaster.Game
 			}
 
 			this.processor.EmitLocalWord(0x3c, (ushort)(this.processor.PullLocalWord(0x3c) + 1));
+		}
+
+		/// <summary>
+		/// The unit arrived at 0x1c / 0x26: a foreign city there is seized (the unit shown to its player), the tile belongs to
+		/// the player, the unit looks around (ShiftUnit), a hut is visited, a unit (not a ship) at sea wakes its stack (0x1560),
+		/// a barbarian on land the human sees near his city is shown to who sees the tile. SI as the calls leave it. The locals
+		/// of HandlePlayerTurn are used as in the original.
+		/// </summary>
+		private void ArriveAtTile(short participantIdx)
+		{
+			short troopIdx = (short)this.processor.PullLocalWord(0x32);
+			short person = this.owner.World.PersonParticipantIdx;
+			int personBit = 1 << (person & 0xff);
+
+			if ((this.processor.PullLocalByte(0x40) & 1) != 0 && this.processor.PullLocalWord(0x48) != (ushort)participantIdx)
+			{
+				// A foreign city is taken
+				this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
+				this.processor.RegSource.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride);
+				this.processor.RegAcc.LowByte = (byte)(1 << (this.processor.PullLocalByte(0x48) & 0x1f));
+				this.troops.Assign(participantIdx, troopIdx, UnitMemory.ShownToParticipants,
+					(byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.ShownToParticipants) | this.processor.RegAcc.LowByte));
+
+				this.processor.EmitLocalWord(0x10, this.owner.Helpers.LocateCityAtPosition(this.processor.PullLocalSignedWord(0x1c), this.processor.PullLocalSignedWord(0x26)));
+
+				this.owner.Conquest.SeizeCity(participantIdx, this.processor.PullLocalSignedWord(0x10), 0);
+
+				this.owner.MapOps.TagTileOwned(this.processor.PullLocalSignedWord(0x1c), this.processor.PullLocalSignedWord(0x26));
+			}
+
+			this.owner.MapOps.MapAssignCityOwner(participantIdx, this.processor.PullLocalSignedWord(0x1c), this.processor.PullLocalSignedWord(0x26));
+
+			this.owner.UnitOps.ShiftUnit(
+				this.processor.PullLocalSignedWord(0x1c),
+				this.processor.PullLocalSignedWord(0x26),
+				participantIdx,
+				this.processor.PullLocalSignedWord(0x32),
+				1);
+
+			if (this.owner.MapOps.ContainsHut(this.processor.PullLocalWord(0x3e), this.processor.PullLocalSignedWord(0x1c), this.processor.PullLocalSignedWord(0x26)) != 0)
+			{
+				this.owner.UnitOps.VisitHut(participantIdx, this.processor.PullLocalSignedWord(0x32));
+
+				this.owner.World.ChartSight[this.processor.PullLocalWord(0x1c), this.processor.PullLocalWord(0x26)] |= 1;
+			}
+
+			if (this.processor.PullLocalWord(0x3e) == MapRules.OceanTerrain)
+			{
+				this.processor.RegBase.Value16 = (ushort)(this.troops.TroopKind(participantIdx, troopIdx) * UnitKindTable.Stride);
+				this.processor.RegSource.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride);
+
+				if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) != UnitKindTable.SeaUnits)
+					this.owner.UnitOps.VisitEachUnitInStack(participantIdx, this.processor.PullLocalSignedWord(0x32), 0x1560);
+			}
+
+			if (participantIdx != 0 || this.processor.PullLocalWord(0x3e) == MapRules.OceanTerrain)
+				return;
+
+			// A barbarian the human sees near his city
+			this.processor.RegSource.Value16 = (ushort)personBit;
+
+			if (((sbyte)this.owner.World.ChartSight[this.processor.PullLocalWord(0x1c), this.processor.PullLocalWord(0x26)] & personBit) == 0)
+				return;
+
+			this.processor.ScaleIndex(0xc, this.processor.PullLocalWord(0x32));
+			this.processor.RegDest.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride + UnitMemory.Origin + UnitMemory.ShownToParticipants);
+
+			if ((this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.ShownToParticipants) & personBit) == 0 &&
+				this.owner.World.Towns[this.owner.Helpers.LocateNearestCity(this.processor.PullLocalSignedWord(0x1c), this.processor.PullLocalSignedWord(0x26))].ParticipantIdx == person)
+			{
+				this.processor.RegAcc.LowByte = (byte)this.owner.World.ChartSight[this.processor.PullLocalWord(0x1c), this.processor.PullLocalWord(0x26)];
+				this.troops.Assign(participantIdx, troopIdx, UnitMemory.ShownToParticipants,
+					(byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.ShownToParticipants) | this.processor.RegAcc.LowByte));
+			}
 		}
 
 		/// <summary>
