@@ -19,8 +19,10 @@ internal static class HumanTurnScript
 	private static readonly int[] Fallback = { 0x20, 0x0d, 0x31, 0x1b };
 
 	/// <summary>Installs the keyboard on the game (call it from the Prepare of the scenario: both games get the same)</summary>
-	public static void Install(GameEngine game, IEnumerable<Input> inputs)
+	/// <remarks>The game is dynamic: the current game or the frozen one (Civilization1Original), which has the same members</remarks>
+	public static void Install(object engine, IEnumerable<Input> inputs)
 	{
+		dynamic game = engine;
 		Queue<Input> pending = new Queue<Input>(inputs);
 		int fallbackIdx = 0;
 		int typed = 0;
@@ -28,7 +30,7 @@ internal static class HumanTurnScript
 
 		game.Processor.EmitUInt16(0x3b01, 0x1a3c, 0);
 
-		game.Processor.InputStarved = waiting =>
+		game.Processor.InputStarved = (Action<bool>)(waiting =>
 		{
 			game.Processor.Idle();
 
@@ -68,6 +70,6 @@ internal static class HumanTurnScript
 
 			lock (game.VideoCard.Tokens)
 				game.VideoCard.Tokens.Enqueue(key);
-		};
+		});
 	}
 }

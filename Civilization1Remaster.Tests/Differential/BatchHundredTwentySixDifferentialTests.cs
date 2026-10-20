@@ -25,16 +25,16 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 	}
 
 	/// <summary>A case: its name, which city (the owner: human or computer; the first, last or biggest), the marker, the changes</summary>
-	public sealed record CityCase(string Name, bool Human, short Marker, Action<GameEngine, short> Setup, Choice Pick = Choice.First);
+	public sealed record CityCase(string Name, bool Human, short Marker, Action<dynamic, short> Setup, Choice Pick = Choice.First);
 
 	/// <summary>The shields of a unit kind (its price x the box of the turn of the city)</summary>
-	public static int UnitPrice(GameEngine game, int kind) =>
+	public static int UnitPrice(dynamic game, int kind) =>
 		game.Processor.Storage.PullUInt16(0x3b01, (ushort)(UnitKindTable.Origin + kind * UnitKindTable.Stride + UnitKindTable.Price));
 
 	/// <summary>A unit kind that costs at least the price (the first one), so that it is not finished in the turn</summary>
-	public static sbyte DearUnit(GameEngine game) => (sbyte)Enumerable.Range(1, 0x1a).First(kind => UnitPrice(game, kind) >= 6);
+	public static sbyte DearUnit(dynamic game) => (sbyte)Enumerable.Range(1, 0x1a).First(kind => UnitPrice(game, kind) >= 6);
 
-	private static readonly CityCase[] TurnCases =
+	internal static readonly CityCase[] TurnCases =
 	{
 		// AdviseHumanProduction
 		new("human advisor, no shields (flag 1)", true, 0, (game, town) =>
@@ -173,11 +173,11 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 	};
 
 	/// <summary>A city of the owner other than the given one (for trade routes), the first that fits</summary>
-	private static int OtherCity(GameEngine game, short town, bool sameOwner) => Enumerable.Range(0, 128).First(other =>
+	private static int OtherCity(dynamic game, short town, bool sameOwner) => Enumerable.Range(0, 128).First(other =>
 		other != town && game.World.Towns[other].ConditionMarker != 0xff &&
 		(game.World.Towns[other].ParticipantIdx == game.World.Towns[town].ParticipantIdx) == sameOwner);
 
-	private static Action<GameEngine, short> Government(short regime, bool courthouse, bool palace) => (game, town) =>
+	private static Action<dynamic, short> Government(short regime, bool courthouse, bool palace) => (game, town) =>
 	{
 		var city = game.World.Towns[town];
 		game.World.Participants[city.ParticipantIdx].RegimeKind = regime;
@@ -185,7 +185,7 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 		city.StructureMarkers0 = (ushort)(palace ? city.StructureMarkers0 | 1 : city.StructureMarkers0 & ~1);
 	};
 
-	private static Action<GameEngine, short> Routes(bool foreign, bool own) => (game, town) =>
+	private static Action<dynamic, short> Routes(bool foreign, bool own) => (game, town) =>
 	{
 		var city = game.World.Towns[town];
 		city.CommerceTownIndices[0] = (sbyte)(foreign ? OtherCity(game, town, false) : -1);
@@ -193,11 +193,11 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 		city.CommerceTownIndices[2] = -1;
 	};
 
-	private static readonly CityCase[] TradeCases =
+	internal static readonly CityCase[] TradeCases =
 	{
 		// RenderCityScreenFrames (the city screen keeps 0x2496 as set by HandleCity: 0 at its start)
 		new("city screen", true, 1, (game, town) => { }),
-		new("city screen, the mini map tab clicked", true, 1, (game, town) => HumanTurnScript.Install(game,
+		new("city screen, the mini map tab clicked", true, 1, (game, town) => HumanTurnScript.Install((object)game,
 			[new HumanTurnScript.Input(0, 1, 177, 110), new HumanTurnScript.Input(0x1b), new HumanTurnScript.Input(0x1b)])),
 
 		// CountCorruptionAndTradeRoutes
@@ -221,32 +221,32 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 			CheckCases(bay, TradeCases, ways);
 	}
 
-	private static Action<GameEngine, short> Rates(short levy, short research) => (game, town) =>
+	private static Action<dynamic, short> Rates(short levy, short research) => (game, town) =>
 	{
 		var player = game.World.Participants[game.World.Towns[town].ParticipantIdx];
 		player.LevyRatio = levy;
 		player.ResearchLevyRatio = research;
 	};
 
-	private static Action<GameEngine, short> Buildings(ushort set, ushort clear) => (game, town) =>
+	private static Action<dynamic, short> Buildings(ushort set, ushort clear) => (game, town) =>
 	{
 		var city = game.World.Towns[town];
 		city.StructureMarkers0 = (ushort)((city.StructureMarkers0 & ~clear) | set);
 	};
 
-	private static Action<GameEngine, short> Then(params Action<GameEngine, short>[] steps) => (game, town) =>
+	private static Action<dynamic, short> Then(params Action<dynamic, short>[] steps) => (game, town) =>
 	{
 		foreach (var step in steps)
 			step(game, town);
 	};
 
-	private static Action<GameEngine, short> Level(short hardness, short regime) => (game, town) =>
+	private static Action<dynamic, short> Level(short hardness, short regime) => (game, town) =>
 	{
 		game.World.HardnessTier = hardness;
 		game.World.Participants[game.World.Towns[town].ParticipantIdx].RegimeKind = regime;
 	};
 
-	private static readonly CityCase[] SplitCases =
+	internal static readonly CityCase[] SplitCases =
 	{
 		// SplitTrade
 		new("taxes 3, science 4 (luxuries 3)", false, -1, Rates(3, 4)),
@@ -281,9 +281,9 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 		new("human, small city, many content", true, -1, Then(Level(0, 6), (game, town) => game.World.Towns[town].TrueExtent = 1)),
 
 		// ApplyLuxuries (the tab 1 of the city screen clicked)
-		new("city screen, tab 1, luxuries", true, 1, Then(Rates(2, 2), (game, town) => HumanTurnScript.Install(game,
+		new("city screen, tab 1, luxuries", true, 1, Then(Rates(2, 2), (game, town) => HumanTurnScript.Install((object)game,
 			[new HumanTurnScript.Input(0, 1, 144, 110), new HumanTurnScript.Input(0x1b), new HumanTurnScript.Input(0x1b)]))),
-		new("city screen, tab 1, no luxuries", true, 1, Then(Rates(5, 5), (game, town) => HumanTurnScript.Install(game,
+		new("city screen, tab 1, no luxuries", true, 1, Then(Rates(5, 5), (game, town) => HumanTurnScript.Install((object)game,
 			[new HumanTurnScript.Input(0, 1, 144, 110), new HumanTurnScript.Input(0x1b), new HumanTurnScript.Input(0x1b)]))),
 	};
 
@@ -296,25 +296,25 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 			CheckCases(bay, SplitCases, ways);
 	}
 
-	private static Action<GameEngine, short> Diag(bool on) => (game, town) =>
+	private static Action<dynamic, short> Diag(bool on) => (game, town) =>
 		game.World.DiagMarkers = (short)(on ? game.World.DiagMarkers | 2 : game.World.DiagMarkers & ~2);
 
-	private static Action<GameEngine, short> Knows(int advance, bool known) => (game, town) =>
+	private static Action<dynamic, short> Knows(int advance, bool known) => (game, town) =>
 	{
 		ushort[] science = game.World.Participants[game.World.Towns[town].ParticipantIdx].FoundScienceMarkers;
 		science[advance >> 4] = (ushort)(known ? science[advance >> 4] | (1 << (advance & 0xf)) : science[advance >> 4] & ~(1 << (advance & 0xf)));
 	};
 
-	private static Action<GameEngine, short> Wonder(int wonder, bool here) => (game, town) =>
+	private static Action<dynamic, short> Wonder(int wonder, bool here) => (game, town) =>
 		game.World.MarvelTownIdx[wonder] = (short)(here ? town : -1);
 
-	private static Action<GameEngine, short> Size(sbyte size) => (game, town) => game.World.Towns[town].TrueExtent = size;
+	private static Action<dynamic, short> Size(sbyte size) => (game, town) => game.World.Towns[town].TrueExtent = size;
 
-	private static readonly Action<GameEngine, short> TabOne = (game, town) => HumanTurnScript.Install(game,
+	private static readonly Action<dynamic, short> TabOne = (game, town) => HumanTurnScript.Install((object)game,
 		[new HumanTurnScript.Input(0, 1, 144, 110), new HumanTurnScript.Input(0x1b), new HumanTurnScript.Input(0x1b)]);
 
 	/// <summary>The first unit of the owner made an attack unit of the city, away from it</summary>
-	private static readonly Action<GameEngine, short> UnitAway = (game, town) =>
+	private static readonly Action<dynamic, short> UnitAway = (game, town) =>
 	{
 		var city = game.World.Towns[town];
 		int troop = Enumerable.Range(0, 128).First(idx => game.Processor.Storage.PullUInt8(0x3b01, (ushort)(UnitMemory.Address(city.ParticipantIdx, idx) + UnitMemory.Kind)) != 0xff);
@@ -326,7 +326,7 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 			game.Processor.EmitUInt8(0x3b01, (ushort)(unit + UnitMemory.Horiz), (byte)((city.Place.X + 10) % 80));
 	};
 
-	private static readonly CityCase[] HappinessCases =
+	internal static readonly CityCase[] HappinessCases =
 	{
 		// ApplyContentImprovements
 		new("colosseum", false, -1, Then(Diag(true), Size(12), Buildings(0x2000, 0x408)), Choice.Biggest),
@@ -379,7 +379,7 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 	}
 
 	/// <summary>The first units of the owner made units of the city (the kind; settlers every third one when asked)</summary>
-	private static Action<GameEngine, short> Supported(int count, byte kind, bool settlers) => (game, town) =>
+	private static Action<dynamic, short> Supported(int count, byte kind, bool settlers) => (game, town) =>
 	{
 		var city = game.World.Towns[town];
 		var units = Enumerable.Range(0, 128).Where(idx => game.Processor.Storage.PullUInt8(0x3b01, (ushort)(UnitMemory.Address(city.ParticipantIdx, idx) + UnitMemory.Kind)) != 0xff).Take(count).ToList();
@@ -392,7 +392,7 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 		}
 	};
 
-	private static readonly CityCase[] SupportCases =
+	internal static readonly CityCase[] SupportCases =
 	{
 		new("computer, small city, many units", false, 0, Then(Size(1), Supported(12, 2, false))),
 		new("human, small city, many units", true, 0, Then(Size(1), Supported(12, 2, false))),
@@ -423,7 +423,7 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 				game.Processor.EmitUInt8(0x3b01, (ushort)(unit + UnitMemory.Vert), (byte)city.Place.Y);
 			}
 		}, Choice.Biggest),
-		new("city screen, the supported units tab", true, 1, Then(Supported(8, 2, true), (game, town) => HumanTurnScript.Install(game,
+		new("city screen, the supported units tab", true, 1, Then(Supported(8, 2, true), (game, town) => HumanTurnScript.Install((object)game,
 			[new HumanTurnScript.Input(0, 1, 110, 110), new HumanTurnScript.Input(0x1b), new HumanTurnScript.Input(0x1b)])), Choice.Biggest),
 	};
 
@@ -436,7 +436,7 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 			CheckCases(bay, SupportCases, ways);
 	}
 
-	private static readonly CityCase[] ListCases =
+	internal static readonly CityCase[] ListCases =
 	{
 		// CountSupportCosts
 		new("turn, units above the shields, a library", false, 0, Then(Size(1), Buildings(0x10, 0), Supported(12, 2, false), UnitAway)),
@@ -464,7 +464,7 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 			CheckCases(bay, ListCases, ways);
 	}
 
-	private static Action<GameEngine, short> Stock(short shields, short food, sbyte making) => (game, town) =>
+	private static Action<dynamic, short> Stock(short shields, short food, sbyte making) => (game, town) =>
 	{
 		var city = game.World.Towns[town];
 		city.MaterialsTally = shields;
@@ -472,7 +472,7 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 		city.PresentMakingIdx = making;
 	};
 
-	private static readonly CityCase[] BoxCases =
+	internal static readonly CityCase[] BoxCases =
 	{
 		new("city screen, no shields, no food, a unit", true, 1, Stock(0, 0, 3), Choice.Biggest),
 		new("city screen, some shields, a dear unit", true, 1, Stock(37, 15, 0xe), Choice.Biggest),
@@ -493,7 +493,7 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 			CheckCases(bay, BoxCases, ways);
 	}
 
-	private static readonly CityCase[] RowCases =
+	internal static readonly CityCase[] RowCases =
 	{
 		new("city screen, settlers and units supported", true, 1, Then(Level(1, 2), Supported(10, 2, true)), Choice.Biggest),
 		new("city screen, despotism far from the palace", true, 1, Then(Level(1, 1), Buildings(0, 0x41)), Choice.Last),
@@ -512,10 +512,10 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 			CheckCases(bay, RowCases, ways);
 	}
 
-	private static readonly Action<GameEngine, short> MiniMapTab = (game, town) => HumanTurnScript.Install(game,
+	private static readonly Action<dynamic, short> MiniMapTab = (game, town) => HumanTurnScript.Install((object)game,
 		[new HumanTurnScript.Input(0, 1, 177, 110), new HumanTurnScript.Input(0x1b), new HumanTurnScript.Input(0x1b)]);
 
-	private static readonly CityCase[] ShortfallCases =
+	internal static readonly CityCase[] ShortfallCases =
 	{
 		new("city screen, settlers eat more than the food", true, 1, Then(Size(1), Supported(8, 0, false)), Choice.First),
 		new("city screen, republic, settlers eat more than the food", true, 1, Then(Level(1, 4), Size(2), Supported(6, 0, false)), Choice.Last),
@@ -538,15 +538,15 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 			CheckCases(bay, ShortfallCases, ways);
 	}
 
-	private static Action<GameEngine, short> Keys(params HumanTurnScript.Input[] inputs) => (game, town) => HumanTurnScript.Install(game,
+	private static Action<dynamic, short> Keys(params HumanTurnScript.Input[] inputs) => (game, town) => HumanTurnScript.Install((object)game,
 		[.. inputs, new HumanTurnScript.Input(0x1b), new HumanTurnScript.Input(0x1b)]);
 
-	private static Action<GameEngine, short> Advisor(bool on) => (game, town) => game.World.Towns[town].ConditionMarker =
+	private static Action<dynamic, short> Advisor(bool on) => (game, town) => game.World.Towns[town].ConditionMarker =
 		(byte)(on ? game.World.Towns[town].ConditionMarker | 0x10 : game.World.Towns[town].ConditionMarker & ~0x10);
 
 	private static HumanTurnScript.Input Held(int horiz, int vert) => new HumanTurnScript.Input(0, 2, horiz, vert);
 
-	private static readonly CityCase[] ButtonCases =
+	internal static readonly CityCase[] ButtonCases =
 	{
 		new("city screen, an improvement it has (blinks)", true, 1, Then(Stock(5, 5, -3), Buildings(4, 0)), Choice.Biggest),
 		new("city screen, an improvement it lacks", true, 1, Then(Stock(5, 5, -3), Buildings(0, 4)), Choice.First),
@@ -586,14 +586,14 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 			CheckCases(bay, ButtonCases, ways);
 	}
 
-	private static Action<GameEngine, short> Gold(short gold) => (game, town) =>
+	private static Action<dynamic, short> Gold(short gold) => (game, town) =>
 		game.World.Participants[game.World.Towns[town].ParticipantIdx].Gold = gold;
 
 	private static HumanTurnScript.Input Key(int key) => new HumanTurnScript.Input(key);
 
 	private static HumanTurnScript.Input Click(int horiz, int vert) => new HumanTurnScript.Input(0, 1, horiz, vert);
 
-	private static readonly CityCase[] PurchaseCases =
+	internal static readonly CityCase[] PurchaseCases =
 	{
 		new("B, a unit, bought", true, 1, Then(Stock(5, 5, 2), Gold(30000), Keys(Key(0x62), Key(0x0d))), Choice.Biggest),
 		new("B, a unit, too little gold", true, 1, Then(Stock(5, 5, 2), Gold(3), Keys(Key(0x62), Key(0x0d))), Choice.Biggest),
@@ -636,7 +636,7 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 	}
 
 	/// <summary>The first units of the owner put into the city with these states and no moves left (the others there awake)</summary>
-	private static Action<GameEngine, short> Garrison(params byte[] states) => (game, town) =>
+	private static Action<dynamic, short> Garrison(params byte[] states) => (game, town) =>
 	{
 		var city = game.World.Towns[town];
 
@@ -662,10 +662,10 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 	};
 
 	/// <summary>The number of specialists (the top six bits of the workers)</summary>
-	private static Action<GameEngine, short> Specialists(int count) => (game, town) =>
+	private static Action<dynamic, short> Specialists(int count) => (game, town) =>
 		game.World.Towns[town].LaborerMarkers1 = (ushort)((game.World.Towns[town].LaborerMarkers1 & 0x3ff) | (count << 10));
 
-	private static readonly CityCase[] KeyCases =
+	internal static readonly CityCase[] KeyCases =
 	{
 		new("A, nothing sleeps", true, 1, Then(Garrison(0, 0, 0), Keys(Key(0x61))), Choice.Biggest),
 		new("A, a sentry woken", true, 1, Then(Garrison(0, 1, 0), Keys(Key(0x61), Key(0x0d))), Choice.Biggest),
@@ -699,20 +699,20 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 	}
 
 	/// <summary>The square right of the city unseen by the human</summary>
-	private static readonly Action<GameEngine, short> UnseenEast = (game, town) =>
+	private static readonly Action<dynamic, short> UnseenEast = (game, town) =>
 	{
 		var city = game.World.Towns[town];
 		game.World.ChartSight[city.Place.X + 1, city.Place.Y] = (sbyte)(game.World.ChartSight[city.Place.X + 1, city.Place.Y] & ~(1 << game.World.PersonParticipantIdx));
 	};
 
 	/// <summary>Every improvement but the palace and the wonders of the first word</summary>
-	private static readonly Action<GameEngine, short> AllBuildings = (game, town) =>
+	private static readonly Action<dynamic, short> AllBuildings = (game, town) =>
 	{
 		game.World.Towns[town].StructureMarkers0 = 0xfffe;
 		game.World.Towns[town].StructureMarkers1 |= 0x7f;
 	};
 
-	private static readonly CityCase[] ListCases2 =
+	internal static readonly CityCase[] ListCases2 =
 	{
 		new("P, moved, picked", true, 1, Keys(Key(0x70), Key(0x4800), Key(0x4d00), Key(0x0d)), Choice.Biggest),
 		new("P, all ways, given up", true, 1, Keys(Key(0x70), Key(0x4700), Key(0x4900), Key(0x4f00), Key(0x5100), Key(0x4b00), Key(0x5000),
@@ -753,7 +753,7 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 			CheckCases(bay, ListCases2, ways);
 	}
 
-	private static readonly CityCase[] ClickCases =
+	internal static readonly CityCase[] ClickCases =
 	{
 		new("the specialists clicked", true, 1, Then(Size(12), Specialists(3), Keys(Click(79, 10), Click(87, 19), Click(94, 5), Click(99, 0), Click(80, 10))), Choice.Biggest),
 		new("just past the specialists", true, 1, Then(Size(12), Specialists(3), Keys(Click(100, 10), Click(86, 10))), Choice.Biggest),
@@ -784,15 +784,15 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 			CheckCases(bay, ClickCases, ways);
 	}
 
-	private static readonly Action<GameEngine, short> Unhappy = Then(Size(14), Buildings(0, 0x2408), Level(4, 1), Rates(10, 0));
+	private static readonly Action<dynamic, short> Unhappy = Then(Size(14), Buildings(0, 0x2408), Level(4, 1), Rates(10, 0));
 
-	private static Action<GameEngine, short> Disorder(bool on) => (game, town) => game.World.Towns[town].ConditionMarker =
+	private static Action<dynamic, short> Disorder(bool on) => (game, town) => game.World.Towns[town].ConditionMarker =
 		(byte)(on ? game.World.Towns[town].ConditionMarker | 1 : game.World.Towns[town].ConditionMarker & ~1);
 
-	private static Action<GameEngine, short> Options(short set, short clear) => (game, town) =>
+	private static Action<dynamic, short> Options(short set, short clear) => (game, town) =>
 		game.World.SessionPrefMarkers = (short)((game.World.SessionPrefMarkers & ~clear) | set);
 
-	private static readonly CityCase[] OrderCases =
+	internal static readonly CityCase[] OrderCases =
 	{
 		new("human, disorder breaks out", true, 0, Then(Unhappy, Disorder(false), Options(0, 9)), Choice.Biggest),
 		new("human, disorder breaks out, the help", true, 0, Then(Unhappy, Disorder(false), Options(1, 8)), Choice.Last),
@@ -819,12 +819,12 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 			CheckCases(bay, OrderCases, ways);
 	}
 
-	private static Action<GameEngine, short> Celebrating(bool on) => (game, town) => game.World.Towns[town].ConditionMarker =
+	private static Action<dynamic, short> Celebrating(bool on) => (game, town) => game.World.Towns[town].ConditionMarker =
 		(byte)(on ? game.World.Towns[town].ConditionMarker | 0x40 : game.World.Towns[town].ConditionMarker & ~0x40);
 
-	private static Action<GameEngine, short> Happy(sbyte size, short regime) => Then(Size(size), Level(1, regime), Rates(0, 0), Buildings(0x2408, 0), Disorder(false));
+	private static Action<dynamic, short> Happy(sbyte size, short regime) => Then(Size(size), Level(1, regime), Rates(0, 0), Buildings(0x2408, 0), Disorder(false));
 
-	private static readonly CityCase[] CelebrationCases =
+	internal static readonly CityCase[] CelebrationCases =
 	{
 		new("human, the celebration starts", true, 0, Then(Happy(4, 2), Celebrating(false), Options(0, 8)), Choice.Biggest),
 		new("human, the celebration starts, the city view", true, 0, Then(Happy(4, 2), Celebrating(false), Options(8, 0)), Choice.Last),
@@ -854,7 +854,7 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 	}
 
 	/// <summary>The research of the owner of the city (the goal of the human player when the owner is human)</summary>
-	private static Action<GameEngine, short> Research(short goal, short headway, short found) => (game, town) =>
+	private static Action<dynamic, short> Research(short goal, short headway, short found) => (game, town) =>
 	{
 		var player = game.World.Participants[game.World.Towns[town].ParticipantIdx];
 		player.PresentInquiryIdx = goal;
@@ -862,13 +862,13 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 		player.FoundScienceTally = found;
 	};
 
-	private static Action<GameEngine, short> Word(ushort address, ushort value) => (game, town) => game.Processor.EmitUInt16(0x3b01, address, value);
+	private static Action<dynamic, short> Word(ushort address, ushort value) => (game, town) => game.Processor.EmitUInt16(0x3b01, address, value);
 
-	private static Action<GameEngine, short> DiagEight(bool on) => (game, town) =>
+	private static Action<dynamic, short> DiagEight(bool on) => (game, town) =>
 		game.World.DiagMarkers = (short)(on ? game.World.DiagMarkers | 8 : game.World.DiagMarkers & ~8);
 
 	/// <summary>No science from the city; the research of the human set to the cost of an advance times two, more the extra</summary>
-	private static Action<GameEngine, short> AtCost(short hardness, short found, short extra) => (game, town) =>
+	private static Action<dynamic, short> AtCost(short hardness, short found, short extra) => (game, town) =>
 	{
 		var player = game.World.Participants[game.World.Towns[town].ParticipantIdx];
 		bool human = game.World.Towns[town].ParticipantIdx == game.World.PersonParticipantIdx;
@@ -883,7 +883,7 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 		player.InquiryHeadway = (short)(2 * found * cost + extra);
 	};
 
-	private static readonly CityCase[] ScienceCases =
+	internal static readonly CityCase[] ScienceCases =
 	{
 		new("human, no goal, research 1", true, 0, Then(Research(-1, 1, 20), DiagEight(false)), Choice.Last),
 		new("human, the easiest level, found by others (4)", true, 0, Then(Level(0, 2), Rates(0, 10), Knows(0x30, false), Research(0x30, 10, 20),
@@ -925,13 +925,13 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 			CheckCases(bay, ScienceCases, ways);
 	}
 
-	private static readonly Action<GameEngine, short> Smoky = Then(Size(25), Buildings(0xc000, 0x1000), Knows(0x23, true), Knows(0x3a, true),
+	private static readonly Action<dynamic, short> Smoky = Then(Size(25), Buildings(0xc000, 0x1000), Knows(0x23, true), Knows(0x3a, true),
 		Knows(0x29, true), Knows(0x3c, true));
 
-	private static Action<GameEngine, short> NuclearPlant(bool known) => Then((game, town) => game.World.Towns[town].StructureMarkers1 |= 0x10,
+	private static Action<dynamic, short> NuclearPlant(bool known) => Then((game, town) => game.World.Towns[town].StructureMarkers1 |= 0x10,
 		Disorder(true), Knows(0x42, known));
 
-	private static readonly CityCase[] PollutionCases =
+	internal static readonly CityCase[] PollutionCases =
 	{
 		new("human, a smoky big city", true, 0, Smoky, Choice.Biggest),
 		new("human, a smoky big city, the last", true, 0, Smoky, Choice.Last),
@@ -959,7 +959,7 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 			CheckCases(bay, PollutionCases, ways);
 	}
 
-	private static readonly CityCase[] UpkeepCases =
+	internal static readonly CityCase[] UpkeepCases =
 	{
 		new("human, poor, every improvement", true, 0, Then(AllBuildings, Gold(0), Level(1, 2)), Choice.Biggest),
 		new("human, a little money, level 2", true, 0, Then(AllBuildings, Gold(12), Level(2, 2), Knows(0x22, false), Knows(0x25, false)), Choice.Biggest),
@@ -1031,7 +1031,7 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 				$"{current.Name}: HandleCity({townIdx}, {current.Marker})",
 				game =>
 				{
-					HumanTurnScript.Install(game, [new HumanTurnScript.Input(0x1b), new HumanTurnScript.Input(0x1b)]);
+					HumanTurnScript.Install((object)game, [new HumanTurnScript.Input(0x1b), new HumanTurnScript.Input(0x1b)]);
 					current.Setup(game, townIdx);
 					gold = game.World.Participants[owner].Gold;
 				},

@@ -1146,6 +1146,9 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   testowych dla niej (`Tests/Frozen`), `DualGame`, `MovedData`, `DualTurnTests` (11 autozapisów × 5 tur, zgodne; mutacje
   5 z 5). Uwaga: `check_mutations.py` kopiuje do roboczych kopii tylko nowe pliki `.cs` – nowy projekt trzeba najpierw
   zacommitować.
+- B0, część 2 (2026-10-20): `DualCityCaseTests` – wszystkie 19 tabel `HandleCity` na zamrożonej i obecnej grze; ustawienia
+  przypadków (`CityCase.Setup`) i `HumanTurnScript.Install` przyjmują grę jako `dynamic`, tabele są `internal`. Mutacje 18 z
+  21; pełny zestaw 744 zielony.
 
 ## Następny krok
 

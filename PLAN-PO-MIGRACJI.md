@@ -85,8 +85,11 @@ do pól C#, takie porównanie przestanie mieć sens. Potrzebne:
    SP, ekrany) plus `MovedData` – dane przeniesione z pamięci porównywane po znaczeniu (`moved.klucz`), a ich adresy
    pomijane w stronach pamięci po obu stronach. Każdy krok B dopisuje wpis. **Zrobione** (lista jeszcze pusta).
 3. Podwójna gra: `DualGame` (zamrożony i obecny silnik z tego samego autozapisu); `DualTurnTests` – 5 tur z 11
-   autozapisów, 25 s, kontrolne mutacje 5 z 5. **Zrobione.** Dalej: tabele przypadków `HandleCity` na obu silnikach
-   (punkt kontrolny i ustawienia stanu w obu), wywołania pojedynczych funkcji.
+   autozapisów, 25 s, kontrolne mutacje 5 z 5. **Zrobione.** `DualCityCaseTests` – 19 tabel przypadków `HandleCity` na
+   obu silnikach (punkt kontrolny w obu, ustawienia stanu przez `dynamic`, porównanie stanu, AX i wyjątków), 47 s;
+   kontrolne mutacje 18 z 21 (ocalały zmiany widoczne tylko w zmiennych lokalnych na stosie i zaraz zamalowanym obrazie
+   – dawne testy porównywały stos – oraz próg kosztu nauki komputera, do którego żaden przypadek nie dochodzi).
+   **Zrobione.** Wywołania innych pojedynczych funkcji dochodzą w krokach B, gdy będą potrzebne.
 4. Stare testy różnicowe zostają, dopóki działają; krok B, który unieważnia test, usuwa go, gdy podwójna gra pokrywa
    funkcję (sprawdzone mutacjami).
 
