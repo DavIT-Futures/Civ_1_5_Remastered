@@ -134,12 +134,8 @@ namespace Civilization1Remaster.Engine
 						}
 
 						ushort rawLine = (ushort)((short)this.owner.GlobDb3e - (short)vertLoc - 4);
-						this.processor.RegAcc.Value16 = rawLine;
-						this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
 						this.processor.RegCount.Value16 = this.processor.PullGlobalWord(0x2fa4);
-						this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
-
-						currentChoice = (ushort)(this.processor.RegAcc.Value16 - this.processor.PullGlobalWord(0xb1ec));
+						currentChoice = (ushort)(DivideWords(rawLine, this.processor.RegCount.Value16) - this.processor.PullGlobalWord(0xb1ec));
 
 						if (horizLoc > (short)this.owner.GlobDb3c || (short)this.owner.GlobDb3c > this.processor.PullGlobalSignedWord(0xde0e))
 						{
@@ -459,9 +455,7 @@ namespace Civilization1Remaster.Engine
 			ushort rightEdge = (ushort)(horizLoc + this.processor.PullGlobalWord(0xd4c8) + 8);
 			this.processor.EmitGlobalWord(0xde0e, rightEdge);
 
-			this.processor.RegAcc.Value16 = (ushort)clampedLines;
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.PullGlobalWord(0x2fa4));
-			ushort bottomEdge = (ushort)(this.processor.RegAcc.Value16 + vertLoc + 6);
+			ushort bottomEdge = (ushort)(MultiplyWords((ushort)clampedLines, this.processor.PullGlobalWord(0x2fa4)) + vertLoc + 6);
 
 			if (this.processor.PullGlobalWord(0x2fa0) != 0)
 			{

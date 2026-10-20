@@ -1001,19 +1001,15 @@ namespace Civilization1Remaster.Game
 						if (role == 1)
 						{
 							this.processor.RegSource.Value16 = (ushort)(this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, stack, 2) + 1);
-							this.processor.RegAcc.Value16 = (ushort)(this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, stack, 1) << 2);
-							this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-							this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegSource.Value16);
-							this.processor.EmitLocalWord(0x10, (ushort)(this.processor.PullLocalWord(0x10) + this.processor.RegAcc.Value16));
+							ushort share = DivideWords((ushort)(this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, stack, 1) << 2), this.processor.RegSource.Value16);
+							this.processor.EmitLocalWord(0x10, (ushort)(this.processor.PullLocalWord(0x10) + share));
 						}
 
 						if (role == 2)
 						{
 							this.processor.RegSource.Value16 = (ushort)(this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, stack, 1) + 1);
-							this.processor.RegAcc.Value16 = (ushort)(this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, stack, 3) << 1);
-							this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-							this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegSource.Value16);
-							this.processor.EmitLocalWord(0x10, (ushort)(this.processor.PullLocalWord(0x10) + this.processor.RegAcc.Value16));
+							ushort share = DivideWords((ushort)(this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, stack, 3) << 1), this.processor.RegSource.Value16);
+							this.processor.EmitLocalWord(0x10, (ushort)(this.processor.PullLocalWord(0x10) + share));
 						}
 					}
 					else
@@ -1110,13 +1106,10 @@ namespace Civilization1Remaster.Game
 			this.processor.EmitLocalWord(0x5a, this.owner.Combat.SettleBattle(participantIdx, troopIdx,
 				(short)this.processor.PullLocalWord(0x58), (short)this.processor.PullLocalWord(0x24), 0));
 
-			this.processor.RegAcc.Value16 = (ushort)(this.owner.UnitOps.TallyUnitsByDomainInStack((short)this.processor.PullLocalWord(0x58),
-				(short)this.processor.PullLocalWord(0x24), 0) + 1);
-			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.PullLocalWord(0x5a));
-			this.processor.EmitLocalWord(0x5a, this.processor.RegAcc.Value16);
-			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
-			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.troops.KindField(participantIdx, troopIdx, UnitKindTable.Price));
-			this.processor.EmitLocalWord(0x5a, this.processor.RegAcc.Value16);
+			ushort losses = MultiplyWords((ushort)(this.owner.UnitOps.TallyUnitsByDomainInStack((short)this.processor.PullLocalWord(0x58),
+				(short)this.processor.PullLocalWord(0x24), 0) + 1), this.processor.PullLocalWord(0x5a));
+			this.processor.EmitLocalWord(0x5a, losses);
+			this.processor.EmitLocalWord(0x5a, DivideWords(losses, this.troops.KindField(participantIdx, troopIdx, UnitKindTable.Price)));
 
 			if ((this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) != 0)
 				this.processor.EmitLocalWord(0x5a, (ushort)(this.processor.PullLocalWord(0x5a) * 3));
@@ -1279,12 +1272,9 @@ namespace Civilization1Remaster.Game
 				this.processor.RegCount.Value16 = (ushort)stack;
 				this.processor.RegSource.Value16 = (ushort)stack;
 
-				this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, troopIdx, 1);
-				this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.PullLocalWord(0x10));
-				this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
+				ushort weighed = MultiplyWords(this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, troopIdx, 1), this.processor.PullLocalWord(0x10));
 				// (the original divides by SI as the tally leaves it, not by the number of units kept there)
-				this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegSource.Value16);
-				this.processor.EmitLocalWord(0x10, this.processor.RegAcc.Value16);
+				this.processor.EmitLocalWord(0x10, DivideWords(weighed, this.processor.RegSource.Value16));
 			}
 
 			if ((short)this.processor.PullLocalWord(0x10) > (short)this.processor.PullLocalWord(0x28))
@@ -1441,11 +1431,10 @@ namespace Civilization1Remaster.Game
 					// The leader's wish for cities (word 0x1514 by the leader) times the places on the continent, against 16 per city
 					ushort continent = this.processor.PullLocalWord(0x1a);
 					short wish = (short)(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(0x1514 + 0x3a * player.ChiefVisuals)) + 1);
-					this.processor.RegAcc.Value16 = (ushort)wish;
-					this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, (ushort)this.owner.World.Landmasses[continent].ConstructionSpotTally);
+					short wanted = (short)MultiplyWords((ushort)wish, (ushort)this.owner.World.Landmasses[continent].ConstructionSpotTally);
 					this.processor.RegData.Value16 = (ushort)(player.Landmasses[continent].TownTally << 4);
 
-					if ((short)this.processor.RegAcc.Value16 > (short)this.processor.RegData.Value16)
+					if (wanted > (short)this.processor.RegData.Value16)
 						return 0;
 				}
 
@@ -1818,10 +1807,10 @@ namespace Civilization1Remaster.Game
 				this.processor.EmitLocalWord(0x26, this.processor.RegAcc.Value16);
 
 				// (the registers of the multiplication as in the original)
-				this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 + 0x18e4));
-				this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.PullLocalWord(0x40));
+				ushort step = MultiplyWords(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 + 0x18e4)),
+					this.processor.PullLocalWord(0x40));
 				this.processor.RegCount.Value16 = this.troops.Pull(participantIdx, troopIdx, UnitMemory.Vert);
-				this.processor.EmitLocalWord(0x2e, (ushort)(this.processor.RegAcc.Value16 + this.processor.RegCount.Value16));
+				this.processor.EmitLocalWord(0x2e, (ushort)(step + this.processor.RegCount.Value16));
 
 				short horizLoc = (short)this.processor.PullLocalWord(0x26);
 				short vertLoc = (short)this.processor.PullLocalWord(0x2e);

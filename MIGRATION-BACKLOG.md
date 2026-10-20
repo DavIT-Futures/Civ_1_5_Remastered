@@ -1135,6 +1135,10 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   `RestoreShieldsAndTrade`, klasa bazowa `GameModule` dla 43 klas. Pełny zestaw zielony.
 - Porządki po migracji, porcja 2 (2026-10-19, część A punkty 4 i 6): `GameMessage` (176 łańcuchów wiadomości), `WriteReplayEntry`,
   `MaskNeighbours`, `UnitMemory.Offset`, `StartTerrainWork`, `CountSpecialSlots`. Pełny zestaw zielony.
+- Resztki asm (2026-10-20): `DeactivateMouse` bez `goto` (ostatnie w projekcie), `MultiplyWords` / `DivideWords` w `GameModule`
+  zamiast sekwencji IMUL / CWD+IDIV w AIPlayer (6 miejsc) i DialogDrawing (2), `settlement.Structures` w CityView. Rejestry
+  zostają ustawione jak w oryginale. Pełny zestaw zielony; mutacje: rozszerzenie znaku w `DivideWords` i warunek w
+  `DeactivateMouse` przeżyły – w grze dzielne są nieujemne, a AX/BX po `DeactivateMouse` nikt nie czyta.
 
 ## Następny krok
 

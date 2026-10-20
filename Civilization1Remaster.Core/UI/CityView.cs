@@ -190,7 +190,7 @@ namespace Civilization1Remaster.UI
 
 			for (int idx = 23; idx > 0; idx--)
 			{
-				while (idx > 0 && (((1 << idx) & this.processor.JoinDoubleWord(settlement.StructureMarkers0, settlement.StructureMarkers1)) == 0 ||
+				while (idx > 0 && (((1 << idx) & settlement.Structures) == 0 ||
 					idx == 7 || idx == 8 || idx == 12 || idx == 18 || idx == 19))
 				{
 					idx--;

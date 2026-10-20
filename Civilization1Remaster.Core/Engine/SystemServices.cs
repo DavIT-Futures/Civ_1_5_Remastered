@@ -1124,19 +1124,18 @@ namespace Civilization1Remaster.Engine
 		{
 			this.processor.Journal.OpenScope("DeactivateMouse()");
 
-			// function body
-			this.processor.RegAcc.LowByte = 0x0;
-			this.processor.Scratch.LowByte = this.processor.PullGlobalByte(0x587d);
-			this.processor.EmitGlobalByte(0x587d, this.processor.RegAcc.LowByte);
-			this.processor.RegAcc.LowByte = this.processor.Scratch.LowByte;
-			this.processor.RegAcc.LowByte = this.processor.BitOrByte(this.processor.RegAcc.LowByte, this.processor.RegAcc.LowByte);
-			if (this.processor.FlagSet.IsEqual) goto L1696;
+			// The flag 0x587d of the mouse cleared; when it was on, AX -1 and BX 2 (as the original leaves them)
+			byte active = this.processor.PullGlobalByte(0x587d);
+			this.processor.Scratch.LowByte = active;
+			this.processor.EmitGlobalByte(0x587d, 0);
+			this.processor.RegAcc.LowByte = this.processor.BitOrByte(active, active);
 
-			this.processor.RegAcc.Value16 = 0xffff;
-			this.processor.RegBase.Value16 = 2;
+			if (active != 0)
+			{
+				this.processor.RegAcc.Value16 = 0xffff;
+				this.processor.RegBase.Value16 = 2;
+			}
 
-		L1696:
-			// Far return
 			this.processor.Journal.CloseScope("DeactivateMouse");
 		}
 
