@@ -2046,8 +2046,7 @@ namespace Civilization1Remaster.Game
 
 			if (town.ParticipantIdx == participantIdx)
 			{
-				this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
-				this.processor.EmitLocalWord(0x3a, this.processor.RegAcc.Value16);
+				this.processor.EmitLocalWord(0x3a, this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80));
 			}
 			else
 			{
@@ -2223,9 +2222,7 @@ namespace Civilization1Remaster.Game
 				this.owner.Libc.AppendText(0xba06,
 					this.owner.Libc.IntegerToText((sbyte)this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d8)), 10));
 				this.owner.Libc.AppendText(0xba06, "/3 strength?\n Cancel\n Attack\n");
-				this.owner.TurnHooks.DisplayDialog(0xba06, 100, 16);
-
-				if (this.processor.RegAcc.Value16 == 1)
+				if (this.owner.TurnHooks.DisplayDialog(0xba06, 100, 16) == 1)
 					return true;
 
 				this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + UnitMemory.Origin + UnitMemory.TravelHoriz), 0xff);
@@ -3347,9 +3344,7 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.EmitGlobalByte(0xba06, 0);
 			this.owner.BlockText.DisplayTextDialog(0x1f6a);
-			this.owner.TurnHooks.DisplayDialog(0xba06, 64, 80);
-
-			if (this.processor.RegAcc.Value16 != 1)
+			if (this.owner.TurnHooks.DisplayDialog(0xba06, 64, 80) != 1)
 				return;
 
 			this.processor.RegSource.Value16 = (ushort)(participantIdx << 1);
@@ -3386,9 +3381,7 @@ namespace Civilization1Remaster.Game
 			this.processor.EmitLocalWord(0x3a, (ushort)rate);
 			this.processor.EmitGlobalWord(0x2f9a, (ushort)participant.LevyRatio);
 
-			this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
-
-			this.processor.EmitLocalWord(0x3a, this.processor.RegAcc.Value16);
+			this.processor.EmitLocalWord(0x3a, this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80));
 
 			if (this.processor.PullLocalWord(0x3a) == 0xffff)
 				return;
@@ -3424,9 +3417,7 @@ namespace Civilization1Remaster.Game
 			this.processor.EmitLocalWord(0x3a, (ushort)rate);
 			this.processor.EmitGlobalWord(0x2f9a, (ushort)-(participant.LevyRatio + participant.ResearchLevyRatio - 10));
 
-			this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
-
-			this.processor.EmitLocalWord(0x3a, this.processor.RegAcc.Value16);
+			this.processor.EmitLocalWord(0x3a, this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80));
 
 			if (this.processor.PullLocalWord(0x3a) == 0xffff)
 				return;

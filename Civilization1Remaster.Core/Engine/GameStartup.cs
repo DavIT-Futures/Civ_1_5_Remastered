@@ -284,8 +284,8 @@ namespace Civilization1Remaster.Engine
 		/// asking; marker 0xffff: ask once even when it is there (then marker 1). The message is made in a buffer in the stack
 		/// frame, like in the original.
 		/// </summary>
-		/// <remarks>In AX: 1 when found at once with marker 0, else the marker</remarks>
-		public void QueryForDisk(ushort diskIdx, ushort marker)
+		/// <returns>1 when found at once with marker 0, else the marker (also left in AX)</returns>
+		public ushort QueryForDisk(ushort diskIdx, ushort marker)
 		{
 			this.processor.Journal.OpenScope($"QueryForDisk({diskIdx}, {marker})");
 
@@ -350,6 +350,8 @@ namespace Civilization1Remaster.Engine
 			this.processor.LeaveFrame();
 
 			this.processor.Journal.CloseScope("QueryForDisk");
+
+			return result;
 		}
 
 		/// <summary>

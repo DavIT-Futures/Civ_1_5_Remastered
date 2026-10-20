@@ -59,9 +59,7 @@ namespace Civilization1Remaster.UI
 
 			do
 			{
-				this.owner.Startup.QueryForDisk(this.processor.PullLocalWord(IntroColumn), 0);
-
-				if (this.processor.RegAcc.Value16 == 0)
+				if (this.owner.Startup.QueryForDisk(this.processor.PullLocalWord(IntroColumn), 0) == 0)
 					break;
 
 				this.processor.EmitGlobalWord(0xdeba, (ushort)(this.processor.PullLocalWord(IntroColumn) + 1));

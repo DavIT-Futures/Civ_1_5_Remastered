@@ -1224,8 +1224,7 @@ namespace Civilization1Remaster.Game
 
 				if ((town.ConditionMarker & 0x10) == 0 && built != 1)
 				{
-					this.owner.Startup.QueryForDisk(1, 0);
-					screen = this.processor.RegAcc.Value16 != 0;
+					screen = this.owner.Startup.QueryForDisk(1, 0) != 0;
 				}
 			}
 

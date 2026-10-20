@@ -297,9 +297,7 @@ namespace Civilization1Remaster.Game
 						break;
 					}
 
-					this.owner.TurnHooks.DisplayDialog(0xba06, 100, 64);
-
-					short choice = (short)this.processor.RegAcc.Value16;
+					short choice = (short)this.owner.TurnHooks.DisplayDialog(0xba06, 100, 64);
 
 					if (choice >= 0)
 					{

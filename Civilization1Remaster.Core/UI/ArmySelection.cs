@@ -33,9 +33,7 @@ namespace Civilization1Remaster.UI
 				this.owner.Libc.AppendText(0xba06, "\n ");
 			}
 
-			this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
-
-			short chosenIdx = (short)(this.processor.RegAcc.Value16 + 1);
+			short chosenIdx = (short)(this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80) + 1);
 
 			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), 0, 0, 0x140, 0xc8,
 				this.processor.PullGlobalWord(0x19d4), 0, 0);

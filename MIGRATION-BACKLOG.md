@@ -1155,6 +1155,9 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   PlayerEnjoysWonderEffect, ObtainDistance, ObtainNavigationKey, ObtainTileOwner, ObtainTextWidth, VerifyMapLimits,
   ObtainDot, TunePosition, PickCityProduction, ObtainTerrainType, LocateNearestCity, ObtainCitizenType, AbsoluteValue,
   ObtainDistanceToCapital, ObtainTileImprovements, TallyUnitsByDomainInStack) – 117 miejsc w 25 plikach. Pełny zestaw zielony.
+- B1, porcja 3 (2026-10-20): `DisplayDialog` i `QueryForDisk` zwracają wynik (`ushort`, dalej też w AX); 25 miejsc bierze go
+  z `return`. Pozostałe „void z odczytem AX” z listy skryptu to fałszywe trafienia (AX z wcześniejszego wywołania) albo
+  `TagTileOwned` – do obejrzenia ręcznie. Pełny zestaw zielony.
 
 ## Następny krok
 

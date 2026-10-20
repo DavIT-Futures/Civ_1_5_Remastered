@@ -60,9 +60,7 @@ namespace Civilization1Remaster.Game
 				if (ownerIdx == 0)
 					this.processor.EmitGlobalByte(0xb276, (byte)(this.processor.PullGlobalByte(0xb276) | 0x20));
 
-				this.owner.TurnHooks.DisplayDialog(0xba06, 80, 80);
-
-				choice = this.processor.RegAcc.Value16;
+				choice = this.owner.TurnHooks.DisplayDialog(0xba06, 80, 80);
 				this.processor.EmitLocalWord(0x24, choice);
 			}
 			else
@@ -328,9 +326,7 @@ namespace Civilization1Remaster.Game
 
 			this.processor.EmitGlobalWord(0x2f9e, 0x0);
 
-			this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
-
-			short choice = (short)this.processor.RegAcc.Value16;
+			short choice = (short)this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
 			this.processor.EmitLocalWord(0x24, (ushort)choice);
 
 			if (choice < 1)
@@ -426,9 +422,7 @@ namespace Civilization1Remaster.Game
 
 			if (participantIdx1 == humanIdx)
 			{
-				this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
-
-				if (this.processor.RegAcc.Value16 != 1)
+				if (this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80) != 1)
 					return;
 			}
 
@@ -491,9 +485,7 @@ namespace Civilization1Remaster.Game
 			this.processor.EnterFrame(0x3a);
 			this.processor.PreserveSource();
 
-			this.owner.Startup.QueryForDisk(1, 0);
-
-			if (this.processor.RegAcc.Value16 != 0)
+			if (this.owner.Startup.QueryForDisk(1, 0) != 0)
 			{
 				ushort pictures = (ushort)(this.processor.RegFrame.Value16 - 0x38);
 
@@ -758,9 +750,7 @@ namespace Civilization1Remaster.Game
 			this.processor.EnterFrame(0x10);
 			this.processor.PreserveSource();
 
-			this.owner.Startup.QueryForDisk(1, 0);
-
-			if (this.processor.RegAcc.Value16 != 0)
+			if (this.owner.Startup.QueryForDisk(1, 0) != 0)
 			{
 				ushort figures = (ushort)(this.processor.RegFrame.Value16 - 0x8);
 

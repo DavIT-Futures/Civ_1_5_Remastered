@@ -30,9 +30,7 @@ namespace Civilization1Remaster.UI
 			{
 				if (this.processor.PullGlobalWord(0x680e) == 0)
 				{
-					this.owner.TurnHooks.DisplayDialog(0x3fb0, 100, 80);
-
-					this.processor.EmitGlobalWord(0x680a, this.processor.RegAcc.Value16);
+					this.processor.EmitGlobalWord(0x680a, this.owner.TurnHooks.DisplayDialog(0x3fb0, 100, 80));
 				}
 				else
 				{

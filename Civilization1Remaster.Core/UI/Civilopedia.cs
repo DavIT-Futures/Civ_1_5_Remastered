@@ -369,8 +369,7 @@ namespace Civilization1Remaster.UI
 			ushort diskStatus = 0xffff;
 			if (this.processor.PullGlobalWord(0xe17c) != 0x3)
 			{
-				this.owner.Startup.QueryForDisk(3, 0);
-				diskStatus = this.processor.RegAcc.Value16;
+				diskStatus = this.owner.Startup.QueryForDisk(3, 0);
 				if (diskStatus == 0)
 				{
 					this.processor.EmitGlobalWord(0x3c62, 0x1);
@@ -504,8 +503,7 @@ namespace Civilization1Remaster.UI
 					break;
 
 				case 1:
-					this.owner.Startup.QueryForDisk(1, 0);
-					if (this.processor.RegAcc.Value16 == 0)
+					if (this.owner.Startup.QueryForDisk(1, 0) == 0)
 					{
 						this.processor.EmitGlobalWord(0x3c62, 0x1);
 					}

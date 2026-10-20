@@ -809,9 +809,7 @@ namespace Civilization1Remaster.UI
 					if (complete == 3)
 						break;
 
-					this.owner.TurnHooks.DisplayDialog(0x4df9, 100, 80);
-
-					kind = (short)(this.processor.RegAcc.Value16 + 3);
+					kind = (short)(this.owner.TurnHooks.DisplayDialog(0x4df9, 100, 80) + 3);
 					this.processor.EmitLocalWord(0x16, (ushort)kind);
 
 					if (kind == 2)
@@ -829,9 +827,7 @@ namespace Civilization1Remaster.UI
 					if (complete == 7)
 						break;
 
-					this.owner.TurnHooks.DisplayDialog(0x4e12, 100, 80);
-
-					kind = (short)(this.processor.RegAcc.Value16 + 6);
+					kind = (short)(this.owner.TurnHooks.DisplayDialog(0x4e12, 100, 80) + 6);
 					this.processor.EmitLocalWord(0x16, (ushort)kind);
 
 					if (kind == 5)
@@ -1011,9 +1007,7 @@ namespace Civilization1Remaster.UI
 
 				this.processor.EmitGlobalWord(0xb276, (ushort)((ushort)(this.owner.World.StarshipMarkers >> 9) ^ 0xff));
 
-				this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
-
-				short chosenIdx = (short)(this.processor.RegAcc.Value16 + 1);
+				short chosenIdx = (short)(this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80) + 1);
 
 				if (chosenIdx > 0)
 				{

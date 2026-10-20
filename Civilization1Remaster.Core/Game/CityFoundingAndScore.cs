@@ -210,9 +210,7 @@ namespace Civilization1Remaster.Game
 
 				if ((this.owner.World.SessionPrefMarkers & 8) != 0)
 				{
-					this.owner.Startup.QueryForDisk(1, 0);
-
-					if (this.processor.RegAcc.Value16 != 0)
+					if (this.owner.Startup.QueryForDisk(1, 0) != 0)
 						this.owner.Diplomats.ExamineCity(townIdx);
 				}
 

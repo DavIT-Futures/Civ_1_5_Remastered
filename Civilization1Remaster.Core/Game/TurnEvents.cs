@@ -117,9 +117,9 @@ namespace Civilization1Remaster.Game
 
 		/// <summary>
 		/// Shows the text as a dialog (DisplayMenu) and puts back the screen as it was before (kept in the back screen 0x19d4);
-		/// the answer of DisplayMenu stays in AX
+		/// the answer of DisplayMenu given back (and left in AX)
 		/// </summary>
-		public void DisplayDialog(ushort charsAddr, int horizLoc, int vertLoc)
+		public ushort DisplayDialog(ushort charsAddr, int horizLoc, int vertLoc)
 		{
 			this.processor.Journal.OpenScope($"DisplayDialog(0x{charsAddr:x4}, {horizLoc}, {vertLoc})");
 
@@ -142,6 +142,8 @@ namespace Civilization1Remaster.Game
 			this.processor.RegAcc.Value16 = answer;
 
 			this.processor.Journal.CloseScope("DisplayDialog");
+
+			return answer;
 		}
 
 		/// <summary>

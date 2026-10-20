@@ -1092,9 +1092,7 @@ namespace Civilization1Remaster.UI
 
 				this.owner.Startup.DisplayMouseCursorFully();
 
-				this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
-
-				this.processor.EmitGlobalWord(0x3934, (ushort)-this.processor.RegAcc.Value16);
+				this.processor.EmitGlobalWord(0x3934, (ushort)-this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80));
 
 				this.owner.Startup.ConcealMouseCursorToSavedLevel();
 
@@ -1440,9 +1438,7 @@ namespace Civilization1Remaster.UI
 			}
 			else
 			{
-				this.owner.Startup.QueryForDisk(2, 0);
-
-				if (this.processor.RegAcc.Value16 == 0)
+				if (this.owner.Startup.QueryForDisk(2, 0) == 0)
 				{
 					DisplayKingLine(participantIdx);
 
@@ -1515,9 +1511,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0x19d4), 0, 0);
 
-			this.owner.Startup.QueryForDisk(2, 0);
-
-			if (this.processor.RegAcc.Value16 != 0)
+			if (this.owner.Startup.QueryForDisk(2, 0) != 0)
 			{
 				NameAdvisorsPicture(pictureName, participantIdx, false);
 

@@ -1391,9 +1391,7 @@ namespace Civilization1Remaster.Game
 
 			if (human.PresentInquiryIdx != 71 && (short)this.processor.PullGlobalWord(0xdeba) > 3)
 			{
-				this.owner.Startup.QueryForDisk(1, 0);
-
-				if (this.processor.RegAcc.Value16 != 0 && (this.owner.World.SessionPrefMarkers & 8) != 0)
+				if (this.owner.Startup.QueryForDisk(1, 0) != 0 && (this.owner.World.SessionPrefMarkers & 8) != 0)
 				{
 					picture = true;
 					this.processor.EmitLocalWord(0x42, 1);
