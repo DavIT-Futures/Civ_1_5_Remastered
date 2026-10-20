@@ -319,9 +319,7 @@ namespace Civilization1Remaster.Engine
 			// function body
 			this.processor.EnterFrame();
 			
-			this.owner.Libc.DosReleaseMemory(arg1);
-
-			if (this.processor.RegAcc.Value16 != 0)
+			if (!this.owner.Libc.DosReleaseMemory(arg1))
 			{
 				this.owner.Libc.CopyText(0xba06, "MEM.ERR:");
 

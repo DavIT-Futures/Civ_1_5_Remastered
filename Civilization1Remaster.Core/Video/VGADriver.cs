@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -112,7 +112,6 @@ namespace Civilization1Remaster.Video
 		{
 			// function body
 			this.processor.RegAcc.Value16 = (ushort)((this.processor.Storage.UnusedStorage.Extent >> 4) & 0xffff);
-			this.processor.FlagSet.IsCarry = true;
 
 			return this.processor.RegAcc.Value16;
 		}

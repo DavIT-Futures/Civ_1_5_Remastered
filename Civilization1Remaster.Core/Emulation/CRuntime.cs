@@ -133,41 +133,34 @@ namespace Civilization1Remaster.Emulation
 			this.processor.Journal.CloseScope("MoveFarData");
 		}
 
-		public void DosReleaseMemory(ushort section)
+		/// <summary>
+		/// Frees the memory block (a picture from 0xb000 up). True: freed (AX 0); false: no such block (AX 9, the DOS error
+		/// of an invalid block)
+		/// </summary>
+		public bool DosReleaseMemory(ushort section)
 		{
 			this.processor.Journal.OpenScope($"DosReleaseMemory(0x{section:x4})");
 
-			// function body
+			bool released;
+
 			if (section >= 0xb000)
 			{
 				// this is a graphics bitmap
-				if (this.owner.VideoCard.Pictures.IncludesKey(section))
-				{
-					this.owner.VideoCard.Pictures.DiscardByKey(section);
-
-					this.processor.FlagSet.IsCarry = false;
-					this.processor.RegAcc.Value16 = 0;
-				}
-				else
-				{
+				if (!this.owner.VideoCard.Pictures.IncludesKey(section))
 					throw new Exception($"The bitmap 0x{section:x4} is not allocated");
-				}
+
+				this.owner.VideoCard.Pictures.DiscardByKey(section);
+				released = true;
 			}
 			else
 			{
-				if (this.processor.Storage.ReleaseStorageChunk(section))
-				{
-					this.processor.FlagSet.IsCarry = false;
-					this.processor.RegAcc.Value16 = 0x0;
-				}
-				else
-				{
-					this.processor.FlagSet.IsCarry = true;
-					this.processor.RegAcc.Value16 = 9; // Invalid memory block uiAddress
-				}
+				released = this.processor.Storage.ReleaseStorageChunk(section);
 			}
 
+			this.processor.RegAcc.Value16 = (ushort)(released ? 0 : 9);
 			this.processor.Journal.CloseScope("DosReleaseMemory");
+
+			return released;
 		}
 		#endregion
 
@@ -807,7 +800,11 @@ namespace Civilization1Remaster.Emulation
 			return backAmountShort;
 		}
 
-		public void BiosDiskCall(ushort directive, ushort driveaDetailsAddr)
+		/// <summary>
+		/// The BIOS disk call: 0 resets the disks, 4 checks the drive of the request is ready. True: done (AH 0); false: not
+		/// ready (AH 0x80)
+		/// </summary>
+		public bool BiosDiskCall(ushort directive, ushort driveaDetailsAddr)
 		{
 			this.processor.Journal.OpenScope("'_bios_disk'(Cdecl) at 0x3045:0x3062");
 
@@ -822,9 +819,8 @@ namespace Civilization1Remaster.Emulation
 				case 0:
 					// reset disk system
 					this.processor.RegAcc.HighByte = 0;
-					this.processor.FlagSet.IsCarry = false;
 					this.processor.Journal.CloseScope("'_bios_disk'");
-					return;
+					return true;
 
 				case 4:
 					// Verify disk sectors
@@ -836,9 +832,8 @@ namespace Civilization1Remaster.Emulation
 							if (diskDetails[idx].IsReady)
 							{
 								this.processor.RegAcc.HighByte = 0;
-								this.processor.FlagSet.IsCarry = false;
 								this.processor.Journal.CloseScope("'_bios_disk'");
-								return;
+								return true;
 							}
 							else
 							{
@@ -850,9 +845,9 @@ namespace Civilization1Remaster.Emulation
 			}
 
 			this.processor.RegAcc.HighByte = 0x80;
-			this.processor.FlagSet.IsCarry = true;
-
 			this.processor.Journal.CloseScope("'_bios_disk'");
+
+			return false;
 		}
 
 		public void DosQueryDrive(ushort amountAddr)

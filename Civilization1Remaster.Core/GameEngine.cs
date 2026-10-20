@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using Civilization1Remaster.Emulation;
 
@@ -264,7 +264,6 @@ namespace Civilization1Remaster
 
 			bool resized = this.processor.Storage.RescaleStorageChunk(programSection, blockSize);
 
-			this.processor.FlagSet.IsCarry = !resized;
 			this.processor.RegAcc.Value16 = (ushort)(resized ? 0 : 8);
 
 			if (!resized)

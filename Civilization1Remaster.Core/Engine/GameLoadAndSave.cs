@@ -686,9 +686,7 @@ namespace Civilization1Remaster.Engine
 
 				for (int attempt = 0; attempt < 3 && ready == 0; attempt++)
 				{
-					this.owner.Libc.BiosDiskCall(4, request);
-
-					if ((this.processor.RegAcc.Value16 & 0xff00) == 0)
+					if (this.owner.Libc.BiosDiskCall(4, request))
 					{
 						ready = 1;
 					}

@@ -1139,6 +1139,9 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   zamiast sekwencji IMUL / CWD+IDIV w AIPlayer (6 miejsc) i DialogDrawing (2), `settlement.Structures` w CityView. Rejestry
   zostają ustawione jak w oryginale. Pełny zestaw zielony; mutacje: rozszerzenie znaku w `DivideWords` i warunek w
   `DeactivateMouse` przeżyły – w grze dzielne są nieujemne, a AX/BX po `DeactivateMouse` nikt nie czyta.
+- Flaga przeniesienia (2026-10-20): `DosReleaseMemory` i `BiosDiskCall` zwracają `bool` (wywołujący pytali o AX, flagi nikt nie
+  czytał), martwe zapisy `FlagSet.IsCarry` w `PrepareMachine` i `ObtainFreeStorage` usunięte. AX dalej ustawiany jak w
+  oryginale. W Core nie ma już żadnego odwołania do flag procesora. Pełny zestaw zielony.
 
 ## Następny krok
 
