@@ -1142,6 +1142,10 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
 - Flaga przeniesienia (2026-10-20): `DosReleaseMemory` i `BiosDiskCall` zwracają `bool` (wywołujący pytali o AX, flagi nikt nie
   czytał), martwe zapisy `FlagSet.IsCarry` w `PrepareMachine` i `ObtainFreeStorage` usunięte. AX dalej ustawiany jak w
   oryginale. W Core nie ma już żadnego odwołania do flag procesora. Pełny zestaw zielony.
+- B0, część 1 (2026-10-20): zamrożona gra (`Civilization1Remaster.Original`, znacznik `migration-end`), kopie pomocników
+  testowych dla niej (`Tests/Frozen`), `DualGame`, `MovedData`, `DualTurnTests` (11 autozapisów × 5 tur, zgodne; mutacje
+  5 z 5). Uwaga: `check_mutations.py` kopiuje do roboczych kopii tylko nowe pliki `.cs` – nowy projekt trzeba najpierw
+  zacommitować.
 
 ## Następny krok
 

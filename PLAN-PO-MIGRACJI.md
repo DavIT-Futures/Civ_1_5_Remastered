@@ -77,6 +77,19 @@ do pól C#, takie porównanie przestanie mieć sens. Potrzebne:
 - ślad wywołań (już istnieje) zostaje jako dodatkowa kontrola;
 - golden master (całe tury) zostaje bez zmian. To on pilnuje, że gra zachowuje się tak samo.
 
+**Plan B0 (2026-10-20):**
+1. Zamrożony silnik: znacznik `migration-end` (7acde51); Core, Machine, GameModel, Foundation, Imaging i Acoustics z tego
+   znacznika w projekcie `Civilization1Remaster.Original` (jedno zestawienie, przestrzeń nazw `Civilization1Original`).
+   Nigdy go nie zmieniać – w razie potrzeby wziąć nową kopię. **Zrobione.**
+2. Projekcja stanu: ten sam słownik dla obu silników (pola GameState i silnika, strony pamięci danych, mapa, losowanie,
+   SP, ekrany) plus `MovedData` – dane przeniesione z pamięci porównywane po znaczeniu (`moved.klucz`), a ich adresy
+   pomijane w stronach pamięci po obu stronach. Każdy krok B dopisuje wpis. **Zrobione** (lista jeszcze pusta).
+3. Podwójna gra: `DualGame` (zamrożony i obecny silnik z tego samego autozapisu); `DualTurnTests` – 5 tur z 11
+   autozapisów, 25 s, kontrolne mutacje 5 z 5. **Zrobione.** Dalej: tabele przypadków `HandleCity` na obu silnikach
+   (punkt kontrolny i ustawienia stanu w obu), wywołania pojedynczych funkcji.
+4. Stare testy różnicowe zostają, dopóki działają; krok B, który unieważnia test, usuwa go, gdy podwójna gra pokrywa
+   funkcję (sprawdzone mutacjami).
+
 ### B1. Wyniki przez `return` zamiast przez AX (848 miejsc)
 
 Metoda po metodzie: `ObtainCitizenType(ea); x = RegAcc` → `x = ObtainCitizenType(ea)`. Najpierw te, których wynik
