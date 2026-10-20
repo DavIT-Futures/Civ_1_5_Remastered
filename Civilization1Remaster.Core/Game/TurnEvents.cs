@@ -130,9 +130,7 @@ namespace Civilization1Remaster.Game
 
 			this.owner.Startup.DisplayMouseCursor();
 
-			this.owner.Dialogs.DisplayMenu(charsAddr, horizLoc, vertLoc, 1);
-
-			ushort answer = this.processor.RegAcc.Value16;
+			ushort answer = this.owner.Dialogs.DisplayMenu(charsAddr, horizLoc, vertLoc, 1);
 
 			this.owner.Startup.ConcealMouseCursor();
 
@@ -1483,9 +1481,7 @@ namespace Civilization1Remaster.Game
 
 			short pull = (short)(((ushort)this.owner.World.DirtyCellTally << 1) - ((ushort)this.owner.World.WorldHeatingTally << 2) - (ushort)this.owner.World.SmogImpactTier);
 
-			this.owner.Helpers.VerifyValueSpan((short)(Math.Sign(pull) + this.owner.World.SmogImpactTier), 0, 99);
-
-			this.owner.World.SmogImpactTier = (short)this.processor.RegAcc.Value16;
+			this.owner.World.SmogImpactTier = (short)this.owner.Helpers.VerifyValueSpan((short)(Math.Sign(pull) + this.owner.World.SmogImpactTier), 0, 99);
 
 			if (this.processor.RegAcc.Value16 == 0xc && this.owner.World.DirtyCellTally > 6)
 			{
@@ -1597,10 +1593,8 @@ namespace Civilization1Remaster.Game
 				.Text((ushort)(wonder + 0xe6a))
 				.Text(".\n");
 
-			this.owner.Helpers.VerifyValueSpan(this.owner.World.Participants[rivalIdx].Gold / 3, 0,
+			this.owner.World.Participants[rivalIdx].Gold -= (short)this.owner.Helpers.VerifyValueSpan(this.owner.World.Participants[rivalIdx].Gold / 3, 0,
 				(10 * (short)this.processor.PullGlobalWord((ushort)(wonder + 0xe82))) - this.owner.World.Towns[cityIdx].MaterialsTally);
-
-			this.owner.World.Participants[rivalIdx].Gold -= (short)this.processor.RegAcc.Value16;
 
 			if (this.processor.PullGlobalWord(0xb278) != 1)
 			{

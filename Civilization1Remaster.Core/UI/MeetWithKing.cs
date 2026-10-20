@@ -218,8 +218,7 @@ namespace Civilization1Remaster.UI
 				person.LiveTroops[25] == 0)
 			{
 				FrameWord(HostileLocal, 1);
-				this.owner.Helpers.VerifyValueSpan((short)FrameWord(TributeLocal), 10 * leader.Standing, 9999);
-				FrameWord(TributeLocal, this.processor.RegAcc.Value16);
+				FrameWord(TributeLocal, (ushort)this.owner.Helpers.VerifyValueSpan((short)FrameWord(TributeLocal), 10 * leader.Standing, 9999));
 				FrameWord(DangerLocal, 0);
 			}
 
@@ -229,8 +228,7 @@ namespace Civilization1Remaster.UI
 			if (leader.LiveTroops[25] != 0 && person.LiveTroops[25] == 0)
 			{
 				FrameWord(HostileLocal, 1);
-				this.owner.Helpers.VerifyValueSpan((short)FrameWord(TributeLocal), 100, 9999);
-				FrameWord(TributeLocal, this.processor.RegAcc.Value16);
+				FrameWord(TributeLocal, (ushort)this.owner.Helpers.VerifyValueSpan((short)FrameWord(TributeLocal), 100, 9999));
 			}
 
 			if (person.LiveTroops[25] != 0)
@@ -266,8 +264,7 @@ namespace Civilization1Remaster.UI
 			else if (FrameWord(LastAudienceLocal) == 0xfffe)
 				FrameWord(TributeLocal, (ushort)CPU.SignedQuotient((short)FrameWord(TributeLocal), 4));
 
-			this.owner.Helpers.VerifyValueSpan(((short)FrameWord(TributeLocal) * (this.owner.World.HardnessTier + 1)) / 32, 0, 20);
-			FrameWord(TributeLocal, (ushort)(this.processor.RegAcc.Value16 * 0x32));
+			FrameWord(TributeLocal, (ushort)((ushort)this.owner.Helpers.VerifyValueSpan(((short)FrameWord(TributeLocal) * (this.owner.World.HardnessTier + 1)) / 32, 0, 20) * 0x32));
 
 			short gold = person.Gold;
 
@@ -705,8 +702,7 @@ namespace Civilization1Remaster.UI
 		/// <summary>Gold for peace (0x22: twice the danger - 4, in fifties, up to the leader's gold)</summary>
 		private void OfferGoldForPeace(short participantIdx)
 		{
-			this.owner.Helpers.VerifyValueSpan(((short)FrameWord(DangerLocal) * 2) - 4, 0, Leader(participantIdx).Gold / 50);
-			FrameWord(AmountLocal, (ushort)(this.processor.RegAcc.Value16 * 0x32));
+			FrameWord(AmountLocal, (ushort)((ushort)this.owner.Helpers.VerifyValueSpan(((short)FrameWord(DangerLocal) * 2) - 4, 0, Leader(participantIdx).Gold / 50) * 0x32));
 
 			if (FrameWord(AmountLocal) == 0)
 				return;
@@ -867,8 +863,7 @@ namespace Civilization1Remaster.UI
 		{
 			short personIdx = this.owner.World.PersonParticipantIdx;
 
-			this.owner.Helpers.VerifyValueSpan((short)FrameWord(DangerLocal), 0, Leader(participantIdx).Gold / 50);
-			FrameWord(AmountLocal, (ushort)(this.processor.RegAcc.Value16 * 0x32));
+			FrameWord(AmountLocal, (ushort)((ushort)this.owner.Helpers.VerifyValueSpan((short)FrameWord(DangerLocal), 0, Leader(participantIdx).Gold / 50) * 0x32));
 
 			if (FrameWord(AmountLocal) != 0)
 			{
@@ -967,8 +962,7 @@ namespace Civilization1Remaster.UI
 			this.processor.RegSource.Value16 = (ushort)(participantIdx << 1);
 			this.processor.RegDest.Value16 = (ushort)(enemyIdx << 1);
 
-			this.owner.Helpers.VerifyValueSpan(((Leader(enemyIdx).MartialMight / 2) * (Leader(participantIdx).Gold / 100)) / 50, 2, 9999);
-			FrameWord(AmountLocal, (ushort)(this.processor.RegAcc.Value16 * 0x32));
+			FrameWord(AmountLocal, (ushort)((ushort)this.owner.Helpers.VerifyValueSpan(((Leader(enemyIdx).MartialMight / 2) * (Leader(participantIdx).Gold / 100)) / 50, 2, 9999) * 0x32));
 
 			EmptyMessage()
 				.Number((short)FrameWord(AmountLocal));
@@ -1829,9 +1823,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Startup.DisplayMouseCursorFully();
 
-			this.owner.Dialogs.DisplayMenu(charsAddr, (short)horizLoc, (short)vertLoc, 1);
-
-			ushort answer = this.processor.RegAcc.Value16;
+			ushort answer = this.owner.Dialogs.DisplayMenu(charsAddr, (short)horizLoc, (short)vertLoc, 1);
 
 			this.owner.Startup.ConcealMouseCursorToSavedLevel();
 

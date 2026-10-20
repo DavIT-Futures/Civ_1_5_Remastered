@@ -281,9 +281,7 @@ namespace Civilization1Remaster.UI
 			{
 				while (true)
 				{
-					this.owner.Libc.KeyAvailable();
-
-					if (this.processor.RegAcc.Value16 != 0 || this.owner.GlobDb3a != 0)
+					if ((ushort)this.owner.Libc.KeyAvailable() != 0 || this.owner.GlobDb3a != 0)
 						break;
 
 					// The cursor blinks
@@ -295,9 +293,7 @@ namespace Civilization1Remaster.UI
 					this.owner.VideoCard.SubstituteHue(this.processor.PullGlobalWord(0xaa), this.processor.PullGlobalSignedWord(0x68d0), vertLoc + 1,
 						this.processor.PullGlobalSignedWord(0x68ce), 10, 11, 15);
 
-					this.owner.Libc.KeyAvailable();
-
-					if (this.processor.RegAcc.Value16 == 0)
+					if ((ushort)this.owner.Libc.KeyAvailable() == 0)
 					{
 						this.owner.TextPainter.AwaitTime(10);
 					}

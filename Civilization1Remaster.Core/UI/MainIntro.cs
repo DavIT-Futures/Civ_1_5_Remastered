@@ -234,9 +234,7 @@ namespace Civilization1Remaster.UI
 				{
 				}
 
-				this.owner.Libc.KeyAvailable();
-
-				if (this.processor.RegAcc.Value16 != 0)
+				if ((ushort)this.owner.Libc.KeyAvailable() != 0)
 					this.processor.EmitLocalWord(IntroColumn, 0x3e7);
 			}
 		}
@@ -316,15 +314,11 @@ namespace Civilization1Remaster.UI
 
 				while (true)
 				{
-					this.owner.Libc.KeyAvailable();
-
-					if (this.processor.RegAcc.Value16 != 0 || MusicReachedColumn(0x1a40))
+					if ((ushort)this.owner.Libc.KeyAvailable() != 0 || MusicReachedColumn(0x1a40))
 						break;
 				}
 
-				this.owner.Libc.KeyAvailable();
-
-				if (this.processor.RegAcc.Value16 != 0)
+				if ((ushort)this.owner.Libc.KeyAvailable() != 0)
 					this.processor.EmitLocalWord(IntroColumn, 0x3e7);
 			}
 		}
@@ -406,9 +400,7 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.EmitGlobalWord(0x6b32, 0xfffe);
 
-			this.owner.Libc.KeyAvailable();
-
-			if (this.processor.RegAcc.Value16 != 0)
+			if ((ushort)this.owner.Libc.KeyAvailable() != 0)
 			{
 				this.processor.EmitGlobalWord(0x6b32, 0xffff);
 
@@ -477,9 +469,7 @@ namespace Civilization1Remaster.UI
 
 			for (this.processor.EmitLocalWord(IntroColumn, 0); (short)this.processor.PullLocalWord(IntroColumn) < 0x64; this.processor.IncrementLocalWord(IntroColumn))
 			{
-				this.owner.Libc.KeyAvailable();
-
-				if (this.processor.RegAcc.Value16 != 0)
+				if ((ushort)this.owner.Libc.KeyAvailable() != 0)
 					break;
 
 				this.owner.TextPainter.AwaitTime(5);

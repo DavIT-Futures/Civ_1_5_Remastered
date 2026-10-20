@@ -212,8 +212,7 @@ namespace Civilization1Remaster.Game
 			Player player = this.owner.World.Participants[participantIdx];
 
 			// The base of the weight of a strategic location: an eighth of the units, 3 - 99
-			this.owner.Helpers.VerifyValueSpan(player.TroopTally / 8, 3, 99);
-			this.processor.EmitLocalWord(SurveyBase, this.processor.RegAcc.Value16);
+			this.processor.EmitLocalWord(SurveyBase, (ushort)this.owner.Helpers.VerifyValueSpan(player.TroopTally / 8, 3, 99));
 			player.GrandTownExtent = 0;
 			player.TownTally = 0;
 
@@ -1267,8 +1266,7 @@ namespace Civilization1Remaster.Game
 			if (this.processor.PullLocalWord(0x1c) != 0 && this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.LeftoverSteps) < 3)
 			{
 				this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, troopIdx, 3);
-				this.owner.Helpers.VerifyValueSpan((short)this.processor.RegAcc.Value16, 1, 99);
-				short stack = (short)this.processor.RegAcc.Value16;
+				short stack = (short)this.owner.Helpers.VerifyValueSpan((short)this.processor.RegAcc.Value16, 1, 99);
 				this.processor.RegCount.Value16 = (ushort)stack;
 				this.processor.RegSource.Value16 = (ushort)stack;
 

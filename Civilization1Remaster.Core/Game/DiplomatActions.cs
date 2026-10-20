@@ -831,9 +831,7 @@ namespace Civilization1Remaster.Game
 
 					this.owner.Startup.ObtainMouseState();
 
-					this.owner.Libc.KeyAvailable();
-
-					if (this.processor.RegAcc.Value16 != 0 || this.owner.GlobDb3a != 0)
+					if ((ushort)this.owner.Libc.KeyAvailable() != 0 || this.owner.GlobDb3a != 0)
 						break;
 				}
 
@@ -852,9 +850,7 @@ namespace Civilization1Remaster.Game
 
 				this.processor.EmitGlobalByte(0xba06, 0x0);
 
-				this.owner.Libc.KeyAvailable();
-
-				if (this.processor.RegAcc.Value16 == 0)
+				if ((ushort)this.owner.Libc.KeyAvailable() == 0)
 				{
 					this.owner.CityScene.DisplayCityScreen(townIdx, -3);
 				}

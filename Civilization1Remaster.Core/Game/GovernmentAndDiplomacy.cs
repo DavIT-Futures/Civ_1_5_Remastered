@@ -177,9 +177,7 @@ namespace Civilization1Remaster.Game
 
 				if (this.processor.RegAcc.Value16 == 0)
 				{
-					this.owner.Helpers.VerifyValueSpan(player.Gold / 100, 1, 10);
-
-					short tribute = (short)(this.processor.RegAcc.Value16 * 0x32);
+					short tribute = (short)((ushort)this.owner.Helpers.VerifyValueSpan(player.Gold / 100, 1, 10) * 0x32);
 					this.processor.EmitLocalWord(0x4, (ushort)tribute);
 
 					this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30ba), this.processor.PullGlobalWord((ushort)(this.processor.RegSource.Value16 + 0x1992)));

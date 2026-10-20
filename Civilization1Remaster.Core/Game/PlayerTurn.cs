@@ -1812,12 +1812,10 @@ namespace Civilization1Remaster.Game
 
 			this.processor.EmitLocalWord(0xe, this.processor.RegAcc.Value16);
 
-			this.owner.Helpers.VerifyValueSpan(
+			this.processor.EmitLocalWord(0x12, (ushort)this.owner.Helpers.VerifyValueSpan(
 				this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x18e4)) +
 					this.processor.PullLocalSignedWord(0x12),
-				0, 49);
-
-			this.processor.EmitLocalWord(0x12, this.processor.RegAcc.Value16);
+				0, 49));
 
 			if (VerifyPositionOnScreen(this.processor.PullLocalSignedWord(0xe), this.processor.PullLocalSignedWord(0x12)) == 0)
 			{
@@ -1885,12 +1883,10 @@ namespace Civilization1Remaster.Game
 
 			this.processor.EmitLocalWord(0x1c, this.processor.RegAcc.Value16);
 
-			this.owner.Helpers.VerifyValueSpan(
+			this.processor.EmitLocalWord(0x26, (ushort)this.owner.Helpers.VerifyValueSpan(
 				this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x18e4)) +
 					this.processor.PullLocalSignedWord(0x30),
-				0, 49);
-
-			this.processor.EmitLocalWord(0x26, this.processor.RegAcc.Value16);
+				0, 49));
 
 			this.processor.EmitLocalWord(0x34, this.owner.MapOps.ObtainTerrainType(this.processor.PullLocalSignedWord(0x2c), this.processor.PullLocalSignedWord(0x30)));
 			this.processor.EmitLocalWord(0x3e, this.owner.MapOps.ObtainTerrainType(this.processor.PullLocalSignedWord(0x1c), this.processor.PullLocalSignedWord(0x26)));

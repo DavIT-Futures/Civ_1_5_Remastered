@@ -961,9 +961,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Startup.ObtainMouseState();
 
-			this.owner.Libc.KeyAvailable();
-
-			return this.processor.RegAcc.Value16 != 0 || this.owner.GlobDb3a != 0;
+			return (ushort)this.owner.Libc.KeyAvailable() != 0 || this.owner.GlobDb3a != 0;
 		}
 		
 		/// <summary>

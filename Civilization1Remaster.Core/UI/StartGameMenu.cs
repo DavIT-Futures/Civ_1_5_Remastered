@@ -60,9 +60,7 @@ namespace Civilization1Remaster.UI
 		{
 			this.owner.Libc.CopyText(0xba06, "Difficulty Level...\n Chieftain (easiest)\n Warlord\n Prince\n King\n Emperor (toughest)\n");
 
-			this.owner.Dialogs.DisplayMenu(0xba06, 160, 35, 1);
-
-			this.owner.World.HardnessTier = (short)this.processor.RegAcc.Value16;
+			this.owner.World.HardnessTier = (short)this.owner.Dialogs.DisplayMenu(0xba06, 160, 35, 1);
 
 			if (this.processor.PullGlobalWord(0x1a3c) != 0 && this.processor.PullGlobalWord(0x2fa2) != 0)
 			{
@@ -70,9 +68,7 @@ namespace Civilization1Remaster.UI
 
 				if ((short)this.owner.GlobDb3c < 0x87)
 				{
-					this.owner.Helpers.VerifyValueSpan(((short)this.owner.GlobDb3e - 12) / 35, 0, 4);
-
-					this.owner.World.HardnessTier = (short)this.processor.RegAcc.Value16;
+					this.owner.World.HardnessTier = (short)this.owner.Helpers.VerifyValueSpan(((short)this.owner.GlobDb3e - 12) / 35, 0, 4);
 				}
 			}
 
@@ -121,15 +117,11 @@ namespace Civilization1Remaster.UI
 
 			do
 			{
-				this.owner.Dialogs.DisplayMenu(0xba06, 160, 35, 1);
-
-				this.owner.World.BotRivalTally = (short)this.processor.RegAcc.Value16;
+				this.owner.World.BotRivalTally = (short)this.owner.Dialogs.DisplayMenu(0xba06, 160, 35, 1);
 			}
 			while (this.processor.RegAcc.Value16 == 0xffff);
 
-			this.owner.Helpers.VerifyValueSpan(6 - this.owner.World.BotRivalTally, 2, 6);
-
-			this.owner.World.BotRivalTally = (short)this.processor.RegAcc.Value16;
+			this.owner.World.BotRivalTally = (short)this.owner.Helpers.VerifyValueSpan(6 - this.owner.World.BotRivalTally, 2, 6);
 			this.owner.World.LiveRealms = (short)(0xff >> (byte)(6 - (byte)this.owner.World.BotRivalTally));
 
 			this.owner.Startup.ConcealMouseCursor();

@@ -98,9 +98,7 @@ namespace Civilization1Remaster.UI
 				this.owner.Libc.AppendText(0xba06, " View Replay\n");
 			}
 
-			this.owner.Dialogs.DisplayMenu(0xba06, 16, 8, 0);
-
-			ushort choice = this.processor.RegAcc.Value16;
+			ushort choice = this.owner.Dialogs.DisplayMenu(0xba06, 16, 8, 0);
 
 			this.owner.TurnLogic.AwaitForKey();
 
@@ -176,9 +174,7 @@ namespace Civilization1Remaster.UI
 			{
 				this.processor.EmitGlobalWord(0xd7f2, (ushort)this.owner.World.SessionPrefMarkers);
 
-				this.owner.Dialogs.DisplayMenu(0xba06, 24, 16, 0);
-
-				choice = this.processor.RegAcc.Value16;
+				choice = this.owner.Dialogs.DisplayMenu(0xba06, 24, 16, 0);
 
 				if (choice != 0xffff)
 				{
@@ -364,9 +360,7 @@ namespace Civilization1Remaster.UI
 			keys.Add(0x0);
 			keys.Add(0x44);
 
-			this.owner.Dialogs.DisplayMenu(0xba06, 72, 8, 0);
-
-			short choice = (short)this.processor.RegAcc.Value16;
+			short choice = (short)this.owner.Dialogs.DisplayMenu(0xba06, 72, 8, 0);
 
 			this.processor.EmitGlobalWord(0xd4ca, choice >= 0 && choice < keys.Count ? (ushort)(short)(sbyte)keys[choice] : (ushort)0xffff);
 		}
@@ -391,9 +385,7 @@ namespace Civilization1Remaster.UI
 			Message(" City Status (F1)\n Military Advisor (F2)\n Intelligence Advisor (F3)\n Attitude Advisor (F4)\n")
 				.Text(" Trade Advisor (F5)\n Science Advisor (F6)\n");
 
-			this.owner.Dialogs.DisplayMenu(0xba06, 112, 8, 0);
-
-			ushort choice = this.processor.RegAcc.Value16;
+			ushort choice = this.owner.Dialogs.DisplayMenu(0xba06, 112, 8, 0);
 
 			RestoreMenuScreen();
 
@@ -466,9 +458,7 @@ namespace Civilization1Remaster.UI
 			Message(" Wonders of the World (F7)\n Top 5 Cities (F8)\n Civilization Score (F9)\n")
 				.Text(" World Map (F10)\n Demographics\n SpaceShips\n");
 
-			this.owner.Dialogs.DisplayMenu(0xba06, 144, 8, 0);
-
-			ushort choice = this.processor.RegAcc.Value16;
+			ushort choice = this.owner.Dialogs.DisplayMenu(0xba06, 144, 8, 0);
 
 			RestoreMenuScreen();
 
@@ -512,9 +502,7 @@ namespace Civilization1Remaster.UI
 			Message(" Complete\n Civilization Advances\n City Improvements\n Military Units\n Terrain Types\n")
 				.Text(" Miscellaneous\n");
 
-			this.owner.Dialogs.DisplayMenu(0xba06, 182, 8, 0);
-
-			ushort choice = this.processor.RegAcc.Value16;
+			ushort choice = this.owner.Dialogs.DisplayMenu(0xba06, 182, 8, 0);
 
 			if (choice != 0xffff)
 			{

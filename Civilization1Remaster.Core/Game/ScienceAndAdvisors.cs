@@ -942,9 +942,8 @@ namespace Civilization1Remaster.Game
 			if ((ushort)(this.owner.World.Participants[person].FoundScienceMarkers[FrameWord(TownLoopLocal)] | own) == own)
 				return;
 
-			this.owner.Helpers.VerifyValueSpan(this.owner.World.Participants[participantIdx].FoundScienceTally -
+			Score = (short)this.owner.Helpers.VerifyValueSpan(this.owner.World.Participants[participantIdx].FoundScienceTally -
 				this.owner.World.Participants[person].FoundScienceTally + 10, 5, 10);
-			Score = (short)this.processor.RegAcc.Value16;
 		}
 
 		/// <summary>
@@ -1339,9 +1338,7 @@ namespace Civilization1Remaster.Game
 
 				this.processor.EmitGlobalWord(0x2fa0, 0x1);
 
-				this.owner.Dialogs.DisplayMenu(0xba06, 80, 64, 1);
-
-				ushort choice = this.processor.RegAcc.Value16;
+				ushort choice = this.owner.Dialogs.DisplayMenu(0xba06, 80, 64, 1);
 
 				this.owner.Startup.ConcealMouseCursor();
 

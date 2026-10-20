@@ -98,6 +98,13 @@ do pól C#, takie porównanie przestanie mieć sens. Potrzebne:
 Metoda po metodzie: `ObtainCitizenType(ea); x = RegAcc` → `x = ObtainCitizenType(ea)`. Najpierw te, których wynik
 nikt nie czyta z rejestru po drodze. Uwaga: kod spoza przepisanych modułów (okienka, grafika) też może czytać AX.
 
+**B1, sposób (2026-10-20):** funkcja dalej ustawia AX (czytają go jeszcze kopie „Reference” starych testów i miejsca, których
+skrypt nie rusza), a wywołujący biorą wynik z `return`: `F(...); x = AX` → `x = F(...)`. Skrypt `b1.py` (scratchpad)
+zamienia tylko pary „samo wywołanie, zaraz potem instrukcja czytająca AX”, pomija ciała `if` bez klamer i zapisy do AX.
+Porcja 1: `VerifyValueSpan`, `KeyAvailable`, `DisplayMenu` – 68 miejsc w 18 plikach. Kolejne porcje: następne funkcje z
+listy (ObtainContinentID, ScreenToPicture, TextLength, PlayerEnjoysWonderEffect, ObtainDistance…), potem funkcje `void`,
+które zwracają przez AX (DisplayDialog, QueryForDisk…), na końcu usunięcie zapisów AX, których nikt już nie czyta.
+
 ### B2. Zmienne lokalne pod numerami → zmienne i parametry C# (2648 miejsc)
 
 Największa porcja pracy, ale najprostsza do zrozumienia. Zaczynać od funkcji z małą ramką; `HandleCity` (268 bajtów

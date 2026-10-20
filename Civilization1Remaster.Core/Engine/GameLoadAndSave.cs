@@ -459,9 +459,7 @@ namespace Civilization1Remaster.Engine
 				{
 					this.owner.Startup.DisplayMouseCursor();
 
-					this.owner.Dialogs.DisplayMenu(0xba06, 48, 33, 1);
-
-					arg1 = this.processor.RegAcc.Value16;
+					arg1 = this.owner.Dialogs.DisplayMenu(0xba06, 48, 33, 1);
 
 					this.owner.Startup.ConcealMouseCursor();
 				}

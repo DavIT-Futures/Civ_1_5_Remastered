@@ -374,9 +374,7 @@ namespace Civilization1Remaster.Engine
 				{
 					this.owner.Libc.CopyText(0xba06, " Start a New Game\n Load a Saved Game\n EARTH\n Customize World\n View Hall of Fame\n");
 
-					this.owner.Dialogs.DisplayMenu(0xba06, 100, 140, 1);
-
-					this.processor.EmitGlobalWord(0x6b32, this.processor.RegAcc.Value16);
+					this.processor.EmitGlobalWord(0x6b32, this.owner.Dialogs.DisplayMenu(0xba06, 100, 140, 1));
 				}
 
 				AwaitTitleSongMeasure();
@@ -574,9 +572,7 @@ namespace Civilization1Remaster.Engine
 
 				this.owner.Libc.CopyText(0xba06, choices);
 
-				this.owner.Dialogs.DisplayMenu(0xba06, 200, menuVert, 1);
-
-				this.processor.EmitGlobalWord(optionAddr, this.processor.RegAcc.Value16);
+				this.processor.EmitGlobalWord(optionAddr, this.owner.Dialogs.DisplayMenu(0xba06, 200, menuVert, 1));
 
 				if (this.processor.RegAcc.Value16 == 0xffff)
 					continue;

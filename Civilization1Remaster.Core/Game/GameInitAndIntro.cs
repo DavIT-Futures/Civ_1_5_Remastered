@@ -1633,12 +1633,10 @@ namespace Civilization1Remaster.Game
 				this.processor.EmitGlobalWord(0x6806, (ushort)(this.processor.PullGlobalWord(0x6806) + 1));
 			}
 
-			this.owner.Helpers.VerifyValueSpan(
+			this.processor.EmitGlobalWord(0x6806, (ushort)this.owner.Helpers.VerifyValueSpan(
 				this.processor.PullInt16(0x3710, (ushort)((this.processor.PullGlobalWord(0x6802) << 1) + 0x83)),
 				(45 * this.processor.PullGlobalSignedWord(0x6806)) + this.processor.PullGlobalSignedWord(0x6800),
-				32767);
-
-			this.processor.EmitGlobalWord(0x6806, this.processor.RegAcc.Value16);
+				32767));
 		}
 
 		/// <summary>

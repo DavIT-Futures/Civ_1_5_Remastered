@@ -878,8 +878,7 @@ namespace Civilization1Remaster.Game
 						wonderColX += 0x98;
 						if (wonderColX > 0x12c)
 						{
-							this.owner.Helpers.VerifyValueSpan(this.processor.PullGlobalSignedWord(0x5116) + 2, 8, 99);
-							wondersY += this.processor.RegAcc.Value16;
+							wondersY += (ushort)this.owner.Helpers.VerifyValueSpan(this.processor.PullGlobalSignedWord(0x5116) + 2, 8, 99);
 							wonderColX = 0x10;
 						}
 
@@ -1010,8 +1009,7 @@ namespace Civilization1Remaster.Game
 
 				if (this.owner.World.Participants[0].Tally > 0)
 				{
-					this.owner.Helpers.VerifyValueSpan(this.owner.World.Participants[0].Tally / 4, 0, 250);
-					this.owner.Services.FloodBox(screenBufferPtr, 35, 192, (short)this.processor.RegAcc.Value16, 7, 11);
+					this.owner.Services.FloodBox(screenBufferPtr, 35, 192, (short)this.owner.Helpers.VerifyValueSpan(this.owner.World.Participants[0].Tally / 4, 0, 250), 7, 11);
 				}
 
 				this.processor.EmitUInt16(this.processor.SegData.Value16, screenBufferPtr, 0);

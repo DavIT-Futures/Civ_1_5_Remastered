@@ -1149,6 +1149,8 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
 - B0, część 2 (2026-10-20): `DualCityCaseTests` – wszystkie 19 tabel `HandleCity` na zamrożonej i obecnej grze; ustawienia
   przypadków (`CityCase.Setup`) i `HumanTurnScript.Install` przyjmują grę jako `dynamic`, tabele są `internal`. Mutacje 18 z
   21; pełny zestaw 744 zielony.
+- B1, porcja 1 (2026-10-20): wynik przez `return` zamiast odczytu AX po `VerifyValueSpan`, `KeyAvailable`, `DisplayMenu`
+  (68 miejsc, 18 plików); funkcje dalej ustawiają AX. Pełny zestaw 744 zielony.
 
 ## Następny krok
 

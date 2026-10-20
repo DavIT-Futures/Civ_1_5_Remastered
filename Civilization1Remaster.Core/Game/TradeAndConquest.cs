@@ -77,9 +77,7 @@ namespace Civilization1Remaster.Game
 
 			ComputeCityPlunder(townIdx);
 
-			this.owner.Helpers.VerifyValueSpan((short)this.processor.RegAcc.Value16, 0, this.owner.World.Participants[formerIdx].Gold);
-
-			short plunder = (short)this.processor.RegAcc.Value16;
+			short plunder = (short)this.owner.Helpers.VerifyValueSpan((short)this.processor.RegAcc.Value16, 0, this.owner.World.Participants[formerIdx].Gold);
 			this.processor.EmitLocalWord(0x4, (ushort)plunder);
 
 			if (!BarbariansRazeCity(participantIdx, townIdx, horizLoc, vertLoc))
