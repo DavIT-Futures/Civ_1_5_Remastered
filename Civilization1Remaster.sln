@@ -19,6 +19,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Civilization1Remaster.Deskt
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Civilization1Remaster.Core", "Civilization1Remaster.Core\Civilization1Remaster.Core.csproj", "{E84E7540-B3D4-4530-B28E-168078EF4E66}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Civilization1Remaster.Original", "Civilization1Remaster.Original\Civilization1Remaster.Original.csproj", "{8A83C4B9-ED2C-4520-A4F7-BBA17A615D05}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -125,6 +127,18 @@ Global
 		{E84E7540-B3D4-4530-B28E-168078EF4E66}.Release|x64.Build.0 = Release|Any CPU
 		{E84E7540-B3D4-4530-B28E-168078EF4E66}.Release|x86.ActiveCfg = Release|Any CPU
 		{E84E7540-B3D4-4530-B28E-168078EF4E66}.Release|x86.Build.0 = Release|Any CPU
+		{8A83C4B9-ED2C-4520-A4F7-BBA17A615D05}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8A83C4B9-ED2C-4520-A4F7-BBA17A615D05}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8A83C4B9-ED2C-4520-A4F7-BBA17A615D05}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{8A83C4B9-ED2C-4520-A4F7-BBA17A615D05}.Debug|x64.Build.0 = Debug|Any CPU
+		{8A83C4B9-ED2C-4520-A4F7-BBA17A615D05}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{8A83C4B9-ED2C-4520-A4F7-BBA17A615D05}.Debug|x86.Build.0 = Debug|Any CPU
+		{8A83C4B9-ED2C-4520-A4F7-BBA17A615D05}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8A83C4B9-ED2C-4520-A4F7-BBA17A615D05}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8A83C4B9-ED2C-4520-A4F7-BBA17A615D05}.Release|x64.ActiveCfg = Release|Any CPU
+		{8A83C4B9-ED2C-4520-A4F7-BBA17A615D05}.Release|x64.Build.0 = Release|Any CPU
+		{8A83C4B9-ED2C-4520-A4F7-BBA17A615D05}.Release|x86.ActiveCfg = Release|Any CPU
+		{8A83C4B9-ED2C-4520-A4F7-BBA17A615D05}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

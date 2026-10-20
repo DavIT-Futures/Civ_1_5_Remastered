@@ -1,0 +1,1850 @@
+﻿using Civilization1Original.Emulation;
+using Civilization1Original.Game;
+
+namespace Civilization1Original.UI
+{
+	public class MeetWithKing : GameModule
+	{
+		private readonly UnitMemory troops;
+
+		public MeetWithKing(GameEngine owner)
+			: base(owner)
+		{
+			this.troops = new UnitMemory(owner.Processor);
+		}
+
+		/// <summary>
+		/// An audience of the human player with the leader of a computer player (arg4 0: the player asked for it, the
+		/// computer player came otherwise, 0xffff from a diplomat). The leader weighs the strength on the continents, nuclear
+		/// weapons, wonders and enemies, then may exchange technologies, ask for an alliance against a common enemy, demand
+		/// tribute or a technology, threaten, offer peace or a cease-fire, or ask the human player to declare war on someone.
+		/// The locals stay in the frame (functions called later from the same depth may read what is left there).
+		/// </summary>
+		public void LaunchAudience(short participantIdx, int horizLoc, int vertLoc, ushort arg4)
+		{
+			this.processor.Journal.OpenScope($"LaunchAudience({participantIdx}, {horizLoc}, {vertLoc}, {arg4})");
+
+			this.processor.EnterFrame(0x36);
+			this.processor.PreserveIndexRegisters();
+
+			this.owner.MapOps.KeepKnownTileImprovements(horizLoc, vertLoc);
+			this.owner.MapOps.RepaintMapTile(horizLoc, vertLoc);
+
+			FrameWord(LastAudienceLocal, (ushort)Leader(participantIdx).TouchParticipantTimeleft);
+			NameEmpress(participantIdx);
+
+			if (arg4 == 0)
+				Leader(participantIdx).TouchParticipantTimeleft = this.owner.World.RoundTally;
+
+			this.processor.EmitGlobalWord(0xd804, 0);
+			FrameWord(HostileLocal, 0);
+			this.processor.EmitGlobalWord(0x3934, arg4);
+			FrameWord(DangerLocal, 0);
+			FrameWord(TributeLocal, 0);
+			FrameWord(DemandLocal, 1);
+			this.processor.EmitGlobalWord(0x6b8e, 0);
+
+			WeighContinents(participantIdx);
+			WeighNuclearWeapons(participantIdx);
+			WeighEnemies(participantIdx);
+
+			bool ended = !ExchangeTechnologies(participantIdx, horizLoc, vertLoc, arg4);
+
+			if (!ended)
+			{
+				if ((this.owner.World.DiagMarkers & 1) == 0)
+				{
+					// Without the diplomacy option the leader only threatens
+					FrameWord(HostileLocal, 1);
+					FrameWord(DemandLocal, 0);
+					FrameWord(DangerLocal, 0);
+					FrameWord(PeaceBrokenLocal, 0);
+				}
+
+				AskForAlliance(participantIdx, horizLoc, vertLoc);
+				DemandTribute(participantIdx, horizLoc, vertLoc);
+				DemandTechnology(participantIdx, horizLoc, vertLoc);
+				Threaten(participantIdx, horizLoc, vertLoc, arg4);
+
+				if (HostileValue == 0 && !OfferTreaty(participantIdx, horizLoc, vertLoc, arg4))
+					DeclareWar(participantIdx);
+
+				NameEmpressBack(participantIdx);
+				this.processor.EmitGlobalWord(0x6b8e, 0);
+
+				WelcomeFriendship(participantIdx, horizLoc, vertLoc);
+				this.processor.EmitGlobalWord(0x6b8e, 1);
+
+				if ((Relation(participantIdx) & 2) != 0 && WelcomeEmissary(participantIdx, horizLoc, vertLoc) != 0xffff)
+					NegotiateUnderPeace(participantIdx);
+
+				if (FrameWord(PeaceBrokenLocal) != 0)
+					this.owner.World.Participants[participantIdx].Relations[this.owner.World.PersonParticipantIdx] |= 0x100;
+
+				this.owner.World.Participants[participantIdx].Relations[this.owner.World.PersonParticipantIdx] &= 0xffdf;
+				this.owner.World.Participants[this.owner.World.PersonParticipantIdx].Relations[participantIdx] &= 0xffdf;
+
+				AdviseAboutLeader(participantIdx);
+			}
+
+			if (this.processor.PullGlobalWord(0x3934) != 0xffff)
+				FinishAudience();
+
+			NameEmpressBack(participantIdx);
+
+			this.processor.EmitGlobalWord(0xd804, 0);
+			this.processor.EmitGlobalWord(0x3934, 0xffff);
+			this.processor.EmitGlobalWord(0x3936, 0xffff);
+			this.processor.RestoreIndexRegisters();
+			this.processor.LeaveFrame();
+			this.processor.Journal.CloseScope("LaunchAudience");
+		}
+
+		// The frame of LaunchAudience (distances below bp)
+		private const int EnemyListLocal = 0x2;
+		private const int NuclearThreatLocal = 0x4;
+		private const int TributeLocal = 0x6;
+		private const int DemandLocal = 0x8;
+		private const int WantedTechnologyLocal = 0xa;
+		private const int OfferedTechnologyLocal = 0xc;
+		private const int PersonTechnologiesLocal = 0xe;
+		private const int WasHostileLocal = 0x10;
+		private const int EnemyTable = 0x1e;
+		private const int LoopLocal = 0x20;
+		private const int AmountLocal = 0x22;
+		private const int HostileLocal = 0x24;
+		private const int ContinentLocal = 0x26;
+		private const int PeaceBrokenLocal = 0x28;
+		private const int AttitudeLocal = 0x2a;
+		private const int OfferedValueLocal = 0x2c;
+		private const int DangerLocal = 0x2e;
+		private const int CommonEnemyLocal = 0x30;
+		private const int LeaderTechnologiesLocal = 0x32;
+		private const int LastAudienceLocal = 0x34;
+
+		private ushort FrameWord(int distance) => this.processor.PullLocalWord(distance);
+
+		private void FrameWord(int distance, ushort amount) => this.processor.EmitLocalWord(distance, amount);
+
+		private ushort HostileValue => FrameWord(HostileLocal);
+
+		private Game.State.Player Leader(int participantIdx) => this.owner.World.Participants[participantIdx];
+
+		private Game.State.Player Person => this.owner.World.Participants[this.owner.World.PersonParticipantIdx];
+
+		/// <summary>The relation of the computer player to the human player</summary>
+		private ushort Relation(short participantIdx) => Leader(participantIdx).Relations[this.owner.World.PersonParticipantIdx];
+
+		/// <summary>The leader 14 is an empress: her titles for the audience</summary>
+		private void NameEmpress(short participantIdx)
+		{
+			if (Leader(participantIdx).ChiefVisuals == 14)
+			{
+				this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x19b4), "Empress");
+				this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x19b6), "Empress");
+			}
+		}
+
+		private void NameEmpressBack(short participantIdx)
+		{
+			if (Leader(participantIdx).ChiefVisuals == 14)
+			{
+				this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x19b4), this.processor.PullGlobalWord(0x33aa));
+				this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x19b6), this.processor.PullGlobalWord(0x33a8));
+			}
+		}
+
+		/// <summary>
+		/// The continents 1 - 14: the danger from the human player's defence where the leader has cities (0x2e), hostility
+		/// where both have attackers (0x24), and the tribute the leader may ask (0x6)
+		/// </summary>
+		private void WeighContinents(short participantIdx)
+		{
+			Game.State.Player leader = Leader(participantIdx);
+
+			for (FrameWord(ContinentLocal, 1); (short)FrameWord(ContinentLocal) < 0xf; FrameWord(ContinentLocal, (ushort)(FrameWord(ContinentLocal) + 1)))
+			{
+				int continentIdx = (short)FrameWord(ContinentLocal);
+				var own = leader.Landmasses[continentIdx];
+				var human = Person.Landmasses[continentIdx];
+				short cities = (short)(leader.TownTally > 1 ? 1 : 0);
+
+				if (own.TownTally > cities && human.Guard > own.Assault)
+				{
+					short factor = (short)(this.owner.World.HardnessTier == 0 ? 4 : 2);
+					short danger = CPU.SignedQuotient((short)(factor * human.Guard), (short)(own.Assault + 1));
+					FrameWord(DangerLocal, (ushort)(FrameWord(DangerLocal) + danger));
+					continue;
+				}
+
+				if (human.Assault != 0 && own.Assault != 0)
+					FrameWord(HostileLocal, 1);
+
+				short tribute;
+
+				if (human.TownTally != 0)
+				{
+					tribute = own.TownTally > 1 ? (short)(own.Guard - human.Guard) : own.Guard;
+				}
+				else if (own.TownTally != 0)
+				{
+					tribute = CPU.SignedQuotient((short)(own.Assault - human.Guard), 2);
+				}
+				else
+				{
+					tribute = CPU.SignedQuotient((short)(own.Guard - human.Guard), 4);
+				}
+
+				FrameWord(TributeLocal, (ushort)(FrameWord(TributeLocal) + tribute));
+			}
+		}
+
+		/// <summary>
+		/// Nuclear weapons: a leader threatens a human player who leads (standing 7) late in the game without them (0x4), a
+		/// leader with them asks for more, a human player with them makes a leader without them afraid; the Great Wall and
+		/// the United Nations of the human player calm the leader; the tribute in fifties, within the human player's gold
+		/// </summary>
+		private void WeighNuclearWeapons(short participantIdx)
+		{
+			Game.State.Player leader = Leader(participantIdx);
+			Game.State.Player person = Person;
+			short personIdx = this.owner.World.PersonParticipantIdx;
+
+			bool threat = person.Standing == 7 && person.TownTally > 4 && leader.TownTally > 1 && person.LiveTroops[25] == 0 &&
+				this.owner.World.RoundTally > 200;
+			FrameWord(NuclearThreatLocal, (ushort)(threat ? 1 : 0));
+
+			if ((threat || ((Relation(participantIdx) & 8) != 0 && (short)(3 * leader.MartialMight) > person.MartialMight)) &&
+				person.LiveTroops[25] == 0)
+			{
+				FrameWord(HostileLocal, 1);
+				this.owner.Helpers.VerifyValueSpan((short)FrameWord(TributeLocal), 10 * leader.Standing, 9999);
+				FrameWord(TributeLocal, this.processor.RegAcc.Value16);
+				FrameWord(DangerLocal, 0);
+			}
+
+			if (leader.LiveTroops[25] != 0)
+				leader.Relations[personIdx] |= 0x80;
+
+			if (leader.LiveTroops[25] != 0 && person.LiveTroops[25] == 0)
+			{
+				FrameWord(HostileLocal, 1);
+				this.owner.Helpers.VerifyValueSpan((short)FrameWord(TributeLocal), 100, 9999);
+				FrameWord(TributeLocal, this.processor.RegAcc.Value16);
+			}
+
+			if (person.LiveTroops[25] != 0)
+			{
+				if (leader.LiveTroops[25] == 0)
+				{
+					FrameWord(DangerLocal, 4);
+				}
+				else
+				{
+					short half = CPU.SignedQuotient((short)FrameWord(TributeLocal), 2);
+					FrameWord(TributeLocal, (ushort)CPU.SignedQuotient((short)(leader.LiveTroops[25] * half), person.LiveTroops[25]));
+				}
+			}
+
+			if (FrameWord(DangerLocal) != 0)
+			{
+				FrameWord(HostileLocal, 0);
+				FrameWord(DemandLocal, 0);
+			}
+
+			if (this.owner.CityOps.PlayerEnjoysWonderEffect(personIdx, 7) != 0 || this.owner.CityOps.PlayerEnjoysWonderEffect(personIdx, 0x12) != 0)
+			{
+				FrameWord(NuclearThreatLocal, 0);
+				FrameWord(HostileLocal, 0);
+
+				if (FrameWord(LastAudienceLocal) == 0xfffe)
+					FrameWord(LastAudienceLocal, 0xffff);
+			}
+
+			if ((Relation(participantIdx) & 8) != 0)
+				FrameWord(TributeLocal, (ushort)(FrameWord(TributeLocal) << 1));
+			else if (FrameWord(LastAudienceLocal) == 0xfffe)
+				FrameWord(TributeLocal, (ushort)CPU.SignedQuotient((short)FrameWord(TributeLocal), 4));
+
+			this.owner.Helpers.VerifyValueSpan(((short)FrameWord(TributeLocal) * (this.owner.World.HardnessTier + 1)) / 32, 0, 20);
+			FrameWord(TributeLocal, (ushort)(this.processor.RegAcc.Value16 * 0x32));
+
+			short gold = person.Gold;
+
+			if ((short)FrameWord(TributeLocal) > gold && (short)FrameWord(TributeLocal) <= (short)(gold << 1) && gold >= 0x32)
+				FrameWord(TributeLocal, (ushort)(CPU.SignedQuotient(gold, 0x32) * 0x32));
+
+			if (leader.LiveTroops[25] != 0)
+			{
+				if ((Relation(participantIdx) & 0x80) == 0 && person.Gold < (short)FrameWord(TributeLocal))
+					FrameWord(TributeLocal, (ushort)(CPU.SignedQuotient(person.Gold, 0x32) * 0x32));
+
+				leader.Relations[personIdx] |= 0x80;
+			}
+
+			if (FrameWord(TributeLocal) == 0 || (short)(3 * leader.MartialMight) < person.MartialMight)
+				FrameWord(HostileLocal, 0);
+
+			if (FrameWord(HostileLocal) != 0)
+				FrameWord(DemandLocal, 2);
+
+			if (FrameWord(HostileLocal) == 0 && (Relation(participantIdx) & 4) != 0)
+				FrameWord(DemandLocal, 0);
+		}
+
+		/// <summary>
+		/// The leader's attitude (0x2a): its wars against stronger players, its character, the human player's strength; a
+		/// common enemy at war with the leader and at peace with the human player (0x30); a calm leader gives up hostility (and
+		/// at random the tribute); a democracy or communism threatens only when much stronger, else turns to monarchy
+		/// </summary>
+		private void WeighEnemies(short participantIdx)
+		{
+			Game.State.Player leader = Leader(participantIdx);
+			short personIdx = this.owner.World.PersonParticipantIdx;
+
+			FrameWord(WasHostileLocal, HostileValue);
+			FrameWord(AttitudeLocal, 0);
+
+			if ((Relation(participantIdx) & 8) != 0)
+				FrameWord(AttitudeLocal, 0xfffe);
+
+			FrameWord(CommonEnemyLocal, 0xffff);
+
+			for (FrameWord(LoopLocal, 1); (short)FrameWord(LoopLocal) < 8; FrameWord(LoopLocal, (ushort)(FrameWord(LoopLocal) + 1)))
+			{
+				short otherIdx = (short)FrameWord(LoopLocal);
+
+				if (otherIdx == personIdx || (leader.Relations[otherIdx] & 3) != 1)
+					continue;
+
+				if (leader.MartialMight < (short)(Leader(otherIdx).MartialMight << 2))
+					this.processor.IncrementLocalWord(AttitudeLocal);
+
+				if (Leader(otherIdx).MartialMight > leader.MartialMight)
+					this.processor.IncrementLocalWord(AttitudeLocal);
+
+				if ((Person.Relations[otherIdx] & 2) != 0)
+					this.processor.CopyLocalWord(LoopLocal, CommonEnemyLocal);
+			}
+
+			ushort character = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(0x1512 + 0x3a * leader.ChiefVisuals));
+			FrameWord(AttitudeLocal, (ushort)(FrameWord(AttitudeLocal) - character));
+
+			if (Person.MartialMight < leader.MartialMight)
+				this.processor.DecrementLocalWord(AttitudeLocal);
+
+			short calm = (short)((Relation(participantIdx) & 2) == 0 ? 1 : 0);
+
+			if (calm < (short)FrameWord(AttitudeLocal) && FrameWord(NuclearThreatLocal) == 0)
+			{
+				FrameWord(HostileLocal, 0);
+
+				if (this.owner.Libc.Dice.DrawInt(2) != 0)
+					FrameWord(TributeLocal, 0);
+			}
+
+			if (leader.RegimeKind >= 4 && HostileValue != 0 && (Relation(participantIdx) & 8) == 0)
+			{
+				if ((short)(3 * Person.MartialMight) > (short)(leader.MartialMight << 1) && FrameWord(NuclearThreatLocal) == 0)
+					FrameWord(HostileLocal, 0);
+				else
+					this.owner.Politics.SwitchGovernment(participantIdx, 2);
+			}
+
+			// At peace and weaker (or already warned): the leader keeps the peace for now
+			FrameWord(PeaceBrokenLocal, 0);
+
+			if ((Relation(participantIdx) & 2) != 0 && HostileValue != 0 &&
+				(leader.MartialMight < Person.MartialMight || (Relation(participantIdx) & 8) != 0))
+			{
+				FrameWord(HostileLocal, 0);
+				FrameWord(PeaceBrokenLocal, 1);
+				FrameWord(DemandLocal, 0);
+			}
+		}
+
+		/// <summary>The name of a technology (records of 0x16 bytes from 0x4da)</summary>
+		private static ushort TechnologyName(ushort scienceIdx) => (ushort)(scienceIdx * 0x16 + 0x4da);
+
+		/// <summary>
+		/// The technologies each side knows (0xe, 0x32), one the leader knows and the human player doesn't (0xa), the most
+		/// valuable one the human player knows and the leader doesn't (0xc, value 0x2c); a friendly leader with fewer
+		/// technologies offers an exchange, again after each one. False: the audience ends here (a friendly leader at peace
+		/// in danger).
+		/// </summary>
+		private bool ExchangeTechnologies(short participantIdx, int horizLoc, int vertLoc, ushort arg4)
+		{
+			short personIdx = this.owner.World.PersonParticipantIdx;
+
+			while (true)
+			{
+				FrameWord(OfferedTechnologyLocal, 0xffff);
+				FrameWord(WantedTechnologyLocal, 0xffff);
+				FrameWord(OfferedValueLocal, 0);
+				FrameWord(LeaderTechnologiesLocal, 0);
+				FrameWord(PersonTechnologiesLocal, 0);
+				FrameWord(LoopLocal, 0);
+
+				do
+				{
+					short scienceIdx = (short)FrameWord(LoopLocal);
+
+					if (this.owner.Advisors.PlayerKnowsTechnology(personIdx, scienceIdx) != 0)
+						this.processor.IncrementLocalWord(PersonTechnologiesLocal);
+
+					if (this.owner.Advisors.PlayerKnowsTechnology(participantIdx, scienceIdx) != 0)
+						this.processor.IncrementLocalWord(LeaderTechnologiesLocal);
+
+					if (this.owner.Advisors.PlayerKnowsTechnology(personIdx, scienceIdx) == 0 &&
+						this.owner.Advisors.PlayerKnowsTechnology(participantIdx, scienceIdx) != 0)
+					{
+						this.processor.CopyLocalWord(LoopLocal, WantedTechnologyLocal);
+					}
+
+					if (this.owner.Advisors.PlayerKnowsTechnology(personIdx, scienceIdx) != 0 &&
+						this.owner.Advisors.PlayerKnowsTechnology(participantIdx, scienceIdx) == 0 &&
+						(short)this.owner.Advisors.ObtainTechnologyInfo(participantIdx, (ushort)scienceIdx) >= (short)FrameWord(OfferedValueLocal))
+					{
+						this.processor.CopyLocalWord(LoopLocal, OfferedTechnologyLocal);
+						FrameWord(OfferedValueLocal, this.owner.Advisors.ObtainTechnologyInfo(participantIdx, (ushort)scienceIdx));
+					}
+
+					FrameWord(LoopLocal, (ushort)(scienceIdx + 1));
+				}
+				while ((short)FrameWord(LoopLocal) < 0x48);
+
+				if (((Relation(participantIdx) & 0x20) != 0 || HostileValue != 0) && (short)FrameWord(LeaderTechnologiesLocal) > 6)
+					break;
+
+				if ((short)FrameWord(PersonTechnologiesLocal) < (short)FrameWord(LeaderTechnologiesLocal) ||
+					FrameWord(WantedTechnologyLocal) == 0xffff || WelcomeEmissary(participantIdx, horizLoc, vertLoc) == 0xffff)
+				{
+					break;
+				}
+
+				this.processor.EmitGlobalWord(0x3936, 1);
+				this.processor.EmitGlobalByte(0xba06, 0);
+				this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be), TechnologyName(FrameWord(WantedTechnologyLocal)));
+				this.owner.BlockText.DisplayTextDialog(0x3776);
+				this.processor.EmitGlobalWord(0xd76c, 0xc);
+
+				if (DisplayKingDialog(0xba06, 0x14, 0x8b) != 1)
+					break;
+
+				this.owner.Startup.ConcealMouseCursor();
+				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0x19d4), 0, 0);
+				this.owner.Startup.DisplayMouseCursor();
+
+				this.processor.EmitGlobalWord(0x3936, 0xffff);
+				this.processor.EmitGlobalWord(0x3c62, 1);
+				this.owner.Conquest.ChooseTechnologyToTake(participantIdx, personIdx);
+				RestoreScreenStyle();
+
+				this.processor.EmitGlobalWord(0x3c62, 1);
+				this.owner.Conquest.ChooseTechnologyToTake(personIdx, participantIdx);
+				this.owner.Helpers.HaltHueCycling();
+				RestoreScreenStyle();
+
+				FrameWord(HostileLocal, 0);
+				this.processor.EmitGlobalWord(0x3936, 1);
+
+				this.owner.Startup.ConcealMouseCursor();
+				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0xaa), 0, 0);
+				this.owner.Startup.DisplayMouseCursor();
+			}
+
+			// A friendly leader at peace with a human player strong on its continents doesn't negotiate
+			return !(HostileValue == 0 && arg4 == 0 && (Relation(participantIdx) & 2) == 2 && (short)FrameWord(DangerLocal) > 2);
+		}
+
+		/// <summary>The style of screen 0 (word 0x10 of it) back from 0x67ec</summary>
+		private void RestoreScreenStyle()
+		{
+			ushort screen = this.processor.PullGlobalWord(0xaa);
+			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(screen + 0x10), this.processor.PullGlobalWord(0x67ec));
+		}
+
+		/// <summary>The leader asks for an alliance against the common enemy (0x30): accepted, the human player breaks the peace with it</summary>
+		private void AskForAlliance(short participantIdx, int horizLoc, int vertLoc)
+		{
+			if (FrameWord(CommonEnemyLocal) == 0xffff || WelcomeEmissary(participantIdx, horizLoc, vertLoc) == 0xffff || FrameWord(DemandLocal) == 0)
+				return;
+
+			this.processor.EmitGlobalByte(0xba06, 0);
+			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30ba),
+				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((FrameWord(CommonEnemyLocal) << 1) + 0x1992)));
+			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be), (ushort)(HostileValue != 0 ? 0x3780 : 0x3787));
+			this.owner.BlockText.DisplayTextDialog(0x378f);
+
+			this.processor.EmitGlobalWord(0x3936, (ushort)(HostileValue != 0 ? 2 : 1));
+			this.processor.EmitGlobalWord(0xd76c, 0xc);
+
+			if (HostileValue != 0)
+				this.owner.Services.PerformSound(0x21, 0);
+
+			if (DisplayKingDialog(0xba06, 0x14, 0x8b) != 1)
+				return;
+
+			FrameWord(HostileLocal, 0);
+
+			if (this.owner.Libc.Dice.DrawInt(2) != 0)
+				FrameWord(TributeLocal, 0);
+
+			short enemyIdx = (short)FrameWord(CommonEnemyLocal);
+			this.owner.Politics.WipeDiplomacyFlags(this.owner.World.PersonParticipantIdx, enemyIdx, 2);
+			this.owner.World.Participants[(ushort)enemyIdx].Relations[this.owner.World.PersonParticipantIdx] |= 8;
+		}
+
+		/// <summary>A hostile leader demands the tribute (0x6) from a human player who has more gold; after the answer 0x6 is 999</summary>
+		private void DemandTribute(short participantIdx, int horizLoc, int vertLoc)
+		{
+			if (FrameWord(TributeLocal) == 0 || FrameWord(DemandLocal) != 2 || Person.Gold <= (short)FrameWord(TributeLocal) ||
+				WelcomeEmissary(participantIdx, horizLoc, vertLoc) == 0xffff)
+			{
+				return;
+			}
+
+			EmptyMessage()
+				.Number((short)FrameWord(TributeLocal));
+			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30bc), 0xba06);
+			this.processor.EmitGlobalByte(0xba06, 0);
+			this.owner.BlockText.DisplayTextDialog(0x3797);
+
+			this.processor.EmitGlobalWord(0x6b8e, 0);
+			this.processor.EmitGlobalWord(0x3936, 2);
+			this.processor.EmitGlobalWord(0xd76c, 0xc);
+			this.owner.Services.PerformSound(0x21, 0);
+
+			if (DisplayKingDialog(0xba06, 0x14, 0x8b) == 1)
+			{
+				short tribute = (short)FrameWord(TributeLocal);
+				Person.Gold -= tribute;
+				Leader(participantIdx).Gold += tribute;
+				FrameWord(HostileLocal, 0);
+			}
+
+			FrameWord(TributeLocal, 0x3e7);
+		}
+
+		/// <summary>A leader with demands asks for the most valuable technology it lacks (0xc); after the answer 0x6 is 999</summary>
+		private void DemandTechnology(short participantIdx, int horizLoc, int vertLoc)
+		{
+			if (FrameWord(DemandLocal) == 0 || FrameWord(OfferedTechnologyLocal) == 0xffff || FrameWord(TributeLocal) == 0x3e7 ||
+				WelcomeEmissary(participantIdx, horizLoc, vertLoc) == 0xffff)
+			{
+				return;
+			}
+
+			this.processor.EmitGlobalByte(0xba06, 0);
+			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be), TechnologyName(FrameWord(OfferedTechnologyLocal)));
+			this.owner.BlockText.DisplayTextDialog(0x37a0);
+
+			this.processor.EmitGlobalWord(0x6b8e, 0);
+			this.processor.EmitGlobalWord(0x3936, 2);
+			this.processor.EmitGlobalWord(0xd76c, 0xc);
+			this.owner.Services.PerformSound(0x21, 0);
+
+			if (DisplayKingDialog(0xba06, 0x14, 0x8b) == 1)
+			{
+				this.owner.Advisors.EarnTechnology(participantIdx, (short)FrameWord(OfferedTechnologyLocal), this.owner.World.PersonParticipantIdx);
+				FrameWord(HostileLocal, 0);
+			}
+
+			FrameWord(TributeLocal, 0x3e7);
+		}
+
+		/// <summary>
+		/// A hostile leader threatens: at peace and with a big tribute left, after a refused demand, or (at war: only when it
+		/// came) otherwise; with an emissary the threat is a dialog, without one a message; the peace treaty ends
+		/// </summary>
+		private void Threaten(short participantIdx, int horizLoc, int vertLoc, ushort arg4)
+		{
+			ushort text;
+			bool welcome;
+
+			if (HostileValue != 0 && (Relation(participantIdx) & 2) != 0 && (short)FrameWord(TributeLocal) > 0x32)
+			{
+				welcome = WelcomeEmissary(participantIdx, horizLoc, vertLoc) != 0xffff;
+				text = (ushort)(welcome ? 0x37a9 : 0x37b2);
+			}
+			else if (HostileValue != 0 && FrameWord(TributeLocal) == 0x3e7)
+			{
+				if (WelcomeEmissary(participantIdx, horizLoc, vertLoc) == 0xffff)
+					return;
+
+				welcome = true;
+				text = 0x37bb;
+			}
+			else
+			{
+				if (HostileValue == 0 || ((Relation(participantIdx) & 1) != 0 && arg4 == 0))
+					return;
+
+				welcome = WelcomeEmissary(participantIdx, horizLoc, vertLoc) != 0xffff;
+				text = (ushort)(welcome ? 0x37c3 : 0x37c8);
+			}
+
+			if (welcome)
+				this.owner.Services.PerformSound(0x21, 0);
+
+			this.processor.EmitGlobalByte(0xba06, 0);
+			this.owner.BlockText.DisplayTextDialog(text);
+			this.owner.BlockText.ArrangeTextRow(0x28);
+
+			if (welcome)
+			{
+				this.processor.EmitGlobalWord(0x6b8e, 1);
+				this.processor.EmitGlobalWord(0x3936, 2);
+				this.processor.EmitGlobalWord(0xd76c, 0xc);
+				DisplayKingDialog(0xba06, 0x14, 0x8b);
+			}
+			else
+			{
+				this.owner.TurnHooks.DisplayDialog(0xba06, 40, 100);
+			}
+
+			this.owner.Politics.WipeDiplomacyFlags(this.owner.World.PersonParticipantIdx, participantIdx, 2);
+		}
+
+		/// <summary>
+		/// A calm leader (not at peace, or the human player asked for the audience) offers peace: accepted, the treaty is
+		/// signed for 16 turns; under a democracy or communism the senate signs anyway; else the peace ends, and a leader in
+		/// danger offers a technology, gold for peace, or (in its last city) everything it has for peace. True: done.
+		/// </summary>
+		private bool OfferTreaty(short participantIdx, int horizLoc, int vertLoc, ushort arg4)
+		{
+			short personIdx = this.owner.World.PersonParticipantIdx;
+
+			if (((Relation(participantIdx) & 2) != 0 && arg4 == 0) || WelcomeEmissary(participantIdx, horizLoc, vertLoc) == 0xffff)
+				return true;
+
+			this.processor.EmitGlobalByte(0xba06, 0);
+			this.owner.BlockText.DisplayTextDialog(0x37cd);
+			this.processor.EmitGlobalWord(0x6b8e, 0);
+			this.processor.EmitGlobalWord(0x3936, 0);
+			this.processor.EmitGlobalWord(0xd76c, 0xc);
+
+			if (DisplayKingDialog(0xba06, 0x14, 0x8b) == 1)
+			{
+				DisplayKingMessage(participantIdx);
+				LogAudience(participantIdx);
+				Leader(participantIdx).TouchParticipantTimeleft = (short)(this.owner.World.RoundTally + 16);
+				return true;
+			}
+
+			if (Person.RegimeKind >= 4)
+			{
+				this.owner.Libc.CopyText(0xba06, "You are overruled by the Senate.\nTreaty signed.\n");
+				DisplayKingDialog(0xba06, 0x14, 0x8b);
+				LogAudience(participantIdx);
+				return true;
+			}
+
+			// The original addresses the leader's word through SI (its gold tribute below uses it)
+			this.processor.RegSource.Value16 = (ushort)(participantIdx << 4);
+
+			if ((Relation(participantIdx) & 2) != 0)
+				this.owner.Politics.WipeDiplomacyFlags(personIdx, participantIdx, 2);
+
+			if ((short)FrameWord(DangerLocal) >= 4 && FrameWord(WantedTechnologyLocal) != 0xffff)
+			{
+				this.processor.RegSource.Value16 = (ushort)(participantIdx << 4);
+
+				if ((Relation(participantIdx) & 0xa) == 0)
+					OfferTechnologyForPeace(participantIdx);
+			}
+
+			this.processor.RegDest.Value16 = (ushort)(participantIdx << 4);
+
+			if ((Relation(participantIdx) & 0xa) == 0)
+				OfferGoldForPeace(participantIdx);
+
+			if (FrameWord(DangerLocal) != 0 && Leader(participantIdx).TownTally <= 1)
+			{
+				this.processor.RegDest.Value16 = (ushort)(participantIdx << 4);
+
+				if ((Relation(participantIdx) & 0xa) == 0)
+					OfferEverythingForPeace(participantIdx);
+			}
+
+			return false;
+		}
+
+		private void OfferTechnologyForPeace(short participantIdx)
+		{
+			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be), TechnologyName(FrameWord(WantedTechnologyLocal)));
+			this.processor.EmitGlobalByte(0xba06, 0);
+			this.owner.BlockText.DisplayTextDialog(0x3805);
+			this.processor.EmitGlobalWord(0x3936, 0);
+			this.processor.EmitGlobalWord(0xd76c, 0xc);
+
+			if (DisplayKingDialog(0xba06, 0x14, 0x8b) != 1)
+				return;
+
+			this.owner.Startup.ConcealMouseCursor();
+			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0x19d4), 0, 0);
+			this.owner.Startup.DisplayMouseCursor();
+			this.owner.Helpers.HaltHueCycling();
+
+			this.processor.EmitGlobalWord(0x3936, 0xffff);
+			this.processor.EmitGlobalWord(0x3c62, 1);
+			this.owner.Advisors.EarnTechnology(this.owner.World.PersonParticipantIdx, (short)FrameWord(WantedTechnologyLocal), participantIdx);
+			RestoreScreenStyle();
+			this.owner.Helpers.HaltHueCycling();
+			this.processor.EmitGlobalWord(0x3936, 0);
+
+			this.owner.Startup.ConcealMouseCursor();
+			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0xaa), 0, 0);
+			this.owner.Startup.DisplayMouseCursor();
+
+			DisplayKingMessage(participantIdx);
+			LogAudience(participantIdx);
+			FrameWord(LastAudienceLocal, (ushort)this.owner.World.RoundTally);
+		}
+
+		/// <summary>Gold for peace (0x22: twice the danger - 4, in fifties, up to the leader's gold)</summary>
+		private void OfferGoldForPeace(short participantIdx)
+		{
+			this.owner.Helpers.VerifyValueSpan(((short)FrameWord(DangerLocal) * 2) - 4, 0, Leader(participantIdx).Gold / 50);
+			FrameWord(AmountLocal, (ushort)(this.processor.RegAcc.Value16 * 0x32));
+
+			if (FrameWord(AmountLocal) == 0)
+				return;
+
+			EmptyMessage()
+				.Number((short)FrameWord(AmountLocal));
+			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30bc), 0xba06);
+			this.processor.EmitGlobalByte(0xba06, 0);
+			this.owner.BlockText.DisplayTextDialog(0x380e);
+			this.processor.EmitGlobalWord(0x3936, 0);
+			this.processor.EmitGlobalWord(0xd76c, 0xc);
+
+			if (DisplayKingDialog(0xba06, 0x14, 0x8b) != 1)
+				return;
+
+			DisplayKingMessage(participantIdx);
+			LogAudience(participantIdx);
+
+			ushort amount = FrameWord(AmountLocal);
+			Person.Gold += (short)amount;
+
+			// A translation slip: the gold is taken from the word at SI (the leader << 4), not from the leader
+			ushort taken = this.processor.RegSource.Value16;
+			this.processor.EmitUInt16(this.processor.SegData.Value16, taken, (ushort)(this.processor.PullUInt16(this.processor.SegData.Value16, taken) - amount));
+			FrameWord(LastAudienceLocal, (ushort)this.owner.World.RoundTally);
+		}
+
+		/// <summary>A leader in danger in its last city gives all its gold and technologies for peace</summary>
+		private void OfferEverythingForPeace(short participantIdx)
+		{
+			short personIdx = this.owner.World.PersonParticipantIdx;
+
+			EmptyMessage()
+				.Number(Leader(participantIdx).Gold);
+			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30bc), 0xba06);
+			this.processor.EmitGlobalByte(0xba06, 0);
+			this.owner.BlockText.DisplayTextDialog(0x3818);
+			this.processor.EmitGlobalWord(0x3936, 0);
+			this.processor.EmitGlobalWord(0xd76c, 0xc);
+
+			if (DisplayKingDialog(0xba06, 0x14, 0x8b) != 1)
+				return;
+
+			DisplayKingMessage(participantIdx);
+			LogAudience(participantIdx);
+
+			Person.Gold += Leader(participantIdx).Gold;
+			Leader(participantIdx).Gold = 0;
+
+			this.owner.Startup.ConcealMouseCursor();
+			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0x19d4), 0, 0);
+			this.owner.Startup.DisplayMouseCursor();
+			this.owner.Helpers.HaltHueCycling();
+			this.processor.EmitGlobalWord(0x3936, 0xffff);
+
+			for (FrameWord(LoopLocal, 0); (short)FrameWord(LoopLocal) < 0x48; FrameWord(LoopLocal, (ushort)(FrameWord(LoopLocal) + 1)))
+			{
+				short scienceIdx = (short)FrameWord(LoopLocal);
+
+				if (this.owner.Advisors.PlayerKnowsTechnology(personIdx, scienceIdx) == 0 &&
+					this.owner.Advisors.PlayerKnowsTechnology(participantIdx, scienceIdx) != 0)
+				{
+					this.processor.EmitGlobalWord(0x3c62, 1);
+					this.owner.Advisors.EarnTechnology(personIdx, scienceIdx, participantIdx);
+				}
+			}
+
+			RestoreScreenStyle();
+			this.owner.Helpers.HaltHueCycling();
+			this.processor.EmitGlobalWord(0x3936, 0);
+
+			this.owner.Startup.ConcealMouseCursor();
+			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0xaa), 0, 0);
+			this.owner.Startup.DisplayMouseCursor();
+
+			FrameWord(LastAudienceLocal, (ushort)this.owner.World.RoundTally);
+		}
+
+		/// <summary>Without a peace treaty the leader declares war</summary>
+		private void DeclareWar(short participantIdx)
+		{
+			if ((Relation(participantIdx) & 2) != 0)
+				return;
+
+			this.owner.Services.PerformSound(0x21, 0);
+			this.processor.EmitGlobalByte(0xba06, 0);
+			this.owner.BlockText.DisplayTextDialog(0x3820);
+			this.processor.EmitGlobalWord(0x6b8e, 1);
+			this.processor.EmitGlobalWord(0x3936, 2);
+			this.processor.EmitGlobalWord(0xd76c, 4);
+			DisplayKingDialog(0xba06, 0x14, 0x8b);
+		}
+
+		/// <summary>A calm leader at peace welcomes the human player's friendship (or reminds of the demand when one is open)</summary>
+		private void WelcomeFriendship(short participantIdx, int horizLoc, int vertLoc)
+		{
+			if (HostileValue != 0 || (Relation(participantIdx) & 2) != 2 || WelcomeEmissary(participantIdx, horizLoc, vertLoc) == 0xffff)
+				return;
+
+			if (FrameWord(DemandLocal) != 0 && FrameWord(TributeLocal) != 0x3e7)
+			{
+				this.processor.EmitGlobalWord(0x3936, 1);
+				this.processor.EmitGlobalWord(0xd76c, 4);
+				this.processor.EmitGlobalByte(0xba06, 0);
+				this.owner.BlockText.DisplayTextDialog(0x382a);
+			}
+			else
+			{
+				short personIdx = this.owner.World.PersonParticipantIdx;
+
+				this.processor.EmitGlobalWord(0x3936, 0);
+				this.processor.EmitGlobalWord(0xd76c, 0xc);
+				Message("We welcome the friendship of the\n")
+					.Text(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((personIdx << 1) + 0x1982)))
+					.Text(" people and their most\nwise and munificent leader:\n")
+					.Text(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((Person.RegimeKind << 1) + 0x19b2)))
+					.Text(" ")
+					.Text(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((personIdx << 1) + 0x19a2)))
+					.Text(".\n");
+			}
+
+			DisplayKingDialog(0xba06, 0x14, 0x8b);
+		}
+
+		/// <summary>
+		/// At peace the human player may talk: 2 demands gold (or the leader ends the peace, or ignores the threat), 1 asks
+		/// the leader to attack someone (an enemy of the human player: it may join for gold)
+		/// </summary>
+		private void NegotiateUnderPeace(short participantIdx)
+		{
+			short personIdx = this.owner.World.PersonParticipantIdx;
+
+			while (true)
+			{
+				this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be),
+					this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((participantIdx << 1) + 0x1992)));
+				this.processor.EmitGlobalByte(0xba06, 0);
+				this.owner.BlockText.DisplayTextDialog(0x388f);
+
+				// Choices disabled: 2 (a demand) shortly after the last audience or under a democracy, 1 (an attack) with only two players left
+				if ((short)(this.owner.World.RoundTally - FrameWord(LastAudienceLocal)) < 0x10 || Person.RegimeKind >= 4)
+					this.processor.EmitGlobalWord(0xb276, 4);
+
+				if (((1 << participantIdx) | (1 << (byte)personIdx)) == (ushort)this.owner.World.LiveRealms)
+					this.processor.EmitGlobalByte(0xb276, (byte)(this.processor.PullGlobalByte(0xb276) | 2));
+
+				FrameWord(ContinentLocal, DisplayKingDialog(0xba06, 0x14, 0x8b));
+
+				if (FrameWord(ContinentLocal) == 2)
+					DemandGoldUnderPeace(participantIdx);
+
+				if (FrameWord(ContinentLocal) != 1 || !AskToAttack(participantIdx))
+					return;
+			}
+		}
+
+		private void DemandGoldUnderPeace(short participantIdx)
+		{
+			short personIdx = this.owner.World.PersonParticipantIdx;
+
+			this.owner.Helpers.VerifyValueSpan((short)FrameWord(DangerLocal), 0, Leader(participantIdx).Gold / 50);
+			FrameWord(AmountLocal, (ushort)(this.processor.RegAcc.Value16 * 0x32));
+
+			if (FrameWord(AmountLocal) != 0)
+			{
+				EmptyMessage()
+					.Number((short)FrameWord(AmountLocal));
+				this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30bc), 0xba06);
+				this.processor.EmitGlobalByte(0xba06, 0);
+				this.owner.BlockText.DisplayTextDialog(0x3897);
+				this.processor.EmitGlobalWord(0x3936, 0);
+				this.processor.EmitGlobalWord(0xd76c, 0xc);
+
+				// A translation slip: the human player gets the answer of the dialog, not the gold
+				ushort answer = DisplayKingDialog(0xba06, 0x14, 0x8b);
+				Person.Gold += (short)answer;
+				Leader(participantIdx).Gold -= (short)FrameWord(AmountLocal);
+				Leader(participantIdx).TouchParticipantTimeleft = this.owner.World.RoundTally;
+				return;
+			}
+
+			if (FrameWord(WasHostileLocal) != 0)
+			{
+				this.owner.Services.PerformSound(0x21, 0);
+				this.processor.EmitGlobalByte(0xba06, 0);
+				this.owner.BlockText.DisplayTextDialog(0x38a1);
+				this.owner.Politics.WipeDiplomacyFlags(personIdx, participantIdx, 2);
+				this.processor.EmitGlobalWord(0x3936, 2);
+				this.processor.EmitGlobalWord(0xd76c, 0xc);
+			}
+			else
+			{
+				this.owner.Libc.CopyText(0xba06, "We ignore your feeble threats.\n");
+				this.processor.EmitGlobalWord(0x3936, 1);
+				this.processor.EmitGlobalWord(0xd76c, 4);
+			}
+
+			DisplayKingDialog(0xba06, 0x14, 0x8b);
+		}
+
+		/// <summary>
+		/// The human player names a living player to attack: not at war with it, the leader refuses; not at peace with it,
+		/// the leader says so and the talk starts again (true); else it joins for gold, if the human player has it
+		/// </summary>
+		private bool AskToAttack(short participantIdx)
+		{
+			short personIdx = this.owner.World.PersonParticipantIdx;
+
+			this.owner.Libc.CopyText(0xba06, "You must attack the evil:\n ");
+			FrameWord(EnemyListLocal, 0);
+
+			for (FrameWord(LoopLocal, 1); (short)FrameWord(LoopLocal) < 8; FrameWord(LoopLocal, (ushort)(FrameWord(LoopLocal) + 1)))
+			{
+				short otherIdx = (short)FrameWord(LoopLocal);
+
+				if (otherIdx == personIdx || otherIdx == participantIdx || (this.owner.World.LiveRealms & (1 << (byte)otherIdx)) == 0)
+					continue;
+
+				ushort entryIdx = FrameWord(EnemyListLocal);
+				this.processor.IncrementLocalWord(EnemyListLocal);
+				this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + (entryIdx << 1) - EnemyTable), (ushort)otherIdx);
+
+				this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((otherIdx << 1) + 0x1992)));
+				this.owner.Libc.AppendText(0xba06, "\n ");
+			}
+
+			FrameWord(AmountLocal, DisplayKingDialog(0xba06, 0x14, 0x8b));
+			this.processor.EmitGlobalWord(0x3936, 1);
+
+			if (FrameWord(AmountLocal) == 0xffff)
+				return false;
+
+			FrameWord(LoopLocal, this.processor.PullUInt16(this.processor.SegStack.Value16,
+				(ushort)(this.processor.RegFrame.Value16 + (FrameWord(AmountLocal) << 1) - EnemyTable)));
+			short enemyIdx = (short)FrameWord(LoopLocal);
+
+			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be),
+				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((enemyIdx << 1) + 0x1992)));
+			this.processor.EmitGlobalWord(0xd76c, 4);
+
+			if ((Leader(participantIdx).Relations[enemyIdx] & 1) == 0)
+			{
+				this.processor.EmitGlobalByte(0xba06, 0);
+				this.owner.BlockText.DisplayTextDialog(0x38e9);
+				DisplayKingDialog(0xba06, 0x14, 0x8b);
+				return false;
+			}
+
+			if ((Leader(participantIdx).Relations[enemyIdx] & 2) == 0)
+			{
+				this.processor.EmitGlobalByte(0xba06, 0);
+				this.owner.BlockText.DisplayTextDialog(0x38f4);
+				DisplayKingDialog(0xba06, 0x14, 0x8b);
+				return true;
+			}
+
+			// The names below are addressed through SI and DI, as the original keeps them over the calls
+			this.processor.RegSource.Value16 = (ushort)(participantIdx << 1);
+			this.processor.RegDest.Value16 = (ushort)(enemyIdx << 1);
+
+			this.owner.Helpers.VerifyValueSpan(((Leader(enemyIdx).MartialMight / 2) * (Leader(participantIdx).Gold / 100)) / 50, 2, 9999);
+			FrameWord(AmountLocal, (ushort)(this.processor.RegAcc.Value16 * 0x32));
+
+			EmptyMessage()
+				.Number((short)FrameWord(AmountLocal));
+			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30bc), 0xba06);
+			this.processor.EmitGlobalByte(0xba06, 0);
+			this.owner.BlockText.DisplayTextDialog(0x38fb);
+
+			if (DisplayKingDialog(0xba06, 0x14, 0x8b) != 1)
+				return false;
+
+			short amount = (short)FrameWord(AmountLocal);
+
+			if (Person.Gold < amount)
+			{
+				this.processor.EmitGlobalByte(0xba06, 0);
+				this.owner.BlockText.DisplayTextDialog(0x391e);
+			}
+			else
+			{
+				Leader(participantIdx).Gold += amount;
+				Person.Gold -= amount;
+
+				Message(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1992)))
+					.Text(" declare war\non the ")
+					.Text(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 + 0x1992)))
+					.Text(".\n");
+			}
+
+			DisplayKingDialog(0xba06, 0x14, 0x8b);
+			return false;
+		}
+
+		/// <summary>After an audience the advisor warns of a big leader without a treaty (once per audience)</summary>
+		private void AdviseAboutLeader(short participantIdx)
+		{
+			if (this.processor.PullGlobalWord(0x3934) == 0xffff || Leader(participantIdx).TownTally <= 4 ||
+				Person.Standing + 1 >= Leader(participantIdx).Standing ||
+				(Person.Relations[participantIdx] & 2) != 0)
+			{
+				return;
+			}
+
+			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30ba),
+				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((participantIdx << 1) + 0x1992)));
+			this.owner.HelpSystem.DisplayHelpPopup(0x392b);
+		}
+
+		/// <summary>
+		/// ?
+		/// </summary>
+		public void FinishAudience()
+		{
+			this.processor.Journal.OpenScope("FinishAudience()");
+
+			// function body
+			ReleaseKingResources();
+
+			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
+			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 0x1);
+
+			this.owner.TurnHooks.RepaintMainScreen();
+
+			this.processor.EmitGlobalWord(0x3936, 0xffff);
+			this.processor.RegAcc.Value16 = 0;
+			this.processor.EmitGlobalWord(0x3934, this.processor.RegAcc.Value16);
+			this.processor.EmitGlobalWord(0xd804, this.processor.RegAcc.Value16);
+
+			// Far return
+			this.processor.Journal.CloseScope("FinishAudience");
+		}
+
+		/// <summary>
+		/// The audience with the player's emissary, once a turn (0xd804): unless the answer 0x3934 is known, shows the map at
+		/// the position (horizLoc -1: not moved) and asks whether to receive the emissary (with "Check Intelligence" when the human player
+		/// has relations bit 0x40 towards the player, which shows the report and asks again); 0x3934 is minus the choice. Unless
+		/// refused (-1), shows the king and his greeting in the player's font (0x36fa).
+		/// </summary>
+		/// <returns>0x3934, also in AX</returns>
+		public ushort WelcomeEmissary(short participantIdx, int horizLoc, int vertLoc)
+		{
+			this.processor.Journal.OpenScope($"WelcomeEmissary({participantIdx}, {horizLoc}, {vertLoc})");
+
+			if (this.processor.PullGlobalWord(0xd804) == 0)
+			{
+				this.processor.EmitGlobalWord(0xd804, 1);
+
+				if (this.processor.PullGlobalWord(0x3934) == 0)
+				{
+					AskToReceiveEmissary(participantIdx, horizLoc, vertLoc);
+				}
+
+				if (this.processor.PullGlobalWord(0x3934) != 0xffff)
+				{
+					ReceiveEmissary(participantIdx);
+				}
+			}
+
+			ushort answer = this.processor.PullGlobalWord(0x3934);
+			this.processor.RegAcc.Value16 = answer;
+
+			this.processor.Journal.CloseScope("WelcomeEmissary");
+
+			return answer;
+		}
+
+		/// <summary>The question of WelcomeEmissary: 0x3934 becomes minus the chosen line (-2 shows the intelligence report first)</summary>
+		private void AskToReceiveEmissary(short participantIdx, int horizLoc, int vertLoc)
+		{
+			if (horizLoc != -1)
+			{
+				this.owner.MapOps.FocusMapView(this.owner.World.PersonParticipantIdx, horizLoc - 8, vertLoc - 2);
+			}
+
+			while (true)
+			{
+				Message("An emissary from the\n")
+					.Text(this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1992)))
+					.Text(" wishes to\nspeak with you.\n")
+					.Text("Will you receive him?\n Yes.\n No.\n");
+
+				if ((this.owner.World.Participants[this.owner.World.PersonParticipantIdx].Relations[participantIdx] & 0x40) != 0)
+				{
+					this.owner.Libc.AppendText(0xba06, " Check Intelligence\n");
+				}
+
+				this.owner.Services.PerformSound(this.processor.PullGlobalWord(LeaderRecord(participantIdx, 0x1518)), 3);
+
+				this.owner.Startup.DisplayMouseCursorFully();
+
+				this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+
+				this.processor.EmitGlobalWord(0x3934, (ushort)-this.processor.RegAcc.Value16);
+
+				this.owner.Startup.ConcealMouseCursorToSavedLevel();
+
+				if (this.processor.PullGlobalWord(0x3934) != 0xfffe)
+					break;
+
+				this.owner.Briefings.DisplayIntelligenceReport(participantIdx);
+			}
+		}
+
+		/// <summary>The audience of WelcomeEmissary: the king's screen, his greeting and dialog</summary>
+		private void ReceiveEmissary(short participantIdx)
+		{
+			this.owner.Startup.ConcealMouseCursor();
+
+			DisplayKingScreen(participantIdx);
+
+			this.owner.Services.PerformSound(this.processor.PullGlobalWord(LeaderRecord(participantIdx, 0x151a)), 3);
+
+			this.owner.Startup.DisplayMouseCursor();
+
+			// The font of the leader (table at 0x36fa), font 3 instead of 10
+			ushort typeface = (ushort)((sbyte)this.processor.PullUInt8(0x36fa, (ushort)this.owner.World.Participants[participantIdx].ChiefVisuals) + 8);
+			this.processor.EmitGlobalWord(0x67ec, typeface == 0xa ? (ushort)3 : typeface);
+
+			this.processor.EmitGlobalWord((ushort)(this.processor.PullGlobalWord(0xaa) + 0x10), this.processor.PullGlobalWord(0x67ec));
+			this.processor.EmitGlobalWord(0xd2dc, 1);
+			this.processor.EmitGlobalWord(0x3936, 1);
+			this.processor.EmitGlobalWord(0x67e8, 0xffff);
+			this.processor.EmitGlobalWord(0x7ef4, 0);
+			this.processor.EmitGlobalWord(0xd76c, 0xc);
+
+			ObtainKingSalutation(participantIdx);
+
+			DisplayKingDialog(0xba06, 0x14, 0x8b);
+		}
+
+		/// <summary>A word of the player's leader record (0x3a bytes per leader)</summary>
+		private ushort LeaderRecord(short participantIdx, ushort field)
+		{
+			return (ushort)((this.owner.World.Participants[participantIdx].ChiefVisuals * 0x3a) + field);
+		}
+
+		/// <summary>
+		/// The greeting of the king at 0xba06: the opening (0x39b1 with relations bit 8 towards the human player, else 0x39e8),
+		/// one of 4 random titles with the government (0x19b2) and the leader's name (0x19a2), "of the" civilization (0x1992),
+		/// and the nuclear threat when the player has nuclear units (type 25)
+		/// </summary>
+		public void ObtainKingSalutation(short participantIdx)
+		{
+			this.processor.Journal.OpenScope($"ObtainKingSalutation({participantIdx})");
+
+			ushort leader = (ushort)((participantIdx << 1) + 0x19a2);
+			ushort Regime() => this.processor.PullGlobalWord((ushort)((this.owner.World.Participants[participantIdx].RegimeKind << 1) + 0x19b2));
+
+			this.owner.Libc.CopyText(0xba06, (this.owner.World.Participants[participantIdx].Relations[this.owner.World.PersonParticipantIdx] & 8) != 0 ? (ushort)0x39b1 : (ushort)0x39e8);
+
+			switch (this.owner.Libc.Dice.DrawInt(4))
+			{
+				case 0:
+					this.owner.Libc.AppendText(0xba06, "the most exalted\n");
+					this.owner.Libc.AppendText(0xba06, Regime());
+					this.owner.Libc.AppendText(0xba06, ": ");
+					this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord(leader));
+					this.owner.Libc.AppendText(0xba06, " ");
+					break;
+
+				case 1:
+					this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord(leader));
+					this.owner.Libc.AppendText(0xba06, ", ruler\nand ");
+					this.owner.Libc.AppendText(0xba06, Regime());
+					this.owner.Libc.AppendText(0xba06, " ");
+					break;
+
+				case 2:
+					this.owner.Libc.AppendText(0xba06, "our most wise\n");
+					this.owner.Libc.AppendText(0xba06, Regime());
+					this.owner.Libc.AppendText(0xba06, ": ");
+					this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord(leader));
+					this.owner.Libc.AppendText(0xba06, " ");
+					break;
+
+				case 3:
+					this.owner.Libc.AppendText(0xba06, "he who makes mortals\ntremble: ");
+					this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord(leader));
+					this.owner.Libc.AppendText(0xba06, " ");
+					break;
+			}
+
+			this.owner.Libc.AppendText(0xba06, "of the ");
+			this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1992)));
+			this.owner.Libc.AppendText(0xba06, "...\n");
+
+			if (this.owner.World.Participants[participantIdx].LiveTroops[25] != 0)
+			{
+				this.owner.Libc.AppendText(0xba06, "Our words are backed\nwith NUCLEAR WEAPONS!\n");
+			}
+
+			this.processor.Journal.CloseScope("ObtainKingSalutation");
+		}
+
+		/// <summary>
+		/// The message of the leader of the player to the human player (text 0x3a8c, with the names of both civilizations from
+		/// the table at 0x1982 put into the text parameters 0x30be and 0x30b8)
+		/// </summary>
+		public void DisplayKingMessage(short participantIdx)
+		{
+			this.processor.Journal.OpenScope($"DisplayKingMessage({participantIdx})");
+
+			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be), CivilizationNameAddr(participantIdx));
+
+			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30b8), CivilizationNameAddr(this.owner.World.PersonParticipantIdx));
+
+			this.processor.EmitGlobalWord(0xd76c, 0xc);
+			this.processor.EmitGlobalByte(0xba06, 0x0);
+
+			this.owner.BlockText.DisplayTextDialog(0x3a8c);
+
+			DisplayKingDialog(0xba06, 0x14, 0x8b);
+
+			this.processor.Journal.CloseScope("DisplayKingMessage");
+		}
+
+		private ushort CivilizationNameAddr(short participantIdx)
+		{
+			return this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1982));
+		}
+
+		/// <summary>
+		/// After an audience: the player and the human have met (diplomacy flag 2), the player waits 16 turns before the next
+		/// contact. At the easiest level the units of the player whose nearest city is one of the human's, at most 2 away, are
+		/// removed.
+		/// </summary>
+		public void LogAudience(short participantIdx)
+		{
+			this.processor.Journal.OpenScope($"LogAudience({participantIdx})");
+
+			this.owner.Politics.AssignDiplomacyFlags(this.owner.World.PersonParticipantIdx, participantIdx, 2);
+
+			this.owner.World.Participants[participantIdx].TouchParticipantTimeleft = (short)(this.owner.World.RoundTally + 16);
+
+			if (this.owner.World.HardnessTier == 0)
+			{
+				for (short troopIdx = 0; troopIdx < UnitMemory.TroopTally; troopIdx++)
+				{
+					if (!this.troops.Exists(participantIdx, troopIdx))
+						continue;
+
+					ushort townIdx = this.owner.Helpers.LocateNearestCity(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
+						this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert));
+
+					if (this.owner.World.Towns[townIdx].ParticipantIdx == this.owner.World.PersonParticipantIdx &&
+						(short)this.processor.PullGlobalWord(0x6c9a) <= 2)
+					{
+						this.owner.UnitOps.EliminateUnit(participantIdx, troopIdx);
+					}
+				}
+			}
+
+			this.processor.Journal.CloseScope("LogAudience");
+		}
+
+		/// <summary>
+		/// One frame of the king's animation. While he speaks (0xd76c counts down) and stands still (step 0x67f4 = 0), the mouth
+		/// moves: eyes 5 or -1, mouth 0, 9 or (every 4th frame) 8, then a pause of 4 frames (0x67f6). Otherwise the step goes on
+		/// along table 0x3ab8 (positive: next step, -1, -2, -3: back to step 0, 6, 14); at the end of a gesture (0) the mood
+		/// 0x3936 picks the next one (0: step 3, the eyes colour 0x3a9a; 1: step 0; 2: step 12, the colours 0x3ab4 / 0x3ab7)
+		/// and 0x7ef4 says which pose he holds (0, 1 at step 14, 2 at step 6); without a pause one time in 12 a still pose
+		/// starts a short gesture. The eyes and the mouth come from the tables 0x3a94 and 0x3aa6.
+		/// </summary>
+		public void ChoreographKingSpeaking()
+		{
+			this.processor.Journal.OpenScope("ChoreographKingSpeaking()");
+
+			// The final values of the locals stay in the stack frame, like in the original
+			this.processor.EnterFrame(0x6);
+
+			this.processor.EmitGlobalWord(0x7ef4, 0xffff);
+
+			short eyes, mouth;
+
+			if (this.processor.PullGlobalWord(0xd76c) != 0 && this.processor.PullGlobalWord(0x67f4) == 0)
+			{
+				eyes = this.processor.PullGlobalWord(0x67f4) != 0 ? (short)5 : (short)-1;
+
+				mouth = this.owner.Libc.Dice.DrawInt(2) != 0 ? (short)9 : (short)0;
+
+				if ((this.processor.PullGlobalByte(0xd76c) & 3) == 0)
+					mouth = 8;
+
+				this.processor.EmitGlobalWord(0xd76c, (ushort)(this.processor.PullGlobalWord(0xd76c) - 1));
+				this.processor.EmitGlobalWord(0x67f6, 4);
+			}
+			else
+			{
+				AdvanceKingGesture();
+
+				if (this.processor.PullGlobalWord(0x67f6) == 0 && this.owner.Libc.Dice.DrawInt(12) == 0 && KingGestureStep() == 0)
+				{
+					switch (this.processor.PullGlobalWord(0x67f4))
+					{
+						case 0:
+							this.processor.EmitGlobalWord(0x67f4, 1);
+							break;
+
+						case 6:
+							this.processor.EmitGlobalWord(0x67f4, 0xa);
+							break;
+
+						case 0xe:
+							this.processor.EmitGlobalWord(0x67f4, 0x11);
+							break;
+					}
+				}
+
+				ushort step = this.processor.PullGlobalWord(0x67f4);
+
+				eyes = (sbyte)this.processor.PullGlobalByte((ushort)(step + 0x3a94));
+				mouth = (sbyte)this.processor.PullGlobalByte((ushort)(step + 0x3aa6));
+			}
+
+			if (this.processor.PullGlobalWord(0x67f6) != 0)
+				this.processor.EmitGlobalWord(0x67f6, (ushort)(this.processor.PullGlobalWord(0x67f6) - 1));
+
+			this.processor.EmitLocalWord(0x2, (ushort)mouth);
+			this.processor.EmitLocalWord(0x4, (ushort)eyes);
+
+			ChoreographKingLikeness((ushort)eyes, (ushort)mouth, this.processor.PullGlobalWord(0x7ef4));
+
+			this.owner.TextPainter.AwaitTime(10);
+
+			this.processor.LeaveFrame();
+			// Far return
+			this.processor.Journal.CloseScope("ChoreographKingSpeaking");
+		}
+
+		/// <summary>The entry of table 0x3ab8 for the king's step 0x67f4</summary>
+		private sbyte KingGestureStep()
+		{
+			return (sbyte)this.processor.PullGlobalByte((ushort)(this.processor.PullGlobalWord(0x67f4) + 0x3ab8));
+		}
+
+		/// <summary>The next step of the king's gesture (see ChoreographKingSpeaking)</summary>
+		private void AdvanceKingGesture()
+		{
+			sbyte next = KingGestureStep();
+
+			if (next > 0)
+			{
+				this.processor.EmitGlobalWord(0x67f4, (ushort)(this.processor.PullGlobalWord(0x67f4) + 1));
+				return;
+			}
+
+			if (next < 0)
+			{
+				switch (next)
+				{
+					case -3:
+						this.processor.EmitGlobalWord(0x67f4, 0xe);
+						break;
+
+					case -2:
+						this.processor.EmitGlobalWord(0x67f4, 6);
+						break;
+
+					case -1:
+						this.processor.EmitGlobalWord(0x67f4, 0);
+						break;
+				}
+
+				return;
+			}
+
+			short gesture = -1;
+
+			switch (this.processor.PullGlobalWord(0x3936))
+			{
+				case 0:
+					this.processor.EmitGlobalByte(0x3a9a, this.processor.PullGlobalWord(0x6b8e) != 0 ? (byte)4 : (byte)2);
+
+					if (this.processor.PullGlobalWord(0x67f4) != 6)
+						gesture = 3;
+					break;
+
+				case 1:
+					if (this.processor.PullGlobalWord(0x67f4) != 0)
+						gesture = 0;
+					break;
+
+				case 2:
+					this.processor.EmitGlobalByte(0x3ab4, this.processor.PullGlobalWord(0x6b8e) != 0 ? (byte)0xb : (byte)7);
+					this.processor.EmitGlobalByte(0x3ab7, this.processor.PullGlobalWord(0x6b8e) != 0 ? (byte)0xb : (byte)7);
+
+					if (this.processor.PullGlobalWord(0x67f4) != 0xe)
+						gesture = 0xc;
+					break;
+			}
+
+			if (this.processor.PullGlobalWord(0xd76c) != 0 && this.processor.PullGlobalWord(0x67f4) != 0)
+				gesture = 0;
+
+			this.processor.EmitLocalWord(0x6, (ushort)gesture);
+
+			if (gesture == -1)
+			{
+				ushort step = this.processor.PullGlobalWord(0x67f4);
+
+				this.processor.EmitGlobalWord(0x7ef4, step == 0xe ? (ushort)1 : step == 6 ? (ushort)2 : (ushort)0);
+				return;
+			}
+
+			if (this.processor.PullGlobalWord(0x67f4) == 0)
+				this.processor.EmitGlobalWord(0x67f4, (ushort)gesture);
+
+			if (this.processor.PullGlobalWord(0x67f4) is 6 or 0xe)
+				this.processor.EmitGlobalWord(0x67f4, (ushort)(this.processor.PullGlobalWord(0x67f4) + 1));
+		}
+
+		/// <summary>
+		/// Opens the audience with the player's king (0x67f2): without the pictures (disk 2 missing and no preference bit 8) only
+		/// a line "&lt;title&gt;: &lt;government&gt; of the &lt;civilization&gt;." over a motif (0x67f0 = 1). Otherwise the advisors of
+		/// govtNa.pic (N the government / 2, 3 for government 3, "m" with technology 0x14, 0x67ee) into 0x804e, the king of
+		/// kingNN.pic (NN = 0x3938 + ChiefVisuals, 0x67f8; kink on EGA for kings 0 and 3) into 0xb1e6, the throne room
+		/// (ImportKingScenery), the 14 faces and mouths into 0x7efe / 0x7f00 and, when disk 2 answers, the 12 small advisors
+		/// (0x67fa = 1). The file name is in the stack frame, like in the original.
+		/// </summary>
+		public void DisplayKingScreen(short participantIdx)
+		{
+			this.processor.Journal.OpenScope($"DisplayKingScreen({participantIdx})");
+
+			// The file name is in the stack frame, like in the original, and the final values of the locals stay there
+			this.processor.EnterFrame(0x16);
+			this.processor.PreserveIndexRegisters();
+
+			ushort pictureName = (ushort)(this.processor.RegFrame.Value16 - 0x10);
+
+			this.processor.EmitGlobalWord(0x67f2, (ushort)participantIdx);
+			this.processor.EmitGlobalWord(0x67f0, 0);
+
+			if ((this.owner.World.SessionPrefMarkers & 8) != 0)
+			{
+				this.owner.Startup.QueryForDisk(2, 1);
+			}
+			else
+			{
+				this.owner.Startup.QueryForDisk(2, 0);
+
+				if (this.processor.RegAcc.Value16 == 0)
+				{
+					DisplayKingLine(participantIdx);
+
+					this.processor.RestoreIndexRegisters();
+					this.processor.LeaveFrame();
+					// Far return
+					this.processor.Journal.CloseScope("DisplayKingScreen");
+					return;
+				}
+			}
+
+			NameAdvisorsPicture(pictureName, participantIdx, true);
+
+			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, pictureName, 0);
+
+			for (int advisorIdx = 0; advisorIdx < 4; advisorIdx++)
+			{
+				this.owner.VideoCard.ScreenToPicture(1, (ushort)((0x50 * advisorIdx) + 1), 0x65, 0x4e, 0x63);
+
+				this.processor.EmitGlobalWord((ushort)((6 * advisorIdx) + 0x804e), this.processor.RegAcc.Value16);
+			}
+
+			short king = (sbyte)this.processor.PullGlobalByte((ushort)((ushort)this.owner.World.Participants[participantIdx].ChiefVisuals + 0x3938));
+			this.processor.EmitGlobalWord(0x67f8, (ushort)king);
+
+			this.owner.Startup.QueryForDisk((ushort)((this.processor.PullGlobalWord(0x67f8) / 7) + 4), 1);
+
+			this.owner.Libc.CopyText(pictureName, "king00.pic");
+
+			king = (short)this.processor.PullGlobalWord(0x67f8);
+			this.processor.EmitGlobalByte((ushort)(pictureName + 5), (byte)(this.processor.PullGlobalByte((ushort)(pictureName + 5)) + (king % 10)));
+			this.processor.EmitGlobalByte((ushort)(pictureName + 4), (byte)(this.processor.PullGlobalByte((ushort)(pictureName + 4)) + (king / 10)));
+
+			if (this.processor.PullGlobalWord(0xd762) == 0 && (this.processor.PullGlobalWord(0x67f8) == 0 || this.processor.PullGlobalWord(0x67f8) == 3))
+			{
+				this.processor.EmitGlobalByte((ushort)(pictureName + 3), 0x6b);
+			}
+
+			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, pictureName, 0);
+
+			this.owner.VideoCard.ScreenToPicture(1, 0xb5, 0x43, 0x8b, 0x85);
+
+			this.processor.EmitGlobalWord(0xb1e6, this.processor.RegAcc.Value16);
+
+			ImportKingScenery(participantIdx);
+
+			this.owner.Helpers.ReleaseResource(this.processor.PullGlobalWord(0x804e), 0x3aee);
+
+			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, pictureName, 0);
+
+			// The 14 faces with their mouths, 5 a row (the 9th and the 12th skip two places)
+			short place = 0;
+			ushort faceIdx;
+
+			for (faceIdx = 0; faceIdx < 0xe; faceIdx++)
+			{
+				if (faceIdx == 8 || faceIdx == 0xb)
+					place += 2;
+
+				ushort horizLoc = (ushort)(((place % 5) * 0x3c) + 1);
+				ushort vertLoc = (ushort)((place / 5) * 0x32);
+
+				this.processor.EmitLocalWord(0x16, (ushort)(faceIdx << 2));
+
+				this.owner.VideoCard.ScreenToPicture(1, horizLoc, (ushort)(vertLoc + 1), 0x3b, 0x14);
+
+				this.processor.EmitGlobalWord((ushort)((faceIdx << 2) + 0x7efe), this.processor.RegAcc.Value16);
+
+				this.owner.VideoCard.ScreenToPicture(1, horizLoc, (ushort)(vertLoc + 0x15), 0x3b, 0x1d);
+
+				this.processor.EmitGlobalWord((ushort)((faceIdx << 2) + 0x7f00), this.processor.RegAcc.Value16);
+
+				place++;
+			}
+
+			this.processor.EmitLocalWord(0x12, faceIdx);
+			this.processor.EmitLocalWord(0x14, (ushort)place);
+
+			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0x19d4), 0, 0);
+
+			this.owner.Startup.QueryForDisk(2, 0);
+
+			if (this.processor.RegAcc.Value16 != 0)
+			{
+				NameAdvisorsPicture(pictureName, participantIdx, false);
+
+				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, pictureName, 0);
+
+				// The 12 small advisors, 3 a row
+				ushort row, column = 0;
+
+				for (row = 0; row < 4; row++)
+				{
+					for (column = 0; column < 3; column++)
+					{
+						this.owner.VideoCard.ScreenToPicture(1, (ushort)((0x1d * column) + 0xa1), (ushort)((0x19 * row) + 1), 0x1c, 0x18);
+
+						this.processor.EmitGlobalWord((ushort)((column << 1) + (6 * row) + 0x804e), this.processor.RegAcc.Value16);
+					}
+				}
+
+				this.processor.EmitLocalWord(0x12, row);
+				this.processor.EmitLocalWord(0x14, column);
+
+				this.processor.EmitGlobalWord(0x67fa, 1);
+
+				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0x19d4), 0, 0);
+
+				this.owner.Startup.QueryForDisk(0, 1);
+
+				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0xaa), 0, 0);
+			}
+			else
+			{
+				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0xaa), 0, 0);
+
+				this.processor.EmitGlobalWord(0x67fa, 0);
+			}
+
+			this.processor.EmitGlobalWord(0x67ea, 1);
+
+			this.processor.RestoreIndexRegisters();
+			this.processor.LeaveFrame();
+			// Far return
+			this.processor.Journal.CloseScope("DisplayKingScreen");
+		}
+
+		/// <summary>
+		/// "govtNa.pic" in the buffer: N the government / 2 ('3' for government 3), "m" instead of "a" with technology 0x14
+		/// (0x67ee, read from the player the first time)
+		/// </summary>
+		private void NameAdvisorsPicture(ushort pictureName, short participantIdx, bool first)
+		{
+			this.owner.Libc.CopyText(pictureName, "govt0a.pic");
+
+			short regime = this.owner.World.Participants[participantIdx].RegimeKind;
+
+			this.processor.EmitGlobalByte((ushort)(pictureName + 4), (byte)((regime / 2) + 0x30));
+
+			if (first)
+			{
+				// The answer, not AX (PlayerKnowsTechnology doesn't set it), like in the original
+				this.processor.RegAcc.Value16 = this.owner.Advisors.PlayerKnowsTechnology(participantIdx, 0x14);
+
+				this.processor.EmitGlobalWord(0x67ee, this.processor.RegAcc.Value16);
+			}
+
+			if (regime == 3)
+			{
+				this.processor.EmitGlobalByte((ushort)(pictureName + 4), 0x33);
+			}
+			else if (this.processor.PullGlobalWord(0x67ee) != 0)
+			{
+				this.processor.EmitGlobalByte((ushort)(pictureName + 5), 0x6d);
+			}
+		}
+
+		/// <summary>The audience without pictures: "&lt;title&gt;: &lt;government&gt; of the &lt;civilization&gt;." over a motif</summary>
+		private void DisplayKingLine(short participantIdx)
+		{
+			this.processor.EmitGlobalWord(0x67f0, 1);
+
+			this.owner.Startup.ConcealMouseCursor();
+
+			this.owner.Helpers.FloodBoxWithMotif(0, 128, 320, 72);
+
+			this.owner.Dialogs.RenderShadowBox(0, 128, 319, 71, 15, 8);
+
+			Message(this.processor.PullGlobalWord((ushort)(((ushort)participantIdx << 1) + 0x19a2)))
+				.Text(": ")
+				.Text(this.processor.PullGlobalWord((ushort)(((ushort)this.owner.World.Participants[participantIdx].RegimeKind << 1) + 0x19b2)))
+				.Text(" of the ")
+				.Text(this.processor.PullGlobalWord((ushort)(((ushort)participantIdx << 1) + 0x1992)))
+				.Text(".");
+
+			this.owner.TextPainter.RenderTextToScreen0(0xba06, 8, 130, 15);
+
+			this.owner.Startup.DisplayMouseCursor();
+		}
+
+		/// <summary>
+		/// Unless 0x67f0 is set: shows the throne room of the player, the background "backNa.pic" (N is the government / 2, 3 for
+		/// government 3, "m" instead of "a" when 0x67ee is set) with (Standing + 1) / 2 figures (columns at 0x3afe, pictures at
+		/// 0x804e) and the king (0xb1e6), with the colours of "kingNN.pal" (NN is 0x67f8) and of the background. The file names are
+		/// made in buffers in the stack frame, like in the original.
+		/// </summary>
+		public void ImportKingScenery(short participantIdx)
+		{
+			this.processor.Journal.OpenScope($"ImportKingScenery({participantIdx})");
+
+			this.processor.EnterFrame(0x1e);
+			this.processor.PreserveSource();
+
+			if (this.processor.PullGlobalWord(0x67f0) == 0)
+			{
+				this.owner.Startup.ConcealMouseCursor();
+
+				ushort sceneryName = (ushort)(this.processor.RegFrame.Value16 - 0xe);
+				this.owner.Libc.CopyText(sceneryName, "back0a.pic");
+
+				short regime = this.owner.World.Participants[participantIdx].RegimeKind;
+				this.processor.EmitGlobalByte((ushort)(sceneryName + 4), (byte)((regime / 2) + 0x30));
+
+				if (regime == 3)
+				{
+					this.processor.EmitGlobalByte((ushort)(sceneryName + 4), 0x33);
+				}
+				else if (this.processor.PullGlobalWord(0x67ee) != 0)
+				{
+					this.processor.EmitGlobalByte((ushort)(sceneryName + 5), 0x6d);
+				}
+
+				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, sceneryName, 0);
+
+				for (int figureIdx = 0; (short)((this.owner.World.Participants[participantIdx].Standing + 1) >> 1) > figureIdx; figureIdx++)
+				{
+					this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0x19d4),
+						(short)this.processor.PullGlobalWord((ushort)((figureIdx << 1) + 0x3afe)), 34,
+						this.processor.PullGlobalWord((ushort)((((figureIdx + participantIdx) & 3) * 6) + 0x804e)));
+				}
+
+				this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0x19d4), 90, 0, this.processor.PullGlobalWord(0xb1e6));
+
+				this.processor.EmitGlobalWord(0x67f4, 0);
+
+				// The background's colours: "backNa.pal"
+				this.owner.Libc.CopyText((ushort)(sceneryName + 7), "pal");
+
+				ushort hueName = (ushort)(this.processor.RegFrame.Value16 - 0x1c);
+				this.owner.Libc.CopyText(hueName, "king00.pal");
+
+				short king = (short)this.processor.PullGlobalWord(0x67f8);
+				this.processor.EmitGlobalByte((ushort)(hueName + 5), (byte)(this.processor.PullGlobalByte((ushort)(hueName + 5)) + king % 10));
+				this.processor.EmitGlobalByte((ushort)(hueName + 4), (byte)(this.processor.PullGlobalByte((ushort)(hueName + 4)) + king / 10));
+
+				this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, hueName, 0xc1d6);
+
+				this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, sceneryName, 0xbdee);
+
+				// The colours 0x40 - 0x8f of the king over the background's
+				for (ushort place = 0xc0; place < 0x1b0; place++)
+				{
+					this.processor.EmitGlobalByte((ushort)(place + 0xbdf4), this.processor.PullGlobalByte((ushort)(place + 0xc1dc)));
+				}
+
+				// The loop counter's last value stays in the frame, like in the original
+				this.processor.EmitLocalWord(0x1e, 0x1b0);
+
+				this.owner.Helpers.HaltHueCycling();
+
+				this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 0);
+
+				this.owner.VideoCard.AssignHuesFromHueStruct(0xbdee);
+
+				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0xaa), 0, 0);
+
+				this.owner.Startup.DisplayMouseCursor();
+			}
+
+			this.processor.RestoreSource();
+			this.processor.LeaveFrame();
+
+			this.processor.Journal.CloseScope("'LoadKingBackground'");
+		}
+
+		/// <summary>
+		/// Ends the meeting music and frees the picture of the king (0x7efe), when one is loaded (0x67ea)
+		/// </summary>
+		public void ReleaseKingResources()
+		{
+			this.processor.Journal.OpenScope("ReleaseKingResources()");
+
+			this.owner.Services.PerformSound(1, 0);
+
+			if (this.processor.PullGlobalWord(0x67ea) != 0)
+			{
+				this.owner.Helpers.ReleaseResource(this.processor.PullGlobalWord(0x7efe), 0);
+			}
+
+			this.processor.EmitGlobalWord(0x67ea, 0x0);
+
+			this.processor.Journal.CloseScope("ReleaseKingResources");
+		}
+
+		/// <summary>
+		/// The king's picture (unless 0x67f0 is set): with the advisors' pose arg3 (not -1, not the one shown, 0x67e8, and with
+		/// 0x67fa) the advisors, one for every two ranks of the standing, by the style of the government (6 for the monarchy,
+		/// +3 with 0x67ee); then the face (arg1) and the mouth (arg2) of the king, placed by the table of the king (0x67f8) in the
+		/// segment 0x36fa.
+		/// </summary>
+		public void ChoreographKingLikeness(ushort arg1, ushort arg2, ushort arg3)
+		{
+			this.processor.Journal.OpenScope($"ChoreographKingLikeness({arg1}, {arg2}, {arg3})");
+
+			if (this.processor.PullGlobalWord(0x67f0) == 0)
+			{
+				this.owner.Startup.ConcealMouseCursor();
+
+				short regime = this.owner.World.Participants[this.processor.PullGlobalWord(0x67f2)].RegimeKind;
+				short style = (short)((regime / 2) % 3);
+
+				if (regime == 3)
+				{
+					style = 6;
+				}
+				else if (this.processor.PullGlobalWord(0x67ee) != 0)
+				{
+					style += 3;
+				}
+
+				if (arg3 != 0xffff && arg3 != this.processor.PullGlobalWord(0x67e8) && this.processor.PullGlobalWord(0x67fa) != 0)
+				{
+					for (short advisorIdx = 0; advisorIdx < (short)((this.owner.World.Participants[this.processor.PullGlobalWord(0x67f2)].Standing + 1) >> 1); advisorIdx++)
+					{
+						ushort seat = (ushort)((advisorIdx + this.processor.PullGlobalWord(0x67f2)) & 3);
+						ushort place = (ushort)((style << 4) + (seat << 2));
+
+						// The tables of the advisors are in the segment 0x36fa (ES is left there, like in the original)
+						this.processor.SegExtra.Value16 = 0x36fa;
+
+						short horizLoc = (short)(this.processor.PullGlobalWord((ushort)((advisorIdx << 1) + 0x3afe)) +
+							(this.processor.PullUInt16(0x36fa, (ushort)(place + 0x80)) - (0x50 * seat)) -
+							(this.processor.PullUInt16(0x36fa, (ushort)(place + 0x82)) - 0xa0));
+						short vertLoc = (short)((this.processor.PullUInt16(0x36fa, (ushort)(place + 0xf0)) - 0x64) -
+							(this.processor.PullUInt16(0x36fa, (ushort)(place + 0xf2)) - (0x19 * seat)));
+
+						this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa), horizLoc, vertLoc + 34,
+							this.processor.PullGlobalWord((ushort)((arg3 << 1) + (0x6 * seat) + 0x804e)));
+
+						this.processor.EmitGlobalWord(0x67e8, arg3);
+					}
+				}
+
+				ushort king = (ushort)(this.processor.PullGlobalWord(0x67f8) << 2);
+
+				this.processor.SegExtra.Value16 = 0x36fa;
+
+				short faceHoriz = (short)(0x5a + (this.processor.PullUInt16(0x36fa, (ushort)(king + 0x10)) - 0xb4) - this.processor.PullUInt16(0x36fa, (ushort)(king + 0x12)));
+				short faceVert = (short)((this.processor.PullUInt16(0x36fa, (ushort)(king + 0x48)) - 0x40) - this.processor.PullUInt16(0x36fa, (ushort)(king + 0x4a)));
+
+				if (arg1 != 0xffff)
+				{
+					this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa), faceHoriz, faceVert - 2,
+						this.processor.PullGlobalWord((ushort)((arg1 << 2) + 0x7efe)));
+				}
+
+				if (arg2 != 0xffff)
+				{
+					this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa), faceHoriz, faceVert + 18,
+						this.processor.PullGlobalWord((ushort)((arg2 << 2) + 0x7f00)));
+				}
+
+				this.owner.Startup.DisplayMouseCursor();
+			}
+
+			// Far return
+			this.processor.Journal.CloseScope("ChoreographKingLikeness");
+		}
+
+		/// <summary>
+		/// A dialog over the bottom part of the king screen (rows 128 - 199, kept in the back screen 0x19d4 and put back);
+		/// column 20 is moved to 36
+		/// </summary>
+		/// <returns>The answer of DisplayMenu, also in AX</returns>
+		public ushort DisplayKingDialog(ushort charsAddr, ushort horizLoc, ushort vertLoc)
+		{
+			this.processor.Journal.OpenScope($"DisplayKingDialog(0x{charsAddr:x4}, {horizLoc}, {vertLoc})");
+
+			this.owner.Startup.ConcealMouseCursor();
+
+			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), 0, 0x80, 0x140, 0x48,
+				this.processor.PullGlobalWord(0x19d4), 0, 0x80);
+
+			if (horizLoc == 0x14)
+			{
+				horizLoc = 0x24;
+			}
+
+			this.owner.Startup.DisplayMouseCursorFully();
+
+			this.owner.Dialogs.DisplayMenu(charsAddr, (short)horizLoc, (short)vertLoc, 1);
+
+			ushort answer = this.processor.RegAcc.Value16;
+
+			this.owner.Startup.ConcealMouseCursorToSavedLevel();
+
+			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0x80, 0x140, 0x48,
+				this.processor.PullGlobalWord(0xaa), 0, 0x80);
+
+			this.owner.Startup.DisplayMouseCursor();
+
+			this.processor.RegAcc.Value16 = answer;
+
+			this.processor.Journal.CloseScope("DisplayKingDialog");
+
+			return answer;
+		}
+	}
+}

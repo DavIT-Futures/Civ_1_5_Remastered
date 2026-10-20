@@ -14,6 +14,8 @@
     <ProjectReference Include="..\Civilization1Remaster.Machine\Civilization1Remaster.Machine.csproj" />
     <!-- The golden master tests run the emulated game without a window -->
     <ProjectReference Include="..\Civilization1Remaster.Core\Civilization1Remaster.Core.csproj" />
+    <!-- The game frozen at the end of the migration (tag migration-end): the reference of the behaviour -->
+    <ProjectReference Include="..\Civilization1Remaster.Original\Civilization1Remaster.Original.csproj" />
   </ItemGroup>
 
   <ItemGroup>

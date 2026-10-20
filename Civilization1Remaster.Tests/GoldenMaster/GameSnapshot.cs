@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
@@ -108,6 +108,10 @@ namespace Civilization1Remaster.Tests.GoldenMaster
 
 		private static bool IsIgnored(int displacement)
 		{
+			// The data moved out of the emulated memory is compared by its meaning (MovedData), not here
+			if (Civilization1Remaster.Tests.Dual.MovedData.IsMoved(displacement))
+				return true;
+
 			foreach ((ushort begin, ushort end) in IgnoredDataRanges)
 			{
 				if (displacement >= begin && displacement <= end)
