@@ -221,10 +221,9 @@ namespace Civilization1Remaster.Game
 
 			this.processor.StackWord(0); // stack management - push return segment, ignored
 			this.processor.StackWord(0x00ab); // stack management - push return offset
-			this.owner.Secession.ObtainDistanceToCapital(formerIdx);
 			this.processor.UnstackDoubleWord(); // stack management - pop return offset and segment
 
-			ushort capitalIdx = this.processor.RegAcc.Value16;
+			ushort capitalIdx = this.owner.Secession.ObtainDistanceToCapital(formerIdx);
 			this.processor.EmitLocalWord(0x2, capitalIdx);
 
 			this.owner.World.Towns[capitalIdx].PresentMakingIdx = -1;
@@ -272,9 +271,7 @@ namespace Civilization1Remaster.Game
 			{
 				this.processor.RegSource.Value16 = (ushort)(markIdx << 1);
 
-				this.owner.Routing.TunePosition((short)this.processor.PullGlobalWord((ushort)(this.processor.RegSource.Value16 + 0x1882)) + (short)horizLoc);
-
-				ushort markHoriz = this.processor.RegAcc.Value16;
+				ushort markHoriz = (ushort)this.owner.Routing.TunePosition((short)this.processor.PullGlobalWord((ushort)(this.processor.RegSource.Value16 + 0x1882)) + (short)horizLoc);
 				ushort markVert = (ushort)(this.processor.PullGlobalWord((ushort)(this.processor.RegSource.Value16 + 0x18e4)) + vertLoc);
 
 				this.processor.EmitLocalWord(0xa, markHoriz);

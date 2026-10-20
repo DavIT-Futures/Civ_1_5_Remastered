@@ -663,9 +663,7 @@ namespace Civilization1Remaster.UI
 			{
 				ushort vertLoc = this.owner.Advisors.PlayerKnowsTechnology(this.owner.World.PersonParticipantIdx, 0x23) == 0 ? (ushort)0x34 : (ushort)1;
 
-				this.owner.VideoCard.ScreenToPicture(1, (ushort)((0x23 * pictureIdx) + 1), vertLoc, 0x22, 0x32);
-
-				this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(pictures + (pictureIdx << 1)), this.processor.RegAcc.Value16);
+				this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(pictures + (pictureIdx << 1)), this.owner.VideoCard.ScreenToPicture(1, (ushort)((0x23 * pictureIdx) + 1), vertLoc, 0x22, 0x32));
 			}
 
 			sbyte size = this.owner.World.Towns[townIdx].TrueExtent;
@@ -946,9 +944,7 @@ namespace Civilization1Remaster.UI
 		{
 			for (int pictureIdx = 0; pictureIdx < 0xa; pictureIdx++)
 			{
-				this.owner.VideoCard.ScreenToPicture(1, (ushort)(((pictureIdx % 4) * 0x4f) + left), (ushort)(((pictureIdx >> 2) * rowHeight) + top), 0x4e, altitude);
-
-				this.processor.EmitGlobalWord((ushort)(pictures + (pictureIdx << 1)), this.processor.RegAcc.Value16);
+				this.processor.EmitGlobalWord((ushort)(pictures + (pictureIdx << 1)), this.owner.VideoCard.ScreenToPicture(1, (ushort)(((pictureIdx % 4) * 0x4f) + left), (ushort)(((pictureIdx >> 2) * rowHeight) + top), 0x4e, altitude));
 			}
 		}
 

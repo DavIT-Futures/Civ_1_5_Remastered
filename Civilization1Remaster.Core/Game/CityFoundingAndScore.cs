@@ -135,9 +135,7 @@ namespace Civilization1Remaster.Game
 
 			this.owner.MapOps.AssignTileImprovements(9, horizLoc, vertLoc);
 
-			this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
-
-			if ((short)this.processor.PullGlobalWord((ushort)((ushort)(this.processor.RegAcc.Value16 * 0xc) + 0x44a)) < -1)
+			if ((short)this.processor.PullGlobalWord((ushort)((ushort)(this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) * 0xc) + 0x44a)) < -1)
 			{
 				this.owner.MapOps.AssignTileImprovements(2, horizLoc, vertLoc);
 			}
@@ -230,9 +228,7 @@ namespace Civilization1Remaster.Game
 
 				town.PresentMakingIdx = (sbyte)this.processor.RegAcc.LowByte;
 
-				this.owner.CityOps.PlayerEnjoysWonderEffect(person, 0x13);
-
-				if (this.processor.RegAcc.Value16 != 0)
+				if (this.owner.CityOps.PlayerEnjoysWonderEffect(person, 0x13) != 0)
 				{
 					this.owner.World.ChartSight[town.Place.X, town.Place.Y] |= (sbyte)(byte)(1 << (byte)person);
 
@@ -356,9 +352,7 @@ namespace Civilization1Remaster.Game
 				this.processor.EmitLocalWord(0xc, tileIdx);
 				this.processor.RegSource.Value16 = (ushort)(tileIdx << 1);
 
-				this.owner.Routing.TunePosition((short)this.processor.PullGlobalWord((ushort)((tileIdx << 1) + 0x1882)) + horizLoc);
-
-				short tileHoriz = (short)this.processor.RegAcc.Value16;
+				short tileHoriz = (short)(ushort)this.owner.Routing.TunePosition((short)this.processor.PullGlobalWord((ushort)((tileIdx << 1) + 0x1882)) + horizLoc);
 				short tileVert = (short)(this.processor.PullGlobalWord((ushort)((tileIdx << 1) + 0x18e4)) + (ushort)vertLoc);
 
 				this.processor.EmitLocalWord(0x2, (ushort)tileHoriz);
@@ -370,9 +364,7 @@ namespace Civilization1Remaster.Game
 				}
 				else
 				{
-					this.owner.VideoCard.ObtainDot(2, tileHoriz + 0x50, tileVert);
-
-					ushort colour = this.processor.RegAcc.Value16;
+					ushort colour = this.owner.VideoCard.ObtainDot(2, tileHoriz + 0x50, tileVert);
 					this.processor.EmitLocalWord(0x10, colour);
 
 					if ((short)colour >= 8)
@@ -670,9 +662,7 @@ namespace Civilization1Remaster.Game
 				this.processor.RegSource.Value16 = townOffset;
 				this.processor.RegDest.Value16 = (ushort)(0x1c * otherIdx);
 
-				this.owner.Helpers.ObtainDistance(town.Place.X, this.owner.World.Towns[otherIdx].Place.X, town.Place.Y, this.owner.World.Towns[otherIdx].Place.Y);
-
-				short distance = (short)this.processor.RegAcc.Value16;
+				short distance = (short)(ushort)this.owner.Helpers.ObtainDistance(town.Place.X, this.owner.World.Towns[otherIdx].Place.X, town.Place.Y, this.owner.World.Towns[otherIdx].Place.Y);
 				this.processor.EmitLocalWord(0x4, (ushort)distance);
 
 				this.owner.CityOps.HandleCity((short)otherIdx, -1);
@@ -841,8 +831,7 @@ namespace Civilization1Remaster.Game
 					}
 					for (int i = 0; i < specialistCount; i++)
 					{
-						this.owner.CityOps.ObtainCitizenType((ushort)i);
-						RenderScoreIcon((ushort)(this.processor.RegAcc.Value16 + 5));
+						RenderScoreIcon((ushort)(this.owner.CityOps.ObtainCitizenType((ushort)i) + 5));
 					}
 				}
 

@@ -147,9 +147,7 @@ namespace Civilization1Remaster.Engine
 
 			while (true)
 			{
-				this.owner.Libc.TextLength(charsAddr);
-
-				if ((short)this.processor.RegAcc.Value16 <= (short)charIdx)
+				if ((short)this.owner.Libc.TextLength(charsAddr) <= (short)charIdx)
 					break;
 
 				hash += (ushort)((sbyte)this.processor.PullGlobalByte((ushort)(charIdx + charsAddr)) * (short)charIdx);

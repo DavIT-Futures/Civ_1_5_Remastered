@@ -77,9 +77,7 @@ namespace Civilization1Remaster.Engine
 		/// <param name="mode"></param>
 		public void RenderCenteredTextToScreen0(ushort charsAddr, int horizLoc, int vertLoc, ushort style)
 		{
-			ObtainTextWidth(charsAddr);
-
-			horizLoc -= this.processor.RegAcc.Value16 / 2;
+			horizLoc -= (ushort)ObtainTextWidth(charsAddr) / 2;
 
 			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.PullGlobalWord(0xaa) + 0xa), 0x0);
 
@@ -103,9 +101,7 @@ namespace Civilization1Remaster.Engine
 		/// <param name="mode"></param>
 		public void RenderCenteredTextWithShadowToScreen0(ushort charsAddr, ushort horizLoc, ushort vertLoc, ushort style)
 		{
-			ObtainTextWidth(charsAddr);
-
-			horizLoc -= (ushort)(this.processor.RegAcc.Value16 >> 1);
+			horizLoc -= (ushort)((ushort)ObtainTextWidth(charsAddr) >> 1);
 
 			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.PullGlobalWord(0xaa) + 0xa), 0x0);
 

@@ -426,8 +426,7 @@ namespace Civilization1Remaster.Game
 				ListUnitChoices(participantIdx, townIdx);
 
 			FrameWord(PageCutCountLocal, (ushort)ChoiceCount);
-			this.owner.Libc.TextLength(0xba06);
-			FrameWord(PageCutLengthLocal, this.processor.RegAcc.Value16);
+			FrameWord(PageCutLengthLocal, this.owner.Libc.TextLength(0xba06));
 
 			// The Great Wall on the continent of the city (no walls and the like then)
 			FrameWord(SharedWallLocal, 0);
@@ -1516,9 +1515,7 @@ namespace Civilization1Remaster.Game
 				.Text((ushort)((ushort)(0x16 * pick) + 0x4da))
 				.Text(".\n");
 
-			this.owner.Libc.TextLength(0xba06);
-
-			ushort length = this.processor.RegAcc.Value16;
+			ushort length = this.owner.Libc.TextLength(0xba06);
 			this.processor.EmitLocalWord(0x40, length);
 
 			ushort allowed = 0;
@@ -1872,9 +1869,7 @@ namespace Civilization1Remaster.Game
 			if (PlayerKnowsTechnology((short)libraryOwner, scienceIdx) != 0)
 				return;
 
-			this.owner.CityOps.PlayerEnjoysWonderEffect((short)libraryOwner, 5);
-
-			if (this.processor.RegAcc.Value16 == 0)
+			if (this.owner.CityOps.PlayerEnjoysWonderEffect((short)libraryOwner, 5) == 0)
 				return;
 
 			int knowing = 0;

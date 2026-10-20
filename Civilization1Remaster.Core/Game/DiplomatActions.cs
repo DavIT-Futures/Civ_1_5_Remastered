@@ -501,9 +501,7 @@ namespace Civilization1Remaster.Game
 
 				for (int pictureIdx = 0; pictureIdx < 0x1c; pictureIdx++)
 				{
-					this.owner.VideoCard.ScreenToPicture(1, (ushort)(((pictureIdx % 7) * 0x2d) + 1), (ushort)(((pictureIdx / 7) * 0x2d) + 1), 0x2c, 0x2c);
-
-					this.processor.EmitGlobalWord((ushort)(pictures + (pictureIdx << 1)), this.processor.RegAcc.Value16);
+					this.processor.EmitGlobalWord((ushort)(pictures + (pictureIdx << 1)), this.owner.VideoCard.ScreenToPicture(1, (ushort)(((pictureIdx % 7) * 0x2d) + 1), (ushort)(((pictureIdx / 7) * 0x2d) + 1), 0x2c, 0x2c));
 				}
 
 				horizLoc = (short)((this.owner.Routing.TunePosition(horizLoc - this.processor.PullGlobalSignedWord(0xd4cc)) << 4) + 0x42);
@@ -774,9 +772,7 @@ namespace Civilization1Remaster.Game
 
 				for (int figureIdx = 0; figureIdx < 4; figureIdx++)
 				{
-					this.owner.VideoCard.ScreenToPicture(1, 1, (ushort)((figureIdx << 4) + 1), 0x2f, 0xf);
-
-					this.processor.EmitGlobalWord((ushort)(figures + (figureIdx << 1)), this.processor.RegAcc.Value16);
+					this.processor.EmitGlobalWord((ushort)(figures + (figureIdx << 1)), this.owner.VideoCard.ScreenToPicture(1, 1, (ushort)((figureIdx << 4) + 1), 0x2f, 0xf));
 				}
 
 				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x537b, 0);

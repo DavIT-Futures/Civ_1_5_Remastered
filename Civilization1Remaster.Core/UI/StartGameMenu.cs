@@ -901,9 +901,7 @@ namespace Civilization1Remaster.UI
 
 				this.processor.RegDest.Value16 = (ushort)((participantIdx << 1) + frame - 0x5a);
 
-				this.owner.MapOps.ObtainContinentID((sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d5)), (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d6)));
-
-				ushort continent = this.processor.RegAcc.Value16;
+				ushort continent = this.owner.MapOps.ObtainContinentID((sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d5)), (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d6)));
 				this.processor.EmitGlobalWord((ushort)(continents + (participantIdx << 1)), continent);
 
 				ushort counter = (ushort)((continent << 1) + frame - 0x46);
@@ -1050,19 +1048,15 @@ namespace Civilization1Remaster.UI
 
 				this.processor.RegDest.Value16 = troop;
 
-				this.owner.MapOps.ObtainContinentID((sbyte)this.processor.PullGlobalByte((ushort)(other + 0x81d5)), (sbyte)this.processor.PullGlobalByte((ushort)(other + 0x81d6)));
-
-				ushort otherContinent = this.processor.RegAcc.Value16;
+				ushort otherContinent = this.owner.MapOps.ObtainContinentID((sbyte)this.processor.PullGlobalByte((ushort)(other + 0x81d5)), (sbyte)this.processor.PullGlobalByte((ushort)(other + 0x81d6)));
 				this.processor.EmitLocalWord(0x5e, otherContinent);
 
 				if (this.owner.MapOps.ObtainContinentID((sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d5)), (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d6))) != otherContinent)
 					continue;
 
-				this.owner.Helpers.ObtainDistance(
+				short distance = (short)(ushort)this.owner.Helpers.ObtainDistance(
 					(sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d5)), (sbyte)this.processor.PullGlobalByte((ushort)(other + 0x81d5)),
 					(sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d6)), (sbyte)this.processor.PullGlobalByte((ushort)(other + 0x81d6)));
-
-				short distance = (short)this.processor.RegAcc.Value16;
 				this.processor.EmitLocalWord(0x8, (ushort)distance);
 
 				if (distance < nearest)

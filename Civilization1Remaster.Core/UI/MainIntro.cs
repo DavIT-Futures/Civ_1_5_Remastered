@@ -136,8 +136,7 @@ namespace Civilization1Remaster.UI
 			this.owner.VideoCard.AssignHuesByIndexArray(0x19fe);
 
 			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x328a, 1);
-			this.owner.VideoCard.ScreenToPicture(1, 0, 64, 320, 80);
-			this.processor.EmitLocalWord(IntroLogo, this.processor.RegAcc.Value16);
+			this.processor.EmitLocalWord(IntroLogo, this.owner.VideoCard.ScreenToPicture(1, 0, 64, 320, 80));
 
 			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x3293, 1);
 			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0x4c, 0x140, 0x18,
@@ -208,9 +207,7 @@ namespace Civilization1Remaster.UI
 					}
 				}
 
-				this.owner.Libc.TextLength(0xba06);
-
-				if (this.processor.RegAcc.Value16 != 0)
+				if (this.owner.Libc.TextLength(0xba06) != 0)
 					RenderCreditLine();
 
 				FlickerCgaScreen();
@@ -270,9 +267,7 @@ namespace Civilization1Remaster.UI
 						this.owner.Libc.ScanStream((short)this.owner.GlobD768, "%[^\n]\n", 0xba06);
 				}
 
-				this.owner.Libc.TextLength(0xba06);
-
-				if (this.processor.RegAcc.Value16 != 0)
+				if (this.owner.Libc.TextLength(0xba06) != 0)
 					RenderCreditLine();
 
 				FlickerCgaScreen();
@@ -404,9 +399,7 @@ namespace Civilization1Remaster.UI
 			{
 				this.processor.EmitGlobalWord(0x6b32, 0xffff);
 
-				this.owner.Dialogs.ObtainNavigationKey();
-
-				switch (this.processor.RegAcc.Value16)
+				switch (this.owner.Dialogs.ObtainNavigationKey())
 				{
 					case 0x4e:
 					case 0x6e:
@@ -643,8 +636,7 @@ namespace Civilization1Remaster.UI
 			this.processor.EmitLocalWord(ScreenPartEnd, this.processor.RegAcc.Value16);
 			this.processor.EmitLocalWord(ScreenPartBegin, this.processor.RegAcc.Value16);
 
-			this.owner.Libc.TextLength(0xba06);
-			this.processor.EmitLocalWord(ScreenTextLength, this.processor.RegAcc.Value16);
+			this.processor.EmitLocalWord(ScreenTextLength, this.owner.Libc.TextLength(0xba06));
 
 			this.owner.Services.PerformSound(3, 0);
 

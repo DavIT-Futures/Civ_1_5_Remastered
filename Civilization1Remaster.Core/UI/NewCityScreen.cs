@@ -263,9 +263,7 @@ namespace Civilization1Remaster.UI
 
 			bool fresh = true;
 
-			this.owner.Libc.TextLength(0xba06);
-
-			for (ushort charIdx = this.processor.RegAcc.Value16; (short)charIdx < (short)breadth; charIdx++)
+			for (ushort charIdx = this.owner.Libc.TextLength(0xba06); (short)charIdx < (short)breadth; charIdx++)
 			{
 				this.processor.EmitGlobalByte((ushort)(charIdx + 0xba06), 0x20);
 			}

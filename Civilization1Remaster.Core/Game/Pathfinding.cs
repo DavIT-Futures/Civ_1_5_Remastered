@@ -529,10 +529,8 @@ namespace Civilization1Remaster.Game
 					if (blockSteps == 0 || blockSteps > fewest)
 						continue;
 
-					this.owner.Helpers.ObtainDistance((sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81da)), (nextColumn * 4) + 1,
+					short distance = (short)(ushort)this.owner.Helpers.ObtainDistance((sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81da)), (nextColumn * 4) + 1,
 						(sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81db)), (nextRow * 4) + 1);
-
-					short distance = (short)this.processor.RegAcc.Value16;
 
 					if (blockSteps < fewest)
 					{
@@ -595,9 +593,7 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.EmitGlobalWord(0x6590, (ushort)((((short)this.processor.PullGlobalWord((ushort)((direction << 1) + 0x1882)) + unitColumn) << 2) + 1));
 
-			TunePosition((short)this.processor.PullGlobalWord(0x6590));
-
-			this.processor.EmitGlobalWord(0x6590, this.processor.RegAcc.Value16);
+			this.processor.EmitGlobalWord(0x6590, (ushort)TunePosition((short)this.processor.PullGlobalWord(0x6590)));
 			this.processor.EmitGlobalWord(0x6592, (ushort)((((short)this.processor.PullGlobalWord((ushort)((direction << 1) + 0x18e4)) + unitRow) << 2) + 1));
 
 			if ((this.owner.MapOps.ObtainTerrainType((short)this.processor.PullGlobalWord(0x6590), (short)this.processor.PullGlobalWord(0x6592)) == 0xa) == sea)
@@ -830,9 +826,7 @@ namespace Civilization1Remaster.Game
 		/// <summary>The neighbours of a tile of the window get its cost plus the move cost (see ShiftToward); the new tail</summary>
 		private byte ExpandWindowCell(short horizLoc, short vertLoc, short cost, byte tail, bool sea, bool air, short windowHoriz, short windowVert)
 		{
-			TunePosition(horizLoc);
-
-			this.owner.MapOps.ContainsRoad((short)this.processor.RegAcc.Value16, vertLoc);
+			this.owner.MapOps.ContainsRoad((short)(ushort)TunePosition(horizLoc), vertLoc);
 
 			ushort road = this.processor.RegAcc.Value16;
 			this.processor.EmitLocalWord(0x8, road);
@@ -858,9 +852,7 @@ namespace Civilization1Remaster.Game
 				if (this.owner.Libc.AbsoluteValue((short)(nextVert - this.processor.PullGlobalWord(0x6592))) >= 8)
 					continue;
 
-				this.owner.MapOps.VerifyMapLimits(tileHoriz, nextVert);
-
-				if (this.processor.RegAcc.Value16 == 0)
+				if (this.owner.MapOps.VerifyMapLimits(tileHoriz, nextVert) == 0)
 					continue;
 
 				ushort terrain = this.owner.MapOps.ObtainTerrainType(tileHoriz, nextVert);
@@ -996,18 +988,14 @@ namespace Civilization1Remaster.Game
 
 			if (troopIdx != 0xffff)
 			{
-				this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, (short)troopIdx, 2);
-
-				this.processor.EmitLocalWord(local, (ushort)(this.processor.RegAcc.Value16 << 2));
+				this.processor.EmitLocalWord(local, (ushort)(this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, (short)troopIdx, 2) << 2));
 			}
 			else
 			{
 				this.processor.EmitLocalWord(local, 0);
 			}
 
-			this.owner.Helpers.ObtainDistance((short)this.processor.PullGlobalWord(0x6590), horizLoc, (short)this.processor.PullGlobalWord(0x6592), vertLoc);
-
-			ushort total = (ushort)(this.processor.PullLocalWord(local) + this.processor.RegAcc.Value16);
+			ushort total = (ushort)(this.processor.PullLocalWord(local) + (ushort)this.owner.Helpers.ObtainDistance((short)this.processor.PullGlobalWord(0x6590), horizLoc, (short)this.processor.PullGlobalWord(0x6592), vertLoc));
 			this.processor.EmitLocalWord(local, total);
 
 			return (short)total;

@@ -593,9 +593,7 @@ namespace Civilization1Remaster.Engine
 
 				this.owner.BlockText.RenderTextChunk(99, 80, 72, 0);
 
-				this.owner.Dialogs.ObtainNavigationKey();
-
-				key = this.processor.RegAcc.Value16;
+				key = this.owner.Dialogs.ObtainNavigationKey();
 
 				for (ushort driveIdx = 0; driveIdx < 6; driveIdx++)
 				{
@@ -651,9 +649,7 @@ namespace Civilization1Remaster.Engine
 		/// <summary>The letter of the drive (0x4384) is written at the end of the text at 0xba06, place: 0xba05 the last character</summary>
 		private void AppendDriveLetter(ushort place)
 		{
-			this.owner.Libc.TextLength(0xba06);
-
-			this.processor.EmitGlobalByte((ushort)(this.processor.RegAcc.Value16 + place), (byte)(this.processor.PullGlobalByte(0x4384) + 0x41));
+			this.processor.EmitGlobalByte((ushort)(this.owner.Libc.TextLength(0xba06) + place), (byte)(this.processor.PullGlobalByte(0x4384) + 0x41));
 		}
 
 		/// <summary>

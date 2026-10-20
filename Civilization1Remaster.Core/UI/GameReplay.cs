@@ -864,14 +864,11 @@ namespace Civilization1Remaster.UI
 
 			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, portraitName, 0);
 
-			this.owner.VideoCard.ScreenToPicture(1, 0xb5, 0x43, 0x8b, 0x85);
-			ushort portrait = this.processor.RegAcc.Value16;
+			ushort portrait = this.owner.VideoCard.ScreenToPicture(1, 0xb5, 0x43, 0x8b, 0x85);
 
-			this.owner.VideoCard.ScreenToPicture(1, 1, 0x33, 0x3b, 0x31);
-			ushort speakingMouth = this.processor.RegAcc.Value16;
+			ushort speakingMouth = this.owner.VideoCard.ScreenToPicture(1, 1, 0x33, 0x3b, 0x31);
 
-			this.owner.VideoCard.ScreenToPicture(1, 1, 0x97, 0x3b, 0x31);
-			ushort closedMouth = this.processor.RegAcc.Value16;
+			ushort closedMouth = this.owner.VideoCard.ScreenToPicture(1, 1, 0x97, 0x3b, 0x31);
 
 			this.processor.EmitLocalWord(0x12, portrait);
 			this.processor.EmitLocalWord(0x30, closedMouth);

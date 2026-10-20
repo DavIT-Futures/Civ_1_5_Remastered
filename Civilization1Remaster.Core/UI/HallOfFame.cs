@@ -152,9 +152,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Libc.MoveFarData(0x3772, (ushort)(record + 0x37f0), this.processor.SegData.Value16, (ushort)(0xba06 + this.owner.Libc.TextLength(0xba06)), 16);
 
-			this.owner.Libc.TextLength(0xba06);
-
-			ushort length = this.processor.RegAcc.Value16;
+			ushort length = this.owner.Libc.TextLength(0xba06);
 
 			this.owner.Libc.AppendText(0xba06, " to ");
 

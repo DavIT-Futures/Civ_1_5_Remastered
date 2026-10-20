@@ -97,9 +97,7 @@ namespace Civilization1Remaster.Game
 		/// <summary>The wonder effect 1 for the player (AX of PlayerEnjoysWonderEffect)</summary>
 		private bool EnjoysWonderEffectOne(short participantIdx)
 		{
-			this.owner.CityOps.PlayerEnjoysWonderEffect(participantIdx, 1);
-
-			return this.processor.RegAcc.Value16 != 0;
+			return this.owner.CityOps.PlayerEnjoysWonderEffect(participantIdx, 1) != 0;
 		}
 
 		/// <summary>The forgotten broken treaty and, every 16th turn, the end of a peace between the two (see HandlePeaceTreaties)</summary>
@@ -283,9 +281,7 @@ namespace Civilization1Remaster.Game
 
 					for (short regime = 1; regime < 6; regime++)
 					{
-						this.owner.CityOps.PlayerEnjoysWonderEffect(participantIdx, 1);
-
-						if (this.processor.RegAcc.Value16 == 0 && !RegimeKnown(participantIdx, regime))
+						if (this.owner.CityOps.PlayerEnjoysWonderEffect(participantIdx, 1) == 0 && !RegimeKnown(participantIdx, regime))
 							continue;
 
 						regimes.Add(regime);
@@ -492,9 +488,7 @@ namespace Civilization1Remaster.Game
 			if (AIWeighsTreaty(participantIdx, otherIdx) == 0)
 				return false;
 
-			this.owner.CityOps.PlayerEnjoysWonderEffect(otherIdx, 7);
-
-			return this.processor.RegAcc.Value16 == 0 && this.owner.World.Participants[participantIdx].RegimeKind < 4;
+			return this.owner.CityOps.PlayerEnjoysWonderEffect(otherIdx, 7) == 0 && this.owner.World.Participants[participantIdx].RegimeKind < 4;
 		}
 
 		/// <summary>"X and\nY" of the two civilizations at 0xba06</summary>

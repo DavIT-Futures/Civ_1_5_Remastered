@@ -470,9 +470,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.TextPainter.RenderTextToScreen0(0xba06, 8, vertLoc + 4, 10);
 
-			this.owner.CityOps.PlayerEnjoysWonderEffect(this.owner.World.PersonParticipantIdx, 0x14);
-
-			if (this.processor.RegAcc.Value16 != 0)
+			if (this.owner.CityOps.PlayerEnjoysWonderEffect(this.owner.World.PersonParticipantIdx, 0x14) != 0)
 			{
 				science += (short)(science / 2);
 			}

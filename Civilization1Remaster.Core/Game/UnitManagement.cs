@@ -1606,8 +1606,7 @@ namespace Civilization1Remaster.Game
 			// Check the 8 neighboring tiles for any foreign unit (Zone of Control)
 			bool found = MovementRules.HasAdjacentForeignUnit(horizLoc, vertLoc, participantIdx, (x, y) =>
 			{
-				this.owner.MapOps.ObtainTileOwner(x, y);
-				return (int)(short)this.processor.RegAcc.Value16;
+				return (int)(short)this.owner.MapOps.ObtainTileOwner(x, y);
 			});
 
 			ushort result = (ushort)(found ? 1 : 0);

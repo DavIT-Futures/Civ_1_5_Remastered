@@ -1151,6 +1151,10 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   21; pełny zestaw 744 zielony.
 - B1, porcja 1 (2026-10-20): wynik przez `return` zamiast odczytu AX po `VerifyValueSpan`, `KeyAvailable`, `DisplayMenu`
   (68 miejsc, 18 plików); funkcje dalej ustawiają AX. Pełny zestaw 744 zielony.
+- B1, porcja 2 (2026-10-20): wynik przez `return` po 19 funkcjach (ObtainContinentID, ScreenToPicture, TextLength,
+  PlayerEnjoysWonderEffect, ObtainDistance, ObtainNavigationKey, ObtainTileOwner, ObtainTextWidth, VerifyMapLimits,
+  ObtainDot, TunePosition, PickCityProduction, ObtainTerrainType, LocateNearestCity, ObtainCitizenType, AbsoluteValue,
+  ObtainDistanceToCapital, ObtainTileImprovements, TallyUnitsByDomainInStack) – 117 miejsc w 25 plikach. Pełny zestaw zielony.
 
 ## Następny krok
 

@@ -203,13 +203,9 @@ namespace Civilization1Remaster.UI
 			}
 			else
 			{
-				this.owner.MapOps.ObtainTileOwner(horizLoc, vertLoc);
-
-				if (this.processor.RegAcc.Value16 != 0xffff)
+				if (this.owner.MapOps.ObtainTileOwner(horizLoc, vertLoc) != 0xffff)
 				{
-					this.owner.MapOps.ObtainTileOwner(horizLoc, vertLoc);
-
-					ushort hue = this.processor.PullGlobalWord((ushort)((this.processor.RegAcc.Value16 << 1) + 0x1946));
+					ushort hue = this.processor.PullGlobalWord((ushort)((this.owner.MapOps.ObtainTileOwner(horizLoc, vertLoc) << 1) + 0x1946));
 
 					this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), boxHoriz + 1, boxVert + 1, 3, 3, 0);
 

@@ -92,9 +92,7 @@ namespace Civilization1Remaster.Game
 				if (town.ConditionMarker == 0xff || town.ParticipantIdx != participantIdx)
 					continue;
 
-				this.owner.MapOps.ObtainContinentID(town.Place.X, town.Place.Y);
-
-				ushort share = ContinentShare(this.processor.RegAcc.Value16);
+				ushort share = ContinentShare(this.owner.MapOps.ObtainContinentID(town.Place.X, town.Place.Y));
 				this.processor.RegDest.Value16 = (ushort)(this.processor.RegAcc.Value16 << 1);
 				this.processor.EmitUInt16(this.processor.SegStack.Value16, share, (ushort)(this.processor.PullUInt16(this.processor.SegStack.Value16, share) + town.TrueExtent));
 
@@ -106,9 +104,7 @@ namespace Civilization1Remaster.Game
 
 				this.processor.RegSource.Value16 = (ushort)(0x1c * townIdx);
 
-				this.owner.MapOps.ObtainContinentID(town.Place.X, town.Place.Y);
-
-				this.processor.EmitLocalWord(0x24, this.processor.RegAcc.Value16);
+				this.processor.EmitLocalWord(0x24, this.owner.MapOps.ObtainContinentID(town.Place.X, town.Place.Y));
 				this.processor.EmitLocalWord(0xe, (ushort)(short)town.Place.X);
 				this.processor.EmitLocalWord(0x12, (ushort)(short)town.Place.Y);
 				this.processor.EmitLocalWord(0x8, townIdx);
@@ -128,9 +124,7 @@ namespace Civilization1Remaster.Game
 
 			TransferRebelUnits(participantIdx, rebelIdx);
 
-			ObtainDistanceToCapital(rebelIdx);
-
-			ushort capitalIdx = this.processor.RegAcc.Value16;
+			ushort capitalIdx = ObtainDistanceToCapital(rebelIdx);
 			this.processor.EmitLocalWord(0x10, capitalIdx);
 			this.processor.RegAcc.Value16 = (ushort)(0x1c * capitalIdx);
 			this.processor.RegSource.Value16 = this.processor.RegAcc.Value16;
@@ -152,10 +146,9 @@ namespace Civilization1Remaster.Game
 
 				this.processor.StackWord(0); // stack management - push return segment, ignored
 				this.processor.StackWord(0x084f); // stack management - push return offset
-				ObtainDistanceToCapital(participantIdx);
 				this.processor.UnstackDoubleWord(); // stack management - pop return offset and segment
 
-				ushort newCapital = this.processor.RegAcc.Value16;
+				ushort newCapital = ObtainDistanceToCapital(participantIdx);
 				this.processor.EmitLocalWord(0x10, newCapital);
 				this.processor.RegAcc.Value16 = (ushort)(0x1c * newCapital);
 				this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
@@ -339,9 +332,7 @@ namespace Civilization1Remaster.Game
 					if (town.ConditionMarker == 0xff || town.ParticipantIdx != participantIdx)
 						continue;
 
-					this.owner.MapOps.ObtainContinentID(town.Place.X, town.Place.Y);
-
-					ushort townContinent = this.processor.RegAcc.Value16;
+					ushort townContinent = this.owner.MapOps.ObtainContinentID(town.Place.X, town.Place.Y);
 					this.processor.EmitLocalWord(0x18, townContinent);
 					this.processor.RegDest.Value16 = (ushort)(townContinent << 1);
 
@@ -372,9 +363,7 @@ namespace Civilization1Remaster.Game
 					if (town.ConditionMarker == 0xff || town.ParticipantIdx != participantIdx)
 						continue;
 
-					this.owner.Helpers.ObtainDistance(town.Place.X, (short)this.processor.PullLocalWord(0xe), town.Place.Y, (short)this.processor.PullLocalWord(0x12));
-
-					short distance = (short)this.processor.RegAcc.Value16;
+					short distance = (short)(ushort)this.owner.Helpers.ObtainDistance(town.Place.X, (short)this.processor.PullLocalWord(0xe), town.Place.Y, (short)this.processor.PullLocalWord(0x12));
 					this.processor.EmitLocalWord(0x4, (ushort)distance);
 
 					if (distance > farthest)

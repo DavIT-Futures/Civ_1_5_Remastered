@@ -100,8 +100,7 @@ namespace Civilization1Remaster.Game
 					continue;
 				}
 
-				this.owner.MapOps.ObtainTileOwner(horizLoc, vertLoc);
-				this.processor.EmitLocalWord(0xe8, this.processor.RegAcc.Value16);
+				this.processor.EmitLocalWord(0xe8, this.owner.MapOps.ObtainTileOwner(horizLoc, vertLoc));
 
 				if (this.processor.PullLocalWord(0xe8) != 0xffff && this.processor.PullLocalWord(0xe8) != (ushort)owner)
 				{
@@ -322,8 +321,7 @@ namespace Civilization1Remaster.Game
 				if (owner != 0 && (this.owner.World.ChartSight[(ushort)horizLoc, (ushort)vertLoc] & (1 << (owner & 0xff))) == 0)
 					this.processor.EmitUInt16(this.processor.SegStack.Value16, unavailable, 1);
 
-				this.owner.MapOps.ObtainTileOwner(horizLoc, vertLoc);
-				this.processor.EmitLocalWord(0xe8, this.processor.RegAcc.Value16);
+				this.processor.EmitLocalWord(0xe8, this.owner.MapOps.ObtainTileOwner(horizLoc, vertLoc));
 
 				ushort shared = (ushort)(short)(10 * this.owner.TownDeltas[tile].X + this.owner.TownDeltas[tile].Y * 2);
 
@@ -753,12 +751,9 @@ namespace Civilization1Remaster.Game
 				this.processor.RegSource.Value16 = (ushort)(marvelIdx * 0x1c);
 				this.processor.RegDest.Value16 = (ushort)(townIdx * 0x1c);
 
-				this.owner.MapOps.ObtainContinentID(this.owner.World.Towns[marvelIdx].Place.X, this.owner.World.Towns[marvelIdx].Place.Y);
-				this.processor.EmitLocalWord(0x10c, this.processor.RegAcc.Value16);
+				this.processor.EmitLocalWord(0x10c, this.owner.MapOps.ObtainContinentID(this.owner.World.Towns[marvelIdx].Place.X, this.owner.World.Towns[marvelIdx].Place.Y));
 
-				this.owner.MapOps.ObtainContinentID(town.Place.X, town.Place.Y);
-
-				if (this.processor.RegAcc.Value16 == this.processor.PullLocalWord(0x10c))
+				if (this.owner.MapOps.ObtainContinentID(town.Place.X, town.Place.Y) == this.processor.PullLocalWord(0x10c))
 				{
 					this.processor.EmitGlobalWord(0x6c98, 2);
 					this.processor.EmitLocalWord(0xac, 2);
@@ -1022,8 +1017,7 @@ namespace Civilization1Remaster.Game
 				this.processor.EmitLocalWord(0xe8, this.owner.Helpers.LocateNearestUnit(owner, this.processor.PullLocalSignedWord(0xba), other.Place.X, other.Place.Y));
 
 				this.processor.RegAcc.Value16 = (ushort)(this.processor.PullGlobalWord(0x6c9a) - 3);
-				this.owner.Libc.AbsoluteValue((short)this.processor.RegAcc.Value16);
-				this.processor.EmitGlobalWord(0x6c9a, this.processor.RegAcc.Value16);
+				this.processor.EmitGlobalWord(0x6c9a, (ushort)this.owner.Libc.AbsoluteValue((short)this.processor.RegAcc.Value16));
 				this.processor.RegBase.Value16 = (ushort)(otherIdx * 0x1c);
 
 				if ((other.ConditionMarker & 0x20) != 0)
@@ -1047,19 +1041,14 @@ namespace Civilization1Remaster.Game
 				short troopIdx = (short)this.processor.PullLocalWord(0xe8);
 				this.processor.RegSource.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride + owner * UnitMemory.ParticipantStride);
 
-				this.owner.MapOps.ObtainTerrainType(this.troops.PullSigned(owner, troopIdx, UnitMemory.Horiz), this.troops.PullSigned(owner, troopIdx, UnitMemory.Vert));
-
-				if (this.processor.RegAcc.Value16 == MapRules.OceanTerrain)
+				if (this.owner.MapOps.ObtainTerrainType(this.troops.PullSigned(owner, troopIdx, UnitMemory.Horiz), this.troops.PullSigned(owner, troopIdx, UnitMemory.Vert)) == MapRules.OceanTerrain)
 					continue;
 
 				this.processor.RegSource.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride + owner * UnitMemory.ParticipantStride);
 				this.processor.RegDest.Value16 = (ushort)(otherIdx * 0x1c);
 
-				this.owner.MapOps.ObtainContinentID(this.troops.PullSigned(owner, troopIdx, UnitMemory.Horiz), this.troops.PullSigned(owner, troopIdx, UnitMemory.Vert));
-				this.processor.EmitLocalWord(0x10c, this.processor.RegAcc.Value16);
-				this.owner.MapOps.ObtainContinentID(other.Place.X, other.Place.Y);
-
-				if (this.processor.RegAcc.Value16 != this.processor.PullLocalWord(0x10c))
+				this.processor.EmitLocalWord(0x10c, this.owner.MapOps.ObtainContinentID(this.troops.PullSigned(owner, troopIdx, UnitMemory.Horiz), this.troops.PullSigned(owner, troopIdx, UnitMemory.Vert)));
+				if (this.owner.MapOps.ObtainContinentID(other.Place.X, other.Place.Y) != this.processor.PullLocalWord(0x10c))
 					continue;
 
 				if (this.processor.PullLocalWord(0xc8) == this.processor.PullGlobalWord(0x6c9a))
@@ -1533,9 +1522,7 @@ namespace Civilization1Remaster.Game
 			this.processor.EmitLocalWord(0xcc, 0);
 
 			// The attitude of the continent (as translated: the landmass record of the player numbered by the continent)
-			this.owner.MapOps.ObtainContinentID(this.processor.PullLocalSignedWord(0xd8), this.processor.PullLocalSignedWord(0xe4));
-
-			if (this.processor.RegAcc.Value16 >= this.owner.World.Participants.Length)
+			if (this.owner.MapOps.ObtainContinentID(this.processor.PullLocalSignedWord(0xd8), this.processor.PullLocalSignedWord(0xe4)) >= this.owner.World.Participants.Length)
 				this.processor.RegAcc.Value16 = 0;
 			else
 				this.processor.RegAcc.Value16 = (ushort)this.owner.World.Participants[this.processor.RegAcc.Value16].Landmasses[owner].Approach;
@@ -1582,8 +1569,7 @@ namespace Civilization1Remaster.Game
 			}
 
 			// A unit where the city tile has no owner (or with the flag 0x10)
-			this.owner.MapOps.ObtainTileOwner(this.processor.PullLocalSignedWord(0xd8), this.processor.PullLocalSignedWord(0xe4));
-			bool unowned = (ushort)(this.processor.RegAcc.Value16 + 1) == 0;
+			bool unowned = (ushort)(this.owner.MapOps.ObtainTileOwner(this.processor.PullLocalSignedWord(0xd8), this.processor.PullLocalSignedWord(0xe4)) + 1) == 0;
 			this.processor.RegAcc.Value16 = (ushort)(this.processor.RegAcc.Value16 + 1);
 			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 
@@ -2093,8 +2079,7 @@ namespace Civilization1Remaster.Game
 			else
 			{
 				// The units away make citizens unhappy (not with the wonder 16 in a republic; two in a democracy)
-				PlayerEnjoysWonderEffect(owner, 16);
-				this.processor.RegCount.Value16 = (ushort)(this.processor.RegAcc.Value16 < 1 ? 1 : 0);
+				this.processor.RegCount.Value16 = (ushort)(PlayerEnjoysWonderEffect(owner, 16) < 1 ? 1 : 0);
 				this.processor.EmitLocalWord(0xe8, this.processor.RegCount.Value16);
 
 				if (player.RegimeKind == 5)
@@ -2165,11 +2150,8 @@ namespace Civilization1Remaster.Game
 				// The wonder 13 on the continent of the city
 				short marvelIdx = this.owner.World.MarvelTownIdx[13];
 				this.processor.RegSource.Value16 = (ushort)(marvelIdx * 0x1c);
-				this.owner.MapOps.ObtainContinentID(this.owner.World.Towns[marvelIdx].Place.X, this.owner.World.Towns[marvelIdx].Place.Y);
-				this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
-				this.owner.MapOps.ObtainContinentID(this.processor.PullLocalSignedWord(0xd8), this.processor.PullLocalSignedWord(0xe4));
-
-				if (this.processor.RegAcc.Value16 == this.processor.RegDest.Value16)
+				this.processor.RegDest.Value16 = this.owner.MapOps.ObtainContinentID(this.owner.World.Towns[marvelIdx].Place.X, this.owner.World.Towns[marvelIdx].Place.Y);
+				if (this.owner.MapOps.ObtainContinentID(this.processor.PullLocalSignedWord(0xd8), this.processor.PullLocalSignedWord(0xe4)) == this.processor.RegDest.Value16)
 					this.processor.EmitGlobalWord(0x70e4, (ushort)(this.processor.PullGlobalWord(0x70e4) - 2));
 			}
 
@@ -2302,9 +2284,8 @@ namespace Civilization1Remaster.Game
 				this.processor.RegSource.Value16 = (ushort)(townIdx * 0x1c);
 				this.processor.RegDest.Value16 = (ushort)(otherIdx * UnitMemory.TroopStride + owner * UnitMemory.ParticipantStride);
 
-				this.owner.Helpers.ObtainDistance(town.Place.X, this.troops.PullSigned(owner, other, UnitMemory.Horiz),
-					town.Place.Y, this.troops.PullSigned(owner, other, UnitMemory.Vert));
-				this.processor.EmitLocalWord(0xb2, this.processor.RegAcc.Value16);
+				this.processor.EmitLocalWord(0xb2, (ushort)this.owner.Helpers.ObtainDistance(town.Place.X, this.troops.PullSigned(owner, other, UnitMemory.Horiz),
+					town.Place.Y, this.troops.PullSigned(owner, other, UnitMemory.Vert)));
 				this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xc8);
 
 				if ((short)this.processor.PullLocalWord(0xb2) > (short)this.processor.PullLocalWord(0xc8))
@@ -2398,8 +2379,7 @@ namespace Civilization1Remaster.Game
 				else
 				{
 					// The unhappy faces of an attack unit away
-					PlayerEnjoysWonderEffect(owner, 16);
-					this.processor.RegCount.Value16 = (ushort)(this.processor.RegAcc.Value16 < 1 ? 1 : 0);
+					this.processor.RegCount.Value16 = (ushort)(PlayerEnjoysWonderEffect(owner, 16) < 1 ? 1 : 0);
 					this.processor.EmitLocalWord(0xe8, this.processor.RegCount.Value16);
 
 					if (player.RegimeKind == 5)
@@ -3127,8 +3107,7 @@ namespace Civilization1Remaster.Game
 			this.processor.EmitLocalWord(0xf0, 0xffff);
 			if ((ushort)this.owner.Libc.KeyAvailable() != 0)
 			{
-				this.owner.Dialogs.ObtainNavigationKey();
-				this.processor.EmitLocalWord(0xf0, this.processor.RegAcc.Value16);
+				this.processor.EmitLocalWord(0xf0, this.owner.Dialogs.ObtainNavigationKey());
 				this.processor.RegAcc.Value16 = 0;
 				this.owner.GlobDb3e = 0;
 				this.owner.GlobDb3c = 0;
@@ -3152,8 +3131,7 @@ namespace Civilization1Remaster.Game
 			{
 				short owner = (short)this.processor.PullGlobalWord(0x6548);
 
-				this.owner.Advisors.PickCityProduction(owner, townIdx);
-				this.processor.EmitLocalWord(0x102, this.processor.RegAcc.Value16);
+				this.processor.EmitLocalWord(0x102, this.owner.Advisors.PickCityProduction(owner, townIdx));
 				this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
 				this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 2);
 
@@ -3341,8 +3319,7 @@ namespace Civilization1Remaster.Game
 				}
 				while (this.processor.RegAcc.Value16 == 0);
 
-				this.owner.Dialogs.ObtainNavigationKey();
-				ushort key = this.processor.RegAcc.Value16;
+				ushort key = this.owner.Dialogs.ObtainNavigationKey();
 				this.processor.EmitLocalWord(0xfc, key);
 				ushort current = this.processor.PullLocalWord(0x106);
 				this.processor.EmitLocalWord(0xea, key switch
@@ -3391,8 +3368,7 @@ namespace Civilization1Remaster.Game
 				}
 				while (this.processor.RegAcc.Value16 == 0);
 
-				this.owner.Dialogs.ObtainNavigationKey();
-				ushort key = this.processor.RegAcc.Value16;
+				ushort key = this.owner.Dialogs.ObtainNavigationKey();
 				this.processor.EmitLocalWord(0xfc, key);
 
 				if (key == 0x4800)
@@ -3469,8 +3445,7 @@ namespace Civilization1Remaster.Game
 
 				this.processor.EmitLocalWord(0xf6, this.processor.PullLocalWord(0xb6));
 				this.processor.CopyLocalWord(0xbe, 0xfc);
-				this.owner.Dialogs.ObtainNavigationKey();
-				ushort key = this.processor.RegAcc.Value16;
+				ushort key = this.owner.Dialogs.ObtainNavigationKey();
 				this.processor.EmitLocalWord(0xe8, key);
 
 				// The keys of the number pad: 7 8 9 / 4 6 / 1 2 3
@@ -3624,8 +3599,7 @@ namespace Civilization1Remaster.Game
 		/// <summary>The specialist 0xea becomes the next type (entertainer, taxman, scientist, again): the city screen again</summary>
 		private CityScreenStep CycleSpecialist()
 		{
-			ObtainCitizenType(this.processor.PullLocalWord(0xea));
-			this.processor.EmitLocalWord(0xe8, this.processor.RegAcc.Value16);
+			this.processor.EmitLocalWord(0xe8, ObtainCitizenType(this.processor.PullLocalWord(0xea)));
 			AssignCitizenType(this.processor.PullLocalWord(0xea),
 				(ushort)((short)this.processor.PullLocalWord(0xe8) < 3 ? this.processor.PullLocalWord(0xe8) + 1 : 1));
 
@@ -3888,8 +3862,7 @@ namespace Civilization1Remaster.Game
 			short owner = (short)this.processor.PullGlobalWord(0x6548);
 
 			StopMakingUnit(town, owner, false);
-			this.owner.Advisors.PickCityProduction(owner, townIdx);
-			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
+			this.processor.RegCount.Value16 = this.owner.Advisors.PickCityProduction(owner, townIdx);
 			town.PresentMakingIdx = (sbyte)this.processor.RegCount.LowByte;
 			StartMakingUnit(town, owner, false);
 		}
@@ -4119,9 +4092,7 @@ namespace Civilization1Remaster.Game
 				player.InquiryHeadway += this.processor.PullLocalSignedWord(0xe8);
 			}
 
-			PlayerEnjoysWonderEffect(owner, 0x14);
-
-			if (this.processor.RegAcc.Value16 != 0)
+			if (PlayerEnjoysWonderEffect(owner, 0x14) != 0)
 				player.InquiryHeadway += (short)(this.processor.PullLocalSignedWord(0xe8) / 2);
 
 			// The cost of an advance
@@ -4386,9 +4357,7 @@ namespace Civilization1Remaster.Game
 
 				this.processor.RegSource.Value16 = (ushort)(otherIdx * 0x1c);
 
-				this.owner.Helpers.ObtainDistance(this.processor.PullLocalSignedWord(0xd8), other.Place.X, this.processor.PullLocalSignedWord(0xe4), other.Place.Y);
-
-				short distance = (short)this.processor.RegAcc.Value16;
+				short distance = (short)(ushort)this.owner.Helpers.ObtainDistance(this.processor.PullLocalSignedWord(0xd8), other.Place.X, this.processor.PullLocalSignedWord(0xe4), other.Place.Y);
 				this.processor.EmitLocalWord(0xb0, (ushort)distance);
 
 				if (distance < (short)this.processor.PullLocalWord(0xb2) && distance != 0)
@@ -4422,15 +4391,11 @@ namespace Civilization1Remaster.Game
 					this.processor.EmitLocalWord(0xd2, (ushort)vertLoc);
 
 					this.processor.RegAcc.Value16 = (ushort)(horizLoc - (short)this.processor.PullLocalWord(0xd8));
-					this.owner.Libc.AbsoluteValue((short)this.processor.RegAcc.Value16);
-
-					if ((short)this.processor.RegAcc.Value16 > 2)
+					if ((short)(ushort)this.owner.Libc.AbsoluteValue((short)this.processor.RegAcc.Value16) > 2)
 						continue;
 
 					this.processor.RegAcc.Value16 = (ushort)(vertLoc - (short)this.processor.PullLocalWord(0xe4));
-					this.owner.Libc.AbsoluteValue((short)this.processor.RegAcc.Value16);
-
-					if ((short)this.processor.RegAcc.Value16 > 2)
+					if ((short)(ushort)this.owner.Libc.AbsoluteValue((short)this.processor.RegAcc.Value16) > 2)
 						continue;
 
 					this.processor.RegCount.Value16 = 0xa;
@@ -5260,9 +5225,7 @@ namespace Civilization1Remaster.Game
 
 			for (citizenIdx = 0; citizenIdx < (short)arg4; citizenIdx++)
 			{
-				ObtainCitizenType((ushort)citizenIdx);
-
-				horizLoc = RenderCitizen(horizLoc, vertLoc, this.processor.PullGlobalWord((ushort)((this.processor.RegAcc.Value16 << 1) + 0x6ea0)), step);
+				horizLoc = RenderCitizen(horizLoc, vertLoc, this.processor.PullGlobalWord((ushort)((ObtainCitizenType((ushort)citizenIdx) << 1) + 0x6ea0)), step);
 			}
 
 			this.processor.EmitLocalWord(0x6, (ushort)citizenIdx);

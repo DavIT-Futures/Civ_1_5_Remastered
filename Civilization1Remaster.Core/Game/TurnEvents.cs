@@ -875,14 +875,10 @@ namespace Civilization1Remaster.Game
 				vertLoc = (short)((short)this.owner.World.Towns[townIdx].Place.Y + shift - 6);
 				this.processor.EmitLocalWord(0x12, (ushort)vertLoc);
 
-				this.owner.Helpers.LocateNearestCity(horizLoc, vertLoc);
-
-				townIdx = this.processor.RegAcc.Value16;
+				townIdx = this.owner.Helpers.LocateNearestCity(horizLoc, vertLoc);
 				this.processor.EmitLocalWord(0x14, townIdx);
 
-				this.owner.Helpers.ObtainDistance(horizLoc, this.owner.World.Towns[townIdx].Place.X, vertLoc, this.owner.World.Towns[townIdx].Place.Y);
-
-				short distance = (short)this.processor.RegAcc.Value16;
+				short distance = (short)(ushort)this.owner.Helpers.ObtainDistance(horizLoc, this.owner.World.Towns[townIdx].Place.X, vertLoc, this.owner.World.Towns[townIdx].Place.Y);
 				this.processor.EmitLocalWord(0xc, (ushort)distance);
 
 				tries++;

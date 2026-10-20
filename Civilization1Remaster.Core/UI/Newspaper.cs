@@ -113,9 +113,7 @@ namespace Civilization1Remaster.UI
 					break;
 			}
 
-			this.owner.TextPainter.ObtainTextWidth(0xba06);
-
-			short width = (short)this.processor.RegAcc.Value16;
+			short width = (short)(ushort)this.owner.TextPainter.ObtainTextWidth(0xba06);
 
 			if (width > 0x12c)
 			{
@@ -123,9 +121,7 @@ namespace Civilization1Remaster.UI
 					.City(townIdx)
 					.Text(" News");
 
-				this.owner.TextPainter.ObtainTextWidth(0xba06);
-
-				width = (short)this.processor.RegAcc.Value16;
+				width = (short)(ushort)this.owner.TextPainter.ObtainTextWidth(0xba06);
 			}
 
 			if (width < 0xc8)

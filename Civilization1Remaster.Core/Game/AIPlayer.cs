@@ -885,9 +885,8 @@ namespace Civilization1Remaster.Game
 		{
 			ushort direction = (ushort)(this.processor.PullLocalWord(0x40) << 1);
 
-			this.owner.Routing.TunePosition(this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(direction + 0x1882)) +
-				(short)this.processor.PullLocalWord(0x30));
-			this.processor.EmitLocalWord(0x26, this.processor.RegAcc.Value16);
+			this.processor.EmitLocalWord(0x26, (ushort)this.owner.Routing.TunePosition(this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(direction + 0x1882)) +
+				(short)this.processor.PullLocalWord(0x30)));
 			this.processor.EmitLocalWord(0x2e, (ushort)(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(direction + 0x18e4)) + this.processor.PullLocalWord(0x36)));
 
 			short horizLoc = (short)this.processor.PullLocalWord(0x26);
@@ -1219,9 +1218,7 @@ namespace Civilization1Remaster.Game
 				if (this.processor.PullUInt8(this.processor.SegExtra.Value16, (ushort)(this.processor.RegBase.Value16 + 0x2438)) == 0 &&
 					this.owner.MapOps.ObtainTerrainType(farHoriz, farVert) != MapRules.OceanTerrain)
 				{
-					this.owner.MapOps.VerifyMapLimits(farHoriz, farVert);
-
-					if (this.processor.RegAcc.Value16 != 0)
+					if (this.owner.MapOps.VerifyMapLimits(farHoriz, farVert) != 0)
 						this.processor.EmitLocalWord(0x10, (ushort)(this.processor.PullLocalWord(0x10) + 8));
 				}
 
@@ -1230,17 +1227,14 @@ namespace Civilization1Remaster.Game
 				{
 					ushort around = (ushort)(this.processor.PullLocalWord(0x44) << 1);
 
-					this.owner.Routing.TunePosition(this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(around + 0x1882)) +
-						(short)this.processor.PullLocalWord(0x26));
-					this.processor.EmitLocalWord(0xe, this.processor.RegAcc.Value16);
+					this.processor.EmitLocalWord(0xe, (ushort)this.owner.Routing.TunePosition(this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(around + 0x1882)) +
+						(short)this.processor.PullLocalWord(0x26)));
 					this.processor.EmitLocalWord(0x16, (ushort)(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(around + 0x18e4)) + this.processor.PullLocalWord(0x2e)));
 
 					short horizLoc = (short)this.processor.PullLocalWord(0xe);
 					short vertLoc = (short)this.processor.PullLocalWord(0x16);
 
-					this.owner.MapOps.VerifyMapLimits(horizLoc, vertLoc);
-
-					if (this.processor.RegAcc.Value16 == 0)
+					if (this.owner.MapOps.VerifyMapLimits(horizLoc, vertLoc) == 0)
 						continue;
 
 					// Not seen by the player: land, or the sea for a ship
@@ -1265,8 +1259,7 @@ namespace Civilization1Remaster.Game
 
 			if (this.processor.PullLocalWord(0x1c) != 0 && this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.LeftoverSteps) < 3)
 			{
-				this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, troopIdx, 3);
-				short stack = (short)this.owner.Helpers.VerifyValueSpan((short)this.processor.RegAcc.Value16, 1, 99);
+				short stack = (short)this.owner.Helpers.VerifyValueSpan((short)this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, troopIdx, 3), 1, 99);
 				this.processor.RegCount.Value16 = (ushort)stack;
 				this.processor.RegSource.Value16 = (ushort)stack;
 
@@ -1475,9 +1468,7 @@ namespace Civilization1Remaster.Game
 			short travelHoriz = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.TravelHoriz);
 			short travelVert = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.TravelVert);
 
-			this.owner.MapOps.VerifyMapLimits(travelHoriz, travelVert);
-
-			if (this.processor.RegAcc.Value16 != 0)
+			if (this.owner.MapOps.VerifyMapLimits(travelHoriz, travelVert) != 0)
 			{
 				ushort terrain = this.owner.MapOps.ObtainTerrainType(travelHoriz, travelVert);
 
@@ -1727,8 +1718,7 @@ namespace Civilization1Remaster.Game
 						continue;
 					}
 
-					this.owner.Helpers.ObtainDistance((short)this.processor.PullLocalWord(0x30), town.Place.X, (short)this.processor.PullLocalWord(0x36), town.Place.Y);
-					this.processor.EmitLocalWord(0x12, this.processor.RegAcc.Value16);
+					this.processor.EmitLocalWord(0x12, (ushort)this.owner.Helpers.ObtainDistance((short)this.processor.PullLocalWord(0x30), town.Place.X, (short)this.processor.PullLocalWord(0x36), town.Place.Y));
 
 					if ((short)this.processor.PullLocalWord(0x12) < (short)this.processor.PullLocalWord(0x14))
 					{
@@ -1759,8 +1749,7 @@ namespace Civilization1Remaster.Game
 					if (town.ConditionMarker == 0xff || this.processor.PullLocalWord(0x3a) != (ushort)participantIdx)
 						continue;
 
-					this.owner.Helpers.ObtainDistance((short)this.processor.PullLocalWord(0x30), town.Place.X, (short)this.processor.PullLocalWord(0x36), town.Place.Y);
-					this.processor.EmitLocalWord(0x12, this.processor.RegAcc.Value16);
+					this.processor.EmitLocalWord(0x12, (ushort)this.owner.Helpers.ObtainDistance((short)this.processor.PullLocalWord(0x30), town.Place.X, (short)this.processor.PullLocalWord(0x36), town.Place.Y));
 
 					if ((short)this.processor.RegAcc.Value16 < 8)
 						continue;
@@ -1800,9 +1789,8 @@ namespace Civilization1Remaster.Game
 				this.processor.RegSource.Value16 = unit;
 				this.processor.RegDest.Value16 = (ushort)(this.processor.PullLocalWord(0x3a) << 1);
 
-				this.owner.Routing.TunePosition(this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 + 0x1882)) *
-					(short)this.processor.PullLocalWord(0x40) + this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz));
-				this.processor.EmitLocalWord(0x26, this.processor.RegAcc.Value16);
+				this.processor.EmitLocalWord(0x26, (ushort)this.owner.Routing.TunePosition(this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 + 0x1882)) *
+					(short)this.processor.PullLocalWord(0x40) + this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz)));
 
 				// (the registers of the multiplication as in the original)
 				ushort step = MultiplyWords(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 + 0x18e4)),
@@ -1848,9 +1836,8 @@ namespace Civilization1Remaster.Game
 			{
 				ushort direction = this.processor.PullLocalWord(0x40);
 
-				this.owner.Routing.TunePosition(this.processor.PullInt16(this.processor.SegData.Value16, (ushort)((direction << 1) + 0x1882)) +
-					(short)this.processor.PullLocalWord(0x30));
-				this.processor.EmitLocalWord(0x26, this.processor.RegAcc.Value16);
+				this.processor.EmitLocalWord(0x26, (ushort)this.owner.Routing.TunePosition(this.processor.PullInt16(this.processor.SegData.Value16, (ushort)((direction << 1) + 0x1882)) +
+					(short)this.processor.PullLocalWord(0x30)));
 				this.processor.EmitLocalWord(0x2e, (ushort)(this.processor.PullGlobalWord((ushort)((direction << 1) + 0x18e4)) + this.processor.PullLocalWord(0x36)));
 
 				short horizLoc = (short)this.processor.PullLocalWord(0x26);
@@ -1861,9 +1848,7 @@ namespace Civilization1Remaster.Game
 				if (this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) == MapRules.OceanTerrain)
 					continue;
 
-				this.owner.MapOps.VerifyMapLimits(horizLoc, vertLoc);
-
-				if (this.processor.RegAcc.Value16 == 0)
+				if (this.owner.MapOps.VerifyMapLimits(horizLoc, vertLoc) == 0)
 					continue;
 
 				ushort owner = this.processor.PullLocalWord(0x20);
@@ -1975,8 +1960,7 @@ namespace Civilization1Remaster.Game
 				if (town.ConditionMarker == 0xff || town.ParticipantIdx != participantIdx || (town.ConditionMarker & 2) == 0)
 					continue;
 
-				this.owner.Helpers.ObtainDistance((short)this.processor.PullLocalWord(0x30), town.Place.X, (short)this.processor.PullLocalWord(0x36), town.Place.Y);
-				this.processor.EmitLocalWord(0x12, this.processor.RegAcc.Value16);
+				this.processor.EmitLocalWord(0x12, (ushort)this.owner.Helpers.ObtainDistance((short)this.processor.PullLocalWord(0x30), town.Place.X, (short)this.processor.PullLocalWord(0x36), town.Place.Y));
 				this.processor.EmitLocalWord(0x4a, this.owner.MapOps.ObtainContinentID(town.Place.X, town.Place.Y));
 
 				if (player.Landmasses[this.processor.PullLocalWord(0x4a)].Assault < 16)
@@ -2211,8 +2195,7 @@ namespace Civilization1Remaster.Game
 			if (this.processor.PullLocalWord(0x56) == 0)
 				DisableStrategicLocation(participantIdx, 0, horizLoc, vertLoc, 0);
 
-			this.owner.VideoCard.ObtainDot(2, horizLoc + 0x50, vertLoc);
-			this.processor.EmitLocalWord(0x28, this.processor.RegAcc.Value16);
+			this.processor.EmitLocalWord(0x28, this.owner.VideoCard.ObtainDot(2, horizLoc + 0x50, vertLoc));
 
 			if (this.processor.PullLocalWord(0x28) != 0 && (short)this.processor.PullLocalWord(0x56) < 3)
 			{
@@ -2223,15 +2206,13 @@ namespace Civilization1Remaster.Game
 				{
 					ushort direction = this.processor.PullLocalWord(0x40);
 
-					this.owner.Routing.TunePosition(this.processor.PullInt16(this.processor.SegData.Value16, (ushort)((direction << 1) + 0x1882)) + horizLoc);
-					this.processor.EmitLocalWord(0x26, this.processor.RegAcc.Value16);
+					this.processor.EmitLocalWord(0x26, (ushort)this.owner.Routing.TunePosition(this.processor.PullInt16(this.processor.SegData.Value16, (ushort)((direction << 1) + 0x1882)) + horizLoc));
 					this.processor.EmitLocalWord(0x2e, (ushort)(this.processor.PullGlobalWord((ushort)((direction << 1) + 0x18e4)) + this.processor.PullLocalWord(0x36)));
 
 					short nextHoriz = (short)this.processor.PullLocalWord(0x26);
 					short nextVert = (short)this.processor.PullLocalWord(0x2e);
 
-					this.owner.VideoCard.ObtainDot(2, nextHoriz + 0x50, nextVert);
-					this.processor.EmitLocalWord(0x10, this.processor.RegAcc.Value16);
+					this.processor.EmitLocalWord(0x10, this.owner.VideoCard.ObtainDot(2, nextHoriz + 0x50, nextVert));
 
 					if ((short)this.processor.PullLocalWord(0x10) > (short)this.processor.PullLocalWord(0x28))
 					{
@@ -2239,8 +2220,7 @@ namespace Civilization1Remaster.Game
 						this.processor.CopyLocalWord(0x40, 0x2c);
 					}
 
-					this.owner.MapOps.ObtainTerrainType(nextHoriz, nextVert);
-					this.owner.MapOps.ContainsHut(this.processor.RegAcc.Value16, nextHoriz, nextVert);
+					this.owner.MapOps.ContainsHut(this.owner.MapOps.ObtainTerrainType(nextHoriz, nextVert), nextHoriz, nextVert);
 
 					if (this.processor.RegAcc.Value16 != 0 && this.processor.PullLocalWord(0x56) != 0)
 						return this.processor.PullLocalWord(0x40);
@@ -2286,8 +2266,7 @@ namespace Civilization1Remaster.Game
 				return false;
 			}
 
-			this.owner.VideoCard.ObtainDot(2, (short)this.processor.PullLocalWord(0x30) + 0x50, (short)this.processor.PullLocalWord(0x36) + 0x32);
-			this.processor.EmitLocalWord(0x3a, this.processor.RegAcc.Value16);
+			this.processor.EmitLocalWord(0x3a, this.owner.VideoCard.ObtainDot(2, (short)this.processor.PullLocalWord(0x30) + 0x50, (short)this.processor.PullLocalWord(0x36) + 0x32));
 
 			return (short)this.processor.RegAcc.Value16 >= 9 &&
 				(short)(0xe - this.processor.PullLocalWord(0x2a)) <= (short)this.processor.PullLocalWord(0x3a);
@@ -2571,8 +2550,7 @@ namespace Civilization1Remaster.Game
 			short horizLoc = (short)this.processor.PullLocalWord(0x30);
 			short vertLoc = (short)this.processor.PullLocalWord(0x36);
 
-			this.owner.Helpers.LocateNearestCity(horizLoc, vertLoc);
-			this.processor.EmitLocalWord(0x34, this.processor.RegAcc.Value16);
+			this.processor.EmitLocalWord(0x34, this.owner.Helpers.LocateNearestCity(horizLoc, vertLoc));
 			this.processor.EmitLocalWord(0x2a, this.processor.PullGlobalWord(0x6c9a));
 
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Kind, 0xff);
@@ -2581,12 +2559,10 @@ namespace Civilization1Remaster.Game
 			this.processor.EmitLocalWord(0x32, this.processor.PullGlobalWord(0x6c9a));
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Kind, this.processor.PullLocalByte(0x8));
 
-			this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
-			this.processor.EmitLocalWord(0x42, this.processor.RegAcc.Value16);
+			this.processor.EmitLocalWord(0x42, this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc));
 			this.processor.EmitLocalWord(0x56, UnitKindTable.Field(this.processor, this.troops.TroopKind(participantIdx, troopIdx), UnitKindTable.TroopGroup));
 
-			this.owner.MapOps.ObtainContinentID(horizLoc, vertLoc);
-			this.processor.EmitLocalWord(0x1a, this.processor.RegAcc.Value16);
+			this.processor.EmitLocalWord(0x1a, this.owner.MapOps.ObtainContinentID(horizLoc, vertLoc));
 			this.processor.EmitLocalWord(0x2, (ushort)this.owner.World.Participants[participantIdx].Landmasses[this.processor.RegAcc.Value16].Approach);
 			this.processor.EmitLocalWord(0x50, (ushort)(1 << (byte)participantIdx));
 

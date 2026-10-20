@@ -1460,9 +1460,7 @@ namespace Civilization1Remaster.UI
 
 			for (int advisorIdx = 0; advisorIdx < 4; advisorIdx++)
 			{
-				this.owner.VideoCard.ScreenToPicture(1, (ushort)((0x50 * advisorIdx) + 1), 0x65, 0x4e, 0x63);
-
-				this.processor.EmitGlobalWord((ushort)((6 * advisorIdx) + 0x804e), this.processor.RegAcc.Value16);
+				this.processor.EmitGlobalWord((ushort)((6 * advisorIdx) + 0x804e), this.owner.VideoCard.ScreenToPicture(1, (ushort)((0x50 * advisorIdx) + 1), 0x65, 0x4e, 0x63));
 			}
 
 			short king = (sbyte)this.processor.PullGlobalByte((ushort)((ushort)this.owner.World.Participants[participantIdx].ChiefVisuals + 0x3938));
@@ -1483,9 +1481,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, pictureName, 0);
 
-			this.owner.VideoCard.ScreenToPicture(1, 0xb5, 0x43, 0x8b, 0x85);
-
-			this.processor.EmitGlobalWord(0xb1e6, this.processor.RegAcc.Value16);
+			this.processor.EmitGlobalWord(0xb1e6, this.owner.VideoCard.ScreenToPicture(1, 0xb5, 0x43, 0x8b, 0x85));
 
 			ImportKingScenery(participantIdx);
 
@@ -1507,13 +1503,9 @@ namespace Civilization1Remaster.UI
 
 				this.processor.EmitLocalWord(0x16, (ushort)(faceIdx << 2));
 
-				this.owner.VideoCard.ScreenToPicture(1, horizLoc, (ushort)(vertLoc + 1), 0x3b, 0x14);
+				this.processor.EmitGlobalWord((ushort)((faceIdx << 2) + 0x7efe), this.owner.VideoCard.ScreenToPicture(1, horizLoc, (ushort)(vertLoc + 1), 0x3b, 0x14));
 
-				this.processor.EmitGlobalWord((ushort)((faceIdx << 2) + 0x7efe), this.processor.RegAcc.Value16);
-
-				this.owner.VideoCard.ScreenToPicture(1, horizLoc, (ushort)(vertLoc + 0x15), 0x3b, 0x1d);
-
-				this.processor.EmitGlobalWord((ushort)((faceIdx << 2) + 0x7f00), this.processor.RegAcc.Value16);
+				this.processor.EmitGlobalWord((ushort)((faceIdx << 2) + 0x7f00), this.owner.VideoCard.ScreenToPicture(1, horizLoc, (ushort)(vertLoc + 0x15), 0x3b, 0x1d));
 
 				place++;
 			}
@@ -1538,9 +1530,7 @@ namespace Civilization1Remaster.UI
 				{
 					for (column = 0; column < 3; column++)
 					{
-						this.owner.VideoCard.ScreenToPicture(1, (ushort)((0x1d * column) + 0xa1), (ushort)((0x19 * row) + 1), 0x1c, 0x18);
-
-						this.processor.EmitGlobalWord((ushort)((column << 1) + (6 * row) + 0x804e), this.processor.RegAcc.Value16);
+						this.processor.EmitGlobalWord((ushort)((column << 1) + (6 * row) + 0x804e), this.owner.VideoCard.ScreenToPicture(1, (ushort)((0x1d * column) + 0xa1), (ushort)((0x19 * row) + 1), 0x1c, 0x18));
 					}
 				}
 
