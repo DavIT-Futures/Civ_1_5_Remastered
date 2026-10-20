@@ -1164,6 +1164,12 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   komentarze) i 5 pętli `do … while (AX …)` z wywołaniem na końcu ciała (`KeyAvailable`, `CompareTextNoCase`,
   `ObtainSongPosition`) – warunek woła funkcję. Zostały odczyty, przed którymi stoi inne wywołanie albo funkcja bez wyniku w
   AX (`ObtainFirstPrerequisite`, `AwaitForKeyPressOrMouseClick`, `SeizeCityScenery`, `DisplayStoryIntro`) – ręcznie.
+- B1, porcja 6 (2026-10-20), ręcznie 19 miejsc: odczyty AX zastąpione słowem, które właśnie zapisano (0x12, 0x3a, 0x1a,
+  słowo opcji menu), wynikiem (`ObtainTileImprovements` & 1, `PickCityProduction`, `LocateNearestCity`, `LocateRouteStep`,
+  `ShiftToward`, `ScreenToPicture`, `ObtainContinentID`); `DisplayStoryIntro`, `HandleCity` i `GameMessage.Dialog` zwracają
+  wynik. Zostaje 9 odczytów po wywołaniach, gdzie AX ustawia funkcja głębiej (`AwaitForKeyPressOrMouseClick`,
+  `ObtainFirstPrerequisite`, `SeizeCityScenery`, `TellStream`, `FindSubtext` – AX to adres), wynik ze `switch` (Palace),
+  `RunGame` i zapis rejestrów w przerwaniu myszy – do etapu B3. Pełny zestaw zielony.
 
 ## Następny krok
 

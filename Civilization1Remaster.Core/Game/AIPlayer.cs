@@ -1749,7 +1749,7 @@ namespace Civilization1Remaster.Game
 
 					this.processor.EmitLocalWord(0x12, (ushort)this.owner.Helpers.ObtainDistance((short)this.processor.PullLocalWord(0x30), town.Place.X, (short)this.processor.PullLocalWord(0x36), town.Place.Y));
 
-					if ((short)this.processor.RegAcc.Value16 < 8)
+					if ((short)this.processor.PullLocalWord(0x12) < 8)
 						continue;
 
 					this.processor.EmitLocalWord(0x4a, this.owner.MapOps.ObtainContinentID(town.Place.X, town.Place.Y));
@@ -1896,8 +1896,8 @@ namespace Civilization1Remaster.Game
 				{
 					this.processor.EmitLocalWord(0x3a, MayAIEnterTile(participantIdx, this.processor.PullLocalWord(0x30), this.processor.PullLocalWord(0x36)));
 
-					if ((short)this.processor.RegAcc.Value16 > 0)
-						return this.processor.RegAcc.Value16;
+					if ((short)this.processor.PullLocalWord(0x3a) > 0)
+						return this.processor.PullLocalWord(0x3a);
 				}
 
 				// Unloading: a strategic location of role 3 on a defended continent, the transport stops and forgets its destination
@@ -2553,7 +2553,7 @@ namespace Civilization1Remaster.Game
 			this.processor.EmitLocalWord(0x56, UnitKindTable.Field(this.processor, this.troops.TroopKind(participantIdx, troopIdx), UnitKindTable.TroopGroup));
 
 			this.processor.EmitLocalWord(0x1a, this.owner.MapOps.ObtainContinentID(horizLoc, vertLoc));
-			this.processor.EmitLocalWord(0x2, (ushort)this.owner.World.Participants[participantIdx].Landmasses[this.processor.RegAcc.Value16].Approach);
+			this.processor.EmitLocalWord(0x2, (ushort)this.owner.World.Participants[participantIdx].Landmasses[this.processor.PullLocalWord(0x1a)].Approach);
 			this.processor.EmitLocalWord(0x50, (ushort)(1 << (byte)participantIdx));
 
 			// The registers as the original leaves them for the code that follows
@@ -2839,8 +2839,7 @@ namespace Civilization1Remaster.Game
 			ushort participantIdx = (byte)town.ParticipantIdx;
 
 			this.owner.World.Participants[participantIdx].StopMaking(town.PresentMakingIdx);
-			this.owner.Advisors.PickCityProduction((short)participantIdx, townIdx);
-			town.PresentMakingIdx = (sbyte)this.processor.RegAcc.LowByte;
+			town.PresentMakingIdx = (sbyte)this.owner.Advisors.PickCityProduction((short)participantIdx, townIdx);
 			this.owner.World.Participants[participantIdx].StartMaking(town.PresentMakingIdx);
 
 			this.processor.RegSource.Value16 = savedSource;

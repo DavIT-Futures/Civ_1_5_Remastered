@@ -64,11 +64,10 @@ namespace Civilization1Remaster.Game
 
 			this.processor.EmitGlobalWord(0x67fc, 0x1);
 
-			do
+			// The story again while it waits (DisplayStoryIntro gives back 1)
+			while (this.DisplayStoryIntro() != 0)
 			{
-				this.DisplayStoryIntro();
 			}
-			while (this.processor.RegAcc.Value16 != 0);
 
 			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.PullGlobalWord(0xaa) + 0x10), 0x1);
 
@@ -735,7 +734,6 @@ namespace Civilization1Remaster.Game
 					this.processor.EmitLocalWord(0x24, horizLoc);
 
 					ushort terrain = ObtainTerrainTypeFromScreen((short)horizLoc, (short)vertLoc);
-					terrain = this.processor.RegAcc.Value16;
 					this.processor.EmitLocalWord(0xaa, terrain);
 
 					if (pass == 0)
@@ -1483,7 +1481,7 @@ namespace Civilization1Remaster.Game
 		/// 0x3710:0x3b66, cycle count 0x3b68). The end of the file or a key (when 0x67fc allows it) ends the story.
 		/// The screen is marked as changed ([0xaa] = 1) and AX is 1 while waiting for the music, else 0.
 		/// </summary>
-		public void DisplayStoryIntro()
+		public ushort DisplayStoryIntro()
 		{
 			this.processor.Journal.OpenScope("DisplayStoryIntro()");
 
@@ -1495,11 +1493,14 @@ namespace Civilization1Remaster.Game
 
 			bool waiting = StoryStep(fileName);
 
-			this.processor.RegAcc.Value16 = (ushort)(waiting ? 1 : 0);
+			ushort result = (ushort)(waiting ? 1 : 0);
+			this.processor.RegAcc.Value16 = result;
 
 			this.processor.LeaveFrame();
 
 			this.processor.Journal.CloseScope("DisplayStoryIntro");
+
+			return result;
 		}
 
 		/// <summary>

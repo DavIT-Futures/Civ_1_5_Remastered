@@ -1,4 +1,4 @@
-namespace Civilization1Remaster
+﻿namespace Civilization1Remaster
 {
 	/// <summary>
 	/// A text built in the message buffer at 0xba06 and shown in a dialog: the same calls as the original makes (CopyText,
@@ -72,10 +72,10 @@ namespace Civilization1Remaster
 			return this;
 		}
 
-		/// <summary>The message shown in a dialog at the place</summary>
-		public void Dialog(int horizLoc, int vertLoc)
+		/// <summary>The message shown in a dialog at the place; the line chosen</summary>
+		public ushort Dialog(int horizLoc, int vertLoc)
 		{
-			this.game.TurnHooks.DisplayDialog(Buffer, horizLoc, vertLoc);
+			return this.game.TurnHooks.DisplayDialog(Buffer, horizLoc, vertLoc);
 		}
 	}
 }

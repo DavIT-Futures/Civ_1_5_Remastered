@@ -220,9 +220,7 @@ namespace Civilization1Remaster.Game
 			{
 				this.processor.RegSource.Value16 = townOffset;
 
-				this.owner.Advisors.PickCityProduction(participantIdx, townIdx);
-
-				town.PresentMakingIdx = (sbyte)this.processor.RegAcc.LowByte;
+				town.PresentMakingIdx = (sbyte)this.owner.Advisors.PickCityProduction(participantIdx, townIdx);
 
 				if (this.owner.CityOps.PlayerEnjoysWonderEffect(person, 0x13) != 0)
 				{

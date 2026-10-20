@@ -226,9 +226,7 @@ namespace Civilization1Remaster.UI
 			short horizLoc = troops.Pull(participantIdx, troopIdx, UnitMemory.Horiz);
 			short vertLoc = troops.Pull(participantIdx, troopIdx, UnitMemory.Vert);
 
-			this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc);
-
-			byte improvements = this.processor.RegAcc.LowByte;
+			byte improvements = (byte)this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc);
 
 			ushort terrain = this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
 

@@ -571,7 +571,7 @@ namespace Civilization1Remaster.Engine
 
 				this.processor.EmitGlobalWord(optionAddr, this.owner.Dialogs.DisplayMenu(0xba06, 200, menuVert, 1));
 
-				if (this.processor.RegAcc.Value16 == 0xffff)
+				if (this.processor.PullGlobalWord(optionAddr) == 0xffff)
 					continue;
 
 				if (this.processor.PullGlobalWord(0x2f9c) == 0)

@@ -183,9 +183,7 @@ namespace Civilization1Remaster.Game
 
 					town.PresentMakingIdx = 0;
 
-					this.owner.Advisors.PickCityProduction(participantIdx, townIdx);
-
-					town.PresentMakingIdx = (sbyte)this.processor.RegAcc.LowByte;
+					town.PresentMakingIdx = (sbyte)this.owner.Advisors.PickCityProduction(participantIdx, townIdx);
 
 					if (town.PresentMakingIdx >= 0)
 					{
@@ -474,17 +472,16 @@ namespace Civilization1Remaster.Game
 						{
 							if (this.processor.PullGlobalWord(0x3934) == 0xffff)
 							{
-								this.owner.TurnHooks.DisplayDialog(0xba06, 80, 32);
+								choice = this.owner.TurnHooks.DisplayDialog(0xba06, 80, 32);
 							}
 							else
 							{
 								this.processor.StackWord(0);
 								this.processor.StackWord(0x07fe);
-								this.owner.Audience.DisplayKingDialog(0xba06, 0x14, 0x8b);
+								choice = this.owner.Audience.DisplayKingDialog(0xba06, 0x14, 0x8b);
 								this.processor.UnstackDoubleWord();
 							}
 
-							choice = this.processor.RegAcc.Value16;
 							this.processor.EmitLocalWord(0x9a, choice);
 						}
 						while (choice == 0xffff);

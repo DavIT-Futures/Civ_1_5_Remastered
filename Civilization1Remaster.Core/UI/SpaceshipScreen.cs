@@ -517,12 +517,12 @@ namespace Civilization1Remaster.UI
 			if ((this.owner.World.StarshipMarkers & (1 << (byte)this.owner.World.PersonParticipantIdx)) != 0)
 				return;
 
-			Message("Confirm spaceship launch.\n(")
+			ushort launch = Message("Confirm spaceship launch.\n(")
 				.Number(success)
 				.Text("% chance of success)\n No Launch\n Launch CONFIRMED!\n")
 				.Dialog(80, 100);
 
-			if (this.processor.RegAcc.Value16 == 1)
+			if (launch == 1)
 			{
 				FireSpaceship(this.owner.World.PersonParticipantIdx);
 			}

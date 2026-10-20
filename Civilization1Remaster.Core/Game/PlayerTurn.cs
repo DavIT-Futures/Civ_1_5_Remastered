@@ -3854,10 +3854,8 @@ namespace Civilization1Remaster.Game
 
 			vertLoc += 8;
 
-			this.owner.MapOps.ObtainTileImprovements(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
+			byte improvements = (byte)this.owner.MapOps.ObtainTileImprovements(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
 				this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert));
-
-			byte improvements = this.processor.RegAcc.LowByte;
 
 			// Railroad or road, irrigation or mines, pollution
 			foreach ((byte bit, byte otherBit, ushort text, ushort otherText) in new[] { ((byte)0x10, (byte)0x8, (ushort)0x20bd, (ushort)0x20c8),
@@ -3878,10 +3876,8 @@ namespace Civilization1Remaster.Game
 			short followingIdx = this.troops.Following(participantIdx, troopIdx);
 			short column = 8;
 
-			this.owner.MapOps.ObtainTileImprovements(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
-				this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert));
-
-			if ((this.processor.RegAcc.LowByte & 1) != 0)
+			if ((this.owner.MapOps.ObtainTileImprovements(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
+				this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert)) & 1) != 0)
 			{
 				ushort townIdx = this.owner.Helpers.LocateCityAtPosition(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
 					this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert));

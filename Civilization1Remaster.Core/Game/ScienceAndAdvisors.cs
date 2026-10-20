@@ -44,9 +44,7 @@ namespace Civilization1Remaster.Game
 
 				while (true)
 				{
-					this.owner.CityOps.HandleCity(townIdx, 0);
-
-					if (this.processor.RegAcc.Value16 == 0 && this.owner.World.Towns[townIdx].TrueExtent > 5)
+					if (this.owner.CityOps.HandleCity(townIdx, 0) == 0 && this.owner.World.Towns[townIdx].TrueExtent > 5)
 					{
 						unrest |= 1;
 					}

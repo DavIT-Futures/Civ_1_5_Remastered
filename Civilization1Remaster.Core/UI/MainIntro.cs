@@ -547,14 +547,13 @@ namespace Civilization1Remaster.UI
 
 			do
 			{
-				this.owner.VideoCard.ScreenToPicture(1,
+				ushort picture = this.owner.VideoCard.ScreenToPicture(1,
 					(ushort)(((this.processor.PullLocalWord(ScreenColumn) % 6) * 0x32) + 1),
 					(ushort)(((this.processor.PullLocalWord(ScreenColumn) / 6) * 0x32) + 1),
 					0x31, 0x31);
 
 				ushort entry = (ushort)(this.processor.PullLocalWord(ScreenColumn) << 1);
-				this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + entry - ScreenShipPictures),
-					this.processor.RegAcc.Value16);
+				this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + entry - ScreenShipPictures), picture);
 
 				this.processor.IncrementLocalWord(ScreenColumn);
 			}

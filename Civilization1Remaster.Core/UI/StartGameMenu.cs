@@ -119,7 +119,7 @@ namespace Civilization1Remaster.UI
 			{
 				this.owner.World.BotRivalTally = (short)this.owner.Dialogs.DisplayMenu(0xba06, 160, 35, 1);
 			}
-			while (this.processor.RegAcc.Value16 == 0xffff);
+			while ((ushort)this.owner.World.BotRivalTally == 0xffff);
 
 			this.owner.World.BotRivalTally = (short)this.owner.Helpers.VerifyValueSpan(6 - this.owner.World.BotRivalTally, 2, 6);
 			this.owner.World.LiveRealms = (short)(0xff >> (byte)(6 - (byte)this.owner.World.BotRivalTally));

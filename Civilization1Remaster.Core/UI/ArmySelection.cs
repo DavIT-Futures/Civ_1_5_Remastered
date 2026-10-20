@@ -190,9 +190,7 @@ namespace Civilization1Remaster.UI
 			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), boxHoriz, boxVert, 4, 4,
 				(ushort)(this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) == 0xa ? 1 : 2));
 
-			this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc);
-
-			if ((this.processor.RegAcc.LowByte & 1) != 0)
+			if ((this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) != 0)
 			{
 				this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), boxHoriz, boxVert, 4, 4,
 					this.processor.PullGlobalWord((ushort)((this.owner.MapOps.ObtainTileOwnerBits(horizLoc, vertLoc) << 1) + 0x1946)));

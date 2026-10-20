@@ -674,11 +674,9 @@ namespace Civilization1Remaster.Game
 
 				if (distance != 0)
 				{
-					this.owner.MapOps.ObtainTileImprovements(troops.PullSigned(ownerIdx, troopIdx, UnitMemory.Horiz),
-						troops.PullSigned(ownerIdx, troopIdx, UnitMemory.Vert));
-
 					// Not the units in another city
-					if ((this.processor.RegAcc.LowByte & 1) != 0)
+					if ((this.owner.MapOps.ObtainTileImprovements(troops.PullSigned(ownerIdx, troopIdx, UnitMemory.Horiz),
+						troops.PullSigned(ownerIdx, troopIdx, UnitMemory.Vert)) & 1) != 0)
 						continue;
 				}
 

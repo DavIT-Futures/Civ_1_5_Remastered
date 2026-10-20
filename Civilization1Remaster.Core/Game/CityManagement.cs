@@ -2770,17 +2770,12 @@ namespace Civilization1Remaster.Game
 				this.processor.EmitLocalWord(0xd8, 4);
 				ushort amount = (ushort)((row << 1) + 0x70da);
 
-				if (row == 0)
-				{
-					this.owner.Helpers.VerifyValueSpan(116 / ((short)this.owner.Helpers.VerifyValueSpan(this.processor.PullInt16(this.processor.SegData.Value16, amount),
-						(town.TrueExtent * 2) + (this.processor.PullLocalSignedWord(0x48) * this.processor.PullGlobalSignedWord(0xe3c6)), 999) + 1), 1, 8);
-				}
-				else
-				{
-					this.owner.Helpers.VerifyValueSpan(116 / (this.processor.PullInt16(this.processor.SegData.Value16, amount) + 1), 1, 8);
-				}
+				int step = row == 0
+					? this.owner.Helpers.VerifyValueSpan(116 / ((short)this.owner.Helpers.VerifyValueSpan(this.processor.PullInt16(this.processor.SegData.Value16, amount),
+						(town.TrueExtent * 2) + (this.processor.PullLocalSignedWord(0x48) * this.processor.PullGlobalSignedWord(0xe3c6)), 999) + 1), 1, 8)
+					: this.owner.Helpers.VerifyValueSpan(116 / (this.processor.PullInt16(this.processor.SegData.Value16, amount) + 1), 1, 8);
 
-				this.processor.EmitLocalWord(0xe8, this.processor.RegAcc.Value16);
+				this.processor.EmitLocalWord(0xe8, (ushort)step);
 				ushort icon = 0;
 
 				for (; (short)this.processor.PullUInt16(this.processor.SegData.Value16, amount) > (short)icon; icon++)
@@ -4461,7 +4456,7 @@ namespace Civilization1Remaster.Game
 		/// production, disorder, celebration, science, pollution, upkeep), 1 the city screen with its input. AX gives back
 		/// the happy less the unhappy citizens. The frame of 0x10c bytes holds the locals of all the parts.
 		/// </summary>
-		public void HandleCity(short townIdx, short marker)
+		public ushort HandleCity(short townIdx, short marker)
 		{
 			this.processor.Journal.OpenScope($"HandleCity({townIdx}, {marker})");
 
@@ -4477,6 +4472,8 @@ namespace Civilization1Remaster.Game
 			this.processor.RegDest.Value16 = this.processor.UnstackWord();
 			this.processor.LeaveFrame();
 			this.processor.Journal.CloseScope("HandleCity");
+
+			return this.processor.RegAcc.Value16;
 		}
 
 		/// <summary>

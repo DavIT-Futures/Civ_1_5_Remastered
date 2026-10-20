@@ -92,8 +92,9 @@ namespace Civilization1Remaster.Game
 				if (town.ConditionMarker == 0xff || town.ParticipantIdx != participantIdx)
 					continue;
 
-				ushort share = ContinentShare(this.owner.MapOps.ObtainContinentID(town.Place.X, town.Place.Y));
-				this.processor.RegDest.Value16 = (ushort)(this.processor.RegAcc.Value16 << 1);
+				ushort continent = this.owner.MapOps.ObtainContinentID(town.Place.X, town.Place.Y);
+				ushort share = ContinentShare(continent);
+				this.processor.RegDest.Value16 = (ushort)(continent << 1);
 				this.processor.EmitUInt16(this.processor.SegStack.Value16, share, (ushort)(this.processor.PullUInt16(this.processor.SegStack.Value16, share) + town.TrueExtent));
 
 				if (!town.Has(CityStructure.Palace))
@@ -409,9 +410,7 @@ namespace Civilization1Remaster.Game
 				this.processor.RegSource.Value16 = troop;
 				this.processor.EmitLocalWord(0x2, (ushort)(sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d7)));
 
-				this.owner.MapOps.ObtainTileImprovements((sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d5)), (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d6)));
-
-				if ((this.processor.RegAcc.LowByte & 1) != 0)
+				if ((this.owner.MapOps.ObtainTileImprovements((sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d5)), (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d6))) & 1) != 0)
 					TransferUnitInCity(participantIdx, rebelIdx, troopIdx, troop);
 				else
 					TransferUnitOutside(participantIdx, rebelIdx, troopIdx, troop);

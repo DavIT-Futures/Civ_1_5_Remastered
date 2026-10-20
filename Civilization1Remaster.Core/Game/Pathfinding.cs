@@ -368,11 +368,11 @@ namespace Civilization1Remaster.Game
 
 			ushort sea = UnitMovesBySea(troop) ? (ushort)1 : (ushort)0;
 
-			LocateRouteStep((short)unitHoriz, (short)unitVert, sea);
+			ushort step = LocateRouteStep((short)unitHoriz, (short)unitVert, sea);
 
 			ushort result;
 
-			if (this.processor.RegAcc.Value16 == 0)
+			if (step == 0)
 			{
 				this.processor.EmitGlobalWord(0x6590, this.processor.PullGlobalByte((ushort)(troop + 0x81da)));
 				this.processor.EmitGlobalWord(0x6592, this.processor.PullGlobalByte((ushort)(troop + 0x81db)));
@@ -1014,11 +1014,11 @@ namespace Civilization1Remaster.Game
 				this.processor.EmitGlobalWord(0x6590, (ushort)((short)horizSpot1));
 				this.processor.EmitGlobalWord(0x6592, (ushort)((short)vertSpot1));
 
-				ShiftToward(0, 127, arg6);
+				ushort direction = ShiftToward(0, 127, arg6);
 
 				this.processor.EmitGlobalByte(0x87cb, 0xff);
-				
-				if (this.processor.RegAcc.Value16 == 0xffff)
+
+				if (direction == 0xffff)
 				{
 					this.processor.RegAcc.Value16 = 0xffff;
 				}

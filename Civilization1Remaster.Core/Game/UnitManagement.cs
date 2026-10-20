@@ -834,8 +834,7 @@ namespace Civilization1Remaster.Game
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.UnusualSteps,
 				(byte)this.troops.KindField(participantIdx, troopIdx, UnitKindTable.RoundsAway));
 
-			this.owner.Helpers.LocateNearestCity(horizLoc, vertLoc);
-			this.troops.Assign(participantIdx, troopIdx, UnitMemory.BaseTown, this.processor.RegAcc.LowByte);
+			this.troops.Assign(participantIdx, troopIdx, UnitMemory.BaseTown, (byte)this.owner.Helpers.LocateNearestCity(horizLoc, vertLoc));
 
 			byte baseTown = this.troops.Pull(participantIdx, troopIdx, UnitMemory.BaseTown);
 			ushort baseOwner = baseTown < 128 ? (ushort)this.owner.World.Towns[baseTown].ParticipantIdx : (ushort)0xffff;
