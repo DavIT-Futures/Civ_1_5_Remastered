@@ -1160,6 +1160,10 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   `TagTileOwned` – do obejrzenia ręcznie. Pełny zestaw zielony.
 - B1, porcja 4 (2026-10-20): wynik przez `return` po kolejnych 38 funkcjach (teksty, pliki, okienka króla, jednostki, zapis
   gry, mysz…) – 47 miejsc. Pomijane: `FindSubtext` (AX to adres, nie wynik), `TellStream`, `CloseStream`. Pełny zestaw zielony.
+- B1, porcja 5 (2026-10-20): 30 miejsc z komentarzem między wywołaniem a odczytem AX (skrypt przechodzi teraz przez
+  komentarze) i 5 pętli `do … while (AX …)` z wywołaniem na końcu ciała (`KeyAvailable`, `CompareTextNoCase`,
+  `ObtainSongPosition`) – warunek woła funkcję. Zostały odczyty, przed którymi stoi inne wywołanie albo funkcja bez wyniku w
+  AX (`ObtainFirstPrerequisite`, `AwaitForKeyPressOrMouseClick`, `SeizeCityScenery`, `DisplayStoryIntro`) – ręcznie.
 
 ## Następny krok
 

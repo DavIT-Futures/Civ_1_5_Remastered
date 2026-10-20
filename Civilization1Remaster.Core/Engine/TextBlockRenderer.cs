@@ -207,9 +207,8 @@ namespace Civilization1Remaster.Engine
 
 					scanned = (ushort)this.owner.Libc.ScanStream((short)handle, "%[^\n]\n", line);
 
-					this.owner.Libc.CompareTextNoCase(line, charsAddr);
 				}
-				while (this.processor.RegAcc.Value16 != 0 && scanned != 0xffff);
+				while ((ushort)this.owner.Libc.CompareTextNoCase(line, charsAddr) != 0 && scanned != 0xffff);
 			}
 
 			bool found = scanned != 0xffff;

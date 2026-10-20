@@ -685,10 +685,8 @@ namespace Civilization1Remaster.Game
 
 				this.owner.BlockText.DisplayTextDialog(0x1cf0);
 
-				DisplayDialog(0xba06, 80, 80);
-
 				// The first line goes on with the game, the second one ends it
-				this.processor.EmitGlobalWord(0xdc48, (ushort)(1 - this.processor.RegAcc.Value16));
+				this.processor.EmitGlobalWord(0xdc48, (ushort)(1 - DisplayDialog(0xba06, 80, 80)));
 			}
 			else
 			{

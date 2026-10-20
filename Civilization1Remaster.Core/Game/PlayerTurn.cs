@@ -3022,9 +3022,7 @@ namespace Civilization1Remaster.Game
 				}
 				else
 				{
-					this.owner.MapOps.RenderUnitOnWorldMap(participantIdx, this.processor.PullLocalSignedWord(0x32));
-
-					if (this.processor.RegAcc.Value16 != 0)
+					if (this.owner.MapOps.RenderUnitOnWorldMap(participantIdx, this.processor.PullLocalSignedWord(0x32)) != 0)
 						this.owner.TextPainter.AwaitTime(10);
 				}
 			}

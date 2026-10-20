@@ -2214,9 +2214,7 @@ namespace Civilization1Remaster.Game
 						this.processor.CopyLocalWord(0x40, 0x2c);
 					}
 
-					this.owner.MapOps.ContainsHut(this.owner.MapOps.ObtainTerrainType(nextHoriz, nextVert), nextHoriz, nextVert);
-
-					if (this.processor.RegAcc.Value16 != 0 && this.processor.PullLocalWord(0x56) != 0)
+					if (this.owner.MapOps.ContainsHut(this.owner.MapOps.ObtainTerrainType(nextHoriz, nextVert), nextHoriz, nextVert) != 0 && this.processor.PullLocalWord(0x56) != 0)
 						return this.processor.PullLocalWord(0x40);
 				}
 
@@ -2532,9 +2530,8 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private void SurveyAIUnit(short participantIdx, short troopIdx)
 		{
-			this.owner.UnitOps.MayOccupyTile(participantIdx, this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
-				this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert));
-			this.processor.EmitLocalWord(0x4c, this.processor.RegAcc.Value16);
+			this.processor.EmitLocalWord(0x4c, this.owner.UnitOps.MayOccupyTile(participantIdx, this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
+				this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert)));
 
 			this.processor.EmitLocalWord(0x2c, 0);
 			this.processor.EmitLocalWord(0x30, this.troops.Pull(participantIdx, troopIdx, UnitMemory.Horiz));
@@ -2548,8 +2545,7 @@ namespace Civilization1Remaster.Game
 			this.processor.EmitLocalWord(0x2a, this.processor.PullGlobalWord(0x6c9a));
 
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Kind, 0xff);
-			this.owner.Helpers.LocateNearestUnit(participantIdx, troopIdx, horizLoc, vertLoc);
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
+			this.processor.EmitLocalWord(0x4, this.owner.Helpers.LocateNearestUnit(participantIdx, troopIdx, horizLoc, vertLoc));
 			this.processor.EmitLocalWord(0x32, this.processor.PullGlobalWord(0x6c9a));
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Kind, this.processor.PullLocalByte(0x8));
 

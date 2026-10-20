@@ -172,9 +172,7 @@ namespace Civilization1Remaster.Game
 
 			this.owner.World.LiveRealms &= (short)~(1 << (byte)rebelIdx);
 
-			this.owner.NewGameWizard.ConstructCivilization(rebelIdx);
-
-			if (this.processor.RegAcc.Value16 == 0)
+			if (this.owner.NewGameWizard.ConstructCivilization(rebelIdx) == 0)
 				return false;
 
 			this.owner.World.LiveRealms |= (short)(1 << (byte)rebelIdx);
@@ -425,9 +423,7 @@ namespace Civilization1Remaster.Game
 		/// <summary>A unit of the player in a city (see TransferRebelUnits)</summary>
 		private void TransferUnitInCity(short participantIdx, short rebelIdx, ushort troopIdx, ushort troop)
 		{
-			this.owner.Helpers.LocateCityAtPosition((sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d5)), (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d6)));
-
-			ushort townIdx = this.processor.RegAcc.Value16;
+			ushort townIdx = this.owner.Helpers.LocateCityAtPosition((sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d5)), (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d6)));
 			this.processor.EmitLocalWord(0x10, townIdx);
 			this.processor.EmitLocalWord(0x2, (ushort)(sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d7)));
 

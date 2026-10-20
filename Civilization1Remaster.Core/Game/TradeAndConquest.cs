@@ -210,9 +210,7 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private void SplitCapturedCivilization(short participantIdx, City town, short formerIdx)
 		{
-			this.owner.Secession.DivideCivilization(formerIdx);
-
-			if (this.processor.RegAcc.Value16 != 0)
+			if (this.owner.Secession.DivideCivilization(formerIdx) != 0)
 				return;
 
 			town.ParticipantIdx = (sbyte)participantIdx;

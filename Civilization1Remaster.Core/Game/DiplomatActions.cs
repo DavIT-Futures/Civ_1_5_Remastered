@@ -152,9 +152,7 @@ namespace Civilization1Remaster.Game
 				if ((town.ConditionMarker & 0x20) != 0)
 					return;
 
-				this.owner.Combat.AffirmBreakTreaty(town.ParticipantIdx);
-
-				if (this.processor.RegAcc.Value16 == 0xffff)
+				if (this.owner.Combat.AffirmBreakTreaty(town.ParticipantIdx) == 0xffff)
 					return;
 
 				this.owner.Politics.WipeDiplomacyFlags(person, town.ParticipantIdx, 2);
@@ -288,9 +286,7 @@ namespace Civilization1Remaster.Game
 
 			this.processor.RegSource.Value16 = (ushort)(0x1c * townIdx);
 
-			this.owner.Politics.LocateNearestCityOfPlayer(ownerIdx, town.Place.X, town.Place.Y);
-
-			ushort distance = this.processor.RegAcc.Value16;
+			ushort distance = this.owner.Politics.LocateNearestCityOfPlayer(ownerIdx, town.Place.X, town.Place.Y);
 			this.processor.EmitLocalWord(0xc, distance);
 
 			if (distance == 0)

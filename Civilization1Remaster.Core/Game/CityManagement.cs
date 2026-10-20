@@ -1276,8 +1276,7 @@ namespace Civilization1Remaster.Game
 			}
 
 			this.processor.RegAcc.Value16 = (ushort)(part - 0x16);
-			this.owner.RocketScreen.ComputeSpaceshipSuccess(owner, (short)this.processor.RegAcc.Value16);
-			this.processor.EmitLocalWord(0xc8, this.processor.RegAcc.Value16);
+			this.processor.EmitLocalWord(0xc8, this.owner.RocketScreen.ComputeSpaceshipSuccess(owner, (short)this.processor.RegAcc.Value16));
 
 			if (this.processor.PullLocalWord(0xc8) != 0 && part < 0x18)
 			{
@@ -2937,8 +2936,7 @@ namespace Civilization1Remaster.Game
 			City town = this.owner.World.Towns[townIdx];
 
 			FloodBoxWithMotif(8, 8, 200, 13);
-			RenderCitizenIcons(townIdx, 8, 8, this.processor.PullLocalWord(0x8), 192);
-			this.processor.EmitLocalWord(0xf4, this.processor.RegAcc.Value16);
+			this.processor.EmitLocalWord(0xf4, RenderCitizenIcons(townIdx, 8, 8, this.processor.PullLocalWord(0x8), 192));
 			this.processor.EmitLocalWord(0xe8, (ushort)this.owner.Helpers.VerifyValueSpan((town.TrueExtent * 8) + 24, 0, 128));
 
 			for (ushort route = 0; route < 3; route++)
@@ -3309,9 +3307,8 @@ namespace Civilization1Remaster.Game
 					this.owner.MapOps.RenderUnitSprite(owner, (short)UnitOfCityList(this.processor.PullLocalWord(0x106)),
 						this.processor.PullLocalSignedWord(0xfa), this.processor.PullLocalSignedWord(0x100));
 					this.owner.TextPainter.AwaitTime(10);
-					this.owner.Libc.KeyAvailable();
 				}
-				while (this.processor.RegAcc.Value16 == 0);
+				while ((ushort)this.owner.Libc.KeyAvailable() == 0);
 
 				ushort key = this.owner.Dialogs.ObtainNavigationKey();
 				this.processor.EmitLocalWord(0xfc, key);
@@ -3358,9 +3355,8 @@ namespace Civilization1Remaster.Game
 					this.owner.TextPainter.AwaitTime(10);
 					this.owner.VideoCard.SubstituteHue(this.processor.PullGlobalWord(0xaa), 252, line, 56, 7, 1, 9);
 					this.owner.TextPainter.AwaitTime(10);
-					this.owner.Libc.KeyAvailable();
 				}
-				while (this.processor.RegAcc.Value16 == 0);
+				while ((ushort)this.owner.Libc.KeyAvailable() == 0);
 
 				ushort key = this.owner.Dialogs.ObtainNavigationKey();
 				this.processor.EmitLocalWord(0xfc, key);
@@ -3433,9 +3429,8 @@ namespace Civilization1Remaster.Game
 					this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 16, 16, this.processor.PullGlobalWord(0xaa), horiz, vert);
 					this.owner.TextPainter.AwaitTime(10);
 					this.processor.EmitGlobalWord(0x6b64, 1);
-					this.owner.Libc.KeyAvailable();
 				}
-				while (this.processor.RegAcc.Value16 == 0);
+				while ((ushort)this.owner.Libc.KeyAvailable() == 0);
 
 				this.processor.EmitLocalWord(0xf6, this.processor.PullLocalWord(0xb6));
 				this.processor.CopyLocalWord(0xbe, 0xfc);
@@ -3684,8 +3679,7 @@ namespace Civilization1Remaster.Game
 		{
 			City town = this.owner.World.Towns[townIdx];
 
-			ObtainCityTileIndex(this.processor.PullLocalSignedWord(0xf6), this.processor.PullLocalSignedWord(0xfc));
-			this.processor.EmitLocalWord(0xea, this.processor.RegAcc.Value16);
+			this.processor.EmitLocalWord(0xea, ObtainCityTileIndex(this.processor.PullLocalSignedWord(0xf6), this.processor.PullLocalSignedWord(0xfc)));
 			ushort tile = this.processor.PullLocalWord(0xea);
 
 			if (tile == 0xffff)
@@ -3756,8 +3750,7 @@ namespace Civilization1Remaster.Game
 				{
 					this.processor.EmitLocalWord(0xbc, resource);
 					this.processor.RegSource.Value16 = (ushort)(tile << 1);
-					MayCityWorkTile(town.Place.X + this.owner.TownDeltas[tile].X, town.Place.Y + this.owner.TownDeltas[tile].Y, resource);
-					this.processor.EmitLocalWord(0xcc, this.processor.RegAcc.Value16);
+					this.processor.EmitLocalWord(0xcc, MayCityWorkTile(town.Place.X + this.owner.TownDeltas[tile].X, town.Place.Y + this.owner.TownDeltas[tile].Y, resource));
 					ushort word = (ushort)((resource << 1) + 0x70da);
 					this.processor.EmitUInt16(this.processor.SegData.Value16, word,
 						(ushort)(this.processor.PullUInt16(this.processor.SegData.Value16, word) - this.processor.PullLocalWord(0xcc)));
@@ -4278,9 +4271,7 @@ namespace Civilization1Remaster.Game
 			if ((town.ConditionMarker & 4) != 0)
 			{
 				this.processor.RegSource.Value16 = (ushort)(townIdx * 0x1c);
-				this.owner.UnitOps.ContainsAdjacentForeignUnit(town.ParticipantIdx, town.Place.X, town.Place.Y);
-
-				if (this.processor.RegAcc.Value16 == 0)
+				if (this.owner.UnitOps.ContainsAdjacentForeignUnit(town.ParticipantIdx, town.Place.X, town.Place.Y) == 0)
 					this.owner.UnitOps.KeepUnitsInCityList(townIdx);
 			}
 

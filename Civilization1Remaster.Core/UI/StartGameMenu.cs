@@ -216,10 +216,8 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Startup.DisplayMouseCursor();
 
-			this.owner.Dialogs.DisplayMenu(0xba06, 160, 35, 1);
-
 			// The line: 0 - rivals the first leaders of slots 1 - rivals + 1, then the second leaders (slot + 8)
-			this.owner.World.PersonParticipantIdx = (short)this.processor.RegAcc.Value16;
+			this.owner.World.PersonParticipantIdx = (short)this.owner.Dialogs.DisplayMenu(0xba06, 160, 35, 1);
 
 			if (this.owner.World.PersonParticipantIdx <= this.owner.World.BotRivalTally)
 			{
@@ -990,9 +988,7 @@ namespace Civilization1Remaster.UI
 					if (given != 0)
 						this.owner.Libc.AppendText(0xba06, "+");
 
-					this.owner.Advisors.UncoverTechnology((short)participantIdx, 0);
-
-					this.owner.Libc.AppendText(0xba06, (ushort)((ushort)(this.processor.RegAcc.Value16 * 0x16) + 0x4da));
+					this.owner.Libc.AppendText(0xba06, (ushort)((ushort)(this.owner.Advisors.UncoverTechnology((short)participantIdx, 0) * 0x16) + 0x4da));
 				}
 
 				this.processor.RegSource.Value16 = (ushort)(participantIdx << 1);
@@ -1146,9 +1142,7 @@ namespace Civilization1Remaster.UI
 
 			this.processor.RegSource.Value16 = troop;
 
-			this.owner.MapOps.ObtainLandMassSize((sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d5)), (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d6)));
-
-			switch (CPU.SignedQuotient((short)this.processor.RegAcc.Value16, 0x32))
+			switch (CPU.SignedQuotient((short)this.owner.MapOps.ObtainLandMassSize((sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d5)), (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d6))), 0x32))
 			{
 				case 0:
 					this.owner.Libc.AppendText(0xba06, 0x3695);

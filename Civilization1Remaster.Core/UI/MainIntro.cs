@@ -109,8 +109,7 @@ namespace Civilization1Remaster.UI
 				if ((short)this.processor.PullLocalWord(IntroColumn) >= screenCount)
 					break;
 
-				this.owner.VideoCard.ReserveScreen(this.processor.PullLocalWord(IntroColumn));
-				this.processor.EmitGlobalWord(0x32d6, this.processor.RegAcc.Value16);
+				this.processor.EmitGlobalWord(0x32d6, this.owner.VideoCard.ReserveScreen(this.processor.PullLocalWord(IntroColumn)));
 
 				if (this.processor.RegAcc.Value16 == 0)
 					this.processor.EmitGlobalWord(0x6dfc, 1);
@@ -429,9 +428,8 @@ namespace Civilization1Remaster.UI
 		{
 			do
 			{
-				this.owner.Services.ObtainSongPosition();
 			}
-			while ((short)this.processor.RegAcc.Value16 < 0xd00);
+			while ((short)this.owner.Services.ObtainSongPosition() < 0xd00);
 
 			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), 0, 0, 0x140, 0xc8,
 				this.processor.PullGlobalWord(0x19d4), 0, 0);

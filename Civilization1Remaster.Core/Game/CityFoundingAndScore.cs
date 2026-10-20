@@ -113,9 +113,7 @@ namespace Civilization1Remaster.Game
 
 			if (this.owner.World.IsHuman(participantIdx))
 			{
-				this.owner.CityNaming.DisplayCityLabelPrompt(townIdx);
-
-				if (this.processor.RegAcc.Value16 == 0)
+				if (this.owner.CityNaming.DisplayCityLabelPrompt(townIdx) == 0)
 					return 0xffff;
 
 				char[] label = this.owner.World.TownLabels[town.LabelIdx].ToCharArray();

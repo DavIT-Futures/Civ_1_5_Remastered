@@ -435,8 +435,7 @@ namespace Civilization1Remaster.UI
 				if (arg2 != 0)
 				{
 					this.owner.BlockText.ImportTextFromFile(0x3fa4, tagBuf);
-					this.owner.BlockText.RenderTextChunk(36, 12, cursorY, 1);
-					cursorY = (short)(this.processor.RegAcc.Value16 + 8);
+					cursorY = (short)((ushort)this.owner.BlockText.RenderTextChunk(36, 12, cursorY, 1) + 8);
 				}
 			}
 

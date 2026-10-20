@@ -127,9 +127,7 @@ namespace Civilization1Remaster.Game
 					}
 				}
 
-				ChartRoute(participantIdx, troopIdx);
-
-				if (this.processor.RegAcc.Value16 != 0 || !windowFailed)
+				if (ChartRoute(participantIdx, troopIdx) != 0 || !windowFailed)
 				{
 					if (TryShiftToward(participantIdx, troopIdx, out ushort step))
 						return step;
@@ -192,9 +190,7 @@ namespace Civilization1Remaster.Game
 			ushort road = (ushort)(this.owner.MapOps.ObtainTileImprovements((sbyte)unitHoriz, (sbyte)unitVert) & 8);
 			this.processor.EmitLocalWord(0xc, road);
 
-			this.owner.UnitOps.MayOccupyTile(participantIdx, (sbyte)unitHoriz, (sbyte)unitVert);
-
-			ushort occupied = this.processor.RegAcc.Value16;
+			ushort occupied = this.owner.UnitOps.MayOccupyTile(participantIdx, (sbyte)unitHoriz, (sbyte)unitVert);
 			this.processor.EmitLocalWord(0x1c, occupied);
 
 			ushort direction;
@@ -650,9 +646,7 @@ namespace Civilization1Remaster.Game
 						!CornerMatches(cornerHoriz, ++cornerVert, marker) && !CornerMatches(--cornerHoriz, cornerVert, marker))
 						continue;
 
-					ComputeRouteCost(cornerHoriz, cornerVert, horizLoc, vertLoc, marker, 18);
-
-					if (this.processor.RegAcc.Value16 != 0xffff)
+					if (ComputeRouteCost(cornerHoriz, cornerVert, horizLoc, vertLoc, marker, 18) != 0xffff)
 					{
 						nearest = distance;
 						found = directionIdx;
@@ -824,9 +818,7 @@ namespace Civilization1Remaster.Game
 		/// <summary>The neighbours of a tile of the window get its cost plus the move cost (see ShiftToward); the new tail</summary>
 		private byte ExpandWindowCell(short horizLoc, short vertLoc, short cost, byte tail, bool sea, bool air, short windowHoriz, short windowVert)
 		{
-			this.owner.MapOps.ContainsRoad((short)(ushort)TunePosition(horizLoc), vertLoc);
-
-			ushort road = this.processor.RegAcc.Value16;
+			ushort road = this.owner.MapOps.ContainsRoad((short)(ushort)TunePosition(horizLoc), vertLoc);
 			this.processor.EmitLocalWord(0x8, road);
 
 			short direction;

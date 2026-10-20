@@ -163,10 +163,8 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Libc.AppendText(0xba06, year < 0 ? (ushort)0x33f1 : (ushort)0x33f6);
 
-			this.owner.TextPainter.ObtainTextWidth(0xba06);
-
 			// Too wide: only up to the civilization
-			if ((short)(this.processor.RegAcc.Value16 + horizLoc) >= 0x140)
+			if ((short)((ushort)this.owner.TextPainter.ObtainTextWidth(0xba06) + horizLoc) >= 0x140)
 			{
 				this.processor.EmitGlobalByte((ushort)(length + 0xba06), 0x0);
 			}

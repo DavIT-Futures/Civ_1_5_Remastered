@@ -1042,9 +1042,7 @@ namespace Civilization1Remaster.Game
 							value += 2;
 						}
 
-						this.owner.MapOps.ContainsSpecialResource(tileHoriz, tileVert);
-
-						if (this.processor.RegAcc.Value16 != 0)
+						if (this.owner.MapOps.ContainsSpecialResource(tileHoriz, tileVert) != 0)
 						{
 							tile += 0xc;
 						}

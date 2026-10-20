@@ -23,8 +23,7 @@ namespace Civilization1Remaster.UI
 			ushort topicAddr = (ushort)(this.processor.RegFrame.Value16 - 0x18);
 
 			this.owner.Libc.CopyText(topicAddr, "*");
-			this.owner.Libc.UppercaseText(charsAddr);
-			this.owner.Libc.AppendText(topicAddr, this.processor.RegAcc.Value16);
+			this.owner.Libc.AppendText(topicAddr, this.owner.Libc.UppercaseText(charsAddr));
 
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
