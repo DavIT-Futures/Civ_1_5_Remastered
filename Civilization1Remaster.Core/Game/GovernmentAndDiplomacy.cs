@@ -171,9 +171,7 @@ namespace Civilization1Remaster.Game
 
 			if ((short)((ushort)player.MartialMight << 1) < other.MartialMight)
 			{
-				this.owner.Audience.WelcomeEmissary(participantIdx, -1, 0);
-
-				if (this.processor.RegAcc.Value16 == 0)
+				if (this.owner.Audience.WelcomeEmissary(participantIdx, -1, 0) == 0)
 				{
 					short tribute = (short)((ushort)this.owner.Helpers.VerifyValueSpan(player.Gold / 100, 1, 10) * 0x32);
 					this.processor.EmitLocalWord(0x4, (ushort)tribute);
@@ -202,9 +200,7 @@ namespace Civilization1Remaster.Game
 			if (other.MartialMight <= player.MartialMight || (short)((ushort)player.MartialMight << 1) < other.MartialMight)
 				return;
 
-			this.owner.Audience.WelcomeEmissary(participantIdx, -1, 0);
-
-			if (this.processor.RegAcc.Value16 != 0)
+			if (this.owner.Audience.WelcomeEmissary(participantIdx, -1, 0) != 0)
 				return;
 
 			this.processor.EmitGlobalByte(0xba06, 0);
@@ -233,10 +229,9 @@ namespace Civilization1Remaster.Game
 
 			this.processor.StackWord(0); // stack management - push return segment, ignored
 			this.processor.StackWord(returnOffset); // stack management - push return offset
-			this.owner.Audience.DisplayKingDialog(0xba06, 0x14, 0x8b);
 			this.processor.UnstackDoubleWord(); // stack management - pop return offset and segment
 
-			return this.processor.RegAcc.Value16 == 1;
+			return this.owner.Audience.DisplayKingDialog(0xba06, 0x14, 0x8b) == 1;
 		}
 
 		/// <summary>The human player and the AI player become allies against the other one (flag 8 of the other's relation)</summary>

@@ -1237,9 +1237,7 @@ namespace Civilization1Remaster.Game
 				if (!MayResearch(participantIdx, scienceIdx))
 					continue;
 
-				ObtainTechnologyInfo(participantIdx, (ushort)scienceIdx);
-
-				short draw = (short)this.owner.Libc.Dice.DrawInt((ushort)(this.processor.RegAcc.Value16 << 2));
+				short draw = (short)this.owner.Libc.Dice.DrawInt((ushort)(ObtainTechnologyInfo(participantIdx, (ushort)scienceIdx) << 2));
 				this.processor.EmitLocalWord(0x40, (ushort)draw);
 
 				if (draw <= highest || (scienceIdx == human.PresentInquiryIdx && participantIdx == person))
@@ -1744,9 +1742,7 @@ namespace Civilization1Remaster.Game
 				this.owner.Libc.Dice.DrawInt(3) != 0)
 				return;
 
-			this.owner.Audience.WelcomeEmissary(participantIdx, -1, 0);
-
-			if (this.processor.RegAcc.Value16 == 0xffff)
+			if (this.owner.Audience.WelcomeEmissary(participantIdx, -1, 0) == 0xffff)
 				return;
 
 			this.processor.EmitGlobalWord(0x3934, 0);

@@ -1596,9 +1596,7 @@ namespace Civilization1Remaster.Game
 					continue;
 				}
 
-				this.owner.Helpers.MergeCoordinates((short)(horizLoc - town.Place.X), (short)(vertLoc - town.Place.Y));
-
-				if ((short)this.processor.RegAcc.Value16 > 2)
+				if ((short)(ushort)this.owner.Helpers.MergeCoordinates((short)(horizLoc - town.Place.X), (short)(vertLoc - town.Place.Y)) > 2)
 					continue;
 
 				this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHoriz, this.processor.PullLocalByte(0x26));
@@ -1896,8 +1894,7 @@ namespace Civilization1Remaster.Game
 
 				if (this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.LeftoverSteps) > 3)
 				{
-					MayAIEnterTile(participantIdx, this.processor.PullLocalWord(0x30), this.processor.PullLocalWord(0x36));
-					this.processor.EmitLocalWord(0x3a, this.processor.RegAcc.Value16);
+					this.processor.EmitLocalWord(0x3a, MayAIEnterTile(participantIdx, this.processor.PullLocalWord(0x30), this.processor.PullLocalWord(0x36)));
 
 					if ((short)this.processor.RegAcc.Value16 > 0)
 						return this.processor.RegAcc.Value16;
@@ -2118,8 +2115,7 @@ namespace Civilization1Remaster.Game
 			// The leader of the stack without this unit (it counts as a diplomat while looking)
 			this.processor.EmitLocalWord(0x3a, (ushort)this.troops.TroopKind(participantIdx, troopIdx));
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Kind, 0x1a);
-			this.owner.UnitOps.LocateStackLeader(participantIdx, troopIdx);
-			this.processor.EmitLocalWord(0x20, this.processor.RegAcc.Value16);
+			this.processor.EmitLocalWord(0x20, this.owner.UnitOps.LocateStackLeader(participantIdx, troopIdx));
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Kind, this.processor.PullLocalByte(0x3a));
 
 			if (this.processor.PullLocalWord(0x20) != 0xffff)
@@ -2131,8 +2127,7 @@ namespace Civilization1Remaster.Game
 					return CityGuard.Stays;
 			}
 
-			this.owner.UnitOps.VerifyTileOccupation(participantIdx, horizLoc, vertLoc);
-			this.processor.EmitLocalWord(0x6, (ushort)(this.processor.RegAcc.Value16 != 0 ? 3 : 4));
+			this.processor.EmitLocalWord(0x6, (ushort)(this.owner.UnitOps.VerifyTileOccupation(participantIdx, horizLoc, vertLoc) != 0 ? 3 : 4));
 
 			Game.State.City town = this.owner.World.Towns[this.processor.PullLocalWord(0x34)];
 
@@ -2141,8 +2136,7 @@ namespace Civilization1Remaster.Game
 			else if (this.processor.PullLocalWord(0x2) == 0)
 				this.processor.IncrementLocalWord(0x6);
 
-			this.owner.UnitOps.TallyUnitsWithFlagInStack(participantIdx, troopIdx, 2);
-			this.processor.EmitLocalWord(0x3a, this.processor.RegAcc.Value16);
+			this.processor.EmitLocalWord(0x3a, this.owner.UnitOps.TallyUnitsWithFlagInStack(participantIdx, troopIdx, 2));
 
 			short wanted = (short)(CPU.SignedQuotient(town.TrueExtent, (short)this.processor.PullLocalWord(0x6)) + 1);
 

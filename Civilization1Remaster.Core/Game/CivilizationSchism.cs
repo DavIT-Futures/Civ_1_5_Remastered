@@ -445,10 +445,8 @@ namespace Civilization1Remaster.Game
 
 				this.owner.MapOps.TagTileOwned((sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d5)), (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d6)));
 
-				this.owner.UnitOps.ConstructUnit((sbyte)this.processor.PullGlobalByte(townRecord), (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d7)),
-					(sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d5)), (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d6)));
-
-				this.processor.EmitLocalWord(0x6, this.processor.RegAcc.Value16);
+				this.processor.EmitLocalWord(0x6, this.owner.UnitOps.ConstructUnit((sbyte)this.processor.PullGlobalByte(townRecord), (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d7)),
+					(sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d5)), (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d6))));
 				return;
 			}
 
@@ -461,10 +459,8 @@ namespace Civilization1Remaster.Game
 
 			this.owner.MapOps.TagTileOwned((sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d5)), (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d6)));
 
-			this.owner.UnitOps.ConstructUnit(rebelIdx, (short)this.processor.PullLocalWord(0x2),
+			ushort newTroop = this.owner.UnitOps.ConstructUnit(rebelIdx, (short)this.processor.PullLocalWord(0x2),
 				(sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d5)), (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d6)));
-
-			ushort newTroop = this.processor.RegAcc.Value16;
 			this.processor.EmitLocalWord(0x6, newTroop);
 
 			ushort copy = (ushort)((ushort)(0xc * newTroop) + (ushort)(0x600 * rebelIdx));
@@ -519,10 +515,8 @@ namespace Civilization1Remaster.Game
 
 			this.owner.MapOps.TagTileOwned((sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d5)), (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d6)));
 
-			this.owner.UnitOps.ConstructUnit(rebelIdx, (short)this.processor.PullLocalWord(0x2),
+			ushort newTroop = this.owner.UnitOps.ConstructUnit(rebelIdx, (short)this.processor.PullLocalWord(0x2),
 				(sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d5)), (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d6)));
-
-			ushort newTroop = this.processor.RegAcc.Value16;
 			this.processor.EmitLocalWord(0x6, newTroop);
 
 			ushort copy = (ushort)((ushort)(0x600 * rebelIdx) + (ushort)(0xc * newTroop));
@@ -555,10 +549,8 @@ namespace Civilization1Remaster.Game
 				{
 					this.owner.MapOps.TagTileOwned((sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d5)), (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d6)));
 
-					this.owner.UnitOps.ConstructUnit(rebelIdx, kind,
+					ushort joined = this.owner.UnitOps.ConstructUnit(rebelIdx, kind,
 						(sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d5)), (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d6)));
-
-					ushort joined = this.processor.RegAcc.Value16;
 					this.processor.EmitLocalWord(0x6, joined);
 
 					ushort joinedCopy = (ushort)((ushort)(0x600 * rebelIdx) + (ushort)(0xc * joined));

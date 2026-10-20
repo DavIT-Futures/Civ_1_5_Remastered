@@ -38,9 +38,8 @@ namespace Civilization1Remaster.Engine
 			// The free memory stays in the frame (bp - 4) like in the original: the timer of the tests counts the accesses to memory
 			this.processor.StackWord(0); // stack management - push return segment, ignored
 			this.processor.StackWord(0x0055); // stack management - push return offset
-			this.owner.VideoCard.ObtainFreeStorage();
 			this.processor.UnstackDoubleWord(); // stack management - pop return offset and segment
-			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
+			this.processor.EmitLocalWord(0x4, this.owner.VideoCard.ObtainFreeStorage());
 
 			if (this.processor.PullGlobalWord(0x6dfc) != 0)
 			{
@@ -69,15 +68,13 @@ namespace Civilization1Remaster.Engine
 
 			this.processor.StackWord(0); // stack management - push return segment, ignored
 			this.processor.StackWord(0x0110); // stack management - push return offset
-			this.owner.ImageToolkit.ImportIcon(0x277);
 			this.processor.UnstackDoubleWord(); // stack management - pop return offset and segment
 
-			this.processor.EmitGlobalWord(0x6e92, this.processor.RegAcc.Value16);
+			this.processor.EmitGlobalWord(0x6e92, this.owner.ImageToolkit.ImportIcon(0x277));
 
 			if (this.processor.PullGlobalWord(0x1a3c) != 0)
 			{
-				this.owner.Services.PrepareMouse();
-				this.processor.EmitGlobalWord(0x1a3c, this.processor.RegAcc.Value16);
+				this.processor.EmitGlobalWord(0x1a3c, this.owner.Services.PrepareMouse());
 			}
 
 			if (this.processor.PullGlobalWord(0x1a3c) != 0)
@@ -399,9 +396,7 @@ namespace Civilization1Remaster.Engine
 						break;
 
 					case 1:
-						this.owner.SaveLoad.ImportGameFromMenu(0xffff);
-
-						if (this.processor.RegAcc.Value16 == 0xffff)
+						if (this.owner.SaveLoad.ImportGameFromMenu(0xffff) == 0xffff)
 						{
 							// No game loaded: the menu again
 							this.processor.EmitGlobalWord(0x6b32, 0xffff);

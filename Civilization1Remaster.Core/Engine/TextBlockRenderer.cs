@@ -162,9 +162,7 @@ namespace Civilization1Remaster.Engine
 
 			while (true)
 			{
-				this.owner.Libc.OpenStream(docnameAddr, "rb");
-
-				handle = this.processor.RegAcc.Value16;
+				handle = (ushort)this.owner.Libc.OpenStream(docnameAddr, "rb");
 
 				this.owner.Libc.SeekStream((short)handle, (((int)(short)hash >> 5) + hash) << 1, 0);
 
@@ -172,9 +170,7 @@ namespace Civilization1Remaster.Engine
 
 				this.owner.Libc.CloseStream((short)handle);
 
-				this.owner.Libc.OpenStream(docnameAddr, "rt");
-
-				handle = this.processor.RegAcc.Value16;
+				handle = (ushort)this.owner.Libc.OpenStream(docnameAddr, "rt");
 
 				ushort offset = this.processor.PullGlobalWord(entry);
 
@@ -185,9 +181,7 @@ namespace Civilization1Remaster.Engine
 
 				this.owner.Libc.ScanStream((short)handle, "%[^\n]\n", line);
 
-				this.owner.Libc.CompareTextNoCase(line, charsAddr);
-
-				if (this.processor.RegAcc.Value16 == 0)
+				if ((ushort)this.owner.Libc.CompareTextNoCase(line, charsAddr) == 0)
 				{
 					indexed = true;
 					break;
@@ -211,9 +205,7 @@ namespace Civilization1Remaster.Engine
 
 					this.processor.EmitGlobalWord(entry, this.processor.RegAcc.Value16);
 
-					this.owner.Libc.ScanStream((short)handle, "%[^\n]\n", line);
-
-					scanned = this.processor.RegAcc.Value16;
+					scanned = (ushort)this.owner.Libc.ScanStream((short)handle, "%[^\n]\n", line);
 
 					this.owner.Libc.CompareTextNoCase(line, charsAddr);
 				}
@@ -252,9 +244,7 @@ namespace Civilization1Remaster.Engine
 
 			if (!indexed && found)
 			{
-				this.owner.Libc.OpenStream(docnameAddr, "r+b");
-
-				handle = this.processor.RegAcc.Value16;
+				handle = (ushort)this.owner.Libc.OpenStream(docnameAddr, "r+b");
 
 				this.owner.Libc.SeekStream((short)handle, ((int)(short)hash >> (5 + hash)) << 1, 0);
 

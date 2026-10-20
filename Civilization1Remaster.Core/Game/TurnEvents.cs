@@ -834,9 +834,7 @@ namespace Civilization1Remaster.Game
 
 				this.processor.EmitLocalWord(0x4, (ushort)kind);
 
-				this.owner.UnitOps.ConstructUnit(0, kind, horizLoc, vertLoc);
-
-				ushort troopIdx = this.processor.RegAcc.Value16;
+				ushort troopIdx = this.owner.UnitOps.ConstructUnit(0, kind, horizLoc, vertLoc);
 				this.processor.EmitLocalWord(0x1c, troopIdx);
 
 				ushort marker = (ushort)((ushort)(0xc * troopIdx) + 0x81d4);
@@ -856,9 +854,7 @@ namespace Civilization1Remaster.Game
 				this.owner.World.Towns[townIdx].ParticipantIdx != this.owner.World.PersonParticipantIdx)
 				return;
 
-			this.owner.Conquest.ComputeCityPlunder((short)townIdx);
-
-			ushort plunder = this.processor.RegAcc.Value16;
+			ushort plunder = this.owner.Conquest.ComputeCityPlunder((short)townIdx);
 			this.processor.EmitLocalWord(0x16, plunder);
 
 			if ((short)this.owner.Libc.Dice.DrawInt(100) >= (short)plunder)
@@ -953,9 +949,7 @@ namespace Civilization1Remaster.Game
 
 				this.processor.EmitLocalWord(0x4, (ushort)kind);
 
-				this.owner.UnitOps.ConstructUnit(0, kind, horizLoc, vertLoc);
-
-				ushort sight = (ushort)((ushort)(0xc * this.processor.RegAcc.Value16) + 0x81dd);
+				ushort sight = (ushort)((ushort)(0xc * this.owner.UnitOps.ConstructUnit(0, kind, horizLoc, vertLoc)) + 0x81dd);
 				this.processor.EmitGlobalByte(sight, (byte)(this.processor.PullGlobalByte(sight) | (byte)this.owner.World.ChartSight[(ushort)horizLoc, (ushort)vertLoc]));
 
 				if (this.owner.World.Towns[townIdx].ParticipantIdx == this.owner.World.PersonParticipantIdx)
@@ -1163,10 +1157,9 @@ namespace Civilization1Remaster.Game
 				{
 					this.processor.StackWord(0); // stack management - push return segment, ignored
 					this.processor.StackWord(0x111e); // stack management - push return offset
-					this.owner.VideoCard.ObtainFreeStorage();
 					this.processor.UnstackDoubleWord(); // stack management - pop return offset and segment
 
-					short storage = (short)this.processor.RegAcc.Value16;
+					short storage = (short)this.owner.VideoCard.ObtainFreeStorage();
 
 					EmptyMessage()
 						.Number(storage);

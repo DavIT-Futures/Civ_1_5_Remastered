@@ -336,9 +336,7 @@ namespace Civilization1Remaster.Engine
 
 			if (marker != 0)
 			{
-				this.owner.Libc.OpenHandle(docnameAddr, 0x8000);
-
-				this.processor.EmitGlobalWord(0x681e, this.processor.RegAcc.Value16);
+				this.processor.EmitGlobalWord(0x681e, (ushort)this.owner.Libc.OpenHandle(docnameAddr, 0x8000));
 
 				short handle = (short)this.processor.PullGlobalWord(0x681e);
 
@@ -440,9 +438,7 @@ namespace Civilization1Remaster.Engine
 
 			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0x19d4), 0, 0);
 
-			QueryForStoreDrive();
-
-			if (this.processor.RegAcc.Value16 != 0xffff)
+			if (QueryForStoreDrive() != 0xffff)
 			{
 				this.owner.Libc.CopyText(0xba06, "\x008cSelect Save File...\n");
 
@@ -469,9 +465,7 @@ namespace Civilization1Remaster.Engine
 					this.processor.EmitGlobalWord(0xe168, arg1);
 					this.processor.EmitGlobalByte(0x41cd, (byte)(arg1 + 0x30));
 
-					StoreGame(0x41c6);
-
-					if (this.processor.RegAcc.Value16 != 0)
+					if (StoreGame(0x41c6) != 0)
 					{
 						if (this.processor.PullGlobalWord(0x681c) == 0)
 						{
@@ -618,9 +612,7 @@ namespace Civilization1Remaster.Engine
 
 			if (drive != 0xffff)
 			{
-				VerifyDrive(drive);
-
-				if (this.processor.RegAcc.Value16 == 0)
+				if (VerifyDrive(drive) == 0)
 				{
 					this.owner.Libc.CopyText(0xba06, "No Disk in Drive A.\n");
 

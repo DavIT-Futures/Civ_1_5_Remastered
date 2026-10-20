@@ -792,11 +792,9 @@ namespace Civilization1Remaster.Game
 			short troopIdx = (short)this.processor.PullLocalWord(0x32);
 			this.processor.RegSource.Value16 = UnitMemory.Offset(participantIdx, troopIdx);
 
-			this.owner.Helpers.MergeCoordinates(
+			this.processor.EmitLocalWord(0x18, (ushort)this.owner.Helpers.MergeCoordinates(
 				(short)(this.processor.PullLocalSignedWord(0x1c) - this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz)),
-				(short)(this.processor.PullLocalSignedWord(0x26) - this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert)));
-
-			this.processor.EmitLocalWord(0x18, this.processor.RegAcc.Value16);
+				(short)(this.processor.PullLocalSignedWord(0x26) - this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert))));
 
 			// Across the date line
 			if (this.owner.Libc.AbsoluteValue((short)(this.processor.PullLocalWord(0x1c) - this.troops.Pull(participantIdx, troopIdx, UnitMemory.Horiz))) == 0x4f &&
@@ -3701,9 +3699,7 @@ namespace Civilization1Remaster.Game
 				}
 				else if (this.processor.PullGlobalWord(terrainRecord) == 0xfffe)
 				{
-					VerifyCoastalTile(horizLoc, vertLoc);
-
-					if (this.processor.RegAcc.Value16 != 0)
+					if (VerifyCoastalTile(horizLoc, vertLoc) != 0)
 						cost = 1;
 				}
 			}

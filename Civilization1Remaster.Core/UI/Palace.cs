@@ -628,9 +628,7 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.EmitGlobalByte((ushort)(pictureName + 6), (byte)((this.processor.PullGlobalByte(sizeAddr) << 1) + first));
 
-			this.owner.ImageToolkit.ImportIcon(pictureName);
-
-			this.processor.EmitLocalWord(pictureLocal, this.processor.RegAcc.Value16);
+			this.processor.EmitLocalWord(pictureLocal, this.owner.ImageToolkit.ImportIcon(pictureName));
 
 			this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa), horizLoc,
 				(short)this.processor.PullGlobalWord(sizeAddr) <= 1 ? 105 : 94, this.processor.PullLocalWord(pictureLocal));

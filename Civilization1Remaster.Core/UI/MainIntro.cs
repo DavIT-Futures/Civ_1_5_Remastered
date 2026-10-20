@@ -162,8 +162,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.World.SessionPrefMarkers |= 0x10;
 
-			this.owner.Libc.OpenStream("credits.txt", "rt");
-			this.owner.GlobD768 = this.processor.RegAcc.Value16;
+			this.owner.GlobD768 = (ushort)this.owner.Libc.OpenStream("credits.txt", "rt");
 
 			this.owner.Services.RestoreTimer();
 			this.owner.Services.PerformSound(3, 0);

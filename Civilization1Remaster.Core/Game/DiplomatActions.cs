@@ -696,10 +696,8 @@ namespace Civilization1Remaster.Game
 
 				this.owner.MapOps.TagTileOwned(troops.PullSigned(ownerIdx, troopIdx, UnitMemory.Horiz), troops.PullSigned(ownerIdx, troopIdx, UnitMemory.Vert));
 
-				this.owner.UnitOps.ConstructUnit(participantIdx, kind, troops.PullSigned(ownerIdx, troopIdx, UnitMemory.Horiz),
+				ushort newIdx = this.owner.UnitOps.ConstructUnit(participantIdx, kind, troops.PullSigned(ownerIdx, troopIdx, UnitMemory.Horiz),
 					troops.PullSigned(ownerIdx, troopIdx, UnitMemory.Vert));
-
-				ushort newIdx = this.processor.RegAcc.Value16;
 				lastTroop = newIdx;
 
 				if (newIdx == 0xffff)

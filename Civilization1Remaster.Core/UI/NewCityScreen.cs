@@ -305,16 +305,12 @@ namespace Civilization1Remaster.UI
 				}
 				else
 				{
-					this.owner.Libc.ReadKey();
-
-					key = this.processor.RegAcc.Value16;
+					key = (ushort)this.owner.Libc.ReadKey();
 				}
 
 				if (key == 0)
 				{
-					this.owner.Libc.ReadKey();
-
-					key = (ushort)(this.processor.RegAcc.Value16 + 0x80);
+					key = (ushort)((ushort)this.owner.Libc.ReadKey() + 0x80);
 				}
 
 				if (key == 0xd)

@@ -1805,9 +1805,7 @@ namespace Civilization1Remaster.Game
 			}
 
 			// The city of the wonder 10
-			ObtainWonderCityID(10);
-
-			if (this.processor.RegAcc.Value16 == (ushort)townIdx)
+			if (ObtainWonderCityID(10) == (ushort)townIdx)
 			{
 				this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xe8);
 				this.processor.EmitLocalWord(0xe8, (ushort)(this.processor.PullLocalWord(0xe8) + this.processor.RegAcc.Value16));
@@ -2009,8 +2007,7 @@ namespace Civilization1Remaster.Game
 				this.processor.EmitLocalWord(0x2, 0);
 				this.processor.EmitLocalWord(0xe6, 0);
 
-				this.owner.MapOps.ObtainUnitAtTile(this.processor.PullLocalSignedWord(0xd8), this.processor.PullLocalSignedWord(0xe4));
-				this.processor.EmitLocalWord(0xe8, this.processor.RegAcc.Value16);
+				this.processor.EmitLocalWord(0xe8, this.owner.MapOps.ObtainUnitAtTile(this.processor.PullLocalSignedWord(0xd8), this.processor.PullLocalSignedWord(0xe4)));
 				this.processor.EmitLocalWord(0xba, this.processor.RegAcc.Value16);
 
 				while (this.processor.PullLocalWord(0xba) != 0xffff)
@@ -2139,9 +2136,7 @@ namespace Civilization1Remaster.Game
 			if (PlayerEnjoysWonderEffect(owner, 0x15) != 0)
 				this.processor.EmitGlobalWord(0x70e2, (ushort)(this.processor.PullGlobalWord(0x70e2) + 1));
 
-			ObtainWonderCityID(11);
-
-			if (this.processor.RegAcc.Value16 == (ushort)townIdx)
+			if (ObtainWonderCityID(11) == (ushort)townIdx)
 				this.processor.EmitGlobalWord(0x70e4, 0);
 
 			if (PlayerEnjoysWonderEffect(owner, 0xd) != 0)

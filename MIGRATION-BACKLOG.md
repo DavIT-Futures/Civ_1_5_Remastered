@@ -1158,6 +1158,8 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
 - B1, porcja 3 (2026-10-20): `DisplayDialog` i `QueryForDisk` zwracają wynik (`ushort`, dalej też w AX); 25 miejsc bierze go
   z `return`. Pozostałe „void z odczytem AX” z listy skryptu to fałszywe trafienia (AX z wcześniejszego wywołania) albo
   `TagTileOwned` – do obejrzenia ręcznie. Pełny zestaw zielony.
+- B1, porcja 4 (2026-10-20): wynik przez `return` po kolejnych 38 funkcjach (teksty, pliki, okienka króla, jednostki, zapis
+  gry, mysz…) – 47 miejsc. Pomijane: `FindSubtext` (AX to adres, nie wynik), `TellStream`, `CloseStream`. Pełny zestaw zielony.
 
 ## Następny krok
 

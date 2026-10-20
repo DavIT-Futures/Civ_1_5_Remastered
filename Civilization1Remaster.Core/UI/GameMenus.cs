@@ -262,9 +262,7 @@ namespace Civilization1Remaster.UI
 					{
 						this.owner.Libc.AppendText(0xba06, " Build Irrigation");
 
-						this.owner.TurnLogic.VerifyCoastalTile(horizLoc, vertLoc);
-
-						if (this.processor.RegAcc.Value16 == 0)
+						if (this.owner.TurnLogic.VerifyCoastalTile(horizLoc, vertLoc) == 0)
 						{
 							this.processor.EmitGlobalWord(0xb276, (ushort)(this.processor.PullGlobalWord(0xb276) | (1 << (byte)keys.Count)));
 						}

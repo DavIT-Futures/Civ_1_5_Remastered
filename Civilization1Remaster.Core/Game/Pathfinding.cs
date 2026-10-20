@@ -142,9 +142,7 @@ namespace Civilization1Remaster.Game
 		/// <summary>ShiftToward with the limit 0x3e7 (into the local 0x14); true with a direction</summary>
 		private bool TryShiftToward(short participantIdx, short troopIdx, out ushort step)
 		{
-			ShiftToward(participantIdx, troopIdx, 0x3e7);
-
-			step = this.processor.RegAcc.Value16;
+			step = ShiftToward(participantIdx, troopIdx, 0x3e7);
 			this.processor.EmitLocalWord(0x14, step);
 
 			return step != 0xffff;

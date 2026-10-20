@@ -75,9 +75,7 @@ namespace Civilization1Remaster.Game
 				this.owner.World.Participants[participantIdx].TouchParticipantTimeleft = -1;
 			}
 
-			ComputeCityPlunder(townIdx);
-
-			short plunder = (short)this.owner.Helpers.VerifyValueSpan((short)this.processor.RegAcc.Value16, 0, this.owner.World.Participants[formerIdx].Gold);
+			short plunder = (short)this.owner.Helpers.VerifyValueSpan((short)ComputeCityPlunder(townIdx), 0, this.owner.World.Participants[formerIdx].Gold);
 			this.processor.EmitLocalWord(0x4, (ushort)plunder);
 
 			if (!BarbariansRazeCity(participantIdx, townIdx, horizLoc, vertLoc))
@@ -239,9 +237,7 @@ namespace Civilization1Remaster.Game
 			if (participantIdx != 0)
 				return false;
 
-			this.owner.MapOps.ObtainUnitAtTile((short)horizLoc, (short)vertLoc);
-
-			ushort troop = (ushort)(0xc * this.processor.RegAcc.Value16);
+			ushort troop = (ushort)(0xc * this.owner.MapOps.ObtainUnitAtTile((short)horizLoc, (short)vertLoc));
 			this.processor.RegSource.Value16 = troop;
 
 			sbyte kind = (sbyte)this.processor.PullGlobalByte((ushort)((ushort)(0x600 * participantIdx) + troop + 0x81d7));
@@ -459,13 +455,9 @@ namespace Civilization1Remaster.Game
 						this.processor.EmitUInt16(this.processor.SegStack.Value16,
 							(ushort)(this.processor.RegFrame.Value16 + slotOffset - 0x94), (ushort)techId);
 
-						this.owner.Advisors.ObtainTechnologyInfo(participantIdx1, (ushort)techId);
-
-						if ((short)this.processor.RegAcc.Value16 > bestScore)
+						if ((short)this.owner.Advisors.ObtainTechnologyInfo(participantIdx1, (ushort)techId) > bestScore)
 						{
-							this.owner.Advisors.ObtainTechnologyInfo(participantIdx1, (ushort)techId);
-
-							bestScore = (short)this.processor.RegAcc.Value16;
+							bestScore = (short)this.owner.Advisors.ObtainTechnologyInfo(participantIdx1, (ushort)techId);
 							this.processor.EmitLocalWord(0x96, (ushort)bestScore);
 							this.processor.EmitLocalWord(0x4, (ushort)techId);
 						}
