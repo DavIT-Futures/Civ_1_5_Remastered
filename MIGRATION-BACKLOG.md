@@ -1170,6 +1170,14 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   wynik. Zostaje 9 odczytów po wywołaniach, gdzie AX ustawia funkcja głębiej (`AwaitForKeyPressOrMouseClick`,
   `ObtainFirstPrerequisite`, `SeizeCityScenery`, `TellStream`, `FindSubtext` – AX to adres), wynik ze `switch` (Palace),
   `RunGame` i zapis rejestrów w przerwaniu myszy – do etapu B3. Pełny zestaw zielony.
+- B2, porcja 1 (2026-10-20): martwe zapisy zmiennych lokalnych (słowa ramki zapisywane, a w pliku nigdzie nieczytane) usunięte
+  w CityFoundingAndScore, GovernmentAndDiplomacy, MapManagement, Pathfinding i UnitCombat – 173 linie (skrypt `b2dead.py`:
+  pomija pliki z `FrameWord` / `RegFrame` i zapisy, których wartość coś woła). Słowo 0x20 ramki `HandlePlayerTurn`
+  (ParticipantMarkers) zostaje: bez niego 17 starych testów `HandlePlayerTurn` się rozjechało, więc ktoś je czyta.
+  Ważne odkrycie B2: zmienne lokalne z własną ramką są już w dużej części czyste – zostały w pamięci celowo, bo inne funkcje
+  czytają niezainicjowane słowa stosu („śmieci” po wcześniejszych wywołaniach, np. `RenderCitizenIcons` 0x2,
+  `LocateNearestFriendlyCity` 0x14 / 0x16, `ObtainDistanceToReplayCity` 0x4, HandleCity w `HandleAllCities`). Główna praca B2
+  to grupy metod dzielących ramkę wołającego (CityManagement 800 odczytów, PlayerTurn 617, AIPlayer 506, …).
 
 ## Następny krok
 

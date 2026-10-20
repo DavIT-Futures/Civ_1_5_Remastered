@@ -60,7 +60,6 @@ namespace Civilization1Remaster.Game
 
 			for (townIdx = 0; townIdx < 0x80; townIdx++)
 			{
-				this.processor.EmitLocalWord(0x8, townIdx);
 
 				if (this.owner.World.Towns[townIdx].ConditionMarker == 0xff)
 					break;
@@ -70,7 +69,6 @@ namespace Civilization1Remaster.Game
 
 			if (townIdx == 0x80)
 			{
-				this.processor.EmitLocalWord(0x8, townIdx);
 
 				if (participantIdx == this.owner.World.PersonParticipantIdx)
 				{
@@ -174,7 +172,6 @@ namespace Civilization1Remaster.Game
 					first = false;
 			}
 
-			this.processor.EmitLocalWord(0x6, first ? (ushort)1 : (ushort)0);
 
 			if (first)
 			{
@@ -278,9 +275,6 @@ namespace Civilization1Remaster.Game
 			}
 			while (!found);
 
-			this.processor.EmitLocalWord(0x10, labelIdx);
-			this.processor.EmitLocalWord(0x2, first);
-			this.processor.EmitLocalWord(0xa, found ? (ushort)1 : (ushort)0);
 
 			return labelIdx;
 		}
@@ -298,7 +292,6 @@ namespace Civilization1Remaster.Game
 				letterIdx--;
 			}
 
-			this.processor.EmitLocalWord(0xc, letterIdx);
 		}
 
 		/// <summary>The flags of the city's neighbours: 2 coastal (big ocean, or any for the human player), 8 river or hills</summary>
@@ -308,14 +301,12 @@ namespace Civilization1Remaster.Game
 
 			for (neighbourIdx = 1; neighbourIdx <= 8; neighbourIdx++)
 			{
-				this.processor.EmitLocalWord(0xc, neighbourIdx);
 				this.processor.RegSource.Value16 = (ushort)(neighbourIdx << 1);
 
 				int tileHoriz = (short)this.processor.PullGlobalWord((ushort)((neighbourIdx << 1) + 0x1882)) + horizLoc;
 				int tileVert = (short)this.processor.PullGlobalWord((ushort)((neighbourIdx << 1) + 0x18e4)) + vertLoc;
 
 				ushort terrain = this.owner.MapOps.ObtainTerrainType(tileHoriz, tileVert);
-				this.processor.EmitLocalWord(0xe, terrain);
 
 				if (terrain == 0xa &&
 					((short)this.owner.MapOps.ObtainLandMassSize(tileHoriz, tileVert) > 0x100 || participantIdx == this.owner.World.PersonParticipantIdx))
@@ -329,7 +320,6 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			this.processor.EmitLocalWord(0xc, neighbourIdx);
 		}
 
 		/// <summary>
@@ -343,14 +333,11 @@ namespace Civilization1Remaster.Game
 
 			for (tileIdx = 0; tileIdx < 0x2d; tileIdx++)
 			{
-				this.processor.EmitLocalWord(0xc, tileIdx);
 				this.processor.RegSource.Value16 = (ushort)(tileIdx << 1);
 
 				short tileHoriz = (short)(ushort)this.owner.Routing.TunePosition((short)this.processor.PullGlobalWord((ushort)((tileIdx << 1) + 0x1882)) + horizLoc);
 				short tileVert = (short)(this.processor.PullGlobalWord((ushort)((tileIdx << 1) + 0x18e4)) + (ushort)vertLoc);
 
-				this.processor.EmitLocalWord(0x2, (ushort)tileHoriz);
-				this.processor.EmitLocalWord(0x4, (ushort)tileVert);
 
 				if (tileIdx <= 0x14)
 				{
@@ -359,7 +346,6 @@ namespace Civilization1Remaster.Game
 				else
 				{
 					ushort colour = this.owner.VideoCard.ObtainDot(2, tileHoriz + 0x50, tileVert);
-					this.processor.EmitLocalWord(0x10, colour);
 
 					if ((short)colour >= 8)
 						this.owner.Services.AssignDot(2, tileHoriz + 0x50, tileVert, 8);
@@ -377,7 +363,6 @@ namespace Civilization1Remaster.Game
 				this.owner.MapOps.KeepKnownTileImprovements(horizLoc, vertLoc);
 			}
 
-			this.processor.EmitLocalWord(0xc, tileIdx);
 		}
 
 		/// <summary>
@@ -417,8 +402,6 @@ namespace Civilization1Remaster.Game
 				terrains |= (ushort)(1 << (byte)terrain);
 			}
 
-			this.processor.EmitLocalWord(0xa, neighbourIdx);
-			this.processor.EmitLocalWord(0xc, terrains);
 
 			EmptyMessage()
 				.City(townIdx);
@@ -553,7 +536,6 @@ namespace Civilization1Remaster.Game
 			do
 			{
 				buildingIdx = (ushort)this.owner.Libc.Dice.DrawInt(24);
-				this.processor.EmitLocalWord(0x10, buildingIdx);
 			}
 			while (buildingIdx == 0 || !town.HasStructureSignExtended(buildingIdx));
 
@@ -641,8 +623,6 @@ namespace Civilization1Remaster.Game
 			short highest = 4;
 			short rivalIdx = -1;
 
-			this.processor.EmitLocalWord(0x6, (ushort)highest);
-			this.processor.EmitLocalWord(0xe, 0xffff);
 
 			if ((short)this.processor.PullGlobalWord(0x70e2) > (short)this.processor.PullGlobalWord(0x70e4) ||
 				town.Has(CityStructure.Palace) || this.owner.World.Participants[town.ParticipantIdx].TownTally <= 3)
@@ -652,29 +632,23 @@ namespace Civilization1Remaster.Game
 
 			for (otherIdx = 0; otherIdx < 0x80 && otherIdx != (ushort)townIdx && this.owner.World.Towns[otherIdx].ConditionMarker != 0xff; otherIdx++)
 			{
-				this.processor.EmitLocalWord(0x2, otherIdx);
 				this.processor.RegSource.Value16 = townOffset;
 				this.processor.RegDest.Value16 = (ushort)(0x1c * otherIdx);
 
 				short distance = (short)(ushort)this.owner.Helpers.ObtainDistance(town.Place.X, this.owner.World.Towns[otherIdx].Place.X, town.Place.Y, this.owner.World.Towns[otherIdx].Place.Y);
-				this.processor.EmitLocalWord(0x4, (ushort)distance);
 
 				this.owner.CityOps.HandleCity((short)otherIdx, -1);
 
 				short prosperity = CPU.SignedQuotient((short)((ushort)(this.processor.PullGlobalWord(0x70e2) - this.processor.PullGlobalWord(0x70e4)) << 5), distance);
-				this.processor.EmitLocalWord(0x8, (ushort)prosperity);
 
 				if (prosperity > highest)
 				{
 					highest = prosperity;
 					rivalIdx = (short)otherIdx;
 
-					this.processor.EmitLocalWord(0x6, (ushort)highest);
-					this.processor.EmitLocalWord(0xe, (ushort)rivalIdx);
 				}
 			}
 
-			this.processor.EmitLocalWord(0x2, otherIdx);
 
 			if (rivalIdx == -1)
 				return;
@@ -732,7 +706,6 @@ namespace Civilization1Remaster.Game
 			{
 			}
 
-			this.processor.EmitLocalWord(0x8, lineEnd);
 			this.processor.EmitGlobalByte((ushort)(lineEnd + 0xba06), 0);
 			this.processor.EmitGlobalWord(0x2f9e, 0x2);
 

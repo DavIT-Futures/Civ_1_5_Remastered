@@ -54,8 +54,6 @@ namespace Civilization1Remaster.Game
 			short shiftHoriz = troopIdx < 128 ? (short)(this.processor.PullGlobalByte((ushort)(troop + 0x81da)) - this.processor.PullGlobalByte((ushort)(troop + 0x81d5))) : (short)0;
 			short shiftVert = troopIdx < 128 ? (short)(this.processor.PullGlobalByte((ushort)(troop + 0x81db)) - this.processor.PullGlobalByte((ushort)(troop + 0x81d6))) : (short)0;
 
-			this.processor.EmitLocalWord(0x1e, (ushort)shiftHoriz);
-			this.processor.EmitLocalWord(0x20, (ushort)shiftVert);
 
 			direction = 0;
 
@@ -65,8 +63,6 @@ namespace Civilization1Remaster.Game
 			shiftHoriz = (short)Math.Sign(shiftHoriz);
 			shiftVert = (short)Math.Sign(shiftVert);
 
-			this.processor.EmitLocalWord(0x1e, (ushort)shiftHoriz);
-			this.processor.EmitLocalWord(0x20, (ushort)shiftVert);
 
 			if (troopIdx < 128)
 			{
@@ -88,7 +84,6 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			this.processor.EmitLocalWord(0x18, candidate);
 
 			return true;
 		}
@@ -141,7 +136,6 @@ namespace Civilization1Remaster.Game
 		private bool TryShiftToward(short participantIdx, short troopIdx, out ushort step)
 		{
 			step = ShiftToward(participantIdx, troopIdx, 0x3e7);
-			this.processor.EmitLocalWord(0x14, step);
 
 			return step != 0xffff;
 		}
@@ -164,8 +158,6 @@ namespace Civilization1Remaster.Game
 			short shiftHoriz = (short)(this.processor.PullGlobalWord(0x6590) - unitHoriz);
 			short shiftVert = (short)(this.processor.PullGlobalWord(0x6592) - unitVert);
 
-			this.processor.EmitLocalWord(0x1e, (ushort)shiftHoriz);
-			this.processor.EmitLocalWord(0x20, (ushort)shiftVert);
 			this.processor.EmitLocalWord(0x26, (ushort)Math.Abs(shiftHoriz));
 			this.processor.EmitLocalWord(0x28, (ushort)Math.Abs(shiftVert));
 
@@ -184,20 +176,15 @@ namespace Civilization1Remaster.Game
 			short lowest = 0x270f;
 			short best = 0;
 
-			this.processor.EmitLocalWord(0x24, (ushort)lowest);
-			this.processor.EmitLocalWord(0x14, 0);
 
 			ushort road = (ushort)(this.owner.MapOps.ObtainTileImprovements((sbyte)unitHoriz, (sbyte)unitVert) & 8);
-			this.processor.EmitLocalWord(0xc, road);
 
 			ushort occupied = this.owner.UnitOps.MayOccupyTile(participantIdx, (sbyte)unitHoriz, (sbyte)unitVert);
-			this.processor.EmitLocalWord(0x1c, occupied);
 
 			ushort direction;
 
 			for (direction = 1; direction < 9; direction++)
 			{
-				this.processor.EmitLocalWord(0x18, direction);
 
 				short stepHoriz = (short)this.processor.PullGlobalWord((ushort)((direction << 1) + 0x1882));
 				short stepVert = (short)this.processor.PullGlobalWord((ushort)((direction << 1) + 0x18e4));
@@ -208,16 +195,11 @@ namespace Civilization1Remaster.Game
 
 				this.processor.RegSource.Value16 = (ushort)(direction << 1);
 				this.processor.RegDest.Value16 = troop;
-				this.processor.EmitLocalWord(0x10, (ushort)nextHoriz);
-				this.processor.EmitLocalWord(0x12, (ushort)nextVert);
-				this.processor.EmitLocalWord(0x2, (ushort)leftHoriz);
-				this.processor.EmitLocalWord(0x4, (ushort)leftVert);
 				this.processor.EmitLocalWord(0x28, (ushort)Math.Abs(leftVert));
 				this.processor.EmitLocalWord(0x26, (ushort)Math.Abs(leftHoriz));
 				this.processor.EmitLocalWord(0x2a, (ushort)Math.Abs(leftVert));
 
 				short nextDistance = GotoDistance(leftHoriz, leftVert);
-				this.processor.EmitLocalWord(0x16, (ushort)nextDistance);
 
 				if (participantIdx == this.owner.World.PersonParticipantIdx && nextDistance > distance)
 					continue;
@@ -242,7 +224,6 @@ namespace Civilization1Remaster.Game
 				cost += (short)((nextDistance << 2) + Math.Abs(leftHoriz) + Math.Abs(leftVert));
 
 				byte last = this.processor.PullGlobalByte((ushort)(troop + 0x81dc));
-				this.processor.EmitLocalByte(0x2a, last);
 
 				if (last != 0xff)
 				{
@@ -251,24 +232,19 @@ namespace Civilization1Remaster.Game
 					if (turn > 4)
 						turn = (short)(8 - turn);
 
-					this.processor.EmitLocalWord(0x6, (ushort)turn);
 
 					cost += (short)(turn * turn);
 				}
 
-				this.processor.EmitLocalWord(0x8, (ushort)cost);
 
 				if (cost < lowest)
 				{
 					best = (short)direction;
 					lowest = cost;
 
-					this.processor.EmitLocalWord(0x14, (ushort)best);
-					this.processor.EmitLocalWord(0x24, (ushort)lowest);
 				}
 			}
 
-			this.processor.EmitLocalWord(0x18, direction);
 
 			this.processor.RegSource.Value16 = troop;
 
@@ -279,14 +255,12 @@ namespace Civilization1Remaster.Game
 			{
 				this.processor.EmitGlobalByte((ushort)(troop + 0x81d8), 0);
 				best = 0;
-				this.processor.EmitLocalWord(0x14, 0);
 			}
 
 			if (best == 0)
 			{
 				this.processor.EmitGlobalByte((ushort)(troop + 0x81dc), 0xff);
 				this.processor.EmitGlobalByte((ushort)(troop + 0x81da), 0xff);
-				this.processor.EmitLocalWord(0x14, 0xffff);
 
 				return 0xffff;
 			}
@@ -303,10 +277,8 @@ namespace Civilization1Remaster.Game
 		private bool MayGotoTile(short participantIdx, short troopIdx, ushort troop, short horizLoc, short vertLoc, ushort occupied, out ushort terrain)
 		{
 			terrain = this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
-			this.processor.EmitLocalWord(0x1a, terrain);
 
 			ushort ownerIdx = this.owner.MapOps.ObtainTileOwner(horizLoc, vertLoc);
-			this.processor.EmitLocalWord(0x22, ownerIdx);
 
 			bool allowed = false;
 
@@ -361,8 +333,6 @@ namespace Civilization1Remaster.Game
 			ushort unitHoriz = this.processor.PullGlobalByte((ushort)(troop + 0x81d5));
 			ushort unitVert = this.processor.PullGlobalByte((ushort)(troop + 0x81d6));
 
-			this.processor.EmitLocalWord(0x36, unitHoriz);
-			this.processor.EmitLocalWord(0x3a, unitVert);
 			this.processor.EmitGlobalWord(0x6590, this.processor.PullGlobalByte((ushort)(troop + 0x81da)));
 			this.processor.EmitGlobalWord(0x6592, this.processor.PullGlobalByte((ushort)(troop + 0x81db)));
 
@@ -384,8 +354,6 @@ namespace Civilization1Remaster.Game
 			{
 				short unitColumn = (short)this.processor.PullGlobalWord(0x6590), unitRow = (short)this.processor.PullGlobalWord(0x6592);
 
-				this.processor.EmitLocalWord(0x36, (ushort)unitColumn);
-				this.processor.EmitLocalWord(0x3a, (ushort)unitRow);
 
 				LocateRouteStep(this.processor.PullGlobalByte((ushort)(troop + 0x81da)), this.processor.PullGlobalByte((ushort)(troop + 0x81db)),
 					UnitMovesBySea(troop) ? (ushort)1 : (ushort)0);
@@ -451,7 +419,6 @@ namespace Civilization1Remaster.Game
 			short steps = 0, links = 0, nextColumn = 0, nextRow = 0;
 			short column, row;
 
-			this.processor.EmitLocalWord(0x16, sea ? (ushort)1 : (ushort)0);
 
 			do
 			{
@@ -492,11 +459,6 @@ namespace Civilization1Remaster.Game
 			}
 			while (head != tail);
 
-			this.processor.EmitLocalWord(0x2, tail);
-			this.processor.EmitLocalWord(0x4, head);
-			this.processor.EmitLocalWord(0xc, found ? (ushort)1 : (ushort)0);
-			this.processor.EmitLocalWord(0x14, (ushort)column);
-			this.processor.EmitLocalWord(0x2c, (ushort)row);
 
 			this.processor.EmitGlobalWord(0x6590, 0xffff);
 
@@ -518,7 +480,6 @@ namespace Civilization1Remaster.Game
 					neighbourSet = true;
 
 					short blockSteps = (sbyte)this.processor.PullGlobalByte((ushort)((ushort)(0xd * nextColumn) + nextRow + 0xd816));
-					this.processor.EmitLocalWord(0x6, (ushort)blockSteps);
 
 					if (blockSteps == 0 || blockSteps > fewest)
 						continue;
@@ -533,7 +494,6 @@ namespace Civilization1Remaster.Game
 					}
 					else
 					{
-						this.processor.EmitLocalWord(0x12, (ushort)distance);
 
 						// Compared with 0xa: the last distance, or the steps of the search (unwritten: what is in the frame)
 						if (distance >= (stepsSet ? steps : (short)this.processor.PullLocalWord(0xa)))
@@ -546,28 +506,22 @@ namespace Civilization1Remaster.Game
 					stepsSet = true;
 				}
 
-				this.processor.EmitLocalWord(0x8, (ushort)fewest);
 				this.processor.EmitLocalWord(0xe, (ushort)bestDirection);
-				this.processor.EmitLocalWord(0x2e, 9);
 
 				if (bestDirection != -1)
 					AimRouteStep(bestDirection, unitColumn, unitRow, sea);
 			}
 			else if (linksSet)
 			{
-				this.processor.EmitLocalWord(0x2e, 9);
 			}
 
 			if (stepsSet)
 				this.processor.EmitLocalWord(0xa, (ushort)steps);
 
 			if (linksSet)
-				this.processor.EmitLocalWord(0x10, (ushort)links);
 
 			if (neighbourSet)
 			{
-				this.processor.EmitLocalWord(0x30, (ushort)nextColumn);
-				this.processor.EmitLocalWord(0x34, (ushort)nextRow);
 			}
 
 			if (this.processor.PullGlobalWord(0x6590) == 0xffff)
@@ -714,10 +668,6 @@ namespace Civilization1Remaster.Game
 			short windowHoriz = (short)(this.processor.PullGlobalWord(0x6590) - 8);
 			short windowVert = (short)(this.processor.PullGlobalWord(0x6592) - 8);
 
-			this.processor.EmitLocalWord(0x46, (ushort)unitHoriz);
-			this.processor.EmitLocalWord(0x4a, (ushort)unitVert);
-			this.processor.EmitLocalWord(0x20, (ushort)windowHoriz);
-			this.processor.EmitLocalWord(0x3a, (ushort)windowVert);
 
 			this.processor.EmitGlobalWord(0x6794, 0);
 
@@ -728,7 +678,6 @@ namespace Civilization1Remaster.Game
 				ChartWindowCosts(participantIdx, troopIdx, arg3, unitHoriz, unitVert, windowHoriz, windowVert);
 			}
 
-			this.processor.EmitLocalWord(0x16, 0xffff);
 
 			short step = -1;
 
@@ -774,7 +723,6 @@ namespace Civilization1Remaster.Game
 			tail++;
 			this.processor.EmitGlobalByte(WindowCell(windowHoriz, windowVert, (short)this.processor.PullGlobalWord(0x6590), (short)this.processor.PullGlobalWord(0x6592)), 1);
 
-			this.processor.EmitLocalWord(0x14, 0);
 			this.processor.EmitGlobalWord(0x6794, arg3);
 
 			ushort kind = (ushort)(0x22 * (sbyte)this.processor.PullGlobalByte((ushort)((ushort)(0xc * troopIdx) + (ushort)(0x600 * participantIdx) + 0x81d7)));
@@ -783,8 +731,6 @@ namespace Civilization1Remaster.Game
 			bool sea = this.processor.PullGlobalWord((ushort)(kind + 0x1138)) == 2;
 			bool air = this.processor.PullGlobalWord((ushort)(kind + 0x113a)) == 1;
 
-			this.processor.EmitLocalWord(0x1e, sea ? (ushort)1 : (ushort)0);
-			this.processor.EmitLocalWord(0x10, air ? (ushort)1 : (ushort)0);
 
 			do
 			{
@@ -792,9 +738,6 @@ namespace Civilization1Remaster.Game
 				short vertLoc = (sbyte)this.processor.PullGlobalByte((ushort)(head + 0x6694));
 				head++;
 
-				this.processor.EmitLocalWord(0x1c, (ushort)horizLoc);
-				this.processor.EmitLocalWord(0x36, (ushort)vertLoc);
-				this.processor.EmitLocalWord(0x4, head);
 
 				short cost = (sbyte)this.processor.PullGlobalByte(WindowCell(windowHoriz, windowVert, horizLoc, vertLoc));
 				this.processor.EmitLocalWord(0xe, (ushort)cost);
@@ -812,32 +755,26 @@ namespace Civilization1Remaster.Game
 			}
 			while (head != tail && (short)head < 0xe1);
 
-			this.processor.EmitLocalWord(0x2, tail);
 		}
 
 		/// <summary>The neighbours of a tile of the window get its cost plus the move cost (see ShiftToward); the new tail</summary>
 		private byte ExpandWindowCell(short horizLoc, short vertLoc, short cost, byte tail, bool sea, bool air, short windowHoriz, short windowVert)
 		{
 			ushort road = this.owner.MapOps.ContainsRoad((short)(ushort)TunePosition(horizLoc), vertLoc);
-			this.processor.EmitLocalWord(0x8, road);
 
 			short direction;
 
 			for (direction = 1; direction <= 8; direction++)
 			{
-				this.processor.EmitLocalWord(0x3c, (ushort)direction);
 
 				short nextHoriz = (short)(this.processor.PullGlobalWord((ushort)((direction << 1) + 0x1882)) + horizLoc);
-				this.processor.EmitLocalWord(0x40, (ushort)nextHoriz);
 
 				if (this.owner.Libc.AbsoluteValue((short)(nextHoriz - this.processor.PullGlobalWord(0x6590))) >= 8)
 					continue;
 
 				short tileHoriz = (short)TunePosition(nextHoriz);
-				this.processor.EmitLocalWord(0xc, (ushort)tileHoriz);
 
 				short nextVert = (short)(this.processor.PullGlobalWord((ushort)((direction << 1) + 0x18e4)) + vertLoc);
-				this.processor.EmitLocalWord(0x44, (ushort)nextVert);
 
 				if (this.owner.Libc.AbsoluteValue((short)(nextVert - this.processor.PullGlobalWord(0x6592))) >= 8)
 					continue;
@@ -846,7 +783,6 @@ namespace Civilization1Remaster.Game
 					continue;
 
 				ushort terrain = this.owner.MapOps.ObtainTerrainType(tileHoriz, nextVert);
-				this.processor.EmitLocalWord(0x3e, terrain);
 
 				if ((terrain == 0xa) != sea && (this.owner.MapOps.ObtainTileImprovements(tileHoriz, nextVert) & 1) == 0)
 					continue;
@@ -866,11 +802,9 @@ namespace Civilization1Remaster.Game
 					nextCost = (short)((3 * (sbyte)this.processor.PullGlobalByte((ushort)((ushort)(0x13 * terrain) + 0x28e))) + cost);
 				}
 
-				this.processor.EmitLocalWord(0x1a, (ushort)nextCost);
 
 				ushort cell = WindowCell(windowHoriz, windowVert, nextHoriz, nextVert);
 				short known = (sbyte)this.processor.PullGlobalByte(cell);
-				this.processor.EmitLocalWord(0x38, (ushort)known);
 
 				if (known != 0 && known <= nextCost)
 					continue;
@@ -879,10 +813,8 @@ namespace Civilization1Remaster.Game
 				this.processor.EmitGlobalByte((ushort)(tail + 0x6594), (byte)nextHoriz);
 				this.processor.EmitGlobalByte((ushort)(tail + 0x6694), (byte)nextVert);
 				tail++;
-				this.processor.EmitLocalWord(0x2, tail);
 			}
 
-			this.processor.EmitLocalWord(0x3c, (ushort)direction);
 
 			return tail;
 		}
@@ -901,7 +833,6 @@ namespace Civilization1Remaster.Game
 
 			for (direction = 1; direction <= 8; direction++)
 			{
-				this.processor.EmitLocalWord(0x3c, (ushort)direction);
 
 				short nextHoriz = (short)(this.processor.PullGlobalWord((ushort)((direction << 1) + 0x1882)) + unitHoriz);
 				short place = (short)this.processor.PullGlobalWord(0x6590);
@@ -909,16 +840,13 @@ namespace Civilization1Remaster.Game
 				if (this.owner.Libc.AbsoluteValue((short)(nextHoriz - place)) >= 0x48)
 					nextHoriz = (short)(nextHoriz <= place ? nextHoriz + 0x50 : nextHoriz - 0x50);
 
-				this.processor.EmitLocalWord(0x40, (ushort)nextHoriz);
 
 				if (this.owner.Libc.AbsoluteValue((short)(nextHoriz - this.processor.PullGlobalWord(0x6590))) >= 8)
 					continue;
 
 				short tileHoriz = (short)TunePosition(nextHoriz);
-				this.processor.EmitLocalWord(0xc, (ushort)tileHoriz);
 
 				short nextVert = (short)(this.processor.PullGlobalWord((ushort)((direction << 1) + 0x18e4)) + unitVert);
-				this.processor.EmitLocalWord(0x44, (ushort)nextVert);
 
 				if (this.owner.Libc.AbsoluteValue((short)(nextVert - this.processor.PullGlobalWord(0x6592))) >= 8)
 					continue;
@@ -933,7 +861,6 @@ namespace Civilization1Remaster.Game
 					continue;
 
 				short cost = (sbyte)this.processor.PullGlobalByte(WindowCell(windowHoriz, windowVert, nextHoriz, nextVert));
-				this.processor.EmitLocalWord(0x6, (ushort)cost);
 
 				if (cost == 0)
 					continue;
@@ -944,7 +871,6 @@ namespace Civilization1Remaster.Game
 					best = direction;
 
 					this.processor.EmitLocalWord(0xa, (ushort)lowest);
-					this.processor.EmitLocalWord(0x16, (ushort)best);
 					this.processor.EmitLocalWord(0xe, (ushort)CrowdAndDistance(participantIdx, tileHoriz, nextVert, 0xe));
 				}
 
@@ -957,12 +883,10 @@ namespace Civilization1Remaster.Game
 				{
 					best = direction;
 
-					this.processor.EmitLocalWord(0x16, (ushort)best);
 					this.processor.EmitLocalWord(0xe, (ushort)alternative);
 				}
 			}
 
-			this.processor.EmitLocalWord(0x3c, (ushort)direction);
 
 			return best;
 		}
@@ -974,7 +898,6 @@ namespace Civilization1Remaster.Game
 		private short CrowdAndDistance(short participantIdx, short horizLoc, short vertLoc, int local)
 		{
 			ushort troopIdx = this.owner.MapOps.ObtainUnitAtTile(horizLoc, vertLoc);
-			this.processor.EmitLocalWord(0x12, troopIdx);
 
 			if (troopIdx != 0xffff)
 			{
