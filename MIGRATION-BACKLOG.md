@@ -1185,6 +1185,21 @@ te błędy są odtwarzane jawnie:
 - `FeedCity` (`HandleCity`, L0819): po `TrueExtent--` przetłumaczony kod sprawdzał flagę Z z wcześniejszego porównania
   (0xe8 == -1, zawsze prawda), a nie wynik zmniejszenia, więc głodujące miasto bez osadnika zawsze ginie (w oryginale tylko przy
   rozmiarze 1; inaczej traci mieszkańca i zeruje zapas).
+- **Miasto cudu spoza tablicy miast – wyjątek zamiast DOS-owego odczytu (2026-10-20, potwierdzone testem).** `MarvelTownIdx`
+  trzyma -1 dla cudu niezbudowanego i 128 dla cudu w mieście zniszczonym (`FinalizeProduction`). DOS czytał wtedy rekord
+  miasta przed albo za tablicą (śmieci, właściciel prawie nigdy się nie zgadza, więc cud po prostu nie działa); C# rzuca
+  `IndexOutOfRangeException` przy `Towns[-1]` / `Towns[128]`. Błąd był już w tłumaczeniu przed migracją (d175cdb):
+  - `PlayerEnjoysWonderEffect` (CityManagement): sprawdza tylko 0xffff, więc 128 → wyjątek, o ile cud nie jest przestarzały.
+    Wołane w każdej turze miasta (cuda 2, 6, 9, 12, 13, 15, 16, 20, 21), przy rządach (1), przy wojnie AI (7), statkach (4, 8),
+    Wielkiej Bibliotece (5) – więc zdobycie albo zniszczenie miasta wielkości 1 z nieprzestarzałym cudem wywraca grę;
+  - `ApplyTechnology` (ScienceAndAdvisors, pętla „... cancels the effect of ...”): przy pierwszym odkryciu wynalazku, który
+    unieważnia cud, czyta `Towns[MarvelTownIdx[cud]]` bez żadnego sprawdzenia, więc wyjątek dla cudu niezbudowanego (-1)
+    i zniszczonego (128) – to może się zdarzać często (np. pierwsze odkrycie Invention bez Hanging Gardens);
+  - `ScoreWondersAndPollution`, ranking cudów w `CityFoundingAndScore` i `WorldMap` sprawdzają -1 i 0x80, są bezpieczne;
+    `Towns[MarvelTownIdx[15 / 13]]` w HandleCity i Hoover Dam w doradcy są wołane dopiero po `PlayerEnjoysWonderEffect`.
+  Naprawa: indeks spoza 0 – 127 traktować jak „nie ten właściciel” (tak wychodziło w DOS-ie); test na oba przypadki
+  (sonda: `MarvelTownIdx[21] = 128` po `FinalizeProduction` + HandleCity; `MarvelTownIdx[2] = -1 / 128`,
+  `ScienceLeadingFoundVia[20] = 0`, `ApplyTechnology(1, 20)`).
 
 - `HandleGameEnd`: co 50 tur wpis 11 historii dostaje jako starszy bajt populacji `(bajt & 0xff00) >> 8`, czyli zawsze 0;
   losowe katastrofy miast: licznik pętli to numer wylosowanego miasta + 1 (pętla kończy się po pierwszym mieście, chyba
