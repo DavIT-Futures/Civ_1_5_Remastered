@@ -1178,6 +1178,11 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   czytają niezainicjowane słowa stosu („śmieci” po wcześniejszych wywołaniach, np. `RenderCitizenIcons` 0x2,
   `LocateNearestFriendlyCity` 0x14 / 0x16, `ObtainDistanceToReplayCity` 0x4, HandleCity w `HandleAllCities`). Główna praca B2
   to grupy metod dzielących ramkę wołającego (CityManagement 800 odczytów, PlayerTurn 617, AIPlayer 506, …).
+- B2, porcja 2 (2026-10-20): stare testy różnicowe `HandleCity` (porównujące też stos z kopią Reference) wycofane:
+  `BatchHundredThirteenDifferentialTests` (losowe) przeniesione na podwójną grę jako `Dual/DualCityRandomTests` (te same
+  scenariusze z Random(zatoka), „drogi” czytane z zamrożonej gry), tabele `BatchHundredTwentySix` jako
+  `Dual/HandleCityCaseTables.cs` (sprawdza je `DualCityCaseTests`), `Reference/CityManagementReference.HandleCity.cs` usunięty.
+  Stos HandleCity nie jest już porównywany, więc jej zmienne lokalne można przenosić.
 
 ## Następny krok
 

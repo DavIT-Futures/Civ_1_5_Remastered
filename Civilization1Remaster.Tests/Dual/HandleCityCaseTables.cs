@@ -1,20 +1,17 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Civilization1Remaster.Game;
-using Civilization1Remaster.Tests.Differential.Reference;
-using Xunit;
-using static Civilization1Remaster.Tests.Differential.DifferentialRun;
-using Register = Civilization1Remaster.Tests.Differential.DifferentialPair.Register;
+using Civilization1Remaster.Tests.Differential;
 
-namespace Civilization1Remaster.Tests.Differential;
+namespace Civilization1Remaster.Tests.Dual;
 
 /// <summary>
-/// HandleCity from tables of cases (no random draws): every case starts from the saved game (fresh checkpoint), picks its city
-/// by a rule (the first one that fits) and changes the state the same way, so a new case never changes the others. New
-/// coverage of HandleCity goes here, the random tests of BatchHundredThirteen stay as they are.
+/// The tables of cases of HandleCity (DualCityCaseTests runs them on the frozen game and the current one): every case picks its
+/// city by a rule (the first, last or biggest one of the owner) and changes the state the same way in both games (the setups
+/// are dynamic: the two games have the same members), so a new case never changes the others.
 /// </summary>
-public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper output)
+public static class HandleCityCaseTables
 {
 	/// <summary>Which city of the owner a case takes</summary>
 	public enum Choice
@@ -212,15 +209,6 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 		new("human, a route to an own city", true, -1, Routes(false, true)),
 	};
 
-	[Fact]
-	public void HandleCityTradeCasesMatchOriginalCode()
-	{
-		HashSet<string> ways = [];
-
-		foreach (int bay in new[] { 5, 9 })
-			CheckCases(bay, TradeCases, ways);
-	}
-
 	private static Action<dynamic, short> Rates(short levy, short research) => (game, town) =>
 	{
 		var player = game.World.Participants[game.World.Towns[town].ParticipantIdx];
@@ -286,15 +274,6 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 		new("city screen, tab 1, no luxuries", true, 1, Then(Rates(5, 5), (game, town) => HumanTurnScript.Install((object)game,
 			[new HumanTurnScript.Input(0, 1, 144, 110), new HumanTurnScript.Input(0x1b), new HumanTurnScript.Input(0x1b)]))),
 	};
-
-	[Fact]
-	public void HandleCitySplitCasesMatchOriginalCode()
-	{
-		HashSet<string> ways = [];
-
-		foreach (int bay in new[] { 5, 9 })
-			CheckCases(bay, SplitCases, ways);
-	}
 
 	private static Action<dynamic, short> Diag(bool on) => (game, town) =>
 		game.World.DiagMarkers = (short)(on ? game.World.DiagMarkers | 2 : game.World.DiagMarkers & ~2);
@@ -369,15 +348,6 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 		new("city screen, tab 1, the wonders", true, 1, Then(Diag(true), Wonder(2, true), Wonder(11, true), TabOne), Choice.Biggest),
 	};
 
-	[Fact]
-	public void HandleCityHappinessCasesMatchOriginalCode()
-	{
-		HashSet<string> ways = [];
-
-		foreach (int bay in new[] { 5, 9 })
-			CheckCases(bay, HappinessCases, ways);
-	}
-
 	/// <summary>The first units of the owner made units of the city (the kind; settlers every third one when asked)</summary>
 	private static Action<dynamic, short> Supported(int count, byte kind, bool settlers) => (game, town) =>
 	{
@@ -427,15 +397,6 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 			[new HumanTurnScript.Input(0, 1, 110, 110), new HumanTurnScript.Input(0x1b), new HumanTurnScript.Input(0x1b)])), Choice.Biggest),
 	};
 
-	[Fact]
-	public void HandleCitySupportCasesMatchOriginalCode()
-	{
-		HashSet<string> ways = [];
-
-		foreach (int bay in new[] { 5, 9 })
-			CheckCases(bay, SupportCases, ways);
-	}
-
 	internal static readonly CityCase[] ListCases =
 	{
 		// CountSupportCosts
@@ -454,15 +415,6 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 		new("city screen, a unit in production", true, 1, (game, town) => game.World.Towns[town].PresentMakingIdx = 3, Choice.Biggest),
 		new("city screen, settlers in production", true, 1, (game, town) => game.World.Towns[town].PresentMakingIdx = 0, Choice.Biggest),
 	};
-
-	[Fact]
-	public void HandleCityListCasesMatchOriginalCode()
-	{
-		HashSet<string> ways = [];
-
-		foreach (int bay in new[] { 5, 9 })
-			CheckCases(bay, ListCases, ways);
-	}
 
 	private static Action<dynamic, short> Stock(short shields, short food, sbyte making) => (game, town) =>
 	{
@@ -484,15 +436,6 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 		new("city screen, size 9, food above the box", true, 1, Then(Stock(5, 999, 2), Size(9)), Choice.Last),
 	};
 
-	[Fact]
-	public void HandleCityBoxCasesMatchOriginalCode()
-	{
-		HashSet<string> ways = [];
-
-		foreach (int bay in new[] { 5, 9 })
-			CheckCases(bay, BoxCases, ways);
-	}
-
 	internal static readonly CityCase[] RowCases =
 	{
 		new("city screen, settlers and units supported", true, 1, Then(Level(1, 2), Supported(10, 2, true)), Choice.Biggest),
@@ -502,15 +445,6 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 		new("city screen, science only", true, 1, Rates(0, 10), Choice.Biggest),
 		new("city screen, a small city", true, 1, Then(Size(1), Rates(4, 4)), Choice.First),
 	};
-
-	[Fact]
-	public void HandleCityRowCasesMatchOriginalCode()
-	{
-		HashSet<string> ways = [];
-
-		foreach (int bay in new[] { 5, 9 })
-			CheckCases(bay, RowCases, ways);
-	}
 
 	private static readonly Action<dynamic, short> MiniMapTab = (game, town) => HumanTurnScript.Install((object)game,
 		[new HumanTurnScript.Input(0, 1, 177, 110), new HumanTurnScript.Input(0x1b), new HumanTurnScript.Input(0x1b)]);
@@ -528,15 +462,6 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 		new("city screen, pollution of the advances", true, 1, Then(Size(20), Buildings(0xc000, 0x1000), Knows(0x23, true), Knows(0x3a, true),
 			Knows(0x29, true), Knows(0x3c, true)), Choice.Biggest),
 	};
-
-	[Fact]
-	public void HandleCityShortfallCasesMatchOriginalCode()
-	{
-		HashSet<string> ways = [];
-
-		foreach (int bay in new[] { 5, 9 })
-			CheckCases(bay, ShortfallCases, ways);
-	}
 
 	private static Action<dynamic, short> Keys(params HumanTurnScript.Input[] inputs) => (game, town) => HumanTurnScript.Install((object)game,
 		[.. inputs, new HumanTurnScript.Input(0x1b), new HumanTurnScript.Input(0x1b)]);
@@ -577,15 +502,6 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 		new("computer city screen", false, 1, Stock(5, 5, 2), Choice.Biggest),
 	};
 
-	[Fact]
-	public void HandleCityButtonCasesMatchOriginalCode()
-	{
-		HashSet<string> ways = [];
-
-		foreach (int bay in new[] { 5, 9 })
-			CheckCases(bay, ButtonCases, ways);
-	}
-
 	private static Action<dynamic, short> Gold(short gold) => (game, town) =>
 		game.World.Participants[game.World.Towns[town].ParticipantIdx].Gold = gold;
 
@@ -625,15 +541,6 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 				(short)((10 * game.Processor.Storage.PullUInt16(0x3b01, 3 * 0x1e + 0xbb2) - 10) * 2), Keys(Key(0x62), Key(0x0d))), Choice.Biggest),
 		new("clicked left and right of the tabs", true, 1, Keys(Click(95, 110), Click(224, 110), Key(0x6d)), Choice.Biggest),
 	};
-
-	[Fact]
-	public void HandleCityPurchaseCasesMatchOriginalCode()
-	{
-		HashSet<string> ways = [];
-
-		foreach (int bay in new[] { 5, 9 })
-			CheckCases(bay, PurchaseCases, ways);
-	}
 
 	/// <summary>The first units of the owner put into the city with these states and no moves left (the others there awake)</summary>
 	private static Action<dynamic, short> Garrison(params byte[] states) => (game, town) =>
@@ -689,15 +596,6 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 		new("9, past the specialists", true, 1, Keys(Key(0x39)), Choice.Biggest),
 	};
 
-	[Fact]
-	public void HandleCityKeyCasesMatchOriginalCode()
-	{
-		HashSet<string> ways = [];
-
-		foreach (int bay in new[] { 5, 9 })
-			CheckCases(bay, KeyCases, ways);
-	}
-
 	/// <summary>The square right of the city unseen by the human</summary>
 	private static readonly Action<dynamic, short> UnseenEast = (game, town) =>
 	{
@@ -744,15 +642,6 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 		new("a line of the second page", true, 1, Then(Buildings(0x7ffe, 0), Keys(Key(0x4d), Click(310, 8), Key(0x5000), Key(0x0d))), Choice.Biggest),
 	};
 
-	[Fact]
-	public void HandleCityListClickCasesMatchOriginalCode()
-	{
-		HashSet<string> ways = [];
-
-		foreach (int bay in new[] { 5, 9 })
-			CheckCases(bay, ListCases2, ways);
-	}
-
 	internal static readonly CityCase[] ClickCases =
 	{
 		new("the specialists clicked", true, 1, Then(Size(12), Specialists(3), Keys(Click(79, 10), Click(87, 19), Click(94, 5), Click(99, 0), Click(80, 10))), Choice.Biggest),
@@ -774,15 +663,6 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 		new("above and below the map", true, 1, Keys(Click(160, 23), Click(160, 104)), Choice.Biggest),
 		new("squares with specialists", true, 1, Then(Size(8), Specialists(4), Keys(Click(176, 56), Click(144, 56), Click(160, 40))), Choice.Last),
 	};
-
-	[Fact]
-	public void HandleCityClickCasesMatchOriginalCode()
-	{
-		HashSet<string> ways = [];
-
-		foreach (int bay in new[] { 5, 9 })
-			CheckCases(bay, ClickCases, ways);
-	}
 
 	private static readonly Action<dynamic, short> Unhappy = Then(Size(14), Buildings(0, 0x2408), Level(4, 1), Rates(10, 0));
 
@@ -810,15 +690,6 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 		new("computer, monarchy, taxes", false, 0, Then(Size(3), Level(1, 2), Disorder(false)), Choice.Last),
 	};
 
-	[Fact]
-	public void HandleCityOrderCasesMatchOriginalCode()
-	{
-		HashSet<string> ways = [];
-
-		foreach (int bay in new[] { 5, 9 })
-			CheckCases(bay, OrderCases, ways);
-	}
-
 	private static Action<dynamic, short> Celebrating(bool on) => (game, town) => game.World.Towns[town].ConditionMarker =
 		(byte)(on ? game.World.Towns[town].ConditionMarker | 0x40 : game.World.Towns[town].ConditionMarker & ~0x40);
 
@@ -843,15 +714,6 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 		new("human, size 2, happy", true, 0, Then(Happy(2, 2), Celebrating(true)), Choice.First),
 		new("human, size 3, happy", true, 0, Then(Happy(3, 2), Celebrating(false)), Choice.First),
 	};
-
-	[Fact]
-	public void HandleCityCelebrationCasesMatchOriginalCode()
-	{
-		HashSet<string> ways = [];
-
-		foreach (int bay in new[] { 5, 9 })
-			CheckCases(bay, CelebrationCases, ways);
-	}
 
 	/// <summary>The research of the owner of the city (the goal of the human player when the owner is human)</summary>
 	private static Action<dynamic, short> Research(short goal, short headway, short found) => (game, town) =>
@@ -916,15 +778,6 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 		new("computer, before Christ, few advances", false, 0, Then(Research(0x30, 100, 2), (game, town) => game.World.Season = -500), Choice.Biggest),
 	};
 
-	[Fact]
-	public void HandleCityScienceCasesMatchOriginalCode()
-	{
-		HashSet<string> ways = [];
-
-		foreach (int bay in new[] { 5, 9 })
-			CheckCases(bay, ScienceCases, ways);
-	}
-
 	private static readonly Action<dynamic, short> Smoky = Then(Size(25), Buildings(0xc000, 0x1000), Knows(0x23, true), Knows(0x3a, true),
 		Knows(0x29, true), Knows(0x3c, true));
 
@@ -950,15 +803,6 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 		new("human, a nuclear plant, no disorder", true, 0, Then(NuclearPlant(false), Rates(0, 0), Size(3), Disorder(false)), Choice.Biggest),
 	};
 
-	[Fact]
-	public void HandleCityPollutionCasesMatchOriginalCode()
-	{
-		HashSet<string> ways = [];
-
-		foreach (int bay in new[] { 5, 9 })
-			CheckCases(bay, PollutionCases, ways);
-	}
-
 	internal static readonly CityCase[] UpkeepCases =
 	{
 		new("human, poor, every improvement", true, 0, Then(AllBuildings, Gold(0), Level(1, 2)), Choice.Biggest),
@@ -976,85 +820,4 @@ public sealed class BatchHundredTwentySixDifferentialTests(ITestOutputHelper out
 		new("city screen, the flag 4", true, 1, (game, town) => game.World.Towns[town].ConditionMarker |= 4, Choice.Biggest),
 		new("counting, the flag 4", true, -1, (game, town) => game.World.Towns[town].ConditionMarker |= 4, Choice.First),
 	};
-
-	[Fact]
-	public void HandleCityUpkeepCasesMatchOriginalCode()
-	{
-		HashSet<string> ways = [];
-
-		foreach (int bay in new[] { 5, 9 })
-			CheckCases(bay, UpkeepCases, ways);
-	}
-
-	[Fact]
-	public void HandleCityTurnCasesMatchOriginalCode()
-	{
-		HashSet<string> ways = [];
-
-		foreach (int bay in new[] { 5, 9 })
-			CheckCases(bay, TurnCases, ways);
-
-		foreach (string way in new[] { "advisor picked", "advisor idle", "bought", "no purchase" })
-			Assert.True(ways.Contains(way), $"No case met '{way}' (met: {string.Join(", ", ways.Order())})");
-	}
-
-	/// <summary>Runs the cases on one saved game, each from the checkpoint; the first city of the owner that fits</summary>
-	public void CheckCases(int bay, CityCase[] cases, HashSet<string> ways)
-	{
-		int caseIdx = 0;
-
-		Check(bay, cases.Length, (chance, pair) =>
-		{
-			CityCase current = cases[caseIdx++];
-			GameEngine engine = pair.Rewritten.Engine;
-			short person = engine.World.PersonParticipantIdx;
-			var fitting = Enumerable.Range(0, 128).Where(town => engine.World.Towns[town].ConditionMarker != 0xff &&
-				(engine.World.Towns[town].ParticipantIdx == person) == current.Human && engine.World.Towns[town].ParticipantIdx != 0 &&
-				(current.Human || (engine.World.ParticipantMarkers & (1 << engine.World.Towns[town].ParticipantIdx)) == 0)).ToList();
-			int found = fitting.Count == 0 ? -1 : current.Pick switch
-			{
-				Choice.Last => fitting[^1],
-				Choice.Biggest => fitting.OrderByDescending(town => engine.World.Towns[town].TrueExtent).ThenBy(town => town).First(),
-				_ => fitting[0],
-			};
-
-			if (found < 0)
-				return null;
-
-			short townIdx = (short)found;
-			short owner = engine.World.Towns[townIdx].ParticipantIdx;
-			ushort frame = (ushort)(engine.Processor.RegStack.Value16 - 2);
-			Dictionary<string, int> before = new Dictionary<string, int>(pair.Rewritten.Calls);
-			short gold = 0;
-
-			return new Scenario(
-				$"{current.Name}: HandleCity({townIdx}, {current.Marker})",
-				game =>
-				{
-					HumanTurnScript.Install((object)game, [new HumanTurnScript.Input(0x1b), new HumanTurnScript.Input(0x1b)]);
-					current.Setup(game, townIdx);
-					gold = game.World.Participants[owner].Gold;
-				},
-				game => new CityManagementReference(game).HandleCity(townIdx, current.Marker),
-				game => game.CityOps.HandleCity(townIdx, current.Marker),
-				Register.Kept | Register.Acc,
-				// What the turn did, from the calls and the gold
-				game =>
-				{
-					int Delta(string name) => Calls(game, pair, name) - before.GetValueOrDefault(name);
-					List<string> met = [];
-
-					if (current.Human)
-						met.Add(Delta("PickCityProduction") > 0 ? "advisor picked" : "advisor idle");
-					else
-						met.Add(game.World.Participants[owner].Gold < gold ? "bought" : "no purchase");
-
-					foreach (string way in met)
-						ways.Add(way);
-
-					return string.Join("+", met);
-				},
-				[(0x3b01, (ushort)(frame - 0x180), 0x180)]);
-		}, output, [], null, fresh: true);
-	}
 }

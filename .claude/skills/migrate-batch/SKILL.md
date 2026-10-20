@@ -32,8 +32,8 @@ Testy zawsze w **Release** z `-parallelMode all` (ok. 7 razy szybciej niż Debug
 - **Testy z tabel przypadków, nie z losowania.** Nowe testy: jawna lista przypadków (rekord z parametrami), każdy scenariusz
   z punktu kontrolnego (`fresh: true`), więc dopisanie przypadku nie zmienia pozostałych i wcześniej złapane mutacje nie trzeba
   powtarzać. Przypadki dobierać do gałęzi nowego kodu. Istniejące testy losowe są zamrożone – nie dopisywać do nich wariantów
-  (każda zmiana przesuwa losowanie); nowe pokrycie przez nowe metody testowe z tabelami. `HandleCity`: `CityCases`
-  (`BatchHundredTwentySixDifferentialTests`).
+  (każda zmiana przesuwa losowanie); nowe pokrycie przez nowe metody testowe z tabelami. `HandleCity`: tabele w
+  `Tests/Dual/HandleCityCaseTables.cs`, sprawdzane na podwójnej grze (`DualCityCaseTests`, losowe: `DualCityRandomTests`).
 - **Mutacje: 8 – 12 na porcję**, tylko w rozgałęzieniach i zapisach stanu (bez każdej granicy `<`/`<=`), jedna runda,
   `--jobs 6`. Ocalała: jeden celowany przypadek w tabeli albo opis (nieosiągalna / równoważna / martwy zapis) – bez kolejnych
   rund.

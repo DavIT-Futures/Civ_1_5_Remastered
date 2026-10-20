@@ -4,14 +4,14 @@ using System.Linq;
 using Civilization1Remaster.Tests.Differential;
 using Civilization1Remaster.Tests.GoldenMaster;
 using Xunit;
-using CityCase = Civilization1Remaster.Tests.Differential.BatchHundredTwentySixDifferentialTests.CityCase;
-using Choice = Civilization1Remaster.Tests.Differential.BatchHundredTwentySixDifferentialTests.Choice;
+using CityCase = Civilization1Remaster.Tests.Dual.HandleCityCaseTables.CityCase;
+using Choice = Civilization1Remaster.Tests.Dual.HandleCityCaseTables.Choice;
 using FrozenCheckpoint = Civilization1Original.Tests.GameCheckpoint;
 
 namespace Civilization1Remaster.Tests.Dual;
 
 /// <summary>
-/// The tables of cases of HandleCity (BatchHundredTwentySixDifferentialTests) on the frozen game and on the current one:
+/// The tables of cases of HandleCity (HandleCityCaseTables) on the frozen game and on the current one:
 /// every case starts both games from the checkpoint after the load, picks its city, changes the state the same way in
 /// both (the setups are dynamic, the two games have the same members) and calls HandleCity in each. Then the states
 /// (DualGame.Compare), AX (what HandleCity gives back) and the failures must match.
@@ -25,25 +25,25 @@ public sealed class DualCityCaseTests(ITestOutputHelper output)
 
 	private static readonly Dictionary<string, CityCase[]> TablesByName = new Dictionary<string, CityCase[]>(StringComparer.Ordinal)
 	{
-		["Turn"] = BatchHundredTwentySixDifferentialTests.TurnCases,
-		["Trade"] = BatchHundredTwentySixDifferentialTests.TradeCases,
-		["Split"] = BatchHundredTwentySixDifferentialTests.SplitCases,
-		["Happiness"] = BatchHundredTwentySixDifferentialTests.HappinessCases,
-		["Support"] = BatchHundredTwentySixDifferentialTests.SupportCases,
-		["List"] = BatchHundredTwentySixDifferentialTests.ListCases,
-		["Box"] = BatchHundredTwentySixDifferentialTests.BoxCases,
-		["Row"] = BatchHundredTwentySixDifferentialTests.RowCases,
-		["Shortfall"] = BatchHundredTwentySixDifferentialTests.ShortfallCases,
-		["Button"] = BatchHundredTwentySixDifferentialTests.ButtonCases,
-		["Purchase"] = BatchHundredTwentySixDifferentialTests.PurchaseCases,
-		["Key"] = BatchHundredTwentySixDifferentialTests.KeyCases,
-		["ListClick"] = BatchHundredTwentySixDifferentialTests.ListCases2,
-		["Click"] = BatchHundredTwentySixDifferentialTests.ClickCases,
-		["Order"] = BatchHundredTwentySixDifferentialTests.OrderCases,
-		["Celebration"] = BatchHundredTwentySixDifferentialTests.CelebrationCases,
-		["Science"] = BatchHundredTwentySixDifferentialTests.ScienceCases,
-		["Pollution"] = BatchHundredTwentySixDifferentialTests.PollutionCases,
-		["Upkeep"] = BatchHundredTwentySixDifferentialTests.UpkeepCases,
+		["Turn"] = HandleCityCaseTables.TurnCases,
+		["Trade"] = HandleCityCaseTables.TradeCases,
+		["Split"] = HandleCityCaseTables.SplitCases,
+		["Happiness"] = HandleCityCaseTables.HappinessCases,
+		["Support"] = HandleCityCaseTables.SupportCases,
+		["List"] = HandleCityCaseTables.ListCases,
+		["Box"] = HandleCityCaseTables.BoxCases,
+		["Row"] = HandleCityCaseTables.RowCases,
+		["Shortfall"] = HandleCityCaseTables.ShortfallCases,
+		["Button"] = HandleCityCaseTables.ButtonCases,
+		["Purchase"] = HandleCityCaseTables.PurchaseCases,
+		["Key"] = HandleCityCaseTables.KeyCases,
+		["ListClick"] = HandleCityCaseTables.ListCases2,
+		["Click"] = HandleCityCaseTables.ClickCases,
+		["Order"] = HandleCityCaseTables.OrderCases,
+		["Celebration"] = HandleCityCaseTables.CelebrationCases,
+		["Science"] = HandleCityCaseTables.ScienceCases,
+		["Pollution"] = HandleCityCaseTables.PollutionCases,
+		["Upkeep"] = HandleCityCaseTables.UpkeepCases,
 	};
 
 	[Theory]
@@ -125,7 +125,8 @@ public sealed class DualCityCaseTests(ITestOutputHelper output)
 		}
 		catch (Exception failure)
 		{
-			return $"{failure.GetType().Name}: {failure.Message}";
+			// (without the temporary game folder, which differs between the two games)
+			return $"{failure.GetType().Name}: {System.Text.RegularExpressions.Regex.Replace(failure.Message, @"Civ1GoldenMaster[\\/][0-9a-f]{32}", "<game folder>")}";
 		}
 		finally
 		{
@@ -133,7 +134,7 @@ public sealed class DualCityCaseTests(ITestOutputHelper output)
 		}
 	}
 
-	/// <summary>The city of the case (as BatchHundredTwentySixDifferentialTests.CheckCases picks it), -1 when none fits</summary>
+	/// <summary>The city of the case (as HandleCityCaseTables.CheckCases picks it), -1 when none fits</summary>
 	private static short PickCity(GameEngine engine, CityCase current)
 	{
 		short person = engine.World.PersonParticipantIdx;
