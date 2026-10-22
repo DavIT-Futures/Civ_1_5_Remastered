@@ -1183,6 +1183,7 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   scenariusze z Random(zatoka), „drogi” czytane z zamrożonej gry), tabele `BatchHundredTwentySix` jako
   `Dual/HandleCityCaseTables.cs` (sprawdza je `DualCityCaseTests`), `Reference/CityManagementReference.HandleCity.cs` usunięty.
   Stos HandleCity nie jest już porównywany, więc jej zmienne lokalne można przenosić.
+- B2, porcja 3 (2026-10-23): zmienne lokalne `HandleCity` od `BP-0xa8` w górę przeniesione do pól klasy `CityRound` w `CityManagement` (każde wywołanie `HandleCity` ma własną instancję z racji rekurencji przez doradcę; dolne słowa ramki zostają, bo leżą w nich tablice `BP-0x3e`, `BP-0x74`, `BP-0x8e` i niezainicjowane słowa czytane przed zapisem jak `0x108`). W `DualGame` licznik kroków zegara (`FixedClockSpan`) jest zerowany na każdym wywołaniu funkcji gry po obu stronach, żeby mniejsza liczba dostępów do pamięci (po wyjęciu zmiennych lokalnych ze stosu) nie przesuwała momentu przerwania zegara podczas wygaszania palety (`0xbd06` / `0xbdee` przy widoku miasta). GoldenMaster i wszystkie testy Dual (49 testów) zielone.
 
 ## Następny krok
 

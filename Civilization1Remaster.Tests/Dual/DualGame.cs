@@ -24,6 +24,25 @@ public sealed class DualGame : IDisposable
 
 		this.Frozen = new FrozenGame(gameFolder, saves, script);
 		this.Current = new HeadlessGame(gameFolder, saves, script);
+
+		// The fixed clock ticks after a number of memory accesses, and the current code makes fewer of them (the locals moved
+		// out of the stack frame), so the timer interrupts (palette cycles, fades) would come at other places. Every call of
+		// a game function starts the count anew in both games: between two calls the interrupts come at the same places as
+		// long as the code between them is unchanged.
+		var frozenProcessor = this.Frozen.Engine.Processor;
+		var currentProcessor = this.Current.Engine.Processor;
+		var frozenListener = this.Frozen.Engine.Journal.ScopeListener;
+		var currentListener = this.Current.Engine.Journal.ScopeListener;
+		this.Frozen.Engine.Journal.ScopeListener = scope =>
+		{
+			frozenListener?.Invoke(scope);
+			frozenProcessor.FixedClockSpan = frozenProcessor.FixedClockSpan;
+		};
+		this.Current.Engine.Journal.ScopeListener = scope =>
+		{
+			currentListener?.Invoke(scope);
+			currentProcessor.FixedClockSpan = currentProcessor.FixedClockSpan;
+		};
 	}
 
 	/// <summary>The game frozen at the end of the migration: the reference</summary>
