@@ -34,7 +34,6 @@ namespace Civilization1Remaster.Game
 			ushort troop = (ushort)((ushort)(0xc * troopIdx) + (ushort)(0x600 * participantIdx));
 
 			this.processor.RegSource.Value16 = (ushort)(0x600 * participantIdx);
-			this.processor.EmitLocalWord(0x26, (ushort)ownerIdx);
 			this.processor.EmitGlobalByte((ushort)(troop + 0x81da), 0xff);
 
 			Message(this.processor.PullGlobalWord((ushort)(((ushort)participantIdx << 1) + 0x1982)))
@@ -61,12 +60,10 @@ namespace Civilization1Remaster.Game
 					this.processor.EmitGlobalByte(0xb276, (byte)(this.processor.PullGlobalByte(0xb276) | 0x20));
 
 				choice = this.owner.TurnHooks.DisplayDialog(0xba06, 80, 80);
-				this.processor.EmitLocalWord(0x24, choice);
 			}
 			else
 			{
 				choice = 2;
-				this.processor.EmitLocalWord(0x24, choice);
 
 				if (ownerIdx == person)
 				{
@@ -100,7 +97,7 @@ namespace Civilization1Remaster.Game
 					break;
 
 				case 2:
-					StealTechnology(townIdx, participantIdx, troopIdx);
+					StealTechnology(townIdx, participantIdx, troopIdx, ownerIdx);
 					break;
 
 				case 3:
@@ -108,7 +105,7 @@ namespace Civilization1Remaster.Game
 					break;
 
 				case 4:
-					InciteRevolt(townIdx, participantIdx, troopIdx);
+					InciteRevolt(townIdx, participantIdx, troopIdx, ownerIdx);
 					break;
 
 				case 5:
@@ -141,11 +138,10 @@ namespace Civilization1Remaster.Game
 		/// a city (0x20); the human player breaks his treaty first (unless he declines) and hears when there is none; the AI
 		/// sabotages instead
 		/// </summary>
-		private void StealTechnology(short townIdx, short participantIdx, short troopIdx)
+		private void StealTechnology(short townIdx, short participantIdx, short troopIdx, short ownerIdx)
 		{
 			short person = this.owner.World.PersonParticipantIdx;
 			City town = this.owner.World.Towns[townIdx];
-			short ownerIdx = (short)this.processor.PullLocalWord(0x26);
 
 			if (participantIdx == person)
 			{
@@ -166,14 +162,10 @@ namespace Civilization1Remaster.Game
 			this.processor.EmitGlobalByte(0xba06, 0);
 
 			ushort first = (ushort)this.owner.Libc.Dice.DrawInt(72);
-			this.processor.EmitLocalWord(0x28, first);
 
-			ushort attempt;
-
-			for (attempt = 0; attempt < 0x48; attempt++)
+			for (ushort attempt = 0; attempt < 0x48; attempt++)
 			{
 				short scienceIdx = (short)((short)(first + attempt) % 0x48);
-				this.processor.EmitLocalWord(0x4, (ushort)scienceIdx);
 
 				if (participantIdx == 0 ||
 					this.owner.Advisors.PlayerKnowsTechnology(ownerIdx, scienceIdx) == 0 ||
@@ -192,8 +184,6 @@ namespace Civilization1Remaster.Game
 				town.ConditionMarker |= 0x20;
 				break;
 			}
-
-			this.processor.EmitLocalWord(0x22, attempt);
 
 			if (this.processor.PullGlobalByte(0xba06) != 0)
 			{
@@ -220,8 +210,6 @@ namespace Civilization1Remaster.Game
 			ushort buildingIdx = 0;
 			bool destroyed = false;
 
-			this.processor.EmitLocalWord(0x28, 0);
-
 			if (this.owner.Libc.Dice.DrawInt(2) != 0 || town.MaterialsTally == 0)
 			{
 				do
@@ -233,8 +221,6 @@ namespace Civilization1Remaster.Game
 						break;
 				}
 				while (buildingIdx == 0 || !town.HasStructureSignExtended(buildingIdx));
-
-				this.processor.EmitLocalWord(0x22, buildingIdx);
 
 				if ((short)tries < 0x63)
 				{
@@ -249,8 +235,6 @@ namespace Civilization1Remaster.Game
 					destroyed = true;
 				}
 			}
-
-			this.processor.EmitLocalWord(0x28, destroyed ? tries : (ushort)0);
 
 			if (!destroyed)
 			{
@@ -279,15 +263,13 @@ namespace Civilization1Remaster.Game
 		/// The dissidents revolt for (owner's gold + 1000) / (distance to the owner's capital + 3) * size, halved in disorder;
 		/// the player may pay it, or twice it to subvert a city of a player at peace; inciting breaks the peace
 		/// </summary>
-		private void InciteRevolt(short townIdx, short participantIdx, short troopIdx)
+		private void InciteRevolt(short townIdx, short participantIdx, short troopIdx, short ownerIdx)
 		{
 			City town = this.owner.World.Towns[townIdx];
-			short ownerIdx = (short)this.processor.PullLocalWord(0x26);
 
 			this.processor.RegSource.Value16 = (ushort)(0x1c * townIdx);
 
 			ushort distance = this.owner.Politics.LocateNearestCityOfPlayer(ownerIdx, town.Place.X, town.Place.Y);
-			this.processor.EmitLocalWord(0xc, distance);
 
 			if (distance == 0)
 				return;
@@ -296,8 +278,6 @@ namespace Civilization1Remaster.Game
 
 			if ((town.ConditionMarker & 1) != 0)
 				cost = CPU.SignedQuotient(cost, 2);
-
-			this.processor.EmitLocalWord(0x8, (ushort)cost);
 
 			Message("Dissidents in ")
 				.City(townIdx)
@@ -323,7 +303,6 @@ namespace Civilization1Remaster.Game
 			this.processor.EmitGlobalWord(0x2f9e, 0x0);
 
 			short choice = (short)this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
-			this.processor.EmitLocalWord(0x24, (ushort)choice);
 
 			if (choice < 1)
 				return;

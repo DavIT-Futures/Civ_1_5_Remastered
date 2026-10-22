@@ -1220,35 +1220,22 @@ namespace Civilization1Remaster.Game
 			short person = this.owner.World.PersonParticipantIdx;
 			Player human = this.owner.World.Participants[person];
 
-			this.processor.EmitLocalWord(0x16, 0);
-
 			short pick = -1;
 			short highest = -1;
 
-			this.processor.EmitLocalWord(0x14, 0xffff);
-			this.processor.EmitLocalWord(0x3c, 0xffff);
-
 			for (short scienceIdx = 0; scienceIdx < 0x48; scienceIdx++)
 			{
-				this.processor.EmitLocalWord(0x46, (ushort)scienceIdx);
-
 				if (!MayResearch(participantIdx, scienceIdx))
 					continue;
 
 				short draw = (short)this.owner.Libc.Dice.DrawInt((ushort)(ObtainTechnologyInfo(participantIdx, (ushort)scienceIdx) << 2));
-				this.processor.EmitLocalWord(0x40, (ushort)draw);
 
 				if (draw <= highest || (scienceIdx == human.PresentInquiryIdx && participantIdx == person))
 					continue;
 
 				highest = draw;
 				pick = scienceIdx;
-
-				this.processor.EmitLocalWord(0x3c, (ushort)highest);
-				this.processor.EmitLocalWord(0x14, (ushort)pick);
 			}
-
-			this.processor.EmitLocalWord(0x46, 0x48);
 
 			if (participantIdx == person && this.owner.World.RoundTally != 0)
 				return ChooseNextResearch(participantIdx, participantIdx1, pick);
@@ -1287,6 +1274,7 @@ namespace Civilization1Remaster.Game
 		private ushort ChooseNextResearch(short participantIdx, short participantIdx1, short pick)
 		{
 			Player human = this.owner.World.Participants[this.owner.World.PersonParticipantIdx];
+			ushort[] choiceList = new ushort[0x48];
 			bool again = false;
 
 			while (true)
@@ -1312,7 +1300,7 @@ namespace Civilization1Remaster.Game
 					RecommendResearch(pick);
 				}
 
-				ushort choices = ListResearchChoices(participantIdx, again);
+				ushort choices = ListResearchChoices(participantIdx, again, choiceList);
 
 				this.processor.EmitGlobalWord(0x2f9e, 0x6);
 
@@ -1328,7 +1316,7 @@ namespace Civilization1Remaster.Game
 
 					human.PresentInquiryIdx = 71;
 
-					return this.processor.PullLocalWord(0x46);
+					return 0x48;
 				}
 
 				this.processor.EmitGlobalWord(0x2fa0, 0x1);
@@ -1346,8 +1334,7 @@ namespace Civilization1Remaster.Game
 
 				this.processor.RegSource.Value16 = (ushort)(choice << 1);
 
-				ushort scienceIdx = this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + (choice << 1) - 0x3a));
-				this.processor.EmitLocalWord(0x46, scienceIdx);
+				ushort scienceIdx = choiceList[choice];
 
 				if (this.processor.PullGlobalWord(0x2f9c) == 0)
 				{
@@ -1361,7 +1348,6 @@ namespace Civilization1Remaster.Game
 				this.owner.TurnHooks.RepaintMainScreen();
 
 				// Asked again, with the same choices
-				this.processor.EmitLocalWord(0x16, 1);
 				again = true;
 			}
 		}
@@ -1380,19 +1366,8 @@ namespace Civilization1Remaster.Game
 			this.owner.Encyclopedia.ObtainFirstPrerequisite((ushort)human.PresentInquiryIdx);
 
 			short first = (short)this.processor.RegAcc.Value16;
-			this.processor.EmitLocalWord(0x44, (ushort)first);
-
-			bool picture = false;
-			this.processor.EmitLocalWord(0x42, 0);
-
-			if (human.PresentInquiryIdx != 71 && (short)this.processor.PullGlobalWord(0xdeba) > 3)
-			{
-				if (this.owner.Startup.QueryForDisk(1, 0) != 0 && (this.owner.World.SessionPrefMarkers & 8) != 0)
-				{
-					picture = true;
-					this.processor.EmitLocalWord(0x42, 1);
-				}
-			}
+			bool picture = human.PresentInquiryIdx != 71 && (short)this.processor.PullGlobalWord(0xdeba) > 3 &&
+				this.owner.Startup.QueryForDisk(1, 0) != 0 && (this.owner.World.SessionPrefMarkers & 8) != 0;
 
 			bool advanced = false;
 
@@ -1402,12 +1377,9 @@ namespace Civilization1Remaster.Game
 
 				this.owner.Libc.CopyText(pictureName, "discovr1.pic");
 
-				this.processor.EmitLocalWord(0x12, 0);
-
 				if (PlayerKnowsTechnology(person, 0x36) != 0)
 				{
 					this.processor.EmitGlobalByte((ushort)(pictureName + 7), 0x32);
-					this.processor.EmitLocalWord(0x12, 1);
 					advanced = true;
 				}
 
@@ -1510,7 +1482,6 @@ namespace Civilization1Remaster.Game
 				.Text(".\n");
 
 			ushort length = this.owner.Libc.TextLength(0xba06);
-			this.processor.EmitLocalWord(0x40, length);
 
 			ushort allowed = 0;
 
@@ -1544,9 +1515,6 @@ namespace Civilization1Remaster.Game
 				allowed++;
 			}
 
-			this.processor.EmitLocalWord(0x12, allowed);
-			this.processor.EmitLocalWord(0x18, 0x18);
-
 			if (allowed == 0)
 				this.processor.EmitGlobalByte((ushort)(length + 0xba06), 0);
 
@@ -1563,19 +1531,16 @@ namespace Civilization1Remaster.Game
 		/// levels only those (technology - known technologies) divisible by 3; again: only the same choices in the same order;
 		/// the number of choices
 		/// </summary>
-		private ushort ListResearchChoices(short participantIdx, bool again)
+		private ushort ListResearchChoices(short participantIdx, bool again, ushort[] choiceList)
 		{
 			Message("Which discovery should our\n")
 				.Text(PlayerKnowsTechnology(this.owner.World.PersonParticipantIdx, 0x14) != 0 ? (ushort)0x2388 : (ushort)0x2393)
 				.Text(" be pursuing, sire?\nPick one...\n ");
 
 			ushort choices = 0;
-			ushort choiceList = (ushort)(this.processor.RegFrame.Value16 - 0x3a);
 
 			for (short scienceIdx = 0; scienceIdx < 0x48; scienceIdx++)
 			{
-				this.processor.EmitLocalWord(0x46, (ushort)scienceIdx);
-
 				if (!MayResearch(participantIdx, scienceIdx))
 					continue;
 
@@ -1589,7 +1554,7 @@ namespace Civilization1Remaster.Game
 				{
 					this.processor.RegSource.Value16 = (ushort)(choices << 1);
 
-					if (this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(choiceList + (choices << 1))) != (ushort)scienceIdx)
+					if (choiceList[choices] != (ushort)scienceIdx)
 						continue;
 				}
 
@@ -1598,13 +1563,9 @@ namespace Civilization1Remaster.Game
 				this.owner.Libc.AppendText(0xba06, "\n ");
 
 				this.processor.RegSource.Value16 = (ushort)(choices << 1);
-				this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(choiceList + (choices << 1)), (ushort)scienceIdx);
+				choiceList[choices] = (ushort)scienceIdx;
 				choices++;
-				this.processor.EmitLocalWord(0x12, choices);
 			}
-
-			this.processor.EmitLocalWord(0x12, choices);
-			this.processor.EmitLocalWord(0x46, 0x48);
 
 			return choices;
 		}

@@ -89,40 +89,33 @@ namespace Civilization1Remaster.Game
 		private void SmoothDiagonalCoastlines()
 		{
 			short horizLoc = 1;
-			this.processor.EmitLocalWord(0xa, (ushort)horizLoc);
 
 			while (horizLoc < 0x4f)
 			{
 				short vertLoc = 1;
-				this.processor.EmitLocalWord(0xc, (ushort)vertLoc);
 
 				while (vertLoc < 0x31)
 				{
 					byte mask = 0;
-					this.processor.EmitLocalWord(0x2, 0);
 
 					if (this.owner.VideoCard.ObtainDot(1, horizLoc, vertLoc) != 0)
 					{
 						mask |= 0x1;
-						this.processor.EmitLocalByte(0x2, mask);
 					}
 
 					if (this.owner.VideoCard.ObtainDot(1, horizLoc + 1, vertLoc) != 0)
 					{
 						mask |= 0x2;
-						this.processor.EmitLocalByte(0x2, mask);
 					}
 
 					if (this.owner.VideoCard.ObtainDot(1, horizLoc, vertLoc + 1) != 0)
 					{
 						mask |= 0x4;
-						this.processor.EmitLocalByte(0x2, mask);
 					}
 
 					if (this.owner.VideoCard.ObtainDot(1, horizLoc + 1, vertLoc + 1) != 0)
 					{
 						mask |= 0x8;
-						this.processor.EmitLocalByte(0x2, mask);
 					}
 
 					if (mask == 0x6 || mask == 0x9)
@@ -134,24 +127,20 @@ namespace Civilization1Remaster.Game
 						if (horizLoc != 0)
 						{
 							horizLoc--;
-							this.processor.EmitLocalWord(0xa, (ushort)horizLoc);
 						}
 
 						if (vertLoc != 0)
 						{
 							vertLoc--;
-							this.processor.EmitLocalWord(0xc, (ushort)vertLoc);
 						}
 					}
 
 					vertLoc++;
-					this.processor.EmitLocalWord(0xc, (ushort)vertLoc);
 				}
 
 				this.DisplayStoryIntro();
 
 				horizLoc++;
-				this.processor.EmitLocalWord(0xa, (ushort)horizLoc);
 			}
 		}
 
@@ -165,16 +154,13 @@ namespace Civilization1Remaster.Game
 
 			for (horizLoc = 0; horizLoc < 0x50; horizLoc++)
 			{
-				this.processor.EmitLocalWord(0xa, (ushort)horizLoc);
 
 				short vertLoc;
 
 				for (vertLoc = 0; vertLoc < 0x32; vertLoc++)
 				{
-					this.processor.EmitLocalWord(0xc, (ushort)vertLoc);
 
 					ushort dot = this.owner.VideoCard.ObtainDot(1, horizLoc, vertLoc);
-					this.processor.EmitLocalWord(0x6, dot);
 
 					if (dot == 0)
 					{
@@ -185,7 +171,6 @@ namespace Civilization1Remaster.Game
 						short rawLat = (short)-((short)(this.owner.Libc.Dice.DrawInt(8) + vertLoc - 0x1d));
 						ushort absLat = (ushort)this.owner.Libc.AbsoluteValue(rawLat);
 						short band = (short)(absLat + (1 - (short)this.processor.PullGlobalWord(0x7ef8)));
-						this.processor.EmitLocalWord(0x4, (ushort)band);
 
 						ushort tier = (ushort)(CPU.SignedQuotient(band, 6) + 1);
 						if (tier <= 7)
@@ -210,12 +195,10 @@ namespace Civilization1Remaster.Game
 					}
 				}
 
-				this.processor.EmitLocalWord(0xc, (ushort)vertLoc);
 
 				this.DisplayStoryIntro();
 			}
 
-			this.processor.EmitLocalWord(0xa, (ushort)horizLoc);
 		}
 
 		/// <summary>
@@ -228,22 +211,17 @@ namespace Civilization1Remaster.Game
 
 			for (vertLoc = 0; vertLoc < 0x32; vertLoc++)
 			{
-				this.processor.EmitLocalWord(0xc, (ushort)vertLoc);
 
 				short latitudeDist = (short)this.owner.Libc.AbsoluteValue((short)(0x19 - vertLoc));
-				this.processor.EmitLocalWord(0x4, (ushort)latitudeDist);
 
 				short moisture = 0;
-				this.processor.EmitLocalWord(0x8, 0);
 
 				short horizLoc;
 
 				for (horizLoc = 0; horizLoc < 0x50; horizLoc++)
 				{
-					this.processor.EmitLocalWord(0xa, (ushort)horizLoc);
 
 					ushort dot = this.owner.VideoCard.ObtainDot(1, horizLoc, vertLoc);
-					this.processor.EmitLocalWord(0x2, dot);
 
 					if (dot == 1)
 					{
@@ -251,14 +229,12 @@ namespace Civilization1Remaster.Game
 						if (cap > moisture)
 						{
 							moisture++;
-							this.processor.EmitLocalWord(0x8, (ushort)moisture);
 						}
 					}
 					else if (moisture > 0)
 					{
 						ushort drop = (ushort)this.owner.Libc.Dice.DrawInt((ushort)(7 - (this.processor.PullGlobalWord(0x7efa) << 1)));
 						moisture = (short)(moisture - drop);
-						this.processor.EmitLocalWord(0x8, (ushort)moisture);
 
 						switch (dot)
 						{
@@ -273,7 +249,6 @@ namespace Civilization1Remaster.Game
 								break;
 							case 0xd:
 								moisture -= 3;
-								this.processor.EmitLocalWord(0x8, (ushort)moisture);
 								break;
 							case 0xe:
 								this.owner.Services.AssignDot(1, horizLoc, vertLoc, 6);
@@ -282,17 +257,13 @@ namespace Civilization1Remaster.Game
 					}
 				}
 
-				this.processor.EmitLocalWord(0xa, (ushort)horizLoc);
 
 				moisture = 0;
-				this.processor.EmitLocalWord(0x8, 0);
 
 				for (horizLoc = 0x4f; horizLoc >= 0; horizLoc--)
 				{
-					this.processor.EmitLocalWord(0xa, (ushort)horizLoc);
 
 					ushort dot = this.owner.VideoCard.ObtainDot(1, horizLoc, vertLoc);
-					this.processor.EmitLocalWord(0x2, dot);
 
 					if (dot == 1)
 					{
@@ -300,14 +271,12 @@ namespace Civilization1Remaster.Game
 						if (cap > moisture)
 						{
 							moisture++;
-							this.processor.EmitLocalWord(0x8, (ushort)moisture);
 						}
 					}
 					else if (moisture > 0)
 					{
 						ushort drop = (ushort)this.owner.Libc.Dice.DrawInt((ushort)(7 - (this.processor.PullGlobalWord(0x7efa) << 1)));
 						moisture = (short)(moisture - drop);
-						this.processor.EmitLocalWord(0x8, (ushort)moisture);
 
 						switch (dot)
 						{
@@ -321,11 +290,9 @@ namespace Civilization1Remaster.Game
 							case 0xa:
 								this.owner.Services.AssignDot(1, horizLoc, vertLoc, latitudeDist < 0xa ? (ushort)11 : (ushort)3);
 								moisture = -2;
-								this.processor.EmitLocalWord(0x8, (ushort)moisture);
 								break;
 							case 0xd:
 								moisture -= 3;
-								this.processor.EmitLocalWord(0x8, (ushort)moisture);
 								this.owner.Services.AssignDot(1, horizLoc, vertLoc, 2);
 								break;
 							case 0xe:
@@ -335,12 +302,10 @@ namespace Civilization1Remaster.Game
 					}
 				}
 
-				this.processor.EmitLocalWord(0xa, (ushort)horizLoc);
 
 				this.DisplayStoryIntro();
 			}
 
-			this.processor.EmitLocalWord(0xc, (ushort)vertLoc);
 		}
 
 		/// <summary>
@@ -348,35 +313,28 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private void AgeTerrain()
 		{
-			short horizLoc = this.processor.PullLocalSignedWord(0xa);
-			short vertLoc = this.processor.PullLocalSignedWord(0xc);
+			short horizLoc = -1;
+			short vertLoc = 0x32;
 			short step = 0;
-			this.processor.EmitLocalWord(0xe, (ushort)step);
 
 			while ((short)((this.processor.PullGlobalSignedWord(0x7efc) * 0x320) + 0x320) > step)
 			{
 				if ((step & 1) == 0)
 				{
 					horizLoc = (short)this.owner.Libc.Dice.DrawInt(80);
-					this.processor.EmitLocalWord(0xa, (ushort)horizLoc);
 
 					vertLoc = (short)this.owner.Libc.Dice.DrawInt(50);
-					this.processor.EmitLocalWord(0xc, (ushort)vertLoc);
 				}
 				else
 				{
 					ushort heading = (ushort)(this.owner.Libc.Dice.DrawInt(8) + 1);
-					this.processor.EmitLocalWord(0x2, heading);
 
 					horizLoc = (short)(horizLoc + this.processor.PullGlobalSignedWord((ushort)((heading << 1) + 0x1882)));
-					this.processor.EmitLocalWord(0xa, (ushort)horizLoc);
 
 					vertLoc = (short)(vertLoc + this.processor.PullGlobalSignedWord((ushort)((heading << 1) + 0x18e4)));
-					this.processor.EmitLocalWord(0xc, (ushort)vertLoc);
 				}
 
 				ushort dot = this.owner.VideoCard.ObtainDot(1, horizLoc, vertLoc);
-				this.processor.EmitLocalWord(0x2, dot);
 
 				switch (dot)
 				{
@@ -409,7 +367,6 @@ namespace Civilization1Remaster.Game
 				}
 
 				step++;
-				this.processor.EmitLocalWord(0xe, (ushort)step);
 			}
 		}
 
