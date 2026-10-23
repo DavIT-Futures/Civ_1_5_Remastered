@@ -152,8 +152,7 @@ public sealed class BatchHundredElevenDifferentialTests(ITestOutputHelper output
 
 					ways.Add(met);
 					return met;
-				},
-				[(0x3b01, (ushort)(frame - 0x80), 0x80)]);
+				});
 		}, output, [], null);
 	}
 }

@@ -181,7 +181,8 @@ public sealed class BatchNinetyFourDifferentialTests(ITestOutputHelper output)
 							else if (click.Near != 0)
 							{
 								// Next to the active unit of the turn (the local 0x32 of HandlePlayerTurn)
-								ushort troop = game.Processor.Storage.PullUInt16(0x3b01, (ushort)(frame - 0x32));
+								ushort troop = ReferenceEquals(game, pair.Rewritten.Engine) ? game.TurnLogic.ActiveTroop :
+									game.Processor.Storage.PullUInt16(0x3b01, (ushort)(frame - 0x32));
 
 								if (troop < 128)
 								{
@@ -260,8 +261,7 @@ public sealed class BatchNinetyFourDifferentialTests(ITestOutputHelper output)
 						ways.Add(way);
 
 					return met.Count == 0 ? "nothing" : string.Join("+", met);
-				},
-				[(0x3b01, (ushort)(frame - 0x80), 0x80)]);
+				});
 		}, output, [], null);
 	}
 }

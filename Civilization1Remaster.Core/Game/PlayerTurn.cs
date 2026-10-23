@@ -17,16 +17,166 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
+		/// The locals of HandlePlayerTurn, shared by the methods it calls as in the original. In the original they were the
+		/// words of the stack frame (BP - offset); the offset of each one is in its comment, the comments of the methods still
+		/// name the locals by these offsets. Every local is a word; byte reads take its low byte, byte writes keep its high byte.
+		/// </summary>
+		private sealed class TurnLocals
+		{
+			private readonly CPU? processor;
+			public TurnLocals(CPU? processor = null) { this.processor = processor; }
+
+			/// <summary>0x2: the colour of a dot of the map view</summary>
+			public ushort Dot;
+			/// <summary>0x4: 1 while the marked tile moves instead of a unit</summary>
+			public ushort MarkedTileMode;
+			/// <summary>0x6: a unit of the human took a key in this turn</summary>
+			public ushort HumanTookKey;
+			/// <summary>0x8: not the first pass over the units</summary>
+			public ushort LaterPass;
+			/// <summary>0xa: the orders asked from ShiftAIUnit for the unit</summary>
+			public ushort AITries;
+			/// <summary>0xc: a click is waiting</summary>
+			public ushort Clicked;
+			/// <summary>0xe: the column of the marked tile or of the click (-1 none)</summary>
+			public ushort CursorHoriz;
+			/// <summary>0x10: a city</summary>
+			public ushort City;
+
+			private ushort cursorVert;
+			/// <summary>0x12: the row of the marked tile or of the click</summary>
+			public ushort CursorVert
+			{
+				get => this.cursorVert;
+				set { this.cursorVert = value; this.processor?.EmitLocalWord(0x12, value); }
+			}
+
+			/// <summary>0x14: the cargo unit taken along</summary>
+			public ushort Cargo;
+			/// <summary>0x18: another unit (at the tile, the best guardian), or a flag</summary>
+			public ushort OtherUnit;
+			/// <summary>0x1c: the column of the target tile</summary>
+			public ushort TargetHoriz;
+			/// <summary>0x1e: 1 unless a unit is left with moves in this pass</summary>
+			public ushort AllMoved;
+			/// <summary>0x20: the players played by humans at the start of the turn</summary>
+			public ushort HumanMarkers;
+			/// <summary>0x22: the column of the carrier before the move</summary>
+			public ushort CarrierHoriz;
+
+			private ushort direction;
+			/// <summary>0x24: the direction of the move</summary>
+			public ushort Direction
+			{
+				get => this.direction;
+				set { this.direction = value; this.processor?.EmitLocalWord(0x24, value); }
+			}
+
+			/// <summary>0x26: the row of the target tile</summary>
+			public ushort TargetVert;
+			/// <summary>0x28: the unit got an order</summary>
+			public ushort Ordered;
+			/// <summary>0x2a: the row of the carrier before the move</summary>
+			public ushort CarrierVert;
+			/// <summary>0x2c: the column of the unit</summary>
+			public ushort UnitHoriz;
+			/// <summary>0x2e: the pass went past the waiting unit 0x46</summary>
+			public ushort PastWaiting;
+			/// <summary>0x30: the row of the unit</summary>
+			public ushort UnitVert;
+			/// <summary>0x32: the unit (0x80 none)</summary>
+			public ushort Troop;
+			/// <summary>0x34: the terrain the unit stands on</summary>
+			public ushort StartTerrain;
+
+			private ushort mouseCursorSet;
+			/// <summary>0x36: the mouse cursor was changed</summary>
+			public ushort MouseCursorSet
+			{
+				get => this.mouseCursorSet;
+				set { this.mouseCursorSet = value; this.processor?.EmitLocalWord(0x36, value); }
+			}
+
+			/// <summary>0x38: something was found</summary>
+			public ushort Found;
+			/// <summary>0x3a: a result used for many things (a city, a battle, a dialog answer, a rate)</summary>
+			public ushort Result;
+			/// <summary>0x3c: a counter or a city</summary>
+			public ushort Count;
+
+			private ushort targetTerrain;
+			/// <summary>0x3e: the terrain of the target tile</summary>
+			public ushort TargetTerrain
+			{
+				get => this.targetTerrain;
+				set { this.targetTerrain = value; this.processor?.EmitLocalWord(0x3e, value); }
+			}
+
+			/// <summary>0x40: the improvements of the target tile (low byte)</summary>
+			public ushort TargetImprovements;
+			/// <summary>0x44: the order (a key)</summary>
+			public ushort Order;
+			/// <summary>0x46: the unit that waits for the next pass</summary>
+			public ushort WaitingTroop;
+			/// <summary>0x48: the owner of the target tile</summary>
+			public ushort TileOwner;
+			/// <summary>0x4a: the cargo units counted</summary>
+			public ushort CargoTally;
+			/// <summary>0x4c: the next cargo unit</summary>
+			public ushort NextCargo;
+			/// <summary>0x4e: the row, status or kind of the unit</summary>
+			public ushort UnitDetail;
+			/// <summary>0x52: the kind of the carrier (low byte)</summary>
+			public ushort CarrierKind;
+
+			/// <summary>
+			/// The locals as the frame of the original starts them: the words left on the stack. Some are read before being
+			/// written (0x12 and 0x24 logged by the calls of a unit that has not moved, 0x3e for a fortress of settlers).
+			/// </summary>
+			public static TurnLocals FromFrame(CPU processor) => new TurnLocals(processor)
+			{
+				Dot = processor.PullLocalWord(0x2), MarkedTileMode = processor.PullLocalWord(0x4),
+				HumanTookKey = processor.PullLocalWord(0x6), LaterPass = processor.PullLocalWord(0x8),
+				AITries = processor.PullLocalWord(0xa), Clicked = processor.PullLocalWord(0xc),
+				CursorHoriz = processor.PullLocalWord(0xe), City = processor.PullLocalWord(0x10),
+				cursorVert = processor.PullLocalWord(0x12), Cargo = processor.PullLocalWord(0x14),
+				OtherUnit = processor.PullLocalWord(0x18), TargetHoriz = processor.PullLocalWord(0x1c),
+				AllMoved = processor.PullLocalWord(0x1e), HumanMarkers = processor.PullLocalWord(0x20),
+				CarrierHoriz = processor.PullLocalWord(0x22), direction = processor.PullLocalWord(0x24),
+				TargetVert = processor.PullLocalWord(0x26), Ordered = processor.PullLocalWord(0x28),
+				CarrierVert = processor.PullLocalWord(0x2a), UnitHoriz = processor.PullLocalWord(0x2c),
+				PastWaiting = processor.PullLocalWord(0x2e), UnitVert = processor.PullLocalWord(0x30),
+				Troop = processor.PullLocalWord(0x32), StartTerrain = processor.PullLocalWord(0x34),
+				mouseCursorSet = processor.PullLocalWord(0x36), Found = processor.PullLocalWord(0x38),
+				Result = processor.PullLocalWord(0x3a), Count = processor.PullLocalWord(0x3c),
+				targetTerrain = processor.PullLocalWord(0x3e), TargetImprovements = processor.PullLocalWord(0x40),
+				Order = processor.PullLocalWord(0x44), WaitingTroop = processor.PullLocalWord(0x46),
+				TileOwner = processor.PullLocalWord(0x48), CargoTally = processor.PullLocalWord(0x4a),
+				NextCargo = processor.PullLocalWord(0x4c), UnitDetail = processor.PullLocalWord(0x4e),
+				CarrierKind = processor.PullLocalWord(0x52),
+			};
+		}
+
+		/// <summary>The locals of the running HandlePlayerTurn</summary>
+		private TurnLocals turn = new TurnLocals();
+
+		/// <summary>The unit of the running HandlePlayerTurn (the local 0x32), for the tests that click next to it</summary>
+		public ushort ActiveTroop => this.turn.Troop;
+
+		/// <summary>
 		/// The turn of a player: passes over his units (another pass while some unit waited or was off the view), each unit
 		/// gets its orders (from ShiftAIUnit, its standing orders or the keys and clicks of the human) and carries them out
-		/// or moves; the human gets a last look without a unit at the end of the turn. The locals (frame 0x52) are shared by
-		/// the methods it calls, as in the original.
+		/// or moves; the human gets a last look without a unit at the end of the turn. The locals (TurnLocals) are shared by
+		/// the methods it calls, as in the original; the frame (0x52) stays so that the called functions run at the same
+		/// depth of the stack.
 		/// </summary>
 		public void HandlePlayerTurn(short participantIdx)
 		{
 			this.processor.Journal.OpenScope($"HandlePlayerTurn({participantIdx})");
 
 			this.processor.EnterFrame(0x52);
+			TurnLocals outer = this.turn;
+			this.turn = TurnLocals.FromFrame(this.processor);
 			this.processor.PreserveIndexRegisters();
 
 			// The player, the help of some turns, the moves of the units
@@ -39,13 +189,13 @@ namespace Civilization1Remaster.Game
 				if (newPass)
 				{
 					// A pass over the units (0x1e stays 1 unless a unit is left with moves)
-					this.processor.EmitLocalWord(0x1e, 1);
-					this.processor.EmitLocalWord(0x32, 0);
+					this.turn.AllMoved = 1;
+					this.turn.Troop = 0;
 				}
 
 				bool endOfTurn = false;
 
-				while ((short)this.processor.PullLocalWord(0x32) < UnitMemory.TroopTally)
+				while ((short)this.turn.Troop < UnitMemory.TroopTally)
 				{
 					if (!VisitUnit(participantIdx))
 					{
@@ -53,7 +203,7 @@ namespace Civilization1Remaster.Game
 						break;
 					}
 
-					this.processor.EmitLocalWord(0x32, (ushort)(this.processor.PullLocalWord(0x32) + 1));
+					this.turn.Troop = (ushort)(this.turn.Troop + 1);
 				}
 
 				if (endOfTurn)
@@ -63,23 +213,23 @@ namespace Civilization1Remaster.Game
 				// (no unit of his took a key, or the option 4), else the end
 				newPass = true;
 
-				if (this.processor.PullLocalWord(0x1e) == 0 && this.processor.PullGlobalWord(0xdc48) == 0)
+				if (this.turn.AllMoved == 0 && this.processor.PullGlobalWord(0xdc48) == 0)
 					continue;
 
 				if (this.processor.PullGlobalWord(0xdc48) != 0 || !this.owner.World.IsHuman(participantIdx) ||
-					(this.processor.PullLocalWord(0x6) != 0 && (this.owner.World.SessionPrefMarkers & 4) == 0))
+					(this.turn.HumanTookKey != 0 && (this.owner.World.SessionPrefMarkers & 4) == 0))
 				{
 					break;
 				}
 
-				this.processor.EmitLocalWord(0x32, UnitMemory.TroopTally);
-				this.processor.EmitLocalWord(0x1e, 0);
-				this.processor.EmitLocalWord(0x8, 1);
+				this.turn.Troop = UnitMemory.TroopTally;
+				this.turn.AllMoved = 0;
+				this.turn.LaterPass = 1;
 
 				if (!LookAtUnit(participantIdx))
 					break;
 
-				this.processor.EmitLocalWord(0x32, (ushort)(this.processor.PullLocalWord(0x32) + 1));
+				this.turn.Troop = (ushort)(this.turn.Troop + 1);
 				newPass = false;
 			}
 
@@ -94,6 +244,7 @@ namespace Civilization1Remaster.Game
 			this.processor.RegSource.Value16 = this.processor.UnstackWord();
 			this.processor.RegDest.Value16 = this.processor.UnstackWord();
 			this.processor.LeaveFrame();
+			this.turn = outer;
 			this.processor.Journal.CloseScope("HandlePlayerTurn");
 		}
 
@@ -135,12 +286,12 @@ namespace Civilization1Remaster.Game
 			if (this.processor.PullGlobalWord(0xdc48) != 0)
 			{
 				// The quit leaves the units
-				this.processor.EmitLocalWord(0x32, UnitMemory.TroopTally);
+				this.turn.Troop = UnitMemory.TroopTally;
 				return true;
 			}
 
-			if (this.processor.PullLocalWord(0x32) == this.processor.PullLocalWord(0x46))
-				this.processor.EmitLocalWord(0x2e, 1);
+			if (this.turn.Troop == this.turn.WaitingTroop)
+				this.turn.PastWaiting = 1;
 
 			// Empty slots, sentried and fortified units and units without moves are skipped; fortifying ones are fortified now
 			if (!StartUnitMove(participantIdx))
@@ -163,15 +314,15 @@ namespace Civilization1Remaster.Game
 			if (this.owner.World.IsHuman(participantIdx))
 				AwaitForKey();
 
-			this.processor.EmitLocalWord(0xa, 0);
+			this.turn.AITries = 0;
 
-			if (this.processor.PullLocalWord(0x36) != 0)
+			if (this.turn.MouseCursorSet != 0)
 				this.owner.Services.AssignMouseCursorImage(0, 0, this.processor.PullGlobalWord(0xd4dc));
 
 			this.processor.RegAcc.Value16 = 0;
-			this.processor.EmitLocalWord(0xc, 0);
-			this.processor.EmitLocalWord(0x36, 0);
-			this.processor.EmitLocalWord(0x28, 0);
+			this.turn.Clicked = 0;
+			this.turn.MouseCursorSet = 0;
+			this.turn.Ordered = 0;
 
 			while (true)
 			{
@@ -182,7 +333,7 @@ namespace Civilization1Remaster.Game
 					switch (step)
 					{
 						case LookStep.OrderOrKey:
-							step = (short)this.processor.PullLocalWord(0x32) < UnitMemory.TroopTally ? LookStep.Order : LookStep.Direction;
+							step = (short)this.turn.Troop < UnitMemory.TroopTally ? LookStep.Order : LookStep.Direction;
 							break;
 
 						case LookStep.Order:
@@ -250,21 +401,21 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private LookStep ChooseDirection(short participantIdx)
 		{
-			if ((short)this.processor.PullLocalWord(0x32) >= UnitMemory.TroopTally && this.processor.PullLocalWord(0x4) == 0)
+			if ((short)this.turn.Troop >= UnitMemory.TroopTally && this.turn.MarkedTileMode == 0)
 				return LookStep.Key;
 
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x44);
+			this.processor.RegAcc.Value16 = this.turn.Order;
 
-			if (this.processor.PullLocalWord(0x44) == 'c')
+			if (this.turn.Order == 'c')
 			{
 				CenterView(participantIdx);
 				return LookStep.Key;
 			}
 
-			if (KeyDirection(this.processor.PullLocalWord(0x44)) == 0)
+			if (KeyDirection(this.turn.Order) == 0)
 				return LookStep.Key;
 
-			this.processor.EmitLocalWord(0x24, KeyDirection(this.processor.PullLocalWord(0x44)));
+			this.turn.Direction = KeyDirection(this.turn.Order);
 			return LookStep.Move;
 		}
 
@@ -275,7 +426,7 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private LookStep MoveTheUnit(short participantIdx)
 		{
-			if (this.processor.PullLocalWord(0x4) != 0)
+			if (this.turn.MarkedTileMode != 0)
 			{
 				MoveMarkedTile(participantIdx);
 				return LookStep.Key;
@@ -339,9 +490,9 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.RegAcc.Value16 = (ushort)participantIdx;
 			this.processor.EmitGlobalWord(0x6b90, (ushort)participantIdx);
-			this.processor.EmitLocalWord(0x20, (ushort)this.owner.World.ParticipantMarkers);
-			this.processor.EmitLocalWord(0xe, 0xffff);
-			this.processor.EmitLocalWord(0x4, 0);
+			this.turn.HumanMarkers = (ushort)this.owner.World.ParticipantMarkers;
+			this.turn.CursorHoriz = 0xffff;
+			this.turn.MarkedTileMode = 0;
 
 			short person = this.owner.World.PersonParticipantIdx;
 
@@ -356,10 +507,10 @@ namespace Civilization1Remaster.Game
 					this.owner.HelpSystem.DisplayHelpPopup(0x1e67);
 			}
 
-			for (this.processor.EmitLocalWord(0x32, 0); (short)this.processor.PullLocalWord(0x32) < UnitMemory.TroopTally;
-				this.processor.EmitLocalWord(0x32, (ushort)(this.processor.PullLocalWord(0x32) + 1)))
+			for (this.turn.Troop = 0; (short)this.turn.Troop < UnitMemory.TroopTally;
+				this.turn.Troop = (ushort)(this.turn.Troop + 1))
 			{
-				short troopIdx = (short)this.processor.PullLocalWord(0x32);
+				short troopIdx = (short)this.turn.Troop;
 
 				if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) == 0xff || this.processor.PullGlobalWord(0xdf60) == 1)
 					continue;
@@ -376,11 +527,11 @@ namespace Civilization1Remaster.Game
 			}
 
 			this.processor.RegAcc.Value16 = 0;
-			this.processor.EmitLocalWord(0x6, 0);
-			this.processor.EmitLocalWord(0x8, 0);
-			this.processor.EmitLocalWord(0x28, 0);
-			this.processor.EmitLocalWord(0x2e, 0);
-			this.processor.EmitLocalWord(0x46, 0x7f);
+			this.turn.HumanTookKey = 0;
+			this.turn.LaterPass = 0;
+			this.turn.Ordered = 0;
+			this.turn.PastWaiting = 0;
+			this.turn.WaitingTroop = 0x7f;
 		}
 
 		/// <summary>
@@ -392,7 +543,7 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private bool StartUnitMove(short participantIdx)
 		{
-			short troopIdx = (short)this.processor.PullLocalWord(0x32);
+			short troopIdx = (short)this.turn.Troop;
 			// (SI as the original leaves it: the player's units, or the unit when it goes on or was fortifying)
 			ushort player = (ushort)(participantIdx * UnitMemory.ParticipantStride);
 			ushort unit = (ushort)(player + troopIdx * UnitMemory.TroopStride);
@@ -404,7 +555,7 @@ namespace Civilization1Remaster.Game
 			if (this.troops.TroopKind(participantIdx, troopIdx) >= 0x1c)
 				this.troops.Assign(participantIdx, troopIdx, UnitMemory.Kind, 1);
 
-			if (this.processor.PullLocalWord(0x8) == 0)
+			if (this.turn.LaterPass == 0)
 			{
 				// (ShiftUnit keeps SI on the stack, where ShiftAIUnit later finds it)
 				this.processor.RegSource.Value16 = unit;
@@ -436,20 +587,20 @@ namespace Civilization1Remaster.Game
 
 			if (participantIdx != this.owner.World.PersonParticipantIdx && (this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) != 0)
 			{
-				this.processor.EmitLocalWord(0x3a, this.owner.Helpers.LocateCityAtPosition(horizLoc, vertLoc));
+				this.turn.Result = this.owner.Helpers.LocateCityAtPosition(horizLoc, vertLoc);
 
-				if ((sbyte)this.owner.World.Towns[this.processor.PullLocalWord(0x3a)].TrueExtent >= 3)
-					this.troops.Assign(participantIdx, troopIdx, UnitMemory.BaseTown, this.processor.PullLocalByte(0x3a));
+				if ((sbyte)this.owner.World.Towns[this.turn.Result].TrueExtent >= 3)
+					this.troops.Assign(participantIdx, troopIdx, UnitMemory.BaseTown, (byte)this.turn.Result);
 			}
 
 			if ((this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) != 0)
 			{
-				this.processor.EmitLocalWord(0x3a, this.owner.Helpers.LocateCityAtPosition(horizLoc, vertLoc));
+				this.turn.Result = this.owner.Helpers.LocateCityAtPosition(horizLoc, vertLoc);
 
-				if ((ushort)this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.BaseTown) == this.processor.PullLocalWord(0x3a) &&
+				if ((ushort)this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.BaseTown) == this.turn.Result &&
 					this.owner.UnitOps.ContainsAdjacentForeignUnit(participantIdx, horizLoc, vertLoc) == 0)
 				{
-					this.owner.UnitOps.KeepUnitsInCityList((short)this.processor.PullLocalWord(0x3a));
+					this.owner.UnitOps.KeepUnitsInCityList((short)this.turn.Result);
 				}
 			}
 
@@ -467,7 +618,7 @@ namespace Civilization1Remaster.Game
 			if (participantIdx != this.owner.World.PersonParticipantIdx)
 				return true;
 
-			short troopIdx = (short)this.processor.PullLocalWord(0x32);
+			short troopIdx = (short)this.turn.Troop;
 			this.processor.RegSource.Value16 = UnitMemory.Offset(participantIdx, troopIdx);
 
 			if ((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 0xc2) != 0)
@@ -480,19 +631,19 @@ namespace Civilization1Remaster.Game
 
 			if (viewHoriz < horizLoc)
 			{
-				this.processor.EmitLocalWord(0x4e, this.troops.Pull(participantIdx, troopIdx, UnitMemory.Vert));
+				this.turn.UnitDetail = this.troops.Pull(participantIdx, troopIdx, UnitMemory.Vert);
 				ushort viewVert = this.processor.PullGlobalWord(0xd75e);
 
-				if (this.processor.PullLocalWord(0x4e) > viewVert && (ushort)(viewHoriz + 0xe) >= horizLoc &&
-					(ushort)(viewVert + 0xa) > this.processor.PullLocalWord(0x4e))
+				if (this.turn.UnitDetail > viewVert && (ushort)(viewHoriz + 0xe) >= horizLoc &&
+					(ushort)(viewVert + 0xa) > this.turn.UnitDetail)
 				{
 					return true;
 				}
 			}
 
-			if (this.processor.PullLocalWord(0x2e) == 0)
+			if (this.turn.PastWaiting == 0)
 			{
-				this.processor.EmitLocalWord(0x1e, 0);
+				this.turn.AllMoved = 0;
 				return false;
 			}
 
@@ -504,11 +655,11 @@ namespace Civilization1Remaster.Game
 				this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz) - 7,
 				this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert) - 6);
 
-			this.processor.EmitLocalWord(0x46, (ushort)((this.processor.PullLocalWord(0x32) - 1) & 0x7f));
-			this.processor.EmitLocalWord(0x2e, 0);
+			this.turn.WaitingTroop = (ushort)((this.turn.Troop - 1) & 0x7f);
+			this.turn.PastWaiting = 0;
 
 			if (this.owner.World.RoundTally == 0)
-				RenderUnitInfo(participantIdx, this.processor.PullLocalWord(0x32));
+				RenderUnitInfo(participantIdx, this.turn.Troop);
 
 			return true;
 		}
@@ -520,20 +671,20 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private void ObtainAIOrder(short participantIdx)
 		{
-			short troopIdx = (short)this.processor.PullLocalWord(0x32);
-			this.processor.EmitLocalWord(0x44, this.owner.Bot.ShiftAIUnit(participantIdx, troopIdx));
+			short troopIdx = (short)this.turn.Troop;
+			this.turn.Order = this.owner.Bot.ShiftAIUnit(participantIdx, troopIdx);
 
-			if (this.processor.PullLocalWord(0x44) != 0)
+			if (this.turn.Order != 0)
 			{
 				this.processor.RegSource.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride);
 				this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHoriz, 0xff);
 			}
 
-			this.processor.EmitLocalWord(0xa, (ushort)(this.processor.PullLocalWord(0xa) + 1));
+			this.turn.AITries = (ushort)(this.turn.AITries + 1);
 
-			if ((short)this.processor.PullLocalWord(0xa) > 4)
+			if ((short)this.turn.AITries > 4)
 			{
-				this.processor.EmitLocalWord(0x44, 0x20);
+				this.turn.Order = 0x20;
 				this.processor.RegSource.Value16 = UnitMemory.Offset(participantIdx, troopIdx);
 				this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHeading, 0xff);
 				this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHoriz, 0xff);
@@ -548,10 +699,10 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private bool ObtainStandingOrder(short participantIdx)
 		{
-			if ((short)this.processor.PullLocalWord(0x32) >= UnitMemory.TroopTally)
+			if ((short)this.turn.Troop >= UnitMemory.TroopTally)
 				return false;
 
-			short troopIdx = (short)this.processor.PullLocalWord(0x32);
+			short troopIdx = (short)this.turn.Troop;
 			this.processor.RegSource.Value16 = UnitMemory.Offset(participantIdx, troopIdx);
 
 			if ((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 0xc2) == 0 &&
@@ -560,28 +711,28 @@ namespace Civilization1Remaster.Game
 				return false;
 			}
 
-			this.processor.EmitLocalWord(0x44, 0x72);
+			this.turn.Order = 0x72;
 
 			if ((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 0x40) != 0)
-				this.processor.EmitLocalWord(0x44, (ushort)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) != 0 ? 0x6d : 0x69));
+				this.turn.Order = (ushort)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) != 0 ? 0x6d : 0x69);
 
-			this.processor.EmitLocalByte(0x4e, this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status));
+			this.turn.UnitDetail = (ushort)((this.turn.UnitDetail & 0xff00) | this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status));
 
-			if ((this.processor.PullLocalByte(0x4e) & 0x80) != 0)
+			if (((byte)this.turn.UnitDetail & 0x80) != 0)
 			{
-				this.processor.EmitLocalWord(0x44, 0x6d);
+				this.turn.Order = 0x6d;
 
-				if ((this.processor.PullLocalByte(0x4e) & 0x40) != 0)
-					this.processor.EmitLocalWord(0x44, 0x66);
+				if (((byte)this.turn.UnitDetail & 0x40) != 0)
+					this.turn.Order = 0x66;
 
 				if ((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 2) != 0)
-					this.processor.EmitLocalWord(0x44, 0x70);
+					this.turn.Order = 0x70;
 			}
 
 			this.processor.RegSource.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride);
 
 			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == UnitKindTable.AirUnits)
-				this.processor.EmitLocalWord(0x44, 0x68);
+				this.turn.Order = 0x68;
 
 			return true;
 		}
@@ -618,9 +769,9 @@ namespace Civilization1Remaster.Game
 		{
 			short person = this.owner.World.PersonParticipantIdx;
 
-			RenderUnitInfo(participantIdx, this.processor.PullLocalWord(0x32));
+			RenderUnitInfo(participantIdx, this.turn.Troop);
 
-			if (this.owner.World.RoundTally == 0 && this.processor.PullLocalWord(0x8) == 0)
+			if (this.owner.World.RoundTally == 0 && this.turn.LaterPass == 0)
 			{
 				this.processor.RegBase.Value16 = (ushort)(participantIdx << 1);
 				this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30b8),
@@ -628,41 +779,41 @@ namespace Civilization1Remaster.Game
 
 				this.owner.HelpSystem.DisplayHelpPopup(0x1e6e);
 
-				this.processor.EmitLocalWord(0x8, 1);
+				this.turn.LaterPass = 1;
 			}
 
-			if (this.processor.PullLocalWord(0x32) < UnitMemory.TroopTally)
+			if (this.turn.Troop < UnitMemory.TroopTally)
 			{
-				short troopIdx = (short)this.processor.PullLocalWord(0x32);
+				short troopIdx = (short)this.turn.Troop;
 				this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
 				this.processor.RegSource.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride);
 
-				if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) == 0 && this.processor.PullLocalWord(0x8) == 0)
+				if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) == 0 && this.turn.LaterPass == 0)
 				{
-					this.owner.HelpSystem.DisplayTileInfo(participantIdx, this.processor.PullLocalWord(0x32));
-					this.processor.EmitLocalWord(0x8, 1);
+					this.owner.HelpSystem.DisplayTileInfo(participantIdx, this.turn.Troop);
+					this.turn.LaterPass = 1;
 				}
 			}
 
 			this.owner.UnitOps.ChoreographUnitMove(participantIdx,
-				this.processor.PullLocalSignedWord(0x32),
-				this.processor.PullLocalWord(0xe),
-				this.processor.PullLocalWord(0x12));
+				(short)this.turn.Troop,
+				this.turn.CursorHoriz,
+				this.turn.CursorVert);
 
-			if (this.processor.PullLocalWord(0x32) != 0x80)
-				this.processor.EmitLocalWord(0x6, 1);
+			if (this.turn.Troop != 0x80)
+				this.turn.HumanTookKey = 1;
 
 			if (this.owner.GlobDb3a == 0)
 			{
-				this.processor.EmitLocalWord(0x44, this.owner.Dialogs.ObtainNavigationKey());
+				this.turn.Order = this.owner.Dialogs.ObtainNavigationKey();
 
-				if (this.processor.PullLocalWord(0x44) != 0xd || this.processor.PullLocalWord(0x4) == 0)
+				if (this.turn.Order != 0xd || this.turn.MarkedTileMode == 0)
 					return HumanOrder.Order;
 
 				// Enter on the marked tile: a click there
-				this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xe);
-				this.processor.EmitLocalWord(0x1c, this.processor.PullLocalWord(0xe));
-				this.processor.EmitLocalWord(0x26, this.processor.PullLocalWord(0x12));
+				this.processor.RegAcc.Value16 = this.turn.CursorHoriz;
+				this.turn.TargetHoriz = this.turn.CursorHoriz;
+				this.turn.TargetVert = this.turn.CursorVert;
 				this.owner.GlobDb3c = 0x50;
 				this.owner.GlobDb3e = 0x8;
 				this.owner.GlobDb3a = 0x1;
@@ -675,16 +826,16 @@ namespace Civilization1Remaster.Game
 			if ((short)this.owner.GlobDb3e < 8)
 			{
 				// The menu bar
-				this.owner.MenuSystem.ManageMenuBar(participantIdx, this.processor.PullLocalSignedWord(0x32), -1);
+				this.owner.MenuSystem.ManageMenuBar(participantIdx, (short)this.turn.Troop, -1);
 
 				AwaitForKey();
 
 				if (this.processor.PullGlobalWord(0xd4ca) == 0xffff)
 					return HumanOrder.NextLook;
 
-				this.processor.EmitLocalWord(0x44, this.processor.PullGlobalWord(0xd4ca));
+				this.turn.Order = this.processor.PullGlobalWord(0xd4ca);
 
-				return (short)this.processor.PullLocalWord(0x32) < 0x80 ? HumanOrder.MenuOrder : HumanOrder.MenuWithoutUnit;
+				return (short)this.turn.Troop < 0x80 ? HumanOrder.MenuOrder : HumanOrder.MenuWithoutUnit;
 			}
 
 			if ((short)this.owner.GlobDb3c < 0x50)
@@ -701,7 +852,7 @@ namespace Civilization1Remaster.Game
 				{
 					ShowPalace();
 				}
-				else if (this.processor.PullLocalWord(0x32) == 0x80)
+				else if (this.turn.Troop == 0x80)
 				{
 					return HumanOrder.EndOfTurn;
 				}
@@ -709,19 +860,19 @@ namespace Civilization1Remaster.Game
 				this.owner.GlobDb3a = 0;
 			}
 
-			if (this.owner.GlobDb3a == 2 && (short)this.processor.PullLocalWord(0x32) < 0x80)
+			if (this.owner.GlobDb3a == 2 && (short)this.turn.Troop < 0x80)
 				TakeHeldClick(participantIdx);
 
 			if (this.owner.GlobDb3a == 2 &&
-				(((sbyte)this.owner.World.ChartSight[this.processor.PullLocalWord(0x1c), this.processor.PullLocalWord(0x26)] & (1 << (person & 0xff))) != 0 ||
+				(((sbyte)this.owner.World.ChartSight[this.turn.TargetHoriz, this.turn.TargetVert] & (1 << (person & 0xff))) != 0 ||
 					this.processor.PullGlobalWord(0xd806) != 0))
 			{
 				// The Civilopedia of the terrain of a seen tile
 				this.owner.Startup.ConcealMouseCursor();
 
 				this.owner.Encyclopedia.DisplayCivilopediaRecord(this.owner.MapOps.ObtainTerrainType(
-					this.processor.PullLocalSignedWord(0x1c),
-					this.processor.PullLocalSignedWord(0x26)), 3);
+					(short)this.turn.TargetHoriz,
+					(short)this.turn.TargetVert), 3);
 
 				this.owner.TurnHooks.RepaintMainScreen();
 
@@ -734,12 +885,12 @@ namespace Civilization1Remaster.Game
 		/// <summary>The tile clicked on the map view: 0x1c / 0x26</summary>
 		private void LocateClickedTile()
 		{
-			this.processor.EmitLocalWord(0x1c, (ushort)this.owner.Routing.TunePosition(
-				(((short)this.owner.GlobDb3c - 80) / 16) + this.processor.PullGlobalSignedWord(0xd4cc)));
+			this.turn.TargetHoriz = (ushort)this.owner.Routing.TunePosition(
+				(((short)this.owner.GlobDb3c - 80) / 16) + this.processor.PullGlobalSignedWord(0xd4cc));
 			this.processor.RegAcc.Value16 = (ushort)(this.owner.GlobDb3e - 8);
 			this.processor.DivideAccumulatorByPowerOfTwo(0x4);
 			this.processor.RegAcc.Value16 = (ushort)(this.processor.RegAcc.Value16 + this.processor.PullGlobalWord(0xd75e));
-			this.processor.EmitLocalWord(0x26, this.processor.RegAcc.Value16);
+			this.turn.TargetVert = this.processor.RegAcc.Value16;
 		}
 
 		/// <summary>The palace of the human player, until a key or a click</summary>
@@ -789,31 +940,31 @@ namespace Civilization1Remaster.Game
 
 			LocateClickedTile();
 
-			short troopIdx = (short)this.processor.PullLocalWord(0x32);
+			short troopIdx = (short)this.turn.Troop;
 			this.processor.RegSource.Value16 = UnitMemory.Offset(participantIdx, troopIdx);
 
-			this.processor.EmitLocalWord(0x18, (ushort)this.owner.Helpers.MergeCoordinates(
-				(short)(this.processor.PullLocalSignedWord(0x1c) - this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz)),
-				(short)(this.processor.PullLocalSignedWord(0x26) - this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert))));
+			this.turn.OtherUnit = (ushort)this.owner.Helpers.MergeCoordinates(
+				(short)((short)this.turn.TargetHoriz - this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz)),
+				(short)((short)this.turn.TargetVert - this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert)));
 
 			// Across the date line
-			if (this.owner.Libc.AbsoluteValue((short)(this.processor.PullLocalWord(0x1c) - this.troops.Pull(participantIdx, troopIdx, UnitMemory.Horiz))) == 0x4f &&
-				this.owner.Libc.AbsoluteValue((short)(this.processor.PullLocalWord(0x26) - this.troops.Pull(participantIdx, troopIdx, UnitMemory.Vert))) <= 1)
+			if (this.owner.Libc.AbsoluteValue((short)(this.turn.TargetHoriz - this.troops.Pull(participantIdx, troopIdx, UnitMemory.Horiz))) == 0x4f &&
+				this.owner.Libc.AbsoluteValue((short)(this.turn.TargetVert - this.troops.Pull(participantIdx, troopIdx, UnitMemory.Vert))) <= 1)
 			{
-				this.processor.EmitLocalWord(0x18, 1);
+				this.turn.OtherUnit = 1;
 			}
 
-			if (this.processor.PullLocalWord(0x18) != 1)
+			if (this.turn.OtherUnit != 1)
 			{
 				this.owner.GlobDb3a = 2;
 				return;
 			}
 
-			this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHoriz, this.processor.PullLocalByte(0x1c));
-			this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelVert, this.processor.PullLocalByte(0x26));
+			this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHoriz, (byte)this.turn.TargetHoriz);
+			this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelVert, (byte)this.turn.TargetVert);
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHeading, 0xff);
 			this.owner.GlobDb3a = 0;
-			this.processor.EmitLocalWord(0x36, 0);
+			this.turn.MouseCursorSet = 0;
 
 			this.owner.Services.AssignMouseCursorImage(0, 0, this.processor.PullGlobalWord(0xd4dc));
 		}
@@ -824,22 +975,22 @@ namespace Civilization1Remaster.Game
 		private HumanOrder TakeClick(short participantIdx)
 		{
 			short person = this.owner.World.PersonParticipantIdx;
-			short horizLoc = (short)this.processor.PullLocalWord(0x1c);
-			short vertLoc = (short)this.processor.PullLocalWord(0x26);
+			short horizLoc = (short)this.turn.TargetHoriz;
+			short vertLoc = (short)this.turn.TargetVert;
 
 			if (this.owner.GlobDb3a == 1)
 			{
-				if (this.processor.PullLocalWord(0x36) != 0 && (short)this.processor.PullLocalWord(0x32) < 0x80)
+				if (this.turn.MouseCursorSet != 0 && (short)this.turn.Troop < 0x80)
 				{
 					// The GoTo pointer: a destination the unit may reach (any for 2)
-					short troopIdx = (short)this.processor.PullLocalWord(0x32);
-					this.processor.EmitLocalWord(0x3e, this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc));
-					bool ocean = this.processor.PullLocalWord(0x3e) == MapRules.OceanTerrain;
+					short troopIdx = (short)this.turn.Troop;
+					this.turn.TargetTerrain = this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
+					bool ocean = this.turn.TargetTerrain == MapRules.OceanTerrain;
 					bool reachable;
 
-					if (this.processor.PullLocalWord(0x36) == 2)
+					if (this.turn.MouseCursorSet == 2)
 						reachable = true;
-					else if (((sbyte)this.owner.World.ChartSight[this.processor.PullLocalWord(0x1c), this.processor.PullLocalWord(0x26)] & (1 << (person & 0xff))) == 0)
+					else if (((sbyte)this.owner.World.ChartSight[this.turn.TargetHoriz, this.turn.TargetVert] & (1 << (person & 0xff))) == 0)
 						reachable = false;
 					else
 					{
@@ -855,12 +1006,12 @@ namespace Civilization1Remaster.Game
 					if (reachable)
 					{
 						this.processor.RegSource.Value16 = UnitMemory.Offset(participantIdx, troopIdx);
-						this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHoriz, this.processor.PullLocalByte(0x1c));
-						this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelVert, this.processor.PullLocalByte(0x26));
+						this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHoriz, (byte)this.turn.TargetHoriz);
+						this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelVert, (byte)this.turn.TargetVert);
 						this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHeading, 0xff);
 					}
 
-					this.processor.EmitLocalWord(0x36, 0);
+					this.turn.MouseCursorSet = 0;
 
 					this.owner.Services.AssignMouseCursorImage(0, 0, this.processor.PullGlobalWord(0xd4dc));
 
@@ -870,43 +1021,43 @@ namespace Civilization1Remaster.Game
 					(this.owner.MapOps.ObtainTileOwnerBits(horizLoc, vertLoc) == (ushort)person || this.processor.PullGlobalWord(0xd806) != 0))
 				{
 					// A city of the human (any with everything shown): the city screen
-					this.processor.EmitLocalWord(0x48, this.owner.MapOps.ObtainTileOwnerBits(horizLoc, vertLoc));
-					this.processor.EmitLocalWord(0x3c, this.owner.Helpers.LocateCityAtPosition(horizLoc, vertLoc));
+					this.turn.TileOwner = this.owner.MapOps.ObtainTileOwnerBits(horizLoc, vertLoc);
+					this.turn.Count = this.owner.Helpers.LocateCityAtPosition(horizLoc, vertLoc);
 
-					this.owner.Advisors.RenewCityScreen(this.processor.PullLocalSignedWord(0x3c));
+					this.owner.Advisors.RenewCityScreen((short)this.turn.Count);
 
 					this.owner.TurnHooks.RenderStatusBar();
 
-					this.processor.EmitLocalWord(0x1e, 0);
+					this.turn.AllMoved = 0;
 					ForgetMarkedTile(participantIdx);
 				}
 				else
 				{
-					this.processor.EmitLocalWord(0x44, this.owner.MapOps.ObtainUnitAtTile(horizLoc, vertLoc));
+					this.turn.Order = this.owner.MapOps.ObtainUnitAtTile(horizLoc, vertLoc);
 
-					if (this.processor.PullGlobalWord(0xd806) != 0 && this.processor.PullLocalWord(0x44) != 0xffff)
+					if (this.processor.PullGlobalWord(0xd806) != 0 && this.turn.Order != 0xffff)
 					{
 						this.owner.ArmyPicker.DisplayUnitInfo(
 							this.processor.PullGlobalSignedWord(0xd7f0),
-							this.processor.PullLocalSignedWord(0x44));
+							(short)this.turn.Order);
 					}
 
-					if (this.processor.PullLocalWord(0x44) != 0xffff && participantIdx == this.processor.PullGlobalSignedWord(0xd7f0))
+					if (this.turn.Order != 0xffff && participantIdx == this.processor.PullGlobalSignedWord(0xd7f0))
 					{
 						// An own unit (from its stack): it is the unit now, unless sentried or fortified
-						this.processor.EmitLocalWord(0x3a, this.owner.UnitOps.DisplayBattleScreen(this.processor.PullGlobalSignedWord(0xd7f0),
-							this.processor.PullLocalSignedWord(0x44)));
+						this.turn.Result = this.owner.UnitOps.DisplayBattleScreen(this.processor.PullGlobalSignedWord(0xd7f0),
+							(short)this.turn.Order);
 
-						short chosen = (short)this.processor.PullLocalWord(0x3a);
+						short chosen = (short)this.turn.Result;
 						this.processor.RegBase.Value16 = (ushort)(chosen * UnitMemory.TroopStride);
 						this.processor.RegSource.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride);
 
 						if ((this.troops.Pull(participantIdx, chosen, UnitMemory.Status) & 9) == 0)
 						{
-							this.processor.EmitLocalWord(0x32, this.processor.PullLocalWord(0x3a));
-							this.processor.EmitLocalWord(0x46, (ushort)((this.processor.PullLocalWord(0x3a) - 1) & 0x7f));
-							this.processor.EmitLocalWord(0x2e, 0);
-							this.processor.EmitLocalWord(0x1e, 0);
+							this.turn.Troop = this.turn.Result;
+							this.turn.WaitingTroop = (ushort)((this.turn.Result - 1) & 0x7f);
+							this.turn.PastWaiting = 0;
+							this.turn.AllMoved = 0;
 							ForgetMarkedTile(participantIdx);
 
 							return HumanOrder.NextLook;
@@ -915,16 +1066,16 @@ namespace Civilization1Remaster.Game
 					else
 					{
 						this.owner.MapOps.FocusMapView(participantIdx,
-							this.processor.PullLocalSignedWord(0x1c) - 7,
-							this.processor.PullLocalSignedWord(0x26) - 6);
+							(short)this.turn.TargetHoriz - 7,
+							(short)this.turn.TargetVert - 6);
 					}
 				}
 			}
 
-			this.processor.EmitLocalWord(0x44, 0xffff);
+			this.turn.Order = 0xffff;
 
-			if (this.processor.PullLocalWord(0xc) != 0)
-				this.processor.EmitLocalWord(0xc, 0);
+			if (this.turn.Clicked != 0)
+				this.turn.Clicked = 0;
 			else
 				AwaitForKey();
 
@@ -934,19 +1085,19 @@ namespace Civilization1Remaster.Game
 		/// <summary>The marked tile (0x4, at 0xe / 0x12) is forgotten and repainted when the player sees it</summary>
 		private void ForgetMarkedTile(short participantIdx)
 		{
-			if (this.processor.PullLocalWord(0x4) == 0)
+			if (this.turn.MarkedTileMode == 0)
 				return;
 
-			this.processor.EmitLocalWord(0x4, 0);
+			this.turn.MarkedTileMode = 0;
 
-			if (((sbyte)this.owner.World.ChartSight[this.processor.PullLocalWord(0xe), this.processor.PullLocalWord(0x12)] & (1 << (byte)participantIdx)) != 0)
+			if (((sbyte)this.owner.World.ChartSight[this.turn.CursorHoriz, this.turn.CursorVert] & (1 << (byte)participantIdx)) != 0)
 			{
 				this.owner.MapOps.RepaintMapTile(
-					this.processor.PullLocalSignedWord(0xe),
-					this.processor.PullLocalSignedWord(0x12));
+					(short)this.turn.CursorHoriz,
+					(short)this.turn.CursorVert);
 			}
 
-			this.processor.EmitLocalWord(0xe, 0xffff);
+			this.turn.CursorHoriz = 0xffff;
 		}
 
 		/// <summary>
@@ -956,37 +1107,37 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private void PrepareOrder(short participantIdx)
 		{
-			short troopIdx = (short)this.processor.PullLocalWord(0x32);
+			short troopIdx = (short)this.turn.Troop;
 
-			if (this.processor.PullLocalWord(0x32) > 127 || this.troops.Pull(participantIdx, troopIdx, UnitMemory.TravelHoriz) != 0xff)
+			if (this.turn.Troop > 127 || this.troops.Pull(participantIdx, troopIdx, UnitMemory.TravelHoriz) != 0xff)
 			{
-				this.processor.EmitLocalWord(0x44, this.owner.Routing.CarryOutGoto(participantIdx, troopIdx));
+				this.turn.Order = this.owner.Routing.CarryOutGoto(participantIdx, troopIdx);
 			}
 			else
 			{
 				this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHeading, 0xff);
 			}
 
-			this.processor.RegSource.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride + this.processor.PullLocalWord(0x32) * UnitMemory.TroopStride);
+			this.processor.RegSource.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride + this.turn.Troop * UnitMemory.TroopStride);
 
-			if (this.processor.PullLocalWord(0x32) < UnitMemory.TroopTally)
+			if (this.turn.Troop < UnitMemory.TroopTally)
 			{
-				this.processor.EmitLocalWord(0x2c, this.troops.Pull(participantIdx, troopIdx, UnitMemory.Horiz));
-				this.processor.EmitLocalWord(0x30, this.troops.Pull(participantIdx, troopIdx, UnitMemory.Vert));
+				this.turn.UnitHoriz = this.troops.Pull(participantIdx, troopIdx, UnitMemory.Horiz);
+				this.turn.UnitVert = this.troops.Pull(participantIdx, troopIdx, UnitMemory.Vert);
 			}
 			else
 			{
-				this.processor.EmitLocalWord(0x2c, 0);
-				this.processor.EmitLocalWord(0x30, 0);
+				this.turn.UnitHoriz = 0;
+				this.turn.UnitVert = 0;
 			}
 		}
 
 		/// <summary>'D': the unit is disbanded</summary>
 		private void DisbandUnit(short participantIdx)
 		{
-			this.troops.Assign(participantIdx, (short)this.processor.PullLocalWord(0x32), UnitMemory.LeftoverSteps, 0);
+			this.troops.Assign(participantIdx, (short)this.turn.Troop, UnitMemory.LeftoverSteps, 0);
 
-			this.owner.UnitOps.EliminateUnit(participantIdx, this.processor.PullLocalSignedWord(0x32));
+			this.owner.UnitOps.EliminateUnit(participantIdx, (short)this.turn.Troop);
 		}
 
 		/// <summary>
@@ -997,16 +1148,16 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private void PillageTile(short participantIdx)
 		{
-			short troopIdx = (short)this.processor.PullLocalWord(0x32);
-			short horizLoc = (short)this.processor.PullLocalWord(0x2c);
-			short vertLoc = (short)this.processor.PullLocalWord(0x30);
+			short troopIdx = (short)this.turn.Troop;
+			short horizLoc = (short)this.turn.UnitHoriz;
+			short vertLoc = (short)this.turn.UnitVert;
 
 			bool may = (this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) == 0;
 
 			if (may)
 			{
-				this.processor.EmitLocalByte(0x4e, this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind));
-				may = (sbyte)this.processor.PullLocalByte(0x4e) < 0x1a && this.processor.PullLocalByte(0x4e) != 0xe;
+				this.turn.UnitDetail = (ushort)((this.turn.UnitDetail & 0xff00) | this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind));
+				may = (sbyte)(byte)this.turn.UnitDetail < 0x1a && (byte)this.turn.UnitDetail != 0xe;
 			}
 
 			if (!may)
@@ -1015,37 +1166,37 @@ namespace Civilization1Remaster.Game
 				return;
 			}
 
-			this.processor.EmitLocalWord(0x10, this.owner.Helpers.LocateNearestCity(horizLoc, vertLoc));
+			this.turn.City = this.owner.Helpers.LocateNearestCity(horizLoc, vertLoc);
 
 			if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.LeftoverSteps) == 0)
 				return;
 
 			// (no when the human keeps the treaty)
-			if (this.owner.Combat.AffirmBreakTreaty(this.owner.World.Towns[this.processor.PullLocalWord(0x10)].ParticipantIdx) == 0xffff)
+			if (this.owner.Combat.AffirmBreakTreaty(this.owner.World.Towns[this.turn.City].ParticipantIdx) == 0xffff)
 				return;
 
-			this.processor.EmitLocalWord(0x3a, this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc));
+			this.turn.Result = this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc);
 
-			if ((this.processor.PullLocalByte(0x3a) & 6) != 0)
+			if (((byte)this.turn.Result & 6) != 0)
 				this.owner.MapOps.DiscardTileImprovements(6, horizLoc, vertLoc);
-			else if ((this.processor.PullLocalByte(0x3a) & 0x10) != 0)
+			else if (((byte)this.turn.Result & 0x10) != 0)
 				this.owner.MapOps.DiscardTileImprovements(0x10, horizLoc, vertLoc);
 			else
 				this.owner.MapOps.DiscardTileImprovements(8, horizLoc, vertLoc);
 
-			if (this.owner.World.Towns[this.processor.PullLocalWord(0x10)].ParticipantIdx == this.owner.World.PersonParticipantIdx)
+			if (this.owner.World.Towns[this.turn.City].ParticipantIdx == this.owner.World.PersonParticipantIdx)
 				this.owner.MapOps.KeepKnownTileImprovements(horizLoc, vertLoc);
 
-			RepaintTileIfVisible(this.processor.PullLocalWord(0x2c), this.processor.PullLocalWord(0x30));
+			RepaintTileIfVisible(this.turn.UnitHoriz, this.turn.UnitVert);
 
-			this.processor.RegSource.Value16 = (ushort)(this.processor.PullLocalWord(0x10) * 0x1c);
+			this.processor.RegSource.Value16 = (ushort)(this.turn.City * 0x1c);
 
 			this.owner.Politics.WipeDiplomacyFlags(this.owner.World.PersonParticipantIdx,
-				this.owner.World.Towns[this.processor.PullLocalWord(0x10)].ParticipantIdx,
+				this.owner.World.Towns[this.turn.City].ParticipantIdx,
 				2);
 
 			// (the player of the strategic location is DI as the original leaves it)
-			if (participantIdx != this.owner.World.Towns[this.processor.PullLocalWord(0x10)].ParticipantIdx)
+			if (participantIdx != this.owner.World.Towns[this.turn.City].ParticipantIdx)
 				this.owner.Bot.SendUnitToStrategicLocation((short)this.processor.RegDest.Value16, horizLoc, vertLoc, 1, 4);
 
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.LeftoverSteps, 0);
@@ -1054,7 +1205,7 @@ namespace Civilization1Remaster.Game
 		/// <summary>Space: the unit does nothing this turn</summary>
 		private void SkipUnit(short participantIdx)
 		{
-			short troopIdx = (short)this.processor.PullLocalWord(0x32);
+			short troopIdx = (short)this.turn.Troop;
 			this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
 			this.processor.RegSource.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride);
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.LeftoverSteps, 0);
@@ -1063,7 +1214,7 @@ namespace Civilization1Remaster.Game
 		/// <summary>'s': the unit is sentried</summary>
 		private void SentryUnit(short participantIdx)
 		{
-			short troopIdx = (short)this.processor.PullLocalWord(0x32);
+			short troopIdx = (short)this.turn.Troop;
 			this.processor.RegSource.Value16 = UnitMemory.Offset(participantIdx, troopIdx);
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Status, (byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) | 1));
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.LeftoverSteps, 0);
@@ -1077,11 +1228,11 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private void UnloadUnit(short participantIdx)
 		{
-			short troopIdx = (short)this.processor.PullLocalWord(0x32);
-			this.processor.EmitLocalByte(0x4e, this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind));
+			short troopIdx = (short)this.turn.Troop;
+			this.turn.UnitDetail = (ushort)((this.turn.UnitDetail & 0xff00) | this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind));
 
-			if (UnitKindTable.Field(this.processor, (sbyte)this.processor.PullLocalByte(0x4e), UnitKindTable.FerryRoom) == 0 &&
-				this.processor.PullLocalByte(0x4e) != UnitKindTable.Carrier)
+			if (UnitKindTable.Field(this.processor, (sbyte)(byte)this.turn.UnitDetail, UnitKindTable.FerryRoom) == 0 &&
+				(byte)this.turn.UnitDetail != UnitKindTable.Carrier)
 			{
 				return;
 			}
@@ -1091,12 +1242,12 @@ namespace Civilization1Remaster.Game
 
 			this.owner.UnitOps.VisitEachUnitInStack(participantIdx, troopIdx, 0x14f6);
 
-			this.processor.EmitLocalWord(0x1e, 0);
-			this.processor.EmitLocalWord(0x28, 1);
+			this.turn.AllMoved = 0;
+			this.turn.Ordered = 1;
 
-			this.processor.EmitLocalWord(0x32, (ushort)(LocateBestGuardian(participantIdx, this.processor.PullLocalWord(0x32)) - 1));
-			this.processor.EmitLocalWord(0x46, (ushort)(this.processor.PullLocalWord(0x32) & 0x7f));
-			this.processor.EmitLocalWord(0x2e, 0);
+			this.turn.Troop = (ushort)(LocateBestGuardian(participantIdx, this.turn.Troop) - 1);
+			this.turn.WaitingTroop = (ushort)(this.turn.Troop & 0x7f);
+			this.turn.PastWaiting = 0;
 		}
 
 		/// <summary>
@@ -1107,40 +1258,40 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private void ToggleGoTo(short participantIdx)
 		{
-			if (this.processor.PullLocalWord(0x36) == 0)
+			if (this.turn.MouseCursorSet == 0)
 			{
-				if (this.processor.PullLocalWord(0x4) == 0)
+				if (this.turn.MarkedTileMode == 0)
 				{
-					this.processor.EmitLocalWord(0x4, 0x1);
-					this.processor.RegSource.Value16 = (ushort)(participantIdx * 0x600 + this.processor.PullLocalWord(0x32) * 0xc);
-					this.processor.EmitLocalWord(0xe, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)));
-					this.processor.EmitLocalWord(0x12, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6)));
+					this.turn.MarkedTileMode = 0x1;
+					this.processor.RegSource.Value16 = (ushort)(participantIdx * 0x600 + this.turn.Troop * 0xc);
+					this.turn.CursorHoriz = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5));
+					this.turn.CursorVert = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6));
 				}
 			}
-			else if (this.processor.PullLocalWord(0x4) != 0)
+			else if (this.turn.MarkedTileMode != 0)
 			{
 				// GoTo cancelled, remove the square cursor
-				this.processor.EmitLocalWord(0x4, 0x0);
+				this.turn.MarkedTileMode = 0x0;
 
-				if ((this.owner.World.ChartSight[this.processor.PullLocalWord(0xe),
-					this.processor.PullLocalWord(0x12)] & (1 << participantIdx)) != 0)
+				if ((this.owner.World.ChartSight[this.turn.CursorHoriz,
+					this.turn.CursorVert] & (1 << participantIdx)) != 0)
 				{
 					this.owner.MapOps.RepaintMapTile(
-						this.processor.PullLocalSignedWord(0xe),
-						this.processor.PullLocalSignedWord(0x12));
+						(short)this.turn.CursorHoriz,
+						(short)this.turn.CursorVert);
 				}
 
-				this.processor.EmitLocalWord(0xe, 0xffff);
+				this.turn.CursorHoriz = 0xffff;
 			}
 
 			if (this.processor.PullGlobalWord(0x1a3c) != 0)
 			{
 				// GoTo mouse pointer, or the normal one when GoTo is cancelled
-				this.processor.RegBase.Value16 = (ushort)((this.processor.PullLocalWord(0x36) != 0 ? 7 : 2) << 1);
+				this.processor.RegBase.Value16 = (ushort)((this.turn.MouseCursorSet != 0 ? 7 : 2) << 1);
 				this.owner.Services.AssignMouseCursorImage(0, 0, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xd4ce)));
 			}
 
-			this.processor.EmitLocalWord(0x36, (ushort)(this.processor.PullLocalWord(0x36) ^ 1));
+			this.turn.MouseCursorSet = (ushort)(this.turn.MouseCursorSet ^ 1);
 		}
 
 		/// <summary>
@@ -1150,17 +1301,17 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private bool OrderHome(short participantIdx)
 		{
-			short troopIdx = (short)this.processor.PullLocalWord(0x32);
+			short troopIdx = (short)this.turn.Troop;
 
-			this.processor.EmitLocalWord(0x10, this.owner.Helpers.LocateNearestCity(
-				this.processor.PullLocalSignedWord(0x2c),
-				this.processor.PullLocalSignedWord(0x30)));
+			this.turn.City = this.owner.Helpers.LocateNearestCity(
+				(short)this.turn.UnitHoriz,
+				(short)this.turn.UnitVert);
 
 			if (this.processor.PullGlobalWord(0x6c9a) == 0)
 			{
 				this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
 				this.processor.RegSource.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride);
-				this.troops.Assign(participantIdx, troopIdx, UnitMemory.BaseTown, this.processor.PullLocalByte(0x10));
+				this.troops.Assign(participantIdx, troopIdx, UnitMemory.BaseTown, (byte)this.turn.City);
 
 				return false;
 			}
@@ -1170,9 +1321,9 @@ namespace Civilization1Remaster.Game
 			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) != UnitKindTable.AirUnits)
 				return false;
 
-			this.processor.EmitLocalWord(0x24, this.owner.UnitOps.LocateNearestFriendlyCity(participantIdx, this.processor.PullLocalSignedWord(0x32)));
+			this.turn.Direction = this.owner.UnitOps.LocateNearestFriendlyCity(participantIdx, (short)this.turn.Troop);
 
-			if (this.processor.PullLocalWord(0x24) != 0)
+			if (this.turn.Direction != 0)
 			{
 				this.troops.Assign(participantIdx, troopIdx, UnitMemory.Status, (byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) | 2));
 				return true;
@@ -1191,7 +1342,7 @@ namespace Civilization1Remaster.Game
 			this.processor.RegSource.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride);
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.LeftoverSteps, 0);
 
-			this.owner.UnitOps.EliminateUnit(participantIdx, this.processor.PullLocalSignedWord(0x32));
+			this.owner.UnitOps.EliminateUnit(participantIdx, (short)this.turn.Troop);
 
 			return false;
 		}
@@ -1203,7 +1354,7 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private void CleanPollution(short participantIdx)
 		{
-			short troopIdx = (short)this.processor.PullLocalWord(0x32);
+			short troopIdx = (short)this.turn.Troop;
 			ushort unit = UnitMemory.Offset(participantIdx, troopIdx);
 			this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
 			this.processor.RegSource.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride);
@@ -1214,27 +1365,27 @@ namespace Civilization1Remaster.Game
 				return;
 			}
 
-			this.processor.EmitLocalWord(0x40, this.owner.MapOps.ObtainTileImprovements(
-				this.processor.PullLocalSignedWord(0x2c),
-				this.processor.PullLocalSignedWord(0x30)));
+			this.turn.TargetImprovements = this.owner.MapOps.ObtainTileImprovements(
+				(short)this.turn.UnitHoriz,
+				(short)this.turn.UnitVert);
 
 			this.processor.RegSource.Value16 = unit;
 
-			if ((this.processor.PullLocalByte(0x40) & 0x40) == 0)
+			if (((byte)this.turn.TargetImprovements & 0x40) == 0)
 			{
 				this.troops.Assign(participantIdx, troopIdx, UnitMemory.Status, (byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 0x7d));
 				this.troops.Assign(participantIdx, troopIdx, UnitMemory.UnusualSteps, 0);
 
 				this.owner.UnitOps.PanMapToPosition(participantIdx,
-					this.processor.PullLocalSignedWord(0x2c),
-					this.processor.PullLocalSignedWord(0x30));
+					(short)this.turn.UnitHoriz,
+					(short)this.turn.UnitVert);
 
 				return;
 			}
 
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Status, (byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) | 0x82));
 
-			RepaintUnitIfVisible(participantIdx, this.processor.PullLocalSignedWord(0x32));
+			RepaintUnitIfVisible(participantIdx, (short)this.turn.Troop);
 
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.LeftoverSteps, 0);
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHeading, 0xff);
@@ -1246,15 +1397,15 @@ namespace Civilization1Remaster.Game
 				return;
 
 			this.owner.MapOps.DiscardTileImprovements(0x40,
-				this.processor.PullLocalSignedWord(0x2c),
-				this.processor.PullLocalSignedWord(0x30));
+				(short)this.turn.UnitHoriz,
+				(short)this.turn.UnitVert);
 
 			this.owner.MapOps.KeepKnownTileImprovements(
-				this.processor.PullLocalSignedWord(0x2c),
-				this.processor.PullLocalSignedWord(0x30));
+				(short)this.turn.UnitHoriz,
+				(short)this.turn.UnitVert);
 
 			owner.World.DirtyCellTally--;
-			RepaintUnitIfVisible(participantIdx, this.processor.PullLocalSignedWord(0x32));
+			RepaintUnitIfVisible(participantIdx, (short)this.turn.Troop);
 
 			this.processor.RegSource.Value16 = unit;
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Status, (byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 0x7d));
@@ -1270,22 +1421,22 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private void FortifyOrBuildFortress(short participantIdx)
 		{
-			short troopIdx = (short)this.processor.PullLocalWord(0x32);
+			short troopIdx = (short)this.turn.Troop;
 			ushort unit = UnitMemory.Offset(participantIdx, troopIdx);
 			this.processor.RegSource.Value16 = unit;
 
 			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) != UnitKindTable.LandUnits)
 				return;
 
-			short horizLoc = (short)this.processor.PullLocalWord(0x2c);
-			short vertLoc = (short)this.processor.PullLocalWord(0x30);
+			short horizLoc = (short)this.turn.UnitHoriz;
+			short vertLoc = (short)this.turn.UnitVert;
 
 			if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) != 0)
 			{
 				this.troops.Assign(participantIdx, troopIdx, UnitMemory.Status, (byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) | 4));
 				this.troops.Assign(participantIdx, troopIdx, UnitMemory.LeftoverSteps, 0);
 
-				RepaintUnitIfVisible(participantIdx, this.processor.PullLocalSignedWord(0x32));
+				RepaintUnitIfVisible(participantIdx, (short)this.turn.Troop);
 
 				if (participantIdx != this.owner.World.PersonParticipantIdx && (this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) != 0)
 				{
@@ -1314,9 +1465,9 @@ namespace Civilization1Remaster.Game
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Status, (byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) | 0xc0));
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.LeftoverSteps, 0);
 
-			RepaintUnitIfVisible(participantIdx, this.processor.PullLocalSignedWord(0x32));
+			RepaintUnitIfVisible(participantIdx, (short)this.turn.Troop);
 
-			this.processor.RegBase.Value16 = (ushort)(this.processor.PullLocalWord(0x3e) * 0x13);
+			this.processor.RegBase.Value16 = (ushort)(this.turn.TargetTerrain * 0x13);
 			short work = (short)((sbyte)this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x28e)) + 4);
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.UnusualSteps, (byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.UnusualSteps) + 1));
 			this.processor.RegCount.Value16 = (ushort)work;
@@ -1326,7 +1477,7 @@ namespace Civilization1Remaster.Game
 
 			this.owner.MapOps.AssignTileImprovements(0x20, horizLoc, vertLoc);
 
-			this.owner.UnitOps.ShiftUnit(horizLoc, vertLoc, participantIdx, this.processor.PullLocalSignedWord(0x32), 1);
+			this.owner.UnitOps.ShiftUnit(horizLoc, vertLoc, participantIdx, (short)this.turn.Troop, 1);
 
 			this.processor.RegSource.Value16 = unit;
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Status, (byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 0x3f));
@@ -1339,10 +1490,10 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private (short TroopIdx, ushort Unit, short HorizLoc, short VertLoc) StartTerrainWork(short participantIdx)
 		{
-			short troopIdx = (short)this.processor.PullLocalWord(0x32);
+			short troopIdx = (short)this.turn.Troop;
 			ushort unit = UnitMemory.Offset(participantIdx, troopIdx);
-			short horizLoc = (short)this.processor.PullLocalWord(0x2c);
-			short vertLoc = (short)this.processor.PullLocalWord(0x30);
+			short horizLoc = (short)this.turn.UnitHoriz;
+			short vertLoc = (short)this.turn.UnitVert;
 			this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
 			this.processor.RegSource.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride);
 
@@ -1365,8 +1516,8 @@ namespace Civilization1Remaster.Game
 				return;
 			}
 
-			this.processor.EmitLocalWord(0x40, this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc));
-			byte improvements = this.processor.PullLocalByte(0x40);
+			this.turn.TargetImprovements = this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc);
+			byte improvements = (byte)this.turn.TargetImprovements;
 			bool refused;
 
 			if ((improvements & 8) != 0)
@@ -1391,9 +1542,9 @@ namespace Civilization1Remaster.Game
 				return;
 			}
 
-			this.processor.EmitLocalWord(0x3e, this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc));
+			this.turn.TargetTerrain = this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
 
-			if (this.processor.PullLocalWord(0x3e) == 0xb &&
+			if (this.turn.TargetTerrain == 0xb &&
 				(this.processor.RegAcc.Value16 = this.owner.Advisors.PlayerKnowsTechnology(participantIdx, 0x13)) == 0)
 			{
 				return;
@@ -1403,9 +1554,9 @@ namespace Civilization1Remaster.Game
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Status, (byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) | 2));
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.LeftoverSteps, 0);
 
-			RepaintUnitIfVisible(participantIdx, this.processor.PullLocalSignedWord(0x32));
+			RepaintUnitIfVisible(participantIdx, (short)this.turn.Troop);
 
-			short factor = (short)((this.processor.PullLocalByte(0x40) & 8) != 0 ? 4 : 2);
+			short factor = (short)(((byte)this.turn.TargetImprovements & 8) != 0 ? 4 : 2);
 			short worth = TerrainWorkByte(0x28e);
 			this.processor.RegBase.Value16 = (ushort)worth;
 			short work = (short)(factor * worth);
@@ -1416,10 +1567,10 @@ namespace Civilization1Remaster.Game
 				return;
 
 			this.owner.MapOps.AssignTileImprovements(
-				(ushort)(((this.processor.PullLocalByte(0x40) & 8) != 0) ? 0x10 : 8),
+				(ushort)((((byte)this.turn.TargetImprovements & 8) != 0) ? 0x10 : 8),
 				horizLoc, vertLoc);
 
-			this.owner.UnitOps.ShiftUnit(horizLoc, vertLoc, participantIdx, this.processor.PullLocalSignedWord(0x32), 1);
+			this.owner.UnitOps.ShiftUnit(horizLoc, vertLoc, participantIdx, (short)this.turn.Troop, 1);
 
 			this.processor.RegSource.Value16 = unit;
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Status, (byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 0xfd));
@@ -1429,7 +1580,7 @@ namespace Civilization1Remaster.Game
 		/// <summary>A signed byte of the terrain 0x3e in the table of terrains (0x13 bytes each); BX as the original leaves it</summary>
 		private short TerrainWorkByte(ushort offset)
 		{
-			this.processor.RegBase.Value16 = (ushort)(this.processor.PullLocalWord(0x3e) * 0x13);
+			this.processor.RegBase.Value16 = (ushort)(this.turn.TargetTerrain * 0x13);
 
 			return (sbyte)this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + offset));
 		}
@@ -1462,11 +1613,11 @@ namespace Civilization1Remaster.Game
 				return;
 			}
 
-			this.processor.EmitLocalWord(0x3e, this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc));
-			this.processor.RegBase.Value16 = (ushort)(this.processor.PullLocalWord(0x3e) * 0xc);
-			this.processor.EmitLocalWord(0x3a, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x44a)));
+			this.turn.TargetTerrain = this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
+			this.processor.RegBase.Value16 = (ushort)(this.turn.TargetTerrain * 0xc);
+			this.turn.Result = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x44a));
 
-			if (this.processor.PullLocalWord(0x3a) == 0xffff)
+			if (this.turn.Result == 0xffff)
 			{
 				this.owner.UnitOps.PanMapToPosition(participantIdx, horizLoc, vertLoc);
 				DisplayHelpForHuman(0x1eaa);
@@ -1474,7 +1625,7 @@ namespace Civilization1Remaster.Game
 				return;
 			}
 
-			if (this.processor.PullLocalWord(0x3a) == 0xfffe && VerifyCoastalTile(horizLoc, vertLoc) == 0)
+			if (this.turn.Result == 0xfffe && VerifyCoastalTile(horizLoc, vertLoc) == 0)
 			{
 				this.owner.UnitOps.PanMapToPosition(participantIdx, horizLoc, vertLoc);
 				DisplayHelpForHuman(0x1eb1);
@@ -1485,7 +1636,7 @@ namespace Civilization1Remaster.Game
 			if (!DoTileWork(participantIdx, troopIdx, unit, 0x40, 0x44c))
 				return;
 
-			if ((short)this.processor.PullLocalWord(0x3a) >= 0)
+			if ((short)this.turn.Result >= 0)
 			{
 				ChangeTerrain(horizLoc, vertLoc);
 			}
@@ -1525,11 +1676,11 @@ namespace Civilization1Remaster.Game
 				return;
 			}
 
-			this.processor.EmitLocalWord(0x3e, this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc));
-			this.processor.RegBase.Value16 = (ushort)(this.processor.PullLocalWord(0x3e) * 0xc);
-			this.processor.EmitLocalWord(0x3a, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x44e)));
+			this.turn.TargetTerrain = this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
+			this.processor.RegBase.Value16 = (ushort)(this.turn.TargetTerrain * 0xc);
+			this.turn.Result = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x44e));
 
-			if (this.processor.PullLocalWord(0x3a) == 0xffff)
+			if (this.turn.Result == 0xffff)
 			{
 				this.owner.UnitOps.PanMapToPosition(participantIdx, horizLoc, vertLoc);
 				DisplayHelpForHuman(0x1ec4);
@@ -1540,7 +1691,7 @@ namespace Civilization1Remaster.Game
 			if (!DoTileWork(participantIdx, troopIdx, unit, 0x80, 0x450))
 				return;
 
-			if ((short)this.processor.PullLocalWord(0x3a) >= 0)
+			if ((short)this.turn.Result >= 0)
 			{
 				// (a second step of the counter, the change only over 5)
 				this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
@@ -1579,13 +1730,13 @@ namespace Civilization1Remaster.Game
 			this.processor.RegSource.Value16 = unit;
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Status, (byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) | bit));
 
-			RepaintUnitIfVisible(participantIdx, this.processor.PullLocalSignedWord(0x32));
+			RepaintUnitIfVisible(participantIdx, (short)this.turn.Troop);
 
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.LeftoverSteps, 0);
 			this.processor.RegAcc.LowByte = 0xff;
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHeading, 0xff);
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHoriz, 0xff);
-			this.processor.RegBase.Value16 = (ushort)(this.processor.PullLocalWord(0x3e) * 0xc);
+			this.processor.RegBase.Value16 = (ushort)(this.turn.TargetTerrain * 0xc);
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.UnusualSteps, (byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.UnusualSteps) + 1));
 
 			return (short)this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + offset)) <=
@@ -1595,15 +1746,15 @@ namespace Civilization1Remaster.Game
 		/// <summary>The terrain of the tile becomes 0x3a (seen by the human player), irrigation and mine go</summary>
 		private void ChangeTerrain(short horizLoc, short vertLoc)
 		{
-			this.owner.Services.AssignDot(2, horizLoc, vertLoc, this.processor.PullLocalWord(0x3a));
-			this.owner.World.ChartSight[this.processor.PullLocalWord(0x2c), this.processor.PullLocalWord(0x30)] |= 1;
+			this.owner.Services.AssignDot(2, horizLoc, vertLoc, this.turn.Result);
+			this.owner.World.ChartSight[this.turn.UnitHoriz, this.turn.UnitVert] |= 1;
 			this.owner.MapOps.DiscardTileImprovements(6, horizLoc, vertLoc);
 		}
 
 		/// <summary>The work is done: the unit is shown, its status loses the bit (mask) and the counter is 0</summary>
 		private void FinishTileWork(short participantIdx, short troopIdx, ushort unit, byte mask)
 		{
-			RepaintUnitIfVisible(participantIdx, this.processor.PullLocalSignedWord(0x32));
+			RepaintUnitIfVisible(participantIdx, (short)this.turn.Troop);
 
 			this.processor.RegSource.Value16 = unit;
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Status, (byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & mask));
@@ -1619,7 +1770,7 @@ namespace Civilization1Remaster.Game
 		{
 			PrepareOrder(participantIdx);
 
-			switch (this.processor.PullLocalWord(0x44))
+			switch (this.turn.Order)
 			{
 				case 0x20:
 					SkipUnit(participantIdx);
@@ -1674,8 +1825,8 @@ namespace Civilization1Remaster.Game
 
 				case 'w':
 					// Wait: the unit comes again in the second pass
-					this.processor.EmitLocalWord(0x28, 0x1);
-					this.processor.EmitLocalWord(0x2e, 0x1);
+					this.turn.Ordered = 0x1;
+					this.turn.PastWaiting = 0x1;
 					break;
 			}
 
@@ -1689,9 +1840,9 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private void BuildCity(short participantIdx)
 		{
-			short troopIdx = (short)this.processor.PullLocalWord(0x32);
-			short horizLoc = (short)this.processor.PullLocalWord(0x2c);
-			short vertLoc = (short)this.processor.PullLocalWord(0x30);
+			short troopIdx = (short)this.turn.Troop;
+			short horizLoc = (short)this.turn.UnitHoriz;
+			short vertLoc = (short)this.turn.UnitVert;
 			this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
 			this.processor.RegSource.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride);
 
@@ -1707,23 +1858,23 @@ namespace Civilization1Remaster.Game
 			if ((this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) != 0)
 			{
 				// The settlers join the city
-				this.processor.EmitLocalWord(0x10, this.owner.MapOps.LocateCityAtTile(horizLoc, vertLoc));
+				this.turn.City = this.owner.MapOps.LocateCityAtTile(horizLoc, vertLoc);
 
-				if ((sbyte)this.owner.World.Towns[this.processor.PullLocalWord(0x10)].TrueExtent >= 0xa)
+				if ((sbyte)this.owner.World.Towns[this.turn.City].TrueExtent >= 0xa)
 				{
 					DisplayHelpForHuman(0x1ed6);
 					return;
 				}
 
-				this.owner.World.Towns[this.processor.PullLocalWord(0x10)].TrueExtent++;
+				this.owner.World.Towns[this.turn.City].TrueExtent++;
 				this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
 				this.processor.ScaleIndex(0x600, (ushort)participantIdx);
 				this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
 				this.troops.Assign(participantIdx, troopIdx, UnitMemory.LeftoverSteps, 0);
 
-				this.owner.UnitOps.EliminateUnit(participantIdx, this.processor.PullLocalSignedWord(0x32));
+				this.owner.UnitOps.EliminateUnit(participantIdx, (short)this.turn.Troop);
 
-				RepaintUnitIfVisible(participantIdx, this.processor.PullLocalSignedWord(0x32));
+				RepaintUnitIfVisible(participantIdx, (short)this.turn.Troop);
 
 				return;
 			}
@@ -1732,16 +1883,16 @@ namespace Civilization1Remaster.Game
 			this.processor.RegSource.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride);
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.LeftoverSteps, 0);
 
-			this.processor.EmitLocalWord(0x3a, this.owner.Founding.EstablishCity(participantIdx,
-				this.processor.PullLocalWord(0x24),
+			this.turn.Result = this.owner.Founding.EstablishCity(participantIdx,
+				this.turn.Direction,
 				horizLoc, vertLoc,
-				1));
+				1);
 
-			if (this.processor.PullLocalWord(0x3a) != 0xffff)
+			if (this.turn.Result != 0xffff)
 			{
-				this.owner.UnitOps.EliminateUnit(participantIdx, this.processor.PullLocalSignedWord(0x32));
+				this.owner.UnitOps.EliminateUnit(participantIdx, (short)this.turn.Troop);
 
-				RepaintUnitIfVisible(participantIdx, this.processor.PullLocalSignedWord(0x32));
+				RepaintUnitIfVisible(participantIdx, (short)this.turn.Troop);
 			}
 		}
 
@@ -1769,17 +1920,17 @@ namespace Civilization1Remaster.Game
 		/// <summary>'c': the view centers on the marked tile (0x4, at 0xe / 0x12) or on the unit (0x2c / 0x30)</summary>
 		private void CenterView(short participantIdx)
 		{
-			if (this.processor.PullLocalWord(0x4) != 0)
+			if (this.turn.MarkedTileMode != 0)
 			{
 				this.owner.MapOps.FocusMapView(participantIdx,
-					this.processor.PullLocalSignedWord(0xe) - 7,
-					this.processor.PullLocalSignedWord(0x12) - 6);
+					(short)this.turn.CursorHoriz - 7,
+					(short)this.turn.CursorVert - 6);
 			}
 			else
 			{
 				this.owner.MapOps.FocusMapView(participantIdx,
-					this.processor.PullLocalSignedWord(0x2c) - 7,
-					this.processor.PullLocalSignedWord(0x30) - 6);
+					(short)this.turn.UnitHoriz - 7,
+					(short)this.turn.UnitVert - 6);
 			}
 		}
 
@@ -1789,29 +1940,29 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private void MoveMarkedTile(short participantIdx)
 		{
-			if (((sbyte)this.owner.World.ChartSight[this.processor.PullLocalWord(0xe), this.processor.PullLocalWord(0x12)] & (1 << (byte)participantIdx)) != 0)
+			if (((sbyte)this.owner.World.ChartSight[this.turn.CursorHoriz, this.turn.CursorVert] & (1 << (byte)participantIdx)) != 0)
 			{
 				this.owner.MapOps.RepaintMapTile(
-					this.processor.PullLocalSignedWord(0xe),
-					this.processor.PullLocalSignedWord(0x12));
+					(short)this.turn.CursorHoriz,
+					(short)this.turn.CursorVert);
 			}
 
-			this.processor.RegSource.Value16 = (ushort)(this.processor.PullLocalWord(0x24) << 1);
+			this.processor.RegSource.Value16 = (ushort)(this.turn.Direction << 1);
 
-			this.processor.EmitLocalWord(0xe, (ushort)this.owner.Routing.TunePosition(
+			this.turn.CursorHoriz = (ushort)this.owner.Routing.TunePosition(
 				this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1882)) +
-					this.processor.PullLocalSignedWord(0xe)));
+					(short)this.turn.CursorHoriz);
 
-			this.processor.EmitLocalWord(0x12, (ushort)this.owner.Helpers.VerifyValueSpan(
+			this.turn.CursorVert = (ushort)this.owner.Helpers.VerifyValueSpan(
 				this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x18e4)) +
-					this.processor.PullLocalSignedWord(0x12),
-				0, 49));
+					(short)this.turn.CursorVert,
+				0, 49);
 
-			if (VerifyPositionOnScreen(this.processor.PullLocalSignedWord(0xe), this.processor.PullLocalSignedWord(0x12)) == 0)
+			if (VerifyPositionOnScreen((short)this.turn.CursorHoriz, (short)this.turn.CursorVert) == 0)
 			{
 				this.owner.MapOps.FocusMapView(participantIdx,
-					this.processor.PullLocalSignedWord(0xe) - 8,
-					this.processor.PullLocalSignedWord(0x12) - 7);
+					(short)this.turn.CursorHoriz - 8,
+					(short)this.turn.CursorVert - 7);
 			}
 		}
 
@@ -1825,18 +1976,18 @@ namespace Civilization1Remaster.Game
 			if (participantIdx != 0)
 				return false;
 
-			short troopIdx = (short)this.processor.PullLocalWord(0x32);
+			short troopIdx = (short)this.turn.Troop;
 			this.processor.RegSource.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride + UnitMemory.Origin + UnitMemory.Kind);
 			byte kind = this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind);
 
 			if (kind == UnitKindTable.Diplomat)
 				return false;
 
-			short horizLoc = (short)this.processor.PullLocalWord(0x2c);
-			short vertLoc = (short)this.processor.PullLocalWord(0x30);
-			this.processor.EmitLocalWord(0x40, this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc));
+			short horizLoc = (short)this.turn.UnitHoriz;
+			short vertLoc = (short)this.turn.UnitVert;
+			this.turn.TargetImprovements = this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc);
 
-			if ((this.processor.PullLocalByte(0x40) & 1) != 0 || (this.processor.PullLocalByte(0x40) & 6) == 0 || kind == 3 || kind == 7)
+			if (((byte)this.turn.TargetImprovements & 1) != 0 || ((byte)this.turn.TargetImprovements & 6) == 0 || kind == 3 || kind == 7)
 				return false;
 
 			if (this.owner.World.Towns[this.owner.Helpers.LocateNearestCity(horizLoc, vertLoc)].ParticipantIdx != this.owner.World.PersonParticipantIdx)
@@ -1844,7 +1995,7 @@ namespace Civilization1Remaster.Game
 
 			this.owner.MapOps.DiscardTileImprovements(6, horizLoc, vertLoc);
 
-			if (((sbyte)this.owner.World.ChartSight[this.processor.PullLocalWord(0x2c), this.processor.PullLocalWord(0x30)] & (1 << (this.owner.World.PersonParticipantIdx & 0xff))) != 0)
+			if (((sbyte)this.owner.World.ChartSight[this.turn.UnitHoriz, this.turn.UnitVert] & (1 << (this.owner.World.PersonParticipantIdx & 0xff))) != 0)
 			{
 				this.owner.MapOps.KeepKnownTileImprovements(horizLoc, vertLoc);
 				this.owner.MapOps.RepaintMapTile(horizLoc, vertLoc);
@@ -1864,22 +2015,22 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private bool LocateMoveTarget(short participantIdx)
 		{
-			short troopIdx = (short)this.processor.PullLocalWord(0x32);
-			this.processor.RegSource.Value16 = (ushort)(this.processor.PullLocalWord(0x24) << 1);
+			short troopIdx = (short)this.turn.Troop;
+			this.processor.RegSource.Value16 = (ushort)(this.turn.Direction << 1);
 
-			this.processor.EmitLocalWord(0x1c, (ushort)this.owner.Routing.TunePosition(
+			this.turn.TargetHoriz = (ushort)this.owner.Routing.TunePosition(
 				this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1882)) +
-					this.processor.PullLocalSignedWord(0x2c)));
+					(short)this.turn.UnitHoriz);
 
-			this.processor.EmitLocalWord(0x26, (ushort)this.owner.Helpers.VerifyValueSpan(
+			this.turn.TargetVert = (ushort)this.owner.Helpers.VerifyValueSpan(
 				this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x18e4)) +
-					this.processor.PullLocalSignedWord(0x30),
-				0, 49));
+					(short)this.turn.UnitVert,
+				0, 49);
 
-			this.processor.EmitLocalWord(0x34, this.owner.MapOps.ObtainTerrainType(this.processor.PullLocalSignedWord(0x2c), this.processor.PullLocalSignedWord(0x30)));
-			this.processor.EmitLocalWord(0x3e, this.owner.MapOps.ObtainTerrainType(this.processor.PullLocalSignedWord(0x1c), this.processor.PullLocalSignedWord(0x26)));
-			this.processor.EmitLocalWord(0x40, this.owner.MapOps.ObtainTileImprovements(this.processor.PullLocalSignedWord(0x1c), this.processor.PullLocalSignedWord(0x26)));
-			this.processor.EmitLocalWord(0x18, this.owner.MapOps.ObtainUnitAtTile(this.processor.PullLocalSignedWord(0x1c), this.processor.PullLocalSignedWord(0x26)));
+			this.turn.StartTerrain = this.owner.MapOps.ObtainTerrainType((short)this.turn.UnitHoriz, (short)this.turn.UnitVert);
+			this.turn.TargetTerrain = this.owner.MapOps.ObtainTerrainType((short)this.turn.TargetHoriz, (short)this.turn.TargetVert);
+			this.turn.TargetImprovements = this.owner.MapOps.ObtainTileImprovements((short)this.turn.TargetHoriz, (short)this.turn.TargetVert);
+			this.turn.OtherUnit = this.owner.MapOps.ObtainUnitAtTile((short)this.turn.TargetHoriz, (short)this.turn.TargetVert);
 
 			this.processor.RegDest.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride);
 			this.processor.RegBase.Value16 = (ushort)(this.troops.TroopKind(participantIdx, troopIdx) * UnitKindTable.Stride);
@@ -1894,18 +2045,18 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private bool StoppedByZoneOfControl(short participantIdx)
 		{
-			if (this.processor.PullLocalWord(0x18) != 0xffff ||
-				this.owner.UnitOps.MayOccupyTile(participantIdx, this.processor.PullLocalSignedWord(0x2c), this.processor.PullLocalSignedWord(0x30)) == 0 ||
-				this.owner.UnitOps.MayOccupyTile(participantIdx, this.processor.PullLocalSignedWord(0x1c), this.processor.PullLocalSignedWord(0x26)) == 0)
+			if (this.turn.OtherUnit != 0xffff ||
+				this.owner.UnitOps.MayOccupyTile(participantIdx, (short)this.turn.UnitHoriz, (short)this.turn.UnitVert) == 0 ||
+				this.owner.UnitOps.MayOccupyTile(participantIdx, (short)this.turn.TargetHoriz, (short)this.turn.TargetVert) == 0)
 			{
 				return false;
 			}
 
-			short troopIdx = (short)this.processor.PullLocalWord(0x32);
+			short troopIdx = (short)this.turn.Troop;
 			this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
 			this.processor.RegSource.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride);
 
-			if (this.troops.TroopKind(participantIdx, troopIdx) >= UnitKindTable.Diplomat || this.processor.PullLocalWord(0x34) == MapRules.OceanTerrain)
+			if (this.troops.TroopKind(participantIdx, troopIdx) >= UnitKindTable.Diplomat || this.turn.StartTerrain == MapRules.OceanTerrain)
 				return false;
 
 			if (participantIdx == this.owner.World.PersonParticipantIdx)
@@ -1943,7 +2094,7 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private MoveStep EnterCityAsDiplomatOrCaravan(short participantIdx)
 		{
-			short troopIdx = (short)this.processor.PullLocalWord(0x32);
+			short troopIdx = (short)this.turn.Troop;
 			ushort unit = UnitMemory.Offset(participantIdx, troopIdx);
 			this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
 			this.processor.RegSource.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride);
@@ -1951,22 +2102,22 @@ namespace Civilization1Remaster.Game
 			if (this.troops.TroopKind(participantIdx, troopIdx) < UnitKindTable.Diplomat)
 				return MoveStep.GoesOn;
 
-			this.processor.EmitLocalWord(0x10, this.owner.Helpers.LocateCityAtPosition(this.processor.PullLocalSignedWord(0x1c), this.processor.PullLocalSignedWord(0x26)));
+			this.turn.City = this.owner.Helpers.LocateCityAtPosition((short)this.turn.TargetHoriz, (short)this.turn.TargetVert);
 
-			if (this.processor.PullLocalWord(0x10) == 0xffff)
+			if (this.turn.City == 0xffff)
 				return MoveStep.NoCity;
 
-			Game.State.City town = this.owner.World.Towns[this.processor.PullLocalWord(0x10)];
-			this.processor.RegBase.Value16 = (ushort)(this.processor.PullLocalWord(0x10) * 0x1c);
+			Game.State.City town = this.owner.World.Towns[this.turn.City];
+			this.processor.RegBase.Value16 = (ushort)(this.turn.City * 0x1c);
 
-			if (town.ParticipantIdx != participantIdx && this.processor.PullLocalWord(0x34) == MapRules.OceanTerrain)
+			if (town.ParticipantIdx != participantIdx && this.turn.StartTerrain == MapRules.OceanTerrain)
 				return MoveStep.Done;
 
 			this.processor.RegSource.Value16 = unit;
 
 			if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) == UnitKindTable.Diplomat)
 			{
-				this.processor.RegBase.Value16 = (ushort)(this.processor.PullLocalWord(0x10) * 0x1c);
+				this.processor.RegBase.Value16 = (ushort)(this.turn.City * 0x1c);
 				this.processor.RegDest.Value16 = (ushort)town.ParticipantIdx;
 
 				if (participantIdx != town.ParticipantIdx)
@@ -1985,13 +2136,13 @@ namespace Civilization1Remaster.Game
 						this.owner.TextPainter.AwaitTime(30);
 
 						this.owner.UnitOps.ChoreographUnitCombat(participantIdx,
-							this.processor.PullLocalSignedWord(0x32),
-							this.processor.PullLocalWord(0x24));
+							(short)this.turn.Troop,
+							this.turn.Direction);
 					}
 
-					this.owner.Diplomats.DiplomatArrivesAtCity(this.processor.PullLocalSignedWord(0x10),
+					this.owner.Diplomats.DiplomatArrivesAtCity((short)this.turn.City,
 						participantIdx,
-						this.processor.PullLocalSignedWord(0x32));
+						(short)this.turn.Troop);
 
 					return MoveStep.Done;
 				}
@@ -2007,14 +2158,14 @@ namespace Civilization1Remaster.Game
 			this.processor.RegDest.Value16 = (ushort)(home * 0x1c);
 			byte homeIdx = this.troops.Pull(participantIdx, troopIdx, UnitMemory.BaseTown);
 
-			this.processor.EmitLocalWord(0x3a, (ushort)this.owner.Helpers.ObtainDistance(
-				this.processor.PullLocalSignedWord(0x1c),
+			this.turn.Result = (ushort)this.owner.Helpers.ObtainDistance(
+				(short)this.turn.TargetHoriz,
 				this.owner.World.Towns[homeIdx].Place.X,
-				this.processor.PullLocalSignedWord(0x26),
-				this.owner.World.Towns[homeIdx].Place.Y));
-			this.processor.RegSource.Value16 = (ushort)(this.processor.PullLocalWord(0x10) * 0x1c);
+				(short)this.turn.TargetVert,
+				this.owner.World.Towns[homeIdx].Place.Y);
+			this.processor.RegSource.Value16 = (ushort)(this.turn.City * 0x1c);
 
-			if (town.ParticipantIdx == participantIdx && (sbyte)town.PresentMakingIdx >= -24 && (short)this.processor.PullLocalWord(0x3a) < 10)
+			if (town.ParticipantIdx == participantIdx && (sbyte)town.PresentMakingIdx >= -24 && (short)this.turn.Result < 10)
 			{
 				// Near its home city, building no wonder: on the same continent it just moves in
 				this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
@@ -2025,49 +2176,49 @@ namespace Civilization1Remaster.Game
 					this.owner.World.Towns[homeIdx].Place.X,
 					this.owner.World.Towns[homeIdx].Place.Y);
 
-				if (this.owner.MapOps.ObtainContinentID(this.processor.PullLocalSignedWord(0x1c), this.processor.PullLocalSignedWord(0x26)) == this.processor.RegDest.Value16)
+				if (this.owner.MapOps.ObtainContinentID((short)this.turn.TargetHoriz, (short)this.turn.TargetVert) == this.processor.RegDest.Value16)
 					return MoveStep.GoesOn;
 			}
 
 			this.owner.Libc.CopyText(0xba06, "Will you?\n Keep moving\n Establish trade route\n");
-			this.processor.RegSource.Value16 = (ushort)(this.processor.PullLocalWord(0x10) * 0x1c);
+			this.processor.RegSource.Value16 = (ushort)(this.turn.City * 0x1c);
 
 			if (town.ParticipantIdx == participantIdx && (sbyte)town.PresentMakingIdx < -24)
 			{
 				this.owner.Libc.AppendText(0xba06, " Help build WONDER.\n");
 
-				if ((short)this.processor.PullLocalWord(0x3a) < 10)
+				if ((short)this.turn.Result < 10)
 					this.processor.EmitGlobalWord(0xb276, 0x2);
 			}
 
-			this.processor.RegBase.Value16 = (ushort)(this.processor.PullLocalWord(0x10) * 0x1c);
+			this.processor.RegBase.Value16 = (ushort)(this.turn.City * 0x1c);
 
 			if (town.ParticipantIdx == participantIdx)
 			{
-				this.processor.EmitLocalWord(0x3a, this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80));
+				this.turn.Result = this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
 			}
 			else
 			{
-				this.processor.EmitLocalWord(0x3a, 0x1);
+				this.turn.Result = 0x1;
 			}
 
-			if (this.processor.PullLocalWord(0x3a) == 1 &&
-				this.owner.Conquest.FoundTradeRoute(participantIdx, this.processor.PullLocalSignedWord(0x32), this.processor.PullLocalSignedWord(0x10)) != 0)
+			if (this.turn.Result == 1 &&
+				this.owner.Conquest.FoundTradeRoute(participantIdx, (short)this.turn.Troop, (short)this.turn.City) != 0)
 			{
 				return MoveStep.Done;
 			}
 
-			if (this.processor.PullLocalWord(0x3a) != 2)
+			if (this.turn.Result != 2)
 				return MoveStep.GoesOn;
 
 			// The caravan helps to build the wonder: 10 times its price
 			this.processor.RegSource.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride);
 			this.processor.RegBase.Value16 = (ushort)(this.troops.TroopKind(participantIdx, troopIdx) * UnitKindTable.Stride);
 			this.processor.RegCount.Value16 = (ushort)(10 * this.troops.KindField(participantIdx, troopIdx, UnitKindTable.Price));
-			this.processor.RegBase.Value16 = (ushort)(this.processor.PullLocalWord(0x10) * 0x1c);
-			this.owner.World.Towns[this.processor.PullLocalWord(0x10)].MaterialsTally += (short)this.processor.RegCount.Value16;
+			this.processor.RegBase.Value16 = (ushort)(this.turn.City * 0x1c);
+			this.owner.World.Towns[this.turn.City].MaterialsTally += (short)this.processor.RegCount.Value16;
 
-			this.owner.UnitOps.EliminateUnit(participantIdx, this.processor.PullLocalSignedWord(0x32));
+			this.owner.UnitOps.EliminateUnit(participantIdx, (short)this.turn.Troop);
 
 			return MoveStep.Done;
 		}
@@ -2091,17 +2242,17 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private void BribeUnitOnTheWay(short participantIdx)
 		{
-			short troopIdx = (short)this.processor.PullLocalWord(0x32);
+			short troopIdx = (short)this.turn.Troop;
 			this.processor.RegSource.Value16 = UnitMemory.Offset(participantIdx, troopIdx);
 
-			if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) != UnitKindTable.Diplomat || this.processor.PullLocalWord(0x18) == 0xffff ||
+			if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) != UnitKindTable.Diplomat || this.turn.OtherUnit == 0xffff ||
 				participantIdx == this.processor.PullGlobalSignedWord(0xd20a))
 			{
 				return;
 			}
 
 			this.owner.Diplomats.BuyUnit(this.processor.PullGlobalSignedWord(0xd20a),
-				this.processor.PullLocalSignedWord(0x18),
+				(short)this.turn.OtherUnit,
 				participantIdx);
 
 			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + UnitMemory.Origin + UnitMemory.TravelHoriz), 0xff);
@@ -2115,11 +2266,11 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private MoveCheck CheckMoveTile(short participantIdx)
 		{
-			short troopIdx = (short)this.processor.PullLocalWord(0x32);
+			short troopIdx = (short)this.turn.Troop;
 			ushort unit = UnitMemory.Offset(participantIdx, troopIdx);
 			short owner = this.processor.PullGlobalSignedWord(0xd20a);
 
-			if (this.processor.PullLocalWord(0x3e) == MapRules.OceanTerrain)
+			if (this.turn.TargetTerrain == MapRules.OceanTerrain)
 			{
 				this.processor.RegSource.Value16 = unit;
 				this.processor.RegBase.Value16 = (ushort)(this.troops.TroopKind(participantIdx, troopIdx) * UnitKindTable.Stride);
@@ -2127,8 +2278,8 @@ namespace Civilization1Remaster.Game
 				if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == UnitKindTable.LandUnits)
 				{
 					// A land unit boards an own ship with room
-					if (participantIdx != this.processor.PullGlobalSignedWord(0xd20a) || this.processor.PullLocalWord(0x18) == 0xffff ||
-						(short)this.owner.UnitOps.TallySpecialUnitsInStack(participantIdx, this.processor.PullLocalSignedWord(0x18)) <= 0)
+					if (participantIdx != this.processor.PullGlobalSignedWord(0xd20a) || this.turn.OtherUnit == 0xffff ||
+						(short)this.owner.UnitOps.TallySpecialUnitsInStack(participantIdx, (short)this.turn.OtherUnit) <= 0)
 					{
 						return MoveCheck.Done;
 					}
@@ -2142,10 +2293,10 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			if (this.processor.PullLocalWord(0x18) == 0xffff || participantIdx == this.processor.PullGlobalSignedWord(0xd20a))
+			if (this.turn.OtherUnit == 0xffff || participantIdx == this.processor.PullGlobalSignedWord(0xd20a))
 				return MoveCheck.Moves;
 
-			if (this.processor.PullLocalWord(0x34) == MapRules.OceanTerrain)
+			if (this.turn.StartTerrain == MapRules.OceanTerrain)
 			{
 				this.processor.RegSource.Value16 = unit;
 				this.processor.RegBase.Value16 = (ushort)(this.troops.TroopKind(participantIdx, troopIdx) * UnitKindTable.Stride);
@@ -2163,7 +2314,7 @@ namespace Civilization1Remaster.Game
 			this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
 			this.processor.RegSource.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride);
 
-			if (this.processor.PullLocalWord(0x3e) != MapRules.OceanTerrain && this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) == UnitKindTable.Submarine)
+			if (this.turn.TargetTerrain != MapRules.OceanTerrain && this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) == UnitKindTable.Submarine)
 				return MoveCheck.Done;
 
 			if (participantIdx != this.owner.World.PersonParticipantIdx)
@@ -2181,7 +2332,7 @@ namespace Civilization1Remaster.Game
 				return MoveCheck.Done;
 
 			// A plane outside a city is attacked only by a fighter
-			short guardian = (short)this.processor.PullLocalWord(0x18);
+			short guardian = (short)this.turn.OtherUnit;
 			this.processor.RegDest.Value16 = (ushort)(guardian * UnitMemory.TroopStride);
 			this.processor.RegBase.Value16 = (ushort)(this.troops.TroopKind(owner, guardian) * UnitKindTable.Stride);
 
@@ -2189,7 +2340,7 @@ namespace Civilization1Remaster.Game
 			{
 				this.processor.RegSource.Value16 = unit;
 
-				if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) != 0xe && (this.processor.PullLocalByte(0x40) & 1) == 0)
+				if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) != 0xe && ((byte)this.turn.TargetImprovements & 1) == 0)
 				{
 					DisplayHelpForHuman(0x1f30);
 					this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + UnitMemory.Origin + UnitMemory.TravelHoriz), 0xff);
@@ -2208,7 +2359,7 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private bool ConfirmAttack(short participantIdx)
 		{
-			short troopIdx = (short)this.processor.PullLocalWord(0x32);
+			short troopIdx = (short)this.turn.Troop;
 			this.processor.RegSource.Value16 = UnitMemory.Offset(participantIdx, troopIdx);
 
 			if (this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.LeftoverSteps) >= 3)
@@ -2244,36 +2395,36 @@ namespace Civilization1Remaster.Game
 		private bool FightAt(short participantIdx)
 		{
 			short person = this.owner.World.PersonParticipantIdx;
-			short troopIdx = (short)this.processor.PullLocalWord(0x32);
+			short troopIdx = (short)this.turn.Troop;
 			ushort unit = UnitMemory.Offset(participantIdx, troopIdx);
-			short horizLoc = (short)this.processor.PullLocalWord(0x1c);
-			short vertLoc = (short)this.processor.PullLocalWord(0x26);
+			short horizLoc = (short)this.turn.TargetHoriz;
+			short vertLoc = (short)this.turn.TargetVert;
 
 			this.processor.RegAcc.Value16 = (ushort)person;
 
 			if (this.processor.PullGlobalWord(0xd20a) == (ushort)person)
 				this.owner.UnitOps.PanMapToPosition(person, horizLoc, vertLoc);
 
-			this.processor.EmitLocalWord(0x18, this.owner.UnitOps.LocateBestGuardianInStack(this.processor.PullGlobalSignedWord(0xd20a),
-				this.processor.PullLocalSignedWord(0x18)));
+			this.turn.OtherUnit = this.owner.UnitOps.LocateBestGuardianInStack(this.processor.PullGlobalSignedWord(0xd20a),
+				(short)this.turn.OtherUnit);
 
 			this.processor.RegAcc.Value16 = (ushort)person;
 
 			if (participantIdx == person || this.processor.PullGlobalWord(0xd20a) == (ushort)person)
 				this.processor.EmitGlobalWord(0x70d8, 0x1);
 
-			this.processor.EmitLocalWord(0x3a, this.owner.Combat.SettleBattle(participantIdx,
-				this.processor.PullLocalSignedWord(0x32),
+			this.turn.Result = this.owner.Combat.SettleBattle(participantIdx,
+				(short)this.turn.Troop,
 				this.processor.PullGlobalSignedWord(0xd20a),
-				this.processor.PullLocalSignedWord(0x18),
-				1));
+				(short)this.turn.OtherUnit,
+				1);
 
 			this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
 			this.processor.RegSource.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride);
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHoriz, 0xff);
 			this.processor.EmitGlobalWord(0x70d8, 0x0);
 
-			if (this.processor.PullLocalWord(0x3a) == 0xffff)
+			if (this.turn.Result == 0xffff)
 				return false;
 
 			this.processor.RegSource.Value16 = unit;
@@ -2296,9 +2447,9 @@ namespace Civilization1Remaster.Game
 			if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) == 0xf)
 				this.troops.Assign(participantIdx, troopIdx, UnitMemory.LeftoverSteps, 0);
 
-			if ((this.processor.PullLocalByte(0x40) & 1) == 0)
+			if (((byte)this.turn.TargetImprovements & 1) == 0)
 			{
-				if ((this.processor.PullLocalByte(0x40) & 0x20) == 0)
+				if (((byte)this.turn.TargetImprovements & 0x20) == 0)
 				{
 					this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
 					this.processor.RegSource.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride);
@@ -2308,9 +2459,9 @@ namespace Civilization1Remaster.Game
 			}
 
 			// The attacked city
-			this.processor.EmitLocalWord(0x10, this.owner.Helpers.LocateCityAtPosition(horizLoc, vertLoc));
-			Game.State.City town = this.owner.World.Towns[this.processor.PullLocalWord(0x10)];
-			this.processor.RegSource.Value16 = (ushort)(this.processor.PullLocalWord(0x10) * 0x1c);
+			this.turn.City = this.owner.Helpers.LocateCityAtPosition(horizLoc, vertLoc);
+			Game.State.City town = this.owner.World.Towns[this.turn.City];
+			this.processor.RegSource.Value16 = (ushort)(this.turn.City * 0x1c);
 
 			if (town.ParticipantIdx != person)
 				town.ConditionMarker |= 0x10;
@@ -2319,32 +2470,32 @@ namespace Civilization1Remaster.Game
 			this.processor.RegSource.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride);
 
 			if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) != 0xff && !town.Has(CityStructure.CityWalls) &&
-				this.processor.PullLocalWord(0x34) != MapRules.OceanTerrain &&
+				this.turn.StartTerrain != MapRules.OceanTerrain &&
 				(this.owner.World.HardnessTier != 0 || this.processor.PullGlobalWord(0xd20a) != (ushort)person))
 			{
 				town.TrueExtent--;
 			}
 
-			this.processor.RegBase.Value16 = (ushort)(this.processor.PullLocalWord(0x10) * 0x1c);
+			this.processor.RegBase.Value16 = (ushort)(this.turn.City * 0x1c);
 
 			if (town.TrueExtent == 0)
 			{
 				// The city is destroyed
 				this.owner.Advisors.FinalizeProduction(
-					this.processor.PullLocalSignedWord(0x10),
-					this.processor.PullLocalWord(0x1c),
-					this.processor.PullLocalWord(0x26));
+					(short)this.turn.City,
+					this.turn.TargetHoriz,
+					this.turn.TargetVert);
 
 				this.owner.NewGameWizard.EliminateCivilization(this.processor.PullGlobalSignedWord(0xd20a), participantIdx);
 
 				if (participantIdx == person)
 				{
-					this.processor.EmitLocalWord(0x18, this.owner.MapOps.ObtainUnitAtTile(horizLoc, vertLoc));
+					this.turn.OtherUnit = this.owner.MapOps.ObtainUnitAtTile(horizLoc, vertLoc);
 
-					if (this.processor.PullLocalWord(0x18) != 0xffff)
+					if (this.turn.OtherUnit != 0xffff)
 					{
 						short owner = this.processor.PullGlobalSignedWord(0xd20a);
-						short left = (short)this.processor.PullLocalWord(0x18);
+						short left = (short)this.turn.OtherUnit;
 						this.processor.RegBase.Value16 = (ushort)(owner * UnitMemory.ParticipantStride);
 						this.processor.RegSource.Value16 = (ushort)(left * UnitMemory.TroopStride);
 						this.troops.Assign(owner, left, UnitMemory.ShownToParticipants,
@@ -2358,7 +2509,7 @@ namespace Civilization1Remaster.Game
 			if (participantIdx == person || this.processor.PullGlobalWord(0xd20a) == (ushort)person || this.processor.PullGlobalWord(0xd806) != 0)
 			{
 				// The human sees the new size
-				this.processor.RegSource.Value16 = (ushort)(this.processor.PullLocalWord(0x10) * 0x1c);
+				this.processor.RegSource.Value16 = (ushort)(this.turn.City * 0x1c);
 				this.processor.RegAcc.LowByte = (byte)town.TrueExtent;
 				town.ShownExtent = (sbyte)this.processor.RegAcc.LowByte;
 
@@ -2382,11 +2533,11 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private bool PayForMove(short participantIdx)
 		{
-			short troopIdx = (short)this.processor.PullLocalWord(0x32);
+			short troopIdx = (short)this.turn.Troop;
 			ushort unit = UnitMemory.Offset(participantIdx, troopIdx);
 			short kindOffset = (short)(this.troops.TroopKind(participantIdx, troopIdx) * UnitKindTable.Stride);
 
-			if (this.processor.PullLocalWord(0x3e) != MapRules.OceanTerrain && (this.processor.PullLocalByte(0x40) & 1) == 0)
+			if (this.turn.TargetTerrain != MapRules.OceanTerrain && ((byte)this.turn.TargetImprovements & 1) == 0)
 			{
 				this.processor.RegSource.Value16 = unit;
 				this.processor.RegBase.Value16 = (ushort)kindOffset;
@@ -2401,8 +2552,8 @@ namespace Civilization1Remaster.Game
 			this.processor.RegSource.Value16 = unit;
 			this.processor.RegBase.Value16 = (ushort)kindOffset;
 
-			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) != UnitKindTable.LandUnits && (this.processor.PullLocalByte(0x40) & 1) != 0 &&
-				this.owner.MapOps.ObtainTileOwnerBits(this.processor.PullLocalSignedWord(0x1c), this.processor.PullLocalSignedWord(0x26)) != (ushort)participantIdx)
+			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) != UnitKindTable.LandUnits && ((byte)this.turn.TargetImprovements & 1) != 0 &&
+				this.owner.MapOps.ObtainTileOwnerBits((short)this.turn.TargetHoriz, (short)this.turn.TargetVert) != (ushort)participantIdx)
 			{
 				if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) != 0x19)
 				{
@@ -2411,11 +2562,11 @@ namespace Civilization1Remaster.Game
 					return false;
 				}
 
-				this.owner.UnitOps.EliminateUnit(participantIdx, this.processor.PullLocalSignedWord(0x32));
+				this.owner.UnitOps.EliminateUnit(participantIdx, (short)this.turn.Troop);
 
 				this.owner.Combat.ExplodeNuclearWeapon(participantIdx,
-					this.processor.PullLocalSignedWord(0x1c),
-					this.processor.PullLocalSignedWord(0x26));
+					(short)this.turn.TargetHoriz,
+					(short)this.turn.TargetVert);
 
 				return false;
 			}
@@ -2431,10 +2582,10 @@ namespace Civilization1Remaster.Game
 
 			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == UnitKindTable.LandUnits)
 			{
-				short horizLoc = (short)this.processor.PullLocalWord(0x2c);
-				short vertLoc = (short)this.processor.PullLocalWord(0x30);
+				short horizLoc = (short)this.turn.UnitHoriz;
+				short vertLoc = (short)this.turn.UnitVert;
 
-				if ((this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & this.processor.PullLocalByte(0x40) & 8) != 0 &&
+				if ((this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & (byte)this.turn.TargetImprovements & 8) != 0 &&
 					this.troops.Pull(participantIdx, troopIdx, UnitMemory.LeftoverSteps) != 0)
 				{
 					// A road on both tiles: 1, a railroad where it stands nothing (for the human without GoTo)
@@ -2456,7 +2607,7 @@ namespace Civilization1Remaster.Game
 				{
 					// The terrain: with fewer moves than full a die may stop the unit
 					this.processor.RegSource.Value16 = (ushort)(unit + UnitMemory.Origin + UnitMemory.LeftoverSteps);
-					this.processor.RegBase.Value16 = (ushort)(this.processor.PullLocalWord(0x3e) * 0x13);
+					this.processor.RegBase.Value16 = (ushort)(this.turn.TargetTerrain * 0x13);
 					short terrainCost = (short)(3 * (sbyte)this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x28e)));
 
 					if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.LeftoverSteps) != 3)
@@ -2502,7 +2653,7 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private bool ComputerMayMove(short participantIdx)
 		{
-			short troopIdx = (short)this.processor.PullLocalWord(0x32);
+			short troopIdx = (short)this.turn.Troop;
 			ushort unit = UnitMemory.Offset(participantIdx, troopIdx);
 			short person = this.owner.World.PersonParticipantIdx;
 
@@ -2511,8 +2662,8 @@ namespace Civilization1Remaster.Game
 				this.processor.RegSource.Value16 = unit;
 
 				if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.TravelHeading) != 0xff &&
-					(ushort)(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.TravelHeading) ^ 4) == this.processor.PullLocalWord(0x24) &&
-					(short)this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, this.processor.PullLocalSignedWord(0x32), 2) <= 2)
+					(ushort)(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.TravelHeading) ^ 4) == this.turn.Direction &&
+					(short)this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, (short)this.turn.Troop, 2) <= 2)
 				{
 					this.processor.RegAcc.LowByte = 0xff;
 					this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + UnitMemory.Origin + UnitMemory.TravelHeading), 0xff);
@@ -2524,12 +2675,12 @@ namespace Civilization1Remaster.Game
 
 				this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
 				this.processor.RegSource.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride);
-				this.processor.RegAcc.LowByte = this.processor.PullLocalByte(0x24);
-				this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHeading, this.processor.PullLocalByte(0x24));
+				this.processor.RegAcc.LowByte = (byte)this.turn.Direction;
+				this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHeading, (byte)this.turn.Direction);
 			}
 
-			if (this.processor.PullLocalWord(0x18) == 0xffff || participantIdx != this.processor.PullGlobalSignedWord(0xd20a) || participantIdx == person ||
-				(this.processor.PullLocalByte(0x40) & 1) != 0)
+			if (this.turn.OtherUnit == 0xffff || participantIdx != this.processor.PullGlobalSignedWord(0xd20a) || participantIdx == person ||
+				((byte)this.turn.TargetImprovements & 1) != 0)
 			{
 				return true;
 			}
@@ -2544,12 +2695,12 @@ namespace Civilization1Remaster.Game
 				return true;
 			}
 
-			this.processor.EmitLocalWord(0x3a, this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, this.processor.PullLocalSignedWord(0x18), 2));
+			this.turn.Result = this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, (short)this.turn.OtherUnit, 2);
 			this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
 			this.processor.RegSource.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride);
 			this.processor.RegAcc.Value16 = (ushort)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.LeftoverSteps) != 0 ? 4 : 2);
 
-			return (short)this.processor.RegAcc.Value16 > (short)this.processor.PullLocalWord(0x3a);
+			return (short)this.processor.RegAcc.Value16 > (short)this.turn.Result;
 		}
 
 		/// <summary>
@@ -2561,37 +2712,37 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private bool EnterTerritory(short participantIdx)
 		{
-			short troopIdx = (short)this.processor.PullLocalWord(0x32);
+			short troopIdx = (short)this.turn.Troop;
 			ushort unit = UnitMemory.Offset(participantIdx, troopIdx);
 			short person = this.owner.World.PersonParticipantIdx;
-			short horizLoc = (short)this.processor.PullLocalWord(0x1c);
-			short vertLoc = (short)this.processor.PullLocalWord(0x26);
+			short horizLoc = (short)this.turn.TargetHoriz;
+			short vertLoc = (short)this.turn.TargetVert;
 
-			this.processor.EmitLocalWord(0x2, this.owner.VideoCard.ObtainDot(2, horizLoc + 80, vertLoc));
+			this.turn.Dot = this.owner.VideoCard.ObtainDot(2, horizLoc + 80, vertLoc);
 
-			if (this.processor.PullLocalWord(0x2) == 0 || (short)this.processor.PullLocalWord(0x2) >= 8)
+			if (this.turn.Dot == 0 || (short)this.turn.Dot >= 8)
 				return true;
 
-			short owner = (short)this.processor.PullLocalWord(0x2);
+			short owner = (short)this.turn.Dot;
 
-			if (this.processor.PullLocalWord(0x3e) != MapRules.OceanTerrain && this.processor.PullLocalWord(0x34) != MapRules.OceanTerrain &&
+			if (this.turn.TargetTerrain != MapRules.OceanTerrain && this.turn.StartTerrain != MapRules.OceanTerrain &&
 				MayTreatyStop(participantIdx, troopIdx, unit, owner, person))
 			{
 				if (participantIdx == person)
 				{
 					this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHoriz, 0xff);
 
-					if (this.owner.Combat.AffirmBreakTreaty(this.processor.PullLocalSignedWord(0x2)) == 0xffff)
+					if (this.owner.Combat.AffirmBreakTreaty((short)this.turn.Dot) == 0xffff)
 						return false;
 
-					this.owner.Politics.WipeDiplomacyFlags(participantIdx, this.processor.PullLocalSignedWord(0x2), 2);
+					this.owner.Politics.WipeDiplomacyFlags(participantIdx, (short)this.turn.Dot, 2);
 				}
-				else if (this.processor.PullLocalWord(0x2) == (ushort)person)
+				else if (this.turn.Dot == (ushort)person)
 				{
 					this.processor.RegSource.Value16 = (ushort)(owner << 4);
 					this.processor.RegBase.Value16 = (ushort)(participantIdx << 1);
 
-					if ((this.owner.World.Participants[this.processor.PullLocalWord(0x2)].Relations[participantIdx] & 2) != 0)
+					if ((this.owner.World.Participants[this.turn.Dot].Relations[participantIdx] & 2) != 0)
 					{
 						this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
 						this.processor.RegSource.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride);
@@ -2602,11 +2753,11 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			if (participantIdx != (short)this.processor.PullLocalWord(0x2) && (this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 0xe) != 0)
+			if (participantIdx != (short)this.turn.Dot && (this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 0xe) != 0)
 			{
 				this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
 				this.processor.RegSource.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride);
-				this.processor.RegAcc.LowByte = (byte)(1 << (this.processor.PullLocalByte(0x2) & 0x1f));
+				this.processor.RegAcc.LowByte = (byte)(1 << ((byte)this.turn.Dot & 0x1f));
 				this.troops.Assign(participantIdx, troopIdx, UnitMemory.ShownToParticipants,
 					(byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.ShownToParticipants) | this.processor.RegAcc.LowByte));
 			}
@@ -2623,7 +2774,7 @@ namespace Civilization1Remaster.Game
 			this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
 			this.processor.RegSource.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride);
 
-			if (this.troops.TroopKind(participantIdx, troopIdx) >= UnitKindTable.Diplomat || (this.processor.PullLocalByte(0x40) & 0xf) == 0 ||
+			if (this.troops.TroopKind(participantIdx, troopIdx) >= UnitKindTable.Diplomat || ((byte)this.turn.TargetImprovements & 0xf) == 0 ||
 				owner == participantIdx || (participantIdx != person && owner != person))
 			{
 				return false;
@@ -2633,7 +2784,7 @@ namespace Civilization1Remaster.Game
 			this.processor.RegBase.Value16 = (ushort)(this.troops.TroopKind(participantIdx, troopIdx) * UnitKindTable.Stride);
 
 			return this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == UnitKindTable.LandUnits &&
-				this.owner.MapOps.ObtainTileOwner((short)this.processor.PullLocalWord(0x1c), (short)this.processor.PullLocalWord(0x26)) != (ushort)participantIdx;
+				this.owner.MapOps.ObtainTileOwner((short)this.turn.TargetHoriz, (short)this.turn.TargetVert) != (ushort)participantIdx;
 		}
 
 		/// <summary>
@@ -2646,33 +2797,33 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private void ShowMove(short participantIdx)
 		{
-			short troopIdx = (short)this.processor.PullLocalWord(0x32);
+			short troopIdx = (short)this.turn.Troop;
 			short person = this.owner.World.PersonParticipantIdx;
 			int personBit = 1 << (person & 0xff);
 
-			this.processor.EmitLocalWord(0x48, this.owner.MapOps.ObtainTileOwnerBits(this.processor.PullLocalSignedWord(0x1c), this.processor.PullLocalSignedWord(0x26)));
+			this.turn.TileOwner = this.owner.MapOps.ObtainTileOwnerBits((short)this.turn.TargetHoriz, (short)this.turn.TargetVert);
 
-			if (participantIdx == 0 && this.processor.PullLocalWord(0x3e) != MapRules.OceanTerrain)
+			if (participantIdx == 0 && this.turn.TargetTerrain != MapRules.OceanTerrain)
 			{
 				this.processor.RegSource.Value16 = (ushort)personBit;
 
-				if (((sbyte)this.owner.World.ChartSight[this.processor.PullLocalWord(0x2c), this.processor.PullLocalWord(0x30)] & personBit) != 0)
+				if (((sbyte)this.owner.World.ChartSight[this.turn.UnitHoriz, this.turn.UnitVert] & personBit) != 0)
 				{
-					this.processor.ScaleIndex(0xc, this.processor.PullLocalWord(0x32));
+					this.processor.ScaleIndex(0xc, this.turn.Troop);
 					this.processor.RegDest.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride + UnitMemory.Origin + UnitMemory.ShownToParticipants);
 
 					if ((this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.ShownToParticipants) & personBit) == 0 &&
-						this.owner.World.Towns[this.owner.Helpers.LocateNearestCity(this.processor.PullLocalSignedWord(0x2c), this.processor.PullLocalSignedWord(0x30))].ParticipantIdx == person)
+						this.owner.World.Towns[this.owner.Helpers.LocateNearestCity((short)this.turn.UnitHoriz, (short)this.turn.UnitVert)].ParticipantIdx == person)
 					{
-						this.processor.RegAcc.LowByte = (byte)this.owner.World.ChartSight[this.processor.PullLocalWord(0x2c), this.processor.PullLocalWord(0x30)];
+						this.processor.RegAcc.LowByte = (byte)this.owner.World.ChartSight[this.turn.UnitHoriz, this.turn.UnitVert];
 						this.troops.Assign(participantIdx, troopIdx, UnitMemory.ShownToParticipants,
 							(byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.ShownToParticipants) | this.processor.RegAcc.LowByte));
 					}
 				}
 			}
 
-			if ((this.processor.PullLocalByte(0x40) & 1) != 0 && this.processor.PullLocalWord(0x48) != (ushort)participantIdx &&
-				((sbyte)this.owner.World.ChartSight[this.processor.PullLocalWord(0x1c), this.processor.PullLocalWord(0x26)] & personBit) != 0)
+			if (((byte)this.turn.TargetImprovements & 1) != 0 && this.turn.TileOwner != (ushort)participantIdx &&
+				((sbyte)this.owner.World.ChartSight[this.turn.TargetHoriz, this.turn.TargetVert] & personBit) != 0)
 			{
 				// Into a foreign city the human sees: with an embassy
 				this.processor.RegSource.Value16 = (ushort)(person << 4);
@@ -2681,8 +2832,8 @@ namespace Civilization1Remaster.Game
 
 				if (!embassy)
 				{
-					this.processor.RegBase.Value16 = (ushort)(this.processor.PullLocalWord(0x48) << 1);
-					embassy = (this.owner.World.Participants[person].Relations[this.processor.PullLocalWord(0x48)] & 0x40) != 0;
+					this.processor.RegBase.Value16 = (ushort)(this.turn.TileOwner << 1);
+					embassy = (this.owner.World.Participants[person].Relations[this.turn.TileOwner] & 0x40) != 0;
 				}
 
 				if (embassy)
@@ -2694,13 +2845,13 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			if (this.processor.PullLocalWord(0x3e) == MapRules.OceanTerrain &&
-				(this.owner.MapOps.ObtainTileImprovements(this.processor.PullLocalSignedWord(0x1c), this.processor.PullLocalSignedWord(0x26)) & 2) != 0)
+			if (this.turn.TargetTerrain == MapRules.OceanTerrain &&
+				(this.owner.MapOps.ObtainTileImprovements((short)this.turn.TargetHoriz, (short)this.turn.TargetVert) & 2) != 0)
 			{
 				this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
 				this.processor.RegSource.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride);
 				this.troops.Assign(participantIdx, troopIdx, UnitMemory.ShownToParticipants,
-					(byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.ShownToParticipants) | (byte)(1 << (this.processor.PullLocalByte(0x48) & 0x1f))));
+					(byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.ShownToParticipants) | (byte)(1 << ((byte)this.turn.TileOwner & 0x1f))));
 			}
 
 			// The move on the screen
@@ -2716,16 +2867,16 @@ namespace Civilization1Remaster.Game
 			if ((this.owner.World.SessionPrefMarkers & 0x20) != 0 || participantIdx == person)
 			{
 				this.owner.UnitOps.PanMapToPosition(person,
-					this.processor.PullLocalSignedWord(0x1c),
-					this.processor.PullLocalSignedWord(0x26));
+					(short)this.turn.TargetHoriz,
+					(short)this.turn.TargetVert);
 
 				this.owner.UnitOps.ChoreographUnitCombat(participantIdx,
-					this.processor.PullLocalSignedWord(0x32),
-					this.processor.PullLocalWord(0x24));
+					(short)this.turn.Troop,
+					this.turn.Direction);
 			}
 			else
 			{
-				this.owner.MapOps.RenderMapTile(this.processor.PullLocalSignedWord(0x2c), this.processor.PullLocalSignedWord(0x30));
+				this.owner.MapOps.RenderMapTile((short)this.turn.UnitHoriz, (short)this.turn.UnitVert);
 			}
 		}
 
@@ -2737,30 +2888,30 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private void MoveUnit(short participantIdx)
 		{
-			short troopIdx = (short)this.processor.PullLocalWord(0x32);
+			short troopIdx = (short)this.turn.Troop;
 			ushort unit = UnitMemory.Offset(participantIdx, troopIdx);
 			short person = this.owner.World.PersonParticipantIdx;
 
 			this.processor.RegSource.Value16 = unit;
-			this.processor.EmitLocalWord(0x14, (ushort)this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.FollowingInStack));
+			this.turn.Cargo = (ushort)this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.FollowingInStack);
 
 			this.owner.MapOps.DiscardUnitFromTile(participantIdx,
-				this.processor.PullLocalSignedWord(0x32),
-				this.processor.PullLocalSignedWord(0x2c),
-				this.processor.PullLocalSignedWord(0x30));
+				(short)this.turn.Troop,
+				(short)this.turn.UnitHoriz,
+				(short)this.turn.UnitVert);
 
-			this.processor.EmitLocalWord(0x22, this.processor.PullLocalWord(0x2c));
-			this.processor.EmitLocalWord(0x2a, this.processor.PullLocalWord(0x30));
+			this.turn.CarrierHoriz = this.turn.UnitHoriz;
+			this.turn.CarrierVert = this.turn.UnitVert;
 
 			this.owner.MapOps.SituateUnitOnTile(participantIdx,
-				this.processor.PullLocalSignedWord(0x32),
-				this.processor.PullLocalSignedWord(0x1c),
-				this.processor.PullLocalSignedWord(0x26));
+				(short)this.turn.Troop,
+				(short)this.turn.TargetHoriz,
+				(short)this.turn.TargetVert);
 
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + UnitMemory.Origin + UnitMemory.Horiz), this.processor.PullLocalByte(0x1c));
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + UnitMemory.Origin + UnitMemory.Vert), this.processor.PullLocalByte(0x26));
+			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + UnitMemory.Origin + UnitMemory.Horiz), (byte)this.turn.TargetHoriz);
+			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + UnitMemory.Origin + UnitMemory.Vert), (byte)this.turn.TargetVert);
 			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + UnitMemory.Origin + UnitMemory.ShownToParticipants), 0);
-			this.processor.RegAcc.LowByte = this.processor.PullLocalByte(0x26);
+			this.processor.RegAcc.LowByte = (byte)this.turn.TargetVert;
 
 			if (participantIdx != person)
 			{
@@ -2771,17 +2922,17 @@ namespace Civilization1Remaster.Game
 					this.troops.Assign(participantIdx, troopIdx, UnitMemory.Status, (byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 0x30));
 			}
 
-			if (this.processor.PullLocalWord(0x2) != 0 && (short)this.processor.PullLocalWord(0x2) < 8 && this.processor.PullLocalWord(0x2) != (ushort)participantIdx)
+			if (this.turn.Dot != 0 && (short)this.turn.Dot < 8 && this.turn.Dot != (ushort)participantIdx)
 			{
-				this.owner.Services.AssignDot(2, this.processor.PullLocalSignedWord(0x1c) + 80,
-					this.processor.PullLocalSignedWord(0x26),
+				this.owner.Services.AssignDot(2, (short)this.turn.TargetHoriz + 80,
+					(short)this.turn.TargetVert,
 					0);
 			}
 
 			this.processor.RegSource.Value16 = unit;
 
-			if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.TravelHoriz) == this.processor.PullLocalWord(0x1c) &&
-				this.troops.Pull(participantIdx, troopIdx, UnitMemory.TravelVert) == this.processor.PullLocalWord(0x26))
+			if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.TravelHoriz) == this.turn.TargetHoriz &&
+				this.troops.Pull(participantIdx, troopIdx, UnitMemory.TravelVert) == this.turn.TargetVert)
 			{
 				this.processor.RegAcc.LowByte = 0xff;
 				this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHeading, 0xff);
@@ -2801,11 +2952,11 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private void TakeCargoAlong(short participantIdx)
 		{
-			short troopIdx = (short)this.processor.PullLocalWord(0x32);
+			short troopIdx = (short)this.turn.Troop;
 			ushort unit = UnitMemory.Offset(participantIdx, troopIdx);
 			ushort player = (ushort)(participantIdx * UnitMemory.ParticipantStride);
 
-			if (this.processor.PullLocalWord(0x34) == MapRules.OceanTerrain && this.processor.PullLocalWord(0x3e) != MapRules.OceanTerrain)
+			if (this.turn.StartTerrain == MapRules.OceanTerrain && this.turn.TargetTerrain != MapRules.OceanTerrain)
 			{
 				this.processor.RegSource.Value16 = unit;
 				this.processor.RegBase.Value16 = (ushort)(this.troops.TroopKind(participantIdx, troopIdx) * UnitKindTable.Stride);
@@ -2816,24 +2967,24 @@ namespace Civilization1Remaster.Game
 
 			this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
 			this.processor.RegSource.Value16 = player;
-			this.processor.EmitLocalByte(0x52, this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind));
+			this.turn.CarrierKind = (ushort)((this.turn.CarrierKind & 0xff00) | this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind));
 
-			if ((UnitKindTable.Field(this.processor, (sbyte)this.processor.PullLocalByte(0x52), UnitKindTable.FerryRoom) == 0 &&
-				this.processor.PullLocalByte(0x52) != UnitKindTable.Carrier) || this.processor.PullLocalWord(0x14) == 0xffff)
+			if ((UnitKindTable.Field(this.processor, (sbyte)(byte)this.turn.CarrierKind, UnitKindTable.FerryRoom) == 0 &&
+				(byte)this.turn.CarrierKind != UnitKindTable.Carrier) || this.turn.Cargo == 0xffff)
 			{
 				return;
 			}
 
 			this.processor.RegAcc.Value16 = 0;
-			this.processor.EmitLocalWord(0x4a, 0);
-			this.processor.EmitLocalWord(0x3c, 0);
+			this.turn.CargoTally = 0;
+			this.turn.Count = 0;
 
 			while (true)
 			{
-				short member = (short)this.processor.PullLocalWord(0x14);
+				short member = (short)this.turn.Cargo;
 				this.processor.RegSource.Value16 = player;
 				this.processor.RegDest.Value16 = (ushort)(member * UnitMemory.TroopStride + player);
-				this.processor.EmitLocalWord(0x4c, (ushort)this.troops.PullSigned(participantIdx, member, UnitMemory.FollowingInStack));
+				this.turn.NextCargo = (ushort)this.troops.PullSigned(participantIdx, member, UnitMemory.FollowingInStack);
 
 				// A transport takes land units, a carrier (no room) planes
 				ushort cargoGroup = (ushort)(this.troops.KindField(participantIdx, troopIdx, UnitKindTable.FerryRoom) == 0 ? 1 : 0);
@@ -2843,7 +2994,7 @@ namespace Civilization1Remaster.Game
 				if (cargoGroup == this.troops.KindField(participantIdx, member, UnitKindTable.LandGroup))
 				{
 					byte status = this.troops.Pull(participantIdx, member, UnitMemory.Status);
-					bool taken = (status & 1) != 0 || this.processor.PullLocalWord(0x34) == MapRules.OceanTerrain;
+					bool taken = (status & 1) != 0 || this.turn.StartTerrain == MapRules.OceanTerrain;
 
 					if (!taken && participantIdx != this.owner.World.PersonParticipantIdx && (status & 0xc) == 0)
 					{
@@ -2856,20 +3007,20 @@ namespace Civilization1Remaster.Game
 						CarryUnit(participantIdx, troopIdx, member, player);
 				}
 
-				this.processor.EmitLocalWord(0x14, this.processor.PullLocalWord(0x4c));
-				this.processor.EmitLocalWord(0x4a, (ushort)(this.processor.PullLocalWord(0x4a) + 1));
+				this.turn.Cargo = this.turn.NextCargo;
+				this.turn.CargoTally = (ushort)(this.turn.CargoTally + 1);
 
-				if ((short)this.processor.PullLocalWord(0x4a) >= 0x14 || this.processor.PullLocalWord(0x14) == 0xffff)
+				if ((short)this.turn.CargoTally >= 0x14 || this.turn.Cargo == 0xffff)
 					return;
 
 				this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
 				this.processor.RegSource.Value16 = player;
-				this.processor.EmitLocalByte(0x52, this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind));
-				this.processor.RegBase.Value16 = (ushort)((sbyte)this.processor.PullLocalByte(0x52) * UnitKindTable.Stride);
-				this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x3c);
+				this.turn.CarrierKind = (ushort)((this.turn.CarrierKind & 0xff00) | this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind));
+				this.processor.RegBase.Value16 = (ushort)((sbyte)(byte)this.turn.CarrierKind * UnitKindTable.Stride);
+				this.processor.RegAcc.Value16 = this.turn.Count;
 
-				if ((short)UnitKindTable.Field(this.processor, (sbyte)this.processor.PullLocalByte(0x52), UnitKindTable.FerryRoom) <= (short)this.processor.PullLocalWord(0x3c) &&
-					this.processor.PullLocalByte(0x52) != UnitKindTable.Carrier && participantIdx != 0)
+				if ((short)UnitKindTable.Field(this.processor, (sbyte)(byte)this.turn.CarrierKind, UnitKindTable.FerryRoom) <= (short)this.turn.Count &&
+					(byte)this.turn.CarrierKind != UnitKindTable.Carrier && participantIdx != 0)
 				{
 					return;
 				}
@@ -2880,18 +3031,18 @@ namespace Civilization1Remaster.Game
 		private void CarryUnit(short participantIdx, short troopIdx, short member, ushort player)
 		{
 			this.owner.MapOps.DiscardUnitFromTile(participantIdx,
-				this.processor.PullLocalSignedWord(0x14),
-				this.processor.PullLocalSignedWord(0x22),
-				this.processor.PullLocalSignedWord(0x2a));
+				(short)this.turn.Cargo,
+				(short)this.turn.CarrierHoriz,
+				(short)this.turn.CarrierVert);
 
 			this.owner.MapOps.SituateUnitOnTile(participantIdx,
-				this.processor.PullLocalSignedWord(0x14),
-				this.processor.PullLocalSignedWord(0x1c),
-				this.processor.PullLocalSignedWord(0x26));
+				(short)this.turn.Cargo,
+				(short)this.turn.TargetHoriz,
+				(short)this.turn.TargetVert);
 
 			this.processor.RegSource.Value16 = (ushort)(player + member * UnitMemory.TroopStride);
-			this.troops.Assign(participantIdx, member, UnitMemory.Horiz, this.processor.PullLocalByte(0x1c));
-			this.troops.Assign(participantIdx, member, UnitMemory.Vert, this.processor.PullLocalByte(0x26));
+			this.troops.Assign(participantIdx, member, UnitMemory.Horiz, (byte)this.turn.TargetHoriz);
+			this.troops.Assign(participantIdx, member, UnitMemory.Vert, (byte)this.turn.TargetVert);
 			this.troops.Assign(participantIdx, member, UnitMemory.ShownToParticipants, 0);
 			this.troops.Assign(participantIdx, member, UnitMemory.TravelHeading, 0xff);
 
@@ -2916,7 +3067,7 @@ namespace Civilization1Remaster.Game
 				this.troops.Assign(participantIdx, member, UnitMemory.UnusualSteps, this.processor.RegAcc.LowByte);
 			}
 
-			this.processor.EmitLocalWord(0x3c, (ushort)(this.processor.PullLocalWord(0x3c) + 1));
+			this.turn.Count = (ushort)(this.turn.Count + 1);
 		}
 
 		/// <summary>
@@ -2927,67 +3078,67 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private void ArriveAtTile(short participantIdx)
 		{
-			short troopIdx = (short)this.processor.PullLocalWord(0x32);
+			short troopIdx = (short)this.turn.Troop;
 			short person = this.owner.World.PersonParticipantIdx;
 			int personBit = 1 << (person & 0xff);
 
-			if ((this.processor.PullLocalByte(0x40) & 1) != 0 && this.processor.PullLocalWord(0x48) != (ushort)participantIdx)
+			if (((byte)this.turn.TargetImprovements & 1) != 0 && this.turn.TileOwner != (ushort)participantIdx)
 			{
 				// A foreign city is taken
 				this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
 				this.processor.RegSource.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride);
-				this.processor.RegAcc.LowByte = (byte)(1 << (this.processor.PullLocalByte(0x48) & 0x1f));
+				this.processor.RegAcc.LowByte = (byte)(1 << ((byte)this.turn.TileOwner & 0x1f));
 				this.troops.Assign(participantIdx, troopIdx, UnitMemory.ShownToParticipants,
 					(byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.ShownToParticipants) | this.processor.RegAcc.LowByte));
 
-				this.processor.EmitLocalWord(0x10, this.owner.Helpers.LocateCityAtPosition(this.processor.PullLocalSignedWord(0x1c), this.processor.PullLocalSignedWord(0x26)));
+				this.turn.City = this.owner.Helpers.LocateCityAtPosition((short)this.turn.TargetHoriz, (short)this.turn.TargetVert);
 
-				this.owner.Conquest.SeizeCity(participantIdx, this.processor.PullLocalSignedWord(0x10), 0);
+				this.owner.Conquest.SeizeCity(participantIdx, (short)this.turn.City, 0);
 
-				this.owner.MapOps.TagTileOwned(this.processor.PullLocalSignedWord(0x1c), this.processor.PullLocalSignedWord(0x26));
+				this.owner.MapOps.TagTileOwned((short)this.turn.TargetHoriz, (short)this.turn.TargetVert);
 			}
 
-			this.owner.MapOps.MapAssignCityOwner(participantIdx, this.processor.PullLocalSignedWord(0x1c), this.processor.PullLocalSignedWord(0x26));
+			this.owner.MapOps.MapAssignCityOwner(participantIdx, (short)this.turn.TargetHoriz, (short)this.turn.TargetVert);
 
 			this.owner.UnitOps.ShiftUnit(
-				this.processor.PullLocalSignedWord(0x1c),
-				this.processor.PullLocalSignedWord(0x26),
+				(short)this.turn.TargetHoriz,
+				(short)this.turn.TargetVert,
 				participantIdx,
-				this.processor.PullLocalSignedWord(0x32),
+				(short)this.turn.Troop,
 				1);
 
-			if (this.owner.MapOps.ContainsHut(this.processor.PullLocalWord(0x3e), this.processor.PullLocalSignedWord(0x1c), this.processor.PullLocalSignedWord(0x26)) != 0)
+			if (this.owner.MapOps.ContainsHut(this.turn.TargetTerrain, (short)this.turn.TargetHoriz, (short)this.turn.TargetVert) != 0)
 			{
-				this.owner.UnitOps.VisitHut(participantIdx, this.processor.PullLocalSignedWord(0x32));
+				this.owner.UnitOps.VisitHut(participantIdx, (short)this.turn.Troop);
 
-				this.owner.World.ChartSight[this.processor.PullLocalWord(0x1c), this.processor.PullLocalWord(0x26)] |= 1;
+				this.owner.World.ChartSight[this.turn.TargetHoriz, this.turn.TargetVert] |= 1;
 			}
 
-			if (this.processor.PullLocalWord(0x3e) == MapRules.OceanTerrain)
+			if (this.turn.TargetTerrain == MapRules.OceanTerrain)
 			{
 				this.processor.RegBase.Value16 = (ushort)(this.troops.TroopKind(participantIdx, troopIdx) * UnitKindTable.Stride);
 				this.processor.RegSource.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride);
 
 				if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) != UnitKindTable.SeaUnits)
-					this.owner.UnitOps.VisitEachUnitInStack(participantIdx, this.processor.PullLocalSignedWord(0x32), 0x1560);
+					this.owner.UnitOps.VisitEachUnitInStack(participantIdx, (short)this.turn.Troop, 0x1560);
 			}
 
-			if (participantIdx != 0 || this.processor.PullLocalWord(0x3e) == MapRules.OceanTerrain)
+			if (participantIdx != 0 || this.turn.TargetTerrain == MapRules.OceanTerrain)
 				return;
 
 			// A barbarian the human sees near his city
 			this.processor.RegSource.Value16 = (ushort)personBit;
 
-			if (((sbyte)this.owner.World.ChartSight[this.processor.PullLocalWord(0x1c), this.processor.PullLocalWord(0x26)] & personBit) == 0)
+			if (((sbyte)this.owner.World.ChartSight[this.turn.TargetHoriz, this.turn.TargetVert] & personBit) == 0)
 				return;
 
-			this.processor.ScaleIndex(0xc, this.processor.PullLocalWord(0x32));
+			this.processor.ScaleIndex(0xc, this.turn.Troop);
 			this.processor.RegDest.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride + UnitMemory.Origin + UnitMemory.ShownToParticipants);
 
 			if ((this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.ShownToParticipants) & personBit) == 0 &&
-				this.owner.World.Towns[this.owner.Helpers.LocateNearestCity(this.processor.PullLocalSignedWord(0x1c), this.processor.PullLocalSignedWord(0x26))].ParticipantIdx == person)
+				this.owner.World.Towns[this.owner.Helpers.LocateNearestCity((short)this.turn.TargetHoriz, (short)this.turn.TargetVert)].ParticipantIdx == person)
 			{
-				this.processor.RegAcc.LowByte = (byte)this.owner.World.ChartSight[this.processor.PullLocalWord(0x1c), this.processor.PullLocalWord(0x26)];
+				this.processor.RegAcc.LowByte = (byte)this.owner.World.ChartSight[this.turn.TargetHoriz, this.turn.TargetVert];
 				this.troops.Assign(participantIdx, troopIdx, UnitMemory.ShownToParticipants,
 					(byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.ShownToParticipants) | this.processor.RegAcc.LowByte));
 			}
@@ -3002,7 +3153,7 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private void FinishMove(short participantIdx)
 		{
-			short troopIdx = (short)this.processor.PullLocalWord(0x32);
+			short troopIdx = (short)this.turn.Troop;
 			ushort unit = UnitMemory.Offset(participantIdx, troopIdx);
 			short person = this.owner.World.PersonParticipantIdx;
 
@@ -3014,22 +3165,22 @@ namespace Civilization1Remaster.Game
 			{
 				if (participantIdx == person || (this.owner.World.SessionPrefMarkers & 0x20) != 0)
 				{
-					this.owner.UnitOps.PanMapToPosition(person, this.processor.PullLocalSignedWord(0x1c), this.processor.PullLocalSignedWord(0x26));
-					this.owner.MapOps.RenderUnitOnWorldMap(participantIdx, this.processor.PullLocalSignedWord(0x32));
+					this.owner.UnitOps.PanMapToPosition(person, (short)this.turn.TargetHoriz, (short)this.turn.TargetVert);
+					this.owner.MapOps.RenderUnitOnWorldMap(participantIdx, (short)this.turn.Troop);
 
 					if (participantIdx != person && this.processor.PullGlobalWord(0xb278) != 1)
 						this.owner.TextPainter.AwaitTime(30);
 				}
 				else
 				{
-					if (this.owner.MapOps.RenderUnitOnWorldMap(participantIdx, this.processor.PullLocalSignedWord(0x32)) != 0)
+					if (this.owner.MapOps.RenderUnitOnWorldMap(participantIdx, (short)this.turn.Troop) != 0)
 						this.owner.TextPainter.AwaitTime(10);
 				}
 			}
 
-			this.processor.EmitLocalWord(0xa, 0);
+			this.turn.AITries = 0;
 
-			if ((this.processor.PullLocalByte(0x40) & 1) != 0)
+			if (((byte)this.turn.TargetImprovements & 1) != 0)
 			{
 				// A plane lands in a city
 				this.processor.RegSource.Value16 = unit;
@@ -3053,7 +3204,7 @@ namespace Civilization1Remaster.Game
 			}
 
 			// A plane on a carrier (the unit through SI as the tally leaves it)
-			if (this.owner.UnitOps.TallyUnitsOfTypeInStack(participantIdx, this.processor.PullLocalSignedWord(0x32), 23) == 0)
+			if (this.owner.UnitOps.TallyUnitsOfTypeInStack(participantIdx, (short)this.turn.Troop, 23) == 0)
 				return;
 
 			ushort status = (ushort)(this.processor.RegSource.Value16 + UnitMemory.Origin + UnitMemory.Status);
@@ -3087,7 +3238,7 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private KeyStep CarryOutKey(short participantIdx)
 		{
-			ushort key = this.processor.PullLocalWord(0x44);
+			ushort key = this.turn.Order;
 			short person = this.owner.World.PersonParticipantIdx;
 			bool everythingShown = this.processor.PullGlobalWord(0xd806) != 0;
 
@@ -3138,11 +3289,11 @@ namespace Civilization1Remaster.Game
 					{
 						for (short civ = 1; civ < 8; civ++)
 						{
-							this.processor.EmitLocalWord(0x3c, (ushort)civ);
+							this.turn.Count = (ushort)civ;
 							this.owner.RealmInfo.DisplayCivilizationOverview(civ);
 						}
 
-						this.processor.EmitLocalWord(0x3c, 8);
+						this.turn.Count = 8;
 					}
 					else
 					{
@@ -3181,19 +3332,19 @@ namespace Civilization1Remaster.Game
 				case 0x4f31: // Shift + End
 				case 0x4b34: // Shift + Left
 				case 0x4737: // Shift + Home
-					this.processor.EmitLocalWord(0x24, ShiftedKeyDirection(key));
+					this.turn.Direction = ShiftedKeyDirection(key);
 					PanViewByDirection();
 					break;
 
 				case 0x2000: // Alt + D
 					this.processor.EmitGlobalWord(0xd806, (ushort)~this.processor.PullGlobalWord(0xd806));
-					this.processor.EmitLocalWord(0x24, 0);
+					this.turn.Direction = 0;
 					PanViewByDirection();
 					break;
 
 				case 0xd: // Enter
 				case 0x20: // Space
-					if (this.processor.PullLocalWord(0x32) == 0x80)
+					if (this.turn.Troop == 0x80)
 						return KeyStep.EndOfTurn;
 					break;
 
@@ -3237,7 +3388,7 @@ namespace Civilization1Remaster.Game
 					// Three random words of each of 16 records of 0x3a bytes, then the dialog 0x2003
 					for (ushort record = 0; record < 0x10; record++)
 					{
-						this.processor.EmitLocalWord(0x3a, record);
+						this.turn.Result = record;
 						this.processor.RegAcc.Value16 = 0x3a;
 						this.processor.ScaleAccumulatorToSource(record);
 
@@ -3248,7 +3399,7 @@ namespace Civilization1Remaster.Game
 						}
 					}
 
-					this.processor.EmitLocalWord(0x3a, 0x10);
+					this.turn.Result = 0x10;
 					this.owner.TurnHooks.DisplayDialog(0x2003, 100, 80);
 					break;
 
@@ -3269,9 +3420,9 @@ namespace Civilization1Remaster.Game
 					break;
 
 				case 0x1b: // Escape
-					if (this.processor.PullGlobalWord(0x1a3c) == 0 && this.processor.PullLocalWord(0x4) != 0)
+					if (this.processor.PullGlobalWord(0x1a3c) == 0 && this.turn.MarkedTileMode != 0)
 					{
-						this.processor.EmitLocalWord(0x4, 0);
+						this.turn.MarkedTileMode = 0;
 						ForgetMarkedTileOnScreen(participantIdx);
 					}
 					break;
@@ -3319,7 +3470,7 @@ namespace Civilization1Remaster.Game
 		/// <summary>The view moves four tiles in the direction 0x24 (SI = 2 * the direction, as in the original)</summary>
 		private void PanViewByDirection()
 		{
-			this.processor.RegSource.Value16 = (ushort)(this.processor.PullLocalWord(0x24) << 1);
+			this.processor.RegSource.Value16 = (ushort)(this.turn.Direction << 1);
 
 			ushort horiz = (ushort)(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1882)) << 2);
 			this.processor.EmitGlobalWord(0xd4cc, (ushort)(this.processor.PullGlobalWord(0xd4cc) + horiz));
@@ -3374,17 +3525,17 @@ namespace Civilization1Remaster.Game
 				this.owner.Libc.AppendText(0xba06, "% Science)\n ");
 			}
 
-			this.processor.EmitLocalWord(0x3a, (ushort)rate);
+			this.turn.Result = (ushort)rate;
 			this.processor.EmitGlobalWord(0x2f9a, (ushort)participant.LevyRatio);
 
-			this.processor.EmitLocalWord(0x3a, this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80));
+			this.turn.Result = this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
 
-			if (this.processor.PullLocalWord(0x3a) == 0xffff)
+			if (this.turn.Result == 0xffff)
 				return;
 
-			participant.ResearchLevyRatio += (short)(participant.LevyRatio - (short)this.processor.PullLocalWord(0x3a));
-			participant.LevyRatio = (short)this.processor.PullLocalWord(0x3a);
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x3a);
+			participant.ResearchLevyRatio += (short)(participant.LevyRatio - (short)this.turn.Result);
+			participant.LevyRatio = (short)this.turn.Result;
+			this.processor.RegAcc.Value16 = this.turn.Result;
 
 			this.owner.TurnHooks.RenderStatusBar();
 		}
@@ -3410,15 +3561,15 @@ namespace Civilization1Remaster.Game
 				this.owner.Libc.AppendText(0xba06, "% Science)\n ");
 			}
 
-			this.processor.EmitLocalWord(0x3a, (ushort)rate);
+			this.turn.Result = (ushort)rate;
 			this.processor.EmitGlobalWord(0x2f9a, (ushort)-(participant.LevyRatio + participant.ResearchLevyRatio - 10));
 
-			this.processor.EmitLocalWord(0x3a, this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80));
+			this.turn.Result = this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
 
-			if (this.processor.PullLocalWord(0x3a) == 0xffff)
+			if (this.turn.Result == 0xffff)
 				return;
 
-			participant.ResearchLevyRatio = (short)-(participant.LevyRatio + (short)this.processor.PullLocalWord(0x3a) - 10);
+			participant.ResearchLevyRatio = (short)-(participant.LevyRatio + (short)this.turn.Result - 10);
 			this.processor.RegAcc.Value16 = (ushort)participant.ResearchLevyRatio;
 
 			this.owner.TurnHooks.RenderStatusBar();
@@ -3445,16 +3596,16 @@ namespace Civilization1Remaster.Game
 					this.processor.EmitGlobalWord(0xdc48, 1);
 			}
 
-			this.processor.EmitLocalWord(0x32, 0x80);
+			this.turn.Troop = 0x80;
 		}
 
 		/// <summary>The marked tile (0xe, 0x12) is repainted when the player has seen it, and forgotten (0xe = -1)</summary>
 		private void ForgetMarkedTileOnScreen(short participantIdx)
 		{
-			if ((this.owner.World.ChartSight[this.processor.PullLocalWord(0xe), this.processor.PullLocalWord(0x12)] & (1 << (participantIdx & 0xff))) != 0)
-				this.owner.MapOps.RepaintMapTile(this.processor.PullLocalSignedWord(0xe), this.processor.PullLocalSignedWord(0x12));
+			if ((this.owner.World.ChartSight[this.turn.CursorHoriz, this.turn.CursorVert] & (1 << (participantIdx & 0xff))) != 0)
+				this.owner.MapOps.RepaintMapTile((short)this.turn.CursorHoriz, (short)this.turn.CursorVert);
 
-			this.processor.EmitLocalWord(0xe, 0xffff);
+			this.turn.CursorHoriz = 0xffff;
 		}
 
 		/// <summary>
@@ -3463,7 +3614,7 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private void ToggleMarkedTile(short participantIdx)
 		{
-			if (this.processor.PullLocalWord(0x4) != 0)
+			if (this.turn.MarkedTileMode != 0)
 			{
 				ForgetMarkedTileOnScreen(participantIdx);
 			}
@@ -3471,43 +3622,43 @@ namespace Civilization1Remaster.Game
 			{
 				bool onUnit = false;
 
-				if (this.processor.PullLocalWord(0x32) != 0x80)
+				if (this.turn.Troop != 0x80)
 				{
-					this.processor.RegSource.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride + this.processor.PullLocalWord(0x32) * UnitMemory.TroopStride);
+					this.processor.RegSource.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride + this.turn.Troop * UnitMemory.TroopStride);
 					ushort place = (ushort)(this.processor.RegSource.Value16 + UnitMemory.Origin);
 
 					if (VerifyPositionOnScreen(
 						this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(place + UnitMemory.Horiz)),
 						this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(place + UnitMemory.Vert))) != 0)
 					{
-						this.processor.EmitLocalWord(0xe, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(place + UnitMemory.Horiz)));
-						this.processor.EmitLocalWord(0x12, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(place + UnitMemory.Vert)));
+						this.turn.CursorHoriz = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(place + UnitMemory.Horiz));
+						this.turn.CursorVert = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(place + UnitMemory.Vert));
 						onUnit = true;
 					}
 				}
 
 				if (!onUnit)
 				{
-					this.processor.EmitLocalWord(0xe, (ushort)(this.processor.PullGlobalWord(0xd4cc) + 7));
-					this.processor.EmitLocalWord(0x12, (ushort)(this.processor.PullGlobalWord(0xd75e) + 6));
+					this.turn.CursorHoriz = (ushort)(this.processor.PullGlobalWord(0xd4cc) + 7);
+					this.turn.CursorVert = (ushort)(this.processor.PullGlobalWord(0xd75e) + 6);
 				}
 
-				if ((this.owner.World.ChartSight[this.processor.PullLocalWord(0xe), this.processor.PullLocalWord(0x12)] & (1 << (participantIdx & 0xff))) != 0)
-					this.owner.MapOps.RepaintMapTile(this.processor.PullLocalSignedWord(0xe), this.processor.PullLocalSignedWord(0x12));
+				if ((this.owner.World.ChartSight[this.turn.CursorHoriz, this.turn.CursorVert] & (1 << (participantIdx & 0xff))) != 0)
+					this.owner.MapOps.RepaintMapTile((short)this.turn.CursorHoriz, (short)this.turn.CursorVert);
 			}
 
-			this.processor.EmitLocalWord(0x4, (ushort)(this.processor.PullLocalWord(0x4) ^ 1));
+			this.turn.MarkedTileMode = (ushort)(this.turn.MarkedTileMode ^ 1);
 		}
 
 		/// <summary>The menu of the menu bar; a chosen order (0xd4ca) becomes the order 0x44 of the unit</summary>
 		private KeyStep ManageMenu(short participantIdx, short menu)
 		{
-			this.owner.MenuSystem.ManageMenuBar(participantIdx, this.processor.PullLocalSignedWord(0x32), menu);
+			this.owner.MenuSystem.ManageMenuBar(participantIdx, (short)this.turn.Troop, menu);
 
 			if (this.processor.PullGlobalWord(0xd4ca) == 0xffff)
 				return KeyStep.NextLook;
 
-			this.processor.EmitLocalWord(0x44, this.processor.PullGlobalWord(0xd4ca));
+			this.turn.Order = this.processor.PullGlobalWord(0xd4ca);
 			return KeyStep.MenuOrder;
 		}
 
@@ -3520,14 +3671,14 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private bool ContinueOrFinishUnit(short participantIdx)
 		{
-			short troopIdx = (short)this.processor.PullLocalWord(0x32);
+			short troopIdx = (short)this.turn.Troop;
 
 			if (troopIdx < UnitMemory.TroopTally)
 			{
 				this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
 				this.processor.RegSource.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride);
 
-				if (this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.LeftoverSteps) > 0 && this.processor.PullLocalWord(0x28) == 0 &&
+				if (this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.LeftoverSteps) > 0 && this.turn.Ordered == 0 &&
 					this.processor.PullGlobalWord(0xdc48) == 0)
 				{
 					return true;
@@ -3538,7 +3689,7 @@ namespace Civilization1Remaster.Game
 
 				if (this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.LeftoverSteps) > 0)
 				{
-					this.processor.EmitLocalWord(0x1e, 0);
+					this.turn.AllMoved = 0;
 				}
 				else
 				{
@@ -3548,7 +3699,7 @@ namespace Civilization1Remaster.Game
 			}
 
 			if (this.owner.World.IsHuman(participantIdx))
-				RenderUnitInfo(participantIdx, this.processor.PullLocalWord(0x32));
+				RenderUnitInfo(participantIdx, this.turn.Troop);
 
 			return false;
 		}
@@ -3572,7 +3723,7 @@ namespace Civilization1Remaster.Game
 				this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert));
 
 			if ((this.processor.RegAcc.LowByte & 1) != 0 ||
-				this.owner.UnitOps.TallyUnitsOfTypeInStack(participantIdx, this.processor.PullLocalSignedWord(0x32), 23) != 0)
+				this.owner.UnitOps.TallyUnitsOfTypeInStack(participantIdx, (short)this.turn.Troop, 23) != 0)
 			{
 				// In a city or on a carrier
 				this.processor.RegSource.Value16 = unit;
@@ -3588,7 +3739,7 @@ namespace Civilization1Remaster.Game
 
 			if ((sbyte)rounds < 0)
 			{
-				this.owner.UnitOps.EliminateUnit(participantIdx, this.processor.PullLocalSignedWord(0x32));
+				this.owner.UnitOps.EliminateUnit(participantIdx, (short)this.turn.Troop);
 				DisplayHelpForHuman(0x2070);
 			}
 		}
@@ -3608,11 +3759,11 @@ namespace Civilization1Remaster.Game
 			if (this.owner.Libc.Dice.DrawInt(2) == 0)
 				return;
 
-			this.processor.EmitLocalWord(0x38, 0);
+			this.turn.Found = 0;
 
 			for (ushort direction = 1; direction <= 8; direction++)
 			{
-				this.processor.EmitLocalWord(0x3c, direction);
+				this.turn.Count = direction;
 				this.processor.RegSource.Value16 = (ushort)(direction << 1);
 				this.processor.RegDest.Value16 = UnitMemory.Offset(participantIdx, troopIdx);
 
@@ -3620,18 +3771,18 @@ namespace Civilization1Remaster.Game
 					this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz) + this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1882)),
 					this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert) + this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x18e4))) != MapRules.OceanTerrain)
 				{
-					this.processor.EmitLocalWord(0x38, 1);
+					this.turn.Found = 1;
 					break;
 				}
 
 				if (direction == 8)
-					this.processor.EmitLocalWord(0x3c, 9);
+					this.turn.Count = 9;
 			}
 
-			if (this.processor.PullLocalWord(0x38) != 0)
+			if (this.turn.Found != 0)
 				return;
 
-			this.owner.UnitOps.EliminateUnit(participantIdx, this.processor.PullLocalSignedWord(0x32));
+			this.owner.UnitOps.EliminateUnit(participantIdx, (short)this.turn.Troop);
 			DisplayHelpForHuman(0x2076);
 		}
 

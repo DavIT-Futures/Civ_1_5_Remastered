@@ -116,8 +116,7 @@ public sealed class BatchNinetyEightDifferentialTests(ITestOutputHelper output)
 						ways.Add(way);
 
 					return met.Count == 0 ? "nothing" : string.Join("+", met);
-				},
-				[(0x3b01, (ushort)(frame - 0x80), 0x80)]);
+				});
 		}, output, [], null);
 	}
 }

@@ -132,7 +132,7 @@ public sealed class BatchNinetyOneDifferentialTests(ITestOutputHelper output)
 					return string.Join("+", met);
 				},
 				// (and the stack below: what ShiftUnit keeps there, ShiftAIUnit finds)
-				[(0x3b01, (ushort)(frame - 0x80), 0x80)]);
+				[(0x3b01, (ushort)(frame - 0x80), 0x80 - 0x52)]);
 		}, output, [], null);
 	}
 }
