@@ -5285,8 +5285,6 @@ namespace Civilization1Remaster.Game
 
 			sbyte size = this.owner.World.Towns[townIdx].TrueExtent;
 
-			this.processor.EmitLocalByte(0xa, (byte)size);
-
 			ushort step = (short)(7 * size) > (short)arg5 ? (ushort)CPU.SignedQuotient((short)arg5, size) : (ushort)7;
 			short citizenIdx;
 
@@ -5330,9 +5328,6 @@ namespace Civilization1Remaster.Game
 			{
 				horizLoc = RenderCitizen(horizLoc, vertLoc, this.processor.PullGlobalWord((ushort)((ObtainCitizenType((ushort)citizenIdx) << 1) + 0x6ea0)), step);
 			}
-
-			this.processor.EmitLocalWord(0x6, (ushort)citizenIdx);
-			this.processor.EmitLocalWord(0x8, step);
 
 			this.processor.RegAcc.Value16 = step;
 			this.processor.LeaveFrame();

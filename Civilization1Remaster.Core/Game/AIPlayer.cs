@@ -28,13 +28,11 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"OperateAITurn({participantIdx})");
 
-			// The locals stay in the frame and get every value the original gives them: functions called later from the same
-			// depth may read what is left there
 			this.processor.EnterFrame(0x68);
 			this.processor.PreserveIndexRegisters();
 
 			CountUnits(participantIdx);
-			CountCities(participantIdx);
+			ushort sentBase = CountCities(participantIdx);
 			CountUsedBlocks(participantIdx);
 			ChooseContinentApproaches(participantIdx);
 
@@ -48,35 +46,13 @@ namespace Civilization1Remaster.Game
 				if ((((byte)participantIdx + (byte)this.owner.World.RoundTally) & 7) == 0)
 					ChooseGovernment(participantIdx);
 
-				DirectUnits(participantIdx);
+				DirectUnits(participantIdx, sentBase);
 			}
 
 			this.processor.RestoreIndexRegisters();
 			this.processor.LeaveFrame();
 			this.processor.Journal.CloseScope("OperateAITurn");
 		}
-
-		// Locals of OperateAITurn (distances below bp)
-		private const int SurveyBase = 0x4;
-		private const int SurveyLocations = 0x44;
-		private const int SurveyDistance = 0x46;
-		private const int SurveyMostTowns = 0x48;
-		private const int SurveyBestDistance = 0x4a;
-		private const int SurveyLoop2 = 0x4c;
-		private const int SurveyStrength = 0x4e;
-		private const int SurveyHoriz = 0x50;
-		private const int SurveyVert = 0x52;
-		private const int SurveyLoop = 0x54;
-		private const int SurveyOuterLoop = 0x58;
-		private const int SurveyContinent = 0x5a;
-		private const int SurveyTowns = 0x5c;
-		private const int SurveyThreats = 0x5e;
-		private const int SurveyApproach = 0x60;
-		private const int SurveyChoice = 0x62;
-		private const int SurveyScratch = 0x64;
-		private const int SurveyScratch2 = 0x66;
-		private const int SurveyScratch3 = 0x68;
-		private const int SurveyStronger = 0x2;
 
 		/// <summary>The 20 x 13 blocks of 4 x 4 tiles of the map in the segment 0x3772: bit 0 a city, bits 1 - 7 the unit roles</summary>
 		private const ushort BlockSegment = 0x3772;
@@ -96,9 +72,6 @@ namespace Civilization1Remaster.Game
 
 		private static ushort LocationPriority(int participantIdx, int locationIdx) => (ushort)(0xb2be + (participantIdx << 5) + locationIdx);
 
-		/// <summary>The word of the table of the frame (bp - 0x44 + 2 * location): units sent to the location so far, plus the base</summary>
-		private ushort LocationSentAddress(int locationIdx) => (ushort)(this.processor.RegFrame.Value16 + (locationIdx << 1) - SurveyLocations);
-
 		/// <summary>
 		/// Strength of the units of the player by continent, the units of the player (without the nuclear weapons), the
 		/// settlers, the unit roles in the blocks; the mark 0x10 of a unit is set when it can't move (another player's unit
@@ -108,41 +81,28 @@ namespace Civilization1Remaster.Game
 		{
 			Player player = this.owner.World.Participants[participantIdx];
 
-			this.processor.EmitLocalWord(SurveyLoop, 0);
-
 			for (ushort continentIdx = 0; continentIdx < 0x10; continentIdx++)
 			{
 				player.Landmasses[continentIdx].TownTally = 0;
 				player.Landmasses[continentIdx].Guard = 0;
 				player.Landmasses[continentIdx].Assault = 0;
-				this.processor.EmitLocalWord(SurveyLoop, (ushort)(continentIdx + 1));
 			}
-
-			this.processor.EmitLocalWord(SurveyHoriz, 0);
 
 			for (ushort blockHoriz = 0; blockHoriz < 0x14; blockHoriz++)
 			{
-				this.processor.EmitLocalWord(SurveyVert, 0);
-
 				for (ushort blockVert = 0; blockVert < 0xd; blockVert++)
 				{
 					this.processor.EmitUInt8(BlockSegment, (ushort)(BlockOrigin + blockHoriz * 0xd + blockVert), 0);
-					this.processor.EmitLocalWord(SurveyVert, (ushort)(blockVert + 1));
 				}
-
-				this.processor.EmitLocalWord(SurveyHoriz, (ushort)(blockHoriz + 1));
 			}
 
 			player.MartialMight = 0;
 			player.ColonistTally = 0;
 			player.TroopTally = 0;
 
-			this.processor.EmitLocalWord(SurveyLoop, 0);
-
 			for (short troopIdx = 0; troopIdx < UnitMemory.TroopTally; troopIdx++)
 			{
 				byte kind = this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind);
-				this.processor.EmitLocalByte(SurveyScratch, kind);
 
 				if (kind != 0xff && kind != 0x19)
 				{
@@ -153,8 +113,6 @@ namespace Civilization1Remaster.Game
 
 					CountUnit(participantIdx, troopIdx);
 				}
-
-				this.processor.EmitLocalWord(SurveyLoop, (ushort)(troopIdx + 1));
 			}
 		}
 
@@ -181,10 +139,8 @@ namespace Civilization1Remaster.Game
 			{
 				ushort continentIdx = this.owner.MapOps.ObtainContinentID(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
 					this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert));
-				this.processor.EmitLocalWord(SurveyContinent, continentIdx);
 
 				kind = this.troops.TroopKind(participantIdx, troopIdx);
-				this.processor.EmitLocalWord(SurveyScratch, (ushort)((participantIdx << 5) + (continentIdx << 1)));
 
 				player.Landmasses[continentIdx].Assault += (short)UnitKindTable.Field(this.processor, kind, UnitKindTable.GuardPower);
 				player.Landmasses[continentIdx].Guard += (short)UnitKindTable.Field(this.processor, kind, UnitKindTable.AssaultPower);
@@ -207,24 +163,19 @@ namespace Civilization1Remaster.Game
 		/// The cities of the player by continent, their total size and the units in production; the units known to be in
 		/// the cities of the player; the cities, own and others', where a unit is sent (strategic locations)
 		/// </summary>
-		private void CountCities(short participantIdx)
+		private ushort CountCities(short participantIdx)
 		{
 			Player player = this.owner.World.Participants[participantIdx];
 
 			// The base of the weight of a strategic location: an eighth of the units, 3 - 99
-			this.processor.EmitLocalWord(SurveyBase, (ushort)this.owner.Helpers.VerifyValueSpan(player.TroopTally / 8, 3, 99));
+			ushort sentBase = (ushort)this.owner.Helpers.VerifyValueSpan(player.TroopTally / 8, 3, 99);
 			player.GrandTownExtent = 0;
 			player.TownTally = 0;
-
-			this.processor.EmitLocalWord(SurveyLoop, 0);
 
 			for (int kindIdx = 0; kindIdx < 0x1c; kindIdx++)
 			{
 				player.TroopsInsideMaking[kindIdx] = 0;
-				this.processor.EmitLocalWord(SurveyLoop, (ushort)(kindIdx + 1));
 			}
-
-			this.processor.EmitLocalWord(SurveyLoop, 0);
 
 			for (short townIdx = 0; townIdx < 0x80; townIdx++)
 			{
@@ -250,9 +201,9 @@ namespace Civilization1Remaster.Game
 							(short)(town.ParticipantIdx == participantIdx ? 4 : 2));
 					}
 				}
-
-				this.processor.EmitLocalWord(SurveyLoop, (ushort)(townIdx + 1));
 			}
+
+			return sentBase;
 		}
 
 		private void CountOwnCity(short participantIdx, short townIdx)
@@ -266,37 +217,27 @@ namespace Civilization1Remaster.Game
 
 			player.StartMaking(town.PresentMakingIdx);
 
-			this.processor.EmitLocalWord(SurveyHoriz, (ushort)((ushort)(short)town.Place.X >> 2));
-			this.processor.EmitLocalWord(SurveyVert, (ushort)((ushort)(short)town.Place.Y >> 2));
 			ushort block = Block(town.Place.X, town.Place.Y);
 			this.processor.EmitUInt8(BlockSegment, block, (byte)(this.processor.PullUInt8(BlockSegment, block) | 1));
 
 			// The (up to two) units known to be in the city: their strength (a translation slip keeps only the last one
 			// for the whole player and the attack of the continent; the defence adds up)
-			this.processor.EmitLocalWord(SurveyLoop2, 0);
-
 			for (ushort unfamiliarIdx = 0; unfamiliarIdx < 2; unfamiliarIdx++)
 			{
 				if ((byte)town.Unfamiliar[unfamiliarIdx] != 0xff)
 				{
 					sbyte kind = (sbyte)((byte)town.Unfamiliar[unfamiliarIdx] & 0x3f);
-					this.processor.EmitLocalWord(SurveyScratch, (ushort)(kind * UnitKindTable.Stride));
 
 					player.MartialMight = (short)(UnitKindTable.Field(this.processor, kind, UnitKindTable.AssaultPower) +
 						UnitKindTable.Field(this.processor, kind, UnitKindTable.GuardPower));
 
 					ushort continentIdx = this.owner.MapOps.ObtainContinentID(town.Place.X, town.Place.Y);
-					this.processor.EmitLocalWord(SurveyContinent, continentIdx);
 
 					kind = (sbyte)((byte)town.Unfamiliar[unfamiliarIdx] & 0x3f);
-					this.processor.EmitLocalWord(SurveyScratch2, (ushort)(kind * UnitKindTable.Stride));
-					this.processor.EmitLocalWord(SurveyScratch3, (ushort)((participantIdx << 5) + (continentIdx << 1)));
 
 					player.Landmasses[continentIdx].Assault = (short)UnitKindTable.Field(this.processor, kind, UnitKindTable.GuardPower);
 					player.Landmasses[continentIdx].Guard += (short)UnitKindTable.Field(this.processor, kind, UnitKindTable.AssaultPower);
 				}
-
-				this.processor.EmitLocalWord(SurveyLoop2, (ushort)(unfamiliarIdx + 1));
 			}
 		}
 
@@ -327,21 +268,13 @@ namespace Civilization1Remaster.Game
 			Player player = this.owner.World.Participants[participantIdx];
 			player.SoilTally = 0;
 
-			this.processor.EmitLocalWord(SurveyHoriz, 0);
-
 			for (ushort blockHoriz = 0; blockHoriz < 0x14; blockHoriz++)
 			{
-				this.processor.EmitLocalWord(SurveyVert, 0);
-
 				for (ushort blockVert = 0; blockVert < 0xd; blockVert++)
 				{
 					if (this.processor.PullUInt8(BlockSegment, (ushort)(BlockOrigin + blockHoriz * 0xd + blockVert)) != 0)
 						player.SoilTally++;
-
-					this.processor.EmitLocalWord(SurveyVert, (ushort)(blockVert + 1));
 				}
-
-				this.processor.EmitLocalWord(SurveyHoriz, (ushort)(blockHoriz + 1));
 			}
 		}
 
@@ -359,23 +292,16 @@ namespace Civilization1Remaster.Game
 			this.processor.EmitGlobalWord(0x2a6e, (ushort)(this.processor.PullGlobalWord(0x2a6e) & ~(1 << participantIdx)));
 
 			this.processor.EmitGlobalWord(0x6ed4, 0);
-			this.processor.EmitLocalWord(SurveyOuterLoop, 1);
 
 			for (ushort otherIdx = 1; otherIdx < 8; otherIdx++)
 			{
 				if ((player.Relations[otherIdx] & 3) == 1)
 					this.processor.EmitGlobalWord(0x6ed4, 1);
-
-				this.processor.EmitLocalWord(SurveyOuterLoop, (ushort)(otherIdx + 1));
 			}
-
-			this.processor.EmitLocalWord(SurveyMostTowns, 0xffff);
-			this.processor.EmitLocalWord(SurveyOuterLoop, 1);
 
 			for (ushort continentIdx = 1; continentIdx < 0xf; continentIdx++)
 			{
 				ChooseContinentApproach(participantIdx, continentIdx);
-				this.processor.EmitLocalWord(SurveyOuterLoop, (ushort)(continentIdx + 1));
 			}
 		}
 
@@ -391,14 +317,6 @@ namespace Civilization1Remaster.Game
 			short strength = 0;
 			short approach = own.Approach;
 
-			this.processor.EmitLocalWord(SurveyThreats, 0);
-			this.processor.EmitLocalWord(SurveyStronger, 0);
-			this.processor.EmitLocalWord(SurveyChoice, 0);
-			this.processor.EmitLocalWord(SurveyTowns, 0);
-			this.processor.EmitLocalWord(SurveyStrength, 0);
-			this.processor.EmitLocalWord(SurveyApproach, (ushort)approach);
-			this.processor.EmitLocalWord(SurveyLoop, 1);
-
 			for (ushort otherIdx = 1; otherIdx < 8; otherIdx++)
 			{
 				PlayerContinent other = this.owner.World.Participants[otherIdx].Landmasses[continentIdx];
@@ -408,51 +326,38 @@ namespace Civilization1Remaster.Game
 					((short)(own.Guard / 4) < other.Guard || other.TownTally != 0) &&
 					((player.Relations[otherIdx] & 3) == 1 || (player.Relations[otherIdx] & 0x100) != 0))
 				{
-					this.processor.EmitLocalWord(SurveyScratch3, (ushort)((otherIdx << 5) + (continentIdx << 1)));
-
 					if (other.Assault < own.Guard || other.Guard < own.Assault || own.TownTally == 0)
 					{
 						threats++;
-						this.processor.EmitLocalWord(SurveyThreats, (ushort)threats);
 					}
 					else
 					{
 						stronger++;
-						this.processor.EmitLocalWord(SurveyStronger, (ushort)stronger);
 					}
 				}
 
 				// The human player at peace with the player, stronger there than half its defence and all its attack
 				if (other.Assault != 0 && otherIdx == this.owner.World.PersonParticipantIdx && (player.Relations[otherIdx] & 2) != 0)
 				{
-					this.processor.EmitLocalWord(SurveyScratch3, (ushort)((participantIdx << 5) + (continentIdx << 1)));
-
 					if ((short)(CPU.SignedQuotient(own.Guard, 2) + own.Assault) < other.Guard)
 					{
 						stronger++;
-						this.processor.EmitLocalWord(SurveyStronger, (ushort)stronger);
 					}
 				}
 
 				strength += other.Assault;
-				this.processor.EmitLocalWord(SurveyStrength, (ushort)strength);
 				towns += other.TownTally;
-				this.processor.EmitLocalWord(SurveyTowns, (ushort)towns);
 
 				if (other.Assault != 0)
 				{
 					// 1: someone at peace with the player, 2: someone at war
 					presence |= (ushort)((player.Relations[otherIdx] & 2) != 0 ? 1 : 2);
-					this.processor.EmitLocalWord(SurveyChoice, presence);
 				}
-
-				this.processor.EmitLocalWord(SurveyLoop, (ushort)(otherIdx + 1));
 			}
 
 			if (this.owner.World.Participants[0].Landmasses[continentIdx].TownTally != 0)
 			{
 				threats++;
-				this.processor.EmitLocalWord(SurveyThreats, (ushort)threats);
 			}
 
 			// Attack (5, with the technology 7) when the player and the others are strong there compared with the
@@ -470,9 +375,6 @@ namespace Civilization1Remaster.Game
 
 			if (own.Assault == 0 && own.TownTally == 0 && presence != 1)
 				own.Approach = 1;
-
-			if ((short)this.processor.PullLocalWord(SurveyMostTowns) < own.TownTally)
-				this.processor.EmitLocalWord(SurveyMostTowns, (ushort)own.TownTally);
 
 			if (own.Approach != approach && !this.owner.World.IsHuman(participantIdx))
 				RefreshCityProduction(participantIdx, continentIdx);
@@ -506,19 +408,14 @@ namespace Civilization1Remaster.Game
 		/// Every unit that can move (not a nuclear weapon) is given up when it is obsolete (and alone in a city or outside),
 		/// or sent to the best of the strategic locations of its role
 		/// </summary>
-		private void DirectUnits(short participantIdx)
+		private void DirectUnits(short participantIdx, ushort sentBase)
 		{
-			ushort sentBase = this.processor.PullLocalWord(SurveyBase);
-
-			this.processor.EmitLocalWord(SurveyOuterLoop, 0);
+			ushort[] locationSent = new ushort[0x20];
 
 			for (int locationIdx = 0; locationIdx < 0x20; locationIdx++)
 			{
-				this.processor.EmitUInt16(this.processor.SegStack.Value16, LocationSentAddress(locationIdx), sentBase);
-				this.processor.EmitLocalWord(SurveyOuterLoop, (ushort)(locationIdx + 1));
+				locationSent[locationIdx] = sentBase;
 			}
-
-			this.processor.EmitLocalWord(SurveyLoop, 0);
 
 			for (short troopIdx = 0; troopIdx < UnitMemory.TroopTally; troopIdx++)
 			{
@@ -526,11 +423,9 @@ namespace Civilization1Remaster.Game
 
 				if (kind != 0xff && (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 0x10) == 0 && kind != 0x19)
 				{
-					if (!GiveUpObsoleteUnit(participantIdx, troopIdx))
-						SendUnitToBestLocation(participantIdx, troopIdx);
+					if (!GiveUpObsoleteUnit(participantIdx, troopIdx, out short horizLoc, out short vertLoc, out ushort continentIdx))
+						SendUnitToBestLocation(participantIdx, troopIdx, horizLoc, vertLoc, continentIdx, sentBase, locationSent);
 				}
-
-				this.processor.EmitLocalWord(SurveyLoop, (ushort)(troopIdx + 1));
 			}
 		}
 
@@ -539,20 +434,13 @@ namespace Civilization1Remaster.Game
 		/// when the continent is attacked) is given up, unless it is next to another player's unit, alone in a city, on the
 		/// ocean or on a continent where the enemy is stronger
 		/// </summary>
-		private bool GiveUpObsoleteUnit(short participantIdx, short troopIdx)
+		private bool GiveUpObsoleteUnit(short participantIdx, short troopIdx, out short horizLoc, out short vertLoc, out ushort continentIdx)
 		{
 			Player player = this.owner.World.Participants[participantIdx];
 
-			this.processor.EmitLocalWord(SurveyBestDistance, 0x270f);
-			this.processor.EmitLocalWord(SurveyChoice, 0xffff);
-
-			short horizLoc = this.troops.Pull(participantIdx, troopIdx, UnitMemory.Horiz);
-			short vertLoc = this.troops.Pull(participantIdx, troopIdx, UnitMemory.Vert);
-			this.processor.EmitLocalWord(SurveyHoriz, (ushort)horizLoc);
-			this.processor.EmitLocalWord(SurveyVert, (ushort)vertLoc);
-
-			ushort continentIdx = this.owner.MapOps.ObtainContinentID(horizLoc, vertLoc);
-			this.processor.EmitLocalWord(SurveyContinent, continentIdx);
+			horizLoc = this.troops.Pull(participantIdx, troopIdx, UnitMemory.Horiz);
+			vertLoc = this.troops.Pull(participantIdx, troopIdx, UnitMemory.Vert);
+			continentIdx = this.owner.MapOps.ObtainContinentID(horizLoc, vertLoc);
 
 			if ((((byte)troopIdx + (byte)this.owner.World.RoundTally) & 0xf) != 0)
 				return false;
@@ -592,36 +480,26 @@ namespace Civilization1Remaster.Game
 		/// The nearest strategic location of the unit's role on its continent (bombers: anywhere, also the locations of role 3)
 		/// weighed by its priority and the units already sent there; the unit gets it as its destination
 		/// </summary>
-		private void SendUnitToBestLocation(short participantIdx, short troopIdx)
+		private void SendUnitToBestLocation(short participantIdx, short troopIdx, short horizLoc, short vertLoc, ushort continentIdx, ushort sentBase, ushort[] locationSent)
 		{
-			ushort sentBase = this.processor.PullLocalWord(SurveyBase);
-			short horizLoc = (short)this.processor.PullLocalWord(SurveyHoriz);
-			short vertLoc = (short)this.processor.PullLocalWord(SurveyVert);
-			ushort continentIdx = this.processor.PullLocalWord(SurveyContinent);
 			short bestDistance = 0x270f;
 			short best = -1;
-
-			this.processor.EmitLocalWord(SurveyOuterLoop, 0);
 
 			for (short locationIdx = 0; locationIdx < 0x20; locationIdx++)
 			{
 				if (LocationFits(participantIdx, troopIdx, locationIdx, continentIdx))
 				{
-					short? distance = WeighLocation(participantIdx, troopIdx, locationIdx, horizLoc, vertLoc);
+					short? distance = WeighLocation(participantIdx, troopIdx, locationIdx, horizLoc, vertLoc, locationSent);
 
-					if (distance != null && MayTakeLocation(participantIdx, troopIdx, locationIdx, distance.Value, sentBase) &&
+					if (distance != null && MayTakeLocation(participantIdx, troopIdx, locationIdx, distance.Value, sentBase, locationSent) &&
 						distance.Value < bestDistance &&
 						(short)((sbyte)this.processor.PullUInt8(this.processor.SegData.Value16, LocationPriority(participantIdx, locationIdx)) << 2) >=
 							CPU.SignedQuotient(distance.Value, (short)sentBase))
 					{
 						bestDistance = distance.Value;
 						best = locationIdx;
-						this.processor.EmitLocalWord(SurveyBestDistance, (ushort)bestDistance);
-						this.processor.EmitLocalWord(SurveyChoice, (ushort)best);
 					}
 				}
-
-				this.processor.EmitLocalWord(SurveyOuterLoop, (ushort)(locationIdx + 1));
 			}
 
 			if (best == -1)
@@ -635,8 +513,7 @@ namespace Civilization1Remaster.Game
 			status = this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status);
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Status, (byte)(status & 0xf0));
 
-			ushort sent = LocationSentAddress(best);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, sent, (ushort)(this.processor.PullUInt16(this.processor.SegData.Value16, sent) + 1));
+			locationSent[best]++;
 		}
 
 		/// <summary>
@@ -660,24 +537,22 @@ namespace Civilization1Remaster.Game
 			}
 
 			byte kindByte = this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind);
-			this.processor.EmitLocalByte(SurveyScratch3, kindByte);
 
 			if (kindByte != 0xf)
 				return false;
 
 			sbyte bomberRole = (sbyte)this.processor.PullUInt8(this.processor.SegData.Value16, LocationRole(participantIdx, locationIdx));
-			this.processor.EmitLocalByte(SurveyScratch2, (byte)bomberRole);
 
-			return UnitKindTable.Field(this.processor, (sbyte)this.processor.PullLocalByte(SurveyScratch3), UnitKindTable.TroopGroup) == (ushort)bomberRole ||
+			return UnitKindTable.Field(this.processor, (sbyte)kindByte, UnitKindTable.TroopGroup) == (ushort)bomberRole ||
 				bomberRole == 3;
 		}
 
 		/// <summary>
-		/// The weighed distance to the location (kept in 0x46): a bomber only goes to locations with priority bit 0 in every
+		/// The weighed distance to the location: a bomber only goes to locations with priority bit 0 in every
 		/// other turn (else null: the location is skipped), its distance is doubled within its range, else quadrupled; other
 		/// units: the distance times the units already sent there; both divided by the priority + 1
 		/// </summary>
-		private short? WeighLocation(short participantIdx, short troopIdx, short locationIdx, short horizLoc, short vertLoc)
+		private short? WeighLocation(short participantIdx, short troopIdx, short locationIdx, short horizLoc, short vertLoc, ushort[] locationSent)
 		{
 			short weighed;
 
@@ -692,7 +567,6 @@ namespace Civilization1Remaster.Game
 				short distance = (short)this.owner.Helpers.ObtainDistance(horizLoc,
 					this.processor.PullInt8(this.processor.SegData.Value16, LocationHoriz(participantIdx, locationIdx)),
 					vertLoc, this.processor.PullInt8(this.processor.SegData.Value16, LocationVert(participantIdx, locationIdx)));
-				this.processor.EmitLocalWord(SurveyDistance, (ushort)distance);
 
 				short range = (short)UnitKindTable.Field(this.processor, this.troops.TroopKind(participantIdx, troopIdx), UnitKindTable.ShiftTally);
 				weighed = (short)((range >= distance ? 2 : 4) * distance);
@@ -703,33 +577,29 @@ namespace Civilization1Remaster.Game
 					this.processor.PullInt8(this.processor.SegData.Value16, LocationHoriz(participantIdx, locationIdx)),
 					vertLoc, this.processor.PullInt8(this.processor.SegData.Value16, LocationVert(participantIdx, locationIdx)));
 
-				weighed = (short)(this.processor.PullUInt16(this.processor.SegStack.Value16, LocationSentAddress(locationIdx)) * distance);
+				weighed = (short)(locationSent[locationIdx] * distance);
 			}
 
 			sbyte priority = (sbyte)this.processor.PullUInt8(this.processor.SegData.Value16, LocationPriority(participantIdx, locationIdx));
-			short result = CPU.SignedQuotient(weighed, (short)(priority + 1));
-			this.processor.EmitLocalWord(SurveyDistance, (ushort)result);
-
-			return result;
+			return CPU.SignedQuotient(weighed, (short)(priority + 1));
 		}
 
 		/// <summary>
 		/// A unit with orders (status bits 2, 3) only takes a location of priority 2 or more, whose weight (priority times
 		/// the base) is not below the distance or no unit was sent there yet, and when it is not in a city
 		/// </summary>
-		private bool MayTakeLocation(short participantIdx, short troopIdx, short locationIdx, short distance, ushort sentBase)
+		private bool MayTakeLocation(short participantIdx, short troopIdx, short locationIdx, short distance, ushort sentBase, ushort[] locationSent)
 		{
 			if ((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 0xc) == 0)
 				return true;
 
 			sbyte priority = (sbyte)this.processor.PullUInt8(this.processor.SegData.Value16, LocationPriority(participantIdx, locationIdx));
-			this.processor.EmitLocalByte(SurveyScratch3, (byte)priority);
 
 			if (priority < 2)
 				return false;
 
 			if ((short)(priority * (short)sentBase) < distance &&
-				this.processor.PullUInt16(this.processor.SegStack.Value16, LocationSentAddress(locationIdx)) != sentBase)
+				locationSent[locationIdx] != sentBase)
 			{
 				return false;
 			}
