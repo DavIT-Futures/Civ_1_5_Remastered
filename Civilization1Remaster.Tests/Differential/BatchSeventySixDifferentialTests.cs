@@ -102,8 +102,6 @@ public sealed class BatchSeventySixDifferentialTests(ITestOutputHelper output)
 
 			Dictionary<string, int> before = new Dictionary<string, int>(pair.Rewritten.Calls);
 
-			// The frame stays below the stack pointer with the last values of the locals (danger, tribute, attitude, ...)
-			ushort frame = (ushort)(engine.Processor.RegStack.Value16 - 2);
 			int Delta(GameEngine game, string name) => Calls(game, pair, name) - before.GetValueOrDefault(name);
 
 			return new Scenario(
@@ -227,8 +225,7 @@ public sealed class BatchSeventySixDifferentialTests(ITestOutputHelper output)
 						ways.Add(way);
 
 					return did.Count == 0 ? "nothing" : "audience";
-				},
-				[(0x3b01, (ushort)(frame - 0x36), 0x36)]);
+				});
 		}, output, [], null);
 	}
 }

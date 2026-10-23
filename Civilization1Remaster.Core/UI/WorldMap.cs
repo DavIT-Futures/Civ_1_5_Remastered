@@ -36,11 +36,6 @@ namespace Civilization1Remaster.UI
 			ushort top = 0x3e7, bottom = 0;
 			short shiftHoriz = (short)(0x28 - this.owner.World.Participants[person].HorizBegin), shiftVert;
 
-			this.processor.EmitLocalWord(0x2, (ushort)person);
-			this.processor.EmitLocalWord(0x18, 0x3e7);
-			this.processor.EmitLocalWord(0x1c, 0);
-			this.processor.EmitLocalWord(0x1e, seen);
-
 			if (this.processor.PullGlobalWord(0xd806) != 0)
 			{
 				shiftHoriz = 0;
@@ -71,15 +66,8 @@ namespace Civilization1Remaster.UI
 					}
 				}
 
-				this.processor.EmitLocalWord(0xe, 0x50);
-
 				shiftVert = (short)-((short)(bottom + top) / 2 - 0x19);
 			}
-
-			this.processor.EmitLocalWord(0x6, (ushort)shiftHoriz);
-			this.processor.EmitLocalWord(0x8, (ushort)shiftVert);
-			this.processor.EmitLocalWord(0x1a, top);
-			this.processor.EmitLocalWord(0x20, bottom);
 
 			short column = 0, row;
 
@@ -96,9 +84,6 @@ namespace Civilization1Remaster.UI
 					RenderWorldMapTile(marker, column, row, shiftHoriz, shiftVert);
 				}
 			}
-
-			this.processor.EmitLocalWord(0xa, (ushort)column);
-			this.processor.EmitLocalWord(0x10, (ushort)row);
 
 			if (this.processor.PullGlobalWord(0xb278) != 1)
 			{
@@ -131,11 +116,7 @@ namespace Civilization1Remaster.UI
 			short pixelHoriz = (short)(this.owner.Routing.TunePosition(horizLoc + shiftHoriz) << 2);
 			short pixelVert = (short)((vertLoc + shiftVert) << 2);
 
-			this.processor.EmitLocalWord(0x12, (ushort)pixelHoriz);
-			this.processor.EmitLocalWord(0x16, (ushort)pixelVert);
-
 			ushort terrain = this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
-			this.processor.EmitLocalWord(0x14, terrain);
 
 			if (marker == 0)
 			{
@@ -150,13 +131,11 @@ namespace Civilization1Remaster.UI
 			if ((this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) != 0)
 			{
 				ushort townIdx = this.owner.Helpers.LocateCityAtPosition(horizLoc, vertLoc);
-				this.processor.EmitLocalWord(0x4, townIdx);
 
 				if (this.owner.World.Towns[townIdx].ShownExtent != 0 || this.processor.PullGlobalWord(0xd806) != 0 ||
 					this.owner.World.Towns[townIdx].ParticipantIdx == this.owner.World.PersonParticipantIdx)
 				{
 					ushort colour = this.processor.PullGlobalWord((ushort)((this.owner.MapOps.ObtainTileOwnerBits(horizLoc, vertLoc) << 1) + 0x1946));
-					this.processor.EmitLocalWord(0x22, colour);
 
 					this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), pixelHoriz, pixelVert, 4, 4, colour);
 				}
@@ -165,7 +144,6 @@ namespace Civilization1Remaster.UI
 			}
 
 			ushort ownerIdx = this.owner.MapOps.ObtainTileOwner(horizLoc, vertLoc);
-			this.processor.EmitLocalWord(0x22, ownerIdx);
 
 			if (ownerIdx == 0xffff)
 				return;
@@ -180,7 +158,6 @@ namespace Civilization1Remaster.UI
 			}
 
 			ushort ownerColour = this.processor.PullGlobalWord((ushort)((ownerIdx << 1) + 0x1946));
-			this.processor.EmitLocalWord(0x22, ownerColour);
 
 			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), pixelHoriz + 1, pixelVert + 1, 3, 3, 0);
 
@@ -459,8 +436,6 @@ namespace Civilization1Remaster.UI
 
 			ushort measure = (ushort)this.owner.Libc.Dice.DrawInt(5);
 
-			this.processor.EmitLocalWord(0x4, measure);
-
 			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 3);
 
 			Message(this.processor.PullGlobalWord((ushort)((this.owner.Libc.Dice.DrawInt(4) << 1) + 0x4516)))
@@ -534,7 +509,6 @@ namespace Civilization1Remaster.UI
 			short rank = 0;
 			short best = -1;
 			short bestValue = 0;
-			bool ranked = false;
 
 			for (short placeIdx = 1; placeIdx < 8; placeIdx++)
 			{
@@ -543,7 +517,6 @@ namespace Civilization1Remaster.UI
 
 				bestValue = 0;
 				best = -1;
-				ranked = true;
 
 				for (short participantIdx = 1; participantIdx < 8; participantIdx++)
 				{
@@ -585,17 +558,6 @@ namespace Civilization1Remaster.UI
 				this.owner.World.Participants[best].RunningSagaStanding += (short)(7 - rank);
 				rank++;
 				this.processor.EmitGlobalWord((ushort)(values + (best << 1)), 0xffff);
-			}
-
-			this.processor.EmitLocalWord(0x2, 0x8);
-			this.processor.EmitLocalWord(0xa, (ushort)vertLoc);
-			this.processor.EmitLocalWord(0xc, 0x8);
-			this.processor.EmitLocalWord(0x20, (ushort)rank);
-
-			if (ranked)
-			{
-				this.processor.EmitLocalWord(0x6, (ushort)bestValue);
-				this.processor.EmitLocalWord(0x1e, (ushort)best);
 			}
 
 			this.owner.World.Participants[0].RunningSagaStanding++;

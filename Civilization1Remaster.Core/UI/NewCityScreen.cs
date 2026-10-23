@@ -393,11 +393,6 @@ namespace Civilization1Remaster.UI
 				lastIdx--;
 			}
 
-			this.processor.EmitLocalWord(0x42, (ushort)(fresh ? 1 : 0));
-			this.processor.EmitLocalWord(0x44, (ushort)lastIdx);
-			this.processor.EmitLocalWord(0x46, accepted);
-			this.processor.EmitLocalWord(0x48, key);
-
 			this.owner.TurnLogic.AwaitForKey();
 
 			this.processor.RegAcc.Value16 = accepted;

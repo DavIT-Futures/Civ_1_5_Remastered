@@ -585,7 +585,6 @@ namespace Civilization1Remaster.UI
 			this.processor.PreserveSource();
 
 			ushort nearest = this.processor.PullLocalWord(0x4);
-			ushort? lastDistance = null;
 
 			this.processor.EmitGlobalWord(0x6812, 999);
 			this.processor.SegExtra.Value16 = ReplayCitySegment;
@@ -597,7 +596,6 @@ namespace Civilization1Remaster.UI
 
 				short distance = (short)this.owner.Helpers.ObtainDistance(horizLoc, (short)PullReplayCity(idx, 0x100),
 					vertLoc, (short)PullReplayCity(idx, 0x200));
-				lastDistance = (ushort)distance;
 
 				if (distance < this.processor.PullGlobalSignedWord(0x6812))
 				{
@@ -606,13 +604,7 @@ namespace Civilization1Remaster.UI
 				}
 			}
 
-			if (lastDistance.HasValue)
-			{
-				this.processor.EmitLocalWord(0x2, lastDistance.Value);
-			}
-
 			this.processor.EmitLocalWord(0x4, nearest);
-			this.processor.EmitLocalWord(0x6, 0x80);
 			this.processor.RegAcc.Value16 = nearest;
 
 			this.processor.RestoreSource();
@@ -868,11 +860,6 @@ namespace Civilization1Remaster.UI
 
 			ushort closedMouth = this.owner.VideoCard.ScreenToPicture(1, 1, 0x97, 0x3b, 0x31);
 
-			this.processor.EmitLocalWord(0x12, portrait);
-			this.processor.EmitLocalWord(0x30, closedMouth);
-			this.processor.EmitLocalWord(0x32, (ushort)leaderIdx);
-			this.processor.EmitLocalWord(0x36, speakingMouth);
-
 			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x4112, 0);
 
 			if (this.processor.PullGlobalWord(0xd762) != 0)
@@ -902,10 +889,6 @@ namespace Civilization1Remaster.UI
 			mouthVert += (short)(this.processor.PullUInt16(0x36fa, (ushort)(mouths + 0x48)) - 0x40);
 			mouthVert -= (short)this.processor.PullUInt16(0x36fa, (ushort)(mouths + 0x4a));
 
-			this.processor.EmitLocalWord(0x14, (ushort)leaderIdx);
-			this.processor.EmitLocalWord(0x28, (ushort)mouthHoriz);
-			this.processor.EmitLocalWord(0x2c, (ushort)mouthVert);
-
 			this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa), 90, 0, portrait);
 
 			this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa), mouthHoriz, mouthVert - 2, speakingMouth);
@@ -925,8 +908,6 @@ namespace Civilization1Remaster.UI
 					this.processor.EmitGlobalByte((ushort)(colourIdx + 0xbdf4), this.processor.PullGlobalByte((ushort)(colourIdx + 0xc1dc)));
 				}
 
-				this.processor.EmitLocalWord(0x2e, 0x1b0);
-
 				this.owner.Services.ImportColorsFromBuffer(8, 0xbdee);
 			}
 
@@ -939,8 +920,6 @@ namespace Civilization1Remaster.UI
 
 			if (fallen >= 7)
 				place += 7;
-
-			this.processor.EmitLocalWord(0x26, (ushort)place);
 
 			this.processor.EmitUInt8(0x3772, (ushort)(place + 0x37c4), (byte)leaderIdx);
 
@@ -1017,8 +996,6 @@ namespace Civilization1Remaster.UI
 				if (leaderIdx == 0xff)
 					continue;
 
-				this.processor.EmitLocalWord(0x2a, leaderIdx);
-
 				this.owner.VideoCard.RenderImage(
 					this.processor.PullGlobalWord(0x19d4),
 					(ushort)(((ushort)leaderIdx % 7 * 0x1c) + 1),
@@ -1029,7 +1006,6 @@ namespace Civilization1Remaster.UI
 					(ushort)((-(placeIdx / 7) * 0x2a) + 0x31));
 			}
 
-			this.processor.EmitLocalWord(0x2e, placeIdx);
 		}
 
 		/// <summary>The text 0xba06 centred at x 160 in colour 20, with the text in colour 23 (VGA) or 15 one line higher</summary>

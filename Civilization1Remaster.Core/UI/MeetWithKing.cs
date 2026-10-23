@@ -30,18 +30,18 @@ namespace Civilization1Remaster.UI
 			this.owner.MapOps.KeepKnownTileImprovements(horizLoc, vertLoc);
 			this.owner.MapOps.RepaintMapTile(horizLoc, vertLoc);
 
-			FrameWord(LastAudienceLocal, (ushort)Leader(participantIdx).TouchParticipantTimeleft);
+			this.audienceLastAudience = (ushort)Leader(participantIdx).TouchParticipantTimeleft;
 			NameEmpress(participantIdx);
 
 			if (arg4 == 0)
 				Leader(participantIdx).TouchParticipantTimeleft = this.owner.World.RoundTally;
 
 			this.processor.EmitGlobalWord(0xd804, 0);
-			FrameWord(HostileLocal, 0);
+			this.audienceHostile = 0;
 			this.processor.EmitGlobalWord(0x3934, arg4);
-			FrameWord(DangerLocal, 0);
-			FrameWord(TributeLocal, 0);
-			FrameWord(DemandLocal, 1);
+			this.audienceDanger = 0;
+			this.audienceTribute = 0;
+			this.audienceDemand = 1;
 			this.processor.EmitGlobalWord(0x6b8e, 0);
 
 			WeighContinents(participantIdx);
@@ -55,10 +55,10 @@ namespace Civilization1Remaster.UI
 				if ((this.owner.World.DiagMarkers & 1) == 0)
 				{
 					// Without the diplomacy option the leader only threatens
-					FrameWord(HostileLocal, 1);
-					FrameWord(DemandLocal, 0);
-					FrameWord(DangerLocal, 0);
-					FrameWord(PeaceBrokenLocal, 0);
+					this.audienceHostile = 1;
+					this.audienceDemand = 0;
+					this.audienceDanger = 0;
+					this.audiencePeaceBroken = 0;
 				}
 
 				AskForAlliance(participantIdx, horizLoc, vertLoc);
@@ -78,7 +78,7 @@ namespace Civilization1Remaster.UI
 				if ((Relation(participantIdx) & 2) != 0 && WelcomeEmissary(participantIdx, horizLoc, vertLoc) != 0xffff)
 					NegotiateUnderPeace(participantIdx);
 
-				if (FrameWord(PeaceBrokenLocal) != 0)
+				if (this.audiencePeaceBroken != 0)
 					this.owner.World.Participants[participantIdx].Relations[this.owner.World.PersonParticipantIdx] |= 0x100;
 
 				this.owner.World.Participants[participantIdx].Relations[this.owner.World.PersonParticipantIdx] &= 0xffdf;
@@ -100,33 +100,19 @@ namespace Civilization1Remaster.UI
 			this.processor.Journal.CloseScope("LaunchAudience");
 		}
 
-		// The frame of LaunchAudience (distances below bp)
-		private const int EnemyListLocal = 0x2;
-		private const int NuclearThreatLocal = 0x4;
-		private const int TributeLocal = 0x6;
-		private const int DemandLocal = 0x8;
-		private const int WantedTechnologyLocal = 0xa;
-		private const int OfferedTechnologyLocal = 0xc;
-		private const int PersonTechnologiesLocal = 0xe;
-		private const int WasHostileLocal = 0x10;
-		private const int EnemyTable = 0x1e;
-		private const int LoopLocal = 0x20;
-		private const int AmountLocal = 0x22;
-		private const int HostileLocal = 0x24;
-		private const int ContinentLocal = 0x26;
-		private const int PeaceBrokenLocal = 0x28;
-		private const int AttitudeLocal = 0x2a;
-		private const int OfferedValueLocal = 0x2c;
-		private const int DangerLocal = 0x2e;
-		private const int CommonEnemyLocal = 0x30;
-		private const int LeaderTechnologiesLocal = 0x32;
-		private const int LastAudienceLocal = 0x34;
+		private ushort audienceNuclearThreat;
+		private ushort audienceTribute;
+		private ushort audienceDemand;
+		private ushort audienceWantedTechnology;
+		private ushort audienceOfferedTechnology;
+		private ushort audienceWasHostile;
+		private ushort audienceHostile;
+		private ushort audiencePeaceBroken;
+		private ushort audienceDanger;
+		private ushort audienceCommonEnemy;
+		private ushort audienceLastAudience;
 
-		private ushort FrameWord(int distance) => this.processor.PullLocalWord(distance);
-
-		private void FrameWord(int distance, ushort amount) => this.processor.EmitLocalWord(distance, amount);
-
-		private ushort HostileValue => FrameWord(HostileLocal);
+		private ushort HostileValue => this.audienceHostile;
 
 		private Game.State.Player Leader(int participantIdx) => this.owner.World.Participants[participantIdx];
 
@@ -162,9 +148,8 @@ namespace Civilization1Remaster.UI
 		{
 			Game.State.Player leader = Leader(participantIdx);
 
-			for (FrameWord(ContinentLocal, 1); (short)FrameWord(ContinentLocal) < 0xf; FrameWord(ContinentLocal, (ushort)(FrameWord(ContinentLocal) + 1)))
+			for (int continentIdx = 1; continentIdx < 0xf; continentIdx++)
 			{
-				int continentIdx = (short)FrameWord(ContinentLocal);
 				var own = leader.Landmasses[continentIdx];
 				var human = Person.Landmasses[continentIdx];
 				short cities = (short)(leader.TownTally > 1 ? 1 : 0);
@@ -173,12 +158,12 @@ namespace Civilization1Remaster.UI
 				{
 					short factor = (short)(this.owner.World.HardnessTier == 0 ? 4 : 2);
 					short danger = CPU.SignedQuotient((short)(factor * human.Guard), (short)(own.Assault + 1));
-					FrameWord(DangerLocal, (ushort)(FrameWord(DangerLocal) + danger));
+					this.audienceDanger = (ushort)(this.audienceDanger + danger);
 					continue;
 				}
 
 				if (human.Assault != 0 && own.Assault != 0)
-					FrameWord(HostileLocal, 1);
+					this.audienceHostile = 1;
 
 				short tribute;
 
@@ -195,7 +180,7 @@ namespace Civilization1Remaster.UI
 					tribute = CPU.SignedQuotient((short)(own.Guard - human.Guard), 4);
 				}
 
-				FrameWord(TributeLocal, (ushort)(FrameWord(TributeLocal) + tribute));
+				this.audienceTribute = (ushort)(this.audienceTribute + tribute);
 			}
 		}
 
@@ -212,14 +197,14 @@ namespace Civilization1Remaster.UI
 
 			bool threat = person.Standing == 7 && person.TownTally > 4 && leader.TownTally > 1 && person.LiveTroops[25] == 0 &&
 				this.owner.World.RoundTally > 200;
-			FrameWord(NuclearThreatLocal, (ushort)(threat ? 1 : 0));
+			this.audienceNuclearThreat = (ushort)(threat ? 1 : 0);
 
 			if ((threat || ((Relation(participantIdx) & 8) != 0 && (short)(3 * leader.MartialMight) > person.MartialMight)) &&
 				person.LiveTroops[25] == 0)
 			{
-				FrameWord(HostileLocal, 1);
-				FrameWord(TributeLocal, (ushort)this.owner.Helpers.VerifyValueSpan((short)FrameWord(TributeLocal), 10 * leader.Standing, 9999));
-				FrameWord(DangerLocal, 0);
+				this.audienceHostile = 1;
+				this.audienceTribute = (ushort)this.owner.Helpers.VerifyValueSpan((short)this.audienceTribute, 10 * leader.Standing, 9999);
+				this.audienceDanger = 0;
 			}
 
 			if (leader.LiveTroops[25] != 0)
@@ -227,66 +212,66 @@ namespace Civilization1Remaster.UI
 
 			if (leader.LiveTroops[25] != 0 && person.LiveTroops[25] == 0)
 			{
-				FrameWord(HostileLocal, 1);
-				FrameWord(TributeLocal, (ushort)this.owner.Helpers.VerifyValueSpan((short)FrameWord(TributeLocal), 100, 9999));
+				this.audienceHostile = 1;
+				this.audienceTribute = (ushort)this.owner.Helpers.VerifyValueSpan((short)this.audienceTribute, 100, 9999);
 			}
 
 			if (person.LiveTroops[25] != 0)
 			{
 				if (leader.LiveTroops[25] == 0)
 				{
-					FrameWord(DangerLocal, 4);
+					this.audienceDanger = 4;
 				}
 				else
 				{
-					short half = CPU.SignedQuotient((short)FrameWord(TributeLocal), 2);
-					FrameWord(TributeLocal, (ushort)CPU.SignedQuotient((short)(leader.LiveTroops[25] * half), person.LiveTroops[25]));
+					short half = CPU.SignedQuotient((short)this.audienceTribute, 2);
+					this.audienceTribute = (ushort)CPU.SignedQuotient((short)(leader.LiveTroops[25] * half), person.LiveTroops[25]);
 				}
 			}
 
-			if (FrameWord(DangerLocal) != 0)
+			if (this.audienceDanger != 0)
 			{
-				FrameWord(HostileLocal, 0);
-				FrameWord(DemandLocal, 0);
+				this.audienceHostile = 0;
+				this.audienceDemand = 0;
 			}
 
 			if (this.owner.CityOps.PlayerEnjoysWonderEffect(personIdx, 7) != 0 || this.owner.CityOps.PlayerEnjoysWonderEffect(personIdx, 0x12) != 0)
 			{
-				FrameWord(NuclearThreatLocal, 0);
-				FrameWord(HostileLocal, 0);
+				this.audienceNuclearThreat = 0;
+				this.audienceHostile = 0;
 
-				if (FrameWord(LastAudienceLocal) == 0xfffe)
-					FrameWord(LastAudienceLocal, 0xffff);
+				if (this.audienceLastAudience == 0xfffe)
+					this.audienceLastAudience = 0xffff;
 			}
 
 			if ((Relation(participantIdx) & 8) != 0)
-				FrameWord(TributeLocal, (ushort)(FrameWord(TributeLocal) << 1));
-			else if (FrameWord(LastAudienceLocal) == 0xfffe)
-				FrameWord(TributeLocal, (ushort)CPU.SignedQuotient((short)FrameWord(TributeLocal), 4));
+				this.audienceTribute = (ushort)(this.audienceTribute << 1);
+			else if (this.audienceLastAudience == 0xfffe)
+				this.audienceTribute = (ushort)CPU.SignedQuotient((short)this.audienceTribute, 4);
 
-			FrameWord(TributeLocal, (ushort)((ushort)this.owner.Helpers.VerifyValueSpan(((short)FrameWord(TributeLocal) * (this.owner.World.HardnessTier + 1)) / 32, 0, 20) * 0x32));
+			this.audienceTribute = (ushort)((ushort)this.owner.Helpers.VerifyValueSpan(((short)this.audienceTribute * (this.owner.World.HardnessTier + 1)) / 32, 0, 20) * 0x32);
 
 			short gold = person.Gold;
 
-			if ((short)FrameWord(TributeLocal) > gold && (short)FrameWord(TributeLocal) <= (short)(gold << 1) && gold >= 0x32)
-				FrameWord(TributeLocal, (ushort)(CPU.SignedQuotient(gold, 0x32) * 0x32));
+			if ((short)this.audienceTribute > gold && (short)this.audienceTribute <= (short)(gold << 1) && gold >= 0x32)
+				this.audienceTribute = (ushort)(CPU.SignedQuotient(gold, 0x32) * 0x32);
 
 			if (leader.LiveTroops[25] != 0)
 			{
-				if ((Relation(participantIdx) & 0x80) == 0 && person.Gold < (short)FrameWord(TributeLocal))
-					FrameWord(TributeLocal, (ushort)(CPU.SignedQuotient(person.Gold, 0x32) * 0x32));
+				if ((Relation(participantIdx) & 0x80) == 0 && person.Gold < (short)this.audienceTribute)
+					this.audienceTribute = (ushort)(CPU.SignedQuotient(person.Gold, 0x32) * 0x32);
 
 				leader.Relations[personIdx] |= 0x80;
 			}
 
-			if (FrameWord(TributeLocal) == 0 || (short)(3 * leader.MartialMight) < person.MartialMight)
-				FrameWord(HostileLocal, 0);
+			if (this.audienceTribute == 0 || (short)(3 * leader.MartialMight) < person.MartialMight)
+				this.audienceHostile = 0;
 
-			if (FrameWord(HostileLocal) != 0)
-				FrameWord(DemandLocal, 2);
+			if (this.audienceHostile != 0)
+				this.audienceDemand = 2;
 
-			if (FrameWord(HostileLocal) == 0 && (Relation(participantIdx) & 4) != 0)
-				FrameWord(DemandLocal, 0);
+			if (this.audienceHostile == 0 && (Relation(participantIdx) & 4) != 0)
+				this.audienceDemand = 0;
 		}
 
 		/// <summary>
@@ -299,64 +284,62 @@ namespace Civilization1Remaster.UI
 			Game.State.Player leader = Leader(participantIdx);
 			short personIdx = this.owner.World.PersonParticipantIdx;
 
-			FrameWord(WasHostileLocal, HostileValue);
-			FrameWord(AttitudeLocal, 0);
+			this.audienceWasHostile = HostileValue;
+			short attitude = 0;
 
 			if ((Relation(participantIdx) & 8) != 0)
-				FrameWord(AttitudeLocal, 0xfffe);
+				attitude = -2;
 
-			FrameWord(CommonEnemyLocal, 0xffff);
+			this.audienceCommonEnemy = 0xffff;
 
-			for (FrameWord(LoopLocal, 1); (short)FrameWord(LoopLocal) < 8; FrameWord(LoopLocal, (ushort)(FrameWord(LoopLocal) + 1)))
+			for (short otherIdx = 1; otherIdx < 8; otherIdx++)
 			{
-				short otherIdx = (short)FrameWord(LoopLocal);
-
 				if (otherIdx == personIdx || (leader.Relations[otherIdx] & 3) != 1)
 					continue;
 
 				if (leader.MartialMight < (short)(Leader(otherIdx).MartialMight << 2))
-					this.processor.IncrementLocalWord(AttitudeLocal);
+					attitude++;
 
 				if (Leader(otherIdx).MartialMight > leader.MartialMight)
-					this.processor.IncrementLocalWord(AttitudeLocal);
+					attitude++;
 
 				if ((Person.Relations[otherIdx] & 2) != 0)
-					this.processor.CopyLocalWord(LoopLocal, CommonEnemyLocal);
+					this.audienceCommonEnemy = (ushort)otherIdx;
 			}
 
 			ushort character = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(0x1512 + 0x3a * leader.ChiefVisuals));
-			FrameWord(AttitudeLocal, (ushort)(FrameWord(AttitudeLocal) - character));
+			attitude = (short)(attitude - character);
 
 			if (Person.MartialMight < leader.MartialMight)
-				this.processor.DecrementLocalWord(AttitudeLocal);
+				attitude--;
 
 			short calm = (short)((Relation(participantIdx) & 2) == 0 ? 1 : 0);
 
-			if (calm < (short)FrameWord(AttitudeLocal) && FrameWord(NuclearThreatLocal) == 0)
+			if (calm < attitude && this.audienceNuclearThreat == 0)
 			{
-				FrameWord(HostileLocal, 0);
+				this.audienceHostile = 0;
 
 				if (this.owner.Libc.Dice.DrawInt(2) != 0)
-					FrameWord(TributeLocal, 0);
+					this.audienceTribute = 0;
 			}
 
 			if (leader.RegimeKind >= 4 && HostileValue != 0 && (Relation(participantIdx) & 8) == 0)
 			{
-				if ((short)(3 * Person.MartialMight) > (short)(leader.MartialMight << 1) && FrameWord(NuclearThreatLocal) == 0)
-					FrameWord(HostileLocal, 0);
+				if ((short)(3 * Person.MartialMight) > (short)(leader.MartialMight << 1) && this.audienceNuclearThreat == 0)
+					this.audienceHostile = 0;
 				else
 					this.owner.Politics.SwitchGovernment(participantIdx, 2);
 			}
 
 			// At peace and weaker (or already warned): the leader keeps the peace for now
-			FrameWord(PeaceBrokenLocal, 0);
+			this.audiencePeaceBroken = 0;
 
 			if ((Relation(participantIdx) & 2) != 0 && HostileValue != 0 &&
 				(leader.MartialMight < Person.MartialMight || (Relation(participantIdx) & 8) != 0))
 			{
-				FrameWord(HostileLocal, 0);
-				FrameWord(PeaceBrokenLocal, 1);
-				FrameWord(DemandLocal, 0);
+				this.audienceHostile = 0;
+				this.audiencePeaceBroken = 1;
+				this.audienceDemand = 0;
 			}
 		}
 
@@ -375,53 +358,47 @@ namespace Civilization1Remaster.UI
 
 			while (true)
 			{
-				FrameWord(OfferedTechnologyLocal, 0xffff);
-				FrameWord(WantedTechnologyLocal, 0xffff);
-				FrameWord(OfferedValueLocal, 0);
-				FrameWord(LeaderTechnologiesLocal, 0);
-				FrameWord(PersonTechnologiesLocal, 0);
-				FrameWord(LoopLocal, 0);
+				this.audienceOfferedTechnology = 0xffff;
+				this.audienceWantedTechnology = 0xffff;
+				short offeredValue = 0;
+				short leaderTechnologies = 0;
+				short personTechnologies = 0;
 
-				do
+				for (short scienceIdx = 0; scienceIdx < 0x48; scienceIdx++)
 				{
-					short scienceIdx = (short)FrameWord(LoopLocal);
-
 					if (this.owner.Advisors.PlayerKnowsTechnology(personIdx, scienceIdx) != 0)
-						this.processor.IncrementLocalWord(PersonTechnologiesLocal);
+						personTechnologies++;
 
 					if (this.owner.Advisors.PlayerKnowsTechnology(participantIdx, scienceIdx) != 0)
-						this.processor.IncrementLocalWord(LeaderTechnologiesLocal);
+						leaderTechnologies++;
 
 					if (this.owner.Advisors.PlayerKnowsTechnology(personIdx, scienceIdx) == 0 &&
 						this.owner.Advisors.PlayerKnowsTechnology(participantIdx, scienceIdx) != 0)
 					{
-						this.processor.CopyLocalWord(LoopLocal, WantedTechnologyLocal);
+						this.audienceWantedTechnology = (ushort)scienceIdx;
 					}
 
 					if (this.owner.Advisors.PlayerKnowsTechnology(personIdx, scienceIdx) != 0 &&
 						this.owner.Advisors.PlayerKnowsTechnology(participantIdx, scienceIdx) == 0 &&
-						(short)this.owner.Advisors.ObtainTechnologyInfo(participantIdx, (ushort)scienceIdx) >= (short)FrameWord(OfferedValueLocal))
+						(short)this.owner.Advisors.ObtainTechnologyInfo(participantIdx, (ushort)scienceIdx) >= offeredValue)
 					{
-						this.processor.CopyLocalWord(LoopLocal, OfferedTechnologyLocal);
-						FrameWord(OfferedValueLocal, this.owner.Advisors.ObtainTechnologyInfo(participantIdx, (ushort)scienceIdx));
+						this.audienceOfferedTechnology = (ushort)scienceIdx;
+						offeredValue = (short)this.owner.Advisors.ObtainTechnologyInfo(participantIdx, (ushort)scienceIdx);
 					}
-
-					FrameWord(LoopLocal, (ushort)(scienceIdx + 1));
 				}
-				while ((short)FrameWord(LoopLocal) < 0x48);
 
-				if (((Relation(participantIdx) & 0x20) != 0 || HostileValue != 0) && (short)FrameWord(LeaderTechnologiesLocal) > 6)
+				if (((Relation(participantIdx) & 0x20) != 0 || HostileValue != 0) && leaderTechnologies > 6)
 					break;
 
-				if ((short)FrameWord(PersonTechnologiesLocal) < (short)FrameWord(LeaderTechnologiesLocal) ||
-					FrameWord(WantedTechnologyLocal) == 0xffff || WelcomeEmissary(participantIdx, horizLoc, vertLoc) == 0xffff)
+				if (personTechnologies < leaderTechnologies ||
+					this.audienceWantedTechnology == 0xffff || WelcomeEmissary(participantIdx, horizLoc, vertLoc) == 0xffff)
 				{
 					break;
 				}
 
 				this.processor.EmitGlobalWord(0x3936, 1);
 				this.processor.EmitGlobalByte(0xba06, 0);
-				this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be), TechnologyName(FrameWord(WantedTechnologyLocal)));
+				this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be), TechnologyName(this.audienceWantedTechnology));
 				this.owner.BlockText.DisplayTextDialog(0x3776);
 				this.processor.EmitGlobalWord(0xd76c, 0xc);
 
@@ -442,7 +419,7 @@ namespace Civilization1Remaster.UI
 				this.owner.Helpers.HaltHueCycling();
 				RestoreScreenStyle();
 
-				FrameWord(HostileLocal, 0);
+				this.audienceHostile = 0;
 				this.processor.EmitGlobalWord(0x3936, 1);
 
 				this.owner.Startup.ConcealMouseCursor();
@@ -451,7 +428,7 @@ namespace Civilization1Remaster.UI
 			}
 
 			// A friendly leader at peace with a human player strong on its continents doesn't negotiate
-			return !(HostileValue == 0 && arg4 == 0 && (Relation(participantIdx) & 2) == 2 && (short)FrameWord(DangerLocal) > 2);
+			return !(HostileValue == 0 && arg4 == 0 && (Relation(participantIdx) & 2) == 2 && (short)this.audienceDanger > 2);
 		}
 
 		/// <summary>The style of screen 0 (word 0x10 of it) back from 0x67ec</summary>
@@ -464,12 +441,12 @@ namespace Civilization1Remaster.UI
 		/// <summary>The leader asks for an alliance against the common enemy (0x30): accepted, the human player breaks the peace with it</summary>
 		private void AskForAlliance(short participantIdx, int horizLoc, int vertLoc)
 		{
-			if (FrameWord(CommonEnemyLocal) == 0xffff || WelcomeEmissary(participantIdx, horizLoc, vertLoc) == 0xffff || FrameWord(DemandLocal) == 0)
+			if (this.audienceCommonEnemy == 0xffff || WelcomeEmissary(participantIdx, horizLoc, vertLoc) == 0xffff || this.audienceDemand == 0)
 				return;
 
 			this.processor.EmitGlobalByte(0xba06, 0);
 			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30ba),
-				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((FrameWord(CommonEnemyLocal) << 1) + 0x1992)));
+				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((this.audienceCommonEnemy << 1) + 0x1992)));
 			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be), (ushort)(HostileValue != 0 ? 0x3780 : 0x3787));
 			this.owner.BlockText.DisplayTextDialog(0x378f);
 
@@ -482,12 +459,12 @@ namespace Civilization1Remaster.UI
 			if (DisplayKingDialog(0xba06, 0x14, 0x8b) != 1)
 				return;
 
-			FrameWord(HostileLocal, 0);
+			this.audienceHostile = 0;
 
 			if (this.owner.Libc.Dice.DrawInt(2) != 0)
-				FrameWord(TributeLocal, 0);
+				this.audienceTribute = 0;
 
-			short enemyIdx = (short)FrameWord(CommonEnemyLocal);
+			short enemyIdx = (short)this.audienceCommonEnemy;
 			this.owner.Politics.WipeDiplomacyFlags(this.owner.World.PersonParticipantIdx, enemyIdx, 2);
 			this.owner.World.Participants[(ushort)enemyIdx].Relations[this.owner.World.PersonParticipantIdx] |= 8;
 		}
@@ -495,14 +472,14 @@ namespace Civilization1Remaster.UI
 		/// <summary>A hostile leader demands the tribute (0x6) from a human player who has more gold; after the answer 0x6 is 999</summary>
 		private void DemandTribute(short participantIdx, int horizLoc, int vertLoc)
 		{
-			if (FrameWord(TributeLocal) == 0 || FrameWord(DemandLocal) != 2 || Person.Gold <= (short)FrameWord(TributeLocal) ||
+			if (this.audienceTribute == 0 || this.audienceDemand != 2 || Person.Gold <= (short)this.audienceTribute ||
 				WelcomeEmissary(participantIdx, horizLoc, vertLoc) == 0xffff)
 			{
 				return;
 			}
 
 			EmptyMessage()
-				.Number((short)FrameWord(TributeLocal));
+				.Number((short)this.audienceTribute);
 			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30bc), 0xba06);
 			this.processor.EmitGlobalByte(0xba06, 0);
 			this.owner.BlockText.DisplayTextDialog(0x3797);
@@ -514,26 +491,26 @@ namespace Civilization1Remaster.UI
 
 			if (DisplayKingDialog(0xba06, 0x14, 0x8b) == 1)
 			{
-				short tribute = (short)FrameWord(TributeLocal);
+				short tribute = (short)this.audienceTribute;
 				Person.Gold -= tribute;
 				Leader(participantIdx).Gold += tribute;
-				FrameWord(HostileLocal, 0);
+				this.audienceHostile = 0;
 			}
 
-			FrameWord(TributeLocal, 0x3e7);
+			this.audienceTribute = 0x3e7;
 		}
 
 		/// <summary>A leader with demands asks for the most valuable technology it lacks (0xc); after the answer 0x6 is 999</summary>
 		private void DemandTechnology(short participantIdx, int horizLoc, int vertLoc)
 		{
-			if (FrameWord(DemandLocal) == 0 || FrameWord(OfferedTechnologyLocal) == 0xffff || FrameWord(TributeLocal) == 0x3e7 ||
+			if (this.audienceDemand == 0 || this.audienceOfferedTechnology == 0xffff || this.audienceTribute == 0x3e7 ||
 				WelcomeEmissary(participantIdx, horizLoc, vertLoc) == 0xffff)
 			{
 				return;
 			}
 
 			this.processor.EmitGlobalByte(0xba06, 0);
-			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be), TechnologyName(FrameWord(OfferedTechnologyLocal)));
+			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be), TechnologyName(this.audienceOfferedTechnology));
 			this.owner.BlockText.DisplayTextDialog(0x37a0);
 
 			this.processor.EmitGlobalWord(0x6b8e, 0);
@@ -543,11 +520,11 @@ namespace Civilization1Remaster.UI
 
 			if (DisplayKingDialog(0xba06, 0x14, 0x8b) == 1)
 			{
-				this.owner.Advisors.EarnTechnology(participantIdx, (short)FrameWord(OfferedTechnologyLocal), this.owner.World.PersonParticipantIdx);
-				FrameWord(HostileLocal, 0);
+				this.owner.Advisors.EarnTechnology(participantIdx, (short)this.audienceOfferedTechnology, this.owner.World.PersonParticipantIdx);
+				this.audienceHostile = 0;
 			}
 
-			FrameWord(TributeLocal, 0x3e7);
+			this.audienceTribute = 0x3e7;
 		}
 
 		/// <summary>
@@ -559,12 +536,12 @@ namespace Civilization1Remaster.UI
 			ushort text;
 			bool welcome;
 
-			if (HostileValue != 0 && (Relation(participantIdx) & 2) != 0 && (short)FrameWord(TributeLocal) > 0x32)
+			if (HostileValue != 0 && (Relation(participantIdx) & 2) != 0 && (short)this.audienceTribute > 0x32)
 			{
 				welcome = WelcomeEmissary(participantIdx, horizLoc, vertLoc) != 0xffff;
 				text = (ushort)(welcome ? 0x37a9 : 0x37b2);
 			}
-			else if (HostileValue != 0 && FrameWord(TributeLocal) == 0x3e7)
+			else if (HostileValue != 0 && this.audienceTribute == 0x3e7)
 			{
 				if (WelcomeEmissary(participantIdx, horizLoc, vertLoc) == 0xffff)
 					return;
@@ -643,7 +620,7 @@ namespace Civilization1Remaster.UI
 			if ((Relation(participantIdx) & 2) != 0)
 				this.owner.Politics.WipeDiplomacyFlags(personIdx, participantIdx, 2);
 
-			if ((short)FrameWord(DangerLocal) >= 4 && FrameWord(WantedTechnologyLocal) != 0xffff)
+			if ((short)this.audienceDanger >= 4 && this.audienceWantedTechnology != 0xffff)
 			{
 				this.processor.RegSource.Value16 = (ushort)(participantIdx << 4);
 
@@ -656,7 +633,7 @@ namespace Civilization1Remaster.UI
 			if ((Relation(participantIdx) & 0xa) == 0)
 				OfferGoldForPeace(participantIdx);
 
-			if (FrameWord(DangerLocal) != 0 && Leader(participantIdx).TownTally <= 1)
+			if (this.audienceDanger != 0 && Leader(participantIdx).TownTally <= 1)
 			{
 				this.processor.RegDest.Value16 = (ushort)(participantIdx << 4);
 
@@ -669,7 +646,7 @@ namespace Civilization1Remaster.UI
 
 		private void OfferTechnologyForPeace(short participantIdx)
 		{
-			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be), TechnologyName(FrameWord(WantedTechnologyLocal)));
+			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be), TechnologyName(this.audienceWantedTechnology));
 			this.processor.EmitGlobalByte(0xba06, 0);
 			this.owner.BlockText.DisplayTextDialog(0x3805);
 			this.processor.EmitGlobalWord(0x3936, 0);
@@ -685,7 +662,7 @@ namespace Civilization1Remaster.UI
 
 			this.processor.EmitGlobalWord(0x3936, 0xffff);
 			this.processor.EmitGlobalWord(0x3c62, 1);
-			this.owner.Advisors.EarnTechnology(this.owner.World.PersonParticipantIdx, (short)FrameWord(WantedTechnologyLocal), participantIdx);
+			this.owner.Advisors.EarnTechnology(this.owner.World.PersonParticipantIdx, (short)this.audienceWantedTechnology, participantIdx);
 			RestoreScreenStyle();
 			this.owner.Helpers.HaltHueCycling();
 			this.processor.EmitGlobalWord(0x3936, 0);
@@ -696,19 +673,19 @@ namespace Civilization1Remaster.UI
 
 			DisplayKingMessage(participantIdx);
 			LogAudience(participantIdx);
-			FrameWord(LastAudienceLocal, (ushort)this.owner.World.RoundTally);
+			this.audienceLastAudience = (ushort)this.owner.World.RoundTally;
 		}
 
 		/// <summary>Gold for peace (0x22: twice the danger - 4, in fifties, up to the leader's gold)</summary>
 		private void OfferGoldForPeace(short participantIdx)
 		{
-			FrameWord(AmountLocal, (ushort)((ushort)this.owner.Helpers.VerifyValueSpan(((short)FrameWord(DangerLocal) * 2) - 4, 0, Leader(participantIdx).Gold / 50) * 0x32));
+			ushort amount = (ushort)((ushort)this.owner.Helpers.VerifyValueSpan(((short)this.audienceDanger * 2) - 4, 0, Leader(participantIdx).Gold / 50) * 0x32);
 
-			if (FrameWord(AmountLocal) == 0)
+			if (amount == 0)
 				return;
 
 			EmptyMessage()
-				.Number((short)FrameWord(AmountLocal));
+				.Number((short)amount);
 			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30bc), 0xba06);
 			this.processor.EmitGlobalByte(0xba06, 0);
 			this.owner.BlockText.DisplayTextDialog(0x380e);
@@ -720,14 +697,12 @@ namespace Civilization1Remaster.UI
 
 			DisplayKingMessage(participantIdx);
 			LogAudience(participantIdx);
-
-			ushort amount = FrameWord(AmountLocal);
 			Person.Gold += (short)amount;
 
 			// A translation slip: the gold is taken from the word at SI (the leader << 4), not from the leader
 			ushort taken = this.processor.RegSource.Value16;
 			this.processor.EmitUInt16(this.processor.SegData.Value16, taken, (ushort)(this.processor.PullUInt16(this.processor.SegData.Value16, taken) - amount));
-			FrameWord(LastAudienceLocal, (ushort)this.owner.World.RoundTally);
+			this.audienceLastAudience = (ushort)this.owner.World.RoundTally;
 		}
 
 		/// <summary>A leader in danger in its last city gives all its gold and technologies for peace</summary>
@@ -758,9 +733,8 @@ namespace Civilization1Remaster.UI
 			this.owner.Helpers.HaltHueCycling();
 			this.processor.EmitGlobalWord(0x3936, 0xffff);
 
-			for (FrameWord(LoopLocal, 0); (short)FrameWord(LoopLocal) < 0x48; FrameWord(LoopLocal, (ushort)(FrameWord(LoopLocal) + 1)))
+			for (short scienceIdx = 0; scienceIdx < 0x48; scienceIdx++)
 			{
-				short scienceIdx = (short)FrameWord(LoopLocal);
 
 				if (this.owner.Advisors.PlayerKnowsTechnology(personIdx, scienceIdx) == 0 &&
 					this.owner.Advisors.PlayerKnowsTechnology(participantIdx, scienceIdx) != 0)
@@ -778,7 +752,7 @@ namespace Civilization1Remaster.UI
 			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0xaa), 0, 0);
 			this.owner.Startup.DisplayMouseCursor();
 
-			FrameWord(LastAudienceLocal, (ushort)this.owner.World.RoundTally);
+			this.audienceLastAudience = (ushort)this.owner.World.RoundTally;
 		}
 
 		/// <summary>Without a peace treaty the leader declares war</summary>
@@ -802,7 +776,7 @@ namespace Civilization1Remaster.UI
 			if (HostileValue != 0 || (Relation(participantIdx) & 2) != 2 || WelcomeEmissary(participantIdx, horizLoc, vertLoc) == 0xffff)
 				return;
 
-			if (FrameWord(DemandLocal) != 0 && FrameWord(TributeLocal) != 0x3e7)
+			if (this.audienceDemand != 0 && this.audienceTribute != 0x3e7)
 			{
 				this.processor.EmitGlobalWord(0x3936, 1);
 				this.processor.EmitGlobalWord(0xd76c, 4);
@@ -843,18 +817,18 @@ namespace Civilization1Remaster.UI
 				this.owner.BlockText.DisplayTextDialog(0x388f);
 
 				// Choices disabled: 2 (a demand) shortly after the last audience or under a democracy, 1 (an attack) with only two players left
-				if ((short)(this.owner.World.RoundTally - FrameWord(LastAudienceLocal)) < 0x10 || Person.RegimeKind >= 4)
+				if ((short)(this.owner.World.RoundTally - this.audienceLastAudience) < 0x10 || Person.RegimeKind >= 4)
 					this.processor.EmitGlobalWord(0xb276, 4);
 
 				if (((1 << participantIdx) | (1 << (byte)personIdx)) == (ushort)this.owner.World.LiveRealms)
 					this.processor.EmitGlobalByte(0xb276, (byte)(this.processor.PullGlobalByte(0xb276) | 2));
 
-				FrameWord(ContinentLocal, DisplayKingDialog(0xba06, 0x14, 0x8b));
+				ushort choice = DisplayKingDialog(0xba06, 0x14, 0x8b);
 
-				if (FrameWord(ContinentLocal) == 2)
+				if (choice == 2)
 					DemandGoldUnderPeace(participantIdx);
 
-				if (FrameWord(ContinentLocal) != 1 || !AskToAttack(participantIdx))
+				if (choice != 1 || !AskToAttack(participantIdx))
 					return;
 			}
 		}
@@ -863,12 +837,12 @@ namespace Civilization1Remaster.UI
 		{
 			short personIdx = this.owner.World.PersonParticipantIdx;
 
-			FrameWord(AmountLocal, (ushort)((ushort)this.owner.Helpers.VerifyValueSpan((short)FrameWord(DangerLocal), 0, Leader(participantIdx).Gold / 50) * 0x32));
+			short amount = (short)((ushort)this.owner.Helpers.VerifyValueSpan((short)this.audienceDanger, 0, Leader(participantIdx).Gold / 50) * 0x32);
 
-			if (FrameWord(AmountLocal) != 0)
+			if (amount != 0)
 			{
 				EmptyMessage()
-					.Number((short)FrameWord(AmountLocal));
+					.Number(amount);
 				this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30bc), 0xba06);
 				this.processor.EmitGlobalByte(0xba06, 0);
 				this.owner.BlockText.DisplayTextDialog(0x3897);
@@ -878,12 +852,12 @@ namespace Civilization1Remaster.UI
 				// A translation slip: the human player gets the answer of the dialog, not the gold
 				ushort answer = DisplayKingDialog(0xba06, 0x14, 0x8b);
 				Person.Gold += (short)answer;
-				Leader(participantIdx).Gold -= (short)FrameWord(AmountLocal);
+				Leader(participantIdx).Gold -= amount;
 				Leader(participantIdx).TouchParticipantTimeleft = this.owner.World.RoundTally;
 				return;
 			}
 
-			if (FrameWord(WasHostileLocal) != 0)
+			if (this.audienceWasHostile != 0)
 			{
 				this.owner.Services.PerformSound(0x21, 0);
 				this.processor.EmitGlobalByte(0xba06, 0);
@@ -911,32 +885,27 @@ namespace Civilization1Remaster.UI
 			short personIdx = this.owner.World.PersonParticipantIdx;
 
 			this.owner.Libc.CopyText(0xba06, "You must attack the evil:\n ");
-			FrameWord(EnemyListLocal, 0);
+			short[] enemyTable = new short[8];
+			int enemyCount = 0;
 
-			for (FrameWord(LoopLocal, 1); (short)FrameWord(LoopLocal) < 8; FrameWord(LoopLocal, (ushort)(FrameWord(LoopLocal) + 1)))
+			for (short otherIdx = 1; otherIdx < 8; otherIdx++)
 			{
-				short otherIdx = (short)FrameWord(LoopLocal);
-
 				if (otherIdx == personIdx || otherIdx == participantIdx || (this.owner.World.LiveRealms & (1 << (byte)otherIdx)) == 0)
 					continue;
 
-				ushort entryIdx = FrameWord(EnemyListLocal);
-				this.processor.IncrementLocalWord(EnemyListLocal);
-				this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + (entryIdx << 1) - EnemyTable), (ushort)otherIdx);
+				enemyTable[enemyCount++] = otherIdx;
 
 				this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((otherIdx << 1) + 0x1992)));
 				this.owner.Libc.AppendText(0xba06, "\n ");
 			}
 
-			FrameWord(AmountLocal, DisplayKingDialog(0xba06, 0x14, 0x8b));
+			ushort choice = DisplayKingDialog(0xba06, 0x14, 0x8b);
 			this.processor.EmitGlobalWord(0x3936, 1);
 
-			if (FrameWord(AmountLocal) == 0xffff)
+			if (choice == 0xffff)
 				return false;
 
-			FrameWord(LoopLocal, this.processor.PullUInt16(this.processor.SegStack.Value16,
-				(ushort)(this.processor.RegFrame.Value16 + (FrameWord(AmountLocal) << 1) - EnemyTable)));
-			short enemyIdx = (short)FrameWord(LoopLocal);
+			short enemyIdx = enemyTable[choice];
 
 			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be),
 				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((enemyIdx << 1) + 0x1992)));
@@ -962,18 +931,16 @@ namespace Civilization1Remaster.UI
 			this.processor.RegSource.Value16 = (ushort)(participantIdx << 1);
 			this.processor.RegDest.Value16 = (ushort)(enemyIdx << 1);
 
-			FrameWord(AmountLocal, (ushort)((ushort)this.owner.Helpers.VerifyValueSpan(((Leader(enemyIdx).MartialMight / 2) * (Leader(participantIdx).Gold / 100)) / 50, 2, 9999) * 0x32));
+			short amount = (short)((ushort)this.owner.Helpers.VerifyValueSpan(((Leader(enemyIdx).MartialMight / 2) * (Leader(participantIdx).Gold / 100)) / 50, 2, 9999) * 0x32);
 
 			EmptyMessage()
-				.Number((short)FrameWord(AmountLocal));
+				.Number(amount);
 			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30bc), 0xba06);
 			this.processor.EmitGlobalByte(0xba06, 0);
 			this.owner.BlockText.DisplayTextDialog(0x38fb);
 
 			if (DisplayKingDialog(0xba06, 0x14, 0x8b) != 1)
 				return false;
-
-			short amount = (short)FrameWord(AmountLocal);
 
 			if (Person.Gold < amount)
 			{
@@ -1317,9 +1284,6 @@ namespace Civilization1Remaster.UI
 			if (this.processor.PullGlobalWord(0x67f6) != 0)
 				this.processor.EmitGlobalWord(0x67f6, (ushort)(this.processor.PullGlobalWord(0x67f6) - 1));
 
-			this.processor.EmitLocalWord(0x2, (ushort)mouth);
-			this.processor.EmitLocalWord(0x4, (ushort)eyes);
-
 			ChoreographKingLikeness((ushort)eyes, (ushort)mouth, this.processor.PullGlobalWord(0x7ef4));
 
 			this.owner.TextPainter.AwaitTime(10);
@@ -1393,8 +1357,6 @@ namespace Civilization1Remaster.UI
 
 			if (this.processor.PullGlobalWord(0xd76c) != 0 && this.processor.PullGlobalWord(0x67f4) != 0)
 				gesture = 0;
-
-			this.processor.EmitLocalWord(0x6, (ushort)gesture);
 
 			if (gesture == -1)
 			{
@@ -1497,17 +1459,12 @@ namespace Civilization1Remaster.UI
 				ushort horizLoc = (ushort)(((place % 5) * 0x3c) + 1);
 				ushort vertLoc = (ushort)((place / 5) * 0x32);
 
-				this.processor.EmitLocalWord(0x16, (ushort)(faceIdx << 2));
-
 				this.processor.EmitGlobalWord((ushort)((faceIdx << 2) + 0x7efe), this.owner.VideoCard.ScreenToPicture(1, horizLoc, (ushort)(vertLoc + 1), 0x3b, 0x14));
 
 				this.processor.EmitGlobalWord((ushort)((faceIdx << 2) + 0x7f00), this.owner.VideoCard.ScreenToPicture(1, horizLoc, (ushort)(vertLoc + 0x15), 0x3b, 0x1d));
 
 				place++;
 			}
-
-			this.processor.EmitLocalWord(0x12, faceIdx);
-			this.processor.EmitLocalWord(0x14, (ushort)place);
 
 			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0x19d4), 0, 0);
 
@@ -1527,9 +1484,6 @@ namespace Civilization1Remaster.UI
 						this.processor.EmitGlobalWord((ushort)((column << 1) + (6 * row) + 0x804e), this.owner.VideoCard.ScreenToPicture(1, (ushort)((0x1d * column) + 0xa1), (ushort)((0x19 * row) + 1), 0x1c, 0x18));
 					}
 				}
-
-				this.processor.EmitLocalWord(0x12, row);
-				this.processor.EmitLocalWord(0x14, column);
 
 				this.processor.EmitGlobalWord(0x67fa, 1);
 
@@ -1673,7 +1627,6 @@ namespace Civilization1Remaster.UI
 				}
 
 				// The loop counter's last value stays in the frame, like in the original
-				this.processor.EmitLocalWord(0x1e, 0x1b0);
 
 				this.owner.Helpers.HaltHueCycling();
 

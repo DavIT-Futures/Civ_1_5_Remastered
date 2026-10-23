@@ -159,8 +159,8 @@ namespace Civilization1Remaster.Tests.Differential
 					game => new WorldMapReference(game).DisplayEpicChronicle(),
 					game => game.Atlas.DisplayEpicChronicle(),
 					Register.Kept,
-					// The measure stays in the frame under the stack (local 4)
-					game => $"measure {game.Processor.PullGlobalWord((ushort)(sp - 2 - 4))}");
+					// The measure stays in the frame of the original under the stack (local 4)
+					game => $"measure {pair.Original.Engine.Processor.PullGlobalWord((ushort)(sp - 2 - 4))}");
 			}, output, ["measure 0", "measure 1", "measure 2", "measure 3", "measure 4"], [0x0d]);
 		}
 	}

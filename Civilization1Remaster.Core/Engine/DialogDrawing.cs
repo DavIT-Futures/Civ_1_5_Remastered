@@ -40,17 +40,16 @@ namespace Civilization1Remaster.Engine
 				this.owner.TurnLogic.AwaitForKey();
 			}
 
+			// RenderCitizenIcons reads the leftover word at 0x2 of this stack depth
 			ushort previousChoice = 0xffff;
 			ushort currentChoice = 0;
 			this.processor.EmitLocalWord(0x2, 0xffff);
-			this.processor.EmitLocalWord(0x4, 0);
 			this.processor.EmitGlobalWord(0x2fa2, 0);
 			this.processor.EmitGlobalWord(0x2f9c, 0);
 
 			if (this.processor.PullGlobalWord(0x2f9a) != 0xffff)
 			{
 				currentChoice = this.processor.PullGlobalWord(0x2f9a);
-				this.processor.EmitLocalWord(0x4, currentChoice);
 			}
 
 			this.processor.EmitGlobalWord(0xb1ec, 0xffff);
@@ -80,7 +79,6 @@ namespace Civilization1Remaster.Engine
 				shadowHue = 0xffff;
 			}
 
-			this.processor.EmitLocalWord(0xc, backHue);
 			this.processor.EmitGlobalWord(0x654c, (ushort)(backHue == 15 ? 3 : 15));
 
 			if (this.processor.PullGlobalWord(0xd762) == 0)
@@ -88,14 +86,9 @@ namespace Civilization1Remaster.Engine
 				shadowHue = 0xffff;
 			}
 
-			this.processor.EmitLocalWord(0xe, shadowHue);
-
 			ushort highlightHeight = this.processor.PullGlobalWord(0x2fa4);
 			ushort mouseUsed = 0;
 			ushort done = 0;
-			this.processor.EmitLocalWord(0x10, highlightHeight);
-			this.processor.EmitLocalWord(0x12, 0);
-			this.processor.EmitLocalWord(0x8, 0);
 
 			this.owner.Startup.ConcealMouseCursor();
 
@@ -126,7 +119,6 @@ namespace Civilization1Remaster.Engine
 					{
 						this.processor.EmitGlobalWord(0x2fa2, 1);
 						mouseUsed = 1;
-						this.processor.EmitLocalWord(0x12, 1);
 
 						if (this.owner.GlobDb3a == 2)
 						{
@@ -142,32 +134,26 @@ namespace Civilization1Remaster.Engine
 							currentChoice = 0xffff;
 						}
 
-						this.processor.EmitLocalWord(0x4, currentChoice);
 						this.processor.RegCount.LowByte = (byte)(currentChoice & 0xff);
 
 						if (((1 << (currentChoice & 0x1f)) & this.processor.PullGlobalWord(0xb276)) != 0)
 						{
 							currentChoice = previousChoice;
-							this.processor.EmitLocalWord(0x4, currentChoice);
 						}
 						else if (this.owner.GlobDb3a == 0)
 						{
 							done = 1;
-							this.processor.EmitLocalWord(0x8, 1);
 						}
 					}
 					else if (this.owner.Libc.KeyAvailable() != 0)
 					{
 						ushort key = ObtainNavigationKey();
-						this.processor.EmitLocalWord(0x6, key);
 
 						if (this.ChoicesIndentTokens && (key == 0x9 || key == 0x4b00 || key == 0x4d00))
 						{
 							this.ChoicesIndentTokenDown = true;
 							currentChoice = 0xffff;
 							done = 1;
-							this.processor.EmitLocalWord(0x4, 0xffff);
-							this.processor.EmitLocalWord(0x8, 1);
 						}
 						else if (key == 0x20 || key == 0xd)
 						{
@@ -176,21 +162,17 @@ namespace Civilization1Remaster.Engine
 							if (((1 << (currentChoice & 0x1f)) & this.processor.PullGlobalWord(0xb276)) == 0)
 							{
 								done = 1;
-								this.processor.EmitLocalWord(0x8, 1);
 							}
 						}
 						else if (key == 0x1b)
 						{
 							currentChoice = 0xffff;
 							done = 1;
-							this.processor.EmitLocalWord(0x4, 0xffff);
-							this.processor.EmitLocalWord(0x8, 1);
 						}
 						else if (key == 0x2300)
 						{
 							this.processor.EmitGlobalWord(0x2f9c, 1);
 							done = 1;
-							this.processor.EmitLocalWord(0x8, 1);
 						}
 						else if (key == 0x2f00)
 						{
@@ -206,7 +188,6 @@ namespace Civilization1Remaster.Engine
 							if ((short)currentChoice > 0)
 							{
 								currentChoice--;
-								this.processor.EmitLocalWord(0x4, currentChoice);
 							}
 						}
 						else if (key == 0x5000)
@@ -214,13 +195,11 @@ namespace Civilization1Remaster.Engine
 							if ((short)currentChoice < (short)(this.processor.PullGlobalWord(0xd208) - 1))
 							{
 								currentChoice++;
-								this.processor.EmitLocalWord(0x4, currentChoice);
 							}
 						}
 						else
 						{
 							ushort searchIdx = (ushort)(currentChoice + 1);
-							this.processor.EmitLocalWord(0xa, searchIdx);
 
 							while ((short)searchIdx < 0x20)
 							{
@@ -234,13 +213,11 @@ namespace Civilization1Remaster.Engine
 									if ((hotkey & 0x1f) == (key & 0x1f))
 									{
 										currentChoice = searchIdx;
-										this.processor.EmitLocalWord(0x4, currentChoice);
 										break;
 									}
 								}
 
 								searchIdx++;
-								this.processor.EmitLocalWord(0xa, searchIdx);
 							}
 						}
 					}
@@ -251,7 +228,6 @@ namespace Civilization1Remaster.Engine
 						this.processor.PullGlobalWord(0xd206) != 0)
 					{
 						currentChoice = 0xffff;
-						this.processor.EmitLocalWord(0x4, 0xffff);
 					}
 
 					if (currentChoice != previousChoice)
@@ -390,11 +366,8 @@ namespace Civilization1Remaster.Engine
 			ushort choiceCount = 0;
 			ushort lineWidth = 0;
 			ushort charIdx = 0;
-			this.processor.EmitLocalWord(0x5a, 0);
 			this.processor.EmitGlobalWord(0x658e, 0);
-			this.processor.EmitLocalWord(0x54, 0);
 			this.processor.EmitGlobalWord(0xd4c8, 0);
-			this.processor.EmitLocalWord(0x56, 0);
 
 			while (this.owner.Libc.TextLength(charsAddr) > charIdx)
 			{
@@ -408,7 +381,6 @@ namespace Civilization1Remaster.Engine
 					}
 
 					lineWidth = 0;
-					this.processor.EmitLocalWord(0x54, 0);
 
 					ushort lineCount = (ushort)(this.processor.PullGlobalWord(0x658e) + 1);
 					this.processor.EmitGlobalWord(0x658e, lineCount);
@@ -418,7 +390,6 @@ namespace Civilization1Remaster.Engine
 				{
 					if (lineWidth == 0)
 					{
-						this.processor.EmitLocalByte(0x5c, ch);
 
 						if (ch == 0x20 || ch == 0x5f)
 						{
@@ -434,17 +405,14 @@ namespace Civilization1Remaster.Engine
 							}
 
 							choiceCount++;
-							this.processor.EmitLocalWord(0x5a, choiceCount);
 						}
 					}
 
 					ushort currentFont = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.PullGlobalWord(0xaa) + 0x10));
 					lineWidth = (ushort)(lineWidth + this.owner.VideoCard.ObtainCharWidth(currentFont, ch));
-					this.processor.EmitLocalWord(0x54, lineWidth);
 				}
 
 				charIdx++;
-				this.processor.EmitLocalWord(0x56, charIdx);
 			}
 
 			short clampedLines = (short)this.owner.Helpers.VerifyValueSpan(
@@ -462,14 +430,11 @@ namespace Civilization1Remaster.Engine
 				bottomEdge += 2;
 			}
 
-			this.processor.EmitLocalWord(0x52, bottomEdge);
-
 			ushort totalLen = this.owner.Libc.TextLength(charsAddr);
 
 			if (this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(charsAddr + totalLen - 1)) != 0xa)
 			{
 				choiceCount--;
-				this.processor.EmitLocalWord(0x5a, choiceCount);
 			}
 
 			this.processor.EmitGlobalWord(0xd208, choiceCount);
@@ -494,7 +459,6 @@ namespace Civilization1Remaster.Engine
 					}
 
 					ushort titleWidth = (ushort)this.owner.TextPainter.ObtainTextWidth(titleAddr);
-					this.processor.EmitLocalWord(0x58, titleWidth);
 
 					ushort minRight = (ushort)(horizLoc + titleWidth + 8);
 
@@ -510,7 +474,6 @@ namespace Civilization1Remaster.Engine
 						(this.processor.PullGlobalSignedWord(0xde0e) - horizLoc) + 42, boxHeight, 7);
 
 					short portraitExtra = (short)(boxSpan - 0x34);
-					this.processor.EmitLocalWord(0x58, (ushort)portraitExtra);
 
 					if ((short)advisor <= 2)
 					{
@@ -547,7 +510,6 @@ namespace Civilization1Remaster.Engine
 			{
 				ushort screenStruct = this.processor.PullGlobalWord(0xaa);
 				ushort savedFont = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(screenStruct + 0x10));
-				this.processor.EmitLocalWord(0x56, savedFont);
 				this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(screenStruct + 0x10), 2);
 
 				this.owner.TextPainter.RenderTextToScreen0(0x2fbd,
@@ -577,13 +539,11 @@ namespace Civilization1Remaster.Engine
 		{
 			byte firstCh = this.processor.PullUInt8(this.processor.SegData.Value16, charsAddr);
 			short optionIdx = (firstCh == 0x20 || firstCh == 0x5f) ? (short)0 : (short)-1;
-			this.processor.EmitLocalWord(0x5a, (ushort)optionIdx);
 
 			this.processor.EmitUInt16(this.processor.SegData.Value16,
 				(ushort)(this.processor.PullGlobalWord(0xaa) + 0xc), this.processor.PullGlobalWord(0x654c));
 
 			ushort lineIdx = 0;
-			this.processor.EmitLocalWord(0x56, 0);
 
 			while ((short)lineIdx < this.processor.PullGlobalSignedWord(0x658e))
 			{
@@ -661,16 +621,13 @@ namespace Civilization1Remaster.Engine
 
 				ushort nextOffset = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((lineIdx << 1) + 0x6550));
 				byte nextLineChar = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(charsAddr + nextOffset));
-				this.processor.EmitLocalByte(0x5c, nextLineChar);
 
 				if (nextLineChar == 0x20 || nextLineChar == 0x5f)
 				{
 					optionIdx++;
-					this.processor.EmitLocalWord(0x5a, (ushort)optionIdx);
 				}
 
 				lineIdx++;
-				this.processor.EmitLocalWord(0x56, lineIdx);
 			}
 		}
 

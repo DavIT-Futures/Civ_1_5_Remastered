@@ -797,8 +797,6 @@ namespace Civilization1Remaster.UI
 			{
 				short kind = 2;
 
-				this.processor.EmitLocalWord(0x16, (ushort)kind);
-
 				this.owner.Startup.DisplayMouseCursor();
 
 				if (arg2 == 1)
@@ -810,7 +808,6 @@ namespace Civilization1Remaster.UI
 						break;
 
 					kind = (short)(this.owner.TurnHooks.DisplayDialog(0x4df9, 100, 80) + 3);
-					this.processor.EmitLocalWord(0x16, (ushort)kind);
 
 					if (kind == 2)
 					{
@@ -828,7 +825,6 @@ namespace Civilization1Remaster.UI
 						break;
 
 					kind = (short)(this.owner.TurnHooks.DisplayDialog(0x4e12, 100, 80) + 6);
-					this.processor.EmitLocalWord(0x16, (ushort)kind);
 
 					if (kind == 5)
 					{
@@ -840,8 +836,6 @@ namespace Civilization1Remaster.UI
 				this.owner.Startup.ConcealMouseCursor();
 
 				ushort slotIdx = arg2 == 0 ? ChooseSpaceshipStructureSlot(participantIdx) : FindSpaceshipSlot(participantIdx, kind);
-
-				this.processor.EmitLocalWord(0xc, slotIdx);
 
 				if (slotIdx != 0xffff)
 				{
@@ -877,8 +871,6 @@ namespace Civilization1Remaster.UI
 						this.owner.World.Participants[rivalIdx].TouchParticipantTimeleft = 0;
 					}
 				}
-
-				this.processor.EmitLocalWord(0x4, (ushort)rivalIdx);
 
 				this.owner.World.StarshipMarkers |= (short)(ushort)(1 << (byte)(participantIdx + 8));
 			}
@@ -962,11 +954,6 @@ namespace Civilization1Remaster.UI
 				slotIdx++;
 			}
 			while (this.processor.PullUInt8(0x375a, (ushort)(3 * slotIdx)) != 0xff);
-
-			this.processor.EmitLocalWord(0x2, outerFree);
-			this.processor.EmitLocalWord(0x6, innerBuilt);
-			this.processor.EmitLocalWord(0x8, outerBuilt);
-			this.processor.EmitLocalWord(0x14, innerFree);
 
 			return (short)(outerBuilt - outerFree) < (short)(innerBuilt - innerFree) ? innerFree : outerFree;
 		}

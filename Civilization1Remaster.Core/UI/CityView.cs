@@ -38,11 +38,12 @@ namespace Civilization1Remaster.UI
 				}
 			}
 
-			this.processor.EmitLocalByte(0x80, 0x0);
+			ushort savedText = (ushort)(this.processor.RegFrame.Value16 - 0x80);
+			this.processor.EmitGlobalByte(savedText, 0x0);
 
 			if (this.owner.Libc.TextLength(0xba06) < 120)
 			{
-				this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x80), 0xba06);
+				this.owner.Libc.CopyText(savedText, 0xba06);
 			}
 
 			// RNG based on city name
@@ -655,7 +656,7 @@ namespace Civilization1Remaster.UI
 			this.processor.EnterFrame(0x1c);
 			this.processor.PreserveSource();
 
-			ushort pictures = (ushort)(this.processor.RegFrame.Value16 - 0x16);
+			ushort[] pictures = new ushort[9];
 
 			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x4ebc, 0);
 
@@ -663,7 +664,7 @@ namespace Civilization1Remaster.UI
 			{
 				ushort vertLoc = this.owner.Advisors.PlayerKnowsTechnology(this.owner.World.PersonParticipantIdx, 0x23) == 0 ? (ushort)0x34 : (ushort)1;
 
-				this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(pictures + (pictureIdx << 1)), this.owner.VideoCard.ScreenToPicture(1, (ushort)((0x23 * pictureIdx) + 1), vertLoc, 0x22, 0x32));
+				pictures[pictureIdx] = this.owner.VideoCard.ScreenToPicture(1, (ushort)((0x23 * pictureIdx) + 1), vertLoc, 0x22, 0x32);
 			}
 
 			sbyte size = this.owner.World.Towns[townIdx].TrueExtent;
@@ -708,13 +709,7 @@ namespace Civilization1Remaster.UI
 				RenderSceneryCitizen(pictures, 5 + this.owner.CityOps.ObtainCitizenType((ushort)citizenIdx), ref arg2, arg3, spacing);
 			}
 
-			this.processor.EmitLocalWord(0x2, (ushort)happy);
-			this.processor.EmitLocalWord(0x4, (ushort)unhappy);
-			this.processor.EmitLocalWord(0x18, (ushort)citizenIdx);
-			this.processor.EmitLocalWord(0x1a, (ushort)spacing);
-			this.processor.EmitLocalByte(0x1c, (byte)size);
-
-			this.owner.Helpers.ReleaseResource(this.processor.PullUInt16(this.processor.SegStack.Value16, pictures), 0x4ec4);
+			this.owner.Helpers.ReleaseResource(pictures[0], 0x4ec4);
 
 			this.processor.RestoreSource();
 			this.processor.LeaveFrame();
@@ -723,13 +718,13 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>One citizen of the city scenery: picture pictureIdx of the frame at (horizLoc, vertLoc), then the next place</summary>
-		private void RenderSceneryCitizen(ushort pictures, int pictureIdx, ref ushort horizLoc, ushort vertLoc, short spacing)
+		private void RenderSceneryCitizen(ushort[] pictures, int pictureIdx, ref ushort horizLoc, ushort vertLoc, short spacing)
 		{
 			this.owner.Services.RenderPictureToScreen(
 				this.processor.PullGlobalWord(0xaa),
 				(short)horizLoc,
 				(short)vertLoc,
-				this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(pictures + (pictureIdx << 1))));
+				pictures[pictureIdx]);
 
 			horizLoc += (ushort)spacing;
 		}
@@ -863,7 +858,7 @@ namespace Civilization1Remaster.UI
 			this.processor.EnterFrame(0x28);
 			this.processor.PreserveSource();
 
-			ushort pictures = (ushort)(this.processor.RegFrame.Value16 - 0x20);
+			ushort[] pictures = new ushort[10];
 
 			this.owner.Helpers.HaltHueCycling();
 
@@ -907,7 +902,7 @@ namespace Civilization1Remaster.UI
 						continue;
 
 					this.owner.Services.RenderPictureToScreenAlternate(this.processor.PullGlobalWord(0x19d4), figureHoriz, 132,
-						this.processor.PullGlobalWord((ushort)(pictures + (((short)frameIdx % 10) << 1))));
+						pictures[(short)frameIdx % 10]);
 				}
 
 				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0x64, 0x140, 0x64, this.processor.PullGlobalWord(0xaa), 0, 0x64);
@@ -918,16 +913,11 @@ namespace Civilization1Remaster.UI
 					break;
 			}
 
-			this.processor.EmitLocalWord(0x22, (ushort)offset);
-			this.processor.EmitLocalWord(0x24, 0xffff);
-			this.processor.EmitLocalWord(0x26, (ushort)figureHoriz);
-			this.processor.EmitLocalWord(0x28, frameIdx);
-
 			this.owner.Startup.DisplayMouseCursor();
 
 			this.owner.TurnLogic.AwaitForKey();
 
-			this.owner.Helpers.ReleaseResource(this.processor.PullGlobalWord(pictures), 0);
+			this.owner.Helpers.ReleaseResource(pictures[0], 0);
 
 			this.owner.Helpers.LaunchHueCycling();
 
@@ -940,11 +930,11 @@ namespace Civilization1Remaster.UI
 		/// <summary>
 		/// The 10 pictures of the parade cut from screen 1 (4 a row, 0x4f apart) into the frame
 		/// </summary>
-		private void CutParadePictures(ushort pictures, ushort left, ushort rowHeight, ushort top, ushort altitude)
+		private void CutParadePictures(ushort[] pictures, ushort left, ushort rowHeight, ushort top, ushort altitude)
 		{
 			for (int pictureIdx = 0; pictureIdx < 0xa; pictureIdx++)
 			{
-				this.processor.EmitGlobalWord((ushort)(pictures + (pictureIdx << 1)), this.owner.VideoCard.ScreenToPicture(1, (ushort)(((pictureIdx % 4) * 0x4f) + left), (ushort)(((pictureIdx >> 2) * rowHeight) + top), 0x4e, altitude));
+				pictures[pictureIdx] = this.owner.VideoCard.ScreenToPicture(1, (ushort)(((pictureIdx % 4) * 0x4f) + left), (ushort)(((pictureIdx >> 2) * rowHeight) + top), 0x4e, altitude);
 			}
 		}
 
@@ -1063,7 +1053,7 @@ namespace Civilization1Remaster.UI
 			this.processor.EnterFrame(0x28);
 			this.processor.PreserveSource();
 
-			ushort pictures = (ushort)(this.processor.RegFrame.Value16 - 0x20);
+			ushort[] pictures = new ushort[10];
 
 			this.owner.Helpers.HaltHueCycling();
 
@@ -1095,7 +1085,7 @@ namespace Civilization1Remaster.UI
 
 					this.owner.Services.RenderPictureToScreenAlternate(this.processor.PullGlobalWord(0x19d4), figureHoriz,
 						this.processor.PullInt16(this.processor.SegData.Value16, (ushort)((figureIdx << 1) + 0x4f4a)) + 132,
-						this.processor.PullGlobalWord((ushort)(pictures + (((short)((3 * figureIdx) + frameIdx) % 10) << 1))));
+						pictures[(short)((3 * figureIdx) + frameIdx) % 10]);
 				}
 
 				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0x64, 0x140, 0x64, this.processor.PullGlobalWord(0xaa), 0, 0x64);
@@ -1106,16 +1096,11 @@ namespace Civilization1Remaster.UI
 					break;
 			}
 
-			this.processor.EmitLocalWord(0x22, (ushort)offset);
-			this.processor.EmitLocalWord(0x24, 0x4);
-			this.processor.EmitLocalWord(0x26, (ushort)figureHoriz);
-			this.processor.EmitLocalWord(0x28, frameIdx);
-
 			this.owner.Startup.DisplayMouseCursor();
 
 			this.owner.TurnLogic.AwaitForKey();
 
-			this.owner.Helpers.ReleaseResource(this.processor.PullGlobalWord(pictures), 0);
+			this.owner.Helpers.ReleaseResource(pictures[0], 0);
 
 			this.processor.RestoreSource();
 			this.processor.LeaveFrame();

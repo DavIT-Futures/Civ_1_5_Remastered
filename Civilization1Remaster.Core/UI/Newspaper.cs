@@ -27,7 +27,6 @@ namespace Civilization1Remaster.UI
 			this.processor.EnterFrame(0x10);
 			this.processor.PreserveSource();
 
-			short givenIdx = townIdx;
 			bool shown = townIdx != -2;
 
 			if (townIdx < 0)
@@ -159,7 +158,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Libc.CopyText(topic, "*NEWSA");
 
-			this.processor.EmitLocalByte(0x7, (byte)(this.processor.PullLocalByte(0x7) + this.owner.Libc.Dice.DrawInt(14)));
+			this.processor.EmitGlobalByte((ushort)(topic + 5), (byte)(this.processor.PullGlobalByte((ushort)(topic + 5)) + this.owner.Libc.Dice.DrawInt(14)));
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
 			this.owner.BlockText.ImportTextFromFile(0x5178, topic);
@@ -176,19 +175,6 @@ namespace Civilization1Remaster.UI
 			}
 
 			this.owner.Startup.DisplayMouseCursor();
-
-			this.processor.EmitLocalWord(0x4, (ushort)givenIdx);
-			this.processor.EmitLocalWord(0xe, (ushort)width);
-
-			if (givenIdx < 0)
-			{
-				this.processor.EmitLocalWord(0x2, 0x80);
-			}
-
-			if (shown)
-			{
-				this.processor.EmitLocalWord(0x10, 0x10);
-			}
 
 			this.processor.RestoreSource();
 			this.processor.LeaveFrame();

@@ -875,17 +875,7 @@ namespace Civilization1Remaster.UI
 			this.processor.PreserveIndexRegisters();
 
 			ushort frame = this.processor.RegFrame.Value16;
-			ushort settlersPerContinent = (ushort)(frame - 0x46);
-			ushort continents = (ushort)(frame - 0x5a);
-			ushort points = (ushort)(frame - 0x1c);
-
-			this.processor.EmitLocalWord(0x26, 0);
-
-			for (ushort continentIdx = 0; continentIdx < 0x10; continentIdx++)
-			{
-				this.processor.RegSource.Value16 = (ushort)(continentIdx << 1);
-				this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(settlersPerContinent + (continentIdx << 1)), 0);
-			}
+			short[] points = new short[8];
 
 			ushort participantIdx;
 
@@ -899,37 +889,25 @@ namespace Civilization1Remaster.UI
 
 				this.processor.RegDest.Value16 = (ushort)((participantIdx << 1) + frame - 0x5a);
 
-				ushort continent = this.owner.MapOps.ObtainContinentID((sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d5)), (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d6)));
-				this.processor.EmitGlobalWord((ushort)(continents + (participantIdx << 1)), continent);
-
-				ushort counter = (ushort)((continent << 1) + frame - 0x46);
-				this.processor.EmitGlobalWord(counter, (ushort)(this.processor.PullGlobalWord(counter) + 1));
+				this.owner.MapOps.ObtainContinentID((sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d5)), (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d6)));
 			}
 
 			ushort scattered = 0;
 			short best = 0;
 
-			this.processor.EmitLocalWord(0xc, scattered);
-			this.processor.EmitLocalWord(0x24, (ushort)best);
-
 			for (participantIdx = 1; participantIdx < 8; participantIdx++)
 			{
-				this.processor.EmitLocalWord(0x4, participantIdx);
-
 				ushort troop = (ushort)(0x600 * participantIdx);
 				this.processor.RegSource.Value16 = troop;
 
 				if (this.processor.PullGlobalByte((ushort)(troop + 0x81d7)) == 0xff)
 					continue;
 
-				this.processor.EmitLocalWord(0x22, (ushort)((0x1c * participantIdx) - 0x18));
-
 				short nearest = NearestCivilization(participantIdx, troop);
 
 				if (nearest >= 10 && nearest != 0x3e7)
 				{
 					scattered |= (ushort)(1 << (byte)participantIdx);
-					this.processor.EmitLocalWord(0xc, scattered);
 				}
 
 				short start = RateStartLocation(participantIdx, troop, nearest);
@@ -937,37 +915,29 @@ namespace Civilization1Remaster.UI
 				if (start > best)
 				{
 					best = start;
-					this.processor.EmitLocalWord(0x24, (ushort)best);
 				}
 
 				this.processor.RegSource.Value16 = (ushort)(participantIdx << 1);
-				this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(points + (participantIdx << 1)), (ushort)start);
+				points[participantIdx] = start;
 			}
 
 			short chosen = -1;
 
-			this.processor.EmitLocalWord(0x5c, 0xffff);
-
 			for (participantIdx = 1; participantIdx < 8; participantIdx++)
 			{
-				this.processor.EmitLocalWord(0x4, participantIdx);
-
 				ushort troop = (ushort)(0x600 * participantIdx);
 				this.processor.RegSource.Value16 = troop;
 
 				if (this.processor.PullGlobalByte((ushort)(troop + 0x81d7)) == 0xff)
 					continue;
 
-				this.processor.EmitLocalWord(0x22, (ushort)((0x1c * participantIdx) - 0x8));
-
 				this.owner.Libc.CopyText(0xba06, "Skills: ");
 
-				ushort playerPoints = (ushort)((participantIdx << 1) + frame - 0x1c);
-				this.processor.RegDest.Value16 = playerPoints;
+				this.processor.RegDest.Value16 = (ushort)((participantIdx << 1) + frame - 0x1c);
 
-				if ((short)(best - this.processor.PullGlobalWord(playerPoints)) > 3)
+				if ((short)(best - points[participantIdx]) > 3)
 				{
-					this.processor.EmitGlobalWord(playerPoints, (ushort)(this.processor.PullGlobalWord(playerPoints) + 3));
+					points[participantIdx] += 3;
 
 					this.owner.UnitOps.ConstructUnit((short)participantIdx, 0, (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d5)),
 						(sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d6)));
@@ -975,15 +945,9 @@ namespace Civilization1Remaster.UI
 					this.owner.Libc.AppendText(0xba06, "Settlers+");
 				}
 
-				ushort given;
-
-				for (given = 0; ; given++)
+				for (ushort given = 0; (short)(best - points[participantIdx]) > (short)given; given++)
 				{
-					this.processor.EmitLocalWord(0x48, given);
 					this.processor.RegSource.Value16 = (ushort)(participantIdx << 1);
-
-					if ((short)(best - this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(points + (participantIdx << 1)))) <= (short)given)
-						break;
 
 					if (given != 0)
 						this.owner.Libc.AppendText(0xba06, "+");
@@ -993,7 +957,7 @@ namespace Civilization1Remaster.UI
 
 				this.processor.RegSource.Value16 = (ushort)(participantIdx << 1);
 
-				if ((short)this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(points + (participantIdx << 1))) != best)
+				if (points[participantIdx] != best)
 					continue;
 
 				this.owner.Libc.AppendText(0xba06, "NONE");
@@ -1001,11 +965,8 @@ namespace Civilization1Remaster.UI
 				if (chosen == -1 || (scattered & (1 << (byte)participantIdx)) != 0)
 				{
 					chosen = (short)participantIdx;
-					this.processor.EmitLocalWord(0x5c, (ushort)chosen);
 				}
 			}
-
-			this.processor.EmitLocalWord(0x4, participantIdx);
 
 			this.processor.RegAcc.Value16 = (ushort)chosen;
 
@@ -1026,12 +987,9 @@ namespace Civilization1Remaster.UI
 			short nearest = 0x3e7;
 			ushort otherIdx;
 
-			this.processor.EmitLocalWord(0x6, 0);
-			this.processor.EmitLocalWord(0xa, (ushort)nearest);
 
 			for (otherIdx = 1; otherIdx < 8; otherIdx++)
 			{
-				this.processor.EmitLocalWord(0x48, otherIdx);
 
 				if (otherIdx == participantIdx)
 					continue;
@@ -1045,7 +1003,6 @@ namespace Civilization1Remaster.UI
 				this.processor.RegDest.Value16 = troop;
 
 				ushort otherContinent = this.owner.MapOps.ObtainContinentID((sbyte)this.processor.PullGlobalByte((ushort)(other + 0x81d5)), (sbyte)this.processor.PullGlobalByte((ushort)(other + 0x81d6)));
-				this.processor.EmitLocalWord(0x5e, otherContinent);
 
 				if (this.owner.MapOps.ObtainContinentID((sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d5)), (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d6))) != otherContinent)
 					continue;
@@ -1053,16 +1010,13 @@ namespace Civilization1Remaster.UI
 				short distance = (short)(ushort)this.owner.Helpers.ObtainDistance(
 					(sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d5)), (sbyte)this.processor.PullGlobalByte((ushort)(other + 0x81d5)),
 					(sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d6)), (sbyte)this.processor.PullGlobalByte((ushort)(other + 0x81d6)));
-				this.processor.EmitLocalWord(0x8, (ushort)distance);
 
 				if (distance < nearest)
 				{
 					nearest = distance;
-					this.processor.EmitLocalWord(0xa, (ushort)nearest);
 				}
 			}
 
-			this.processor.EmitLocalWord(0x48, otherIdx);
 
 			return nearest;
 		}
@@ -1106,7 +1060,6 @@ namespace Civilization1Remaster.UI
 					(sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d5)) + (short)this.processor.PullGlobalWord((ushort)((neighbourIdx << 1) + 0x1882)),
 					(sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d6)) + (short)this.processor.PullGlobalWord((ushort)((neighbourIdx << 1) + 0x18e4)));
 
-				this.processor.EmitLocalWord(0x4a, terrain);
 
 				if (terrain == 0xa)
 					ocean++;
@@ -1118,10 +1071,6 @@ namespace Civilization1Remaster.UI
 					river++;
 			}
 
-			this.processor.EmitLocalWord(0x48, neighbourIdx);
-			this.processor.EmitLocalWord(0x20, ocean);
-			this.processor.EmitLocalWord(0x2, grassland);
-			this.processor.EmitLocalWord(0x1e, river);
 
 			this.owner.Libc.CopyText(0xba06, ocean != 0 ? (ushort)0x3653 : (ushort)0x365c);
 
@@ -1168,7 +1117,6 @@ namespace Civilization1Remaster.UI
 					break;
 			}
 
-			this.processor.EmitLocalWord(0x6, (ushort)start);
 
 			return start;
 		}

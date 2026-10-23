@@ -413,8 +413,6 @@ namespace Civilization1Remaster.UI
 					built |= (ushort)(1 << (byte)part);
 			}
 
-			this.processor.EmitLocalWord(0x14, built);
-
 			for (ushort sectionIdx = 1; sectionIdx < 8; sectionIdx++)
 			{
 				this.processor.EmitGlobalByte((ushort)((sectionIdx << 1) + 0xb25f), 0xff);
@@ -468,8 +466,6 @@ namespace Civilization1Remaster.UI
 					continue;
 				}
 
-				this.processor.EmitLocalWord(0x2e, part);
-
 				ushort look = 2;
 
 				if (section < 4)
@@ -477,8 +473,6 @@ namespace Civilization1Remaster.UI
 
 				if (section > 4)
 					look = PalacePart((ushort)(section + 1)) == 0xffff || section == 7 ? (ushort)3 : (ushort)1;
-
-				this.processor.EmitLocalWord(0x26, look);
 
 				switch (look)
 				{
@@ -557,10 +551,6 @@ namespace Civilization1Remaster.UI
 				}
 			}
 
-			this.processor.EmitLocalWord(0x1c, horizLoc);
-			this.processor.EmitLocalWord(0x20, vertLoc);
-			this.processor.EmitLocalWord(0x22, section);
-
 			// The wing of the last left end, unless it is section 3
 			ushort lastLeft = this.processor.PullLocalWord(0x12);
 
@@ -576,17 +566,19 @@ namespace Civilization1Remaster.UI
 			{
 				this.owner.Libc.CopyText(pictureName, "cbrush0.pic");
 
+				ushort leftBush = 0, rightBush = 0;
+
 				if (this.processor.PullGlobalWord(0xd930) != 0)
 				{
-					RenderPalaceBush(pictureName, 0xd930, 0x2e, 0x2a, 0);
+					leftBush = RenderPalaceBush(pictureName, 0xd930, 0x2e, 0);
 				}
 
 				if (this.processor.PullGlobalWord(0xd934) != 0)
 				{
-					RenderPalaceBush(pictureName, 0xd934, 0x2f, 0x2c, 184);
+					rightBush = RenderPalaceBush(pictureName, 0xd934, 0x2f, 184);
 				}
 
-				this.owner.Helpers.ReleaseResource(this.processor.PullLocalWord(this.processor.PullGlobalWord(0xd930) != 0 ? 0x2a : 0x2c), 0);
+				this.owner.Helpers.ReleaseResource(this.processor.PullGlobalWord(0xd930) != 0 ? leftBush : rightBush, 0);
 			}
 
 			if (marker != 0)
@@ -624,14 +616,16 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>A bush of the palace garden: cbrush picture 2 * size + first from the word sizeAddr, at x horizLoc</summary>
-		private void RenderPalaceBush(ushort pictureName, ushort sizeAddr, byte first, int pictureLocal, int horizLoc)
+		private ushort RenderPalaceBush(ushort pictureName, ushort sizeAddr, byte first, int horizLoc)
 		{
 			this.processor.EmitGlobalByte((ushort)(pictureName + 6), (byte)((this.processor.PullGlobalByte(sizeAddr) << 1) + first));
 
-			this.processor.EmitLocalWord(pictureLocal, this.owner.ImageToolkit.ImportIcon(pictureName));
+			ushort picture = this.owner.ImageToolkit.ImportIcon(pictureName);
 
 			this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa), horizLoc,
-				(short)this.processor.PullGlobalWord(sizeAddr) <= 1 ? 105 : 94, this.processor.PullLocalWord(pictureLocal));
+				(short)this.processor.PullGlobalWord(sizeAddr) <= 1 ? 105 : 94, picture);
+
+			return picture;
 		}
 
 		/// <summary>
@@ -760,7 +754,7 @@ namespace Civilization1Remaster.UI
 					continue;
 
 				this.owner.Libc.CopyText(docname, "castle0.pic");
-				this.processor.EmitLocalByte(0xa, (byte)(level + 0x30));
+				this.processor.EmitGlobalByte((ushort)(docname + 6), (byte)(level + 0x30));
 
 				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, docname, 0);
 
@@ -827,15 +821,8 @@ namespace Civilization1Remaster.UI
 						}
 					}
 
-					this.processor.EmitLocalWord(0x14, 0x2);
-					this.processor.EmitLocalWord(0x16, horizLoc);
-					this.processor.EmitLocalWord(0x18, vertLoc);
 				}
-
-				this.processor.EmitLocalWord(0x12, section);
 			}
-
-			this.processor.EmitLocalWord(0x1a, level);
 
 			this.processor.RegSource.Value16 = this.processor.UnstackWord();
 			this.processor.LeaveFrame();
