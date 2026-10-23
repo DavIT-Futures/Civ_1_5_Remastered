@@ -39,7 +39,10 @@ Testy zawsze w **Release** z `-parallelMode all` (ok. 7 razy szybciej niż Debug
   rund.
 - **Pełny zestaw tylko przy kamieniach milowych:** po zmianie wspólnego kodu (`Civilization1Remaster.Machine`, harness,
   `UnitMemory`, `MapLayers`, `CommonUtilities`), po skończeniu dużego fragmentu (np. całej metody) i na koniec sesji.
-  Między nimi golden master (16 s) na porcję.
+  Między nimi golden master (16 s) na porcję. **Wyjątek – B2 (zmienne lokalne ze stosu): pełny zestaw po każdej porcji**,
+  bo usunięcie zapisu do ramki może zmienić śmieci, które inna funkcja na tej samej głębokości stosu czyta jako
+  niezainicjowaną zmienną (`RenderCitizenIcons` 0x2, `HandlePlayerTurn` 0x12 / 0x24 / 0x36 / 0x3e …); wychodzi to w testach
+  innych modułów. Taki zapis zostaje (fizycznie na stos, obok zmiennej C#).
 
 ## Kroki
 
