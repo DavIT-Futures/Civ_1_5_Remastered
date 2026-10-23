@@ -102,8 +102,6 @@ namespace Civilization1Remaster.Game
 			}
 			else
 			{
-				this.processor.EmitLocalWord(0xe, 0);
-
 				bool windowFailed = false;
 				short columns = (short)Math.Abs((short)(this.processor.PullGlobalByte((ushort)(troop + 0x81da)) - this.processor.PullGlobalByte((ushort)(troop + 0x81d5))));
 
@@ -117,7 +115,6 @@ namespace Civilization1Remaster.Game
 						if (TryShiftToward(participantIdx, troopIdx, out ushort step))
 							return step;
 
-						this.processor.EmitLocalWord(0xe, 1);
 						windowFailed = true;
 					}
 				}
@@ -158,11 +155,7 @@ namespace Civilization1Remaster.Game
 			short shiftHoriz = (short)(this.processor.PullGlobalWord(0x6590) - unitHoriz);
 			short shiftVert = (short)(this.processor.PullGlobalWord(0x6592) - unitVert);
 
-			this.processor.EmitLocalWord(0x26, (ushort)Math.Abs(shiftHoriz));
-			this.processor.EmitLocalWord(0x28, (ushort)Math.Abs(shiftVert));
-
 			short distance = GotoDistance(shiftHoriz, shiftVert);
-			this.processor.EmitLocalWord(0xa, (ushort)distance);
 
 			if (shiftHoriz == 0 && shiftVert == 0)
 			{
@@ -195,9 +188,6 @@ namespace Civilization1Remaster.Game
 
 				this.processor.RegSource.Value16 = (ushort)(direction << 1);
 				this.processor.RegDest.Value16 = troop;
-				this.processor.EmitLocalWord(0x28, (ushort)Math.Abs(leftVert));
-				this.processor.EmitLocalWord(0x26, (ushort)Math.Abs(leftHoriz));
-				this.processor.EmitLocalWord(0x2a, (ushort)Math.Abs(leftVert));
 
 				short nextDistance = GotoDistance(leftHoriz, leftVert);
 
@@ -414,8 +404,7 @@ namespace Civilization1Remaster.Game
 
 			bool sea = UnitMovesBySea(troop);
 			bool found = false;
-			// The last values of the locals 0xa (steps, then the distance), 0x10, 0x2e, 0x30, 0x34 (unset: never written)
-			bool stepsSet = false, linksSet = false, neighbourSet = false;
+			bool stepsSet = false;
 			short steps = 0, links = 0, nextColumn = 0, nextRow = 0;
 			short column, row;
 
@@ -435,7 +424,6 @@ namespace Civilization1Remaster.Game
 				stepsSet = true;
 				head++;
 				links = RouteBlockLinks(sea, column, row);
-				linksSet = true;
 
 				for (short direction = 1; direction <= 8; direction++)
 				{
@@ -444,7 +432,6 @@ namespace Civilization1Remaster.Game
 
 					nextColumn = RouteNeighbourColumn(direction, column);
 					nextRow = (short)(this.processor.PullGlobalWord((ushort)((direction << 1) + 0x18e4)) + row);
-					neighbourSet = true;
 
 					ushort block = (ushort)((ushort)(0xd * nextColumn) + nextRow + 0xd816);
 
@@ -468,7 +455,6 @@ namespace Civilization1Remaster.Game
 				short bestDirection = -1;
 
 				links = RouteBlockLinks(UnitMovesBySea(troop), unitColumn, unitRow);
-				linksSet = true;
 
 				for (short direction = 1; direction <= 8; direction++)
 				{
@@ -477,7 +463,6 @@ namespace Civilization1Remaster.Game
 
 					nextColumn = RouteNeighbourColumn(direction, unitColumn);
 					nextRow = (short)(this.processor.PullGlobalWord((ushort)((direction << 1) + 0x18e4)) + unitRow);
-					neighbourSet = true;
 
 					short blockSteps = (sbyte)this.processor.PullGlobalByte((ushort)((ushort)(0xd * nextColumn) + nextRow + 0xd816));
 
@@ -506,22 +491,8 @@ namespace Civilization1Remaster.Game
 					stepsSet = true;
 				}
 
-				this.processor.EmitLocalWord(0xe, (ushort)bestDirection);
-
 				if (bestDirection != -1)
 					AimRouteStep(bestDirection, unitColumn, unitRow, sea);
-			}
-			else if (linksSet)
-			{
-			}
-
-			if (stepsSet)
-				this.processor.EmitLocalWord(0xa, (ushort)steps);
-
-			if (linksSet)
-
-			if (neighbourSet)
-			{
 			}
 
 			if (this.processor.PullGlobalWord(0x6590) == 0xffff)
@@ -740,7 +711,6 @@ namespace Civilization1Remaster.Game
 
 
 				short cost = (sbyte)this.processor.PullGlobalByte(WindowCell(windowHoriz, windowVert, horizLoc, vertLoc));
-				this.processor.EmitLocalWord(0xe, (ushort)cost);
 
 				if (cost > (short)this.processor.PullGlobalWord(0x6794))
 					continue;
@@ -827,9 +797,8 @@ namespace Civilization1Remaster.Game
 		{
 			short lowest = 0x63;
 			short best = -1;
+			short bestCrowd = 0;
 			short direction;
-
-			this.processor.EmitLocalWord(0xa, (ushort)lowest);
 
 			for (direction = 1; direction <= 8; direction++)
 			{
@@ -869,21 +838,18 @@ namespace Civilization1Remaster.Game
 				{
 					lowest = cost;
 					best = direction;
-
-					this.processor.EmitLocalWord(0xa, (ushort)lowest);
-					this.processor.EmitLocalWord(0xe, (ushort)CrowdAndDistance(participantIdx, tileHoriz, nextVert, 0xe));
+					bestCrowd = CrowdAndDistance(participantIdx, tileHoriz, nextVert);
 				}
 
 				if (cost != lowest)
 					continue;
 
-				short alternative = CrowdAndDistance(participantIdx, tileHoriz, nextVert, 0x1a);
+				short alternative = CrowdAndDistance(participantIdx, tileHoriz, nextVert);
 
-				if (alternative < (short)this.processor.PullLocalWord(0xe))
+				if (alternative < bestCrowd)
 				{
 					best = direction;
-
-					this.processor.EmitLocalWord(0xe, (ushort)alternative);
+					bestCrowd = alternative;
 				}
 			}
 
@@ -892,24 +858,16 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// 4 * the units of the player in the stack on the tile (none: 0) plus the distance to the place; the units go into the
-		/// local first, like in the original
+		/// 4 * the units of the player in the stack on the tile (none: 0) plus the distance to the place
 		/// </summary>
-		private short CrowdAndDistance(short participantIdx, short horizLoc, short vertLoc, int local)
+		private short CrowdAndDistance(short participantIdx, short horizLoc, short vertLoc)
 		{
 			ushort troopIdx = this.owner.MapOps.ObtainUnitAtTile(horizLoc, vertLoc);
+			ushort crowd = troopIdx != 0xffff
+				? (ushort)(this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, (short)troopIdx, 2) << 2)
+				: (ushort)0;
 
-			if (troopIdx != 0xffff)
-			{
-				this.processor.EmitLocalWord(local, (ushort)(this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, (short)troopIdx, 2) << 2));
-			}
-			else
-			{
-				this.processor.EmitLocalWord(local, 0);
-			}
-
-			ushort total = (ushort)(this.processor.PullLocalWord(local) + (ushort)this.owner.Helpers.ObtainDistance((short)this.processor.PullGlobalWord(0x6590), horizLoc, (short)this.processor.PullGlobalWord(0x6592), vertLoc));
-			this.processor.EmitLocalWord(local, total);
+			ushort total = (ushort)(crowd + (ushort)this.owner.Helpers.ObtainDistance((short)this.processor.PullGlobalWord(0x6590), horizLoc, (short)this.processor.PullGlobalWord(0x6592), vertLoc));
 
 			return (short)total;
 		}
