@@ -1285,6 +1285,14 @@ potem poprawki zachowania z listy niżej – po decyzji użytkownika.
 Kod C# przetłumaczony z asm ma miejscami inne zachowanie niż DOS-owy CIV.EXE. Testy porównują z tłumaczeniem, więc na razie
 te błędy są odtwarzane jawnie:
 
+- **„… discover X from the Barbarians” przy zwykłych badaniach komputera (2026-10-24, zgłoszone przez użytkownika).**
+  `AnnounceTechnology` (ScienceAndAdvisors): źródło 0 znaczy „z badań” (tak wołają `UncoverTechnology(gracz, 0)` po
+  badaniach i chatka ze zwojami `EarnTechnology(gracz, tech, 0)`), i czasownik to słusznie „discover” (0x23d7). Dopisek
+  „ from the <źródło>” sprawdza jednak `participantIdx1 == 0` przez AX (`or ax, ax`), a tłumaczenie zgubiło
+  `mov ax, [participantIdx1]` – AX to wtedy 0xba06 (wynik AppendText), więc dopisek idzie zawsze, a gracz 0 to
+  barbarzyńcy. W DOS-owym CIV.EXE komunikat kończy się na nazwie technologii. Widać to przy każdej technologii,
+  którą AI (z kontaktem z człowiekiem) odkryje sama. Naprawa: warunek `participantIdx != participantIdx1 &&
+  participantIdx1 != 0` – na końcu migracji, bo zamrożona gra i baseline mają ten błąd.
 - `FeedCity` (`HandleCity`, L0819): po `TrueExtent--` przetłumaczony kod sprawdzał flagę Z z wcześniejszego porównania
   (0xe8 == -1, zawsze prawda), a nie wynik zmniejszenia, więc głodujące miasto bez osadnika zawsze ginie (w oryginale tylko przy
   rozmiarze 1; inaczej traci mieszkańca i zeruje zapas).
