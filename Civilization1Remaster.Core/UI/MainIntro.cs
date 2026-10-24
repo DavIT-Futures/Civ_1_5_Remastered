@@ -128,7 +128,7 @@ namespace Civilization1Remaster.UI
 			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
 
 			if (VgaMode == 0)
-				this.owner.Services.FloodBox(this.processor.PullGlobalWord(0x19fc), 0, 0, 320, 200, 0);
+				this.owner.Services.FloodBox(SpriteScreenBox, 0, 0, 320, 200, 0);
 
 			this.owner.VideoCard.AssignHuesByIndexArray(0x19fe);
 
@@ -582,7 +582,7 @@ namespace Civilization1Remaster.UI
 			this.owner.Startup.QueryForDisk(0, 1);
 
 			if (VgaMode == 0)
-				this.owner.Services.FloodBox(this.processor.PullGlobalWord(0x19fc), 0, 0, 320, 200, 0);
+				this.owner.Services.FloodBox(SpriteScreenBox, 0, 0, 320, 200, 0);
 
 			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, this.processor.PullLocalWord(ScreenBackground));
 			this.owner.Services.FloodBox(ScreenBox, 0, 12, 320, 176, this.processor.PullLocalWord(ScreenBackground));

@@ -130,18 +130,18 @@ namespace Civilization1Remaster.Game
 			ushort targetTop = (ushort)(sourceTop - top);
 			ushort altitude = (ushort)(0x32 - targetTop - (top > 0 ? top : 0));
 
-			this.processor.EmitGlobalWord(0x6ed6, (ushort)left);
-			this.processor.EmitGlobalWord(0x70ea, (ushort)top);
+			MapFocusLeft = (ushort)left;
+			MapFocusTop = (ushort)top;
 
 			this.owner.Services.FloodBox(ScreenBox, 0, 8, 80, 50, 0);
 
 			if (MapRevealed != 0)
 			{
 				left = (short)this.owner.Helpers.VerifyValueSpan(left, 0, 16);
-				this.processor.EmitGlobalWord(0x6ed6, (ushort)left);
+				MapFocusLeft = (ushort)left;
 
 				top = (short)this.owner.Helpers.VerifyValueSpan(top, 0, 65530);
-				this.processor.EmitGlobalWord(0x70ea, (ushort)top);
+				MapFocusTop = (ushort)top;
 
 				this.owner.VideoCard.RenderImage(PictureScreenBox, (ushort)left, (ushort)top, 0x50, 0x32,
 					ScreenBox, 0, 8);
@@ -239,7 +239,7 @@ namespace Civilization1Remaster.Game
 				if (VgaMode == 0)
 				{
 					this.owner.VideoCard.RenderImage(
-						this.processor.PullGlobalWord(0x19fc),
+						SpriteScreenBox,
 						0, 0x50, 16, 16,
 						ScreenBox,
 						(ushort)screenX, (ushort)screenY);
@@ -359,7 +359,7 @@ namespace Civilization1Remaster.Game
 				mask = MaskNeighbours(horizLoc, vertLoc, mask, 2, 0x8, terrainType => terrainType != 0xa);
 
 				this.owner.VideoCard.RenderImage(
-					this.processor.PullGlobalWord(0x19fc),
+					SpriteScreenBox,
 					(ushort)(mask << 4), 0x40, 16, 16,
 					ScreenBox,
 					(ushort)screenX, (ushort)screenY);

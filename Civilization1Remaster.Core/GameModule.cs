@@ -1073,6 +1073,146 @@ namespace Civilization1Remaster
 			get => this.processor.PullGlobalWord(0xd766);
 			set => this.processor.EmitGlobalWord(0xd766, value);
 		}
+
+		/// <summary>0xd206: the menu has no choice, any key closes it ("Press key to continue")</summary>
+		protected ushort MenuAnyKey
+		{
+			get => this.processor.PullGlobalWord(0xd206);
+			set => this.processor.EmitGlobalWord(0xd206, value);
+		}
+
+		/// <summary>0x2fa0: the menu box is 2 pixels taller with the text 0x2fbd at its bottom right</summary>
+		protected ushort MenuFooter
+		{
+			get => this.processor.PullGlobalWord(0x2fa0);
+			set => this.processor.EmitGlobalWord(0x2fa0, value);
+		}
+
+		/// <summary>0x681a: the game is loaded, not saved ("Which drive contains your saved game files?")</summary>
+		protected ushort LoadingGame
+		{
+			get => this.processor.PullGlobalWord(0x681a);
+			set => this.processor.EmitGlobalWord(0x681a, value);
+		}
+
+		/// <summary>0x681e: the handle of the file of the game loaded</summary>
+		protected ushort LoadFile
+		{
+			get => this.processor.PullGlobalWord(0x681e);
+			set => this.processor.EmitGlobalWord(0x681e, value);
+		}
+
+		/// <summary>0x3c62: the Civilopedia is shown without its pictures (disk missing)</summary>
+		protected ushort CivilopediaWithoutPictures
+		{
+			get => this.processor.PullGlobalWord(0x3c62);
+			set => this.processor.EmitGlobalWord(0x3c62, value);
+		}
+
+		/// <summary>0x6542: the unhappy citizens above the size of the city</summary>
+		protected ushort CityExcessUnhappy
+		{
+			get => this.processor.PullGlobalWord(0x6542);
+			set => this.processor.EmitGlobalWord(0x6542, value);
+		}
+
+		/// <summary>0xe3c2: the unpaid support of the cities; a computer player above 0 falls into anarchy</summary>
+		protected ushort AnarchyPressure
+		{
+			get => this.processor.PullGlobalWord(0xe3c2);
+			set => this.processor.EmitGlobalWord(0xe3c2, value);
+		}
+
+		/// <summary>0xdb42: a computer player at 0 or more chooses democracy</summary>
+		protected ushort DemocracyPressure
+		{
+			get => this.processor.PullGlobalWord(0xdb42);
+			set => this.processor.EmitGlobalWord(0xdb42, value);
+		}
+
+		/// <summary>0x20f4: new units are set up without repainting and moving them</summary>
+		protected ushort QuietUnitSetup
+		{
+			get => this.processor.PullGlobalWord(0x20f4);
+			set => this.processor.EmitGlobalWord(0x20f4, value);
+		}
+
+		/// <summary>0x6ed6: the left offset of the map view focus</summary>
+		protected ushort MapFocusLeft
+		{
+			get => this.processor.PullGlobalWord(0x6ed6);
+			set => this.processor.EmitGlobalWord(0x6ed6, value);
+		}
+
+		/// <summary>0x70ea: the top offset of the map view focus</summary>
+		protected ushort MapFocusTop
+		{
+			get => this.processor.PullGlobalWord(0x70ea);
+			set => this.processor.EmitGlobalWord(0x70ea, value);
+		}
+
+		/// <summary>0x19fc: the address of the box of the sprites</summary>
+		protected ushort SpriteScreenBox
+		{
+			get => this.processor.PullGlobalWord(0x19fc);
+			set => this.processor.EmitGlobalWord(0x19fc, value);
+		}
+
+		/// <summary>0x67fe: the pixels under the clouds lightened while the world is made</summary>
+		protected ushort LightenedPixels
+		{
+			get => this.processor.PullGlobalWord(0x67fe);
+			set => this.processor.EmitGlobalWord(0x67fe, value);
+		}
+
+		/// <summary>0x1a3e: little memory with VGA: one sprite for every row</summary>
+		protected ushort LowMemoryVga
+		{
+			get => this.processor.PullGlobalWord(0x1a3e);
+			set => this.processor.EmitGlobalWord(0x1a3e, value);
+		}
+
+		/// <summary>0x5876: the picture of the mouse pointer drawn</summary>
+		protected ushort PointerImage
+		{
+			get => this.processor.PullGlobalWord(0x5876);
+			set => this.processor.EmitGlobalWord(0x5876, value);
+		}
+
+		/// <summary>0x5878: the x of the hot spot of the mouse pointer</summary>
+		protected ushort PointerHotHoriz
+		{
+			get => this.processor.PullGlobalWord(0x5878);
+			set => this.processor.EmitGlobalWord(0x5878, value);
+		}
+
+		/// <summary>0x587a: the y of the hot spot of the mouse pointer</summary>
+		protected ushort PointerHotVert
+		{
+			get => this.processor.PullGlobalWord(0x587a);
+			set => this.processor.EmitGlobalWord(0x587a, value);
+		}
+
+		/// <summary>0x6b8e: the king welcomed the friendship</summary>
+		protected ushort AudienceWelcomed
+		{
+			get => this.processor.PullGlobalWord(0x6b8e);
+			set => this.processor.EmitGlobalWord(0x6b8e, value);
+		}
+
+		/// <summary>0x67ee: the pictures of the audience are the modern ones (technology 0x14)</summary>
+		protected ushort KingModernPictures
+		{
+			get => this.processor.PullGlobalWord(0x67ee);
+			set => this.processor.EmitGlobalWord(0x67ee, value);
+		}
+
+		/// <summary>0x804e: the picture of the government in the audience (govtNa.pic)</summary>
+		protected ushort GovernmentPicture
+		{
+			get => this.processor.PullGlobalWord(0x804e);
+			set => this.processor.EmitGlobalWord(0x804e, value);
+		}
 		#endregion
 	}
 }

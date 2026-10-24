@@ -32,8 +32,8 @@ namespace Civilization1Remaster.Game
 			this.processor.EnterFrame(0xa);
 			this.processor.PreserveIndexRegisters();
 
-			this.processor.EmitGlobalWord(0xdb42, 0);
-			this.processor.EmitGlobalWord(0xe3c2, 0);
+			DemocracyPressure = 0;
+			AnarchyPressure = 0;
 
 			// 1: a city of size above 5 whose turn returned 0, 2: a city in disorder
 			int unrest = 0;
@@ -1106,7 +1106,7 @@ namespace Civilization1Remaster.Game
 				this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(screen + 0x10), 2);
 			}
 
-			this.processor.EmitGlobalWord(0x2fa0, 1);
+			MenuFooter = 1;
 			ushort picked = this.owner.Dialogs.DisplayMenu(0xba06, 80, 8, 1);
 			Score = (short)ChoiceEntry(picked + 1);
 
@@ -1131,7 +1131,7 @@ namespace Civilization1Remaster.Game
 			// The Civilopedia of the choice, then the menu again
 			this.owner.Startup.ConcealMouseCursor();
 			this.owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, BackScreenBox, 0, 0);
-			this.processor.EmitGlobalWord(0x3c62, 1);
+			CivilopediaWithoutPictures = 1;
 
 			if (Score >= 0)
 				this.owner.Encyclopedia.DisplayCivilopediaRecord((ushort)Score, 2);
@@ -1320,7 +1320,7 @@ namespace Civilization1Remaster.Game
 					return 0x48;
 				}
 
-				this.processor.EmitGlobalWord(0x2fa0, 0x1);
+				MenuFooter = 0x1;
 
 				ushort choice = this.owner.Dialogs.DisplayMenu(0xba06, 80, 64, 1);
 
@@ -1681,7 +1681,7 @@ namespace Civilization1Remaster.Game
 
 			if ((participantIdx != person || participantIdx1 == -2) && KingAnswer == 0xffff)
 			{
-				this.processor.EmitGlobalWord(0xd206, 1);
+				MenuAnyKey = 1;
 
 				DialogStyle = participantIdx == person ? (ushort)6 : (ushort)0;
 

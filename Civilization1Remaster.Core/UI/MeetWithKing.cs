@@ -42,7 +42,7 @@ namespace Civilization1Remaster.UI
 			this.audienceDanger = 0;
 			this.audienceTribute = 0;
 			this.audienceDemand = 1;
-			this.processor.EmitGlobalWord(0x6b8e, 0);
+			AudienceWelcomed = 0;
 
 			WeighContinents(participantIdx);
 			WeighNuclearWeapons(participantIdx);
@@ -70,10 +70,10 @@ namespace Civilization1Remaster.UI
 					DeclareWar(participantIdx);
 
 				NameEmpressBack(participantIdx);
-				this.processor.EmitGlobalWord(0x6b8e, 0);
+				AudienceWelcomed = 0;
 
 				WelcomeFriendship(participantIdx, horizLoc, vertLoc);
-				this.processor.EmitGlobalWord(0x6b8e, 1);
+				AudienceWelcomed = 1;
 
 				if ((Relation(participantIdx) & 2) != 0 && WelcomeEmissary(participantIdx, horizLoc, vertLoc) != 0xffff)
 					NegotiateUnderPeace(participantIdx);
@@ -410,11 +410,11 @@ namespace Civilization1Remaster.UI
 				this.owner.Startup.DisplayMouseCursor();
 
 				KingMood = 0xffff;
-				this.processor.EmitGlobalWord(0x3c62, 1);
+				CivilopediaWithoutPictures = 1;
 				this.owner.Conquest.ChooseTechnologyToTake(participantIdx, personIdx);
 				RestoreScreenStyle();
 
-				this.processor.EmitGlobalWord(0x3c62, 1);
+				CivilopediaWithoutPictures = 1;
 				this.owner.Conquest.ChooseTechnologyToTake(personIdx, participantIdx);
 				this.owner.Helpers.HaltHueCycling();
 				RestoreScreenStyle();
@@ -484,7 +484,7 @@ namespace Civilization1Remaster.UI
 			this.processor.EmitGlobalByte(0xba06, 0);
 			this.owner.BlockText.DisplayTextDialog(0x3797);
 
-			this.processor.EmitGlobalWord(0x6b8e, 0);
+			AudienceWelcomed = 0;
 			KingMood = 2;
 			KingSpeaking = 0xc;
 			this.owner.Services.PerformSound(0x21, 0);
@@ -513,7 +513,7 @@ namespace Civilization1Remaster.UI
 			this.owner.Libc.CopyText(CodeText4, TechnologyName(this.audienceOfferedTechnology));
 			this.owner.BlockText.DisplayTextDialog(0x37a0);
 
-			this.processor.EmitGlobalWord(0x6b8e, 0);
+			AudienceWelcomed = 0;
 			KingMood = 2;
 			KingSpeaking = 0xc;
 			this.owner.Services.PerformSound(0x21, 0);
@@ -567,7 +567,7 @@ namespace Civilization1Remaster.UI
 
 			if (welcome)
 			{
-				this.processor.EmitGlobalWord(0x6b8e, 1);
+				AudienceWelcomed = 1;
 				KingMood = 2;
 				KingSpeaking = 0xc;
 				DisplayKingDialog(0xba06, 0x14, 0x8b);
@@ -594,7 +594,7 @@ namespace Civilization1Remaster.UI
 
 			this.processor.EmitGlobalByte(0xba06, 0);
 			this.owner.BlockText.DisplayTextDialog(0x37cd);
-			this.processor.EmitGlobalWord(0x6b8e, 0);
+			AudienceWelcomed = 0;
 			KingMood = 0;
 			KingSpeaking = 0xc;
 
@@ -661,7 +661,7 @@ namespace Civilization1Remaster.UI
 			this.owner.Helpers.HaltHueCycling();
 
 			KingMood = 0xffff;
-			this.processor.EmitGlobalWord(0x3c62, 1);
+			CivilopediaWithoutPictures = 1;
 			this.owner.Advisors.EarnTechnology(this.owner.World.PersonParticipantIdx, (short)this.audienceWantedTechnology, participantIdx);
 			RestoreScreenStyle();
 			this.owner.Helpers.HaltHueCycling();
@@ -739,7 +739,7 @@ namespace Civilization1Remaster.UI
 				if (this.owner.Advisors.PlayerKnowsTechnology(personIdx, scienceIdx) == 0 &&
 					this.owner.Advisors.PlayerKnowsTechnology(participantIdx, scienceIdx) != 0)
 				{
-					this.processor.EmitGlobalWord(0x3c62, 1);
+					CivilopediaWithoutPictures = 1;
 					this.owner.Advisors.EarnTechnology(personIdx, scienceIdx, participantIdx);
 				}
 			}
@@ -764,7 +764,7 @@ namespace Civilization1Remaster.UI
 			this.owner.Services.PerformSound(0x21, 0);
 			this.processor.EmitGlobalByte(0xba06, 0);
 			this.owner.BlockText.DisplayTextDialog(0x3820);
-			this.processor.EmitGlobalWord(0x6b8e, 1);
+			AudienceWelcomed = 1;
 			KingMood = 2;
 			KingSpeaking = 4;
 			DisplayKingDialog(0xba06, 0x14, 0x8b);
@@ -1335,7 +1335,7 @@ namespace Civilization1Remaster.UI
 			switch (KingMood)
 			{
 				case 0:
-					this.processor.EmitGlobalByte(0x3a9a, this.processor.PullGlobalWord(0x6b8e) != 0 ? (byte)4 : (byte)2);
+					this.processor.EmitGlobalByte(0x3a9a, AudienceWelcomed != 0 ? (byte)4 : (byte)2);
 
 					if (KingStep != 6)
 						gesture = 3;
@@ -1347,8 +1347,8 @@ namespace Civilization1Remaster.UI
 					break;
 
 				case 2:
-					this.processor.EmitGlobalByte(0x3ab4, this.processor.PullGlobalWord(0x6b8e) != 0 ? (byte)0xb : (byte)7);
-					this.processor.EmitGlobalByte(0x3ab7, this.processor.PullGlobalWord(0x6b8e) != 0 ? (byte)0xb : (byte)7);
+					this.processor.EmitGlobalByte(0x3ab4, AudienceWelcomed != 0 ? (byte)0xb : (byte)7);
+					this.processor.EmitGlobalByte(0x3ab7, AudienceWelcomed != 0 ? (byte)0xb : (byte)7);
 
 					if (KingStep != 0xe)
 						gesture = 0xc;
@@ -1443,7 +1443,7 @@ namespace Civilization1Remaster.UI
 
 			ImportKingScenery(participantIdx);
 
-			this.owner.Helpers.ReleaseResource(this.processor.PullGlobalWord(0x804e), 0x3aee);
+			this.owner.Helpers.ReleaseResource(GovernmentPicture, 0x3aee);
 
 			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, pictureName, 0);
 
@@ -1525,14 +1525,14 @@ namespace Civilization1Remaster.UI
 				// The answer, not AX (PlayerKnowsTechnology doesn't set it), like in the original
 				this.processor.RegAcc.Value16 = this.owner.Advisors.PlayerKnowsTechnology(participantIdx, 0x14);
 
-				this.processor.EmitGlobalWord(0x67ee, this.processor.RegAcc.Value16);
+				KingModernPictures = this.processor.RegAcc.Value16;
 			}
 
 			if (regime == 3)
 			{
 				this.processor.EmitGlobalByte((ushort)(pictureName + 4), 0x33);
 			}
-			else if (this.processor.PullGlobalWord(0x67ee) != 0)
+			else if (KingModernPictures != 0)
 			{
 				this.processor.EmitGlobalByte((ushort)(pictureName + 5), 0x6d);
 			}
@@ -1588,7 +1588,7 @@ namespace Civilization1Remaster.UI
 				{
 					this.processor.EmitGlobalByte((ushort)(sceneryName + 4), 0x33);
 				}
-				else if (this.processor.PullGlobalWord(0x67ee) != 0)
+				else if (KingModernPictures != 0)
 				{
 					this.processor.EmitGlobalByte((ushort)(sceneryName + 5), 0x6d);
 				}
@@ -1685,7 +1685,7 @@ namespace Civilization1Remaster.UI
 				{
 					style = 6;
 				}
-				else if (this.processor.PullGlobalWord(0x67ee) != 0)
+				else if (KingModernPictures != 0)
 				{
 					style += 3;
 				}

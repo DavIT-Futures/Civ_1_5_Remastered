@@ -32,7 +32,7 @@ namespace Civilization1Remaster.Game
 				ushort savedSource = this.processor.RegSource.Value16;
 				ushort savedDest = this.processor.RegDest.Value16;
 
-				this.processor.EmitGlobalWord(0x20f4, 0x1);
+				QuietUnitSetup = 0x1;
 
 				for (int keptIdx = 0; keptIdx < 2; keptIdx++)
 				{
@@ -55,7 +55,7 @@ namespace Civilization1Remaster.Game
 					town.Unfamiliar[keptIdx] = -1;
 				}
 
-				this.processor.EmitGlobalWord(0x20f4, 0x0);
+				QuietUnitSetup = 0x0;
 				town.ConditionMarker |= KeptUnitsCondition;
 
 				this.processor.RegSource.Value16 = savedSource;
@@ -91,7 +91,7 @@ namespace Civilization1Remaster.Game
 
 				ushort countLosses = CountLosses;
 				CountLosses = 0;
-				this.processor.EmitGlobalWord(0x20f4, 0x1);
+				QuietUnitSetup = 0x1;
 
 				bool firstSeen = false;
 
@@ -119,7 +119,7 @@ namespace Civilization1Remaster.Game
 					EliminateUnit(participantIdx, troopIdx);
 				}
 
-				this.processor.EmitGlobalWord(0x20f4, 0x0);
+				QuietUnitSetup = 0x0;
 				CountLosses = countLosses;
 				town.ConditionMarker &= unchecked((byte)~KeptUnitsCondition);
 
@@ -667,9 +667,9 @@ namespace Civilization1Remaster.Game
 			}
 
 			// Position of the unit on the world map (top left corner of the screen)
-			short worldMapTop = this.processor.PullGlobalSignedWord(0x70ea);
+			short worldMapTop = (short)MapFocusTop;
 			short dotHoriz = (short)this.owner.Routing.TunePosition(
-				this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz) - this.processor.PullGlobalSignedWord(0x6ed6));
+				this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz) - (short)MapFocusLeft);
 			int unitVert = troopIdx < 127 ? this.troops.Pull(participantIdx, troopIdx, UnitMemory.Vert) : 0xff;
 			short dotVert = (short)(unitVert - worldMapTop);
 			bool dotVisible = dotVert >= 0 && dotVert < 50;
@@ -854,7 +854,7 @@ namespace Civilization1Remaster.Game
 
 			this.owner.World.Participants[participantIdx].LiveTroops[kind]++;
 
-			if (this.processor.PullGlobalWord(0x20f4) == 0)
+			if (QuietUnitSetup == 0)
 			{
 				if (MapRevealed != 0 || participantIdx == this.owner.World.PersonParticipantIdx ||
 					(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.ShownToParticipants) & (ushort)(1 << this.owner.World.PersonParticipantIdx)) != 0)
@@ -868,7 +868,7 @@ namespace Civilization1Remaster.Game
 			}
 
 			if (participantIdx == this.owner.World.PersonParticipantIdx && this.owner.World.RoundTally != 0 &&
-				this.processor.PullGlobalWord(0x20f4) == 0)
+				QuietUnitSetup == 0)
 			{
 				if (this.owner.World.Participants[participantIdx].TroopTally == 0)
 				{
@@ -932,7 +932,7 @@ namespace Civilization1Remaster.Game
 
 			this.owner.MapOps.DiscardUnitFromTile(participantIdx, troopIdx, horizLoc, vertLoc);
 
-			if (this.processor.PullGlobalWord(0x20f4) == 0 && KingMood == 0xffff &&
+			if (QuietUnitSetup == 0 && KingMood == 0xffff &&
 				(MapRevealed != 0 || participantIdx == this.owner.World.PersonParticipantIdx ||
 				(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.ShownToParticipants) & (ushort)(1 << this.owner.World.PersonParticipantIdx)) != 0))
 			{

@@ -1258,7 +1258,7 @@ namespace Civilization1Remaster.UI
 					ushort entry = (ushort)(0xb886 + (row << 5) + (column << 1));
 
 					// Rows 6 - 9 (and all rows with 0x1a3e) have one sprite, repeated in every column
-					if ((row >= 6 || this.processor.PullGlobalWord(0x1a3e) != 0) && column != 0)
+					if ((row >= 6 || LowMemoryVga != 0) && column != 0)
 					{
 						this.processor.EmitGlobalWord(entry, this.processor.PullGlobalWord((ushort)(entry - 2)));
 					}
@@ -1298,7 +1298,7 @@ namespace Civilization1Remaster.UI
 		{
 			this.owner.ImageToolkit.ImportPictureOrColors(3, 0, 0, 0x3714, 1);
 
-			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19fc), 0, 0, 0x140, 0xc8,
+			this.owner.VideoCard.RenderImage(SpriteScreenBox, 0, 0, 0x140, 0xc8,
 				BackScreenBox, 0, 0);
 
 			for (int idx = 0; idx < 0xc; idx++)

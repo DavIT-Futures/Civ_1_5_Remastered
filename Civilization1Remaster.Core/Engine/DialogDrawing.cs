@@ -248,7 +248,7 @@ namespace Civilization1Remaster.Engine
 					if ((short)currentChoice < 0 ||
 						(short)currentChoice >= (short)MenuChoiceCount ||
 						this.processor.PullGlobalWord(0x8066) != 0 ||
-						this.processor.PullGlobalWord(0xd206) != 0)
+						MenuAnyKey != 0)
 					{
 						currentChoice = 0xffff;
 						this.processor.EmitLocalWord(0x4, 0xffff);
@@ -296,8 +296,8 @@ namespace Civilization1Remaster.Engine
 
 				DialogStyle = 0xffff;
 				DefaultLine = 0xffff;
-				this.processor.EmitGlobalWord(0x2fa0, 0);
-				this.processor.EmitGlobalWord(0xd206, 0);
+				MenuFooter = 0;
+				MenuAnyKey = 0;
 				DisabledLines = 0;
 				MenuOptions = 0;
 				this.processor.RegAcc.Value16 = currentChoice;
@@ -457,7 +457,7 @@ namespace Civilization1Remaster.Engine
 
 			ushort bottomEdge = (ushort)(MultiplyWords((ushort)clampedLines, MenuLineHeight) + vertLoc + 6);
 
-			if (this.processor.PullGlobalWord(0x2fa0) != 0)
+			if (MenuFooter != 0)
 			{
 				bottomEdge += 2;
 			}
@@ -543,7 +543,7 @@ namespace Civilization1Remaster.Engine
 				}
 			}
 
-			if (this.processor.PullGlobalWord(0x2fa0) != 0)
+			if (MenuFooter != 0)
 			{
 				ushort screenStruct = ScreenBox;
 				ushort savedFont = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(screenStruct + 0x10));

@@ -372,14 +372,14 @@ namespace Civilization1Remaster.UI
 				diskStatus = this.owner.Startup.QueryForDisk(3, 0);
 				if (diskStatus == 0)
 				{
-					this.processor.EmitGlobalWord(0x3c62, 0x1);
+					CivilopediaWithoutPictures = 0x1;
 				}
 			}
 
 			ushort bgColor = 0xf;
 			if (VgaMode != 0)
 			{
-				if (this.processor.PullGlobalWord(0x3c62) == 0)
+				if (CivilopediaWithoutPictures == 0)
 				{
 					bgColor = 0xfd;
 					this.owner.VideoCard.AssignHue(0xfd, VGABitmap.Hue18ToHue(0x3d, 0x3d, 0x3d));
@@ -399,7 +399,7 @@ namespace Civilization1Remaster.UI
 			short titleX = arg2 == 0x2 ? (short)0xe0 : (short)0xcc;
 			if (arg2 == 0x4 ||
 				(arg2 == 0x1 && (short)scienceIdx > 0x18) ||
-				this.processor.PullGlobalWord(0x3c62) != 0)
+				CivilopediaWithoutPictures != 0)
 			{
 				titleX = 0xa0;
 			}
@@ -465,7 +465,7 @@ namespace Civilization1Remaster.UI
 				this.owner.Startup.QueryForDisk(0, 1);
 			}
 
-			this.processor.EmitGlobalWord(0x3c62, 0x0);
+			CivilopediaWithoutPictures = 0x0;
 			if (KingAnswer == 0xffff)
 			{
 				this.owner.Services.FloodBox(ScreenBox, 8, 8, 304, 184, bgColor);
@@ -483,7 +483,7 @@ namespace Civilization1Remaster.UI
 			switch (arg2)
 			{
 				case 0:
-					if (this.processor.PullGlobalWord(0x3c62) == 0)
+					if (CivilopediaWithoutPictures == 0)
 					{
 						ushort iconIdx = ObtainFirstPrerequisite(scienceIdx);
 						this.owner.Libc.CopyText(0xba06, "iconpg1.pic");
@@ -504,10 +504,10 @@ namespace Civilization1Remaster.UI
 				case 1:
 					if (this.owner.Startup.QueryForDisk(1, 0) == 0)
 					{
-						this.processor.EmitGlobalWord(0x3c62, 0x1);
+						CivilopediaWithoutPictures = 0x1;
 					}
 
-					if ((short)scienceIdx > 1 && (short)scienceIdx <= 0x15 && this.processor.PullGlobalWord(0x3c62) == 0)
+					if ((short)scienceIdx > 1 && (short)scienceIdx <= 0x15 && CivilopediaWithoutPictures == 0)
 					{
 						this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x3d07, 0);
 						this.owner.Helpers.PullAndAssignColors(0x3d14);
@@ -528,7 +528,7 @@ namespace Civilization1Remaster.UI
 					break;
 
 				case 2:
-					if (this.processor.PullGlobalWord(0x3c62) == 0)
+					if (CivilopediaWithoutPictures == 0)
 					{
 						ushort iconIdx = ObtainSecondPrerequisite(scienceIdx);
 						this.owner.Libc.CopyText(0xba06, "iconpga.pic");
@@ -551,7 +551,7 @@ namespace Civilization1Remaster.UI
 					break;
 
 				case 3:
-					if (this.processor.PullGlobalWord(0x3c62) == 0)
+					if (CivilopediaWithoutPictures == 0)
 					{
 						ushort iconIdx = ObtainTechnologyCategory(scienceIdx);
 						this.owner.Libc.CopyText(0xba06, "iconpgt1.pic");

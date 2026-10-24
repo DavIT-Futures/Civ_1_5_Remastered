@@ -889,8 +889,8 @@ namespace Civilization1Remaster.Game
 					// The world map: the view moves there
 					this.owner.MapOps.FocusMapView(participantIdx,
 						(short)(ushort)this.owner.Routing.TunePosition(
-						(short)this.owner.GlobDb3c + this.processor.PullGlobalSignedWord(0x6ed6) - 7),
-						this.owner.Helpers.VerifyValueSpan((short)this.owner.GlobDb3e + this.processor.PullGlobalSignedWord(0x70ea) - 14, 0, 49));
+						(short)this.owner.GlobDb3c + (short)MapFocusLeft - 7),
+						this.owner.Helpers.VerifyValueSpan((short)this.owner.GlobDb3e + (short)MapFocusTop - 14, 0, 49));
 				}
 				else if ((short)this.owner.GlobDb3e < 0x48)
 				{

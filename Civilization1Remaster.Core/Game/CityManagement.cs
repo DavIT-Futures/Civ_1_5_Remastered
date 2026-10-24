@@ -2108,13 +2108,13 @@ namespace Civilization1Remaster.Game
 			this.round.Content = this.processor.RegAcc.Value16;
 
 			// The citizens above the size
-			this.processor.EmitGlobalWord(0x6542, 0);
+			CityExcessUnhappy = 0;
 			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 
 			if (town.TrueExtent < (short)CityUnhappy)
 			{
 				this.processor.RegCount.Value16 = (ushort)(CityUnhappy - town.TrueExtent);
-				this.processor.EmitGlobalWord(0x6542, this.processor.RegCount.Value16);
+				CityExcessUnhappy = this.processor.RegCount.Value16;
 				CityUnhappy = (ushort)town.TrueExtent;
 			}
 
@@ -2562,7 +2562,7 @@ namespace Civilization1Remaster.Game
 				if (this.processor.PullGlobalWord(0x8078) != 0 &&
 					this.owner.World.Participants[owner].FoundScienceTally < this.owner.World.Participants[person].FoundScienceTally)
 				{
-					this.processor.EmitGlobalWord(0xdb42, 0xfc19);
+					DemocracyPressure = 0xfc19;
 				}
 				else if ((short)this.round.Best > 0)
 				{
@@ -2744,10 +2744,10 @@ namespace Civilization1Remaster.Game
 			{
 				this.processor.RegCount.Value16 = 5;
 				this.processor.RegAcc.Value16 = (ushort)((short)(CitySpecialSlots - CityShields) * 5);
-				this.processor.EmitGlobalWord(0xe3c2, (ushort)(this.processor.PullGlobalWord(0xe3c2) + this.processor.RegAcc.Value16));
+				AnarchyPressure = (ushort)(AnarchyPressure + this.processor.RegAcc.Value16);
 			}
 
-			this.processor.EmitGlobalWord(0xe3c2, (ushort)(this.processor.PullGlobalWord(0xe3c2) + (ushort)this.owner.Helpers.VerifyValueSpan((short)CitySpecialSlots, 0, town.TrueExtent)));
+			AnarchyPressure = (ushort)(AnarchyPressure + (ushort)this.owner.Helpers.VerifyValueSpan((short)CitySpecialSlots, 0, town.TrueExtent));
 
 			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 			this.processor.RegCount.Value16 = (ushort)(town.Has(CityStructure.Marketplace) ? 5 : 7);
@@ -2755,7 +2755,7 @@ namespace Civilization1Remaster.Game
 
 			short factor = (short)(this.processor.RegCount.Value16 - this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1516)));
 			this.processor.RegAcc.Value16 = (ushort)(factor * (short)CityAttackersAway);
-			this.processor.EmitGlobalWord(0xdb42, (ushort)(this.processor.PullGlobalWord(0xdb42) - this.processor.RegAcc.Value16));
+			DemocracyPressure = (ushort)(DemocracyPressure - this.processor.RegAcc.Value16);
 		}
 
 		/// <summary>
@@ -5210,7 +5210,7 @@ namespace Civilization1Remaster.Game
 
 					if (this.processor.PullGlobalWord(0x2494) != 0)
 					{
-						this.processor.EmitGlobalWord(0xe3c2, (ushort)(this.processor.PullGlobalWord(0xe3c2) - 2));
+						AnarchyPressure = (ushort)(AnarchyPressure - 2);
 					}
 				}
 
@@ -5218,7 +5218,7 @@ namespace Civilization1Remaster.Game
 				{
 					if (this.processor.PullGlobalWord(0x2494) != 0)
 					{
-						this.processor.EmitGlobalWord(0xdb42, (ushort)(this.processor.PullGlobalWord(0xdb42) + 1));
+						DemocracyPressure = (ushort)(DemocracyPressure + 1);
 					}
 
 					short needed = (short)((this.owner.World.Towns[townIdx].ConditionMarker & 0x40) != 0 ? 2 : 4);
@@ -5391,10 +5391,10 @@ namespace Civilization1Remaster.Game
 			CityHappy =
 				(ushort)this.owner.Helpers.VerifyValueSpan((short)CityHappy, 0, town.TrueExtent);
 
-			while (this.processor.PullGlobalWord(0x6542) != 0 &&
-				(short)CityUnhappy < this.processor.PullGlobalSignedWord(0x6542))
+			while (CityExcessUnhappy != 0 &&
+				(short)CityUnhappy < (short)CityExcessUnhappy)
 			{
-				this.processor.EmitGlobalWord(0x6542, (ushort)(this.processor.PullGlobalWord(0x6542) - 1));
+				CityExcessUnhappy = (ushort)(CityExcessUnhappy - 1);
 				CityUnhappy = (ushort)(CityUnhappy + 1);
 			}
 
@@ -5409,9 +5409,9 @@ namespace Civilization1Remaster.Game
 				if ((short)(CityHappy + CityUnhappy) <= room)
 					break;
 
-				if (this.processor.PullGlobalWord(0x6542) != 0)
+				if (CityExcessUnhappy != 0)
 				{
-					this.processor.EmitGlobalWord(0x6542, (ushort)(this.processor.PullGlobalWord(0x6542) - 1));
+					CityExcessUnhappy = (ushort)(CityExcessUnhappy - 1);
 				}
 				else
 				{
@@ -5474,7 +5474,7 @@ namespace Civilization1Remaster.Game
 				this.owner.Services.RenderPictureToScreen(ScreenBox, horizLoc, vertLoc,
 					this.processor.PullGlobalWord((ushort)(((citizenIdx & 1) << 1) + 0x6e9e)));
 
-				if (citizenIdx < (short)this.processor.PullGlobalWord(0x6542))
+				if (citizenIdx < (short)CityExcessUnhappy)
 				{
 					this.owner.VideoCard.SubstituteHue(ScreenBox, horizLoc, vertLoc, 12, 14, 5, 12);
 				}

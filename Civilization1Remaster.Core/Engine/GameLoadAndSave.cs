@@ -215,7 +215,7 @@ namespace Civilization1Remaster.Engine
 			this.processor.Journal.OpenScope("ChooseGameToImport()");
 
 			ushort bay = 0xffff;
-			this.processor.EmitGlobalWord(0x681a, 0x1);
+			LoadingGame = 0x1;
 
 			this.owner.Startup.ConcealMouseCursor();
 
@@ -286,7 +286,7 @@ namespace Civilization1Remaster.Engine
 
 			// function body
 			ushort bay = 0xffff;
-			this.processor.EmitGlobalWord(0x681a, 0x1);
+			LoadingGame = 0x1;
 
 			this.owner.Startup.ConcealMouseCursor();
 
@@ -336,9 +336,9 @@ namespace Civilization1Remaster.Engine
 
 			if (marker != 0)
 			{
-				this.processor.EmitGlobalWord(0x681e, (ushort)this.owner.Libc.OpenHandle(docnameAddr, 0x8000));
+				LoadFile = (ushort)this.owner.Libc.OpenHandle(docnameAddr, 0x8000);
 
-				short handle = (short)this.processor.PullGlobalWord(0x681e);
+				short handle = (short)LoadFile;
 
 				if (handle == -1)
 				{
@@ -432,7 +432,7 @@ namespace Civilization1Remaster.Engine
 			this.processor.Journal.OpenScope($"DisplayStoreGameDialog({arg1})");
 
 			FileError = 0;
-			this.processor.EmitGlobalWord(0x681a, 0);
+			LoadingGame = 0;
 
 			this.owner.Startup.ConcealMouseCursor();
 
@@ -490,7 +490,7 @@ namespace Civilization1Remaster.Engine
 
 						this.owner.Libc.AppendText(0xba06, " Press key to continue.\n");
 
-						this.processor.EmitGlobalWord(0xd206, 0x1);
+						MenuAnyKey = 0x1;
 
 						this.owner.Dialogs.DisplayMenu(0xba06, 64, 127, 1);
 					}
@@ -534,7 +534,7 @@ namespace Civilization1Remaster.Engine
 
 			this.owner.Libc.AppendText(0xba06, "\n ... save in progress.\n");
 
-			this.processor.EmitGlobalWord(0xd206, 0x1);
+			MenuAnyKey = 0x1;
 
 			this.owner.Dialogs.DisplayMenu(0xba06, 64, 86, 1);
 
@@ -566,7 +566,7 @@ namespace Civilization1Remaster.Engine
 
 			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 15);
 
-			if (this.processor.PullGlobalWord(0x681a) == 0)
+			if (LoadingGame == 0)
 			{
 				this.owner.UnitOps.RenderBusyIndicator();
 			}
@@ -575,7 +575,7 @@ namespace Civilization1Remaster.Engine
 
 			do
 			{
-				this.owner.Libc.CopyText(0xba06, this.processor.PullGlobalWord(0x681a) != 0 ?
+				this.owner.Libc.CopyText(0xba06, LoadingGame != 0 ?
 					"  Which drive contains your\n    saved game files?\n\n            " :
 					"  Which drive contains your\n     Save Game disk?\n\n            ");
 

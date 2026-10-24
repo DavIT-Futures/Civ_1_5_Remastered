@@ -45,7 +45,7 @@ namespace Civilization1Remaster.Game
 					this.ProduceCloudLayer();
 					this.DisplayStoryIntro();
 				}
-				while ((short)(((LandMass << 3) * 0x28) + 0x280) > this.processor.PullGlobalSignedWord(0x67fe));
+				while ((short)(((LandMass << 3) * 0x28) + 0x280) > (short)LightenedPixels);
 
 				this.owner.Dialogs.RenderBox(0, 0, 79, 49, 0);
 				this.owner.Dialogs.RenderBox(1, 1, 77, 47, 0);
@@ -520,7 +520,7 @@ namespace Civilization1Remaster.Game
 
 						this.owner.Services.AssignDot(1, horizLoc, vertLoc, (ushort)(hue + 1));
 
-						this.processor.EmitGlobalWord(0x67fe, (ushort)(this.processor.PullGlobalWord(0x67fe) + 1));
+						LightenedPixels = (ushort)(LightenedPixels + 1);
 					}
 				}
 			}

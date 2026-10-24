@@ -1322,6 +1322,24 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   Pełny zestaw 767/767 (jeden przebieg na pięć porcji), mutacje 13 / 13 (dwie dopiero z innym testem:
   `SpaceshipSupport` – `RenderSpaceship`, nie `ComputeSpaceshipSuccess`; `CivilopediaNextPage` – `DisplayCivilopedia`,
   nie `DisplayCivilopediaIndex`).
+- B4, porcje 15 – 19 razem (2026-10-24, pięć małych porcji i raz testy), 20 zmiennych, 52 odczyty, 54 zapisy, skrypt
+  `b4i.py` + `names_b4i.py` w scratchpadzie. Znaczenie ustalone z dokładniejszego czytania kodu.
+  Porcja 15 (okienka, pliki, Civilopedia): `MenuAnyKey` 0xd206, `MenuFooter` 0x2fa0, `LoadingGame` 0x681a,
+  `LoadFile` 0x681e, `CivilopediaWithoutPictures` 0x3c62.
+  Porcja 16 (tura miasta, ustrój komputerów): `CityExcessUnhappy` 0x6542, `AnarchyPressure` 0xe3c2,
+  `DemocracyPressure` 0xdb42, `QuietUnitSetup` 0x20f4.
+  Porcja 17 (widok mapy, nowy świat): `MapFocusLeft` / `MapFocusTop` 0x6ed6 / 0x70ea, `SpriteScreenBox` 0x19fc,
+  `LightenedPixels` 0x67fe, `LowMemoryVga` 0x1a3e.
+  Porcja 18 (wskaźnik myszy): `PointerImage` 0x5876, `PointerHotHoriz` / `PointerHotVert` 0x5878 / 0x587a.
+  Porcja 19 (audiencja): `AudienceWelcomed` 0x6b8e, `KingModernPictures` 0x67ee, `GovernmentPicture` 0x804e.
+  Pełny zestaw 767/767 (jeden przebieg), mutacje 11 / 11 (wskaźnik myszy bez testu różnicowego – zostaje golden
+  master; pułapka: `check_mutations.py` czyta pliki z `\n`, więc kontekst mutacji pisać z `\n`, nie `\r\n`).
+  **Stan B4 po tej rundzie:** w klasach `GameModule` zostały już prawie wyłącznie elementy tabel z CIV.EXE (np. nazwy
+  cywilizacji 0x1982 / 0x1992 / 0x19a2, tabele 0xc10 – 0xca6, 0x81ae – 0x81ce, teksty 0x33a8 / 0x33aa – to B5),
+  pojedyncze uchwyty obrazków o niepewnym przeznaczeniu (0xd4da, 0xb880, 0x6e9e, 0xb2ba, 0xdf0c, 0x6834, 0x32d6,
+  0x817a) i flagi bez jasnego znaczenia (0x8078, 0xdb38, 0x6802, 0x3484, 0x2494, 0xde20, 0xb22a, 0x6b92, 0x67fa,
+  0x6534, 0x2fec, 0x2fa2, 0x2f98, 0x1c28, 0xdc6a, 0x5116, 0x8066, 0xd2dc, 0x6820, 0x654e, 0x4b2c / 0x4b32 / 0x4b34,
+  0xd922, 0x6e92) oraz dostępy bajtowe. Dalej B4 opłaca się tylko razem z B5 albo przy przepisywaniu tych funkcji.
 
 ## Następny krok
 

@@ -388,11 +388,11 @@ namespace Civilization1Remaster.Game
 		/// <summary>Communism (4), Democracy (3, more than 10 cities), Monarchy (2), or Anarchy (1) when 0xe3c2 is set</summary>
 		private void ChooseGovernment(short participantIdx)
 		{
-			if ((short)this.processor.PullGlobalWord(0xe3c2) > 0)
+			if ((short)AnarchyPressure > 0)
 			{
 				this.owner.Politics.SwitchGovernment(participantIdx, 1);
 			}
-			else if (this.owner.Advisors.PlayerKnowsTechnology(participantIdx, 0x2c) != 0 && (short)this.processor.PullGlobalWord(0xdb42) >= 0)
+			else if (this.owner.Advisors.PlayerKnowsTechnology(participantIdx, 0x2c) != 0 && (short)DemocracyPressure >= 0)
 			{
 				this.owner.Politics.SwitchGovernment(participantIdx, 4);
 			}

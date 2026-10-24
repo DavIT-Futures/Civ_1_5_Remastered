@@ -64,7 +64,7 @@ namespace Civilization1Remaster.Engine
 			}
 
 			if (VgaMode != 0 && (short)this.processor.PullLocalWord(0x4) < 0x23be)
-				this.processor.EmitGlobalWord(0x1a3e, 1);
+				LowMemoryVga = 1;
 
 			this.processor.StackWord(0); // stack management - push return segment, ignored
 			this.processor.StackWord(0x0110); // stack management - push return offset
@@ -325,7 +325,7 @@ namespace Civilization1Remaster.Engine
 
 					ushort kept = KingMood;
 					KingMood = 0xffff;
-					this.processor.EmitGlobalWord(0xd206, 0x1);
+					MenuAnyKey = 0x1;
 
 					this.owner.Dialogs.DisplayMenu(message, 100, 81, 1);
 

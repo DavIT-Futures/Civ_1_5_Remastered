@@ -1150,9 +1150,9 @@ namespace Civilization1Remaster.Engine
 			this.processor.Journal.OpenScope($"AssignMouseCursorImage({arg1}, {arg2}, {arg3})");
 
 			// function body
-			this.processor.EmitGlobalWord(0x5878, arg1);
-			this.processor.EmitGlobalWord(0x587a, arg2);
-			this.processor.EmitGlobalWord(0x5876, arg3);
+			PointerHotHoriz = arg1;
+			PointerHotVert = arg2;
+			PointerImage = arg3;
 
 			// Far return
 			this.processor.Journal.CloseScope("AssignMouseCursorImage");
@@ -1192,11 +1192,11 @@ namespace Civilization1Remaster.Engine
 		{
 			this.processor.Journal.OpenScope("RenderMouseCursor()");
 
-			if (this.processor.PullGlobalWord(0x5876) != 0 && this.processor.PullGlobalByte(0x5403) == 0)
+			if (PointerImage != 0 && this.processor.PullGlobalByte(0x5403) == 0)
 			{
-				RenderCursorToScreen((short)(this.processor.PullGlobalSignedWord(0x586e) - this.processor.PullGlobalSignedWord(0x5878)),
-					(short)(this.processor.PullGlobalSignedWord(0x5870) - this.processor.PullGlobalSignedWord(0x587a)),
-					this.processor.PullGlobalWord(0x5876));
+				RenderCursorToScreen((short)(this.processor.PullGlobalSignedWord(0x586e) - (short)PointerHotHoriz),
+					(short)(this.processor.PullGlobalSignedWord(0x5870) - (short)PointerHotVert),
+					PointerImage);
 
 				this.processor.EmitGlobalByte(0x5403, 0x1);
 			}
@@ -1211,7 +1211,7 @@ namespace Civilization1Remaster.Engine
 		{
 			this.processor.Journal.OpenScope("BlankMouseCursor()");
 
-			if (this.processor.PullGlobalWord(0x5876) != 0 && this.processor.PullGlobalByte(0x5403) != 0)
+			if (PointerImage != 0 && this.processor.PullGlobalByte(0x5403) != 0)
 			{
 				this.processor.EmitGlobalByte(0x5403, 0x0);
 
