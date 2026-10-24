@@ -132,7 +132,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.MapOps.DiscardTileImprovements(0x24, horizLoc, vertLoc);
 
-			// Remake: the land under a new city is cleared. Forest, jungle and swamp change the same way
+			// Remaster: the land under a new city is cleared. Forest, jungle and swamp change the same way
 			// as when settlers irrigate them (forest to plains, jungle and swamp to grassland).
 			this.owner.Founding.WipeCitySquare(horizLoc, vertLoc);
 

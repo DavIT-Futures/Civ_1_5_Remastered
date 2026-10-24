@@ -1,6 +1,6 @@
 # Civilization1Remaster
 
-C# remake of Civilization 1 (DOS): `Civilization1Remaster.Core` is the original CIV.EXE translated to emulated x86 C#
+C# remaster of Civilization 1 (DOS): `Civilization1Remaster.Core` is the original CIV.EXE translated to emulated x86 C#
 (`Civilization1Remaster.Machine`, the CPU), `Civilization1Remaster.Desktop` is the Avalonia window. The user is Polish: answer in Polish.
 
 ## Current work: migration asm → C#

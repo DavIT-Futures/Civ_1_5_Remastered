@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="Civilization1Remaster.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Civilization1Remaster.Foundation\Civilization1Remaster.Foundation.csproj" />
     <ProjectReference Include="..\Civilization1Remaster.Machine\Civilization1Remaster.Machine.csproj" />
     <ProjectReference Include="..\Civilization1Remaster.Imaging\Civilization1Remaster.Imaging.csproj" />

@@ -59,6 +59,7 @@ namespace Civilization1Remaster.Tests.GoldenMaster
 
 			// And the news of a technology as before (TechnologyNewsRules: "... from the Barbarians" for research)
 			this.Engine.TurnHooks.ClassicTechnologyNews = true;
+			this.Engine.TurnHooks.ClassicRailroads = true;
 
 			this.keyboard = new ScriptedKeyboard(this.processor, this.Engine.VideoCard.Tokens, this.Engine.VideoCard.VideoLatch,
 				script ?? ScriptedKeyboard.DefaultScript);

@@ -2569,6 +2569,38 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
+		/// The remaster's railroads (RailroadRules): a step along a road from a tile with a railroad (or a city, once the player
+		/// knows Railroad) is free for every unit; a unit not moved by hand (GoTo or a computer player) rides for free at most
+		/// 30 times a turn, counted here.
+		/// </summary>
+		internal bool RideForFree(short participantIdx, short troopIdx, short horizLoc, short vertLoc)
+		{
+			bool knowsRailroad = this.owner.Advisors.PlayerKnowsTechnology(participantIdx, RailroadRules.RailroadTechnology) != 0;
+
+			if (!RailroadRules.HasRailroad(this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc), knowsRailroad, classic: false))
+				return false;
+
+			bool byHand = participantIdx == this.owner.World.PersonParticipantIdx &&
+				this.troops.Pull(participantIdx, troopIdx, UnitMemory.TravelHoriz) == 0xff;
+
+			if (this.freeRides.Round != this.owner.World.RoundTally)
+				this.freeRides = (this.owner.World.RoundTally, new Dictionary<(short, short), int>());
+
+			int ridden = this.freeRides.Steps.GetValueOrDefault((participantIdx, troopIdx));
+
+			if (!RailroadRules.IsFreeStep(byHand, ridden, classic: false))
+				return false;
+
+			if (!byHand)
+				this.freeRides.Steps[(participantIdx, troopIdx)] = ridden + 1;
+
+			return true;
+		}
+
+		/// <summary>The free railroad steps of the units not moved by hand in the turn (RideForFree)</summary>
+		private (int Round, Dictionary<(short, short), int> Steps) freeRides = (-1, new Dictionary<(short, short), int>());
+
+		/// <summary>
 		/// The cost of the move to 0x1c / 0x26: a ship does not go on land outside a city (the destination is forgotten); a
 		/// plane or ship into a foreign city: a nuclear weapon explodes there, others are refused (help); without moves no move.
 		/// A land unit pays nothing on a railroad (the human without GoTo), 1 on a road on both tiles, else 3 times the byte
@@ -2635,13 +2667,20 @@ namespace Civilization1Remaster.Game
 					// A road on both tiles: 1, a railroad where it stands nothing (for the human without GoTo)
 					byte cost = 1;
 
-					if ((this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 0x10) != 0 && participantIdx == this.owner.World.PersonParticipantIdx)
+					if (this.owner.TurnHooks.ClassicRailroads)
 					{
-						this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
-						this.processor.RegDest.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride);
+						if ((this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 0x10) != 0 && participantIdx == this.owner.World.PersonParticipantIdx)
+						{
+							this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
+							this.processor.RegDest.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride);
 
-						if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.TravelHoriz) == 0xff)
-							cost = 0;
+							if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.TravelHoriz) == 0xff)
+								cost = 0;
+						}
+					}
+					else if (RideForFree(participantIdx, troopIdx, horizLoc, vertLoc))
+					{
+						cost = 0;
 					}
 
 					this.processor.RegAcc.LowByte = cost;

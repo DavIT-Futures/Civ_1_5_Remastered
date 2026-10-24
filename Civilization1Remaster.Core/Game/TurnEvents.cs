@@ -29,6 +29,12 @@ namespace Civilization1Remaster.Game
 		public bool ClassicTechnologyNews { get; set; }
 
 		/// <summary>
+		/// The railroads as in the original (RailroadRules): only the human player's units moved by hand ride for free, and
+		/// a city has no railroad. The tests turn it on (HeadlessGame), like ClassicHealing.
+		/// </summary>
+		public bool ClassicRailroads { get; set; }
+
+		/// <summary>
 		/// Units heal lost hit points every turn (HealingRules): 2 in an own city; outside cities 1 for a fortified land unit
 		/// and for a resting ship (sentry or not moved this turn) next to land, at most 3 tiles from an own city.
 		/// Runs at the end of the game turn, so the moves left (reset at the start of each player's turn) show whether the
