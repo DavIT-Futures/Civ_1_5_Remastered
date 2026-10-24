@@ -36,7 +36,7 @@ namespace Civilization1Remaster.Game
 			this.processor.RegSource.Value16 = (ushort)(0x600 * participantIdx);
 			this.processor.EmitGlobalByte((ushort)(troop + 0x81da), 0xff);
 
-			Message(this.processor.PullGlobalWord((ushort)(((ushort)participantIdx << 1) + 0x1982)))
+			Message(CivilizationName((ushort)participantIdx))
 				.Text(" diplomat arrives\nin ")
 				.City(townIdx)
 				.Text("...\n Establish Embassy\n Investigate City\n Steal Technology\n Industrial Sabotage\n Incite a Revolt\n Meet with King\n");
@@ -174,9 +174,9 @@ namespace Civilization1Remaster.Game
 
 				this.owner.Advisors.EarnTechnology(participantIdx, scienceIdx, ownerIdx);
 
-				Message(this.processor.PullGlobalWord((ushort)(((ushort)participantIdx << 1) + 0x1992)))
+				Message(CivilizationPlural((ushort)participantIdx))
 					.Text(" steal\n")
-					.Text((ushort)((ushort)(0x16 * scienceIdx) + 0x4da))
+					.Text(TechnologyText(scienceIdx))
 					.Text(".\n")
 					.Style(0x0)
 					.Dialog(80, 80);
@@ -229,7 +229,7 @@ namespace Civilization1Remaster.Game
 					town.StructureMarkers0 &= keep;
 					town.StructureMarkers1 &= (keep & 0x8000) != 0 ? (ushort)0xffff : (ushort)0;
 
-					Message((ushort)((ushort)(0x1e * buildingIdx) + 0xbb8))
+					Message(BuildingText(buildingIdx))
 						.Text(" destroyed\n");
 
 					destroyed = true;
@@ -242,7 +242,7 @@ namespace Civilization1Remaster.Game
 
 				town.MaterialsTally = 0;
 
-				Message(town.PresentMakingIdx >= 0 ? (ushort)((ushort)(0x22 * town.PresentMakingIdx) + 0x112a) : (ushort)((ushort)(0x1e * -town.PresentMakingIdx) + 0xb9a))
+				Message(town.PresentMakingIdx >= 0 ? UnitText(town.PresentMakingIdx) : (ushort)((ushort)(0x1e * -town.PresentMakingIdx) + 0xb9a))
 					.Text(" production sabotaged\n");
 			}
 
@@ -381,7 +381,7 @@ namespace Civilization1Remaster.Game
 			UnitMemory troops = new UnitMemory(this.processor);
 			ushort kindName = (ushort)((troops.TroopKind(participantIdx, troopIdx) * UnitKindTable.Stride) + UnitKindTable.Origin);
 
-			Message(this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1982)))
+			Message(CivilizationName(participantIdx))
 				.Text(" ")
 				.Text(kindName)
 				.Text("\nwill desert for ")
@@ -406,11 +406,11 @@ namespace Civilization1Remaster.Game
 				this.owner.MapOps.FocusMapView(participantIdx, troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz) - 8,
 					troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert) - 6);
 
-				Message(this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1982)))
+				Message(CivilizationName(participantIdx))
 					.Text(" ")
 					.Text(kindName)
 					.Text(" unit\nbribed by ")
-					.Text(this.processor.PullGlobalWord((ushort)((participantIdx1 << 1) + 0x1992)))
+					.Text(CivilizationPlural(participantIdx1))
 					.Text("!\n")
 					.Style(0)
 					.Dialog(80, 40);
@@ -617,7 +617,7 @@ namespace Civilization1Remaster.Game
 					this.owner.MapOps.FocusMapView(humanIdx, town.Place.X - 8, town.Place.Y - 5);
 				}
 
-				Message(this.processor.PullGlobalWord((ushort)((ownerIdx << 1) + 0x1992)))
+				Message(CivilizationPlural(ownerIdx))
 					.Text(participantIdx == 0 ? (ushort)0x5322 : (ushort)0x533c)
 					.City(townIdx);
 
@@ -629,7 +629,7 @@ namespace Civilization1Remaster.Game
 				{
 					this.owner.Libc.AppendText(0xba06, ".\n");
 
-					this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1982)));
+					this.owner.Libc.AppendText(0xba06, CivilizationName(participantIdx));
 
 					this.owner.Libc.AppendText(0xba06, 0x5355);
 				}

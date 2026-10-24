@@ -511,7 +511,7 @@ namespace Civilization1Remaster.Game
 						ScreenBox,
 						loserX + 1,
 						loserY + 1,
-						this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(((frame + 0x20) << 1) + 0xd4ce)));
+						SpritePicture((frame + 0x20)));
 
 					this.owner.TextPainter.AwaitTime(4);
 
@@ -554,7 +554,7 @@ namespace Civilization1Remaster.Game
 				DialogStyle = 0x3;
 
 				Message("Sneak attack by\n")
-					.Text(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((participantIdx1 << 1) + 0x1982)))
+					.Text(CivilizationName(participantIdx1))
 					.Text(" forces!\n")
 					.Dialog(100, 80);
 
@@ -568,9 +568,9 @@ namespace Civilization1Remaster.Game
 				{
 					DialogStyle = 0x5;
 
-					Message(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((participantIdx2 << 1) + 0x1992)))
+					Message(CivilizationPlural(participantIdx2))
 						.Text(" cancel\npeace treaty\nwith ")
-						.Text(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((participantIdx1 << 1) + 0x1992)))
+						.Text(CivilizationPlural(participantIdx1))
 						.Text(".\n")
 						.Dialog(100, 80);
 				}
@@ -632,11 +632,11 @@ namespace Civilization1Remaster.Game
 						this.processor.EmitLocalWord(0x14, (ushort)dir);
 
 						short checkX = (short)((byte)PullUnitByte(participantIdx2, troopIdx2, TroopHorizDisplacement) +
-							this.processor.PullGlobalSignedWord((ushort)((dir << 1) + 0x1882)));
+							(short)DirectionHoriz(dir));
 						this.processor.EmitLocalWord(0xa, (ushort)checkX);
 
 						short checkY = (short)((byte)PullUnitByte(participantIdx2, troopIdx2, TroopVertDisplacement) +
-							this.processor.PullGlobalSignedWord((ushort)((dir << 1) + 0x18e4)));
+							(short)DirectionVert(dir));
 						this.processor.EmitLocalWord(0xc, (ushort)checkY);
 
 						ushort unitAtTile = this.owner.MapOps.ObtainUnitAtTile(checkX, checkY);
@@ -755,7 +755,7 @@ namespace Civilization1Remaster.Game
 			if ((person.Relations[participantIdx] & 2) != 0)
 			{
 				Message("We have signed a\npeace treaty with\nthe ")
-					.Text(this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1992)))
+					.Text(CivilizationPlural(participantIdx))
 					.Text("!\n Cancel action.\n Break treaty.\n")
 					.Style(0x5)
 					.Dialog(80, 80);
@@ -804,7 +804,7 @@ namespace Civilization1Remaster.Game
 			{
 				DialogStyle = 0x3;
 
-				Message(this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1992)))
+				Message(CivilizationPlural(participantIdx))
 					.Text(" use\nnuclear weapons!\n")
 					.Dialog(100, 80);
 			}

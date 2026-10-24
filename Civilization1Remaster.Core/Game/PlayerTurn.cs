@@ -4022,13 +4022,13 @@ namespace Civilization1Remaster.Game
 			short troopIdx = (short)arg2;
 			short vertLoc = 0x63;
 
-			this.owner.Libc.CopyText(0xba06, this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1982)));
+			this.owner.Libc.CopyText(0xba06, CivilizationName(participantIdx));
 
 			this.owner.TextPainter.RenderTextToScreen0(0xba06, 4, 99, 0);
 
 			vertLoc += 8;
 
-			this.owner.Libc.CopyText(0xba06, (ushort)((0x22 * this.troops.TroopKind(participantIdx, troopIdx)) + 0x112a));
+			this.owner.Libc.CopyText(0xba06, UnitText(this.troops.TroopKind(participantIdx, troopIdx)));
 
 			this.owner.TextPainter.RenderTextToScreen0(0xba06, 4, vertLoc, 0);
 

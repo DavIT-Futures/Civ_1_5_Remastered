@@ -83,8 +83,8 @@ namespace Civilization1Remaster.UI
 
 				vertLoc2 = dice.DrawInt(8) + 1;
 
-				horizLoc1 = Math.Min(Math.Max(this.processor.PullInt16(this.processor.SegData.Value16, (ushort)((vertLoc2 << 1) + 0x1882)) + horizLoc1, 0), 18);
-				vertLoc1 = Math.Min(Math.Max(this.processor.PullInt16(this.processor.SegData.Value16, (ushort)((vertLoc2 << 1) + 0x18e4)) + (ushort)vertLoc1, 0), 11);
+				horizLoc1 = Math.Min(Math.Max((short)DirectionHoriz(vertLoc2) + horizLoc1, 0), 18);
+				vertLoc1 = Math.Min(Math.Max((short)DirectionVert(vertLoc2) + (ushort)vertLoc1, 0), 11);
 			}
 
 			vertLoc2 = 4 + dice.DrawInt(2);
@@ -331,15 +331,15 @@ namespace Civilization1Remaster.UI
 
 								if ((vertLoc1 & 0x1) == 0)
 								{
-									leadScratch = ((this.processor.PullInt16(this.processor.SegData.Value16, (ushort)((idx << 1) + 0x18e4)) <= 0) ? 0 : -1);
+									leadScratch = (((short)DirectionVert(idx) <= 0) ? 0 : -1);
 								}
 								else
 								{
-									leadScratch = (this.processor.PullInt16(this.processor.SegData.Value16, (ushort)((idx << 1) + 0x18e4)) >= 0) ? 0 : 1;
+									leadScratch = ((short)DirectionVert(idx) >= 0) ? 0 : 1;
 								}
 
-								int horizScratch = leadScratch + this.processor.PullInt16(this.processor.SegData.Value16, (ushort)((idx << 1) + 0x1882)) + horizLoc1;
-								int vertScratch = this.processor.PullInt16(this.processor.SegData.Value16, (ushort)((idx << 1) + 0x18e4)) + vertLoc1;
+								int horizScratch = leadScratch + (short)DirectionHoriz(idx) + horizLoc1;
+								int vertScratch = (short)DirectionVert(idx) + vertLoc1;
 
 								if (vertScratch < 12 && townArrangement[horizScratch, vertScratch] >= 0)
 								{
@@ -395,15 +395,15 @@ namespace Civilization1Remaster.UI
 									int leadScratch;
 									if ((vertLoc1 & 1) == 0)
 									{
-										leadScratch = (this.processor.PullInt16(this.processor.SegData.Value16, (ushort)((idx << 1) + 0x18e4)) <= 0) ? 0 : -1;
+										leadScratch = ((short)DirectionVert(idx) <= 0) ? 0 : -1;
 									}
 									else
 									{
-										leadScratch = (this.processor.PullInt16(this.processor.SegData.Value16, (ushort)((idx << 1) + 0x18e4)) >= 0) ? 0 : 1;
+										leadScratch = ((short)DirectionVert(idx) >= 0) ? 0 : 1;
 									}
 
-									int horizScratch = leadScratch + this.processor.PullInt16(this.processor.SegData.Value16, (ushort)((idx << 1) + 0x1882)) + horizLoc1;
-									int vertScratch = this.processor.PullInt16(this.processor.SegData.Value16, (ushort)((idx << 1) + 0x18e4)) + vertLoc1;
+									int horizScratch = leadScratch + (short)DirectionHoriz(idx) + horizLoc1;
+									int vertScratch = (short)DirectionVert(idx) + vertLoc1;
 
 									if ((idx & 1) != 0)
 									{

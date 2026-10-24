@@ -311,8 +311,8 @@ namespace Civilization1Remaster.Game
 				this.processor.EmitLocalWord(0xc, neighbourIdx);
 				this.processor.RegSource.Value16 = (ushort)(neighbourIdx << 1);
 
-				int tileHoriz = (short)this.processor.PullGlobalWord((ushort)((neighbourIdx << 1) + 0x1882)) + horizLoc;
-				int tileVert = (short)this.processor.PullGlobalWord((ushort)((neighbourIdx << 1) + 0x18e4)) + vertLoc;
+				int tileHoriz = (short)DirectionHoriz(neighbourIdx) + horizLoc;
+				int tileVert = (short)DirectionVert(neighbourIdx) + vertLoc;
 
 				ushort terrain = this.owner.MapOps.ObtainTerrainType(tileHoriz, tileVert);
 				this.processor.EmitLocalWord(0xe, terrain);
@@ -346,8 +346,8 @@ namespace Civilization1Remaster.Game
 				this.processor.EmitLocalWord(0xc, tileIdx);
 				this.processor.RegSource.Value16 = (ushort)(tileIdx << 1);
 
-				short tileHoriz = (short)(ushort)this.owner.Routing.TunePosition((short)this.processor.PullGlobalWord((ushort)((tileIdx << 1) + 0x1882)) + horizLoc);
-				short tileVert = (short)(this.processor.PullGlobalWord((ushort)((tileIdx << 1) + 0x18e4)) + (ushort)vertLoc);
+				short tileHoriz = (short)(ushort)this.owner.Routing.TunePosition((short)DirectionHoriz(tileIdx) + horizLoc);
+				short tileVert = (short)(DirectionVert(tileIdx) + (ushort)vertLoc);
 
 				this.processor.EmitLocalWord(0x2, (ushort)tileHoriz);
 				this.processor.EmitLocalWord(0x4, (ushort)tileVert);
@@ -411,8 +411,8 @@ namespace Civilization1Remaster.Game
 				this.processor.RegSource.Value16 = (ushort)(neighbourIdx << 1);
 
 				ushort terrain = this.owner.MapOps.ObtainTerrainType(
-					town.Place.X + (short)this.processor.PullGlobalWord((ushort)((neighbourIdx << 1) + 0x1882)),
-					town.Place.Y + (short)this.processor.PullGlobalWord((ushort)((neighbourIdx << 1) + 0x18e4)));
+					town.Place.X + (short)DirectionHoriz(neighbourIdx),
+					town.Place.Y + (short)DirectionVert(neighbourIdx));
 
 				terrains |= (ushort)(1 << (byte)terrain);
 			}
@@ -437,7 +437,7 @@ namespace Civilization1Remaster.Game
 						Message("Earthquake in ")
 							.City(townIdx)
 							.Text("!\n")
-							.Text((ushort)((ushort)(0x1e * buildingIdx) + 0xbb8))
+							.Text(BuildingText(buildingIdx))
 							.Text(" destroyed.\n");
 					}
 					break;
@@ -508,7 +508,7 @@ namespace Civilization1Remaster.Game
 					{
 						ushort buildingIdx = DestroyRandomBuilding(town);
 
-						this.owner.Libc.CopyText(CodeText1, (ushort)((ushort)(0x1e * buildingIdx) + 0xbb8));
+						this.owner.Libc.CopyText(CodeText1, BuildingText(buildingIdx));
 
 						this.owner.BlockText.DisplayTextDialog(0x4fc3);
 					}
@@ -835,7 +835,7 @@ namespace Civilization1Remaster.Game
 			this.owner.World.Participants[participantIdx].LevyRatio = savedLevyRatio;
 			CitizenScore = (ushort)totalCitizenScore;
 
-			ushort civNamePtr = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((participantIdx << 1) + 0x1982));
+			ushort civNamePtr = CivilizationName(participantIdx);
 			Message(civNamePtr)
 				.Text(" Citizens (")
 				.Number((short)totalCitizenScore)
@@ -868,7 +868,7 @@ namespace Civilization1Remaster.Game
 						if (marker && wondersY < 0xb4)
 						{
 							this.owner.CityOps.RenderResourceIcon((short)(wonderIdx + 0x18), (short)wonderColX, (short)(wondersY - 2));
-							this.owner.TextPainter.RenderTextToScreen0((ushort)(wonderIdx * 0x1e + 0xe6a), (short)(wonderColX + 20), (short)wondersY, 11);
+							this.owner.TextPainter.RenderTextToScreen0(WonderText(wonderIdx), (short)(wonderColX + 20), (short)wondersY, 11);
 						}
 
 						totalWonderScore += 20;

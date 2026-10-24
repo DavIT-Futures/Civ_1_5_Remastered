@@ -117,6 +117,13 @@ Gdy funkcja nie ma już zmiennych lokalnych w pamięci, ramkę (`EnterFrame`) i 
 sesji: menu (`OperateMenu`, `PreserveIndexRegisters`) odkłada SI/DI na stos, a test porównuje ten obszar. Po B0 to
 porównanie przestanie wymuszać odtwarzanie SI/DI.
 
+**Odłożone na koniec migracji (decyzja użytkownika 2026-10-24),** razem z poprawkami zachowania i nagraniem baseline'u
+od nowa. Powód: sonda resztek stosu (`LeftoverWatcher`, golden master + Differential + Dual) pokazała 30 funkcji, które
+czytają 617 słów stosu zostawionych przez inne funkcje – także `HandlePlayerTurn` (37), `ShiftAIUnit` (27),
+`PickCityProduction` (13), `RenderCitizenIcons`, `LocateNearestFriendlyCity`, `ReckonContinentSizes`. Każde usunięcie
+ramki, `Preserve…` albo nawet „martwego” zapisu SI (odkładanego potem na stos przez funkcje niżej) zmienia, co te
+funkcje czytają, a więc decyzje AI. Bez zmiany baseline'u B3 dałoby się robić tylko funkcja po funkcji z sondą.
+
 ### B4. Zmienne globalne pod adresami → nazwane pola (252 adresy, 3117 miejsc)
 
 Po jednym adresie albo po grupie (np. wyniki tury miasta `0x70da`–`0x70e6` → `CityTurn.Food`, `Shields`, `Trade`,

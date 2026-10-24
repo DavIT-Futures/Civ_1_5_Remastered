@@ -344,9 +344,9 @@ namespace Civilization1Remaster.Game
 			DialogStyle = 0x0;
 
 			Message("Spies report:\n")
-				.Text(this.processor.PullGlobalWord((ushort)(((ushort)participantIdx << 1) + 0x1992)))
+				.Text(CivilizationPlural((ushort)participantIdx))
 				.Text(this.owner.World.Towns[townIdx].TrueExtent != 0 ? (ushort)0x2893 : (ushort)0x28a1)
-				.Text(this.processor.PullGlobalWord((ushort)(((ushort)formerIdx << 1) + 0x1982)))
+				.Text(CivilizationName((ushort)formerIdx))
 				.Text(" city\nof ");
 
 			ObtainCityLabel(townIdx);
@@ -367,7 +367,7 @@ namespace Civilization1Remaster.Game
 			ushort built = (ushort)(1 << participantIdx);
 			ushort launched = (ushort)(1 << (participantIdx + 8));
 
-			Message(this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1982)))
+			Message(CivilizationName(participantIdx))
 				.Text(" spaceship\n");
 
 			if ((this.owner.World.StarshipMarkers & launched) != 0)
@@ -441,7 +441,7 @@ namespace Civilization1Remaster.Game
 					if (this.owner.Advisors.PlayerKnowsTechnology(participantIdx1, techId) == 0 &&
 						this.owner.Advisors.PlayerKnowsTechnology(participantIdx2, techId) != 0)
 					{
-						this.owner.Libc.AppendText(0xba06, (ushort)((0x16 * techId) + 0x4da));
+						this.owner.Libc.AppendText(0xba06, TechnologyText(techId));
 						this.owner.Libc.AppendText(0xba06, "\n ");
 
 						ushort slotOffset = (ushort)(count << 1);
@@ -497,9 +497,9 @@ namespace Civilization1Remaster.Game
 						if (participantIdx2 == this.owner.World.PersonParticipantIdx)
 						{
 							this.owner.Libc.CopyText(0xba06,
-								this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((participantIdx1 << 1) + 0x1992)));
+								CivilizationPlural(participantIdx1));
 							this.owner.Libc.AppendText(0xba06, " take\n");
-							this.owner.Libc.AppendText(0xba06, (ushort)((0x16 * this.processor.PullLocalWord(0x4)) + 0x4da));
+							this.owner.Libc.AppendText(0xba06, TechnologyText(this.processor.PullLocalWord(0x4)));
 							this.owner.Libc.AppendText(0xba06, ".\n");
 
 							if (KingAnswer == 0xffff)

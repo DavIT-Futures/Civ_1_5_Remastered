@@ -378,7 +378,7 @@ namespace Civilization1Remaster.UI
 				if (this.owner.Advisors.PlayerKnowsTechnology(this.owner.World.PersonParticipantIdx, scienceIdx) == 0)
 					continue;
 
-				this.owner.Libc.AppendText(0xba06, (ushort)((0x16 * scienceIdx) + 0x4da));
+				this.owner.Libc.AppendText(0xba06, TechnologyText(scienceIdx));
 
 				this.owner.Libc.AppendText(0xba06, ", ");
 
@@ -801,9 +801,9 @@ namespace Civilization1Remaster.UI
 
 			if (participantIdx != 0 && participantIdx != this.owner.World.PersonParticipantIdx && !OwnsCity(participantIdx))
 			{
-				Message(this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1982)))
+				Message(CivilizationName(participantIdx))
 					.Text("\ncivilization\ndestroyed\nby ")
-					.Text(this.processor.PullGlobalWord((ushort)((participantIdx1 << 1) + 0x1992)))
+					.Text(CivilizationPlural(participantIdx1))
 					.Text("!\n");
 
 				short humanIdx = this.owner.World.PersonParticipantIdx;
@@ -1057,8 +1057,8 @@ namespace Civilization1Remaster.UI
 				this.processor.RegDest.Value16 = troop;
 
 				ushort terrain = this.owner.MapOps.ObtainTerrainType(
-					(sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d5)) + (short)this.processor.PullGlobalWord((ushort)((neighbourIdx << 1) + 0x1882)),
-					(sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d6)) + (short)this.processor.PullGlobalWord((ushort)((neighbourIdx << 1) + 0x18e4)));
+					(sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d5)) + (short)DirectionHoriz(neighbourIdx),
+					(sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d6)) + (short)DirectionVert(neighbourIdx));
 
 
 				if (terrain == 0xa)
@@ -1399,10 +1399,10 @@ namespace Civilization1Remaster.UI
 			{
 				this.owner.Advisors.RenderAdvisorScenery();
 
-				Message(this.processor.PullGlobalWord((ushort)((this.owner.World.PersonParticipantIdx << 1) + 0x1982)))
+				Message(CivilizationName(this.owner.World.PersonParticipantIdx))
 					.Text(" government\nchanged to ");
 				this.owner.Libc.AppendText(0xba06,
-					this.processor.PullGlobalWord((ushort)((this.owner.World.Participants[this.owner.World.PersonParticipantIdx].RegimeKind << 1) + 0x1966)));
+					GovernmentName(this.owner.World.Participants[this.owner.World.PersonParticipantIdx].RegimeKind));
 				this.owner.Libc.AppendText(0xba06, "!\n");
 
 				this.owner.Paper.DisplayNewspaper(-2);

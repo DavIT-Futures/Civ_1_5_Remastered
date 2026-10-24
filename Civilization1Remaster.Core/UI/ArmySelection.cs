@@ -28,7 +28,7 @@ namespace Civilization1Remaster.UI
 
 			for (int participantIdx = 1; participantIdx < 8; participantIdx++)
 			{
-				this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1982)));
+				this.owner.Libc.AppendText(0xba06, CivilizationName(participantIdx));
 
 				this.owner.Libc.AppendText(0xba06, "\n ");
 			}
@@ -193,13 +193,13 @@ namespace Civilization1Remaster.UI
 			if ((this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) != 0)
 			{
 				this.owner.Services.FloodBox(ScreenBox, boxHoriz, boxVert, 4, 4,
-					this.processor.PullGlobalWord((ushort)((this.owner.MapOps.ObtainTileOwnerBits(horizLoc, vertLoc) << 1) + 0x1946)));
+					PlayerColour(this.owner.MapOps.ObtainTileOwnerBits(horizLoc, vertLoc)));
 			}
 			else
 			{
 				if (this.owner.MapOps.ObtainTileOwner(horizLoc, vertLoc) != 0xffff)
 				{
-					ushort hue = this.processor.PullGlobalWord((ushort)((this.owner.MapOps.ObtainTileOwner(horizLoc, vertLoc) << 1) + 0x1946));
+					ushort hue = PlayerColour(this.owner.MapOps.ObtainTileOwner(horizLoc, vertLoc));
 
 					this.owner.Services.FloodBox(ScreenBox, boxHoriz + 1, boxVert + 1, 3, 3, 0);
 
@@ -216,7 +216,7 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope($"DisplayUnitInfo({participantIdx}, {troopIdx})");
 
-			Message(this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1982)))
+			Message(CivilizationName(participantIdx))
 				.Text("\n")
 				.Number(troopIdx)
 				.Text(KindLabel(participantIdx, troopIdx))

@@ -73,7 +73,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 10, 15);
 
-			Message(this.processor.PullGlobalWord((ushort)((person.RegimeKind << 1) + 0x19b2)))
+			Message(GovernmentTitle(person.RegimeKind))
 				.Text(" ")
 				.Text(this.processor.PullGlobalWord((ushort)(personSlot + 0x19a2)))
 				.Text(": ");
@@ -143,7 +143,7 @@ namespace Civilization1Remaster.UI
 			for (short bulbIdx = 0; (short)this.owner.Helpers.VerifyValueSpan(this.owner.World.Participants[participantIdx].InquiryHeadway, 0, cost) > bulbIdx; bulbIdx++)
 			{
 				this.owner.Services.RenderPictureToScreen(ScreenBox, (progress / 8) + barLeft, 33,
-					this.processor.PullGlobalWord((0xc << 1) + 0xd4ce));
+					SpritePicture(0xc));
 
 				progress += (short)step;
 			}
@@ -153,7 +153,7 @@ namespace Civilization1Remaster.UI
 			if (inquiry != -1)
 			{
 				Message("Researching ")
-					.Text((ushort)((inquiry * 0x16) + 0x4da));
+					.Text(TechnologyText(inquiry));
 
 				this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 161, 26, 0);
 				this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 26, 15);
@@ -167,7 +167,7 @@ namespace Civilization1Remaster.UI
 				if (this.owner.Advisors.PlayerKnowsTechnology(participantIdx, technologyIdx) == 0)
 					continue;
 
-				this.owner.Libc.CopyText(0xba06, (ushort)((technologyIdx * 0x16) + 0x4da));
+				this.owner.Libc.CopyText(0xba06, TechnologyText(technologyIdx));
 
 				ushort hue = (ushort)((this.owner.World.ScienceLeadingFoundVia[technologyIdx] & 7) == participantIdx ? 0xf : 0xb);
 
@@ -213,7 +213,7 @@ namespace Civilization1Remaster.UI
 				this.owner.VideoCard.RenderLine(ScreenBox, 36, vertLoc - 2, 319, vertLoc - 2, 9);
 
 				this.owner.Services.RenderPictureToScreen(ScreenBox, ((rowIdx & 1) << 4) + 2, vertLoc - 4,
-					this.processor.PullGlobalWord((ushort)((((participantIdx << 5) + kind + 0x40) << 1) + 0xd4ce)));
+					SpritePicture(((participantIdx << 5) + kind + 0x40)));
 
 				rowIdx++;
 
@@ -293,11 +293,11 @@ namespace Civilization1Remaster.UI
 				this.owner.VideoCard.RenderLine(ScreenBox, 36, vertLoc - 1, 319, vertLoc - 1, 8);
 
 				this.owner.Services.RenderPictureToScreen(ScreenBox, ((rowIdx & 1) << 4) + 2, vertLoc - 4,
-					this.processor.PullGlobalWord((ushort)((((participantIdx << 5) + kind + 0x40) << 1) + 0xd4ce)));
+					SpritePicture(((participantIdx << 5) + kind + 0x40)));
 
 				rowIdx++;
 
-				this.owner.TextPainter.RenderTextToScreen0((ushort)((kind * 0x22) + 0x112a), 36, vertLoc, 15);
+				this.owner.TextPainter.RenderTextToScreen0(UnitText(kind), 36, vertLoc, 15);
 
 				short losses = this.owner.World.Participants[participantIdx].MissingTroops[kind];
 
@@ -323,7 +323,7 @@ namespace Civilization1Remaster.UI
 						EmptyMessage()
 							.Number(losses);
 						this.owner.TextPainter.RenderTextToScreen0(0xba06, horizLoc, vertLoc,
-							this.processor.PullGlobalWord((ushort)((playerIdx << 1) + 0x1946)));
+							PlayerColour(playerIdx));
 					}
 				}
 
@@ -331,7 +331,7 @@ namespace Civilization1Remaster.UI
 			}
 
 			this.owner.Dialogs.RenderBox(100, 25, 18, vertLoc - 25,
-				this.processor.PullGlobalWord((ushort)((this.owner.World.PersonParticipantIdx << 1) + 0x1946)));
+				PlayerColour(this.owner.World.PersonParticipantIdx));
 
 			FinishReportScreen();
 
@@ -512,7 +512,7 @@ namespace Civilization1Remaster.UI
 
 				this.owner.Libc.AppendText(0xba06, " ");
 
-				this.owner.Libc.AppendText(0xba06, (ushort)((0x1e * structureIdx) + 0xbb8));
+				this.owner.Libc.AppendText(0xba06, BuildingText(structureIdx));
 
 				this.owner.Libc.AppendText(0xba06, ", ");
 
@@ -592,12 +592,12 @@ namespace Civilization1Remaster.UI
 
 				this.owner.VideoCard.RenderLine(ScreenBox, 4, (short)(vertLoc - 2), 316, (short)(vertLoc - 2), 9);
 
-				this.owner.Libc.CopyText(0xba06, this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1992)));
+				this.owner.Libc.CopyText(0xba06, CivilizationPlural(participantIdx));
 
 				if ((short)participantIdx != this.owner.World.PersonParticipantIdx &&
 					(this.owner.World.Participants[this.owner.World.PersonParticipantIdx].Relations[participantIdx] & 0x40) == 0)
 				{
-					this.owner.TextPainter.RenderTextToScreen0(0x485b, 96, vertLoc, this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1946)));
+					this.owner.TextPainter.RenderTextToScreen0(0x485b, 96, vertLoc, PlayerColour(participantIdx));
 
 					rowCount++;
 					continue;
@@ -617,7 +617,7 @@ namespace Civilization1Remaster.UI
 
 				short boxTop = (short)(0x18 * rowCount);
 
-				this.owner.CityOps.RenderLabelBox(281, boxTop + 20, 318, boxTop + 29, 0xba06, this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1946)));
+				this.owner.CityOps.RenderLabelBox(281, boxTop + 20, 318, boxTop + 29, 0xba06, PlayerColour(participantIdx));
 			}
 
 			this.owner.Startup.DisplayMouseCursor();
@@ -733,11 +733,11 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Libc.AppendText(0xba06, ": ");
 
-			this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x19a2)));
+			this.owner.Libc.AppendText(0xba06, LeaderName(participantIdx));
 
 			this.owner.TextPainter.RenderTextWithShadow(0xba06, 8, vertLoc, 15);
 
-			Message(this.processor.PullGlobalWord((ushort)(((ushort)this.owner.World.Participants[participantIdx].RegimeKind << 1) + 0x1966)))
+			Message(GovernmentName((ushort)this.owner.World.Participants[participantIdx].RegimeKind))
 				.Text(", ")
 				.Number(this.owner.World.Participants[participantIdx].Gold)
 				.Text("$");
@@ -751,7 +751,7 @@ namespace Civilization1Remaster.UI
 				this.owner.Libc.AppendText(0xba06, " Units.");
 			}
 
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, 160, vertLoc, this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1946)));
+			this.owner.TextPainter.RenderTextToScreen0(0xba06, 160, vertLoc, PlayerColour(participantIdx));
 
 			vertLoc += 8;
 
@@ -762,7 +762,7 @@ namespace Civilization1Remaster.UI
 			{
 				this.processor.EmitGlobalByte(0xba06, 0);
 
-				this.owner.Libc.CopyText(0xba06, this.processor.PullGlobalWord((ushort)((otherIdx << 1) + 0x1992)));
+				this.owner.Libc.CopyText(0xba06, CivilizationPlural(otherIdx));
 
 				if (horizLoc > 0xf0)
 				{
@@ -811,16 +811,16 @@ namespace Civilization1Remaster.UI
 			short vertLoc = 0x20;
 
 			Message("Subject: the ")
-				.Text(this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1992)));
+				.Text(CivilizationPlural(participantIdx));
 
 			this.owner.TextPainter.RenderTextWithShadow(0xba06, 16, 32, 15);
 
 			vertLoc += 0xc;
 
 			Message("Leader:\x008f ")
-				.Text(this.processor.PullGlobalWord((ushort)((participant.RegimeKind << 1) + 0x19b2)))
+				.Text(GovernmentTitle(participant.RegimeKind))
 				.Text(" ")
-				.Text(this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x19a2)));
+				.Text(LeaderName(participantIdx));
 
 			this.owner.TextPainter.RenderTextToScreen0(0xba06, 16, vertLoc, 9);
 
@@ -863,7 +863,7 @@ namespace Civilization1Remaster.UI
 			vertLoc += 8;
 
 			Message("Government:\x008f ")
-				.Text(this.processor.PullGlobalWord((ushort)((participant.RegimeKind << 1) + 0x1966)));
+				.Text(GovernmentName(participant.RegimeKind));
 
 			this.owner.TextPainter.RenderTextToScreen0(0xba06, 16, vertLoc, 9);
 
@@ -910,7 +910,7 @@ namespace Civilization1Remaster.UI
 
 				this.owner.Libc.AppendText(0xba06, "\x0087 with the ");
 
-				this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)((otherIdx << 1) + 0x1992)));
+				this.owner.Libc.AppendText(0xba06, CivilizationPlural(otherIdx));
 
 				this.owner.Libc.AppendText(0xba06, ".");
 
@@ -930,7 +930,7 @@ namespace Civilization1Remaster.UI
 				if (this.owner.Advisors.PlayerKnowsTechnology(participantIdx, scienceIdx) == 0)
 					continue;
 
-				this.owner.TextPainter.RenderTextToScreen0((ushort)((scienceIdx * 0x16) + 0x4da), 24, vertLoc, 7);
+				this.owner.TextPainter.RenderTextToScreen0(TechnologyText(scienceIdx), 24, vertLoc, 7);
 
 				vertLoc += 8;
 

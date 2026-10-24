@@ -192,8 +192,8 @@ namespace Civilization1Remaster.Game
 
 			for (int spotIdx = 0; spotIdx < 0x2d; spotIdx++)
 			{
-				int spotHoriz = this.owner.Routing.TunePosition((short)this.processor.PullGlobalWord((ushort)((spotIdx << 1) + 0x1882)) + horizLoc);
-				short spotVert = (short)(this.processor.PullGlobalWord((ushort)((spotIdx << 1) + 0x18e4)) + vertLoc);
+				int spotHoriz = this.owner.Routing.TunePosition((short)DirectionHoriz(spotIdx) + horizLoc);
+				short spotVert = (short)(DirectionVert(spotIdx) + vertLoc);
 
 				this.owner.Helpers.LocateNearestCity(spotHoriz, spotVert);
 
@@ -1395,10 +1395,10 @@ namespace Civilization1Remaster.Game
 				this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
 			}
 
-			Message(this.processor.PullGlobalWord((ushort)(((ushort)participantIdx << 1) + 0x1982)))
+			Message(CivilizationName((ushort)participantIdx))
 				.Text(PlayerKnowsTechnology(person, 0x14) != 0 ? (ushort)0x22cc : (ushort)0x22d8)
 				.Text("\ndiscover the secret\nof ")
-				.Text((ushort)((ushort)(0x16 * human.PresentInquiryIdx) + 0x4da));
+				.Text(TechnologyText(human.PresentInquiryIdx));
 
 			if (human.PresentInquiryIdx == 71)
 			{
@@ -1479,7 +1479,7 @@ namespace Civilization1Remaster.Game
 		private void RecommendResearch(short pick)
 		{
 			Message("Science Advisor:\nI recommend we\ndevelop ")
-				.Text((ushort)((ushort)(0x16 * pick) + 0x4da))
+				.Text(TechnologyText(pick))
 				.Text(".\n");
 
 			ushort length = this.owner.Libc.TextLength(0xba06);
@@ -1559,7 +1559,7 @@ namespace Civilization1Remaster.Game
 						continue;
 				}
 
-				this.owner.Libc.AppendText(0xba06, (ushort)((ushort)(0x16 * scienceIdx) + 0x4da));
+				this.owner.Libc.AppendText(0xba06, TechnologyText(scienceIdx));
 
 				this.owner.Libc.AppendText(0xba06, "\n ");
 
@@ -1629,9 +1629,9 @@ namespace Civilization1Remaster.Game
 			}
 
 			EmptyMessage()
-				.Text(this.processor.PullGlobalWord((ushort)(((ushort)participantIdx << 1) + 0x1992)))
+				.Text(CivilizationPlural((ushort)participantIdx))
 				.Text(participantIdx == participantIdx1 || participantIdx1 == 0 ? (ushort)0x23d7 : (ushort)0x23e1)
-				.Text((ushort)((ushort)(0x16 * scienceIdx) + 0x4da));
+				.Text(TechnologyText(scienceIdx));
 
 			if (TechnologyNewsRules.NamesSource(participantIdx, participantIdx1, this.owner.TurnHooks.ClassicTechnologyNews))
 			{
@@ -1643,7 +1643,7 @@ namespace Civilization1Remaster.Game
 				}
 				else
 				{
-					this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)(((ushort)participantIdx1 << 1) + 0x1992)));
+					this.owner.Libc.AppendText(0xba06, CivilizationPlural((ushort)participantIdx1));
 				}
 			}
 
@@ -1708,9 +1708,9 @@ namespace Civilization1Remaster.Game
 			EmissaryAudience = 0;
 			this.processor.EmitGlobalByte(0xba06, 0);
 
-			this.owner.Libc.CopyText(CodeText1, this.processor.PullGlobalWord((ushort)(((ushort)participantIdx << 1) + 0x1992)));
+			this.owner.Libc.CopyText(CodeText1, CivilizationPlural((ushort)participantIdx));
 
-			this.owner.Libc.CopyText(CodeText4, (ushort)((ushort)(0x16 * scienceIdx) + 0x4da));
+			this.owner.Libc.CopyText(CodeText4, TechnologyText(scienceIdx));
 
 			this.owner.BlockText.DisplayTextDialog(0x240e);
 
@@ -1776,7 +1776,7 @@ namespace Civilization1Remaster.Game
 				if (participantIdx == person && KingAnswer == 0xffff)
 				{
 					Message("Development of ")
-						.Text((ushort)((ushort)(0x16 * scienceIdx) + 0x4da))
+						.Text(TechnologyText(scienceIdx))
 						.Text("\nmakes existing Barracks\nobsolete.\n")
 						.Style(0x3)
 						.Dialog(80, 100);
@@ -1799,9 +1799,9 @@ namespace Civilization1Remaster.Game
 						this.owner.World.Towns[this.owner.World.MarvelTownIdx[wonderIdx]].ParticipantIdx != person)
 						continue;
 
-					Message((ushort)((ushort)(0x16 * scienceIdx) + 0x4da))
+					Message(TechnologyText(scienceIdx))
 						.Text(" cancels\nthe effect of\n")
-						.Text((ushort)((ushort)(0x1e * wonderIdx) + 0xe6a))
+						.Text(WonderText(wonderIdx))
 						.Text(".\n");
 
 					this.owner.Paper.DisplayNewspaper(-1);

@@ -596,15 +596,15 @@ namespace Civilization1Remaster.UI
 		private void PrepareLandingText(short participantIdx)
 		{
 			ushort regime = (ushort)this.owner.World.Participants[this.owner.World.PersonParticipantIdx].RegimeKind;
-			Message(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((regime << 1) + 0x19b2)))
+			Message(GovernmentTitle(regime))
 				.Text(" ");
 
 			ushort person = (ushort)this.owner.World.PersonParticipantIdx;
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((person << 1) + 0x19a2)));
+			this.owner.Libc.AppendText(0xba06, LeaderName(person));
 			this.owner.Libc.CopyText(CodeText1, 0xba06);
 
 			this.owner.Libc.CopyText(CodeText2,
-				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(((ushort)participantIdx << 1) + 0x1982)));
+				CivilizationName((ushort)participantIdx));
 
 			EmptyMessage()
 				.Number(this.owner.World.Participants[participantIdx].StarshipInhabitants);
@@ -972,7 +972,7 @@ namespace Civilization1Remaster.UI
 
 			short humanIdx = this.owner.World.PersonParticipantIdx;
 
-			this.owner.Libc.CopyText(0xba06, this.processor.PullGlobalWord((ushort)((humanIdx << 1) + 0x19a2)));
+			this.owner.Libc.CopyText(0xba06, LeaderName(humanIdx));
 			this.owner.Libc.UppercaseText(0xba06);
 			this.owner.Libc.CopyText(CodeText1, 0xba06);
 
@@ -982,7 +982,7 @@ namespace Civilization1Remaster.UI
 			{
 				if (this.owner.Advisors.PlayerKnowsTechnology(humanIdx, technologyIdx) != 0)
 				{
-					this.owner.Libc.CopyText(0xba06, (ushort)((technologyIdx * 0x16) + 0x4da));
+					this.owner.Libc.CopyText(0xba06, TechnologyText(technologyIdx));
 				}
 			}
 

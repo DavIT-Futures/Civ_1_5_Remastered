@@ -161,7 +161,7 @@ namespace Civilization1Remaster.UI
 		/// <summary>The plural name (0x1992) of the player</summary>
 		private ushort ReplayPlural(int participantIdx)
 		{
-			return this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1992));
+			return CivilizationPlural(participantIdx);
 		}
 
 		/// <summary>
@@ -222,17 +222,17 @@ namespace Civilization1Remaster.UI
 					{
 						case 5:
 							this.owner.Libc.AppendText(0xba06, " discover ");
-							this.owner.Libc.AppendText(0xba06, (ushort)((0x16 * thing) + 0x4da));
+							this.owner.Libc.AppendText(0xba06, TechnologyText(thing));
 							break;
 
 						case 6:
 							this.owner.Libc.AppendText(0xba06, " produce first ");
-							this.owner.Libc.AppendText(0xba06, (ushort)((0x22 * thing) + 0x112a));
+							this.owner.Libc.AppendText(0xba06, UnitText(thing));
 							break;
 
 						case 8:
 							this.owner.Libc.AppendText(0xba06, " form ");
-							this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)((thing << 1) + 0x1966)));
+							this.owner.Libc.AppendText(0xba06, GovernmentName(thing));
 							break;
 
 						default:
@@ -243,7 +243,7 @@ namespace Civilization1Remaster.UI
 								this.owner.Libc.AppendText(0xba06, "the ");
 							}
 
-							this.owner.Libc.AppendText(0xba06, (ushort)((0x1e * thing) + 0xe6a));
+							this.owner.Libc.AppendText(0xba06, WonderText(thing));
 							break;
 					}
 
@@ -288,7 +288,7 @@ namespace Civilization1Remaster.UI
 
 					short destroyer = ReplayByte(ref spot);
 
-					this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)((ReplayActor << 1) + 0x1982)));
+					this.owner.Libc.AppendText(0xba06, CivilizationName(ReplayActor));
 
 					this.owner.Libc.AppendText(0xba06, " civilization destroyed by ");
 
@@ -652,7 +652,7 @@ namespace Civilization1Remaster.UI
 							ushort cityOwner = PullReplayCity(cityIdx, 0);
 
 							hue = ReplayCityDistance == 0 ? (ushort)(cityOwner == 1 ? 7 : 15) :
-								this.processor.PullGlobalWord((ushort)((cityOwner << 1) + 0x1946));
+								PlayerColour(cityOwner);
 						}
 
 						this.owner.Services.FloodBox(ScreenBox, tileHoriz * 4, (tileVert * 4) + 4, 4, 4, hue);
@@ -734,7 +734,7 @@ namespace Civilization1Remaster.UI
 			ushort buffer = (ushort)(this.processor.RegFrame.Value16 - 0x10);
 			ushort leader = (ushort)(0x3a * this.owner.World.Participants[participantIdx].ChiefVisuals);
 
-			this.owner.Libc.CopyText(this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1982)), (ushort)(leader + 0x1502));
+			this.owner.Libc.CopyText(CivilizationName(participantIdx), (ushort)(leader + 0x1502));
 			this.owner.Libc.CopyText(buffer, (ushort)(leader + 0x14f2));
 
 			if (this.processor.PullGlobalByte(buffer) == 0)
@@ -743,7 +743,7 @@ namespace Civilization1Remaster.UI
 				this.owner.Libc.AppendText(buffer, "s");
 			}
 
-			this.owner.Libc.CopyText(this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1992)), buffer);
+			this.owner.Libc.CopyText(CivilizationPlural(participantIdx), buffer);
 
 			this.processor.RestoreSource();
 			this.processor.LeaveFrame();
@@ -793,7 +793,7 @@ namespace Civilization1Remaster.UI
 			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 152, 20);
 			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 151, (ushort)(VgaMode != 0 ? 23 : 15));
 
-			Message(this.processor.PullGlobalWord((ushort)((this.owner.World.PersonParticipantIdx << 1) + 0x19a2)))
+			Message(LeaderName(this.owner.World.PersonParticipantIdx))
 				.Text(" the CONQUEROR!");
 
 			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 168, 20);
@@ -942,7 +942,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Libc.AppendText(0xba06, ": ");
 
-			this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)(((ushort)this.owner.World.PersonParticipantIdx << 1) + 0x1992)));
+			this.owner.Libc.AppendText(0xba06, CivilizationPlural((ushort)this.owner.World.PersonParticipantIdx));
 
 			this.owner.Libc.AppendText(0xba06, " destroy");
 
@@ -950,7 +950,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Libc.CopyText(0xba06, "the ");
 
-			Message(this.processor.PullGlobalWord((ushort)(((ushort)participantIdx << 1) + 0x1982)))
+			Message(CivilizationName((ushort)participantIdx))
 				.Text(" civilization!");
 
 			RenderShadowedCentredLine(168);

@@ -171,7 +171,7 @@ namespace Civilization1Remaster.Game
 				if (dotVert < 0 || dotVert >= 0x32)
 					continue;
 
-				this.owner.Services.AssignDot(dotHoriz, dotVert + 8, this.processor.PullGlobalWord((ushort)((town.ParticipantIdx << 1) + 0x1946)));
+				this.owner.Services.AssignDot(dotHoriz, dotVert + 8, PlayerColour(town.ParticipantIdx));
 			}
 
 			this.owner.Dialogs.RenderShadowBox(0, 8, 79, 49, 15, 8);
@@ -262,7 +262,7 @@ namespace Civilization1Remaster.Game
 				this.owner.Services.RenderPictureToScreen(
 					ScreenBox,
 					screenX, screenY,
-					this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((4 << 1) + 0xd4ce)));
+					SpritePicture(4));
 			}
 
 			if (terrain == 0xb)
@@ -307,7 +307,7 @@ namespace Civilization1Remaster.Game
 				this.owner.Services.FloodBox(
 					ScreenBox,
 					horizLoc * 4, vertLoc * 4, 4, 4,
-					this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((ownerBits << 1) + 0x1946)));
+					PlayerColour(ownerBits));
 				return ownerBits;
 			}
 
@@ -335,8 +335,8 @@ namespace Civilization1Remaster.Game
 				this.processor.EmitLocalWord(0x12, mask);
 
 				ushort adjX = (ushort)this.owner.Routing.TunePosition(
-					this.processor.PullInt16(this.processor.SegData.Value16, (ushort)((dir << 1) + 0x1882)) + horizLoc);
-				int adjY = this.processor.PullInt16(this.processor.SegData.Value16, (ushort)((dir << 1) + 0x18e4)) + vertLoc;
+					(short)DirectionHoriz(dir) + horizLoc);
+				int adjY = (short)DirectionVert(dir) + vertLoc;
 
 				if (fits(ObtainTerrainType((short)adjX, adjY)) && VerifyMapLimits(0, adjY) != 0)
 				{
@@ -413,8 +413,8 @@ namespace Civilization1Remaster.Game
 			{
 				this.processor.EmitLocalWord(0xc, dir);
 				ushort adjX = (ushort)this.owner.Routing.TunePosition(
-					this.processor.PullInt16(this.processor.SegData.Value16, (ushort)((dir << 1) + 0x1882)) + horizLoc);
-				int adjY = this.processor.PullInt16(this.processor.SegData.Value16, (ushort)((dir << 1) + 0x18e4)) + vertLoc;
+					(short)DirectionHoriz(dir) + horizLoc);
+				int adjY = (short)DirectionVert(dir) + vertLoc;
 
 				if (ObtainTerrainType((short)adjX, adjY) == 0xb)
 				{
@@ -440,8 +440,8 @@ namespace Civilization1Remaster.Game
 				this.processor.EmitLocalWord(0x12, mask);
 
 				ushort adjTerrain = ObtainTerrainType(
-					this.processor.PullInt16(this.processor.SegData.Value16, (ushort)((dir << 1) + 0x1882)) + horizLoc,
-					this.processor.PullInt16(this.processor.SegData.Value16, (ushort)((dir << 1) + 0x18e4)) + vertLoc);
+					(short)DirectionHoriz(dir) + horizLoc,
+					(short)DirectionVert(dir) + vertLoc);
 				this.processor.EmitLocalWord(0x4, adjTerrain);
 
 				if (adjTerrain == 0xb || adjTerrain == 0xa)
@@ -532,8 +532,8 @@ namespace Civilization1Remaster.Game
 					this.processor.EmitLocalWord(0xc, dir);
 
 					ushort adjImp = ObtainKnownTileImprovements(
-						this.processor.PullInt16(this.processor.SegData.Value16, (ushort)((dir << 1) + 0x1882)) + horizLoc,
-						this.processor.PullInt16(this.processor.SegData.Value16, (ushort)((dir << 1) + 0x18e4)) + vertLoc);
+						(short)DirectionHoriz(dir) + horizLoc,
+						(short)DirectionVert(dir) + vertLoc);
 					this.processor.EmitLocalWord(0x1c, adjImp);
 
 					if ((adjImp & 0x8) != 0)
@@ -565,7 +565,7 @@ namespace Civilization1Remaster.Game
 				this.owner.Services.RenderPictureToScreen(
 					ScreenBox,
 					screenX, screenY,
-					this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((5 << 1) + 0xd4ce)));
+					SpritePicture(5));
 			}
 
 			if (ContainsSpecialResource(horizLoc, vertLoc) != 0)
@@ -573,7 +573,7 @@ namespace Civilization1Remaster.Game
 				this.owner.Services.RenderPictureToScreen(
 					ScreenBox,
 					screenX, screenY,
-					this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(((terrain + 0x10) << 1) + 0xd4ce)));
+					SpritePicture((terrain + 0x10)));
 			}
 
 			if (ContainsHut(terrain, horizLoc, vertLoc) != 0)
@@ -581,7 +581,7 @@ namespace Civilization1Remaster.Game
 				this.owner.Services.RenderPictureToScreen(
 					ScreenBox,
 					screenX, screenY,
-					this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((0x1f << 1) + 0xd4ce)));
+					SpritePicture(0x1f));
 			}
 
 			if ((improvements & 0x20) != 0)
@@ -589,7 +589,7 @@ namespace Civilization1Remaster.Game
 				this.owner.Services.RenderPictureToScreen(
 					ScreenBox,
 					screenX, screenY,
-					this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((0x1e << 1) + 0xd4ce)));
+					SpritePicture(0x1e));
 			}
 
 			if (MapRevealed == 0)
@@ -600,8 +600,8 @@ namespace Civilization1Remaster.Game
 				{
 					this.processor.EmitLocalWord(0xc, dir);
 					ushort adjX = (ushort)this.owner.Routing.TunePosition(
-						this.processor.PullInt16(this.processor.SegData.Value16, (ushort)((dir << 1) + 0x1882)) + horizLoc);
-					ushort adjY = (ushort)(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((dir << 1) + 0x18e4)) + (ushort)vertLoc);
+						(short)DirectionHoriz(dir) + horizLoc);
+					ushort adjY = (ushort)(DirectionVert(dir) + (ushort)vertLoc);
 
 					if (((ushort)(short)this.owner.World.ChartSight[adjX, adjY] & personBit) == 0)
 					{
@@ -654,7 +654,7 @@ namespace Civilization1Remaster.Game
 				ScreenBox,
 				(short)(screenX + 1),
 				(short)(screenY + 1),
-				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((0x1c << 1) + 0xd4ce)));
+				SpritePicture(0x1c));
 
 			this.owner.VideoCard.SubstituteHue(
 				ScreenBox,
@@ -695,7 +695,7 @@ namespace Civilization1Remaster.Game
 				this.owner.Services.RenderPictureToScreen(
 					ScreenBox,
 					screenX + 1, screenY + 1,
-					this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((0x1d << 1) + 0xd4ce)));
+					SpritePicture(0x1d));
 			}
 
 			ushort labelIdx = CityLabelCount;
@@ -730,7 +730,7 @@ namespace Civilization1Remaster.Game
 
 				this.owner.Services.FloodBox(ScreenBox, (horizLoc * 4) + 1, (vertLoc * 4) + 1, 3, 3, (ushort)(kind == 0 ? 6 : 0));
 				this.owner.Services.FloodBox(ScreenBox, horizLoc * 4, vertLoc * 4, 3, 3,
-					this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1946)));
+					PlayerColour(participantIdx));
 
 				this.processor.Journal.CloseScope("RenderUnitOnWorldMap");
 
@@ -751,7 +751,7 @@ namespace Civilization1Remaster.Game
 				if (this.troops.Following(participantIdx, troopIdx) != -1)
 				{
 					this.owner.Services.RenderPictureToScreen(ScreenBox, viewHoriz + 1, viewVert + 1,
-						this.processor.PullGlobalWord((ushort)((((participantIdx << 5) + kind + 0x40) << 1) + 0xd4ce)));
+						SpritePicture(((participantIdx << 5) + kind + 0x40)));
 				}
 
 				RenderUnitSprite(participantIdx, troopIdx, viewHoriz, viewVert);
@@ -821,11 +821,11 @@ namespace Civilization1Remaster.Game
 			ushort markHue = (ushort)(participantIdx == 1 ? 9 : 15);
 
 			this.owner.Services.RenderPictureToScreen(ScreenBox, horizLoc, vertLoc,
-				this.processor.PullGlobalWord((ushort)(((kind + (participantIdx << 5) + 0x40) << 1) + 0xd4ce)));
+				SpritePicture((kind + (participantIdx << 5) + 0x40)));
 
 			if ((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 8) != 0)
 			{
-				this.owner.Services.RenderPictureToScreen(ScreenBox, horizLoc, vertLoc, this.processor.PullGlobalWord((0x1d << 1) + 0xd4ce));
+				this.owner.Services.RenderPictureToScreen(ScreenBox, horizLoc, vertLoc, SpritePicture(0x1d));
 			}
 			else if ((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 4) != 0)
 			{

@@ -344,7 +344,7 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>The name of a technology (records of 0x16 bytes from 0x4da)</summary>
-		private static ushort TechnologyName(ushort scienceIdx) => (ushort)(scienceIdx * 0x16 + 0x4da);
+		private static ushort TechnologyName(ushort scienceIdx) => TechnologyText(scienceIdx);
 
 		/// <summary>
 		/// The technologies each side knows (0xe, 0x32), one the leader knows and the human player doesn't (0xa), the most
@@ -446,7 +446,7 @@ namespace Civilization1Remaster.UI
 
 			this.processor.EmitGlobalByte(0xba06, 0);
 			this.owner.Libc.CopyText(CodeText2,
-				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((this.audienceCommonEnemy << 1) + 0x1992)));
+				CivilizationPlural(this.audienceCommonEnemy));
 			this.owner.Libc.CopyText(CodeText4, (ushort)(HostileValue != 0 ? 0x3780 : 0x3787));
 			this.owner.BlockText.DisplayTextDialog(0x378f);
 
@@ -790,11 +790,11 @@ namespace Civilization1Remaster.UI
 				KingMood = 0;
 				KingSpeaking = 0xc;
 				Message("We welcome the friendship of the\n")
-					.Text(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((personIdx << 1) + 0x1982)))
+					.Text(CivilizationName(personIdx))
 					.Text(" people and their most\nwise and munificent leader:\n")
-					.Text(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((Person.RegimeKind << 1) + 0x19b2)))
+					.Text(GovernmentTitle(Person.RegimeKind))
 					.Text(" ")
-					.Text(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((personIdx << 1) + 0x19a2)))
+					.Text(LeaderName(personIdx))
 					.Text(".\n");
 			}
 
@@ -812,7 +812,7 @@ namespace Civilization1Remaster.UI
 			while (true)
 			{
 				this.owner.Libc.CopyText(CodeText4,
-					this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((participantIdx << 1) + 0x1992)));
+					CivilizationPlural(participantIdx));
 				this.processor.EmitGlobalByte(0xba06, 0);
 				this.owner.BlockText.DisplayTextDialog(0x388f);
 
@@ -895,7 +895,7 @@ namespace Civilization1Remaster.UI
 
 				enemyTable[enemyCount++] = otherIdx;
 
-				this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((otherIdx << 1) + 0x1992)));
+				this.owner.Libc.AppendText(0xba06, CivilizationPlural(otherIdx));
 				this.owner.Libc.AppendText(0xba06, "\n ");
 			}
 
@@ -908,7 +908,7 @@ namespace Civilization1Remaster.UI
 			short enemyIdx = enemyTable[choice];
 
 			this.owner.Libc.CopyText(CodeText4,
-				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((enemyIdx << 1) + 0x1992)));
+				CivilizationPlural(enemyIdx));
 			KingSpeaking = 4;
 
 			if ((Leader(participantIdx).Relations[enemyIdx] & 1) == 0)
@@ -973,7 +973,7 @@ namespace Civilization1Remaster.UI
 			}
 
 			this.owner.Libc.CopyText(CodeText2,
-				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((participantIdx << 1) + 0x1992)));
+				CivilizationPlural(participantIdx));
 			this.owner.HelpSystem.DisplayHelpPopup(0x392b);
 		}
 
@@ -1046,7 +1046,7 @@ namespace Civilization1Remaster.UI
 			while (true)
 			{
 				Message("An emissary from the\n")
-					.Text(this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1992)))
+					.Text(CivilizationPlural(participantIdx))
 					.Text(" wishes to\nspeak with you.\n")
 					.Text("Will you receive him?\n Yes.\n No.\n");
 
@@ -1113,7 +1113,7 @@ namespace Civilization1Remaster.UI
 			this.processor.Journal.OpenScope($"ObtainKingSalutation({participantIdx})");
 
 			ushort leader = (ushort)((participantIdx << 1) + 0x19a2);
-			ushort Regime() => this.processor.PullGlobalWord((ushort)((this.owner.World.Participants[participantIdx].RegimeKind << 1) + 0x19b2));
+			ushort Regime() => GovernmentTitle(this.owner.World.Participants[participantIdx].RegimeKind);
 
 			this.owner.Libc.CopyText(0xba06, (this.owner.World.Participants[participantIdx].Relations[this.owner.World.PersonParticipantIdx] & 8) != 0 ? (ushort)0x39b1 : (ushort)0x39e8);
 
@@ -1150,7 +1150,7 @@ namespace Civilization1Remaster.UI
 			}
 
 			this.owner.Libc.AppendText(0xba06, "of the ");
-			this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1992)));
+			this.owner.Libc.AppendText(0xba06, CivilizationPlural(participantIdx));
 			this.owner.Libc.AppendText(0xba06, "...\n");
 
 			if (this.owner.World.Participants[participantIdx].LiveTroops[25] != 0)
@@ -1185,7 +1185,7 @@ namespace Civilization1Remaster.UI
 
 		private ushort CivilizationNameAddr(short participantIdx)
 		{
-			return this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1982));
+			return CivilizationName(participantIdx);
 		}
 
 		/// <summary>
@@ -1549,11 +1549,11 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Dialogs.RenderShadowBox(0, 128, 319, 71, 15, 8);
 
-			Message(this.processor.PullGlobalWord((ushort)(((ushort)participantIdx << 1) + 0x19a2)))
+			Message(LeaderName((ushort)participantIdx))
 				.Text(": ")
-				.Text(this.processor.PullGlobalWord((ushort)(((ushort)this.owner.World.Participants[participantIdx].RegimeKind << 1) + 0x19b2)))
+				.Text(GovernmentTitle((ushort)this.owner.World.Participants[participantIdx].RegimeKind))
 				.Text(" of the ")
-				.Text(this.processor.PullGlobalWord((ushort)(((ushort)participantIdx << 1) + 0x1992)))
+				.Text(CivilizationPlural((ushort)participantIdx))
 				.Text(".");
 
 			this.owner.TextPainter.RenderTextToScreen0(0xba06, 8, 130, 15);

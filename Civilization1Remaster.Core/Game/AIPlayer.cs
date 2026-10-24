@@ -1814,9 +1814,9 @@ namespace Civilization1Remaster.Game
 			{
 				ushort direction = this.look.Direction;
 
-				this.look.TileHoriz = (ushort)this.owner.Routing.TunePosition(this.processor.PullInt16(this.processor.SegData.Value16, (ushort)((direction << 1) + 0x1882)) +
+				this.look.TileHoriz = (ushort)this.owner.Routing.TunePosition((short)DirectionHoriz(direction) +
 					(short)this.look.Horiz);
-				this.look.TileVert = (ushort)(this.processor.PullGlobalWord((ushort)((direction << 1) + 0x18e4)) + this.look.Vert);
+				this.look.TileVert = (ushort)(DirectionVert(direction) + this.look.Vert);
 
 				short horizLoc = (short)this.look.TileHoriz;
 				short vertLoc = (short)this.look.TileVert;
@@ -2180,8 +2180,8 @@ namespace Civilization1Remaster.Game
 				{
 					ushort direction = this.look.Direction;
 
-					this.look.TileHoriz = (ushort)this.owner.Routing.TunePosition(this.processor.PullInt16(this.processor.SegData.Value16, (ushort)((direction << 1) + 0x1882)) + horizLoc);
-					this.look.TileVert = (ushort)(this.processor.PullGlobalWord((ushort)((direction << 1) + 0x18e4)) + this.look.Vert);
+					this.look.TileHoriz = (ushort)this.owner.Routing.TunePosition((short)DirectionHoriz(direction) + horizLoc);
+					this.look.TileVert = (ushort)(DirectionVert(direction) + this.look.Vert);
 
 					short nextHoriz = (short)this.look.TileHoriz;
 					short nextVert = (short)this.look.TileVert;
@@ -2293,9 +2293,9 @@ namespace Civilization1Remaster.Game
 			{
 				ushort direction = this.look.Direction;
 				this.look.TileHoriz = (ushort)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.TravelHoriz) +
-					this.processor.PullGlobalWord((ushort)((direction << 1) + 0x1882)));
+					DirectionHoriz(direction));
 				this.look.TileVert = (ushort)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.TravelVert) +
-					this.processor.PullGlobalWord((ushort)((direction << 1) + 0x18e4)));
+					DirectionVert(direction));
 
 				if (this.owner.MapOps.ObtainTileOwner((short)this.look.TileHoriz, (short)this.look.TileVert) != 0xffff)
 					continue;
@@ -2352,8 +2352,8 @@ namespace Civilization1Remaster.Game
 				this.look.Direction = (ushort)(this.look.Direction + 1))
 			{
 				ushort direction = this.look.Direction;
-				this.look.TileHoriz = (ushort)(town.Place.X + this.processor.PullGlobalWord((ushort)((direction << 1) + 0x1882)));
-				this.look.TileVert = (ushort)(town.Place.Y + this.processor.PullGlobalWord((ushort)((direction << 1) + 0x18e4)));
+				this.look.TileHoriz = (ushort)(town.Place.X + DirectionHoriz(direction));
+				this.look.TileVert = (ushort)(town.Place.Y + DirectionVert(direction));
 
 				this.look.TileOwner = this.owner.MapOps.ObtainTileOwner((short)this.look.TileHoriz, (short)this.look.TileVert);
 				ushort tileOwner = this.look.TileOwner;

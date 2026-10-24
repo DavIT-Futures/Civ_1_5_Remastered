@@ -132,9 +132,9 @@ namespace Civilization1Remaster.Game
 						participantIdx != person && otherIdx != (ushort)person)
 					{
 						Message("The war between\nthe ")
-							.Text(this.processor.PullGlobalWord((ushort)(((ushort)participantIdx << 1) + 0x1992)))
+							.Text(CivilizationPlural((ushort)participantIdx))
 							.Text(" and the\n")
-							.Text(this.processor.PullGlobalWord((ushort)((otherIdx << 1) + 0x1992)))
+							.Text(CivilizationPlural(otherIdx))
 							.Text(" has ended.\n")
 							.Style(0x1)
 							.Dialog(100, 80);
@@ -281,7 +281,7 @@ namespace Civilization1Remaster.Game
 
 						regimes.Add(regime);
 
-						this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)((regime << 1) + 0x1966)));
+						this.owner.Libc.AppendText(0xba06, GovernmentName(regime));
 
 						this.owner.Libc.AppendText(0xba06, "\n ");
 					}
@@ -318,11 +318,11 @@ namespace Civilization1Remaster.Game
 
 					if ((participant.Relations[0] & 4) != 0)
 					{
-						this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1982)));
+						this.owner.Libc.AppendText(0xba06, CivilizationName(participantIdx));
 
 						this.owner.Libc.AppendText(0xba06, " government\nchanged to ");
 
-						this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)((regimeKind << 1) + 0x1966)));
+						this.owner.Libc.AppendText(0xba06, GovernmentName(regimeKind));
 
 						this.owner.Libc.AppendText(0xba06, "!\n");
 
@@ -332,7 +332,7 @@ namespace Civilization1Remaster.Game
 					{
 						this.owner.Libc.AppendText(0xba06, "The ");
 
-						this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1982)));
+						this.owner.Libc.AppendText(0xba06, CivilizationName(participantIdx));
 
 						this.owner.Libc.AppendText(0xba06, " government\nhas been overthrown!\n");
 
@@ -487,9 +487,9 @@ namespace Civilization1Remaster.Game
 		/// <summary>"X and\nY" of the two civilizations at 0xba06</summary>
 		private void AppendPair(short participantIdx1, short participantIdx2)
 		{
-			Message(this.processor.PullGlobalWord((ushort)((participantIdx1 << 1) + 0x1992)))
+			Message(CivilizationPlural(participantIdx1))
 				.Text(" and\n")
-				.Text(this.processor.PullGlobalWord((ushort)((participantIdx2 << 1) + 0x1992)));
+				.Text(CivilizationPlural(participantIdx2));
 		}
 
 		/// <summary>

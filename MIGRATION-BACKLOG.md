@@ -1340,12 +1340,33 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   0x817a) i flagi bez jasnego znaczenia (0x8078, 0xdb38, 0x6802, 0x3484, 0x2494, 0xde20, 0xb22a, 0x6b92, 0x67fa,
   0x6534, 0x2fec, 0x2fa2, 0x2f98, 0x1c28, 0xdc6a, 0x5116, 0x8066, 0xd2dc, 0x6820, 0x654e, 0x4b2c / 0x4b32 / 0x4b34,
   0xd922, 0x6e92) oraz dostępy bajtowe. Dalej B4 opłaca się tylko razem z B5 albo przy przepisywaniu tych funkcji.
+- **B3 odłożone na koniec migracji** (decyzja użytkownika 2026-10-24, powód w `PLAN-PO-MIGRACJI.md`, B3): 30 funkcji czyta
+  617 słów stosu zostawionych przez inne, więc każda zmiana ramek i SI/DI zmienia decyzje AI. Raport sondy „przed”
+  i skan funkcji: scratchpad tej sesji (`lo_before.txt`, `b3scan.tsv`) – przy powrocie do B3 nagrać od nowa.
+- B5, porcje 1 – 3 razem (2026-10-24): tabele słów z CIV.EXE jako akcesory `GameModule` (region „Tables of CIV.EXE”):
+  `Nazwa(indeks)` = `PullGlobalWord((ushort)((indeks << 1) + baza))`, ten sam rodzaj dostępu (każdy odczyt CPU liczy
+  się do zegara testów raz, `PullInt16` → `(short)Nazwa(...)`). `CivilizationName` 0x1982, `CivilizationPlural` 0x1992,
+  `LeaderName` 0x19a2, `GovernmentName` 0x1966, `GovernmentTitle` 0x19b2, `PlayerColour` 0x1946, `DirectionHoriz` /
+  `DirectionVert` 0x1882 / 0x18e4, `SpritePicture` 0xd4ce – 221 odczytów, skrypt `b5a.py` w scratchpadzie (forma
+  `(ushort)((i << 1) + baza)` i `(i << 1) + baza`). Zostają z adresem: odczyty z już podwojonym indeksem (`names`,
+  `personSlot`, `direction`, `dirOffset`, SI/DI/BX jako przesunięcie – ok. 80) i odczyty bajtowe; do przerobienia razem
+  z tymi zmiennymi.
+- B5, porcja 4 (2026-10-24, razem z 1 – 3 i jednym przebiegiem testów): adresy nazw w tabelach rekordów jako funkcje
+  bez dostępu do pamięci (sama arytmetyka): `TechnologyText(i)` = 0x16 * i + 0x4da, `BuildingText` 0x1e * i + 0xbb8,
+  `WonderText` 0x1e * i + 0xe6a, `UnitText` 0x22 * i + 0x112a – 44 miejsca w 7 postaciach rzutowań (skrypt `b5b.py`).
+  Zostaje 8 z przesunięciem policzonym wcześniej (SI, `otherAddr`, `unitSpec`) i prywatne `MeetWithKing.TechnologyName`
+  (duplikat `TechnologyText`). Następne: rekordy przywódców (0x14e2 / 0x14f2 / 0x1502 / 0x1516 / 0x1518 / 0x151a co
+  0x3a – prawie wszystkie przez przesunięcie `leader` / `names`, więc razem z tymi zmiennymi), budynki 0xbb2 co 0x1e,
+  teren 0x28e co 0x13, surowe odczyty tabeli jednostek 0x112a co 0x22 obok `UnitKindTable`.
+  Porcje 1 – 4: pełny zestaw 767/767 (jeden przebieg), mutacje 13 / 13 (indeks ^ 1 w akcesorze; `DirectionVert` –
+  golden master, zawieszenie = złapana).
 
 ## Następny krok
 
-Stan 2026-10-19 (po porcji 144): żadnej metody w stylu asm (`find_asm_methods.py Civilization1Remaster.Core 99999` pusty).
-Migracja asm → C# zakończona; dalej: usuwanie śladów emulacji (rejestry, ramki, adresy pamięci zamiast pól) i dopiero
-potem poprawki zachowania z listy niżej – po decyzji użytkownika.
+Stan 2026-10-24: migracja asm → C# zakończona (2026-10-19), B0 – B2 i B4 zrobione (B4 do granicy opisanej wyżej),
+B3 odłożone na koniec, trwa B5 (tabele z CIV.EXE). Robić kilka porcji naraz, potem jeden pełny zestaw i jedna runda
+mutacji (prośba użytkownika). Poprawki zachowania z listy niżej – za przełącznikami `Classic…` (remaster), po decyzji
+użytkownika.
 
 ## Błędy przetłumaczonego kodu zachowane celowo (baseline je ma, naprawić na końcu)
 

@@ -2146,7 +2146,7 @@ namespace Civilization1Remaster.Game
 			{
 				RenderCitizenIcons(townIdx, 100, (short)this.round.IconVert, this.round.Specialists, 92);
 				this.owner.Services.RenderPictureToScreen(ScreenBox, 208, (short)this.round.IconVert + 4,
-					this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((0xe << 1) + 0xd4ce)));
+					SpritePicture(0xe));
 				this.round.IconVert = (ushort)(this.round.IconVert + 0x10);
 				this.owner.VideoCard.RenderLine(ScreenBox,
 					100, (short)this.round.IconVert - 2, 222, (short)this.round.IconVert - 2, 1);
@@ -2359,7 +2359,7 @@ namespace Civilization1Remaster.Game
 						{
 							this.round.NewUnit = drawn;
 							this.owner.Services.RenderPictureToScreen(ScreenBox, (short)this.round.IconHoriz,
-								(short)this.round.IconVert + 4, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((0xd << 1) + 0xd4ce)));
+								(short)this.round.IconVert + 4, SpritePicture(0xd));
 							this.round.IconHoriz = (ushort)(this.round.IconHoriz - 2);
 						}
 
@@ -2620,19 +2620,19 @@ namespace Civilization1Remaster.Game
 				if (CityUnitUpkeep != 0)
 				{
 					this.owner.Services.RenderPictureToScreen(ScreenBox, (short)this.round.DrawHoriz + 8,
-						(short)this.round.DrawVert + 12, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((0x9 << 1) + 0xd4ce)));
+						(short)this.round.DrawVert + 12, SpritePicture(0x9));
 				}
 
 				if (this.troops.Pull(owner, troopIdx, UnitMemory.Kind) == 0)
 				{
 					// The food of settlers
 					this.owner.Services.RenderPictureToScreen(ScreenBox, (short)this.round.DrawHoriz,
-						(short)this.round.DrawVert + 12, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((0x8 << 1) + 0xd4ce)));
+						(short)this.round.DrawVert + 12, SpritePicture(0x8));
 
 					if (player.RegimeKind >= 2)
 					{
 						this.owner.Services.RenderPictureToScreen(ScreenBox, (short)this.round.DrawHoriz + 2,
-							(short)this.round.DrawVert + 12, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((0x8 << 1) + 0xd4ce)));
+							(short)this.round.DrawVert + 12, SpritePicture(0x8));
 					}
 				}
 				else
@@ -2650,12 +2650,12 @@ namespace Civilization1Remaster.Game
 							this.troops.Pull(owner, troopIdx, UnitMemory.Vert) != (byte)(sbyte)town.Place.Y))
 					{
 						this.owner.Services.RenderPictureToScreen(ScreenBox, (short)this.round.DrawHoriz,
-							(short)this.round.DrawVert + 12, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((0xd << 1) + 0xd4ce)));
+							(short)this.round.DrawVert + 12, SpritePicture(0xd));
 
 						if ((short)this.round.Value > 1)
 						{
 							this.owner.Services.RenderPictureToScreen(ScreenBox, (short)this.round.DrawHoriz + 2,
-								(short)this.round.DrawVert + 12, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((0xd << 1) + 0xd4ce)));
+								(short)this.round.DrawVert + 12, SpritePicture(0xd));
 						}
 					}
 				}
@@ -2824,7 +2824,7 @@ namespace Civilization1Remaster.Game
 
 				this.round.ImprovementCount = (ushort)(this.round.ImprovementCount + 1);
 				this.owner.Services.RenderPictureToScreen(ScreenBox, 309, (short)this.round.Vert + 1,
-					this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((0xb << 1) + 0xd4ce)));
+					SpritePicture(0xb));
 				RenderImprovementName(improvement, 56, false);
 			}
 		}
@@ -2832,7 +2832,7 @@ namespace Civilization1Remaster.Game
 		/// <summary>A row of the improvement list: the name (upper case, within the width), the icon (left or right by the row)</summary>
 		private void RenderImprovementName(ushort improvement, ushort width, bool shrinkFirst)
 		{
-			this.processor.RegAcc.Value16 = (ushort)(improvement * 0x1e + 0xbb8);
+			this.processor.RegAcc.Value16 = BuildingText(improvement);
 			this.owner.Libc.CopyText(0xba06, this.processor.RegAcc.Value16);
 
 			if (shrinkFirst)
@@ -2926,7 +2926,7 @@ namespace Civilization1Remaster.Game
 			if (town.PresentMakingIdx >= 0)
 			{
 				this.owner.Services.RenderPictureToScreen(ScreenBox, 264, 100,
-					this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((((byte)town.PresentMakingIdx + (owner << 5) + 0x40) << 1) + 0xd4ce)));
+					SpritePicture(((byte)town.PresentMakingIdx + (owner << 5) + 0x40)));
 			}
 			else
 			{
@@ -2955,7 +2955,7 @@ namespace Civilization1Remaster.Game
 					((((short)this.round.Index % ((short)this.round.CostFactor * (short)this.round.ShieldsPerRow)) *
 						(short)this.round.Value) / (short)this.round.ShieldsPerRow) + 232,
 					(((short)this.round.Index / ((short)this.round.CostFactor * (short)this.round.ShieldsPerRow)) * 8) + 117,
-					this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((0x9 << 1) + 0xd4ce)));
+					SpritePicture(0x9));
 			}
 
 			this.round.Index = shield;
@@ -3013,7 +3013,7 @@ namespace Civilization1Remaster.Game
 				this.owner.Services.RenderPictureToScreen(ScreenBox,
 					(((short)this.round.Index % (short)this.processor.RegSource.Value16) * (short)this.round.Value) + 4,
 					(((short)this.round.Index / (short)this.processor.RegSource.Value16) * (short)this.round.DrawVert) + 116,
-					this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((0x8 << 1) + 0xd4ce)));
+					SpritePicture(0x8));
 			}
 		}
 
@@ -3063,7 +3063,7 @@ namespace Civilization1Remaster.Game
 
 					this.owner.Services.RenderPictureToScreen(ScreenBox, (short)this.round.Horiz,
 						((short)this.round.Item * 8) + (short)this.round.DrawVert,
-						this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(((row + 8) << 1) + 0xd4ce)));
+						SpritePicture((row + 8)));
 
 					this.processor.RegAcc.Value16 = this.round.Value;
 					this.round.Horiz = (ushort)(this.round.Horiz + this.processor.RegAcc.Value16);
@@ -3110,7 +3110,7 @@ namespace Civilization1Remaster.Game
 			{
 				this.round.Index = drawn;
 				this.owner.Services.RenderPictureToScreen(ScreenBox, (short)this.round.Horiz / 2,
-					(short)this.round.DrawVert + 24, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((icon << 1) + 0xd4ce)));
+					(short)this.round.DrawVert + 24, SpritePicture(icon));
 				this.processor.RegAcc.Value16 = this.round.Value;
 				this.round.Horiz = (ushort)(this.round.Horiz + this.processor.RegAcc.Value16);
 			}
@@ -3142,7 +3142,7 @@ namespace Civilization1Remaster.Game
 					this.owner.Services.RenderPictureToScreen(ScreenBox,
 						((short)this.round.Index * (short)this.round.Value) + 8,
 						(short)this.round.DrawVert,
-						this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((0x8 << 1) + 0xd4ce)));
+						SpritePicture(0x8));
 				}
 
 				this.round.Index = icon;
@@ -3165,7 +3165,7 @@ namespace Civilization1Remaster.Game
 					this.owner.Services.RenderPictureToScreen(ScreenBox,
 						((short)this.round.Index * (short)this.round.Value) + 8,
 						(short)this.round.DrawVert + 8,
-						this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((0x9 << 1) + 0xd4ce)));
+						SpritePicture(0x9));
 				}
 
 				this.round.Index = icon;
@@ -3827,7 +3827,7 @@ namespace Civilization1Remaster.Game
 				ushort price = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(0x1e * improvement + 0xbd0));
 
 				Message("Do you want to sell\nyour ")
-					.Text((ushort)(0x1e * improvement + 0xbb8))
+					.Text(BuildingText(improvement))
 					.Text(" for ")
 					.Number((short)(0xa * (short)price))
 					.Text("$?\n No.\n Yes.\n");
@@ -4249,7 +4249,7 @@ namespace Civilization1Remaster.Game
 					if (human && player.RegimeKind != 0)
 					{
 						Message("'We love the ")
-							.Text(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((player.RegimeKind << 1) + 0x19b2)))
+							.Text(GovernmentTitle(player.RegimeKind))
 							.Text("'\nday celebrated in\n")
 							.City(townIdx)
 							.Text("!\n");
@@ -4292,7 +4292,7 @@ namespace Civilization1Remaster.Game
 			{
 				this.owner.Services.PerformSound(0x23, 0);
 				Message("'We love the ")
-					.Text(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((player.RegimeKind << 1) + 0x19b2)))
+					.Text(GovernmentTitle(player.RegimeKind))
 					.Text("'\ncelebration canceled\nin ")
 					.City(townIdx)
 					.Text(".\n");
@@ -4517,7 +4517,7 @@ namespace Civilization1Remaster.Game
 				EmptyMessage()
 					.City(townIdx)
 					.Text("\ncan't maintain\n")
-					.Text((ushort)(improvement * 0x1e + 0xbb8))
+					.Text(BuildingText(improvement))
 					.Text(".\n")
 					.Style(4)
 					.Dialog(100, 80);
@@ -5105,7 +5105,7 @@ namespace Civilization1Remaster.Game
 
 					this.owner.Services.RenderPictureToScreen(ScreenBox,
 						161 + (this.owner.TownDeltas[townTile].X * 16) + iconHoriz, 57 + (this.owner.TownDeltas[townTile].Y * 16) + iconVert,
-						this.processor.PullGlobalWord((ushort)(((resource + 8) << 1) + 0xd4ce)));
+						SpritePicture((resource + 8)));
 
 					if (iconHoriz < 8)
 					{
@@ -5123,7 +5123,7 @@ namespace Civilization1Remaster.Game
 			{
 				this.owner.Services.RenderPictureToScreen(ScreenBox,
 					165 + (this.owner.TownDeltas[townTile].X * 16), 61 + (this.owner.TownDeltas[townTile].Y * 16),
-					this.processor.PullGlobalWord((0xd << 1) + 0xd4ce));
+					SpritePicture(0xd));
 			}
 
 			this.processor.EmitGlobalWord(0x2494, 0);

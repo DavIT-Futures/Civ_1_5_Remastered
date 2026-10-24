@@ -213,7 +213,7 @@ namespace Civilization1Remaster.Game
 
 			this.processor.RegDest.Value16 = (ushort)(participantIdx << 1);
 
-			this.owner.Libc.CopyText(CodeText1, this.processor.PullGlobalWord((ushort)(((ushort)participantIdx << 1) + 0x1982)));
+			this.owner.Libc.CopyText(CodeText1, CivilizationName((ushort)participantIdx));
 
 			this.owner.Libc.CopyText(CodeText2, this.processor.PullGlobalWord((ushort)(names + 0x1982)));
 

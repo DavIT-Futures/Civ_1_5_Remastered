@@ -329,9 +329,9 @@ namespace Civilization1Remaster.Game
 				{
 					ushort heading = (ushort)(this.owner.Libc.Dice.DrawInt(8) + 1);
 
-					horizLoc = (short)(horizLoc + this.processor.PullGlobalSignedWord((ushort)((heading << 1) + 0x1882)));
+					horizLoc = (short)(horizLoc + (short)DirectionHoriz(heading));
 
-					vertLoc = (short)(vertLoc + this.processor.PullGlobalSignedWord((ushort)((heading << 1) + 0x18e4)));
+					vertLoc = (short)(vertLoc + (short)DirectionVert(heading));
 				}
 
 				ushort dot = this.owner.VideoCard.ObtainDot(1, horizLoc, vertLoc);
@@ -1080,8 +1080,8 @@ namespace Civilization1Remaster.Game
 					{
 						lastDirection = direction;
 
-						short nextHoriz = (short)((this.processor.PullGlobalWord((ushort)((direction << 1) + 0x1882)) << 2) + horizLoc);
-						short nextVert = (short)((this.processor.PullGlobalWord((ushort)((direction << 1) + 0x18e4)) << 2) + vertLoc);
+						short nextHoriz = (short)((DirectionHoriz(direction) << 2) + horizLoc);
+						short nextVert = (short)((DirectionVert(direction) << 2) + vertLoc);
 
 						neighbour = (nextHoriz, nextVert);
 
@@ -1100,8 +1100,8 @@ namespace Civilization1Remaster.Game
 
 						LinkLandmassBlock(column, row, direction - 1);
 
-						short nextColumn = (short)(this.processor.PullGlobalWord((ushort)((direction << 1) + 0x1882)) + column);
-						short nextRow = (short)(this.processor.PullGlobalWord((ushort)((direction << 1) + 0x18e4)) + row);
+						short nextColumn = (short)(DirectionHoriz(direction) + column);
+						short nextRow = (short)(DirectionVert(direction) + row);
 
 						neighbour = (nextColumn, nextRow);
 

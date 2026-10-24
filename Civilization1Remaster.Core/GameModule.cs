@@ -1214,5 +1214,47 @@ namespace Civilization1Remaster
 			set => this.processor.EmitGlobalWord(0x804e, value);
 		}
 		#endregion
+
+		#region Tables of CIV.EXE in the data segment, read where the original reads them
+
+		/// <summary>The address of the name of the technology (records of 0x16 bytes at 0x4da)</summary>
+		protected static ushort TechnologyText(int index) => (ushort)(0x16 * index + 0x4da);
+
+		/// <summary>The address of the name of the building (records of 0x1e bytes from 0xb9a, the name at 0xbb8 + 0x1e * building)</summary>
+		protected static ushort BuildingText(int index) => (ushort)(0x1e * index + 0xbb8);
+
+		/// <summary>The address of the name of the wonder (records of 0x1e bytes, the name at 0xe6a + 0x1e * wonder)</summary>
+		protected static ushort WonderText(int index) => (ushort)(0x1e * index + 0xe6a);
+
+		/// <summary>The address of the name of the unit kind (records of 0x22 bytes at 0x112a, UnitKindTable)</summary>
+		protected static ushort UnitText(int index) => (ushort)(0x22 * index + 0x112a);
+
+		/// <summary>0x1982 + 2 * index: the text of the name of the civilization of the player ("Babylonian")</summary>
+		protected ushort CivilizationName(int index) => this.processor.PullGlobalWord((ushort)((index << 1) + 0x1982));
+
+		/// <summary>0x1992 + 2 * index: the text of the plural name of the civilization of the player ("Babylonians")</summary>
+		protected ushort CivilizationPlural(int index) => this.processor.PullGlobalWord((ushort)((index << 1) + 0x1992));
+
+		/// <summary>0x19a2 + 2 * index: the text of the name of the leader of the player</summary>
+		protected ushort LeaderName(int index) => this.processor.PullGlobalWord((ushort)((index << 1) + 0x19a2));
+
+		/// <summary>0x1966 + 2 * index: the text of the name of the government</summary>
+		protected ushort GovernmentName(int index) => this.processor.PullGlobalWord((ushort)((index << 1) + 0x1966));
+
+		/// <summary>0x19b2 + 2 * index: the text of the title of the leader under the government</summary>
+		protected ushort GovernmentTitle(int index) => this.processor.PullGlobalWord((ushort)((index << 1) + 0x19b2));
+
+		/// <summary>0x1946 + 2 * index: the colour of the player</summary>
+		protected ushort PlayerColour(int index) => this.processor.PullGlobalWord((ushort)((index << 1) + 0x1946));
+
+		/// <summary>0x1882 + 2 * index: the x step of the direction (0 the tile itself, 1 - 8 the neighbours, then the second ring)</summary>
+		protected ushort DirectionHoriz(int index) => this.processor.PullGlobalWord((ushort)((index << 1) + 0x1882));
+
+		/// <summary>0x18e4 + 2 * index: the y step of the direction</summary>
+		protected ushort DirectionVert(int index) => this.processor.PullGlobalWord((ushort)((index << 1) + 0x18e4));
+
+		/// <summary>0xd4ce + 2 * index: the picture of the sprite (0x40 + 32 * player + unit kind: the units of the players)</summary>
+		protected ushort SpritePicture(int index) => this.processor.PullGlobalWord((ushort)((index << 1) + 0xd4ce));
+		#endregion
 	}
 }

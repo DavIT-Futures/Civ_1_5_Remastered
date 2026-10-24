@@ -658,9 +658,9 @@ namespace Civilization1Remaster.Game
 			{
 				Player person = this.owner.World.Participants[this.owner.World.PersonParticipantIdx];
 
-				Message(this.processor.PullGlobalWord((ushort)((person.RegimeKind << 1) + 0x19b2)))
+				Message(GovernmentTitle(person.RegimeKind))
 					.Text(" ")
-					.Text(this.processor.PullGlobalWord((ushort)((this.owner.World.PersonParticipantIdx << 1) + 0x19a2)))
+					.Text(LeaderName(this.owner.World.PersonParticipantIdx))
 					.Text("\nplans retirement\nin 20 years.\n");
 
 				this.owner.Paper.DisplayNewspaper(-1);
@@ -697,7 +697,7 @@ namespace Civilization1Remaster.Game
 
 				RepaintMainScreen();
 
-				Message(this.processor.PullGlobalWord((ushort)((ArrivedSpaceship << 1) + 0x1982)))
+				Message(CivilizationName(ArrivedSpaceship))
 					.Text(" spaceship\narrives at Alpha Centauri.\n");
 
 				this.owner.Paper.DisplayNewspaper(-1);
@@ -705,7 +705,7 @@ namespace Civilization1Remaster.Game
 
 			if ((short)(0x834 - (0x14 * this.owner.World.HardnessTier)) == this.owner.World.Season)
 			{
-				Message(this.processor.PullGlobalWord((ushort)((this.owner.World.PersonParticipantIdx << 1) + 0x19a2)))
+				Message(LeaderName(this.owner.World.PersonParticipantIdx))
 					.Text(" dynasty\nends after glorious\n6000 year reign!\n");
 
 				ushort leader = (ushort)(0x3a * this.owner.World.Participants[this.owner.World.PersonParticipantIdx].ChiefVisuals);
@@ -1274,7 +1274,7 @@ namespace Civilization1Remaster.Game
 			short previousMark = (short)PopulationMark;
 
 			Message("The population of the\nfertile ")
-				.Text(this.processor.PullGlobalWord((ushort)((this.owner.World.PersonParticipantIdx << 1) + 0x1982)))
+				.Text(CivilizationName(this.owner.World.PersonParticipantIdx))
 				.Text(" empire now\nexceeds ");
 
 			if (population < 100)
@@ -1626,7 +1626,7 @@ namespace Civilization1Remaster.Game
 			EmptyMessage()
 				.City((short)cityIdx)
 				.Text(" (")
-				.Text(this.processor.PullGlobalWord((ushort)((rivalIdx << 1) + 0x1982)))
+				.Text(CivilizationName(rivalIdx))
 				.Text(")\nbuilds ")
 				.Text((ushort)(wonder + 0xe6a))
 				.Text(".\n");

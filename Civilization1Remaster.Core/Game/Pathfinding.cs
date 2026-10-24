@@ -80,8 +80,8 @@ namespace Civilization1Remaster.Game
 			{
 				this.processor.RegSource.Value16 = (ushort)(candidate << 1);
 
-				if ((short)this.processor.PullGlobalWord((ushort)((candidate << 1) + 0x1882)) == shiftHoriz &&
-					(short)this.processor.PullGlobalWord((ushort)((candidate << 1) + 0x18e4)) == shiftVert)
+				if ((short)DirectionHoriz(candidate) == shiftHoriz &&
+					(short)DirectionVert(candidate) == shiftVert)
 				{
 					direction = candidate;
 					break;
@@ -199,8 +199,8 @@ namespace Civilization1Remaster.Game
 			{
 				this.processor.EmitLocalWord(0x18, direction);
 
-				short stepHoriz = (short)this.processor.PullGlobalWord((ushort)((direction << 1) + 0x1882));
-				short stepVert = (short)this.processor.PullGlobalWord((ushort)((direction << 1) + 0x18e4));
+				short stepHoriz = (short)DirectionHoriz(direction);
+				short stepVert = (short)DirectionVert(direction);
 				short nextHoriz = (short)(this.processor.PullGlobalByte((ushort)(troop + 0x81d5)) + stepHoriz);
 				short nextVert = (short)(this.processor.PullGlobalByte((ushort)(troop + 0x81d6)) + stepVert);
 				short leftHoriz = (short)(shiftHoriz - stepHoriz);
@@ -418,7 +418,7 @@ namespace Civilization1Remaster.Game
 		/// <summary>The column of the block in the direction, wrapping at 20</summary>
 		private short RouteNeighbourColumn(short direction, short column)
 		{
-			short nextColumn = (short)(this.processor.PullGlobalWord((ushort)((direction << 1) + 0x1882)) + column);
+			short nextColumn = (short)(DirectionHoriz(direction) + column);
 
 			if (nextColumn == 0x14)
 				nextColumn = 0;
@@ -476,7 +476,7 @@ namespace Civilization1Remaster.Game
 						continue;
 
 					nextColumn = RouteNeighbourColumn(direction, column);
-					nextRow = (short)(this.processor.PullGlobalWord((ushort)((direction << 1) + 0x18e4)) + row);
+					nextRow = (short)(DirectionVert(direction) + row);
 					neighbourSet = true;
 
 					ushort block = (ushort)((ushort)(0xd * nextColumn) + nextRow + 0xd816);
@@ -514,7 +514,7 @@ namespace Civilization1Remaster.Game
 						continue;
 
 					nextColumn = RouteNeighbourColumn(direction, unitColumn);
-					nextRow = (short)(this.processor.PullGlobalWord((ushort)((direction << 1) + 0x18e4)) + unitRow);
+					nextRow = (short)(DirectionVert(direction) + unitRow);
 					neighbourSet = true;
 
 					short blockSteps = (sbyte)this.processor.PullGlobalByte((ushort)((ushort)(0xd * nextColumn) + nextRow + 0xd816));
@@ -585,10 +585,10 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private void AimRouteStep(short direction, short unitColumn, short unitRow, bool sea)
 		{
-			GoalHoriz = (ushort)((((short)this.processor.PullGlobalWord((ushort)((direction << 1) + 0x1882)) + unitColumn) << 2) + 1);
+			GoalHoriz = (ushort)((((short)DirectionHoriz(direction) + unitColumn) << 2) + 1);
 
 			GoalHoriz = (ushort)TunePosition((short)GoalHoriz);
-			GoalVert = (ushort)((((short)this.processor.PullGlobalWord((ushort)((direction << 1) + 0x18e4)) + unitRow) << 2) + 1);
+			GoalVert = (ushort)((((short)DirectionVert(direction) + unitRow) << 2) + 1);
 
 			if ((this.owner.MapOps.ObtainTerrainType((short)GoalHoriz, (short)GoalVert) == 0xa) == sea)
 				return;
@@ -627,8 +627,8 @@ namespace Civilization1Remaster.Game
 
 				for (int directionIdx = 1; directionIdx <= 8; directionIdx++)
 				{
-					short nextHoriz = (short)(this.processor.PullGlobalWord((ushort)((directionIdx << 1) + 0x1882)) + blockHoriz);
-					short nextVert = (short)(this.processor.PullGlobalWord((ushort)((directionIdx << 1) + 0x18e4)) + blockVert);
+					short nextHoriz = (short)(DirectionHoriz(directionIdx) + blockHoriz);
+					short nextVert = (short)(DirectionVert(directionIdx) + blockVert);
 
 					if (!BlockMarked(blocks, nextHoriz, nextVert))
 						continue;
@@ -658,8 +658,8 @@ namespace Civilization1Remaster.Game
 
 			if (found != -1)
 			{
-				GoalHoriz = (ushort)(this.processor.PullGlobalWord((ushort)((found << 1) + 0x1882)) + blockHoriz);
-				GoalVert = (ushort)(this.processor.PullGlobalWord((ushort)((found << 1) + 0x18e4)) + blockVert);
+				GoalHoriz = (ushort)(DirectionHoriz(found) + blockHoriz);
+				GoalVert = (ushort)(DirectionVert(found) + blockVert);
 				result = 1;
 			}
 
@@ -827,7 +827,7 @@ namespace Civilization1Remaster.Game
 			{
 				this.processor.EmitLocalWord(0x3c, (ushort)direction);
 
-				short nextHoriz = (short)(this.processor.PullGlobalWord((ushort)((direction << 1) + 0x1882)) + horizLoc);
+				short nextHoriz = (short)(DirectionHoriz(direction) + horizLoc);
 				this.processor.EmitLocalWord(0x40, (ushort)nextHoriz);
 
 				if (this.owner.Libc.AbsoluteValue((short)(nextHoriz - GoalHoriz)) >= 8)
@@ -836,7 +836,7 @@ namespace Civilization1Remaster.Game
 				short tileHoriz = (short)TunePosition(nextHoriz);
 				this.processor.EmitLocalWord(0xc, (ushort)tileHoriz);
 
-				short nextVert = (short)(this.processor.PullGlobalWord((ushort)((direction << 1) + 0x18e4)) + vertLoc);
+				short nextVert = (short)(DirectionVert(direction) + vertLoc);
 				this.processor.EmitLocalWord(0x44, (ushort)nextVert);
 
 				if (this.owner.Libc.AbsoluteValue((short)(nextVert - GoalVert)) >= 8)
@@ -903,7 +903,7 @@ namespace Civilization1Remaster.Game
 			{
 				this.processor.EmitLocalWord(0x3c, (ushort)direction);
 
-				short nextHoriz = (short)(this.processor.PullGlobalWord((ushort)((direction << 1) + 0x1882)) + unitHoriz);
+				short nextHoriz = (short)(DirectionHoriz(direction) + unitHoriz);
 				short place = (short)GoalHoriz;
 
 				if (this.owner.Libc.AbsoluteValue((short)(nextHoriz - place)) >= 0x48)
@@ -917,7 +917,7 @@ namespace Civilization1Remaster.Game
 				short tileHoriz = (short)TunePosition(nextHoriz);
 				this.processor.EmitLocalWord(0xc, (ushort)tileHoriz);
 
-				short nextVert = (short)(this.processor.PullGlobalWord((ushort)((direction << 1) + 0x18e4)) + unitVert);
+				short nextVert = (short)(DirectionVert(direction) + unitVert);
 				this.processor.EmitLocalWord(0x44, (ushort)nextVert);
 
 				if (this.owner.Libc.AbsoluteValue((short)(nextVert - GoalVert)) >= 8)

@@ -123,9 +123,9 @@ namespace Civilization1Remaster.UI
 				ushort nextKind = 0xffff;
 
 				// Technologies, improvements and wonders (1 - 0x2d), units, terrains, concepts (names through 0x3c64)
-				FindNextCivilopediaEntry(part, 0, 0, 0x43, idx => (ushort)((0x16 * idx) + 0x4da), lastName, nextName, ref nextIdx, ref nextKind);
+				FindNextCivilopediaEntry(part, 0, 0, 0x43, idx => TechnologyText(idx), lastName, nextName, ref nextIdx, ref nextKind);
 				FindNextCivilopediaEntry(part, 1, 1, 0x2e, idx => (ushort)((0x1e * idx) + 0xb9a), lastName, nextName, ref nextIdx, ref nextKind);
-				FindNextCivilopediaEntry(part, 2, 0, 0x1c, idx => (ushort)((0x22 * idx) + 0x112a), lastName, nextName, ref nextIdx, ref nextKind);
+				FindNextCivilopediaEntry(part, 2, 0, 0x1c, idx => UnitText(idx), lastName, nextName, ref nextIdx, ref nextKind);
 				FindNextCivilopediaEntry(part, 3, 0, 0xc, idx => (ushort)((0x13 * idx) + 0x282), lastName, nextName, ref nextIdx, ref nextKind);
 				FindNextCivilopediaEntry(part, 4, 0, 0x15, idx => this.processor.PullGlobalWord((ushort)((idx << 1) + 0x3c64)), lastName, nextName, ref nextIdx, ref nextKind);
 
@@ -497,7 +497,7 @@ namespace Civilization1Remaster.UI
 							110, 68, 62, 42);
 					}
 
-					this.owner.Libc.CopyText(0xba06, (ushort)((short)0x16 * (short)scienceIdx + 0x4da));
+					this.owner.Libc.CopyText(0xba06, TechnologyText((short)scienceIdx));
 					this.owner.TextPainter.RenderCenteredTextToScreen0(0x3cf2, titleX, 36, 7);
 					break;
 
@@ -542,7 +542,7 @@ namespace Civilization1Remaster.UI
 							158, 61, 88, 42);
 					}
 
-					this.owner.Libc.CopyText(0xba06, (ushort)((short)0x22 * (short)scienceIdx + 0x112a));
+					this.owner.Libc.CopyText(0xba06, UnitText((short)scienceIdx));
 					this.owner.TextPainter.RenderCenteredTextToScreen0(0x3d5a, titleX, 36, 7);
 					this.owner.Services.RenderPictureToScreen(
 						ScreenBox,
@@ -593,14 +593,14 @@ namespace Civilization1Remaster.UI
 			if (req1 != 0xff)
 			{
 				Message("Requires ")
-					.Text((ushort)((short)(sbyte)0x16 * (short)(sbyte)req1 + 0x4da));
+					.Text(TechnologyText((short)(sbyte)req1));
 			}
 
 			byte req2 = this.processor.PullUInt8(dataSeg, (ushort)(techSpecAddr + 0x4ef));
 			if (req2 != 0xff)
 			{
 				this.owner.Libc.AppendText(0xba06, " and ");
-				this.owner.Libc.AppendText(0xba06, (ushort)((short)(sbyte)0x16 * (short)(sbyte)req2 + 0x4da));
+				this.owner.Libc.AppendText(0xba06, TechnologyText((short)(sbyte)req2));
 			}
 
 			this.owner.TextPainter.RenderTextToScreen0(0xba06, 32, cursorY, 1);
@@ -620,7 +620,7 @@ namespace Civilization1Remaster.UI
 					if (companion != 0xff)
 					{
 						this.owner.Libc.AppendText(0xba06, " (with ");
-						this.owner.Libc.AppendText(0xba06, (ushort)((short)(sbyte)0x16 * (short)(sbyte)companion + 0x4da));
+						this.owner.Libc.AppendText(0xba06, TechnologyText((short)(sbyte)companion));
 						this.owner.Libc.AppendText(0xba06, ")");
 					}
 
@@ -636,7 +636,7 @@ namespace Civilization1Remaster.UI
 					if (companion != 0xff)
 					{
 						this.owner.Libc.AppendText(0xba06, " (with ");
-						this.owner.Libc.AppendText(0xba06, (ushort)((short)(sbyte)0x16 * (short)(sbyte)companion + 0x4da));
+						this.owner.Libc.AppendText(0xba06, TechnologyText((short)(sbyte)companion));
 						this.owner.Libc.AppendText(0xba06, ")");
 					}
 
@@ -712,7 +712,7 @@ namespace Civilization1Remaster.UI
 			ushort impSpec = (ushort)(0x1e * scienceIdx);
 			this.owner.Libc.CopyText(0xba06, "Requires ");
 			ushort reqTech = this.processor.PullUInt16(dataSeg, (ushort)(impSpec + 0xbb6));
-			this.owner.Libc.AppendText(0xba06, (ushort)((short)0x16 * (short)reqTech + 0x4da));
+			this.owner.Libc.AppendText(0xba06, TechnologyText((short)reqTech));
 			this.owner.TextPainter.RenderTextToScreen0(0xba06, 12, cursorY, 9);
 			cursorY = (short)(cursorY + 8);
 
@@ -736,7 +736,7 @@ namespace Civilization1Remaster.UI
 			ushort unitSpec = (ushort)(0x22 * scienceIdx);
 			this.owner.Libc.CopyText(0xba06, "Requires ");
 			ushort reqTech = this.processor.PullUInt16(dataSeg, (ushort)(unitSpec + 0x114a));
-			this.owner.Libc.AppendText(0xba06, (ushort)((short)0x16 * (short)reqTech + 0x4da));
+			this.owner.Libc.AppendText(0xba06, TechnologyText((short)reqTech));
 			if (scienceIdx == 0x19)
 			{
 				this.owner.Libc.AppendText(0xba06, " and Nuclear Fission");

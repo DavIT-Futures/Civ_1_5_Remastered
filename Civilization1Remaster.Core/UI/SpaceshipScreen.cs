@@ -743,7 +743,7 @@ namespace Civilization1Remaster.UI
 		{
 			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
 
-			Message(this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1992)))
+			Message(CivilizationPlural(participantIdx))
 				.Text(" build space ship.\n");
 
 			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 96, 15);
@@ -985,7 +985,7 @@ namespace Civilization1Remaster.UI
 
 				for (int participantIdx = 1; participantIdx < 8; participantIdx++)
 				{
-					this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1982)));
+					this.owner.Libc.AppendText(0xba06, CivilizationName(participantIdx));
 
 					this.owner.Libc.AppendText(0xba06, "\n ");
 				}
@@ -1024,7 +1024,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.TurnLogic.AwaitForKey();
 
-			Message(this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1992)))
+			Message(CivilizationPlural(participantIdx))
 				.Text(" LAUNCH space ship!");
 
 			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 92, 15);
