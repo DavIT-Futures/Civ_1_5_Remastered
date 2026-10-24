@@ -1,4 +1,5 @@
 using Civilization1Remaster.Emulation;
+using Civilization1Remaster.Game.Rules;
 using Civilization1Remaster.Game.State;
 
 namespace Civilization1Remaster.Game
@@ -366,10 +367,10 @@ namespace Civilization1Remaster.Game
 
 			byte homeIdx = this.processor.PullGlobalByte((ushort)(troop + 0x81df));
 
-			// AX holds the home city's offset like in the original (a unit without a home, 0xff, throws here)
+			// AX holds the home city's offset like in the original (for a unit without a home, 0xff, see HomeOwner)
 			this.processor.RegAcc.Value16 = (ushort)(0x1c * (sbyte)homeIdx);
 
-			if (this.owner.World.Towns[homeIdx].ParticipantIdx != this.owner.World.Towns[townIdx].ParticipantIdx)
+			if (HomeOwner(participantIdx, homeIdx) != this.owner.World.Towns[townIdx].ParticipantIdx)
 			{
 				this.owner.UnitOps.EliminateUnit(participantIdx, (short)troopIdx);
 
@@ -403,10 +404,10 @@ namespace Civilization1Remaster.Game
 		{
 			ushort playerUnits = (ushort)(0x600 * participantIdx);
 
-			// AX holds the home city's offset like in the original (a unit without a home, 0xff, throws here)
+			// AX holds the home city's offset like in the original (for a unit without a home, 0xff, see HomeOwner)
 			this.processor.RegAcc.Value16 = (ushort)(0x1c * (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81df)));
 
-			short homeOwner = this.owner.World.Towns[this.processor.PullGlobalByte((ushort)(troop + 0x81df))].ParticipantIdx;
+			short homeOwner = HomeOwner(participantIdx, this.processor.PullGlobalByte((ushort)(troop + 0x81df)));
 			short next = (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81de));
 
 			if ((ushort)homeOwner != (ushort)rebelIdx)
@@ -422,7 +423,7 @@ namespace Civilization1Remaster.Game
 					short following = (sbyte)this.processor.PullGlobalByte((ushort)(other + 0x81de));
 					this.processor.RegAcc.Value16 = (ushort)(0x1c * (sbyte)this.processor.PullGlobalByte((ushort)(other + 0x81df)));
 
-					if (this.owner.World.Towns[this.processor.PullGlobalByte((ushort)(other + 0x81df))].ParticipantIdx != homeOwner)
+					if (HomeOwner(participantIdx, this.processor.PullGlobalByte((ushort)(other + 0x81df))) != homeOwner)
 					{
 						this.processor.EmitGlobalByte((ushort)(other + 0x81df), this.processor.PullGlobalByte((ushort)((ushort)(0xc * troopIdx) + playerUnits + 0x81df)));
 					}
@@ -475,7 +476,7 @@ namespace Civilization1Remaster.Game
 					this.processor.EmitGlobalByte((ushort)(joinedCopy + 0x81d4), (byte)(this.processor.PullGlobalByte((ushort)(troop + 0x81d4)) & 0xfe));
 					this.processor.RegAcc.Value16 = (ushort)(0x1c * (sbyte)this.processor.PullGlobalByte((ushort)(other + 0x81df)));
 
-					if (this.owner.World.Towns[this.processor.PullGlobalByte((ushort)(other + 0x81df))].ParticipantIdx != homeOwner)
+					if (HomeOwner(participantIdx, this.processor.PullGlobalByte((ushort)(other + 0x81df))) != homeOwner)
 					{
 						this.processor.EmitGlobalByte((ushort)(joinedCopy + 0x81df), this.processor.PullGlobalByte((ushort)(troop + 0x81df)));
 					}
@@ -484,6 +485,14 @@ namespace Civilization1Remaster.Game
 				next = following;
 			}
 		}
+
+		/// <summary>
+		/// The owner of the home city of a unit of the player; a unit without a home city counts as homed with the player
+		/// (HomeCityRules.HasHome)
+		/// </summary>
+		private short HomeOwner(short participantIdx, byte homeIdx) =>
+			HomeCityRules.HasHome(homeIdx, this.owner.TurnHooks.ClassicSchismHomes) ?
+				this.owner.World.Towns[homeIdx].ParticipantIdx : participantIdx;
 
 		/// <summary>
 		/// ?

@@ -61,6 +61,8 @@ namespace Civilization1Remaster.Tests.GoldenMaster
 			this.Engine.TurnHooks.ClassicTechnologyNews = true;
 			this.Engine.TurnHooks.ClassicRailroads = true;
 			this.Engine.TurnHooks.ClassicWonderCities = true;
+			this.Engine.TurnHooks.ClassicSchismHomes = true;
+			this.Engine.TurnHooks.ClassicMilitaryReportRows = true;
 
 			this.keyboard = new ScriptedKeyboard(this.processor, this.Engine.VideoCard.Tokens, this.Engine.VideoCard.VideoLatch,
 				script ?? ScriptedKeyboard.DefaultScript);

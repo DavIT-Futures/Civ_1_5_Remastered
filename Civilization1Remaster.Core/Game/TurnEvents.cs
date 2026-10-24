@@ -42,6 +42,20 @@ namespace Civilization1Remaster.Game
 		public bool ClassicWonderCities { get; set; }
 
 		/// <summary>
+		/// The schism (DivideCivilization) reads the owner of the home city also for a unit without one (0xff), as the
+		/// translated code did it: IndexOutOfRangeException (HomeCityRules.HasHome). The tests turn it on (HeadlessGame),
+		/// like ClassicHealing.
+		/// </summary>
+		public bool ClassicSchismHomes { get; set; }
+
+		/// <summary>
+		/// The military report takes the player of a chosen row from the stack frame also for a row of a player without
+		/// contact, which never wrote it (garbage, IndexOutOfRangeException from 8 up), as the translated code did it. The
+		/// tests turn it on (HeadlessGame), like ClassicHealing.
+		/// </summary>
+		public bool ClassicMilitaryReportRows { get; set; }
+
+		/// <summary>
 		/// Units heal lost hit points every turn (HealingRules): 2 in an own city; outside cities 1 for a fortified land unit
 		/// and for a resting ship (sentry or not moved this turn) next to land, at most 3 tiles from an own city.
 		/// Runs at the end of the game turn, so the moves left (reset at the start of each player's turn) show whether the

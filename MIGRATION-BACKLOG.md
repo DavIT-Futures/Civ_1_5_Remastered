@@ -1334,7 +1334,11 @@ te błędy są odtwarzane jawnie:
 - `DivideCivilization`: technologie przepisywane z gracza na niego samego (nowa cywilizacja zaczyna bez technologii), flaga 9
   wojny ustawiana drugi raz w relacji gracza zamiast nowej cywilizacji, jednostka bez miasta macierzystego (0xff) poza miastem
   rzuca wyjątek (`Towns[255]`), brak miasta do oddania zapętla podział. Po naprawie: kopia technologii, relacja obustronna,
-  sprawdzenie 0xff i warunek końca pętli.
+  sprawdzenie 0xff i warunek końca pętli. **Wyjątek dla jednostki bez miasta macierzystego naprawiony w grze 2026-10-24**
+  za przełącznikiem `TurnHooks.ClassicSchismHomes`: `HomeCityRules.HasHome` – taka jednostka liczy się jak jednostka
+  z miastem gracza (zostaje przy starej cywilizacji; w mieście nowej przechodzi do właściciela miasta). Testy:
+  `SchismAndReportCrashTests` (oba warianty, jednostka w mieście i poza nim). Reszta punktu (technologie, relacja, pętla)
+  nadal do zrobienia.
 - `HandlePeaceTreaties`: groźba emisariusza (L0468) bierze nazwę gracza z `word[0x1992 + DI]`, gdzie DI = gracz << 4 (ustawione
   dla relacji), czyli spoza tablicy nazw – tekst z przypadkowego wskaźnika. Po naprawie: 0x1992 + 2 * gracz.
 - `EarnTechnology`: pierwsze odkrycie technologii, która dezaktualizuje cud (tabela 0x10fe), czyta `Towns[MarvelTownIdx[cud]]`
@@ -1345,7 +1349,9 @@ te błędy są odtwarzane jawnie:
   nieosiągalny (szukanie nigdy nie kończy się na 0xffff). Po naprawie: komunikat i bit w 0x687a + 2 * rodzaj.
 - `DisplayMilitaryReport`: wiersz gracza bez kontaktu nie zapisuje swojego wpisu listy w ramce, więc klawisz 1 – 7 albo kliknięcie
   w ten wiersz czyta śmieci ze stosu; śmieci ≥ 8 dają `IndexOutOfRangeException` w `Relations` (DOS czytał pamięć). Po naprawie:
-  wpis 0xffff / pominięcie wiersza.
+  wpis 0xffff / pominięcie wiersza. **Naprawione w grze 2026-10-24** za przełącznikiem
+  `TurnHooks.ClassicMilitaryReportRows`: lista graczy wierszy także w tablicy C# (-1 dla wiersza bez kontaktu, który nic
+  nie pokazuje). Test: `SchismAndReportCrashTests` (stos pod SP zapełniony wartością 0x99).
 - `VisitEachUnitInStack` zostawia SI = `0x600 * gracz` (tłumaczenie nie zachowywało SI). `AIPlayer` (L2947, ok. linii 4330)
   trzyma w SI sumę ataku stosu, woła `TallyUnitsByDomainInStack(…, 1)` i dzieli przez SI, więc dzieli przez `0x600 * gracz`
   zamiast przez atak. Po naprawie: AI inaczej ocenia ataki (zmiana baseline).

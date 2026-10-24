@@ -558,7 +558,7 @@ namespace Civilization1Remaster.UI
 		/// easiest two levels), a colour and peace, alliance or war with each player, the others only "no contact" (0x485b).
 		/// The rows from the second player get a box "INFO" + row, and a key 1 - 7 or a click right of x 0x119 shows the
 		/// intelligence report of that row's player (the rows without contact read an entry of the list in the stack frame that
-		/// was never written, like in the original). Ends with a key or click elsewhere.
+		/// was never written, like in the original, unless ClassicMilitaryReportRows is off: then they show nothing). Ends with a key or click elsewhere.
 		/// </summary>
 		public void DisplayMilitaryReport()
 		{
@@ -569,6 +569,9 @@ namespace Civilization1Remaster.UI
 			this.processor.PreserveIndexRegisters();
 
 			ushort rowPlayers = (ushort)(this.processor.RegFrame.Value16 - 0x16);
+
+			// The same list in C#, with -1 for the rows without contact (ClassicMilitaryReportRows off)
+			short[] rowPlayerList = [-1, -1, -1, -1, -1, -1, -1, -1];
 
 			DisplayReportPreamble(0x4847, 1);
 
@@ -603,6 +606,7 @@ namespace Civilization1Remaster.UI
 				RenderMilitaryReportRow(participantIdx, vertLoc);
 
 				this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(rowPlayers + (rowCount << 1)), participantIdx);
+				rowPlayerList[rowCount] = (short)participantIdx;
 				rowCount++;
 
 				if ((short)participantIdx == this.owner.World.PersonParticipantIdx)
@@ -653,9 +657,13 @@ namespace Civilization1Remaster.UI
 
 				if (chosen && rowIdx >= 0 && rowIdx < (short)rowCount)
 				{
-					ushort rowPlayerIdx = this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(rowPlayers + (rowIdx << 1)));
+					bool classicRows = this.owner.TurnHooks.ClassicMilitaryReportRows;
+					ushort rowPlayerIdx = classicRows ?
+						this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(rowPlayers + (rowIdx << 1))) :
+						(ushort)rowPlayerList[rowIdx];
 
-					if ((short)rowPlayerIdx != this.owner.World.PersonParticipantIdx &&
+					if ((classicRows || (short)rowPlayerIdx != -1) &&
+						(short)rowPlayerIdx != this.owner.World.PersonParticipantIdx &&
 						(this.owner.World.Participants[this.owner.World.PersonParticipantIdx].Relations[rowPlayerIdx] & 0x40) != 0)
 					{
 						DisplayIntelligenceReport((short)rowPlayerIdx);
