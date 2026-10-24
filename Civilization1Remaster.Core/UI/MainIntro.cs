@@ -601,18 +601,18 @@ namespace Civilization1Remaster.UI
 
 			ushort person = (ushort)this.owner.World.PersonParticipantIdx;
 			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((person << 1) + 0x19a2)));
-			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30b8), 0xba06);
+			this.owner.Libc.CopyText(CodeText1, 0xba06);
 
-			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30ba),
+			this.owner.Libc.CopyText(CodeText2,
 				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(((ushort)participantIdx << 1) + 0x1982)));
 
 			EmptyMessage()
 				.Number(this.owner.World.Participants[participantIdx].StarshipInhabitants);
-			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30bc), 0xba06);
+			this.owner.Libc.CopyText(CodeText3, 0xba06);
 
 			EmptyMessage()
 				.Number(this.owner.World.Participants[participantIdx].StarshipLiftoffSeason);
-			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be), 0xba06);
+			this.owner.Libc.CopyText(CodeText4, 0xba06);
 
 			EmptyMessage()
 				.Number(this.owner.World.Season);
@@ -974,7 +974,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Libc.CopyText(0xba06, this.processor.PullGlobalWord((ushort)((humanIdx << 1) + 0x19a2)));
 			this.owner.Libc.UppercaseText(0xba06);
-			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30b8), 0xba06);
+			this.owner.Libc.CopyText(CodeText1, 0xba06);
 
 			this.owner.Libc.CopyText(0xba06, "Irrigation");
 
@@ -986,7 +986,7 @@ namespace Civilization1Remaster.UI
 				}
 			}
 
-			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be), 0xba06);
+			this.owner.Libc.CopyText(CodeText4, 0xba06);
 
 			this.processor.EmitGlobalByte(0xba06, 0);
 

@@ -1155,7 +1155,7 @@ namespace Civilization1Remaster.Game
 			this.owner.Libc.CopyText((ushort)(key + 1), name);
 			this.owner.Libc.CopyText(0xba06, advisor);
 			this.owner.BlockText.ImportTextFromFile(documentAddr, key);
-			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be), (ushort)(key + 1));
+			this.owner.Libc.CopyText(CodeText4, (ushort)(key + 1));
 			this.owner.BlockText.ReflowText();
 			this.owner.BlockText.ArrangeTextRow(0x32);
 			this.processor.EmitGlobalWord(0xdb38, 1);
@@ -1708,13 +1708,13 @@ namespace Civilization1Remaster.Game
 			EmissaryAudience = 0;
 			this.processor.EmitGlobalByte(0xba06, 0);
 
-			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30b8), this.processor.PullGlobalWord((ushort)(((ushort)participantIdx << 1) + 0x1992)));
+			this.owner.Libc.CopyText(CodeText1, this.processor.PullGlobalWord((ushort)(((ushort)participantIdx << 1) + 0x1992)));
 
-			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be), (ushort)((ushort)(0x16 * scienceIdx) + 0x4da));
+			this.owner.Libc.CopyText(CodeText4, (ushort)((ushort)(0x16 * scienceIdx) + 0x4da));
 
 			this.owner.BlockText.DisplayTextDialog(0x240e);
 
-			this.processor.EmitGlobalWord(0x3936, 0x2);
+			KingMood = 0x2;
 			KingSpeaking = 0xc;
 
 			this.processor.StackWord(0); // stack management - push return segment, ignored

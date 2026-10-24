@@ -818,7 +818,7 @@ namespace Civilization1Remaster.Game
 			if (this.owner.World.RoundTally == 0 && this.turn.LaterPass == 0)
 			{
 				this.processor.RegBase.Value16 = (ushort)(participantIdx << 1);
-				this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30b8),
+				this.owner.Libc.CopyText(CodeText1,
 					this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1992)));
 
 				this.owner.HelpSystem.DisplayHelpPopup(0x1e6e);

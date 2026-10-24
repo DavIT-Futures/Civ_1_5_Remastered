@@ -176,12 +176,12 @@ namespace Civilization1Remaster.Game
 					short tribute = (short)((ushort)this.owner.Helpers.VerifyValueSpan(player.Gold / 100, 1, 10) * 0x32);
 					this.processor.EmitLocalWord(0x4, (ushort)tribute);
 
-					this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30ba), this.processor.PullGlobalWord((ushort)(this.processor.RegSource.Value16 + 0x1992)));
+					this.owner.Libc.CopyText(CodeText2, this.processor.PullGlobalWord((ushort)(this.processor.RegSource.Value16 + 0x1992)));
 
 					EmptyMessage()
 						.Number(tribute);
 
-					this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30bc), 0xba06);
+					this.owner.Libc.CopyText(CodeText3, 0xba06);
 
 					this.processor.EmitGlobalByte(0xba06, 0);
 
@@ -205,9 +205,9 @@ namespace Civilization1Remaster.Game
 
 			this.processor.EmitGlobalByte(0xba06, 0);
 
-			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30ba), this.processor.PullGlobalWord((ushort)(this.processor.RegDest.Value16 + 0x1992)));
+			this.owner.Libc.CopyText(CodeText2, this.processor.PullGlobalWord((ushort)(this.processor.RegDest.Value16 + 0x1992)));
 
-			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be), (player.Relations[person] & 2) == 0 ? (ushort)0x299b : (ushort)0x2990);
+			this.owner.Libc.CopyText(CodeText4, (player.Relations[person] & 2) == 0 ? (ushort)0x299b : (ushort)0x2990);
 
 			if (AskKing(0x29a6, 0x0279))
 			{
@@ -224,7 +224,7 @@ namespace Civilization1Remaster.Game
 		{
 			this.owner.BlockText.DisplayTextDialog(charsAddr);
 
-			this.processor.EmitGlobalWord(0x3936, 0x1);
+			KingMood = 0x1;
 			KingSpeaking = 0xc;
 
 			this.processor.StackWord(0); // stack management - push return segment, ignored

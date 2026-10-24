@@ -56,7 +56,7 @@ namespace Civilization1Remaster.Engine
 
 				EmptyMessage()
 					.Number((short)this.processor.PullLocalWord(0x4));
-				this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be), 0xba06);
+				this.owner.Libc.CopyText(CodeText4, 0xba06);
 				this.processor.EmitGlobalByte(0xba06, 0);
 
 				this.owner.BlockText.DisplayTextDialog(0x270);
@@ -323,13 +323,13 @@ namespace Civilization1Remaster.Engine
 					this.owner.Libc.AppendText(message, "A");
 					this.owner.Libc.AppendText(message, ".\n \n    Press Return\n    to continue.\n");
 
-					ushort kept = this.processor.PullGlobalWord(0x3936);
-					this.processor.EmitGlobalWord(0x3936, 0xffff);
+					ushort kept = KingMood;
+					KingMood = 0xffff;
 					this.processor.EmitGlobalWord(0xd206, 0x1);
 
 					this.owner.Dialogs.DisplayMenu(message, 100, 81, 1);
 
-					this.processor.EmitGlobalWord(0x3936, kept);
+					KingMood = kept;
 
 					this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 15);
 

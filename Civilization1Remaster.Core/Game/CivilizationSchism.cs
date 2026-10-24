@@ -213,9 +213,9 @@ namespace Civilization1Remaster.Game
 
 			this.processor.RegDest.Value16 = (ushort)(participantIdx << 1);
 
-			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30b8), this.processor.PullGlobalWord((ushort)(((ushort)participantIdx << 1) + 0x1982)));
+			this.owner.Libc.CopyText(CodeText1, this.processor.PullGlobalWord((ushort)(((ushort)participantIdx << 1) + 0x1982)));
 
-			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30ba), this.processor.PullGlobalWord((ushort)(names + 0x1982)));
+			this.owner.Libc.CopyText(CodeText2, this.processor.PullGlobalWord((ushort)(names + 0x1982)));
 
 			this.owner.BlockText.DisplayTextDialog(participantIdx == this.owner.World.PersonParticipantIdx ? (ushort)0x4a18 : (ushort)0x4a20);
 

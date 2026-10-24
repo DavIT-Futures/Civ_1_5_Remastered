@@ -423,7 +423,7 @@ namespace Civilization1Remaster.Game
 			EmptyMessage()
 				.City(townIdx);
 
-			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be), 0xba06);
+			this.owner.Libc.CopyText(CodeText4, 0xba06);
 
 			this.processor.EmitGlobalByte(0xba06, 0);
 
@@ -508,7 +508,7 @@ namespace Civilization1Remaster.Game
 					{
 						ushort buildingIdx = DestroyRandomBuilding(town);
 
-						this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30b8), (ushort)((ushort)(0x1e * buildingIdx) + 0xbb8));
+						this.owner.Libc.CopyText(CodeText1, (ushort)((ushort)(0x1e * buildingIdx) + 0xbb8));
 
 						this.owner.BlockText.DisplayTextDialog(0x4fc3);
 					}

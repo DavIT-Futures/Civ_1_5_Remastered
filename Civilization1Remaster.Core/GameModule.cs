@@ -492,6 +492,83 @@ namespace Civilization1Remaster
 			get => this.processor.PullGlobalWord(0xdeba);
 			set => this.processor.EmitGlobalWord(0xdeba, value);
 		}
+
+		/// <summary>0x3936: the mood of the king in the audience, which picks his next gesture (0, 1, 2; 0xffff: no audience)</summary>
+		protected ushort KingMood
+		{
+			get => this.processor.PullGlobalWord(0x3936);
+			set => this.processor.EmitGlobalWord(0x3936, value);
+		}
+
+		/// <summary>0x30b8: the address of the first code text of the text blocks</summary>
+		protected ushort CodeText1
+		{
+			get => this.processor.PullGlobalWord(0x30b8);
+			set => this.processor.EmitGlobalWord(0x30b8, value);
+		}
+
+		/// <summary>0x30ba: the address of the second code text of the text blocks</summary>
+		protected ushort CodeText2
+		{
+			get => this.processor.PullGlobalWord(0x30ba);
+			set => this.processor.EmitGlobalWord(0x30ba, value);
+		}
+
+		/// <summary>0x30bc: the address of the third code text of the text blocks</summary>
+		protected ushort CodeText3
+		{
+			get => this.processor.PullGlobalWord(0x30bc);
+			set => this.processor.EmitGlobalWord(0x30bc, value);
+		}
+
+		/// <summary>0x30be: the address of the fourth code text of the text blocks</summary>
+		protected ushort CodeText4
+		{
+			get => this.processor.PullGlobalWord(0x30be);
+			set => this.processor.EmitGlobalWord(0x30be, value);
+		}
+
+		/// <summary>0x2fa4: the height of a line of the menu</summary>
+		protected ushort MenuLineHeight
+		{
+			get => this.processor.PullGlobalWord(0x2fa4);
+			set => this.processor.EmitGlobalWord(0x2fa4, value);
+		}
+
+		/// <summary>0xde0e: the right edge of the menu</summary>
+		protected ushort MenuRightEdge
+		{
+			get => this.processor.PullGlobalWord(0xde0e);
+			set => this.processor.EmitGlobalWord(0xde0e, value);
+		}
+
+		/// <summary>0x658e: the lines of the menu</summary>
+		protected ushort MenuLineCount
+		{
+			get => this.processor.PullGlobalWord(0x658e);
+			set => this.processor.EmitGlobalWord(0x658e, value);
+		}
+
+		/// <summary>0x4b2e: the width of a part of the palace</summary>
+		protected ushort PalacePartWidth
+		{
+			get => this.processor.PullGlobalWord(0x4b2e);
+			set => this.processor.EmitGlobalWord(0x4b2e, value);
+		}
+
+		/// <summary>0x67f8: the picture of the king in the audience (kingNN.pic)</summary>
+		protected ushort KingPicture
+		{
+			get => this.processor.PullGlobalWord(0x67f8);
+			set => this.processor.EmitGlobalWord(0x67f8, value);
+		}
+
+		/// <summary>0x6532: the total TallyUnitsByDomainInStack counts</summary>
+		protected ushort StackDomainTally
+		{
+			get => this.processor.PullGlobalWord(0x6532);
+			set => this.processor.EmitGlobalWord(0x6532, value);
+		}
 		#endregion
 	}
 }

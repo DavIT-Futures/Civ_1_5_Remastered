@@ -94,7 +94,7 @@ namespace Civilization1Remaster.UI
 
 			EmissaryAudience = 0;
 			KingAnswer = 0xffff;
-			this.processor.EmitGlobalWord(0x3936, 0xffff);
+			KingMood = 0xffff;
 			this.processor.RestoreIndexRegisters();
 			this.processor.LeaveFrame();
 			this.processor.Journal.CloseScope("LaunchAudience");
@@ -396,9 +396,9 @@ namespace Civilization1Remaster.UI
 					break;
 				}
 
-				this.processor.EmitGlobalWord(0x3936, 1);
+				KingMood = 1;
 				this.processor.EmitGlobalByte(0xba06, 0);
-				this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be), TechnologyName(this.audienceWantedTechnology));
+				this.owner.Libc.CopyText(CodeText4, TechnologyName(this.audienceWantedTechnology));
 				this.owner.BlockText.DisplayTextDialog(0x3776);
 				KingSpeaking = 0xc;
 
@@ -409,7 +409,7 @@ namespace Civilization1Remaster.UI
 				this.owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, BackScreenBox, 0, 0);
 				this.owner.Startup.DisplayMouseCursor();
 
-				this.processor.EmitGlobalWord(0x3936, 0xffff);
+				KingMood = 0xffff;
 				this.processor.EmitGlobalWord(0x3c62, 1);
 				this.owner.Conquest.ChooseTechnologyToTake(participantIdx, personIdx);
 				RestoreScreenStyle();
@@ -420,7 +420,7 @@ namespace Civilization1Remaster.UI
 				RestoreScreenStyle();
 
 				this.audienceHostile = 0;
-				this.processor.EmitGlobalWord(0x3936, 1);
+				KingMood = 1;
 
 				this.owner.Startup.ConcealMouseCursor();
 				this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
@@ -445,12 +445,12 @@ namespace Civilization1Remaster.UI
 				return;
 
 			this.processor.EmitGlobalByte(0xba06, 0);
-			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30ba),
+			this.owner.Libc.CopyText(CodeText2,
 				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((this.audienceCommonEnemy << 1) + 0x1992)));
-			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be), (ushort)(HostileValue != 0 ? 0x3780 : 0x3787));
+			this.owner.Libc.CopyText(CodeText4, (ushort)(HostileValue != 0 ? 0x3780 : 0x3787));
 			this.owner.BlockText.DisplayTextDialog(0x378f);
 
-			this.processor.EmitGlobalWord(0x3936, (ushort)(HostileValue != 0 ? 2 : 1));
+			KingMood = (ushort)(HostileValue != 0 ? 2 : 1);
 			KingSpeaking = 0xc;
 
 			if (HostileValue != 0)
@@ -480,12 +480,12 @@ namespace Civilization1Remaster.UI
 
 			EmptyMessage()
 				.Number((short)this.audienceTribute);
-			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30bc), 0xba06);
+			this.owner.Libc.CopyText(CodeText3, 0xba06);
 			this.processor.EmitGlobalByte(0xba06, 0);
 			this.owner.BlockText.DisplayTextDialog(0x3797);
 
 			this.processor.EmitGlobalWord(0x6b8e, 0);
-			this.processor.EmitGlobalWord(0x3936, 2);
+			KingMood = 2;
 			KingSpeaking = 0xc;
 			this.owner.Services.PerformSound(0x21, 0);
 
@@ -510,11 +510,11 @@ namespace Civilization1Remaster.UI
 			}
 
 			this.processor.EmitGlobalByte(0xba06, 0);
-			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be), TechnologyName(this.audienceOfferedTechnology));
+			this.owner.Libc.CopyText(CodeText4, TechnologyName(this.audienceOfferedTechnology));
 			this.owner.BlockText.DisplayTextDialog(0x37a0);
 
 			this.processor.EmitGlobalWord(0x6b8e, 0);
-			this.processor.EmitGlobalWord(0x3936, 2);
+			KingMood = 2;
 			KingSpeaking = 0xc;
 			this.owner.Services.PerformSound(0x21, 0);
 
@@ -568,7 +568,7 @@ namespace Civilization1Remaster.UI
 			if (welcome)
 			{
 				this.processor.EmitGlobalWord(0x6b8e, 1);
-				this.processor.EmitGlobalWord(0x3936, 2);
+				KingMood = 2;
 				KingSpeaking = 0xc;
 				DisplayKingDialog(0xba06, 0x14, 0x8b);
 			}
@@ -595,7 +595,7 @@ namespace Civilization1Remaster.UI
 			this.processor.EmitGlobalByte(0xba06, 0);
 			this.owner.BlockText.DisplayTextDialog(0x37cd);
 			this.processor.EmitGlobalWord(0x6b8e, 0);
-			this.processor.EmitGlobalWord(0x3936, 0);
+			KingMood = 0;
 			KingSpeaking = 0xc;
 
 			if (DisplayKingDialog(0xba06, 0x14, 0x8b) == 1)
@@ -646,10 +646,10 @@ namespace Civilization1Remaster.UI
 
 		private void OfferTechnologyForPeace(short participantIdx)
 		{
-			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be), TechnologyName(this.audienceWantedTechnology));
+			this.owner.Libc.CopyText(CodeText4, TechnologyName(this.audienceWantedTechnology));
 			this.processor.EmitGlobalByte(0xba06, 0);
 			this.owner.BlockText.DisplayTextDialog(0x3805);
-			this.processor.EmitGlobalWord(0x3936, 0);
+			KingMood = 0;
 			KingSpeaking = 0xc;
 
 			if (DisplayKingDialog(0xba06, 0x14, 0x8b) != 1)
@@ -660,12 +660,12 @@ namespace Civilization1Remaster.UI
 			this.owner.Startup.DisplayMouseCursor();
 			this.owner.Helpers.HaltHueCycling();
 
-			this.processor.EmitGlobalWord(0x3936, 0xffff);
+			KingMood = 0xffff;
 			this.processor.EmitGlobalWord(0x3c62, 1);
 			this.owner.Advisors.EarnTechnology(this.owner.World.PersonParticipantIdx, (short)this.audienceWantedTechnology, participantIdx);
 			RestoreScreenStyle();
 			this.owner.Helpers.HaltHueCycling();
-			this.processor.EmitGlobalWord(0x3936, 0);
+			KingMood = 0;
 
 			this.owner.Startup.ConcealMouseCursor();
 			this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
@@ -686,10 +686,10 @@ namespace Civilization1Remaster.UI
 
 			EmptyMessage()
 				.Number((short)amount);
-			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30bc), 0xba06);
+			this.owner.Libc.CopyText(CodeText3, 0xba06);
 			this.processor.EmitGlobalByte(0xba06, 0);
 			this.owner.BlockText.DisplayTextDialog(0x380e);
-			this.processor.EmitGlobalWord(0x3936, 0);
+			KingMood = 0;
 			KingSpeaking = 0xc;
 
 			if (DisplayKingDialog(0xba06, 0x14, 0x8b) != 1)
@@ -712,10 +712,10 @@ namespace Civilization1Remaster.UI
 
 			EmptyMessage()
 				.Number(Leader(participantIdx).Gold);
-			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30bc), 0xba06);
+			this.owner.Libc.CopyText(CodeText3, 0xba06);
 			this.processor.EmitGlobalByte(0xba06, 0);
 			this.owner.BlockText.DisplayTextDialog(0x3818);
-			this.processor.EmitGlobalWord(0x3936, 0);
+			KingMood = 0;
 			KingSpeaking = 0xc;
 
 			if (DisplayKingDialog(0xba06, 0x14, 0x8b) != 1)
@@ -731,7 +731,7 @@ namespace Civilization1Remaster.UI
 			this.owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, BackScreenBox, 0, 0);
 			this.owner.Startup.DisplayMouseCursor();
 			this.owner.Helpers.HaltHueCycling();
-			this.processor.EmitGlobalWord(0x3936, 0xffff);
+			KingMood = 0xffff;
 
 			for (short scienceIdx = 0; scienceIdx < 0x48; scienceIdx++)
 			{
@@ -746,7 +746,7 @@ namespace Civilization1Remaster.UI
 
 			RestoreScreenStyle();
 			this.owner.Helpers.HaltHueCycling();
-			this.processor.EmitGlobalWord(0x3936, 0);
+			KingMood = 0;
 
 			this.owner.Startup.ConcealMouseCursor();
 			this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
@@ -765,7 +765,7 @@ namespace Civilization1Remaster.UI
 			this.processor.EmitGlobalByte(0xba06, 0);
 			this.owner.BlockText.DisplayTextDialog(0x3820);
 			this.processor.EmitGlobalWord(0x6b8e, 1);
-			this.processor.EmitGlobalWord(0x3936, 2);
+			KingMood = 2;
 			KingSpeaking = 4;
 			DisplayKingDialog(0xba06, 0x14, 0x8b);
 		}
@@ -778,7 +778,7 @@ namespace Civilization1Remaster.UI
 
 			if (this.audienceDemand != 0 && this.audienceTribute != 0x3e7)
 			{
-				this.processor.EmitGlobalWord(0x3936, 1);
+				KingMood = 1;
 				KingSpeaking = 4;
 				this.processor.EmitGlobalByte(0xba06, 0);
 				this.owner.BlockText.DisplayTextDialog(0x382a);
@@ -787,7 +787,7 @@ namespace Civilization1Remaster.UI
 			{
 				short personIdx = this.owner.World.PersonParticipantIdx;
 
-				this.processor.EmitGlobalWord(0x3936, 0);
+				KingMood = 0;
 				KingSpeaking = 0xc;
 				Message("We welcome the friendship of the\n")
 					.Text(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((personIdx << 1) + 0x1982)))
@@ -811,7 +811,7 @@ namespace Civilization1Remaster.UI
 
 			while (true)
 			{
-				this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be),
+				this.owner.Libc.CopyText(CodeText4,
 					this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((participantIdx << 1) + 0x1992)));
 				this.processor.EmitGlobalByte(0xba06, 0);
 				this.owner.BlockText.DisplayTextDialog(0x388f);
@@ -843,10 +843,10 @@ namespace Civilization1Remaster.UI
 			{
 				EmptyMessage()
 					.Number(amount);
-				this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30bc), 0xba06);
+				this.owner.Libc.CopyText(CodeText3, 0xba06);
 				this.processor.EmitGlobalByte(0xba06, 0);
 				this.owner.BlockText.DisplayTextDialog(0x3897);
-				this.processor.EmitGlobalWord(0x3936, 0);
+				KingMood = 0;
 				KingSpeaking = 0xc;
 
 				// A translation slip: the human player gets the answer of the dialog, not the gold
@@ -863,13 +863,13 @@ namespace Civilization1Remaster.UI
 				this.processor.EmitGlobalByte(0xba06, 0);
 				this.owner.BlockText.DisplayTextDialog(0x38a1);
 				this.owner.Politics.WipeDiplomacyFlags(personIdx, participantIdx, 2);
-				this.processor.EmitGlobalWord(0x3936, 2);
+				KingMood = 2;
 				KingSpeaking = 0xc;
 			}
 			else
 			{
 				this.owner.Libc.CopyText(0xba06, "We ignore your feeble threats.\n");
-				this.processor.EmitGlobalWord(0x3936, 1);
+				KingMood = 1;
 				KingSpeaking = 4;
 			}
 
@@ -900,14 +900,14 @@ namespace Civilization1Remaster.UI
 			}
 
 			ushort choice = DisplayKingDialog(0xba06, 0x14, 0x8b);
-			this.processor.EmitGlobalWord(0x3936, 1);
+			KingMood = 1;
 
 			if (choice == 0xffff)
 				return false;
 
 			short enemyIdx = enemyTable[choice];
 
-			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be),
+			this.owner.Libc.CopyText(CodeText4,
 				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((enemyIdx << 1) + 0x1992)));
 			KingSpeaking = 4;
 
@@ -935,7 +935,7 @@ namespace Civilization1Remaster.UI
 
 			EmptyMessage()
 				.Number(amount);
-			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30bc), 0xba06);
+			this.owner.Libc.CopyText(CodeText3, 0xba06);
 			this.processor.EmitGlobalByte(0xba06, 0);
 			this.owner.BlockText.DisplayTextDialog(0x38fb);
 
@@ -972,7 +972,7 @@ namespace Civilization1Remaster.UI
 				return;
 			}
 
-			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30ba),
+			this.owner.Libc.CopyText(CodeText2,
 				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((participantIdx << 1) + 0x1992)));
 			this.owner.HelpSystem.DisplayHelpPopup(0x392b);
 		}
@@ -992,7 +992,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.TurnHooks.RepaintMainScreen();
 
-			this.processor.EmitGlobalWord(0x3936, 0xffff);
+			KingMood = 0xffff;
 			this.processor.RegAcc.Value16 = 0;
 			KingAnswer = this.processor.RegAcc.Value16;
 			EmissaryAudience = this.processor.RegAcc.Value16;
@@ -1087,7 +1087,7 @@ namespace Civilization1Remaster.UI
 
 			this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), this.processor.PullGlobalWord(0x67ec));
 			this.processor.EmitGlobalWord(0xd2dc, 1);
-			this.processor.EmitGlobalWord(0x3936, 1);
+			KingMood = 1;
 			this.processor.EmitGlobalWord(0x67e8, 0xffff);
 			this.processor.EmitGlobalWord(0x7ef4, 0);
 			KingSpeaking = 0xc;
@@ -1169,9 +1169,9 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope($"DisplayKingMessage({participantIdx})");
 
-			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be), CivilizationNameAddr(participantIdx));
+			this.owner.Libc.CopyText(CodeText4, CivilizationNameAddr(participantIdx));
 
-			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30b8), CivilizationNameAddr(this.owner.World.PersonParticipantIdx));
+			this.owner.Libc.CopyText(CodeText1, CivilizationNameAddr(this.owner.World.PersonParticipantIdx));
 
 			KingSpeaking = 0xc;
 			this.processor.EmitGlobalByte(0xba06, 0x0);
@@ -1332,7 +1332,7 @@ namespace Civilization1Remaster.UI
 
 			short gesture = -1;
 
-			switch (this.processor.PullGlobalWord(0x3936))
+			switch (KingMood)
 			{
 				case 0:
 					this.processor.EmitGlobalByte(0x3a9a, this.processor.PullGlobalWord(0x6b8e) != 0 ? (byte)4 : (byte)2);
@@ -1422,17 +1422,17 @@ namespace Civilization1Remaster.UI
 			}
 
 			short king = (sbyte)this.processor.PullGlobalByte((ushort)((ushort)this.owner.World.Participants[participantIdx].ChiefVisuals + 0x3938));
-			this.processor.EmitGlobalWord(0x67f8, (ushort)king);
+			KingPicture = (ushort)king;
 
-			this.owner.Startup.QueryForDisk((ushort)((this.processor.PullGlobalWord(0x67f8) / 7) + 4), 1);
+			this.owner.Startup.QueryForDisk((ushort)((KingPicture / 7) + 4), 1);
 
 			this.owner.Libc.CopyText(pictureName, "king00.pic");
 
-			king = (short)this.processor.PullGlobalWord(0x67f8);
+			king = (short)KingPicture;
 			this.processor.EmitGlobalByte((ushort)(pictureName + 5), (byte)(this.processor.PullGlobalByte((ushort)(pictureName + 5)) + (king % 10)));
 			this.processor.EmitGlobalByte((ushort)(pictureName + 4), (byte)(this.processor.PullGlobalByte((ushort)(pictureName + 4)) + (king / 10)));
 
-			if (VgaMode == 0 && (this.processor.PullGlobalWord(0x67f8) == 0 || this.processor.PullGlobalWord(0x67f8) == 3))
+			if (VgaMode == 0 && (KingPicture == 0 || KingPicture == 3))
 			{
 				this.processor.EmitGlobalByte((ushort)(pictureName + 3), 0x6b);
 			}
@@ -1612,7 +1612,7 @@ namespace Civilization1Remaster.UI
 				ushort hueName = (ushort)(this.processor.RegFrame.Value16 - 0x1c);
 				this.owner.Libc.CopyText(hueName, "king00.pal");
 
-				short king = (short)this.processor.PullGlobalWord(0x67f8);
+				short king = (short)KingPicture;
 				this.processor.EmitGlobalByte((ushort)(hueName + 5), (byte)(this.processor.PullGlobalByte((ushort)(hueName + 5)) + king % 10));
 				this.processor.EmitGlobalByte((ushort)(hueName + 4), (byte)(this.processor.PullGlobalByte((ushort)(hueName + 4)) + king / 10));
 
@@ -1713,7 +1713,7 @@ namespace Civilization1Remaster.UI
 					}
 				}
 
-				ushort king = (ushort)(this.processor.PullGlobalWord(0x67f8) << 2);
+				ushort king = (ushort)(KingPicture << 2);
 
 				this.processor.SegExtra.Value16 = 0x36fa;
 

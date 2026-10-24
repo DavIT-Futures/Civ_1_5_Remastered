@@ -361,9 +361,9 @@ namespace Civilization1Remaster.UI
 
 			ushort names = (ushort)(this.owner.World.PersonParticipantIdx << 1);
 
-			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be), this.processor.PullGlobalWord((ushort)(names + 0x19a2)));
+			this.owner.Libc.CopyText(CodeText4, this.processor.PullGlobalWord((ushort)(names + 0x19a2)));
 
-			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30b8), this.processor.PullGlobalWord((ushort)(names + 0x1992)));
+			this.owner.Libc.CopyText(CodeText1, this.processor.PullGlobalWord((ushort)(names + 0x1992)));
 
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 

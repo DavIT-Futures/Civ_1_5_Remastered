@@ -298,7 +298,7 @@ namespace Civilization1Remaster.UI
 							this.processor.PullInt8(dataSeg, (ushort)(5 * optIdx + 0xf * nextLevel + 0x4b32)) + 1,
 							this.processor.PullUInt16(dataSeg, (ushort)((optIdx << 2) + 0xb23c)));
 
-						drawX = (short)(drawX + (short)this.processor.PullGlobalWord(0x4b2e));
+						drawX = (short)(drawX + (short)PalacePartWidth);
 						this.owner.Services.RenderPictureToScreen(
 							ScreenBox,
 							drawX,
@@ -322,7 +322,7 @@ namespace Civilization1Remaster.UI
 								drawX,
 								this.processor.PullInt8(dataSeg, (ushort)(0xf * nextLevel + 5 * optIdx + 0x4b32)) + 1,
 								this.processor.PullUInt16(dataSeg, (ushort)((optIdx << 2) + 0xb23c)));
-							drawX = (short)(drawX + (short)this.processor.PullGlobalWord(0x4b2e));
+							drawX = (short)(drawX + (short)PalacePartWidth);
 						}
 
 						short towerShift = optIdx == 2 ? (short)3 : (short)2;
@@ -487,7 +487,7 @@ namespace Civilization1Remaster.UI
 						horizLoc += this.processor.PullGlobalWord(0x4b32);
 
 						if (section == 3)
-							horizLoc += this.processor.PullGlobalWord(0x4b2e);
+							horizLoc += PalacePartWidth;
 
 						this.processor.EmitLocalWord(0x12, section);
 						break;
@@ -497,20 +497,20 @@ namespace Civilization1Remaster.UI
 						ushort leftEnd = this.processor.PullLocalWord(0x12);
 
 						if ((ushort)(leftEnd + 1) == section && PalaceStyle(section) == PalaceStyle(leftEnd))
-							RenderPalacePart(part, leftEnd, (ushort)(horizLoc + this.processor.PullGlobalWord(0x4b2e) - 17), vertLoc - 2, 0);
+							RenderPalacePart(part, leftEnd, (ushort)(horizLoc + PalacePartWidth - 17), vertLoc - 2, 0);
 
 						ushort rightEnd = this.processor.PullLocalWord(0x18);
 
 						if ((ushort)(rightEnd - 1) == section && PalaceStyle(section) == PalaceStyle(rightEnd))
-							RenderPalacePart(part, rightEnd, (ushort)(horizLoc + this.processor.PullGlobalWord(0x4b2e) - 17), vertLoc - 2, 1);
+							RenderPalacePart(part, rightEnd, (ushort)(horizLoc + PalacePartWidth - 17), vertLoc - 2, 1);
 
 						RenderPalacePart(part, section, horizLoc, vertLoc, 0);
 
-						horizLoc += this.processor.PullGlobalWord(0x4b2e);
+						horizLoc += PalacePartWidth;
 
 						RenderPalacePart(part, section, horizLoc, vertLoc, 1);
 
-						horizLoc += this.processor.PullGlobalWord(0x4b2e);
+						horizLoc += PalacePartWidth;
 						break;
 
 					case 2:
@@ -532,7 +532,7 @@ namespace Civilization1Remaster.UI
 						{
 							RenderPalacePart(part, section, horizLoc, vertLoc, 0);
 
-							horizLoc += this.processor.PullGlobalWord(0x4b2e);
+							horizLoc += PalacePartWidth;
 						}
 
 						ushort level = PalacePart((ushort)(section - 1));

@@ -932,7 +932,7 @@ namespace Civilization1Remaster.Game
 
 			this.owner.MapOps.DiscardUnitFromTile(participantIdx, troopIdx, horizLoc, vertLoc);
 
-			if (this.processor.PullGlobalWord(0x20f4) == 0 && this.processor.PullGlobalWord(0x3936) == 0xffff &&
+			if (this.processor.PullGlobalWord(0x20f4) == 0 && KingMood == 0xffff &&
 				(MapRevealed != 0 || participantIdx == this.owner.World.PersonParticipantIdx ||
 				(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.ShownToParticipants) & (ushort)(1 << this.owner.World.PersonParticipantIdx)) != 0))
 			{
@@ -1075,13 +1075,13 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"TallyUnitsByDomainInStack({participantIdx}, {troopIdx}, {mode})");
 
-			this.processor.EmitGlobalWord(0x6532, 0x0);
+			StackDomainTally = 0x0;
 			this.processor.EmitGlobalWord(0x6536, mode);
 			this.processor.EmitGlobalWord(0x6538, (ushort)troopIdx);
 
 			VisitEachUnitInStack(participantIdx, troopIdx, 0x1280);
 
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x6532);
+			this.processor.RegAcc.Value16 = StackDomainTally;
 
 			this.processor.Journal.CloseScope("TallyUnitsByDomainInStack");
 

@@ -124,7 +124,7 @@ namespace Civilization1Remaster.UI
 
 			EmptyMessage()
 				.City((short)townIdx);
-			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30b8), 0xba06);
+			this.owner.Libc.CopyText(CodeText1, 0xba06);
 
 			if (terrain == 4 && (improvements & 6) == 0)
 			{

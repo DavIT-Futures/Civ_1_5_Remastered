@@ -1274,6 +1274,15 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   testach na prośbę użytkownika). Następna porcja przygotowana w scratchpadzie (`m_b4f.json`: PopulationMark,
   BirthPicture, AudienceKing, KingPause, ReplayCityDistance, CityNamesShown, KingPose, Climate, ScoreIconHoriz /
   ScoreIconVert, TextPass, EarthGame, SpaceshipColonists, MidTurnSave, LastSaveSlot).
+- B4, porcja 6 (2026-10-24): `KingMood` 0x3936 (nastrój króla wybierający gest, 0xffff poza audiencją – okienka mają
+  wtedy własną wysokość wiersza), `CodeText1` – `CodeText4` 0x30b8 – 0x30be (adresy tekstów kodów; odczyt z wyliczanym
+  adresem w `TextBlockRenderer` zostaje), `MenuLineHeight` 0x2fa4, `MenuRightEdge` 0xde0e, `MenuLineCount` 0x658e,
+  `PalacePartWidth` 0x4b2e, `KingPicture` 0x67f8, `StackDomainTally` 0x6532 (`AddToGlobal` zostaje z adresem) – 79
+  odczytów, 38 zapisów, skrypt `b4f.py` w scratchpadzie (pułapka: zapisy w plikach CRLF – `$` w regexie stoi za `\r`).
+  Pominięte, bo znaczenie niejasne albo podwójne: 0x6b8e (audiencja), 0x6542 (nadmiar obywateli / naukowcy), 0xdb38,
+  0x6802 (blisko zmiennych zegara), 0x20f4, 0x3c62. Pełny zestaw 767/767. 9 / 9 mutacji w miejscach użycia (menu:
+  test `OperateAndDisplayMenuMatchOriginalCode`, nie `DialogsMatchOriginalCode`; szerokość pałacu:
+  `ImportPalaceGraphicsMatchesOriginalCode`, `DisplayPalace` jej nie czyta; `StackDomainTally`: golden master).
 
 ## Następny krok
 
