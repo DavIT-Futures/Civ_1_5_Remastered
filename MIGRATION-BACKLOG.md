@@ -1262,6 +1262,10 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   `MainMenuChoice` 0x6b32, `ReplayMode` 0x680a, `ReplayActor` 0x6810, `MousePresent` 0x1a3c, `PointerShowLevel` 0xdeea
   (181 odczytów, 89 zapisów). Pełny zestaw zielony, raport identyczny, mutacje (odwrócenie wartości) złapane – zapis
   `ChosenOrder` łapie test paska menu, odczyt test tury gracza.
+- B4, porcja 4 (2026-10-24): `StoryState` 0x3b62, `StoryLineTime` 0x6806, `SaveDrive` 0x4384, `MapRedrawRequest`
+  0x6b64, `PollutionFactor` 0x6c98, `CityAgain` 0xb1e8, `WorldMapView` 0xb278 (tylko odczyt), `UnitAtTilePlayer` 0xd20a
+  (51 odczytów, 32 zapisy). Pełny zestaw zielony, raport identyczny, 8 / 8 mutacji (`MapRedrawRequest` czyta
+  `RenewCityScreen`, test `DialogDifferentialTests.DialogsMatchOriginalCode`).
 
 ## Następny krok
 

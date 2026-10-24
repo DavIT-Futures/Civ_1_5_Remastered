@@ -1134,7 +1134,7 @@ namespace Civilization1Remaster.Game
 			this.processor.EnterFrame(0x8);
 			this.processor.PreserveSource();
 
-			if (this.processor.PullGlobalWord(0xb278) != 1)
+			if (WorldMapView != 1)
 			{
 				Player human = this.owner.World.Participants[this.owner.World.PersonParticipantIdx];
 
@@ -1585,7 +1585,7 @@ namespace Civilization1Remaster.Game
 			this.owner.World.Participants[rivalIdx].Gold -= (short)this.owner.Helpers.VerifyValueSpan(this.owner.World.Participants[rivalIdx].Gold / 3, 0,
 				(10 * (short)this.processor.PullGlobalWord((ushort)(wonder + 0xe82))) - this.owner.World.Towns[cityIdx].MaterialsTally);
 
-			if (this.processor.PullGlobalWord(0xb278) != 1)
+			if (WorldMapView != 1)
 			{
 				this.owner.Services.PerformSound(this.processor.PullGlobalWord((ushort)((ushort)(0x3a * this.owner.World.Participants[rivalIdx].ChiefVisuals) + 0x1518)), 0);
 

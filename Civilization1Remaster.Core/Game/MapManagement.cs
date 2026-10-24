@@ -54,7 +54,7 @@ namespace Civilization1Remaster.Game
 
 			this.owner.TurnHooks.RenderStatusBar();
 
-			ushort kept = this.processor.PullGlobalWord(0xd20a);
+			ushort kept = UnitAtTilePlayer;
 
 			MapViewHoriz = (ushort)this.owner.Routing.TunePosition(horizLoc);
 			MapViewVert = (ushort)this.owner.Helpers.VerifyValueSpan(vertLoc, 0, 38);
@@ -178,7 +178,7 @@ namespace Civilization1Remaster.Game
 
 			this.owner.Dialogs.RenderBox(horizLoc - left - 1, vertLoc - top + 7, 17, 10, 15);
 
-			this.processor.EmitGlobalWord(0xd20a, kept);
+			UnitAtTilePlayer = kept;
 
 			this.owner.Startup.DisplayMouseCursor();
 
@@ -198,7 +198,7 @@ namespace Civilization1Remaster.Game
 			this.processor.EnterFrame(0x26);
 			this.processor.PreserveIndexRegisters();
 
-			if (this.processor.PullGlobalWord(0xb278) == 0x1)
+			if (WorldMapView == 0x1)
 			{
 				ushort outcome = RenderWorldMapTileBlock(horizLoc, vertLoc);
 				return FinishRenderMapTile(outcome);
@@ -724,7 +724,7 @@ namespace Civilization1Remaster.Game
 			sbyte vertLoc = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert);
 			sbyte kind = this.troops.TroopKind(participantIdx, troopIdx);
 
-			if (this.processor.PullGlobalWord(0xb278) == 1)
+			if (WorldMapView == 1)
 			{
 				this.processor.RegAcc.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
 
@@ -908,7 +908,7 @@ namespace Civilization1Remaster.Game
 
 				if (troopIdx != 0xffff)
 				{
-					short ownerIdx = this.processor.PullGlobalSignedWord(0xd20a);
+					short ownerIdx = (short)UnitAtTilePlayer;
 					short personIdx = this.owner.World.PersonParticipantIdx;
 
 					bool seen = MapRevealed != 0 || ownerIdx == personIdx ||
@@ -916,7 +916,7 @@ namespace Civilization1Remaster.Game
 
 					if (seen && (ObtainTileImprovements(horizLoc, vertLoc) & 0x1) == 0)
 					{
-						RepaintUnitTile(this.processor.PullGlobalSignedWord(0xd20a), (short)troopIdx);
+						RepaintUnitTile((short)UnitAtTilePlayer, (short)troopIdx);
 					}
 				}
 			}
@@ -1084,7 +1084,7 @@ namespace Civilization1Remaster.Game
 				if (found != 0xffff)
 				{
 					FoundPlayer = participantIdx;
-					this.processor.EmitGlobalWord(0xd20a, participantIdx);
+					UnitAtTilePlayer = participantIdx;
 				}
 				else
 				{
@@ -1219,7 +1219,7 @@ namespace Civilization1Remaster.Game
 				if (town.ConditionMarker != 0xff && town.Place.X == horizLoc && town.Place.Y == vertLoc)
 				{
 					FoundPlayer = participantIdx;
-					this.processor.EmitGlobalWord(0xd20a, participantIdx);
+					UnitAtTilePlayer = participantIdx;
 					found = (ushort)townIdx;
 					break;
 				}

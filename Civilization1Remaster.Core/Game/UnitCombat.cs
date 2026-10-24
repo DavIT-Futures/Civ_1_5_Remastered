@@ -364,7 +364,7 @@ namespace Civilization1Remaster.Game
 				((ushort)PullUnitByte(participantIdx2, troopIdx2, 9) & personBit) != 0 ||
 				MapRevealed != 0;
 
-			return visibleToPerson && this.processor.PullGlobalWord(0xb278) != 1;
+			return visibleToPerson && WorldMapView != 1;
 		}
 
 		private void AnimateBattle(

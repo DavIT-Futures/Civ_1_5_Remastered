@@ -365,6 +365,57 @@ namespace Civilization1Remaster
 			get => this.processor.PullGlobalWord(0xe3c6);
 			set => this.processor.EmitGlobalWord(0xe3c6, value);
 		}
+		/// <summary>0x3b62: the story text of the intro (0 not started, then telling)</summary>
+		protected ushort StoryState
+		{
+			get => this.processor.PullGlobalWord(0x3b62);
+			set => this.processor.EmitGlobalWord(0x3b62, value);
+		}
+
+		/// <summary>0x4384: the letter of the drive of the saved games</summary>
+		protected ushort SaveDrive
+		{
+			get => this.processor.PullGlobalWord(0x4384);
+			set => this.processor.EmitGlobalWord(0x4384, value);
+		}
+
+		/// <summary>0x6806: the music time of the next line of the story</summary>
+		protected ushort StoryLineTime
+		{
+			get => this.processor.PullGlobalWord(0x6806);
+			set => this.processor.EmitGlobalWord(0x6806, value);
+		}
+
+		/// <summary>0x6b64: the main screen and the map are drawn again after the city screen</summary>
+		protected ushort MapRedrawRequest
+		{
+			get => this.processor.PullGlobalWord(0x6b64);
+			set => this.processor.EmitGlobalWord(0x6b64, value);
+		}
+
+		/// <summary>0x6c98: the divisor of the pollution of the cities</summary>
+		protected ushort PollutionFactor
+		{
+			get => this.processor.PullGlobalWord(0x6c98);
+			set => this.processor.EmitGlobalWord(0x6c98, value);
+		}
+
+		/// <summary>0xb1e8: a city is handled once more with its screen (2 again)</summary>
+		protected ushort CityAgain
+		{
+			get => this.processor.PullGlobalWord(0xb1e8);
+			set => this.processor.EmitGlobalWord(0xb1e8, value);
+		}
+
+		/// <summary>0xb278: 1 when the map is drawn as the world map (a tile in 4 x 4 pixels)</summary>
+		protected ushort WorldMapView => this.processor.PullGlobalWord(0xb278);
+
+		/// <summary>0xd20a: the player of the unit found last at a tile (also in 0xd7f0)</summary>
+		protected ushort UnitAtTilePlayer
+		{
+			get => this.processor.PullGlobalWord(0xd20a);
+			set => this.processor.EmitGlobalWord(0xd20a, value);
+		}
 		#endregion
 	}
 }

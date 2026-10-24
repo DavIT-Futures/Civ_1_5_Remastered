@@ -687,7 +687,7 @@ namespace Civilization1Remaster.Game
 						.Text(".\n")
 						.Style(4)
 						.Dialog(100, 80);
-					this.processor.EmitGlobalWord(0xb1e8, 1);
+					CityAgain = 1;
 				}
 
 				this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
@@ -967,7 +967,7 @@ namespace Civilization1Remaster.Game
 			this.processor.RegAcc.Value16 = 0;
 			this.round.FactoryPower = 0;
 			this.round.FactoryBonus = 0;
-			this.processor.EmitGlobalWord(0x6c98, 1);
+			PollutionFactor = 1;
 			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 
 			if (town.Has(CityStructure.Factory))
@@ -981,13 +981,13 @@ namespace Civilization1Remaster.Game
 
 			if (town.Has(CityStructure.HydroPlant))
 			{
-				this.processor.EmitGlobalWord(0x6c98, 2);
+				PollutionFactor = 2;
 				this.round.FactoryPower = 2;
 			}
 
 			if (town.Has(CityStructure.NuclearPlant))
 			{
-				this.processor.EmitGlobalWord(0x6c98, 2);
+				PollutionFactor = 2;
 				this.round.FactoryPower = 2;
 			}
 
@@ -1002,7 +1002,7 @@ namespace Civilization1Remaster.Game
 
 				if (this.owner.MapOps.ObtainContinentID(town.Place.X, town.Place.Y) == this.round.Continent)
 				{
-					this.processor.EmitGlobalWord(0x6c98, 2);
+					PollutionFactor = 2;
 					this.round.FactoryPower = 2;
 				}
 			}
@@ -1010,7 +1010,7 @@ namespace Civilization1Remaster.Game
 			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 
 			if (town.Has(CityStructure.RecyclingCenter))
-				this.processor.EmitGlobalWord(0x6c98, 3);
+				PollutionFactor = 3;
 
 			this.round.FactoryPower = (ushort)this.owner.Helpers.VerifyValueSpan((short)this.round.FactoryPower, 0, (short)this.round.FactoryBonus);
 			this.round.ShieldsKept = CityShields;
@@ -1176,7 +1176,7 @@ namespace Civilization1Remaster.Game
 				if (this.round.NewUnit == 0xffff || (town.PresentMakingIdx != 0 && town.PresentMakingIdx < 0x1a))
 					return;
 
-				this.processor.EmitGlobalWord(0xb1e8, 1);
+				CityAgain = 1;
 				EmptyMessage()
 					.City(townIdx)
 					.Text(" builds ");
@@ -1449,7 +1449,7 @@ namespace Civilization1Remaster.Game
 			// The announcement (a wonder of a computer player shows its city to all)
 			if (humanPlayed)
 			{
-				this.processor.EmitGlobalWord(0xb1e8, 1);
+				CityAgain = 1;
 			}
 			else
 			{
@@ -1737,7 +1737,7 @@ namespace Civilization1Remaster.Game
 				return;
 			}
 
-			this.processor.EmitGlobalWord(0xb1e8, 0);
+			CityAgain = 0;
 			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 
 			StopMakingUnit(town, owner, true);
@@ -3377,7 +3377,7 @@ namespace Civilization1Remaster.Game
 				if (this.round.AdvisorPick == 0x63)
 					return CityScreenStep.Restart;
 
-				this.processor.EmitGlobalWord(0xb1e8, 0);
+				CityAgain = 0;
 
 				StopMakingUnit(town, owner, false);
 				town.PresentMakingIdx = (sbyte)(byte)this.round.AdvisorPick;
@@ -3443,7 +3443,7 @@ namespace Civilization1Remaster.Game
 			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 1);
 			this.processor.EmitGlobalByte(0xba06, 0);
 			this.owner.CityScene.DisplayCityScreen(townIdx, -1);
-			this.processor.EmitGlobalWord(0x6b64, 1);
+			MapRedrawRequest = 1;
 			CityScreenTab = 0;
 
 			return CityScreenStep.Restart;
@@ -3675,7 +3675,7 @@ namespace Civilization1Remaster.Game
 					this.owner.TextPainter.AwaitTime(10);
 					this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 16, 16, ScreenBox, horiz, vert);
 					this.owner.TextPainter.AwaitTime(10);
-					this.processor.EmitGlobalWord(0x6b64, 1);
+					MapRedrawRequest = 1;
 				}
 				while ((ushort)this.owner.Libc.KeyAvailable() == 0);
 
@@ -3754,7 +3754,7 @@ namespace Civilization1Remaster.Game
 				this.processor.RegBase.Value16 = ScreenBox;
 				this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 1);
 				this.owner.CityNaming.DisplayCityLabelPrompt(townIdx);
-				this.processor.EmitGlobalWord(0x6b64, 1);
+				MapRedrawRequest = 1;
 				return CityScreenStep.Restart;
 			}
 
@@ -3825,7 +3825,7 @@ namespace Civilization1Remaster.Game
 					town.ConditionMarker |= 0x80;
 
 					if (improvement + 1 == 8)
-						this.processor.EmitGlobalWord(0x6b64, 1);
+						MapRedrawRequest = 1;
 				}
 
 				this.owner.Startup.ConcealMouseCursor();
@@ -4147,7 +4147,7 @@ namespace Civilization1Remaster.Game
 
 					if ((town.ConditionMarker & 1) == 0)
 					{
-						this.processor.EmitGlobalWord(0xb1e8, 1);
+						CityAgain = 1;
 
 						if ((this.owner.World.SessionPrefMarkers & 1) != 0)
 							this.owner.HelpSystem.DisplayHelpPopup(0x2708);
@@ -4340,7 +4340,7 @@ namespace Civilization1Remaster.Game
 			if (owner == person && (short)(11 - player.FoundScienceTally) > (short)this.round.Measure)
 				this.round.Measure = (ushort)(11 - player.FoundScienceTally);
 
-			if (owner == person && this.processor.PullGlobalWord(0xb1e8) != 0)
+			if (owner == person && CityAgain != 0)
 				return;
 
 			short progress = (short)(player.InquiryHeadway / (this.owner.World.Season < 0 ? 1 : 2));
@@ -4370,7 +4370,7 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private short CountPollution(City town)
 		{
-			short divisor = this.processor.PullGlobalSignedWord(0x6c98);
+			short divisor = (short)PollutionFactor;
 
 			if (divisor == 0)
 				throw new Exception("Division by zero");

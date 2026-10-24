@@ -54,16 +54,16 @@ namespace Civilization1Remaster.Game
 						unrest |= 2;
 					}
 
-					if (this.processor.PullGlobalWord(0xb1e8) == 0)
+					if (CityAgain == 0)
 						break;
 
 					this.owner.CityOps.HandleCity(townIdx, 1);
 
 					this.owner.TurnHooks.RepaintMainScreen();
 
-					bool again = this.processor.PullGlobalWord(0xb1e8) == 2;
+					bool again = CityAgain == 2;
 
-					this.processor.EmitGlobalWord(0xb1e8, 0);
+					CityAgain = 0;
 
 					if (!again)
 						break;
@@ -263,11 +263,11 @@ namespace Civilization1Remaster.Game
 
 			RenderAdvisorScenery();
 
-			this.processor.EmitGlobalWord(0x6b64, 0x0);
+			MapRedrawRequest = 0x0;
 
 			this.owner.CityOps.HandleCity(townIdx, 1);
 
-			if (this.processor.PullGlobalWord(0x6b64) != 0)
+			if (MapRedrawRequest != 0)
 			{
 				this.owner.TurnHooks.RepaintMainScreen();
 			}
@@ -1139,7 +1139,7 @@ namespace Civilization1Remaster.Game
 
 			this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
 			this.owner.Startup.DisplayMouseCursor();
-			this.processor.EmitGlobalWord(0x6b64, 1);
+			MapRedrawRequest = 1;
 
 			return null;
 		}

@@ -1465,14 +1465,14 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private bool StoryStep(ushort fileName)
 		{
-			if ((short)this.processor.PullGlobalWord(0x3b62) >= 2 && this.owner.Libc.KeyAvailable() == 0)
+			if ((short)StoryState >= 2 && this.owner.Libc.KeyAvailable() == 0)
 			{
 				// The story is told: the "press a key" line
-				if ((short)this.processor.PullGlobalWord(0x3b62) < 5)
+				if ((short)StoryState < 5)
 				{
-					this.processor.EmitGlobalWord(0x3b62, (ushort)(this.processor.PullGlobalWord(0x3b62) + 1));
+					StoryState = (ushort)(StoryState + 1);
 
-					if (this.processor.PullGlobalWord(0x3b62) == 5)
+					if (StoryState == 5)
 					{
 						this.owner.Services.FloodBox(ScreenBox, 40, 160, 240, 8, 0);
 					}
@@ -1491,11 +1491,11 @@ namespace Civilization1Remaster.Game
 				return false;
 			}
 
-			if (this.processor.PullGlobalWord(0x3b62) == 0)
+			if (StoryState == 0)
 			{
 				this.processor.EmitGlobalWord(0x6804, (ushort)this.owner.Libc.OpenStream("story.txt", "rt"));
-				this.processor.EmitGlobalWord(0x3b62, 0x1);
-				this.processor.EmitGlobalWord(0x6806, 0);
+				StoryState = 0x1;
+				StoryLineTime = 0;
 				this.processor.EmitGlobalWord(0x6800, 0);
 
 				this.owner.Libc.CopyText(0xba06, "");
@@ -1509,14 +1509,14 @@ namespace Civilization1Remaster.Game
 				this.processor.EmitGlobalWord(0x6800, this.owner.Services.ObtainSongPosition());
 			}
 
-			if (this.processor.PullGlobalSignedWord(0x6800) < this.processor.PullGlobalSignedWord(0x6806))
+			if (this.processor.PullGlobalSignedWord(0x6800) < (short)StoryLineTime)
 			{
 				MarkScreenChanged();
 
 				return true;
 			}
 
-			if (this.processor.PullGlobalWord(0x3b62) != 2 && this.processor.PullGlobalSignedWord(0x6802) < 0x28)
+			if (StoryState != 2 && this.processor.PullGlobalSignedWord(0x6802) < 0x28)
 			{
 				this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 160, 3);
 
@@ -1538,7 +1538,7 @@ namespace Civilization1Remaster.Game
 
 			MarkScreenChanged();
 
-			return this.processor.PullGlobalWord(0x3b62) != 2;
+			return StoryState != 2;
 		}
 
 		/// <summary>
@@ -1562,7 +1562,7 @@ namespace Civilization1Remaster.Game
 
 			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 160, 11);
 
-			this.processor.EmitGlobalWord(0x6806, 0x0);
+			StoryLineTime = 0x0;
 
 			if ((short)this.owner.Libc.TextLength(0xba06) > 3)
 			{
@@ -1576,7 +1576,7 @@ namespace Civilization1Remaster.Game
 					this.owner.Services.PerformSound(4, 0);
 				}
 
-				this.processor.EmitGlobalWord(0x6806, (ushort)(this.processor.PullGlobalWord(0x6806) + 2));
+				StoryLineTime = (ushort)(StoryLineTime + 2);
 				this.processor.EmitGlobalWord(0x6802, (ushort)(this.processor.PullGlobalWord(0x6802) + 1));
 			}
 			else
@@ -1586,13 +1586,13 @@ namespace Civilization1Remaster.Game
 
 			if ((short)this.owner.Libc.TextLength(0xba06) > 0x13)
 			{
-				this.processor.EmitGlobalWord(0x6806, (ushort)(this.processor.PullGlobalWord(0x6806) + 1));
+				StoryLineTime = (ushort)(StoryLineTime + 1);
 			}
 
-			this.processor.EmitGlobalWord(0x6806, (ushort)this.owner.Helpers.VerifyValueSpan(
+			StoryLineTime = (ushort)this.owner.Helpers.VerifyValueSpan(
 				this.processor.PullInt16(0x3710, (ushort)((this.processor.PullGlobalWord(0x6802) << 1) + 0x83)),
-				(45 * this.processor.PullGlobalSignedWord(0x6806)) + this.processor.PullGlobalSignedWord(0x6800),
-				32767));
+				(45 * (short)StoryLineTime) + this.processor.PullGlobalSignedWord(0x6800),
+				32767);
 		}
 
 		/// <summary>
@@ -1689,7 +1689,7 @@ namespace Civilization1Remaster.Game
 				StopStoryColourCycles();
 			}
 
-			this.processor.EmitGlobalWord(0x3b62, 0x2);
+			StoryState = 0x2;
 		}
 
 		/// <summary>Stops the colour cycles 1 - 0x3b68 of the story picture</summary>

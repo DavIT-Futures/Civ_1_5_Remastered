@@ -85,7 +85,7 @@ namespace Civilization1Remaster.UI
 				}
 			}
 
-			if (this.processor.PullGlobalWord(0xb278) != 1)
+			if (WorldMapView != 1)
 			{
 				this.owner.Conquest.AwaitForKeyPressOrMouseClick();
 
@@ -691,7 +691,7 @@ namespace Civilization1Remaster.UI
 
 				tally.Shields[owner] += shields;
 
-				short pollution = (short)(CPU.SignedQuotient(shields, (short)this.processor.PullGlobalWord(0x6c98)) - 0x14);
+				short pollution = (short)(CPU.SignedQuotient(shields, (short)PollutionFactor) - 0x14);
 				pollution += (short)((short)(size * ContentAdvances) / 4);
 
 				if (pollution > 0)

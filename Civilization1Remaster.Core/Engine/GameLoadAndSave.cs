@@ -557,11 +557,11 @@ namespace Civilization1Remaster.Engine
 		{
 			this.processor.Journal.OpenScope("QueryForStoreDrive()");
 
-			if (this.processor.PullGlobalWord(0x4384) == 0xffff)
+			if (SaveDrive == 0xffff)
 			{
 				this.owner.Libc.DosQueryDrive(0x4384);
 
-				this.processor.EmitGlobalWord(0x4384, (ushort)(this.processor.PullGlobalWord(0x4384) - 1));
+				SaveDrive = (ushort)(SaveDrive - 1);
 			}
 
 			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 15);
@@ -593,13 +593,13 @@ namespace Civilization1Remaster.Engine
 				{
 					if (key == 'A' + driveIdx || key == 'a' + driveIdx)
 					{
-						this.processor.EmitGlobalWord(0x4384, driveIdx);
+						SaveDrive = driveIdx;
 					}
 				}
 
 				if (key == 0x1b)
 				{
-					this.processor.EmitGlobalWord(0x4384, 0xffff);
+					SaveDrive = 0xffff;
 				}
 
 				this.owner.Services.FloodBox(ScreenBox, 80, 88, 160, 24, 15);
@@ -608,7 +608,7 @@ namespace Civilization1Remaster.Engine
 
 			this.owner.Services.FloodBox(ScreenBox, 8, 8, 304, 184, 15);
 
-			ushort drive = this.processor.PullGlobalWord(0x4384);
+			ushort drive = SaveDrive;
 
 			if (drive != 0xffff)
 			{
@@ -627,9 +627,9 @@ namespace Civilization1Remaster.Engine
 				}
 			}
 
-			this.processor.EmitGlobalByte(0x41c6, (byte)(this.processor.PullGlobalByte(0x4384) + 0x61));
+			this.processor.EmitGlobalByte(0x41c6, (byte)((byte)SaveDrive + 0x61));
 
-			drive = this.processor.PullGlobalWord(0x4384);
+			drive = SaveDrive;
 			this.processor.RegAcc.Value16 = drive;
 
 			// Far return
@@ -641,7 +641,7 @@ namespace Civilization1Remaster.Engine
 		/// <summary>The letter of the drive (0x4384) is written at the end of the text at 0xba06, place: 0xba05 the last character</summary>
 		private void AppendDriveLetter(ushort place)
 		{
-			this.processor.EmitGlobalByte((ushort)(this.owner.Libc.TextLength(0xba06) + place), (byte)(this.processor.PullGlobalByte(0x4384) + 0x41));
+			this.processor.EmitGlobalByte((ushort)(this.owner.Libc.TextLength(0xba06) + place), (byte)((byte)SaveDrive + 0x41));
 		}
 
 		/// <summary>

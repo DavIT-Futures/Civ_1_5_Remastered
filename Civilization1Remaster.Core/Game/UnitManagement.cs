@@ -1831,7 +1831,7 @@ namespace Civilization1Remaster.Game
 			int horizLoc = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz);
 			int vertLoc = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert);
 
-			if (this.processor.PullGlobalWord(0xb278) == 1)
+			if (WorldMapView == 1)
 			{
 				this.owner.MapOps.RenderMapTile(horizLoc, vertLoc);
 			}
