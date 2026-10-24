@@ -406,7 +406,7 @@ namespace Civilization1Remaster.UI
 					break;
 
 				this.owner.Startup.ConcealMouseCursor();
-				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0x19d4), 0, 0);
+				this.owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, BackScreenBox, 0, 0);
 				this.owner.Startup.DisplayMouseCursor();
 
 				this.processor.EmitGlobalWord(0x3936, 0xffff);
@@ -423,7 +423,7 @@ namespace Civilization1Remaster.UI
 				this.processor.EmitGlobalWord(0x3936, 1);
 
 				this.owner.Startup.ConcealMouseCursor();
-				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0xaa), 0, 0);
+				this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
 				this.owner.Startup.DisplayMouseCursor();
 			}
 
@@ -434,7 +434,7 @@ namespace Civilization1Remaster.UI
 		/// <summary>The style of screen 0 (word 0x10 of it) back from 0x67ec</summary>
 		private void RestoreScreenStyle()
 		{
-			ushort screen = this.processor.PullGlobalWord(0xaa);
+			ushort screen = ScreenBox;
 			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(screen + 0x10), this.processor.PullGlobalWord(0x67ec));
 		}
 
@@ -656,7 +656,7 @@ namespace Civilization1Remaster.UI
 				return;
 
 			this.owner.Startup.ConcealMouseCursor();
-			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0x19d4), 0, 0);
+			this.owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, BackScreenBox, 0, 0);
 			this.owner.Startup.DisplayMouseCursor();
 			this.owner.Helpers.HaltHueCycling();
 
@@ -668,7 +668,7 @@ namespace Civilization1Remaster.UI
 			this.processor.EmitGlobalWord(0x3936, 0);
 
 			this.owner.Startup.ConcealMouseCursor();
-			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0xaa), 0, 0);
+			this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
 			this.owner.Startup.DisplayMouseCursor();
 
 			DisplayKingMessage(participantIdx);
@@ -728,7 +728,7 @@ namespace Civilization1Remaster.UI
 			Leader(participantIdx).Gold = 0;
 
 			this.owner.Startup.ConcealMouseCursor();
-			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0x19d4), 0, 0);
+			this.owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, BackScreenBox, 0, 0);
 			this.owner.Startup.DisplayMouseCursor();
 			this.owner.Helpers.HaltHueCycling();
 			this.processor.EmitGlobalWord(0x3936, 0xffff);
@@ -749,7 +749,7 @@ namespace Civilization1Remaster.UI
 			this.processor.EmitGlobalWord(0x3936, 0);
 
 			this.owner.Startup.ConcealMouseCursor();
-			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0xaa), 0, 0);
+			this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
 			this.owner.Startup.DisplayMouseCursor();
 
 			this.audienceLastAudience = (ushort)this.owner.World.RoundTally;
@@ -987,7 +987,7 @@ namespace Civilization1Remaster.UI
 			// function body
 			ReleaseKingResources();
 
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
+			this.processor.RegBase.Value16 = ScreenBox;
 			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 0x1);
 
 			this.owner.TurnHooks.RepaintMainScreen();
@@ -1085,7 +1085,7 @@ namespace Civilization1Remaster.UI
 			ushort typeface = (ushort)((sbyte)this.processor.PullUInt8(0x36fa, (ushort)this.owner.World.Participants[participantIdx].ChiefVisuals) + 8);
 			this.processor.EmitGlobalWord(0x67ec, typeface == 0xa ? (ushort)3 : typeface);
 
-			this.processor.EmitGlobalWord((ushort)(this.processor.PullGlobalWord(0xaa) + 0x10), this.processor.PullGlobalWord(0x67ec));
+			this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), this.processor.PullGlobalWord(0x67ec));
 			this.processor.EmitGlobalWord(0xd2dc, 1);
 			this.processor.EmitGlobalWord(0x3936, 1);
 			this.processor.EmitGlobalWord(0x67e8, 0xffff);
@@ -1212,7 +1212,7 @@ namespace Civilization1Remaster.UI
 						this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert));
 
 					if (this.owner.World.Towns[townIdx].ParticipantIdx == this.owner.World.PersonParticipantIdx &&
-						(short)this.processor.PullGlobalWord(0x6c9a) <= 2)
+						(short)FoundDistance <= 2)
 					{
 						this.owner.UnitOps.EliminateUnit(participantIdx, troopIdx);
 					}
@@ -1466,7 +1466,7 @@ namespace Civilization1Remaster.UI
 				place++;
 			}
 
-			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0x19d4), 0, 0);
+			this.owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, BackScreenBox, 0, 0);
 
 			if (this.owner.Startup.QueryForDisk(2, 0) != 0)
 			{
@@ -1487,15 +1487,15 @@ namespace Civilization1Remaster.UI
 
 				this.processor.EmitGlobalWord(0x67fa, 1);
 
-				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0x19d4), 0, 0);
+				this.owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, BackScreenBox, 0, 0);
 
 				this.owner.Startup.QueryForDisk(0, 1);
 
-				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0xaa), 0, 0);
+				this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
 			}
 			else
 			{
-				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0xaa), 0, 0);
+				this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
 
 				this.processor.EmitGlobalWord(0x67fa, 0);
 			}
@@ -1597,12 +1597,12 @@ namespace Civilization1Remaster.UI
 
 				for (int figureIdx = 0; (short)((this.owner.World.Participants[participantIdx].Standing + 1) >> 1) > figureIdx; figureIdx++)
 				{
-					this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0x19d4),
+					this.owner.Services.RenderPictureToScreen(BackScreenBox,
 						(short)this.processor.PullGlobalWord((ushort)((figureIdx << 1) + 0x3afe)), 34,
 						this.processor.PullGlobalWord((ushort)((((figureIdx + participantIdx) & 3) * 6) + 0x804e)));
 				}
 
-				this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0x19d4), 90, 0, this.processor.PullGlobalWord(0xb1e6));
+				this.owner.Services.RenderPictureToScreen(BackScreenBox, 90, 0, this.processor.PullGlobalWord(0xb1e6));
 
 				this.processor.EmitGlobalWord(0x67f4, 0);
 
@@ -1630,11 +1630,11 @@ namespace Civilization1Remaster.UI
 
 				this.owner.Helpers.HaltHueCycling();
 
-				this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 0);
+				this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
 
 				this.owner.VideoCard.AssignHuesFromHueStruct(0xbdee);
 
-				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0xaa), 0, 0);
+				this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
 
 				this.owner.Startup.DisplayMouseCursor();
 			}
@@ -1706,7 +1706,7 @@ namespace Civilization1Remaster.UI
 						short vertLoc = (short)((this.processor.PullUInt16(0x36fa, (ushort)(place + 0xf0)) - 0x64) -
 							(this.processor.PullUInt16(0x36fa, (ushort)(place + 0xf2)) - (0x19 * seat)));
 
-						this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa), horizLoc, vertLoc + 34,
+						this.owner.Services.RenderPictureToScreen(ScreenBox, horizLoc, vertLoc + 34,
 							this.processor.PullGlobalWord((ushort)((arg3 << 1) + (0x6 * seat) + 0x804e)));
 
 						this.processor.EmitGlobalWord(0x67e8, arg3);
@@ -1722,13 +1722,13 @@ namespace Civilization1Remaster.UI
 
 				if (arg1 != 0xffff)
 				{
-					this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa), faceHoriz, faceVert - 2,
+					this.owner.Services.RenderPictureToScreen(ScreenBox, faceHoriz, faceVert - 2,
 						this.processor.PullGlobalWord((ushort)((arg1 << 2) + 0x7efe)));
 				}
 
 				if (arg2 != 0xffff)
 				{
-					this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa), faceHoriz, faceVert + 18,
+					this.owner.Services.RenderPictureToScreen(ScreenBox, faceHoriz, faceVert + 18,
 						this.processor.PullGlobalWord((ushort)((arg2 << 2) + 0x7f00)));
 				}
 
@@ -1750,8 +1750,8 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Startup.ConcealMouseCursor();
 
-			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), 0, 0x80, 0x140, 0x48,
-				this.processor.PullGlobalWord(0x19d4), 0, 0x80);
+			this.owner.VideoCard.RenderImage(ScreenBox, 0, 0x80, 0x140, 0x48,
+				BackScreenBox, 0, 0x80);
 
 			if (horizLoc == 0x14)
 			{
@@ -1764,8 +1764,8 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Startup.ConcealMouseCursorToSavedLevel();
 
-			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0x80, 0x140, 0x48,
-				this.processor.PullGlobalWord(0xaa), 0, 0x80);
+			this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0x80, 0x140, 0x48,
+				ScreenBox, 0, 0x80);
 
 			this.owner.Startup.DisplayMouseCursor();
 

@@ -66,13 +66,13 @@ namespace Civilization1Remaster.Engine
 			ushort lastBreak = 0;
 			ushort lineStart = 0;
 			short lineBreadth = 0;
-			ushort lineHeight = this.owner.VideoCard.ObtainTextHeight(this.processor.PullGlobalWord((ushort)(this.processor.PullGlobalWord(0xaa) + 0x10)));
+			ushort lineHeight = this.owner.VideoCard.ObtainTextHeight(this.processor.PullGlobalWord((ushort)(ScreenBox + 0x10)));
 
 			for (ushort place = 0; (short)this.owner.Libc.TextLength(0xba06) > (short)place; place++)
 			{
 				byte chr = this.processor.PullGlobalByte((ushort)(0xba06 + place));
 
-				lineBreadth += (short)this.owner.VideoCard.ObtainCharWidth(this.processor.PullGlobalWord((ushort)(this.processor.PullGlobalWord(0xaa) + 0x10)), chr);
+				lineBreadth += (short)this.owner.VideoCard.ObtainCharWidth(this.processor.PullGlobalWord((ushort)(ScreenBox + 0x10)), chr);
 
 				if (chr == 0x20 || chr == 0xa || chr == 0x5e)
 				{

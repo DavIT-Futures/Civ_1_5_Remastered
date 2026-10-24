@@ -105,7 +105,7 @@ namespace Civilization1Remaster.Engine
 				}
 			}
 
-			this.processor.EmitGlobalWord(0x6c9a, (ushort)nearestDistance);
+			FoundDistance = (ushort)nearestDistance;
 			this.processor.RegAcc.Value16 = nearest;
 
 			this.processor.Journal.CloseScope("LocateNearestCity");
@@ -142,7 +142,7 @@ namespace Civilization1Remaster.Engine
 				}
 			}
 
-			this.processor.EmitGlobalWord(0x6c9a, (ushort)nearestDistance);
+			FoundDistance = (ushort)nearestDistance;
 			this.processor.RegAcc.Value16 = nearest;
 
 			this.processor.Journal.CloseScope("LocateNearestUnit");
@@ -263,9 +263,9 @@ namespace Civilization1Remaster.Engine
 						int tileBreadth = Math.Min(breadthScratch, 32);
 
 						this.owner.VideoCard.RenderImage(
-							this.processor.PullGlobalWord(0x19e8),
+							PictureScreenBox,
 							288, 120, tileBreadth, tileAltitude,
-							this.processor.PullGlobalWord(0xaa),
+							ScreenBox,
 							horizLocScratch, vertLocScratch);
 
 						horizLocScratch += tileBreadth;
@@ -278,7 +278,7 @@ namespace Civilization1Remaster.Engine
 			}
 			else
 			{
-				this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa),
+				this.owner.Services.FloodBox(ScreenBox,
 					horizLoc, vertLoc, breadth, altitude, 7);
 			}		
 		}

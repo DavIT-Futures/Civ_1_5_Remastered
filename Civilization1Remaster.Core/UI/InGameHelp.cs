@@ -32,20 +32,20 @@ namespace Civilization1Remaster.UI
 				this.owner.Startup.ConcealMouseCursor();
 
 				this.owner.VideoCard.RenderImage(
-					this.processor.PullGlobalWord(0xaa),
+					ScreenBox,
 					0, 0, 0x140, 0xc8,
-					this.processor.PullGlobalWord(0x19d4),
+					BackScreenBox,
 					0, 0);
 
-				this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 2);
+				this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 2);
 				this.owner.TextPainter.RenderCenteredTextToScreen0(topicAddr, 160, 192, 0);
 				this.owner.BlockText.RenderTextChunk(32, 32, 32, 15);
 				this.owner.Conquest.AwaitForKeyPressOrMouseClick();
 
 				this.owner.VideoCard.RenderImage(
-					this.processor.PullGlobalWord(0x19d4),
+					BackScreenBox,
 					0, 0, 0x140, 0xc8,
-					this.processor.PullGlobalWord(0xaa),
+					ScreenBox,
 					0, 0);
 
 				this.owner.Startup.DisplayMouseCursor();
@@ -117,7 +117,7 @@ namespace Civilization1Remaster.UI
 			ushort townIdx = this.owner.Helpers.LocateNearestCity(horizLoc, vertLoc);
 
 			if (townIdx == 0xffff || (ushort)this.owner.World.Towns[townIdx].ParticipantIdx != (ushort)participantIdx ||
-				this.processor.PullGlobalWord(0x6c9a) != 1)
+				FoundDistance != 1)
 				return;
 
 			byte improvements = (byte)this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc);
@@ -163,27 +163,27 @@ namespace Civilization1Remaster.UI
 
 				this.owner.Startup.ConcealMouseCursor();
 
-				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), 0, 0, 0x140, 0xc8,
-					this.processor.PullGlobalWord(0x19d4), 0, 0);
+				this.owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8,
+					BackScreenBox, 0, 0);
 
 				short height = (short)((6 * lineTally) + 10);
 
-				this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 56, 16, 208, height, 2);
+				this.owner.Services.FloodBox(ScreenBox, 56, 16, 208, height, 2);
 
 				this.owner.Dialogs.RenderBox(56, 16, 208, height, 10);
 
-				this.processor.EmitGlobalWord((ushort)(this.processor.PullGlobalWord(0xaa) + 0x10), 0x2);
+				this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 0x2);
 
 				this.owner.TextPainter.RenderCenteredTextToScreen0(0x34e7, 160, 19, 0);
 
 				this.owner.BlockText.RenderTextChunk(32, 64, 25, 15);
 
-				this.processor.EmitGlobalWord((ushort)(this.processor.PullGlobalWord(0xaa) + 0x10), 0x1);
+				this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 0x1);
 
 				this.owner.Conquest.AwaitForKeyPressOrMouseClick();
 
-				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 0x140, 0xc8,
-					this.processor.PullGlobalWord(0xaa), 0, 0);
+				this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8,
+					ScreenBox, 0, 0);
 
 				this.owner.Startup.DisplayMouseCursor();
 			}
@@ -209,27 +209,27 @@ namespace Civilization1Remaster.UI
 
 				this.owner.Startup.ConcealMouseCursor();
 
-				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), 0, 0, 0x140, 0xc8,
-					this.processor.PullGlobalWord(0x19d4), 0, 0);
+				this.owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8,
+					BackScreenBox, 0, 0);
 
 				short height = (short)((6 * lineTally) + 10);
 
-				this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 56, 16, 208, height, 4);
+				this.owner.Services.FloodBox(ScreenBox, 56, 16, 208, height, 4);
 
 				this.owner.Dialogs.RenderBox(56, 16, 208, height, 12);
 
-				this.processor.EmitGlobalWord((ushort)(this.processor.PullGlobalWord(0xaa) + 0x10), 0x2);
+				this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 0x2);
 
 				this.owner.TextPainter.RenderCenteredTextToScreen0(0x350b, 160, 19, 0);
 
 				this.owner.BlockText.RenderTextChunk(32, 64, 25, 15);
 
-				this.processor.EmitGlobalWord((ushort)(this.processor.PullGlobalWord(0xaa) + 0x10), 0x1);
+				this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 0x1);
 
 				this.owner.Conquest.AwaitForKeyPressOrMouseClick();
 
-				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 0x140, 0xc8,
-					this.processor.PullGlobalWord(0xaa), 0, 0);
+				this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8,
+					ScreenBox, 0, 0);
 
 				this.owner.Startup.DisplayMouseCursor();
 			}

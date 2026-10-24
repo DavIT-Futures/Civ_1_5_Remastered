@@ -191,7 +191,7 @@ namespace Civilization1Remaster.Engine
 				{
 					// Switch the tab
 					this.displayBackups = !this.displayBackups;
-					this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 15);
+					this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 15);
 					continue;
 				}
 
@@ -220,9 +220,9 @@ namespace Civilization1Remaster.Engine
 			this.owner.Startup.ConcealMouseCursor();
 
 			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0xaa),
+				ScreenBox,
 				0, 0, 0x140, 0xc8,
-				this.processor.PullGlobalWord(0x19d4),
+				BackScreenBox,
 				0, 0);
 
 			if (QueryForStoreDrive() != 0xffff)
@@ -233,9 +233,9 @@ namespace Civilization1Remaster.Engine
 			this.owner.Startup.QueryForDisk(0, 1);
 
 			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0x19d4),
+				BackScreenBox,
 				0, 0, 0x140, 0xc8,
-				this.processor.PullGlobalWord(0xaa),
+				ScreenBox,
 				0, 0);
 
 			this.owner.Startup.DisplayMouseCursor();
@@ -398,11 +398,11 @@ namespace Civilization1Remaster.Engine
 
 				this.owner.Startup.QueryForDisk(0, 1);
 
-				this.processor.EmitGlobalWord(this.processor.PullGlobalWord(0xaa), 0x2);
+				this.processor.EmitGlobalWord(ScreenBox, 0x2);
 
 				this.owner.WorldSetup.ReckonContinentSizes(0);
 
-				this.processor.EmitGlobalWord(this.processor.PullGlobalWord(0xaa), 0x0);
+				this.processor.EmitGlobalWord(ScreenBox, 0x0);
 				this.processor.EmitGlobalWord(0x6820, 0x8);
 
 				// The original game had 4 manual saves and saved slots 4 - 9 automatically, at the start of a turn.
@@ -436,7 +436,7 @@ namespace Civilization1Remaster.Engine
 
 			this.owner.Startup.ConcealMouseCursor();
 
-			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0x19d4), 0, 0);
+			this.owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, BackScreenBox, 0, 0);
 
 			if (QueryForStoreDrive() != 0xffff)
 			{
@@ -475,7 +475,7 @@ namespace Civilization1Remaster.Engine
 						{
 							this.owner.Libc.CopyText(0xba06, " Game NOT saved.\n");
 
-							this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 64, 127, 192, 34, 12);
+							this.owner.Services.FloodBox(ScreenBox, 64, 127, 192, 34, 12);
 						}
 
 						if (this.processor.PullGlobalWord(0x681c) == 0xd)
@@ -499,7 +499,7 @@ namespace Civilization1Remaster.Engine
 
 			this.owner.Startup.QueryForDisk(0, 1);
 
-			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0xaa), 0, 0);
+			this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
 
 			this.owner.Startup.DisplayMouseCursor();
 
@@ -564,7 +564,7 @@ namespace Civilization1Remaster.Engine
 				this.processor.EmitGlobalWord(0x4384, (ushort)(this.processor.PullGlobalWord(0x4384) - 1));
 			}
 
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 15);
+			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 15);
 
 			if (this.processor.PullGlobalWord(0x681a) == 0)
 			{
@@ -602,11 +602,11 @@ namespace Civilization1Remaster.Engine
 					this.processor.EmitGlobalWord(0x4384, 0xffff);
 				}
 
-				this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 80, 88, 160, 24, 15);
+				this.owner.Services.FloodBox(ScreenBox, 80, 88, 160, 24, 15);
 			}
 			while (key != 0xd && key != 0x1b);
 
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 8, 8, 304, 184, 15);
+			this.owner.Services.FloodBox(ScreenBox, 8, 8, 304, 184, 15);
 
 			ushort drive = this.processor.PullGlobalWord(0x4384);
 

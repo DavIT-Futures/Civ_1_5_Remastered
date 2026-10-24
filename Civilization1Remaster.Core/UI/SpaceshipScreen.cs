@@ -27,7 +27,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Startup.QueryForDisk(1, 1);
 
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 0);
+			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
 
 			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x4bc4, 1);
 
@@ -109,7 +109,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Libc.CopyBytes(0xc744, 0xc35c, 0x180);
 
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 0);
+			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
 
 			this.owner.VideoCard.AssignHuesFromHueStruct(0xc5be);
 
@@ -161,18 +161,18 @@ namespace Civilization1Remaster.UI
 
 			if ((short)mass >= 0x50 && shown)
 			{
-				this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa), 152, 88, this.processor.PullGlobalWord(0x6834));
+				this.owner.Services.RenderPictureToScreen(ScreenBox, 152, 88, this.processor.PullGlobalWord(0x6834));
 			}
 
 			if (shown)
 			{
 				ushort colour = (ushort)((participantIdx << 1) + 0x1946);
 
-				this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 240, 8, 80, 192, this.processor.PullGlobalWord(colour));
+				this.owner.Services.FloodBox(ScreenBox, 240, 8, 80, 192, this.processor.PullGlobalWord(colour));
 
-				this.owner.VideoCard.RenderLine(this.processor.PullGlobalWord(0xaa), 0, 8, 0, 199, this.processor.PullGlobalWord(colour));
+				this.owner.VideoCard.RenderLine(ScreenBox, 0, 8, 0, 199, this.processor.PullGlobalWord(colour));
 
-				this.owner.VideoCard.RenderLine(this.processor.PullGlobalWord(0xaa), 0, 199, 240, 199, this.processor.PullGlobalWord(colour));
+				this.owner.VideoCard.RenderLine(ScreenBox, 0, 199, 240, 199, this.processor.PullGlobalWord(colour));
 			}
 
 			(short success, short flightTime, short vertLoc) = RenderSpaceshipFigures(shown, mass);
@@ -237,9 +237,9 @@ namespace Civilization1Remaster.UI
 		{
 			ushort names = (ushort)(participantIdx << 1);
 
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 0);
+			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
 
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 8, this.processor.PullGlobalWord((ushort)(names + 0x1946)));
+			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 8, this.processor.PullGlobalWord((ushort)(names + 0x1946)));
 
 			Message(this.processor.PullGlobalWord((ushort)(names + 0x1982)))
 				.Text(" SpaceShip: X.S.S. ");
@@ -282,7 +282,7 @@ namespace Civilization1Remaster.UI
 					{
 						// The original computes the picture address as part << 1 + 0x682a, which C# reads as part << 0x682b,
 						// a shift by 11 (the count is masked to 5 bits)
-						this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa), (column * 16) - 16, (row * 16) + 8,
+						this.owner.Services.RenderPictureToScreen(ScreenBox, (column * 16) - 16, (row * 16) + 8,
 							this.processor.PullGlobalWord((ushort)((ushort)part << 0xb)));
 					}
 
@@ -741,7 +741,7 @@ namespace Civilization1Remaster.UI
 		/// </summary>
 		private void BuildSpaceshipPart(short participantIdx, ushort placeIdx)
 		{
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 0);
+			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
 
 			Message(this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1992)))
 				.Text(" build space ship.\n");
@@ -783,7 +783,7 @@ namespace Civilization1Remaster.UI
 			this.processor.EnterFrame(0x16);
 			this.processor.PreserveSource();
 
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 0);
+			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
 
 			RenderSpaceScenery();
 
@@ -1020,7 +1020,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Startup.ConcealMouseCursor();
 
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 0);
+			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
 
 			this.owner.TurnLogic.AwaitForKey();
 

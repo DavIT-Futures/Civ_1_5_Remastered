@@ -1235,6 +1235,14 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   `CityRound` na stosie (`Workers` 0x50, `TileFood` / `TileShields` / `TileTrade` 0x4 / 0xc / 0x46, `UnitsDrawn` 0x4e,
   `Found` 0x108 …): 120 odczytów, 57 zapisów. Tablice ramki (BP-0x3e, BP-0x74, BP-0x8e) zostają adresowane przez BP.
   Raport sondy identyczny co do bajtu, pełny zestaw zielony, 8 / 8 mutacji.
+- B4, porcja 1 (2026-10-24): zmienne globalne jako nazwane właściwości `GameModule` (region „Global variables”), które
+  czytają i zapisują segment danych dokładnie tam, gdzie oryginał (te same dostępy – zegar testów i raport sondy bez
+  zmian): pudełka ekranów `ScreenBox` 0xaa, `BackScreenBox` 0x19d4, `PictureScreenBox` 0x19e8 (763 miejsca) i wyniki tury
+  miasta `CityFood` / `CityShields` / `CityTrade` / `CityLuxuries` / `CityHappy` / `CityUnhappy` / `CityScience`
+  0x70da – 0x70e6, `CityOwner` 0x6548, `CityTiles` 0x6540, `CitySpecialists` 0xe8b8, `FoundDistance` 0x6c9a,
+  `ContentAdvances` 0xb882, `HumanTileNear` 0x70e8 (220 odczytów, 47 zapisów). Skrypt: lista adresów z nazwami → zamiana
+  w klasach `GameModule` (inne klasy, np. sterowniki, zostają z adresami). Pełny zestaw zielony, raport identyczny,
+  8 / 8 mutacji (`PictureScreenBox` łapie dopiero test podwójnej gry – golden master nie porównuje ekranów).
 
 ## Następny krok
 

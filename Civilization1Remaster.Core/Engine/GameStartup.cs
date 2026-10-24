@@ -52,7 +52,7 @@ namespace Civilization1Remaster.Engine
 			if ((short)this.processor.RegAcc.Value16 > (short)this.processor.PullLocalWord(0x4))
 			{
 				// Not enough memory: the amount in the text 0x270, then a menu with it
-				this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 12);
+				this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 12);
 
 				EmptyMessage()
 					.Number((short)this.processor.PullLocalWord(0x4));
@@ -156,13 +156,13 @@ namespace Civilization1Remaster.Engine
 			// From here the same as after Load a Saved Game in LogoAndMainGameMenu
 			ConcealMouseCursor();
 
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 7);
+			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 7);
 
 			this.owner.NewGameWizard.DisplayTribeSelection();
 
 			this.processor.EmitGlobalWord(0x2f98, 0x1);
 
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 0);
+			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
 
 			this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, 0x1c0c, 1);
 
@@ -304,7 +304,7 @@ namespace Civilization1Remaster.Engine
 				while (this.owner.Services.PathPresent(this.processor.PullGlobalWord((ushort)((diskIdx << 1) + 0x1ace))) == 0xffff ||
 					marker == 0xffff)
 				{
-					this.owner.Services.DisplayScreen(this.processor.PullGlobalWord(this.processor.PullGlobalWord(0xaa)));
+					this.owner.Services.DisplayScreen(this.processor.PullGlobalWord(ScreenBox));
 
 					if (marker == 0xffff)
 					{
@@ -313,7 +313,7 @@ namespace Civilization1Remaster.Engine
 
 					ConcealMouseCursor();
 
-					this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 15);
+					this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 15);
 
 					this.processor.EmitGlobalByte(0x1ade,
 						(byte)(CPU.SignedQuotient((short)diskIdx, (short)this.processor.PullGlobalWord(0xdeba)) + 0x31));
@@ -331,7 +331,7 @@ namespace Civilization1Remaster.Engine
 
 					this.processor.EmitGlobalWord(0x3936, kept);
 
-					this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 15);
+					this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 15);
 
 					this.processor.EmitGlobalWord(0x1ae0, 0x1);
 
@@ -405,7 +405,7 @@ namespace Civilization1Remaster.Engine
 
 						ConcealMouseCursor();
 
-						this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 7);
+						this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 7);
 						chosen = true;
 						break;
 
@@ -455,7 +455,7 @@ namespace Civilization1Remaster.Engine
 				this.owner.Services.FloodColors(5, 0, 0, 0);
 			}
 
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 0);
+			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
 
 			this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, 0x1c0c, 1);
 
@@ -510,14 +510,14 @@ namespace Civilization1Remaster.Engine
 		/// </summary>
 		private void ShowMadeWorld(ushort pictureName)
 		{
-			this.processor.EmitUInt16(this.processor.SegData.Value16, this.processor.PullGlobalWord(0xaa), 0x0);
+			this.processor.EmitUInt16(this.processor.SegData.Value16, ScreenBox, 0x0);
 
 			this.owner.Services.DisplayScreen(0);
 
 			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, pictureName, 0);
 
-			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0xa0, 0x32, 0xa0, 0x96,
-				this.processor.PullGlobalWord(0x19e8), 0xa0, 0x32);
+			this.owner.VideoCard.RenderImage(BackScreenBox, 0xa0, 0x32, 0xa0, 0x96,
+				PictureScreenBox, 0xa0, 0x32);
 
 			QueryForDisk(0, 1);
 		}
@@ -536,14 +536,14 @@ namespace Civilization1Remaster.Engine
 				this.owner.Services.FloodColors(5, 0, 0, 0);
 			}
 
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 0);
+			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
 
 			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x1b3d, 1);
 
 			QueryForDisk(0, 1);
 
-			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 0x140, 0xc8,
-				this.processor.PullGlobalWord(0xaa), 0, 0);
+			this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8,
+				ScreenBox, 0, 0);
 
 			DisplayMouseCursor();
 

@@ -291,7 +291,7 @@ namespace Civilization1Remaster.Game
 			City town = this.owner.World.Towns[townIdx];
 
 			this.owner.UnitOps.ConstructUnitsFromCityList(townIdx);
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 0);
+			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
 			RenderFrame(2, 1, 208, 21);
 
 			// The population: 1 + 2 + ... + the size
@@ -305,7 +305,7 @@ namespace Civilization1Remaster.Game
 			}
 
 			this.round.Index = citizen;
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
+			this.processor.RegBase.Value16 = ScreenBox;
 			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 2);
 
 			EmptyMessage()
@@ -328,7 +328,7 @@ namespace Civilization1Remaster.Game
 
 			ushort tile = 0;
 
-			for (; (short)tile < (short)this.processor.PullGlobalWord(0x6540); tile++)
+			for (; (short)tile < (short)CityTiles; tile++)
 			{
 				this.round.Index = tile;
 				short horizLoc = (short)(town.Place.X + this.owner.TownDeltas[tile].X);
@@ -336,7 +336,7 @@ namespace Civilization1Remaster.Game
 				this.round.TileHoriz = (ushort)horizLoc;
 				this.round.TileVert = (ushort)vertLoc;
 
-				short owner = (short)this.processor.PullGlobalWord(0x6548);
+				short owner = (short)CityOwner;
 
 				if (owner == this.owner.World.PersonParticipantIdx &&
 					(this.owner.World.ChartSight[(ushort)horizLoc, (ushort)vertLoc] & (1 << (owner & 0xff))) == 0)
@@ -381,7 +381,7 @@ namespace Civilization1Remaster.Game
 		private bool FeedCity(short townIdx)
 		{
 			City town = this.owner.World.Towns[townIdx];
-			short owner = (short)this.processor.PullGlobalWord(0x6548);
+			short owner = (short)CityOwner;
 
 			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 			town.ConditionMarker &= 0x7f;
@@ -429,7 +429,7 @@ namespace Civilization1Remaster.Game
 					town.TrueExtent--;
 					this.processor.RegSource.Value16 = (ushort)(townIdx * 0x1c);
 					this.owner.Advisors.FinalizeProduction(townIdx, (ushort)(short)town.Place.X, (ushort)(short)town.Place.Y);
-					this.owner.NewGameWizard.EliminateCivilization((short)this.processor.PullGlobalWord(0x6548), 0);
+					this.owner.NewGameWizard.EliminateCivilization((short)CityOwner, 0);
 					this.owner.Startup.DisplayMouseCursor();
 					return false;
 				}
@@ -458,7 +458,7 @@ namespace Civilization1Remaster.Game
 				// No growth above 10 without an aqueduct
 				town.TrueExtent--;
 
-				if (this.processor.PullGlobalWord(0x6548) == (ushort)this.owner.World.PersonParticipantIdx)
+				if (CityOwner == (ushort)this.owner.World.PersonParticipantIdx)
 				{
 					this.processor.EmitGlobalWord(0x2f9e, 4);
 					EmptyMessage()
@@ -481,7 +481,7 @@ namespace Civilization1Remaster.Game
 		private void CountCityUnits(short townIdx)
 		{
 			City town = this.owner.World.Towns[townIdx];
-			short owner = (short)this.processor.PullGlobalWord(0x6548);
+			short owner = (short)CityOwner;
 
 			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 			this.round.Workers = (ushort)(town.TrueExtent + 1);
@@ -544,10 +544,10 @@ namespace Civilization1Remaster.Game
 		{
 			City town = this.owner.World.Towns[townIdx];
 
-			this.processor.EmitGlobalWord(0x70e8, 0);
+			HumanTileNear = 0;
 			ushort tile = 0;
 
-			for (; (short)tile < (short)this.processor.PullGlobalWord(0x6540); tile++)
+			for (; (short)tile < (short)CityTiles; tile++)
 			{
 				this.round.Index = tile;
 				this.processor.RegSource.Value16 = (ushort)(tile << 1);
@@ -559,7 +559,7 @@ namespace Civilization1Remaster.Game
 				this.round.TileHoriz = (ushort)horizLoc;
 				this.round.TileVert = (ushort)vertLoc;
 
-				short owner = (short)this.processor.PullGlobalWord(0x6548);
+				short owner = (short)CityOwner;
 
 				// A tile the owner has not seen (the barbarians see all)
 				if (owner != 0 && (this.owner.World.ChartSight[(ushort)horizLoc, (ushort)vertLoc] & (1 << (owner & 0xff))) == 0)
@@ -569,7 +569,7 @@ namespace Civilization1Remaster.Game
 
 				ushort shared = (ushort)(short)(10 * this.owner.TownDeltas[tile].X + this.owner.TownDeltas[tile].Y * 2);
 
-				if (this.round.Value != 0xffff && this.round.Value != this.processor.PullGlobalWord(0x6548))
+				if (this.round.Value != 0xffff && this.round.Value != CityOwner)
 				{
 					// A tile of another player
 					this.processor.RegDest.Value16 = shared;
@@ -579,7 +579,7 @@ namespace Civilization1Remaster.Game
 					this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
 
 					if (this.round.Value == (ushort)this.owner.World.PersonParticipantIdx)
-						this.processor.EmitGlobalWord(0x70e8, 1);
+						HumanTileNear = 1;
 				}
 
 				// A tile worked by a neighbouring city
@@ -622,7 +622,7 @@ namespace Civilization1Remaster.Game
 		private bool KeepWorkers(short townIdx, short marker)
 		{
 			City town = this.owner.World.Towns[townIdx];
-			short owner = (short)this.processor.PullGlobalWord(0x6548);
+			short owner = (short)CityOwner;
 
 			this.processor.RegAcc.Value16 = 0;
 			this.round.WorkersHigh = 0;
@@ -632,14 +632,14 @@ namespace Civilization1Remaster.Game
 			{
 				this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 
-				if ((town.ConditionMarker & 1) == 0 && this.processor.PullGlobalWord(0x70e8) == 0)
+				if ((town.ConditionMarker & 1) == 0 && HumanTileNear == 0)
 					return true;
 			}
 
 			// 0x50: the size + 1 less the workers
 			ushort tile = 0;
 
-			for (; (short)tile < (short)this.processor.PullGlobalWord(0x6540); tile++)
+			for (; (short)tile < (short)CityTiles; tile++)
 			{
 				this.round.Index = tile;
 
@@ -655,7 +655,7 @@ namespace Civilization1Remaster.Game
 				this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 				this.round.Workers = (ushort)(town.TrueExtent + 1);
 
-				for (tile = 0; (short)tile < (short)this.processor.PullGlobalWord(0x6540); tile++)
+				for (tile = 0; (short)tile < (short)CityTiles; tile++)
 				{
 					this.round.Index = tile;
 
@@ -694,7 +694,7 @@ namespace Civilization1Remaster.Game
 				this.round.Workers = (ushort)(town.TrueExtent + 1);
 			}
 
-			return this.round.Workers != this.processor.PullGlobalWord(0xe8b8) && this.round.Workers != 0;
+			return this.round.Workers != CitySpecialists && this.round.Workers != 0;
 		}
 
 		/// <summary>Whether the tile is worked by the city (CX, BX the masked words of the workers, SI the city, as in the original)</summary>
@@ -739,13 +739,13 @@ namespace Civilization1Remaster.Game
 				// Food first
 				while (true)
 				{
-					this.processor.RegCount.Value16 = (ushort)((short)this.round.Workers / 2 + this.processor.PullGlobalWord(0x70da));
+					this.processor.RegCount.Value16 = (ushort)((short)this.round.Workers / 2 + CityFood);
 					this.processor.RegAcc.Value16 = (ushort)((short)this.round.SettlerFood * (short)this.processor.PullGlobalWord(0xe3c6));
 					this.processor.RegBase.Value16 = (ushort)(town.TrueExtent * 2 + this.processor.RegAcc.Value16);
 
 					bool hungry = (short)this.processor.RegBase.Value16 > (short)this.processor.RegCount.Value16 || town.TrueExtent < 3;
 
-					if (!hungry || (short)this.round.Workers <= (short)this.processor.PullGlobalWord(0xe8b8) ||
+					if (!hungry || (short)this.round.Workers <= (short)CitySpecialists ||
 						this.round.Found == 0xffff)
 					{
 						break;
@@ -757,7 +757,7 @@ namespace Civilization1Remaster.Game
 					this.round.BestFood = 0;
 					ushort tile = 0;
 
-					for (; (short)tile < (short)this.processor.PullGlobalWord(0x6540); tile++)
+					for (; (short)tile < (short)CityTiles; tile++)
 					{
 						this.round.Index = tile;
 
@@ -771,7 +771,7 @@ namespace Civilization1Remaster.Game
 						this.round.TileValue = (ushort)(MayCityWorkTile(horizLoc, vertLoc, 1) << 1);
 						this.processor.RegAcc.Value16 = this.round.TileValue;
 
-						if (this.round.Workers == 1 && this.processor.PullGlobalWord(0x70dc) == 0 && this.round.TileValue == 0)
+						if (this.round.Workers == 1 && CityShields == 0 && this.round.TileValue == 0)
 							continue;
 
 						this.round.TileValue = (ushort)(this.round.TileValue + MayCityWorkTile(horizLoc, vertLoc, 2));
@@ -799,16 +799,16 @@ namespace Civilization1Remaster.Game
 				}
 
 				// A computer city with the flag 1 keeps one more specialist
-				if (this.processor.PullGlobalWord(0x6548) != (ushort)this.owner.World.PersonParticipantIdx)
+				if (CityOwner != (ushort)this.owner.World.PersonParticipantIdx)
 				{
 					this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 
 					if ((town.ConditionMarker & 1) != 0)
-						this.processor.EmitGlobalWord(0xe8b8, (ushort)(this.processor.PullGlobalWord(0xe8b8) + 1));
+						CitySpecialists = (ushort)(CitySpecialists + 1);
 				}
 
 				// The best weighted yield
-				while ((short)this.round.Workers > (short)this.processor.PullGlobalWord(0xe8b8))
+				while ((short)this.round.Workers > (short)CitySpecialists)
 				{
 					this.round.Found = 0xffff;
 					this.processor.RegAcc.Value16 = 0;
@@ -817,7 +817,7 @@ namespace Civilization1Remaster.Game
 					this.round.BestFood = 0;
 					ushort tile = 0;
 
-					for (; (short)tile < (short)this.processor.PullGlobalWord(0x6540); tile++)
+					for (; (short)tile < (short)CityTiles; tile++)
 					{
 						this.round.Index = tile;
 
@@ -829,7 +829,7 @@ namespace Civilization1Remaster.Game
 
 						// Food
 						short divisor = (short)this.owner.Helpers.VerifyValueSpan(
-							this.processor.PullGlobalSignedWord(0x70da) - (town.TrueExtent * 2) - ((short)this.round.SettlerFood * this.processor.PullGlobalSignedWord(0xe3c6)), 1, 99);
+							(short)CityFood - (town.TrueExtent * 2) - ((short)this.round.SettlerFood * this.processor.PullGlobalSignedWord(0xe3c6)), 1, 99);
 						short weight = (short)(16 / divisor);
 						this.processor.RegCount.Value16 = (ushort)weight;
 						this.processor.RegSource.Value16 = (ushort)weight;
@@ -843,7 +843,7 @@ namespace Civilization1Remaster.Game
 						this.processor.RegSource.Value16 = (ushort)yield;
 						this.round.TileShields = (ushort)yield;
 
-						divisor = (short)this.owner.Helpers.VerifyValueSpan(this.processor.PullGlobalSignedWord(0x70dc) - this.processor.PullGlobalSignedWord(0xd2f6), 1, 99);
+						divisor = (short)this.owner.Helpers.VerifyValueSpan((short)CityShields - this.processor.PullGlobalSignedWord(0xd2f6), 1, 99);
 						this.processor.RegCount.Value16 = (ushort)divisor;
 						this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 						this.round.TileValue = (ushort)(this.round.TileValue + (short)(3 * town.TrueExtent) / divisor * yield);
@@ -853,7 +853,7 @@ namespace Civilization1Remaster.Game
 						this.processor.RegSource.Value16 = (ushort)yield;
 						this.round.TileTrade = (ushort)yield;
 
-						divisor = (short)this.owner.Helpers.VerifyValueSpan(this.processor.PullGlobalSignedWord(0x70de), 1, 99);
+						divisor = (short)this.owner.Helpers.VerifyValueSpan((short)CityTrade, 1, 99);
 						this.processor.RegCount.Value16 = (ushort)divisor;
 						this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 						int product = (short)(town.TrueExtent * 2) / divisor * yield;
@@ -991,7 +991,7 @@ namespace Civilization1Remaster.Game
 				this.round.FactoryPower = 2;
 			}
 
-			if (PlayerEnjoysWonderEffect((short)this.processor.PullGlobalWord(0x6548), 15) != 0)
+			if (PlayerEnjoysWonderEffect((short)CityOwner, 15) != 0)
 			{
 				// The wonder powers the cities on its continent
 				short marvelIdx = this.owner.World.MarvelTownIdx[15];
@@ -1013,18 +1013,18 @@ namespace Civilization1Remaster.Game
 				this.processor.EmitGlobalWord(0x6c98, 3);
 
 			this.round.FactoryPower = (ushort)this.owner.Helpers.VerifyValueSpan((short)this.round.FactoryPower, 0, (short)this.round.FactoryBonus);
-			this.round.ShieldsKept = this.processor.PullGlobalWord(0x70dc);
-			this.round.TradeKept = this.processor.PullGlobalWord(0x70de);
+			this.round.ShieldsKept = CityShields;
+			this.round.TradeKept = CityTrade;
 
 			// The shields grow by a quarter of the power and of the factory bonus
-			short shields = (short)this.processor.PullGlobalWord(0x70dc);
+			short shields = (short)CityShields;
 			short power = (short)((short)((short)this.round.FactoryPower * shields) / 4);
 			short factory = (short)((short)this.round.FactoryBonus * shields);
 			this.processor.RegBase.Value16 = (ushort)power;
 			this.processor.RegCount.Value16 = 2;
 			this.processor.RegData.Value16 = (ushort)(factory < 0 ? 0xffff : 0);
 			this.processor.RegAcc.Value16 = (ushort)(factory / 4 + power);
-			this.processor.EmitGlobalWord(0x70dc, (ushort)(this.processor.PullGlobalWord(0x70dc) + this.processor.RegAcc.Value16));
+			CityShields = (ushort)(CityShields + this.processor.RegAcc.Value16);
 
 			this.processor.RegAcc.Value16 = (ushort)marker;
 			this.processor.RegData.Value16 = (ushort)((marker < 0 ? 0xffff : 0) | (ushort)marker);
@@ -1059,16 +1059,16 @@ namespace Civilization1Remaster.Game
 		private ProductionStep ProduceInCity(short townIdx)
 		{
 			City town = this.owner.World.Towns[townIdx];
-			short owner = (short)this.processor.PullGlobalWord(0x6548);
+			short owner = (short)CityOwner;
 
 			// The food and the shields of the turn
 			this.processor.RegSource.Value16 = (ushort)(townIdx * 0x1c);
 			this.processor.RegCount.Value16 = (ushort)(town.TrueExtent * 2);
 			this.processor.RegAcc.Value16 = (ushort)((short)this.round.SettlerFood * (short)this.processor.PullGlobalWord(0xe3c6));
-			this.processor.RegData.Value16 = (ushort)(this.processor.PullGlobalWord(0x70da) - this.processor.RegAcc.Value16 - this.processor.RegCount.Value16);
+			this.processor.RegData.Value16 = (ushort)(CityFood - this.processor.RegAcc.Value16 - this.processor.RegCount.Value16);
 			town.GrainTally += (short)this.processor.RegData.Value16;
 
-			this.round.Value = (ushort)(this.processor.PullGlobalWord(0x70dc) - this.processor.PullGlobalWord(0xd2f6));
+			this.round.Value = (ushort)(CityShields - this.processor.PullGlobalWord(0xd2f6));
 			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0xd2f6);
 			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 
@@ -1110,7 +1110,7 @@ namespace Civilization1Remaster.Game
 			// The first unit of its kind goes into the replay
 			if ((this.owner.World.ScienceLeadingFoundVia[town.PresentMakingIdx] & 8) == 0)
 			{
-				this.owner.UnitOps.AttachReplayContent(6, this.processor.PullGlobalByte(0x6548), (byte)town.PresentMakingIdx);
+				this.owner.UnitOps.AttachReplayContent(6, (byte)CityOwner, (byte)town.PresentMakingIdx);
 				this.owner.World.ScienceLeadingFoundVia[town.PresentMakingIdx] |= 8;
 			}
 
@@ -1148,7 +1148,7 @@ namespace Civilization1Remaster.Game
 			this.owner.Advisors.FinalizeProduction(townIdx, (ushort)(short)town.Place.X, (ushort)(short)town.Place.Y);
 			this.processor.RegSource.Value16 = (ushort)(townIdx * 0x1c);
 			this.round.NewUnit = this.owner.UnitOps.ConstructUnit(owner, town.PresentMakingIdx, town.Place.X, town.Place.Y);
-			this.owner.NewGameWizard.EliminateCivilization((short)this.processor.PullGlobalWord(0x6548), 0);
+			this.owner.NewGameWizard.EliminateCivilization((short)CityOwner, 0);
 			this.owner.Startup.DisplayMouseCursor();
 
 			return ProductionStep.CityLost;
@@ -1164,7 +1164,7 @@ namespace Civilization1Remaster.Game
 		private void FinishUnitOfCity(short townIdx)
 		{
 			City town = this.owner.World.Towns[townIdx];
-			short owner = (short)this.processor.PullGlobalWord(0x6548);
+			short owner = (short)CityOwner;
 			short person = this.owner.World.PersonParticipantIdx;
 
 			if (owner == person || this.round.NewUnit == 0xffff)
@@ -1246,7 +1246,7 @@ namespace Civilization1Remaster.Game
 		private void SendDiplomat(short townIdx)
 		{
 			City town = this.owner.World.Towns[townIdx];
-			short owner = (short)this.processor.PullGlobalWord(0x6548);
+			short owner = (short)CityOwner;
 
 			this.round.Found = 0xffff;
 			this.round.Best = 0x7fff;
@@ -1264,15 +1264,15 @@ namespace Civilization1Remaster.Game
 				this.processor.RegSource.Value16 = (ushort)(otherIdx * 0x1c);
 				this.round.Value = this.owner.Helpers.LocateNearestUnit(owner, (short)this.round.NewUnit, other.Place.X, other.Place.Y);
 
-				this.processor.RegAcc.Value16 = (ushort)(this.processor.PullGlobalWord(0x6c9a) - 3);
-				this.processor.EmitGlobalWord(0x6c9a, (ushort)this.owner.Libc.AbsoluteValue((short)this.processor.RegAcc.Value16));
+				this.processor.RegAcc.Value16 = (ushort)(FoundDistance - 3);
+				FoundDistance = (ushort)this.owner.Libc.AbsoluteValue((short)this.processor.RegAcc.Value16);
 				this.processor.RegBase.Value16 = (ushort)(otherIdx * 0x1c);
 
 				if ((other.ConditionMarker & 0x20) != 0)
-					this.processor.EmitGlobalWord(0x6c9a, 3);
+					FoundDistance = 3;
 
 				short best = (short)this.round.Best;
-				short distance = (short)this.processor.PullGlobalWord(0x6c9a);
+				short distance = (short)FoundDistance;
 
 				if (best < distance)
 					continue;
@@ -1299,10 +1299,10 @@ namespace Civilization1Remaster.Game
 				if (this.owner.MapOps.ObtainContinentID(other.Place.X, other.Place.Y) != this.round.Continent)
 					continue;
 
-				if (this.round.Best == this.processor.PullGlobalWord(0x6c9a))
+				if (this.round.Best == FoundDistance)
 					this.round.Selected = 1;
 				else
-					this.round.Best = this.processor.PullGlobalWord(0x6c9a);
+					this.round.Best = FoundDistance;
 
 				this.round.Found = this.round.Value;
 				this.processor.RegAcc.Value16 = this.round.OtherCity;
@@ -1357,7 +1357,7 @@ namespace Civilization1Remaster.Game
 		private bool CompleteImprovement(short townIdx)
 		{
 			City town = this.owner.World.Towns[townIdx];
-			short owner = (short)this.processor.PullGlobalWord(0x6548);
+			short owner = (short)CityOwner;
 
 			this.processor.RegSource.Value16 = (ushort)(townIdx * 0x1c);
 			this.processor.RegCount.Value16 = 0x1e;
@@ -1385,7 +1385,7 @@ namespace Civilization1Remaster.Game
 				else
 				{
 					this.owner.World.MarvelTownIdx[built - 24] = townIdx;
-					this.owner.UnitOps.AttachReplayContent(10, this.processor.PullGlobalByte(0x6548), (byte)(built - 0x18));
+					this.owner.UnitOps.AttachReplayContent(10, (byte)CityOwner, (byte)(built - 0x18));
 				}
 			}
 			else if (TestImprovement(townIdx, built))
@@ -1424,7 +1424,7 @@ namespace Civilization1Remaster.Game
 			this.processor.RegBase.Value16 = (ushort)(-town.PresentMakingIdx * 0x1e);
 			town.MaterialsTally -= (short)((short)this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xbb2)) *
 				(short)this.round.CostFactor);
-			this.processor.RegCount.LowByte = this.processor.PullGlobalByte(0x6548);
+			this.processor.RegCount.LowByte = (byte)CityOwner;
 
 			bool humanPlayed = this.owner.World.IsHuman(owner);
 
@@ -1511,7 +1511,7 @@ namespace Civilization1Remaster.Game
 		private void BuildSpaceshipPart(short townIdx)
 		{
 			City town = this.owner.World.Towns[townIdx];
-			short owner = (short)this.processor.PullGlobalWord(0x6548);
+			short owner = (short)CityOwner;
 			short person = this.owner.World.PersonParticipantIdx;
 			short part = (short)this.round.Value;
 
@@ -1614,7 +1614,7 @@ namespace Civilization1Remaster.Game
 		private void ApplyImprovement(short townIdx)
 		{
 			City town = this.owner.World.Towns[townIdx];
-			short owner = (short)this.processor.PullGlobalWord(0x6548);
+			short owner = (short)CityOwner;
 			short person = this.owner.World.PersonParticipantIdx;
 			short built = (short)this.round.Value;
 
@@ -1712,7 +1712,7 @@ namespace Civilization1Remaster.Game
 		private void AdviseHumanProduction(short townIdx)
 		{
 			City town = this.owner.World.Towns[townIdx];
-			short owner = (short)this.processor.PullGlobalWord(0x6548);
+			short owner = (short)CityOwner;
 
 			if (owner != this.owner.World.PersonParticipantIdx)
 				return;
@@ -1726,7 +1726,7 @@ namespace Civilization1Remaster.Game
 				return;
 
 			this.round.Value = this.owner.Advisors.PickCityProduction(owner, townIdx);
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
+			this.processor.RegBase.Value16 = ScreenBox;
 			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 2);
 
 			if (this.round.Value == 0x63)
@@ -1758,7 +1758,7 @@ namespace Civilization1Remaster.Game
 		private void BuyForComputerCity(short townIdx)
 		{
 			City town = this.owner.World.Towns[townIdx];
-			short owner = (short)this.processor.PullGlobalWord(0x6548);
+			short owner = (short)CityOwner;
 			Player player = this.owner.World.Participants[owner];
 
 			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
@@ -1884,7 +1884,7 @@ namespace Civilization1Remaster.Game
 			RenderLabelBox(161, 106, 193, 114, 0x25f5, 9);
 			RenderLabelBox(194, 106, 226, 114, 0x25f9, 9);
 
-			this.owner.VideoCard.SubstituteHue(this.processor.PullGlobalWord(0xaa), (33 * this.processor.PullGlobalSignedWord(0x2496)) + 96, 107, 32, 7, 9, 15);
+			this.owner.VideoCard.SubstituteHue(ScreenBox, (33 * this.processor.PullGlobalSignedWord(0x2496)) + 96, 107, 32, 7, 9, 15);
 
 			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x2496);
 
@@ -1901,7 +1901,7 @@ namespace Civilization1Remaster.Game
 		private void CountCorruptionAndTradeRoutes(short townIdx)
 		{
 			City town = this.owner.World.Towns[townIdx];
-			short owner = (short)this.processor.PullGlobalWord(0x6548);
+			short owner = (short)CityOwner;
 			Player player = this.owner.World.Participants[owner];
 
 			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
@@ -1915,7 +1915,7 @@ namespace Civilization1Remaster.Game
 			// The corruption
 			this.processor.RegCount.Value16 = (ushort)(20 * player.RegimeKind + 0x50);
 			this.processor.RegBase.Value16 = 3;
-			short corruption = (short)((short)((short)this.processor.PullGlobalWord(0x70de) * (short)this.processor.PullGlobalWord(0x6b30)) * 3);
+			short corruption = (short)((short)((short)CityTrade * (short)this.processor.PullGlobalWord(0x6b30)) * 3);
 			this.processor.EmitGlobalWord(0xd2e0, (ushort)(corruption / (short)this.processor.RegCount.Value16));
 
 			if (town.Has(CityStructure.Courthouse) || town.Has(CityStructure.Palace))
@@ -1928,7 +1928,7 @@ namespace Civilization1Remaster.Game
 			if (player.RegimeKind == 5)
 				this.processor.EmitGlobalWord(0xd2e0, 0);
 
-			this.processor.RegAcc.LowByte = (byte)(this.processor.PullGlobalByte(0x70de) - this.processor.PullGlobalByte(0xd2e0));
+			this.processor.RegAcc.LowByte = (byte)((byte)CityTrade - this.processor.PullGlobalByte(0xd2e0));
 			town.RootCommerce = (sbyte)this.processor.RegAcc.LowByte;
 
 			// The trade routes
@@ -1941,10 +1941,10 @@ namespace Civilization1Remaster.Game
 					continue;
 
 				City partner = this.owner.World.Towns[this.round.OtherCity];
-				short share = (short)(partner.RootCommerce + this.processor.PullGlobalWord(0x70de) + 4);
+				short share = (short)(partner.RootCommerce + CityTrade + 4);
 				share = (short)(partner.ParticipantIdx != owner ? share / 8 : share / 16);
 				this.processor.RegAcc.Value16 = (ushort)share;
-				this.processor.EmitGlobalWord(0x70de, (ushort)(this.processor.PullGlobalWord(0x70de) + share));
+				CityTrade = (ushort)(CityTrade + share);
 			}
 
 			this.round.Item = 3;
@@ -1960,11 +1960,11 @@ namespace Civilization1Remaster.Game
 		private void SplitTrade(short townIdx)
 		{
 			City town = this.owner.World.Towns[townIdx];
-			Player player = this.owner.World.Participants[(short)this.processor.PullGlobalWord(0x6548)];
+			Player player = this.owner.World.Participants[(short)CityOwner];
 
 			// The corruption of the whole trade
 			this.processor.RegCount.Value16 = (ushort)(20 * player.RegimeKind + 0x50);
-			short corruption = (short)((short)((short)this.processor.PullGlobalWord(0x70de) * (short)this.processor.PullGlobalWord(0x6b30)) * 3);
+			short corruption = (short)((short)((short)CityTrade * (short)this.processor.PullGlobalWord(0x6b30)) * 3);
 			this.processor.EmitGlobalWord(0xd2e0, (ushort)(corruption / (short)this.processor.RegCount.Value16));
 
 			if (player.RegimeKind == 5)
@@ -1977,17 +1977,17 @@ namespace Civilization1Remaster.Game
 			}
 
 			// The luxuries, the taxes and the science
-			short trade = (short)this.processor.PullGlobalWord(0x70de);
+			short trade = (short)CityTrade;
 			short corrupt = (short)this.processor.PullGlobalWord(0xd2e0);
 
-			this.processor.EmitGlobalWord(0x70e0, (ushort)this.owner.Helpers.VerifyValueSpan(((-(player.ResearchLevyRatio + player.LevyRatio - 10) * (trade - corrupt)) + 5) / 10, 0, trade));
+			CityLuxuries = (ushort)this.owner.Helpers.VerifyValueSpan(((-(player.ResearchLevyRatio + player.LevyRatio - 10) * (trade - corrupt)) + 5) / 10, 0, trade);
 
 			this.processor.EmitGlobalWord(0xe17a, (ushort)this.owner.Helpers.VerifyValueSpan(((player.LevyRatio * (trade - corrupt)) + 5) / 10, 0,
-				trade - (short)this.processor.PullGlobalWord(0x70e0) - corrupt));
+				trade - (short)CityLuxuries - corrupt));
 
-			this.processor.RegAcc.Value16 = (ushort)(this.processor.PullGlobalWord(0x70de) - this.processor.PullGlobalWord(0x70e0) -
+			this.processor.RegAcc.Value16 = (ushort)(CityTrade - CityLuxuries -
 				this.processor.PullGlobalWord(0xe17a) - this.processor.PullGlobalWord(0xd2e0));
-			this.processor.EmitGlobalWord(0x70e6, this.processor.RegAcc.Value16);
+			CityScience = this.processor.RegAcc.Value16;
 
 			// The specialists
 			TallySpecialists(1);
@@ -1996,11 +1996,11 @@ namespace Civilization1Remaster.Game
 
 			TallySpecialists(2);
 			this.processor.RegAcc.Value16 = (ushort)(this.processor.RegAcc.Value16 << 1);
-			this.processor.EmitGlobalWord(0x70e6, (ushort)(this.processor.PullGlobalWord(0x70e6) + this.processor.RegAcc.Value16));
+			CityScience = (ushort)(CityScience + this.processor.RegAcc.Value16);
 
 			TallySpecialists(3);
 			this.processor.RegAcc.Value16 = (ushort)(this.processor.RegAcc.Value16 << 1);
-			this.processor.EmitGlobalWord(0x70e0, (ushort)(this.processor.PullGlobalWord(0x70e0) + this.processor.RegAcc.Value16));
+			CityLuxuries = (ushort)(CityLuxuries + this.processor.RegAcc.Value16);
 
 			// The library and the university
 			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
@@ -2012,8 +2012,8 @@ namespace Civilization1Remaster.Game
 				if ((town.StructureMarkers0 & improvement) == 0)
 					continue;
 
-				this.processor.RegAcc.Value16 = (ushort)((short)this.processor.PullGlobalWord(0x70e0) / 2);
-				this.processor.EmitGlobalWord(0x70e0, (ushort)(this.processor.PullGlobalWord(0x70e0) + this.processor.RegAcc.Value16));
+				this.processor.RegAcc.Value16 = (ushort)((short)CityLuxuries / 2);
+				CityLuxuries = (ushort)(CityLuxuries + this.processor.RegAcc.Value16);
 				this.processor.RegAcc.Value16 = (ushort)((short)this.processor.PullGlobalWord(0xe17a) / 2);
 				this.processor.EmitGlobalWord(0xe17a, (ushort)(this.processor.PullGlobalWord(0xe17a) + this.processor.RegAcc.Value16));
 			}
@@ -2029,10 +2029,10 @@ namespace Civilization1Remaster.Game
 		private void CountScienceAndContent(short townIdx)
 		{
 			City town = this.owner.World.Towns[townIdx];
-			short owner = (short)this.processor.PullGlobalWord(0x6548);
+			short owner = (short)CityOwner;
 			Player player = this.owner.World.Participants[owner];
 
-			this.round.Value = this.processor.PullGlobalWord(0x70e6);
+			this.round.Value = CityScience;
 
 			foreach (ushort improvement in new ushort[] { 0x20, 0x800 })
 			{
@@ -2041,13 +2041,13 @@ namespace Civilization1Remaster.Game
 				if ((town.StructureMarkers0 & improvement) == 0)
 					continue;
 
-				this.processor.RegAcc.Value16 = (ushort)((short)this.processor.PullGlobalWord(0x70e6) / 2);
+				this.processor.RegAcc.Value16 = (ushort)((short)CityScience / 2);
 				this.round.Value = (ushort)(this.round.Value + this.processor.RegAcc.Value16);
 
 				if (PlayerEnjoysWonderEffect(owner, 0xc) != 0)
 				{
 					this.processor.RegCount.Value16 = 3;
-					this.processor.RegAcc.Value16 = (ushort)((short)this.processor.PullGlobalWord(0x70e6) / 3);
+					this.processor.RegAcc.Value16 = (ushort)((short)CityScience / 3);
 					this.round.Value = (ushort)(this.round.Value + this.processor.RegAcc.Value16);
 				}
 			}
@@ -2060,8 +2060,8 @@ namespace Civilization1Remaster.Game
 			}
 
 			this.processor.RegAcc.Value16 = this.round.Value;
-			this.processor.EmitGlobalWord(0x70e6, this.processor.RegAcc.Value16);
-			this.processor.EmitGlobalWord(0x70e2, 0);
+			CityScience = this.processor.RegAcc.Value16;
+			CityHappy = 0;
 
 			// The content citizens
 			if (owner == this.owner.World.PersonParticipantIdx)
@@ -2088,18 +2088,18 @@ namespace Civilization1Remaster.Game
 				this.processor.RegAcc.Value16 = (ushort)(town.TrueExtent - 3);
 			}
 
-			this.processor.EmitGlobalWord(0x70e4, this.processor.RegAcc.Value16);
+			CityUnhappy = this.processor.RegAcc.Value16;
 			this.round.Content = this.processor.RegAcc.Value16;
 
 			// The citizens above the size
 			this.processor.EmitGlobalWord(0x6542, 0);
 			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 
-			if (town.TrueExtent < (short)this.processor.PullGlobalWord(0x70e4))
+			if (town.TrueExtent < (short)CityUnhappy)
 			{
-				this.processor.RegCount.Value16 = (ushort)(this.processor.PullGlobalWord(0x70e4) - town.TrueExtent);
+				this.processor.RegCount.Value16 = (ushort)(CityUnhappy - town.TrueExtent);
 				this.processor.EmitGlobalWord(0x6542, this.processor.RegCount.Value16);
-				this.processor.EmitGlobalWord(0x70e4, (ushort)town.TrueExtent);
+				CityUnhappy = (ushort)town.TrueExtent;
 			}
 
 			ReshuffleCitizens(townIdx, this.round.Specialists);
@@ -2117,22 +2117,22 @@ namespace Civilization1Remaster.Game
 				this.round.IconVert = 0x74;
 				RenderCitizenIcons(townIdx, 100, (short)this.round.IconVert, this.round.Specialists, 92);
 				this.round.IconVert = (ushort)(this.round.IconVert + 0x10);
-				this.owner.VideoCard.RenderLine(this.processor.PullGlobalWord(0xaa),
+				this.owner.VideoCard.RenderLine(ScreenBox,
 					100, (short)this.round.IconVert - 2, 222, (short)this.round.IconVert - 2, 1);
 			}
 
-			this.processor.RegAcc.Value16 = (ushort)((short)this.processor.PullGlobalWord(0x70e0) / 2);
-			this.processor.EmitGlobalWord(0x70e2, this.processor.RegAcc.Value16);
+			this.processor.RegAcc.Value16 = (ushort)((short)CityLuxuries / 2);
+			CityHappy = this.processor.RegAcc.Value16;
 
 			ReshuffleCitizens(townIdx, this.round.Specialists);
 
-			if (marker == 1 && this.processor.PullGlobalWord(0x2496) == 1 && this.processor.PullGlobalWord(0x70e2) != 0)
+			if (marker == 1 && this.processor.PullGlobalWord(0x2496) == 1 && CityHappy != 0)
 			{
 				RenderCitizenIcons(townIdx, 100, (short)this.round.IconVert, this.round.Specialists, 92);
-				this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa), 208, (short)this.round.IconVert + 4,
+				this.owner.Services.RenderPictureToScreen(ScreenBox, 208, (short)this.round.IconVert + 4,
 					this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((0xe << 1) + 0xd4ce)));
 				this.round.IconVert = (ushort)(this.round.IconVert + 0x10);
-				this.owner.VideoCard.RenderLine(this.processor.PullGlobalWord(0xaa),
+				this.owner.VideoCard.RenderLine(ScreenBox,
 					100, (short)this.round.IconVert - 2, 222, (short)this.round.IconVert - 2, 1);
 			}
 
@@ -2150,7 +2150,7 @@ namespace Civilization1Remaster.Game
 		private void ApplyContentImprovements(short townIdx, short marker)
 		{
 			City town = this.owner.World.Towns[townIdx];
-			short owner = (short)this.processor.PullGlobalWord(0x6548);
+			short owner = (short)CityOwner;
 			bool tab = marker == 1 && this.processor.PullGlobalWord(0x2496) == 1;
 
 			this.round.IconHoriz = 0xd0;
@@ -2159,7 +2159,7 @@ namespace Civilization1Remaster.Game
 			// The colosseum
 			if (town.Has(CityStructure.Colosseum))
 			{
-				this.processor.EmitGlobalWord(0x70e4, (ushort)(this.processor.PullGlobalWord(0x70e4) - 3));
+				CityUnhappy = (ushort)(CityUnhappy - 3);
 
 				if (tab)
 					DrawContentIcon(14);
@@ -2175,7 +2175,7 @@ namespace Civilization1Remaster.Game
 				else
 					this.processor.RegAcc.Value16 = 0;
 
-				this.processor.EmitGlobalWord(0x70e4, (ushort)(this.processor.PullGlobalWord(0x70e4) - this.processor.RegAcc.Value16));
+				CityUnhappy = (ushort)(CityUnhappy - this.processor.RegAcc.Value16);
 
 				if (tab)
 				{
@@ -2192,14 +2192,14 @@ namespace Civilization1Remaster.Game
 			if (town.Has(CityStructure.Temple))
 			{
 				if (this.owner.Advisors.PlayerKnowsTechnology(owner, 0x1a) != 0)
-					this.processor.EmitGlobalWord(0x70e4, (ushort)(this.processor.PullGlobalWord(0x70e4) - 2));
+					CityUnhappy = (ushort)(CityUnhappy - 2);
 				else if (this.owner.Advisors.PlayerKnowsTechnology(owner, 0x19) != 0)
-					this.processor.EmitGlobalWord(0x70e4, (ushort)(this.processor.PullGlobalWord(0x70e4) - 1));
+					CityUnhappy = (ushort)(CityUnhappy - 1);
 
 				if (PlayerEnjoysWonderEffect(owner, 6) != 0)
 				{
 					this.processor.RegAcc.Value16 = (ushort)(this.owner.Advisors.PlayerKnowsTechnology(owner, 0x1a) != 0 ? 2 : 1);
-					this.processor.EmitGlobalWord(0x70e4, (ushort)(this.processor.PullGlobalWord(0x70e4) - this.processor.RegAcc.Value16));
+					CityUnhappy = (ushort)(CityUnhappy - this.processor.RegAcc.Value16);
 				}
 
 				if (tab)
@@ -2216,7 +2216,7 @@ namespace Civilization1Remaster.Game
 				{
 					RenderCitizenIcons(townIdx, 100, (short)this.round.IconVert, this.round.Specialists, 92);
 					this.round.IconVert = (ushort)(this.round.IconVert + 0x10);
-					this.owner.VideoCard.RenderLine(this.processor.PullGlobalWord(0xaa),
+					this.owner.VideoCard.RenderLine(ScreenBox,
 						100, (short)this.round.IconVert - 2, 222, (short)this.round.IconVert - 2, 1);
 				}
 			}
@@ -2242,7 +2242,7 @@ namespace Civilization1Remaster.Game
 		private void ApplyMilitaryHappiness(short townIdx, short marker)
 		{
 			City town = this.owner.World.Towns[townIdx];
-			short owner = (short)this.processor.PullGlobalWord(0x6548);
+			short owner = (short)CityOwner;
 			Player player = this.owner.World.Participants[owner];
 			bool tab = marker == 1 && this.processor.PullGlobalWord(0x2496) == 1;
 
@@ -2275,7 +2275,7 @@ namespace Civilization1Remaster.Game
 
 						if (tab && (short)this.round.UnitsAway <= 3)
 						{
-							this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa), (short)this.round.IconHoriz,
+							this.owner.Services.RenderPictureToScreen(ScreenBox, (short)this.round.IconHoriz,
 								(short)this.round.IconVert - 1,
 								this.processor.PullUInt16(this.processor.SegData.Value16,
 									(ushort)(((this.troops.Pull(owner, troopIdx, UnitMemory.Kind) + (owner << 5) + 0x40) << 1) + 0xd4ce)));
@@ -2297,7 +2297,7 @@ namespace Civilization1Remaster.Game
 				{
 					this.round.NewUnit = slot;
 
-					if (this.processor.PullGlobalWord(0x70e4) == 0)
+					if (CityUnhappy == 0)
 						continue;
 
 					this.processor.RegSource.Value16 = (ushort)(townIdx * 0x1c);
@@ -2318,7 +2318,7 @@ namespace Civilization1Remaster.Game
 				if ((short)this.round.UnitsAway > 3)
 					this.round.UnitsAway = 3;
 
-				this.processor.EmitGlobalWord(0x70e4, (ushort)(this.processor.PullGlobalWord(0x70e4) - (ushort)this.owner.Helpers.VerifyValueSpan((short)this.round.UnitsAway, 0, this.processor.PullGlobalSignedWord(0x70e4))));
+				CityUnhappy = (ushort)(CityUnhappy - (ushort)this.owner.Helpers.VerifyValueSpan((short)this.round.UnitsAway, 0, (short)CityUnhappy));
 			}
 			else
 			{
@@ -2333,7 +2333,7 @@ namespace Civilization1Remaster.Game
 				{
 					short unhappy = (short)((short)this.round.Value * (short)this.processor.PullGlobalWord(0x6546));
 					this.processor.RegAcc.Value16 = (ushort)unhappy;
-					this.processor.EmitGlobalWord(0x70e4, (ushort)(this.processor.PullGlobalWord(0x70e4) + unhappy));
+					CityUnhappy = (ushort)(CityUnhappy + unhappy);
 
 					if (tab)
 					{
@@ -2342,7 +2342,7 @@ namespace Civilization1Remaster.Game
 						for (; unhappy > (short)drawn; drawn++)
 						{
 							this.round.NewUnit = drawn;
-							this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa), (short)this.round.IconHoriz,
+							this.owner.Services.RenderPictureToScreen(ScreenBox, (short)this.round.IconHoriz,
 								(short)this.round.IconVert + 4, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((0xd << 1) + 0xd4ce)));
 							this.round.IconHoriz = (ushort)(this.round.IconHoriz - 2);
 						}
@@ -2358,7 +2358,7 @@ namespace Civilization1Remaster.Game
 			{
 				RenderCitizenIcons(townIdx, 100, (short)this.round.IconVert, this.round.Specialists, 92);
 				this.round.IconVert = (ushort)(this.round.IconVert + 0x10);
-				this.owner.VideoCard.RenderLine(this.processor.PullGlobalWord(0xaa),
+				this.owner.VideoCard.RenderLine(ScreenBox,
 					100, (short)this.round.IconVert - 2, 222, (short)this.round.IconVert - 2, 1);
 			}
 
@@ -2374,18 +2374,18 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private void ApplyWonderHappiness(short townIdx, short marker)
 		{
-			short owner = (short)this.processor.PullGlobalWord(0x6548);
+			short owner = (short)CityOwner;
 
-			this.round.Value = (ushort)(this.processor.PullGlobalWord(0x70e2) - this.processor.PullGlobalWord(0x70e4));
+			this.round.Value = (ushort)(CityHappy - CityUnhappy);
 
 			if (PlayerEnjoysWonderEffect(owner, 2) != 0)
-				this.processor.EmitGlobalWord(0x70e2, (ushort)(this.processor.PullGlobalWord(0x70e2) + 1));
+				CityHappy = (ushort)(CityHappy + 1);
 
 			if (PlayerEnjoysWonderEffect(owner, 0x15) != 0)
-				this.processor.EmitGlobalWord(0x70e2, (ushort)(this.processor.PullGlobalWord(0x70e2) + 1));
+				CityHappy = (ushort)(CityHappy + 1);
 
 			if (ObtainWonderCityID(11) == (ushort)townIdx)
-				this.processor.EmitGlobalWord(0x70e4, 0);
+				CityUnhappy = 0;
 
 			if (PlayerEnjoysWonderEffect(owner, 0xd) != 0)
 			{
@@ -2394,26 +2394,26 @@ namespace Civilization1Remaster.Game
 				this.processor.RegSource.Value16 = (ushort)(marvelIdx * 0x1c);
 				this.processor.RegDest.Value16 = this.owner.MapOps.ObtainContinentID(this.owner.World.Towns[marvelIdx].Place.X, this.owner.World.Towns[marvelIdx].Place.Y);
 				if (this.owner.MapOps.ObtainContinentID((short)this.round.Horiz, (short)this.round.Vert) == this.processor.RegDest.Value16)
-					this.processor.EmitGlobalWord(0x70e4, (ushort)(this.processor.PullGlobalWord(0x70e4) - 2));
+					CityUnhappy = (ushort)(CityUnhappy - 2);
 			}
 
 			ReshuffleCitizens(townIdx, this.round.Specialists);
 
 			if (marker == 1 && this.processor.PullGlobalWord(0x2496) == 1 &&
-				(ushort)(this.processor.PullGlobalWord(0x70e2) - this.processor.PullGlobalWord(0x70e4)) != this.round.Value)
+				(ushort)(CityHappy - CityUnhappy) != this.round.Value)
 			{
 				RenderCitizenIcons(townIdx, 100, (short)this.round.IconVert, this.round.Specialists, 92);
 				this.owner.TextPainter.RenderTextToScreen0(0x25fe, 190, (short)this.round.IconVert + 5, 15);
 				this.round.IconVert = (ushort)(this.round.IconVert + 0x10);
-				this.owner.VideoCard.RenderLine(this.processor.PullGlobalWord(0xaa),
+				this.owner.VideoCard.RenderLine(ScreenBox,
 					100, (short)this.round.IconVert - 2, 222, (short)this.round.IconVert - 2, 1);
 			}
 
 			if ((this.owner.World.DiagMarkers & 2) == 0)
 			{
 				this.processor.RegAcc.Value16 = 0;
-				this.processor.EmitGlobalWord(0x70e4, 0);
-				this.processor.EmitGlobalWord(0x70e2, 0);
+				CityUnhappy = 0;
+				CityHappy = 0;
 			}
 		}
 
@@ -2450,7 +2450,7 @@ namespace Civilization1Remaster.Game
 		private bool SupportUnit(short townIdx, short marker)
 		{
 			City town = this.owner.World.Towns[townIdx];
-			short owner = (short)this.processor.PullGlobalWord(0x6548);
+			short owner = (short)CityOwner;
 			short troopIdx = (short)this.round.Index;
 
 			this.processor.RegBase.Value16 = (ushort)(owner * UnitMemory.ParticipantStride);
@@ -2490,9 +2490,9 @@ namespace Civilization1Remaster.Game
 		private bool DisbandUnsupportedUnit(short townIdx)
 		{
 			City town = this.owner.World.Towns[townIdx];
-			short owner = (short)this.processor.PullGlobalWord(0x6548);
+			short owner = (short)CityOwner;
 			short person = this.owner.World.PersonParticipantIdx;
-			bool enoughShields = (short)this.processor.PullGlobalWord(0x70dc) >= (short)this.processor.PullGlobalWord(0xd2f6);
+			bool enoughShields = (short)CityShields >= (short)this.processor.PullGlobalWord(0xd2f6);
 
 			if (enoughShields)
 			{
@@ -2592,7 +2592,7 @@ namespace Civilization1Remaster.Game
 		private void DrawSupportedUnit(short townIdx)
 		{
 			City town = this.owner.World.Towns[townIdx];
-			short owner = (short)this.processor.PullGlobalWord(0x6548);
+			short owner = (short)CityOwner;
 			short troopIdx = (short)this.round.Index;
 			Player player = this.owner.World.Participants[owner];
 
@@ -2603,19 +2603,19 @@ namespace Civilization1Remaster.Game
 			{
 				if (this.processor.PullGlobalWord(0xd2f6) != 0)
 				{
-					this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa), (short)this.round.DrawHoriz + 8,
+					this.owner.Services.RenderPictureToScreen(ScreenBox, (short)this.round.DrawHoriz + 8,
 						(short)this.round.DrawVert + 12, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((0x9 << 1) + 0xd4ce)));
 				}
 
 				if (this.troops.Pull(owner, troopIdx, UnitMemory.Kind) == 0)
 				{
 					// The food of settlers
-					this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa), (short)this.round.DrawHoriz,
+					this.owner.Services.RenderPictureToScreen(ScreenBox, (short)this.round.DrawHoriz,
 						(short)this.round.DrawVert + 12, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((0x8 << 1) + 0xd4ce)));
 
 					if (player.RegimeKind >= 2)
 					{
-						this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa), (short)this.round.DrawHoriz + 2,
+						this.owner.Services.RenderPictureToScreen(ScreenBox, (short)this.round.DrawHoriz + 2,
 							(short)this.round.DrawVert + 12, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((0x8 << 1) + 0xd4ce)));
 					}
 				}
@@ -2633,12 +2633,12 @@ namespace Civilization1Remaster.Game
 							this.troops.Pull(owner, troopIdx, UnitMemory.Horiz) != (byte)(sbyte)town.Place.X ||
 							this.troops.Pull(owner, troopIdx, UnitMemory.Vert) != (byte)(sbyte)town.Place.Y))
 					{
-						this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa), (short)this.round.DrawHoriz,
+						this.owner.Services.RenderPictureToScreen(ScreenBox, (short)this.round.DrawHoriz,
 							(short)this.round.DrawVert + 12, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((0xd << 1) + 0xd4ce)));
 
 						if ((short)this.round.Value > 1)
 						{
-							this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa), (short)this.round.DrawHoriz + 2,
+							this.owner.Services.RenderPictureToScreen(ScreenBox, (short)this.round.DrawHoriz + 2,
 								(short)this.round.DrawVert + 12, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((0xd << 1) + 0xd4ce)));
 						}
 					}
@@ -2646,7 +2646,7 @@ namespace Civilization1Remaster.Game
 			}
 
 			// The unit and its dot on the mini map
-			this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa), (short)this.round.DrawHoriz, (short)this.round.DrawVert,
+			this.owner.Services.RenderPictureToScreen(ScreenBox, (short)this.round.DrawHoriz, (short)this.round.DrawVert,
 				this.processor.PullUInt16(this.processor.SegData.Value16,
 					(ushort)(((this.troops.Pull(owner, troopIdx, UnitMemory.Kind) + (owner << 5) + 0x40) << 1) + 0xd4ce)));
 
@@ -2671,7 +2671,7 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private void DrawUnitInCity(short marker)
 		{
-			short owner = (short)this.processor.PullGlobalWord(0x6548);
+			short owner = (short)CityOwner;
 			short troopIdx = (short)this.round.Index;
 
 			if ((short)this.round.UnitsDrawn >= 0x12 || this.processor.PullGlobalWord(0x2496) != 0)
@@ -2722,12 +2722,12 @@ namespace Civilization1Remaster.Game
 		private void CountSupportCosts(short townIdx)
 		{
 			City town = this.owner.World.Towns[townIdx];
-			Player player = this.owner.World.Participants[(short)this.processor.PullGlobalWord(0x6548)];
+			Player player = this.owner.World.Participants[(short)CityOwner];
 
-			if ((short)this.processor.PullGlobalWord(0x70dc) < (short)this.processor.PullGlobalWord(0xdeb8))
+			if ((short)CityShields < (short)this.processor.PullGlobalWord(0xdeb8))
 			{
 				this.processor.RegCount.Value16 = 5;
-				this.processor.RegAcc.Value16 = (ushort)((short)(this.processor.PullGlobalWord(0xdeb8) - this.processor.PullGlobalWord(0x70dc)) * 5);
+				this.processor.RegAcc.Value16 = (ushort)((short)(this.processor.PullGlobalWord(0xdeb8) - CityShields) * 5);
 				this.processor.EmitGlobalWord(0xe3c2, (ushort)(this.processor.PullGlobalWord(0xe3c2) + this.processor.RegAcc.Value16));
 			}
 
@@ -2751,7 +2751,7 @@ namespace Civilization1Remaster.Game
 		{
 			City town = this.owner.World.Towns[townIdx];
 
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
+			this.processor.RegBase.Value16 = ScreenBox;
 			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 2);
 			RenderFrame(211, 1, 317, 97);
 
@@ -2807,7 +2807,7 @@ namespace Civilization1Remaster.Game
 				}
 
 				this.round.ImprovementCount = (ushort)(this.round.ImprovementCount + 1);
-				this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa), 309, (short)this.round.Vert + 1,
+				this.owner.Services.RenderPictureToScreen(ScreenBox, 309, (short)this.round.Vert + 1,
 					this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((0xb << 1) + 0xd4ce)));
 				RenderImprovementName(improvement, 56, false);
 			}
@@ -2846,13 +2846,13 @@ namespace Civilization1Remaster.Game
 		{
 			City town = this.owner.World.Towns[townIdx];
 
-			this.owner.VideoCard.RenderLine(this.processor.PullGlobalWord(0xaa), 231, 0, 250, 0, 0);
-			this.owner.VideoCard.RenderLine(this.processor.PullGlobalWord(0xaa), 231, 1, 250, 1, 1);
+			this.owner.VideoCard.RenderLine(ScreenBox, 231, 0, 250, 0, 0);
+			this.owner.VideoCard.RenderLine(ScreenBox, 231, 1, 250, 1, 1);
 
 			if (((byte)this.round.ListFlags & 2) != 0)
 				RenderLabelBox(287, 88, 315, 96, 0x262a, 9);
 
-			this.owner.VideoCard.SubstituteHue(this.processor.PullGlobalWord(0xaa), 309, 2, 8, 96, 14, 12);
+			this.owner.VideoCard.SubstituteHue(ScreenBox, 309, 2, 8, 96, 14, 12);
 			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 
 			if (town.PresentMakingIdx >= 0)
@@ -2878,7 +2878,7 @@ namespace Civilization1Remaster.Game
 		private void RenderProductionBox(short townIdx)
 		{
 			City town = this.owner.World.Towns[townIdx];
-			short owner = (short)this.processor.PullGlobalWord(0x6548);
+			short owner = (short)CityOwner;
 
 			this.round.ShieldsPerRow = (ushort)this.owner.Helpers.VerifyValueSpan((((short)this.round.ProductionPrice - 1) / 10) + 1, ((town.MaterialsTally - 1) / 100) + 1, 99);
 
@@ -2897,7 +2897,7 @@ namespace Civilization1Remaster.Game
 			this.round.DrawVert = (ushort)((((short)this.round.ProductionPrice - 1) / perRow << 3) + 8);
 			this.processor.RegAcc.Value16 = this.round.DrawVert;
 
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 230, 99, (short)this.round.DrawHoriz + 3, (short)this.round.DrawVert + 19, 1);
+			this.owner.Services.FloodBox(ScreenBox, 230, 99, (short)this.round.DrawHoriz + 3, (short)this.round.DrawVert + 19, 1);
 
 			if (owner == this.owner.World.PersonParticipantIdx)
 			{
@@ -2909,7 +2909,7 @@ namespace Civilization1Remaster.Game
 
 			if (town.PresentMakingIdx >= 0)
 			{
-				this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa), 264, 100,
+				this.owner.Services.RenderPictureToScreen(ScreenBox, 264, 100,
 					this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((((byte)town.PresentMakingIdx + (owner << 5) + 0x40) << 1) + 0xd4ce)));
 			}
 			else
@@ -2935,7 +2935,7 @@ namespace Civilization1Remaster.Game
 			{
 				this.round.Index = shield;
 				this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
-				this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa),
+				this.owner.Services.RenderPictureToScreen(ScreenBox,
 					((((short)this.round.Index % ((short)this.round.CostFactor * (short)this.round.ShieldsPerRow)) *
 						(short)this.round.Value) / (short)this.round.ShieldsPerRow) + 232,
 					(((short)this.round.Index / ((short)this.round.CostFactor * (short)this.round.ShieldsPerRow)) * 8) + 117,
@@ -2970,7 +2970,7 @@ namespace Civilization1Remaster.Game
 			this.round.DrawVert = (ushort)(80 / box);
 			this.processor.RegAcc.Value16 = this.round.DrawVert;
 
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 2, 106, 91,
+			this.owner.Services.FloodBox(ScreenBox, 2, 106, 91,
 				((short)this.round.CostFactor * (short)this.round.DrawVert) + 12, 1);
 			this.owner.TextPainter.RenderTextToScreen0(0x2640, 8, 108, 15);
 			FloodBoxWithMotif(3, 115, (town.TrueExtent * (short)this.round.Value) + 9,
@@ -2981,7 +2981,7 @@ namespace Civilization1Remaster.Game
 			// The granary
 			if (town.Has(CityStructure.Granary))
 			{
-				this.owner.VideoCard.RenderLine(this.processor.PullGlobalWord(0xaa), 5, 155,
+				this.owner.VideoCard.RenderLine(ScreenBox, 5, 155,
 					(town.TrueExtent * (short)this.round.Value) + 9, 155, 1);
 			}
 
@@ -2994,7 +2994,7 @@ namespace Civilization1Remaster.Game
 					break;
 
 				this.processor.RegSource.Value16 = (ushort)(town.TrueExtent + 1);
-				this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa),
+				this.owner.Services.RenderPictureToScreen(ScreenBox,
 					(((short)this.round.Index % (short)this.processor.RegSource.Value16) * (short)this.round.Value) + 4,
 					(((short)this.round.Index / (short)this.processor.RegSource.Value16) * (short)this.round.DrawVert) + 116,
 					this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((0x8 << 1) + 0xd4ce)));
@@ -3012,7 +3012,7 @@ namespace Civilization1Remaster.Game
 
 			RenderFrame(2, 23, 124, 65);
 			this.round.DrawVert = 0x19;
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 2, 23, 122, 9, 1);
+			this.owner.Services.FloodBox(ScreenBox, 2, 23, 122, 9, 1);
 			this.owner.TextPainter.RenderTextToScreen0(0x264d, 8, (short)this.round.DrawVert, 15);
 			this.round.DrawVert = (ushort)(this.round.DrawVert + 8);
 
@@ -3042,10 +3042,10 @@ namespace Civilization1Remaster.Game
 					if (row == 1 && this.processor.PullGlobalWord(0xd2f6) != 0 && icon == this.processor.PullGlobalWord(0xd2f6))
 						this.round.Horiz = (ushort)(this.round.Horiz + 4);
 
-					if (row == 2 && (ushort)(this.processor.PullGlobalWord(0x70de) - this.processor.PullGlobalWord(0xd2e0)) == icon)
+					if (row == 2 && (ushort)(CityTrade - this.processor.PullGlobalWord(0xd2e0)) == icon)
 						this.round.Horiz = (ushort)(this.round.Horiz + 2);
 
-					this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa), (short)this.round.Horiz,
+					this.owner.Services.RenderPictureToScreen(ScreenBox, (short)this.round.Horiz,
 						((short)this.round.Item * 8) + (short)this.round.DrawVert,
 						this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(((row + 8) << 1) + 0xd4ce)));
 
@@ -3066,12 +3066,12 @@ namespace Civilization1Remaster.Game
 		private void RenderTradeRow()
 		{
 			this.round.Horiz = 8;
-			this.round.Value = (ushort)this.owner.Helpers.VerifyValueSpan(224 / (this.processor.PullGlobalSignedWord(0x70e0) + this.processor.PullGlobalSignedWord(0x70e6) +
+			this.round.Value = (ushort)this.owner.Helpers.VerifyValueSpan(224 / ((short)CityLuxuries + (short)CityScience +
 				this.processor.PullGlobalSignedWord(0xe17a) + this.processor.PullGlobalSignedWord(0xd2e0) + 2), 1, 16);
 
 			RenderTradeIcons(0x70e0, 0xe);
 
-			if (this.processor.PullGlobalWord(0x70e0) != 0)
+			if (CityLuxuries != 0)
 				this.round.Horiz = (ushort)(this.round.Horiz + 8);
 
 			this.processor.RegAcc.Value16 = this.round.Horiz;
@@ -3093,7 +3093,7 @@ namespace Civilization1Remaster.Game
 			for (; (short)drawn < (short)this.processor.PullGlobalWord(amount); drawn++)
 			{
 				this.round.Index = drawn;
-				this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa), (short)this.round.Horiz / 2,
+				this.owner.Services.RenderPictureToScreen(ScreenBox, (short)this.round.Horiz / 2,
 					(short)this.round.DrawVert + 24, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((icon << 1) + 0xd4ce)));
 				this.processor.RegAcc.Value16 = this.round.Value;
 				this.round.Horiz = (ushort)(this.round.Horiz + this.processor.RegAcc.Value16);
@@ -3115,57 +3115,57 @@ namespace Civilization1Remaster.Game
 			int Eaten() => (town.TrueExtent * 2) + ((short)this.round.SettlerFood * this.processor.PullGlobalSignedWord(0xe3c6));
 
 			// The food missing
-			if ((short)Eaten() > this.processor.PullGlobalSignedWord(0x70da))
+			if ((short)Eaten() > (short)CityFood)
 			{
 				this.round.Value = (ushort)this.owner.Helpers.VerifyValueSpan(116 / (Eaten() + 1), 1, 8);
-				ushort icon = this.processor.PullGlobalWord(0x70da);
+				ushort icon = CityFood;
 
 				for (; (short)Eaten() > (short)icon; icon++)
 				{
 					this.round.Index = icon;
-					this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa),
+					this.owner.Services.RenderPictureToScreen(ScreenBox,
 						((short)this.round.Index * (short)this.round.Value) + 8,
 						(short)this.round.DrawVert,
 						this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((0x8 << 1) + 0xd4ce)));
 				}
 
 				this.round.Index = icon;
-				this.owner.VideoCard.SubstituteHue(this.processor.PullGlobalWord(0xaa),
-					((short)this.round.Value * this.processor.PullGlobalSignedWord(0x70da)) + 8,
+				this.owner.VideoCard.SubstituteHue(ScreenBox,
+					((short)this.round.Value * (short)CityFood) + 8,
 					(short)this.round.DrawVert,
-					((Eaten() - this.processor.PullGlobalSignedWord(0x70da)) * (short)this.round.Value) + 4,
+					((Eaten() - (short)CityFood) * (short)this.round.Value) + 4,
 					8, 15, 0);
 			}
 
 			// The shields of the support missing
-			if (this.processor.PullGlobalSignedWord(0x70dc) < this.processor.PullGlobalSignedWord(0xd2f6))
+			if ((short)CityShields < this.processor.PullGlobalSignedWord(0xd2f6))
 			{
-				this.round.Value = (ushort)this.owner.Helpers.VerifyValueSpan(116 / (this.processor.PullGlobalSignedWord(0x70dc) + 1), 1, 8);
-				ushort icon = this.processor.PullGlobalWord(0x70dc);
+				this.round.Value = (ushort)this.owner.Helpers.VerifyValueSpan(116 / ((short)CityShields + 1), 1, 8);
+				ushort icon = CityShields;
 
 				for (; (short)icon < this.processor.PullGlobalSignedWord(0xd2f6); icon++)
 				{
 					this.round.Index = icon;
-					this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa),
+					this.owner.Services.RenderPictureToScreen(ScreenBox,
 						((short)this.round.Index * (short)this.round.Value) + 8,
 						(short)this.round.DrawVert + 8,
 						this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((0x9 << 1) + 0xd4ce)));
 				}
 
 				this.round.Index = icon;
-				this.owner.VideoCard.SubstituteHue(this.processor.PullGlobalWord(0xaa),
-					(this.processor.PullGlobalSignedWord(0x70dc) * (short)this.round.Value) + 8,
+				this.owner.VideoCard.SubstituteHue(ScreenBox,
+					((short)CityShields * (short)this.round.Value) + 8,
 					(short)this.round.DrawVert + 8,
-					(this.processor.PullGlobalSignedWord(0xd2f6) - this.processor.PullGlobalSignedWord(0x70dc)) * (short)this.round.Value,
+					(this.processor.PullGlobalSignedWord(0xd2f6) - (short)CityShields) * (short)this.round.Value,
 					8, 15, 0);
 			}
 
 			// The corruption
 			if (this.processor.PullGlobalWord(0xd2e0) != 0)
 			{
-				this.round.Value = (ushort)this.owner.Helpers.VerifyValueSpan(116 / (this.processor.PullGlobalSignedWord(0x70de) + 1), 1, 8);
-				this.owner.VideoCard.SubstituteHue(this.processor.PullGlobalWord(0xaa),
-					((this.processor.PullGlobalSignedWord(0x70de) - this.processor.PullGlobalSignedWord(0xd2e0)) * (short)this.round.Value) + 6,
+				this.round.Value = (ushort)this.owner.Helpers.VerifyValueSpan(116 / ((short)CityTrade + 1), 1, 8);
+				this.owner.VideoCard.SubstituteHue(ScreenBox,
+					(((short)CityTrade - this.processor.PullGlobalSignedWord(0xd2e0)) * (short)this.round.Value) + 6,
 					(short)this.round.DrawVert + 16,
 					((short)this.round.Value * this.processor.PullGlobalSignedWord(0xd2e0)) + 2,
 					8, 15, 0);
@@ -3199,7 +3199,7 @@ namespace Civilization1Remaster.Game
 					.City((short)partner)
 					.Text(":+");
 				City other = this.owner.World.Towns[partner];
-				int shift = (ushort)other.ParticipantIdx != this.processor.PullGlobalWord(0x6548) ? 3 : 4;
+				int shift = (ushort)other.ParticipantIdx != CityOwner ? 3 : 4;
 				this.owner.Libc.AppendText(0xba06,
 					this.owner.Libc.IntegerToText((short)(((short)town.RootCommerce + (short)other.RootCommerce + 4) >> shift), 10));
 				this.owner.Libc.AppendText(0xba06, "} ");
@@ -3240,7 +3240,7 @@ namespace Civilization1Remaster.Game
 			for (; (short)icon < (short)this.round.Pollution; icon++)
 			{
 				this.round.Index = icon;
-				this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa),
+				this.owner.Services.RenderPictureToScreen(ScreenBox,
 					((short)this.round.Index * (short)this.round.DrawVert) + 98,
 					(this.round.Index & 1) + 161,
 					this.processor.PullGlobalWord(0xb2ba));
@@ -3257,7 +3257,7 @@ namespace Civilization1Remaster.Game
 		private void RenderExitAndBuyButtons(short townIdx)
 		{
 			City town = this.owner.World.Towns[townIdx];
-			short owner = (short)this.processor.PullGlobalWord(0x6548);
+			short owner = (short)CityOwner;
 
 			RenderLabelBox(284, 190, 316, 198, 0x2662, 12);
 			RenderLabelBox(231, 190, 272, 198, 0x2667, 9);
@@ -3310,9 +3310,9 @@ namespace Civilization1Remaster.Game
 				this.round.ChangeBlinks = (ushort)(this.round.ChangeBlinks + 1);
 
 				if (((byte)this.round.ChangeBlinks & 1) != 0)
-					this.owner.VideoCard.SubstituteHue(this.processor.PullGlobalWord(0xaa), 231, 106, 32, 8, 14, 9);
+					this.owner.VideoCard.SubstituteHue(ScreenBox, 231, 106, 32, 8, 14, 9);
 				else
-					this.owner.VideoCard.SubstituteHue(this.processor.PullGlobalWord(0xaa), 231, 106, 32, 8, 9, 14);
+					this.owner.VideoCard.SubstituteHue(ScreenBox, 231, 106, 32, 8, 9, 14);
 
 				this.owner.Startup.DisplayMouseCursor();
 				this.owner.TextPainter.AwaitTime(10);
@@ -3368,10 +3368,10 @@ namespace Civilization1Remaster.Game
 
 			if ((town.ConditionMarker & 0x10) != 0)
 			{
-				short owner = (short)this.processor.PullGlobalWord(0x6548);
+				short owner = (short)CityOwner;
 
 				this.round.AdvisorPick = this.owner.Advisors.PickCityProduction(owner, townIdx);
-				this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
+				this.processor.RegBase.Value16 = ScreenBox;
 				this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 2);
 
 				if (this.round.AdvisorPick == 0x63)
@@ -3383,7 +3383,7 @@ namespace Civilization1Remaster.Game
 				town.PresentMakingIdx = (sbyte)(byte)this.round.AdvisorPick;
 				StartMakingUnit(town, owner, false);
 
-				this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 230, 99, 90, 100, 0);
+				this.owner.Services.FloodBox(ScreenBox, 230, 99, 90, 100, 0);
 			}
 
 			RestoreShieldsAndTrade();
@@ -3439,7 +3439,7 @@ namespace Civilization1Remaster.Game
 				return CityScreenStep.Redraw;
 
 			// The view of the city
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
+			this.processor.RegBase.Value16 = ScreenBox;
 			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 1);
 			this.processor.EmitGlobalByte(0xba06, 0);
 			this.owner.CityScene.DisplayCityScreen(townIdx, -1);
@@ -3457,7 +3457,7 @@ namespace Civilization1Remaster.Game
 		private void BuyCityProduction(short townIdx)
 		{
 			City town = this.owner.World.Towns[townIdx];
-			short owner = (short)this.processor.PullGlobalWord(0x6548);
+			short owner = (short)CityOwner;
 			sbyte making = town.PresentMakingIdx;
 
 			if (making >= 0)
@@ -3494,7 +3494,7 @@ namespace Civilization1Remaster.Game
 				this.owner.Libc.AppendText(0xba06, " Yes\n No\n");
 
 			this.owner.Startup.DisplayMouseCursor();
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
+			this.processor.RegBase.Value16 = ScreenBox;
 			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 1);
 			if (this.owner.Dialogs.DisplayMenu(0xba06, 100, 80, 1) == 0 && this.owner.World.Participants[owner].Gold >= (short)this.round.Value)
 			{
@@ -3527,7 +3527,7 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private void ActivateUnitsInCity()
 		{
-			short owner = (short)this.processor.PullGlobalWord(0x6548);
+			short owner = (short)CityOwner;
 			ushort Unit(ushort place) => UnitMemory.Address(owner, UnitOfCityList(place));
 
 			this.round.Selected = 0;
@@ -3598,9 +3598,9 @@ namespace Civilization1Remaster.Game
 				do
 				{
 					short line = (short)((((short)this.round.Selected + (short)this.round.WonderRows) * 6) + 3);
-					this.owner.VideoCard.SubstituteHue(this.processor.PullGlobalWord(0xaa), 252, line, 56, 7, 9, 1);
+					this.owner.VideoCard.SubstituteHue(ScreenBox, 252, line, 56, 7, 9, 1);
 					this.owner.TextPainter.AwaitTime(10);
-					this.owner.VideoCard.SubstituteHue(this.processor.PullGlobalWord(0xaa), 252, line, 56, 7, 1, 9);
+					this.owner.VideoCard.SubstituteHue(ScreenBox, 252, line, 56, 7, 1, 9);
 					this.owner.TextPainter.AwaitTime(10);
 				}
 				while ((ushort)this.owner.Libc.KeyAvailable() == 0);
@@ -3670,10 +3670,10 @@ namespace Civilization1Remaster.Game
 					ushort horiz = (ushort)((this.round.CursorHoriz << 4) + 0xa0);
 					ushort vert = (ushort)((this.round.CursorVert << 4) + 0x38);
 
-					this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), horiz, vert, 16, 16, this.processor.PullGlobalWord(0x19d4), 0, 0);
+					this.owner.VideoCard.RenderImage(ScreenBox, horiz, vert, 16, 16, BackScreenBox, 0, 0);
 					this.owner.Dialogs.RenderBox((short)this.round.CursorHoriz * 16 + 160, (short)this.round.CursorVert * 16 + 56, 15, 15, 15);
 					this.owner.TextPainter.AwaitTime(10);
-					this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 16, 16, this.processor.PullGlobalWord(0xaa), horiz, vert);
+					this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 16, 16, ScreenBox, horiz, vert);
 					this.owner.TextPainter.AwaitTime(10);
 					this.processor.EmitGlobalWord(0x6b64, 1);
 				}
@@ -3751,7 +3751,7 @@ namespace Civilization1Remaster.Game
 			if (key == 0x72 || (click && horiz >= 0xe7 && vert > 0xbe && horiz < 0x10e))
 			{
 				this.owner.TurnLogic.AwaitForKey();
-				this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
+				this.processor.RegBase.Value16 = ScreenBox;
 				this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 1);
 				this.owner.CityNaming.DisplayCityLabelPrompt(townIdx);
 				this.processor.EmitGlobalWord(0x6b64, 1);
@@ -3815,12 +3815,12 @@ namespace Civilization1Remaster.Game
 					.Text(" for ")
 					.Number((short)(0xa * (short)price))
 					.Text("$?\n No.\n Yes.\n");
-				this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
+				this.processor.RegBase.Value16 = ScreenBox;
 				this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 1);
 				this.owner.Startup.DisplayMouseCursor();
 				if (this.owner.Dialogs.DisplayMenu(0xba06, 128, 80, 1) == 1)
 				{
-					this.owner.World.Participants[this.processor.PullGlobalWord(0x6548)].Gold += (short)(0xa * price);
+					this.owner.World.Participants[CityOwner].Gold += (short)(0xa * price);
 					town.Structures -= bit;
 					town.ConditionMarker |= 0x80;
 
@@ -3912,7 +3912,7 @@ namespace Civilization1Remaster.Game
 			if ((short)this.round.Selected >= (short)this.round.UnitsDrawn)
 				return false;
 
-			short owner = (short)this.processor.PullGlobalWord(0x6548);
+			short owner = (short)CityOwner;
 			WakeUnitOfCity(UnitMemory.Address(owner, UnitOfCityList(this.round.Selected)));
 
 			RestoreShieldsAndTrade();
@@ -3943,7 +3943,7 @@ namespace Civilization1Remaster.Game
 				// first enough food so the city doesn't starve, then the best mix of food, shields and trade.
 				town.LaborerMarkers0 = 0;
 				town.LaborerMarkers1 = 0;
-				this.processor.EmitGlobalWord(0xe8b8, 0);
+				CitySpecialists = 0;
 				return CityScreenStep.Restart;
 			}
 
@@ -3957,7 +3957,7 @@ namespace Civilization1Remaster.Game
 			this.processor.RegSource.Value16 = (ushort)(tile << 1);
 			this.processor.RegDest.Value16 = (ushort)(townIdx * 0x1c);
 
-			if ((this.owner.World.ChartSight[(ushort)(short)horiz, (ushort)(short)vert] & (short)(1 << this.processor.PullGlobalByte(0x6548))) == 0)
+			if ((this.owner.World.ChartSight[(ushort)(short)horiz, (ushort)(short)vert] & (short)(1 << (byte)CityOwner)) == 0)
 				return CityScreenStep.Restart;
 
 			RestoreShieldsAndTrade();
@@ -3986,9 +3986,9 @@ namespace Civilization1Remaster.Game
 				this.round.WorkersGained = (ushort)(this.round.WorkersGained + 1);
 				RenderCityTile(townIdx, tile, marker);
 
-				if (this.processor.PullGlobalWord(0xe8b8) != 0)
+				if (CitySpecialists != 0)
 				{
-					this.processor.EmitGlobalWord(0xe8b8, (ushort)(this.processor.PullGlobalWord(0xe8b8) - 1));
+					CitySpecialists = (ushort)(CitySpecialists - 1);
 					this.round.Workers = (ushort)(this.round.Workers - 1);
 				}
 			}
@@ -4010,7 +4010,7 @@ namespace Civilization1Remaster.Game
 				this.round.Item = 3;
 				this.processor.RegSource.Value16 = (ushort)(tile << 1);
 				this.owner.MapOps.RenderMapTile(town.Place.X + this.owner.TownDeltas[tile].X, town.Place.Y + this.owner.TownDeltas[tile].Y);
-				this.processor.EmitGlobalWord(0xe8b8, (ushort)(this.processor.PullGlobalWord(0xe8b8) + 1));
+				CitySpecialists = (ushort)(CitySpecialists + 1);
 				this.round.Workers = (ushort)(this.round.Workers + 1);
 			}
 
@@ -4057,8 +4057,8 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private void RestoreShieldsAndTrade()
 		{
-			this.processor.EmitGlobalWord(0x70dc, this.round.ShieldsKept);
-			this.processor.EmitGlobalWord(0x70de, this.round.TradeKept);
+			CityShields = this.round.ShieldsKept;
+			CityTrade = this.round.TradeKept;
 			this.processor.RegAcc.Value16 = this.round.TradeKept;
 		}
 
@@ -4097,7 +4097,7 @@ namespace Civilization1Remaster.Game
 		private void RepickCityProduction(short townIdx)
 		{
 			City town = this.owner.World.Towns[townIdx];
-			short owner = (short)this.processor.PullGlobalWord(0x6548);
+			short owner = (short)CityOwner;
 
 			StopMakingUnit(town, owner, false);
 			this.processor.RegCount.Value16 = this.owner.Advisors.PickCityProduction(owner, townIdx);
@@ -4114,10 +4114,10 @@ namespace Civilization1Remaster.Game
 		private void ApplyCivilOrder(short townIdx)
 		{
 			City town = this.owner.World.Towns[townIdx];
-			short owner = (short)this.processor.PullGlobalWord(0x6548);
+			short owner = (short)CityOwner;
 			bool human = this.owner.World.IsHuman(owner);
 
-			this.round.Value = (ushort)(this.processor.PullGlobalWord(0x70e2) - this.processor.PullGlobalWord(0x70e4));
+			this.round.Value = (ushort)(CityHappy - CityUnhappy);
 
 			if ((short)this.round.Value < 0)
 			{
@@ -4218,12 +4218,12 @@ namespace Civilization1Remaster.Game
 		private void ApplyCelebration(short townIdx)
 		{
 			City town = this.owner.World.Towns[townIdx];
-			short owner = (short)this.processor.PullGlobalWord(0x6548);
+			short owner = (short)CityOwner;
 			Player player = this.owner.World.Participants[owner];
 			bool human = this.owner.World.IsHuman(owner);
 
-			bool celebrates = this.processor.PullGlobalWord(0x70e4) == 0 && town.TrueExtent > 2 &&
-				(short)((town.TrueExtent + 1) / 2) <= this.processor.PullGlobalSignedWord(0x70e2) && player.RegimeKind != 0;
+			bool celebrates = CityUnhappy == 0 && town.TrueExtent > 2 &&
+				(short)((town.TrueExtent + 1) / 2) <= (short)CityHappy && player.RegimeKind != 0;
 
 			if (celebrates)
 			{
@@ -4261,7 +4261,7 @@ namespace Civilization1Remaster.Game
 					// Growth while it goes on under republic or democracy, with food to spare
 					short eaten = (short)((town.TrueExtent * 2) + ((short)this.round.SettlerFood * this.processor.PullGlobalSignedWord(0xe3c6)));
 
-					if (eaten < this.processor.PullGlobalSignedWord(0x70da) && (town.TrueExtent < 10 || town.Has(CityStructure.Aqueduct)))
+					if (eaten < (short)CityFood && (town.TrueExtent < 10 || town.Has(CityStructure.Aqueduct)))
 						town.TrueExtent++;
 				}
 
@@ -4297,12 +4297,12 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private void ApplyResearch()
 		{
-			short owner = (short)this.processor.PullGlobalWord(0x6548);
+			short owner = (short)CityOwner;
 			short person = this.owner.World.PersonParticipantIdx;
 			Player player = this.owner.World.Participants[owner];
 			Player human = this.owner.World.Participants[person];
 
-			this.round.Value = this.processor.PullGlobalWord(0x70e6);
+			this.round.Value = CityScience;
 
 			if (owner == person)
 			{
@@ -4375,12 +4375,12 @@ namespace Civilization1Remaster.Game
 			if (divisor == 0)
 				throw new Exception("Division by zero");
 
-			int quotient = this.processor.PullGlobalSignedWord(0x70dc) / divisor;
+			int quotient = (short)CityShields / divisor;
 
 			if (quotient != (short)quotient)
 				throw new Exception("Division error");
 
-			short pollution = (short)((short)(quotient - 20) + ((short)(town.TrueExtent * this.processor.PullGlobalSignedWord(0xb882)) / 4));
+			short pollution = (short)((short)(quotient - 20) + ((short)(town.TrueExtent * (short)ContentAdvances) / 4));
 			this.round.Pollution = (ushort)pollution;
 
 			return pollution;
@@ -4396,11 +4396,11 @@ namespace Civilization1Remaster.Game
 		private bool ApplyScoreAndPollution(short townIdx)
 		{
 			City town = this.owner.World.Towns[townIdx];
-			short owner = (short)this.processor.PullGlobalWord(0x6548);
+			short owner = (short)CityOwner;
 			Player player = this.owner.World.Participants[owner];
 			short person = this.owner.World.PersonParticipantIdx;
 
-			player.Tally += (short)(town.TrueExtent + this.processor.PullGlobalWord(0x70e2) - this.processor.PullGlobalWord(0x70e4));
+			player.Tally += (short)(town.TrueExtent + CityHappy - CityUnhappy);
 
 			if (owner != person)
 				return false;
@@ -4462,7 +4462,7 @@ namespace Civilization1Remaster.Game
 		private void PayImprovementUpkeep(short townIdx)
 		{
 			City town = this.owner.World.Towns[townIdx];
-			short owner = (short)this.processor.PullGlobalWord(0x6548);
+			short owner = (short)CityOwner;
 			Player player = this.owner.World.Participants[owner];
 			ushort improvement = 1;
 
@@ -4526,10 +4526,10 @@ namespace Civilization1Remaster.Game
 					this.owner.UnitOps.KeepUnitsInCityList(townIdx);
 			}
 
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
+			this.processor.RegBase.Value16 = ScreenBox;
 			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 1);
 			this.owner.Startup.DisplayMouseCursor();
-			this.processor.RegAcc.Value16 = (ushort)(this.processor.PullGlobalWord(0x70e2) - this.processor.PullGlobalWord(0x70e4));
+			this.processor.RegAcc.Value16 = (ushort)(CityHappy - CityUnhappy);
 		}
 
 		/// <summary>
@@ -4648,29 +4648,29 @@ namespace Civilization1Remaster.Game
 			// The tile of the city itself
 			this.round.CityTileNeighbour = 0;
 			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
-			this.processor.EmitGlobalWord(0x6548, (ushort)town.ParticipantIdx);
-			this.processor.EmitGlobalWord(0x6540, 0x15);
+			CityOwner = (ushort)town.ParticipantIdx;
+			CityTiles = 0x15;
 			this.round.MapViewHoriz = this.processor.PullGlobalWord(0xd4cc);
 			this.round.MapViewVert = this.processor.PullGlobalWord(0xd75e);
 
-			short owner = (short)this.processor.PullGlobalWord(0x6548);
+			short owner = (short)CityOwner;
 			this.round.SettlerFood = (ushort)(this.owner.World.Participants[owner].RegimeKind <= 1 ? 1 : 2);
 
 			// The advances that make citizens content, unless the wonder 0x1000 is in the city
-			this.processor.EmitGlobalWord(0xb882, 0);
+			ContentAdvances = 0;
 
 			if (!town.Has(CityStructure.MassTransit))
 			{
 				foreach (short advance in new short[] { 0x23, 0x3a, 0x29, 0x3c })
 				{
 					if (this.owner.Advisors.PlayerKnowsTechnology(owner, advance) != 0)
-						this.processor.EmitGlobalWord(0xb882, (ushort)(this.processor.PullGlobalWord(0xb882) + 1));
+						ContentAdvances = (ushort)(ContentAdvances + 1);
 				}
 			}
 
 			this.round.CostFactor = 0xa;
 			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
-			this.processor.EmitGlobalWord(0xe8b8, (ushort)((((uint)town.LaborerMarkers1 << 16) | town.LaborerMarkers0) >> 0x1a));
+			CitySpecialists = (ushort)((((uint)town.LaborerMarkers1 << 16) | town.LaborerMarkers0) >> 0x1a);
 			this.processor.RegData.Value16 = 0;
 			this.processor.RegCount.LowByte = 0x1a;
 
@@ -4697,7 +4697,7 @@ namespace Civilization1Remaster.Game
 
 			if ((town.ConditionMarker & 1) == 0)
 			{
-				this.processor.EmitGlobalWord(0xe8b8, 0);
+				CitySpecialists = 0;
 			}
 			else
 			{
@@ -4918,7 +4918,7 @@ namespace Civilization1Remaster.Game
 			}
 
 			// A computer city buys shields with gold
-			if (!this.owner.World.IsHuman(this.processor.PullGlobalWord(0x6548)))
+			if (!this.owner.World.IsHuman(CityOwner))
 				BuyForComputerCity(townIdx);
 
 			return true;
@@ -4948,7 +4948,7 @@ namespace Civilization1Remaster.Game
 			RenderCitizensAndRoutes(townIdx);
 			RenderCityDotAndPollution(townIdx);
 
-			if (this.processor.PullGlobalWord(0x6548) != (ushort)this.owner.World.PersonParticipantIdx)
+			if (CityOwner != (ushort)this.owner.World.PersonParticipantIdx)
 			{
 				this.owner.Conquest.AwaitForKeyPressOrMouseClick();
 				return CityScreenStep.Leave;
@@ -5025,7 +5025,7 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private void EndCityTurn(short townIdx)
 		{
-			if (this.processor.PullGlobalWord(0x6548) != 0)
+			if (CityOwner != 0)
 			{
 				// Civil disorder, order restored, the taxes; the celebration
 				ApplyCivilOrder(townIdx);
@@ -5087,7 +5087,7 @@ namespace Civilization1Remaster.Game
 					if (!shown)
 						continue;
 
-					this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa),
+					this.owner.Services.RenderPictureToScreen(ScreenBox,
 						161 + (this.owner.TownDeltas[townTile].X * 16) + iconHoriz, 57 + (this.owner.TownDeltas[townTile].Y * 16) + iconVert,
 						this.processor.PullGlobalWord((ushort)(((resource + 8) << 1) + 0xd4ce)));
 
@@ -5105,7 +5105,7 @@ namespace Civilization1Remaster.Game
 
 			if (shown && total == 0)
 			{
-				this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa),
+				this.owner.Services.RenderPictureToScreen(ScreenBox,
 					165 + (this.owner.TownDeltas[townTile].X * 16), 61 + (this.owner.TownDeltas[townTile].Y * 16),
 					this.processor.PullGlobalWord((0xd << 1) + 0xd4ce));
 			}
@@ -5187,7 +5187,7 @@ namespace Civilization1Remaster.Game
 
 				if (yield > 2 && (this.owner.World.Towns[townIdx].ConditionMarker & 0x40) == 0)
 				{
-					if (this.owner.World.Participants[this.processor.PullGlobalWord(0x6548)].RegimeKind <= 1)
+					if (this.owner.World.Participants[CityOwner].RegimeKind <= 1)
 					{
 						yield--;
 					}
@@ -5207,7 +5207,7 @@ namespace Civilization1Remaster.Game
 
 					short needed = (short)((this.owner.World.Towns[townIdx].ConditionMarker & 0x40) != 0 ? 2 : 4);
 
-					if (needed <= this.owner.World.Participants[this.processor.PullGlobalWord(0x6548)].RegimeKind)
+					if (needed <= this.owner.World.Participants[CityOwner].RegimeKind)
 					{
 						yield++;
 					}
@@ -5371,25 +5371,25 @@ namespace Civilization1Remaster.Game
 
 			City town = this.owner.World.Towns[townIdx];
 
-			this.processor.EmitGlobalWord(0x70e2,
-				(ushort)this.owner.Helpers.VerifyValueSpan(this.processor.PullGlobalSignedWord(0x70e2), 0, town.TrueExtent));
+			CityHappy =
+				(ushort)this.owner.Helpers.VerifyValueSpan((short)CityHappy, 0, town.TrueExtent);
 
 			while (this.processor.PullGlobalWord(0x6542) != 0 &&
-				this.processor.PullGlobalSignedWord(0x70e4) < this.processor.PullGlobalSignedWord(0x6542))
+				(short)CityUnhappy < this.processor.PullGlobalSignedWord(0x6542))
 			{
 				this.processor.EmitGlobalWord(0x6542, (ushort)(this.processor.PullGlobalWord(0x6542) - 1));
-				this.processor.EmitGlobalWord(0x70e4, (ushort)(this.processor.PullGlobalWord(0x70e4) + 1));
+				CityUnhappy = (ushort)(CityUnhappy + 1);
 			}
 
-			ushort taxmen = (ushort)this.owner.Helpers.VerifyValueSpan(this.processor.PullGlobalSignedWord(0x70e4), 0, town.TrueExtent);
+			ushort taxmen = (ushort)this.owner.Helpers.VerifyValueSpan((short)CityUnhappy, 0, town.TrueExtent);
 
 			while (true)
 			{
-				this.processor.EmitGlobalWord(0x70e4, taxmen);
+				CityUnhappy = taxmen;
 
 				short room = (short)this.owner.Helpers.VerifyValueSpan(town.TrueExtent - (short)workerTally, 0, 99);
 
-				if ((short)(this.processor.PullGlobalWord(0x70e2) + this.processor.PullGlobalWord(0x70e4)) <= room)
+				if ((short)(CityHappy + CityUnhappy) <= room)
 					break;
 
 				if (this.processor.PullGlobalWord(0x6542) != 0)
@@ -5398,13 +5398,13 @@ namespace Civilization1Remaster.Game
 				}
 				else
 				{
-					this.processor.EmitGlobalWord(0x70e2, (ushort)(this.processor.PullGlobalWord(0x70e2) - 1));
-					this.processor.EmitGlobalWord(0x70e2,
-						(ushort)this.owner.Helpers.VerifyValueSpan(this.processor.PullGlobalSignedWord(0x70e2), 0, town.TrueExtent));
+					CityHappy = (ushort)(CityHappy - 1);
+					CityHappy =
+						(ushort)this.owner.Helpers.VerifyValueSpan((short)CityHappy, 0, town.TrueExtent);
 				}
 
-				this.processor.EmitGlobalWord(0x70e4, (ushort)(this.processor.PullGlobalWord(0x70e4) - 1));
-				taxmen = (ushort)this.owner.Helpers.VerifyValueSpan(this.processor.PullGlobalSignedWord(0x70e4), 0, town.TrueExtent);
+				CityUnhappy = (ushort)(CityUnhappy - 1);
+				taxmen = (ushort)this.owner.Helpers.VerifyValueSpan((short)CityUnhappy, 0, town.TrueExtent);
 			}
 
 			this.processor.Journal.CloseScope("ReshuffleCitizens");
@@ -5431,7 +5431,7 @@ namespace Civilization1Remaster.Game
 			ushort step = (short)(7 * size) > (short)arg5 ? (ushort)CPU.SignedQuotient((short)arg5, size) : (ushort)7;
 			short citizenIdx;
 
-			for (citizenIdx = 0; citizenIdx < (short)this.processor.PullGlobalWord(0x70e2); citizenIdx++)
+			for (citizenIdx = 0; citizenIdx < (short)CityHappy; citizenIdx++)
 			{
 				horizLoc = RenderCitizen(horizLoc, vertLoc, this.processor.PullGlobalWord((ushort)(((citizenIdx & 1) << 1) + 0x6e96)), step);
 			}
@@ -5441,8 +5441,8 @@ namespace Civilization1Remaster.Game
 				horizLoc += 2;
 			}
 
-			for (citizenIdx = 0; (short)(this.owner.World.Towns[townIdx].TrueExtent - arg4 - this.processor.PullGlobalWord(0x70e2) -
-				this.processor.PullGlobalWord(0x70e4)) > citizenIdx; citizenIdx++)
+			for (citizenIdx = 0; (short)(this.owner.World.Towns[townIdx].TrueExtent - arg4 - CityHappy -
+				CityUnhappy) > citizenIdx; citizenIdx++)
 			{
 				horizLoc = RenderCitizen(horizLoc, vertLoc, this.processor.PullGlobalWord((ushort)(((citizenIdx & 1) << 1) + 0x6e9a)), step);
 			}
@@ -5452,14 +5452,14 @@ namespace Civilization1Remaster.Game
 				horizLoc += 2;
 			}
 
-			for (citizenIdx = 0; citizenIdx < (short)this.processor.PullGlobalWord(0x70e4); citizenIdx++)
+			for (citizenIdx = 0; citizenIdx < (short)CityUnhappy; citizenIdx++)
 			{
-				this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa), horizLoc, vertLoc,
+				this.owner.Services.RenderPictureToScreen(ScreenBox, horizLoc, vertLoc,
 					this.processor.PullGlobalWord((ushort)(((citizenIdx & 1) << 1) + 0x6e9e)));
 
 				if (citizenIdx < (short)this.processor.PullGlobalWord(0x6542))
 				{
-					this.owner.VideoCard.SubstituteHue(this.processor.PullGlobalWord(0xaa), horizLoc, vertLoc, 12, 14, 5, 12);
+					this.owner.VideoCard.SubstituteHue(ScreenBox, horizLoc, vertLoc, 12, 14, 5, 12);
 				}
 
 				horizLoc += (short)step;
@@ -5487,7 +5487,7 @@ namespace Civilization1Remaster.Game
 		/// <returns>The place of the next one</returns>
 		private short RenderCitizen(short horizLoc, short vertLoc, ushort picture, ushort step)
 		{
-			this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa), horizLoc, vertLoc, picture);
+			this.owner.Services.RenderPictureToScreen(ScreenBox, horizLoc, vertLoc, picture);
 
 			return (short)(horizLoc + step);
 		}
@@ -5515,19 +5515,19 @@ namespace Civilization1Remaster.Game
 				if (horizLocOrigin >= 40)
 				{
 					this.owner.VideoCard.RenderImage(
-						this.processor.PullGlobalWord(0x19e8),
+						PictureScreenBox,
 						((horizLocOrigin & 1) * 19) + 161, 100, 18, 10,
-						this.processor.PullGlobalWord(0xaa),
+						ScreenBox,
 						horizLocTo, vertLocTo);
 				}
 				else
 				{
 					this.owner.VideoCard.RenderImage(
-						this.processor.PullGlobalWord(0x19e8),
+						PictureScreenBox,
 						((horizLocOrigin / 5) * 19) + 161,
 						((horizLocOrigin % 5) * 10) + 50,
 						18, 10,
-						this.processor.PullGlobalWord(0xaa),
+						ScreenBox,
 						horizLocTo, vertLocTo);
 				}
 			}
@@ -5567,7 +5567,7 @@ namespace Civilization1Remaster.Game
 			// function body
 			if (this.processor.PullGlobalWord(0xd762) == 0)
 			{
-				this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), horizLoc, vertLoc, breadth, altitude, 9);
+				this.owner.Services.FloodBox(ScreenBox, horizLoc, vertLoc, breadth, altitude, 9);
 			}
 			else
 			{
@@ -5584,9 +5584,9 @@ namespace Civilization1Remaster.Game
 					{
 						int tileBreadth = Math.Min(boxBreadth, 16);
 
-						this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19e8),
+						this.owner.VideoCard.RenderImage(PictureScreenBox,
 							208, 100, tileBreadth, tileAltitude,
-							this.processor.PullGlobalWord(0xaa),
+							ScreenBox,
 							boxHorizLoc, boxVertLoc);
 
 						boxHorizLoc += tileBreadth;
@@ -5616,19 +5616,19 @@ namespace Civilization1Remaster.Game
 			this.processor.Journal.OpenScope($"RenderLabelBox({horizLoc}, {vertLoc}, {horizSpot1}, {vertSpot1}, 0x{charsAddr:x4}, {style})");
 
 			// function body
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa),
+			this.owner.Services.FloodBox(ScreenBox,
 				horizLoc, vertLoc, horizSpot1 - horizLoc, vertSpot1 - vertLoc, style);
 		
-			this.owner.VideoCard.RenderLine(this.processor.PullGlobalWord(0xaa),
+			this.owner.VideoCard.RenderLine(ScreenBox,
 				horizLoc, vertLoc, horizSpot1, vertLoc, (ushort)((style < 8) ? (style + 8) : 7));
 		
-			this.owner.VideoCard.RenderLine(this.processor.PullGlobalWord(0xaa),
+			this.owner.VideoCard.RenderLine(ScreenBox,
 				horizLoc, vertLoc, horizLoc, vertSpot1, (ushort)((style < 8) ? (style + 8) : 7));
 		
-			this.owner.VideoCard.RenderLine(this.processor.PullGlobalWord(0xaa),
+			this.owner.VideoCard.RenderLine(ScreenBox,
 				horizLoc + 1, vertSpot1, horizSpot1, vertSpot1, (ushort)((style < 8) ? 8 : (style - 8)));
 
-			this.owner.VideoCard.RenderLine(this.processor.PullGlobalWord(0xaa),
+			this.owner.VideoCard.RenderLine(ScreenBox,
 				horizSpot1, vertLoc, horizSpot1, vertSpot1, (ushort)((style < 0x8) ? 8 : (style - 8)));
 
 			this.owner.TextPainter.RenderCenteredTextToScreen0(charsAddr,
@@ -5647,7 +5647,7 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope("RenderMiniMap()");
 
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 101, 117, 120, 75, 0);
+			this.owner.Services.FloodBox(ScreenBox, 101, 117, 120, 75, 0);
 
 			short humanIdx = this.owner.World.PersonParticipantIdx;
 
@@ -5665,7 +5665,7 @@ namespace Civilization1Remaster.Game
 					int dotVert = (vertLoc / 2) * 3 + (sbyte)this.processor.PullGlobalByte((ushort)(0x2810 + quarter)) + 0x76;
 					ushort hue = (ushort)(this.owner.MapOps.ObtainTerrainType((short)horizLoc, vertLoc) == MapRules.OceanTerrain ? 1 : 2);
 
-					this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), dotHoriz, dotVert, 2, 2, hue);
+					this.owner.Services.FloodBox(ScreenBox, dotHoriz, dotVert, 2, 2, hue);
 				}
 			}
 
@@ -5687,7 +5687,7 @@ namespace Civilization1Remaster.Game
 				horizLoc = this.owner.Routing.TunePosition(
 					horizLoc - this.owner.World.Participants[this.owner.World.PersonParticipantIdx].HorizBegin + 40);
 
-				this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa),
+				this.owner.Services.FloodBox(ScreenBox,
 					((horizLoc * 3) / 2) + 101, ((vertLoc * 3) / 2) + 118, 2, 2, style);
 			}
 

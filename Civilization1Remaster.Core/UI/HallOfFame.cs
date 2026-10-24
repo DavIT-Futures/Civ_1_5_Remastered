@@ -75,13 +75,13 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope($"DisplayHallOfFame({arg1})");
 
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 15);
+			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 15);
 
 			this.owner.TextPainter.RenderCenteredTextToScreen0(0x33be, 160, 16, 0);
 
 			this.owner.TextPainter.RenderCenteredTextToScreen0(0x33cb, 160, 24, 0);
 
-			this.owner.VideoCard.RenderLine(this.processor.PullGlobalWord(0xaa), 80, 32, 240, 32, 14);
+			this.owner.VideoCard.RenderLine(ScreenBox, 80, 32, 240, 32, 14);
 
 			short vertLoc = 0x28;
 
@@ -209,7 +209,7 @@ namespace Civilization1Remaster.UI
 
 			if (placeIdx == arg1)
 			{
-				this.owner.VideoCard.SubstituteHue(this.processor.PullGlobalWord(0xaa), horizLoc - 4, vertLoc - 28, 296, 26, 15, 14);
+				this.owner.VideoCard.SubstituteHue(ScreenBox, horizLoc - 4, vertLoc - 28, 296, 26, 15, 14);
 			}
 
 			return vertLoc;
@@ -311,19 +311,19 @@ namespace Civilization1Remaster.UI
 
 				this.owner.Startup.ConcealMouseCursor();
 
-				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0x19d4), 0, 0);
+				this.owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, BackScreenBox, 0, 0);
 
 				this.owner.Services.PerformSound(0x22, 0);
 
-				this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 15);
+				this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 15);
 
 				this.owner.UnitOps.RenderBusyIndicator();
 
-				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19e8), 0xc8, 0x8c, 0x28, 0x3c, this.processor.PullGlobalWord(0xaa), 10, 10);
+				this.owner.VideoCard.RenderImage(PictureScreenBox, 0xc8, 0x8c, 0x28, 0x3c, ScreenBox, 10, 10);
 
-				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19e8), 0xf0, 0x8c, 0x28, 0x3c, this.processor.PullGlobalWord(0xaa), 0x10e, 10);
+				this.owner.VideoCard.RenderImage(PictureScreenBox, 0xf0, 0x8c, 0x28, 0x3c, ScreenBox, 0x10e, 10);
 
-				this.processor.EmitGlobalWord((ushort)(this.processor.PullGlobalWord(0xaa) + 0x10), 7);
+				this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 7);
 
 				this.owner.Helpers.FloodBoxWithMotif(80, 4, 160, 27);
 
@@ -364,15 +364,15 @@ namespace Civilization1Remaster.UI
 					this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, -((level * 8) - 184), (ushort)(level == rank ? 0 : 7));
 				}
 
-				this.owner.VideoCard.SubstituteHue(this.processor.PullGlobalWord(0xaa), 80, 183 - rank * 8, 160, 8, 15, 14);
+				this.owner.VideoCard.SubstituteHue(ScreenBox, 80, 183 - rank * 8, 160, 8, 15, 14);
 
 				this.owner.Conquest.AwaitForKeyPressOrMouseClick();
 
 				this.owner.Services.PerformSound(1, 0);
 
-				this.processor.EmitGlobalWord((ushort)(this.processor.PullGlobalWord(0xaa) + 0x10), 1);
+				this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 1);
 
-				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0xaa), 0, 0);
+				this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
 
 				this.owner.Startup.DisplayMouseCursor();
 			}
@@ -415,7 +415,7 @@ namespace Civilization1Remaster.UI
 
 				this.owner.CityOps.HandleCity(townIdx, -1);
 
-				short score = (short)(this.owner.World.Towns[townIdx].TrueExtent + this.processor.PullGlobalWord(0x70e2) - this.processor.PullGlobalWord(0x70e4));
+				short score = (short)(this.owner.World.Towns[townIdx].TrueExtent + CityHappy - CityUnhappy);
 
 				for (int wonderIdx = 1; wonderIdx <= 0x15; wonderIdx++)
 				{
@@ -444,9 +444,9 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Startup.ConcealMouseCursor();
 
-			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0x19d4), 0, 0);
+			this.owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, BackScreenBox, 0, 0);
 
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 3);
+			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 3);
 
 			this.owner.TextPainter.RenderTextWithShadow(0x3486, 80, 12, 15);
 
@@ -472,7 +472,7 @@ namespace Civilization1Remaster.UI
 
 				this.owner.CityOps.HandleCity(townIdx, -1);
 
-				this.owner.CityOps.RenderCitizenIcons(townIdx, 48, (short)(vertLoc + 10), this.processor.PullGlobalWord(0xe8b8), 160);
+				this.owner.CityOps.RenderCitizenIcons(townIdx, 48, (short)(vertLoc + 10), CitySpecialists, 160);
 
 				short iconHoriz = (short)(0x30 + this.owner.Helpers.VerifyValueSpan(this.owner.World.Towns[townIdx].TrueExtent * 8, 0, 160) + 8);
 
@@ -497,7 +497,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Conquest.AwaitForKeyPressOrMouseClick();
 
-			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0xaa), 0, 0);
+			this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
 
 			this.owner.Startup.DisplayMouseCursor();
 

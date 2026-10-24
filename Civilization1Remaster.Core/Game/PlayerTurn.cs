@@ -944,19 +944,19 @@ namespace Civilization1Remaster.Game
 
 			this.owner.Throne.ImportPalaceGraphics(0);
 
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
+			this.processor.RegBase.Value16 = ScreenBox;
 			this.processor.EmitUInt16(this.processor.SegData.Value16, this.processor.RegBase.Value16, 0x0);
 
 			this.owner.Helpers.HaltHueCycling();
 
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 0);
+			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
 
 			this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, 0x1e79, 1);
 
 			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0x19d4),
+				BackScreenBox,
 				0, 0, 0x140, 0xc8,
-				this.processor.PullGlobalWord(0xaa),
+				ScreenBox,
 				0, 0);
 
 			this.owner.Startup.DisplayMouseCursor();
@@ -1351,7 +1351,7 @@ namespace Civilization1Remaster.Game
 				(short)this.turn.UnitHoriz,
 				(short)this.turn.UnitVert);
 
-			if (this.processor.PullGlobalWord(0x6c9a) == 0)
+			if (FoundDistance == 0)
 			{
 				this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
 				this.processor.RegSource.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride);

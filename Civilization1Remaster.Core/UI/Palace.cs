@@ -28,11 +28,11 @@ namespace Civilization1Remaster.UI
 			this.owner.Libc.CopyText(textBuf, 0xba06);
 			this.owner.Startup.QueryForDisk(2, 1);
 
-			this.processor.EmitUInt16(dataSeg, this.processor.PullGlobalWord(0xaa), 0x1);
+			this.processor.EmitUInt16(dataSeg, ScreenBox, 0x1);
 			ImportPalaceGraphics(0);
-			this.processor.EmitUInt16(dataSeg, this.processor.PullGlobalWord(0xaa), 0x0);
+			this.processor.EmitUInt16(dataSeg, ScreenBox, 0x0);
 
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 0);
+			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
 			this.owner.Helpers.HaltHueCycling();
 
 			ushort chiefVisuals = (ushort)this.owner.World.Participants[this.owner.World.PersonParticipantIdx].ChiefVisuals;
@@ -41,23 +41,23 @@ namespace Civilization1Remaster.UI
 			this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, 0x4ae6, 1);
 
 			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0x19d4),
+				BackScreenBox,
 				0, 0, 0x140, 0xc8,
-				this.processor.PullGlobalWord(0xaa),
+				ScreenBox,
 				0, 0);
 
 			this.owner.Dialogs.DisplayMenu(textBuf, 20, 16, 1);
 
 			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0x19d4),
+				BackScreenBox,
 				0x14, 0x10, 0x118, 0x2c,
-				this.processor.PullGlobalWord(0xaa),
+				ScreenBox,
 				0x14, 0x10);
 
 			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0xaa),
+				ScreenBox,
 				0, 0, 0x140, 0xc8,
-				this.processor.PullGlobalWord(0x19d4),
+				BackScreenBox,
 				0, 0);
 
 			this.processor.EmitGlobalWord(0xdb38, 0x1);
@@ -104,7 +104,7 @@ namespace Civilization1Remaster.UI
 
 			if (this.processor.PullGlobalWord(0xd762) == 0)
 			{
-				this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 0);
+				this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
 			}
 
 			this.owner.TurnHooks.RepaintMainScreen();
@@ -193,9 +193,9 @@ namespace Civilization1Remaster.UI
 			this.owner.Startup.ConcealMouseCursor();
 
 			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0x19d4),
+				BackScreenBox,
 				0, 0, 0x140, 0xc8,
-				this.processor.PullGlobalWord(0xaa),
+				ScreenBox,
 				0, 0);
 
 			ushort nextLevel = (ushort)this.owner.Helpers.VerifyValueSpan(
@@ -212,9 +212,9 @@ namespace Civilization1Remaster.UI
 			this.processor.EmitUInt16(dataSeg, (ushort)(finalWordOff + 0xd91e), nextLevel);
 			this.processor.EmitUInt16(dataSeg, (ushort)(finalWordOff + 0xb222), selectedStyle);
 
-			this.processor.EmitUInt16(dataSeg, this.processor.PullGlobalWord(0xaa), 0x1);
+			this.processor.EmitUInt16(dataSeg, ScreenBox, 0x1);
 			ImportPalaceGraphics(0);
-			this.processor.EmitUInt16(dataSeg, this.processor.PullGlobalWord(0xaa), 0x0);
+			this.processor.EmitUInt16(dataSeg, ScreenBox, 0x0);
 
 			this.owner.VideoCard.RenderScreenToMainScreen(1, 0x14);
 			this.owner.TurnLogic.AwaitForKey();
@@ -247,14 +247,14 @@ namespace Civilization1Remaster.UI
 			ImportPalaceCastle((ushort)(1 << (byte)nextLevel), 0);
 
 			short boxHeight = 0x5c;
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 16, 2, 288, 102, 9);
+			this.owner.Services.FloodBox(ScreenBox, 16, 2, 288, 102, 9);
 			this.owner.TextPainter.RenderCenteredTextToScreen0(0x4b13, 160, 3, 15);
 
 			for (ushort optIdx = 1; (short)optIdx <= 3; optIdx++)
 			{
 				short drawX = (short)(0x64 * (short)optIdx - 0x50);
 				ushort boxColor = this.processor.PullGlobalWord(0xd762) == 0 ? (ushort)3 : (ushort)1;
-				this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), drawX, 10, 80, boxHeight, boxColor);
+				this.owner.Services.FloodBox(ScreenBox, drawX, 10, 80, boxHeight, boxColor);
 
 				drawX = (short)(drawX + 0x10);
 				ushort look = 2;
@@ -278,14 +278,14 @@ namespace Civilization1Remaster.UI
 						if (selectedSection != 1)
 						{
 							this.owner.Services.RenderPictureToScreen(
-								this.processor.PullGlobalWord(0xaa),
+								ScreenBox,
 								drawX + this.processor.PullGlobalSignedWord(0x4b32),
 								this.processor.PullInt8(dataSeg, (ushort)(0xf * nextLevel + 5 * optIdx + 0x4b32)) + 1,
 								this.processor.PullUInt16(dataSeg, (ushort)((optIdx << 2) + 0xb23e)));
 						}
 
 						this.owner.Services.RenderPictureToScreen(
-							this.processor.PullGlobalWord(0xaa),
+							ScreenBox,
 							drawX,
 							this.processor.PullInt8(dataSeg, (ushort)(0xf * nextLevel + 5 * optIdx + 0x4b34)) + 1,
 							this.processor.PullUInt16(dataSeg, (ushort)((optIdx << 2) + 0xb23c)));
@@ -293,14 +293,14 @@ namespace Civilization1Remaster.UI
 
 					case 1:
 						this.owner.Services.RenderPictureToScreen(
-							this.processor.PullGlobalWord(0xaa),
+							ScreenBox,
 							drawX,
 							this.processor.PullInt8(dataSeg, (ushort)(5 * optIdx + 0xf * nextLevel + 0x4b32)) + 1,
 							this.processor.PullUInt16(dataSeg, (ushort)((optIdx << 2) + 0xb23c)));
 
 						drawX = (short)(drawX + (short)this.processor.PullGlobalWord(0x4b2e));
 						this.owner.Services.RenderPictureToScreen(
-							this.processor.PullGlobalWord(0xaa),
+							ScreenBox,
 							drawX,
 							(short)(this.processor.PullInt8(dataSeg, (ushort)(this.processor.RegSource.Value16 + 0x4b33)) + 1),
 							this.processor.PullUInt16(dataSeg, (ushort)(this.processor.RegDest.Value16 + 0xb23e)));
@@ -308,7 +308,7 @@ namespace Civilization1Remaster.UI
 
 					case 2:
 						this.owner.Services.RenderPictureToScreen(
-							this.processor.PullGlobalWord(0xaa),
+							ScreenBox,
 							drawX,
 							(short)(this.processor.PullInt8(dataSeg, (ushort)(0xf * nextLevel + 5 * optIdx + 0x4b31)) + 1),
 							this.processor.PullUInt16(dataSeg, (ushort)((optIdx << 2) + 0xb23c)));
@@ -318,7 +318,7 @@ namespace Civilization1Remaster.UI
 						if (selectedSection != 7)
 						{
 							this.owner.Services.RenderPictureToScreen(
-								this.processor.PullGlobalWord(0xaa),
+								ScreenBox,
 								drawX,
 								this.processor.PullInt8(dataSeg, (ushort)(0xf * nextLevel + 5 * optIdx + 0x4b32)) + 1,
 								this.processor.PullUInt16(dataSeg, (ushort)((optIdx << 2) + 0xb23c)));
@@ -327,7 +327,7 @@ namespace Civilization1Remaster.UI
 
 						short towerShift = optIdx == 2 ? (short)3 : (short)2;
 						this.owner.Services.RenderPictureToScreen(
-							this.processor.PullGlobalWord(0xaa),
+							ScreenBox,
 							(short)(drawX - towerShift),
 							(short)(this.processor.PullInt8(dataSeg, (ushort)(0xf * nextLevel + 5 * optIdx + 0x4b35)) + 1),
 							this.processor.PullUInt16(dataSeg, (ushort)((optIdx << 2) + 0xb23e)));
@@ -366,13 +366,13 @@ namespace Civilization1Remaster.UI
 			}
 
 			this.owner.Startup.ConcealMouseCursor();
-			this.processor.EmitUInt16(dataSeg, this.processor.PullGlobalWord(0xaa), 0x1);
+			this.processor.EmitUInt16(dataSeg, ScreenBox, 0x1);
 			ImportPalaceGraphics(0);
 
-			ushort screen0Ptr = this.processor.PullGlobalWord(0xaa);
+			ushort screen0Ptr = ScreenBox;
 			this.processor.EmitUInt16(dataSeg, screen0Ptr, 0x0);
 			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0x19d4),
+				BackScreenBox,
 				0, 0, 0x140, 0xc8,
 				screen0Ptr,
 				0, 0);
@@ -400,7 +400,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Startup.QueryForDisk(2, 1);
 
-			this.processor.EmitGlobalWord(this.processor.PullGlobalWord(0xaa), 1);
+			this.processor.EmitGlobalWord(ScreenBox, 1);
 			this.processor.EmitGlobalWord(0x6828, 0xffff);
 
 			ushort built = 0;
@@ -583,14 +583,14 @@ namespace Civilization1Remaster.UI
 
 			if (marker != 0)
 			{
-				this.processor.EmitGlobalWord(this.processor.PullGlobalWord(0xaa), 0);
+				this.processor.EmitGlobalWord(ScreenBox, 0);
 
 				if (this.processor.PullGlobalWord(0xd762) != 0 && (short)this.processor.PullGlobalWord(0xdeba) > 7)
 				{
 					this.owner.Services.FloodColors(5, 0, 0, 0);
 				}
 
-				this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 0);
+				this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
 
 				this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, 0x4bb0, 1);
 
@@ -622,7 +622,7 @@ namespace Civilization1Remaster.UI
 
 			ushort picture = this.owner.ImageToolkit.ImportIcon(pictureName);
 
-			this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa), horizLoc,
+			this.owner.Services.RenderPictureToScreen(ScreenBox, horizLoc,
 				(short)this.processor.PullGlobalWord(sizeAddr) <= 1 ? 105 : 94, picture);
 
 			return picture;
@@ -722,7 +722,7 @@ namespace Civilization1Remaster.UI
 			sbyte height = (sbyte)this.processor.PullGlobalByte((ushort)((0xf * arg1) + heightIdx + 0x4b36));
 			ushort vertLoc = (ushort)(height + arg4 + arg1);
 
-			this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa),
+			this.owner.Services.RenderPictureToScreen(ScreenBox,
 				(short)arg3,
 				(short)vertLoc,
 				this.processor.PullGlobalWord((ushort)((marker << 1) + (arg2 << 2) + 0xb23c)));

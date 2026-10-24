@@ -35,13 +35,13 @@ namespace Civilization1Remaster.UI
 
 			short chosenIdx = (short)(this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80) + 1);
 
-			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), 0, 0, 0x140, 0xc8,
-				this.processor.PullGlobalWord(0x19d4), 0, 0);
+			this.owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8,
+				BackScreenBox, 0, 0);
 
 			DisplayArmyList(chosenIdx);
 
-			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 0x140, 0xc8,
-				this.processor.PullGlobalWord(0xaa), 0, 0);
+			this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8,
+				ScreenBox, 0, 0);
 
 			this.processor.Journal.CloseScope("DisplayWhichArmy");
 		}
@@ -57,7 +57,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Startup.ConcealMouseCursor();
 
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 0);
+			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
 
 			ushort sight = (ushort)(1 << (byte)participantIdx);
 
@@ -74,7 +74,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Libc.ReadKey();
 
-			this.processor.EmitGlobalWord((ushort)(this.processor.PullGlobalWord(0xaa) + 0x10), 0x2);
+			this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 0x2);
 
 			// The strategic locations; another role keeps the text of the one before
 			for (int placeIdx = 0; placeIdx < 0x20; placeIdx++)
@@ -173,7 +173,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Libc.ReadKey();
 
-			this.processor.EmitGlobalWord((ushort)(this.processor.PullGlobalWord(0xaa) + 0x10), 0x1);
+			this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 0x1);
 
 			this.owner.Startup.DisplayMouseCursor();
 
@@ -187,12 +187,12 @@ namespace Civilization1Remaster.UI
 			short boxHoriz = (short)(horizLoc << 2);
 			short boxVert = (short)(vertLoc << 2);
 
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), boxHoriz, boxVert, 4, 4,
+			this.owner.Services.FloodBox(ScreenBox, boxHoriz, boxVert, 4, 4,
 				(ushort)(this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) == 0xa ? 1 : 2));
 
 			if ((this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) != 0)
 			{
-				this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), boxHoriz, boxVert, 4, 4,
+				this.owner.Services.FloodBox(ScreenBox, boxHoriz, boxVert, 4, 4,
 					this.processor.PullGlobalWord((ushort)((this.owner.MapOps.ObtainTileOwnerBits(horizLoc, vertLoc) << 1) + 0x1946)));
 			}
 			else
@@ -201,9 +201,9 @@ namespace Civilization1Remaster.UI
 				{
 					ushort hue = this.processor.PullGlobalWord((ushort)((this.owner.MapOps.ObtainTileOwner(horizLoc, vertLoc) << 1) + 0x1946));
 
-					this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), boxHoriz + 1, boxVert + 1, 3, 3, 0);
+					this.owner.Services.FloodBox(ScreenBox, boxHoriz + 1, boxVert + 1, 3, 3, 0);
 
-					this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), boxHoriz, boxVert, 3, 3, hue);
+					this.owner.Services.FloodBox(ScreenBox, boxHoriz, boxVert, 3, 3, hue);
 				}
 			}
 		}

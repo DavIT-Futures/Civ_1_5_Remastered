@@ -53,39 +53,39 @@ namespace Civilization1Remaster.UI
 
 			if (shown)
 			{
-				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0x19d4), 0, 0);
+				this.owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, BackScreenBox, 0, 0);
 			}
 
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 100, 15);
+			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 100, 15);
 
-			this.processor.EmitGlobalWord((ushort)(this.processor.PullGlobalWord(0xaa) + 0x10), 0x4);
+			this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 0x4);
 
-			this.owner.VideoCard.RenderLine(this.processor.PullGlobalWord(0xaa), 1, 1, 318, 1, 0);
+			this.owner.VideoCard.RenderLine(ScreenBox, 1, 1, 318, 1, 0);
 
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 8, 3, 304, 20, 15);
+			this.owner.Services.FloodBox(ScreenBox, 8, 3, 304, 20, 15);
 
-			this.processor.EmitGlobalWord((ushort)(this.processor.PullGlobalWord(0xaa) + 0xe), 0xf);
+			this.processor.EmitGlobalWord((ushort)(ScreenBox + 0xe), 0xf);
 
-			this.owner.VideoCard.RenderLine(this.processor.PullGlobalWord(0xaa), 0, 35, 319, 35, 0);
+			this.owner.VideoCard.RenderLine(ScreenBox, 0, 35, 319, 35, 0);
 
-			this.owner.VideoCard.RenderLine(this.processor.PullGlobalWord(0xaa), 1, 1, 1, 35, 0);
+			this.owner.VideoCard.RenderLine(ScreenBox, 1, 1, 1, 35, 0);
 
-			this.owner.VideoCard.RenderLine(this.processor.PullGlobalWord(0xaa), 318, 1, 318, 35, 0);
+			this.owner.VideoCard.RenderLine(ScreenBox, 318, 1, 318, 35, 0);
 
-			this.owner.VideoCard.RenderLine(this.processor.PullGlobalWord(0xaa), 0, 97, 319, 97, 0);
+			this.owner.VideoCard.RenderLine(ScreenBox, 0, 97, 319, 97, 0);
 
 			if (shown)
 			{
 				for (short personIdx = 0; personIdx < 0x10; personIdx++)
 				{
-					this.owner.Services.RenderPictureToScreenAlternate(this.processor.PullGlobalWord(0xaa), 20 * personIdx,
+					this.owner.Services.RenderPictureToScreenAlternate(ScreenBox, 20 * personIdx,
 						100 - this.owner.Libc.Dice.DrawInt(2), this.processor.PullGlobalWord(0xdf0c));
 				}
 			}
 
 			this.owner.BlockText.RenderTextChunk(40, 16, 40, 0);
 
-			this.processor.EmitGlobalWord((ushort)(this.processor.PullGlobalWord(0xaa) + 0x10), 0x5);
+			this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 0x5);
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
 			switch (this.owner.Libc.Dice.DrawInt(4))
@@ -135,13 +135,13 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Libc.CopyText(0xba06, this.owner.Libc.Dice.DrawInt(2) != 0 ? (ushort)0x514f : (ushort)0x5156);
 
-			this.processor.EmitGlobalWord((ushort)(this.processor.PullGlobalWord(0xaa) + 0x10), 0x3);
+			this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 0x3);
 
 			this.owner.TextPainter.RenderText(0xba06, 6, 3, 0);
 
 			this.owner.TextPainter.RenderText(0xba06, 272, 3, 0);
 
-			this.processor.EmitGlobalWord((ushort)(this.processor.PullGlobalWord(0xaa) + 0x10), 0x1);
+			this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 0x1);
 			EmptyMessage()
 				.Text("10 cents");
 
@@ -153,7 +153,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.TextPainter.RenderTextToScreen0(0xba06, 8, 28, 0);
 
-			this.processor.EmitGlobalWord((ushort)(this.processor.PullGlobalWord(0xaa) + 0x10), 0x2);
+			this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 0x2);
 
 			ushort topic = (ushort)(this.processor.RegFrame.Value16 - 0xc);
 
@@ -166,13 +166,13 @@ namespace Civilization1Remaster.UI
 
 			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 3, 0);
 
-			this.processor.EmitGlobalWord((ushort)(this.processor.PullGlobalWord(0xaa) + 0x10), 0x1);
+			this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 0x1);
 
 			if (shown)
 			{
 				this.owner.Dialogs.DisplayMenu(0x5181, 80, 128, 1);
 
-				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0xaa), 0, 0);
+				this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
 			}
 
 			this.owner.Startup.DisplayMouseCursor();

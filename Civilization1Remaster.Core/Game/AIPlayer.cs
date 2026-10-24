@@ -2531,11 +2531,11 @@ namespace Civilization1Remaster.Game
 			short vertLoc = (short)this.look.Vert;
 
 			this.look.NearestCity = this.owner.Helpers.LocateNearestCity(horizLoc, vertLoc);
-			this.look.CityDistance = this.processor.PullGlobalWord(0x6c9a);
+			this.look.CityDistance = FoundDistance;
 
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Kind, 0xff);
 			this.look.NearestUnit = this.owner.Helpers.LocateNearestUnit(participantIdx, troopIdx, horizLoc, vertLoc);
-			this.look.UnitDistance = this.processor.PullGlobalWord(0x6c9a);
+			this.look.UnitDistance = FoundDistance;
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Kind, (byte)this.look.Kind);
 
 			this.look.Terrain = this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
@@ -2964,7 +2964,7 @@ namespace Civilization1Remaster.Game
 					this.processor.PullInt16(dataSeg, (ushort)(dirOffset + 0x1882)) + (short)unitX);
 				ushort adjY = (ushort)(this.processor.PullUInt16(dataSeg, (ushort)(dirOffset + 0x18e4)) + unitY);
 
-				if ((short)this.processor.PullGlobalWord(0x6c9a) <= 8 &&
+				if ((short)FoundDistance <= 8 &&
 					this.owner.MapOps.ObtainTerrainType((short)adjX, (short)adjY) != 0xa &&
 					((byte)this.owner.MapOps.ObtainTileImprovements((short)adjX, (short)adjY) & 0x1) == 0 &&
 					(ushort)(this.owner.MapOps.ObtainTileOwner((short)adjX, (short)adjY) + 1) == 0 &&
@@ -3061,7 +3061,7 @@ namespace Civilization1Remaster.Game
 		{
 			ushort dataSeg = this.processor.SegData.Value16;
 			ushort nearestCity = this.owner.Helpers.LocateNearestCity((short)unitX, (short)unitY);
-			if (this.processor.PullGlobalWord(0x6c9a) == 0)
+			if (FoundDistance == 0)
 			{
 				if (this.processor.PullUInt8(dataSeg, (ushort)(unitAddr + 0x81de)) == 0xff)
 				{
@@ -3084,7 +3084,7 @@ namespace Civilization1Remaster.Game
 					this.owner.World.Towns[nearestCity].Place.X,
 					this.owner.World.Towns[nearestCity].Place.Y);
 				ushort unitContinent = this.owner.MapOps.ObtainContinentID((short)unitX, (short)unitY);
-				if (unitContinent != cityContinent || (short)this.processor.PullGlobalWord(0x6c9a) > 8)
+				if (unitContinent != cityContinent || (short)FoundDistance > 8)
 				{
 					this.owner.UnitOps.EliminateUnit(participantIdx, troopIdx);
 					return 0x20;
@@ -3141,7 +3141,7 @@ namespace Civilization1Remaster.Game
 					}
 				}
 
-				short cityDist = (short)this.processor.PullGlobalWord(0x6c9a);
+				short cityDist = (short)FoundDistance;
 				if (currentTerrain == 0xa)
 				{
 					if (cityDist < 3)
@@ -3157,7 +3157,7 @@ namespace Civilization1Remaster.Game
 						troopIdx,
 						this.processor.PullInt8(dataSeg, (ushort)(unitAddr + 0x81d5)),
 						this.processor.PullInt8(dataSeg, (ushort)(unitAddr + 0x81d6)));
-					if ((short)this.processor.PullGlobalWord(0x6c9a) <= 3)
+					if ((short)FoundDistance <= 3)
 					{
 						ushort nearestUnitAddr = (ushort)((ushort)participantIdx * 0x600 + nearestUnit * 0xc);
 						if (this.processor.PullUInt8(dataSeg, (ushort)(nearestUnitAddr + 0x81d7)) != 0x1a)
@@ -3224,7 +3224,7 @@ namespace Civilization1Remaster.Game
 					this.owner.Helpers.LocateNearestCity((short)adjX, (short)adjY);
 					short randBonus = (short)this.owner.Libc.Dice.DrawInt(4);
 					short defenseBonus = (short)(sbyte)this.processor.PullUInt8(dataSeg, (ushort)(adjTerrain * 0x13 + 0x28e));
-					short distPenalty = (short)(this.processor.PullGlobalWord(0x6c9a) << 2);
+					short distPenalty = (short)(FoundDistance << 2);
 					dirScore = (short)(dirScore + defenseBonus + randBonus + distPenalty);
 				}
 				else

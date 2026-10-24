@@ -68,11 +68,11 @@ namespace Civilization1Remaster.UI
 			ushort nextName = (ushort)(this.processor.RegFrame.Value16 - 0x32);
 			ushort shortName = (ushort)(this.processor.RegFrame.Value16 - 0x18);
 
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 14);
+			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 14);
 
 			this.owner.Libc.CopyText(lastName, "a");
 
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 60, 2, 200, 9, 15);
+			this.owner.Services.FloodBox(ScreenBox, 60, 2, 200, 9, 15);
 
 			this.owner.TextPainter.RenderCenteredTextToScreen0(0x3c90, 161, 4, 0);
 
@@ -85,7 +85,7 @@ namespace Civilization1Remaster.UI
 				this.owner.TextPainter.RenderTextToScreen0(0x3cd1, 8, 4, 12);
 			}
 
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 2, 14, 316, 184, 15);
+			this.owner.Services.FloodBox(ScreenBox, 2, 14, 316, 184, 15);
 
 			short width = (short)((short)arg2 > 0 ? 0x96 : 0x64);
 			ushort entryTally = ListCivilopediaEntries(arg1, arg2, width, lastName, nextName, shortName);
@@ -248,11 +248,11 @@ namespace Civilization1Remaster.UI
 				short horizLoc = (short)((column * width) + 8);
 				short vertLoc = (short)((7 * row) + 0xf);
 
-				this.owner.VideoCard.SubstituteHue(this.processor.PullGlobalWord(0xaa), horizLoc, vertLoc, width - 2, 8, 15, 10);
+				this.owner.VideoCard.SubstituteHue(ScreenBox, horizLoc, vertLoc, width - 2, 8, 15, 10);
 
 				ushort key = this.owner.Dialogs.ObtainNavigationKey();
 
-				this.owner.VideoCard.SubstituteHue(this.processor.PullGlobalWord(0xaa), horizLoc, vertLoc, width - 2, 8, 10, 15);
+				this.owner.VideoCard.SubstituteHue(ScreenBox, horizLoc, vertLoc, width - 2, 8, 10, 15);
 
 				switch (key)
 				{
@@ -390,10 +390,10 @@ namespace Civilization1Remaster.UI
 				}
 			}
 
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, bgColor);
+			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, bgColor);
 			this.owner.UnitOps.RenderBusyIndicator();
 
-			this.processor.EmitUInt16(dataSeg, (ushort)(this.processor.PullGlobalWord(0xaa) + 0x10), 0x7);
+			this.processor.EmitUInt16(dataSeg, (ushort)(ScreenBox + 0x10), 0x7);
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
 			short titleX = arg2 == 0x2 ? (short)0xe0 : (short)0xcc;
@@ -406,10 +406,10 @@ namespace Civilization1Remaster.UI
 
 			this.RenderCivilopediaRecordHeader(dataSeg, scienceIdx, arg2, titleX);
 
-			this.processor.EmitUInt16(dataSeg, (ushort)(this.processor.PullGlobalWord(0xaa) + 0x10), 0x6);
+			this.processor.EmitUInt16(dataSeg, (ushort)(ScreenBox + 0x10), 0x6);
 			this.owner.Libc.UppercaseText(0xba06);
 			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, titleX, 20, 0);
-			this.processor.EmitUInt16(dataSeg, (ushort)(this.processor.PullGlobalWord(0xaa) + 0x10), 0x7);
+			this.processor.EmitUInt16(dataSeg, (ushort)(ScreenBox + 0x10), 0x7);
 
 			ushort tagBuf = (ushort)(this.processor.RegFrame.Value16 - 0x2c);
 			this.owner.Libc.CopyText(tagBuf, "*");
@@ -426,7 +426,7 @@ namespace Civilization1Remaster.UI
 					{
 						this.owner.BlockText.RenderTextChunk(37, 12, 76, 1);
 						this.owner.Conquest.AwaitForKeyPressOrMouseClick();
-						this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 8, 76, 304, 116, bgColor);
+						this.owner.Services.FloodBox(ScreenBox, 8, 76, 304, 116, bgColor);
 					}
 				}
 
@@ -455,7 +455,7 @@ namespace Civilization1Remaster.UI
 					break;
 			}
 
-			this.processor.EmitUInt16(dataSeg, (ushort)(this.processor.PullGlobalWord(0xaa) + 0x10), 0x1);
+			this.processor.EmitUInt16(dataSeg, (ushort)(ScreenBox + 0x10), 0x1);
 			this.owner.Startup.DisplayMouseCursor();
 			this.owner.Conquest.AwaitForKeyPressOrMouseClick();
 			this.owner.Startup.ConcealMouseCursor();
@@ -468,7 +468,7 @@ namespace Civilization1Remaster.UI
 			this.processor.EmitGlobalWord(0x3c62, 0x0);
 			if (this.processor.PullGlobalWord(0x3934) == 0xffff)
 			{
-				this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 8, 8, 304, 184, bgColor);
+				this.owner.Services.FloodBox(ScreenBox, 8, 8, 304, 184, bgColor);
 				this.owner.Helpers.LaunchHueCycling();
 			}
 
@@ -517,7 +517,7 @@ namespace Civilization1Remaster.UI
 							(ushort)(((iconSlot >> 2) * 0x32) + 1),
 							(ushort)(((iconSlot & 3) * 0x32) + 1),
 							0x31, 0x31);
-						this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa), 37, 17, picHandle);
+						this.owner.Services.RenderPictureToScreen(ScreenBox, 37, 17, picHandle);
 						this.owner.Helpers.ReleaseResource(picHandle, 0);
 					}
 
@@ -545,7 +545,7 @@ namespace Civilization1Remaster.UI
 					this.owner.Libc.CopyText(0xba06, (ushort)((short)0x22 * (short)scienceIdx + 0x112a));
 					this.owner.TextPainter.RenderCenteredTextToScreen0(0x3d5a, titleX, 36, 7);
 					this.owner.Services.RenderPictureToScreen(
-						this.processor.PullGlobalWord(0xaa),
+						ScreenBox,
 						216, 48,
 						this.processor.PullUInt16(dataSeg, (ushort)((scienceIdx << 1) + 0xd58e)));
 					break;
@@ -652,7 +652,7 @@ namespace Civilization1Remaster.UI
 				if (this.processor.PullUInt16(dataSeg, (ushort)(unitSpec + 0x114a)) == scienceIdx)
 				{
 					this.owner.Services.RenderPictureToScreen(
-						this.processor.PullGlobalWord(0xaa),
+						ScreenBox,
 						40,
 						cursorY - 4,
 						this.processor.PullUInt16(
@@ -945,8 +945,8 @@ namespace Civilization1Remaster.UI
 				breadth = (ushort)(centreHoriz << 1);
 			}
 
-			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), left, top, breadth, height,
-				this.processor.PullGlobalWord(0xaa), (ushort)(centreHoriz - (breadth >> 1)), (ushort)(centreVert - (height >> 1)));
+			this.owner.VideoCard.RenderImage(BackScreenBox, left, top, breadth, height,
+				ScreenBox, (ushort)(centreHoriz - (breadth >> 1)), (ushort)(centreVert - (height >> 1)));
 
 			this.processor.Journal.CloseScope("RenderIcon");
 		}

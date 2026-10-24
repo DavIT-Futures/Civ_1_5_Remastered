@@ -27,9 +27,9 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Startup.ConcealMouseCursor();
 
-			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0x19d4), 0, 0);
+			this.owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, BackScreenBox, 0, 0);
 
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 0);
+			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
 
 			short person = this.owner.World.PersonParticipantIdx;
 			ushort seen = (ushort)(1 << (byte)person);
@@ -89,7 +89,7 @@ namespace Civilization1Remaster.UI
 			{
 				this.owner.Conquest.AwaitForKeyPressOrMouseClick();
 
-				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0xaa), 0, 0);
+				this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
 			}
 
 			this.owner.Startup.DisplayMouseCursor();
@@ -120,12 +120,12 @@ namespace Civilization1Remaster.UI
 
 			if (marker == 0)
 			{
-				this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), pixelHoriz, pixelVert, 4, 4, terrain == 0xa ? (ushort)1 : (ushort)2);
+				this.owner.Services.FloodBox(ScreenBox, pixelHoriz, pixelVert, 4, 4, terrain == 0xa ? (ushort)1 : (ushort)2);
 			}
 			else
 			{
-				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19e8), (ushort)((terrain << 2) + 0xa0), (ushort)((((horizLoc + vertLoc) & 1) << 2) + 0x6f),
-					4, 4, this.processor.PullGlobalWord(0xaa), (ushort)pixelHoriz, (ushort)pixelVert);
+				this.owner.VideoCard.RenderImage(PictureScreenBox, (ushort)((terrain << 2) + 0xa0), (ushort)((((horizLoc + vertLoc) & 1) << 2) + 0x6f),
+					4, 4, ScreenBox, (ushort)pixelHoriz, (ushort)pixelVert);
 			}
 
 			if ((this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) != 0)
@@ -137,7 +137,7 @@ namespace Civilization1Remaster.UI
 				{
 					ushort colour = this.processor.PullGlobalWord((ushort)((this.owner.MapOps.ObtainTileOwnerBits(horizLoc, vertLoc) << 1) + 0x1946));
 
-					this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), pixelHoriz, pixelVert, 4, 4, colour);
+					this.owner.Services.FloodBox(ScreenBox, pixelHoriz, pixelVert, 4, 4, colour);
 				}
 
 				return;
@@ -159,9 +159,9 @@ namespace Civilization1Remaster.UI
 
 			ushort ownerColour = this.processor.PullGlobalWord((ushort)((ownerIdx << 1) + 0x1946));
 
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), pixelHoriz + 1, pixelVert + 1, 3, 3, 0);
+			this.owner.Services.FloodBox(ScreenBox, pixelHoriz + 1, pixelVert + 1, 3, 3, 0);
 
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), pixelHoriz, pixelVert, 3, 3, ownerColour);
+			this.owner.Services.FloodBox(ScreenBox, pixelHoriz, pixelVert, 3, 3, ownerColour);
 		}
 
 		/// <summary>
@@ -175,16 +175,16 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Startup.ConcealMouseCursor();
 
-			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0x19d4), 0, 0);
+			this.owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, BackScreenBox, 0, 0);
 
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 4);
+			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 4);
 
 			for (int participantIdx = 1; participantIdx < 8; participantIdx++)
 			{
 				this.owner.TextPainter.RenderTextWithShadow(this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1982)), participantIdx * 40, 8,
 					this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1946)));
 
-				this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa), participantIdx * 40, 16,
+				this.owner.Services.RenderPictureToScreen(ScreenBox, participantIdx * 40, 16,
 					this.processor.PullGlobalWord((ushort)((((participantIdx << 5) + 0x40) << 1) + 0xd4ce)));
 			}
 
@@ -217,7 +217,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Conquest.AwaitForKeyPressOrMouseClick();
 
-			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0xaa), 0, 0);
+			this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
 
 			this.owner.Startup.DisplayMouseCursor();
 
@@ -236,21 +236,21 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Startup.ConcealMouseCursor();
 
-			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0x19d4), 0, 0);
+			this.owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, BackScreenBox, 0, 0);
 
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 8);
+			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 8);
 
 			ushort peak = 0x32;
 
 			this.owner.Dialogs.RenderBox(4, 9, 311, 183, 0);
 
-			this.processor.EmitGlobalWord((ushort)(this.processor.PullGlobalWord(0xaa) + 0x10), 2);
+			this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 2);
 
 			for (short round = 0; round <= this.owner.World.RoundTally && round <= 0x258; round += 0x32)
 			{
 				short horizLoc = (short)(round / 2);
 
-				this.owner.VideoCard.RenderLine(this.processor.PullGlobalWord(0xaa), horizLoc + 4, 9, horizLoc + 4, 192, 0);
+				this.owner.VideoCard.RenderLine(ScreenBox, horizLoc + 4, 9, horizLoc + 4, 192, 0);
 
 				if (round % 100 != 0)
 					continue;
@@ -263,7 +263,7 @@ namespace Civilization1Remaster.UI
 				this.owner.TextPainter.RenderTextToScreen0(0xba06, horizLoc, 194, 15);
 			}
 
-			this.processor.EmitGlobalWord((ushort)(this.processor.PullGlobalWord(0xaa) + 0x10), 1);
+			this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 1);
 
 			short epochTally = (short)(this.owner.World.RoundTally / 4);
 
@@ -301,7 +301,7 @@ namespace Civilization1Remaster.UI
 					short horizLoc = (short)(epochIdx << 1);
 					short vertLoc = (short)((ushort)(0xb4 * HistoryScore(epochIdx, participantIdx)) / peak);
 
-					this.owner.VideoCard.RenderLine(this.processor.PullGlobalWord(0xaa), previousHoriz + 4, 192 - previousVert, horizLoc + 4, 192 - vertLoc,
+					this.owner.VideoCard.RenderLine(ScreenBox, previousHoriz + 4, 192 - previousVert, horizLoc + 4, 192 - vertLoc,
 						this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1946)));
 
 					previousHoriz = horizLoc;
@@ -311,7 +311,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Conquest.AwaitForKeyPressOrMouseClick();
 
-			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0xaa), 0, 0);
+			this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
 
 			this.owner.Startup.DisplayMouseCursor();
 
@@ -341,7 +341,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Startup.ConcealMouseCursor();
 
-			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0x19d4), 0, 0);
+			this.owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, BackScreenBox, 0, 0);
 
 			short vertLoc = 999;
 
@@ -360,7 +360,7 @@ namespace Civilization1Remaster.UI
 						this.owner.Conquest.AwaitForKeyPressOrMouseClick();
 					}
 
-					this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 3);
+					this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 3);
 
 					this.owner.TextPainter.RenderTextWithShadow(0x43f0, 100, 12, 15);
 
@@ -406,7 +406,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Conquest.AwaitForKeyPressOrMouseClick();
 
-			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0xaa), 0, 0);
+			this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
 
 			this.owner.Startup.DisplayMouseCursor();
 
@@ -432,11 +432,11 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Startup.ConcealMouseCursor();
 
-			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0x19d4), 0, 0);
+			this.owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, BackScreenBox, 0, 0);
 
 			ushort measure = (ushort)this.owner.Libc.Dice.DrawInt(5);
 
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 3);
+			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 3);
 
 			Message(this.processor.PullGlobalWord((ushort)((this.owner.Libc.Dice.DrawInt(4) << 1) + 0x4516)))
 				.Text(" completes his epic history:");
@@ -468,7 +468,7 @@ namespace Civilization1Remaster.UI
 				if (measure == 3)
 				{
 					this.processor.EmitGlobalWord(place, (ushort)(this.processor.PullGlobalWord(place) +
-						town.TrueExtent + this.processor.PullGlobalWord(0x70e2) - this.processor.PullGlobalWord(0x70e4)));
+						town.TrueExtent + CityHappy - CityUnhappy));
 				}
 
 				if (measure == 4)
@@ -566,7 +566,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Conquest.AwaitForKeyPressOrMouseClick();
 
-			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0xaa), 0, 0);
+			this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
 
 			this.owner.Startup.DisplayMouseCursor();
 
@@ -591,9 +591,9 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Startup.ConcealMouseCursor();
 
-			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0x19d4), 0, 0);
+			this.owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, BackScreenBox, 0, 0);
 
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 1);
+			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 1);
 
 			Message(this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1982)))
 				.Text(" Demographics");
@@ -606,7 +606,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Conquest.AwaitForKeyPressOrMouseClick();
 
-			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0xaa), 0, 0);
+			this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
 
 			this.owner.Startup.DisplayMouseCursor();
 
@@ -682,17 +682,17 @@ namespace Civilization1Remaster.UI
 				short size = (sbyte)town.TrueExtent;
 
 				tally.Size[owner] += size;
-				tally.Approval[owner] += (short)(size + this.processor.PullGlobalWord(0x70e2) - this.processor.PullGlobalWord(0x70e4));
-				tally.Money[owner] += (short)((this.processor.PullGlobalWord(0x70e0) << 1) + this.processor.PullGlobalWord(0xe17a));
-				tally.Unrest[owner] += (short)(this.processor.PullGlobalWord(0x70da) - (size << 1));
-				tally.Output[owner] += (short)(this.processor.PullGlobalWord(0x70da) + this.processor.PullGlobalWord(0x70dc) + this.processor.PullGlobalWord(0x70de));
+				tally.Approval[owner] += (short)(size + CityHappy - CityUnhappy);
+				tally.Money[owner] += (short)((CityLuxuries << 1) + this.processor.PullGlobalWord(0xe17a));
+				tally.Unrest[owner] += (short)(CityFood - (size << 1));
+				tally.Output[owner] += (short)(CityFood + CityShields + CityTrade);
 
-				short shields = (short)this.processor.PullGlobalWord(0x70dc);
+				short shields = (short)CityShields;
 
 				tally.Shields[owner] += shields;
 
 				short pollution = (short)(CPU.SignedQuotient(shields, (short)this.processor.PullGlobalWord(0x6c98)) - 0x14);
-				pollution += (short)((short)(size * this.processor.PullGlobalWord(0xb882)) / 4);
+				pollution += (short)((short)(size * ContentAdvances) / 4);
 
 				if (pollution > 0)
 				{
@@ -1039,7 +1039,7 @@ namespace Civilization1Remaster.UI
 			// "st", "nd", "rd", "th"
 			this.owner.Libc.AppendText(0xba06, rank switch { 1 => (ushort)0x4670, 2 => (ushort)0x4673, 3 => (ushort)0x4676, _ => (ushort)0x4679 });
 
-			this.owner.VideoCard.RenderLine(this.processor.PullGlobalWord(0xaa), 4, Math.Abs(vertLoc) - 3, 316, Math.Abs(vertLoc) - 3, 9);
+			this.owner.VideoCard.RenderLine(ScreenBox, 4, Math.Abs(vertLoc) - 3, 316, Math.Abs(vertLoc) - 3, 9);
 
 			this.owner.TextPainter.RenderTextWithShadow(0xba06, 192, Math.Abs(vertLoc), 15);
 

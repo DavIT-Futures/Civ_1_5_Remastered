@@ -580,7 +580,7 @@ namespace Civilization1Remaster.Game
 
 			this.processor.EmitGlobalByte(0xba06, 0);
 
-			if ((short)this.processor.PullGlobalWord(0x70e2) >= (short)this.processor.PullGlobalWord(0x70e4))
+			if ((short)CityHappy >= (short)CityUnhappy)
 				return;
 
 			switch (this.owner.Libc.Dice.DrawInt(3))
@@ -644,7 +644,7 @@ namespace Civilization1Remaster.Game
 			this.processor.EmitLocalWord(0x6, (ushort)highest);
 			this.processor.EmitLocalWord(0xe, 0xffff);
 
-			if ((short)this.processor.PullGlobalWord(0x70e2) > (short)this.processor.PullGlobalWord(0x70e4) ||
+			if ((short)CityHappy > (short)CityUnhappy ||
 				town.Has(CityStructure.Palace) || this.owner.World.Participants[town.ParticipantIdx].TownTally <= 3)
 				return;
 
@@ -661,7 +661,7 @@ namespace Civilization1Remaster.Game
 
 				this.owner.CityOps.HandleCity((short)otherIdx, -1);
 
-				short prosperity = CPU.SignedQuotient((short)((ushort)(this.processor.PullGlobalWord(0x70e2) - this.processor.PullGlobalWord(0x70e4)) << 5), distance);
+				short prosperity = CPU.SignedQuotient((short)((ushort)(CityHappy - CityUnhappy) << 5), distance);
 				this.processor.EmitLocalWord(0x8, (ushort)prosperity);
 
 				if (prosperity > highest)
@@ -756,7 +756,7 @@ namespace Civilization1Remaster.Game
 
 			if (marker)
 			{
-				ushort screenBufferPtr = this.processor.PullGlobalWord(0xaa);
+				ushort screenBufferPtr = ScreenBox;
 				this.processor.EmitUInt16(this.processor.SegData.Value16, screenBufferPtr, 1);
 				this.owner.Briefings.DisplayReportPreamble(0x506b, 3);
 			}
@@ -766,11 +766,11 @@ namespace Civilization1Remaster.Game
 			if (marker && (this.owner.World.StarshipMarkers & 0x100) != 0)
 			{
 				this.owner.TextPainter.RenderCenteredTextToScreen0(0x507e, 160, 100, 15);
-				ushort screenBufferPtr = this.processor.PullGlobalWord(0xaa);
+				ushort screenBufferPtr = ScreenBox;
 				this.processor.EmitUInt16(this.processor.SegData.Value16, screenBufferPtr, 0);
 
 				this.owner.VideoCard.RenderImage(
-					this.processor.PullGlobalWord(0x19d4),
+					BackScreenBox,
 					0, 0, 0x140, 0xc8,
 					screenBufferPtr,
 					0, 0);
@@ -804,9 +804,9 @@ namespace Civilization1Remaster.Game
 
 				this.owner.CityOps.HandleCity(townIdx, -1);
 
-				int happyCount = this.processor.PullGlobalWord(0x70e2);
-				int unhappyCount = this.processor.PullGlobalWord(0x70e4);
-				int specialistCount = this.processor.PullGlobalWord(0xe8b8);
+				int happyCount = CityHappy;
+				int unhappyCount = CityUnhappy;
+				int specialistCount = CitySpecialists;
 				int contentCount = this.owner.World.Towns[townIdx].TrueExtent - happyCount - unhappyCount - specialistCount;
 
 				if (marker)
@@ -987,7 +987,7 @@ namespace Civilization1Remaster.Game
 
 			if (marker)
 			{
-				ushort screenBufferPtr = this.processor.PullGlobalWord(0xaa);
+				ushort screenBufferPtr = ScreenBox;
 				this.owner.Services.FloodBox(screenBufferPtr, 35, 192, 250, 7, 8);
 
 				if (this.owner.World.Participants[0].Tally > 0)
@@ -998,7 +998,7 @@ namespace Civilization1Remaster.Game
 				this.processor.EmitUInt16(this.processor.SegData.Value16, screenBufferPtr, 0);
 
 				this.owner.VideoCard.RenderImage(
-					this.processor.PullGlobalWord(0x19d4),
+					BackScreenBox,
 					0, 0, 0x140, 0xc8,
 					screenBufferPtr,
 					0, 0);
@@ -1035,7 +1035,7 @@ namespace Civilization1Remaster.Game
 
 			if (this.processor.PullGlobalSignedWord(0xb2bc) <= 0xa0)
 			{
-				this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa),
+				this.owner.Services.RenderPictureToScreen(ScreenBox,
 					this.processor.PullGlobalSignedWord(0xb25c),
 					this.processor.PullGlobalSignedWord(0xb2bc),
 					this.processor.PullGlobalWord((ushort)((arg1 << 1) + 0x6e96)));

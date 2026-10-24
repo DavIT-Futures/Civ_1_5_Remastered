@@ -56,7 +56,7 @@ namespace Civilization1Remaster.Engine
 			this.processor.EmitGlobalWord(0xb1ec, 0xffff);
 			this.processor.EmitGlobalWord(0xd2e2, 0x1);
 
-			ushort fontId = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.PullGlobalWord(0xaa) + 0x10));
+			ushort fontId = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(ScreenBox + 0x10));
 			ushort lineHeight = this.owner.VideoCard.ObtainTextHeight(fontId);
 
 			if (lineHeight == 9)
@@ -280,7 +280,7 @@ namespace Civilization1Remaster.Engine
 					{
 						byte flashHue = (byte)(this.processor.PullGlobalWord(0x2f9c) != 0 ? 11 : this.processor.PullGlobalWord(0x654c));
 
-						this.owner.VideoCard.SubstituteHue(this.processor.PullGlobalWord(0xaa),
+						this.owner.VideoCard.SubstituteHue(ScreenBox,
 							horizLoc + 3,
 							(((short)currentChoice + this.processor.PullGlobalSignedWord(0xb1ec)) *
 								this.processor.PullGlobalSignedWord(0x2fa4)) + vertLoc + 4,
@@ -322,14 +322,14 @@ namespace Civilization1Remaster.Engine
 				this.processor.PullGlobalSignedWord(0x2fa4)) + vertLoc + 4;
 			int width = this.processor.PullGlobalSignedWord(0xd4c8) + 5;
 
-			this.owner.VideoCard.SubstituteHue(this.processor.PullGlobalWord(0xaa),
+			this.owner.VideoCard.SubstituteHue(ScreenBox,
 				horizLoc + 3, rowTop, width, (short)highlightHeight,
 				highlight ? (byte)backHue : (byte)11,
 				highlight ? (byte)11 : (byte)backHue);
 
 			if (shadowHue != 0xffff)
 			{
-				this.owner.VideoCard.SubstituteHue(this.processor.PullGlobalWord(0xaa),
+				this.owner.VideoCard.SubstituteHue(ScreenBox,
 					horizLoc + 3, rowTop, width, (short)highlightHeight,
 					highlight ? (byte)shadowHue : (byte)3,
 					highlight ? (byte)3 : (byte)shadowHue);
@@ -367,7 +367,7 @@ namespace Civilization1Remaster.Engine
 
 		private void MeasureAndDrawMenuFrame(ushort charsAddr, int horizLoc, int vertLoc)
 		{
-			ushort fontId = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.PullGlobalWord(0xaa) + 0x10));
+			ushort fontId = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(ScreenBox + 0x10));
 			ushort lineHeight = this.owner.VideoCard.ObtainTextHeight(fontId);
 
 			if (lineHeight == 9)
@@ -438,7 +438,7 @@ namespace Civilization1Remaster.Engine
 						}
 					}
 
-					ushort currentFont = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.PullGlobalWord(0xaa) + 0x10));
+					ushort currentFont = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(ScreenBox + 0x10));
 					lineWidth = (ushort)(lineWidth + this.owner.VideoCard.ObtainCharWidth(currentFont, ch));
 					this.processor.EmitLocalWord(0x54, lineWidth);
 				}
@@ -514,38 +514,38 @@ namespace Civilization1Remaster.Engine
 
 					if ((short)advisor <= 2)
 					{
-						this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa),
+						this.owner.Services.RenderPictureToScreen(ScreenBox,
 							horizLoc - 40, vertLoc - 5,
 							this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((advisor << 1) + 0xdf62)));
 					}
 					else if (portraitExtra > 0)
 					{
 						this.owner.VideoCard.RenderImage(
-							this.processor.PullGlobalWord(0x19e8),
+							PictureScreenBox,
 							(40 * (short)advisor) + 40, 140, 40, 60,
-							this.processor.PullGlobalWord(0xaa),
+							ScreenBox,
 							horizLoc - 40,
 							(portraitExtra - 1 + vertLoc) - 6);
 					}
 					else
 					{
 						this.owner.VideoCard.RenderImage(
-							this.processor.PullGlobalWord(0x19e8),
+							PictureScreenBox,
 							(40 * advisor) + 40, 140, 40, 60,
-							this.processor.PullGlobalWord(0xaa),
+							ScreenBox,
 							horizLoc - 40, vertLoc - 6);
 					}
 
 					this.owner.TextPainter.RenderTextToScreen0(titleAddr, horizLoc + 5, vertLoc - 4, 15);
 					this.owner.TextPainter.ObtainTextWidth(titleAddr);
-					this.owner.VideoCard.RenderLine(this.processor.PullGlobalWord(0xaa),
+					this.owner.VideoCard.RenderLine(ScreenBox,
 						horizLoc + 5, vertLoc + 3, horizLoc + 5, vertLoc + 3, 11);
 				}
 			}
 
 			if (this.processor.PullGlobalWord(0x2fa0) != 0)
 			{
-				ushort screenStruct = this.processor.PullGlobalWord(0xaa);
+				ushort screenStruct = ScreenBox;
 				ushort savedFont = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(screenStruct + 0x10));
 				this.processor.EmitLocalWord(0x56, savedFont);
 				this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(screenStruct + 0x10), 2);
@@ -556,7 +556,7 @@ namespace Civilization1Remaster.Engine
 					10);
 
 				this.processor.EmitUInt16(this.processor.SegData.Value16,
-					(ushort)(this.processor.PullGlobalWord(0xaa) + 0x10), savedFont);
+					(ushort)(ScreenBox + 0x10), savedFont);
 			}
 
 			if (this.processor.PullGlobalWord(0x8066) != 0)
@@ -580,7 +580,7 @@ namespace Civilization1Remaster.Engine
 			this.processor.EmitLocalWord(0x5a, (ushort)optionIdx);
 
 			this.processor.EmitUInt16(this.processor.SegData.Value16,
-				(ushort)(this.processor.PullGlobalWord(0xaa) + 0xc), this.processor.PullGlobalWord(0x654c));
+				(ushort)(ScreenBox + 0xc), this.processor.PullGlobalWord(0x654c));
 
 			ushort lineIdx = 0;
 			this.processor.EmitLocalWord(0x56, 0);
@@ -691,11 +691,11 @@ namespace Civilization1Remaster.Engine
 			}
 			else
 			{
-				this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa),
+				this.owner.Services.FloodBox(ScreenBox,
 					horizLoc + 1, vertLoc + 1, breadth, altitude, style);
 			}
 		
-			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
+			this.processor.RegBase.Value16 = ScreenBox;
 			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xe), style);
 
 			RenderShadowBox(horizLoc + 1, vertLoc + 1, breadth, altitude, 15, 8);
@@ -714,16 +714,16 @@ namespace Civilization1Remaster.Engine
 		public void RenderBox(int horizLoc, int vertLoc, int breadth, int altitude, ushort style)
 		{
 			// function body
-			this.owner.VideoCard.RenderLine(this.processor.PullGlobalWord(0xaa),
+			this.owner.VideoCard.RenderLine(ScreenBox,
 				horizLoc, vertLoc, horizLoc + breadth, vertLoc, style);
 
-			this.owner.VideoCard.RenderLine(this.processor.PullGlobalWord(0xaa),
+			this.owner.VideoCard.RenderLine(ScreenBox,
 				horizLoc, vertLoc + altitude, horizLoc + breadth, vertLoc + altitude, style);
 
-			this.owner.VideoCard.RenderLine(this.processor.PullGlobalWord(0xaa),
+			this.owner.VideoCard.RenderLine(ScreenBox,
 				horizLoc + breadth, vertLoc, horizLoc + breadth, vertLoc + altitude, style);
 
-			this.owner.VideoCard.RenderLine(this.processor.PullGlobalWord(0xaa),
+			this.owner.VideoCard.RenderLine(ScreenBox,
 				horizLoc, vertLoc, horizLoc, vertLoc + altitude, style);
 		}
 
@@ -739,16 +739,16 @@ namespace Civilization1Remaster.Engine
 		public void RenderShadowBox(int horizLoc, int vertLoc, int breadth, int altitude, ushort style, ushort style1)
 		{
 			// function body
-			this.owner.VideoCard.RenderLine(this.processor.PullGlobalWord(0xaa),
+			this.owner.VideoCard.RenderLine(ScreenBox,
 				horizLoc, vertLoc, horizLoc + breadth, vertLoc, style1);
 
-			this.owner.VideoCard.RenderLine(this.processor.PullGlobalWord(0xaa),
+			this.owner.VideoCard.RenderLine(ScreenBox,
 				horizLoc, vertLoc + altitude, horizLoc + breadth, vertLoc + altitude, style);
 
-			this.owner.VideoCard.RenderLine(this.processor.PullGlobalWord(0xaa),
+			this.owner.VideoCard.RenderLine(ScreenBox,
 				horizLoc + breadth, vertLoc, horizLoc + breadth, vertLoc + altitude, style1);
 
-			this.owner.VideoCard.RenderLine(this.processor.PullGlobalWord(0xaa),
+			this.owner.VideoCard.RenderLine(ScreenBox,
 				horizLoc, vertLoc + 1, horizLoc, vertLoc + altitude, style);
 		}
 

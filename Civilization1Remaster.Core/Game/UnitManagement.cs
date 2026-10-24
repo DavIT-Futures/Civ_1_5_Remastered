@@ -1871,8 +1871,8 @@ namespace Civilization1Remaster.Game
 				this.owner.MapOps.RenderUnitOnWorldMap(participantIdx, followingIdx);
 			}
 
-			ushort screen = this.processor.PullGlobalWord(0xaa);
-			ushort backScreen = this.processor.PullGlobalWord(0x19d4);
+			ushort screen = ScreenBox;
+			ushort backScreen = BackScreenBox;
 
 			this.owner.VideoCard.RenderImage(screen, 0x50, 0, 0xf0, 0xc8, backScreen, 0x50, 0);
 
@@ -1913,8 +1913,8 @@ namespace Civilization1Remaster.Game
 			ushort savedSource = this.processor.RegSource.Value16;
 			ushort savedDest = this.processor.RegDest.Value16;
 
-			ushort screen = this.processor.PullGlobalWord(0xaa);
-			ushort backScreen = this.processor.PullGlobalWord(0x19d4);
+			ushort screen = ScreenBox;
+			ushort backScreen = BackScreenBox;
 
 			this.owner.Startup.ConcealMouseCursor();
 
@@ -2028,7 +2028,7 @@ namespace Civilization1Remaster.Game
 		/// <returns>Line of the list, a negative number or a number past the list when none was chosen</returns>
 		private int ChooseFromStackList(short listTop, int stackTally, ref int selected)
 		{
-			ushort screen = this.processor.PullGlobalWord(0xaa);
+			ushort screen = ScreenBox;
 
 			this.owner.Startup.DisplayMouseCursor();
 
@@ -2269,8 +2269,8 @@ namespace Civilization1Remaster.Game
 
 		private void RenderBorderPiece(int pieceLeft, int pieceTop, int horizLoc, int vertLoc)
 		{
-			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19e8), pieceLeft, pieceTop, 8, 8,
-				this.processor.PullGlobalWord(0xaa), horizLoc, vertLoc);
+			this.owner.VideoCard.RenderImage(PictureScreenBox, pieceLeft, pieceTop, 8, 8,
+				ScreenBox, horizLoc, vertLoc);
 		}
 	}
 }

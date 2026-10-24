@@ -25,7 +25,7 @@ namespace Civilization1Remaster.Game
 
 			this.owner.Startup.QueryForDisk(7, 1);
 
-			ushort screenZero = this.processor.PullGlobalWord(0xaa);
+			ushort screenZero = ScreenBox;
 			this.processor.RegBase.Value16 = screenZero;
 			this.processor.EmitUInt16(this.processor.SegData.Value16, screenZero, 0x1);
 			this.processor.EmitGlobalWord(0x67fc, 0x0);
@@ -38,7 +38,7 @@ namespace Civilization1Remaster.Game
 			{
 				this.DisplayStoryIntro();
 
-				this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 0);
+				this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
 
 				do
 				{
@@ -58,7 +58,7 @@ namespace Civilization1Remaster.Game
 				this.ProduceElevation();
 			}
 
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 160, 0, 160, 200, 0);
+			this.owner.Services.FloodBox(ScreenBox, 160, 0, 160, 200, 0);
 
 			this.ProduceTerrain();
 
@@ -69,12 +69,12 @@ namespace Civilization1Remaster.Game
 			{
 			}
 
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.PullGlobalWord(0xaa) + 0x10), 0x1);
+			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(ScreenBox + 0x10), 0x1);
 
 			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0xaa),
+				ScreenBox,
 				0, 0, 0x140, 0xc8,
-				this.processor.PullGlobalWord(0x19e8),
+				PictureScreenBox,
 				0, 0);
 
 			this.processor.RestoreIndexRegisters();
@@ -409,7 +409,7 @@ namespace Civilization1Remaster.Game
 
 			while (true)
 			{
-				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), 0, 0, 0xa0, 0x64, this.processor.PullGlobalWord(0xaa), 0xa0, 0);
+				this.owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0xa0, 0x64, ScreenBox, 0xa0, 0);
 
 				short horizLoc;
 				short vertLoc;
@@ -475,7 +475,7 @@ namespace Civilization1Remaster.Game
 				}
 				else
 				{
-					this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), 0xa0, 0, 0xa0, 0x64, this.processor.PullGlobalWord(0xaa), 0, 0);
+					this.owner.VideoCard.RenderImage(ScreenBox, 0xa0, 0, 0xa0, 0x64, ScreenBox, 0, 0);
 				}
 
 				DisplayStoryIntro();
@@ -487,9 +487,9 @@ namespace Civilization1Remaster.Game
 					break;
 			}
 
-			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), 0, 0x32, 0x50, 0x32, this.processor.PullGlobalWord(0xaa), 0, 0x96);
+			this.owner.VideoCard.RenderImage(ScreenBox, 0, 0x32, 0x50, 0x32, ScreenBox, 0, 0x96);
 
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 50, 80, 50, 0);
+			this.owner.Services.FloodBox(ScreenBox, 0, 50, 80, 50, 0);
 
 			this.processor.Journal.CloseScope("ProduceElevation");
 		}
@@ -503,7 +503,7 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope("ProduceCloudLayer()");
 
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 160, 0, 80, 50, 0);
+			this.owner.Services.FloodBox(ScreenBox, 160, 0, 80, 50, 0);
 
 			short cloudHoriz = (short)(this.owner.Libc.Dice.DrawInt(72) + 4);
 			short cloudVert = (short)(this.owner.Libc.Dice.DrawInt(34) + 8);
@@ -617,7 +617,7 @@ namespace Civilization1Remaster.Game
 
 			DisplayStoryIntro();
 
-			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0x19e8), 0, 0);
+			this.owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, PictureScreenBox, 0, 0);
 
 			LabelLandmasses();
 
@@ -627,8 +627,8 @@ namespace Civilization1Remaster.Game
 
 			SituateSpecialTerrain();
 
-			this.owner.VideoCard.RenderLine(this.processor.PullGlobalWord(0xaa), 0, 0, 79, 0, 15);
-			this.owner.VideoCard.RenderLine(this.processor.PullGlobalWord(0xaa), 0, 49, 79, 49, 15);
+			this.owner.VideoCard.RenderLine(ScreenBox, 0, 0, 79, 0, 15);
+			this.owner.VideoCard.RenderLine(ScreenBox, 0, 49, 79, 49, 15);
 
 			ushort dotIdx;
 
@@ -1396,7 +1396,7 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"ObtainTerrainTypeFromScreen({horizLoc}, {vertLoc})");
 
-			ushort displayIdx = this.processor.PullGlobalWord(this.processor.PullGlobalWord(0xaa));
+			ushort displayIdx = this.processor.PullGlobalWord(ScreenBox);
 			ushort colour = this.owner.VideoCard.ObtainDot(displayIdx, horizLoc, vertLoc);
 			ushort terrain = this.processor.PullGlobalWord((ushort)(0x2ba6 + (colour << 1)));
 
@@ -1419,7 +1419,7 @@ namespace Civilization1Remaster.Game
 
 			// function body
 			this.owner.VideoCard.ObtainDot(
-				this.processor.PullUInt16(this.processor.SegData.Value16, this.processor.PullGlobalWord(0xaa)),
+				this.processor.PullUInt16(this.processor.SegData.Value16, ScreenBox),
 				horizLoc, vertLoc + 50);
 
 			// Far return
@@ -1446,7 +1446,7 @@ namespace Civilization1Remaster.Game
 			this.processor.EnterFrame(0x1a);
 			ushort fileName = (ushort)(this.processor.RegFrame.Value16 - 0x10);
 
-			this.processor.EmitUInt16(this.processor.SegData.Value16, this.processor.PullGlobalWord(0xaa), 0x0);
+			this.processor.EmitUInt16(this.processor.SegData.Value16, ScreenBox, 0x0);
 
 			bool waiting = StoryStep(fileName);
 
@@ -1474,7 +1474,7 @@ namespace Civilization1Remaster.Game
 
 					if (this.processor.PullGlobalWord(0x3b62) == 5)
 					{
-						this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 40, 160, 240, 8, 0);
+						this.owner.Services.FloodBox(ScreenBox, 40, 160, 240, 8, 0);
 					}
 				}
 				else
@@ -1500,7 +1500,7 @@ namespace Civilization1Remaster.Game
 
 				this.owner.Libc.CopyText(0xba06, "");
 
-				this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.PullGlobalWord(0xaa) + 0x10), 0x7);
+				this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(ScreenBox + 0x10), 0x7);
 				this.processor.EmitGlobalWord(0x6802, 0x0);
 			}
 
@@ -1550,8 +1550,8 @@ namespace Civilization1Remaster.Game
 			if (this.processor.PullGlobalSignedWord(0x3b64) > 1)
 			{
 				// The line under the picture is wiped with the picture
-				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19e8), 0, 0xa0, 0x140, 8,
-					this.processor.PullGlobalWord(0xaa), 0, 0xa0);
+				this.owner.VideoCard.RenderImage(PictureScreenBox, 0, 0xa0, 0x140, 8,
+					ScreenBox, 0, 0xa0);
 			}
 
 			this.owner.TextPainter.AwaitTime(10);
@@ -1621,8 +1621,8 @@ namespace Civilization1Remaster.Game
 				this.owner.Services.FloodColors(8, 0, 0, 0);
 			}
 
-			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19e8), 0, 0, 0x140, 0xc8,
-				this.processor.PullGlobalWord(0xaa), 0, 0);
+			this.owner.VideoCard.RenderImage(PictureScreenBox, 0, 0, 0x140, 0xc8,
+				ScreenBox, 0, 0);
 
 			if (this.processor.PullGlobalWord(0xd762) == 0)
 				return;
@@ -1704,7 +1704,7 @@ namespace Civilization1Remaster.Game
 		/// <summary>Marks the screen as changed ([0xaa] = 1)</summary>
 		private void MarkScreenChanged()
 		{
-			this.processor.EmitUInt16(this.processor.SegData.Value16, this.processor.PullGlobalWord(0xaa), 0x1);
+			this.processor.EmitUInt16(this.processor.SegData.Value16, ScreenBox, 0x1);
 		}
 
 		/// <summary>

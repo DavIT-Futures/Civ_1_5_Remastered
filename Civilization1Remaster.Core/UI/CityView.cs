@@ -295,7 +295,7 @@ namespace Civilization1Remaster.UI
 							if (((1 << marvelIdx) & 0x808a) != 0)
 							{
 								this.owner.Services.RenderPictureToScreen(
-									this.processor.PullGlobalWord(0x19d4),
+									BackScreenBox,
 									(((marvelIdx == 3) ? 80 : 0) +
 										((this.processor.PullInt16(0x3767, (ushort)((marvelIdx << 3) + 0x0)) < 10) ? -1 : 2) +
 										this.processor.PullInt16(0x3767, (ushort)((marvelIdx << 3) + 0x0))),
@@ -310,7 +310,7 @@ namespace Civilization1Remaster.UI
 				{
 					for (int idx = (townIdx == this.owner.World.MarvelTownIdx[7]) ? 69 : 0; idx < 310; idx += 45)
 					{
-						this.owner.Services.RenderPictureToScreenAlternate(this.processor.PullGlobalWord(0x19d4),
+						this.owner.Services.RenderPictureToScreenAlternate(BackScreenBox,
 							idx, 2, this.processor.PullGlobalWord(0x81c4));
 					}
 				}
@@ -431,11 +431,11 @@ namespace Civilization1Remaster.UI
 							idx += 19;
 						}
 
-						this.owner.Services.RenderPictureToScreenAlternate(this.processor.PullGlobalWord(0x19d4),
+						this.owner.Services.RenderPictureToScreenAlternate(BackScreenBox,
 							idx, 108, this.processor.PullGlobalWord(0x81ce));
 					}
 
-					this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0x19d4),
+					this.owner.Services.RenderPictureToScreen(BackScreenBox,
 						142, 108, this.processor.PullGlobalWord(0x81ae));
 				}
 
@@ -443,15 +443,15 @@ namespace Civilization1Remaster.UI
 				{
 					for (int idx = 0; idx < 310; idx += 46)
 					{
-						this.owner.Services.RenderPictureToScreenAlternate(this.processor.PullGlobalWord(0x19d4),
+						this.owner.Services.RenderPictureToScreenAlternate(BackScreenBox,
 							idx, 115, this.processor.PullGlobalWord(0x81cc));
 					}
 
-					this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0x19d4),
+					this.owner.Services.RenderPictureToScreen(BackScreenBox,
 						0, 115, this.processor.PullGlobalWord(0x81b8));
 				}
 
-				this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
+				this.processor.RegBase.Value16 = ScreenBox;
 				this.processor.EmitUInt16(this.processor.SegData.Value16, this.processor.RegBase.Value16, 0x1);
 				this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 0x6);
 
@@ -475,7 +475,7 @@ namespace Civilization1Remaster.UI
 					this.owner.Dialogs.DisplayMenu((ushort)(this.processor.RegFrame.Value16 - 0x80), 80, 8, 1);
 				}
 
-				this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
+				this.processor.RegBase.Value16 = ScreenBox;
 				this.processor.EmitUInt16(this.processor.SegData.Value16, this.processor.RegBase.Value16, 0x0);
 				this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 0x1);
 
@@ -487,7 +487,7 @@ namespace Civilization1Remaster.UI
 				}
 				else
 				{
-					this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 0);
+					this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
 
 					if (arg2 != -3)
 					{
@@ -495,9 +495,9 @@ namespace Civilization1Remaster.UI
 					}
 
 					this.owner.VideoCard.RenderImage(
-						this.processor.PullGlobalWord(0x19d4),
+						BackScreenBox,
 						0, 0, 320, 200,
-						this.processor.PullGlobalWord(0xaa),
+						ScreenBox,
 						0, 0);
 
 					if (arg2 == -3 && this.processor.PullGlobalWord(0xd762) != 0)
@@ -564,7 +564,7 @@ namespace Civilization1Remaster.UI
 
 				if (this.processor.PullGlobalWord(0xd762) != 0)
 				{
-					this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 0);
+					this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
 
 					this.owner.TurnHooks.DisplayCivilizationScenery();
 				}
@@ -584,7 +584,7 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope($"RenderCityPicture({arg1}, {arg2}, {pictureIdx})");
 
-			this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0x19d4),
+			this.owner.Services.RenderPictureToScreen(BackScreenBox,
 				((arg2 & 1) * 8) + (arg1 * 16) - 5,
 				(arg2 * 8) + 50,
 				this.processor.PullGlobalWord((ushort)((pictureIdx << 1) + 0x6880)));
@@ -600,7 +600,7 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope($"RenderCityPictureRegion({arg1}, {arg2}, {arg3}, {arg4})");
 
-			this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0x19d4),
+			this.owner.Services.RenderPictureToScreen(BackScreenBox,
 				((arg2 & 1) << 3) + (arg1 << 4),
 				(arg2 << 3) + 26,
 				this.processor.PullGlobalWord((ushort)((arg3 << 1) + (arg4 << 3) + 0x817a)));
@@ -620,7 +620,7 @@ namespace Civilization1Remaster.UI
 			{
 				int horizLoc = this.owner.Helpers.VerifyValueSpan(((arg2 & 1) * 8) + (arg1 * 16) - 9, 0, 999);
 
-				this.owner.Services.RenderPictureToScreenAlternate(this.processor.PullGlobalWord(0x19d4),
+				this.owner.Services.RenderPictureToScreenAlternate(BackScreenBox,
 					(short)horizLoc,
 					(short)((short)(arg2 << 3) + 16),
 					this.processor.PullGlobalWord((ushort)((arg3 << 1) + 0x81a2)));
@@ -633,7 +633,7 @@ namespace Civilization1Remaster.UI
 
 				int horizLoc = this.owner.Helpers.VerifyValueSpan(((arg2 & 1) * 8) + (arg1 * 16) - 9, 0, 999);
 
-				this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0x19d4),
+				this.owner.Services.RenderPictureToScreen(BackScreenBox,
 					(short)horizLoc,
 					(short)arg2 - 10,
 					this.processor.PullGlobalWord((ushort)((arg3 << 1) + 0x68a0)));
@@ -670,10 +670,10 @@ namespace Civilization1Remaster.UI
 			sbyte size = this.owner.World.Towns[townIdx].TrueExtent;
 			short spacing = (short)(12 * size) > (short)arg4 ? CPU.SignedQuotient((short)arg4, size) : (short)12;
 
-			short happy = (short)this.owner.Helpers.VerifyValueSpan(this.processor.PullGlobalSignedWord(0x70e2), 0, this.owner.World.Towns[townIdx].TrueExtent);
-			short unhappy = (short)this.owner.Helpers.VerifyValueSpan(this.processor.PullGlobalSignedWord(0x70e4), 0, this.owner.World.Towns[townIdx].TrueExtent);
+			short happy = (short)this.owner.Helpers.VerifyValueSpan((short)CityHappy, 0, this.owner.World.Towns[townIdx].TrueExtent);
+			short unhappy = (short)this.owner.Helpers.VerifyValueSpan((short)CityUnhappy, 0, this.owner.World.Towns[townIdx].TrueExtent);
 
-			while ((short)(happy + unhappy) > (short)this.owner.Helpers.VerifyValueSpan(this.owner.World.Towns[townIdx].TrueExtent - this.processor.PullGlobalSignedWord(0xe8b8), 0, 99))
+			while ((short)(happy + unhappy) > (short)this.owner.Helpers.VerifyValueSpan(this.owner.World.Towns[townIdx].TrueExtent - (short)CitySpecialists, 0, 99))
 			{
 				happy = (short)this.owner.Helpers.VerifyValueSpan((short)(happy - 1), 0, this.owner.World.Towns[townIdx].TrueExtent);
 				unhappy = (short)this.owner.Helpers.VerifyValueSpan((short)(unhappy - 1), 0, this.owner.World.Towns[townIdx].TrueExtent);
@@ -689,7 +689,7 @@ namespace Civilization1Remaster.UI
 			if (happy != 0)
 				arg2 += 8;
 
-			for (citizenIdx = 0; (short)(this.owner.World.Towns[townIdx].TrueExtent - happy - unhappy - this.processor.PullGlobalWord(0xe8b8)) > citizenIdx; citizenIdx++)
+			for (citizenIdx = 0; (short)(this.owner.World.Towns[townIdx].TrueExtent - happy - unhappy - CitySpecialists) > citizenIdx; citizenIdx++)
 			{
 				RenderSceneryCitizen(pictures, 2 + (citizenIdx & 1), ref arg2, arg3, spacing);
 			}
@@ -704,7 +704,7 @@ namespace Civilization1Remaster.UI
 
 			arg2 += 12;
 
-			for (citizenIdx = 0; citizenIdx < (short)this.processor.PullGlobalWord(0xe8b8); citizenIdx++)
+			for (citizenIdx = 0; citizenIdx < (short)CitySpecialists; citizenIdx++)
 			{
 				RenderSceneryCitizen(pictures, 5 + this.owner.CityOps.ObtainCitizenType((ushort)citizenIdx), ref arg2, arg3, spacing);
 			}
@@ -721,7 +721,7 @@ namespace Civilization1Remaster.UI
 		private void RenderSceneryCitizen(ushort[] pictures, int pictureIdx, ref ushort horizLoc, ushort vertLoc, short spacing)
 		{
 			this.owner.Services.RenderPictureToScreen(
-				this.processor.PullGlobalWord(0xaa),
+				ScreenBox,
 				(short)horizLoc,
 				(short)vertLoc,
 				pictures[pictureIdx]);
@@ -882,7 +882,7 @@ namespace Civilization1Remaster.UI
 				CutParadePictures(pictures, 1, 0x42, 1, 0x41);
 			}
 
-			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), 0, 0x64, 0x140, 0x64, this.processor.PullGlobalWord(0x19d4), 0, 0);
+			this.owner.VideoCard.RenderImage(ScreenBox, 0, 0x64, 0x140, 0x64, BackScreenBox, 0, 0);
 
 			ushort frameIdx = 0;
 			short offset;
@@ -892,7 +892,7 @@ namespace Civilization1Remaster.UI
 			{
 				this.owner.Services.RestoreTimer();
 
-				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 0x140, 0x64, this.processor.PullGlobalWord(0x19d4), 0, 0x64);
+				this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0x64, BackScreenBox, 0, 0x64);
 
 				for (short figureIdx = 7; figureIdx >= 0; figureIdx--)
 				{
@@ -901,11 +901,11 @@ namespace Civilization1Remaster.UI
 					if (figureHoriz >= 0x140 || figureHoriz <= -0x30)
 						continue;
 
-					this.owner.Services.RenderPictureToScreenAlternate(this.processor.PullGlobalWord(0x19d4), figureHoriz, 132,
+					this.owner.Services.RenderPictureToScreenAlternate(BackScreenBox, figureHoriz, 132,
 						pictures[(short)frameIdx % 10]);
 				}
 
-				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0x64, 0x140, 0x64, this.processor.PullGlobalWord(0xaa), 0, 0x64);
+				this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0x64, 0x140, 0x64, ScreenBox, 0, 0x64);
 
 				frameIdx++;
 
@@ -985,9 +985,9 @@ namespace Civilization1Remaster.UI
 
 			// Draw City View to screen 0
 			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0xaa),
+				ScreenBox,
 				0, 100, 320, 100,
-				this.processor.PullGlobalWord(0x19d4),
+				BackScreenBox,
 				0, 0);
 
 			for (int idx = -48, jdx = 0; idx < 420; idx += 3, jdx++)
@@ -996,9 +996,9 @@ namespace Civilization1Remaster.UI
 
 				// Draw a lower portion of City View to screen 0
 				this.owner.VideoCard.RenderImage(
-					this.processor.PullGlobalWord(0x19d4),
+					BackScreenBox,
 					0, 0, 320, 100,
-					this.processor.PullGlobalWord(0x19d4),
+					BackScreenBox,
 					0, 100);
 
 				for (int kdx = 0; kdx < 4; kdx++)
@@ -1007,7 +1007,7 @@ namespace Civilization1Remaster.UI
 
 					if (horizSpot > -48 && horizSpot < 320)
 					{
-						this.owner.Services.RenderPictureToScreenAlternate(this.processor.PullGlobalWord(0x19d4),
+						this.owner.Services.RenderPictureToScreenAlternate(BackScreenBox,
 							horizSpot, this.processor.PullInt16(this.processor.SegData.Value16, (ushort)((kdx << 1) + 0x4f4a)) + 132,
 							pictures[(kdx * 3 + jdx) % 10]);
 					}				
@@ -1015,9 +1015,9 @@ namespace Civilization1Remaster.UI
 
 				// Draw a lower portion of City View to screen 0
 				this.owner.VideoCard.RenderImage(
-					this.processor.PullGlobalWord(0x19d4),
+					BackScreenBox,
 					0, 100, 320, 100,
-					this.processor.PullGlobalWord(0xaa),
+					ScreenBox,
 					0, 100);
 
 				while (this.processor.PullGlobalWord(0x5c) < 10) ;
@@ -1064,7 +1064,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Startup.ConcealMouseCursor();
 
-			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), 0, 0x64, 0x140, 0x64, this.processor.PullGlobalWord(0x19d4), 0, 0);
+			this.owner.VideoCard.RenderImage(ScreenBox, 0, 0x64, 0x140, 0x64, BackScreenBox, 0, 0);
 
 			ushort frameIdx = 0;
 			short offset;
@@ -1074,7 +1074,7 @@ namespace Civilization1Remaster.UI
 			{
 				this.owner.Services.RestoreTimer();
 
-				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 0x140, 0x64, this.processor.PullGlobalWord(0x19d4), 0, 0x64);
+				this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0x64, BackScreenBox, 0, 0x64);
 
 				for (short figureIdx = 0; figureIdx < 4; figureIdx++)
 				{
@@ -1083,12 +1083,12 @@ namespace Civilization1Remaster.UI
 					if (figureHoriz >= 0x140 || figureHoriz <= -0x30)
 						continue;
 
-					this.owner.Services.RenderPictureToScreenAlternate(this.processor.PullGlobalWord(0x19d4), figureHoriz,
+					this.owner.Services.RenderPictureToScreenAlternate(BackScreenBox, figureHoriz,
 						this.processor.PullInt16(this.processor.SegData.Value16, (ushort)((figureIdx << 1) + 0x4f4a)) + 132,
 						pictures[(short)((3 * figureIdx) + frameIdx) % 10]);
 				}
 
-				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0x64, 0x140, 0x64, this.processor.PullGlobalWord(0xaa), 0, 0x64);
+				this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0x64, 0x140, 0x64, ScreenBox, 0, 0x64);
 
 				frameIdx++;
 

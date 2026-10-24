@@ -125,8 +125,8 @@ namespace Civilization1Remaster.Game
 
 			this.owner.Startup.ConcealMouseCursor();
 
-			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200,
-				this.processor.PullGlobalWord(0x19d4), 0, 0);
+			this.owner.VideoCard.RenderImage(ScreenBox, 0, 0, 320, 200,
+				BackScreenBox, 0, 0);
 
 			this.owner.Startup.DisplayMouseCursor();
 
@@ -134,8 +134,8 @@ namespace Civilization1Remaster.Game
 
 			this.owner.Startup.ConcealMouseCursor();
 
-			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 320, 200,
-				this.processor.PullGlobalWord(0xaa), 0, 0);
+			this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 320, 200,
+				ScreenBox, 0, 0);
 
 			this.owner.Startup.DisplayMouseCursor();
 
@@ -268,7 +268,7 @@ namespace Civilization1Remaster.Game
 			Player player = this.owner.World.Participants[participantIdx];
 			bool person = participantIdx == this.owner.World.PersonParticipantIdx;
 
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 2, 192, 6, 6, 8);
+			this.owner.Services.FloodBox(ScreenBox, 2, 192, 6, 6, 8);
 
 			if (person)
 			{
@@ -291,7 +291,7 @@ namespace Civilization1Remaster.Game
 
 			this.owner.Bot.ReimposeStrategicLocations(participantIdx);
 
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 2, 192, 6, 6, 15);
+			this.owner.Services.FloodBox(ScreenBox, 2, 192, 6, 6, 15);
 
 			if (participantIdx == this.owner.World.PersonParticipantIdx)
 			{
@@ -750,14 +750,14 @@ namespace Civilization1Remaster.Game
 
 			this.owner.Startup.ConcealMouseCursor();
 
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 0);
+			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
 
 			this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, 0x1d05, 1);
 
 			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0x19d4),
+				BackScreenBox,
 				0, 0, 0x140, 0xc8,
-				this.processor.PullGlobalWord(0xaa),
+				ScreenBox,
 				0, 0);
 
 			this.owner.Conquest.AwaitForKeyPressOrMouseClick();
@@ -1104,7 +1104,7 @@ namespace Civilization1Remaster.Game
 			this.processor.Journal.OpenScope("WipeStatusLine()");
 
 			// function body
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 8, 0);
+			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 8, 0);
 
 			this.owner.TextPainter.RenderTextToScreen0(0x1d6f, 8, 1, 15);
 
@@ -1140,13 +1140,13 @@ namespace Civilization1Remaster.Game
 
 				FloodBoxWithShadow(0, 58, 80, 39);
 
-				this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 3, 60, 74, 11, 11);
+				this.owner.Services.FloodBox(ScreenBox, 3, 60, 74, 11, 11);
 
 				if (this.owner.World.TruceRoundTally > 1)
 				{
 					int peace = this.owner.Helpers.VerifyValueSpan(this.owner.World.TruceRoundTally * 2, 0, 60);
 
-					this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 3, 60, (short)peace, 2, 15);
+					this.owner.Services.FloodBox(ScreenBox, 3, 60, (short)peace, 2, 15);
 				}
 
 				RenderPalace(this.owner.World.PersonParticipantIdx, this.owner.World.CastleTier, 8, 58);
@@ -1182,15 +1182,15 @@ namespace Civilization1Remaster.Game
 				short progress = CPU.SignedQuotient((short)(human.InquiryHeadway << 2), (short)(cost + 1));
 				int bulb = this.owner.Helpers.VerifyValueSpan(progress, 0, 3);
 
-				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19e8), (ushort)((bulb << 3) + 0xa0), 0x78, 8, 8,
-					this.processor.PullGlobalWord(0xaa), 0x30, 0x50);
+				this.owner.VideoCard.RenderImage(PictureScreenBox, (ushort)((bulb << 3) + 0xa0), 0x78, 8, 8,
+					ScreenBox, 0x30, 0x50);
 
 				if (this.owner.World.SmogImpactTier != 0)
 				{
 					int smog = this.owner.Helpers.VerifyValueSpan(this.owner.World.SmogImpactTier / 4, 0, 3);
 
-					this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19e8), (ushort)((smog << 3) + 0xa0), 0x80, 8, 8,
-						this.processor.PullGlobalWord(0xaa), 0x38, 0x50);
+					this.owner.VideoCard.RenderImage(PictureScreenBox, (ushort)((smog << 3) + 0xa0), 0x80, 8, 8,
+						ScreenBox, 0x38, 0x50);
 				}
 
 				EmptyMessage()
@@ -1277,7 +1277,7 @@ namespace Civilization1Remaster.Game
 			this.processor.EnterFrame(0x36);
 			this.processor.PreserveIndexRegisters();
 
-			this.owner.VideoCard.RenderLine(this.processor.PullGlobalWord(0xaa), horizLoc - 5, vertLoc + 13, horizLoc + 68, vertLoc + 13, 2);
+			this.owner.VideoCard.RenderLine(ScreenBox, horizLoc - 5, vertLoc + 13, horizLoc + 68, vertLoc + 13, 2);
 
 			if (this.owner.World.Participants[participantIdx].TownTally != 0)
 			{
@@ -1376,7 +1376,7 @@ namespace Civilization1Remaster.Game
 
 					int height = this.owner.Helpers.VerifyValueSpan(sectionLevel - 1, 0, 3);
 
-					this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa), (7 * sectionIdx) + horizLoc, vertLoc - 1,
+					this.owner.Services.RenderPictureToScreen(ScreenBox, (7 * sectionIdx) + horizLoc, vertLoc - 1,
 						this.processor.PullGlobalWord((ushort)((0x28 * SectionWord(styles, sectionIdx)) + ((((short)height * 5) + shape) << 1) + 0xd21c)));
 				}
 

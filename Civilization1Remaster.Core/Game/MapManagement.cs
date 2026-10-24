@@ -91,7 +91,7 @@ namespace Civilization1Remaster.Game
 					}
 					else
 					{
-						this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), (column * 16) + 80, (row * 16) + 8, 16, 16, 0);
+						this.owner.Services.FloodBox(ScreenBox, (column * 16) + 80, (row * 16) + 8, 16, 16, 0);
 					}
 				}
 
@@ -133,7 +133,7 @@ namespace Civilization1Remaster.Game
 			this.processor.EmitGlobalWord(0x6ed6, (ushort)left);
 			this.processor.EmitGlobalWord(0x70ea, (ushort)top);
 
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 8, 80, 50, 0);
+			this.owner.Services.FloodBox(ScreenBox, 0, 8, 80, 50, 0);
 
 			if (this.processor.PullGlobalWord(0xd806) != 0)
 			{
@@ -143,18 +143,18 @@ namespace Civilization1Remaster.Game
 				top = (short)this.owner.Helpers.VerifyValueSpan(top, 0, 65530);
 				this.processor.EmitGlobalWord(0x70ea, (ushort)top);
 
-				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19e8), (ushort)left, (ushort)top, 0x50, 0x32,
-					this.processor.PullGlobalWord(0xaa), 0, 8);
+				this.owner.VideoCard.RenderImage(PictureScreenBox, (ushort)left, (ushort)top, 0x50, 0x32,
+					ScreenBox, 0, 8);
 			}
 			else
 			{
-				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19e8), (ushort)(wrappedLeft + 0xf0), sourceTop, breadth, altitude,
-					this.processor.PullGlobalWord(0xaa), 0, (ushort)(targetTop + 8));
+				this.owner.VideoCard.RenderImage(PictureScreenBox, (ushort)(wrappedLeft + 0xf0), sourceTop, breadth, altitude,
+					ScreenBox, 0, (ushort)(targetTop + 8));
 
 				if (breadth < 0x50)
 				{
-					this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19e8), 0xf0, sourceTop, (ushort)(0x50 - breadth), altitude,
-						this.processor.PullGlobalWord(0xaa), breadth, (ushort)(targetTop + 8));
+					this.owner.VideoCard.RenderImage(PictureScreenBox, 0xf0, sourceTop, (ushort)(0x50 - breadth), altitude,
+						ScreenBox, breadth, (ushort)(targetTop + 8));
 				}
 			}
 
@@ -241,15 +241,15 @@ namespace Civilization1Remaster.Game
 					this.owner.VideoCard.RenderImage(
 						this.processor.PullGlobalWord(0x19fc),
 						0, 0x50, 16, 16,
-						this.processor.PullGlobalWord(0xaa),
+						ScreenBox,
 						(ushort)screenX, (ushort)screenY);
 				}
 				else
 				{
 					this.owner.VideoCard.RenderImage(
-						this.processor.PullGlobalWord(0x19e8),
+						PictureScreenBox,
 						0x100, 0x78, 16, 16,
-						this.processor.PullGlobalWord(0xaa),
+						ScreenBox,
 						(ushort)screenX, (ushort)screenY);
 				}
 			}
@@ -260,7 +260,7 @@ namespace Civilization1Remaster.Game
 				(improvements & 0x1) == 0)
 			{
 				this.owner.Services.RenderPictureToScreen(
-					this.processor.PullGlobalWord(0xaa),
+					ScreenBox,
 					screenX, screenY,
 					this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((4 << 1) + 0xd4ce)));
 			}
@@ -305,7 +305,7 @@ namespace Civilization1Remaster.Game
 			{
 				ushort ownerBits = ObtainTileOwnerBits(horizLoc, vertLoc);
 				this.owner.Services.FloodBox(
-					this.processor.PullGlobalWord(0xaa),
+					ScreenBox,
 					horizLoc * 4, vertLoc * 4, 4, 4,
 					this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((ownerBits << 1) + 0x1946)));
 				return ownerBits;
@@ -314,11 +314,11 @@ namespace Civilization1Remaster.Game
 			ushort terrain = ObtainTerrainType(horizLoc, vertLoc);
 			if (terrain == 0xa)
 			{
-				this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), horizLoc * 4, vertLoc * 4, 4, 4, 1);
+				this.owner.Services.FloodBox(ScreenBox, horizLoc * 4, vertLoc * 4, 4, 4, 1);
 				return 0xa;
 			}
 
-			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), horizLoc * 4, vertLoc * 4, 4, 4, 2);
+			this.owner.Services.FloodBox(ScreenBox, horizLoc * 4, vertLoc * 4, 4, 4, 2);
 			return 0x2;
 		}
 
@@ -361,7 +361,7 @@ namespace Civilization1Remaster.Game
 				this.owner.VideoCard.RenderImage(
 					this.processor.PullGlobalWord(0x19fc),
 					(ushort)(mask << 4), 0x40, 16, 16,
-					this.processor.PullGlobalWord(0xaa),
+					ScreenBox,
 					(ushort)screenX, (ushort)screenY);
 				return;
 			}
@@ -384,7 +384,7 @@ namespace Civilization1Remaster.Game
 					: (short)(screenX + ((quad & 1) << 3));
 				short qy = quad >= 2 ? (short)(screenY + 8) : screenY;
 
-				this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa), qx, qy, sprite);
+				this.owner.Services.RenderPictureToScreen(ScreenBox, qx, qy, sprite);
 			}
 
 			this.processor.EmitLocalWord(0xc, 4);
@@ -403,9 +403,9 @@ namespace Civilization1Remaster.Game
 			if (specialCoastX >= 0)
 			{
 				this.owner.VideoCard.RenderImage(
-					this.processor.PullGlobalWord(0x19e8),
+					PictureScreenBox,
 					(ushort)specialCoastX, 0x64, 16, 16,
-					this.processor.PullGlobalWord(0xaa),
+					ScreenBox,
 					(ushort)screenX, (ushort)screenY);
 			}
 
@@ -419,7 +419,7 @@ namespace Civilization1Remaster.Game
 				if (ObtainTerrainType((short)adjX, adjY) == 0xb)
 				{
 					this.owner.Services.RenderPictureToScreen(
-						this.processor.PullGlobalWord(0xaa),
+						ScreenBox,
 						screenX, screenY,
 						this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(((dir / 2) << 1) + 0xd2d4)));
 				}
@@ -461,7 +461,7 @@ namespace Civilization1Remaster.Game
 			}
 
 			this.owner.Services.RenderPictureToScreen(
-				this.processor.PullGlobalWord(0xaa),
+				ScreenBox,
 				screenX, screenY,
 				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((mask << 1) + 0x6dfe)));
 		}
@@ -476,14 +476,14 @@ namespace Civilization1Remaster.Game
 				mask = MaskNeighbours(horizLoc, vertLoc, mask, 2, 0x8, terrainType => terrainType == terrain);
 
 				this.owner.Services.RenderPictureToScreen(
-					this.processor.PullGlobalWord(0xaa),
+					ScreenBox,
 					screenX, screenY,
 					this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((mask << 1) + (terrain << 5) + 0xb886)));
 
 				if (terrain == 0x2 && (((byte)(7 * horizLoc + 11 * vertLoc)) & 0x2) == 0)
 				{
 					this.owner.Services.RenderPictureToScreen(
-						this.processor.PullGlobalWord(0xaa),
+						ScreenBox,
 						(short)(screenX + 4),
 						(short)(screenY + 4),
 						this.processor.PullGlobalWord(0xb880));
@@ -496,7 +496,7 @@ namespace Civilization1Remaster.Game
 					: (ushort)((horizLoc + vertLoc) & 0x1);
 
 				this.owner.Services.RenderPictureToScreen(
-					this.processor.PullGlobalWord(0xaa),
+					ScreenBox,
 					screenX, screenY,
 					this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((terrain << 5) + (variant << 1) + 0xb886)));
 			}
@@ -509,16 +509,16 @@ namespace Civilization1Remaster.Game
 				if (this.processor.PullGlobalWord(0xd762) != 0)
 				{
 					this.owner.Services.RenderPictureToScreen(
-						this.processor.PullGlobalWord(0xaa),
+						ScreenBox,
 						screenX, screenY,
 						this.processor.PullGlobalWord(0xd4da));
 				}
 				else
 				{
-					this.owner.VideoCard.SubstituteHue(this.processor.PullGlobalWord(0xaa), screenX, screenY, 16, 16, 2, 0);
-					this.owner.VideoCard.SubstituteHue(this.processor.PullGlobalWord(0xaa), screenX, screenY, 16, 16, 10, 15);
-					this.owner.VideoCard.SubstituteHue(this.processor.PullGlobalWord(0xaa), screenX, screenY, 16, 16, 9, 8);
-					this.owner.VideoCard.SubstituteHue(this.processor.PullGlobalWord(0xaa), screenX, screenY, 16, 16, 11, 0);
+					this.owner.VideoCard.SubstituteHue(ScreenBox, screenX, screenY, 16, 16, 2, 0);
+					this.owner.VideoCard.SubstituteHue(ScreenBox, screenX, screenY, 16, 16, 10, 15);
+					this.owner.VideoCard.SubstituteHue(ScreenBox, screenX, screenY, 16, 16, 9, 8);
+					this.owner.VideoCard.SubstituteHue(ScreenBox, screenX, screenY, 16, 16, 11, 0);
 				}
 			}
 
@@ -543,7 +543,7 @@ namespace Civilization1Remaster.Game
 
 						ushort roadTable = ((improvements & 0x11) != 0 && (adjImp & 0x11) != 0) ? (ushort)0xb298 : (ushort)0xb278;
 						this.owner.Services.RenderPictureToScreen(
-							this.processor.PullGlobalWord(0xaa),
+							ScreenBox,
 							screenX, screenY,
 							this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((dir << 1) + roadTable)));
 					}
@@ -554,7 +554,7 @@ namespace Civilization1Remaster.Game
 				if (isolatedDotHue != 0xffff)
 				{
 					this.owner.Services.FloodBox(
-						this.processor.PullGlobalWord(0xaa),
+						ScreenBox,
 						screenX + 7, screenY + 7, 2, 2,
 						isolatedDotHue);
 				}
@@ -563,7 +563,7 @@ namespace Civilization1Remaster.Game
 			if ((improvements & 0x4) != 0 && this.processor.PullGlobalWord(0xdcfc) == 0)
 			{
 				this.owner.Services.RenderPictureToScreen(
-					this.processor.PullGlobalWord(0xaa),
+					ScreenBox,
 					screenX, screenY,
 					this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((5 << 1) + 0xd4ce)));
 			}
@@ -571,7 +571,7 @@ namespace Civilization1Remaster.Game
 			if (ContainsSpecialResource(horizLoc, vertLoc) != 0)
 			{
 				this.owner.Services.RenderPictureToScreen(
-					this.processor.PullGlobalWord(0xaa),
+					ScreenBox,
 					screenX, screenY,
 					this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(((terrain + 0x10) << 1) + 0xd4ce)));
 			}
@@ -579,7 +579,7 @@ namespace Civilization1Remaster.Game
 			if (ContainsHut(terrain, horizLoc, vertLoc) != 0)
 			{
 				this.owner.Services.RenderPictureToScreen(
-					this.processor.PullGlobalWord(0xaa),
+					ScreenBox,
 					screenX, screenY,
 					this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((0x1f << 1) + 0xd4ce)));
 			}
@@ -587,7 +587,7 @@ namespace Civilization1Remaster.Game
 			if ((improvements & 0x20) != 0)
 			{
 				this.owner.Services.RenderPictureToScreen(
-					this.processor.PullGlobalWord(0xaa),
+					ScreenBox,
 					screenX, screenY,
 					this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((0x1e << 1) + 0xd4ce)));
 			}
@@ -606,7 +606,7 @@ namespace Civilization1Remaster.Game
 					if (((ushort)(short)this.owner.World.ChartSight[adjX, adjY] & personBit) == 0)
 					{
 						this.owner.Services.RenderPictureToScreen(
-							this.processor.PullGlobalWord(0xaa),
+							ScreenBox,
 							screenX, screenY,
 							this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(((dir / 2) << 1) + 0x7eec)));
 					}
@@ -646,18 +646,18 @@ namespace Civilization1Remaster.Game
 			this.processor.EmitLocalWord(0x26, (ushort)innerY);
 
 			this.owner.Services.FloodBox(
-				this.processor.PullGlobalWord(0xaa),
+				ScreenBox,
 				innerX, innerY, 12, 12,
 				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(ownerWordOffset + 0x1946)));
 
 			this.owner.Services.RenderPictureToScreen(
-				this.processor.PullGlobalWord(0xaa),
+				ScreenBox,
 				(short)(screenX + 1),
 				(short)(screenY + 1),
 				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((0x1c << 1) + 0xd4ce)));
 
 			this.owner.VideoCard.SubstituteHue(
-				this.processor.PullGlobalWord(0xaa),
+				ScreenBox,
 				innerX, innerY, 12, 12, 5,
 				(byte)this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(ownerWordOffset + 0x1956)));
 
@@ -672,7 +672,7 @@ namespace Civilization1Remaster.Game
 			if ((town.ConditionMarker & 0x1) != 0)
 			{
 				this.owner.Services.RenderPictureToScreen(
-					this.processor.PullGlobalWord(0xaa),
+					ScreenBox,
 					screenX + 5, innerY,
 					this.processor.PullGlobalWord(0x6e9e));
 			}
@@ -693,7 +693,7 @@ namespace Civilization1Remaster.Game
 			if (town.Has(CityStructure.CityWalls))
 			{
 				this.owner.Services.RenderPictureToScreen(
-					this.processor.PullGlobalWord(0xaa),
+					ScreenBox,
 					screenX + 1, screenY + 1,
 					this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((0x1d << 1) + 0xd4ce)));
 			}
@@ -728,8 +728,8 @@ namespace Civilization1Remaster.Game
 			{
 				this.processor.RegAcc.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
 
-				this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), (horizLoc * 4) + 1, (vertLoc * 4) + 1, 3, 3, (ushort)(kind == 0 ? 6 : 0));
-				this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), horizLoc * 4, vertLoc * 4, 3, 3,
+				this.owner.Services.FloodBox(ScreenBox, (horizLoc * 4) + 1, (vertLoc * 4) + 1, 3, 3, (ushort)(kind == 0 ? 6 : 0));
+				this.owner.Services.FloodBox(ScreenBox, horizLoc * 4, vertLoc * 4, 3, 3,
 					this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1946)));
 
 				this.processor.Journal.CloseScope("RenderUnitOnWorldMap");
@@ -750,7 +750,7 @@ namespace Civilization1Remaster.Game
 
 				if (this.troops.Following(participantIdx, troopIdx) != -1)
 				{
-					this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa), viewHoriz + 1, viewVert + 1,
+					this.owner.Services.RenderPictureToScreen(ScreenBox, viewHoriz + 1, viewVert + 1,
 						this.processor.PullGlobalWord((ushort)((((participantIdx << 5) + kind + 0x40) << 1) + 0xd4ce)));
 				}
 
@@ -789,7 +789,7 @@ namespace Civilization1Remaster.Game
 		/// <param name="yPos">Top side of the map square on the screen</param>
 		public void RenderHealthBar(int horizLoc, int vertLoc, int completeStrikeMarks, int strikeMarks)
 		{
-			ushort display = this.processor.PullGlobalWord(0xaa);
+			ushort display = ScreenBox;
 
 			// The unit image covers the map square without its left column and top row,
 			// the bar stays inside the unit image so it is erased together with the unit
@@ -820,12 +820,12 @@ namespace Civilization1Remaster.Game
 			byte kind = this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind);
 			ushort markHue = (ushort)(participantIdx == 1 ? 9 : 15);
 
-			this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa), horizLoc, vertLoc,
+			this.owner.Services.RenderPictureToScreen(ScreenBox, horizLoc, vertLoc,
 				this.processor.PullGlobalWord((ushort)(((kind + (participantIdx << 5) + 0x40) << 1) + 0xd4ce)));
 
 			if ((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 8) != 0)
 			{
-				this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa), horizLoc, vertLoc, this.processor.PullGlobalWord((0x1d << 1) + 0xd4ce));
+				this.owner.Services.RenderPictureToScreen(ScreenBox, horizLoc, vertLoc, this.processor.PullGlobalWord((0x1d << 1) + 0xd4ce));
 			}
 			else if ((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 4) != 0)
 			{
@@ -870,9 +870,9 @@ namespace Civilization1Remaster.Game
 
 			if ((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 1) != 0)
 			{
-				this.owner.VideoCard.SubstituteHue(this.processor.PullGlobalWord(0xaa), horizLoc, vertLoc, 16, 16, 5, 7);
+				this.owner.VideoCard.SubstituteHue(ScreenBox, horizLoc, vertLoc, 16, 16, 5, 7);
 
-				this.owner.VideoCard.SubstituteHue(this.processor.PullGlobalWord(0xaa), horizLoc, vertLoc, 16, 16, 8, 7);
+				this.owner.VideoCard.SubstituteHue(ScreenBox, horizLoc, vertLoc, 16, 16, 8, 7);
 			}
 
 			{

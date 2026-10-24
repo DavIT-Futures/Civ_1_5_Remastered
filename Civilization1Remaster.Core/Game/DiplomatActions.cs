@@ -479,20 +479,20 @@ namespace Civilization1Remaster.Game
 
 				this.owner.Services.PerformSound(0x2a, 0);
 
-				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), horizLoc, vertLoc, 0x2c, 0x2c,
-					this.processor.PullGlobalWord(0x19d4), horizLoc, vertLoc);
+				this.owner.VideoCard.RenderImage(ScreenBox, horizLoc, vertLoc, 0x2c, 0x2c,
+					BackScreenBox, horizLoc, vertLoc);
 
 				for (int stepIdx = 0; stepIdx < 0x23; stepIdx++)
 				{
 					int pictureIdx = stepIdx < 0x1c ? stepIdx : stepIdx - 7;
 
-					this.owner.Services.RenderPictureToScreenAlternate(this.processor.PullGlobalWord(0xaa), horizLoc, vertLoc,
+					this.owner.Services.RenderPictureToScreenAlternate(ScreenBox, horizLoc, vertLoc,
 						this.processor.PullGlobalWord((ushort)(pictures + (pictureIdx << 1))));
 
 					this.owner.TextPainter.AwaitTime(5);
 
-					this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), horizLoc, vertLoc, 0x2c, 0x2c,
-						this.processor.PullGlobalWord(0xaa), horizLoc, vertLoc);
+					this.owner.VideoCard.RenderImage(BackScreenBox, horizLoc, vertLoc, 0x2c, 0x2c,
+						ScreenBox, horizLoc, vertLoc);
 				}
 
 				this.processor.EmitLocalWord(0x3a, 0x23);
@@ -556,7 +556,7 @@ namespace Civilization1Remaster.Game
 
 					this.owner.CityOps.HandleCity((short)otherIdx, -1);
 
-					short surplus = CPU.SignedQuotient((short)((this.processor.PullGlobalWord(0x70e2) - this.processor.PullGlobalWord(0x70e4)) << 5), (short)distance);
+					short surplus = CPU.SignedQuotient((short)((CityHappy - CityUnhappy) << 5), (short)distance);
 
 					this.processor.EmitLocalWord(0x14, (ushort)surplus);
 
@@ -738,11 +738,11 @@ namespace Civilization1Remaster.Game
 
 				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x537b, 0);
 
-				this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 0);
+				this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
 
 				this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, 0x5384, 1);
 
-				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0xaa), 0, 0);
+				this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
 
 				EmptyMessage()
 					.City(townIdx)
@@ -752,13 +752,13 @@ namespace Civilization1Remaster.Game
 
 				this.owner.Libc.AppendText(0xba06, ".");
 
-				this.processor.EmitGlobalWord((ushort)(this.processor.PullGlobalWord(0xaa) + 0x10), 0x6);
+				this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 0x6);
 
 				this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 4, 0);
 
-				this.processor.EmitGlobalWord((ushort)(this.processor.PullGlobalWord(0xaa) + 0x10), 0x1);
+				this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 0x1);
 
-				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0x78, 0x140, 0x28, this.processor.PullGlobalWord(0x19d4), 0, 0);
+				this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0x78, 0x140, 0x28, BackScreenBox, 0, 0);
 
 				ushort steps = 0;
 
@@ -770,15 +770,15 @@ namespace Civilization1Remaster.Game
 				{
 					this.owner.Services.RestoreTimer();
 
-					this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 0x140, 0x28, this.processor.PullGlobalWord(0x19d4), 0, 0x78);
+					this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0x28, BackScreenBox, 0, 0x78);
 
 					for (short figureIdx = 0; figureIdx < 4; figureIdx++)
 					{
-						this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0x19d4), (13 * figureIdx) + horizLoc,
+						this.owner.Services.RenderPictureToScreen(BackScreenBox, (13 * figureIdx) + horizLoc,
 							((10 * figureIdx) & 0xf) + 120, this.processor.PullGlobalWord((ushort)(figures + (((figureIdx + horizLoc) & 3) << 1))));
 					}
 
-					this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0x78, 0x140, 0x28, this.processor.PullGlobalWord(0xaa), 0, 0x78);
+					this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0x78, 0x140, 0x28, ScreenBox, 0, 0x78);
 
 					steps++;
 
@@ -813,7 +813,7 @@ namespace Civilization1Remaster.Game
 				}
 				else
 				{
-					this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 0);
+					this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
 
 					this.owner.TurnHooks.DisplayCivilizationScenery();
 				}

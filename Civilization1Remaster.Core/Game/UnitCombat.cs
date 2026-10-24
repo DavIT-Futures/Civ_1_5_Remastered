@@ -417,9 +417,9 @@ namespace Civilization1Remaster.Game
 				}
 
 				this.owner.VideoCard.RenderImage(
-					this.processor.PullGlobalWord(0xaa),
+					ScreenBox,
 					0x50, 0, 0xf0, 0xc8,
-					this.processor.PullGlobalWord(0x19d4),
+					BackScreenBox,
 					0x50, 0);
 
 				short assailantScreenX = (short)((this.owner.Routing.TunePosition(
@@ -466,7 +466,7 @@ namespace Civilization1Remaster.Game
 							(participantIdx1 << 5) + 0x40) << 1) + 0xd4ce));
 
 					this.owner.Services.RenderPictureToScreen(
-						this.processor.PullGlobalWord(0xaa),
+						ScreenBox,
 						drawX + 1,
 						drawY + 1,
 						unitSprite);
@@ -474,9 +474,9 @@ namespace Civilization1Remaster.Game
 					this.owner.TextPainter.AwaitTime(2);
 
 					this.owner.VideoCard.RenderImage(
-						this.processor.PullGlobalWord(0x19d4),
+						BackScreenBox,
 						(ushort)drawX, (ushort)drawY, 16, 16,
-						this.processor.PullGlobalWord(0xaa),
+						ScreenBox,
 						(ushort)drawX, (ushort)drawY);
 				}
 
@@ -491,9 +491,9 @@ namespace Civilization1Remaster.Game
 					PullUnitByte(participantIdx2, troopIdx2, TroopVertDisplacement));
 
 				this.owner.VideoCard.RenderImage(
-					this.processor.PullGlobalWord(0xaa),
+					ScreenBox,
 					0, 0, 0x100, 0xc8,
-					this.processor.PullGlobalWord(0x19d4),
+					BackScreenBox,
 					0, 0);
 
 				int guardianDisplayHoriz = assailantScreenX + 16 * stepX;
@@ -508,7 +508,7 @@ namespace Civilization1Remaster.Game
 					short loserY = (short)(assailantScreenY + loserStep * stepY);
 
 					this.owner.Services.RenderPictureToScreen(
-						this.processor.PullGlobalWord(0xaa),
+						ScreenBox,
 						loserX + 1,
 						loserY + 1,
 						this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(((frame + 0x20) << 1) + 0xd4ce)));
@@ -516,9 +516,9 @@ namespace Civilization1Remaster.Game
 					this.owner.TextPainter.AwaitTime(4);
 
 					this.owner.VideoCard.RenderImage(
-						this.processor.PullGlobalWord(0x19d4),
+						BackScreenBox,
 						(ushort)loserX, (ushort)loserY, 16, 16,
-						this.processor.PullGlobalWord(0xaa),
+						ScreenBox,
 						(ushort)loserX, (ushort)loserY);
 				}
 
@@ -528,9 +528,9 @@ namespace Civilization1Remaster.Game
 				int victorVert = assailantScreenY + (assailantWins ? 0 : 16 * stepY);
 
 				this.owner.VideoCard.RenderImage(
-					this.processor.PullGlobalWord(0x19d4),
+					BackScreenBox,
 					victorHoriz, victorVert, 16, 16,
-					this.processor.PullGlobalWord(0xaa),
+					ScreenBox,
 					victorHoriz, victorVert);
 			}
 

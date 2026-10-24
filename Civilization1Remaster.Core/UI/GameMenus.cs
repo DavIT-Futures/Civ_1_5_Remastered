@@ -31,8 +31,8 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Startup.ConcealMouseCursor();
 
-			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200,
-				this.processor.PullGlobalWord(0x19d4), 0, 0);
+			this.owner.VideoCard.RenderImage(ScreenBox, 0, 0, 320, 200,
+				BackScreenBox, 0, 0);
 
 			this.owner.Startup.DisplayMouseCursor();
 
@@ -68,8 +68,8 @@ namespace Civilization1Remaster.UI
 
 			if (this.processor.PullGlobalWord(0x654a) == 0)
 			{
-				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 0x140, 0xc8,
-					this.processor.PullGlobalWord(0xaa), 0, 0);
+				this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8,
+					ScreenBox, 0, 0);
 			}
 
 			this.owner.Startup.DisplayMouseCursor();
@@ -430,8 +430,8 @@ namespace Civilization1Remaster.UI
 		{
 			this.owner.Startup.ConcealMouseCursor();
 
-			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 0x140, 0xc8,
-				this.processor.PullGlobalWord(0xaa), 0, 0);
+			this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8,
+				ScreenBox, 0, 0);
 
 			this.owner.Startup.DisplayMouseCursor();
 

@@ -196,7 +196,7 @@ namespace Civilization1Remaster.Game
 
 				this.owner.Helpers.LocateNearestCity(spotHoriz, spotVert);
 
-				if (spotIdx <= 0x14 || (short)this.processor.PullGlobalWord(0x6c9a) > 3)
+				if (spotIdx <= 0x14 || (short)FoundDistance > 3)
 				{
 					ushort holder = this.owner.VideoCard.ObtainDot(2, spotHoriz + 0x50, spotVert + 0x32);
 					this.owner.Services.AssignDot(2, spotHoriz + 0x50, spotVert, holder);
@@ -220,9 +220,9 @@ namespace Civilization1Remaster.Game
 			this.owner.Startup.ConcealMouseCursor();
 
 			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0xaa),
+				ScreenBox,
 				0, 0, 0x140, 0xc8,
-				this.processor.PullGlobalWord(0x19d4),
+				BackScreenBox,
 				0, 0);
 
 			this.owner.Startup.DisplayMouseCursor();
@@ -242,9 +242,9 @@ namespace Civilization1Remaster.Game
 			this.owner.Startup.ConcealMouseCursor();
 
 			this.owner.VideoCard.RenderImage(
-				this.processor.PullGlobalWord(0x19d4),
+				BackScreenBox,
 				0, 0, 0x140, 0xc8,
-				this.processor.PullGlobalWord(0xaa),
+				ScreenBox,
 				0, 0);
 
 			this.owner.Startup.DisplayMouseCursor();
@@ -619,7 +619,7 @@ namespace Civilization1Remaster.Game
 				FrameWord(DefensiveLocal, 1);
 
 			short unhappy = (short)((player.RegimeKind <= 1 ? 1 : 2) * (short)this.processor.PullGlobalWord(0xe3c6));
-			FrameWord(HappyRoomLocal, (ushort)((short)this.processor.PullGlobalWord(0x70da) - unhappy - (town.TrueExtent << 1)));
+			FrameWord(HappyRoomLocal, (ushort)((short)CityFood - unhappy - (town.TrueExtent << 1)));
 
 			for (FrameWord(ChoiceLoopLocal, 0); (short)FrameWord(ChoiceLoopLocal) < 0x1c; this.processor.IncrementLocalWord(ChoiceLoopLocal))
 			{
@@ -775,8 +775,8 @@ namespace Civilization1Remaster.Game
 		private void ScoreImprovementChoice(short participantIdx, short townIdx, short choice)
 		{
 			City town = this.owner.World.Towns[townIdx];
-			short food = (short)this.processor.PullGlobalWord(0x70dc);
-			short trade = (short)this.processor.PullGlobalWord(0x70de);
+			short food = (short)CityShields;
+			short trade = (short)CityTrade;
 
 			Score = 0x3e7;
 			FrameWord(DefensiveImprovementLocal, 0);
@@ -1045,7 +1045,7 @@ namespace Civilization1Remaster.Game
 				Score <<= 2;
 
 			// Doubled unless the player is at war (0x6ed4) and the approach is defensive or there is more food than 0xdeb8
-			if ((FrameWord(DefensiveLocal) == 0 && (short)this.processor.PullGlobalWord(0x70dc) <= (short)this.processor.PullGlobalWord(0xdeb8)) ||
+			if ((FrameWord(DefensiveLocal) == 0 && (short)CityShields <= (short)this.processor.PullGlobalWord(0xdeb8)) ||
 				this.processor.PullGlobalWord(0x6ed4) == 0)
 			{
 				Score <<= 1;
@@ -1083,7 +1083,7 @@ namespace Civilization1Remaster.Game
 
 			if ((this.owner.World.SessionPrefMarkers & 1) != 0 && AdvisorsShown == 0)
 			{
-				ushort screen = this.processor.PullGlobalWord(0xaa);
+				ushort screen = ScreenBox;
 				this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(screen + 0x10), 2);
 
 				if (FrameWord(BestUnitLocal) != 0xffff)
@@ -1093,7 +1093,7 @@ namespace Civilization1Remaster.Game
 					ShowProductionAdvice((short)FrameWord(BestImprovementLocal), "Domestic Advisor:\n", 0x22a3, 164);
 
 				AdvisorsShown = 1;
-				screen = this.processor.PullGlobalWord(0xaa);
+				screen = ScreenBox;
 				this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(screen + 0x10), 1);
 
 				return null;
@@ -1101,7 +1101,7 @@ namespace Civilization1Remaster.Game
 
 			if (ChoiceCount > 0x14 || PageState != 0)
 			{
-				ushort screen = this.processor.PullGlobalWord(0xaa);
+				ushort screen = ScreenBox;
 				this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(screen + 0x10), 2);
 			}
 
@@ -1121,7 +1121,7 @@ namespace Civilization1Remaster.Game
 				return null;
 			}
 
-			ushort display = this.processor.PullGlobalWord(0xaa);
+			ushort display = ScreenBox;
 			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(display + 0x10), 1);
 
 			if (this.processor.PullGlobalWord(0x2f9c) == 0)
@@ -1129,7 +1129,7 @@ namespace Civilization1Remaster.Game
 
 			// The Civilopedia of the choice, then the menu again
 			this.owner.Startup.ConcealMouseCursor();
-			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0x19d4), 0, 0);
+			this.owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, BackScreenBox, 0, 0);
 			this.processor.EmitGlobalWord(0x3c62, 1);
 
 			if (Score >= 0)
@@ -1137,7 +1137,7 @@ namespace Civilization1Remaster.Game
 			else
 				this.owner.Encyclopedia.DisplayCivilopediaRecord((ushort)(-Score), 1);
 
-			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0xaa), 0, 0);
+			this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
 			this.owner.Startup.DisplayMouseCursor();
 			this.processor.EmitGlobalWord(0x6b64, 1);
 
@@ -1170,7 +1170,7 @@ namespace Civilization1Remaster.Game
 			this.processor.Journal.OpenScope($"ComposeProductionOption({townIdx}, {arg2})");
 
 			int perTurn = this.owner.Helpers.VerifyValueSpan(
-				this.processor.PullGlobalSignedWord(0x70dc) - this.processor.PullGlobalSignedWord(0xd2f6), 1, 99);
+				(short)CityShields - this.processor.PullGlobalSignedWord(0xd2f6), 1, 99);
 
 			ushort turns = (ushort)this.owner.Helpers.VerifyValueSpan(
 				(((10 * arg2) - this.owner.World.Towns[townIdx].MaterialsTally - 1) / (short)perTurn) + 1, 1, 999);
@@ -1291,7 +1291,7 @@ namespace Civilization1Remaster.Game
 
 				this.owner.Startup.ConcealMouseCursor();
 
-				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0x19d4), 0, 0);
+				this.owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, BackScreenBox, 0, 0);
 
 				this.owner.Startup.DisplayMouseCursor();
 
@@ -1325,7 +1325,7 @@ namespace Civilization1Remaster.Game
 
 				this.owner.Startup.ConcealMouseCursor();
 
-				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0xaa), 0, 0);
+				this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
 
 				this.owner.Startup.DisplayMouseCursor();
 
@@ -1385,13 +1385,13 @@ namespace Civilization1Remaster.Game
 
 				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, pictureName, 0);
 
-				this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 0);
+				this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
 
 				this.owner.Helpers.HaltHueCycling();
 
 				this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, pictureName, 1);
 
-				this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0x19d4), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0xaa), 0, 0);
+				this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
 			}
 
 			Message(this.processor.PullGlobalWord((ushort)(((ushort)participantIdx << 1) + 0x1982)))
@@ -1434,13 +1434,13 @@ namespace Civilization1Remaster.Game
 		private void ShowDiscoveryPicture(ushort pictureName, short first, bool advanced)
 		{
 			if (!advanced)
-				this.processor.EmitGlobalWord((ushort)(this.processor.PullGlobalWord(0xaa) + 0x10), 0x6);
+				this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 0x6);
 
 			this.processor.EmitGlobalWord(0xdb38, 0x1);
 
 			this.owner.Dialogs.DisplayMenu(0xba06, 96, advanced ? (short)25 : (short)1, 1);
 
-			this.processor.EmitGlobalWord((ushort)(this.processor.PullGlobalWord(0xaa) + 0x10), 0x1);
+			this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 0x1);
 
 			this.owner.Libc.CopyText(0xba06, "iconpg1.pic");
 
@@ -1518,12 +1518,12 @@ namespace Civilization1Remaster.Game
 			if (allowed == 0)
 				this.processor.EmitGlobalByte((ushort)(length + 0xba06), 0);
 
-			this.processor.EmitGlobalWord((ushort)(this.processor.PullGlobalWord(0xaa) + 0x10), 0x2);
+			this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 0x2);
 			this.processor.EmitGlobalWord(0xdb38, 0x1);
 
 			this.owner.Dialogs.DisplayMenu(0xba06, 8, (short)-((allowed << 3) - 0xa8), 1);
 
-			this.processor.EmitGlobalWord((ushort)(this.processor.PullGlobalWord(0xaa) + 0x10), 0x1);
+			this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 0x1);
 		}
 
 		/// <summary>
