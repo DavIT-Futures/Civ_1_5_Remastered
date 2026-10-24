@@ -1300,7 +1300,10 @@ te błędy są odtwarzane jawnie:
   baseline od nowa.
 - `FeedCity` (`HandleCity`, L0819): po `TrueExtent--` przetłumaczony kod sprawdzał flagę Z z wcześniejszego porównania
   (0xe8 == -1, zawsze prawda), a nie wynik zmniejszenia, więc głodujące miasto bez osadnika zawsze ginie (w oryginale tylko przy
-  rozmiarze 1; inaczej traci mieszkańca i zeruje zapas).
+  rozmiarze 1; inaczej traci mieszkańca i zeruje zapas). **Naprawione w grze 2026-10-24** za przełącznikiem `TurnHooks.ClassicStarvation`
+  (potwierdzone w tłumaczeniu z d175cdb: niezerowy rozmiar po `dec` skacze do L0863 – zapas 0, odświeżenie pola): miasto
+  traci mieszkańca i zapas, ginie tylko przy rozmiarze 1 (`LoseStarvingCity`, `GrowCity` wydzielone z `FeedCity`).
+  Testy: `StarvationInGameTests` (oba warianty, rozmiar 3 i 1; 3 mutacje złapane).
 - **Miasto cudu spoza tablicy miast – wyjątek zamiast DOS-owego odczytu (2026-10-20, potwierdzone testem).** `MarvelTownIdx`
   trzyma -1 dla cudu niezbudowanego i 128 dla cudu w mieście zniszczonym (`FinalizeProduction`). DOS czytał wtedy rekord
   miasta przed albo za tablicą (śmieci, właściciel prawie nigdy się nie zgadza, więc cud po prostu nie działa); C# rzuca

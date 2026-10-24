@@ -373,8 +373,9 @@ namespace Civilization1Remaster.Game
 
 		/// <summary>
 		/// The food of the city in its turn: the flag 0x80 cleared; with the food storage below zero a settler of the city
-		/// starves (the human is told), else the city is lost (the translated code tests the flags of the earlier comparison
-		/// instead of the size, so it is always lost: kept, see the backlog); with the storage at (size + 1) x 0x4a the city
+		/// starves (the human is told), else the city loses a citizen and the storage, at size 1 the city is lost
+		/// (ClassicStarvation: the translated code tests the flags of the earlier comparison instead of the size, so it is
+		/// always lost); with the storage at (size + 1) x 0x4a the city
 		/// grows (a granary keeps 5 x size + 5), above 10 without an aqueduct it stays (with the bit 4 of DiagMarkers; the human
 		/// is told). False when the city is lost. The locals of HandleCity and BX, SI are used as in the original.
 		/// </summary>
@@ -424,14 +425,13 @@ namespace Civilization1Remaster.Game
 				}
 				else
 				{
-					// The city is lost (whatever its size, as the translated code does)
+					// The city loses a citizen, and itself at size 1 (ClassicStarvation: whatever its size, as the translated
+					// code does)
 					this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 					town.TrueExtent--;
-					this.processor.RegSource.Value16 = (ushort)(townIdx * 0x1c);
-					this.owner.Advisors.FinalizeProduction(townIdx, (ushort)(short)town.Place.X, (ushort)(short)town.Place.Y);
-					this.owner.NewGameWizard.EliminateCivilization((short)CityOwner, 0);
-					this.owner.Startup.DisplayMouseCursor();
-					return false;
+
+					if (this.owner.TurnHooks.ClassicStarvation || town.TrueExtent == 0)
+						return LoseStarvingCity(town, townIdx);
 				}
 
 				this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
@@ -439,6 +439,22 @@ namespace Civilization1Remaster.Game
 				this.owner.TurnLogic.RepaintTileIfVisible(this.round.Horiz, this.round.Vert);
 			}
 
+			return GrowCity(town, townIdx);
+		}
+
+		/// <summary>The starving city is lost (see FeedCity); false</summary>
+		private bool LoseStarvingCity(City town, short townIdx)
+		{
+			this.processor.RegSource.Value16 = (ushort)(townIdx * 0x1c);
+			this.owner.Advisors.FinalizeProduction(townIdx, (ushort)(short)town.Place.X, (ushort)(short)town.Place.Y);
+			this.owner.NewGameWizard.EliminateCivilization((short)CityOwner, 0);
+			this.owner.Startup.DisplayMouseCursor();
+			return false;
+		}
+
+		/// <summary>The growth of the city (see FeedCity); true</summary>
+		private bool GrowCity(City town, short townIdx)
+		{
 			// Growth
 			this.processor.RegSource.Value16 = (ushort)(townIdx * 0x1c);
 

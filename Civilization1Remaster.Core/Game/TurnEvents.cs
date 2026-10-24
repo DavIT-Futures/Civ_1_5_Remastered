@@ -58,6 +58,13 @@ namespace Civilization1Remaster.Game
 		public bool ClassicSchism { get; set; }
 
 		/// <summary>
+		/// A starving city without a settler to lose is lost whatever its size, as the translated code did it (FeedCity
+		/// tested the flags of an earlier comparison instead of the size); off it loses a citizen, and itself at size 1.
+		/// The tests turn it on (HeadlessGame), like ClassicHealing.
+		/// </summary>
+		public bool ClassicStarvation { get; set; }
+
+		/// <summary>
 		/// The military report takes the player of a chosen row from the stack frame also for a row of a player without
 		/// contact, which never wrote it (garbage, IndexOutOfRangeException from 8 up), as the translated code did it. The
 		/// tests turn it on (HeadlessGame), like ClassicHealing.
