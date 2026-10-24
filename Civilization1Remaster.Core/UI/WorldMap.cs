@@ -1,5 +1,6 @@
 ﻿using System;
 using Civilization1Remaster.Emulation;
+using Civilization1Remaster.Game.Rules;
 using Civilization1Remaster.Game.State;
 
 namespace Civilization1Remaster.UI
@@ -367,7 +368,8 @@ namespace Civilization1Remaster.UI
 					vertLoc = 0x20;
 				}
 
-				short participantIdx = this.owner.World.Towns[townIdx].ParticipantIdx;
+				short participantIdx = WonderCityRules.ReadsCity(townIdx, this.owner.TurnHooks.ClassicWonderCities) ?
+					this.owner.World.Towns[townIdx].ParticipantIdx : (short)0;
 
 				this.processor.EmitGlobalByte(0xba06, 0);
 

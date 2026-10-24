@@ -35,6 +35,13 @@ namespace Civilization1Remaster.Game
 		public bool ClassicRailroads { get; set; }
 
 		/// <summary>
+		/// The city of a wonder read also for a wonder nobody has built (-1) or whose city was destroyed (128), as the
+		/// translated code did it: IndexOutOfRangeException (WonderCityRules.ReadsCity). The tests turn it on (HeadlessGame),
+		/// like ClassicHealing.
+		/// </summary>
+		public bool ClassicWonderCities { get; set; }
+
+		/// <summary>
 		/// Units heal lost hit points every turn (HealingRules): 2 in an own city; outside cities 1 for a fortified land unit
 		/// and for a resting ship (sentry or not moved this turn) next to land, at most 3 tiles from an own city.
 		/// Runs at the end of the game turn, so the moves left (reset at the start of each player's turn) show whether the

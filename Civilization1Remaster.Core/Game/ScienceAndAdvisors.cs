@@ -1795,6 +1795,7 @@ namespace Civilization1Remaster.Game
 					this.processor.RegSource.Value16 = (ushort)(wonderIdx << 1);
 
 					if (this.processor.PullGlobalWord((ushort)(this.processor.RegSource.Value16 + 0x10fe)) != (ushort)scienceIdx ||
+						!WonderCityRules.ReadsCity(this.owner.World.MarvelTownIdx[wonderIdx], this.owner.TurnHooks.ClassicWonderCities) ||
 						this.owner.World.Towns[this.owner.World.MarvelTownIdx[wonderIdx]].ParticipantIdx != person)
 						continue;
 
@@ -1813,7 +1814,7 @@ namespace Civilization1Remaster.Game
 			ushort libraryOwner = (ushort)this.owner.World.MarvelTownIdx[5];
 			this.processor.EmitLocalWord(0x8, libraryOwner);
 
-			if (libraryOwner == 0xffff)
+			if (libraryOwner == 0xffff || !WonderCityRules.ReadsCity(libraryOwner, this.owner.TurnHooks.ClassicWonderCities))
 				return;
 
 			libraryOwner = (ushort)this.owner.World.Towns[libraryOwner].ParticipantIdx;

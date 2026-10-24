@@ -1316,6 +1316,11 @@ te błędy są odtwarzane jawnie:
   Naprawa: indeks spoza 0 – 127 traktować jak „nie ten właściciel” (tak wychodziło w DOS-ie); test na oba przypadki
   (sonda: `MarvelTownIdx[21] = 128` po `FinalizeProduction` + HandleCity; `MarvelTownIdx[2] = -1 / 128`,
   `ScienceLeadingFoundVia[20] = 0`, `ApplyTechnology(1, 20)`).
+  **Naprawione w grze 2026-10-24** za przełącznikiem `TurnHooks.ClassicWonderCities` (jak `ClassicTechnologyNews`):
+  `WonderCityRules.ReadsCity` – cud -1 / 128 nie należy do nikogo w `PlayerEnjoysWonderEffect`, pętli „cancels the effect of”
+  i Wielkiej Bibliotece (`EarnTechnology` → `ApplyTechnology`) oraz na ekranie cudów (`DisplayWondersOfTheWorld`, właściciel
+  czytany tylko dla miasta z tablicy). `HeadlessGame` włącza przełącznik, więc testy i baseline zostają przy wyjątku. Testy:
+  `WonderCityRulesTests`, `WonderCityInGameTests` (oba warianty, każde miejsce). Na końcu migracji usunąć przełącznik.
 
 - `HandleGameEnd`: co 50 tur wpis 11 historii dostaje jako starszy bajt populacji `(bajt & 0xff00) >> 8`, czyli zawsze 0;
   losowe katastrofy miast: licznik pętli to numer wylosowanego miasta + 1 (pętla kończy się po pierwszym mieście, chyba
@@ -1334,7 +1339,7 @@ te błędy są odtwarzane jawnie:
   dla relacji), czyli spoza tablicy nazw – tekst z przypadkowego wskaźnika. Po naprawie: 0x1992 + 2 * gracz.
 - `EarnTechnology`: pierwsze odkrycie technologii, która dezaktualizuje cud (tabela 0x10fe), czyta `Towns[MarvelTownIdx[cud]]`
   także dla niezbudowanego cudu (-1) albo zniszczonego miasta (128), więc rzuca `IndexOutOfRangeException` (DOS czytał pamięć
-  przed tablicą). Do potwierdzenia w grze; po naprawie: sprawdzić -1 / 128 przed odczytem.
+  przed tablicą). **Naprawione w grze 2026-10-24** (`ClassicWonderCities`, patrz wyżej).
 - `AttachSpaceshipPart`: gdy nie ma wolnego miejsca danego rodzaju, komponent lub moduł trafia na koniec tabeli 0x375a (wiersz
   0xff, czyli 12 bajtów przed siatką gracza), a struktura w slot 0x63 (poza tabelą); komunikat „No further … required” jest
   nieosiągalny (szukanie nigdy nie kończy się na 0xffff). Po naprawie: komunikat i bit w 0x687a + 2 * rodzaj.
@@ -1347,7 +1352,7 @@ te błędy są odtwarzane jawnie:
 - `LocateNearestFriendlyCity`: bez własnego miasta i lotniskowca cel kroku to niezainicjowane zmienne lokalne (śmieci ze stosu).
   Odtworzone przez odczyt ramki stosu. Po naprawie: np. kierunek 0 (brak ruchu).
 - `DisplayWondersOfTheWorld`: cud zniszczonego miasta (`MarvelTownIdx` = 128) daje odczyt `Towns[128]` przed sprawdzeniem 128,
-  więc ekran cudów rzuca `IndexOutOfRangeException` (DOS czytał tam śmieci). Po naprawie: właściciel czytany dopiero dla miasta < 128.
+  więc ekran cudów rzuca `IndexOutOfRangeException` (DOS czytał tam śmieci). Po naprawie: właściciel czytany dopiero dla miasta < 128. **Naprawione w grze 2026-10-24** (`ClassicWonderCities`).
 - `ShiftAIUnit` (`AIPlayer`, ok. linii 2143) na jednej ścieżce czyta zmienną lokalną 0xc (indeks miasta) przed jej ustawieniem.
   `HandlePlayerTurn` woła `ShiftUnit` i `ShiftAIUnit` z tej samej głębokości stosu, więc dostaje typ terenu zostawiony przez
   `ShiftUnit` (bez tego `IndexOutOfRangeException` w `Towns`). Dlatego `ShiftUnit` zachowuje `EnterFrame(0x16)` i na końcu
