@@ -1231,6 +1231,10 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   identyczny co do bajtu z raportem przed nią; pełny zestaw zielony; 8 mutacji offsetów w `UnitLook` (testy
   `ShiftAIUnit…MatchOriginalCode`). Od teraz B2 w tej postaci (nazwy na ramce), a zmienne C# bez ramki dopiero po decyzji
   o zmianach zachowania.
+- B2, porcja 11 (2026-10-24): dolna ramka `HandleCity` (słowa poniżej BP-0xa8 i 0x108) jako nazwane właściwości
+  `CityRound` na stosie (`Workers` 0x50, `TileFood` / `TileShields` / `TileTrade` 0x4 / 0xc / 0x46, `UnitsDrawn` 0x4e,
+  `Found` 0x108 …): 120 odczytów, 57 zapisów. Tablice ramki (BP-0x3e, BP-0x74, BP-0x8e) zostają adresowane przez BP.
+  Raport sondy identyczny co do bajtu, pełny zestaw zielony, 8 / 8 mutacji.
 
 ## Następny krok
 
