@@ -1200,6 +1200,24 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   pod `BP-0x34`) i `RenderMilitaryReportRow` (0x1a) – `DialogDrawing.cs` i `AdvisorReports.cs` przywrócone do stanu
   sprzed porcji 7 (zmiany tam tylko usuwały zapisy). Wniosek: w B2 zapis do ramki jest martwy dopiero, gdy nikt później
   nie czyta tego słowa stosu jako śmieci – po każdej porcji B2 pełny zestaw.
+- B2, sonda odczytów śmieci (2026-10-24): narzędzie testowe `Tests/Dual/LeftoverWatcher.cs` (punkt zaczepienia
+  `IStackWatcher` w `CPU`: ramki, odczyty i zapisy segmentu stosu) – każdy odczyt słowa ramki przed jego zapisem jest
+  liczony z ostatnim autorem tego słowa i wartością; `CIV_LEFTOVERS=plik` włącza raport, `compare_leftovers.py` porównuje
+  dwa raporty (czytelnicy z innymi wartościami i utraconymi autorami). Raporty dla każdego commitu B2 i jego rodzica
+  (GoldenMaster + Differential + Dual) pokazały utracone zapisy w prawie każdej porcji, więc: cofnięte w całości
+  B2 porcja 1 (0881a2a: `MapManagement.RenderMapTile` karmił `LocateNearestFriendlyCity` 0x14, `ShiftAIUnit` 0x21 / 0x22 /
+  0x52, `HandlePlayerTurn` 0x24, `LaunchAudience`; `Pathfinding`, `UnitCombat`, `CityFoundingAndScore`,
+  `GovernmentAndDiplomacy`), porcja 5 (c0a623f: końcowe zapisy `RenderPalace`, `RefreshPeaceGraphContent`,
+  `ChooseTechnologyToTake`), porcja 8 (f5be1a7: ramka `PickCityProduction`, `RenderExplosion`); z porcji 6 cofnięte
+  `CityManagement` (`RenderCitizenIcons`) i `GameInitAndIntro` (`ReckonContinentSizes` 0x8), z porcji 7 `TextBlockRenderer`
+  i `Newspaper` (oraz wcześniej `DialogDrawing`, `AdvisorReports`); testy `BatchSeventyFive` i `BatchThirty` znów porównują
+  te ramki. `CityRound` (HandleCity) i `TurnLocals` (HandlePlayerTurn) zapisują każdą wartość także do ramki (`Keep`) –
+  nazwy zostają, obraz stosu jak w oryginale (0x108 zagnieżdżonej HandleCity dostawał 0xffff z 0xe8 zewnętrznej).
+  Zostaje z B2: porcje 3, 4, 9 (z zapisami do ramki), AIPlayer z porcji 6 (z kopią tablicy pod `BP-0x44`), część porcji 7.
+  Porównanie z raportem sprzed B2 (125a179): jedyny inny autor to `HandleCity` 0x108 (liczy się tylko 0xffff, ten sam).
+  Uwaga do raportów: wartości tego samego czytelnika potrafią się różnić bez utraconego autora (przesunięcie zegara
+  testów, inna kolejność) – znaczenie ma utracony autor; `HandlePlayerTurn` czyta całą ramkę na wejściu (`FromFrame`),
+  więc ma dodatkowych autorów.
 
 ## Następny krok
 

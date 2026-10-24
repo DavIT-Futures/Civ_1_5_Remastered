@@ -67,6 +67,7 @@ namespace Civilization1Remaster.Tests.GoldenMaster
 				this.Engine.VideoCard.Displays.Select(display => GameSnapshot.Fnv(display.Datum.PictureStorage).ToString("x8"))));
 
 			this.Engine.Journal.ScopeListener = CountCall;
+			Dual.LeftoverWatcher.Attach(this.processor, this.Engine.Journal);
 			this.processor.Heartbeat = CheckDeadline;
 		}
 

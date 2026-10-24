@@ -24,6 +24,7 @@ namespace Civilization1Remaster.Emulation
 		{
 			EnterFrame();
 			this.regStack.Value16 = SubtractWord(this.regStack.Value16, localsSize);
+			this.StackWatcher?.OpenFrame(this.regFrame.Value16, localsSize);
 		}
 
 		/// <summary>
@@ -31,6 +32,7 @@ namespace Civilization1Remaster.Emulation
 		/// </summary>
 		public void LeaveFrame()
 		{
+			this.StackWatcher?.CloseFrame(this.regFrame.Value16);
 			this.regStack.Value16 = this.regFrame.Value16;
 			this.regFrame.Value16 = UnstackWord();
 		}

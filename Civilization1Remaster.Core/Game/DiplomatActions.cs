@@ -462,13 +462,13 @@ namespace Civilization1Remaster.Game
 
 			if (this.owner.Startup.QueryForDisk(1, 0) != 0)
 			{
-				ushort[] pictures = new ushort[0x1c];
+				ushort pictures = (ushort)(this.processor.RegFrame.Value16 - 0x38);
 
 				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x5318, 1);
 
 				for (int pictureIdx = 0; pictureIdx < 0x1c; pictureIdx++)
 				{
-					pictures[pictureIdx] = this.owner.VideoCard.ScreenToPicture(1, (ushort)(((pictureIdx % 7) * 0x2d) + 1), (ushort)(((pictureIdx / 7) * 0x2d) + 1), 0x2c, 0x2c);
+					this.processor.EmitGlobalWord((ushort)(pictures + (pictureIdx << 1)), this.owner.VideoCard.ScreenToPicture(1, (ushort)(((pictureIdx % 7) * 0x2d) + 1), (ushort)(((pictureIdx / 7) * 0x2d) + 1), 0x2c, 0x2c));
 				}
 
 				horizLoc = (short)((this.owner.Routing.TunePosition(horizLoc - this.processor.PullGlobalSignedWord(0xd4cc)) << 4) + 0x42);
@@ -487,7 +487,7 @@ namespace Civilization1Remaster.Game
 					int pictureIdx = stepIdx < 0x1c ? stepIdx : stepIdx - 7;
 
 					this.owner.Services.RenderPictureToScreenAlternate(this.processor.PullGlobalWord(0xaa), horizLoc, vertLoc,
-						pictures[pictureIdx]);
+						this.processor.PullGlobalWord((ushort)(pictures + (pictureIdx << 1))));
 
 					this.owner.TextPainter.AwaitTime(5);
 
@@ -495,7 +495,9 @@ namespace Civilization1Remaster.Game
 						this.processor.PullGlobalWord(0xaa), horizLoc, vertLoc);
 				}
 
-				this.owner.Helpers.ReleaseResource(pictures[0], 0);
+				this.processor.EmitLocalWord(0x3a, 0x23);
+
+				this.owner.Helpers.ReleaseResource(this.processor.PullGlobalWord(pictures), 0);
 
 				this.owner.Startup.QueryForDisk(0, 1);
 
@@ -531,9 +533,17 @@ namespace Civilization1Remaster.Game
 			short bestSurplus = 0;
 			ushort bestIdx = 0xffff;
 
+			this.processor.EmitLocalWord(0x2, (ushort)ownerIdx);
+			this.processor.EmitLocalWord(0x10, (ushort)horizLoc);
+			this.processor.EmitLocalWord(0x12, (ushort)vertLoc);
+			this.processor.EmitLocalWord(0xa, 0x3e7);
+			this.processor.EmitLocalWord(0x1c, 0x0);
+
 			if (participantIdx == -1)
 			{
-				for (ushort otherIdx = 0; otherIdx < 0x80; otherIdx++)
+				ushort otherIdx;
+
+				for (otherIdx = 0; otherIdx < 0x80; otherIdx++)
 				{
 					City other = this.owner.World.Towns[otherIdx];
 
@@ -542,9 +552,13 @@ namespace Civilization1Remaster.Game
 
 					int distance = this.owner.Helpers.ObtainDistance(town.Place.X, other.Place.X, town.Place.Y, other.Place.Y);
 
+					this.processor.EmitLocalWord(0x8, (ushort)distance);
+
 					this.owner.CityOps.HandleCity((short)otherIdx, -1);
 
 					short surplus = CPU.SignedQuotient((short)((this.processor.PullGlobalWord(0x70e2) - this.processor.PullGlobalWord(0x70e4)) << 5), (short)distance);
+
+					this.processor.EmitLocalWord(0x14, (ushort)surplus);
 
 					if (surplus > bestSurplus)
 					{
@@ -553,11 +567,16 @@ namespace Civilization1Remaster.Game
 					}
 				}
 
+				this.processor.EmitLocalWord(0x6, otherIdx);
+
 				if (bestSurplus != 0)
 				{
 					participantIdx = this.owner.World.Towns[bestIdx].ParticipantIdx;
 				}
 			}
+
+			this.processor.EmitLocalWord(0xe, (ushort)bestSurplus);
+			this.processor.EmitLocalWord(0x1a, bestIdx);
 
 			if (participantIdx != -1)
 			{
@@ -619,11 +638,15 @@ namespace Civilization1Remaster.Game
 			}
 
 			UnitMemory troops = new UnitMemory(this.processor);
+			int lastDistance = 0;
+			ushort? lastKind = null, lastTroop = null;
 
 			for (short troopIdx = 0; troopIdx < UnitMemory.TroopTally; troopIdx++)
 			{
 				int distance = this.owner.Helpers.ObtainDistance(horizLoc, troops.PullSigned(ownerIdx, troopIdx, UnitMemory.Horiz),
 					vertLoc, troops.PullSigned(ownerIdx, troopIdx, UnitMemory.Vert));
+
+				lastDistance = distance;
 
 				if (troops.Pull(ownerIdx, troopIdx, UnitMemory.Kind) == 0xff || (short)distance > 1)
 					continue;
@@ -637,6 +660,7 @@ namespace Civilization1Remaster.Game
 				}
 
 				sbyte kind = troops.TroopKind(ownerIdx, troopIdx);
+				lastKind = (ushort)kind;
 
 				this.owner.UnitOps.EliminateUnit(ownerIdx, troopIdx);
 
@@ -647,6 +671,7 @@ namespace Civilization1Remaster.Game
 
 				ushort newIdx = this.owner.UnitOps.ConstructUnit(participantIdx, kind, troops.PullSigned(ownerIdx, troopIdx, UnitMemory.Horiz),
 					troops.PullSigned(ownerIdx, troopIdx, UnitMemory.Vert));
+				lastTroop = newIdx;
 
 				if (newIdx == 0xffff)
 					continue;
@@ -656,7 +681,18 @@ namespace Civilization1Remaster.Game
 				troops.Assign(participantIdx, newIdx, UnitMemory.BaseTown, (byte)townIdx);
 			}
 
+			this.processor.EmitLocalWord(0x16, 0x80);
+			this.processor.EmitLocalWord(0x8, (ushort)lastDistance);
+
+			if (lastKind != null)
+			{
+				this.processor.EmitLocalWord(0x4, lastKind.Value);
+				this.processor.EmitLocalWord(0xc, lastTroop!.Value);
+			}
+
 			short preferences = this.owner.World.SessionPrefMarkers;
+
+			this.processor.EmitLocalWord(0x18, (ushort)preferences);
 			this.processor.EmitGlobalWord(0x28bc, 0x1);
 
 			if ((short)this.processor.PullGlobalWord(0xdeba) <= 1)
@@ -755,6 +791,10 @@ namespace Civilization1Remaster.Game
 					if ((ushort)this.owner.Libc.KeyAvailable() != 0 || this.owner.GlobDb3a != 0)
 						break;
 				}
+
+				this.processor.EmitLocalWord(0xa, (ushort)horizLoc);
+				this.processor.EmitLocalWord(0xc, 0x4);
+				this.processor.EmitLocalWord(0x10, steps);
 
 				this.owner.Helpers.ReleaseResource(this.processor.PullGlobalWord(figures), 0x539a);
 

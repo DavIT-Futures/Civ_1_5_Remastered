@@ -613,6 +613,8 @@ namespace Civilization1Remaster.Game
 				RankLandOrSea(pass);
 			}
 
+			this.processor.EmitLocalWord(0x8, pass);
+
 			DisplayStoryIntro();
 
 			this.owner.VideoCard.RenderImage(this.processor.PullGlobalWord(0xaa), 0, 0, 0x140, 0xc8, this.processor.PullGlobalWord(0x19e8), 0, 0);
@@ -628,13 +630,17 @@ namespace Civilization1Remaster.Game
 			this.owner.VideoCard.RenderLine(this.processor.PullGlobalWord(0xaa), 0, 0, 79, 0, 15);
 			this.owner.VideoCard.RenderLine(this.processor.PullGlobalWord(0xaa), 0, 49, 79, 49, 15);
 
-			for (ushort dotIdx = 0; dotIdx < 0x14; dotIdx++)
+			ushort dotIdx;
+
+			for (dotIdx = 0; dotIdx < 0x14; dotIdx++)
 			{
 				this.owner.Services.AssignDot(this.owner.Libc.Dice.DrawInt(80), 0, 7);
 				this.owner.Services.AssignDot(this.owner.Libc.Dice.DrawInt(80), 1, 7);
 				this.owner.Services.AssignDot(this.owner.Libc.Dice.DrawInt(80), 48, 7);
 				this.owner.Services.AssignDot(this.owner.Libc.Dice.DrawInt(80), 49, 7);
 			}
+
+			this.processor.EmitLocalWord(0x24, dotIdx);
 
 			this.processor.RestoreIndexRegisters();
 			this.processor.LeaveFrame();
@@ -1051,24 +1057,33 @@ namespace Civilization1Remaster.Game
 
 			this.owner.Libc.FillBytes(0xdb44, 0, 0x104);
 
-			(short, short)? land = null, neighbourLand = null;
-			short? lastNeighbourContinent = null;
+			// The last values of the locals (null: never set), written into the frame at the end
+			(short, short)? neighbour = null, origin = null, land = null, neighbourLand = null;
+			short? lastDirection = null, lastNeighbourContinent = null, lastCost = null, lastContinent = null;
+			short column, row = 0;
 
-			for (short column = 0; column < 0x14; column++)
+			for (column = 0; column < 0x14; column++)
 			{
-				for (short row = 0; row < 0xd; row++)
+				for (row = 0; row < 0xd; row++)
 				{
 					short horizLoc = (short)((column << 2) + 1), vertLoc = (short)((row << 2) + 1);
 
+					origin = (horizLoc, vertLoc);
+
 					short continent = FindBlockLand(horizLoc, vertLoc, ref land);
+					lastContinent = continent;
 
 					if (continent == -1)
 						continue;
 
 					for (short direction = 1; direction <= 4; direction++)
 					{
+						lastDirection = direction;
+
 						short nextHoriz = (short)((this.processor.PullGlobalWord((ushort)((direction << 1) + 0x1882)) << 2) + horizLoc);
 						short nextVert = (short)((this.processor.PullGlobalWord((ushort)((direction << 1) + 0x18e4)) << 2) + vertLoc);
+
+						neighbour = (nextHoriz, nextVert);
 
 						short nextContinent = FindBlockLand(nextHoriz, nextVert, ref neighbourLand);
 						lastNeighbourContinent = nextContinent;
@@ -1078,6 +1093,7 @@ namespace Civilization1Remaster.Game
 
 						short cost = (short)this.owner.Routing.ComputeRouteCost(land!.Value.Item1, land.Value.Item2,
 							neighbourLand!.Value.Item1, neighbourLand.Value.Item2, 0, 20);
+						lastCost = cost;
 
 						if (cost == -1 || cost >= 0x14)
 							continue;
@@ -1087,17 +1103,57 @@ namespace Civilization1Remaster.Game
 						short nextColumn = (short)(this.processor.PullGlobalWord((ushort)((direction << 1) + 0x1882)) + column);
 						short nextRow = (short)(this.processor.PullGlobalWord((ushort)((direction << 1) + 0x18e4)) + row);
 
+						neighbour = (nextColumn, nextRow);
+
 						if (nextColumn < 0 || nextColumn >= 0x14 || nextRow < 0 || nextRow >= 0xd)
 							continue;
 
 						LinkLandmassBlock(nextColumn, nextRow, (direction + 3) & 7);
 					}
+
+					lastDirection = 5;
 				}
 			}
 
-			// ReckonContinentSizes (called right after LabelLandmasses in ProduceTerrain) reads 0xe before setting it when a neighbour has no sea
+			if (neighbour is (short nextHorizLoc, short nextVertLoc))
+			{
+				this.processor.EmitLocalWord(0x2, (ushort)nextHorizLoc);
+				this.processor.EmitLocalWord(0x4, (ushort)nextVertLoc);
+			}
+
+			if (origin is (short originHoriz, short originVert))
+			{
+				this.processor.EmitLocalWord(0x8, (ushort)originHoriz);
+				this.processor.EmitLocalWord(0xc, (ushort)originVert);
+			}
+
+			if (lastDirection is short directionLeft)
+				this.processor.EmitLocalWord(0xa, (ushort)directionLeft);
+
 			if (lastNeighbourContinent is short neighbourContinent)
 				this.processor.EmitLocalWord(0xe, (ushort)neighbourContinent);
+
+			if (lastCost is short costLeft)
+				this.processor.EmitLocalWord(0x10, (ushort)costLeft);
+
+			this.processor.EmitLocalWord(0x14, (ushort)column);
+
+			if (neighbourLand is (short neighbourHoriz, short neighbourVert))
+			{
+				this.processor.EmitLocalWord(0x16, (ushort)neighbourHoriz);
+				this.processor.EmitLocalWord(0x1c, (ushort)neighbourVert);
+			}
+
+			if (lastContinent is short continentLeft)
+				this.processor.EmitLocalWord(0x18, (ushort)continentLeft);
+
+			this.processor.EmitLocalWord(0x1a, (ushort)row);
+
+			if (land is (short landHoriz, short landVert))
+			{
+				this.processor.EmitLocalWord(0x20, (ushort)landHoriz);
+				this.processor.EmitLocalWord(0x24, (ushort)landVert);
+			}
 
 			this.processor.RestoreIndexRegisters();
 			this.processor.LeaveFrame();
@@ -1146,20 +1202,28 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"ReckonContinentSizes({marker})");
 
+			// The final values of the locals stay in the stack frame, like in the original
 			this.processor.EnterFrame(0x18);
 			this.processor.PreserveIndexRegisters();
 
-			// A neighbour without sea compares 0xe as it was before it is first set
-			ushort lastNextSea = this.processor.PullLocalWord(0xe);
-
 			this.owner.Libc.FillBytes(0x7f38, 0, 0x104);
 
-			for (short column = 0; column < 0x14; column++)
+			short column;
+
+			for (column = 0; column < 0x14; column++)
 			{
-				for (short row = 0; row < 0xc; row++)
+				this.processor.EmitLocalWord(0x14, (ushort)column);
+
+				short row;
+
+				for (row = 0; row < 0xc; row++)
 				{
-					LinkSeaBlock(column, row, ref lastNextSea);
+					this.processor.EmitLocalWord(0x18, (ushort)row);
+
+					LinkSeaBlock(column, row);
 				}
+
+				this.processor.EmitLocalWord(0x18, (ushort)row);
 
 				if (marker != 0)
 				{
@@ -1167,11 +1231,15 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
+			this.processor.EmitLocalWord(0x14, (ushort)column);
+
 			for (ushort row = 0; row < 0xc; row++)
 			{
 				this.processor.EmitGlobalByte((ushort)(row + 0x7f38), (byte)(this.processor.PullGlobalByte((ushort)(row + 0x7f38)) | 0xe0));
 				this.processor.EmitGlobalByte((ushort)(row + 0x802f), (byte)(this.processor.PullGlobalByte((ushort)(row + 0x802f)) | 0xe));
 			}
+
+			this.processor.EmitLocalWord(0x18, 0xc);
 
 			this.processor.EmitGlobalByte(0x7f38, (byte)(this.processor.PullGlobalByte(0x7f38) & 0x7f));
 			this.processor.EmitGlobalByte(0x7f43, (byte)(this.processor.PullGlobalByte(0x7f43) & 0xdf));
@@ -1184,29 +1252,39 @@ namespace Civilization1Remaster.Game
 			this.processor.Journal.CloseScope("ReckonContinentSizes");
 		}
 
-		/// <summary>The sea links of one block (see ReckonContinentSizes)</summary>
-		private void LinkSeaBlock(short column, short row, ref ushort lastNextSea)
+		/// <summary>The sea links of one block (see ReckonContinentSizes); the locals of the frame are written as in the original</summary>
+		private void LinkSeaBlock(short column, short row)
 		{
 			short horizLoc = (short)((column << 2) + 1), vertLoc = (short)((row << 2) + 1);
-			ushort blockSea = 0xffff;
+
+			this.processor.EmitLocalWord(0x8, (ushort)horizLoc);
+			this.processor.EmitLocalWord(0xc, (ushort)vertLoc);
+			this.processor.EmitLocalWord(0x16, 0xffff);
 
 			if (FindBlockSea(horizLoc, vertLoc) is ushort sea)
-				blockSea = sea;
+				this.processor.EmitLocalWord(0x16, sea);
 
-			if (blockSea == 0xffff)
+			if (this.processor.PullLocalWord(0x16) == 0xffff)
 				return;
 
-			for (short direction = 1; direction <= 8; direction++)
+			short direction;
+
+			for (direction = 1; direction <= 8; direction++)
 			{
+				this.processor.EmitLocalWord(0xa, (ushort)direction);
+
 				ushort offset = (ushort)(direction << 1);
 				short nextHoriz = (short)((this.processor.PullGlobalWord((ushort)(offset + 0x1882)) << 2) + horizLoc);
 				short nextVert = (short)((this.processor.PullGlobalWord((ushort)(offset + 0x18e4)) << 2) + vertLoc);
 
-				// A neighbour without sea leaves lastNextSea (0xe) as it was
-				if (FindBlockSea(nextHoriz, nextVert) is ushort nextSea)
-					lastNextSea = nextSea;
+				this.processor.EmitLocalWord(0x2, (ushort)nextHoriz);
+				this.processor.EmitLocalWord(0x4, (ushort)nextVert);
 
-				if (blockSea != lastNextSea)
+				// A neighbour without sea leaves 0xe as it was
+				if (FindBlockSea(nextHoriz, nextVert) is ushort nextSea)
+					this.processor.EmitLocalWord(0xe, nextSea);
+
+				if (this.processor.PullLocalWord(0x16) != this.processor.PullLocalWord(0xe))
 					continue;
 
 				if (!SeaPassageOpen(horizLoc, vertLoc, offset) && (row != 0xb || direction != 3))
@@ -1221,11 +1299,16 @@ namespace Civilization1Remaster.Game
 
 				short nextColumn = (short)(this.processor.PullGlobalWord((ushort)(offset + 0x1882)) + column);
 
+				this.processor.EmitLocalWord(0x2, (ushort)nextColumn);
+				this.processor.EmitLocalWord(0x4, (ushort)nextRow);
+
 				if (nextColumn < 0 || nextColumn >= 0x14 || nextRow < 0 || nextRow > 0xc)
 					continue;
 
 				LinkSeaBlockBit(nextColumn, nextRow, (direction + 3) & 7);
 			}
+
+			this.processor.EmitLocalWord(0xa, (ushort)direction);
 		}
 
 		/// <summary>
@@ -1250,14 +1333,26 @@ namespace Civilization1Remaster.Game
 
 		/// <summary>
 		/// Whether a ship can pass from the block's corner 5 tiles in the direction: at each step at least 2 of the 4 tiles
-		/// (x, y), (x + 1, y), (x, y + 1), (x + 1, y + 1) are ocean inside the map
+		/// (x, y), (x + 1, y), (x, y + 1), (x + 1, y + 1) are ocean inside the map (the locals 0x2 - 0x6, 0x10, 0x12 as in the
+		/// original)
 		/// </summary>
 		private bool SeaPassageOpen(short horizLoc, short vertLoc, ushort offset)
 		{
-			for (short step = 0; step <= 4; step++)
+			bool open = true;
+			short step;
+
+			this.processor.EmitLocalWord(0x2, (ushort)horizLoc);
+			this.processor.EmitLocalWord(0x4, (ushort)vertLoc);
+
+			for (step = 0; step <= 4; step++)
 			{
+				this.processor.EmitLocalWord(0x12, (ushort)step);
+
 				horizLoc = (short)(horizLoc + this.processor.PullGlobalWord((ushort)(offset + 0x1882)));
 				vertLoc = (short)(vertLoc + this.processor.PullGlobalWord((ushort)(offset + 0x18e4)));
+
+				this.processor.EmitLocalWord(0x2, (ushort)horizLoc);
+				this.processor.EmitLocalWord(0x4, (ushort)vertLoc);
 
 				short ocean = 4;
 
@@ -1268,11 +1363,21 @@ namespace Civilization1Remaster.Game
 						ocean--;
 				}
 
+				this.processor.EmitLocalWord(0x6, (ushort)ocean);
+
 				if (ocean < 2)
-					return false;
+				{
+					open = false;
+					break;
+				}
 			}
 
-			return true;
+			if (open)
+				this.processor.EmitLocalWord(0x12, (ushort)step);
+
+			this.processor.EmitLocalWord(0x10, open ? (ushort)1 : (ushort)0);
+
+			return open;
 		}
 
 		/// <summary>Sets bit bitIdx of the block's sea links (0x7f38 + 13 * column + row)</summary>

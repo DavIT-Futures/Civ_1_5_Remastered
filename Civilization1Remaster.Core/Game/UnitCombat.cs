@@ -208,6 +208,12 @@ namespace Civilization1Remaster.Game
 				assault = assailantSteps * assault / 3;
 			}
 
+			this.processor.EmitLocalWord(0x6, (ushort)townIdx);
+			this.processor.EmitLocalWord(0x8, (ushort)assailantKind);
+			this.processor.EmitLocalWord(0xe, (ushort)guardianKind);
+			this.processor.EmitLocalWord(0x1e, (ushort)(raidersAssaultTown ? 1 : 0));
+			this.processor.EmitLocalWord(0x20, (ushort)guardianLand);
+			this.processor.EmitLocalByte(0x26, (byte)assailantSteps);
 
 			if (marker == 0)
 			{
@@ -234,6 +240,8 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
+			this.processor.EmitLocalWord(0x10, (ushort)assault);
+			this.processor.EmitLocalWord(0x1a, (ushort)guard);
 
 			if (participantIdx1 == this.owner.World.PersonParticipantIdx)
 			{
@@ -253,6 +261,7 @@ namespace Civilization1Remaster.Game
 				(ushort)assault, (ushort)guard,
 				raidersAssaultTown);
 
+			this.processor.EmitLocalWord(0x24, (ushort)(assailantWins ? 0x10 : 0));
 
 			if (ShouldShowBattle(participantIdx1, troopIdx1, participantIdx2, troopIdx2))
 			{
@@ -379,6 +388,7 @@ namespace Civilization1Remaster.Game
 			{
 				int victorKind = assailantWins ? assailantKind : guardianKind;
 				ushort modernWeapon = (ObtainUnitAttack(victorKind) > 4 || ObtainUnitProtection(victorKind) > 2) ? (ushort)1 : (ushort)0;
+				this.processor.EmitLocalWord(0x16, modernWeapon);
 
 				ushort soundId;
 				if (assailantWins && assailantKind == 0xf)
@@ -400,6 +410,7 @@ namespace Civilization1Remaster.Game
 				this.owner.MapOps.RenderUnitOnWorldMap(participantIdx2, troopIdx2);
 
 				byte nextInStack = (byte)PullUnitByte(participantIdx1, troopIdx1, 0xa);
+				this.processor.EmitLocalByte(0x26, nextInStack);
 				if (nextInStack != 0xff)
 				{
 					this.owner.MapOps.RenderUnitOnWorldMap(participantIdx1, (short)PullUnitByte(participantIdx1, troopIdx1, 0xa));
@@ -414,31 +425,38 @@ namespace Civilization1Remaster.Game
 				short assailantScreenX = (short)((this.owner.Routing.TunePosition(
 					PullUnitByte(participantIdx1, troopIdx1, TroopHorizDisplacement) -
 					this.processor.PullGlobalSignedWord(0xd4cc)) << 4) + 0x50);
+				this.processor.EmitLocalWord(0xa, (ushort)assailantScreenX);
 
 				short assailantScreenY = (short)((((byte)PullUnitByte(participantIdx1, troopIdx1, TroopVertDisplacement) -
 					this.processor.PullGlobalWord(0xd75e)) << 4) + 0x8);
+				this.processor.EmitLocalWord(0xc, (ushort)assailantScreenY);
 
 				byte defX = (byte)PullUnitByte(participantIdx2, troopIdx2, TroopHorizDisplacement);
 				byte attX = (byte)PullUnitByte(participantIdx1, troopIdx1, TroopHorizDisplacement);
 				short stepX = (short)Math.Sign((short)(defX - attX));
+				this.processor.EmitLocalWord(0x12, (ushort)stepX);
 
 				byte defY = (byte)PullUnitByte(participantIdx2, troopIdx2, TroopVertDisplacement);
 				byte attY = (byte)PullUnitByte(participantIdx1, troopIdx1, TroopVertDisplacement);
 				short stepY = (short)Math.Sign((short)(defY - attY));
+				this.processor.EmitLocalWord(0x18, (ushort)stepY);
 
 				if ((byte)PullUnitByte(participantIdx2, troopIdx2, TroopHorizDisplacement) == 0 &&
 					(byte)PullUnitByte(participantIdx1, troopIdx1, TroopHorizDisplacement) == 0x4f)
 				{
 					stepX = (short)-stepX;
+					this.processor.EmitLocalWord(0x12, (ushort)stepX);
 				}
 				else if ((byte)PullUnitByte(participantIdx2, troopIdx2, TroopHorizDisplacement) == 0x4f &&
 					(byte)PullUnitByte(participantIdx1, troopIdx1, TroopHorizDisplacement) == 0)
 				{
 					stepX = (short)-stepX;
+					this.processor.EmitLocalWord(0x12, (ushort)stepX);
 				}
 
 				for (short step = 0; step <= 0xa; step++)
 				{
+					this.processor.EmitLocalWord(0x1c, (ushort)step);
 					short drawX = (short)(assailantScreenX + step * stepX);
 					short drawY = (short)(assailantScreenY + step * stepY);
 
@@ -462,6 +480,7 @@ namespace Civilization1Remaster.Game
 						(ushort)drawX, (ushort)drawY);
 				}
 
+				this.processor.EmitLocalWord(0x1c, 0xb);
 
 				this.owner.MapOps.RepaintMapTile(
 					PullUnitByte(participantIdx1, troopIdx1, TroopHorizDisplacement),
@@ -484,6 +503,7 @@ namespace Civilization1Remaster.Game
 				short loserStep = (short)(assailantWins ? 0x10 : 0);
 				for (short frame = 0; frame < 8; frame++)
 				{
+					this.processor.EmitLocalWord(0x1c, (ushort)frame);
 					short loserX = (short)(assailantScreenX + loserStep * stepX);
 					short loserY = (short)(assailantScreenY + loserStep * stepY);
 
@@ -502,6 +522,7 @@ namespace Civilization1Remaster.Game
 						(ushort)loserX, (ushort)loserY);
 				}
 
+				this.processor.EmitLocalWord(0x1c, 8);
 
 				int victorHoriz = assailantScreenX + (assailantWins ? 0 : 16 * stepX);
 				int victorVert = assailantScreenY + (assailantWins ? 0 : 16 * stepY);
@@ -588,6 +609,7 @@ namespace Civilization1Remaster.Game
 					PullUnitByte(participantIdx2, troopIdx2, TroopVertDisplacement)) & 0x20) == 0)
 			{
 				ushort destroyedCount = this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx2, troopIdx2, 2);
+				this.processor.EmitLocalWord(0x22, destroyedCount);
 
 				this.owner.World.Participants[participantIdx1].TroopsRuined[participantIdx2] += (short)destroyedCount;
 				this.owner.UnitOps.VisitEachUnitInStack(participantIdx2, troopIdx2, 0xf10);
@@ -607,14 +629,18 @@ namespace Civilization1Remaster.Game
 				{
 					for (short dir = 8; dir >= 0; dir--)
 					{
+						this.processor.EmitLocalWord(0x14, (ushort)dir);
 
 						short checkX = (short)((byte)PullUnitByte(participantIdx2, troopIdx2, TroopHorizDisplacement) +
 							this.processor.PullGlobalSignedWord((ushort)((dir << 1) + 0x1882)));
+						this.processor.EmitLocalWord(0xa, (ushort)checkX);
 
 						short checkY = (short)((byte)PullUnitByte(participantIdx2, troopIdx2, TroopVertDisplacement) +
 							this.processor.PullGlobalSignedWord((ushort)((dir << 1) + 0x18e4)));
+						this.processor.EmitLocalWord(0xc, (ushort)checkY);
 
 						ushort unitAtTile = this.owner.MapOps.ObtainUnitAtTile(checkX, checkY);
+						this.processor.EmitLocalWord(0x1a, unitAtTile);
 
 						if (unitAtTile != 0xffff && this.processor.PullGlobalSignedWord(0xd7f0) != this.owner.World.PersonParticipantIdx)
 						{
@@ -622,6 +648,7 @@ namespace Civilization1Remaster.Game
 						}
 					}
 
+					this.processor.EmitLocalWord(0x14, 0xffff);
 
 					if (this.owner.World.Towns[townIdx].ParticipantIdx == this.owner.World.PersonParticipantIdx)
 					{

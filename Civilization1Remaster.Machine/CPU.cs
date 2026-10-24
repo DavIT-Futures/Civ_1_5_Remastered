@@ -152,6 +152,9 @@ namespace Civilization1Remaster.Emulation
 		/// </summary>
 		public Action<bool>? InputStarved { get; set; }
 
+		/// <summary>Test seam: sees the frames and the accesses of the stack segment (see IStackWatcher)</summary>
+		public IStackWatcher? StackWatcher { get; set; }
+
 		/// <summary>
 		/// The game waits for the timer. With the real time clock this sleeps a bit, with the fixed clock (FixedClockSpan)
 		/// the next timer interrupt is due at once, so the waits take no time and don't depend on the speed of the computer.
@@ -447,72 +450,108 @@ namespace Civilization1Remaster.Emulation
 
 		public byte PullUInt8(ushort section, ushort displacement)
 		{
+			if (this.StackWatcher != null && section == this.segStack.Value16)
+				this.StackWatcher.Read(displacement, 1);
+
 			this.PumpMessages();
 			return this.storage.PullUInt8(section, displacement);
 		}
 
 		public sbyte PullInt8(ushort section, ushort displacement)
 		{
+			if (this.StackWatcher != null && section == this.segStack.Value16)
+				this.StackWatcher.Read(displacement, 1);
+
 			this.PumpMessages();
 			return this.storage.PullInt8(section, displacement);
 		}
 
 		public ushort PullUInt16(ushort section, ushort displacement)
 		{
+			if (this.StackWatcher != null && section == this.segStack.Value16)
+				this.StackWatcher.Read(displacement, 2);
+
 			this.PumpMessages();
 			return this.storage.PullUInt16(section, displacement);
 		}
 
 		public short PullInt16(ushort section, ushort displacement)
 		{
+			if (this.StackWatcher != null && section == this.segStack.Value16)
+				this.StackWatcher.Read(displacement, 2);
+
 			this.PumpMessages();
 			return this.storage.PullInt16(section, displacement);
 		}
 
 		public uint PullUInt32(ushort section, ushort displacement)
 		{
+			if (this.StackWatcher != null && section == this.segStack.Value16)
+				this.StackWatcher.Read(displacement, 4);
+
 			this.PumpMessages();
 			return this.storage.PullUInt32(section, displacement);
 		}
 
 		public int PullInt32(ushort section, ushort displacement)
 		{
+			if (this.StackWatcher != null && section == this.segStack.Value16)
+				this.StackWatcher.Read(displacement, 4);
+
 			this.PumpMessages();
 			return this.storage.PullInt32(section, displacement);
 		}
 
 		public void EmitUInt8(ushort section, ushort displacement, byte amount)
 		{
+			if (this.StackWatcher != null && section == this.segStack.Value16)
+				this.StackWatcher.Write(displacement, 1);
+
 			this.PumpMessages();
 			this.storage.EmitUInt8(section, displacement, amount);
 		}
 
 		public void EmitInt8(ushort section, ushort displacement, sbyte amount)
 		{
+			if (this.StackWatcher != null && section == this.segStack.Value16)
+				this.StackWatcher.Write(displacement, 1);
+
 			this.PumpMessages();
 			this.storage.EmitInt8(section, displacement, amount);
 		}
 
 		public void EmitUInt16(ushort section, ushort displacement, ushort amount)
 		{
+			if (this.StackWatcher != null && section == this.segStack.Value16)
+				this.StackWatcher.Write(displacement, 2);
+
 			this.PumpMessages();
 			this.storage.EmitUInt16(section, displacement, amount);
 		}
 
 		public void EmitInt16(ushort section, ushort displacement, short amount)
 		{
+			if (this.StackWatcher != null && section == this.segStack.Value16)
+				this.StackWatcher.Write(displacement, 2);
+
 			this.PumpMessages();
 			this.storage.EmitInt16(section, displacement, amount);
 		}
 
 		public void EmitUInt32(ushort section, ushort displacement, uint amount)
 		{
+			if (this.StackWatcher != null && section == this.segStack.Value16)
+				this.StackWatcher.Write(displacement, 4);
+
 			this.PumpMessages();
 			this.storage.EmitUInt32(section, displacement, amount);
 		}
 
 		public void EmitInt32(ushort section, ushort displacement, int amount)
 		{
+			if (this.StackWatcher != null && section == this.segStack.Value16)
+				this.StackWatcher.Write(displacement, 4);
+
 			this.PumpMessages();
 			this.storage.EmitInt32(section, displacement, amount);
 		}
@@ -628,6 +667,7 @@ namespace Civilization1Remaster.Emulation
 			{
 				throw new Exception("Stack overflow");
 			}
+			this.StackWatcher?.Write((ushort)(this.regStack.Value16 - 2), 2);
 			this.regStack.Value16 -= 1;
 			this.storage.EmitUInt8(this.segStack.Value16, this.regStack.Value16, (byte)((amount & 0xff00) >> 8));
 			this.regStack.Value16 -= 1;
@@ -640,6 +680,7 @@ namespace Civilization1Remaster.Emulation
 			{
 				throw new Exception("Stack overflow");
 			}
+			this.StackWatcher?.Write((ushort)(this.regStack.Value16 - 4), 4);
 			this.regStack.Value16 -= 1;
 			this.storage.EmitUInt8(this.segStack.Value16, this.regStack.Value16, (byte)((amount & 0xff000000) >> 24));
 			this.regStack.Value16 -= 1;

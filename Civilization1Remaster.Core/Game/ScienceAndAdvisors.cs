@@ -70,6 +70,8 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
+			this.processor.EmitLocalWord(0x2, 0x80);
+			this.processor.EmitLocalWord(0x8, (ushort)unrest);
 
 			if (participantIdx == this.owner.World.PersonParticipantIdx || (this.owner.World.DiagMarkers & 4) == 0)
 			{
@@ -95,6 +97,7 @@ namespace Civilization1Remaster.Game
 			}
 
 			luxuries = (short)this.owner.Helpers.VerifyValueSpan(luxuries, 0, 4);
+			this.processor.EmitLocalWord(0x6, (ushort)luxuries);
 
 			participant.ResearchLevyRatio = (short)(this.processor.PullGlobalWord((ushort)(0x1516 + (0x3a * participant.ChiefVisuals))) +
 				((10 - luxuries) / 2));
@@ -332,37 +335,64 @@ namespace Civilization1Remaster.Game
 			return choice;
 		}
 
+		// The frame of PickCityProduction (distances below bp)
+		private const int HappyRoomLocal = 0x2;
+		private const int AdvisorsShownLocal = 0x4;
+		private const int SharedWallLocal = 0x6;
+		private const int DefenceNeedLocal = 0x8;
+		private const int ChoiceCountLocal = 0xa;
+		private const int BestUnitLocal = 0xc;
+		private const int UnitsOnContinentTable = 0x44;
+		private const int ChoiceLocal = 0x46;
+		private const int BestImprovementLocal = 0x48;
+		private const int TownLoopLocal = 0x4a;
+		private const int BestScoreLocal = 0x4c;
+		private const int ChoiceTable = 0xde;
+		private const int ChoiceLoopLocal = 0xe0;
+		private const int MakingElsewhereTable = 0x11a;
+		private const int UnfamiliarLoopLocal = 0x11c;
+		private const int BestUnitScoreLocal = 0x11e;
 		private const int AdviceKey = 0x12e;
+		private const int BestImprovementScoreLocal = 0x130;
+		private const int DefensiveImprovementLocal = 0x132;
+		private const int ScoreLocal = 0x134;
+		private const int PageCutCountLocal = 0x136;
+		private const int PageCutLengthLocal = 0x138;
+		private const int PageStateLocal = 0x13a;
+		private const int DefensiveLocal = 0x13c;
+		private const int ContinentLocal = 0x13e;
+		private const int UnitTallyLocal = 0x140;
+		private const int ApproachLocal = 0x142;
+		private const int BestChoiceLocal = 0x144;
+		private const int WallContinentLocal = 0x146;
+		private const int BuiltHighLocal = 0x148;
+		private const int BuiltLowLocal = 0x14a;
 
-		private readonly ushort[] choiceTable = new ushort[0x49];
-		private readonly ushort[] makingElsewhereTable = new ushort[0x1c];
-		private readonly ushort[] unitsOnContinentTable = new ushort[0x1c];
-		private short prodHappyRoom;
-		private ushort prodSharedWall;
-		private short prodDefenceNeed;
-		private ushort prodBestUnit;
-		private ushort prodBestImprovement;
-		private short prodBestUnitScore;
-		private short prodBestImprovementScore;
-		private ushort prodDefensive;
-		private ushort prodContinent;
-		private short prodUnitTally;
-		private ushort prodApproach;
-		private short prodBestChoice;
+		private ushort FrameWord(int distance)
+		{
+			return this.processor.PullLocalWord(distance);
+		}
+
+		private void FrameWord(int distance, ushort amount)
+		{
+			this.processor.EmitLocalWord(distance, amount);
+		}
 
 		/// <summary>0: one page, 1: the menu is cut after the units ("more..." leads to the rest), 2: the rest only</summary>
-		private ushort PageState { get; set; }
+		private ushort PageState { get => FrameWord(PageStateLocal); set => FrameWord(PageStateLocal, value); }
 
-		private ushort AdvisorsShown { get; set; }
+		private ushort AdvisorsShown { get => FrameWord(AdvisorsShownLocal); set => FrameWord(AdvisorsShownLocal, value); }
 
 		/// <summary>The next free entry of the list of choices (entry 0 is the production of the city)</summary>
-		private short ChoiceCount { get; set; }
+		private short ChoiceCount { get => (short)FrameWord(ChoiceCountLocal); set => FrameWord(ChoiceCountLocal, (ushort)value); }
 
-		private short Score { get; set; }
+		private short Score { get => (short)FrameWord(ScoreLocal); set => FrameWord(ScoreLocal, (ushort)value); }
 
-		private ushort ChoiceEntry(int entryIdx) => this.choiceTable[(ushort)entryIdx];
+		private ushort ChoiceAddress(int entryIdx) => (ushort)(this.processor.RegFrame.Value16 + (entryIdx << 1) - ChoiceTable);
 
-		private void ChoiceEntry(int entryIdx, ushort choice) => this.choiceTable[(ushort)entryIdx] = choice;
+		private ushort ChoiceEntry(int entryIdx) => this.processor.PullUInt16(this.processor.SegStack.Value16, ChoiceAddress(entryIdx));
+
+		private void ChoiceEntry(int entryIdx, ushort choice) => this.processor.EmitUInt16(this.processor.SegStack.Value16, ChoiceAddress(entryIdx), choice);
 
 		/// <summary>Appends a choice to the list (and to the menu text, done by the caller)</summary>
 		private void AddChoice(ushort choice)
@@ -371,6 +401,9 @@ namespace Civilization1Remaster.Game
 			ChoiceCount = (short)(entryIdx + 1);
 			ChoiceEntry(entryIdx, choice);
 		}
+
+		/// <summary>A word of the frame table at bp - table + 2 * index (the unit tables of 28 words)</summary>
+		private ushort TableAddress(int table, int index) => (ushort)(this.processor.RegFrame.Value16 + (index << 1) - table);
 
 		/// <summary>
 		/// The menu text and the list of choices. True when the list is too long for one page the first time: it starts again,
@@ -381,7 +414,7 @@ namespace Civilization1Remaster.Game
 			City town = this.owner.World.Towns[townIdx];
 
 			ChoiceCount = 1;
-			ChoiceEntry(0, (ushort)(short)town.PresentMakingIdx);
+			FrameWord(ChoiceTable, (ushort)(short)town.PresentMakingIdx);
 
 			Message("What shall we build in ")
 				.City(townIdx)
@@ -390,19 +423,19 @@ namespace Civilization1Remaster.Game
 			if (PageState != 2)
 				ListUnitChoices(participantIdx, townIdx);
 
-			short pageCutCount = ChoiceCount;
-			ushort pageCutLength = this.owner.Libc.TextLength(0xba06);
+			FrameWord(PageCutCountLocal, (ushort)ChoiceCount);
+			FrameWord(PageCutLengthLocal, this.owner.Libc.TextLength(0xba06));
 
 			// The Great Wall on the continent of the city (no walls and the like then)
-			this.prodSharedWall = 0;
+			FrameWord(SharedWallLocal, 0);
 
 			if (this.owner.CityOps.PlayerEnjoysWonderEffect(participantIdx, 15) != 0)
 			{
 				City wallTown = this.owner.World.Towns[this.owner.World.MarvelTownIdx[15]];
-				ushort wallContinent = this.owner.MapOps.ObtainContinentID(wallTown.Place.X, wallTown.Place.Y);
+				FrameWord(WallContinentLocal, this.owner.MapOps.ObtainContinentID(wallTown.Place.X, wallTown.Place.Y));
 
-				if (this.owner.MapOps.ObtainContinentID(town.Place.X, town.Place.Y) == wallContinent)
-					this.prodSharedWall = 1;
+				if (this.owner.MapOps.ObtainContinentID(town.Place.X, town.Place.Y) == FrameWord(WallContinentLocal))
+					FrameWord(SharedWallLocal, 1);
 			}
 
 			if ((this.owner.World.DiagMarkers & 4) != 0)
@@ -418,8 +451,8 @@ namespace Civilization1Remaster.Game
 					return true;
 				}
 
-				this.owner.Libc.CopyText((ushort)(pageCutLength + 0xba06), "more...\n");
-				ChoiceEntry(pageCutCount, 0x63);
+				this.owner.Libc.CopyText((ushort)(FrameWord(PageCutLengthLocal) + 0xba06), "more...\n");
+				ChoiceEntry(FrameWord(PageCutCountLocal), 0x63);
 			}
 
 			if (PageState == 2)
@@ -439,8 +472,9 @@ namespace Civilization1Remaster.Game
 		{
 			City town = this.owner.World.Towns[townIdx];
 
-			for (sbyte kind = 0; kind < 0x1c; kind++)
+			for (FrameWord(ChoiceLoopLocal, 0); (short)FrameWord(ChoiceLoopLocal) < 0x1c; FrameWord(ChoiceLoopLocal, (ushort)(FrameWord(ChoiceLoopLocal) + 1)))
 			{
+				sbyte kind = (sbyte)FrameWord(ChoiceLoopLocal);
 
 				if (kind == 0x19 && (this.owner.World.MarvelTownIdx[17] == -1 || PlayerKnowsTechnology(participantIdx, 0x1b) == 0))
 					continue;
@@ -481,19 +515,21 @@ namespace Civilization1Remaster.Game
 		{
 			City town = this.owner.World.Towns[townIdx];
 
-			for (short improvementIdx = 1; improvementIdx <= 0x18; improvementIdx++)
+			for (FrameWord(ChoiceLoopLocal, 1); (short)FrameWord(ChoiceLoopLocal) <= 0x18; FrameWord(ChoiceLoopLocal, (ushort)(FrameWord(ChoiceLoopLocal) + 1)))
 			{
+				short improvementIdx = (short)FrameWord(ChoiceLoopLocal);
+
 				if (PlayerKnowsTechnology(participantIdx, this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(ImprovementRecord(improvementIdx) + 0x1c))) == 0)
 					continue;
 
-				ushort builtLow = town.StructureMarkers0;
-				ushort builtHigh = town.StructureMarkers1;
-				uint built = (uint)(builtHigh << 16 | builtLow);
+				FrameWord(BuiltLowLocal, town.StructureMarkers0);
+				FrameWord(BuiltHighLocal, town.StructureMarkers1);
+				uint built = (uint)(FrameWord(BuiltHighLocal) << 16 | FrameWord(BuiltLowLocal));
 
 				if ((built & (1u << (byte)(improvementIdx - 1))) != 0)
 					continue;
 
-				if (improvementIdx == 7 && (builtLow & 1) != 0)
+				if (improvementIdx == 7 && (this.processor.PullLocalByte(BuiltLowLocal) & 1) != 0)
 					continue;
 
 				if (improvementIdx == 0xf && town.Has(CityStructure.ManufacturingPlant))
@@ -517,7 +553,7 @@ namespace Civilization1Remaster.Game
 				if (improvementIdx == 0x13 && !town.Has(CityStructure.Factory))
 					continue;
 
-				if (improvementIdx is 0x13 or 0x14 or 0x15 && (this.prodSharedWall != 0 || (town.StructureMarkers1 & 0x1c) != 0))
+				if (improvementIdx is 0x13 or 0x14 or 0x15 && (FrameWord(SharedWallLocal) != 0 || (town.StructureMarkers1 & 0x1c) != 0))
 					continue;
 
 				if (improvementIdx > 0x15 &&
@@ -537,8 +573,12 @@ namespace Civilization1Remaster.Game
 		/// <summary>The wonders (25 - 45) the player knows that nobody has built; "*" before one that is obsolete for someone</summary>
 		private void ListWonderChoices(short participantIdx, short townIdx)
 		{
-			for (short improvementIdx = 0x19; improvementIdx <= 0x2d; improvementIdx++)
+			FrameWord(ChoiceLoopLocal, 0x19);
+
+			do
 			{
+				short improvementIdx = (short)FrameWord(ChoiceLoopLocal);
+
 				if (PlayerKnowsTechnology(participantIdx, this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(ImprovementRecord(improvementIdx) + 0x1c))) != 0 &&
 					this.owner.World.MarvelTownIdx[improvementIdx - 0x18] == -1)
 				{
@@ -553,7 +593,10 @@ namespace Civilization1Remaster.Game
 
 					AddChoice((ushort)-improvementIdx);
 				}
+
+				FrameWord(ChoiceLoopLocal, (ushort)(FrameWord(ChoiceLoopLocal) + 1));
 			}
+			while ((short)FrameWord(ChoiceLoopLocal) <= 0x2d);
 		}
 
 		/// <summary>
@@ -568,65 +611,80 @@ namespace Civilization1Remaster.Game
 			Player player = this.owner.World.Participants[participantIdx];
 			City town = this.owner.World.Towns[townIdx];
 
-			this.prodContinent = this.owner.MapOps.ObtainContinentID(town.Place.X, town.Place.Y);
-			this.prodApproach = (ushort)player.Landmasses[this.prodContinent].Approach;
-			this.prodDefensive = (ushort)((short)this.prodApproach is 1 or 2 ? 1 : 0);
+			FrameWord(ContinentLocal, this.owner.MapOps.ObtainContinentID(town.Place.X, town.Place.Y));
+			FrameWord(ApproachLocal, (ushort)player.Landmasses[FrameWord(ContinentLocal)].Approach);
+			FrameWord(DefensiveLocal, (ushort)((short)FrameWord(ApproachLocal) is 1 or 2 ? 1 : 0));
 
-			if (this.processor.PullGlobalWord(0x8078) != 0 && (short)this.prodApproach == 5)
-				this.prodDefensive = 1;
+			if (this.processor.PullGlobalWord(0x8078) != 0 && (short)FrameWord(ApproachLocal) == 5)
+				FrameWord(DefensiveLocal, 1);
 
 			short unhappy = (short)((player.RegimeKind <= 1 ? 1 : 2) * (short)this.processor.PullGlobalWord(0xe3c6));
-			this.prodHappyRoom = (short)((short)this.processor.PullGlobalWord(0x70da) - unhappy - (town.TrueExtent << 1));
-			// RenderCitizenIcons (called from HandleCity at the same stack depth) reads 0x2 before writing it
-			this.processor.EmitLocalWord(0x2, (ushort)this.prodHappyRoom);
+			FrameWord(HappyRoomLocal, (ushort)((short)this.processor.PullGlobalWord(0x70da) - unhappy - (town.TrueExtent << 1)));
 
-			for (int kind = 0; kind < 0x1c; kind++)
+			for (FrameWord(ChoiceLoopLocal, 0); (short)FrameWord(ChoiceLoopLocal) < 0x1c; this.processor.IncrementLocalWord(ChoiceLoopLocal))
 			{
-				this.makingElsewhereTable[kind] = 1;
-				this.unitsOnContinentTable[kind] = 0;
+				int kind = (short)FrameWord(ChoiceLoopLocal);
+				this.processor.EmitUInt16(this.processor.SegData.Value16, TableAddress(MakingElsewhereTable, kind), 1);
+				this.processor.EmitUInt16(this.processor.SegData.Value16, TableAddress(UnitsOnContinentTable, kind), 0);
 			}
 
-			this.prodUnitTally = player.TroopTally;
+			FrameWord(UnitTallyLocal, (ushort)player.TroopTally);
 			player.TroopTally = 0;
 
-			for (short otherTownIdx = 0; otherTownIdx < 0x80; otherTownIdx++)
+			FrameWord(TownLoopLocal, 0);
+
+			do
 			{
-				City other = this.owner.World.Towns[otherTownIdx];
+				City other = this.owner.World.Towns[FrameWord(TownLoopLocal)];
 
 				if (other.ConditionMarker != 0xff && other.ParticipantIdx == participantIdx &&
-					this.owner.MapOps.ObtainContinentID(other.Place.X, other.Place.Y) == this.prodContinent)
+					this.owner.MapOps.ObtainContinentID(other.Place.X, other.Place.Y) == FrameWord(ContinentLocal))
 				{
-					if (other.PresentMakingIdx >= 0 && otherTownIdx != townIdx)
+					if (other.PresentMakingIdx >= 0 && (short)FrameWord(TownLoopLocal) != townIdx)
 					{
-						this.makingElsewhereTable[other.PresentMakingIdx]++;
+						ushort making = TableAddress(MakingElsewhereTable, other.PresentMakingIdx);
+						this.processor.EmitUInt16(this.processor.SegStack.Value16, making, (ushort)(this.processor.PullUInt16(this.processor.SegStack.Value16, making) + 1));
 					}
 
-					for (int uIdx = 0; uIdx < 2; uIdx++)
+					for (FrameWord(UnfamiliarLoopLocal, 0); (short)FrameWord(UnfamiliarLoopLocal) < 2; FrameWord(UnfamiliarLoopLocal, (ushort)(FrameWord(UnfamiliarLoopLocal) + 1)))
 					{
-						byte unfamiliar = (byte)other.Unfamiliar[uIdx];
+						byte unfamiliar = (byte)other.Unfamiliar[FrameWord(UnfamiliarLoopLocal)];
+						this.processor.EmitLocalByte(BuiltLowLocal, unfamiliar);
 
 						if (unfamiliar != 0xff)
 						{
 							player.TroopTally++;
-							this.unitsOnContinentTable[(sbyte)unfamiliar & 0x3f]++;
+							ushort units = TableAddress(UnitsOnContinentTable, (sbyte)unfamiliar & 0x3f);
+							this.processor.EmitUInt16(this.processor.SegStack.Value16, units, (ushort)(this.processor.PullUInt16(this.processor.SegStack.Value16, units) + 1));
 						}
 					}
 				}
-			}
 
-			for (short troopIdx = 0; troopIdx < 0x80; troopIdx++)
+				FrameWord(TownLoopLocal, (ushort)(FrameWord(TownLoopLocal) + 1));
+			}
+			while ((short)FrameWord(TownLoopLocal) < 0x80);
+
+			FrameWord(ChoiceLoopLocal, 0);
+
+			do
 			{
+				short troopIdx = (short)FrameWord(ChoiceLoopLocal);
+
 				if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) != 0xff)
 				{
 					player.TroopTally++;
 
 					if (this.owner.MapOps.ObtainContinentID(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
-						this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert)) == this.prodContinent)
+						this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert)) == FrameWord(ContinentLocal))
 					{
-						this.unitsOnContinentTable[this.troops.TroopKind(participantIdx, troopIdx)]++;
+						ushort units = TableAddress(UnitsOnContinentTable, this.troops.TroopKind(participantIdx, troopIdx));
+						this.processor.EmitUInt16(this.processor.SegStack.Value16, units, (ushort)(this.processor.PullUInt16(this.processor.SegStack.Value16, units) + 1));
 					}
 				}
+
+				FrameWord(ChoiceLoopLocal, (ushort)(troopIdx + 1));
 			}
+			while ((short)FrameWord(ChoiceLoopLocal) < 0x80);
 
 			if (player.TroopTally == 0 && participantIdx != this.owner.World.PersonParticipantIdx && player.RegimeKind <= 1)
 				return 1;
@@ -645,19 +703,19 @@ namespace Civilization1Remaster.Game
 		{
 			City town = this.owner.World.Towns[townIdx];
 
-			this.prodDefenceNeed = 0;
-			ushort unitIdx = this.owner.MapOps.ObtainUnitAtTile(town.Place.X, town.Place.Y);
+			FrameWord(DefenceNeedLocal, 0);
+			FrameWord(ChoiceLoopLocal, this.owner.MapOps.ObtainUnitAtTile(town.Place.X, town.Place.Y));
 
-			if (unitIdx == 0xffff)
+			if (FrameWord(ChoiceLoopLocal) == 0xffff)
 			{
-				this.prodDefenceNeed = 2;
+				FrameWord(DefenceNeedLocal, 2);
 				return;
 			}
 
-			short defenders = (short)this.owner.UnitOps.TallyUnitsWithFlagInStack(participantIdx, (short)unitIdx, 2);
+			short defenders = (short)this.owner.UnitOps.TallyUnitsWithFlagInStack(participantIdx, (short)FrameWord(ChoiceLoopLocal), 2);
 
-			if ((short)(town.TrueExtent / 4 + this.prodDefensive) > defenders)
-				this.prodDefenceNeed = 1;
+			if ((short)(town.TrueExtent / 4 + FrameWord(DefensiveLocal)) > defenders)
+				FrameWord(DefenceNeedLocal, 1);
 		}
 
 		/// <summary>
@@ -666,15 +724,16 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private void ScoreProductionChoices(short participantIdx, short townIdx)
 		{
-			this.prodBestUnitScore = 0x3e7;
-			this.prodBestImprovementScore = 0x3e7;
-			short bestScore = 0x3e7;
-			this.prodBestUnit = 0xffff;
-			this.prodBestImprovement = 0xffff;
+			FrameWord(BestUnitScoreLocal, 0x3e7);
+			FrameWord(BestImprovementScoreLocal, 0x3e7);
+			FrameWord(BestScoreLocal, 0x3e7);
+			FrameWord(BestUnitLocal, 0xffff);
+			FrameWord(BestImprovementLocal, 0xffff);
 
-			for (short entryIdx = 1; entryIdx < ChoiceCount; entryIdx++)
+			for (FrameWord(ChoiceLoopLocal, 1); (short)FrameWord(ChoiceLoopLocal) < ChoiceCount; FrameWord(ChoiceLoopLocal, (ushort)(FrameWord(ChoiceLoopLocal) + 1)))
 			{
-				short choice = (short)ChoiceEntry(entryIdx);
+				FrameWord(ChoiceLocal, ChoiceEntry((short)FrameWord(ChoiceLoopLocal)));
+				short choice = (short)FrameWord(ChoiceLocal);
 
 				if (choice >= 0 && choice < 0x1a)
 				{
@@ -687,24 +746,24 @@ namespace Civilization1Remaster.Game
 					ScoreImprovementChoice(participantIdx, townIdx, choice);
 				}
 
-				if (Score < bestScore)
+				if (Score < (short)FrameWord(BestScoreLocal))
 				{
-					this.prodBestChoice = entryIdx;
-					bestScore = Score;
+					this.processor.CopyLocalWord(ChoiceLoopLocal, BestChoiceLocal);
+					this.processor.CopyLocalWord(ScoreLocal, BestScoreLocal);
 				}
 
 				if (choice < 0 || choice >= 0x1a)
 				{
-					if (Score < this.prodBestImprovementScore)
+					if (Score < (short)FrameWord(BestImprovementScoreLocal))
 					{
-						this.prodBestImprovementScore = Score;
-						this.prodBestImprovement = (ushort)entryIdx;
+						FrameWord(BestImprovementScoreLocal, (ushort)Score);
+						this.processor.CopyLocalWord(ChoiceLoopLocal, BestImprovementLocal);
 					}
 				}
-				else if (Score < this.prodBestUnitScore)
+				else if (Score < (short)FrameWord(BestUnitScoreLocal))
 				{
-					this.prodBestUnitScore = Score;
-					this.prodBestUnit = (ushort)entryIdx;
+					FrameWord(BestUnitScoreLocal, (ushort)Score);
+					this.processor.CopyLocalWord(ChoiceLoopLocal, BestUnitLocal);
 				}
 			}
 		}
@@ -720,7 +779,7 @@ namespace Civilization1Remaster.Game
 			short trade = (short)this.processor.PullGlobalWord(0x70de);
 
 			Score = 0x3e7;
-			ushort defensiveImprovement = 0;
+			FrameWord(DefensiveImprovementLocal, 0);
 
 			switch (27 - choice)
 			{
@@ -754,7 +813,7 @@ namespace Civilization1Remaster.Game
 
 				case 29:
 					Score = 5;
-					defensiveImprovement = 1;
+					FrameWord(DefensiveImprovementLocal, 1);
 					break;
 
 				case 30:
@@ -788,12 +847,12 @@ namespace Civilization1Remaster.Game
 					if (town.Has(CityStructure.Palace))
 						Score -= 4;
 
-					defensiveImprovement = 1;
+					FrameWord(DefensiveImprovementLocal, 1);
 					break;
 
 				case 36:
 				{
-					short room = CPU.SignedQuotient(this.prodHappyRoom, 2);
+					short room = CPU.SignedQuotient((short)FrameWord(HappyRoomLocal), 2);
 					short size = town.TrueExtent;
 
 					if ((short)(10 - room) <= size)
@@ -848,7 +907,7 @@ namespace Civilization1Remaster.Game
 			}
 			else
 			{
-				short weight = (short)(this.prodDefensive == defensiveImprovement ? 10 : 20);
+				short weight = (short)(FrameWord(DefensiveLocal) == FrameWord(DefensiveImprovementLocal) ? 10 : 20);
 				Score = (short)(weight * Score);
 
 				short character = (short)(this.processor.PullUInt16(this.processor.SegData.Value16,
@@ -870,14 +929,14 @@ namespace Civilization1Remaster.Game
 				return;
 			}
 
-			int wordIdx = this.owner.Libc.Dice.DrawInt(5);
+			FrameWord(TownLoopLocal, (ushort)this.owner.Libc.Dice.DrawInt(5));
 
 			if (((1 << participantIdx) & this.processor.PullGlobalWord(0x2a6e)) == 0)
 				return;
 
-			ushort own = this.owner.World.Participants[participantIdx].FoundScienceMarkers[wordIdx];
+			ushort own = this.owner.World.Participants[participantIdx].FoundScienceMarkers[FrameWord(TownLoopLocal)];
 
-			if ((ushort)(this.owner.World.Participants[person].FoundScienceMarkers[wordIdx] | own) == own)
+			if ((ushort)(this.owner.World.Participants[person].FoundScienceMarkers[FrameWord(TownLoopLocal)] | own) == own)
 				return;
 
 			Score = (short)this.owner.Helpers.VerifyValueSpan(this.owner.World.Participants[participantIdx].FoundScienceTally -
@@ -896,8 +955,8 @@ namespace Civilization1Remaster.Game
 			City town = this.owner.World.Towns[townIdx];
 			sbyte kind = (sbyte)choice;
 
-			if (choice == 0 && (player.RegimeKind <= 1 ? 1 : 2) >= this.prodHappyRoom &&
-				(player.LiveTroops[0] != 0 || (short)this.makingElsewhereTable[0] > 1))
+			if (choice == 0 && (player.RegimeKind <= 1 ? 1 : 2) >= (short)FrameWord(HappyRoomLocal) &&
+				(player.LiveTroops[0] != 0 || (short)FrameWord(MakingElsewhereTable) > 1))
 			{
 				return false;
 			}
@@ -925,26 +984,26 @@ namespace Civilization1Remaster.Game
 
 			if (UnitKindTable.Field(this.processor, kind, UnitKindTable.LandGroup) == UnitKindTable.LandUnits)
 			{
-				Score = (short)((this.makingElsewhereTable[choice] << 1) +
-					this.unitsOnContinentTable[choice]);
+				Score = (short)((this.processor.PullUInt16(this.processor.SegData.Value16, TableAddress(MakingElsewhereTable, choice)) << 1) +
+					this.processor.PullUInt16(this.processor.SegData.Value16, TableAddress(UnitsOnContinentTable, choice)));
 			}
 			else
 			{
-				short assault = player.Landmasses[this.prodContinent].Assault;
+				short assault = player.Landmasses[FrameWord(ContinentLocal)].Assault;
 
 				if (assault < 8)
 					return false;
 
 				short units = (short)((player.TroopsInsideMaking[choice] << 1) + player.LiveTroops[choice]);
-				Score = CPU.SignedQuotient((short)(player.Landmasses[this.prodContinent].Assault * units), (short)(player.TroopTally + 1));
+				Score = CPU.SignedQuotient((short)(player.Landmasses[FrameWord(ContinentLocal)].Assault * units), (short)(player.TroopTally + 1));
 			}
 
-			if (this.prodDefenceNeed != 0)
+			if (FrameWord(DefenceNeedLocal) != 0)
 			{
 				if (UnitKindTable.Field(this.processor, kind, UnitKindTable.TroopGroup) != UnitKindTable.DefenceTroops)
 					return false;
 
-				Score = CPU.SignedQuotient(2, this.prodDefenceNeed);
+				Score = CPU.SignedQuotient(2, (short)FrameWord(DefenceNeedLocal));
 			}
 
 			ushort role = UnitKindTable.Field(this.processor, kind, UnitKindTable.TroopGroup);
@@ -953,13 +1012,13 @@ namespace Civilization1Remaster.Game
 			{
 				Score <<= 1;
 
-				if (this.prodApproach != role)
+				if (FrameWord(ApproachLocal) != role)
 					Score <<= 1;
 			}
 
 			if (UnitKindTable.Field(this.processor, kind, UnitKindTable.TroopGroup) == UnitKindTable.TransportTroops)
 			{
-				if (this.prodApproach != 5)
+				if (FrameWord(ApproachLocal) != 5)
 					return false;
 
 				Score = CPU.SignedQuotient((short)(3 * Score), 2);
@@ -977,7 +1036,7 @@ namespace Civilization1Remaster.Game
 			Score = CPU.SignedQuotient(price, strength);
 
 			if (UnitKindTable.Field(this.processor, kind, UnitKindTable.TroopGroup) == 3)
-				Score = (short)((this.prodDefensive != 0 ? 4 : 2) * Score);
+				Score = (short)((FrameWord(DefensiveLocal) != 0 ? 4 : 2) * Score);
 
 			if (UnitKindTable.Field(this.processor, kind, UnitKindTable.LandGroup) == UnitKindTable.AirUnits)
 				Score <<= 1;
@@ -986,7 +1045,7 @@ namespace Civilization1Remaster.Game
 				Score <<= 2;
 
 			// Doubled unless the player is at war (0x6ed4) and the approach is defensive or there is more food than 0xdeb8
-			if ((this.prodDefensive == 0 && (short)this.processor.PullGlobalWord(0x70dc) <= (short)this.processor.PullGlobalWord(0xdeb8)) ||
+			if ((FrameWord(DefensiveLocal) == 0 && (short)this.processor.PullGlobalWord(0x70dc) <= (short)this.processor.PullGlobalWord(0xdeb8)) ||
 				this.processor.PullGlobalWord(0x6ed4) == 0)
 			{
 				Score <<= 1;
@@ -1004,20 +1063,20 @@ namespace Civilization1Remaster.Game
 		{
 			City town = this.owner.World.Towns[townIdx];
 
-			this.owner.World.Participants[participantIdx].TroopTally = this.prodUnitTally;
+			this.owner.World.Participants[participantIdx].TroopTally = (short)FrameWord(UnitTallyLocal);
 
 			if (!this.owner.World.IsHuman(participantIdx))
 			{
 				if ((byte)town.PresentMakingIdx == 0xff)
 					return 0xffff;
 
-				return ChoiceEntry(this.prodBestChoice);
+				return ChoiceEntry((short)FrameWord(BestChoiceLocal));
 			}
 
 			if ((town.ConditionMarker & 0x10) != 0)
 			{
-				if (this.prodBestImprovement != 0xffff && this.prodBestImprovementScore <= 0x1f4)
-					return ChoiceEntry((short)this.prodBestImprovement);
+				if (FrameWord(BestImprovementLocal) != 0xffff && (short)FrameWord(BestImprovementScoreLocal) <= 0x1f4)
+					return ChoiceEntry((short)FrameWord(BestImprovementLocal));
 
 				return 0x63;
 			}
@@ -1027,11 +1086,11 @@ namespace Civilization1Remaster.Game
 				ushort screen = this.processor.PullGlobalWord(0xaa);
 				this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(screen + 0x10), 2);
 
-				if (this.prodBestUnit != 0xffff)
-					ShowProductionAdvice((short)this.prodBestUnit, "Military Advisor:\n", 0x2284, 8);
+				if (FrameWord(BestUnitLocal) != 0xffff)
+					ShowProductionAdvice((short)FrameWord(BestUnitLocal), "Military Advisor:\n", 0x2284, 8);
 
-				if (this.prodBestImprovement != 0xffff)
-					ShowProductionAdvice((short)this.prodBestImprovement, "Domestic Advisor:\n", 0x22a3, 164);
+				if (FrameWord(BestImprovementLocal) != 0xffff)
+					ShowProductionAdvice((short)FrameWord(BestImprovementLocal), "Domestic Advisor:\n", 0x22a3, 164);
 
 				AdvisorsShown = 1;
 				screen = this.processor.PullGlobalWord(0xaa);
@@ -1048,7 +1107,7 @@ namespace Civilization1Remaster.Game
 
 			this.processor.EmitGlobalWord(0x2fa0, 1);
 			ushort picked = this.owner.Dialogs.DisplayMenu(0xba06, 80, 8, 1);
-			Score = (short)ChoiceEntry((short)picked + 1);
+			Score = (short)ChoiceEntry(picked + 1);
 
 			if ((ushort)Score == 0x63)
 			{
@@ -1617,6 +1676,7 @@ namespace Civilization1Remaster.Game
 					}
 				}
 
+				this.processor.EmitLocalWord(0x2, 0x1c);
 			}
 
 			if ((participantIdx != person || participantIdx1 == -2) && this.processor.PullGlobalWord(0x3934) == 0xffff)

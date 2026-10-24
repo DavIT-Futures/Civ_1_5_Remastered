@@ -42,7 +42,11 @@ Testy zawsze w **Release** z `-parallelMode all` (ok. 7 razy szybciej niż Debug
   Między nimi golden master (16 s) na porcję. **Wyjątek – B2 (zmienne lokalne ze stosu): pełny zestaw po każdej porcji**,
   bo usunięcie zapisu do ramki może zmienić śmieci, które inna funkcja na tej samej głębokości stosu czyta jako
   niezainicjowaną zmienną (`RenderCitizenIcons` 0x2, `HandlePlayerTurn` 0x12 / 0x24 / 0x36 / 0x3e …); wychodzi to w testach
-  innych modułów. Taki zapis zostaje (fizycznie na stos, obok zmiennej C#).
+  innych modułów. Taki zapis zostaje (fizycznie na stos, obok zmiennej C#). Sprawdzać sondą `Tests/Dual/LeftoverWatcher.cs`:
+  ten sam zestaw (`-namespace …GoldenMaster -namespace …Differential -namespace …Dual`) z `CIV_LEFTOVERS=przed.txt` przed
+  porcją i `po.txt` po niej, potem `python Civilization1Remaster.Tests/Dual/compare_leftovers.py przed.txt po.txt` – każdy
+  czytelnik z innymi wartościami i utraconym autorem to zapis do przywrócenia. Klasy zmiennych ramki (`CityRound`,
+  `TurnLocals`) zapisują każdą wartość także do ramki (`Keep`); samych zapisów ramki nie usuwać jako „martwych”.
 
 ## Kroki
 

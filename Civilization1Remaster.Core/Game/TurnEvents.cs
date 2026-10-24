@@ -492,7 +492,11 @@ namespace Civilization1Remaster.Game
 			this.owner.UnitOps.AttachReplayContent(11, (byte)this.owner.World.Participants[this.owner.World.PersonParticipantIdx].TownTally,
 				(byte)0, (byte)population);
 
-			ushort[] ranking = new ushort[4];
+			// The ranking in the frame (bp - 0x14, four words); a standing past 7 writes past them, like in the original
+			for (int placeIdx = 0; placeIdx < 4; placeIdx++)
+			{
+				this.processor.EmitUInt16(this.processor.SegStack.Value16, RankingSlot(placeIdx << 1), 0x0);
+			}
 
 			for (short participantIdx = 1; participantIdx < 8; participantIdx++)
 			{
@@ -500,11 +504,21 @@ namespace Civilization1Remaster.Game
 					continue;
 
 				short standing = this.owner.World.Participants[participantIdx].Standing;
+				ushort slot = RankingSlot((short)(standing / 2) << 1);
 				ushort place = (ushort)((standing & 1) == 0 ? participantIdx : participantIdx << 4);
-				ranking[standing / 2] |= place;
+
+				this.processor.EmitUInt16(this.processor.SegStack.Value16, slot,
+					(ushort)(this.processor.PullUInt16(this.processor.SegStack.Value16, slot) | place));
 			}
 
-			this.owner.UnitOps.AttachReplayContent(12, (byte)ranking[3], (byte)ranking[2], (byte)ranking[1], (byte)ranking[0]);
+			this.owner.UnitOps.AttachReplayContent(12, this.processor.PullLocalByte(0xe), this.processor.PullLocalByte(0x10),
+				this.processor.PullLocalByte(0x12), this.processor.PullLocalByte(0x14));
+		}
+
+		/// <summary>The address of the ranking word at the byte offset in the frame (bp - 0x14)</summary>
+		private ushort RankingSlot(int offset)
+		{
+			return (ushort)(this.processor.RegFrame.Value16 + offset - 0x14);
 		}
 
 		/// <summary>
@@ -793,14 +807,17 @@ namespace Civilization1Remaster.Game
 			do
 			{
 				horizLoc = (short)this.owner.Libc.Dice.DrawInt(80);
+				this.processor.EmitLocalWord(0xe, (ushort)horizLoc);
 
 				vertLoc = (short)(this.owner.Libc.Dice.DrawInt(44) + 3);
+				this.processor.EmitLocalWord(0x12, (ushort)vertLoc);
 			}
 			while (this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) != 0xa ||
 				this.owner.MapOps.ObtainTileOwner(horizLoc, vertLoc) != 0xffff ||
 				(short)this.owner.MapOps.ObtainLandMassSize(horizLoc, vertLoc) < 0x10);
 
 			short units = (short)this.owner.Helpers.VerifyValueSpan((this.owner.World.RoundTally / 150) + 1, 1, 3);
+			this.processor.EmitLocalWord(0x16, (ushort)units);
 
 			this.owner.UnitOps.ConstructUnit(0, units < 3 ? (short)0x11 : (short)0x12, horizLoc, vertLoc);
 
@@ -813,24 +830,30 @@ namespace Civilization1Remaster.Game
 				if (unitIdx == units)
 					kind = 0x1a;
 
+				this.processor.EmitLocalWord(0x4, (ushort)kind);
+
 				ushort troopIdx = this.owner.UnitOps.ConstructUnit(0, kind, horizLoc, vertLoc);
+				this.processor.EmitLocalWord(0x1c, troopIdx);
 
 				ushort marker = (ushort)((ushort)(0xc * troopIdx) + 0x81d4);
 				this.processor.EmitGlobalByte(marker, (byte)(this.processor.PullGlobalByte(marker) | 1));
 			}
 
+			this.processor.EmitLocalWord(0x14, (ushort)unitIdx);
 		}
 
 		/// <summary>The barbarians landing near a city of the human player (see DisplayTravellersReport)</summary>
 		private void RaidHumanCity()
 		{
 			ushort townIdx = (ushort)this.owner.Libc.Dice.DrawInt(128);
+			this.processor.EmitLocalWord(0x14, townIdx);
 
 			if (this.owner.World.Towns[townIdx].ConditionMarker == 0xff ||
 				this.owner.World.Towns[townIdx].ParticipantIdx != this.owner.World.PersonParticipantIdx)
 				return;
 
 			ushort plunder = this.owner.Conquest.ComputeCityPlunder((short)townIdx);
+			this.processor.EmitLocalWord(0x16, plunder);
 
 			if ((short)this.owner.Libc.Dice.DrawInt(100) >= (short)plunder)
 				return;
@@ -842,15 +865,20 @@ namespace Civilization1Remaster.Game
 			{
 				int shift = this.owner.Libc.Dice.DrawInt(13);
 				horizLoc = (short)((short)this.owner.World.Towns[townIdx].Place.X + shift - 6);
+				this.processor.EmitLocalWord(0xe, (ushort)horizLoc);
 
 				shift = this.owner.Libc.Dice.DrawInt(13);
 				vertLoc = (short)((short)this.owner.World.Towns[townIdx].Place.Y + shift - 6);
+				this.processor.EmitLocalWord(0x12, (ushort)vertLoc);
 
 				townIdx = this.owner.Helpers.LocateNearestCity(horizLoc, vertLoc);
+				this.processor.EmitLocalWord(0x14, townIdx);
 
 				short distance = (short)(ushort)this.owner.Helpers.ObtainDistance(horizLoc, this.owner.World.Towns[townIdx].Place.X, vertLoc, this.owner.World.Towns[townIdx].Place.Y);
+				this.processor.EmitLocalWord(0xc, (ushort)distance);
 
 				tries++;
+				this.processor.EmitLocalWord(0x1c, tries);
 
 				if ((short)tries >= 0x63)
 					return;
@@ -905,6 +933,7 @@ namespace Civilization1Remaster.Game
 			}
 
 			short units = (short)this.owner.Helpers.VerifyValueSpan(this.owner.Libc.Dice.DrawInt(this.owner.World.Towns[townIdx].TrueExtent / 2), 2, 99);
+			this.processor.EmitLocalWord(0x16, (ushort)units);
 
 			short unitIdx;
 
@@ -916,6 +945,8 @@ namespace Civilization1Remaster.Game
 				if (unitIdx == units)
 					kind = 0x1a;
 
+				this.processor.EmitLocalWord(0x4, (ushort)kind);
+
 				ushort sight = (ushort)((ushort)(0xc * this.owner.UnitOps.ConstructUnit(0, kind, horizLoc, vertLoc)) + 0x81dd);
 				this.processor.EmitGlobalByte(sight, (byte)(this.processor.PullGlobalByte(sight) | (byte)this.owner.World.ChartSight[(ushort)horizLoc, (ushort)vertLoc]));
 
@@ -925,6 +956,7 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
+			this.processor.EmitLocalWord(0x18, (ushort)unitIdx);
 		}
 
 		/// <summary>
@@ -943,7 +975,7 @@ namespace Civilization1Remaster.Game
 			this.processor.EnterFrame(0x1a);
 			this.processor.PreserveIndexRegisters();
 
-			ushort[] powers = new ushort[8];
+			ushort powers = (ushort)(this.processor.RegFrame.Value16 - 0x16);
 			short strongest = 0;
 			ushort treaties = 0;
 
@@ -962,7 +994,7 @@ namespace Civilization1Remaster.Game
 					power = 0;
 				}
 
-				powers[participantIdx] = power;
+				this.processor.EmitGlobalWord((ushort)(powers + (participantIdx << 1)), power);
 
 				if (participantIdx != this.owner.World.PersonParticipantIdx && strongest < (short)power)
 				{
@@ -1000,7 +1032,7 @@ namespace Civilization1Remaster.Game
 
 				for (short participantIdx = 1; participantIdx < 8; participantIdx++)
 				{
-					short power = (short)powers[participantIdx];
+					short power = (short)this.processor.PullGlobalWord((ushort)(powers + (participantIdx << 1)));
 
 					if (strongest < power)
 					{
@@ -1010,8 +1042,14 @@ namespace Civilization1Remaster.Game
 				}
 
 				this.owner.World.Participants[best].Standing = (short)(8 - rank);
-				powers[best] = 0xffff;
+				this.processor.EmitGlobalWord((ushort)(powers + (best << 1)), 0xffff);
 			}
+
+			this.processor.EmitLocalWord(0x2, 0x8);
+			this.processor.EmitLocalWord(0x4, (ushort)strongest);
+			this.processor.EmitLocalWord(0x6, 0x8);
+			this.processor.EmitLocalWord(0x18, treaties);
+			this.processor.EmitLocalWord(0x1a, best);
 
 			this.processor.EmitGlobalWord(0x8078, 0x0);
 
@@ -1341,6 +1379,23 @@ namespace Civilization1Remaster.Game
 					this.owner.Services.RenderPictureToScreen(this.processor.PullGlobalWord(0xaa), (7 * sectionIdx) + horizLoc, vertLoc - 1,
 						this.processor.PullGlobalWord((ushort)((0x28 * SectionWord(styles, sectionIdx)) + ((((short)height * 5) + shape) << 1) + 0xd21c)));
 				}
+
+				this.processor.EmitLocalWord(0x36, (ushort)parts);
+				this.processor.EmitLocalWord(0x6, (ushort)highest);
+				this.processor.EmitLocalWord(0x4, seed);
+				this.processor.EmitLocalWord(0x8, 0x9);
+
+				if (lastShape != null)
+				{
+					this.processor.EmitLocalWord(0xc, lastShape.Value);
+				}
+
+				if (generated)
+				{
+					this.processor.EmitLocalWord(0x2, last.attempts);
+					this.processor.EmitLocalWord(0xa, last.fits);
+					this.processor.EmitLocalWord(0xe, last.chosen);
+				}
 			}
 
 			this.processor.RegSource.Value16 = this.processor.UnstackWord();
@@ -1436,9 +1491,13 @@ namespace Civilization1Remaster.Game
 
 			for (attempt = 0; attempt <= this.owner.World.HardnessTier; attempt++)
 			{
+				this.processor.EmitLocalWord(0xa, (ushort)attempt);
+
 				if (TryRivalWonder(attempt))
 					break;
 			}
+
+			this.processor.EmitLocalWord(0xa, (ushort)attempt);
 
 			this.processor.RestoreIndexRegisters();
 			this.processor.LeaveFrame();
@@ -1451,6 +1510,7 @@ namespace Civilization1Remaster.Game
 		{
 			short person = this.owner.World.PersonParticipantIdx;
 			ushort wonderIdx = (ushort)(this.owner.Libc.Dice.DrawInt(21) + 1);
+			this.processor.EmitLocalWord(0x8, wonderIdx);
 
 			if (this.owner.World.HardnessTier == 0 &&
 				this.owner.Advisors.PlayerKnowsTechnology(person, (short)this.processor.PullGlobalWord((ushort)((ushort)(0x1e * wonderIdx) + 0xbb6))) == 0)
@@ -1464,14 +1524,18 @@ namespace Civilization1Remaster.Game
 						wonderIdx = 0x11;
 				}
 
+				this.processor.EmitLocalWord(0x2, 0x80);
+				this.processor.EmitLocalWord(0x8, wonderIdx);
 			}
 
 			ushort cityIdx = (ushort)this.owner.Libc.Dice.DrawInt(128);
+			this.processor.EmitLocalWord(0x2, cityIdx);
 
 			if (this.owner.World.Towns[cityIdx].ConditionMarker == 0xff)
 				return false;
 
 			ushort rivalIdx = (ushort)this.owner.World.Towns[cityIdx].ParticipantIdx;
+			this.processor.EmitLocalWord(0xc, rivalIdx);
 
 			if ((this.owner.World.Participants[rivalIdx].Relations[0] & 4) != 0)
 				return false;
@@ -1483,6 +1547,7 @@ namespace Civilization1Remaster.Game
 				this.owner.Advisors.PlayerKnowsTechnology(person, 0x2e) == 0 && this.owner.World.MarvelTownIdx[17] == -1)
 			{
 				wonderIdx = 0x11;
+				this.processor.EmitLocalWord(0x8, wonderIdx);
 			}
 
 			if (wonderIdx == 0x11 && this.owner.Advisors.PlayerKnowsTechnology(person, 0x2e) != 0 &&
@@ -1496,6 +1561,7 @@ namespace Civilization1Remaster.Game
 				return false;
 
 			ushort wonder = (ushort)(0x1e * wonderIdx);
+			this.processor.EmitLocalWord(0xe, (ushort)(0x1c * cityIdx));
 
 			if (this.owner.World.Towns[cityIdx].TrueExtent <= CPU.SignedQuotient((short)this.processor.PullGlobalWord((ushort)(wonder + 0xe82)), 10))
 				return false;
@@ -1546,6 +1612,8 @@ namespace Civilization1Remaster.Game
 				if (HumanCityBuilds(townIdx, wonderIdx))
 					this.owner.Advisors.RenewCityScreen((short)townIdx);
 			}
+
+			this.processor.EmitLocalWord(0x2, 0x80);
 
 			return true;
 		}

@@ -72,6 +72,8 @@ public sealed class BatchSeventyFiveDifferentialTests(ITestOutputHelper output)
 
 			Dictionary<string, int> before = new Dictionary<string, int>(pair.Rewritten.Calls);
 
+			// The frame stays below the stack pointer with the last values of the locals (the scores, the best choices, the list)
+			ushort frame = (ushort)(engine.Processor.RegStack.Value16 - 2);
 			int Delta(GameEngine game, string name) => Calls(game, pair, name) - before.GetValueOrDefault(name);
 
 			return new Scenario(
@@ -196,7 +198,8 @@ public sealed class BatchSeventyFiveDifferentialTests(ITestOutputHelper output)
 
 					ways.Add(way);
 					return way;
-				});
+				},
+				[(0x3b01, (ushort)(frame - 0x14a), 0x14a)]);
 		}, output, [], null);
 	}
 }
