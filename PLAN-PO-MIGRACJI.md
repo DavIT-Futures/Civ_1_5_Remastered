@@ -141,6 +141,52 @@ na stary układ bajtów.
 Gdy nic już nie używa rejestrów i pamięci danych, zostaje grafika (bufory ekranu, palety) i dźwięk. To osobna decyzja:
 albo zostawić małą warstwę zgodności, albo przepisać rysowanie na bezpośrednie bufory.
 
+**Plan B6 (2026-10-25).** Stan: Core 52 400 linii, `this.processor.` 6 134 razy. Co jeszcze siedzi w emulatorze:
+
+| Ślad | Miejsc | Faza |
+|---|---|---|
+| AX (`RegAcc`) – głównie zapisy „jak w oryginale” | 568 | B1-reszta / B3 |
+| SI/DI | 588 | B3 (odłożone) |
+| BX/CX/DX | 443 | B3 (nie było w planie – dopisać) |
+| `EnterFrame`/`LeaveFrame`, `Preserve…`, `StackWord` | 190 / 151 / 82 | B3 |
+| zmienne lokalne w ramce (`PullLocal…`, `FrameWord`) | 909 | B2-reszta (resztki stosu) / B3 |
+| zmienne globalne pod adresem (literał / wyliczony) | 713 / 600 | B4-reszta |
+| surowe `Pull…`/`Emit…(segment, adres)` | 753 | B5-reszta, B6.1 – B6.3 |
+| teksty przez adresy (`CopyText`/`AppendText`, bufor 0xba06) | 643 / 1053 | B6.1 |
+| jednostki w pamięci (`UnitMemory`, `troops.`) | 798 | B6.2 |
+| pudełka ekranów w pamięci (`ScreenBox`…), `VideoCard`, `Services` | 772 / 392 / 464 | B6.5 |
+| dziennik wywołań (`Journal.OpenScope`/`CloseScope`) | 751 | B6.9 |
+
+Kolejność (każdy krok osobno zielony; pamięć 0x3b01 długo zostaje jako magazyn, zmieniają się tylko „szwy”):
+
+- **B6.0 – testy, warunek wszystkiego dalej.** (a) *Rzut stanu na pamięć*: `GameSnapshot` liczy `mem.` z pamięci, więc
+  stan przeniesiony do C# musi być wpisywany do widoku pamięci w starym układzie bajtów (ta sama warstwa posłuży zapisowi
+  gry, którego format zostaje). (b) *Zegar testów niezależny od dostępów do pamięci*: dziś przerwanie co 10 000 dostępów
+  CPU (`FixedClockSpan`) – każdy odczyt przeniesiony do C# przesuwa moment tyknięcia. Zegar tykać przy oczekiwaniu na
+  zegar / klawisz i co N wywołań funkcji gry (dziennik), w obu grach; baseline nagrać od nowa z zamrożonej gry
+  (jak przy `baseline-interrupt-registers.patch`). Bez tego B6 da się robić tylko z zachowaniem liczby dostępów.
+- **B6.1 – teksty.** Bufor 0xba06 i funkcje C runtime na adresach (`CopyText`, `AppendText`, `IntegerToText`) → `string` /
+  `StringBuilder`; rysowanie tekstu (`TextPainter`, `BlockText`) przyjmuje `string`. Kody tekstów (`CodeText1` – `5`)
+  i tabele nazw (B5) zwracają `string`. Duże, ale mechaniczne; projekcja potrzebna, bo bufor jest w `mem.`.
+- **B6.2 – jednostki.** `UnitMemory` to już jedyny szew: magazyn → tablica C# (rekord 12 bajtów jako struktura) +
+  projekcja 0x81d4 dla migawki i zapisu gry; potem `GameState.Participants[].Troops` (dziś tylko kopia z wczytania)
+  staje się prawdziwym stanem.
+- **B6.3 – tabele z CIV.EXE.** Akcesory B5 to szew: wczytać tabele raz przy starcie do tablic C# (są zapisywane z grą,
+  więc też projekcja). Teksty tabel → `string`.
+- **B6.4 – zmienne globalne.** Właściwości B4 → pola C# (jeden szew), z projekcją tych, które idą do zapisu / migawki.
+- **B6.5 – ekrany.** Struktury pudełek ekranów w pamięci (`ScreenBox` + 0x10 czcionka itd.) → obiekty C#; `VGADriver`
+  już trzyma bitmapy C#, więc zostaje tylko adresowanie. Palety i cykle kolorów z pamięci → C#.
+- **B6.6 – pliki i C runtime.** `CRuntime` (uchwyty, `fscanf`, `fread`) → .NET; format `.SVE` / `.MAP` bez zmian przez
+  warstwę projekcji. Tu też naprawa `ScanStream` (pusta linia) – ale to zmiana zachowania (lista błędów).
+- **B6.7 – przerwania i wejście.** Zegar, mysz (0x586e – 0x5874), klawiatura → zdarzenia hosta; `PumpMessages` znika.
+- **B6.8 – rejestry i stos** (po B3, czyli na końcu z nowym baseline'em): usunąć AX/SI/DI/BX/CX/DX, ramki, `MZExecutable`
+  i obraz CIV.EXE w pamięci (dane początkowe: z pliku CIV.EXE przy starcie albo z zasobu).
+- **B6.9 – dziennik wywołań.** Testy różnicowe porównują ślad `OpenScope`; zostaje, dopóki są potrzebne, potem jako
+  opcjonalne logowanie albo usunąć.
+
+Uwagi: B6.1 – B6.5 nie zmieniają zachowania, jeśli B6.0 jest zrobione; B6.8 razem z B3 i poprawkami zachowania
+(nowy baseline). Wydajność: dziś każdy dostęp do pamięci woła `PumpMessages` – po B6.7 gra przyspieszy.
+
 ## Potem (decyzja użytkownika)
 
 Poprawki zachowania z listy „Błędy przetłumaczonego kodu zachowane celowo” w `MIGRATION-BACKLOG.md` (np. głodujące
