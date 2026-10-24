@@ -21,9 +21,14 @@ byte of the game turns them red and tells in which turn and in which value the g
 4. after loading and after every turn takes a `GameSnapshot`.
 
 Determinism comes from test seams that do nothing in the desktop game:
-`CPU.FixedClockSpan` (a timer interrupt after every 10 000 memory accesses and at every wait for the timer or a key,
-instead of the real time), `CPU.InputStarved` (the scripted keyboard), `LogWrapper.ScopeListener` (call counts),
+`CPU.FixedClockSpan` (instead of the real time a timer interrupt after every 50 calls of game functions, at every wait for
+the timer (`Idle`) or a key, and after every 16 reads of the timer variables 0x40 – 0x6f or polls of the music position
+(`CPU.PollMusic`, a one-line seam in `SystemServices.ObtainSongPosition` of both games) for the loops that wait without
+calling a game function; the calls are counted in every journal the game switches to (`CPU.Journal`) – since B6.0, 2026-10-25; before, after every 10 000 memory accesses, which moved the interrupts whenever
+the code made fewer accesses), `CPU.InputStarved` (the scripted keyboard), `LogWrapper.ScopeListener` (call counts),
 and a stable hash for the city picture in `CityView` (`string.GetHashCode` is different in every process).
+The data moved out of the emulated memory into C# is written back at its address before the data segment is hashed
+(`Dual/MovedData.Project`), so the baselines stay valid while the state leaves the memory.
 `GoldenMasterDeterminismTests` plays the same game twice and requires identical snapshots.
 
 ## What is compared
@@ -104,6 +109,11 @@ cp GoldenMaster/Baselines/* <repository>/Civilization1Remaster.Tests/GoldenMaste
 ```
 
 A change of the harness that changes the snapshots (other keys, other saves, more turns) needs new baselines made this way.
+
+From the frozen game (`Civilization1Remaster.Original`, the code at the end of the migration, with the current harness):
+add `CIV1_GOLDEN_MASTER_FROZEN=1` to the command above (working copy). B6.0 (2026-10-25) checked the new clock this way:
+the frozen game with the clock by calls gives the same behaviour channels as the committed baselines (only the header
+and the informational `call.` counts differ), so the baselines from a3b5a3b were kept.
 
 ## Running
 

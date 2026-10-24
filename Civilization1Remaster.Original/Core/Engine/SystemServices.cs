@@ -1014,6 +1014,9 @@ namespace Civilization1Original.Engine
 		/// <returns></returns>
 		public ushort ObtainSongPosition()
 		{
+			// Test seam: the fixed test clock counts the polls of the music (nothing in the game)
+			this.processor.PollMusic();
+
 			this.processor.RegAcc.Value16 = this.owner.Audio.ObtainSongPosition();
 
 			return this.processor.RegAcc.Value16;

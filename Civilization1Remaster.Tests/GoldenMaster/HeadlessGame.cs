@@ -22,10 +22,10 @@ namespace Civilization1Remaster.Tests.GoldenMaster
 		/// <summary>
 		/// The fixed clock gives a timer interrupt after this many memory accesses (and at every wait for the timer or a key).
 		/// The game also waits in loops that only read a counter of the timer interrupt (the palette fades), so it can't be too big.
-		/// The refactored code makes fewer memory accesses, so the interrupts come at other places than in the original code:
-		/// the timer variables are left out of the snapshot (GameSnapshot.IgnoredDataRanges).
+		/// Since B6.0 (2026-10-25) the clock counts the calls of game functions, not the memory accesses: the interrupts come
+		/// at the same calls in the frozen game and in the current one, however many memory accesses the code makes.
 		/// </summary>
-		public const int ClockSpan = 10_000;
+		public const int ClockSpan = 50;
 
 		private readonly string folder;
 		private readonly CPU processor;

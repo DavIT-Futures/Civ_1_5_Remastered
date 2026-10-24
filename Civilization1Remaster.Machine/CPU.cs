@@ -50,9 +50,16 @@ namespace Civilization1Remaster.Emulation
 		// Timer chip divisor, read from the game memory by the game thread (0x4dae is 60 interrupts per second)
 		private volatile int clockDenominator = 0x4dae;
 		private readonly Thread clockWorker;
-		// Test seam: when not 0, the timer interrupts are counted from the memory accesses of the game instead of the real time
+		// Test seam: when not 0, the timer interrupts are counted from the calls of game functions instead of the real time
 		private int fixedClockSpan = 0;
 		private int fixedClockSteps = 0;
+		private int timerPolls = 0;
+
+		// The fixed clock: a waiting loop that only reads the timer counter gets an interrupt every this many reads
+		private const int TimerPollSpan = 16;
+		// The timer variables of the game in the data segment (the counters the waiting loops read)
+		private const ushort TimerVariablesBegin = 0x40;
+		private const ushort TimerVariablesEnd = 0x70;
 
 		// The game programs the timer chip (8253) with this divisor, normally for 60 interrupts per second
 		private const ushort ClockContentSection = 0x3b01;
@@ -124,10 +131,20 @@ namespace Civilization1Remaster.Emulation
 		ushort IStackProbe.DataSegment { get { return this.segData.Value16; } }
 		ushort IStackProbe.FramePointer { get { return this.regFrame.Value16; } }
 
+		/// <summary>
+		/// The journal of the game functions called now (the game switches it, for example to the journal of the intro); the
+		/// fixed test clock counts the calls in every journal the game switches to
+		/// </summary>
 		public LogWrapper Journal
 		{
 			get { return this.journal; }
-			set { this.journal = value; }
+			set
+			{
+				this.journal = value;
+
+				if (this.fixedClockSpan != 0)
+					value.ScopeOpened = CountClockScope;
+			}
 		}
 
 		public bool AllowClock
@@ -137,13 +154,32 @@ namespace Civilization1Remaster.Emulation
 		}
 
 		/// <summary>
-		/// Test seam for runs without a window that must be reproducible: when not 0, a timer interrupt is due after this many
-		/// memory accesses of the game instead of after the real time, and the timer thread stops counting.
+		/// Test seam for runs without a window that must be reproducible: when not 0, a timer interrupt comes after this many
+		/// calls of game functions (scopes of the journal) instead of after the real time, and the timer thread stops counting.
+		/// The interrupt comes at the call itself, so it does not depend on the memory accesses of the code (B6: state moved
+		/// from the memory into C# would move it otherwise).
 		/// </summary>
 		public int FixedClockSpan
 		{
 			get { return this.fixedClockSpan; }
-			set { this.fixedClockSpan = value; this.fixedClockSteps = 0; this.waitingClockBeats = 0; }
+			set
+			{
+				this.fixedClockSpan = value;
+				this.fixedClockSteps = 0;
+				this.waitingClockBeats = 0;
+				this.journal.ScopeOpened = value != 0 ? CountClockScope : null;
+			}
+		}
+
+		/// <summary>A call of a game function under the fixed test clock: every FixedClockSpan calls the timer interrupt comes</summary>
+		private void CountClockScope()
+		{
+			if (this.allowClock && ++this.fixedClockSteps >= this.fixedClockSpan)
+			{
+				this.fixedClockSteps = 0;
+				this.waitingClockBeats = 1;
+				ServeClock();
+			}
 		}
 
 		/// <summary>
@@ -167,6 +203,7 @@ namespace Civilization1Remaster.Emulation
 				{
 					this.fixedClockSteps = 0;
 					this.waitingClockBeats = 1;
+					ServeClock();
 				}
 			}
 			else
@@ -272,12 +309,44 @@ namespace Civilization1Remaster.Emulation
 				Thread.Sleep(200);
 			}
 
-			if (this.fixedClockSpan != 0 && this.allowClock && ++this.fixedClockSteps >= this.fixedClockSpan)
-			{
-				this.fixedClockSteps = 0;
-				this.waitingClockBeats = 1;
-			}
+			ServeClock();
+		}
 
+		/// <summary>
+		/// The fixed clock: a read of a timer variable. The loops that wait for the timer only by reading its counter (no call
+		/// of a game function, no Idle) get an interrupt every TimerPollSpan such reads, the same in every version of the code.
+		/// </summary>
+		private void PollTimer(ushort section, ushort displacement)
+		{
+			if (this.fixedClockSpan != 0 && section == this.segData.Value16 &&
+				displacement >= TimerVariablesBegin && displacement < TimerVariablesEnd)
+				CountPoll();
+		}
+
+		/// <summary>
+		/// Test seam: the game asks for the position of the music (the intro and the title wait for it in loops without a call
+		/// of a game function). Under the fixed clock it counts like a read of the timer variables (PollTimer), else nothing.
+		/// </summary>
+		public void PollMusic()
+		{
+			if (this.fixedClockSpan != 0)
+				CountPoll();
+		}
+
+		/// <summary>A poll of the timer or of the music under the fixed clock: every TimerPollSpan polls the interrupt comes</summary>
+		private void CountPoll()
+		{
+			if (this.allowClock && ++this.timerPolls >= TimerPollSpan)
+			{
+				this.timerPolls = 0;
+				this.waitingClockBeats = 1;
+				ServeClock();
+			}
+		}
+
+		/// <summary>The timer interrupt (and the mouse interrupt before it) when one is due and the interrupts are allowed</summary>
+		private void ServeClock()
+		{
 			if (this.allowSignal && this.allowClock && Volatile.Read(ref this.waitingClockBeats) > 0 && !this.insideClock)
 			{
 				this.insideClock = true;
@@ -454,6 +523,7 @@ namespace Civilization1Remaster.Emulation
 				this.StackWatcher.Read(displacement, 1);
 
 			this.PumpMessages();
+			PollTimer(section, displacement);
 			return this.storage.PullUInt8(section, displacement);
 		}
 
@@ -463,6 +533,7 @@ namespace Civilization1Remaster.Emulation
 				this.StackWatcher.Read(displacement, 1);
 
 			this.PumpMessages();
+			PollTimer(section, displacement);
 			return this.storage.PullInt8(section, displacement);
 		}
 
@@ -472,6 +543,7 @@ namespace Civilization1Remaster.Emulation
 				this.StackWatcher.Read(displacement, 2);
 
 			this.PumpMessages();
+			PollTimer(section, displacement);
 			return this.storage.PullUInt16(section, displacement);
 		}
 
@@ -481,6 +553,7 @@ namespace Civilization1Remaster.Emulation
 				this.StackWatcher.Read(displacement, 2);
 
 			this.PumpMessages();
+			PollTimer(section, displacement);
 			return this.storage.PullInt16(section, displacement);
 		}
 

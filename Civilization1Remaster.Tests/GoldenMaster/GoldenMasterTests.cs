@@ -28,6 +28,9 @@ namespace Civilization1Remaster.Tests.GoldenMaster
 		/// <summary>Written into the baseline header, for example the commit the baseline was made from</summary>
 		public const string SourceVariable = "CIV1_GOLDEN_MASTER_SOURCE";
 
+		/// <summary>With UpdateVariable: set to 1 to write the baselines from the frozen game (Civilization1Remaster.Original)</summary>
+		public const string FrozenVariable = "CIV1_GOLDEN_MASTER_FROZEN";
+
 		/// <summary>Set to 1 to write the last called game function every 2 seconds into %TEMP%\Civ1GoldenMaster-AUTOnn.log</summary>
 		public const string TraceVariable = "CIV1_GOLDEN_MASTER_TRACE";
 
@@ -54,7 +57,9 @@ namespace Civilization1Remaster.Tests.GoldenMaster
 
 			GoldenMasterBaseline? baseline = update ? null : GoldenMasterBaseline.Read(baselineRoute);
 			int turnTally = baseline == null ? TurnTally : baseline.Turns.Count - 1;
-			List<GameSnapshot> turns = Play(gameFolder!, this.bay, turnTally, out string ending);
+			bool frozen = update && Environment.GetEnvironmentVariable(FrozenVariable)?.Trim() == "1";
+			List<GameSnapshot> turns = frozen ? PlayFrozen(gameFolder!, this.bay, turnTally, out string ending) :
+				Play(gameFolder!, this.bay, turnTally, out ending);
 
 			if (baseline == null)
 			{
@@ -99,6 +104,43 @@ namespace Civilization1Remaster.Tests.GoldenMaster
 			}
 
 			return turns;
+		}
+
+		/// <summary>The same turns in the frozen game (the baselines since B6.0, see README.md)</summary>
+		public static List<GameSnapshot> PlayFrozen(string gameFolder, int bay, int turnTally, out string ending)
+		{
+			List<GameSnapshot> turns = new List<GameSnapshot>();
+			ending = $"Played {turnTally} turns";
+
+			using Civilization1Original.Tests.HeadlessGame game = new Civilization1Original.Tests.HeadlessGame(gameFolder, Path.Combine(SourceFolder(), "Saves"));
+
+			game.LoadAutosave(bay, RandomSeed);
+			turns.Add(AsCurrent(game.Capture()));
+
+			for (int turnIdx = 1; turnIdx <= turnTally; turnIdx++)
+			{
+				game.PlayTurn();
+				turns.Add(AsCurrent(game.Capture()));
+
+				if (game.GameEndFlag != 0)
+				{
+					ending = $"The game ended in turn {turnIdx} (game end flag 0x{game.GameEndFlag:x4})";
+					break;
+				}
+			}
+
+			return turns;
+		}
+
+		/// <summary>The snapshot of the frozen game as one of the current game (the same keys)</summary>
+		private static GameSnapshot AsCurrent(Civilization1Original.Tests.GameSnapshot frozen)
+		{
+			GameSnapshot snapshot = new GameSnapshot();
+
+			foreach (KeyValuePair<string, string> entry in frozen.Values)
+				snapshot.Values[entry.Key] = entry.Value;
+
+			return snapshot;
 		}
 
 		/// <summary>

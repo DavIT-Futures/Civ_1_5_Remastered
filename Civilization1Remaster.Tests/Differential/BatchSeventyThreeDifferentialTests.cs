@@ -80,6 +80,9 @@ public sealed class BatchSeventyThreeDifferentialTests(ITestOutputHelper output)
 				$"ClockInterrupt(54={counter54}, 59={counter59}, 58={flag58}, 46={tempo46:x}, 48={tempo48:x}, 44={count44}, 4c={beat4c})",
 				game =>
 				{
+					// The test calls the interrupt itself: no timer interrupt of the fixed clock in between (since B6.0 the reads
+					// of the timer variables count as polls of the clock)
+					game.Processor.AllowClock = false;
 					game.Processor.EmitUInt32(0x3b01, 0x42, time42);
 					game.Processor.EmitGlobalWord(0x54, counter54);
 					game.Processor.EmitGlobalByte(0x59, counter59);

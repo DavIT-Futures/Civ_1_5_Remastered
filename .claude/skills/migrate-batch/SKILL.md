@@ -65,11 +65,11 @@ Testy zawsze w **Release** z `-parallelMode all` (ok. 7 razy szybciej niż Debug
      SI/DI zachowane. **Ramkę stosu (`EnterFrame`, `Preserve…`) zostawić**, gdy funkcja woła coś, co czyta śmieci spod stosu
      (`RenderCitizenIcons`, `ObtainDistanceToReplayCity`, `HandleCity`, …) albo zmienia SI (`VisitEachUnitInStack`, `TallyUnits…InStack`), oraz
      gdy bufor (nazwa pliku, lista) jest w ramce. `DisplayMenu` / `DisplayDialog` zostawiają w DI wartość z SI – ustawić SI jak oryginał.
-   - Zegar testów tyka co N dostępów `CPU.Pull…/Emit…` (`StackWord`/`Unstack…`, `Storage` i `rep movsb` się nie liczą, ale
-     zmienne lokalne `PullLocalWord`/`EmitLocalWord` tak – kod czekający na muzykę albo 0x5c zostawia je w ramce i czyta tyle
-     razy co oryginał, porcje 72 – 73). Kopię `rep movs` robić
-     przez `processor.Storage`; w kodzie, w którym liczy się moment tyknięcia (palety, cykle kolorów, oczekiwanie na zegar),
-     zachować liczbę dostępów do pamięci (porcja 51).
+   - Zegar testów (od B6.0, 2026-10-25) tyka co 50 wywołań funkcji gry (`OpenScope`), przy `Idle` i co 16 odczytów
+     zmiennych zegara 0x40 – 0x6f, nie od liczby dostępów do pamięci: przenoszenie odczytów do C# go nie przesuwa. Liczba
+     wywołań i wiersze `OpenScope` muszą zostać jak w oryginale; pętla czekania na zegar musi czytać licznik (0x5c, 0x6800…)
+     z pamięci tyle razy co oryginał albo wołać `Idle`. Dane wyjęte z pamięci do C#: wpis w `Tests/Dual/MovedData.cs`
+     (bajty w starym układzie) – migawka wpisuje je z powrotem pod adres przed haszami.
    - Jednostki: `UnitMemory` (pamięć 0x81d4), typy: `UnitKindTable`, mapa: `MapOps.Chart` (`MapLayers`), stałe: `MapRules`.
 4. `extract_reference.py` (z commita HEAD, **przed** podmianą), potem `replace_methods.py`, build Release (jak wyżej).
 5. Test różnicowy `BatchNNDifferentialTests.cs` (wzory: poprzednie Batch*): scenariusze z `new Random(bay)`, lista gałęzi, które muszą

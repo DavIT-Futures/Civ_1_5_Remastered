@@ -62,7 +62,7 @@ namespace Civilization1Remaster.Tests.GoldenMaster
 				ObjectWalker.Walk($"engine.{field.Name}", field.GetValue(engine), snapshot.Values);
 			}
 
-			CaptureDataSegment(engine.Processor, snapshot.Values);
+			CaptureDataSegment(engine, snapshot.Values);
 			CaptureMap(engine, snapshot.Values);
 			CaptureRandom(engine.Libc.Dice, snapshot.Values);
 			snapshot.Values["cpu.sp"] = $"{engine.Processor.SegStack.Value16:x4}:{engine.Processor.RegStack.Value16:x4}";
@@ -83,10 +83,15 @@ namespace Civilization1Remaster.Tests.GoldenMaster
 			return BehaviourChannels.Any(channel => key.StartsWith(channel, StringComparison.Ordinal));
 		}
 
-		private static void CaptureDataSegment(CPU processor, IDictionary<string, string> values)
+		private static void CaptureDataSegment(GameEngine engine, IDictionary<string, string> values)
 		{
-			byte[] storage = processor.Storage.StoragePayload;
-			uint origin = CPU.AsLinearAddress(DataSection, 0);
+			// The data segment as the original game has it: the data moved out of the emulated memory into C# is written back
+			// at its address (MovedData.Project), so the hashes stay those of the baselines and of the frozen game
+			byte[] storage = new byte[0x10000];
+			Array.Copy(engine.Processor.Storage.StoragePayload, CPU.AsLinearAddress(DataSection, 0), storage, 0, storage.Length);
+			Civilization1Remaster.Tests.Dual.MovedData.Project(engine, storage);
+
+			uint origin = 0;
 			byte[] page = new byte[0x100];
 
 			for (int pageIdx = 0; pageIdx < 0x100; pageIdx++)
@@ -108,10 +113,6 @@ namespace Civilization1Remaster.Tests.GoldenMaster
 
 		private static bool IsIgnored(int displacement)
 		{
-			// The data moved out of the emulated memory is compared by its meaning (MovedData), not here
-			if (Civilization1Remaster.Tests.Dual.MovedData.IsMoved(displacement))
-				return true;
-
 			foreach ((ushort begin, ushort end) in IgnoredDataRanges)
 			{
 				if (displacement >= begin && displacement <= end)

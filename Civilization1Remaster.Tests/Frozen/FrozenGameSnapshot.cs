@@ -108,10 +108,6 @@ namespace Civilization1Original.Tests
 
 		private static bool IsIgnored(int displacement)
 		{
-			// The data moved out of the emulated memory is compared by its meaning (MovedData), not here
-			if (Civilization1Remaster.Tests.Dual.MovedData.IsMoved(displacement))
-				return true;
-
 			foreach ((ushort begin, ushort end) in IgnoredDataRanges)
 			{
 				if (displacement >= begin && displacement <= end)

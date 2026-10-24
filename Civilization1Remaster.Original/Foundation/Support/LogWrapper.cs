@@ -30,6 +30,9 @@ namespace Civilization1Original
 		/// </summary>
 		public Action<string>? ScopeListener { get; set; }
 
+		/// <summary>Test seam: called at the start of every scope, before ScopeListener (the fixed test clock counts them)</summary>
+		public Action? ScopeOpened { get; set; }
+
 		public IStackProbe? Probe
 		{
 			get { return this.probe; }
@@ -43,6 +46,7 @@ namespace Civilization1Original
 
 		public void OpenScope(string words, bool displayLatches)
 		{
+			this.ScopeOpened?.Invoke();
 			this.ScopeListener?.Invoke(words);
 
 			if (this.journal != null)

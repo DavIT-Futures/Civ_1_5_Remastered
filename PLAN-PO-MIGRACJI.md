@@ -165,6 +165,19 @@ Kolejność (każdy krok osobno zielony; pamięć 0x3b01 długo zostaje jako mag
   CPU (`FixedClockSpan`) – każdy odczyt przeniesiony do C# przesuwa moment tyknięcia. Zegar tykać przy oczekiwaniu na
   zegar / klawisz i co N wywołań funkcji gry (dziennik), w obu grach; baseline nagrać od nowa z zamrożonej gry
   (jak przy `baseline-interrupt-registers.patch`). Bez tego B6 da się robić tylko z zachowaniem liczby dostępów.
+  **Zrobione 2026-10-25:** (b) zegar testów w obu maszynach (bieżącej i `Original`) tyka co 50 wywołań funkcji gry
+  (`LogWrapper.ScopeOpened`, w każdym dzienniku, na który gra przełącza `CPU.Journal` – intro ma własny), przy `Idle`
+  i co 16 odczytów zmiennych zegara 0x40 – 0x6f albo pytań o pozycję muzyki (`CPU.PollMusic`, jednowierszowy szew
+  w `SystemServices.ObtainSongPosition` obu gier) – pętle czekania bez wywołań: `AwaitTime`, `CityView`, `GameReplay`,
+  `MainIntro` (`MusicReachedColumn`, `ShowTitleLogo`), `DiplomatActions`; przerwanie przychodzi od razu
+  (`CPU.ServeClock`), nie przy następnym dostępie do pamięci. Zamrożona gra z nowym zegarem daje te same kanały
+  zachowania co baseline'y z a3b5a3b, więc te zostały (nagrywanie z zamrożonej gry: `CIV1_GOLDEN_MASTER_FROZEN=1`).
+  Hak `DualGame` (zerowanie licznika przy każdym wywołaniu) usunięty. (a) `MovedData.Entry` daje bajty w starym układzie,
+  migawka bieżącej gry wpisuje je pod ich adres w kopii segmentu przed liczeniem haszy (`MovedData.Project`), zamrożona
+  niczego nie pomija – golden master i podwójna gra porównują te same bajty (test `MovedDataTests`). Test `ClockInterrupt` (woła
+  obsługę przerwania sam) wyłącza zegar testów w scenariuszu (`AllowClock = false`). Pełny zestaw 770/770. Mutacje warstwy
+  testowej: rzut i `PollMusic` złapane; podpinanie zegara pod przełączane dzienniki przeżywa (intro i tak tyka przez
+  `PollMusic`) – zostaje dla jednolitego liczenia wywołań.
 - **B6.1 – teksty.** Bufor 0xba06 i funkcje C runtime na adresach (`CopyText`, `AppendText`, `IntegerToText`) → `string` /
   `StringBuilder`; rysowanie tekstu (`TextPainter`, `BlockText`) przyjmuje `string`. Kody tekstów (`CodeText1` – `5`)
   i tabele nazw (B5) zwracają `string`. Duże, ale mechaniczne; projekcja potrzebna, bo bufor jest w `mem.`.
