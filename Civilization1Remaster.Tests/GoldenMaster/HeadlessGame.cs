@@ -64,6 +64,7 @@ namespace Civilization1Remaster.Tests.GoldenMaster
 			this.Engine.TurnHooks.ClassicSchismHomes = true;
 			this.Engine.TurnHooks.ClassicSchism = true;
 			this.Engine.TurnHooks.ClassicStarvation = true;
+			this.Engine.TurnHooks.ClassicStackStrength = true;
 			this.Engine.TurnHooks.ClassicMilitaryReportRows = true;
 
 			this.keyboard = new ScriptedKeyboard(this.processor, this.Engine.VideoCard.Tokens, this.Engine.VideoCard.VideoLatch,

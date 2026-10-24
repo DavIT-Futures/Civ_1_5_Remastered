@@ -1471,7 +1471,12 @@ te błędy są odtwarzane jawnie:
   nie pokazuje). Test: `SchismAndReportCrashTests` (stos pod SP zapełniony wartością 0x99).
 - `VisitEachUnitInStack` zostawia SI = `0x600 * gracz` (tłumaczenie nie zachowywało SI). `AIPlayer` (L2947, ok. linii 4330)
   trzyma w SI sumę ataku stosu, woła `TallyUnitsByDomainInStack(…, 1)` i dzieli przez SI, więc dzieli przez `0x600 * gracz`
-  zamiast przez atak. Po naprawie: AI inaczej ocenia ataki (zmiana baseline).
+  zamiast przez atak. Po naprawie: AI inaczej ocenia ataki (zmiana baseline). **Naprawione w grze 2026-10-24** za
+  przełącznikiem `TurnHooks.ClassicStackStrength`: w `AIPlayer.ScoreTile` dzielnik to pierwsza suma + 1
+  (`StackStrengthRules.Divisor`) – obrońca dodaje 4 × obrona stosu / (jednostki + 1), atakujący 2 × atak / (obrona + 1);
+  SI nadal ustawiane jak w oryginale. Testy: `StackStrengthTests` (reguła i 11 autozapisów × 5 tur: ruchy AI różnią się
+  co najmniej w jednym). Mutacje: reguła i gałąź atakującego złapane; gałąź obrońcy wykonuje się (sonda: kilka razy
+  w tych turach), ale nie przesądza o ruchu – zostaje test reguły.
 - `LocateNearestFriendlyCity`: bez własnego miasta i lotniskowca cel kroku to niezainicjowane zmienne lokalne (śmieci ze stosu).
   Odtworzone przez odczyt ramki stosu. Po naprawie: np. kierunek 0 (brak ruchu).
 - `DisplayWondersOfTheWorld`: cud zniszczonego miasta (`MarvelTownIdx` = 128) daje odczyt `Towns[128]` przed sprawdzeniem 128,

@@ -65,6 +65,13 @@ namespace Civilization1Remaster.Game
 		public bool ClassicStarvation { get; set; }
 
 		/// <summary>
+		/// A computer unit weighs the strength of an own stack divided by 0x600 * player, as the translated code did it
+		/// (StackStrengthRules.Divisor: the divisor kept in SI was lost in the second tally). The tests turn it on
+		/// (HeadlessGame), like ClassicHealing.
+		/// </summary>
+		public bool ClassicStackStrength { get; set; }
+
+		/// <summary>
 		/// The military report takes the player of a chosen row from the stack frame also for a row of a player without
 		/// contact, which never wrote it (garbage, IndexOutOfRangeException from 8 up), as the translated code did it. The
 		/// tests turn it on (HeadlessGame), like ClassicHealing.
