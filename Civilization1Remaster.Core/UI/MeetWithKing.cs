@@ -952,9 +952,9 @@ namespace Civilization1Remaster.UI
 				Leader(participantIdx).Gold += amount;
 				Person.Gold -= amount;
 
-				Message(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1992)))
+				Message(CivilizationPluralAt(this.processor.RegSource.Value16))
 					.Text(" declare war\non the ")
-					.Text(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 + 0x1992)))
+					.Text(CivilizationPluralAt(this.processor.RegDest.Value16))
 					.Text(".\n");
 			}
 

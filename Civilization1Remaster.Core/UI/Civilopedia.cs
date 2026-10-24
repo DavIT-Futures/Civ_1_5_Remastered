@@ -124,9 +124,9 @@ namespace Civilization1Remaster.UI
 
 				// Technologies, improvements and wonders (1 - 0x2d), units, terrains, concepts (names through 0x3c64)
 				FindNextCivilopediaEntry(part, 0, 0, 0x43, idx => TechnologyText(idx), lastName, nextName, ref nextIdx, ref nextKind);
-				FindNextCivilopediaEntry(part, 1, 1, 0x2e, idx => (ushort)((0x1e * idx) + 0xb9a), lastName, nextName, ref nextIdx, ref nextKind);
+				FindNextCivilopediaEntry(part, 1, 1, 0x2e, idx => BuildingRecordText(idx), lastName, nextName, ref nextIdx, ref nextKind);
 				FindNextCivilopediaEntry(part, 2, 0, 0x1c, idx => UnitText(idx), lastName, nextName, ref nextIdx, ref nextKind);
-				FindNextCivilopediaEntry(part, 3, 0, 0xc, idx => (ushort)((0x13 * idx) + 0x282), lastName, nextName, ref nextIdx, ref nextKind);
+				FindNextCivilopediaEntry(part, 3, 0, 0xc, idx => TerrainText(idx), lastName, nextName, ref nextIdx, ref nextKind);
 				FindNextCivilopediaEntry(part, 4, 0, 0x15, idx => this.processor.PullGlobalWord((ushort)((idx << 1) + 0x3c64)), lastName, nextName, ref nextIdx, ref nextKind);
 
 				if (nextKind == 0xffff)
@@ -521,7 +521,7 @@ namespace Civilization1Remaster.UI
 						this.owner.Helpers.ReleaseResource(picHandle, 0);
 					}
 
-					this.owner.Libc.CopyText(0xba06, (ushort)((short)0x1e * (short)scienceIdx + 0xb9a));
+					this.owner.Libc.CopyText(0xba06, BuildingRecordText((short)scienceIdx));
 					this.owner.TextPainter.RenderCenteredTextToScreen0(
 						(short)scienceIdx > 0x18 ? (ushort)0x3d2e : (ushort)0x3d1d,
 						titleX, 36, 7);
@@ -572,7 +572,7 @@ namespace Civilization1Remaster.UI
 					}
 
 					EmptyMessage()
-						.Text((ushort)(0x13 * scienceIdx + 0x282));
+						.Text(TerrainText(scienceIdx));
 					this.owner.TextPainter.RenderCenteredTextToScreen0(0x3d7f, titleX, 36, 7);
 					break;
 
@@ -649,7 +649,7 @@ namespace Civilization1Remaster.UI
 			for (ushort unitIdx = 0; (short)unitIdx < 0x1c; unitIdx++)
 			{
 				ushort unitSpec = (ushort)(0x22 * unitIdx);
-				if (this.processor.PullUInt16(dataSeg, (ushort)(unitSpec + 0x114a)) == scienceIdx)
+				if (UnitKindWordAt(unitSpec, UnitKindTable.Technology) == scienceIdx)
 				{
 					this.owner.Services.RenderPictureToScreen(
 						ScreenBox,
@@ -659,7 +659,7 @@ namespace Civilization1Remaster.UI
 							dataSeg,
 							(ushort)((((unitIdx + (this.owner.World.PersonParticipantIdx << 5)) + 0x40) << 1) + 0xd4ce)));
 
-					Message((ushort)(unitSpec + 0x112a))
+					Message(UnitTextAt(unitSpec))
 						.Text(" unit");
 					this.owner.TextPainter.RenderTextToScreen0(0xba06, 60, cursorY, 12);
 					cursorY = (short)(cursorY + 0xc);
@@ -669,10 +669,10 @@ namespace Civilization1Remaster.UI
 			for (ushort impIdx = 1; (short)impIdx <= 0x2d; impIdx++)
 			{
 				ushort impSpec = (ushort)(0x1e * impIdx);
-				if (this.processor.PullUInt16(dataSeg, (ushort)(impSpec + 0xbb6)) == scienceIdx)
+				if (BuildingWordAt(impSpec, BuildingTable.Technology) == scienceIdx)
 				{
 					this.owner.CityOps.RenderResourceIcon((short)impIdx, 40, (short)(cursorY - 2));
-					Message((ushort)(impSpec + 0xb9a))
+					Message(BuildingRecordTextAt(impSpec))
 						.Text((short)impIdx > 0x18 ? " Wonder" : " improvement");
 					this.owner.TextPainter.RenderTextToScreen0(0xba06, 60, cursorY, 2);
 					cursorY = (short)(cursorY + 0xc);
@@ -700,7 +700,7 @@ namespace Civilization1Remaster.UI
 			else
 			{
 				Message("(Taken from ")
-					.Text(this.processor.PullUInt16(dataSeg, (ushort)((obtainedFrom << 1) + 0x1992)))
+					.Text(CivilizationPlural(obtainedFrom))
 					.Text(")");
 			}
 
@@ -711,7 +711,7 @@ namespace Civilization1Remaster.UI
 		{
 			ushort impSpec = (ushort)(0x1e * scienceIdx);
 			this.owner.Libc.CopyText(0xba06, "Requires ");
-			ushort reqTech = this.processor.PullUInt16(dataSeg, (ushort)(impSpec + 0xbb6));
+			ushort reqTech = BuildingWordAt(impSpec, BuildingTable.Technology);
 			this.owner.Libc.AppendText(0xba06, TechnologyText((short)reqTech));
 			this.owner.TextPainter.RenderTextToScreen0(0xba06, 12, cursorY, 9);
 			cursorY = (short)(cursorY + 8);
@@ -719,7 +719,7 @@ namespace Civilization1Remaster.UI
 			this.owner.Libc.CopyText(0xba06, "Cost: ");
 			this.owner.Libc.AppendText(
 				0xba06,
-				this.owner.Libc.IntegerToText((short)(0xa * (short)this.processor.PullUInt16(dataSeg, (ushort)(impSpec + 0xbb2))), 10));
+				this.owner.Libc.IntegerToText((short)(0xa * (short)BuildingWordAt(impSpec, BuildingTable.Price)), 10));
 			this.owner.Libc.AppendText(0xba06, " shields.");
 			this.owner.TextPainter.RenderTextToScreen0(0xba06, 12, cursorY, 9);
 			cursorY = (short)(cursorY + 8);
@@ -727,7 +727,7 @@ namespace Civilization1Remaster.UI
 			this.owner.Libc.CopyText(0xba06, "Maintenance: $");
 			this.owner.Libc.AppendText(
 				0xba06,
-				this.owner.Libc.IntegerToText((short)this.processor.PullUInt16(dataSeg, (ushort)(impSpec + 0xbb4)), 10));
+				this.owner.Libc.IntegerToText((short)BuildingWordAt(impSpec, BuildingTable.Upkeep), 10));
 			this.owner.TextPainter.RenderTextToScreen0(0xba06, 12, cursorY, 12);
 		}
 
@@ -735,7 +735,7 @@ namespace Civilization1Remaster.UI
 		{
 			ushort unitSpec = (ushort)(0x22 * scienceIdx);
 			this.owner.Libc.CopyText(0xba06, "Requires ");
-			ushort reqTech = this.processor.PullUInt16(dataSeg, (ushort)(unitSpec + 0x114a));
+			ushort reqTech = UnitKindWordAt(unitSpec, UnitKindTable.Technology);
 			this.owner.Libc.AppendText(0xba06, TechnologyText((short)reqTech));
 			if (scienceIdx == 0x19)
 			{
@@ -748,7 +748,7 @@ namespace Civilization1Remaster.UI
 			this.owner.Libc.CopyText(0xba06, "Cost: ");
 			this.owner.Libc.AppendText(
 				0xba06,
-				this.owner.Libc.IntegerToText((short)(0xa * (short)this.processor.PullUInt16(dataSeg, (ushort)(unitSpec + 0x1142))), 10));
+				this.owner.Libc.IntegerToText((short)(0xa * (short)UnitKindWordAt(unitSpec, UnitKindTable.Price)), 10));
 			this.owner.Libc.AppendText(0xba06, " resources.");
 			this.owner.TextPainter.RenderTextToScreen0(0xba06, 100, cursorY, 9);
 			cursorY = (short)(cursorY + 8);
@@ -756,21 +756,21 @@ namespace Civilization1Remaster.UI
 			this.owner.Libc.CopyText(0xba06, "Attack Strength: ");
 			this.owner.Libc.AppendText(
 				0xba06,
-				this.owner.Libc.IntegerToText((short)this.processor.PullUInt16(dataSeg, (ushort)(unitSpec + 0x113e)), 10));
+				this.owner.Libc.IntegerToText((short)UnitKindWordAt(unitSpec, UnitKindTable.AssaultPower), 10));
 			this.owner.TextPainter.RenderTextToScreen0(0xba06, 100, cursorY, 12);
 			cursorY = (short)(cursorY + 8);
 
 			this.owner.Libc.CopyText(0xba06, "Defense Strength: ");
 			this.owner.Libc.AppendText(
 				0xba06,
-				this.owner.Libc.IntegerToText((short)this.processor.PullUInt16(dataSeg, (ushort)(unitSpec + 0x1140)), 10));
+				this.owner.Libc.IntegerToText((short)UnitKindWordAt(unitSpec, UnitKindTable.GuardPower), 10));
 			this.owner.TextPainter.RenderTextToScreen0(0xba06, 100, cursorY, 12);
 			cursorY = (short)(cursorY + 8);
 
 			this.owner.Libc.CopyText(0xba06, "Movement Rate: ");
 			this.owner.Libc.AppendText(
 				0xba06,
-				this.owner.Libc.IntegerToText((short)this.processor.PullUInt16(dataSeg, (ushort)(unitSpec + 0x113a)), 10));
+				this.owner.Libc.IntegerToText((short)UnitKindWordAt(unitSpec, UnitKindTable.ShiftTally), 10));
 			this.owner.TextPainter.RenderTextToScreen0(0xba06, 100, cursorY, 0);
 		}
 
@@ -785,7 +785,7 @@ namespace Civilization1Remaster.UI
 				}
 
 				ushort varSpec = (ushort)(0x13 * variantIdx);
-				this.owner.TextPainter.RenderTextToScreen0((ushort)(varSpec + 0x282), 12, cursorY, 1);
+				this.owner.TextPainter.RenderTextToScreen0(TerrainTextAt(varSpec), 12, cursorY, 1);
 				cursorY = (short)(cursorY + 8);
 
 				sbyte foodVal = (sbyte)this.processor.PullUInt8(dataSeg, (ushort)(varSpec + 0x290));
@@ -889,7 +889,7 @@ namespace Civilization1Remaster.UI
 			this.owner.Libc.CopyText(0xba06, "Movement cost: ");
 			this.owner.Libc.AppendText(
 				0xba06,
-				this.owner.Libc.IntegerToText((sbyte)this.processor.PullUInt8(dataSeg, (ushort)(baseSpec + 0x28e)), 10));
+				this.owner.Libc.IntegerToText((sbyte)TerrainFieldAt(baseSpec, TerrainTable.MoveCost), 10));
 			this.owner.Libc.AppendText(0xba06, " MP");
 			this.owner.TextPainter.RenderTextToScreen0(0xba06, 12, cursorY, 12);
 			cursorY = (short)(cursorY + 8);

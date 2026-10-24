@@ -124,6 +124,8 @@ namespace Civilization1Remaster.Game
 		public const int Sight = 0x1a;
 		public const int FerryRoom = 0x1c;
 		public const int TroopGroup = 0x1e;
+		/// <summary>The technology that allows the unit</summary>
+		public const int Technology = 0x20;
 
 		/// <summary>LandGroup of land units</summary>
 		public const int LandUnits = 0;

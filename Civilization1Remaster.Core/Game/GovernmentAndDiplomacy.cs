@@ -176,7 +176,7 @@ namespace Civilization1Remaster.Game
 					short tribute = (short)((ushort)this.owner.Helpers.VerifyValueSpan(player.Gold / 100, 1, 10) * 0x32);
 					this.processor.EmitLocalWord(0x4, (ushort)tribute);
 
-					this.owner.Libc.CopyText(CodeText2, this.processor.PullGlobalWord((ushort)(this.processor.RegSource.Value16 + 0x1992)));
+					this.owner.Libc.CopyText(CodeText2, CivilizationPluralAt(this.processor.RegSource.Value16));
 
 					EmptyMessage()
 						.Number(tribute);
@@ -205,7 +205,7 @@ namespace Civilization1Remaster.Game
 
 			this.processor.EmitGlobalByte(0xba06, 0);
 
-			this.owner.Libc.CopyText(CodeText2, this.processor.PullGlobalWord((ushort)(this.processor.RegDest.Value16 + 0x1992)));
+			this.owner.Libc.CopyText(CodeText2, CivilizationPluralAt(this.processor.RegDest.Value16));
 
 			this.owner.Libc.CopyText(CodeText4, (player.Relations[person] & 2) == 0 ? (ushort)0x299b : (ushort)0x2990);
 

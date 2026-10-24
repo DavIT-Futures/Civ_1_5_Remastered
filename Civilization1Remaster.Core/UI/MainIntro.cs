@@ -1039,8 +1039,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Services.PerformSound(1, 0);
 
-			this.owner.Services.PerformSound(this.processor.PullGlobalWord(
-				(ushort)((this.owner.World.Participants[humanIdx].ChiefVisuals * 0x3a) + 0x1518)), 0);
+			this.owner.Services.PerformSound(LeaderWord(this.owner.World.Participants[humanIdx].ChiefVisuals, LeaderTable.ShortTune), 0);
 
 			this.owner.TextPainter.AwaitTime(300);
 
@@ -1080,7 +1079,7 @@ namespace Civilization1Remaster.UI
 				ushort terrain = this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
 
 				// Terrain names of 0x13 bytes at 0x282, names of their special resources at 0x366
-				this.owner.Libc.CopyText(0xba06, (ushort)((terrain * 0x13) + 0x282));
+				this.owner.Libc.CopyText(0xba06, TerrainText(terrain));
 
 				if (this.owner.MapOps.ContainsSpecialResource(horizLoc, vertLoc) != 0)
 				{

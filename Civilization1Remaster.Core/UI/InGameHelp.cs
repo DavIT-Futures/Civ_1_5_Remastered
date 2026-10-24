@@ -137,7 +137,7 @@ namespace Civilization1Remaster.UI
 				return;
 			}
 
-			if (this.processor.PullGlobalByte((ushort)((terrain * 0x13) + 0x28e)) == 1 && (improvements & 8) == 0 && terrain != 0xb &&
+			if (TerrainField(terrain, TerrainTable.MoveCost) == 1 && (improvements & 8) == 0 && terrain != 0xb &&
 				this.owner.World.Participants[participantIdx].LiveTroops[0] < 2)
 			{
 				DisplayHelpPopup(0x34d8);

@@ -239,18 +239,18 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
 
-			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 8, this.processor.PullGlobalWord((ushort)(names + 0x1946)));
+			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 8, PlayerColourAt(names));
 
-			Message(this.processor.PullGlobalWord((ushort)(names + 0x1982)))
+			Message(CivilizationNameAt(names))
 				.Text(" SpaceShip: X.S.S. ");
 
 			ushort length = this.owner.Libc.TextLength(0xba06);
 
-			this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)(names + 0x19a2)));
+			this.owner.Libc.AppendText(0xba06, LeaderNameAt(names));
 
 			// The "X" of "X.S.S." becomes the first letter of the civilization
 			this.processor.EmitGlobalByte((ushort)(length + 0xb9ff),
-				this.processor.PullGlobalByte(this.processor.PullGlobalWord((ushort)(names + 0x1982))));
+				this.processor.PullGlobalByte(CivilizationNameAt(names)));
 
 			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 1, 0);
 		}

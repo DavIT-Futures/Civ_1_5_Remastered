@@ -525,9 +525,9 @@ namespace Civilization1Remaster.Engine
 				.Text("\n ")
 				.Text(this.processor.PullGlobalWord((ushort)((this.owner.World.HardnessTier << 1) + 0x33a2)))
 				.Text(" ")
-				.Text(this.processor.PullGlobalWord((ushort)(personSlot + 0x19a2)))
+				.Text(LeaderNameAt(personSlot))
 				.Text("\n ")
-				.Text(this.processor.PullGlobalWord((ushort)(personSlot + 0x1992)))
+				.Text(CivilizationPluralAt(personSlot))
 				.Text("/");
 
 			this.owner.TurnHooks.ObtainCurrentYearAsText();

@@ -648,7 +648,7 @@ namespace Civilization1Remaster.Game
 			this.owner.Services.FloodBox(
 				ScreenBox,
 				innerX, innerY, 12, 12,
-				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(ownerWordOffset + 0x1946)));
+				PlayerColourAt(ownerWordOffset));
 
 			this.owner.Services.RenderPictureToScreen(
 				ScreenBox,

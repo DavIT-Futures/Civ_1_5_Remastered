@@ -1413,7 +1413,7 @@ namespace Civilization1Remaster.Game
 
 			// The original plays only a short fanfare (table at 0x1518, one to five seconds),
 			// the national anthem (table at 0x151a, as in the palace and the throne room) plays until the next research is chosen
-			this.owner.Services.PerformSound(this.processor.PullGlobalWord((ushort)((ushort)(0x3a * this.owner.World.Participants[participantIdx].ChiefVisuals) + 0x151a)), 3);
+			this.owner.Services.PerformSound(LeaderWord(this.owner.World.Participants[participantIdx].ChiefVisuals, LeaderTable.Tune), 3);
 
 			if (picture)
 			{
@@ -1492,10 +1492,10 @@ namespace Civilization1Remaster.Game
 			{
 				this.processor.RegSource.Value16 = (ushort)(0x22 * kindIdx);
 
-				if (this.processor.PullGlobalWord((ushort)(this.processor.RegSource.Value16 + 0x114a)) != (ushort)pick)
+				if (UnitKindWordAt(this.processor.RegSource.Value16, UnitKindTable.Technology) != (ushort)pick)
 					continue;
 
-				this.owner.Libc.AppendText(0xba06, (ushort)(this.processor.RegSource.Value16 + 0x112a));
+				this.owner.Libc.AppendText(0xba06, UnitTextAt(this.processor.RegSource.Value16));
 
 				this.owner.Libc.AppendText(0xba06, "\n-");
 
@@ -1506,10 +1506,10 @@ namespace Civilization1Remaster.Game
 			{
 				this.processor.RegSource.Value16 = (ushort)(0x1e * wonderIdx);
 
-				if (this.processor.PullGlobalWord((ushort)(this.processor.RegSource.Value16 + 0xbb6)) != (ushort)pick)
+				if (BuildingWordAt(this.processor.RegSource.Value16, BuildingTable.Technology) != (ushort)pick)
 					continue;
 
-				this.owner.Libc.AppendText(0xba06, (ushort)(this.processor.RegSource.Value16 + 0xb9a));
+				this.owner.Libc.AppendText(0xba06, BuildingRecordTextAt(this.processor.RegSource.Value16));
 
 				this.owner.Libc.AppendText(0xba06, "\n-");
 
@@ -1656,9 +1656,9 @@ namespace Civilization1Remaster.Game
 				{
 					this.processor.RegSource.Value16 = (ushort)(0x1e * wonderIdx);
 
-					if (this.processor.PullGlobalWord((ushort)(this.processor.RegSource.Value16 + 0xbb6)) == (ushort)scienceIdx)
+					if (BuildingWordAt(this.processor.RegSource.Value16, BuildingTable.Technology) == (ushort)scienceIdx)
 					{
-						this.owner.Libc.AppendText(0xba06, (ushort)(this.processor.RegSource.Value16 + 0xb9a));
+						this.owner.Libc.AppendText(0xba06, BuildingRecordTextAt(this.processor.RegSource.Value16));
 
 						this.owner.Libc.AppendText(0xba06, "\n ");
 					}
@@ -1668,9 +1668,9 @@ namespace Civilization1Remaster.Game
 				{
 					this.processor.RegSource.Value16 = (ushort)(0x22 * kindIdx);
 
-					if (this.processor.PullGlobalWord((ushort)(this.processor.RegSource.Value16 + 0x114a)) == (ushort)scienceIdx)
+					if (UnitKindWordAt(this.processor.RegSource.Value16, UnitKindTable.Technology) == (ushort)scienceIdx)
 					{
-						this.owner.Libc.AppendText(0xba06, (ushort)(this.processor.RegSource.Value16 + 0x112a));
+						this.owner.Libc.AppendText(0xba06, UnitTextAt(this.processor.RegSource.Value16));
 
 						this.owner.Libc.AppendText(0xba06, "\n ");
 					}
@@ -1866,7 +1866,7 @@ namespace Civilization1Remaster.Game
 			sbyte b0 = (sbyte)this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(arg2 * 2 + 0xb0a));
 			sbyte b1 = (sbyte)this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(arg2 * 2 + 0xb0b));
 			int leaderVisuals = this.owner.World.Participants[participantIdx].ChiefVisuals;
-			short leaderFactor = (short)this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(leaderVisuals * 0x3a + 0x1516));
+			short leaderFactor = (short)LeaderWord(leaderVisuals, LeaderTable.Leaning);
 			ushort result = ScienceRules.CalculateTechnologyInfo(b0, b1, leaderFactor);
 			this.processor.RegAcc.Value16 = result;
 

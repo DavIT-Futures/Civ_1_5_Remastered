@@ -242,7 +242,7 @@ namespace Civilization1Remaster.Game
 
 				town.MaterialsTally = 0;
 
-				Message(town.PresentMakingIdx >= 0 ? UnitText(town.PresentMakingIdx) : (ushort)((ushort)(0x1e * -town.PresentMakingIdx) + 0xb9a))
+				Message(town.PresentMakingIdx >= 0 ? UnitText(town.PresentMakingIdx) : BuildingRecordText(-town.PresentMakingIdx))
 					.Text(" production sabotaged\n");
 			}
 

@@ -865,9 +865,9 @@ namespace Civilization1Remaster.Game
 		{
 			ushort direction = (ushort)(this.look.Direction << 1);
 
-			this.look.TileHoriz = (ushort)this.owner.Routing.TunePosition(this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(direction + 0x1882)) +
+			this.look.TileHoriz = (ushort)this.owner.Routing.TunePosition((short)DirectionHorizAt(direction) +
 				(short)this.look.Horiz);
-			this.look.TileVert = (ushort)(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(direction + 0x18e4)) + this.look.Vert);
+			this.look.TileVert = (ushort)(DirectionVertAt(direction) + this.look.Vert);
 
 			short horizLoc = (short)this.look.TileHoriz;
 			short vertLoc = (short)this.look.TileVert;
@@ -1179,8 +1179,8 @@ namespace Civilization1Remaster.Game
 			if (this.look.NoEnemyNear != 0)
 			{
 				ushort direction = (ushort)(this.look.Direction << 1);
-				this.look.TileHoriz = (ushort)((this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(direction + 0x1882)) << 2) + this.look.Horiz);
-				this.look.TileVert = (ushort)((this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(direction + 0x18e4)) << 2) + this.look.Vert);
+				this.look.TileHoriz = (ushort)((DirectionHorizAt(direction) << 2) + this.look.Horiz);
+				this.look.TileVert = (ushort)((DirectionVertAt(direction) << 2) + this.look.Vert);
 
 				// (the divisions as the original makes them)
 				this.processor.RegAcc.Value16 = this.look.TileHoriz;
@@ -1207,9 +1207,9 @@ namespace Civilization1Remaster.Game
 				{
 					ushort around = (ushort)(this.look.Around << 1);
 
-					this.look.AroundHoriz = (ushort)this.owner.Routing.TunePosition(this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(around + 0x1882)) +
+					this.look.AroundHoriz = (ushort)this.owner.Routing.TunePosition((short)DirectionHorizAt(around) +
 						(short)this.look.TileHoriz);
-					this.look.AroundVert = (ushort)(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(around + 0x18e4)) + this.look.TileVert);
+					this.look.AroundVert = (ushort)(DirectionVertAt(around) + this.look.TileVert);
 
 					short horizLoc = (short)this.look.AroundHoriz;
 					short vertLoc = (short)this.look.AroundVert;
@@ -1429,9 +1429,9 @@ namespace Civilization1Remaster.Game
 			ushort direction = (ushort)(this.look.Round << 1);
 			this.processor.RegDest.Value16 = direction;
 			this.look.TileHoriz = (ushort)((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Horiz) >> 2) +
-				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(direction + 0x1882)));
+				DirectionHorizAt(direction));
 			this.look.TileVert = (ushort)((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Vert) >> 2) +
-				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(direction + 0x18e4)));
+				DirectionVertAt(direction));
 			this.processor.SegExtra.Value16 = 0x3772;
 
 			if ((this.processor.PullUInt8(this.processor.SegExtra.Value16,
@@ -1544,8 +1544,8 @@ namespace Civilization1Remaster.Game
 			{
 				this.look.Round = (ushort)(((this.look.Direction + this.owner.World.RoundTally) & 7) + 1);
 				ushort direction = (ushort)(this.look.Round << 1);
-				this.look.TileHoriz = (ushort)(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(direction + 0x1882)) + this.look.Horiz);
-				this.look.TileVert = (ushort)(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(direction + 0x18e4)) + this.look.Vert);
+				this.look.TileHoriz = (ushort)(DirectionHorizAt(direction) + this.look.Horiz);
+				this.look.TileVert = (ushort)(DirectionVertAt(direction) + this.look.Vert);
 
 				short horizLoc = (short)this.look.TileHoriz;
 				short vertLoc = (short)this.look.TileVert;
@@ -1620,8 +1620,8 @@ namespace Civilization1Remaster.Game
 				this.look.Direction = (ushort)(this.look.Direction + 1))
 			{
 				ushort direction = (ushort)(this.look.Direction << 1);
-				short stepHoriz = this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(direction + 0x1882));
-				short stepVert = this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(direction + 0x18e4));
+				short stepHoriz = (short)DirectionHorizAt(direction);
+				short stepVert = (short)DirectionVertAt(direction);
 
 				if ((this.owner.MapOps.ObtainTileImprovements(stepHoriz + horizLoc, stepVert + vertLoc) & 8) == 0)
 					continue;
@@ -1646,7 +1646,7 @@ namespace Civilization1Remaster.Game
 			}
 
 			if (this.look.LandUnits == 1 && this.look.Round != 0 &&
-				this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(0x13 * this.look.Terrain + 0x28e)) == 1)
+				TerrainField(this.look.Terrain, TerrainTable.MoveCost) == 1)
 			{
 				return 0x72;
 			}
@@ -1767,11 +1767,11 @@ namespace Civilization1Remaster.Game
 				this.processor.RegSource.Value16 = unit;
 				this.processor.RegDest.Value16 = (ushort)(this.look.Round << 1);
 
-				this.look.TileHoriz = (ushort)this.owner.Routing.TunePosition(this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 + 0x1882)) *
+				this.look.TileHoriz = (ushort)this.owner.Routing.TunePosition((short)DirectionHorizAt(this.processor.RegDest.Value16) *
 					(short)this.look.Direction + this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz));
 
 				// (the registers of the multiplication as in the original)
-				ushort step = MultiplyWords(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 + 0x18e4)),
+				ushort step = MultiplyWords(DirectionVertAt(this.processor.RegDest.Value16),
 					this.look.Direction);
 				this.processor.RegCount.Value16 = this.troops.Pull(participantIdx, troopIdx, UnitMemory.Vert);
 				this.look.TileVert = (ushort)(step + this.processor.RegCount.Value16);
@@ -2929,7 +2929,7 @@ namespace Civilization1Remaster.Game
 			byte unitKind = this.processor.PullUInt8(dataSeg, (ushort)(unitAddr + 0x81d7));
 			ushort unitSpecOffset = (ushort)((short)(sbyte)0x22 * (short)(sbyte)unitKind);
 
-			if (this.processor.PullUInt16(dataSeg, (ushort)(unitSpecOffset + 0x1148)) == 0x5)
+			if (UnitKindWordAt(unitSpecOffset, UnitKindTable.TroopGroup) == 0x5)
 			{
 				ushort seaResult = this.ManageBarbarianSeaTransport(participantIdx, troopIdx, unitAddr, unitX, unitY);
 				this.processor.RegAcc.Value16 = seaResult;
@@ -2961,8 +2961,8 @@ namespace Civilization1Remaster.Game
 			{
 				ushort dirOffset = (ushort)(dir << 1);
 				ushort adjX = (ushort)this.owner.Routing.TunePosition(
-					this.processor.PullInt16(dataSeg, (ushort)(dirOffset + 0x1882)) + (short)unitX);
-				ushort adjY = (ushort)(this.processor.PullUInt16(dataSeg, (ushort)(dirOffset + 0x18e4)) + unitY);
+					(short)DirectionHorizAt(dirOffset) + (short)unitX);
+				ushort adjY = (ushort)(DirectionVertAt(dirOffset) + unitY);
 
 				if ((short)FoundDistance <= 8 &&
 					this.owner.MapOps.ObtainTerrainType((short)adjX, (short)adjY) != 0xa &&
@@ -3070,7 +3070,7 @@ namespace Civilization1Remaster.Game
 
 				byte curKind = this.processor.PullUInt8(dataSeg, (ushort)(unitAddr + 0x81d7));
 				ushort curSpecOffset = (ushort)((short)(sbyte)0x22 * (short)(sbyte)curKind);
-				if (this.processor.PullUInt16(dataSeg, (ushort)(curSpecOffset + 0x1148)) == 0x2)
+				if (UnitKindWordAt(curSpecOffset, UnitKindTable.TroopGroup) == 0x2)
 				{
 					return 0x66;
 				}
@@ -3190,16 +3190,16 @@ namespace Civilization1Remaster.Game
 				ushort dirOffset = (ushort)(dir << 1);
 				ushort adjX = (ushort)this.owner.Routing.TunePosition(
 					this.processor.PullInt8(dataSeg, (ushort)(unitAddr + 0x81d5)) +
-					this.processor.PullInt16(dataSeg, (ushort)(dirOffset + 0x1882)));
+					(short)DirectionHorizAt(dirOffset));
 				ushort adjY = (ushort)(this.processor.PullUInt8(dataSeg, (ushort)(unitAddr + 0x81d6)) +
-					this.processor.PullUInt16(dataSeg, (ushort)(dirOffset + 0x18e4)));
+					DirectionVertAt(dirOffset));
 
 				ushort adjTerrain = this.owner.MapOps.ObtainTerrainType((short)adjX, (short)adjY);
 				ushort isOcean = adjTerrain == 0xa ? (ushort)1 : (ushort)0;
 
 				byte curKind = this.processor.PullUInt8(dataSeg, (ushort)(unitAddr + 0x81d7));
 				ushort curSpecOff = (ushort)((short)(sbyte)0x22 * (short)(sbyte)curKind);
-				ushort isSeaDomain = this.processor.PullUInt16(dataSeg, (ushort)(curSpecOff + 0x1138)) == 0x2 ? (ushort)1 : (ushort)0;
+				ushort isSeaDomain = UnitKindWordAt(curSpecOff, UnitKindTable.LandGroup) == 0x2 ? (ushort)1 : (ushort)0;
 				if (isSeaDomain != isOcean)
 				{
 					continue;
@@ -3223,7 +3223,7 @@ namespace Civilization1Remaster.Game
 
 					this.owner.Helpers.LocateNearestCity((short)adjX, (short)adjY);
 					short randBonus = (short)this.owner.Libc.Dice.DrawInt(4);
-					short defenseBonus = (short)(sbyte)this.processor.PullUInt8(dataSeg, (ushort)(adjTerrain * 0x13 + 0x28e));
+					short defenseBonus = (short)(sbyte)TerrainField(adjTerrain, TerrainTable.MoveCost);
 					short distPenalty = (short)(FoundDistance << 2);
 					dirScore = (short)(dirScore + defenseBonus + randBonus + distPenalty);
 				}
@@ -3282,7 +3282,7 @@ namespace Civilization1Remaster.Game
 					{
 						byte kindNow = this.processor.PullUInt8(dataSeg, (ushort)(unitAddr + 0x81d7));
 						ushort specNow = (ushort)((short)(sbyte)0x22 * (short)(sbyte)kindNow);
-						if (this.processor.PullUInt16(dataSeg, (ushort)(specNow + 0x1138)) == 0 &&
+						if (UnitKindWordAt(specNow, UnitKindTable.LandGroup) == 0 &&
 							unitAtAdj == 0xffff &&
 							this.owner.UnitOps.MayOccupyTile(participantIdx, (short)adjX, (short)adjY) != 0)
 						{
@@ -3296,12 +3296,12 @@ namespace Civilization1Remaster.Game
 						dirScore = (short)(dirScore + 0x6);
 					}
 
-					if (this.processor.PullUInt16(dataSeg, (ushort)(dirOffset + 0x1882)) == targetDirX)
+					if (DirectionHorizAt(dirOffset) == targetDirX)
 					{
 						dirScore = (short)(dirScore + 0x2);
 					}
 
-					if (this.processor.PullUInt16(dataSeg, (ushort)(dirOffset + 0x18e4)) == targetDirY)
+					if (DirectionVertAt(dirOffset) == targetDirY)
 					{
 						dirScore = (short)(dirScore + 0x2);
 					}

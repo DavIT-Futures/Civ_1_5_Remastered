@@ -1379,7 +1379,7 @@ namespace Civilization1Remaster.Game
 			this.processor.RegCount.Value16 = 0x1e;
 			this.processor.RegBase.Value16 = (ushort)(-town.PresentMakingIdx * 0x1e);
 
-			if ((short)((short)this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xbb2)) *
+			if ((short)((short)BuildingWordAt(this.processor.RegBase.Value16, BuildingTable.Price) *
 				(short)this.round.CostFactor) > town.MaterialsTally)
 			{
 				return false;
@@ -1438,7 +1438,7 @@ namespace Civilization1Remaster.Game
 			this.processor.RegSource.Value16 = (ushort)(townIdx * 0x1c);
 			this.processor.RegCount.Value16 = 0x1e;
 			this.processor.RegBase.Value16 = (ushort)(-town.PresentMakingIdx * 0x1e);
-			town.MaterialsTally -= (short)((short)this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xbb2)) *
+			town.MaterialsTally -= (short)((short)BuildingWordAt(this.processor.RegBase.Value16, BuildingTable.Price) *
 				(short)this.round.CostFactor);
 			this.processor.RegCount.LowByte = (byte)CityOwner;
 
@@ -1476,7 +1476,7 @@ namespace Civilization1Remaster.Game
 			EmptyMessage()
 				.City(townIdx)
 				.Text(" builds\n");
-			this.processor.RegAcc.Value16 = (ushort)(built * 0x1e + 0xb9a);
+			this.processor.RegAcc.Value16 = BuildingRecordText(built);
 			this.owner.Libc.AppendText(0xba06, this.processor.RegAcc.Value16);
 			this.owner.Libc.AppendText(0xba06, ".\n");
 			this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
@@ -1547,7 +1547,7 @@ namespace Civilization1Remaster.Game
 			{
 				// The shields come back, the city builds the part again
 				this.processor.RegBase.Value16 = (ushort)(part * 0x1e);
-				this.processor.RegCount.Value16 = (ushort)((short)this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xbb2)) *
+				this.processor.RegCount.Value16 = (ushort)((short)BuildingWordAt(this.processor.RegBase.Value16, BuildingTable.Price) *
 					(short)this.round.CostFactor);
 				this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 				town.MaterialsTally += (short)this.processor.RegCount.Value16;
@@ -1673,7 +1673,7 @@ namespace Civilization1Remaster.Game
 					}
 
 					this.processor.RegBase.Value16 = (ushort)(owner << 1);
-					this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1982)));
+					this.owner.Libc.AppendText(0xba06, CivilizationNameAt(this.processor.RegBase.Value16));
 					this.owner.Libc.AppendText(0xba06, " capital\nmoved to ");
 					this.owner.Conquest.ObtainCityLabel(townIdx);
 					this.owner.Libc.AppendText(0xba06, ".\n");
@@ -1826,7 +1826,7 @@ namespace Civilization1Remaster.Game
 			{
 				this.processor.RegSource.Value16 = (ushort)(0x1c * townIdx);
 				this.round.Amount = (ushort)this.owner.Helpers.VerifyValueSpan(
-					this.processor.PullInt16(this.processor.SegData.Value16, (ushort)((-town.PresentMakingIdx * 0x1e) + 0xbb2)) * (short)this.round.CostFactor -
+					(short)BuildingWord(-town.PresentMakingIdx, BuildingTable.Price) * (short)this.round.CostFactor -
 						town.MaterialsTally,
 					0, player.Gold / 8);
 			}
@@ -1882,7 +1882,7 @@ namespace Civilization1Remaster.Game
 
 			this.processor.RegSource.Value16 = (ushort)(0x1c * townIdx);
 			this.round.Amount = (ushort)this.owner.Helpers.VerifyValueSpan(
-				this.processor.PullInt16(this.processor.SegData.Value16, (ushort)((0x22 * town.PresentMakingIdx) + 0x1142)) * (short)this.round.CostFactor -
+				(short)UnitKindWord(town.PresentMakingIdx, UnitKindTable.Price) * (short)this.round.CostFactor -
 					town.MaterialsTally,
 				0, limit);
 		}
@@ -2293,8 +2293,7 @@ namespace Civilization1Remaster.Game
 						{
 							this.owner.Services.RenderPictureToScreen(ScreenBox, (short)this.round.IconHoriz,
 								(short)this.round.IconVert - 1,
-								this.processor.PullUInt16(this.processor.SegData.Value16,
-									(ushort)(((this.troops.Pull(owner, troopIdx, UnitMemory.Kind) + (owner << 5) + 0x40) << 1) + 0xd4ce)));
+								SpritePicture((this.troops.Pull(owner, troopIdx, UnitMemory.Kind) + (owner << 5) + 0x40)));
 							this.round.IconHoriz = (ushort)(this.round.IconHoriz - 2);
 						}
 					}
@@ -2325,7 +2324,7 @@ namespace Civilization1Remaster.Game
 					this.processor.RegCount.Value16 = 0x22;
 					this.processor.RegBase.Value16 = (ushort)((town.Unfamiliar[slot] & 0x3f) * 0x22);
 
-					if (this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x113e)) != 0)
+					if (UnitKindWordAt(this.processor.RegBase.Value16, UnitKindTable.AssaultPower) != 0)
 						this.round.UnitsAway = (ushort)(this.round.UnitsAway + 1);
 				}
 
@@ -2663,8 +2662,7 @@ namespace Civilization1Remaster.Game
 
 			// The unit and its dot on the mini map
 			this.owner.Services.RenderPictureToScreen(ScreenBox, (short)this.round.DrawHoriz, (short)this.round.DrawVert,
-				this.processor.PullUInt16(this.processor.SegData.Value16,
-					(ushort)(((this.troops.Pull(owner, troopIdx, UnitMemory.Kind) + (owner << 5) + 0x40) << 1) + 0xd4ce)));
+				SpritePicture((this.troops.Pull(owner, troopIdx, UnitMemory.Kind) + (owner << 5) + 0x40)));
 
 			this.processor.RegSource.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride + owner * UnitMemory.ParticipantStride);
 			RenderMiniMapDot(this.troops.Pull(owner, troopIdx, UnitMemory.Horiz), this.troops.Pull(owner, troopIdx, UnitMemory.Vert), 7);
@@ -2753,7 +2751,7 @@ namespace Civilization1Remaster.Game
 			this.processor.RegCount.Value16 = (ushort)(town.Has(CityStructure.Marketplace) ? 5 : 7);
 			this.processor.RegBase.Value16 = (ushort)(player.ChiefVisuals * 0x3a);
 
-			short factor = (short)(this.processor.RegCount.Value16 - this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1516)));
+			short factor = (short)(this.processor.RegCount.Value16 - LeaderWordAt(this.processor.RegBase.Value16, LeaderTable.Leaning));
 			this.processor.RegAcc.Value16 = (ushort)(factor * (short)CityAttackersAway);
 			DemocracyPressure = (ushort)(DemocracyPressure - this.processor.RegAcc.Value16);
 		}
@@ -2880,7 +2878,7 @@ namespace Civilization1Remaster.Game
 			{
 				this.processor.RegCount.Value16 = 0x1e;
 				this.processor.RegBase.Value16 = (ushort)(-town.PresentMakingIdx * 0x1e);
-				this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xbb2));
+				this.processor.RegAcc.Value16 = BuildingWordAt(this.processor.RegBase.Value16, BuildingTable.Price);
 			}
 
 			this.round.ProductionPrice = this.processor.RegAcc.Value16;
@@ -2931,7 +2929,7 @@ namespace Civilization1Remaster.Game
 			else
 			{
 				this.processor.RegCount.Value16 = 0x1e;
-				this.processor.RegAcc.Value16 = (ushort)(-town.PresentMakingIdx * 0x1e + 0xb9a);
+				this.processor.RegAcc.Value16 = BuildingRecordText(-town.PresentMakingIdx);
 				this.owner.Libc.CopyText(0xba06, this.processor.RegAcc.Value16);
 				this.owner.BlockText.ShrinkTextToWidth(0xba06, 0x56);
 				this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 274, 100, 15);
@@ -3478,13 +3476,13 @@ namespace Civilization1Remaster.Game
 
 			if (making >= 0)
 			{
-				this.round.Selected = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((making * 0x22) + 0x1142));
+				this.round.Selected = UnitKindWord(making, UnitKindTable.Price);
 				short missing = (short)this.owner.Helpers.VerifyValueSpan((10 * (short)this.round.Selected) - town.MaterialsTally, 0, 999);
 				this.round.Value = (ushort)((short)(missing * missing) / 20 + (missing * 2));
 			}
 			else
 			{
-				this.round.Selected = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((-making * 0x1e) + 0xbb2));
+				this.round.Selected = BuildingWord(-making, BuildingTable.Price);
 				this.round.Value = (ushort)((ushort)this.owner.Helpers.VerifyValueSpan((10 * (short)this.round.Selected) - town.MaterialsTally, 0, 999) << 1);
 
 				if (-making > 0x15)
@@ -3824,7 +3822,7 @@ namespace Civilization1Remaster.Game
 				if (line != 0 || (town.ConditionMarker & 0x80) != 0)
 					continue;
 
-				ushort price = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(0x1e * improvement + 0xbd0));
+				ushort price = BuildingWord(improvement + 1, BuildingTable.Price);
 
 				Message("Do you want to sell\nyour ")
 					.Text(BuildingText(improvement))
@@ -4491,7 +4489,7 @@ namespace Civilization1Remaster.Game
 				if ((town.Structures & bit) == 0 || player.RegimeKind == 0)
 					continue;
 
-				player.Gold -= (short)this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(improvement * 0x1e + 0xbd2));
+				player.Gold -= (short)BuildingWord(improvement + 1, BuildingTable.Upkeep);
 
 				if (improvement == 1)
 				{
@@ -4521,7 +4519,7 @@ namespace Civilization1Remaster.Game
 					.Text(".\n")
 					.Style(4)
 					.Dialog(100, 80);
-				player.Gold += (short)(0xa * this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(improvement * 0x1e + 0xbd0)));
+				player.Gold += (short)(0xa * BuildingWord(improvement + 1, BuildingTable.Price));
 			}
 
 			this.round.Item = improvement;

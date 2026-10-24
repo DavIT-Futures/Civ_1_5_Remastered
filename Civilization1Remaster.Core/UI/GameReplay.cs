@@ -734,12 +734,12 @@ namespace Civilization1Remaster.UI
 			ushort buffer = (ushort)(this.processor.RegFrame.Value16 - 0x10);
 			ushort leader = (ushort)(0x3a * this.owner.World.Participants[participantIdx].ChiefVisuals);
 
-			this.owner.Libc.CopyText(CivilizationName(participantIdx), (ushort)(leader + 0x1502));
-			this.owner.Libc.CopyText(buffer, (ushort)(leader + 0x14f2));
+			this.owner.Libc.CopyText(CivilizationName(participantIdx), LeaderTextAt(leader, LeaderTable.Civilization));
+			this.owner.Libc.CopyText(buffer, LeaderTextAt(leader, LeaderTable.CivilizationPlural));
 
 			if (this.processor.PullGlobalByte(buffer) == 0)
 			{
-				this.owner.Libc.CopyText(buffer, (ushort)(leader + 0x1502));
+				this.owner.Libc.CopyText(buffer, LeaderTextAt(leader, LeaderTable.Civilization));
 				this.owner.Libc.AppendText(buffer, "s");
 			}
 
@@ -783,7 +783,7 @@ namespace Civilization1Remaster.UI
 			DisplayReplay();
 
 			ushort leader = (ushort)(0x3a * this.owner.World.Participants[this.owner.World.PersonParticipantIdx].ChiefVisuals);
-			this.owner.Services.PerformSound(this.processor.PullGlobalWord((ushort)(leader + 0x151a)), 3);
+			this.owner.Services.PerformSound(LeaderWordAt(leader, LeaderTable.Tune), 3);
 
 			this.owner.Services.FloodBox(ScreenBox, 18, 150, 284, 32,
 				(ushort)(VgaMode != 0 ? 34 : 7));
@@ -893,7 +893,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Services.RenderPictureToScreen(ScreenBox, mouthHoriz, mouthVert - 2, speakingMouth);
 
-			this.owner.Services.PerformSound(this.processor.PullGlobalWord((ushort)((ushort)(0x3a * this.owner.World.Participants[participantIdx].ChiefVisuals) + 0x151a)), 3);
+			this.owner.Services.PerformSound(LeaderWord(this.owner.World.Participants[participantIdx].ChiefVisuals, LeaderTable.Tune), 3);
 
 			if (VgaMode != 0)
 			{
@@ -965,7 +965,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.TextPainter.AwaitTime(60);
 
-			this.owner.Services.PerformSound(this.processor.PullGlobalWord((ushort)((ushort)(0x3a * this.owner.World.Participants[this.owner.World.PersonParticipantIdx].ChiefVisuals) + 0x151a)), 3);
+			this.owner.Services.PerformSound(LeaderWord(this.owner.World.Participants[this.owner.World.PersonParticipantIdx].ChiefVisuals, LeaderTable.Tune), 3);
 
 			this.owner.VideoCard.RenderScreenToMainScreen(1, 0x1e);
 

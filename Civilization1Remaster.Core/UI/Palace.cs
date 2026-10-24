@@ -36,7 +36,7 @@ namespace Civilization1Remaster.UI
 			this.owner.Helpers.HaltHueCycling();
 
 			ushort chiefVisuals = (ushort)this.owner.World.Participants[this.owner.World.PersonParticipantIdx].ChiefVisuals;
-			this.owner.Services.PerformSound(this.processor.PullUInt16(dataSeg, (ushort)(0x3a * chiefVisuals + 0x151a)), 3);
+			this.owner.Services.PerformSound(LeaderWord(chiefVisuals, LeaderTable.Tune), 3);
 
 			this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, 0x4ae6, 1);
 

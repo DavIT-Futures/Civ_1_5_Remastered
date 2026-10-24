@@ -819,7 +819,7 @@ namespace Civilization1Remaster.Game
 			{
 				this.processor.RegBase.Value16 = (ushort)(participantIdx << 1);
 				this.owner.Libc.CopyText(CodeText1,
-					this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1992)));
+					CivilizationPluralAt(this.processor.RegBase.Value16));
 
 				this.owner.HelpSystem.DisplayHelpPopup(0x1e6e);
 
@@ -1332,7 +1332,7 @@ namespace Civilization1Remaster.Game
 			{
 				// GoTo mouse pointer, or the normal one when GoTo is cancelled
 				this.processor.RegBase.Value16 = (ushort)((this.turn.MouseCursorSet != 0 ? 7 : 2) << 1);
-				this.owner.Services.AssignMouseCursorImage(0, 0, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xd4ce)));
+				this.owner.Services.AssignMouseCursorImage(0, 0, SpritePictureAt(this.processor.RegBase.Value16));
 			}
 
 			this.turn.MouseCursorSet = (ushort)(this.turn.MouseCursorSet ^ 1);
@@ -1512,7 +1512,7 @@ namespace Civilization1Remaster.Game
 			RepaintUnitIfVisible(participantIdx, (short)this.turn.Troop);
 
 			this.processor.RegBase.Value16 = (ushort)(this.turn.TargetTerrain * 0x13);
-			short work = (short)((sbyte)this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x28e)) + 4);
+			short work = (short)((sbyte)TerrainFieldAt(this.processor.RegBase.Value16, TerrainTable.MoveCost) + 4);
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.UnusualSteps, (byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.UnusualSteps) + 1));
 			this.processor.RegCount.Value16 = (ushort)work;
 
@@ -1994,11 +1994,11 @@ namespace Civilization1Remaster.Game
 			this.processor.RegSource.Value16 = (ushort)(this.turn.Direction << 1);
 
 			this.turn.CursorHoriz = (ushort)this.owner.Routing.TunePosition(
-				this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1882)) +
+				(short)DirectionHorizAt(this.processor.RegSource.Value16) +
 					(short)this.turn.CursorHoriz);
 
 			this.turn.CursorVert = (ushort)this.owner.Helpers.VerifyValueSpan(
-				this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x18e4)) +
+				(short)DirectionVertAt(this.processor.RegSource.Value16) +
 					(short)this.turn.CursorVert,
 				0, 49);
 
@@ -2063,11 +2063,11 @@ namespace Civilization1Remaster.Game
 			this.processor.RegSource.Value16 = (ushort)(this.turn.Direction << 1);
 
 			this.turn.TargetHoriz = (ushort)this.owner.Routing.TunePosition(
-				this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1882)) +
+				(short)DirectionHorizAt(this.processor.RegSource.Value16) +
 					(short)this.turn.UnitHoriz);
 
 			this.turn.TargetVert = (ushort)this.owner.Helpers.VerifyValueSpan(
-				this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x18e4)) +
+				(short)DirectionVertAt(this.processor.RegSource.Value16) +
 					(short)this.turn.UnitVert,
 				0, 49);
 
@@ -2691,7 +2691,7 @@ namespace Civilization1Remaster.Game
 					// The terrain: with fewer moves than full a die may stop the unit
 					this.processor.RegSource.Value16 = (ushort)(unit + UnitMemory.Origin + UnitMemory.LeftoverSteps);
 					this.processor.RegBase.Value16 = (ushort)(this.turn.TargetTerrain * 0x13);
-					short terrainCost = (short)(3 * (sbyte)this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x28e)));
+					short terrainCost = (short)(3 * (sbyte)TerrainFieldAt(this.processor.RegBase.Value16, TerrainTable.MoveCost));
 
 					if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.LeftoverSteps) != 3)
 					{
@@ -3555,10 +3555,10 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.RegSource.Value16 = (ushort)(this.turn.Direction << 1);
 
-			ushort horiz = (ushort)(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1882)) << 2);
+			ushort horiz = (ushort)(DirectionHorizAt(this.processor.RegSource.Value16) << 2);
 			MapViewHoriz = (ushort)(MapViewHoriz + horiz);
 
-			ushort vert = (ushort)(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x18e4)) << 2);
+			ushort vert = (ushort)(DirectionVertAt(this.processor.RegSource.Value16) << 2);
 			MapViewVert = (ushort)(MapViewVert + vert);
 
 			this.owner.MapOps.FocusMapView(this.owner.World.PersonParticipantIdx,
@@ -3581,7 +3581,7 @@ namespace Civilization1Remaster.Game
 			this.owner.World.Participants[participantIdx].RegimeKind = 0;
 
 			Message("The ")
-				.Text(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1992)))
+				.Text(CivilizationPluralAt(this.processor.RegSource.Value16))
 				.Text(" are\nrevolting! Citizens\ndemand new govt.\n");
 			this.owner.Paper.DisplayNewspaper(-1);
 			this.owner.NewGameWizard.ImportGovernmentGraphics();
@@ -3851,8 +3851,8 @@ namespace Civilization1Remaster.Game
 				this.processor.RegDest.Value16 = UnitMemory.Offset(participantIdx, troopIdx);
 
 				if (this.owner.MapOps.ObtainTerrainType(
-					this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz) + this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1882)),
-					this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert) + this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x18e4))) != MapRules.OceanTerrain)
+					this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz) + (short)DirectionHorizAt(this.processor.RegSource.Value16),
+					this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert) + (short)DirectionVertAt(this.processor.RegSource.Value16)) != MapRules.OceanTerrain)
 				{
 					this.turn.Found = 1;
 					break;
@@ -4081,7 +4081,7 @@ namespace Civilization1Remaster.Game
 			vertLoc += 8;
 
 			Message("(")
-				.Text((ushort)((0x13 * this.owner.MapOps.ObtainTerrainType(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz), this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert))) + 0x282))
+				.Text(TerrainText(this.owner.MapOps.ObtainTerrainType(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz), this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert))))
 				.Text(")");
 
 			this.owner.TextPainter.RenderTextToScreen0(0xba06, 4, vertLoc, 0);

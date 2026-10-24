@@ -193,21 +193,21 @@ namespace Civilization1Remaster.Game
 
 			ushort leaderNames = (ushort)(0x3a * rebel.ChiefVisuals);
 
-			this.owner.Libc.CopyText(this.processor.PullGlobalWord((ushort)(names + 0x19a2)), (ushort)(leaderNames + 0x14e2));
+			this.owner.Libc.CopyText(LeaderNameAt(names), LeaderTextAt(leaderNames, LeaderTable.Name));
 
-			this.owner.Libc.CopyText(this.processor.PullGlobalWord((ushort)(names + 0x1982)), (ushort)((ushort)(0x3a * rebel.ChiefVisuals) + 0x1502));
+			this.owner.Libc.CopyText(CivilizationNameAt(names), LeaderText(rebel.ChiefVisuals, LeaderTable.Civilization));
 
-			this.owner.Libc.CopyText(0xba06, (ushort)((ushort)(0x3a * rebel.ChiefVisuals) + 0x14f2));
+			this.owner.Libc.CopyText(0xba06, LeaderText(rebel.ChiefVisuals, LeaderTable.CivilizationPlural));
 
 			if (this.processor.PullGlobalByte(0xba06) == 0)
 			{
-				Message(this.processor.PullGlobalWord((ushort)(names + 0x1982)))
+				Message(CivilizationNameAt(names))
 					.Text("s");
 			}
 
 			this.processor.RegSource.Value16 = names;
 
-			this.owner.Libc.CopyText(this.processor.PullGlobalWord((ushort)(names + 0x1992)), 0xba06);
+			this.owner.Libc.CopyText(CivilizationPluralAt(names), 0xba06);
 
 			this.processor.EmitGlobalByte(0xba06, 0);
 
@@ -215,7 +215,7 @@ namespace Civilization1Remaster.Game
 
 			this.owner.Libc.CopyText(CodeText1, CivilizationName((ushort)participantIdx));
 
-			this.owner.Libc.CopyText(CodeText2, this.processor.PullGlobalWord((ushort)(names + 0x1982)));
+			this.owner.Libc.CopyText(CodeText2, CivilizationNameAt(names));
 
 			this.owner.BlockText.DisplayTextDialog(participantIdx == this.owner.World.PersonParticipantIdx ? (ushort)0x4a18 : (ushort)0x4a20);
 

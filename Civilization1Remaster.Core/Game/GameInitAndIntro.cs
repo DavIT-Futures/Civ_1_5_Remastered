@@ -1274,8 +1274,8 @@ namespace Civilization1Remaster.Game
 				this.processor.EmitLocalWord(0xa, (ushort)direction);
 
 				ushort offset = (ushort)(direction << 1);
-				short nextHoriz = (short)((this.processor.PullGlobalWord((ushort)(offset + 0x1882)) << 2) + horizLoc);
-				short nextVert = (short)((this.processor.PullGlobalWord((ushort)(offset + 0x18e4)) << 2) + vertLoc);
+				short nextHoriz = (short)((DirectionHorizAt(offset) << 2) + horizLoc);
+				short nextVert = (short)((DirectionVertAt(offset) << 2) + vertLoc);
 
 				this.processor.EmitLocalWord(0x2, (ushort)nextHoriz);
 				this.processor.EmitLocalWord(0x4, (ushort)nextVert);
@@ -1290,14 +1290,14 @@ namespace Civilization1Remaster.Game
 				if (!SeaPassageOpen(horizLoc, vertLoc, offset) && (row != 0xb || direction != 3))
 					continue;
 
-				short nextRow = (short)(this.processor.PullGlobalWord((ushort)(offset + 0x18e4)) + row);
+				short nextRow = (short)(DirectionVertAt(offset) + row);
 
 				if (nextRow >= 0xc)
 					continue;
 
 				LinkSeaBlockBit(column, row, direction - 1);
 
-				short nextColumn = (short)(this.processor.PullGlobalWord((ushort)(offset + 0x1882)) + column);
+				short nextColumn = (short)(DirectionHorizAt(offset) + column);
 
 				this.processor.EmitLocalWord(0x2, (ushort)nextColumn);
 				this.processor.EmitLocalWord(0x4, (ushort)nextRow);
@@ -1348,8 +1348,8 @@ namespace Civilization1Remaster.Game
 			{
 				this.processor.EmitLocalWord(0x12, (ushort)step);
 
-				horizLoc = (short)(horizLoc + this.processor.PullGlobalWord((ushort)(offset + 0x1882)));
-				vertLoc = (short)(vertLoc + this.processor.PullGlobalWord((ushort)(offset + 0x18e4)));
+				horizLoc = (short)(horizLoc + DirectionHorizAt(offset));
+				vertLoc = (short)(vertLoc + DirectionVertAt(offset));
 
 				this.processor.EmitLocalWord(0x2, (ushort)horizLoc);
 				this.processor.EmitLocalWord(0x4, (ushort)vertLoc);

@@ -69,13 +69,13 @@ namespace Civilization1Remaster.UI
 			}
 
 			this.owner.Libc.AppendText(0xba06, " of the ");
-			this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)(personSlot + 0x1992)));
+			this.owner.Libc.AppendText(0xba06, CivilizationPluralAt(personSlot));
 
 			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 10, 15);
 
 			Message(GovernmentTitle(person.RegimeKind))
 				.Text(" ")
-				.Text(this.processor.PullGlobalWord((ushort)(personSlot + 0x19a2)))
+				.Text(LeaderNameAt(personSlot))
 				.Text(": ");
 
 			this.owner.TurnHooks.ObtainCurrentYearAsText();
@@ -453,7 +453,7 @@ namespace Civilization1Remaster.UI
 
 					ushort cost = (ushort)(costs + (structureIdx << 1));
 
-					this.processor.EmitGlobalWord(cost, (ushort)(this.processor.PullGlobalWord(cost) + this.processor.PullGlobalWord((ushort)((0x1e * structureIdx) + 0xbd2))));
+					this.processor.EmitGlobalWord(cost, (ushort)(this.processor.PullGlobalWord(cost) + BuildingWord(structureIdx + 1, BuildingTable.Upkeep)));
 
 					if (structureIdx == 1)
 					{
@@ -506,7 +506,7 @@ namespace Civilization1Remaster.UI
 
 				// The number of the buildings: the cost by the upkeep (the palace by its own cost)
 				short tally = structureIdx == 1 ? (short)(cost / palaceCost) :
-					(short)(cost / (short)this.processor.PullGlobalWord((ushort)((0x1e * structureIdx) + 0xbd2)));
+					(short)(cost / (short)BuildingWord(structureIdx + 1, BuildingTable.Upkeep));
 
 				this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(tally, 10));
 
@@ -1108,9 +1108,9 @@ namespace Civilization1Remaster.UI
 				if (making < 0)
 				{
 					// A building: names of 0x1e bytes at 0xb9a, costs at 0xbb2
-					this.owner.Libc.CopyText(0xba06, (ushort)((-making * 0x1e) + 0xb9a));
+					this.owner.Libc.CopyText(0xba06, BuildingRecordText(-making));
 					this.owner.BlockText.ShrinkTextToWidth(0xba06, 96);
-					AppendProductionCost(townIdx, (short)(10 * this.processor.PullGlobalWord((ushort)((-making * 0x1e) + 0xbb2))));
+					AppendProductionCost(townIdx, (short)(10 * BuildingWord(-making, BuildingTable.Price)));
 				}
 				else if (making < 0x40)
 				{

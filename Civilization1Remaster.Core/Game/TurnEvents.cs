@@ -710,7 +710,7 @@ namespace Civilization1Remaster.Game
 
 				ushort leader = (ushort)(0x3a * this.owner.World.Participants[this.owner.World.PersonParticipantIdx].ChiefVisuals);
 
-				this.owner.Services.PerformSound(this.processor.PullGlobalWord((ushort)(leader + 0x151a)), 3);
+				this.owner.Services.PerformSound(LeaderWordAt(leader, LeaderTable.Tune), 3);
 
 				this.owner.Paper.DisplayNewspaper(-1);
 
@@ -1562,7 +1562,7 @@ namespace Civilization1Remaster.Game
 			this.processor.EmitLocalWord(0x8, wonderIdx);
 
 			if (this.owner.World.HardnessTier == 0 &&
-				this.owner.Advisors.PlayerKnowsTechnology(person, (short)this.processor.PullGlobalWord((ushort)((ushort)(0x1e * wonderIdx) + 0xbb6))) == 0)
+				this.owner.Advisors.PlayerKnowsTechnology(person, (short)BuildingWord(wonderIdx, BuildingTable.Technology)) == 0)
 				return false;
 
 			if (this.owner.World.HardnessTier < 2)
@@ -1636,7 +1636,7 @@ namespace Civilization1Remaster.Game
 
 			if (WorldMapView != 1)
 			{
-				this.owner.Services.PerformSound(this.processor.PullGlobalWord((ushort)((ushort)(0x3a * this.owner.World.Participants[rivalIdx].ChiefVisuals) + 0x1518)), 0);
+				this.owner.Services.PerformSound(LeaderWord(this.owner.World.Participants[rivalIdx].ChiefVisuals, LeaderTable.ShortTune), 0);
 
 				DialogStyle = (this.owner.World.Participants[person].Relations[rivalIdx] & 0x40) == 0 ? (ushort)2 : (ushort)5;
 

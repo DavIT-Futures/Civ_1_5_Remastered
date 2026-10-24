@@ -100,7 +100,7 @@ namespace Civilization1Remaster.Game
 
 			ushort kind = (ushort)(0x22 * (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d7)));
 
-			if (this.processor.PullGlobalWord((ushort)(kind + 0x1138)) == 1)
+			if (UnitKindWordAt(kind, UnitKindTable.LandGroup) == 1)
 			{
 				GoalHoriz = this.processor.PullGlobalByte((ushort)(troop + 0x81da));
 				GoalVert = this.processor.PullGlobalByte((ushort)(troop + 0x81db));
@@ -235,8 +235,8 @@ namespace Civilization1Remaster.Game
 				{
 					ushort unitKind = (ushort)(0x22 * (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d7)));
 
-					cost = (short)this.processor.PullGlobalWord((ushort)(unitKind + 0x113a)) <= 1 ? (short)3 :
-						(short)(3 * (sbyte)this.processor.PullGlobalByte((ushort)((ushort)(0x13 * terrain) + 0x28e)));
+					cost = (short)UnitKindWordAt(unitKind, UnitKindTable.ShiftTally) <= 1 ? (short)3 :
+						(short)(3 * (sbyte)TerrainField(terrain, TerrainTable.MoveCost));
 				}
 
 				cost += (short)((nextDistance << 2) + Math.Abs(leftHoriz) + Math.Abs(leftVert));
@@ -315,7 +315,7 @@ namespace Civilization1Remaster.Game
 				ushort kind = (ushort)(0x22 * (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d7)));
 				this.processor.RegSource.Value16 = terrain == 0xa ? (ushort)1 : (ushort)0;
 
-				if ((this.processor.PullGlobalWord((ushort)(kind + 0x1138)) == 2) == (terrain == 0xa) &&
+				if ((UnitKindWordAt(kind, UnitKindTable.LandGroup) == 2) == (terrain == 0xa) &&
 					(occupied == 0 || this.owner.UnitOps.MayOccupyTile(participantIdx, horizLoc, vertLoc) == 0))
 				{
 					allowed = true;
@@ -324,7 +324,7 @@ namespace Civilization1Remaster.Game
 				{
 					this.processor.RegSource.Value16 = (ushort)(0x600 * participantIdx);
 
-					if (this.processor.PullGlobalWord((ushort)((ushort)(0x22 * (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d7))) + 0x1138)) == 1)
+					if (UnitKindWord((sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d7)), UnitKindTable.LandGroup) == 1)
 						allowed = true;
 				}
 			}
@@ -406,7 +406,7 @@ namespace Civilization1Remaster.Game
 		/// <summary>Whether the unit (offset from 0x81d4) is of a sea kind (domain 2, 0x1138 + 0x22 * kind)</summary>
 		private bool UnitMovesBySea(ushort troop)
 		{
-			return this.processor.PullGlobalWord((ushort)((ushort)(0x22 * (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d7))) + 0x1138)) == 2;
+			return UnitKindWord((sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d7)), UnitKindTable.LandGroup) == 2;
 		}
 
 		/// <summary>The links of the block (the bits of directions 1 - 8): sea blocks 0x7f38 or land blocks 0xdb44</summary>
@@ -780,8 +780,8 @@ namespace Civilization1Remaster.Game
 			ushort kind = (ushort)(0x22 * (sbyte)this.processor.PullGlobalByte((ushort)((ushort)(0xc * troopIdx) + (ushort)(0x600 * participantIdx) + 0x81d7)));
 			this.processor.RegSource.Value16 = kind;
 
-			bool sea = this.processor.PullGlobalWord((ushort)(kind + 0x1138)) == 2;
-			bool air = this.processor.PullGlobalWord((ushort)(kind + 0x113a)) == 1;
+			bool sea = UnitKindWordAt(kind, UnitKindTable.LandGroup) == 2;
+			bool air = UnitKindWordAt(kind, UnitKindTable.ShiftTally) == 1;
 
 			this.processor.EmitLocalWord(0x1e, sea ? (ushort)1 : (ushort)0);
 			this.processor.EmitLocalWord(0x10, air ? (ushort)1 : (ushort)0);
@@ -863,7 +863,7 @@ namespace Civilization1Remaster.Game
 				}
 				else
 				{
-					nextCost = (short)((3 * (sbyte)this.processor.PullGlobalByte((ushort)((ushort)(0x13 * terrain) + 0x28e))) + cost);
+					nextCost = (short)((3 * (sbyte)TerrainField(terrain, TerrainTable.MoveCost)) + cost);
 				}
 
 				this.processor.EmitLocalWord(0x1a, (ushort)nextCost);
@@ -928,7 +928,7 @@ namespace Civilization1Remaster.Game
 				ushort kind = (ushort)(0x22 * (sbyte)this.processor.PullGlobalByte((ushort)((ushort)(0xc * troopIdx) + (ushort)(0x600 * participantIdx) + 0x81d7)));
 				this.processor.RegSource.Value16 = seaTile ? (ushort)1 : (ushort)0;
 
-				if ((this.processor.PullGlobalWord((ushort)(kind + 0x1138)) == 2) != seaTile &&
+				if ((UnitKindWordAt(kind, UnitKindTable.LandGroup) == 2) != seaTile &&
 					(this.owner.MapOps.ObtainTileImprovements(tileHoriz, nextVert) & 1) == 0)
 					continue;
 

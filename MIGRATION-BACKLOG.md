@@ -1360,6 +1360,25 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   teren 0x28e co 0x13, surowe odczyty tabeli jednostek 0x112a co 0x22 obok `UnitKindTable`.
   Porcje 1 – 4: pełny zestaw 767/767 (jeden przebieg), mutacje 13 / 13 (indeks ^ 1 w akcesorze; `DirectionVert` –
   golden master, zawieszenie = złapana).
+- B5, porcje 5 – 8 razem (2026-10-24, reszta B5 naraz i raz testy), 172 miejsca, skrypt `b5c.py` w scratchpadzie
+  (parser nawiasów: adres `(ushort)(L + baza)`, L = indeks rekordu w 7 zapisach mnożenia albo przesunięcie policzone
+  wcześniej; odczyt = cały argument `PullGlobalWord` / `PullUInt16` / `PullInt16` / `PullUInt8` / `PullGlobalByte`,
+  także przez `dataSeg` – zawsze `SegData`). Stałe pól: `UnitKindTable.Technology` (0x20), nowe `BuildingTable`
+  (0xb9a co 0x1e: `Price`, `Upkeep`, `Technology`), `TerrainTable` (0x282 co 0x13: `MoveCost`), `LeaderTable`
+  (0x14e2 co 0x3a: `Name`, `CivilizationPlural`, `Civilization`, `Leaning`, `ShortTune`, `Tune`) w
+  `Game/RecordTables.cs`. Akcesory `GameModule`: `UnitKindWord(At)`, `BuildingWord(At)`, `TerrainField(At)` (bajt),
+  `LeaderWord(At)`; adresy `UnitTextAt`, `BuildingRecordText(At)`, `TerrainText(At)`, `LeaderText(At)`; przez
+  przesunięcie `CivilizationNameAt` … `SpritePictureAt`. 0xbd0 / 0xbd2 = pole rekordu `i + 1`.
+  **Pułapka (złapana kompilacją):** rzutowanie odczytu ze znakiem (`PullInt16` / `PullInt8` → `(short)` / `(sbyte)`)
+  trzeba rozpoznać po nazwie metody, nie po końcu prefiksu z segmentem – pierwsza wersja skryptu je gubiła (zmiana
+  wartości ujemnych bez błędu kompilacji w arytmetyce); zmiany cofnięte i zrobione od nowa, 15 / 15 odczytów ze znakiem
+  sprawdzonych parami. Zostają z adresem: bajty tabeli kierunków (`PullUInt8` 0x1882 / 0x18e4), adresy „slotów”
+  (`nameSlot`, `pluralSlot`, `leader` w `MeetWithKing`, `colour` w `SpaceshipScreen` – zapisywane dalej jako adres),
+  wieloliniowy odczyt obrazka w `Civilopedia`, `0x16d2` (cywilizacja rekordu przywódcy + 8) i `AIPlayer.TerrainByte`
+  (pola 0x28e / 0x28f terenu przez własne przesunięcie).
+  Pełny zestaw 767/767 (jeden przebieg), mutacje 14 / 14: 10 z 12 w akcesorach od razu; `LeaderWord` / `LeaderWordAt`
+  na melodiach (`Tune`) przeżywają – `PerformSound` nie zostawia śladu w testach (równoważne) – więc sprawdzone na polu
+  `Leaning` (`ConstructCivilization`, golden master przez `CityManagement`).
 
 ## Następny krok
 

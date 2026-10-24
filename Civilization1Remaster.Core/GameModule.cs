@@ -1,4 +1,5 @@
 ﻿using Civilization1Remaster.Emulation;
+using Civilization1Remaster.Game;
 
 namespace Civilization1Remaster
 {
@@ -1216,6 +1217,78 @@ namespace Civilization1Remaster
 		#endregion
 
 		#region Tables of CIV.EXE in the data segment, read where the original reads them
+
+		/// <summary>A word field (UnitKindTable) of the unit kind: 0x112a + 0x22 * kind + field</summary>
+		protected ushort UnitKindWord(int kind, int field) => this.processor.PullGlobalWord((ushort)(UnitKindTable.Stride * kind + UnitKindTable.Origin + field));
+
+		/// <summary>A word field of the unit kind through the offset 0x22 * kind computed before</summary>
+		protected ushort UnitKindWordAt(int offset, int field) => this.processor.PullGlobalWord((ushort)(offset + UnitKindTable.Origin + field));
+
+		/// <summary>The address of the name of the unit kind through the offset 0x22 * kind computed before</summary>
+		protected static ushort UnitTextAt(int offset) => (ushort)(offset + UnitKindTable.Origin);
+
+		/// <summary>A word field (BuildingTable) of the building record: 0xb9a + 0x1e * record + field</summary>
+		protected ushort BuildingWord(int record, int field) => this.processor.PullGlobalWord((ushort)(BuildingTable.Stride * record + BuildingTable.Origin + field));
+
+		/// <summary>A word field of the building record through the offset 0x1e * record computed before</summary>
+		protected ushort BuildingWordAt(int offset, int field) => this.processor.PullGlobalWord((ushort)(offset + BuildingTable.Origin + field));
+
+		/// <summary>The address of the name of the building record: 0xb9a + 0x1e * record</summary>
+		protected static ushort BuildingRecordText(int record) => (ushort)(BuildingTable.Stride * record + BuildingTable.Origin);
+
+		/// <summary>The address of the name of the building record through the offset 0x1e * record computed before</summary>
+		protected static ushort BuildingRecordTextAt(int offset) => (ushort)(offset + BuildingTable.Origin);
+
+		/// <summary>A byte field (TerrainTable) of the terrain type: 0x282 + 0x13 * terrain + field</summary>
+		protected byte TerrainField(int terrain, int field) => this.processor.PullGlobalByte((ushort)(TerrainTable.Stride * terrain + TerrainTable.Origin + field));
+
+		/// <summary>A byte field of the terrain type through the offset 0x13 * terrain computed before</summary>
+		protected byte TerrainFieldAt(int offset, int field) => this.processor.PullGlobalByte((ushort)(offset + TerrainTable.Origin + field));
+
+		/// <summary>The address of the name of the terrain type: 0x282 + 0x13 * terrain</summary>
+		protected static ushort TerrainText(int terrain) => (ushort)(TerrainTable.Stride * terrain + TerrainTable.Origin);
+
+		/// <summary>The address of the name of the terrain type through the offset 0x13 * terrain computed before</summary>
+		protected static ushort TerrainTextAt(int offset) => (ushort)(offset + TerrainTable.Origin);
+
+		/// <summary>The address of a text field (LeaderTable) of the leader: 0x14e2 + 0x3a * leader + field</summary>
+		protected static ushort LeaderText(int leader, int field) => (ushort)(LeaderTable.Stride * leader + LeaderTable.Origin + field);
+
+		/// <summary>The address of a text field of the leader through the offset 0x3a * leader computed before</summary>
+		protected static ushort LeaderTextAt(int offset, int field) => (ushort)(offset + LeaderTable.Origin + field);
+
+		/// <summary>A word field (LeaderTable) of the leader: 0x14e2 + 0x3a * leader + field</summary>
+		protected ushort LeaderWord(int leader, int field) => this.processor.PullGlobalWord((ushort)(LeaderTable.Stride * leader + LeaderTable.Origin + field));
+
+		/// <summary>A word field of the leader through the offset 0x3a * leader computed before</summary>
+		protected ushort LeaderWordAt(int offset, int field) => this.processor.PullGlobalWord((ushort)(offset + LeaderTable.Origin + field));
+
+		/// <summary>CivilizationName through the offset 2 * index computed before</summary>
+		protected ushort CivilizationNameAt(int offset) => this.processor.PullGlobalWord((ushort)(offset + 0x1982));
+
+		/// <summary>CivilizationPlural through the offset 2 * index computed before</summary>
+		protected ushort CivilizationPluralAt(int offset) => this.processor.PullGlobalWord((ushort)(offset + 0x1992));
+
+		/// <summary>LeaderName through the offset 2 * index computed before</summary>
+		protected ushort LeaderNameAt(int offset) => this.processor.PullGlobalWord((ushort)(offset + 0x19a2));
+
+		/// <summary>GovernmentName through the offset 2 * index computed before</summary>
+		protected ushort GovernmentNameAt(int offset) => this.processor.PullGlobalWord((ushort)(offset + 0x1966));
+
+		/// <summary>GovernmentTitle through the offset 2 * index computed before</summary>
+		protected ushort GovernmentTitleAt(int offset) => this.processor.PullGlobalWord((ushort)(offset + 0x19b2));
+
+		/// <summary>PlayerColour through the offset 2 * index computed before</summary>
+		protected ushort PlayerColourAt(int offset) => this.processor.PullGlobalWord((ushort)(offset + 0x1946));
+
+		/// <summary>DirectionHoriz through the offset 2 * index computed before</summary>
+		protected ushort DirectionHorizAt(int offset) => this.processor.PullGlobalWord((ushort)(offset + 0x1882));
+
+		/// <summary>DirectionVert through the offset 2 * index computed before</summary>
+		protected ushort DirectionVertAt(int offset) => this.processor.PullGlobalWord((ushort)(offset + 0x18e4));
+
+		/// <summary>SpritePicture through the offset 2 * index computed before</summary>
+		protected ushort SpritePictureAt(int offset) => this.processor.PullGlobalWord((ushort)(offset + 0xd4ce));
 
 		/// <summary>The address of the name of the technology (records of 0x16 bytes at 0x4da)</summary>
 		protected static ushort TechnologyText(int index) => (ushort)(0x16 * index + 0x4da);

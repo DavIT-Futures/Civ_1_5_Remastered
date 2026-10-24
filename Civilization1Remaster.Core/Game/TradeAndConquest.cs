@@ -238,7 +238,7 @@ namespace Civilization1Remaster.Game
 
 			sbyte kind = (sbyte)this.processor.PullGlobalByte((ushort)((ushort)(0x600 * participantIdx) + troop + 0x81d7));
 
-			if ((short)this.processor.PullGlobalWord((ushort)((ushort)(0x22 * kind) + 0x113e)) > 2 || NoConquestAnimation != 0)
+			if ((short)UnitKindWord(kind, UnitKindTable.AssaultPower) > 2 || NoConquestAnimation != 0)
 				return false;
 
 			this.owner.Advisors.FinalizeProduction(townIdx, horizLoc, vertLoc);
@@ -263,8 +263,8 @@ namespace Civilization1Remaster.Game
 			{
 				this.processor.RegSource.Value16 = (ushort)(markIdx << 1);
 
-				ushort markHoriz = (ushort)this.owner.Routing.TunePosition((short)this.processor.PullGlobalWord((ushort)(this.processor.RegSource.Value16 + 0x1882)) + (short)horizLoc);
-				ushort markVert = (ushort)(this.processor.PullGlobalWord((ushort)(this.processor.RegSource.Value16 + 0x18e4)) + vertLoc);
+				ushort markHoriz = (ushort)this.owner.Routing.TunePosition((short)DirectionHorizAt(this.processor.RegSource.Value16) + (short)horizLoc);
+				ushort markVert = (ushort)(DirectionVertAt(this.processor.RegSource.Value16) + vertLoc);
 
 				this.processor.EmitLocalWord(0xa, markHoriz);
 				this.processor.EmitLocalWord(0xc, markVert);
@@ -292,7 +292,7 @@ namespace Civilization1Remaster.Game
 
 			this.processor.RegSource.Value16 = (ushort)(participantIdx << 1);
 
-			Message(this.processor.PullGlobalWord((ushort)(this.processor.RegSource.Value16 + 0x1992)))
+			Message(CivilizationPluralAt(this.processor.RegSource.Value16))
 				.Text(" capture\n");
 
 			ObtainCityLabel(townIdx);
@@ -303,7 +303,7 @@ namespace Civilization1Remaster.Game
 
 			this.owner.Libc.AppendText(0xba06, " gold\npieces plundered.\n");
 
-			this.owner.Services.PerformSound(this.processor.PullGlobalWord((ushort)((ushort)(0x3a * this.owner.World.Participants[participantIdx].ChiefVisuals) + 0x1518)), 0);
+			this.owner.Services.PerformSound(LeaderWord(this.owner.World.Participants[participantIdx].ChiefVisuals, LeaderTable.ShortTune), 0);
 
 			if ((this.owner.World.SessionPrefMarkers & 8) != 0)
 			{

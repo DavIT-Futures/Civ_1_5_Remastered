@@ -199,7 +199,7 @@ namespace Civilization1Remaster.UI
 
 			for (int leader = 1; leader < this.owner.World.BotRivalTally + 2; leader++)
 			{
-				this.owner.Libc.AppendText(0xba06, (ushort)((0x3a * leader) + 0x1502));
+				this.owner.Libc.AppendText(0xba06, LeaderText(leader, LeaderTable.Civilization));
 
 				this.owner.Libc.AppendText(0xba06, "\n ");
 			}
@@ -266,7 +266,7 @@ namespace Civilization1Remaster.UI
 			short personIdx = this.owner.World.PersonParticipantIdx;
 			ushort names = (ushort)(personIdx << 1);
 
-			this.processor.EmitGlobalByte(this.processor.PullGlobalWord((ushort)(names + 0x1982)), 0x0);
+			this.processor.EmitGlobalByte(CivilizationNameAt(names), 0x0);
 
 			if (randomTribe)
 			{
@@ -274,7 +274,7 @@ namespace Civilization1Remaster.UI
 
 				this.owner.World.Participants[personIdx].ChiefVisuals = personIdx;
 
-				this.owner.Libc.CopyText(this.processor.PullGlobalWord((ushort)(names + 0x19a2)), (ushort)((0x3a * personIdx) + 0x14e2));
+				this.owner.Libc.CopyText(LeaderNameAt(names), LeaderText(personIdx, LeaderTable.Name));
 			}
 			else
 			{
@@ -284,22 +284,22 @@ namespace Civilization1Remaster.UI
 
 				ushort leader = (ushort)(0x3a * person.ChiefVisuals);
 
-				this.owner.Libc.CopyText(this.processor.PullGlobalWord((ushort)(names + 0x19a2)), (ushort)(leader + 0x14e2));
+				this.owner.Libc.CopyText(LeaderNameAt(names), LeaderTextAt(leader, LeaderTable.Name));
 
-				this.owner.Libc.CopyText(this.processor.PullGlobalWord((ushort)(names + 0x1982)), (ushort)(leader + 0x1502));
+				this.owner.Libc.CopyText(CivilizationNameAt(names), LeaderTextAt(leader, LeaderTable.Civilization));
 
-				this.owner.Libc.CopyText(0xba06, (ushort)(leader + 0x14f2));
+				this.owner.Libc.CopyText(0xba06, LeaderTextAt(leader, LeaderTable.CivilizationPlural));
 
 				if (this.processor.PullGlobalByte(0xba06) == 0)
 				{
-					Message(this.processor.PullGlobalWord((ushort)(names + 0x1982)))
+					Message(CivilizationNameAt(names))
 						.Text("s");
 				}
 
-				this.owner.Libc.CopyText(this.processor.PullGlobalWord((ushort)(names + 0x1992)), 0xba06);
+				this.owner.Libc.CopyText(CivilizationPluralAt(names), 0xba06);
 			}
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0(this.processor.PullGlobalWord((ushort)(names + 0x1992)), 46, 92, 15);
+			this.owner.TextPainter.RenderCenteredTextToScreen0(CivilizationPluralAt(names), 46, 92, 15);
 		}
 
 		/// <summary>
@@ -361,9 +361,9 @@ namespace Civilization1Remaster.UI
 
 			ushort names = (ushort)(this.owner.World.PersonParticipantIdx << 1);
 
-			this.owner.Libc.CopyText(CodeText4, this.processor.PullGlobalWord((ushort)(names + 0x19a2)));
+			this.owner.Libc.CopyText(CodeText4, LeaderNameAt(names));
 
-			this.owner.Libc.CopyText(CodeText1, this.processor.PullGlobalWord((ushort)(names + 0x1992)));
+			this.owner.Libc.CopyText(CodeText1, CivilizationPluralAt(names));
 
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
@@ -394,7 +394,7 @@ namespace Civilization1Remaster.UI
 
 			ushort leader = (ushort)(0x3a * this.owner.World.Participants[this.owner.World.PersonParticipantIdx].ChiefVisuals);
 
-			this.owner.Services.PerformSound(this.processor.PullGlobalWord((ushort)(leader + 0x151a)), 3);
+			this.owner.Services.PerformSound(LeaderWordAt(leader, LeaderTable.Tune), 3);
 
 			this.owner.Startup.ConcealMouseCursor();
 
@@ -613,7 +613,7 @@ namespace Civilization1Remaster.UI
 
 			if (participantIdx != this.owner.World.PersonParticipantIdx)
 			{
-				player.ResearchLevyRatio = (short)(this.processor.PullGlobalWord((ushort)((0x3a * player.ChiefVisuals) + 0x1516)) + 3);
+				player.ResearchLevyRatio = (short)(LeaderWord(player.ChiefVisuals, LeaderTable.Leaning) + 3);
 				player.LevyRatio = (short)(9 - player.ResearchLevyRatio);
 			}
 
@@ -770,23 +770,23 @@ namespace Civilization1Remaster.UI
 			ushort leader = (ushort)(0x3a * this.owner.World.Participants[participantIdx].ChiefVisuals);
 			ushort names = (ushort)(participantIdx << 1);
 
-			this.owner.Libc.CopyText(this.processor.PullGlobalWord((ushort)(names + 0x19a2)), (ushort)(leader + 0x14e2));
+			this.owner.Libc.CopyText(LeaderNameAt(names), LeaderTextAt(leader, LeaderTable.Name));
 
 			if (participantIdx == this.owner.World.PersonParticipantIdx &&
-				this.processor.PullGlobalByte(this.processor.PullGlobalWord((ushort)(names + 0x1982))) != 0)
+				this.processor.PullGlobalByte(CivilizationNameAt(names)) != 0)
 				return;
 
-			this.owner.Libc.CopyText(this.processor.PullGlobalWord((ushort)(names + 0x1982)), (ushort)(leader + 0x1502));
+			this.owner.Libc.CopyText(CivilizationNameAt(names), LeaderTextAt(leader, LeaderTable.Civilization));
 
-			this.owner.Libc.CopyText(0xba06, (ushort)(leader + 0x14f2));
+			this.owner.Libc.CopyText(0xba06, LeaderTextAt(leader, LeaderTable.CivilizationPlural));
 
 			if (this.processor.PullGlobalByte(0xba06) == 0)
 			{
-				Message(this.processor.PullGlobalWord((ushort)(names + 0x1982)))
+				Message(CivilizationNameAt(names))
 					.Text("s");
 			}
 
-			this.owner.Libc.CopyText(this.processor.PullGlobalWord((ushort)(names + 0x1992)), 0xba06);
+			this.owner.Libc.CopyText(CivilizationPluralAt(names), 0xba06);
 		}
 
 		/// <summary>
