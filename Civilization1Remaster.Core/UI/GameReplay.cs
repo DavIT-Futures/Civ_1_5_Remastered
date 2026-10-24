@@ -30,17 +30,17 @@ namespace Civilization1Remaster.UI
 			{
 				if (this.processor.PullGlobalWord(0x680e) == 0)
 				{
-					this.processor.EmitGlobalWord(0x680a, this.owner.TurnHooks.DisplayDialog(0x3fb0, 100, 80));
+					ReplayMode = this.owner.TurnHooks.DisplayDialog(0x3fb0, 100, 80);
 				}
 				else
 				{
-					this.processor.EmitGlobalWord(0x680a, 0x4);
+					ReplayMode = 0x4;
 				}
 
-				if ((short)this.processor.PullGlobalWord(0x680a) <= 0)
+				if ((short)ReplayMode <= 0)
 					break;
 
-				if (this.processor.PullGlobalWord(0x680a) == 3)
+				if (ReplayMode == 3)
 				{
 					ushort handle = (ushort)this.owner.Libc.OpenHandle("replay.txt", 0x8301, 0x80);
 
@@ -59,12 +59,12 @@ namespace Civilization1Remaster.UI
 
 				ReplayGame();
 
-				if (this.processor.PullGlobalWord(0x680a) == 3)
+				if (ReplayMode == 3)
 				{
 					this.owner.Libc.CloseHandle((short)this.processor.PullGlobalWord(0x680c));
 				}
 
-				if ((short)this.processor.PullGlobalWord(0x680a) >= 3)
+				if ((short)ReplayMode >= 3)
 					break;
 			}
 
@@ -109,7 +109,7 @@ namespace Civilization1Remaster.UI
 				ObtainReplayPlayerLabel(participantIdx);
 			}
 
-			if (this.processor.PullGlobalWord(0x680a) != 4)
+			if (ReplayMode != 4)
 			{
 				this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
 
@@ -130,7 +130,7 @@ namespace Civilization1Remaster.UI
 			{
 				spot = ReplayEvent(spot);
 
-				if (this.processor.PullGlobalWord(0x680a) == 2 && this.owner.Libc.ReadKey() == 0x1b)
+				if (ReplayMode == 2 && this.owner.Libc.ReadKey() == 0x1b)
 					break;
 			}
 
@@ -177,7 +177,7 @@ namespace Civilization1Remaster.UI
 
 			short year = (short)ObtainReplayYear(turn);
 
-			this.processor.EmitGlobalWord(0x6810, 0xffff);
+			ReplayActor = 0xffff;
 			EmptyMessage()
 				.Number(Math.Abs(year))
 				.Text(year < 0 ? " BC" : " AD")
@@ -212,11 +212,11 @@ namespace Civilization1Remaster.UI
 				{
 					ushort actor = ReplayByte(ref spot);
 
-					this.processor.EmitGlobalWord(0x6810, actor);
+					ReplayActor = actor;
 
 					ushort thing = ReplayByte(ref spot);
 
-					this.owner.Libc.AppendText(0xba06, ReplayPlural(this.processor.PullGlobalWord(0x6810)));
+					this.owner.Libc.AppendText(0xba06, ReplayPlural(ReplayActor));
 
 					switch (kind)
 					{
@@ -254,7 +254,7 @@ namespace Civilization1Remaster.UI
 				case 11:
 				{
 					// The status of the human player: cities, population (two parts)
-					this.processor.EmitGlobalWord(0x6810, (ushort)this.owner.World.PersonParticipantIdx);
+					ReplayActor = (ushort)this.owner.World.PersonParticipantIdx;
 
 					short towns = ReplayByte(ref spot);
 					sbyte populationHigh = (sbyte)ReplayByte(ref spot);
@@ -284,24 +284,24 @@ namespace Civilization1Remaster.UI
 				{
 					ushort fallen = ReplayByte(ref spot);
 
-					this.processor.EmitGlobalWord(0x6810, fallen);
+					ReplayActor = fallen;
 
 					short destroyer = ReplayByte(ref spot);
 
-					this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)((this.processor.PullGlobalWord(0x6810) << 1) + 0x1982)));
+					this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)((ReplayActor << 1) + 0x1982)));
 
 					this.owner.Libc.AppendText(0xba06, " civilization destroyed by ");
 
 					this.owner.Libc.AppendText(0xba06, ReplayPlural(destroyer));
 
-					if (this.processor.PullGlobalWord(0x680a) == 4 && destroyer == this.owner.World.PersonParticipantIdx)
+					if (ReplayMode == 4 && destroyer == this.owner.World.PersonParticipantIdx)
 					{
-						DisplayCivilizationDestroyedScreen((short)this.processor.PullGlobalWord(0x6810), (ushort)year);
+						DisplayCivilizationDestroyedScreen((short)ReplayActor, (ushort)year);
 					}
 
-					this.owner.World.Participants[this.processor.PullGlobalWord(0x6810)].ChiefVisuals ^= 8;
+					this.owner.World.Participants[ReplayActor].ChiefVisuals ^= 8;
 
-					ObtainReplayPlayerLabel((short)this.processor.PullGlobalWord(0x6810));
+					ObtainReplayPlayerLabel((short)ReplayActor);
 
 					RenderReplayPreamble();
 					break;
@@ -319,27 +319,27 @@ namespace Civilization1Remaster.UI
 		{
 			ushort actor = ReplayByte(ref spot);
 
-			this.processor.EmitGlobalWord(0x6810, actor);
+			ReplayActor = actor;
 
 			ushort labelIdx = ReplayByte(ref spot);
 			ushort horizLoc = ReplayByte(ref spot);
 			ushort vertLoc = ReplayByte(ref spot);
 
-			if (this.processor.PullGlobalWord(0x6810) != 0xff)
+			if (ReplayActor != 0xff)
 			{
-				this.owner.Libc.AppendText(0xba06, ReplayPlural(this.processor.PullGlobalWord(0x6810)));
+				this.owner.Libc.AppendText(0xba06, ReplayPlural(ReplayActor));
 
 				if (kind == 1)
 				{
 					this.owner.Libc.AppendText(0xba06, " found the city of ");
 
-					AssignReplayCityContent(this.processor.PullGlobalWord(0x6810), horizLoc, vertLoc);
+					AssignReplayCityContent(ReplayActor, horizLoc, vertLoc);
 				}
 				else
 				{
 					this.owner.Libc.AppendText(0xba06, " capture ");
 
-					AssignReplayCityContentAlt(this.processor.PullGlobalWord(0x6810), horizLoc, vertLoc);
+					AssignReplayCityContentAlt(ReplayActor, horizLoc, vertLoc);
 				}
 
 				AppendReplayCityName(labelIdx);
@@ -359,7 +359,7 @@ namespace Civilization1Remaster.UI
 
 			RenderReplayMapTile(horizLoc, vertLoc);
 
-			if (this.processor.PullGlobalWord(0x680a) == 1)
+			if (ReplayMode == 1)
 			{
 				this.owner.TextPainter.AwaitTime(30);
 			}
@@ -413,7 +413,7 @@ namespace Civilization1Remaster.UI
 				spot++;
 			}
 
-			if (this.processor.PullGlobalWord(0x680a) == 3)
+			if (ReplayMode == 3)
 			{
 				RenderReplayPreamble();
 			}
@@ -428,9 +428,9 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope("RenderReplayPreamble()");
 
-			if (this.processor.PullGlobalWord(0x680a) != 4)
+			if (ReplayMode != 4)
 			{
-				if (this.processor.PullGlobalWord(0x6810) == (ushort)this.owner.World.PersonParticipantIdx)
+				if (ReplayActor == (ushort)this.owner.World.PersonParticipantIdx)
 				{
 					this.owner.Libc.UppercaseText(0xba06);
 				}
@@ -439,7 +439,7 @@ namespace Civilization1Remaster.UI
 
 				this.owner.TextPainter.RenderTextToScreen0(0xba06, 4, 1, 0);
 
-				if (this.processor.PullGlobalWord(0x680a) == 3)
+				if (ReplayMode == 3)
 				{
 					ushort length = this.owner.Libc.TextLength(0xba06);
 
@@ -628,7 +628,7 @@ namespace Civilization1Remaster.UI
 			this.processor.EnterFrame(0xc);
 			this.processor.PreserveIndexRegisters();
 
-			if (this.processor.PullGlobalWord(0x680a) != 4)
+			if (ReplayMode != 4)
 			{
 				int left = this.owner.Helpers.VerifyValueSpan(horizLoc - 5, 0, 80);
 				int right = this.owner.Helpers.VerifyValueSpan(horizLoc + 5, 0, 80);

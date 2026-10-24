@@ -21,7 +21,7 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope($"ManageMenuBar({participantIdx}, {troopIdx}, {marker})");
 
-			this.processor.EmitGlobalWord(0xd4ca, 0xffff);
+			ChosenOrder = 0xffff;
 			this.processor.EmitGlobalWord(0x654a, 0x0);
 
 			if (marker == -1)
@@ -106,15 +106,15 @@ namespace Civilization1Remaster.UI
 			switch (choice)
 			{
 				case 0:
-					this.processor.EmitGlobalWord(0xd4ca, 0x3d);
+					ChosenOrder = 0x3d;
 					break;
 
 				case 1:
-					this.processor.EmitGlobalWord(0xd4ca, 0x2d);
+					ChosenOrder = 0x2d;
 					break;
 
 				case 2:
-					this.processor.EmitGlobalWord(0xd4ca, 0x3f);
+					ChosenOrder = 0x3f;
 					break;
 
 				case 3:
@@ -122,7 +122,7 @@ namespace Civilization1Remaster.UI
 					break;
 
 				case 4:
-					this.processor.EmitGlobalWord(0xd4ca, 0x53);
+					ChosenOrder = 0x53;
 					break;
 
 				case 5:
@@ -133,22 +133,22 @@ namespace Civilization1Remaster.UI
 					if (this.owner.SaveLoad.FetchBay != 0xffff)
 					{
 						GameEndRequest = GameLoadAndSave.FetchSessionAsk;
-						this.processor.EmitGlobalWord(0xd4ca, 0x1000);
+						ChosenOrder = 0x1000;
 					}
 					break;
 
 				case 6:
-					this.processor.EmitGlobalWord(0xd4ca, 0xfffe);
+					ChosenOrder = 0xfffe;
 					break;
 
 				case 8:
 					GameEndRequest = 0x2;
-					this.processor.EmitGlobalWord(0xd4ca, 0x1000);
+					ChosenOrder = 0x1000;
 					break;
 
 				case 9:
 					GameEndRequest = 0x1;
-					this.processor.EmitGlobalWord(0xd4ca, 0x1000);
+					ChosenOrder = 0x1000;
 					break;
 
 				case 10:
@@ -178,15 +178,15 @@ namespace Civilization1Remaster.UI
 
 				if (choice != 0xffff)
 				{
-					if (this.processor.PullGlobalWord(0x2f9c) == 0)
+					if (MenuHelpTopic == 0)
 					{
 						this.owner.World.SessionPrefMarkers ^= (short)(1 << (byte)choice);
 					}
 
-					this.processor.EmitGlobalWord(0x2f9a, choice);
+					DefaultLine = choice;
 				}
 			}
-			while (choice != 0xffff || this.processor.PullGlobalWord(0x2f9c) != 0);
+			while (choice != 0xffff || MenuHelpTopic != 0);
 		}
 
 		/// <summary>
@@ -358,7 +358,7 @@ namespace Civilization1Remaster.UI
 
 			short choice = (short)this.owner.Dialogs.DisplayMenu(0xba06, 72, 8, 0);
 
-			this.processor.EmitGlobalWord(0xd4ca, choice >= 0 && choice < keys.Count ? (ushort)(short)(sbyte)keys[choice] : (ushort)0xffff);
+			ChosenOrder = choice >= 0 && choice < keys.Count ? (ushort)(short)(sbyte)keys[choice] : (ushort)0xffff;
 		}
 
 		/// <summary>" Change to " and the name of the terrain the work makes (the word at the address)</summary>

@@ -45,11 +45,11 @@ namespace Civilization1Remaster.Engine
 			this.processor.EmitLocalWord(0x2, 0xffff);
 			this.processor.EmitLocalWord(0x4, 0);
 			this.processor.EmitGlobalWord(0x2fa2, 0);
-			this.processor.EmitGlobalWord(0x2f9c, 0);
+			MenuHelpTopic = 0;
 
-			if (this.processor.PullGlobalWord(0x2f9a) != 0xffff)
+			if (DefaultLine != 0xffff)
 			{
-				currentChoice = this.processor.PullGlobalWord(0x2f9a);
+				currentChoice = DefaultLine;
 				this.processor.EmitLocalWord(0x4, currentChoice);
 			}
 
@@ -99,7 +99,7 @@ namespace Civilization1Remaster.Engine
 
 			this.owner.Startup.ConcealMouseCursor();
 
-			OperateMenu(charsAddr, horizLoc, vertLoc, this.processor.PullGlobalWord(0x2f9a));
+			OperateMenu(charsAddr, horizLoc, vertLoc, DefaultLine);
 
 			this.owner.Startup.DisplayMouseCursor();
 
@@ -130,7 +130,7 @@ namespace Civilization1Remaster.Engine
 
 						if (this.owner.GlobDb3a == 2)
 						{
-							this.processor.EmitGlobalWord(0x2f9c, 1);
+							MenuHelpTopic = 1;
 						}
 
 						ushort rawLine = (ushort)((short)this.owner.GlobDb3e - (short)vertLoc - 4);
@@ -188,7 +188,7 @@ namespace Civilization1Remaster.Engine
 						}
 						else if (key == 0x2300)
 						{
-							this.processor.EmitGlobalWord(0x2f9c, 1);
+							MenuHelpTopic = 1;
 							done = 1;
 							this.processor.EmitLocalWord(0x8, 1);
 						}
@@ -270,7 +270,7 @@ namespace Civilization1Remaster.Engine
 
 				if (currentChoice == 0xffff)
 				{
-					this.processor.EmitGlobalWord(0x2f9c, 0);
+					MenuHelpTopic = 0;
 				}
 				else
 				{
@@ -278,7 +278,7 @@ namespace Civilization1Remaster.Engine
 
 					if (VgaMode == 0)
 					{
-						byte flashHue = (byte)(this.processor.PullGlobalWord(0x2f9c) != 0 ? 11 : this.processor.PullGlobalWord(0x654c));
+						byte flashHue = (byte)(MenuHelpTopic != 0 ? 11 : this.processor.PullGlobalWord(0x654c));
 
 						this.owner.VideoCard.SubstituteHue(ScreenBox,
 							horizLoc + 3,
@@ -295,7 +295,7 @@ namespace Civilization1Remaster.Engine
 				}
 
 				DialogStyle = 0xffff;
-				this.processor.EmitGlobalWord(0x2f9a, 0xffff);
+				DefaultLine = 0xffff;
 				this.processor.EmitGlobalWord(0x2fa0, 0);
 				this.processor.EmitGlobalWord(0xd206, 0);
 				DisabledLines = 0;

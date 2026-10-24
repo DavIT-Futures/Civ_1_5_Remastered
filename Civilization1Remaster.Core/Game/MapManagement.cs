@@ -56,8 +56,8 @@ namespace Civilization1Remaster.Game
 
 			ushort kept = this.processor.PullGlobalWord(0xd20a);
 
-			this.processor.EmitGlobalWord(0xd4cc, (ushort)this.owner.Routing.TunePosition(horizLoc));
-			this.processor.EmitGlobalWord(0xd75e, (ushort)this.owner.Helpers.VerifyValueSpan(vertLoc, 0, 38));
+			MapViewHoriz = (ushort)this.owner.Routing.TunePosition(horizLoc);
+			MapViewVert = (ushort)this.owner.Helpers.VerifyValueSpan(vertLoc, 0, 38);
 
 			// Another error, the code modified first parameter (playerID) to a
 			// Visibility Mask and that conflicts with other code which expects playerID.
@@ -78,16 +78,16 @@ namespace Civilization1Remaster.Game
 
 					if (!shown)
 					{
-						ushort tileHoriz = (ushort)this.owner.Routing.TunePosition(column + this.processor.PullGlobalSignedWord(0xd4cc));
-						ushort tileVert = (ushort)(row + this.processor.PullGlobalWord(0xd75e));
+						ushort tileHoriz = (ushort)this.owner.Routing.TunePosition(column + (short)MapViewHoriz);
+						ushort tileVert = (ushort)(row + MapViewVert);
 
 						shown = (this.owner.World.ChartSight[tileHoriz, tileVert] & chartSightFilter) != 0;
 					}
 
 					if (shown)
 					{
-						RepaintMapTile((short)this.owner.Routing.TunePosition(column + this.processor.PullGlobalSignedWord(0xd4cc)),
-							row + this.processor.PullGlobalSignedWord(0xd75e));
+						RepaintMapTile((short)this.owner.Routing.TunePosition(column + (short)MapViewHoriz),
+							row + (short)MapViewVert);
 					}
 					else
 					{
@@ -204,10 +204,10 @@ namespace Civilization1Remaster.Game
 				return FinishRenderMapTile(outcome);
 			}
 
-			short screenX = (short)((this.owner.Routing.TunePosition(horizLoc - this.processor.PullGlobalSignedWord(0xd4cc)) << 4) + 0x50);
+			short screenX = (short)((this.owner.Routing.TunePosition(horizLoc - (short)MapViewHoriz) << 4) + 0x50);
 			this.processor.EmitLocalWord(0x6, (ushort)screenX);
 
-			short screenY = (short)(((vertLoc - this.processor.PullGlobalSignedWord(0xd75e)) << 4) + 0x8);
+			short screenY = (short)(((vertLoc - (short)MapViewVert) << 4) + 0x8);
 			this.processor.EmitLocalWord(0xa, (ushort)screenY);
 
 			if (screenX < 0x50 || screenX >= 0x140 || screenY < 0x8 || screenY > 0xc0)
@@ -737,8 +737,8 @@ namespace Civilization1Remaster.Game
 				return this.processor.RegAcc.Value16;
 			}
 
-			short viewHoriz = (short)((this.owner.Routing.TunePosition(horizLoc - this.processor.PullGlobalSignedWord(0xd4cc)) << 4) + 0x50);
-			short viewVert = (short)((((byte)vertLoc - this.processor.PullGlobalWord(0xd75e)) << 4) + 8);
+			short viewHoriz = (short)((this.owner.Routing.TunePosition(horizLoc - (short)MapViewHoriz) << 4) + 0x50);
+			short viewVert = (short)((((byte)vertLoc - MapViewVert) << 4) + 8);
 			ushort drawn = 0;
 
 			if (viewHoriz >= 0x50 && viewHoriz < 0x140 && viewVert >= 8 && viewVert <= 0xc0 &&

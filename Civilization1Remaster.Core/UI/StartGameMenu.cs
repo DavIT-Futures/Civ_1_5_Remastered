@@ -62,7 +62,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.World.HardnessTier = (short)this.owner.Dialogs.DisplayMenu(0xba06, 160, 35, 1);
 
-			if (this.processor.PullGlobalWord(0x1a3c) != 0 && this.processor.PullGlobalWord(0x2fa2) != 0)
+			if (MousePresent != 0 && this.processor.PullGlobalWord(0x2fa2) != 0)
 			{
 				this.owner.Startup.ObtainMouseState();
 

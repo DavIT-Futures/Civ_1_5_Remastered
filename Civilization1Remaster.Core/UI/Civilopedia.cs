@@ -90,7 +90,7 @@ namespace Civilization1Remaster.UI
 			short width = (short)((short)arg2 > 0 ? 0x96 : 0x64);
 			ushort entryTally = ListCivilopediaEntries(arg1, arg2, width, lastName, nextName, shortName);
 
-			ushort answer = (ushort)(this.processor.PullGlobalWord(0x1a3c) != 0
+			ushort answer = (ushort)(MousePresent != 0
 				? ChooseCivilopediaEntryWithMouse(arg1, width, entryTally)
 				: ChooseCivilopediaEntryWithKeys(arg1, width, entryTally));
 
@@ -466,7 +466,7 @@ namespace Civilization1Remaster.UI
 			}
 
 			this.processor.EmitGlobalWord(0x3c62, 0x0);
-			if (this.processor.PullGlobalWord(0x3934) == 0xffff)
+			if (KingAnswer == 0xffff)
 			{
 				this.owner.Services.FloodBox(ScreenBox, 8, 8, 304, 184, bgColor);
 				this.owner.Helpers.LaunchHueCycling();

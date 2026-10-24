@@ -112,7 +112,7 @@ namespace Civilization1Remaster.Game
 
 			if (participantIdx == this.owner.World.PersonParticipantIdx)
 			{
-				this.owner.MapOps.FocusMapView(this.owner.World.PersonParticipantIdx, (short)this.processor.PullGlobalWord(0xd4cc), (short)this.processor.PullGlobalWord(0xd75e));
+				this.owner.MapOps.FocusMapView(this.owner.World.PersonParticipantIdx, (short)MapViewHoriz, (short)MapViewVert);
 			}
 			else
 			{

@@ -683,7 +683,7 @@ namespace Civilization1Remaster.UI
 
 				tally.Size[owner] += size;
 				tally.Approval[owner] += (short)(size + CityHappy - CityUnhappy);
-				tally.Money[owner] += (short)((CityLuxuries << 1) + this.processor.PullGlobalWord(0xe17a));
+				tally.Money[owner] += (short)((CityLuxuries << 1) + CityTaxes);
 				tally.Unrest[owner] += (short)(CityFood - (size << 1));
 				tally.Output[owner] += (short)(CityFood + CityShields + CityTrade);
 

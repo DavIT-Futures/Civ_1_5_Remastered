@@ -424,11 +424,11 @@ namespace Civilization1Remaster.Game
 
 				short assailantScreenX = (short)((this.owner.Routing.TunePosition(
 					PullUnitByte(participantIdx1, troopIdx1, TroopHorizDisplacement) -
-					this.processor.PullGlobalSignedWord(0xd4cc)) << 4) + 0x50);
+					(short)MapViewHoriz) << 4) + 0x50);
 				this.processor.EmitLocalWord(0xa, (ushort)assailantScreenX);
 
 				short assailantScreenY = (short)((((byte)PullUnitByte(participantIdx1, troopIdx1, TroopVertDisplacement) -
-					this.processor.PullGlobalWord(0xd75e)) << 4) + 0x8);
+					MapViewVert) << 4) + 0x8);
 				this.processor.EmitLocalWord(0xc, (ushort)assailantScreenY);
 
 				byte defX = (byte)PullUnitByte(participantIdx2, troopIdx2, TroopHorizDisplacement);

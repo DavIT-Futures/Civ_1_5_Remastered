@@ -51,7 +51,7 @@ namespace Civilization1Remaster.UI
 				this.owner.Startup.DisplayMouseCursor();
 			}
 
-			this.processor.EmitGlobalWord(0x2f9c, 0x0);
+			MenuHelpTopic = 0x0;
 			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("DisplayHelpTopic");

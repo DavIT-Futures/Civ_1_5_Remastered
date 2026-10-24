@@ -1249,10 +1249,19 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   `VgaMode` 0xd762, `FoundPlayer` 0xd7f0, `MapRevealed` 0xd806, `GameEndRequest` 0xdc48 (228 odczytów, 122 zapisy;
   `GameMessage` spoza `GameModule` zostaje z adresem 0x2f9e). Pełny zestaw zielony, raport identyczny, 8 / 8 mutacji
   (dwie dopiero jako odwrócenie wartości: sąsiedni adres ma w testach to samo 0). Pułapka skryptu: plik czytany
-  binarnie (`
-`) i zapisany w trybie tekstowym dostaje `
+  binarnie (`
+
+`) i zapisany w trybie tekstowym dostaje `
+
+
 ` – narzędzie mutacji odrzuca wtedy łatkę; zapis z
   `newline=''`.
+- B4, porcja 3 (2026-10-24): 17 zmiennych globalnych: `MapViewHoriz` / `MapViewVert` 0xd4cc / 0xd75e, `CityCorruption`
+  0xd2e0, `CityUnitUpkeep` 0xd2f6, `CityTaxes` 0xe17a, `CitySettlers` 0xe3c6, `CityAttackersAway` 0x6546,
+  `CitySpecialSlots` 0xdeb8, `DefaultLine` 0x2f9a, `MenuHelpTopic` 0x2f9c, `ChosenOrder` 0xd4ca, `KingAnswer` 0x3934,
+  `MainMenuChoice` 0x6b32, `ReplayMode` 0x680a, `ReplayActor` 0x6810, `MousePresent` 0x1a3c, `PointerShowLevel` 0xdeea
+  (181 odczytów, 89 zapisów). Pełny zestaw zielony, raport identyczny, mutacje (odwrócenie wartości) złapane – zapis
+  `ChosenOrder` łapie test paska menu, odczyt test tury gracza.
 
 ## Następny krok
 

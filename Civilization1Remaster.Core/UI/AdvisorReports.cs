@@ -425,7 +425,7 @@ namespace Civilization1Remaster.UI
 
 					this.owner.Libc.AppendText(0xba06, "\\/");
 
-					this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText((short)this.processor.PullGlobalWord(0xe17a), 10));
+					this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText((short)CityTaxes, 10));
 
 					this.owner.Libc.AppendText(0xba06, "$/");
 
@@ -433,7 +433,7 @@ namespace Civilization1Remaster.UI
 
 					this.owner.Libc.AppendText(0xba06, "~");
 
-					income += (short)this.processor.PullGlobalWord(0xe17a);
+					income += (short)CityTaxes;
 					science += (short)CityScience;
 				}
 

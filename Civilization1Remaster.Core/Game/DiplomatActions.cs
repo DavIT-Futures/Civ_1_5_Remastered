@@ -471,8 +471,8 @@ namespace Civilization1Remaster.Game
 					this.processor.EmitGlobalWord((ushort)(pictures + (pictureIdx << 1)), this.owner.VideoCard.ScreenToPicture(1, (ushort)(((pictureIdx % 7) * 0x2d) + 1), (ushort)(((pictureIdx / 7) * 0x2d) + 1), 0x2c, 0x2c));
 				}
 
-				horizLoc = (short)((this.owner.Routing.TunePosition(horizLoc - this.processor.PullGlobalSignedWord(0xd4cc)) << 4) + 0x42);
-				vertLoc = (short)(((vertLoc - this.processor.PullGlobalWord(0xd75e)) << 4) - 6);
+				horizLoc = (short)((this.owner.Routing.TunePosition(horizLoc - (short)MapViewHoriz) << 4) + 0x42);
+				vertLoc = (short)(((vertLoc - MapViewVert) << 4) - 6);
 
 				horizLoc = (short)this.owner.Helpers.VerifyValueSpan(horizLoc, 80, 276);
 				vertLoc = (short)this.owner.Helpers.VerifyValueSpan(vertLoc, 8, 0x9c);

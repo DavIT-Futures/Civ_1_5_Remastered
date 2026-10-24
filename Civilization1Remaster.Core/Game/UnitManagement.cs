@@ -659,8 +659,8 @@ namespace Civilization1Remaster.Game
 
 			if (cursorHoriz != 0xffff)
 			{
-				frameHoriz = (short)((this.owner.Routing.TunePosition((short)cursorHoriz - this.processor.PullGlobalSignedWord(0xd4cc)) << 4) + 0x50);
-				frameVert = (short)(((cursorVert - this.processor.PullGlobalWord(0xd75e)) << 4) + 0x8);
+				frameHoriz = (short)((this.owner.Routing.TunePosition((short)cursorHoriz - (short)MapViewHoriz) << 4) + 0x50);
+				frameVert = (short)(((cursorVert - MapViewVert) << 4) + 0x8);
 
 				if (frameHoriz < 0x50 || frameHoriz >= 0x140 || frameVert < 0x8 || frameVert > 0xc0)
 					frameHoriz = -1;
@@ -1470,7 +1470,7 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"PanMapToPosition({participantIdx}, {horizLoc}, {vertLoc})");
 
-			int viewLeft = this.processor.PullGlobalSignedWord(0xd4cc);
+			int viewLeft = (short)MapViewHoriz;
 
 			// The view may reach over the right edge of the world
 			if (horizLoc < 16 && viewLeft > 64)
@@ -1478,7 +1478,7 @@ namespace Civilization1Remaster.Game
 				horizLoc += MapRules.Width;
 			}
 
-			int viewTop = this.processor.PullGlobalSignedWord(0xd75e);
+			int viewTop = (short)MapViewVert;
 			bool outside = horizLoc < viewLeft + 2 || horizLoc > viewLeft + 13 || vertLoc < viewTop + 2 || vertLoc > viewTop + 9;
 
 			if (outside)
@@ -1877,8 +1877,8 @@ namespace Civilization1Remaster.Game
 			this.owner.VideoCard.RenderImage(screen, 0x50, 0, 0xf0, 0xc8, backScreen, 0x50, 0);
 
 			// Top left pixel of the tile in the map view (16 x 16 pixels a tile, from 80, 8)
-			short tileLeft = (short)((this.owner.Routing.TunePosition(horizLoc - this.processor.PullGlobalSignedWord(0xd4cc)) << 4) + 0x50);
-			short tileTop = (short)(((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Vert) - this.processor.PullGlobalWord(0xd75e)) << 4) + 8);
+			short tileLeft = (short)((this.owner.Routing.TunePosition(horizLoc - (short)MapViewHoriz) << 4) + 0x50);
+			short tileTop = (short)(((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Vert) - MapViewVert) << 4) + 8);
 
 			int stepHoriz = this.owner.MapOps.Chart.DirectionHoriz(heading);
 			int stepVert = this.owner.MapOps.Chart.DirectionVert(heading);
@@ -2034,7 +2034,7 @@ namespace Civilization1Remaster.Game
 
 			this.owner.TurnLogic.AwaitForKey();
 
-			if (this.processor.PullGlobalWord(0x1a3c) != 0)
+			if (MousePresent != 0)
 			{
 				do
 				{

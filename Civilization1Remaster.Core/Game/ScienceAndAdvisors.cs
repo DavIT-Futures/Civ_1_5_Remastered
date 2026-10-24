@@ -618,7 +618,7 @@ namespace Civilization1Remaster.Game
 			if (this.processor.PullGlobalWord(0x8078) != 0 && (short)FrameWord(ApproachLocal) == 5)
 				FrameWord(DefensiveLocal, 1);
 
-			short unhappy = (short)((player.RegimeKind <= 1 ? 1 : 2) * (short)this.processor.PullGlobalWord(0xe3c6));
+			short unhappy = (short)((player.RegimeKind <= 1 ? 1 : 2) * (short)CitySettlers);
 			FrameWord(HappyRoomLocal, (ushort)((short)CityFood - unhappy - (town.TrueExtent << 1)));
 
 			for (FrameWord(ChoiceLoopLocal, 0); (short)FrameWord(ChoiceLoopLocal) < 0x1c; this.processor.IncrementLocalWord(ChoiceLoopLocal))
@@ -838,7 +838,7 @@ namespace Civilization1Remaster.Game
 					break;
 
 				case 34:
-					Score = (short)-(((short)this.processor.PullGlobalWord(0xd2e0) << 1) - 0xc);
+					Score = (short)-(((short)CityCorruption << 1) - 0xc);
 					break;
 
 				case 35:
@@ -1045,7 +1045,7 @@ namespace Civilization1Remaster.Game
 				Score <<= 2;
 
 			// Doubled unless the player is at war (0x6ed4) and the approach is defensive or there is more food than 0xdeb8
-			if ((FrameWord(DefensiveLocal) == 0 && (short)CityShields <= (short)this.processor.PullGlobalWord(0xdeb8)) ||
+			if ((FrameWord(DefensiveLocal) == 0 && (short)CityShields <= (short)CitySpecialSlots) ||
 				this.processor.PullGlobalWord(0x6ed4) == 0)
 			{
 				Score <<= 1;
@@ -1124,7 +1124,7 @@ namespace Civilization1Remaster.Game
 			ushort display = ScreenBox;
 			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(display + 0x10), 1);
 
-			if (this.processor.PullGlobalWord(0x2f9c) == 0)
+			if (MenuHelpTopic == 0)
 				return (ushort)Score;
 
 			// The Civilopedia of the choice, then the menu again
@@ -1170,7 +1170,7 @@ namespace Civilization1Remaster.Game
 			this.processor.Journal.OpenScope($"ComposeProductionOption({townIdx}, {arg2})");
 
 			int perTurn = this.owner.Helpers.VerifyValueSpan(
-				(short)CityShields - this.processor.PullGlobalSignedWord(0xd2f6), 1, 99);
+				(short)CityShields - (short)CityUnitUpkeep, 1, 99);
 
 			ushort turns = (ushort)this.owner.Helpers.VerifyValueSpan(
 				(((10 * arg2) - this.owner.World.Towns[townIdx].MaterialsTally - 1) / (short)perTurn) + 1, 1, 999);
@@ -1336,7 +1336,7 @@ namespace Civilization1Remaster.Game
 
 				ushort scienceIdx = choiceList[choice];
 
-				if (this.processor.PullGlobalWord(0x2f9c) == 0)
+				if (MenuHelpTopic == 0)
 				{
 					human.PresentInquiryIdx = (short)scienceIdx;
 
@@ -1679,7 +1679,7 @@ namespace Civilization1Remaster.Game
 				this.processor.EmitLocalWord(0x2, 0x1c);
 			}
 
-			if ((participantIdx != person || participantIdx1 == -2) && this.processor.PullGlobalWord(0x3934) == 0xffff)
+			if ((participantIdx != person || participantIdx1 == -2) && KingAnswer == 0xffff)
 			{
 				this.processor.EmitGlobalWord(0xd206, 1);
 
@@ -1704,7 +1704,7 @@ namespace Civilization1Remaster.Game
 			if (this.owner.Audience.WelcomeEmissary(participantIdx, -1, 0) == 0xffff)
 				return;
 
-			this.processor.EmitGlobalWord(0x3934, 0);
+			KingAnswer = 0;
 			this.processor.EmitGlobalWord(0xd804, 0);
 			this.processor.EmitGlobalByte(0xba06, 0);
 
@@ -1744,7 +1744,7 @@ namespace Civilization1Remaster.Game
 					this.owner.TurnHooks.RepaintMainScreen();
 				}
 
-				if (this.processor.PullGlobalWord(0x3934) == 0xffff)
+				if (KingAnswer == 0xffff)
 				{
 					this.owner.TurnHooks.RepaintMainScreen();
 
@@ -1773,7 +1773,7 @@ namespace Civilization1Remaster.Game
 					}
 				}
 
-				if (participantIdx == person && this.processor.PullGlobalWord(0x3934) == 0xffff)
+				if (participantIdx == person && KingAnswer == 0xffff)
 				{
 					Message("Development of ")
 						.Text((ushort)((ushort)(0x16 * scienceIdx) + 0x4da))

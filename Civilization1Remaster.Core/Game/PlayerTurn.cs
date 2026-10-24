@@ -671,12 +671,12 @@ namespace Civilization1Remaster.Game
 			// On the map view (the unsigned comparisons of the original)
 			ushort horizLoc = this.troops.Pull(participantIdx, troopIdx, UnitMemory.Horiz);
 			this.processor.RegDest.Value16 = horizLoc;
-			ushort viewHoriz = this.processor.PullGlobalWord(0xd4cc);
+			ushort viewHoriz = MapViewHoriz;
 
 			if (viewHoriz < horizLoc)
 			{
 				this.turn.UnitDetail = this.troops.Pull(participantIdx, troopIdx, UnitMemory.Vert);
-				ushort viewVert = this.processor.PullGlobalWord(0xd75e);
+				ushort viewVert = MapViewVert;
 
 				if (this.turn.UnitDetail > viewVert && (ushort)(viewHoriz + 0xe) >= horizLoc &&
 					(ushort)(viewVert + 0xa) > this.turn.UnitDetail)
@@ -874,10 +874,10 @@ namespace Civilization1Remaster.Game
 
 				AwaitForKey();
 
-				if (this.processor.PullGlobalWord(0xd4ca) == 0xffff)
+				if (ChosenOrder == 0xffff)
 					return HumanOrder.NextLook;
 
-				this.turn.Order = this.processor.PullGlobalWord(0xd4ca);
+				this.turn.Order = ChosenOrder;
 
 				return (short)this.turn.Troop < 0x80 ? HumanOrder.MenuOrder : HumanOrder.MenuWithoutUnit;
 			}
@@ -930,10 +930,10 @@ namespace Civilization1Remaster.Game
 		private void LocateClickedTile()
 		{
 			this.turn.TargetHoriz = (ushort)this.owner.Routing.TunePosition(
-				(((short)this.owner.GlobDb3c - 80) / 16) + this.processor.PullGlobalSignedWord(0xd4cc));
+				(((short)this.owner.GlobDb3c - 80) / 16) + (short)MapViewHoriz);
 			this.processor.RegAcc.Value16 = (ushort)(this.owner.GlobDb3e - 8);
 			this.processor.DivideAccumulatorByPowerOfTwo(0x4);
-			this.processor.RegAcc.Value16 = (ushort)(this.processor.RegAcc.Value16 + this.processor.PullGlobalWord(0xd75e));
+			this.processor.RegAcc.Value16 = (ushort)(this.processor.RegAcc.Value16 + MapViewVert);
 			this.turn.TargetVert = this.processor.RegAcc.Value16;
 		}
 
@@ -1328,7 +1328,7 @@ namespace Civilization1Remaster.Game
 				this.turn.CursorHoriz = 0xffff;
 			}
 
-			if (this.processor.PullGlobalWord(0x1a3c) != 0)
+			if (MousePresent != 0)
 			{
 				// GoTo mouse pointer, or the normal one when GoTo is cancelled
 				this.processor.RegBase.Value16 = (ushort)((this.turn.MouseCursorSet != 0 ? 7 : 2) << 1);
@@ -3422,10 +3422,10 @@ namespace Civilization1Remaster.Game
 
 				case 0x74: // 't'
 					this.processor.EmitGlobalWord(0xdcfc, 1);
-					this.owner.MapOps.FocusMapView(participantIdx, this.processor.PullGlobalSignedWord(0xd4cc), this.processor.PullGlobalSignedWord(0xd75e));
+					this.owner.MapOps.FocusMapView(participantIdx, (short)MapViewHoriz, (short)MapViewVert);
 					this.owner.Conquest.AwaitForKeyPressOrMouseClick();
 					this.processor.EmitGlobalWord(0xdcfc, 0);
-					this.owner.MapOps.FocusMapView(participantIdx, this.processor.PullGlobalSignedWord(0xd4cc), this.processor.PullGlobalSignedWord(0xd75e));
+					this.owner.MapOps.FocusMapView(participantIdx, (short)MapViewHoriz, (short)MapViewVert);
 					break;
 
 				case 0x1300: // Alt + R
@@ -3464,7 +3464,7 @@ namespace Civilization1Remaster.Game
 					break;
 
 				case 0x1b: // Escape
-					if (this.processor.PullGlobalWord(0x1a3c) == 0 && this.turn.MarkedTileMode != 0)
+					if (MousePresent == 0 && this.turn.MarkedTileMode != 0)
 					{
 						this.turn.MarkedTileMode = 0;
 						ForgetMarkedTileOnScreen(participantIdx);
@@ -3472,7 +3472,7 @@ namespace Civilization1Remaster.Game
 					break;
 
 				case 0x9: // Tab
-					if (this.processor.PullGlobalWord(0x1a3c) == 0)
+					if (MousePresent == 0)
 						ToggleMarkedTile(participantIdx);
 					break;
 
@@ -3517,14 +3517,14 @@ namespace Civilization1Remaster.Game
 			this.processor.RegSource.Value16 = (ushort)(this.turn.Direction << 1);
 
 			ushort horiz = (ushort)(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1882)) << 2);
-			this.processor.EmitGlobalWord(0xd4cc, (ushort)(this.processor.PullGlobalWord(0xd4cc) + horiz));
+			MapViewHoriz = (ushort)(MapViewHoriz + horiz);
 
 			ushort vert = (ushort)(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x18e4)) << 2);
-			this.processor.EmitGlobalWord(0xd75e, (ushort)(this.processor.PullGlobalWord(0xd75e) + vert));
+			MapViewVert = (ushort)(MapViewVert + vert);
 
 			this.owner.MapOps.FocusMapView(this.owner.World.PersonParticipantIdx,
-				this.processor.PullGlobalSignedWord(0xd4cc),
-				this.processor.PullGlobalSignedWord(0xd75e));
+				(short)MapViewHoriz,
+				(short)MapViewVert);
 		}
 
 		/// <summary>
@@ -3570,7 +3570,7 @@ namespace Civilization1Remaster.Game
 			}
 
 			this.turn.Result = (ushort)rate;
-			this.processor.EmitGlobalWord(0x2f9a, (ushort)participant.LevyRatio);
+			DefaultLine = (ushort)participant.LevyRatio;
 
 			this.turn.Result = this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
 
@@ -3606,7 +3606,7 @@ namespace Civilization1Remaster.Game
 			}
 
 			this.turn.Result = (ushort)rate;
-			this.processor.EmitGlobalWord(0x2f9a, (ushort)-(participant.LevyRatio + participant.ResearchLevyRatio - 10));
+			DefaultLine = (ushort)-(participant.LevyRatio + participant.ResearchLevyRatio - 10);
 
 			this.turn.Result = this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
 
@@ -3683,8 +3683,8 @@ namespace Civilization1Remaster.Game
 
 				if (!onUnit)
 				{
-					this.turn.CursorHoriz = (ushort)(this.processor.PullGlobalWord(0xd4cc) + 7);
-					this.turn.CursorVert = (ushort)(this.processor.PullGlobalWord(0xd75e) + 6);
+					this.turn.CursorHoriz = (ushort)(MapViewHoriz + 7);
+					this.turn.CursorVert = (ushort)(MapViewVert + 6);
 				}
 
 				if ((this.owner.World.ChartSight[this.turn.CursorHoriz, this.turn.CursorVert] & (1 << (participantIdx & 0xff))) != 0)
@@ -3699,10 +3699,10 @@ namespace Civilization1Remaster.Game
 		{
 			this.owner.MenuSystem.ManageMenuBar(participantIdx, (short)this.turn.Troop, menu);
 
-			if (this.processor.PullGlobalWord(0xd4ca) == 0xffff)
+			if (ChosenOrder == 0xffff)
 				return KeyStep.NextLook;
 
-			this.turn.Order = this.processor.PullGlobalWord(0xd4ca);
+			this.turn.Order = ChosenOrder;
 			return KeyStep.MenuOrder;
 		}
 
@@ -4132,15 +4132,15 @@ namespace Civilization1Remaster.Game
 			this.owner.Journal.OpenScope($"VerifyPositionOnScreen({horizLoc}, {vertLoc})");
 
 			// function body
-			if (horizLoc < 16 && this.processor.PullGlobalSignedWord(0xd4cc) >= 65)
+			if (horizLoc < 16 && (short)MapViewHoriz >= 65)
 			{
 				horizLoc += 80;
 			}
 
-			if (horizLoc < this.processor.PullGlobalSignedWord(0xd4cc) ||
-				horizLoc >= this.processor.PullGlobalSignedWord(0xd4cc) + 15 ||
-				vertLoc < this.processor.PullGlobalSignedWord(0xd75e) ||
-				vertLoc >= this.processor.PullGlobalSignedWord(0xd75e) + 12)
+			if (horizLoc < (short)MapViewHoriz ||
+				horizLoc >= (short)MapViewHoriz + 15 ||
+				vertLoc < (short)MapViewVert ||
+				vertLoc >= (short)MapViewVert + 12)
 			{
 				this.processor.RegAcc.Value16 = 0;
 			}

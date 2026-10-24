@@ -29,7 +29,7 @@ namespace Civilization1Remaster.Engine
 			// '1' - No sound 0x4e, '4' - Sound blaster 0x41, '5' - Roland MIDI board 0x52; first letter of driver
 			this.processor.EmitGlobalByte(0x1a30, 0x4e);
 			// '1' - Mouse and Keyboard 0x1, '2' - Keyboard only 0x0
-			this.processor.EmitGlobalWord(0x1a3c, 0x1);
+			MousePresent = 0x1;
 
 			this.owner.Prologue.DisplayMainIntro();
 
@@ -72,12 +72,12 @@ namespace Civilization1Remaster.Engine
 
 			this.processor.EmitGlobalWord(0x6e92, this.owner.ImageToolkit.ImportIcon(0x277));
 
-			if (this.processor.PullGlobalWord(0x1a3c) != 0)
+			if (MousePresent != 0)
 			{
-				this.processor.EmitGlobalWord(0x1a3c, this.owner.Services.PrepareMouse());
+				MousePresent = this.owner.Services.PrepareMouse();
 			}
 
-			if (this.processor.PullGlobalWord(0x1a3c) != 0)
+			if (MousePresent != 0)
 			{
 				this.owner.Services.AssignMouseCursorImage(0, 0, this.processor.PullGlobalWord(0x6e92));
 				DisplayMouseCursor();
@@ -90,18 +90,18 @@ namespace Civilization1Remaster.Engine
 			// Start Game menu, level, tribe, name
 			FreshWorldChoices();
 
-			if (this.processor.PullGlobalWord(0x6b32) == 1)
+			if (MainMenuChoice == 1)
 			{
 				// A loaded game: the map view around the first city of the human player
 				this.processor.RegAcc.Value16 = (ushort)(this.owner.World.Participants[this.owner.World.PersonParticipantIdx].HorizBegin - 7);
-				this.processor.EmitGlobalWord(0xd4cc, this.processor.RegAcc.Value16);
-				this.processor.EmitGlobalWord(0xd75e, 0x13);
+				MapViewHoriz = this.processor.RegAcc.Value16;
+				MapViewVert = 0x13;
 
 				this.owner.TurnHooks.RepaintMainScreen();
 			}
 
 			// Mouse pointer show/hide level at the start of the game, a game loaded during play starts with the same level
-			ushort arrowTier = this.processor.PullGlobalWord(0xdeea);
+			ushort arrowTier = PointerShowLevel;
 
 			while (true)
 			{
@@ -119,7 +119,7 @@ namespace Civilization1Remaster.Engine
 				ImportGameDuringPlay(arrowTier);
 			}
 
-			if (this.processor.PullGlobalWord(0x1a3c) != 0)
+			if (MousePresent != 0)
 				this.owner.Services.DeactivateMouse();
 
 			this.owner.Services.PerformSound(0, 0);
@@ -140,13 +140,13 @@ namespace Civilization1Remaster.Engine
 			this.processor.Journal.OpenScope($"ImportGameDuringPlay({arrowTier})");
 
 			GameEndRequest = 0x0;
-			this.processor.EmitGlobalWord(0xd4ca, 0x0);
+			ChosenOrder = 0x0;
 
 			// The turn was left in the middle, restore the pointer level
-			while ((short)this.processor.PullGlobalWord(0xdeea) > (short)arrowTier)
+			while ((short)PointerShowLevel > (short)arrowTier)
 				ConcealMouseCursor();
 
-			while ((short)this.processor.PullGlobalWord(0xdeea) < (short)arrowTier)
+			while ((short)PointerShowLevel < (short)arrowTier)
 				DisplayMouseCursor();
 
 			ushort bay = this.owner.SaveLoad.FetchBay;
@@ -172,9 +172,9 @@ namespace Civilization1Remaster.Engine
 
 			FreshWorldChoices();
 
-			this.processor.EmitGlobalWord(0x6b32, 0x1);
-			this.processor.EmitGlobalWord(0xd4cc, (ushort)(this.owner.World.Participants[this.owner.World.PersonParticipantIdx].HorizBegin - 7));
-			this.processor.EmitGlobalWord(0xd75e, 0x13);
+			MainMenuChoice = 0x1;
+			MapViewHoriz = (ushort)(this.owner.World.Participants[this.owner.World.PersonParticipantIdx].HorizBegin - 7);
+			MapViewVert = 0x13;
 
 			this.owner.TurnHooks.RepaintMainScreen();
 
@@ -187,7 +187,7 @@ namespace Civilization1Remaster.Engine
 		public void ObtainMouseState()
 		{
 			// function body
-			if (this.processor.PullGlobalWord(0x1a3c) != 0)
+			if (MousePresent != 0)
 			{
 				this.owner.Services.ObtainAndWipeMouseClick();
 
@@ -214,9 +214,9 @@ namespace Civilization1Remaster.Engine
 		{
 			this.processor.Journal.OpenScope("DisplayMouseCursor()");
 
-			this.processor.EmitGlobalWord(0xdeea, (ushort)(this.processor.PullGlobalWord(0xdeea) + 1));
+			PointerShowLevel = (ushort)(PointerShowLevel + 1);
 
-			if (this.processor.PullGlobalWord(0x1a3c) != 0 && this.processor.PullGlobalWord(0xdeea) == 1)
+			if (MousePresent != 0 && PointerShowLevel == 1)
 			{
 				this.owner.Services.RenderMouseCursor();
 			}
@@ -232,12 +232,12 @@ namespace Civilization1Remaster.Engine
 			this.processor.Journal.OpenScope("ConcealMouseCursor()");
 
 			// function body
-			if (this.processor.PullGlobalWord(0x1a3c) != 0 && this.processor.PullGlobalWord(0xdeea) == 1)
+			if (MousePresent != 0 && PointerShowLevel == 1)
 			{
 				this.owner.Services.BlankMouseCursor();
 			}
 		
-			this.processor.EmitGlobalWord(0xdeea, this.processor.DecrementWord(this.processor.PullGlobalWord(0xdeea)));
+			PointerShowLevel = this.processor.DecrementWord(PointerShowLevel);
 
 			// Far return
 			this.processor.Journal.CloseScope("ConcealMouseCursor");
@@ -250,9 +250,9 @@ namespace Civilization1Remaster.Engine
 		{
 			this.processor.Journal.OpenScope("DisplayMouseCursorFully()");
 
-			this.processor.EmitGlobalWord(0x652e, this.processor.PullGlobalWord(0xdeea));
+			this.processor.EmitGlobalWord(0x652e, PointerShowLevel);
 
-			while ((short)this.processor.PullGlobalWord(0xdeea) < 1)
+			while ((short)PointerShowLevel < 1)
 			{
 				DisplayMouseCursor();
 			}
@@ -267,7 +267,7 @@ namespace Civilization1Remaster.Engine
 		{
 			this.processor.Journal.OpenScope("ConcealMouseCursorToSavedLevel()");
 
-			while ((short)this.processor.PullGlobalWord(0xdeea) > (short)this.processor.PullGlobalWord(0x652e))
+			while ((short)PointerShowLevel > (short)this.processor.PullGlobalWord(0x652e))
 			{
 				ConcealMouseCursor();
 			}
@@ -369,18 +369,18 @@ namespace Civilization1Remaster.Engine
 
 			while (!chosen)
 			{
-				while (this.processor.PullGlobalWord(0x6b32) == 0xffff)
+				while (MainMenuChoice == 0xffff)
 				{
 					this.owner.Libc.CopyText(0xba06, " Start a New Game\n Load a Saved Game\n EARTH\n Customize World\n View Hall of Fame\n");
 
-					this.processor.EmitGlobalWord(0x6b32, this.owner.Dialogs.DisplayMenu(0xba06, 100, 140, 1));
+					MainMenuChoice = this.owner.Dialogs.DisplayMenu(0xba06, 100, 140, 1);
 				}
 
 				AwaitTitleSongMeasure();
 
 				this.owner.Services.PerformSound(1, 0);
 
-				switch (this.processor.PullGlobalWord(0x6b32))
+				switch (MainMenuChoice)
 				{
 					case 0:
 						ConcealMouseCursor();
@@ -399,7 +399,7 @@ namespace Civilization1Remaster.Engine
 						if (this.owner.SaveLoad.ImportGameFromMenu(0xffff) == 0xffff)
 						{
 							// No game loaded: the menu again
-							this.processor.EmitGlobalWord(0x6b32, 0xffff);
+							MainMenuChoice = 0xffff;
 							break;
 						}
 
@@ -436,7 +436,7 @@ namespace Civilization1Remaster.Engine
 
 						DisplayMouseCursor();
 
-						this.processor.EmitGlobalWord(0x6b32, 0xffff);
+						MainMenuChoice = 0xffff;
 						break;
 
 					default:
@@ -449,8 +449,8 @@ namespace Civilization1Remaster.Engine
 
 			this.processor.EmitGlobalWord(0x2f98, 0x1);
 
-			if (VgaMode != 0 && (this.processor.PullGlobalWord(0x6b32) == 0 ||
-				this.processor.PullGlobalWord(0x6b32) == 2 || this.processor.PullGlobalWord(0x6b32) == 3))
+			if (VgaMode != 0 && (MainMenuChoice == 0 ||
+				MainMenuChoice == 2 || MainMenuChoice == 3))
 			{
 				this.owner.Services.FloodColors(5, 0, 0, 0);
 			}
@@ -561,7 +561,7 @@ namespace Civilization1Remaster.Engine
 		/// </summary>
 		private void ChooseWorldOption(ushort optionAddr, short menuVert, string choices, ushort helpTopic)
 		{
-			this.processor.EmitGlobalWord(0x2f9a, 0x1);
+			DefaultLine = 0x1;
 
 			while (true)
 			{
@@ -574,12 +574,12 @@ namespace Civilization1Remaster.Engine
 				if (this.processor.PullGlobalWord(optionAddr) == 0xffff)
 					continue;
 
-				if (this.processor.PullGlobalWord(0x2f9c) == 0)
+				if (MenuHelpTopic == 0)
 					break;
 
 				this.owner.HelpSystem.DisplayHelpTopic(helpTopic);
 
-				this.processor.EmitGlobalWord(0x2f9a, this.processor.PullGlobalWord(optionAddr));
+				DefaultLine = this.processor.PullGlobalWord(optionAddr);
 			}
 		}
 
@@ -590,7 +590,7 @@ namespace Civilization1Remaster.Engine
 		{
 			this.processor.Journal.OpenScope("FreshWorldChoices()");
 
-			if (this.processor.PullGlobalWord(0x1a3c) != 0)
+			if (MousePresent != 0)
 			{
 				this.owner.Services.AssignMouseCursorImage(0, 0, this.processor.PullGlobalWord(0xd4dc));
 			}

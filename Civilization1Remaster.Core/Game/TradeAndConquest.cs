@@ -470,7 +470,7 @@ namespace Civilization1Remaster.Game
 
 						do
 						{
-							if (this.processor.PullGlobalWord(0x3934) == 0xffff)
+							if (KingAnswer == 0xffff)
 							{
 								choice = this.owner.TurnHooks.DisplayDialog(0xba06, 80, 32);
 							}
@@ -502,7 +502,7 @@ namespace Civilization1Remaster.Game
 							this.owner.Libc.AppendText(0xba06, (ushort)((0x16 * this.processor.PullLocalWord(0x4)) + 0x4da));
 							this.owner.Libc.AppendText(0xba06, ".\n");
 
-							if (this.processor.PullGlobalWord(0x3934) == 0xffff)
+							if (KingAnswer == 0xffff)
 							{
 								this.owner.TurnHooks.DisplayDialog(0xba06, 80, 80);
 							}

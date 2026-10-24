@@ -389,37 +389,37 @@ namespace Civilization1Remaster.UI
 		/// </summary>
 		private void TakeIntroChoice()
 		{
-			this.processor.EmitGlobalWord(0x6b32, 0xfffe);
+			MainMenuChoice = 0xfffe;
 
 			if ((ushort)this.owner.Libc.KeyAvailable() != 0)
 			{
-				this.processor.EmitGlobalWord(0x6b32, 0xffff);
+				MainMenuChoice = 0xffff;
 
 				switch (this.owner.Dialogs.ObtainNavigationKey())
 				{
 					case 0x4e:
 					case 0x6e:
-						this.processor.EmitGlobalWord(0x6b32, 0);
+						MainMenuChoice = 0;
 						break;
 
 					case 0x4c:
 					case 0x6c:
-						this.processor.EmitGlobalWord(0x6b32, 1);
+						MainMenuChoice = 1;
 						break;
 
 					case 0x45:
 					case 0x65:
-						this.processor.EmitGlobalWord(0x6b32, 2);
+						MainMenuChoice = 2;
 						break;
 
 					case 0x43:
 					case 0x63:
-						this.processor.EmitGlobalWord(0x6b32, 3);
+						MainMenuChoice = 3;
 						break;
 				}
 			}
 
-			if (this.processor.PullGlobalWord(0x6b32) == 0xfffe)
+			if (MainMenuChoice == 0xfffe)
 				ShowTitleLogo();
 		}
 
@@ -465,7 +465,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.TurnLogic.AwaitForKey();
 
-			this.processor.EmitGlobalWord(0x6b32, 0xffff);
+			MainMenuChoice = 0xffff;
 		}
 
 		/// <summary>Stops the colour cycles, leaves the title logo on screen 0 and lets the picture of the logo go</summary>
@@ -1069,8 +1069,8 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Startup.ConcealMouseCursor();
 
-			short centreHoriz = (short)(this.processor.PullGlobalWord(0xd4cc) + 7);
-			short centreVert = (short)(this.processor.PullGlobalWord(0xd75e) + 6);
+			short centreHoriz = (short)(MapViewHoriz + 7);
+			short centreVert = (short)(MapViewVert + 6);
 			MapLayers chart = this.owner.MapOps.Chart;
 
 			for (int heading = 1; heading <= 8; heading++)

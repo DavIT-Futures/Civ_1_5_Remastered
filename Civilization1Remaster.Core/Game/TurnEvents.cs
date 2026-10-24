@@ -212,8 +212,8 @@ namespace Civilization1Remaster.Game
 				// The first turn: the view on the settler of the human player, the tutorial on the easiest level
 				ushort troop = (ushort)(0x600 * personIdx);
 
-				this.processor.EmitGlobalWord(0xd4cc, (ushort)(this.processor.PullGlobalByte((ushort)(troop + 0x81d5)) - 7));
-				this.processor.EmitGlobalWord(0xd75e, (ushort)(this.processor.PullGlobalByte((ushort)(troop + 0x81d6)) - 6));
+				MapViewHoriz = (ushort)(this.processor.PullGlobalByte((ushort)(troop + 0x81d5)) - 7);
+				MapViewVert = (ushort)(this.processor.PullGlobalByte((ushort)(troop + 0x81d6)) - 6);
 
 				RepaintMainScreen();
 
@@ -1646,8 +1646,8 @@ namespace Civilization1Remaster.Game
 			this.owner.Startup.ConcealMouseCursor();
 
 			this.owner.MapOps.FocusMapView(this.owner.World.PersonParticipantIdx,
-				this.processor.PullGlobalSignedWord(0xd4cc),
-				this.processor.PullGlobalSignedWord(0xd75e));
+				(short)MapViewHoriz,
+				(short)MapViewVert);
 
 			FloodBoxWithShadow(0, 97, 80, 103);
 

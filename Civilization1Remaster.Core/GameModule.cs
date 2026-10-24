@@ -247,6 +247,124 @@ namespace Civilization1Remaster
 			get => this.processor.PullGlobalWord(0xdc48);
 			set => this.processor.EmitGlobalWord(0xdc48, value);
 		}
+		/// <summary>0x1a3c: a mouse is present</summary>
+		protected ushort MousePresent
+		{
+			get => this.processor.PullGlobalWord(0x1a3c);
+			set => this.processor.EmitGlobalWord(0x1a3c, value);
+		}
+
+		/// <summary>0x2f9a: the default line of the next menu</summary>
+		protected ushort DefaultLine
+		{
+			get => this.processor.PullGlobalWord(0x2f9a);
+			set => this.processor.EmitGlobalWord(0x2f9a, value);
+		}
+
+		/// <summary>0x2f9c: the help topic of the menu (while set, the menu comes back even after Escape)</summary>
+		protected ushort MenuHelpTopic
+		{
+			get => this.processor.PullGlobalWord(0x2f9c);
+			set => this.processor.EmitGlobalWord(0x2f9c, value);
+		}
+
+		/// <summary>0x3934: the answer of the king dialog (-1 not known yet)</summary>
+		protected ushort KingAnswer
+		{
+			get => this.processor.PullGlobalWord(0x3934);
+			set => this.processor.EmitGlobalWord(0x3934, value);
+		}
+
+		/// <summary>0x6546: the attack units of the city away from it (planes always)</summary>
+		protected ushort CityAttackersAway
+		{
+			get => this.processor.PullGlobalWord(0x6546);
+			set => this.processor.EmitGlobalWord(0x6546, value);
+		}
+
+		/// <summary>0x680a: the mode of the replay</summary>
+		protected ushort ReplayMode
+		{
+			get => this.processor.PullGlobalWord(0x680a);
+			set => this.processor.EmitGlobalWord(0x680a, value);
+		}
+
+		/// <summary>0x6810: the acting player of the replay event (-1 none)</summary>
+		protected ushort ReplayActor
+		{
+			get => this.processor.PullGlobalWord(0x6810);
+			set => this.processor.EmitGlobalWord(0x6810, value);
+		}
+
+		/// <summary>0x6b32: the choice of the main menu (0 - 3, -1 not chosen)</summary>
+		protected ushort MainMenuChoice
+		{
+			get => this.processor.PullGlobalWord(0x6b32);
+			set => this.processor.EmitGlobalWord(0x6b32, value);
+		}
+
+		/// <summary>0xd2e0: the corruption of the city in its turn</summary>
+		protected ushort CityCorruption
+		{
+			get => this.processor.PullGlobalWord(0xd2e0);
+			set => this.processor.EmitGlobalWord(0xd2e0, value);
+		}
+
+		/// <summary>0xd2f6: the shields the units of the city cost in its turn</summary>
+		protected ushort CityUnitUpkeep
+		{
+			get => this.processor.PullGlobalWord(0xd2f6);
+			set => this.processor.EmitGlobalWord(0xd2f6, value);
+		}
+
+		/// <summary>0xd4ca: the order chosen from the menu bar (its key)</summary>
+		protected ushort ChosenOrder
+		{
+			get => this.processor.PullGlobalWord(0xd4ca);
+			set => this.processor.EmitGlobalWord(0xd4ca, value);
+		}
+
+		/// <summary>0xd4cc: the column of the map view (its top left tile)</summary>
+		protected ushort MapViewHoriz
+		{
+			get => this.processor.PullGlobalWord(0xd4cc);
+			set => this.processor.EmitGlobalWord(0xd4cc, value);
+		}
+
+		/// <summary>0xd75e: the row of the map view (its top left tile)</summary>
+		protected ushort MapViewVert
+		{
+			get => this.processor.PullGlobalWord(0xd75e);
+			set => this.processor.EmitGlobalWord(0xd75e, value);
+		}
+
+		/// <summary>0xdeb8: the special slots of the city in use (Unfamiliar)</summary>
+		protected ushort CitySpecialSlots
+		{
+			get => this.processor.PullGlobalWord(0xdeb8);
+			set => this.processor.EmitGlobalWord(0xdeb8, value);
+		}
+
+		/// <summary>0xdeea: the show level of the mouse pointer (drawn from 1)</summary>
+		protected ushort PointerShowLevel
+		{
+			get => this.processor.PullGlobalWord(0xdeea);
+			set => this.processor.EmitGlobalWord(0xdeea, value);
+		}
+
+		/// <summary>0xe17a: the taxes of the city in its turn</summary>
+		protected ushort CityTaxes
+		{
+			get => this.processor.PullGlobalWord(0xe17a);
+			set => this.processor.EmitGlobalWord(0xe17a, value);
+		}
+
+		/// <summary>0xe3c6: the settlers of the city in its turn</summary>
+		protected ushort CitySettlers
+		{
+			get => this.processor.PullGlobalWord(0xe3c6);
+			set => this.processor.EmitGlobalWord(0xe3c6, value);
+		}
 		#endregion
 	}
 }

@@ -38,7 +38,7 @@ namespace Civilization1Remaster.UI
 
 			this.processor.EmitGlobalWord(0xd804, 0);
 			this.audienceHostile = 0;
-			this.processor.EmitGlobalWord(0x3934, arg4);
+			KingAnswer = arg4;
 			this.audienceDanger = 0;
 			this.audienceTribute = 0;
 			this.audienceDemand = 1;
@@ -87,13 +87,13 @@ namespace Civilization1Remaster.UI
 				AdviseAboutLeader(participantIdx);
 			}
 
-			if (this.processor.PullGlobalWord(0x3934) != 0xffff)
+			if (KingAnswer != 0xffff)
 				FinishAudience();
 
 			NameEmpressBack(participantIdx);
 
 			this.processor.EmitGlobalWord(0xd804, 0);
-			this.processor.EmitGlobalWord(0x3934, 0xffff);
+			KingAnswer = 0xffff;
 			this.processor.EmitGlobalWord(0x3936, 0xffff);
 			this.processor.RestoreIndexRegisters();
 			this.processor.LeaveFrame();
@@ -965,7 +965,7 @@ namespace Civilization1Remaster.UI
 		/// <summary>After an audience the advisor warns of a big leader without a treaty (once per audience)</summary>
 		private void AdviseAboutLeader(short participantIdx)
 		{
-			if (this.processor.PullGlobalWord(0x3934) == 0xffff || Leader(participantIdx).TownTally <= 4 ||
+			if (KingAnswer == 0xffff || Leader(participantIdx).TownTally <= 4 ||
 				Person.Standing + 1 >= Leader(participantIdx).Standing ||
 				(Person.Relations[participantIdx] & 2) != 0)
 			{
@@ -994,7 +994,7 @@ namespace Civilization1Remaster.UI
 
 			this.processor.EmitGlobalWord(0x3936, 0xffff);
 			this.processor.RegAcc.Value16 = 0;
-			this.processor.EmitGlobalWord(0x3934, this.processor.RegAcc.Value16);
+			KingAnswer = this.processor.RegAcc.Value16;
 			this.processor.EmitGlobalWord(0xd804, this.processor.RegAcc.Value16);
 
 			// Far return
@@ -1016,18 +1016,18 @@ namespace Civilization1Remaster.UI
 			{
 				this.processor.EmitGlobalWord(0xd804, 1);
 
-				if (this.processor.PullGlobalWord(0x3934) == 0)
+				if (KingAnswer == 0)
 				{
 					AskToReceiveEmissary(participantIdx, horizLoc, vertLoc);
 				}
 
-				if (this.processor.PullGlobalWord(0x3934) != 0xffff)
+				if (KingAnswer != 0xffff)
 				{
 					ReceiveEmissary(participantIdx);
 				}
 			}
 
-			ushort answer = this.processor.PullGlobalWord(0x3934);
+			ushort answer = KingAnswer;
 			this.processor.RegAcc.Value16 = answer;
 
 			this.processor.Journal.CloseScope("WelcomeEmissary");
@@ -1059,11 +1059,11 @@ namespace Civilization1Remaster.UI
 
 				this.owner.Startup.DisplayMouseCursorFully();
 
-				this.processor.EmitGlobalWord(0x3934, (ushort)-this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80));
+				KingAnswer = (ushort)-this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
 
 				this.owner.Startup.ConcealMouseCursorToSavedLevel();
 
-				if (this.processor.PullGlobalWord(0x3934) != 0xfffe)
+				if (KingAnswer != 0xfffe)
 					break;
 
 				this.owner.Briefings.DisplayIntelligenceReport(participantIdx);

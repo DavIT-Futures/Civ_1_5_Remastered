@@ -177,7 +177,7 @@ namespace Civilization1Remaster.Engine
 				this.owner.Startup.DisplayMouseCursor();
 
 				// Start on the first saved game, not on the tab line
-				this.processor.EmitGlobalWord(0x2f9a, 0x1);
+				DefaultLine = 0x1;
 				this.owner.Dialogs.ChoicesIndentTokens = true;
 				this.owner.Dialogs.ChoicesIndentTokenDown = false;
 
@@ -449,7 +449,7 @@ namespace Civilization1Remaster.Engine
 					ImportGame(0x41c6, 1);
 				}
 
-				this.processor.EmitGlobalWord(0x2f9a, (ushort)this.owner.Helpers.VerifyValueSpan(this.processor.PullGlobalSignedWord(0xe168), 0, HandBayTally - 1));
+				DefaultLine = (ushort)this.owner.Helpers.VerifyValueSpan(this.processor.PullGlobalSignedWord(0xe168), 0, HandBayTally - 1);
 
 				if (arg1 == 0xffff)
 				{
