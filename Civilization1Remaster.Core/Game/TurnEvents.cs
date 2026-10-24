@@ -49,6 +49,15 @@ namespace Civilization1Remaster.Game
 		public bool ClassicSchismHomes { get; set; }
 
 		/// <summary>
+		/// The schism (DivideCivilization) as the translated code did it: the technologies copied onto the player himself
+		/// (the new civilization gets none), the second flag of the war in the player's relation instead of the new
+		/// civilization's, a unit in a city of another owner given to the player in a raw byte of the data segment as a unit of kind -1, the farthest cities given until the share is reached even when no farther city is left (the last
+		/// one again, or city 0 of anybody, forever when it is empty), and IndexOutOfRangeException (Towns[0xffff]) when a
+		/// side has no city for a capital. The tests turn it on (HeadlessGame), like ClassicHealing.
+		/// </summary>
+		public bool ClassicSchism { get; set; }
+
+		/// <summary>
 		/// The military report takes the player of a chosen row from the stack frame also for a row of a player without
 		/// contact, which never wrote it (garbage, IndexOutOfRangeException from 8 up), as the translated code did it. The
 		/// tests turn it on (HeadlessGame), like ClassicHealing.

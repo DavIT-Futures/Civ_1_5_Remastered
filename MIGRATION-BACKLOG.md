@@ -1337,8 +1337,16 @@ te błędy są odtwarzane jawnie:
   sprawdzenie 0xff i warunek końca pętli. **Wyjątek dla jednostki bez miasta macierzystego naprawiony w grze 2026-10-24**
   za przełącznikiem `TurnHooks.ClassicSchismHomes`: `HomeCityRules.HasHome` – taka jednostka liczy się jak jednostka
   z miastem gracza (zostaje przy starej cywilizacji; w mieście nowej przechodzi do właściciela miasta). Testy:
-  `SchismAndReportCrashTests` (oba warianty, jednostka w mieście i poza nim). Reszta punktu (technologie, relacja, pętla)
-  nadal do zrobienia.
+  `SchismAndReportCrashTests` (oba warianty, jednostka w mieście i poza nim). **Reszta naprawiona w grze 2026-10-24** za przełącznikiem
+  `TurnHooks.ClassicSchism`: nowa cywilizacja dostaje kopię technologii gracza, flaga 9 wojny w jej relacji do gracza
+  (jak w asm: DI = nowa << 4), oddawanie najdalszych miast kończy się, gdy nie ma już miasta dalej niż 1 pole (w
+  tłumaczeniu: znowu miasto z poprzedniej rundy albo `Towns[0]` kogokolwiek – pusta wieczna pętla), strona bez miasta
+  na stolicę nie rzuca wyjątku (`Towns[0xffff]`; komputer zostaje przy starej stolicy). Przy okazji znalezione dwa
+  błędy `TransferUnitInCity` (jednostka w mieście innego właściciela niż właściciel jej miasta macierzystego): nowy
+  właściciel brany z surowego bajtu danych pod `0x1c * miasto` (tłumaczenie zgubiło adres tablicy miast; asm czytał
+  właściciela miasta) i typ czytany po `EliminateUnit` (0xff – tak samo w oryginale: jednostka znika, w C#
+  `LiveTroops[-1]` rzuca wyjątek); naprawione tym samym przełącznikiem (właściciel miasta, typ sprzed usunięcia).
+  Testy: `SchismRepairTests` (oba warianty; 7 mutacji złapanych).
 - `HandlePeaceTreaties`: groźba emisariusza (L0468) bierze nazwę gracza z `word[0x1992 + DI]`, gdzie DI = gracz << 4 (ustawione
   dla relacji), czyli spoza tablicy nazw – tekst z przypadkowego wskaźnika. Po naprawie: 0x1992 + 2 * gracz.
 - `EarnTechnology`: pierwsze odkrycie technologii, która dezaktualizuje cud (tabela 0x10fe), czyta `Towns[MarvelTownIdx[cud]]`

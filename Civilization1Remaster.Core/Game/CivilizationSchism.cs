@@ -104,12 +104,18 @@ namespace Civilization1Remaster.Game
 
 			TransferRebelUnits(participantIdx, rebelIdx);
 
+			bool classic = this.owner.TurnHooks.ClassicSchism;
+
 			ushort capitalIdx = ObtainDistanceToCapital(rebelIdx);
 			this.processor.RegAcc.Value16 = (ushort)(0x1c * capitalIdx);
 			this.processor.RegSource.Value16 = this.processor.RegAcc.Value16;
 
-			this.owner.World.Towns[capitalIdx].StructureMarkers0 |= 1;
-			this.owner.World.Participants[rebelIdx].HorizBegin = (short)this.owner.World.Towns[capitalIdx].Place.X;
+			// The new civilization without a city gets no capital (ClassicSchism: Towns[0xffff] throws)
+			if (classic || capitalIdx != 0xffff)
+			{
+				this.owner.World.Towns[capitalIdx].StructureMarkers0 |= 1;
+				this.owner.World.Participants[rebelIdx].HorizBegin = (short)this.owner.World.Towns[capitalIdx].Place.X;
+			}
 
 			if (participantIdx == this.owner.World.PersonParticipantIdx)
 			{
@@ -127,6 +133,11 @@ namespace Civilization1Remaster.Game
 				this.processor.UnstackDoubleWord(); // stack management - pop return offset and segment
 
 				ushort newCapital = ObtainDistanceToCapital(participantIdx);
+
+				// Without another city the old capital stays (ClassicSchism: Towns[0xffff] throws)
+				if (!classic && newCapital == 0xffff)
+					newCapital = oldCapital;
+
 				this.processor.RegAcc.Value16 = (ushort)(0x1c * newCapital);
 				this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
 
@@ -219,23 +230,31 @@ namespace Civilization1Remaster.Game
 			rebel.FoundScienceTally = player.FoundScienceTally;
 			rebel.RegimeKind = player.RegimeKind;
 
-			// The technologies go back onto the player himself, like in the original (the new civilization gets none)
+			// The new civilization knows the player's technologies (ClassicSchism: they go back onto the player himself, like
+			// in the translated code, and the new civilization gets none)
+			bool classic = this.owner.TurnHooks.ClassicSchism;
+			Player learner = classic ? player : rebel;
+
 			for (ushort scienceIdx = 0; scienceIdx < 5; scienceIdx++)
 			{
 				this.processor.RegSource.Value16 = (ushort)(scienceIdx << 1);
-				player.FoundScienceMarkers[scienceIdx] = player.FoundScienceMarkers[scienceIdx];
+				learner.FoundScienceMarkers[scienceIdx] = player.FoundScienceMarkers[scienceIdx];
 			}
 
 			this.processor.RegSource.Value16 = names;
 
 			rebel.TouchParticipantTimeleft = (short)(this.owner.World.RoundTally - 8);
 
-			// War: both flags go into the player's relation to the new civilization, like in the original
+			// War: the player's relation to the new civilization and the new civilization's to the player (ClassicSchism: both
+			// flags go into the player's relation, like in the translated code)
 			player.Relations[rebelIdx] |= 1;
 
 			this.processor.RegDest.Value16 = (ushort)(rebelIdx << 4);
 
-			player.Relations[rebelIdx] |= 9;
+			if (classic)
+				player.Relations[rebelIdx] |= 9;
+			else
+				rebel.Relations[participantIdx] |= 9;
 
 			return true;
 		}
@@ -320,7 +339,11 @@ namespace Civilization1Remaster.Game
 					}
 				}
 
-				// Without a farther city the one of the last round is taken again, like in the original
+				// Without a farther city no city is left to give (ClassicSchism: the one of the last round is taken again, or
+				// city 0 of anybody, like in the translated code)
+				if (!this.owner.TurnHooks.ClassicSchism && farthest == 1)
+					break;
+
 				this.processor.RegAcc.Value16 = (ushort)(0x1c * farthestIdx);
 				this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
 
@@ -332,7 +355,7 @@ namespace Civilization1Remaster.Game
 
 		/// <summary>
 		/// The player's units follow the cities: a unit in a city of another owner than its home city's owner goes to the
-		/// city's owner (homed by the raw byte at 0x1c * city, like in the original); in a city of the new civilization
+		/// city's owner (ClassicSchism: to the player in the raw byte at 0x1c * city, as a unit of kind -1); in a city of the new civilization
 		/// homed there it changes sides; outside a city, a unit homed in a city of the new civilization changes sides with
 		/// its stack, else the stack's units homed elsewhere get its home city
 		/// </summary>
@@ -376,7 +399,14 @@ namespace Civilization1Remaster.Game
 
 				this.owner.MapOps.TagTileOwned((sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d5)), (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d6)));
 
-				this.owner.UnitOps.ConstructUnit((sbyte)this.processor.PullGlobalByte(townRecord), (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d7)),
+				// The unit goes to the city's owner (ClassicSchism: to the player in the raw byte at 0x1c * city of the data
+				// segment, like in the translated code, which lost the address of the city table), with its kind (ClassicSchism:
+				// the kind read after EliminateUnit, -1, like in the original: the unit vanishes, C# throws)
+				bool classic = this.owner.TurnHooks.ClassicSchism;
+				short cityOwner = classic ? (sbyte)this.processor.PullGlobalByte(townRecord) : this.owner.World.Towns[townIdx].ParticipantIdx;
+				short kind = classic ? (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d7)) : unitKind;
+
+				this.owner.UnitOps.ConstructUnit(cityOwner, kind,
 					(sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d5)), (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d6)));
 				return;
 			}
