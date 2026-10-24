@@ -1300,6 +1300,28 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   `PalaceFirstPicture` łapie `ImportPalaceCastle`, nie `ImportPalaceGraphics`; `Climate` – `OpeningSequence`, nie
   `MapMaking`; `AudiencePlayer` – odczyt w `ChoreographKingLikeness`; `CityLabelCount` – `RenderMapTile`, nie
   `FocusMapView`; `PopulationMark` – `RenderStatusBar`, nie golden master).
+- B4, porcje 10 – 14 razem (2026-10-24, na prośbę użytkownika: pięć porcji i raz testy), 40 zmiennych, 50 odczytów,
+  31 zapis, skrypt `b4h.py` + `names_b4h.py` w scratchpadzie. Zostały już głównie adresy z 1 – 3 użyciami.
+  Porcja 10 (historia, nowy świat, ekrany): `StoryFile` 0x6804, `StoryKeyAllowed` 0x67fc, `LandMass` /
+  `Temperature` / `WorldAge` 0x7ef6 / 0x7ef8 / 0x7efc, `ScreenReserveFailed` 0x6dfc, `ScreenRepaintRequest` 0x1ae0,
+  `CodeText5` 0x30c0, `EgaMode` 0xb20e.
+  Porcja 11 (audiencja): `SavedScreenStyle` 0x67ec, `KingPictureLoaded` 0x67ea, `AdvisorPoseShown` 0x67e8,
+  `KingScenePicture` 0xb1e6, `KingFacesPicture` 0x7efe.
+  Porcja 12 (statek): `SpaceshipPropulsion` 0xdea8, `SpaceshipFuel` 0xdeaa, `SpaceshipSupport` 0xdeb0,
+  `SpaceshipEnergy` 0xdeb2, `SpaceshipComponentsComplete` / `SpaceshipModulesComplete` 0x687c / 0x687e,
+  `SpaceshipPicture` 0x682a.
+  Porcja 13 (pliki, powtórka, Civilopedia, wpisywanie tekstu): `FileError` 0x681c, `SavedHumanPlayer` /
+  `SavedDifficulty` / `SavedYear` 0x6822 / 0x6824 / 0x6826, `ReplayAtGameEnd` 0x680e, `CivilopediaNextPage` 0x6808,
+  `SavedPointerShowLevel` 0x652e, `TextCursorColumn` / `TextCursorWidth` 0x68d0 / 0x68ce.
+  Porcja 14 (jednostki, trasy, wojna, pałac, wynik): `StackDomainMode` 0x6536, `StackIndexLimit` 0x6538,
+  `RoutePlaceHoriz` / `RoutePlaceVert` 0x6796 / 0x6798, `PlayerAtWar` 0x6ed4, `NoConquestAnimation` 0x28bc,
+  `PalaceRightBushes` 0xd934, `WonderScore` / `CitizenScore` 0xd764 / 0xd766.
+  Pominięte (niejasne): 0x2fa0, 0x2fa2, 0x2f98, 0x19fc, 0x8078, 0x67ee, 0x6534, 0x2fec, 0x2494, 0x6e92, 0x6b92,
+  0x67fe, 0x67fa, 0x4b32, 0x1c28, 0xdc6a, 0x5116, 0x1a3e, 0x681e, 0x6834; 0x5876 / 0x5872 (`SystemServices`),
+  0x687a (bajt).
+  Pełny zestaw 767/767 (jeden przebieg na pięć porcji), mutacje 13 / 13 (dwie dopiero z innym testem:
+  `SpaceshipSupport` – `RenderSpaceship`, nie `ComputeSpaceshipSuccess`; `CivilopediaNextPage` – `DisplayCivilopedia`,
+  nie `DisplayCivilopediaIndex`).
 
 ## Następny krok
 

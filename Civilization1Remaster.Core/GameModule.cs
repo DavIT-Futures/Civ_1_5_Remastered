@@ -800,6 +800,279 @@ namespace Civilization1Remaster
 			get => this.processor.PullGlobalWord(0xd760);
 			set => this.processor.EmitGlobalWord(0xd760, value);
 		}
+
+		/// <summary>0x6804: the handle of story.txt</summary>
+		protected ushort StoryFile
+		{
+			get => this.processor.PullGlobalWord(0x6804);
+			set => this.processor.EmitGlobalWord(0x6804, value);
+		}
+
+		/// <summary>0x67fc: a key may end the story</summary>
+		protected ushort StoryKeyAllowed
+		{
+			get => this.processor.PullGlobalWord(0x67fc);
+			set => this.processor.EmitGlobalWord(0x67fc, value);
+		}
+
+		/// <summary>0x7ef6: the land mass of the new world</summary>
+		protected ushort LandMass
+		{
+			get => this.processor.PullGlobalWord(0x7ef6);
+			set => this.processor.EmitGlobalWord(0x7ef6, value);
+		}
+
+		/// <summary>0x7ef8: the temperature of the new world</summary>
+		protected ushort Temperature
+		{
+			get => this.processor.PullGlobalWord(0x7ef8);
+			set => this.processor.EmitGlobalWord(0x7ef8, value);
+		}
+
+		/// <summary>0x7efc: the age of the new world</summary>
+		protected ushort WorldAge
+		{
+			get => this.processor.PullGlobalWord(0x7efc);
+			set => this.processor.EmitGlobalWord(0x7efc, value);
+		}
+
+		/// <summary>0x6dfc: one of the screens could not be reserved</summary>
+		protected ushort ScreenReserveFailed
+		{
+			get => this.processor.PullGlobalWord(0x6dfc);
+			set => this.processor.EmitGlobalWord(0x6dfc, value);
+		}
+
+		/// <summary>0x1ae0: the screen is to be repainted</summary>
+		protected ushort ScreenRepaintRequest
+		{
+			get => this.processor.PullGlobalWord(0x1ae0);
+			set => this.processor.EmitGlobalWord(0x1ae0, value);
+		}
+
+		/// <summary>0x30c0: the address of the fifth code text of the text blocks</summary>
+		protected ushort CodeText5
+		{
+			get => this.processor.PullGlobalWord(0x30c0);
+			set => this.processor.EmitGlobalWord(0x30c0, value);
+		}
+
+		/// <summary>0xb20e: the EGA driver is used</summary>
+		protected ushort EgaMode
+		{
+			get => this.processor.PullGlobalWord(0xb20e);
+			set => this.processor.EmitGlobalWord(0xb20e, value);
+		}
+
+		/// <summary>0x67ec: the style of screen 0 kept during the audience</summary>
+		protected ushort SavedScreenStyle
+		{
+			get => this.processor.PullGlobalWord(0x67ec);
+			set => this.processor.EmitGlobalWord(0x67ec, value);
+		}
+
+		/// <summary>0x67ea: the picture of the king is loaded</summary>
+		protected ushort KingPictureLoaded
+		{
+			get => this.processor.PullGlobalWord(0x67ea);
+			set => this.processor.EmitGlobalWord(0x67ea, value);
+		}
+
+		/// <summary>0x67e8: the pose of the advisors shown (0xffff none)</summary>
+		protected ushort AdvisorPoseShown
+		{
+			get => this.processor.PullGlobalWord(0x67e8);
+			set => this.processor.EmitGlobalWord(0x67e8, value);
+		}
+
+		/// <summary>0xb1e6: the picture of the king in the throne room</summary>
+		protected ushort KingScenePicture
+		{
+			get => this.processor.PullGlobalWord(0xb1e6);
+			set => this.processor.EmitGlobalWord(0xb1e6, value);
+		}
+
+		/// <summary>0x7efe: the picture of the faces and mouths of the king</summary>
+		protected ushort KingFacesPicture
+		{
+			get => this.processor.PullGlobalWord(0x7efe);
+			set => this.processor.EmitGlobalWord(0x7efe, value);
+		}
+
+		/// <summary>0xdea8: the propulsion components of the spaceship</summary>
+		protected ushort SpaceshipPropulsion
+		{
+			get => this.processor.PullGlobalWord(0xdea8);
+			set => this.processor.EmitGlobalWord(0xdea8, value);
+		}
+
+		/// <summary>0xdeaa: the fuel components of the spaceship</summary>
+		protected ushort SpaceshipFuel
+		{
+			get => this.processor.PullGlobalWord(0xdeaa);
+			set => this.processor.EmitGlobalWord(0xdeaa, value);
+		}
+
+		/// <summary>0xdeb0: the support modules of the spaceship</summary>
+		protected ushort SpaceshipSupport
+		{
+			get => this.processor.PullGlobalWord(0xdeb0);
+			set => this.processor.EmitGlobalWord(0xdeb0, value);
+		}
+
+		/// <summary>0xdeb2: the energy modules of the spaceship</summary>
+		protected ushort SpaceshipEnergy
+		{
+			get => this.processor.PullGlobalWord(0xdeb2);
+			set => this.processor.EmitGlobalWord(0xdeb2, value);
+		}
+
+		/// <summary>0x687c: all components of the spaceship are there</summary>
+		protected ushort SpaceshipComponentsComplete
+		{
+			get => this.processor.PullGlobalWord(0x687c);
+			set => this.processor.EmitGlobalWord(0x687c, value);
+		}
+
+		/// <summary>0x687e: all modules of the spaceship are there</summary>
+		protected ushort SpaceshipModulesComplete
+		{
+			get => this.processor.PullGlobalWord(0x687e);
+			set => this.processor.EmitGlobalWord(0x687e, value);
+		}
+
+		/// <summary>0x682a: the picture of the spaceship parts</summary>
+		protected ushort SpaceshipPicture
+		{
+			get => this.processor.PullGlobalWord(0x682a);
+			set => this.processor.EmitGlobalWord(0x682a, value);
+		}
+
+		/// <summary>0x681c: the error of the last file operation</summary>
+		protected ushort FileError
+		{
+			get => this.processor.PullGlobalWord(0x681c);
+			set => this.processor.EmitGlobalWord(0x681c, value);
+		}
+
+		/// <summary>0x6822: the human player of the saved game</summary>
+		protected ushort SavedHumanPlayer
+		{
+			get => this.processor.PullGlobalWord(0x6822);
+			set => this.processor.EmitGlobalWord(0x6822, value);
+		}
+
+		/// <summary>0x6824: the difficulty of the saved game</summary>
+		protected ushort SavedDifficulty
+		{
+			get => this.processor.PullGlobalWord(0x6824);
+			set => this.processor.EmitGlobalWord(0x6824, value);
+		}
+
+		/// <summary>0x6826: the year of the saved game</summary>
+		protected ushort SavedYear
+		{
+			get => this.processor.PullGlobalWord(0x6826);
+			set => this.processor.EmitGlobalWord(0x6826, value);
+		}
+
+		/// <summary>0x680e: the replay is shown at the end of the game</summary>
+		protected ushort ReplayAtGameEnd
+		{
+			get => this.processor.PullGlobalWord(0x680e);
+			set => this.processor.EmitGlobalWord(0x680e, value);
+		}
+
+		/// <summary>0x6808: the Civilopedia list has a next page</summary>
+		protected ushort CivilopediaNextPage
+		{
+			get => this.processor.PullGlobalWord(0x6808);
+			set => this.processor.EmitGlobalWord(0x6808, value);
+		}
+
+		/// <summary>0x652e: the show level of the mouse pointer kept</summary>
+		protected ushort SavedPointerShowLevel
+		{
+			get => this.processor.PullGlobalWord(0x652e);
+			set => this.processor.EmitGlobalWord(0x652e, value);
+		}
+
+		/// <summary>0x68d0: the column of the text cursor</summary>
+		protected ushort TextCursorColumn
+		{
+			get => this.processor.PullGlobalWord(0x68d0);
+			set => this.processor.EmitGlobalWord(0x68d0, value);
+		}
+
+		/// <summary>0x68ce: the width of the character at the text cursor</summary>
+		protected ushort TextCursorWidth
+		{
+			get => this.processor.PullGlobalWord(0x68ce);
+			set => this.processor.EmitGlobalWord(0x68ce, value);
+		}
+
+		/// <summary>0x6536: what TallyUnitsByDomainInStack counts</summary>
+		protected ushort StackDomainMode
+		{
+			get => this.processor.PullGlobalWord(0x6536);
+			set => this.processor.EmitGlobalWord(0x6536, value);
+		}
+
+		/// <summary>0x6538: the units below this index count as defensive units</summary>
+		protected ushort StackIndexLimit
+		{
+			get => this.processor.PullGlobalWord(0x6538);
+			set => this.processor.EmitGlobalWord(0x6538, value);
+		}
+
+		/// <summary>0x6796: the x of the place of the route</summary>
+		protected ushort RoutePlaceHoriz
+		{
+			get => this.processor.PullGlobalWord(0x6796);
+			set => this.processor.EmitGlobalWord(0x6796, value);
+		}
+
+		/// <summary>0x6798: the y of the place of the route</summary>
+		protected ushort RoutePlaceVert
+		{
+			get => this.processor.PullGlobalWord(0x6798);
+			set => this.processor.EmitGlobalWord(0x6798, value);
+		}
+
+		/// <summary>0x6ed4: the player is at war with someone</summary>
+		protected ushort PlayerAtWar
+		{
+			get => this.processor.PullGlobalWord(0x6ed4);
+			set => this.processor.EmitGlobalWord(0x6ed4, value);
+		}
+
+		/// <summary>0x28bc: the city is seized without the animations</summary>
+		protected ushort NoConquestAnimation
+		{
+			get => this.processor.PullGlobalWord(0x28bc);
+			set => this.processor.EmitGlobalWord(0x28bc, value);
+		}
+
+		/// <summary>0xd934: the bushes right of the palace</summary>
+		protected ushort PalaceRightBushes
+		{
+			get => this.processor.PullGlobalWord(0xd934);
+			set => this.processor.EmitGlobalWord(0xd934, value);
+		}
+
+		/// <summary>0xd764: the score of the wonders</summary>
+		protected ushort WonderScore
+		{
+			get => this.processor.PullGlobalWord(0xd764);
+			set => this.processor.EmitGlobalWord(0xd764, value);
+		}
+
+		/// <summary>0xd766: the score of the citizens</summary>
+		protected ushort CitizenScore
+		{
+			get => this.processor.PullGlobalWord(0xd766);
+			set => this.processor.EmitGlobalWord(0xd766, value);
+		}
 		#endregion
 	}
 }

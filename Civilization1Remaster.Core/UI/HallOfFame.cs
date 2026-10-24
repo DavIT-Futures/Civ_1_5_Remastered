@@ -250,8 +250,8 @@ namespace Civilization1Remaster.UI
 					0x3772, (ushort)(record + 0x1e), 0x10);
 				this.processor.EmitUInt16(0x3772, (ushort)(record + 2), (ushort)this.owner.World.HardnessTier);
 				this.processor.EmitUInt16(0x3772, (ushort)(record + 4), this.processor.PullGlobalWord(0xdc6a));
-				this.processor.EmitUInt16(0x3772, (ushort)(record + 8), this.processor.PullGlobalWord(0xd764));
-				this.processor.EmitUInt16(0x3772, (ushort)(record + 0xa), this.processor.PullGlobalWord(0xd766));
+				this.processor.EmitUInt16(0x3772, (ushort)(record + 8), WonderScore);
+				this.processor.EmitUInt16(0x3772, (ushort)(record + 0xa), CitizenScore);
 				this.processor.EmitInt16(0x3772, (ushort)(record + 6), this.owner.World.Season);
 
 				ushort population = this.owner.Helpers.ObtainPlayerPopulation(humanIdx);

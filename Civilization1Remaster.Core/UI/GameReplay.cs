@@ -28,7 +28,7 @@ namespace Civilization1Remaster.UI
 
 			while (true)
 			{
-				if (this.processor.PullGlobalWord(0x680e) == 0)
+				if (ReplayAtGameEnd == 0)
 				{
 					ReplayMode = this.owner.TurnHooks.DisplayDialog(0x3fb0, 100, 80);
 				}
@@ -763,7 +763,7 @@ namespace Civilization1Remaster.UI
 
 			this.processor.EnterFrame(0x2);
 
-			this.processor.EmitGlobalWord(0x680e, 0x1);
+			ReplayAtGameEnd = 0x1;
 
 			this.owner.Helpers.HaltHueCycling();
 
@@ -813,7 +813,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.TurnHooks.RepaintMainScreen();
 
-			this.processor.EmitGlobalWord(0x680e, 0x0);
+			ReplayAtGameEnd = 0x0;
 
 			this.processor.LeaveFrame();
 

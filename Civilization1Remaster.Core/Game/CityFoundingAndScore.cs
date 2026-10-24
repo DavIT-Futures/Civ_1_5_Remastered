@@ -833,7 +833,7 @@ namespace Civilization1Remaster.Game
 			}
 
 			this.owner.World.Participants[participantIdx].LevyRatio = savedLevyRatio;
-			this.processor.EmitGlobalWord(0xd766, (ushort)totalCitizenScore);
+			CitizenScore = (ushort)totalCitizenScore;
 
 			ushort civNamePtr = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((participantIdx << 1) + 0x1982));
 			Message(civNamePtr)
@@ -876,7 +876,7 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			this.processor.EmitGlobalWord(0xd764, (ushort)totalWonderScore);
+			WonderScore = (ushort)totalWonderScore;
 			Message(civNamePtr)
 				.Text(" Achievements (")
 				.Number((short)totalWonderScore)

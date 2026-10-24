@@ -562,7 +562,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Helpers.ReleaseResource(PalaceFirstPicture, 0x4b9f);
 
-			if (PalaceLeftBushes != 0 || this.processor.PullGlobalWord(0xd934) != 0)
+			if (PalaceLeftBushes != 0 || PalaceRightBushes != 0)
 			{
 				this.owner.Libc.CopyText(pictureName, "cbrush0.pic");
 
@@ -573,7 +573,7 @@ namespace Civilization1Remaster.UI
 					leftBush = RenderPalaceBush(pictureName, 0xd930, 0x2e, 0);
 				}
 
-				if (this.processor.PullGlobalWord(0xd934) != 0)
+				if (PalaceRightBushes != 0)
 				{
 					rightBush = RenderPalaceBush(pictureName, 0xd934, 0x2f, 184);
 				}

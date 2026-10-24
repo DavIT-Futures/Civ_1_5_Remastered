@@ -28,7 +28,7 @@ namespace Civilization1Remaster.Game
 			ushort screenZero = ScreenBox;
 			this.processor.RegBase.Value16 = screenZero;
 			this.processor.EmitUInt16(this.processor.SegData.Value16, screenZero, 0x1);
-			this.processor.EmitGlobalWord(0x67fc, 0x0);
+			StoryKeyAllowed = 0x0;
 
 			if (EarthGame != 0)
 			{
@@ -45,7 +45,7 @@ namespace Civilization1Remaster.Game
 					this.ProduceCloudLayer();
 					this.DisplayStoryIntro();
 				}
-				while ((short)(((this.processor.PullGlobalWord(0x7ef6) << 3) * 0x28) + 0x280) > this.processor.PullGlobalSignedWord(0x67fe));
+				while ((short)(((LandMass << 3) * 0x28) + 0x280) > this.processor.PullGlobalSignedWord(0x67fe));
 
 				this.owner.Dialogs.RenderBox(0, 0, 79, 49, 0);
 				this.owner.Dialogs.RenderBox(1, 1, 77, 47, 0);
@@ -62,7 +62,7 @@ namespace Civilization1Remaster.Game
 
 			this.ProduceTerrain();
 
-			this.processor.EmitGlobalWord(0x67fc, 0x1);
+			StoryKeyAllowed = 0x1;
 
 			// The story again while it waits (DisplayStoryIntro gives back 1)
 			while (this.DisplayStoryIntro() != 0)
@@ -170,7 +170,7 @@ namespace Civilization1Remaster.Game
 					{
 						short rawLat = (short)-((short)(this.owner.Libc.Dice.DrawInt(8) + vertLoc - 0x1d));
 						ushort absLat = (ushort)this.owner.Libc.AbsoluteValue(rawLat);
-						short band = (short)(absLat + (1 - (short)this.processor.PullGlobalWord(0x7ef8)));
+						short band = (short)(absLat + (1 - (short)Temperature));
 
 						ushort tier = (ushort)(CPU.SignedQuotient(band, 6) + 1);
 						if (tier <= 7)
@@ -317,7 +317,7 @@ namespace Civilization1Remaster.Game
 			short vertLoc = 0x32;
 			short step = 0;
 
-			while ((short)((this.processor.PullGlobalSignedWord(0x7efc) * 0x320) + 0x320) > step)
+			while ((short)(((short)WorldAge * 0x320) + 0x320) > step)
 			{
 				if ((step & 1) == 0)
 				{
@@ -483,7 +483,7 @@ namespace Civilization1Remaster.Game
 				attemptTally++;
 
 				if (attemptTally >= 0x100 ||
-					(short)(((this.processor.PullGlobalWord(0x7ef6) + Climate) << 1) + 6) <= riverTally)
+					(short)(((LandMass + Climate) << 1) + 6) <= riverTally)
 					break;
 			}
 
@@ -1493,7 +1493,7 @@ namespace Civilization1Remaster.Game
 
 			if (StoryState == 0)
 			{
-				this.processor.EmitGlobalWord(0x6804, (ushort)this.owner.Libc.OpenStream("story.txt", "rt"));
+				StoryFile = (ushort)this.owner.Libc.OpenStream("story.txt", "rt");
 				StoryState = 0x1;
 				StoryLineTime = 0;
 				this.processor.EmitGlobalWord(0x6800, 0);
@@ -1523,9 +1523,9 @@ namespace Civilization1Remaster.Game
 				this.owner.TextPainter.AwaitTime(5);
 			}
 
-			short lineRead = this.owner.Libc.ScanStream((short)this.processor.PullGlobalWord(0x6804), "%[^\n]\n", 0xba06);
+			short lineRead = this.owner.Libc.ScanStream((short)StoryFile, "%[^\n]\n", 0xba06);
 
-			if (lineRead == -1 || (this.owner.Libc.KeyAvailable() != 0 && this.processor.PullGlobalWord(0x67fc) != 0))
+			if (lineRead == -1 || (this.owner.Libc.KeyAvailable() != 0 && StoryKeyAllowed != 0))
 			{
 				EndStory(lineRead == -1);
 			}
@@ -1680,7 +1680,7 @@ namespace Civilization1Remaster.Game
 				this.owner.TextPainter.AwaitTime(180);
 			}
 
-			this.owner.Libc.CloseStream((short)this.processor.PullGlobalWord(0x6804));
+			this.owner.Libc.CloseStream((short)StoryFile);
 
 			this.owner.Services.PerformSound(1, 0);
 

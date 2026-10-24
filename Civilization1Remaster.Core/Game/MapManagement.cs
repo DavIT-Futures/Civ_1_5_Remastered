@@ -48,7 +48,7 @@ namespace Civilization1Remaster.Game
 
 			this.owner.Startup.ConcealMouseCursor();
 
-			this.processor.EmitGlobalWord(0x1ae0, 0x0);
+			ScreenRepaintRequest = 0x0;
 
 			this.owner.TurnHooks.WipeStatusLine();
 

@@ -238,7 +238,7 @@ namespace Civilization1Remaster.Game
 
 			sbyte kind = (sbyte)this.processor.PullGlobalByte((ushort)((ushort)(0x600 * participantIdx) + troop + 0x81d7));
 
-			if ((short)this.processor.PullGlobalWord((ushort)((ushort)(0x22 * kind) + 0x113e)) > 2 || this.processor.PullGlobalWord(0x28bc) != 0)
+			if ((short)this.processor.PullGlobalWord((ushort)((ushort)(0x22 * kind) + 0x113e)) > 2 || NoConquestAnimation != 0)
 				return false;
 
 			this.owner.Advisors.FinalizeProduction(townIdx, horizLoc, vertLoc);

@@ -80,7 +80,7 @@ namespace Civilization1Remaster.UI
 
 			this.processor.EnterFrame(0x12);
 
-			this.owner.Helpers.ReleaseResource(this.processor.PullGlobalWord(0x682a), 0x4cda);
+			this.owner.Helpers.ReleaseResource(SpaceshipPicture, 0x4cda);
 
 			if (VgaMode != 0)
 			{
@@ -354,7 +354,7 @@ namespace Civilization1Remaster.UI
 
 			// Support: life support per colonist module
 			short colonists = (short)this.owner.Helpers.VerifyValueSpan((short)SpaceshipColonists, 1, 99);
-			short support = CPU.SignedQuotient((short)(0x64 * this.processor.PullGlobalWord(0xdeb0)), colonists);
+			short support = CPU.SignedQuotient((short)(0x64 * SpaceshipSupport), colonists);
 
 			Message("Support: ")
 				.Number(support)
@@ -371,8 +371,8 @@ namespace Civilization1Remaster.UI
 
 			// Energy: power per support and colonist module
 			short modules = (short)this.owner.Helpers.VerifyValueSpan(
-				(short)SpaceshipColonists + this.processor.PullGlobalSignedWord(0xdeb0), 1, 99);
-			short energy = CPU.SignedQuotient((short)(0xc8 * this.processor.PullGlobalWord(0xdeb2)), modules);
+				(short)SpaceshipColonists + (short)SpaceshipSupport, 1, 99);
+			short energy = CPU.SignedQuotient((short)(0xc8 * SpaceshipEnergy), modules);
 
 			Message("Energy: ")
 				.Number(energy)
@@ -409,8 +409,8 @@ namespace Civilization1Remaster.UI
 			vertLoc += 8;
 
 			// Fuel: fuel per propulsion
-			short propulsion = (short)this.owner.Helpers.VerifyValueSpan(this.processor.PullGlobalSignedWord(0xdea8), 1, 99);
-			short fuel = CPU.SignedQuotient((short)(0x64 * this.processor.PullGlobalWord(0xdeaa)), propulsion);
+			short propulsion = (short)this.owner.Helpers.VerifyValueSpan((short)SpaceshipPropulsion, 1, 99);
+			short fuel = CPU.SignedQuotient((short)(0x64 * SpaceshipFuel), propulsion);
 
 			Message("Fuel: ")
 				.Number(fuel)
@@ -431,8 +431,8 @@ namespace Civilization1Remaster.UI
 			vertLoc += 8;
 
 			// Flight time (tenths of years): 50 * mass / (thrust + 1), over 15 years less success
-			short thrust = (short)this.owner.Helpers.VerifyValueSpan(10 * this.processor.PullGlobalSignedWord(0xdea8), 0,
-				10 * this.processor.PullGlobalSignedWord(0xdeaa));
+			short thrust = (short)this.owner.Helpers.VerifyValueSpan(10 * (short)SpaceshipPropulsion, 0,
+				10 * (short)SpaceshipFuel);
 			short flightTime = CPU.SignedQuotient((short)(0x32 * mass), (short)(thrust + 1));
 
 			if (flightTime > 0x96)
@@ -801,7 +801,7 @@ namespace Civilization1Remaster.UI
 
 				if (arg2 == 1)
 				{
-					ushort complete = this.processor.PullGlobalWord(0x687c);
+					ushort complete = SpaceshipComponentsComplete;
 					DisabledLines = complete;
 
 					if (complete == 3)
@@ -818,7 +818,7 @@ namespace Civilization1Remaster.UI
 
 				if (arg2 == 2)
 				{
-					ushort complete = this.processor.PullGlobalWord(0x687e);
+					ushort complete = SpaceshipModulesComplete;
 					DisabledLines = complete;
 
 					if (complete == 7)

@@ -721,8 +721,8 @@ namespace Civilization1Remaster.Game
 
 			GotoCost = 0;
 
-			if (GoalHoriz != this.processor.PullGlobalWord(0x6796) ||
-				GoalVert != this.processor.PullGlobalWord(0x6798) ||
+			if (GoalHoriz != RoutePlaceHoriz ||
+				GoalVert != RoutePlaceVert ||
 				this.processor.PullGlobalByte(WindowCell(windowHoriz, windowVert, unitHoriz, unitVert)) == 0)
 			{
 				ChartWindowCosts(participantIdx, troopIdx, arg3, unitHoriz, unitVert, windowHoriz, windowVert);
@@ -762,8 +762,8 @@ namespace Civilization1Remaster.Game
 		/// <summary>The move costs of the window from the place outwards, until the unit's tile (see ShiftToward)</summary>
 		private void ChartWindowCosts(short participantIdx, short troopIdx, ushort arg3, short unitHoriz, short unitVert, short windowHoriz, short windowVert)
 		{
-			this.processor.EmitGlobalWord(0x6796, GoalHoriz);
-			this.processor.EmitGlobalWord(0x6798, GoalVert);
+			RoutePlaceHoriz = GoalHoriz;
+			RoutePlaceVert = GoalVert;
 
 			this.owner.Libc.FillBytes(0xb780, 0, 0x100);
 

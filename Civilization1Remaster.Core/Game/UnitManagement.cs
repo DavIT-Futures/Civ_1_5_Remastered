@@ -1076,8 +1076,8 @@ namespace Civilization1Remaster.Game
 			this.processor.Journal.OpenScope($"TallyUnitsByDomainInStack({participantIdx}, {troopIdx}, {mode})");
 
 			StackDomainTally = 0x0;
-			this.processor.EmitGlobalWord(0x6536, mode);
-			this.processor.EmitGlobalWord(0x6538, (ushort)troopIdx);
+			StackDomainMode = mode;
+			StackIndexLimit = (ushort)troopIdx;
 
 			VisitEachUnitInStack(participantIdx, troopIdx, 0x1280);
 
@@ -1096,7 +1096,7 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"TallyUnitsByDomainStep({participantIdx}, {troopIdx})");
 
-			switch (this.processor.PullGlobalWord(0x6536))
+			switch (StackDomainMode)
 			{
 				case 0:
 					AddToGlobal(0x6532, this.troops.KindField(participantIdx, troopIdx, UnitKindTable.Price));
@@ -1115,7 +1115,7 @@ namespace Civilization1Remaster.Game
 					break;
 
 				case 4:
-					if (troopIdx < (short)this.processor.PullGlobalWord(0x6538) &&
+					if (troopIdx < (short)StackIndexLimit &&
 						this.troops.KindField(participantIdx, troopIdx, UnitKindTable.TroopGroup) == UnitKindTable.DefenceTroops)
 					{
 						AddToGlobal(0x6532, 1);

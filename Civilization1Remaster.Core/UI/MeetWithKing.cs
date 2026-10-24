@@ -435,7 +435,7 @@ namespace Civilization1Remaster.UI
 		private void RestoreScreenStyle()
 		{
 			ushort screen = ScreenBox;
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(screen + 0x10), this.processor.PullGlobalWord(0x67ec));
+			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(screen + 0x10), SavedScreenStyle);
 		}
 
 		/// <summary>The leader asks for an alliance against the common enemy (0x30): accepted, the human player breaks the peace with it</summary>
@@ -1083,12 +1083,12 @@ namespace Civilization1Remaster.UI
 
 			// The font of the leader (table at 0x36fa), font 3 instead of 10
 			ushort typeface = (ushort)((sbyte)this.processor.PullUInt8(0x36fa, (ushort)this.owner.World.Participants[participantIdx].ChiefVisuals) + 8);
-			this.processor.EmitGlobalWord(0x67ec, typeface == 0xa ? (ushort)3 : typeface);
+			SavedScreenStyle = typeface == 0xa ? (ushort)3 : typeface;
 
-			this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), this.processor.PullGlobalWord(0x67ec));
+			this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), SavedScreenStyle);
 			this.processor.EmitGlobalWord(0xd2dc, 1);
 			KingMood = 1;
-			this.processor.EmitGlobalWord(0x67e8, 0xffff);
+			AdvisorPoseShown = 0xffff;
 			KingPose = 0;
 			KingSpeaking = 0xc;
 
@@ -1439,7 +1439,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, pictureName, 0);
 
-			this.processor.EmitGlobalWord(0xb1e6, this.owner.VideoCard.ScreenToPicture(1, 0xb5, 0x43, 0x8b, 0x85));
+			KingScenePicture = this.owner.VideoCard.ScreenToPicture(1, 0xb5, 0x43, 0x8b, 0x85);
 
 			ImportKingScenery(participantIdx);
 
@@ -1500,7 +1500,7 @@ namespace Civilization1Remaster.UI
 				this.processor.EmitGlobalWord(0x67fa, 0);
 			}
 
-			this.processor.EmitGlobalWord(0x67ea, 1);
+			KingPictureLoaded = 1;
 
 			this.processor.RestoreIndexRegisters();
 			this.processor.LeaveFrame();
@@ -1602,7 +1602,7 @@ namespace Civilization1Remaster.UI
 						this.processor.PullGlobalWord((ushort)((((figureIdx + participantIdx) & 3) * 6) + 0x804e)));
 				}
 
-				this.owner.Services.RenderPictureToScreen(BackScreenBox, 90, 0, this.processor.PullGlobalWord(0xb1e6));
+				this.owner.Services.RenderPictureToScreen(BackScreenBox, 90, 0, KingScenePicture);
 
 				KingStep = 0;
 
@@ -1654,12 +1654,12 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Services.PerformSound(1, 0);
 
-			if (this.processor.PullGlobalWord(0x67ea) != 0)
+			if (KingPictureLoaded != 0)
 			{
-				this.owner.Helpers.ReleaseResource(this.processor.PullGlobalWord(0x7efe), 0);
+				this.owner.Helpers.ReleaseResource(KingFacesPicture, 0);
 			}
 
-			this.processor.EmitGlobalWord(0x67ea, 0x0);
+			KingPictureLoaded = 0x0;
 
 			this.processor.Journal.CloseScope("ReleaseKingResources");
 		}
@@ -1690,7 +1690,7 @@ namespace Civilization1Remaster.UI
 					style += 3;
 				}
 
-				if (arg3 != 0xffff && arg3 != this.processor.PullGlobalWord(0x67e8) && this.processor.PullGlobalWord(0x67fa) != 0)
+				if (arg3 != 0xffff && arg3 != AdvisorPoseShown && this.processor.PullGlobalWord(0x67fa) != 0)
 				{
 					for (short advisorIdx = 0; advisorIdx < (short)((this.owner.World.Participants[AudiencePlayer].Standing + 1) >> 1); advisorIdx++)
 					{
@@ -1709,7 +1709,7 @@ namespace Civilization1Remaster.UI
 						this.owner.Services.RenderPictureToScreen(ScreenBox, horizLoc, vertLoc + 34,
 							this.processor.PullGlobalWord((ushort)((arg3 << 1) + (0x6 * seat) + 0x804e)));
 
-						this.processor.EmitGlobalWord(0x67e8, arg3);
+						AdvisorPoseShown = arg3;
 					}
 				}
 

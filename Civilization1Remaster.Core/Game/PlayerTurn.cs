@@ -324,7 +324,7 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private bool VisitUnit(short participantIdx)
 		{
-			if (this.processor.PullGlobalWord(0x1ae0) != 0)
+			if (ScreenRepaintRequest != 0)
 				this.owner.TurnHooks.RepaintMainScreen();
 
 			if (GameEndRequest != 0)

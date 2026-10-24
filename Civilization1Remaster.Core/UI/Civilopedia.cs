@@ -30,7 +30,7 @@ namespace Civilization1Remaster.UI
 
 				if (answer == 0xffff)
 				{
-					firstEntry = this.processor.PullGlobalWord(0x6808) != 0 ? (ushort)(firstEntry + 0x4e) : (ushort)0;
+					firstEntry = CivilopediaNextPage != 0 ? (ushort)(firstEntry + 0x4e) : (ushort)0;
 				}
 			}
 			while (answer != 0xfffe);
@@ -162,7 +162,7 @@ namespace Civilization1Remaster.UI
 					break;
 			}
 
-			this.processor.EmitGlobalWord(0x6808, (ushort)(horizLoc >= 0x12c ? 1 : 0));
+			CivilopediaNextPage = (ushort)(horizLoc >= 0x12c ? 1 : 0);
 
 			return entryTally;
 		}

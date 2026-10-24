@@ -41,7 +41,7 @@ namespace Civilization1Remaster.Engine
 			this.processor.UnstackDoubleWord(); // stack management - pop return offset and segment
 			this.processor.EmitLocalWord(0x4, this.owner.VideoCard.ObtainFreeStorage());
 
-			if (this.processor.PullGlobalWord(0x6dfc) != 0)
+			if (ScreenReserveFailed != 0)
 			{
 				// A screen could not be reserved
 				this.processor.EmitLocalWord(0x4, 0);
@@ -250,7 +250,7 @@ namespace Civilization1Remaster.Engine
 		{
 			this.processor.Journal.OpenScope("DisplayMouseCursorFully()");
 
-			this.processor.EmitGlobalWord(0x652e, PointerShowLevel);
+			SavedPointerShowLevel = PointerShowLevel;
 
 			while ((short)PointerShowLevel < 1)
 			{
@@ -267,7 +267,7 @@ namespace Civilization1Remaster.Engine
 		{
 			this.processor.Journal.OpenScope("ConcealMouseCursorToSavedLevel()");
 
-			while ((short)PointerShowLevel > (short)this.processor.PullGlobalWord(0x652e))
+			while ((short)PointerShowLevel > (short)SavedPointerShowLevel)
 			{
 				ConcealMouseCursor();
 			}
@@ -333,7 +333,7 @@ namespace Civilization1Remaster.Engine
 
 					this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 15);
 
-					this.processor.EmitGlobalWord(0x1ae0, 0x1);
+					ScreenRepaintRequest = 0x1;
 
 					DisplayMouseCursor();
 				}

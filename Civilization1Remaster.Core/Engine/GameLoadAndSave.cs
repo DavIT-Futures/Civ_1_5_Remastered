@@ -360,16 +360,16 @@ namespace Civilization1Remaster.Engine
 					this.owner.Libc.SeekHandle(handle, 10, 0);
 					this.owner.Libc.ReadHandle(handle, 0x6824, 2);
 
-					this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)((this.processor.PullGlobalWord(0x6824) << 1) + 0x33a2)));
+					this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)((SavedDifficulty << 1) + 0x33a2)));
 
 					this.owner.Libc.AppendText(0xba06, " ");
 
-					this.owner.Libc.SeekHandle(handle, (14 * (int)(short)this.processor.PullGlobalWord(0x6822)) + 16, 0);
+					this.owner.Libc.SeekHandle(handle, (14 * (int)(short)SavedHumanPlayer) + 16, 0);
 					this.owner.Libc.ReadHandle(handle, names, 14);
 
 					this.owner.Libc.AppendText(0xba06, names);
 
-					this.owner.Libc.SeekHandle(handle, (12 * (int)(short)this.processor.PullGlobalWord(0x6822)) + 0x80, 0);
+					this.owner.Libc.SeekHandle(handle, (12 * (int)(short)SavedHumanPlayer) + 0x80, 0);
 					this.owner.Libc.ReadHandle(handle, names, 0xc);
 
 					this.owner.Libc.AppendText(0xba06, ", ");
@@ -378,7 +378,7 @@ namespace Civilization1Remaster.Engine
 
 					this.owner.Libc.AppendText(0xba06, "/");
 
-					short year = (short)this.processor.PullGlobalWord(0x6826);
+					short year = (short)SavedYear;
 
 					this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(Math.Abs(year), 10));
 
@@ -431,7 +431,7 @@ namespace Civilization1Remaster.Engine
 		{
 			this.processor.Journal.OpenScope($"DisplayStoreGameDialog({arg1})");
 
-			this.processor.EmitGlobalWord(0x681c, 0);
+			FileError = 0;
 			this.processor.EmitGlobalWord(0x681a, 0);
 
 			this.owner.Startup.ConcealMouseCursor();
@@ -467,7 +467,7 @@ namespace Civilization1Remaster.Engine
 
 					if (StoreGame(0x41c6) != 0)
 					{
-						if (this.processor.PullGlobalWord(0x681c) == 0)
+						if (FileError == 0)
 						{
 							this.owner.Libc.CopyText(0xba06, " Game has been saved.\n");
 						}
@@ -478,12 +478,12 @@ namespace Civilization1Remaster.Engine
 							this.owner.Services.FloodBox(ScreenBox, 64, 127, 192, 34, 12);
 						}
 
-						if (this.processor.PullGlobalWord(0x681c) == 0xd)
+						if (FileError == 0xd)
 						{
 							this.owner.Libc.AppendText(0xba06, " Write access denied.\n");
 						}
 
-						if (this.processor.PullGlobalWord(0x681c) == 0x1c)
+						if (FileError == 0x1c)
 						{
 							this.owner.Libc.AppendText(0xba06, " Disk Full.\n");
 						}

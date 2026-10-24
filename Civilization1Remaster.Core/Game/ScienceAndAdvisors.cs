@@ -1047,7 +1047,7 @@ namespace Civilization1Remaster.Game
 
 			// Doubled unless the player is at war (0x6ed4) and the approach is defensive or there is more food than 0xdeb8
 			if ((FrameWord(DefensiveLocal) == 0 && (short)CityShields <= (short)CitySpecialSlots) ||
-				this.processor.PullGlobalWord(0x6ed4) == 0)
+				PlayerAtWar == 0)
 			{
 				Score <<= 1;
 			}

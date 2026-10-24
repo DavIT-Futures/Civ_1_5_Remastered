@@ -693,7 +693,7 @@ namespace Civilization1Remaster.Game
 			short preferences = this.owner.World.SessionPrefMarkers;
 
 			this.processor.EmitLocalWord(0x18, (ushort)preferences);
-			this.processor.EmitGlobalWord(0x28bc, 0x1);
+			NoConquestAnimation = 0x1;
 
 			if ((short)FirstMissingDisk <= 1)
 			{
@@ -702,7 +702,7 @@ namespace Civilization1Remaster.Game
 
 			this.owner.Conquest.SeizeCity(participantIdx, townIdx, 1);
 
-			this.processor.EmitGlobalWord(0x28bc, 0x0);
+			NoConquestAnimation = 0x0;
 			this.owner.World.SessionPrefMarkers = preferences;
 
 			this.owner.MapOps.MapAssignCityOwner(participantIdx, town.Place.X, town.Place.Y);

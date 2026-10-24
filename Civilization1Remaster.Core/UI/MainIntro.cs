@@ -87,7 +87,7 @@ namespace Civilization1Remaster.UI
 
 			bool ega = this.processor.PullGlobalByte(0x1a22) == 0x65 || this.processor.PullGlobalByte(0x1a22) == 0x45;
 			this.processor.RegAcc.Value16 = (ushort)(ega ? 1 : 0);
-			this.processor.EmitGlobalWord(0xb20e, this.processor.RegAcc.Value16);
+			EgaMode = this.processor.RegAcc.Value16;
 
 			// Change Num-Lock state
 			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(ScreenBox + 0x10), 1);
@@ -96,7 +96,7 @@ namespace Civilization1Remaster.UI
 		/// <summary>Screens 0 - 2 (VGA) or 0 - 3; 0x6dfc is set when one of them can't be reserved</summary>
 		private void ReserveIntroScreens()
 		{
-			this.processor.EmitGlobalWord(0x6dfc, 0);
+			ScreenReserveFailed = 0;
 			this.processor.RegAcc.Value16 = (ushort)(VgaMode != 0 ? 3 : 4);
 			this.processor.EmitLocalWord(IntroScreenCount, this.processor.RegAcc.Value16);
 
@@ -112,7 +112,7 @@ namespace Civilization1Remaster.UI
 				this.processor.EmitGlobalWord(0x32d6, this.owner.VideoCard.ReserveScreen(this.processor.PullLocalWord(IntroColumn)));
 
 				if (this.processor.RegAcc.Value16 == 0)
-					this.processor.EmitGlobalWord(0x6dfc, 1);
+					ScreenReserveFailed = 1;
 
 				this.processor.EmitLocalWord(IntroColumn, (ushort)(this.processor.PullLocalWord(IntroColumn) + 1));
 			}
@@ -616,7 +616,7 @@ namespace Civilization1Remaster.UI
 
 			EmptyMessage()
 				.Number(this.owner.World.Season);
-			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30c0), 0xba06);
+			this.owner.Libc.CopyText(CodeText5, 0xba06);
 
 			this.owner.BlockText.ImportTextFromFile(0x3301,
 				(ushort)((participantIdx != this.owner.World.PersonParticipantIdx) ? 0x32f9 : 0x32f2));

@@ -293,12 +293,12 @@ namespace Civilization1Remaster.Game
 			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)((participantIdx << 5) + 0xe6b6), 0);
 			HumanContinentAttackers = (ushort)(HumanContinentAttackers & ~(1 << participantIdx));
 
-			this.processor.EmitGlobalWord(0x6ed4, 0);
+			PlayerAtWar = 0;
 
 			for (ushort otherIdx = 1; otherIdx < 8; otherIdx++)
 			{
 				if ((player.Relations[otherIdx] & 3) == 1)
-					this.processor.EmitGlobalWord(0x6ed4, 1);
+					PlayerAtWar = 1;
 			}
 
 			for (ushort continentIdx = 1; continentIdx < 0xf; continentIdx++)

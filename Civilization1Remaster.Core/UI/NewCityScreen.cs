@@ -283,13 +283,13 @@ namespace Civilization1Remaster.UI
 						break;
 
 					// The cursor blinks
-					this.owner.VideoCard.SubstituteHue(ScreenBox, this.processor.PullGlobalSignedWord(0x68d0), vertLoc + 1,
-						this.processor.PullGlobalSignedWord(0x68ce), 10, 15, 11);
+					this.owner.VideoCard.SubstituteHue(ScreenBox, (short)TextCursorColumn, vertLoc + 1,
+						(short)TextCursorWidth, 10, 15, 11);
 
 					this.owner.TextPainter.AwaitTime(10);
 
-					this.owner.VideoCard.SubstituteHue(ScreenBox, this.processor.PullGlobalSignedWord(0x68d0), vertLoc + 1,
-						this.processor.PullGlobalSignedWord(0x68ce), 10, 11, 15);
+					this.owner.VideoCard.SubstituteHue(ScreenBox, (short)TextCursorColumn, vertLoc + 1,
+						(short)TextCursorWidth, 10, 11, 15);
 
 					if ((ushort)this.owner.Libc.KeyAvailable() == 0)
 					{
@@ -437,8 +437,8 @@ namespace Civilization1Remaster.UI
 
 				if (place == (short)TextCursor)
 				{
-					this.processor.EmitGlobalWord(0x68d0, (ushort)horizLoc);
-					this.processor.EmitGlobalWord(0x68ce, this.owner.VideoCard.ObtainCharWidth(typeface, character));
+					TextCursorColumn = (ushort)horizLoc;
+					TextCursorWidth = this.owner.VideoCard.ObtainCharWidth(typeface, character);
 				}
 
 				horizLoc += (short)this.owner.VideoCard.ObtainCharWidth(typeface, character);
