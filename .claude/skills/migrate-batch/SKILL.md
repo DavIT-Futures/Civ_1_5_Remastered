@@ -119,6 +119,18 @@ Testy zawsze w **Release** z `-parallelMode all` (ok. 7 razy szybciej niż Debug
 9. `git add` tylko plików porcji, commit na `main` z `Co-Authored-By`, `dotnet build Civilization1Remaster.sln -v q -nologo`
    (zablokowane pliki = gra uruchomiona: nie zabijać procesu, poprosić o zamknięcie).
 
+## B4: zmienne globalne jako nazwane właściwości (od 2026-10-24)
+
+- Właściwość `protected ushort Nazwa { get => PullGlobalWord(adres); set => EmitGlobalWord(adres, value); }` w regionie
+  „Global variables” `GameModule.cs`; zamiana skryptem (`b4*.py` w scratchpadzie: `PullGlobalWord(a)` → `Nazwa`,
+  `PullGlobalSignedWord(a)` → `(short)Nazwa`, cała instrukcja `EmitGlobalWord(a, x);` → `Nazwa = x;`, zapis z `newline=''`,
+  regex z `\r?$`). Te same dostępy do pamięci, więc zachowanie bez zmian. Tylko adresy czytane słowem i tylko w klasach
+  `GameModule`; bez dostępów bajtowych do adresu i do adresu + 1; nazwa sprawdzona na kolizje.
+- Na prośbę użytkownika: kilka porcji (3 – 5) naraz, potem jeden pełny zestaw, jedna runda mutacji, jeden commit.
+- Mutacja musi leżeć w funkcji, którą test naprawdę wykonuje: przypisać test po nazwie funkcji z miejscem użycia
+  (`<Funkcja>MatchesOriginalCode`); ocalałe mutacje w B4 to prawie zawsze zły test. W `check_mutations.py` kontekst z `\n`.
+- Literały w poleceniach powłoki: backticki w `python -c "..."` wykonują się jako polecenia – wpisy do backlogu przez Edit.
+
 ## Praca bez użytkownika
 
 Laptop zasypia po zamknięciu klapy (keep-awake blokuje tylko usypianie z bezczynności) – przed długą pracą poprosić o otwarty
