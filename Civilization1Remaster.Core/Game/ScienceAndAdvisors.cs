@@ -1,4 +1,5 @@
 ﻿using Civilization1Remaster.Emulation;
+using Civilization1Remaster.Game.Rules;
 using Civilization1Remaster.Game.State;
 
 namespace Civilization1Remaster.Game
@@ -1632,12 +1633,11 @@ namespace Civilization1Remaster.Game
 				.Text(participantIdx == participantIdx1 || participantIdx1 == 0 ? (ushort)0x23d7 : (ushort)0x23e1)
 				.Text((ushort)((ushort)(0x16 * scienceIdx) + 0x4da));
 
-			// AX is 0xba06 here (the original tested it)
-			if (participantIdx != participantIdx1)
+			if (TechnologyNewsRules.NamesSource(participantIdx, participantIdx1, this.owner.TurnHooks.ClassicTechnologyNews))
 			{
 				this.owner.Libc.AppendText(0xba06, " from\nthe ");
 
-				if (participantIdx1 == -2)
+				if (participantIdx1 == TechnologyNewsRules.GreatLibrary)
 				{
 					this.owner.Libc.AppendText(0xba06, "Great Library");
 				}

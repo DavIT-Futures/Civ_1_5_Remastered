@@ -1292,7 +1292,11 @@ te błędy są odtwarzane jawnie:
   `mov ax, [participantIdx1]` – AX to wtedy 0xba06 (wynik AppendText), więc dopisek idzie zawsze, a gracz 0 to
   barbarzyńcy. W DOS-owym CIV.EXE komunikat kończy się na nazwie technologii. Widać to przy każdej technologii,
   którą AI (z kontaktem z człowiekiem) odkryje sama. Naprawa: warunek `participantIdx != participantIdx1 &&
-  participantIdx1 != 0` – na końcu migracji, bo zamrożona gra i baseline mają ten błąd.
+  participantIdx1 != 0` (`TechnologyNewsRules.NamesSource`). **Naprawione w grze 2026-10-24** za przełącznikiem
+  `TurnHooks.ClassicTechnologyNews` (jak `ClassicHealing`): `HeadlessGame` go włącza, więc testy, zamrożona gra
+  i baseline się zgadzają; gra (Desktop) ma poprawny komunikat („Babylonians develop Mass Transit!”). Testy:
+  `TechnologyNewsRulesTests`, `TechnologyNewsInGameTests` (oba warianty). Na końcu migracji usunąć przełącznik i nagrać
+  baseline od nowa.
 - `FeedCity` (`HandleCity`, L0819): po `TrueExtent--` przetłumaczony kod sprawdzał flagę Z z wcześniejszego porównania
   (0xe8 == -1, zawsze prawda), a nie wynik zmniejszenia, więc głodujące miasto bez osadnika zawsze ginie (w oryginale tylko przy
   rozmiarze 1; inaczej traci mieszkańca i zeruje zapas).

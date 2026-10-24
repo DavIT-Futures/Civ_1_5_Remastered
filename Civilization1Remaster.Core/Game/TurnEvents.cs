@@ -23,6 +23,12 @@ namespace Civilization1Remaster.Game
 		public bool ClassicHealing { get; set; }
 
 		/// <summary>
+		/// The news of a technology as the translated code wrote it: "... discover X from the Barbarians!" for every research
+		/// of a computer player (TechnologyNewsRules.NamesSource). The tests turn it on (HeadlessGame), like ClassicHealing.
+		/// </summary>
+		public bool ClassicTechnologyNews { get; set; }
+
+		/// <summary>
 		/// Units heal lost hit points every turn (HealingRules): 2 in an own city; outside cities 1 for a fortified land unit
 		/// and for a resting ship (sentry or not moved this turn) next to land, at most 3 tiles from an own city.
 		/// Runs at the end of the game turn, so the moves left (reset at the start of each player's turn) show whether the

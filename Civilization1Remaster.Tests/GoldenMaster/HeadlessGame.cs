@@ -57,6 +57,9 @@ namespace Civilization1Remaster.Tests.GoldenMaster
 			// The baselines were recorded before HealingRules (healing in cities, ships at the coast)
 			this.Engine.TurnHooks.ClassicHealing = true;
 
+			// And the news of a technology as before (TechnologyNewsRules: "... from the Barbarians" for research)
+			this.Engine.TurnHooks.ClassicTechnologyNews = true;
+
 			this.keyboard = new ScriptedKeyboard(this.processor, this.Engine.VideoCard.Tokens, this.Engine.VideoCard.VideoLatch,
 				script ?? ScriptedKeyboard.DefaultScript);
 			this.processor.InputStarved = this.keyboard.OnInputStarved;
