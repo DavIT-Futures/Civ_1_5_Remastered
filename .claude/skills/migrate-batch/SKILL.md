@@ -130,6 +130,11 @@ Testy zawsze w **Release** z `-parallelMode all` (ok. 7 razy szybciej niż Debug
 - Mutacja musi leżeć w funkcji, którą test naprawdę wykonuje: przypisać test po nazwie funkcji z miejscem użycia
   (`<Funkcja>MatchesOriginalCode`); ocalałe mutacje w B4 to prawie zawsze zły test. W `check_mutations.py` kontekst z `\n`.
 - Literały w poleceniach powłoki: backticki w `python -c "..."` wykonują się jako polecenia – wpisy do backlogu przez Edit.
+- B5 (tabele z CIV.EXE) tak samo: akcesory `GameModule` (region „Tables of CIV.EXE”), stałe pól w `UnitKindTable` i
+  `Game/RecordTables.cs`. Odczyt ze znakiem (`PullInt16`, `PullInt8`, `PullGlobalSignedWord`) dostaje `(short)` /
+  `(sbyte)` przed akcesorem – rozpoznawać po nazwie metody, nie po prefiksie z segmentem; po zamianie porównać parami
+  usunięte odczyty ze znakiem z nowymi rzutowaniami. Indeks rekordu bez `+` / `-` na najwyższym poziomie (kolejność
+  działań). Mutacje melodii (`PerformSound`) są równoważne – testy nie widzą dźwięku.
 
 ## Praca bez użytkownika
 
