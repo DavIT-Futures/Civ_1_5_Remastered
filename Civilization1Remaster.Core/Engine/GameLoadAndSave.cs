@@ -156,7 +156,7 @@ namespace Civilization1Remaster.Engine
 						bays.Add(0xffff);
 					}
 
-					AssignManualFileLabel(Math.Clamp((int)this.processor.PullGlobalWord(0xe168), 0, HandBayTally - 1));
+					AssignManualFileLabel(Math.Clamp((int)LastSaveSlot, 0, HandBayTally - 1));
 				}
 				else
 				{
@@ -262,11 +262,11 @@ namespace Civilization1Remaster.Engine
 				outcome = ImportGame(0x41c6, 0);
 
 				this.FetchingBackup = false;
-				AssignManualFileLabel(Math.Clamp((int)this.processor.PullGlobalWord(0xe168), 0, HandBayTally - 1));
+				AssignManualFileLabel(Math.Clamp((int)LastSaveSlot, 0, HandBayTally - 1));
 			}
 			else
 			{
-				this.processor.EmitGlobalWord(0xe168, bay);
+				LastSaveSlot = bay;
 				this.processor.EmitGlobalByte(0x41cd, (byte)(0x30 + bay));
 
 				outcome = ImportGame(0x41c6, 0);
@@ -407,7 +407,7 @@ namespace Civilization1Remaster.Engine
 
 				// The original game had 4 manual saves and saved slots 4 - 9 automatically, at the start of a turn.
 				// Autosaves now have their own files, all manual saves continue in the middle of the turn.
-				this.processor.EmitGlobalWord(0xdf60, (ushort)(this.FetchingBackup ? 0x2 : 0x1));
+				MidTurnSave = (ushort)(this.FetchingBackup ? 0x2 : 0x1);
 				this.processor.EmitGlobalWord(0x3484, 0xfffd);
 				this.owner.World.StarshipMarkers &= 0x7ffe;
 			}
@@ -449,7 +449,7 @@ namespace Civilization1Remaster.Engine
 					ImportGame(0x41c6, 1);
 				}
 
-				DefaultLine = (ushort)this.owner.Helpers.VerifyValueSpan(this.processor.PullGlobalSignedWord(0xe168), 0, HandBayTally - 1);
+				DefaultLine = (ushort)this.owner.Helpers.VerifyValueSpan((short)LastSaveSlot, 0, HandBayTally - 1);
 
 				if (arg1 == 0xffff)
 				{
@@ -462,7 +462,7 @@ namespace Civilization1Remaster.Engine
 
 				if (arg1 != 0xffff)
 				{
-					this.processor.EmitGlobalWord(0xe168, arg1);
+					LastSaveSlot = arg1;
 					this.processor.EmitGlobalByte(0x41cd, (byte)(arg1 + 0x30));
 
 					if (StoreGame(0x41c6) != 0)

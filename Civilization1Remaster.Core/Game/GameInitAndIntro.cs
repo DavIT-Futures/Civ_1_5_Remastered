@@ -30,7 +30,7 @@ namespace Civilization1Remaster.Game
 			this.processor.EmitUInt16(this.processor.SegData.Value16, screenZero, 0x1);
 			this.processor.EmitGlobalWord(0x67fc, 0x0);
 
-			if (this.processor.PullGlobalWord(0xd76a) != 0)
+			if (EarthGame != 0)
 			{
 				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x3b20, 1);
 			}
@@ -225,7 +225,7 @@ namespace Civilization1Remaster.Game
 
 					if (dot == 1)
 					{
-						short cap = (short)(this.owner.Libc.AbsoluteValue((short)(0xc - latitudeDist)) + (this.processor.PullGlobalWord(0x7efa) << 2));
+						short cap = (short)(this.owner.Libc.AbsoluteValue((short)(0xc - latitudeDist)) + (Climate << 2));
 						if (cap > moisture)
 						{
 							moisture++;
@@ -233,7 +233,7 @@ namespace Civilization1Remaster.Game
 					}
 					else if (moisture > 0)
 					{
-						ushort drop = (ushort)this.owner.Libc.Dice.DrawInt((ushort)(7 - (this.processor.PullGlobalWord(0x7efa) << 1)));
+						ushort drop = (ushort)this.owner.Libc.Dice.DrawInt((ushort)(7 - (Climate << 1)));
 						moisture = (short)(moisture - drop);
 
 						switch (dot)
@@ -267,7 +267,7 @@ namespace Civilization1Remaster.Game
 
 					if (dot == 1)
 					{
-						short cap = (short)((latitudeDist / 2) + this.processor.PullGlobalSignedWord(0x7efa));
+						short cap = (short)((latitudeDist / 2) + (short)Climate);
 						if (cap > moisture)
 						{
 							moisture++;
@@ -275,7 +275,7 @@ namespace Civilization1Remaster.Game
 					}
 					else if (moisture > 0)
 					{
-						ushort drop = (ushort)this.owner.Libc.Dice.DrawInt((ushort)(7 - (this.processor.PullGlobalWord(0x7efa) << 1)));
+						ushort drop = (ushort)this.owner.Libc.Dice.DrawInt((ushort)(7 - (Climate << 1)));
 						moisture = (short)(moisture - drop);
 
 						switch (dot)
@@ -483,7 +483,7 @@ namespace Civilization1Remaster.Game
 				attemptTally++;
 
 				if (attemptTally >= 0x100 ||
-					(short)(((this.processor.PullGlobalWord(0x7ef6) + this.processor.PullGlobalWord(0x7efa)) << 1) + 6) <= riverTally)
+					(short)(((this.processor.PullGlobalWord(0x7ef6) + Climate) << 1) + 6) <= riverTally)
 					break;
 			}
 
@@ -1547,7 +1547,7 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private void TellStoryLine(ushort fileName)
 		{
-			if (this.processor.PullGlobalSignedWord(0x3b64) > 1)
+			if ((short)BirthPicture > 1)
 			{
 				// The line under the picture is wiped with the picture
 				this.owner.VideoCard.RenderImage(PictureScreenBox, 0, 0xa0, 0x140, 8,
@@ -1603,8 +1603,8 @@ namespace Civilization1Remaster.Game
 			this.owner.Libc.CopyText(fileName, "birth0.pic");
 
 			// The digit of the name (bp - 0xb)
-			byte pictureIdx = (byte)this.processor.PullGlobalWord(0x3b64);
-			this.processor.EmitGlobalWord(0x3b64, (ushort)(this.processor.PullGlobalWord(0x3b64) + 1));
+			byte pictureIdx = (byte)BirthPicture;
+			BirthPicture = (ushort)(BirthPicture + 1);
 			this.processor.EmitGlobalByte((ushort)(fileName + 5), (byte)(this.processor.PullGlobalByte((ushort)(fileName + 5)) + pictureIdx));
 
 			bool colours = VgaMode != 0;
@@ -1634,9 +1634,9 @@ namespace Civilization1Remaster.Game
 			this.owner.Services.ImportColorsFromBuffer(8, 0xc5be);
 
 			// The colour cycles of the picture: first colour, last colour, speed (300 / speed beats a step), 0 at the end
-			this.processor.EmitGlobalWord(0x3b68, 0x0);
+			StoryCycleCount = 0x0;
 
-			while (this.processor.PullUInt8(0x3710, this.processor.PullGlobalWord(0x3b66)) != 0)
+			while (this.processor.PullUInt8(0x3710, StoryCycleRecord) != 0)
 			{
 				ushort first = NextStoryCycleByte();
 				ushort last = NextStoryCycleByte();
@@ -1647,14 +1647,14 @@ namespace Civilization1Remaster.Game
 
 				ushort delay = (ushort)(0x12c / speed);
 
-				this.processor.EmitGlobalWord(0x3b68, (ushort)(this.processor.PullGlobalWord(0x3b68) + 1));
+				StoryCycleCount = (ushort)(StoryCycleCount + 1);
 
-				this.owner.Services.AssignHueCycleSpan(this.processor.PullGlobalWord(0x3b68), delay, first, last);
+				this.owner.Services.AssignHueCycleSpan(StoryCycleCount, delay, first, last);
 			}
 
-			this.processor.EmitGlobalWord(0x3b66, (ushort)(this.processor.PullGlobalWord(0x3b66) + 1));
+			StoryCycleRecord = (ushort)(StoryCycleRecord + 1);
 
-			for (short cycleIdx = 1; cycleIdx <= this.processor.PullGlobalSignedWord(0x3b68); cycleIdx++)
+			for (short cycleIdx = 1; cycleIdx <= (short)StoryCycleCount; cycleIdx++)
 			{
 				this.owner.Services.ActivateHueCycle((ushort)cycleIdx);
 			}
@@ -1663,8 +1663,8 @@ namespace Civilization1Remaster.Game
 		/// <summary>The next byte of the colour cycle records of the story pictures (0x3710:0x3b66)</summary>
 		private ushort NextStoryCycleByte()
 		{
-			ushort spot = this.processor.PullGlobalWord(0x3b66);
-			this.processor.EmitGlobalWord(0x3b66, (ushort)(this.processor.PullGlobalWord(0x3b66) + 1));
+			ushort spot = StoryCycleRecord;
+			StoryCycleRecord = (ushort)(StoryCycleRecord + 1);
 
 			return this.processor.PullUInt8(0x3710, spot);
 		}
@@ -1695,7 +1695,7 @@ namespace Civilization1Remaster.Game
 		/// <summary>Stops the colour cycles 1 - 0x3b68 of the story picture</summary>
 		private void StopStoryColourCycles()
 		{
-			for (short cycleIdx = 1; cycleIdx <= this.processor.PullGlobalSignedWord(0x3b68); cycleIdx++)
+			for (short cycleIdx = 1; cycleIdx <= (short)StoryCycleCount; cycleIdx++)
 			{
 				this.owner.Services.DeactivateHueCycle((ushort)cycleIdx);
 			}

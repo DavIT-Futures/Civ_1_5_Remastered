@@ -1283,6 +1283,23 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   0x6802 (blisko zmiennych zegara), 0x20f4, 0x3c62. Pełny zestaw 767/767. 9 / 9 mutacji w miejscach użycia (menu:
   test `OperateAndDisplayMenuMatchOriginalCode`, nie `DialogsMatchOriginalCode`; szerokość pałacu:
   `ImportPalaceGraphicsMatchesOriginalCode`, `DisplayPalace` jej nie czyta; `StackDomainTally`: golden master).
+- B4, porcje 7 – 9 razem (2026-10-24, na prośbę użytkownika: trzy porcje i raz testy), 33 zmienne, 95 odczytów,
+  58 zapisów, skrypt `b4g.py` + `names_b4g.py` w scratchpadzie.
+  Porcja 7: `PopulationMark` 0x1c24, `LastSaveSlot` 0xe168, `MidTurnSave` 0xdf60, `SpaceshipColonists` 0xdeae,
+  `EarthGame` 0xd76a, `Climate` 0x7efa, `KingPause` 0x67f6, `ReplayCityDistance` 0x6812, `ScoreIconHoriz` /
+  `ScoreIconVert` 0xb25c / 0xb2bc, `BirthPicture` 0x3b64.
+  Porcja 8: `MenuWidth` 0xd4c8, `MenuFirstChoice` 0xb1ec, `MenuChoiceCount` 0xd208, `MenuMeasuring` 0xd2e2,
+  `MenuFlashHue` 0x654c, `MenuOptions` 0xd7f2, `PalaceFirstPicture` 0x6828, `PalaceLeftBushes` 0xd930,
+  `StoryCycleRecord` / `StoryCycleCount` 0x3b66 / 0x3b68.
+  Porcja 9: `CountLosses` 0x70d8, `StackLeader` 0x6530, `KingPose` 0x7ef4, `AudiencePlayer` 0x67f2,
+  `AudienceWithoutPictures` 0x67f0, `ReplayFile` 0x680c, `CityLabelCount` 0x6c96, `HumanContinentAttackers` 0x2a6e,
+  `DiskInUse` 0xe17c, `HallOfFameScore` 0xb77e, `PointerPicture` 0xd4dc, `UnitLimitTold` 0xd760.
+  Pominięte (znaczenie niejasne): 0x6ed6 / 0x70ea, 0xde20, 0xb22a, 0x681a, 0x3484, 0xe3c2 / 0xdb42, 0xd206; bajty
+  0xba0c (w buforze 0xba06), 0x1a22, 0x5403 (`SystemServices` nie jest `GameModule`), 0xb1d4.
+  Pełny zestaw 767/767 (jeden przebieg na trzy porcje), mutacje 13 / 13 (w drugiej rundzie 5 z innymi testami: zapis
+  `PalaceFirstPicture` łapie `ImportPalaceCastle`, nie `ImportPalaceGraphics`; `Climate` – `OpeningSequence`, nie
+  `MapMaking`; `AudiencePlayer` – odczyt w `ChoreographKingLikeness`; `CityLabelCount` – `RenderMapTile`, nie
+  `FocusMapView`; `PopulationMark` – `RenderStatusBar`, nie golden master).
 
 ## Następny krok
 

@@ -585,7 +585,7 @@ namespace Civilization1Remaster.UI
 
 			(short horizLoc, short vertLoc, ushort attemptTally) = ChooseStartPlace(participantIdx, foreignTowns);
 
-			if (this.owner.World.RoundTally == 0 && this.processor.PullGlobalWord(0xd76a) != 0)
+			if (this.owner.World.RoundTally == 0 && EarthGame != 0)
 			{
 				// EARTH: the start place of the leader
 				ushort place = (ushort)(player.ChiefVisuals << 1);
@@ -1200,7 +1200,7 @@ namespace Civilization1Remaster.UI
 				StorePicture(0xd4ce, idx, 1, (ushort)(idx << 4), 0x20, 0x10, 0x10);
 			}
 
-			this.processor.EmitGlobalWord(0xd4dc, this.processor.PullGlobalWord(0x6e92));
+			PointerPicture = this.processor.PullGlobalWord(0x6e92);
 
 			for (int idx = 0; idx < 8; idx++)
 			{

@@ -53,8 +53,8 @@ namespace Civilization1Remaster.Engine
 				this.processor.EmitLocalWord(0x4, currentChoice);
 			}
 
-			this.processor.EmitGlobalWord(0xb1ec, 0xffff);
-			this.processor.EmitGlobalWord(0xd2e2, 0x1);
+			MenuFirstChoice = 0xffff;
+			MenuMeasuring = 0x1;
 
 			ushort fontId = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(ScreenBox + 0x10));
 			ushort lineHeight = this.owner.VideoCard.ObtainTextHeight(fontId);
@@ -81,7 +81,7 @@ namespace Civilization1Remaster.Engine
 			}
 
 			this.processor.EmitLocalWord(0xc, backHue);
-			this.processor.EmitGlobalWord(0x654c, (ushort)(backHue == 15 ? 3 : 15));
+			MenuFlashHue = (ushort)(backHue == 15 ? 3 : 15);
 
 			if (VgaMode == 0)
 			{
@@ -117,7 +117,7 @@ namespace Civilization1Remaster.Engine
 						this.owner.Audience.ChoreographKingSpeaking();
 					}
 
-					this.processor.EmitGlobalWord(0xd2e2, 0);
+					MenuMeasuring = 0;
 					this.owner.GlobDb3a = 0;
 
 					this.owner.Startup.ObtainMouseState();
@@ -135,7 +135,7 @@ namespace Civilization1Remaster.Engine
 
 						ushort rawLine = (ushort)((short)this.owner.GlobDb3e - (short)vertLoc - 4);
 						this.processor.RegCount.Value16 = MenuLineHeight;
-						currentChoice = (ushort)(DivideWords(rawLine, this.processor.RegCount.Value16) - this.processor.PullGlobalWord(0xb1ec));
+						currentChoice = (ushort)(DivideWords(rawLine, this.processor.RegCount.Value16) - MenuFirstChoice);
 
 						if (horizLoc > (short)this.owner.GlobDb3c || (short)this.owner.GlobDb3c > (short)MenuRightEdge)
 						{
@@ -211,7 +211,7 @@ namespace Civilization1Remaster.Engine
 						}
 						else if (key == 0x5000)
 						{
-							if ((short)currentChoice < (short)(this.processor.PullGlobalWord(0xd208) - 1))
+							if ((short)currentChoice < (short)(MenuChoiceCount - 1))
 							{
 								currentChoice++;
 								this.processor.EmitLocalWord(0x4, currentChoice);
@@ -246,7 +246,7 @@ namespace Civilization1Remaster.Engine
 					}
 
 					if ((short)currentChoice < 0 ||
-						(short)currentChoice >= this.processor.PullGlobalSignedWord(0xd208) ||
+						(short)currentChoice >= (short)MenuChoiceCount ||
 						this.processor.PullGlobalWord(0x8066) != 0 ||
 						this.processor.PullGlobalWord(0xd206) != 0)
 					{
@@ -278,13 +278,13 @@ namespace Civilization1Remaster.Engine
 
 					if (VgaMode == 0)
 					{
-						byte flashHue = (byte)(MenuHelpTopic != 0 ? 11 : this.processor.PullGlobalWord(0x654c));
+						byte flashHue = (byte)(MenuHelpTopic != 0 ? 11 : MenuFlashHue);
 
 						this.owner.VideoCard.SubstituteHue(ScreenBox,
 							horizLoc + 3,
-							(((short)currentChoice + this.processor.PullGlobalSignedWord(0xb1ec)) *
+							(((short)currentChoice + (short)MenuFirstChoice) *
 								(short)MenuLineHeight) + vertLoc + 4,
-							this.processor.PullGlobalSignedWord(0xd4c8) + 5,
+							(short)MenuWidth + 5,
 							(short)highlightHeight,
 							11,
 							flashHue);
@@ -299,7 +299,7 @@ namespace Civilization1Remaster.Engine
 				this.processor.EmitGlobalWord(0x2fa0, 0);
 				this.processor.EmitGlobalWord(0xd206, 0);
 				DisabledLines = 0;
-				this.processor.EmitGlobalWord(0xd7f2, 0);
+				MenuOptions = 0;
 				this.processor.RegAcc.Value16 = currentChoice;
 			}
 
@@ -318,9 +318,9 @@ namespace Civilization1Remaster.Engine
 				return;
 			}
 
-			int rowTop = (((short)choice + this.processor.PullGlobalSignedWord(0xb1ec)) *
+			int rowTop = (((short)choice + (short)MenuFirstChoice) *
 				(short)MenuLineHeight) + vertLoc + 4;
-			int width = this.processor.PullGlobalSignedWord(0xd4c8) + 5;
+			int width = (short)MenuWidth + 5;
 
 			this.owner.VideoCard.SubstituteHue(ScreenBox,
 				horizLoc + 3, rowTop, width, (short)highlightHeight,
@@ -351,7 +351,7 @@ namespace Civilization1Remaster.Engine
 
 			this.processor.EmitGlobalWord(0x654e, 0);
 
-			if (this.processor.PullGlobalWord(0xd2e2) == 1)
+			if (MenuMeasuring == 1)
 			{
 				MeasureAndDrawMenuFrame(charsAddr, horizLoc, vertLoc);
 			}
@@ -393,7 +393,7 @@ namespace Civilization1Remaster.Engine
 			this.processor.EmitLocalWord(0x5a, 0);
 			MenuLineCount = 0;
 			this.processor.EmitLocalWord(0x54, 0);
-			this.processor.EmitGlobalWord(0xd4c8, 0);
+			MenuWidth = 0;
 			this.processor.EmitLocalWord(0x56, 0);
 
 			while (this.owner.Libc.TextLength(charsAddr) > charIdx)
@@ -402,9 +402,9 @@ namespace Civilization1Remaster.Engine
 
 				if (ch == 0xa)
 				{
-					if ((short)lineWidth > this.processor.PullGlobalSignedWord(0xd4c8))
+					if ((short)lineWidth > (short)MenuWidth)
 					{
-						this.processor.EmitGlobalWord(0xd4c8, lineWidth);
+						MenuWidth = lineWidth;
 					}
 
 					lineWidth = 0;
@@ -428,9 +428,9 @@ namespace Civilization1Remaster.Engine
 								this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(choiceCount + 0xdc4a), nextCh);
 							}
 
-							if (this.processor.PullGlobalWord(0xb1ec) == 0xffff)
+							if (MenuFirstChoice == 0xffff)
 							{
-								this.processor.EmitGlobalWord(0xb1ec, MenuLineCount);
+								MenuFirstChoice = MenuLineCount;
 							}
 
 							choiceCount++;
@@ -452,7 +452,7 @@ namespace Civilization1Remaster.Engine
 				0, (192 - vertLoc) / (short)MenuLineHeight);
 			MenuLineCount = (ushort)clampedLines;
 
-			ushort rightEdge = (ushort)(horizLoc + this.processor.PullGlobalWord(0xd4c8) + 8);
+			ushort rightEdge = (ushort)(horizLoc + MenuWidth + 8);
 			MenuRightEdge = rightEdge;
 
 			ushort bottomEdge = (ushort)(MultiplyWords((ushort)clampedLines, MenuLineHeight) + vertLoc + 6);
@@ -472,7 +472,7 @@ namespace Civilization1Remaster.Engine
 				this.processor.EmitLocalWord(0x5a, choiceCount);
 			}
 
-			this.processor.EmitGlobalWord(0xd208, choiceCount);
+			MenuChoiceCount = choiceCount;
 
 			if ((vertLoc & 1) == 0)
 			{
@@ -580,7 +580,7 @@ namespace Civilization1Remaster.Engine
 			this.processor.EmitLocalWord(0x5a, (ushort)optionIdx);
 
 			this.processor.EmitUInt16(this.processor.SegData.Value16,
-				(ushort)(ScreenBox + 0xc), this.processor.PullGlobalWord(0x654c));
+				(ushort)(ScreenBox + 0xc), MenuFlashHue);
 
 			ushort lineIdx = 0;
 			this.processor.EmitLocalWord(0x56, 0);
@@ -589,7 +589,7 @@ namespace Civilization1Remaster.Engine
 			{
 				bool drawLine = true;
 
-				if (this.processor.PullGlobalWord(0xd2e2) == 0)
+				if (MenuMeasuring == 0)
 				{
 					short diff = (short)this.owner.Libc.AbsoluteValue((short)(arg4 - (ushort)optionIdx));
 
@@ -606,7 +606,7 @@ namespace Civilization1Remaster.Engine
 					this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(charsAddr + nextLineStart - 1), 0);
 
 					bool checkedOption = optionIdx >= 0 &&
-						((1 << (optionIdx & 0x1f)) & this.processor.PullGlobalWord(0xd7f2)) != 0;
+						((1 << (optionIdx & 0x1f)) & MenuOptions) != 0;
 
 					if (checkedOption)
 					{
@@ -638,7 +638,7 @@ namespace Civilization1Remaster.Engine
 
 						if (optionIdx < 0)
 						{
-							hue = this.processor.PullGlobalWord(0x654c);
+							hue = MenuFlashHue;
 						}
 						else
 						{

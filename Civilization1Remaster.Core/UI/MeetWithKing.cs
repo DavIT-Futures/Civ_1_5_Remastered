@@ -1089,7 +1089,7 @@ namespace Civilization1Remaster.UI
 			this.processor.EmitGlobalWord(0xd2dc, 1);
 			KingMood = 1;
 			this.processor.EmitGlobalWord(0x67e8, 0xffff);
-			this.processor.EmitGlobalWord(0x7ef4, 0);
+			KingPose = 0;
 			KingSpeaking = 0xc;
 
 			ObtainKingSalutation(participantIdx);
@@ -1237,7 +1237,7 @@ namespace Civilization1Remaster.UI
 			// The final values of the locals stay in the stack frame, like in the original
 			this.processor.EnterFrame(0x6);
 
-			this.processor.EmitGlobalWord(0x7ef4, 0xffff);
+			KingPose = 0xffff;
 
 			short eyes, mouth;
 
@@ -1251,13 +1251,13 @@ namespace Civilization1Remaster.UI
 					mouth = 8;
 
 				KingSpeaking = (ushort)(KingSpeaking - 1);
-				this.processor.EmitGlobalWord(0x67f6, 4);
+				KingPause = 4;
 			}
 			else
 			{
 				AdvanceKingGesture();
 
-				if (this.processor.PullGlobalWord(0x67f6) == 0 && this.owner.Libc.Dice.DrawInt(12) == 0 && KingGestureStep() == 0)
+				if (KingPause == 0 && this.owner.Libc.Dice.DrawInt(12) == 0 && KingGestureStep() == 0)
 				{
 					switch (KingStep)
 					{
@@ -1281,10 +1281,10 @@ namespace Civilization1Remaster.UI
 				mouth = (sbyte)this.processor.PullGlobalByte((ushort)(step + 0x3aa6));
 			}
 
-			if (this.processor.PullGlobalWord(0x67f6) != 0)
-				this.processor.EmitGlobalWord(0x67f6, (ushort)(this.processor.PullGlobalWord(0x67f6) - 1));
+			if (KingPause != 0)
+				KingPause = (ushort)(KingPause - 1);
 
-			ChoreographKingLikeness((ushort)eyes, (ushort)mouth, this.processor.PullGlobalWord(0x7ef4));
+			ChoreographKingLikeness((ushort)eyes, (ushort)mouth, KingPose);
 
 			this.owner.TextPainter.AwaitTime(10);
 
@@ -1362,7 +1362,7 @@ namespace Civilization1Remaster.UI
 			{
 				ushort step = KingStep;
 
-				this.processor.EmitGlobalWord(0x7ef4, step == 0xe ? (ushort)1 : step == 6 ? (ushort)2 : (ushort)0);
+				KingPose = step == 0xe ? (ushort)1 : step == 6 ? (ushort)2 : (ushort)0;
 				return;
 			}
 
@@ -1391,8 +1391,8 @@ namespace Civilization1Remaster.UI
 
 			ushort pictureName = (ushort)(this.processor.RegFrame.Value16 - 0x10);
 
-			this.processor.EmitGlobalWord(0x67f2, (ushort)participantIdx);
-			this.processor.EmitGlobalWord(0x67f0, 0);
+			AudiencePlayer = (ushort)participantIdx;
+			AudienceWithoutPictures = 0;
 
 			if ((this.owner.World.SessionPrefMarkers & 8) != 0)
 			{
@@ -1541,7 +1541,7 @@ namespace Civilization1Remaster.UI
 		/// <summary>The audience without pictures: "&lt;title&gt;: &lt;government&gt; of the &lt;civilization&gt;." over a motif</summary>
 		private void DisplayKingLine(short participantIdx)
 		{
-			this.processor.EmitGlobalWord(0x67f0, 1);
+			AudienceWithoutPictures = 1;
 
 			this.owner.Startup.ConcealMouseCursor();
 
@@ -1574,7 +1574,7 @@ namespace Civilization1Remaster.UI
 			this.processor.EnterFrame(0x1e);
 			this.processor.PreserveSource();
 
-			if (this.processor.PullGlobalWord(0x67f0) == 0)
+			if (AudienceWithoutPictures == 0)
 			{
 				this.owner.Startup.ConcealMouseCursor();
 
@@ -1674,11 +1674,11 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope($"ChoreographKingLikeness({arg1}, {arg2}, {arg3})");
 
-			if (this.processor.PullGlobalWord(0x67f0) == 0)
+			if (AudienceWithoutPictures == 0)
 			{
 				this.owner.Startup.ConcealMouseCursor();
 
-				short regime = this.owner.World.Participants[this.processor.PullGlobalWord(0x67f2)].RegimeKind;
+				short regime = this.owner.World.Participants[AudiencePlayer].RegimeKind;
 				short style = (short)((regime / 2) % 3);
 
 				if (regime == 3)
@@ -1692,9 +1692,9 @@ namespace Civilization1Remaster.UI
 
 				if (arg3 != 0xffff && arg3 != this.processor.PullGlobalWord(0x67e8) && this.processor.PullGlobalWord(0x67fa) != 0)
 				{
-					for (short advisorIdx = 0; advisorIdx < (short)((this.owner.World.Participants[this.processor.PullGlobalWord(0x67f2)].Standing + 1) >> 1); advisorIdx++)
+					for (short advisorIdx = 0; advisorIdx < (short)((this.owner.World.Participants[AudiencePlayer].Standing + 1) >> 1); advisorIdx++)
 					{
-						ushort seat = (ushort)((advisorIdx + this.processor.PullGlobalWord(0x67f2)) & 3);
+						ushort seat = (ushort)((advisorIdx + AudiencePlayer) & 3);
 						ushort place = (ushort)((style << 4) + (seat << 2));
 
 						// The tables of the advisors are in the segment 0x36fa (ES is left there, like in the original)

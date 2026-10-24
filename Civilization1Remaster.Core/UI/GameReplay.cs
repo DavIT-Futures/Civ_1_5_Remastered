@@ -44,7 +44,7 @@ namespace Civilization1Remaster.UI
 				{
 					ushort handle = (ushort)this.owner.Libc.OpenHandle("replay.txt", 0x8301, 0x80);
 
-					this.processor.EmitGlobalWord(0x680c, handle);
+					ReplayFile = handle;
 
 					if (handle == 0xffff)
 					{
@@ -61,7 +61,7 @@ namespace Civilization1Remaster.UI
 
 				if (ReplayMode == 3)
 				{
-					this.owner.Libc.CloseHandle((short)this.processor.PullGlobalWord(0x680c));
+					this.owner.Libc.CloseHandle((short)ReplayFile);
 				}
 
 				if ((short)ReplayMode >= 3)
@@ -447,7 +447,7 @@ namespace Civilization1Remaster.UI
 					this.processor.EmitGlobalByte((ushort)(length + 0xba07), 0xa);
 					this.processor.EmitGlobalByte((ushort)(length + 0xba08), 0x0);
 
-					this.owner.Libc.WriteHandle((short)this.processor.PullGlobalWord(0x680c), 0xba06, (ushort)(length + 2));
+					this.owner.Libc.WriteHandle((short)ReplayFile, 0xba06, (ushort)(length + 2));
 				}
 
 				this.owner.BlockText.ShrinkTextToWidth(0xba06, 312);
@@ -586,7 +586,7 @@ namespace Civilization1Remaster.UI
 
 			ushort nearest = this.processor.PullLocalWord(0x4);
 
-			this.processor.EmitGlobalWord(0x6812, 999);
+			ReplayCityDistance = 999;
 			this.processor.SegExtra.Value16 = ReplayCitySegment;
 
 			for (int idx = 0; idx < 0x80; idx++)
@@ -597,9 +597,9 @@ namespace Civilization1Remaster.UI
 				short distance = (short)this.owner.Helpers.ObtainDistance(horizLoc, (short)PullReplayCity(idx, 0x100),
 					vertLoc, (short)PullReplayCity(idx, 0x200));
 
-				if (distance < this.processor.PullGlobalSignedWord(0x6812))
+				if (distance < (short)ReplayCityDistance)
 				{
-					this.processor.EmitGlobalWord(0x6812, (ushort)distance);
+					ReplayCityDistance = (ushort)distance;
 					nearest = (ushort)idx;
 				}
 			}
@@ -645,13 +645,13 @@ namespace Civilization1Remaster.UI
 						ushort cityIdx = ObtainDistanceToReplayCity(tileHoriz, tileVert);
 						ushort hue = 8;
 
-						if (this.processor.PullGlobalSignedWord(0x6812) < 6 &&
+						if ((short)ReplayCityDistance < 6 &&
 							this.owner.MapOps.ObtainContinentID((short)PullReplayCity(cityIdx, 0x100), (short)PullReplayCity(cityIdx, 0x200)) ==
 							this.owner.MapOps.ObtainContinentID(tileHoriz, tileVert))
 						{
 							ushort cityOwner = PullReplayCity(cityIdx, 0);
 
-							hue = this.processor.PullGlobalWord(0x6812) == 0 ? (ushort)(cityOwner == 1 ? 7 : 15) :
+							hue = ReplayCityDistance == 0 ? (ushort)(cityOwner == 1 ? 7 : 15) :
 								this.processor.PullGlobalWord((ushort)((cityOwner << 1) + 0x1946));
 						}
 
@@ -713,7 +713,7 @@ namespace Civilization1Remaster.UI
 					}
 				}
 
-				this.owner.Libc.WriteHandle((short)this.processor.PullGlobalWord(0x680c), 0xba06, 0x52);
+				this.owner.Libc.WriteHandle((short)ReplayFile, 0xba06, 0x52);
 			}
 
 			this.processor.Journal.CloseScope("DumpReplayCities");

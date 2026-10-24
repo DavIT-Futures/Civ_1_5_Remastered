@@ -291,7 +291,7 @@ namespace Civilization1Remaster.Game
 
 			player.Landmasses[0].Approach = 0;
 			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)((participantIdx << 5) + 0xe6b6), 0);
-			this.processor.EmitGlobalWord(0x2a6e, (ushort)(this.processor.PullGlobalWord(0x2a6e) & ~(1 << participantIdx)));
+			HumanContinentAttackers = (ushort)(HumanContinentAttackers & ~(1 << participantIdx));
 
 			this.processor.EmitGlobalWord(0x6ed4, 0);
 
@@ -382,7 +382,7 @@ namespace Civilization1Remaster.Game
 				RefreshCityProduction(participantIdx, continentIdx);
 
 			if (own.Assault != 0 && this.owner.World.Participants[this.owner.World.PersonParticipantIdx].Landmasses[continentIdx].TownTally > 1)
-				this.processor.EmitGlobalWord(0x2a6e, (ushort)(this.processor.PullGlobalWord(0x2a6e) | (1 << participantIdx)));
+				HumanContinentAttackers = (ushort)(HumanContinentAttackers | (1 << participantIdx));
 		}
 
 		/// <summary>Communism (4), Democracy (3, more than 10 cities), Monarchy (2), or Anarchy (1) when 0xe3c2 is set</summary>
@@ -2200,7 +2200,7 @@ namespace Civilization1Remaster.Game
 						return this.look.Direction;
 				}
 
-				if (this.owner.World.RoundTally == 0 && this.processor.PullGlobalWord(0xd76a) != 0)
+				if (this.owner.World.RoundTally == 0 && EarthGame != 0)
 				{
 					this.look.BestScore = 0xf;
 					this.look.BestDirection = 0;

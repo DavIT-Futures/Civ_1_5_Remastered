@@ -63,7 +63,7 @@ namespace Civilization1Remaster.Game
 			// Visibility Mask and that conflicts with other code which expects playerID.
 			ushort chartSightFilter = (ushort)(1 << (byte)participantIdx);
 
-			this.processor.EmitGlobalWord(0x6c96, 0x0);
+			CityLabelCount = 0x0;
 
 			ushort order = (ushort)this.owner.Libc.Dice.DrawInt(256);
 
@@ -98,7 +98,7 @@ namespace Civilization1Remaster.Game
 				order = (byte)((order * 5) + 1);
 			}
 
-			for (int labelIdx = 0; labelIdx < (short)this.processor.PullGlobalWord(0x6c96); labelIdx++)
+			for (int labelIdx = 0; labelIdx < (short)CityLabelCount; labelIdx++)
 			{
 				ushort place = (ushort)(labelIdx << 1);
 
@@ -698,13 +698,13 @@ namespace Civilization1Remaster.Game
 					this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((0x1d << 1) + 0xd4ce)));
 			}
 
-			ushort labelIdx = this.processor.PullGlobalWord(0x6c96);
+			ushort labelIdx = CityLabelCount;
 			if ((short)labelIdx < 0x20)
 			{
 				ushort slot = (ushort)(labelIdx << 1);
 				this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(slot + 0x6dac), (ushort)screenX);
 				this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(slot + 0x6e3e), (ushort)screenY);
-				this.processor.EmitGlobalWord(0x6c96, (ushort)(labelIdx + 1));
+				CityLabelCount = (ushort)(labelIdx + 1);
 				this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(slot + 0xdf20), cityIdx);
 			}
 		}

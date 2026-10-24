@@ -235,7 +235,7 @@ namespace Civilization1Remaster.Game
 
 			startGold = this.owner.World.Participants[personIdx].Gold;
 
-			this.processor.EmitGlobalWord(0xd760, 0);
+			UnitLimitTold = 0;
 			this.processor.EmitGlobalWord(0x6b92, 0);
 			this.owner.World.HighestScienceTally = 0;
 			this.processor.EmitGlobalWord(0xde20, 0);
@@ -286,7 +286,7 @@ namespace Civilization1Remaster.Game
 					continue;
 
 				// After a loaded game the turn goes on at the human player
-				if (participantIdx < this.owner.World.PersonParticipantIdx && this.processor.PullGlobalWord(0xdf60) != 0)
+				if (participantIdx < this.owner.World.PersonParticipantIdx && MidTurnSave != 0)
 					continue;
 
 				PlayTurnOfPlayer(participantIdx);
@@ -324,7 +324,7 @@ namespace Civilization1Remaster.Game
 				this.owner.Startup.DisplayMouseCursor();
 			}
 
-			if (this.processor.PullGlobalWord(0xdf60) == 0)
+			if (MidTurnSave == 0)
 			{
 				this.owner.Advisors.HandleAllCities(participantIdx);
 			}
@@ -368,7 +368,7 @@ namespace Civilization1Remaster.Game
 				this.owner.TurnLogic.HandlePlayerTurn(participantIdx);
 			}
 
-			this.processor.EmitGlobalWord(0xdf60, 0x0);
+			MidTurnSave = 0x0;
 
 			if (person)
 			{
@@ -1271,7 +1271,7 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private void AnnouncePopulationMark(short population)
 		{
-			short previousMark = (short)this.processor.PullGlobalWord(0x1c24);
+			short previousMark = (short)PopulationMark;
 
 			Message("The population of the\nfertile ")
 				.Text(this.processor.PullGlobalWord((ushort)((this.owner.World.PersonParticipantIdx << 1) + 0x1982)))
@@ -1279,17 +1279,17 @@ namespace Civilization1Remaster.Game
 
 			if (population < 100)
 			{
-				if ((short)(this.processor.PullGlobalWord(0x1c24) * 10) < population)
+				if ((short)(PopulationMark * 10) < population)
 				{
 					short mark = (short)(population / 10);
 					this.processor.RegSource.Value16 = (ushort)mark;
 
 					this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(mark, 10));
 
-					this.processor.EmitGlobalWord(0x1c24, (ushort)mark);
+					PopulationMark = (ushort)mark;
 				}
 			}
-			else if ((short)((this.processor.PullGlobalWord(0x1c24) - 9) * 100) < population)
+			else if ((short)((PopulationMark - 9) * 100) < population)
 			{
 				short hundreds = (short)(population / 100);
 				this.processor.RegSource.Value16 = (ushort)hundreds;
@@ -1297,10 +1297,10 @@ namespace Civilization1Remaster.Game
 				this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(hundreds, 10));
 				this.owner.Libc.AppendText(0xba06, ",0");
 
-				this.processor.EmitGlobalWord(0x1c24, (ushort)(hundreds + 9));
+				PopulationMark = (ushort)(hundreds + 9);
 			}
 
-			if (previousMark < (short)this.processor.PullGlobalWord(0x1c24) && (short)this.processor.PullGlobalWord(0x3484) >= -1)
+			if (previousMark < (short)PopulationMark && (short)this.processor.PullGlobalWord(0x3484) >= -1)
 			{
 				this.owner.Libc.AppendText(0xba06, "00,000 citizens.\n");
 

@@ -361,7 +361,7 @@ namespace Civilization1Remaster.Game
 			this.turn.AITries = 0;
 
 			if (this.turn.MouseCursorSet != 0)
-				this.owner.Services.AssignMouseCursorImage(0, 0, this.processor.PullGlobalWord(0xd4dc));
+				this.owner.Services.AssignMouseCursorImage(0, 0, PointerPicture);
 
 			this.processor.RegAcc.Value16 = 0;
 			this.turn.Clicked = 0;
@@ -556,7 +556,7 @@ namespace Civilization1Remaster.Game
 			{
 				short troopIdx = (short)this.turn.Troop;
 
-				if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) == 0xff || this.processor.PullGlobalWord(0xdf60) == 1)
+				if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) == 0xff || MidTurnSave == 1)
 					continue;
 
 				this.troops.Assign(participantIdx, troopIdx, UnitMemory.LeftoverSteps,
@@ -1010,7 +1010,7 @@ namespace Civilization1Remaster.Game
 			this.owner.GlobDb3a = 0;
 			this.turn.MouseCursorSet = 0;
 
-			this.owner.Services.AssignMouseCursorImage(0, 0, this.processor.PullGlobalWord(0xd4dc));
+			this.owner.Services.AssignMouseCursorImage(0, 0, PointerPicture);
 		}
 
 		/// <summary>
@@ -1057,7 +1057,7 @@ namespace Civilization1Remaster.Game
 
 					this.turn.MouseCursorSet = 0;
 
-					this.owner.Services.AssignMouseCursorImage(0, 0, this.processor.PullGlobalWord(0xd4dc));
+					this.owner.Services.AssignMouseCursorImage(0, 0, PointerPicture);
 
 					ForgetMarkedTile(participantIdx);
 				}
@@ -2455,7 +2455,7 @@ namespace Civilization1Remaster.Game
 			this.processor.RegAcc.Value16 = (ushort)person;
 
 			if (participantIdx == person || UnitAtTilePlayer == (ushort)person)
-				this.processor.EmitGlobalWord(0x70d8, 0x1);
+				CountLosses = 0x1;
 
 			this.turn.Result = this.owner.Combat.SettleBattle(participantIdx,
 				(short)this.turn.Troop,
@@ -2466,7 +2466,7 @@ namespace Civilization1Remaster.Game
 			this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
 			this.processor.RegSource.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride);
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHoriz, 0xff);
-			this.processor.EmitGlobalWord(0x70d8, 0x0);
+			CountLosses = 0x0;
 
 			if (this.turn.Result == 0xffff)
 				return false;

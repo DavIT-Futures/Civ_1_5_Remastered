@@ -231,7 +231,7 @@ namespace Civilization1Remaster.UI
 			{
 				ushort record = (ushort)((slotIdx * 0x2e) + 0x37d2);
 				short rating = (short)((this.processor.PullUInt16(0x3772, (ushort)(record + 2)) + 2) * this.processor.PullUInt16(0x3772, record));
-				short gameRating = (short)((this.owner.World.HardnessTier + 2) * this.processor.PullGlobalWord(0xb77e));
+				short gameRating = (short)((this.owner.World.HardnessTier + 2) * HallOfFameScore);
 
 				if (rating >= gameRating && slotIdx != 5)
 					continue;
@@ -243,7 +243,7 @@ namespace Civilization1Remaster.UI
 
 				short humanIdx = this.owner.World.PersonParticipantIdx;
 
-				this.processor.EmitUInt16(0x3772, record, this.processor.PullGlobalWord(0xb77e));
+				this.processor.EmitUInt16(0x3772, record, HallOfFameScore);
 				this.owner.Libc.MoveFarData(this.processor.SegData.Value16, this.processor.PullGlobalWord((ushort)((humanIdx << 1) + 0x19a2)),
 					0x3772, (ushort)(record + 0xe), 0xe);
 				this.owner.Libc.MoveFarData(this.processor.SegData.Value16, this.processor.PullGlobalWord((ushort)((humanIdx << 1) + 0x1992)),

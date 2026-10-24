@@ -177,7 +177,7 @@ namespace Civilization1Remaster.UI
 
 			(short success, short flightTime, short vertLoc) = RenderSpaceshipFigures(shown, mass);
 
-			if (this.processor.PullGlobalWord(0xdeae) == 0)
+			if (SpaceshipColonists == 0)
 			{
 				arg3 = 0;
 			}
@@ -217,7 +217,7 @@ namespace Civilization1Remaster.UI
 				MoveSpaceshipStars(participantIdx, arg2, arg3, success);
 			}
 
-			this.owner.World.Participants[participantIdx].StarshipInhabitants = (short)this.processor.PullGlobalWord(0xdeae);
+			this.owner.World.Participants[participantIdx].StarshipInhabitants = (short)SpaceshipColonists;
 
 			this.processor.RegAcc.Value16 = (ushort)success;
 
@@ -342,7 +342,7 @@ namespace Civilization1Remaster.UI
 			vertLoc += 8;
 
 			EmptyMessage()
-				.Number((short)this.processor.PullGlobalWord(0xdeae))
+				.Number((short)SpaceshipColonists)
 				.Text("0,000");
 
 			if (shown)
@@ -353,7 +353,7 @@ namespace Civilization1Remaster.UI
 			vertLoc += 8;
 
 			// Support: life support per colonist module
-			short colonists = (short)this.owner.Helpers.VerifyValueSpan(this.processor.PullGlobalSignedWord(0xdeae), 1, 99);
+			short colonists = (short)this.owner.Helpers.VerifyValueSpan((short)SpaceshipColonists, 1, 99);
 			short support = CPU.SignedQuotient((short)(0x64 * this.processor.PullGlobalWord(0xdeb0)), colonists);
 
 			Message("Support: ")
@@ -371,7 +371,7 @@ namespace Civilization1Remaster.UI
 
 			// Energy: power per support and colonist module
 			short modules = (short)this.owner.Helpers.VerifyValueSpan(
-				this.processor.PullGlobalSignedWord(0xdeae) + this.processor.PullGlobalSignedWord(0xdeb0), 1, 99);
+				(short)SpaceshipColonists + this.processor.PullGlobalSignedWord(0xdeb0), 1, 99);
 			short energy = CPU.SignedQuotient((short)(0xc8 * this.processor.PullGlobalWord(0xdeb2)), modules);
 
 			Message("Energy: ")

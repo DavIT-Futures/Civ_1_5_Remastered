@@ -787,8 +787,8 @@ namespace Civilization1Remaster.Game
 
 			int citizensY = 0x1a;
 			int wondersY = 0x1a;
-			this.processor.EmitGlobalWord(0xb25c, 0x3e7);
-			this.processor.EmitGlobalWord(0xb2bc, 0x1a);
+			ScoreIconHoriz = 0x3e7;
+			ScoreIconVert = 0x1a;
 
 			short savedLevyRatio = this.owner.World.Participants[participantIdx].LevyRatio;
 			this.owner.World.Participants[participantIdx].LevyRatio = (short)(6 - this.owner.World.Participants[participantIdx].ResearchLevyRatio);
@@ -846,7 +846,7 @@ namespace Civilization1Remaster.Game
 				this.owner.TextPainter.RenderTextWithShadow(0xba06, 16, (short)citizensY, 15);
 			}
 
-			wondersY = this.processor.PullGlobalWord(0xb2bc) + 0x10;
+			wondersY = ScoreIconVert + 0x10;
 			int wonderTitleY = wondersY;
 			int wonderColX = 0x3e7;
 			int totalWonderScore = 0;
@@ -983,7 +983,7 @@ namespace Civilization1Remaster.Game
 				this.owner.TextPainter.RenderTextWithShadow(0xba06, 16, (short)wondersY, 15);
 			}
 
-			this.processor.EmitGlobalWord(0xb77e, (ushort)this.owner.World.Participants[0].Tally);
+			HallOfFameScore = (ushort)this.owner.World.Participants[0].Tally;
 
 			if (marker)
 			{
@@ -1023,21 +1023,21 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"RenderScoreIcon({arg1})");
 
-			short iconLeft = (short)(this.processor.PullGlobalWord(0xb25c) + 8);
-			this.processor.EmitGlobalWord(0xb25c, (ushort)iconLeft);
+			short iconLeft = (short)(ScoreIconHoriz + 8);
+			ScoreIconHoriz = (ushort)iconLeft;
 
 			if (iconLeft > 0x124)
 			{
-				short iconTop = (short)(this.processor.PullGlobalWord(0xb2bc) + this.processor.PullGlobalWord(0x5116));
-				this.processor.EmitGlobalWord(0xb2bc, (ushort)iconTop);
-				this.processor.EmitGlobalWord(0xb25c, (ushort)(((iconTop >> 1) & 0x4) + 0x10));
+				short iconTop = (short)(ScoreIconVert + this.processor.PullGlobalWord(0x5116));
+				ScoreIconVert = (ushort)iconTop;
+				ScoreIconHoriz = (ushort)(((iconTop >> 1) & 0x4) + 0x10);
 			}
 
-			if (this.processor.PullGlobalSignedWord(0xb2bc) <= 0xa0)
+			if ((short)ScoreIconVert <= 0xa0)
 			{
 				this.owner.Services.RenderPictureToScreen(ScreenBox,
-					this.processor.PullGlobalSignedWord(0xb25c),
-					this.processor.PullGlobalSignedWord(0xb2bc),
+					(short)ScoreIconHoriz,
+					(short)ScoreIconVert,
 					this.processor.PullGlobalWord((ushort)((arg1 << 1) + 0x6e96)));
 			}
 

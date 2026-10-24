@@ -89,8 +89,8 @@ namespace Civilization1Remaster.Game
 				ushort savedSource = this.processor.RegSource.Value16;
 				ushort savedDest = this.processor.RegDest.Value16;
 
-				ushort countLosses = this.processor.PullGlobalWord(0x70d8);
-				this.processor.EmitGlobalWord(0x70d8, 0);
+				ushort countLosses = CountLosses;
+				CountLosses = 0;
 				this.processor.EmitGlobalWord(0x20f4, 0x1);
 
 				bool firstSeen = false;
@@ -120,7 +120,7 @@ namespace Civilization1Remaster.Game
 				}
 
 				this.processor.EmitGlobalWord(0x20f4, 0x0);
-				this.processor.EmitGlobalWord(0x70d8, countLosses);
+				CountLosses = countLosses;
 				town.ConditionMarker &= unchecked((byte)~KeptUnitsCondition);
 
 				this.processor.RegSource.Value16 = savedSource;
@@ -776,7 +776,7 @@ namespace Civilization1Remaster.Game
 
 			if (troopIdx == -1)
 			{
-				if (participantIdx == this.owner.World.PersonParticipantIdx && this.processor.PullGlobalWord(0xd760) == 0)
+				if (participantIdx == this.owner.World.PersonParticipantIdx && UnitLimitTold == 0)
 				{
 					DialogStyle = 0x3;
 					this.processor.EmitGlobalByte(0xba06, 0x0);
@@ -785,7 +785,7 @@ namespace Civilization1Remaster.Game
 
 					this.owner.TurnHooks.DisplayDialog(0xba06, 80, 64);
 
-					this.processor.EmitGlobalWord(0xd760, 0x1);
+					UnitLimitTold = 0x1;
 				}
 
 				result = 0xffff;
@@ -894,7 +894,7 @@ namespace Civilization1Remaster.Game
 			ushort savedSource = this.processor.RegSource.Value16;
 			ushort savedDest = this.processor.RegDest.Value16;
 
-			if (this.processor.PullGlobalWord(0x70d8) != 0)
+			if (CountLosses != 0)
 			{
 				// Losses are counted (the kind as an unsigned word: an empty record, -1, is not counted)
 				ushort lostKind = (ushort)this.troops.TroopKind(participantIdx, troopIdx);
@@ -971,7 +971,7 @@ namespace Civilization1Remaster.Game
 
 			if (this.troops.Following(participantIdx, troopIdx) != -1)
 			{
-				this.processor.EmitGlobalWord(0x6530, (ushort)troopIdx);
+				StackLeader = (ushort)troopIdx;
 				this.processor.EmitGlobalWord(0x6534, 0);
 
 				for (short firstIdx = 0; firstIdx < UnitMemory.TroopTally; firstIdx++)
@@ -985,7 +985,7 @@ namespace Civilization1Remaster.Game
 					}
 				}
 
-				leader = this.processor.PullGlobalWord(0x6530);
+				leader = StackLeader;
 			}
 
 			this.processor.RegSource.Value16 = savedSource;
@@ -1011,12 +1011,12 @@ namespace Civilization1Remaster.Game
 
 			if (this.troops.Following(participantIdx, troopIdx) != -1)
 			{
-				this.processor.EmitGlobalWord(0x6530, (ushort)troopIdx);
+				StackLeader = (ushort)troopIdx;
 				this.processor.EmitGlobalWord(0x6534, 0xffff);
 
 				VisitEachUnitInStack(participantIdx, troopIdx, 0x1169);
 
-				guardian = this.processor.PullGlobalWord(0x6530);
+				guardian = StackLeader;
 			}
 
 			this.processor.RegSource.Value16 = savedSource;
@@ -1059,7 +1059,7 @@ namespace Civilization1Remaster.Game
 				if (score > bestScore)
 				{
 					this.processor.EmitGlobalWord(0x6534, (ushort)score);
-					this.processor.EmitGlobalWord(0x6530, (ushort)troopIdx);
+					StackLeader = (ushort)troopIdx;
 				}
 			}
 

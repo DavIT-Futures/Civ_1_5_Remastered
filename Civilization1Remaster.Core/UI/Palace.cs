@@ -242,7 +242,7 @@ namespace Civilization1Remaster.UI
 
 			this.processor.RegSource.Value16 = selWordOff;
 			this.processor.RegDest.Value16 = 6;
-			this.processor.EmitGlobalWord(0x6828, 0xffff);
+			PalaceFirstPicture = 0xffff;
 
 			ImportPalaceCastle((ushort)(1 << (byte)nextLevel), 0);
 
@@ -339,7 +339,7 @@ namespace Civilization1Remaster.UI
 				this.owner.TextPainter.RenderTextWithShadow(0xba06, (short)optIdx * 100 - 44, 12, 15);
 			}
 
-			this.owner.Helpers.ReleaseResource(this.processor.PullGlobalWord(0x6828), 0x4b27);
+			this.owner.Helpers.ReleaseResource(PalaceFirstPicture, 0x4b27);
 			this.owner.TurnLogic.AwaitForKey();
 			this.owner.Startup.DisplayMouseCursor();
 
@@ -401,7 +401,7 @@ namespace Civilization1Remaster.UI
 			this.owner.Startup.QueryForDisk(2, 1);
 
 			this.processor.EmitGlobalWord(ScreenBox, 1);
-			this.processor.EmitGlobalWord(0x6828, 0xffff);
+			PalaceFirstPicture = 0xffff;
 
 			ushort built = 0;
 
@@ -560,15 +560,15 @@ namespace Civilization1Remaster.UI
 					(ushort)(PalacePart((ushort)(lastLeft + 1)) - PalacePart(lastLeft) + vertLoc), 0);
 			}
 
-			this.owner.Helpers.ReleaseResource(this.processor.PullGlobalWord(0x6828), 0x4b9f);
+			this.owner.Helpers.ReleaseResource(PalaceFirstPicture, 0x4b9f);
 
-			if (this.processor.PullGlobalWord(0xd930) != 0 || this.processor.PullGlobalWord(0xd934) != 0)
+			if (PalaceLeftBushes != 0 || this.processor.PullGlobalWord(0xd934) != 0)
 			{
 				this.owner.Libc.CopyText(pictureName, "cbrush0.pic");
 
 				ushort leftBush = 0, rightBush = 0;
 
-				if (this.processor.PullGlobalWord(0xd930) != 0)
+				if (PalaceLeftBushes != 0)
 				{
 					leftBush = RenderPalaceBush(pictureName, 0xd930, 0x2e, 0);
 				}
@@ -578,7 +578,7 @@ namespace Civilization1Remaster.UI
 					rightBush = RenderPalaceBush(pictureName, 0xd934, 0x2f, 184);
 				}
 
-				this.owner.Helpers.ReleaseResource(this.processor.PullGlobalWord(0xd930) != 0 ? leftBush : rightBush, 0);
+				this.owner.Helpers.ReleaseResource(PalaceLeftBushes != 0 ? leftBush : rightBush, 0);
 			}
 
 			if (marker != 0)
@@ -815,9 +815,9 @@ namespace Civilization1Remaster.UI
 							this.processor.EmitGlobalWord(picture, this.processor.RegAcc.Value16);
 						}
 
-						if (style != -1 && this.processor.PullGlobalWord(0x6828) == 0xffff)
+						if (style != -1 && PalaceFirstPicture == 0xffff)
 						{
-							this.processor.EmitGlobalWord(0x6828, this.processor.PullGlobalWord(picture));
+							PalaceFirstPicture = this.processor.PullGlobalWord(picture);
 						}
 					}
 

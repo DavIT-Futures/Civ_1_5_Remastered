@@ -569,6 +569,237 @@ namespace Civilization1Remaster
 			get => this.processor.PullGlobalWord(0x6532);
 			set => this.processor.EmitGlobalWord(0x6532, value);
 		}
+
+		/// <summary>0x1c24: the next population mark of the status bar (tens below 100, then hundreds + 9)</summary>
+		protected ushort PopulationMark
+		{
+			get => this.processor.PullGlobalWord(0x1c24);
+			set => this.processor.EmitGlobalWord(0x1c24, value);
+		}
+
+		/// <summary>0xe168: the save slot used last</summary>
+		protected ushort LastSaveSlot
+		{
+			get => this.processor.PullGlobalWord(0xe168);
+			set => this.processor.EmitGlobalWord(0xe168, value);
+		}
+
+		/// <summary>0xdf60: the game continues in the middle of the turn (2 an autosave, 1 a manual save)</summary>
+		protected ushort MidTurnSave
+		{
+			get => this.processor.PullGlobalWord(0xdf60);
+			set => this.processor.EmitGlobalWord(0xdf60, value);
+		}
+
+		/// <summary>0xdeae: the colonists of the spaceship</summary>
+		protected ushort SpaceshipColonists
+		{
+			get => this.processor.PullGlobalWord(0xdeae);
+			set => this.processor.EmitGlobalWord(0xdeae, value);
+		}
+
+		/// <summary>0xd76a: the game is played on the map of the Earth</summary>
+		protected ushort EarthGame
+		{
+			get => this.processor.PullGlobalWord(0xd76a);
+			set => this.processor.EmitGlobalWord(0xd76a, value);
+		}
+
+		/// <summary>0x7efa: the climate of the new world</summary>
+		protected ushort Climate
+		{
+			get => this.processor.PullGlobalWord(0x7efa);
+			set => this.processor.EmitGlobalWord(0x7efa, value);
+		}
+
+		/// <summary>0x67f6: the frames of the pause of the speaking king</summary>
+		protected ushort KingPause
+		{
+			get => this.processor.PullGlobalWord(0x67f6);
+			set => this.processor.EmitGlobalWord(0x67f6, value);
+		}
+
+		/// <summary>0x6812: the distance of the nearest entry of the replay city table (999 none)</summary>
+		protected ushort ReplayCityDistance
+		{
+			get => this.processor.PullGlobalWord(0x6812);
+			set => this.processor.EmitGlobalWord(0x6812, value);
+		}
+
+		/// <summary>0xb25c: the x of the last icon of the score screen</summary>
+		protected ushort ScoreIconHoriz
+		{
+			get => this.processor.PullGlobalWord(0xb25c);
+			set => this.processor.EmitGlobalWord(0xb25c, value);
+		}
+
+		/// <summary>0xb2bc: the y of the row of icons of the score screen</summary>
+		protected ushort ScoreIconVert
+		{
+			get => this.processor.PullGlobalWord(0xb2bc);
+			set => this.processor.EmitGlobalWord(0xb2bc, value);
+		}
+
+		/// <summary>0x3b64: the next picture of the story (birthN.pic)</summary>
+		protected ushort BirthPicture
+		{
+			get => this.processor.PullGlobalWord(0x3b64);
+			set => this.processor.EmitGlobalWord(0x3b64, value);
+		}
+
+		/// <summary>0xd4c8: the width of the widest line of the menu</summary>
+		protected ushort MenuWidth
+		{
+			get => this.processor.PullGlobalWord(0xd4c8);
+			set => this.processor.EmitGlobalWord(0xd4c8, value);
+		}
+
+		/// <summary>0xb1ec: the line of the first choice of the menu (0xffff none)</summary>
+		protected ushort MenuFirstChoice
+		{
+			get => this.processor.PullGlobalWord(0xb1ec);
+			set => this.processor.EmitGlobalWord(0xb1ec, value);
+		}
+
+		/// <summary>0xd208: the choices of the menu</summary>
+		protected ushort MenuChoiceCount
+		{
+			get => this.processor.PullGlobalWord(0xd208);
+			set => this.processor.EmitGlobalWord(0xd208, value);
+		}
+
+		/// <summary>0xd2e2: the first pass of the menu, which measures it</summary>
+		protected ushort MenuMeasuring
+		{
+			get => this.processor.PullGlobalWord(0xd2e2);
+			set => this.processor.EmitGlobalWord(0xd2e2, value);
+		}
+
+		/// <summary>0x654c: the colour of the flashing choice of the menu</summary>
+		protected ushort MenuFlashHue
+		{
+			get => this.processor.PullGlobalWord(0x654c);
+			set => this.processor.EmitGlobalWord(0x654c, value);
+		}
+
+		/// <summary>0xd7f2: the bits of the options the menu shows as chosen</summary>
+		protected ushort MenuOptions
+		{
+			get => this.processor.PullGlobalWord(0xd7f2);
+			set => this.processor.EmitGlobalWord(0xd7f2, value);
+		}
+
+		/// <summary>0x6828: the first picture of the palace parts (0xffff unset)</summary>
+		protected ushort PalaceFirstPicture
+		{
+			get => this.processor.PullGlobalWord(0x6828);
+			set => this.processor.EmitGlobalWord(0x6828, value);
+		}
+
+		/// <summary>0xd930: the bushes left of the palace</summary>
+		protected ushort PalaceLeftBushes
+		{
+			get => this.processor.PullGlobalWord(0xd930);
+			set => this.processor.EmitGlobalWord(0xd930, value);
+		}
+
+		/// <summary>0x3b66: the next byte of the colour cycle records of the story pictures (0x3710)</summary>
+		protected ushort StoryCycleRecord
+		{
+			get => this.processor.PullGlobalWord(0x3b66);
+			set => this.processor.EmitGlobalWord(0x3b66, value);
+		}
+
+		/// <summary>0x3b68: the colour cycles of the story picture</summary>
+		protected ushort StoryCycleCount
+		{
+			get => this.processor.PullGlobalWord(0x3b68);
+			set => this.processor.EmitGlobalWord(0x3b68, value);
+		}
+
+		/// <summary>0x70d8: the units eliminated are counted as losses</summary>
+		protected ushort CountLosses
+		{
+			get => this.processor.PullGlobalWord(0x70d8);
+			set => this.processor.EmitGlobalWord(0x70d8, value);
+		}
+
+		/// <summary>0x6530: the unit that leads the stack</summary>
+		protected ushort StackLeader
+		{
+			get => this.processor.PullGlobalWord(0x6530);
+			set => this.processor.EmitGlobalWord(0x6530, value);
+		}
+
+		/// <summary>0x7ef4: the pose the king holds (0, 1, 2)</summary>
+		protected ushort KingPose
+		{
+			get => this.processor.PullGlobalWord(0x7ef4);
+			set => this.processor.EmitGlobalWord(0x7ef4, value);
+		}
+
+		/// <summary>0x67f2: the player whose king gives the audience</summary>
+		protected ushort AudiencePlayer
+		{
+			get => this.processor.PullGlobalWord(0x67f2);
+			set => this.processor.EmitGlobalWord(0x67f2, value);
+		}
+
+		/// <summary>0x67f0: the audience shows a line over a motif instead of the throne room</summary>
+		protected ushort AudienceWithoutPictures
+		{
+			get => this.processor.PullGlobalWord(0x67f0);
+			set => this.processor.EmitGlobalWord(0x67f0, value);
+		}
+
+		/// <summary>0x680c: the handle of the replay file</summary>
+		protected ushort ReplayFile
+		{
+			get => this.processor.PullGlobalWord(0x680c);
+			set => this.processor.EmitGlobalWord(0x680c, value);
+		}
+
+		/// <summary>0x6c96: the names of the cities written on the map</summary>
+		protected ushort CityLabelCount
+		{
+			get => this.processor.PullGlobalWord(0x6c96);
+			set => this.processor.EmitGlobalWord(0x6c96, value);
+		}
+
+		/// <summary>0x2a6e: the bits of the players that attack a continent of the human player</summary>
+		protected ushort HumanContinentAttackers
+		{
+			get => this.processor.PullGlobalWord(0x2a6e);
+			set => this.processor.EmitGlobalWord(0x2a6e, value);
+		}
+
+		/// <summary>0xe17c: the disk of the game in use</summary>
+		protected ushort DiskInUse
+		{
+			get => this.processor.PullGlobalWord(0xe17c);
+			set => this.processor.EmitGlobalWord(0xe17c, value);
+		}
+
+		/// <summary>0xb77e: the score of the game for the Hall of Fame</summary>
+		protected ushort HallOfFameScore
+		{
+			get => this.processor.PullGlobalWord(0xb77e);
+			set => this.processor.EmitGlobalWord(0xb77e, value);
+		}
+
+		/// <summary>0xd4dc: the picture of the mouse pointer</summary>
+		protected ushort PointerPicture
+		{
+			get => this.processor.PullGlobalWord(0xd4dc);
+			set => this.processor.EmitGlobalWord(0xd4dc, value);
+		}
+
+		/// <summary>0xd760: the human player was told there is no room for more units</summary>
+		protected ushort UnitLimitTold
+		{
+			get => this.processor.PullGlobalWord(0xd760);
+			set => this.processor.EmitGlobalWord(0xd760, value);
+		}
 		#endregion
 	}
 }

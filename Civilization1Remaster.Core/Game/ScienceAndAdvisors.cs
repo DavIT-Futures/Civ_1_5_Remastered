@@ -932,7 +932,7 @@ namespace Civilization1Remaster.Game
 
 			FrameWord(TownLoopLocal, (ushort)this.owner.Libc.Dice.DrawInt(5));
 
-			if (((1 << participantIdx) & this.processor.PullGlobalWord(0x2a6e)) == 0)
+			if (((1 << participantIdx) & HumanContinentAttackers) == 0)
 				return;
 
 			ushort own = this.owner.World.Participants[participantIdx].FoundScienceMarkers[FrameWord(TownLoopLocal)];

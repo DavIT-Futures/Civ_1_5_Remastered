@@ -341,7 +341,7 @@ namespace Civilization1Remaster.Engine
 				result = marker;
 			}
 
-			this.processor.EmitGlobalWord(0xe17c, diskIdx);
+			DiskInUse = diskIdx;
 			this.processor.RegAcc.Value16 = result;
 
 			this.processor.LeaveFrame();
@@ -363,7 +363,7 @@ namespace Civilization1Remaster.Engine
 
 			// The frame like the original (the song position is kept at bp - 2)
 			this.processor.EnterFrame(0x6);
-			this.processor.EmitGlobalWord(0xd76a, 0x0);
+			EarthGame = 0x0;
 
 			bool chosen = false;
 
@@ -412,7 +412,7 @@ namespace Civilization1Remaster.Engine
 					case 2:
 						ConcealMouseCursor();
 
-						this.processor.EmitGlobalWord(0xd76a, 0x1);
+						EarthGame = 0x1;
 
 						this.owner.WorldSetup.OpeningSequence();
 
@@ -592,7 +592,7 @@ namespace Civilization1Remaster.Engine
 
 			if (MousePresent != 0)
 			{
-				this.owner.Services.AssignMouseCursorImage(0, 0, this.processor.PullGlobalWord(0xd4dc));
+				this.owner.Services.AssignMouseCursorImage(0, 0, PointerPicture);
 			}
 
 			if (this.owner.World.RoundTally == 0)

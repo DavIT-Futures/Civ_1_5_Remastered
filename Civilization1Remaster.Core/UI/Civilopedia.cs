@@ -328,7 +328,7 @@ namespace Civilization1Remaster.UI
 
 			if (row >= 0)
 			{
-				if (this.processor.PullGlobalWord(0xe17c) != 3)
+				if (DiskInUse != 3)
 				{
 					this.owner.Startup.QueryForDisk(3, 1);
 				}
@@ -367,7 +367,7 @@ namespace Civilization1Remaster.UI
 			this.owner.Startup.ConcealMouseCursor();
 
 			ushort diskStatus = 0xffff;
-			if (this.processor.PullGlobalWord(0xe17c) != 0x3)
+			if (DiskInUse != 0x3)
 			{
 				diskStatus = this.owner.Startup.QueryForDisk(3, 0);
 				if (diskStatus == 0)

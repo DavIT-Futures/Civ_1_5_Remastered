@@ -172,7 +172,7 @@ namespace Civilization1Remaster.UI
 
 			do
 			{
-				this.processor.EmitGlobalWord(0xd7f2, (ushort)this.owner.World.SessionPrefMarkers);
+				MenuOptions = (ushort)this.owner.World.SessionPrefMarkers;
 
 				choice = this.owner.Dialogs.DisplayMenu(0xba06, 24, 16, 0);
 
