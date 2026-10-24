@@ -1218,6 +1218,12 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   Uwaga do raportów: wartości tego samego czytelnika potrafią się różnić bez utraconego autora (przesunięcie zegara
   testów, inna kolejność) – znaczenie ma utracony autor; `HandlePlayerTurn` czyta całą ramkę na wejściu (`FromFrame`),
   więc ma dodatkowych autorów.
+- B2, reszta porcji 7 sprawdzona (2026-10-24): raport ma teraz pokrycie (`#frame Funkcja<tab>ile` – ile razy testy
+  otworzyły ramkę funkcji). Wszystkie 30 funkcji z ramką w `CityView`, `GameReplay`, `MeetWithKing`, `NewCityScreen`,
+  `Palace`, `SpaceshipScreen`, `StartGameMenu`, `WorldMap` testy uruchamiają (10 – 38 tys. razy). Żaden czytelnik nie
+  dostaje innych wartości; jedynie `MeetWithKing` (`LaunchAudience`, `ChoreographKingSpeaking`) przestał być ostatnim
+  autorem bajtów buforów tekstu w `DisplayNewspaper`, `DisplayPalace`, `DisplayCityScreen`, ale te same bajty zostawia
+  tam inna funkcja (ten sam tekst) – wartości identyczne przed porcją 7, po niej i teraz. Porcja 7 w tych plikach zostaje.
 
 ## Następny krok
 

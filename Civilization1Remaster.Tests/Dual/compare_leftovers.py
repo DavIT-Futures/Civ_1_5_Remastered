@@ -10,7 +10,8 @@ last write of that stack word), "Owner push" (a push or a word below the frames)
 same values from another writer is fine. Lost writers of a reader with other values mean that the changed code no longer
 leaves the word the reader used to get: the write has to stay (on the stack, next to the C# variable). Readers missing in
 the new run read C# variables now (or the tests no longer reach them); they are listed apart. Run both reports on the same
-tests (the golden master: -namespace Civilization1Remaster.Tests.GoldenMaster).
+tests (the golden master: -namespace Civilization1Remaster.Tests.GoldenMaster). Lines "#frame Owner<tab>count" of a
+report tell how often the tests opened the frame of each function (what the report can say anything about).
 """
 import sys
 from collections import defaultdict
@@ -21,6 +22,8 @@ def read(route):
     values = defaultdict(set)
     with open(route, encoding='utf-8') as report:
         for line in report:
+            if line.startswith('#'):
+                continue
             reader, writer, value, tally = line.rstrip('\n').split('\t')
             writers[reader][writer] += int(tally)
             values[reader].add(value)

@@ -89,6 +89,9 @@ public sealed class LeftoverWatcher : IStackWatcher
 		// Frames left behind by a call that failed (an exception) lie at the same depth or deeper
 		this.frames.RemoveAll(frame => frame.Pointer <= framePointer);
 		this.frames.Add(new Frame(framePointer, localsSize, this.scope));
+
+		// The coverage: which frames the tests opened at all
+		Tally.AddOrUpdate("#frame " + this.scope, 1, (_, tally) => tally + 1);
 	}
 
 	public void CloseFrame(ushort framePointer)
