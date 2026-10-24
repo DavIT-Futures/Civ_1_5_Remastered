@@ -242,7 +242,7 @@ namespace Civilization1Remaster.Game
 
 				PlayTurnOfPlayer(participantIdx);
 
-				if (GameEndRequest != 0 && this.processor.PullGlobalWord(0xb884) == 0)
+				if (GameEndRequest != 0 && ConquestEnd == 0)
 				{
 					if (GameEndRequest == 2)
 					{
@@ -592,7 +592,7 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private bool ChooseGameEnd()
 		{
-			this.processor.EmitGlobalWord(0x1cf6, 0xffff);
+			ArrivedSpaceship = 0xffff;
 
 			for (int participantIdx = 1; participantIdx < 8; participantIdx++)
 			{
@@ -601,7 +601,7 @@ namespace Civilization1Remaster.Game
 
 				if (this.owner.World.Participants[participantIdx].StarshipArrivalSeason == this.owner.World.Season)
 				{
-					this.processor.EmitGlobalWord(0x1cf6, (ushort)participantIdx);
+					ArrivedSpaceship = (ushort)participantIdx;
 				}
 			}
 
@@ -617,7 +617,7 @@ namespace Civilization1Remaster.Game
 				this.owner.Paper.DisplayNewspaper(-1);
 			}
 
-			return this.processor.PullGlobalWord(0x1cf6) != 0xffff || this.processor.PullGlobalWord(0xb884) != 0 ||
+			return ArrivedSpaceship != 0xffff || ConquestEnd != 0 ||
 				(short)(0x834 - (0x14 * this.owner.World.HardnessTier)) == this.owner.World.Season;
 		}
 
@@ -631,24 +631,24 @@ namespace Civilization1Remaster.Game
 
 			this.owner.Libc.CopyText(0xba06, "*** GAME OVER ***\n");
 
-			if (this.processor.PullGlobalWord(0xb884) != 0)
+			if (ConquestEnd != 0)
 			{
 				this.owner.Libc.CopyText(0xba06, "Your civilization\nhas conquered\nthe entire planet!\n");
 
-				this.processor.EmitGlobalWord(0x1cf6, 0xffff);
+				ArrivedSpaceship = 0xffff;
 
 				this.owner.Paper.DisplayNewspaper(-1);
 
 				this.owner.Replayer.DisplayConquerorScreen();
 			}
 
-			if (this.processor.PullGlobalWord(0x1cf6) != 0xffff)
+			if (ArrivedSpaceship != 0xffff)
 			{
-				this.owner.Prologue.DisplayCivilizationScreen((short)this.processor.PullGlobalWord(0x1cf6));
+				this.owner.Prologue.DisplayCivilizationScreen((short)ArrivedSpaceship);
 
 				RepaintMainScreen();
 
-				Message(this.processor.PullGlobalWord((ushort)((this.processor.PullGlobalWord(0x1cf6) << 1) + 0x1982)))
+				Message(this.processor.PullGlobalWord((ushort)((ArrivedSpaceship << 1) + 0x1982)))
 					.Text(" spaceship\narrives at Alpha Centauri.\n");
 
 				this.owner.Paper.DisplayNewspaper(-1);
@@ -679,7 +679,7 @@ namespace Civilization1Remaster.Game
 
 			this.processor.EmitGlobalByte(0x4cd9, (byte)(this.processor.PullGlobalByte(0x4cd9) | 0x1));
 
-			if (this.processor.PullGlobalWord(0xb884) == 0)
+			if (ConquestEnd == 0)
 			{
 				this.processor.EmitGlobalByte(0xba06, 0x0);
 

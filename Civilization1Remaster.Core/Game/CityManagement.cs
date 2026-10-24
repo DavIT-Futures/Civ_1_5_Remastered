@@ -1910,12 +1910,12 @@ namespace Civilization1Remaster.Game
 			CityCorruption = 0;
 
 			if (player.RegimeKind == 3)
-				this.processor.EmitGlobalWord(0x6b30, 0xa);
+				PalaceDistance = 0xa;
 
 			// The corruption
 			this.processor.RegCount.Value16 = (ushort)(20 * player.RegimeKind + 0x50);
 			this.processor.RegBase.Value16 = 3;
-			short corruption = (short)((short)((short)CityTrade * (short)this.processor.PullGlobalWord(0x6b30)) * 3);
+			short corruption = (short)((short)((short)CityTrade * (short)PalaceDistance) * 3);
 			CityCorruption = (ushort)(corruption / (short)this.processor.RegCount.Value16);
 
 			if (town.Has(CityStructure.Courthouse) || town.Has(CityStructure.Palace))
@@ -1964,7 +1964,7 @@ namespace Civilization1Remaster.Game
 
 			// The corruption of the whole trade
 			this.processor.RegCount.Value16 = (ushort)(20 * player.RegimeKind + 0x50);
-			short corruption = (short)((short)((short)CityTrade * (short)this.processor.PullGlobalWord(0x6b30)) * 3);
+			short corruption = (short)((short)((short)CityTrade * (short)PalaceDistance) * 3);
 			CityCorruption = (ushort)(corruption / (short)this.processor.RegCount.Value16);
 
 			if (player.RegimeKind == 5)
@@ -3224,7 +3224,7 @@ namespace Civilization1Remaster.Game
 
 			if (CityScreenTab == 2)
 			{
-				City shown = this.owner.World.Towns[this.processor.PullGlobalWord(0x653e)];
+				City shown = this.owner.World.Towns[ShownCity];
 				RenderMiniMapDot((ushort)((short)shown.Place.X), (ushort)((short)shown.Place.Y), 15);
 			}
 
@@ -4574,10 +4574,10 @@ namespace Civilization1Remaster.Game
 
 			this.round.Horiz = (ushort)(short)town.Place.X;
 			this.round.Vert = (ushort)(short)town.Place.Y;
-			this.processor.EmitGlobalWord(0x653e, (ushort)townIdx);
+			ShownCity = (ushort)townIdx;
 			this.round.Distance = 7;
 			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
-			this.processor.EmitGlobalWord(0x6b30, (ushort)(town.Has(CityStructure.Palace) ? 0 : 0x20));
+			PalaceDistance = (ushort)(town.Has(CityStructure.Palace) ? 0 : 0x20);
 
 			if (town.MaterialsTally > 999 || town.MaterialsTally < 0)
 				town.MaterialsTally = 0;
@@ -4599,11 +4599,11 @@ namespace Civilization1Remaster.Game
 				if (distance < (short)this.round.Distance && distance != 0)
 					this.round.Distance = (ushort)distance;
 
-				if (other.ParticipantIdx == town.ParticipantIdx && other.Has(CityStructure.Palace) && distance < (short)this.processor.PullGlobalWord(0x6b30))
+				if (other.ParticipantIdx == town.ParticipantIdx && other.Has(CityStructure.Palace) && distance < (short)PalaceDistance)
 				{
 					// The nearest palace of the owner
 					this.processor.RegBase.Value16 = (ushort)(otherIdx * 0x1c);
-					this.processor.EmitGlobalWord(0x6b30, (ushort)distance);
+					PalaceDistance = (ushort)distance;
 				}
 
 				if (distance > 5)
@@ -5173,7 +5173,7 @@ namespace Civilization1Remaster.Game
 					yield = 0;
 				}
 
-				ushort townIdx = this.processor.PullGlobalWord(0x653e);
+				ushort townIdx = ShownCity;
 
 				if (yield != 0 && arg3 == 2 && ObtainWonderCityID(3) == townIdx)
 				{
@@ -5315,7 +5315,7 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"AssignCitizenType({arg1}, {arg2})");
 
-			short cityIdx = (short)this.processor.PullGlobalWord(0x653e);
+			short cityIdx = (short)ShownCity;
 			ushort currentMarkers = this.owner.World.Towns[cityIdx].LaborerMarkers2;
 			ushort updated = CitizenSpecialistRules.SetSpecialistType(currentMarkers, arg1, (CitizenSpecialistRules.SpecialistType)arg2);
 			this.owner.World.Towns[cityIdx].LaborerMarkers2 = updated;
@@ -5332,7 +5332,7 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"ObtainCitizenType({arg1})");
 
-			short cityIdx = (short)this.processor.PullGlobalWord(0x653e);
+			short cityIdx = (short)ShownCity;
 			ushort markers = this.owner.World.Towns[cityIdx].LaborerMarkers2;
 			var specType = CitizenSpecialistRules.GetSpecialistType(markers, arg1);
 			this.processor.RegAcc.Value16 = (ushort)specType;
@@ -5350,7 +5350,7 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"TallySpecialists({arg1})");
 
-			short cityIdx = (short)this.processor.PullGlobalWord(0x653e);
+			short cityIdx = (short)ShownCity;
 			ushort markers = this.owner.World.Towns[cityIdx].LaborerMarkers2;
 			int tally = CitizenSpecialistRules.CountSpecialists(markers, (CitizenSpecialistRules.SpecialistType)arg1);
 			this.processor.RegAcc.Value16 = (ushort)tally;

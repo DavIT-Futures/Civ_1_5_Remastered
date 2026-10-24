@@ -316,7 +316,7 @@ namespace Civilization1Remaster.Engine
 					this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 15);
 
 					this.processor.EmitGlobalByte(0x1ade,
-						(byte)(CPU.SignedQuotient((short)diskIdx, (short)this.processor.PullGlobalWord(0xdeba)) + 0x31));
+						(byte)(CPU.SignedQuotient((short)diskIdx, (short)FirstMissingDisk) + 0x31));
 
 					ushort message = (ushort)(this.processor.RegFrame.Value16 - 0x100);
 					this.owner.Libc.CopyText(message, "Please insert Disk ");

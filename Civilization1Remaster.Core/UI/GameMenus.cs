@@ -22,7 +22,7 @@ namespace Civilization1Remaster.UI
 			this.processor.Journal.OpenScope($"ManageMenuBar({participantIdx}, {troopIdx}, {marker})");
 
 			ChosenOrder = 0xffff;
-			this.processor.EmitGlobalWord(0x654a, 0x0);
+			MenuResult = 0x0;
 
 			if (marker == -1)
 			{
@@ -61,12 +61,12 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Startup.ConcealMouseCursor();
 
-			if (this.processor.PullGlobalWord(0x654a) == 1)
+			if (MenuResult == 1)
 			{
 				this.owner.TurnHooks.RepaintMainScreen();
 			}
 
-			if (this.processor.PullGlobalWord(0x654a) == 0)
+			if (MenuResult == 0)
 			{
 				this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8,
 					ScreenBox, 0, 0);
@@ -435,7 +435,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Startup.DisplayMouseCursor();
 
-			this.processor.EmitGlobalWord(0x654a, 0xffff);
+			MenuResult = 0xffff;
 		}
 
 		/// <summary>
@@ -504,11 +504,11 @@ namespace Civilization1Remaster.UI
 			{
 				this.owner.Encyclopedia.DisplayCivilopedia((ushort)(choice - 1));
 
-				this.processor.EmitGlobalWord(0x654a, 0xffff);
+				MenuResult = 0xffff;
 			}
 			else
 			{
-				this.processor.EmitGlobalWord(0x654a, 0x1);
+				MenuResult = 0x1;
 			}
 
 			this.processor.Journal.CloseScope("DisplayCivilopediaMenu");

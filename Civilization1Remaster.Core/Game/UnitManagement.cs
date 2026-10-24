@@ -1139,12 +1139,12 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"TallyUnitsOfTypeInStack({participantIdx}, {troopIdx}, {arg3})");
 
-			this.processor.EmitGlobalWord(0x653a, arg3);
-			this.processor.EmitGlobalWord(0x653c, 0x0);
+			StackKind = arg3;
+			StackTally = 0x0;
 
 			VisitEachUnitInStack(participantIdx, troopIdx, 0x135a);
 
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x653c);
+			this.processor.RegAcc.Value16 = StackTally;
 
 			this.processor.Journal.CloseScope("TallyUnitsOfTypeInStack");
 
@@ -1158,7 +1158,7 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"TallyUnitsOfTypeStep({participantIdx}, {troopIdx})");
 
-			if ((ushort)this.troops.TroopKind(participantIdx, troopIdx) == this.processor.PullGlobalWord(0x653a))
+			if ((ushort)this.troops.TroopKind(participantIdx, troopIdx) == StackKind)
 			{
 				AddToGlobal(0x653c, 1);
 			}
@@ -1173,12 +1173,12 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"TallyUnitsWithFlagInStack({participantIdx}, {troopIdx}, {arg3})");
 
-			this.processor.EmitGlobalWord(0x653a, arg3);
-			this.processor.EmitGlobalWord(0x653c, 0x0);
+			StackKind = arg3;
+			StackTally = 0x0;
 
 			VisitEachUnitInStack(participantIdx, troopIdx, 0x13a9);
 
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x653c);
+			this.processor.RegAcc.Value16 = StackTally;
 
 			this.processor.Journal.CloseScope("TallyUnitsWithFlagInStack");
 
@@ -1192,7 +1192,7 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"TallyUnitsWithFlagStep({participantIdx}, {troopIdx})");
 
-			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.TroopGroup) == this.processor.PullGlobalWord(0x653a))
+			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.TroopGroup) == StackKind)
 			{
 				AddToGlobal(0x653c, 1);
 			}
@@ -1208,11 +1208,11 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"TallySpecialUnitsInStack({participantIdx}, {troopIdx})");
 
-			this.processor.EmitGlobalWord(0x653c, 0x0);
+			StackTally = 0x0;
 
 			VisitEachUnitInStack(participantIdx, troopIdx, 0x13f8);
 
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x653c);
+			this.processor.RegAcc.Value16 = StackTally;
 
 			this.processor.Journal.CloseScope("TallySpecialUnitsInStack");
 

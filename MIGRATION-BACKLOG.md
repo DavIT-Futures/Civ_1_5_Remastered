@@ -1266,6 +1266,13 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   0x6b64, `PollutionFactor` 0x6c98, `CityAgain` 0xb1e8, `WorldMapView` 0xb278 (tylko odczyt), `UnitAtTilePlayer` 0xd20a
   (51 odczytów, 32 zapisy). Pełny zestaw zielony, raport identyczny, 8 / 8 mutacji (`MapRedrawRequest` czyta
   `RenewCityScreen`, test `DialogDifferentialTests.DialogsMatchOriginalCode`).
+- B4, porcja 5 (2026-10-24): `ArrivedSpaceship` 0x1cf6, `StackKind` / `StackTally` 0x653a / 0x653c (wywołania
+  `AddToGlobal(0x653c, …)` zostają z adresem), `ShownCity` 0x653e, `MenuResult` 0x654a, `GotoCost` 0x6794,
+  `PalaceDistance` 0x6b30, `ConquestEnd` 0xb884, `EmissaryAudience` 0xd804, `UnitsHidden` 0xdcfc, `FirstMissingDisk`
+  0xdeba (36 odczytów, 29 zapisów). Pełny zestaw zielony, raport identyczny; mutacji nie robiono (sesja zatrzymana po
+  testach na prośbę użytkownika). Następna porcja przygotowana w scratchpadzie (`m_b4f.json`: PopulationMark,
+  BirthPicture, AudienceKing, KingPause, ReplayCityDistance, CityNamesShown, KingPose, Climate, ScoreIconHoriz /
+  ScoreIconVert, TextPass, EarthGame, SpaceshipColonists, MidTurnSave, LastSaveSlot).
 
 ## Następny krok
 

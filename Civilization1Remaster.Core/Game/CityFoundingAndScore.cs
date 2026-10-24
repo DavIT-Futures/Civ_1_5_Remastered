@@ -956,7 +956,7 @@ namespace Civilization1Remaster.Game
 			}
 
 			int conquestBonus = -1;
-			if (this.processor.PullGlobalWord(0xb884) != 0)
+			if (ConquestEnd != 0)
 			{
 				conquestBonus = ScoreRules.ComputeConquestBonus(this.owner.World.BotRivalTally, this.owner.World.RoundTally);
 			}

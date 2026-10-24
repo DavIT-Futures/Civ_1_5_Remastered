@@ -54,7 +54,7 @@ namespace Civilization1Remaster.UI
 		/// <summary>The disks 1 - 7 that are present one after the other (0xdeba: the first one missing), then waits for the path 0x324a</summary>
 		private void FindIntroDisks()
 		{
-			this.processor.EmitGlobalWord(0xdeba, 1);
+			FirstMissingDisk = 1;
 			this.processor.EmitLocalWord(IntroColumn, 1);
 
 			do
@@ -62,7 +62,7 @@ namespace Civilization1Remaster.UI
 				if (this.owner.Startup.QueryForDisk(this.processor.PullLocalWord(IntroColumn), 0) == 0)
 					break;
 
-				this.processor.EmitGlobalWord(0xdeba, (ushort)(this.processor.PullLocalWord(IntroColumn) + 1));
+				FirstMissingDisk = (ushort)(this.processor.PullLocalWord(IntroColumn) + 1);
 				this.processor.IncrementLocalWord(IntroColumn);
 			}
 			while ((short)this.processor.PullLocalWord(IntroColumn) < 8);

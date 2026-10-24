@@ -1366,7 +1366,7 @@ namespace Civilization1Remaster.Game
 			this.owner.Encyclopedia.ObtainFirstPrerequisite((ushort)human.PresentInquiryIdx);
 
 			short first = (short)this.processor.RegAcc.Value16;
-			bool picture = human.PresentInquiryIdx != 71 && (short)this.processor.PullGlobalWord(0xdeba) > 3 &&
+			bool picture = human.PresentInquiryIdx != 71 && (short)FirstMissingDisk > 3 &&
 				this.owner.Startup.QueryForDisk(1, 0) != 0 && (this.owner.World.SessionPrefMarkers & 8) != 0;
 
 			bool advanced = false;
@@ -1705,7 +1705,7 @@ namespace Civilization1Remaster.Game
 				return;
 
 			KingAnswer = 0;
-			this.processor.EmitGlobalWord(0xd804, 0);
+			EmissaryAudience = 0;
 			this.processor.EmitGlobalByte(0xba06, 0);
 
 			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30b8), this.processor.PullGlobalWord((ushort)(((ushort)participantIdx << 1) + 0x1992)));

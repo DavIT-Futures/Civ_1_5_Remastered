@@ -695,7 +695,7 @@ namespace Civilization1Remaster.Game
 			this.processor.EmitLocalWord(0x18, (ushort)preferences);
 			this.processor.EmitGlobalWord(0x28bc, 0x1);
 
-			if ((short)this.processor.PullGlobalWord(0xdeba) <= 1)
+			if ((short)FirstMissingDisk <= 1)
 			{
 				this.owner.World.SessionPrefMarkers &= 0x7ff7;
 			}

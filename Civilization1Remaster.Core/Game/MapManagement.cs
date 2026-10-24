@@ -256,7 +256,7 @@ namespace Civilization1Remaster.Game
 
 			if ((improvements & 0x2) != 0 &&
 				terrain != 0xa &&
-				this.processor.PullGlobalWord(0xdcfc) == 0 &&
+				UnitsHidden == 0 &&
 				(improvements & 0x1) == 0)
 			{
 				this.owner.Services.RenderPictureToScreen(
@@ -279,7 +279,7 @@ namespace Civilization1Remaster.Game
 			ushort ownerBits = ObtainTileOwnerBits(horizLoc, vertLoc);
 			this.processor.EmitLocalWord(0x1e, ownerBits);
 
-			if ((improvements & 0x1) != 0 && this.processor.PullGlobalWord(0xdcfc) == 0)
+			if ((improvements & 0x1) != 0 && UnitsHidden == 0)
 			{
 				RenderCityOnTile(horizLoc, vertLoc, screenX, screenY);
 			}
@@ -560,7 +560,7 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			if ((improvements & 0x4) != 0 && this.processor.PullGlobalWord(0xdcfc) == 0)
+			if ((improvements & 0x4) != 0 && UnitsHidden == 0)
 			{
 				this.owner.Services.RenderPictureToScreen(
 					ScreenBox,
@@ -902,7 +902,7 @@ namespace Civilization1Remaster.Game
 
 			RenderMapTile(horizLoc, vertLoc);
 
-			if (this.processor.PullGlobalWord(0xdcfc) == 0)
+			if (UnitsHidden == 0)
 			{
 				ushort troopIdx = ObtainUnitAtTile(horizLoc, vertLoc);
 

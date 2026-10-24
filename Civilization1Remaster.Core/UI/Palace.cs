@@ -585,7 +585,7 @@ namespace Civilization1Remaster.UI
 			{
 				this.processor.EmitGlobalWord(ScreenBox, 0);
 
-				if (VgaMode != 0 && (short)this.processor.PullGlobalWord(0xdeba) > 7)
+				if (VgaMode != 0 && (short)FirstMissingDisk > 7)
 				{
 					this.owner.Services.FloodColors(5, 0, 0, 0);
 				}

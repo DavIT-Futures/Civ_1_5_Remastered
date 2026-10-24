@@ -416,6 +416,82 @@ namespace Civilization1Remaster
 			get => this.processor.PullGlobalWord(0xd20a);
 			set => this.processor.EmitGlobalWord(0xd20a, value);
 		}
+		/// <summary>0x1cf6: the player whose spaceship arrived this year (-1 none)</summary>
+		protected ushort ArrivedSpaceship
+		{
+			get => this.processor.PullGlobalWord(0x1cf6);
+			set => this.processor.EmitGlobalWord(0x1cf6, value);
+		}
+
+		/// <summary>0x653a: the unit kind TallyUnitsOfTypeInStack counts</summary>
+		protected ushort StackKind
+		{
+			get => this.processor.PullGlobalWord(0x653a);
+			set => this.processor.EmitGlobalWord(0x653a, value);
+		}
+
+		/// <summary>0x653c: the units of the kind in the stack</summary>
+		protected ushort StackTally
+		{
+			get => this.processor.PullGlobalWord(0x653c);
+			set => this.processor.EmitGlobalWord(0x653c, value);
+		}
+
+		/// <summary>0x653e: the city of the city screen</summary>
+		protected ushort ShownCity
+		{
+			get => this.processor.PullGlobalWord(0x653e);
+			set => this.processor.EmitGlobalWord(0x653e, value);
+		}
+
+		/// <summary>0x654a: the result of the menu of the menu bar</summary>
+		protected ushort MenuResult
+		{
+			get => this.processor.PullGlobalWord(0x654a);
+			set => this.processor.EmitGlobalWord(0x654a, value);
+		}
+
+		/// <summary>0x6794: the cost of the route to the unit</summary>
+		protected ushort GotoCost
+		{
+			get => this.processor.PullGlobalWord(0x6794);
+			set => this.processor.EmitGlobalWord(0x6794, value);
+		}
+
+		/// <summary>0x6b30: the distance of the city to the palace of its owner</summary>
+		protected ushort PalaceDistance
+		{
+			get => this.processor.PullGlobalWord(0x6b30);
+			set => this.processor.EmitGlobalWord(0x6b30, value);
+		}
+
+		/// <summary>0xb884: the game ends by conquest</summary>
+		protected ushort ConquestEnd
+		{
+			get => this.processor.PullGlobalWord(0xb884);
+			set => this.processor.EmitGlobalWord(0xb884, value);
+		}
+
+		/// <summary>0xd804: the audience with the emissary of the player took place this turn</summary>
+		protected ushort EmissaryAudience
+		{
+			get => this.processor.PullGlobalWord(0xd804);
+			set => this.processor.EmitGlobalWord(0xd804, value);
+		}
+
+		/// <summary>0xdcfc: the units on the map are not drawn</summary>
+		protected ushort UnitsHidden
+		{
+			get => this.processor.PullGlobalWord(0xdcfc);
+			set => this.processor.EmitGlobalWord(0xdcfc, value);
+		}
+
+		/// <summary>0xdeba: the first disk of the game that is missing</summary>
+		protected ushort FirstMissingDisk
+		{
+			get => this.processor.PullGlobalWord(0xdeba);
+			set => this.processor.EmitGlobalWord(0xdeba, value);
+		}
 		#endregion
 	}
 }

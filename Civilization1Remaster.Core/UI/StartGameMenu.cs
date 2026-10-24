@@ -629,7 +629,7 @@ namespace Civilization1Remaster.UI
 				if ((ushort)((1 << this.owner.World.PersonParticipantIdx) | 1) == (ushort)this.owner.World.LiveRealms)
 				{
 					GameEndRequest = 1;
-					this.processor.EmitGlobalWord(0xb884, 1);
+					ConquestEnd = 1;
 				}
 
 				return false;

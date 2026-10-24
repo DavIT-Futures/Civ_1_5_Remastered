@@ -719,7 +719,7 @@ namespace Civilization1Remaster.Game
 			this.processor.EmitLocalWord(0x20, (ushort)windowHoriz);
 			this.processor.EmitLocalWord(0x3a, (ushort)windowVert);
 
-			this.processor.EmitGlobalWord(0x6794, 0);
+			GotoCost = 0;
 
 			if (GoalHoriz != this.processor.PullGlobalWord(0x6796) ||
 				GoalVert != this.processor.PullGlobalWord(0x6798) ||
@@ -732,7 +732,7 @@ namespace Civilization1Remaster.Game
 
 			short step = -1;
 
-			if ((short)arg3 > (short)this.processor.PullGlobalWord(0x6794))
+			if ((short)arg3 > (short)GotoCost)
 				step = ChooseCheapestStep(participantIdx, troopIdx, unitHoriz, unitVert, windowHoriz, windowVert);
 
 			if (step == -1)
@@ -775,7 +775,7 @@ namespace Civilization1Remaster.Game
 			this.processor.EmitGlobalByte(WindowCell(windowHoriz, windowVert, (short)GoalHoriz, (short)GoalVert), 1);
 
 			this.processor.EmitLocalWord(0x14, 0);
-			this.processor.EmitGlobalWord(0x6794, arg3);
+			GotoCost = arg3;
 
 			ushort kind = (ushort)(0x22 * (sbyte)this.processor.PullGlobalByte((ushort)((ushort)(0xc * troopIdx) + (ushort)(0x600 * participantIdx) + 0x81d7)));
 			this.processor.RegSource.Value16 = kind;
@@ -799,12 +799,12 @@ namespace Civilization1Remaster.Game
 				short cost = (sbyte)this.processor.PullGlobalByte(WindowCell(windowHoriz, windowVert, horizLoc, vertLoc));
 				this.processor.EmitLocalWord(0xe, (ushort)cost);
 
-				if (cost > (short)this.processor.PullGlobalWord(0x6794))
+				if (cost > (short)GotoCost)
 					continue;
 
 				if ((short)TunePosition(horizLoc) == unitHoriz && vertLoc == unitVert)
 				{
-					this.processor.EmitGlobalWord(0x6794, (ushort)cost);
+					GotoCost = (ushort)cost;
 					continue;
 				}
 
@@ -1024,7 +1024,7 @@ namespace Civilization1Remaster.Game
 				}
 				else
 				{
-					this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x6794);
+					this.processor.RegAcc.Value16 = GotoCost;
 				}
 			}
 			else

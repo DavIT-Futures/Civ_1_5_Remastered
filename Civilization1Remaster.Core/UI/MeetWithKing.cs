@@ -36,7 +36,7 @@ namespace Civilization1Remaster.UI
 			if (arg4 == 0)
 				Leader(participantIdx).TouchParticipantTimeleft = this.owner.World.RoundTally;
 
-			this.processor.EmitGlobalWord(0xd804, 0);
+			EmissaryAudience = 0;
 			this.audienceHostile = 0;
 			KingAnswer = arg4;
 			this.audienceDanger = 0;
@@ -92,7 +92,7 @@ namespace Civilization1Remaster.UI
 
 			NameEmpressBack(participantIdx);
 
-			this.processor.EmitGlobalWord(0xd804, 0);
+			EmissaryAudience = 0;
 			KingAnswer = 0xffff;
 			this.processor.EmitGlobalWord(0x3936, 0xffff);
 			this.processor.RestoreIndexRegisters();
@@ -995,7 +995,7 @@ namespace Civilization1Remaster.UI
 			this.processor.EmitGlobalWord(0x3936, 0xffff);
 			this.processor.RegAcc.Value16 = 0;
 			KingAnswer = this.processor.RegAcc.Value16;
-			this.processor.EmitGlobalWord(0xd804, this.processor.RegAcc.Value16);
+			EmissaryAudience = this.processor.RegAcc.Value16;
 
 			// Far return
 			this.processor.Journal.CloseScope("FinishAudience");
@@ -1012,9 +1012,9 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope($"WelcomeEmissary({participantIdx}, {horizLoc}, {vertLoc})");
 
-			if (this.processor.PullGlobalWord(0xd804) == 0)
+			if (EmissaryAudience == 0)
 			{
-				this.processor.EmitGlobalWord(0xd804, 1);
+				EmissaryAudience = 1;
 
 				if (KingAnswer == 0)
 				{

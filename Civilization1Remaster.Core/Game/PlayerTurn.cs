@@ -3421,10 +3421,10 @@ namespace Civilization1Remaster.Game
 					break;
 
 				case 0x74: // 't'
-					this.processor.EmitGlobalWord(0xdcfc, 1);
+					UnitsHidden = 1;
 					this.owner.MapOps.FocusMapView(participantIdx, (short)MapViewHoriz, (short)MapViewVert);
 					this.owner.Conquest.AwaitForKeyPressOrMouseClick();
-					this.processor.EmitGlobalWord(0xdcfc, 0);
+					UnitsHidden = 0;
 					this.owner.MapOps.FocusMapView(participantIdx, (short)MapViewHoriz, (short)MapViewVert);
 					break;
 
