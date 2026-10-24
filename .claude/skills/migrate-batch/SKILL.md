@@ -47,6 +47,8 @@ Testy zawsze w **Release** z `-parallelMode all` (ok. 7 razy szybciej niż Debug
   porcją i `po.txt` po niej, potem `python Civilization1Remaster.Tests/Dual/compare_leftovers.py przed.txt po.txt` – każdy
   czytelnik z innymi wartościami i utraconym autorem to zapis do przywrócenia. Klasy zmiennych ramki (`CityRound`,
   `TurnLocals`) zapisują każdą wartość także do ramki (`Keep`); samych zapisów ramki nie usuwać jako „martwych”.
+  Najprostsza i dokładna postać B2 (porcja 10, `UnitLook` w `AIPlayer`): klasa z nazwanymi właściwościami, których
+  get / set to `PullLocalWord` / `EmitLocalWord` danego offsetu – zero zmian dostępów, raport sondy identyczny co do bajtu.
 
 ## Kroki
 

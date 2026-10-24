@@ -1224,6 +1224,13 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   dostaje innych wartości; jedynie `MeetWithKing` (`LaunchAudience`, `ChoreographKingSpeaking`) przestał być ostatnim
   autorem bajtów buforów tekstu w `DisplayNewspaper`, `DisplayPalace`, `DisplayCityScreen`, ale te same bajty zostawia
   tam inna funkcja (ten sam tekst) – wartości identyczne przed porcją 7, po niej i teraz. Porcja 7 w tych plikach zostaje.
+- B2, porcja 10 (2026-10-24): zmienne lokalne `ShiftAIUnit` (ramka 0x5e, 28 pomocników w `AIPlayer`: 412 odczytów,
+  183 zapisy, 9 kopii, 4 inkrementacje, zapis bajtu 0x5e) jako nazwane właściwości klasy `UnitLook`, które czytają
+  i zapisują słowa ramki na stosie dokładnie jak oryginał (`Horiz` 0x30, `BestScore` 0x28, `Harbour` 0xc …). Ta postać
+  nie zmienia ani wartości, ani liczby dostępów do pamięci (zegar testów), ani odczytów śmieci: raport sondy po zmianie
+  identyczny co do bajtu z raportem przed nią; pełny zestaw zielony; 8 mutacji offsetów w `UnitLook` (testy
+  `ShiftAIUnit…MatchOriginalCode`). Od teraz B2 w tej postaci (nazwy na ramce), a zmienne C# bez ramki dopiero po decyzji
+  o zmianach zachowania.
 
 ## Następny krok
 
