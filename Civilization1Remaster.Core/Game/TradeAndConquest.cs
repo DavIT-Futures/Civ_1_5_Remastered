@@ -341,7 +341,7 @@ namespace Civilization1Remaster.Game
 			if ((known[participantIdx] & 0x40) == 0 && (known[formerIdx] & 0x40) == 0)
 				return;
 
-			this.processor.EmitGlobalWord(0x2f9e, 0x0);
+			DialogStyle = 0x0;
 
 			Message("Spies report:\n")
 				.Text(this.processor.PullGlobalWord((ushort)(((ushort)participantIdx << 1) + 0x1992)))

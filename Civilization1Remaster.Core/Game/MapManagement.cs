@@ -74,7 +74,7 @@ namespace Civilization1Remaster.Game
 
 				if (row < 0xc && column < 0xf)
 				{
-					bool shown = this.processor.PullGlobalWord(0xd806) != 0;
+					bool shown = MapRevealed != 0;
 
 					if (!shown)
 					{
@@ -135,7 +135,7 @@ namespace Civilization1Remaster.Game
 
 			this.owner.Services.FloodBox(ScreenBox, 0, 8, 80, 50, 0);
 
-			if (this.processor.PullGlobalWord(0xd806) != 0)
+			if (MapRevealed != 0)
 			{
 				left = (short)this.owner.Helpers.VerifyValueSpan(left, 0, 16);
 				this.processor.EmitGlobalWord(0x6ed6, (ushort)left);
@@ -221,7 +221,7 @@ namespace Civilization1Remaster.Game
 			ushort improvements = ObtainKnownTileImprovements(horizLoc, vertLoc);
 			this.processor.EmitLocalWord(0x14, improvements);
 
-			if (this.processor.PullGlobalWord(0xd806) != 0)
+			if (MapRevealed != 0)
 			{
 				improvements = ObtainTileImprovements(horizLoc, vertLoc);
 				this.processor.EmitLocalWord(0x14, improvements);
@@ -236,7 +236,7 @@ namespace Civilization1Remaster.Game
 
 			if (terrain != 0xa)
 			{
-				if (this.processor.PullGlobalWord(0xd762) == 0)
+				if (VgaMode == 0)
 				{
 					this.owner.VideoCard.RenderImage(
 						this.processor.PullGlobalWord(0x19fc),
@@ -354,7 +354,7 @@ namespace Civilization1Remaster.Game
 			ushort mask = 0;
 			this.processor.EmitLocalWord(0x12, 0);
 
-			if (this.processor.PullGlobalWord(0xd762) == 0)
+			if (VgaMode == 0)
 			{
 				mask = MaskNeighbours(horizLoc, vertLoc, mask, 2, 0x8, terrainType => terrainType != 0xa);
 
@@ -453,7 +453,7 @@ namespace Civilization1Remaster.Game
 
 			this.processor.EmitLocalWord(0xc, 9);
 
-			if (this.processor.PullGlobalWord(0xd762) == 0 ||
+			if (VgaMode == 0 ||
 				(this.owner.VideoCard.ObtainDot(2, horizLoc, vertLoc + 150) & 0x8) != 0)
 			{
 				mask = (ushort)(mask + 0x10);
@@ -468,7 +468,7 @@ namespace Civilization1Remaster.Game
 
 		private void RenderLandTerrainOverlay(int horizLoc, int vertLoc, short screenX, short screenY, ushort terrain)
 		{
-			if (this.processor.PullGlobalWord(0xd762) != 0)
+			if (VgaMode != 0)
 			{
 				ushort mask = 0;
 				this.processor.EmitLocalWord(0x12, 0);
@@ -506,7 +506,7 @@ namespace Civilization1Remaster.Game
 		{
 			if ((improvements & 0x40) != 0)
 			{
-				if (this.processor.PullGlobalWord(0xd762) != 0)
+				if (VgaMode != 0)
 				{
 					this.owner.Services.RenderPictureToScreen(
 						ScreenBox,
@@ -592,7 +592,7 @@ namespace Civilization1Remaster.Game
 					this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((0x1e << 1) + 0xd4ce)));
 			}
 
-			if (this.processor.PullGlobalWord(0xd806) == 0)
+			if (MapRevealed == 0)
 			{
 				ushort personBit = (ushort)(1 << (this.owner.World.PersonParticipantIdx & 0xff));
 
@@ -624,7 +624,7 @@ namespace Civilization1Remaster.Game
 			City town = this.owner.World.Towns[cityIdx];
 			if (town.ParticipantIdx != this.owner.World.PersonParticipantIdx &&
 				town.ShownExtent == 0 &&
-				this.processor.PullGlobalWord(0xd806) == 0)
+				MapRevealed == 0)
 			{
 				return;
 			}
@@ -661,7 +661,7 @@ namespace Civilization1Remaster.Game
 				innerX, innerY, 12, 12, 5,
 				(byte)this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(ownerWordOffset + 0x1956)));
 
-			short displayedSize = (town.ParticipantIdx == this.owner.World.PersonParticipantIdx || this.processor.PullGlobalWord(0xd806) != 0)
+			short displayedSize = (town.ParticipantIdx == this.owner.World.PersonParticipantIdx || MapRevealed != 0)
 				? (short)town.TrueExtent
 				: (short)town.ShownExtent;
 			this.processor.EmitLocalWord(0xe, (ushort)displayedSize);
@@ -911,7 +911,7 @@ namespace Civilization1Remaster.Game
 					short ownerIdx = this.processor.PullGlobalSignedWord(0xd20a);
 					short personIdx = this.owner.World.PersonParticipantIdx;
 
-					bool seen = this.processor.PullGlobalWord(0xd806) != 0 || ownerIdx == personIdx ||
+					bool seen = MapRevealed != 0 || ownerIdx == personIdx ||
 						(this.troops.Pull(ownerIdx, troopIdx, UnitMemory.ShownToParticipants) & (1 << personIdx)) != 0;
 
 					if (seen && (ObtainTileImprovements(horizLoc, vertLoc) & 0x1) == 0)
@@ -1083,7 +1083,7 @@ namespace Civilization1Remaster.Game
 
 				if (found != 0xffff)
 				{
-					this.processor.EmitGlobalWord(0xd7f0, participantIdx);
+					FoundPlayer = participantIdx;
 					this.processor.EmitGlobalWord(0xd20a, participantIdx);
 				}
 				else
@@ -1184,7 +1184,7 @@ namespace Civilization1Remaster.Game
 				AssignChartDot(horizLoc, vertLoc + 100, (ushort)(low | improvements));
 			}
 
-			if (this.processor.PullGlobalSignedWord(0x6b90) == this.owner.World.PersonParticipantIdx)
+			if ((short)TurnPlayer == this.owner.World.PersonParticipantIdx)
 			{
 				KeepKnownTileImprovements(horizLoc, vertLoc);
 			}
@@ -1218,7 +1218,7 @@ namespace Civilization1Remaster.Game
 
 				if (town.ConditionMarker != 0xff && town.Place.X == horizLoc && town.Place.Y == vertLoc)
 				{
-					this.processor.EmitGlobalWord(0xd7f0, participantIdx);
+					FoundPlayer = participantIdx;
 					this.processor.EmitGlobalWord(0xd20a, participantIdx);
 					found = (ushort)townIdx;
 					break;

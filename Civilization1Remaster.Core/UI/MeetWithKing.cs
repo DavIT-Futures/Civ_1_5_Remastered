@@ -400,7 +400,7 @@ namespace Civilization1Remaster.UI
 				this.processor.EmitGlobalByte(0xba06, 0);
 				this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be), TechnologyName(this.audienceWantedTechnology));
 				this.owner.BlockText.DisplayTextDialog(0x3776);
-				this.processor.EmitGlobalWord(0xd76c, 0xc);
+				KingSpeaking = 0xc;
 
 				if (DisplayKingDialog(0xba06, 0x14, 0x8b) != 1)
 					break;
@@ -451,7 +451,7 @@ namespace Civilization1Remaster.UI
 			this.owner.BlockText.DisplayTextDialog(0x378f);
 
 			this.processor.EmitGlobalWord(0x3936, (ushort)(HostileValue != 0 ? 2 : 1));
-			this.processor.EmitGlobalWord(0xd76c, 0xc);
+			KingSpeaking = 0xc;
 
 			if (HostileValue != 0)
 				this.owner.Services.PerformSound(0x21, 0);
@@ -486,7 +486,7 @@ namespace Civilization1Remaster.UI
 
 			this.processor.EmitGlobalWord(0x6b8e, 0);
 			this.processor.EmitGlobalWord(0x3936, 2);
-			this.processor.EmitGlobalWord(0xd76c, 0xc);
+			KingSpeaking = 0xc;
 			this.owner.Services.PerformSound(0x21, 0);
 
 			if (DisplayKingDialog(0xba06, 0x14, 0x8b) == 1)
@@ -515,7 +515,7 @@ namespace Civilization1Remaster.UI
 
 			this.processor.EmitGlobalWord(0x6b8e, 0);
 			this.processor.EmitGlobalWord(0x3936, 2);
-			this.processor.EmitGlobalWord(0xd76c, 0xc);
+			KingSpeaking = 0xc;
 			this.owner.Services.PerformSound(0x21, 0);
 
 			if (DisplayKingDialog(0xba06, 0x14, 0x8b) == 1)
@@ -569,7 +569,7 @@ namespace Civilization1Remaster.UI
 			{
 				this.processor.EmitGlobalWord(0x6b8e, 1);
 				this.processor.EmitGlobalWord(0x3936, 2);
-				this.processor.EmitGlobalWord(0xd76c, 0xc);
+				KingSpeaking = 0xc;
 				DisplayKingDialog(0xba06, 0x14, 0x8b);
 			}
 			else
@@ -596,7 +596,7 @@ namespace Civilization1Remaster.UI
 			this.owner.BlockText.DisplayTextDialog(0x37cd);
 			this.processor.EmitGlobalWord(0x6b8e, 0);
 			this.processor.EmitGlobalWord(0x3936, 0);
-			this.processor.EmitGlobalWord(0xd76c, 0xc);
+			KingSpeaking = 0xc;
 
 			if (DisplayKingDialog(0xba06, 0x14, 0x8b) == 1)
 			{
@@ -650,7 +650,7 @@ namespace Civilization1Remaster.UI
 			this.processor.EmitGlobalByte(0xba06, 0);
 			this.owner.BlockText.DisplayTextDialog(0x3805);
 			this.processor.EmitGlobalWord(0x3936, 0);
-			this.processor.EmitGlobalWord(0xd76c, 0xc);
+			KingSpeaking = 0xc;
 
 			if (DisplayKingDialog(0xba06, 0x14, 0x8b) != 1)
 				return;
@@ -690,7 +690,7 @@ namespace Civilization1Remaster.UI
 			this.processor.EmitGlobalByte(0xba06, 0);
 			this.owner.BlockText.DisplayTextDialog(0x380e);
 			this.processor.EmitGlobalWord(0x3936, 0);
-			this.processor.EmitGlobalWord(0xd76c, 0xc);
+			KingSpeaking = 0xc;
 
 			if (DisplayKingDialog(0xba06, 0x14, 0x8b) != 1)
 				return;
@@ -716,7 +716,7 @@ namespace Civilization1Remaster.UI
 			this.processor.EmitGlobalByte(0xba06, 0);
 			this.owner.BlockText.DisplayTextDialog(0x3818);
 			this.processor.EmitGlobalWord(0x3936, 0);
-			this.processor.EmitGlobalWord(0xd76c, 0xc);
+			KingSpeaking = 0xc;
 
 			if (DisplayKingDialog(0xba06, 0x14, 0x8b) != 1)
 				return;
@@ -766,7 +766,7 @@ namespace Civilization1Remaster.UI
 			this.owner.BlockText.DisplayTextDialog(0x3820);
 			this.processor.EmitGlobalWord(0x6b8e, 1);
 			this.processor.EmitGlobalWord(0x3936, 2);
-			this.processor.EmitGlobalWord(0xd76c, 4);
+			KingSpeaking = 4;
 			DisplayKingDialog(0xba06, 0x14, 0x8b);
 		}
 
@@ -779,7 +779,7 @@ namespace Civilization1Remaster.UI
 			if (this.audienceDemand != 0 && this.audienceTribute != 0x3e7)
 			{
 				this.processor.EmitGlobalWord(0x3936, 1);
-				this.processor.EmitGlobalWord(0xd76c, 4);
+				KingSpeaking = 4;
 				this.processor.EmitGlobalByte(0xba06, 0);
 				this.owner.BlockText.DisplayTextDialog(0x382a);
 			}
@@ -788,7 +788,7 @@ namespace Civilization1Remaster.UI
 				short personIdx = this.owner.World.PersonParticipantIdx;
 
 				this.processor.EmitGlobalWord(0x3936, 0);
-				this.processor.EmitGlobalWord(0xd76c, 0xc);
+				KingSpeaking = 0xc;
 				Message("We welcome the friendship of the\n")
 					.Text(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((personIdx << 1) + 0x1982)))
 					.Text(" people and their most\nwise and munificent leader:\n")
@@ -818,10 +818,10 @@ namespace Civilization1Remaster.UI
 
 				// Choices disabled: 2 (a demand) shortly after the last audience or under a democracy, 1 (an attack) with only two players left
 				if ((short)(this.owner.World.RoundTally - this.audienceLastAudience) < 0x10 || Person.RegimeKind >= 4)
-					this.processor.EmitGlobalWord(0xb276, 4);
+					DisabledLines = 4;
 
 				if (((1 << participantIdx) | (1 << (byte)personIdx)) == (ushort)this.owner.World.LiveRealms)
-					this.processor.EmitGlobalByte(0xb276, (byte)(this.processor.PullGlobalByte(0xb276) | 2));
+					DisabledLinesLow = (byte)((byte)DisabledLines | 2);
 
 				ushort choice = DisplayKingDialog(0xba06, 0x14, 0x8b);
 
@@ -847,7 +847,7 @@ namespace Civilization1Remaster.UI
 				this.processor.EmitGlobalByte(0xba06, 0);
 				this.owner.BlockText.DisplayTextDialog(0x3897);
 				this.processor.EmitGlobalWord(0x3936, 0);
-				this.processor.EmitGlobalWord(0xd76c, 0xc);
+				KingSpeaking = 0xc;
 
 				// A translation slip: the human player gets the answer of the dialog, not the gold
 				ushort answer = DisplayKingDialog(0xba06, 0x14, 0x8b);
@@ -864,13 +864,13 @@ namespace Civilization1Remaster.UI
 				this.owner.BlockText.DisplayTextDialog(0x38a1);
 				this.owner.Politics.WipeDiplomacyFlags(personIdx, participantIdx, 2);
 				this.processor.EmitGlobalWord(0x3936, 2);
-				this.processor.EmitGlobalWord(0xd76c, 0xc);
+				KingSpeaking = 0xc;
 			}
 			else
 			{
 				this.owner.Libc.CopyText(0xba06, "We ignore your feeble threats.\n");
 				this.processor.EmitGlobalWord(0x3936, 1);
-				this.processor.EmitGlobalWord(0xd76c, 4);
+				KingSpeaking = 4;
 			}
 
 			DisplayKingDialog(0xba06, 0x14, 0x8b);
@@ -909,7 +909,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be),
 				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((enemyIdx << 1) + 0x1992)));
-			this.processor.EmitGlobalWord(0xd76c, 4);
+			KingSpeaking = 4;
 
 			if ((Leader(participantIdx).Relations[enemyIdx] & 1) == 0)
 			{
@@ -1090,7 +1090,7 @@ namespace Civilization1Remaster.UI
 			this.processor.EmitGlobalWord(0x3936, 1);
 			this.processor.EmitGlobalWord(0x67e8, 0xffff);
 			this.processor.EmitGlobalWord(0x7ef4, 0);
-			this.processor.EmitGlobalWord(0xd76c, 0xc);
+			KingSpeaking = 0xc;
 
 			ObtainKingSalutation(participantIdx);
 
@@ -1173,7 +1173,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30b8), CivilizationNameAddr(this.owner.World.PersonParticipantIdx));
 
-			this.processor.EmitGlobalWord(0xd76c, 0xc);
+			KingSpeaking = 0xc;
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
 			this.owner.BlockText.DisplayTextDialog(0x3a8c);
@@ -1241,16 +1241,16 @@ namespace Civilization1Remaster.UI
 
 			short eyes, mouth;
 
-			if (this.processor.PullGlobalWord(0xd76c) != 0 && this.processor.PullGlobalWord(0x67f4) == 0)
+			if (KingSpeaking != 0 && KingStep == 0)
 			{
-				eyes = this.processor.PullGlobalWord(0x67f4) != 0 ? (short)5 : (short)-1;
+				eyes = KingStep != 0 ? (short)5 : (short)-1;
 
 				mouth = this.owner.Libc.Dice.DrawInt(2) != 0 ? (short)9 : (short)0;
 
-				if ((this.processor.PullGlobalByte(0xd76c) & 3) == 0)
+				if (((byte)KingSpeaking & 3) == 0)
 					mouth = 8;
 
-				this.processor.EmitGlobalWord(0xd76c, (ushort)(this.processor.PullGlobalWord(0xd76c) - 1));
+				KingSpeaking = (ushort)(KingSpeaking - 1);
 				this.processor.EmitGlobalWord(0x67f6, 4);
 			}
 			else
@@ -1259,23 +1259,23 @@ namespace Civilization1Remaster.UI
 
 				if (this.processor.PullGlobalWord(0x67f6) == 0 && this.owner.Libc.Dice.DrawInt(12) == 0 && KingGestureStep() == 0)
 				{
-					switch (this.processor.PullGlobalWord(0x67f4))
+					switch (KingStep)
 					{
 						case 0:
-							this.processor.EmitGlobalWord(0x67f4, 1);
+							KingStep = 1;
 							break;
 
 						case 6:
-							this.processor.EmitGlobalWord(0x67f4, 0xa);
+							KingStep = 0xa;
 							break;
 
 						case 0xe:
-							this.processor.EmitGlobalWord(0x67f4, 0x11);
+							KingStep = 0x11;
 							break;
 					}
 				}
 
-				ushort step = this.processor.PullGlobalWord(0x67f4);
+				ushort step = KingStep;
 
 				eyes = (sbyte)this.processor.PullGlobalByte((ushort)(step + 0x3a94));
 				mouth = (sbyte)this.processor.PullGlobalByte((ushort)(step + 0x3aa6));
@@ -1296,7 +1296,7 @@ namespace Civilization1Remaster.UI
 		/// <summary>The entry of table 0x3ab8 for the king's step 0x67f4</summary>
 		private sbyte KingGestureStep()
 		{
-			return (sbyte)this.processor.PullGlobalByte((ushort)(this.processor.PullGlobalWord(0x67f4) + 0x3ab8));
+			return (sbyte)this.processor.PullGlobalByte((ushort)(KingStep + 0x3ab8));
 		}
 
 		/// <summary>The next step of the king's gesture (see ChoreographKingSpeaking)</summary>
@@ -1306,7 +1306,7 @@ namespace Civilization1Remaster.UI
 
 			if (next > 0)
 			{
-				this.processor.EmitGlobalWord(0x67f4, (ushort)(this.processor.PullGlobalWord(0x67f4) + 1));
+				KingStep = (ushort)(KingStep + 1);
 				return;
 			}
 
@@ -1315,15 +1315,15 @@ namespace Civilization1Remaster.UI
 				switch (next)
 				{
 					case -3:
-						this.processor.EmitGlobalWord(0x67f4, 0xe);
+						KingStep = 0xe;
 						break;
 
 					case -2:
-						this.processor.EmitGlobalWord(0x67f4, 6);
+						KingStep = 6;
 						break;
 
 					case -1:
-						this.processor.EmitGlobalWord(0x67f4, 0);
+						KingStep = 0;
 						break;
 				}
 
@@ -1337,12 +1337,12 @@ namespace Civilization1Remaster.UI
 				case 0:
 					this.processor.EmitGlobalByte(0x3a9a, this.processor.PullGlobalWord(0x6b8e) != 0 ? (byte)4 : (byte)2);
 
-					if (this.processor.PullGlobalWord(0x67f4) != 6)
+					if (KingStep != 6)
 						gesture = 3;
 					break;
 
 				case 1:
-					if (this.processor.PullGlobalWord(0x67f4) != 0)
+					if (KingStep != 0)
 						gesture = 0;
 					break;
 
@@ -1350,27 +1350,27 @@ namespace Civilization1Remaster.UI
 					this.processor.EmitGlobalByte(0x3ab4, this.processor.PullGlobalWord(0x6b8e) != 0 ? (byte)0xb : (byte)7);
 					this.processor.EmitGlobalByte(0x3ab7, this.processor.PullGlobalWord(0x6b8e) != 0 ? (byte)0xb : (byte)7);
 
-					if (this.processor.PullGlobalWord(0x67f4) != 0xe)
+					if (KingStep != 0xe)
 						gesture = 0xc;
 					break;
 			}
 
-			if (this.processor.PullGlobalWord(0xd76c) != 0 && this.processor.PullGlobalWord(0x67f4) != 0)
+			if (KingSpeaking != 0 && KingStep != 0)
 				gesture = 0;
 
 			if (gesture == -1)
 			{
-				ushort step = this.processor.PullGlobalWord(0x67f4);
+				ushort step = KingStep;
 
 				this.processor.EmitGlobalWord(0x7ef4, step == 0xe ? (ushort)1 : step == 6 ? (ushort)2 : (ushort)0);
 				return;
 			}
 
-			if (this.processor.PullGlobalWord(0x67f4) == 0)
-				this.processor.EmitGlobalWord(0x67f4, (ushort)gesture);
+			if (KingStep == 0)
+				KingStep = (ushort)gesture;
 
-			if (this.processor.PullGlobalWord(0x67f4) is 6 or 0xe)
-				this.processor.EmitGlobalWord(0x67f4, (ushort)(this.processor.PullGlobalWord(0x67f4) + 1));
+			if (KingStep is 6 or 0xe)
+				KingStep = (ushort)(KingStep + 1);
 		}
 
 		/// <summary>
@@ -1432,7 +1432,7 @@ namespace Civilization1Remaster.UI
 			this.processor.EmitGlobalByte((ushort)(pictureName + 5), (byte)(this.processor.PullGlobalByte((ushort)(pictureName + 5)) + (king % 10)));
 			this.processor.EmitGlobalByte((ushort)(pictureName + 4), (byte)(this.processor.PullGlobalByte((ushort)(pictureName + 4)) + (king / 10)));
 
-			if (this.processor.PullGlobalWord(0xd762) == 0 && (this.processor.PullGlobalWord(0x67f8) == 0 || this.processor.PullGlobalWord(0x67f8) == 3))
+			if (VgaMode == 0 && (this.processor.PullGlobalWord(0x67f8) == 0 || this.processor.PullGlobalWord(0x67f8) == 3))
 			{
 				this.processor.EmitGlobalByte((ushort)(pictureName + 3), 0x6b);
 			}
@@ -1604,7 +1604,7 @@ namespace Civilization1Remaster.UI
 
 				this.owner.Services.RenderPictureToScreen(BackScreenBox, 90, 0, this.processor.PullGlobalWord(0xb1e6));
 
-				this.processor.EmitGlobalWord(0x67f4, 0);
+				KingStep = 0;
 
 				// The background's colours: "backNa.pal"
 				this.owner.Libc.CopyText((ushort)(sceneryName + 7), "pal");

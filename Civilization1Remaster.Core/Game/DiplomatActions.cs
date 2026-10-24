@@ -48,16 +48,16 @@ namespace Civilization1Remaster.Game
 				this.processor.RegSource.Value16 = (ushort)(ownerIdx << 1);
 
 				if ((this.owner.World.Participants[person].Relations[ownerIdx] & 0x40) != 0 || ownerIdx == 0)
-					this.processor.EmitGlobalWord(0xb276, 0x1);
+					DisabledLines = 0x1;
 
 				if ((town.ConditionMarker & 0x20) != 0)
-					this.processor.EmitGlobalByte(0xb276, (byte)(this.processor.PullGlobalByte(0xb276) | 4));
+					DisabledLinesLow = (byte)((byte)DisabledLines | 4);
 
 				if (town.Has(CityStructure.Palace))
-					this.processor.EmitGlobalByte(0xb276, (byte)(this.processor.PullGlobalByte(0xb276) | 0x10));
+					DisabledLinesLow = (byte)((byte)DisabledLines | 0x10);
 
 				if (ownerIdx == 0)
-					this.processor.EmitGlobalByte(0xb276, (byte)(this.processor.PullGlobalByte(0xb276) | 0x20));
+					DisabledLinesLow = (byte)((byte)DisabledLines | 0x20);
 
 				choice = this.owner.TurnHooks.DisplayDialog(0xba06, 80, 80);
 			}
@@ -252,7 +252,7 @@ namespace Civilization1Remaster.Game
 
 			this.owner.Libc.AppendText(0xba06, ".\n");
 
-			this.processor.EmitGlobalWord(0x2f9e, 0x0);
+			DialogStyle = 0x0;
 
 			this.owner.TurnHooks.DisplayDialog(0xba06, 80, 80);
 
@@ -300,7 +300,7 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			this.processor.EmitGlobalWord(0x2f9e, 0x0);
+			DialogStyle = 0x0;
 
 			short choice = (short)this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
 
@@ -800,7 +800,7 @@ namespace Civilization1Remaster.Game
 
 				this.owner.Startup.QueryForDisk(0, 1);
 
-				if (this.processor.PullGlobalWord(0xd762) != 0)
+				if (VgaMode != 0)
 				{
 					this.owner.Services.FloodColors(10, 0, 0, 0);
 				}

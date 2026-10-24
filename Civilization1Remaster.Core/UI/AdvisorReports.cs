@@ -119,7 +119,7 @@ namespace Civilization1Remaster.UI
 			DisplayReportPreamble(0x4762, 1);
 
 			short knownTally = this.owner.World.Participants[participantIdx].FoundScienceTally;
-			short costFactor = (short)((this.owner.World.HardnessTier << 1) + this.processor.PullGlobalWord(0xd2de) + 6);
+			short costFactor = (short)((this.owner.World.HardnessTier << 1) + TechnologyLevel + 6);
 
 			if (costFactor < (short)(0xb - knownTally))
 			{

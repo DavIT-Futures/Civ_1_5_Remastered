@@ -242,9 +242,9 @@ namespace Civilization1Remaster.Game
 
 				PlayTurnOfPlayer(participantIdx);
 
-				if (this.processor.PullGlobalWord(0xdc48) != 0 && this.processor.PullGlobalWord(0xb884) == 0)
+				if (GameEndRequest != 0 && this.processor.PullGlobalWord(0xb884) == 0)
 				{
-					if (this.processor.PullGlobalWord(0xdc48) == 2)
+					if (GameEndRequest == 2)
 					{
 						DisplayEndGameSequence();
 
@@ -303,7 +303,7 @@ namespace Civilization1Remaster.Game
 
 					this.owner.Prologue.DisplayTerrainTutorial();
 
-					this.processor.EmitGlobalWord(0xdc48, 0xffff);
+					GameEndRequest = 0xffff;
 
 					this.owner.Startup.DisplayMouseCursor();
 				}
@@ -314,7 +314,7 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			if (this.processor.PullGlobalWord(0xdc48) == 0)
+			if (GameEndRequest == 0)
 			{
 				this.owner.TurnLogic.HandlePlayerTurn(participantIdx);
 			}
@@ -407,7 +407,7 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private void WarnOfBankruptcy(short startGold)
 		{
-			if (this.processor.PullGlobalWord(0xdc48) != 0)
+			if (GameEndRequest != 0)
 				return;
 
 			Player person = this.owner.World.Participants[this.owner.World.PersonParticipantIdx];
@@ -425,7 +425,7 @@ namespace Civilization1Remaster.Game
 
 			this.owner.BlockText.DisplayTextDialog(0x1c2a);
 
-			this.processor.EmitGlobalWord(0x2f9e, 0x4);
+			DialogStyle = 0x4;
 
 			DisplayDialog(0xba06, 80, 80);
 		}
@@ -479,12 +479,12 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			this.processor.EmitGlobalWord(0xd2de, 0x0);
+			TechnologyLevel = 0x0;
 
 			if (this.owner.World.Season >= 0)
 			{
-				this.processor.EmitGlobalWord(0xd2de, (ushort)this.owner.Helpers.VerifyValueSpan(
-					this.owner.World.HighestScienceTally - (this.owner.World.RoundTally / 9), 0, 6));
+				TechnologyLevel = (ushort)this.owner.Helpers.VerifyValueSpan(
+					this.owner.World.HighestScienceTally - (this.owner.World.RoundTally / 9), 0, 6);
 			}
 
 			ushort population = this.owner.Helpers.ObtainPlayerPopulation(this.owner.World.PersonParticipantIdx);
@@ -686,14 +686,14 @@ namespace Civilization1Remaster.Game
 				this.owner.BlockText.DisplayTextDialog(0x1cf0);
 
 				// The first line goes on with the game, the second one ends it
-				this.processor.EmitGlobalWord(0xdc48, (ushort)(1 - DisplayDialog(0xba06, 80, 80)));
+				GameEndRequest = (ushort)(1 - DisplayDialog(0xba06, 80, 80));
 			}
 			else
 			{
-				this.processor.EmitGlobalWord(0xdc48, 0x1);
+				GameEndRequest = 0x1;
 			}
 
-			if (this.processor.PullGlobalWord(0xdc48) != 0)
+			if (GameEndRequest != 0)
 			{
 				DisplayTitleScreen();
 			}
@@ -709,7 +709,7 @@ namespace Civilization1Remaster.Game
 			// function body
 			this.owner.Atlas.DisplayCivilizationGraph();
 
-			if (this.processor.PullGlobalWord(0xdc48) != 2)
+			if (GameEndRequest != 2)
 			{
 				this.owner.Replayer.DisplayReplay();
 			}
@@ -927,7 +927,7 @@ namespace Civilization1Remaster.Game
 
 				this.owner.Libc.AppendText(0xba06, "!\n");
 
-				this.processor.EmitGlobalWord(0x2f9e, 0x2);
+				DialogStyle = 0x2;
 
 				DisplayDialog(0xba06, 100, 32);
 			}
@@ -1151,7 +1151,7 @@ namespace Civilization1Remaster.Game
 
 				RenderPalace(this.owner.World.PersonParticipantIdx, this.owner.World.CastleTier, 8, 58);
 
-				if (this.processor.PullGlobalWord(0xd806) != 0)
+				if (MapRevealed != 0)
 				{
 					this.processor.StackWord(0); // stack management - push return segment, ignored
 					this.processor.StackWord(0x111e); // stack management - push return offset
@@ -1177,7 +1177,7 @@ namespace Civilization1Remaster.Game
 				ObtainCurrentYearAsText();
 				this.owner.TextPainter.RenderTextToScreen0(0xba06, 2, 81, 0);
 
-				short cost = (short)(((this.owner.World.HardnessTier << 1) + this.processor.PullGlobalWord(0xd2de) + 6) *
+				short cost = (short)(((this.owner.World.HardnessTier << 1) + TechnologyLevel + 6) *
 					human.FoundScienceTally * (this.owner.World.Season < 0 ? 1 : 2));
 				short progress = CPU.SignedQuotient((short)(human.InquiryHeadway << 2), (short)(cost + 1));
 				int bulb = this.owner.Helpers.VerifyValueSpan(progress, 0, 3);
@@ -1255,7 +1255,7 @@ namespace Civilization1Remaster.Game
 			{
 				this.owner.Libc.AppendText(0xba06, "00,000 citizens.\n");
 
-				this.processor.EmitGlobalWord(0x2f9e, 4);
+				DialogStyle = 4;
 
 				DisplayDialog(0xba06, 100, 80);
 			}
@@ -1589,7 +1589,7 @@ namespace Civilization1Remaster.Game
 			{
 				this.owner.Services.PerformSound(this.processor.PullGlobalWord((ushort)((ushort)(0x3a * this.owner.World.Participants[rivalIdx].ChiefVisuals) + 0x1518)), 0);
 
-				this.processor.EmitGlobalWord(0x2f9e, (this.owner.World.Participants[person].Relations[rivalIdx] & 0x40) == 0 ? (ushort)2 : (ushort)5);
+				DialogStyle = (this.owner.World.Participants[person].Relations[rivalIdx] & 0x40) == 0 ? (ushort)2 : (ushort)5;
 
 				DisplayDialog(0xba06, 100, 80);
 
@@ -1638,7 +1638,7 @@ namespace Civilization1Remaster.Game
 
 			this.processor.EmitGlobalWord(0x1c28, 0x1);
 
-			if (this.processor.PullGlobalWord(0xd762) != 0)
+			if (VgaMode != 0)
 			{
 				this.owner.Services.FloodColors(5, 0, 0, 0);
 			}
@@ -1690,7 +1690,7 @@ namespace Civilization1Remaster.Game
 			this.processor.EnterFrame(0x10);
 			this.processor.PreserveSource();
 
-			if (this.processor.PullGlobalWord(0xd762) != 0)
+			if (VgaMode != 0)
 			{
 				this.owner.Helpers.HaltHueCycling();
 

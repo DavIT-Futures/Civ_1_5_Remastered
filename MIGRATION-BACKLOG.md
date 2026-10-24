@@ -1243,6 +1243,16 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   `ContentAdvances` 0xb882, `HumanTileNear` 0x70e8 (220 odczytów, 47 zapisów). Skrypt: lista adresów z nazwami → zamiana
   w klasach `GameModule` (inne klasy, np. sterowniki, zostają z adresami). Pełny zestaw zielony, raport identyczny,
   8 / 8 mutacji (`PictureScreenBox` łapie dopiero test podwójnej gry – golden master nie porównuje ekranów).
+- B4, porcja 2 (2026-10-24): kolejne 14 zmiennych globalnych w `GameModule`: `CityScreenTab` 0x2496, `DialogStyle`
+  0x2f9e, `GoalHoriz` / `GoalVert` 0x6590 / 0x6592, `KingStep` 0x67f4, `KingSpeaking` 0xd76c, `TextCursor` 0x68cc,
+  `TurnPlayer` 0x6b90, `DisabledLines` 0xb276 (z `DisabledLinesLow` dla zapisów bajtu), `TechnologyLevel` 0xd2de,
+  `VgaMode` 0xd762, `FoundPlayer` 0xd7f0, `MapRevealed` 0xd806, `GameEndRequest` 0xdc48 (228 odczytów, 122 zapisy;
+  `GameMessage` spoza `GameModule` zostaje z adresem 0x2f9e). Pełny zestaw zielony, raport identyczny, 8 / 8 mutacji
+  (dwie dopiero jako odwrócenie wartości: sąsiedni adres ma w testach to samo 0). Pułapka skryptu: plik czytany
+  binarnie (`
+`) i zapisany w trybie tekstowym dostaje `
+` – narzędzie mutacji odrzuca wtedy łatkę; zapis z
+  `newline=''`.
 
 ## Następny krok
 

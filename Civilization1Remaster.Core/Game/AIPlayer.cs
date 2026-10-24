@@ -888,7 +888,7 @@ namespace Civilization1Remaster.Game
 
 			if (this.look.TileUnit != 0xffff)
 			{
-				ushort owner = this.processor.PullGlobalWord(0xd7f0);
+				ushort owner = FoundPlayer;
 
 				if (this.troops.Pull(owner, this.look.TileUnit, UnitMemory.Kind) == UnitKindTable.Diplomat)
 				{
@@ -1554,7 +1554,7 @@ namespace Civilization1Remaster.Game
 
 				// Units of another player, or own settlers there
 				if (this.look.TileOwner != 0xffff &&
-					((ushort)participantIdx != this.processor.PullGlobalWord(0xd7f0) ||
+					((ushort)participantIdx != FoundPlayer ||
 						this.owner.UnitOps.TallyUnitsOfTypeInStack(participantIdx, (short)this.look.TileOwner, 0) != 0))
 				{
 					continue;
@@ -2604,7 +2604,7 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			if (participantIdx == this.processor.PullGlobalSignedWord(0x6b90) && participantIdx != this.owner.World.PersonParticipantIdx &&
+			if (participantIdx == (short)TurnPlayer && participantIdx != this.owner.World.PersonParticipantIdx &&
 				(live == 3 || live == 4))
 			{
 				SendUnitOfRole(participantIdx, horizLoc, vertLoc, live);
@@ -2989,7 +2989,7 @@ namespace Civilization1Remaster.Game
 								(byte)(this.processor.PullUInt8(dataSeg, (ushort)(unitAddr + 0x81dd)) | humanBitByte));
 
 							this.owner.UnitOps.PanMapToPosition(this.owner.World.PersonParticipantIdx, (short)adjX, (short)adjY);
-							this.processor.EmitGlobalWord(0x2f9e, 0x3);
+							DialogStyle = 0x3;
 							this.owner.Libc.CopyText(0xba06, "Barbarian raiding party\nlands near ");
 							nearestCity = this.owner.Helpers.LocateNearestCity((short)adjX, (short)adjY);
 							this.owner.Conquest.ObtainCityLabel((short)nearestCity);
@@ -3217,7 +3217,7 @@ namespace Civilization1Remaster.Game
 				{
 					if (unitAtAdj != 0xffff)
 					{
-						ushort unitOwnerAtAdj = this.processor.PullGlobalWord(0xd7f0);
+						ushort unitOwnerAtAdj = FoundPlayer;
 						dirScore = (short)(dirScore + ((ushort)participantIdx == unitOwnerAtAdj ? (short)0x63 : unchecked((short)0xff9d)));
 					}
 
@@ -3253,7 +3253,7 @@ namespace Civilization1Remaster.Game
 
 					if (unitAtAdj != 0xffff)
 					{
-						ushort adjUnitOwner = this.processor.PullGlobalWord(0xd7f0);
+						ushort adjUnitOwner = FoundPlayer;
 						if ((ushort)participantIdx == adjUnitOwner)
 						{
 							if (this.owner.MapOps.ObtainTerrainType((short)unitX, (short)unitY) != 0xa)

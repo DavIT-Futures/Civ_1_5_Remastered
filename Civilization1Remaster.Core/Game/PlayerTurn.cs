@@ -257,10 +257,10 @@ namespace Civilization1Remaster.Game
 				// (no unit of his took a key, or the option 4), else the end
 				newPass = true;
 
-				if (this.turn.AllMoved == 0 && this.processor.PullGlobalWord(0xdc48) == 0)
+				if (this.turn.AllMoved == 0 && GameEndRequest == 0)
 					continue;
 
-				if (this.processor.PullGlobalWord(0xdc48) != 0 || !this.owner.World.IsHuman(participantIdx) ||
+				if (GameEndRequest != 0 || !this.owner.World.IsHuman(participantIdx) ||
 					(this.turn.HumanTookKey != 0 && (this.owner.World.SessionPrefMarkers & 4) == 0))
 				{
 					break;
@@ -327,7 +327,7 @@ namespace Civilization1Remaster.Game
 			if (this.processor.PullGlobalWord(0x1ae0) != 0)
 				this.owner.TurnHooks.RepaintMainScreen();
 
-			if (this.processor.PullGlobalWord(0xdc48) != 0)
+			if (GameEndRequest != 0)
 			{
 				// The quit leaves the units
 				this.turn.Troop = UnitMemory.TroopTally;
@@ -533,7 +533,7 @@ namespace Civilization1Remaster.Game
 		private void PrepareTurn(short participantIdx)
 		{
 			this.processor.RegAcc.Value16 = (ushort)participantIdx;
-			this.processor.EmitGlobalWord(0x6b90, (ushort)participantIdx);
+			TurnPlayer = (ushort)participantIdx;
 			this.turn.HumanMarkers = (ushort)this.owner.World.ParticipantMarkers;
 			this.turn.CursorHoriz = 0xffff;
 			this.turn.MarkedTileMode = 0;
@@ -909,7 +909,7 @@ namespace Civilization1Remaster.Game
 
 			if (this.owner.GlobDb3a == 2 &&
 				(((sbyte)this.owner.World.ChartSight[this.turn.TargetHoriz, this.turn.TargetVert] & (1 << (person & 0xff))) != 0 ||
-					this.processor.PullGlobalWord(0xd806) != 0))
+					MapRevealed != 0))
 			{
 				// The Civilopedia of the terrain of a seen tile
 				this.owner.Startup.ConcealMouseCursor();
@@ -1062,7 +1062,7 @@ namespace Civilization1Remaster.Game
 					ForgetMarkedTile(participantIdx);
 				}
 				else if ((this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) != 0 &&
-					(this.owner.MapOps.ObtainTileOwnerBits(horizLoc, vertLoc) == (ushort)person || this.processor.PullGlobalWord(0xd806) != 0))
+					(this.owner.MapOps.ObtainTileOwnerBits(horizLoc, vertLoc) == (ushort)person || MapRevealed != 0))
 				{
 					// A city of the human (any with everything shown): the city screen
 					this.turn.TileOwner = this.owner.MapOps.ObtainTileOwnerBits(horizLoc, vertLoc);
@@ -1079,17 +1079,17 @@ namespace Civilization1Remaster.Game
 				{
 					this.turn.Order = this.owner.MapOps.ObtainUnitAtTile(horizLoc, vertLoc);
 
-					if (this.processor.PullGlobalWord(0xd806) != 0 && this.turn.Order != 0xffff)
+					if (MapRevealed != 0 && this.turn.Order != 0xffff)
 					{
 						this.owner.ArmyPicker.DisplayUnitInfo(
-							this.processor.PullGlobalSignedWord(0xd7f0),
+							(short)FoundPlayer,
 							(short)this.turn.Order);
 					}
 
-					if (this.turn.Order != 0xffff && participantIdx == this.processor.PullGlobalSignedWord(0xd7f0))
+					if (this.turn.Order != 0xffff && participantIdx == (short)FoundPlayer)
 					{
 						// An own unit (from its stack): it is the unit now, unless sentried or fortified
-						this.turn.Result = this.owner.UnitOps.DisplayBattleScreen(this.processor.PullGlobalSignedWord(0xd7f0),
+						this.turn.Result = this.owner.UnitOps.DisplayBattleScreen((short)FoundPlayer,
 							(short)this.turn.Order);
 
 						short chosen = (short)this.turn.Result;
@@ -2232,7 +2232,7 @@ namespace Civilization1Remaster.Game
 				this.owner.Libc.AppendText(0xba06, " Help build WONDER.\n");
 
 				if ((short)this.turn.Result < 10)
-					this.processor.EmitGlobalWord(0xb276, 0x2);
+					DisabledLines = 0x2;
 			}
 
 			this.processor.RegBase.Value16 = (ushort)(this.turn.City * 0x1c);
@@ -2550,7 +2550,7 @@ namespace Civilization1Remaster.Game
 
 			this.processor.RegAcc.Value16 = (ushort)person;
 
-			if (participantIdx == person || this.processor.PullGlobalWord(0xd20a) == (ushort)person || this.processor.PullGlobalWord(0xd806) != 0)
+			if (participantIdx == person || this.processor.PullGlobalWord(0xd20a) == (ushort)person || MapRevealed != 0)
 			{
 				// The human sees the new size
 				this.processor.RegSource.Value16 = (ushort)(this.turn.City * 0x1c);
@@ -2903,7 +2903,7 @@ namespace Civilization1Remaster.Game
 			this.processor.RegSource.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride);
 
 			if ((this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.ShownToParticipants) & personBit) == 0 && participantIdx != person &&
-				(this.processor.PullGlobalWord(0xd806) == 0 || participantIdx == 0))
+				(MapRevealed == 0 || participantIdx == 0))
 			{
 				return;
 			}
@@ -3205,7 +3205,7 @@ namespace Civilization1Remaster.Game
 			this.processor.RegSource.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride);
 
 			if ((this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.ShownToParticipants) & (1 << (person & 0xff))) != 0 || participantIdx == person ||
-				(this.processor.PullGlobalWord(0xd806) != 0 && participantIdx != 0))
+				(MapRevealed != 0 && participantIdx != 0))
 			{
 				if (participantIdx == person || (this.owner.World.SessionPrefMarkers & 0x20) != 0)
 				{
@@ -3284,7 +3284,7 @@ namespace Civilization1Remaster.Game
 		{
 			ushort key = this.turn.Order;
 			short person = this.owner.World.PersonParticipantIdx;
-			bool everythingShown = this.processor.PullGlobalWord(0xd806) != 0;
+			bool everythingShown = MapRevealed != 0;
 
 			this.processor.RegAcc.Value16 = key;
 
@@ -3381,7 +3381,7 @@ namespace Civilization1Remaster.Game
 					break;
 
 				case 0x2000: // Alt + D
-					this.processor.EmitGlobalWord(0xd806, (ushort)~this.processor.PullGlobalWord(0xd806));
+					MapRevealed = (ushort)~MapRevealed;
 					this.turn.Direction = 0;
 					PanViewByDirection();
 					break;
@@ -3625,19 +3625,19 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private void ConfirmQuit()
 		{
-			if (this.processor.PullGlobalWord(0xdc48) != GameLoadAndSave.FetchSessionAsk)
+			if (GameEndRequest != GameLoadAndSave.FetchSessionAsk)
 			{
 				Message("Are you sure you\nwant to Quit?\n Keep Playing\n Yes, Quit\n")
 					.Dialog(100, 80);
 
 				if (this.processor.RegAcc.Value16 != 1)
 				{
-					this.processor.EmitGlobalWord(0xdc48, 0);
+					GameEndRequest = 0;
 					return;
 				}
 
-				if (this.processor.PullGlobalWord(0xdc48) == 0)
-					this.processor.EmitGlobalWord(0xdc48, 1);
+				if (GameEndRequest == 0)
+					GameEndRequest = 1;
 			}
 
 			this.turn.Troop = 0x80;
@@ -3723,7 +3723,7 @@ namespace Civilization1Remaster.Game
 				this.processor.RegSource.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride);
 
 				if (this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.LeftoverSteps) > 0 && this.turn.Ordered == 0 &&
-					this.processor.PullGlobalWord(0xdc48) == 0)
+					GameEndRequest == 0)
 				{
 					return true;
 				}
@@ -3838,7 +3838,7 @@ namespace Civilization1Remaster.Game
 			this.processor.Journal.OpenScope($"RepaintTileIfVisible({horizLoc}, {vertLoc})");
 
 			if ((this.owner.World.ChartSight[horizLoc, vertLoc] & (ushort)(1 << this.owner.World.PersonParticipantIdx)) != 0 ||
-				this.processor.PullGlobalWord(0xd806) != 0)
+				MapRevealed != 0)
 			{
 				this.owner.MapOps.RepaintMapTile(horizLoc, vertLoc);
 			}
@@ -4227,7 +4227,7 @@ namespace Civilization1Remaster.Game
 			this.processor.Journal.OpenScope($"DisplayHelpForHuman(0x{charsAddr:x4})");
 
 			// function body
-			if (this.processor.PullGlobalSignedWord(0x6b90) == this.owner.World.PersonParticipantIdx)
+			if ((short)TurnPlayer == this.owner.World.PersonParticipantIdx)
 			{
 				this.owner.HelpSystem.DisplayHelpPopupForHuman(charsAddr);
 			}

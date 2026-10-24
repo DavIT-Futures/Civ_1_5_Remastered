@@ -1302,7 +1302,7 @@ namespace Civilization1Remaster.Game
 
 				ushort choices = ListResearchChoices(participantIdx, again, choiceList);
 
-				this.processor.EmitGlobalWord(0x2f9e, 0x6);
+				DialogStyle = 0x6;
 
 				if (choices == 0)
 				{
@@ -1454,7 +1454,7 @@ namespace Civilization1Remaster.Game
 
 			this.owner.Encyclopedia.RenderIcon((ushort)(((first % 3) * 111) + 1), (ushort)((((first % 9) / 3) * 69) + 1), 110, 68, 174, advanced ? (ushort)87 : (ushort)96);
 
-			if (this.processor.PullGlobalWord(0xd762) != 0)
+			if (VgaMode != 0)
 			{
 				this.owner.Libc.CopyText((ushort)(pictureName + 8), ".pal");
 
@@ -1683,7 +1683,7 @@ namespace Civilization1Remaster.Game
 			{
 				this.processor.EmitGlobalWord(0xd206, 1);
 
-				this.processor.EmitGlobalWord(0x2f9e, participantIdx == person ? (ushort)6 : (ushort)0);
+				DialogStyle = participantIdx == person ? (ushort)6 : (ushort)0;
 
 				this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
 			}
@@ -1715,7 +1715,7 @@ namespace Civilization1Remaster.Game
 			this.owner.BlockText.DisplayTextDialog(0x240e);
 
 			this.processor.EmitGlobalWord(0x3936, 0x2);
-			this.processor.EmitGlobalWord(0xd76c, 0xc);
+			KingSpeaking = 0xc;
 
 			this.processor.StackWord(0); // stack management - push return segment, ignored
 			this.processor.StackWord(0x200b); // stack management - push return offset

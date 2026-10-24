@@ -217,7 +217,7 @@ namespace Civilization1Remaster.UI
 				EmptyMessage()
 					.Number(this.owner.World.Participants[participantIdx].Standing);
 
-				if (this.processor.PullGlobalWord(0xd806) != 0)
+				if (MapRevealed != 0)
 				{
 					this.owner.TextPainter.RenderTextToScreen0(0xba06, (participantIdx * 30) + 84, 1, 15);
 				}
@@ -225,7 +225,7 @@ namespace Civilization1Remaster.UI
 				this.owner.Services.RenderPictureToScreen(ScreenBox, (30 * participantIdx) + 90, 2,
 					this.processor.PullGlobalWord((ushort)((((participantIdx << 5) + 0x40) << 1) + 0xd4ce)));
 
-				if (participantIdx != this.owner.World.PersonParticipantIdx && this.processor.PullGlobalWord(0xd806) == 0)
+				if (participantIdx != this.owner.World.PersonParticipantIdx && MapRevealed == 0)
 					continue;
 
 				vertLoc = 0x12;
@@ -312,7 +312,7 @@ namespace Civilization1Remaster.UI
 					if (rowIdx == columnIdx)
 						continue;
 
-					if (this.processor.PullGlobalWord(0xd806) == 0 && rowIdx != personIdx && columnIdx != personIdx)
+					if (MapRevealed == 0 && rowIdx != personIdx && columnIdx != personIdx)
 						continue;
 
 					EmptyMessage()

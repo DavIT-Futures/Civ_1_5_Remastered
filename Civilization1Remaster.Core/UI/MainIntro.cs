@@ -83,7 +83,7 @@ namespace Civilization1Remaster.UI
 		{
 			bool colourful = this.processor.PullGlobalByte(0x1a22) == 0x6d || this.processor.PullGlobalByte(0x1a22) == 0x4d;
 			this.processor.RegAcc.Value16 = (ushort)(colourful ? 1 : 0);
-			this.processor.EmitGlobalWord(0xd762, this.processor.RegAcc.Value16);
+			VgaMode = this.processor.RegAcc.Value16;
 
 			bool ega = this.processor.PullGlobalByte(0x1a22) == 0x65 || this.processor.PullGlobalByte(0x1a22) == 0x45;
 			this.processor.RegAcc.Value16 = (ushort)(ega ? 1 : 0);
@@ -97,7 +97,7 @@ namespace Civilization1Remaster.UI
 		private void ReserveIntroScreens()
 		{
 			this.processor.EmitGlobalWord(0x6dfc, 0);
-			this.processor.RegAcc.Value16 = (ushort)(this.processor.PullGlobalWord(0xd762) != 0 ? 3 : 4);
+			this.processor.RegAcc.Value16 = (ushort)(VgaMode != 0 ? 3 : 4);
 			this.processor.EmitLocalWord(IntroScreenCount, this.processor.RegAcc.Value16);
 
 			this.processor.EmitLocalWord(IntroColumn, 0);
@@ -127,7 +127,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
 
-			if (this.processor.PullGlobalWord(0xd762) == 0)
+			if (VgaMode == 0)
 				this.owner.Services.FloodBox(this.processor.PullGlobalWord(0x19fc), 0, 0, 320, 200, 0);
 
 			this.owner.VideoCard.AssignHuesByIndexArray(0x19fe);
@@ -147,7 +147,7 @@ namespace Civilization1Remaster.UI
 			this.owner.Services.FloodBox(ScreenBox, 0, 12, 320, 176, 0);
 			this.owner.Services.AssignHueCycleSpan(1, 14, 146, 152);
 
-			if (this.processor.PullGlobalWord(0xd762) != 0)
+			if (VgaMode != 0)
 			{
 				this.processor.EmitLocalWord(IntroColumn, 1);
 
@@ -345,9 +345,9 @@ namespace Civilization1Remaster.UI
 			this.processor.EmitLocalWord(IntroSavedFlag, this.processor.PullUInt16(this.processor.SegData.Value16, screen));
 			this.processor.EmitUInt16(this.processor.SegData.Value16, screen, 1);
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 184, (ushort)(this.processor.PullGlobalWord(0xd762) != 0 ? 0xfc : 0x7));
-			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 182, (ushort)(this.processor.PullGlobalWord(0xd762) != 0 ? 0xf8 : 0xf));
-			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 183, (ushort)(this.processor.PullGlobalWord(0xd762) != 0 ? 0xfa : 0xf));
+			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 184, (ushort)(VgaMode != 0 ? 0xfc : 0x7));
+			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 182, (ushort)(VgaMode != 0 ? 0xf8 : 0xf));
+			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 183, (ushort)(VgaMode != 0 ? 0xfa : 0xf));
 
 			screen = ScreenBox;
 			this.processor.EmitUInt16(this.processor.SegData.Value16, screen, this.processor.PullLocalWord(IntroSavedFlag));
@@ -356,7 +356,7 @@ namespace Civilization1Remaster.UI
 		/// <summary>Without VGA the flag of screen 0 switches between 0 and 3 every column</summary>
 		private void FlickerCgaScreen()
 		{
-			if (this.processor.PullGlobalWord(0xd762) != 0)
+			if (VgaMode != 0)
 				return;
 
 			ushort screen = ScreenBox;
@@ -367,7 +367,7 @@ namespace Civilization1Remaster.UI
 		/// <summary>Without VGA screen 0 is shown after a dot drawn with its flag 0</summary>
 		private void ShowCgaScreen()
 		{
-			if (this.processor.PullGlobalWord(0xd762) != 0)
+			if (VgaMode != 0)
 				return;
 
 			ushort screen = ScreenBox;
@@ -436,7 +436,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Services.RenderPictureToScreen(BackScreenBox, 0, 64, this.processor.PullLocalWord(IntroLogo));
 
-			if (this.processor.PullGlobalWord(0xd762) != 0)
+			if (VgaMode != 0)
 			{
 				this.owner.Services.AssignHueCycleSpan(4, 14, 224, 239);
 				this.owner.Services.ActivateHueCycle(4);
@@ -471,7 +471,7 @@ namespace Civilization1Remaster.UI
 		/// <summary>Stops the colour cycles, leaves the title logo on screen 0 and lets the picture of the logo go</summary>
 		private void CloseIntro()
 		{
-			if (this.processor.PullGlobalWord(0xd762) != 0)
+			if (VgaMode != 0)
 			{
 				for (this.processor.EmitLocalWord(IntroColumn, 1);
 					(short)this.processor.PullLocalWord(IntroColumn) <= 4;
@@ -561,7 +561,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Helpers.HaltHueCycling();
 
-			if (this.processor.PullGlobalWord(0xd762) != 0)
+			if (VgaMode != 0)
 			{
 				this.processor.EmitLocalWord(ScreenBackground, 0xec);
 				this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 236);
@@ -581,7 +581,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Startup.QueryForDisk(0, 1);
 
-			if (this.processor.PullGlobalWord(0xd762) == 0)
+			if (VgaMode == 0)
 				this.owner.Services.FloodBox(this.processor.PullGlobalWord(0x19fc), 0, 0, 320, 200, 0);
 
 			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, this.processor.PullLocalWord(ScreenBackground));
@@ -729,10 +729,10 @@ namespace Civilization1Remaster.UI
 			this.processor.EmitLocalWord(ScreenSavedFlag, this.processor.PullUInt16(this.processor.SegData.Value16, screen));
 			this.processor.EmitUInt16(this.processor.SegData.Value16, screen, 1);
 
-			ushort hue = (ushort)(this.processor.PullGlobalWord(0xd762) != 0 ? 0x38 : 0x7);
+			ushort hue = (ushort)(VgaMode != 0 ? 0x38 : 0x7);
 			this.owner.TextPainter.RenderCenteredTextToScreen0((ushort)(0xba06 + this.processor.PullLocalWord(ScreenPartBegin)), 160, 184, hue);
 
-			hue = (ushort)(this.processor.PullGlobalWord(0xd762) != 0 ? 0x3c : 0xf);
+			hue = (ushort)(VgaMode != 0 ? 0x3c : 0xf);
 			this.owner.TextPainter.RenderCenteredTextToScreen0((ushort)(0xba06 + this.processor.PullLocalWord(ScreenPartBegin)), 160, 183, hue);
 
 			screen = ScreenBox;
@@ -793,7 +793,7 @@ namespace Civilization1Remaster.UI
 
 			this.processor.EmitLocalWord(ScreenStarHoriz, (ushort)(this.processor.PullLocalWord(ScreenStarHoriz) + 1));
 
-			if (this.processor.PullGlobalWord(0xd762) == 0)
+			if (VgaMode == 0)
 			{
 				ushort screen = ScreenBox;
 				this.processor.EmitLocalWord(ScreenSavedFlag, this.processor.PullUInt16(this.processor.SegData.Value16, screen));
@@ -846,7 +846,7 @@ namespace Civilization1Remaster.UI
 			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x330a, 0);
 			this.owner.Services.PerformSound(1, 0);
 
-			if (this.processor.PullGlobalWord(0xd762) != 0)
+			if (VgaMode != 0)
 				this.owner.Services.FloodColors(5, 0, 0, 0);
 
 			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
@@ -857,7 +857,7 @@ namespace Civilization1Remaster.UI
 			this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8,
 				ScreenBox, 0, 0);
 
-			if (this.processor.PullGlobalWord(0xd762) == 0)
+			if (VgaMode == 0)
 				return;
 
 			this.owner.Services.AssignHueCycleSpan(1, 15, 16, 31);
@@ -915,7 +915,7 @@ namespace Civilization1Remaster.UI
 		{
 			this.owner.Conquest.AwaitForKeyPressOrMouseClick();
 
-			if (participantIdx == this.owner.World.PersonParticipantIdx && this.processor.PullGlobalWord(0xd762) != 0)
+			if (participantIdx == this.owner.World.PersonParticipantIdx && VgaMode != 0)
 			{
 				this.processor.EmitLocalWord(ScreenColumn, 1);
 
@@ -933,7 +933,7 @@ namespace Civilization1Remaster.UI
 
 			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(ScreenBox + 0x10), 1);
 
-			if (this.processor.PullGlobalWord(0xd762) == 0)
+			if (VgaMode == 0)
 			{
 				this.owner.Startup.QueryForDisk(7, 1);
 				this.owner.ImageToolkit.ImportPictureOrColors(3, 0, 0, 0x3322, 0);
@@ -1017,7 +1017,7 @@ namespace Civilization1Remaster.UI
 
 				ushort hue = 9;
 
-				if (this.processor.PullGlobalWord(0xd762) != 0)
+				if (VgaMode != 0)
 				{
 					this.owner.TextPainter.RenderCenteredTextToScreen0(partAddr, 160, 7, 15);
 					this.owner.TextPainter.RenderCenteredTextToScreen0(partAddr, 160, 9, 13);

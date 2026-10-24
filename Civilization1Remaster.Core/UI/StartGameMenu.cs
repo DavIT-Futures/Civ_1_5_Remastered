@@ -628,7 +628,7 @@ namespace Civilization1Remaster.UI
 
 				if ((ushort)((1 << this.owner.World.PersonParticipantIdx) | 1) == (ushort)this.owner.World.LiveRealms)
 				{
-					this.processor.EmitGlobalWord(0xdc48, 1);
+					GameEndRequest = 1;
 					this.processor.EmitGlobalWord(0xb884, 1);
 				}
 
@@ -807,11 +807,11 @@ namespace Civilization1Remaster.UI
 					.Text("!\n");
 
 				short humanIdx = this.owner.World.PersonParticipantIdx;
-				this.processor.EmitGlobalWord(0x2f9e, (ushort)((this.owner.World.Participants[humanIdx].Relations[participantIdx] & 0x40) != 0 ? 5 : 2));
+				DialogStyle = (ushort)((this.owner.World.Participants[humanIdx].Relations[participantIdx] & 0x40) != 0 ? 5 : 2);
 
 				if (participantIdx1 == humanIdx)
 				{
-					this.processor.EmitGlobalWord(0x2f9e, 3);
+					DialogStyle = 3;
 				}
 
 				this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
@@ -1146,7 +1146,7 @@ namespace Civilization1Remaster.UI
 				StorePicture(0xdf62, idx, 1, (ushort)((0x2a * idx) + 0xa0), 0x8e, 0x29, 0x3a);
 			}
 
-			if (this.processor.PullGlobalWord(0xd762) != 0)
+			if (VgaMode != 0)
 			{
 				CutVgaUnitSprites();
 			}
@@ -1155,7 +1155,7 @@ namespace Civilization1Remaster.UI
 				CutEgaUnitSprites();
 			}
 
-			if (this.processor.PullGlobalWord(0xd762) != 0)
+			if (VgaMode != 0)
 			{
 				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x3720, 0);
 

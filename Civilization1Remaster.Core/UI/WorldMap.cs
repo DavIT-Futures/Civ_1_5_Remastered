@@ -36,7 +36,7 @@ namespace Civilization1Remaster.UI
 			ushort top = 0x3e7, bottom = 0;
 			short shiftHoriz = (short)(0x28 - this.owner.World.Participants[person].HorizBegin), shiftVert;
 
-			if (this.processor.PullGlobalWord(0xd806) != 0)
+			if (MapRevealed != 0)
 			{
 				shiftHoriz = 0;
 				shiftVert = 0;
@@ -78,7 +78,7 @@ namespace Civilization1Remaster.UI
 					bool shown = (this.owner.World.ChartSight[(ushort)column, (ushort)row] & seen) != 0 &&
 						this.owner.MapOps.VerifyMapLimits(0, row + shiftVert) != 0;
 
-					if (!shown && this.processor.PullGlobalWord(0xd806) == 0)
+					if (!shown && MapRevealed == 0)
 						continue;
 
 					RenderWorldMapTile(marker, column, row, shiftHoriz, shiftVert);
@@ -132,7 +132,7 @@ namespace Civilization1Remaster.UI
 			{
 				ushort townIdx = this.owner.Helpers.LocateCityAtPosition(horizLoc, vertLoc);
 
-				if (this.owner.World.Towns[townIdx].ShownExtent != 0 || this.processor.PullGlobalWord(0xd806) != 0 ||
+				if (this.owner.World.Towns[townIdx].ShownExtent != 0 || MapRevealed != 0 ||
 					this.owner.World.Towns[townIdx].ParticipantIdx == this.owner.World.PersonParticipantIdx)
 				{
 					ushort colour = this.processor.PullGlobalWord((ushort)((this.owner.MapOps.ObtainTileOwnerBits(horizLoc, vertLoc) << 1) + 0x1946));
@@ -148,7 +148,7 @@ namespace Civilization1Remaster.UI
 			if (ownerIdx == 0xffff)
 				return;
 
-			if (ownerIdx != (ushort)this.owner.World.PersonParticipantIdx && this.processor.PullGlobalWord(0xd806) == 0)
+			if (ownerIdx != (ushort)this.owner.World.PersonParticipantIdx && MapRevealed == 0)
 			{
 				ushort troopIdx = this.owner.MapOps.ObtainUnitAtTile(horizLoc, vertLoc);
 				sbyte visibility = (sbyte)this.processor.PullGlobalByte((ushort)((ushort)(0xc * troopIdx) + (ushort)(0x600 * ownerIdx) + 0x81dd));

@@ -83,7 +83,7 @@ namespace Civilization1Remaster.Engine
 			this.processor.EmitLocalWord(0xc, backHue);
 			this.processor.EmitGlobalWord(0x654c, (ushort)(backHue == 15 ? 3 : 15));
 
-			if (this.processor.PullGlobalWord(0xd762) == 0)
+			if (VgaMode == 0)
 			{
 				shadowHue = 0xffff;
 			}
@@ -145,7 +145,7 @@ namespace Civilization1Remaster.Engine
 						this.processor.EmitLocalWord(0x4, currentChoice);
 						this.processor.RegCount.LowByte = (byte)(currentChoice & 0xff);
 
-						if (((1 << (currentChoice & 0x1f)) & this.processor.PullGlobalWord(0xb276)) != 0)
+						if (((1 << (currentChoice & 0x1f)) & DisabledLines) != 0)
 						{
 							currentChoice = previousChoice;
 							this.processor.EmitLocalWord(0x4, currentChoice);
@@ -173,7 +173,7 @@ namespace Civilization1Remaster.Engine
 						{
 							this.processor.RegCount.LowByte = (byte)(currentChoice & 0xff);
 
-							if (((1 << (currentChoice & 0x1f)) & this.processor.PullGlobalWord(0xb276)) == 0)
+							if (((1 << (currentChoice & 0x1f)) & DisabledLines) == 0)
 							{
 								done = 1;
 								this.processor.EmitLocalWord(0x8, 1);
@@ -276,7 +276,7 @@ namespace Civilization1Remaster.Engine
 				{
 					this.owner.Startup.ConcealMouseCursor();
 
-					if (this.processor.PullGlobalWord(0xd762) == 0)
+					if (VgaMode == 0)
 					{
 						byte flashHue = (byte)(this.processor.PullGlobalWord(0x2f9c) != 0 ? 11 : this.processor.PullGlobalWord(0x654c));
 
@@ -294,11 +294,11 @@ namespace Civilization1Remaster.Engine
 					this.owner.Startup.DisplayMouseCursor();
 				}
 
-				this.processor.EmitGlobalWord(0x2f9e, 0xffff);
+				DialogStyle = 0xffff;
 				this.processor.EmitGlobalWord(0x2f9a, 0xffff);
 				this.processor.EmitGlobalWord(0x2fa0, 0);
 				this.processor.EmitGlobalWord(0xd206, 0);
-				this.processor.EmitGlobalWord(0xb276, 0);
+				DisabledLines = 0;
 				this.processor.EmitGlobalWord(0xd7f2, 0);
 				this.processor.RegAcc.Value16 = currentChoice;
 			}
@@ -476,7 +476,7 @@ namespace Civilization1Remaster.Engine
 
 			if ((vertLoc & 1) == 0)
 			{
-				ushort advisor = this.processor.PullGlobalWord(0x2f9e);
+				ushort advisor = DialogStyle;
 
 				if (advisor == 0xffff)
 				{
@@ -613,7 +613,7 @@ namespace Civilization1Remaster.Engine
 						ushort lineAddr = (ushort)(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(lineSlot + 0x654e)) + charsAddr);
 						this.processor.EmitUInt8(this.processor.SegData.Value16, lineAddr, 0x5e);
 
-						ushort hue = (ushort)(((1 << (optionIdx & 0x1f)) & this.processor.PullGlobalWord(0xb276)) != 0 ? 3 : 0);
+						ushort hue = (ushort)(((1 << (optionIdx & 0x1f)) & DisabledLines) != 0 ? 3 : 0);
 
 						this.owner.TextPainter.RenderTextToScreen0(lineAddr,
 							horizLoc + 5,
@@ -642,7 +642,7 @@ namespace Civilization1Remaster.Engine
 						}
 						else
 						{
-							hue = (ushort)(((1 << (optionIdx & 0x1f)) & this.processor.PullGlobalWord(0xb276)) != 0 ? 3 : 0);
+							hue = (ushort)(((1 << (optionIdx & 0x1f)) & DisabledLines) != 0 ? 3 : 0);
 						}
 
 						// The original pushes AX before calling RenderTextToScreen0 without popping it (leaves SP -= 2 per non-checked line)

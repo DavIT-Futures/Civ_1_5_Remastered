@@ -259,7 +259,7 @@ namespace Civilization1Remaster.UI
 			this.owner.Dialogs.RenderBox(horizLoc, vertLoc - 1, breadth * 8 + 8, 13, 0);
 
 			this.processor.EmitGlobalWord((ushort)(ScreenBox + 0xe), 0xf);
-			this.processor.EmitGlobalWord(0x68cc, 0x0);
+			TextCursor = 0x0;
 
 			bool fresh = true;
 
@@ -322,42 +322,42 @@ namespace Civilization1Remaster.UI
 					break;
 				}
 
-				if (key == 0xcb && this.processor.PullGlobalWord(0x68cc) != 0)
+				if (key == 0xcb && TextCursor != 0)
 				{
-					this.processor.EmitGlobalWord(0x68cc, (ushort)(this.processor.PullGlobalWord(0x68cc) - 1));
+					TextCursor = (ushort)(TextCursor - 1);
 				}
 
-				if (key == 0xcd && (short)(breadth - 1) > (short)this.processor.PullGlobalWord(0x68cc))
+				if (key == 0xcd && (short)(breadth - 1) > (short)TextCursor)
 				{
-					this.processor.EmitGlobalWord(0x68cc, (ushort)(this.processor.PullGlobalWord(0x68cc) + 1));
+					TextCursor = (ushort)(TextCursor + 1);
 				}
 
 				if (key == 0xd2)
 				{
-					this.owner.Libc.CopyText(kept, (ushort)(this.processor.PullGlobalWord(0x68cc) + 0xba06));
+					this.owner.Libc.CopyText(kept, (ushort)(TextCursor + 0xba06));
 
-					this.owner.Libc.CopyText((ushort)(this.processor.PullGlobalWord(0x68cc) + 0xba07), kept);
+					this.owner.Libc.CopyText((ushort)(TextCursor + 0xba07), kept);
 
-					this.processor.EmitGlobalByte((ushort)(this.processor.PullGlobalWord(0x68cc) + 0xba06), 0x20);
+					this.processor.EmitGlobalByte((ushort)(TextCursor + 0xba06), 0x20);
 					this.processor.EmitGlobalByte((ushort)(breadth + 0xba06), 0x0);
 				}
 
 				if (key == 0xd3)
 				{
-					this.owner.Libc.CopyText((ushort)(this.processor.PullGlobalWord(0x68cc) + 0xba06), (ushort)(this.processor.PullGlobalWord(0x68cc) + 0xba07));
+					this.owner.Libc.CopyText((ushort)(TextCursor + 0xba06), (ushort)(TextCursor + 0xba07));
 
-					this.processor.EmitGlobalByte((ushort)(this.processor.PullGlobalWord(0x68cc) + 0xba06), 0x20);
+					this.processor.EmitGlobalByte((ushort)(TextCursor + 0xba06), 0x20);
 					this.processor.EmitGlobalByte((ushort)(breadth + 0xba05), 0x20);
 					this.processor.EmitGlobalByte((ushort)(breadth + 0xba06), 0x0);
 				}
 
-				if (key == 0x8 && this.processor.PullGlobalWord(0x68cc) != 0)
+				if (key == 0x8 && TextCursor != 0)
 				{
-					this.owner.Libc.CopyText((ushort)(this.processor.PullGlobalWord(0x68cc) + 0xba05), (ushort)(this.processor.PullGlobalWord(0x68cc) + 0xba06));
+					this.owner.Libc.CopyText((ushort)(TextCursor + 0xba05), (ushort)(TextCursor + 0xba06));
 
 					this.processor.EmitGlobalByte((ushort)(breadth + 0xba05), 0x20);
 					this.processor.EmitGlobalByte((ushort)(breadth + 0xba06), 0x0);
-					this.processor.EmitGlobalWord(0x68cc, (ushort)(this.processor.PullGlobalWord(0x68cc) - 1));
+					TextCursor = (ushort)(TextCursor - 1);
 				}
 
 				if ((short)key < 0x80 && (short)key >= 0x20)
@@ -370,13 +370,13 @@ namespace Civilization1Remaster.UI
 						}
 					}
 
-					ushort place = this.processor.PullGlobalWord(0x68cc);
+					ushort place = TextCursor;
 
 					this.processor.EmitGlobalByte((ushort)(place + 0xba06), (byte)key);
 
 					if ((short)(breadth - 1) > (short)place)
 					{
-						this.processor.EmitGlobalWord(0x68cc, (ushort)(this.processor.PullGlobalWord(0x68cc) + 1));
+						TextCursor = (ushort)(TextCursor + 1);
 					}
 				}
 
@@ -435,7 +435,7 @@ namespace Civilization1Remaster.UI
 				ushort typeface = this.processor.PullGlobalWord((ushort)(ScreenBox + 0x10));
 				byte character = this.processor.PullGlobalByte((ushort)(place + 0xba06));
 
-				if (place == (short)this.processor.PullGlobalWord(0x68cc))
+				if (place == (short)TextCursor)
 				{
 					this.processor.EmitGlobalWord(0x68d0, (ushort)horizLoc);
 					this.processor.EmitGlobalWord(0x68ce, this.owner.VideoCard.ObtainCharWidth(typeface, character));

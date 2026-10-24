@@ -88,7 +88,7 @@ namespace Civilization1Remaster.UI
 
 			if (owner.World.RoundTally == 0)
 			{
-				this.processor.EmitGlobalWord(0xb276, 0x10);
+				DisabledLines = 0x10;
 			}
 
 			this.owner.Libc.CopyText(0xba06, " Tax Rate\n Luxuries Rate\n FindCity\n Options\n Save Game\n Load Game\n REVOLUTION!\n \n Retire\n QUIT to DOS\n");
@@ -132,7 +132,7 @@ namespace Civilization1Remaster.UI
 
 					if (this.owner.SaveLoad.FetchBay != 0xffff)
 					{
-						this.processor.EmitGlobalWord(0xdc48, GameLoadAndSave.FetchSessionAsk);
+						GameEndRequest = GameLoadAndSave.FetchSessionAsk;
 						this.processor.EmitGlobalWord(0xd4ca, 0x1000);
 					}
 					break;
@@ -142,12 +142,12 @@ namespace Civilization1Remaster.UI
 					break;
 
 				case 8:
-					this.processor.EmitGlobalWord(0xdc48, 0x2);
+					GameEndRequest = 0x2;
 					this.processor.EmitGlobalWord(0xd4ca, 0x1000);
 					break;
 
 				case 9:
-					this.processor.EmitGlobalWord(0xdc48, 0x1);
+					GameEndRequest = 0x1;
 					this.processor.EmitGlobalWord(0xd4ca, 0x1000);
 					break;
 
@@ -233,7 +233,7 @@ namespace Civilization1Remaster.UI
 			this.owner.Libc.AppendText(0xba06, " No Orders \x008fspace\n");
 			keys.Add(0x20);
 
-			this.processor.EmitGlobalWord(0xb276, 0x0);
+			DisabledLines = 0x0;
 
 			if (troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) == 0)
 			{
@@ -262,7 +262,7 @@ namespace Civilization1Remaster.UI
 
 						if (this.owner.TurnLogic.VerifyCoastalTile(horizLoc, vertLoc) == 0)
 						{
-							this.processor.EmitGlobalWord(0xb276, (ushort)(this.processor.PullGlobalWord(0xb276) | (1 << (byte)keys.Count)));
+							DisabledLines = (ushort)(DisabledLines | (1 << (byte)keys.Count));
 						}
 					}
 					else if ((short)this.processor.PullGlobalWord(irrigation) >= 0)
@@ -310,7 +310,7 @@ namespace Civilization1Remaster.UI
 
 				if (this.owner.Advisors.PlayerKnowsTechnology(participantIdx, 0x2d) == 0)
 				{
-					this.processor.EmitGlobalWord(0xb276, (ushort)(this.processor.PullGlobalWord(0xb276) | (1 << (byte)keys.Count)));
+					DisabledLines = (ushort)(DisabledLines | (1 << (byte)keys.Count));
 				}
 			}
 			else if (troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == 0)
@@ -394,7 +394,7 @@ namespace Civilization1Remaster.UI
 					break;
 
 				case 1:
-					if (this.processor.PullGlobalWord(0xd806) != 0)
+					if (MapRevealed != 0)
 					{
 						this.owner.RealmInfo.DisplayCivilizationScoreList();
 					}
@@ -448,7 +448,7 @@ namespace Civilization1Remaster.UI
 
 			if ((this.owner.World.StarshipMarkers & 0xfe00) == 0)
 			{
-				this.processor.EmitGlobalWord(0xb276, 0x20);
+				DisabledLines = 0x20;
 			}
 
 			Message(" Wonders of the World (F7)\n Top 5 Cities (F8)\n Civilization Score (F9)\n")

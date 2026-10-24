@@ -1607,7 +1607,7 @@ namespace Civilization1Remaster.Game
 			this.processor.EmitGlobalWord(0x3b64, (ushort)(this.processor.PullGlobalWord(0x3b64) + 1));
 			this.processor.EmitGlobalByte((ushort)(fileName + 5), (byte)(this.processor.PullGlobalByte((ushort)(fileName + 5)) + pictureIdx));
 
-			bool colours = this.processor.PullGlobalWord(0xd762) != 0;
+			bool colours = VgaMode != 0;
 
 			if (colours)
 			{
@@ -1616,7 +1616,7 @@ namespace Civilization1Remaster.Game
 
 			this.owner.ImageToolkit.ImportPictureOrColors(2, 0, 0, fileName, 0);
 
-			if (this.processor.PullGlobalWord(0xd762) != 0)
+			if (VgaMode != 0)
 			{
 				this.owner.Services.FloodColors(8, 0, 0, 0);
 			}
@@ -1624,7 +1624,7 @@ namespace Civilization1Remaster.Game
 			this.owner.VideoCard.RenderImage(PictureScreenBox, 0, 0, 0x140, 0xc8,
 				ScreenBox, 0, 0);
 
-			if (this.processor.PullGlobalWord(0xd762) == 0)
+			if (VgaMode == 0)
 				return;
 
 			this.owner.Libc.CopyText((ushort)(fileName + 7), "pal");
@@ -1684,7 +1684,7 @@ namespace Civilization1Remaster.Game
 
 			this.owner.Services.PerformSound(1, 0);
 
-			if (this.processor.PullGlobalWord(0xd762) != 0)
+			if (VgaMode != 0)
 			{
 				StopStoryColourCycles();
 			}

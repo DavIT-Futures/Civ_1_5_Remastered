@@ -377,7 +377,7 @@ namespace Civilization1Remaster.UI
 			}
 
 			ushort bgColor = 0xf;
-			if (this.processor.PullGlobalWord(0xd762) != 0)
+			if (VgaMode != 0)
 			{
 				if (this.processor.PullGlobalWord(0x3c62) == 0)
 				{
@@ -558,7 +558,7 @@ namespace Civilization1Remaster.UI
 						byte pageDigit = (byte)CPU.SignedQuotient((short)iconIdx, 6);
 						this.processor.EmitGlobalByte(0xba0d, (byte)(this.processor.PullGlobalByte(0xba0d) + pageDigit));
 						this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0xba06, 0);
-						if (this.processor.PullGlobalWord(0xd762) != 0)
+						if (VgaMode != 0)
 						{
 							this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, 0x3d75, 0xc5be);
 							this.owner.VideoCard.AssignHuesFromHueStruct(0xc5be);

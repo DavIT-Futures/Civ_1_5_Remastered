@@ -65,7 +65,7 @@ namespace Civilization1Remaster.UI
 			{
 				for (short horizLoc = 0; horizLoc < 0x50; horizLoc++)
 				{
-					if ((this.owner.World.ChartSight[(ushort)horizLoc, (ushort)vertLoc] & sight) == 0 && this.processor.PullGlobalWord(0xd806) == 0)
+					if ((this.owner.World.ChartSight[(ushort)horizLoc, (ushort)vertLoc] & sight) == 0 && MapRevealed == 0)
 						continue;
 
 					RenderStrategicTile(horizLoc, vertLoc);

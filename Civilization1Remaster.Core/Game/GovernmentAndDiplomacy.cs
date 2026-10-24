@@ -225,7 +225,7 @@ namespace Civilization1Remaster.Game
 			this.owner.BlockText.DisplayTextDialog(charsAddr);
 
 			this.processor.EmitGlobalWord(0x3936, 0x1);
-			this.processor.EmitGlobalWord(0xd76c, 0xc);
+			KingSpeaking = 0xc;
 
 			this.processor.StackWord(0); // stack management - push return segment, ignored
 			this.processor.StackWord(returnOffset); // stack management - push return offset
@@ -339,7 +339,7 @@ namespace Civilization1Remaster.Game
 						participant.Relations[0] |= 4;
 					}
 
-					this.processor.EmitGlobalWord(0x2f9e, 0x1);
+					DialogStyle = 0x1;
 
 					this.owner.TurnHooks.DisplayDialog(0xba06, 80, 64);
 				}
@@ -447,7 +447,7 @@ namespace Civilization1Remaster.Game
 
 					this.owner.Libc.AppendText(0xba06, " sign\na peace treaty.\n");
 
-					this.processor.EmitGlobalWord(0x2f9e, 0x1);
+					DialogStyle = 0x1;
 
 					this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
 				}
@@ -466,7 +466,7 @@ namespace Civilization1Remaster.Game
 
 					this.owner.Libc.AppendText(0xba06, (participant1.Relations[participantIdx2] & 2) != 0 ? (ushort)0x2a36 : (ushort)0x2a4d);
 
-					this.processor.EmitGlobalWord(0x2f9e, 0x1);
+					DialogStyle = 0x1;
 
 					this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
 				}

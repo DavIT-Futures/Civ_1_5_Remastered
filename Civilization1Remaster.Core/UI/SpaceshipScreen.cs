@@ -57,7 +57,7 @@ namespace Civilization1Remaster.UI
 			this.owner.Services.AssignHueCycleSpan(4, 8, 144, 159);
 			this.owner.Services.AssignHueCycleSpan(5, 150, 128, 129);
 
-			if (this.processor.PullGlobalWord(0xd762) != 0)
+			if (VgaMode != 0)
 			{
 				for (ushort cycleIdx = 1; cycleIdx <= 5; cycleIdx++)
 				{
@@ -82,7 +82,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Helpers.ReleaseResource(this.processor.PullGlobalWord(0x682a), 0x4cda);
 
-			if (this.processor.PullGlobalWord(0xd762) != 0)
+			if (VgaMode != 0)
 			{
 				for (ushort cycleIdx = 1; cycleIdx <= 5; cycleIdx++)
 				{
@@ -802,7 +802,7 @@ namespace Civilization1Remaster.UI
 				if (arg2 == 1)
 				{
 					ushort complete = this.processor.PullGlobalWord(0x687c);
-					this.processor.EmitGlobalWord(0xb276, complete);
+					DisabledLines = complete;
 
 					if (complete == 3)
 						break;
@@ -819,7 +819,7 @@ namespace Civilization1Remaster.UI
 				if (arg2 == 2)
 				{
 					ushort complete = this.processor.PullGlobalWord(0x687e);
-					this.processor.EmitGlobalWord(0xb276, complete);
+					DisabledLines = complete;
 
 					if (complete == 7)
 						break;
@@ -990,7 +990,7 @@ namespace Civilization1Remaster.UI
 					this.owner.Libc.AppendText(0xba06, "\n ");
 				}
 
-				this.processor.EmitGlobalWord(0xb276, (ushort)((ushort)(this.owner.World.StarshipMarkers >> 9) ^ 0xff));
+				DisabledLines = (ushort)((ushort)(this.owner.World.StarshipMarkers >> 9) ^ 0xff);
 
 				short chosenIdx = (short)(this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80) + 1);
 

@@ -247,7 +247,7 @@ namespace Civilization1Remaster.Engine
 		public void FloodBoxWithMotif(int horizLoc, int vertLoc, int breadth, int altitude)
 		{
 			// function body
-			if (this.processor.PullGlobalSignedWord(0xd762) != 0)
+			if ((short)VgaMode != 0)
 			{
 				int vertLocScratch = vertLoc;
 				int altitudeScratch = altitude;
@@ -291,7 +291,7 @@ namespace Civilization1Remaster.Engine
 		{
 			this.processor.Journal.OpenScope($"PullAndAssignColors(0x{docnameAddr:x4})");
 
-			if (this.processor.PullGlobalWord(0xd762) != 0)
+			if (VgaMode != 0)
 			{
 				this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, docnameAddr, 0xbdee);
 
@@ -362,7 +362,7 @@ namespace Civilization1Remaster.Engine
 		public void LaunchHueCycling()
 		{
 			// function body
-			if (this.processor.PullGlobalWord(0x2fec) == 0 && this.processor.PullGlobalWord(0xd762) != 0)
+			if (this.processor.PullGlobalWord(0x2fec) == 0 && VgaMode != 0)
 			{
 				this.owner.Services.ActivateHueCycle(1);
 
@@ -383,7 +383,7 @@ namespace Civilization1Remaster.Engine
 
 			// function body
 			if (this.processor.PullGlobalWord(0x2fec) != 0 &&
-				this.processor.PullGlobalWord(0xd762) != 0)
+				VgaMode != 0)
 			{
 				this.owner.Services.DeactivateHueCycle(1);
 

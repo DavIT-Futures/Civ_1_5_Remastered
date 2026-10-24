@@ -362,7 +362,7 @@ namespace Civilization1Remaster.Game
 				participantIdx2 == personIdx ||
 				((ushort)PullUnitByte(participantIdx1, troopIdx1, 9) & personBit) != 0 ||
 				((ushort)PullUnitByte(participantIdx2, troopIdx2, 9) & personBit) != 0 ||
-				this.processor.PullGlobalWord(0xd806) != 0;
+				MapRevealed != 0;
 
 			return visibleToPerson && this.processor.PullGlobalWord(0xb278) != 1;
 		}
@@ -551,7 +551,7 @@ namespace Civilization1Remaster.Game
 			if ((participantIdx2 == personIdx && (this.owner.World.Participants[participantIdx2].Relations[participantIdx1] & 2) != 0) ||
 				(this.owner.World.Participants[participantIdx1].Relations[participantIdx2] & 0x200) != 0)
 			{
-				this.processor.EmitGlobalWord(0x2f9e, 0x3);
+				DialogStyle = 0x3;
 
 				Message("Sneak attack by\n")
 					.Text(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((participantIdx1 << 1) + 0x1982)))
@@ -566,7 +566,7 @@ namespace Civilization1Remaster.Game
 			{
 				if (participantIdx1 == personIdx || participantIdx2 == personIdx)
 				{
-					this.processor.EmitGlobalWord(0x2f9e, 0x5);
+					DialogStyle = 0x5;
 
 					Message(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((participantIdx2 << 1) + 0x1992)))
 						.Text(" cancel\npeace treaty\nwith ")
@@ -642,9 +642,9 @@ namespace Civilization1Remaster.Game
 						ushort unitAtTile = this.owner.MapOps.ObtainUnitAtTile(checkX, checkY);
 						this.processor.EmitLocalWord(0x1a, unitAtTile);
 
-						if (unitAtTile != 0xffff && this.processor.PullGlobalSignedWord(0xd7f0) != this.owner.World.PersonParticipantIdx)
+						if (unitAtTile != 0xffff && (short)FoundPlayer != this.owner.World.PersonParticipantIdx)
 						{
-							this.owner.UnitOps.VisitEachUnitInStack(this.processor.PullGlobalSignedWord(0xd7f0), (short)unitAtTile, 0x1593);
+							this.owner.UnitOps.VisitEachUnitInStack((short)FoundPlayer, (short)unitAtTile, 0x1593);
 						}
 					}
 
@@ -802,7 +802,7 @@ namespace Civilization1Remaster.Game
 
 			if (participantIdx != this.owner.World.PersonParticipantIdx)
 			{
-				this.processor.EmitGlobalWord(0x2f9e, 0x3);
+				DialogStyle = 0x3;
 
 				Message(this.processor.PullGlobalWord((ushort)((participantIdx << 1) + 0x1992)))
 					.Text(" use\nnuclear weapons!\n")
@@ -838,13 +838,13 @@ namespace Civilization1Remaster.Game
 				if (troopIdx == 0xffff)
 					continue;
 
-				ushort ruined = this.owner.UnitOps.TallyUnitsByDomainInStack(this.processor.PullGlobalSignedWord(0xd7f0), (short)troopIdx, 2);
+				ushort ruined = this.owner.UnitOps.TallyUnitsByDomainInStack((short)FoundPlayer, (short)troopIdx, 2);
 
-				this.owner.World.Participants[participantIdx].TroopsRuined[this.processor.PullGlobalWord(0xd7f0)] += (short)ruined;
+				this.owner.World.Participants[participantIdx].TroopsRuined[FoundPlayer] += (short)ruined;
 
-				this.owner.UnitOps.VisitEachUnitInStack(this.processor.PullGlobalSignedWord(0xd7f0), (short)troopIdx, 0xf10);
+				this.owner.UnitOps.VisitEachUnitInStack((short)FoundPlayer, (short)troopIdx, 0xf10);
 
-				ushort victimIdx = this.processor.PullGlobalWord(0xd7f0);
+				ushort victimIdx = FoundPlayer;
 
 				if ((ushort)participantIdx != victimIdx)
 				{

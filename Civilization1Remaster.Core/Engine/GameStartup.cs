@@ -47,7 +47,7 @@ namespace Civilization1Remaster.Engine
 				this.processor.EmitLocalWord(0x4, 0);
 			}
 
-			this.processor.RegAcc.Value16 = (ushort)(this.processor.PullGlobalWord(0xd762) != 0 ? 0x1f40 : 0xfa0);
+			this.processor.RegAcc.Value16 = (ushort)(VgaMode != 0 ? 0x1f40 : 0xfa0);
 
 			if ((short)this.processor.RegAcc.Value16 > (short)this.processor.PullLocalWord(0x4))
 			{
@@ -63,7 +63,7 @@ namespace Civilization1Remaster.Engine
 				this.owner.Dialogs.DisplayMenu(0xba06, 64, 49, 1);
 			}
 
-			if (this.processor.PullGlobalWord(0xd762) != 0 && (short)this.processor.PullLocalWord(0x4) < 0x23be)
+			if (VgaMode != 0 && (short)this.processor.PullLocalWord(0x4) < 0x23be)
 				this.processor.EmitGlobalWord(0x1a3e, 1);
 
 			this.processor.StackWord(0); // stack management - push return segment, ignored
@@ -105,15 +105,15 @@ namespace Civilization1Remaster.Engine
 
 			while (true)
 			{
-				this.processor.EmitGlobalWord(0xdc48, 0);
+				GameEndRequest = 0;
 
 				do
 				{
 					this.owner.TurnHooks.HandleGameEnd();
 				}
-				while (this.processor.PullGlobalWord(0xdc48) == 0);
+				while (GameEndRequest == 0);
 
-				if (this.processor.PullGlobalWord(0xdc48) != GameLoadAndSave.FetchSessionAsk)
+				if (GameEndRequest != GameLoadAndSave.FetchSessionAsk)
 					break;
 
 				ImportGameDuringPlay(arrowTier);
@@ -139,7 +139,7 @@ namespace Civilization1Remaster.Engine
 		{
 			this.processor.Journal.OpenScope($"ImportGameDuringPlay({arrowTier})");
 
-			this.processor.EmitGlobalWord(0xdc48, 0x0);
+			GameEndRequest = 0x0;
 			this.processor.EmitGlobalWord(0xd4ca, 0x0);
 
 			// The turn was left in the middle, restore the pointer level
@@ -449,7 +449,7 @@ namespace Civilization1Remaster.Engine
 
 			this.processor.EmitGlobalWord(0x2f98, 0x1);
 
-			if (this.processor.PullGlobalWord(0xd762) != 0 && (this.processor.PullGlobalWord(0x6b32) == 0 ||
+			if (VgaMode != 0 && (this.processor.PullGlobalWord(0x6b32) == 0 ||
 				this.processor.PullGlobalWord(0x6b32) == 2 || this.processor.PullGlobalWord(0x6b32) == 3))
 			{
 				this.owner.Services.FloodColors(5, 0, 0, 0);
@@ -531,7 +531,7 @@ namespace Civilization1Remaster.Engine
 
 			QueryForDisk(7, 1);
 
-			if (this.processor.PullGlobalWord(0xd762) != 0)
+			if (VgaMode != 0)
 			{
 				this.owner.Services.FloodColors(5, 0, 0, 0);
 			}

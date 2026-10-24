@@ -265,10 +265,10 @@ namespace Civilization1Remaster.Game
 		private const int CityImprovement = 1;
 
 		/// <summary>The player whose unit ObtainUnitAtTile found last (0xd7f0)</summary>
-		private short FoundUnitParticipant => this.processor.PullGlobalSignedWord(0xd7f0);
+		private short FoundUnitParticipant => (short)FoundPlayer;
 
 		/// <summary>The AI players see all units (0xd806, a debug option of the original)</summary>
-		private bool RevealAll => this.processor.PullGlobalWord(0xd806) != 0;
+		private bool RevealAll => MapRevealed != 0;
 
 		/// <summary>
 		/// Column of a tile around: the step of the direction table (1 - 8 the tiles next to it, 9 - 24 the ring 2 tiles far,
@@ -778,7 +778,7 @@ namespace Civilization1Remaster.Game
 			{
 				if (participantIdx == this.owner.World.PersonParticipantIdx && this.processor.PullGlobalWord(0xd760) == 0)
 				{
-					this.processor.EmitGlobalWord(0x2f9e, 0x3);
+					DialogStyle = 0x3;
 					this.processor.EmitGlobalByte(0xba06, 0x0);
 
 					this.owner.BlockText.DisplayTextDialog(0x2126);
@@ -856,7 +856,7 @@ namespace Civilization1Remaster.Game
 
 			if (this.processor.PullGlobalWord(0x20f4) == 0)
 			{
-				if (this.processor.PullGlobalWord(0xd806) != 0 || participantIdx == this.owner.World.PersonParticipantIdx ||
+				if (MapRevealed != 0 || participantIdx == this.owner.World.PersonParticipantIdx ||
 					(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.ShownToParticipants) & (ushort)(1 << this.owner.World.PersonParticipantIdx)) != 0)
 				{
 					this.owner.MapOps.RepaintMapTile(
@@ -933,7 +933,7 @@ namespace Civilization1Remaster.Game
 			this.owner.MapOps.DiscardUnitFromTile(participantIdx, troopIdx, horizLoc, vertLoc);
 
 			if (this.processor.PullGlobalWord(0x20f4) == 0 && this.processor.PullGlobalWord(0x3936) == 0xffff &&
-				(this.processor.PullGlobalWord(0xd806) != 0 || participantIdx == this.owner.World.PersonParticipantIdx ||
+				(MapRevealed != 0 || participantIdx == this.owner.World.PersonParticipantIdx ||
 				(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.ShownToParticipants) & (ushort)(1 << this.owner.World.PersonParticipantIdx)) != 0))
 			{
 				this.owner.MapOps.RepaintMapTile(

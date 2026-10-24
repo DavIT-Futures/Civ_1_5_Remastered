@@ -199,7 +199,7 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope($"DisplayHelpPopupForHuman(0x{charsAddr:x4})");
 
-			if (this.processor.PullGlobalWord(0x6b90) == (ushort)this.owner.World.PersonParticipantIdx)
+			if (TurnPlayer == (ushort)this.owner.World.PersonParticipantIdx)
 			{
 				this.processor.EmitGlobalByte(0xba06, 0x0);
 

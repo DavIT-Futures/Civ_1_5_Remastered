@@ -147,6 +147,106 @@ namespace Civilization1Remaster
 			get => this.processor.PullGlobalWord(0xe8b8);
 			set => this.processor.EmitGlobalWord(0xe8b8, value);
 		}
+		/// <summary>0x2496: the tab lit on the city screen (0 - 3)</summary>
+		protected ushort CityScreenTab
+		{
+			get => this.processor.PullGlobalWord(0x2496);
+			set => this.processor.EmitGlobalWord(0x2496, value);
+		}
+
+		/// <summary>0x2f9e: the style of the next dialog (its frame and the advisor portrait)</summary>
+		protected ushort DialogStyle
+		{
+			get => this.processor.PullGlobalWord(0x2f9e);
+			set => this.processor.EmitGlobalWord(0x2f9e, value);
+		}
+
+		/// <summary>0x6590: the column where the unit heads (see CarryOutGoto)</summary>
+		protected ushort GoalHoriz
+		{
+			get => this.processor.PullGlobalWord(0x6590);
+			set => this.processor.EmitGlobalWord(0x6590, value);
+		}
+
+		/// <summary>0x6592: the row where the unit heads (see CarryOutGoto)</summary>
+		protected ushort GoalVert
+		{
+			get => this.processor.PullGlobalWord(0x6592);
+			set => this.processor.EmitGlobalWord(0x6592, value);
+		}
+
+		/// <summary>0x67f4: the step of the king's animation (0 standing still)</summary>
+		protected ushort KingStep
+		{
+			get => this.processor.PullGlobalWord(0x67f4);
+			set => this.processor.EmitGlobalWord(0x67f4, value);
+		}
+
+		/// <summary>0x68cc: the cursor in the text field of PullTextInput</summary>
+		protected ushort TextCursor
+		{
+			get => this.processor.PullGlobalWord(0x68cc);
+			set => this.processor.EmitGlobalWord(0x68cc, value);
+		}
+
+		/// <summary>0x6b90: the player whose turn it is</summary>
+		protected ushort TurnPlayer
+		{
+			get => this.processor.PullGlobalWord(0x6b90);
+			set => this.processor.EmitGlobalWord(0x6b90, value);
+		}
+
+		/// <summary>0xb276: the lines of the menu that cannot be chosen (a bit per line)</summary>
+		protected ushort DisabledLines
+		{
+			get => this.processor.PullGlobalWord(0xb276);
+			set => this.processor.EmitGlobalWord(0xb276, value);
+		}
+
+		/// <summary>0xb276: its low byte alone (the high byte stays)</summary>
+		protected byte DisabledLinesLow { set => this.processor.EmitGlobalByte(0xb276, value); }
+
+		/// <summary>0xd2de: the technology level of the time (AD only)</summary>
+		protected ushort TechnologyLevel
+		{
+			get => this.processor.PullGlobalWord(0xd2de);
+			set => this.processor.EmitGlobalWord(0xd2de, value);
+		}
+
+		/// <summary>0xd762: not 0 on VGA (the colours and palettes of the pictures)</summary>
+		protected ushort VgaMode
+		{
+			get => this.processor.PullGlobalWord(0xd762);
+			set => this.processor.EmitGlobalWord(0xd762, value);
+		}
+
+		/// <summary>0xd76c: the king speaks (counts down)</summary>
+		protected ushort KingSpeaking
+		{
+			get => this.processor.PullGlobalWord(0xd76c);
+			set => this.processor.EmitGlobalWord(0xd76c, value);
+		}
+
+		/// <summary>0xd7f0: the player of the unit, or the owner of the tile, found last (also in 0xd20a)</summary>
+		protected ushort FoundPlayer
+		{
+			get => this.processor.PullGlobalWord(0xd7f0);
+			set => this.processor.EmitGlobalWord(0xd7f0, value);
+		}
+
+		/// <summary>0xd806: the whole map is shown</summary>
+		protected ushort MapRevealed
+		{
+			get => this.processor.PullGlobalWord(0xd806);
+			set => this.processor.EmitGlobalWord(0xd806, value);
+		}
+
+		/// <summary>0xdc48: asks the main loop to end or to load the game</summary>
+		protected ushort GameEndRequest
+		{
+			get => this.processor.PullGlobalWord(0xdc48);
+			set => this.processor.EmitGlobalWord(0xdc48, value);
+		}
 		#endregion
 	}
 }

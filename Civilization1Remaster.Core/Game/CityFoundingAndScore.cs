@@ -74,7 +74,7 @@ namespace Civilization1Remaster.Game
 
 				if (participantIdx == this.owner.World.PersonParticipantIdx)
 				{
-					this.processor.EmitGlobalWord(0x2f9e, 0x4);
+					DialogStyle = 0x4;
 					this.processor.EmitGlobalByte(0xba06, 0);
 
 					this.owner.BlockText.DisplayTextDialog(0x4f74);
@@ -714,7 +714,7 @@ namespace Civilization1Remaster.Game
 
 			if (this.owner.World.IsHuman(town.ParticipantIdx))
 			{
-				this.processor.EmitGlobalWord(0x2f9e, 0x4);
+				DialogStyle = 0x4;
 
 				this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
 
@@ -734,7 +734,7 @@ namespace Civilization1Remaster.Game
 
 			this.processor.EmitLocalWord(0x8, lineEnd);
 			this.processor.EmitGlobalByte((ushort)(lineEnd + 0xba06), 0);
-			this.processor.EmitGlobalWord(0x2f9e, 0x2);
+			DialogStyle = 0x2;
 
 			this.owner.TurnHooks.DisplayDialog(0xba06, 100, 64);
 

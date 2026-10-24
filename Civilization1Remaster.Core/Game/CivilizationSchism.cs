@@ -207,7 +207,7 @@ namespace Civilization1Remaster.Game
 
 			this.owner.BlockText.DisplayTextDialog(participantIdx == this.owner.World.PersonParticipantIdx ? (ushort)0x4a18 : (ushort)0x4a20);
 
-			this.processor.EmitGlobalWord(0x2f9e, 0x5);
+			DialogStyle = 0x5;
 
 			this.owner.TurnHooks.DisplayDialog(0xba06, 80, 80);
 

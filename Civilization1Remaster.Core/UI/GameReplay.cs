@@ -786,18 +786,18 @@ namespace Civilization1Remaster.UI
 			this.owner.Services.PerformSound(this.processor.PullGlobalWord((ushort)(leader + 0x151a)), 3);
 
 			this.owner.Services.FloodBox(ScreenBox, 18, 150, 284, 32,
-				(ushort)(this.processor.PullGlobalWord(0xd762) != 0 ? 34 : 7));
+				(ushort)(VgaMode != 0 ? 34 : 7));
 
 			this.owner.Libc.CopyText(0xba06, "The entire world hails");
 
 			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 152, 20);
-			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 151, (ushort)(this.processor.PullGlobalWord(0xd762) != 0 ? 23 : 15));
+			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 151, (ushort)(VgaMode != 0 ? 23 : 15));
 
 			Message(this.processor.PullGlobalWord((ushort)((this.owner.World.PersonParticipantIdx << 1) + 0x19a2)))
 				.Text(" the CONQUEROR!");
 
 			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 168, 20);
-			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 167, (ushort)(this.processor.PullGlobalWord(0xd762) != 0 ? 23 : 15));
+			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 167, (ushort)(VgaMode != 0 ? 23 : 15));
 
 			this.owner.TurnLogic.AwaitForKey();
 
@@ -845,7 +845,7 @@ namespace Civilization1Remaster.UI
 			this.processor.EmitGlobalByte((ushort)(portraitName + 5), (byte)(this.processor.PullGlobalByte((ushort)(portraitName + 5)) + (leaderIdx % 10)));
 			this.processor.EmitGlobalByte((ushort)(portraitName + 4), (byte)(this.processor.PullGlobalByte((ushort)(portraitName + 4)) + (leaderIdx / 10)));
 
-			if (this.processor.PullGlobalWord(0xd762) == 0 && (leaderIdx == 0 || leaderIdx == 3))
+			if (VgaMode == 0 && (leaderIdx == 0 || leaderIdx == 3))
 			{
 				this.processor.EmitGlobalByte((ushort)(portraitName + 3), 0x6b);
 			}
@@ -862,7 +862,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x4112, 0);
 
-			if (this.processor.PullGlobalWord(0xd762) != 0)
+			if (VgaMode != 0)
 			{
 				this.owner.Services.FloodColors(5, 0, 0, 0);
 			}
@@ -871,7 +871,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Libc.CopyText(wallName, "slam2.pic");
 
-			if (this.processor.PullGlobalWord(0xd762) == 0)
+			if (VgaMode == 0)
 			{
 				this.processor.EmitGlobalByte((ushort)(wallName + 3), 0x67);
 			}
@@ -895,7 +895,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Services.PerformSound(this.processor.PullGlobalWord((ushort)((ushort)(0x3a * this.owner.World.Participants[participantIdx].ChiefVisuals) + 0x151a)), 3);
 
-			if (this.processor.PullGlobalWord(0xd762) != 0)
+			if (VgaMode != 0)
 			{
 				this.owner.Libc.CopyText((ushort)(portraitName + 7), "pal");
 
@@ -1013,7 +1013,7 @@ namespace Civilization1Remaster.UI
 		{
 			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, vertLoc, 20);
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, vertLoc - 1, this.processor.PullGlobalWord(0xd762) != 0 ? (ushort)23 : (ushort)15);
+			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, vertLoc - 1, VgaMode != 0 ? (ushort)23 : (ushort)15);
 		}
 	}
 }

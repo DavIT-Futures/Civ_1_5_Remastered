@@ -500,14 +500,14 @@ namespace Civilization1Remaster.UI
 						ScreenBox,
 						0, 0);
 
-					if (arg2 == -3 && this.processor.PullGlobalWord(0xd762) != 0)
+					if (arg2 == -3 && VgaMode != 0)
 					{
 						this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, 0x4eaa, 0xbdee);
 
 						this.owner.Services.ImportColorsFromBuffer(15, 0xbdee);
 					}
 
-					if (this.processor.PullGlobalWord(0xd762) != 0)
+					if (VgaMode != 0)
 					{
 						this.owner.Services.AssignHueCycleSpan(4, 15, 64, 79);
 
@@ -539,7 +539,7 @@ namespace Civilization1Remaster.UI
 
 			if (arg2 == -2)
 			{
-				if (this.processor.PullGlobalWord(0xd762) != 0)
+				if (VgaMode != 0)
 				{
 					this.owner.Services.DeactivateHueCycle(4);
 				}
@@ -555,14 +555,14 @@ namespace Civilization1Remaster.UI
 					this.owner.Conquest.AwaitForKeyPressOrMouseClick();
 				}
 
-				if (this.processor.PullGlobalWord(0xd762) != 0)
+				if (VgaMode != 0)
 				{
 					this.owner.Services.DeactivateHueCycle(4);
 				}
 
 				this.owner.Startup.QueryForDisk(0, 1);
 
-				if (this.processor.PullGlobalWord(0xd762) != 0)
+				if (VgaMode != 0)
 				{
 					this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
 
@@ -862,7 +862,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Helpers.HaltHueCycling();
 
-			if (this.processor.PullGlobalWord(0xd762) != 0)
+			if (VgaMode != 0)
 			{
 				this.owner.VideoCard.AssignHue(0xfd, VGABitmap.Hue18ToHue(3, 3, 3));
 			}

@@ -102,7 +102,7 @@ namespace Civilization1Remaster.UI
 			this.owner.Services.PerformSound(1, 0);
 			this.owner.Startup.QueryForDisk(0, 1);
 
-			if (this.processor.PullGlobalWord(0xd762) == 0)
+			if (VgaMode == 0)
 			{
 				this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
 			}
@@ -253,7 +253,7 @@ namespace Civilization1Remaster.UI
 			for (ushort optIdx = 1; (short)optIdx <= 3; optIdx++)
 			{
 				short drawX = (short)(0x64 * (short)optIdx - 0x50);
-				ushort boxColor = this.processor.PullGlobalWord(0xd762) == 0 ? (ushort)3 : (ushort)1;
+				ushort boxColor = VgaMode == 0 ? (ushort)3 : (ushort)1;
 				this.owner.Services.FloodBox(ScreenBox, drawX, 10, 80, boxHeight, boxColor);
 
 				drawX = (short)(drawX + 0x10);
@@ -585,7 +585,7 @@ namespace Civilization1Remaster.UI
 			{
 				this.processor.EmitGlobalWord(ScreenBox, 0);
 
-				if (this.processor.PullGlobalWord(0xd762) != 0 && (short)this.processor.PullGlobalWord(0xdeba) > 7)
+				if (VgaMode != 0 && (short)this.processor.PullGlobalWord(0xdeba) > 7)
 				{
 					this.owner.Services.FloodColors(5, 0, 0, 0);
 				}
