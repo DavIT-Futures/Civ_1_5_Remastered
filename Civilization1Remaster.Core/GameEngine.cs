@@ -374,6 +374,9 @@ namespace Civilization1Remaster
 			// Defaults are OK, no need to modify bytes at 0x590a - 0x590e
 
 			this.processor.RegFrame.Value16 = 0x0;
+
+			// B6.1: the message buffer lives in C# from now on
+			this.words.Attach();
 		}
 
 		public CPU Processor

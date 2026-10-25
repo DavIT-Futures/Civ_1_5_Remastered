@@ -15,6 +15,40 @@ namespace Civilization1Remaster.Emulation
 		private readonly CPUMemoryRegion gfxunitZone = new CPUMemoryRegion((ushort)0xa000, 0, 0x10000);
 		private readonly CPU processor;
 
+		// B6.1: a range of the memory kept in a C# array of its owner (the message buffer, TextBuffer)
+		private uint overlayBegin;
+		private byte[]? overlay;
+
+		/// <summary>
+		/// The bytes from the linear address on live in the array from now on (B6.1: the store of the message buffer moves
+		/// into C#): every access of the memory to the range reads and writes the array. The current bytes of the memory are
+		/// copied into the array first, the memory under it is cleared.
+		/// </summary>
+		public void AttachOverlay(uint begin, byte[] content)
+		{
+			Array.Copy(this.store, begin, content, 0, content.Length);
+			Array.Clear(this.store, (int)begin, content.Length);
+			this.overlayBegin = begin;
+			this.overlay = content;
+		}
+
+		private byte Peek(uint site)
+		{
+			uint place = site - this.overlayBegin;
+
+			return this.overlay != null && place < (uint)this.overlay.Length ? this.overlay[place] : this.store[site];
+		}
+
+		private void Poke(uint site, byte value)
+		{
+			uint place = site - this.overlayBegin;
+
+			if (this.overlay != null && place < (uint)this.overlay.Length)
+				this.overlay[place] = value;
+			else
+				this.store[site] = value;
+		}
+
 		public CPUMemory(CPU processor)
 		{
 			this.processor = processor;
@@ -108,7 +142,7 @@ namespace Civilization1Remaster.Emulation
 					if ((this.storageZones[idx].PermissionMarkers & CPUMemoryFlagsEnum.ReadWarning) == CPUMemoryFlagsEnum.ReadWarning)
 						this.processor.Journal.EmitLine($"// Warning: Read byte at 0x{location:x8}");
 
-					return this.store[location];
+					return Peek(location);
 				}
 			}
 
@@ -156,8 +190,8 @@ namespace Civilization1Remaster.Emulation
 
 					uint site = location;
 
-					return (ushort)((ushort)this.store[site] |
-						(ushort)((ushort)this.store[site + 1] << 8));
+					return (ushort)((ushort)Peek(site) |
+						(ushort)((ushort)Peek(site + 1) << 8));
 				}
 			}
 
@@ -205,10 +239,10 @@ namespace Civilization1Remaster.Emulation
 
 					uint site = location;
 
-					return (uint)((uint)this.store[site] |
-						(uint)((uint)this.store[site + 1] << 8) |
-						(uint)((uint)this.store[site + 2] << 16) |
-						(uint)((uint)this.store[site + 3] << 24));
+					return (uint)((uint)Peek(site) |
+						(uint)((uint)Peek(site + 1) << 8) |
+						(uint)((uint)Peek(site + 2) << 16) |
+						(uint)((uint)Peek(site + 3) << 24));
 				}
 			}
 
@@ -289,7 +323,7 @@ namespace Civilization1Remaster.Emulation
 					if ((this.storageZones[idx].PermissionMarkers & CPUMemoryFlagsEnum.WriteWarning) == CPUMemoryFlagsEnum.WriteWarning)
 						this.processor.Journal.EmitLine($"// Warning: Write byte at 0x{location:x8}");
 
-					this.store[location] = amount;
+					Poke(location, amount);
 					located = true;
 					break;
 				}
@@ -372,8 +406,8 @@ namespace Civilization1Remaster.Emulation
 
 					uint site = location;
 
-					this.store[site] = (byte)(amount & 0xff);
-					this.store[site + 1] = (byte)((amount & 0xff00) >> 8);
+					Poke(site, (byte)(amount & 0xff));
+					Poke(site + 1, (byte)((amount & 0xff00) >> 8));
 					located = true;
 					break;
 				}
@@ -424,10 +458,10 @@ namespace Civilization1Remaster.Emulation
 
 					uint site = location;
 
-					this.store[site] = (byte)(amount & 0xff);
-					this.store[site + 1] = (byte)((amount & 0xff00) >> 8);
-					this.store[site + 2] = (byte)((amount & 0xff0000) >> 16);
-					this.store[site + 3] = (byte)((amount & 0xff000000) >> 24);
+					Poke(site, (byte)(amount & 0xff));
+					Poke(site + 1, (byte)((amount & 0xff00) >> 8));
+					Poke(site + 2, (byte)((amount & 0xff0000) >> 16));
+					Poke(site + 3, (byte)((amount & 0xff000000) >> 24));
 					located = true;
 					break;
 				}
@@ -452,7 +486,15 @@ namespace Civilization1Remaster.Emulation
 
 		public void EmitChunk(uint location, byte[] originContent, int loc, int span)
 		{
-			Array.Copy(originContent, loc, this.store, location, span);
+			if (this.overlay != null && location < this.overlayBegin + this.overlay.Length && location + span > this.overlayBegin)
+			{
+				for (int idx = 0; idx < span; idx++)
+					Poke((uint)(location + idx), originContent[loc + idx]);
+			}
+			else
+			{
+				Array.Copy(originContent, loc, this.store, location, span);
+			}
 		}
 		#endregion
 

@@ -187,7 +187,18 @@ Kolejność (każdy krok osobno zielony; pamięć 0x3b01 długo zostaje jako mag
   72 zerowania, 28 `TextLength` (dwa tylko dla AX: `_ = Words.Length`), 41 bajtów (także 0xba05 – 0xba58 jako
   `Words[k]`), 427 przekazań adresu (`TextBuffer.Address ± k`); `GameMessage` też. W Core nie ma już literału 0xba06.
   Pełny zestaw 770/770, mutacje 8 / 8 (golden master; `DialogsMatchOriginalCode` nie przechodzi przez `Set` / `Append`).
-  **Część 2 (następna):** przenieść magazyn do C# – `byte[]` bufora z semantyką strcpy / strcat (bajty za zerem zostają,
+  **Część 2 – zrobione 2026-10-25:** bufor ma 0x300 bajtów (0xba06 – 0xbd05; sonda: gra zapisuje i czyta cały zakres,
+  0xbd06 to następna zmienna) i żyje w `byte[]` `TextBuffer` (`Attach` na końcu `PrepareMachine`). Kod, który dostaje
+  sam adres, czyta i pisze tablicę przez pamięć: `CPUMemory.AttachOverlay` – każdy dostęp bajtowy (`Peek` / `Poke` w
+  6 podstawowych metodach i `EmitChunk`) do zakresu idzie do tablicy, blok pamięci pod nim jest wyzerowany. Zamrożona gra
+  bez zmian. `MovedData`: wpis „TextBuffer” (cała tablica), rzut do migawki – golden master i podwójna gra bez zmian.
+  Test `MessageBufferLivesInCSharp` (także `EmitChunk` przez koniec bufora). Punkt kontrolny testów (`GameCheckpoint`)
+  zapisuje i przywraca też tablicę bufora (kopiuje blok pamięci bezpośrednio, z pominięciem nakładki – bez tego padło
+  21 testów podwójnej gry miast). Pełny zestaw 771/771, mutacje 5 / 6 (zerowanie pamięci przy `Attach` równoważne:
+  pamięć pod buforem jest wtedy pusta). Zostaje na później (B6.1 część 3): budować teksty w tablicy C# bez C runtime
+  i przestawić odbiorców adresu (`TextPainter`, `DisplayDialog`, `DisplayMenu`, `BlockText`, pliki) na `TextBuffer`
+  / `string`, potem usunąć nakładkę.
+  **Pierwotny plan części 2:** przenieść magazyn do C# – `byte[]` bufora z semantyką strcpy / strcat (bajty za zerem zostają,
   jak w pamięci), wpis w `MovedData` (adres 0xba06, długość bufora) i odczyty przez adres (`TextPainter`,
   `DisplayDialog`, `DisplayMenu`, `BlockText`, `ReadHandle` / `WriteHandle` / `MoveFarData` – plik przez bufor) –
   każdy, kto dostaje `TextBuffer.Address`, musi czytać z C#. Długość bufora ustalić z kodu (najdłuższy tekst / plik).

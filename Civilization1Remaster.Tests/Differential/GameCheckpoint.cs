@@ -18,6 +18,7 @@ namespace Civilization1Remaster.Tests.Differential
 	{
 		private readonly object world;
 		private readonly byte[] memory;
+		private readonly byte[] words;
 		private readonly ushort[] registers;
 		private readonly Dictionary<int, byte[]> screens;
 
@@ -28,6 +29,8 @@ namespace Civilization1Remaster.Tests.Differential
 
 			this.world = Clone(engine.World);
 			this.memory = (byte[])processor.Storage.StoragePayload.Clone();
+			// The message buffer lives in C# (B6.1), not in the memory block
+			this.words = engine.Words.Bytes;
 			this.registers = Registers(processor).Select(register => register.Value16).ToArray();
 			this.screens = engine.VideoCard.Displays.ToDictionary(display => display.Token, display => (byte[])display.Datum.PictureStorage.Clone());
 		}
@@ -40,6 +43,7 @@ namespace Civilization1Remaster.Tests.Differential
 
 			CopyInto(this.world, engine.World);
 			Buffer.BlockCopy(this.memory, 0, processor.Storage.StoragePayload, 0, this.memory.Length);
+			engine.Words.Restore(this.words);
 
 			CPURegister[] live = Registers(processor);
 

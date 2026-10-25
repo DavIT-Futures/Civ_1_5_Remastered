@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Civilization1Remaster.Engine;
 
 namespace Civilization1Remaster.Tests.Dual;
 
@@ -16,8 +17,12 @@ public static class MovedData
 	/// <summary>A moved piece of data: its key, its address and length in the data segment of the frozen game, how the current game gives it (the bytes in the layout of the original, low first)</summary>
 	public sealed record Entry(string Key, ushort Address, int Length, Func<GameEngine, byte[]> Current);
 
-	/// <summary>Nothing is moved yet</summary>
-	public static readonly Entry[] Entries = [];
+	/// <summary>The data moved so far</summary>
+	public static readonly Entry[] Entries =
+	[
+		// B6.1: the message buffer (TextBuffer, 0x300 bytes)
+		new Entry("TextBuffer", TextBuffer.Address, TextBuffer.Size, engine => engine.Words.Bytes),
+	];
 
 	/// <summary>Whether the byte of the data segment belongs to moved data</summary>
 	public static bool IsMoved(int displacement) => Entries.Any(entry => displacement >= entry.Address && displacement < entry.Address + entry.Length);

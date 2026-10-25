@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using Civilization1Remaster.Emulation;
+using Civilization1Remaster.Engine;
 using Civilization1Remaster.Tests.GoldenMaster;
 using Xunit;
 
@@ -39,5 +40,35 @@ public class MovedDataTests
 		// The length must match
 		Assert.Throws<InvalidOperationException>(() =>
 			MovedData.Project(engine, (byte[])memory.Clone(), [new MovedData.Entry("short", 0x6548, 2, _ => [1])]));
+	}
+
+	/// <summary>B6.1: the message buffer is kept in C#, the memory under it stays empty, and the memory reads give the array</summary>
+	[Fact]
+	public void MessageBufferLivesInCSharp()
+	{
+		string? gameFolder = GoldenMasterTests.FindGameFolder();
+		Assert.SkipWhen(gameFolder == null, "The CIVILIZATION game folder (the original game files) was not found");
+
+		using HeadlessGame game = new HeadlessGame(gameFolder!, Path.Combine(GoldenMasterTests.SourceFolder(), "Saves"));
+		game.LoadAutosave(9, GoldenMasterTests.RandomSeed);
+		GameEngine engine = game.Engine;
+
+		engine.Words.Set("Babylonians");
+		engine.Words.Append(" develop Writing!");
+
+		uint origin = CPU.AsLinearAddress(GameSnapshot.DataSection, TextBuffer.Address);
+		Assert.All(engine.Processor.Storage.StoragePayload.Skip((int)origin).Take(TextBuffer.Size), value => Assert.Equal(0, value));
+
+		Assert.Equal("Babylonians develop Writing!", engine.Words.ToString());
+		Assert.Equal("Babylonians develop Writing!", System.Text.Encoding.ASCII.GetString(engine.Words.Bytes, 0, 28));
+		Assert.Equal((byte)'B', engine.Processor.PullGlobalByte(TextBuffer.Address));
+		Assert.Equal((ushort)('a' << 8 | 'B'), engine.Processor.PullGlobalWord(TextBuffer.Address));
+
+		// A block of bytes copied into the buffer and over its end (EmitChunk): the part in the buffer goes to the array
+		byte[] block = Enumerable.Range(1, 8).Select(value => (byte)value).ToArray();
+		engine.Processor.Storage.EmitChunk(GameSnapshot.DataSection, TextBuffer.Address + TextBuffer.Size - 4, block, 0, block.Length);
+		Assert.Equal(new byte[] { 1, 2, 3, 4 }, engine.Words.Bytes[^4..]);
+		Assert.Equal(new byte[] { 5, 6, 7, 8 }, engine.Processor.Storage.StoragePayload[(int)(origin + TextBuffer.Size)..(int)(origin + TextBuffer.Size + 4)]);
+		Assert.All(engine.Processor.Storage.StoragePayload.Skip((int)origin).Take(TextBuffer.Size), value => Assert.Equal(0, value));
 	}
 }
