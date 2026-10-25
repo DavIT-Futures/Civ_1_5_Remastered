@@ -73,6 +73,7 @@ namespace Civilization1Remaster.Tests.GoldenMaster
 			this.Engine.TurnHooks.ClassicEmissaryThreat = true;
 			this.Engine.TurnHooks.ClassicFreshGameRuins = true;
 			this.Engine.TurnHooks.ClassicSpaceshipSlots = true;
+			this.Engine.TurnHooks.ClassicStackLeftovers = true;
 
 			this.keyboard = new ScriptedKeyboard(this.processor, this.Engine.VideoCard.Tokens, this.Engine.VideoCard.VideoLatch,
 				script ?? ScriptedKeyboard.DefaultScript);

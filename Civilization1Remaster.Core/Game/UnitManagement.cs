@@ -2097,12 +2097,19 @@ namespace Civilization1Remaster.Game
 			ushort savedDest = this.processor.RegDest.Value16;
 
 			// The frame of the original: without an own city or carrier the target stays what was left in the stack there
+			// (ClassicStackLeftovers); the remaster takes the place of the unit, so it stays (direction 0)
 			this.processor.EnterFrame(0x16);
 			int targetHoriz = this.processor.PullLocalSignedWord(0x14);
 			int targetVert = this.processor.PullLocalSignedWord(0x16);
 
 			int unitHoriz = this.troops.Pull(participantIdx, troopIdx, UnitMemory.Horiz);
 			int unitVert = this.troops.Pull(participantIdx, troopIdx, UnitMemory.Vert);
+
+			if (!this.owner.TurnHooks.ClassicStackLeftovers)
+			{
+				targetHoriz = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz);
+				targetVert = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert);
+			}
 			int nearest = 999;
 
 			foreach (City town in this.owner.World.Towns)

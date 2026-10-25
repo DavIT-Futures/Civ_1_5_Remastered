@@ -339,6 +339,18 @@ SI/DI.
    wzmocnieniu testu: oczekiwany adres liczony niezależnie od reguły, część rodzaju 3 zamiast struktury).
 2. `ClassicStackLeftovers`: funkcje czytające śmieci ze stosu dostają przy wyłączonym przełączniku jawną wartość (np.
    „brak ruchu”, „brak miasta”); przy włączonym czytają stos jak dziś. To odcina B3 od decyzji AI.
+   **Zrobione 2026-10-25:** sonda (golden master + Differential + Dual) pokazała 31 funkcji (m.in. `HandlePlayerTurn` 37
+   słów, `ShiftAIUnit` 33, `PickCityProduction`, `HandleCity` 0x62 / 0x6c / 0x108, `RenderCitizenIcons` 0x2,
+   `ObtainDistanceToReplayCity` 0x4, `LocateNearestFriendlyCity` 0x14 / 0x16; część to bufory w ramce wypełniane
+   zapisami, których sonda nie widzi). Zamiast łatać każdą: przy wyłączonym przełączniku `CPU.EnterFrame` zeruje
+   zmienne lokalne nowej ramki (`CPU.ClearFrameLocals`, jak domyślna wartość zmiennej C#) i zgłasza je sondzie jako
+   zapisane – każdy odczyt przed zapisem daje 0, niezależnie od wcześniejszych funkcji, więc B3 (usuwanie ramek) nie
+   zmieni już zachowania, jeśli zmienne C# zaczną od 0. Jawna wartość inna niż 0: `LocateNearestFriendlyCity` bez
+   miasta i lotniskowca – cel to pole jednostki (zostaje, kierunek 0). Gra (`GameEngine`) ustawia zerowanie,
+   `HeadlessGame` włącza przełącznik przed przygotowaniem maszyny. Testy `StackLeftoverTests`: ramka w CPU, jednostka
+   bez domu, 5 tur 7 autozapisów bez przełącznika bez wyjątku, przełącznik zmienia grę. (Szum pod stosem na granicy tur
+   nic nie zmienia nawet w trybie klasycznym – śmieci zostawiają wywołania w tej samej turze – więc taki test nic nie
+   dowodzi i go nie ma.)
 3. Reszta B2 (zmienne lokalne → C#) i B1 (wyniki przez `return`), z sondą stosu jak dotąd.
 4. Testy różnicowe porównują sam stan (bez rejestrów i stosu pod SP), żeby usuwanie SI/DI w B3 nie dawało fałszywych
    alarmów.

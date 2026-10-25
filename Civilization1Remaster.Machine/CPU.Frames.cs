@@ -25,7 +25,22 @@ namespace Civilization1Remaster.Emulation
 			EnterFrame();
 			this.regStack.Value16 = SubtractWord(this.regStack.Value16, localsSize);
 			this.StackWatcher?.OpenFrame(this.regFrame.Value16, localsSize);
+
+			if (this.ClearFrameLocals && localsSize != 0)
+			{
+				for (int place = 0; place < localsSize; place++)
+					this.storage.EmitUInt8(this.segStack.Value16, (ushort)(this.regStack.Value16 + place), 0);
+
+				this.StackWatcher?.Write(this.regStack.Value16, localsSize);
+			}
 		}
+
+		/// <summary>
+		/// When set, the local variables of a new frame start at 0 instead of what earlier functions left on the stack (the
+		/// translated functions that read a local before writing it get 0, whatever ran before them). The game sets it
+		/// (TurnEvents.ClassicStackLeftovers off); the tests keep the leftovers of the original.
+		/// </summary>
+		public bool ClearFrameLocals { get; set; }
 
 		/// <summary>
 		/// The end of a function: throws the local variables away and restores the caller's frame pointer (mov sp, bp; pop bp).

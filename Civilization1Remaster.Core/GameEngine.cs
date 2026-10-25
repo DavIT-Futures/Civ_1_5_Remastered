@@ -81,6 +81,9 @@ namespace Civilization1Remaster
 
 			this.processor = new CPU(this, this.journal);
 
+			// The remaster: local variables start at 0, not with the leftovers of earlier functions (ClassicStackLeftovers)
+			this.processor.ClearFrameLocals = true;
+
 			this.journal.Probe = this.processor;
 			this.signalJournal.Probe = this.processor;
 			this.videoHandlerJournal.Probe = this.processor;

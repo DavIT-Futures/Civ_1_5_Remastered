@@ -126,6 +126,18 @@ namespace Civilization1Remaster.Game
 		public bool ClassicSpaceshipSlots { get; set; }
 
 		/// <summary>
+		/// The local variables of a function start with what earlier functions left on the stack, as in the translated code
+		/// (about 30 functions read a local before they write it: the AI of the units, the human player's turn, the city
+		/// screen...); off they start at 0 (CPU.ClearFrameLocals), and a unit without an own city or carrier to fly home to
+		/// stays (LocateNearestFriendlyCity). The tests turn it on (HeadlessGame), like ClassicHealing.
+		/// </summary>
+		public bool ClassicStackLeftovers
+		{
+			get => !this.processor.ClearFrameLocals;
+			set => this.processor.ClearFrameLocals = !value;
+		}
+
+		/// <summary>
 		/// Units heal lost hit points every turn (HealingRules): 2 in an own city; outside cities 1 for a fortified land unit
 		/// and for a resting ship (sentry or not moved this turn) next to land, at most 3 tiles from an own city.
 		/// Runs at the end of the game turn, so the moves left (reset at the start of each player's turn) show whether the

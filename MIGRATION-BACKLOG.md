@@ -1496,7 +1496,10 @@ te błędy są odtwarzane jawnie:
   co najmniej w jednym). Mutacje: reguła i gałąź atakującego złapane; gałąź obrońcy wykonuje się (sonda: kilka razy
   w tych turach), ale nie przesądza o ruchu – zostaje test reguły.
 - `LocateNearestFriendlyCity`: bez własnego miasta i lotniskowca cel kroku to niezainicjowane zmienne lokalne (śmieci ze stosu).
-  Odtworzone przez odczyt ramki stosu. Po naprawie: np. kierunek 0 (brak ruchu).
+  Odtworzone przez odczyt ramki stosu. Po naprawie: np. kierunek 0 (brak ruchu). **Naprawione w grze 2026-10-25** za
+  przełącznikiem `TurnHooks.ClassicStackLeftovers` (kierunek 0); ten sam przełącznik zeruje zmienne lokalne każdej
+  nowej ramki (`CPU.ClearFrameLocals`), więc żadna funkcja nie czyta już śmieci ze stosu (`ShiftAIUnit` 0xc,
+  `RenderCitizenIcons` 0x2, `DisplayTravellersReport` 0x2, `HandlePlayerTurn` …). Testy: `StackLeftoverTests`.
 - `DisplayWondersOfTheWorld`: cud zniszczonego miasta (`MarvelTownIdx` = 128) daje odczyt `Towns[128]` przed sprawdzeniem 128,
   więc ekran cudów rzuca `IndexOutOfRangeException` (DOS czytał tam śmieci). Po naprawie: właściciel czytany dopiero dla miasta < 128. **Naprawione w grze 2026-10-24** (`ClassicWonderCities`).
 - `ShiftAIUnit` (`AIPlayer`, ok. linii 2143) na jednej ścieżce czyta zmienną lokalną 0xc (indeks miasta) przed jej ustawieniem.
