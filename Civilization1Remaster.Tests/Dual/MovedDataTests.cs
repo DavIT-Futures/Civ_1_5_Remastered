@@ -80,7 +80,40 @@ public class MovedDataTests
 		Assert.All(engine.Processor.Storage.StoragePayload.Skip((int)origin).Take(size), value => Assert.Equal(0, value));
 	}
 
-	/// <summary>B6.2: a saved game has the units of the C# array, and loading it puts them back there</summary>
+	/// <summary>B6.3 / B6.4: the tables of CIV.EXE and the named globals are kept in C#, the memory under them stays empty</summary>
+	[Fact]
+	public void TablesAndGlobalsLiveInCSharp()
+	{
+		string? gameFolder = GoldenMasterTests.FindGameFolder();
+		Assert.SkipWhen(gameFolder == null, "The CIVILIZATION game folder (the original game files) was not found");
+
+		using HeadlessGame game = new HeadlessGame(gameFolder!, Path.Combine(GoldenMasterTests.SourceFolder(), "Saves"));
+		game.LoadAutosave(9, GoldenMasterTests.RandomSeed);
+		GameEngine engine = game.Engine;
+		byte[] payload = engine.Processor.Storage.StoragePayload;
+
+		// Every moved range: nothing in the memory block
+		foreach (MovedRanges.Range range in MovedRanges.All)
+		{
+			uint origin = CPU.AsLinearAddress(GameSnapshot.DataSection, range.Address);
+			Assert.All(payload.Skip((int)origin).Take(range.Length), value => Assert.Equal(0, value));
+		}
+
+		// The tables: the C# bytes are what the memory gives (the name of the first terrain, "Desert")
+		Assert.Equal("Desert", System.Text.Encoding.ASCII.GetString(engine.Tables.Content, 0, 6));
+		Assert.Equal(engine.Processor.PullGlobalWord(0x1882 + 2), engine.Tables.Word(0x1882 + 2));
+
+		// A global: the field and the memory are one, both ways
+		engine.Processor.EmitGlobalWord(engine.Globals.CityOwner.Address, 0x1234);
+		Assert.Equal(0x1234, engine.Globals.CityOwner.Value);
+		engine.Globals.CityOwner.Value = 0x0506;
+		Assert.Equal(0x0506, engine.Processor.PullGlobalWord(engine.Globals.CityOwner.Address));
+		Assert.Equal(0x06, engine.Processor.PullGlobalByte(engine.Globals.CityOwner.Address));
+		engine.Processor.EmitGlobalByte((ushort)(engine.Globals.CityOwner.Address + 1), 0x07);
+		Assert.Equal(0x0706, engine.Globals.CityOwner.Value);
+	}
+
+	/// <summary>B6.2: a saved game has the units of the C# array, and loading it puts them back there (and the names, B6.3)</summary>
 	[Fact]
 	public void SavedGameKeepsTheUnits()
 	{
@@ -93,6 +126,11 @@ public class MovedDataTests
 		Civilization1Remaster.Game.UnitMemory troops = new Civilization1Remaster.Game.UnitMemory(engine.Processor);
 
 		byte[] saved = engine.UnitRecords;
+
+		// The names of the leaders, civilizations (plural) and civilizations: the texts at the pointers 0x19a2 / 0x1992 / 0x1982
+		(ushort Pointer, int Length)[] nameBlocks = [(0x19a2, 0x70), (0x1992, 0x60), (0x1982, 0x58)];
+		byte[][] names = nameBlocks.Select(block => Enumerable.Range(0, block.Length)
+			.Select(idx => engine.Processor.PullGlobalByte((ushort)(engine.Processor.PullGlobalWord(block.Pointer) + idx))).ToArray()).ToArray();
 		Assert.True(engine.SaveLoad.StoreGameContent("B62TEST.SVE"));
 
 		// Other units meanwhile, then the saved game again
@@ -102,8 +140,22 @@ public class MovedDataTests
 				troops.Assign(player, unit, 3, 0x55);
 		}
 
+		foreach ((ushort pointer, int length) in nameBlocks)
+		{
+			for (int idx = 0; idx < length; idx++)
+				engine.Processor.EmitGlobalByte((ushort)(engine.Processor.PullGlobalWord(pointer) + idx), (byte)'x');
+		}
+
 		Assert.True(engine.SaveLoad.ImportGameContent("B62TEST.SVE"));
 		Assert.Equal(saved, engine.UnitRecords);
+
+		// Other names meanwhile would not be kept: the saved ones come back each to its place
+		for (int blockIdx = 0; blockIdx < nameBlocks.Length; blockIdx++)
+		{
+			ushort start = engine.Processor.PullGlobalWord(nameBlocks[blockIdx].Pointer);
+			Assert.Equal(names[blockIdx], Enumerable.Range(0, nameBlocks[blockIdx].Length)
+				.Select(idx => engine.Processor.PullGlobalByte((ushort)(start + idx))).ToArray());
+		}
 	}
 
 	/// <summary>B6.1: the message buffer is kept in C#, the memory under it stays empty, and the memory reads give the array</summary>

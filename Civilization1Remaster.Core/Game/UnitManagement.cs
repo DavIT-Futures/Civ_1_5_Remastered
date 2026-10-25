@@ -972,7 +972,7 @@ namespace Civilization1Remaster.Game
 			if (this.troops.Following(participantIdx, troopIdx) != -1)
 			{
 				StackLeader = (ushort)troopIdx;
-				this.processor.EmitGlobalWord(0x6534, 0);
+				StackLeaderScore = 0;
 
 				for (short firstIdx = 0; firstIdx < UnitMemory.TroopTally; firstIdx++)
 				{
@@ -1012,7 +1012,7 @@ namespace Civilization1Remaster.Game
 			if (this.troops.Following(participantIdx, troopIdx) != -1)
 			{
 				StackLeader = (ushort)troopIdx;
-				this.processor.EmitGlobalWord(0x6534, 0xffff);
+				StackLeaderScore = 0xffff;
 
 				VisitEachUnitInStack(participantIdx, troopIdx, 0x1169);
 
@@ -1055,10 +1055,10 @@ namespace Civilization1Remaster.Game
 
 			if (score >= 0)
 			{
-				int bestScore = (short)this.processor.PullGlobalWord(0x6534);
+				int bestScore = (short)StackLeaderScore;
 				if (score > bestScore)
 				{
-					this.processor.EmitGlobalWord(0x6534, (ushort)score);
+					StackLeaderScore = (ushort)score;
 					StackLeader = (ushort)troopIdx;
 				}
 			}

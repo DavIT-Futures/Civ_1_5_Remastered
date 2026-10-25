@@ -17,14 +17,18 @@ public static class MovedData
 	/// <summary>A moved piece of data: its key, its address and length in the data segment of the frozen game, how the current game gives it (the bytes in the layout of the original, low first)</summary>
 	public sealed record Entry(string Key, ushort Address, int Length, Func<GameEngine, byte[]> Current);
 
-	/// <summary>The data moved so far</summary>
-	public static readonly Entry[] Entries =
-	[
-		// B6.1: the message buffer (TextBuffer, 0x300 bytes)
-		new Entry("TextBuffer", TextBuffer.Address, TextBuffer.Size, engine => engine.Words.Bytes),
-		// B6.2: the units of all players (UnitMemory, 8 x 0x600 bytes)
-		new Entry("Units", Civilization1Remaster.Game.UnitMemory.Origin, Civilization1Remaster.Game.UnitMemory.ParticipantStride * 8, engine => engine.UnitRecords),
-	];
+	/// <summary>The data moved so far: every range of MovedRanges (Core), as the current game gives it through the memory</summary>
+	public static readonly Entry[] Entries = MovedRanges.All
+		.Select(range => new Entry(range.Key, range.Address, range.Length, engine => Read(engine, range.Address, range.Length)))
+		.ToArray();
+
+	/// <summary>The bytes of the current game at the address, also of the ranges kept in C#</summary>
+	private static byte[] Read(GameEngine engine, ushort address, int length)
+	{
+		byte[] bytes = new byte[length];
+		engine.Processor.Storage.ReadChunk(Civilization1Remaster.Emulation.CPU.AsLinearAddress(engine.Processor.SegData.Value16, address), bytes, 0, length);
+		return bytes;
+	}
 
 	/// <summary>Whether the byte of the data segment belongs to moved data</summary>
 	public static bool IsMoved(int displacement) => Entries.Any(entry => displacement >= entry.Address && displacement < entry.Address + entry.Length);
@@ -34,7 +38,9 @@ public static class MovedData
 	{
 		foreach (Entry entry in Entries)
 		{
-			byte[] bytes = Enumerable.Range(0, entry.Length).Select(idx => engine.Processor.PullGlobalByte((ushort)(entry.Address + idx))).ToArray();
+			// The bytes as they are (the CPU reads give 0 for the bytes the game may not touch, like 0x19be - 0x19c1)
+			uint origin = Civilization1Original.Emulation.CPU.AsLinearAddress(engine.Processor.SegData.Value16, entry.Address);
+			byte[] bytes = engine.Processor.Storage.StoragePayload.AsSpan((int)origin, entry.Length).ToArray();
 			values[$"moved.{entry.Key}"] = Convert.ToHexString(bytes);
 		}
 	}

@@ -446,7 +446,7 @@ namespace Civilization1Remaster.Game
 					this.processor.RegSource.Value16 = townOffset;
 
 					if (this.owner.Advisors.PlayerKnowsTechnology(town.ParticipantIdx, 10) == 0 && !town.Has(CityStructure.Aqueduct) &&
-						this.owner.Advisors.PlayerKnowsTechnology(town.ParticipantIdx, (short)this.processor.PullGlobalWord(0xcc4)) != 0)
+						this.owner.Advisors.PlayerKnowsTechnology(town.ParticipantIdx, (short)BuildingWord(9, BuildingTable.Technology)) != 0)
 					{
 						this.owner.BlockText.DisplayTextDialog(0x4f99);
 
@@ -460,7 +460,7 @@ namespace Civilization1Remaster.Game
 					{
 						this.processor.RegSource.Value16 = townOffset;
 
-						if (!town.Has(CityStructure.CityWalls) && this.owner.Advisors.PlayerKnowsTechnology(town.ParticipantIdx, (short)this.processor.PullGlobalWord(0xca6)) != 0)
+						if (!town.Has(CityStructure.CityWalls) && this.owner.Advisors.PlayerKnowsTechnology(town.ParticipantIdx, (short)BuildingWord(8, BuildingTable.Technology)) != 0)
 						{
 							this.owner.BlockText.DisplayTextDialog(0x4f9d);
 
@@ -475,7 +475,7 @@ namespace Civilization1Remaster.Game
 					{
 						this.processor.RegSource.Value16 = townOffset;
 
-						if (!town.Has(CityStructure.Temple) && this.owner.Advisors.PlayerKnowsTechnology(town.ParticipantIdx, (short)this.processor.PullGlobalWord(0xc2e)) != 0)
+						if (!town.Has(CityStructure.Temple) && this.owner.Advisors.PlayerKnowsTechnology(town.ParticipantIdx, (short)BuildingWord(4, BuildingTable.Technology)) != 0)
 						{
 							this.owner.BlockText.DisplayTextDialog(0x4fa1);
 
@@ -489,7 +489,7 @@ namespace Civilization1Remaster.Game
 					this.processor.RegSource.Value16 = townOffset;
 
 					if (town.TrueExtent != 0 && !town.Has(CityStructure.Granary) &&
-						this.owner.Advisors.PlayerKnowsTechnology(town.ParticipantIdx, (short)this.processor.PullGlobalWord(0xc10)) != 0)
+						this.owner.Advisors.PlayerKnowsTechnology(town.ParticipantIdx, (short)BuildingWord(3, BuildingTable.Technology)) != 0)
 					{
 						this.owner.BlockText.DisplayTextDialog(0x4fa5);
 
@@ -504,7 +504,7 @@ namespace Civilization1Remaster.Game
 					this.processor.RegSource.Value16 = townOffset;
 
 					if ((town.StructureMarkers0 & 0xfffe) != 0 && !town.Has(CityStructure.Aqueduct) &&
-						this.owner.Advisors.PlayerKnowsTechnology(town.ParticipantIdx, (short)this.processor.PullGlobalWord(0xcc4)) != 0)
+						this.owner.Advisors.PlayerKnowsTechnology(town.ParticipantIdx, (short)BuildingWord(9, BuildingTable.Technology)) != 0)
 					{
 						ushort buildingIdx = DestroyRandomBuilding(town);
 

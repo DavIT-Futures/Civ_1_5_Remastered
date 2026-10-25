@@ -15,80 +15,88 @@ namespace Civilization1Remaster.Emulation
 		private readonly CPUMemoryRegion gfxunitZone = new CPUMemoryRegion((ushort)0xa000, 0, 0x10000);
 		private readonly CPU processor;
 
-		// B6: ranges of the memory kept in C# arrays of their owners (B6.1 the message buffer, B6.2 the units)
-		private readonly List<(uint Begin, byte[] Content)> overlays = new List<(uint Begin, byte[] Content)>();
-		// The bounds of all of them: the other accesses skip the search
-		private uint overlaysLow = uint.MaxValue;
-		private uint overlaysHigh = 0;
+		// B6: ranges of the memory kept in C# by their owners (the message buffer, the units, the tables, the globals)
+		private readonly List<(uint Begin, IMemoryOverlay Overlay)> overlays = new List<(uint Begin, IMemoryOverlay Overlay)>();
+		private readonly Dictionary<uint, IMemoryOverlay> overlayStarts = new Dictionary<uint, IMemoryOverlay>();
+		// For every byte of the memory the overlay that keeps it (its index + 1), 0 for the memory itself
+		private short[]? overlayMap;
 
 		/// <summary>
-		/// The bytes from the linear address on live in the array from now on (B6.1: the store of the message buffer moves
-		/// into C#): every access of the memory to the range reads and writes the array. The current bytes of the memory are
-		/// copied into the array first, the memory under it is cleared.
+		/// The bytes from the linear address on live in the owner of the overlay from now on (B6): every access of the memory
+		/// to the range reads and writes it. The current bytes of the memory are written into it first, the memory under it
+		/// is cleared.
 		/// </summary>
-		public void AttachOverlay(uint begin, byte[] content)
+		public void AttachOverlay(uint begin, IMemoryOverlay overlay)
 		{
-			Array.Copy(this.store, begin, content, 0, content.Length);
-			Array.Clear(this.store, (int)begin, content.Length);
-			this.overlays.Add((begin, content));
-			this.overlaysLow = Math.Min(this.overlaysLow, begin);
-			this.overlaysHigh = Math.Max(this.overlaysHigh, begin + (uint)content.Length);
-		}
+			this.overlayMap ??= new short[this.store.Length];
 
-		/// <summary>The ranges kept in C# arrays (the tests save and restore them with the memory)</summary>
-		public IReadOnlyList<(uint Begin, byte[] Content)> Overlays => this.overlays;
-
-		/// <summary>The array of the range that starts at the linear address, null when the range is still in the memory</summary>
-		public byte[]? OverlayAt(uint begin)
-		{
-			foreach ((uint start, byte[] content) in this.overlays)
+			for (int place = 0; place < overlay.Length; place++)
 			{
-				if (start == begin)
-					return content;
+				if (this.overlayMap[begin + place] != 0)
+					throw new InvalidOperationException($"The overlay at 0x{begin:x5} overlaps another one at 0x{begin + place:x5}");
+
+				overlay.Write(place, this.store[begin + place]);
+				this.store[begin + place] = 0;
+				this.overlayMap[begin + place] = (short)(this.overlays.Count + 1);
 			}
 
-			return null;
+			this.overlays.Add((begin, overlay));
+			this.overlayStarts[begin] = overlay;
 		}
+
+		/// <summary>A range kept in a byte array (see AttachOverlay)</summary>
+		public void AttachOverlay(uint begin, byte[] content) => AttachOverlay(begin, new ArrayOverlay(content));
+
+		/// <summary>The ranges kept in C# (the tests save and restore them with the memory)</summary>
+		public IReadOnlyList<(uint Begin, IMemoryOverlay Overlay)> Overlays => this.overlays;
+
+		/// <summary>The overlay of the range that starts at the linear address, null when the range is still in the memory</summary>
+		public IMemoryOverlay? OverlayOf(uint begin) => this.overlayStarts.TryGetValue(begin, out IMemoryOverlay? overlay) ? overlay : null;
+
+		/// <summary>The array of the range that starts at the linear address, null when the range is not kept in an array</summary>
+		public byte[]? OverlayAt(uint begin) => (OverlayOf(begin) as ArrayOverlay)?.Content;
 
 		private byte Peek(uint site)
 		{
-			if (site < this.overlaysLow || site >= this.overlaysHigh)
+			int owner = this.overlayMap == null ? 0 : this.overlayMap[site];
+
+			if (owner == 0)
 				return this.store[site];
 
-			foreach ((uint start, byte[] content) in this.overlays)
-			{
-				uint place = site - start;
-
-				if (place < (uint)content.Length)
-					return content[place];
-			}
-
-			return this.store[site];
+			(uint start, IMemoryOverlay overlay) = this.overlays[owner - 1];
+			return overlay.Read((int)(site - start));
 		}
 
 		private void Poke(uint site, byte value)
 		{
-			if (site < this.overlaysLow || site >= this.overlaysHigh)
+			int owner = this.overlayMap == null ? 0 : this.overlayMap[site];
+
+			if (owner == 0)
 			{
 				this.store[site] = value;
 				return;
 			}
 
-			foreach ((uint start, byte[] content) in this.overlays)
-			{
-				uint place = site - start;
-
-				if (place < (uint)content.Length)
-				{
-					content[place] = value;
-					return;
-				}
-			}
-
-			this.store[site] = value;
+			(uint start, IMemoryOverlay overlay) = this.overlays[owner - 1];
+			overlay.Write((int)(site - start), value);
 		}
 
-		/// <summary>Copies bytes of the memory, also of the ranges kept in C# arrays (a file of the game is written from them)</summary>
+		/// <summary>Whether a byte of the range is kept in C#</summary>
+		private bool TouchesOverlay(uint location, int span)
+		{
+			if (this.overlayMap == null)
+				return false;
+
+			for (int idx = 0; idx < span; idx++)
+			{
+				if (this.overlayMap[location + idx] != 0)
+					return true;
+			}
+
+			return false;
+		}
+
+		/// <summary>Copies bytes of the memory, also of the ranges kept in C# (a file of the game is written from them)</summary>
 		public void ReadChunk(uint location, byte[] target, int loc, int span)
 		{
 			for (int idx = 0; idx < span; idx++)
@@ -532,7 +540,7 @@ namespace Civilization1Remaster.Emulation
 
 		public void EmitChunk(uint location, byte[] originContent, int loc, int span)
 		{
-			if (this.overlays.Exists(range => location < range.Begin + range.Content.Length && location + span > range.Begin))
+			if (TouchesOverlay(location, span))
 			{
 				for (int idx = 0; idx < span; idx++)
 					Poke((uint)(location + idx), originContent[loc + idx]);

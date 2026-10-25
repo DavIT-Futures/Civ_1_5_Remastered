@@ -355,7 +355,7 @@ namespace Civilization1Remaster.Game
 					troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz), troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert));
 				sbyte kind = troops.TroopKind(participantIdx, troopIdx);
 				short price = (short)(CPU.SignedQuotient((short)(this.owner.World.Participants[participantIdx].Gold + 0x2ee), (short)(distance + 2)) *
-					UnitKindTable.Field(this.processor, kind, UnitKindTable.Price));
+					UnitKindWord(kind, UnitKindTable.Price));
 
 				if (kind != 0)
 				{

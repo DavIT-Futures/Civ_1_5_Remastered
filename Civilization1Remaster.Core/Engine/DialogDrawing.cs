@@ -44,7 +44,7 @@ namespace Civilization1Remaster.Engine
 			ushort currentChoice = 0;
 			this.processor.EmitLocalWord(0x2, 0xffff);
 			this.processor.EmitLocalWord(0x4, 0);
-			this.processor.EmitGlobalWord(0x2fa2, 0);
+			MenuMouseUsed = 0;
 			MenuHelpTopic = 0;
 
 			if (DefaultLine != 0xffff)
@@ -124,7 +124,7 @@ namespace Civilization1Remaster.Engine
 
 					if (this.owner.GlobDb3a != 0 || mouseUsed != 0)
 					{
-						this.processor.EmitGlobalWord(0x2fa2, 1);
+						MenuMouseUsed = 1;
 						mouseUsed = 1;
 						this.processor.EmitLocalWord(0x12, 1);
 
@@ -685,7 +685,7 @@ namespace Civilization1Remaster.Engine
 		public void FloodBoxWithDoubleShadow(int horizLoc, int vertLoc, int breadth, int altitude, ushort style)
 		{
 			// function body
-			if (style == 7 && this.processor.PullGlobalWord(0x2f98) != 0)
+			if (style == 7 && BoxMotif != 0)
 			{
 				this.owner.Helpers.FloodBoxWithMotif(horizLoc + 1, vertLoc + 1, breadth, altitude);
 			}

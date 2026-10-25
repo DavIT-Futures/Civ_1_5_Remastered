@@ -178,8 +178,10 @@ namespace Civilization1Remaster.Emulation
 			{
 				this.fixedClockSteps = 0;
 				this.waitingClockBeats = 1;
-				ServeClock();
 			}
+
+			// Also an interrupt that could not come before (interrupts disabled, or inside the timer function)
+			ServeClock();
 		}
 
 		/// <summary>
@@ -309,7 +311,9 @@ namespace Civilization1Remaster.Emulation
 				Thread.Sleep(200);
 			}
 
-			ServeClock();
+			// Under the fixed test clock the interrupts come only at the clock points (CountClockScope, CountPoll, Idle)
+			if (this.fixedClockSpan == 0)
+				ServeClock();
 		}
 
 		/// <summary>
@@ -340,8 +344,11 @@ namespace Civilization1Remaster.Emulation
 			{
 				this.timerPolls = 0;
 				this.waitingClockBeats = 1;
-				ServeClock();
 			}
+
+			// Under the fixed test clock the interrupts come only at the calls of game functions, the waits and the polls of the
+			// timer, never at a memory access: code that makes fewer memory accesses gets them at the same places
+			ServeClock();
 		}
 
 		/// <summary>The timer interrupt (and the mouse interrupt before it) when one is due and the interrupts are allowed</summary>

@@ -362,7 +362,7 @@ namespace Civilization1Remaster.Engine
 		public void LaunchHueCycling()
 		{
 			// function body
-			if (this.processor.PullGlobalWord(0x2fec) == 0 && VgaMode != 0)
+			if (HueCyclingOn == 0 && VgaMode != 0)
 			{
 				this.owner.Services.ActivateHueCycle(1);
 
@@ -371,7 +371,7 @@ namespace Civilization1Remaster.Engine
 				this.owner.Services.ActivateHueCycle(3);
 			}
 		
-			this.processor.EmitGlobalWord(0x2fec, 0x1);
+			HueCyclingOn = 0x1;
 		}
 
 		/// <summary>
@@ -382,7 +382,7 @@ namespace Civilization1Remaster.Engine
 			this.processor.Journal.OpenScope("HaltHueCycling()");
 
 			// function body
-			if (this.processor.PullGlobalWord(0x2fec) != 0 &&
+			if (HueCyclingOn != 0 &&
 				VgaMode != 0)
 			{
 				this.owner.Services.DeactivateHueCycle(1);
@@ -392,7 +392,7 @@ namespace Civilization1Remaster.Engine
 				this.owner.Services.DeactivateHueCycle(3);
 			}
 
-			this.processor.EmitGlobalWord(0x2fec, 0x0);
+			HueCyclingOn = 0x0;
 
 			// Far return
 			this.processor.Journal.CloseScope("HaltHueCycling");

@@ -838,7 +838,7 @@ namespace Civilization1Remaster.Game
 			}
 
 			if ((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 0xc2) != 0 &&
-				UnitKindTable.Field(this.processor, (sbyte)kind, UnitKindTable.LandGroup) != UnitKindTable.AirUnits)
+				UnitKindWord((sbyte)kind, UnitKindTable.LandGroup) != UnitKindTable.AirUnits)
 			{
 				byte status = this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status);
 				byte letter = 0x52;

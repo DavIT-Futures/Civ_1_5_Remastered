@@ -2558,7 +2558,7 @@ namespace Civilization1Remaster.Game
 
 			if (enoughShields)
 			{
-				if (this.processor.PullGlobalWord(0x8078) != 0 &&
+				if (LateGameNudge != 0 &&
 					this.owner.World.Participants[owner].FoundScienceTally < this.owner.World.Participants[person].FoundScienceTally)
 				{
 					DemocracyPressure = 0xfc19;
@@ -4142,14 +4142,14 @@ namespace Civilization1Remaster.Game
 						.Text("! Mayor\nflees in panic.\n");
 					this.owner.Services.PerformSound(0x24, 0);
 
-					if ((this.owner.World.SessionPrefMarkers & 8) != 0 && (town.ConditionMarker & 1) == 0 && this.processor.PullGlobalWord(0x6b92) == 0)
+					if ((this.owner.World.SessionPrefMarkers & 8) != 0 && (town.ConditionMarker & 1) == 0 && RiotShown == 0)
 					{
 						// The riot in the view of the city, once
 						this.owner.CityScene.DisplayCityScreen(townIdx, -2);
 						this.owner.CityScene.RiotAnimation();
 						this.owner.Startup.QueryForDisk(0, 1);
 						this.owner.TurnHooks.RepaintMainScreen();
-						this.processor.EmitGlobalWord(0x6b92, 1);
+						RiotShown = 1;
 					}
 					else
 					{
@@ -5082,7 +5082,7 @@ namespace Civilization1Remaster.Game
 			}
 			else
 			{
-				this.processor.EmitGlobalWord(0x2494, 1);
+				CityTileDotted = 1;
 
 				this.owner.Services.AssignDot(2, horizLoc + 0x50, vertLoc, (ushort)this.owner.World.Towns[townIdx].ParticipantIdx);
 			}
@@ -5124,7 +5124,7 @@ namespace Civilization1Remaster.Game
 					SpritePicture(0xd));
 			}
 
-			this.processor.EmitGlobalWord(0x2494, 0);
+			CityTileDotted = 0;
 
 			this.processor.Journal.CloseScope("RenderCityTile");
 		}
@@ -5206,7 +5206,7 @@ namespace Civilization1Remaster.Game
 						yield--;
 					}
 
-					if (this.processor.PullGlobalWord(0x2494) != 0)
+					if (CityTileDotted != 0)
 					{
 						AnarchyPressure = (ushort)(AnarchyPressure - 2);
 					}
@@ -5214,7 +5214,7 @@ namespace Civilization1Remaster.Game
 
 				if (yield != 0 && arg3 == 2)
 				{
-					if (this.processor.PullGlobalWord(0x2494) != 0)
+					if (CityTileDotted != 0)
 					{
 						DemocracyPressure = (ushort)(DemocracyPressure + 1);
 					}

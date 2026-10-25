@@ -126,8 +126,8 @@ namespace Civilization1Remaster.UI
 		{
 			if (Leader(participantIdx).ChiefVisuals == 14)
 			{
-				this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x19b4), "Empress");
-				this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x19b6), "Empress");
+				this.owner.Libc.CopyText(GovernmentTitleAt(2), "Empress");
+				this.owner.Libc.CopyText(GovernmentTitleAt(4), "Empress");
 			}
 		}
 
@@ -135,8 +135,8 @@ namespace Civilization1Remaster.UI
 		{
 			if (Leader(participantIdx).ChiefVisuals == 14)
 			{
-				this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x19b4), this.processor.PullGlobalWord(0x33aa));
-				this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x19b6), this.processor.PullGlobalWord(0x33a8));
+				this.owner.Libc.CopyText(GovernmentTitleAt(2), this.processor.PullGlobalWord(0x33aa));
+				this.owner.Libc.CopyText(GovernmentTitleAt(4), this.processor.PullGlobalWord(0x33a8));
 			}
 		}
 
@@ -1485,7 +1485,7 @@ namespace Civilization1Remaster.UI
 					}
 				}
 
-				this.processor.EmitGlobalWord(0x67fa, 1);
+				KingScreenKept = 1;
 
 				this.owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, BackScreenBox, 0, 0);
 
@@ -1497,7 +1497,7 @@ namespace Civilization1Remaster.UI
 			{
 				this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
 
-				this.processor.EmitGlobalWord(0x67fa, 0);
+				KingScreenKept = 0;
 			}
 
 			KingPictureLoaded = 1;
@@ -1690,7 +1690,7 @@ namespace Civilization1Remaster.UI
 					style += 3;
 				}
 
-				if (arg3 != 0xffff && arg3 != AdvisorPoseShown && this.processor.PullGlobalWord(0x67fa) != 0)
+				if (arg3 != 0xffff && arg3 != AdvisorPoseShown && KingScreenKept != 0)
 				{
 					for (short advisorIdx = 0; advisorIdx < (short)((this.owner.World.Participants[AudiencePlayer].Standing + 1) >> 1); advisorIdx++)
 					{

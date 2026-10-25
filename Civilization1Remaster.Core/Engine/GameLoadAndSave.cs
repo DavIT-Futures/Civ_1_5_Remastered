@@ -408,7 +408,7 @@ namespace Civilization1Remaster.Engine
 				// The original game had 4 manual saves and saved slots 4 - 9 automatically, at the start of a turn.
 				// Autosaves now have their own files, all manual saves continue in the middle of the turn.
 				MidTurnSave = (ushort)(this.FetchingBackup ? 0x2 : 0x1);
-				this.processor.EmitGlobalWord(0x3484, 0xfffd);
+				LoadedGameMark = 0xfffd;
 				this.owner.World.StarshipMarkers &= 0x7ffe;
 			}
 
@@ -728,9 +728,9 @@ namespace Civilization1Remaster.Engine
 				this.owner.World.HardnessTier = PullInt16(source);
 				this.owner.World.LiveRealms = PullInt16(source);
 				this.owner.World.Participants[this.owner.World.PersonParticipantIdx].PresentInquiryIdx = PullInt16(source);
-				PullContent(source, this.processor.PullGlobalWord(0x19a2), 0x70);
-				PullContent(source, this.processor.PullGlobalWord(0x1992), 0x60);
-				PullContent(source, this.processor.PullGlobalWord(0x1982), 0x58);
+				PullContent(source, LeaderNameAt(0), 0x70);
+				PullContent(source, CivilizationPluralAt(0), 0x60);
+				PullContent(source, CivilizationNameAt(0), 0x58);
 
 				for (int idx = 0; idx < this.owner.World.Participants.Length; idx++)
 				{
@@ -1171,9 +1171,9 @@ namespace Civilization1Remaster.Engine
 				EmitInt16(sink, this.owner.World.HardnessTier);
 				EmitInt16(sink, this.owner.World.LiveRealms);
 				EmitInt16(sink, this.owner.World.Participants[this.owner.World.PersonParticipantIdx].PresentInquiryIdx);
-				EmitContent(sink, this.processor.PullGlobalWord(0x19a2), 0x70);
-				EmitContent(sink, this.processor.PullGlobalWord(0x1992), 0x60);
-				EmitContent(sink, this.processor.PullGlobalWord(0x1982), 0x58);
+				EmitContent(sink, LeaderNameAt(0), 0x70);
+				EmitContent(sink, CivilizationPluralAt(0), 0x60);
+				EmitContent(sink, CivilizationNameAt(0), 0x58);
 
 				for (int idx = 0; idx < this.owner.World.Participants.Length; idx++)
 				{

@@ -62,7 +62,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.World.HardnessTier = (short)this.owner.Dialogs.DisplayMenu(TextBuffer.Address, 160, 35, 1);
 
-			if (MousePresent != 0 && this.processor.PullGlobalWord(0x2fa2) != 0)
+			if (MousePresent != 0 && MenuMouseUsed != 0)
 			{
 				this.owner.Startup.ObtainMouseState();
 
@@ -1200,7 +1200,7 @@ namespace Civilization1Remaster.UI
 				StorePicture(0xd4ce, idx, 1, (ushort)(idx << 4), 0x20, 0x10, 0x10);
 			}
 
-			PointerPicture = this.processor.PullGlobalWord(0x6e92);
+			PointerPicture = PointerIcon;
 
 			for (int idx = 0; idx < 8; idx++)
 			{

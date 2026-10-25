@@ -57,7 +57,10 @@ namespace Civilization1Remaster.Tests.GoldenMaster
 
 		public void OnInputStarved(bool waiting)
 		{
-			this.processor.Idle();
+			// Time passes while the game waits for a key, not when it only looks for one (B6.0: how often the code looks is
+			// a detail of the code and must not move the timer interrupts of the fixed clock)
+			if (waiting)
+				this.processor.Idle();
 
 			if (!waiting && this.withholdNextPoll)
 			{

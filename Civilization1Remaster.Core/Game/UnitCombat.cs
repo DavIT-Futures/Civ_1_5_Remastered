@@ -18,9 +18,6 @@ namespace Civilization1Remaster.Game
 		}
 
 		// Unit data in memory: 12 bytes per unit, 0x600 bytes (128 units) per player
-		private const int TroopsRoot = 0x81d4;
-		private const int TroopExtent = 0xc;
-		private const int ParticipantTroopsExtent = 0x600;
 		private const int TroopConditionDisplacement = 0;
 		private const int TroopHorizDisplacement = 1;
 		private const int TroopVertDisplacement = 2;
@@ -98,7 +95,7 @@ namespace Civilization1Remaster.Game
 
 		private int PullUnitByte(int participantIdx, int troopIdx, int displacement)
 		{
-			return (sbyte)this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(TroopsRoot + participantIdx * ParticipantTroopsExtent + troopIdx * TroopExtent + displacement));
+			return this.troops.PullSigned(participantIdx, troopIdx, displacement);
 		}
 
 		private int PullUnitDefinitionWord(int troopKind, int displacement)
@@ -247,10 +244,7 @@ namespace Civilization1Remaster.Game
 			{
 				if (AffirmBreakTreaty(participantIdx2) == 0xffff)
 				{
-					this.processor.EmitUInt8(
-						this.processor.SegData.Value16,
-						(ushort)(TroopsRoot + participantIdx1 * ParticipantTroopsExtent + troopIdx1 * TroopExtent + 6),
-						0xff);
+					this.troops.Assign(participantIdx1, troopIdx1, UnitMemory.TravelHoriz, 0xff);
 					return FinishSettleBattle(0xffff);
 				}
 			}
@@ -668,11 +662,8 @@ namespace Civilization1Remaster.Game
 
 		private void PromoteUnitToVeteran(short participantIdx, short troopIdx)
 		{
-			ushort statusAddr = (ushort)(TroopsRoot + participantIdx * ParticipantTroopsExtent + troopIdx * TroopExtent + TroopConditionDisplacement);
-			this.processor.EmitUInt8(
-				this.processor.SegData.Value16,
-				statusAddr,
-				(byte)(this.processor.PullUInt8(this.processor.SegData.Value16, statusAddr) | (byte)UnitStatusEnum.Veteran));
+			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Status,
+				(byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) | (byte)UnitStatusEnum.Veteran));
 		}
 
 		/// <summary>

@@ -160,10 +160,9 @@ namespace Civilization1Remaster.Game
 			{
 				for (int troopIdx = 0; troopIdx < UnitHealth.TroopTally; troopIdx++)
 				{
-					ushort troop = (ushort)(0x81d4 + 0x600 * participantIdx + 0xc * troopIdx);
-					int troopKind = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(troop + 3));
+					int troopKind = this.Troops.Pull(participantIdx, troopIdx, UnitMemory.Kind);
 
-					if (troopKind != 0xff && (this.processor.PullUInt8(this.processor.SegData.Value16, troop) & (int)UnitStatusEnum.Fortified) != 0)
+					if (troopKind != 0xff && (this.Troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & (int)UnitStatusEnum.Fortified) != 0)
 					{
 						this.owner.World.Vitals.MendOne(participantIdx, troopIdx, troopKind);
 					}
@@ -243,9 +242,9 @@ namespace Civilization1Remaster.Game
 			startGold = this.owner.World.Participants[personIdx].Gold;
 
 			UnitLimitTold = 0;
-			this.processor.EmitGlobalWord(0x6b92, 0);
+			RiotShown = 0;
 			this.owner.World.HighestScienceTally = 0;
-			this.processor.EmitGlobalWord(0xde20, 0);
+			LiveRealmCount = 0;
 
 			// The living players and the most technologies
 			for (int participantIdx = 0; participantIdx < 8; participantIdx++)
@@ -253,7 +252,7 @@ namespace Civilization1Remaster.Game
 				if ((this.owner.World.LiveRealms & (1 << participantIdx)) == 0)
 					continue;
 
-				this.processor.EmitGlobalWord(0xde20, (ushort)(this.processor.PullGlobalWord(0xde20) + 1));
+				LiveRealmCount = (ushort)(LiveRealmCount + 1);
 
 				short sciences = this.owner.World.Participants[participantIdx].FoundScienceTally;
 
@@ -593,17 +592,17 @@ namespace Civilization1Remaster.Game
 				this.owner.World.Participants[this.owner.World.Towns[townIdx].ParticipantIdx].Tally += 25;
 			}
 
-			if (this.processor.PullGlobalWord(0x3484) == 0xfffd)
+			if (LoadedGameMark == 0xfffd)
 			{
-				this.processor.EmitGlobalWord(0x3484, 0xfffe);
+				LoadedGameMark = 0xfffe;
 				return;
 			}
 
 			this.owner.World.Participants[this.owner.World.PersonParticipantIdx].Tally -= (short)(10 * this.owner.World.DirtyCellTally);
 
-			if (this.processor.PullGlobalWord(0x3484) == 0xfffe)
+			if (LoadedGameMark == 0xfffe)
 			{
-				this.processor.EmitGlobalWord(0x3484, 0x0);
+				LoadedGameMark = 0x0;
 			}
 		}
 
@@ -891,8 +890,9 @@ namespace Civilization1Remaster.Game
 				ushort troopIdx = this.owner.UnitOps.ConstructUnit(0, kind, horizLoc, vertLoc);
 				this.processor.EmitLocalWord(0x1c, troopIdx);
 
-				ushort marker = (ushort)((ushort)(0xc * troopIdx) + 0x81d4);
-				this.processor.EmitGlobalByte(marker, (byte)(this.processor.PullGlobalByte(marker) | 1));
+				// The barbarian units start on sentry (player 0); troopIdx may be past the table (0xffff, no free place)
+				int marker = (ushort)(UnitMemory.TroopStride * troopIdx);
+				this.Troops.AssignAt(marker, UnitMemory.Status, (byte)(this.Troops.PullAt(marker, UnitMemory.Status) | 1));
 			}
 
 			this.processor.EmitLocalWord(0x14, (ushort)unitIdx);
@@ -1042,7 +1042,7 @@ namespace Civilization1Remaster.Game
 
 				for (int kind = 0; kind < 0x1c; kind++)
 				{
-					power += (ushort)(UnitKindTable.Field(this.processor, (sbyte)kind, UnitKindTable.Price) * participant.LiveTroops[kind]);
+					power += (ushort)(UnitKindWord((sbyte)kind, UnitKindTable.Price) * participant.LiveTroops[kind]);
 				}
 
 				if (((1 << participantIdx) & this.owner.World.LiveRealms) == 0)
@@ -1107,13 +1107,13 @@ namespace Civilization1Remaster.Game
 			this.processor.EmitLocalWord(0x18, treaties);
 			this.processor.EmitLocalWord(0x1a, best);
 
-			this.processor.EmitGlobalWord(0x8078, 0x0);
+			LateGameNudge = 0x0;
 
 			Player human = this.owner.World.Participants[this.owner.World.PersonParticipantIdx];
 
 			if (human.Standing == 7 && human.TownTally > 4 && human.LiveTroops[25] == 0 && this.owner.World.RoundTally > 200)
 			{
-				this.processor.EmitGlobalWord(0x8078, 0x1);
+				LateGameNudge = 0x1;
 
 				for (short participantIdx = 1; participantIdx < 8; participantIdx++)
 				{
@@ -1260,7 +1260,7 @@ namespace Civilization1Remaster.Game
 					.Number(human.ResearchLevyRatio);
 				this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 2, 89, 0);
 
-				if (this.processor.PullGlobalWord(0x1c28) == 0)
+				if (RepaintingMainScreen == 0)
 				{
 					AnnouncePopulationMark(population);
 				}
@@ -1307,7 +1307,7 @@ namespace Civilization1Remaster.Game
 				PopulationMark = (ushort)(hundreds + 9);
 			}
 
-			if (previousMark < (short)PopulationMark && (short)this.processor.PullGlobalWord(0x3484) >= -1)
+			if (previousMark < (short)PopulationMark && (short)LoadedGameMark >= -1)
 			{
 				this.owner.Words.Append("00,000 citizens.\n");
 
@@ -1692,7 +1692,7 @@ namespace Civilization1Remaster.Game
 
 			this.owner.Helpers.HaltHueCycling();
 
-			this.processor.EmitGlobalWord(0x1c28, 0x1);
+			RepaintingMainScreen = 0x1;
 
 			if (VgaMode != 0)
 			{
@@ -1711,7 +1711,7 @@ namespace Civilization1Remaster.Game
 
 			DisplayCivilizationScenery();
 
-			this.processor.EmitGlobalWord(0x1c28, 0x0);
+			RepaintingMainScreen = 0x0;
 
 			this.owner.Helpers.LaunchHueCycling();
 

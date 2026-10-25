@@ -1275,7 +1275,7 @@ namespace Civilization1Remaster.Game
 			short troopIdx = (short)this.turn.Troop;
 			this.turn.UnitDetail = (ushort)((this.turn.UnitDetail & 0xff00) | this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind));
 
-			if (UnitKindTable.Field(this.processor, (sbyte)(byte)this.turn.UnitDetail, UnitKindTable.FerryRoom) == 0 &&
+			if (UnitKindWord((sbyte)(byte)this.turn.UnitDetail, UnitKindTable.FerryRoom) == 0 &&
 				(byte)this.turn.UnitDetail != UnitKindTable.Carrier)
 			{
 				return;
@@ -3052,7 +3052,7 @@ namespace Civilization1Remaster.Game
 			this.processor.RegSource.Value16 = player;
 			this.turn.CarrierKind = (ushort)((this.turn.CarrierKind & 0xff00) | this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind));
 
-			if ((UnitKindTable.Field(this.processor, (sbyte)(byte)this.turn.CarrierKind, UnitKindTable.FerryRoom) == 0 &&
+			if ((UnitKindWord((sbyte)(byte)this.turn.CarrierKind, UnitKindTable.FerryRoom) == 0 &&
 				(byte)this.turn.CarrierKind != UnitKindTable.Carrier) || this.turn.Cargo == 0xffff)
 			{
 				return;
@@ -3102,7 +3102,7 @@ namespace Civilization1Remaster.Game
 				this.processor.RegBase.Value16 = (ushort)((sbyte)(byte)this.turn.CarrierKind * UnitKindTable.Stride);
 				this.processor.RegAcc.Value16 = this.turn.Count;
 
-				if ((short)UnitKindTable.Field(this.processor, (sbyte)(byte)this.turn.CarrierKind, UnitKindTable.FerryRoom) <= (short)this.turn.Count &&
+				if ((short)UnitKindWord((sbyte)(byte)this.turn.CarrierKind, UnitKindTable.FerryRoom) <= (short)this.turn.Count &&
 					(byte)this.turn.CarrierKind != UnitKindTable.Carrier && participantIdx != 0)
 				{
 					return;

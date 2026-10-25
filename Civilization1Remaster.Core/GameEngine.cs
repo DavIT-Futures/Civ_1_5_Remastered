@@ -51,6 +51,8 @@ namespace Civilization1Remaster
 		private readonly CivilizationSchism realmSplit;
 		private readonly CRuntime chrLibc;
 		private readonly TextBuffer words;
+		private readonly GameTables tables;
+		private readonly GameGlobals globals = new GameGlobals();
 		private readonly VGADriver videoHandler;
 		private readonly SoundDriver audioHandler;
 		#endregion
@@ -85,6 +87,7 @@ namespace Civilization1Remaster
 			#region Initialize Segments
 			this.chrLibc = new CRuntime(this);
 			this.words = new TextBuffer(this);
+			this.tables = new GameTables(this);
 			this.videoHandler = new VGADriver(this, host);
 			this.audioHandler = new SoundDriver(this);
 
@@ -381,6 +384,12 @@ namespace Civilization1Remaster
 			// B6.2: the units too (UnitMemory reads and writes the array, the rest of the code through the memory)
 			this.processor.Storage.AttachOverlay(CPU.AsLinearAddress(this.processor.SegData.Value16, UnitMemory.Origin),
 				new byte[UnitMemory.ParticipantStride * 8]);
+
+			// B6.3: the tables of CIV.EXE, B6.4: the named global variables
+			this.processor.Storage.AttachOverlay(CPU.AsLinearAddress(this.processor.SegData.Value16, GameTables.Begin), this.tables.Content);
+
+			foreach (GlobalWord global in this.globals.All)
+				this.processor.Storage.AttachOverlay(CPU.AsLinearAddress(this.processor.SegData.Value16, global.Address), global);
 		}
 
 		public CPU Processor
@@ -624,6 +633,18 @@ namespace Civilization1Remaster
 		/// <summary>The records of the units of all players at 0x81d4, kept in C# (B6.2): a copy</summary>
 		public byte[] UnitRecords => (byte[])(this.processor.Storage.OverlayAt(
 			CPU.AsLinearAddress(this.processor.SegData.Value16, UnitMemory.Origin)) ?? []).Clone();
+
+		/// <summary>The tables of CIV.EXE 0x282 - 0x19c1 (B6.3)</summary>
+		public GameTables Tables
+		{
+			get { return this.tables; }
+		}
+
+		/// <summary>The named global variables (B6.4)</summary>
+		public GameGlobals Globals
+		{
+			get { return this.globals; }
+		}
 
 		/// <summary>The message buffer at 0xba06 (B6.1)</summary>
 		public TextBuffer Words

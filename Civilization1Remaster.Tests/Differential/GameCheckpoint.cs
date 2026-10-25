@@ -29,8 +29,9 @@ namespace Civilization1Remaster.Tests.Differential
 
 			this.world = Clone(engine.World);
 			this.memory = (byte[])processor.Storage.StoragePayload.Clone();
-			// The data kept in C# arrays (B6: the message buffer, the units), not in the memory block
-			this.overlays = processor.Storage.Overlays.Select(range => (byte[])range.Content.Clone()).ToArray();
+			// The data kept in C# (B6: the message buffer, the units, the tables, the globals), not in the memory block
+			this.overlays = processor.Storage.Overlays
+				.Select(range => Enumerable.Range(0, range.Overlay.Length).Select(place => range.Overlay.Read(place)).ToArray()).ToArray();
 			this.registers = Registers(processor).Select(register => register.Value16).ToArray();
 			this.screens = engine.VideoCard.Displays.ToDictionary(display => display.Token, display => (byte[])display.Datum.PictureStorage.Clone());
 		}
@@ -44,7 +45,10 @@ namespace Civilization1Remaster.Tests.Differential
 			CopyInto(this.world, engine.World);
 			Buffer.BlockCopy(this.memory, 0, processor.Storage.StoragePayload, 0, this.memory.Length);
 			for (int idx = 0; idx < this.overlays.Length; idx++)
-				Buffer.BlockCopy(this.overlays[idx], 0, processor.Storage.Overlays[idx].Content, 0, this.overlays[idx].Length);
+			{
+				for (int place = 0; place < this.overlays[idx].Length; place++)
+					processor.Storage.Overlays[idx].Overlay.Write(place, this.overlays[idx][place]);
+			}
 
 			CPURegister[] live = Registers(processor);
 

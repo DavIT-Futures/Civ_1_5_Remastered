@@ -1,0 +1,24 @@
+﻿using System.Collections.Generic;
+using System.Linq;
+using Civilization1Remaster.Game;
+
+namespace Civilization1Remaster.Engine
+{
+	/// <summary>
+	/// The ranges of the data segment that live in C# (B6): the message buffer (B6.1), the units (B6.2), the tables of
+	/// CIV.EXE (B6.3) and the named global variables (B6.4). GameEngine.PrepareMachine attaches them over the memory, the
+	/// snapshots of the tests write them back at their addresses (MovedData).
+	/// </summary>
+	public static class MovedRanges
+	{
+		public sealed record Range(string Key, ushort Address, int Length);
+
+		public static IReadOnlyList<Range> All { get; } =
+		[
+			new Range("TextBuffer", TextBuffer.Address, TextBuffer.Size),
+			new Range("Units", UnitMemory.Origin, UnitMemory.ParticipantStride * 8),
+			new Range("Tables", GameTables.Begin, GameTables.End - GameTables.Begin),
+			.. GameGlobals.Layout.Select(global => new Range(global.Name, global.Address, 2)),
+		];
+	}
+}

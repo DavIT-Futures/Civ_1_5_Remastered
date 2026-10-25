@@ -70,7 +70,7 @@ namespace Civilization1Remaster.Engine
 			this.processor.StackWord(0x0110); // stack management - push return offset
 			this.processor.UnstackDoubleWord(); // stack management - pop return offset and segment
 
-			this.processor.EmitGlobalWord(0x6e92, this.owner.ImageToolkit.ImportIcon(0x277));
+			PointerIcon = (ushort)(this.owner.ImageToolkit.ImportIcon(0x277));
 
 			if (MousePresent != 0)
 			{
@@ -79,7 +79,7 @@ namespace Civilization1Remaster.Engine
 
 			if (MousePresent != 0)
 			{
-				this.owner.Services.AssignMouseCursorImage(0, 0, this.processor.PullGlobalWord(0x6e92));
+				this.owner.Services.AssignMouseCursorImage(0, 0, PointerIcon);
 				DisplayMouseCursor();
 			}
 
@@ -160,7 +160,7 @@ namespace Civilization1Remaster.Engine
 
 			this.owner.NewGameWizard.DisplayTribeSelection();
 
-			this.processor.EmitGlobalWord(0x2f98, 0x1);
+			BoxMotif = 0x1;
 
 			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
 
@@ -447,7 +447,7 @@ namespace Civilization1Remaster.Engine
 
 			this.owner.NewGameWizard.DisplayTribeSelection();
 
-			this.processor.EmitGlobalWord(0x2f98, 0x1);
+			BoxMotif = 0x1;
 
 			if (VgaMode != 0 && (MainMenuChoice == 0 ||
 				MainMenuChoice == 2 || MainMenuChoice == 3))

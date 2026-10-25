@@ -227,6 +227,43 @@ Kolejność (każdy krok osobno zielony; pamięć 0x3b01 długo zostaje jako mag
 - **B6.3 – tabele z CIV.EXE.** Akcesory B5 to szew: wczytać tabele raz przy starcie do tablic C# (są zapisywane z grą,
   więc też projekcja). Teksty tabel → `string`.
 - **B6.4 – zmienne globalne.** Właściwości B4 → pola C# (jeden szew), z projekcją tych, które idą do zapisu / migawki.
+  **B6.3 + B6.4 zrobione razem 2026-10-25:** nakładki ogólne (`Machine/IMemoryOverlay.cs`: `IMemoryOverlay`,
+  `ArrayOverlay`; `CPUMemory`: mapa bajt → nakładka O(1) zamiast przeszukiwania listy, wykrywanie nakładających się
+  zakresów, `OverlayOf` / `OverlayAt`). Rejestr `Engine/MovedRanges.cs` (bufor, jednostki, tabele, 169 zmiennych) –
+  z niego `MovedData` w testach (wpisy, rzut) i punkt kontrolny (każda nakładka przez `Read` / `Write`).
+  B6.3: `Engine/GameTables.cs` – blok 0x282 – 0x19c1 (teren, technologie, budynki i cuda, przestarzałe cuda, typy
+  jednostek, przywódcy, kierunki, kolory, wskaźniki nazw) w tablicy C#; akcesory B5 czytają `Tables.Word` / `Byte`
+  (adres poza blokiem – przez pamięć, jak indeks poza tabelą w oryginale). B6.4: `Engine/GameGlobals.cs` – `GlobalWord`
+  (pole `Value`, bajty dla pamięci jak w segmencie danych) dla każdej z 169 nazwanych zmiennych; właściwości
+  `GameModule` czytają i piszą `owner.Globals.X.Value` (`DisabledLinesLow` – niższy bajt). Pułapka: 0x19be – 0x19c1
+  w bloku tabel są zablokowane (`ForbidAccess`) – odczyt CPU daje 0, więc `MovedData.AddFrozen` czyta surowe bajty.
+  Test `TablesAndGlobalsLiveInCSharp`.
+  Zegar testów (B6.0) poprawiony przy tej porcji: pod stałym zegarem przerwanie przychodzi tylko w punktach zegara
+  (`CountClockScope`, `CountPoll`, `Idle`), nigdy przy zwykłym dostępie do pamięci (`PumpMessages`) – inaczej kod, który
+  czyta zmienną z C# zamiast z pamięci, dostaje przerwanie w innym miejscu (`DisplayStoryIntro`, `TitleLogo`). Klawiatura
+  skryptu woła `Idle` przy pustej kolejce tylko, gdy gra czeka na klawisz.  
+  **Porcje 1 – 3 (2026-10-25):** (1) `TurnEvents.MendOnlyFortifiedUnits`, barbarzyńcy (`TurnEvents` 894), `WorldMap`,
+  `UnitCombat` (`PullUnitByte`, `PromoteUnitToVeteran`, wymazanie celu) przez `UnitMemory` – stałe `TroopsRoot` itd.
+  usunięte; (2) 16 kolejnych zmiennych w `GameGlobals` (`StoryMusicTime` 0x6800, `StoryLinesTold` 0x6802,
+  `HueCyclingOn` 0x2fec, `RepaintingMainScreen` 0x1c28, `LoadedGameMark` 0x3484, `StackLeaderScore` 0x6534 …);
+  (3) literalne odczyty tabel (technologie budynków 0xc10 – 0xcc4, wskaźniki nazw 0x1982 – 0x19b6) przez akcesory B5.
+  Zostają: zmienne zegara 0x40 – 0x6f i myszy 0x586e – 0x5875 (B6.7), tablice pod adresem (np. 0x817a, 0x804e),
+  zmienne o niejasnym znaczeniu (0xdb38, 0x8066, 0x5116, 0xdc6a), `SystemServices` (sterowniki), `UnitKindTable.Field`
+  (statyczne z CPU, zostaje tylko w `UnitMemory.KindField`).
+  **Porcje 4 – 5 (2026-10-25):** (4) `UnitKindTable.Field(this.processor, …)` w klasach `GameModule` (47 miejsc) →
+  `UnitKindWord` (przez `Tables`); (5) B6.1 część 3: `TextBuffer.Set` / `Append` / `Length` / indeks / `Clear` na
+  tablicy (strcpy / strcat / strlen w C#, te same bajty i AX); tekst, który wyszedłby za bufor, i bufor przed
+  `Attach` – dalej przez C runtime i pamięć. Test `SavedGameKeepsTheUnits` sprawdza też nazwy przywódców i
+  cywilizacji w zapisie. Pełny zestaw 774/774 (B6.3/B6.4 oraz porcje 1 – 3 i 4 – 5 osobno). Mutacje: B6.3/B6.4
+  10/10, porcje 1 – 3: 8/11, porcje 4 – 5: 6/8. Ocalałe są równoważne w danych testów: wiersze jednostek w
+  `WorldMap` (miasta wyznaczają te same granice), `HueCyclingOn` / `RiotShown` (oba 0, gdy cykle stoją), technologia
+  świątyni / targu (obie znane albo żadna), `ShiftTally` / `Sight` (równe dla tych jednostek), AX po `TextBuffer.Set`
+  (nikt go nie czyta).  **Kolejne porcje (pętla do 90% tygodniowego limitu, 2026-10-25):** (1) B6.2-reszta: zmienne z gotowym adresem 0x81d4
+  (`TurnEvents` 163 / 894 / 1006, `WorldMap` 49, `UnitCombat.TroopsRoot`) przez `UnitMemory`; (2) pozostałe literalne
+  `PullGlobal…(0x…)` w klasach `GameModule` nazwać i dopisać do `GameGlobals` (te o niejasnym znaczeniu nazwać po
+  adresie i funkcji); (3) bezpośrednie odczyty `MovedRanges` przez pamięć w akcesorach (np. `UnitKindTable.Field`) na
+  `Tables`; (4) B6.1 część 3: `TextBuffer` bez C runtime (strcpy / strcat na tablicy, AX jak wcześniej);
+  (5) B6.5 ekrany: struktury pudełek ekranów (`ScreenBox` + 0x10 czcionka) jako obiekty C#.
 - **B6.5 – ekrany.** Struktury pudełek ekranów w pamięci (`ScreenBox` + 0x10 czcionka itd.) → obiekty C#; `VGADriver`
   już trzyma bitmapy C#, więc zostaje tylko adresowanie. Palety i cykle kolorów z pamięci → C#.
 - **B6.6 – pliki i C runtime.** `CRuntime` (uchwyty, `fscanf`, `fread`) → .NET; format `.SVE` / `.MAP` bez zmian przez

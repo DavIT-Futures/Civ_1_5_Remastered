@@ -480,23 +480,23 @@ namespace Civilization1Remaster.Game
 				if (kind == 0x19 && (this.owner.World.MarvelTownIdx[17] == -1 || PlayerKnowsTechnology(participantIdx, 0x1b) == 0))
 					continue;
 
-				if (PlayerKnowsTechnology(participantIdx, (short)UnitKindTable.Field(this.processor, kind, 0x20)) == 0 ||
-					PlayerKnowsTechnology(participantIdx, (short)UnitKindTable.Field(this.processor, kind, 0xc)) != 0)
+				if (PlayerKnowsTechnology(participantIdx, (short)UnitKindWord(kind, 0x20)) == 0 ||
+					PlayerKnowsTechnology(participantIdx, (short)UnitKindWord(kind, 0xc)) != 0)
 				{
 					continue;
 				}
 
-				if ((town.ConditionMarker & 2) == 0 && UnitKindTable.Field(this.processor, kind, UnitKindTable.LandGroup) == UnitKindTable.SeaUnits)
+				if ((town.ConditionMarker & 2) == 0 && UnitKindWord(kind, UnitKindTable.LandGroup) == UnitKindTable.SeaUnits)
 					continue;
 
 				this.owner.Words.Append((ushort)(UnitKindTable.Origin + kind * UnitKindTable.Stride));
-				ComposeProductionOption(townIdx, UnitKindTable.Field(this.processor, kind, UnitKindTable.Price));
+				ComposeProductionOption(townIdx, UnitKindWord(kind, UnitKindTable.Price));
 				this.owner.Words.Append(", ADM:");
-				this.owner.Words.Append(this.owner.Libc.IntegerToText((short)UnitKindTable.Field(this.processor, kind, UnitKindTable.AssaultPower), 10));
+				this.owner.Words.Append(this.owner.Libc.IntegerToText((short)UnitKindWord(kind, UnitKindTable.AssaultPower), 10));
 				this.owner.Words.Append("/");
-				this.owner.Words.Append(this.owner.Libc.IntegerToText((short)UnitKindTable.Field(this.processor, kind, UnitKindTable.GuardPower), 10));
+				this.owner.Words.Append(this.owner.Libc.IntegerToText((short)UnitKindWord(kind, UnitKindTable.GuardPower), 10));
 				this.owner.Words.Append("/");
-				this.owner.Words.Append(this.owner.Libc.IntegerToText((short)UnitKindTable.Field(this.processor, kind, UnitKindTable.ShiftTally), 10));
+				this.owner.Words.Append(this.owner.Libc.IntegerToText((short)UnitKindWord(kind, UnitKindTable.ShiftTally), 10));
 				this.owner.Words.Append(")\n ");
 
 				AddChoice((ushort)kind);
@@ -537,13 +537,13 @@ namespace Civilization1Remaster.Game
 					continue;
 
 				if (improvementIdx == 0xa && !town.Has(CityStructure.Marketplace) &&
-					PlayerKnowsTechnology(participantIdx, this.processor.PullGlobalSignedWord(0xc4c)) != 0)
+					PlayerKnowsTechnology(participantIdx, (short)BuildingWord(5, BuildingTable.Technology)) != 0)
 				{
 					continue;
 				}
 
 				if (improvementIdx == 0xc && !town.Has(CityStructure.Library) &&
-					PlayerKnowsTechnology(participantIdx, this.processor.PullGlobalSignedWord(0xc6a)) != 0)
+					PlayerKnowsTechnology(participantIdx, (short)BuildingWord(6, BuildingTable.Technology)) != 0)
 				{
 					continue;
 				}
@@ -616,7 +616,7 @@ namespace Civilization1Remaster.Game
 			FrameWord(ApproachLocal, (ushort)player.Landmasses[FrameWord(ContinentLocal)].Approach);
 			FrameWord(DefensiveLocal, (ushort)((short)FrameWord(ApproachLocal) is 1 or 2 ? 1 : 0));
 
-			if (this.processor.PullGlobalWord(0x8078) != 0 && (short)FrameWord(ApproachLocal) == 5)
+			if (LateGameNudge != 0 && (short)FrameWord(ApproachLocal) == 5)
 				FrameWord(DefensiveLocal, 1);
 
 			short unhappy = (short)((player.RegimeKind <= 1 ? 1 : 2) * (short)CitySettlers);
@@ -983,7 +983,7 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			if (UnitKindTable.Field(this.processor, kind, UnitKindTable.LandGroup) == UnitKindTable.LandUnits)
+			if (UnitKindWord(kind, UnitKindTable.LandGroup) == UnitKindTable.LandUnits)
 			{
 				Score = (short)((this.processor.PullUInt16(this.processor.SegData.Value16, TableAddress(MakingElsewhereTable, choice)) << 1) +
 					this.processor.PullUInt16(this.processor.SegData.Value16, TableAddress(UnitsOnContinentTable, choice)));
@@ -1001,13 +1001,13 @@ namespace Civilization1Remaster.Game
 
 			if (FrameWord(DefenceNeedLocal) != 0)
 			{
-				if (UnitKindTable.Field(this.processor, kind, UnitKindTable.TroopGroup) != UnitKindTable.DefenceTroops)
+				if (UnitKindWord(kind, UnitKindTable.TroopGroup) != UnitKindTable.DefenceTroops)
 					return false;
 
 				Score = CPU.SignedQuotient(2, (short)FrameWord(DefenceNeedLocal));
 			}
 
-			ushort role = UnitKindTable.Field(this.processor, kind, UnitKindTable.TroopGroup);
+			ushort role = UnitKindWord(kind, UnitKindTable.TroopGroup);
 
 			if (role != UnitKindTable.DefenceTroops && role != 0)
 			{
@@ -1017,7 +1017,7 @@ namespace Civilization1Remaster.Game
 					Score <<= 1;
 			}
 
-			if (UnitKindTable.Field(this.processor, kind, UnitKindTable.TroopGroup) == UnitKindTable.TransportTroops)
+			if (UnitKindWord(kind, UnitKindTable.TroopGroup) == UnitKindTable.TransportTroops)
 			{
 				if (FrameWord(ApproachLocal) != 5)
 					return false;
@@ -1030,16 +1030,16 @@ namespace Civilization1Remaster.Game
 					this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(0x1516 + 0x3a * player.ChiefVisuals)))
 				: (short)0x10;
 
-			short price = (short)(weight * (short)(UnitKindTable.Field(this.processor, kind, UnitKindTable.Price) + 2) * Score);
-			short strength = (short)((short)(UnitKindTable.Field(this.processor, kind, UnitKindTable.AssaultPower) +
-				UnitKindTable.Field(this.processor, kind, UnitKindTable.GuardPower)) *
-				(short)(UnitKindTable.Field(this.processor, kind, UnitKindTable.ShiftTally) + 1));
+			short price = (short)(weight * (short)(UnitKindWord(kind, UnitKindTable.Price) + 2) * Score);
+			short strength = (short)((short)(UnitKindWord(kind, UnitKindTable.AssaultPower) +
+				UnitKindWord(kind, UnitKindTable.GuardPower)) *
+				(short)(UnitKindWord(kind, UnitKindTable.ShiftTally) + 1));
 			Score = CPU.SignedQuotient(price, strength);
 
-			if (UnitKindTable.Field(this.processor, kind, UnitKindTable.TroopGroup) == 3)
+			if (UnitKindWord(kind, UnitKindTable.TroopGroup) == 3)
 				Score = (short)((FrameWord(DefensiveLocal) != 0 ? 4 : 2) * Score);
 
-			if (UnitKindTable.Field(this.processor, kind, UnitKindTable.LandGroup) == UnitKindTable.AirUnits)
+			if (UnitKindWord(kind, UnitKindTable.LandGroup) == UnitKindTable.AirUnits)
 				Score <<= 1;
 
 			if (player.TroopTally > 120)

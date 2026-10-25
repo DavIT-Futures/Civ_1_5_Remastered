@@ -279,7 +279,7 @@ namespace Civilization1Remaster.UI
 						{
 							this.owner.Services.RenderPictureToScreen(
 								ScreenBox,
-								drawX + this.processor.PullGlobalSignedWord(0x4b32),
+								drawX + (short)PalaceWingShift,
 								this.processor.PullInt8(dataSeg, (ushort)(0xf * nextLevel + 5 * optIdx + 0x4b32)) + 1,
 								this.processor.PullUInt16(dataSeg, (ushort)((optIdx << 2) + 0xb23e)));
 						}
@@ -440,7 +440,7 @@ namespace Civilization1Remaster.UI
 			if (this.processor.PullGlobalWord(0xd922) == 0xffff)
 				horizLoc -= 0x18;
 
-			if (this.processor.PullGlobalWord(0xb22a) == 1)
+			if (PalaceLayout == 1)
 				horizLoc++;
 
 			const ushort vertLoc = 0x24;
@@ -479,12 +479,12 @@ namespace Civilization1Remaster.UI
 					case 0:
 						// A left end with its wing
 						if (section == 3)
-							RenderPalacePart(part, section, (ushort)(horizLoc + this.processor.PullGlobalWord(0x4b32)), vertLoc, 1);
+							RenderPalacePart(part, section, (ushort)(horizLoc + PalaceWingShift), vertLoc, 1);
 
 						if (PalaceStyle(section) != 1 || section == 3)
 							RenderPalacePart(part, section, horizLoc, vertLoc, 0);
 
-						horizLoc += this.processor.PullGlobalWord(0x4b32);
+						horizLoc += PalaceWingShift;
 
 						if (section == 3)
 							horizLoc += PalacePartWidth;
@@ -515,14 +515,14 @@ namespace Civilization1Remaster.UI
 
 					case 2:
 						// The middle
-						if (this.processor.PullGlobalWord(0xb22a) == 1)
+						if (PalaceLayout == 1)
 							horizLoc--;
 
 						RenderPalacePart(part, section, (ushort)(horizLoc - 2), vertLoc, 0);
 
 						horizLoc += this.processor.PullGlobalWord(0x4b2c);
 
-						if (this.processor.PullGlobalWord(0xb22a) == 1)
+						if (PalaceLayout == 1)
 							horizLoc--;
 						break;
 

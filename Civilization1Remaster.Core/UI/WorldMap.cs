@@ -46,10 +46,8 @@ namespace Civilization1Remaster.UI
 			{
 				for (int troopIdx = 0; troopIdx < 0x80; troopIdx++)
 				{
-					ushort troop = (ushort)((0x600 * person) + (0xc * troopIdx) + 0x81d4);
-
-					if (this.processor.PullGlobalByte((ushort)(troop + 3)) != 0xff)
-						FitWorldMapRows(this.processor.PullGlobalByte((ushort)(troop + 2)), ref top, ref bottom);
+					if (this.Troops.Pull(person, troopIdx, UnitMemory.Kind) != 0xff)
+						FitWorldMapRows(this.Troops.Pull(person, troopIdx, UnitMemory.Vert), ref top, ref bottom);
 				}
 
 				for (int townIdx = 0; townIdx < 0x80; townIdx++)
