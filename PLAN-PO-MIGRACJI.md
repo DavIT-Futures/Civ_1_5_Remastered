@@ -202,7 +202,18 @@ Kolejność (każdy krok osobno zielony; pamięć 0x3b01 długo zostaje jako mag
   jak w pamięci), wpis w `MovedData` (adres 0xba06, długość bufora) i odczyty przez adres (`TextPainter`,
   `DisplayDialog`, `DisplayMenu`, `BlockText`, `ReadHandle` / `WriteHandle` / `MoveFarData` – plik przez bufor) –
   każdy, kto dostaje `TextBuffer.Address`, musi czytać z C#. Długość bufora ustalić z kodu (najdłuższy tekst / plik).
-- **B6.2 – jednostki.** `UnitMemory` to już jedyny szew: magazyn → tablica C# (rekord 12 bajtów jako struktura) +
+- **B6.2 – jednostki, zrobione 2026-10-25:** rekordy jednostek (0x81d4, 8 × 0x600 bajtów) w tablicy C# podpinanej
+  w `PrepareMachine` jako druga nakładka (`CPUMemory`: lista nakładek, `OverlayAt`, `ReadChunk`); `UnitMemory` czyta
+  i pisze tablicę wprost (adres spoza tabeli – jak w oryginale – przez pamięć), reszta kodu (surowe `0x81d4 + …`)
+  przez pamięć do tej samej tablicy. Pliki gry (`PullContent` / `EmitContent` w `GameLoadAndSave`, np. jednostki
+  0x81d4 / 0x3000 przy wczytaniu) przez nakładki zamiast `StoragePayload`. `GameEngine.UnitRecords`, wpis „Units”
+  w `MovedData`, punkt kontrolny zapisuje i przywraca wszystkie nakładki. Testy `UnitsLiveInCSharp` i
+  `SavedGameKeepsTheUnits` (zapis gry i wczytanie: jednostki z tablicy C#). Pełny zestaw 773/773, mutacje 6 / 7
+  (kopia pamięci przy `Attach` równoważna: jednostki przychodzą dopiero z wczytaniem); czas gry bez zmian (golden master
+  jak przy poprzednim commicie). Następnie:
+  `GameState.Participants[].Troops` jako prawdziwy stan (dziś kopia z wczytania) i surowe odczyty `0x81d4 + …`
+  w `AIPlayer` / `CivilizationSchism` / `PlayerTurn` przez `UnitMemory`.
+- **B6.2 – jednostki (pierwotny plan).** `UnitMemory` to już jedyny szew: magazyn → tablica C# (rekord 12 bajtów jako struktura) +
   projekcja 0x81d4 dla migawki i zapisu gry; potem `GameState.Participants[].Troops` (dziś tylko kopia z wczytania)
   staje się prawdziwym stanem.
 - **B6.3 – tabele z CIV.EXE.** Akcesory B5 to szew: wczytać tabele raz przy starcie do tablic C# (są zapisywane z grą,

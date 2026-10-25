@@ -42,6 +42,70 @@ public class MovedDataTests
 			MovedData.Project(engine, (byte[])memory.Clone(), [new MovedData.Entry("short", 0x6548, 2, _ => [1])]));
 	}
 
+	/// <summary>B6.2: the units are kept in C#: the memory under them stays empty, UnitMemory and the memory reads agree</summary>
+	[Fact]
+	public void UnitsLiveInCSharp()
+	{
+		string? gameFolder = GoldenMasterTests.FindGameFolder();
+		Assert.SkipWhen(gameFolder == null, "The CIVILIZATION game folder (the original game files) was not found");
+
+		using HeadlessGame game = new HeadlessGame(gameFolder!, Path.Combine(GoldenMasterTests.SourceFolder(), "Saves"));
+		game.LoadAutosave(9, GoldenMasterTests.RandomSeed);
+		GameEngine engine = game.Engine;
+		Civilization1Remaster.Game.UnitMemory troops = new Civilization1Remaster.Game.UnitMemory(engine.Processor);
+
+		int size = Civilization1Remaster.Game.UnitMemory.ParticipantStride * 8;
+		uint origin = CPU.AsLinearAddress(GameSnapshot.DataSection, Civilization1Remaster.Game.UnitMemory.Origin);
+		Assert.All(engine.Processor.Storage.StoragePayload.Skip((int)origin).Take(size), value => Assert.Equal(0, value));
+
+		// The loaded game has units, the same through UnitMemory and through the memory
+		byte[] records = engine.UnitRecords;
+		Assert.Equal(size, records.Length);
+		Assert.Contains(records, value => value != 0 && value != 0xff);
+
+		for (int player = 0; player < 8; player++)
+		{
+			for (int unit = 0; unit < 0x80; unit += 7)
+			{
+				ushort address = Civilization1Remaster.Game.UnitMemory.Address(player, unit);
+				Assert.Equal(engine.Processor.PullGlobalByte((ushort)(address + 3)), troops.Pull(player, unit, 3));
+			}
+		}
+
+		// A write through UnitMemory is seen through the memory, and the other way round
+		troops.Assign(1, 5, 1, 0x2a);
+		Assert.Equal(0x2a, engine.Processor.PullGlobalByte((ushort)(Civilization1Remaster.Game.UnitMemory.Address(1, 5) + 1)));
+		engine.Processor.EmitGlobalByte((ushort)(Civilization1Remaster.Game.UnitMemory.Address(2, 6) + 2), 0x17);
+		Assert.Equal(0x17, troops.Pull(2, 6, 2));
+		Assert.All(engine.Processor.Storage.StoragePayload.Skip((int)origin).Take(size), value => Assert.Equal(0, value));
+	}
+
+	/// <summary>B6.2: a saved game has the units of the C# array, and loading it puts them back there</summary>
+	[Fact]
+	public void SavedGameKeepsTheUnits()
+	{
+		string? gameFolder = GoldenMasterTests.FindGameFolder();
+		Assert.SkipWhen(gameFolder == null, "The CIVILIZATION game folder (the original game files) was not found");
+
+		using HeadlessGame game = new HeadlessGame(gameFolder!, Path.Combine(GoldenMasterTests.SourceFolder(), "Saves"));
+		game.LoadAutosave(9, GoldenMasterTests.RandomSeed);
+		GameEngine engine = game.Engine;
+		Civilization1Remaster.Game.UnitMemory troops = new Civilization1Remaster.Game.UnitMemory(engine.Processor);
+
+		byte[] saved = engine.UnitRecords;
+		Assert.True(engine.SaveLoad.StoreGameContent("B62TEST.SVE"));
+
+		// Other units meanwhile, then the saved game again
+		for (int player = 0; player < 8; player++)
+		{
+			for (int unit = 0; unit < 0x80; unit++)
+				troops.Assign(player, unit, 3, 0x55);
+		}
+
+		Assert.True(engine.SaveLoad.ImportGameContent("B62TEST.SVE"));
+		Assert.Equal(saved, engine.UnitRecords);
+	}
+
 	/// <summary>B6.1: the message buffer is kept in C#, the memory under it stays empty, and the memory reads give the array</summary>
 	[Fact]
 	public void MessageBufferLivesInCSharp()

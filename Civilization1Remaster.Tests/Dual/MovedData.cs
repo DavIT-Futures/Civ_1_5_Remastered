@@ -22,6 +22,8 @@ public static class MovedData
 	[
 		// B6.1: the message buffer (TextBuffer, 0x300 bytes)
 		new Entry("TextBuffer", TextBuffer.Address, TextBuffer.Size, engine => engine.Words.Bytes),
+		// B6.2: the units of all players (UnitMemory, 8 x 0x600 bytes)
+		new Entry("Units", Civilization1Remaster.Game.UnitMemory.Origin, Civilization1Remaster.Game.UnitMemory.ParticipantStride * 8, engine => engine.UnitRecords),
 	];
 
 	/// <summary>Whether the byte of the data segment belongs to moved data</summary>

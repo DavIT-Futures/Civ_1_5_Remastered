@@ -1110,8 +1110,7 @@ namespace Civilization1Remaster.Engine
 		/// <param name="length"></param>
 		private void PullContent(Stream source, ushort stagingAddr, ushort span)
 		{
-			source.ReadExactly(this.processor.Storage.StoragePayload,
-				(int)CPU.AsLinearAddress(this.processor.SegData.Value16, stagingAddr), span);
+			ReadIntoMemory(source, CPU.AsLinearAddress(this.processor.SegData.Value16, stagingAddr), span);
 		}
 
 		/// <summary>
@@ -1123,8 +1122,23 @@ namespace Civilization1Remaster.Engine
 		/// <param name="length"></param>
 		private void PullContent(Stream source, ushort stagingSect, ushort stagingAddr, ushort span)
 		{
-			source.ReadExactly(this.processor.Storage.StoragePayload,
-				(int)CPU.AsLinearAddress(stagingSect, stagingAddr), span);
+			ReadIntoMemory(source, CPU.AsLinearAddress(stagingSect, stagingAddr), span);
+		}
+
+		/// <summary>Bytes of a file into the memory, also into the ranges kept in C# arrays (B6: the units)</summary>
+		private void ReadIntoMemory(Stream source, uint location, ushort span)
+		{
+			byte[] content = new byte[span];
+			source.ReadExactly(content, 0, span);
+			this.processor.Storage.EmitChunk(location, content, 0, span);
+		}
+
+		/// <summary>Bytes of the memory into a file, also of the ranges kept in C# arrays</summary>
+		private void WriteFromMemory(Stream sink, uint location, ushort span)
+		{
+			byte[] content = new byte[span];
+			this.processor.Storage.ReadChunk(location, content, 0, span);
+			sink.Write(content, 0, span);
 		}
 
 		/// <summary>
@@ -1507,8 +1521,7 @@ namespace Civilization1Remaster.Engine
 		/// <param name="length"></param>
 		private void EmitContent(Stream sink, ushort stagingAddr, ushort span)
 		{
-			sink.Write(this.processor.Storage.StoragePayload,
-				(int)CPU.AsLinearAddress(this.processor.SegData.Value16, stagingAddr), span);
+			WriteFromMemory(sink, CPU.AsLinearAddress(this.processor.SegData.Value16, stagingAddr), span);
 		}
 
 		/// <summary>
@@ -1520,8 +1533,7 @@ namespace Civilization1Remaster.Engine
 		/// <param name="length"></param>
 		private void EmitContent(Stream sink, ushort stagingSect, ushort stagingAddr, ushort span)
 		{
-			sink.Write(this.processor.Storage.StoragePayload,
-				(int)CPU.AsLinearAddress(stagingSect, stagingAddr), span);
+			WriteFromMemory(sink, CPU.AsLinearAddress(stagingSect, stagingAddr), span);
 		}
 
 		public static byte PullUInt8(Stream source) { return StreamIo.PullUInt8(source); }

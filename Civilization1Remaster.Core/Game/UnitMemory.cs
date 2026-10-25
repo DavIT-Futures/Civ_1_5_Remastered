@@ -4,8 +4,10 @@ using Civilization1Remaster.Emulation;
 namespace Civilization1Remaster.Game
 {
 	/// <summary>
-	/// The live units of all players: 128 records of 12 bytes for each of the 8 players, in the emulated data segment.
+	/// The live units of all players: 128 records of 12 bytes for each of the 8 players at 0x81d4 of the data segment.
 	/// GameState.Participants[].Troops is only the copy made when a game is loaded, the game code reads and writes these.
+	/// B6.2: the records live in a C# array (GameEngine.PrepareMachine attaches it to the memory), read and written here
+	/// directly; the code that still uses the addresses reaches the same array through the memory.
 	/// </summary>
 	public sealed class UnitMemory
 	{
@@ -52,19 +54,35 @@ namespace Civilization1Remaster.Game
 			return (ushort)(Origin + (ParticipantStride * participantIdx) + (TroopStride * troopIdx));
 		}
 
+		private byte[]? records;
+
+		/// <summary>The records in C#, found once (null before the machine is prepared: then through the memory)</summary>
+		private byte[]? Records => this.records ??= this.processor.Storage.OverlayAt(CPU.AsLinearAddress(this.processor.SegData.Value16, Origin));
+
 		public sbyte PullSigned(int participantIdx, int troopIdx, int offset)
 		{
-			return this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(Address(participantIdx, troopIdx) + offset));
+			return (sbyte)Pull(participantIdx, troopIdx, offset);
 		}
 
 		public byte Pull(int participantIdx, int troopIdx, int offset)
 		{
-			return this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(Address(participantIdx, troopIdx) + offset));
+			byte[]? records = Records;
+			ushort place = (ushort)(Offset(participantIdx, troopIdx) + offset);
+
+			// An address past the table (the original reads the memory after it) goes through the memory
+			return records != null && place < records.Length ? records[place] :
+				this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(Address(participantIdx, troopIdx) + offset));
 		}
 
 		public void Assign(int participantIdx, int troopIdx, int offset, byte amount)
 		{
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(Address(participantIdx, troopIdx) + offset), amount);
+			byte[]? records = Records;
+			ushort place = (ushort)(Offset(participantIdx, troopIdx) + offset);
+
+			if (records != null && place < records.Length)
+				records[place] = amount;
+			else
+				this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(Address(participantIdx, troopIdx) + offset), amount);
 		}
 
 		public sbyte TroopKind(int participantIdx, int troopIdx)
@@ -80,7 +98,7 @@ namespace Civilization1Remaster.Game
 
 		public void AssignFollowing(int participantIdx, int troopIdx, byte following)
 		{
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(Address(participantIdx, troopIdx) + FollowingInStack), following);
+			Assign(participantIdx, troopIdx, FollowingInStack, following);
 		}
 
 		/// <summary>

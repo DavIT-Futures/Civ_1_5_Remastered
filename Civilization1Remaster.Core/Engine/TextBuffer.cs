@@ -54,9 +54,6 @@ namespace Civilization1Remaster.Engine
 		/// <summary>The bytes of the buffer, all of them (also after the end of the text, like the memory of the original)</summary>
 		public byte[] Bytes => (byte[])this.store.Clone();
 
-		/// <summary>The bytes of the buffer are these again (a checkpoint of the tests puts the game back)</summary>
-		public void Restore(byte[] content) => System.Array.Copy(content, this.store, Size);
-
 		/// <summary>
 		/// The store moves from the memory into the array (after the machine is prepared): the current bytes are taken over,
 		/// every access of the memory to the buffer goes to the array from now on

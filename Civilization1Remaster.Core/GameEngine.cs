@@ -377,6 +377,10 @@ namespace Civilization1Remaster
 
 			// B6.1: the message buffer lives in C# from now on
 			this.words.Attach();
+
+			// B6.2: the units too (UnitMemory reads and writes the array, the rest of the code through the memory)
+			this.processor.Storage.AttachOverlay(CPU.AsLinearAddress(this.processor.SegData.Value16, UnitMemory.Origin),
+				new byte[UnitMemory.ParticipantStride * 8]);
 		}
 
 		public CPU Processor
@@ -617,7 +621,11 @@ namespace Civilization1Remaster
 			get { return this.chrLibc; }
 		}
 
-		/// <summary>The message buffer at TextBuffer.Address (B6.1)</summary>
+		/// <summary>The records of the units of all players at 0x81d4, kept in C# (B6.2): a copy</summary>
+		public byte[] UnitRecords => (byte[])(this.processor.Storage.OverlayAt(
+			CPU.AsLinearAddress(this.processor.SegData.Value16, UnitMemory.Origin)) ?? []).Clone();
+
+		/// <summary>The message buffer at 0xba06 (B6.1)</summary>
 		public TextBuffer Words
 		{
 			get { return this.words; }

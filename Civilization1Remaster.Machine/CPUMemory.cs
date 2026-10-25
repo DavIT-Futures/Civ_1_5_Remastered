@@ -15,9 +15,11 @@ namespace Civilization1Remaster.Emulation
 		private readonly CPUMemoryRegion gfxunitZone = new CPUMemoryRegion((ushort)0xa000, 0, 0x10000);
 		private readonly CPU processor;
 
-		// B6.1: a range of the memory kept in a C# array of its owner (the message buffer, TextBuffer)
-		private uint overlayBegin;
-		private byte[]? overlay;
+		// B6: ranges of the memory kept in C# arrays of their owners (B6.1 the message buffer, B6.2 the units)
+		private readonly List<(uint Begin, byte[] Content)> overlays = new List<(uint Begin, byte[] Content)>();
+		// The bounds of all of them: the other accesses skip the search
+		private uint overlaysLow = uint.MaxValue;
+		private uint overlaysHigh = 0;
 
 		/// <summary>
 		/// The bytes from the linear address on live in the array from now on (B6.1: the store of the message buffer moves
@@ -28,25 +30,69 @@ namespace Civilization1Remaster.Emulation
 		{
 			Array.Copy(this.store, begin, content, 0, content.Length);
 			Array.Clear(this.store, (int)begin, content.Length);
-			this.overlayBegin = begin;
-			this.overlay = content;
+			this.overlays.Add((begin, content));
+			this.overlaysLow = Math.Min(this.overlaysLow, begin);
+			this.overlaysHigh = Math.Max(this.overlaysHigh, begin + (uint)content.Length);
+		}
+
+		/// <summary>The ranges kept in C# arrays (the tests save and restore them with the memory)</summary>
+		public IReadOnlyList<(uint Begin, byte[] Content)> Overlays => this.overlays;
+
+		/// <summary>The array of the range that starts at the linear address, null when the range is still in the memory</summary>
+		public byte[]? OverlayAt(uint begin)
+		{
+			foreach ((uint start, byte[] content) in this.overlays)
+			{
+				if (start == begin)
+					return content;
+			}
+
+			return null;
 		}
 
 		private byte Peek(uint site)
 		{
-			uint place = site - this.overlayBegin;
+			if (site < this.overlaysLow || site >= this.overlaysHigh)
+				return this.store[site];
 
-			return this.overlay != null && place < (uint)this.overlay.Length ? this.overlay[place] : this.store[site];
+			foreach ((uint start, byte[] content) in this.overlays)
+			{
+				uint place = site - start;
+
+				if (place < (uint)content.Length)
+					return content[place];
+			}
+
+			return this.store[site];
 		}
 
 		private void Poke(uint site, byte value)
 		{
-			uint place = site - this.overlayBegin;
-
-			if (this.overlay != null && place < (uint)this.overlay.Length)
-				this.overlay[place] = value;
-			else
+			if (site < this.overlaysLow || site >= this.overlaysHigh)
+			{
 				this.store[site] = value;
+				return;
+			}
+
+			foreach ((uint start, byte[] content) in this.overlays)
+			{
+				uint place = site - start;
+
+				if (place < (uint)content.Length)
+				{
+					content[place] = value;
+					return;
+				}
+			}
+
+			this.store[site] = value;
+		}
+
+		/// <summary>Copies bytes of the memory, also of the ranges kept in C# arrays (a file of the game is written from them)</summary>
+		public void ReadChunk(uint location, byte[] target, int loc, int span)
+		{
+			for (int idx = 0; idx < span; idx++)
+				target[loc + idx] = Peek((uint)(location + idx));
 		}
 
 		public CPUMemory(CPU processor)
@@ -486,7 +532,7 @@ namespace Civilization1Remaster.Emulation
 
 		public void EmitChunk(uint location, byte[] originContent, int loc, int span)
 		{
-			if (this.overlay != null && location < this.overlayBegin + this.overlay.Length && location + span > this.overlayBegin)
+			if (this.overlays.Exists(range => location < range.Begin + range.Content.Length && location + span > range.Begin))
 			{
 				for (int idx = 0; idx < span; idx++)
 					Poke((uint)(location + idx), originContent[loc + idx]);
