@@ -265,7 +265,12 @@ Kolejność (każdy krok osobno zielony; pamięć 0x3b01 długo zostaje jako mag
   `CivRectangle` sięgają przez pamięć. Kod gry: pola pudełka rysowania przez `GameModule.DrawingBox` (`CivRectangle`,
   nowe słowa `ForeHues` 0xc i `RearHues` 0xe, bo kod pisze tam słowa) zamiast `ScreenBox + 0x10` itd. – ok. 90 miejsc,
   także przez BX (`RegBase = ScreenBox`, zapis BX zostaje do B6.8). Mutacje 9 / 10 + 1 / 2 (widok miasta z przycisku ekranu miasta nie występuje w turach golden master; cztery najpierw sprawdzane złym
-  testem, z właściwym złapane; ocalała: odczyt czcionki w `MeasureAndDrawMenuFrame` – w teście menu i tak równy).  **Kolejne porcje (pętla do 90% tygodniowego limitu, 2026-10-25):** (1) B6.2-reszta: zmienne z gotowym adresem 0x81d4
+  testem, z właściwym złapane; ocalała: odczyt czcionki w `MeasureAndDrawMenuFrame` – w teście menu i tak równy).
+  **B6.5, cykle kolorów (2026-10-25):** blok sterownika 0x35cf:0000 – 0x0343 (słowo 0xffff, tabela 8 adresów
+  rekordów od 2, rekordy po 0x66 bajtów od 0x14: krok, pozycja, długość, pierwszy kolor, opóźnienie, licznik, kolory
+  dwa razy) w `Engine/HueCycles.cs` (tablica C#, nakładka); `AssignHueCycleSpan`, `ActivateHueCycle`,
+  `DeactivateHueCycle`, `RefreshHueCycling` czytają i piszą ją bezpośrednio (rejestry jak wcześniej). Poza segmentem
+  danych, więc bez wpisu w `MovedRanges`; okna `Watched` testów czytają przez nakładkę. Mutacje 10 / 10.  **Kolejne porcje (pętla do 90% tygodniowego limitu, 2026-10-25):** (1) B6.2-reszta: zmienne z gotowym adresem 0x81d4
   (`TurnEvents` 163 / 894 / 1006, `WorldMap` 49, `UnitCombat.TroopsRoot`) przez `UnitMemory`; (2) pozostałe literalne
   `PullGlobal…(0x…)` w klasach `GameModule` nazwać i dopisać do `GameGlobals` (te o niejasnym znaczeniu nazwać po
   adresie i funkcji); (3) bezpośrednie odczyty `MovedRanges` przez pamięć w akcesorach (np. `UnitKindTable.Field`) na

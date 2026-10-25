@@ -54,6 +54,7 @@ namespace Civilization1Remaster
 		private readonly GameTables tables;
 		private readonly GameGlobals globals = new GameGlobals();
 		private readonly ScreenBoxes boxes = new ScreenBoxes();
+		private readonly HueCycles hueCycles;
 		private readonly VGADriver videoHandler;
 		private readonly SoundDriver audioHandler;
 		#endregion
@@ -89,6 +90,7 @@ namespace Civilization1Remaster
 			this.chrLibc = new CRuntime(this);
 			this.words = new TextBuffer(this);
 			this.tables = new GameTables(this);
+			this.hueCycles = new HueCycles(this.processor);
 			this.videoHandler = new VGADriver(this, host);
 			this.audioHandler = new SoundDriver(this);
 
@@ -393,6 +395,9 @@ namespace Civilization1Remaster
 			for (int boxIdx = 0; boxIdx < ScreenBoxes.Addresses.Length; boxIdx++)
 				this.processor.Storage.AttachOverlay(CPU.AsLinearAddress(this.processor.SegData.Value16, ScreenBoxes.Addresses[boxIdx]), this.boxes.Content[boxIdx]);
 
+			// B6.5: the colour cycles of the driver
+			this.processor.Storage.AttachOverlay(CPU.AsLinearAddress(HueCycles.Segment, 0), this.hueCycles.Content);
+
 			foreach (GlobalWord global in this.globals.All)
 				this.processor.Storage.AttachOverlay(CPU.AsLinearAddress(this.processor.SegData.Value16, global.Address), global);
 		}
@@ -638,6 +643,12 @@ namespace Civilization1Remaster
 		/// <summary>The records of the units of all players at 0x81d4, kept in C# (B6.2): a copy</summary>
 		public byte[] UnitRecords => (byte[])(this.processor.Storage.OverlayAt(
 			CPU.AsLinearAddress(this.processor.SegData.Value16, UnitMemory.Origin)) ?? []).Clone();
+
+		/// <summary>The colour cycles of the driver at 0x35cf (B6.5)</summary>
+		public HueCycles HueCycles
+		{
+			get { return this.hueCycles; }
+		}
 
 		/// <summary>The boxes of the screens (B6.5)</summary>
 		public ScreenBoxes Boxes

@@ -262,7 +262,7 @@ namespace Civilization1Remaster.Engine
 		{
 			this.processor.Journal.OpenScope($"AssignHueCycleSpan({arg1}, {arg2}, {arg3}, {arg4})");
 
-			this.processor.EmitUInt16(HueCycleSegment, 0x0, 0xffff);
+			this.owner.HueCycles.SetWord(0x0, 0xffff);
 			this.processor.RegAcc.Value16 = 0xffff;
 
 			ushort cycleIdx = (ushort)(arg1 - 1);
@@ -281,8 +281,8 @@ namespace Civilization1Remaster.Engine
 					ushort colours = (ushort)Math.Min(span + 1, 0x10);
 					byte first = (byte)arg3;
 
-					this.processor.EmitUInt16(HueCycleSegment, (ushort)(cycle + 4), (ushort)(colours * 3));
-					this.processor.EmitUInt8(HueCycleSegment, (ushort)(cycle + 6), first);
+					this.owner.HueCycles.SetWord((ushort)(cycle + 4), (ushort)(colours * 3));
+					this.owner.HueCycles.SetByte((ushort)(cycle + 6), first);
 
 					this.processor.DisableInterrupts();
 
@@ -292,15 +292,15 @@ namespace Civilization1Remaster.Engine
 					lock (this.owner.VideoCard.VideoLatch)
 					{
 						VGABitmap display = this.owner.VideoCard.Displays.ObtainValueByKey(0);
-						uint stagingLoc = CPU.AsLinearAddress(HueCycleSegment, (ushort)(cycle + 0x9));
+						ushort stagingLoc = (ushort)(cycle + 0x9);
 
 						for (int idx = 0; idx < colours; idx++)
 						{
 							Color hue = VGABitmap.HueToHue18(display.ObtainHue(idx + first));
 
-							this.processor.Storage.EmitUInt8(stagingLoc++, hue.R);
-							this.processor.Storage.EmitUInt8(stagingLoc++, hue.G);
-							this.processor.Storage.EmitUInt8(stagingLoc++, hue.B);
+							this.owner.HueCycles.SetByte(stagingLoc++, hue.R);
+							this.owner.HueCycles.SetByte(stagingLoc++, hue.G);
+							this.owner.HueCycles.SetByte(stagingLoc++, hue.B);
 						}
 					}
 
@@ -309,17 +309,17 @@ namespace Civilization1Remaster.Engine
 					// The colours again after them, but the last one (rep movsb with ES = the cycle segment, straight in the memory
 					// without clock steps)
 					ushort hues = (ushort)(cycle + 0x9);
-					ushort copyLength = (ushort)(this.processor.PullUInt16(HueCycleSegment, (ushort)(cycle + 4)) - 3);
+					ushort copyLength = (ushort)(this.owner.HueCycles.Word((ushort)(cycle + 4)) - 3);
 
 					for (int idx = 0; idx < copyLength; idx++)
 					{
-						this.processor.Storage.EmitUInt8(HueCycleSegment, (ushort)(hues + (colours * 3) + idx),
-							this.processor.Storage.PullUInt8(HueCycleSegment, (ushort)(hues + idx)));
+						this.owner.HueCycles.SetByte((ushort)(hues + (colours * 3) + idx),
+							this.owner.HueCycles.Byte((ushort)(hues + idx)));
 					}
 
-					this.processor.EmitUInt8(HueCycleSegment, (ushort)(cycle + 0x7), (byte)arg2);
-					this.processor.EmitUInt8(HueCycleSegment, (ushort)(cycle + 0x8), 0x0);
-					this.processor.EmitUInt16(HueCycleSegment, (ushort)(cycle + 0x2), 0x0);
+					this.owner.HueCycles.SetByte((ushort)(cycle + 0x7), (byte)arg2);
+					this.owner.HueCycles.SetByte((ushort)(cycle + 0x8), 0x0);
+					this.owner.HueCycles.SetWord((ushort)(cycle + 0x2), 0x0);
 
 					this.processor.SegExtra.Value16 = HueCycleSegment;
 					this.processor.RegAcc.Value16 = arg2;
@@ -348,19 +348,19 @@ namespace Civilization1Remaster.Engine
 			{
 				ushort cycle = HueCycleRecord(cycleIdx);
 
-				this.processor.EmitUInt16(HueCycleSegment, cycle, (ushort)(backwards ? -3 : 3));
-				this.processor.EmitUInt8(HueCycleSegment, (ushort)(cycle + 8), this.processor.PullUInt8(HueCycleSegment, (ushort)(cycle + 7)));
+				this.owner.HueCycles.SetWord(cycle, (ushort)(backwards ? -3 : 3));
+				this.owner.HueCycles.SetByte((ushort)(cycle + 8), this.owner.HueCycles.Byte((ushort)(cycle + 7)));
 			}
 
 			this.processor.Journal.CloseScope("ActivateHueCycle");
 		}
 
 		/// <summary>The segment of the colour cycles (a table of 8 record addresses at 2)</summary>
-		private const ushort HueCycleSegment = 0x35cf;
+		private const ushort HueCycleSegment = HueCycles.Segment;
 
 		private ushort HueCycleRecord(ushort cycleIdx)
 		{
-			ushort cycle = this.processor.PullUInt16(HueCycleSegment, (ushort)((cycleIdx << 1) + 2));
+			ushort cycle = this.owner.HueCycles.Word((ushort)((cycleIdx << 1) + 2));
 			this.processor.RegBase.Value16 = cycle;
 
 			return cycle;
@@ -378,7 +378,7 @@ namespace Civilization1Remaster.Engine
 
 			if (cycleIdx < 8)
 			{
-				this.processor.EmitUInt8(HueCycleSegment, (ushort)(HueCycleRecord(cycleIdx) + 8), 0);
+				this.owner.HueCycles.SetByte((ushort)(HueCycleRecord(cycleIdx) + 8), 0);
 			}
 
 			this.processor.Journal.CloseScope("DeactivateHueCycle");
@@ -400,7 +400,7 @@ namespace Civilization1Remaster.Engine
 
 			while (true)
 			{
-				ushort cycle = this.processor.PullUInt16(this.processor.SegData.Value16, this.processor.RegDest.Value16);
+				ushort cycle = this.owner.HueCycles.Word(this.processor.RegDest.Value16);
 				this.processor.RegBase.Value16 = cycle;
 				this.processor.RegDest.Value16 = (ushort)(this.processor.RegDest.Value16 + 2);
 
@@ -410,28 +410,28 @@ namespace Civilization1Remaster.Engine
 				}
 
 				// Inactive cycle (timer 0), or not yet time for the next step: the timer is read again to count it down, as in the original
-				if (this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(cycle + 8)) == 0)
+				if (this.owner.HueCycles.Byte((ushort)(cycle + 8)) == 0)
 				{
 					continue;
 				}
 
-				byte timer = (byte)(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(cycle + 8)) - 1);
-				this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(cycle + 8), timer);
+				byte timer = (byte)(this.owner.HueCycles.Byte((ushort)(cycle + 8)) - 1);
+				this.owner.HueCycles.SetByte((ushort)(cycle + 8), timer);
 				if (timer != 0)
 				{
 					continue;
 				}
 
-				byte initialDelay = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(cycle + 7));
+				byte initialDelay = this.owner.HueCycles.Byte((ushort)(cycle + 7));
 				this.processor.RegAcc.LowByte = initialDelay;
-				this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(cycle + 8), initialDelay);
+				this.owner.HueCycles.SetByte((ushort)(cycle + 8), initialDelay);
 
-				ushort count = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(cycle + 4));
+				ushort count = this.owner.HueCycles.Word((ushort)(cycle + 4));
 				this.processor.RegCount.Value16 = count;
 
 				// One step back (forward for a backward cycle), wrapped around the colours of the cycle
-				short position = (short)this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(cycle + 2));
-				short step = (short)this.processor.PullUInt16(this.processor.SegData.Value16, cycle);
+				short position = (short)this.owner.HueCycles.Word((ushort)(cycle + 2));
+				short step = (short)this.owner.HueCycles.Word(cycle);
 				short source = (short)(position - step);
 
 				if (position < step)
@@ -445,13 +445,13 @@ namespace Civilization1Remaster.Engine
 				}
 
 				this.processor.RegSource.Value16 = (ushort)source;
-				this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(cycle + 2), (ushort)source);
+				this.owner.HueCycles.SetWord((ushort)(cycle + 2), (ushort)source);
 
 				ushort paletteOffset = (ushort)(cycle + 9);
 				this.processor.RegAcc.Value16 = paletteOffset;
 				this.processor.RegSource.Value16 = (ushort)(this.processor.RegSource.Value16 + paletteOffset);
 
-				byte startHue = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(cycle + 6));
+				byte startHue = this.owner.HueCycles.Byte((ushort)(cycle + 6));
 				this.processor.RegAcc.LowByte = startHue;
 
 				if (this.owner.VideoCard.Displays.IncludesKey(0))
@@ -459,14 +459,14 @@ namespace Civilization1Remaster.Engine
 					lock (this.owner.VideoCard.VideoLatch)
 					{
 						VGABitmap display = this.owner.VideoCard.Displays.ObtainValueByKey(0);
-						uint stagingLoc = CPU.AsLinearAddress(this.processor.SegData.Value16, this.processor.RegSource.Value16);
+						ushort stagingLoc = this.processor.RegSource.Value16;
 						int total = count / 3;
 
 						for (int idx = 0; idx < total; idx++)
 						{
-							byte crimson = this.processor.Storage.PullUInt8(stagingLoc++);
-							byte emerald = this.processor.Storage.PullUInt8(stagingLoc++);
-							byte azure = this.processor.Storage.PullUInt8(stagingLoc++);
+							byte crimson = this.owner.HueCycles.Byte(stagingLoc++);
+							byte emerald = this.owner.HueCycles.Byte(stagingLoc++);
+							byte azure = this.owner.HueCycles.Byte(stagingLoc++);
 
 							display.AssignHue(idx + startHue, VGABitmap.Hue18ToHue(crimson, emerald, azure));
 						}

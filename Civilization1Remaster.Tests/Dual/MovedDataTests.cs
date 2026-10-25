@@ -109,6 +109,11 @@ public class MovedDataTests
 
 		Assert.Equal(engine.Processor.PullGlobalWord(0x98 + 0x10), (ushort)(engine.Boxes.Content[0][0x10] | (engine.Boxes.Content[0][0x11] << 8)));
 
+		// The colour cycles of the driver (0x35cf): the memory under them empty, the records 0x66 bytes apart from 0x14
+		Assert.All(payload.Skip((int)CPU.AsLinearAddress(HueCycles.Segment, 0)).Take(HueCycles.Size), value => Assert.Equal(0, value));
+		Assert.Equal(Enumerable.Range(0, 8).Select(cycleIdx => (ushort)(0x14 + 0x66 * cycleIdx)), Enumerable.Range(0, 8).Select(engine.HueCycles.Record));
+		Assert.Equal(engine.HueCycles.Word(0x14 + 4), engine.Processor.PullUInt16(HueCycles.Segment, 0x14 + 4));
+
 		// A global: the field and the memory are one, both ways
 		engine.Processor.EmitGlobalWord(engine.Globals.CityOwner.Address, 0x1234);
 		Assert.Equal(0x1234, engine.Globals.CityOwner.Value);
