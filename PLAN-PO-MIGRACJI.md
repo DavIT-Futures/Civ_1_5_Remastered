@@ -270,7 +270,15 @@ Kolejność (każdy krok osobno zielony; pamięć 0x3b01 długo zostaje jako mag
   rekordów od 2, rekordy po 0x66 bajtów od 0x14: krok, pozycja, długość, pierwszy kolor, opóźnienie, licznik, kolory
   dwa razy) w `Engine/HueCycles.cs` (tablica C#, nakładka); `AssignHueCycleSpan`, `ActivateHueCycle`,
   `DeactivateHueCycle`, `RefreshHueCycling` czytają i piszą ją bezpośrednio (rejestry jak wcześniej). Poza segmentem
-  danych, więc bez wpisu w `MovedRanges`; okna `Watched` testów czytają przez nakładkę. Mutacje 10 / 10.  **Kolejne porcje (pętla do 90% tygodniowego limitu, 2026-10-25):** (1) B6.2-reszta: zmienne z gotowym adresem 0x81d4
+  danych, więc bez wpisu w `MovedRanges`; okna `Watched` testów czytają przez nakładkę. Mutacje 10 / 10.
+  **Stan po pętli 2026-10-25 i co dalej (wymaga decyzji):** proste porcje B6 się skończyły. Zostają: (a) B6.6 –
+  tabela uchwytów plików (`CPU.Documents`, `DocumentHndTally`) jest wspólna dla `CRuntime` i przerwań DOS w `CPU`
+  (int 21h) – trzeba najpierw sprawdzić, czy przerwania DOS są jeszcze używane, i dopiero wtedy przenieść tabelę do
+  `CRuntime`; bufory plików w pamięci (adresy) zostają do B6.8. (b) B6.7 – przerwania, mysz, klawiatura jako zdarzenia
+  hosta: zmienia podstawę zegara testów (B6.0), więc razem z nowym baseline'em albo bardzo ostrożnie. (c) B6.4 –
+  reszta adresów to głównie tablice (0x4b2c / 0x4b32 / 0x4b34 szerokości pałacu, 0x33a8 / 0x33aa, 0x591e – 0x5922,
+  uchwyty obrazków 0x6e9e / 0xb880 / 0xd4da / 0xb2ba) i bajty obok siebie (0x87c9 – 0x87cb, potrzebny `GlobalByte`);
+  znaczenie kilku niejasne (0xdb38, 0x8066, 0x5116, 0xdc6a). (d) B6.8 / B3 – na koniec z nowym baseline'em.  **Kolejne porcje (pętla do 90% tygodniowego limitu, 2026-10-25):** (1) B6.2-reszta: zmienne z gotowym adresem 0x81d4
   (`TurnEvents` 163 / 894 / 1006, `WorldMap` 49, `UnitCombat.TroopsRoot`) przez `UnitMemory`; (2) pozostałe literalne
   `PullGlobal…(0x…)` w klasach `GameModule` nazwać i dopisać do `GameGlobals` (te o niejasnym znaczeniu nazwać po
   adresie i funkcji); (3) bezpośrednie odczyty `MovedRanges` przez pamięć w akcesorach (np. `UnitKindTable.Field`) na
