@@ -11,8 +11,10 @@ namespace Civilization1Remaster.Tests.Differential
 	/// <summary>
 	/// Two headless games loaded from the same autosave with the same random seed: one runs the original code of a function
 	/// (Reference), the other the rewritten one. After every call the whole state is compared: the GameSnapshot (game state,
-	/// data segment, map, random generator, stack pointer, call counts), the pictures of all screens and the registers the
-	/// callers depend on. While they match, both games stay identical, so the scenarios run one after the other.
+	/// data segment, map, random generator, stack pointer, call counts), the pictures of all screens and the result
+	/// registers (AX, DX). While they match, both games stay identical, so the scenarios run one after the other.
+	/// Since phase 0, point 4 (2026-10-25) the other registers (SI, DI, BP, SP, BX, CX) and the stack below SP are no longer
+	/// compared, whatever a test asks for: they are what B3 removes (frames, saved registers), the state is what matters.
 	/// </summary>
 	public sealed class DifferentialPair : IDisposable
 	{
@@ -77,7 +79,13 @@ namespace Civilization1Remaster.Tests.Differential
 				throw new InvalidOperationException(difference);
 		}
 
-		/// <summary>Registers that a function leaves for its caller</summary>
+		/// <summary>The registers compared: the results of a function (AX, and DX for 32-bit results)</summary>
+		public const Register Compared = Register.Acc | Register.Data;
+
+		/// <summary>The first stack address of the data segment (the stack: 0xe8c0 - 0xffff, see GameSnapshot)</summary>
+		private const int StackBegin = 0xe8c0;
+
+		/// <summary>Registers that a function leaves for its caller (only those in Compared are compared)</summary>
 		[Flags]
 		public enum Register
 		{
@@ -234,12 +242,20 @@ namespace Civilization1Remaster.Tests.Differential
 
 			CPU processor = game.Engine.Processor;
 
-			// Memory outside the data segment that the GameSnapshot doesn't see (tables in other segments)
+			// Memory outside the data segment that the GameSnapshot doesn't see (tables in other segments); not the stack
+			// (frames and what lies below them, which B3 removes)
 			foreach ((ushort segment, ushort begin, int length) in watched ?? [])
 			{
 				for (int idx = 0; idx < length; idx++)
+				{
+					if (segment == GameSnapshot.DataSection && begin + idx >= StackBegin)
+						continue;
+
 					values[$"watch.{segment:x4}:{begin + idx:x4}"] = processor.PullUInt8(segment, (ushort)(begin + idx)).ToString("x2");
+				}
 			}
+
+			registers &= Compared;
 
 			AddRegister(values, registers, Register.Acc, "ax", processor.RegAcc.Value16);
 			AddRegister(values, registers, Register.Base, "bx", processor.RegBase.Value16);

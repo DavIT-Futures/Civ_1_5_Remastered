@@ -100,7 +100,8 @@ Testy zawsze w **Release** z `-parallelMode all` (ok. 7 razy szybciej niż Debug
    (klawisze i kliknięcia: 0x586e / 0x5870 / 0x5874 przy 0x1a3c = 1 tylko na czas jednego kliknięcia, potem klawisze
    Space, Enter, '1', Escape – bez Escape wskaźnik GoTo albo wybrana jednostka czeka na klawisze bez końca); rozkazy, których
    jednostka nie wykona (rozkazy osadników dla innych, bity rozkazów samolotu), zapętlają turę (limit 20000 klawiszy, ok.
-   40 s). Porównywać ramkę i 0x80 bajtów stosu pod nią (`ShiftUnit` zostawia tam SI dla `ShiftAIUnit`).
+   40 s). Od 2026-10-25 (faza 0, punkt 4) `DifferentialPair` porównuje tylko AX / DX i pomija okna `Watched` na stosie
+   (0xe8c0 i wyżej) – SI, DI, BP, SP, BX, CX i ramki to, co usuwa B3; resztki stosu pilnuje golden master.
 6. Mutacje: `mutations.json` z jedną mutacją na funkcję (w gałęzi trudnej do trafienia), `python …/check_mutations.py mutations.json`
    (zawieszony scenariusz pada po 120 s = CAUGHT; proces dłuższy niż 400 s jest zabijany z dziećmi = CAUGHT (hang)).
    Budżet: 8 – 12 mutacji na porcję (patrz „Strategia testów”) (jedna mutacja ≈ 10 s budowania + czas testu; 4 workery). Po zmianie testu powtarzać tylko

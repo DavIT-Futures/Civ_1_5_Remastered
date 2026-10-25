@@ -12,8 +12,10 @@ compares it with its original code, in many scenarios that the saves don't reach
 - `DifferentialPair`: two `HeadlessGame`s loaded from the same autosave with the same random seed. `Prepare` changes both
   in the same way (the scenario: positions of units, the year, the random seed, ...), `Run` calls the original code in one
   and the rewritten code in the other and compares everything: the `GameSnapshot` (game state, data segment, map, random
-  generator, stack pointer, call counts), the pictures of all screens, the registers the callers depend on (SI, DI, BP, SP,
-  and AX for a function that returns a value) and an exception, if one is thrown. While both games match, they stay
+  generator, stack pointer, call counts), the pictures of all screens, the result registers (AX, and DX for 32-bit
+  results) and an exception, if one is thrown. Since 2026-10-25 (phase 0, point 4 of PLAN-PO-MIGRACJI.md) the other
+  registers (SI, DI, BP, SP, BX, CX) are not compared, whatever `Register` flags a test passes, and `Watched` windows on
+  the stack (0xe8c0 and up) are skipped: frames and saved registers are what B3 removes. While both games match, they stay
   identical, so the scenarios run one after the other without loading again.
 - The order of the called game functions with their arguments (the journal scopes) must be the same too; it catches a
   wrong argument of a drawing call even when the picture is empty. Addresses in the stack (0xe8c0 - 0xf0bf) are left out of
@@ -28,8 +30,9 @@ compares it with its original code, in many scenarios that the saves don't reach
 - A test also checks that its scenarios met every branch of the function (for example every outcome of a hut), otherwise
   a green test would not say much.
 
-Not compared: the stack below SP (the original code leaves its locals there, and a later function may read them before
-setting them, see `ShiftUnitFrame` in `UnitManagement`); the golden master is still needed for that.
+Not compared: the stack (frames, the words below SP; the original code leaves its locals there, and a later function may
+read them before setting them, see `ShiftUnitFrame` in `UnitManagement` and `TurnHooks.ClassicStackLeftovers`) and the
+registers other than AX / DX; the golden master is still needed for what the leftovers change.
 
 ## Adding a function
 

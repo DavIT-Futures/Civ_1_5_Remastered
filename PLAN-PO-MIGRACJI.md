@@ -366,7 +366,12 @@ SI/DI.
    `RenderSpaceshipMatchesOriginalCode`, przypadki kliknięć pól mapy miasta w `HandleCityCasesMatchFrozenGame`;
    ocalała `TileValue + 1` równoważna – wszystkie pola przesunięte o tyle samo, porównywane tylko między sobą).
 4. Testy różnicowe porównują sam stan (bez rejestrów i stosu pod SP), żeby usuwanie SI/DI w B3 nie dawało fałszywych
-   alarmów.
+   alarmów. **Zrobione 2026-10-25:** `DifferentialPair` porównuje tylko AX i DX (wyniki funkcji – kopie Reference oddają
+   je tylko w rejestrach; DX dla wyników 32-bitowych), niezależnie od flag `Register` testu, i pomija okna `Watched` na
+   stosie (0xe8c0 i wyżej); ślad wywołań już wcześniej zastępował adresy stosu przez `<stack>`. Pełny zestaw 809/809.
+   Kontrola mutacjami: zmiana samego SI (`HandlePeaceTreaties`) przechodzi – zamierzenie; zmiany rysowania
+   (`DisplayNewspaper`, `ExamineCity`) i wyniku (`RenderSpaceship`) dalej łapane. README testów różnicowych i skill
+   `migrate-batch` poprawione.
 5. Tag `classic-final`: ostatni stan zgodny z oryginałem, ze starymi baseline'ami.
 
 **Faza 1 – nowy baseline (jeden commit):** `HeadlessGame` wyłącza wszystkie `Classic…`, baseline'y golden master
