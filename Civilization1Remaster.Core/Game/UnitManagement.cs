@@ -1081,11 +1081,12 @@ namespace Civilization1Remaster.Game
 
 			VisitEachUnitInStack(participantIdx, troopIdx, 0x1280);
 
-			this.processor.RegAcc.Value16 = StackDomainTally;
+			ushort result = StackDomainTally;
+			this.processor.RegAcc.Value16 = result;
 
 			this.processor.Journal.CloseScope("TallyUnitsByDomainInStack");
 
-			return this.processor.RegAcc.Value16;
+			return result;
 		}
 
 		/// <summary>
@@ -1144,11 +1145,12 @@ namespace Civilization1Remaster.Game
 
 			VisitEachUnitInStack(participantIdx, troopIdx, 0x135a);
 
-			this.processor.RegAcc.Value16 = StackTally;
+			ushort result = StackTally;
+			this.processor.RegAcc.Value16 = result;
 
 			this.processor.Journal.CloseScope("TallyUnitsOfTypeInStack");
 
-			return this.processor.RegAcc.Value16;
+			return result;
 		}
 
 		/// <summary>
@@ -1178,11 +1180,12 @@ namespace Civilization1Remaster.Game
 
 			VisitEachUnitInStack(participantIdx, troopIdx, 0x13a9);
 
-			this.processor.RegAcc.Value16 = StackTally;
+			ushort result = StackTally;
+			this.processor.RegAcc.Value16 = result;
 
 			this.processor.Journal.CloseScope("TallyUnitsWithFlagInStack");
 
-			return this.processor.RegAcc.Value16;
+			return result;
 		}
 
 		/// <summary>
@@ -1212,11 +1215,12 @@ namespace Civilization1Remaster.Game
 
 			VisitEachUnitInStack(participantIdx, troopIdx, 0x13f8);
 
-			this.processor.RegAcc.Value16 = StackTally;
+			ushort result = StackTally;
+			this.processor.RegAcc.Value16 = result;
 
 			this.processor.Journal.CloseScope("TallySpecialUnitsInStack");
 
-			return this.processor.RegAcc.Value16;
+			return result;
 		}
 
 		/// <summary>

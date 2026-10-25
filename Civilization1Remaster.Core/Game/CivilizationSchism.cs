@@ -108,7 +108,7 @@ namespace Civilization1Remaster.Game
 
 			ushort capitalIdx = ObtainDistanceToCapital(rebelIdx);
 			this.processor.RegAcc.Value16 = (ushort)(0x1c * capitalIdx);
-			this.processor.RegSource.Value16 = this.processor.RegAcc.Value16;
+			this.processor.RegSource.Value16 = ((ushort)(0x1c * capitalIdx));
 
 			// The new civilization without a city gets no capital (ClassicSchism: Towns[0xffff] throws)
 			if (classic || capitalIdx != 0xffff)
@@ -124,7 +124,7 @@ namespace Civilization1Remaster.Game
 			else
 			{
 				this.processor.RegAcc.Value16 = (ushort)(0x1c * oldCapital);
-				this.processor.RegSource.Value16 = this.processor.RegAcc.Value16;
+				this.processor.RegSource.Value16 = ((ushort)(0x1c * oldCapital));
 
 				this.owner.World.Towns[oldCapital].ParticipantIdx = -1;
 
@@ -139,7 +139,7 @@ namespace Civilization1Remaster.Game
 					newCapital = oldCapital;
 
 				this.processor.RegAcc.Value16 = (ushort)(0x1c * newCapital);
-				this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
+				this.processor.RegDest.Value16 = ((ushort)(0x1c * newCapital));
 
 				this.owner.World.Towns[newCapital].StructureMarkers0 |= 1;
 				this.owner.World.Participants[participantIdx].HorizBegin = (short)this.owner.World.Towns[newCapital].Place.X;
@@ -345,7 +345,7 @@ namespace Civilization1Remaster.Game
 					break;
 
 				this.processor.RegAcc.Value16 = (ushort)(0x1c * farthestIdx);
-				this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
+				this.processor.RegBase.Value16 = ((ushort)(0x1c * farthestIdx));
 
 				given += this.owner.World.Towns[farthestIdx].TrueExtent;
 

@@ -219,14 +219,15 @@ namespace Civilization1Remaster.UI
 
 			this.owner.World.Participants[participantIdx].StarshipInhabitants = (short)SpaceshipColonists;
 
-			this.processor.RegAcc.Value16 = (ushort)success;
+			ushort result = (ushort)success;
+			this.processor.RegAcc.Value16 = result;
 
 			this.processor.RestoreIndexRegisters();
 			this.processor.LeaveFrame();
 
 			this.processor.Journal.CloseScope("RenderSpaceship");
 
-			return this.processor.RegAcc.Value16;
+			return result;
 		}
 
 		/// <summary>
@@ -700,7 +701,7 @@ namespace Civilization1Remaster.UI
 
 			this.processor.Journal.CloseScope("ComputeSpaceshipSuccess");
 
-			return this.processor.RegAcc.Value16;
+			return result;
 		}
 
 		/// <summary>

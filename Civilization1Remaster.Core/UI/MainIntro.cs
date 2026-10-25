@@ -82,12 +82,12 @@ namespace Civilization1Remaster.UI
 		private void DetectGraphicsDriver()
 		{
 			bool colourful = this.processor.PullGlobalByte(0x1a22) == 0x6d || this.processor.PullGlobalByte(0x1a22) == 0x4d;
-			this.processor.RegAcc.Value16 = (ushort)(colourful ? 1 : 0);
-			VgaMode = this.processor.RegAcc.Value16;
+			VgaMode = (ushort)(colourful ? 1 : 0);
+			this.processor.RegAcc.Value16 = VgaMode;
 
 			bool ega = this.processor.PullGlobalByte(0x1a22) == 0x65 || this.processor.PullGlobalByte(0x1a22) == 0x45;
-			this.processor.RegAcc.Value16 = (ushort)(ega ? 1 : 0);
-			EgaMode = this.processor.RegAcc.Value16;
+			EgaMode = (ushort)(ega ? 1 : 0);
+			this.processor.RegAcc.Value16 = EgaMode;
 
 			// Change Num-Lock state
 			DrawingBox.TypefaceIdx = 1;
@@ -98,7 +98,7 @@ namespace Civilization1Remaster.UI
 		{
 			ScreenReserveFailed = 0;
 			this.processor.RegAcc.Value16 = (ushort)(VgaMode != 0 ? 3 : 4);
-			this.processor.EmitLocalWord(IntroScreenCount, this.processor.RegAcc.Value16);
+			this.processor.EmitLocalWord(IntroScreenCount, ((ushort)(VgaMode != 0 ? 3 : 4)));
 
 			this.processor.EmitLocalWord(IntroColumn, 0);
 
@@ -627,7 +627,7 @@ namespace Civilization1Remaster.UI
 			this.processor.EmitLocalWord(ScreenStarHoriz, 0xfff6);
 			this.processor.EmitLocalWord(ScreenStarVert, 0x5c);
 			this.processor.RegAcc.Value16 = 0xffff;
-			this.processor.EmitLocalWord(ScreenPartEnd, this.processor.RegAcc.Value16);
+			this.processor.EmitLocalWord(ScreenPartEnd, 0xffff);
 			this.processor.EmitLocalWord(ScreenPartBegin, this.processor.RegAcc.Value16);
 
 			this.processor.EmitLocalWord(ScreenTextLength, this.owner.Words.Length);

@@ -273,10 +273,11 @@ namespace Civilization1Remaster.Game
 			this.processor.Journal.OpenScope($"ObtainCityTileIndex({horizLoc}, {vertLoc})");
 
 			int index = CitizenSpecialistRules.FindCityTileIndex(horizLoc, vertLoc);
-			this.processor.RegAcc.Value16 = (index >= 0) ? (ushort)index : (ushort)0xffff;
+			ushort result = (index >= 0) ? (ushort)index : (ushort)0xffff;
+			this.processor.RegAcc.Value16 = result;
 
 			this.processor.Journal.CloseScope("ObtainCityTileIndex");
-			return this.processor.RegAcc.Value16;
+			return result;
 		}
 
 		/// <summary>
@@ -687,7 +688,7 @@ namespace Civilization1Remaster.Game
 					uint mask = 1u << (tile & 0xff);
 					this.processor.RegAcc.Value16 = (ushort)mask;
 					this.processor.RegData.Value16 = (ushort)(mask >> 16);
-					this.round.WorkersLow = (ushort)(this.round.WorkersLow | this.processor.RegAcc.Value16);
+					this.round.WorkersLow = (ushort)(this.round.WorkersLow | (ushort)mask);
 					this.round.WorkersHigh = (ushort)(this.round.WorkersHigh | this.processor.RegData.Value16);
 				}
 
@@ -757,7 +758,7 @@ namespace Civilization1Remaster.Game
 				{
 					this.processor.RegCount.Value16 = (ushort)((short)this.round.Workers / 2 + CityFood);
 					this.processor.RegAcc.Value16 = (ushort)((short)this.round.SettlerFood * (short)CitySettlers);
-					this.processor.RegBase.Value16 = (ushort)(town.TrueExtent * 2 + this.processor.RegAcc.Value16);
+					this.processor.RegBase.Value16 = (ushort)(town.TrueExtent * 2 + ((ushort)((short)this.round.SettlerFood * (short)CitySettlers)));
 
 					bool hungry = (short)this.processor.RegBase.Value16 > (short)this.processor.RegCount.Value16 || town.TrueExtent < 3;
 
@@ -799,10 +800,10 @@ namespace Civilization1Remaster.Game
 						if (food > best || (food == best && (short)this.round.TileValue > (short)this.round.BestValue))
 						{
 							this.round.BestFood = (ushort)food;
-							this.processor.RegAcc.Value16 = this.round.TileValue;
-							this.round.BestValue = this.processor.RegAcc.Value16;
-							this.processor.RegAcc.Value16 = this.round.Index;
-							this.round.Found = this.processor.RegAcc.Value16;
+							this.round.BestValue = this.round.TileValue;
+							this.processor.RegAcc.Value16 = this.round.BestValue;
+							this.round.Found = this.round.Index;
+							this.processor.RegAcc.Value16 = this.round.Found;
 						}
 					}
 
@@ -875,16 +876,16 @@ namespace Civilization1Remaster.Game
 						int product = (short)(town.TrueExtent * 2) / divisor * yield;
 						this.processor.RegAcc.Value16 = (ushort)product;
 						this.processor.RegData.Value16 = (ushort)(product >> 16);
-						this.round.TileValue = (ushort)(this.round.TileValue + this.processor.RegAcc.Value16);
+						this.round.TileValue = (ushort)(this.round.TileValue + (ushort)product);
 						this.processor.RegAcc.Value16 = this.round.BestValue;
 
 						if ((short)this.round.TileValue > (short)this.round.BestValue)
 						{
 							this.round.BestValue = this.round.TileValue;
-							this.processor.RegAcc.Value16 = this.round.Index;
-							this.round.Found = this.processor.RegAcc.Value16;
-							this.processor.RegAcc.Value16 = (ushort)(((this.round.TileFood + this.round.TileShields) << 1) + this.round.TileTrade);
-							this.round.BestWeighted = this.processor.RegAcc.Value16;
+							this.round.Found = this.round.Index;
+							this.processor.RegAcc.Value16 = this.round.Found;
+							this.round.BestWeighted = (ushort)(((this.round.TileFood + this.round.TileShields) << 1) + this.round.TileTrade);
+							this.processor.RegAcc.Value16 = this.round.BestWeighted;
 						}
 					}
 
@@ -905,8 +906,8 @@ namespace Civilization1Remaster.Game
 			this.processor.RegSource.Value16 = (ushort)(townIdx * 0x1c);
 			town.LaborerMarkers0 = this.processor.RegCount.Value16;
 			town.LaborerMarkers1 = this.processor.RegBase.Value16;
-			this.processor.RegAcc.Value16 = (ushort)-(short)this.round.Workers;
-			this.round.WorkersGained = this.processor.RegAcc.Value16;
+			this.round.WorkersGained = (ushort)-(short)this.round.Workers;
+			this.processor.RegAcc.Value16 = this.round.WorkersGained;
 		}
 
 		/// <summary>A tile around the city still free for a worker (the array at BP-0x3e); 0xc6 / 0xd2 its place</summary>
@@ -937,7 +938,7 @@ namespace Civilization1Remaster.Game
 			uint mask = 1u << (tile & 0xff);
 			this.processor.RegAcc.Value16 = (ushort)mask;
 			this.processor.RegData.Value16 = (ushort)(mask >> 16);
-			this.round.WorkersLow = (ushort)(this.round.WorkersLow | this.processor.RegAcc.Value16);
+			this.round.WorkersLow = (ushort)(this.round.WorkersLow | (ushort)mask);
 			this.round.WorkersHigh = (ushort)(this.round.WorkersHigh | this.processor.RegData.Value16);
 			this.round.Workers = (ushort)(this.round.Workers - 1);
 		}
@@ -957,8 +958,8 @@ namespace Civilization1Remaster.Game
 			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 			this.round.Horiz = (ushort)(short)town.Place.X;
 			this.round.Vert = (ushort)(short)town.Place.Y;
-			this.processor.RegAcc.Value16 = this.round.Workers;
-			this.round.Specialists = this.processor.RegAcc.Value16;
+			this.round.Specialists = this.round.Workers;
+			this.processor.RegAcc.Value16 = this.round.Specialists;
 
 			// The citizen icons
 			ushort citizen = 0;
@@ -1040,7 +1041,7 @@ namespace Civilization1Remaster.Game
 			this.processor.RegCount.Value16 = 2;
 			this.processor.RegData.Value16 = (ushort)(factory < 0 ? 0xffff : 0);
 			this.processor.RegAcc.Value16 = (ushort)(factory / 4 + power);
-			CityShields = (ushort)(CityShields + this.processor.RegAcc.Value16);
+			CityShields = (ushort)(CityShields + ((ushort)(factory / 4 + power)));
 
 			this.processor.RegAcc.Value16 = (ushort)marker;
 			this.processor.RegData.Value16 = (ushort)((marker < 0 ? 0xffff : 0) | (ushort)marker);
@@ -1081,7 +1082,7 @@ namespace Civilization1Remaster.Game
 			this.processor.RegSource.Value16 = (ushort)(townIdx * 0x1c);
 			this.processor.RegCount.Value16 = (ushort)(town.TrueExtent * 2);
 			this.processor.RegAcc.Value16 = (ushort)((short)this.round.SettlerFood * (short)CitySettlers);
-			this.processor.RegData.Value16 = (ushort)(CityFood - this.processor.RegAcc.Value16 - this.processor.RegCount.Value16);
+			this.processor.RegData.Value16 = (ushort)(CityFood - ((ushort)((short)this.round.SettlerFood * (short)CitySettlers)) - this.processor.RegCount.Value16);
 			town.GrainTally += (short)this.processor.RegData.Value16;
 
 			this.round.Value = (ushort)(CityShields - CityUnitUpkeep);
@@ -1092,7 +1093,7 @@ namespace Civilization1Remaster.Game
 				this.round.Value = 0;
 
 			this.processor.RegAcc.Value16 = this.round.Value;
-			town.MaterialsTally += (short)this.processor.RegAcc.Value16;
+			town.MaterialsTally += (short)this.round.Value;
 
 			if (town.PresentMakingIdx < 0)
 				return ProductionStep.Improvement;
@@ -1198,7 +1199,7 @@ namespace Civilization1Remaster.Game
 					.Text(" builds ");
 				this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 				this.processor.RegAcc.Value16 = (ushort)(town.PresentMakingIdx * UnitKindTable.Stride + UnitKindTable.Origin);
-				this.owner.Words.Append(this.processor.RegAcc.Value16);
+				this.owner.Words.Append(((ushort)(town.PresentMakingIdx * UnitKindTable.Stride + UnitKindTable.Origin)));
 				this.owner.Words.Append(".\n");
 				DialogStyle = 3;
 				this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 80, 80);
@@ -1227,8 +1228,8 @@ namespace Civilization1Remaster.Game
 					}
 
 					this.round.Best = (ushort)other.RootCommerce;
-					this.processor.RegAcc.Value16 = this.round.OtherCity;
-					this.round.Found = this.processor.RegAcc.Value16;
+					this.round.Found = this.round.OtherCity;
+					this.processor.RegAcc.Value16 = this.round.Found;
 				}
 
 				this.round.OtherCity = 0x80;
@@ -1281,7 +1282,7 @@ namespace Civilization1Remaster.Game
 				this.round.Value = this.owner.Helpers.LocateNearestUnit(owner, (short)this.round.NewUnit, other.Place.X, other.Place.Y);
 
 				this.processor.RegAcc.Value16 = (ushort)(FoundDistance - 3);
-				FoundDistance = (ushort)this.owner.Libc.AbsoluteValue((short)this.processor.RegAcc.Value16);
+				FoundDistance = (ushort)this.owner.Libc.AbsoluteValue((short)((ushort)(FoundDistance - 3)));
 				this.processor.RegBase.Value16 = (ushort)(otherIdx * 0x1c);
 
 				if ((other.ConditionMarker & 0x20) != 0)
@@ -1321,8 +1322,8 @@ namespace Civilization1Remaster.Game
 					this.round.Best = FoundDistance;
 
 				this.round.Found = this.round.Value;
-				this.processor.RegAcc.Value16 = this.round.OtherCity;
-				this.round.Target = this.processor.RegAcc.Value16;
+				this.round.Target = this.round.OtherCity;
+				this.processor.RegAcc.Value16 = this.round.Target;
 			}
 
 			this.round.OtherCity = 0x80;
@@ -1541,7 +1542,7 @@ namespace Civilization1Remaster.Game
 			}
 
 			this.processor.RegAcc.Value16 = (ushort)(part - 0x16);
-			this.round.Best = this.owner.RocketScreen.ComputeSpaceshipSuccess(owner, (short)this.processor.RegAcc.Value16);
+			this.round.Best = this.owner.RocketScreen.ComputeSpaceshipSuccess(owner, (short)((ushort)(part - 0x16)));
 
 			if (this.round.Best != 0 && part < 0x18)
 			{
@@ -1864,14 +1865,14 @@ namespace Civilization1Remaster.Game
 			if (player.Gold > 2000)
 			{
 				this.processor.RegAcc.Value16 = (ushort)(player.Gold / 512);
-				this.round.Amount = (ushort)(this.round.Amount + this.processor.RegAcc.Value16);
+				this.round.Amount = (ushort)(this.round.Amount + ((ushort)(player.Gold / 512)));
 			}
 
 			// The purchase
 			this.processor.RegAcc.Value16 = this.round.Amount;
-			town.MaterialsTally += (short)this.processor.RegAcc.Value16;
+			town.MaterialsTally += (short)this.round.Amount;
 			this.processor.RegAcc.Value16 = (ushort)(this.round.Amount << 1);
-			player.Gold -= (short)this.processor.RegAcc.Value16;
+			player.Gold -= (short)((ushort)(this.round.Amount << 1));
 			town.ConditionMarker &= 0xef;
 		}
 
@@ -2029,9 +2030,9 @@ namespace Civilization1Remaster.Game
 					continue;
 
 				this.processor.RegAcc.Value16 = (ushort)((short)CityLuxuries / 2);
-				CityLuxuries = (ushort)(CityLuxuries + this.processor.RegAcc.Value16);
+				CityLuxuries = (ushort)(CityLuxuries + ((ushort)((short)CityLuxuries / 2)));
 				this.processor.RegAcc.Value16 = (ushort)((short)CityTaxes / 2);
-				CityTaxes = (ushort)(CityTaxes + this.processor.RegAcc.Value16);
+				CityTaxes = (ushort)(CityTaxes + ((ushort)((short)CityTaxes / 2)));
 			}
 		}
 
@@ -2058,13 +2059,13 @@ namespace Civilization1Remaster.Game
 					continue;
 
 				this.processor.RegAcc.Value16 = (ushort)((short)CityScience / 2);
-				this.round.Value = (ushort)(this.round.Value + this.processor.RegAcc.Value16);
+				this.round.Value = (ushort)(this.round.Value + ((ushort)((short)CityScience / 2)));
 
 				if (PlayerEnjoysWonderEffect(owner, 0xc) != 0)
 				{
 					this.processor.RegCount.Value16 = 3;
 					this.processor.RegAcc.Value16 = (ushort)((short)CityScience / 3);
-					this.round.Value = (ushort)(this.round.Value + this.processor.RegAcc.Value16);
+					this.round.Value = (ushort)(this.round.Value + ((ushort)((short)CityScience / 3)));
 				}
 			}
 
@@ -2072,11 +2073,11 @@ namespace Civilization1Remaster.Game
 			if (ObtainWonderCityID(10) == (ushort)townIdx)
 			{
 				this.processor.RegAcc.Value16 = this.round.Value;
-				this.round.Value = (ushort)(this.round.Value + this.processor.RegAcc.Value16);
+				this.round.Value = (ushort)(this.round.Value + this.round.Value);
 			}
 
-			this.processor.RegAcc.Value16 = this.round.Value;
-			CityScience = this.processor.RegAcc.Value16;
+			CityScience = this.round.Value;
+			this.processor.RegAcc.Value16 = CityScience;
 			CityHappy = 0;
 
 			// The content citizens
@@ -2085,7 +2086,7 @@ namespace Civilization1Remaster.Game
 				this.round.Value = (ushort)-(this.owner.World.HardnessTier * 2 - 0xe);
 				this.processor.RegCount.Value16 = (ushort)((short)this.round.Value / 2);
 				this.processor.RegAcc.Value16 = (ushort)(player.RegimeKind / 2 + 2);
-				this.round.Value = (ushort)((short)this.processor.RegAcc.Value16 * (short)this.processor.RegCount.Value16);
+				this.round.Value = (ushort)((short)((ushort)(player.RegimeKind / 2 + 2)) * (short)this.processor.RegCount.Value16);
 
 				short step = (short)this.round.Value;
 
@@ -2137,8 +2138,8 @@ namespace Civilization1Remaster.Game
 					100, (short)this.round.IconVert - 2, 222, (short)this.round.IconVert - 2, 1);
 			}
 
-			this.processor.RegAcc.Value16 = (ushort)((short)CityLuxuries / 2);
-			CityHappy = this.processor.RegAcc.Value16;
+			CityHappy = (ushort)((short)CityLuxuries / 2);
+			this.processor.RegAcc.Value16 = CityHappy;
 
 			ReshuffleCitizens(townIdx, this.round.Specialists);
 
@@ -2548,8 +2549,8 @@ namespace Civilization1Remaster.Game
 				if ((short)this.round.Distance > (short)this.round.Best)
 				{
 					this.round.Best = this.round.Distance;
-					this.processor.RegAcc.Value16 = this.round.Selected;
-					this.round.Found = this.processor.RegAcc.Value16;
+					this.round.Found = this.round.Selected;
+					this.processor.RegAcc.Value16 = this.round.Found;
 				}
 			}
 
@@ -2716,7 +2717,7 @@ namespace Civilization1Remaster.Game
 			this.round.UnitsDrawn = (ushort)(drawn + 1);
 			this.processor.RegSource.Value16 = (ushort)(drawn << 1);
 			this.processor.RegAcc.Value16 = (ushort)troopIdx;
-			this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x74), this.processor.RegAcc.Value16);
+			this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x74), (ushort)troopIdx);
 			this.round.UnitHoriz = (ushort)(this.round.UnitHoriz + 0x12);
 
 			this.processor.RegCount.Value16 = 6;
@@ -2742,7 +2743,7 @@ namespace Civilization1Remaster.Game
 			{
 				this.processor.RegCount.Value16 = 5;
 				this.processor.RegAcc.Value16 = (ushort)((short)(CitySpecialSlots - CityShields) * 5);
-				AnarchyPressure = (ushort)(AnarchyPressure + this.processor.RegAcc.Value16);
+				AnarchyPressure = (ushort)(AnarchyPressure + ((ushort)((short)(CitySpecialSlots - CityShields) * 5)));
 			}
 
 			AnarchyPressure = (ushort)(AnarchyPressure + (ushort)this.owner.Helpers.VerifyValueSpan((short)CitySpecialSlots, 0, town.TrueExtent));
@@ -2753,7 +2754,7 @@ namespace Civilization1Remaster.Game
 
 			short factor = (short)(this.processor.RegCount.Value16 - LeaderWordAt(this.processor.RegBase.Value16, LeaderTable.Leaning));
 			this.processor.RegAcc.Value16 = (ushort)(factor * (short)CityAttackersAway);
-			DemocracyPressure = (ushort)(DemocracyPressure - this.processor.RegAcc.Value16);
+			DemocracyPressure = (ushort)(DemocracyPressure - ((ushort)(factor * (short)CityAttackersAway)));
 		}
 
 		/// <summary>
@@ -2797,8 +2798,8 @@ namespace Civilization1Remaster.Game
 
 			// The improvements from 0xda on
 			this.round.ListEnd = 0;
-			this.processor.RegAcc.Value16 = this.round.ListStart;
-			this.round.Item = this.processor.RegAcc.Value16;
+			this.round.Item = this.round.ListStart;
+			this.processor.RegAcc.Value16 = this.round.Item;
 
 			for (; (short)this.round.Item < 0x18; this.round.Item = (ushort)(this.round.Item + 1))
 			{
@@ -2815,8 +2816,8 @@ namespace Civilization1Remaster.Game
 				{
 					// The list is full: the next page
 					this.round.ListFlags = (ushort)((this.round.ListFlags | 2) & 0xfffe);
-					this.processor.RegAcc.Value16 = this.round.Item;
-					this.round.ListEnd = this.processor.RegAcc.Value16;
+					this.round.ListEnd = this.round.Item;
+					this.processor.RegAcc.Value16 = this.round.ListEnd;
 					break;
 				}
 
@@ -3064,7 +3065,7 @@ namespace Civilization1Remaster.Game
 						SpritePicture((row + 8)));
 
 					this.processor.RegAcc.Value16 = this.round.Value;
-					this.round.Horiz = (ushort)(this.round.Horiz + this.processor.RegAcc.Value16);
+					this.round.Horiz = (ushort)(this.round.Horiz + this.round.Value);
 				}
 
 				this.round.Index = icon;
@@ -3088,8 +3089,8 @@ namespace Civilization1Remaster.Game
 			if (CityLuxuries != 0)
 				this.round.Horiz = (ushort)(this.round.Horiz + 8);
 
-			this.processor.RegAcc.Value16 = this.round.Horiz;
-			this.round.DrawHoriz = this.processor.RegAcc.Value16;
+			this.round.DrawHoriz = this.round.Horiz;
+			this.processor.RegAcc.Value16 = this.round.DrawHoriz;
 
 			RenderTradeIcons(0xe17a, 0xb);
 
@@ -3110,7 +3111,7 @@ namespace Civilization1Remaster.Game
 				this.owner.Services.RenderPictureToScreen(ScreenBox, (short)this.round.Horiz / 2,
 					(short)this.round.DrawVert + 24, SpritePicture(icon));
 				this.processor.RegAcc.Value16 = this.round.Value;
-				this.round.Horiz = (ushort)(this.round.Horiz + this.processor.RegAcc.Value16);
+				this.round.Horiz = (ushort)(this.round.Horiz + this.round.Value);
 			}
 
 			this.round.Index = drawn;
@@ -3694,8 +3695,8 @@ namespace Civilization1Remaster.Game
 				while ((ushort)this.owner.Libc.KeyAvailable() == 0);
 
 				this.round.DrawHoriz = this.round.CursorHoriz;
-				this.processor.RegAcc.Value16 = this.round.CursorVert;
-				this.round.DrawVert = this.processor.RegAcc.Value16;
+				this.round.DrawVert = this.round.CursorVert;
+				this.processor.RegAcc.Value16 = this.round.DrawVert;
 				ushort key = this.owner.Dialogs.ObtainNavigationKey();
 				this.round.Value = key;
 
@@ -3725,15 +3726,15 @@ namespace Civilization1Remaster.Game
 				if (!allowed)
 				{
 					this.round.CursorHoriz = this.round.DrawHoriz;
-					this.processor.RegAcc.Value16 = this.round.DrawVert;
-					this.round.CursorVert = this.processor.RegAcc.Value16;
+					this.round.CursorVert = this.round.DrawVert;
+					this.processor.RegAcc.Value16 = this.round.CursorVert;
 				}
 
 				if (key == 0xd || key == 0x20)
 				{
 					this.round.DrawHoriz = this.round.CursorHoriz;
-					this.processor.RegAcc.Value16 = this.round.CursorVert;
-					this.round.DrawVert = this.processor.RegAcc.Value16;
+					this.round.DrawVert = this.round.CursorVert;
+					this.processor.RegAcc.Value16 = this.round.DrawVert;
 					return true;
 				}
 
@@ -3793,8 +3794,8 @@ namespace Civilization1Remaster.Game
 		private CityScreenStep TurnListPage()
 		{
 			this.round.ListFlags = (ushort)(this.round.ListFlags ^ 1);
-			this.processor.RegAcc.Value16 = this.round.ListEnd;
-			this.round.ListStart = this.processor.RegAcc.Value16;
+			this.round.ListStart = this.round.ListEnd;
+			this.processor.RegAcc.Value16 = this.round.ListStart;
 			RestoreShieldsAndTrade();
 			return CityScreenStep.Redraw;
 		}
@@ -4641,11 +4642,11 @@ namespace Civilization1Remaster.Game
 					this.round.TileVert = (ushort)vertLoc;
 
 					this.processor.RegAcc.Value16 = (ushort)(horizLoc - (short)this.round.Horiz);
-					if ((short)(ushort)this.owner.Libc.AbsoluteValue((short)this.processor.RegAcc.Value16) > 2)
+					if ((short)(ushort)this.owner.Libc.AbsoluteValue((short)((ushort)(horizLoc - (short)this.round.Horiz))) > 2)
 						continue;
 
 					this.processor.RegAcc.Value16 = (ushort)(vertLoc - (short)this.round.Vert);
-					if ((short)(ushort)this.owner.Libc.AbsoluteValue((short)this.processor.RegAcc.Value16) > 2)
+					if ((short)(ushort)this.owner.Libc.AbsoluteValue((short)((ushort)(vertLoc - (short)this.round.Vert))) > 2)
 						continue;
 
 					this.processor.RegCount.Value16 = 0xa;
@@ -5262,11 +5263,12 @@ namespace Civilization1Remaster.Game
 					this.owner.World.Towns[townIdx].ParticipantIdx == participantIdx;
 			}
 
-			this.processor.RegAcc.Value16 = (ushort)(enjoys ? 1 : 0);
+			ushort result = (ushort)(enjoys ? 1 : 0);
+			this.processor.RegAcc.Value16 = result;
 
 			this.processor.Journal.CloseScope("PlayerEnjoysWonderEffect");
 
-			return this.processor.RegAcc.Value16;
+			return result;
 		}
 
 		/// <summary>
@@ -5350,10 +5352,11 @@ namespace Civilization1Remaster.Game
 			short cityIdx = (short)ShownCity;
 			ushort markers = this.owner.World.Towns[cityIdx].LaborerMarkers2;
 			var specType = CitizenSpecialistRules.GetSpecialistType(markers, arg1);
-			this.processor.RegAcc.Value16 = (ushort)specType;
+			ushort result = (ushort)specType;
+			this.processor.RegAcc.Value16 = result;
 
 			this.processor.Journal.CloseScope("ObtainCitizenType");
-			return this.processor.RegAcc.Value16;
+			return result;
 		}
 
 		/// <summary>
@@ -5368,10 +5371,11 @@ namespace Civilization1Remaster.Game
 			short cityIdx = (short)ShownCity;
 			ushort markers = this.owner.World.Towns[cityIdx].LaborerMarkers2;
 			int tally = CitizenSpecialistRules.CountSpecialists(markers, (CitizenSpecialistRules.SpecialistType)arg1);
-			this.processor.RegAcc.Value16 = (ushort)tally;
+			ushort result = (ushort)tally;
+			this.processor.RegAcc.Value16 = result;
 
 			this.processor.Journal.CloseScope("TallySpecialists");
-			return this.processor.RegAcc.Value16;
+			return result;
 		}
 
 		/// <summary>

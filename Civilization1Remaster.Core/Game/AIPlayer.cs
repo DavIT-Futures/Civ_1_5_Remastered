@@ -2197,10 +2197,10 @@ namespace Civilization1Remaster.Game
 
 					if ((short)this.look.Score > (short)this.look.BestScore)
 					{
-						this.processor.RegAcc.Value16 = this.look.Score;
-						this.look.BestScore = this.processor.RegAcc.Value16;
-						this.processor.RegAcc.Value16 = this.look.Direction;
-						this.look.BestDirection = this.processor.RegAcc.Value16;
+						this.look.BestScore = this.look.Score;
+						this.processor.RegAcc.Value16 = this.look.BestScore;
+						this.look.BestDirection = this.look.Direction;
+						this.processor.RegAcc.Value16 = this.look.BestDirection;
 					}
 
 					if (this.owner.MapOps.ContainsHut(this.owner.MapOps.ObtainTerrainType(nextHoriz, nextVert), nextHoriz, nextVert) != 0 && this.look.Role != 0)
@@ -2279,18 +2279,18 @@ namespace Civilization1Remaster.Game
 
 				if ((short)this.look.Round > (short)this.look.BestScore && HasCityNear(participantIdx, town))
 				{
-					this.processor.RegAcc.Value16 = this.look.Round;
-					this.look.BestScore = this.processor.RegAcc.Value16;
-					this.processor.RegAcc.Value16 = this.look.Harbour;
-					this.look.NearestCity = this.processor.RegAcc.Value16;
+					this.look.BestScore = this.look.Round;
+					this.processor.RegAcc.Value16 = this.look.BestScore;
+					this.look.NearestCity = this.look.Harbour;
+					this.processor.RegAcc.Value16 = this.look.NearestCity;
 				}
 			}
 
 			if ((short)this.look.BestScore < 0xa || player.LiveTroops[25] <= 1)
 				return 0x20;
 
-			this.processor.RegAcc.Value16 = this.look.NearestCity;
-			this.look.Harbour = this.processor.RegAcc.Value16;
+			this.look.Harbour = this.look.NearestCity;
+			this.processor.RegAcc.Value16 = this.look.Harbour;
 			Game.State.City target = this.owner.World.Towns[this.look.Harbour];
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHoriz, (byte)(sbyte)target.Place.X);
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelVert, (byte)(sbyte)target.Place.Y);
@@ -2452,10 +2452,10 @@ namespace Civilization1Remaster.Game
 
 					if ((short)this.look.HarbourDistance < (short)this.look.BestDistance)
 					{
-						this.processor.RegAcc.Value16 = this.look.HarbourDistance;
-						this.look.BestDistance = this.processor.RegAcc.Value16;
-						this.processor.RegAcc.Value16 = this.look.Direction;
-						this.look.NearestUnit = this.processor.RegAcc.Value16;
+						this.look.BestDistance = this.look.HarbourDistance;
+						this.processor.RegAcc.Value16 = this.look.BestDistance;
+						this.look.NearestUnit = this.look.Direction;
+						this.processor.RegAcc.Value16 = this.look.NearestUnit;
 					}
 				}
 
@@ -2502,10 +2502,10 @@ namespace Civilization1Remaster.Game
 
 				if ((short)this.look.HarbourDistance < (short)this.look.BestDistance)
 				{
-					this.processor.RegAcc.Value16 = this.look.HarbourDistance;
-					this.look.BestDistance = this.processor.RegAcc.Value16;
-					this.processor.RegAcc.Value16 = this.look.Direction;
-					this.look.NearestCity = this.processor.RegAcc.Value16;
+					this.look.BestDistance = this.look.HarbourDistance;
+					this.processor.RegAcc.Value16 = this.look.BestDistance;
+					this.look.NearestCity = this.look.Direction;
+					this.processor.RegAcc.Value16 = this.look.NearestCity;
 				}
 			}
 

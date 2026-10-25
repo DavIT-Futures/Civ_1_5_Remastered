@@ -31,9 +31,10 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private ushort ReturnAcc(int amount)
 		{
-			this.processor.RegAcc.Value16 = (ushort)amount;
+			ushort result = (ushort)amount;
+			this.processor.RegAcc.Value16 = result;
 
-			return this.processor.RegAcc.Value16;
+			return result;
 		}
 
 		/// <summary>

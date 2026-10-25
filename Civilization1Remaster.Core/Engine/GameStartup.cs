@@ -93,8 +93,8 @@ namespace Civilization1Remaster.Engine
 			if (MainMenuChoice == 1)
 			{
 				// A loaded game: the map view around the first city of the human player
-				this.processor.RegAcc.Value16 = (ushort)(this.owner.World.Participants[this.owner.World.PersonParticipantIdx].HorizBegin - 7);
-				MapViewHoriz = this.processor.RegAcc.Value16;
+				MapViewHoriz = (ushort)(this.owner.World.Participants[this.owner.World.PersonParticipantIdx].HorizBegin - 7);
+				this.processor.RegAcc.Value16 = MapViewHoriz;
 				MapViewVert = 0x13;
 
 				this.owner.TurnHooks.RepaintMainScreen();
@@ -194,8 +194,8 @@ namespace Civilization1Remaster.Engine
 				this.processor.RegAcc.Value16 = this.processor.BitOrWord(this.processor.RegAcc.Value16, this.owner.Pointer.Buttons);
 				this.owner.GlobDb3a = this.processor.RegAcc.Value16;
 				this.owner.GlobDb3c = this.owner.Pointer.Horiz;
-				this.processor.RegAcc.Value16 = this.owner.Pointer.Vert;
-				this.owner.GlobDb3e = this.processor.RegAcc.Value16;
+				this.owner.GlobDb3e = this.owner.Pointer.Vert;
+				this.processor.RegAcc.Value16 = this.owner.GlobDb3e;
 			}
 			else
 			{

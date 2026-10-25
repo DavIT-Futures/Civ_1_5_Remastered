@@ -993,9 +993,9 @@ namespace Civilization1Remaster.UI
 			this.owner.TurnHooks.RepaintMainScreen();
 
 			KingMood = 0xffff;
-			this.processor.RegAcc.Value16 = 0;
-			KingAnswer = this.processor.RegAcc.Value16;
-			EmissaryAudience = this.processor.RegAcc.Value16;
+			KingAnswer = 0;
+			EmissaryAudience = KingAnswer;
+			this.processor.RegAcc.Value16 = EmissaryAudience;
 
 			// Far return
 			this.processor.Journal.CloseScope("FinishAudience");

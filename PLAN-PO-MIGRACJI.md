@@ -352,6 +352,19 @@ SI/DI.
    nic nie zmienia nawet w trybie klasycznym – śmieci zostawiają wywołania w tej samej turze – więc taki test nic nie
    dowodzi i go nie ma.)
 3. Reszta B2 (zmienne lokalne → C#) i B1 (wyniki przez `return`), z sondą stosu jak dotąd.
+   **Stan 2026-10-25:** B2 jest w praktyce zrobione – z 620 dostępów do ramki pod numerami tylko 123 to odczyty, i to
+   głównie klasy zmiennych ramki (`UnitLook` w `AIPlayer`, `CityRound` w `CityManagement`, właściwości get / set na
+   ramce); 497 to zapisy „Keep” (wartość jest już zmienną C#, ramka dostaje kopię). Kopie są potrzebne dopóki (a) w
+   trybie klasycznym funkcje czytają śmieci ze stosu i (b) testy różnicowe porównują ramkę i stos pod nią z kopią
+   oryginału – więc ich usunięcie dopiero po punkcie 4 i w fazie 2 (po nowym baseline'ie). B1: 77 odczytów AX w kodzie gry
+   zamienionych na wartości C# (skrypty `b1ax.py`, `b1ax2.py`, `retax2.py` w scratchpadzie: para „AX = E; X = AX” →
+   „X = E; AX = X”, odczyt AX kilka wierszy po zapisie czystego wyrażenia → samo wyrażenie, funkcja z jednym zapisem AX
+   i `return AX` → `return` wartości); zapisy AX zostają (rejestry porównują testy). Zostało 73 odczytów (`DisplayMenu`,
+   `ImportTextFromFile`, rozgałęzienia `HandleCity`, przerwania i sterowniki – te ostatnie to interfejs rejestrów,
+   zostają do B6.8). Pułapka: zdejmowanie nawiasów regexem `\(\((ushort)\)x\)` psuje wywołania `F((ushort)x)` –
+   tylko na zmienionych wierszach. Pełny zestaw 809/809; mutacje 7 / 8 (dwie dopiero z właściwym testem:
+   `RenderSpaceshipMatchesOriginalCode`, przypadki kliknięć pól mapy miasta w `HandleCityCasesMatchFrozenGame`;
+   ocalała `TileValue + 1` równoważna – wszystkie pola przesunięte o tyle samo, porównywane tylko między sobą).
 4. Testy różnicowe porównują sam stan (bez rejestrów i stosu pod SP), żeby usuwanie SI/DI w B3 nie dawało fałszywych
    alarmów.
 5. Tag `classic-final`: ostatni stan zgodny z oryginałem, ze starymi baseline'ami.

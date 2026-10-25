@@ -101,7 +101,7 @@ namespace Civilization1Remaster.UI
 
 			this.processor.Journal.CloseScope("DisplayCivilopediaIndex");
 
-			return this.processor.RegAcc.Value16;
+			return answer;
 		}
 
 		/// <summary>
