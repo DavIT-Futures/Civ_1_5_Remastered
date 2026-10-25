@@ -374,7 +374,32 @@ SI/DI.
    `migrate-batch` poprawione.
 5. Tag `classic-final`: ostatni stan zgodny z oryginałem, ze starymi baseline'ami.
 
-**Faza 1 – nowy baseline (jeden commit):** `HeadlessGame` wyłącza wszystkie `Classic…`, baseline'y golden master
+**Faza 1 – nowy baseline (jeden commit):** **zrobione 2026-10-26.** Tag `classic-final` (ostatni stan zgodny z
+oryginałem, stare baseline'y). `HeadlessGame(…, classic: false)` domyślnie gra jak remaster; `classic: true` włącza
+wszystkie przełączniki (`HeadlessGame.TurnClassic`) – tak robią `DifferentialPair` i `DualGame` (porównania z kodem
+oryginału i z zamrożoną grą). Baseline'y golden master nagrane od nowa z gry remasteru. Raport (kanały zachowania,
+`classic-final` → nowe; po wczytaniu wszędzie identycznie, tura 1: leczenie `Vitals.missingStrikeMarks` i stan
+generatora losowego – dwa losowania katastrof – potem coraz więcej, bo komputery grają inaczej):
+
+   | Autozapis | Różnych wartości w turach 0 – 5 | Najczęściej zmienione kanały |
+   |---|---|---|
+   | AUTO00 | [0, 8, 35, 78, 172, 161] | mem 138, state.Participants[7] 43, state.Participants[4] 35, state.Towns[9] 24, map 20, state.Vitals 17 |
+   | AUTO01 | [0, 4, 8, 50, 62, 85] | mem 77, state.Participants[2] 31, state.Towns[29] 18, map 12, state.Participants[6] 10, state.Vitals 9 |
+   | AUTO02 | [0, 4, 48, 85, 117, 140] | mem 115, state.Participants[2] 45, state.Vitals 25, state.Participants[4] 20, state.Towns[29] 19, state.Towns[14] 18 |
+   | AUTO03 | [0, 14, 54, 85, 111, 136] | mem 139, state.Participants[2] 48, state.Participants[4] 31, state.Vitals 26, map 20, state.Participants[7] 17 |
+   | AUTO04 | [0, 4, 54, 38, 54, 85] | mem 70, state.Participants[2] 51, state.Vitals 18, state.Participants[4] 18, state.Towns[29] 16, state.Towns[9] 15 |
+   | AUTO05 | [0, 3, 10, 26, 30, 36] | mem 59, state.Participants[2] 12, state.Vitals 6, map 6, rng 5, state.Towns[29] 5 |
+   | AUTO06 | [0, 2, 32, 38, 68, 101] | mem 76, state.Participants[2] 26, state.Participants[7] 24, state.Participants[4] 23, state.Towns[9] 17, state.Vitals 13 |
+   | AUTO07 | [0, 3, 18, 27, 100, 116] | mem 98, state.Participants[7] 56, state.Participants[4] 19, state.Towns[9] 19, state.Vitals 15, state.Participants[2] 11 |
+   | AUTO08 | [0, 7, 22, 21, 93, 111] | mem 87, state.Participants[2] 27, state.Vitals 23, state.Participants[4] 15, map 10, state.Participants[6] 10 |
+   | AUTO09 | [0, 5, 7, 29, 56, 134] | mem 86, state.Participants[7] 19, state.Participants[2] 13, map 13, state.Participants[4] 13, state.Towns[9] 13 |
+   | AUTO10 | [0, 3, 32, 94, 109, 133] | mem 124, state.Participants[2] 29, state.Participants[6] 28, state.Vitals 27, state.Participants[7] 26, map 17 |
+   | AUTO11 | [0, 5, 60, 104, 140, 145] | mem 134, state.Participants[7] 66, state.Participants[2] 43, state.Participants[4] 24, state.Towns[14] 23, state.Towns[16] 17 |
+   | AUTO12 | [0, 2, 15, 32, 55, 88] | mem 68, state.Participants[7] 22, state.Participants[2] 21, map 8, state.Towns[2] 7, state.Participants[4] 7 |
+   | AUTO13 | [0, 3, 10, 39, 32, 55] | mem 66, state.Participants[4] 11, state.Towns[1] 9, map 9, state.Vitals 8, state.Participants[7] 8 |
+   | AUTO14 | [0, 6, 6, 34, 47, 58] | mem 59, state.Participants[2] 22, state.Vitals 16, state.Participants[4] 10, state.Towns[1] 10, rng 5 |
+
+Plan pierwotny: `HeadlessGame` wyłącza wszystkie `Classic…`, baseline'y golden master
 nagrane od nowa (15 autozapisów × 5 tur) z raportem, które kanały w których turach się zmieniły i dlaczego; test
 determinizmu i kilka tur w GUI. Testy z zamrożoną grą (Dual) i różnicowe dla zmienionych funkcji włączają `Classic…`
 jawnie – działają dalej do fazy 3.

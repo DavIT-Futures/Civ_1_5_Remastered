@@ -32,7 +32,7 @@ namespace Civilization1Remaster.Tests.GoldenMaster
 		private readonly ScriptedKeyboard keyboard;
 		private readonly Dictionary<string, int> calls = new Dictionary<string, int>(StringComparer.Ordinal);
 
-		public HeadlessGame(string gameFolder, string? savesFolder = null, int[]? script = null)
+		public HeadlessGame(string gameFolder, string? savesFolder = null, int[]? script = null, bool classic = false)
 		{
 			this.folder = Path.Combine(Path.GetTempPath(), "Civ1GoldenMaster", Guid.NewGuid().ToString("N"));
 			Directory.CreateDirectory(this.folder);
@@ -54,26 +54,10 @@ namespace Civilization1Remaster.Tests.GoldenMaster
 			this.processor.StandardFolder = this.folder + Path.DirectorySeparatorChar;
 			this.processor.FixedClockSpan = ClockSpan;
 
-			// The baselines were recorded before HealingRules (healing in cities, ships at the coast)
-			this.Engine.TurnHooks.ClassicHealing = true;
-
-			// And the news of a technology as before (TechnologyNewsRules: "... from the Barbarians" for research)
-			this.Engine.TurnHooks.ClassicTechnologyNews = true;
-			this.Engine.TurnHooks.ClassicRailroads = true;
-			this.Engine.TurnHooks.ClassicWonderCities = true;
-			this.Engine.TurnHooks.ClassicSchismHomes = true;
-			this.Engine.TurnHooks.ClassicSchism = true;
-			this.Engine.TurnHooks.ClassicStarvation = true;
-			this.Engine.TurnHooks.ClassicStackStrength = true;
-			this.Engine.TurnHooks.ClassicMilitaryReportRows = true;
-			this.Engine.TurnHooks.ClassicTenths = true;
-			this.Engine.TurnHooks.ClassicSpaceshipPictures = true;
-			this.Engine.TurnHooks.ClassicDisasterDraws = true;
-			this.Engine.TurnHooks.ClassicReplayPopulation = true;
-			this.Engine.TurnHooks.ClassicEmissaryThreat = true;
-			this.Engine.TurnHooks.ClassicFreshGameRuins = true;
-			this.Engine.TurnHooks.ClassicSpaceshipSlots = true;
-			this.Engine.TurnHooks.ClassicStackLeftovers = true;
+			// The remaster plays by default (the baselines since phase 1, 2026-10-26); the comparisons with the original
+			// translated code (DifferentialPair, DualGame) ask for the classic game: every Classic switch on
+			if (classic)
+				TurnClassic(this.Engine.TurnHooks);
 
 			this.keyboard = new ScriptedKeyboard(this.processor, this.Engine.VideoCard.Tokens, this.Engine.VideoCard.VideoLatch,
 				script ?? ScriptedKeyboard.DefaultScript);
@@ -87,6 +71,31 @@ namespace Civilization1Remaster.Tests.GoldenMaster
 			this.Engine.Journal.ScopeListener = CountCall;
 			Dual.LeftoverWatcher.Attach(this.processor, this.Engine.Journal);
 			this.processor.Heartbeat = CheckDeadline;
+		}
+
+		/// <summary>
+		/// The game as the translated code of the original played it: every remaster change off (the Classic switches of
+		/// TurnEvents). The state of the tag classic-final, before the new baselines.
+		/// </summary>
+		public static void TurnClassic(Civilization1Remaster.Game.TurnEvents turnHooks)
+		{
+			turnHooks.ClassicHealing = true;
+			turnHooks.ClassicTechnologyNews = true;
+			turnHooks.ClassicRailroads = true;
+			turnHooks.ClassicWonderCities = true;
+			turnHooks.ClassicSchismHomes = true;
+			turnHooks.ClassicSchism = true;
+			turnHooks.ClassicStarvation = true;
+			turnHooks.ClassicStackStrength = true;
+			turnHooks.ClassicMilitaryReportRows = true;
+			turnHooks.ClassicTenths = true;
+			turnHooks.ClassicSpaceshipPictures = true;
+			turnHooks.ClassicDisasterDraws = true;
+			turnHooks.ClassicReplayPopulation = true;
+			turnHooks.ClassicEmissaryThreat = true;
+			turnHooks.ClassicFreshGameRuins = true;
+			turnHooks.ClassicSpaceshipSlots = true;
+			turnHooks.ClassicStackLeftovers = true;
 		}
 
 		public GameEngine Engine { get; }

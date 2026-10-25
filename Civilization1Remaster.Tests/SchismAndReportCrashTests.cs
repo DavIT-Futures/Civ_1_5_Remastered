@@ -82,6 +82,9 @@ namespace Civilization1Remaster.Tests
 			GameEngine engine = game.Engine;
 			engine.TurnHooks.ClassicMilitaryReportRows = classic;
 
+			// The classic report reads the garbage of the stack: the frame keeps what lies there (the remaster zeroes it)
+			engine.TurnHooks.ClassicStackLeftovers = classic;
+
 			// The words below the stack pointer, where the report's frame will be: a player number past the table
 			ushort stackTop = engine.Processor.RegStack.Value16;
 

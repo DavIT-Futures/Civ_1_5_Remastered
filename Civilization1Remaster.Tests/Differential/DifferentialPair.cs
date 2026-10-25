@@ -67,8 +67,8 @@ namespace Civilization1Remaster.Tests.Differential
 		{
 			string saves = Path.Combine(GoldenMasterTests.SourceFolder(), "Saves");
 
-			this.Original = new HeadlessGame(this.gameFolder, saves, this.script);
-			this.Rewritten = new HeadlessGame(this.gameFolder, saves, this.script);
+			this.Original = new HeadlessGame(this.gameFolder, saves, this.script, classic: true);
+			this.Rewritten = new HeadlessGame(this.gameFolder, saves, this.script, classic: true);
 
 			this.Original.LoadAutosave(this.bay, this.randomSeed);
 			this.Rewritten.LoadAutosave(this.bay, this.randomSeed);

@@ -92,7 +92,14 @@ CIV1_GOLDEN_MASTER_UPDATE=1 CIV1_GOLDEN_MASTER_SOURCE="commit $(git rev-parse --
 (PowerShell: `$env:CIV1_GOLDEN_MASTER_UPDATE=1` before the command.) `CIV1_GOLDEN_MASTER_SOURCE` is written into the
 header. Review the diff of `Baselines/` before committing it.
 
-From the original code (how the committed baselines were made):
+**Since phase 1 (2026-10-26) the committed baselines are those of the remaster**: recorded from the working copy as above
+with `HeadlessGame` playing the remaster (every `TurnHooks.Classic…` switch off, the default; `classic: true` turns them
+all on, as `DifferentialPair` and `DualGame` do for the comparisons with the original code). The classic baselines, made
+from the original code as below, are at the git tag `classic-final`. The report of the change (per autosave: identical
+after loading, first differences in turn 1 – healing `Vitals`, the random generator of the two disaster draws – growing
+to 36 – 172 values in turn 5 as the computer players move otherwise) is in PLAN-PO-MIGRACJI.md, phase 1.
+
+From the original code (how the classic baselines, tag `classic-final`, were made):
 
 ```bash
 git worktree add --detach ../civ1-baseline a3b5a3b

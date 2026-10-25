@@ -23,7 +23,7 @@ public sealed class DualGame : IDisposable
 		string saves = Path.Combine(GoldenMasterTests.SourceFolder(), "Saves");
 
 		this.Frozen = new FrozenGame(gameFolder, saves, script);
-		this.Current = new HeadlessGame(gameFolder, saves, script);
+		this.Current = new HeadlessGame(gameFolder, saves, script, classic: true);
 
 		// The fixed clock counts the calls of game functions (CPU.FixedClockSpan), so the timer interrupts come at the same
 		// calls in both games, however many memory accesses the current code makes.
