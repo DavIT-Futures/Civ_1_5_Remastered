@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
 using Civilization1Remaster.Emulation;
@@ -167,6 +167,32 @@ public class MovedDataTests
 			Assert.Equal(names[blockIdx], Enumerable.Range(0, nameBlocks[blockIdx].Length)
 				.Select(idx => engine.Processor.PullGlobalByte((ushort)(start + idx))).ToArray());
 		}
+	}
+
+	/// <summary>B6.6: the open files are kept by the C runtime: a handle reads its file, a closed handle is gone, handles grow</summary>
+	[Fact]
+	public void FileHandlesLiveInTheCRuntime()
+	{
+		string? gameFolder = GoldenMasterTests.FindGameFolder();
+		Assert.SkipWhen(gameFolder == null, "The CIVILIZATION game folder (the original game files) was not found");
+
+		using HeadlessGame game = new HeadlessGame(gameFolder!, Path.Combine(GoldenMasterTests.SourceFolder(), "Saves"));
+		game.LoadAutosave(9, GoldenMasterTests.RandomSeed);
+		GameEngine engine = game.Engine;
+
+		short handle = engine.Libc.OpenStream("story.txt", "rt");
+		Assert.True(handle >= 0x20);
+		Assert.True(engine.Libc.ScanStream(handle, "%[^\n]\n", TextBuffer.Address) > 0);
+		Assert.NotEqual(0, engine.Words.Length);
+		Assert.Equal(0, engine.Libc.CloseStream(handle));
+
+		// Closed: closing again fails, reading finds nothing; the next file gets the next handle
+		Assert.Equal(-1, engine.Libc.CloseStream(handle));
+		Assert.Equal(-1, engine.Libc.ScanStream(handle, "%[^\n]\n", TextBuffer.Address));
+
+		short next = engine.Libc.OpenStream("story.txt", "rt");
+		Assert.Equal(handle + 1, next);
+		Assert.Equal(0, engine.Libc.CloseStream(next));
 	}
 
 	/// <summary>B6.1: the message buffer is kept in C#, the memory under it stays empty, and the memory reads give the array</summary>
