@@ -24,7 +24,17 @@ namespace Civilization1Original.Emulation
 		{
 			EnterFrame();
 			this.regStack.Value16 = SubtractWord(this.regStack.Value16, localsSize);
+
+			// Test seam (phase 2, 2026-10-26): the locals start at 0, like the remaster (TurnEvents.ClassicStackLeftovers off)
+			if (this.ClearFrameLocals && localsSize != 0)
+			{
+				for (int place = 0; place < localsSize; place++)
+					this.storage.EmitUInt8(this.segStack.Value16, (ushort)(this.regStack.Value16 + place), 0);
+			}
 		}
+
+		/// <summary>Test seam: the local variables of a new frame start at 0 instead of the stack leftovers</summary>
+		public bool ClearFrameLocals { get; set; }
 
 		/// <summary>
 		/// The end of a function: throws the local variables away and restores the caller's frame pointer (mov sp, bp; pop bp).

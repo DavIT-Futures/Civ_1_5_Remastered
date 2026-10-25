@@ -25,6 +25,10 @@ public sealed class DualGame : IDisposable
 		this.Frozen = new FrozenGame(gameFolder, saves, script);
 		this.Current = new HeadlessGame(gameFolder, saves, script, classic: true);
 
+		// Both games zero the locals of a new frame (the current one by default, the frozen one through its seam): what one
+		// function leaves on the stack for another no longer decides anything, so B3 may remove frames
+		this.Frozen.Engine.Processor.ClearFrameLocals = true;
+
 		// The fixed clock counts the calls of game functions (CPU.FixedClockSpan), so the timer interrupts come at the same
 		// calls in both games, however many memory accesses the current code makes.
 	}

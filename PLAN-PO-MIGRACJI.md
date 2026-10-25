@@ -404,7 +404,11 @@ nagrane od nowa (15 autozapisów × 5 tur) z raportem, które kanały w których
 determinizmu i kilka tur w GUI. Testy z zamrożoną grą (Dual) i różnicowe dla zmienionych funkcji włączają `Classic…`
 jawnie – działają dalej do fazy 3.
 
-**Faza 2 – B3 + B6.8 pod nowym baseline'em:** ramki, SI/DI, BX/CX/DX moduł po module; przy jawnych wartościach
+**Faza 2 – B3 + B6.8 pod nowym baseline'em:** **Przygotowanie zrobione 2026-10-26:** porównania z kodem oryginału
+zerują ramki po obu stronach – `HeadlessGame.TurnClassic` nie włącza już `ClassicStackLeftovers` (bieżące CPU zeruje
+domyślnie, `DifferentialPair` ma obie gry na nim), a zamrożona gra dostała szew `CPU.ClearFrameLocals` (włącza go
+`DualGame`). Pełny zestaw 809/809 bez innych zmian. Odtąd żaden test nie zależy od tego, co jedna funkcja zostawia
+na stosie dla drugiej, więc zapisy „Keep”, klasy zmiennych ramki i ramki można usuwać. ramki, SI/DI, BX/CX/DX moduł po module; przy jawnych wartościach
 zamiast śmieci golden master zostaje zielony, sonda stosu ma pokazać zero czytelników. Na końcu rejestry z CPU,
 `MZExecutable` i obraz CIV.EXE w pamięci (dane początkowe z pliku przy starcie).
 

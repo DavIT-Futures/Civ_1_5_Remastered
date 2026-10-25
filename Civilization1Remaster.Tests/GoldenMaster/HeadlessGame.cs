@@ -75,7 +75,9 @@ namespace Civilization1Remaster.Tests.GoldenMaster
 
 		/// <summary>
 		/// The game as the translated code of the original played it: every remaster change off (the Classic switches of
-		/// TurnEvents). The state of the tag classic-final, before the new baselines.
+		/// TurnEvents), except the stack leftovers: since phase 2 (2026-10-26) the comparisons with the original code
+		/// (DifferentialPair, DualGame with the frozen game's CPU.ClearFrameLocals) zero the frames on both sides, so the
+		/// removal of frames and saved registers (B3) changes neither side. At the tag classic-final the leftovers were on too.
 		/// </summary>
 		public static void TurnClassic(Civilization1Remaster.Game.TurnEvents turnHooks)
 		{
@@ -95,7 +97,6 @@ namespace Civilization1Remaster.Tests.GoldenMaster
 			turnHooks.ClassicEmissaryThreat = true;
 			turnHooks.ClassicFreshGameRuins = true;
 			turnHooks.ClassicSpaceshipSlots = true;
-			turnHooks.ClassicStackLeftovers = true;
 		}
 
 		public GameEngine Engine { get; }
