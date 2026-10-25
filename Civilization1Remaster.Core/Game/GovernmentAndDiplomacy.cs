@@ -21,8 +21,9 @@ namespace Civilization1Remaster.Game
 		/// every 16th turn the peace of a war (1 without 2) ends with a message when the human player knows one of them,
 		/// and the flags 1 and 0x10 are cleared both ways. Every 32nd turn (the player's turn, 4 * player) an AI player that
 		/// asked for help (0x20) against a player at war with the human player sends an emissary: a much weaker one pays
-		/// tribute for an alliance, a stronger one threatens (the name read at 0x1992 + 16 * player, not of the player, like
-		/// in the original). SI and DI get the values of the original before the calls.
+		/// tribute for an alliance, a stronger one threatens (the name of the enemy; with ClassicEmissaryThreat read at
+		/// 0x1992 + 16 * player, past the table, like the translated code). SI and DI get the values of the original before
+		/// the calls.
 		/// </summary>
 		public void HandlePeaceTreaties(short participantIdx)
 		{
@@ -205,7 +206,11 @@ namespace Civilization1Remaster.Game
 
 			this.owner.Words.Clear();
 
-			this.owner.Libc.CopyText(CodeText2, CivilizationPluralAt(this.processor.RegDest.Value16));
+			// $THEM of the threat: the enemy (the translated code read the offset from DI, player << 4 when nothing called
+			// changes it: TurnEndRules.EmissaryEnemyName)
+			ushort enemyName = this.owner.TurnHooks.ClassicEmissaryThreat ? this.processor.RegDest.Value16 :
+				TurnEndRules.EmissaryEnemyName(participantIdx, otherIdx, classic: false);
+			this.owner.Libc.CopyText(CodeText2, CivilizationPluralAt(enemyName));
 
 			this.owner.Libc.CopyText(CodeText4, (player.Relations[person] & 2) == 0 ? (ushort)0x299b : (ushort)0x2990);
 

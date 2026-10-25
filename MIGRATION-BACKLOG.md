@@ -1433,13 +1433,23 @@ te błędy są odtwarzane jawnie:
 
 - `HandleGameEnd`: co 50 tur wpis 11 historii dostaje jako starszy bajt populacji `(bajt & 0xff00) >> 8`, czyli zawsze 0;
   losowe katastrofy miast: licznik pętli to numer wylosowanego miasta + 1 (pętla kończy się po pierwszym mieście, chyba
-  że wylosowano miasto 0). Po naprawie: starszy bajt populacji, dwa losowania.
+  że wylosowano miasto 0). Po naprawie: starszy bajt populacji, dwa losowania. **Naprawione w grze 2026-10-25** za
+  przełącznikami `TurnHooks.ClassicReplayPopulation` i `ClassicDisasterDraws` (`TurnEndRules`): starszy bajt populacji,
+  dwa losowania miast na turę (`StrikeCity` wydzielone). Testy: `TurnEndRulesTests` (reguły; w grze oba warianty:
+  liczba losowań przez porównanie z generatorem o tym samym ziarnie, wpis 11 przy miastach wielkości 25).
 - `DisplayCensus`: wielkość rodziny wypisywana jako „x/10.x/10” zamiast „x/10.x%10”. Po naprawie: reszta z dzielenia.
+  **Naprawione w grze 2026-10-25** za przełącznikiem `TurnHooks.ClassicTenths` (`TenthsRules`, razem z masą i czasem
+  lotu statku). Test: `TenthsAndSpaceshipTests.CensusWritesTheTenths` (w tym autozapisie „2.2” kontra „2.6”).
 - `RenderSpaceship`: obrazek części statku spod `word[część << 1 + 0x682a]` – w C# to przesunięcie o 0x682b, czyli o 11 bitów,
   więc adres jest zły (obrazek zwykle nie istnieje i nic się nie rysuje); masa i czas lotu wypisywane jako „x/10,x/10” zamiast
-  „x/10,x%10”. Po naprawie: `word[0x682a + 2 * część]`, reszta z dzielenia.
+  „x/10,x%10”. Po naprawie: `word[0x682a + 2 * część]`, reszta z dzielenia. **Naprawione w grze 2026-10-25** za
+  przełącznikami `TurnHooks.ClassicSpaceshipPictures` (`SpaceshipPictureRules`) i `ClassicTenths`. Test:
+  `TenthsAndSpaceshipTests.SpaceshipDrawsTheParts` (obrazek części na jej miejscu; masa i czas lotu tylko w teście
+  reguły – oba teksty powstają jeden po drugim bez funkcji gry pomiędzy, więc w grze ich nie widać bez nowego szwu).
 - `ConfigureFreshGame`: zerowanie `TroopsRuined` po każdej `ConstructCivilization` dotyczy zawsze gracza 6 (licznik innej
-  pętli). Po naprawie: gracz z pętli (albo usunąć, jeśli `ConstructCivilization` to robi).
+  pętli). Po naprawie: gracz z pętli (albo usunąć, jeśli `ConstructCivilization` to robi). **Naprawione w grze
+  2026-10-25** za przełącznikiem `TurnHooks.ClassicFreshGameRuins` (`TurnEndRules.RuinedUnitsCleared`); test tylko reguły
+  (nowa gra w teście to cały kreator).
 - `DivideCivilization`: technologie przepisywane z gracza na niego samego (nowa cywilizacja zaczyna bez technologii), flaga 9
   wojny ustawiana drugi raz w relacji gracza zamiast nowej cywilizacji, jednostka bez miasta macierzystego (0xff) poza miastem
   rzuca wyjątek (`Towns[255]`), brak miasta do oddania zapętla podział. Po naprawie: kopia technologii, relacja obustronna,
@@ -1458,12 +1468,20 @@ te błędy są odtwarzane jawnie:
   Testy: `SchismRepairTests` (oba warianty; 7 mutacji złapanych).
 - `HandlePeaceTreaties`: groźba emisariusza (L0468) bierze nazwę gracza z `word[0x1992 + DI]`, gdzie DI = gracz << 4 (ustawione
   dla relacji), czyli spoza tablicy nazw – tekst z przypadkowego wskaźnika. Po naprawie: 0x1992 + 2 * gracz.
+  **Naprawione w grze 2026-10-25** za przełącznikiem `TurnHooks.ClassicEmissaryThreat` (`TurnEndRules.EmissaryEnemyName`):
+  tekst *CRUSADE z KING.TXT („rid the world of the evil $THEM”) wymienia **wroga**, więc 0x1992 + 2 × wróg, jak przy
+  trybucie. Test: `TurnEndRulesTests.ThreatOfAnEmissaryNamesTheEnemy` (w klasycznym wariancie wychodzi „Mr.”).
 - `EarnTechnology`: pierwsze odkrycie technologii, która dezaktualizuje cud (tabela 0x10fe), czyta `Towns[MarvelTownIdx[cud]]`
   także dla niezbudowanego cudu (-1) albo zniszczonego miasta (128), więc rzuca `IndexOutOfRangeException` (DOS czytał pamięć
   przed tablicą). **Naprawione w grze 2026-10-24** (`ClassicWonderCities`, patrz wyżej).
 - `AttachSpaceshipPart`: gdy nie ma wolnego miejsca danego rodzaju, komponent lub moduł trafia na koniec tabeli 0x375a (wiersz
   0xff, czyli 12 bajtów przed siatką gracza), a struktura w slot 0x63 (poza tabelą); komunikat „No further … required” jest
   nieosiągalny (szukanie nigdy nie kończy się na 0xffff). Po naprawie: komunikat i bit w 0x687a + 2 * rodzaj.
+  **Naprawione w grze 2026-10-25** za przełącznikiem `TurnHooks.ClassicSpaceshipSlots` (`SpaceshipSlotRules`): brak
+  miejsca daje 0xffff, rodzaj dostaje bit swojej linii dialogu (rodzaj − 3 × grupa; tłumaczenie przesuwało o sam rodzaj)
+  i komunikat „No further Propulsion required.” (nazwa spod 0x4bd0 + 0x1a × rodzaj; tłumaczenie dodawało 3 × grupę
+  drugi raz); struktura bez miejsca po wybranej stronie bierze drugą stronę, przy obu pełnych – brak miejsca. Testy:
+  `SpaceshipSlotTests` (reguły, w grze oba warianty).
 - `DisplayMilitaryReport`: wiersz gracza bez kontaktu nie zapisuje swojego wpisu listy w ramce, więc klawisz 1 – 7 albo kliknięcie
   w ten wiersz czyta śmieci ze stosu; śmieci ≥ 8 dają `IndexOutOfRangeException` w `Relations` (DOS czytał pamięć). Po naprawie:
   wpis 0xffff / pominięcie wiersza. **Naprawione w grze 2026-10-24** za przełącznikiem

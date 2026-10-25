@@ -313,6 +313,55 @@ Kolejność (każdy krok osobno zielony; pamięć 0x3b01 długo zostaje jako mag
 Uwagi: B6.1 – B6.5 nie zmieniają zachowania, jeśli B6.0 jest zrobione; B6.8 razem z B3 i poprawkami zachowania
 (nowy baseline). Wydajność: dziś każdy dostęp do pamięci woła `PumpMessages` – po B6.7 gra przyspieszy.
 
+## Zamknięcie etapu porównywania z oryginałem (plan 2026-10-25, przyjęty przez użytkownika)
+
+Cel: przejść od „testy = identycznie jak oryginał” do „testy = zamierzone zachowanie remastera”, nie tracąc siatki
+bezpieczeństwa. Baseline nagrywany od nowa **dwa razy**, każdy raz w osobnym commicie bez innych zmian (przełączniki +
+baseline'y + raport różnic); pomiędzy nimi golden master znowu pilnuje, że nic się nie zmienia przypadkiem.
+
+Stan na start: dziewięć poprawek działa w grze za przełącznikami `TurnHooks.Classic…` (Healing, Railroads,
+TechnologyNews, WonderCities, SchismHomes, Schism, Starvation, StackStrength, MilitaryReportRows), które `HeadlessGame`
+włącza. Bez przełącznika: `HandleGameEnd` (bajt populacji w historii, pętla katastrof), `DisplayCensus` („/10” zamiast
+„%10”), `RenderSpaceship` (adres obrazka, „/10”), `ConfigureFreshGame` (`TroopsRuined` gracza 6), groźba emisariusza w
+`HandlePeaceTreaties`, `AttachSpaceshipPart`, indeks pomocy i pusta linia w `ScanStream`. Śmieci na stosie: 30 funkcji,
+617 słów (`LeftoverWatcher`). Ślady emulacji: 789 zmiennych lokalnych pod numerami, 344 zapisy AX, 94 ramki, 81 zapisów
+SI/DI.
+
+**Faza 0 – przygotowanie, bez zmiany zachowania (stary baseline):**
+1. Pozostałe błędy za przełącznikami `Classic…`, każdy z testem obu wariantów (jak `ClassicStarvation`). Indeks pomocy
+   (zmienia pliki tekstowe gry) – osobno albo pominąć, do decyzji.
+   **Zrobione 2026-10-25 (bez indeksu pomocy):** `ClassicTenths` (spis ludności, masa i czas lotu statku),
+   `ClassicSpaceshipPictures`, `ClassicDisasterDraws`, `ClassicReplayPopulation`, `ClassicEmissaryThreat` (groźba
+   wymienia wroga – tekst *CRUSADE), `ClassicFreshGameRuins`, `ClassicSpaceshipSlots` (pełny rodzaj części: bit linii
+   dialogu i „No further Propulsion required.”). Reguły: `TenthsRules`, `SpaceshipPictureRules`, `TurnEndRules`,
+   `SpaceshipSlotRules`; testy `TenthsAndSpaceshipTests`, `TurnEndRulesTests`, `SpaceshipSlotTests` (oba warianty w
+   grze, poza `ClassicFreshGameRuins` – tylko reguła). Pełny zestaw 797/797, mutacje 10 / 10 (jedna dopiero po
+   wzmocnieniu testu: oczekiwany adres liczony niezależnie od reguły, część rodzaju 3 zamiast struktury).
+2. `ClassicStackLeftovers`: funkcje czytające śmieci ze stosu dostają przy wyłączonym przełączniku jawną wartość (np.
+   „brak ruchu”, „brak miasta”); przy włączonym czytają stos jak dziś. To odcina B3 od decyzji AI.
+3. Reszta B2 (zmienne lokalne → C#) i B1 (wyniki przez `return`), z sondą stosu jak dotąd.
+4. Testy różnicowe porównują sam stan (bez rejestrów i stosu pod SP), żeby usuwanie SI/DI w B3 nie dawało fałszywych
+   alarmów.
+5. Tag `classic-final`: ostatni stan zgodny z oryginałem, ze starymi baseline'ami.
+
+**Faza 1 – nowy baseline (jeden commit):** `HeadlessGame` wyłącza wszystkie `Classic…`, baseline'y golden master
+nagrane od nowa (15 autozapisów × 5 tur) z raportem, które kanały w których turach się zmieniły i dlaczego; test
+determinizmu i kilka tur w GUI. Testy z zamrożoną grą (Dual) i różnicowe dla zmienionych funkcji włączają `Classic…`
+jawnie – działają dalej do fazy 3.
+
+**Faza 2 – B3 + B6.8 pod nowym baseline'em:** ramki, SI/DI, BX/CX/DX moduł po module; przy jawnych wartościach
+zamiast śmieci golden master zostaje zielony, sonda stosu ma pokazać zero czytelników. Na końcu rejestry z CPU,
+`MZExecutable` i obraz CIV.EXE w pamięci (dane początkowe z pliku przy starcie).
+
+**Faza 3 – sprzątanie i drugi baseline:** usunięcie przełączników i kodu „classic”, zamrożonej gry
+(`Civilization1Remaster.Original`), kopii Reference, testów Dual; testy różnicowe → testy zachowania z tabel przypadków.
+B6.7 część 2 (zdarzenia hosta zamiast `PumpMessages`, nowy zegar testów) → **drugie nagranie baseline'u** (powinno
+zmienić tylko to, co zależy od czasu). B6.9 (dziennik jako opcjonalne logowanie). Potem odłożone usprawnienia z
+backlogu („Obsolete Wonders”, rozszerzone raporty doradców).
+
+Decyzje otwarte: tryb klasyczny dla graczy – propozycja: jako opcje zostają tylko zmiany reguł (leczenie, koleje),
+poprawki błędów na stałe (cały tryb „classic” utrzymywałby emulację stosu na zawsze); indeks pomocy.
+
 ## Potem (decyzja użytkownika)
 
 Poprawki zachowania z listy „Błędy przetłumaczonego kodu zachowane celowo” w `MIGRATION-BACKLOG.md` (np. głodujące

@@ -79,6 +79,53 @@ namespace Civilization1Remaster.Game
 		public bool ClassicMilitaryReportRows { get; set; }
 
 		/// <summary>
+		/// The tenths of the census (children of a family) and of the spaceship (mass, flight time) written as the whole part
+		/// again ("4.4" for 45), as the translated code did it (TenthsRules.Tenth). The tests turn it on (HeadlessGame), like
+		/// ClassicHealing.
+		/// </summary>
+		public bool ClassicTenths { get; set; }
+
+		/// <summary>
+		/// The pictures of the spaceship parts read from part &lt;&lt; 11 instead of 0x682a + 2 * part, as the translated code
+		/// did it (SpaceshipPictureRules.PictureAddress), so the parts are not drawn. The tests turn it on (HeadlessGame), like
+		/// ClassicHealing.
+		/// </summary>
+		public bool ClassicSpaceshipPictures { get; set; }
+
+		/// <summary>
+		/// The random disasters after turn 50 with the loop counter taken from the drawn city, as the translated code did it:
+		/// one city a turn (two only when city 0 is drawn) instead of TurnEndRules.DisasterDraws. The tests turn it on
+		/// (HeadlessGame), like ClassicHealing.
+		/// </summary>
+		public bool ClassicDisasterDraws { get; set; }
+
+		/// <summary>
+		/// The high byte of the population in the replay entry 11 always 0, as the translated code wrote it
+		/// (TurnEndRules.ReplayPopulationHigh). The tests turn it on (HeadlessGame), like ClassicHealing.
+		/// </summary>
+		public bool ClassicReplayPopulation { get; set; }
+
+		/// <summary>
+		/// A threatening emissary names the civilization at a pointer past the table of names, as the translated code read it
+		/// (TurnEndRules.EmissaryEnemyName). The tests turn it on (HeadlessGame), like ClassicHealing.
+		/// </summary>
+		public bool ClassicEmissaryThreat { get; set; }
+
+		/// <summary>
+		/// The ruined units of player 6 cleared after each civilization made at the start of a game instead of that
+		/// civilization's, as the translated code did it (TurnEndRules.RuinedUnitsCleared). The tests turn it on
+		/// (HeadlessGame), like ClassicHealing.
+		/// </summary>
+		public bool ClassicFreshGameRuins { get; set; }
+
+		/// <summary>
+		/// A spaceship part without a free place of its kind put past the table of places (row 0xff, a structure into
+		/// place 0x63), as the translated code did it; off a full kind is marked complete with "No further ... required."
+		/// (SpaceshipSlotRules). The tests turn it on (HeadlessGame), like ClassicHealing.
+		/// </summary>
+		public bool ClassicSpaceshipSlots { get; set; }
+
+		/// <summary>
 		/// Units heal lost hit points every turn (HealingRules): 2 in an own city; outside cities 1 for a fortified land unit
 		/// and for a resting ship (sentry or not moved this turn) next to land, at most 3 tiles from an own city.
 		/// Runs at the end of the game turn, so the moves left (reset at the start of each player's turn) show whether the
@@ -434,25 +481,44 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// Disasters for random cities of size 5 or more (not the last city of their owner); the loop counter is the city
-		/// number + 1, like in the original, so it ends after the first city unless that is city 0
+		/// Disasters for random cities of size 5 or more (not the last city of their owner): two drawn cities
+		/// (TurnEndRules.DisasterDraws); with ClassicDisasterDraws the loop counter is the city number + 1, like in the
+		/// translated code, so it ends after the first city unless that is city 0
 		/// </summary>
 		private void StrikeRandomCities()
 		{
+			if (!this.ClassicDisasterDraws)
+			{
+				for (int draw = 0; draw < TurnEndRules.DisasterDraws; draw++)
+				{
+					short townIdx = (short)this.owner.Libc.Dice.DrawInt(128);
+
+					StrikeCity(townIdx);
+				}
+
+				return;
+			}
+
 			short counter = 0;
 
 			while (counter < 2)
 			{
 				counter = (short)this.owner.Libc.Dice.DrawInt(128);
 
-				City town = this.owner.World.Towns[counter];
-
-				if (town.ConditionMarker != 0xff && this.owner.World.Participants[town.ParticipantIdx].TownTally > 1 && town.TrueExtent >= 5)
-				{
-					this.owner.Founding.HandleCityDisasters(counter);
-				}
+				StrikeCity(counter);
 
 				counter++;
+			}
+		}
+
+		/// <summary>A disaster for the city when it is of size 5 or more and not the last city of its owner</summary>
+		private void StrikeCity(short townIdx)
+		{
+			City town = this.owner.World.Towns[townIdx];
+
+			if (town.ConditionMarker != 0xff && this.owner.World.Participants[town.ParticipantIdx].TownTally > 1 && town.TrueExtent >= 5)
+			{
+				this.owner.Founding.HandleCityDisasters(townIdx);
 			}
 		}
 
@@ -516,8 +582,8 @@ namespace Civilization1Remaster.Game
 
 		/// <summary>
 		/// Every 50 turns: the most technologies, the technology level of the time (0xd2de, AD only), and into the replay the
-		/// status of the human player (11: cities, population: the original takes a byte of the population as its high part,
-		/// so that part is always 0) and the ranking (12: the players by their standing, two places a byte; the bytes are made
+		/// status of the human player (11: cities, population; with ClassicReplayPopulation the high byte is always 0, see
+		/// TurnEndRules.ReplayPopulationHigh) and the ranking (12: the players by their standing, two places a byte; the bytes are made
 		/// in the frame and given in the reverse order, like in the original)
 		/// </summary>
 		private void NoteStatusInReplay()
@@ -545,7 +611,7 @@ namespace Civilization1Remaster.Game
 			ushort population = this.owner.Helpers.ObtainPlayerPopulation(this.owner.World.PersonParticipantIdx);
 
 			this.owner.UnitOps.AttachReplayContent(11, (byte)this.owner.World.Participants[this.owner.World.PersonParticipantIdx].TownTally,
-				(byte)0, (byte)population);
+				TurnEndRules.ReplayPopulationHigh(population, this.ClassicReplayPopulation), (byte)population);
 
 			// The ranking in the frame (bp - 0x14, four words); a standing past 7 writes past them, like in the original
 			for (int placeIdx = 0; placeIdx < 4; placeIdx++)

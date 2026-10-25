@@ -66,6 +66,13 @@ namespace Civilization1Remaster.Tests.GoldenMaster
 			this.Engine.TurnHooks.ClassicStarvation = true;
 			this.Engine.TurnHooks.ClassicStackStrength = true;
 			this.Engine.TurnHooks.ClassicMilitaryReportRows = true;
+			this.Engine.TurnHooks.ClassicTenths = true;
+			this.Engine.TurnHooks.ClassicSpaceshipPictures = true;
+			this.Engine.TurnHooks.ClassicDisasterDraws = true;
+			this.Engine.TurnHooks.ClassicReplayPopulation = true;
+			this.Engine.TurnHooks.ClassicEmissaryThreat = true;
+			this.Engine.TurnHooks.ClassicFreshGameRuins = true;
+			this.Engine.TurnHooks.ClassicSpaceshipSlots = true;
 
 			this.keyboard = new ScriptedKeyboard(this.processor, this.Engine.VideoCard.Tokens, this.Engine.VideoCard.VideoLatch,
 				script ?? ScriptedKeyboard.DefaultScript);

@@ -927,7 +927,7 @@ namespace Civilization1Remaster.UI
 				}
 			});
 
-			// Family size: 40 * unrest / size + 20 tenths (the original writes the tenths as value / 10 twice)
+			// Family size: 40 * unrest / size + 20 tenths (the translated code writes the tenths as value / 10 twice, TenthsRules)
 			row = vertLoc;
 
 			RenderCensusRow(0x460b, ref vertLoc, false, 0x4624, participantIdx =>
@@ -937,9 +937,9 @@ namespace Civilization1Remaster.UI
 				if (participantIdx == shownIdx)
 				{
 					EmptyMessage()
-						.Number((short)(CensusValue(participantIdx) / 10))
+						.Number(TenthsRules.Whole(CensusValue(participantIdx)))
 						.Text(".")
-						.Number((short)(CensusValue(participantIdx) / 10))
+						.Number(TenthsRules.Tenth(CensusValue(participantIdx), this.owner.TurnHooks.ClassicTenths))
 						.Text(" children");
 
 					this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 104, row, 15);
