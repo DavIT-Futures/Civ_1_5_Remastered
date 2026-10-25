@@ -941,7 +941,7 @@ namespace Civilization1Remaster.UI
 		/// <summary>Waits for 10 timer ticks (since RestoreTimer), then a key or a click ends the parade</summary>
 		private bool ParadeInterrupted()
 		{
-			while ((short)this.processor.PullGlobalWord(0x5c) < 0xa)
+			while ((short)this.owner.Timer.Beats < 0xa)
 			{
 			}
 
@@ -1020,7 +1020,7 @@ namespace Civilization1Remaster.UI
 					ScreenBox,
 					0, 100);
 
-				while (this.processor.PullGlobalWord(0x5c) < 10) ;
+				while (this.owner.Timer.Beats < 10) ;
 
 				this.owner.Startup.ObtainMouseState();
 

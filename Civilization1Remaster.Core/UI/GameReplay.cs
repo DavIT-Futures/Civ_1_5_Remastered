@@ -930,7 +930,7 @@ namespace Civilization1Remaster.UI
 
 			RenderWallOfLeaders(BackScreenBox);
 
-			while ((short)this.processor.PullGlobalWord(0x5c) < 0xf0)
+			while ((short)this.owner.Timer.Beats < 0xf0)
 			{
 				this.owner.Words.Clear();
 			}

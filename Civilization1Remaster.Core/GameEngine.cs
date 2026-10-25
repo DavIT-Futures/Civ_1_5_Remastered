@@ -55,6 +55,8 @@ namespace Civilization1Remaster
 		private readonly GameGlobals globals = new GameGlobals();
 		private readonly ScreenBoxes boxes = new ScreenBoxes();
 		private readonly HueCycles hueCycles;
+		private readonly TimerState timer;
+		private readonly PointerState pointer = new PointerState();
 		private readonly VGADriver videoHandler;
 		private readonly SoundDriver audioHandler;
 		#endregion
@@ -91,6 +93,7 @@ namespace Civilization1Remaster
 			this.words = new TextBuffer(this);
 			this.tables = new GameTables(this);
 			this.hueCycles = new HueCycles(this.processor);
+			this.timer = new TimerState(this.processor);
 			this.videoHandler = new VGADriver(this, host);
 			this.audioHandler = new SoundDriver(this);
 
@@ -398,6 +401,12 @@ namespace Civilization1Remaster
 			// B6.5: the colour cycles of the driver
 			this.processor.Storage.AttachOverlay(CPU.AsLinearAddress(HueCycles.Segment, 0), this.hueCycles.Content);
 
+			// B6.7, part 1: the variables of the timer and the state of the mouse
+			this.processor.Storage.AttachOverlay(CPU.AsLinearAddress(this.processor.SegData.Value16, TimerState.Begin), this.timer.Content);
+			this.processor.Storage.AttachOverlay(CPU.AsLinearAddress(this.processor.SegData.Value16, PointerState.PlaceAddress), this.pointer.Place);
+			this.processor.Storage.AttachOverlay(CPU.AsLinearAddress(this.processor.SegData.Value16, PointerState.ShiftAddress), this.pointer.Shift);
+			this.processor.Storage.AttachOverlay(CPU.AsLinearAddress(this.processor.SegData.Value16, PointerState.CursorAddress), this.pointer.Cursor);
+
 			foreach (GlobalWord global in this.globals.All)
 				this.processor.Storage.AttachOverlay(CPU.AsLinearAddress(this.processor.SegData.Value16, global.Address), global);
 		}
@@ -643,6 +652,18 @@ namespace Civilization1Remaster
 		/// <summary>The records of the units of all players at 0x81d4, kept in C# (B6.2): a copy</summary>
 		public byte[] UnitRecords => (byte[])(this.processor.Storage.OverlayAt(
 			CPU.AsLinearAddress(this.processor.SegData.Value16, UnitMemory.Origin)) ?? []).Clone();
+
+		/// <summary>The variables of the timer and sound driver at 0x40 - 0x6f (B6.7)</summary>
+		public TimerState Timer
+		{
+			get { return this.timer; }
+		}
+
+		/// <summary>The state of the mouse driver (B6.7)</summary>
+		public PointerState Pointer
+		{
+			get { return this.pointer; }
+		}
 
 		/// <summary>The colour cycles of the driver at 0x35cf (B6.5)</summary>
 		public HueCycles HueCycles

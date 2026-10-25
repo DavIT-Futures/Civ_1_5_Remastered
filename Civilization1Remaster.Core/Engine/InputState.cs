@@ -1,0 +1,128 @@
+using Civilization1Remaster.Emulation;
+
+namespace Civilization1Remaster.Engine
+{
+	/// <summary>
+	/// The variables of the timer and sound driver at 0x40 - 0x6f of the data segment, kept in C# (B6.7, part 1): the timer
+	/// interrupt (SystemServices.ClockInterrupt) and the waits of the game work on them. The game code reads the beat counter
+	/// through the CPU (Beats): under the fixed clock of the tests every read of these variables is a poll of the timer
+	/// (CPU.PollTimer), and the interrupts come after so many polls, so the reads stay where and as many as they were.
+	/// </summary>
+	public sealed class TimerState
+	{
+		/// <summary>The first address of the block</summary>
+		public const ushort Begin = 0x40;
+
+		/// <summary>The size of the block in bytes (to 0x6f)</summary>
+		public const int Size = 0x30;
+
+		/// <summary>The address of the beat counter</summary>
+		public const ushort BeatsAddress = 0x5c;
+
+		private readonly CPU processor;
+
+		public TimerState(CPU processor)
+		{
+			this.processor = processor;
+		}
+
+		/// <summary>The bytes of the block</summary>
+		public byte[] Content { get; } = new byte[Size];
+
+		/// <summary>
+		/// The beats counted by the timer since the last reset (0x5c, OnClockBeat adds one), what the waits of the game compare;
+		/// a read is a poll of the timer (see the class)
+		/// </summary>
+		public ushort Beats => this.processor.PullGlobalWord(BeatsAddress);
+	}
+
+	/// <summary>
+	/// The state of the mouse driver kept in C# (B6.7, part 1): the place, the buttons and the clicks at 0x586e - 0x5875
+	/// (written by the mouse interrupt, SystemServices.PointerEvent), the shift of the column at 0x587c, the driver switch at
+	/// 0x587d and the pointer flags at 0x5402 (refresh latch) / 0x5403 (pointer on the screen). The memory reaches the bytes through overlays.
+	/// </summary>
+	public sealed class PointerState
+	{
+		/// <summary>The address of the place, buttons and clicks</summary>
+		public const ushort PlaceAddress = 0x586e;
+
+		/// <summary>The address of the column shift and the driver switch</summary>
+		public const ushort ShiftAddress = 0x587c;
+
+		/// <summary>The address of the cursor flags</summary>
+		public const ushort CursorAddress = 0x5402;
+
+		/// <summary>The bytes at 0x586e: column, row, buttons, clicks (words)</summary>
+		public byte[] Place { get; } = new byte[8];
+
+		/// <summary>The bytes at 0x587c: column shift, driver switch</summary>
+		public byte[] Shift { get; } = new byte[2];
+
+		/// <summary>The bytes at 0x5402: refresh latch, pointer shown</summary>
+		public byte[] Cursor { get; } = new byte[2];
+
+		/// <summary>The column of the pointer (0x586e)</summary>
+		public ushort Horiz
+		{
+			get => Word(this.Place, 0);
+			set => SetWord(this.Place, 0, value);
+		}
+
+		/// <summary>The row of the pointer (0x5870)</summary>
+		public ushort Vert
+		{
+			get => Word(this.Place, 2);
+			set => SetWord(this.Place, 2, value);
+		}
+
+		/// <summary>The buttons held (0x5872): bit 0 left, bit 1 right</summary>
+		public ushort Buttons
+		{
+			get => Word(this.Place, 4);
+			set => SetWord(this.Place, 4, value);
+		}
+
+		/// <summary>The buttons pressed since the game last asked (0x5874)</summary>
+		public ushort Clicks
+		{
+			get => Word(this.Place, 6);
+			set => SetWord(this.Place, 6, value);
+		}
+
+		/// <summary>The shift of the column of the driver (0x587c)</summary>
+		public byte ColumnShift
+		{
+			get => this.Shift[0];
+			set => this.Shift[0] = value;
+		}
+
+		/// <summary>The driver switch (0x587d)</summary>
+		public byte DriverActive
+		{
+			get => this.Shift[1];
+			set => this.Shift[1] = value;
+		}
+
+		/// <summary>The latch of the pointer refresh (0x5402): 2 while the mouse interrupt renews the screen</summary>
+		public byte RefreshLatch
+		{
+			get => this.Cursor[0];
+			set => this.Cursor[0] = value;
+		}
+
+		/// <summary>The pointer is on the screen (0x5403): the mouse interrupt then renews the screen when it moves</summary>
+		public byte PointerShown
+		{
+			get => this.Cursor[1];
+			set => this.Cursor[1] = value;
+		}
+
+		private static ushort Word(byte[] bytes, int place) => (ushort)(bytes[place] | (bytes[place + 1] << 8));
+
+		private static void SetWord(byte[] bytes, int place, ushort value)
+		{
+			bytes[place] = (byte)value;
+			bytes[place + 1] = (byte)(value >> 8);
+		}
+	}
+}

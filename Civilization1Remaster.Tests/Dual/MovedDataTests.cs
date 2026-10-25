@@ -114,6 +114,23 @@ public class MovedDataTests
 		Assert.Equal(Enumerable.Range(0, 8).Select(cycleIdx => (ushort)(0x14 + 0x66 * cycleIdx)), Enumerable.Range(0, 8).Select(engine.HueCycles.Record));
 		Assert.Equal(engine.HueCycles.Word(0x14 + 4), engine.Processor.PullUInt16(HueCycles.Segment, 0x14 + 4));
 
+		// The timer and the mouse (B6.7): the fields and the memory are one
+		engine.Processor.EmitGlobalWord(TimerState.BeatsAddress, 0x1234);
+		Assert.Equal(0x1234, engine.Timer.Beats);
+		Assert.Equal(0x34, engine.Timer.Content[TimerState.BeatsAddress - TimerState.Begin]);
+		engine.Pointer.Vert = 0x00c7;
+		Assert.Equal(0x00c7, engine.Processor.PullGlobalWord(PointerState.PlaceAddress + 2));
+		engine.Processor.EmitGlobalByte(PointerState.CursorAddress + 1, 1);
+		Assert.Equal(1, engine.Pointer.PointerShown);
+
+		// The mouse driver switched off: the flag 0x587d read and cleared (AX -1 when it was on), the shift 0x587c beside it kept
+		engine.Processor.EmitGlobalByte(PointerState.ShiftAddress, 0);
+		engine.Processor.EmitGlobalByte(PointerState.ShiftAddress + 1, 1);
+		engine.Services.DeactivateMouse();
+		Assert.Equal(0xffff, engine.Processor.RegAcc.Value16);
+		Assert.Equal(0, engine.Processor.PullGlobalByte(PointerState.ShiftAddress + 1));
+		Assert.Equal(0, engine.Pointer.ColumnShift);
+
 		// A global: the field and the memory are one, both ways
 		engine.Processor.EmitGlobalWord(engine.Globals.CityOwner.Address, 0x1234);
 		Assert.Equal(0x1234, engine.Globals.CityOwner.Value);

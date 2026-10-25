@@ -286,7 +286,15 @@ Kolejność (każdy krok osobno zielony; pamięć 0x3b01 długo zostaje jako mag
   `FileHandlesLiveInTheCRuntime`. Pełny zestaw 774/774 (+1). Mutacje: zamknięcie bez usunięcia uchwytu złapane;
   pierwszy uchwyt 0x21 zamiast 0x20 – równoważne (gra porównuje uchwyt tylko z -1). Zamrożona kopia
   (`Civilization1Remaster.Original`) bez zmian. Dalej w B6.6: bufory plików pod adresami (`ReadStream` / `WriteStream`
-  na pamięci) – razem z B6.8.  **Kolejne porcje (pętla do 90% tygodniowego limitu, 2026-10-25):** (1) B6.2-reszta: zmienne z gotowym adresem 0x81d4
+  na pamięci) – razem z B6.8.
+  **B6.7, część 1 (2026-10-25):** zmienne zegara i dźwięku 0x40 – 0x6f (`TimerState`) oraz stan myszy 0x586e – 0x5875,
+  0x587c – 0x587d i flagi kursora 0x5402 – 0x5403 (`PointerState`) w tablicach C# (nakładki, wpisy w `MovedRanges`).
+  Pułapka: pod stałym zegarem testów każdy odczyt 0x40 – 0x6f przez CPU to zapytanie o czas (`PollTimer`), także w
+  samej obsłudze przerwania – dlatego licznik 0x5c w kodzie gry (`Timer.Beats`, pętle oczekiwania) i sterownik
+  (`ClockInterrupt`, dźwięk, zanikanie palety) czytają dalej przez CPU; mysz i kursor (`Pointer.Horiz` / `Vert` /
+  `Buttons` / `Clicks` / `ColumnShift` / `DriverActive` / `RefreshLatch` / `PointerShown`) – wprost z C#, 40 miejsc.
+  Zegar bez zmian. Pełny zestaw 775/775, mutacje 8 / 8 (jedna dopiero z testem `DeactivateMouse` w
+  `TablesAndGlobalsLiveInCSharp`). Część 2 (zdarzenia hosta zamiast `PumpMessages`, zegar) – po nowym baseline'ie.  **Kolejne porcje (pętla do 90% tygodniowego limitu, 2026-10-25):** (1) B6.2-reszta: zmienne z gotowym adresem 0x81d4
   (`TurnEvents` 163 / 894 / 1006, `WorldMap` 49, `UnitCombat.TroopsRoot`) przez `UnitMemory`; (2) pozostałe literalne
   `PullGlobal…(0x…)` w klasach `GameModule` nazwać i dopisać do `GameGlobals` (te o niejasnym znaczeniu nazwać po
   adresie i funkcji); (3) bezpośrednie odczyty `MovedRanges` przez pamięć w akcesorach (np. `UnitKindTable.Field`) na

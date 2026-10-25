@@ -191,10 +191,10 @@ namespace Civilization1Remaster.Engine
 			{
 				this.owner.Services.ObtainAndWipeMouseClick();
 
-				this.processor.RegAcc.Value16 = this.processor.BitOrWord(this.processor.RegAcc.Value16, this.processor.PullGlobalWord(0x5872));
+				this.processor.RegAcc.Value16 = this.processor.BitOrWord(this.processor.RegAcc.Value16, this.owner.Pointer.Buttons);
 				this.owner.GlobDb3a = this.processor.RegAcc.Value16;
-				this.owner.GlobDb3c = this.processor.PullGlobalWord(0x586e);
-				this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x5870);
+				this.owner.GlobDb3c = this.owner.Pointer.Horiz;
+				this.processor.RegAcc.Value16 = this.owner.Pointer.Vert;
 				this.owner.GlobDb3e = this.processor.RegAcc.Value16;
 			}
 			else

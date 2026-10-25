@@ -924,8 +924,8 @@ namespace Civilization1Remaster.Engine
 		/// </summary>
 		private void ClearPointerLatch()
 		{
-			if (this.processor.PullGlobalByte(0x5403) != 0)
-				this.processor.EmitGlobalByte(0x5402, 0x0);
+			if (this.owner.Pointer.PointerShown != 0)
+				this.owner.Pointer.RefreshLatch = 0x0;
 		}
 
 		/// <summary>
@@ -1106,13 +1106,13 @@ namespace Civilization1Remaster.Engine
 
 			this.processor.RegCount.LowByte = 0;
 			this.processor.RegAcc.Value16 = (ushort)(this.owner.VideoCard.DisplayPointerSite.X >> this.processor.RegCount.LowByte);
-			this.processor.EmitGlobalByte(0x587c, this.processor.RegCount.LowByte);
-			this.processor.EmitGlobalWord(0x586e, this.processor.RegAcc.Value16);
-			this.processor.EmitGlobalWord(0x5870, (ushort)this.owner.VideoCard.DisplayPointerSite.Y);
-			this.processor.EmitGlobalWord(0x5872, this.owner.VideoCard.DisplayPointerClicks);
+			this.owner.Pointer.ColumnShift = this.processor.RegCount.LowByte;
+			this.owner.Pointer.Horiz = this.processor.RegAcc.Value16;
+			this.owner.Pointer.Vert = (ushort)this.owner.VideoCard.DisplayPointerSite.Y;
+			this.owner.Pointer.Buttons = this.owner.VideoCard.DisplayPointerClicks;
 			this.processor.RegAcc.Value16 = 0xffff;
 
-			this.processor.EmitGlobalByte(0x587d, this.processor.RegAcc.LowByte);
+			this.owner.Pointer.DriverActive = this.processor.RegAcc.LowByte;
 
 			// Far return
 			this.processor.Journal.CloseScope("PrepareMouse");
@@ -1128,9 +1128,9 @@ namespace Civilization1Remaster.Engine
 			this.processor.Journal.OpenScope("DeactivateMouse()");
 
 			// The flag 0x587d of the mouse cleared; when it was on, AX -1 and BX 2 (as the original leaves them)
-			byte active = this.processor.PullGlobalByte(0x587d);
+			byte active = this.owner.Pointer.DriverActive;
 			this.processor.Scratch.LowByte = active;
-			this.processor.EmitGlobalByte(0x587d, 0);
+			this.owner.Pointer.DriverActive = 0;
 			this.processor.RegAcc.LowByte = this.processor.BitOrByte(active, active);
 
 			if (active != 0)
@@ -1168,8 +1168,8 @@ namespace Civilization1Remaster.Engine
 		{
 			this.processor.Journal.OpenScope($"AssignMousePosition({horizLoc}, {vertLoc})");
 
-			this.processor.EmitGlobalWord(0x586e, horizLoc);
-			this.processor.EmitGlobalWord(0x5870, vertLoc);
+			this.owner.Pointer.Horiz = horizLoc;
+			this.owner.Pointer.Vert = vertLoc;
 
 			this.processor.Journal.CloseScope("AssignMousePosition");
 		}
@@ -1181,8 +1181,8 @@ namespace Civilization1Remaster.Engine
 		public ushort ObtainAndWipeMouseClick()
 		{
 			// function body
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x5874);
-			this.processor.EmitGlobalWord(0x5874, 0);
+			this.processor.RegAcc.Value16 = this.owner.Pointer.Clicks;
+			this.owner.Pointer.Clicks = 0;
 
 			return this.processor.RegAcc.Value16;
 		}
@@ -1195,13 +1195,13 @@ namespace Civilization1Remaster.Engine
 		{
 			this.processor.Journal.OpenScope("RenderMouseCursor()");
 
-			if (PointerImage != 0 && this.processor.PullGlobalByte(0x5403) == 0)
+			if (PointerImage != 0 && this.owner.Pointer.PointerShown == 0)
 			{
-				RenderCursorToScreen((short)(this.processor.PullGlobalSignedWord(0x586e) - (short)PointerHotHoriz),
-					(short)(this.processor.PullGlobalSignedWord(0x5870) - (short)PointerHotVert),
+				RenderCursorToScreen((short)((short)this.owner.Pointer.Horiz - (short)PointerHotHoriz),
+					(short)((short)this.owner.Pointer.Vert - (short)PointerHotVert),
 					PointerImage);
 
-				this.processor.EmitGlobalByte(0x5403, 0x1);
+				this.owner.Pointer.PointerShown = 0x1;
 			}
 
 			this.processor.Journal.CloseScope("RenderMouseCursor");
@@ -1214,9 +1214,9 @@ namespace Civilization1Remaster.Engine
 		{
 			this.processor.Journal.OpenScope("BlankMouseCursor()");
 
-			if (PointerImage != 0 && this.processor.PullGlobalByte(0x5403) != 0)
+			if (PointerImage != 0 && this.owner.Pointer.PointerShown != 0)
 			{
-				this.processor.EmitGlobalByte(0x5403, 0x0);
+				this.owner.Pointer.PointerShown = 0x0;
 
 				RecoverScreenUnderCursor();
 			}
@@ -1251,32 +1251,32 @@ namespace Civilization1Remaster.Engine
 			this.processor.SegData.Value16 = 0x3b01;
 			this.processor.RegFrame.Value16 = this.processor.RegCount.Value16;
 
-			byte shift = this.processor.PullGlobalByte(0x587c);
+			byte shift = this.owner.Pointer.ColumnShift;
 			this.processor.RegCount.LowByte = shift;
 			this.processor.RegFrame.Value16 >>= shift;
 			this.processor.RegCount.Value16 = this.processor.RegFrame.Value16;
 
 			ushort buttons = this.processor.RegBase.Value16;
-			this.processor.EmitGlobalWord(0x5874, (ushort)(this.processor.PullGlobalWord(0x5874) | buttons));
-			this.processor.EmitGlobalWord(0x5872, buttons);
-			this.processor.EmitGlobalWord(0x586e, this.processor.RegCount.Value16);
-			this.processor.EmitGlobalWord(0x5870, this.processor.RegData.Value16);
+			this.owner.Pointer.Clicks = (ushort)(this.owner.Pointer.Clicks | buttons);
+			this.owner.Pointer.Buttons = buttons;
+			this.owner.Pointer.Horiz = this.processor.RegCount.Value16;
+			this.owner.Pointer.Vert = this.processor.RegData.Value16;
 
 			ushort condition = this.processor.RegAcc.Value16;
 			this.processor.RegFrame.Value16 = condition;
 
-			if ((condition & 1) != 0 && this.processor.PullGlobalByte(0x5403) != 0)
+			if ((condition & 1) != 0 && this.owner.Pointer.PointerShown != 0)
 			{
 				this.processor.RegAcc.LowByte = 2;
-				byte prev = this.processor.PullGlobalByte(0x5402);
-				this.processor.EmitGlobalByte(0x5402, 2);
+				byte prev = this.owner.Pointer.RefreshLatch;
+				this.owner.Pointer.RefreshLatch = 2;
 				this.processor.Scratch.LowByte = prev;
 				this.processor.RegAcc.LowByte = prev;
 
 				if (prev == 0)
 				{
 					RenewScreen();
-					this.processor.EmitGlobalByte(0x5402, 0);
+					this.owner.Pointer.RefreshLatch = 0;
 				}
 			}
 		}

@@ -1479,7 +1479,7 @@ namespace Civilization1Remaster.Game
 				}
 				else
 				{
-					StoryMusicTime = (ushort)CPU.SignedQuotient(this.processor.PullGlobalSignedWord(0x5c), 0x3c);
+					StoryMusicTime = (ushort)CPU.SignedQuotient((short)this.owner.Timer.Beats, 0x3c);
 
 					ushort colour = (ushort)(((byte)StoryMusicTime & 1) != 0 ? 0xf : 0x3);
 

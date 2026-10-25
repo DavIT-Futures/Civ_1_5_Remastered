@@ -808,10 +808,10 @@ namespace Civilization1Remaster.UI
 				this.owner.Services.DisplayScreen(this.processor.RegAcc.Value16);
 			}
 
-			if ((short)this.processor.PullGlobalWord(0x5c) > 0xc && (this.processor.PullLocalByte(ScreenColumn) & 1) == 0)
+			if ((short)this.owner.Timer.Beats > 0xc && (this.processor.PullLocalByte(ScreenColumn) & 1) == 0)
 				this.processor.IncrementLocalWord(ScreenColumn);
 
-			while ((short)this.processor.PullGlobalWord(0x5c) < 8)
+			while ((short)this.owner.Timer.Beats < 8)
 			{
 			}
 		}

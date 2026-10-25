@@ -134,7 +134,7 @@ namespace Civilization1Remaster.Engine
 		{
 			this.owner.Services.RestoreTimer();
 
-			while (this.processor.PullGlobalSignedWord(0x5c) < holdMoment)
+			while ((short)this.owner.Timer.Beats < holdMoment)
 			{
 				this.processor.Idle();
 			}

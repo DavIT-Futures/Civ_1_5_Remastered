@@ -782,7 +782,7 @@ namespace Civilization1Remaster.Game
 
 					steps++;
 
-					while ((short)this.processor.PullGlobalWord(0x5c) < 0xa)
+					while ((short)this.owner.Timer.Beats < 0xa)
 					{
 					}
 
