@@ -1435,13 +1435,13 @@ namespace Civilization1Remaster.Game
 		private void ShowDiscoveryPicture(ushort pictureName, short first, bool advanced)
 		{
 			if (!advanced)
-				this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 0x6);
+				DrawingBox.TypefaceIdx = 0x6;
 
 			this.processor.EmitGlobalWord(0xdb38, 0x1);
 
 			this.owner.Dialogs.DisplayMenu(TextBuffer.Address, 96, advanced ? (short)25 : (short)1, 1);
 
-			this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 0x1);
+			DrawingBox.TypefaceIdx = 0x1;
 
 			this.owner.Words.Set("iconpg1.pic");
 
@@ -1519,12 +1519,12 @@ namespace Civilization1Remaster.Game
 			if (allowed == 0)
 				this.processor.EmitGlobalByte((ushort)(length + TextBuffer.Address), 0);
 
-			this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 0x2);
+			DrawingBox.TypefaceIdx = 0x2;
 			this.processor.EmitGlobalWord(0xdb38, 0x1);
 
 			this.owner.Dialogs.DisplayMenu(TextBuffer.Address, 8, (short)-((allowed << 3) - 0xa8), 1);
 
-			this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 0x1);
+			DrawingBox.TypefaceIdx = 0x1;
 		}
 
 		/// <summary>

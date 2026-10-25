@@ -304,7 +304,7 @@ namespace Civilization1Remaster.Engine
 				while (this.owner.Services.PathPresent(this.processor.PullGlobalWord((ushort)((diskIdx << 1) + 0x1ace))) == 0xffff ||
 					marker == 0xffff)
 				{
-					this.owner.Services.DisplayScreen(this.processor.PullGlobalWord(ScreenBox));
+					this.owner.Services.DisplayScreen(DrawingBox.DisplayIdx);
 
 					if (marker == 0xffff)
 					{
@@ -510,7 +510,7 @@ namespace Civilization1Remaster.Engine
 		/// </summary>
 		private void ShowMadeWorld(ushort pictureName)
 		{
-			this.processor.EmitUInt16(this.processor.SegData.Value16, ScreenBox, 0x0);
+			DrawingBox.DisplayIdx = 0x0;
 
 			this.owner.Services.DisplayScreen(0);
 

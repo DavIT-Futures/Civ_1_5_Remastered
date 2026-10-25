@@ -243,7 +243,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Dialogs.RenderBox(4, 9, 311, 183, 0);
 
-			this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 2);
+			DrawingBox.TypefaceIdx = 2;
 
 			for (short round = 0; round <= this.owner.World.RoundTally && round <= 0x258; round += 0x32)
 			{
@@ -262,7 +262,7 @@ namespace Civilization1Remaster.UI
 				this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, horizLoc, 194, 15);
 			}
 
-			this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 1);
+			DrawingBox.TypefaceIdx = 1;
 
 			short epochTally = (short)(this.owner.World.RoundTally / 4);
 

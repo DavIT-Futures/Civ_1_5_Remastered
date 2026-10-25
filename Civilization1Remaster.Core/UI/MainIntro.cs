@@ -90,7 +90,7 @@ namespace Civilization1Remaster.UI
 			EgaMode = this.processor.RegAcc.Value16;
 
 			// Change Num-Lock state
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(ScreenBox + 0x10), 1);
+			DrawingBox.TypefaceIdx = 1;
 		}
 
 		/// <summary>Screens 0 - 2 (VGA) or 0 - 3; 0x6dfc is set when one of them can't be reserved</summary>
@@ -197,7 +197,7 @@ namespace Civilization1Remaster.UI
 					else
 					{
 						if (column == 0xa)
-							this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(ScreenBox + 0x10), 5);
+							DrawingBox.TypefaceIdx = 5;
 
 						this.owner.Libc.ScanStream((short)this.owner.GlobD768, "%[^\n]\n", TextBuffer.Address);
 					}
@@ -482,7 +482,7 @@ namespace Civilization1Remaster.UI
 			}
 			else
 			{
-				this.processor.EmitUInt16(this.processor.SegData.Value16, ScreenBox, 0);
+				DrawingBox.DisplayIdx = 0;
 			}
 
 			this.owner.Services.FloodBox(BackScreenBox, 0, 0, 320, 200, 0);
@@ -492,7 +492,7 @@ namespace Civilization1Remaster.UI
 				ScreenBox, 0, 0);
 			this.owner.Services.DisplayScreen(0);
 
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(ScreenBox + 0x10), 1);
+			DrawingBox.TypefaceIdx = 1;
 
 			this.owner.Helpers.ReleaseResource(this.processor.PullLocalWord(IntroLogo), 0);
 		}
@@ -623,7 +623,7 @@ namespace Civilization1Remaster.UI
 			this.owner.BlockText.ReflowText();
 			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - ScreenText), TextBuffer.Address);
 
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(ScreenBox + 0x10), 6);
+			DrawingBox.TypefaceIdx = 6;
 			this.processor.EmitLocalWord(ScreenStarHoriz, 0xfff6);
 			this.processor.EmitLocalWord(ScreenStarVert, 0x5c);
 			this.processor.RegAcc.Value16 = 0xffff;
@@ -824,7 +824,7 @@ namespace Civilization1Remaster.UI
 		{
 			this.owner.Helpers.ReleaseResource(this.processor.PullLocalWord(ScreenShipPictures), 0);
 
-			this.processor.EmitUInt16(this.processor.SegData.Value16, ScreenBox, 0);
+			DrawingBox.DisplayIdx = 0;
 			this.owner.Services.DisplayScreen(0);
 
 			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - ScreenText), (ushort)(this.processor.PullLocalWord(ScreenPartEnd) + (ushort)(TextBuffer.Address + 1)));
@@ -927,11 +927,11 @@ namespace Civilization1Remaster.UI
 				while ((short)this.processor.PullLocalWord(ScreenColumn) <= 6);
 			}
 
-			this.processor.EmitUInt16(this.processor.SegData.Value16, ScreenBox, 0);
+			DrawingBox.DisplayIdx = 0;
 			this.owner.Services.PerformSound(1, 0);
 			this.owner.Libc.CloseStream((short)this.owner.GlobD768);
 
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(ScreenBox + 0x10), 1);
+			DrawingBox.TypefaceIdx = 1;
 
 			if (VgaMode == 0)
 			{
@@ -994,7 +994,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.BlockText.ReflowText();
 
-			this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 6);
+			DrawingBox.TypefaceIdx = 6;
 
 			short end = (short)this.owner.Words.Length;
 			short place = -1;
@@ -1049,7 +1049,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.TurnHooks.DisplayCivilizationScenery();
 
-			this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 1);
+			DrawingBox.TypefaceIdx = 1;
 
 			this.processor.Journal.CloseScope("DisplayTerrainTutorial");
 		}

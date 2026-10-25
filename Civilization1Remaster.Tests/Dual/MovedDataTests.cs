@@ -80,7 +80,7 @@ public class MovedDataTests
 		Assert.All(engine.Processor.Storage.StoragePayload.Skip((int)origin).Take(size), value => Assert.Equal(0, value));
 	}
 
-	/// <summary>B6.3 / B6.4: the tables of CIV.EXE and the named globals are kept in C#, the memory under them stays empty</summary>
+	/// <summary>B6.3 / B6.4 / B6.5: the tables of CIV.EXE, the named globals and the boxes of the screens are kept in C#, the memory under them stays empty</summary>
 	[Fact]
 	public void TablesAndGlobalsLiveInCSharp()
 	{
@@ -102,6 +102,12 @@ public class MovedDataTests
 		// The tables: the C# bytes are what the memory gives (the name of the first terrain, "Desert")
 		Assert.Equal("Desert", System.Text.Encoding.ASCII.GetString(engine.Tables.Content, 0, 6));
 		Assert.Equal(engine.Processor.PullGlobalWord(0x1882 + 2), engine.Tables.Word(0x1882 + 2));
+
+		// The boxes of the screens: each one points at itself from the word after it, the typeface of the drawing box
+		for (int boxIdx = 0; boxIdx < ScreenBoxes.Addresses.Length; boxIdx++)
+			Assert.Equal(ScreenBoxes.Addresses[boxIdx], engine.Processor.PullGlobalWord((ushort)(ScreenBoxes.Addresses[boxIdx] + 0x12)));
+
+		Assert.Equal(engine.Processor.PullGlobalWord(0x98 + 0x10), (ushort)(engine.Boxes.Content[0][0x10] | (engine.Boxes.Content[0][0x11] << 8)));
 
 		// A global: the field and the memory are one, both ways
 		engine.Processor.EmitGlobalWord(engine.Globals.CityOwner.Address, 0x1234);

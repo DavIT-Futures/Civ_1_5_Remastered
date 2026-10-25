@@ -23,7 +23,7 @@ namespace Civilization1Remaster.Engine
 		/// <param name="mode"></param>
 		public void RenderText(ushort charsAddr, int horizLoc, int vertLoc, ushort style)
 		{
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(ScreenBox + 0xc), style);
+			DrawingBox.ForeHues = style;
 
 			if (this.processor.PullGlobalWord(0x6b8c) != 0x0)
 			{
@@ -42,11 +42,11 @@ namespace Civilization1Remaster.Engine
 		/// <param name="mode"></param>
 		public void RenderTextToScreen0(ushort charsAddr, int horizLoc, int vertLoc, ushort style)
 		{
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(ScreenBox + 0xa), 0x0);
+			DrawingBox.FlagSet = 0x0;
 
 			RenderText(charsAddr, horizLoc, vertLoc, style);
 
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(ScreenBox + 0xa), 0x1);
+			DrawingBox.FlagSet = 0x1;
 		}
 
 		public void RenderTextToScreen0(string text, int horizLoc, int vertLoc, ushort style)
@@ -79,11 +79,11 @@ namespace Civilization1Remaster.Engine
 		{
 			horizLoc -= (ushort)ObtainTextWidth(charsAddr) / 2;
 
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(ScreenBox + 0xa), 0x0);
+			DrawingBox.FlagSet = 0x0;
 
 			RenderText(charsAddr, horizLoc, vertLoc, style);
 
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(ScreenBox + 0xa), 0x1);
+			DrawingBox.FlagSet = 0x1;
 		}
 
 		public void RenderCenteredTextToScreen0(string text, int horizLoc, int vertLoc, ushort style)
@@ -103,12 +103,12 @@ namespace Civilization1Remaster.Engine
 		{
 			horizLoc -= (ushort)((ushort)ObtainTextWidth(charsAddr) >> 1);
 
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(ScreenBox + 0xa), 0x0);
+			DrawingBox.FlagSet = 0x0;
 
 			RenderText(charsAddr, horizLoc + 1, vertLoc + 1, 0);
 			RenderText(charsAddr, horizLoc, vertLoc, style);
 
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(ScreenBox + 0xa), 0x1);
+			DrawingBox.FlagSet = 0x1;
 		}
 
 		/// <summary>
@@ -118,7 +118,7 @@ namespace Civilization1Remaster.Engine
 		/// <returns></returns>
 		public int ObtainTextWidth(ushort charsAddr)
 		{
-			ushort faceIdent = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(ScreenBox + 0x10));
+			ushort faceIdent = DrawingBox.TypefaceIdx;
 			string words = this.processor.PullText(CPU.AsLinearAddress(this.processor.SegData.Value16, charsAddr));
 
 			this.processor.RegAcc.Value16 = (ushort)this.owner.VideoCard.ObtainRenderTextSize(faceIdent, words).Width;

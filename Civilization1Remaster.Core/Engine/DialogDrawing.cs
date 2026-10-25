@@ -56,7 +56,7 @@ namespace Civilization1Remaster.Engine
 			MenuFirstChoice = 0xffff;
 			MenuMeasuring = 0x1;
 
-			ushort fontId = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(ScreenBox + 0x10));
+			ushort fontId = DrawingBox.TypefaceIdx;
 			ushort lineHeight = this.owner.VideoCard.ObtainTextHeight(fontId);
 
 			if (lineHeight == 9)
@@ -367,7 +367,7 @@ namespace Civilization1Remaster.Engine
 
 		private void MeasureAndDrawMenuFrame(ushort charsAddr, int horizLoc, int vertLoc)
 		{
-			ushort fontId = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(ScreenBox + 0x10));
+			ushort fontId = DrawingBox.TypefaceIdx;
 			ushort lineHeight = this.owner.VideoCard.ObtainTextHeight(fontId);
 
 			if (lineHeight == 9)
@@ -438,7 +438,7 @@ namespace Civilization1Remaster.Engine
 						}
 					}
 
-					ushort currentFont = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(ScreenBox + 0x10));
+					ushort currentFont = DrawingBox.TypefaceIdx;
 					lineWidth = (ushort)(lineWidth + this.owner.VideoCard.ObtainCharWidth(currentFont, ch));
 					this.processor.EmitLocalWord(0x54, lineWidth);
 				}
@@ -545,18 +545,16 @@ namespace Civilization1Remaster.Engine
 
 			if (MenuFooter != 0)
 			{
-				ushort screenStruct = ScreenBox;
-				ushort savedFont = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(screenStruct + 0x10));
+				ushort savedFont = DrawingBox.TypefaceIdx;
 				this.processor.EmitLocalWord(0x56, savedFont);
-				this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(screenStruct + 0x10), 2);
+				DrawingBox.TypefaceIdx = 2;
 
 				this.owner.TextPainter.RenderTextToScreen0(0x2fbd,
 					(short)MenuRightEdge - 74,
 					(short)bottomEdge - 4,
 					10);
 
-				this.processor.EmitUInt16(this.processor.SegData.Value16,
-					(ushort)(ScreenBox + 0x10), savedFont);
+				DrawingBox.TypefaceIdx = savedFont;
 			}
 
 			if (this.processor.PullGlobalWord(0x8066) != 0)
@@ -579,8 +577,7 @@ namespace Civilization1Remaster.Engine
 			short optionIdx = (firstCh == 0x20 || firstCh == 0x5f) ? (short)0 : (short)-1;
 			this.processor.EmitLocalWord(0x5a, (ushort)optionIdx);
 
-			this.processor.EmitUInt16(this.processor.SegData.Value16,
-				(ushort)(ScreenBox + 0xc), MenuFlashHue);
+			DrawingBox.ForeHues = MenuFlashHue;
 
 			ushort lineIdx = 0;
 			this.processor.EmitLocalWord(0x56, 0);
@@ -696,7 +693,7 @@ namespace Civilization1Remaster.Engine
 			}
 		
 			this.processor.RegBase.Value16 = ScreenBox;
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xe), style);
+			DrawingBox.RearHues = style;
 
 			RenderShadowBox(horizLoc + 1, vertLoc + 1, breadth, altitude, 15, 8);
 

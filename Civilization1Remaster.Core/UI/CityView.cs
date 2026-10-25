@@ -453,7 +453,7 @@ namespace Civilization1Remaster.UI
 
 				this.processor.RegBase.Value16 = ScreenBox;
 				this.processor.EmitUInt16(this.processor.SegData.Value16, this.processor.RegBase.Value16, 0x1);
-				this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 0x6);
+				DrawingBox.TypefaceIdx = 0x6;
 
 				if (this.owner.Libc.TextLength((ushort)(this.processor.RegFrame.Value16 - 0x80)) == 0)
 				{
@@ -477,7 +477,7 @@ namespace Civilization1Remaster.UI
 
 				this.processor.RegBase.Value16 = ScreenBox;
 				this.processor.EmitUInt16(this.processor.SegData.Value16, this.processor.RegBase.Value16, 0x0);
-				this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 0x1);
+				DrawingBox.TypefaceIdx = 0x1;
 
 				if (idx3 != 0)
 				{

@@ -1,4 +1,5 @@
 ﻿using Civilization1Remaster.Emulation;
+using Civilization1Remaster.Video;
 using Civilization1Remaster.Game;
 
 namespace Civilization1Remaster
@@ -55,6 +56,9 @@ namespace Civilization1Remaster
 
 		/// <summary>0xaa: the address of the box (a screen and its rectangle) the drawing goes to</summary>
 		protected ushort ScreenBox => this.owner.Globals.ScreenBox.Value;
+
+		/// <summary>The fields of the box at ScreenBox (B6.5): display, rectangle, flags, hues, typeface</summary>
+		protected CivRectangle DrawingBox => new CivRectangle(this.processor, CPU.AsLinearAddress(this.processor.SegData.Value16, ScreenBox));
 
 		/// <summary>0x19d4: the box of the back screen, which keeps what the screen showed before a dialog or the map</summary>
 		protected ushort BackScreenBox => this.owner.Globals.BackScreenBox.Value;

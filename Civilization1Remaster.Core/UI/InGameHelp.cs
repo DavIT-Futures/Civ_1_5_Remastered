@@ -172,13 +172,13 @@ namespace Civilization1Remaster.UI
 
 				this.owner.Dialogs.RenderBox(56, 16, 208, height, 10);
 
-				this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 0x2);
+				DrawingBox.TypefaceIdx = 0x2;
 
 				this.owner.TextPainter.RenderCenteredTextToScreen0(0x34e7, 160, 19, 0);
 
 				this.owner.BlockText.RenderTextChunk(32, 64, 25, 15);
 
-				this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 0x1);
+				DrawingBox.TypefaceIdx = 0x1;
 
 				this.owner.Conquest.AwaitForKeyPressOrMouseClick();
 
@@ -218,13 +218,13 @@ namespace Civilization1Remaster.UI
 
 				this.owner.Dialogs.RenderBox(56, 16, 208, height, 12);
 
-				this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 0x2);
+				DrawingBox.TypefaceIdx = 0x2;
 
 				this.owner.TextPainter.RenderCenteredTextToScreen0(0x350b, 160, 19, 0);
 
 				this.owner.BlockText.RenderTextChunk(32, 64, 25, 15);
 
-				this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 0x1);
+				DrawingBox.TypefaceIdx = 0x1;
 
 				this.owner.Conquest.AwaitForKeyPressOrMouseClick();
 

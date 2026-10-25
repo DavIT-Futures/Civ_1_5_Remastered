@@ -306,7 +306,7 @@ namespace Civilization1Remaster.Game
 
 			this.round.Index = citizen;
 			this.processor.RegBase.Value16 = ScreenBox;
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 2);
+			DrawingBox.TypefaceIdx = 2;
 
 			EmptyMessage()
 				.City(townIdx);
@@ -1743,7 +1743,7 @@ namespace Civilization1Remaster.Game
 
 			this.round.Value = this.owner.Advisors.PickCityProduction(owner, townIdx);
 			this.processor.RegBase.Value16 = ScreenBox;
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 2);
+			DrawingBox.TypefaceIdx = 2;
 
 			if (this.round.Value == 0x63)
 			{
@@ -2766,7 +2766,7 @@ namespace Civilization1Remaster.Game
 			City town = this.owner.World.Towns[townIdx];
 
 			this.processor.RegBase.Value16 = ScreenBox;
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 2);
+			DrawingBox.TypefaceIdx = 2;
 			RenderFrame(211, 1, 317, 97);
 
 			this.processor.RegAcc.Value16 = 2;
@@ -3386,7 +3386,7 @@ namespace Civilization1Remaster.Game
 
 				this.round.AdvisorPick = this.owner.Advisors.PickCityProduction(owner, townIdx);
 				this.processor.RegBase.Value16 = ScreenBox;
-				this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 2);
+				DrawingBox.TypefaceIdx = 2;
 
 				if (this.round.AdvisorPick == 0x63)
 					return CityScreenStep.Restart;
@@ -3454,7 +3454,7 @@ namespace Civilization1Remaster.Game
 
 			// The view of the city
 			this.processor.RegBase.Value16 = ScreenBox;
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 1);
+			DrawingBox.TypefaceIdx = 1;
 			this.owner.Words.Clear();
 			this.owner.CityScene.DisplayCityScreen(townIdx, -1);
 			MapRedrawRequest = 1;
@@ -3509,7 +3509,7 @@ namespace Civilization1Remaster.Game
 
 			this.owner.Startup.DisplayMouseCursor();
 			this.processor.RegBase.Value16 = ScreenBox;
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 1);
+			DrawingBox.TypefaceIdx = 1;
 			if (this.owner.Dialogs.DisplayMenu(TextBuffer.Address, 100, 80, 1) == 0 && this.owner.World.Participants[owner].Gold >= (short)this.round.Value)
 			{
 				town.MaterialsTally = (short)(10 * (short)this.round.Selected);
@@ -3766,7 +3766,7 @@ namespace Civilization1Remaster.Game
 			{
 				this.owner.TurnLogic.AwaitForKey();
 				this.processor.RegBase.Value16 = ScreenBox;
-				this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 1);
+				DrawingBox.TypefaceIdx = 1;
 				this.owner.CityNaming.DisplayCityLabelPrompt(townIdx);
 				MapRedrawRequest = 1;
 				return CityScreenStep.Restart;
@@ -3830,7 +3830,7 @@ namespace Civilization1Remaster.Game
 					.Number((short)(0xa * (short)price))
 					.Text("$?\n No.\n Yes.\n");
 				this.processor.RegBase.Value16 = ScreenBox;
-				this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 1);
+				DrawingBox.TypefaceIdx = 1;
 				this.owner.Startup.DisplayMouseCursor();
 				if (this.owner.Dialogs.DisplayMenu(TextBuffer.Address, 128, 80, 1) == 1)
 				{
@@ -4541,7 +4541,7 @@ namespace Civilization1Remaster.Game
 			}
 
 			this.processor.RegBase.Value16 = ScreenBox;
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 1);
+			DrawingBox.TypefaceIdx = 1;
 			this.owner.Startup.DisplayMouseCursor();
 			this.processor.RegAcc.Value16 = (ushort)(CityHappy - CityUnhappy);
 		}

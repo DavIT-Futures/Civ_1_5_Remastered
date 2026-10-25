@@ -777,7 +777,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
 
-			this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 0x6);
+			DrawingBox.TypefaceIdx = 0x6;
 
 			DisplayReplay();
 
@@ -804,7 +804,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Services.PerformSound(1, 0);
 
-			this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 0x1);
+			DrawingBox.TypefaceIdx = 0x1;
 
 			this.owner.Startup.QueryForDisk(0, 1);
 

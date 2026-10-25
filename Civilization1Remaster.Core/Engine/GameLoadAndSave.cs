@@ -398,11 +398,11 @@ namespace Civilization1Remaster.Engine
 
 				this.owner.Startup.QueryForDisk(0, 1);
 
-				this.processor.EmitGlobalWord(ScreenBox, 0x2);
+				DrawingBox.DisplayIdx = 0x2;
 
 				this.owner.WorldSetup.ReckonContinentSizes(0);
 
-				this.processor.EmitGlobalWord(ScreenBox, 0x0);
+				DrawingBox.DisplayIdx = 0x0;
 				this.processor.EmitGlobalWord(0x6820, 0x8);
 
 				// The original game had 4 manual saves and saved slots 4 - 9 automatically, at the start of a turn.

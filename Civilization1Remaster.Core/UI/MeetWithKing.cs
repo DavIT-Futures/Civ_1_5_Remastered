@@ -988,7 +988,7 @@ namespace Civilization1Remaster.UI
 			ReleaseKingResources();
 
 			this.processor.RegBase.Value16 = ScreenBox;
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 0x1);
+			DrawingBox.TypefaceIdx = 0x1;
 
 			this.owner.TurnHooks.RepaintMainScreen();
 
@@ -1085,7 +1085,7 @@ namespace Civilization1Remaster.UI
 			ushort typeface = (ushort)((sbyte)this.processor.PullUInt8(0x36fa, (ushort)this.owner.World.Participants[participantIdx].ChiefVisuals) + 8);
 			SavedScreenStyle = typeface == 0xa ? (ushort)3 : typeface;
 
-			this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), SavedScreenStyle);
+			DrawingBox.TypefaceIdx = SavedScreenStyle;
 			this.processor.EmitGlobalWord(0xd2dc, 1);
 			KingMood = 1;
 			AdvisorPoseShown = 0xffff;

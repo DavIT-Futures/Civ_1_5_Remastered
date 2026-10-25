@@ -32,7 +32,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Startup.DisplayMouseCursor();
 
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(ScreenBox + 0x10), 0x7);
+			DrawingBox.TypefaceIdx = 0x7;
 
 			ChooseDifficulty();
 
@@ -357,7 +357,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Startup.DisplayMouseCursor();
 
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(ScreenBox + 0x10), 0x1);
+			DrawingBox.TypefaceIdx = 0x1;
 
 			ushort names = (ushort)(this.owner.World.PersonParticipantIdx << 1);
 
@@ -1411,11 +1411,11 @@ namespace Civilization1Remaster.UI
 
 				this.owner.Services.FloodBox(ScreenBox, 0, 100, 320, 100, 15);
 
-				this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 0x6);
+				DrawingBox.TypefaceIdx = 0x6;
 
 				this.owner.TextPainter.RenderCenteredTextToScreen0(0x375a, 160, 102, 0);
 
-				this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 0x2);
+				DrawingBox.TypefaceIdx = 0x2;
 
 				for (int advisorIdx = 0; advisorIdx < 4; advisorIdx++)
 				{
@@ -1428,7 +1428,7 @@ namespace Civilization1Remaster.UI
 					this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, (80 * advisorIdx) + 40, (advisorIdx & 1) != 0 ? 186 : 180, 0);
 				}
 
-				this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 0x1);
+				DrawingBox.TypefaceIdx = 0x1;
 
 				this.owner.Startup.DisplayMouseCursor();
 

@@ -58,13 +58,13 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 100, 15);
 
-			this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 0x4);
+			DrawingBox.TypefaceIdx = 0x4;
 
 			this.owner.VideoCard.RenderLine(ScreenBox, 1, 1, 318, 1, 0);
 
 			this.owner.Services.FloodBox(ScreenBox, 8, 3, 304, 20, 15);
 
-			this.processor.EmitGlobalWord((ushort)(ScreenBox + 0xe), 0xf);
+			DrawingBox.RearHues = 0xf;
 
 			this.owner.VideoCard.RenderLine(ScreenBox, 0, 35, 319, 35, 0);
 
@@ -85,7 +85,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.BlockText.RenderTextChunk(40, 16, 40, 0);
 
-			this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 0x5);
+			DrawingBox.TypefaceIdx = 0x5;
 			this.owner.Words.Clear();
 
 			switch (this.owner.Libc.Dice.DrawInt(4))
@@ -135,13 +135,13 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Words.Set(this.owner.Libc.Dice.DrawInt(2) != 0 ? (ushort)0x514f : (ushort)0x5156);
 
-			this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 0x3);
+			DrawingBox.TypefaceIdx = 0x3;
 
 			this.owner.TextPainter.RenderText(TextBuffer.Address, 6, 3, 0);
 
 			this.owner.TextPainter.RenderText(TextBuffer.Address, 272, 3, 0);
 
-			this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 0x1);
+			DrawingBox.TypefaceIdx = 0x1;
 			EmptyMessage()
 				.Text("10 cents");
 
@@ -153,7 +153,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 8, 28, 0);
 
-			this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 0x2);
+			DrawingBox.TypefaceIdx = 0x2;
 
 			ushort topic = (ushort)(this.processor.RegFrame.Value16 - 0xc);
 
@@ -166,7 +166,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 160, 3, 0);
 
-			this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 0x1);
+			DrawingBox.TypefaceIdx = 0x1;
 
 			if (shown)
 			{

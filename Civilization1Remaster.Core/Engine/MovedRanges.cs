@@ -6,8 +6,8 @@ namespace Civilization1Remaster.Engine
 {
 	/// <summary>
 	/// The ranges of the data segment that live in C# (B6): the message buffer (B6.1), the units (B6.2), the tables of
-	/// CIV.EXE (B6.3) and the named global variables (B6.4). GameEngine.PrepareMachine attaches them over the memory, the
-	/// snapshots of the tests write them back at their addresses (MovedData).
+	/// CIV.EXE (B6.3), the named global variables (B6.4) and the boxes of the screens (B6.5). GameEngine.PrepareMachine
+	/// attaches them over the memory, the snapshots of the tests write them back at their addresses (MovedData).
 	/// </summary>
 	public static class MovedRanges
 	{
@@ -18,6 +18,7 @@ namespace Civilization1Remaster.Engine
 			new Range("TextBuffer", TextBuffer.Address, TextBuffer.Size),
 			new Range("Units", UnitMemory.Origin, UnitMemory.ParticipantStride * 8),
 			new Range("Tables", GameTables.Begin, GameTables.End - GameTables.Begin),
+			.. ScreenBoxes.Addresses.Select((address, boxIdx) => new Range($"Box{boxIdx}", address, ScreenBoxes.Size)),
 			.. GameGlobals.Layout.Select(global => new Range(global.Name, global.Address, 2)),
 		];
 	}

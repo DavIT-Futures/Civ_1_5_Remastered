@@ -752,11 +752,11 @@ namespace Civilization1Remaster.Game
 
 				this.owner.Words.Append(".");
 
-				this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 0x6);
+				DrawingBox.TypefaceIdx = 0x6;
 
 				this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 160, 4, 0);
 
-				this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 0x1);
+				DrawingBox.TypefaceIdx = 0x1;
 
 				this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0x78, 0x140, 0x28, BackScreenBox, 0, 0);
 

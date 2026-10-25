@@ -258,7 +258,14 @@ Kolejność (każdy krok osobno zielony; pamięć 0x3b01 długo zostaje jako mag
   10/10, porcje 1 – 3: 8/11, porcje 4 – 5: 6/8. Ocalałe są równoważne w danych testów: wiersze jednostek w
   `WorldMap` (miasta wyznaczają te same granice), `HueCyclingOn` / `RiotShown` (oba 0, gdy cykle stoją), technologia
   świątyni / targu (obie znane albo żadna), `ShiftTally` / `Sight` (równe dla tych jednostek), AX po `TextBuffer.Set`
-  (nikt go nie czyta).  **Kolejne porcje (pętla do 90% tygodniowego limitu, 2026-10-25):** (1) B6.2-reszta: zmienne z gotowym adresem 0x81d4
+  (nikt go nie czyta).
+  **B6.5 (2026-10-25):** cztery pudełka ekranów (0x12 bajtów: ekran, prostokąt, flagi, kolory, czcionka) leżą
+  w 0x98, 0x19c2, 0x19d6, 0x19ea, każde z wskaźnikiem na siebie zaraz za nim (0xaa, 0x19d4, 0x19e8, 0x19fc).
+  `Engine/ScreenBoxes.cs` trzyma je w tablicach C# (nakładki, wpisy `Box0` – `Box3` w `MovedRanges`); sterowniki i
+  `CivRectangle` sięgają przez pamięć. Kod gry: pola pudełka rysowania przez `GameModule.DrawingBox` (`CivRectangle`,
+  nowe słowa `ForeHues` 0xc i `RearHues` 0xe, bo kod pisze tam słowa) zamiast `ScreenBox + 0x10` itd. – ok. 90 miejsc,
+  także przez BX (`RegBase = ScreenBox`, zapis BX zostaje do B6.8). Mutacje 9 / 10 + 1 / 2 (widok miasta z przycisku ekranu miasta nie występuje w turach golden master; cztery najpierw sprawdzane złym
+  testem, z właściwym złapane; ocalała: odczyt czcionki w `MeasureAndDrawMenuFrame` – w teście menu i tak równy).  **Kolejne porcje (pętla do 90% tygodniowego limitu, 2026-10-25):** (1) B6.2-reszta: zmienne z gotowym adresem 0x81d4
   (`TurnEvents` 163 / 894 / 1006, `WorldMap` 49, `UnitCombat.TroopsRoot`) przez `UnitMemory`; (2) pozostałe literalne
   `PullGlobal…(0x…)` w klasach `GameModule` nazwać i dopisać do `GameGlobals` (te o niejasnym znaczeniu nazwać po
   adresie i funkcji); (3) bezpośrednie odczyty `MovedRanges` przez pamięć w akcesorach (np. `UnitKindTable.Field`) na

@@ -53,6 +53,7 @@ namespace Civilization1Remaster
 		private readonly TextBuffer words;
 		private readonly GameTables tables;
 		private readonly GameGlobals globals = new GameGlobals();
+		private readonly ScreenBoxes boxes = new ScreenBoxes();
 		private readonly VGADriver videoHandler;
 		private readonly SoundDriver audioHandler;
 		#endregion
@@ -388,6 +389,10 @@ namespace Civilization1Remaster
 			// B6.3: the tables of CIV.EXE, B6.4: the named global variables
 			this.processor.Storage.AttachOverlay(CPU.AsLinearAddress(this.processor.SegData.Value16, GameTables.Begin), this.tables.Content);
 
+			// B6.5: the boxes of the screens
+			for (int boxIdx = 0; boxIdx < ScreenBoxes.Addresses.Length; boxIdx++)
+				this.processor.Storage.AttachOverlay(CPU.AsLinearAddress(this.processor.SegData.Value16, ScreenBoxes.Addresses[boxIdx]), this.boxes.Content[boxIdx]);
+
 			foreach (GlobalWord global in this.globals.All)
 				this.processor.Storage.AttachOverlay(CPU.AsLinearAddress(this.processor.SegData.Value16, global.Address), global);
 		}
@@ -633,6 +638,12 @@ namespace Civilization1Remaster
 		/// <summary>The records of the units of all players at 0x81d4, kept in C# (B6.2): a copy</summary>
 		public byte[] UnitRecords => (byte[])(this.processor.Storage.OverlayAt(
 			CPU.AsLinearAddress(this.processor.SegData.Value16, UnitMemory.Origin)) ?? []).Clone();
+
+		/// <summary>The boxes of the screens (B6.5)</summary>
+		public ScreenBoxes Boxes
+		{
+			get { return this.boxes; }
+		}
 
 		/// <summary>The tables of CIV.EXE 0x282 - 0x19c1 (B6.3)</summary>
 		public GameTables Tables

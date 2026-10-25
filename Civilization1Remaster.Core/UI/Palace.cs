@@ -28,9 +28,9 @@ namespace Civilization1Remaster.UI
 			this.owner.Libc.CopyText(textBuf, TextBuffer.Address);
 			this.owner.Startup.QueryForDisk(2, 1);
 
-			this.processor.EmitUInt16(dataSeg, ScreenBox, 0x1);
+			DrawingBox.DisplayIdx = 0x1;
 			ImportPalaceGraphics(0);
-			this.processor.EmitUInt16(dataSeg, ScreenBox, 0x0);
+			DrawingBox.DisplayIdx = 0x0;
 
 			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
 			this.owner.Helpers.HaltHueCycling();
@@ -212,9 +212,9 @@ namespace Civilization1Remaster.UI
 			this.processor.EmitUInt16(dataSeg, (ushort)(finalWordOff + 0xd91e), nextLevel);
 			this.processor.EmitUInt16(dataSeg, (ushort)(finalWordOff + 0xb222), selectedStyle);
 
-			this.processor.EmitUInt16(dataSeg, ScreenBox, 0x1);
+			DrawingBox.DisplayIdx = 0x1;
 			ImportPalaceGraphics(0);
-			this.processor.EmitUInt16(dataSeg, ScreenBox, 0x0);
+			DrawingBox.DisplayIdx = 0x0;
 
 			this.owner.VideoCard.RenderScreenToMainScreen(1, 0x14);
 			this.owner.TurnLogic.AwaitForKey();
@@ -366,7 +366,7 @@ namespace Civilization1Remaster.UI
 			}
 
 			this.owner.Startup.ConcealMouseCursor();
-			this.processor.EmitUInt16(dataSeg, ScreenBox, 0x1);
+			DrawingBox.DisplayIdx = 0x1;
 			ImportPalaceGraphics(0);
 
 			ushort screen0Ptr = ScreenBox;
@@ -400,7 +400,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Startup.QueryForDisk(2, 1);
 
-			this.processor.EmitGlobalWord(ScreenBox, 1);
+			DrawingBox.DisplayIdx = 1;
 			PalaceFirstPicture = 0xffff;
 
 			ushort built = 0;
@@ -583,7 +583,7 @@ namespace Civilization1Remaster.UI
 
 			if (marker != 0)
 			{
-				this.processor.EmitGlobalWord(ScreenBox, 0);
+				DrawingBox.DisplayIdx = 0;
 
 				if (VgaMode != 0 && (short)FirstMissingDisk > 7)
 				{

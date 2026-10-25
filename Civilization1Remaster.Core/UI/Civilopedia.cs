@@ -393,7 +393,7 @@ namespace Civilization1Remaster.UI
 			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, bgColor);
 			this.owner.UnitOps.RenderBusyIndicator();
 
-			this.processor.EmitUInt16(dataSeg, (ushort)(ScreenBox + 0x10), 0x7);
+			DrawingBox.TypefaceIdx = 0x7;
 			this.owner.Words.Clear();
 
 			short titleX = arg2 == 0x2 ? (short)0xe0 : (short)0xcc;
@@ -406,10 +406,10 @@ namespace Civilization1Remaster.UI
 
 			this.RenderCivilopediaRecordHeader(dataSeg, scienceIdx, arg2, titleX);
 
-			this.processor.EmitUInt16(dataSeg, (ushort)(ScreenBox + 0x10), 0x6);
+			DrawingBox.TypefaceIdx = 0x6;
 			this.owner.Libc.UppercaseText(TextBuffer.Address);
 			this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, titleX, 20, 0);
-			this.processor.EmitUInt16(dataSeg, (ushort)(ScreenBox + 0x10), 0x7);
+			DrawingBox.TypefaceIdx = 0x7;
 
 			ushort tagBuf = (ushort)(this.processor.RegFrame.Value16 - 0x2c);
 			this.owner.Libc.CopyText(tagBuf, "*");
@@ -455,7 +455,7 @@ namespace Civilization1Remaster.UI
 					break;
 			}
 
-			this.processor.EmitUInt16(dataSeg, (ushort)(ScreenBox + 0x10), 0x1);
+			DrawingBox.TypefaceIdx = 0x1;
 			this.owner.Startup.DisplayMouseCursor();
 			this.owner.Conquest.AwaitForKeyPressOrMouseClick();
 			this.owner.Startup.ConcealMouseCursor();

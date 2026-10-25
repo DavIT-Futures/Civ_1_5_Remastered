@@ -258,7 +258,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Dialogs.RenderBox(horizLoc, vertLoc - 1, breadth * 8 + 8, 13, 0);
 
-			this.processor.EmitGlobalWord((ushort)(ScreenBox + 0xe), 0xf);
+			DrawingBox.RearHues = 0xf;
 			TextCursor = 0x0;
 
 			bool fresh = true;
@@ -432,7 +432,7 @@ namespace Civilization1Remaster.UI
 
 				this.processor.EmitGlobalByte(next, cut);
 
-				ushort typeface = this.processor.PullGlobalWord((ushort)(ScreenBox + 0x10));
+				ushort typeface = DrawingBox.TypefaceIdx;
 				byte character = this.processor.PullGlobalByte((ushort)(place + TextBuffer.Address));
 
 				if (place == (short)TextCursor)

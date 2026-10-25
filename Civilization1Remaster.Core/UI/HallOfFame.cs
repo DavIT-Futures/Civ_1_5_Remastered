@@ -323,7 +323,7 @@ namespace Civilization1Remaster.UI
 
 				this.owner.VideoCard.RenderImage(PictureScreenBox, 0xf0, 0x8c, 0x28, 0x3c, ScreenBox, 0x10e, 10);
 
-				this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 7);
+				DrawingBox.TypefaceIdx = 7;
 
 				this.owner.Helpers.FloodBoxWithMotif(80, 4, 160, 27);
 
@@ -370,7 +370,7 @@ namespace Civilization1Remaster.UI
 
 				this.owner.Services.PerformSound(1, 0);
 
-				this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 1);
+				DrawingBox.TypefaceIdx = 1;
 
 				this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
 

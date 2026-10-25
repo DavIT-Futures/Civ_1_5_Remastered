@@ -757,7 +757,7 @@ namespace Civilization1Remaster.Game
 			if (marker)
 			{
 				ushort screenBufferPtr = ScreenBox;
-				this.processor.EmitUInt16(this.processor.SegData.Value16, screenBufferPtr, 1);
+				DrawingBox.DisplayIdx = 1;
 				this.owner.Briefings.DisplayReportPreamble(0x506b, 3);
 			}
 
@@ -767,7 +767,7 @@ namespace Civilization1Remaster.Game
 			{
 				this.owner.TextPainter.RenderCenteredTextToScreen0(0x507e, 160, 100, 15);
 				ushort screenBufferPtr = ScreenBox;
-				this.processor.EmitUInt16(this.processor.SegData.Value16, screenBufferPtr, 0);
+				DrawingBox.DisplayIdx = 0;
 
 				this.owner.VideoCard.RenderImage(
 					BackScreenBox,
@@ -995,7 +995,7 @@ namespace Civilization1Remaster.Game
 					this.owner.Services.FloodBox(screenBufferPtr, 35, 192, (short)this.owner.Helpers.VerifyValueSpan(this.owner.World.Participants[0].Tally / 4, 0, 250), 7, 11);
 				}
 
-				this.processor.EmitUInt16(this.processor.SegData.Value16, screenBufferPtr, 0);
+				DrawingBox.DisplayIdx = 0;
 
 				this.owner.VideoCard.RenderImage(
 					BackScreenBox,

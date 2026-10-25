@@ -74,7 +74,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Libc.ReadKey();
 
-			this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 0x2);
+			DrawingBox.TypefaceIdx = 0x2;
 
 			// The strategic locations; another role keeps the text of the one before
 			for (int placeIdx = 0; placeIdx < 0x20; placeIdx++)
@@ -173,7 +173,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Libc.ReadKey();
 
-			this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 0x1);
+			DrawingBox.TypefaceIdx = 0x1;
 
 			this.owner.Startup.DisplayMouseCursor();
 

@@ -69,7 +69,7 @@ namespace Civilization1Remaster.Game
 			{
 			}
 
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(ScreenBox + 0x10), 0x1);
+			DrawingBox.TypefaceIdx = 0x1;
 
 			this.owner.VideoCard.RenderImage(
 				ScreenBox,
@@ -1396,7 +1396,7 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"ObtainTerrainTypeFromScreen({horizLoc}, {vertLoc})");
 
-			ushort displayIdx = this.processor.PullGlobalWord(ScreenBox);
+			ushort displayIdx = DrawingBox.DisplayIdx;
 			ushort colour = this.owner.VideoCard.ObtainDot(displayIdx, horizLoc, vertLoc);
 			ushort terrain = this.processor.PullGlobalWord((ushort)(0x2ba6 + (colour << 1)));
 
@@ -1419,7 +1419,7 @@ namespace Civilization1Remaster.Game
 
 			// function body
 			this.owner.VideoCard.ObtainDot(
-				this.processor.PullUInt16(this.processor.SegData.Value16, ScreenBox),
+				DrawingBox.DisplayIdx,
 				horizLoc, vertLoc + 50);
 
 			// Far return
@@ -1446,7 +1446,7 @@ namespace Civilization1Remaster.Game
 			this.processor.EnterFrame(0x1a);
 			ushort fileName = (ushort)(this.processor.RegFrame.Value16 - 0x10);
 
-			this.processor.EmitUInt16(this.processor.SegData.Value16, ScreenBox, 0x0);
+			DrawingBox.DisplayIdx = 0x0;
 
 			bool waiting = StoryStep(fileName);
 
@@ -1500,7 +1500,7 @@ namespace Civilization1Remaster.Game
 
 				this.owner.Words.Set("");
 
-				this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(ScreenBox + 0x10), 0x7);
+				DrawingBox.TypefaceIdx = 0x7;
 				StoryLinesTold = 0x0;
 			}
 
@@ -1701,10 +1701,10 @@ namespace Civilization1Remaster.Game
 			}
 		}
 
-		/// <summary>Marks the screen as changed ([0xaa] = 1)</summary>
+		/// <summary>The drawing box back on screen 1 (its display index: [[0xaa]] = 1)</summary>
 		private void MarkScreenChanged()
 		{
-			this.processor.EmitUInt16(this.processor.SegData.Value16, ScreenBox, 0x1);
+			DrawingBox.DisplayIdx = 0x1;
 		}
 
 		/// <summary>
