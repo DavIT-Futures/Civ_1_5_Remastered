@@ -268,8 +268,8 @@ namespace Civilization1Remaster.Game
 				// The first turn: the view on the settler of the human player, the tutorial on the easiest level
 				ushort troop = (ushort)(0x600 * personIdx);
 
-				MapViewHoriz = (ushort)(this.processor.PullGlobalByte((ushort)(troop + 0x81d5)) - 7);
-				MapViewVert = (ushort)(this.processor.PullGlobalByte((ushort)(troop + 0x81d6)) - 6);
+				MapViewHoriz = (ushort)(this.Troops.PullAt(troop, UnitMemory.Horiz) - 7);
+				MapViewVert = (ushort)(this.Troops.PullAt(troop, UnitMemory.Vert) - 6);
 
 				RepaintMainScreen();
 

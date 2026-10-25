@@ -877,12 +877,12 @@ namespace Civilization1Remaster.Game
 
 			{
 				// Every unit shows its hit points: green squares, and gray squares for lost hit points until it heals
-				int troopKind = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(0x600 * participantIdx + 0xc * troopIdx + 0x81d7));
+				int troopKind = this.Troops.PullAt((0x600 * participantIdx + 0xc * troopIdx), UnitMemory.Kind);
 				int missingStrikeMarks = this.owner.World.Vitals.ObtainLostHitPoints(participantIdx, troopIdx, troopKind);
 
 				if (troopKind != 0xff)
 				{
-					bool seasoned = (this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(0x600 * participantIdx + 0xc * troopIdx + 0x81d4)) & (int)UnitStatusEnum.Veteran) != 0;
+					bool seasoned = (this.Troops.PullAt((0x600 * participantIdx + 0xc * troopIdx), UnitMemory.Status) & (int)UnitStatusEnum.Veteran) != 0;
 					int completeStrikeMarks = this.owner.World.Vitals.ObtainFullHitPoints(participantIdx, troopIdx, troopKind, seasoned);
 
 					RenderHealthBar(horizLoc - 1, vertLoc - 1, completeStrikeMarks, completeStrikeMarks - missingStrikeMarks);

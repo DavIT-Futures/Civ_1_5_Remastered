@@ -490,8 +490,8 @@ namespace Civilization1Remaster.UI
 			{
 				ushort troop = (ushort)((0x600 * participantIdx) + (0xc * troopIdx));
 
-				this.processor.EmitGlobalByte((ushort)(troop + 0x81d7), 0xff);
-				this.processor.EmitGlobalByte((ushort)(troop + 0x81d4), 0x0);
+				this.Troops.AssignAt(troop, UnitMemory.Kind, 0xff);
+				this.Troops.AssignAt(troop, UnitMemory.Status, 0x0);
 			}
 
 			this.processor.EmitGlobalWord((ushort)(0xd20c + (participantIdx << 1)), 0);
@@ -648,11 +648,11 @@ namespace Civilization1Remaster.UI
 			{
 				ushort troop = (ushort)(0xc * troopIdx);
 
-				if (this.processor.PullGlobalByte((ushort)(troop + 0x81d7)) == 0xff)
+				if (this.Troops.PullAt(troop, UnitMemory.Kind) == 0xff)
 					continue;
 
-				short distance = (short)this.owner.Helpers.ObtainDistance(horizLoc, (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d5)),
-					vertLoc, (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d6)));
+				short distance = (short)this.owner.Helpers.ObtainDistance(horizLoc, (sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz),
+					vertLoc, (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert));
 
 				if (distance <= 8)
 				{
@@ -714,8 +714,8 @@ namespace Civilization1Remaster.UI
 					{
 						ushort troop = (ushort)(0x600 * otherIdx);
 
-						short distance = (short)this.owner.Helpers.ObtainDistance(horizLoc, (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d5)),
-							vertLoc, (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d6)));
+						short distance = (short)this.owner.Helpers.ObtainDistance(horizLoc, (sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz),
+							vertLoc, (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert));
 
 						if (distance < nearest)
 						{
@@ -884,12 +884,12 @@ namespace Civilization1Remaster.UI
 				ushort troop = (ushort)(0x600 * participantIdx);
 				this.processor.RegSource.Value16 = troop;
 
-				if (this.processor.PullGlobalByte((ushort)(troop + 0x81d7)) == 0xff)
+				if (this.Troops.PullAt(troop, UnitMemory.Kind) == 0xff)
 					continue;
 
 				this.processor.RegDest.Value16 = (ushort)((participantIdx << 1) + frame - 0x5a);
 
-				this.owner.MapOps.ObtainContinentID((sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d5)), (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d6)));
+				this.owner.MapOps.ObtainContinentID((sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert));
 			}
 
 			ushort scattered = 0;
@@ -900,7 +900,7 @@ namespace Civilization1Remaster.UI
 				ushort troop = (ushort)(0x600 * participantIdx);
 				this.processor.RegSource.Value16 = troop;
 
-				if (this.processor.PullGlobalByte((ushort)(troop + 0x81d7)) == 0xff)
+				if (this.Troops.PullAt(troop, UnitMemory.Kind) == 0xff)
 					continue;
 
 				short nearest = NearestCivilization(participantIdx, troop);
@@ -928,7 +928,7 @@ namespace Civilization1Remaster.UI
 				ushort troop = (ushort)(0x600 * participantIdx);
 				this.processor.RegSource.Value16 = troop;
 
-				if (this.processor.PullGlobalByte((ushort)(troop + 0x81d7)) == 0xff)
+				if (this.Troops.PullAt(troop, UnitMemory.Kind) == 0xff)
 					continue;
 
 				this.owner.Words.Set("Skills: ");
@@ -939,8 +939,8 @@ namespace Civilization1Remaster.UI
 				{
 					points[participantIdx] += 3;
 
-					this.owner.UnitOps.ConstructUnit((short)participantIdx, 0, (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d5)),
-						(sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d6)));
+					this.owner.UnitOps.ConstructUnit((short)participantIdx, 0, (sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz),
+						(sbyte)this.Troops.PullAt(troop, UnitMemory.Vert));
 
 					this.owner.Words.Append("Settlers+");
 				}
@@ -997,19 +997,19 @@ namespace Civilization1Remaster.UI
 				ushort other = (ushort)(0x600 * otherIdx);
 				this.processor.RegSource.Value16 = other;
 
-				if (this.processor.PullGlobalByte((ushort)(other + 0x81d7)) == 0xff)
+				if (this.Troops.PullAt(other, UnitMemory.Kind) == 0xff)
 					continue;
 
 				this.processor.RegDest.Value16 = troop;
 
-				ushort otherContinent = this.owner.MapOps.ObtainContinentID((sbyte)this.processor.PullGlobalByte((ushort)(other + 0x81d5)), (sbyte)this.processor.PullGlobalByte((ushort)(other + 0x81d6)));
+				ushort otherContinent = this.owner.MapOps.ObtainContinentID((sbyte)this.Troops.PullAt(other, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(other, UnitMemory.Vert));
 
-				if (this.owner.MapOps.ObtainContinentID((sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d5)), (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d6))) != otherContinent)
+				if (this.owner.MapOps.ObtainContinentID((sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert)) != otherContinent)
 					continue;
 
 				short distance = (short)(ushort)this.owner.Helpers.ObtainDistance(
-					(sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d5)), (sbyte)this.processor.PullGlobalByte((ushort)(other + 0x81d5)),
-					(sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d6)), (sbyte)this.processor.PullGlobalByte((ushort)(other + 0x81d6)));
+					(sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(other, UnitMemory.Horiz),
+					(sbyte)this.Troops.PullAt(troop, UnitMemory.Vert), (sbyte)this.Troops.PullAt(other, UnitMemory.Vert));
 
 				if (distance < nearest)
 				{
@@ -1057,8 +1057,8 @@ namespace Civilization1Remaster.UI
 				this.processor.RegDest.Value16 = troop;
 
 				ushort terrain = this.owner.MapOps.ObtainTerrainType(
-					(sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d5)) + (short)DirectionHoriz(neighbourIdx),
-					(sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d6)) + (short)DirectionVert(neighbourIdx));
+					(sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz) + (short)DirectionHoriz(neighbourIdx),
+					(sbyte)this.Troops.PullAt(troop, UnitMemory.Vert) + (short)DirectionVert(neighbourIdx));
 
 
 				if (terrain == 0xa)
@@ -1091,7 +1091,7 @@ namespace Civilization1Remaster.UI
 
 			this.processor.RegSource.Value16 = troop;
 
-			switch (CPU.SignedQuotient((short)this.owner.MapOps.ObtainLandMassSize((sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d5)), (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d6))), 0x32))
+			switch (CPU.SignedQuotient((short)this.owner.MapOps.ObtainLandMassSize((sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert)), 0x32))
 			{
 				case 0:
 					this.owner.Words.Append(0x3695);

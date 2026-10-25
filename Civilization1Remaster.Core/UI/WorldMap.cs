@@ -152,7 +152,7 @@ namespace Civilization1Remaster.UI
 			if (ownerIdx != (ushort)this.owner.World.PersonParticipantIdx && MapRevealed == 0)
 			{
 				ushort troopIdx = this.owner.MapOps.ObtainUnitAtTile(horizLoc, vertLoc);
-				sbyte visibility = (sbyte)this.processor.PullGlobalByte((ushort)((ushort)(0xc * troopIdx) + (ushort)(0x600 * ownerIdx) + 0x81dd));
+				sbyte visibility = (sbyte)this.Troops.PullAt(((ushort)(0xc * troopIdx) + (ushort)(0x600 * ownerIdx)), UnitMemory.ShownToParticipants);
 
 				if ((visibility & (1 << (byte)this.owner.World.PersonParticipantIdx)) == 0)
 					return;

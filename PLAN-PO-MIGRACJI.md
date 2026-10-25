@@ -213,6 +213,14 @@ Kolejność (każdy krok osobno zielony; pamięć 0x3b01 długo zostaje jako mag
   jak przy poprzednim commicie). Następnie:
   `GameState.Participants[].Troops` jako prawdziwy stan (dziś kopia z wczytania) i surowe odczyty `0x81d4 + …`
   w `AIPlayer` / `CivilizationSchism` / `PlayerTurn` przez `UnitMemory`.
+  **B6.2, część 2 (2026-10-25):** ok. 190 surowych dostępów `0x81d4 + rekord + pole` (odczyty i zapisy, przez
+  `PullGlobalByte`, `PullUInt8` / `PullInt8` / `EmitUInt8` z `SegData` i `dataSeg`, także wieloliniowe) przez
+  `UnitMemory.PullAt` / `AssignAt` (przesunięcie rekordu policzone wcześniej, nazwane pole `UnitMemory.Horiz` itd.),
+  `GameModule.Troops` (wspólna instancja); skrypt `b62c.py`. Zostają: zmienne z adresem już z 0x81d4 (`TurnEvents`
+  163 / 894 / 1006, `WorldMap` 49, `UnitCombat.TroopsRoot`) – przez nakładkę – i hurtowy zapis / odczyt gry.
+  Pełny zestaw 773/773, mutacje 8 / 10 (dwie w ścieżce „poza tabelą” `UnitMemory` równoważne – idzie przez pamięć,
+  a ta przez nakładkę do tej samej tablicy; trzy dopiero z testem funkcji: `CarryOutGoto`, `RenderUnitSprite`,
+  `HandlePlayerTurnHumanChoice`).
 - **B6.2 – jednostki (pierwotny plan).** `UnitMemory` to już jedyny szew: magazyn → tablica C# (rekord 12 bajtów jako struktura) +
   projekcja 0x81d4 dla migawki i zapisu gry; potem `GameState.Participants[].Troops` (dziś tylko kopia z wczytania)
   staje się prawdziwym stanem.

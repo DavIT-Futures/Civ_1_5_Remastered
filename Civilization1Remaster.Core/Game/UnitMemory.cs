@@ -66,23 +66,38 @@ namespace Civilization1Remaster.Game
 
 		public byte Pull(int participantIdx, int troopIdx, int offset)
 		{
-			byte[]? records = Records;
-			ushort place = (ushort)(Offset(participantIdx, troopIdx) + offset);
-
-			// An address past the table (the original reads the memory after it) goes through the memory
-			return records != null && place < records.Length ? records[place] :
-				this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(Address(participantIdx, troopIdx) + offset));
+			return PullAt(Offset(participantIdx, troopIdx), offset);
 		}
 
 		public void Assign(int participantIdx, int troopIdx, int offset, byte amount)
 		{
+			AssignAt(Offset(participantIdx, troopIdx), offset, amount);
+		}
+
+		/// <summary>
+		/// A byte of a unit through the place of its record computed before (0x600 * player + 0xc * unit, the raw address
+		/// of the original less Origin). A place past the table (the original reads the memory after it) goes through the
+		/// memory.
+		/// </summary>
+		public byte PullAt(int recordOffset, int offset)
+		{
 			byte[]? records = Records;
-			ushort place = (ushort)(Offset(participantIdx, troopIdx) + offset);
+			ushort place = (ushort)(recordOffset + offset);
+
+			return records != null && place < records.Length ? records[place] :
+				this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(Origin + recordOffset + offset));
+		}
+
+		/// <summary>Writes a byte of a unit through the place of its record computed before (see PullAt)</summary>
+		public void AssignAt(int recordOffset, int offset, byte amount)
+		{
+			byte[]? records = Records;
+			ushort place = (ushort)(recordOffset + offset);
 
 			if (records != null && place < records.Length)
 				records[place] = amount;
 			else
-				this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(Address(participantIdx, troopIdx) + offset), amount);
+				this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(Origin + recordOffset + offset), amount);
 		}
 
 		public sbyte TroopKind(int participantIdx, int troopIdx)

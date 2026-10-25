@@ -366,13 +366,13 @@ namespace Civilization1Remaster.Game
 				ushort troop = (ushort)((ushort)(0x600 * participantIdx) + (ushort)(0xc * troopIdx));
 				this.processor.RegSource.Value16 = (ushort)(0x600 * participantIdx);
 
-				if (this.processor.PullGlobalByte((ushort)(troop + 0x81d7)) == 0xff)
+				if (this.Troops.PullAt(troop, UnitMemory.Kind) == 0xff)
 					continue;
 
 				this.processor.RegSource.Value16 = troop;
-				short unitKind = (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d7));
+				short unitKind = (sbyte)this.Troops.PullAt(troop, UnitMemory.Kind);
 
-				if ((this.owner.MapOps.ObtainTileImprovements((sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d5)), (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d6))) & 1) != 0)
+				if ((this.owner.MapOps.ObtainTileImprovements((sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert)) & 1) != 0)
 					TransferUnitInCity(participantIdx, rebelIdx, troopIdx, troop);
 				else
 					TransferUnitOutside(participantIdx, rebelIdx, troopIdx, troop, unitKind);
@@ -382,13 +382,13 @@ namespace Civilization1Remaster.Game
 		/// <summary>A unit of the player in a city (see TransferRebelUnits)</summary>
 		private void TransferUnitInCity(short participantIdx, short rebelIdx, ushort troopIdx, ushort troop)
 		{
-			ushort townIdx = this.owner.Helpers.LocateCityAtPosition((sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d5)), (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d6)));
-			short unitKind = (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d7));
+			ushort townIdx = this.owner.Helpers.LocateCityAtPosition((sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert));
+			short unitKind = (sbyte)this.Troops.PullAt(troop, UnitMemory.Kind);
 
 			ushort townRecord = (ushort)(0x1c * townIdx);
 			this.processor.RegDest.Value16 = townRecord;
 
-			byte homeIdx = this.processor.PullGlobalByte((ushort)(troop + 0x81df));
+			byte homeIdx = this.Troops.PullAt(troop, UnitMemory.BaseTown);
 
 			// AX holds the home city's offset like in the original (for a unit without a home, 0xff, see HomeOwner)
 			this.processor.RegAcc.Value16 = (ushort)(0x1c * (sbyte)homeIdx);
@@ -397,17 +397,17 @@ namespace Civilization1Remaster.Game
 			{
 				this.owner.UnitOps.EliminateUnit(participantIdx, (short)troopIdx);
 
-				this.owner.MapOps.TagTileOwned((sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d5)), (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d6)));
+				this.owner.MapOps.TagTileOwned((sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert));
 
 				// The unit goes to the city's owner (ClassicSchism: to the player in the raw byte at 0x1c * city of the data
 				// segment, like in the translated code, which lost the address of the city table), with its kind (ClassicSchism:
 				// the kind read after EliminateUnit, -1, like in the original: the unit vanishes, C# throws)
 				bool classic = this.owner.TurnHooks.ClassicSchism;
 				short cityOwner = classic ? (sbyte)this.processor.PullGlobalByte(townRecord) : this.owner.World.Towns[townIdx].ParticipantIdx;
-				short kind = classic ? (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d7)) : unitKind;
+				short kind = classic ? (sbyte)this.Troops.PullAt(troop, UnitMemory.Kind) : unitKind;
 
 				this.owner.UnitOps.ConstructUnit(cityOwner, kind,
-					(sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d5)), (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d6)));
+					(sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert));
 				return;
 			}
 
@@ -418,15 +418,15 @@ namespace Civilization1Remaster.Game
 
 			this.processor.RegSource.Value16 = troop;
 
-			this.owner.MapOps.TagTileOwned((sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d5)), (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d6)));
+			this.owner.MapOps.TagTileOwned((sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert));
 
 			ushort newTroop = this.owner.UnitOps.ConstructUnit(rebelIdx, unitKind,
-				(sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d5)), (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d6)));
+				(sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert));
 
 			ushort copy = (ushort)((ushort)(0xc * newTroop) + (ushort)(0x600 * rebelIdx));
 			this.processor.RegDest.Value16 = (ushort)(0x600 * rebelIdx);
 
-			this.processor.EmitGlobalByte((ushort)(copy + 0x81d4), (byte)(this.processor.PullGlobalByte((ushort)(troop + 0x81d4)) & 0xfe));
+			this.Troops.AssignAt(copy, UnitMemory.Status, (byte)(this.Troops.PullAt(troop, UnitMemory.Status) & 0xfe));
 		}
 
 		/// <summary>A unit of the player outside the cities, with its stack (see TransferRebelUnits)</summary>
@@ -435,10 +435,10 @@ namespace Civilization1Remaster.Game
 			ushort playerUnits = (ushort)(0x600 * participantIdx);
 
 			// AX holds the home city's offset like in the original (for a unit without a home, 0xff, see HomeOwner)
-			this.processor.RegAcc.Value16 = (ushort)(0x1c * (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81df)));
+			this.processor.RegAcc.Value16 = (ushort)(0x1c * (sbyte)this.Troops.PullAt(troop, UnitMemory.BaseTown));
 
-			short homeOwner = HomeOwner(participantIdx, this.processor.PullGlobalByte((ushort)(troop + 0x81df)));
-			short next = (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81de));
+			short homeOwner = HomeOwner(participantIdx, this.Troops.PullAt(troop, UnitMemory.BaseTown));
+			short next = (sbyte)this.Troops.PullAt(troop, UnitMemory.FollowingInStack);
 
 			if ((ushort)homeOwner != (ushort)rebelIdx)
 			{
@@ -450,12 +450,12 @@ namespace Civilization1Remaster.Game
 					ushort other = (ushort)((ushort)(0xc * next) + playerUnits);
 					this.processor.RegDest.Value16 = other;
 
-					short following = (sbyte)this.processor.PullGlobalByte((ushort)(other + 0x81de));
-					this.processor.RegAcc.Value16 = (ushort)(0x1c * (sbyte)this.processor.PullGlobalByte((ushort)(other + 0x81df)));
+					short following = (sbyte)this.Troops.PullAt(other, UnitMemory.FollowingInStack);
+					this.processor.RegAcc.Value16 = (ushort)(0x1c * (sbyte)this.Troops.PullAt(other, UnitMemory.BaseTown));
 
-					if (HomeOwner(participantIdx, this.processor.PullGlobalByte((ushort)(other + 0x81df))) != homeOwner)
+					if (HomeOwner(participantIdx, this.Troops.PullAt(other, UnitMemory.BaseTown)) != homeOwner)
 					{
-						this.processor.EmitGlobalByte((ushort)(other + 0x81df), this.processor.PullGlobalByte((ushort)((ushort)(0xc * troopIdx) + playerUnits + 0x81df)));
+						this.Troops.AssignAt(other, UnitMemory.BaseTown, this.Troops.PullAt(((ushort)(0xc * troopIdx) + playerUnits), UnitMemory.BaseTown));
 					}
 
 					next = following;
@@ -466,18 +466,18 @@ namespace Civilization1Remaster.Game
 
 			this.owner.UnitOps.EliminateUnit(participantIdx, (short)troopIdx);
 
-			this.owner.MapOps.MapAssignCityOwner(rebelIdx, (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d5)), (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d6)));
+			this.owner.MapOps.MapAssignCityOwner(rebelIdx, (sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert));
 
-			this.owner.MapOps.TagTileOwned((sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d5)), (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d6)));
+			this.owner.MapOps.TagTileOwned((sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert));
 
 			ushort newTroop = this.owner.UnitOps.ConstructUnit(rebelIdx, unitKind,
-				(sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d5)), (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d6)));
+				(sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert));
 
 			ushort copy = (ushort)((ushort)(0x600 * rebelIdx) + (ushort)(0xc * newTroop));
 			this.processor.RegDest.Value16 = copy;
 
-			this.processor.EmitGlobalByte((ushort)(copy + 0x81d4), (byte)(this.processor.PullGlobalByte((ushort)(troop + 0x81d4)) & 0xfe));
-			this.processor.EmitGlobalByte((ushort)(copy + 0x81df), this.processor.PullGlobalByte((ushort)(troop + 0x81df)));
+			this.Troops.AssignAt(copy, UnitMemory.Status, (byte)(this.Troops.PullAt(troop, UnitMemory.Status) & 0xfe));
+			this.Troops.AssignAt(copy, UnitMemory.BaseTown, this.Troops.PullAt(troop, UnitMemory.BaseTown));
 
 			// The rest of the stack changes sides too, on the unit's tile, with its status and (homed elsewhere) home city
 			while (next != -1 && (ushort)next != troopIdx)
@@ -487,28 +487,28 @@ namespace Civilization1Remaster.Game
 				ushort other = (ushort)((ushort)(0xc * next) + playerUnits);
 				this.processor.RegDest.Value16 = other;
 
-				short following = (sbyte)this.processor.PullGlobalByte((ushort)(other + 0x81de));
-				short kind = (sbyte)this.processor.PullGlobalByte((ushort)(other + 0x81d7));
+				short following = (sbyte)this.Troops.PullAt(other, UnitMemory.FollowingInStack);
+				short kind = (sbyte)this.Troops.PullAt(other, UnitMemory.Kind);
 
 				this.owner.UnitOps.EliminateUnit(participantIdx, next);
 
-				this.owner.MapOps.MapAssignCityOwner(rebelIdx, (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d5)), (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d6)));
+				this.owner.MapOps.MapAssignCityOwner(rebelIdx, (sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert));
 
 				if (kind != -1)
 				{
-					this.owner.MapOps.TagTileOwned((sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d5)), (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d6)));
+					this.owner.MapOps.TagTileOwned((sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert));
 
 					ushort joined = this.owner.UnitOps.ConstructUnit(rebelIdx, kind,
-						(sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d5)), (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d6)));
+						(sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert));
 
 					ushort joinedCopy = (ushort)((ushort)(0x600 * rebelIdx) + (ushort)(0xc * joined));
 
-					this.processor.EmitGlobalByte((ushort)(joinedCopy + 0x81d4), (byte)(this.processor.PullGlobalByte((ushort)(troop + 0x81d4)) & 0xfe));
-					this.processor.RegAcc.Value16 = (ushort)(0x1c * (sbyte)this.processor.PullGlobalByte((ushort)(other + 0x81df)));
+					this.Troops.AssignAt(joinedCopy, UnitMemory.Status, (byte)(this.Troops.PullAt(troop, UnitMemory.Status) & 0xfe));
+					this.processor.RegAcc.Value16 = (ushort)(0x1c * (sbyte)this.Troops.PullAt(other, UnitMemory.BaseTown));
 
-					if (HomeOwner(participantIdx, this.processor.PullGlobalByte((ushort)(other + 0x81df))) != homeOwner)
+					if (HomeOwner(participantIdx, this.Troops.PullAt(other, UnitMemory.BaseTown)) != homeOwner)
 					{
-						this.processor.EmitGlobalByte((ushort)(joinedCopy + 0x81df), this.processor.PullGlobalByte((ushort)(troop + 0x81df)));
+						this.Troops.AssignAt(joinedCopy, UnitMemory.BaseTown, this.Troops.PullAt(troop, UnitMemory.BaseTown));
 					}
 				}
 

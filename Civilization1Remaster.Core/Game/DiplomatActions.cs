@@ -34,7 +34,7 @@ namespace Civilization1Remaster.Game
 			ushort troop = (ushort)((ushort)(0xc * troopIdx) + (ushort)(0x600 * participantIdx));
 
 			this.processor.RegSource.Value16 = (ushort)(0x600 * participantIdx);
-			this.processor.EmitGlobalByte((ushort)(troop + 0x81da), 0xff);
+			this.Troops.AssignAt(troop, UnitMemory.TravelHoriz, 0xff);
 
 			Message(CivilizationName((ushort)participantIdx))
 				.Text(" diplomat arrives\nin ")
@@ -113,12 +113,12 @@ namespace Civilization1Remaster.Game
 					{
 						this.processor.RegSource.Value16 = troop;
 
-						this.owner.Audience.LaunchAudience(ownerIdx, (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d5)),
-							(sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d6)), 1);
+						this.owner.Audience.LaunchAudience(ownerIdx, (sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz),
+							(sbyte)this.Troops.PullAt(troop, UnitMemory.Vert), 1);
 					}
 
 					this.processor.RegSource.Value16 = (ushort)(0x600 * participantIdx);
-					this.processor.EmitGlobalByte((ushort)(troop + 0x81d8), 0);
+					this.Troops.AssignAt(troop, UnitMemory.LeftoverSteps, 0);
 					break;
 			}
 

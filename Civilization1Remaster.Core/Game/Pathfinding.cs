@@ -51,8 +51,8 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.RegSource.Value16 = troop;
 
-			short shiftHoriz = troopIdx < 128 ? (short)(this.processor.PullGlobalByte((ushort)(troop + 0x81da)) - this.processor.PullGlobalByte((ushort)(troop + 0x81d5))) : (short)0;
-			short shiftVert = troopIdx < 128 ? (short)(this.processor.PullGlobalByte((ushort)(troop + 0x81db)) - this.processor.PullGlobalByte((ushort)(troop + 0x81d6))) : (short)0;
+			short shiftHoriz = troopIdx < 128 ? (short)(this.Troops.PullAt(troop, UnitMemory.TravelHoriz) - this.Troops.PullAt(troop, UnitMemory.Horiz)) : (short)0;
+			short shiftVert = troopIdx < 128 ? (short)(this.Troops.PullAt(troop, UnitMemory.TravelVert) - this.Troops.PullAt(troop, UnitMemory.Vert)) : (short)0;
 
 			this.processor.EmitLocalWord(0x1e, (ushort)shiftHoriz);
 			this.processor.EmitLocalWord(0x20, (ushort)shiftVert);
@@ -71,7 +71,7 @@ namespace Civilization1Remaster.Game
 			if (troopIdx < 128)
 			{
 				this.processor.RegSource.Value16 = (ushort)(troop - (0xc * troopIdx));
-				this.processor.EmitGlobalByte((ushort)(troop + 0x81da), 0xff);
+				this.Troops.AssignAt(troop, UnitMemory.TravelHoriz, 0xff);
 			}
 
 			ushort candidate;
@@ -98,26 +98,26 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.RegSource.Value16 = troop;
 
-			ushort kind = (ushort)(0x22 * (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d7)));
+			ushort kind = (ushort)(0x22 * (sbyte)this.Troops.PullAt(troop, UnitMemory.Kind));
 
 			if (UnitKindWordAt(kind, UnitKindTable.LandGroup) == 1)
 			{
-				GoalHoriz = this.processor.PullGlobalByte((ushort)(troop + 0x81da));
-				GoalVert = this.processor.PullGlobalByte((ushort)(troop + 0x81db));
+				GoalHoriz = this.Troops.PullAt(troop, UnitMemory.TravelHoriz);
+				GoalVert = this.Troops.PullAt(troop, UnitMemory.TravelVert);
 			}
 			else
 			{
 				this.processor.EmitLocalWord(0xe, 0);
 
 				bool windowFailed = false;
-				short columns = (short)Math.Abs((short)(this.processor.PullGlobalByte((ushort)(troop + 0x81da)) - this.processor.PullGlobalByte((ushort)(troop + 0x81d5))));
+				short columns = (short)Math.Abs((short)(this.Troops.PullAt(troop, UnitMemory.TravelHoriz) - this.Troops.PullAt(troop, UnitMemory.Horiz)));
 
 				if (columns < 7 || columns > 0x49)
 				{
-					if (Math.Abs((short)(this.processor.PullGlobalByte((ushort)(troop + 0x81db)) - this.processor.PullGlobalByte((ushort)(troop + 0x81d6)))) < 7)
+					if (Math.Abs((short)(this.Troops.PullAt(troop, UnitMemory.TravelVert) - this.Troops.PullAt(troop, UnitMemory.Vert))) < 7)
 					{
-						GoalHoriz = this.processor.PullGlobalByte((ushort)(troop + 0x81da));
-						GoalVert = this.processor.PullGlobalByte((ushort)(troop + 0x81db));
+						GoalHoriz = this.Troops.PullAt(troop, UnitMemory.TravelHoriz);
+						GoalVert = this.Troops.PullAt(troop, UnitMemory.TravelVert);
 
 						if (TryShiftToward(participantIdx, troopIdx, out ushort step))
 							return step;
@@ -159,8 +159,8 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.RegSource.Value16 = troop;
 
-			short unitHoriz = this.processor.PullGlobalByte((ushort)(troop + 0x81d5));
-			short unitVert = this.processor.PullGlobalByte((ushort)(troop + 0x81d6));
+			short unitHoriz = this.Troops.PullAt(troop, UnitMemory.Horiz);
+			short unitVert = this.Troops.PullAt(troop, UnitMemory.Vert);
 			short shiftHoriz = (short)(GoalHoriz - unitHoriz);
 			short shiftVert = (short)(GoalVert - unitVert);
 
@@ -174,9 +174,9 @@ namespace Civilization1Remaster.Game
 
 			if (shiftHoriz == 0 && shiftVert == 0)
 			{
-				this.processor.EmitGlobalByte((ushort)(troop + 0x81dc), 0xff);
-				this.processor.EmitGlobalByte((ushort)(troop + 0x81da), 0xff);
-				this.processor.EmitGlobalByte((ushort)(troop + 0x81d8), 0);
+				this.Troops.AssignAt(troop, UnitMemory.TravelHeading, 0xff);
+				this.Troops.AssignAt(troop, UnitMemory.TravelHoriz, 0xff);
+				this.Troops.AssignAt(troop, UnitMemory.LeftoverSteps, 0);
 
 				return 0xffff;
 			}
@@ -201,8 +201,8 @@ namespace Civilization1Remaster.Game
 
 				short stepHoriz = (short)DirectionHoriz(direction);
 				short stepVert = (short)DirectionVert(direction);
-				short nextHoriz = (short)(this.processor.PullGlobalByte((ushort)(troop + 0x81d5)) + stepHoriz);
-				short nextVert = (short)(this.processor.PullGlobalByte((ushort)(troop + 0x81d6)) + stepVert);
+				short nextHoriz = (short)(this.Troops.PullAt(troop, UnitMemory.Horiz) + stepHoriz);
+				short nextVert = (short)(this.Troops.PullAt(troop, UnitMemory.Vert) + stepVert);
 				short leftHoriz = (short)(shiftHoriz - stepHoriz);
 				short leftVert = (short)(shiftVert - stepVert);
 
@@ -233,7 +233,7 @@ namespace Civilization1Remaster.Game
 				}
 				else
 				{
-					ushort unitKind = (ushort)(0x22 * (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d7)));
+					ushort unitKind = (ushort)(0x22 * (sbyte)this.Troops.PullAt(troop, UnitMemory.Kind));
 
 					cost = (short)UnitKindWordAt(unitKind, UnitKindTable.ShiftTally) <= 1 ? (short)3 :
 						(short)(3 * (sbyte)TerrainField(terrain, TerrainTable.MoveCost));
@@ -241,7 +241,7 @@ namespace Civilization1Remaster.Game
 
 				cost += (short)((nextDistance << 2) + Math.Abs(leftHoriz) + Math.Abs(leftVert));
 
-				byte last = this.processor.PullGlobalByte((ushort)(troop + 0x81dc));
+				byte last = this.Troops.PullAt(troop, UnitMemory.TravelHeading);
 				this.processor.EmitLocalByte(0x2a, last);
 
 				if (last != 0xff)
@@ -272,26 +272,26 @@ namespace Civilization1Remaster.Game
 
 			this.processor.RegSource.Value16 = troop;
 
-			byte previous = this.processor.PullGlobalByte((ushort)(troop + 0x81dc));
+			byte previous = this.Troops.PullAt(troop, UnitMemory.TravelHeading);
 
 			// Straight back: the unit stops for this turn
 			if (previous != 0xff && (ushort)((ushort)(sbyte)previous ^ 4) == (ushort)best)
 			{
-				this.processor.EmitGlobalByte((ushort)(troop + 0x81d8), 0);
+				this.Troops.AssignAt(troop, UnitMemory.LeftoverSteps, 0);
 				best = 0;
 				this.processor.EmitLocalWord(0x14, 0);
 			}
 
 			if (best == 0)
 			{
-				this.processor.EmitGlobalByte((ushort)(troop + 0x81dc), 0xff);
-				this.processor.EmitGlobalByte((ushort)(troop + 0x81da), 0xff);
+				this.Troops.AssignAt(troop, UnitMemory.TravelHeading, 0xff);
+				this.Troops.AssignAt(troop, UnitMemory.TravelHoriz, 0xff);
 				this.processor.EmitLocalWord(0x14, 0xffff);
 
 				return 0xffff;
 			}
 
-			this.processor.EmitGlobalByte((ushort)(troop + 0x81dc), (byte)best);
+			this.Troops.AssignAt(troop, UnitMemory.TravelHeading, (byte)best);
 
 			return (ushort)best;
 		}
@@ -312,7 +312,7 @@ namespace Civilization1Remaster.Game
 
 			if (ownerIdx == 0xffff || ownerIdx == (ushort)participantIdx)
 			{
-				ushort kind = (ushort)(0x22 * (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d7)));
+				ushort kind = (ushort)(0x22 * (sbyte)this.Troops.PullAt(troop, UnitMemory.Kind));
 				this.processor.RegSource.Value16 = terrain == 0xa ? (ushort)1 : (ushort)0;
 
 				if ((UnitKindWordAt(kind, UnitKindTable.LandGroup) == 2) == (terrain == 0xa) &&
@@ -324,7 +324,7 @@ namespace Civilization1Remaster.Game
 				{
 					this.processor.RegSource.Value16 = (ushort)(0x600 * participantIdx);
 
-					if (UnitKindWord((sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d7)), UnitKindTable.LandGroup) == 1)
+					if (UnitKindWord((sbyte)this.Troops.PullAt(troop, UnitMemory.Kind), UnitKindTable.LandGroup) == 1)
 						allowed = true;
 				}
 			}
@@ -358,13 +358,13 @@ namespace Civilization1Remaster.Game
 			this.processor.PreserveIndexRegisters();
 
 			ushort troop = (ushort)((ushort)(0x600 * participantIdx) + (ushort)(0xc * troopIdx));
-			ushort unitHoriz = this.processor.PullGlobalByte((ushort)(troop + 0x81d5));
-			ushort unitVert = this.processor.PullGlobalByte((ushort)(troop + 0x81d6));
+			ushort unitHoriz = this.Troops.PullAt(troop, UnitMemory.Horiz);
+			ushort unitVert = this.Troops.PullAt(troop, UnitMemory.Vert);
 
 			this.processor.EmitLocalWord(0x36, unitHoriz);
 			this.processor.EmitLocalWord(0x3a, unitVert);
-			GoalHoriz = this.processor.PullGlobalByte((ushort)(troop + 0x81da));
-			GoalVert = this.processor.PullGlobalByte((ushort)(troop + 0x81db));
+			GoalHoriz = this.Troops.PullAt(troop, UnitMemory.TravelHoriz);
+			GoalVert = this.Troops.PullAt(troop, UnitMemory.TravelVert);
 
 			ushort sea = UnitMovesBySea(troop) ? (ushort)1 : (ushort)0;
 
@@ -374,11 +374,11 @@ namespace Civilization1Remaster.Game
 
 			if (step == 0)
 			{
-				GoalHoriz = this.processor.PullGlobalByte((ushort)(troop + 0x81da));
-				GoalVert = this.processor.PullGlobalByte((ushort)(troop + 0x81db));
+				GoalHoriz = this.Troops.PullAt(troop, UnitMemory.TravelHoriz);
+				GoalVert = this.Troops.PullAt(troop, UnitMemory.TravelVert);
 
 				// The goal row is still in AX in the original
-				result = this.processor.PullGlobalByte((ushort)(troop + 0x81db));
+				result = this.Troops.PullAt(troop, UnitMemory.TravelVert);
 			}
 			else
 			{
@@ -387,7 +387,7 @@ namespace Civilization1Remaster.Game
 				this.processor.EmitLocalWord(0x36, (ushort)unitColumn);
 				this.processor.EmitLocalWord(0x3a, (ushort)unitRow);
 
-				LocateRouteStep(this.processor.PullGlobalByte((ushort)(troop + 0x81da)), this.processor.PullGlobalByte((ushort)(troop + 0x81db)),
+				LocateRouteStep(this.Troops.PullAt(troop, UnitMemory.TravelHoriz), this.Troops.PullAt(troop, UnitMemory.TravelVert),
 					UnitMovesBySea(troop) ? (ushort)1 : (ushort)0);
 
 				result = SearchRouteBlocks(troop, unitColumn, unitRow) ? (ushort)1 : (ushort)0;
@@ -406,7 +406,7 @@ namespace Civilization1Remaster.Game
 		/// <summary>Whether the unit (offset from 0x81d4) is of a sea kind (domain 2, 0x1138 + 0x22 * kind)</summary>
 		private bool UnitMovesBySea(ushort troop)
 		{
-			return UnitKindWord((sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d7)), UnitKindTable.LandGroup) == 2;
+			return UnitKindWord((sbyte)this.Troops.PullAt(troop, UnitMemory.Kind), UnitKindTable.LandGroup) == 2;
 		}
 
 		/// <summary>The links of the block (the bits of directions 1 - 8): sea blocks 0x7f38 or land blocks 0xdb44</summary>
@@ -523,8 +523,8 @@ namespace Civilization1Remaster.Game
 					if (blockSteps == 0 || blockSteps > fewest)
 						continue;
 
-					short distance = (short)(ushort)this.owner.Helpers.ObtainDistance((sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81da)), (nextColumn * 4) + 1,
-						(sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81db)), (nextRow * 4) + 1);
+					short distance = (short)(ushort)this.owner.Helpers.ObtainDistance((sbyte)this.Troops.PullAt(troop, UnitMemory.TravelHoriz), (nextColumn * 4) + 1,
+						(sbyte)this.Troops.PullAt(troop, UnitMemory.TravelVert), (nextRow * 4) + 1);
 
 					if (blockSteps < fewest)
 					{
@@ -572,8 +572,8 @@ namespace Civilization1Remaster.Game
 
 			if (GoalHoriz == 0xffff)
 			{
-				GoalHoriz = this.processor.PullGlobalByte((ushort)(troop + 0x81da));
-				GoalVert = this.processor.PullGlobalByte((ushort)(troop + 0x81db));
+				GoalHoriz = this.Troops.PullAt(troop, UnitMemory.TravelHoriz);
+				GoalVert = this.Troops.PullAt(troop, UnitMemory.TravelVert);
 			}
 
 			return found;
@@ -709,8 +709,8 @@ namespace Civilization1Remaster.Game
 			ushort troop = (ushort)((ushort)(0x600 * participantIdx) + (ushort)(0xc * troopIdx));
 			this.processor.RegSource.Value16 = troop;
 
-			short unitHoriz = this.processor.PullGlobalByte((ushort)(troop + 0x81d5));
-			short unitVert = this.processor.PullGlobalByte((ushort)(troop + 0x81d6));
+			short unitHoriz = this.Troops.PullAt(troop, UnitMemory.Horiz);
+			short unitVert = this.Troops.PullAt(troop, UnitMemory.Vert);
 			short windowHoriz = (short)(GoalHoriz - 8);
 			short windowVert = (short)(GoalVert - 8);
 
@@ -739,8 +739,8 @@ namespace Civilization1Remaster.Game
 			{
 				this.processor.RegSource.Value16 = troop;
 
-				GoalHoriz = this.processor.PullGlobalByte((ushort)(troop + 0x81da));
-				GoalVert = this.processor.PullGlobalByte((ushort)(troop + 0x81db));
+				GoalHoriz = this.Troops.PullAt(troop, UnitMemory.TravelHoriz);
+				GoalVert = this.Troops.PullAt(troop, UnitMemory.TravelVert);
 			}
 
 			this.processor.RegAcc.Value16 = (ushort)step;
@@ -777,7 +777,7 @@ namespace Civilization1Remaster.Game
 			this.processor.EmitLocalWord(0x14, 0);
 			GotoCost = arg3;
 
-			ushort kind = (ushort)(0x22 * (sbyte)this.processor.PullGlobalByte((ushort)((ushort)(0xc * troopIdx) + (ushort)(0x600 * participantIdx) + 0x81d7)));
+			ushort kind = (ushort)(0x22 * (sbyte)this.Troops.PullAt(((ushort)(0xc * troopIdx) + (ushort)(0x600 * participantIdx)), UnitMemory.Kind));
 			this.processor.RegSource.Value16 = kind;
 
 			bool sea = UnitKindWordAt(kind, UnitKindTable.LandGroup) == 2;
@@ -925,7 +925,7 @@ namespace Civilization1Remaster.Game
 
 				bool seaTile = this.owner.MapOps.ObtainTerrainType(tileHoriz, nextVert) == 0xa;
 
-				ushort kind = (ushort)(0x22 * (sbyte)this.processor.PullGlobalByte((ushort)((ushort)(0xc * troopIdx) + (ushort)(0x600 * participantIdx) + 0x81d7)));
+				ushort kind = (ushort)(0x22 * (sbyte)this.Troops.PullAt(((ushort)(0xc * troopIdx) + (ushort)(0x600 * participantIdx)), UnitMemory.Kind));
 				this.processor.RegSource.Value16 = seaTile ? (ushort)1 : (ushort)0;
 
 				if ((UnitKindWordAt(kind, UnitKindTable.LandGroup) == 2) != seaTile &&

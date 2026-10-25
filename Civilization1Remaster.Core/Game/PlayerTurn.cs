@@ -1308,8 +1308,8 @@ namespace Civilization1Remaster.Game
 				{
 					this.turn.MarkedTileMode = 0x1;
 					this.processor.RegSource.Value16 = (ushort)(participantIdx * 0x600 + this.turn.Troop * 0xc);
-					this.turn.CursorHoriz = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5));
-					this.turn.CursorVert = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6));
+					this.turn.CursorHoriz = this.Troops.PullAt(this.processor.RegSource.Value16, UnitMemory.Horiz);
+					this.turn.CursorVert = this.Troops.PullAt(this.processor.RegSource.Value16, UnitMemory.Vert);
 				}
 			}
 			else if (this.turn.MarkedTileMode != 0)
@@ -2413,7 +2413,7 @@ namespace Civilization1Remaster.Game
 			{
 				this.owner.Words.Set("Attack at\n");
 				this.owner.Libc.AppendText(TextBuffer.Address,
-					this.owner.Libc.IntegerToText((sbyte)this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d8)), 10));
+					this.owner.Libc.IntegerToText((sbyte)this.Troops.PullAt(this.processor.RegSource.Value16, UnitMemory.LeftoverSteps), 10));
 				this.owner.Words.Append("/3 strength?\n Cancel\n Attack\n");
 				if (this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 16) == 1)
 					return true;

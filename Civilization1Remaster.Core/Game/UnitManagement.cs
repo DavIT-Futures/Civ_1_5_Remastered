@@ -1037,16 +1037,16 @@ namespace Civilization1Remaster.Game
 			this.processor.Journal.OpenScope($"LocateBestGuardianStep({participantIdx}, {troopIdx})");
 
 			// Extract unit parameters
-			int unitKind = (sbyte)this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(0x81d7 + participantIdx * 0x600 + troopIdx * 0xc));
-			int horiz = (sbyte)this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(0x81d5 + participantIdx * 0x600 + troopIdx * 0xc));
-			int vert = (sbyte)this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(0x81d6 + participantIdx * 0x600 + troopIdx * 0xc));
+			int unitKind = (sbyte)this.Troops.PullAt((participantIdx * 0x600 + troopIdx * 0xc), UnitMemory.Kind);
+			int horiz = (sbyte)this.Troops.PullAt((participantIdx * 0x600 + troopIdx * 0xc), UnitMemory.Horiz);
+			int vert = (sbyte)this.Troops.PullAt((participantIdx * 0x600 + troopIdx * 0xc), UnitMemory.Vert);
 			int terrainType = this.owner.MapOps.ObtainTerrainType(horiz, vert);
 
 			int landGroup = (short)this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(0x1138 + unitKind * 0x22));
 			int baseGuardPower = (short)this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(0x1140 + unitKind * 0x22));
 			int terrainDefenseFactor = (sbyte)this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(0x28f + terrainType * 0x13));
 
-			byte condition = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(0x81d4 + participantIdx * 0x600 + troopIdx * 0xc));
+			byte condition = this.Troops.PullAt((participantIdx * 0x600 + troopIdx * 0xc), UnitMemory.Status);
 			bool isFortified = (condition & 0x8) != 0;
 			bool isVeteran = (condition & 0x20) != 0;
 

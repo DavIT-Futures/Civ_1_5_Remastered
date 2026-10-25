@@ -8,6 +8,10 @@ namespace Civilization1Remaster
 	{
 		protected readonly GameEngine owner;
 		protected readonly CPU processor;
+		private UnitMemory? unitTable;
+
+		/// <summary>The records of the units (B6.2: in C#, UnitMemory)</summary>
+		protected UnitMemory Troops => this.unitTable ??= new UnitMemory(this.processor);
 
 		protected GameModule(GameEngine owner)
 		{

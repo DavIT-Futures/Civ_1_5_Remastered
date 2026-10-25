@@ -2916,7 +2916,7 @@ namespace Civilization1Remaster.Game
 
 			ushort dataSeg = this.processor.SegData.Value16;
 			ushort unitAddr = (ushort)((ushort)participantIdx * 0x600 + (ushort)troopIdx * 0xc);
-			byte unitYByte = this.processor.PullUInt8(dataSeg, (ushort)(unitAddr + 0x81d6));
+			byte unitYByte = this.Troops.PullAt(unitAddr, UnitMemory.Vert);
 			if (unitYByte < 0x2 || unitYByte >= 0x30)
 			{
 				this.processor.RegAcc.Value16 = (ushort)(((0x600 * (ushort)participantIdx) & 0xff00) | unitYByte);
@@ -2929,11 +2929,11 @@ namespace Civilization1Remaster.Game
 
 			ushort mayOccupyCurrent = this.owner.UnitOps.MayOccupyTile(
 				participantIdx,
-				this.processor.PullInt8(dataSeg, (ushort)(unitAddr + 0x81d5)),
-				this.processor.PullInt8(dataSeg, (ushort)(unitAddr + 0x81d6)));
-			ushort unitX = this.processor.PullUInt8(dataSeg, (ushort)(unitAddr + 0x81d5));
-			ushort unitY = this.processor.PullUInt8(dataSeg, (ushort)(unitAddr + 0x81d6));
-			byte unitKind = this.processor.PullUInt8(dataSeg, (ushort)(unitAddr + 0x81d7));
+				(sbyte)this.Troops.PullAt(unitAddr, UnitMemory.Horiz),
+				(sbyte)this.Troops.PullAt(unitAddr, UnitMemory.Vert));
+			ushort unitX = this.Troops.PullAt(unitAddr, UnitMemory.Horiz);
+			ushort unitY = this.Troops.PullAt(unitAddr, UnitMemory.Vert);
+			byte unitKind = this.Troops.PullAt(unitAddr, UnitMemory.Kind);
 			ushort unitSpecOffset = (ushort)((short)(sbyte)0x22 * (short)(sbyte)unitKind);
 
 			if (UnitKindWordAt(unitSpecOffset, UnitKindTable.TroopGroup) == 0x5)
@@ -2957,7 +2957,7 @@ namespace Civilization1Remaster.Game
 		private ushort ManageBarbarianSeaTransport(short participantIdx, short troopIdx, ushort unitAddr, ushort unitX, ushort unitY)
 		{
 			ushort dataSeg = this.processor.SegData.Value16;
-			if (this.processor.PullUInt8(dataSeg, (ushort)(unitAddr + 0x81de)) == 0xff)
+			if (this.Troops.PullAt(unitAddr, UnitMemory.FollowingInStack) == 0xff)
 			{
 				this.owner.UnitOps.EliminateUnit(participantIdx, troopIdx);
 				return 0x20;
@@ -2990,10 +2990,7 @@ namespace Civilization1Remaster.Game
 						if (adjContinent == cityContinent)
 						{
 							byte humanBitByte = (byte)(1 << (byte)(this.owner.World.PersonParticipantIdx & 0xff));
-							this.processor.EmitUInt8(
-								dataSeg,
-								(ushort)(unitAddr + 0x81dd),
-								(byte)(this.processor.PullUInt8(dataSeg, (ushort)(unitAddr + 0x81dd)) | humanBitByte));
+							this.Troops.AssignAt(unitAddr, UnitMemory.ShownToParticipants, (byte)(this.Troops.PullAt(unitAddr, UnitMemory.ShownToParticipants) | humanBitByte));
 
 							this.owner.UnitOps.PanMapToPosition(this.owner.World.PersonParticipantIdx, (short)adjX, (short)adjY);
 							DialogStyle = 0x3;
@@ -3006,11 +3003,8 @@ namespace Civilization1Remaster.Game
 					}
 
 					byte tileSight = (byte)this.owner.World.ChartSight[adjX, adjY];
-					this.processor.EmitUInt8(
-						dataSeg,
-						(ushort)(unitAddr + 0x81dd),
-						(byte)(this.processor.PullUInt8(dataSeg, (ushort)(unitAddr + 0x81dd)) | tileSight));
-					this.processor.EmitUInt8(dataSeg, (ushort)(unitAddr + 0x81d8), 0x0);
+					this.Troops.AssignAt(unitAddr, UnitMemory.ShownToParticipants, (byte)(this.Troops.PullAt(unitAddr, UnitMemory.ShownToParticipants) | tileSight));
+					this.Troops.AssignAt(unitAddr, UnitMemory.LeftoverSteps, 0x0);
 					return 0x75;
 				}
 
@@ -3020,7 +3014,7 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			if (this.processor.PullUInt8(dataSeg, (ushort)(unitAddr + 0x81da)) == 0xff)
+			if (this.Troops.PullAt(unitAddr, UnitMemory.TravelHoriz) == 0xff)
 			{
 				short bestScore = 0;
 				ushort bestCity = 0;
@@ -3051,8 +3045,8 @@ namespace Civilization1Remaster.Game
 					return 0x20;
 				}
 
-				this.processor.EmitUInt8(dataSeg, (ushort)(unitAddr + 0x81da), (byte)(sbyte)this.owner.World.Towns[bestCity].Place.X);
-				this.processor.EmitUInt8(dataSeg, (ushort)(unitAddr + 0x81db), (byte)(sbyte)this.owner.World.Towns[bestCity].Place.Y);
+				this.Troops.AssignAt(unitAddr, UnitMemory.TravelHoriz, (byte)(sbyte)this.owner.World.Towns[bestCity].Place.X);
+				this.Troops.AssignAt(unitAddr, UnitMemory.TravelVert, (byte)(sbyte)this.owner.World.Towns[bestCity].Place.Y);
 			}
 
 			return 0;
@@ -3070,12 +3064,12 @@ namespace Civilization1Remaster.Game
 			ushort nearestCity = this.owner.Helpers.LocateNearestCity((short)unitX, (short)unitY);
 			if (FoundDistance == 0)
 			{
-				if (this.processor.PullUInt8(dataSeg, (ushort)(unitAddr + 0x81de)) == 0xff)
+				if (this.Troops.PullAt(unitAddr, UnitMemory.FollowingInStack) == 0xff)
 				{
 					return 0x66;
 				}
 
-				byte curKind = this.processor.PullUInt8(dataSeg, (ushort)(unitAddr + 0x81d7));
+				byte curKind = this.Troops.PullAt(unitAddr, UnitMemory.Kind);
 				ushort curSpecOffset = (ushort)((short)(sbyte)0x22 * (short)(sbyte)curKind);
 				if (UnitKindWordAt(curSpecOffset, UnitKindTable.TroopGroup) == 0x2)
 				{
@@ -3125,24 +3119,24 @@ namespace Civilization1Remaster.Game
 
 			if (targetDirX != 0xfffe)
 			{
-				this.processor.EmitUInt8(dataSeg, (ushort)(unitAddr + 0x81da), (byte)(sbyte)this.owner.World.Towns[nearestCity].Place.X);
-				this.processor.EmitUInt8(dataSeg, (ushort)(unitAddr + 0x81db), (byte)(sbyte)this.owner.World.Towns[nearestCity].Place.Y);
+				this.Troops.AssignAt(unitAddr, UnitMemory.TravelHoriz, (byte)(sbyte)this.owner.World.Towns[nearestCity].Place.X);
+				this.Troops.AssignAt(unitAddr, UnitMemory.TravelVert, (byte)(sbyte)this.owner.World.Towns[nearestCity].Place.Y);
 				ushort gotoDir = this.owner.Routing.CarryOutGoto(participantIdx, troopIdx);
-				this.processor.EmitUInt8(dataSeg, (ushort)(unitAddr + 0x81dc), (byte)(gotoDir & 0xff));
+				this.Troops.AssignAt(unitAddr, UnitMemory.TravelHeading, (byte)(gotoDir & 0xff));
 			}
 
-			this.processor.EmitUInt8(dataSeg, (ushort)(unitAddr + 0x81da), 0xff);
-			if (this.processor.PullUInt8(dataSeg, (ushort)(unitAddr + 0x81d7)) == 0x1a)
+			this.Troops.AssignAt(unitAddr, UnitMemory.TravelHoriz, 0xff);
+			if (this.Troops.PullAt(unitAddr, UnitMemory.Kind) == 0x1a)
 			{
 				ushort currentTerrain = this.owner.MapOps.ObtainTerrainType(
-					this.processor.PullInt8(dataSeg, (ushort)(unitAddr + 0x81d5)),
-					this.processor.PullInt8(dataSeg, (ushort)(unitAddr + 0x81d6)));
-				byte nextInStack = this.processor.PullUInt8(dataSeg, (ushort)(unitAddr + 0x81de));
+					(sbyte)this.Troops.PullAt(unitAddr, UnitMemory.Horiz),
+					(sbyte)this.Troops.PullAt(unitAddr, UnitMemory.Vert));
+				byte nextInStack = this.Troops.PullAt(unitAddr, UnitMemory.FollowingInStack);
 				if (nextInStack != 0xff && currentTerrain != 0xa)
 				{
 					ushort nextUnitOffset = (ushort)((short)(sbyte)0xc * (short)(sbyte)nextInStack);
 					ushort nextUnitAddr = (ushort)((ushort)participantIdx * 0x600 + nextUnitOffset);
-					if (this.processor.PullUInt8(dataSeg, (ushort)(nextUnitAddr + 0x81d7)) != 0x1a)
+					if (this.Troops.PullAt(nextUnitAddr, UnitMemory.Kind) != 0x1a)
 					{
 						return 0x20;
 					}
@@ -3162,21 +3156,15 @@ namespace Civilization1Remaster.Game
 					ushort nearestUnit = this.owner.Helpers.LocateNearestUnit(
 						participantIdx,
 						troopIdx,
-						this.processor.PullInt8(dataSeg, (ushort)(unitAddr + 0x81d5)),
-						this.processor.PullInt8(dataSeg, (ushort)(unitAddr + 0x81d6)));
+						(sbyte)this.Troops.PullAt(unitAddr, UnitMemory.Horiz),
+						(sbyte)this.Troops.PullAt(unitAddr, UnitMemory.Vert));
 					if ((short)FoundDistance <= 3)
 					{
 						ushort nearestUnitAddr = (ushort)((ushort)participantIdx * 0x600 + nearestUnit * 0xc);
-						if (this.processor.PullUInt8(dataSeg, (ushort)(nearestUnitAddr + 0x81d7)) != 0x1a)
+						if (this.Troops.PullAt(nearestUnitAddr, UnitMemory.Kind) != 0x1a)
 						{
-							this.processor.EmitUInt8(
-								dataSeg,
-								(ushort)(unitAddr + 0x81da),
-								this.processor.PullUInt8(dataSeg, (ushort)(nearestUnitAddr + 0x81d5)));
-							this.processor.EmitUInt8(
-								dataSeg,
-								(ushort)(unitAddr + 0x81db),
-								this.processor.PullUInt8(dataSeg, (ushort)(nearestUnitAddr + 0x81d6)));
+							this.Troops.AssignAt(unitAddr, UnitMemory.TravelHoriz, this.Troops.PullAt(nearestUnitAddr, UnitMemory.Horiz));
+							this.Troops.AssignAt(unitAddr, UnitMemory.TravelVert, this.Troops.PullAt(nearestUnitAddr, UnitMemory.Vert));
 							return 0;
 						}
 					}
@@ -3196,15 +3184,15 @@ namespace Civilization1Remaster.Game
 			{
 				ushort dirOffset = (ushort)(dir << 1);
 				ushort adjX = (ushort)this.owner.Routing.TunePosition(
-					this.processor.PullInt8(dataSeg, (ushort)(unitAddr + 0x81d5)) +
+					(sbyte)this.Troops.PullAt(unitAddr, UnitMemory.Horiz) +
 					(short)DirectionHorizAt(dirOffset));
-				ushort adjY = (ushort)(this.processor.PullUInt8(dataSeg, (ushort)(unitAddr + 0x81d6)) +
+				ushort adjY = (ushort)(this.Troops.PullAt(unitAddr, UnitMemory.Vert) +
 					DirectionVertAt(dirOffset));
 
 				ushort adjTerrain = this.owner.MapOps.ObtainTerrainType((short)adjX, (short)adjY);
 				ushort isOcean = adjTerrain == 0xa ? (ushort)1 : (ushort)0;
 
-				byte curKind = this.processor.PullUInt8(dataSeg, (ushort)(unitAddr + 0x81d7));
+				byte curKind = this.Troops.PullAt(unitAddr, UnitMemory.Kind);
 				ushort curSpecOff = (ushort)((short)(sbyte)0x22 * (short)(sbyte)curKind);
 				ushort isSeaDomain = UnitKindWordAt(curSpecOff, UnitKindTable.LandGroup) == 0x2 ? (ushort)1 : (ushort)0;
 				if (isSeaDomain != isOcean)
@@ -3220,7 +3208,7 @@ namespace Civilization1Remaster.Game
 				ushort unitAtAdj = this.owner.MapOps.ObtainUnitAtTile((short)adjX, (short)adjY);
 				short dirScore = 0;
 
-				if (this.processor.PullUInt8(dataSeg, (ushort)(unitAddr + 0x81d7)) == 0x1a)
+				if (this.Troops.PullAt(unitAddr, UnitMemory.Kind) == 0x1a)
 				{
 					if (unitAtAdj != 0xffff)
 					{
@@ -3278,7 +3266,7 @@ namespace Civilization1Remaster.Game
 							}
 
 							ushort adjUnitAddr = (ushort)(adjUnitOwner * 0x600 + unitAtAdj * 0xc);
-							if (this.processor.PullUInt8(dataSeg, (ushort)(adjUnitAddr + 0x81d7)) != 0x1a)
+							if (this.Troops.PullAt(adjUnitAddr, UnitMemory.Kind) != 0x1a)
 							{
 								dirScore = (short)(dirScore + 0x63);
 							}
@@ -3287,7 +3275,7 @@ namespace Civilization1Remaster.Game
 
 					if (mayOccupyCurrent != 0)
 					{
-						byte kindNow = this.processor.PullUInt8(dataSeg, (ushort)(unitAddr + 0x81d7));
+						byte kindNow = this.Troops.PullAt(unitAddr, UnitMemory.Kind);
 						ushort specNow = (ushort)((short)(sbyte)0x22 * (short)(sbyte)kindNow);
 						if (UnitKindWordAt(specNow, UnitKindTable.LandGroup) == 0 &&
 							unitAtAdj == 0xffff &&
@@ -3297,7 +3285,7 @@ namespace Civilization1Remaster.Game
 						}
 					}
 
-					short prevDir = (short)(sbyte)this.processor.PullUInt8(dataSeg, (ushort)(unitAddr + 0x81dc));
+					short prevDir = (short)(sbyte)this.Troops.PullAt(unitAddr, UnitMemory.TravelHeading);
 					if ((ushort)prevDir == dir)
 					{
 						dirScore = (short)(dirScore + 0x6);
@@ -3323,13 +3311,13 @@ namespace Civilization1Remaster.Game
 
 			ushort curImprovements = this.owner.MapOps.ObtainTileImprovements((short)unitX, (short)unitY);
 			if (((byte)curImprovements & 0x1) != 0 &&
-				this.processor.PullUInt8(dataSeg, (ushort)(unitAddr + 0x81de)) == 0xff &&
+				this.Troops.PullAt(unitAddr, UnitMemory.FollowingInStack) == 0xff &&
 				bestDirScore < 0x63)
 			{
 				return 0x20;
 			}
 
-			this.processor.EmitUInt8(dataSeg, (ushort)(unitAddr + 0x81dc), (byte)(bestDir & 0xff));
+			this.Troops.AssignAt(unitAddr, UnitMemory.TravelHeading, (byte)(bestDir & 0xff));
 			return bestDir;
 		}
 

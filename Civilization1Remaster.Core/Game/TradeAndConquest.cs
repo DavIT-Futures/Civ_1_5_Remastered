@@ -139,14 +139,14 @@ namespace Civilization1Remaster.Game
 				ushort troop = (ushort)((ushort)(0x600 * formerIdx) + (ushort)(0xc * troopIdx));
 				this.processor.RegSource.Value16 = troop;
 
-				if (this.processor.PullGlobalByte((ushort)(troop + 0x81d7)) == 0xff ||
-					(sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81df)) != townIdx)
+				if (this.Troops.PullAt(troop, UnitMemory.Kind) == 0xff ||
+					(sbyte)this.Troops.PullAt(troop, UnitMemory.BaseTown) != townIdx)
 					continue;
 
 				this.processor.RegDest.Value16 = townOffset;
 
-				if (this.processor.PullGlobalByte((ushort)(troop + 0x81d5)) == (byte)(sbyte)town.Place.X &&
-					this.processor.PullGlobalByte((ushort)(troop + 0x81d6)) == (byte)(sbyte)town.Place.Y &&
+				if (this.Troops.PullAt(troop, UnitMemory.Horiz) == (byte)(sbyte)town.Place.X &&
+					this.Troops.PullAt(troop, UnitMemory.Vert) == (byte)(sbyte)town.Place.Y &&
 					town.TrueExtent != 0)
 					continue;
 
@@ -236,7 +236,7 @@ namespace Civilization1Remaster.Game
 			ushort troop = (ushort)(0xc * this.owner.MapOps.ObtainUnitAtTile((short)horizLoc, (short)vertLoc));
 			this.processor.RegSource.Value16 = troop;
 
-			sbyte kind = (sbyte)this.processor.PullGlobalByte((ushort)((ushort)(0x600 * participantIdx) + troop + 0x81d7));
+			sbyte kind = (sbyte)this.Troops.PullAt(((ushort)(0x600 * participantIdx) + troop), UnitMemory.Kind);
 
 			if ((short)UnitKindWord(kind, UnitKindTable.AssaultPower) > 2 || NoConquestAnimation != 0)
 				return false;
