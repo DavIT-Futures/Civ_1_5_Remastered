@@ -297,11 +297,11 @@ namespace Civilization1Remaster.Game
 
 			ObtainCityLabel(townIdx);
 
-			this.owner.Libc.AppendText(0xba06, ". ");
+			this.owner.Words.Append(". ");
 
-			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(plunder, 10));
+			this.owner.Words.Append(this.owner.Libc.IntegerToText(plunder, 10));
 
-			this.owner.Libc.AppendText(0xba06, " gold\npieces plundered.\n");
+			this.owner.Words.Append(" gold\npieces plundered.\n");
 
 			this.owner.Services.PerformSound(LeaderWord(this.owner.World.Participants[participantIdx].ChiefVisuals, LeaderTable.ShortTune), 0);
 
@@ -351,9 +351,9 @@ namespace Civilization1Remaster.Game
 
 			ObtainCityLabel(townIdx);
 
-			this.owner.Libc.AppendText(0xba06, ".\n");
+			this.owner.Words.Append(".\n");
 
-			this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+			this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 80);
 		}
 
 		/// <summary>
@@ -372,9 +372,9 @@ namespace Civilization1Remaster.Game
 
 			if ((this.owner.World.StarshipMarkers & launched) != 0)
 			{
-				this.owner.Libc.AppendText(0xba06, (this.owner.World.StarshipMarkers & built) != 0 ? (ushort)0x28ca : (ushort)0x28dd);
+				this.owner.Words.Append((this.owner.World.StarshipMarkers & built) != 0 ? (ushort)0x28ca : (ushort)0x28dd);
 
-				this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+				this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 80);
 			}
 
 			this.owner.World.StarshipMarkers &= (short)~built;
@@ -428,7 +428,7 @@ namespace Civilization1Remaster.Game
 				ushort count = 0;
 				this.processor.EmitLocalWord(0x2, 0);
 
-				this.owner.Libc.CopyText(0xba06, "Select one...\n ");
+				this.owner.Words.Set("Select one...\n ");
 
 				short bestScore = -1;
 				this.processor.EmitLocalWord(0x96, 0xffff);
@@ -441,8 +441,8 @@ namespace Civilization1Remaster.Game
 					if (this.owner.Advisors.PlayerKnowsTechnology(participantIdx1, techId) == 0 &&
 						this.owner.Advisors.PlayerKnowsTechnology(participantIdx2, techId) != 0)
 					{
-						this.owner.Libc.AppendText(0xba06, TechnologyText(techId));
-						this.owner.Libc.AppendText(0xba06, "\n ");
+						this.owner.Words.Append(TechnologyText(techId));
+						this.owner.Words.Append("\n ");
 
 						ushort slotOffset = (ushort)(count << 1);
 						count++;
@@ -472,13 +472,13 @@ namespace Civilization1Remaster.Game
 						{
 							if (KingAnswer == 0xffff)
 							{
-								choice = this.owner.TurnHooks.DisplayDialog(0xba06, 80, 32);
+								choice = this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 80, 32);
 							}
 							else
 							{
 								this.processor.StackWord(0);
 								this.processor.StackWord(0x07fe);
-								choice = this.owner.Audience.DisplayKingDialog(0xba06, 0x14, 0x8b);
+								choice = this.owner.Audience.DisplayKingDialog(TextBuffer.Address, 0x14, 0x8b);
 								this.processor.UnstackDoubleWord();
 							}
 
@@ -496,21 +496,21 @@ namespace Civilization1Remaster.Game
 					{
 						if (participantIdx2 == this.owner.World.PersonParticipantIdx)
 						{
-							this.owner.Libc.CopyText(0xba06,
+							this.owner.Libc.CopyText(TextBuffer.Address,
 								CivilizationPlural(participantIdx1));
-							this.owner.Libc.AppendText(0xba06, " take\n");
-							this.owner.Libc.AppendText(0xba06, TechnologyText(this.processor.PullLocalWord(0x4)));
-							this.owner.Libc.AppendText(0xba06, ".\n");
+							this.owner.Words.Append(" take\n");
+							this.owner.Words.Append(TechnologyText(this.processor.PullLocalWord(0x4)));
+							this.owner.Words.Append(".\n");
 
 							if (KingAnswer == 0xffff)
 							{
-								this.owner.TurnHooks.DisplayDialog(0xba06, 80, 80);
+								this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 80, 80);
 							}
 							else
 							{
 								this.processor.StackWord(0);
 								this.processor.StackWord(0x089e);
-								this.owner.Audience.DisplayKingDialog(0xba06, 0x14, 0x8b);
+								this.owner.Audience.DisplayKingDialog(TextBuffer.Address, 0x14, 0x8b);
 								this.processor.UnstackDoubleWord();
 							}
 						}
@@ -536,7 +536,7 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// Appends the name of the city (13 characters of GameState.TownLabels) to the text at 0xba06, "NONE" for city -1
+		/// Appends the name of the city (13 characters of GameState.TownLabels) to the text at TextBuffer.Address, "NONE" for city -1
 		/// </summary>
 		public void ObtainCityLabel(short townIdx)
 		{
@@ -545,7 +545,7 @@ namespace Civilization1Remaster.Game
 			if (townIdx != -1)
 			{
 				byte townLabelIdx = this.owner.World.Towns[townIdx].LabelIdx;
-				ushort charsDisplacement = (ushort)(0xba06 + this.owner.Libc.TextLength(0xba06));
+				ushort charsDisplacement = (ushort)(TextBuffer.Address + this.owner.Words.Length);
 
 				for (int idx = 0; idx < 0xd; idx++)
 				{
@@ -554,7 +554,7 @@ namespace Civilization1Remaster.Game
 			}
 			else
 			{
-				this.owner.Libc.AppendText(0xba06, "NONE");
+				this.owner.Words.Append("NONE");
 			}
 
 			this.processor.Journal.CloseScope("ObtainCityLabel");
@@ -643,17 +643,17 @@ namespace Civilization1Remaster.Game
 
 				ObtainCityLabel((short)homeIdx);
 
-				this.owner.Libc.AppendText(0xba06, "\narrives in ");
+				this.owner.Words.Append("\narrives in ");
 
 				ObtainCityLabel(townIdx);
 
-				this.owner.Libc.AppendText(0xba06, "\nTrade route established\nRevenue: $");
+				this.owner.Words.Append("\nTrade route established\nRevenue: $");
 
-				this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(revenue, 10));
+				this.owner.Words.Append(this.owner.Libc.IntegerToText(revenue, 10));
 
-				this.owner.Libc.AppendText(0xba06, ".\n");
+				this.owner.Words.Append(".\n");
 
-				this.owner.TurnHooks.DisplayDialog(0xba06, 80, 80);
+				this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 80, 80);
 
 				this.owner.TurnHooks.RenderStatusBar();
 			}

@@ -50,6 +50,7 @@ namespace Civilization1Remaster
 		private readonly ArmySelection forceChoice;
 		private readonly CivilizationSchism realmSplit;
 		private readonly CRuntime chrLibc;
+		private readonly TextBuffer words;
 		private readonly VGADriver videoHandler;
 		private readonly SoundDriver audioHandler;
 		#endregion
@@ -83,6 +84,7 @@ namespace Civilization1Remaster
 
 			#region Initialize Segments
 			this.chrLibc = new CRuntime(this);
+			this.words = new TextBuffer(this);
 			this.videoHandler = new VGADriver(this, host);
 			this.audioHandler = new SoundDriver(this);
 
@@ -610,6 +612,12 @@ namespace Civilization1Remaster
 		public CRuntime Libc
 		{
 			get { return this.chrLibc; }
+		}
+
+		/// <summary>The message buffer at TextBuffer.Address (B6.1)</summary>
+		public TextBuffer Words
+		{
+			get { return this.words; }
 		}
 
 		public VGADriver VideoCard

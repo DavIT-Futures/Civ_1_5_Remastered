@@ -23,9 +23,9 @@ namespace Civilization1Remaster.UI
 			ushort textBuf = (ushort)(this.processor.RegFrame.Value16 - 0x100);
 
 			this.owner.Startup.ConcealMouseCursor();
-			this.processor.EmitGlobalByte(0xba06, 0x0);
+			this.owner.Words.Clear();
 			this.owner.BlockText.DisplayTextDialog(0x4ade);
-			this.owner.Libc.CopyText(textBuf, 0xba06);
+			this.owner.Libc.CopyText(textBuf, TextBuffer.Address);
 			this.owner.Startup.QueryForDisk(2, 1);
 
 			this.processor.EmitUInt16(dataSeg, ScreenBox, 0x1);
@@ -76,7 +76,7 @@ namespace Civilization1Remaster.UI
 					short labelX = (short)(0x30 * (short)sec - 0x24);
 					EmptyMessage()
 						.Number((short)sec);
-					this.owner.TextPainter.RenderTextWithShadow(0xba06, labelX, 144, 14);
+					this.owner.TextPainter.RenderTextWithShadow(TextBuffer.Address, labelX, 144, 14);
 					hasOptions = 1;
 				}
 			}
@@ -86,9 +86,9 @@ namespace Civilization1Remaster.UI
 				ushort gardenWordOff = (ushort)(gardenIdx << 1);
 				if ((short)this.processor.PullUInt16(dataSeg, (ushort)(gardenWordOff + 0xd930)) < 3)
 				{
-					this.owner.Libc.CopyText(0xba06, "A");
-					this.processor.EmitGlobalByte(0xba06, (byte)(this.processor.PullGlobalByte(0xba06) + (byte)gardenIdx));
-					this.owner.TextPainter.RenderTextWithShadow(0xba06, (short)gardenIdx * 120 + 40, 160, 14);
+					this.owner.Words.Set("A");
+					this.processor.EmitGlobalByte(TextBuffer.Address, (byte)(this.owner.Words[0] + (byte)gardenIdx));
+					this.owner.TextPainter.RenderTextWithShadow(TextBuffer.Address, (short)gardenIdx * 120 + 40, 160, 14);
 					hasOptions = 1;
 				}
 			}
@@ -336,7 +336,7 @@ namespace Civilization1Remaster.UI
 
 				EmptyMessage()
 					.Number((short)optIdx);
-				this.owner.TextPainter.RenderTextWithShadow(0xba06, (short)optIdx * 100 - 44, 12, 15);
+				this.owner.TextPainter.RenderTextWithShadow(TextBuffer.Address, (short)optIdx * 100 - 44, 12, 15);
 			}
 
 			this.owner.Helpers.ReleaseResource(PalaceFirstPicture, 0x4b27);

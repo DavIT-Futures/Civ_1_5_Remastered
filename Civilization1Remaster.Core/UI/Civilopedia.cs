@@ -394,7 +394,7 @@ namespace Civilization1Remaster.UI
 			this.owner.UnitOps.RenderBusyIndicator();
 
 			this.processor.EmitUInt16(dataSeg, (ushort)(ScreenBox + 0x10), 0x7);
-			this.processor.EmitGlobalByte(0xba06, 0x0);
+			this.owner.Words.Clear();
 
 			short titleX = arg2 == 0x2 ? (short)0xe0 : (short)0xcc;
 			if (arg2 == 0x4 ||
@@ -407,14 +407,14 @@ namespace Civilization1Remaster.UI
 			this.RenderCivilopediaRecordHeader(dataSeg, scienceIdx, arg2, titleX);
 
 			this.processor.EmitUInt16(dataSeg, (ushort)(ScreenBox + 0x10), 0x6);
-			this.owner.Libc.UppercaseText(0xba06);
-			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, titleX, 20, 0);
+			this.owner.Libc.UppercaseText(TextBuffer.Address);
+			this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, titleX, 20, 0);
 			this.processor.EmitUInt16(dataSeg, (ushort)(ScreenBox + 0x10), 0x7);
 
 			ushort tagBuf = (ushort)(this.processor.RegFrame.Value16 - 0x2c);
 			this.owner.Libc.CopyText(tagBuf, "*");
-			this.owner.Libc.AppendText(tagBuf, 0xba06);
-			this.processor.EmitGlobalByte(0xba06, 0x0);
+			this.owner.Libc.AppendText(tagBuf, TextBuffer.Address);
+			this.owner.Words.Clear();
 
 			short cursorY = 0x4c;
 			if (diskStatus != 0)
@@ -431,7 +431,7 @@ namespace Civilization1Remaster.UI
 				}
 
 				this.owner.Libc.AppendText(tagBuf, "2");
-				this.processor.EmitGlobalByte(0xba06, 0x0);
+				this.owner.Words.Clear();
 				if (arg2 != 0)
 				{
 					this.owner.BlockText.ImportTextFromFile(0x3fa4, tagBuf);
@@ -486,10 +486,10 @@ namespace Civilization1Remaster.UI
 					if (CivilopediaWithoutPictures == 0)
 					{
 						ushort iconIdx = ObtainFirstPrerequisite(scienceIdx);
-						this.owner.Libc.CopyText(0xba06, "iconpg1.pic");
+						this.owner.Words.Set("iconpg1.pic");
 						byte pageDigit = (byte)CPU.SignedQuotient((short)iconIdx, 9);
-						this.processor.EmitGlobalByte(0xba0c, (byte)(this.processor.PullGlobalByte(0xba0c) + pageDigit));
-						this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0xba06, 0);
+						this.owner.Words[6] = (byte)(this.owner.Words[6] + pageDigit);
+						this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, TextBuffer.Address, 0);
 						this.owner.Helpers.PullAndAssignColors(0x3ce6);
 						RenderIcon(
 							(ushort)(((iconIdx % 3) * 111) + 1),
@@ -497,7 +497,7 @@ namespace Civilization1Remaster.UI
 							110, 68, 62, 42);
 					}
 
-					this.owner.Libc.CopyText(0xba06, TechnologyText((short)scienceIdx));
+					this.owner.Words.Set(TechnologyText((short)scienceIdx));
 					this.owner.TextPainter.RenderCenteredTextToScreen0(0x3cf2, titleX, 36, 7);
 					break;
 
@@ -521,7 +521,7 @@ namespace Civilization1Remaster.UI
 						this.owner.Helpers.ReleaseResource(picHandle, 0);
 					}
 
-					this.owner.Libc.CopyText(0xba06, BuildingRecordText((short)scienceIdx));
+					this.owner.Words.Set(BuildingRecordText((short)scienceIdx));
 					this.owner.TextPainter.RenderCenteredTextToScreen0(
 						(short)scienceIdx > 0x18 ? (ushort)0x3d2e : (ushort)0x3d1d,
 						titleX, 36, 7);
@@ -531,10 +531,10 @@ namespace Civilization1Remaster.UI
 					if (CivilopediaWithoutPictures == 0)
 					{
 						ushort iconIdx = ObtainSecondPrerequisite(scienceIdx);
-						this.owner.Libc.CopyText(0xba06, "iconpga.pic");
+						this.owner.Words.Set("iconpga.pic");
 						byte pageChar = (byte)CPU.SignedQuotient((short)iconIdx, 6);
-						this.processor.EmitGlobalByte(0xba0c, (byte)(this.processor.PullGlobalByte(0xba0c) + pageChar));
-						this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0xba06, 0);
+						this.owner.Words[6] = (byte)(this.owner.Words[6] + pageChar);
+						this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, TextBuffer.Address, 0);
 						this.owner.Helpers.PullAndAssignColors(0x3d4e);
 						RenderIcon(
 							(ushort)(((iconIdx & 1) * 160) + 1),
@@ -542,7 +542,7 @@ namespace Civilization1Remaster.UI
 							158, 61, 88, 42);
 					}
 
-					this.owner.Libc.CopyText(0xba06, UnitText((short)scienceIdx));
+					this.owner.Words.Set(UnitText((short)scienceIdx));
 					this.owner.TextPainter.RenderCenteredTextToScreen0(0x3d5a, titleX, 36, 7);
 					this.owner.Services.RenderPictureToScreen(
 						ScreenBox,
@@ -554,10 +554,10 @@ namespace Civilization1Remaster.UI
 					if (CivilopediaWithoutPictures == 0)
 					{
 						ushort iconIdx = ObtainTechnologyCategory(scienceIdx);
-						this.owner.Libc.CopyText(0xba06, "iconpgt1.pic");
+						this.owner.Words.Set("iconpgt1.pic");
 						byte pageDigit = (byte)CPU.SignedQuotient((short)iconIdx, 6);
-						this.processor.EmitGlobalByte(0xba0d, (byte)(this.processor.PullGlobalByte(0xba0d) + pageDigit));
-						this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0xba06, 0);
+						this.owner.Words[7] = (byte)(this.owner.Words[7] + pageDigit);
+						this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, TextBuffer.Address, 0);
 						if (VgaMode != 0)
 						{
 							this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, 0x3d75, 0xc5be);
@@ -577,7 +577,7 @@ namespace Civilization1Remaster.UI
 					break;
 
 				case 4:
-					this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(dataSeg, (ushort)((scienceIdx << 1) + 0x3c64)));
+					this.owner.Words.Append(this.processor.PullUInt16(dataSeg, (ushort)((scienceIdx << 1) + 0x3c64)));
 					this.owner.TextPainter.RenderCenteredTextToScreen0(0x3d8c, titleX, 36, 7);
 					break;
 			}
@@ -586,7 +586,7 @@ namespace Civilization1Remaster.UI
 		private void RenderTechnologyCivilopediaDetails(ushort dataSeg, ushort scienceIdx, short titleX, ushort bgColor, short cursorY)
 		{
 			cursorY = (short)(cursorY + 8);
-			this.processor.EmitGlobalByte(0xba06, 0x0);
+			this.owner.Words.Clear();
 
 			ushort techSpecAddr = (ushort)(0x16 * scienceIdx);
 			byte req1 = this.processor.PullUInt8(dataSeg, (ushort)(techSpecAddr + 0x4ee));
@@ -599,11 +599,11 @@ namespace Civilization1Remaster.UI
 			byte req2 = this.processor.PullUInt8(dataSeg, (ushort)(techSpecAddr + 0x4ef));
 			if (req2 != 0xff)
 			{
-				this.owner.Libc.AppendText(0xba06, " and ");
-				this.owner.Libc.AppendText(0xba06, TechnologyText((short)(sbyte)req2));
+				this.owner.Words.Append(" and ");
+				this.owner.Words.Append(TechnologyText((short)(sbyte)req2));
 			}
 
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, 32, cursorY, 1);
+			this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 32, cursorY, 1);
 			cursorY = (short)(cursorY + 0x10);
 			this.owner.TextPainter.RenderTextToScreen0(0x3dad, 32, cursorY, 1);
 			cursorY = (short)(cursorY + 8);
@@ -615,32 +615,32 @@ namespace Civilization1Remaster.UI
 				ushort otherReq1 = (ushort)(short)(sbyte)this.processor.PullUInt8(dataSeg, (ushort)(otherAddr + 0x4ee));
 				if (otherReq1 == scienceIdx)
 				{
-					this.owner.Libc.CopyText(0xba06, (ushort)(otherAddr + 0x4da));
+					this.owner.Words.Set((ushort)(otherAddr + 0x4da));
 					byte companion = this.processor.PullUInt8(dataSeg, (ushort)(otherAddr + 0x4ef));
 					if (companion != 0xff)
 					{
-						this.owner.Libc.AppendText(0xba06, " (with ");
-						this.owner.Libc.AppendText(0xba06, TechnologyText((short)(sbyte)companion));
-						this.owner.Libc.AppendText(0xba06, ")");
+						this.owner.Words.Append(" (with ");
+						this.owner.Words.Append(TechnologyText((short)(sbyte)companion));
+						this.owner.Words.Append(")");
 					}
 
-					this.owner.TextPainter.RenderTextToScreen0(0xba06, 40, cursorY, 9);
+					this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 40, cursorY, 9);
 					cursorY = (short)(cursorY + 8);
 				}
 
 				ushort otherReq2 = (ushort)(short)(sbyte)this.processor.PullUInt8(dataSeg, (ushort)(otherAddr + 0x4ef));
 				if (otherReq2 == scienceIdx)
 				{
-					this.owner.Libc.CopyText(0xba06, (ushort)(otherAddr + 0x4da));
+					this.owner.Words.Set((ushort)(otherAddr + 0x4da));
 					byte companion = this.processor.PullUInt8(dataSeg, (ushort)(otherAddr + 0x4ee));
 					if (companion != 0xff)
 					{
-						this.owner.Libc.AppendText(0xba06, " (with ");
-						this.owner.Libc.AppendText(0xba06, TechnologyText((short)(sbyte)companion));
-						this.owner.Libc.AppendText(0xba06, ")");
+						this.owner.Words.Append(" (with ");
+						this.owner.Words.Append(TechnologyText((short)(sbyte)companion));
+						this.owner.Words.Append(")");
 					}
 
-					this.owner.TextPainter.RenderTextToScreen0(0xba06, 40, cursorY, 9);
+					this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 40, cursorY, 9);
 					cursorY = (short)(cursorY + 8);
 				}
 			}
@@ -661,7 +661,7 @@ namespace Civilization1Remaster.UI
 
 					Message(UnitTextAt(unitSpec))
 						.Text(" unit");
-					this.owner.TextPainter.RenderTextToScreen0(0xba06, 60, cursorY, 12);
+					this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 60, cursorY, 12);
 					cursorY = (short)(cursorY + 0xc);
 				}
 			}
@@ -674,7 +674,7 @@ namespace Civilization1Remaster.UI
 					this.owner.CityOps.RenderResourceIcon((short)impIdx, 40, (short)(cursorY - 2));
 					Message(BuildingRecordTextAt(impSpec))
 						.Text((short)impIdx > 0x18 ? " Wonder" : " improvement");
-					this.owner.TextPainter.RenderTextToScreen0(0xba06, 60, cursorY, 2);
+					this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 60, cursorY, 2);
 					cursorY = (short)(cursorY + 0xc);
 				}
 			}
@@ -687,15 +687,15 @@ namespace Civilization1Remaster.UI
 			ushort obtainedFrom = (ushort)this.owner.World.Participants[this.owner.World.PersonParticipantIdx].ScienceObtainedSince[scienceIdx];
 			if (obtainedFrom == 0xfffe)
 			{
-				this.owner.Libc.CopyText(0xba06, 0x3dee);
+				this.owner.Words.Set(0x3dee);
 			}
 			else if (obtainedFrom == 0xffff)
 			{
-				this.processor.EmitGlobalByte(0xba06, 0x0);
+				this.owner.Words.Clear();
 			}
 			else if (obtainedFrom == 0)
 			{
-				this.owner.Libc.CopyText(0xba06, 0x3e03);
+				this.owner.Words.Set(0x3e03);
 			}
 			else
 			{
@@ -704,74 +704,74 @@ namespace Civilization1Remaster.UI
 					.Text(")");
 			}
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, titleX, 48, 7);
+			this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, titleX, 48, 7);
 		}
 
 		private void RenderImprovementCivilopediaDetails(ushort dataSeg, ushort scienceIdx, short cursorY)
 		{
 			ushort impSpec = (ushort)(0x1e * scienceIdx);
-			this.owner.Libc.CopyText(0xba06, "Requires ");
+			this.owner.Words.Set("Requires ");
 			ushort reqTech = BuildingWordAt(impSpec, BuildingTable.Technology);
-			this.owner.Libc.AppendText(0xba06, TechnologyText((short)reqTech));
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, 12, cursorY, 9);
+			this.owner.Words.Append(TechnologyText((short)reqTech));
+			this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 12, cursorY, 9);
 			cursorY = (short)(cursorY + 8);
 
-			this.owner.Libc.CopyText(0xba06, "Cost: ");
+			this.owner.Words.Set("Cost: ");
 			this.owner.Libc.AppendText(
-				0xba06,
+				TextBuffer.Address,
 				this.owner.Libc.IntegerToText((short)(0xa * (short)BuildingWordAt(impSpec, BuildingTable.Price)), 10));
-			this.owner.Libc.AppendText(0xba06, " shields.");
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, 12, cursorY, 9);
+			this.owner.Words.Append(" shields.");
+			this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 12, cursorY, 9);
 			cursorY = (short)(cursorY + 8);
 
-			this.owner.Libc.CopyText(0xba06, "Maintenance: $");
+			this.owner.Words.Set("Maintenance: $");
 			this.owner.Libc.AppendText(
-				0xba06,
+				TextBuffer.Address,
 				this.owner.Libc.IntegerToText((short)BuildingWordAt(impSpec, BuildingTable.Upkeep), 10));
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, 12, cursorY, 12);
+			this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 12, cursorY, 12);
 		}
 
 		private void RenderUnitCivilopediaDetails(ushort dataSeg, ushort scienceIdx, short cursorY)
 		{
 			ushort unitSpec = (ushort)(0x22 * scienceIdx);
-			this.owner.Libc.CopyText(0xba06, "Requires ");
+			this.owner.Words.Set("Requires ");
 			ushort reqTech = UnitKindWordAt(unitSpec, UnitKindTable.Technology);
-			this.owner.Libc.AppendText(0xba06, TechnologyText((short)reqTech));
+			this.owner.Words.Append(TechnologyText((short)reqTech));
 			if (scienceIdx == 0x19)
 			{
-				this.owner.Libc.AppendText(0xba06, " and Nuclear Fission");
+				this.owner.Words.Append(" and Nuclear Fission");
 			}
 
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, 100, cursorY, 9);
+			this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 100, cursorY, 9);
 			cursorY = (short)(cursorY + 8);
 
-			this.owner.Libc.CopyText(0xba06, "Cost: ");
+			this.owner.Words.Set("Cost: ");
 			this.owner.Libc.AppendText(
-				0xba06,
+				TextBuffer.Address,
 				this.owner.Libc.IntegerToText((short)(0xa * (short)UnitKindWordAt(unitSpec, UnitKindTable.Price)), 10));
-			this.owner.Libc.AppendText(0xba06, " resources.");
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, 100, cursorY, 9);
+			this.owner.Words.Append(" resources.");
+			this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 100, cursorY, 9);
 			cursorY = (short)(cursorY + 8);
 
-			this.owner.Libc.CopyText(0xba06, "Attack Strength: ");
+			this.owner.Words.Set("Attack Strength: ");
 			this.owner.Libc.AppendText(
-				0xba06,
+				TextBuffer.Address,
 				this.owner.Libc.IntegerToText((short)UnitKindWordAt(unitSpec, UnitKindTable.AssaultPower), 10));
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, 100, cursorY, 12);
+			this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 100, cursorY, 12);
 			cursorY = (short)(cursorY + 8);
 
-			this.owner.Libc.CopyText(0xba06, "Defense Strength: ");
+			this.owner.Words.Set("Defense Strength: ");
 			this.owner.Libc.AppendText(
-				0xba06,
+				TextBuffer.Address,
 				this.owner.Libc.IntegerToText((short)UnitKindWordAt(unitSpec, UnitKindTable.GuardPower), 10));
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, 100, cursorY, 12);
+			this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 100, cursorY, 12);
 			cursorY = (short)(cursorY + 8);
 
-			this.owner.Libc.CopyText(0xba06, "Movement Rate: ");
+			this.owner.Words.Set("Movement Rate: ");
 			this.owner.Libc.AppendText(
-				0xba06,
+				TextBuffer.Address,
 				this.owner.Libc.IntegerToText((short)UnitKindWordAt(unitSpec, UnitKindTable.ShiftTally), 10));
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, 100, cursorY, 0);
+			this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 100, cursorY, 0);
 		}
 
 		private void RenderTerrainCivilopediaDetails(ushort dataSeg, ushort scienceIdx, short cursorY)
@@ -796,23 +796,23 @@ namespace Civilization1Remaster.UI
 						.Number(foodVal);
 					if (foodVal >= 3)
 					{
-						this.owner.Libc.AppendText(0xba06, "*");
+						this.owner.Words.Append("*");
 					}
 
 					if (irrigEffect < -1)
 					{
-						this.owner.Libc.AppendText(0xba06, " (");
-						this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText((short)(foodVal - irrigEffect - 1), 10));
+						this.owner.Words.Append(" (");
+						this.owner.Words.Append(this.owner.Libc.IntegerToText((short)(foodVal - irrigEffect - 1), 10));
 						if (foodVal >= 2)
 						{
-							this.owner.Libc.AppendText(0xba06, "*");
+							this.owner.Words.Append("*");
 						}
 
-						this.owner.Libc.AppendText(0xba06, " with Irrigation)");
+						this.owner.Words.Append(" with Irrigation)");
 					}
 
-					this.owner.Libc.AppendText(0xba06, " units.");
-					this.owner.TextPainter.RenderTextToScreen0(0xba06, 16, cursorY, 9);
+					this.owner.Words.Append(" units.");
+					this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 16, cursorY, 9);
 					cursorY = (short)(cursorY + 8);
 				}
 
@@ -820,28 +820,28 @@ namespace Civilization1Remaster.UI
 				short mineEffect = (short)this.processor.PullUInt16(dataSeg, (ushort)(0xc * scienceIdx + 0x44e));
 				if (prodVal != 0 || mineEffect < -1)
 				{
-					this.owner.Libc.CopyText(0xba06, "Production: ");
+					this.owner.Words.Set("Production: ");
 					if (scienceIdx == 0x2 || scienceIdx == 0xb)
 					{
-						this.owner.Libc.AppendText(0xba06, "0/");
+						this.owner.Words.Append("0/");
 					}
 
-					this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(prodVal, 10));
+					this.owner.Words.Append(this.owner.Libc.IntegerToText(prodVal, 10));
 					if (mineEffect < -1)
 					{
 						short minedProd = (short)(prodVal - mineEffect - 1);
-						this.owner.Libc.AppendText(0xba06, " (");
-						this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(minedProd, 10));
+						this.owner.Words.Append(" (");
+						this.owner.Words.Append(this.owner.Libc.IntegerToText(minedProd, 10));
 						if (minedProd >= 3)
 						{
-							this.owner.Libc.AppendText(0xba06, "*");
+							this.owner.Words.Append("*");
 						}
 
-						this.owner.Libc.AppendText(0xba06, " with Mining)");
+						this.owner.Words.Append(" with Mining)");
 					}
 
-					this.owner.Libc.AppendText(0xba06, " units.");
-					this.owner.TextPainter.RenderTextToScreen0(0xba06, 16, cursorY, 9);
+					this.owner.Words.Append(" units.");
+					this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 16, cursorY, 9);
 					cursorY = (short)(cursorY + 8);
 				}
 
@@ -852,22 +852,22 @@ namespace Civilization1Remaster.UI
 						.Number(tradeVal);
 					if (tradeVal != 0)
 					{
-						this.owner.Libc.AppendText(0xba06, "%");
+						this.owner.Words.Append("%");
 					}
 
 					if (tradeVal >= 3)
 					{
-						this.owner.Libc.AppendText(0xba06, "*");
+						this.owner.Words.Append("*");
 					}
 
 					if ((short)scienceIdx <= 2)
 					{
-						this.owner.Libc.AppendText(0xba06, " (");
-						this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText((short)(tradeVal + 1), 10));
-						this.owner.Libc.AppendText(0xba06, "% with Roads)");
+						this.owner.Words.Append(" (");
+						this.owner.Words.Append(this.owner.Libc.IntegerToText((short)(tradeVal + 1), 10));
+						this.owner.Words.Append("% with Roads)");
 					}
 
-					this.owner.TextPainter.RenderTextToScreen0(0xba06, 16, cursorY, 9);
+					this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 16, cursorY, 9);
 					cursorY = (short)(cursorY + 8);
 				}
 
@@ -886,22 +886,22 @@ namespace Civilization1Remaster.UI
 			cursorY = (short)(cursorY + 0xc);
 
 			ushort baseSpec = (ushort)(0x13 * scienceIdx);
-			this.owner.Libc.CopyText(0xba06, "Movement cost: ");
+			this.owner.Words.Set("Movement cost: ");
 			this.owner.Libc.AppendText(
-				0xba06,
+				TextBuffer.Address,
 				this.owner.Libc.IntegerToText((sbyte)TerrainFieldAt(baseSpec, TerrainTable.MoveCost), 10));
-			this.owner.Libc.AppendText(0xba06, " MP");
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, 12, cursorY, 12);
+			this.owner.Words.Append(" MP");
+			this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 12, cursorY, 12);
 			cursorY = (short)(cursorY + 8);
 
-			this.owner.Libc.CopyText(0xba06, "Defense bonus: +");
+			this.owner.Words.Set("Defense bonus: +");
 			this.owner.Libc.AppendText(
-				0xba06,
+				TextBuffer.Address,
 				this.owner.Libc.IntegerToText(
 					(short)((0x32 * (short)(sbyte)this.processor.PullUInt8(dataSeg, (ushort)(baseSpec + 0x28f))) - 0x64),
 					10));
-			this.owner.Libc.AppendText(0xba06, "%");
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, 12, cursorY, 12);
+			this.owner.Words.Append("%");
+			this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 12, cursorY, 12);
 		}
 
 		/// <summary>

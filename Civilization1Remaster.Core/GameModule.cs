@@ -38,13 +38,13 @@ namespace Civilization1Remaster
 			return this.processor.RegAcc.Value16;
 		}
 
-		/// <summary>A message in the buffer 0xba06 that starts with the text</summary>
+		/// <summary>A message in the buffer TextBuffer.Address that starts with the text</summary>
 		protected GameMessage Message(string text) => GameMessage.Start(this.owner, text);
 
-		/// <summary>A message in the buffer 0xba06 that starts with the text at the address</summary>
+		/// <summary>A message in the buffer TextBuffer.Address that starts with the text at the address</summary>
 		protected GameMessage Message(ushort textAddr) => GameMessage.Start(this.owner, textAddr);
 
-		/// <summary>A message in the buffer 0xba06 that starts empty</summary>
+		/// <summary>A message in the buffer TextBuffer.Address that starts empty</summary>
 		protected GameMessage EmptyMessage() => GameMessage.Empty(this.owner);
 
 		#region Global variables of the data segment, read where the original reads them

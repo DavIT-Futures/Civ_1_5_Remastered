@@ -59,7 +59,7 @@ namespace Civilization1Remaster.Game
 				if (ownerIdx == 0)
 					DisabledLinesLow = (byte)((byte)DisabledLines | 0x20);
 
-				choice = this.owner.TurnHooks.DisplayDialog(0xba06, 80, 80);
+				choice = this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 80, 80);
 			}
 			else
 			{
@@ -159,7 +159,7 @@ namespace Civilization1Remaster.Game
 				return;
 			}
 
-			this.processor.EmitGlobalByte(0xba06, 0);
+			this.owner.Words.Clear();
 
 			ushort first = (ushort)this.owner.Libc.Dice.DrawInt(72);
 
@@ -185,7 +185,7 @@ namespace Civilization1Remaster.Game
 				break;
 			}
 
-			if (this.processor.PullGlobalByte(0xba06) != 0)
+			if (this.owner.Words[0] != 0)
 			{
 				this.owner.UnitOps.EliminateUnit(participantIdx, troopIdx);
 			}
@@ -246,15 +246,15 @@ namespace Civilization1Remaster.Game
 					.Text(" production sabotaged\n");
 			}
 
-			this.owner.Libc.AppendText(0xba06, "in ");
+			this.owner.Words.Append("in ");
 
 			this.owner.Conquest.ObtainCityLabel(townIdx);
 
-			this.owner.Libc.AppendText(0xba06, ".\n");
+			this.owner.Words.Append(".\n");
 
 			DialogStyle = 0x0;
 
-			this.owner.TurnHooks.DisplayDialog(0xba06, 80, 80);
+			this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 80, 80);
 
 			this.owner.UnitOps.EliminateUnit(participantIdx, troopIdx);
 		}
@@ -287,7 +287,7 @@ namespace Civilization1Remaster.Game
 
 			if (cost <= this.owner.World.Participants[participantIdx].Gold)
 			{
-				this.owner.Libc.AppendText(0xba06, " Forget it.\n Incite revolt\n");
+				this.owner.Words.Append(" Forget it.\n Incite revolt\n");
 
 				if ((short)(cost << 1) <= this.owner.World.Participants[participantIdx].Gold)
 				{
@@ -295,14 +295,14 @@ namespace Civilization1Remaster.Game
 
 					if ((this.owner.World.Participants[participantIdx].Relations[ownerIdx] & 2) != 0)
 					{
-						this.owner.Libc.AppendText(0xba06, " Subvert city ($x2)\n");
+						this.owner.Words.Append(" Subvert city ($x2)\n");
 					}
 				}
 			}
 
 			DialogStyle = 0x0;
 
-			short choice = (short)this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+			short choice = (short)this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 80);
 
 			if (choice < 1)
 				return;
@@ -392,12 +392,12 @@ namespace Civilization1Remaster.Game
 
 			if (price <= this.owner.World.Participants[participantIdx1].Gold)
 			{
-				this.owner.Libc.AppendText(0xba06, " Forget it.\n Pay\n");
+				this.owner.Words.Append(" Forget it.\n Pay\n");
 			}
 
 			if (participantIdx1 == humanIdx)
 			{
-				if (this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80) != 1)
+				if (this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 80) != 1)
 					return;
 			}
 
@@ -623,18 +623,18 @@ namespace Civilization1Remaster.Game
 
 				if (participantIdx == 0)
 				{
-					this.owner.Libc.AppendText(0xba06, 0x536c);
+					this.owner.Words.Append(0x536c);
 				}
 				else
 				{
-					this.owner.Libc.AppendText(0xba06, ".\n");
+					this.owner.Words.Append(".\n");
 
-					this.owner.Libc.AppendText(0xba06, CivilizationName(participantIdx));
+					this.owner.Words.Append(CivilizationName(participantIdx));
 
-					this.owner.Libc.AppendText(0xba06, 0x5355);
+					this.owner.Words.Append(0x5355);
 				}
 
-				this.owner.TurnHooks.DisplayDialog(0xba06, 100, 32);
+				this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 32);
 			}
 
 			UnitMemory troops = new UnitMemory(this.processor);
@@ -750,11 +750,11 @@ namespace Civilization1Remaster.Game
 
 				this.owner.TurnHooks.ObtainCurrentYearAsText();
 
-				this.owner.Libc.AppendText(0xba06, ".");
+				this.owner.Words.Append(".");
 
 				this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 0x6);
 
-				this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 4, 0);
+				this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 160, 4, 0);
 
 				this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 0x1);
 
@@ -805,7 +805,7 @@ namespace Civilization1Remaster.Game
 					this.owner.Services.FloodColors(10, 0, 0, 0);
 				}
 
-				this.processor.EmitGlobalByte(0xba06, 0x0);
+				this.owner.Words.Clear();
 
 				if ((ushort)this.owner.Libc.KeyAvailable() == 0)
 				{

@@ -197,9 +197,9 @@ namespace Civilization1Remaster.Game
 
 			this.owner.Libc.CopyText(CivilizationNameAt(names), LeaderText(rebel.ChiefVisuals, LeaderTable.Civilization));
 
-			this.owner.Libc.CopyText(0xba06, LeaderText(rebel.ChiefVisuals, LeaderTable.CivilizationPlural));
+			this.owner.Words.Set(LeaderText(rebel.ChiefVisuals, LeaderTable.CivilizationPlural));
 
-			if (this.processor.PullGlobalByte(0xba06) == 0)
+			if (this.owner.Words[0] == 0)
 			{
 				Message(CivilizationNameAt(names))
 					.Text("s");
@@ -207,9 +207,9 @@ namespace Civilization1Remaster.Game
 
 			this.processor.RegSource.Value16 = names;
 
-			this.owner.Libc.CopyText(CivilizationPluralAt(names), 0xba06);
+			this.owner.Libc.CopyText(CivilizationPluralAt(names), TextBuffer.Address);
 
-			this.processor.EmitGlobalByte(0xba06, 0);
+			this.owner.Words.Clear();
 
 			this.processor.RegDest.Value16 = (ushort)(participantIdx << 1);
 
@@ -221,7 +221,7 @@ namespace Civilization1Remaster.Game
 
 			DialogStyle = 0x5;
 
-			this.owner.TurnHooks.DisplayDialog(0xba06, 80, 80);
+			this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 80, 80);
 
 			rebel.Gold = (short)(player.Gold / 2);
 			player.Gold -= rebel.Gold;

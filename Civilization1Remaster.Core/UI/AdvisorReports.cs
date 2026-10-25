@@ -39,7 +39,7 @@ namespace Civilization1Remaster.UI
 
 		/// <summary>
 		/// The head of an advisor report on a screen of the colour: the title, then the kind of state by government / 2
-		/// (0x473c, 0x4743, 0x474b; for the others the text at 0xba06 stays) " of the " civilization, then the ruler's title
+		/// (0x473c, 0x4743, 0x474b; for the others the text at TextBuffer.Address stays) " of the " civilization, then the ruler's title
 		/// (0x19b2 + 2 * government), the leader's name and the year
 		/// </summary>
 		public void RenderReportPreamble(ushort charsAddr, ushort style)
@@ -56,22 +56,22 @@ namespace Civilization1Remaster.UI
 			switch (person.RegimeKind / 2)
 			{
 				case 0:
-					this.owner.Libc.CopyText(0xba06, 0x473c);
+					this.owner.Words.Set(0x473c);
 					break;
 
 				case 1:
-					this.owner.Libc.CopyText(0xba06, 0x4743);
+					this.owner.Words.Set(0x4743);
 					break;
 
 				case 2:
-					this.owner.Libc.CopyText(0xba06, 0x474b);
+					this.owner.Words.Set(0x474b);
 					break;
 			}
 
-			this.owner.Libc.AppendText(0xba06, " of the ");
-			this.owner.Libc.AppendText(0xba06, CivilizationPluralAt(personSlot));
+			this.owner.Words.Append(" of the ");
+			this.owner.Words.Append(CivilizationPluralAt(personSlot));
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 10, 15);
+			this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 160, 10, 15);
 
 			Message(GovernmentTitle(person.RegimeKind))
 				.Text(" ")
@@ -80,7 +80,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.TurnHooks.ObtainCurrentYearAsText();
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 18, 15);
+			this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 160, 18, 15);
 
 			this.processor.Journal.CloseScope("RenderReportPreamble");
 		}
@@ -155,8 +155,8 @@ namespace Civilization1Remaster.UI
 				Message("Researching ")
 					.Text(TechnologyText(inquiry));
 
-				this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 161, 26, 0);
-				this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 26, 15);
+				this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 161, 26, 0);
+				this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 160, 26, 15);
 			}
 
 			short vertLoc = 0x2a;
@@ -167,11 +167,11 @@ namespace Civilization1Remaster.UI
 				if (this.owner.Advisors.PlayerKnowsTechnology(participantIdx, technologyIdx) == 0)
 					continue;
 
-				this.owner.Libc.CopyText(0xba06, TechnologyText(technologyIdx));
+				this.owner.Words.Set(TechnologyText(technologyIdx));
 
 				ushort hue = (ushort)((this.owner.World.ScienceLeadingFoundVia[technologyIdx] & 7) == participantIdx ? 0xf : 0xb);
 
-				this.owner.TextPainter.RenderTextToScreen0(0xba06, ((shown % 3) * 100) + 8, vertLoc, hue);
+				this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, ((shown % 3) * 100) + 8, vertLoc, hue);
 
 				shown++;
 
@@ -221,25 +221,25 @@ namespace Civilization1Remaster.UI
 
 				this.owner.TextPainter.RenderTextToScreen0(record, 36, vertLoc, 15);
 
-				this.owner.Libc.CopyText(0xba06, "(");
-				this.owner.Libc.AppendText(0xba06,
+				this.owner.Words.Set("(");
+				this.owner.Libc.AppendText(TextBuffer.Address,
 					this.owner.Libc.IntegerToText((short)this.processor.PullGlobalWord((ushort)(record + UnitKindTable.AssaultPower)), 10));
-				this.owner.Libc.AppendText(0xba06, "/");
-				this.owner.Libc.AppendText(0xba06,
+				this.owner.Words.Append("/");
+				this.owner.Libc.AppendText(TextBuffer.Address,
 					this.owner.Libc.IntegerToText((short)this.processor.PullGlobalWord((ushort)(record + UnitKindTable.GuardPower)), 10));
-				this.owner.Libc.AppendText(0xba06, "/");
-				this.owner.Libc.AppendText(0xba06,
+				this.owner.Words.Append("/");
+				this.owner.Libc.AppendText(TextBuffer.Address,
 					this.owner.Libc.IntegerToText((short)this.processor.PullGlobalWord((ushort)(record + UnitKindTable.ShiftTally)), 10));
-				this.owner.Libc.AppendText(0xba06, ")");
+				this.owner.Words.Append(")");
 
-				this.owner.TextPainter.RenderTextToScreen0(0xba06, 112, vertLoc, 11);
+				this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 112, vertLoc, 11);
 
 				if (active > 0)
 				{
 					EmptyMessage()
 						.Number(active)
 						.Text(" active");
-					this.owner.TextPainter.RenderTextToScreen0(0xba06, 168, vertLoc, 15);
+					this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 168, vertLoc, 15);
 				}
 
 				if (making > 0)
@@ -247,7 +247,7 @@ namespace Civilization1Remaster.UI
 					EmptyMessage()
 						.Number(making)
 						.Text(" in production");
-					this.owner.TextPainter.RenderTextToScreen0(0xba06, 232, vertLoc, 11);
+					this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 232, vertLoc, 11);
 				}
 
 				vertLoc += 9;
@@ -305,7 +305,7 @@ namespace Civilization1Remaster.UI
 				{
 					EmptyMessage()
 						.Number(losses);
-					this.owner.TextPainter.RenderTextToScreen0(0xba06, 104, vertLoc, 12);
+					this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 104, vertLoc, 12);
 				}
 
 				int horizLoc = 0x68;
@@ -322,7 +322,7 @@ namespace Civilization1Remaster.UI
 					{
 						EmptyMessage()
 							.Number(losses);
-						this.owner.TextPainter.RenderTextToScreen0(0xba06, horizLoc, vertLoc,
+						this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, horizLoc, vertLoc,
 							PlayerColour(playerIdx));
 					}
 				}
@@ -404,34 +404,34 @@ namespace Civilization1Remaster.UI
 				EmptyMessage()
 					.City(townIdx);
 
-				this.owner.BlockText.ShrinkTextToWidth(0xba06, 62);
+				this.owner.BlockText.ShrinkTextToWidth(TextBuffer.Address, 62);
 
 				if (vertLoc < 0xb4)
 				{
-					this.owner.TextPainter.RenderTextWithShadow(0xba06, 16, vertLoc, 15);
+					this.owner.TextPainter.RenderTextWithShadow(TextBuffer.Address, 16, vertLoc, 15);
 				}
 
-				this.processor.EmitGlobalByte(0xba06, 0x0);
+				this.owner.Words.Clear();
 
 				if ((town.ConditionMarker & 1) != 0)
 				{
-					this.owner.Libc.AppendText(0xba06, " \x008c(Disorder)");
+					this.owner.Words.Append(" \x008c(Disorder)");
 				}
 				else
 				{
-					this.owner.Libc.AppendText(0xba06, " ");
+					this.owner.Words.Append(" ");
 
-					this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText((short)CityLuxuries, 10));
+					this.owner.Words.Append(this.owner.Libc.IntegerToText((short)CityLuxuries, 10));
 
-					this.owner.Libc.AppendText(0xba06, "\\/");
+					this.owner.Words.Append("\\/");
 
-					this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText((short)CityTaxes, 10));
+					this.owner.Words.Append(this.owner.Libc.IntegerToText((short)CityTaxes, 10));
 
-					this.owner.Libc.AppendText(0xba06, "$/");
+					this.owner.Words.Append("$/");
 
-					this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText((short)CityScience, 10));
+					this.owner.Words.Append(this.owner.Libc.IntegerToText((short)CityScience, 10));
 
-					this.owner.Libc.AppendText(0xba06, "~");
+					this.owner.Words.Append("~");
 
 					income += (short)CityTaxes;
 					science += (short)CityScience;
@@ -439,7 +439,7 @@ namespace Civilization1Remaster.UI
 
 				if (vertLoc < 0xb4)
 				{
-					this.owner.TextPainter.RenderTextToScreen0(0xba06, 80, vertLoc, 10);
+					this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 80, vertLoc, 10);
 
 					vertLoc += 8;
 				}
@@ -468,7 +468,7 @@ namespace Civilization1Remaster.UI
 				.Number(income)
 				.Text("$");
 
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, 8, vertLoc + 4, 10);
+			this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 8, vertLoc + 4, 10);
 
 			if (this.owner.CityOps.PlayerEnjoysWonderEffect(this.owner.World.PersonParticipantIdx, 0x14) != 0)
 			{
@@ -487,7 +487,7 @@ namespace Civilization1Remaster.UI
 					.Number(turns)
 					.Text(" turns");
 
-				this.owner.TextPainter.RenderTextToScreen0(0xba06, 8, vertLoc + 12, 10);
+				this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 8, vertLoc + 12, 10);
 			}
 
 			this.owner.TextPainter.RenderTextToScreen0(0x481f, 160, 32, 15);
@@ -502,27 +502,27 @@ namespace Civilization1Remaster.UI
 				if (cost == 0)
 					continue;
 
-				this.processor.EmitGlobalByte(0xba06, 0x0);
+				this.owner.Words.Clear();
 
 				// The number of the buildings: the cost by the upkeep (the palace by its own cost)
 				short tally = structureIdx == 1 ? (short)(cost / palaceCost) :
 					(short)(cost / (short)BuildingWord(structureIdx + 1, BuildingTable.Upkeep));
 
-				this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(tally, 10));
+				this.owner.Words.Append(this.owner.Libc.IntegerToText(tally, 10));
 
-				this.owner.Libc.AppendText(0xba06, " ");
+				this.owner.Words.Append(" ");
 
-				this.owner.Libc.AppendText(0xba06, BuildingText(structureIdx));
+				this.owner.Words.Append(BuildingText(structureIdx));
 
-				this.owner.Libc.AppendText(0xba06, ", ");
+				this.owner.Words.Append(", ");
 
-				this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(cost, 10));
+				this.owner.Words.Append(this.owner.Libc.IntegerToText(cost, 10));
 
-				this.owner.Libc.AppendText(0xba06, "$");
+				this.owner.Words.Append("$");
 
 				if (vertLoc < 0xb4)
 				{
-					this.owner.TextPainter.RenderTextToScreen0(0xba06, 160, vertLoc, 14);
+					this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 160, vertLoc, 14);
 
 					vertLoc += 8;
 				}
@@ -534,7 +534,7 @@ namespace Civilization1Remaster.UI
 				.Number(total)
 				.Text("$");
 
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, 160, vertLoc + 4, 14);
+			this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 160, vertLoc + 4, 14);
 
 			vertLoc += 0xc;
 
@@ -592,7 +592,7 @@ namespace Civilization1Remaster.UI
 
 				this.owner.VideoCard.RenderLine(ScreenBox, 4, (short)(vertLoc - 2), 316, (short)(vertLoc - 2), 9);
 
-				this.owner.Libc.CopyText(0xba06, CivilizationPlural(participantIdx));
+				this.owner.Words.Set(CivilizationPlural(participantIdx));
 
 				if ((short)participantIdx != this.owner.World.PersonParticipantIdx &&
 					(this.owner.World.Participants[this.owner.World.PersonParticipantIdx].Relations[participantIdx] & 0x40) == 0)
@@ -617,7 +617,7 @@ namespace Civilization1Remaster.UI
 
 				short boxTop = (short)(0x18 * rowCount);
 
-				this.owner.CityOps.RenderLabelBox(281, boxTop + 20, 318, boxTop + 29, 0xba06, PlayerColour(participantIdx));
+				this.owner.CityOps.RenderLabelBox(281, boxTop + 20, 318, boxTop + 29, TextBuffer.Address, PlayerColour(participantIdx));
 			}
 
 			this.owner.Startup.DisplayMouseCursor();
@@ -710,7 +710,7 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// The details of a player in the foreign minister's report (his name is in 0xba06): title, government, treasury, units
+		/// The details of a player in the foreign minister's report (his name is in TextBuffer.Address): title, government, treasury, units
 		/// and then peace, alliance or war with each player, 0x60 apart, in rows of 8 from x 0x10
 		/// </summary>
 		private void RenderMilitaryReportRow(ushort participantIdx, short vertLoc)
@@ -731,11 +731,11 @@ namespace Civilization1Remaster.UI
 
 			this.processor.EmitLocalWord(0x6, capitalIdx);
 
-			this.owner.Libc.AppendText(0xba06, ": ");
+			this.owner.Words.Append(": ");
 
-			this.owner.Libc.AppendText(0xba06, LeaderName(participantIdx));
+			this.owner.Words.Append(LeaderName(participantIdx));
 
-			this.owner.TextPainter.RenderTextWithShadow(0xba06, 8, vertLoc, 15);
+			this.owner.TextPainter.RenderTextWithShadow(TextBuffer.Address, 8, vertLoc, 15);
 
 			Message(GovernmentName((ushort)this.owner.World.Participants[participantIdx].RegimeKind))
 				.Text(", ")
@@ -744,14 +744,14 @@ namespace Civilization1Remaster.UI
 
 			if (this.owner.World.HardnessTier <= 1)
 			{
-				this.owner.Libc.AppendText(0xba06, ", ");
+				this.owner.Words.Append(", ");
 
-				this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(this.owner.World.Participants[participantIdx].TroopTally, 10));
+				this.owner.Words.Append(this.owner.Libc.IntegerToText(this.owner.World.Participants[participantIdx].TroopTally, 10));
 
-				this.owner.Libc.AppendText(0xba06, " Units.");
+				this.owner.Words.Append(" Units.");
 			}
 
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, 160, vertLoc, PlayerColour(participantIdx));
+			this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 160, vertLoc, PlayerColour(participantIdx));
 
 			vertLoc += 8;
 
@@ -760,9 +760,9 @@ namespace Civilization1Remaster.UI
 
 			for (otherIdx = 1; (short)otherIdx < 8; otherIdx++)
 			{
-				this.processor.EmitGlobalByte(0xba06, 0);
+				this.owner.Words.Clear();
 
-				this.owner.Libc.CopyText(0xba06, CivilizationPlural(otherIdx));
+				this.owner.Words.Set(CivilizationPlural(otherIdx));
 
 				if (horizLoc > 0xf0)
 				{
@@ -774,7 +774,7 @@ namespace Civilization1Remaster.UI
 
 				if ((relation & 2) != 0)
 				{
-					this.owner.Libc.AppendText(0xba06, (relation & 4) != 0 ? ":\x008f ALLIED" : ":\x008f PEACE");
+					this.owner.Words.Append((relation & 4) != 0 ? ":\x008f ALLIED" : ":\x008f PEACE");
 				}
 				else if ((relation & 3) != 1)
 				{
@@ -782,10 +782,10 @@ namespace Civilization1Remaster.UI
 				}
 				else
 				{
-					this.owner.Libc.AppendText(0xba06, ":\x008c WAR");
+					this.owner.Words.Append(":\x008c WAR");
 				}
 
-				this.owner.TextPainter.RenderTextToScreen0(0xba06, horizLoc, vertLoc, 7);
+				this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, horizLoc, vertLoc, 7);
 
 				horizLoc += 0x60;
 			}
@@ -813,7 +813,7 @@ namespace Civilization1Remaster.UI
 			Message("Subject: the ")
 				.Text(CivilizationPlural(participantIdx));
 
-			this.owner.TextPainter.RenderTextWithShadow(0xba06, 16, 32, 15);
+			this.owner.TextPainter.RenderTextWithShadow(TextBuffer.Address, 16, 32, 15);
 
 			vertLoc += 0xc;
 
@@ -822,7 +822,7 @@ namespace Civilization1Remaster.UI
 				.Text(" ")
 				.Text(LeaderName(participantIdx));
 
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, 16, vertLoc, 9);
+			this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 16, vertLoc, 9);
 
 			vertLoc += 8;
 
@@ -858,14 +858,14 @@ namespace Civilization1Remaster.UI
 			Message("Capital:\x008f ")
 				.City(capitalIdx);
 
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, 16, vertLoc, 9);
+			this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 16, vertLoc, 9);
 
 			vertLoc += 8;
 
 			Message("Government:\x008f ")
 				.Text(GovernmentName(participant.RegimeKind));
 
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, 16, vertLoc, 9);
+			this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 16, vertLoc, 9);
 
 			vertLoc += 8;
 
@@ -873,7 +873,7 @@ namespace Civilization1Remaster.UI
 				.Number(participant.Gold)
 				.Text("$");
 
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, 16, vertLoc, 9);
+			this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 16, vertLoc, 9);
 
 			vertLoc += 8;
 
@@ -883,7 +883,7 @@ namespace Civilization1Remaster.UI
 					.Number(participant.TroopTally)
 					.Text(" Units.");
 
-				this.owner.TextPainter.RenderTextToScreen0(0xba06, 16, vertLoc, 9);
+				this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 16, vertLoc, 9);
 
 				vertLoc += 0xc;
 			}
@@ -897,24 +897,24 @@ namespace Civilization1Remaster.UI
 				// With the 1 of contact one of the two applies (3 is peace)
 				if ((participant.Relations[otherIdx] & 2) != 0)
 				{
-					this.owner.Libc.CopyText(0xba06, "At\x008f PEACE");
+					this.owner.Words.Set("At\x008f PEACE");
 				}
 
 				if ((participant.Relations[otherIdx] & 3) == 1)
 				{
-					this.owner.Libc.CopyText(0xba06, "At\x008c WAR");
+					this.owner.Words.Set("At\x008c WAR");
 				}
 
 				if ((participant.Relations[otherIdx] & 1) == 0)
 					continue;
 
-				this.owner.Libc.AppendText(0xba06, "\x0087 with the ");
+				this.owner.Words.Append("\x0087 with the ");
 
-				this.owner.Libc.AppendText(0xba06, CivilizationPlural(otherIdx));
+				this.owner.Words.Append(CivilizationPlural(otherIdx));
 
-				this.owner.Libc.AppendText(0xba06, ".");
+				this.owner.Words.Append(".");
 
-				this.owner.TextPainter.RenderTextToScreen0(0xba06, 24, vertLoc, 7);
+				this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 24, vertLoc, 7);
 
 				vertLoc += 8;
 			}
@@ -984,7 +984,7 @@ namespace Civilization1Remaster.UI
 				EmptyMessage()
 					.City(townIdx)
 					.Text(":");
-				this.owner.TextPainter.RenderTextToScreen0(0xba06, 16, vertLoc, 15);
+				this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 16, vertLoc, 15);
 
 				this.owner.CityOps.RenderCitizenIcons(townIdx, (short)((shift & 7) + 0x50), (short)(vertLoc - 3), CitySpecialists, 124);
 
@@ -1015,18 +1015,18 @@ namespace Civilization1Remaster.UI
 			}
 
 			// The population is computed, but not written
-			this.owner.Libc.CopyText(0xba06, "Population: ");
+			this.owner.Words.Set("Population: ");
 			this.owner.Helpers.ObtainPlayerPopulation(participantIdx);
 
-			this.owner.Libc.AppendText(0xba06, " Happy:");
+			this.owner.Words.Append(" Happy:");
 			AffixProductionCount(happy, citizens);
-			this.owner.Libc.AppendText(0xba06, "% Content:");
+			this.owner.Words.Append("% Content:");
 			AffixProductionCount((short)(citizens - happy - unhappy), citizens);
-			this.owner.Libc.AppendText(0xba06, "% Unhappy:");
+			this.owner.Words.Append("% Unhappy:");
 			AffixProductionCount(unhappy, citizens);
-			this.owner.Libc.AppendText(0xba06, "%");
+			this.owner.Words.Append("%");
 
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, 16, vertLoc + 8, 15);
+			this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 16, vertLoc + 8, 15);
 
 			FinishReportScreen();
 
@@ -1048,11 +1048,11 @@ namespace Civilization1Remaster.UI
 			// function body
 			if (arg1 < 300)
 			{
-				this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText((100 * arg1) / arg2, 10));
+				this.owner.Words.Append(this.owner.Libc.IntegerToText((100 * arg1) / arg2, 10));
 			}
 			else
 			{
-				this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText((10 * arg1) / (arg2 / 10), 10));
+				this.owner.Words.Append(this.owner.Libc.IntegerToText((10 * arg1) / (arg2 / 10), 10));
 			}
 
 			// Far return
@@ -1090,7 +1090,7 @@ namespace Civilization1Remaster.UI
 
 				EmptyMessage()
 					.City(townIdx);
-				this.owner.TextPainter.RenderTextToScreen0(0xba06, 8, vertLoc, 15);
+				this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 8, vertLoc, 15);
 
 				EmptyMessage()
 					.Number(this.owner.World.Towns[townIdx].TrueExtent)
@@ -1101,25 +1101,25 @@ namespace Civilization1Remaster.UI
 					.Text("| ")
 					.Number((short)CityTrade)
 					.Text("}");
-				this.owner.TextPainter.RenderTextToScreen0(0xba06, 80, vertLoc, 15);
+				this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 80, vertLoc, 15);
 
 				sbyte making = this.owner.World.Towns[townIdx].PresentMakingIdx;
 
 				if (making < 0)
 				{
 					// A building: names of 0x1e bytes at 0xb9a, costs at 0xbb2
-					this.owner.Libc.CopyText(0xba06, BuildingRecordText(-making));
-					this.owner.BlockText.ShrinkTextToWidth(0xba06, 96);
+					this.owner.Words.Set(BuildingRecordText(-making));
+					this.owner.BlockText.ShrinkTextToWidth(TextBuffer.Address, 96);
 					AppendProductionCost(townIdx, (short)(10 * BuildingWord(-making, BuildingTable.Price)));
 				}
 				else if (making < 0x40)
 				{
 					ushort record = (ushort)((making * UnitKindTable.Stride) + UnitKindTable.Origin);
-					this.owner.Libc.CopyText(0xba06, record);
+					this.owner.Words.Set(record);
 					AppendProductionCost(townIdx, (short)(10 * this.processor.PullGlobalWord((ushort)(record + UnitKindTable.Price))));
 				}
 
-				this.owner.TextPainter.RenderTextToScreen0(0xba06, 172, vertLoc, 15);
+				this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 172, vertLoc, 15);
 
 				vertLoc += 8;
 			}
@@ -1129,14 +1129,14 @@ namespace Civilization1Remaster.UI
 			this.processor.Journal.CloseScope("DisplayCityStatusReport");
 		}
 
-		/// <summary>Appends " (shields/cost)" of the city's production to the text at 0xba06 (0x87 is the shield)</summary>
+		/// <summary>Appends " (shields/cost)" of the city's production to the text at TextBuffer.Address (0x87 is the shield)</summary>
 		private void AppendProductionCost(short townIdx, short cost)
 		{
-			this.owner.Libc.AppendText(0xba06, "\x0087 (");
-			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(this.owner.World.Towns[townIdx].MaterialsTally, 10));
-			this.owner.Libc.AppendText(0xba06, "/");
-			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(cost, 10));
-			this.owner.Libc.AppendText(0xba06, ")");
+			this.owner.Words.Append("\x0087 (");
+			this.owner.Words.Append(this.owner.Libc.IntegerToText(this.owner.World.Towns[townIdx].MaterialsTally, 10));
+			this.owner.Words.Append("/");
+			this.owner.Words.Append(this.owner.Libc.IntegerToText(cost, 10));
+			this.owner.Words.Append(")");
 		}
 	}
 }

@@ -45,14 +45,14 @@ namespace Civilization1Remaster.Engine
 						switch (swatchAddr)
 						{
 							case 0:
-								beginAddr = 0xba08;
+								beginAddr = (ushort)(TextBuffer.Address + 2);
 								for (int idx = 0; idx < swatch.Length; idx++)
 								{
 									this.processor.EmitUInt8(this.processor.SegData.Value16, beginAddr++, swatch[idx]);
 								}
 								break;
 							case 1:
-								beginAddr = 0xba06;
+								beginAddr = TextBuffer.Address;
 								for (int idx = 0; idx < swatch.Length; idx++)
 								{
 									this.processor.EmitUInt8(this.processor.SegData.Value16, beginAddr++, swatch[idx]);
@@ -67,7 +67,7 @@ namespace Civilization1Remaster.Engine
 								}
 								break;
 						}
-						if (swatchAddr == 1 || swatchAddr == 0xba06)
+						if (swatchAddr == 1 || swatchAddr == TextBuffer.Address)
 							this.owner.VideoCard.AssignHuesFromHueStruct(swatch);
 					}
 				}
@@ -88,14 +88,14 @@ namespace Civilization1Remaster.Engine
 					switch (swatchAddr)
 					{
 						case 0:
-							beginAddr = 0xba08;
+							beginAddr = (ushort)(TextBuffer.Address + 2);
 							for (int idx = 0; idx < swatch.Length; idx++)
 							{
 								this.processor.EmitUInt8(this.processor.SegData.Value16, beginAddr++, swatch[idx]);
 							}
 							break;
 						case 1:
-							beginAddr = 0xba06;
+							beginAddr = TextBuffer.Address;
 							for (int idx = 0; idx < swatch.Length; idx++)
 							{
 								this.processor.EmitUInt8(this.processor.SegData.Value16, beginAddr++, swatch[idx]);
@@ -110,7 +110,7 @@ namespace Civilization1Remaster.Engine
 							}
 							break;
 					}
-					if (swatchAddr == 1 || swatchAddr == 0xba06)
+					if (swatchAddr == 1 || swatchAddr == TextBuffer.Address)
 						this.owner.VideoCard.AssignHuesFromHueStruct(swatch);
 				}
 			}

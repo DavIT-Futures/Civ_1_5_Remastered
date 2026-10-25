@@ -477,13 +477,13 @@ namespace Civilization1Remaster.Game
 			if (!this.owner.World.IsHuman(this.owner.World.PersonParticipantIdx))
 				return;
 
-			this.processor.EmitGlobalByte(0xba06, 0x0);
+			this.owner.Words.Clear();
 
 			this.owner.BlockText.DisplayTextDialog(0x1c2a);
 
 			DialogStyle = 0x4;
 
-			DisplayDialog(0xba06, 80, 80);
+			DisplayDialog(TextBuffer.Address, 80, 80);
 		}
 
 		/// <summary>
@@ -685,11 +685,11 @@ namespace Civilization1Remaster.Game
 		{
 			this.owner.Startup.ConcealMouseCursor();
 
-			this.owner.Libc.CopyText(0xba06, "*** GAME OVER ***\n");
+			this.owner.Words.Set("*** GAME OVER ***\n");
 
 			if (ConquestEnd != 0)
 			{
-				this.owner.Libc.CopyText(0xba06, "Your civilization\nhas conquered\nthe entire planet!\n");
+				this.owner.Words.Set("Your civilization\nhas conquered\nthe entire planet!\n");
 
 				ArrivedSpaceship = 0xffff;
 
@@ -737,12 +737,12 @@ namespace Civilization1Remaster.Game
 
 			if (ConquestEnd == 0)
 			{
-				this.processor.EmitGlobalByte(0xba06, 0x0);
+				this.owner.Words.Clear();
 
 				this.owner.BlockText.DisplayTextDialog(0x1cf0);
 
 				// The first line goes on with the game, the second one ends it
-				GameEndRequest = (ushort)(1 - DisplayDialog(0xba06, 80, 80));
+				GameEndRequest = (ushort)(1 - DisplayDialog(TextBuffer.Address, 80, 80));
 			}
 			else
 			{
@@ -964,28 +964,28 @@ namespace Civilization1Remaster.Game
 					this.owner.World.Towns[townIdx].Place.X - 8,
 					this.owner.World.Towns[townIdx].Place.Y - 6);
 
-				this.owner.Libc.CopyText(0xba06, "Travellers report:\n");
+				this.owner.Words.Set("Travellers report:\n");
 
 				if ((this.owner.World.ScienceLeadingFoundVia[35] & 7) != 0)
 				{
-					this.owner.Libc.AppendText(0xba06, 0x1d26);
+					this.owner.Words.Append(0x1d26);
 				}
 				else if ((this.processor.PullUInt8(this.processor.SegExtra.Value16, 0x4f4) & 7) != 0)
 				{
-					this.owner.Libc.AppendText(0xba06, 0x1d3f);
+					this.owner.Words.Append(0x1d3f);
 				}
 				else
 				{
-					this.owner.Libc.AppendText(0xba06, 0x1d53);
+					this.owner.Words.Append(0x1d53);
 				}
 
 				this.owner.Conquest.ObtainCityLabel((short)townIdx);
 
-				this.owner.Libc.AppendText(0xba06, "!\n");
+				this.owner.Words.Append("!\n");
 
 				DialogStyle = 0x2;
 
-				DisplayDialog(0xba06, 100, 32);
+				DisplayDialog(TextBuffer.Address, 100, 32);
 			}
 
 			short units = (short)this.owner.Helpers.VerifyValueSpan(this.owner.Libc.Dice.DrawInt(this.owner.World.Towns[townIdx].TrueExtent / 2), 2, 99);
@@ -1217,21 +1217,21 @@ namespace Civilization1Remaster.Game
 
 					EmptyMessage()
 						.Number(storage);
-					this.owner.TextPainter.RenderTextToScreen0(0xba06, 2, 59, 0);
+					this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 2, 59, 0);
 				}
 
-				this.processor.EmitGlobalByte(0xba06, 0);
+				this.owner.Words.Clear();
 				short population = (short)this.owner.Helpers.ObtainPlayerPopulation(this.owner.World.PersonParticipantIdx);
-				this.owner.Libc.AppendText(0xba06, "#");
+				this.owner.Words.Append("#");
 
 				if (population != 0)
 				{
-					this.owner.TextPainter.RenderTextToScreen0(0xba06, 2, 73, 0);
+					this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 2, 73, 0);
 				}
 
-				this.processor.EmitGlobalByte(0xba06, 0);
+				this.owner.Words.Clear();
 				ObtainCurrentYearAsText();
-				this.owner.TextPainter.RenderTextToScreen0(0xba06, 2, 81, 0);
+				this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 2, 81, 0);
 
 				short cost = (short)(((this.owner.World.HardnessTier << 1) + TechnologyLevel + 6) *
 					human.FoundScienceTally * (this.owner.World.Season < 0 ? 1 : 2));
@@ -1258,7 +1258,7 @@ namespace Civilization1Remaster.Game
 					.Number(human.LevyRatio)
 					.Text(".")
 					.Number(human.ResearchLevyRatio);
-				this.owner.TextPainter.RenderTextToScreen0(0xba06, 2, 89, 0);
+				this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 2, 89, 0);
 
 				if (this.processor.PullGlobalWord(0x1c28) == 0)
 				{
@@ -1291,7 +1291,7 @@ namespace Civilization1Remaster.Game
 					short mark = (short)(population / 10);
 					this.processor.RegSource.Value16 = (ushort)mark;
 
-					this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(mark, 10));
+					this.owner.Words.Append(this.owner.Libc.IntegerToText(mark, 10));
 
 					PopulationMark = (ushort)mark;
 				}
@@ -1301,19 +1301,19 @@ namespace Civilization1Remaster.Game
 				short hundreds = (short)(population / 100);
 				this.processor.RegSource.Value16 = (ushort)hundreds;
 
-				this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(hundreds, 10));
-				this.owner.Libc.AppendText(0xba06, ",0");
+				this.owner.Words.Append(this.owner.Libc.IntegerToText(hundreds, 10));
+				this.owner.Words.Append(",0");
 
 				PopulationMark = (ushort)(hundreds + 9);
 			}
 
 			if (previousMark < (short)PopulationMark && (short)this.processor.PullGlobalWord(0x3484) >= -1)
 			{
-				this.owner.Libc.AppendText(0xba06, "00,000 citizens.\n");
+				this.owner.Words.Append("00,000 citizens.\n");
 
 				DialogStyle = 4;
 
-				DisplayDialog(0xba06, 100, 80);
+				DisplayDialog(TextBuffer.Address, 100, 80);
 			}
 		}
 
@@ -1498,13 +1498,13 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// Gets current year as a String, appends buffer at 0xba06
+		/// Gets current year as a String, appends buffer at TextBuffer.Address
 		/// </summary>
 		public void ObtainCurrentYearAsText()
 		{
-			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(Math.Abs(this.owner.World.Season), 10));
+			this.owner.Words.Append(this.owner.Libc.IntegerToText(Math.Abs(this.owner.World.Season), 10));
 
-			this.owner.Libc.AppendText(0xba06, (ushort)((this.owner.World.Season >= 0) ? 0x1df4 : 0x1df0));
+			this.owner.Words.Append((ushort)((this.owner.World.Season >= 0) ? 0x1df4 : 0x1df0));
 		}
 
 		/// <summary>
@@ -1530,7 +1530,7 @@ namespace Civilization1Remaster.Game
 
 			if (this.processor.RegAcc.Value16 == 0xc && this.owner.World.DirtyCellTally > 6)
 			{
-				this.owner.Libc.CopyText(0xba06, "Scientists alarmed by\nrising temperatures.\nGlobal Warming feared!\n");
+				this.owner.Words.Set("Scientists alarmed by\nrising temperatures.\nGlobal Warming feared!\n");
 
 				this.owner.Paper.DisplayNewspaper(-1);
 			}
@@ -1647,7 +1647,7 @@ namespace Civilization1Remaster.Game
 
 				DialogStyle = (this.owner.World.Participants[person].Relations[rivalIdx] & 0x40) == 0 ? (ushort)2 : (ushort)5;
 
-				DisplayDialog(0xba06, 100, 80);
+				DisplayDialog(TextBuffer.Address, 100, 80);
 
 				this.owner.Encyclopedia.DisplayCivilopediaRecord((ushort)(wonderIdx + 0x18), 1);
 

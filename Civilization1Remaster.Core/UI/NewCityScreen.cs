@@ -42,7 +42,7 @@ namespace Civilization1Remaster.UI
 
 				answer = PullTextInput(0x58, 0x60, 0xc);
 			}
-			while (this.owner.Libc.TextLength(0xba06) == 0);
+			while (this.owner.Words.Length == 0);
 
 			if (answer != 0)
 			{
@@ -51,7 +51,7 @@ namespace Civilization1Remaster.UI
 
 				for (int idx = 0; idx < 0xd; idx++)
 				{
-					label[idx] = (char)this.processor.PullGlobalByte((ushort)(0xba06 + idx));
+					label[idx] = (char)this.owner.Words[idx];
 				}
 
 				this.owner.World.TownLabels[labelIdx] = new string(label);
@@ -87,11 +87,11 @@ namespace Civilization1Remaster.UI
 
 			this.owner.TextPainter.RenderTextToScreen0(0x53ab, 166, 90, 0);
 
-			this.owner.Libc.CopyText(0xba06, this.processor.PullGlobalWord(nameSlot));
+			this.owner.Words.Set(this.processor.PullGlobalWord(nameSlot));
 
 			PullTextInput(0xa6, 0x68, 0xd);
 
-			this.owner.Libc.CopyText(this.processor.PullGlobalWord(nameSlot), 0xba06);
+			this.owner.Libc.CopyText(this.processor.PullGlobalWord(nameSlot), TextBuffer.Address);
 
 			this.owner.Startup.DisplayMouseCursor();
 
@@ -118,21 +118,21 @@ namespace Civilization1Remaster.UI
 
 			this.owner.TextPainter.RenderTextToScreen0(0x53b8, 166, 90, 0);
 
-			this.owner.Libc.CopyText(0xba06, this.processor.PullGlobalWord(pluralSlot));
+			this.owner.Words.Set(this.processor.PullGlobalWord(pluralSlot));
 
 			PullTextInput(0xa6, 0x68, 0xb);
 
-			this.owner.Libc.CopyText(this.processor.PullGlobalWord(pluralSlot), 0xba06);
+			this.owner.Libc.CopyText(this.processor.PullGlobalWord(pluralSlot), TextBuffer.Address);
 
 			// The last character (the one before the text when it is empty)
-			ushort lastAddr = (ushort)(0xba06 + this.owner.Libc.TextLength(0xba06) - 1);
+			ushort lastAddr = (ushort)(TextBuffer.Address + this.owner.Words.Length - 1);
 
 			if (this.processor.PullGlobalByte(lastAddr) == 's')
 			{
 				this.processor.EmitGlobalByte(lastAddr, 0);
 			}
 
-			this.owner.Libc.CopyText(this.processor.PullGlobalWord(nameSlot), 0xba06);
+			this.owner.Libc.CopyText(this.processor.PullGlobalWord(nameSlot), TextBuffer.Address);
 			this.processor.EmitGlobalByte((ushort)(this.processor.PullGlobalWord(nameSlot) + 0xa), 0);
 
 			this.owner.Startup.DisplayMouseCursor();
@@ -198,7 +198,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.TextPainter.RenderTextToScreen0(charsAddr, 66, 80, 0);
 
-			this.processor.EmitGlobalByte(0xba06, 0x0);
+			this.owner.Words.Clear();
 
 			PullTextInput(0x42, 0x59, 0x10);
 
@@ -212,7 +212,7 @@ namespace Civilization1Remaster.UI
 					this.processor.Storage.EmitUInt8(this.processor.SegStack.Value16, (ushort)(label + idx), this.owner.World.TownLabels[labelIdx][idx]);
 				}
 
-				if (this.owner.Libc.CompareTextPrefixNoCase(0xba06, label, this.owner.Libc.TextLength(0xba06)) != 0)
+				if (this.owner.Libc.CompareTextPrefixNoCase(TextBuffer.Address, label, this.owner.Words.Length) != 0)
 					continue;
 
 				for (int townIdx = 0; townIdx < 0x80; townIdx++)
@@ -238,7 +238,7 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// Edits the text at 0xba06 in a field of breadth characters (padded with spaces): the cursor (0x68cc) blinks until a
+		/// Edits the text at TextBuffer.Address in a field of breadth characters (padded with spaces): the cursor (0x68cc) blinks until a
 		/// key or a click; Left / Right move it, Insert and Delete shift the rest, Backspace deletes before it, a character
 		/// overwrites (the first one typed clears the field). Return or a click accepts, Escape cancels; the trailing spaces
 		/// are cut off.
@@ -263,12 +263,12 @@ namespace Civilization1Remaster.UI
 
 			bool fresh = true;
 
-			for (ushort charIdx = this.owner.Libc.TextLength(0xba06); (short)charIdx < (short)breadth; charIdx++)
+			for (ushort charIdx = this.owner.Words.Length; (short)charIdx < (short)breadth; charIdx++)
 			{
-				this.processor.EmitGlobalByte((ushort)(charIdx + 0xba06), 0x20);
+				this.processor.EmitGlobalByte((ushort)(charIdx + TextBuffer.Address), 0x20);
 			}
 
-			this.processor.EmitGlobalByte((ushort)(breadth + 0xba06), 0x0);
+			this.processor.EmitGlobalByte((ushort)(breadth + TextBuffer.Address), 0x0);
 
 			RenderTextInputField(horizLoc, vertLoc, breadth);
 
@@ -334,29 +334,29 @@ namespace Civilization1Remaster.UI
 
 				if (key == 0xd2)
 				{
-					this.owner.Libc.CopyText(kept, (ushort)(TextCursor + 0xba06));
+					this.owner.Libc.CopyText(kept, (ushort)(TextCursor + TextBuffer.Address));
 
-					this.owner.Libc.CopyText((ushort)(TextCursor + 0xba07), kept);
+					this.owner.Libc.CopyText((ushort)(TextCursor + (ushort)(TextBuffer.Address + 1)), kept);
 
-					this.processor.EmitGlobalByte((ushort)(TextCursor + 0xba06), 0x20);
-					this.processor.EmitGlobalByte((ushort)(breadth + 0xba06), 0x0);
+					this.processor.EmitGlobalByte((ushort)(TextCursor + TextBuffer.Address), 0x20);
+					this.processor.EmitGlobalByte((ushort)(breadth + TextBuffer.Address), 0x0);
 				}
 
 				if (key == 0xd3)
 				{
-					this.owner.Libc.CopyText((ushort)(TextCursor + 0xba06), (ushort)(TextCursor + 0xba07));
+					this.owner.Libc.CopyText((ushort)(TextCursor + TextBuffer.Address), (ushort)(TextCursor + (ushort)(TextBuffer.Address + 1)));
 
-					this.processor.EmitGlobalByte((ushort)(TextCursor + 0xba06), 0x20);
-					this.processor.EmitGlobalByte((ushort)(breadth + 0xba05), 0x20);
-					this.processor.EmitGlobalByte((ushort)(breadth + 0xba06), 0x0);
+					this.processor.EmitGlobalByte((ushort)(TextCursor + TextBuffer.Address), 0x20);
+					this.owner.Words[breadth - 1] = 0x20;
+					this.processor.EmitGlobalByte((ushort)(breadth + TextBuffer.Address), 0x0);
 				}
 
 				if (key == 0x8 && TextCursor != 0)
 				{
-					this.owner.Libc.CopyText((ushort)(TextCursor + 0xba05), (ushort)(TextCursor + 0xba06));
+					this.owner.Libc.CopyText((ushort)(TextCursor + (ushort)(TextBuffer.Address - 1)), (ushort)(TextCursor + TextBuffer.Address));
 
-					this.processor.EmitGlobalByte((ushort)(breadth + 0xba05), 0x20);
-					this.processor.EmitGlobalByte((ushort)(breadth + 0xba06), 0x0);
+					this.owner.Words[breadth - 1] = 0x20;
+					this.processor.EmitGlobalByte((ushort)(breadth + TextBuffer.Address), 0x0);
 					TextCursor = (ushort)(TextCursor - 1);
 				}
 
@@ -366,13 +366,13 @@ namespace Civilization1Remaster.UI
 					{
 						for (ushort charIdx = 0; (short)charIdx < (short)breadth; charIdx++)
 						{
-							this.processor.EmitGlobalByte((ushort)(charIdx + 0xba06), 0x20);
+							this.processor.EmitGlobalByte((ushort)(charIdx + TextBuffer.Address), 0x20);
 						}
 					}
 
 					ushort place = TextCursor;
 
-					this.processor.EmitGlobalByte((ushort)(place + 0xba06), (byte)key);
+					this.processor.EmitGlobalByte((ushort)(place + TextBuffer.Address), (byte)key);
 
 					if ((short)(breadth - 1) > (short)place)
 					{
@@ -387,9 +387,9 @@ namespace Civilization1Remaster.UI
 
 			short lastIdx = (short)(breadth - 1);
 
-			while (lastIdx > 0 && this.processor.PullGlobalByte((ushort)(lastIdx + 0xba06)) == 0x20)
+			while (lastIdx > 0 && this.processor.PullGlobalByte((ushort)(lastIdx + TextBuffer.Address)) == 0x20)
 			{
-				this.processor.EmitGlobalByte((ushort)(lastIdx + 0xba06), 0x0);
+				this.processor.EmitGlobalByte((ushort)(lastIdx + TextBuffer.Address), 0x0);
 				lastIdx--;
 			}
 
@@ -406,7 +406,7 @@ namespace Civilization1Remaster.UI
 		}
 		
 		/// <summary>
-		/// Draws the text of an input field (0xba06) character by character on white boxes of 8 x 8, the field the width in
+		/// Draws the text of an input field (TextBuffer.Address) character by character on white boxes of 8 x 8, the field the width in
 		/// characters; at the cursor (0x68cc) the column and the width of its character go to 0x68d0 and 0x68ce
 		/// </summary>
 		public void RenderTextInputField(short horizLoc, short vertLoc, ushort breadth)
@@ -420,20 +420,20 @@ namespace Civilization1Remaster.UI
 			{
 				this.owner.Services.FloodBox(ScreenBox, horizLoc, vertLoc, 8, 8, 15);
 
-				if ((short)this.owner.Libc.TextLength(0xba06) <= place)
+				if ((short)this.owner.Words.Length <= place)
 					continue;
 
 				// The character alone: the next one is cut off for the drawing
-				ushort next = (ushort)(place + 0xba07);
+				ushort next = (ushort)(place + (ushort)(TextBuffer.Address + 1));
 				byte cut = this.processor.PullGlobalByte(next);
 				this.processor.EmitGlobalByte(next, 0x0);
 
-				this.owner.TextPainter.RenderText((ushort)(0xba06 + place), horizLoc, vertLoc, 0);
+				this.owner.TextPainter.RenderText((ushort)(TextBuffer.Address + place), horizLoc, vertLoc, 0);
 
 				this.processor.EmitGlobalByte(next, cut);
 
 				ushort typeface = this.processor.PullGlobalWord((ushort)(ScreenBox + 0x10));
-				byte character = this.processor.PullGlobalByte((ushort)(place + 0xba06));
+				byte character = this.processor.PullGlobalByte((ushort)(place + TextBuffer.Address));
 
 				if (place == (short)TextCursor)
 				{

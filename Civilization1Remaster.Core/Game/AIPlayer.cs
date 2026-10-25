@@ -2997,11 +2997,11 @@ namespace Civilization1Remaster.Game
 
 							this.owner.UnitOps.PanMapToPosition(this.owner.World.PersonParticipantIdx, (short)adjX, (short)adjY);
 							DialogStyle = 0x3;
-							this.owner.Libc.CopyText(0xba06, "Barbarian raiding party\nlands near ");
+							this.owner.Words.Set("Barbarian raiding party\nlands near ");
 							nearestCity = this.owner.Helpers.LocateNearestCity((short)adjX, (short)adjY);
 							this.owner.Conquest.ObtainCityLabel((short)nearestCity);
-							this.owner.Libc.AppendText(0xba06, "!\nCitizens are alarmed.\n");
-							this.owner.TurnHooks.DisplayDialog(0xba06, 100, 32);
+							this.owner.Words.Append("!\nCitizens are alarmed.\n");
+							this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 32);
 						}
 					}
 

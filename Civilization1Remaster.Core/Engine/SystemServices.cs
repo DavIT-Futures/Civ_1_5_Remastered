@@ -493,14 +493,14 @@ namespace Civilization1Remaster.Engine
 		{
 			this.processor.Journal.OpenScope($"ImportColorsFromBuffer({arg1}, 0x{swatchAddr:x4})");
 
-			// The target palette goes to 0xba06 (rep movsb with ES = DS, which the original leaves in ES). Copied straight in the
+			// The target palette goes to TextBuffer.Address (rep movsb with ES = DS, which the original leaves in ES). Copied straight in the
 			// memory like rep movsb, without clock steps: with a colour cycle on, an earlier timer beat would change the
 			// colours that PullCurrentColors takes
 			this.processor.SegExtra.Value16 = this.processor.SegData.Value16;
 
 			for (int idx = 0; idx < 0x300; idx++)
 			{
-				this.processor.Storage.EmitUInt8(this.processor.SegData.Value16, (ushort)(0xba06 + idx),
+				this.processor.Storage.EmitUInt8(this.processor.SegData.Value16, (ushort)(TextBuffer.Address + idx),
 					this.processor.Storage.PullUInt8(this.processor.SegData.Value16, (ushort)(swatchAddr + 6 + idx)));
 			}
 
@@ -522,7 +522,7 @@ namespace Civilization1Remaster.Engine
 
 			for (int idx = 0; idx < 0x100; idx++)
 			{
-				ushort colour = (ushort)(0xba06 + (3 * idx));
+				ushort colour = (ushort)(TextBuffer.Address + (3 * idx));
 
 				this.processor.EmitGlobalByte(colour, arg2);
 				this.processor.EmitGlobalByte((ushort)(colour + 1), arg3);
@@ -536,7 +536,7 @@ namespace Civilization1Remaster.Engine
 
 		/// <summary>
 		/// The common part of ImportColorsFromBuffer and FloodColors: the current colours to 0xbd06, the fade to the colours
-		/// at 0xba06, then waiting until the timer interrupt has finished it (0x68 = 0)
+		/// at TextBuffer.Address, then waiting until the timer interrupt has finished it (0x68 = 0)
 		/// </summary>
 		private void FadeToTargetColors(ushort steps)
 		{
@@ -551,7 +551,7 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <summary>
-		/// Starts a fade from the colours at 0xbd06 to the colours at 0xba06 in arg1 * 6 timer beats (0x68): the colours per
+		/// Starts a fade from the colours at 0xbd06 to the colours at TextBuffer.Address in arg1 * 6 timer beats (0x68): the colours per
 		/// beat (0x64, from the measured speed 0x66 / 14, at most 0x100), the first colour (0x62), the mix step (0x6c) and the
 		/// mix (0x6a); the first step is done at once
 		/// </summary>
@@ -707,7 +707,7 @@ namespace Civilization1Remaster.Engine
 
 		/// <summary>
 		/// The next 0x64 colours of a fade (from colour 0x62, wrapping at 256) into 0xc006: each colour byte is the mix of the
-		/// colours at 0xbd06 (from) and 0xba06 (to), (from * ~mix + to * mix) / 0x10000 rounded, with the mix 0x6a; after the last colour
+		/// colours at 0xbd06 (from) and TextBuffer.Address (to), (from * ~mix + to * mix) / 0x10000 rounded, with the mix 0x6a; after the last colour
 		/// the mix grows by 0x6c (at most 0xffff). The memory accesses are those of the original (the beats of the test timer
 		/// depend on them; the colours are written straight into memory like stosb), and AX, BX, CX, DX are left as it leaves
 		/// them; SI, DI, BP and ES are kept.
@@ -744,7 +744,7 @@ namespace Civilization1Remaster.Engine
 					data = (ushort)(product >> 16);
 				}
 
-				byte to = this.processor.PullGlobalByte((ushort)(source + 0xba06));
+				byte to = this.processor.PullGlobalByte((ushort)(source + TextBuffer.Address));
 
 				acc = to;
 

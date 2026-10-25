@@ -28,7 +28,7 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// Wipes the Hall of Fame and reads it from fame.dta (0x114 bytes, through the buffer 0xba06) into 0x3772:0x37d2
+		/// Wipes the Hall of Fame and reads it from fame.dta (0x114 bytes, through the buffer TextBuffer.Address) into 0x3772:0x37d2
 		/// </summary>
 		public void ImportHallOfFame()
 		{
@@ -38,9 +38,9 @@ namespace Civilization1Remaster.UI
 
 			short handle = this.owner.Libc.OpenHandle("fame.dta", 0x8102, 0x80);
 
-			this.owner.Libc.ReadHandle(handle, 0xba06, 0x114);
+			this.owner.Libc.ReadHandle(handle, TextBuffer.Address, 0x114);
 
-			this.owner.Libc.MoveFarData(this.processor.SegData.Value16, 0xba06, 0x3772, 0x37d2, 0x114);
+			this.owner.Libc.MoveFarData(this.processor.SegData.Value16, TextBuffer.Address, 0x3772, 0x37d2, 0x114);
 
 			this.owner.Libc.CloseHandle(handle);
 
@@ -48,7 +48,7 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// Writes the Hall of Fame (0x114 bytes at 0x3772:0x37d2, through the buffer 0xba06) to fame.dta
+		/// Writes the Hall of Fame (0x114 bytes at 0x3772:0x37d2, through the buffer TextBuffer.Address) to fame.dta
 		/// </summary>
 		public void StoreHallOfFame()
 		{
@@ -56,9 +56,9 @@ namespace Civilization1Remaster.UI
 
 			short handle = this.owner.Libc.OpenHandle("fame.dta", 0x8302, 0x80);
 
-			this.owner.Libc.MoveFarData(0x3772, 0x37d2, this.processor.SegData.Value16, 0xba06, 0x114);
+			this.owner.Libc.MoveFarData(0x3772, 0x37d2, this.processor.SegData.Value16, TextBuffer.Address, 0x114);
 
-			this.owner.Libc.WriteHandle(handle, 0xba06, 0x114);
+			this.owner.Libc.WriteHandle(handle, TextBuffer.Address, 0x114);
 
 			this.owner.Libc.CloseHandle(handle);
 
@@ -130,9 +130,9 @@ namespace Civilization1Remaster.UI
 
 			if (score <= 0)
 			{
-				this.owner.Libc.CopyText(0xba06, " ---");
+				this.owner.Words.Set(" ---");
 
-				this.owner.TextPainter.RenderTextToScreen0(0xba06, horizLoc, vertLoc, 0);
+				this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, horizLoc, vertLoc, 0);
 
 				return (short)(vertLoc + 0x1a);
 			}
@@ -141,69 +141,69 @@ namespace Civilization1Remaster.UI
 				.Number((short)(placeIdx + 1))
 				.Text(". ");
 
-			this.owner.Libc.MoveFarData(0x3772, (ushort)(record + 0x37e0), this.processor.SegData.Value16, (ushort)(0xba06 + this.owner.Libc.TextLength(0xba06)), 16);
+			this.owner.Libc.MoveFarData(0x3772, (ushort)(record + 0x37e0), this.processor.SegData.Value16, (ushort)(TextBuffer.Address + this.owner.Words.Length), 16);
 
-			this.owner.Libc.AppendText(0xba06, ", ");
+			this.owner.Words.Append(", ");
 
 			this.processor.SegExtra.Value16 = 0x3772;
-			this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)((this.processor.PullUInt16(0x3772, (ushort)(record + 0x37d4)) << 1) + 0x33a2)));
+			this.owner.Words.Append(this.processor.PullGlobalWord((ushort)((this.processor.PullUInt16(0x3772, (ushort)(record + 0x37d4)) << 1) + 0x33a2)));
 
-			this.owner.Libc.AppendText(0xba06, " of the ");
+			this.owner.Words.Append(" of the ");
 
-			this.owner.Libc.MoveFarData(0x3772, (ushort)(record + 0x37f0), this.processor.SegData.Value16, (ushort)(0xba06 + this.owner.Libc.TextLength(0xba06)), 16);
+			this.owner.Libc.MoveFarData(0x3772, (ushort)(record + 0x37f0), this.processor.SegData.Value16, (ushort)(TextBuffer.Address + this.owner.Words.Length), 16);
 
-			ushort length = this.owner.Libc.TextLength(0xba06);
+			ushort length = this.owner.Words.Length;
 
-			this.owner.Libc.AppendText(0xba06, " to ");
+			this.owner.Words.Append(" to ");
 
 			this.processor.SegExtra.Value16 = 0x3772;
 			short year = (short)this.processor.PullUInt16(0x3772, (ushort)(record + 0x37d8));
 
-			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(Math.Abs(year), 10));
+			this.owner.Words.Append(this.owner.Libc.IntegerToText(Math.Abs(year), 10));
 
-			this.owner.Libc.AppendText(0xba06, year < 0 ? (ushort)0x33f1 : (ushort)0x33f6);
+			this.owner.Words.Append(year < 0 ? (ushort)0x33f1 : (ushort)0x33f6);
 
 			// Too wide: only up to the civilization
-			if ((short)((ushort)this.owner.TextPainter.ObtainTextWidth(0xba06) + horizLoc) >= 0x140)
+			if ((short)((ushort)this.owner.TextPainter.ObtainTextWidth(TextBuffer.Address) + horizLoc) >= 0x140)
 			{
-				this.processor.EmitGlobalByte((ushort)(length + 0xba06), 0x0);
+				this.processor.EmitGlobalByte((ushort)(length + TextBuffer.Address), 0x0);
 			}
 
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, horizLoc, vertLoc, 0);
+			this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, horizLoc, vertLoc, 0);
 
 			vertLoc += 8;
 
-			this.owner.Libc.CopyText(0xba06, "Population: ");
+			this.owner.Words.Set("Population: ");
 
 			this.processor.SegExtra.Value16 = 0x3772;
 			this.owner.Helpers.PopulationToText(this.processor.PullInt16(0x3772, (ushort)(record + 0x37de)));
 
-			this.owner.Libc.AppendText(0xba06, ", Score: ");
+			this.owner.Words.Append(", Score: ");
 
 			this.processor.SegExtra.Value16 = 0x3772;
-			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText((short)this.processor.PullUInt16(0x3772, (ushort)(record + 0x37d2)), 10));
+			this.owner.Words.Append(this.owner.Libc.IntegerToText((short)this.processor.PullUInt16(0x3772, (ushort)(record + 0x37d2)), 10));
 
 			this.processor.SegExtra.Value16 = 0x3772;
 			ushort hardness = this.processor.PullUInt16(0x3772, (ushort)(record + 0x37d4));
 
 			if (hardness <= 4)
 			{
-				this.owner.Libc.AppendText(0xba06, new ushort[] { 0x3412, 0x341e, 0x3429, 0x3433, 0x343b }[hardness]);
+				this.owner.Words.Append(new ushort[] { 0x3412, 0x341e, 0x3429, 0x3433, 0x343b }[hardness]);
 			}
 
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, horizLoc + 0xc, vertLoc, 7);
+			this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, horizLoc + 0xc, vertLoc, 7);
 
 			vertLoc += 8;
 
-			this.owner.Libc.CopyText(0xba06, "    --- CIVILIZATION RATING: ");
+			this.owner.Words.Set("    --- CIVILIZATION RATING: ");
 
 			// The score is read through ES as the functions called since left it, like in the original
-			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText((short)((((short)this.processor.PullUInt16(0x3772, (ushort)(record + 0x37d4)) + 1) *
+			this.owner.Words.Append(this.owner.Libc.IntegerToText((short)((((short)this.processor.PullUInt16(0x3772, (ushort)(record + 0x37d4)) + 1) *
 				(short)this.processor.PullUInt16(this.processor.SegExtra.Value16, (ushort)(record + 0x37d2))) / 0x32), 10));
 
-			this.owner.Libc.AppendText(0xba06, "% ---");
+			this.owner.Words.Append("% ---");
 
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, horizLoc + 0xc, vertLoc, 12);
+			this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, horizLoc + 0xc, vertLoc, 12);
 
 			vertLoc += 10;
 
@@ -334,34 +334,34 @@ namespace Civilization1Remaster.UI
 				if (arg2 == 0)
 				{
 					PullRankTitle(0x1f4);
-					this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 6, 15);
+					this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 160, 6, 15);
 
 					PullRankTitle(0x20d);
-					this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 14, 15);
+					this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 160, 14, 15);
 
 					ending = 0x3471;
 				}
 				else
 				{
 					PullRankTitle(0x226);
-					this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 6, 15);
+					this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 160, 6, 15);
 
 					PullRankTitle(0x23f);
-					this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(percentage, 10));
-					this.owner.Libc.AppendText(0xba06, "% exceeds even");
-					this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 14, 15);
+					this.owner.Words.Append(this.owner.Libc.IntegerToText(percentage, 10));
+					this.owner.Words.Append("% exceeds even");
+					this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 160, 14, 15);
 
 					ending = 0x3482;
 				}
 
 				PullRankTitle((ushort)((0x13 - rank) * 0x19));
-				this.owner.Libc.AppendText(0xba06, ending);
-				this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 22, 15);
+				this.owner.Words.Append(ending);
+				this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 160, 22, 15);
 
 				for (short level = 0; level <= rank; level++)
 				{
 					PullRankTitle((ushort)((0x13 - level) * 0x19));
-					this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, -((level * 8) - 184), (ushort)(level == rank ? 0 : 7));
+					this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 160, -((level * 8) - 184), (ushort)(level == rank ? 0 : 7));
 				}
 
 				this.owner.VideoCard.SubstituteHue(ScreenBox, 80, 183 - rank * 8, 160, 8, 15, 14);
@@ -380,10 +380,10 @@ namespace Civilization1Remaster.UI
 			this.processor.Journal.CloseScope("DisplayGameResultsScreen");
 		}
 
-		/// <summary>Copies the text (0x20 bytes) at 0x36d4:offset, the ranking titles, to 0xba06</summary>
+		/// <summary>Copies the text (0x20 bytes) at 0x36d4:offset, the ranking titles, to TextBuffer.Address</summary>
 		private void PullRankTitle(ushort offset)
 		{
-			this.owner.Libc.MoveFarData(0x36d4, offset, this.processor.SegData.Value16, 0xba06, 0x20);
+			this.owner.Libc.MoveFarData(0x36d4, offset, this.processor.SegData.Value16, TextBuffer.Address, 0x20);
 		}
 
 		/// <summary>
@@ -467,7 +467,7 @@ namespace Civilization1Remaster.UI
 					.Text(CivilizationName(this.owner.World.Towns[townIdx].ParticipantIdx))
 					.Text(")");
 
-				this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, vertLoc + 3,
+				this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 160, vertLoc + 3,
 					PlayerColour(this.owner.World.Towns[townIdx].ParticipantIdx));
 
 				this.owner.CityOps.HandleCity(townIdx, -1);

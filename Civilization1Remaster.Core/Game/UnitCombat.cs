@@ -597,9 +597,9 @@ namespace Civilization1Remaster.Game
 
 				if (participantIdx1 == this.owner.World.PersonParticipantIdx)
 				{
-					this.processor.EmitGlobalByte(0xba06, 0x0);
+					this.owner.Words.Clear();
 					this.owner.BlockText.DisplayTextDialog(0x2ae7);
-					this.owner.TurnHooks.DisplayDialog(0xba06, 80, 80);
+					this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 80, 80);
 				}
 			}
 

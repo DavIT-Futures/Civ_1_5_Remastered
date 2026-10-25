@@ -129,7 +129,7 @@ namespace Civilization1Remaster.Engine
 
 				if (this.displayBackups)
 				{
-					this.owner.Libc.CopyText(0xba06, "\x008cLoad Game: Autosaves\n Show Saved Games...\n");
+					this.owner.Words.Set("\x008cLoad Game: Autosaves\n Show Saved Games...\n");
 
 					List<(int Bay, int Round)> backups = new List<(int Bay, int Round)>();
 
@@ -152,7 +152,7 @@ namespace Civilization1Remaster.Engine
 
 					if (backups.Count == 0)
 					{
-						this.owner.Libc.AppendText(0xba06, " (no autosaves yet)\n");
+						this.owner.Words.Append(" (no autosaves yet)\n");
 						bays.Add(0xffff);
 					}
 
@@ -160,7 +160,7 @@ namespace Civilization1Remaster.Engine
 				}
 				else
 				{
-					this.owner.Libc.CopyText(0xba06, "\x008cLoad Game: Saved Games\n Show Autosaves...\n");
+					this.owner.Words.Set("\x008cLoad Game: Saved Games\n Show Autosaves...\n");
 
 					for (int idx = 0; idx < HandBayTally; idx++)
 					{
@@ -181,7 +181,7 @@ namespace Civilization1Remaster.Engine
 				this.owner.Dialogs.ChoicesIndentTokens = true;
 				this.owner.Dialogs.ChoicesIndentTokenDown = false;
 
-				ushort option = this.owner.Dialogs.DisplayMenu(0xba06, 48, vertLoc, 1);
+				ushort option = this.owner.Dialogs.DisplayMenu(TextBuffer.Address, 48, vertLoc, 1);
 
 				this.owner.Dialogs.ChoicesIndentTokens = false;
 
@@ -319,7 +319,7 @@ namespace Civilization1Remaster.Engine
 		/// <summary>
 		/// Marker 0: loads the saved game (the extension of the file name becomes SVE), the continents are counted again and
 		/// the game continues in the middle of the turn (0xdf60: 2 for an autosave, 1 for a manual save). Otherwise appends the
-		/// line of the file to the list of saved games at 0xba06: " (EMPTY)", or the difficulty, the leader and the civilization
+		/// line of the file to the list of saved games at TextBuffer.Address: " (EMPTY)", or the difficulty, the leader and the civilization
 		/// of the human player and the year.
 		/// </summary>
 		/// <returns>1, 0 for a missing file in the list, also in AX</returns>
@@ -342,7 +342,7 @@ namespace Civilization1Remaster.Engine
 
 				if (handle == -1)
 				{
-					this.owner.Libc.AppendText(0xba06, " (EMPTY)\n");
+					this.owner.Words.Append(" (EMPTY)\n");
 				}
 				else
 				{
@@ -355,34 +355,34 @@ namespace Civilization1Remaster.Engine
 					this.owner.Libc.SeekHandle(handle, 8, 0);
 					this.owner.Libc.ReadHandle(handle, 0x6826, 2);
 
-					this.owner.Libc.AppendText(0xba06, " ");
+					this.owner.Words.Append(" ");
 
 					this.owner.Libc.SeekHandle(handle, 10, 0);
 					this.owner.Libc.ReadHandle(handle, 0x6824, 2);
 
-					this.owner.Libc.AppendText(0xba06, this.processor.PullGlobalWord((ushort)((SavedDifficulty << 1) + 0x33a2)));
+					this.owner.Words.Append(this.processor.PullGlobalWord((ushort)((SavedDifficulty << 1) + 0x33a2)));
 
-					this.owner.Libc.AppendText(0xba06, " ");
+					this.owner.Words.Append(" ");
 
 					this.owner.Libc.SeekHandle(handle, (14 * (int)(short)SavedHumanPlayer) + 16, 0);
 					this.owner.Libc.ReadHandle(handle, names, 14);
 
-					this.owner.Libc.AppendText(0xba06, names);
+					this.owner.Words.Append(names);
 
 					this.owner.Libc.SeekHandle(handle, (12 * (int)(short)SavedHumanPlayer) + 0x80, 0);
 					this.owner.Libc.ReadHandle(handle, names, 0xc);
 
-					this.owner.Libc.AppendText(0xba06, ", ");
+					this.owner.Words.Append(", ");
 
-					this.owner.Libc.AppendText(0xba06, names);
+					this.owner.Words.Append(names);
 
-					this.owner.Libc.AppendText(0xba06, "/");
+					this.owner.Words.Append("/");
 
 					short year = (short)SavedYear;
 
-					this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(Math.Abs(year), 10));
+					this.owner.Words.Append(this.owner.Libc.IntegerToText(Math.Abs(year), 10));
 
-					this.owner.Libc.AppendText(0xba06, year < 0 ? " BC\n" : " AD\n");
+					this.owner.Words.Append(year < 0 ? " BC\n" : " AD\n");
 				}
 
 				this.owner.Libc.CloseHandle(handle);
@@ -440,7 +440,7 @@ namespace Civilization1Remaster.Engine
 
 			if (QueryForStoreDrive() != 0xffff)
 			{
-				this.owner.Libc.CopyText(0xba06, "\x008cSelect Save File...\n");
+				this.owner.Words.Set("\x008cSelect Save File...\n");
 
 				for (int bayIdx = 0; bayIdx < HandBayTally; bayIdx++)
 				{
@@ -455,7 +455,7 @@ namespace Civilization1Remaster.Engine
 				{
 					this.owner.Startup.DisplayMouseCursor();
 
-					arg1 = this.owner.Dialogs.DisplayMenu(0xba06, 48, 33, 1);
+					arg1 = this.owner.Dialogs.DisplayMenu(TextBuffer.Address, 48, 33, 1);
 
 					this.owner.Startup.ConcealMouseCursor();
 				}
@@ -469,30 +469,30 @@ namespace Civilization1Remaster.Engine
 					{
 						if (FileError == 0)
 						{
-							this.owner.Libc.CopyText(0xba06, " Game has been saved.\n");
+							this.owner.Words.Set(" Game has been saved.\n");
 						}
 						else
 						{
-							this.owner.Libc.CopyText(0xba06, " Game NOT saved.\n");
+							this.owner.Words.Set(" Game NOT saved.\n");
 
 							this.owner.Services.FloodBox(ScreenBox, 64, 127, 192, 34, 12);
 						}
 
 						if (FileError == 0xd)
 						{
-							this.owner.Libc.AppendText(0xba06, " Write access denied.\n");
+							this.owner.Words.Append(" Write access denied.\n");
 						}
 
 						if (FileError == 0x1c)
 						{
-							this.owner.Libc.AppendText(0xba06, " Disk Full.\n");
+							this.owner.Words.Append(" Disk Full.\n");
 						}
 
-						this.owner.Libc.AppendText(0xba06, " Press key to continue.\n");
+						this.owner.Words.Append(" Press key to continue.\n");
 
 						MenuAnyKey = 0x1;
 
-						this.owner.Dialogs.DisplayMenu(0xba06, 64, 127, 1);
+						this.owner.Dialogs.DisplayMenu(TextBuffer.Address, 64, 127, 1);
 					}
 				}
 			}
@@ -532,11 +532,11 @@ namespace Civilization1Remaster.Engine
 
 			this.owner.TurnHooks.ObtainCurrentYearAsText();
 
-			this.owner.Libc.AppendText(0xba06, "\n ... save in progress.\n");
+			this.owner.Words.Append("\n ... save in progress.\n");
 
 			MenuAnyKey = 0x1;
 
-			this.owner.Dialogs.DisplayMenu(0xba06, 64, 86, 1);
+			this.owner.Dialogs.DisplayMenu(TextBuffer.Address, 64, 86, 1);
 
 			StoreGameContent(this.processor.PullText(CPU.AsLinearAddress(this.processor.SegData.Value16, docnameAddr)));
 
@@ -575,15 +575,15 @@ namespace Civilization1Remaster.Engine
 
 			do
 			{
-				this.owner.Libc.CopyText(0xba06, LoadingGame != 0 ?
+				this.owner.Words.Set(LoadingGame != 0 ?
 					"  Which drive contains your\n    saved game files?\n\n            " :
 					"  Which drive contains your\n     Save Game disk?\n\n            ");
 
-				AppendDriveLetter(0xba05);
+				AppendDriveLetter((ushort)(TextBuffer.Address - 1));
 
-				this.owner.Libc.AppendText(0xba06, ":\n\n    Press drive letter and\nReturn when disk is inserted.\n");
+				this.owner.Words.Append(":\n\n    Press drive letter and\nReturn when disk is inserted.\n");
 
-				this.owner.Libc.AppendText(0xba06, "    Press Escape to cancel.\n");
+				this.owner.Words.Append("    Press Escape to cancel.\n");
 
 				this.owner.BlockText.RenderTextChunk(99, 80, 72, 0);
 
@@ -614,11 +614,11 @@ namespace Civilization1Remaster.Engine
 			{
 				if (VerifyDrive(drive) == 0)
 				{
-					this.owner.Libc.CopyText(0xba06, "No Disk in Drive A.\n");
+					this.owner.Words.Set("No Disk in Drive A.\n");
 
-					AppendDriveLetter(0xba03);
+					AppendDriveLetter((ushort)(TextBuffer.Address - 3));
 
-					this.owner.Dialogs.DisplayMenu(0xba06, 100, 80, 1);
+					this.owner.Dialogs.DisplayMenu(TextBuffer.Address, 100, 80, 1);
 
 					this.processor.RegAcc.Value16 = 0xffff;
 					this.processor.Journal.CloseScope("QueryForStoreDrive");
@@ -638,10 +638,10 @@ namespace Civilization1Remaster.Engine
 			return drive;
 		}
 
-		/// <summary>The letter of the drive (0x4384) is written at the end of the text at 0xba06, place: 0xba05 the last character</summary>
+		/// <summary>The letter of the drive (0x4384) is written at the end of the text at TextBuffer.Address, place: (ushort)(TextBuffer.Address - 1) the last character</summary>
 		private void AppendDriveLetter(ushort place)
 		{
-			this.processor.EmitGlobalByte((ushort)(this.owner.Libc.TextLength(0xba06) + place), (byte)((byte)SaveDrive + 0x41));
+			this.processor.EmitGlobalByte((ushort)(this.owner.Words.Length + place), (byte)((byte)SaveDrive + 0x41));
 		}
 
 		/// <summary>
@@ -1487,8 +1487,8 @@ namespace Civilization1Remaster.Engine
 			}
 			catch (Exception extra)
 			{
-				this.owner.Libc.CopyText(0xba06, extra.Message);
-				this.owner.Dialogs.DisplayMenu(0xba06, 4, 64, 1);
+				this.owner.Words.Set(extra.Message);
+				this.owner.Dialogs.DisplayMenu(TextBuffer.Address, 4, 64, 1);
 
 				victory = false;
 			}

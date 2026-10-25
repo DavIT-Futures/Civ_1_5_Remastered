@@ -25,7 +25,7 @@ namespace Civilization1Remaster.UI
 			this.owner.Libc.CopyText(topicAddr, "*");
 			this.owner.Libc.AppendText(topicAddr, this.owner.Libc.UppercaseText(charsAddr));
 
-			this.processor.EmitGlobalByte(0xba06, 0x0);
+			this.owner.Words.Clear();
 
 			if (this.owner.BlockText.ImportTextFromFile(0x34b2, topicAddr) != 0)
 			{
@@ -124,7 +124,7 @@ namespace Civilization1Remaster.UI
 
 			EmptyMessage()
 				.City((short)townIdx);
-			this.owner.Libc.CopyText(CodeText1, 0xba06);
+			this.owner.Libc.CopyText(CodeText1, TextBuffer.Address);
 
 			if (terrain == 4 && (improvements & 6) == 0)
 			{
@@ -155,7 +155,7 @@ namespace Civilization1Remaster.UI
 
 			if ((this.owner.World.SessionPrefMarkers & 0x1) != 0 && this.owner.World.Season < 0)
 			{
-				this.processor.EmitGlobalByte(0xba06, 0x0);
+				this.owner.Words.Clear();
 
 				ushort lineTally = this.owner.BlockText.ImportTextFromFile(0x34de, charsAddr);
 
@@ -201,7 +201,7 @@ namespace Civilization1Remaster.UI
 
 			if (TurnPlayer == (ushort)this.owner.World.PersonParticipantIdx)
 			{
-				this.processor.EmitGlobalByte(0xba06, 0x0);
+				this.owner.Words.Clear();
 
 				ushort lineTally = this.owner.BlockText.ImportTextFromFile(0x3501, charsAddr);
 

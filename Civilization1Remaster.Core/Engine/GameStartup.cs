@@ -56,11 +56,11 @@ namespace Civilization1Remaster.Engine
 
 				EmptyMessage()
 					.Number((short)this.processor.PullLocalWord(0x4));
-				this.owner.Libc.CopyText(CodeText4, 0xba06);
-				this.processor.EmitGlobalByte(0xba06, 0);
+				this.owner.Libc.CopyText(CodeText4, TextBuffer.Address);
+				this.owner.Words.Clear();
 
 				this.owner.BlockText.DisplayTextDialog(0x270);
-				this.owner.Dialogs.DisplayMenu(0xba06, 64, 49, 1);
+				this.owner.Dialogs.DisplayMenu(TextBuffer.Address, 64, 49, 1);
 			}
 
 			if (VgaMode != 0 && (short)this.processor.PullLocalWord(0x4) < 0x23be)
@@ -371,9 +371,9 @@ namespace Civilization1Remaster.Engine
 			{
 				while (MainMenuChoice == 0xffff)
 				{
-					this.owner.Libc.CopyText(0xba06, " Start a New Game\n Load a Saved Game\n EARTH\n Customize World\n View Hall of Fame\n");
+					this.owner.Words.Set(" Start a New Game\n Load a Saved Game\n EARTH\n Customize World\n View Hall of Fame\n");
 
-					MainMenuChoice = this.owner.Dialogs.DisplayMenu(0xba06, 100, 140, 1);
+					MainMenuChoice = this.owner.Dialogs.DisplayMenu(TextBuffer.Address, 100, 140, 1);
 				}
 
 				AwaitTitleSongMeasure();
@@ -567,9 +567,9 @@ namespace Civilization1Remaster.Engine
 			{
 				this.owner.Services.AssignMousePosition(210, (ushort)(menuVert + 10));
 
-				this.owner.Libc.CopyText(0xba06, choices);
+				this.owner.Words.Set(choices);
 
-				this.processor.EmitGlobalWord(optionAddr, this.owner.Dialogs.DisplayMenu(0xba06, 200, menuVert, 1));
+				this.processor.EmitGlobalWord(optionAddr, this.owner.Dialogs.DisplayMenu(TextBuffer.Address, 200, menuVert, 1));
 
 				if (this.processor.PullGlobalWord(optionAddr) == 0xffff)
 					continue;

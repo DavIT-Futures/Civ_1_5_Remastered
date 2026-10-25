@@ -166,7 +166,7 @@ namespace Civilization1Remaster.UI
 			this.owner.Services.RestoreTimer();
 			this.owner.Services.PerformSound(3, 0);
 
-			this.processor.EmitGlobalByte(0xba06, 0);
+			this.owner.Words.Clear();
 		}
 
 		/// <summary>
@@ -192,18 +192,18 @@ namespace Civilization1Remaster.UI
 
 					if (column == 0x32 || column == 0xa0)
 					{
-						this.processor.EmitGlobalByte(0xba06, 0);
+						this.owner.Words.Clear();
 					}
 					else
 					{
 						if (column == 0xa)
 							this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(ScreenBox + 0x10), 5);
 
-						this.owner.Libc.ScanStream((short)this.owner.GlobD768, "%[^\n]\n", 0xba06);
+						this.owner.Libc.ScanStream((short)this.owner.GlobD768, "%[^\n]\n", TextBuffer.Address);
 					}
 				}
 
-				if (this.owner.Libc.TextLength(0xba06) != 0)
+				if (this.owner.Words.Length != 0)
 					RenderCreditLine();
 
 				FlickerCgaScreen();
@@ -258,12 +258,12 @@ namespace Civilization1Remaster.UI
 						continue;
 
 					if (column == 0x32 || column == 0x74 || column == 0x136)
-						this.processor.EmitGlobalByte(0xba06, 0);
+						this.owner.Words.Clear();
 					else
-						this.owner.Libc.ScanStream((short)this.owner.GlobD768, "%[^\n]\n", 0xba06);
+						this.owner.Libc.ScanStream((short)this.owner.GlobD768, "%[^\n]\n", TextBuffer.Address);
 				}
 
-				if (this.owner.Libc.TextLength(0xba06) != 0)
+				if (this.owner.Words.Length != 0)
 					RenderCreditLine();
 
 				FlickerCgaScreen();
@@ -338,16 +338,16 @@ namespace Civilization1Remaster.UI
 			return MusicColumnMark(start) <= song;
 		}
 
-		/// <summary>The line of the credits (0xba06) in the band at the bottom, with its shadow, drawn into screen 0 too</summary>
+		/// <summary>The line of the credits (TextBuffer.Address) in the band at the bottom, with its shadow, drawn into screen 0 too</summary>
 		private void RenderCreditLine()
 		{
 			ushort screen = ScreenBox;
 			this.processor.EmitLocalWord(IntroSavedFlag, this.processor.PullUInt16(this.processor.SegData.Value16, screen));
 			this.processor.EmitUInt16(this.processor.SegData.Value16, screen, 1);
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 184, (ushort)(VgaMode != 0 ? 0xfc : 0x7));
-			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 182, (ushort)(VgaMode != 0 ? 0xf8 : 0xf));
-			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 183, (ushort)(VgaMode != 0 ? 0xfa : 0xf));
+			this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 160, 184, (ushort)(VgaMode != 0 ? 0xfc : 0x7));
+			this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 160, 182, (ushort)(VgaMode != 0 ? 0xf8 : 0xf));
+			this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 160, 183, (ushort)(VgaMode != 0 ? 0xfa : 0xf));
 
 			screen = ScreenBox;
 			this.processor.EmitUInt16(this.processor.SegData.Value16, screen, this.processor.PullLocalWord(IntroSavedFlag));
@@ -600,28 +600,28 @@ namespace Civilization1Remaster.UI
 				.Text(" ");
 
 			ushort person = (ushort)this.owner.World.PersonParticipantIdx;
-			this.owner.Libc.AppendText(0xba06, LeaderName(person));
-			this.owner.Libc.CopyText(CodeText1, 0xba06);
+			this.owner.Words.Append(LeaderName(person));
+			this.owner.Libc.CopyText(CodeText1, TextBuffer.Address);
 
 			this.owner.Libc.CopyText(CodeText2,
 				CivilizationName((ushort)participantIdx));
 
 			EmptyMessage()
 				.Number(this.owner.World.Participants[participantIdx].StarshipInhabitants);
-			this.owner.Libc.CopyText(CodeText3, 0xba06);
+			this.owner.Libc.CopyText(CodeText3, TextBuffer.Address);
 
 			EmptyMessage()
 				.Number(this.owner.World.Participants[participantIdx].StarshipLiftoffSeason);
-			this.owner.Libc.CopyText(CodeText4, 0xba06);
+			this.owner.Libc.CopyText(CodeText4, TextBuffer.Address);
 
 			EmptyMessage()
 				.Number(this.owner.World.Season);
-			this.owner.Libc.CopyText(CodeText5, 0xba06);
+			this.owner.Libc.CopyText(CodeText5, TextBuffer.Address);
 
 			this.owner.BlockText.ImportTextFromFile(0x3301,
 				(ushort)((participantIdx != this.owner.World.PersonParticipantIdx) ? 0x32f9 : 0x32f2));
 			this.owner.BlockText.ReflowText();
-			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - ScreenText), 0xba06);
+			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - ScreenText), TextBuffer.Address);
 
 			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(ScreenBox + 0x10), 6);
 			this.processor.EmitLocalWord(ScreenStarHoriz, 0xfff6);
@@ -630,11 +630,11 @@ namespace Civilization1Remaster.UI
 			this.processor.EmitLocalWord(ScreenPartEnd, this.processor.RegAcc.Value16);
 			this.processor.EmitLocalWord(ScreenPartBegin, this.processor.RegAcc.Value16);
 
-			this.processor.EmitLocalWord(ScreenTextLength, this.owner.Libc.TextLength(0xba06));
+			this.processor.EmitLocalWord(ScreenTextLength, this.owner.Words.Length);
 
 			this.owner.Services.PerformSound(3, 0);
 
-			this.processor.EmitGlobalByte(0xba06, 0);
+			this.owner.Words.Clear();
 		}
 
 		/// <summary>
@@ -660,7 +660,7 @@ namespace Civilization1Remaster.UI
 				}
 
 				if ((short)this.processor.PullLocalWord(ScreenColumn) % 0x16 == 0)
-					CutNextTextPart(0xba06);
+					CutNextTextPart(TextBuffer.Address);
 
 				short textLength = (short)this.processor.PullLocalWord(ScreenTextLength);
 
@@ -673,7 +673,7 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// The next part of the text at the address (0xba06, or the frame copy at bp - 0x200 through the stack segment):
+		/// The next part of the text at the address (TextBuffer.Address, or the frame copy at bp - 0x200 through the stack segment):
 		/// from after the end of the last part up to "^" (made the end of the text) or the end of the whole text
 		/// </summary>
 		private void CutNextTextPart(ushort text)
@@ -691,7 +691,7 @@ namespace Civilization1Remaster.UI
 					break;
 			}
 
-			if (text == 0xba06)
+			if (text == TextBuffer.Address)
 			{
 				if ((short)end < (short)this.processor.PullLocalWord(ScreenTextLength))
 					EmitTextByte(text, end, 0);
@@ -706,18 +706,18 @@ namespace Civilization1Remaster.UI
 			}
 		}
 
-		/// <summary>A letter of the text in the data segment (0xba06) or of the copy in the frame</summary>
+		/// <summary>A letter of the text in the data segment (TextBuffer.Address) or of the copy in the frame</summary>
 		private byte PullTextByte(ushort text, ushort idx)
 		{
-			return text == 0xba06
-				? this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(idx + 0xba06))
+			return text == TextBuffer.Address
+				? this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(idx + TextBuffer.Address))
 				: this.processor.PullUInt8(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + idx - ScreenText));
 		}
 
 		private void EmitTextByte(ushort text, ushort idx, byte letter)
 		{
-			if (text == 0xba06)
-				this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(idx + 0xba06), letter);
+			if (text == TextBuffer.Address)
+				this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(idx + TextBuffer.Address), letter);
 			else
 				this.processor.EmitUInt8(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + idx - ScreenText), letter);
 		}
@@ -730,10 +730,10 @@ namespace Civilization1Remaster.UI
 			this.processor.EmitUInt16(this.processor.SegData.Value16, screen, 1);
 
 			ushort hue = (ushort)(VgaMode != 0 ? 0x38 : 0x7);
-			this.owner.TextPainter.RenderCenteredTextToScreen0((ushort)(0xba06 + this.processor.PullLocalWord(ScreenPartBegin)), 160, 184, hue);
+			this.owner.TextPainter.RenderCenteredTextToScreen0((ushort)(TextBuffer.Address + this.processor.PullLocalWord(ScreenPartBegin)), 160, 184, hue);
 
 			hue = (ushort)(VgaMode != 0 ? 0x3c : 0xf);
-			this.owner.TextPainter.RenderCenteredTextToScreen0((ushort)(0xba06 + this.processor.PullLocalWord(ScreenPartBegin)), 160, 183, hue);
+			this.owner.TextPainter.RenderCenteredTextToScreen0((ushort)(TextBuffer.Address + this.processor.PullLocalWord(ScreenPartBegin)), 160, 183, hue);
 
 			screen = ScreenBox;
 			this.processor.EmitUInt16(this.processor.SegData.Value16, screen, this.processor.PullLocalWord(ScreenSavedFlag));
@@ -827,7 +827,7 @@ namespace Civilization1Remaster.UI
 			this.processor.EmitUInt16(this.processor.SegData.Value16, ScreenBox, 0);
 			this.owner.Services.DisplayScreen(0);
 
-			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - ScreenText), (ushort)(this.processor.PullLocalWord(ScreenPartEnd) + 0xba07));
+			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - ScreenText), (ushort)(this.processor.PullLocalWord(ScreenPartEnd) + (ushort)(TextBuffer.Address + 1)));
 
 			ushort shown = (ushort)(this.processor.PullLocalWord(ScreenPartEnd) + 1);
 			this.processor.EmitLocalWord(ScreenTextLength, (ushort)(this.processor.PullLocalWord(ScreenTextLength) - shown));
@@ -972,23 +972,23 @@ namespace Civilization1Remaster.UI
 
 			short humanIdx = this.owner.World.PersonParticipantIdx;
 
-			this.owner.Libc.CopyText(0xba06, LeaderName(humanIdx));
-			this.owner.Libc.UppercaseText(0xba06);
-			this.owner.Libc.CopyText(CodeText1, 0xba06);
+			this.owner.Words.Set(LeaderName(humanIdx));
+			this.owner.Libc.UppercaseText(TextBuffer.Address);
+			this.owner.Libc.CopyText(CodeText1, TextBuffer.Address);
 
-			this.owner.Libc.CopyText(0xba06, "Irrigation");
+			this.owner.Words.Set("Irrigation");
 
 			for (short technologyIdx = 0; technologyIdx < 0x48; technologyIdx++)
 			{
 				if (this.owner.Advisors.PlayerKnowsTechnology(humanIdx, technologyIdx) != 0)
 				{
-					this.owner.Libc.CopyText(0xba06, TechnologyText(technologyIdx));
+					this.owner.Words.Set(TechnologyText(technologyIdx));
 				}
 			}
 
-			this.owner.Libc.CopyText(CodeText4, 0xba06);
+			this.owner.Libc.CopyText(CodeText4, TextBuffer.Address);
 
-			this.processor.EmitGlobalByte(0xba06, 0);
+			this.owner.Words.Clear();
 
 			this.owner.BlockText.ImportTextFromFile(0x3348, 0x3342);
 
@@ -996,22 +996,22 @@ namespace Civilization1Remaster.UI
 
 			this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 6);
 
-			short end = (short)this.owner.Libc.TextLength(0xba06);
+			short end = (short)this.owner.Words.Length;
 			short place = -1;
 
 			do
 			{
-				ushort partAddr = (ushort)(0xba06 + place + 1);
+				ushort partAddr = (ushort)(TextBuffer.Address + place + 1);
 
 				do
 				{
 					place++;
-				} while (this.processor.PullGlobalByte((ushort)(0xba06 + place)) != 0x5e && place < end);
+				} while (this.owner.Words[place] != 0x5e && place < end);
 
 				if (place >= end)
 					break;
 
-				this.processor.EmitGlobalByte((ushort)(0xba06 + place), 0);
+				this.processor.EmitGlobalByte((ushort)(TextBuffer.Address + place), 0);
 
 				this.owner.VideoCard.RenderImage(BackScreenBox, 0, 6, 0x140, 0x14, ScreenBox, 0, 6);
 
@@ -1031,7 +1031,7 @@ namespace Civilization1Remaster.UI
 
 				this.owner.TextPainter.RenderCenteredTextToScreen0(partAddr, 160, 8, hue);
 
-				if (this.processor.PullGlobalByte((ushort)(0xba05 + place)) != 0x21 && this.owner.Libc.KeyAvailable() == 0)
+				if (this.owner.Words[place - 1] != 0x21 && this.owner.Libc.KeyAvailable() == 0)
 				{
 					this.owner.TextPainter.AwaitTime(200);
 				}
@@ -1079,16 +1079,16 @@ namespace Civilization1Remaster.UI
 				ushort terrain = this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
 
 				// Terrain names of 0x13 bytes at 0x282, names of their special resources at 0x366
-				this.owner.Libc.CopyText(0xba06, TerrainText(terrain));
+				this.owner.Words.Set(TerrainText(terrain));
 
 				if (this.owner.MapOps.ContainsSpecialResource(horizLoc, vertLoc) != 0)
 				{
-					this.owner.Libc.CopyText(0xba06, (ushort)((terrain * 0x13) + 0x366));
+					this.owner.Words.Set((ushort)((terrain * 0x13) + 0x366));
 				}
 
 				if (this.owner.MapOps.ContainsHut(terrain, horizLoc, vertLoc) != 0)
 				{
-					this.owner.Libc.CopyText(0xba06, "Village");
+					this.owner.Words.Set("Village");
 				}
 
 				this.processor.RegSource.Value16 = (ushort)(heading << 1);
@@ -1097,15 +1097,15 @@ namespace Civilization1Remaster.UI
 					(chart.DirectionHoriz(heading) << 6) + 170, (chart.DirectionVert(heading) * 48) + 100);
 			}
 
-			this.owner.Libc.CopyText(0xba06, "Menu Bar");
+			this.owner.Words.Set("Menu Bar");
 
 			RenderTutorialPointer(160, 6, 200, 16);
 
-			this.owner.Libc.CopyText(0xba06, "Map Window");
+			this.owner.Words.Set("Map Window");
 
 			RenderTutorialPointer(48, 32, 88, 24);
 
-			this.owner.Libc.CopyText(0xba06, "Active Unit");
+			this.owner.Words.Set("Active Unit");
 
 			RenderTutorialPointer(40, 128, 88, 170);
 
@@ -1119,7 +1119,7 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// A tutorial hint: a line (colour 15) from the pointed place to the text, then the text at 0xba06 as a dialog
+		/// A tutorial hint: a line (colour 15) from the pointed place to the text, then the text at TextBuffer.Address as a dialog
 		/// </summary>
 		public void RenderTutorialPointer(int horizSpot1, int vertSpot1, int horizSpot2, int vertSpot2)
 		{
@@ -1127,11 +1127,11 @@ namespace Civilization1Remaster.UI
 
 			this.owner.VideoCard.RenderLine(ScreenBox, horizSpot1, vertSpot1, horizSpot2, vertSpot2 + 6, 15);
 
-			this.owner.Libc.AppendText(0xba06, "\n");
+			this.owner.Words.Append("\n");
 
 			this.processor.EmitGlobalWord(0xdb38, 0x1);
 
-			this.owner.Dialogs.DisplayMenu(0xba06, horizSpot2, vertSpot2, 1);
+			this.owner.Dialogs.DisplayMenu(TextBuffer.Address, horizSpot2, vertSpot2, 1);
 
 			this.processor.Journal.CloseScope("RenderTutorialPointer");
 		}

@@ -13,7 +13,7 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <summary>
-		/// Breaks the text at 0xba06 into lines of the width (in characters): a space after the width becomes a line break
+		/// Breaks the text at TextBuffer.Address into lines of the width (in characters): a space after the width becomes a line break
 		/// (unless a space follows), "^" becomes a space with a line break after it (over the next character); a line break
 		/// is added at the end of a text that does not end with one
 		/// </summary>
@@ -23,7 +23,7 @@ namespace Civilization1Remaster.Engine
 
 			short column = 0;
 
-			for (ushort place = 0xba06; (short)this.owner.Libc.TextLength(0xba06) > (short)(place - 0xba06); place++)
+			for (ushort place = TextBuffer.Address; (short)this.owner.Words.Length > (short)(place - TextBuffer.Address); place++)
 			{
 				if (this.processor.PullGlobalByte(place) == '^')
 				{
@@ -48,14 +48,14 @@ namespace Civilization1Remaster.Engine
 
 			if (column > 0)
 			{
-				this.owner.Libc.AppendText(0xba06, "\n");
+				this.owner.Words.Append("\n");
 			}
 
 			this.processor.Journal.CloseScope("ArrangeTextRow");
 		}
 
 		/// <summary>
-		/// Draws the text at 0xba06 in lines of at most peakBreadth * 8 pixels, from vertLoc down while the lines start at most at
+		/// Draws the text at TextBuffer.Address in lines of at most peakBreadth * 8 pixels, from vertLoc down while the lines start at most at
 		/// row 192: a line ends at the last space, line break or "^" before it gets too wide (or at a line break or "^", which also
 		/// skips the character after a "^"). Returns the row below the last drawn line.
 		/// </summary>
@@ -68,9 +68,9 @@ namespace Civilization1Remaster.Engine
 			short lineBreadth = 0;
 			ushort lineHeight = this.owner.VideoCard.ObtainTextHeight(this.processor.PullGlobalWord((ushort)(ScreenBox + 0x10)));
 
-			for (ushort place = 0; (short)this.owner.Libc.TextLength(0xba06) > (short)place; place++)
+			for (ushort place = 0; (short)this.owner.Words.Length > (short)place; place++)
 			{
-				byte chr = this.processor.PullGlobalByte((ushort)(0xba06 + place));
+				byte chr = this.owner.Words[place];
 
 				lineBreadth += (short)this.owner.VideoCard.ObtainCharWidth(this.processor.PullGlobalWord((ushort)(ScreenBox + 0x10)), chr);
 
@@ -83,18 +83,18 @@ namespace Civilization1Remaster.Engine
 					continue;
 
 				// The line ends at the last break: draw it alone
-				ushort breakAddr = (ushort)(0xba06 + lastBreak);
+				ushort breakAddr = (ushort)(TextBuffer.Address + lastBreak);
 				byte broken = this.processor.PullGlobalByte(breakAddr);
 
 				this.processor.EmitGlobalByte(breakAddr, 0);
-				this.owner.TextPainter.RenderTextToScreen0((ushort)(0xba06 + lineStart), horizLoc, vertLoc, style);
+				this.owner.TextPainter.RenderTextToScreen0((ushort)(TextBuffer.Address + lineStart), horizLoc, vertLoc, style);
 				this.processor.EmitGlobalByte(breakAddr, broken);
 
 				vertLoc += (short)lineHeight;
 				lineBreadth = 0;
 				lineStart = (ushort)(lastBreak + 1);
 
-				if (this.processor.PullGlobalByte((ushort)(0xba06 + place)) == 0x5e)
+				if (this.owner.Words[place] == 0x5e)
 				{
 					lineStart++;
 				}
@@ -108,7 +108,7 @@ namespace Civilization1Remaster.Engine
 			// The rest (lineBreadth is 0 after a full page)
 			if (lineBreadth > 0 && vertLoc <= 192)
 			{
-				this.owner.TextPainter.RenderTextToScreen0((ushort)(0xba06 + lineStart), horizLoc, vertLoc, style);
+				this.owner.TextPainter.RenderTextToScreen0((ushort)(TextBuffer.Address + lineStart), horizLoc, vertLoc, style);
 
 				vertLoc += (short)lineHeight;
 			}
@@ -121,7 +121,7 @@ namespace Civilization1Remaster.Engine
 
 		/// <summary>
 		/// Appends the text of the topic charsAddr from the text file (lines after the "*TOPIC" line up to the next "*" line,
-		/// joined with spaces, without trailing spaces and '^') to 0xba06. The file starts with an index of 256 words, by a
+		/// joined with spaces, without trailing spaces and '^') to TextBuffer.Address. The file starts with an index of 256 words, by a
 		/// hash of the topic (the low byte of the sum of character * position): a word above 0x1ff (not "00") is the offset of the
 		/// topic line, a wrong topic tries the next hash. Without an index entry, the topic is searched from 0x200 and its offset
 		/// written into the index.
@@ -223,9 +223,9 @@ namespace Civilization1Remaster.Engine
 
 				do
 				{
-					this.owner.Libc.AppendText(0xba06, line);
+					this.owner.Words.Append(line);
 
-					this.owner.Libc.AppendText(0xba06, " ");
+					this.owner.Words.Append(" ");
 
 					this.owner.Libc.ScanStream((short)handle, "%[^\n]\n", line);
 
@@ -234,9 +234,9 @@ namespace Civilization1Remaster.Engine
 				while (this.processor.PullGlobalByte(line) != '*');
 
 				// Let's try to trim the dialog text, and fix the bug with unecessary lines in dialogs
-				string feed = this.processor.PullText(CPU.AsLinearAddress(this.owner.Processor.SegData.Value16, 0xba06));
+				string feed = this.processor.PullText(CPU.AsLinearAddress(this.owner.Processor.SegData.Value16, TextBuffer.Address));
 				feed = feed.TrimEnd(new char[] { ' ', '^' });
-				this.processor.EmitText(CPU.AsLinearAddress(this.owner.Processor.SegData.Value16, 0xba06), feed, feed.Length);
+				this.processor.EmitText(CPU.AsLinearAddress(this.owner.Processor.SegData.Value16, TextBuffer.Address), feed, feed.Length);
 			}
 
 			this.owner.Libc.CloseStream((short)handle);
@@ -290,7 +290,7 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <summary>
-		/// Replaces in the text at 0xba06 every occurrence of the 5 codes (texts pointed to by 0x30ae + 2 * code) by their
+		/// Replaces in the text at TextBuffer.Address every occurrence of the 5 codes (texts pointed to by 0x30ae + 2 * code) by their
 		/// texts (0x30b8 + 2 * code), one code after the other. The rest of the text waits in a buffer in the stack frame,
 		/// like in the original.
 		/// </summary>
@@ -309,7 +309,7 @@ namespace Civilization1Remaster.Engine
 
 				while (true)
 				{
-					this.owner.Libc.FindSubtext(0xba06, code);
+					this.owner.Libc.FindSubtext(TextBuffer.Address, code);
 
 					ushort found = this.processor.RegAcc.Value16;
 
@@ -318,8 +318,8 @@ namespace Civilization1Remaster.Engine
 
 					this.owner.Libc.CopyText(rest, found);
 					this.processor.EmitGlobalByte(found, 0);
-					this.owner.Libc.AppendText(0xba06, replacement);
-					this.owner.Libc.AppendText(0xba06, (ushort)(rest + this.owner.Libc.TextLength(code)));
+					this.owner.Words.Append(replacement);
+					this.owner.Words.Append((ushort)(rest + this.owner.Libc.TextLength(code)));
 				}
 			}
 

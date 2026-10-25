@@ -91,14 +91,14 @@ namespace Civilization1Remaster.UI
 				DisabledLines = 0x10;
 			}
 
-			this.owner.Libc.CopyText(0xba06, " Tax Rate\n Luxuries Rate\n FindCity\n Options\n Save Game\n Load Game\n REVOLUTION!\n \n Retire\n QUIT to DOS\n");
+			this.owner.Words.Set(" Tax Rate\n Luxuries Rate\n FindCity\n Options\n Save Game\n Load Game\n REVOLUTION!\n \n Retire\n QUIT to DOS\n");
 
 			if ((this.owner.World.StarshipMarkers & 0x100) != 0)
 			{
-				this.owner.Libc.AppendText(0xba06, " View Replay\n");
+				this.owner.Words.Append(" View Replay\n");
 			}
 
-			ushort choice = this.owner.Dialogs.DisplayMenu(0xba06, 16, 8, 0);
+			ushort choice = this.owner.Dialogs.DisplayMenu(TextBuffer.Address, 16, 8, 0);
 
 			this.owner.TurnLogic.AwaitForKey();
 
@@ -166,7 +166,7 @@ namespace Civilization1Remaster.UI
 		/// </summary>
 		private void ChooseOptions()
 		{
-			this.owner.Libc.CopyText(0xba06, "Options:\n Instant Advice\n AutoSave\n End of Turn\n Animations\n Sound\n Enemy Moves\n Civilopedia Text\n Palace\n");
+			this.owner.Words.Set("Options:\n Instant Advice\n AutoSave\n End of Turn\n Animations\n Sound\n Enemy Moves\n Civilopedia Text\n Palace\n");
 
 			ushort choice;
 
@@ -174,7 +174,7 @@ namespace Civilization1Remaster.UI
 			{
 				MenuOptions = (ushort)this.owner.World.SessionPrefMarkers;
 
-				choice = this.owner.Dialogs.DisplayMenu(0xba06, 24, 16, 0);
+				choice = this.owner.Dialogs.DisplayMenu(TextBuffer.Address, 24, 16, 0);
 
 				if (choice != 0xffff)
 				{
@@ -221,7 +221,7 @@ namespace Civilization1Remaster.UI
 			UnitMemory troops = new UnitMemory(this.processor);
 			List<byte> keys = new List<byte>();
 
-			this.processor.EmitGlobalByte(0xba06, 0x0);
+			this.owner.Words.Clear();
 
 			short horizLoc = troops.Pull(participantIdx, troopIdx, UnitMemory.Horiz);
 			short vertLoc = troops.Pull(participantIdx, troopIdx, UnitMemory.Vert);
@@ -230,7 +230,7 @@ namespace Civilization1Remaster.UI
 
 			ushort terrain = this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
 
-			this.owner.Libc.AppendText(0xba06, " No Orders \x008fspace\n");
+			this.owner.Words.Append(" No Orders \x008fspace\n");
 			keys.Add(0x20);
 
 			DisabledLines = 0x0;
@@ -238,17 +238,17 @@ namespace Civilization1Remaster.UI
 			if (troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) == 0)
 			{
 				// Settlers
-				this.owner.Libc.AppendText(0xba06, (improvements & 1) != 0 ? (ushort)0x2cbc : (ushort)0x2ccd);
+				this.owner.Words.Append((improvements & 1) != 0 ? (ushort)0x2cbc : (ushort)0x2ccd);
 				keys.Add(0x62);
 
 				if ((improvements & 0x8) == 0)
 				{
-					this.owner.Libc.AppendText(0xba06, " Build Road \x008fr\n");
+					this.owner.Words.Append(" Build Road \x008fr\n");
 					keys.Add(0x72);
 				}
 				else if ((improvements & 0x10) == 0 && this.owner.Advisors.PlayerKnowsTechnology(participantIdx, 0x31) != 0)
 				{
-					this.owner.Libc.AppendText(0xba06, " Build RailRoad \x008fr\n");
+					this.owner.Words.Append(" Build RailRoad \x008fr\n");
 					keys.Add(0x72);
 				}
 
@@ -258,7 +258,7 @@ namespace Civilization1Remaster.UI
 
 					if (this.processor.PullGlobalWord(irrigation) == 0xfffe)
 					{
-						this.owner.Libc.AppendText(0xba06, " Build Irrigation");
+						this.owner.Words.Append(" Build Irrigation");
 
 						if (this.owner.TurnLogic.VerifyCoastalTile(horizLoc, vertLoc) == 0)
 						{
@@ -273,7 +273,7 @@ namespace Civilization1Remaster.UI
 					if (this.processor.PullGlobalWord(irrigation) != 0xffff)
 					{
 						keys.Add(0x69);
-						this.owner.Libc.AppendText(0xba06, " \x008fi\n");
+						this.owner.Words.Append(" \x008fi\n");
 					}
 				}
 
@@ -283,7 +283,7 @@ namespace Civilization1Remaster.UI
 
 					if ((short)this.processor.PullGlobalWord(mining) <= -2)
 					{
-						this.owner.Libc.AppendText(0xba06, 0x2d28);
+						this.owner.Words.Append(0x2d28);
 					}
 					else if ((short)this.processor.PullGlobalWord(mining) >= 0)
 					{
@@ -293,20 +293,20 @@ namespace Civilization1Remaster.UI
 					if (this.processor.PullGlobalWord(mining) != 0xffff)
 					{
 						keys.Add(0x6d);
-						this.owner.Libc.AppendText(0xba06, " \x008fm\n");
+						this.owner.Words.Append(" \x008fm\n");
 					}
 				}
 
 				if ((improvements & 0x40) != 0)
 				{
-					this.owner.Libc.AppendText(0xba06, " Clean up Pollution \x008fp\n");
+					this.owner.Words.Append(" Clean up Pollution \x008fp\n");
 					keys.Add(0x70);
 				}
 			}
 
 			if (troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) == 0)
 			{
-				this.owner.Libc.AppendText(0xba06, " Build Fortress \x008ff\n");
+				this.owner.Words.Append(" Build Fortress \x008ff\n");
 
 				if (this.owner.Advisors.PlayerKnowsTechnology(participantIdx, 0x2d) == 0)
 				{
@@ -315,7 +315,7 @@ namespace Civilization1Remaster.UI
 			}
 			else if (troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == 0)
 			{
-				this.owner.Libc.AppendText(0xba06, " Fortify \x008ff\n");
+				this.owner.Words.Append(" Fortify \x008ff\n");
 			}
 
 			if (troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == 0)
@@ -323,7 +323,7 @@ namespace Civilization1Remaster.UI
 				keys.Add(0x66);
 			}
 
-			this.owner.Libc.AppendText(0xba06, " Wait \x008fw\n Sentry \x008fs\n GoTo\n");
+			this.owner.Words.Append(" Wait \x008fw\n Sentry \x008fs\n GoTo\n");
 			keys.Add(0x77);
 			keys.Add(0x73);
 			keys.Add(0x67);
@@ -334,29 +334,29 @@ namespace Civilization1Remaster.UI
 
 				if (kind < 0x1a && kind != 0xe)
 				{
-					this.owner.Libc.AppendText(0xba06, " Pillage \x008fP\n");
+					this.owner.Words.Append(" Pillage \x008fP\n");
 					keys.Add(0x50);
 				}
 			}
 
 			if ((improvements & 0x1) != 0)
 			{
-				this.owner.Libc.AppendText(0xba06, " Home City \x008fh\n");
+				this.owner.Words.Append(" Home City \x008fh\n");
 				keys.Add(0x68);
 			}
 
 			if ((troops.KindField(participantIdx, troopIdx, UnitKindTable.TroopGroup) == 5 || troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) == 0x17) &&
 				troops.Pull(participantIdx, troopIdx, UnitMemory.FollowingInStack) != 0xff)
 			{
-				this.owner.Libc.AppendText(0xba06, " Unload \x008fu\n");
+				this.owner.Words.Append(" Unload \x008fu\n");
 				keys.Add(0x75);
 			}
 
-			this.owner.Libc.AppendText(0xba06, " \n Disband Unit \x008fD\n");
+			this.owner.Words.Append(" \n Disband Unit \x008fD\n");
 			keys.Add(0x0);
 			keys.Add(0x44);
 
-			short choice = (short)this.owner.Dialogs.DisplayMenu(0xba06, 72, 8, 0);
+			short choice = (short)this.owner.Dialogs.DisplayMenu(TextBuffer.Address, 72, 8, 0);
 
 			ChosenOrder = choice >= 0 && choice < keys.Count ? (ushort)(short)(sbyte)keys[choice] : (ushort)0xffff;
 		}
@@ -364,9 +364,9 @@ namespace Civilization1Remaster.UI
 		/// <summary>" Change to " and the name of the terrain the work makes (the word at the address)</summary>
 		private void AppendChangeOfTerrain(ushort work)
 		{
-			this.owner.Libc.AppendText(0xba06, " Change to ");
+			this.owner.Words.Append(" Change to ");
 
-			this.owner.Libc.AppendText(0xba06,
+			this.owner.Libc.AppendText(TextBuffer.Address,
 				TerrainText(this.processor.PullGlobalWord((ushort)((this.processor.PullGlobalWord(work) << 1) + 0x2ba6))));
 		}
 
@@ -381,7 +381,7 @@ namespace Civilization1Remaster.UI
 			Message(" City Status (F1)\n Military Advisor (F2)\n Intelligence Advisor (F3)\n Attitude Advisor (F4)\n")
 				.Text(" Trade Advisor (F5)\n Science Advisor (F6)\n");
 
-			ushort choice = this.owner.Dialogs.DisplayMenu(0xba06, 112, 8, 0);
+			ushort choice = this.owner.Dialogs.DisplayMenu(TextBuffer.Address, 112, 8, 0);
 
 			RestoreMenuScreen();
 
@@ -454,7 +454,7 @@ namespace Civilization1Remaster.UI
 			Message(" Wonders of the World (F7)\n Top 5 Cities (F8)\n Civilization Score (F9)\n")
 				.Text(" World Map (F10)\n Demographics\n SpaceShips\n");
 
-			ushort choice = this.owner.Dialogs.DisplayMenu(0xba06, 144, 8, 0);
+			ushort choice = this.owner.Dialogs.DisplayMenu(TextBuffer.Address, 144, 8, 0);
 
 			RestoreMenuScreen();
 
@@ -498,7 +498,7 @@ namespace Civilization1Remaster.UI
 			Message(" Complete\n Civilization Advances\n City Improvements\n Military Units\n Terrain Types\n")
 				.Text(" Miscellaneous\n");
 
-			ushort choice = this.owner.Dialogs.DisplayMenu(0xba06, 182, 8, 0);
+			ushort choice = this.owner.Dialogs.DisplayMenu(TextBuffer.Address, 182, 8, 0);
 
 			if (choice != 0xffff)
 			{

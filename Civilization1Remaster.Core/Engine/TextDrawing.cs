@@ -51,8 +51,8 @@ namespace Civilization1Remaster.Engine
 
 		public void RenderTextToScreen0(string text, int horizLoc, int vertLoc, ushort style)
 		{
-			this.owner.Libc.CopyText(0xba06, text);
-			RenderTextToScreen0(0xba06, horizLoc, vertLoc, style);
+			this.owner.Words.Set(text);
+			RenderTextToScreen0(TextBuffer.Address, horizLoc, vertLoc, style);
 		}
 
 		/// <summary>
@@ -88,8 +88,8 @@ namespace Civilization1Remaster.Engine
 
 		public void RenderCenteredTextToScreen0(string text, int horizLoc, int vertLoc, ushort style)
 		{
-			this.owner.Libc.CopyText(0xba06, text);
-			RenderCenteredTextToScreen0(0xba06, horizLoc, vertLoc, style);
+			this.owner.Words.Set(text);
+			RenderCenteredTextToScreen0(TextBuffer.Address, horizLoc, vertLoc, style);
 		}
 
 		/// <summary>

@@ -779,11 +779,11 @@ namespace Civilization1Remaster.Game
 				if (participantIdx == this.owner.World.PersonParticipantIdx && UnitLimitTold == 0)
 				{
 					DialogStyle = 0x3;
-					this.processor.EmitGlobalByte(0xba06, 0x0);
+					this.owner.Words.Clear();
 
 					this.owner.BlockText.DisplayTextDialog(0x2126);
 
-					this.owner.TurnHooks.DisplayDialog(0xba06, 80, 64);
+					this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 80, 64);
 
 					UnitLimitTold = 0x1;
 				}
@@ -1711,11 +1711,11 @@ namespace Civilization1Remaster.Game
 		/// <summary>The text of the hut, shown to the human player</summary>
 		private void AnnounceHut(short participantIdx, string text)
 		{
-			this.owner.Libc.CopyText(0xba06, text);
+			this.owner.Words.Set(text);
 
 			if (participantIdx == this.owner.World.PersonParticipantIdx)
 			{
-				this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+				this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 80);
 			}
 		}
 
@@ -1997,19 +1997,19 @@ namespace Civilization1Remaster.Game
 			{
 				this.owner.MapOps.RenderUnitSprite(participantIdx, present, 106, lineTop);
 
-				this.owner.Libc.CopyText(0xba06, (ushort)(UnitKindTable.Origin + (UnitKindTable.Stride * this.troops.TroopKind(participantIdx, present))));
+				this.owner.Words.Set((ushort)(UnitKindTable.Origin + (UnitKindTable.Stride * this.troops.TroopKind(participantIdx, present))));
 
 				if ((this.troops.Pull(participantIdx, present, UnitMemory.Status) & (int)UnitStatusEnum.Veteran) != 0)
 				{
-					this.owner.Libc.AppendText(0xba06, " (V)");
+					this.owner.Words.Append(" (V)");
 				}
 
-				this.owner.TextPainter.RenderTextToScreen0(0xba06, 128, lineTop, 15);
+				this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 128, lineTop, 15);
 
 				EmptyMessage()
 					.City(this.troops.PullSigned(participantIdx, present, UnitMemory.BaseTown));
 
-				this.owner.TextPainter.RenderTextToScreen0(0xba06, 128, lineTop + 8, 14);
+				this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 128, lineTop + 8, 14);
 
 				present = this.troops.Following(participantIdx, present);
 				lineTop += 0x10;

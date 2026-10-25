@@ -181,6 +181,16 @@ Kolejność (każdy krok osobno zielony; pamięć 0x3b01 długo zostaje jako mag
 - **B6.1 – teksty.** Bufor 0xba06 i funkcje C runtime na adresach (`CopyText`, `AppendText`, `IntegerToText`) → `string` /
   `StringBuilder`; rysowanie tekstu (`TextPainter`, `BlockText`) przyjmuje `string`. Kody tekstów (`CodeText1` – `5`)
   i tabele nazw (B5) zwracają `string`. Duże, ale mechaniczne; projekcja potrzebna, bo bufor jest w `mem.`.
+  **B6.1, część 1 – szew (2026-10-25):** `Engine/TextBuffer.cs` (`GameEngine.Words`): `Set`, `Append` (string albo
+  adres), `Clear`, `Length`, indeks bajtów, `ToString`, stała `Address`. Na razie przez te same funkcje C runtime co
+  wcześniej (bajty w pamięci i AX bez zmian). Przez niego przechodzą: 124 `CopyText(0xba06, …)`, 390 `AppendText`,
+  72 zerowania, 28 `TextLength` (dwa tylko dla AX: `_ = Words.Length`), 41 bajtów (także 0xba05 – 0xba58 jako
+  `Words[k]`), 427 przekazań adresu (`TextBuffer.Address ± k`); `GameMessage` też. W Core nie ma już literału 0xba06.
+  Pełny zestaw 770/770, mutacje 8 / 8 (golden master; `DialogsMatchOriginalCode` nie przechodzi przez `Set` / `Append`).
+  **Część 2 (następna):** przenieść magazyn do C# – `byte[]` bufora z semantyką strcpy / strcat (bajty za zerem zostają,
+  jak w pamięci), wpis w `MovedData` (adres 0xba06, długość bufora) i odczyty przez adres (`TextPainter`,
+  `DisplayDialog`, `DisplayMenu`, `BlockText`, `ReadHandle` / `WriteHandle` / `MoveFarData` – plik przez bufor) –
+  każdy, kto dostaje `TextBuffer.Address`, musi czytać z C#. Długość bufora ustalić z kodu (najdłuższy tekst / plik).
 - **B6.2 – jednostki.** `UnitMemory` to już jedyny szew: magazyn → tablica C# (rekord 12 bajtów jako struktura) +
   projekcja 0x81d4 dla migawki i zapisu gry; potem `GameState.Participants[].Troops` (dziś tylko kopia z wczytania)
   staje się prawdziwym stanem.

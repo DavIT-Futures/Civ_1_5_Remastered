@@ -24,16 +24,16 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope("DisplayWhichArmy()");
 
-			this.owner.Libc.CopyText(0xba06, "Which army?\n ");
+			this.owner.Words.Set("Which army?\n ");
 
 			for (int participantIdx = 1; participantIdx < 8; participantIdx++)
 			{
-				this.owner.Libc.AppendText(0xba06, CivilizationName(participantIdx));
+				this.owner.Words.Append(CivilizationName(participantIdx));
 
-				this.owner.Libc.AppendText(0xba06, "\n ");
+				this.owner.Words.Append("\n ");
 			}
 
-			short chosenIdx = (short)(this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80) + 1);
+			short chosenIdx = (short)(this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 80) + 1);
 
 			this.owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8,
 				BackScreenBox, 0, 0);
@@ -88,23 +88,23 @@ namespace Civilization1Remaster.UI
 				switch ((sbyte)live)
 				{
 					case 0:
-						this.owner.Libc.CopyText(0xba06, "S");
+						this.owner.Words.Set("S");
 						break;
 
 					case 1:
-						this.owner.Libc.CopyText(0xba06, "A");
+						this.owner.Words.Set("A");
 						break;
 
 					case 2:
-						this.owner.Libc.CopyText(0xba06, "D");
+						this.owner.Words.Set("D");
 						break;
 
 					case 3:
-						this.owner.Libc.CopyText(0xba06, "N");
+						this.owner.Words.Set("N");
 						break;
 				}
 
-				this.owner.TextPainter.RenderTextWithShadow(0xba06, this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(place + 0xe598)) << 2,
+				this.owner.TextPainter.RenderTextWithShadow(TextBuffer.Address, this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(place + 0xe598)) << 2,
 					this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(place + 0xe798)) << 2, 13);
 			}
 
@@ -119,19 +119,19 @@ namespace Civilization1Remaster.UI
 				switch ((sbyte)live)
 				{
 					case 0:
-						this.owner.Libc.CopyText(0xba06, 0x417f);
+						this.owner.Words.Set(0x417f);
 						break;
 
 					case 1:
-						this.owner.Libc.CopyText(0xba06, 0x4181);
+						this.owner.Words.Set(0x4181);
 						break;
 
 					case 2:
-						this.owner.Libc.CopyText(0xba06, 0x4183);
+						this.owner.Words.Set(0x4183);
 						break;
 				}
 
-				this.owner.TextPainter.RenderTextWithShadow(0xba06, this.owner.World.Participants[participantIdx].TacticalSites[siteIdx].Place.X << 2,
+				this.owner.TextPainter.RenderTextWithShadow(TextBuffer.Address, this.owner.World.Participants[participantIdx].TacticalSites[siteIdx].Place.X << 2,
 					this.owner.World.Participants[participantIdx].TacticalSites[siteIdx].Place.Y << 2, 14);
 			}
 
@@ -154,19 +154,19 @@ namespace Civilization1Remaster.UI
 				{
 					if (continent.Approach == approach)
 					{
-						this.owner.Libc.AppendText(0xba06, letter);
+						this.owner.Words.Append(letter);
 					}
 				}
 
-				this.owner.Libc.AppendText(0xba06, " ");
+				this.owner.Words.Append(" ");
 
-				this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(continent.Guard, 10));
+				this.owner.Words.Append(this.owner.Libc.IntegerToText(continent.Guard, 10));
 
-				this.owner.Libc.AppendText(0xba06, "/");
+				this.owner.Words.Append("/");
 
-				this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(continent.Assault, 10));
+				this.owner.Words.Append(this.owner.Libc.IntegerToText(continent.Assault, 10));
 
-				this.owner.TextPainter.RenderTextToScreen0(0xba06, 2, row, 7);
+				this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 2, row, 7);
 
 				row += 6;
 			}
@@ -231,24 +231,24 @@ namespace Civilization1Remaster.UI
 
 			if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.TravelHoriz) != 0xff)
 			{
-				this.owner.Libc.AppendText(0xba06, "To:");
-				this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(this.troops.Pull(participantIdx, troopIdx, UnitMemory.TravelHoriz), 10));
-				this.owner.Libc.AppendText(0xba06, ",");
-				this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(this.troops.Pull(participantIdx, troopIdx, UnitMemory.TravelVert), 10));
-				this.owner.Libc.AppendText(0xba06, "\n");
+				this.owner.Words.Append("To:");
+				this.owner.Words.Append(this.owner.Libc.IntegerToText(this.troops.Pull(participantIdx, troopIdx, UnitMemory.TravelHoriz), 10));
+				this.owner.Words.Append(",");
+				this.owner.Words.Append(this.owner.Libc.IntegerToText(this.troops.Pull(participantIdx, troopIdx, UnitMemory.TravelVert), 10));
+				this.owner.Words.Append("\n");
 			}
 
-			this.owner.Libc.AppendText(0xba06, "*");
+			this.owner.Words.Append("*");
 
 			for (short current = this.troops.Following(participantIdx, troopIdx);
-				current != -1 && current != troopIdx && (short)this.owner.Libc.TextLength(0xba06) < 0x200;
+				current != -1 && current != troopIdx && (short)this.owner.Words.Length < 0x200;
 				current = this.troops.Following(participantIdx, current))
 			{
-				this.owner.Libc.AppendText(0xba06, KindLabel(participantIdx, current));
-				this.owner.Libc.AppendText(0xba06, "\n*");
+				this.owner.Words.Append(KindLabel(participantIdx, current));
+				this.owner.Words.Append("\n*");
 			}
 
-			this.owner.TurnHooks.DisplayDialog(0xba06, 10, 10);
+			this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 10, 10);
 
 			this.processor.Journal.CloseScope("DisplayUnitInfo");
 		}

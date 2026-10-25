@@ -222,19 +222,19 @@ namespace Civilization1Remaster.Engine
 			// function body
 			if (inhabitants >= 100)
 			{
-				this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(inhabitants / 100, 10));
+				this.owner.Words.Append(this.owner.Libc.IntegerToText(inhabitants / 100, 10));
 
-				this.owner.Libc.AppendText(0xba06, ",");
+				this.owner.Words.Append(",");
 
 				if ((inhabitants % 100) < 10)
 				{
-					this.owner.Libc.AppendText(0xba06, "0");
+					this.owner.Words.Append("0");
 				}
 			}
 
-			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(inhabitants % 100, 10));
+			this.owner.Words.Append(this.owner.Libc.IntegerToText(inhabitants % 100, 10));
 
-			this.owner.Libc.AppendText(0xba06, "0,000");
+			this.owner.Words.Append("0,000");
 		}
 
 		/// <summary>
@@ -321,16 +321,16 @@ namespace Civilization1Remaster.Engine
 			
 			if (!this.owner.Libc.DosReleaseMemory(arg1))
 			{
-				this.owner.Libc.CopyText(0xba06, "MEM.ERR:");
+				this.owner.Words.Set("MEM.ERR:");
 
 				if (charsAddr != 0)
 				{
-					this.owner.Libc.AppendText(0xba06, charsAddr);
+					this.owner.Words.Append(charsAddr);
 				}
 
-				this.owner.Libc.AppendText(0xba06, "\n");
+				this.owner.Words.Append("\n");
 
-				this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+				this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 80);
 			}
 		
 			this.processor.RegFrame.Value16 = this.processor.UnstackWord();

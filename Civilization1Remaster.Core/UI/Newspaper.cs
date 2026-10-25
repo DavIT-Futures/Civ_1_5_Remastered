@@ -86,18 +86,18 @@ namespace Civilization1Remaster.UI
 			this.owner.BlockText.RenderTextChunk(40, 16, 40, 0);
 
 			this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 0x5);
-			this.processor.EmitGlobalByte(0xba06, 0x0);
+			this.owner.Words.Clear();
 
 			switch (this.owner.Libc.Dice.DrawInt(4))
 			{
 				case 0:
 					this.owner.Conquest.ObtainCityLabel(townIdx);
-					this.owner.Libc.AppendText(0xba06, 0x5118);
+					this.owner.Words.Append(0x5118);
 					break;
 
 				case 1:
 					this.owner.Conquest.ObtainCityLabel(townIdx);
-					this.owner.Libc.AppendText(0xba06, 0x5120);
+					this.owner.Words.Append(0x5120);
 					break;
 
 				case 2:
@@ -113,7 +113,7 @@ namespace Civilization1Remaster.UI
 					break;
 			}
 
-			short width = (short)(ushort)this.owner.TextPainter.ObtainTextWidth(0xba06);
+			short width = (short)(ushort)this.owner.TextPainter.ObtainTextWidth(TextBuffer.Address);
 
 			if (width > 0x12c)
 			{
@@ -121,7 +121,7 @@ namespace Civilization1Remaster.UI
 					.City(townIdx)
 					.Text(" News");
 
-				width = (short)(ushort)this.owner.TextPainter.ObtainTextWidth(0xba06);
+				width = (short)(ushort)this.owner.TextPainter.ObtainTextWidth(TextBuffer.Address);
 			}
 
 			if (width < 0xc8)
@@ -131,27 +131,27 @@ namespace Civilization1Remaster.UI
 				this.owner.TextPainter.RenderText(0x514b, 268, 11, 0);
 			}
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 11, 0);
+			this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 160, 11, 0);
 
-			this.owner.Libc.CopyText(0xba06, this.owner.Libc.Dice.DrawInt(2) != 0 ? (ushort)0x514f : (ushort)0x5156);
+			this.owner.Words.Set(this.owner.Libc.Dice.DrawInt(2) != 0 ? (ushort)0x514f : (ushort)0x5156);
 
 			this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 0x3);
 
-			this.owner.TextPainter.RenderText(0xba06, 6, 3, 0);
+			this.owner.TextPainter.RenderText(TextBuffer.Address, 6, 3, 0);
 
-			this.owner.TextPainter.RenderText(0xba06, 272, 3, 0);
+			this.owner.TextPainter.RenderText(TextBuffer.Address, 272, 3, 0);
 
 			this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 0x1);
 			EmptyMessage()
 				.Text("10 cents");
 
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, 272, 28, 0);
+			this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 272, 28, 0);
 
-			this.owner.Libc.CopyText(0xba06, "January 1, ");
+			this.owner.Words.Set("January 1, ");
 
 			this.owner.TurnHooks.ObtainCurrentYearAsText();
 
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, 8, 28, 0);
+			this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 8, 28, 0);
 
 			this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 0x2);
 
@@ -160,11 +160,11 @@ namespace Civilization1Remaster.UI
 			this.owner.Libc.CopyText(topic, "*NEWSA");
 
 			this.processor.EmitLocalByte(0x7, (byte)(this.processor.PullLocalByte(0x7) + this.owner.Libc.Dice.DrawInt(14)));
-			this.processor.EmitGlobalByte(0xba06, 0x0);
+			this.owner.Words.Clear();
 
 			this.owner.BlockText.ImportTextFromFile(0x5178, topic);
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 3, 0);
+			this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 160, 3, 0);
 
 			this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 0x1);
 

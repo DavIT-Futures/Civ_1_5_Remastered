@@ -7,7 +7,7 @@
 	public readonly struct GameMessage
 	{
 		/// <summary>The message buffer of the original</summary>
-		public const ushort Buffer = 0xba06;
+		public const ushort Buffer = TextBuffer.Address;
 
 		private readonly GameEngine game;
 
@@ -19,14 +19,14 @@
 		/// <summary>The buffer starts with the text</summary>
 		public static GameMessage Start(GameEngine game, string text)
 		{
-			game.Libc.CopyText(Buffer, text);
+			game.Words.Set(text);
 			return new GameMessage(game);
 		}
 
 		/// <summary>The buffer starts with the text at the address</summary>
 		public static GameMessage Start(GameEngine game, ushort textAddr)
 		{
-			game.Libc.CopyText(Buffer, textAddr);
+			game.Words.Set(textAddr);
 			return new GameMessage(game);
 		}
 
@@ -40,21 +40,21 @@
 		/// <summary>The text added</summary>
 		public GameMessage Text(string text)
 		{
-			this.game.Libc.AppendText(Buffer, text);
+			this.game.Words.Append(text);
 			return this;
 		}
 
 		/// <summary>The text at the address added</summary>
 		public GameMessage Text(ushort textAddr)
 		{
-			this.game.Libc.AppendText(Buffer, textAddr);
+			this.game.Words.Append(textAddr);
 			return this;
 		}
 
 		/// <summary>The number added (in decimal)</summary>
 		public GameMessage Number(int amount)
 		{
-			this.game.Libc.AppendText(Buffer, this.game.Libc.IntegerToText(amount, 10));
+			this.game.Words.Append(this.game.Libc.IntegerToText(amount, 10));
 			return this;
 		}
 

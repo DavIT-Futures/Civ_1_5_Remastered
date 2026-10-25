@@ -310,11 +310,11 @@ namespace Civilization1Remaster.Game
 
 			EmptyMessage()
 				.City(townIdx);
-			this.owner.Libc.UppercaseText(0xba06);
-			this.owner.Libc.AppendText(0xba06, " (Pop:");
+			this.owner.Libc.UppercaseText(TextBuffer.Address);
+			this.owner.Words.Append(" (Pop:");
 			this.owner.Helpers.PopulationToText((short)this.round.Value);
-			this.owner.Libc.AppendText(0xba06, ")");
-			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 104, 2, 15);
+			this.owner.Words.Append(")");
+			this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 104, 2, 15);
 
 			RenderFrame(127, 23, 208, 104);
 
@@ -1198,10 +1198,10 @@ namespace Civilization1Remaster.Game
 					.Text(" builds ");
 				this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 				this.processor.RegAcc.Value16 = (ushort)(town.PresentMakingIdx * UnitKindTable.Stride + UnitKindTable.Origin);
-				this.owner.Libc.AppendText(0xba06, this.processor.RegAcc.Value16);
-				this.owner.Libc.AppendText(0xba06, ".\n");
+				this.owner.Words.Append(this.processor.RegAcc.Value16);
+				this.owner.Words.Append(".\n");
 				DialogStyle = 3;
-				this.owner.TurnHooks.DisplayDialog(0xba06, 80, 80);
+				this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 80, 80);
 				return;
 			}
 
@@ -1477,8 +1477,8 @@ namespace Civilization1Remaster.Game
 				.City(townIdx)
 				.Text(" builds\n");
 			this.processor.RegAcc.Value16 = BuildingRecordText(built);
-			this.owner.Libc.AppendText(0xba06, this.processor.RegAcc.Value16);
-			this.owner.Libc.AppendText(0xba06, ".\n");
+			this.owner.Words.Append(this.processor.RegAcc.Value16);
+			this.owner.Words.Append(".\n");
 			this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
 
 			bool screen = false;
@@ -1664,7 +1664,7 @@ namespace Civilization1Remaster.Game
 
 				if (told)
 				{
-					this.processor.EmitGlobalByte(0xba06, 0);
+					this.owner.Words.Clear();
 
 					if (owner != person)
 					{
@@ -1673,12 +1673,12 @@ namespace Civilization1Remaster.Game
 					}
 
 					this.processor.RegBase.Value16 = (ushort)(owner << 1);
-					this.owner.Libc.AppendText(0xba06, CivilizationNameAt(this.processor.RegBase.Value16));
-					this.owner.Libc.AppendText(0xba06, " capital\nmoved to ");
+					this.owner.Words.Append(CivilizationNameAt(this.processor.RegBase.Value16));
+					this.owner.Words.Append(" capital\nmoved to ");
 					this.owner.Conquest.ObtainCityLabel(townIdx);
-					this.owner.Libc.AppendText(0xba06, ".\n");
+					this.owner.Words.Append(".\n");
 					DialogStyle = 5;
-					this.owner.TurnHooks.DisplayDialog(0xba06, 80, 80);
+					this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 80, 80);
 
 					this.owner.World.Participants[owner].HorizBegin = (short)town.Place.X;
 					this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
@@ -2588,10 +2588,10 @@ namespace Civilization1Remaster.Game
 				this.processor.RegBase.Value16 = (ushort)(owner * UnitMemory.ParticipantStride);
 				this.processor.RegSource.Value16 = (ushort)(farthest * UnitMemory.TroopStride);
 				this.processor.RegAcc.Value16 = (ushort)(this.troops.TroopKind(owner, farthest) * UnitKindTable.Stride + UnitKindTable.Origin);
-				this.owner.Libc.AppendText(0xba06, this.processor.RegAcc.Value16);
-				this.owner.Libc.AppendText(0xba06, ".\n Unit Disbanded.\n");
+				this.owner.Words.Append(this.processor.RegAcc.Value16);
+				this.owner.Words.Append(".\n Unit Disbanded.\n");
 				DialogStyle = 3;
-				this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+				this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 80);
 			}
 
 			this.owner.UnitOps.EliminateUnit(owner, (short)this.round.Found);
@@ -2704,13 +2704,13 @@ namespace Civilization1Remaster.Game
 			this.owner.MapOps.RenderUnitSprite(owner, troopIdx, (short)this.round.UnitHoriz, (short)this.round.UnitVert);
 
 			// The abbreviation of the home city (3 letters and a dot)
-			this.processor.EmitGlobalByte(0xba06, 0);
+			this.owner.Words.Clear();
 			this.processor.RegBase.Value16 = (ushort)(owner * UnitMemory.ParticipantStride);
 			this.processor.RegSource.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
 			this.owner.Conquest.ObtainCityLabel(this.troops.PullSigned(owner, troopIdx, UnitMemory.BaseTown));
-			this.processor.EmitGlobalByte(0xba09, 0x2e);
-			this.processor.EmitGlobalByte(0xba0a, 0);
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, (short)this.round.UnitHoriz, (short)this.round.UnitVert + 15, 0);
+			this.owner.Words[3] = 0x2e;
+			this.owner.Words[4] = 0;
+			this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, (short)this.round.UnitHoriz, (short)this.round.UnitVert + 15, 0);
 
 			ushort drawn = this.round.UnitsDrawn;
 			this.round.UnitsDrawn = (ushort)(drawn + 1);
@@ -2831,20 +2831,20 @@ namespace Civilization1Remaster.Game
 		private void RenderImprovementName(ushort improvement, ushort width, bool shrinkFirst)
 		{
 			this.processor.RegAcc.Value16 = BuildingText(improvement);
-			this.owner.Libc.CopyText(0xba06, this.processor.RegAcc.Value16);
+			this.owner.Words.Set(this.processor.RegAcc.Value16);
 
 			if (shrinkFirst)
 			{
-				this.owner.Libc.UppercaseText(0xba06);
-				this.owner.BlockText.ShrinkTextToWidth(0xba06, width);
+				this.owner.Libc.UppercaseText(TextBuffer.Address);
+				this.owner.BlockText.ShrinkTextToWidth(TextBuffer.Address, width);
 			}
 			else
 			{
-				this.owner.BlockText.ShrinkTextToWidth(0xba06, width);
-				this.owner.Libc.UppercaseText(0xba06);
+				this.owner.BlockText.ShrinkTextToWidth(TextBuffer.Address, width);
+				this.owner.Libc.UppercaseText(TextBuffer.Address);
 			}
 
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, 253, (short)this.round.Vert + 2, 15);
+			this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 253, (short)this.round.Vert + 2, 15);
 			RenderResourceIcon((short)(improvement + 1), (short)((((byte)this.round.Selected & 1) != 0) ? 213 : 233),
 				(short)((short)this.round.Vert - 2));
 
@@ -2930,9 +2930,9 @@ namespace Civilization1Remaster.Game
 			{
 				this.processor.RegCount.Value16 = 0x1e;
 				this.processor.RegAcc.Value16 = BuildingRecordText(-town.PresentMakingIdx);
-				this.owner.Libc.CopyText(0xba06, this.processor.RegAcc.Value16);
-				this.owner.BlockText.ShrinkTextToWidth(0xba06, 0x56);
-				this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 274, 100, 15);
+				this.owner.Words.Set(this.processor.RegAcc.Value16);
+				this.owner.BlockText.ShrinkTextToWidth(TextBuffer.Address, 0x56);
+				this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 274, 100, 15);
 			}
 		}
 
@@ -3214,15 +3214,15 @@ namespace Civilization1Remaster.Game
 					.Text(":+");
 				City other = this.owner.World.Towns[partner];
 				int shift = (ushort)other.ParticipantIdx != CityOwner ? 3 : 4;
-				this.owner.Libc.AppendText(0xba06,
+				this.owner.Libc.AppendText(TextBuffer.Address,
 					this.owner.Libc.IntegerToText((short)(((short)town.RootCommerce + (short)other.RootCommerce + 4) >> shift), 10));
-				this.owner.Libc.AppendText(0xba06, "} ");
+				this.owner.Words.Append("} ");
 
 				if (CityScreenTab == 2)
 					RenderMiniMapDot((ushort)((short)other.Place.X), (ushort)((short)other.Place.Y), 10);
 
 				if (CityScreenTab == 0)
-					this.owner.TextPainter.RenderTextToScreen0(0xba06, 98, ((short)this.round.Item * 6) + 179, 10);
+					this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 98, ((short)this.round.Item * 6) + 179, 10);
 			}
 
 			this.round.Item = 3;
@@ -3455,7 +3455,7 @@ namespace Civilization1Remaster.Game
 			// The view of the city
 			this.processor.RegBase.Value16 = ScreenBox;
 			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 1);
-			this.processor.EmitGlobalByte(0xba06, 0);
+			this.owner.Words.Clear();
 			this.owner.CityScene.DisplayCityScreen(townIdx, -1);
 			MapRedrawRequest = 1;
 			CityScreenTab = 0;
@@ -3503,14 +3503,14 @@ namespace Civilization1Remaster.Game
 				.Text("\n");
 
 			if (making >= 0 && (town.ConditionMarker & 1) != 0)
-				this.owner.Libc.AppendText(0xba06, "CIVIL DISORDER\n");
+				this.owner.Words.Append("CIVIL DISORDER\n");
 			else if (this.owner.World.Participants[owner].Gold >= cost)
-				this.owner.Libc.AppendText(0xba06, " Yes\n No\n");
+				this.owner.Words.Append(" Yes\n No\n");
 
 			this.owner.Startup.DisplayMouseCursor();
 			this.processor.RegBase.Value16 = ScreenBox;
 			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 1);
-			if (this.owner.Dialogs.DisplayMenu(0xba06, 100, 80, 1) == 0 && this.owner.World.Participants[owner].Gold >= (short)this.round.Value)
+			if (this.owner.Dialogs.DisplayMenu(TextBuffer.Address, 100, 80, 1) == 0 && this.owner.World.Participants[owner].Gold >= (short)this.round.Value)
 			{
 				town.MaterialsTally = (short)(10 * (short)this.round.Selected);
 				this.owner.World.Participants[owner].Gold -= (short)this.round.Value;
@@ -3832,7 +3832,7 @@ namespace Civilization1Remaster.Game
 				this.processor.RegBase.Value16 = ScreenBox;
 				this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 1);
 				this.owner.Startup.DisplayMouseCursor();
-				if (this.owner.Dialogs.DisplayMenu(0xba06, 128, 80, 1) == 1)
+				if (this.owner.Dialogs.DisplayMenu(TextBuffer.Address, 128, 80, 1) == 1)
 				{
 					this.owner.World.Participants[CityOwner].Gold += (short)(0xa * price);
 					town.Structures -= bit;
@@ -3865,8 +3865,8 @@ namespace Civilization1Remaster.Game
 		/// <summary>The message that a city smaller than five can't have taxmen or scientists: the city from its start</summary>
 		private CityScreenStep RefuseSpecialists()
 		{
-			this.owner.Libc.CopyText(0xba06, "A City must have five\npopulation units to support\ntaxmen or scientists.\n");
-			this.owner.Dialogs.DisplayMenu(0xba06, 32, 32, 1);
+			this.owner.Words.Set("A City must have five\npopulation units to support\ntaxmen or scientists.\n");
+			this.owner.Dialogs.DisplayMenu(TextBuffer.Address, 32, 32, 1);
 
 			return CityScreenStep.Restart;
 		}
@@ -4154,7 +4154,7 @@ namespace Civilization1Remaster.Game
 					else
 					{
 						DialogStyle = 4;
-						this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+						this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 80);
 					}
 
 					this.owner.Services.PerformSound(1, 0);

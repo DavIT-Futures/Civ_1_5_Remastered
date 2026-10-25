@@ -281,7 +281,7 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// What a city builds next. The menu text (0xba06, "What shall we build in ...") lists the units, improvements and
+		/// What a city builds next. The menu text (TextBuffer.Address, "What shall we build in ...") lists the units, improvements and
 		/// wonders the player can build, with a list of the choices in the frame (bp - 0xdc, units >= 0, improvements and
 		/// wonders negative, 0x63 / 0x62 for "more..."); every choice gets a score for the city (lower is better). A computer
 		/// player takes the best one (1 / 3 / 7 for a player without units or the barbarians); for the human player the advisors
@@ -425,7 +425,7 @@ namespace Civilization1Remaster.Game
 				ListUnitChoices(participantIdx, townIdx);
 
 			FrameWord(PageCutCountLocal, (ushort)ChoiceCount);
-			FrameWord(PageCutLengthLocal, this.owner.Libc.TextLength(0xba06));
+			FrameWord(PageCutLengthLocal, this.owner.Words.Length);
 
 			// The Great Wall on the continent of the city (no walls and the like then)
 			FrameWord(SharedWallLocal, 0);
@@ -452,13 +452,13 @@ namespace Civilization1Remaster.Game
 					return true;
 				}
 
-				this.owner.Libc.CopyText((ushort)(FrameWord(PageCutLengthLocal) + 0xba06), "more...\n");
+				this.owner.Libc.CopyText((ushort)(FrameWord(PageCutLengthLocal) + TextBuffer.Address), "more...\n");
 				ChoiceEntry(FrameWord(PageCutCountLocal), 0x63);
 			}
 
 			if (PageState == 2)
 			{
-				this.owner.Libc.AppendText(0xba06, "more...\n");
+				this.owner.Words.Append("more...\n");
 				AddChoice(0x62);
 			}
 
@@ -489,15 +489,15 @@ namespace Civilization1Remaster.Game
 				if ((town.ConditionMarker & 2) == 0 && UnitKindTable.Field(this.processor, kind, UnitKindTable.LandGroup) == UnitKindTable.SeaUnits)
 					continue;
 
-				this.owner.Libc.AppendText(0xba06, (ushort)(UnitKindTable.Origin + kind * UnitKindTable.Stride));
+				this.owner.Words.Append((ushort)(UnitKindTable.Origin + kind * UnitKindTable.Stride));
 				ComposeProductionOption(townIdx, UnitKindTable.Field(this.processor, kind, UnitKindTable.Price));
-				this.owner.Libc.AppendText(0xba06, ", ADM:");
-				this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText((short)UnitKindTable.Field(this.processor, kind, UnitKindTable.AssaultPower), 10));
-				this.owner.Libc.AppendText(0xba06, "/");
-				this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText((short)UnitKindTable.Field(this.processor, kind, UnitKindTable.GuardPower), 10));
-				this.owner.Libc.AppendText(0xba06, "/");
-				this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText((short)UnitKindTable.Field(this.processor, kind, UnitKindTable.ShiftTally), 10));
-				this.owner.Libc.AppendText(0xba06, ")\n ");
+				this.owner.Words.Append(", ADM:");
+				this.owner.Words.Append(this.owner.Libc.IntegerToText((short)UnitKindTable.Field(this.processor, kind, UnitKindTable.AssaultPower), 10));
+				this.owner.Words.Append("/");
+				this.owner.Words.Append(this.owner.Libc.IntegerToText((short)UnitKindTable.Field(this.processor, kind, UnitKindTable.GuardPower), 10));
+				this.owner.Words.Append("/");
+				this.owner.Words.Append(this.owner.Libc.IntegerToText((short)UnitKindTable.Field(this.processor, kind, UnitKindTable.ShiftTally), 10));
+				this.owner.Words.Append(")\n ");
 
 				AddChoice((ushort)kind);
 			}
@@ -563,9 +563,9 @@ namespace Civilization1Remaster.Game
 					continue;
 				}
 
-				this.owner.Libc.AppendText(0xba06, ImprovementRecord(improvementIdx));
+				this.owner.Words.Append(ImprovementRecord(improvementIdx));
 				ComposeProductionOption(townIdx, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(ImprovementRecord(improvementIdx) + 0x18)));
-				this.owner.Libc.AppendText(0xba06, ")\n ");
+				this.owner.Words.Append(")\n ");
 
 				AddChoice((ushort)-improvementIdx);
 			}
@@ -586,11 +586,11 @@ namespace Civilization1Remaster.Game
 					ushort obsolete = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((improvementIdx << 1) + 0x10ce));
 
 					if (obsolete != 0x7f && ((byte)this.owner.World.ScienceLeadingFoundVia[this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((improvementIdx << 1) + 0x10ce))] & 7) != 0)
-						this.owner.Libc.AppendText(0xba06, "*");
+						this.owner.Words.Append("*");
 
-					this.owner.Libc.AppendText(0xba06, ImprovementRecord(improvementIdx));
+					this.owner.Words.Append(ImprovementRecord(improvementIdx));
 					ComposeProductionOption(townIdx, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(ImprovementRecord(improvementIdx) + 0x18)));
-					this.owner.Libc.AppendText(0xba06, ")\n ");
+					this.owner.Words.Append(")\n ");
 
 					AddChoice((ushort)-improvementIdx);
 				}
@@ -1107,7 +1107,7 @@ namespace Civilization1Remaster.Game
 			}
 
 			MenuFooter = 1;
-			ushort picked = this.owner.Dialogs.DisplayMenu(0xba06, 80, 8, 1);
+			ushort picked = this.owner.Dialogs.DisplayMenu(TextBuffer.Address, 80, 8, 1);
 			Score = (short)ChoiceEntry(picked + 1);
 
 			if ((ushort)Score == 0x63)
@@ -1153,17 +1153,17 @@ namespace Civilization1Remaster.Game
 
 			ushort key = (ushort)(this.processor.RegFrame.Value16 - AdviceKey);
 			this.owner.Libc.CopyText((ushort)(key + 1), name);
-			this.owner.Libc.CopyText(0xba06, advisor);
+			this.owner.Words.Set(advisor);
 			this.owner.BlockText.ImportTextFromFile(documentAddr, key);
 			this.owner.Libc.CopyText(CodeText4, (ushort)(key + 1));
 			this.owner.BlockText.ReflowText();
 			this.owner.BlockText.ArrangeTextRow(0x32);
 			this.processor.EmitGlobalWord(0xdb38, 1);
-			this.owner.Dialogs.DisplayMenu(0xba06, horizLoc, 160, 1);
+			this.owner.Dialogs.DisplayMenu(TextBuffer.Address, horizLoc, 160, 1);
 		}
 
 		/// <summary>
-		/// Appends " (n turns)" or " (1 turn)" to the text at 0xba06: the turns the city needs for the production of cost arg2
+		/// Appends " (n turns)" or " (1 turn)" to the text at TextBuffer.Address: the turns the city needs for the production of cost arg2
 		/// (in tens of shields), with the shields per turn 0x70dc - 0xd2f6 (1 - 99); 1 - 999 turns
 		/// </summary>
 		public void ComposeProductionOption(short townIdx, ushort arg2)
@@ -1176,11 +1176,11 @@ namespace Civilization1Remaster.Game
 			ushort turns = (ushort)this.owner.Helpers.VerifyValueSpan(
 				(((10 * arg2) - this.owner.World.Towns[townIdx].MaterialsTally - 1) / (short)perTurn) + 1, 1, 999);
 
-			this.owner.Libc.AppendText(0xba06, " (");
+			this.owner.Words.Append(" (");
 
-			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText((short)turns, 10));
+			this.owner.Words.Append(this.owner.Libc.IntegerToText((short)turns, 10));
 
-			this.owner.Libc.AppendText(0xba06, (ushort)(turns != 1 ? 0x22b2 : 0x22b9));
+			this.owner.Words.Append((ushort)(turns != 1 ? 0x22b2 : 0x22b9));
 
 			this.processor.Journal.CloseScope("ComposeProductionOption");
 		}
@@ -1307,13 +1307,13 @@ namespace Civilization1Remaster.Game
 
 				if (choices == 0)
 				{
-					this.owner.Libc.AppendText(0xba06, " Future Technology ");
+					this.owner.Words.Append(" Future Technology ");
 
-					this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText((short)(human.ComingScienceTally + 1), 10));
+					this.owner.Words.Append(this.owner.Libc.IntegerToText((short)(human.ComingScienceTally + 1), 10));
 
-					this.owner.Libc.AppendText(0xba06, "\n");
+					this.owner.Words.Append("\n");
 
-					this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+					this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 80);
 
 					human.PresentInquiryIdx = 71;
 
@@ -1322,7 +1322,7 @@ namespace Civilization1Remaster.Game
 
 				MenuFooter = 0x1;
 
-				ushort choice = this.owner.Dialogs.DisplayMenu(0xba06, 80, 64, 1);
+				ushort choice = this.owner.Dialogs.DisplayMenu(TextBuffer.Address, 80, 64, 1);
 
 				this.owner.Startup.ConcealMouseCursor();
 
@@ -1402,14 +1402,14 @@ namespace Civilization1Remaster.Game
 
 			if (human.PresentInquiryIdx == 71)
 			{
-				this.owner.Libc.AppendText(0xba06, " ");
+				this.owner.Words.Append(" ");
 
 				human.ComingScienceTally++;
 
-				this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(human.ComingScienceTally, 10));
+				this.owner.Words.Append(this.owner.Libc.IntegerToText(human.ComingScienceTally, 10));
 			}
 
-			this.owner.Libc.AppendText(0xba06, "!\n");
+			this.owner.Words.Append("!\n");
 
 			// The original plays only a short fanfare (table at 0x1518, one to five seconds),
 			// the national anthem (table at 0x151a, as in the palace and the throne room) plays until the next research is chosen
@@ -1439,17 +1439,17 @@ namespace Civilization1Remaster.Game
 
 			this.processor.EmitGlobalWord(0xdb38, 0x1);
 
-			this.owner.Dialogs.DisplayMenu(0xba06, 96, advanced ? (short)25 : (short)1, 1);
+			this.owner.Dialogs.DisplayMenu(TextBuffer.Address, 96, advanced ? (short)25 : (short)1, 1);
 
 			this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 0x1);
 
-			this.owner.Libc.CopyText(0xba06, "iconpg1.pic");
+			this.owner.Words.Set("iconpg1.pic");
 
-			this.processor.EmitGlobalByte(0xba0c, (byte)(this.processor.PullGlobalByte(0xba0c) + CPU.SignedQuotient(first, 9)));
+			this.owner.Words[6] = (byte)(this.owner.Words[6] + CPU.SignedQuotient(first, 9));
 
 			this.owner.Startup.QueryForDisk(3, 1);
 
-			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0xba06, 0);
+			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, TextBuffer.Address, 0);
 
 			this.owner.Startup.QueryForDisk(0, 1);
 
@@ -1482,11 +1482,11 @@ namespace Civilization1Remaster.Game
 				.Text(TechnologyText(pick))
 				.Text(".\n");
 
-			ushort length = this.owner.Libc.TextLength(0xba06);
+			ushort length = this.owner.Words.Length;
 
 			ushort allowed = 0;
 
-			this.owner.Libc.AppendText(0xba06, "So we can build:\n-");
+			this.owner.Words.Append("So we can build:\n-");
 
 			for (ushort kindIdx = 0; kindIdx < 0x1c; kindIdx++)
 			{
@@ -1495,9 +1495,9 @@ namespace Civilization1Remaster.Game
 				if (UnitKindWordAt(this.processor.RegSource.Value16, UnitKindTable.Technology) != (ushort)pick)
 					continue;
 
-				this.owner.Libc.AppendText(0xba06, UnitTextAt(this.processor.RegSource.Value16));
+				this.owner.Words.Append(UnitTextAt(this.processor.RegSource.Value16));
 
-				this.owner.Libc.AppendText(0xba06, "\n-");
+				this.owner.Words.Append("\n-");
 
 				allowed++;
 			}
@@ -1509,20 +1509,20 @@ namespace Civilization1Remaster.Game
 				if (BuildingWordAt(this.processor.RegSource.Value16, BuildingTable.Technology) != (ushort)pick)
 					continue;
 
-				this.owner.Libc.AppendText(0xba06, BuildingRecordTextAt(this.processor.RegSource.Value16));
+				this.owner.Words.Append(BuildingRecordTextAt(this.processor.RegSource.Value16));
 
-				this.owner.Libc.AppendText(0xba06, "\n-");
+				this.owner.Words.Append("\n-");
 
 				allowed++;
 			}
 
 			if (allowed == 0)
-				this.processor.EmitGlobalByte((ushort)(length + 0xba06), 0);
+				this.processor.EmitGlobalByte((ushort)(length + TextBuffer.Address), 0);
 
 			this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 0x2);
 			this.processor.EmitGlobalWord(0xdb38, 0x1);
 
-			this.owner.Dialogs.DisplayMenu(0xba06, 8, (short)-((allowed << 3) - 0xa8), 1);
+			this.owner.Dialogs.DisplayMenu(TextBuffer.Address, 8, (short)-((allowed << 3) - 0xa8), 1);
 
 			this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 0x1);
 		}
@@ -1559,9 +1559,9 @@ namespace Civilization1Remaster.Game
 						continue;
 				}
 
-				this.owner.Libc.AppendText(0xba06, TechnologyText(scienceIdx));
+				this.owner.Words.Append(TechnologyText(scienceIdx));
 
-				this.owner.Libc.AppendText(0xba06, "\n ");
+				this.owner.Words.Append("\n ");
 
 				this.processor.RegSource.Value16 = (ushort)(choices << 1);
 				choiceList[choices] = (ushort)scienceIdx;
@@ -1635,19 +1635,19 @@ namespace Civilization1Remaster.Game
 
 			if (TechnologyNewsRules.NamesSource(participantIdx, participantIdx1, this.owner.TurnHooks.ClassicTechnologyNews))
 			{
-				this.owner.Libc.AppendText(0xba06, " from\nthe ");
+				this.owner.Words.Append(" from\nthe ");
 
 				if (participantIdx1 == TechnologyNewsRules.GreatLibrary)
 				{
-					this.owner.Libc.AppendText(0xba06, "Great Library");
+					this.owner.Words.Append("Great Library");
 				}
 				else
 				{
-					this.owner.Libc.AppendText(0xba06, CivilizationPlural((ushort)participantIdx1));
+					this.owner.Words.Append(CivilizationPlural((ushort)participantIdx1));
 				}
 			}
 
-			this.owner.Libc.AppendText(0xba06, "!\n ");
+			this.owner.Words.Append("!\n ");
 
 			if (participantIdx != person)
 			{
@@ -1658,9 +1658,9 @@ namespace Civilization1Remaster.Game
 
 					if (BuildingWordAt(this.processor.RegSource.Value16, BuildingTable.Technology) == (ushort)scienceIdx)
 					{
-						this.owner.Libc.AppendText(0xba06, BuildingRecordTextAt(this.processor.RegSource.Value16));
+						this.owner.Words.Append(BuildingRecordTextAt(this.processor.RegSource.Value16));
 
-						this.owner.Libc.AppendText(0xba06, "\n ");
+						this.owner.Words.Append("\n ");
 					}
 				}
 
@@ -1670,9 +1670,9 @@ namespace Civilization1Remaster.Game
 
 					if (UnitKindWordAt(this.processor.RegSource.Value16, UnitKindTable.Technology) == (ushort)scienceIdx)
 					{
-						this.owner.Libc.AppendText(0xba06, UnitTextAt(this.processor.RegSource.Value16));
+						this.owner.Words.Append(UnitTextAt(this.processor.RegSource.Value16));
 
-						this.owner.Libc.AppendText(0xba06, "\n ");
+						this.owner.Words.Append("\n ");
 					}
 				}
 
@@ -1685,7 +1685,7 @@ namespace Civilization1Remaster.Game
 
 				DialogStyle = participantIdx == person ? (ushort)6 : (ushort)0;
 
-				this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+				this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 80);
 			}
 		}
 
@@ -1706,7 +1706,7 @@ namespace Civilization1Remaster.Game
 
 			KingAnswer = 0;
 			EmissaryAudience = 0;
-			this.processor.EmitGlobalByte(0xba06, 0);
+			this.owner.Words.Clear();
 
 			this.owner.Libc.CopyText(CodeText1, CivilizationPlural((ushort)participantIdx));
 
@@ -1719,7 +1719,7 @@ namespace Civilization1Remaster.Game
 
 			this.processor.StackWord(0); // stack management - push return segment, ignored
 			this.processor.StackWord(0x200b); // stack management - push return offset
-			this.owner.Audience.DisplayKingDialog(0xba06, 0x14, 0x8b);
+			this.owner.Audience.DisplayKingDialog(TextBuffer.Address, 0x14, 0x8b);
 			this.processor.UnstackDoubleWord(); // stack management - pop return offset and segment
 
 			this.owner.Audience.FinishAudience();

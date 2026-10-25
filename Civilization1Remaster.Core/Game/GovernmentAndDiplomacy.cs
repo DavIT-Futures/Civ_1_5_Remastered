@@ -181,9 +181,9 @@ namespace Civilization1Remaster.Game
 					EmptyMessage()
 						.Number(tribute);
 
-					this.owner.Libc.CopyText(CodeText3, 0xba06);
+					this.owner.Libc.CopyText(CodeText3, TextBuffer.Address);
 
-					this.processor.EmitGlobalByte(0xba06, 0);
+					this.owner.Words.Clear();
 
 					if (AskKing(0x2988, 0x03d8))
 					{
@@ -203,7 +203,7 @@ namespace Civilization1Remaster.Game
 			if (this.owner.Audience.WelcomeEmissary(participantIdx, -1, 0) != 0)
 				return;
 
-			this.processor.EmitGlobalByte(0xba06, 0);
+			this.owner.Words.Clear();
 
 			this.owner.Libc.CopyText(CodeText2, CivilizationPluralAt(this.processor.RegDest.Value16));
 
@@ -231,7 +231,7 @@ namespace Civilization1Remaster.Game
 			this.processor.StackWord(returnOffset); // stack management - push return offset
 			this.processor.UnstackDoubleWord(); // stack management - pop return offset and segment
 
-			return this.owner.Audience.DisplayKingDialog(0xba06, 0x14, 0x8b) == 1;
+			return this.owner.Audience.DisplayKingDialog(TextBuffer.Address, 0x14, 0x8b) == 1;
 		}
 
 		/// <summary>The human player and the AI player become allies against the other one (flag 8 of the other's relation)</summary>
@@ -270,7 +270,7 @@ namespace Civilization1Remaster.Game
 
 				while (true)
 				{
-					this.owner.Libc.CopyText(0xba06, "Select type of\nGovernment...\n ");
+					this.owner.Words.Set("Select type of\nGovernment...\n ");
 
 					List<short> regimes = new List<short>();
 
@@ -281,9 +281,9 @@ namespace Civilization1Remaster.Game
 
 						regimes.Add(regime);
 
-						this.owner.Libc.AppendText(0xba06, GovernmentName(regime));
+						this.owner.Words.Append(GovernmentName(regime));
 
-						this.owner.Libc.AppendText(0xba06, "\n ");
+						this.owner.Words.Append("\n ");
 					}
 
 					if (regimeKind == 0)
@@ -292,7 +292,7 @@ namespace Civilization1Remaster.Game
 						break;
 					}
 
-					short choice = (short)this.owner.TurnHooks.DisplayDialog(0xba06, 100, 64);
+					short choice = (short)this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 64);
 
 					if (choice >= 0)
 					{
@@ -314,34 +314,34 @@ namespace Civilization1Remaster.Game
 				if ((participant.RegimeKind != regimeKind || (participant.Relations[0] & 4) != 0) &&
 					(this.owner.World.Participants[this.owner.World.PersonParticipantIdx].Relations[participantIdx] & 0x40) != 0)
 				{
-					this.processor.EmitGlobalByte(0xba06, 0x0);
+					this.owner.Words.Clear();
 
 					if ((participant.Relations[0] & 4) != 0)
 					{
-						this.owner.Libc.AppendText(0xba06, CivilizationName(participantIdx));
+						this.owner.Words.Append(CivilizationName(participantIdx));
 
-						this.owner.Libc.AppendText(0xba06, " government\nchanged to ");
+						this.owner.Words.Append(" government\nchanged to ");
 
-						this.owner.Libc.AppendText(0xba06, GovernmentName(regimeKind));
+						this.owner.Words.Append(GovernmentName(regimeKind));
 
-						this.owner.Libc.AppendText(0xba06, "!\n");
+						this.owner.Words.Append("!\n");
 
 						participant.Relations[0] &= 0xfffb;
 					}
 					else
 					{
-						this.owner.Libc.AppendText(0xba06, "The ");
+						this.owner.Words.Append("The ");
 
-						this.owner.Libc.AppendText(0xba06, CivilizationName(participantIdx));
+						this.owner.Words.Append(CivilizationName(participantIdx));
 
-						this.owner.Libc.AppendText(0xba06, " government\nhas been overthrown!\n");
+						this.owner.Words.Append(" government\nhas been overthrown!\n");
 
 						participant.Relations[0] |= 4;
 					}
 
 					DialogStyle = 0x1;
 
-					this.owner.TurnHooks.DisplayDialog(0xba06, 80, 64);
+					this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 80, 64);
 				}
 
 				participant.RegimeKind = regimeKind;
@@ -445,11 +445,11 @@ namespace Civilization1Remaster.Game
 				{
 					AppendPair(participantIdx1, participantIdx2);
 
-					this.owner.Libc.AppendText(0xba06, " sign\na peace treaty.\n");
+					this.owner.Words.Append(" sign\na peace treaty.\n");
 
 					DialogStyle = 0x1;
 
-					this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+					this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 80);
 				}
 
 				AssignDiplomacyFlags(participantIdx1, participantIdx2, 2);
@@ -464,11 +464,11 @@ namespace Civilization1Remaster.Game
 				{
 					AppendPair(participantIdx1, participantIdx2);
 
-					this.owner.Libc.AppendText(0xba06, (participant1.Relations[participantIdx2] & 2) != 0 ? (ushort)0x2a36 : (ushort)0x2a4d);
+					this.owner.Words.Append((participant1.Relations[participantIdx2] & 2) != 0 ? (ushort)0x2a36 : (ushort)0x2a4d);
 
 					DialogStyle = 0x1;
 
-					this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+					this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 80);
 				}
 
 				WipeDiplomacyFlags(participantIdx1, participantIdx2, 2);
@@ -484,7 +484,7 @@ namespace Civilization1Remaster.Game
 			return this.owner.CityOps.PlayerEnjoysWonderEffect(otherIdx, 7) == 0 && this.owner.World.Participants[participantIdx].RegimeKind < 4;
 		}
 
-		/// <summary>"X and\nY" of the two civilizations at 0xba06</summary>
+		/// <summary>"X and\nY" of the two civilizations at TextBuffer.Address</summary>
 		private void AppendPair(short participantIdx1, short participantIdx2)
 		{
 			Message(CivilizationPlural(participantIdx1))

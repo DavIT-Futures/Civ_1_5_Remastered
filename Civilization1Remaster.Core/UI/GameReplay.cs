@@ -195,11 +195,11 @@ namespace Civilization1Remaster.UI
 				{
 					byte pair = ReplayByte(ref spot);
 
-					this.owner.Libc.AppendText(0xba06, ReplayPlural(pair >> 4));
+					this.owner.Words.Append(ReplayPlural(pair >> 4));
 
-					this.owner.Libc.AppendText(0xba06, kind == 2 ? " declare war on " : " make peace with ");
+					this.owner.Words.Append(kind == 2 ? " declare war on " : " make peace with ");
 
-					this.owner.Libc.AppendText(0xba06, ReplayPlural(pair & 0xf));
+					this.owner.Words.Append(ReplayPlural(pair & 0xf));
 
 					RenderReplayPreamble();
 					break;
@@ -216,34 +216,34 @@ namespace Civilization1Remaster.UI
 
 					ushort thing = ReplayByte(ref spot);
 
-					this.owner.Libc.AppendText(0xba06, ReplayPlural(ReplayActor));
+					this.owner.Words.Append(ReplayPlural(ReplayActor));
 
 					switch (kind)
 					{
 						case 5:
-							this.owner.Libc.AppendText(0xba06, " discover ");
-							this.owner.Libc.AppendText(0xba06, TechnologyText(thing));
+							this.owner.Words.Append(" discover ");
+							this.owner.Words.Append(TechnologyText(thing));
 							break;
 
 						case 6:
-							this.owner.Libc.AppendText(0xba06, " produce first ");
-							this.owner.Libc.AppendText(0xba06, UnitText(thing));
+							this.owner.Words.Append(" produce first ");
+							this.owner.Words.Append(UnitText(thing));
 							break;
 
 						case 8:
-							this.owner.Libc.AppendText(0xba06, " form ");
-							this.owner.Libc.AppendText(0xba06, GovernmentName(thing));
+							this.owner.Words.Append(" form ");
+							this.owner.Words.Append(GovernmentName(thing));
 							break;
 
 						default:
-							this.owner.Libc.AppendText(0xba06, " build ");
+							this.owner.Words.Append(" build ");
 
 							if ((short)thing <= 7)
 							{
-								this.owner.Libc.AppendText(0xba06, "the ");
+								this.owner.Words.Append("the ");
 							}
 
-							this.owner.Libc.AppendText(0xba06, WonderText(thing));
+							this.owner.Words.Append(WonderText(thing));
 							break;
 					}
 
@@ -260,17 +260,17 @@ namespace Civilization1Remaster.UI
 					sbyte populationHigh = (sbyte)ReplayByte(ref spot);
 					short populationLow = ReplayByte(ref spot);
 
-					this.owner.Libc.AppendText(0xba06, ReplayPlural(this.owner.World.PersonParticipantIdx));
+					this.owner.Words.Append(ReplayPlural(this.owner.World.PersonParticipantIdx));
 
-					this.owner.Libc.AppendText(0xba06, ": ");
+					this.owner.Words.Append(": ");
 
-					this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(towns, 10));
+					this.owner.Words.Append(this.owner.Libc.IntegerToText(towns, 10));
 
-					this.owner.Libc.AppendText(0xba06, " cities; ");
+					this.owner.Words.Append(" cities; ");
 
 					this.owner.Helpers.PopulationToText(populationHigh + populationLow);
 
-					this.owner.Libc.AppendText(0xba06, " population");
+					this.owner.Words.Append(" population");
 
 					RenderReplayPreamble();
 					break;
@@ -288,11 +288,11 @@ namespace Civilization1Remaster.UI
 
 					short destroyer = ReplayByte(ref spot);
 
-					this.owner.Libc.AppendText(0xba06, CivilizationName(ReplayActor));
+					this.owner.Words.Append(CivilizationName(ReplayActor));
 
-					this.owner.Libc.AppendText(0xba06, " civilization destroyed by ");
+					this.owner.Words.Append(" civilization destroyed by ");
 
-					this.owner.Libc.AppendText(0xba06, ReplayPlural(destroyer));
+					this.owner.Words.Append(ReplayPlural(destroyer));
 
 					if (ReplayMode == 4 && destroyer == this.owner.World.PersonParticipantIdx)
 					{
@@ -327,17 +327,17 @@ namespace Civilization1Remaster.UI
 
 			if (ReplayActor != 0xff)
 			{
-				this.owner.Libc.AppendText(0xba06, ReplayPlural(ReplayActor));
+				this.owner.Words.Append(ReplayPlural(ReplayActor));
 
 				if (kind == 1)
 				{
-					this.owner.Libc.AppendText(0xba06, " found the city of ");
+					this.owner.Words.Append(" found the city of ");
 
 					AssignReplayCityContent(ReplayActor, horizLoc, vertLoc);
 				}
 				else
 				{
-					this.owner.Libc.AppendText(0xba06, " capture ");
+					this.owner.Words.Append(" capture ");
 
 					AssignReplayCityContentAlt(ReplayActor, horizLoc, vertLoc);
 				}
@@ -350,7 +350,7 @@ namespace Civilization1Remaster.UI
 			{
 				AppendReplayCityName(labelIdx);
 
-				this.owner.Libc.AppendText(0xba06, " destroyed");
+				this.owner.Words.Append(" destroyed");
 
 				RenderReplayPreamble();
 
@@ -365,10 +365,10 @@ namespace Civilization1Remaster.UI
 			}
 		}
 
-		/// <summary>The 13 bytes of the city name (TownLabels) after the text at 0xba06</summary>
+		/// <summary>The 13 bytes of the city name (TownLabels) after the text at TextBuffer.Address</summary>
 		private void AppendReplayCityName(ushort labelIdx)
 		{
-			ushort end = (ushort)(0xba06 + this.owner.Libc.TextLength(0xba06));
+			ushort end = (ushort)(TextBuffer.Address + this.owner.Words.Length);
 
 			for (int idx = 0; idx < 0xd; idx++)
 			{
@@ -382,7 +382,7 @@ namespace Civilization1Remaster.UI
 		/// </summary>
 		private void ReplayRanking(ref ushort spot)
 		{
-			this.owner.Libc.CopyText(0xba06, "*** ");
+			this.owner.Words.Set("*** ");
 
 			for (short pairIdx = 0; pairIdx < 4; pairIdx++)
 			{
@@ -390,24 +390,24 @@ namespace Civilization1Remaster.UI
 
 				if ((places & 0xf0) != 0)
 				{
-					this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText((short)((pairIdx << 1) + 1), 10));
+					this.owner.Words.Append(this.owner.Libc.IntegerToText((short)((pairIdx << 1) + 1), 10));
 
-					this.owner.Libc.AppendText(0xba06, ":");
+					this.owner.Words.Append(":");
 
-					this.owner.Libc.AppendText(0xba06, ReplayPlural(places >> 4));
+					this.owner.Words.Append(ReplayPlural(places >> 4));
 
-					this.owner.Libc.AppendText(0xba06, " ");
+					this.owner.Words.Append(" ");
 				}
 
 				if ((places & 0xf) != 0)
 				{
-					this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText((short)((pairIdx << 1) + 2), 10));
+					this.owner.Words.Append(this.owner.Libc.IntegerToText((short)((pairIdx << 1) + 2), 10));
 
-					this.owner.Libc.AppendText(0xba06, ":");
+					this.owner.Words.Append(":");
 
-					this.owner.Libc.AppendText(0xba06, ReplayPlural(places & 0xf));
+					this.owner.Words.Append(ReplayPlural(places & 0xf));
 
-					this.owner.Libc.AppendText(0xba06, " ");
+					this.owner.Words.Append(" ");
 				}
 
 				spot++;
@@ -420,7 +420,7 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// Shows the line of a replay event (the text at 0xba06) at the top of the screen, in capitals for the human's events
+		/// Shows the line of a replay event (the text at TextBuffer.Address) at the top of the screen, in capitals for the human's events
 		/// (0x6810), and writes it with CR LF to the replay file (0x680c) in mode 3 of 0x680a; nothing in mode 4. The text is
 		/// drawn, then drawn again shortened to 312 pixels.
 		/// </summary>
@@ -432,29 +432,29 @@ namespace Civilization1Remaster.UI
 			{
 				if (ReplayActor == (ushort)this.owner.World.PersonParticipantIdx)
 				{
-					this.owner.Libc.UppercaseText(0xba06);
+					this.owner.Libc.UppercaseText(TextBuffer.Address);
 				}
 
 				this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 8, 15);
 
-				this.owner.TextPainter.RenderTextToScreen0(0xba06, 4, 1, 0);
+				this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 4, 1, 0);
 
 				if (ReplayMode == 3)
 				{
-					ushort length = this.owner.Libc.TextLength(0xba06);
+					ushort length = this.owner.Words.Length;
 
-					this.processor.EmitGlobalByte((ushort)(length + 0xba06), 0xd);
-					this.processor.EmitGlobalByte((ushort)(length + 0xba07), 0xa);
-					this.processor.EmitGlobalByte((ushort)(length + 0xba08), 0x0);
+					this.processor.EmitGlobalByte((ushort)(length + TextBuffer.Address), 0xd);
+					this.owner.Words[length + 1] = 0xa;
+					this.owner.Words[length + 2] = 0x0;
 
-					this.owner.Libc.WriteHandle((short)ReplayFile, 0xba06, (ushort)(length + 2));
+					this.owner.Libc.WriteHandle((short)ReplayFile, TextBuffer.Address, (ushort)(length + 2));
 				}
 
-				this.owner.BlockText.ShrinkTextToWidth(0xba06, 312);
+				this.owner.BlockText.ShrinkTextToWidth(TextBuffer.Address, 312);
 
 				this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 8, 15);
 
-				this.owner.TextPainter.RenderTextToScreen0(0xba06, 4, 1, 0);
+				this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 4, 1, 0);
 			}
 
 			this.processor.Journal.CloseScope("RenderReplayPreamble");
@@ -676,14 +676,14 @@ namespace Civilization1Remaster.UI
 
 			for (int vertLoc = 0; vertLoc < 50; vertLoc++)
 			{
-				this.processor.EmitGlobalByte(0xba56, 0xd);
-				this.processor.EmitGlobalByte(0xba57, 0xa);
-				this.processor.EmitGlobalByte(0xba58, 0);
+				this.owner.Words[80] = 0xd;
+				this.owner.Words[81] = 0xa;
+				this.owner.Words[82] = 0;
 
 				for (int horizLoc = 0; horizLoc < 80; horizLoc++)
 				{
 					bool ocean = this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) == MapRules.OceanTerrain;
-					this.processor.EmitGlobalByte((ushort)(0xba06 + horizLoc), (byte)(ocean ? 0x20 : 0x2e));
+					this.processor.EmitGlobalByte((ushort)(TextBuffer.Address + horizLoc), (byte)(ocean ? 0x20 : 0x2e));
 				}
 
 				for (int horizLoc = 0; horizLoc < 80; horizLoc++)
@@ -697,15 +697,14 @@ namespace Civilization1Remaster.UI
 							continue;
 
 						bool walls = (this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) != 0;
-						this.processor.EmitGlobalByte((ushort)(0xba06 + horizLoc), (byte)(walls ? 0x2a : 0x2b));
+						this.processor.EmitGlobalByte((ushort)(TextBuffer.Address + horizLoc), (byte)(walls ? 0x2a : 0x2b));
 
 						// The name after it: at least its first character, then while the line goes on and the name does
 						int place = 0;
 
 						do
 						{
-							this.processor.EmitGlobalByte((ushort)(0xba07 + horizLoc + place),
-								(byte)this.owner.World.TownLabels[labelIdx][place]);
+							this.owner.Words[horizLoc + place + 1] = (byte)this.owner.World.TownLabels[labelIdx][place];
 							place++;
 						} while (horizLoc + place + 1 < 0x50 && this.owner.World.TownLabels[labelIdx][place] != '\0');
 
@@ -713,7 +712,7 @@ namespace Civilization1Remaster.UI
 					}
 				}
 
-				this.owner.Libc.WriteHandle((short)ReplayFile, 0xba06, 0x52);
+				this.owner.Libc.WriteHandle((short)ReplayFile, TextBuffer.Address, 0x52);
 			}
 
 			this.processor.Journal.CloseScope("DumpReplayCities");
@@ -788,16 +787,16 @@ namespace Civilization1Remaster.UI
 			this.owner.Services.FloodBox(ScreenBox, 18, 150, 284, 32,
 				(ushort)(VgaMode != 0 ? 34 : 7));
 
-			this.owner.Libc.CopyText(0xba06, "The entire world hails");
+			this.owner.Words.Set("The entire world hails");
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 152, 20);
-			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 151, (ushort)(VgaMode != 0 ? 23 : 15));
+			this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 160, 152, 20);
+			this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 160, 151, (ushort)(VgaMode != 0 ? 23 : 15));
 
 			Message(LeaderName(this.owner.World.PersonParticipantIdx))
 				.Text(" the CONQUEROR!");
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 168, 20);
-			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 167, (ushort)(VgaMode != 0 ? 23 : 15));
+			this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 160, 168, 20);
+			this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 160, 167, (ushort)(VgaMode != 0 ? 23 : 15));
 
 			this.owner.TurnLogic.AwaitForKey();
 
@@ -933,22 +932,22 @@ namespace Civilization1Remaster.UI
 
 			while ((short)this.processor.PullGlobalWord(0x5c) < 0xf0)
 			{
-				this.processor.EmitGlobalByte(0xba06, 0);
+				this.owner.Words.Clear();
 			}
 
-			this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(Math.Abs((short)arg2), 10));
+			this.owner.Words.Append(this.owner.Libc.IntegerToText(Math.Abs((short)arg2), 10));
 
-			this.owner.Libc.AppendText(0xba06, (short)arg2 < 0 ? " BC" : " AD");
+			this.owner.Words.Append((short)arg2 < 0 ? " BC" : " AD");
 
-			this.owner.Libc.AppendText(0xba06, ": ");
+			this.owner.Words.Append(": ");
 
-			this.owner.Libc.AppendText(0xba06, CivilizationPlural((ushort)this.owner.World.PersonParticipantIdx));
+			this.owner.Words.Append(CivilizationPlural((ushort)this.owner.World.PersonParticipantIdx));
 
-			this.owner.Libc.AppendText(0xba06, " destroy");
+			this.owner.Words.Append(" destroy");
 
 			RenderShadowedCentredLine(152);
 
-			this.owner.Libc.CopyText(0xba06, "the ");
+			this.owner.Words.Set("the ");
 
 			Message(CivilizationName((ushort)participantIdx))
 				.Text(" civilization!");
@@ -1008,12 +1007,12 @@ namespace Civilization1Remaster.UI
 
 		}
 
-		/// <summary>The text 0xba06 centred at x 160 in colour 20, with the text in colour 23 (VGA) or 15 one line higher</summary>
+		/// <summary>The text TextBuffer.Address centred at x 160 in colour 20, with the text in colour 23 (VGA) or 15 one line higher</summary>
 		private void RenderShadowedCentredLine(int vertLoc)
 		{
-			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, vertLoc, 20);
+			this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 160, vertLoc, 20);
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, vertLoc - 1, VgaMode != 0 ? (ushort)23 : (ushort)15);
+			this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 160, vertLoc - 1, VgaMode != 0 ? (ushort)23 : (ushort)15);
 		}
 	}
 }

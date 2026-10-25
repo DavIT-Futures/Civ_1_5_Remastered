@@ -2224,12 +2224,12 @@ namespace Civilization1Remaster.Game
 					return MoveStep.GoesOn;
 			}
 
-			this.owner.Libc.CopyText(0xba06, "Will you?\n Keep moving\n Establish trade route\n");
+			this.owner.Words.Set("Will you?\n Keep moving\n Establish trade route\n");
 			this.processor.RegSource.Value16 = (ushort)(this.turn.City * 0x1c);
 
 			if (town.ParticipantIdx == participantIdx && (sbyte)town.PresentMakingIdx < -24)
 			{
-				this.owner.Libc.AppendText(0xba06, " Help build WONDER.\n");
+				this.owner.Words.Append(" Help build WONDER.\n");
 
 				if ((short)this.turn.Result < 10)
 					DisabledLines = 0x2;
@@ -2239,7 +2239,7 @@ namespace Civilization1Remaster.Game
 
 			if (town.ParticipantIdx == participantIdx)
 			{
-				this.turn.Result = this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+				this.turn.Result = this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 80);
 			}
 			else
 			{
@@ -2411,11 +2411,11 @@ namespace Civilization1Remaster.Game
 
 			if (participantIdx == this.owner.World.PersonParticipantIdx)
 			{
-				this.owner.Libc.CopyText(0xba06, "Attack at\n");
-				this.owner.Libc.AppendText(0xba06,
+				this.owner.Words.Set("Attack at\n");
+				this.owner.Libc.AppendText(TextBuffer.Address,
 					this.owner.Libc.IntegerToText((sbyte)this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d8)), 10));
-				this.owner.Libc.AppendText(0xba06, "/3 strength?\n Cancel\n Attack\n");
-				if (this.owner.TurnHooks.DisplayDialog(0xba06, 100, 16) == 1)
+				this.owner.Words.Append("/3 strength?\n Cancel\n Attack\n");
+				if (this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 16) == 1)
 					return true;
 
 				this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + UnitMemory.Origin + UnitMemory.TravelHoriz), 0xff);
@@ -3572,9 +3572,9 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private void StartRevolution(short participantIdx)
 		{
-			this.processor.EmitGlobalByte(0xba06, 0);
+			this.owner.Words.Clear();
 			this.owner.BlockText.DisplayTextDialog(0x1f6a);
-			if (this.owner.TurnHooks.DisplayDialog(0xba06, 64, 80) != 1)
+			if (this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 64, 80) != 1)
 				return;
 
 			this.processor.RegSource.Value16 = (ushort)(participantIdx << 1);
@@ -3595,23 +3595,23 @@ namespace Civilization1Remaster.Game
 		{
 			ref var participant = ref this.owner.World.Participants[participantIdx];
 
-			this.owner.Libc.CopyText(0xba06, "Select new Tax rate:\n ");
+			this.owner.Words.Set("Select new Tax rate:\n ");
 
 			short rate = 0;
 
 			for (; (short)(participant.LevyRatio + participant.ResearchLevyRatio) >= rate; rate++)
 			{
-				this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText((short)(10 * rate), 10));
-				this.owner.Libc.AppendText(0xba06, "% Tax, (");
-				this.owner.Libc.AppendText(0xba06,
+				this.owner.Words.Append(this.owner.Libc.IntegerToText((short)(10 * rate), 10));
+				this.owner.Words.Append("% Tax, (");
+				this.owner.Libc.AppendText(TextBuffer.Address,
 					this.owner.Libc.IntegerToText((short)((participant.LevyRatio + participant.ResearchLevyRatio - rate) * 10), 10));
-				this.owner.Libc.AppendText(0xba06, "% Science)\n ");
+				this.owner.Words.Append("% Science)\n ");
 			}
 
 			this.turn.Result = (ushort)rate;
 			DefaultLine = (ushort)participant.LevyRatio;
 
-			this.turn.Result = this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+			this.turn.Result = this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 80);
 
 			if (this.turn.Result == 0xffff)
 				return;
@@ -3631,23 +3631,23 @@ namespace Civilization1Remaster.Game
 		{
 			ref var participant = ref this.owner.World.Participants[participantIdx];
 
-			this.owner.Libc.CopyText(0xba06, "Select new Luxuries rate:\n ");
+			this.owner.Words.Set("Select new Luxuries rate:\n ");
 
 			short rate = 0;
 
 			for (; (short)(10 - participant.LevyRatio) >= rate; rate++)
 			{
-				this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText((short)(10 * rate), 10));
-				this.owner.Libc.AppendText(0xba06, "% Luxuries, (");
-				this.owner.Libc.AppendText(0xba06,
+				this.owner.Words.Append(this.owner.Libc.IntegerToText((short)(10 * rate), 10));
+				this.owner.Words.Append("% Luxuries, (");
+				this.owner.Libc.AppendText(TextBuffer.Address,
 					this.owner.Libc.IntegerToText((short)(-(rate + participant.LevyRatio - 10) * 10), 10));
-				this.owner.Libc.AppendText(0xba06, "% Science)\n ");
+				this.owner.Words.Append("% Science)\n ");
 			}
 
 			this.turn.Result = (ushort)rate;
 			DefaultLine = (ushort)-(participant.LevyRatio + participant.ResearchLevyRatio - 10);
 
-			this.turn.Result = this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+			this.turn.Result = this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 80);
 
 			if (this.turn.Result == 0xffff)
 				return;
@@ -4022,15 +4022,15 @@ namespace Civilization1Remaster.Game
 			short troopIdx = (short)arg2;
 			short vertLoc = 0x63;
 
-			this.owner.Libc.CopyText(0xba06, CivilizationName(participantIdx));
+			this.owner.Words.Set(CivilizationName(participantIdx));
 
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, 4, 99, 0);
+			this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 4, 99, 0);
 
 			vertLoc += 8;
 
-			this.owner.Libc.CopyText(0xba06, UnitText(this.troops.TroopKind(participantIdx, troopIdx)));
+			this.owner.Words.Set(UnitText(this.troops.TroopKind(participantIdx, troopIdx)));
 
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, 4, vertLoc, 0);
+			this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 4, vertLoc, 0);
 
 			vertLoc += 8;
 
@@ -4051,32 +4051,32 @@ namespace Civilization1Remaster.Game
 
 			if (thirds != 0)
 			{
-				this.owner.Libc.AppendText(0xba06, ".");
+				this.owner.Words.Append(".");
 
-				this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(thirds, 10));
+				this.owner.Words.Append(this.owner.Libc.IntegerToText(thirds, 10));
 			}
 
 			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.RoundsAway) != 0)
 			{
 				// Aircraft: the moves left with the fuel of the next turns
-				this.owner.Libc.AppendText(0xba06, "(");
+				this.owner.Words.Append("(");
 
 				moves += (short)(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.UnusualSteps) *
 					(short)this.troops.KindField(participantIdx, troopIdx, UnitKindTable.ShiftTally));
 
-				this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(moves, 10));
+				this.owner.Words.Append(this.owner.Libc.IntegerToText(moves, 10));
 
-				this.owner.Libc.AppendText(0xba06, ")");
+				this.owner.Words.Append(")");
 			}
 
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, 4, vertLoc, 0);
+			this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 4, vertLoc, 0);
 
 			vertLoc += 8;
 
 			EmptyMessage()
 				.City(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.BaseTown));
 
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, 4, vertLoc, 0);
+			this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 4, vertLoc, 0);
 
 			vertLoc += 8;
 
@@ -4084,7 +4084,7 @@ namespace Civilization1Remaster.Game
 				.Text(TerrainText(this.owner.MapOps.ObtainTerrainType(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz), this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert))))
 				.Text(")");
 
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, 4, vertLoc, 0);
+			this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 4, vertLoc, 0);
 
 			vertLoc += 8;
 

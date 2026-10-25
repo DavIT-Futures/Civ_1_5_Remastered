@@ -1498,7 +1498,7 @@ namespace Civilization1Remaster.Game
 				StoryLineTime = 0;
 				this.processor.EmitGlobalWord(0x6800, 0);
 
-				this.owner.Libc.CopyText(0xba06, "");
+				this.owner.Words.Set("");
 
 				this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(ScreenBox + 0x10), 0x7);
 				this.processor.EmitGlobalWord(0x6802, 0x0);
@@ -1518,12 +1518,12 @@ namespace Civilization1Remaster.Game
 
 			if (StoryState != 2 && this.processor.PullGlobalSignedWord(0x6802) < 0x28)
 			{
-				this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 160, 3);
+				this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 160, 160, 3);
 
 				this.owner.TextPainter.AwaitTime(5);
 			}
 
-			short lineRead = this.owner.Libc.ScanStream((short)StoryFile, "%[^\n]\n", 0xba06);
+			short lineRead = this.owner.Libc.ScanStream((short)StoryFile, "%[^\n]\n", TextBuffer.Address);
 
 			if (lineRead == -1 || (this.owner.Libc.KeyAvailable() != 0 && StoryKeyAllowed != 0))
 			{
@@ -1542,7 +1542,7 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// The line just read from story.txt (0xba06): shown under the picture, or the next picture for a short line; then the
+		/// The line just read from story.txt (TextBuffer.Address): shown under the picture, or the next picture for a short line; then the
 		/// time of the next line (0x6806) from the music table 0x3710:0x83
 		/// </summary>
 		private void TellStoryLine(ushort fileName)
@@ -1556,15 +1556,15 @@ namespace Civilization1Remaster.Game
 
 			this.owner.TextPainter.AwaitTime(10);
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 160, 3);
+			this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 160, 160, 3);
 
 			this.owner.TextPainter.AwaitTime(5);
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 160, 11);
+			this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 160, 160, 11);
 
 			StoryLineTime = 0x0;
 
-			if ((short)this.owner.Libc.TextLength(0xba06) > 3)
+			if ((short)this.owner.Words.Length > 3)
 			{
 				if (this.processor.PullGlobalWord(0x6802) == 0)
 				{
@@ -1584,7 +1584,7 @@ namespace Civilization1Remaster.Game
 				ShowStoryPicture(fileName);
 			}
 
-			if ((short)this.owner.Libc.TextLength(0xba06) > 0x13)
+			if ((short)this.owner.Words.Length > 0x13)
 			{
 				StoryLineTime = (ushort)(StoryLineTime + 1);
 			}
@@ -1718,7 +1718,7 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"EnactGlobalWarming({worldHeatingTally})");
 
-			this.owner.Libc.CopyText(0xba06, "Global temperature\nrises! Icecaps melt.\nSevere Drought.\n");
+			this.owner.Words.Set("Global temperature\nrises! Icecaps melt.\nSevere Drought.\n");
 
 			this.owner.Paper.DisplayNewspaper(-1);
 

@@ -58,9 +58,9 @@ namespace Civilization1Remaster.UI
 		/// </summary>
 		private void ChooseDifficulty()
 		{
-			this.owner.Libc.CopyText(0xba06, "Difficulty Level...\n Chieftain (easiest)\n Warlord\n Prince\n King\n Emperor (toughest)\n");
+			this.owner.Words.Set("Difficulty Level...\n Chieftain (easiest)\n Warlord\n Prince\n King\n Emperor (toughest)\n");
 
-			this.owner.World.HardnessTier = (short)this.owner.Dialogs.DisplayMenu(0xba06, 160, 35, 1);
+			this.owner.World.HardnessTier = (short)this.owner.Dialogs.DisplayMenu(TextBuffer.Address, 160, 35, 1);
 
 			if (MousePresent != 0 && this.processor.PullGlobalWord(0x2fa2) != 0)
 			{
@@ -106,18 +106,18 @@ namespace Civilization1Remaster.UI
 		/// </summary>
 		private void ChooseCompetition()
 		{
-			this.owner.Libc.CopyText(0xba06, "Level of Competition...\n ");
+			this.owner.Words.Set("Level of Competition...\n ");
 
 			for (short tally = 7; tally > 2; tally--)
 			{
-				this.owner.Libc.AppendText(0xba06, this.owner.Libc.IntegerToText(tally, 10));
+				this.owner.Words.Append(this.owner.Libc.IntegerToText(tally, 10));
 
-				this.owner.Libc.AppendText(0xba06, " Civilizations\n ");
+				this.owner.Words.Append(" Civilizations\n ");
 			}
 
 			do
 			{
-				this.owner.World.BotRivalTally = (short)this.owner.Dialogs.DisplayMenu(0xba06, 160, 35, 1);
+				this.owner.World.BotRivalTally = (short)this.owner.Dialogs.DisplayMenu(TextBuffer.Address, 160, 35, 1);
 			}
 			while ((ushort)this.owner.World.BotRivalTally == 0xffff);
 
@@ -193,22 +193,22 @@ namespace Civilization1Remaster.UI
 		/// </summary>
 		private void ChooseTribe()
 		{
-			this.owner.Libc.CopyText(0xba06, "Pick your tribe...\n ");
+			this.owner.Words.Set("Pick your tribe...\n ");
 
-			this.owner.Libc.TextLength(0xba06);
+			_ = this.owner.Words.Length;
 
 			for (int leader = 1; leader < this.owner.World.BotRivalTally + 2; leader++)
 			{
-				this.owner.Libc.AppendText(0xba06, LeaderText(leader, LeaderTable.Civilization));
+				this.owner.Words.Append(LeaderText(leader, LeaderTable.Civilization));
 
-				this.owner.Libc.AppendText(0xba06, "\n ");
+				this.owner.Words.Append("\n ");
 			}
 
 			for (int leader = 1; leader < this.owner.World.BotRivalTally + 2; leader++)
 			{
-				this.owner.Libc.AppendText(0xba06, (ushort)((0x3a * leader) + 0x16d2));
+				this.owner.Words.Append((ushort)((0x3a * leader) + 0x16d2));
 
-				this.owner.Libc.AppendText(0xba06, "\n ");
+				this.owner.Words.Append("\n ");
 			}
 
 			this.owner.VideoCard.RenderImage(BackScreenBox, 0x96, 0, 0xa0, 0xc8,
@@ -217,7 +217,7 @@ namespace Civilization1Remaster.UI
 			this.owner.Startup.DisplayMouseCursor();
 
 			// The line: 0 - rivals the first leaders of slots 1 - rivals + 1, then the second leaders (slot + 8)
-			this.owner.World.PersonParticipantIdx = (short)this.owner.Dialogs.DisplayMenu(0xba06, 160, 35, 1);
+			this.owner.World.PersonParticipantIdx = (short)this.owner.Dialogs.DisplayMenu(TextBuffer.Address, 160, 35, 1);
 
 			if (this.owner.World.PersonParticipantIdx <= this.owner.World.BotRivalTally)
 			{
@@ -288,15 +288,15 @@ namespace Civilization1Remaster.UI
 
 				this.owner.Libc.CopyText(CivilizationNameAt(names), LeaderTextAt(leader, LeaderTable.Civilization));
 
-				this.owner.Libc.CopyText(0xba06, LeaderTextAt(leader, LeaderTable.CivilizationPlural));
+				this.owner.Words.Set(LeaderTextAt(leader, LeaderTable.CivilizationPlural));
 
-				if (this.processor.PullGlobalByte(0xba06) == 0)
+				if (this.owner.Words[0] == 0)
 				{
 					Message(CivilizationNameAt(names))
 						.Text("s");
 				}
 
-				this.owner.Libc.CopyText(CivilizationPluralAt(names), 0xba06);
+				this.owner.Libc.CopyText(CivilizationPluralAt(names), TextBuffer.Address);
 			}
 
 			this.owner.TextPainter.RenderCenteredTextToScreen0(CivilizationPluralAt(names), 46, 92, 15);
@@ -365,11 +365,11 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Libc.CopyText(CodeText1, CivilizationPluralAt(names));
 
-			this.processor.EmitGlobalByte(0xba06, 0x0);
+			this.owner.Words.Clear();
 
 			this.owner.BlockText.DisplayTextDialog(0x35c3);
 
-			this.owner.Libc.TextLength(0xba06);
+			_ = this.owner.Words.Length;
 
 			int shown = 0;
 
@@ -378,19 +378,19 @@ namespace Civilization1Remaster.UI
 				if (this.owner.Advisors.PlayerKnowsTechnology(this.owner.World.PersonParticipantIdx, scienceIdx) == 0)
 					continue;
 
-				this.owner.Libc.AppendText(0xba06, TechnologyText(scienceIdx));
+				this.owner.Words.Append(TechnologyText(scienceIdx));
 
-				this.owner.Libc.AppendText(0xba06, ", ");
+				this.owner.Words.Append(", ");
 
 				shown++;
 
 				if (shown == 2)
 				{
-					this.owner.Libc.AppendText(0xba06, "\n");
+					this.owner.Words.Append("\n");
 				}
 			}
 
-			this.owner.Libc.AppendText(0xba06, "and Roads.\n");
+			this.owner.Words.Append("and Roads.\n");
 
 			ushort leader = (ushort)(0x3a * this.owner.World.Participants[this.owner.World.PersonParticipantIdx].ChiefVisuals);
 
@@ -778,15 +778,15 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Libc.CopyText(CivilizationNameAt(names), LeaderTextAt(leader, LeaderTable.Civilization));
 
-			this.owner.Libc.CopyText(0xba06, LeaderTextAt(leader, LeaderTable.CivilizationPlural));
+			this.owner.Words.Set(LeaderTextAt(leader, LeaderTable.CivilizationPlural));
 
-			if (this.processor.PullGlobalByte(0xba06) == 0)
+			if (this.owner.Words[0] == 0)
 			{
 				Message(CivilizationNameAt(names))
 					.Text("s");
 			}
 
-			this.owner.Libc.CopyText(CivilizationPluralAt(names), 0xba06);
+			this.owner.Libc.CopyText(CivilizationPluralAt(names), TextBuffer.Address);
 		}
 
 		/// <summary>
@@ -814,7 +814,7 @@ namespace Civilization1Remaster.UI
 					DialogStyle = 3;
 				}
 
-				this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+				this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 80);
 
 				this.owner.Conquest.EliminateSpaceship(participantIdx);
 
@@ -864,7 +864,7 @@ namespace Civilization1Remaster.UI
 		/// grasslands (3 grassland tiles +1), and the continent size (/ 50: 2 and 3 +1, more +2). The players behind the best
 		/// get compensation: more than 3 points behind another settlers (+3), then a technology per point (UncoverTechnology).
 		/// Returns the first player with the best start, or the last of them not too close to another civilization. The
-		/// descriptions in 0xba06 are never shown. The tables of the continents and the points are in the stack frame and SI / DI
+		/// descriptions in TextBuffer.Address are never shown. The tables of the continents and the points are in the stack frame and SI / DI
 		/// get the values of the original before the calls, like in the original.
 		/// </summary>
 		public ushort CharacterizeStartLocation()
@@ -931,7 +931,7 @@ namespace Civilization1Remaster.UI
 				if (this.processor.PullGlobalByte((ushort)(troop + 0x81d7)) == 0xff)
 					continue;
 
-				this.owner.Libc.CopyText(0xba06, "Skills: ");
+				this.owner.Words.Set("Skills: ");
 
 				this.processor.RegDest.Value16 = (ushort)((participantIdx << 1) + frame - 0x1c);
 
@@ -942,7 +942,7 @@ namespace Civilization1Remaster.UI
 					this.owner.UnitOps.ConstructUnit((short)participantIdx, 0, (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d5)),
 						(sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d6)));
 
-					this.owner.Libc.AppendText(0xba06, "Settlers+");
+					this.owner.Words.Append("Settlers+");
 				}
 
 				for (ushort given = 0; (short)(best - points[participantIdx]) > (short)given; given++)
@@ -950,9 +950,9 @@ namespace Civilization1Remaster.UI
 					this.processor.RegSource.Value16 = (ushort)(participantIdx << 1);
 
 					if (given != 0)
-						this.owner.Libc.AppendText(0xba06, "+");
+						this.owner.Words.Append("+");
 
-					this.owner.Libc.AppendText(0xba06, (ushort)((ushort)(this.owner.Advisors.UncoverTechnology((short)participantIdx, 0) * 0x16) + 0x4da));
+					this.owner.Words.Append((ushort)((ushort)(this.owner.Advisors.UncoverTechnology((short)participantIdx, 0) * 0x16) + 0x4da));
 				}
 
 				this.processor.RegSource.Value16 = (ushort)(participantIdx << 1);
@@ -960,7 +960,7 @@ namespace Civilization1Remaster.UI
 				if (points[participantIdx] != best)
 					continue;
 
-				this.owner.Libc.AppendText(0xba06, "NONE");
+				this.owner.Words.Append("NONE");
 
 				if (chosen == -1 || (scattered & (1 << (byte)participantIdx)) != 0)
 				{
@@ -1021,30 +1021,30 @@ namespace Civilization1Remaster.UI
 			return nearest;
 		}
 
-		/// <summary>The points of the player's start (see CharacterizeStartLocation); the description goes into 0xba06</summary>
+		/// <summary>The points of the player's start (see CharacterizeStartLocation); the description goes into TextBuffer.Address</summary>
 		private short RateStartLocation(ushort participantIdx, ushort troop, short nearest)
 		{
 			short start = 0;
 
-			this.owner.Libc.CopyText(0xba06, "Nearest civilization: ");
+			this.owner.Words.Set("Nearest civilization: ");
 
 			if (nearest < 10)
 			{
-				this.owner.Libc.AppendText(0xba06, "close");
+				this.owner.Words.Append("close");
 			}
 			else if (nearest < 0x14)
 			{
-				this.owner.Libc.AppendText(0xba06, "moderate");
+				this.owner.Words.Append("moderate");
 				start++;
 			}
 			else if (nearest != 0x3e7)
 			{
-				this.owner.Libc.AppendText(0xba06, "far away");
+				this.owner.Words.Append("far away");
 				start += 2;
 			}
 			else
 			{
-				this.owner.Libc.AppendText(0xba06, "isolated");
+				this.owner.Words.Append("isolated");
 				start += 4;
 			}
 
@@ -1072,21 +1072,21 @@ namespace Civilization1Remaster.UI
 			}
 
 
-			this.owner.Libc.CopyText(0xba06, ocean != 0 ? (ushort)0x3653 : (ushort)0x365c);
+			this.owner.Words.Set(ocean != 0 ? (ushort)0x3653 : (ushort)0x365c);
 
 			if ((short)river > 1)
 			{
-				this.owner.Libc.AppendText(0xba06, "river valley on a ");
+				this.owner.Words.Append("river valley on a ");
 				start += 2;
 			}
 			else if ((short)grassland >= 3)
 			{
-				this.owner.Libc.AppendText(0xba06, "grasslands on a ");
+				this.owner.Words.Append("grasslands on a ");
 				start++;
 			}
 			else
 			{
-				this.owner.Libc.AppendText(0xba06, "plains on a ");
+				this.owner.Words.Append("plains on a ");
 			}
 
 			this.processor.RegSource.Value16 = troop;
@@ -1094,25 +1094,25 @@ namespace Civilization1Remaster.UI
 			switch (CPU.SignedQuotient((short)this.owner.MapOps.ObtainLandMassSize((sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d5)), (sbyte)this.processor.PullGlobalByte((ushort)(troop + 0x81d6))), 0x32))
 			{
 				case 0:
-					this.owner.Libc.AppendText(0xba06, 0x3695);
+					this.owner.Words.Append(0x3695);
 					break;
 
 				case 1:
-					this.owner.Libc.AppendText(0xba06, 0x36a3);
+					this.owner.Words.Append(0x36a3);
 					break;
 
 				case 2:
-					this.owner.Libc.AppendText(0xba06, 0x36b1);
+					this.owner.Words.Append(0x36b1);
 					start++;
 					break;
 
 				case 3:
-					this.owner.Libc.AppendText(0xba06, 0x36c2);
+					this.owner.Words.Append(0x36c2);
 					start++;
 					break;
 
 				default:
-					this.owner.Libc.AppendText(0xba06, "large continent.");
+					this.owner.Words.Append("large continent.");
 					start += 2;
 					break;
 			}
@@ -1401,9 +1401,9 @@ namespace Civilization1Remaster.UI
 
 				Message(CivilizationName(this.owner.World.PersonParticipantIdx))
 					.Text(" government\nchanged to ");
-				this.owner.Libc.AppendText(0xba06,
+				this.owner.Libc.AppendText(TextBuffer.Address,
 					GovernmentName(this.owner.World.Participants[this.owner.World.PersonParticipantIdx].RegimeKind));
-				this.owner.Libc.AppendText(0xba06, "!\n");
+				this.owner.Words.Append("!\n");
 
 				this.owner.Paper.DisplayNewspaper(-2);
 
@@ -1422,10 +1422,10 @@ namespace Civilization1Remaster.UI
 					this.owner.VideoCard.RenderImage(PictureScreenBox, (ushort)((0x28 * advisorIdx) + 0xa0), 0x8c, 0x28, 0x3c,
 						ScreenBox, (ushort)((0x50 * advisorIdx) + 0x14), 0x76);
 
-					this.owner.Libc.CopyText(0xba06, this.processor.PullGlobalWord((ushort)((advisorIdx << 1) + 0x2fac)));
-					this.processor.EmitGlobalByte((ushort)(this.owner.Libc.TextLength(0xba06) + 0xba05), 0x0);
+					this.owner.Words.Set(this.processor.PullGlobalWord((ushort)((advisorIdx << 1) + 0x2fac)));
+					this.owner.Words[this.owner.Words.Length - 1] = 0x0;
 
-					this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, (80 * advisorIdx) + 40, (advisorIdx & 1) != 0 ? 186 : 180, 0);
+					this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, (80 * advisorIdx) + 40, (advisorIdx & 1) != 0 ? 186 : 180, 0);
 				}
 
 				this.processor.EmitGlobalWord((ushort)(ScreenBox + 0x10), 0x1);

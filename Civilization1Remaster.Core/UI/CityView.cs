@@ -41,15 +41,15 @@ namespace Civilization1Remaster.UI
 			ushort savedText = (ushort)(this.processor.RegFrame.Value16 - 0x80);
 			this.processor.EmitGlobalByte(savedText, 0x0);
 
-			if (this.owner.Libc.TextLength(0xba06) < 120)
+			if (this.owner.Words.Length < 120)
 			{
-				this.owner.Libc.CopyText(savedText, 0xba06);
+				this.owner.Libc.CopyText(savedText, TextBuffer.Address);
 			}
 
 			// RNG based on city name
 			EmptyMessage()
 				.City(townIdx);
-			string settlementTitle = this.processor.PullText(CPU.AsLinearAddress(this.processor.SegData.Value16, 0xba06));
+			string settlementTitle = this.processor.PullText(CPU.AsLinearAddress(this.processor.SegData.Value16, TextBuffer.Address));
 			// string.GetHashCode is different in every run of the program, a stable hash draws the same picture every time
 			RandomMT19937 dice = new RandomMT19937(StableTextHash(settlementTitle));
 
@@ -460,13 +460,13 @@ namespace Civilization1Remaster.UI
 					EmptyMessage()
 						.City(townIdx);
 
-					this.owner.TextPainter.RenderCenteredTextWithShadowToScreen0(0xba06, 160, 2, 15);
+					this.owner.TextPainter.RenderCenteredTextWithShadowToScreen0(TextBuffer.Address, 160, 2, 15);
 
-					this.processor.EmitGlobalByte(0xba06, 0x0);
+					this.owner.Words.Clear();
 
 					this.owner.TurnHooks.ObtainCurrentYearAsText();
 
-					this.owner.TextPainter.RenderCenteredTextWithShadowToScreen0(0xba06, 160, 15, 15);
+					this.owner.TextPainter.RenderCenteredTextWithShadowToScreen0(TextBuffer.Address, 160, 15, 15);
 				}
 				else
 				{

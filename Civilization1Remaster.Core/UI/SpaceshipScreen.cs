@@ -244,15 +244,15 @@ namespace Civilization1Remaster.UI
 			Message(CivilizationNameAt(names))
 				.Text(" SpaceShip: X.S.S. ");
 
-			ushort length = this.owner.Libc.TextLength(0xba06);
+			ushort length = this.owner.Words.Length;
 
-			this.owner.Libc.AppendText(0xba06, LeaderNameAt(names));
+			this.owner.Words.Append(LeaderNameAt(names));
 
 			// The "X" of "X.S.S." becomes the first letter of the civilization
 			this.processor.EmitGlobalByte((ushort)(length + 0xb9ff),
 				this.processor.PullGlobalByte(CivilizationNameAt(names)));
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 1, 0);
+			this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 160, 1, 0);
 		}
 
 		/// <summary>
@@ -347,7 +347,7 @@ namespace Civilization1Remaster.UI
 
 			if (shown)
 			{
-				this.owner.TextPainter.RenderTextToScreen0(0xba06, 242, vertLoc, 0);
+				this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 242, vertLoc, 0);
 			}
 
 			vertLoc += 8;
@@ -360,7 +360,7 @@ namespace Civilization1Remaster.UI
 				.Number(support)
 				.Text("%");
 
-			this.owner.TextPainter.RenderTextToScreen0(0xba06, 242, vertLoc, (ushort)(support < 0x64 ? 4 : 0));
+			this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 242, vertLoc, (ushort)(support < 0x64 ? 4 : 0));
 
 			vertLoc += 8;
 
@@ -382,7 +382,7 @@ namespace Civilization1Remaster.UI
 
 			if (shown)
 			{
-				this.owner.TextPainter.RenderTextToScreen0(0xba06, 242, vertLoc, (ushort)(energy < 0x64 ? 4 : 0));
+				this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 242, vertLoc, (ushort)(energy < 0x64 ? 4 : 0));
 			}
 
 			vertLoc += 0x10;
@@ -403,7 +403,7 @@ namespace Civilization1Remaster.UI
 
 			if (shown)
 			{
-				this.owner.TextPainter.RenderTextToScreen0(0xba06, 242, vertLoc, 0);
+				this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 242, vertLoc, 0);
 			}
 
 			vertLoc += 8;
@@ -418,7 +418,7 @@ namespace Civilization1Remaster.UI
 
 			if (shown)
 			{
-				this.owner.TextPainter.RenderTextToScreen0(0xba06, 242, vertLoc, (ushort)(fuel < 0x64 ? 4 : 0));
+				this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 242, vertLoc, (ushort)(fuel < 0x64 ? 4 : 0));
 			}
 
 			vertLoc += 8;
@@ -449,7 +449,7 @@ namespace Civilization1Remaster.UI
 
 			if (shown)
 			{
-				this.owner.TextPainter.RenderTextToScreen0(0xba06, 242, vertLoc, 0);
+				this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 242, vertLoc, 0);
 			}
 
 			vertLoc += 0x10;
@@ -469,7 +469,7 @@ namespace Civilization1Remaster.UI
 
 			if (shown)
 			{
-				this.owner.TextPainter.RenderTextToScreen0(0xba06, 242, vertLoc, 0);
+				this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 242, vertLoc, 0);
 			}
 
 			return (success, flightTime, (short)(vertLoc + 0x10));
@@ -746,7 +746,7 @@ namespace Civilization1Remaster.UI
 			Message(CivilizationPlural(participantIdx))
 				.Text(" build space ship.\n");
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 96, 15);
+			this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 160, 96, 15);
 
 			this.owner.Conquest.AwaitForKeyPressOrMouseClick();
 
@@ -981,18 +981,18 @@ namespace Civilization1Remaster.UI
 
 			if ((this.owner.World.StarshipMarkers & 0xfe00) != 0)
 			{
-				this.owner.Libc.CopyText(0xba06, "Which nation?\n ");
+				this.owner.Words.Set("Which nation?\n ");
 
 				for (int participantIdx = 1; participantIdx < 8; participantIdx++)
 				{
-					this.owner.Libc.AppendText(0xba06, CivilizationName(participantIdx));
+					this.owner.Words.Append(CivilizationName(participantIdx));
 
-					this.owner.Libc.AppendText(0xba06, "\n ");
+					this.owner.Words.Append("\n ");
 				}
 
 				DisabledLines = (ushort)((ushort)(this.owner.World.StarshipMarkers >> 9) ^ 0xff);
 
-				short chosenIdx = (short)(this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80) + 1);
+				short chosenIdx = (short)(this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 80) + 1);
 
 				if (chosenIdx > 0)
 				{
@@ -1027,13 +1027,13 @@ namespace Civilization1Remaster.UI
 			Message(CivilizationPlural(participantIdx))
 				.Text(" LAUNCH space ship!");
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 92, 15);
+			this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 160, 92, 15);
 
 			Message("Estimate arrival in ")
 				.Number(this.owner.World.Participants[participantIdx].StarshipArrivalSeason)
 				.Text(".\n");
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 100, 15);
+			this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 160, 100, 15);
 
 			this.owner.World.Participants[participantIdx].StarshipLiftoffSeason = this.owner.World.Season;
 
