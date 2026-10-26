@@ -177,19 +177,6 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Startup.DisplayMouseCursor();
 
-			this.processor.EmitLocalWord(0x4, (ushort)givenIdx);
-			this.processor.EmitLocalWord(0xe, (ushort)width);
-
-			if (givenIdx < 0)
-			{
-				this.processor.EmitLocalWord(0x2, 0x80);
-			}
-
-			if (shown)
-			{
-				this.processor.EmitLocalWord(0x10, 0x10);
-			}
-
 			this.processor.RestoreSource();
 			this.processor.LeaveFrame();
 			// Far return
