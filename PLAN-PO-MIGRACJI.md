@@ -464,7 +464,17 @@ pomocniczej albo pomocniczą sięgającą do ramki wołaną też spod innej ramk
 `ReckonContinentSizes`, `DisplayTravellersReport`, `HandleEndOfTurnEvents`, `LocateNearestFriendlyCity`,
 `ObtainDistanceToReplayCity`, `RenderSpaceship`, `ObtainNavigationKey`, `TitleLogoAndMainChoices`. 808/808.
 `FrameWords` czyta i pisze też bajty (`FrameByte` / `SetFrameByte`: parzysta odległość to młodszy bajt słowa, nieparzysta
-starszy bajt słowa poniżej); dzięki temu `DisplayMainIntro` (0x4e, 15 pomocniczych) – 808/808. ramki, SI/DI, BX/CX/DX moduł po module; przy jawnych wartościach
+starszy bajt słowa poniżej); dzięki temu `DisplayMainIntro` (0x4e, 15 pomocniczych) – 808/808.
+**Następne kroki pętli B3 (stan 2026-10-26 rano):** (1) ramki z wyliczanymi adresami (tablice, bufory) jak w
+`CityManagement`: `FrameWords` + adres `RegFrame + x - baza` → odległość `baza - x` (skrypt `b3cityframe.py` jako wzór;
+bufory przekazywane przez adres do funkcji tekstu / plików zostają na stosie do B6.8); kandydaci z `b3frames.py`
+„computed or byte”: `DisplayMenu`/`OperateMenu`, `TradeAndConquest`, `ScienceAndAdvisors`, `AdvisorReports`,
+`DiplomatActions`, `TurnEvents`, `GameStartup.RunGame`, `TextBlockRenderer`, `Palace`, `Newspaper`, `MainIntro`;
+(2) zagadka ramki `ProduceTerrain` (wyżej); (3) ok. 100 odczytów SI/DI zostawianych przez wywołane funkcje; (4) pary
+`PreserveIndexRegisters` / `RestoreIndexRegisters` tam, gdzie nikt nie czyta SI/DI po powrocie. Ramki z „przeciekiem”
+(`DivideCivilization`, `OpeningSequence`, `DisplayConquerorScreen`, `LaunchAudience`) zostają do usunięcia porównania
+`cpu.sp` w fazie 3. Narzędzia w scratchpadzie sesji: `emptyframes.py`, `dropframes.py`, `b3frames.py`, `frametree.py`,
+`b3keep*.py`, `b3sidi.py`, `edits.py`. ramki, SI/DI, BX/CX/DX moduł po module; przy jawnych wartościach
 zamiast śmieci golden master zostaje zielony, sonda stosu ma pokazać zero czytelników. Na końcu rejestry z CPU,
 `MZExecutable` i obraz CIV.EXE w pamięci (dane początkowe z pliku przy starcie).
 
