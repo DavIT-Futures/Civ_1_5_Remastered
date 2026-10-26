@@ -1461,18 +1461,12 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope("DisplayStoryIntro()");
 
-			// The frame keeps the picture file name (bp - 0x10) like the original
-			this.processor.EnterFrame(0x1a);
-			ushort fileName = (ushort)(this.processor.RegFrame.Value16 - 0x10);
-
 			DrawingBox.DisplayIdx = 0x0;
 
-			bool waiting = StoryStep(fileName);
+			bool waiting = StoryStep();
 
 			ushort result = (ushort)(waiting ? 1 : 0);
 			this.processor.RegAcc.Value16 = result;
-
-			this.processor.LeaveFrame();
 
 			this.processor.Journal.CloseScope("DisplayStoryIntro");
 
@@ -1482,7 +1476,7 @@ namespace Civilization1Remaster.Game
 		/// <summary>
 		/// The step of DisplayStoryIntro, true while waiting for the music
 		/// </summary>
-		private bool StoryStep(ushort fileName)
+		private bool StoryStep()
 		{
 			if ((short)StoryState >= 2 && this.owner.Libc.KeyAvailable() == 0)
 			{
@@ -1550,7 +1544,7 @@ namespace Civilization1Remaster.Game
 			}
 			else
 			{
-				TellStoryLine(fileName);
+				TellStoryLine();
 			}
 
 			this.owner.Services.DisplayScreen(0);
@@ -1564,7 +1558,7 @@ namespace Civilization1Remaster.Game
 		/// The line just read from story.txt (TextBuffer.Address): shown under the picture, or the next picture for a short line; then the
 		/// time of the next line (0x6806) from the music table 0x3710:0x83
 		/// </summary>
-		private void TellStoryLine(ushort fileName)
+		private void TellStoryLine()
 		{
 			if ((short)BirthPicture > 1)
 			{
@@ -1600,7 +1594,7 @@ namespace Civilization1Remaster.Game
 			}
 			else
 			{
-				ShowStoryPicture(fileName);
+				ShowStoryPicture();
 			}
 
 			if ((short)this.owner.Words.Length > 0x13)
@@ -1617,14 +1611,11 @@ namespace Civilization1Remaster.Game
 		/// <summary>
 		/// The next picture birthN.pic (N = 0x3b64), with VGA colours faded in with its palette birthN.pal and its colour cycles
 		/// </summary>
-		private void ShowStoryPicture(ushort fileName)
+		private void ShowStoryPicture()
 		{
-			this.owner.Libc.CopyText(fileName, "birth0.pic");
-
-			// The digit of the name (bp - 0xb)
 			byte pictureIdx = (byte)BirthPicture;
 			BirthPicture = (ushort)(BirthPicture + 1);
-			this.processor.EmitGlobalByte((ushort)(fileName + 5), (byte)(this.processor.PullGlobalByte((ushort)(fileName + 5)) + pictureIdx));
+			string pictureName = $"birth{pictureIdx}.pic";
 
 			bool colours = VgaMode != 0;
 
@@ -1633,7 +1624,7 @@ namespace Civilization1Remaster.Game
 				StopStoryColourCycles();
 			}
 
-			this.owner.ImageToolkit.ImportPictureOrColors(2, 0, 0, fileName, 0);
+			this.owner.ImageToolkit.ImportPictureOrColors(2, 0, 0, pictureName, 0);
 
 			if (VgaMode != 0)
 			{
@@ -1646,9 +1637,9 @@ namespace Civilization1Remaster.Game
 			if (VgaMode == 0)
 				return;
 
-			this.owner.Libc.CopyText((ushort)(fileName + 7), "pal");
+			string palName = $"birth{pictureIdx}.pal";
 
-			this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, fileName, 0xc5be);
+			this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, palName, 0xc5be);
 
 			this.owner.Services.ImportColorsFromBuffer(8, 0xc5be);
 

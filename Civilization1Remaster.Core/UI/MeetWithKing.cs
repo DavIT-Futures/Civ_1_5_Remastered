@@ -1383,11 +1383,7 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope($"DisplayKingScreen({participantIdx})");
 
-			// The file name is in the stack frame, like in the original, and the final values of the locals stay there
-			this.processor.EnterFrame(0x16);
 			this.processor.PreserveIndexRegisters();
-
-			ushort pictureName = (ushort)(this.processor.RegFrame.Value16 - 0x10);
 
 			AudiencePlayer = (ushort)participantIdx;
 			AudienceWithoutPictures = 0;
@@ -1403,16 +1399,15 @@ namespace Civilization1Remaster.UI
 					DisplayKingLine(participantIdx);
 
 					this.processor.RestoreIndexRegisters();
-					this.processor.LeaveFrame();
 					// Far return
 					this.processor.Journal.CloseScope("DisplayKingScreen");
 					return;
 				}
 			}
 
-			NameAdvisorsPicture(pictureName, participantIdx, true);
+			string advisorsPic = NameAdvisorsPicture(participantIdx, true);
 
-			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, pictureName, 0);
+			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, advisorsPic, 0);
 
 			for (int advisorIdx = 0; advisorIdx < 4; advisorIdx++)
 			{
@@ -1424,18 +1419,14 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Startup.QueryForDisk((ushort)((KingPicture / 7) + 4), 1);
 
-			this.owner.Libc.CopyText(pictureName, "king00.pic");
-
 			king = (short)KingPicture;
-			this.processor.EmitGlobalByte((ushort)(pictureName + 5), (byte)(this.processor.PullGlobalByte((ushort)(pictureName + 5)) + (king % 10)));
-			this.processor.EmitGlobalByte((ushort)(pictureName + 4), (byte)(this.processor.PullGlobalByte((ushort)(pictureName + 4)) + (king / 10)));
+			char tens = (char)('0' + (king / 10));
+			char ones = (char)('0' + (king % 10));
+			string kingPic = (VgaMode == 0 && (KingPicture == 0 || KingPicture == 3))
+				? $"kink{tens}{ones}.pic"
+				: $"king{tens}{ones}.pic";
 
-			if (VgaMode == 0 && (KingPicture == 0 || KingPicture == 3))
-			{
-				this.processor.EmitGlobalByte((ushort)(pictureName + 3), 0x6b);
-			}
-
-			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, pictureName, 0);
+			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, kingPic, 0);
 
 			KingScenePicture = this.owner.VideoCard.ScreenToPicture(1, 0xb5, 0x43, 0x8b, 0x85);
 
@@ -1443,7 +1434,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Helpers.ReleaseResource(GovernmentPicture, 0x3aee);
 
-			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, pictureName, 0);
+			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, kingPic, 0);
 
 			// The 14 faces with their mouths, 5 a row (the 9th and the 12th skip two places)
 			short place = 0;
@@ -1468,9 +1459,9 @@ namespace Civilization1Remaster.UI
 
 			if (this.owner.Startup.QueryForDisk(2, 0) != 0)
 			{
-				NameAdvisorsPicture(pictureName, participantIdx, false);
+				string secondAdvisorsPic = NameAdvisorsPicture(participantIdx, false);
 
-				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, pictureName, 0);
+				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, secondAdvisorsPic, 0);
 
 				// The 12 small advisors, 3 a row
 				ushort row, column = 0;
@@ -1501,7 +1492,6 @@ namespace Civilization1Remaster.UI
 			KingPictureLoaded = 1;
 
 			this.processor.RestoreIndexRegisters();
-			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("DisplayKingScreen");
 		}
@@ -1510,13 +1500,9 @@ namespace Civilization1Remaster.UI
 		/// "govtNa.pic" in the buffer: N the government / 2 ('3' for government 3), "m" instead of "a" with technology 0x14
 		/// (0x67ee, read from the player the first time)
 		/// </summary>
-		private void NameAdvisorsPicture(ushort pictureName, short participantIdx, bool first)
+		private string NameAdvisorsPicture(short participantIdx, bool first)
 		{
-			this.owner.Libc.CopyText(pictureName, "govt0a.pic");
-
 			short regime = this.owner.World.Participants[participantIdx].RegimeKind;
-
-			this.processor.EmitGlobalByte((ushort)(pictureName + 4), (byte)((regime / 2) + 0x30));
 
 			if (first)
 			{
@@ -1526,14 +1512,9 @@ namespace Civilization1Remaster.UI
 				KingModernPictures = this.processor.RegAcc.Value16;
 			}
 
-			if (regime == 3)
-			{
-				this.processor.EmitGlobalByte((ushort)(pictureName + 4), 0x33);
-			}
-			else if (KingModernPictures != 0)
-			{
-				this.processor.EmitGlobalByte((ushort)(pictureName + 5), 0x6d);
-			}
+			char regimeChar = regime == 3 ? '3' : (char)((regime / 2) + '0');
+			char techChar = regime != 3 && KingModernPictures != 0 ? 'm' : 'a';
+			return $"govt{regimeChar}{techChar}.pic";
 		}
 
 		/// <summary>The audience without pictures: "&lt;title&gt;: &lt;government&gt; of the &lt;civilization&gt;." over a motif</summary>
@@ -1569,28 +1550,16 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope($"ImportKingScenery({participantIdx})");
 
-			this.processor.EnterFrame(0x1e);
-
 			if (AudienceWithoutPictures == 0)
 			{
 				this.owner.Startup.ConcealMouseCursor();
 
-				ushort sceneryName = (ushort)(this.processor.RegFrame.Value16 - 0xe);
-				this.owner.Libc.CopyText(sceneryName, "back0a.pic");
-
 				short regime = this.owner.World.Participants[participantIdx].RegimeKind;
-				this.processor.EmitGlobalByte((ushort)(sceneryName + 4), (byte)((regime / 2) + 0x30));
+				char regimeChar = regime == 3 ? '3' : (char)((regime / 2) + '0');
+				char techChar = regime != 3 && KingModernPictures != 0 ? 'm' : 'a';
+				string sceneryPic = $"back{regimeChar}{techChar}.pic";
 
-				if (regime == 3)
-				{
-					this.processor.EmitGlobalByte((ushort)(sceneryName + 4), 0x33);
-				}
-				else if (KingModernPictures != 0)
-				{
-					this.processor.EmitGlobalByte((ushort)(sceneryName + 5), 0x6d);
-				}
-
-				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, sceneryName, 0);
+				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, sceneryPic, 0);
 
 				for (int figureIdx = 0; (short)((this.owner.World.Participants[participantIdx].Standing + 1) >> 1) > figureIdx; figureIdx++)
 				{
@@ -1604,26 +1573,22 @@ namespace Civilization1Remaster.UI
 				KingStep = 0;
 
 				// The background's colours: "backNa.pal"
-				this.owner.Libc.CopyText((ushort)(sceneryName + 7), "pal");
-
-				ushort hueName = (ushort)(this.processor.RegFrame.Value16 - 0x1c);
-				this.owner.Libc.CopyText(hueName, "king00.pal");
+				string sceneryPal = $"back{regimeChar}{techChar}.pal";
 
 				short king = (short)KingPicture;
-				this.processor.EmitGlobalByte((ushort)(hueName + 5), (byte)(this.processor.PullGlobalByte((ushort)(hueName + 5)) + king % 10));
-				this.processor.EmitGlobalByte((ushort)(hueName + 4), (byte)(this.processor.PullGlobalByte((ushort)(hueName + 4)) + king / 10));
+				char tens = (char)('0' + (king / 10));
+				char ones = (char)('0' + (king % 10));
+				string hueName = $"king{tens}{ones}.pal";
 
 				this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, hueName, 0xc1d6);
 
-				this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, sceneryName, 0xbdee);
+				this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, sceneryPal, 0xbdee);
 
 				// The colours 0x40 - 0x8f of the king over the background's
 				for (ushort place = 0xc0; place < 0x1b0; place++)
 				{
 					this.processor.EmitGlobalByte((ushort)(place + 0xbdf4), this.processor.PullGlobalByte((ushort)(place + 0xc1dc)));
 				}
-
-				// The loop counter's last value stays in the frame, like in the original
 
 				this.owner.Helpers.HaltHueCycling();
 
@@ -1635,8 +1600,6 @@ namespace Civilization1Remaster.UI
 
 				this.owner.Startup.DisplayMouseCursor();
 			}
-
-			this.processor.LeaveFrame();
 
 			this.processor.Journal.CloseScope("'LoadKingBackground'");
 		}

@@ -1346,24 +1346,12 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope("ImportGovernmentGraphics()");
 
-			this.processor.EnterFrame(0x12);
-
 			this.owner.Startup.QueryForDisk(2, 1);
 
-			ushort docname = (ushort)(this.processor.RegFrame.Value16 - 0x10);
-			this.owner.Libc.CopyText(docname, "govt0a.pic");
-
-			ushort regime = (ushort)this.owner.World.Participants[this.owner.World.PersonParticipantIdx].RegimeKind;
-			this.processor.EmitGlobalByte((ushort)(docname + 4), (byte)(((short)regime / 2) + 0x30));
-
-			if (regime == 3)
-			{
-				this.processor.EmitGlobalByte((ushort)(docname + 4), 0x33);
-			}
-			else if (this.owner.Advisors.PlayerKnowsTechnology(this.owner.World.PersonParticipantIdx, 0x14) != 0)
-			{
-				this.processor.EmitGlobalByte((ushort)(docname + 5), 0x6d);
-			}
+			short regime = this.owner.World.Participants[this.owner.World.PersonParticipantIdx].RegimeKind;
+			char regimeChar = regime == 3 ? '3' : (char)((regime / 2) + '0');
+			char techChar = regime != 3 && this.owner.Advisors.PlayerKnowsTechnology(this.owner.World.PersonParticipantIdx, 0x14) != 0 ? 'm' : 'a';
+			string docname = $"govt{regimeChar}{techChar}.pic";
 
 			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, docname, 0);
 
@@ -1371,8 +1359,6 @@ namespace Civilization1Remaster.UI
 				PictureScreenBox, 0xa0, 0x8c);
 
 			this.owner.Startup.QueryForDisk(0, 1);
-
-			this.processor.LeaveFrame();
 
 			this.processor.Journal.CloseScope("ImportGovernmentGraphics");
 		}
