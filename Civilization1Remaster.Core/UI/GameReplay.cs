@@ -1,11 +1,15 @@
 ﻿using System;
 using Civilization1Remaster.Emulation;
+using Civilization1Remaster.Engine;
 using Civilization1Remaster.Game.Rules;
 
 namespace Civilization1Remaster.UI
 {
 	public class GameReplay : GameModule
 	{
+		/// <summary>The words of the frame of ObtainDistanceToReplayCity, shared by its helpers (B3: in C#, new for every call)</summary>
+		private FrameWords obtainDistanceToReplayCityFrame = null!;
+
 		public GameReplay(GameEngine owner)
 			: base(owner)
 		{
@@ -580,9 +584,11 @@ namespace Civilization1Remaster.UI
 			this.processor.Journal.OpenScope($"ObtainDistanceToReplayCity({horizLoc}, {vertLoc})");
 
 			this.processor.EnterFrame(0x6);
+			FrameWords outerFrame = this.obtainDistanceToReplayCityFrame;
+			this.obtainDistanceToReplayCityFrame = new FrameWords(this.processor, 0x6);
 			this.processor.PreserveSource();
 
-			ushort nearest = this.processor.PullLocalWord(0x4);
+			ushort nearest = this.obtainDistanceToReplayCityFrame.Frame(0x4);
 
 			ReplayCityDistance = 999;
 			this.processor.SegExtra.Value16 = ReplayCitySegment;
@@ -602,10 +608,11 @@ namespace Civilization1Remaster.UI
 				}
 			}
 
-			this.processor.EmitLocalWord(0x4, nearest);
+			this.obtainDistanceToReplayCityFrame.SetFrame(0x4, nearest);
 			this.processor.RegAcc.Value16 = nearest;
 
 			this.processor.RestoreSource();
+			this.obtainDistanceToReplayCityFrame = outerFrame;
 			this.processor.LeaveFrame();
 
 			this.processor.Journal.CloseScope("ObtainDistanceToReplayCity");

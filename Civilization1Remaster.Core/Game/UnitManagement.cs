@@ -1,5 +1,6 @@
 ﻿using System;
 using Civilization1Remaster.Emulation;
+using Civilization1Remaster.Engine;
 using Civilization1Remaster.Game.Rules;
 
 namespace Civilization1Remaster.Game
@@ -9,6 +10,9 @@ namespace Civilization1Remaster.Game
 	/// </summary>
 	public class UnitManagement : GameModule
 	{
+		/// <summary>The words of the frame of LocateNearestFriendlyCity, shared by its helpers (B3: in C#, new for every call)</summary>
+		private FrameWords locateNearestFriendlyCityFrame = null!;
+
 		private readonly UnitMemory troops;
 
 		public UnitManagement(GameEngine owner)
@@ -2103,8 +2107,10 @@ namespace Civilization1Remaster.Game
 			// The frame of the original: without an own city or carrier the target stays what was left in the stack there
 			// (ClassicStackLeftovers); the remaster takes the place of the unit, so it stays (direction 0)
 			this.processor.EnterFrame(0x16);
-			int targetHoriz = this.processor.PullLocalSignedWord(0x14);
-			int targetVert = this.processor.PullLocalSignedWord(0x16);
+			FrameWords outerFrame = this.locateNearestFriendlyCityFrame;
+			this.locateNearestFriendlyCityFrame = new FrameWords(this.processor, 0x16);
+			int targetHoriz = (short)this.locateNearestFriendlyCityFrame.Frame(0x14);
+			int targetVert = (short)this.locateNearestFriendlyCityFrame.Frame(0x16);
 
 			int unitHoriz = this.troops.Pull(participantIdx, troopIdx, UnitMemory.Horiz);
 			int unitVert = this.troops.Pull(participantIdx, troopIdx, UnitMemory.Vert);
@@ -2177,6 +2183,7 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
+			this.locateNearestFriendlyCityFrame = outerFrame;
 			this.processor.LeaveFrame();
 
 			this.processor.RegSource.Value16 = savedSource;

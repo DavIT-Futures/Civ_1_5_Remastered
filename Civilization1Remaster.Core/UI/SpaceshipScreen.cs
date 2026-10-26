@@ -1,4 +1,5 @@
 ﻿using Civilization1Remaster.Emulation;
+using Civilization1Remaster.Engine;
 
 namespace Civilization1Remaster.UI
 {
@@ -7,6 +8,9 @@ namespace Civilization1Remaster.UI
 	/// </summary>
 	public class SpaceshipScreen : GameModule
 	{
+		/// <summary>The words of the frame of RenderSpaceship, shared by its helpers (B3: in C#, new for every call)</summary>
+		private FrameWords renderSpaceshipFrame = null!;
+
 		public SpaceshipScreen(GameEngine owner)
 			: base(owner)
 		{
@@ -138,6 +142,8 @@ namespace Civilization1Remaster.UI
 			// The frame keeps the key of the star animation (bp - 0x16) like the original: without a key (a click) the old
 			// stack value is read
 			this.processor.EnterFrame(0x20);
+			FrameWords outerFrame = this.renderSpaceshipFrame;
+			this.renderSpaceshipFrame = new FrameWords(this.processor, 0x20);
 			this.processor.PreserveIndexRegisters();
 
 			this.owner.Startup.ConcealMouseCursor();
@@ -223,6 +229,7 @@ namespace Civilization1Remaster.UI
 			this.processor.RegAcc.Value16 = result;
 
 			this.processor.RestoreIndexRegisters();
+			this.renderSpaceshipFrame = outerFrame;
 			this.processor.LeaveFrame();
 
 			this.processor.Journal.CloseScope("RenderSpaceship");
@@ -503,7 +510,7 @@ namespace Civilization1Remaster.UI
 
 			if (arg2 != 0 && this.owner.GlobDb3a == 0)
 			{
-				this.processor.EmitLocalWord(0x16, this.owner.Dialogs.ObtainNavigationKey());
+				this.renderSpaceshipFrame.SetFrame(0x16, this.owner.Dialogs.ObtainNavigationKey());
 			}
 
 			if (participantIdx != this.owner.World.PersonParticipantIdx || arg3 == 0 || arg2 >= 0)
@@ -511,7 +518,7 @@ namespace Civilization1Remaster.UI
 
 			bool launchClick = this.owner.GlobDb3a != 0 && (short)this.owner.GlobDb3c > 0xf2 && (short)this.owner.GlobDb3e >= 0xbe;
 
-			if (!launchClick && this.processor.PullLocalWord(0x16) != 0x6c)
+			if (!launchClick && this.renderSpaceshipFrame.Frame(0x16) != 0x6c)
 				return;
 
 			if ((this.owner.World.StarshipMarkers & (1 << (byte)this.owner.World.PersonParticipantIdx)) != 0)

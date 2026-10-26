@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using Civilization1Remaster.Emulation;
+using Civilization1Remaster.Engine;
 using Civilization1Remaster.Game.State;
 
 namespace Civilization1Remaster.Game
@@ -11,6 +12,12 @@ namespace Civilization1Remaster.Game
 	/// </summary>
 	public class TurnEvents : GameModule
 	{
+		/// <summary>The words of the frame of DisplayTravellersReport, shared by its helpers (B3: in C#, new for every call)</summary>
+		private FrameWords displayTravellersReportFrame = null!;
+
+		/// <summary>The words of the frame of HandleEndOfTurnEvents, shared by its helpers (B3: in C#, new for every call)</summary>
+		private FrameWords handleEndOfTurnEventsFrame = null!;
+
 		public TurnEvents(GameEngine owner)
 			: base(owner)
 		{
@@ -914,6 +921,8 @@ namespace Civilization1Remaster.Game
 			this.processor.Journal.OpenScope("DisplayTravellersReport()");
 
 			this.processor.EnterFrame(0x1c);
+			FrameWords outerFrame = this.displayTravellersReportFrame;
+			this.displayTravellersReportFrame = new FrameWords(this.processor, 0x1c);
 			this.processor.PreserveIndexRegisters();
 
 			if ((ushort)((ushort)(5 - (ushort)this.owner.World.HardnessTier) * 0x1e) <= this.owner.World.RoundTally)
@@ -927,6 +936,7 @@ namespace Civilization1Remaster.Game
 			}
 
 			this.processor.RestoreIndexRegisters();
+			this.displayTravellersReportFrame = outerFrame;
 			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("DisplayTravellersReport");
@@ -940,17 +950,17 @@ namespace Civilization1Remaster.Game
 			do
 			{
 				horizLoc = (short)this.owner.Libc.Dice.DrawInt(80);
-				this.processor.EmitLocalWord(0xe, (ushort)horizLoc);
+				this.displayTravellersReportFrame.SetFrame(0xe, (ushort)horizLoc);
 
 				vertLoc = (short)(this.owner.Libc.Dice.DrawInt(44) + 3);
-				this.processor.EmitLocalWord(0x12, (ushort)vertLoc);
+				this.displayTravellersReportFrame.SetFrame(0x12, (ushort)vertLoc);
 			}
 			while (this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) != 0xa ||
 				this.owner.MapOps.ObtainTileOwner(horizLoc, vertLoc) != 0xffff ||
 				(short)this.owner.MapOps.ObtainLandMassSize(horizLoc, vertLoc) < 0x10);
 
 			short units = (short)this.owner.Helpers.VerifyValueSpan((this.owner.World.RoundTally / 150) + 1, 1, 3);
-			this.processor.EmitLocalWord(0x16, (ushort)units);
+			this.displayTravellersReportFrame.SetFrame(0x16, (ushort)units);
 
 			this.owner.UnitOps.ConstructUnit(0, units < 3 ? (short)0x11 : (short)0x12, horizLoc, vertLoc);
 
@@ -963,31 +973,31 @@ namespace Civilization1Remaster.Game
 				if (unitIdx == units)
 					kind = 0x1a;
 
-				this.processor.EmitLocalWord(0x4, (ushort)kind);
+				this.displayTravellersReportFrame.SetFrame(0x4, (ushort)kind);
 
 				ushort troopIdx = this.owner.UnitOps.ConstructUnit(0, kind, horizLoc, vertLoc);
-				this.processor.EmitLocalWord(0x1c, troopIdx);
+				this.displayTravellersReportFrame.SetFrame(0x1c, troopIdx);
 
 				// The barbarian units start on sentry (player 0); troopIdx may be past the table (0xffff, no free place)
 				int marker = (ushort)(UnitMemory.TroopStride * troopIdx);
 				this.Troops.AssignAt(marker, UnitMemory.Status, (byte)(this.Troops.PullAt(marker, UnitMemory.Status) | 1));
 			}
 
-			this.processor.EmitLocalWord(0x14, (ushort)unitIdx);
+			this.displayTravellersReportFrame.SetFrame(0x14, (ushort)unitIdx);
 		}
 
 		/// <summary>The barbarians landing near a city of the human player (see DisplayTravellersReport)</summary>
 		private void RaidHumanCity()
 		{
 			ushort townIdx = (ushort)this.owner.Libc.Dice.DrawInt(128);
-			this.processor.EmitLocalWord(0x14, townIdx);
+			this.displayTravellersReportFrame.SetFrame(0x14, townIdx);
 
 			if (this.owner.World.Towns[townIdx].ConditionMarker == 0xff ||
 				this.owner.World.Towns[townIdx].ParticipantIdx != this.owner.World.PersonParticipantIdx)
 				return;
 
 			ushort plunder = this.owner.Conquest.ComputeCityPlunder((short)townIdx);
-			this.processor.EmitLocalWord(0x16, plunder);
+			this.displayTravellersReportFrame.SetFrame(0x16, plunder);
 
 			if ((short)this.owner.Libc.Dice.DrawInt(100) >= (short)plunder)
 				return;
@@ -999,20 +1009,20 @@ namespace Civilization1Remaster.Game
 			{
 				int shift = this.owner.Libc.Dice.DrawInt(13);
 				horizLoc = (short)((short)this.owner.World.Towns[townIdx].Place.X + shift - 6);
-				this.processor.EmitLocalWord(0xe, (ushort)horizLoc);
+				this.displayTravellersReportFrame.SetFrame(0xe, (ushort)horizLoc);
 
 				shift = this.owner.Libc.Dice.DrawInt(13);
 				vertLoc = (short)((short)this.owner.World.Towns[townIdx].Place.Y + shift - 6);
-				this.processor.EmitLocalWord(0x12, (ushort)vertLoc);
+				this.displayTravellersReportFrame.SetFrame(0x12, (ushort)vertLoc);
 
 				townIdx = this.owner.Helpers.LocateNearestCity(horizLoc, vertLoc);
-				this.processor.EmitLocalWord(0x14, townIdx);
+				this.displayTravellersReportFrame.SetFrame(0x14, townIdx);
 
 				short distance = (short)(ushort)this.owner.Helpers.ObtainDistance(horizLoc, this.owner.World.Towns[townIdx].Place.X, vertLoc, this.owner.World.Towns[townIdx].Place.Y);
-				this.processor.EmitLocalWord(0xc, (ushort)distance);
+				this.displayTravellersReportFrame.SetFrame(0xc, (ushort)distance);
 
 				tries++;
-				this.processor.EmitLocalWord(0x1c, tries);
+				this.displayTravellersReportFrame.SetFrame(0x1c, tries);
 
 				if ((short)tries >= 0x63)
 					return;
@@ -1020,7 +1030,7 @@ namespace Civilization1Remaster.Game
 				if (distance < 6)
 					continue;
 
-				if (this.owner.UnitOps.VerifyTileOccupation(this.processor.PullLocalSignedWord(0x2), horizLoc, vertLoc) != 0)
+				if (this.owner.UnitOps.VerifyTileOccupation((short)this.displayTravellersReportFrame.Frame(0x2), horizLoc, vertLoc) != 0)
 					continue;
 
 				if (this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) == 0xa)
@@ -1067,7 +1077,7 @@ namespace Civilization1Remaster.Game
 			}
 
 			short units = (short)this.owner.Helpers.VerifyValueSpan(this.owner.Libc.Dice.DrawInt(this.owner.World.Towns[townIdx].TrueExtent / 2), 2, 99);
-			this.processor.EmitLocalWord(0x16, (ushort)units);
+			this.displayTravellersReportFrame.SetFrame(0x16, (ushort)units);
 
 			short unitIdx;
 
@@ -1079,7 +1089,7 @@ namespace Civilization1Remaster.Game
 				if (unitIdx == units)
 					kind = 0x1a;
 
-				this.processor.EmitLocalWord(0x4, (ushort)kind);
+				this.displayTravellersReportFrame.SetFrame(0x4, (ushort)kind);
 
 				ushort sight = (ushort)((ushort)(0xc * this.owner.UnitOps.ConstructUnit(0, kind, horizLoc, vertLoc)) + 0x81dd);
 				this.processor.EmitGlobalByte(sight, (byte)(this.processor.PullGlobalByte(sight) | (byte)this.owner.World.ChartSight[(ushort)horizLoc, (ushort)vertLoc]));
@@ -1090,7 +1100,7 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			this.processor.EmitLocalWord(0x18, (ushort)unitIdx);
+			this.displayTravellersReportFrame.SetFrame(0x18, (ushort)unitIdx);
 		}
 
 		/// <summary>
@@ -1600,6 +1610,8 @@ namespace Civilization1Remaster.Game
 			this.processor.Journal.OpenScope("HandleEndOfTurnEvents()");
 
 			this.processor.EnterFrame(0xe);
+			FrameWords outerFrame = this.handleEndOfTurnEventsFrame;
+			this.handleEndOfTurnEventsFrame = new FrameWords(this.processor, 0xe);
 			this.processor.PreserveIndexRegisters();
 
 			short pull = (short)(((ushort)this.owner.World.DirtyCellTally << 1) - ((ushort)this.owner.World.WorldHeatingTally << 2) - (ushort)this.owner.World.SmogImpactTier);
@@ -1625,15 +1637,16 @@ namespace Civilization1Remaster.Game
 
 			for (attempt = 0; attempt <= this.owner.World.HardnessTier; attempt++)
 			{
-				this.processor.EmitLocalWord(0xa, (ushort)attempt);
+				this.handleEndOfTurnEventsFrame.SetFrame(0xa, (ushort)attempt);
 
 				if (TryRivalWonder(attempt))
 					break;
 			}
 
-			this.processor.EmitLocalWord(0xa, (ushort)attempt);
+			this.handleEndOfTurnEventsFrame.SetFrame(0xa, (ushort)attempt);
 
 			this.processor.RestoreIndexRegisters();
+			this.handleEndOfTurnEventsFrame = outerFrame;
 			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("HandleEndOfTurnEvents");
@@ -1644,7 +1657,7 @@ namespace Civilization1Remaster.Game
 		{
 			short person = this.owner.World.PersonParticipantIdx;
 			ushort wonderIdx = (ushort)(this.owner.Libc.Dice.DrawInt(21) + 1);
-			this.processor.EmitLocalWord(0x8, wonderIdx);
+			this.handleEndOfTurnEventsFrame.SetFrame(0x8, wonderIdx);
 
 			if (this.owner.World.HardnessTier == 0 &&
 				this.owner.Advisors.PlayerKnowsTechnology(person, (short)BuildingWord(wonderIdx, BuildingTable.Technology)) == 0)
@@ -1658,18 +1671,18 @@ namespace Civilization1Remaster.Game
 						wonderIdx = 0x11;
 				}
 
-				this.processor.EmitLocalWord(0x2, 0x80);
-				this.processor.EmitLocalWord(0x8, wonderIdx);
+				this.handleEndOfTurnEventsFrame.SetFrame(0x2, 0x80);
+				this.handleEndOfTurnEventsFrame.SetFrame(0x8, wonderIdx);
 			}
 
 			ushort cityIdx = (ushort)this.owner.Libc.Dice.DrawInt(128);
-			this.processor.EmitLocalWord(0x2, cityIdx);
+			this.handleEndOfTurnEventsFrame.SetFrame(0x2, cityIdx);
 
 			if (this.owner.World.Towns[cityIdx].ConditionMarker == 0xff)
 				return false;
 
 			ushort rivalIdx = (ushort)this.owner.World.Towns[cityIdx].ParticipantIdx;
-			this.processor.EmitLocalWord(0xc, rivalIdx);
+			this.handleEndOfTurnEventsFrame.SetFrame(0xc, rivalIdx);
 
 			if ((this.owner.World.Participants[rivalIdx].Relations[0] & 4) != 0)
 				return false;
@@ -1681,7 +1694,7 @@ namespace Civilization1Remaster.Game
 				this.owner.Advisors.PlayerKnowsTechnology(person, 0x2e) == 0 && this.owner.World.MarvelTownIdx[17] == -1)
 			{
 				wonderIdx = 0x11;
-				this.processor.EmitLocalWord(0x8, wonderIdx);
+				this.handleEndOfTurnEventsFrame.SetFrame(0x8, wonderIdx);
 			}
 
 			if (wonderIdx == 0x11 && this.owner.Advisors.PlayerKnowsTechnology(person, 0x2e) != 0 &&
@@ -1695,7 +1708,7 @@ namespace Civilization1Remaster.Game
 				return false;
 
 			ushort wonder = (ushort)(0x1e * wonderIdx);
-			this.processor.EmitLocalWord(0xe, (ushort)(0x1c * cityIdx));
+			this.handleEndOfTurnEventsFrame.SetFrame(0xe, (ushort)(0x1c * cityIdx));
 
 			if (this.owner.World.Towns[cityIdx].TrueExtent <= CPU.SignedQuotient((short)this.processor.PullGlobalWord((ushort)(wonder + 0xe82)), 10))
 				return false;
@@ -1747,7 +1760,7 @@ namespace Civilization1Remaster.Game
 					this.owner.Advisors.RenewCityScreen((short)townIdx);
 			}
 
-			this.processor.EmitLocalWord(0x2, 0x80);
+			this.handleEndOfTurnEventsFrame.SetFrame(0x2, 0x80);
 
 			return true;
 		}

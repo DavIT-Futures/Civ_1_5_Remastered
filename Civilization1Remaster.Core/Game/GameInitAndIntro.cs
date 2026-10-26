@@ -1,10 +1,17 @@
 ﻿using System;
 using Civilization1Remaster.Emulation;
+using Civilization1Remaster.Engine;
 
 namespace Civilization1Remaster.Game
 {
 	public class GameInitAndIntro : GameModule
 	{
+		/// <summary>The words of the frame of LabelLandmasses, shared by its helpers (B3: in C#, new for every call)</summary>
+		private FrameWords labelLandmassesFrame = null!;
+
+		/// <summary>The words of the frame of ReckonContinentSizes, shared by its helpers (B3: in C#, new for every call)</summary>
+		private FrameWords reckonContinentSizesFrame = null!;
+
 		public GameInitAndIntro(GameEngine owner)
 			: base(owner)
 		{
@@ -1053,6 +1060,8 @@ namespace Civilization1Remaster.Game
 			this.processor.Journal.OpenScope("LabelLandmasses()");
 
 			this.processor.EnterFrame(0x26);
+			FrameWords outerFrame = this.labelLandmassesFrame;
+			this.labelLandmassesFrame = new FrameWords(this.processor, 0x26);
 			this.processor.PreserveIndexRegisters();
 
 			this.owner.Libc.FillBytes(0xdb44, 0, 0x104);
@@ -1117,45 +1126,46 @@ namespace Civilization1Remaster.Game
 
 			if (neighbour is (short nextHorizLoc, short nextVertLoc))
 			{
-				this.processor.EmitLocalWord(0x2, (ushort)nextHorizLoc);
-				this.processor.EmitLocalWord(0x4, (ushort)nextVertLoc);
+				this.labelLandmassesFrame.SetFrame(0x2, (ushort)nextHorizLoc);
+				this.labelLandmassesFrame.SetFrame(0x4, (ushort)nextVertLoc);
 			}
 
 			if (origin is (short originHoriz, short originVert))
 			{
-				this.processor.EmitLocalWord(0x8, (ushort)originHoriz);
-				this.processor.EmitLocalWord(0xc, (ushort)originVert);
+				this.labelLandmassesFrame.SetFrame(0x8, (ushort)originHoriz);
+				this.labelLandmassesFrame.SetFrame(0xc, (ushort)originVert);
 			}
 
 			if (lastDirection is short directionLeft)
-				this.processor.EmitLocalWord(0xa, (ushort)directionLeft);
+				this.labelLandmassesFrame.SetFrame(0xa, (ushort)directionLeft);
 
 			if (lastNeighbourContinent is short neighbourContinent)
-				this.processor.EmitLocalWord(0xe, (ushort)neighbourContinent);
+				this.labelLandmassesFrame.SetFrame(0xe, (ushort)neighbourContinent);
 
 			if (lastCost is short costLeft)
-				this.processor.EmitLocalWord(0x10, (ushort)costLeft);
+				this.labelLandmassesFrame.SetFrame(0x10, (ushort)costLeft);
 
-			this.processor.EmitLocalWord(0x14, (ushort)column);
+			this.labelLandmassesFrame.SetFrame(0x14, (ushort)column);
 
 			if (neighbourLand is (short neighbourHoriz, short neighbourVert))
 			{
-				this.processor.EmitLocalWord(0x16, (ushort)neighbourHoriz);
-				this.processor.EmitLocalWord(0x1c, (ushort)neighbourVert);
+				this.labelLandmassesFrame.SetFrame(0x16, (ushort)neighbourHoriz);
+				this.labelLandmassesFrame.SetFrame(0x1c, (ushort)neighbourVert);
 			}
 
 			if (lastContinent is short continentLeft)
-				this.processor.EmitLocalWord(0x18, (ushort)continentLeft);
+				this.labelLandmassesFrame.SetFrame(0x18, (ushort)continentLeft);
 
-			this.processor.EmitLocalWord(0x1a, (ushort)row);
+			this.labelLandmassesFrame.SetFrame(0x1a, (ushort)row);
 
 			if (land is (short landHoriz, short landVert))
 			{
-				this.processor.EmitLocalWord(0x20, (ushort)landHoriz);
-				this.processor.EmitLocalWord(0x24, (ushort)landVert);
+				this.labelLandmassesFrame.SetFrame(0x20, (ushort)landHoriz);
+				this.labelLandmassesFrame.SetFrame(0x24, (ushort)landVert);
 			}
 
 			this.processor.RestoreIndexRegisters();
+			this.labelLandmassesFrame = outerFrame;
 			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("LabelLandmasses");
@@ -1204,6 +1214,8 @@ namespace Civilization1Remaster.Game
 
 			// The final values of the locals stay in the stack frame, like in the original
 			this.processor.EnterFrame(0x18);
+			FrameWords outerFrame = this.reckonContinentSizesFrame;
+			this.reckonContinentSizesFrame = new FrameWords(this.processor, 0x18);
 			this.processor.PreserveIndexRegisters();
 
 			this.owner.Libc.FillBytes(0x7f38, 0, 0x104);
@@ -1212,18 +1224,18 @@ namespace Civilization1Remaster.Game
 
 			for (column = 0; column < 0x14; column++)
 			{
-				this.processor.EmitLocalWord(0x14, (ushort)column);
+				this.reckonContinentSizesFrame.SetFrame(0x14, (ushort)column);
 
 				short row;
 
 				for (row = 0; row < 0xc; row++)
 				{
-					this.processor.EmitLocalWord(0x18, (ushort)row);
+					this.reckonContinentSizesFrame.SetFrame(0x18, (ushort)row);
 
 					LinkSeaBlock(column, row);
 				}
 
-				this.processor.EmitLocalWord(0x18, (ushort)row);
+				this.reckonContinentSizesFrame.SetFrame(0x18, (ushort)row);
 
 				if (marker != 0)
 				{
@@ -1231,7 +1243,7 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			this.processor.EmitLocalWord(0x14, (ushort)column);
+			this.reckonContinentSizesFrame.SetFrame(0x14, (ushort)column);
 
 			for (ushort row = 0; row < 0xc; row++)
 			{
@@ -1239,7 +1251,7 @@ namespace Civilization1Remaster.Game
 				this.processor.EmitGlobalByte((ushort)(row + 0x802f), (byte)(this.processor.PullGlobalByte((ushort)(row + 0x802f)) | 0xe));
 			}
 
-			this.processor.EmitLocalWord(0x18, 0xc);
+			this.reckonContinentSizesFrame.SetFrame(0x18, 0xc);
 
 			this.processor.EmitGlobalByte(0x7f38, (byte)(this.processor.PullGlobalByte(0x7f38) & 0x7f));
 			this.processor.EmitGlobalByte(0x7f43, (byte)(this.processor.PullGlobalByte(0x7f43) & 0xdf));
@@ -1247,6 +1259,7 @@ namespace Civilization1Remaster.Game
 			this.processor.EmitGlobalByte(0x803a, (byte)(this.processor.PullGlobalByte(0x803a) & 0xf7));
 
 			this.processor.RestoreIndexRegisters();
+			this.reckonContinentSizesFrame = outerFrame;
 			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("ReckonContinentSizes");
@@ -1257,34 +1270,34 @@ namespace Civilization1Remaster.Game
 		{
 			short horizLoc = (short)((column << 2) + 1), vertLoc = (short)((row << 2) + 1);
 
-			this.processor.EmitLocalWord(0x8, (ushort)horizLoc);
-			this.processor.EmitLocalWord(0xc, (ushort)vertLoc);
-			this.processor.EmitLocalWord(0x16, 0xffff);
+			this.reckonContinentSizesFrame.SetFrame(0x8, (ushort)horizLoc);
+			this.reckonContinentSizesFrame.SetFrame(0xc, (ushort)vertLoc);
+			this.reckonContinentSizesFrame.SetFrame(0x16, 0xffff);
 
 			if (FindBlockSea(horizLoc, vertLoc) is ushort sea)
-				this.processor.EmitLocalWord(0x16, sea);
+				this.reckonContinentSizesFrame.SetFrame(0x16, sea);
 
-			if (this.processor.PullLocalWord(0x16) == 0xffff)
+			if (this.reckonContinentSizesFrame.Frame(0x16) == 0xffff)
 				return;
 
 			short direction;
 
 			for (direction = 1; direction <= 8; direction++)
 			{
-				this.processor.EmitLocalWord(0xa, (ushort)direction);
+				this.reckonContinentSizesFrame.SetFrame(0xa, (ushort)direction);
 
 				ushort offset = (ushort)(direction << 1);
 				short nextHoriz = (short)((DirectionHorizAt(offset) << 2) + horizLoc);
 				short nextVert = (short)((DirectionVertAt(offset) << 2) + vertLoc);
 
-				this.processor.EmitLocalWord(0x2, (ushort)nextHoriz);
-				this.processor.EmitLocalWord(0x4, (ushort)nextVert);
+				this.reckonContinentSizesFrame.SetFrame(0x2, (ushort)nextHoriz);
+				this.reckonContinentSizesFrame.SetFrame(0x4, (ushort)nextVert);
 
 				// A neighbour without sea leaves 0xe as it was
 				if (FindBlockSea(nextHoriz, nextVert) is ushort nextSea)
-					this.processor.EmitLocalWord(0xe, nextSea);
+					this.reckonContinentSizesFrame.SetFrame(0xe, nextSea);
 
-				if (this.processor.PullLocalWord(0x16) != this.processor.PullLocalWord(0xe))
+				if (this.reckonContinentSizesFrame.Frame(0x16) != this.reckonContinentSizesFrame.Frame(0xe))
 					continue;
 
 				if (!SeaPassageOpen(horizLoc, vertLoc, offset) && (row != 0xb || direction != 3))
@@ -1299,8 +1312,8 @@ namespace Civilization1Remaster.Game
 
 				short nextColumn = (short)(DirectionHorizAt(offset) + column);
 
-				this.processor.EmitLocalWord(0x2, (ushort)nextColumn);
-				this.processor.EmitLocalWord(0x4, (ushort)nextRow);
+				this.reckonContinentSizesFrame.SetFrame(0x2, (ushort)nextColumn);
+				this.reckonContinentSizesFrame.SetFrame(0x4, (ushort)nextRow);
 
 				if (nextColumn < 0 || nextColumn >= 0x14 || nextRow < 0 || nextRow > 0xc)
 					continue;
@@ -1308,7 +1321,7 @@ namespace Civilization1Remaster.Game
 				LinkSeaBlockBit(nextColumn, nextRow, (direction + 3) & 7);
 			}
 
-			this.processor.EmitLocalWord(0xa, (ushort)direction);
+			this.reckonContinentSizesFrame.SetFrame(0xa, (ushort)direction);
 		}
 
 		/// <summary>
@@ -1341,18 +1354,18 @@ namespace Civilization1Remaster.Game
 			bool open = true;
 			short step;
 
-			this.processor.EmitLocalWord(0x2, (ushort)horizLoc);
-			this.processor.EmitLocalWord(0x4, (ushort)vertLoc);
+			this.reckonContinentSizesFrame.SetFrame(0x2, (ushort)horizLoc);
+			this.reckonContinentSizesFrame.SetFrame(0x4, (ushort)vertLoc);
 
 			for (step = 0; step <= 4; step++)
 			{
-				this.processor.EmitLocalWord(0x12, (ushort)step);
+				this.reckonContinentSizesFrame.SetFrame(0x12, (ushort)step);
 
 				horizLoc = (short)(horizLoc + DirectionHorizAt(offset));
 				vertLoc = (short)(vertLoc + DirectionVertAt(offset));
 
-				this.processor.EmitLocalWord(0x2, (ushort)horizLoc);
-				this.processor.EmitLocalWord(0x4, (ushort)vertLoc);
+				this.reckonContinentSizesFrame.SetFrame(0x2, (ushort)horizLoc);
+				this.reckonContinentSizesFrame.SetFrame(0x4, (ushort)vertLoc);
 
 				short ocean = 4;
 
@@ -1363,7 +1376,7 @@ namespace Civilization1Remaster.Game
 						ocean--;
 				}
 
-				this.processor.EmitLocalWord(0x6, (ushort)ocean);
+				this.reckonContinentSizesFrame.SetFrame(0x6, (ushort)ocean);
 
 				if (ocean < 2)
 				{
@@ -1373,9 +1386,9 @@ namespace Civilization1Remaster.Game
 			}
 
 			if (open)
-				this.processor.EmitLocalWord(0x12, (ushort)step);
+				this.reckonContinentSizesFrame.SetFrame(0x12, (ushort)step);
 
-			this.processor.EmitLocalWord(0x10, open ? (ushort)1 : (ushort)0);
+			this.reckonContinentSizesFrame.SetFrame(0x10, open ? (ushort)1 : (ushort)0);
 
 			return open;
 		}

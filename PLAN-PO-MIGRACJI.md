@@ -456,7 +456,13 @@ kończącej: `ManageBarbarianUnit`, `DiplomatArrivesAtCity` (`FinishDiplomatArri
 (`LeaveAttachSpaceshipPart`) – 808/808.
 **B3, porcja 5 (2026-10-26):** `Pathfinding` bez ramek na stosie: `CarryOutGoto` – kopie jego pomocniczych (nikt ich nie
 czytał) i ramka usunięte; ramki `ChartRoute` (0x3a, `SearchRouteBlocks`) i `ShiftToward` (0x4a, `ChooseCheapestStep`,
-`CrowdAndDistance`, `ChartWindowCosts`, `ExpandWindowCell`) jako `FrameWords`, nowe na każde wywołanie. 808/808. ramki, SI/DI, BX/CX/DX moduł po module; przy jawnych wartościach
+`CrowdAndDistance`, `ChartWindowCosts`, `ExpandWindowCell`) jako `FrameWords`, nowe na każde wywołanie. 808/808.
+**B3, porcja 6 (2026-10-26):** skrypt `b3frames.py` – ramka, do której właściciel i jego pomocnicze bez ramek sięgają
+tylko nazwanymi słowami (`PullLocalWord` / `EmitLocalWord` / `Increment…`), staje się `FrameWords` (pole
+`<właściciel>Frame`, nowe na każde wywołanie); pominięte grupy z wyliczanymi adresami, bajtami, BP, `LeaveFrame` w
+pomocniczej albo pomocniczą sięgającą do ramki wołaną też spod innej ramki. Dziewięć: `LabelLandmasses`,
+`ReckonContinentSizes`, `DisplayTravellersReport`, `HandleEndOfTurnEvents`, `LocateNearestFriendlyCity`,
+`ObtainDistanceToReplayCity`, `RenderSpaceship`, `ObtainNavigationKey`, `TitleLogoAndMainChoices`. 808/808. ramki, SI/DI, BX/CX/DX moduł po module; przy jawnych wartościach
 zamiast śmieci golden master zostaje zielony, sonda stosu ma pokazać zero czytelników. Na końcu rejestry z CPU,
 `MZExecutable` i obraz CIV.EXE w pamięci (dane początkowe z pliku przy starcie).
 
