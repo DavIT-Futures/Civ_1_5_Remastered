@@ -573,6 +573,8 @@ bez wyjątku (czyta 0), `DifferentialPair` po wyjątku w scenariuszu przywraca S
 
 **B6.8, porcja 11 (2026-10-26):** ramki i bufory stosu przeniesione do C# w `CityView.DisplayCityScreen` (usunięto ramkę 0x186, bufor tekstu ekranu miasta przeniesiony do pamięci roboczej) oraz `TextBlockRenderer.ImportTextFromFile` (usunięto ramkę 0x110, bufory linii i wpisu indeksu przeniesione ze stosu emulacji). Usunięto 2 ramki stosu (`EnterFrame`/`LeaveFrame`), pozostało 9 (w tym 6 odłożonych do Fazy 3). 4 z 4 mutacji złapanych (BatchThirty, GoldenMaster), Golden Master 16/16 zielony.
 
+**B6.8, porcja 12 (2026-10-26):** eliminacja ramki stosu w `CityManagement.HandleCity` (usunięto ramkę 0x10c `EnterFrame(0x10c)` / `LeaveFrame()`, obliczenia miasta działają na instancji `CityRound`). Usunięto ostatnią standardową ramkę stosu emulacji. Pozostało dokładnie 8 ramek odłożonych do Fazy 3 (5 z wyciekiem stosu w DOS: `OperateMenu`, `DivideCivilization`, `OpeningSequence`, `DisplayConquerorScreen`, `LaunchAudience`; 1 ramka VGA: `DuplicateScreenToMainScreen`; 2 ze specjalnym zachowaniem klasycznym: `ProduceTerrain` [ClassicLabelNumbers] i `DisplayCivilizationScreen` [dostęp do tyknięć zegara]). 2 z 2 mutacji złapanych (GoldenMaster `PlayedTurnsMatchBaseline`), Golden Master 15/15 zielony.
+
 
 
 **Faza 3 – sprzątanie i drugi baseline:** usunięcie przełączników i kodu „classic”, zamrożonej gry

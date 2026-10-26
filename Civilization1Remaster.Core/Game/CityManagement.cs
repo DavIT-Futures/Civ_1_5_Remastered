@@ -4750,7 +4750,6 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"HandleCity({townIdx}, {marker})");
 
-			this.processor.EnterFrame(0x10c);
 			this.processor.PreserveIndexRegisters();
 
 			// HandleCity calls itself (the advisor counts the city), each call has its own locals as its own frame
@@ -4766,7 +4765,6 @@ namespace Civilization1Remaster.Game
 
 			this.processor.RestoreSource();
 			this.processor.RestoreDest();
-			this.processor.LeaveFrame();
 			this.processor.Journal.CloseScope("HandleCity");
 
 			return this.processor.RegAcc.Value16;
