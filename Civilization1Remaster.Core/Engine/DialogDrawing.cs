@@ -34,8 +34,6 @@ namespace Civilization1Remaster.Engine
 		{
 			this.processor.Journal.OpenScope($"DisplayMenu(0x{charsAddr:x4}, {horizLoc}, {vertLoc}, {marker})");
 
-			// The stack frame stays so called functions (OperateMenu, ChoreographKingSpeaking) run at the same stack depth
-			this.processor.EnterFrame(0x12);
 			this.processor.PreserveSource();
 
 			if (marker != 0)
@@ -279,8 +277,7 @@ namespace Civilization1Remaster.Engine
 				this.processor.RegAcc.Value16 = currentChoice;
 			}
 
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.LeaveFrame();
+			this.processor.RestoreSource();
 			// Far return
 			this.processor.Journal.CloseScope("DisplayMenu");
 

@@ -348,8 +348,6 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope($"DisplayTradeReport({participantIdx})");
 
-			// HandleCity is called at the depth of the original (the frame stays; B3: the costs of the buildings are in C#)
-			this.processor.EnterFrame(0x40);
 			this.processor.PreserveIndexRegisters();
 
 			ushort[] costs = new ushort[0x18];
@@ -537,7 +535,6 @@ namespace Civilization1Remaster.UI
 			FinishReportScreen();
 
 			this.processor.RestoreIndexRegisters();
-			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("DisplayTradeReport");
 		}
@@ -554,11 +551,10 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope("DisplayMilitaryReport()");
 
-			// The list of the rows' players is in the stack frame, like in the original (the classic rows read its leftovers)
-			this.processor.EnterFrame(0x26);
 			this.processor.PreserveIndexRegisters();
-
-			ushort rowPlayers = (ushort)(this.processor.RegFrame.Value16 - 0x16);
+			// The list of the rows' players of the frame of the original (B3: in C#; the rows without contact keep 0, the
+			// classic rows read it)
+			ushort[] rowPlayers = new ushort[8];
 
 			// The same list in C#, with -1 for the rows without contact (ClassicMilitaryReportRows off)
 			short[] rowPlayerList = [-1, -1, -1, -1, -1, -1, -1, -1];
@@ -592,7 +588,7 @@ namespace Civilization1Remaster.UI
 
 				RenderMilitaryReportRow(participantIdx, vertLoc);
 
-				this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(rowPlayers + (rowCount << 1)), participantIdx);
+				rowPlayers[rowCount] = participantIdx;
 				rowPlayerList[rowCount] = (short)participantIdx;
 				rowCount++;
 
@@ -645,7 +641,7 @@ namespace Civilization1Remaster.UI
 				{
 					bool classicRows = this.owner.TurnHooks.ClassicMilitaryReportRows;
 					ushort rowPlayerIdx = classicRows ?
-						this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(rowPlayers + (rowIdx << 1))) :
+						rowPlayers[rowIdx] :
 						(ushort)rowPlayerList[rowIdx];
 
 					if ((classicRows || (short)rowPlayerIdx != -1) &&
@@ -686,7 +682,6 @@ namespace Civilization1Remaster.UI
 			this.owner.Startup.DisplayMouseCursor();
 
 			this.processor.RestoreIndexRegisters();
-			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("DisplayMilitaryReport");
 		}

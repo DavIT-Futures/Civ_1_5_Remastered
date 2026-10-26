@@ -479,7 +479,7 @@ namespace Civilization1Remaster.Engine
 			}
 
 			this.processor.SegData.Value16 = this.processor.UnstackWord();
-			this.processor.RegDest.Value16 = this.processor.UnstackWord();
+			this.processor.RestoreDest();
 			this.processor.RestoreSource();
 
 			this.processor.Journal.CloseScope("RefreshHueCycling");

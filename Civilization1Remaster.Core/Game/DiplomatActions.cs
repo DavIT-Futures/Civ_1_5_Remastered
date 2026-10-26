@@ -509,8 +509,6 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"ComputeInciteCost({townIdx}, {participantIdx})");
 
-			// HandleCity is called at the depth of the original (the frame stays; B3: the locals are C# variables)
-			this.processor.EnterFrame(0x1c);
 			this.processor.PreserveIndexRegisters();
 
 			City town = this.owner.World.Towns[townIdx];
@@ -555,9 +553,8 @@ namespace Civilization1Remaster.Game
 				Revolt(townIdx, participantIdx, ownerIdx, horizLoc, vertLoc);
 			}
 
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.RegDest.Value16 = this.processor.UnstackWord();
-			this.processor.LeaveFrame();
+			this.processor.RestoreSource();
+			this.processor.RestoreDest();
 			// Far return
 			this.processor.Journal.CloseScope("ComputeInciteCost");
 		}

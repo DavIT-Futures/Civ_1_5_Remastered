@@ -212,7 +212,8 @@ public sealed class BatchEightySixDifferentialTests(ITestOutputHelper output)
 				{
 					ushort result = game.Processor.RegAcc.Value16;
 					byte travelAfter = game.Processor.Storage.PullUInt8(0x3b01, (ushort)(UnitMemory.Address(participantIdx, troopIdx) + UnitMemory.TravelHoriz));
-					bool looked = game.Processor.Storage.PullUInt16(0x3b01, (ushort)(frame - 0x5c)) is 0 or 1;
+					// (the frame of the original: the rewritten code has none)
+					bool looked = pair.Original.Engine.Processor.Storage.PullUInt16(0x3b01, (ushort)(frame - 0x5c)) is 0 or 1;
 					string way = result == 0x66 ? "fortifies"
 						: result == 0x62 ? "builds city"
 						: result == 0 && travelBefore != 0xff && travelAfter == travelBefore ? "goes on"

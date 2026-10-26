@@ -237,7 +237,7 @@ namespace Civilization1Remaster.Video
 			}
 			this.processor.SegExtra.Value16 = this.processor.UnstackWord();
 			this.processor.SegData.Value16 = this.processor.UnstackWord();
-			this.processor.RegDest.Value16 = this.processor.UnstackWord();
+			this.processor.RestoreDest();
 			this.processor.RestoreSource();
 
 			// Far return
@@ -289,7 +289,7 @@ namespace Civilization1Remaster.Video
 			}
 
 			this.processor.SegData.Value16 = this.processor.UnstackWord();
-			this.processor.RegDest.Value16 = this.processor.UnstackWord();
+			this.processor.RestoreDest();
 			this.processor.RestoreSource();
 			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
 			// Far return

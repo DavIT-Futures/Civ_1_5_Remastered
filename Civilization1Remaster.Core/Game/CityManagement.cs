@@ -4764,8 +4764,8 @@ namespace Civilization1Remaster.Game
 
 			this.round = outer;
 
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.RegDest.Value16 = this.processor.UnstackWord();
+			this.processor.RestoreSource();
+			this.processor.RestoreDest();
 			this.processor.LeaveFrame();
 			this.processor.Journal.CloseScope("HandleCity");
 
@@ -5458,9 +5458,7 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"RenderCitizenIcons({townIdx}, {horizLoc}, {vertLoc}, {arg4}, {arg5})");
 
-			// The gap after the happy citizens depends on the frame word 0x2, which is never written (the leftovers of the
-			// functions called before at this depth), like in the original (B3: the other locals are C# variables)
-			this.processor.EnterFrame(0xa);
+			// No gap after the happy citizens: the original made it on the frame word 0x2, which is never written (0)
 
 			sbyte size = this.owner.World.Towns[townIdx].TrueExtent;
 
@@ -5472,10 +5470,6 @@ namespace Civilization1Remaster.Game
 				horizLoc = RenderCitizen(horizLoc, vertLoc, this.processor.PullGlobalWord((ushort)(((citizenIdx & 1) << 1) + 0x6e96)), step);
 			}
 
-			if (this.processor.PullLocalWord(0x2) != 0)
-			{
-				horizLoc += 2;
-			}
 
 			for (citizenIdx = 0; (short)(this.owner.World.Towns[townIdx].TrueExtent - arg4 - CityHappy -
 				CityUnhappy) > citizenIdx; citizenIdx++)
@@ -5509,7 +5503,6 @@ namespace Civilization1Remaster.Game
 			}
 
 			this.processor.RegAcc.Value16 = step;
-			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("RenderCitizenIcons");
 

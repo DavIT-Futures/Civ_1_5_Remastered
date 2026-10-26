@@ -27,8 +27,6 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"HandleAllCities({participantIdx})");
 
-			// HandleCity is called at the depth of the original (the frame stays; B3: the locals are C# variables)
-			this.processor.EnterFrame(0xa);
 			this.processor.PreserveIndexRegisters();
 
 			DemocracyPressure = 0;
@@ -72,9 +70,8 @@ namespace Civilization1Remaster.Game
 
 			if (participantIdx == this.owner.World.PersonParticipantIdx || (this.owner.World.DiagMarkers & 4) == 0)
 			{
-				this.processor.RegSource.Value16 = this.processor.UnstackWord();
-				this.processor.RegDest.Value16 = this.processor.UnstackWord();
-				this.processor.LeaveFrame();
+				this.processor.RestoreSource();
+				this.processor.RestoreDest();
 				this.processor.Journal.CloseScope("HandleAllCities");
 				return;
 			}
@@ -110,9 +107,8 @@ namespace Civilization1Remaster.Game
 
 			participant.LevyRatio = (short)(10 - participant.ResearchLevyRatio - luxuries);
 
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.RegDest.Value16 = this.processor.UnstackWord();
-			this.processor.LeaveFrame();
+			this.processor.RestoreSource();
+			this.processor.RestoreDest();
 			// Far return
 			this.processor.Journal.CloseScope("HandleAllCities");
 		}
@@ -284,12 +280,11 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"PickCityProduction({participantIdx}, {townIdx})");
 
-			// The words of the frame are in C# (B3, properties below), with what lay on the stack (some are read before they
-			// are written); the key of the advice and the words around it (a long name could run over) stay on the stack, so
-			// does the frame (HandleCity at the depth of the original)
+			// The words of the frame are in C# (B3, properties below; some are read before they are written: 0); the key of
+			// the advice and the words around it (a long name could run over) stay on the stack, in the frame
 			this.processor.EnterFrame(0x14a);
 			FrameWords outerFrame = this.pickFrame;
-			this.pickFrame = new FrameWords(this.processor, 0x14a, AdviceSpillLocal, AdviceKey).WithLeftovers();
+			this.pickFrame = new FrameWords(this.processor, 0x14a, AdviceSpillLocal, AdviceKey);
 			this.processor.PreserveIndexRegisters();
 
 			// "*" before the name of the best choice in the frame: the key of its advice in the text file
@@ -1590,8 +1585,6 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"EarnTechnology({participantIdx}, {scienceIdx}, {participantIdx1})");
 
-			// The frame stays for the depth of the calls (B3: the locals are C# variables)
-			this.processor.EnterFrame(0x8);
 			this.processor.PreserveIndexRegisters();
 
 			if (PlayerKnowsTechnology(participantIdx, scienceIdx) == 0)
@@ -1613,7 +1606,6 @@ namespace Civilization1Remaster.Game
 			}
 
 			this.processor.RestoreIndexRegisters();
-			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("EarnTechnology");
 		}

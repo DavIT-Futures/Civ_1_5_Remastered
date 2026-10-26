@@ -24,7 +24,6 @@ namespace Civilization1Remaster.Engine
 		{
 			this.processor.Journal.OpenScope("RunGame()");
 
-			this.processor.EnterFrame(0xa);
 
 			// Main menu selection
 			// '1' - VGA; first letter of driver
@@ -129,7 +128,6 @@ namespace Civilization1Remaster.Engine
 			this.owner.Services.HaltSound();
 			this.owner.Services.HaltTimer();
 
-			this.processor.LeaveFrame();
 			this.processor.Journal.CloseScope("RunGame");
 		}
 

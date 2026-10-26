@@ -58,6 +58,12 @@ namespace Civilization1Remaster.Emulation
 			this.regSource.Value16 = UnstackWord();
 		}
 
+		/// <summary>Takes the destination index register back from the stack (pop di).</summary>
+		public void RestoreDest()
+		{
+			this.regDest.Value16 = UnstackWord();
+		}
+
 		#endregion
 
 		#region Arithmetic on the accumulator

@@ -184,7 +184,6 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"HandlePlayerTurn({participantIdx})");
 
-			this.processor.EnterFrame(0x52);
 			TurnLocals outer = this.turn;
 			this.turn = new TurnLocals();
 			this.processor.PreserveIndexRegisters();
@@ -251,9 +250,8 @@ namespace Civilization1Remaster.Game
 				this.owner.Startup.DisplayMouseCursor();
 			}
 
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.RegDest.Value16 = this.processor.UnstackWord();
-			this.processor.LeaveFrame();
+			this.processor.RestoreSource();
+			this.processor.RestoreDest();
 			this.turn = outer;
 			this.processor.Journal.CloseScope("HandlePlayerTurn");
 		}

@@ -146,18 +146,6 @@ namespace Civilization1Remaster.Game
 		public bool ClassicLabelNumbers { get; set; }
 
 		/// <summary>
-		/// The local variables of a function start with what earlier functions left on the stack, as in the translated code
-		/// (about 30 functions read a local before they write it: the AI of the units, the human player's turn, the city
-		/// screen...); off they start at 0 (CPU.ClearFrameLocals), and a unit without an own city or carrier to fly home to
-		/// stays (LocateNearestFriendlyCity). The tests turn it on (HeadlessGame), like ClassicHealing.
-		/// </summary>
-		public bool ClassicStackLeftovers
-		{
-			get => !this.processor.ClearFrameLocals;
-			set => this.processor.ClearFrameLocals = !value;
-		}
-
-		/// <summary>
 		/// Units heal lost hit points every turn (HealingRules): 2 in an own city; outside cities 1 for a fortified land unit
 		/// and for a resting ship (sentry or not moved this turn) next to land, at most 3 tiles from an own city.
 		/// Runs at the end of the game turn, so the moves left (reset at the start of each player's turn) show whether the
@@ -1131,9 +1119,8 @@ namespace Civilization1Remaster.Game
 			this.processor.Journal.OpenScope("RefreshPeaceGraphContent()");
 
 			// The powers of the frame of the original (B3: in C#): when no power is above -1, the ranking takes the player of the
-			// rank before (at first the local 0x1a, read before written: the frame stays for it)
-			this.processor.EnterFrame(0x1a);
 			this.processor.PreserveIndexRegisters();
+			// rank before (at first 0, the local 0x1a of the original read before it is written)
 
 			ushort[] powers = new ushort[8];
 			short strongest = 0;
@@ -1184,7 +1171,7 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			ushort best = this.processor.PullLocalWord(0x1a);
+			ushort best = 0;
 
 			for (short rank = 1; rank < 8; rank++)
 			{
@@ -1229,9 +1216,8 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.RegDest.Value16 = this.processor.UnstackWord();
-			this.processor.LeaveFrame();
+			this.processor.RestoreSource();
+			this.processor.RestoreDest();
 			// Far return
 			this.processor.Journal.CloseScope("RefreshPeaceGraphContent");
 		}
@@ -1426,16 +1412,15 @@ namespace Civilization1Remaster.Game
 			this.processor.Journal.OpenScope($"RenderPalace({participantIdx}, {castleTier}, {horizLoc}, {vertLoc})");
 
 			// The levels and the styles of the sections are in the words of the frame of the original (B3: in C#): the left
-			// neighbour of section 0 is the frame word 0x34 (never written), the right neighbour of section 8 the style of
-			// section 0 (unwritten for an AI player without it); the frame stays for these leftovers
-			this.processor.EnterFrame(0x36);
 			this.processor.PreserveIndexRegisters();
+			// neighbour of section 0 is the frame word 0x34 (never written, 0), the right neighbour of section 8 the style of
+			// section 0 (0 for an AI player without it)
 
 			this.owner.VideoCard.RenderLine(ScreenBox, horizLoc - 5, vertLoc + 13, horizLoc + 68, vertLoc + 13, 2);
 
 			if (this.owner.World.Participants[participantIdx].TownTally != 0)
 			{
-				FrameWords frame = new FrameWords(this.processor, 0x36).WithLeftovers();
+				FrameWords frame = new FrameWords(this.processor, 0x36);
 				SectionTable levels = new SectionTable(frame, 0x32);
 				SectionTable styles = new SectionTable(frame, 0x20);
 
@@ -1527,9 +1512,8 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.RegDest.Value16 = this.processor.UnstackWord();
-			this.processor.LeaveFrame();
+			this.processor.RestoreSource();
+			this.processor.RestoreDest();
 			// Far return
 			this.processor.Journal.CloseScope("RenderPalace");
 		}

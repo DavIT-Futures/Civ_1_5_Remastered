@@ -421,10 +421,9 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope("DisplayEpicChronicle()");
 
-			// HandleCity is called at the depth of the original (the frame stays; B3: the values of the players are in C#, the
-			// barbarians' one never set for the measures 3 and 4)
-			this.processor.EnterFrame(0x20);
 			this.processor.PreserveIndexRegisters();
+			// The values of the players of the frame of the original (B3: in C#; the barbarians' one never set for the
+			// measures 3 and 4)
 
 			ushort[] values = new ushort[8];
 
@@ -568,7 +567,6 @@ namespace Civilization1Remaster.UI
 			this.owner.Startup.DisplayMouseCursor();
 
 			this.processor.RestoreIndexRegisters();
-			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("DisplayEpicChronicle");
 		}

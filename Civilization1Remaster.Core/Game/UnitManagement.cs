@@ -10,9 +10,6 @@ namespace Civilization1Remaster.Game
 	/// </summary>
 	public class UnitManagement : GameModule
 	{
-		/// <summary>The words of the frame of LocateNearestFriendlyCity, shared by its helpers (B3: in C#, new for every call)</summary>
-		private FrameWords locateNearestFriendlyCityFrame = null!;
-
 		private readonly UnitMemory troops;
 
 		public UnitManagement(GameEngine owner)
@@ -154,14 +151,9 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"ShiftUnit({horizLoc}, {vertLoc}, {participantIdx}, {troopIdx}, {marker})");
 
-			// The stack frame of the original stays, see ShiftUnitFrame
-			this.processor.EnterFrame(0x16);
 			this.processor.PreserveIndexRegisters();
 
-			ShiftUnitFrame frame = new ShiftUnitFrame();
-
 			int startTerrain = this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
-			frame.StartTerrain = (ushort)startTerrain;
 
 			if (participantIdx == this.owner.World.PersonParticipantIdx)
 			{
@@ -169,20 +161,18 @@ namespace Civilization1Remaster.Game
 			}
 
 			int startImprovements = this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc);
-			frame.StartImprovements = (ushort)startImprovements;
 			bool repaint = marker != 0;
 
 			for (int heading = 1; heading < 9; heading++)
 			{
-				MeetNearTile(frame, participantIdx, troopIdx, horizLoc, vertLoc, heading, startTerrain, startImprovements, repaint);
+				MeetNearTile(participantIdx, troopIdx, horizLoc, vertLoc, heading, startTerrain, startImprovements, repaint);
 			}
 
 			for (int heading = 9; heading < 25; heading++)
 			{
-				MeetFarTile(frame, participantIdx, troopIdx, horizLoc, vertLoc, heading, startImprovements, repaint);
+				MeetFarTile(participantIdx, troopIdx, horizLoc, vertLoc, heading, startImprovements, repaint);
 			}
 
-			frame.Heading = 25;
 
 			if (participantIdx == this.owner.World.PersonParticipantIdx && repaint)
 			{
@@ -192,7 +182,6 @@ namespace Civilization1Remaster.Game
 				{
 					int ringHoriz = RingHoriz(heading, horizLoc);
 					int ringVert = RingVert(heading, vertLoc);
-					frame.AtRing(ringHoriz, ringVert);
 
 					if (this.owner.MapOps.VerifyMapLimits(ringHoriz, ringVert) != 0 && Sees(participantIdx, ringHoriz, ringVert))
 					{
@@ -200,68 +189,12 @@ namespace Civilization1Remaster.Game
 					}
 				}
 
-				frame.Heading = 49;
 			}
 
-			// Only the leftovers need them: without them the frame of ShiftAIUnit starts at 0
-			if (this.owner.TurnHooks.ClassicStackLeftovers)
-				frame.Leave(this.processor);
-
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.RegDest.Value16 = this.processor.UnstackWord();
-			this.processor.LeaveFrame();
+			this.processor.RestoreSource();
+			this.processor.RestoreDest();
 
 			this.processor.Journal.CloseScope("ShiftUnit");
-		}
-
-		/// <summary>
-		/// The values the original leaves in the locals of its stack frame (offsets from BP). ShiftAIUnit, called later by
-		/// HandlePlayerTurn from the same stack depth, reads its local 0xc (a city index) on a path before setting it and so
-		/// gets the terrain type left here; written only with ClassicStackLeftovers.
-		/// A local that the original sets only on some paths is null when it was not set: the stack keeps its older value.
-		/// </summary>
-		private sealed class ShiftUnitFrame
-		{
-			public ushort? StackTroopIdx;
-			public ushort? FarKind;
-			public ushort? Strategy;
-			public ushort? TownIdx;
-			public ushort Heading;
-			public ushort StartTerrain;
-			public ushort StartImprovements;
-			public ushort RingHoriz;
-			public ushort RingVert;
-			public ushort? CityParticipantIdx;
-			public ushort? RingImprovements;
-
-			public void AtRing(int ringHoriz, int ringVert)
-			{
-				this.RingHoriz = (ushort)ringHoriz;
-				this.RingVert = (ushort)ringVert;
-			}
-
-			public void Leave(CPU processor)
-			{
-				Emit(processor, 0x2, this.StackTroopIdx);
-				Emit(processor, 0x4, this.FarKind);
-				Emit(processor, 0x6, this.Strategy);
-				Emit(processor, 0x8, this.TownIdx);
-				Emit(processor, 0xa, this.Heading);
-				Emit(processor, 0xc, this.StartTerrain);
-				Emit(processor, 0xe, this.StartImprovements);
-				Emit(processor, 0x10, this.RingHoriz);
-				Emit(processor, 0x12, this.RingVert);
-				Emit(processor, 0x14, this.CityParticipantIdx);
-				Emit(processor, 0x16, this.RingImprovements);
-			}
-
-			private static void Emit(CPU processor, ushort local, ushort? amount)
-			{
-				if (amount.HasValue)
-				{
-					processor.EmitLocalWord(local, amount.Value);
-				}
-			}
 		}
 
 		/// <summary>Bit of Player.Relations: the two players have peace</summary>
@@ -358,12 +291,11 @@ namespace Civilization1Remaster.Game
 		/// <summary>
 		/// A tile next to the unit: the player sees it (not the barbarians), meets the foreign city and the foreign units on it
 		/// </summary>
-		private void MeetNearTile(ShiftUnitFrame frame, short participantIdx, short troopIdx, int horizLoc, int vertLoc, int heading,
+		private void MeetNearTile(short participantIdx, short troopIdx, int horizLoc, int vertLoc, int heading,
 			int startTerrain, int startImprovements, bool repaint)
 		{
 			int nearHoriz = RingHoriz(heading, horizLoc);
 			int nearVert = RingVert(heading, vertLoc);
-			frame.AtRing(nearHoriz, nearVert);
 
 			if (this.owner.MapOps.VerifyMapLimits(nearHoriz, nearVert) == 0)
 				return;
@@ -374,19 +306,17 @@ namespace Civilization1Remaster.Game
 			}
 
 			int nearImprovements = this.owner.MapOps.ObtainTileImprovements(nearHoriz, nearVert);
-			frame.RingImprovements = (ushort)nearImprovements;
 
 			if ((nearImprovements & CityImprovement) != 0)
 			{
-				MeetNearCity(frame, participantIdx, troopIdx, nearHoriz, nearVert);
+				MeetNearCity(participantIdx, troopIdx, nearHoriz, nearVert);
 			}
 
 			ushort nearTroopIdx = this.owner.MapOps.ObtainUnitAtTile(nearHoriz, nearVert);
-			frame.StackTroopIdx = nearTroopIdx;
 
 			if (nearTroopIdx != 0xffff && participantIdx != FoundUnitParticipant)
 			{
-				MeetNearUnit(frame, participantIdx, troopIdx, horizLoc, vertLoc, nearHoriz, nearVert, (short)nearTroopIdx,
+				MeetNearUnit(participantIdx, troopIdx, horizLoc, vertLoc, nearHoriz, nearVert, (short)nearTroopIdx,
 					startTerrain, startImprovements, nearImprovements);
 			}
 
@@ -400,17 +330,15 @@ namespace Civilization1Remaster.Game
 		/// A city next to the unit, when it belongs to another player: it gives back its kept units, the human player sees its size,
 		/// the city owner sees a land unit and, without peace, its AI remembers the threat
 		/// </summary>
-		private void MeetNearCity(ShiftUnitFrame frame, short participantIdx, short troopIdx, int nearHoriz, int nearVert)
+		private void MeetNearCity(short participantIdx, short troopIdx, int nearHoriz, int nearVert)
 		{
 			short cityParticipantIdx = (short)this.owner.MapOps.ObtainTileOwnerBits(nearHoriz, nearVert);
 
 			if (cityParticipantIdx == participantIdx)
 				return;
 
-			frame.CityParticipantIdx = (ushort)cityParticipantIdx;
 
 			ushort townIdx = this.owner.Helpers.LocateCityAtPosition(nearHoriz, nearVert);
-			frame.TownIdx = townIdx;
 
 			ConstructUnitsFromCityList((short)townIdx);
 
@@ -435,7 +363,7 @@ namespace Civilization1Remaster.Game
 		/// A foreign stack next to the unit: both see each other (not into a city), the stack wakes up, units lose their
 		/// "go to" orders, and two land units meeting on land may make peace or remember each other
 		/// </summary>
-		private void MeetNearUnit(ShiftUnitFrame frame, short participantIdx, short troopIdx, int horizLoc, int vertLoc, int nearHoriz, int nearVert,
+		private void MeetNearUnit(short participantIdx, short troopIdx, int horizLoc, int vertLoc, int nearHoriz, int nearVert,
 			short nearTroopIdx, int startTerrain, int startImprovements, int nearImprovements)
 		{
 			if ((startImprovements & CityImprovement) == 0)
@@ -467,7 +395,7 @@ namespace Civilization1Remaster.Game
 				this.owner.MapOps.ObtainTerrainType(nearHoriz, nearVert) != MapRules.OceanTerrain &&
 				this.troops.KindField(FoundUnitParticipant, nearTroopIdx, UnitKindTable.LandGroup) != UnitKindTable.AirUnits)
 			{
-				ConfrontNearUnit(frame, participantIdx, troopIdx, horizLoc, vertLoc, nearHoriz, nearVert, nearTroopIdx);
+				ConfrontNearUnit(participantIdx, troopIdx, horizLoc, vertLoc, nearHoriz, nearVert, nearTroopIdx);
 			}
 
 			// A foreign ship next to the unit
@@ -483,7 +411,7 @@ namespace Civilization1Remaster.Game
 		/// (1 for a diplomat, a fortified defender or a barbarian, else 3) and, unless the unit is a diplomat, the other player
 		/// remembers the unit
 		/// </summary>
-		private void ConfrontNearUnit(ShiftUnitFrame frame, short participantIdx, short troopIdx, int horizLoc, int vertLoc, int nearHoriz, int nearVert,
+		private void ConfrontNearUnit(short participantIdx, short troopIdx, int horizLoc, int vertLoc, int nearHoriz, int nearVert,
 			short nearTroopIdx)
 		{
 			this.owner.Politics.BargainPeaceTreaty(participantIdx, FoundUnitParticipant, horizLoc, vertLoc);
@@ -504,7 +432,6 @@ namespace Civilization1Remaster.Game
 					}
 				}
 
-				frame.Strategy = (ushort)strategy;
 
 				this.owner.Bot.SendUnitToStrategicLocation(participantIdx, (short)nearHoriz, (short)nearVert, 1, strategy);
 			}
@@ -520,20 +447,17 @@ namespace Civilization1Remaster.Game
 		/// A tile 2 tiles far from the unit: the unit sees it and the foreign units on it (by its sight), the foreign units there
 		/// see the unit (by their sight), and a city of the human player 2 tiles far sees the unit
 		/// </summary>
-		private void MeetFarTile(ShiftUnitFrame frame, short participantIdx, short troopIdx, int horizLoc, int vertLoc, int heading,
+		private void MeetFarTile(short participantIdx, short troopIdx, int horizLoc, int vertLoc, int heading,
 			int startImprovements, bool repaint)
 		{
 			int farHoriz = RingHoriz(heading, horizLoc);
 			int farVert = RingVert(heading, vertLoc);
-			frame.AtRing(farHoriz, farVert);
 
 			if (this.owner.MapOps.VerifyMapLimits(farHoriz, farVert) == 0)
 				return;
 
 			ushort farTroopIdx = this.owner.MapOps.ObtainUnitAtTile(farHoriz, farVert);
-			frame.StackTroopIdx = farTroopIdx;
 			int farImprovements = this.owner.MapOps.ObtainTileImprovements(farHoriz, farVert);
-			frame.RingImprovements = (ushort)farImprovements;
 
 			if (SeesFarTile(participantIdx, troopIdx, farHoriz, farVert))
 			{
@@ -548,7 +472,6 @@ namespace Civilization1Remaster.Game
 			if (farTroopIdx != 0xffff && participantIdx != FoundUnitParticipant &&
 				this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) != UnitKindTable.Submarine)
 			{
-				frame.FarKind = (ushort)this.troops.TroopKind(FoundUnitParticipant, farTroopIdx);
 
 				SpottedByFarUnit(participantIdx, troopIdx, horizLoc, vertLoc, farHoriz, farVert, (short)farTroopIdx, startImprovements);
 			}
@@ -2106,22 +2029,12 @@ namespace Civilization1Remaster.Game
 			ushort savedSource = this.processor.RegSource.Value16;
 			ushort savedDest = this.processor.RegDest.Value16;
 
-			// The frame of the original: without an own city or carrier the target stays what was left in the stack there
-			// (ClassicStackLeftovers); the remaster takes the place of the unit, so it stays (direction 0)
-			this.processor.EnterFrame(0x16);
-			FrameWords outerFrame = this.locateNearestFriendlyCityFrame;
-			this.locateNearestFriendlyCityFrame = new FrameWords(this.processor, 0x16);
-			int targetHoriz = (short)this.locateNearestFriendlyCityFrame.Frame(0x14);
-			int targetVert = (short)this.locateNearestFriendlyCityFrame.Frame(0x16);
-
+			// Without an own city or carrier the target is the place of the unit, so it stays (direction 0; the original took
+			// what was left on the stack)
 			int unitHoriz = this.troops.Pull(participantIdx, troopIdx, UnitMemory.Horiz);
 			int unitVert = this.troops.Pull(participantIdx, troopIdx, UnitMemory.Vert);
-
-			if (!this.owner.TurnHooks.ClassicStackLeftovers)
-			{
-				targetHoriz = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz);
-				targetVert = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert);
-			}
+			int targetHoriz = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz);
+			int targetVert = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert);
 			int nearest = 999;
 
 			foreach (City town in this.owner.World.Towns)
@@ -2184,9 +2097,6 @@ namespace Civilization1Remaster.Game
 					heading = (ushort)direction;
 				}
 			}
-
-			this.locateNearestFriendlyCityFrame = outerFrame;
-			this.processor.LeaveFrame();
 
 			this.processor.RegSource.Value16 = savedSource;
 			this.processor.RegDest.Value16 = savedDest;

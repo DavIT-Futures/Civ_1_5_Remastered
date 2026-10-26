@@ -254,7 +254,7 @@ namespace Civilization1Remaster.Engine
 
 			this.processor.RegAcc.Value16 = found ? lines : (ushort)0xffff;
 
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
+			this.processor.RestoreSource();
 			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("ImportTextFromFile");

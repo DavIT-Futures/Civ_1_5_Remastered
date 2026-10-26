@@ -534,6 +534,19 @@ stosu znikają, gra zachowuje się przewidywalnie. Do końca migracji przełącz
 testach; w fazie 3 znika razem z nimi, a wtedy usuwamy emulację stosu: pozostałe ramki („dla głębokości”, z resztkami),
 pary `Preserve`/`Restore`, `WithLeftovers`, zapisy-resztki (`ShiftUnitFrame`, kopia w `DirectUnits`). Jako opcje dla
 graczy zostają tylko zmiany reguł (leczenie, koleje, konwersja produkcji…).
+**Zrobione od razu (2026-10-26, prośba użytkownika):** przełącznik i `CPU.ClearFrameLocals` usunięte – `EnterFrame`
+zawsze zeruje zmienne (zamrożona gra `DualGame` ma swój przełącznik). Usunięte: `ShiftUnitFrame`, kopia liczników w
+`DirectUnits`, klasyczna ścieżka `LocateNearestFriendlyCity`, `WithLeftovers`, ramki czytane przed zapisem
+(`RenderPalace`, `RefreshPeaceGraphContent`, `RenderCitizenIcons`, `ChooseTechnologyToTake`, raport wojskowy), 11 ramek
+„dla głębokości” (skaner `depthframes.py`: `DisplayMenu`, `RunGame`, `OperateAITurn`, `ShiftAIUnit`, `HandlePlayerTurn`,
+`HandleAllCities`, `EarnTechnology`, `SeizeCity`, `ComputeInciteCost`, `DisplayTradeReport`, `DisplayEpicChronicle`);
+ręczne `RegX = UnstackWord()` → `RestoreSource()` / `RestoreDest()`. **Pary `Preserve`/`Restore` – próba nieudana:**
+sonda (przy każdym przywróceniu porównanie z bieżącym rejestrem, pełny zestaw) wskazała 39 metod, w których para nigdy
+niczego nie przywraca, ale ich usunięcie psuje golden master, testy podwójnej gry i różnicowe (m.in. `ReckonContinentSizes`,
+`RunGame`, `HandleGameEnd`, `DisplayMainIntro`) – coś zależy od głębokości stosu albo od odłożonych słów (do zbadania:
+funkcje „przeciekające” pod nimi, odczyty względem SP). Cofnięte; pary zostają do fazy 3. Zostają też ramki
+„przeciekające” i ramki z buforami. Testy: `StackLeftoverTests` tylko z regułą remastera (jednostka bez domu zostaje), raport wojskowy klasyczny
+bez wyjątku (czyta 0), `DifferentialPair` po wyjątku w scenariuszu przywraca SP / BP (wersje zostawiają różne ramki).
 
 **Faza 3 – sprzątanie i drugi baseline:** usunięcie przełączników i kodu „classic”, zamrożonej gry
 (`Civilization1Remaster.Original`), kopii Reference, testów Dual; testy różnicowe → testy zachowania z tabel przypadków.

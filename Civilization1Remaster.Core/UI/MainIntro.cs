@@ -534,8 +534,8 @@ namespace Civilization1Remaster.UI
 
 			this.processor.EnterFrame(0x246);
 			FrameWords outerFrame = this.screenFrame;
-			this.screenFrame = new FrameWords(this.processor, 0x246, 2, ScreenText).WithLeftovers();
 			this.processor.PreserveSource();
+			this.screenFrame = new FrameWords(this.processor, 0x246, 2, ScreenText);
 
 			ImportShipPictures();
 			PrepareLandingText(participantIdx);

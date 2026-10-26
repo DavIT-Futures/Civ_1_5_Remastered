@@ -28,8 +28,6 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"SeizeCity({participantIdx}, {townIdx}, {marker})");
 
-			// The frame stays for the depth of the calls (B3: the locals are C# variables)
-			this.processor.EnterFrame(0x12);
 			this.processor.PreserveIndexRegisters();
 
 			short person = this.owner.World.PersonParticipantIdx;
@@ -190,7 +188,6 @@ namespace Civilization1Remaster.Game
 			this.owner.NewGameWizard.EliminateCivilization((short)formerIdx, participantIdx);
 
 			this.processor.RestoreIndexRegisters();
-			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("SeizeCity");
 		}
@@ -406,9 +403,9 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"ChooseTechnologyToTake({participantIdx1}, {participantIdx2})");
 
-			// The frame stays: local 0x4 (best technology for the AI) is read uninitialized when no technology has
-			// ObtainTechnologyInfo > -1 (B3: the list of up to 72 technologies of the frame is in C#)
-			this.processor.EnterFrame(0x9a);
+			// The best technology for the AI is 0 when no technology has ObtainTechnologyInfo > -1 (the local 0x4 of the
+			// original, read uninitialized); the list of up to 72 technologies of the frame is in C# (B3)
+			ushort bestTech = 0;
 			this.processor.PreserveSource();
 
 			if (participantIdx1 != 0 && participantIdx2 != 0)
@@ -437,7 +434,7 @@ namespace Civilization1Remaster.Game
 						if ((short)this.owner.Advisors.ObtainTechnologyInfo(participantIdx1, (ushort)techId) > bestScore)
 						{
 							bestScore = (short)this.owner.Advisors.ObtainTechnologyInfo(participantIdx1, (ushort)techId);
-							this.processor.EmitLocalWord(0x4, (ushort)techId);
+							bestTech = (ushort)techId;
 						}
 					}
 				}
@@ -477,7 +474,7 @@ namespace Civilization1Remaster.Game
 							this.owner.Libc.CopyText(TextBuffer.Address,
 								CivilizationPlural(participantIdx1));
 							this.owner.Words.Append(" take\n");
-							this.owner.Words.Append(TechnologyText(this.processor.PullLocalWord(0x4)));
+							this.owner.Words.Append(TechnologyText(bestTech));
 							this.owner.Words.Append(".\n");
 
 							if (KingAnswer == 0xffff)
@@ -493,7 +490,7 @@ namespace Civilization1Remaster.Game
 							}
 						}
 
-						this.owner.Advisors.EarnTechnology(participantIdx1, this.processor.PullLocalSignedWord(0x4), participantIdx2);
+						this.owner.Advisors.EarnTechnology(participantIdx1, (short)bestTech, participantIdx2);
 						this.owner.Bot.RefreshCityProduction(participantIdx1, 0xffff);
 					}
 				}
@@ -507,8 +504,7 @@ namespace Civilization1Remaster.Game
 				this.processor.RegAcc.Value16 = 0;
 			}
 
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.LeaveFrame();
+			this.processor.RestoreSource();
 			// Far return
 			this.processor.Journal.CloseScope("ChooseTechnologyToTake");
 		}

@@ -10,8 +10,9 @@ namespace Civilization1Remaster.Tests
 {
 	/// <summary>
 	/// Two crashes of the translated code, in a loaded game: the schism of a civilization with units without a home city
-	/// (Towns[255], ClassicSchismHomes) and a row without contact chosen in the military report (garbage of the stack frame,
-	/// ClassicMilitaryReportRows). Off (the game) they work, on (the tests) they throw IndexOutOfRangeException.
+	/// (Towns[255], ClassicSchismHomes): off (the game) it works, on (the tests) it throws IndexOutOfRangeException; and a
+	/// row without contact chosen in the military report (ClassicMilitaryReportRows): the translated code read the garbage
+	/// of its stack frame there and could crash, without the leftovers of the stack it reads 0.
 	/// </summary>
 	public class SchismAndReportCrashTests
 	{
@@ -82,19 +83,9 @@ namespace Civilization1Remaster.Tests
 			GameEngine engine = game.Engine;
 			engine.TurnHooks.ClassicMilitaryReportRows = classic;
 
-			// The classic report reads the garbage of the stack: the frame keeps what lies there (the remaster zeroes it)
-			engine.TurnHooks.ClassicStackLeftovers = classic;
-
-			// The words below the stack pointer, where the report's frame will be: a player number past the table
-			ushort stackTop = engine.Processor.RegStack.Value16;
-
-			for (int offset = 2; offset <= 0x400; offset += 2)
-				engine.Processor.Storage.EmitUInt16(engine.Processor.SegStack.Value16, (ushort)(stackTop - offset), 0x99);
-
-			if (classic)
-				Assert.Throws<IndexOutOfRangeException>(engine.Briefings.DisplayMilitaryReport);
-			else
-				engine.Briefings.DisplayMilitaryReport();
+			// The classic rows read the list for a row without contact: 0 since the garbage of the stack is gone (the
+			// translated code crashed on a player number past the table there), the remaster skips the row
+			engine.Briefings.DisplayMilitaryReport();
 		}
 
 		private static HeadlessGame LoadGame(int[]? script = null)

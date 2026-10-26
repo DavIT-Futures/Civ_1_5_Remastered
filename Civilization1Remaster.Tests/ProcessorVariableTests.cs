@@ -175,6 +175,11 @@ namespace Civilization1Remaster.Tests
 				original.StackWord(original.RegFrame.Value16);
 				original.RegFrame.Value16 = original.RegStack.Value16;
 				original.RegStack.Value16 = original.SubtractWord(original.RegStack.Value16, size);
+
+				// the local variables start at 0
+				for (int place = 0; place < size; place++)
+					original.Storage.EmitUInt8(original.SegStack.Value16, (ushort)(original.RegStack.Value16 + place), 0);
+
 				helper.EnterFrame(size);
 				AssertSameState(original, helper);
 

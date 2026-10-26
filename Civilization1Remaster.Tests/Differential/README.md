@@ -30,9 +30,10 @@ compares it with its original code, in many scenarios that the saves don't reach
 - A test also checks that its scenarios met every branch of the function (for example every outcome of a hut), otherwise
   a green test would not say much.
 
-Not compared: the stack (frames, the words below SP; the original code leaves its locals there, and a later function may
-read them before setting them, see `ShiftUnitFrame` in `UnitManagement` and `TurnHooks.ClassicStackLeftovers`) and the
-registers other than AX / DX; the golden master is still needed for what the leftovers change.
+Not compared: the stack (frames, the words below SP) and the registers other than AX / DX. The local variables start at
+0 on both sides (`CPU.EnterFrame`; the frozen game of `DualGame` through its `CPU.ClearFrameLocals`): the leftovers the
+original read from the stack are gone for good (2026-10-26). The stack pointer is compared; a scenario that throws gets
+the stack and frame pointers back (`DifferentialPair.Invoke`), since the versions leave different frames behind.
 
 ## Adding a function
 

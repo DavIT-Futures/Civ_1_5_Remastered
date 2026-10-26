@@ -603,7 +603,7 @@ namespace Civilization1Remaster.Game
 			// under the frame, like in the original; the words of the frame start with what lay on the stack
 			this.processor.EnterFrame(0xd4);
 			FrameWords outerFrame = this.terrainFrame;
-			this.terrainFrame = new FrameWords(this.processor, 0xd4).WithLeftovers();
+			this.terrainFrame = new FrameWords(this.processor, 0xd4);
 			this.processor.PreserveIndexRegisters();
 
 			const int terrainCounts = 0x20;

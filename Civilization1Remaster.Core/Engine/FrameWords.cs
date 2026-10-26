@@ -27,21 +27,6 @@ namespace Civilization1Remaster.Engine
 			this.words = new ushort[(size / 2) + 1];
 		}
 
-		/// <summary>
-		/// Takes the words of the frame on the stack (0 when CPU.ClearFrameLocals zeroed it, else what earlier functions left
-		/// there, TurnEvents.ClassicStackLeftovers): for a function that reads a local before it writes it
-		/// </summary>
-		public FrameWords WithLeftovers()
-		{
-			for (int distance = 2; distance <= this.size; distance += 2)
-			{
-				if (Within(distance))
-					this.words[distance / 2] = this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 - distance));
-			}
-
-			return this;
-		}
-
 		/// <summary>The word at BP - distance</summary>
 		public ushort Frame(int distance)
 		{

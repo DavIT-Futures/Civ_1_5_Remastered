@@ -29,7 +29,6 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"OperateAITurn({participantIdx})");
 
-			this.processor.EnterFrame(0x68);
 			this.processor.PreserveIndexRegisters();
 
 			CountUnits(participantIdx);
@@ -51,7 +50,6 @@ namespace Civilization1Remaster.Game
 			}
 
 			this.processor.RestoreIndexRegisters();
-			this.processor.LeaveFrame();
 			this.processor.Journal.CloseScope("OperateAITurn");
 		}
 
@@ -412,14 +410,10 @@ namespace Civilization1Remaster.Game
 		private void DirectUnits(short participantIdx, ushort sentBase)
 		{
 			ushort[] locationSent = new ushort[0x20];
-			bool leftovers = this.owner.TurnHooks.ClassicStackLeftovers;
 
 			for (int locationIdx = 0; locationIdx < 0x20; locationIdx++)
 			{
 				locationSent[locationIdx] = sentBase;
-
-				if (leftovers)
-					this.processor.EmitUInt16(this.processor.SegStack.Value16, LocationSentAddress(locationIdx), sentBase);
 			}
 
 			for (short troopIdx = 0; troopIdx < UnitMemory.TroopTally; troopIdx++)
@@ -519,21 +513,7 @@ namespace Civilization1Remaster.Game
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Status, (byte)(status & 0xf0));
 
 			locationSent[best]++;
-
-			if (this.owner.TurnHooks.ClassicStackLeftovers)
-			{
-				ushort sent = LocationSentAddress(best);
-				this.processor.EmitUInt16(this.processor.SegData.Value16, sent, (ushort)(this.processor.PullUInt16(this.processor.SegData.Value16, sent) + 1));
-			}
 		}
-
-		/// <summary>
-		/// The word of a location in the copy of the counts of the units sent that stays in the frame of OperateAITurn
-		/// (BP-0x44, one word per location), only with ClassicStackLeftovers. Nothing here reads it, but HandlePlayerTurn,
-		/// called later at the same depth of the stack, reads its words as uninitialized locals (0x12 the row of the cursor,
-		/// 0x24, 0x36, 0x3e); without the leftovers its frame starts at 0.
-		/// </summary>
-		private ushort LocationSentAddress(int locationIdx) => (ushort)(this.processor.RegFrame.Value16 + (locationIdx << 1) - 0x44);
 
 		/// <summary>
 		/// The location is used and wants the unit's role on the unit's continent, or the unit is a bomber (0xf) and the
@@ -728,7 +708,6 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"ShiftAIUnit({participantIdx}, {troopIdx})");
 
-			this.processor.EnterFrame(0x5e);
 			this.processor.PreserveIndexRegisters();
 
 			// (the barbarians leave the accumulator as their move leaves it)
@@ -752,9 +731,8 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.RegDest.Value16 = this.processor.UnstackWord();
-			this.processor.LeaveFrame();
+			this.processor.RestoreSource();
+			this.processor.RestoreDest();
 			// Far return
 			this.processor.Journal.CloseScope("ShiftAIUnit");
 

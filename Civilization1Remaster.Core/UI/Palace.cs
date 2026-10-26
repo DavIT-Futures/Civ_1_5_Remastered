@@ -398,10 +398,9 @@ namespace Civilization1Remaster.UI
 
 			ushort pictureName = (ushort)(this.processor.RegFrame.Value16 - 0x10);
 
-			// Locals 0x12 and 0x18 of the original (B3: in C#), read before written on some paths: they start with what the
-			// frame holds
-			ushort lastLeftEnd = this.processor.PullLocalWord(0x12);
-			ushort builtRightmost = this.processor.PullLocalWord(0x18);
+			// Locals 0x12 and 0x18 of the original (B3: in C#), read before written on some paths: they start at 0
+			ushort lastLeftEnd = 0;
+			ushort builtRightmost = 0;
 
 			this.owner.Startup.QueryForDisk(2, 1);
 
@@ -829,7 +828,7 @@ namespace Civilization1Remaster.UI
 				}
 			}
 
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
+			this.processor.RestoreSource();
 			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("ImportPalaceCastle");

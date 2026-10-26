@@ -190,8 +190,16 @@ namespace Civilization1Remaster.Tests.Differential
 			});
 		}
 
+		/// <summary>
+		/// Runs the scenario. An exception leaves the frames of the functions it left on the emulated stack, as many as the
+		/// version has (B3 removes frames): the stack pointer and the frame pointer go back to where they were, like the C#
+		/// stack unwinds, so the next scenarios of the game start at the same depth in both versions.
+		/// </summary>
 		private static Exception? Invoke(Action<GameEngine> action, GameEngine engine)
 		{
+			ushort stack = engine.Processor.RegStack.Value16;
+			ushort frame = engine.Processor.RegFrame.Value16;
+
 			try
 			{
 				action(engine);
@@ -199,6 +207,8 @@ namespace Civilization1Remaster.Tests.Differential
 			}
 			catch (Exception failure)
 			{
+				engine.Processor.RegStack.Value16 = stack;
+				engine.Processor.RegFrame.Value16 = frame;
 				return failure;
 			}
 		}
