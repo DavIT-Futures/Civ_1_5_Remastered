@@ -5456,12 +5456,10 @@ namespace Civilization1Remaster.Game
 			this.processor.Journal.OpenScope($"RenderCitizenIcons({townIdx}, {horizLoc}, {vertLoc}, {arg4}, {arg5})");
 
 			// The gap after the happy citizens depends on the frame word 0x2, which is never written (the leftovers of the
-			// functions called before at this depth), like in the original; the final values of the locals stay in the frame
+			// functions called before at this depth), like in the original (B3: the other locals are C# variables)
 			this.processor.EnterFrame(0xa);
 
 			sbyte size = this.owner.World.Towns[townIdx].TrueExtent;
-
-			this.processor.EmitLocalByte(0xa, (byte)size);
 
 			ushort step = (short)(7 * size) > (short)arg5 ? (ushort)CPU.SignedQuotient((short)arg5, size) : (ushort)7;
 			short citizenIdx;
@@ -5506,9 +5504,6 @@ namespace Civilization1Remaster.Game
 			{
 				horizLoc = RenderCitizen(horizLoc, vertLoc, this.processor.PullGlobalWord((ushort)((ObtainCitizenType((ushort)citizenIdx) << 1) + 0x6ea0)), step);
 			}
-
-			this.processor.EmitLocalWord(0x6, (ushort)citizenIdx);
-			this.processor.EmitLocalWord(0x8, step);
 
 			this.processor.RegAcc.Value16 = step;
 			this.processor.LeaveFrame();

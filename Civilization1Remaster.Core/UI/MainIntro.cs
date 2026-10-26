@@ -519,6 +519,9 @@ namespace Civilization1Remaster.UI
 		private const int ScreenStarVert = 0x244;
 		private const int ScreenBackground = 0x246;
 
+		/// <summary>The words of the frame of DisplayCivilizationScreen above its text (B3: in C#, new for every call)</summary>
+		private FrameWords screenFrame = null!;
+
 		/// <summary>
 		/// The end of the space race: the ship of the player (the human player or another one) lands on Alpha Centauri. The
 		/// pictures of the flying ship come from 0x32d8, the text (file 0x3301, part 0x32f2 for the human player, else 0x32f9)
@@ -530,6 +533,8 @@ namespace Civilization1Remaster.UI
 			this.processor.Journal.OpenScope($"DisplayCivilizationScreen({participantIdx})");
 
 			this.processor.EnterFrame(0x246);
+			FrameWords outerFrame = this.screenFrame;
+			this.screenFrame = new FrameWords(this.processor, 0x246, ScreenText).WithLeftovers();
 			this.processor.PreserveSource();
 
 			ImportShipPictures();
@@ -540,6 +545,7 @@ namespace Civilization1Remaster.UI
 			CloseLanding(participantIdx);
 
 			this.processor.RestoreSource();
+			this.screenFrame = outerFrame;
 			this.processor.LeaveFrame();
 			this.processor.Journal.CloseScope("DisplayCivilizationScreen");
 		}
@@ -550,32 +556,32 @@ namespace Civilization1Remaster.UI
 			this.owner.Startup.QueryForDisk(6, 1);
 			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x32d8, 0);
 
-			this.processor.EmitLocalWord(ScreenColumn, 0);
+			this.screenFrame.SetFrame(ScreenColumn, 0);
 
 			do
 			{
 				ushort picture = this.owner.VideoCard.ScreenToPicture(1,
-					(ushort)(((this.processor.PullLocalWord(ScreenColumn) % 6) * 0x32) + 1),
-					(ushort)(((this.processor.PullLocalWord(ScreenColumn) / 6) * 0x32) + 1),
+					(ushort)(((this.screenFrame.Frame(ScreenColumn) % 6) * 0x32) + 1),
+					(ushort)(((this.screenFrame.Frame(ScreenColumn) / 6) * 0x32) + 1),
 					0x31, 0x31);
 
-				ushort entry = (ushort)(this.processor.PullLocalWord(ScreenColumn) << 1);
-				this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + entry - ScreenShipPictures), picture);
+				ushort entry = (ushort)(this.screenFrame.Frame(ScreenColumn) << 1);
+				this.screenFrame.SetFrame(ScreenShipPictures - entry, picture);
 
-				this.processor.IncrementLocalWord(ScreenColumn);
+				this.screenFrame.SetFrame(ScreenColumn, (ushort)(this.screenFrame.Frame(ScreenColumn) + 1));
 			}
-			while ((short)this.processor.PullLocalWord(ScreenColumn) < 0x18);
+			while ((short)this.screenFrame.Frame(ScreenColumn) < 0x18);
 
 			this.owner.Helpers.HaltHueCycling();
 
 			if (VgaMode != 0)
 			{
-				this.processor.EmitLocalWord(ScreenBackground, 0xec);
+				this.screenFrame.SetFrame(ScreenBackground, 0xec);
 				this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 236);
 			}
 			else
 			{
-				this.processor.EmitLocalWord(ScreenBackground, 0);
+				this.screenFrame.SetFrame(ScreenBackground, 0);
 				this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
 			}
 
@@ -591,8 +597,8 @@ namespace Civilization1Remaster.UI
 			if (VgaMode == 0)
 				this.owner.Services.FloodBox(SpriteScreenBox, 0, 0, 320, 200, 0);
 
-			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, this.processor.PullLocalWord(ScreenBackground));
-			this.owner.Services.FloodBox(ScreenBox, 0, 12, 320, 176, this.processor.PullLocalWord(ScreenBackground));
+			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, this.screenFrame.Frame(ScreenBackground));
+			this.owner.Services.FloodBox(ScreenBox, 0, 12, 320, 176, this.screenFrame.Frame(ScreenBackground));
 		}
 
 		/// <summary>
@@ -631,13 +637,13 @@ namespace Civilization1Remaster.UI
 			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - ScreenText), TextBuffer.Address);
 
 			DrawingBox.TypefaceIdx = 6;
-			this.processor.EmitLocalWord(ScreenStarHoriz, 0xfff6);
-			this.processor.EmitLocalWord(ScreenStarVert, 0x5c);
+			this.screenFrame.SetFrame(ScreenStarHoriz, 0xfff6);
+			this.screenFrame.SetFrame(ScreenStarVert, 0x5c);
 			this.processor.RegAcc.Value16 = 0xffff;
-			this.processor.EmitLocalWord(ScreenPartEnd, 0xffff);
-			this.processor.EmitLocalWord(ScreenPartBegin, this.processor.RegAcc.Value16);
+			this.screenFrame.SetFrame(ScreenPartEnd, 0xffff);
+			this.screenFrame.SetFrame(ScreenPartBegin, this.processor.RegAcc.Value16);
 
-			this.processor.EmitLocalWord(ScreenTextLength, this.owner.Words.Length);
+			this.screenFrame.SetFrame(ScreenTextLength, this.owner.Words.Length);
 
 			this.owner.Services.PerformSound(3, 0);
 
@@ -650,32 +656,32 @@ namespace Civilization1Remaster.UI
 		/// </summary>
 		private void FlyShip()
 		{
-			for (this.processor.EmitLocalWord(ScreenColumn, 0); (short)this.processor.PullLocalWord(ScreenColumn) < 0x140; )
+			for (this.screenFrame.SetFrame(ScreenColumn, 0); (short)this.screenFrame.Frame(ScreenColumn) < 0x140; )
 			{
 				this.owner.Services.RestoreTimer();
 
-				if ((short)this.processor.PullLocalWord(ScreenColumn) < 0x140)
+				if ((short)this.screenFrame.Frame(ScreenColumn) < 0x140)
 				{
 					this.owner.Services.FloodBox(BackScreenBox, 0, 176,
-						320 - this.processor.PullLocalSignedWord(ScreenColumn), 24, this.processor.PullLocalWord(ScreenBackground));
+						320 - (short)this.screenFrame.Frame(ScreenColumn), 24, this.screenFrame.Frame(ScreenBackground));
 				}
 
-				if (this.processor.PullLocalWord(ScreenColumn) != 0)
+				if (this.screenFrame.Frame(ScreenColumn) != 0)
 				{
-					this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0x14, this.processor.PullLocalWord(ScreenColumn), 0x18,
-						BackScreenBox, (ushort)(0x140 - this.processor.PullLocalWord(ScreenColumn)), 0xb0);
+					this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0x14, this.screenFrame.Frame(ScreenColumn), 0x18,
+						BackScreenBox, (ushort)(0x140 - this.screenFrame.Frame(ScreenColumn)), 0xb0);
 				}
 
-				if ((short)this.processor.PullLocalWord(ScreenColumn) % 0x16 == 0)
+				if ((short)this.screenFrame.Frame(ScreenColumn) % 0x16 == 0)
 					CutNextTextPart(TextBuffer.Address);
 
-				short textLength = (short)this.processor.PullLocalWord(ScreenTextLength);
+				short textLength = (short)this.screenFrame.Frame(ScreenTextLength);
 
-				if ((short)this.processor.PullLocalWord(ScreenPartEnd) < textLength)
+				if ((short)this.screenFrame.Frame(ScreenPartEnd) < textLength)
 					RenderLandingTextPart();
 
 				RenderShipFrame();
-				this.processor.IncrementLocalWord(ScreenColumn);
+				this.screenFrame.SetFrame(ScreenColumn, (ushort)(this.screenFrame.Frame(ScreenColumn) + 1));
 			}
 		}
 
@@ -685,31 +691,31 @@ namespace Civilization1Remaster.UI
 		/// </summary>
 		private void CutNextTextPart(ushort text)
 		{
-			this.processor.EmitLocalWord(ScreenPartBegin, (ushort)(this.processor.PullLocalWord(ScreenPartEnd) + 1));
+			this.screenFrame.SetFrame(ScreenPartBegin, (ushort)(this.screenFrame.Frame(ScreenPartEnd) + 1));
 
 			ushort end;
 
 			while (true)
 			{
-				this.processor.EmitLocalWord(ScreenPartEnd, (ushort)(this.processor.PullLocalWord(ScreenPartEnd) + 1));
-				end = this.processor.PullLocalWord(ScreenPartEnd);
+				this.screenFrame.SetFrame(ScreenPartEnd, (ushort)(this.screenFrame.Frame(ScreenPartEnd) + 1));
+				end = this.screenFrame.Frame(ScreenPartEnd);
 
-				if (PullTextByte(text, end) == 0x5e || (short)end >= (short)this.processor.PullLocalWord(ScreenTextLength))
+				if (PullTextByte(text, end) == 0x5e || (short)end >= (short)this.screenFrame.Frame(ScreenTextLength))
 					break;
 			}
 
 			if (text == TextBuffer.Address)
 			{
-				if ((short)end < (short)this.processor.PullLocalWord(ScreenTextLength))
+				if ((short)end < (short)this.screenFrame.Frame(ScreenTextLength))
 					EmitTextByte(text, end, 0);
 			}
 			else
 			{
 				// The copy in the frame reads the end of the part again
-				short textLength = (short)this.processor.PullLocalWord(ScreenTextLength);
+				short textLength = (short)this.screenFrame.Frame(ScreenTextLength);
 
-				if ((short)this.processor.PullLocalWord(ScreenPartEnd) < textLength)
-					EmitTextByte(text, this.processor.PullLocalWord(ScreenPartEnd), 0);
+				if ((short)this.screenFrame.Frame(ScreenPartEnd) < textLength)
+					EmitTextByte(text, this.screenFrame.Frame(ScreenPartEnd), 0);
 			}
 		}
 
@@ -733,17 +739,17 @@ namespace Civilization1Remaster.UI
 		private void RenderLandingTextPart()
 		{
 			ushort screen = ScreenBox;
-			this.processor.EmitLocalWord(ScreenSavedFlag, this.processor.PullUInt16(this.processor.SegData.Value16, screen));
+			this.screenFrame.SetFrame(ScreenSavedFlag, this.processor.PullUInt16(this.processor.SegData.Value16, screen));
 			this.processor.EmitUInt16(this.processor.SegData.Value16, screen, 1);
 
 			ushort hue = (ushort)(VgaMode != 0 ? 0x38 : 0x7);
-			this.owner.TextPainter.RenderCenteredTextToScreen0((ushort)(TextBuffer.Address + this.processor.PullLocalWord(ScreenPartBegin)), 160, 184, hue);
+			this.owner.TextPainter.RenderCenteredTextToScreen0((ushort)(TextBuffer.Address + this.screenFrame.Frame(ScreenPartBegin)), 160, 184, hue);
 
 			hue = (ushort)(VgaMode != 0 ? 0x3c : 0xf);
-			this.owner.TextPainter.RenderCenteredTextToScreen0((ushort)(TextBuffer.Address + this.processor.PullLocalWord(ScreenPartBegin)), 160, 183, hue);
+			this.owner.TextPainter.RenderCenteredTextToScreen0((ushort)(TextBuffer.Address + this.screenFrame.Frame(ScreenPartBegin)), 160, 183, hue);
 
 			screen = ScreenBox;
-			this.processor.EmitUInt16(this.processor.SegData.Value16, screen, this.processor.PullLocalWord(ScreenSavedFlag));
+			this.processor.EmitUInt16(this.processor.SegData.Value16, screen, this.screenFrame.Frame(ScreenSavedFlag));
 		}
 
 		/// <summary>
@@ -752,71 +758,70 @@ namespace Civilization1Remaster.UI
 		/// </summary>
 		private void RenderShipFrame()
 		{
-			this.processor.EmitLocalWord(ScreenShipFrame, (ushort)(this.processor.PullLocalWord(ScreenShipFrame) + 1));
+			this.screenFrame.SetFrame(ScreenShipFrame, (ushort)(this.screenFrame.Frame(ScreenShipFrame) + 1));
 
-			if ((short)this.processor.PullLocalWord(ScreenShipFrame) >= 0x17)
-				this.processor.EmitLocalWord(ScreenShipFrame, 0);
+			if ((short)this.screenFrame.Frame(ScreenShipFrame) >= 0x17)
+				this.screenFrame.SetFrame(ScreenShipFrame, 0);
 
 			this.owner.Services.RenderPictureToScreen(BackScreenBox, 135, 51,
-				this.processor.PullUInt16(this.processor.SegStack.Value16,
-					(ushort)(this.processor.RegFrame.Value16 + (this.processor.PullLocalWord(ScreenShipFrame) << 1) - ScreenShipPictures)));
+				this.screenFrame.Frame(ScreenShipPictures - (this.screenFrame.Frame(ScreenShipFrame) << 1)));
 
 			FlickerCgaScreen();
 
-			if ((short)this.processor.PullLocalWord(ScreenColumn) < 0x140)
+			if ((short)this.screenFrame.Frame(ScreenColumn) < 0x140)
 			{
-				this.owner.Services.FloodBox(ScreenBox, 0, 12, 319, 20, this.processor.PullLocalWord(ScreenBackground));
+				this.owner.Services.FloodBox(ScreenBox, 0, 12, 319, 20, this.screenFrame.Frame(ScreenBackground));
 			}
 
-			if (this.processor.PullLocalWord(ScreenColumn) != 0)
+			if (this.screenFrame.Frame(ScreenColumn) != 0)
 			{
-				this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, this.processor.PullLocalWord(ScreenColumn), 0x14,
-					ScreenBox, (ushort)(0x140 - this.processor.PullLocalWord(ScreenColumn)), 0xc);
+				this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, this.screenFrame.Frame(ScreenColumn), 0x14,
+					ScreenBox, (ushort)(0x140 - this.screenFrame.Frame(ScreenColumn)), 0xc);
 			}
 
 			this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0xb0, 0x140, 0x18,
 				ScreenBox, 0, 0x20);
 
-			if ((short)this.processor.PullLocalWord(ScreenColumn) < 0x140)
+			if ((short)this.screenFrame.Frame(ScreenColumn) < 0x140)
 			{
 				this.owner.Services.FloodBox(ScreenBox, 0, 56,
-					320 - this.processor.PullLocalSignedWord(ScreenColumn), 132, this.processor.PullLocalWord(ScreenBackground));
+					320 - (short)this.screenFrame.Frame(ScreenColumn), 132, this.screenFrame.Frame(ScreenBackground));
 			}
 
-			if (this.processor.PullLocalWord(ScreenColumn) != 0)
+			if (this.screenFrame.Frame(ScreenColumn) != 0)
 			{
-				this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0x2c, this.processor.PullLocalWord(ScreenColumn), 0x84,
-					ScreenBox, (ushort)(0x140 - this.processor.PullLocalWord(ScreenColumn)), 0x38);
+				this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0x2c, this.screenFrame.Frame(ScreenColumn), 0x84,
+					ScreenBox, (ushort)(0x140 - this.screenFrame.Frame(ScreenColumn)), 0x38);
 			}
 
 			// The star moves one dot every column, two on odd columns (where it is drawn)
-			if ((this.processor.PullLocalByte(ScreenColumn) & 1) != 0)
+			if ((this.screenFrame.FrameByte(ScreenColumn) & 1) != 0)
 			{
-				this.processor.IncrementLocalWord(ScreenStarHoriz);
+				this.screenFrame.SetFrame(ScreenStarHoriz, (ushort)(this.screenFrame.Frame(ScreenStarHoriz) + 1));
 				this.owner.Services.AssignDot(
-					this.processor.PullLocalSignedWord(ScreenStarHoriz) - this.processor.PullLocalSignedWord(ScreenColumn),
-					this.processor.PullLocalSignedWord(ScreenStarVert), 15);
+					(short)this.screenFrame.Frame(ScreenStarHoriz) - (short)this.screenFrame.Frame(ScreenColumn),
+					(short)this.screenFrame.Frame(ScreenStarVert), 15);
 			}
 
-			this.processor.EmitLocalWord(ScreenStarHoriz, (ushort)(this.processor.PullLocalWord(ScreenStarHoriz) + 1));
+			this.screenFrame.SetFrame(ScreenStarHoriz, (ushort)(this.screenFrame.Frame(ScreenStarHoriz) + 1));
 
 			if (VgaMode == 0)
 			{
 				ushort screen = ScreenBox;
-				this.processor.EmitLocalWord(ScreenSavedFlag, this.processor.PullUInt16(this.processor.SegData.Value16, screen));
+				this.screenFrame.SetFrame(ScreenSavedFlag, this.processor.PullUInt16(this.processor.SegData.Value16, screen));
 				this.processor.EmitUInt16(this.processor.SegData.Value16, screen, 0);
 
 				this.owner.Services.AssignDot(0, 0, 0);
 
 				screen = ScreenBox;
-				this.processor.RegAcc.Value16 = this.processor.PullLocalWord(ScreenSavedFlag);
+				this.processor.RegAcc.Value16 = this.screenFrame.Frame(ScreenSavedFlag);
 				this.processor.EmitUInt16(this.processor.SegData.Value16, screen, this.processor.RegAcc.Value16);
 
 				this.owner.Services.DisplayScreen(this.processor.RegAcc.Value16);
 			}
 
-			if ((short)this.owner.Timer.Beats > 0xc && (this.processor.PullLocalByte(ScreenColumn) & 1) == 0)
-				this.processor.IncrementLocalWord(ScreenColumn);
+			if ((short)this.owner.Timer.Beats > 0xc && (this.screenFrame.FrameByte(ScreenColumn) & 1) == 0)
+				this.screenFrame.SetFrame(ScreenColumn, (ushort)(this.screenFrame.Frame(ScreenColumn) + 1));
 
 			while ((short)this.owner.Timer.Beats < 8)
 			{
@@ -829,16 +834,16 @@ namespace Civilization1Remaster.UI
 		/// </summary>
 		private void ShowLanding(short participantIdx)
 		{
-			this.owner.Helpers.ReleaseResource(this.processor.PullLocalWord(ScreenShipPictures), 0);
+			this.owner.Helpers.ReleaseResource(this.screenFrame.Frame(ScreenShipPictures), 0);
 
 			DrawingBox.DisplayIdx = 0;
 			this.owner.Services.DisplayScreen(0);
 
-			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - ScreenText), (ushort)(this.processor.PullLocalWord(ScreenPartEnd) + (ushort)(TextBuffer.Address + 1)));
+			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - ScreenText), (ushort)(this.screenFrame.Frame(ScreenPartEnd) + (ushort)(TextBuffer.Address + 1)));
 
-			ushort shown = (ushort)(this.processor.PullLocalWord(ScreenPartEnd) + 1);
-			this.processor.EmitLocalWord(ScreenTextLength, (ushort)(this.processor.PullLocalWord(ScreenTextLength) - shown));
-			this.processor.EmitLocalWord(ScreenPartEnd, 0xffff);
+			ushort shown = (ushort)(this.screenFrame.Frame(ScreenPartEnd) + 1);
+			this.screenFrame.SetFrame(ScreenTextLength, (ushort)(this.screenFrame.Frame(ScreenTextLength) - shown));
+			this.screenFrame.SetFrame(ScreenPartEnd, 0xffff);
 
 			if (participantIdx != this.owner.World.PersonParticipantIdx)
 			{
@@ -874,14 +879,14 @@ namespace Civilization1Remaster.UI
 			this.owner.Services.AssignHueCycleSpan(5, 60, 48, 53);
 			this.owner.Services.AssignHueCycleSpan(6, 37, 54, 63);
 
-			this.processor.EmitLocalWord(ScreenColumn, 1);
+			this.screenFrame.SetFrame(ScreenColumn, 1);
 
 			do
 			{
-				this.owner.Services.ActivateHueCycle(this.processor.PullLocalWord(ScreenColumn));
-				this.processor.IncrementLocalWord(ScreenColumn);
+				this.owner.Services.ActivateHueCycle(this.screenFrame.Frame(ScreenColumn));
+				this.screenFrame.SetFrame(ScreenColumn, (ushort)(this.screenFrame.Frame(ScreenColumn) + 1));
 			}
-			while ((short)this.processor.PullLocalWord(ScreenColumn) <= 6);
+			while ((short)this.screenFrame.Frame(ScreenColumn) <= 6);
 		}
 
 		/// <summary>The rest of the text, part after part (up to "^"), at the top of the screen with a blinking dot after each part</summary>
@@ -891,17 +896,17 @@ namespace Civilization1Remaster.UI
 			{
 				CutNextTextPart((ushort)(this.processor.RegFrame.Value16 - ScreenText));
 
-				short textLength = (short)this.processor.PullLocalWord(ScreenTextLength);
+				short textLength = (short)this.screenFrame.Frame(ScreenTextLength);
 
-				if ((short)this.processor.PullLocalWord(ScreenPartEnd) < textLength)
+				if ((short)this.screenFrame.Frame(ScreenPartEnd) < textLength)
 				{
 					this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0x20,
 						ScreenBox, 0, 0);
 
 					this.owner.TextPainter.RenderCenteredTextToScreen0(
-						(ushort)(this.processor.RegFrame.Value16 + this.processor.PullLocalWord(ScreenPartBegin) - ScreenText), 160, 5, 11);
+						(ushort)(this.processor.RegFrame.Value16 + this.screenFrame.Frame(ScreenPartBegin) - ScreenText), 160, 5, 11);
 					this.owner.TextPainter.RenderCenteredTextToScreen0(
-						(ushort)(this.processor.RegFrame.Value16 + this.processor.PullLocalWord(ScreenPartBegin) - ScreenText), 160, 4, 15);
+						(ushort)(this.processor.RegFrame.Value16 + this.screenFrame.Frame(ScreenPartBegin) - ScreenText), 160, 4, 15);
 
 					this.owner.Services.AssignDot(280, 32, 15);
 					this.owner.TextPainter.AwaitTime(80);
@@ -909,9 +914,9 @@ namespace Civilization1Remaster.UI
 					this.owner.TextPainter.AwaitTime(80);
 				}
 
-				textLength = (short)this.processor.PullLocalWord(ScreenTextLength);
+				textLength = (short)this.screenFrame.Frame(ScreenTextLength);
 
-				if ((short)this.processor.PullLocalWord(ScreenPartEnd) >= textLength)
+				if ((short)this.screenFrame.Frame(ScreenPartEnd) >= textLength)
 					break;
 			}
 			while (true);
@@ -924,14 +929,14 @@ namespace Civilization1Remaster.UI
 
 			if (participantIdx == this.owner.World.PersonParticipantIdx && VgaMode != 0)
 			{
-				this.processor.EmitLocalWord(ScreenColumn, 1);
+				this.screenFrame.SetFrame(ScreenColumn, 1);
 
 				do
 				{
-					this.owner.Services.DeactivateHueCycle(this.processor.PullLocalWord(ScreenColumn));
-					this.processor.IncrementLocalWord(ScreenColumn);
+					this.owner.Services.DeactivateHueCycle(this.screenFrame.Frame(ScreenColumn));
+					this.screenFrame.SetFrame(ScreenColumn, (ushort)(this.screenFrame.Frame(ScreenColumn) + 1));
 				}
-				while ((short)this.processor.PullLocalWord(ScreenColumn) <= 6);
+				while ((short)this.screenFrame.Frame(ScreenColumn) <= 6);
 			}
 
 			DrawingBox.DisplayIdx = 0;
