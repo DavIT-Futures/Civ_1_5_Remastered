@@ -497,6 +497,17 @@ słowa ramki ze stosu, `ImportPalaceGraphics` zaczyna 0x12 / 0x18 od `PullLocalW
 `DisplayMilitaryReport` zostaje na stosie (`SchismAndReportCrashTests` sprawdza śmieci). Etykiety gałęzi testów
 różnicowych czytające lokalne z ramki biorą `pair.Original` (`ImportTextFromFileMatchesOriginalCode`).
 
+**Zagadka `ProduceTerrain` rozwiązana (2026-10-26):** sonda (nakładka pamięci na ramkę, łapie też odczyty przez
+`Storage`) pokazała, że jedynym czytelnikiem jest `RankLandOrSea`: `numbers[etykieta]` dla etykiet ≥ 0x53 czyta ponad
+BP, ujemnych (sbyte) – pod ramką. W teście jeden scenariusz kończy się wyjątkiem w obu wersjach i zostawia ramkę
+(0xda bajtów) na stosie; następny scenariusz biegnie głębiej i czyta tę starą ramkę – oryginał ją ma w pamięci, C# nie.
+Artefakt testu: `ProduceTerrainMatchesOriginalCode` ma teraz `fresh: true`, ramka w `FrameWords` (`WithLeftovers`).
+**Znaleziona rozbieżność do decyzji (nie z tej zmiany):** w prawdziwej grze etykiety 0x57 – 0x5d czytają ramkę
+`OpeningSequence` (jej lokalne – liczniki pętli – oryginał zostawia tam, remaster ma je w C#, ramka zera), a niezerowa
+„liczba” rysuje kropkę na mapie ekranu (y + 50). Tak samo każde czytanie poza tablicą ponad BP trafia w ramki
+wywołujących, które B2 / B3 przeniosły do C#. Rzadkie (ponad 0x56 etykiet lądu lub mórz), golden master nie łapie;
+do rozstrzygnięcia przy poprawkach zachowania (zdefiniować: etykiety bez numeru = 15).
+
 **Faza 3 – sprzątanie i drugi baseline:** usunięcie przełączników i kodu „classic”, zamrożonej gry
 (`Civilization1Remaster.Original`), kopii Reference, testów Dual; testy różnicowe → testy zachowania z tabel przypadków.
 B6.7 część 2 (zdarzenia hosta zamiast `PumpMessages`, nowy zegar testów) → **drugie nagranie baseline'u** (powinno

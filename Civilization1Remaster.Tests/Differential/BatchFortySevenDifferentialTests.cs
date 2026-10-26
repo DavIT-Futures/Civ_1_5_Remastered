@@ -54,7 +54,7 @@ namespace Civilization1Remaster.Tests.Differential
 					},
 					Register.Kept,
 					game => "map");
-			}, output, ["map"]);
+			}, output, ["map"], fresh: true);
 		}
 	}
 }
