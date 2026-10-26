@@ -24,8 +24,6 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"DiplomatArrivesAtCity({townIdx}, {participantIdx}, {troopIdx})");
 
-			// The final values of the locals stay in the stack frame, like in the original
-			this.processor.EnterFrame(0x28);
 			this.processor.PreserveIndexRegisters();
 
 			short person = this.owner.World.PersonParticipantIdx;
@@ -128,7 +126,6 @@ namespace Civilization1Remaster.Game
 		private void FinishDiplomatArrival()
 		{
 			this.processor.RestoreIndexRegisters();
-			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("DiplomatArrivesAtCity");
 		}

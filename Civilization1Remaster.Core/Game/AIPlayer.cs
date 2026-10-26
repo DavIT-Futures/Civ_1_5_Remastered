@@ -2924,7 +2924,6 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"ManageBarbarianUnit({participantIdx}, {troopIdx})");
 
-			this.processor.EnterFrame(0x54);
 			this.processor.PreserveIndexRegisters();
 
 			ushort dataSeg = this.processor.SegData.Value16;
@@ -2935,7 +2934,6 @@ namespace Civilization1Remaster.Game
 				this.processor.RegAcc.Value16 = (ushort)(((0x600 * (ushort)participantIdx) & 0xff00) | unitYByte);
 				this.owner.UnitOps.EliminateUnit(participantIdx, troopIdx);
 				this.processor.RestoreIndexRegisters();
-				this.processor.LeaveFrame();
 				this.processor.Journal.CloseScope("ManageBarbarianUnit");
 				return this.processor.RegAcc.Value16;
 			}
@@ -2954,7 +2952,6 @@ namespace Civilization1Remaster.Game
 				ushort seaResult = this.ManageBarbarianSeaTransport(participantIdx, troopIdx, unitAddr, unitX, unitY);
 				this.processor.RegAcc.Value16 = seaResult;
 				this.processor.RestoreIndexRegisters();
-				this.processor.LeaveFrame();
 				this.processor.Journal.CloseScope("ManageBarbarianUnit");
 				return seaResult;
 			}
@@ -2962,7 +2959,6 @@ namespace Civilization1Remaster.Game
 			ushort landResult = this.ManageBarbarianFieldUnit(participantIdx, troopIdx, unitAddr, unitX, unitY, mayOccupyCurrent);
 			this.processor.RegAcc.Value16 = landResult;
 			this.processor.RestoreIndexRegisters();
-			this.processor.LeaveFrame();
 			this.processor.Journal.CloseScope("ManageBarbarianUnit");
 			return landResult;
 		}

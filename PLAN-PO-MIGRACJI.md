@@ -451,7 +451,9 @@ samego pliku nie dotykają lokali, stosu ani BP) – 13 ramek usuniętych: `BuyU
 `DisplayAttitudeReport`, trzy `RenderCityScenery…`, `DisplayReplay`, `RenderReplayMapTile`, `ChoreographKingSpeaking`,
 `ComputeSpaceshipSuccess`, `ConfigureFreshGame`, `ConstructCivilization`, `DisplayWorldMap`. Trzy zostały, bo oryginał
 na części ścieżek zostawia ramkę na stosie (`cpu.sp`): `OpeningSequence`, `DisplayConquerorScreen`, `LaunchAudience`
-(jak `DivideCivilization`). Pełny zestaw 808/808. ramki, SI/DI, BX/CX/DX moduł po module; przy jawnych wartościach
+(jak `DivideCivilization`). Pełny zestaw 808/808. Potem trzy z kilkoma wyjściami lub `LeaveFrame` w metodzie
+kończącej: `ManageBarbarianUnit`, `DiplomatArrivesAtCity` (`FinishDiplomatArrival`), `AttachSpaceshipPart`
+(`LeaveAttachSpaceshipPart`) – 808/808. ramki, SI/DI, BX/CX/DX moduł po module; przy jawnych wartościach
 zamiast śmieci golden master zostaje zielony, sonda stosu ma pokazać zero czytelników. Na końcu rejestry z CPU,
 `MZExecutable` i obraz CIV.EXE w pamięci (dane początkowe z pliku przy starcie).
 
