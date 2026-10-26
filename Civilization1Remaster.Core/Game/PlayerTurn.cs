@@ -1960,11 +1960,11 @@ namespace Civilization1Remaster.Game
 			this.processor.RegSource.Value16 = (ushort)(this.turn.Direction << 1);
 
 			this.turn.CursorHoriz = (ushort)this.owner.Routing.TunePosition(
-				(short)DirectionHorizAt(this.processor.RegSource.Value16) +
+				(short)DirectionHorizAt((ushort)(this.turn.Direction << 1)) +
 					(short)this.turn.CursorHoriz);
 
 			this.turn.CursorVert = (ushort)this.owner.Helpers.VerifyValueSpan(
-				(short)DirectionVertAt(this.processor.RegSource.Value16) +
+				(short)DirectionVertAt((ushort)(this.turn.Direction << 1)) +
 					(short)this.turn.CursorVert,
 				0, 49);
 
@@ -2029,11 +2029,11 @@ namespace Civilization1Remaster.Game
 			this.processor.RegSource.Value16 = (ushort)(this.turn.Direction << 1);
 
 			this.turn.TargetHoriz = (ushort)this.owner.Routing.TunePosition(
-				(short)DirectionHorizAt(this.processor.RegSource.Value16) +
+				(short)DirectionHorizAt((ushort)(this.turn.Direction << 1)) +
 					(short)this.turn.UnitHoriz);
 
 			this.turn.TargetVert = (ushort)this.owner.Helpers.VerifyValueSpan(
-				(short)DirectionVertAt(this.processor.RegSource.Value16) +
+				(short)DirectionVertAt((ushort)(this.turn.Direction << 1)) +
 					(short)this.turn.UnitVert,
 				0, 49);
 
@@ -2247,13 +2247,14 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// A diplomat next to a foreign unit where no city is bribes it (BuyUnit) and forgets its destination (written through
-		/// SI as the original leaves it). The locals of HandlePlayerTurn are used as in the original.
+		/// A diplomat next to a foreign unit where no city is bribes it (BuyUnit) and forgets its destination. The locals of
+		/// HandlePlayerTurn are used as in the original.
 		/// </summary>
 		private void BribeUnitOnTheWay(short participantIdx)
 		{
 			short troopIdx = (short)this.turn.Troop;
-			this.processor.RegSource.Value16 = UnitMemory.Offset(participantIdx, troopIdx);
+			ushort unit = UnitMemory.Offset(participantIdx, troopIdx);
+			this.processor.RegSource.Value16 = unit;
 
 			if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) != UnitKindTable.Diplomat || this.turn.OtherUnit == 0xffff ||
 				participantIdx == (short)UnitAtTilePlayer)
@@ -2265,7 +2266,8 @@ namespace Civilization1Remaster.Game
 				(short)this.turn.OtherUnit,
 				participantIdx);
 
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + UnitMemory.Origin + UnitMemory.TravelHoriz), 0xff);
+			// BuyUnit keeps SI
+			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(unit + UnitMemory.Origin + UnitMemory.TravelHoriz), 0xff);
 		}
 
 		/// <summary>
@@ -2294,10 +2296,12 @@ namespace Civilization1Remaster.Game
 						return MoveCheck.Done;
 					}
 
-					ushort status = (ushort)(this.processor.RegSource.Value16 + UnitMemory.Origin + UnitMemory.Status);
+					// Written through the SI that TallySpecialUnitsInStack leaves: the unit 0 of the player, like in the original
+					ushort boarded = (ushort)(participantIdx * UnitMemory.ParticipantStride);
+					ushort status = (ushort)(boarded + UnitMemory.Origin + UnitMemory.Status);
 					this.processor.EmitUInt8(this.processor.SegData.Value16, status, (byte)(this.processor.PullUInt8(this.processor.SegData.Value16, status) | 1));
 					this.processor.EmitUInt8(this.processor.SegData.Value16, status, (byte)(this.processor.PullUInt8(this.processor.SegData.Value16, status) & 0xf3));
-					this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + UnitMemory.Origin + UnitMemory.LeftoverSteps), 3);
+					this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(boarded + UnitMemory.Origin + UnitMemory.LeftoverSteps), 3);
 
 					return MoveCheck.Moves;
 				}
@@ -2315,7 +2319,7 @@ namespace Civilization1Remaster.Game
 				{
 					// (a land unit on a ship does not attack)
 					DisplayHelpForHuman(0x1f28);
-					this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + UnitMemory.Origin + UnitMemory.TravelHoriz), 0xff);
+					this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(unit + UnitMemory.Origin + UnitMemory.TravelHoriz), 0xff);
 
 					return MoveCheck.Done;
 				}
@@ -2353,7 +2357,7 @@ namespace Civilization1Remaster.Game
 				if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) != 0xe && ((byte)this.turn.TargetImprovements & 1) == 0)
 				{
 					DisplayHelpForHuman(0x1f30);
-					this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + UnitMemory.Origin + UnitMemory.TravelHoriz), 0xff);
+					this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(unit + UnitMemory.Origin + UnitMemory.TravelHoriz), 0xff);
 
 					return MoveCheck.Done;
 				}
@@ -2379,12 +2383,12 @@ namespace Civilization1Remaster.Game
 			{
 				this.owner.Words.Set("Attack at\n");
 				this.owner.Libc.AppendText(TextBuffer.Address,
-					this.owner.Libc.IntegerToText((sbyte)this.Troops.PullAt(this.processor.RegSource.Value16, UnitMemory.LeftoverSteps), 10));
+					this.owner.Libc.IntegerToText((sbyte)this.Troops.PullAt(UnitMemory.Offset(participantIdx, troopIdx), UnitMemory.LeftoverSteps), 10));
 				this.owner.Words.Append("/3 strength?\n Cancel\n Attack\n");
 				if (this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 16) == 1)
 					return true;
 
-				this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + UnitMemory.Origin + UnitMemory.TravelHoriz), 0xff);
+				this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(UnitMemory.Offset(participantIdx, troopIdx) + UnitMemory.Origin + UnitMemory.TravelHoriz), 0xff);
 				return false;
 			}
 
@@ -2600,7 +2604,7 @@ namespace Civilization1Remaster.Game
 				if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) != 0x19)
 				{
 					DisplayHelpForHuman(0x1f62);
-					this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + UnitMemory.Origin + UnitMemory.TravelHoriz), 0xff);
+					this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(unit + UnitMemory.Origin + UnitMemory.TravelHoriz), 0xff);
 					return false;
 				}
 
@@ -2957,9 +2961,9 @@ namespace Civilization1Remaster.Game
 				(short)this.turn.TargetHoriz,
 				(short)this.turn.TargetVert);
 
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + UnitMemory.Origin + UnitMemory.Horiz), (byte)this.turn.TargetHoriz);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + UnitMemory.Origin + UnitMemory.Vert), (byte)this.turn.TargetVert);
-			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + UnitMemory.Origin + UnitMemory.ShownToParticipants), 0);
+			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(unit + UnitMemory.Origin + UnitMemory.Horiz), (byte)this.turn.TargetHoriz);
+			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(unit + UnitMemory.Origin + UnitMemory.Vert), (byte)this.turn.TargetVert);
+			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(unit + UnitMemory.Origin + UnitMemory.ShownToParticipants), 0);
 			this.processor.RegAcc.LowByte = (byte)this.turn.TargetVert;
 
 			if (participantIdx != person)
@@ -3443,7 +3447,7 @@ namespace Civilization1Remaster.Game
 
 						for (ushort word = 0; word < 6; word += 2)
 						{
-							this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1512 + word),
+							this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)((0x3a * record) + 0x1512 + word),
 								(ushort)(this.owner.Libc.Dice.DrawInt(3) - 1));
 						}
 					}
@@ -3521,10 +3525,10 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.RegSource.Value16 = (ushort)(this.turn.Direction << 1);
 
-			ushort horiz = (ushort)(DirectionHorizAt(this.processor.RegSource.Value16) << 2);
+			ushort horiz = (ushort)(DirectionHorizAt((ushort)(this.turn.Direction << 1)) << 2);
 			MapViewHoriz = (ushort)(MapViewHoriz + horiz);
 
-			ushort vert = (ushort)(DirectionVertAt(this.processor.RegSource.Value16) << 2);
+			ushort vert = (ushort)(DirectionVertAt((ushort)(this.turn.Direction << 1)) << 2);
 			MapViewVert = (ushort)(MapViewVert + vert);
 
 			this.owner.MapOps.FocusMapView(this.owner.World.PersonParticipantIdx,
@@ -3547,7 +3551,7 @@ namespace Civilization1Remaster.Game
 			this.owner.World.Participants[participantIdx].RegimeKind = 0;
 
 			Message("The ")
-				.Text(CivilizationPluralAt(this.processor.RegSource.Value16))
+				.Text(CivilizationPluralAt((ushort)(participantIdx << 1)))
 				.Text(" are\nrevolting! Citizens\ndemand new govt.\n");
 			this.owner.Paper.DisplayNewspaper(-1);
 			this.owner.NewGameWizard.ImportGovernmentGraphics();
@@ -3817,8 +3821,8 @@ namespace Civilization1Remaster.Game
 				this.processor.RegDest.Value16 = UnitMemory.Offset(participantIdx, troopIdx);
 
 				if (this.owner.MapOps.ObtainTerrainType(
-					this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz) + (short)DirectionHorizAt(this.processor.RegSource.Value16),
-					this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert) + (short)DirectionVertAt(this.processor.RegSource.Value16)) != MapRules.OceanTerrain)
+					this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz) + (short)DirectionHorizAt((ushort)(direction << 1)),
+					this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert) + (short)DirectionVertAt((ushort)(direction << 1))) != MapRules.OceanTerrain)
 				{
 					this.turn.Found = 1;
 					break;

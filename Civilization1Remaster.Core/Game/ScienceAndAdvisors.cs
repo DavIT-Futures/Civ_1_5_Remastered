@@ -1494,12 +1494,13 @@ namespace Civilization1Remaster.Game
 
 			for (ushort kindIdx = 0; kindIdx < 0x1c; kindIdx++)
 			{
-				this.processor.RegSource.Value16 = (ushort)(0x22 * kindIdx);
+				ushort kindRecord = (ushort)(0x22 * kindIdx);
+				this.processor.RegSource.Value16 = kindRecord;
 
-				if (UnitKindWordAt(this.processor.RegSource.Value16, UnitKindTable.Technology) != (ushort)pick)
+				if (UnitKindWordAt(kindRecord, UnitKindTable.Technology) != (ushort)pick)
 					continue;
 
-				this.owner.Words.Append(UnitTextAt(this.processor.RegSource.Value16));
+				this.owner.Words.Append(UnitTextAt(kindRecord));
 
 				this.owner.Words.Append("\n-");
 
@@ -1508,12 +1509,13 @@ namespace Civilization1Remaster.Game
 
 			for (ushort wonderIdx = 0; wonderIdx < 0x18; wonderIdx++)
 			{
-				this.processor.RegSource.Value16 = (ushort)(0x1e * wonderIdx);
+				ushort wonderRecord = (ushort)(0x1e * wonderIdx);
+				this.processor.RegSource.Value16 = wonderRecord;
 
-				if (BuildingWordAt(this.processor.RegSource.Value16, BuildingTable.Technology) != (ushort)pick)
+				if (BuildingWordAt(wonderRecord, BuildingTable.Technology) != (ushort)pick)
 					continue;
 
-				this.owner.Words.Append(BuildingRecordTextAt(this.processor.RegSource.Value16));
+				this.owner.Words.Append(BuildingRecordTextAt(wonderRecord));
 
 				this.owner.Words.Append("\n-");
 
@@ -1658,11 +1660,12 @@ namespace Civilization1Remaster.Game
 				// The wonders (0xbb6, names 0xb9a) and the units (0x114a, names 0x112a) the technology allows
 				for (ushort wonderIdx = 0; wonderIdx < 0x18; wonderIdx++)
 				{
-					this.processor.RegSource.Value16 = (ushort)(0x1e * wonderIdx);
+					ushort wonderRecord = (ushort)(0x1e * wonderIdx);
+					this.processor.RegSource.Value16 = wonderRecord;
 
-					if (BuildingWordAt(this.processor.RegSource.Value16, BuildingTable.Technology) == (ushort)scienceIdx)
+					if (BuildingWordAt(wonderRecord, BuildingTable.Technology) == (ushort)scienceIdx)
 					{
-						this.owner.Words.Append(BuildingRecordTextAt(this.processor.RegSource.Value16));
+						this.owner.Words.Append(BuildingRecordTextAt(wonderRecord));
 
 						this.owner.Words.Append("\n ");
 					}
@@ -1670,11 +1673,12 @@ namespace Civilization1Remaster.Game
 
 				for (ushort kindIdx = 0; kindIdx < 0x1c; kindIdx++)
 				{
-					this.processor.RegSource.Value16 = (ushort)(0x22 * kindIdx);
+					ushort kindRecord = (ushort)(0x22 * kindIdx);
+					this.processor.RegSource.Value16 = kindRecord;
 
-					if (UnitKindWordAt(this.processor.RegSource.Value16, UnitKindTable.Technology) == (ushort)scienceIdx)
+					if (UnitKindWordAt(kindRecord, UnitKindTable.Technology) == (ushort)scienceIdx)
 					{
-						this.owner.Words.Append(UnitTextAt(this.processor.RegSource.Value16));
+						this.owner.Words.Append(UnitTextAt(kindRecord));
 
 						this.owner.Words.Append("\n ");
 					}
