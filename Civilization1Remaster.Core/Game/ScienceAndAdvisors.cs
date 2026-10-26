@@ -275,15 +275,10 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"PickCityProduction({participantIdx}, {townIdx})");
 
-			// The words of the frame are in C# (B3, properties below; some are read before they are written: 0); the key of
-			// the advice and the words around it (a long name could run over) stay on the stack, in the frame
-			this.processor.EnterFrame(0x14a);
+			// The words of the frame are in C# (B3, properties below; some are read before they are written: 0)
 			FrameWords outerFrame = this.pickFrame;
-			this.pickFrame = new FrameWords(this.processor, 0x14a, AdviceSpillLocal, AdviceKey);
+			this.pickFrame = new FrameWords(this.processor, 0x14a);
 			this.processor.PreserveIndexRegisters();
-
-			// "*" before the name of the best choice in the frame: the key of its advice in the text file
-			this.pickFrame.SetFrameByte(AdviceKey, 0x2a);
 			PageState = 0;
 			AdvisorsShown = 0;
 
@@ -317,7 +312,6 @@ namespace Civilization1Remaster.Game
 			this.processor.RegAcc.Value16 = choice;
 			this.processor.RestoreIndexRegisters();
 			this.pickFrame = outerFrame;
-			this.processor.LeaveFrame();
 			this.processor.Journal.CloseScope("PickCityProduction");
 
 			return choice;
@@ -340,9 +334,6 @@ namespace Civilization1Remaster.Game
 		private const int MakingElsewhereTable = 0x11a;
 		private const int UnfamiliarLoopLocal = 0x11c;
 		private const int BestUnitScoreLocal = 0x11e;
-		private const int AdviceKey = 0x12e;
-		/// <summary>The lowest word a name copied to the key of the advice could reach (28 letters)</summary>
-		private const int AdviceSpillLocal = 0x112;
 		private const int BestImprovementScoreLocal = 0x130;
 		private const int DefensiveImprovementLocal = 0x132;
 		private const int ScoreLocal = 0x134;
@@ -1145,7 +1136,8 @@ namespace Civilization1Remaster.Game
 			Score = (short)ChoiceEntry(entryIdx);
 			ushort name = Score >= 0 ? (ushort)(0x112a + 0x22 * Score) : ImprovementRecord(-Score);
 
-			ushort key = (ushort)(this.processor.RegFrame.Value16 - AdviceKey);
+			ushort key = (ushort)(this.processor.RegStack.Value16 - 0x300);
+			this.processor.EmitUInt8(this.processor.SegStack.Value16, key, (byte)'*');
 			this.owner.Libc.CopyText((ushort)(key + 1), name);
 			this.owner.Words.Set(advisor);
 			this.owner.BlockText.ImportTextFromFile(documentAddr, key);
