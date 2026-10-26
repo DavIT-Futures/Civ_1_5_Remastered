@@ -508,6 +508,15 @@ Artefakt testu: `ProduceTerrainMatchesOriginalCode` ma teraz `fresh: true`, ramk
 wywołujących, które B2 / B3 przeniosły do C#. Rzadkie (ponad 0x56 etykiet lądu lub mórz), golden master nie łapie;
 do rozstrzygnięcia przy poprawkach zachowania (zdefiniować: etykiety bez numeru = 15).
 
+**Odczyty SI / DI (punkt 3, 2026-10-26):** sonda (tymczasowa klasa w Core: przy każdym odczycie rejestru porównanie z
+wartością ostatniego przypisania w tej samej metodzie, zapis zgodności / różnicy do pliku, pełny zestaw) potwierdziła
+36 odczytów – teraz zmienne C# (przypisanie rejestru zostaje dla kodu, który go czyta później). Zostają: odczyty po
+funkcjach, które zostawiają w rejestrze co innego (`TallyUnitsByDomainInStack`, `TallySpecialUnitsInStack` – SI =
+0x600 x gracz: AIPlayer 999 / 1009 / 1268, PlayerTurn 2189 / 2722 – 2724, CityManagement 4671), odczyty, do których
+testy nie dochodzą (PlayerTurn: ścieżka jednostki 23, 1210, 3118; GovernmentAndDiplomacy 172), klasyczna groźba
+emisariusza (DI celowo) i `SystemServices` (zapis / odczyt stanu rejestrów). Nie podstawiać wyrażeń z wywołaniami funkcji
+gry w miejsce odczytu – zmienia ślad wywołań; zmienna lokalna w miejscu przypisania.
+
 **Faza 3 – sprzątanie i drugi baseline:** usunięcie przełączników i kodu „classic”, zamrożonej gry
 (`Civilization1Remaster.Original`), kopii Reference, testów Dual; testy różnicowe → testy zachowania z tabel przypadków.
 B6.7 część 2 (zdarzenia hosta zamiast `PumpMessages`, nowy zegar testów) → **drugie nagranie baseline'u** (powinno

@@ -107,6 +107,9 @@ Testy zawsze w **Release** z `-parallelMode all` (ok. 7 razy szybciej niż Debug
    Budżet: 8 – 12 mutacji na porcję (patrz „Strategia testów”) (jedna mutacja ≈ 10 s budowania + czas testu; 4 workery). Po zmianie testu powtarzać tylko
    ocalałe i mutacje gałęzi, których dotyczy zmiana – nigdy całego zbioru z poprzednich porcji (godziny, porcje 116 – 119).
    Długie polecenia zawsze w tle (`run_in_background`), nie przez `timeout` w Bash na pierwszym planie.
+   **Każde uruchomienie testów z limitem czasu** (pełny zestaw ok. 25 min przy zwykłych 10 – 16, pojedyncze testy ok.
+   5 min): `Start-Process … -PassThru`, `$p.Handle`, `$p.WaitForExit(limit)`, po przekroczeniu `Stop-Process` samego
+   procesu testów (nigdy gry) i wynik = błąd. Bez limitu zawieszony przebieg potrafił stać kilkadziesiąt minut.
    Każda musi być CAUGHT; SURVIVED = albo słaby test (dodać scenariusze), albo mutacja nieosiągalna (zmienić). Mutacja musi
    leżeć w funkcji, którą sprawdza podany test (porcje 68 / 70: mutacje w `SeizeCity` / `FocusMapView` „przeżywały” w testach
    innych funkcji).
