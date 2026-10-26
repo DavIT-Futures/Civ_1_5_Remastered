@@ -1,6 +1,7 @@
 ﻿
 using System;
 using Civilization1Remaster.Emulation;
+using Civilization1Remaster.Engine;
 using Civilization1Remaster.Game.Rules;
 using Civilization1Remaster.Game.State;
 
@@ -31,30 +32,13 @@ namespace Civilization1Remaster.Game
 			/// (2026-10-26): 0 at the start like the zeroed frame. The arrays of the frame and the locals read through it
 			/// share them as in the original.
 			/// </summary>
-			private readonly ushort[] words = new ushort[(0x10c / 2) + 1];
+			private readonly FrameWords frame = new FrameWords(processor, 0x10c);
 
-			/// <summary>
-			/// The word at BP - distance (16-bit: an index of an array may be negative, as in the original): from the array,
-			/// out of the frame from the stack as before
-			/// </summary>
-			public ushort Frame(int distance)
-			{
-				distance = (short)(ushort)distance;
+			/// <summary>The word at BP - distance (FrameWords)</summary>
+			public ushort Frame(int distance) => this.frame.Frame(distance);
 
-				return distance > 0 && distance <= 0x10c && (distance & 1) == 0 ? this.words[distance / 2] :
-					processor.PullUInt16(processor.SegStack.Value16, (ushort)(processor.RegFrame.Value16 - distance));
-			}
-
-			/// <summary>Writes the word at BP - distance (see Frame)</summary>
-			public void SetFrame(int distance, ushort value)
-			{
-				distance = (short)(ushort)distance;
-
-				if (distance > 0 && distance <= 0x10c && (distance & 1) == 0)
-					this.words[distance / 2] = value;
-				else
-					processor.EmitUInt16(processor.SegStack.Value16, (ushort)(processor.RegFrame.Value16 - distance), value);
-			}
+			/// <summary>Writes the word at BP - distance (FrameWords)</summary>
+			public void SetFrame(int distance, ushort value) => this.frame.SetFrame(distance, value);
 
 			/// <summary>
 			/// The value (the distance is the word of the frame where the original kept it; B3, 2026-10-26: no longer written

@@ -439,7 +439,13 @@ Potem cała ramka `HandleCity` (0x10c bajtów) jako tablica słów w `CityRound`
 16-bitowo – indeks tablicy bywa ujemny; poza ramką dalej stos): 18 zmiennych i 16 dostępów do tablic (bp-0x3e, -0x74,
 -0x8e, -0xa6), układ i nakładanie jak w oryginale. Test `LeftoversChangeTheGame` usunięty: po B3 tury tych
 autozapisów nie czytają już nic ze stosu, więc przełącznik `ClassicStackLeftovers` ich nie zmienia (działanie
-przełącznika pokazuje `UnitWithoutHomeStays`). Pełny zestaw 808/808 (przed usunięciem testu 809 z tym jednym), mutacje 3 / 3. ramki, SI/DI, BX/CX/DX moduł po module; przy jawnych wartościach
+przełącznika pokazuje `UnitWithoutHomeStays`). Pełny zestaw 808/808 (przed usunięciem testu 809 z tym jednym), mutacje 3 / 3.
+Wspólna klasa `Engine/FrameWords` (słowa ramki po odległości od BP, 16-bitowo, poza ramką stos); `CityRound` z niej
+korzysta. **Nieudane:** ramka `ProduceTerrain` (0xd4, wspólna z `RankLandOrSea`, `LabelLandOrSea`, `JoinRowAbove`)
+w `FrameWords` psuje `ProduceTerrainMatchesOriginalCode`, a zapis „na wylot” do pamięci go naprawia – czyli coś czyta
+te słowa ze stosu, ale nie przez CPU (sonda `IStackWatcher` na ramce nie widzi ani jednego odczytu, także zawężenie do
+zakresów 2 – 0x50 / 0x52 – 0xa2 / 0xa4 – 0xd4 nie wystarcza). Cofnięte; do zbadania przed B6.8 (odczyty przez
+`Storage` / sterowniki). ramki, SI/DI, BX/CX/DX moduł po module; przy jawnych wartościach
 zamiast śmieci golden master zostaje zielony, sonda stosu ma pokazać zero czytelników. Na końcu rejestry z CPU,
 `MZExecutable` i obraz CIV.EXE w pamięci (dane początkowe z pliku przy starcie).
 
