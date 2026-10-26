@@ -115,6 +115,9 @@ public sealed class DualCityCaseTests(ITestOutputHelper output)
 	/// <summary>The setup of the case and HandleCity in one game (dynamic: the frozen game or the current one); the failure, null when it finished</summary>
 	private static string? Run(dynamic engine, CityCase current, short townIdx, Action<long> setDeadline)
 	{
+		ushort stack = engine.Processor.RegStack.Value16;
+		ushort frame = engine.Processor.RegFrame.Value16;
+
 		try
 		{
 			HumanTurnScript.Install((object)engine, [new HumanTurnScript.Input(0x1b), new HumanTurnScript.Input(0x1b)]);
@@ -125,6 +128,11 @@ public sealed class DualCityCaseTests(ITestOutputHelper output)
 		}
 		catch (Exception failure)
 		{
+			// The exception leaves the frames of the functions it left on the emulated stack, as many as the version has (B3
+			// removes frames and saved registers): the pointers go back, so the next cases start at the same depth
+			engine.Processor.RegStack.Value16 = stack;
+			engine.Processor.RegFrame.Value16 = frame;
+
 			// (without the temporary game folder, which differs between the two games)
 			return $"{failure.GetType().Name}: {System.Text.RegularExpressions.Regex.Replace(failure.Message, @"Civ1GoldenMaster[\\/][0-9a-f]{32}", "<game folder>")}";
 		}

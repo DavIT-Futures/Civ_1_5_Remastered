@@ -653,7 +653,6 @@ namespace Civilization1Remaster.UI
 			this.processor.Journal.OpenScope($"RenderCityScenery({townIdx}, {arg2}, {arg3}, {arg4})");
 
 			// The pictures are in the stack frame, like in the original, and the final values of the locals stay there
-			this.processor.PreserveSource();
 
 			ushort[] pictures = new ushort[9];
 
@@ -710,7 +709,6 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Helpers.ReleaseResource(pictures[0], 0x4ec4);
 
-			this.processor.RestoreSource();
 			// Far return
 			this.processor.Journal.CloseScope("RenderCityScenery");
 		}
@@ -853,7 +851,6 @@ namespace Civilization1Remaster.UI
 			this.processor.Journal.OpenScope($"RenderCitySceneryForPlayer({participantIdx})");
 
 			// The pictures are in the stack frame, like in the original, and the final values of the locals stay there
-			this.processor.PreserveSource();
 
 			ushort[] pictures = new ushort[10];
 
@@ -918,7 +915,6 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Helpers.LaunchHueCycling();
 
-			this.processor.RestoreSource();
 			// Far return
 			this.processor.Journal.CloseScope("RenderCitySceneryForPlayer");
 		}
@@ -1046,7 +1042,6 @@ namespace Civilization1Remaster.UI
 			this.processor.Journal.OpenScope("RenderCitySceneryForHuman()");
 
 			// The pictures are in the stack frame, like in the original, and the final values of the locals stay there
-			this.processor.PreserveSource();
 
 			ushort[] pictures = new ushort[10];
 
@@ -1097,7 +1092,6 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Helpers.ReleaseResource(pictures[0], 0);
 
-			this.processor.RestoreSource();
 			// Far return
 			this.processor.Journal.CloseScope("RenderCitySceneryForHuman");
 		}

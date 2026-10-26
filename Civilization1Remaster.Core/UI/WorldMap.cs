@@ -23,7 +23,6 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope($"DisplayWorldMap({marker})");
 
-			this.processor.PreserveIndexRegisters();
 
 			this.owner.Startup.ConcealMouseCursor();
 
@@ -92,7 +91,6 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Startup.DisplayMouseCursor();
 
-			this.processor.RestoreIndexRegisters();
 			// Far return
 			this.processor.Journal.CloseScope("DisplayWorldMap");
 		}
@@ -421,7 +419,6 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope("DisplayEpicChronicle()");
 
-			this.processor.PreserveIndexRegisters();
 			// The values of the players of the frame of the original (B3: in C#; the barbarians' one never set for the
 			// measures 3 and 4)
 
@@ -566,7 +563,6 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Startup.DisplayMouseCursor();
 
-			this.processor.RestoreIndexRegisters();
 			// Far return
 			this.processor.Journal.CloseScope("DisplayEpicChronicle");
 		}
@@ -582,7 +578,6 @@ namespace Civilization1Remaster.UI
 			this.processor.Journal.OpenScope($"DisplayCensus({participantIdx})");
 
 			this.processor.EnterFrame(0xba);
-			this.processor.PreserveIndexRegisters();
 
 			this.owner.Startup.ConcealMouseCursor();
 
@@ -605,7 +600,6 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Startup.DisplayMouseCursor();
 
-			this.processor.RestoreIndexRegisters();
 			this.processor.LeaveFrame();
 
 			this.processor.Journal.CloseScope("DisplayCensus");

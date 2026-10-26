@@ -348,7 +348,6 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope($"DisplayTradeReport({participantIdx})");
 
-			this.processor.PreserveIndexRegisters();
 
 			ushort[] costs = new ushort[0x18];
 
@@ -534,7 +533,6 @@ namespace Civilization1Remaster.UI
 
 			FinishReportScreen();
 
-			this.processor.RestoreIndexRegisters();
 			// Far return
 			this.processor.Journal.CloseScope("DisplayTradeReport");
 		}

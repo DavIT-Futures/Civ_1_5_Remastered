@@ -190,7 +190,6 @@ namespace Civilization1Remaster.UI
 			this.processor.Journal.OpenScope($"DisplayLabelInputBox(0x{charsAddr:x4})");
 
 			this.processor.EnterFrame(0x14);
-			this.processor.PreserveSource();
 
 			this.owner.Services.FloodBox(ScreenBox, 64, 78, 224, 24, 15);
 
@@ -229,7 +228,6 @@ namespace Civilization1Remaster.UI
 
 			this.processor.RegAcc.Value16 = found;
 
-			this.processor.RestoreSource();
 			this.processor.LeaveFrame();
 
 			this.processor.Journal.CloseScope("DisplayLabelInputBox");
@@ -250,7 +248,6 @@ namespace Civilization1Remaster.UI
 
 			// The text moved by Insert is kept in the stack frame, like in the original, and the final values of the locals stay there
 			this.processor.EnterFrame(0x48);
-			this.processor.PreserveSource();
 
 			ushort kept = (ushort)(this.processor.RegFrame.Value16 - 0x40);
 
@@ -396,7 +393,6 @@ namespace Civilization1Remaster.UI
 			this.owner.TurnLogic.AwaitForKey();
 
 			this.processor.RegAcc.Value16 = accepted;
-			this.processor.RestoreSource();
 			this.processor.LeaveFrame();
 
 			// Far return

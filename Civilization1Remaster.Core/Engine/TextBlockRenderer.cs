@@ -137,7 +137,6 @@ namespace Civilization1Remaster.Engine
 
 			// The line and the index entry are in the stack frame, like in the original (buffers of the file functions)
 			this.processor.EnterFrame(0x110);
-			this.processor.PreserveSource();
 
 			ushort line = (ushort)(this.processor.RegFrame.Value16 - 0x100);
 			ushort entry = (ushort)(this.processor.RegFrame.Value16 - 0x104);
@@ -254,7 +253,6 @@ namespace Civilization1Remaster.Engine
 
 			this.processor.RegAcc.Value16 = found ? lines : (ushort)0xffff;
 
-			this.processor.RestoreSource();
 			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("ImportTextFromFile");

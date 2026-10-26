@@ -540,12 +540,15 @@ zawsze zeruje zmienne (zamrożona gra `DualGame` ma swój przełącznik). Usuni�
 (`RenderPalace`, `RefreshPeaceGraphContent`, `RenderCitizenIcons`, `ChooseTechnologyToTake`, raport wojskowy), 11 ramek
 „dla głębokości” (skaner `depthframes.py`: `DisplayMenu`, `RunGame`, `OperateAITurn`, `ShiftAIUnit`, `HandlePlayerTurn`,
 `HandleAllCities`, `EarnTechnology`, `SeizeCity`, `ComputeInciteCost`, `DisplayTradeReport`, `DisplayEpicChronicle`);
-ręczne `RegX = UnstackWord()` → `RestoreSource()` / `RestoreDest()`. **Pary `Preserve`/`Restore` – próba nieudana:**
-sonda (przy każdym przywróceniu porównanie z bieżącym rejestrem, pełny zestaw) wskazała 39 metod, w których para nigdy
-niczego nie przywraca, ale ich usunięcie psuje golden master, testy podwójnej gry i różnicowe (m.in. `ReckonContinentSizes`,
-`RunGame`, `HandleGameEnd`, `DisplayMainIntro`) – coś zależy od głębokości stosu albo od odłożonych słów (do zbadania:
-funkcje „przeciekające” pod nimi, odczyty względem SP). Cofnięte; pary zostają do fazy 3. Zostają też ramki
-„przeciekające” i ramki z buforami. Testy: `StackLeftoverTests` tylko z regułą remastera (jednostka bez domu zostaje), raport wojskowy klasyczny
+ręczne `RegX = UnstackWord()` → `RestoreSource()` / `RestoreDest()`. **Pary `Preserve`/`Restore` (2026-10-26):** sonda (przy każdym przywróceniu porównanie z bieżącym rejestrem, pełny
+zestaw) wskazuje metody, w których para nigdy niczego nie przywraca. Pierwsza próba zepsuła golden master – przyczyna
+(bisekcja): błąd skryptu w `VGADriver.FloodBuffer` / `DuplicateScreenToMainScreen`, które odkładają ręcznie także DI,
+DS i ES – skrypt uznał `PreserveSource` + `RestoreDest` + `RestoreSource` za parę i rozjechał stos. Kryteria teraz:
+`PreserveSource` tylko z `RestoreSource`, komplet SI i DI dla `PreserveIndexRegisters`, bez ręcznych `StackWord` /
+`UnstackWord` rejestrów, bez ramek „przeciekających”. Usunięte pary ok. 35 metod; zostają te, które przywracają
+rejestr (31), nieosiągnięte w testach, z ręcznymi odłożeniami i w ramkach „przeciekających”. Testy podwójnej gry
+(`DualCityRandomTests`, `DualCityCaseTests`) też przywracają SP / BP po wyjątku w przypadku (wersje zostawiają różne
+ramki i rejestry na stosie). Zostają ramki „przeciekające” i ramki z buforami. Testy: `StackLeftoverTests` tylko z regułą remastera (jednostka bez domu zostaje), raport wojskowy klasyczny
 bez wyjątku (czyta 0), `DifferentialPair` po wyjątku w scenariuszu przywraca SP / BP (wersje zostawiają różne ramki).
 
 **Faza 3 – sprzątanie i drugi baseline:** usunięcie przełączników i kodu „classic”, zamrożonej gry

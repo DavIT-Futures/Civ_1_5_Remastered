@@ -326,7 +326,6 @@ namespace Civilization1Remaster.Game
 			this.processor.EnterFrame(0x3a);
 			FrameWords outerFrame = this.routeFrame;
 			this.routeFrame = new FrameWords(this.processor, 0x3a);
-			this.processor.PreserveIndexRegisters();
 
 			ushort troop = (ushort)((ushort)(0x600 * participantIdx) + (ushort)(0xc * troopIdx));
 			ushort unitHoriz = this.Troops.PullAt(troop, UnitMemory.Horiz);
@@ -362,7 +361,6 @@ namespace Civilization1Remaster.Game
 
 			this.processor.RegAcc.Value16 = result;
 
-			this.processor.RestoreIndexRegisters();
 			this.routeFrame = outerFrame;
 			this.processor.LeaveFrame();
 			// Far return

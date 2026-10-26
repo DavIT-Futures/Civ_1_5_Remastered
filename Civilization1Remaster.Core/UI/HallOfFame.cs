@@ -397,7 +397,6 @@ namespace Civilization1Remaster.UI
 			this.processor.Journal.OpenScope("DisplayTopCities()");
 
 			this.processor.EnterFrame(0x20);
-			this.processor.PreserveIndexRegisters();
 
 			ushort scores = (ushort)(this.processor.RegFrame.Value16 - 0x20);
 			ushort towns = (ushort)(this.processor.RegFrame.Value16 - 0x10);
@@ -501,7 +500,6 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Startup.DisplayMouseCursor();
 
-			this.processor.RestoreIndexRegisters();
 			this.processor.LeaveFrame();
 
 			this.processor.Journal.CloseScope("DisplayTopCities");

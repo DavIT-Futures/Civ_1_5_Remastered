@@ -144,7 +144,6 @@ namespace Civilization1Remaster.UI
 			this.processor.EnterFrame(0x20);
 			FrameWords outerFrame = this.renderSpaceshipFrame;
 			this.renderSpaceshipFrame = new FrameWords(this.processor, 0x20);
-			this.processor.PreserveIndexRegisters();
 
 			this.owner.Startup.ConcealMouseCursor();
 
@@ -228,7 +227,6 @@ namespace Civilization1Remaster.UI
 			ushort result = (ushort)success;
 			this.processor.RegAcc.Value16 = result;
 
-			this.processor.RestoreIndexRegisters();
 			this.renderSpaceshipFrame = outerFrame;
 			this.processor.LeaveFrame();
 
@@ -639,7 +637,6 @@ namespace Civilization1Remaster.UI
 			this.processor.Journal.OpenScope($"ComputeSpaceshipSuccess({participantIdx}, {arg2})");
 
 			// The frame like the original (the functions called see the stack at the same depth)
-			this.processor.PreserveIndexRegisters();
 
 			this.owner.World.BotStarshipVictoryRatio = 0;
 
@@ -702,7 +699,6 @@ namespace Civilization1Remaster.UI
 
 			this.processor.RegAcc.Value16 = result;
 
-			this.processor.RestoreIndexRegisters();
 
 			this.processor.Journal.CloseScope("ComputeSpaceshipSuccess");
 

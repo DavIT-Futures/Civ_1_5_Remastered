@@ -1570,7 +1570,6 @@ namespace Civilization1Remaster.UI
 			this.processor.Journal.OpenScope($"ImportKingScenery({participantIdx})");
 
 			this.processor.EnterFrame(0x1e);
-			this.processor.PreserveSource();
 
 			if (AudienceWithoutPictures == 0)
 			{
@@ -1637,7 +1636,6 @@ namespace Civilization1Remaster.UI
 				this.owner.Startup.DisplayMouseCursor();
 			}
 
-			this.processor.RestoreSource();
 			this.processor.LeaveFrame();
 
 			this.processor.Journal.CloseScope("'LoadKingBackground'");

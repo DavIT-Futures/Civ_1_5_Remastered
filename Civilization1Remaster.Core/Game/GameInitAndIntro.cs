@@ -1072,7 +1072,6 @@ namespace Civilization1Remaster.Game
 			this.processor.EnterFrame(0x26);
 			FrameWords outerFrame = this.labelLandmassesFrame;
 			this.labelLandmassesFrame = new FrameWords(this.processor, 0x26);
-			this.processor.PreserveIndexRegisters();
 
 			this.owner.Libc.FillBytes(0xdb44, 0, 0x104);
 
@@ -1174,7 +1173,6 @@ namespace Civilization1Remaster.Game
 				this.labelLandmassesFrame.SetFrame(0x24, (ushort)landVert);
 			}
 
-			this.processor.RestoreIndexRegisters();
 			this.labelLandmassesFrame = outerFrame;
 			this.processor.LeaveFrame();
 			// Far return
@@ -1226,7 +1224,6 @@ namespace Civilization1Remaster.Game
 			this.processor.EnterFrame(0x18);
 			FrameWords outerFrame = this.reckonContinentSizesFrame;
 			this.reckonContinentSizesFrame = new FrameWords(this.processor, 0x18);
-			this.processor.PreserveIndexRegisters();
 
 			this.owner.Libc.FillBytes(0x7f38, 0, 0x104);
 
@@ -1268,7 +1265,6 @@ namespace Civilization1Remaster.Game
 			this.processor.EmitGlobalByte(0x802f, (byte)(this.processor.PullGlobalByte(0x802f) & 0xfd));
 			this.processor.EmitGlobalByte(0x803a, (byte)(this.processor.PullGlobalByte(0x803a) & 0xf7));
 
-			this.processor.RestoreIndexRegisters();
 			this.reckonContinentSizesFrame = outerFrame;
 			this.processor.LeaveFrame();
 			// Far return

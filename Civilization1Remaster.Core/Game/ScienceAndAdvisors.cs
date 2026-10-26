@@ -27,7 +27,6 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"HandleAllCities({participantIdx})");
 
-			this.processor.PreserveIndexRegisters();
 
 			DemocracyPressure = 0;
 			AnarchyPressure = 0;
@@ -70,8 +69,6 @@ namespace Civilization1Remaster.Game
 
 			if (participantIdx == this.owner.World.PersonParticipantIdx || (this.owner.World.DiagMarkers & 4) == 0)
 			{
-				this.processor.RestoreSource();
-				this.processor.RestoreDest();
 				this.processor.Journal.CloseScope("HandleAllCities");
 				return;
 			}
@@ -107,8 +104,6 @@ namespace Civilization1Remaster.Game
 
 			participant.LevyRatio = (short)(10 - participant.ResearchLevyRatio - luxuries);
 
-			this.processor.RestoreSource();
-			this.processor.RestoreDest();
 			// Far return
 			this.processor.Journal.CloseScope("HandleAllCities");
 		}

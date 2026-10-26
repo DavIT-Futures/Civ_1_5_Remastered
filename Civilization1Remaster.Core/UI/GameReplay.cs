@@ -27,7 +27,6 @@ namespace Civilization1Remaster.UI
 			this.processor.Journal.OpenScope("DisplayReplay()");
 
 			// The frame like the original (the functions called see the stack at the same depth)
-			this.processor.PreserveSource();
 
 			while (true)
 			{
@@ -71,7 +70,6 @@ namespace Civilization1Remaster.UI
 					break;
 			}
 
-			this.processor.RestoreSource();
 
 			this.processor.Journal.CloseScope("DisplayReplay");
 		}
@@ -586,7 +584,6 @@ namespace Civilization1Remaster.UI
 			this.processor.EnterFrame(0x6);
 			FrameWords outerFrame = this.obtainDistanceToReplayCityFrame;
 			this.obtainDistanceToReplayCityFrame = new FrameWords(this.processor, 0x6);
-			this.processor.PreserveSource();
 
 			ushort nearest = this.obtainDistanceToReplayCityFrame.Frame(0x4);
 
@@ -611,7 +608,6 @@ namespace Civilization1Remaster.UI
 			this.obtainDistanceToReplayCityFrame.SetFrame(0x4, nearest);
 			this.processor.RegAcc.Value16 = nearest;
 
-			this.processor.RestoreSource();
 			this.obtainDistanceToReplayCityFrame = outerFrame;
 			this.processor.LeaveFrame();
 
@@ -630,7 +626,6 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope($"RenderReplayMapTile({horizLoc}, {vertLoc})");
 
-			this.processor.PreserveIndexRegisters();
 
 			if (ReplayMode != 4)
 			{
@@ -664,7 +659,6 @@ namespace Civilization1Remaster.UI
 				}
 			}
 
-			this.processor.RestoreIndexRegisters();
 
 			this.processor.Journal.CloseScope("RenderReplayMapTile");
 		}
@@ -731,7 +725,6 @@ namespace Civilization1Remaster.UI
 			this.processor.Journal.OpenScope($"ObtainReplayPlayerLabel({participantIdx})");
 
 			this.processor.EnterFrame(0x10);
-			this.processor.PreserveSource();
 
 			ushort buffer = (ushort)(this.processor.RegFrame.Value16 - 0x10);
 			ushort leader = (ushort)(0x3a * this.owner.World.Participants[participantIdx].ChiefVisuals);
@@ -747,7 +740,6 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Libc.CopyText(CivilizationPlural(participantIdx), buffer);
 
-			this.processor.RestoreSource();
 			this.processor.LeaveFrame();
 
 			this.processor.Journal.CloseScope("ObtainReplayPlayerLabel");
@@ -835,7 +827,6 @@ namespace Civilization1Remaster.UI
 
 			// The file names are in the stack frame, like in the original, and the final values of the locals stay there
 			this.processor.EnterFrame(0x36);
-			this.processor.PreserveSource();
 
 			ushort portraitName = (ushort)(this.processor.RegFrame.Value16 - 0x10);
 			ushort wallName = (ushort)(this.processor.RegFrame.Value16 - 0x24);
@@ -977,7 +968,6 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Services.PerformSound(1, 0);
 
-			this.processor.RestoreSource();
 			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("DisplayCivilizationDestroyedScreen");

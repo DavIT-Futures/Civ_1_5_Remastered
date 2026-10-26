@@ -394,7 +394,6 @@ namespace Civilization1Remaster.UI
 			this.processor.Journal.OpenScope($"ImportPalaceGraphics({marker})");
 
 			this.processor.EnterFrame(0x2e);
-			this.processor.PreserveSource();
 
 			ushort pictureName = (ushort)(this.processor.RegFrame.Value16 - 0x10);
 
@@ -601,7 +600,6 @@ namespace Civilization1Remaster.UI
 				this.owner.Startup.QueryForDisk(0, 1);
 			}
 
-			this.processor.RestoreSource();
 			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("ImportPalaceGraphics");
@@ -747,7 +745,6 @@ namespace Civilization1Remaster.UI
 
 			// The file name is in the stack frame, like in the original, and the final values of the locals stay there
 			this.processor.EnterFrame(0x1a);
-			this.processor.PreserveSource();
 
 			ushort docname = (ushort)(this.processor.RegFrame.Value16 - 0x10);
 			ushort level;
@@ -828,7 +825,6 @@ namespace Civilization1Remaster.UI
 				}
 			}
 
-			this.processor.RestoreSource();
 			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("ImportPalaceCastle");

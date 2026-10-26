@@ -1119,7 +1119,6 @@ namespace Civilization1Remaster.Game
 			this.processor.Journal.OpenScope("RefreshPeaceGraphContent()");
 
 			// The powers of the frame of the original (B3: in C#): when no power is above -1, the ranking takes the player of the
-			this.processor.PreserveIndexRegisters();
 			// rank before (at first 0, the local 0x1a of the original read before it is written)
 
 			ushort[] powers = new ushort[8];
@@ -1216,8 +1215,6 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			this.processor.RestoreSource();
-			this.processor.RestoreDest();
 			// Far return
 			this.processor.Journal.CloseScope("RefreshPeaceGraphContent");
 		}
@@ -1412,7 +1409,6 @@ namespace Civilization1Remaster.Game
 			this.processor.Journal.OpenScope($"RenderPalace({participantIdx}, {castleTier}, {horizLoc}, {vertLoc})");
 
 			// The levels and the styles of the sections are in the words of the frame of the original (B3: in C#): the left
-			this.processor.PreserveIndexRegisters();
 			// neighbour of section 0 is the frame word 0x34 (never written, 0), the right neighbour of section 8 the style of
 			// section 0 (0 for an AI player without it)
 
@@ -1512,8 +1508,6 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			this.processor.RestoreSource();
-			this.processor.RestoreDest();
 			// Far return
 			this.processor.Journal.CloseScope("RenderPalace");
 		}
@@ -1807,7 +1801,6 @@ namespace Civilization1Remaster.Game
 			this.processor.Journal.OpenScope("DisplayCivilizationScenery()");
 
 			this.processor.EnterFrame(0x10);
-			this.processor.PreserveSource();
 
 			if (VgaMode != 0)
 			{
@@ -1839,7 +1832,6 @@ namespace Civilization1Remaster.Game
 				this.owner.Helpers.LaunchHueCycling();
 			}
 
-			this.processor.RestoreSource();
 			this.processor.LeaveFrame();
 
 			this.processor.Journal.CloseScope("DisplayCivilizationScenery");

@@ -41,7 +41,6 @@ namespace Civilization1Remaster.UI
 			this.processor.EnterFrame(0x4e);
 			FrameWords outerFrame = this.displayMainIntroFrame;
 			this.displayMainIntroFrame = new FrameWords(this.processor, 0x4e);
-			this.processor.PreserveSource();
 
 			FindIntroDisks();
 			DetectGraphicsDriver();
@@ -52,7 +51,6 @@ namespace Civilization1Remaster.UI
 			TakeIntroChoice();
 			CloseIntro();
 
-			this.processor.RestoreSource();
 			this.displayMainIntroFrame = outerFrame;
 			this.processor.LeaveFrame();
 			this.processor.Journal.CloseScope("DisplayMainIntro");
@@ -534,7 +532,6 @@ namespace Civilization1Remaster.UI
 
 			this.processor.EnterFrame(0x246);
 			FrameWords outerFrame = this.screenFrame;
-			this.processor.PreserveSource();
 			this.screenFrame = new FrameWords(this.processor, 0x246, 2, ScreenText);
 
 			ImportShipPictures();
@@ -544,7 +541,6 @@ namespace Civilization1Remaster.UI
 			RenderClosingText();
 			CloseLanding(participantIdx);
 
-			this.processor.RestoreSource();
 			this.screenFrame = outerFrame;
 			this.processor.LeaveFrame();
 			this.processor.Journal.CloseScope("DisplayCivilizationScreen");

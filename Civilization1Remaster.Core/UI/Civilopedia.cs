@@ -62,7 +62,6 @@ namespace Civilization1Remaster.UI
 			// The frame keeps the names like the original: the last listed (bp - 0x4c), the next one (bp - 0x32) and its
 			// shortened copy (bp - 0x18)
 			this.processor.EnterFrame(0x5c);
-			this.processor.PreserveIndexRegisters();
 
 			ushort lastName = (ushort)(this.processor.RegFrame.Value16 - 0x4c);
 			ushort nextName = (ushort)(this.processor.RegFrame.Value16 - 0x32);
@@ -96,7 +95,6 @@ namespace Civilization1Remaster.UI
 
 			this.processor.RegAcc.Value16 = answer;
 
-			this.processor.RestoreIndexRegisters();
 			this.processor.LeaveFrame();
 
 			this.processor.Journal.CloseScope("DisplayCivilopediaIndex");
@@ -358,7 +356,6 @@ namespace Civilization1Remaster.UI
 			this.processor.Journal.OpenScope($"DisplayCivilopediaRecord({scienceIdx}, {arg2})");
 
 			this.processor.EnterFrame(0x34);
-			this.processor.PreserveIndexRegisters();
 
 			ushort dataSeg = this.processor.SegData.Value16;
 			this.processor.EmitGlobalByte(0x3fa9, (byte)((byte)arg2 + 0x30));
@@ -473,7 +470,6 @@ namespace Civilization1Remaster.UI
 			}
 
 			this.owner.Startup.DisplayMouseCursor();
-			this.processor.RestoreIndexRegisters();
 			this.processor.LeaveFrame();
 			this.processor.Journal.CloseScope("DisplayCivilopediaRecord");
 		}
