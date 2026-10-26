@@ -419,8 +419,10 @@ tablice w ramce są adresowane przez zmienną `frame = RegFrame` (`frame - 0xce`
 zostało nic do usunięcia – tam trzeba najpierw zamienić tablice ramki na tablice C# (następna porcja). Pełny zestaw
 809/809. Heredoc w Bash zamienia `` w regexie na znak backspace – skrypty pisać narzędziem Write.
 **B3, porcja 2 (2026-10-26):** ramki bez żadnego dostępu usunięte (`EnterFrame` / `LeaveFrame`, zapis SI/DI zostaje):
-`RenderMapTile`, dwie w `CityFoundingAndScore`, `SettleBattle` i jedna w `UnitCombat`, `DivideCivilization`,
-`HandlePeaceTreaties`. ramki, SI/DI, BX/CX/DX moduł po module; przy jawnych wartościach
+`RenderMapTile`, dwie w `CityFoundingAndScore`, `SettleBattle` i jedna w `UnitCombat`, `HandlePeaceTreaties`.
+`DivideCivilization` musiało ramkę zachować: na części ścieżek oryginał wychodzi emulowanym skokiem i zostawia ramkę na
+stosie, a testy porównują wskaźnik stosu (`cpu.sp`). Pułapka: przed commitem czytać wynik testów, nie łańcuchować
+commita za testem. ramki, SI/DI, BX/CX/DX moduł po module; przy jawnych wartościach
 zamiast śmieci golden master zostaje zielony, sonda stosu ma pokazać zero czytelników. Na końcu rejestry z CPU,
 `MZExecutable` i obraz CIV.EXE w pamięci (dane początkowe z pliku przy starcie).
 

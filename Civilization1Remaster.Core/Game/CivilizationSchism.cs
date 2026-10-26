@@ -27,6 +27,8 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"DivideCivilization({participantIdx})");
 
+			// The frame stays: on some paths the original leaves it on the stack (the stack pointer is compared)
+			this.processor.EnterFrame(0x48);
 			this.processor.PreserveIndexRegisters();
 
 			ushort result = SplitCivilization(participantIdx);
@@ -34,6 +36,7 @@ namespace Civilization1Remaster.Game
 			this.processor.RegAcc.Value16 = result;
 
 			this.processor.RestoreIndexRegisters();
+			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("DivideCivilization");
 
