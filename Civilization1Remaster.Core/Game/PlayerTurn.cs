@@ -1308,8 +1308,8 @@ namespace Civilization1Remaster.Game
 				{
 					this.turn.MarkedTileMode = 0x1;
 					this.processor.RegSource.Value16 = (ushort)(participantIdx * 0x600 + this.turn.Troop * 0xc);
-					this.turn.CursorHoriz = this.Troops.PullAt(this.processor.RegSource.Value16, UnitMemory.Horiz);
-					this.turn.CursorVert = this.Troops.PullAt(this.processor.RegSource.Value16, UnitMemory.Vert);
+					this.turn.CursorHoriz = this.Troops.PullAt(((ushort)(participantIdx * 0x600 + this.turn.Troop * 0xc)), UnitMemory.Horiz);
+					this.turn.CursorVert = this.Troops.PullAt(((ushort)(participantIdx * 0x600 + this.turn.Troop * 0xc)), UnitMemory.Vert);
 				}
 			}
 			else if (this.turn.MarkedTileMode != 0)
@@ -3708,7 +3708,7 @@ namespace Civilization1Remaster.Game
 				if (this.turn.Troop != 0x80)
 				{
 					this.processor.RegSource.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride + this.turn.Troop * UnitMemory.TroopStride);
-					ushort place = (ushort)(this.processor.RegSource.Value16 + UnitMemory.Origin);
+					ushort place = (ushort)(((ushort)(participantIdx * UnitMemory.ParticipantStride + this.turn.Troop * UnitMemory.TroopStride)) + UnitMemory.Origin);
 
 					if (VerifyPositionOnScreen(
 						this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(place + UnitMemory.Horiz)),

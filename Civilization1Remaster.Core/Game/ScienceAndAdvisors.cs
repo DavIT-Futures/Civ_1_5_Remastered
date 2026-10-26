@@ -1759,7 +1759,7 @@ namespace Civilization1Remaster.Game
 				// The exchange of ambassadors that followed never happens: the test of the original, ((Relations == 0) & 0x40),
 				// is always false
 				this.processor.RegSource.Value16 = (ushort)(participantIdx << 1);
-				this.processor.RegDest.Value16 = (ushort)(((ushort)person << 4) + this.processor.RegSource.Value16);
+				this.processor.RegDest.Value16 = (ushort)(((ushort)person << 4) + ((ushort)(participantIdx << 1)));
 			}
 
 			if (ScienceRules.DoesTechObsoleteBarracks(scienceIdx))

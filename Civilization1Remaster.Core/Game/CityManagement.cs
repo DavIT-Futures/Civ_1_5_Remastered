@@ -568,7 +568,7 @@ namespace Civilization1Remaster.Game
 			{
 				this.round.Index = tile;
 				this.processor.RegSource.Value16 = (ushort)(tile << 1);
-				ushort unavailable = (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x3e);
+				ushort unavailable = (ushort)(this.processor.RegFrame.Value16 + ((ushort)(tile << 1)) - 0x3e);
 				this.processor.EmitUInt16(this.processor.SegStack.Value16, unavailable, 0);
 
 				short horizLoc = (short)(town.Place.X + this.owner.TownDeltas[tile].X);
@@ -680,7 +680,7 @@ namespace Civilization1Remaster.Game
 						continue;
 
 					this.processor.RegSource.Value16 = (ushort)(tile << 1);
-					this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x3e), 1);
+					this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + ((ushort)(tile << 1)) - 0x3e), 1);
 
 					RenderCityTile(townIdx, tile, marker);
 
@@ -931,7 +931,7 @@ namespace Civilization1Remaster.Game
 			ushort tile = this.round.Found;
 
 			this.processor.RegSource.Value16 = (ushort)(tile << 1);
-			this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x3e), 1);
+			this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + ((ushort)(tile << 1)) - 0x3e), 1);
 
 			RenderCityTile(townIdx, tile, marker);
 
@@ -2717,7 +2717,7 @@ namespace Civilization1Remaster.Game
 			this.round.UnitsDrawn = (ushort)(drawn + 1);
 			this.processor.RegSource.Value16 = (ushort)(drawn << 1);
 			this.processor.RegAcc.Value16 = (ushort)troopIdx;
-			this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x74), (ushort)troopIdx);
+			this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + ((ushort)(drawn << 1)) - 0x74), (ushort)troopIdx);
 			this.round.UnitHoriz = (ushort)(this.round.UnitHoriz + 0x12);
 
 			this.processor.RegCount.Value16 = 6;
@@ -4581,7 +4581,7 @@ namespace Civilization1Remaster.Game
 				{
 					this.round.Vert = row;
 					this.processor.RegSource.Value16 = (ushort)(column * 0xa + row * 2);
-					this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0xa6), 0);
+					this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + ((ushort)(column * 0xa + row * 2)) - 0xa6), 0);
 				}
 
 				this.round.Vert = 5;
