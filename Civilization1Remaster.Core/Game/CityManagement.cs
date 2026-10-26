@@ -373,9 +373,10 @@ namespace Civilization1Remaster.Game
 				this.owner.MapOps.RenderMapTile(horizLoc, vertLoc);
 
 				this.processor.RegSource.Value16 = (ushort)(tile << 1);
-				this.processor.RegDest.Value16 = (ushort)(short)(10 * this.owner.TownDeltas[tile].X + this.owner.TownDeltas[tile].Y * 2);
+				ushort spot = (ushort)(short)(10 * this.owner.TownDeltas[tile].X + this.owner.TownDeltas[tile].Y * 2);
+				this.processor.RegDest.Value16 = spot;
 
-				if (this.round.Frame(0x8e - this.processor.RegDest.Value16) != 0)
+				if (this.round.Frame(0x8e - spot) != 0)
 				{
 					// A tile worked by a neighbouring city
 					this.owner.Dialogs.RenderBox(
@@ -933,7 +934,7 @@ namespace Civilization1Remaster.Game
 
 			this.processor.RegSource.Value16 = (ushort)(tile << 1);
 
-			if (this.round.Frame(0x3e - this.processor.RegSource.Value16) != 0)
+			if (this.round.Frame(0x3e - (tile << 1)) != 0)
 				return false;
 
 			this.round.TileHoriz = (ushort)(short)(town.Place.X + this.owner.TownDeltas[tile].X);
@@ -2424,8 +2425,9 @@ namespace Civilization1Remaster.Game
 				// The wonder 13 on the continent of the city
 				short marvelIdx = this.owner.World.MarvelTownIdx[13];
 				this.processor.RegSource.Value16 = (ushort)(marvelIdx * 0x1c);
-				this.processor.RegDest.Value16 = this.owner.MapOps.ObtainContinentID(this.owner.World.Towns[marvelIdx].Place.X, this.owner.World.Towns[marvelIdx].Place.Y);
-				if (this.owner.MapOps.ObtainContinentID((short)this.round.Horiz, (short)this.round.Vert) == this.processor.RegDest.Value16)
+				ushort marvelContinent = this.owner.MapOps.ObtainContinentID(this.owner.World.Towns[marvelIdx].Place.X, this.owner.World.Towns[marvelIdx].Place.Y);
+				this.processor.RegDest.Value16 = marvelContinent;
+				if (this.owner.MapOps.ObtainContinentID((short)this.round.Horiz, (short)this.round.Vert) == marvelContinent)
 					CityUnhappy = (ushort)(CityUnhappy - 2);
 			}
 
@@ -3024,10 +3026,11 @@ namespace Civilization1Remaster.Game
 				if ((short)this.owner.Helpers.VerifyValueSpan(town.GrainTally, 0, (town.TrueExtent + 1) * (short)this.round.CostFactor) <= (short)grain)
 					break;
 
-				this.processor.RegSource.Value16 = (ushort)(town.TrueExtent + 1);
+				short perRow = (short)(town.TrueExtent + 1);
+				this.processor.RegSource.Value16 = (ushort)perRow;
 				this.owner.Services.RenderPictureToScreen(ScreenBox,
-					(((short)this.round.Index % (short)this.processor.RegSource.Value16) * (short)this.round.Value) + 4,
-					(((short)this.round.Index / (short)this.processor.RegSource.Value16) * (short)this.round.DrawVert) + 116,
+					(((short)this.round.Index % perRow) * (short)this.round.Value) + 4,
+					(((short)this.round.Index / perRow) * (short)this.round.DrawVert) + 116,
 					SpritePicture(0x8));
 			}
 		}

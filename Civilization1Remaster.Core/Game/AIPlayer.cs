@@ -1785,13 +1785,14 @@ namespace Civilization1Remaster.Game
 			{
 				this.look.Round = (ushort)this.owner.Libc.Dice.DrawInt(9);
 				this.processor.RegSource.Value16 = unit;
-				this.processor.RegDest.Value16 = (ushort)(this.look.Round << 1);
+				ushort round = (ushort)(this.look.Round << 1);
+				this.processor.RegDest.Value16 = round;
 
-				this.look.TileHoriz = (ushort)this.owner.Routing.TunePosition((short)DirectionHorizAt(this.processor.RegDest.Value16) *
+				this.look.TileHoriz = (ushort)this.owner.Routing.TunePosition((short)DirectionHorizAt(round) *
 					(short)this.look.Direction + this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz));
 
 				// (the registers of the multiplication as in the original)
-				ushort step = MultiplyWords(DirectionVertAt(this.processor.RegDest.Value16),
+				ushort step = MultiplyWords(DirectionVertAt(round),
 					this.look.Direction);
 				this.processor.RegCount.Value16 = this.troops.Pull(participantIdx, troopIdx, UnitMemory.Vert);
 				this.look.TileVert = (ushort)(step + this.processor.RegCount.Value16);
@@ -2250,11 +2251,12 @@ namespace Civilization1Remaster.Game
 				return false;
 
 			ushort nearest = this.look.NearestCity;
-			this.processor.RegSource.Value16 = nearest < 128 ? (ushort)this.owner.World.Towns[nearest].ParticipantIdx : (ushort)0xffff;
+			ushort cityOwner = nearest < 128 ? (ushort)this.owner.World.Towns[nearest].ParticipantIdx : (ushort)0xffff;
+			this.processor.RegSource.Value16 = cityOwner;
 			short person = this.owner.World.PersonParticipantIdx;
 
-			if ((ushort)person != this.processor.RegSource.Value16 || this.look.MayStay != 0 ||
-				(short)this.look.CityDistance <= 1 || (ushort)participantIdx == this.processor.RegSource.Value16 ||
+			if ((ushort)person != cityOwner || this.look.MayStay != 0 ||
+				(short)this.look.CityDistance <= 1 || (ushort)participantIdx == cityOwner ||
 				this.owner.World.Participants[participantIdx].FoundScienceTally >= this.owner.World.Participants[person].FoundScienceTally)
 			{
 				return false;

@@ -2740,10 +2740,11 @@ namespace Civilization1Remaster.Game
 
 			this.processor.RegSource.Value16 = unit;
 			this.processor.RegBase.Value16 = (ushort)(this.troops.TroopKind(participantIdx, troopIdx) * UnitKindTable.Stride);
-			this.processor.RegDest.Value16 = this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup);
+			ushort group = this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup);
+			this.processor.RegDest.Value16 = group;
 
-			if (this.processor.RegDest.Value16 != UnitKindTable.LandUnits &&
-				(this.processor.RegDest.Value16 != UnitKindTable.AirUnits || this.troops.Pull(participantIdx, troopIdx, UnitMemory.UnusualSteps) == 0))
+			if (group != UnitKindTable.LandUnits &&
+				(group != UnitKindTable.AirUnits || this.troops.Pull(participantIdx, troopIdx, UnitMemory.UnusualSteps) == 0))
 			{
 				return true;
 			}
@@ -3111,9 +3112,10 @@ namespace Civilization1Remaster.Game
 			// A plane on a carrier: a round of fuel less
 			this.processor.RegSource.Value16 = (ushort)(player + member * UnitMemory.TroopStride);
 			this.processor.RegBase.Value16 = (ushort)(this.troops.TroopKind(participantIdx, member) * UnitKindTable.Stride);
-			this.processor.RegDest.Value16 = this.troops.KindField(participantIdx, member, UnitKindTable.RoundsAway);
+			ushort roundsAway = this.troops.KindField(participantIdx, member, UnitKindTable.RoundsAway);
+			this.processor.RegDest.Value16 = roundsAway;
 
-			if (this.processor.RegDest.Value16 != 0)
+			if (roundsAway != 0)
 			{
 				this.processor.RegAcc.Value16 = this.processor.RegDest.Value16;
 				this.processor.RegAcc.LowByte = (byte)(this.processor.RegAcc.LowByte - 1);
