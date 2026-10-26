@@ -1,5 +1,6 @@
 ﻿using System;
 using Civilization1Remaster.Emulation;
+using Civilization1Remaster.Engine;
 
 namespace Civilization1Remaster.Game
 {
@@ -8,6 +9,12 @@ namespace Civilization1Remaster.Game
 	/// </summary>
 	public class Pathfinding : GameModule
 	{
+		/// <summary>The words of the frame of ChartRoute, shared by SearchRouteBlocks (B3: in C#)</summary>
+		private FrameWords routeFrame = null!;
+
+		/// <summary>The words of the frame of ShiftToward, shared by its helpers (B3: in C#)</summary>
+		private FrameWords stepFrame = null!;
+
 		public Pathfinding(GameEngine owner)
 			: base(owner)
 		{
@@ -27,7 +34,6 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"CarryOutGoto({participantIdx}, {troopIdx})");
 
-			this.processor.EnterFrame(0x2a);
 			this.processor.PreserveIndexRegisters();
 
 			ushort troop = (ushort)((ushort)(0x600 * participantIdx) + (ushort)(0xc * troopIdx));
@@ -39,7 +45,6 @@ namespace Civilization1Remaster.Game
 			this.processor.RegAcc.Value16 = direction;
 
 			this.processor.RestoreIndexRegisters();
-			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("CarryOutGoto");
 
@@ -102,7 +107,6 @@ namespace Civilization1Remaster.Game
 			}
 			else
 			{
-				this.processor.EmitLocalWord(0xe, 0);
 
 				bool windowFailed = false;
 				short columns = (short)Math.Abs((short)(this.Troops.PullAt(troop, UnitMemory.TravelHoriz) - this.Troops.PullAt(troop, UnitMemory.Horiz)));
@@ -117,7 +121,6 @@ namespace Civilization1Remaster.Game
 						if (TryShiftToward(participantIdx, troopIdx, out ushort step))
 							return step;
 
-						this.processor.EmitLocalWord(0xe, 1);
 						windowFailed = true;
 					}
 				}
@@ -160,7 +163,6 @@ namespace Civilization1Remaster.Game
 
 
 			short distance = GotoDistance(shiftHoriz, shiftVert);
-			this.processor.EmitLocalWord(0xa, (ushort)distance);
 
 			if (shiftHoriz == 0 && shiftVert == 0)
 			{
@@ -176,7 +178,6 @@ namespace Civilization1Remaster.Game
 
 
 			ushort road = (ushort)(this.owner.MapOps.ObtainTileImprovements((sbyte)unitHoriz, (sbyte)unitVert) & 8);
-			this.processor.EmitLocalWord(0xc, road);
 
 			ushort occupied = this.owner.UnitOps.MayOccupyTile(participantIdx, (sbyte)unitHoriz, (sbyte)unitVert);
 
@@ -194,7 +195,6 @@ namespace Civilization1Remaster.Game
 
 				this.processor.RegSource.Value16 = (ushort)(direction << 1);
 				this.processor.RegDest.Value16 = troop;
-				this.processor.EmitLocalWord(0x10, (ushort)nextHoriz);
 
 				short nextDistance = GotoDistance(leftHoriz, leftVert);
 
@@ -324,6 +324,8 @@ namespace Civilization1Remaster.Game
 			this.processor.Journal.OpenScope($"ChartRoute({participantIdx}, {troopIdx})");
 
 			this.processor.EnterFrame(0x3a);
+			FrameWords outerFrame = this.routeFrame;
+			this.routeFrame = new FrameWords(this.processor, 0x3a);
 			this.processor.PreserveIndexRegisters();
 
 			ushort troop = (ushort)((ushort)(0x600 * participantIdx) + (ushort)(0xc * troopIdx));
@@ -361,6 +363,7 @@ namespace Civilization1Remaster.Game
 			this.processor.RegAcc.Value16 = result;
 
 			this.processor.RestoreIndexRegisters();
+			this.routeFrame = outerFrame;
 			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("ChartRoute");
@@ -456,7 +459,7 @@ namespace Civilization1Remaster.Game
 			}
 			while (head != tail);
 
-			this.processor.EmitLocalWord(0xc, found ? (ushort)1 : (ushort)0);
+			this.routeFrame.SetFrame(0xc, found ? (ushort)1 : (ushort)0);
 
 			GoalHoriz = 0xffff;
 
@@ -494,7 +497,7 @@ namespace Civilization1Remaster.Game
 					{
 
 						// Compared with 0xa: the last distance, or the steps of the search (unwritten: what is in the frame)
-						if (distance >= (stepsSet ? steps : (short)this.processor.PullLocalWord(0xa)))
+						if (distance >= (stepsSet ? steps : (short)this.routeFrame.Frame(0xa)))
 							continue;
 
 						bestDirection = direction;
@@ -504,7 +507,7 @@ namespace Civilization1Remaster.Game
 					stepsSet = true;
 				}
 
-				this.processor.EmitLocalWord(0xe, (ushort)bestDirection);
+				this.routeFrame.SetFrame(0xe, (ushort)bestDirection);
 
 				if (bestDirection != -1)
 					AimRouteStep(bestDirection, unitColumn, unitRow, sea);
@@ -514,10 +517,10 @@ namespace Civilization1Remaster.Game
 			}
 
 			if (stepsSet)
-				this.processor.EmitLocalWord(0xa, (ushort)steps);
+				this.routeFrame.SetFrame(0xa, (ushort)steps);
 
 			if (linksSet)
-				this.processor.EmitLocalWord(0x10, (ushort)links);
+				this.routeFrame.SetFrame(0x10, (ushort)links);
 
 			if (neighbourSet)
 			{
@@ -657,6 +660,8 @@ namespace Civilization1Remaster.Game
 			this.processor.Journal.OpenScope($"ShiftToward({participantIdx}, {troopIdx}, {arg3})");
 
 			this.processor.EnterFrame(0x4a);
+			FrameWords outerFrame = this.stepFrame;
+			this.stepFrame = new FrameWords(this.processor, 0x4a);
 			this.processor.PreserveIndexRegisters();
 
 			ushort troop = (ushort)((ushort)(0x600 * participantIdx) + (ushort)(0xc * troopIdx));
@@ -694,6 +699,7 @@ namespace Civilization1Remaster.Game
 			this.processor.RegAcc.Value16 = (ushort)step;
 
 			this.processor.RestoreIndexRegisters();
+			this.stepFrame = outerFrame;
 			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("ShiftToward");
@@ -730,7 +736,7 @@ namespace Civilization1Remaster.Game
 			bool sea = UnitKindWordAt(kind, UnitKindTable.LandGroup) == 2;
 			bool air = UnitKindWordAt(kind, UnitKindTable.ShiftTally) == 1;
 
-			this.processor.EmitLocalWord(0x10, air ? (ushort)1 : (ushort)0);
+			this.stepFrame.SetFrame(0x10, air ? (ushort)1 : (ushort)0);
 
 			do
 			{
@@ -740,7 +746,7 @@ namespace Civilization1Remaster.Game
 
 
 				short cost = (sbyte)this.processor.PullGlobalByte(WindowCell(windowHoriz, windowVert, horizLoc, vertLoc));
-				this.processor.EmitLocalWord(0xe, (ushort)cost);
+				this.stepFrame.SetFrame(0xe, (ushort)cost);
 
 				if (cost > (short)GotoCost)
 					continue;
@@ -773,7 +779,7 @@ namespace Civilization1Remaster.Game
 					continue;
 
 				short tileHoriz = (short)TunePosition(nextHoriz);
-				this.processor.EmitLocalWord(0xc, (ushort)tileHoriz);
+				this.stepFrame.SetFrame(0xc, (ushort)tileHoriz);
 
 				short nextVert = (short)(DirectionVert(direction) + vertLoc);
 
@@ -830,7 +836,7 @@ namespace Civilization1Remaster.Game
 			short best = -1;
 			short direction;
 
-			this.processor.EmitLocalWord(0xa, (ushort)lowest);
+			this.stepFrame.SetFrame(0xa, (ushort)lowest);
 
 			for (direction = 1; direction <= 8; direction++)
 			{
@@ -846,7 +852,7 @@ namespace Civilization1Remaster.Game
 					continue;
 
 				short tileHoriz = (short)TunePosition(nextHoriz);
-				this.processor.EmitLocalWord(0xc, (ushort)tileHoriz);
+				this.stepFrame.SetFrame(0xc, (ushort)tileHoriz);
 
 				short nextVert = (short)(DirectionVert(direction) + unitVert);
 
@@ -872,8 +878,8 @@ namespace Civilization1Remaster.Game
 					lowest = cost;
 					best = direction;
 
-					this.processor.EmitLocalWord(0xa, (ushort)lowest);
-					this.processor.EmitLocalWord(0xe, (ushort)CrowdAndDistance(participantIdx, tileHoriz, nextVert, 0xe));
+					this.stepFrame.SetFrame(0xa, (ushort)lowest);
+					this.stepFrame.SetFrame(0xe, (ushort)CrowdAndDistance(participantIdx, tileHoriz, nextVert, 0xe));
 				}
 
 				if (cost != lowest)
@@ -881,11 +887,11 @@ namespace Civilization1Remaster.Game
 
 				short alternative = CrowdAndDistance(participantIdx, tileHoriz, nextVert, 0x1a);
 
-				if (alternative < (short)this.processor.PullLocalWord(0xe))
+				if (alternative < (short)this.stepFrame.Frame(0xe))
 				{
 					best = direction;
 
-					this.processor.EmitLocalWord(0xe, (ushort)alternative);
+					this.stepFrame.SetFrame(0xe, (ushort)alternative);
 				}
 			}
 
@@ -903,15 +909,15 @@ namespace Civilization1Remaster.Game
 
 			if (troopIdx != 0xffff)
 			{
-				this.processor.EmitLocalWord(local, (ushort)(this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, (short)troopIdx, 2) << 2));
+				this.stepFrame.SetFrame(local, (ushort)(this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, (short)troopIdx, 2) << 2));
 			}
 			else
 			{
-				this.processor.EmitLocalWord(local, 0);
+				this.stepFrame.SetFrame(local, 0);
 			}
 
-			ushort total = (ushort)(this.processor.PullLocalWord(local) + (ushort)this.owner.Helpers.ObtainDistance((short)GoalHoriz, horizLoc, (short)GoalVert, vertLoc));
-			this.processor.EmitLocalWord(local, total);
+			ushort total = (ushort)(this.stepFrame.Frame(local) + (ushort)this.owner.Helpers.ObtainDistance((short)GoalHoriz, horizLoc, (short)GoalVert, vertLoc));
+			this.stepFrame.SetFrame(local, total);
 
 			return (short)total;
 		}

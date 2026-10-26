@@ -453,7 +453,10 @@ samego pliku nie dotykają lokali, stosu ani BP) – 13 ramek usuniętych: `BuyU
 na części ścieżek zostawia ramkę na stosie (`cpu.sp`): `OpeningSequence`, `DisplayConquerorScreen`, `LaunchAudience`
 (jak `DivideCivilization`). Pełny zestaw 808/808. Potem trzy z kilkoma wyjściami lub `LeaveFrame` w metodzie
 kończącej: `ManageBarbarianUnit`, `DiplomatArrivesAtCity` (`FinishDiplomatArrival`), `AttachSpaceshipPart`
-(`LeaveAttachSpaceshipPart`) – 808/808. ramki, SI/DI, BX/CX/DX moduł po module; przy jawnych wartościach
+(`LeaveAttachSpaceshipPart`) – 808/808.
+**B3, porcja 5 (2026-10-26):** `Pathfinding` bez ramek na stosie: `CarryOutGoto` – kopie jego pomocniczych (nikt ich nie
+czytał) i ramka usunięte; ramki `ChartRoute` (0x3a, `SearchRouteBlocks`) i `ShiftToward` (0x4a, `ChooseCheapestStep`,
+`CrowdAndDistance`, `ChartWindowCosts`, `ExpandWindowCell`) jako `FrameWords`, nowe na każde wywołanie. 808/808. ramki, SI/DI, BX/CX/DX moduł po module; przy jawnych wartościach
 zamiast śmieci golden master zostaje zielony, sonda stosu ma pokazać zero czytelników. Na końcu rejestry z CPU,
 `MZExecutable` i obraz CIV.EXE w pamięci (dane początkowe z pliku przy starcie).
 
