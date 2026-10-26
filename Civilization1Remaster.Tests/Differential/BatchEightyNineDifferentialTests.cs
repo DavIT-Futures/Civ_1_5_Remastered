@@ -372,7 +372,7 @@ public sealed class BatchEightyNineDifferentialTests(ITestOutputHelper output)
 				game =>
 				{
 					int Delta(string name) => Calls(game, pair, name) - before.GetValueOrDefault(name);
-					ushort Local(int local) => game.Processor.Storage.PullUInt16(0x3b01, (ushort)(frame - local));
+					ushort Local(int local) => pair.Original.Engine.Processor.Storage.PullUInt16(0x3b01, (ushort)(frame - local));
 					bool looked = Local(0x40) == 9;
 					List<string> met = [];
 

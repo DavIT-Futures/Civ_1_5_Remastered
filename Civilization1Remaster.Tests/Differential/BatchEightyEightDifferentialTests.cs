@@ -352,7 +352,7 @@ public sealed class BatchEightyEightDifferentialTests(ITestOutputHelper output)
 				game =>
 				{
 					int Delta(string name) => Calls(game, pair, name) - before.GetValueOrDefault(name);
-					ushort Local(int local) => game.Processor.Storage.PullUInt16(0x3b01, (ushort)(frame - local));
+					ushort Local(int local) => pair.Original.Engine.Processor.Storage.PullUInt16(0x3b01, (ushort)(frame - local));
 					List<string> met = [];
 
 					if (Delta("SettleBattle") > 0)
@@ -382,7 +382,7 @@ public sealed class BatchEightyEightDifferentialTests(ITestOutputHelper output)
 					if (neighbour == 2 && Local(0x1c) is 0 or 1 && Delta("ContainsHut") > 0)
 						met.Add("own unit");
 
-					if ((game.Processor.Storage.PullUInt8(0x3b01, (ushort)(frame - 0x5e)) is >= 1 and <= 8))
+					if ((pair.Original.Engine.Processor.Storage.PullUInt8(0x3b01, (ushort)(frame - 0x5e)) is >= 1 and <= 8))
 						met.Add("heading");
 
 					if (militia && Local(0x56) == 1 && Local(0x1c) is 0 or 1)

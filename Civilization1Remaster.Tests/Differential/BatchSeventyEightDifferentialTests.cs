@@ -94,7 +94,7 @@ public sealed class BatchSeventyEightDifferentialTests(ITestOutputHelper output)
 				{
 					ushort answer = game.Processor.RegAcc.Value16;
 					string way = answer != 0x20 ? "placed"
-						: (short)game.Processor.Storage.PullUInt16(0x3b01, (ushort)(frame - 0x28)) >= 0xa ? "too few weapons"
+						: (short)pair.Original.Engine.Processor.Storage.PullUInt16(0x3b01, (ushort)(frame - 0x28)) >= 0xa ? "too few weapons"
 						: "no target";
 
 					ways.Add(way);

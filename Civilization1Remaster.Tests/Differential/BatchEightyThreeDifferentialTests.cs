@@ -233,7 +233,7 @@ public sealed class BatchEightyThreeDifferentialTests(ITestOutputHelper output)
 				{
 					int Delta(string name) => Calls(game, pair, name) - before.GetValueOrDefault(name);
 					ushort result = game.Processor.RegAcc.Value16;
-					ushort entered = game.Processor.Storage.PullUInt16(0x3b01, (ushort)(frame - 0x3a));
+					ushort entered = pair.Original.Engine.Processor.Storage.PullUInt16(0x3b01, (ushort)(frame - 0x3a));
 					ushort unit = UnitMemory.Address(participantIdx, troopIdx);
 					byte travelAfter = game.Processor.Storage.PullUInt8(0x3b01, (ushort)(unit + UnitMemory.TravelHoriz));
 					byte stepsAfter = game.Processor.Storage.PullUInt8(0x3b01, (ushort)(unit + UnitMemory.LeftoverSteps));

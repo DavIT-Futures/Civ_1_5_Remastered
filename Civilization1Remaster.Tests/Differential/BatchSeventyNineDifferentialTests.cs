@@ -171,16 +171,16 @@ public sealed class BatchSeventyNineDifferentialTests(ITestOutputHelper output)
 						way = "diplomat given up";
 					else if (mode == 2 && answer == 0 && UnitByte(game, participantIdx, troopIdx, UnitMemory.TravelHoriz) != 0xff)
 						way = "diplomat to a city";
-					else if (mode == 4 && answer >= 1 && answer <= 8 && (short)game.Processor.Storage.PullUInt16(0x3b01, (ushort)(frame - 0x40)) == answer)
+					else if (mode == 4 && answer >= 1 && answer <= 8 && (short)pair.Original.Engine.Processor.Storage.PullUInt16(0x3b01, (ushort)(frame - 0x40)) == answer)
 						way = "hut";
 					else if (mode == 5 && answer == 0x62)
 						way = "wanders";
-					else if (mode == 6 && game.Processor.Storage.PullUInt16(0x3b01, (ushort)(frame - 0x28)) == 7 &&
-						game.Processor.Storage.PullUInt16(0x3b01, (ushort)(frame - 0x4c)) == 0)
+					else if (mode == 6 && pair.Original.Engine.Processor.Storage.PullUInt16(0x3b01, (ushort)(frame - 0x28)) == 7 &&
+						pair.Original.Engine.Processor.Storage.PullUInt16(0x3b01, (ushort)(frame - 0x4c)) == 0)
 						way = "seven unknown";
-					else if (mode == 3 && answer == 0x62 && game.Processor.Storage.PullUInt16(0x3b01, (ushort)(frame - 0x3a)) >= 9)
+					else if (mode == 3 && answer == 0x62 && pair.Original.Engine.Processor.Storage.PullUInt16(0x3b01, (ushort)(frame - 0x3a)) >= 9)
 						way = "ambassador";
-					else if ((answer == 0x62 || answer <= 8) && game.Processor.Storage.PullUInt16(0x3b01, (ushort)(frame - 0x28)) >= 8)
+					else if ((answer == 0x62 || answer <= 8) && pair.Original.Engine.Processor.Storage.PullUInt16(0x3b01, (ushort)(frame - 0x28)) >= 8)
 						way = "explores";
 					else
 						way = "goes on";

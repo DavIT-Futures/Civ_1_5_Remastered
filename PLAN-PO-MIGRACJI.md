@@ -422,7 +422,15 @@ zostało nic do usunięcia – tam trzeba najpierw zamienić tablice ramki na ta
 `RenderMapTile`, dwie w `CityFoundingAndScore`, `SettleBattle` i jedna w `UnitCombat`, `HandlePeaceTreaties`.
 `DivideCivilization` musiało ramkę zachować: na części ścieżek oryginał wychodzi emulowanym skokiem i zostawia ramkę na
 stosie, a testy porównują wskaźnik stosu (`cpu.sp`). Pułapka: przed commitem czytać wynik testów, nie łańcuchować
-commita za testem. ramki, SI/DI, BX/CX/DX moduł po module; przy jawnych wartościach
+commita za testem.
+**B3, porcja 3 (2026-10-26):** 9 odczytów SI/DI zaraz po zapisie czystego wyrażenia → samo wyrażenie (`b3sidi.py`);
+reszta (ok. 100) to wartości zostawiane przez wywołane funkcje – po kolei. `UnitLook` (43 zmienne `ShiftAIUnit`,
+słowa 0x2 – 0x5e ramki) to zwykły obiekt C#, nowy na każde wywołanie (wszyscy użytkownicy działają pod ramką
+`ShiftAIUnit`, bez rekursji; żadna kopia Reference nie woła tych metod). Etykiety gałęzi sześciu testów `ShiftAIUnit…`
+czytały słowa ramki z gry przepisanej – teraz z gry oryginalnej (`pair.Original`), która dalej je zapisuje. Mutacje
+2 / 3 (`HeadingLow` równoważna: starszy bajt kierunku zawsze 0). `CityRound` (HandleCity) zostaje na razie na ramce:
+jego słowa nakładają się na tablice ramki (0x8e to baza tablicy, 0x16 to pole 20 tablicy bp-0x3e, 0x40 – 0x50 w
+zasięgu tablicy bp-0x74) – trzeba przenieść razem z tablicami. ramki, SI/DI, BX/CX/DX moduł po module; przy jawnych wartościach
 zamiast śmieci golden master zostaje zielony, sonda stosu ma pokazać zero czytelników. Na końcu rejestry z CPU,
 `MZExecutable` i obraz CIV.EXE w pamięci (dane początkowe z pliku przy starcie).
 

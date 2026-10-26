@@ -226,8 +226,8 @@ public sealed class BatchEightySevenDifferentialTests(ITestOutputHelper output)
 				{
 					ushort result = game.Processor.RegAcc.Value16;
 					byte heading = game.Processor.Storage.PullUInt8(0x3b01, (ushort)(UnitMemory.Address(participantIdx, troopIdx) + UnitMemory.TravelHeading));
-					ushort looked = game.Processor.Storage.PullUInt16(0x3b01, (ushort)(frame - 0x5c));
-					ushort around = game.Processor.Storage.PullUInt16(0x3b01, (ushort)(frame - 0x44));
+					ushort looked = pair.Original.Engine.Processor.Storage.PullUInt16(0x3b01, (ushort)(frame - 0x5c));
+					ushort around = pair.Original.Engine.Processor.Storage.PullUInt16(0x3b01, (ushort)(frame - 0x44));
 
 					if (looked is 0 or 1 && around == 9)
 						ways.Add("surroundings");
