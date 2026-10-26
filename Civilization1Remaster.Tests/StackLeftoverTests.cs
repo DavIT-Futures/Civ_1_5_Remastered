@@ -97,12 +97,9 @@ namespace Civilization1Remaster.Tests
 			Assert.NotEmpty(PlayTurns(autosave, classic: false));
 		}
 
-		/// <summary>The switch matters: the zeroed locals change the game of some autosave against the leftovers</summary>
-		[Fact]
-		public void LeftoversChangeTheGame()
-		{
-			Assert.Contains(new[] { 9, 0, 3, 5, 7, 11, 13 }, autosave => PlayTurns(autosave, classic: true) != PlayTurns(autosave, classic: false));
-		}
+		// (Until B3 the leftovers also changed whole turns of these autosaves; since the locals of HandleCity, ShiftAIUnit
+		// and HandlePlayerTurn live in C# objects, nothing the turns read is left on the stack: UnitWithoutHomeStays shows
+		// what the switch still does.)
 
 		private static string PlayTurns(int autosave, bool classic)
 		{

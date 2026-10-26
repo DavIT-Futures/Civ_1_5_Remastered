@@ -27,6 +27,36 @@ namespace Civilization1Remaster.Game
 		private sealed class CityRound(CPU processor)
 		{
 			/// <summary>
+			/// The words of the frame of the original below BP (index distance / 2, distance 2 - 0x10c), in C# since B3
+			/// (2026-10-26): 0 at the start like the zeroed frame. The arrays of the frame and the locals read through it
+			/// share them as in the original.
+			/// </summary>
+			private readonly ushort[] words = new ushort[(0x10c / 2) + 1];
+
+			/// <summary>
+			/// The word at BP - distance (16-bit: an index of an array may be negative, as in the original): from the array,
+			/// out of the frame from the stack as before
+			/// </summary>
+			public ushort Frame(int distance)
+			{
+				distance = (short)(ushort)distance;
+
+				return distance > 0 && distance <= 0x10c && (distance & 1) == 0 ? this.words[distance / 2] :
+					processor.PullUInt16(processor.SegStack.Value16, (ushort)(processor.RegFrame.Value16 - distance));
+			}
+
+			/// <summary>Writes the word at BP - distance (see Frame)</summary>
+			public void SetFrame(int distance, ushort value)
+			{
+				distance = (short)(ushort)distance;
+
+				if (distance > 0 && distance <= 0x10c && (distance & 1) == 0)
+					this.words[distance / 2] = value;
+				else
+					processor.EmitUInt16(processor.SegStack.Value16, (ushort)(processor.RegFrame.Value16 - distance), value);
+			}
+
+			/// <summary>
 			/// The value (the distance is the word of the frame where the original kept it; B3, 2026-10-26: no longer written
 			/// there, the frames are zeroed and nothing reads these words: the arrays of the frame end at 0xa6)
 			/// </summary>
@@ -220,41 +250,41 @@ namespace Civilization1Remaster.Game
 			public ushort Continent { get => this.continent; set => Keep(ref this.continent, 0x10c, value); }
 
 			/// <summary>BP-0x2 (on the stack): the units looked at for martial law (at most 0x20)</summary>
-			public ushort MartialLawUnits { get => processor.PullLocalWord(0x2); set => processor.EmitLocalWord(0x2, value); }
+			public ushort MartialLawUnits { get => Frame(0x2); set => SetFrame(0x2, value); }
 			/// <summary>BP-0x4 (on the stack): the food of the tile looked at</summary>
-			public ushort TileFood { get => processor.PullLocalWord(0x4); set => processor.EmitLocalWord(0x4, value); }
+			public ushort TileFood { get => Frame(0x4); set => SetFrame(0x4, value); }
 			/// <summary>BP-0x6 (on the stack): the column of the next icon in the row of the citizens</summary>
-			public ushort IconHoriz { get => processor.PullLocalWord(0x6); set => processor.EmitLocalWord(0x6, value); }
+			public ushort IconHoriz { get => Frame(0x6); set => SetFrame(0x6, value); }
 			/// <summary>BP-0x8 (on the stack): the specialists of the city</summary>
-			public ushort Specialists { get => processor.PullLocalWord(0x8); set => processor.EmitLocalWord(0x8, value); }
+			public ushort Specialists { get => Frame(0x8); set => SetFrame(0x8, value); }
 			/// <summary>BP-0xa (on the stack): the trade 0x70de kept for the city screen</summary>
-			public ushort TradeKept { get => processor.PullLocalWord(0xa); set => processor.EmitLocalWord(0xa, value); }
+			public ushort TradeKept { get => Frame(0xa); set => SetFrame(0xa, value); }
 			/// <summary>BP-0xc (on the stack): the shields of the tile looked at</summary>
-			public ushort TileShields { get => processor.PullLocalWord(0xc); set => processor.EmitLocalWord(0xc, value); }
+			public ushort TileShields { get => Frame(0xc); set => SetFrame(0xc, value); }
 			/// <summary>BP-0x16 (on the stack): the word of the city tile (20) in the array of the tiles not to work (BP-0x3e)</summary>
-			public ushort CityTileTaken { get => processor.PullLocalWord(0x16); set => processor.EmitLocalWord(0x16, value); }
+			public ushort CityTileTaken { get => Frame(0x16); set => SetFrame(0x16, value); }
 			/// <summary>BP-0x40 (on the stack): the wonders in the list of improvements</summary>
-			public ushort WonderRows { get => processor.PullLocalWord(0x40); set => processor.EmitLocalWord(0x40, value); }
+			public ushort WonderRows { get => Frame(0x40); set => SetFrame(0x40, value); }
 			/// <summary>BP-0x42 (on the stack): the line of the icons of the citizens</summary>
-			public ushort IconVert { get => processor.PullLocalWord(0x42); set => processor.EmitLocalWord(0x42, value); }
+			public ushort IconVert { get => Frame(0x42); set => SetFrame(0x42, value); }
 			/// <summary>BP-0x44 (on the stack): the shields per row of the production box</summary>
-			public ushort ShieldsPerRow { get => processor.PullLocalWord(0x44); set => processor.EmitLocalWord(0x44, value); }
+			public ushort ShieldsPerRow { get => Frame(0x44); set => SetFrame(0x44, value); }
 			/// <summary>BP-0x46 (on the stack): the trade of the tile looked at</summary>
-			public ushort TileTrade { get => processor.PullLocalWord(0x46); set => processor.EmitLocalWord(0x46, value); }
+			public ushort TileTrade { get => Frame(0x46); set => SetFrame(0x46, value); }
 			/// <summary>BP-0x48 (on the stack): the food of a settler (1 under despotism or anarchy, else 2)</summary>
-			public ushort SettlerFood { get => processor.PullLocalWord(0x48); set => processor.EmitLocalWord(0x48, value); }
+			public ushort SettlerFood { get => Frame(0x48); set => SetFrame(0x48, value); }
 			/// <summary>BP-0x4a (on the stack): the factor of the prices (10, for a computer player by the level)</summary>
-			public ushort CostFactor { get => processor.PullLocalWord(0x4a); set => processor.EmitLocalWord(0x4a, value); }
+			public ushort CostFactor { get => Frame(0x4a); set => SetFrame(0x4a, value); }
 			/// <summary>BP-0x4c (on the stack): a city looked at; the city at the end of a trade route</summary>
-			public ushort OtherCity { get => processor.PullLocalWord(0x4c); set => processor.EmitLocalWord(0x4c, value); }
+			public ushort OtherCity { get => Frame(0x4c); set => SetFrame(0x4c, value); }
 			/// <summary>BP-0x4e (on the stack): the units drawn in the city</summary>
-			public ushort UnitsDrawn { get => processor.PullLocalWord(0x4e); set => processor.EmitLocalWord(0x4e, value); }
+			public ushort UnitsDrawn { get => Frame(0x4e); set => SetFrame(0x4e, value); }
 			/// <summary>BP-0x50 (on the stack): the workers still to place; the size + 1</summary>
-			public ushort Workers { get => processor.PullLocalWord(0x50); set => processor.EmitLocalWord(0x50, value); }
+			public ushort Workers { get => Frame(0x50); set => SetFrame(0x50, value); }
 			/// <summary>BP-0x8e (on the stack): the word of the city tile in the array of the tiles of neighbours (BP-0x8e)</summary>
-			public ushort CityTileNeighbour { get => processor.PullLocalWord(0x8e); set => processor.EmitLocalWord(0x8e, value); }
+			public ushort CityTileNeighbour { get => Frame(0x8e); set => SetFrame(0x8e, value); }
 			/// <summary>BP-0x108 (on the stack): the tile the last search found (-1 none) or a unit; PickWorkers reads it before anything writes it</summary>
-			public ushort Found { get => processor.PullLocalWord(0x108); set => processor.EmitLocalWord(0x108, value); }
+			public ushort Found { get => Frame(0x108); set => SetFrame(0x108, value); }
 		}
 
 		public CityManagement(GameEngine owner)
@@ -361,7 +391,7 @@ namespace Civilization1Remaster.Game
 				this.processor.RegSource.Value16 = (ushort)(tile << 1);
 				this.processor.RegDest.Value16 = (ushort)(short)(10 * this.owner.TownDeltas[tile].X + this.owner.TownDeltas[tile].Y * 2);
 
-				if (this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegDest.Value16 - 0x8e)) != 0)
+				if (this.round.Frame(0x8e - this.processor.RegDest.Value16) != 0)
 				{
 					// A tile worked by a neighbouring city
 					this.owner.Dialogs.RenderBox(
@@ -570,8 +600,8 @@ namespace Civilization1Remaster.Game
 			{
 				this.round.Index = tile;
 				this.processor.RegSource.Value16 = (ushort)(tile << 1);
-				ushort unavailable = (ushort)(this.processor.RegFrame.Value16 + ((ushort)(tile << 1)) - 0x3e);
-				this.processor.EmitUInt16(this.processor.SegStack.Value16, unavailable, 0);
+				int unavailable = 0x3e - (ushort)(tile << 1);
+				this.round.SetFrame(unavailable, 0);
 
 				short horizLoc = (short)(town.Place.X + this.owner.TownDeltas[tile].X);
 				short vertLoc = (short)(town.Place.Y + this.owner.TownDeltas[tile].Y);
@@ -582,7 +612,7 @@ namespace Civilization1Remaster.Game
 
 				// A tile the owner has not seen (the barbarians see all)
 				if (owner != 0 && (this.owner.World.ChartSight[(ushort)horizLoc, (ushort)vertLoc] & (1 << (owner & 0xff))) == 0)
-					this.processor.EmitUInt16(this.processor.SegStack.Value16, unavailable, 1);
+					this.round.SetFrame(unavailable, 1);
 
 				this.round.Value = this.owner.MapOps.ObtainTileOwner(horizLoc, vertLoc);
 
@@ -593,8 +623,8 @@ namespace Civilization1Remaster.Game
 					// A tile of another player
 					this.processor.RegDest.Value16 = shared;
 					this.processor.RegAcc.Value16 = 1;
-					this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + shared - 0x8e), 1);
-					this.processor.EmitUInt16(this.processor.SegStack.Value16, unavailable, 1);
+					this.round.SetFrame(0x8e - shared, 1);
+					this.round.SetFrame(unavailable, 1);
 					this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
 
 					if (this.round.Value == (ushort)this.owner.World.PersonParticipantIdx)
@@ -604,10 +634,10 @@ namespace Civilization1Remaster.Game
 				// A tile worked by a neighbouring city
 				this.processor.RegDest.Value16 = shared;
 
-				if (this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + shared - 0x8e)) != 0)
-					this.processor.EmitUInt16(this.processor.SegStack.Value16, unavailable, 1);
+				if (this.round.Frame(0x8e - shared) != 0)
+					this.round.SetFrame(unavailable, 1);
 
-				if (this.processor.PullUInt16(this.processor.SegStack.Value16, unavailable) == 0)
+				if (this.round.Frame(unavailable) == 0)
 					continue;
 
 				// Its worker is taken off
@@ -682,7 +712,7 @@ namespace Civilization1Remaster.Game
 						continue;
 
 					this.processor.RegSource.Value16 = (ushort)(tile << 1);
-					this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + ((ushort)(tile << 1)) - 0x3e), 1);
+					this.round.SetFrame(0x3e - ((ushort)(tile << 1)), 1);
 
 					RenderCityTile(townIdx, tile, marker);
 
@@ -919,7 +949,7 @@ namespace Civilization1Remaster.Game
 
 			this.processor.RegSource.Value16 = (ushort)(tile << 1);
 
-			if (this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x3e)) != 0)
+			if (this.round.Frame(0x3e - this.processor.RegSource.Value16) != 0)
 				return false;
 
 			this.round.TileHoriz = (ushort)(short)(town.Place.X + this.owner.TownDeltas[tile].X);
@@ -933,7 +963,7 @@ namespace Civilization1Remaster.Game
 			ushort tile = this.round.Found;
 
 			this.processor.RegSource.Value16 = (ushort)(tile << 1);
-			this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + ((ushort)(tile << 1)) - 0x3e), 1);
+			this.round.SetFrame(0x3e - ((ushort)(tile << 1)), 1);
 
 			RenderCityTile(townIdx, tile, marker);
 
@@ -2719,7 +2749,7 @@ namespace Civilization1Remaster.Game
 			this.round.UnitsDrawn = (ushort)(drawn + 1);
 			this.processor.RegSource.Value16 = (ushort)(drawn << 1);
 			this.processor.RegAcc.Value16 = (ushort)troopIdx;
-			this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + ((ushort)(drawn << 1)) - 0x74), (ushort)troopIdx);
+			this.round.SetFrame(0x74 - ((ushort)(drawn << 1)), (ushort)troopIdx);
 			this.round.UnitHoriz = (ushort)(this.round.UnitHoriz + 0x12);
 
 			this.processor.RegCount.Value16 = 6;
@@ -3535,7 +3565,7 @@ namespace Civilization1Remaster.Game
 
 		/// <summary>The unit of the list of the units in the city (the words before the frame at -0x74)</summary>
 		private ushort UnitOfCityList(ushort place) =>
-			this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + (place << 1) - 0x74));
+			this.round.Frame(0x74 - (place << 1));
 
 		/// <summary>
 		/// A: a cursor on the units in the city (0x4e of them, six in a row; 0x106 the unit, from the first that sleeps or
@@ -3988,7 +4018,7 @@ namespace Civilization1Remaster.Game
 				ushort place = (ushort)(short)((10 * this.owner.TownDeltas[tile].X) + (this.owner.TownDeltas[tile].Y * 2));
 				this.processor.RegDest.Value16 = place;
 
-				if (this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + place - 0x8e)) != 0)
+				if (this.round.Frame(0x8e - place) != 0)
 					return CityScreenStep.Redraw;
 			}
 
@@ -4583,7 +4613,7 @@ namespace Civilization1Remaster.Game
 				{
 					this.round.Vert = row;
 					this.processor.RegSource.Value16 = (ushort)(column * 0xa + row * 2);
-					this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + ((ushort)(column * 0xa + row * 2)) - 0xa6), 0);
+					this.round.SetFrame(0xa6 - ((ushort)(column * 0xa + row * 2)), 0);
 				}
 
 				this.round.Vert = 5;
@@ -4654,7 +4684,7 @@ namespace Civilization1Remaster.Game
 					this.processor.RegCount.Value16 = 0xa;
 					this.processor.RegSource.Value16 = (ushort)((horizLoc - (short)this.round.Horiz) * 0xa +
 						((vertLoc - (short)this.round.Vert) << 1));
-					this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegSource.Value16 - 0x8e), 1);
+					this.round.SetFrame(0x8e - this.processor.RegSource.Value16, 1);
 				}
 
 				this.round.Index = 21;
