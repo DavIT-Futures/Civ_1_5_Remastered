@@ -133,7 +133,6 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"FinalizeProduction({townIdx}, {horizLoc}, {vertLoc})");
 
-			this.processor.EnterFrame(0xa);
 			this.processor.PreserveIndexRegisters();
 
 			City town = this.owner.World.Towns[townIdx];
@@ -205,7 +204,6 @@ namespace Civilization1Remaster.Game
 			}
 
 			this.processor.RestoreIndexRegisters();
-			this.processor.LeaveFrame();
 
 			this.processor.Journal.CloseScope("FinalizeProduction");
 		}

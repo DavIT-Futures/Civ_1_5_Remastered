@@ -954,7 +954,6 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope($"DisplayAttitudeReport({participantIdx})");
 
-			this.processor.EnterFrame(0x14);
 			this.processor.PreserveSource();
 
 			DisplayReportPreamble(0x4995, 9);
@@ -1031,7 +1030,6 @@ namespace Civilization1Remaster.UI
 			FinishReportScreen();
 
 			this.processor.RestoreSource();
-			this.processor.LeaveFrame();
 
 			this.processor.Journal.CloseScope("DisplayAttitudeReport");
 		}

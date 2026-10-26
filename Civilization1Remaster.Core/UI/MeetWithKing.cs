@@ -23,7 +23,7 @@ namespace Civilization1Remaster.UI
 		public void LaunchAudience(short participantIdx, int horizLoc, int vertLoc, ushort arg4)
 		{
 			this.processor.Journal.OpenScope($"LaunchAudience({participantIdx}, {horizLoc}, {vertLoc}, {arg4})");
-
+			// The frame stays: on some paths the original leaves it on the stack (the tests compare the stack pointer)
 			this.processor.EnterFrame(0x36);
 			this.processor.PreserveIndexRegisters();
 
@@ -1235,7 +1235,6 @@ namespace Civilization1Remaster.UI
 			this.processor.Journal.OpenScope("ChoreographKingSpeaking()");
 
 			// The final values of the locals stay in the stack frame, like in the original
-			this.processor.EnterFrame(0x6);
 
 			KingPose = 0xffff;
 
@@ -1288,7 +1287,6 @@ namespace Civilization1Remaster.UI
 
 			this.owner.TextPainter.AwaitTime(10);
 
-			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("ChoreographKingSpeaking");
 		}

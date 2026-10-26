@@ -445,7 +445,13 @@ korzysta. **Nieudane:** ramka `ProduceTerrain` (0xd4, wspólna z `RankLandOrSea`
 w `FrameWords` psuje `ProduceTerrainMatchesOriginalCode`, a zapis „na wylot” do pamięci go naprawia – czyli coś czyta
 te słowa ze stosu, ale nie przez CPU (sonda `IStackWatcher` na ramce nie widzi ani jednego odczytu, także zawężenie do
 zakresów 2 – 0x50 / 0x52 – 0xa2 / 0xa4 – 0xd4 nie wystarcza). Cofnięte; do zbadania przed B6.8 (odczyty przez
-`Storage` / sterowniki). ramki, SI/DI, BX/CX/DX moduł po module; przy jawnych wartościach
+`Storage` / sterowniki).
+**B3, porcja 4 (2026-10-26):** skaner ramek bez dostępów (`emptyframes.py`: metoda i jej pomocnicze bez ramek z tego
+samego pliku nie dotykają lokali, stosu ani BP) – 13 ramek usuniętych: `BuyUnit`, `FinalizeProduction`,
+`DisplayAttitudeReport`, trzy `RenderCityScenery…`, `DisplayReplay`, `RenderReplayMapTile`, `ChoreographKingSpeaking`,
+`ComputeSpaceshipSuccess`, `ConfigureFreshGame`, `ConstructCivilization`, `DisplayWorldMap`. Trzy zostały, bo oryginał
+na części ścieżek zostawia ramkę na stosie (`cpu.sp`): `OpeningSequence`, `DisplayConquerorScreen`, `LaunchAudience`
+(jak `DivideCivilization`). Pełny zestaw 808/808. ramki, SI/DI, BX/CX/DX moduł po module; przy jawnych wartościach
 zamiast śmieci golden master zostaje zielony, sonda stosu ma pokazać zero czytelników. Na końcu rejestry z CPU,
 `MZExecutable` i obraz CIV.EXE w pamięci (dane początkowe z pliku przy starcie).
 

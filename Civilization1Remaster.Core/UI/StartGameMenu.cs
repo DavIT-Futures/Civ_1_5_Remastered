@@ -22,7 +22,6 @@ namespace Civilization1Remaster.UI
 			this.processor.Journal.OpenScope("ConfigureFreshGame()");
 
 			// The frame like the original (the functions called see the stack at the same depth)
-			this.processor.EnterFrame(0x12);
 			this.processor.PreserveSource();
 
 			this.owner.Startup.ConcealMouseCursor();
@@ -47,7 +46,6 @@ namespace Civilization1Remaster.UI
 			WelcomeHumanPlayer();
 
 			this.processor.RestoreSource();
-			this.processor.LeaveFrame();
 
 			this.processor.Journal.CloseScope("ConfigureFreshGame");
 		}
@@ -433,7 +431,6 @@ namespace Civilization1Remaster.UI
 			this.processor.Journal.OpenScope($"ConstructCivilization({participantIdx})");
 
 			// The frame like the original (the functions called see the stack at the same depth)
-			this.processor.EnterFrame(0x34);
 			this.processor.PreserveIndexRegisters();
 
 			if (participantIdx != this.owner.World.PersonParticipantIdx || this.owner.World.RoundTally == 0)
@@ -444,7 +441,6 @@ namespace Civilization1Remaster.UI
 			}
 
 			this.processor.RestoreIndexRegisters();
-			this.processor.LeaveFrame();
 
 			this.processor.Journal.CloseScope("ConstructCivilization");
 

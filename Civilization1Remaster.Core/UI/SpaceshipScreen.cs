@@ -632,7 +632,6 @@ namespace Civilization1Remaster.UI
 			this.processor.Journal.OpenScope($"ComputeSpaceshipSuccess({participantIdx}, {arg2})");
 
 			// The frame like the original (the functions called see the stack at the same depth)
-			this.processor.EnterFrame(0x6);
 			this.processor.PreserveIndexRegisters();
 
 			this.owner.World.BotStarshipVictoryRatio = 0;
@@ -697,7 +696,6 @@ namespace Civilization1Remaster.UI
 			this.processor.RegAcc.Value16 = result;
 
 			this.processor.RestoreIndexRegisters();
-			this.processor.LeaveFrame();
 
 			this.processor.Journal.CloseScope("ComputeSpaceshipSuccess");
 

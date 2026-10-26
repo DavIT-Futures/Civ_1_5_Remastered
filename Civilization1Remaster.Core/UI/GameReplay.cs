@@ -23,7 +23,6 @@ namespace Civilization1Remaster.UI
 			this.processor.Journal.OpenScope("DisplayReplay()");
 
 			// The frame like the original (the functions called see the stack at the same depth)
-			this.processor.EnterFrame(0x24);
 			this.processor.PreserveSource();
 
 			while (true)
@@ -69,7 +68,6 @@ namespace Civilization1Remaster.UI
 			}
 
 			this.processor.RestoreSource();
-			this.processor.LeaveFrame();
 
 			this.processor.Journal.CloseScope("DisplayReplay");
 		}
@@ -625,7 +623,6 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope($"RenderReplayMapTile({horizLoc}, {vertLoc})");
 
-			this.processor.EnterFrame(0xc);
 			this.processor.PreserveIndexRegisters();
 
 			if (ReplayMode != 4)
@@ -661,7 +658,6 @@ namespace Civilization1Remaster.UI
 			}
 
 			this.processor.RestoreIndexRegisters();
-			this.processor.LeaveFrame();
 
 			this.processor.Journal.CloseScope("RenderReplayMapTile");
 		}
@@ -759,7 +755,7 @@ namespace Civilization1Remaster.UI
 		public void DisplayConquerorScreen()
 		{
 			this.processor.Journal.OpenScope("DisplayConquerorScreen()");
-
+			// The frame stays: on some paths the original leaves it on the stack (the tests compare the stack pointer)
 			this.processor.EnterFrame(0x2);
 
 			ReplayAtGameEnd = 0x1;

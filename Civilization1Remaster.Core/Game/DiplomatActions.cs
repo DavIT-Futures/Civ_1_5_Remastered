@@ -343,7 +343,6 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"BuyUnit({participantIdx}, {troopIdx}, {participantIdx1})");
 
-			this.processor.EnterFrame(0xc);
 			this.processor.PreserveIndexRegisters();
 
 			short humanIdx = this.owner.World.PersonParticipantIdx;
@@ -369,7 +368,6 @@ namespace Civilization1Remaster.Game
 			}
 
 			this.processor.RestoreIndexRegisters();
-			this.processor.LeaveFrame();
 
 			this.processor.Journal.CloseScope("BuyUnit");
 		}

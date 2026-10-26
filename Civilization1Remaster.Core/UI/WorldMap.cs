@@ -23,7 +23,6 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope($"DisplayWorldMap({marker})");
 
-			this.processor.EnterFrame(0x22);
 			this.processor.PreserveIndexRegisters();
 
 			this.owner.Startup.ConcealMouseCursor();
@@ -94,7 +93,6 @@ namespace Civilization1Remaster.UI
 			this.owner.Startup.DisplayMouseCursor();
 
 			this.processor.RestoreIndexRegisters();
-			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("DisplayWorldMap");
 		}
