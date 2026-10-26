@@ -15,8 +15,7 @@ namespace Civilization1Remaster.Game
 		/// <summary>The words of the frame of DisplayTravellersReport, shared by its helpers (B3: in C#, new for every call)</summary>
 		private FrameWords displayTravellersReportFrame = null!;
 
-		/// <summary>The words of the frame of HandleEndOfTurnEvents, shared by its helpers (B3: in C#, new for every call)</summary>
-		private FrameWords handleEndOfTurnEventsFrame = null!;
+
 
 		/// <summary>The words of the frame of HandleGameEnd: the ranking of NoteStatusInReplay (B3: in C#, new for every call)</summary>
 		private FrameWords handleGameEndFrame;
@@ -1575,9 +1574,6 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope("HandleEndOfTurnEvents()");
 
-			this.processor.EnterFrame(0xe);
-			FrameWords outerFrame = this.handleEndOfTurnEventsFrame;
-			this.handleEndOfTurnEventsFrame = new FrameWords(this.processor, 0xe);
 			this.processor.PreserveIndexRegisters();
 
 			short pull = (short)(((ushort)this.owner.World.DirtyCellTally << 1) - ((ushort)this.owner.World.WorldHeatingTally << 2) - (ushort)this.owner.World.SmogImpactTier);
@@ -1599,21 +1595,13 @@ namespace Civilization1Remaster.Game
 				this.owner.World.SmogImpactTier = 0;
 			}
 
-			short attempt;
-
-			for (attempt = 0; attempt <= this.owner.World.HardnessTier; attempt++)
+			for (short attempt = 0; attempt <= this.owner.World.HardnessTier; attempt++)
 			{
-				this.handleEndOfTurnEventsFrame.SetFrame(0xa, (ushort)attempt);
-
 				if (TryRivalWonder(attempt))
 					break;
 			}
 
-			this.handleEndOfTurnEventsFrame.SetFrame(0xa, (ushort)attempt);
-
 			this.processor.RestoreIndexRegisters();
-			this.handleEndOfTurnEventsFrame = outerFrame;
-			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("HandleEndOfTurnEvents");
 		}
@@ -1623,7 +1611,6 @@ namespace Civilization1Remaster.Game
 		{
 			short person = this.owner.World.PersonParticipantIdx;
 			ushort wonderIdx = (ushort)(this.owner.Libc.Dice.DrawInt(21) + 1);
-			this.handleEndOfTurnEventsFrame.SetFrame(0x8, wonderIdx);
 
 			if (this.owner.World.HardnessTier == 0 &&
 				this.owner.Advisors.PlayerKnowsTechnology(person, (short)BuildingWord(wonderIdx, BuildingTable.Technology)) == 0)
@@ -1637,18 +1624,14 @@ namespace Civilization1Remaster.Game
 						wonderIdx = 0x11;
 				}
 
-				this.handleEndOfTurnEventsFrame.SetFrame(0x2, 0x80);
-				this.handleEndOfTurnEventsFrame.SetFrame(0x8, wonderIdx);
-			}
+					}
 
 			ushort cityIdx = (ushort)this.owner.Libc.Dice.DrawInt(128);
-			this.handleEndOfTurnEventsFrame.SetFrame(0x2, cityIdx);
 
 			if (this.owner.World.Towns[cityIdx].ConditionMarker == 0xff)
 				return false;
 
 			ushort rivalIdx = (ushort)this.owner.World.Towns[cityIdx].ParticipantIdx;
-			this.handleEndOfTurnEventsFrame.SetFrame(0xc, rivalIdx);
 
 			if ((this.owner.World.Participants[rivalIdx].Relations[0] & 4) != 0)
 				return false;
@@ -1660,8 +1643,7 @@ namespace Civilization1Remaster.Game
 				this.owner.Advisors.PlayerKnowsTechnology(person, 0x2e) == 0 && this.owner.World.MarvelTownIdx[17] == -1)
 			{
 				wonderIdx = 0x11;
-				this.handleEndOfTurnEventsFrame.SetFrame(0x8, wonderIdx);
-			}
+				}
 
 			if (wonderIdx == 0x11 && this.owner.Advisors.PlayerKnowsTechnology(person, 0x2e) != 0 &&
 				this.owner.World.Participants[rivalIdx].MartialMight > this.owner.World.Participants[person].MartialMight)
@@ -1674,7 +1656,6 @@ namespace Civilization1Remaster.Game
 				return false;
 
 			ushort wonder = (ushort)(0x1e * wonderIdx);
-			this.handleEndOfTurnEventsFrame.SetFrame(0xe, (ushort)(0x1c * cityIdx));
 
 			if (this.owner.World.Towns[cityIdx].TrueExtent <= CPU.SignedQuotient((short)this.processor.PullGlobalWord((ushort)(wonder + 0xe82)), 10))
 				return false;
@@ -1726,7 +1707,6 @@ namespace Civilization1Remaster.Game
 					this.owner.Advisors.RenewCityScreen((short)townIdx);
 			}
 
-			this.handleEndOfTurnEventsFrame.SetFrame(0x2, 0x80);
 
 			return true;
 		}

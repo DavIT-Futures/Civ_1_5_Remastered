@@ -647,25 +647,15 @@ namespace Civilization1Remaster.Engine
 		{
 			this.processor.Journal.OpenScope($"VerifyDrive({driveIdx})");
 
-			this.processor.EnterFrame(0x12);
-
 			ushort ready = 1;
 
 			if ((short)driveIdx <= 1)
 			{
-				ushort request = (ushort)(this.processor.RegFrame.Value16 - 0x12);
-
-				this.processor.EmitGlobalWord(request, driveIdx);
-				this.processor.EmitGlobalWord((ushort)(request + 2), 0);
-				this.processor.EmitGlobalWord((ushort)(request + 4), 0);
-				this.processor.EmitGlobalWord((ushort)(request + 6), 2);
-				this.processor.EmitGlobalWord((ushort)(request + 8), 1);
-
 				ready = 0;
 
 				for (int attempt = 0; attempt < 3 && ready == 0; attempt++)
 				{
-					if (this.owner.Libc.BiosDiskCall(4, request))
+					if (this.owner.Libc.BiosDiskCall(4, (int)driveIdx))
 					{
 						ready = 1;
 					}
@@ -677,8 +667,6 @@ namespace Civilization1Remaster.Engine
 			}
 
 			this.processor.RegAcc.Value16 = ready;
-
-			this.processor.LeaveFrame();
 
 			this.processor.Journal.CloseScope("VerifyDrive");
 

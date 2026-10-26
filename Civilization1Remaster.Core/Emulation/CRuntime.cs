@@ -834,6 +834,49 @@ namespace Civilization1Remaster.Emulation
 		/// The BIOS disk call: 0 resets the disks, 4 checks the drive of the request is ready. True: done (AH 0); false: not
 		/// ready (AH 0x80)
 		/// </summary>
+		public bool BiosDiskCall(ushort directive, int volume)
+		{
+			this.processor.Journal.OpenScope("'_bios_disk'(Cdecl) at 0x3045:0x3062");
+
+			// function body
+			DriveInfo[] diskDetails = DriveInfo.GetDrives();
+			char chrDisk = (char)((volume >= 0x80) ? (volume - 0x80 + 'C') : ('A' + volume));
+
+			switch (directive)
+			{
+				case 0:
+					// reset disk system
+					this.processor.RegAcc.HighByte = 0;
+					this.processor.Journal.CloseScope("'_bios_disk'");
+					return true;
+
+				case 4:
+					// Verify disk sectors
+					for (int idx = 0; idx < diskDetails.Length; idx++)
+					{
+						if (diskDetails[idx].Name[0] == chrDisk)
+						{
+							if (diskDetails[idx].IsReady)
+							{
+								this.processor.RegAcc.HighByte = 0;
+								this.processor.Journal.CloseScope("'_bios_disk'");
+								return true;
+							}
+							else
+							{
+								break;
+							}
+						}
+					}
+					break;
+			}
+
+			this.processor.RegAcc.HighByte = 0x80;
+			this.processor.Journal.CloseScope("'_bios_disk'");
+
+			return false;
+		}
+
 		public bool BiosDiskCall(ushort directive, ushort driveaDetailsAddr)
 		{
 			this.processor.Journal.OpenScope("'_bios_disk'(Cdecl) at 0x3045:0x3062");

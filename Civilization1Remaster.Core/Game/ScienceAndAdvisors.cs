@@ -1194,7 +1194,6 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"UncoverTechnology({participantIdx}, {participantIdx1})");
 
-			this.processor.EnterFrame(0x46);
 			this.processor.PreserveSource();
 
 			ushort result = participantIdx == 0 ? (ushort)0xffff : UncoverTechnologyOf(participantIdx, participantIdx1);
@@ -1202,7 +1201,6 @@ namespace Civilization1Remaster.Game
 			this.processor.RegAcc.Value16 = result;
 
 			this.processor.RestoreSource();
-			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("UncoverTechnology");
 
@@ -1356,7 +1354,6 @@ namespace Civilization1Remaster.Game
 		{
 			short person = this.owner.World.PersonParticipantIdx;
 			Player human = this.owner.World.Participants[person];
-			ushort pictureName = (ushort)(this.processor.RegFrame.Value16 - 0x10);
 
 			this.owner.Encyclopedia.ObtainFirstPrerequisite((ushort)human.PresentInquiryIdx);
 
@@ -1364,19 +1361,12 @@ namespace Civilization1Remaster.Game
 			bool picture = human.PresentInquiryIdx != 71 && (short)FirstMissingDisk > 3 &&
 				this.owner.Startup.QueryForDisk(1, 0) != 0 && (this.owner.World.SessionPrefMarkers & 8) != 0;
 
-			bool advanced = false;
+			bool advanced = PlayerKnowsTechnology(person, 0x36) != 0;
+			string pictureName = advanced ? "discovr2.pic" : "discovr1.pic";
 
 			if (picture)
 			{
 				this.owner.Startup.ConcealMouseCursor();
-
-				this.owner.Libc.CopyText(pictureName, "discovr1.pic");
-
-				if (PlayerKnowsTechnology(person, 0x36) != 0)
-				{
-					this.processor.EmitGlobalByte((ushort)(pictureName + 7), 0x32);
-					advanced = true;
-				}
 
 				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, pictureName, 0);
 
@@ -1426,7 +1416,7 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>The discovery message on the picture and the icon of the first prerequisite (iconpgN.pic, N = first / 9)</summary>
-		private void ShowDiscoveryPicture(ushort pictureName, short first, bool advanced)
+		private void ShowDiscoveryPicture(string pictureName, short first, bool advanced)
 		{
 			if (!advanced)
 				DrawingBox.TypefaceIdx = 0x6;
@@ -1451,9 +1441,9 @@ namespace Civilization1Remaster.Game
 
 			if (VgaMode != 0)
 			{
-				this.owner.Libc.CopyText((ushort)(pictureName + 8), ".pal");
+				string palName = advanced ? "discovr2.pal" : "discovr1.pal";
 
-				this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, pictureName, 0xc1d6);
+				this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, palName, 0xc1d6);
 
 				this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, 0x2311, 0xc5be);
 

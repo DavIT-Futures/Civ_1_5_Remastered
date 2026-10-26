@@ -559,6 +559,8 @@ bez wyjątku (czyta 0), `DifferentialPair` po wyjątku w scenariuszu przywraca S
 
 **B6.8, porcja 4 (2026-10-26):** bufory i ramki stosu przeniesione do C# w `TextBlockRenderer.ReflowText` (bufor `rest` na 516 bajtów zastąpiony ciągiem C# z `PullText`), `NewCityScreen.PullTextInput` (bufor `kept` w klawiszu Insert zastąpiony ciągiem C#), `DialogDrawing.ObtainNavigationKey` (usunięto ramkę `0x2` i pole `obtainNavigationKeyFrame`) oraz `CommonUtilities.ReleaseResource` (usunięto pustą ramkę stosu C). Usunięto 4 ramki stosu (`EnterFrame`/`LeaveFrame`), pozostało 35. 8 z 8 mutacji złapanych (BatchNine, BatchThirtyThree, BatchThirtyNine), Golden Master 16/16 zielony.
 
+**B6.8, porcja 5 (2026-10-26):** bufory i ramki stosu przeniesione do C# w `GameInitAndIntro.LabelLandmasses` (usunięto ramkę 0x26 i pole `labelLandmassesFrame`), `GameLoadAndSave.VerifyDrive` (usunięto ramkę 0x12, `request` zastąpiony `BiosDiskCall`), `ScienceAndAdvisors.UncoverTechnology` / `AnnounceDiscovery` / `ShowDiscoveryPicture` (usunięto ramkę 0x46, `pictureName` jako string C# dla `.pic` i `.pal`), `TurnEvents.HandleEndOfTurnEvents` / `TryRivalWonder` (usunięto ramkę 0xe i pole `handleEndOfTurnEventsFrame`). Usunięto 4 ramki stosu (`EnterFrame`/`LeaveFrame`), pozostało 31. 8 z 8 mutacji złapanych (BatchNine, BatchForty, BatchFortyOne, BatchFortyFour), Golden Master 16/16 zielony.
+
 **Faza 3 – sprzątanie i drugi baseline:** usunięcie przełączników i kodu „classic”, zamrożonej gry
 (`Civilization1Remaster.Original`), kopii Reference, testów Dual; testy różnicowe → testy zachowania z tabel przypadków.
 B6.7 część 2 (zdarzenia hosta zamiast `PumpMessages`, nowy zegar testów) → **drugie nagranie baseline'u** (powinno

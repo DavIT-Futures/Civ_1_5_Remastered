@@ -6,8 +6,7 @@ namespace Civilization1Remaster.Game
 {
 	public class GameInitAndIntro : GameModule
 	{
-		/// <summary>The words of the frame of LabelLandmasses, shared by its helpers (B3: in C#, new for every call)</summary>
-		private FrameWords labelLandmassesFrame = null!;
+
 
 		/// <summary>The words of the frame of ReckonContinentSizes, shared by its helpers (B3: in C#, new for every call)</summary>
 		private FrameWords reckonContinentSizesFrame = null!;
@@ -1069,49 +1068,34 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope("LabelLandmasses()");
 
-			this.processor.EnterFrame(0x26);
-			FrameWords outerFrame = this.labelLandmassesFrame;
-			this.labelLandmassesFrame = new FrameWords(this.processor, 0x26);
-
 			this.owner.Libc.FillBytes(0xdb44, 0, 0x104);
 
-			// The last values of the locals (null: never set), written into the frame at the end
-			(short, short)? neighbour = null, origin = null, land = null, neighbourLand = null;
-			short? lastDirection = null, lastNeighbourContinent = null, lastCost = null, lastContinent = null;
-			short column, row = 0;
+			(short, short)? land = null;
+			(short, short)? neighbourLand = null;
 
-			for (column = 0; column < 0x14; column++)
+			for (short column = 0; column < 0x14; column++)
 			{
-				for (row = 0; row < 0xd; row++)
+				for (short row = 0; row < 0xd; row++)
 				{
 					short horizLoc = (short)((column << 2) + 1), vertLoc = (short)((row << 2) + 1);
 
-					origin = (horizLoc, vertLoc);
-
 					short continent = FindBlockLand(horizLoc, vertLoc, ref land);
-					lastContinent = continent;
 
 					if (continent == -1)
 						continue;
 
 					for (short direction = 1; direction <= 4; direction++)
 					{
-						lastDirection = direction;
-
 						short nextHoriz = (short)((DirectionHoriz(direction) << 2) + horizLoc);
 						short nextVert = (short)((DirectionVert(direction) << 2) + vertLoc);
 
-						neighbour = (nextHoriz, nextVert);
-
 						short nextContinent = FindBlockLand(nextHoriz, nextVert, ref neighbourLand);
-						lastNeighbourContinent = nextContinent;
 
 						if (continent != nextContinent)
 							continue;
 
 						short cost = (short)this.owner.Routing.ComputeRouteCost(land!.Value.Item1, land.Value.Item2,
 							neighbourLand!.Value.Item1, neighbourLand.Value.Item2, 0, 20);
-						lastCost = cost;
 
 						if (cost == -1 || cost >= 0x14)
 							continue;
@@ -1121,60 +1105,14 @@ namespace Civilization1Remaster.Game
 						short nextColumn = (short)(DirectionHoriz(direction) + column);
 						short nextRow = (short)(DirectionVert(direction) + row);
 
-						neighbour = (nextColumn, nextRow);
-
 						if (nextColumn < 0 || nextColumn >= 0x14 || nextRow < 0 || nextRow >= 0xd)
 							continue;
 
 						LinkLandmassBlock(nextColumn, nextRow, (direction + 3) & 7);
 					}
-
-					lastDirection = 5;
 				}
 			}
 
-			if (neighbour is (short nextHorizLoc, short nextVertLoc))
-			{
-				this.labelLandmassesFrame.SetFrame(0x2, (ushort)nextHorizLoc);
-				this.labelLandmassesFrame.SetFrame(0x4, (ushort)nextVertLoc);
-			}
-
-			if (origin is (short originHoriz, short originVert))
-			{
-				this.labelLandmassesFrame.SetFrame(0x8, (ushort)originHoriz);
-				this.labelLandmassesFrame.SetFrame(0xc, (ushort)originVert);
-			}
-
-			if (lastDirection is short directionLeft)
-				this.labelLandmassesFrame.SetFrame(0xa, (ushort)directionLeft);
-
-			if (lastNeighbourContinent is short neighbourContinent)
-				this.labelLandmassesFrame.SetFrame(0xe, (ushort)neighbourContinent);
-
-			if (lastCost is short costLeft)
-				this.labelLandmassesFrame.SetFrame(0x10, (ushort)costLeft);
-
-			this.labelLandmassesFrame.SetFrame(0x14, (ushort)column);
-
-			if (neighbourLand is (short neighbourHoriz, short neighbourVert))
-			{
-				this.labelLandmassesFrame.SetFrame(0x16, (ushort)neighbourHoriz);
-				this.labelLandmassesFrame.SetFrame(0x1c, (ushort)neighbourVert);
-			}
-
-			if (lastContinent is short continentLeft)
-				this.labelLandmassesFrame.SetFrame(0x18, (ushort)continentLeft);
-
-			this.labelLandmassesFrame.SetFrame(0x1a, (ushort)row);
-
-			if (land is (short landHoriz, short landVert))
-			{
-				this.labelLandmassesFrame.SetFrame(0x20, (ushort)landHoriz);
-				this.labelLandmassesFrame.SetFrame(0x24, (ushort)landVert);
-			}
-
-			this.labelLandmassesFrame = outerFrame;
-			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("LabelLandmasses");
 		}
