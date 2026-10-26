@@ -866,10 +866,8 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope("CharacterizeStartLocation()");
 
-			this.processor.EnterFrame(0x5e);
 			this.processor.PreserveIndexRegisters();
 
-			ushort frame = this.processor.RegFrame.Value16;
 			short[] points = new short[8];
 
 			ushort participantIdx;
@@ -881,8 +879,6 @@ namespace Civilization1Remaster.UI
 
 				if (this.Troops.PullAt(troop, UnitMemory.Kind) == 0xff)
 					continue;
-
-				this.processor.RegDest.Value16 = (ushort)((participantIdx << 1) + frame - 0x5a);
 
 				this.owner.MapOps.ObtainContinentID((sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert));
 			}
@@ -928,8 +924,6 @@ namespace Civilization1Remaster.UI
 
 				this.owner.Words.Set("Skills: ");
 
-				this.processor.RegDest.Value16 = (ushort)((participantIdx << 1) + frame - 0x1c);
-
 				if ((short)(best - points[participantIdx]) > 3)
 				{
 					points[participantIdx] += 3;
@@ -966,7 +960,6 @@ namespace Civilization1Remaster.UI
 			this.processor.RegAcc.Value16 = (ushort)chosen;
 
 			this.processor.RestoreIndexRegisters();
-			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("CharacterizeStartLocation");
 

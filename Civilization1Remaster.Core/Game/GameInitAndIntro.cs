@@ -9,7 +9,6 @@ namespace Civilization1Remaster.Game
 
 
 		/// <summary>The words of the frame of ReckonContinentSizes, shared by its helpers (B3: in C#, new for every call)</summary>
-		private FrameWords reckonContinentSizesFrame = null!;
 
 		public GameInitAndIntro(GameEngine owner)
 			: base(owner)
@@ -1158,29 +1157,16 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"ReckonContinentSizes({marker})");
 
-			// The final values of the locals stay in the stack frame, like in the original
-			this.processor.EnterFrame(0x18);
-			FrameWords outerFrame = this.reckonContinentSizesFrame;
-			this.reckonContinentSizesFrame = new FrameWords(this.processor, 0x18);
-
 			this.owner.Libc.FillBytes(0x7f38, 0, 0x104);
 
-			short column;
+			short lastNextSea = 0;
 
-			for (column = 0; column < 0x14; column++)
+			for (short column = 0; column < 0x14; column++)
 			{
-				this.reckonContinentSizesFrame.SetFrame(0x14, (ushort)column);
-
-				short row;
-
-				for (row = 0; row < 0xc; row++)
+				for (short row = 0; row < 0xc; row++)
 				{
-					this.reckonContinentSizesFrame.SetFrame(0x18, (ushort)row);
-
-					LinkSeaBlock(column, row);
+					LinkSeaBlock(column, row, ref lastNextSea);
 				}
-
-				this.reckonContinentSizesFrame.SetFrame(0x18, (ushort)row);
 
 				if (marker != 0)
 				{
@@ -1188,60 +1174,40 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			this.reckonContinentSizesFrame.SetFrame(0x14, (ushort)column);
-
 			for (ushort row = 0; row < 0xc; row++)
 			{
 				this.processor.EmitGlobalByte((ushort)(row + 0x7f38), (byte)(this.processor.PullGlobalByte((ushort)(row + 0x7f38)) | 0xe0));
 				this.processor.EmitGlobalByte((ushort)(row + 0x802f), (byte)(this.processor.PullGlobalByte((ushort)(row + 0x802f)) | 0xe));
 			}
 
-			this.reckonContinentSizesFrame.SetFrame(0x18, 0xc);
-
 			this.processor.EmitGlobalByte(0x7f38, (byte)(this.processor.PullGlobalByte(0x7f38) & 0x7f));
 			this.processor.EmitGlobalByte(0x7f43, (byte)(this.processor.PullGlobalByte(0x7f43) & 0xdf));
 			this.processor.EmitGlobalByte(0x802f, (byte)(this.processor.PullGlobalByte(0x802f) & 0xfd));
 			this.processor.EmitGlobalByte(0x803a, (byte)(this.processor.PullGlobalByte(0x803a) & 0xf7));
 
-			this.reckonContinentSizesFrame = outerFrame;
-			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("ReckonContinentSizes");
 		}
 
-		/// <summary>The sea links of one block (see ReckonContinentSizes); the locals of the frame are written as in the original</summary>
-		private void LinkSeaBlock(short column, short row)
+		/// <summary>The sea links of one block (see ReckonContinentSizes)</summary>
+		private void LinkSeaBlock(short column, short row, ref short lastNextSea)
 		{
 			short horizLoc = (short)((column << 2) + 1), vertLoc = (short)((row << 2) + 1);
 
-			this.reckonContinentSizesFrame.SetFrame(0x8, (ushort)horizLoc);
-			this.reckonContinentSizesFrame.SetFrame(0xc, (ushort)vertLoc);
-			this.reckonContinentSizesFrame.SetFrame(0x16, 0xffff);
-
-			if (FindBlockSea(horizLoc, vertLoc) is ushort sea)
-				this.reckonContinentSizesFrame.SetFrame(0x16, sea);
-
-			if (this.reckonContinentSizesFrame.Frame(0x16) == 0xffff)
+			if (FindBlockSea(horizLoc, vertLoc) is not ushort sea)
 				return;
 
-			short direction;
-
-			for (direction = 1; direction <= 8; direction++)
+			for (short direction = 1; direction <= 8; direction++)
 			{
-				this.reckonContinentSizesFrame.SetFrame(0xa, (ushort)direction);
-
 				ushort offset = (ushort)(direction << 1);
 				short nextHoriz = (short)((DirectionHorizAt(offset) << 2) + horizLoc);
 				short nextVert = (short)((DirectionVertAt(offset) << 2) + vertLoc);
 
-				this.reckonContinentSizesFrame.SetFrame(0x2, (ushort)nextHoriz);
-				this.reckonContinentSizesFrame.SetFrame(0x4, (ushort)nextVert);
-
-				// A neighbour without sea leaves 0xe as it was
+				// A neighbour without sea leaves lastNextSea as it was
 				if (FindBlockSea(nextHoriz, nextVert) is ushort nextSea)
-					this.reckonContinentSizesFrame.SetFrame(0xe, nextSea);
+					lastNextSea = (short)nextSea;
 
-				if (this.reckonContinentSizesFrame.Frame(0x16) != this.reckonContinentSizesFrame.Frame(0xe))
+				if ((short)sea != lastNextSea)
 					continue;
 
 				if (!SeaPassageOpen(horizLoc, vertLoc, offset) && (row != 0xb || direction != 3))
@@ -1256,16 +1222,11 @@ namespace Civilization1Remaster.Game
 
 				short nextColumn = (short)(DirectionHorizAt(offset) + column);
 
-				this.reckonContinentSizesFrame.SetFrame(0x2, (ushort)nextColumn);
-				this.reckonContinentSizesFrame.SetFrame(0x4, (ushort)nextRow);
-
 				if (nextColumn < 0 || nextColumn >= 0x14 || nextRow < 0 || nextRow > 0xc)
 					continue;
 
 				LinkSeaBlockBit(nextColumn, nextRow, (direction + 3) & 7);
 			}
-
-			this.reckonContinentSizesFrame.SetFrame(0xa, (ushort)direction);
 		}
 
 		/// <summary>
@@ -1290,26 +1251,14 @@ namespace Civilization1Remaster.Game
 
 		/// <summary>
 		/// Whether a ship can pass from the block's corner 5 tiles in the direction: at each step at least 2 of the 4 tiles
-		/// (x, y), (x + 1, y), (x, y + 1), (x + 1, y + 1) are ocean inside the map (the locals 0x2 - 0x6, 0x10, 0x12 as in the
-		/// original)
+		/// (x, y), (x + 1, y), (x, y + 1), (x + 1, y + 1) are ocean inside the map
 		/// </summary>
 		private bool SeaPassageOpen(short horizLoc, short vertLoc, ushort offset)
 		{
-			bool open = true;
-			short step;
-
-			this.reckonContinentSizesFrame.SetFrame(0x2, (ushort)horizLoc);
-			this.reckonContinentSizesFrame.SetFrame(0x4, (ushort)vertLoc);
-
-			for (step = 0; step <= 4; step++)
+			for (short step = 0; step <= 4; step++)
 			{
-				this.reckonContinentSizesFrame.SetFrame(0x12, (ushort)step);
-
 				horizLoc = (short)(horizLoc + DirectionHorizAt(offset));
 				vertLoc = (short)(vertLoc + DirectionVertAt(offset));
-
-				this.reckonContinentSizesFrame.SetFrame(0x2, (ushort)horizLoc);
-				this.reckonContinentSizesFrame.SetFrame(0x4, (ushort)vertLoc);
 
 				short ocean = 4;
 
@@ -1320,21 +1269,13 @@ namespace Civilization1Remaster.Game
 						ocean--;
 				}
 
-				this.reckonContinentSizesFrame.SetFrame(0x6, (ushort)ocean);
-
 				if (ocean < 2)
 				{
-					open = false;
-					break;
+					return false;
 				}
 			}
 
-			if (open)
-				this.reckonContinentSizesFrame.SetFrame(0x12, (ushort)step);
-
-			this.reckonContinentSizesFrame.SetFrame(0x10, open ? (ushort)1 : (ushort)0);
-
-			return open;
+			return true;
 		}
 
 		/// <summary>Sets bit bitIdx of the block's sea links (0x7f38 + 13 * column + row)</summary>
