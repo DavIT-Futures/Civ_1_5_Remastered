@@ -1144,7 +1144,7 @@ namespace Civilization1Remaster.Game
 			this.owner.Libc.CopyText(CodeText4, (ushort)(key + 1));
 			this.owner.BlockText.ReflowText();
 			this.owner.BlockText.ArrangeTextRow(0x32);
-			this.processor.EmitGlobalWord(0xdb38, 1);
+			DialogNeedsRedraw = 1;
 			this.owner.Dialogs.DisplayMenu(TextBuffer.Address, horizLoc, 160, 1);
 		}
 
@@ -1413,7 +1413,7 @@ namespace Civilization1Remaster.Game
 			if (!advanced)
 				DrawingBox.TypefaceIdx = 0x6;
 
-			this.processor.EmitGlobalWord(0xdb38, 0x1);
+			DialogNeedsRedraw = 1;
 
 			this.owner.Dialogs.DisplayMenu(TextBuffer.Address, 96, advanced ? (short)25 : (short)1, 1);
 
@@ -1498,7 +1498,7 @@ namespace Civilization1Remaster.Game
 				this.processor.EmitGlobalByte((ushort)(length + TextBuffer.Address), 0);
 
 			DrawingBox.TypefaceIdx = 0x2;
-			this.processor.EmitGlobalWord(0xdb38, 0x1);
+			DialogNeedsRedraw = 1;
 
 			this.owner.Dialogs.DisplayMenu(TextBuffer.Address, 8, (short)-((allowed << 3) - 0xa8), 1);
 

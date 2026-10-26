@@ -1334,6 +1334,160 @@ namespace Civilization1Remaster
 			set => this.owner.Globals.LiveRealmCount.Value = value;
 		}
 
+		/// <summary>0xdb38: whether a dialog or menu background needs to be redrawn (1 = needs redraw)</summary>
+		protected ushort DialogNeedsRedraw
+		{
+			get => this.owner.Globals.DialogNeedsRedraw.Value;
+			set => this.owner.Globals.DialogNeedsRedraw.Value = value;
+		}
+
+		/// <summary>0x8066: whether the 'More' box on the menu is displayed</summary>
+		protected ushort MenuMoreBox
+		{
+			get => this.owner.Globals.MenuMoreBox.Value;
+			set => this.owner.Globals.MenuMoreBox.Value = value;
+		}
+
+		/// <summary>0x654e: the base of the table of line offsets in a menu</summary>
+		protected ushort MenuLineOffsets
+		{
+			get => this.owner.Globals.MenuLineOffsets.Value;
+			set => this.owner.Globals.MenuLineOffsets.Value = value;
+		}
+
+		/// <summary>0x5116: vertical shift for wonders/score icons</summary>
+		protected short ScoreVerticalShift
+		{
+			get => (short)this.owner.Globals.ScoreVerticalShift.Value;
+			set => this.owner.Globals.ScoreVerticalShift.Value = (ushort)value;
+		}
+
+		/// <summary>0xdc6a: schism share parameter / peace turns in Hall of Fame</summary>
+		protected ushort SchismShareDc6a
+		{
+			get => this.owner.Globals.SchismShareDc6a.Value;
+			set => this.owner.Globals.SchismShareDc6a.Value = value;
+		}
+
+		/// <summary>0x6b8c: whether text coordinate is doubled (e.g. 640-pixel screen modes)</summary>
+		protected ushort DoubleWidthText
+		{
+			get => this.owner.Globals.DoubleWidthText.Value;
+			set => this.owner.Globals.DoubleWidthText.Value = value;
+		}
+
+		/// <summary>0xdf0c: picture handle of the cheering crowd in the newspaper</summary>
+		protected ushort NewspaperCrowdPicture
+		{
+			get => this.owner.Globals.NewspaperCrowdPicture.Value;
+			set => this.owner.Globals.NewspaperCrowdPicture.Value = value;
+		}
+
+		/// <summary>0xd2dc: initial prompt flag in audience with foreign king</summary>
+		protected ushort AudienceInitialPrompt
+		{
+			get => this.owner.Globals.AudienceInitialPrompt.Value;
+			set => this.owner.Globals.AudienceInitialPrompt.Value = value;
+		}
+
+		/// <summary>0xdeb6: unit support count</summary>
+		protected ushort UnitSupportCount
+		{
+			get => this.owner.Globals.UnitSupportCount.Value;
+			set => this.owner.Globals.UnitSupportCount.Value = value;
+		}
+
+		/// <summary>0x6820: loop counter of player index during game import</summary>
+		protected ushort ImportPlayerIndex
+		{
+			get => this.owner.Globals.ImportPlayerIndex.Value;
+			set => this.owner.Globals.ImportPlayerIndex.Value = value;
+		}
+
+		/// <summary>0xd4da: picture handle of the tile fortress</summary>
+		protected ushort TileFortressPicture
+		{
+			get => this.owner.Globals.TileFortressPicture.Value;
+			set => this.owner.Globals.TileFortressPicture.Value = value;
+		}
+
+		/// <summary>0xb880: picture handle of the mini peace symbol on the map</summary>
+		protected ushort MiniSymbolPicture
+		{
+			get => this.owner.Globals.MiniSymbolPicture.Value;
+			set => this.owner.Globals.MiniSymbolPicture.Value = value;
+		}
+
+		/// <summary>0x6e9e: picture handle of the unhappy citizen</summary>
+		protected ushort UnhappyCitizenPicture
+		{
+			get => this.owner.Globals.UnhappyCitizenPicture.Value;
+			set => this.owner.Globals.UnhappyCitizenPicture.Value = value;
+		}
+
+		/// <summary>0xb2ba: picture handle of the pollution skull icon</summary>
+		protected ushort PollutionIconPicture
+		{
+			get => this.owner.Globals.PollutionIconPicture.Value;
+			set => this.owner.Globals.PollutionIconPicture.Value = value;
+		}
+
+		/// <summary>0x6834: picture handle of the spaceship habitat module</summary>
+		protected ushort SpaceshipHabitatPicture
+		{
+			get => this.owner.Globals.SpaceshipHabitatPicture.Value;
+			set => this.owner.Globals.SpaceshipHabitatPicture.Value = value;
+		}
+
+		/// <summary>0x32d6: picture handle of the reserved intro screen</summary>
+		protected ushort IntroReservedScreen
+		{
+			get => this.owner.Globals.IntroReservedScreen.Value;
+			set => this.owner.Globals.IntroReservedScreen.Value = value;
+		}
+
+		/// <summary>0x4b2c: width of the palace left wing</summary>
+		protected ushort PalaceLeftWingWidth
+		{
+			get => this.owner.Globals.PalaceLeftWingWidth.Value;
+			set => this.owner.Globals.PalaceLeftWingWidth.Value = value;
+		}
+
+		/// <summary>0x4b34: width of the palace right wing</summary>
+		protected ushort PalaceRightWingWidth
+		{
+			get => this.owner.Globals.PalaceRightWingWidth.Value;
+			set => this.owner.Globals.PalaceRightWingWidth.Value = value;
+		}
+
+		/// <summary>0xd922: palace style horizontal shift</summary>
+		protected ushort PalaceStyleShift
+		{
+			get => this.owner.Globals.PalaceStyleShift.Value;
+			set => this.owner.Globals.PalaceStyleShift.Value = value;
+		}
+
+		/// <summary>0xd932: palace garden background index</summary>
+		protected ushort PalaceGardenBackground
+		{
+			get => this.owner.Globals.PalaceGardenBackground.Value;
+			set => this.owner.Globals.PalaceGardenBackground.Value = value;
+		}
+
+		/// <summary>0x33a8: saved government title for communism</summary>
+		protected ushort SavedGovernmentTitleCommunism
+		{
+			get => this.owner.Globals.SavedGovernmentTitleCommunism.Value;
+			set => this.owner.Globals.SavedGovernmentTitleCommunism.Value = value;
+		}
+
+		/// <summary>0x33aa: saved government title for monarchy</summary>
+		protected ushort SavedGovernmentTitleMonarchy
+		{
+			get => this.owner.Globals.SavedGovernmentTitleMonarchy.Value;
+			set => this.owner.Globals.SavedGovernmentTitleMonarchy.Value = value;
+		}
+
 		#endregion
 
 		#region Tables of CIV.EXE in the data segment, read where the original reads them

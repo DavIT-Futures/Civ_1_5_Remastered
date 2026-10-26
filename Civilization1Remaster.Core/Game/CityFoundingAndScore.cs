@@ -830,7 +830,7 @@ namespace Civilization1Remaster.Game
 						wonderColX += 0x98;
 						if (wonderColX > 0x12c)
 						{
-							wondersY += (ushort)this.owner.Helpers.VerifyValueSpan(this.processor.PullGlobalSignedWord(0x5116) + 2, 8, 99);
+							wondersY += (ushort)this.owner.Helpers.VerifyValueSpan(ScoreVerticalShift + 2, 8, 99);
 							wonderColX = 0x10;
 						}
 
@@ -997,7 +997,7 @@ namespace Civilization1Remaster.Game
 
 			if (iconLeft > 0x124)
 			{
-				short iconTop = (short)(ScoreIconVert + this.processor.PullGlobalWord(0x5116));
+				short iconTop = (short)(ScoreIconVert + (ushort)ScoreVerticalShift);
 				ScoreIconVert = (ushort)iconTop;
 				ScoreIconHoriz = (ushort)(((iconTop >> 1) & 0x4) + 0x10);
 			}

@@ -25,7 +25,7 @@ namespace Civilization1Remaster.Engine
 		{
 			DrawingBox.ForeHues = style;
 
-			if (this.processor.PullGlobalWord(0x6b8c) != 0x0)
+			if (DoubleWidthText != 0)
 			{
 				horizLoc <<= 1;
 			}

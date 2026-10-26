@@ -249,7 +249,7 @@ namespace Civilization1Remaster.UI
 				this.owner.Libc.MoveFarData(this.processor.SegData.Value16, CivilizationPlural(humanIdx),
 					0x3772, (ushort)(record + 0x1e), 0x10);
 				this.processor.EmitUInt16(0x3772, (ushort)(record + 2), (ushort)this.owner.World.HardnessTier);
-				this.processor.EmitUInt16(0x3772, (ushort)(record + 4), this.processor.PullGlobalWord(0xdc6a));
+				this.processor.EmitUInt16(0x3772, (ushort)(record + 4), SchismShareDc6a);
 				this.processor.EmitUInt16(0x3772, (ushort)(record + 8), WonderScore);
 				this.processor.EmitUInt16(0x3772, (ushort)(record + 0xa), CitizenScore);
 				this.processor.EmitInt16(0x3772, (ushort)(record + 6), this.owner.World.Season);

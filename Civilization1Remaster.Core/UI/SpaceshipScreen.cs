@@ -151,7 +151,7 @@ namespace Civilization1Remaster.UI
 
 			if ((short)mass >= 0x50 && shown)
 			{
-				this.owner.Services.RenderPictureToScreen(ScreenBox, 152, 88, this.processor.PullGlobalWord(0x6834));
+				this.owner.Services.RenderPictureToScreen(ScreenBox, 152, 88, SpaceshipHabitatPicture);
 			}
 
 			if (shown)

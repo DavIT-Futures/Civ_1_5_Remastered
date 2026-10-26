@@ -135,8 +135,8 @@ namespace Civilization1Remaster.UI
 		{
 			if (Leader(participantIdx).ChiefVisuals == 14)
 			{
-				this.owner.Libc.CopyText(GovernmentTitleAt(2), this.processor.PullGlobalWord(0x33aa));
-				this.owner.Libc.CopyText(GovernmentTitleAt(4), this.processor.PullGlobalWord(0x33a8));
+				this.owner.Libc.CopyText(GovernmentTitleAt(2), SavedGovernmentTitleMonarchy);
+				this.owner.Libc.CopyText(GovernmentTitleAt(4), SavedGovernmentTitleCommunism);
 			}
 		}
 
@@ -1086,7 +1086,7 @@ namespace Civilization1Remaster.UI
 			SavedScreenStyle = typeface == 0xa ? (ushort)3 : typeface;
 
 			DrawingBox.TypefaceIdx = SavedScreenStyle;
-			this.processor.EmitGlobalWord(0xd2dc, 1);
+			AudienceInitialPrompt = 1;
 			KingMood = 1;
 			AdvisorPoseShown = 0xffff;
 			KingPose = 0;

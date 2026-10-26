@@ -398,7 +398,7 @@ namespace Civilization1Remaster.Engine
 				this.owner.WorldSetup.ReckonContinentSizes(0);
 
 				DrawingBox.DisplayIdx = 0x0;
-				this.processor.EmitGlobalWord(0x6820, 0x8);
+				ImportPlayerIndex = 8;
 
 				// The original game had 4 manual saves and saved slots 4 - 9 automatically, at the start of a turn.
 				// Autosaves now have their own files, all manual saves continue in the middle of the turn.
@@ -511,7 +511,7 @@ namespace Civilization1Remaster.Engine
 
 			ushort personSlot = (ushort)(this.owner.World.PersonParticipantIdx << 1);
 
-			this.processor.EmitGlobalWord(0xdb38, 0x1);
+			DialogNeedsRedraw = 1;
 
 			Message(" ")
 				.Text(docnameAddr)

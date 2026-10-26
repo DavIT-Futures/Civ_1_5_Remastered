@@ -460,7 +460,7 @@ namespace Civilization1Remaster.Game
 						ScreenBox,
 						(short)(screenX + 4),
 						(short)(screenY + 4),
-						this.processor.PullGlobalWord(0xb880));
+						MiniSymbolPicture);
 				}
 			}
 			else
@@ -485,7 +485,7 @@ namespace Civilization1Remaster.Game
 					this.owner.Services.RenderPictureToScreen(
 						ScreenBox,
 						screenX, screenY,
-						this.processor.PullGlobalWord(0xd4da));
+						TileFortressPicture);
 				}
 				else
 				{
@@ -636,7 +636,7 @@ namespace Civilization1Remaster.Game
 				this.owner.Services.RenderPictureToScreen(
 					ScreenBox,
 					screenX + 5, innerY,
-					this.processor.PullGlobalWord(0x6e9e));
+					UnhappyCitizenPicture);
 			}
 			else
 			{

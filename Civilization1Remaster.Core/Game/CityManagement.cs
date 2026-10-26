@@ -2464,7 +2464,7 @@ namespace Civilization1Remaster.Game
 			this.processor.RegAcc.Value16 = 0;
 			this.round.UnitsDrawn = 0;
 			CitySpecialSlots = 0;
-			this.processor.EmitGlobalWord(0xdeb6, 0);
+			UnitSupportCount = 0;
 			CityUnitUpkeep = 0;
 
 			CountSpecialSlots(townIdx);
@@ -3277,7 +3277,7 @@ namespace Civilization1Remaster.Game
 				this.owner.Services.RenderPictureToScreen(ScreenBox,
 					((short)this.round.Index * (short)this.round.DrawVert) + 98,
 					(this.round.Index & 1) + 161,
-					this.processor.PullGlobalWord(0xb2ba));
+					PollutionIconPicture);
 			}
 
 			this.round.Index = icon;

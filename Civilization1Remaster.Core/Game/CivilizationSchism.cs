@@ -1,4 +1,4 @@
-using Civilization1Remaster.Emulation;
+﻿using Civilization1Remaster.Emulation;
 using Civilization1Remaster.Game.Rules;
 using Civilization1Remaster.Game.State;
 
@@ -318,7 +318,7 @@ namespace Civilization1Remaster.Game
 			given = 0;
 			ushort farthestIdx = 0;
 
-			while (CPU.SignedQuotient((short)(9 * given), (short)(this.processor.PullGlobalWord(0xdc6a) + 3)) < this.owner.World.Participants[participantIdx].GrandTownExtent)
+			while (CPU.SignedQuotient((short)(9 * given), (short)(SchismShareDc6a + 3)) < this.owner.World.Participants[participantIdx].GrandTownExtent)
 			{
 				short farthest = 1;
 

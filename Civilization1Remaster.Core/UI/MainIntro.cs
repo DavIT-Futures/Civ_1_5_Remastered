@@ -102,7 +102,7 @@ namespace Civilization1Remaster.UI
 				if ((short)this.introColumn >= screenCount)
 					break;
 
-				this.processor.EmitGlobalWord(0x32d6, this.owner.VideoCard.ReserveScreen(this.introColumn));
+				IntroReservedScreen = this.owner.VideoCard.ReserveScreen(this.introColumn);
 
 				if (this.processor.RegAcc.Value16 == 0)
 					ScreenReserveFailed = 1;
@@ -1125,7 +1125,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Words.Append("\n");
 
-			this.processor.EmitGlobalWord(0xdb38, 0x1);
+			DialogNeedsRedraw = 1;
 
 			this.owner.Dialogs.DisplayMenu(TextBuffer.Address, horizSpot2, vertSpot2, 1);
 

@@ -77,7 +77,7 @@ namespace Civilization1Remaster.UI
 				for (short personIdx = 0; personIdx < 0x10; personIdx++)
 				{
 					this.owner.Services.RenderPictureToScreenAlternate(ScreenBox, 20 * personIdx,
-						100 - this.owner.Libc.Dice.DrawInt(2), this.processor.PullGlobalWord(0xdf0c));
+						100 - this.owner.Libc.Dice.DrawInt(2), NewspaperCrowdPicture);
 				}
 			}
 

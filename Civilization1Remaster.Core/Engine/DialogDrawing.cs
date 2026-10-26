@@ -94,9 +94,9 @@ namespace Civilization1Remaster.Engine
 
 			this.owner.Startup.DisplayMouseCursor();
 
-			if (this.processor.PullGlobalWord(0xdb38) != 0)
+			if (DialogNeedsRedraw != 0)
 			{
-				this.processor.EmitGlobalWord(0xdb38, 0);
+				DialogNeedsRedraw = 0;
 				this.processor.RegAcc.Value16 = 0xffff;
 			}
 			else
@@ -222,7 +222,7 @@ namespace Civilization1Remaster.Engine
 
 					if ((short)currentChoice < 0 ||
 						(short)currentChoice >= (short)MenuChoiceCount ||
-						this.processor.PullGlobalWord(0x8066) != 0 ||
+						MenuMoreBox != 0 ||
 						MenuAnyKey != 0)
 					{
 						currentChoice = 0xffff;
@@ -321,7 +321,7 @@ namespace Civilization1Remaster.Engine
 			this.processor.EnterFrame(0x5c);
 			this.processor.PreserveIndexRegisters();
 
-			this.processor.EmitGlobalWord(0x654e, 0);
+			MenuLineOffsets = 0;
 
 			if (MenuMeasuring == 1)
 			{
@@ -515,7 +515,7 @@ namespace Civilization1Remaster.Engine
 				DrawingBox.TypefaceIdx = savedFont;
 			}
 
-			if (this.processor.PullGlobalWord(0x8066) != 0)
+			if (MenuMoreBox != 0)
 			{
 				this.owner.TextPainter.RenderText(0x2fce,
 					(ushort)(MenuRightEdge - 0x11),

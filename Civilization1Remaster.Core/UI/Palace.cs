@@ -59,7 +59,7 @@ namespace Civilization1Remaster.UI
 				BackScreenBox,
 				0, 0);
 
-			this.processor.EmitGlobalWord(0xdb38, 0x1);
+			DialogNeedsRedraw = 1;
 			this.owner.Dialogs.DisplayMenu(0x4af0, 40, 16, 1);
 
 			ushort hasOptions = 0;
@@ -423,7 +423,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, marker != 0 ? (ushort)0x4b81 : (ushort)0x4b89, 0);
 
-			if ((short)this.processor.PullGlobalWord(0xd932) > 0)
+			if ((short)PalaceGardenBackground > 0)
 			{
 				string gardenPicture = $"cbacks{(char)(this.processor.PullGlobalByte(0xd932) + '0')}.pic";
 				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0x87, gardenPicture, 0);
@@ -431,7 +431,7 @@ namespace Civilization1Remaster.UI
 
 			ushort horizLoc = 0x10;
 
-			if (this.processor.PullGlobalWord(0xd922) == 0xffff)
+			if (PalaceStyleShift == 0xffff)
 				horizLoc -= 0x18;
 
 			if (PalaceLayout == 1)
@@ -514,7 +514,7 @@ namespace Civilization1Remaster.UI
 
 						RenderPalacePart(part, section, (ushort)(horizLoc - 2), vertLoc, 0);
 
-						horizLoc += this.processor.PullGlobalWord(0x4b2c);
+						horizLoc += PalaceLeftWingWidth;
 
 						if (PalaceLayout == 1)
 							horizLoc--;
@@ -540,7 +540,7 @@ namespace Civilization1Remaster.UI
 							RenderPalacePart(part, section, (ushort)(horizLoc - (PalaceStyle(section) == 1 ? 3 : 2)), vertLoc, 1);
 						}
 
-						horizLoc += this.processor.PullGlobalWord(0x4b34);
+						horizLoc += PalaceRightWingWidth;
 						break;
 				}
 			}

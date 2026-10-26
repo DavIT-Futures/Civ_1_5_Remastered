@@ -469,7 +469,7 @@ namespace Civilization1Remaster.UI
 				}
 				else
 				{
-					this.processor.EmitGlobalWord(0xdb38, 0x1);
+					DialogNeedsRedraw = 1;
 
 					this.owner.Dialogs.DisplayMenu(savedText, 80, 8, 1);
 				}

@@ -219,6 +219,28 @@ namespace Civilization1Remaster.Engine
 		public readonly GlobalWord LateGameNudge = new GlobalWord(0x8078);
 		public readonly GlobalWord PalaceLayout = new GlobalWord(0xb22a);
 		public readonly GlobalWord LiveRealmCount = new GlobalWord(0xde20);
+		public readonly GlobalWord DialogNeedsRedraw = new GlobalWord(0xdb38);
+		public readonly GlobalWord MenuMoreBox = new GlobalWord(0x8066);
+		public readonly GlobalWord MenuLineOffsets = new GlobalWord(0x654e);
+		public readonly GlobalWord ScoreVerticalShift = new GlobalWord(0x5116);
+		public readonly GlobalWord SchismShareDc6a = new GlobalWord(0xdc6a);
+		public readonly GlobalWord DoubleWidthText = new GlobalWord(0x6b8c);
+		public readonly GlobalWord NewspaperCrowdPicture = new GlobalWord(0xdf0c);
+		public readonly GlobalWord AudienceInitialPrompt = new GlobalWord(0xd2dc);
+		public readonly GlobalWord UnitSupportCount = new GlobalWord(0xdeb6);
+		public readonly GlobalWord ImportPlayerIndex = new GlobalWord(0x6820);
+		public readonly GlobalWord TileFortressPicture = new GlobalWord(0xd4da);
+		public readonly GlobalWord MiniSymbolPicture = new GlobalWord(0xb880);
+		public readonly GlobalWord UnhappyCitizenPicture = new GlobalWord(0x6e9e);
+		public readonly GlobalWord PollutionIconPicture = new GlobalWord(0xb2ba);
+		public readonly GlobalWord SpaceshipHabitatPicture = new GlobalWord(0x6834);
+		public readonly GlobalWord IntroReservedScreen = new GlobalWord(0x32d6);
+		public readonly GlobalWord PalaceLeftWingWidth = new GlobalWord(0x4b2c);
+		public readonly GlobalWord PalaceRightWingWidth = new GlobalWord(0x4b34);
+		public readonly GlobalWord PalaceStyleShift = new GlobalWord(0xd922);
+		public readonly GlobalWord PalaceGardenBackground = new GlobalWord(0xd932);
+		public readonly GlobalWord SavedGovernmentTitleCommunism = new GlobalWord(0x33a8);
+		public readonly GlobalWord SavedGovernmentTitleMonarchy = new GlobalWord(0x33aa);
 
 		/// <summary>The names and addresses of the variables (MovedRanges)</summary>
 		public static readonly (string Name, ushort Address)[] Layout =
@@ -408,9 +430,31 @@ namespace Civilization1Remaster.Engine
 			("LateGameNudge", 0x8078),
 			("PalaceLayout", 0xb22a),
 			("LiveRealmCount", 0xde20),
+			("DialogNeedsRedraw", 0xdb38),
+			("MenuMoreBox", 0x8066),
+			("MenuLineOffsets", 0x654e),
+			("ScoreVerticalShift", 0x5116),
+			("SchismShareDc6a", 0xdc6a),
+			("DoubleWidthText", 0x6b8c),
+			("NewspaperCrowdPicture", 0xdf0c),
+			("AudienceInitialPrompt", 0xd2dc),
+			("UnitSupportCount", 0xdeb6),
+			("ImportPlayerIndex", 0x6820),
+			("TileFortressPicture", 0xd4da),
+			("MiniSymbolPicture", 0xb880),
+			("UnhappyCitizenPicture", 0x6e9e),
+			("PollutionIconPicture", 0xb2ba),
+			("SpaceshipHabitatPicture", 0x6834),
+			("IntroReservedScreen", 0x32d6),
+			("PalaceLeftWingWidth", 0x4b2c),
+			("PalaceRightWingWidth", 0x4b34),
+			("PalaceStyleShift", 0xd922),
+			("PalaceGardenBackground", 0xd932),
+			("SavedGovernmentTitleCommunism", 0x33a8),
+			("SavedGovernmentTitleMonarchy", 0x33aa),
 		];
 
 		/// <summary>All the variables, in the order of Layout</summary>
-		public IEnumerable<GlobalWord> All => [ScreenBox, BackScreenBox, PictureScreenBox, CityTiles, CityOwner, FoundDistance, CityFood, CityShields, CityTrade, CityLuxuries, CityHappy, CityUnhappy, CityScience, HumanTileNear, ContentAdvances, CitySpecialists, CityScreenTab, DialogStyle, GoalHoriz, GoalVert, KingStep, TextCursor, TurnPlayer, DisabledLines, TechnologyLevel, VgaMode, KingSpeaking, FoundPlayer, MapRevealed, GameEndRequest, MousePresent, DefaultLine, MenuHelpTopic, KingAnswer, CityAttackersAway, ReplayMode, ReplayActor, MainMenuChoice, CityCorruption, CityUnitUpkeep, ChosenOrder, MapViewHoriz, MapViewVert, CitySpecialSlots, PointerShowLevel, CityTaxes, CitySettlers, StoryState, SaveDrive, StoryLineTime, MapRedrawRequest, PollutionFactor, CityAgain, WorldMapView, UnitAtTilePlayer, ArrivedSpaceship, StackKind, StackTally, ShownCity, MenuResult, GotoCost, PalaceDistance, ConquestEnd, EmissaryAudience, UnitsHidden, FirstMissingDisk, KingMood, CodeText1, CodeText2, CodeText3, CodeText4, MenuLineHeight, MenuRightEdge, MenuLineCount, PalacePartWidth, KingPicture, StackDomainTally, PopulationMark, LastSaveSlot, MidTurnSave, SpaceshipColonists, EarthGame, Climate, KingPause, ReplayCityDistance, ScoreIconHoriz, ScoreIconVert, BirthPicture, MenuWidth, MenuFirstChoice, MenuChoiceCount, MenuMeasuring, MenuFlashHue, MenuOptions, PalaceFirstPicture, PalaceLeftBushes, StoryCycleRecord, StoryCycleCount, CountLosses, StackLeader, KingPose, AudiencePlayer, AudienceWithoutPictures, ReplayFile, CityLabelCount, HumanContinentAttackers, DiskInUse, HallOfFameScore, PointerPicture, UnitLimitTold, StoryFile, StoryKeyAllowed, LandMass, Temperature, WorldAge, ScreenReserveFailed, ScreenRepaintRequest, CodeText5, EgaMode, SavedScreenStyle, KingPictureLoaded, AdvisorPoseShown, KingScenePicture, KingFacesPicture, SpaceshipPropulsion, SpaceshipFuel, SpaceshipSupport, SpaceshipEnergy, SpaceshipComponentsComplete, SpaceshipModulesComplete, SpaceshipPicture, FileError, SavedHumanPlayer, SavedDifficulty, SavedYear, ReplayAtGameEnd, CivilopediaNextPage, SavedPointerShowLevel, TextCursorColumn, TextCursorWidth, StackDomainMode, StackIndexLimit, RoutePlaceHoriz, RoutePlaceVert, PlayerAtWar, NoConquestAnimation, PalaceRightBushes, WonderScore, CitizenScore, MenuAnyKey, MenuFooter, LoadingGame, LoadFile, CivilopediaWithoutPictures, CityExcessUnhappy, AnarchyPressure, DemocracyPressure, QuietUnitSetup, MapFocusLeft, MapFocusTop, SpriteScreenBox, LightenedPixels, LowMemoryVga, PointerImage, PointerHotHoriz, PointerHotVert, AudienceWelcomed, KingModernPictures, GovernmentPicture, RepaintingMainScreen, CityTileDotted, BoxMotif, MenuMouseUsed, HueCyclingOn, LoadedGameMark, PalaceWingShift, StackLeaderScore, KingScreenKept, StoryMusicTime, StoryLinesTold, RiotShown, PointerIcon, LateGameNudge, PalaceLayout, LiveRealmCount];
+		public IEnumerable<GlobalWord> All => [ScreenBox, BackScreenBox, PictureScreenBox, CityTiles, CityOwner, FoundDistance, CityFood, CityShields, CityTrade, CityLuxuries, CityHappy, CityUnhappy, CityScience, HumanTileNear, ContentAdvances, CitySpecialists, CityScreenTab, DialogStyle, GoalHoriz, GoalVert, KingStep, TextCursor, TurnPlayer, DisabledLines, TechnologyLevel, VgaMode, KingSpeaking, FoundPlayer, MapRevealed, GameEndRequest, MousePresent, DefaultLine, MenuHelpTopic, KingAnswer, CityAttackersAway, ReplayMode, ReplayActor, MainMenuChoice, CityCorruption, CityUnitUpkeep, ChosenOrder, MapViewHoriz, MapViewVert, CitySpecialSlots, PointerShowLevel, CityTaxes, CitySettlers, StoryState, SaveDrive, StoryLineTime, MapRedrawRequest, PollutionFactor, CityAgain, WorldMapView, UnitAtTilePlayer, ArrivedSpaceship, StackKind, StackTally, ShownCity, MenuResult, GotoCost, PalaceDistance, ConquestEnd, EmissaryAudience, UnitsHidden, FirstMissingDisk, KingMood, CodeText1, CodeText2, CodeText3, CodeText4, MenuLineHeight, MenuRightEdge, MenuLineCount, PalacePartWidth, KingPicture, StackDomainTally, PopulationMark, LastSaveSlot, MidTurnSave, SpaceshipColonists, EarthGame, Climate, KingPause, ReplayCityDistance, ScoreIconHoriz, ScoreIconVert, BirthPicture, MenuWidth, MenuFirstChoice, MenuChoiceCount, MenuMeasuring, MenuFlashHue, MenuOptions, PalaceFirstPicture, PalaceLeftBushes, StoryCycleRecord, StoryCycleCount, CountLosses, StackLeader, KingPose, AudiencePlayer, AudienceWithoutPictures, ReplayFile, CityLabelCount, HumanContinentAttackers, DiskInUse, HallOfFameScore, PointerPicture, UnitLimitTold, StoryFile, StoryKeyAllowed, LandMass, Temperature, WorldAge, ScreenReserveFailed, ScreenRepaintRequest, CodeText5, EgaMode, SavedScreenStyle, KingPictureLoaded, AdvisorPoseShown, KingScenePicture, KingFacesPicture, SpaceshipPropulsion, SpaceshipFuel, SpaceshipSupport, SpaceshipEnergy, SpaceshipComponentsComplete, SpaceshipModulesComplete, SpaceshipPicture, FileError, SavedHumanPlayer, SavedDifficulty, SavedYear, ReplayAtGameEnd, CivilopediaNextPage, SavedPointerShowLevel, TextCursorColumn, TextCursorWidth, StackDomainMode, StackIndexLimit, RoutePlaceHoriz, RoutePlaceVert, PlayerAtWar, NoConquestAnimation, PalaceRightBushes, WonderScore, CitizenScore, MenuAnyKey, MenuFooter, LoadingGame, LoadFile, CivilopediaWithoutPictures, CityExcessUnhappy, AnarchyPressure, DemocracyPressure, QuietUnitSetup, MapFocusLeft, MapFocusTop, SpriteScreenBox, LightenedPixels, LowMemoryVga, PointerImage, PointerHotHoriz, PointerHotVert, AudienceWelcomed, KingModernPictures, GovernmentPicture, RepaintingMainScreen, CityTileDotted, BoxMotif, MenuMouseUsed, HueCyclingOn, LoadedGameMark, PalaceWingShift, StackLeaderScore, KingScreenKept, StoryMusicTime, StoryLinesTold, RiotShown, PointerIcon, LateGameNudge, PalaceLayout, LiveRealmCount, DialogNeedsRedraw, MenuMoreBox, MenuLineOffsets, ScoreVerticalShift, SchismShareDc6a, DoubleWidthText, NewspaperCrowdPicture, AudienceInitialPrompt, UnitSupportCount, ImportPlayerIndex, TileFortressPicture, MiniSymbolPicture, UnhappyCitizenPicture, PollutionIconPicture, SpaceshipHabitatPicture, IntroReservedScreen, PalaceLeftWingWidth, PalaceRightWingWidth, PalaceStyleShift, PalaceGardenBackground, SavedGovernmentTitleCommunism, SavedGovernmentTitleMonarchy];
 	}
 }
