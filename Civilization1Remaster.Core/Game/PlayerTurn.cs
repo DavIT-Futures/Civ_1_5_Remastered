@@ -20,185 +20,151 @@ namespace Civilization1Remaster.Game
 		/// The locals of HandlePlayerTurn, shared by the methods it calls as in the original. In the original they were the
 		/// words of the stack frame (BP - offset); the offset of each one is in its comment, the comments of the methods still
 		/// name the locals by these offsets. Every local is a word; byte reads take its low byte, byte writes keep its high byte.
+		/// B3 (2026-10-26): a C# object made for every turn, every value 0 at the start like the zeroed frame of the remaster
+		/// (the "stays on the stack" remarks below tell what the classic code left there for later functions).
 		/// </summary>
 		private sealed class TurnLocals
 		{
-			private readonly CPU? processor;
-			public TurnLocals(CPU? processor = null) { this.processor = processor; }
-
-			/// <summary>The value, and the word of the frame as the original writes it (later functions read it)</summary>
-			private void Keep(ref ushort local, int distance, ushort value)
-			{
-				local = value;
-				this.processor?.EmitLocalWord(distance, value);
-			}
-
 			private ushort dot;
 			/// <summary>0x2: the colour of a dot of the map view (stays on the stack: DisplayTravellersReport reads it)</summary>
 			public ushort Dot
 			{
 				get => this.dot;
-				set { this.dot = value; this.processor?.EmitLocalWord(0x2, value); }
+				set => this.dot = value;
 			}
 			private ushort markedTileMode;
 			/// <summary>0x4: 1 while the marked tile moves instead of a unit</summary>
-			public ushort MarkedTileMode { get => this.markedTileMode; set => Keep(ref this.markedTileMode, 0x4, value); }
+			public ushort MarkedTileMode { get => this.markedTileMode; set => this.markedTileMode = value; }
 			private ushort humanTookKey;
 			/// <summary>0x6: a unit of the human took a key in this turn</summary>
-			public ushort HumanTookKey { get => this.humanTookKey; set => Keep(ref this.humanTookKey, 0x6, value); }
+			public ushort HumanTookKey { get => this.humanTookKey; set => this.humanTookKey = value; }
 			private ushort laterPass;
 			/// <summary>0x8: not the first pass over the units</summary>
-			public ushort LaterPass { get => this.laterPass; set => Keep(ref this.laterPass, 0x8, value); }
+			public ushort LaterPass { get => this.laterPass; set => this.laterPass = value; }
 			private ushort aITries;
 			/// <summary>0xa: the orders asked from ShiftAIUnit for the unit</summary>
-			public ushort AITries { get => this.aITries; set => Keep(ref this.aITries, 0xa, value); }
+			public ushort AITries { get => this.aITries; set => this.aITries = value; }
 			private ushort clicked;
 			/// <summary>0xc: a click is waiting</summary>
-			public ushort Clicked { get => this.clicked; set => Keep(ref this.clicked, 0xc, value); }
+			public ushort Clicked { get => this.clicked; set => this.clicked = value; }
 			private ushort cursorHoriz;
 			/// <summary>0xe: the column of the marked tile or of the click (-1 none)</summary>
-			public ushort CursorHoriz { get => this.cursorHoriz; set => Keep(ref this.cursorHoriz, 0xe, value); }
+			public ushort CursorHoriz { get => this.cursorHoriz; set => this.cursorHoriz = value; }
 			private ushort city;
 			/// <summary>0x10: a city</summary>
-			public ushort City { get => this.city; set => Keep(ref this.city, 0x10, value); }
+			public ushort City { get => this.city; set => this.city = value; }
 
 			private ushort cursorVert;
 			/// <summary>0x12: the row of the marked tile or of the click</summary>
 			public ushort CursorVert
 			{
 				get => this.cursorVert;
-				set { this.cursorVert = value; this.processor?.EmitLocalWord(0x12, value); }
+				set => this.cursorVert = value;
 			}
 
 			private ushort cargo;
 			/// <summary>0x14: the cargo unit taken along</summary>
-			public ushort Cargo { get => this.cargo; set => Keep(ref this.cargo, 0x14, value); }
+			public ushort Cargo { get => this.cargo; set => this.cargo = value; }
 			private ushort otherUnit;
 			/// <summary>0x18: another unit (at the tile, the best guardian), or a flag</summary>
-			public ushort OtherUnit { get => this.otherUnit; set => Keep(ref this.otherUnit, 0x18, value); }
+			public ushort OtherUnit { get => this.otherUnit; set => this.otherUnit = value; }
 			private ushort targetHoriz;
 			/// <summary>0x1c: the column of the target tile</summary>
-			public ushort TargetHoriz { get => this.targetHoriz; set => Keep(ref this.targetHoriz, 0x1c, value); }
+			public ushort TargetHoriz { get => this.targetHoriz; set => this.targetHoriz = value; }
 			private ushort allMoved;
 			/// <summary>0x1e: 1 unless a unit is left with moves in this pass</summary>
-			public ushort AllMoved { get => this.allMoved; set => Keep(ref this.allMoved, 0x1e, value); }
+			public ushort AllMoved { get => this.allMoved; set => this.allMoved = value; }
 			private ushort humanMarkers;
 			/// <summary>0x20: the players played by humans at the start of the turn</summary>
-			public ushort HumanMarkers { get => this.humanMarkers; set => Keep(ref this.humanMarkers, 0x20, value); }
+			public ushort HumanMarkers { get => this.humanMarkers; set => this.humanMarkers = value; }
 			private ushort carrierHoriz;
 			/// <summary>0x22: the column of the carrier before the move</summary>
-			public ushort CarrierHoriz { get => this.carrierHoriz; set => Keep(ref this.carrierHoriz, 0x22, value); }
+			public ushort CarrierHoriz { get => this.carrierHoriz; set => this.carrierHoriz = value; }
 
 			private ushort direction;
 			/// <summary>0x24: the direction of the move</summary>
 			public ushort Direction
 			{
 				get => this.direction;
-				set { this.direction = value; this.processor?.EmitLocalWord(0x24, value); }
+				set => this.direction = value;
 			}
 
 			private ushort targetVert;
 			/// <summary>0x26: the row of the target tile</summary>
-			public ushort TargetVert { get => this.targetVert; set => Keep(ref this.targetVert, 0x26, value); }
+			public ushort TargetVert { get => this.targetVert; set => this.targetVert = value; }
 			private ushort ordered;
 			/// <summary>0x28: the unit got an order</summary>
-			public ushort Ordered { get => this.ordered; set => Keep(ref this.ordered, 0x28, value); }
+			public ushort Ordered { get => this.ordered; set => this.ordered = value; }
 			private ushort carrierVert;
 			/// <summary>0x2a: the row of the carrier before the move</summary>
-			public ushort CarrierVert { get => this.carrierVert; set => Keep(ref this.carrierVert, 0x2a, value); }
+			public ushort CarrierVert { get => this.carrierVert; set => this.carrierVert = value; }
 			private ushort unitHoriz;
 			/// <summary>0x2c: the column of the unit</summary>
-			public ushort UnitHoriz { get => this.unitHoriz; set => Keep(ref this.unitHoriz, 0x2c, value); }
+			public ushort UnitHoriz { get => this.unitHoriz; set => this.unitHoriz = value; }
 			private ushort pastWaiting;
 			/// <summary>0x2e: the pass went past the waiting unit 0x46</summary>
-			public ushort PastWaiting { get => this.pastWaiting; set => Keep(ref this.pastWaiting, 0x2e, value); }
+			public ushort PastWaiting { get => this.pastWaiting; set => this.pastWaiting = value; }
 			private ushort unitVert;
 			/// <summary>0x30: the row of the unit</summary>
-			public ushort UnitVert { get => this.unitVert; set => Keep(ref this.unitVert, 0x30, value); }
+			public ushort UnitVert { get => this.unitVert; set => this.unitVert = value; }
 			private ushort troop;
 			/// <summary>0x32: the unit (0x80 none)</summary>
-			public ushort Troop { get => this.troop; set => Keep(ref this.troop, 0x32, value); }
+			public ushort Troop { get => this.troop; set => this.troop = value; }
 			private ushort startTerrain;
 			/// <summary>0x34: the terrain the unit stands on</summary>
-			public ushort StartTerrain { get => this.startTerrain; set => Keep(ref this.startTerrain, 0x34, value); }
+			public ushort StartTerrain { get => this.startTerrain; set => this.startTerrain = value; }
 
 			private ushort mouseCursorSet;
 			/// <summary>0x36: the mouse cursor was changed</summary>
 			public ushort MouseCursorSet
 			{
 				get => this.mouseCursorSet;
-				set { this.mouseCursorSet = value; this.processor?.EmitLocalWord(0x36, value); }
+				set => this.mouseCursorSet = value;
 			}
 
 			private ushort found;
 			/// <summary>0x38: something was found</summary>
-			public ushort Found { get => this.found; set => Keep(ref this.found, 0x38, value); }
+			public ushort Found { get => this.found; set => this.found = value; }
 			private ushort result;
 			/// <summary>0x3a: a result used for many things (a city, a battle, a dialog answer, a rate)</summary>
-			public ushort Result { get => this.result; set => Keep(ref this.result, 0x3a, value); }
+			public ushort Result { get => this.result; set => this.result = value; }
 			private ushort count;
 			/// <summary>0x3c: a counter or a city</summary>
-			public ushort Count { get => this.count; set => Keep(ref this.count, 0x3c, value); }
+			public ushort Count { get => this.count; set => this.count = value; }
 
 			private ushort targetTerrain;
 			/// <summary>0x3e: the terrain of the target tile</summary>
 			public ushort TargetTerrain
 			{
 				get => this.targetTerrain;
-				set { this.targetTerrain = value; this.processor?.EmitLocalWord(0x3e, value); }
+				set => this.targetTerrain = value;
 			}
 
 			private ushort targetImprovements;
 			/// <summary>0x40: the improvements of the target tile (low byte)</summary>
-			public ushort TargetImprovements { get => this.targetImprovements; set => Keep(ref this.targetImprovements, 0x40, value); }
+			public ushort TargetImprovements { get => this.targetImprovements; set => this.targetImprovements = value; }
 			private ushort order;
 			/// <summary>0x44: the order (a key)</summary>
-			public ushort Order { get => this.order; set => Keep(ref this.order, 0x44, value); }
+			public ushort Order { get => this.order; set => this.order = value; }
 			private ushort waitingTroop;
 			/// <summary>0x46: the unit that waits for the next pass</summary>
-			public ushort WaitingTroop { get => this.waitingTroop; set => Keep(ref this.waitingTroop, 0x46, value); }
+			public ushort WaitingTroop { get => this.waitingTroop; set => this.waitingTroop = value; }
 			private ushort tileOwner;
 			/// <summary>0x48: the owner of the target tile</summary>
-			public ushort TileOwner { get => this.tileOwner; set => Keep(ref this.tileOwner, 0x48, value); }
+			public ushort TileOwner { get => this.tileOwner; set => this.tileOwner = value; }
 			private ushort cargoTally;
 			/// <summary>0x4a: the cargo units counted</summary>
-			public ushort CargoTally { get => this.cargoTally; set => Keep(ref this.cargoTally, 0x4a, value); }
+			public ushort CargoTally { get => this.cargoTally; set => this.cargoTally = value; }
 			private ushort nextCargo;
 			/// <summary>0x4c: the next cargo unit</summary>
-			public ushort NextCargo { get => this.nextCargo; set => Keep(ref this.nextCargo, 0x4c, value); }
+			public ushort NextCargo { get => this.nextCargo; set => this.nextCargo = value; }
 			private ushort unitDetail;
 			/// <summary>0x4e: the row, status or kind of the unit</summary>
-			public ushort UnitDetail { get => this.unitDetail; set => Keep(ref this.unitDetail, 0x4e, value); }
+			public ushort UnitDetail { get => this.unitDetail; set => this.unitDetail = value; }
 			private ushort carrierKind;
 			/// <summary>0x52: the kind of the carrier (low byte)</summary>
-			public ushort CarrierKind { get => this.carrierKind; set => Keep(ref this.carrierKind, 0x52, value); }
+			public ushort CarrierKind { get => this.carrierKind; set => this.carrierKind = value; }
 
-			/// <summary>
-			/// The locals as the frame of the original starts them: the words left on the stack. Some are read before being
-			/// written (0x12 and 0x24 logged by the calls of a unit that has not moved, 0x3e for a fortress of settlers).
-			/// </summary>
-			public static TurnLocals FromFrame(CPU processor) => new TurnLocals(processor)
-			{
-				dot = processor.PullLocalWord(0x2), markedTileMode = processor.PullLocalWord(0x4),
-				humanTookKey = processor.PullLocalWord(0x6), laterPass = processor.PullLocalWord(0x8),
-				aITries = processor.PullLocalWord(0xa), clicked = processor.PullLocalWord(0xc),
-				cursorHoriz = processor.PullLocalWord(0xe), city = processor.PullLocalWord(0x10),
-				cursorVert = processor.PullLocalWord(0x12), cargo = processor.PullLocalWord(0x14),
-				otherUnit = processor.PullLocalWord(0x18), targetHoriz = processor.PullLocalWord(0x1c),
-				allMoved = processor.PullLocalWord(0x1e), humanMarkers = processor.PullLocalWord(0x20),
-				carrierHoriz = processor.PullLocalWord(0x22), direction = processor.PullLocalWord(0x24),
-				targetVert = processor.PullLocalWord(0x26), ordered = processor.PullLocalWord(0x28),
-				carrierVert = processor.PullLocalWord(0x2a), unitHoriz = processor.PullLocalWord(0x2c),
-				pastWaiting = processor.PullLocalWord(0x2e), unitVert = processor.PullLocalWord(0x30),
-				troop = processor.PullLocalWord(0x32), startTerrain = processor.PullLocalWord(0x34),
-				mouseCursorSet = processor.PullLocalWord(0x36), found = processor.PullLocalWord(0x38),
-				result = processor.PullLocalWord(0x3a), count = processor.PullLocalWord(0x3c),
-				targetTerrain = processor.PullLocalWord(0x3e), targetImprovements = processor.PullLocalWord(0x40),
-				order = processor.PullLocalWord(0x44), waitingTroop = processor.PullLocalWord(0x46),
-				tileOwner = processor.PullLocalWord(0x48), cargoTally = processor.PullLocalWord(0x4a),
-				nextCargo = processor.PullLocalWord(0x4c), unitDetail = processor.PullLocalWord(0x4e),
-				carrierKind = processor.PullLocalWord(0x52),
-			};
 		}
 
 		/// <summary>The locals of the running HandlePlayerTurn</summary>
@@ -220,7 +186,7 @@ namespace Civilization1Remaster.Game
 
 			this.processor.EnterFrame(0x52);
 			TurnLocals outer = this.turn;
-			this.turn = TurnLocals.FromFrame(this.processor);
+			this.turn = new TurnLocals();
 			this.processor.PreserveIndexRegisters();
 
 			// The player, the help of some turns, the moves of the units
