@@ -135,11 +135,9 @@ namespace Civilization1Remaster.Engine
 		{
 			this.processor.Journal.OpenScope($"ImportTextFromFile(0x{docnameAddr:x4}, 0x{charsAddr:x4})");
 
-			// The line and the index entry are in the stack frame, like in the original (buffers of the file functions)
-			this.processor.EnterFrame(0x110);
-
-			ushort line = (ushort)(this.processor.RegFrame.Value16 - 0x100);
-			ushort entry = (ushort)(this.processor.RegFrame.Value16 - 0x104);
+			// The line and the index entry are buffers of the file functions
+			ushort line = (ushort)(this.processor.RegStack.Value16 - 0x100);
+			ushort entry = (ushort)(this.processor.RegStack.Value16 - 0x104);
 
 			ushort hash = 0;
 			ushort charIdx = 0;
@@ -253,7 +251,6 @@ namespace Civilization1Remaster.Engine
 
 			this.processor.RegAcc.Value16 = found ? lines : (ushort)0xffff;
 
-			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("ImportTextFromFile");
 

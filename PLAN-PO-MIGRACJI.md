@@ -571,6 +571,8 @@ bez wyjątku (czyta 0), `DifferentialPair` po wyjątku w scenariuszu przywraca S
 
 **B6.8, porcja 10 (2026-10-26):** ramki i bufory stosu przeniesione do C# w `ScienceAndAdvisors.PickCityProduction` (usunięto ramkę 0x14a, bufor klucza porady przeniesiony do pamięci roboczej) oraz `MainIntro.DisplayMainIntro` (usunięto ramkę 0x4e i pole `displayMainIntroFrame`, zmienne lokalne ekranów/kolumny/loga przeniesione do pól C#). Usunięto 2 ramki stosu (`EnterFrame`/`LeaveFrame`), pozostało 11 (w tym 5 odłożonych do Fazy 3). 4 z 4 mutacji złapanych (BatchSeventyFive, BatchSeventyTwo), Golden Master 16/16 zielony.
 
+**B6.8, porcja 11 (2026-10-26):** ramki i bufory stosu przeniesione do C# w `CityView.DisplayCityScreen` (usunięto ramkę 0x186, bufor tekstu ekranu miasta przeniesiony do pamięci roboczej) oraz `TextBlockRenderer.ImportTextFromFile` (usunięto ramkę 0x110, bufory linii i wpisu indeksu przeniesione ze stosu emulacji). Usunięto 2 ramki stosu (`EnterFrame`/`LeaveFrame`), pozostało 9 (w tym 6 odłożonych do Fazy 3). 4 z 4 mutacji złapanych (BatchThirty, GoldenMaster), Golden Master 16/16 zielony.
+
 
 
 **Faza 3 – sprzątanie i drugi baseline:** usunięcie przełączników i kodu „classic”, zamrożonej gry

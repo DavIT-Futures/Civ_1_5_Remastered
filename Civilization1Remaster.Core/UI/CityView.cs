@@ -21,7 +21,6 @@ namespace Civilization1Remaster.UI
 			this.processor.Journal.OpenScope($"DisplayCityScreen({townIdx}, {arg2})");
 
 			// function body
-			this.processor.EnterFrame(0x186);
 
 			City settlement = this.owner.World.Towns[townIdx];
 
@@ -38,7 +37,7 @@ namespace Civilization1Remaster.UI
 				}
 			}
 
-			ushort savedText = (ushort)(this.processor.RegFrame.Value16 - 0x80);
+			ushort savedText = (ushort)(this.processor.RegStack.Value16 - 0x300);
 			this.processor.EmitGlobalByte(savedText, 0x0);
 
 			if (this.owner.Words.Length < 120)
@@ -455,7 +454,7 @@ namespace Civilization1Remaster.UI
 				this.processor.EmitUInt16(this.processor.SegData.Value16, this.processor.RegBase.Value16, 0x1);
 				DrawingBox.TypefaceIdx = 0x6;
 
-				if (this.owner.Libc.TextLength((ushort)(this.processor.RegFrame.Value16 - 0x80)) == 0)
+				if (this.owner.Libc.TextLength(savedText) == 0)
 				{
 					EmptyMessage()
 						.City(townIdx);
@@ -472,7 +471,7 @@ namespace Civilization1Remaster.UI
 				{
 					this.processor.EmitGlobalWord(0xdb38, 0x1);
 
-					this.owner.Dialogs.DisplayMenu((ushort)(this.processor.RegFrame.Value16 - 0x80), 80, 8, 1);
+					this.owner.Dialogs.DisplayMenu(savedText, 80, 8, 1);
 				}
 
 				this.processor.RegBase.Value16 = ScreenBox;
@@ -572,7 +571,6 @@ namespace Civilization1Remaster.UI
 				this.owner.Helpers.LaunchHueCycling();
 			}
 
-			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("DisplayCityScreen");
 		}
