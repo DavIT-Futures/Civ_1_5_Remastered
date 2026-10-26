@@ -396,15 +396,13 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope("DisplayTopCities()");
 
-			this.processor.EnterFrame(0x20);
-
-			ushort scores = (ushort)(this.processor.RegFrame.Value16 - 0x20);
-			ushort towns = (ushort)(this.processor.RegFrame.Value16 - 0x10);
+			short[] scores = new short[5];
+			short[] towns = new short[5];
 
 			for (int placeIdx = 0; placeIdx < 5; placeIdx++)
 			{
-				this.processor.EmitGlobalWord((ushort)(towns + (placeIdx << 1)), 0xffff);
-				this.processor.EmitGlobalWord((ushort)(scores + (placeIdx << 1)), 0xffff);
+				towns[placeIdx] = -1;
+				scores[placeIdx] = -1;
 			}
 
 			for (short townIdx = 0; townIdx < 0x80; townIdx++)
@@ -426,17 +424,17 @@ namespace Civilization1Remaster.UI
 
 				for (int placeIdx = 0; placeIdx < 5; placeIdx++)
 				{
-					if ((short)this.processor.PullGlobalWord((ushort)(scores + (placeIdx << 1))) >= score)
+					if (scores[placeIdx] >= score)
 						continue;
 
 					for (int laterIdx = 3; laterIdx >= placeIdx; laterIdx--)
 					{
-						this.processor.EmitGlobalWord((ushort)(scores + ((laterIdx + 1) << 1)), this.processor.PullGlobalWord((ushort)(scores + (laterIdx << 1))));
-						this.processor.EmitGlobalWord((ushort)(towns + ((laterIdx + 1) << 1)), this.processor.PullGlobalWord((ushort)(towns + (laterIdx << 1))));
+						scores[laterIdx + 1] = scores[laterIdx];
+						towns[laterIdx + 1] = towns[laterIdx];
 					}
 
-					this.processor.EmitGlobalWord((ushort)(scores + (placeIdx << 1)), (ushort)score);
-					this.processor.EmitGlobalWord((ushort)(towns + (placeIdx << 1)), (ushort)townIdx);
+					scores[placeIdx] = score;
+					towns[placeIdx] = townIdx;
 					break;
 				}
 			}
@@ -453,10 +451,10 @@ namespace Civilization1Remaster.UI
 
 			for (short placeIdx = 0; placeIdx < 5; placeIdx++)
 			{
-				if (this.processor.PullGlobalWord((ushort)(scores + (placeIdx << 1))) == 0xffff)
+				if (scores[placeIdx] == -1)
 					continue;
 
-				short townIdx = (short)this.processor.PullGlobalWord((ushort)(towns + (placeIdx << 1)));
+				short townIdx = towns[placeIdx];
 
 				EmptyMessage()
 					.Number((short)(placeIdx + 1))
@@ -499,8 +497,6 @@ namespace Civilization1Remaster.UI
 			this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
 
 			this.owner.Startup.DisplayMouseCursor();
-
-			this.processor.LeaveFrame();
 
 			this.processor.Journal.CloseScope("DisplayTopCities");
 		}

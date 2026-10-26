@@ -8,7 +8,6 @@ namespace Civilization1Remaster.Engine
 	public class GameStartup : GameModule
 	{
 		/// <summary>The words of the frame of TitleLogoAndMainChoices, shared by its helpers (B3: in C#, new for every call)</summary>
-		private FrameWords titleLogoAndMainChoicesFrame = null!;
 
 		public GameStartup(GameEngine owner)
 			: base(owner)
@@ -365,10 +364,6 @@ namespace Civilization1Remaster.Engine
 		{
 			this.processor.Journal.OpenScope("TitleLogoAndMainChoices()");
 
-			// The frame like the original (the song position is kept at bp - 2)
-			this.processor.EnterFrame(0x6);
-			FrameWords outerFrame = this.titleLogoAndMainChoicesFrame;
-			this.titleLogoAndMainChoicesFrame = new FrameWords(this.processor, 0x6);
 			EarthGame = 0x0;
 
 			bool chosen = false;
@@ -469,9 +464,6 @@ namespace Civilization1Remaster.Engine
 
 			DisplayMouseCursor();
 
-			this.titleLogoAndMainChoicesFrame = outerFrame;
-			this.processor.LeaveFrame();
-
 			this.processor.Journal.CloseScope("TitleLogoAndMainChoices");
 		}
 
@@ -487,7 +479,6 @@ namespace Civilization1Remaster.Engine
 			{
 				position = (short)this.owner.Services.ObtainSongPosition();
 
-				this.titleLogoAndMainChoicesFrame.SetFrame(0x2, (ushort)position);
 			}
 			while (position > 0x1495 && (short)(position - 0x1495) % 0x120 != 0);
 		}

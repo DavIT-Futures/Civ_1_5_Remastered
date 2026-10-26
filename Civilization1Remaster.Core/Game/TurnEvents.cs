@@ -1267,7 +1267,6 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope("RenderStatusBar()");
 
-			this.processor.EnterFrame(0x8);
 			this.processor.PreserveSource();
 
 			if (WorldMapView != 1)
@@ -1347,7 +1346,6 @@ namespace Civilization1Remaster.Game
 			}
 
 			this.processor.RestoreSource();
-			this.processor.LeaveFrame();
 
 			this.processor.Journal.CloseScope("RenderStatusBar");
 		}
