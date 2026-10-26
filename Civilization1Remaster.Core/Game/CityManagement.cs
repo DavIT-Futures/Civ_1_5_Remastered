@@ -26,11 +26,13 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private sealed class CityRound(CPU processor)
 		{
-			/// <summary>The value, and the word of the frame as the original writes it (other functions read it later)</summary>
-			private void Keep(ref ushort local, int distance, ushort value)
+			/// <summary>
+			/// The value (the distance is the word of the frame where the original kept it; B3, 2026-10-26: no longer written
+			/// there, the frames are zeroed and nothing reads these words: the arrays of the frame end at 0xa6)
+			/// </summary>
+			private static void Keep(ref ushort local, int distance, ushort value)
 			{
 				local = value;
-				processor.EmitLocalWord(distance, value);
 			}
 
 			private ushort content;

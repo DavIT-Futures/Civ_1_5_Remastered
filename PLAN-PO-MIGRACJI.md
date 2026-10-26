@@ -432,7 +432,9 @@ czytały słowa ramki z gry przepisanej – teraz z gry oryginalnej (`pair.Origi
 jego słowa nakładają się na tablice ramki (0x8e to baza tablicy, 0x16 to pole 20 tablicy bp-0x3e, 0x40 – 0x50 w
 zasięgu tablicy bp-0x74) – trzeba przenieść razem z tablicami.
 `TurnLocals` (HandlePlayerTurn, 38 zmiennych) startuje jako pusty obiekt C# (bez `FromFrame` i bez kopii `Keep` do
-ramki); pełny zestaw 809/809 przed uproszczeniem klasy, golden master + Dual po nim. ramki, SI/DI, BX/CX/DX moduł po module; przy jawnych wartościach
+ramki); pełny zestaw 809/809 przed uproszczeniem klasy, golden master + Dual po nim. `CityRound`: zmienne z
+kopiami `Keep` (słowa 0xa8 – 0x10c, powyżej wszystkich tablic ramki, które kończą się na 0xa6) nie piszą już do
+ramki (809/809); zmienne 0x2 – 0x108 czytane przez ramkę zostają, dopóki tablice ramki nie przejdą do C#. ramki, SI/DI, BX/CX/DX moduł po module; przy jawnych wartościach
 zamiast śmieci golden master zostaje zielony, sonda stosu ma pokazać zero czytelników. Na końcu rejestry z CPU,
 `MZExecutable` i obraz CIV.EXE w pamięci (dane początkowe z pliku przy starcie).
 
