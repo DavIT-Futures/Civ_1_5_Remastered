@@ -281,16 +281,11 @@ namespace Civilization1Remaster.Engine
 
 		/// <summary>
 		/// Replaces in the text at TextBuffer.Address every occurrence of the 5 codes (texts pointed to by 0x30ae + 2 * code) by their
-		/// texts (0x30b8 + 2 * code), one code after the other. The rest of the text waits in a buffer in the stack frame,
-		/// like in the original.
+		/// texts (0x30b8 + 2 * code), one code after the other.
 		/// </summary>
 		public void ReflowText()
 		{
 			this.processor.Journal.OpenScope("ReflowText()");
-
-			this.processor.EnterFrame(0x204);
-
-			ushort rest = (ushort)(this.processor.RegFrame.Value16 - 0x202);
 
 			for (int codeIdx = 0; codeIdx < 5; codeIdx++)
 			{
@@ -306,14 +301,13 @@ namespace Civilization1Remaster.Engine
 					if (found == 0)
 						break;
 
-					this.owner.Libc.CopyText(rest, found);
+					ushort codeLen = this.owner.Libc.TextLength(code);
+					string rest = this.processor.PullText(CPU.AsLinearAddress(this.processor.SegData.Value16, (ushort)(found + codeLen)));
 					this.processor.EmitGlobalByte(found, 0);
 					this.owner.Words.Append(replacement);
-					this.owner.Words.Append((ushort)(rest + this.owner.Libc.TextLength(code)));
+					this.owner.Words.Append(rest);
 				}
 			}
-
-			this.processor.LeaveFrame();
 
 			this.processor.Journal.CloseScope("ReflowText");
 		}

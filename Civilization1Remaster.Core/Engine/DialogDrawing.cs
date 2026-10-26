@@ -7,8 +7,7 @@ namespace Civilization1Remaster.Engine
 	/// </summary>
 	public class DialogDrawing : GameModule
 	{
-		/// <summary>The words of the frame of ObtainNavigationKey, shared by its helpers (B3: in C#, new for every call)</summary>
-		private FrameWords obtainNavigationKeyFrame = null!;
+
 
 		public DialogDrawing(GameEngine owner)
 			: base(owner)
@@ -711,11 +710,6 @@ namespace Civilization1Remaster.Engine
 		{
 			this.processor.Journal.OpenScope("ObtainNavigationKey()");
 
-			// The key stays in the stack frame, like in the original
-			this.processor.EnterFrame(0x2);
-			FrameWords outerFrame = this.obtainNavigationKeyFrame;
-			this.obtainNavigationKeyFrame = new FrameWords(this.processor, 0x2);
-
 			ushort key = (ushort)this.owner.Libc.ReadKey();
 
 			key = key switch
@@ -739,11 +733,8 @@ namespace Civilization1Remaster.Engine
 				_ => (key & 0xff) != 0 ? (ushort)(key & 0xff) : key
 			};
 
-			this.obtainNavigationKeyFrame.SetFrame(0x2, key);
 			this.processor.RegAcc.Value16 = key;
 
-			this.obtainNavigationKeyFrame = outerFrame;
-			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("ObtainNavigationKey");
 

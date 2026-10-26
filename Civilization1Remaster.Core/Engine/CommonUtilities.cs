@@ -317,8 +317,6 @@ namespace Civilization1Remaster.Engine
 			this.processor.Journal.OpenScope($"ReleaseResource({arg1}, 0x{charsAddr:x4})");
 
 			// function body
-			this.processor.EnterFrame();
-			
 			if (!this.owner.Libc.DosReleaseMemory(arg1))
 			{
 				this.owner.Words.Set("MEM.ERR:");
@@ -332,8 +330,6 @@ namespace Civilization1Remaster.Engine
 
 				this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 80);
 			}
-		
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
 			// Far return
 			this.processor.Journal.CloseScope("ReleaseResource");
 		}

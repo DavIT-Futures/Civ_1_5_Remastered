@@ -557,6 +557,8 @@ bez wyjątku (czyta 0), `DifferentialPair` po wyjątku w scenariuszu przywraca S
 
 **B6.8, porcja 3 (2026-10-26):** bufory nazw plików i tekstów przeniesione ze stosu do C# w `GameReplay.ObtainReplayPlayerLabel` (bufor nazwy w liczbie mnogiej), `GameReplay.DisplayCivilizationDestroyedScreen` (`king{tens}{ones}.pic/.pal`, `slam2.pic`/`slag2.pic`) oraz `NewCityScreen.DisplayLabelInputBox` (bufor nazwy miasta na stosie do porównywania prefiksów). Usunięto 3 ramki stosu (`EnterFrame`/`LeaveFrame`), pozostało 39. 8 z 8 mutacji złapanych (BatchEight, BatchForty, BatchSixteen), Golden Master 16/16 zielony.
 
+**B6.8, porcja 4 (2026-10-26):** bufory i ramki stosu przeniesione do C# w `TextBlockRenderer.ReflowText` (bufor `rest` na 516 bajtów zastąpiony ciągiem C# z `PullText`), `NewCityScreen.PullTextInput` (bufor `kept` w klawiszu Insert zastąpiony ciągiem C#), `DialogDrawing.ObtainNavigationKey` (usunięto ramkę `0x2` i pole `obtainNavigationKeyFrame`) oraz `CommonUtilities.ReleaseResource` (usunięto pustą ramkę stosu C). Usunięto 4 ramki stosu (`EnterFrame`/`LeaveFrame`), pozostało 35. 8 z 8 mutacji złapanych (BatchNine, BatchThirtyThree, BatchThirtyNine), Golden Master 16/16 zielony.
+
 **Faza 3 – sprzątanie i drugi baseline:** usunięcie przełączników i kodu „classic”, zamrożonej gry
 (`Civilization1Remaster.Original`), kopii Reference, testów Dual; testy różnicowe → testy zachowania z tabel przypadków.
 B6.7 część 2 (zdarzenia hosta zamiast `PumpMessages`, nowy zegar testów) → **drugie nagranie baseline'u** (powinno

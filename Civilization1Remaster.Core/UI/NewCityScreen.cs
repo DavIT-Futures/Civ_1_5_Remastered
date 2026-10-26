@@ -240,10 +240,7 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope($"PullTextInput({horizLoc}, {vertLoc}, {breadth})");
 
-			// The text moved by Insert is kept in the stack frame, like in the original, and the final values of the locals stay there
-			this.processor.EnterFrame(0x48);
 
-			ushort kept = (ushort)(this.processor.RegFrame.Value16 - 0x40);
 
 			this.owner.Services.FloodBox(ScreenBox, horizLoc, vertLoc, (7 * breadth), 11, 15);
 
@@ -325,7 +322,7 @@ namespace Civilization1Remaster.UI
 
 				if (key == 0xd2)
 				{
-					this.owner.Libc.CopyText(kept, (ushort)(TextCursor + TextBuffer.Address));
+					string kept = this.processor.PullText(CPU.AsLinearAddress(this.processor.SegData.Value16, (ushort)(TextCursor + TextBuffer.Address)));
 
 					this.owner.Libc.CopyText((ushort)(TextCursor + (ushort)(TextBuffer.Address + 1)), kept);
 
@@ -387,7 +384,6 @@ namespace Civilization1Remaster.UI
 			this.owner.TurnLogic.AwaitForKey();
 
 			this.processor.RegAcc.Value16 = accepted;
-			this.processor.LeaveFrame();
 
 			// Far return
 			this.processor.Journal.CloseScope("PullTextInput");
