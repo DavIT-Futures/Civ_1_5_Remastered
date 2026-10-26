@@ -567,6 +567,9 @@ bez wyjątku (czyta 0), `DifferentialPair` po wyjątku w scenariuszu przywraca S
 
 **B6.8, porcja 8 (2026-10-26):** eliminacja 6 ramek stosu w modułach UI i silnika: GameStartup.QueryForDisk (ramka 0x102), Newspaper.DisplayNewspaper (ramka 0x10, bufor *NEWS{A..N} w C#), Civilopedia.DisplayCivilopediaIndex (ramka 0x5c, bufory nazw), Civilopedia.DisplayCivilopediaRecord (ramka 0x34, bufor tagBuf), Palace.DisplayPalace (ramka 0x110) oraz InGameHelp.DisplayHelpTopic (ramka 0x18, bufor tematu pomocy). Usunięto 6 ramek stosu (EnterFrame/LeaveFrame), pozostało 16. 12 z 12 mutacji złapanych (BatchEighteen, BatchThirtyThree, BatchFiftyNine, BatchSeventyOne, BatchSixtyEight), Golden Master 16/16 zielony.
 
+**B6.8, porcja 9 (2026-10-26):** ramki i bufory stosu przeniesione do C# w TurnEvents.DisplayTravellersReport (usunięto ramkę 0x1c i pole displayTravellersReportFrame), TurnEvents.HandleGameEnd (usunięto ramkę 0x1a i pole handleGameEndFrame, ranking replayu spakowany w C# do tablicy bajtów) oraz WorldMap.DisplayCensus (usunięto ramkę 0xba, wartości linii spisu w pamięci roboczej). Usunięto 3 ramki stosu (EnterFrame/LeaveFrame), pozostało 13 (w tym 5 odłożonych do Fazy 3). 6 z 6 mutacji złapanych (BatchForty, BatchSixtyFour, BatchSixtyTwo), Golden Master 16/16 zielony.
+
+
 
 **Faza 3 – sprzątanie i drugi baseline:** usunięcie przełączników i kodu „classic”, zamrożonej gry
 (`Civilization1Remaster.Original`), kopii Reference, testów Dual; testy różnicowe → testy zachowania z tabel przypadków.

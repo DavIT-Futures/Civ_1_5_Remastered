@@ -577,8 +577,6 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope($"DisplayCensus({participantIdx})");
 
-			this.processor.EnterFrame(0xba);
-
 			this.owner.Startup.ConcealMouseCursor();
 
 			this.owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, BackScreenBox, 0, 0);
@@ -599,8 +597,6 @@ namespace Civilization1Remaster.UI
 			this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
 
 			this.owner.Startup.DisplayMouseCursor();
-
-			this.processor.LeaveFrame();
 
 			this.processor.Journal.CloseScope("DisplayCensus");
 		}
@@ -712,10 +708,10 @@ namespace Civilization1Remaster.UI
 			return tally;
 		}
 
-		/// <summary>The value of the player for the current line (the frame, bp - 0xa8)</summary>
+		/// <summary>The value of the player for the current line (in stack scratch area)</summary>
 		private ushort CensusValueAddress(int participantIdx)
 		{
-			return (ushort)(this.processor.RegFrame.Value16 + (participantIdx << 1) - 0xa8);
+			return (ushort)(this.processor.RegStack.Value16 - 0x300 + (participantIdx << 1));
 		}
 
 		private short CensusValue(int participantIdx)
@@ -741,7 +737,7 @@ namespace Civilization1Remaster.UI
 				valueOfPlayer(participantIdx);
 			}
 
-			RenderCensusLine((ushort)(this.processor.RegFrame.Value16 - 0xa8), (short)(lowerIsBetter ? -vertLoc : vertLoc), unit);
+			RenderCensusLine((ushort)(this.processor.RegStack.Value16 - 0x300), (short)(lowerIsBetter ? -vertLoc : vertLoc), unit);
 
 			vertLoc += 0xc;
 		}

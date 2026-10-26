@@ -12,19 +12,9 @@ namespace Civilization1Remaster.Game
 	/// </summary>
 	public class TurnEvents : GameModule
 	{
-		/// <summary>The words of the frame of DisplayTravellersReport, shared by its helpers (B3: in C#, new for every call)</summary>
-		private FrameWords displayTravellersReportFrame = null!;
-
-
-
-		/// <summary>The words of the frame of HandleGameEnd: the ranking of NoteStatusInReplay (B3: in C#, new for every call)</summary>
-		private FrameWords handleGameEndFrame;
-
 		public TurnEvents(GameEngine owner)
 			: base(owner)
 		{
-			// NoteStatusInReplay called alone (the tests) gets a frame of its own
-			this.handleGameEndFrame = new FrameWords(this.processor, 0x1a);
 		}
 
 		/// <summary>
@@ -279,10 +269,6 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope("HandleGameEnd()");
 
-			// The frame stays: LeaveFrame drops what the turns of the players leave on the stack
-			this.processor.EnterFrame(0x1a);
-			FrameWords outerFrame = this.handleGameEndFrame;
-			this.handleGameEndFrame = new FrameWords(this.processor, 0x1a);
 			this.processor.PreserveIndexRegisters();
 
 			if (PlayTurnOfPlayers(out short startGold))
@@ -291,8 +277,6 @@ namespace Civilization1Remaster.Game
 			}
 
 			this.processor.RestoreIndexRegisters();
-			this.handleGameEndFrame = outerFrame;
-			this.processor.LeaveFrame();
 
 			this.processor.Journal.CloseScope("HandleGameEnd");
 		}
@@ -636,11 +620,7 @@ namespace Civilization1Remaster.Game
 			this.owner.UnitOps.AttachReplayContent(11, (byte)this.owner.World.Participants[this.owner.World.PersonParticipantIdx].TownTally,
 				TurnEndRules.ReplayPopulationHigh(population, this.ClassicReplayPopulation), (byte)population);
 
-			// The ranking in the frame (bp - 0x14, four words); a standing past 7 writes past them, like in the original
-			for (int placeIdx = 0; placeIdx < 4; placeIdx++)
-			{
-				this.handleGameEndFrame.SetFrame(RankingSlot(placeIdx << 1), 0x0);
-			}
+			byte[] ranking = new byte[4];
 
 			for (short participantIdx = 1; participantIdx < 8; participantIdx++)
 			{
@@ -648,20 +628,15 @@ namespace Civilization1Remaster.Game
 					continue;
 
 				short standing = this.owner.World.Participants[participantIdx].Standing;
-				int slot = RankingSlot((short)(standing / 2) << 1);
-				ushort place = (ushort)((standing & 1) == 0 ? participantIdx : participantIdx << 4);
-
-				this.handleGameEndFrame.SetFrame(slot, (ushort)(this.handleGameEndFrame.Frame(slot) | place));
+				int pairIdx = standing / 2;
+				if (pairIdx >= 0 && pairIdx < 4)
+				{
+					byte nibble = (byte)((standing & 1) == 0 ? participantIdx : (participantIdx << 4));
+					ranking[pairIdx] |= nibble;
+				}
 			}
 
-			this.owner.UnitOps.AttachReplayContent(12, this.handleGameEndFrame.FrameByte(0xe), this.handleGameEndFrame.FrameByte(0x10),
-				this.handleGameEndFrame.FrameByte(0x12), this.handleGameEndFrame.FrameByte(0x14));
-		}
-
-		/// <summary>The distance below BP of the ranking word at the byte offset from bp - 0x14</summary>
-		private static int RankingSlot(int offset)
-		{
-			return 0x14 - offset;
+			this.owner.UnitOps.AttachReplayContent(12, ranking[3], ranking[2], ranking[1], ranking[0]);
 		}
 
 		/// <summary>
@@ -923,9 +898,6 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope("DisplayTravellersReport()");
 
-			this.processor.EnterFrame(0x1c);
-			FrameWords outerFrame = this.displayTravellersReportFrame;
-			this.displayTravellersReportFrame = new FrameWords(this.processor, 0x1c);
 			this.processor.PreserveIndexRegisters();
 
 			if ((ushort)((ushort)(5 - (ushort)this.owner.World.HardnessTier) * 0x1e) <= this.owner.World.RoundTally)
@@ -939,8 +911,6 @@ namespace Civilization1Remaster.Game
 			}
 
 			this.processor.RestoreIndexRegisters();
-			this.displayTravellersReportFrame = outerFrame;
-			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("DisplayTravellersReport");
 		}
@@ -953,17 +923,14 @@ namespace Civilization1Remaster.Game
 			do
 			{
 				horizLoc = (short)this.owner.Libc.Dice.DrawInt(80);
-				this.displayTravellersReportFrame.SetFrame(0xe, (ushort)horizLoc);
 
 				vertLoc = (short)(this.owner.Libc.Dice.DrawInt(44) + 3);
-				this.displayTravellersReportFrame.SetFrame(0x12, (ushort)vertLoc);
 			}
 			while (this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) != 0xa ||
 				this.owner.MapOps.ObtainTileOwner(horizLoc, vertLoc) != 0xffff ||
 				(short)this.owner.MapOps.ObtainLandMassSize(horizLoc, vertLoc) < 0x10);
 
 			short units = (short)this.owner.Helpers.VerifyValueSpan((this.owner.World.RoundTally / 150) + 1, 1, 3);
-			this.displayTravellersReportFrame.SetFrame(0x16, (ushort)units);
 
 			this.owner.UnitOps.ConstructUnit(0, units < 3 ? (short)0x11 : (short)0x12, horizLoc, vertLoc);
 
@@ -976,31 +943,26 @@ namespace Civilization1Remaster.Game
 				if (unitIdx == units)
 					kind = 0x1a;
 
-				this.displayTravellersReportFrame.SetFrame(0x4, (ushort)kind);
 
 				ushort troopIdx = this.owner.UnitOps.ConstructUnit(0, kind, horizLoc, vertLoc);
-				this.displayTravellersReportFrame.SetFrame(0x1c, troopIdx);
 
 				// The barbarian units start on sentry (player 0); troopIdx may be past the table (0xffff, no free place)
 				int marker = (ushort)(UnitMemory.TroopStride * troopIdx);
 				this.Troops.AssignAt(marker, UnitMemory.Status, (byte)(this.Troops.PullAt(marker, UnitMemory.Status) | 1));
 			}
 
-			this.displayTravellersReportFrame.SetFrame(0x14, (ushort)unitIdx);
 		}
 
 		/// <summary>The barbarians landing near a city of the human player (see DisplayTravellersReport)</summary>
 		private void RaidHumanCity()
 		{
 			ushort townIdx = (ushort)this.owner.Libc.Dice.DrawInt(128);
-			this.displayTravellersReportFrame.SetFrame(0x14, townIdx);
 
 			if (this.owner.World.Towns[townIdx].ConditionMarker == 0xff ||
 				this.owner.World.Towns[townIdx].ParticipantIdx != this.owner.World.PersonParticipantIdx)
 				return;
 
 			ushort plunder = this.owner.Conquest.ComputeCityPlunder((short)townIdx);
-			this.displayTravellersReportFrame.SetFrame(0x16, plunder);
 
 			if ((short)this.owner.Libc.Dice.DrawInt(100) >= (short)plunder)
 				return;
@@ -1012,20 +974,15 @@ namespace Civilization1Remaster.Game
 			{
 				int shift = this.owner.Libc.Dice.DrawInt(13);
 				horizLoc = (short)((short)this.owner.World.Towns[townIdx].Place.X + shift - 6);
-				this.displayTravellersReportFrame.SetFrame(0xe, (ushort)horizLoc);
 
 				shift = this.owner.Libc.Dice.DrawInt(13);
 				vertLoc = (short)((short)this.owner.World.Towns[townIdx].Place.Y + shift - 6);
-				this.displayTravellersReportFrame.SetFrame(0x12, (ushort)vertLoc);
 
 				townIdx = this.owner.Helpers.LocateNearestCity(horizLoc, vertLoc);
-				this.displayTravellersReportFrame.SetFrame(0x14, townIdx);
-
+	
 				short distance = (short)(ushort)this.owner.Helpers.ObtainDistance(horizLoc, this.owner.World.Towns[townIdx].Place.X, vertLoc, this.owner.World.Towns[townIdx].Place.Y);
-				this.displayTravellersReportFrame.SetFrame(0xc, (ushort)distance);
 
 				tries++;
-				this.displayTravellersReportFrame.SetFrame(0x1c, tries);
 
 				if ((short)tries >= 0x63)
 					return;
@@ -1033,7 +990,7 @@ namespace Civilization1Remaster.Game
 				if (distance < 6)
 					continue;
 
-				if (this.owner.UnitOps.VerifyTileOccupation((short)this.displayTravellersReportFrame.Frame(0x2), horizLoc, vertLoc) != 0)
+				if (this.owner.UnitOps.VerifyTileOccupation(0, horizLoc, vertLoc) != 0)
 					continue;
 
 				if (this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) == 0xa)
@@ -1080,7 +1037,6 @@ namespace Civilization1Remaster.Game
 			}
 
 			short units = (short)this.owner.Helpers.VerifyValueSpan(this.owner.Libc.Dice.DrawInt(this.owner.World.Towns[townIdx].TrueExtent / 2), 2, 99);
-			this.displayTravellersReportFrame.SetFrame(0x16, (ushort)units);
 
 			short unitIdx;
 
@@ -1092,7 +1048,6 @@ namespace Civilization1Remaster.Game
 				if (unitIdx == units)
 					kind = 0x1a;
 
-				this.displayTravellersReportFrame.SetFrame(0x4, (ushort)kind);
 
 				ushort sight = (ushort)((ushort)(0xc * this.owner.UnitOps.ConstructUnit(0, kind, horizLoc, vertLoc)) + 0x81dd);
 				this.processor.EmitGlobalByte(sight, (byte)(this.processor.PullGlobalByte(sight) | (byte)this.owner.World.ChartSight[(ushort)horizLoc, (ushort)vertLoc]));
@@ -1103,7 +1058,6 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			this.displayTravellersReportFrame.SetFrame(0x18, (ushort)unitIdx);
 		}
 
 		/// <summary>
