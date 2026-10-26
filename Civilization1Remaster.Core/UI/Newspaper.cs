@@ -23,8 +23,6 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope($"DisplayNewspaper({townIdx})");
 
-			// The topic of the story is in the stack frame, like in the original, and the final values of the locals stay there
-			this.processor.EnterFrame(0x10);
 			this.processor.PreserveSource();
 
 			short givenIdx = townIdx;
@@ -155,11 +153,11 @@ namespace Civilization1Remaster.UI
 
 			DrawingBox.TypefaceIdx = 0x2;
 
-			ushort topic = (ushort)(this.processor.RegFrame.Value16 - 0xc);
-
-			this.owner.Libc.CopyText(topic, "*NEWSA");
-
-			this.processor.EmitLocalByte(0x7, (byte)(this.processor.PullLocalByte(0x7) + this.owner.Libc.Dice.DrawInt(14)));
+			short storyIdx = (short)this.owner.Libc.Dice.DrawInt(14);
+			this.processor.RegAcc.Value16 = (ushort)storyIdx;
+			char letter = (char)('A' + storyIdx);
+			ushort topic = (ushort)(this.processor.RegStack.Value16 - 0x300);
+			this.owner.Libc.CopyText(topic, $"*NEWS{letter}");
 			this.owner.Words.Clear();
 
 			this.owner.BlockText.ImportTextFromFile(0x5178, topic);
@@ -178,7 +176,6 @@ namespace Civilization1Remaster.UI
 			this.owner.Startup.DisplayMouseCursor();
 
 			this.processor.RestoreSource();
-			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("DisplayNewspaper");
 		}

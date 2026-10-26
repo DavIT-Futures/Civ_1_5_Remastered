@@ -59,13 +59,10 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope($"DisplayCivilopediaIndex({arg1}, {arg2})");
 
-			// The frame keeps the names like the original: the last listed (bp - 0x4c), the next one (bp - 0x32) and its
-			// shortened copy (bp - 0x18)
-			this.processor.EnterFrame(0x5c);
-
-			ushort lastName = (ushort)(this.processor.RegFrame.Value16 - 0x4c);
-			ushort nextName = (ushort)(this.processor.RegFrame.Value16 - 0x32);
-			ushort shortName = (ushort)(this.processor.RegFrame.Value16 - 0x18);
+			ushort scratchBase = (ushort)(this.processor.RegStack.Value16 - 0x300);
+			ushort lastName = (ushort)(scratchBase + 0x10);
+			ushort nextName = (ushort)(scratchBase + 0x30);
+			ushort shortName = (ushort)(scratchBase + 0x50);
 
 			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 14);
 
@@ -94,8 +91,6 @@ namespace Civilization1Remaster.UI
 				: ChooseCivilopediaEntryWithKeys(arg1, width, entryTally));
 
 			this.processor.RegAcc.Value16 = answer;
-
-			this.processor.LeaveFrame();
 
 			this.processor.Journal.CloseScope("DisplayCivilopediaIndex");
 
@@ -355,8 +350,6 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope($"DisplayCivilopediaRecord({scienceIdx}, {arg2})");
 
-			this.processor.EnterFrame(0x34);
-
 			ushort dataSeg = this.processor.SegData.Value16;
 			this.processor.EmitGlobalByte(0x3fa9, (byte)((byte)arg2 + 0x30));
 
@@ -408,7 +401,7 @@ namespace Civilization1Remaster.UI
 			this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, titleX, 20, 0);
 			DrawingBox.TypefaceIdx = 0x7;
 
-			ushort tagBuf = (ushort)(this.processor.RegFrame.Value16 - 0x2c);
+			ushort tagBuf = (ushort)(this.processor.RegStack.Value16 - 0x300);
 			this.owner.Libc.CopyText(tagBuf, "*");
 			this.owner.Libc.AppendText(tagBuf, TextBuffer.Address);
 			this.owner.Words.Clear();
@@ -470,7 +463,6 @@ namespace Civilization1Remaster.UI
 			}
 
 			this.owner.Startup.DisplayMouseCursor();
-			this.processor.LeaveFrame();
 			this.processor.Journal.CloseScope("DisplayCivilopediaRecord");
 		}
 

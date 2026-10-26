@@ -16,11 +16,10 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope("DisplayPalace()");
 
-			this.processor.EnterFrame(0x110);
 			this.processor.PreserveIndexRegisters();
 
 			ushort dataSeg = this.processor.SegData.Value16;
-			ushort textBuf = (ushort)(this.processor.RegFrame.Value16 - 0x100);
+			ushort textBuf = (ushort)(this.processor.RegStack.Value16 - 0x300);
 
 			this.owner.Startup.ConcealMouseCursor();
 			this.owner.Words.Clear();
@@ -111,7 +110,6 @@ namespace Civilization1Remaster.UI
 			this.owner.Startup.DisplayMouseCursor();
 
 			this.processor.RestoreIndexRegisters();
-			this.processor.LeaveFrame();
 			this.processor.Journal.CloseScope("DisplayPalace");
 		}
 

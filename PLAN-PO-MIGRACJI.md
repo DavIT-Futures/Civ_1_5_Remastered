@@ -565,6 +565,9 @@ bez wyjątku (czyta 0), `DifferentialPair` po wyjątku w scenariuszu przywraca S
 
 **B6.8, porcja 7 (2026-10-26):** ramki i bufory stosu przeniesione do C# w `GameInitAndIntro.ReckonContinentSizes` / `LinkSeaBlock` / `SeaPassageOpen` (usunięto ramkę 0x18 i pole `reckonContinentSizesFrame`, `lastNextSea` przekazywane przez `ref`, czysta logika przejść morskich), `Pathfinding.ChartRoute` / `SearchRouteBlocks` (usunięto ramkę 0x3a i pole `routeFrame`), `Pathfinding.ShiftToward` / `ChooseCheapestStep` / `CrowdAndDistance` (usunięto ramkę 0x4a i pole `stepFrame`, `CrowdAndDistance` jako metoda pomocnicza C# zwracająca `short`, zmienna lokalna `bestCrowdAndDistance`) oraz `StartGameMenu.CharacterizeStartLocation` (usunięto ramkę 0x5e, usunięto nieużywane obliczenia `frame - 0x5a` / `0x1c`). Usunięto 4 ramki stosu (`EnterFrame`/`LeaveFrame`), pozostały 22. 8 z 8 mutacji złapanych (BatchFortyTwo, BatchFortyThree, BatchFortyFive), Golden Master 16/16 zielony.
 
+**B6.8, porcja 8 (2026-10-26):** eliminacja 6 ramek stosu w modułach UI i silnika: GameStartup.QueryForDisk (ramka 0x102), Newspaper.DisplayNewspaper (ramka 0x10, bufor *NEWS{A..N} w C#), Civilopedia.DisplayCivilopediaIndex (ramka 0x5c, bufory nazw), Civilopedia.DisplayCivilopediaRecord (ramka 0x34, bufor tagBuf), Palace.DisplayPalace (ramka 0x110) oraz InGameHelp.DisplayHelpTopic (ramka 0x18, bufor tematu pomocy). Usunięto 6 ramek stosu (EnterFrame/LeaveFrame), pozostało 16. 12 z 12 mutacji złapanych (BatchEighteen, BatchThirtyThree, BatchFiftyNine, BatchSeventyOne, BatchSixtyEight), Golden Master 16/16 zielony.
+
+
 **Faza 3 – sprzątanie i drugi baseline:** usunięcie przełączników i kodu „classic”, zamrożonej gry
 (`Civilization1Remaster.Original`), kopii Reference, testów Dual; testy różnicowe → testy zachowania z tabel przypadków.
 B6.7 część 2 (zdarzenia hosta zamiast `PumpMessages`, nowy zegar testów) → **drugie nagranie baseline'u** (powinno

@@ -17,10 +17,7 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope($"DisplayHelpTopic(0x{charsAddr:x4})");
 
-			// The topic buffer stays in the stack frame at bp - 0x18
-			this.processor.EnterFrame(0x18);
-
-			ushort topicAddr = (ushort)(this.processor.RegFrame.Value16 - 0x18);
+			ushort topicAddr = (ushort)(this.processor.RegStack.Value16 - 0x300);
 
 			this.owner.Libc.CopyText(topicAddr, "*");
 			this.owner.Libc.AppendText(topicAddr, this.owner.Libc.UppercaseText(charsAddr));
@@ -52,7 +49,6 @@ namespace Civilization1Remaster.UI
 			}
 
 			MenuHelpTopic = 0x0;
-			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("DisplayHelpTopic");
 		}

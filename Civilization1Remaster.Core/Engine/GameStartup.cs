@@ -289,7 +289,6 @@ namespace Civilization1Remaster.Engine
 		{
 			this.processor.Journal.OpenScope($"QueryForDisk({diskIdx}, {marker})");
 
-			this.processor.EnterFrame(0x102);
 
 			ushort result;
 
@@ -321,7 +320,7 @@ namespace Civilization1Remaster.Engine
 					this.processor.EmitGlobalByte(0x1ade,
 						(byte)(CPU.SignedQuotient((short)diskIdx, (short)FirstMissingDisk) + 0x31));
 
-					ushort message = (ushort)(this.processor.RegFrame.Value16 - 0x100);
+					ushort message = (ushort)(this.processor.RegStack.Value16 - 0x100);
 					this.owner.Libc.CopyText(message, "Please insert Disk ");
 					this.owner.Libc.AppendText(message, "A");
 					this.owner.Libc.AppendText(message, ".\n \n    Press Return\n    to continue.\n");
@@ -347,7 +346,7 @@ namespace Civilization1Remaster.Engine
 			DiskInUse = diskIdx;
 			this.processor.RegAcc.Value16 = result;
 
-			this.processor.LeaveFrame();
+
 
 			this.processor.Journal.CloseScope("QueryForDisk");
 
