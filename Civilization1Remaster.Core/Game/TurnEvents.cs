@@ -18,6 +18,9 @@ namespace Civilization1Remaster.Game
 		/// <summary>The words of the frame of HandleEndOfTurnEvents, shared by its helpers (B3: in C#, new for every call)</summary>
 		private FrameWords handleEndOfTurnEventsFrame = null!;
 
+		/// <summary>The words of the frame of HandleGameEnd: the ranking of NoteStatusInReplay (B3: in C#, new for every call)</summary>
+		private FrameWords handleGameEndFrame = null!;
+
 		public TurnEvents(GameEngine owner)
 			: base(owner)
 		{
@@ -279,7 +282,10 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope("HandleGameEnd()");
 
+			// The frame stays: LeaveFrame drops what the turns of the players leave on the stack
 			this.processor.EnterFrame(0x1a);
+			FrameWords outerFrame = this.handleGameEndFrame;
+			this.handleGameEndFrame = new FrameWords(this.processor, 0x1a);
 			this.processor.PreserveIndexRegisters();
 
 			if (PlayTurnOfPlayers(out short startGold))
@@ -288,6 +294,7 @@ namespace Civilization1Remaster.Game
 			}
 
 			this.processor.RestoreIndexRegisters();
+			this.handleGameEndFrame = outerFrame;
 			this.processor.LeaveFrame();
 
 			this.processor.Journal.CloseScope("HandleGameEnd");
@@ -635,7 +642,7 @@ namespace Civilization1Remaster.Game
 			// The ranking in the frame (bp - 0x14, four words); a standing past 7 writes past them, like in the original
 			for (int placeIdx = 0; placeIdx < 4; placeIdx++)
 			{
-				this.processor.EmitUInt16(this.processor.SegStack.Value16, RankingSlot(placeIdx << 1), 0x0);
+				this.handleGameEndFrame.SetFrame(RankingSlot(placeIdx << 1), 0x0);
 			}
 
 			for (short participantIdx = 1; participantIdx < 8; participantIdx++)
@@ -644,21 +651,20 @@ namespace Civilization1Remaster.Game
 					continue;
 
 				short standing = this.owner.World.Participants[participantIdx].Standing;
-				ushort slot = RankingSlot((short)(standing / 2) << 1);
+				int slot = RankingSlot((short)(standing / 2) << 1);
 				ushort place = (ushort)((standing & 1) == 0 ? participantIdx : participantIdx << 4);
 
-				this.processor.EmitUInt16(this.processor.SegStack.Value16, slot,
-					(ushort)(this.processor.PullUInt16(this.processor.SegStack.Value16, slot) | place));
+				this.handleGameEndFrame.SetFrame(slot, (ushort)(this.handleGameEndFrame.Frame(slot) | place));
 			}
 
-			this.owner.UnitOps.AttachReplayContent(12, this.processor.PullLocalByte(0xe), this.processor.PullLocalByte(0x10),
-				this.processor.PullLocalByte(0x12), this.processor.PullLocalByte(0x14));
+			this.owner.UnitOps.AttachReplayContent(12, this.handleGameEndFrame.FrameByte(0xe), this.handleGameEndFrame.FrameByte(0x10),
+				this.handleGameEndFrame.FrameByte(0x12), this.handleGameEndFrame.FrameByte(0x14));
 		}
 
-		/// <summary>The address of the ranking word at the byte offset in the frame (bp - 0x14)</summary>
-		private ushort RankingSlot(int offset)
+		/// <summary>The distance below BP of the ranking word at the byte offset from bp - 0x14</summary>
+		private static int RankingSlot(int offset)
 		{
-			return (ushort)(this.processor.RegFrame.Value16 + offset - 0x14);
+			return 0x14 - offset;
 		}
 
 		/// <summary>
@@ -1114,12 +1120,9 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope("RefreshPeaceGraphContent()");
 
-			// The powers are in the stack frame, like in the original, and the final values of the locals stay there: when no
-			// power is above -1, the ranking takes the player of the rank before (or the one left in the frame)
-			this.processor.EnterFrame(0x1a);
-			this.processor.PreserveIndexRegisters();
-
-			ushort powers = (ushort)(this.processor.RegFrame.Value16 - 0x16);
+			// The powers of the frame of the original (B3: in C#): when no power is above -1, the ranking takes the player of the
+			// rank before (0 at first, like the zeroed frame)
+			ushort[] powers = new ushort[8];
 			short strongest = 0;
 			ushort treaties = 0;
 
@@ -1138,7 +1141,7 @@ namespace Civilization1Remaster.Game
 					power = 0;
 				}
 
-				this.processor.EmitGlobalWord((ushort)(powers + (participantIdx << 1)), power);
+				powers[participantIdx] = power;
 
 				if (participantIdx != this.owner.World.PersonParticipantIdx && strongest < (short)power)
 				{
@@ -1168,7 +1171,7 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			ushort best = this.processor.PullLocalWord(0x1a);
+			ushort best = 0;
 
 			for (short rank = 1; rank < 8; rank++)
 			{
@@ -1176,7 +1179,7 @@ namespace Civilization1Remaster.Game
 
 				for (short participantIdx = 1; participantIdx < 8; participantIdx++)
 				{
-					short power = (short)this.processor.PullGlobalWord((ushort)(powers + (participantIdx << 1)));
+					short power = (short)powers[participantIdx];
 
 					if (strongest < power)
 					{
@@ -1186,14 +1189,8 @@ namespace Civilization1Remaster.Game
 				}
 
 				this.owner.World.Participants[best].Standing = (short)(8 - rank);
-				this.processor.EmitGlobalWord((ushort)(powers + (best << 1)), 0xffff);
+				powers[best] = 0xffff;
 			}
-
-			this.processor.EmitLocalWord(0x2, 0x8);
-			this.processor.EmitLocalWord(0x4, (ushort)strongest);
-			this.processor.EmitLocalWord(0x6, 0x8);
-			this.processor.EmitLocalWord(0x18, treaties);
-			this.processor.EmitLocalWord(0x1a, best);
 
 			LateGameNudge = 0x0;
 
@@ -1219,9 +1216,6 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.RegDest.Value16 = this.processor.UnstackWord();
-			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("RefreshPeaceGraphContent");
 		}
@@ -1415,18 +1409,16 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"RenderPalace({participantIdx}, {castleTier}, {horizLoc}, {vertLoc})");
 
-			// The levels and the styles of the sections are in the stack frame, like in the original: the left neighbour of
-			// section 0 is the frame word 0x34 (never written), the right neighbour of section 8 the style of section 0; the
-			// final values of the locals stay there
-			this.processor.EnterFrame(0x36);
-			this.processor.PreserveIndexRegisters();
-
+			// The levels and the styles of the sections are in the words of the frame of the original (B3: in C#): the left
+			// neighbour of section 0 is the frame word 0x34 (never written, 0), the right neighbour of section 8 the style of
+			// section 0
 			this.owner.VideoCard.RenderLine(ScreenBox, horizLoc - 5, vertLoc + 13, horizLoc + 68, vertLoc + 13, 2);
 
 			if (this.owner.World.Participants[participantIdx].TownTally != 0)
 			{
-				ushort levels = (ushort)(this.processor.RegFrame.Value16 - 0x32);
-				ushort styles = (ushort)(this.processor.RegFrame.Value16 - 0x20);
+				FrameWords frame = new FrameWords(this.processor, 0x36);
+				SectionTable levels = new SectionTable(frame, 0x32);
+				SectionTable styles = new SectionTable(frame, 0x20);
 
 				short parts = (short)this.owner.Helpers.VerifyValueSpan(castleTier + 3, 3, 36);
 				short highest = (short)(parts / 5);
@@ -1438,8 +1430,6 @@ namespace Civilization1Remaster.Game
 
 				ushort seed = (ushort)(participantIdx * this.owner.World.ChanceRoot);
 				short built = 0;
-				(ushort attempts, ushort fits, ushort level, ushort chosen) last = (0, 0, 0, 0);
-				bool generated = false;
 
 				if (participantIdx == this.owner.World.PersonParticipantIdx)
 				{
@@ -1488,13 +1478,8 @@ namespace Civilization1Remaster.Game
 
 						SetSectionWord(levels, chosen, (ushort)level);
 						SetSectionWord(styles, chosen, (ushort)(participantIdx % 3));
-						last = (attempts, (ushort)(fits ? 1 : 0), (ushort)level, (ushort)chosen);
-						generated = true;
 					}
 				}
-
-				// The frame word 0xc: the last level generated, then the shape of each drawn section
-				ushort? lastShape = generated ? last.level : null;
 
 				for (int sectionIdx = 0; sectionIdx < 9; sectionIdx++)
 				{
@@ -1516,48 +1501,29 @@ namespace Civilization1Remaster.Game
 						shape = (ushort)(SectionWord(levels, sectionIdx + 1) == 0xffff || sectionIdx == 7 ? 4 : 3);
 					}
 
-					lastShape = shape;
-
 					int height = this.owner.Helpers.VerifyValueSpan(sectionLevel - 1, 0, 3);
 
 					this.owner.Services.RenderPictureToScreen(ScreenBox, (7 * sectionIdx) + horizLoc, vertLoc - 1,
 						this.processor.PullGlobalWord((ushort)((0x28 * SectionWord(styles, sectionIdx)) + ((((short)height * 5) + shape) << 1) + 0xd21c)));
 				}
-
-				this.processor.EmitLocalWord(0x36, (ushort)parts);
-				this.processor.EmitLocalWord(0x6, (ushort)highest);
-				this.processor.EmitLocalWord(0x4, seed);
-				this.processor.EmitLocalWord(0x8, 0x9);
-
-				if (lastShape != null)
-				{
-					this.processor.EmitLocalWord(0xc, lastShape.Value);
-				}
-
-				if (generated)
-				{
-					this.processor.EmitLocalWord(0x2, last.attempts);
-					this.processor.EmitLocalWord(0xa, last.fits);
-					this.processor.EmitLocalWord(0xe, last.chosen);
-				}
 			}
 
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.RegDest.Value16 = this.processor.UnstackWord();
-			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("RenderPalace");
 		}
 
-		/// <summary>A word of a table of the sections in the stack frame (the index may be -1 or 9, like in the original)</summary>
-		private ushort SectionWord(ushort table, int sectionIdx)
+		/// <summary>A table of the sections in the frame words of RenderPalace: section 0 at the given distance below BP</summary>
+		private readonly record struct SectionTable(FrameWords Frame, int Distance);
+
+		/// <summary>A word of a table of the sections (the index may be -1 or 9, like in the original)</summary>
+		private static ushort SectionWord(SectionTable table, int sectionIdx)
 		{
-			return this.processor.PullGlobalWord((ushort)(table + (sectionIdx << 1)));
+			return table.Frame.Frame(table.Distance - (sectionIdx << 1));
 		}
 
-		private void SetSectionWord(ushort table, int sectionIdx, ushort amount)
+		private static void SetSectionWord(SectionTable table, int sectionIdx, ushort amount)
 		{
-			this.processor.EmitGlobalWord((ushort)(table + (sectionIdx << 1)), amount);
+			table.Frame.SetFrame(table.Distance - (sectionIdx << 1), amount);
 		}
 
 		/// <summary>
