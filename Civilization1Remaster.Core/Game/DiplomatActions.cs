@@ -451,19 +451,16 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"RenderExplosion({horizLoc}, {vertLoc})");
 
-			// The pictures and the step counter stay in the stack frame, like in the original
-			this.processor.EnterFrame(0x3a);
-			this.processor.PreserveSource();
-
 			if (this.owner.Startup.QueryForDisk(1, 0) != 0)
 			{
-				ushort pictures = (ushort)(this.processor.RegFrame.Value16 - 0x38);
+				// The pictures of the frame of the original (B3: in C#)
+				ushort[] pictures = new ushort[0x1c];
 
 				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x5318, 1);
 
 				for (int pictureIdx = 0; pictureIdx < 0x1c; pictureIdx++)
 				{
-					this.processor.EmitGlobalWord((ushort)(pictures + (pictureIdx << 1)), this.owner.VideoCard.ScreenToPicture(1, (ushort)(((pictureIdx % 7) * 0x2d) + 1), (ushort)(((pictureIdx / 7) * 0x2d) + 1), 0x2c, 0x2c));
+					pictures[pictureIdx] = this.owner.VideoCard.ScreenToPicture(1, (ushort)(((pictureIdx % 7) * 0x2d) + 1), (ushort)(((pictureIdx / 7) * 0x2d) + 1), 0x2c, 0x2c);
 				}
 
 				horizLoc = (short)((this.owner.Routing.TunePosition(horizLoc - (short)MapViewHoriz) << 4) + 0x42);
@@ -482,7 +479,7 @@ namespace Civilization1Remaster.Game
 					int pictureIdx = stepIdx < 0x1c ? stepIdx : stepIdx - 7;
 
 					this.owner.Services.RenderPictureToScreenAlternate(ScreenBox, horizLoc, vertLoc,
-						this.processor.PullGlobalWord((ushort)(pictures + (pictureIdx << 1))));
+						pictures[pictureIdx]);
 
 					this.owner.TextPainter.AwaitTime(5);
 
@@ -490,17 +487,13 @@ namespace Civilization1Remaster.Game
 						ScreenBox, horizLoc, vertLoc);
 				}
 
-				this.processor.EmitLocalWord(0x3a, 0x23);
-
-				this.owner.Helpers.ReleaseResource(this.processor.PullGlobalWord(pictures), 0);
+				this.owner.Helpers.ReleaseResource(pictures[0], 0);
 
 				this.owner.Startup.QueryForDisk(0, 1);
 
 				this.owner.TurnHooks.DisplayCivilizationScenery();
 			}
 
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("RenderExplosion");
 		}
@@ -516,8 +509,7 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"ComputeInciteCost({townIdx}, {participantIdx})");
 
-			// HandleCity reads leftovers under the stack, so it is called at the depth of the original, and the final values of the
-			// locals stay in the frame
+			// HandleCity is called at the depth of the original (the frame stays; B3: the locals are C# variables)
 			this.processor.EnterFrame(0x1c);
 			this.processor.PreserveIndexRegisters();
 
@@ -527,12 +519,6 @@ namespace Civilization1Remaster.Game
 			short vertLoc = (short)town.Place.Y;
 			short bestSurplus = 0;
 			ushort bestIdx = 0xffff;
-
-			this.processor.EmitLocalWord(0x2, (ushort)ownerIdx);
-			this.processor.EmitLocalWord(0x10, (ushort)horizLoc);
-			this.processor.EmitLocalWord(0x12, (ushort)vertLoc);
-			this.processor.EmitLocalWord(0xa, 0x3e7);
-			this.processor.EmitLocalWord(0x1c, 0x0);
 
 			if (participantIdx == -1)
 			{
@@ -547,13 +533,9 @@ namespace Civilization1Remaster.Game
 
 					int distance = this.owner.Helpers.ObtainDistance(town.Place.X, other.Place.X, town.Place.Y, other.Place.Y);
 
-					this.processor.EmitLocalWord(0x8, (ushort)distance);
-
 					this.owner.CityOps.HandleCity((short)otherIdx, -1);
 
 					short surplus = CPU.SignedQuotient((short)((CityHappy - CityUnhappy) << 5), (short)distance);
-
-					this.processor.EmitLocalWord(0x14, (ushort)surplus);
 
 					if (surplus > bestSurplus)
 					{
@@ -562,16 +544,11 @@ namespace Civilization1Remaster.Game
 					}
 				}
 
-				this.processor.EmitLocalWord(0x6, otherIdx);
-
 				if (bestSurplus != 0)
 				{
 					participantIdx = this.owner.World.Towns[bestIdx].ParticipantIdx;
 				}
 			}
-
-			this.processor.EmitLocalWord(0xe, (ushort)bestSurplus);
-			this.processor.EmitLocalWord(0x1a, bestIdx);
 
 			if (participantIdx != -1)
 			{
@@ -585,7 +562,7 @@ namespace Civilization1Remaster.Game
 			this.processor.Journal.CloseScope("ComputeInciteCost");
 		}
 
-		/// <summary>The city goes over to the player (see ComputeInciteCost), the locals of its frame are written like in the original</summary>
+		/// <summary>The city goes over to the player (see ComputeInciteCost)</summary>
 		private void Revolt(short townIdx, short participantIdx, short ownerIdx, short horizLoc, short vertLoc)
 		{
 			City town = this.owner.World.Towns[townIdx];
@@ -633,15 +610,11 @@ namespace Civilization1Remaster.Game
 			}
 
 			UnitMemory troops = new UnitMemory(this.processor);
-			int lastDistance = 0;
-			ushort? lastKind = null, lastTroop = null;
 
 			for (short troopIdx = 0; troopIdx < UnitMemory.TroopTally; troopIdx++)
 			{
 				int distance = this.owner.Helpers.ObtainDistance(horizLoc, troops.PullSigned(ownerIdx, troopIdx, UnitMemory.Horiz),
 					vertLoc, troops.PullSigned(ownerIdx, troopIdx, UnitMemory.Vert));
-
-				lastDistance = distance;
 
 				if (troops.Pull(ownerIdx, troopIdx, UnitMemory.Kind) == 0xff || (short)distance > 1)
 					continue;
@@ -655,7 +628,6 @@ namespace Civilization1Remaster.Game
 				}
 
 				sbyte kind = troops.TroopKind(ownerIdx, troopIdx);
-				lastKind = (ushort)kind;
 
 				this.owner.UnitOps.EliminateUnit(ownerIdx, troopIdx);
 
@@ -666,7 +638,6 @@ namespace Civilization1Remaster.Game
 
 				ushort newIdx = this.owner.UnitOps.ConstructUnit(participantIdx, kind, troops.PullSigned(ownerIdx, troopIdx, UnitMemory.Horiz),
 					troops.PullSigned(ownerIdx, troopIdx, UnitMemory.Vert));
-				lastTroop = newIdx;
 
 				if (newIdx == 0xffff)
 					continue;
@@ -676,18 +647,8 @@ namespace Civilization1Remaster.Game
 				troops.Assign(participantIdx, newIdx, UnitMemory.BaseTown, (byte)townIdx);
 			}
 
-			this.processor.EmitLocalWord(0x16, 0x80);
-			this.processor.EmitLocalWord(0x8, (ushort)lastDistance);
-
-			if (lastKind != null)
-			{
-				this.processor.EmitLocalWord(0x4, lastKind.Value);
-				this.processor.EmitLocalWord(0xc, lastTroop!.Value);
-			}
-
 			short preferences = this.owner.World.SessionPrefMarkers;
 
-			this.processor.EmitLocalWord(0x18, (ushort)preferences);
 			NoConquestAnimation = 0x1;
 
 			if ((short)FirstMissingDisk <= 1)
@@ -705,20 +666,17 @@ namespace Civilization1Remaster.Game
 
 		/// <summary>
 		/// A diplomat establishes an embassy... in fact investigates the city: the title "... founded: year." over a picture with
-		/// four walking figures (cut from 0x536e into the stack frame) moving to the right until a key or a click (frame by
+		/// four walking figures (cut from 0x536e) moving to the right until a key or a click (frame by
 		/// frame, 10 timer ticks each), then the city screen (unless a key is still waiting).
 		/// </summary>
 		public void ExamineCity(short townIdx)
 		{
 			this.processor.Journal.OpenScope($"ExamineCity({townIdx})");
 
-			// The pictures of the figures and the counters stay in the stack frame, like in the original
-			this.processor.EnterFrame(0x10);
-			this.processor.PreserveSource();
-
 			if (this.owner.Startup.QueryForDisk(1, 0) != 0)
 			{
-				ushort figures = (ushort)(this.processor.RegFrame.Value16 - 0x8);
+				// The pictures of the frame of the original (B3: in C#)
+				ushort[] figures = new ushort[4];
 
 				this.owner.Helpers.HaltHueCycling();
 
@@ -728,7 +686,7 @@ namespace Civilization1Remaster.Game
 
 				for (int figureIdx = 0; figureIdx < 4; figureIdx++)
 				{
-					this.processor.EmitGlobalWord((ushort)(figures + (figureIdx << 1)), this.owner.VideoCard.ScreenToPicture(1, 1, (ushort)((figureIdx << 4) + 1), 0x2f, 0xf));
+					figures[figureIdx] = this.owner.VideoCard.ScreenToPicture(1, 1, (ushort)((figureIdx << 4) + 1), 0x2f, 0xf);
 				}
 
 				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x537b, 0);
@@ -755,8 +713,6 @@ namespace Civilization1Remaster.Game
 
 				this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0x78, 0x140, 0x28, BackScreenBox, 0, 0);
 
-				ushort steps = 0;
-
 				this.owner.TurnLogic.AwaitForKey();
 
 				short horizLoc = 0x50;
@@ -770,12 +726,10 @@ namespace Civilization1Remaster.Game
 					for (short figureIdx = 0; figureIdx < 4; figureIdx++)
 					{
 						this.owner.Services.RenderPictureToScreen(BackScreenBox, (13 * figureIdx) + horizLoc,
-							((10 * figureIdx) & 0xf) + 120, this.processor.PullGlobalWord((ushort)(figures + (((figureIdx + horizLoc) & 3) << 1))));
+							((10 * figureIdx) & 0xf) + 120, figures[(figureIdx + horizLoc) & 3]);
 					}
 
 					this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0x78, 0x140, 0x28, ScreenBox, 0, 0x78);
-
-					steps++;
 
 					while ((short)this.owner.Timer.Beats < 0xa)
 					{
@@ -787,11 +741,7 @@ namespace Civilization1Remaster.Game
 						break;
 				}
 
-				this.processor.EmitLocalWord(0xa, (ushort)horizLoc);
-				this.processor.EmitLocalWord(0xc, 0x4);
-				this.processor.EmitLocalWord(0x10, steps);
-
-				this.owner.Helpers.ReleaseResource(this.processor.PullGlobalWord(figures), 0x539a);
+				this.owner.Helpers.ReleaseResource(figures[0], 0x539a);
 
 				this.owner.Startup.QueryForDisk(0, 1);
 
@@ -818,8 +768,6 @@ namespace Civilization1Remaster.Game
 				this.owner.TurnLogic.AwaitForKey();
 			}
 
-			this.processor.RegSource.Value16 = this.processor.UnstackWord();
-			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("ExamineCity");
 		}

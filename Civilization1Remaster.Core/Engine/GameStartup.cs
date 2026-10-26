@@ -38,27 +38,27 @@ namespace Civilization1Remaster.Engine
 
 			QueryForDisk(0, 1);
 
-			// The free memory stays in the frame (bp - 4) like in the original: the timer of the tests counts the accesses to memory
+			// The free memory (the local 4 of the original, B3: in C#)
 			this.processor.StackWord(0); // stack management - push return segment, ignored
 			this.processor.StackWord(0x0055); // stack management - push return offset
 			this.processor.UnstackDoubleWord(); // stack management - pop return offset and segment
-			this.processor.EmitLocalWord(0x4, this.owner.VideoCard.ObtainFreeStorage());
+			short freeStorage = (short)this.owner.VideoCard.ObtainFreeStorage();
 
 			if (ScreenReserveFailed != 0)
 			{
 				// A screen could not be reserved
-				this.processor.EmitLocalWord(0x4, 0);
+				freeStorage = 0;
 			}
 
 			this.processor.RegAcc.Value16 = (ushort)(VgaMode != 0 ? 0x1f40 : 0xfa0);
 
-			if ((short)this.processor.RegAcc.Value16 > (short)this.processor.PullLocalWord(0x4))
+			if ((short)this.processor.RegAcc.Value16 > freeStorage)
 			{
 				// Not enough memory: the amount in the text 0x270, then a menu with it
 				this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 12);
 
 				EmptyMessage()
-					.Number((short)this.processor.PullLocalWord(0x4));
+					.Number(freeStorage);
 				this.owner.Libc.CopyText(CodeText4, TextBuffer.Address);
 				this.owner.Words.Clear();
 
@@ -66,7 +66,7 @@ namespace Civilization1Remaster.Engine
 				this.owner.Dialogs.DisplayMenu(TextBuffer.Address, 64, 49, 1);
 			}
 
-			if (VgaMode != 0 && (short)this.processor.PullLocalWord(0x4) < 0x23be)
+			if (VgaMode != 0 && freeStorage < 0x23be)
 				LowMemoryVga = 1;
 
 			this.processor.StackWord(0); // stack management - push return segment, ignored

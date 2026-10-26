@@ -45,15 +45,12 @@ namespace Civilization1Remaster.Engine
 
 			ushort previousChoice = 0xffff;
 			ushort currentChoice = 0;
-			this.processor.EmitLocalWord(0x2, 0xffff);
-			this.processor.EmitLocalWord(0x4, 0);
 			MenuMouseUsed = 0;
 			MenuHelpTopic = 0;
 
 			if (DefaultLine != 0xffff)
 			{
 				currentChoice = DefaultLine;
-				this.processor.EmitLocalWord(0x4, currentChoice);
 			}
 
 			MenuFirstChoice = 0xffff;
@@ -83,7 +80,6 @@ namespace Civilization1Remaster.Engine
 				shadowHue = 0xffff;
 			}
 
-			this.processor.EmitLocalWord(0xc, backHue);
 			MenuFlashHue = (ushort)(backHue == 15 ? 3 : 15);
 
 			if (VgaMode == 0)
@@ -91,14 +87,9 @@ namespace Civilization1Remaster.Engine
 				shadowHue = 0xffff;
 			}
 
-			this.processor.EmitLocalWord(0xe, shadowHue);
-
 			ushort highlightHeight = MenuLineHeight;
 			ushort mouseUsed = 0;
 			ushort done = 0;
-			this.processor.EmitLocalWord(0x10, highlightHeight);
-			this.processor.EmitLocalWord(0x12, 0);
-			this.processor.EmitLocalWord(0x8, 0);
 
 			this.owner.Startup.ConcealMouseCursor();
 
@@ -129,7 +120,6 @@ namespace Civilization1Remaster.Engine
 					{
 						MenuMouseUsed = 1;
 						mouseUsed = 1;
-						this.processor.EmitLocalWord(0x12, 1);
 
 						if (this.owner.GlobDb3a == 2)
 						{
@@ -145,32 +135,26 @@ namespace Civilization1Remaster.Engine
 							currentChoice = 0xffff;
 						}
 
-						this.processor.EmitLocalWord(0x4, currentChoice);
 						this.processor.RegCount.LowByte = (byte)(currentChoice & 0xff);
 
 						if (((1 << (currentChoice & 0x1f)) & DisabledLines) != 0)
 						{
 							currentChoice = previousChoice;
-							this.processor.EmitLocalWord(0x4, currentChoice);
 						}
 						else if (this.owner.GlobDb3a == 0)
 						{
 							done = 1;
-							this.processor.EmitLocalWord(0x8, 1);
 						}
 					}
 					else if (this.owner.Libc.KeyAvailable() != 0)
 					{
 						ushort key = ObtainNavigationKey();
-						this.processor.EmitLocalWord(0x6, key);
 
 						if (this.ChoicesIndentTokens && (key == 0x9 || key == 0x4b00 || key == 0x4d00))
 						{
 							this.ChoicesIndentTokenDown = true;
 							currentChoice = 0xffff;
 							done = 1;
-							this.processor.EmitLocalWord(0x4, 0xffff);
-							this.processor.EmitLocalWord(0x8, 1);
 						}
 						else if (key == 0x20 || key == 0xd)
 						{
@@ -179,21 +163,17 @@ namespace Civilization1Remaster.Engine
 							if (((1 << (currentChoice & 0x1f)) & DisabledLines) == 0)
 							{
 								done = 1;
-								this.processor.EmitLocalWord(0x8, 1);
 							}
 						}
 						else if (key == 0x1b)
 						{
 							currentChoice = 0xffff;
 							done = 1;
-							this.processor.EmitLocalWord(0x4, 0xffff);
-							this.processor.EmitLocalWord(0x8, 1);
 						}
 						else if (key == 0x2300)
 						{
 							MenuHelpTopic = 1;
 							done = 1;
-							this.processor.EmitLocalWord(0x8, 1);
 						}
 						else if (key == 0x2f00)
 						{
@@ -209,7 +189,6 @@ namespace Civilization1Remaster.Engine
 							if ((short)currentChoice > 0)
 							{
 								currentChoice--;
-								this.processor.EmitLocalWord(0x4, currentChoice);
 							}
 						}
 						else if (key == 0x5000)
@@ -217,13 +196,11 @@ namespace Civilization1Remaster.Engine
 							if ((short)currentChoice < (short)(MenuChoiceCount - 1))
 							{
 								currentChoice++;
-								this.processor.EmitLocalWord(0x4, currentChoice);
 							}
 						}
 						else
 						{
 							ushort searchIdx = (ushort)(currentChoice + 1);
-							this.processor.EmitLocalWord(0xa, searchIdx);
 
 							while ((short)searchIdx < 0x20)
 							{
@@ -237,13 +214,11 @@ namespace Civilization1Remaster.Engine
 									if ((hotkey & 0x1f) == (key & 0x1f))
 									{
 										currentChoice = searchIdx;
-										this.processor.EmitLocalWord(0x4, currentChoice);
 										break;
 									}
 								}
 
 								searchIdx++;
-								this.processor.EmitLocalWord(0xa, searchIdx);
 							}
 						}
 					}
@@ -254,7 +229,6 @@ namespace Civilization1Remaster.Engine
 						MenuAnyKey != 0)
 					{
 						currentChoice = 0xffff;
-						this.processor.EmitLocalWord(0x4, 0xffff);
 					}
 
 					if (currentChoice != previousChoice)
@@ -265,7 +239,6 @@ namespace Civilization1Remaster.Engine
 						SwapMenuOptionHue(horizLoc, vertLoc, currentChoice, highlightHeight, backHue, shadowHue, true);
 
 						previousChoice = currentChoice;
-						this.processor.EmitLocalWord(0x2, previousChoice);
 
 						this.owner.Startup.DisplayMouseCursor();
 					}
@@ -393,11 +366,8 @@ namespace Civilization1Remaster.Engine
 			ushort choiceCount = 0;
 			ushort lineWidth = 0;
 			ushort charIdx = 0;
-			this.processor.EmitLocalWord(0x5a, 0);
 			MenuLineCount = 0;
-			this.processor.EmitLocalWord(0x54, 0);
 			MenuWidth = 0;
-			this.processor.EmitLocalWord(0x56, 0);
 
 			while (this.owner.Libc.TextLength(charsAddr) > charIdx)
 			{
@@ -411,7 +381,6 @@ namespace Civilization1Remaster.Engine
 					}
 
 					lineWidth = 0;
-					this.processor.EmitLocalWord(0x54, 0);
 
 					ushort lineCount = (ushort)(MenuLineCount + 1);
 					MenuLineCount = lineCount;
@@ -421,7 +390,6 @@ namespace Civilization1Remaster.Engine
 				{
 					if (lineWidth == 0)
 					{
-						this.processor.EmitLocalByte(0x5c, ch);
 
 						if (ch == 0x20 || ch == 0x5f)
 						{
@@ -437,17 +405,14 @@ namespace Civilization1Remaster.Engine
 							}
 
 							choiceCount++;
-							this.processor.EmitLocalWord(0x5a, choiceCount);
 						}
 					}
 
 					ushort currentFont = DrawingBox.TypefaceIdx;
 					lineWidth = (ushort)(lineWidth + this.owner.VideoCard.ObtainCharWidth(currentFont, ch));
-					this.processor.EmitLocalWord(0x54, lineWidth);
 				}
 
 				charIdx++;
-				this.processor.EmitLocalWord(0x56, charIdx);
 			}
 
 			short clampedLines = (short)this.owner.Helpers.VerifyValueSpan(
@@ -465,14 +430,11 @@ namespace Civilization1Remaster.Engine
 				bottomEdge += 2;
 			}
 
-			this.processor.EmitLocalWord(0x52, bottomEdge);
-
 			ushort totalLen = this.owner.Libc.TextLength(charsAddr);
 
 			if (this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(charsAddr + totalLen - 1)) != 0xa)
 			{
 				choiceCount--;
-				this.processor.EmitLocalWord(0x5a, choiceCount);
 			}
 
 			MenuChoiceCount = choiceCount;
@@ -497,7 +459,6 @@ namespace Civilization1Remaster.Engine
 					}
 
 					ushort titleWidth = (ushort)this.owner.TextPainter.ObtainTextWidth(titleAddr);
-					this.processor.EmitLocalWord(0x58, titleWidth);
 
 					ushort minRight = (ushort)(horizLoc + titleWidth + 8);
 
@@ -513,7 +474,6 @@ namespace Civilization1Remaster.Engine
 						((short)MenuRightEdge - horizLoc) + 42, boxHeight, 7);
 
 					short portraitExtra = (short)(boxSpan - 0x34);
-					this.processor.EmitLocalWord(0x58, (ushort)portraitExtra);
 
 					if ((short)advisor <= 2)
 					{
@@ -549,7 +509,6 @@ namespace Civilization1Remaster.Engine
 			if (MenuFooter != 0)
 			{
 				ushort savedFont = DrawingBox.TypefaceIdx;
-				this.processor.EmitLocalWord(0x56, savedFont);
 				DrawingBox.TypefaceIdx = 2;
 
 				this.owner.TextPainter.RenderTextToScreen0(0x2fbd,
@@ -578,12 +537,10 @@ namespace Civilization1Remaster.Engine
 		{
 			byte firstCh = this.processor.PullUInt8(this.processor.SegData.Value16, charsAddr);
 			short optionIdx = (firstCh == 0x20 || firstCh == 0x5f) ? (short)0 : (short)-1;
-			this.processor.EmitLocalWord(0x5a, (ushort)optionIdx);
 
 			DrawingBox.ForeHues = MenuFlashHue;
 
 			ushort lineIdx = 0;
-			this.processor.EmitLocalWord(0x56, 0);
 
 			while ((short)lineIdx < (short)MenuLineCount)
 			{
@@ -661,16 +618,13 @@ namespace Civilization1Remaster.Engine
 
 				ushort nextOffset = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((lineIdx << 1) + 0x6550));
 				byte nextLineChar = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(charsAddr + nextOffset));
-				this.processor.EmitLocalByte(0x5c, nextLineChar);
 
 				if (nextLineChar == 0x20 || nextLineChar == 0x5f)
 				{
 					optionIdx++;
-					this.processor.EmitLocalWord(0x5a, (ushort)optionIdx);
 				}
 
 				lineIdx++;
-				this.processor.EmitLocalWord(0x56, lineIdx);
 			}
 		}
 

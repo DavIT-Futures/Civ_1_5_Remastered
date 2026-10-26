@@ -421,12 +421,12 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope("DisplayEpicChronicle()");
 
-			// The values of the players are in the stack frame (the barbarians' one never set for the measures 3 and 4), like in the
-			// original: HandleCity and RenderPalace read leftovers under the stack; the final values of the locals stay there
+			// HandleCity is called at the depth of the original (the frame stays; B3: the values of the players are in C#, the
+			// barbarians' one never set for the measures 3 and 4)
 			this.processor.EnterFrame(0x20);
 			this.processor.PreserveIndexRegisters();
 
-			ushort values = (ushort)(this.processor.RegFrame.Value16 - 0x1c);
+			ushort[] values = new ushort[8];
 
 			this.owner.Startup.ConcealMouseCursor();
 
@@ -449,7 +449,7 @@ namespace Civilization1Remaster.UI
 
 			for (int participantIdx = 1; participantIdx < 8; participantIdx++)
 			{
-				this.processor.EmitGlobalWord((ushort)(values + (participantIdx << 1)), 0x0);
+				values[participantIdx] = 0x0;
 			}
 
 			for (short townIdx = 0; townIdx < 0x80; townIdx++)
@@ -461,42 +461,41 @@ namespace Civilization1Remaster.UI
 
 				this.owner.CityOps.HandleCity(townIdx, -1);
 
-				ushort place = (ushort)(values + (town.ParticipantIdx << 1));
+				short place = town.ParticipantIdx;
 
 				if (measure == 3)
 				{
-					this.processor.EmitGlobalWord(place, (ushort)(this.processor.PullGlobalWord(place) +
-						town.TrueExtent + CityHappy - CityUnhappy));
+					values[place] = (ushort)(values[place] + town.TrueExtent + CityHappy - CityUnhappy);
 				}
 
 				if (measure == 4)
 				{
-					this.processor.EmitGlobalWord(place, (ushort)(this.processor.PullGlobalWord(place) + town.TrueExtent));
+					values[place] = (ushort)(values[place] + town.TrueExtent);
 				}
 			}
 
 			for (short participantIdx = 0; participantIdx < 8; participantIdx++)
 			{
-				ushort place = (ushort)(values + (participantIdx << 1));
+				short place = participantIdx;
 
 				switch (measure)
 				{
 					case 0:
-						this.processor.EmitGlobalWord(place, (ushort)this.owner.World.Participants[participantIdx].Gold);
+						values[place] = (ushort)this.owner.World.Participants[participantIdx].Gold;
 						break;
 
 					case 1:
-						this.processor.EmitGlobalWord(place, (ushort)this.owner.World.Participants[participantIdx].MartialMight);
+						values[place] = (ushort)this.owner.World.Participants[participantIdx].MartialMight;
 						break;
 
 					case 2:
-						this.processor.EmitGlobalWord(place, 0x0);
+						values[place] = 0x0;
 
 						for (short scienceIdx = 0; scienceIdx < 0x48; scienceIdx++)
 						{
 							if (this.owner.Advisors.PlayerKnowsTechnology(participantIdx, scienceIdx) != 0)
 							{
-								this.processor.EmitGlobalWord(place, (ushort)(this.processor.PullGlobalWord(place) + 1));
+								values[place] = (ushort)(values[place] + 1);
 							}
 						}
 						break;
@@ -518,7 +517,7 @@ namespace Civilization1Remaster.UI
 
 				for (short participantIdx = 1; participantIdx < 8; participantIdx++)
 				{
-					short value = (short)this.processor.PullGlobalWord((ushort)(values + (participantIdx << 1)));
+					short value = (short)values[participantIdx];
 
 					if (value >= bestValue && ((1 << (byte)participantIdx) & (ushort)this.owner.World.LiveRealms) != 0)
 					{
@@ -555,7 +554,7 @@ namespace Civilization1Remaster.UI
 
 				this.owner.World.Participants[best].RunningSagaStanding += (short)(7 - rank);
 				rank++;
-				this.processor.EmitGlobalWord((ushort)(values + (best << 1)), 0xffff);
+				values[best] = 0xffff;
 			}
 
 			this.owner.World.Participants[0].RunningSagaStanding++;

@@ -478,6 +478,18 @@ bufory przekazywane przez adres do funkcji tekstu / plików zostają na stosie d
 zamiast śmieci golden master zostaje zielony, sonda stosu ma pokazać zero czytelników. Na końcu rejestry z CPU,
 `MZExecutable` i obraz CIV.EXE w pamięci (dane początkowe z pliku przy starcie).
 
+**Pętla B3, 2026-10-26 (dalej):** do C# przeszły: zmienne 0x12 / 0x18 `ImportPalaceGraphics` (ramka zostaje dla nazwy
+pliku), tablica sił `RefreshPeaceGraphContent` (bez ramki), tablice poziomów i stylów `RenderPalace` (`FrameWords` z
+nakładaniem tablic, bez ramki), ranking `NoteStatusInReplay` (`FrameWords` ramki `HandleGameEnd`; ramka zostaje, bo
+`LeaveFrame` sprząta to, co tury graczy zostawiają na stosie; konstruktor daje ramkę na wywołanie samej funkcji w
+testach), obrazki `RenderExplosion` i `ExamineCity` (bez ramek), wartości graczy `DisplayEpicChronicle`, wolna pamięć
+`RunGame`; usunięte zapisy-resztki do ramek w `ComputeInciteCost`/`Revolt`, `HandleAllCities`, `DisplayMenu`,
+`OperateMenu` (ramki zostają: głębokość wywołań `HandleCity` / menu). Zegar testów nie liczy dostępów do pamięci (tylko
+wywołania, odpytania zegara, Idle), więc tablice C# zamiast słów stosu nie przesuwają przerwań. Odłożone:
+`PickCityProduction` (bufor klucza porady bp - 0x12e przekazywany przez adres sąsiaduje z `BestUnitScore` 0x11e –
+`FrameWords` potrzebowałby zakresu „na stosie”), `RenderCensusLine` (publiczna, dostaje adres tablicy), `ProduceTerrain`.
+Lekcja: test wołający funkcję pomocniczą przez refleksję (`TurnEndRulesTests`) nie przechodzi przez właściciela ramki.
+
 **Faza 3 – sprzątanie i drugi baseline:** usunięcie przełączników i kodu „classic”, zamrożonej gry
 (`Civilization1Remaster.Original`), kopii Reference, testów Dual; testy różnicowe → testy zachowania z tabel przypadków.
 B6.7 część 2 (zdarzenia hosta zamiast `PumpMessages`, nowy zegar testów) → **drugie nagranie baseline'u** (powinno

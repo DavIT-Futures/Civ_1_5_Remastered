@@ -19,11 +19,13 @@ namespace Civilization1Remaster.Game
 		private FrameWords handleEndOfTurnEventsFrame = null!;
 
 		/// <summary>The words of the frame of HandleGameEnd: the ranking of NoteStatusInReplay (B3: in C#, new for every call)</summary>
-		private FrameWords handleGameEndFrame = null!;
+		private FrameWords handleGameEndFrame;
 
 		public TurnEvents(GameEngine owner)
 			: base(owner)
 		{
+			// NoteStatusInReplay called alone (the tests) gets a frame of its own
+			this.handleGameEndFrame = new FrameWords(this.processor, 0x1a);
 		}
 
 		/// <summary>

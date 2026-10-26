@@ -27,8 +27,7 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"HandleAllCities({participantIdx})");
 
-			// HandleCity reads leftovers under the stack, so it is called at the depth of the original, and the final values of the
-			// locals stay in the frame
+			// HandleCity is called at the depth of the original (the frame stays; B3: the locals are C# variables)
 			this.processor.EnterFrame(0xa);
 			this.processor.PreserveIndexRegisters();
 
@@ -71,9 +70,6 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			this.processor.EmitLocalWord(0x2, 0x80);
-			this.processor.EmitLocalWord(0x8, (ushort)unrest);
-
 			if (participantIdx == this.owner.World.PersonParticipantIdx || (this.owner.World.DiagMarkers & 4) == 0)
 			{
 				this.processor.RegSource.Value16 = this.processor.UnstackWord();
@@ -98,7 +94,6 @@ namespace Civilization1Remaster.Game
 			}
 
 			luxuries = (short)this.owner.Helpers.VerifyValueSpan(luxuries, 0, 4);
-			this.processor.EmitLocalWord(0x6, (ushort)luxuries);
 
 			participant.ResearchLevyRatio = (short)(this.processor.PullGlobalWord((ushort)(0x1516 + (0x3a * participant.ChiefVisuals))) +
 				((10 - luxuries) / 2));
