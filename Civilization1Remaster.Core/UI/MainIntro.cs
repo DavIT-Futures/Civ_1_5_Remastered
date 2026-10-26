@@ -1,10 +1,14 @@
 ﻿using Civilization1Remaster.Emulation;
+using Civilization1Remaster.Engine;
 using Civilization1Remaster.Game;
 
 namespace Civilization1Remaster.UI
 {
 	public class MainIntro : GameModule
 	{
+		/// <summary>The words of the frame of DisplayMainIntro, shared by its helpers (B3: in C#, new for every call)</summary>
+		private FrameWords displayMainIntroFrame = null!;
+
 		public MainIntro(GameEngine owner)
 			: base(owner)
 		{
@@ -35,6 +39,8 @@ namespace Civilization1Remaster.UI
 			this.processor.Journal.OpenScope("DisplayMainIntro()");
 
 			this.processor.EnterFrame(0x4e);
+			FrameWords outerFrame = this.displayMainIntroFrame;
+			this.displayMainIntroFrame = new FrameWords(this.processor, 0x4e);
 			this.processor.PreserveSource();
 
 			FindIntroDisks();
@@ -47,6 +53,7 @@ namespace Civilization1Remaster.UI
 			CloseIntro();
 
 			this.processor.RestoreSource();
+			this.displayMainIntroFrame = outerFrame;
 			this.processor.LeaveFrame();
 			this.processor.Journal.CloseScope("DisplayMainIntro");
 		}
@@ -55,27 +62,27 @@ namespace Civilization1Remaster.UI
 		private void FindIntroDisks()
 		{
 			FirstMissingDisk = 1;
-			this.processor.EmitLocalWord(IntroColumn, 1);
+			this.displayMainIntroFrame.SetFrame(IntroColumn, 1);
 
 			do
 			{
-				if (this.owner.Startup.QueryForDisk(this.processor.PullLocalWord(IntroColumn), 0) == 0)
+				if (this.owner.Startup.QueryForDisk(this.displayMainIntroFrame.Frame(IntroColumn), 0) == 0)
 					break;
 
-				FirstMissingDisk = (ushort)(this.processor.PullLocalWord(IntroColumn) + 1);
-				this.processor.IncrementLocalWord(IntroColumn);
+				FirstMissingDisk = (ushort)(this.displayMainIntroFrame.Frame(IntroColumn) + 1);
+				this.displayMainIntroFrame.SetFrame(IntroColumn, (ushort)(this.displayMainIntroFrame.Frame(IntroColumn) + 1));
 			}
-			while ((short)this.processor.PullLocalWord(IntroColumn) < 8);
+			while ((short)this.displayMainIntroFrame.Frame(IntroColumn) < 8);
 
-			this.processor.EmitLocalWord(IntroPathFound, 0);
+			this.displayMainIntroFrame.SetFrame(IntroPathFound, 0);
 
 			do
 			{
 				this.owner.Services.PathPresent(0x324a);
 				this.processor.RegAcc.Value16 = (ushort)(this.processor.RegAcc.Value16 == 0xffff ? 0 : 1);
-				this.processor.EmitLocalWord(IntroPathFound, this.processor.RegAcc.Value16);
+				this.displayMainIntroFrame.SetFrame(IntroPathFound, this.processor.RegAcc.Value16);
 			}
-			while (this.processor.PullLocalWord(IntroPathFound) == 0);
+			while (this.displayMainIntroFrame.Frame(IntroPathFound) == 0);
 		}
 
 		/// <summary>The first letter of the driver name (0x1a22): m = VGA / MCGA (0xd762), e = EGA (0xb20e)</summary>
@@ -98,23 +105,23 @@ namespace Civilization1Remaster.UI
 		{
 			ScreenReserveFailed = 0;
 			this.processor.RegAcc.Value16 = (ushort)(VgaMode != 0 ? 3 : 4);
-			this.processor.EmitLocalWord(IntroScreenCount, ((ushort)(VgaMode != 0 ? 3 : 4)));
+			this.displayMainIntroFrame.SetFrame(IntroScreenCount, ((ushort)(VgaMode != 0 ? 3 : 4)));
 
-			this.processor.EmitLocalWord(IntroColumn, 0);
+			this.displayMainIntroFrame.SetFrame(IntroColumn, 0);
 
 			while (true)
 			{
-				short screenCount = (short)this.processor.PullLocalWord(IntroScreenCount);
+				short screenCount = (short)this.displayMainIntroFrame.Frame(IntroScreenCount);
 
-				if ((short)this.processor.PullLocalWord(IntroColumn) >= screenCount)
+				if ((short)this.displayMainIntroFrame.Frame(IntroColumn) >= screenCount)
 					break;
 
-				this.processor.EmitGlobalWord(0x32d6, this.owner.VideoCard.ReserveScreen(this.processor.PullLocalWord(IntroColumn)));
+				this.processor.EmitGlobalWord(0x32d6, this.owner.VideoCard.ReserveScreen(this.displayMainIntroFrame.Frame(IntroColumn)));
 
 				if (this.processor.RegAcc.Value16 == 0)
 					ScreenReserveFailed = 1;
 
-				this.processor.EmitLocalWord(IntroColumn, (ushort)(this.processor.PullLocalWord(IntroColumn) + 1));
+				this.displayMainIntroFrame.SetFrame(IntroColumn, (ushort)(this.displayMainIntroFrame.Frame(IntroColumn) + 1));
 			}
 		}
 
@@ -133,7 +140,7 @@ namespace Civilization1Remaster.UI
 			this.owner.VideoCard.AssignHuesByIndexArray(0x19fe);
 
 			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x328a, 1);
-			this.processor.EmitLocalWord(IntroLogo, this.owner.VideoCard.ScreenToPicture(1, 0, 64, 320, 80));
+			this.displayMainIntroFrame.SetFrame(IntroLogo, this.owner.VideoCard.ScreenToPicture(1, 0, 64, 320, 80));
 
 			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x3293, 1);
 			this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0x4c, 0x140, 0x18,
@@ -149,14 +156,14 @@ namespace Civilization1Remaster.UI
 
 			if (VgaMode != 0)
 			{
-				this.processor.EmitLocalWord(IntroColumn, 1);
+				this.displayMainIntroFrame.SetFrame(IntroColumn, 1);
 
 				do
 				{
-					this.owner.Services.ActivateHueCycle(this.processor.PullLocalWord(IntroColumn));
-					this.processor.IncrementLocalWord(IntroColumn);
+					this.owner.Services.ActivateHueCycle(this.displayMainIntroFrame.Frame(IntroColumn));
+					this.displayMainIntroFrame.SetFrame(IntroColumn, (ushort)(this.displayMainIntroFrame.Frame(IntroColumn) + 1));
 				}
-				while ((short)this.processor.PullLocalWord(IntroColumn) <= 3);
+				while ((short)this.displayMainIntroFrame.Frame(IntroColumn) <= 3);
 			}
 
 			this.owner.World.SessionPrefMarkers |= 0x10;
@@ -175,19 +182,19 @@ namespace Civilization1Remaster.UI
 		/// </summary>
 		private void ScrollCredits()
 		{
-			for (this.processor.EmitLocalWord(IntroColumn, 0);
-				(short)this.processor.PullLocalWord(IntroColumn) < 0x140;
-				this.processor.EmitLocalWord(IntroColumn, (ushort)(this.processor.PullLocalWord(IntroColumn) + 1)))
+			for (this.displayMainIntroFrame.SetFrame(IntroColumn, 0);
+				(short)this.displayMainIntroFrame.Frame(IntroColumn) < 0x140;
+				this.displayMainIntroFrame.SetFrame(IntroColumn, (ushort)(this.displayMainIntroFrame.Frame(IntroColumn) + 1)))
 			{
-				ushort rest = (ushort)(0x140 - this.processor.PullLocalWord(IntroColumn));
+				ushort rest = (ushort)(0x140 - this.displayMainIntroFrame.Frame(IntroColumn));
 
 				this.owner.Services.FloodBox(BackScreenBox, 0, 176, (short)rest, 24, 0);
-				this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0x40, this.processor.PullLocalWord(IntroColumn), 0x18,
+				this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0x40, this.displayMainIntroFrame.Frame(IntroColumn), 0x18,
 					BackScreenBox, rest, 0xb0);
 
 				foreach (ushort column in CreditColumns)
 				{
-					if (this.processor.PullLocalWord(IntroColumn) != column)
+					if (this.displayMainIntroFrame.Frame(IntroColumn) != column)
 						continue;
 
 					if (column == 0x32 || column == 0xa0)
@@ -208,27 +215,27 @@ namespace Civilization1Remaster.UI
 
 				FlickerCgaScreen();
 
-				rest = (ushort)(0x140 - this.processor.PullLocalWord(IntroColumn));
+				rest = (ushort)(0x140 - this.displayMainIntroFrame.Frame(IntroColumn));
 
-				this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, this.processor.PullLocalWord(IntroColumn), 0x40,
+				this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, this.displayMainIntroFrame.Frame(IntroColumn), 0x40,
 					ScreenBox, rest, 0xc);
 				this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0xb0, 0x140, 0x18,
 					ScreenBox, 0, 0x4c);
-				this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0x58, this.processor.PullLocalWord(IntroColumn), 0x58,
+				this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0x58, this.displayMainIntroFrame.Frame(IntroColumn), 0x58,
 					ScreenBox, rest, 0x64);
 
 				ShowCgaScreen();
 
 				// Behind the music: one column more (only from an even column); then wait until the music reaches the column
-				if (MusicPassedColumn(0) && (this.processor.PullLocalByte(IntroColumn) & 1) == 0)
-					this.processor.IncrementLocalWord(IntroColumn);
+				if (MusicPassedColumn(0) && (this.displayMainIntroFrame.FrameByte(IntroColumn) & 1) == 0)
+					this.displayMainIntroFrame.SetFrame(IntroColumn, (ushort)(this.displayMainIntroFrame.Frame(IntroColumn) + 1));
 
 				while (!MusicReachedColumn(0))
 				{
 				}
 
 				if ((ushort)this.owner.Libc.KeyAvailable() != 0)
-					this.processor.EmitLocalWord(IntroColumn, 0x3e7);
+					this.displayMainIntroFrame.SetFrame(IntroColumn, 0x3e7);
 			}
 		}
 
@@ -238,23 +245,23 @@ namespace Civilization1Remaster.UI
 		/// </summary>
 		private void ScrollPlanet()
 		{
-			for (this.processor.EmitLocalWord(IntroColumn, 0);
-				(short)this.processor.PullLocalWord(IntroColumn) < 0x140;
-				this.processor.EmitLocalWord(IntroColumn, (ushort)(this.processor.PullLocalWord(IntroColumn) + 1)))
+			for (this.displayMainIntroFrame.SetFrame(IntroColumn, 0);
+				(short)this.displayMainIntroFrame.Frame(IntroColumn) < 0x140;
+				this.displayMainIntroFrame.SetFrame(IntroColumn, (ushort)(this.displayMainIntroFrame.Frame(IntroColumn) + 1)))
 			{
 				this.owner.VideoCard.RenderImage(BackScreenBox,
-					this.processor.PullLocalWord(IntroColumn), 0x40, (ushort)(0x140 - this.processor.PullLocalWord(IntroColumn)), 0x18,
+					this.displayMainIntroFrame.Frame(IntroColumn), 0x40, (ushort)(0x140 - this.displayMainIntroFrame.Frame(IntroColumn)), 0x18,
 					BackScreenBox, 0, 0xb0);
 
-				if (this.processor.PullLocalWord(IntroColumn) != 0)
+				if (this.displayMainIntroFrame.Frame(IntroColumn) != 0)
 				{
-					this.owner.VideoCard.RenderImage(PictureScreenBox, 0, 0x40, this.processor.PullLocalWord(IntroColumn), 0x18,
-						BackScreenBox, (ushort)(0x140 - this.processor.PullLocalWord(IntroColumn)), 0xb0);
+					this.owner.VideoCard.RenderImage(PictureScreenBox, 0, 0x40, this.displayMainIntroFrame.Frame(IntroColumn), 0x18,
+						BackScreenBox, (ushort)(0x140 - this.displayMainIntroFrame.Frame(IntroColumn)), 0xb0);
 				}
 
 				foreach (ushort column in PlanetColumns)
 				{
-					if (this.processor.PullLocalWord(IntroColumn) != column)
+					if (this.displayMainIntroFrame.Frame(IntroColumn) != column)
 						continue;
 
 					if (column == 0x32 || column == 0x74 || column == 0x136)
@@ -268,40 +275,40 @@ namespace Civilization1Remaster.UI
 
 				FlickerCgaScreen();
 
-				if ((short)this.processor.PullLocalWord(IntroColumn) < 0x140)
+				if ((short)this.displayMainIntroFrame.Frame(IntroColumn) < 0x140)
 				{
 					this.owner.VideoCard.RenderImage(BackScreenBox,
-						this.processor.PullLocalWord(IntroColumn), 0, (ushort)(0x140 - this.processor.PullLocalWord(IntroColumn)), 0x40,
+						this.displayMainIntroFrame.Frame(IntroColumn), 0, (ushort)(0x140 - this.displayMainIntroFrame.Frame(IntroColumn)), 0x40,
 						ScreenBox, 0, 0xc);
 				}
 
-				if (this.processor.PullLocalWord(IntroColumn) != 0)
+				if (this.displayMainIntroFrame.Frame(IntroColumn) != 0)
 				{
-					this.owner.VideoCard.RenderImage(PictureScreenBox, 0, 0, this.processor.PullLocalWord(IntroColumn), 0x40,
-						ScreenBox, (ushort)(0x140 - this.processor.PullLocalWord(IntroColumn)), 0xc);
+					this.owner.VideoCard.RenderImage(PictureScreenBox, 0, 0, this.displayMainIntroFrame.Frame(IntroColumn), 0x40,
+						ScreenBox, (ushort)(0x140 - this.displayMainIntroFrame.Frame(IntroColumn)), 0xc);
 				}
 
 				this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0xb0, 0x140, 0x18,
 					ScreenBox, 0, 0x4c);
 
-				if ((short)this.processor.PullLocalWord(IntroColumn) < 0x140)
+				if ((short)this.displayMainIntroFrame.Frame(IntroColumn) < 0x140)
 				{
 					this.owner.VideoCard.RenderImage(BackScreenBox,
-						this.processor.PullLocalWord(IntroColumn), 0x58, (ushort)(0x140 - this.processor.PullLocalWord(IntroColumn)), 0x58,
+						this.displayMainIntroFrame.Frame(IntroColumn), 0x58, (ushort)(0x140 - this.displayMainIntroFrame.Frame(IntroColumn)), 0x58,
 						ScreenBox, 0, 0x64);
 				}
 
-				if (this.processor.PullLocalWord(IntroColumn) != 0)
+				if (this.displayMainIntroFrame.Frame(IntroColumn) != 0)
 				{
-					this.owner.VideoCard.RenderImage(PictureScreenBox, 0, 0x58, this.processor.PullLocalWord(IntroColumn), 0x58,
-						ScreenBox, (ushort)(0x140 - this.processor.PullLocalWord(IntroColumn)), 0x64);
+					this.owner.VideoCard.RenderImage(PictureScreenBox, 0, 0x58, this.displayMainIntroFrame.Frame(IntroColumn), 0x58,
+						ScreenBox, (ushort)(0x140 - this.displayMainIntroFrame.Frame(IntroColumn)), 0x64);
 				}
 
 				ShowCgaScreen();
 
 				// The music of this part starts 0x1a40 / 0x15 columns further; a key stops the waiting
-				if (MusicPassedColumn(0x1a40) && (this.processor.PullLocalByte(IntroColumn) & 1) == 0)
-					this.processor.IncrementLocalWord(IntroColumn);
+				if (MusicPassedColumn(0x1a40) && (this.displayMainIntroFrame.FrameByte(IntroColumn) & 1) == 0)
+					this.displayMainIntroFrame.SetFrame(IntroColumn, (ushort)(this.displayMainIntroFrame.Frame(IntroColumn) + 1));
 
 				while (true)
 				{
@@ -310,14 +317,14 @@ namespace Civilization1Remaster.UI
 				}
 
 				if ((ushort)this.owner.Libc.KeyAvailable() != 0)
-					this.processor.EmitLocalWord(IntroColumn, 0x3e7);
+					this.displayMainIntroFrame.SetFrame(IntroColumn, 0x3e7);
 			}
 		}
 
 		/// <summary>The column of the intro the music is at: (0x15 * column + start) / 4, in 16 bits with the sign</summary>
 		private short MusicColumnMark(ushort start)
 		{
-			short scaled = (short)(0x15 * (short)this.processor.PullLocalWord(IntroColumn) + start);
+			short scaled = (short)(0x15 * (short)this.displayMainIntroFrame.Frame(IntroColumn) + start);
 
 			return (short)(scaled / 4);
 		}
@@ -342,7 +349,7 @@ namespace Civilization1Remaster.UI
 		private void RenderCreditLine()
 		{
 			ushort screen = ScreenBox;
-			this.processor.EmitLocalWord(IntroSavedFlag, this.processor.PullUInt16(this.processor.SegData.Value16, screen));
+			this.displayMainIntroFrame.SetFrame(IntroSavedFlag, this.processor.PullUInt16(this.processor.SegData.Value16, screen));
 			this.processor.EmitUInt16(this.processor.SegData.Value16, screen, 1);
 
 			this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 160, 184, (ushort)(VgaMode != 0 ? 0xfc : 0x7));
@@ -350,7 +357,7 @@ namespace Civilization1Remaster.UI
 			this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 160, 183, (ushort)(VgaMode != 0 ? 0xfa : 0xf));
 
 			screen = ScreenBox;
-			this.processor.EmitUInt16(this.processor.SegData.Value16, screen, this.processor.PullLocalWord(IntroSavedFlag));
+			this.processor.EmitUInt16(this.processor.SegData.Value16, screen, this.displayMainIntroFrame.Frame(IntroSavedFlag));
 		}
 
 		/// <summary>Without VGA the flag of screen 0 switches between 0 and 3 every column</summary>
@@ -371,13 +378,13 @@ namespace Civilization1Remaster.UI
 				return;
 
 			ushort screen = ScreenBox;
-			this.processor.EmitLocalWord(IntroSavedFlag, this.processor.PullUInt16(this.processor.SegData.Value16, screen));
+			this.displayMainIntroFrame.SetFrame(IntroSavedFlag, this.processor.PullUInt16(this.processor.SegData.Value16, screen));
 			this.processor.EmitUInt16(this.processor.SegData.Value16, screen, 0);
 
 			this.owner.Services.AssignDot(0, 0, 0);
 
 			screen = ScreenBox;
-			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(IntroSavedFlag);
+			this.processor.RegAcc.Value16 = this.displayMainIntroFrame.Frame(IntroSavedFlag);
 			this.processor.EmitUInt16(this.processor.SegData.Value16, screen, this.processor.RegAcc.Value16);
 
 			this.owner.Services.DisplayScreen(this.processor.RegAcc.Value16);
@@ -434,7 +441,7 @@ namespace Civilization1Remaster.UI
 			this.owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8,
 				BackScreenBox, 0, 0);
 
-			this.owner.Services.RenderPictureToScreen(BackScreenBox, 0, 64, this.processor.PullLocalWord(IntroLogo));
+			this.owner.Services.RenderPictureToScreen(BackScreenBox, 0, 64, this.displayMainIntroFrame.Frame(IntroLogo));
 
 			if (VgaMode != 0)
 			{
@@ -442,20 +449,20 @@ namespace Civilization1Remaster.UI
 				this.owner.Services.ActivateHueCycle(4);
 			}
 
-			this.processor.EmitLocalWord(IntroColumn, 0);
+			this.displayMainIntroFrame.SetFrame(IntroColumn, 0);
 
 			do
 			{
-				this.owner.VideoCard.RenderImage(BackScreenBox, this.processor.PullLocalWord(IntroColumn), 0x40, 0x4, 0x50,
-					ScreenBox, this.processor.PullLocalWord(IntroColumn), 0x40);
+				this.owner.VideoCard.RenderImage(BackScreenBox, this.displayMainIntroFrame.Frame(IntroColumn), 0x40, 0x4, 0x50,
+					ScreenBox, this.displayMainIntroFrame.Frame(IntroColumn), 0x40);
 
 				this.owner.TextPainter.AwaitTime(1);
 
-				this.processor.EmitLocalWord(IntroColumn, (ushort)(this.processor.PullLocalWord(IntroColumn) + 4));
+				this.displayMainIntroFrame.SetFrame(IntroColumn, (ushort)(this.displayMainIntroFrame.Frame(IntroColumn) + 4));
 			}
-			while ((short)this.processor.PullLocalWord(IntroColumn) < 0x140);
+			while ((short)this.displayMainIntroFrame.Frame(IntroColumn) < 0x140);
 
-			for (this.processor.EmitLocalWord(IntroColumn, 0); (short)this.processor.PullLocalWord(IntroColumn) < 0x64; this.processor.IncrementLocalWord(IntroColumn))
+			for (this.displayMainIntroFrame.SetFrame(IntroColumn, 0); (short)this.displayMainIntroFrame.Frame(IntroColumn) < 0x64; this.displayMainIntroFrame.SetFrame(IntroColumn, (ushort)(this.displayMainIntroFrame.Frame(IntroColumn) + 1)))
 			{
 				if ((ushort)this.owner.Libc.KeyAvailable() != 0)
 					break;
@@ -473,11 +480,11 @@ namespace Civilization1Remaster.UI
 		{
 			if (VgaMode != 0)
 			{
-				for (this.processor.EmitLocalWord(IntroColumn, 1);
-					(short)this.processor.PullLocalWord(IntroColumn) <= 4;
-					this.processor.EmitLocalWord(IntroColumn, (ushort)(this.processor.PullLocalWord(IntroColumn) + 1)))
+				for (this.displayMainIntroFrame.SetFrame(IntroColumn, 1);
+					(short)this.displayMainIntroFrame.Frame(IntroColumn) <= 4;
+					this.displayMainIntroFrame.SetFrame(IntroColumn, (ushort)(this.displayMainIntroFrame.Frame(IntroColumn) + 1)))
 				{
-					this.owner.Services.DeactivateHueCycle(this.processor.PullLocalWord(IntroColumn));
+					this.owner.Services.DeactivateHueCycle(this.displayMainIntroFrame.Frame(IntroColumn));
 				}
 			}
 			else
@@ -486,7 +493,7 @@ namespace Civilization1Remaster.UI
 			}
 
 			this.owner.Services.FloodBox(BackScreenBox, 0, 0, 320, 200, 0);
-			this.owner.Services.RenderPictureToScreen(BackScreenBox, 0, 64, this.processor.PullLocalWord(IntroLogo));
+			this.owner.Services.RenderPictureToScreen(BackScreenBox, 0, 64, this.displayMainIntroFrame.Frame(IntroLogo));
 			this.owner.VideoCard.RenderScreenToMainScreen(1, 0x14);
 			this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8,
 				ScreenBox, 0, 0);
@@ -494,7 +501,7 @@ namespace Civilization1Remaster.UI
 
 			DrawingBox.TypefaceIdx = 1;
 
-			this.owner.Helpers.ReleaseResource(this.processor.PullLocalWord(IntroLogo), 0);
+			this.owner.Helpers.ReleaseResource(this.displayMainIntroFrame.Frame(IntroLogo), 0);
 		}
 
 		// Local variables of DisplayCivilizationScreen in its stack frame (they stay there: the screen waits for the timer, the

@@ -462,7 +462,9 @@ tylko nazwanymi słowami (`PullLocalWord` / `EmitLocalWord` / `Increment…`), s
 `<właściciel>Frame`, nowe na każde wywołanie); pominięte grupy z wyliczanymi adresami, bajtami, BP, `LeaveFrame` w
 pomocniczej albo pomocniczą sięgającą do ramki wołaną też spod innej ramki. Dziewięć: `LabelLandmasses`,
 `ReckonContinentSizes`, `DisplayTravellersReport`, `HandleEndOfTurnEvents`, `LocateNearestFriendlyCity`,
-`ObtainDistanceToReplayCity`, `RenderSpaceship`, `ObtainNavigationKey`, `TitleLogoAndMainChoices`. 808/808. ramki, SI/DI, BX/CX/DX moduł po module; przy jawnych wartościach
+`ObtainDistanceToReplayCity`, `RenderSpaceship`, `ObtainNavigationKey`, `TitleLogoAndMainChoices`. 808/808.
+`FrameWords` czyta i pisze też bajty (`FrameByte` / `SetFrameByte`: parzysta odległość to młodszy bajt słowa, nieparzysta
+starszy bajt słowa poniżej); dzięki temu `DisplayMainIntro` (0x4e, 15 pomocniczych) – 808/808. ramki, SI/DI, BX/CX/DX moduł po module; przy jawnych wartościach
 zamiast śmieci golden master zostaje zielony, sonda stosu ma pokazać zero czytelników. Na końcu rejestry z CPU,
 `MZExecutable` i obraz CIV.EXE w pamięci (dane początkowe z pliku przy starcie).
 

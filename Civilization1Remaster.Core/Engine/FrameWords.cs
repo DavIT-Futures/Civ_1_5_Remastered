@@ -42,6 +42,34 @@ namespace Civilization1Remaster.Engine
 				this.processor.EmitUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 - distance), value);
 		}
 
+		/// <summary>The byte at BP - distance (the low byte of the word at an even distance, the high byte of the word below an odd one)</summary>
+		public byte FrameByte(int distance)
+		{
+			distance = (short)(ushort)distance;
+			int word = (distance + 1) & ~1;
+
+			if (!Within(word))
+				return this.processor.PullUInt8(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 - distance));
+
+			return (distance & 1) == 0 ? (byte)this.words[word / 2] : (byte)(this.words[word / 2] >> 8);
+		}
+
+		/// <summary>Writes the byte at BP - distance (see FrameByte)</summary>
+		public void SetFrameByte(int distance, byte value)
+		{
+			distance = (short)(ushort)distance;
+			int word = (distance + 1) & ~1;
+
+			if (!Within(word))
+			{
+				this.processor.EmitUInt8(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 - distance), value);
+				return;
+			}
+
+			ushort old = this.words[word / 2];
+			this.words[word / 2] = (distance & 1) == 0 ? (ushort)((old & 0xff00) | value) : (ushort)((old & 0xff) | (value << 8));
+		}
+
 		private bool Within(int distance) => distance > 0 && distance <= this.size && (distance & 1) == 0;
 	}
 }
