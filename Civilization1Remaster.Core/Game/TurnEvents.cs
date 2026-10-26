@@ -1123,7 +1123,10 @@ namespace Civilization1Remaster.Game
 			this.processor.Journal.OpenScope("RefreshPeaceGraphContent()");
 
 			// The powers of the frame of the original (B3: in C#): when no power is above -1, the ranking takes the player of the
-			// rank before (0 at first, like the zeroed frame)
+			// rank before (at first the local 0x1a, read before written: the frame stays for it)
+			this.processor.EnterFrame(0x1a);
+			this.processor.PreserveIndexRegisters();
+
 			ushort[] powers = new ushort[8];
 			short strongest = 0;
 			ushort treaties = 0;
@@ -1173,7 +1176,7 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			ushort best = 0;
+			ushort best = this.processor.PullLocalWord(0x1a);
 
 			for (short rank = 1; rank < 8; rank++)
 			{
@@ -1218,6 +1221,9 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
+			this.processor.RegSource.Value16 = this.processor.UnstackWord();
+			this.processor.RegDest.Value16 = this.processor.UnstackWord();
+			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("RefreshPeaceGraphContent");
 		}
@@ -1412,13 +1418,16 @@ namespace Civilization1Remaster.Game
 			this.processor.Journal.OpenScope($"RenderPalace({participantIdx}, {castleTier}, {horizLoc}, {vertLoc})");
 
 			// The levels and the styles of the sections are in the words of the frame of the original (B3: in C#): the left
-			// neighbour of section 0 is the frame word 0x34 (never written, 0), the right neighbour of section 8 the style of
-			// section 0
+			// neighbour of section 0 is the frame word 0x34 (never written), the right neighbour of section 8 the style of
+			// section 0 (unwritten for an AI player without it); the frame stays for these leftovers
+			this.processor.EnterFrame(0x36);
+			this.processor.PreserveIndexRegisters();
+
 			this.owner.VideoCard.RenderLine(ScreenBox, horizLoc - 5, vertLoc + 13, horizLoc + 68, vertLoc + 13, 2);
 
 			if (this.owner.World.Participants[participantIdx].TownTally != 0)
 			{
-				FrameWords frame = new FrameWords(this.processor, 0x36);
+				FrameWords frame = new FrameWords(this.processor, 0x36).WithLeftovers();
 				SectionTable levels = new SectionTable(frame, 0x32);
 				SectionTable styles = new SectionTable(frame, 0x20);
 
@@ -1510,6 +1519,9 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
+			this.processor.RegSource.Value16 = this.processor.UnstackWord();
+			this.processor.RegDest.Value16 = this.processor.UnstackWord();
+			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("RenderPalace");
 		}

@@ -488,7 +488,14 @@ testach), obrazki `RenderExplosion` i `ExamineCity` (bez ramek), wartości gracz
 wywołania, odpytania zegara, Idle), więc tablice C# zamiast słów stosu nie przesuwają przerwań. Odłożone:
 `PickCityProduction` (bufor klucza porady bp - 0x12e przekazywany przez adres sąsiaduje z `BestUnitScore` 0x11e –
 `FrameWords` potrzebowałby zakresu „na stosie”), `RenderCensusLine` (publiczna, dostaje adres tablicy), `ProduceTerrain`.
-Lekcja: test wołający funkcję pomocniczą przez refleksję (`TurnEndRulesTests`) nie przechodzi przez właściciela ramki.
+Lekcja: test wołający funkcję pomocniczą przez refleksję (`TurnEndRulesTests`) nie przechodzi przez właściciela ramki. Dalej: `DisplayTradeReport`
+(koszty budynków), `ChooseTechnologyToTake` (lista technologii; lokalna 0x4 zostaje na stosie – czytana przed zapisem),
+zapisy-resztki `SeizeCity`, `ImportTextFromFile`, `DisplayMilitaryReport`. Lekcja 2: **słowo ramki czytane przed
+zapisem zostaje w ramce** – z `ClassicStackLeftovers` ma tam być to, co zostawiły wcześniejsze funkcje: `RenderPalace`
+(słowo 0x34, styl sekcji 0) i `RefreshPeaceGraphContent` (0x1a) wróciły do ramek, `FrameWords.WithLeftovers()` bierze
+słowa ramki ze stosu, `ImportPalaceGraphics` zaczyna 0x12 / 0x18 od `PullLocalWord`; lista wierszy
+`DisplayMilitaryReport` zostaje na stosie (`SchismAndReportCrashTests` sprawdza śmieci). Etykiety gałęzi testów
+różnicowych czytające lokalne z ramki biorą `pair.Original` (`ImportTextFromFileMatchesOriginalCode`).
 
 **Faza 3 – sprzątanie i drugi baseline:** usunięcie przełączników i kodu „classic”, zamrożonej gry
 (`Civilization1Remaster.Original`), kopii Reference, testów Dual; testy różnicowe → testy zachowania z tabel przypadków.

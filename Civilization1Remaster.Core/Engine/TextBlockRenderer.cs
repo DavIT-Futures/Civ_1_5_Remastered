@@ -135,7 +135,7 @@ namespace Civilization1Remaster.Engine
 		{
 			this.processor.Journal.OpenScope($"ImportTextFromFile(0x{docnameAddr:x4}, 0x{charsAddr:x4})");
 
-			// The line and the index entry are in the stack frame, like in the original; the final values of the locals stay there
+			// The line and the index entry are in the stack frame, like in the original (buffers of the file functions)
 			this.processor.EnterFrame(0x110);
 			this.processor.PreserveSource();
 
@@ -251,14 +251,6 @@ namespace Civilization1Remaster.Engine
 
 				this.owner.Libc.CloseStream((short)handle);
 			}
-
-			this.processor.EmitLocalWord(0x102, hash);
-			this.processor.EmitLocalWord(0x106, charIdx);
-			this.processor.EmitLocalWord(0x108, (ushort)(found ? 1 : 0));
-			this.processor.EmitLocalWord(0x10a, scanned);
-			this.processor.EmitLocalWord(0x10c, lines);
-			this.processor.EmitLocalWord(0x10e, (ushort)(indexed ? 1 : 0));
-			this.processor.EmitLocalWord(0x110, handle);
 
 			this.processor.RegAcc.Value16 = found ? lines : (ushort)0xffff;
 

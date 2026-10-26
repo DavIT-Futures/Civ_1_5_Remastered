@@ -348,12 +348,11 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope($"DisplayTradeReport({participantIdx})");
 
-			// The costs of the buildings are in the stack frame, like in the original (HandleCity reads leftovers under the
-			// stack); the final values of the locals stay there
+			// HandleCity is called at the depth of the original (the frame stays; B3: the costs of the buildings are in C#)
 			this.processor.EnterFrame(0x40);
 			this.processor.PreserveIndexRegisters();
 
-			ushort costs = (ushort)(this.processor.RegFrame.Value16 - 0x34);
+			ushort[] costs = new ushort[0x18];
 
 			short palaceCost = (short)(this.owner.World.HardnessTier / 2);
 
@@ -378,7 +377,7 @@ namespace Civilization1Remaster.UI
 
 			for (int structureIdx = 0; structureIdx < 0x18; structureIdx++)
 			{
-				this.processor.EmitGlobalWord((ushort)(costs + (structureIdx << 1)), 0x0);
+				costs[structureIdx] = 0x0;
 			}
 
 			short vertLoc = 0x28;
@@ -451,18 +450,15 @@ namespace Civilization1Remaster.UI
 					if (((ushort)structure & town.StructureMarkers0) == 0 && ((ushort)(structure >> 16) & town.StructureMarkers1) == 0)
 						continue;
 
-					ushort cost = (ushort)(costs + (structureIdx << 1));
-
-					this.processor.EmitGlobalWord(cost, (ushort)(this.processor.PullGlobalWord(cost) + BuildingWord(structureIdx + 1, BuildingTable.Upkeep)));
+					costs[structureIdx] = (ushort)(costs[structureIdx] + BuildingWord(structureIdx + 1, BuildingTable.Upkeep));
 
 					if (structureIdx == 1)
 					{
-						this.processor.EmitGlobalWord(cost, (ushort)(this.processor.PullGlobalWord(cost) + palaceCost));
+						costs[structureIdx] = (ushort)(costs[structureIdx] + palaceCost);
 					}
 				}
 			}
 
-			this.processor.EmitLocalWord(0x38, 0x80);
 
 			Message("Total Income: ")
 				.Number(income)
@@ -481,7 +477,6 @@ namespace Civilization1Remaster.UI
 				short turns = CPU.SignedQuotient((short)((short)(epoch * this.owner.World.Participants[this.owner.World.PersonParticipantIdx].FoundScienceTally) *
 					(short)((this.owner.World.HardnessTier << 1) + 6)), science);
 
-				this.processor.EmitLocalWord(0x3a, (ushort)turns);
 
 				Message("Discoveries: ")
 					.Number(turns)
@@ -497,7 +492,7 @@ namespace Civilization1Remaster.UI
 
 			for (int structureIdx = 0; structureIdx < 0x18; structureIdx++)
 			{
-				short cost = (short)this.processor.PullGlobalWord((ushort)(costs + (structureIdx << 1)));
+				short cost = (short)costs[structureIdx];
 
 				if (cost == 0)
 					continue;
@@ -538,11 +533,6 @@ namespace Civilization1Remaster.UI
 
 			vertLoc += 0xc;
 
-			this.processor.EmitLocalWord(0x2, (ushort)total);
-			this.processor.EmitLocalWord(0x4, (ushort)science);
-			this.processor.EmitLocalWord(0x36, (ushort)vertLoc);
-			this.processor.EmitLocalWord(0x3c, 0x18);
-			this.processor.EmitLocalWord(0x3e, (ushort)palaceCost);
 
 			FinishReportScreen();
 
@@ -564,7 +554,7 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope("DisplayMilitaryReport()");
 
-			// The list of the rows' players is in the stack frame, like in the original, and the final values of the locals stay there
+			// The list of the rows' players is in the stack frame, like in the original (the classic rows read its leftovers)
 			this.processor.EnterFrame(0x26);
 			this.processor.PreserveIndexRegisters();
 
@@ -579,8 +569,6 @@ namespace Civilization1Remaster.UI
 			bool reportShown = false;
 			ushort participantIdx;
 
-			this.processor.EmitLocalWord(0x1e, 0x20);
-			this.processor.EmitLocalWord(0x24, 0);
 
 			for (participantIdx = 1; (short)participantIdx < 8; participantIdx++)
 			{
@@ -588,7 +576,6 @@ namespace Civilization1Remaster.UI
 					continue;
 
 				short vertLoc = (short)((0x18 * rowCount) + 0x20);
-				this.processor.EmitLocalWord(0x1e, (ushort)vertLoc);
 
 				this.owner.VideoCard.RenderLine(ScreenBox, 4, (short)(vertLoc - 2), 316, (short)(vertLoc - 2), 9);
 
@@ -640,7 +627,6 @@ namespace Civilization1Remaster.UI
 				if (this.owner.Libc.KeyAvailable() != 0)
 				{
 					ushort key = this.owner.Dialogs.ObtainNavigationKey();
-					this.processor.EmitLocalWord(0x22, key);
 
 					if ((short)key >= 0x31 && (short)key <= 0x37)
 					{
@@ -669,7 +655,6 @@ namespace Civilization1Remaster.UI
 						DisplayIntelligenceReport((short)rowPlayerIdx);
 
 						reportShown = true;
-						this.processor.EmitLocalWord(0x24, 1);
 						done = 0;
 					}
 				}
@@ -686,9 +671,6 @@ namespace Civilization1Remaster.UI
 			}
 			while (done == 0);
 
-			this.processor.EmitLocalWord(0x2, rowCount);
-			this.processor.EmitLocalWord(0x4, participantIdx);
-			this.processor.EmitLocalWord(0x18, done);
 
 			this.owner.Startup.ConcealMouseCursor();
 
@@ -729,7 +711,6 @@ namespace Civilization1Remaster.UI
 				}
 			}
 
-			this.processor.EmitLocalWord(0x6, capitalIdx);
 
 			this.owner.Words.Append(": ");
 
@@ -790,9 +771,6 @@ namespace Civilization1Remaster.UI
 				horizLoc += 0x60;
 			}
 
-			this.processor.EmitLocalWord(0x1a, (ushort)horizLoc);
-			this.processor.EmitLocalWord(0x1c, otherIdx);
-			this.processor.EmitLocalWord(0x1e, (ushort)vertLoc);
 		}
 
 		/// <summary>

@@ -28,7 +28,7 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"SeizeCity({participantIdx}, {townIdx}, {marker})");
 
-			// The final values of the locals stay in the stack frame, like in the original
+			// The frame stays for the depth of the calls (B3: the locals are C# variables)
 			this.processor.EnterFrame(0x12);
 			this.processor.PreserveIndexRegisters();
 
@@ -41,10 +41,6 @@ namespace Civilization1Remaster.Game
 			ushort formerIdx = (ushort)town.ParticipantIdx;
 			ushort horizLoc = (ushort)(short)town.Place.X;
 			ushort vertLoc = (ushort)(short)town.Place.Y;
-
-			this.processor.EmitLocalWord(0x12, formerIdx);
-			this.processor.EmitLocalWord(0x6, horizLoc);
-			this.processor.EmitLocalWord(0x8, vertLoc);
 
 			if (participantIdx == person)
 				this.owner.World.Participants[formerIdx].TouchParticipantTimeleft = -2;
@@ -76,7 +72,6 @@ namespace Civilization1Remaster.Game
 			}
 
 			short plunder = (short)this.owner.Helpers.VerifyValueSpan((short)ComputeCityPlunder(townIdx), 0, this.owner.World.Participants[formerIdx].Gold);
-			this.processor.EmitLocalWord(0x4, (ushort)plunder);
 
 			if (!BarbariansRazeCity(participantIdx, townIdx, horizLoc, vertLoc))
 			{
@@ -153,8 +148,6 @@ namespace Civilization1Remaster.Game
 				this.owner.UnitOps.EliminateUnit((short)formerIdx, (short)troopIdx);
 			}
 
-			this.processor.EmitLocalWord(0x10, troopIdx);
-
 			if (participantIdx == person && this.owner.World.Participants[person].RegimeKind < 4)
 			{
 				town.ConditionMarker |= 1;
@@ -218,7 +211,6 @@ namespace Civilization1Remaster.Game
 			this.processor.UnstackDoubleWord(); // stack management - pop return offset and segment
 
 			ushort capitalIdx = this.owner.Secession.ObtainDistanceToCapital(formerIdx);
-			this.processor.EmitLocalWord(0x2, capitalIdx);
 
 			this.owner.World.Towns[capitalIdx].PresentMakingIdx = -1;
 
@@ -266,13 +258,9 @@ namespace Civilization1Remaster.Game
 				ushort markHoriz = (ushort)this.owner.Routing.TunePosition((short)DirectionHorizAt(this.processor.RegSource.Value16) + (short)horizLoc);
 				ushort markVert = (ushort)(DirectionVertAt(this.processor.RegSource.Value16) + vertLoc);
 
-				this.processor.EmitLocalWord(0xa, markHoriz);
-				this.processor.EmitLocalWord(0xc, markVert);
-
 				this.owner.Services.AssignDot(2, (short)markHoriz + 0x50, (short)markVert, (ushort)participantIdx);
 			}
 
-			this.processor.EmitLocalWord(0x10, markIdx);
 		}
 
 		/// <summary>The human player takes or loses the city: the map, the capture message, the city screen or the newspaper</summary>
@@ -418,25 +406,22 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"ChooseTechnologyToTake({participantIdx1}, {participantIdx2})");
 
-			// The frame stays: the list of up to 72 technologies is at bp - 0x94, and local 0x4 (best technology for the AI) is read
-			// uninitialized when no technology has ObtainTechnologyInfo > -1
+			// The frame stays: local 0x4 (best technology for the AI) is read uninitialized when no technology has
+			// ObtainTechnologyInfo > -1 (B3: the list of up to 72 technologies of the frame is in C#)
 			this.processor.EnterFrame(0x9a);
 			this.processor.PreserveSource();
 
 			if (participantIdx1 != 0 && participantIdx2 != 0)
 			{
 				ushort count = 0;
-				this.processor.EmitLocalWord(0x2, 0);
+				ushort[] techs = new ushort[0x48];
 
 				this.owner.Words.Set("Select one...\n ");
 
 				short bestScore = -1;
-				this.processor.EmitLocalWord(0x96, 0xffff);
-				this.processor.EmitLocalWord(0x98, 0x47);
 
 				for (short techId = 0x47; techId >= 0; techId--)
 				{
-					this.processor.EmitLocalWord(0x98, (ushort)techId);
 
 					if (this.owner.Advisors.PlayerKnowsTechnology(participantIdx1, techId) == 0 &&
 						this.owner.Advisors.PlayerKnowsTechnology(participantIdx2, techId) != 0)
@@ -446,21 +431,16 @@ namespace Civilization1Remaster.Game
 
 						ushort slotOffset = (ushort)(count << 1);
 						count++;
-						this.processor.EmitLocalWord(0x2, count);
 						this.processor.RegSource.Value16 = slotOffset;
-						this.processor.EmitUInt16(this.processor.SegStack.Value16,
-							(ushort)(this.processor.RegFrame.Value16 + slotOffset - 0x94), (ushort)techId);
+						techs[count - 1] = (ushort)techId;
 
 						if ((short)this.owner.Advisors.ObtainTechnologyInfo(participantIdx1, (ushort)techId) > bestScore)
 						{
 							bestScore = (short)this.owner.Advisors.ObtainTechnologyInfo(participantIdx1, (ushort)techId);
-							this.processor.EmitLocalWord(0x96, (ushort)bestScore);
 							this.processor.EmitLocalWord(0x4, (ushort)techId);
 						}
 					}
 				}
-
-				this.processor.EmitLocalWord(0x98, 0xffff);
 
 				if (count != 0)
 				{
@@ -482,13 +462,11 @@ namespace Civilization1Remaster.Game
 								this.processor.UnstackDoubleWord();
 							}
 
-							this.processor.EmitLocalWord(0x9a, choice);
 						}
 						while (choice == 0xffff);
 
 						this.processor.RegSource.Value16 = (ushort)(choice << 1);
-						short chosenTech = this.processor.PullInt16(this.processor.SegStack.Value16,
-							(ushort)(this.processor.RegFrame.Value16 + (choice << 1) - 0x94));
+						short chosenTech = (short)techs[choice];
 
 						this.owner.Advisors.EarnTechnology(participantIdx1, chosenTech, participantIdx2);
 					}

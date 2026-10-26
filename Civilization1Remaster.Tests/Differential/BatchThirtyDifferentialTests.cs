@@ -224,9 +224,9 @@ namespace Civilization1Remaster.Tests.Differential
 					Register.Acc | Register.Kept,
 					game =>
 					{
-						// The locals stay in the frame under the stack: 0x10e indexed, 0x102 the last hash
-						bool indexed = game.Processor.PullGlobalWord((ushort)(sp - 2 - 0x10e)) != 0;
-						bool rehashed = game.Processor.PullGlobalWord((ushort)(sp - 2 - 0x102)) != Hash(topic);
+						// The locals of the original stay in its frame under the stack: 0x10e indexed, 0x102 the last hash
+						bool indexed = pair.Original.Engine.Processor.PullGlobalWord((ushort)(sp - 2 - 0x10e)) != 0;
+						bool rehashed = pair.Original.Engine.Processor.PullGlobalWord((ushort)(sp - 2 - 0x102)) != Hash(topic);
 						return game.Processor.RegAcc.Value16 == 0xffff ? $"missing{(rehashed ? ", next hash" : "")}" :
 							$"{(indexed ? "indexed" : "searched")}{(rehashed ? ", next hash" : "")}";
 					});

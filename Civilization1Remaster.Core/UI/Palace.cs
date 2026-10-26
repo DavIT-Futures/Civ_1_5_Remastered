@@ -398,9 +398,10 @@ namespace Civilization1Remaster.UI
 
 			ushort pictureName = (ushort)(this.processor.RegFrame.Value16 - 0x10);
 
-			// Locals 0x12 and 0x18 of the original (B3: in C#; 0 like the zeroed frame when never written)
-			ushort lastLeftEnd = 0;
-			ushort builtRightmost = 0;
+			// Locals 0x12 and 0x18 of the original (B3: in C#), read before written on some paths: they start with what the
+			// frame holds
+			ushort lastLeftEnd = this.processor.PullLocalWord(0x12);
+			ushort builtRightmost = this.processor.PullLocalWord(0x18);
 
 			this.owner.Startup.QueryForDisk(2, 1);
 
