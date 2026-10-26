@@ -632,6 +632,29 @@ namespace Civilization1Remaster.Emulation
 			return scratch;
 		}
 
+		public string ReadText(short hnd, int span)
+		{
+			if (this.files.IncludesKey(hnd))
+			{
+				FileStreamItem documentElement = this.files.ObtainValueByKey(hnd);
+				char[] chars = new char[span];
+				int count = 0;
+				for (int idx = 0; idx < span; idx++)
+				{
+					short chr = documentElement.PullChar();
+					if (chr < 0)
+						break;
+					chars[count++] = (char)(byte)chr;
+					if (chr == 0)
+						break;
+				}
+				string text = new string(chars, 0, count);
+				int zero = text.IndexOf('\0');
+				return zero >= 0 ? text.Substring(0, zero) : text;
+			}
+			return string.Empty;
+		}
+
 		public short ReadHandle(short hnd, ushort stagingAddr, ushort span)
 		{
 			uint location = CPU.AsLinearAddress(this.processor.SegData.Value16, stagingAddr);

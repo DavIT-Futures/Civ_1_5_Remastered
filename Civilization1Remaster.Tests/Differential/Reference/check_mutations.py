@@ -16,6 +16,9 @@ TIMEOUT seconds is killed with its child processes and counts as CAUGHT (hang).
 A survivor can be an equivalent mutation (a value the code never reaches): then choose a mutation that changes behaviour.
 """
 import json, os, re, shutil, subprocess, sys, threading
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
 ROOT = os.getcwd()
 WORKTREES = os.path.join(ROOT, '.mutants')

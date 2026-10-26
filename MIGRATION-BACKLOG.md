@@ -1381,6 +1381,8 @@ sprawdza, że jego scenariusze trafiają wszystkie gałęzie, i łapie celowo wp
   na melodiach (`Tune`) przeżywają – `PerformSound` nie zostawia śladu w testach (równoważne) – więc sprawdzone na polu
   `Leaning` (`ConstructCivilization`, golden master przez `CityManagement`).
 
+- B6.8, porcja 1 (2026-10-26): bufory nazw plików i tekstów przeniesione ze stosu do C# w `TurnEvents.DisplayCivilizationScenery`, `SpaceshipScreen.ImportSpaceScenery`, `Palace.ImportPalaceGraphics` (`RenderPalaceBush`, `ImportPalaceCastle`) oraz `GameLoadAndSave.ImportGame`. W `ImageTools` przeciążenia `ImportPictureOrColors` i `ImportIcon` przyjmujące `string`; w `CRuntime` metoda `ReadText`. Usunięto 5 ramek stosu (`EnterFrame`/`LeaveFrame`), pozostało 46. 8 z 8 mutacji złapanych (BatchEleven, BatchTwelve, BatchFortyTwo, BatchThirty, BatchThirtyTwo), Golden Master 16/16 zielony.
+
 ## Następny krok
 
 Stan 2026-10-24: migracja asm → C# zakończona (2026-10-19), B0 – B2 i B4 zrobione (B4 do granicy opisanej wyżej),

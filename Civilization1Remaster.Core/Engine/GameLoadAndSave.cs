@@ -327,9 +327,6 @@ namespace Civilization1Remaster.Engine
 		{
 			this.processor.Journal.OpenScope($"ImportGame(0x{docnameAddr:x4}, {marker})");
 
-			// The names are read into a buffer in the stack frame, like in the original
-			this.processor.EnterFrame(0x10);
-
 			this.owner.Libc.CopyText((ushort)(docnameAddr + 9), "SVE");
 
 			ushort result = 1;
@@ -346,8 +343,6 @@ namespace Civilization1Remaster.Engine
 				}
 				else
 				{
-					ushort names = (ushort)(this.processor.RegFrame.Value16 - 0x10);
-
 					// The human player (0x6822), the year (0x6826) and the difficulty (0x6824)
 					this.owner.Libc.SeekHandle(handle, 2, 0);
 					this.owner.Libc.ReadHandle(handle, 0x6822, 2);
@@ -365,16 +360,16 @@ namespace Civilization1Remaster.Engine
 					this.owner.Words.Append(" ");
 
 					this.owner.Libc.SeekHandle(handle, (14 * (int)(short)SavedHumanPlayer) + 16, 0);
-					this.owner.Libc.ReadHandle(handle, names, 14);
+					string leaderName = this.owner.Libc.ReadText(handle, 14);
 
-					this.owner.Words.Append(names);
+					this.owner.Words.Append(leaderName);
 
 					this.owner.Libc.SeekHandle(handle, (12 * (int)(short)SavedHumanPlayer) + 0x80, 0);
-					this.owner.Libc.ReadHandle(handle, names, 0xc);
+					string civName = this.owner.Libc.ReadText(handle, 0xc);
 
 					this.owner.Words.Append(", ");
 
-					this.owner.Words.Append(names);
+					this.owner.Words.Append(civName);
 
 					this.owner.Words.Append("/");
 
@@ -413,8 +408,6 @@ namespace Civilization1Remaster.Engine
 			}
 
 			this.processor.RegAcc.Value16 = result;
-
-			this.processor.LeaveFrame();
 
 			// Far return
 			this.processor.Journal.CloseScope("ImportGame");

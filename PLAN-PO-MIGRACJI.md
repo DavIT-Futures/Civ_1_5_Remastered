@@ -551,6 +551,8 @@ rejestr (31), nieosiągnięte w testach, z ręcznymi odłożeniami i w ramkach �
 ramki i rejestry na stosie). Zostają ramki „przeciekające” i ramki z buforami. Testy: `StackLeftoverTests` tylko z regułą remastera (jednostka bez domu zostaje), raport wojskowy klasyczny
 bez wyjątku (czyta 0), `DifferentialPair` po wyjątku w scenariuszu przywraca SP / BP (wersje zostawiają różne ramki).
 
+**B6.8, porcja 1 (2026-10-26):** bufory nazw plików i tekstów przeniesione ze stosu do C# w `TurnEvents.DisplayCivilizationScenery`, `SpaceshipScreen.ImportSpaceScenery`, `Palace.ImportPalaceGraphics` (`RenderPalaceBush`, `ImportPalaceCastle`) oraz `GameLoadAndSave.ImportGame`. W `ImageTools` przeciążenia `ImportPictureOrColors` i `ImportIcon` przyjmujące `string`; w `CRuntime` metoda `ReadText`. Usunięto 5 ramek stosu (`EnterFrame`/`LeaveFrame`), pozostało 46. 8 z 8 mutacji złapanych (BatchEleven, BatchTwelve, BatchFortyTwo, BatchThirty, BatchThirtyTwo), Golden Master 16/16 zielony.
+
 **Faza 3 – sprzątanie i drugi baseline:** usunięcie przełączników i kodu „classic”, zamrożonej gry
 (`Civilization1Remaster.Original`), kopii Reference, testów Dual; testy różnicowe → testy zachowania z tabel przypadków.
 B6.7 część 2 (zdarzenia hosta zamiast `PumpMessages`, nowy zegar testów) → **drugie nagranie baseline'u** (powinno

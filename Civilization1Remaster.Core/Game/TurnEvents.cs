@@ -1800,26 +1800,14 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope("DisplayCivilizationScenery()");
 
-			this.processor.EnterFrame(0x10);
-
 			if (VgaMode != 0)
 			{
 				this.owner.Helpers.HaltHueCycling();
 
-				ushort docname = (ushort)(this.processor.RegFrame.Value16 - 0x10);
-				this.owner.Libc.CopyText(docname, "back0a.pal");
-
 				short regime = this.owner.World.Participants[this.owner.World.PersonParticipantIdx].RegimeKind;
-				this.processor.EmitGlobalByte((ushort)(docname + 4), (byte)((regime / 2) + 0x30));
-
-				if (regime == 3)
-				{
-					this.processor.EmitGlobalByte((ushort)(docname + 4), 0x33);
-				}
-				else if (this.owner.Advisors.PlayerKnowsTechnology(this.owner.World.PersonParticipantIdx, 0x14) != 0)
-				{
-					this.processor.EmitGlobalByte((ushort)(docname + 5), 0x6d);
-				}
+				char regimeChar = regime == 3 ? '3' : (char)((regime / 2) + '0');
+				char techChar = regime != 3 && this.owner.Advisors.PlayerKnowsTechnology(this.owner.World.PersonParticipantIdx, 0x14) != 0 ? 'm' : 'a';
+				string docname = $"back{regimeChar}{techChar}.pal";
 
 				this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, docname, 0xc1d6);
 
@@ -1831,8 +1819,6 @@ namespace Civilization1Remaster.Game
 
 				this.owner.Helpers.LaunchHueCycling();
 			}
-
-			this.processor.LeaveFrame();
 
 			this.processor.Journal.CloseScope("DisplayCivilizationScenery");
 		}

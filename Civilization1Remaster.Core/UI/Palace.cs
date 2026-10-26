@@ -393,10 +393,6 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope($"ImportPalaceGraphics({marker})");
 
-			this.processor.EnterFrame(0x2e);
-
-			ushort pictureName = (ushort)(this.processor.RegFrame.Value16 - 0x10);
-
 			// Locals 0x12 and 0x18 of the original (B3: in C#), read before written on some paths: they start at 0
 			ushort lastLeftEnd = 0;
 			ushort builtRightmost = 0;
@@ -431,11 +427,8 @@ namespace Civilization1Remaster.UI
 
 			if ((short)this.processor.PullGlobalWord(0xd932) > 0)
 			{
-				this.owner.Libc.CopyText(pictureName, "cbacks0.pic");
-
-				this.processor.EmitGlobalByte((ushort)(pictureName + 6), (byte)(this.processor.PullGlobalByte(0xd932) + 0x30));
-
-				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0x87, pictureName, 0);
+				string gardenPicture = $"cbacks{(char)(this.processor.PullGlobalByte(0xd932) + '0')}.pic";
+				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0x87, gardenPicture, 0);
 			}
 
 			ushort horizLoc = 0x10;
@@ -567,18 +560,16 @@ namespace Civilization1Remaster.UI
 
 			if (PalaceLeftBushes != 0 || PalaceRightBushes != 0)
 			{
-				this.owner.Libc.CopyText(pictureName, "cbrush0.pic");
-
 				ushort leftBush = 0, rightBush = 0;
 
 				if (PalaceLeftBushes != 0)
 				{
-					leftBush = RenderPalaceBush(pictureName, 0xd930, 0x2e, 0);
+					leftBush = RenderPalaceBush(0xd930, 0x2e, 0);
 				}
 
 				if (PalaceRightBushes != 0)
 				{
-					rightBush = RenderPalaceBush(pictureName, 0xd934, 0x2f, 184);
+					rightBush = RenderPalaceBush(0xd934, 0x2f, 184);
 				}
 
 				this.owner.Helpers.ReleaseResource(PalaceLeftBushes != 0 ? leftBush : rightBush, 0);
@@ -600,7 +591,6 @@ namespace Civilization1Remaster.UI
 				this.owner.Startup.QueryForDisk(0, 1);
 			}
 
-			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("ImportPalaceGraphics");
 		}
@@ -618,9 +608,10 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>A bush of the palace garden: cbrush picture 2 * size + first from the word sizeAddr, at x horizLoc</summary>
-		private ushort RenderPalaceBush(ushort pictureName, ushort sizeAddr, byte first, int horizLoc)
+		private ushort RenderPalaceBush(ushort sizeAddr, byte first, int horizLoc)
 		{
-			this.processor.EmitGlobalByte((ushort)(pictureName + 6), (byte)((this.processor.PullGlobalByte(sizeAddr) << 1) + first));
+			char bushChar = (char)((this.processor.PullGlobalByte(sizeAddr) << 1) + first);
+			string pictureName = $"cbrush{bushChar}.pic";
 
 			ushort picture = this.owner.ImageToolkit.ImportIcon(pictureName);
 
@@ -743,10 +734,6 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope($"ImportPalaceCastle({arg1}, {arg2})");
 
-			// The file name is in the stack frame, like in the original, and the final values of the locals stay there
-			this.processor.EnterFrame(0x1a);
-
-			ushort docname = (ushort)(this.processor.RegFrame.Value16 - 0x10);
 			ushort level;
 
 			for (level = 0; level < 5; level++)
@@ -754,8 +741,7 @@ namespace Civilization1Remaster.UI
 				if (((1 << level) & arg1) == 0)
 					continue;
 
-				this.owner.Libc.CopyText(docname, "castle0.pic");
-				this.processor.EmitGlobalByte((ushort)(docname + 6), (byte)(level + 0x30));
+				string docname = $"castle{level}.pic";
 
 				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, docname, 0);
 
@@ -825,7 +811,6 @@ namespace Civilization1Remaster.UI
 				}
 			}
 
-			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("ImportPalaceCastle");
 		}
