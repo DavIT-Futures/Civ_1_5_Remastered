@@ -51,7 +51,6 @@ namespace Civilization1Remaster.Game
 			this.processor.Journal.OpenScope($"EstablishCity({participantIdx}, {arg2}, {horizLoc}, {vertLoc}, {townExtent})");
 
 			// The final values of the locals stay in the stack frame, like in the original
-			this.processor.EnterFrame(0x14);
 			this.processor.PreserveSource();
 
 			this.owner.Bot.DisableStrategicLocation(participantIdx, 0, horizLoc, vertLoc, 4);
@@ -90,7 +89,6 @@ namespace Civilization1Remaster.Game
 			this.processor.RegAcc.Value16 = result;
 
 			this.processor.RestoreSource();
-			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("EstablishCity");
 
@@ -379,7 +377,6 @@ namespace Civilization1Remaster.Game
 			this.processor.Journal.OpenScope($"HandleCityDisasters({townIdx})");
 
 			// The final values of the locals stay in the stack frame, like in the original
-			this.processor.EnterFrame(0x10);
 			this.processor.PreserveIndexRegisters();
 
 			City town = this.owner.World.Towns[townIdx];
@@ -520,7 +517,6 @@ namespace Civilization1Remaster.Game
 			ReportCityDisaster(townIdx);
 
 			this.processor.RestoreIndexRegisters();
-			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("HandleCityDisasters");
 		}

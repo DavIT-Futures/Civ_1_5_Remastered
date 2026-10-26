@@ -127,7 +127,6 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"SettleBattle({participantIdx1}, {troopIdx1}, {participantIdx2}, {troopIdx2}, {marker})");
 
-			this.processor.EnterFrame(0x26);
 			this.processor.PreserveIndexRegisters();
 
 			int assailantKind = PullUnitByte(participantIdx1, troopIdx1, TroopKindDisplacement);
@@ -285,7 +284,6 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.RegAcc.Value16 = outcome;
 			this.processor.RestoreIndexRegisters();
-			this.processor.LeaveFrame();
 			this.processor.Journal.CloseScope("SettleBattle");
 			return outcome;
 		}
@@ -759,7 +757,6 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"ExplodeNuclearWeapon({participantIdx}, {horizLoc}, {vertLoc})");
 
-			this.processor.EnterFrame(0xc);
 			this.processor.PreserveSource();
 
 			MapLayers chart = this.owner.MapOps.Chart;
@@ -819,7 +816,6 @@ namespace Civilization1Remaster.Game
 			EnactNuclearFallout(horizLoc, vertLoc);
 
 			this.processor.RestoreSource();
-			this.processor.LeaveFrame();
 
 			this.processor.Journal.CloseScope("ExplodeNuclearWeapon");
 		}

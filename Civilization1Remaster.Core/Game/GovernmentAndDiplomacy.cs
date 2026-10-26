@@ -29,8 +29,6 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"HandlePeaceTreaties({participantIdx})");
 
-			// The final values of the locals stay in the stack frame, like in the original
-			this.processor.EnterFrame(0x6);
 			this.processor.PreserveIndexRegisters();
 
 			short person = this.owner.World.PersonParticipantIdx;
@@ -86,7 +84,6 @@ namespace Civilization1Remaster.Game
 			}
 
 			this.processor.RestoreIndexRegisters();
-			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("HandlePeaceTreaties");
 		}

@@ -27,7 +27,6 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"DivideCivilization({participantIdx})");
 
-			this.processor.EnterFrame(0x48);
 			this.processor.PreserveIndexRegisters();
 
 			ushort result = SplitCivilization(participantIdx);
@@ -35,7 +34,6 @@ namespace Civilization1Remaster.Game
 			this.processor.RegAcc.Value16 = result;
 
 			this.processor.RestoreIndexRegisters();
-			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("DivideCivilization");
 
