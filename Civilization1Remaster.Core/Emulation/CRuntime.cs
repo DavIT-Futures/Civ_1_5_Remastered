@@ -28,6 +28,9 @@ namespace Civilization1Remaster.Emulation
 		#region Keyboard operations
 		public short KeyAvailable()
 		{
+			// Loops that wait for a key alone still get the interrupts (the timer, the mouse of the window)
+			this.processor.PumpMessages();
+
 			if (this.owner.VideoCard.Tokens.Count == 0)
 				this.processor.InputStarved?.Invoke(false);
 

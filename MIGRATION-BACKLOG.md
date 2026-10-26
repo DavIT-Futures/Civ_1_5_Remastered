@@ -13,6 +13,7 @@ kodem gry). Usprawnienia i zmiany reguł gry wchodzą dopiero na sam koniec, gdy
 | Ekran „Obsolete Wonders” w menu raportów i dopisek „(Obsolete)” na liście cudów | a04e786 | nic (`WorldMap`, `GameMenus` przywrócone) |
 | Rozszerzone raporty doradców: postęp badań „(x/y)”, nauka na turę, sumy handlu i plonów, podsumowanie miast | a04e786, 2c9ab40 | `AdvisorStatistics` (nieużywane). Uwaga: wersja z refaktora wołała `HandleCity`, które ma skutki uboczne, więc nowa wersja musi liczyć bez zmiany stanu |
 | `EliminateUnit`: natychmiastowe wyjście dla już usuniętej jednostki | a04e786 | nic (zostało tylko sprawdzenie zakresu, jak w baseline) |
+| **Nowe (prośba użytkownika 2026-10-26):** konwersja produkcji miasta na złoto albo naukę (jak „Coinage” z późniejszych Civ) – gdy miasto nie ma już co budować albo gracz tego chce; ok. 50% tarcz zamienia się na wybrany plon. Do ustalenia: pozycja w menu produkcji, wybór złoto / nauka, zachowanie AI. Za przełącznikiem `Classic…`, który testy włączają | – | nic |
 
 ## Refaktory wycofane do oryginału (do zrobienia jeszcze raz, krok po kroku, z golden master)
 

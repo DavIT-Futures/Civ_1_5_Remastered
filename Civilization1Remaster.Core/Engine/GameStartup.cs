@@ -189,7 +189,10 @@ namespace Civilization1Remaster.Engine
 		/// </summary>
 		public void ObtainMouseState()
 		{
-			// function body
+			// The game waits for the buttons in loops of this call alone: the interrupts (the mouse of the window, the timer)
+			// come here, as they came with the reads of 0x586e through the CPU before the state moved to C#
+			this.processor.PumpMessages();
+
 			if (MousePresent != 0)
 			{
 				this.owner.Services.ObtainAndWipeMouseClick();

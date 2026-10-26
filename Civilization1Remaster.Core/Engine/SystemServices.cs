@@ -1180,7 +1180,9 @@ namespace Civilization1Remaster.Engine
 		/// <returns></returns>
 		public ushort ObtainAndWipeMouseClick()
 		{
-			// function body
+			// The interrupts come before the clicks are read (see GameStartup.ObtainMouseState)
+			this.processor.PumpMessages();
+
 			this.processor.RegAcc.Value16 = this.owner.Pointer.Clicks;
 			this.owner.Pointer.Clicks = 0;
 
