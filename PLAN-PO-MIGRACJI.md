@@ -408,7 +408,16 @@ jawnie – działają dalej do fazy 3.
 zerują ramki po obu stronach – `HeadlessGame.TurnClassic` nie włącza już `ClassicStackLeftovers` (bieżące CPU zeruje
 domyślnie, `DifferentialPair` ma obie gry na nim), a zamrożona gra dostała szew `CPU.ClearFrameLocals` (włącza go
 `DualGame`). Pełny zestaw 809/809 bez innych zmian. Odtąd żaden test nie zależy od tego, co jedna funkcja zostawia
-na stosie dla drugiej, więc zapisy „Keep”, klasy zmiennych ramki i ramki można usuwać. ramki, SI/DI, BX/CX/DX moduł po module; przy jawnych wartościach
+na stosie dla drugiej, więc zapisy „Keep”, klasy zmiennych ramki i ramki można usuwać.
+**B3, porcja 1 (2026-10-26):** 171 kopii „Keep” usuniętych w `CityFoundingAndScore`, `GovernmentAndDiplomacy`,
+`MapManagement`, `Pathfinding`, `UnitCombat` (skrypt `b3keep.py`: zapis do słowa ramki, którego nic w pliku nie czyta –
+`PullLocal…`, `Increment/DecrementLocal…`, właściwość ramki, nazwana stała; pliki z wyliczanymi adresami ramki
+pominięte; ciało `if`/`for` bez klamer zostaje). Pułapki (złapane testem `ProduceTerrainMatchesOriginalCode`):
+pomocnicze metody czytają ramkę wołającego przez wyliczony adres (ochrona per metoda nie wystarcza – cały plik),
+tablice w ramce są adresowane przez zmienną `frame = RegFrame` (`frame - 0xce`) i czytane przed bazą (indeks -1:
+`ranking + 2 * lower - 2` = bp-0xd0). Z ochroną całego pliku i marginesem 0x10 w plikach z tablicami w ramce nie
+zostało nic do usunięcia – tam trzeba najpierw zamienić tablice ramki na tablice C# (następna porcja). Pełny zestaw
+809/809. Heredoc w Bash zamienia `` w regexie na znak backspace – skrypty pisać narzędziem Write. ramki, SI/DI, BX/CX/DX moduł po module; przy jawnych wartościach
 zamiast śmieci golden master zostaje zielony, sonda stosu ma pokazać zero czytelników. Na końcu rejestry z CPU,
 `MZExecutable` i obraz CIV.EXE w pamięci (dane początkowe z pliku przy starcie).
 

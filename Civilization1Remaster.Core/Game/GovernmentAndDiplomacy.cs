@@ -67,11 +67,9 @@ namespace Civilization1Remaster.Game
 
 			for (ushort otherIdx = 1; otherIdx < 8; otherIdx++)
 			{
-				this.processor.EmitLocalWord(0x2, otherIdx);
 				EndOldTreaties(participantIdx, otherIdx);
 			}
 
-			this.processor.EmitLocalWord(0x2, 8);
 
 			if (participantIdx != 0 && (this.owner.World.RoundTally & 0x1f) == (ushort)(participantIdx << 2) && participantIdx != person)
 			{
@@ -79,14 +77,12 @@ namespace Civilization1Remaster.Game
 
 				for (otherIdx = 1; otherIdx < 8; otherIdx++)
 				{
-					this.processor.EmitLocalWord(0x2, otherIdx);
 					SendWarEmissary(participantIdx, otherIdx);
 
 					this.processor.RegSource.Value16 = (ushort)(participantIdx << 4);
 					player.Relations[otherIdx] &= 0xffdf;
 				}
 
-				this.processor.EmitLocalWord(0x2, otherIdx);
 			}
 
 			this.processor.RestoreIndexRegisters();
@@ -175,7 +171,6 @@ namespace Civilization1Remaster.Game
 				if (this.owner.Audience.WelcomeEmissary(participantIdx, -1, 0) == 0)
 				{
 					short tribute = (short)((ushort)this.owner.Helpers.VerifyValueSpan(player.Gold / 100, 1, 10) * 0x32);
-					this.processor.EmitLocalWord(0x4, (ushort)tribute);
 
 					this.owner.Libc.CopyText(CodeText2, CivilizationPluralAt(this.processor.RegSource.Value16));
 
