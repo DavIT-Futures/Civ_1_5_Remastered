@@ -412,11 +412,14 @@ namespace Civilization1Remaster.Game
 		private void DirectUnits(short participantIdx, ushort sentBase)
 		{
 			ushort[] locationSent = new ushort[0x20];
+			bool leftovers = this.owner.TurnHooks.ClassicStackLeftovers;
 
 			for (int locationIdx = 0; locationIdx < 0x20; locationIdx++)
 			{
 				locationSent[locationIdx] = sentBase;
-				this.processor.EmitUInt16(this.processor.SegStack.Value16, LocationSentAddress(locationIdx), sentBase);
+
+				if (leftovers)
+					this.processor.EmitUInt16(this.processor.SegStack.Value16, LocationSentAddress(locationIdx), sentBase);
 			}
 
 			for (short troopIdx = 0; troopIdx < UnitMemory.TroopTally; troopIdx++)
@@ -516,14 +519,19 @@ namespace Civilization1Remaster.Game
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Status, (byte)(status & 0xf0));
 
 			locationSent[best]++;
-			ushort sent = LocationSentAddress(best);
-			this.processor.EmitUInt16(this.processor.SegData.Value16, sent, (ushort)(this.processor.PullUInt16(this.processor.SegData.Value16, sent) + 1));
+
+			if (this.owner.TurnHooks.ClassicStackLeftovers)
+			{
+				ushort sent = LocationSentAddress(best);
+				this.processor.EmitUInt16(this.processor.SegData.Value16, sent, (ushort)(this.processor.PullUInt16(this.processor.SegData.Value16, sent) + 1));
+			}
 		}
 
 		/// <summary>
 		/// The word of a location in the copy of the counts of the units sent that stays in the frame of OperateAITurn
-		/// (BP-0x44, one word per location). Nothing here reads it, but HandlePlayerTurn, called later at the same depth of
-		/// the stack, reads its words as uninitialized locals (0x12 the row of the cursor, 0x24, 0x36, 0x3e).
+		/// (BP-0x44, one word per location), only with ClassicStackLeftovers. Nothing here reads it, but HandlePlayerTurn,
+		/// called later at the same depth of the stack, reads its words as uninitialized locals (0x12 the row of the cursor,
+		/// 0x24, 0x36, 0x3e); without the leftovers its frame starts at 0.
 		/// </summary>
 		private ushort LocationSentAddress(int locationIdx) => (ushort)(this.processor.RegFrame.Value16 + (locationIdx << 1) - 0x44);
 

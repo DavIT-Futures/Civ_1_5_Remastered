@@ -203,7 +203,9 @@ namespace Civilization1Remaster.Game
 				frame.Heading = 49;
 			}
 
-			frame.Leave(this.processor);
+			// Only the leftovers need them: without them the frame of ShiftAIUnit starts at 0
+			if (this.owner.TurnHooks.ClassicStackLeftovers)
+				frame.Leave(this.processor);
 
 			this.processor.RegSource.Value16 = this.processor.UnstackWord();
 			this.processor.RegDest.Value16 = this.processor.UnstackWord();
@@ -215,7 +217,7 @@ namespace Civilization1Remaster.Game
 		/// <summary>
 		/// The values the original leaves in the locals of its stack frame (offsets from BP). ShiftAIUnit, called later by
 		/// HandlePlayerTurn from the same stack depth, reads its local 0xc (a city index) on a path before setting it and so
-		/// gets the terrain type left here. Kept until the end of the migration, see MIGRATION-BACKLOG.md.
+		/// gets the terrain type left here; written only with ClassicStackLeftovers.
 		/// A local that the original sets only on some paths is null when it was not set: the stack keeps its older value.
 		/// </summary>
 		private sealed class ShiftUnitFrame

@@ -97,6 +97,7 @@ namespace Civilization1Remaster.Tests.GoldenMaster
 			turnHooks.ClassicEmissaryThreat = true;
 			turnHooks.ClassicFreshGameRuins = true;
 			turnHooks.ClassicSpaceshipSlots = true;
+			turnHooks.ClassicLabelNumbers = true;
 		}
 
 		public GameEngine Engine { get; }

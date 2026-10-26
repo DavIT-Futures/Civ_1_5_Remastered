@@ -517,6 +517,19 @@ testy nie dochodzą (PlayerTurn: ścieżka jednostki 23, 1210, 3118; GovernmentA
 emisariusza (DI celowo) i `SystemServices` (zapis / odczyt stanu rejestrów). Nie podstawiać wyrażeń z wywołaniami funkcji
 gry w miejsce odczytu – zmienia ślad wywołań; zmienna lokalna w miejscu przypisania.
 
+**Odczyty poza tablicami (decyzja użytkownika 2026-10-26: jawna definicja za przełącznikiem `Classic…`):** sonda w
+`FrameWords` (każdy dostęp poza ramką, pełny zestaw) znalazła tylko `ProduceTerrain`: `terrainCounts[teren]` dla terenu
+spoza tabeli (zapis do pamięci, nie czytanie stosu – zostaje) i numery etykiet. `ClassicLabelNumbers`: etykieta poza
+1 – 0x3f (także ujemna) dostaje 15 jak inne nierankowane; włączony (testy) czyta poza tablicą jak oryginał
+(`LabelNumberTests`). Zapisy istniejące tylko dla czytelników niezainicjowanych zmiennych działają tylko z
+`ClassicStackLeftovers`: kopia liczników w ramce `OperateAITurn` (`AIPlayer.DirectUnits`), lokalne `ShiftUnit`
+(`ShiftUnitFrame.Leave`). Golden master bez zmian (813/813).
+**Dalej zależy od losu `ClassicStackLeftovers`:** w remasterze ramki są zerowane, więc ramki trzymane „dla głębokości”
+(`HandleAllCities`, `ComputeInciteCost`, `DisplayEpicChronicle`, `GameReplay`, `HallOfFame`, `MeetWithKing`,
+`StartGameMenu`, `SpaceshipScreen`, menu…), pary `Preserve`/`Restore` bez czytelników i słowa czytane przed zapisem
+(`WithLeftovers`, `RenderCitizenIcons` 0x2, `ChooseTechnologyToTake` 0x4) potrzebuje tylko tryb resztek. Jeśli tryb
+zostaje dla graczy, ramki trzeba warunkować; jeśli odpada w fazie 3 – można je usunąć razem z nim.
+
 **Faza 3 – sprzątanie i drugi baseline:** usunięcie przełączników i kodu „classic”, zamrożonej gry
 (`Civilization1Remaster.Original`), kopii Reference, testów Dual; testy różnicowe → testy zachowania z tabel przypadków.
 B6.7 część 2 (zdarzenia hosta zamiast `PumpMessages`, nowy zegar testów) → **drugie nagranie baseline'u** (powinno

@@ -138,6 +138,14 @@ namespace Civilization1Remaster.Game
 		public bool ClassicSpaceshipSlots { get; set; }
 
 		/// <summary>
+		/// A continent or sea of a new map labelled past the 63 ranked ones (or a label above 127, negative as a byte) takes
+		/// the number of its label from past the table of numbers, as the translated code did it: the locals of
+		/// ProduceTerrain, the frames of its callers above it or the stack under it; off it gets 15, the number of the
+		/// unranked ones (GameInitAndIntro.RankLandOrSea). The tests turn it on (HeadlessGame), like ClassicHealing.
+		/// </summary>
+		public bool ClassicLabelNumbers { get; set; }
+
+		/// <summary>
 		/// The local variables of a function start with what earlier functions left on the stack, as in the translated code
 		/// (about 30 functions read a local before they write it: the AI of the units, the human player's turn, the city
 		/// screen...); off they start at 0 (CPU.ClearFrameLocals), and a unit without an own city or carrier to fly home to

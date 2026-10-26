@@ -890,7 +890,10 @@ namespace Civilization1Remaster.Game
 
 			ushort horizLoc, vertLoc = 0;
 
-			// A label from 0x40 on reads past the numbers, the locals of the frame (x at 0x24, y at 0xa8, ...), like in the original
+			// A label from 0x40 on (or negative) reads past the numbers with ClassicLabelNumbers: the locals of the frame (x at
+			// 0x24, y at 0xa8, ...), the frames of the callers above them or the stack under the frame; else it gets 15
+			bool classicNumbers = this.owner.TurnHooks.ClassicLabelNumbers;
+
 			for (horizLoc = 0; horizLoc < 0x50; horizLoc++)
 			{
 				this.terrainFrame.SetFrame(0x24, horizLoc);
@@ -902,7 +905,8 @@ namespace Civilization1Remaster.Game
 					short tileLabel = this.owner.World.ChartSight[horizLoc, vertLoc];
 					this.processor.RegSource.Value16 = (ushort)(tileLabel << 1);
 
-					ushort number = this.terrainFrame.Frame(numbers - ((tileLabel << 1)));
+					ushort number = classicNumbers || (tileLabel >= 0 && tileLabel < 0x40) ?
+						this.terrainFrame.Frame(numbers - (tileLabel << 1)) : (ushort)0xf;
 					this.terrainFrame.SetFrame(0xa6, number);
 
 					if (number != 0)
