@@ -555,6 +555,8 @@ bez wyjątku (czyta 0), `DifferentialPair` po wyjątku w scenariuszu przywraca S
 
 **B6.8, porcja 2 (2026-10-26):** bufory nazw plików graficznych przeniesione ze stosu do C# w `StartGameMenu.ImportGovernmentGraphics` (`govt{regime}{tech}.pic`), `MeetWithKing.DisplayKingScreen` / `NameAdvisorsPicture` (`govt{regime}{tech}.pic`, `king{tens}{ones}.pic`), `MeetWithKing.ImportKingScenery` (`back{regime}{tech}.pic/.pal`, `king{tens}{ones}.pal`) oraz `GameInitAndIntro.DisplayStoryIntro` / `ShowStoryPicture` (`birth{N}.pic/.pal`). Usunięto 4 ramki stosu (`EnterFrame`/`LeaveFrame`), pozostały 42. 8 z 8 mutacji złapanych (BatchEight, BatchTwenty, BatchFortyOne, BatchFiftyFour), Golden Master 16/16 zielony.
 
+**B6.8, porcja 3 (2026-10-26):** bufory nazw plików i tekstów przeniesione ze stosu do C# w `GameReplay.ObtainReplayPlayerLabel` (bufor nazwy w liczbie mnogiej), `GameReplay.DisplayCivilizationDestroyedScreen` (`king{tens}{ones}.pic/.pal`, `slam2.pic`/`slag2.pic`) oraz `NewCityScreen.DisplayLabelInputBox` (bufor nazwy miasta na stosie do porównywania prefiksów). Usunięto 3 ramki stosu (`EnterFrame`/`LeaveFrame`), pozostało 39. 8 z 8 mutacji złapanych (BatchEight, BatchForty, BatchSixteen), Golden Master 16/16 zielony.
+
 **Faza 3 – sprzątanie i drugi baseline:** usunięcie przełączników i kodu „classic”, zamrożonej gry
 (`Civilization1Remaster.Original`), kopii Reference, testów Dual; testy różnicowe → testy zachowania z tabel przypadków.
 B6.7 część 2 (zdarzenia hosta zamiast `PumpMessages`, nowy zegar testów) → **drugie nagranie baseline'u** (powinno

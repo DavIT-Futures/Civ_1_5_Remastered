@@ -724,23 +724,21 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope($"ObtainReplayPlayerLabel({participantIdx})");
 
-			this.processor.EnterFrame(0x10);
-
-			ushort buffer = (ushort)(this.processor.RegFrame.Value16 - 0x10);
 			ushort leader = (ushort)(0x3a * this.owner.World.Participants[participantIdx].ChiefVisuals);
+			ushort civName = LeaderTextAt(leader, LeaderTable.Civilization);
+			ushort pluralName = LeaderTextAt(leader, LeaderTable.CivilizationPlural);
 
-			this.owner.Libc.CopyText(CivilizationName(participantIdx), LeaderTextAt(leader, LeaderTable.Civilization));
-			this.owner.Libc.CopyText(buffer, LeaderTextAt(leader, LeaderTable.CivilizationPlural));
+			this.owner.Libc.CopyText(CivilizationName(participantIdx), civName);
 
-			if (this.processor.PullGlobalByte(buffer) == 0)
+			if (this.processor.PullGlobalByte(pluralName) == 0)
 			{
-				this.owner.Libc.CopyText(buffer, LeaderTextAt(leader, LeaderTable.Civilization));
-				this.owner.Libc.AppendText(buffer, "s");
+				string plural = this.processor.PullText(CPU.AsLinearAddress(this.processor.SegData.Value16, civName)) + "s";
+				this.owner.Libc.CopyText(CivilizationPlural(participantIdx), plural);
 			}
-
-			this.owner.Libc.CopyText(CivilizationPlural(participantIdx), buffer);
-
-			this.processor.LeaveFrame();
+			else
+			{
+				this.owner.Libc.CopyText(CivilizationPlural(participantIdx), pluralName);
+			}
 
 			this.processor.Journal.CloseScope("ObtainReplayPlayerLabel");
 		}
@@ -825,27 +823,16 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope($"DisplayCivilizationDestroyedScreen({participantIdx}, {arg2})");
 
-			// The file names are in the stack frame, like in the original, and the final values of the locals stay there
-			this.processor.EnterFrame(0x36);
-
-			ushort portraitName = (ushort)(this.processor.RegFrame.Value16 - 0x10);
-			ushort wallName = (ushort)(this.processor.RegFrame.Value16 - 0x24);
-
 			short leaderIdx = (sbyte)this.processor.PullGlobalByte((ushort)((ushort)this.owner.World.Participants[participantIdx].ChiefVisuals + 0x3938));
-
-			this.owner.Libc.CopyText(portraitName, "king00.pic");
-
-			this.processor.EmitGlobalByte((ushort)(portraitName + 5), (byte)(this.processor.PullGlobalByte((ushort)(portraitName + 5)) + (leaderIdx % 10)));
-			this.processor.EmitGlobalByte((ushort)(portraitName + 4), (byte)(this.processor.PullGlobalByte((ushort)(portraitName + 4)) + (leaderIdx / 10)));
-
-			if (VgaMode == 0 && (leaderIdx == 0 || leaderIdx == 3))
-			{
-				this.processor.EmitGlobalByte((ushort)(portraitName + 3), 0x6b);
-			}
+			char tens = (char)('0' + (leaderIdx / 10));
+			char ones = (char)('0' + (leaderIdx % 10));
+			string portraitPic = (VgaMode == 0 && (leaderIdx == 0 || leaderIdx == 3))
+				? $"kink{tens}{ones}.pic"
+				: $"king{tens}{ones}.pic";
 
 			this.owner.Startup.QueryForDisk((ushort)(((ushort)leaderIdx / 7) + 4), 1);
 
-			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, portraitName, 0);
+			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, portraitPic, 0);
 
 			ushort portrait = this.owner.VideoCard.ScreenToPicture(1, 0xb5, 0x43, 0x8b, 0x85);
 
@@ -862,12 +849,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
 
-			this.owner.Libc.CopyText(wallName, "slam2.pic");
-
-			if (VgaMode == 0)
-			{
-				this.processor.EmitGlobalByte((ushort)(wallName + 3), 0x67);
-			}
+			string wallName = VgaMode == 0 ? "slag2.pic" : "slam2.pic";
 
 			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0x85, wallName, 0);
 
@@ -890,9 +872,9 @@ namespace Civilization1Remaster.UI
 
 			if (VgaMode != 0)
 			{
-				this.owner.Libc.CopyText((ushort)(portraitName + 7), "pal");
+				string portraitPal = $"king{tens}{ones}.pal";
 
-				this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, portraitName, 0xc1d6);
+				this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, portraitPal, 0xc1d6);
 
 				this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, 0x412a, 0xbdee);
 
@@ -968,7 +950,6 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Services.PerformSound(1, 0);
 
-			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("DisplayCivilizationDestroyedScreen");
 		}

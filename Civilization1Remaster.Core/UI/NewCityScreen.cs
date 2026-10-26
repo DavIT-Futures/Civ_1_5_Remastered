@@ -189,8 +189,6 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope($"DisplayLabelInputBox(0x{charsAddr:x4})");
 
-			this.processor.EnterFrame(0x14);
-
 			this.owner.Services.FloodBox(ScreenBox, 64, 78, 224, 24, 15);
 
 			this.owner.Dialogs.RenderBox(64, 78, 224, 24, 0);
@@ -201,17 +199,15 @@ namespace Civilization1Remaster.UI
 
 			PullTextInput(0x42, 0x59, 0x10);
 
-			ushort label = (ushort)(this.processor.RegFrame.Value16 - 0x10);
+			string input = this.owner.Words.ToString();
+			int inputLen = this.owner.Words.Length;
 			ushort found = 0xffff;
 
 			for (int labelIdx = 0; labelIdx < 0x100 && found == 0xffff; labelIdx++)
 			{
-				for (int idx = 0; idx < 13; idx++)
-				{
-					this.processor.Storage.EmitUInt8(this.processor.SegStack.Value16, (ushort)(label + idx), this.owner.World.TownLabels[labelIdx][idx]);
-				}
-
-				if (this.owner.Libc.CompareTextPrefixNoCase(TextBuffer.Address, label, this.owner.Words.Length) != 0)
+				string labelText = this.owner.World.TownLabels[labelIdx];
+				string prefix = labelText.Length > inputLen ? labelText.Substring(0, inputLen) : labelText;
+				if (string.Compare(input, prefix, StringComparison.CurrentCultureIgnoreCase) != 0)
 					continue;
 
 				for (int townIdx = 0; townIdx < 0x80; townIdx++)
@@ -227,8 +223,6 @@ namespace Civilization1Remaster.UI
 			}
 
 			this.processor.RegAcc.Value16 = found;
-
-			this.processor.LeaveFrame();
 
 			this.processor.Journal.CloseScope("DisplayLabelInputBox");
 
