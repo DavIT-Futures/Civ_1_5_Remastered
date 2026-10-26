@@ -529,6 +529,11 @@ spoza tabeli (zapis do pamięci, nie czytanie stosu – zostaje) i numery etykie
 `StartGameMenu`, `SpaceshipScreen`, menu…), pary `Preserve`/`Restore` bez czytelników i słowa czytane przed zapisem
 (`WithLeftovers`, `RenderCitizenIcons` 0x2, `ChooseTechnologyToTake` 0x4) potrzebuje tylko tryb resztek. Jeśli tryb
 zostaje dla graczy, ramki trzeba warunkować; jeśli odpada w fazie 3 – można je usunąć razem z nim.
+**Decyzja użytkownika 2026-10-26: `ClassicStackLeftovers` odpada w fazie 3** (nie jest opcją dla graczy): śmieci ze
+stosu znikają, gra zachowuje się przewidywalnie. Do końca migracji przełącznik służy tylko porównaniom z oryginałem w
+testach; w fazie 3 znika razem z nimi, a wtedy usuwamy emulację stosu: pozostałe ramki („dla głębokości”, z resztkami),
+pary `Preserve`/`Restore`, `WithLeftovers`, zapisy-resztki (`ShiftUnitFrame`, kopia w `DirectUnits`). Jako opcje dla
+graczy zostają tylko zmiany reguł (leczenie, koleje, konwersja produkcji…).
 
 **Faza 3 – sprzątanie i drugi baseline:** usunięcie przełączników i kodu „classic”, zamrożonej gry
 (`Civilization1Remaster.Original`), kopii Reference, testów Dual; testy różnicowe → testy zachowania z tabel przypadków.
