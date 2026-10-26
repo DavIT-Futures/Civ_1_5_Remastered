@@ -284,13 +284,16 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"PickCityProduction({participantIdx}, {townIdx})");
 
-			// The locals stay in the frame (properties below): the list of choices is there, and the functions called later
-			// from the same depth may read what is left
+			// The words of the frame are in C# (B3, properties below), with what lay on the stack (some are read before they
+			// are written); the key of the advice and the words around it (a long name could run over) stay on the stack, so
+			// does the frame (HandleCity at the depth of the original)
 			this.processor.EnterFrame(0x14a);
+			FrameWords outerFrame = this.pickFrame;
+			this.pickFrame = new FrameWords(this.processor, 0x14a, AdviceSpillLocal, AdviceKey).WithLeftovers();
 			this.processor.PreserveIndexRegisters();
 
 			// "*" before the name of the best choice in the frame: the key of its advice in the text file
-			this.processor.EmitLocalByte(AdviceKey, 0x2a);
+			this.pickFrame.SetFrameByte(AdviceKey, 0x2a);
 			PageState = 0;
 			AdvisorsShown = 0;
 
@@ -323,6 +326,7 @@ namespace Civilization1Remaster.Game
 
 			this.processor.RegAcc.Value16 = choice;
 			this.processor.RestoreIndexRegisters();
+			this.pickFrame = outerFrame;
 			this.processor.LeaveFrame();
 			this.processor.Journal.CloseScope("PickCityProduction");
 
@@ -347,6 +351,8 @@ namespace Civilization1Remaster.Game
 		private const int UnfamiliarLoopLocal = 0x11c;
 		private const int BestUnitScoreLocal = 0x11e;
 		private const int AdviceKey = 0x12e;
+		/// <summary>The lowest word a name copied to the key of the advice could reach (28 letters)</summary>
+		private const int AdviceSpillLocal = 0x112;
 		private const int BestImprovementScoreLocal = 0x130;
 		private const int DefensiveImprovementLocal = 0x132;
 		private const int ScoreLocal = 0x134;
@@ -362,14 +368,17 @@ namespace Civilization1Remaster.Game
 		private const int BuiltHighLocal = 0x148;
 		private const int BuiltLowLocal = 0x14a;
 
+		/// <summary>The words of the frame of PickCityProduction (B3: in C#, new for every call)</summary>
+		private FrameWords pickFrame = null!;
+
 		private ushort FrameWord(int distance)
 		{
-			return this.processor.PullLocalWord(distance);
+			return this.pickFrame.Frame(distance);
 		}
 
 		private void FrameWord(int distance, ushort amount)
 		{
-			this.processor.EmitLocalWord(distance, amount);
+			this.pickFrame.SetFrame(distance, amount);
 		}
 
 		/// <summary>0: one page, 1: the menu is cut after the units ("more..." leads to the rest), 2: the rest only</summary>
@@ -382,11 +391,9 @@ namespace Civilization1Remaster.Game
 
 		private short Score { get => (short)FrameWord(ScoreLocal); set => FrameWord(ScoreLocal, (ushort)value); }
 
-		private ushort ChoiceAddress(int entryIdx) => (ushort)(this.processor.RegFrame.Value16 + (entryIdx << 1) - ChoiceTable);
+		private ushort ChoiceEntry(int entryIdx) => FrameWord(TableWord(ChoiceTable, entryIdx));
 
-		private ushort ChoiceEntry(int entryIdx) => this.processor.PullUInt16(this.processor.SegStack.Value16, ChoiceAddress(entryIdx));
-
-		private void ChoiceEntry(int entryIdx, ushort choice) => this.processor.EmitUInt16(this.processor.SegStack.Value16, ChoiceAddress(entryIdx), choice);
+		private void ChoiceEntry(int entryIdx, ushort choice) => FrameWord(TableWord(ChoiceTable, entryIdx), choice);
 
 		/// <summary>Appends a choice to the list (and to the menu text, done by the caller)</summary>
 		private void AddChoice(ushort choice)
@@ -396,8 +403,8 @@ namespace Civilization1Remaster.Game
 			ChoiceEntry(entryIdx, choice);
 		}
 
-		/// <summary>A word of the frame table at bp - table + 2 * index (the unit tables of 28 words)</summary>
-		private ushort TableAddress(int table, int index) => (ushort)(this.processor.RegFrame.Value16 + (index << 1) - table);
+		/// <summary>The distance of a word of the frame table at bp - table + 2 * index (the unit tables of 28 words)</summary>
+		private static int TableWord(int table, int index) => table - (index << 1);
 
 		/// <summary>
 		/// The menu text and the list of choices. True when the list is too long for one page the first time: it starts again,
@@ -523,7 +530,7 @@ namespace Civilization1Remaster.Game
 				if ((built & (1u << (byte)(improvementIdx - 1))) != 0)
 					continue;
 
-				if (improvementIdx == 7 && (this.processor.PullLocalByte(BuiltLowLocal) & 1) != 0)
+				if (improvementIdx == 7 && (this.pickFrame.FrameByte(BuiltLowLocal) & 1) != 0)
 					continue;
 
 				if (improvementIdx == 0xf && town.Has(CityStructure.ManufacturingPlant))
@@ -615,11 +622,11 @@ namespace Civilization1Remaster.Game
 			short unhappy = (short)((player.RegimeKind <= 1 ? 1 : 2) * (short)CitySettlers);
 			FrameWord(HappyRoomLocal, (ushort)((short)CityFood - unhappy - (town.TrueExtent << 1)));
 
-			for (FrameWord(ChoiceLoopLocal, 0); (short)FrameWord(ChoiceLoopLocal) < 0x1c; this.processor.IncrementLocalWord(ChoiceLoopLocal))
+			for (FrameWord(ChoiceLoopLocal, 0); (short)FrameWord(ChoiceLoopLocal) < 0x1c; FrameWord(ChoiceLoopLocal, (ushort)(FrameWord(ChoiceLoopLocal) + 1)))
 			{
 				int kind = (short)FrameWord(ChoiceLoopLocal);
-				this.processor.EmitUInt16(this.processor.SegData.Value16, TableAddress(MakingElsewhereTable, kind), 1);
-				this.processor.EmitUInt16(this.processor.SegData.Value16, TableAddress(UnitsOnContinentTable, kind), 0);
+				FrameWord(TableWord(MakingElsewhereTable, kind), 1);
+				FrameWord(TableWord(UnitsOnContinentTable, kind), 0);
 			}
 
 			FrameWord(UnitTallyLocal, (ushort)player.TroopTally);
@@ -636,20 +643,20 @@ namespace Civilization1Remaster.Game
 				{
 					if (other.PresentMakingIdx >= 0 && (short)FrameWord(TownLoopLocal) != townIdx)
 					{
-						ushort making = TableAddress(MakingElsewhereTable, other.PresentMakingIdx);
-						this.processor.EmitUInt16(this.processor.SegStack.Value16, making, (ushort)(this.processor.PullUInt16(this.processor.SegStack.Value16, making) + 1));
+						int making = TableWord(MakingElsewhereTable, other.PresentMakingIdx);
+						FrameWord(making, (ushort)(FrameWord(making) + 1));
 					}
 
 					for (FrameWord(UnfamiliarLoopLocal, 0); (short)FrameWord(UnfamiliarLoopLocal) < 2; FrameWord(UnfamiliarLoopLocal, (ushort)(FrameWord(UnfamiliarLoopLocal) + 1)))
 					{
 						byte unfamiliar = (byte)other.Unfamiliar[FrameWord(UnfamiliarLoopLocal)];
-						this.processor.EmitLocalByte(BuiltLowLocal, unfamiliar);
+						this.pickFrame.SetFrameByte(BuiltLowLocal, unfamiliar);
 
 						if (unfamiliar != 0xff)
 						{
 							player.TroopTally++;
-							ushort units = TableAddress(UnitsOnContinentTable, (sbyte)unfamiliar & 0x3f);
-							this.processor.EmitUInt16(this.processor.SegStack.Value16, units, (ushort)(this.processor.PullUInt16(this.processor.SegStack.Value16, units) + 1));
+							int units = TableWord(UnitsOnContinentTable, (sbyte)unfamiliar & 0x3f);
+							FrameWord(units, (ushort)(FrameWord(units) + 1));
 						}
 					}
 				}
@@ -671,8 +678,8 @@ namespace Civilization1Remaster.Game
 					if (this.owner.MapOps.ObtainContinentID(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
 						this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert)) == FrameWord(ContinentLocal))
 					{
-						ushort units = TableAddress(UnitsOnContinentTable, this.troops.TroopKind(participantIdx, troopIdx));
-						this.processor.EmitUInt16(this.processor.SegStack.Value16, units, (ushort)(this.processor.PullUInt16(this.processor.SegStack.Value16, units) + 1));
+						int units = TableWord(UnitsOnContinentTable, this.troops.TroopKind(participantIdx, troopIdx));
+						FrameWord(units, (ushort)(FrameWord(units) + 1));
 					}
 				}
 
@@ -742,8 +749,10 @@ namespace Civilization1Remaster.Game
 
 				if (Score < (short)FrameWord(BestScoreLocal))
 				{
-					this.processor.CopyLocalWord(ChoiceLoopLocal, BestChoiceLocal);
-					this.processor.CopyLocalWord(ScoreLocal, BestScoreLocal);
+					this.processor.RegAcc.Value16 = FrameWord(ChoiceLoopLocal);
+					FrameWord(BestChoiceLocal, this.processor.RegAcc.Value16);
+					this.processor.RegAcc.Value16 = FrameWord(ScoreLocal);
+					FrameWord(BestScoreLocal, this.processor.RegAcc.Value16);
 				}
 
 				if (choice < 0 || choice >= 0x1a)
@@ -751,13 +760,15 @@ namespace Civilization1Remaster.Game
 					if (Score < (short)FrameWord(BestImprovementScoreLocal))
 					{
 						FrameWord(BestImprovementScoreLocal, (ushort)Score);
-						this.processor.CopyLocalWord(ChoiceLoopLocal, BestImprovementLocal);
+						this.processor.RegAcc.Value16 = FrameWord(ChoiceLoopLocal);
+						FrameWord(BestImprovementLocal, this.processor.RegAcc.Value16);
 					}
 				}
 				else if (Score < (short)FrameWord(BestUnitScoreLocal))
 				{
 					FrameWord(BestUnitScoreLocal, (ushort)Score);
-					this.processor.CopyLocalWord(ChoiceLoopLocal, BestUnitLocal);
+					this.processor.RegAcc.Value16 = FrameWord(ChoiceLoopLocal);
+					FrameWord(BestUnitLocal, this.processor.RegAcc.Value16);
 				}
 			}
 		}
@@ -978,8 +989,8 @@ namespace Civilization1Remaster.Game
 
 			if (UnitKindWord(kind, UnitKindTable.LandGroup) == UnitKindTable.LandUnits)
 			{
-				Score = (short)((this.processor.PullUInt16(this.processor.SegData.Value16, TableAddress(MakingElsewhereTable, choice)) << 1) +
-					this.processor.PullUInt16(this.processor.SegData.Value16, TableAddress(UnitsOnContinentTable, choice)));
+				Score = (short)((FrameWord(TableWord(MakingElsewhereTable, choice)) << 1) +
+					FrameWord(TableWord(UnitsOnContinentTable, choice)));
 			}
 			else
 			{
@@ -1577,7 +1588,7 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"EarnTechnology({participantIdx}, {scienceIdx}, {participantIdx1})");
 
-			// The final values of the locals stay in the stack frame, like in the original
+			// The frame stays for the depth of the calls (B3: the locals are C# variables)
 			this.processor.EnterFrame(0x8);
 			this.processor.PreserveIndexRegisters();
 
@@ -1668,8 +1679,6 @@ namespace Civilization1Remaster.Game
 						this.owner.Words.Append("\n ");
 					}
 				}
-
-				this.processor.EmitLocalWord(0x2, 0x1c);
 			}
 
 			if ((participantIdx != person || participantIdx1 == -2) && KingAnswer == 0xffff)
@@ -1799,19 +1808,15 @@ namespace Civilization1Remaster.Game
 
 					this.owner.Paper.DisplayNewspaper(-1);
 				}
-
-				this.processor.EmitLocalWord(0x6, 0x16);
 			}
 
 			// The Great Library (wonder 5) gives a technology that two players know
 			ushort libraryOwner = (ushort)this.owner.World.MarvelTownIdx[5];
-			this.processor.EmitLocalWord(0x8, libraryOwner);
 
 			if (libraryOwner == 0xffff || !WonderCityRules.ReadsCity(libraryOwner, this.owner.TurnHooks.ClassicWonderCities))
 				return;
 
 			libraryOwner = (ushort)this.owner.World.Towns[libraryOwner].ParticipantIdx;
-			this.processor.EmitLocalWord(0x8, libraryOwner);
 
 			if (PlayerKnowsTechnology((short)libraryOwner, scienceIdx) != 0)
 				return;

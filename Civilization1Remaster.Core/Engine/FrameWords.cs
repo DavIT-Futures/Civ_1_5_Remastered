@@ -14,14 +14,16 @@ namespace Civilization1Remaster.Engine
 		private readonly CPU processor;
 		private readonly int size;
 		private readonly ushort[] words;
-		private readonly int stackPart;
+		private readonly int stackFrom;
+		private readonly int stackTo;
 
-		/// <summary>stackPart: the words up to this distance stay on the stack (a buffer passed by its address)</summary>
-		public FrameWords(CPU processor, int size, int stackPart = 0)
+		/// <summary>The words at the distances stackFrom - stackTo stay on the stack (a buffer passed by its address)</summary>
+		public FrameWords(CPU processor, int size, int stackFrom = 0, int stackTo = 0)
 		{
 			this.processor = processor;
 			this.size = size;
-			this.stackPart = stackPart;
+			this.stackFrom = stackFrom;
+			this.stackTo = stackTo;
 			this.words = new ushort[(size / 2) + 1];
 		}
 
@@ -31,9 +33,10 @@ namespace Civilization1Remaster.Engine
 		/// </summary>
 		public FrameWords WithLeftovers()
 		{
-			for (int distance = this.stackPart + 2; distance <= this.size; distance += 2)
+			for (int distance = 2; distance <= this.size; distance += 2)
 			{
-				this.words[distance / 2] = this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 - distance));
+				if (Within(distance))
+					this.words[distance / 2] = this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 - distance));
 			}
 
 			return this;
@@ -87,6 +90,7 @@ namespace Civilization1Remaster.Engine
 			this.words[word / 2] = (distance & 1) == 0 ? (ushort)((old & 0xff00) | value) : (ushort)((old & 0xff) | (value << 8));
 		}
 
-		private bool Within(int distance) => distance > this.stackPart && distance > 0 && distance <= this.size && (distance & 1) == 0;
+		private bool Within(int distance) => distance > 0 && distance <= this.size && (distance & 1) == 0 &&
+			(distance < this.stackFrom || distance > this.stackTo);
 	}
 }
