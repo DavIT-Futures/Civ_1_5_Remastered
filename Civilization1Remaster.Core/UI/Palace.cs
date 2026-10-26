@@ -398,6 +398,10 @@ namespace Civilization1Remaster.UI
 
 			ushort pictureName = (ushort)(this.processor.RegFrame.Value16 - 0x10);
 
+			// Locals 0x12 and 0x18 of the original (B3: in C#; 0 like the zeroed frame when never written)
+			ushort lastLeftEnd = 0;
+			ushort builtRightmost = 0;
+
 			this.owner.Startup.QueryForDisk(2, 1);
 
 			DrawingBox.DisplayIdx = 1;
@@ -451,7 +455,7 @@ namespace Civilization1Remaster.UI
 			while (PalacePart((ushort)rightmost) == 0xffff)
 			{
 				rightmost--;
-				this.processor.EmitLocalWord(0x18, (ushort)rightmost);
+				builtRightmost = (ushort)rightmost;
 			}
 
 			ushort section;
@@ -489,17 +493,17 @@ namespace Civilization1Remaster.UI
 						if (section == 3)
 							horizLoc += PalacePartWidth;
 
-						this.processor.EmitLocalWord(0x12, section);
+						lastLeftEnd = section;
 						break;
 
 					case 1:
 						// A section between two, joined to the left end before it and to the rightmost one after it
-						ushort leftEnd = this.processor.PullLocalWord(0x12);
+						ushort leftEnd = lastLeftEnd;
 
 						if ((ushort)(leftEnd + 1) == section && PalaceStyle(section) == PalaceStyle(leftEnd))
 							RenderPalacePart(part, leftEnd, (ushort)(horizLoc + PalacePartWidth - 17), vertLoc - 2, 0);
 
-						ushort rightEnd = this.processor.PullLocalWord(0x18);
+						ushort rightEnd = builtRightmost;
 
 						if ((ushort)(rightEnd - 1) == section && PalaceStyle(section) == PalaceStyle(rightEnd))
 							RenderPalacePart(part, rightEnd, (ushort)(horizLoc + PalacePartWidth - 17), vertLoc - 2, 1);
@@ -552,7 +556,7 @@ namespace Civilization1Remaster.UI
 			}
 
 			// The wing of the last left end, unless it is section 3
-			ushort lastLeft = this.processor.PullLocalWord(0x12);
+			ushort lastLeft = lastLeftEnd;
 
 			if (PalaceStyle(lastLeft) == 1 && lastLeft != 3)
 			{
