@@ -1,4 +1,4 @@
-﻿using Civilization1Remaster.Emulation;
+using Civilization1Remaster.Emulation;
 using Civilization1Remaster.Engine;
 
 namespace Civilization1Remaster.UI
@@ -15,6 +15,46 @@ namespace Civilization1Remaster.UI
 		private const ushort StarRowsAddress = 0x6852;
 		private const ushort StarDrawnAddress = 0x6866;
 		private const ushort SpaceshipCompleteMasksAddress = 0x687a;
+
+		private const ushort SpaceshipLayoutSegment = 0x375a;
+		private const ushort SpaceshipGridSegment = 0x3772;
+		private const ushort SpaceshipGridBaseAddress = 0x16e0;
+		private const ushort SpaceshipGridParticipantStride = 0xb4;
+		private const ushort SpaceshipGridRowStride = 12;
+		private const ushort SpaceshipSlotStride = 3;
+		private const ushort SpaceshipSlotColumnOffset = 0;
+		private const ushort SpaceshipSlotRowOffset = 1;
+		private const ushort SpaceshipSlotKindOffset = 2;
+		private const byte SpaceshipSlotEndMarker = 0xff;
+		private const byte SpaceshipSlotEmptyMarker = 0xff;
+
+		private const ushort SpaceshipBackgroundPictureAddress = 0x4bc4;
+		private const ushort SpaceshipResourceBlockAddress = 0x4cda;
+		private const ushort SpaceshipPaletteAddress = 0x4cea;
+		private const ushort PaletteBufferAddress1 = 0xc1d6;
+		private const ushort PaletteBufferAddress2 = 0xc5be;
+		private const ushort PaletteCopySourceAddress = 0xc744;
+		private const ushort PaletteCopyTargetAddress = 0xc35c;
+
+		private const ushort SpaceshipPopulationHeaderAddress = 0x4d08;
+		private const ushort SpaceshipMassHeaderAddress = 0x4d31;
+		private const ushort SpaceshipFlightTimeHeaderAddress = 0x4d4a;
+		private const ushort SpaceshipSuccessRateHeaderAddress = 0x4d60;
+		private const ushort ArrivalPassedStringAddress = 0x4d7c;
+		private const ushort ArrivalExpectedStringAddress = 0x4d84;
+		private const ushort SpaceshipLaunchInstructionsStringAddress = 0x4d8e;
+		private const ushort SpaceshipComponentChoiceDialogAddress = 0x4df9;
+		private const ushort SpaceshipModuleChoiceDialogAddress = 0x4e12;
+
+		private sbyte LayoutSlotColumn(int slotIdx) => (sbyte)this.processor.PullUInt8(SpaceshipLayoutSegment, (ushort)((slotIdx * SpaceshipSlotStride) + SpaceshipSlotColumnOffset));
+		private sbyte LayoutSlotRow(int slotIdx) => (sbyte)this.processor.PullUInt8(SpaceshipLayoutSegment, (ushort)((slotIdx * SpaceshipSlotStride) + SpaceshipSlotRowOffset));
+		private sbyte LayoutSlotKind(int slotIdx) => (sbyte)this.processor.PullUInt8(SpaceshipLayoutSegment, (ushort)((slotIdx * SpaceshipSlotStride) + SpaceshipSlotKindOffset));
+		private byte LayoutSlotMarker(int slotIdx) => this.processor.PullUInt8(SpaceshipLayoutSegment, (ushort)(slotIdx * SpaceshipSlotStride));
+
+		private ushort SpaceshipGridCellAddress(short participantIdx, int column, int row)
+		{
+			return (ushort)((SpaceshipGridRowStride * column) + row + (SpaceshipGridParticipantStride * participantIdx) + SpaceshipGridBaseAddress);
+		}
 
 		private byte StarColumn(int index) => this.processor.PullGlobalByte((ushort)(index + StarColumnsAddress));
 		private void AssignStarColumn(int index, byte val) => this.processor.EmitGlobalByte((ushort)(index + StarColumnsAddress), val);
@@ -50,7 +90,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
 
-			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x4bc4, 1);
+			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, SpaceshipBackgroundPictureAddress, 1);
 
 			for (int partIdx = 0; partIdx < 0xa; partIdx++)
 			{
@@ -101,7 +141,7 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope("ImportSpaceScenery()");
 
-			this.owner.Helpers.ReleaseResource(SpaceshipPicture, 0x4cda);
+			this.owner.Helpers.ReleaseResource(SpaceshipPicture, SpaceshipResourceBlockAddress);
 
 			if (VgaMode != 0)
 			{
@@ -118,15 +158,15 @@ namespace Civilization1Remaster.UI
 			char techChar = this.owner.Advisors.PlayerKnowsTechnology(this.owner.World.PersonParticipantIdx, 0x14) != 0 ? 'm' : 'a';
 			string docname = $"back{regimeChar}{techChar}.pal";
 
-			this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, docname, 0xc1d6);
+			this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, docname, PaletteBufferAddress1);
 
-			this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, 0x4cea, 0xc5be);
+			this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, SpaceshipPaletteAddress, PaletteBufferAddress2);
 
-			this.owner.Libc.CopyBytes(0xc744, 0xc35c, 0x180);
+			this.owner.Libc.CopyBytes(PaletteCopySourceAddress, PaletteCopyTargetAddress, 0x180);
 
 			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
 
-			this.owner.VideoCard.AssignHuesFromHueStruct(0xc5be);
+			this.owner.VideoCard.AssignHuesFromHueStruct(PaletteBufferAddress2);
 
 			this.owner.Helpers.SetupHueCycling();
 
@@ -198,7 +238,7 @@ namespace Civilization1Remaster.UI
 				{
 					Player player = this.owner.World.Participants[participantIdx];
 
-					this.owner.TextPainter.RenderTextToScreen0((ushort)(player.StarshipArrivalSeason < this.owner.World.Season ? 0x4d7c : 0x4d84),
+					this.owner.TextPainter.RenderTextToScreen0((ushort)(player.StarshipArrivalSeason < this.owner.World.Season ? ArrivalPassedStringAddress : ArrivalExpectedStringAddress),
 						242, vertLoc, 0);
 				}
 			}
@@ -209,7 +249,7 @@ namespace Civilization1Remaster.UI
 
 				if (participantIdx == this.owner.World.PersonParticipantIdx && arg2 < 0 && arg3 != 0)
 				{
-					this.owner.TextPainter.RenderTextToScreen0(0x4d8e, 256, 190, 0);
+					this.owner.TextPainter.RenderTextToScreen0(SpaceshipLaunchInstructionsStringAddress, 256, 190, 0);
 
 					this.owner.Dialogs.RenderBox(242, 188, 76, 9, 0);
 				}
@@ -278,10 +318,9 @@ namespace Civilization1Remaster.UI
 
 			do
 			{
-				ushort place = (ushort)(3 * placeIdx);
-				short column = (sbyte)this.processor.PullUInt8(0x375a, place);
-				short row = (sbyte)this.processor.PullUInt8(0x375a, (ushort)(place + 1));
-				short part = (sbyte)this.processor.PullUInt8(0x3772, (ushort)((0xb4 * participantIdx) + (0xc * column) + row + 0x16e0));
+				short column = LayoutSlotColumn(placeIdx);
+				short row = LayoutSlotRow(placeIdx);
+				short part = (sbyte)this.processor.PullUInt8(SpaceshipGridSegment, SpaceshipGridCellAddress(participantIdx, column, row));
 
 				if (part != -1)
 				{
@@ -322,12 +361,12 @@ namespace Civilization1Remaster.UI
 				else
 				{
 					// The original reads the kind of the empty place here (and forgets it)
-					this.processor.PullUInt8(0x375a, (ushort)(place + 2));
+					_ = LayoutSlotKind(placeIdx);
 				}
 
 				placeIdx++;
 			}
-			while (this.processor.PullUInt8(0x375a, (ushort)(3 * placeIdx)) != 0xff);
+			while (LayoutSlotMarker(placeIdx) != SpaceshipSlotEndMarker);
 		}
 
 		/// <summary>
@@ -341,7 +380,7 @@ namespace Civilization1Remaster.UI
 			short success = 0x64;
 			short vertLoc = 0x10;
 
-			this.owner.TextPainter.RenderTextToScreen0(0x4d08, 242, 16, 0);
+			this.owner.TextPainter.RenderTextToScreen0(SpaceshipPopulationHeaderAddress, 242, 16, 0);
 
 			vertLoc += 8;
 
@@ -393,7 +432,7 @@ namespace Civilization1Remaster.UI
 
 			if (shown)
 			{
-				this.owner.TextPainter.RenderTextToScreen0(0x4d31, 242, vertLoc, 0);
+				this.owner.TextPainter.RenderTextToScreen0(SpaceshipMassHeaderAddress, 242, vertLoc, 0);
 			}
 
 			vertLoc += 8;
@@ -429,7 +468,7 @@ namespace Civilization1Remaster.UI
 
 			if (shown)
 			{
-				this.owner.TextPainter.RenderTextToScreen0(0x4d4a, 242, vertLoc, 0);
+				this.owner.TextPainter.RenderTextToScreen0(SpaceshipFlightTimeHeaderAddress, 242, vertLoc, 0);
 			}
 
 			vertLoc += 8;
@@ -462,7 +501,7 @@ namespace Civilization1Remaster.UI
 
 			if (shown)
 			{
-				this.owner.TextPainter.RenderTextToScreen0(0x4d60, 242, vertLoc, 0);
+				this.owner.TextPainter.RenderTextToScreen0(SpaceshipSuccessRateHeaderAddress, 242, vertLoc, 0);
 			}
 
 			vertLoc += 8;
@@ -543,10 +582,10 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope($"ObtainSpaceshipPartValue({participantIdx}, {arg2}, {arg3})");
 
-			this.processor.SegExtra.Value16 = 0x3772;
+			this.processor.SegExtra.Value16 = SpaceshipGridSegment;
 
 			sbyte part = (sbyte)this.processor.PullUInt8(this.processor.SegExtra.Value16,
-				(ushort)((0xb4 * participantIdx) + (0xc * arg2) + arg3 + 0x16e0));
+				SpaceshipGridCellAddress(participantIdx, (short)arg2, (short)arg3));
 
 			ushort taken = (ushort)(part != -1 && part < 3 ? 1 : 0);
 
@@ -645,16 +684,16 @@ namespace Civilization1Remaster.UI
 
 			while (true)
 			{
-				if (SpaceshipPlaceCell(participantIdx, placeIdx) == 0xff)
+				if (SpaceshipPlaceCell(participantIdx, placeIdx) == SpaceshipSlotEmptyMarker)
 				{
-					ushort place = (ushort)(3 * placeIdx);
+					sbyte slotKind = LayoutSlotKind(placeIdx);
 
-					if (firstFree == 0x3e7 && (sbyte)this.processor.PullUInt8(0x375a, (ushort)(place + 2)) >= (short)((3 * arg2) + 3))
+					if (firstFree == 0x3e7 && slotKind >= (short)((3 * arg2) + 3))
 					{
 						firstFree = placeIdx;
 					}
 
-					if ((sbyte)this.processor.PullUInt8(0x375a, (ushort)(place + 2)) / 3 == arg2)
+					if (slotKind / 3 == arg2)
 					{
 						found = true;
 						break;
@@ -663,7 +702,7 @@ namespace Civilization1Remaster.UI
 
 				placeIdx++;
 
-				if (this.processor.PullUInt8(0x375a, (ushort)(3 * placeIdx)) == 0xff)
+				if (LayoutSlotMarker(placeIdx) == SpaceshipSlotEndMarker)
 					break;
 
 				if ((short)(placeIdx - firstFree) < 4 || arg2 == 2)
@@ -675,7 +714,7 @@ namespace Civilization1Remaster.UI
 			}
 
 			ushort result;
-			bool atEnd = this.processor.PullUInt8(0x375a, (ushort)(3 * placeIdx)) == 0xff;
+			bool atEnd = LayoutSlotMarker(placeIdx) == SpaceshipSlotEndMarker;
 
 			if (atEnd && firstFree == 0x3e7)
 			{
@@ -685,7 +724,7 @@ namespace Civilization1Remaster.UI
 			{
 				result = 1;
 			}
-			else if (this.processor.PullUInt8(0x375a, (ushort)(3 * placeIdx)) == 0xff && firstFree != 0x3e7)
+			else if (atEnd && firstFree != 0x3e7)
 			{
 				result = 1;
 			}
@@ -722,17 +761,13 @@ namespace Civilization1Remaster.UI
 		/// <summary>The address of the cell of the place (table 0x375a: column, row) in the player's spaceship (0x3772:0x16e0)</summary>
 		private ushort SpaceshipPlaceAddress(short participantIdx, ushort placeIdx)
 		{
-			ushort place = (ushort)(3 * placeIdx);
-			short column = (sbyte)this.processor.PullUInt8(0x375a, place);
-			short row = (sbyte)this.processor.PullUInt8(0x375a, (ushort)(place + 1));
-
-			return (ushort)((0xc * column) + row + (0xb4 * participantIdx) + 0x16e0);
+			return SpaceshipGridCellAddress(participantIdx, LayoutSlotColumn(placeIdx), LayoutSlotRow(placeIdx));
 		}
 
 		/// <summary>The cell of the place in the player's spaceship (0xff: empty)</summary>
 		private byte SpaceshipPlaceCell(short participantIdx, ushort placeIdx)
 		{
-			return this.processor.PullUInt8(0x3772, SpaceshipPlaceAddress(participantIdx, placeIdx));
+			return this.processor.PullUInt8(SpaceshipGridSegment, SpaceshipPlaceAddress(participantIdx, placeIdx));
 		}
 
 		/// <summary>
@@ -754,9 +789,9 @@ namespace Civilization1Remaster.UI
 
 			this.owner.TurnLogic.AwaitForKey();
 
-			byte kind = this.processor.PullUInt8(0x375a, (ushort)((3 * placeIdx) + 2));
+			byte kind = (byte)LayoutSlotKind(placeIdx);
 
-			this.processor.EmitUInt8(0x3772, SpaceshipPlaceAddress(participantIdx, placeIdx), kind);
+			this.processor.EmitUInt8(SpaceshipGridSegment, SpaceshipPlaceAddress(participantIdx, placeIdx), kind);
 
 			this.owner.World.BotStarshipVictoryRatio = (short)RenderSpaceship(participantIdx, -1, 0);
 
@@ -805,7 +840,7 @@ namespace Civilization1Remaster.UI
 					if (complete == 3)
 						break;
 
-					kind = (short)(this.owner.TurnHooks.DisplayDialog(0x4df9, 100, 80) + 3);
+					kind = (short)(this.owner.TurnHooks.DisplayDialog(SpaceshipComponentChoiceDialogAddress, 100, 80) + 3);
 
 					if (kind == 2)
 					{
@@ -822,7 +857,7 @@ namespace Civilization1Remaster.UI
 					if (complete == 7)
 						break;
 
-					kind = (short)(this.owner.TurnHooks.DisplayDialog(0x4e12, 100, 80) + 6);
+					kind = (short)(this.owner.TurnHooks.DisplayDialog(SpaceshipModuleChoiceDialogAddress, 100, 80) + 6);
 
 					if (kind == 5)
 					{
@@ -837,7 +872,7 @@ namespace Civilization1Remaster.UI
 
 				if (slotIdx != 0xffff)
 				{
-					this.processor.EmitUInt8(0x3772, SpaceshipGridOffset(participantIdx, slotIdx), this.processor.PullUInt8(0x375a, (ushort)((3 * slotIdx) + 2)));
+					this.processor.EmitUInt8(SpaceshipGridSegment, SpaceshipGridOffset(participantIdx, slotIdx), (byte)LayoutSlotKind(slotIdx));
 
 					attach = true;
 					break;
@@ -899,17 +934,15 @@ namespace Civilization1Remaster.UI
 		/// <summary>The offset of the slot slotIdx (table 0x375a) in the player's spaceship grid, segment 0x3772</summary>
 		private ushort SpaceshipGridOffset(short participantIdx, ushort slotIdx)
 		{
-			ushort slot = (ushort)(3 * slotIdx);
-
-			return (ushort)((12 * (sbyte)this.processor.PullUInt8(0x375a, slot)) + (sbyte)this.processor.PullUInt8(0x375a, (ushort)(slot + 1)) + (0xb4 * participantIdx) + 0x16e0);
+			return SpaceshipPlaceAddress(participantIdx, slotIdx);
 		}
 
 		/// <summary>Whether the slot is free (0xff) and the kind of the slot of table 0x375a</summary>
 		private bool SpaceshipSlotFree(short participantIdx, ushort slotIdx, out sbyte kind)
 		{
-			bool free = this.processor.PullUInt8(0x3772, SpaceshipGridOffset(participantIdx, slotIdx)) == 0xff;
+			bool free = this.processor.PullUInt8(SpaceshipGridSegment, SpaceshipGridOffset(participantIdx, slotIdx)) == SpaceshipSlotEmptyMarker;
 
-			kind = (sbyte)this.processor.PullUInt8(0x375a, (ushort)((3 * slotIdx) + 2));
+			kind = LayoutSlotKind(slotIdx);
 
 			return free;
 		}
@@ -926,7 +959,7 @@ namespace Civilization1Remaster.UI
 
 				slotIdx++;
 			}
-			while (this.processor.PullUInt8(0x375a, (ushort)(3 * slotIdx)) != 0xff);
+			while (LayoutSlotMarker(slotIdx) != SpaceshipSlotEndMarker);
 
 			// No free place of the kind: the end of the table (classic), or none
 			return this.owner.TurnHooks.ClassicSpaceshipSlots ? slotIdx : SpaceshipSlotRules.NoSlot;
@@ -957,7 +990,7 @@ namespace Civilization1Remaster.UI
 
 				slotIdx++;
 			}
-			while (this.processor.PullUInt8(0x375a, (ushort)(3 * slotIdx)) != 0xff);
+			while (LayoutSlotMarker(slotIdx) != SpaceshipSlotEndMarker);
 
 			ushort chosen = (short)(outerBuilt - outerFree) < (short)(innerBuilt - innerFree) ? innerFree : outerFree;
 
