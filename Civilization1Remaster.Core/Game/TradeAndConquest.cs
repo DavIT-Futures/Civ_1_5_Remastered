@@ -201,10 +201,6 @@ namespace Civilization1Remaster.Game
 
 			town.ParticipantIdx = (sbyte)participantIdx;
 
-			this.processor.StackWord(0); // stack management - push return segment, ignored
-			this.processor.StackWord(0x00ab); // stack management - push return offset
-			this.processor.UnstackDoubleWord(); // stack management - pop return offset and segment
-
 			ushort capitalIdx = this.owner.Secession.ObtainDistanceToCapital(formerIdx);
 
 			this.owner.World.Towns[capitalIdx].PresentMakingIdx = -1;
@@ -450,10 +446,7 @@ namespace Civilization1Remaster.Game
 							}
 							else
 							{
-								this.processor.StackWord(0);
-								this.processor.StackWord(0x07fe);
 								choice = this.owner.Audience.DisplayKingDialog(TextBuffer.Address, 0x14, 0x8b);
-								this.processor.UnstackDoubleWord();
 							}
 
 						}
@@ -480,10 +473,7 @@ namespace Civilization1Remaster.Game
 							}
 							else
 							{
-								this.processor.StackWord(0);
-								this.processor.StackWord(0x089e);
 								this.owner.Audience.DisplayKingDialog(TextBuffer.Address, 0x14, 0x8b);
-								this.processor.UnstackDoubleWord();
 							}
 						}
 

@@ -122,10 +122,6 @@ namespace Civilization1Remaster.Game
 
 				this.owner.World.Towns[oldCapital].ParticipantIdx = -1;
 
-				this.processor.StackWord(0); // stack management - push return segment, ignored
-				this.processor.StackWord(0x084f); // stack management - push return offset
-				this.processor.UnstackDoubleWord(); // stack management - pop return offset and segment
-
 				ushort newCapital = ObtainDistanceToCapital(participantIdx);
 
 				// Without another city the old capital stays (ClassicSchism: Towns[0xffff] throws)

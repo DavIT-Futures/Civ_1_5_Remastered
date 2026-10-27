@@ -191,11 +191,6 @@ namespace Civilization1Remaster.Video
 			this.processor.Journal.OpenScope($"FloodBuffer({displayIdx})");
 
 			// function body
-			this.processor.PreserveSource();
-			this.processor.StackWord(this.processor.RegDest.Value16);
-			this.processor.StackWord(this.processor.SegData.Value16);
-			this.processor.StackWord(this.processor.SegExtra.Value16);
-
 			this.glob15d4DisplayIdx = displayIdx;
 
 			if (this.glob15d2StagingMarker != 0)
@@ -235,10 +230,6 @@ namespace Civilization1Remaster.Video
 					throw new Exception($"The screen {displayIdx} is not allocated");
 				}
 			}
-			this.processor.SegExtra.Value16 = this.processor.UnstackWord();
-			this.processor.SegData.Value16 = this.processor.UnstackWord();
-			this.processor.RestoreDest();
-			this.processor.RestoreSource();
 
 			// Far return
 			this.processor.Journal.CloseScope("FloodBuffer");
@@ -253,16 +244,9 @@ namespace Civilization1Remaster.Video
 			this.processor.Journal.OpenScope($"DuplicateScreenToMainScreen(0x{displayIdx:x4})");
 
 			// function body
-			this.processor.PreserveSource();
-			this.processor.StackWord(this.processor.RegDest.Value16);
-			this.processor.StackWord(this.processor.SegData.Value16);
-
 			if (displayIdx != 0)
 			{
-				this.processor.StackWord(0); // stack management - push return segment, ignored
-				this.processor.StackWord(0x0650); // stack management - push return offset
 				FloodBuffer(displayIdx);
-				this.processor.UnstackDoubleWord(); // stack management - pop return offset and segment
 
 				if (this.displays.IncludesKey(0))
 				{
@@ -287,9 +271,6 @@ namespace Civilization1Remaster.Video
 				}
 			}
 
-			this.processor.SegData.Value16 = this.processor.UnstackWord();
-			this.processor.RestoreDest();
-			this.processor.RestoreSource();
 			// Far return
 			this.processor.Journal.CloseScope("'CopyScreenToMainScreen'");
 			this.processor.Journal = scratchJournal;

@@ -1684,10 +1684,7 @@ namespace Civilization1Remaster.Game
 			KingMood = 0x2;
 			KingSpeaking = 0xc;
 
-			this.processor.StackWord(0); // stack management - push return segment, ignored
-			this.processor.StackWord(0x200b); // stack management - push return offset
 			this.owner.Audience.DisplayKingDialog(TextBuffer.Address, 0x14, 0x8b);
-			this.processor.UnstackDoubleWord(); // stack management - pop return offset and segment
 
 			this.owner.Audience.FinishAudience();
 		}

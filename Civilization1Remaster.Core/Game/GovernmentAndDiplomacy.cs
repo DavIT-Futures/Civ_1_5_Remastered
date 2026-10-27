@@ -176,7 +176,7 @@ namespace Civilization1Remaster.Game
 
 					this.owner.Words.Clear();
 
-					if (AskKing(0x2988, 0x03d8))
+					if (AskKing(0x2988))
 					{
 						this.owner.World.Participants[person].Gold += tribute;
 						player.Gold += tribute;
@@ -204,7 +204,7 @@ namespace Civilization1Remaster.Game
 
 			this.owner.Libc.CopyText(CodeText4, (player.Relations[person] & 2) == 0 ? (ushort)0x299b : (ushort)0x2990);
 
-			if (AskKing(0x29a6, 0x0279))
+			if (AskKing(0x29a6))
 			{
 				AllyAgainst(participantIdx, otherIdx);
 
@@ -215,16 +215,12 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>The emissary's text, then the king's answer: true for the first choice</summary>
-		private bool AskKing(ushort charsAddr, ushort returnOffset)
+		private bool AskKing(ushort charsAddr)
 		{
 			this.owner.BlockText.DisplayTextDialog(charsAddr);
 
 			KingMood = 0x1;
 			KingSpeaking = 0xc;
-
-			this.processor.StackWord(0); // stack management - push return segment, ignored
-			this.processor.StackWord(returnOffset); // stack management - push return offset
-			this.processor.UnstackDoubleWord(); // stack management - pop return offset and segment
 
 			return this.owner.Audience.DisplayKingDialog(TextBuffer.Address, 0x14, 0x8b) == 1;
 		}

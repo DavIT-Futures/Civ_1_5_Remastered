@@ -1260,10 +1260,6 @@ namespace Civilization1Remaster.Game
 
 				if (MapRevealed != 0)
 				{
-					this.processor.StackWord(0); // stack management - push return segment, ignored
-					this.processor.StackWord(0x111e); // stack management - push return offset
-					this.processor.UnstackDoubleWord(); // stack management - pop return offset and segment
-
 					short storage = (short)this.owner.VideoCard.ObtainFreeStorage();
 
 					EmptyMessage()

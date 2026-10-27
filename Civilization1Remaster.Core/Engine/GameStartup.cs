@@ -42,9 +42,6 @@ namespace Civilization1Remaster.Engine
 			QueryForDisk(0, 1);
 
 			// The free memory (the local 4 of the original, B3: in C#)
-			this.processor.StackWord(0); // stack management - push return segment, ignored
-			this.processor.StackWord(0x0055); // stack management - push return offset
-			this.processor.UnstackDoubleWord(); // stack management - pop return offset and segment
 			short freeStorage = (short)this.owner.VideoCard.ObtainFreeStorage();
 
 			if (ScreenReserveFailed != 0)
@@ -71,10 +68,6 @@ namespace Civilization1Remaster.Engine
 
 			if (VgaMode != 0 && freeStorage < 0x23be)
 				LowMemoryVga = 1;
-
-			this.processor.StackWord(0); // stack management - push return segment, ignored
-			this.processor.StackWord(0x0110); // stack management - push return offset
-			this.processor.UnstackDoubleWord(); // stack management - pop return offset and segment
 
 			PointerIcon = (ushort)(this.owner.ImageToolkit.ImportIcon(0x277));
 
