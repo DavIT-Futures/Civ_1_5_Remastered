@@ -23,6 +23,31 @@ namespace Civilization1Remaster.Game
 		public const int Stride = 0x13;
 		/// <summary>The moves a unit needs to enter the terrain (byte)</summary>
 		public const int MoveCost = 0xc;
+		/// <summary>Defense bonus factor for terrain (byte)</summary>
+		public const int DefenseBonus = 0xd;
+		/// <summary>Base food yield (byte)</summary>
+		public const int Food = 0xe;
+		/// <summary>Base shield/production yield (byte)</summary>
+		public const int Shields = 0xf;
+		/// <summary>Base trade yield (byte)</summary>
+		public const int Trade = 0x10;
+	}
+
+	/// <summary>The terrain improvement effects/results (records of 12 bytes = 6 words) in the data segment</summary>
+	public static class TerrainImprovementTable
+	{
+		public const ushort Origin = 0x44a;
+		public const int Stride = 0xc;
+		public const int Irrigation = 0x0;
+		public const int Mining = 0x4;
+	}
+
+	/// <summary>The technology prerequisite requirements table</summary>
+	public static class TechnologyTable
+	{
+		public const ushort Prerequisite1Address = 0x4ee;
+		public const ushort Prerequisite2Address = 0x4ef;
+		public const int Stride = 0x16;
 	}
 
 	/// <summary>The leaders and their civilizations (records of 0x3a bytes) in the data segment</summary>

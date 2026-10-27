@@ -1,9 +1,21 @@
-﻿using Civilization1Remaster.Emulation;
+using Civilization1Remaster.Emulation;
 
 namespace Civilization1Remaster.UI
 {
 	public class InGameHelp : GameModule
 	{
+		private const ushort HelpFileNameAddress = 0x34b2;
+		private const ushort HelpFileName2Address = 0x34de;
+		private const ushort HelpFileName3Address = 0x3501;
+
+		private const ushort HelpCitySiteTopicAddress = 0x34bb;
+		private const ushort HelpIrrigateTopicAddress = 0x34c6;
+		private const ushort HelpIrrigate2TopicAddress = 0x34ce;
+		private const ushort HelpMineTopicAddress = 0x34d8;
+
+		private const ushort HelpAdviceHeaderAddress = 0x34e7;
+		private const ushort HelpAdviceHeader2Address = 0x350b;
+
 		public InGameHelp(GameEngine owner)
 			: base(owner)
 		{
@@ -24,7 +36,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Words.Clear();
 
-			if (this.owner.BlockText.ImportTextFromFile(0x34b2, topicAddr) != 0)
+			if (this.owner.BlockText.ImportTextFromFile(HelpFileNameAddress, topicAddr) != 0)
 			{
 				this.owner.Startup.ConcealMouseCursor();
 
@@ -70,10 +82,8 @@ namespace Civilization1Remaster.UI
 				sbyte vertLoc = troops.PullSigned(participantIdx, (short)arg2, UnitMemory.Vert);
 				ushort terrain = this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
 
-				// Terrain records of 0x13 bytes: food at 0x290, shields at 0x291, mining at 0x28e
-				ushort terrainRecord = (ushort)(terrain * 0x13);
-				bool cityPlace = (short)((sbyte)this.processor.PullGlobalByte((ushort)(terrainRecord + 0x290)) +
-					(sbyte)this.processor.PullGlobalByte((ushort)(terrainRecord + 0x291))) >= 2;
+				bool cityPlace = (short)((sbyte)TerrainField(terrain, TerrainTable.Food) +
+					(sbyte)TerrainField(terrain, TerrainTable.Shields)) >= 2;
 
 				short worth = (short)this.owner.VideoCard.ObtainDot(2, horizLoc + 80, vertLoc);
 
@@ -96,7 +106,7 @@ namespace Civilization1Remaster.UI
 				{
 					this.owner.MapOps.FocusMapView(this.owner.World.PersonParticipantIdx, horizLoc - 7, vertLoc - 6);
 
-					DisplayHelpPopup(0x34bb);
+					DisplayHelpPopup(HelpCitySiteTopicAddress);
 				}
 				else
 				{
@@ -124,19 +134,19 @@ namespace Civilization1Remaster.UI
 
 			if (terrain == 4 && (improvements & 6) == 0)
 			{
-				DisplayHelpPopup(0x34c6);
+				DisplayHelpPopup(HelpIrrigateTopicAddress);
 			}
 
 			if (terrain == 1 && this.owner.TurnLogic.VerifyCoastalTile(horizLoc, vertLoc) != 0 && (improvements & 6) == 0)
 			{
-				DisplayHelpPopup(0x34ce);
+				DisplayHelpPopup(HelpIrrigate2TopicAddress);
 				return;
 			}
 
 			if (TerrainField(terrain, TerrainTable.MoveCost) == 1 && (improvements & 8) == 0 && terrain != 0xb &&
 				this.owner.World.Participants[participantIdx].LiveTroops[0] < 2)
 			{
-				DisplayHelpPopup(0x34d8);
+				DisplayHelpPopup(HelpMineTopicAddress);
 			}
 		}
 
@@ -153,7 +163,7 @@ namespace Civilization1Remaster.UI
 			{
 				this.owner.Words.Clear();
 
-				ushort lineTally = this.owner.BlockText.ImportTextFromFile(0x34de, charsAddr);
+				ushort lineTally = this.owner.BlockText.ImportTextFromFile(HelpFileName2Address, charsAddr);
 
 				this.owner.BlockText.ReflowText();
 
@@ -170,7 +180,7 @@ namespace Civilization1Remaster.UI
 
 				DrawingBox.TypefaceIdx = 0x2;
 
-				this.owner.TextPainter.RenderCenteredTextToScreen0(0x34e7, 160, 19, 0);
+				this.owner.TextPainter.RenderCenteredTextToScreen0(HelpAdviceHeaderAddress, 160, 19, 0);
 
 				this.owner.BlockText.RenderTextChunk(32, 64, 25, 15);
 
@@ -199,7 +209,7 @@ namespace Civilization1Remaster.UI
 			{
 				this.owner.Words.Clear();
 
-				ushort lineTally = this.owner.BlockText.ImportTextFromFile(0x3501, charsAddr);
+				ushort lineTally = this.owner.BlockText.ImportTextFromFile(HelpFileName3Address, charsAddr);
 
 				this.owner.BlockText.ReflowText();
 
@@ -216,7 +226,7 @@ namespace Civilization1Remaster.UI
 
 				DrawingBox.TypefaceIdx = 0x2;
 
-				this.owner.TextPainter.RenderCenteredTextToScreen0(0x350b, 160, 19, 0);
+				this.owner.TextPainter.RenderCenteredTextToScreen0(HelpAdviceHeader2Address, 160, 19, 0);
 
 				this.owner.BlockText.RenderTextChunk(32, 64, 25, 15);
 

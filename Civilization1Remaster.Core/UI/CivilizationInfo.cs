@@ -1,4 +1,4 @@
-﻿using Civilization1Remaster.Emulation;
+using Civilization1Remaster.Emulation;
 
 namespace Civilization1Remaster.UI
 {
@@ -7,6 +7,9 @@ namespace Civilization1Remaster.UI
 	/// </summary>
 	public class CivilizationInfo : GameModule
 	{
+		private const ushort CivilizationOverviewSummaryHeaderAddress = 0x46be;
+		private const ushort CivilizationOverviewTechnologiesHeaderAddress = 0x4729;
+
 		public CivilizationInfo(GameEngine owner)
 			: base(owner)
 		{
@@ -55,7 +58,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 16, 40, 15);
 
-			this.owner.TextPainter.RenderTextToScreen0(0x46be, 16, 50, 15);
+			this.owner.TextPainter.RenderTextToScreen0(CivilizationOverviewSummaryHeaderAddress, 16, 50, 15);
 
 			this.owner.Words.Clear();
 
@@ -139,7 +142,7 @@ namespace Civilization1Remaster.UI
 
 			vertLoc = 0x38;
 
-			this.owner.TextPainter.RenderTextToScreen0(0x4729, 16, 56, 15);
+			this.owner.TextPainter.RenderTextToScreen0(CivilizationOverviewTechnologiesHeaderAddress, 16, 56, 15);
 
 			vertLoc += 8;
 

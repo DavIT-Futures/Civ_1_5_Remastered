@@ -1,4 +1,4 @@
-﻿using Civilization1Remaster.Emulation;
+using Civilization1Remaster.Emulation;
 using Civilization1Remaster.Game.Rules;
 using Civilization1Remaster.Game.State;
 
@@ -1251,8 +1251,8 @@ namespace Civilization1Remaster.Game
 			ushort science = (ushort)(0x16 * scienceIdx);
 			this.processor.RegSource.Value16 = science;
 
-			return PlayerKnowsTechnology(participantIdx, (sbyte)this.processor.PullGlobalByte((ushort)(science + 0x4ee))) != 0 &&
-				PlayerKnowsTechnology(participantIdx, (sbyte)this.processor.PullGlobalByte((ushort)(science + 0x4ef))) != 0;
+			return PlayerKnowsTechnology(participantIdx, (sbyte)this.processor.PullGlobalByte((ushort)(science + TechnologyTable.Prerequisite1Address))) != 0 &&
+				PlayerKnowsTechnology(participantIdx, (sbyte)this.processor.PullGlobalByte((ushort)(science + TechnologyTable.Prerequisite2Address))) != 0;
 		}
 
 		/// <summary>The human player's discovery and his choice of the next research (see UncoverTechnology)</summary>

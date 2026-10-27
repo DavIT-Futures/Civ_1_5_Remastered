@@ -1,4 +1,4 @@
-﻿using Civilization1Remaster.Emulation;
+using Civilization1Remaster.Emulation;
 
 namespace Civilization1Remaster.UI
 {
@@ -6,6 +6,9 @@ namespace Civilization1Remaster.UI
 	{
 		private const ushort CivilopediaFileName = 0x3fa4;
 		private const ushort CivilopediaFileNumberOffset = 0x3fa9;
+		private const ushort CivilopediaConceptTitlesTableAddress = 0x3c64;
+		private const ushort CivilopediaNoneStringAddress = 0x3dee;
+		private const ushort CivilopediaAllowsStringAddress = 0x3e03;
 
 
 		public Civilopedia(GameEngine owner)
@@ -124,7 +127,7 @@ namespace Civilization1Remaster.UI
 				FindNextCivilopediaEntry(part, 1, 1, 0x2e, idx => BuildingRecordText(idx), lastName, nextName, ref nextIdx, ref nextKind);
 				FindNextCivilopediaEntry(part, 2, 0, 0x1c, idx => UnitText(idx), lastName, nextName, ref nextIdx, ref nextKind);
 				FindNextCivilopediaEntry(part, 3, 0, 0xc, idx => TerrainText(idx), lastName, nextName, ref nextIdx, ref nextKind);
-				FindNextCivilopediaEntry(part, 4, 0, 0x15, idx => this.processor.PullGlobalWord((ushort)((idx << 1) + 0x3c64)), lastName, nextName, ref nextIdx, ref nextKind);
+				FindNextCivilopediaEntry(part, 4, 0, 0x15, idx => this.processor.PullGlobalWord((ushort)((idx << 1) + CivilopediaConceptTitlesTableAddress)), lastName, nextName, ref nextIdx, ref nextKind);
 
 				if (nextKind == 0xffff)
 					break;
@@ -569,7 +572,7 @@ namespace Civilization1Remaster.UI
 					break;
 
 				case 4:
-					this.owner.Words.Append(this.processor.PullUInt16(dataSeg, (ushort)((scienceIdx << 1) + 0x3c64)));
+					this.owner.Words.Append(this.processor.PullUInt16(dataSeg, (ushort)((scienceIdx << 1) + CivilopediaConceptTitlesTableAddress)));
 					this.owner.TextPainter.RenderCenteredTextToScreen0(0x3d8c, titleX, 36, 7);
 					break;
 			}
@@ -581,14 +584,14 @@ namespace Civilization1Remaster.UI
 			this.owner.Words.Clear();
 
 			ushort techSpecAddr = (ushort)(0x16 * scienceIdx);
-			byte req1 = this.processor.PullUInt8(dataSeg, (ushort)(techSpecAddr + 0x4ee));
+			byte req1 = this.processor.PullUInt8(dataSeg, (ushort)(techSpecAddr + TechnologyTable.Prerequisite1Address));
 			if (req1 != 0xff)
 			{
 				Message("Requires ")
 					.Text(TechnologyText((short)(sbyte)req1));
 			}
 
-			byte req2 = this.processor.PullUInt8(dataSeg, (ushort)(techSpecAddr + 0x4ef));
+			byte req2 = this.processor.PullUInt8(dataSeg, (ushort)(techSpecAddr + TechnologyTable.Prerequisite2Address));
 			if (req2 != 0xff)
 			{
 				this.owner.Words.Append(" and ");
@@ -679,7 +682,7 @@ namespace Civilization1Remaster.UI
 			ushort obtainedFrom = (ushort)this.owner.World.Participants[this.owner.World.PersonParticipantIdx].ScienceObtainedSince[scienceIdx];
 			if (obtainedFrom == 0xfffe)
 			{
-				this.owner.Words.Set(0x3dee);
+				this.owner.Words.Set(CivilopediaNoneStringAddress);
 			}
 			else if (obtainedFrom == 0xffff)
 			{
@@ -687,7 +690,7 @@ namespace Civilization1Remaster.UI
 			}
 			else if (obtainedFrom == 0)
 			{
-				this.owner.Words.Set(0x3e03);
+				this.owner.Words.Set(CivilopediaAllowsStringAddress);
 			}
 			else
 			{
@@ -771,7 +774,7 @@ namespace Civilization1Remaster.UI
 			for (ushort variantIdx = scienceIdx; (short)(scienceIdx + 0xc) >= (short)variantIdx; variantIdx = (ushort)(variantIdx + 0xc))
 			{
 				if (variantIdx != scienceIdx &&
-					this.processor.PullUInt8(dataSeg, (ushort)(0x13 * scienceIdx + 0x290)) == 0x2)
+					TerrainField(scienceIdx, TerrainTable.Food) == 2)
 				{
 					continue;
 				}
@@ -780,8 +783,8 @@ namespace Civilization1Remaster.UI
 				this.owner.TextPainter.RenderTextToScreen0(TerrainTextAt(varSpec), 12, cursorY, 1);
 				cursorY = (short)(cursorY + 8);
 
-				sbyte foodVal = (sbyte)this.processor.PullUInt8(dataSeg, (ushort)(varSpec + 0x290));
-				short irrigEffect = (short)this.processor.PullUInt16(dataSeg, (ushort)(0xc * scienceIdx + 0x44a));
+				sbyte foodVal = (sbyte)TerrainFieldAt(varSpec, TerrainTable.Food);
+				short irrigEffect = (short)this.processor.PullUInt16(dataSeg, (ushort)(TerrainImprovementTable.Origin + (0xc * scienceIdx) + TerrainImprovementTable.Irrigation));
 				if (foodVal != 0 || irrigEffect < -1)
 				{
 					Message("Food: ")
@@ -808,8 +811,8 @@ namespace Civilization1Remaster.UI
 					cursorY = (short)(cursorY + 8);
 				}
 
-				sbyte prodVal = (sbyte)this.processor.PullUInt8(dataSeg, (ushort)(varSpec + 0x291));
-				short mineEffect = (short)this.processor.PullUInt16(dataSeg, (ushort)(0xc * scienceIdx + 0x44e));
+				sbyte prodVal = (sbyte)TerrainFieldAt(varSpec, TerrainTable.Shields);
+				short mineEffect = (short)this.processor.PullUInt16(dataSeg, (ushort)(TerrainImprovementTable.Origin + (0xc * scienceIdx) + TerrainImprovementTable.Mining));
 				if (prodVal != 0 || mineEffect < -1)
 				{
 					this.owner.Words.Set("Production: ");
@@ -837,7 +840,7 @@ namespace Civilization1Remaster.UI
 					cursorY = (short)(cursorY + 8);
 				}
 
-				sbyte tradeVal = (sbyte)this.processor.PullUInt8(dataSeg, (ushort)(varSpec + 0x292));
+				sbyte tradeVal = (sbyte)TerrainFieldAt(varSpec, TerrainTable.Trade);
 				if (tradeVal != 0 || (short)scienceIdx <= 2)
 				{
 					Message("Trade: ")
@@ -890,7 +893,7 @@ namespace Civilization1Remaster.UI
 			this.owner.Libc.AppendText(
 				TextBuffer.Address,
 				this.owner.Libc.IntegerToText(
-					(short)((0x32 * (short)(sbyte)this.processor.PullUInt8(dataSeg, (ushort)(baseSpec + 0x28f))) - 0x64),
+					(short)((0x32 * (short)(sbyte)TerrainFieldAt(baseSpec, TerrainTable.DefenseBonus)) - 0x64),
 					10));
 			this.owner.Words.Append("%");
 			this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 12, cursorY, 12);

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Civilization1Remaster.Emulation;
 using Civilization1Remaster.Engine;
 using Civilization1Remaster.Game.Rules;
@@ -1707,7 +1707,7 @@ namespace Civilization1Remaster.Game
 		/// <summary>One of the two technologies required by the technology (bytes 0x4ee and 0x4ef of records of 0x16 bytes), -1 for none</summary>
 		private sbyte RequiredScience(int scienceIdx, int requiredIdx)
 		{
-			return this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(0x4ee + requiredIdx + (0x16 * scienceIdx)));
+			return this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(TechnologyTable.Prerequisite1Address + requiredIdx + (TechnologyTable.Stride * scienceIdx)));
 		}
 
 		/// <summary>
