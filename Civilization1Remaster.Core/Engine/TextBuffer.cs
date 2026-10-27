@@ -54,7 +54,6 @@ namespace Civilization1Remaster.Engine
 				if (length < 0)
 					return this.game.Libc.TextLength(Address);
 
-				this.game.Processor.RegAcc.Value16 = (ushort)length;
 				return (ushort)length;
 			}
 		}
@@ -94,7 +93,6 @@ namespace Civilization1Remaster.Engine
 				this.store[place + idx] = (byte)text[idx];
 
 			this.store[place + text.Length] = 0;
-			this.game.Processor.RegAcc.Value16 = Address;
 			return Address;
 		}
 

@@ -477,8 +477,7 @@ namespace Civilization1Remaster.UI
 						0, 115, CityStructurePicture(11));
 				}
 
-				this.processor.RegBase.Value16 = ScreenBox;
-				this.processor.EmitUInt16(this.processor.SegData.Value16, this.processor.RegBase.Value16, 0x1);
+				this.processor.EmitUInt16(this.processor.SegData.Value16, ScreenBox, 0x1);
 				DrawingBox.TypefaceIdx = 0x6;
 
 				if (this.owner.Libc.TextLength(savedText) == 0)
@@ -501,8 +500,7 @@ namespace Civilization1Remaster.UI
 					this.owner.Dialogs.DisplayMenu(savedText, 80, 8, 1);
 				}
 
-				this.processor.RegBase.Value16 = ScreenBox;
-				this.processor.EmitUInt16(this.processor.SegData.Value16, this.processor.RegBase.Value16, 0x0);
+				this.processor.EmitUInt16(this.processor.SegData.Value16, ScreenBox, 0x0);
 				DrawingBox.TypefaceIdx = 0x1;
 
 				if (idx3 != 0)
@@ -823,9 +821,9 @@ namespace Civilization1Remaster.UI
 
 				loaded = true;
 
-				SeizeCityScenery((ushort)wonderIdx);
+				ushort pic = SeizeCityScenery((ushort)wonderIdx);
 
-				SetWonderPicture(wonderIdx, this.processor.RegAcc.Value16);
+				SetWonderPicture(wonderIdx, pic);
 			}
 		}
 
@@ -833,7 +831,7 @@ namespace Civilization1Remaster.UI
 		/// Cuts a picture of the city view out of screen 1. The rectangles (segment 0x3767, records of 4 words: left, top, right,
 		/// bottom) are turned into left, top, width, height once, the first time (when the right of rectangle 1 is above 300).
 		/// </summary>
-		public void SeizeCityScenery(ushort arg1)
+		public ushort SeizeCityScenery(ushort arg1)
 		{
 			this.processor.Journal.OpenScope($"SeizeCityScenery({arg1})");
 
@@ -850,13 +848,15 @@ namespace Civilization1Remaster.UI
 				}
 			}
 
-			this.owner.VideoCard.ScreenToPicture(1,
+			ushort handle = this.owner.VideoCard.ScreenToPicture(1,
 				SceneryBoxField(arg1, SceneryBoxLeft),
 				SceneryBoxField(arg1, SceneryBoxTop),
 				SceneryBoxField(arg1, SceneryBoxWidth),
 				SceneryBoxField(arg1, SceneryBoxHeight));
 
 			this.processor.Journal.CloseScope("SeizeCityScenery");
+
+			return handle;
 		}
 
 		/// <summary>The segment of the rectangles of the city view pictures</summary>

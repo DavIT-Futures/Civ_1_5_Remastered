@@ -1,4 +1,4 @@
-﻿using Civilization1Remaster.Emulation;
+using Civilization1Remaster.Emulation;
 
 namespace Civilization1Remaster.UI
 {
@@ -61,8 +61,6 @@ namespace Civilization1Remaster.UI
 				ScreenBox, 0, 0);
 
 			this.owner.Startup.DisplayMouseCursor();
-
-			this.processor.RegAcc.Value16 = answer;
 
 			this.processor.Journal.CloseScope("DisplayCityLabelPrompt");
 
@@ -220,8 +218,6 @@ namespace Civilization1Remaster.UI
 					}
 				}
 			}
-
-			this.processor.RegAcc.Value16 = found;
 
 			this.processor.Journal.CloseScope("DisplayLabelInputBox");
 
@@ -381,8 +377,6 @@ namespace Civilization1Remaster.UI
 			}
 
 			this.owner.TurnLogic.AwaitForKey();
-
-			this.processor.RegAcc.Value16 = accepted;
 
 			// Far return
 			this.processor.Journal.CloseScope("PullTextInput");

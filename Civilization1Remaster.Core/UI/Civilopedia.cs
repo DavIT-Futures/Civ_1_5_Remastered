@@ -115,8 +115,6 @@ namespace Civilization1Remaster.UI
 				? ChooseCivilopediaEntryWithMouse(arg1, width, entryTally)
 				: ChooseCivilopediaEntryWithKeys(arg1, width, entryTally));
 
-			this.processor.RegAcc.Value16 = answer;
-
 			this.processor.Journal.CloseScope("DisplayCivilopediaIndex");
 
 			return answer;
@@ -1005,7 +1003,6 @@ namespace Civilization1Remaster.UI
 
 			for (int idx = 0; idx < tally; idx++)
 			{
-				this.processor.RegBase.Value16 = (ushort)idx;
 				this.processor.SegExtra.Value16 = 0x371e;
 
 				if ((ushort)(sbyte)this.processor.PullUInt8(this.processor.SegExtra.Value16, (ushort)(origin + idx)) == scienceIdx)
@@ -1014,8 +1011,6 @@ namespace Civilization1Remaster.UI
 					break;
 				}
 			}
-
-			this.processor.RegAcc.Value16 = found;
 
 			return found;
 		}

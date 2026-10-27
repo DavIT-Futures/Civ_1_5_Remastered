@@ -832,38 +832,39 @@ namespace Civilization1Remaster.UI
 						sbyte style = (sbyte)PalaceSectionStyleMarker(section, partIdx);
 						bool middle = arg2 != 0 ? PalaceSectionStyle(section) == 1 : section == 2;
 
+						ushort picHandle = 0;
 						switch (style)
 						{
 							case 0:
-								this.owner.VideoCard.ScreenToPicture(1, horizLoc, (ushort)(vertLoc + 1), 0x34, 0x63);
+								picHandle = this.owner.VideoCard.ScreenToPicture(1, horizLoc, (ushort)(vertLoc + 1), 0x34, 0x63);
 								break;
 
 							case 1:
-								this.owner.VideoCard.ScreenToPicture(1, (ushort)(horizLoc + 0x35), (ushort)(vertLoc + 1), 0x18, 0x63);
+								picHandle = this.owner.VideoCard.ScreenToPicture(1, (ushort)(horizLoc + 0x35), (ushort)(vertLoc + 1), 0x18, 0x63);
 								break;
 
 							case 2:
-								this.owner.VideoCard.ScreenToPicture(1, (ushort)(horizLoc + 0x4e), (ushort)(vertLoc + 1), 0x18, 0x63);
+								picHandle = this.owner.VideoCard.ScreenToPicture(1, (ushort)(horizLoc + 0x4e), (ushort)(vertLoc + 1), 0x18, 0x63);
 								break;
 
 							case 3:
 								if (middle)
-									this.owner.VideoCard.ScreenToPicture(1, 0xa0, 0x65, 0x23, 0x63);
+									picHandle = this.owner.VideoCard.ScreenToPicture(1, 0xa0, 0x65, 0x23, 0x63);
 								else
-									this.owner.VideoCard.ScreenToPicture(1, (ushort)(horizLoc + 0x67), (ushort)(vertLoc + 1), 0x1c, 0x63);
+									picHandle = this.owner.VideoCard.ScreenToPicture(1, (ushort)(horizLoc + 0x67), (ushort)(vertLoc + 1), 0x1c, 0x63);
 								break;
 
 							case 4:
 								if (middle)
-									this.owner.VideoCard.ScreenToPicture(1, 0xc4, 0x65, 0x23, 0x63);
+									picHandle = this.owner.VideoCard.ScreenToPicture(1, 0xc4, 0x65, 0x23, 0x63);
 								else
-									this.owner.VideoCard.ScreenToPicture(1, (ushort)(horizLoc + 0x84), (ushort)(vertLoc + 1), 0x1b, 0x63);
+									picHandle = this.owner.VideoCard.ScreenToPicture(1, (ushort)(horizLoc + 0x84), (ushort)(vertLoc + 1), 0x1b, 0x63);
 								break;
 						}
 
 						if (style is >= 0 and <= 4)
 						{
-							SetPalacePicture(section, partIdx, this.processor.RegAcc.Value16);
+							SetPalacePicture(section, partIdx, picHandle);
 						}
 
 						if (style != -1 && PalaceFirstPicture == 0xffff)

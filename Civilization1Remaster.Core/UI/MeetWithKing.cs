@@ -979,7 +979,6 @@ namespace Civilization1Remaster.UI
 			// function body
 			ReleaseKingResources();
 
-			this.processor.RegBase.Value16 = ScreenBox;
 			DrawingBox.TypefaceIdx = 0x1;
 
 			this.owner.TurnHooks.RepaintMainScreen();
@@ -987,7 +986,6 @@ namespace Civilization1Remaster.UI
 			KingMood = 0xffff;
 			KingAnswer = 0;
 			EmissaryAudience = KingAnswer;
-			this.processor.RegAcc.Value16 = EmissaryAudience;
 
 			// Far return
 			this.processor.Journal.CloseScope("FinishAudience");
@@ -1020,7 +1018,6 @@ namespace Civilization1Remaster.UI
 			}
 
 			ushort answer = KingAnswer;
-			this.processor.RegAcc.Value16 = answer;
 
 			this.processor.Journal.CloseScope("WelcomeEmissary");
 
@@ -1489,10 +1486,7 @@ namespace Civilization1Remaster.UI
 
 			if (first)
 			{
-				// The answer, not AX (PlayerKnowsTechnology doesn't set it), like in the original
-				this.processor.RegAcc.Value16 = this.owner.Advisors.PlayerKnowsTechnology(participantIdx, 0x14);
-
-				KingModernPictures = this.processor.RegAcc.Value16;
+				KingModernPictures = this.owner.Advisors.PlayerKnowsTechnology(participantIdx, 0x14);
 			}
 
 			char regimeChar = regime == 3 ? '3' : (char)((regime / 2) + '0');
@@ -1710,8 +1704,6 @@ namespace Civilization1Remaster.UI
 				ScreenBox, 0, 0x80);
 
 			this.owner.Startup.DisplayMouseCursor();
-
-			this.processor.RegAcc.Value16 = answer;
 
 			this.processor.Journal.CloseScope("DisplayKingDialog");
 

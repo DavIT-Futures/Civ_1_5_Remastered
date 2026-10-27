@@ -1,4 +1,4 @@
-﻿using Civilization1Remaster.Emulation;
+using Civilization1Remaster.Emulation;
 using Microsoft.Win32;
 using System.Threading;
 
@@ -120,8 +120,6 @@ namespace Civilization1Remaster.Engine
 		{
 			ushort faceIdent = DrawingBox.TypefaceIdx;
 			string words = this.processor.PullText(CPU.AsLinearAddress(this.processor.SegData.Value16, charsAddr));
-
-			this.processor.RegAcc.Value16 = (ushort)this.owner.VideoCard.ObtainRenderTextSize(faceIdent, words).Width;
 
 			return this.owner.VideoCard.ObtainRenderTextSize(faceIdent, words).Width;
 		}

@@ -161,7 +161,6 @@ namespace Civilization1Remaster.UI
 			DrawingBox.TypefaceIdx = 0x2;
 
 			short storyIdx = (short)this.owner.Libc.Dice.DrawInt(14);
-			this.processor.RegAcc.Value16 = (ushort)storyIdx;
 			char letter = (char)('A' + storyIdx);
 			ushort topic = (ushort)(this.processor.RegStack.Value16 - 0x300);
 			this.owner.Libc.CopyText(topic, $"*NEWS{letter}");

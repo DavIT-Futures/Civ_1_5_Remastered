@@ -440,17 +440,15 @@ namespace Civilization1Remaster.UI
 
 			// The frame like the original (the functions called see the stack at the same depth)
 
+			ushort result = 0;
 			if (participantIdx != this.owner.World.PersonParticipantIdx || this.owner.World.RoundTally == 0)
 			{
-				ushort result = RemakeCivilization(participantIdx);
-
-				this.processor.RegAcc.Value16 = result;
+				result = RemakeCivilization(participantIdx);
 			}
-
 
 			this.processor.Journal.CloseScope("ConstructCivilization");
 
-			return this.processor.RegAcc.Value16;
+			return result;
 		}
 
 		/// <summary>The work of ConstructCivilization; 0 when the civilization does not come</summary>
@@ -957,8 +955,6 @@ namespace Civilization1Remaster.UI
 					chosen = (short)participantIdx;
 				}
 			}
-
-			this.processor.RegAcc.Value16 = (ushort)chosen;
 
 			// Far return
 			this.processor.Journal.CloseScope("CharacterizeStartLocation");

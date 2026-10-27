@@ -164,7 +164,7 @@ namespace Civilization1Remaster
 			// Call our 'short Main()' function
 			this.Startup.RunGame();
 
-			this.Libc.TerminateProgram((short)this.processor.RegAcc.Value16);
+			this.Libc.TerminateProgram(0);
 		}
 
 		/// <summary>
@@ -281,16 +281,7 @@ namespace Civilization1Remaster
 			ushort programSection = this.processor.SegExtra.Value16;
 			ushort blockSize = (ushort)(topSection - programSection);
 
-			this.processor.RegBase.Value16 = blockSize;
-
-			bool resized = this.processor.Storage.RescaleStorageChunk(programSection, blockSize);
-
-			this.processor.RegAcc.Value16 = (ushort)(resized ? 0 : 8);
-
-			if (!resized)
-			{
-				this.processor.RegBase.Value16 = 0;
-			}
+			this.processor.Storage.RescaleStorageChunk(programSection, blockSize);
 
 			this.processor.EmitUInt16(contentSection, StartupDataSegmentAddress, this.processor.SegData.Value16);
 
