@@ -4,6 +4,7 @@ using System.Drawing;
 using Civilization1Remaster.Emulation;
 using Civilization1Remaster.Engine;
 using Civilization1Remaster.Game.State;
+using Civilization1Remaster.UI;
 
 namespace Civilization1Remaster.Game
 {
@@ -1386,8 +1387,8 @@ namespace Civilization1Remaster.Game
 				{
 					for (int sectionIdx = 0; sectionIdx < 9; sectionIdx++)
 					{
-						SetSectionWord(levels, sectionIdx, this.processor.PullGlobalWord((ushort)((sectionIdx << 1) + 0xd91e)));
-						SetSectionWord(styles, sectionIdx, this.processor.PullGlobalWord((ushort)((sectionIdx << 1) + 0xb222)));
+						SetSectionWord(levels, sectionIdx, this.processor.PullGlobalWord((ushort)((sectionIdx << 1) + Palace.PalaceSectionLevelsAddress)));
+						SetSectionWord(styles, sectionIdx, this.processor.PullGlobalWord((ushort)((sectionIdx << 1) + Palace.PalaceSectionStylesAddress)));
 					}
 
 					built = 9;

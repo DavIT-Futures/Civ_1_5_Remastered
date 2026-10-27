@@ -1,15 +1,97 @@
-﻿using Civilization1Remaster.Emulation;
+using Civilization1Remaster.Emulation;
 
 namespace Civilization1Remaster.UI
 {
 	public class Palace : GameModule
 	{
+		private const ushort PalaceUpgradeAnnouncementDialogAddress = 0x4ade;
+		private const ushort PalaceInitialScreenPictureAddress = 0x4ae6;
+		private const ushort PalaceUpgradeOptionsPromptAddress = 0x4af0;
+		private const ushort PalaceStyleChoiceHeaderAddress = 0x4b13;
+		private const ushort PalaceCastleResourceAddress = 0x4b27;
+		private const ushort PalacePartHeightTable1Address = 0x4b31;
+		private const ushort PalacePartHeightTable2Address = 0x4b32;
+		private const ushort PalacePartHeightTable3Address = 0x4b33;
+		private const ushort PalacePartHeightTable4Address = 0x4b34;
+		private const ushort PalacePartHeightTable5Address = 0x4b35;
+		private const ushort PalacePartHeightTableAddress = 0x4b36;
+		private const ushort PalaceScreenBackgroundPictureAddress = 0x4b81;
+		private const ushort PalaceDefaultBackgroundPictureAddress = 0x4b89;
+		private const ushort PalaceGraphicsResourceAddress = 0x4b9f;
+		private const ushort PalacePaletteAddress = 0x4bb0;
+
+		public const ushort PalaceSectionStylesAddress = 0xb222;
+		public const ushort PalacePicturesTableAddress = 0xb23c;
+		public const ushort PalaceSectionStyleMarkersAddress = 0xb25e;
+
+		public const ushort PalaceSectionLevelsAddress = 0xd91e;
+		public const ushort PalaceLeftBushesAddress = 0xd930;
+		public const ushort PalaceGardenLevelsAddress = 0xd930;
+		public const ushort PalaceRightBushesAddress = 0xd934;
+
 		public Palace(GameEngine owner)
 			: base(owner)
 		{
 		}
 
-/// <summary>
+		private ushort PalaceSectionLevel(ushort sectionIdx)
+		{
+			return this.processor.PullGlobalWord((ushort)(PalaceSectionLevelsAddress + (sectionIdx << 1)));
+		}
+
+		private void SetPalaceSectionLevel(ushort sectionIdx, ushort level)
+		{
+			this.processor.EmitGlobalWord((ushort)(PalaceSectionLevelsAddress + (sectionIdx << 1)), level);
+		}
+
+		private ushort PalaceGardenLevel(ushort gardenIdx)
+		{
+			return this.processor.PullGlobalWord((ushort)(PalaceGardenLevelsAddress + (gardenIdx << 1)));
+		}
+
+		private ushort PalaceSectionStyle(ushort sectionIdx)
+		{
+			return this.processor.PullGlobalWord((ushort)(PalaceSectionStylesAddress + (sectionIdx << 1)));
+		}
+
+		private void SetPalaceSectionStyle(ushort sectionIdx, ushort style)
+		{
+			this.processor.EmitGlobalWord((ushort)(PalaceSectionStylesAddress + (sectionIdx << 1)), style);
+		}
+
+		private byte PalaceSectionStyleMarker(ushort sectionIdx, ushort markerIdx)
+		{
+			return this.processor.PullGlobalByte((ushort)(PalaceSectionStyleMarkersAddress + (sectionIdx << 1) + markerIdx));
+		}
+
+		private void SetPalaceSectionStyleMarker(ushort sectionIdx, ushort markerIdx, byte marker)
+		{
+			this.processor.EmitGlobalByte((ushort)(PalaceSectionStyleMarkersAddress + (sectionIdx << 1) + markerIdx), marker);
+		}
+
+		private void SetPalaceSectionStyleMarkers(ushort sectionIdx, byte marker0, byte marker1)
+		{
+			ushort addr = (ushort)(PalaceSectionStyleMarkersAddress + (sectionIdx << 1));
+			this.processor.EmitGlobalByte(addr, marker0);
+			this.processor.EmitGlobalByte((ushort)(addr + 1), marker1);
+		}
+
+		private static ushort PalacePictureAddress(ushort sectionIdx, ushort partIdx)
+		{
+			return (ushort)(PalacePicturesTableAddress + (sectionIdx << 2) + (partIdx << 1));
+		}
+
+		private ushort PalacePicture(ushort sectionIdx, ushort partIdx)
+		{
+			return this.processor.PullGlobalWord(PalacePictureAddress(sectionIdx, partIdx));
+		}
+
+		private void SetPalacePicture(ushort sectionIdx, ushort partIdx, ushort pictureHandle)
+		{
+			this.processor.EmitGlobalWord(PalacePictureAddress(sectionIdx, partIdx), pictureHandle);
+		}
+
+		/// <summary>
 		/// ?
 		/// </summary>
 		public void DisplayPalace()
@@ -23,7 +105,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Startup.ConcealMouseCursor();
 			this.owner.Words.Clear();
-			this.owner.BlockText.DisplayTextDialog(0x4ade);
+			this.owner.BlockText.DisplayTextDialog(PalaceUpgradeAnnouncementDialogAddress);
 			this.owner.Libc.CopyText(textBuf, TextBuffer.Address);
 			this.owner.Startup.QueryForDisk(2, 1);
 
@@ -37,7 +119,7 @@ namespace Civilization1Remaster.UI
 			ushort chiefVisuals = (ushort)this.owner.World.Participants[this.owner.World.PersonParticipantIdx].ChiefVisuals;
 			this.owner.Services.PerformSound(LeaderWord(chiefVisuals, LeaderTable.Tune), 3);
 
-			this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, 0x4ae6, 1);
+			this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, PalaceInitialScreenPictureAddress, 1);
 
 			this.owner.VideoCard.RenderImage(
 				BackScreenBox,
@@ -60,16 +142,15 @@ namespace Civilization1Remaster.UI
 				0, 0);
 
 			DialogNeedsRedraw = 1;
-			this.owner.Dialogs.DisplayMenu(0x4af0, 40, 16, 1);
+			this.owner.Dialogs.DisplayMenu(PalaceUpgradeOptionsPromptAddress, 40, 16, 1);
 
 			ushort hasOptions = 0;
 			for (ushort sec = 1; (short)sec < 8; sec++)
 			{
-				ushort secWordOff = (ushort)(sec << 1);
-				short level = (short)this.processor.PullUInt16(dataSeg, (ushort)(secWordOff + 0xd91e));
+				short level = (short)PalaceSectionLevel(sec);
 				if (level < 4 &&
-					((short)this.processor.PullUInt16(dataSeg, (ushort)(secWordOff + 0xd91c)) > 0 ||
-					 (short)this.processor.PullUInt16(dataSeg, (ushort)(secWordOff + 0xd920)) > 0 ||
+					((short)PalaceSectionLevel((ushort)(sec - 1)) > 0 ||
+					 (short)PalaceSectionLevel((ushort)(sec + 1)) > 0 ||
 					 level >= 0))
 				{
 					short labelX = (short)(0x30 * (short)sec - 0x24);
@@ -82,8 +163,7 @@ namespace Civilization1Remaster.UI
 
 			for (ushort gardenIdx = 0; (short)gardenIdx < 3; gardenIdx++)
 			{
-				ushort gardenWordOff = (ushort)(gardenIdx << 1);
-				if ((short)this.processor.PullUInt16(dataSeg, (ushort)(gardenWordOff + 0xd930)) < 3)
+				if ((short)PalaceGardenLevel(gardenIdx) < 3)
 				{
 					this.owner.Words.Set("A");
 					this.processor.EmitGlobalByte(TextBuffer.Address, (byte)(this.owner.Words[0] + (byte)gardenIdx));
@@ -146,14 +226,13 @@ namespace Civilization1Remaster.UI
 					selectedSection = (ushort)(CPU.SignedQuotient((short)(this.owner.GlobDb3c + 0xc), 0x30) + 1);
 				}
 
-				ushort selWordOff = (ushort)(selectedSection << 1);
-				if ((short)this.processor.PullUInt16(dataSeg, (ushort)(selWordOff + 0xd91e)) >= 4)
+				if ((short)PalaceSectionLevel(selectedSection) >= 4)
 				{
 					continue;
 				}
 
 				if ((short)selectedSection >= 9 &&
-					(short)this.processor.PullUInt16(dataSeg, (ushort)(selWordOff + 0xd91e)) >= 3)
+					(short)PalaceSectionLevel(selectedSection) >= 3)
 				{
 					continue;
 				}
@@ -165,9 +244,8 @@ namespace Civilization1Remaster.UI
 			{
 				while ((short)selectedSection < 4)
 				{
-					ushort secWordOff = (ushort)(selectedSection << 1);
-					if ((short)this.processor.PullUInt16(dataSeg, (ushort)(secWordOff + 0xd920)) > 0 ||
-						this.processor.PullUInt16(dataSeg, (ushort)(secWordOff + 0xd91e)) != 0xffff)
+					if ((short)PalaceSectionLevel((ushort)(selectedSection + 1)) > 0 ||
+						PalaceSectionLevel(selectedSection) != 0xffff)
 					{
 						break;
 					}
@@ -177,9 +255,8 @@ namespace Civilization1Remaster.UI
 
 				while ((short)selectedSection > 4)
 				{
-					ushort secWordOff = (ushort)(selectedSection << 1);
-					if ((short)this.processor.PullUInt16(dataSeg, (ushort)(secWordOff + 0xd91c)) > 0 ||
-						this.processor.PullUInt16(dataSeg, (ushort)(secWordOff + 0xd91e)) != 0xffff)
+					if ((short)PalaceSectionLevel((ushort)(selectedSection - 1)) > 0 ||
+						PalaceSectionLevel(selectedSection) != 0xffff)
 					{
 						break;
 					}
@@ -197,7 +274,7 @@ namespace Civilization1Remaster.UI
 				0, 0);
 
 			ushort nextLevel = (ushort)this.owner.Helpers.VerifyValueSpan(
-				this.processor.PullInt16(dataSeg, (ushort)((selectedSection << 1) + 0xd91e)) + 1,
+				(short)PalaceSectionLevel(selectedSection) + 1,
 				1, 4);
 
 			ushort selectedStyle = 0;
@@ -206,9 +283,8 @@ namespace Civilization1Remaster.UI
 				selectedStyle = this.SelectPalaceArchitectureStyle(dataSeg, selectedSection, nextLevel);
 			}
 
-			ushort finalWordOff = (ushort)(selectedSection << 1);
-			this.processor.EmitUInt16(dataSeg, (ushort)(finalWordOff + 0xd91e), nextLevel);
-			this.processor.EmitUInt16(dataSeg, (ushort)(finalWordOff + 0xb222), selectedStyle);
+			SetPalaceSectionLevel(selectedSection, nextLevel);
+			SetPalaceSectionStyle(selectedSection, selectedStyle);
 
 			DrawingBox.DisplayIdx = 0x1;
 			ImportPalaceGraphics(0);
@@ -223,19 +299,17 @@ namespace Civilization1Remaster.UI
 		{
 			for (ushort sec = 1; (short)sec < 8; sec++)
 			{
-				ushort secWordOff = (ushort)(sec << 1);
-				this.processor.EmitUInt8(dataSeg, (ushort)(secWordOff + 0xb25f), 0xff);
-				this.processor.EmitUInt8(dataSeg, (ushort)(secWordOff + 0xb25e), 0xff);
+				SetPalaceSectionStyleMarkers(sec, 0xff, 0xff);
 			}
 
 			RenderPalaceSection(selectedSection, 0);
 
 			ushort selWordOff = (ushort)(selectedSection << 1);
+			byte marker0 = PalaceSectionStyleMarker(selectedSection, 0);
+			byte marker1 = PalaceSectionStyleMarker(selectedSection, 1);
 			for (ushort styleIdx = 1; (short)styleIdx <= 3; styleIdx++)
 			{
-				ushort styleWordOff = (ushort)(styleIdx << 1);
-				this.processor.EmitUInt8(dataSeg, (ushort)(styleWordOff + 0xb25e), this.processor.PullUInt8(dataSeg, (ushort)(selWordOff + 0xb25e)));
-				this.processor.EmitUInt8(dataSeg, (ushort)(styleWordOff + 0xb25f), this.processor.PullUInt8(dataSeg, (ushort)(selWordOff + 0xb25f)));
+				SetPalaceSectionStyleMarkers(styleIdx, marker0, marker1);
 			}
 
 			this.processor.RegSource.Value16 = selWordOff;
@@ -246,7 +320,7 @@ namespace Civilization1Remaster.UI
 
 			short boxHeight = 0x5c;
 			this.owner.Services.FloodBox(ScreenBox, 16, 2, 288, 102, 9);
-			this.owner.TextPainter.RenderCenteredTextToScreen0(0x4b13, 160, 3, 15);
+			this.owner.TextPainter.RenderCenteredTextToScreen0(PalaceStyleChoiceHeaderAddress, 160, 3, 15);
 
 			for (ushort optIdx = 1; (short)optIdx <= 3; optIdx++)
 			{
@@ -258,14 +332,14 @@ namespace Civilization1Remaster.UI
 				ushort look = 2;
 				if ((short)selectedSection < 4)
 				{
-					look = (this.processor.PullUInt16(dataSeg, (ushort)(selWordOff + 0xd91c)) == 0xffff || selectedSection == 1)
+					look = (PalaceSectionLevel((ushort)(selectedSection - 1)) == 0xffff || selectedSection == 1)
 						? (ushort)0
 						: (ushort)1;
 				}
 
 				if ((short)selectedSection > 4)
 				{
-					look = (this.processor.PullUInt16(dataSeg, (ushort)(selWordOff + 0xd920)) == 0xffff || selectedSection == 7)
+					look = (PalaceSectionLevel((ushort)(selectedSection + 1)) == 0xffff || selectedSection == 7)
 						? (ushort)3
 						: (ushort)1;
 				}
@@ -278,38 +352,38 @@ namespace Civilization1Remaster.UI
 							this.owner.Services.RenderPictureToScreen(
 								ScreenBox,
 								drawX + (short)PalaceWingShift,
-								this.processor.PullInt8(dataSeg, (ushort)(0xf * nextLevel + 5 * optIdx + 0x4b32)) + 1,
-								this.processor.PullUInt16(dataSeg, (ushort)((optIdx << 2) + 0xb23e)));
+								this.processor.PullInt8(dataSeg, (ushort)(0xf * nextLevel + 5 * optIdx + PalacePartHeightTable2Address)) + 1,
+								PalacePicture(optIdx, 1));
 						}
 
 						this.owner.Services.RenderPictureToScreen(
 							ScreenBox,
 							drawX,
-							this.processor.PullInt8(dataSeg, (ushort)(0xf * nextLevel + 5 * optIdx + 0x4b34)) + 1,
-							this.processor.PullUInt16(dataSeg, (ushort)((optIdx << 2) + 0xb23c)));
+							this.processor.PullInt8(dataSeg, (ushort)(0xf * nextLevel + 5 * optIdx + PalacePartHeightTable4Address)) + 1,
+							PalacePicture(optIdx, 0));
 						break;
 
 					case 1:
 						this.owner.Services.RenderPictureToScreen(
 							ScreenBox,
 							drawX,
-							this.processor.PullInt8(dataSeg, (ushort)(5 * optIdx + 0xf * nextLevel + 0x4b32)) + 1,
-							this.processor.PullUInt16(dataSeg, (ushort)((optIdx << 2) + 0xb23c)));
+							this.processor.PullInt8(dataSeg, (ushort)(5 * optIdx + 0xf * nextLevel + PalacePartHeightTable2Address)) + 1,
+							PalacePicture(optIdx, 0));
 
 						drawX = (short)(drawX + (short)PalacePartWidth);
 						this.owner.Services.RenderPictureToScreen(
 							ScreenBox,
 							drawX,
-							(short)(this.processor.PullInt8(dataSeg, (ushort)(this.processor.RegSource.Value16 + 0x4b33)) + 1),
-							this.processor.PullUInt16(dataSeg, (ushort)(this.processor.RegDest.Value16 + 0xb23e)));
+							(short)(this.processor.PullInt8(dataSeg, (ushort)(this.processor.RegSource.Value16 + PalacePartHeightTable3Address)) + 1),
+							this.processor.PullUInt16(dataSeg, (ushort)(this.processor.RegDest.Value16 + PalacePicturesTableAddress + 2)));
 						break;
 
 					case 2:
 						this.owner.Services.RenderPictureToScreen(
 							ScreenBox,
 							drawX,
-							(short)(this.processor.PullInt8(dataSeg, (ushort)(0xf * nextLevel + 5 * optIdx + 0x4b31)) + 1),
-							this.processor.PullUInt16(dataSeg, (ushort)((optIdx << 2) + 0xb23c)));
+							(short)(this.processor.PullInt8(dataSeg, (ushort)(0xf * nextLevel + 5 * optIdx + PalacePartHeightTable1Address)) + 1),
+							PalacePicture(optIdx, 0));
 						break;
 
 					case 3:
@@ -318,8 +392,8 @@ namespace Civilization1Remaster.UI
 							this.owner.Services.RenderPictureToScreen(
 								ScreenBox,
 								drawX,
-								this.processor.PullInt8(dataSeg, (ushort)(0xf * nextLevel + 5 * optIdx + 0x4b32)) + 1,
-								this.processor.PullUInt16(dataSeg, (ushort)((optIdx << 2) + 0xb23c)));
+								this.processor.PullInt8(dataSeg, (ushort)(0xf * nextLevel + 5 * optIdx + PalacePartHeightTable2Address)) + 1,
+								PalacePicture(optIdx, 0));
 							drawX = (short)(drawX + (short)PalacePartWidth);
 						}
 
@@ -327,8 +401,8 @@ namespace Civilization1Remaster.UI
 						this.owner.Services.RenderPictureToScreen(
 							ScreenBox,
 							(short)(drawX - towerShift),
-							(short)(this.processor.PullInt8(dataSeg, (ushort)(0xf * nextLevel + 5 * optIdx + 0x4b35)) + 1),
-							this.processor.PullUInt16(dataSeg, (ushort)((optIdx << 2) + 0xb23e)));
+							(short)(this.processor.PullInt8(dataSeg, (ushort)(0xf * nextLevel + 5 * optIdx + PalacePartHeightTable5Address)) + 1),
+							PalacePicture(optIdx, 1));
 						break;
 				}
 
@@ -337,7 +411,7 @@ namespace Civilization1Remaster.UI
 				this.owner.TextPainter.RenderTextWithShadow(TextBuffer.Address, (short)optIdx * 100 - 44, 12, 15);
 			}
 
-			this.owner.Helpers.ReleaseResource(PalaceFirstPicture, 0x4b27);
+			this.owner.Helpers.ReleaseResource(PalaceFirstPicture, PalaceCastleResourceAddress);
 			this.owner.TurnLogic.AwaitForKey();
 			this.owner.Startup.DisplayMouseCursor();
 
@@ -412,8 +486,7 @@ namespace Civilization1Remaster.UI
 
 			for (ushort sectionIdx = 1; sectionIdx < 8; sectionIdx++)
 			{
-				this.processor.EmitGlobalByte((ushort)((sectionIdx << 1) + 0xb25f), 0xff);
-				this.processor.EmitGlobalByte((ushort)((sectionIdx << 1) + 0xb25e), 0xff);
+				SetPalaceSectionStyleMarkers(sectionIdx, 0xff, 0xff);
 
 				if (PalacePart(sectionIdx) != 0xffff)
 					RenderPalaceSection(sectionIdx, 1);
@@ -421,7 +494,7 @@ namespace Civilization1Remaster.UI
 
 			ImportPalaceCastle(built, 1);
 
-			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, marker != 0 ? (ushort)0x4b81 : (ushort)0x4b89, 0);
+			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, marker != 0 ? PalaceScreenBackgroundPictureAddress : PalaceDefaultBackgroundPictureAddress, 0);
 
 			if ((short)PalaceGardenBackground > 0)
 			{
@@ -554,7 +627,7 @@ namespace Civilization1Remaster.UI
 					(ushort)(PalacePart((ushort)(lastLeft + 1)) - PalacePart(lastLeft) + vertLoc), 0);
 			}
 
-			this.owner.Helpers.ReleaseResource(PalaceFirstPicture, 0x4b9f);
+			this.owner.Helpers.ReleaseResource(PalaceFirstPicture, PalaceGraphicsResourceAddress);
 
 			if (PalaceLeftBushes != 0 || PalaceRightBushes != 0)
 			{
@@ -562,12 +635,12 @@ namespace Civilization1Remaster.UI
 
 				if (PalaceLeftBushes != 0)
 				{
-					leftBush = RenderPalaceBush(0xd930, 0x2e, 0);
+					leftBush = RenderPalaceBush(PalaceLeftBushesAddress, 0x2e, 0);
 				}
 
 				if (PalaceRightBushes != 0)
 				{
-					rightBush = RenderPalaceBush(0xd934, 0x2f, 184);
+					rightBush = RenderPalaceBush(PalaceRightBushesAddress, 0x2f, 184);
 				}
 
 				this.owner.Helpers.ReleaseResource(PalaceLeftBushes != 0 ? leftBush : rightBush, 0);
@@ -584,7 +657,7 @@ namespace Civilization1Remaster.UI
 
 				this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
 
-				this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, 0x4bb0, 1);
+				this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, PalacePaletteAddress, 1);
 
 				this.owner.Startup.QueryForDisk(0, 1);
 			}
@@ -596,13 +669,13 @@ namespace Civilization1Remaster.UI
 		/// <summary>The part built in the palace section (0xd91e + 2 * section), 0xffff for none</summary>
 		private ushort PalacePart(ushort sectionIdx)
 		{
-			return this.processor.PullGlobalWord((ushort)((sectionIdx << 1) + 0xd91e));
+			return PalaceSectionLevel(sectionIdx);
 		}
 
 		/// <summary>The style of the palace section (0xb222 + 2 * section)</summary>
 		private ushort PalaceStyle(ushort sectionIdx)
 		{
-			return this.processor.PullGlobalWord((ushort)((sectionIdx << 1) + 0xb222));
+			return PalaceSectionStyle(sectionIdx);
 		}
 
 		/// <summary>A bush of the palace garden: cbrush picture 2 * size + first from the word sizeAddr, at x horizLoc</summary>
@@ -630,10 +703,7 @@ namespace Civilization1Remaster.UI
 			this.processor.Journal.OpenScope($"RenderPalaceSection({arg1}, {marker})");
 
 			short section = (short)arg1;
-			ushort levels = (ushort)(arg1 << 1);
-			ushort style = (ushort)(levels + 0xb25e);
-			ushort shape = (ushort)(levels + 0xb25f);
-			ushort level = this.processor.PullGlobalWord((ushort)(levels + 0xd91e));
+			ushort level = PalaceSectionLevel(arg1);
 
 			// 0: left end, 1: inner section, 2: middle, 3: right end
 			int place = 2;
@@ -642,7 +712,7 @@ namespace Civilization1Remaster.UI
 			{
 				place = 1;
 
-				if (this.processor.PullGlobalWord((ushort)(levels + 0xd91c)) == 0xffff || arg1 == 1)
+				if (PalaceSectionLevel((ushort)(arg1 - 1)) == 0xffff || arg1 == 1)
 				{
 					place = 0;
 				}
@@ -652,7 +722,7 @@ namespace Civilization1Remaster.UI
 			{
 				place = 1;
 
-				if (this.processor.PullGlobalWord((ushort)(levels + 0xd920)) == 0xffff || arg1 == 7)
+				if (PalaceSectionLevel((ushort)(arg1 + 1)) == 0xffff || arg1 == 7)
 				{
 					place = 3;
 				}
@@ -661,31 +731,31 @@ namespace Civilization1Remaster.UI
 			switch (place)
 			{
 				case 0:
-					this.processor.EmitGlobalByte(style, 0x3);
+					SetPalaceSectionStyleMarker(arg1, 0, 0x3);
 
 					if (arg1 == 3 || marker == 0)
 					{
-						this.processor.EmitGlobalByte(shape, (byte)(level != 0 ? 1 : 2));
+						SetPalaceSectionStyleMarker(arg1, 1, (byte)(level != 0 ? 1 : 2));
 					}
 					break;
 
 				case 1:
-					this.processor.EmitGlobalByte(style, (byte)(LeftNeighbourHigher(levels) || arg1 == 5 ||
-						this.processor.PullGlobalWord((ushort)(levels + 0xd91a)) == 0xffff ? 1 : 2));
-					this.processor.EmitGlobalByte(shape, 0x2);
+					SetPalaceSectionStyleMarker(arg1, 0, (byte)(LeftNeighbourHigher(arg1) || arg1 == 5 ||
+						PalaceSectionLevel((ushort)(arg1 - 2)) == 0xffff ? 1 : 2));
+					SetPalaceSectionStyleMarker(arg1, 1, 0x2);
 					break;
 
 				case 2:
-					this.processor.EmitGlobalByte(style, 0x0);
+					SetPalaceSectionStyleMarker(arg1, 0, 0x0);
 					break;
 
 				case 3:
 					if (arg1 == 5 || marker == 0)
 					{
-						this.processor.EmitGlobalByte(style, (byte)(LeftNeighbourHigher(levels) || arg1 == 5 ? 1 : 2));
+						SetPalaceSectionStyleMarker(arg1, 0, (byte)(LeftNeighbourHigher(arg1) || arg1 == 5 ? 1 : 2));
 					}
 
-					this.processor.EmitGlobalByte(shape, 0x4);
+					SetPalaceSectionStyleMarker(arg1, 1, 0x4);
 					break;
 			}
 
@@ -693,10 +763,10 @@ namespace Civilization1Remaster.UI
 			this.processor.Journal.CloseScope("RenderPalaceSection");
 		}
 
-		/// <summary>The section to the left (levels at 0xd91c) is higher than the section (0xd91e)</summary>
-		private bool LeftNeighbourHigher(ushort levels)
+		/// <summary>The section to the left is higher than the section</summary>
+		private bool LeftNeighbourHigher(ushort sectionIdx)
 		{
-			return (short)this.processor.PullGlobalWord((ushort)(levels + 0xd91c)) > (short)this.processor.PullGlobalWord((ushort)(levels + 0xd91e));
+			return (short)PalaceSectionLevel((ushort)(sectionIdx - 1)) > (short)PalaceSectionLevel(sectionIdx);
 		}
 
 		/// <summary>
@@ -707,16 +777,16 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope($"RenderPalacePart({arg1}, {arg2}, {arg3}, {arg4}, {marker})");
 
-			ushort partPlace = this.processor.PullGlobalWord((ushort)((arg2 << 1) + 0xb222));
-			sbyte styleShift = (sbyte)this.processor.PullGlobalByte((ushort)(marker + (arg2 << 1) + 0xb25e));
+			ushort partPlace = PalaceSectionStyle(arg2);
+			sbyte styleShift = (sbyte)PalaceSectionStyleMarker(arg2, marker);
 			ushort heightIdx = (ushort)(styleShift + (5 * partPlace));
-			sbyte height = (sbyte)this.processor.PullGlobalByte((ushort)((0xf * arg1) + heightIdx + 0x4b36));
+			sbyte height = (sbyte)this.processor.PullGlobalByte((ushort)((0xf * arg1) + heightIdx + PalacePartHeightTableAddress));
 			ushort vertLoc = (ushort)(height + arg4 + arg1);
 
 			this.owner.Services.RenderPictureToScreen(ScreenBox,
 				(short)arg3,
 				(short)vertLoc,
-				this.processor.PullGlobalWord((ushort)((marker << 1) + (arg2 << 2) + 0xb23c)));
+				PalacePicture(arg2, marker));
 
 			this.processor.Journal.CloseScope("RenderPalacePart");
 		}
@@ -747,10 +817,10 @@ namespace Civilization1Remaster.UI
 
 				for (section = 1; section < 8; section++)
 				{
-					if (this.processor.PullGlobalWord((ushort)((section << 1) + 0xd91e)) != level && arg2 != 0)
+					if (PalaceSectionLevel(section) != level && arg2 != 0)
 						continue;
 
-					ushort place = this.processor.PullGlobalWord((ushort)((section << 1) + 0xb222));
+					ushort place = PalaceSectionStyle(section);
 
 					if (arg2 == 0)
 					{
@@ -762,9 +832,9 @@ namespace Civilization1Remaster.UI
 
 					for (ushort partIdx = 0; partIdx < 2; partIdx++)
 					{
-						ushort picture = (ushort)((section << 2) + (partIdx << 1) + 0xb23c);
-						sbyte style = (sbyte)this.processor.PullGlobalByte((ushort)((section << 1) + 0xb25e + partIdx));
-						bool middle = arg2 != 0 ? this.processor.PullGlobalWord((ushort)((section << 1) + 0xb222)) == 1 : section == 2;
+						ushort picture = PalacePictureAddress(section, partIdx);
+						sbyte style = (sbyte)PalaceSectionStyleMarker(section, partIdx);
+						bool middle = arg2 != 0 ? PalaceSectionStyle(section) == 1 : section == 2;
 
 						switch (style)
 						{
@@ -797,12 +867,12 @@ namespace Civilization1Remaster.UI
 
 						if (style is >= 0 and <= 4)
 						{
-							this.processor.EmitGlobalWord(picture, this.processor.RegAcc.Value16);
+							SetPalacePicture(section, partIdx, this.processor.RegAcc.Value16);
 						}
 
 						if (style != -1 && PalaceFirstPicture == 0xffff)
 						{
-							PalaceFirstPicture = this.processor.PullGlobalWord(picture);
+							PalaceFirstPicture = PalacePicture(section, partIdx);
 						}
 					}
 

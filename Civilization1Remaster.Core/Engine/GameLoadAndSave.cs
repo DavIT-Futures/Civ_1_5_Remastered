@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using Civilization1Remaster.Emulation;
+using Civilization1Remaster.UI;
 
 namespace Civilization1Remaster.Engine
 {
@@ -1023,8 +1024,8 @@ namespace Civilization1Remaster.Engine
 					this.owner.World.Participants[idx].StarshipArrivalSeason = PullInt16(source);
 				}
 
-				PullContent(source, 0xd91e, 0x18);
-				PullContent(source, 0xb222, 0x18);
+				PullContent(source, Palace.PalaceSectionLevelsAddress, 0x18);
+				PullContent(source, Palace.PalaceSectionStylesAddress, 0x18);
 
 				for (int idx = 0; idx < this.owner.World.TownPlaces.Length; idx++)
 				{
@@ -1446,8 +1447,8 @@ namespace Civilization1Remaster.Engine
 					EmitInt16(sink, this.owner.World.Participants[idx].StarshipArrivalSeason);
 				}
 
-				EmitContent(sink, 0xd91e, 0x18);
-				EmitContent(sink, 0xb222, 0x18);
+				EmitContent(sink, Palace.PalaceSectionLevelsAddress, 0x18);
+				EmitContent(sink, Palace.PalaceSectionStylesAddress, 0x18);
 
 				for (int idx = 0; idx < 256; idx++)
 				{

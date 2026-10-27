@@ -5,8 +5,8 @@ namespace Civilization1Remaster.UI
 	public class StartGameMenu : GameModule
 	{
 		private const ushort SoundDriverOptionAddress = 0x1a30;
-		private const ushort PalaceSectionLevelsAddress = 0xd91e;
-		private const ushort PalaceSectionStylesAddress = 0xb222;
+		private const ushort PalaceSectionLevelsAddress = Palace.PalaceSectionLevelsAddress;
+		private const ushort PalaceSectionStylesAddress = Palace.PalaceSectionStylesAddress;
 		private const ushort ParticipantCountersAddress = 0xd20c;
 		private const ushort LeaderEarthStartPositionTableAddress = 0x35da;
 		private const ushort VgaPaletteBufferAddress = 0x6b34;
