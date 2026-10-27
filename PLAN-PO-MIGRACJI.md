@@ -603,6 +603,8 @@ bez wyjątku (czyta 0), `DifferentialPair` po wyjątku w scenariuszu przywraca S
 
 **Faza 3 część 1 (2026-10-27):** uniezależnienie testów różnicowych od wskaźnika stosu `cpu.sp` (`DifferentialPair.cs` filtruje `cpu.sp`) oraz eliminacja 5 ramek stosu emulacji (`EnterFrame` / `LeaveFrame`): `VGADriver.DuplicateScreenToMainScreen` (ramka VGA), `CivilizationSchism.DivideCivilization` (ramka 0x48), `GameReplay.DisplayConquerorScreen` (ramka 0x2), `MeetWithKing.LaunchAudience` (ramka 0x36), `GameInitAndIntro.OpeningSequence` (ramka 0xe). Usunięto niepotrzebne zachowywanie rejestrów indeksowych (`PreserveIndexRegisters` / `RestoreIndexRegisters`) w odchudzonych procedurach. 2/2 mutacje złapane (`DivideCivilizationMatchesOriginalCode`, `LaunchAudienceMatchesOriginalCode`), testy różnicowe (17/17) oraz Golden Master (15/15) zielone.
 
+**Faza 3 część 2 (2026-10-27):** oczyszczenie pozostałości emulacji x86 (callee-saved rejestrów indeksowych `PreserveIndexRegisters()`, `RestoreIndexRegisters()`, `PreserveSource()`, `RestoreSource()`, `PreserveDest()`, `RestoreDest()`) w 17 plikach logiki gry i UI: `CityFoundingAndScore.cs`, `GovernmentAndDiplomacy.cs`, `MapManagement.cs`, `Pathfinding.cs`, `TradeAndConquest.cs`, `AdvisorReports.cs`, `MainIntro.cs`, `MeetWithKing.cs`, `Newspaper.cs`, `Palace.cs`, `SpaceshipScreen.cs`, `StartGameMenu.cs`, `UnitCombat.cs`, `UnitManagement.cs`, `ScienceAndAdvisors.cs`, `TurnEvents.cs`, `DiplomatActions.cs`. 2/2 mutacje złapane (`SeizeCityMatchesOriginalCode`, `DiplomatArrivesAtCityMatchesOriginalCode`), testy różnicowe (19/19) oraz Golden Master (15/15) w pełni zielone (0 błędów, 0 ostrzeżeń w `Civilization1Remaster.Core`).
+
 
 
 **Faza 3 – sprzątanie i drugi baseline:** usunięcie przełączników i kodu „classic”, zamrożonej gry

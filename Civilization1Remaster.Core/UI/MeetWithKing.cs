@@ -1382,7 +1382,6 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope($"DisplayKingScreen({participantIdx})");
 
-			this.processor.PreserveIndexRegisters();
 
 			AudiencePlayer = (ushort)participantIdx;
 			AudienceWithoutPictures = 0;
@@ -1397,7 +1396,6 @@ namespace Civilization1Remaster.UI
 				{
 					DisplayKingLine(participantIdx);
 
-					this.processor.RestoreIndexRegisters();
 					// Far return
 					this.processor.Journal.CloseScope("DisplayKingScreen");
 					return;
@@ -1490,7 +1488,6 @@ namespace Civilization1Remaster.UI
 
 			KingPictureLoaded = 1;
 
-			this.processor.RestoreIndexRegisters();
 			// Far return
 			this.processor.Journal.CloseScope("DisplayKingScreen");
 		}

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Civilization1Remaster.Emulation;
 using Civilization1Remaster.Engine;
 
@@ -35,7 +35,6 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"CarryOutGoto({participantIdx}, {troopIdx})");
 
-			this.processor.PreserveIndexRegisters();
 
 			ushort troop = (ushort)((ushort)(0x600 * participantIdx) + (ushort)(0xc * troopIdx));
 			ushort direction;
@@ -45,7 +44,6 @@ namespace Civilization1Remaster.Game
 
 			this.processor.RegAcc.Value16 = direction;
 
-			this.processor.RestoreIndexRegisters();
 			// Far return
 			this.processor.Journal.CloseScope("CarryOutGoto");
 
@@ -647,7 +645,6 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"ShiftToward({participantIdx}, {troopIdx}, {arg3})");
 
-			this.processor.PreserveIndexRegisters();
 
 			ushort troop = (ushort)((ushort)(0x600 * participantIdx) + (ushort)(0xc * troopIdx));
 			this.processor.RegSource.Value16 = troop;
@@ -683,7 +680,6 @@ namespace Civilization1Remaster.Game
 
 			this.processor.RegAcc.Value16 = (ushort)step;
 
-			this.processor.RestoreIndexRegisters();
 			// Far return
 			this.processor.Journal.CloseScope("ShiftToward");
 

@@ -1,4 +1,4 @@
-﻿using Civilization1Remaster.Emulation;
+using Civilization1Remaster.Emulation;
 
 namespace Civilization1Remaster.UI
 {
@@ -876,7 +876,6 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope("CharacterizeStartLocation()");
 
-			this.processor.PreserveIndexRegisters();
 
 			short[] points = new short[8];
 
@@ -969,7 +968,6 @@ namespace Civilization1Remaster.UI
 
 			this.processor.RegAcc.Value16 = (ushort)chosen;
 
-			this.processor.RestoreIndexRegisters();
 			// Far return
 			this.processor.Journal.CloseScope("CharacterizeStartLocation");
 

@@ -196,7 +196,6 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"RenderMapTile({horizLoc}, {vertLoc})");
 
-			this.processor.PreserveIndexRegisters();
 
 			if (WorldMapView == 0x1)
 			{
@@ -286,7 +285,6 @@ namespace Civilization1Remaster.Game
 		private ushort FinishRenderMapTile(ushort result)
 		{
 			this.processor.RegAcc.Value16 = result;
-			this.processor.RestoreIndexRegisters();
 			this.processor.Journal.CloseScope("RenderMapTile");
 			return result;
 		}

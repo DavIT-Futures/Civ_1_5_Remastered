@@ -1,4 +1,4 @@
-﻿using Civilization1Remaster.Emulation;
+using Civilization1Remaster.Emulation;
 using Civilization1Remaster.Game.State;
 
 namespace Civilization1Remaster.UI
@@ -549,7 +549,6 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope("DisplayMilitaryReport()");
 
-			this.processor.PreserveIndexRegisters();
 			// The list of the rows' players of the frame of the original (B3: in C#; the rows without contact keep 0, the
 			// classic rows read it)
 			ushort[] rowPlayers = new ushort[8];
@@ -679,7 +678,6 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Startup.DisplayMouseCursor();
 
-			this.processor.RestoreIndexRegisters();
 			// Far return
 			this.processor.Journal.CloseScope("DisplayMilitaryReport");
 		}
@@ -925,7 +923,6 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope($"DisplayAttitudeReport({participantIdx})");
 
-			this.processor.PreserveSource();
 
 			DisplayReportPreamble(0x4995, 9);
 
@@ -1000,7 +997,6 @@ namespace Civilization1Remaster.UI
 
 			FinishReportScreen();
 
-			this.processor.RestoreSource();
 
 			this.processor.Journal.CloseScope("DisplayAttitudeReport");
 		}

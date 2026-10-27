@@ -1,4 +1,4 @@
-﻿using Civilization1Remaster.Emulation;
+using Civilization1Remaster.Emulation;
 using Civilization1Remaster.Game.State;
 
 namespace Civilization1Remaster.UI
@@ -34,7 +34,6 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope($"DisplayNewspaper({townIdx})");
 
-			this.processor.PreserveSource();
 
 			short givenIdx = townIdx;
 			bool shown = townIdx != -2;
@@ -186,7 +185,6 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Startup.DisplayMouseCursor();
 
-			this.processor.RestoreSource();
 			// Far return
 			this.processor.Journal.CloseScope("DisplayNewspaper");
 		}

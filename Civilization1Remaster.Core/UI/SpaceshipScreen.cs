@@ -814,7 +814,6 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope($"AttachSpaceshipPart({participantIdx}, {arg2})");
 
-			this.processor.PreserveSource();
 
 			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
 
@@ -926,7 +925,6 @@ namespace Civilization1Remaster.UI
 
 			ImportSpaceScenery();
 
-			this.processor.RestoreSource();
 			// Far return
 			this.processor.Journal.CloseScope("AttachSpaceshipPart");
 		}

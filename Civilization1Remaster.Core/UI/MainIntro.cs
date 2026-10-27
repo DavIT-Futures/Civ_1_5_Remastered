@@ -1060,7 +1060,6 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope("DisplayInterfaceTutorial()");
 
-			this.processor.PreserveSource();
 
 			this.owner.Startup.ConcealMouseCursor();
 
@@ -1109,7 +1108,6 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Conquest.AwaitForKeyPressOrMouseClick();
 
-			this.processor.RestoreSource();
 
 			this.processor.Journal.CloseScope("DisplayInterfaceTutorial");
 		}

@@ -1,4 +1,4 @@
-﻿using Civilization1Remaster.Emulation;
+using Civilization1Remaster.Emulation;
 using Civilization1Remaster.Game.State;
 
 namespace Civilization1Remaster.Game
@@ -24,7 +24,6 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"DiplomatArrivesAtCity({townIdx}, {participantIdx}, {troopIdx})");
 
-			this.processor.PreserveIndexRegisters();
 
 			short person = this.owner.World.PersonParticipantIdx;
 			City town = this.owner.World.Towns[townIdx];
@@ -125,7 +124,6 @@ namespace Civilization1Remaster.Game
 
 		private void FinishDiplomatArrival()
 		{
-			this.processor.RestoreIndexRegisters();
 			// Far return
 			this.processor.Journal.CloseScope("DiplomatArrivesAtCity");
 		}
@@ -340,7 +338,6 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"BuyUnit({participantIdx}, {troopIdx}, {participantIdx1})");
 
-			this.processor.PreserveIndexRegisters();
 
 			short humanIdx = this.owner.World.PersonParticipantIdx;
 			UnitMemory troops = new UnitMemory(this.processor);
@@ -364,7 +361,6 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			this.processor.RestoreIndexRegisters();
 
 			this.processor.Journal.CloseScope("BuyUnit");
 		}
@@ -509,7 +505,6 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"ComputeInciteCost({townIdx}, {participantIdx})");
 
-			this.processor.PreserveIndexRegisters();
 
 			City town = this.owner.World.Towns[townIdx];
 			short ownerIdx = town.ParticipantIdx;
@@ -553,8 +548,6 @@ namespace Civilization1Remaster.Game
 				Revolt(townIdx, participantIdx, ownerIdx, horizLoc, vertLoc);
 			}
 
-			this.processor.RestoreSource();
-			this.processor.RestoreDest();
 			// Far return
 			this.processor.Journal.CloseScope("ComputeInciteCost");
 		}

@@ -98,7 +98,6 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope("DisplayPalace()");
 
-			this.processor.PreserveIndexRegisters();
 
 			ushort dataSeg = this.processor.SegData.Value16;
 			ushort textBuf = (ushort)(this.processor.RegStack.Value16 - 0x300);
@@ -189,7 +188,6 @@ namespace Civilization1Remaster.UI
 			this.owner.TurnHooks.RepaintMainScreen();
 			this.owner.Startup.DisplayMouseCursor();
 
-			this.processor.RestoreIndexRegisters();
 			this.processor.Journal.CloseScope("DisplayPalace");
 		}
 

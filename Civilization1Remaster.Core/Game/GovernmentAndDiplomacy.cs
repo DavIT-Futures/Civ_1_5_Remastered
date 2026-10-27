@@ -1,4 +1,4 @@
-﻿using Civilization1Remaster.Emulation;
+using Civilization1Remaster.Emulation;
 using System.Runtime.InteropServices;
 using Civilization1Remaster.Game.State;
 
@@ -29,7 +29,6 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"HandlePeaceTreaties({participantIdx})");
 
-			this.processor.PreserveIndexRegisters();
 
 			short person = this.owner.World.PersonParticipantIdx;
 			Player player = this.owner.World.Participants[participantIdx];
@@ -83,7 +82,6 @@ namespace Civilization1Remaster.Game
 
 			}
 
-			this.processor.RestoreIndexRegisters();
 			// Far return
 			this.processor.Journal.CloseScope("HandlePeaceTreaties");
 		}

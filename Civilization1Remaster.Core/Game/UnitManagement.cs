@@ -151,7 +151,6 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"ShiftUnit({horizLoc}, {vertLoc}, {participantIdx}, {troopIdx}, {marker})");
 
-			this.processor.PreserveIndexRegisters();
 
 			int startTerrain = this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
 
@@ -191,8 +190,6 @@ namespace Civilization1Remaster.Game
 
 			}
 
-			this.processor.RestoreSource();
-			this.processor.RestoreDest();
 
 			this.processor.Journal.CloseScope("ShiftUnit");
 		}

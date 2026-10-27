@@ -1,4 +1,4 @@
-﻿using Civilization1Remaster.Emulation;
+using Civilization1Remaster.Emulation;
 using Civilization1Remaster.Game.State;
 
 namespace Civilization1Remaster.Game
@@ -28,7 +28,6 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"SeizeCity({participantIdx}, {townIdx}, {marker})");
 
-			this.processor.PreserveIndexRegisters();
 
 			short person = this.owner.World.PersonParticipantIdx;
 			City town = this.owner.World.Towns[townIdx];
@@ -187,7 +186,6 @@ namespace Civilization1Remaster.Game
 
 			this.owner.NewGameWizard.EliminateCivilization((short)formerIdx, participantIdx);
 
-			this.processor.RestoreIndexRegisters();
 			// Far return
 			this.processor.Journal.CloseScope("SeizeCity");
 		}
@@ -406,7 +404,6 @@ namespace Civilization1Remaster.Game
 			// The best technology for the AI is 0 when no technology has ObtainTechnologyInfo > -1 (the local 0x4 of the
 			// original, read uninitialized); the list of up to 72 technologies of the frame is in C# (B3)
 			ushort bestTech = 0;
-			this.processor.PreserveSource();
 
 			if (participantIdx1 != 0 && participantIdx2 != 0)
 			{
@@ -504,7 +501,6 @@ namespace Civilization1Remaster.Game
 				this.processor.RegAcc.Value16 = 0;
 			}
 
-			this.processor.RestoreSource();
 			// Far return
 			this.processor.Journal.CloseScope("ChooseTechnologyToTake");
 		}

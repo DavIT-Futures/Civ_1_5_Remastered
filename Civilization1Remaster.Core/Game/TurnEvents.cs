@@ -292,14 +292,12 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope("HandleGameEnd()");
 
-			this.processor.PreserveIndexRegisters();
 
 			if (PlayTurnOfPlayers(out short startGold))
 			{
 				FinishTurn(startGold);
 			}
 
-			this.processor.RestoreIndexRegisters();
 
 			this.processor.Journal.CloseScope("HandleGameEnd");
 		}
@@ -921,7 +919,6 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope("DisplayTravellersReport()");
 
-			this.processor.PreserveIndexRegisters();
 
 			if ((ushort)((ushort)(5 - (ushort)this.owner.World.HardnessTier) * 0x1e) <= this.owner.World.RoundTally)
 			{
@@ -933,7 +930,6 @@ namespace Civilization1Remaster.Game
 				RaidHumanCity();
 			}
 
-			this.processor.RestoreIndexRegisters();
 			// Far return
 			this.processor.Journal.CloseScope("DisplayTravellersReport");
 		}
@@ -1244,7 +1240,6 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope("RenderStatusBar()");
 
-			this.processor.PreserveSource();
 
 			if (WorldMapView != 1)
 			{
@@ -1322,7 +1317,6 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			this.processor.RestoreSource();
 
 			this.processor.Journal.CloseScope("RenderStatusBar");
 		}
@@ -1549,7 +1543,6 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope("HandleEndOfTurnEvents()");
 
-			this.processor.PreserveIndexRegisters();
 
 			short pull = (short)(((ushort)this.owner.World.DirtyCellTally << 1) - ((ushort)this.owner.World.WorldHeatingTally << 2) - (ushort)this.owner.World.SmogImpactTier);
 
@@ -1576,7 +1569,6 @@ namespace Civilization1Remaster.Game
 					break;
 			}
 
-			this.processor.RestoreIndexRegisters();
 			// Far return
 			this.processor.Journal.CloseScope("HandleEndOfTurnEvents");
 		}

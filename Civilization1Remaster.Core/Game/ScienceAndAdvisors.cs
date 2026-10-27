@@ -119,7 +119,6 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"FinalizeProduction({townIdx}, {horizLoc}, {vertLoc})");
 
-			this.processor.PreserveIndexRegisters();
 
 			City town = this.owner.World.Towns[townIdx];
 
@@ -189,7 +188,6 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			this.processor.RestoreIndexRegisters();
 
 			this.processor.Journal.CloseScope("FinalizeProduction");
 		}
@@ -278,7 +276,6 @@ namespace Civilization1Remaster.Game
 			// The words of the frame are in C# (B3, properties below; some are read before they are written: 0)
 			FrameWords outerFrame = this.pickFrame;
 			this.pickFrame = new FrameWords(this.processor, 0x14a);
-			this.processor.PreserveIndexRegisters();
 			PageState = 0;
 			AdvisorsShown = 0;
 
@@ -310,7 +307,6 @@ namespace Civilization1Remaster.Game
 			}
 
 			this.processor.RegAcc.Value16 = choice;
-			this.processor.RestoreIndexRegisters();
 			this.pickFrame = outerFrame;
 			this.processor.Journal.CloseScope("PickCityProduction");
 
@@ -1186,13 +1182,11 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"UncoverTechnology({participantIdx}, {participantIdx1})");
 
-			this.processor.PreserveSource();
 
 			ushort result = participantIdx == 0 ? (ushort)0xffff : UncoverTechnologyOf(participantIdx, participantIdx1);
 
 			this.processor.RegAcc.Value16 = result;
 
-			this.processor.RestoreSource();
 			// Far return
 			this.processor.Journal.CloseScope("UncoverTechnology");
 
@@ -1562,7 +1556,6 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"EarnTechnology({participantIdx}, {scienceIdx}, {participantIdx1})");
 
-			this.processor.PreserveIndexRegisters();
 
 			if (PlayerKnowsTechnology(participantIdx, scienceIdx) == 0)
 			{
@@ -1582,7 +1575,6 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			this.processor.RestoreIndexRegisters();
 			// Far return
 			this.processor.Journal.CloseScope("EarnTechnology");
 		}
