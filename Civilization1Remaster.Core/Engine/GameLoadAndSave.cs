@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using Civilization1Remaster.Emulation;
+using Civilization1Remaster.Game;
 using Civilization1Remaster.UI;
 
 namespace Civilization1Remaster.Engine
@@ -9,7 +10,31 @@ namespace Civilization1Remaster.Engine
 	public class GameLoadAndSave : GameModule
 	{
 		private const ushort SaveFileNameAddress = 0x41c6;
+		private const ushort SaveFileNamePatternAddress = 0x41c8;
 		private const ushort SaveSlotDigitAddress = 0x41cd;
+		private const ushort DifficultyNamesTableAddress = 0x33a2;
+		private const ushort SavedGameDriveLetterAddress = 0x4384;
+
+		private const ushort ExploredMapSegment = 0xdcfe;
+		private const ushort ExploredMapSize = 0x100;
+
+		private const ushort CivilizationHistorySegment = 0x3772;
+		private const ushort CivilizationHistoryBaseAddress = 0x0;
+		private const ushort CivilizationHistorySize = 0x4b0;
+
+		private const ushort CityNamesStatusAddress = 0x112a;
+		private const ushort CityNamesStatusSize = 0x3b8;
+
+		private const ushort UnitsBufferSize = 0x3000;
+
+		private const ushort ReplayTurnsAddress = 0xdb44;
+		private const ushort ReplayTurnsSize = 0x104;
+
+		private const ushort SpaceshipGridSegment = 0x3772;
+		private const ushort SpaceshipGridBaseAddress = 0x16e0;
+		private const ushort SpaceshipGridTotalSize = 0x5a0;
+
+		private const ushort PalaceSectionRecordSize = 0x18;
 
 
 		public GameLoadAndSave(GameEngine owner)
@@ -102,7 +127,7 @@ namespace Civilization1Remaster.Engine
 
 			for (int idx = 0; idx < label.Length; idx++)
 			{
-				this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(0x41c8 + idx), (byte)label[idx]);
+				this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(SaveFileNamePatternAddress + idx), (byte)label[idx]);
 			}
 		}
 
@@ -115,7 +140,7 @@ namespace Civilization1Remaster.Engine
 
 			for (int idx = 0; idx < label.Length; idx++)
 			{
-				this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(0x41c8 + idx), (byte)label[idx]);
+				this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(SaveFileNamePatternAddress + idx), (byte)label[idx]);
 			}
 		}
 
@@ -348,19 +373,19 @@ namespace Civilization1Remaster.Engine
 				}
 				else
 				{
-					// The human player (0x6822), the year (0x6826) and the difficulty (0x6824)
+					// The human player (SavedHumanPlayer), the year (SavedYear) and the difficulty (SavedDifficulty)
 					this.owner.Libc.SeekHandle(handle, 2, 0);
-					this.owner.Libc.ReadHandle(handle, 0x6822, 2);
+					this.owner.Libc.ReadHandle(handle, this.owner.Globals.SavedHumanPlayer.Address, 2);
 
 					this.owner.Libc.SeekHandle(handle, 8, 0);
-					this.owner.Libc.ReadHandle(handle, 0x6826, 2);
+					this.owner.Libc.ReadHandle(handle, this.owner.Globals.SavedYear.Address, 2);
 
 					this.owner.Words.Append(" ");
 
 					this.owner.Libc.SeekHandle(handle, 10, 0);
-					this.owner.Libc.ReadHandle(handle, 0x6824, 2);
+					this.owner.Libc.ReadHandle(handle, this.owner.Globals.SavedDifficulty.Address, 2);
 
-					this.owner.Words.Append(this.processor.PullGlobalWord((ushort)((SavedDifficulty << 1) + 0x33a2)));
+					this.owner.Words.Append(this.processor.PullGlobalWord((ushort)((SavedDifficulty << 1) + DifficultyNamesTableAddress)));
 
 					this.owner.Words.Append(" ");
 
@@ -521,7 +546,7 @@ namespace Civilization1Remaster.Engine
 			Message(" ")
 				.Text(docnameAddr)
 				.Text("\n ")
-				.Text(this.processor.PullGlobalWord((ushort)((this.owner.World.HardnessTier << 1) + 0x33a2)))
+				.Text(this.processor.PullGlobalWord((ushort)((this.owner.World.HardnessTier << 1) + DifficultyNamesTableAddress)))
 				.Text(" ")
 				.Text(LeaderNameAt(personSlot))
 				.Text("\n ")
@@ -557,7 +582,7 @@ namespace Civilization1Remaster.Engine
 
 			if (SaveDrive == 0xffff)
 			{
-				this.owner.Libc.DosQueryDrive(0x4384);
+				this.owner.Libc.DosQueryDrive(SavedGameDriveLetterAddress);
 
 				SaveDrive = (ushort)(SaveDrive - 1);
 			}
@@ -862,14 +887,14 @@ namespace Civilization1Remaster.Engine
 					}
 				}
 
-				PullContent(source, 0xdcfe, 0x100);
+				PullContent(source, ExploredMapSegment, ExploredMapSize);
 
 				for (int idx = 0; idx < 16; idx++)
 				{
 					this.owner.World.Landmasses[idx].ConstructionSpotTally = PullInt16(source);
 				}
 				
-				PullContent(source, 0x3772, 0, 0x4b0);
+				PullContent(source, CivilizationHistorySegment, CivilizationHistoryBaseAddress, CivilizationHistorySize);
 
 				for (int idx = 0; idx < this.owner.World.TrucePlotContent.Length; idx++)
 				{
@@ -881,10 +906,10 @@ namespace Civilization1Remaster.Engine
 					this.owner.World.Towns[idx] = City.ReadFrom(source);
 				}
 
-				PullContent(source, 0x112a, 0x3b8);
+				PullContent(source, CityNamesStatusAddress, CityNamesStatusSize);
 
-				byte[] troops = new byte[0x3000];
-				source.ReadExactly(troops, 0, 0x3000);
+				byte[] troops = new byte[UnitsBufferSize];
+				source.ReadExactly(troops, 0, UnitsBufferSize);
 				MemoryStream troopSource = new MemoryStream(troops);
 
 				for (int idx = 0; idx < 8; idx++)
@@ -896,7 +921,7 @@ namespace Civilization1Remaster.Engine
 				}
 
 				troopSource.Position = 0;
-				PullContent(troopSource, 0x81d4, 0x3000);
+				PullContent(troopSource, UnitMemory.Origin, UnitsBufferSize);
 
 				troopSource.Close();
 
@@ -997,7 +1022,7 @@ namespace Civilization1Remaster.Engine
 				this.owner.World.SmogImpactTier = PullInt16(source);
 				this.owner.World.WorldHeatingTally = PullInt16(source);
 				this.owner.World.SessionPrefMarkers = PullInt16(source);
-				PullContent(source, 0xdb44, 0x104);
+				PullContent(source, ReplayTurnsAddress, ReplayTurnsSize);
 				this.owner.World.HighestScienceTally = PullInt16(source);
 				this.owner.World.Participants[this.owner.World.PersonParticipantIdx].ComingScienceTally = PullInt16(source);
 				this.owner.World.DiagMarkers = PullInt16(source);
@@ -1014,7 +1039,7 @@ namespace Civilization1Remaster.Engine
 					this.owner.World.Participants[idx].RunningSagaStanding = PullInt16(source);
 				}
 
-				PullContent(source, 0x3772, 0x16e0, 0x5a0);
+				PullContent(source, SpaceshipGridSegment, SpaceshipGridBaseAddress, SpaceshipGridTotalSize);
 				this.owner.World.StarshipMarkers = PullInt16(source);
 				this.owner.World.Participants[this.owner.World.PersonParticipantIdx].StarshipVictoryRatio = PullInt16(source);
 				this.owner.World.BotStarshipVictoryRatio = PullInt16(source);
@@ -1024,8 +1049,8 @@ namespace Civilization1Remaster.Engine
 					this.owner.World.Participants[idx].StarshipArrivalSeason = PullInt16(source);
 				}
 
-				PullContent(source, Palace.PalaceSectionLevelsAddress, 0x18);
-				PullContent(source, Palace.PalaceSectionStylesAddress, 0x18);
+				PullContent(source, Palace.PalaceSectionLevelsAddress, PalaceSectionRecordSize);
+				PullContent(source, Palace.PalaceSectionStylesAddress, PalaceSectionRecordSize);
 
 				for (int idx = 0; idx < this.owner.World.TownPlaces.Length; idx++)
 				{
@@ -1305,14 +1330,14 @@ namespace Civilization1Remaster.Engine
 					}
 				}
 
-				EmitContent(sink, 0xdcfe, 0x100);
+				EmitContent(sink, ExploredMapSegment, ExploredMapSize);
 
 				for (int idx = 0; idx < 16; idx++)
 				{
 					EmitInt16(sink, this.owner.World.Landmasses[idx].ConstructionSpotTally);
 				}
 
-				EmitContent(sink, 0x3772, 0, 0x4b0);
+				EmitContent(sink, CivilizationHistorySegment, CivilizationHistoryBaseAddress, CivilizationHistorySize);
 
 				for (int idx = 0; idx < this.owner.World.TrucePlotContent.Length; idx++)
 				{
@@ -1324,9 +1349,9 @@ namespace Civilization1Remaster.Engine
 					this.owner.World.Towns[idx].WriteTo(sink);
 				}
 
-				EmitContent(sink, 0x112a, 0x3b8);
+				EmitContent(sink, CityNamesStatusAddress, CityNamesStatusSize);
 
-				EmitContent(sink, 0x81d4, 0x3000);
+				EmitContent(sink, UnitMemory.Origin, UnitsBufferSize);
 
 				for (int idx = 0; idx < this.owner.World.ChartSight.GetLength(0); idx++)
 				{
@@ -1420,7 +1445,7 @@ namespace Civilization1Remaster.Engine
 				EmitInt16(sink, this.owner.World.SmogImpactTier);
 				EmitInt16(sink, this.owner.World.WorldHeatingTally);
 				EmitInt16(sink, this.owner.World.SessionPrefMarkers);
-				EmitContent(sink, 0xdb44, 0x104);
+				EmitContent(sink, ReplayTurnsAddress, ReplayTurnsSize);
 				EmitInt16(sink, this.owner.World.HighestScienceTally);
 				EmitInt16(sink, this.owner.World.Participants[this.owner.World.PersonParticipantIdx].ComingScienceTally);
 				EmitInt16(sink, this.owner.World.DiagMarkers);
@@ -1437,7 +1462,7 @@ namespace Civilization1Remaster.Engine
 					EmitInt16(sink, this.owner.World.Participants[idx].RunningSagaStanding);
 				}
 
-				EmitContent(sink, 0x3772, 0x16e0, 0x5a0);
+				EmitContent(sink, SpaceshipGridSegment, SpaceshipGridBaseAddress, SpaceshipGridTotalSize);
 				EmitInt16(sink, this.owner.World.StarshipMarkers);
 				EmitInt16(sink, this.owner.World.Participants[this.owner.World.PersonParticipantIdx].StarshipVictoryRatio);
 				EmitInt16(sink, this.owner.World.BotStarshipVictoryRatio);
@@ -1447,8 +1472,8 @@ namespace Civilization1Remaster.Engine
 					EmitInt16(sink, this.owner.World.Participants[idx].StarshipArrivalSeason);
 				}
 
-				EmitContent(sink, Palace.PalaceSectionLevelsAddress, 0x18);
-				EmitContent(sink, Palace.PalaceSectionStylesAddress, 0x18);
+				EmitContent(sink, Palace.PalaceSectionLevelsAddress, PalaceSectionRecordSize);
+				EmitContent(sink, Palace.PalaceSectionStylesAddress, PalaceSectionRecordSize);
 
 				for (int idx = 0; idx < 256; idx++)
 				{
