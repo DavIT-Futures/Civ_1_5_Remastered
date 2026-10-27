@@ -213,17 +213,7 @@ namespace Civilization1Remaster.Video
 						}
 					}
 
-					this.processor.StackWord(199);
-					this.processor.StackWord(319);
-					this.processor.StackWord(0);
-					this.processor.StackWord(0);
-					this.processor.StackWord(this.glob15d4DisplayIdx);
-					ushort boxAddr = this.processor.RegStack.Value16;
-
-					RenderPictureToScreen(boxAddr, this.glob15c2HorizLoc, this.glob15c4VertLoc, this.glob15c0);
-
-					// free Rect structure
-					this.processor.RegStack.Value16 = this.processor.SumWord(this.processor.RegStack.Value16, 0xa);
+					RenderPictureToDisplay(this.glob15d4DisplayIdx, this.glob15c2HorizLoc, this.glob15c4VertLoc, this.glob15c0);
 				}
 				else
 				{
@@ -461,60 +451,42 @@ namespace Civilization1Remaster.Video
 			return this.processor.RegAcc.Value16;
 		}
 
+		public void RenderPictureToDisplay(ushort displayIdx, int horizLoc, int vertLoc, ushort pictureAddr)
+		{
+			// function body
+			if (this.displays.IncludesKey(displayIdx))
+			{
+				if (this.pictures.IncludesKey(pictureAddr))
+				{
+					lock (this.VideoLatch)
+					{
+						VGABitmap display = this.displays.ObtainValueByKey(displayIdx);
+						VGABitmap picture = this.pictures.ObtainValueByKey(pictureAddr);
+
+						display.RenderImage(horizLoc, vertLoc, picture, true);
+					}
+				}
+				else
+				{
+					this.processor.Journal.EmitLine($"The bitmap 0x{pictureAddr:x4} is not allocated");
+				}
+			}
+			else
+			{
+				throw new Exception($"The screen {displayIdx} is not allocated");
+			}
+		}
+
 		public void RenderPictureToScreen(ushort boxAddr, int horizLoc, int vertLoc, ushort pictureAddr)
 		{
 			// function body
 			CivRectangle box = new CivRectangle(this.processor, CPU.AsLinearAddress(this.processor.SegData.Value16, boxAddr));
-
-			if (this.displays.IncludesKey(box.DisplayIdx))
-			{
-				if (this.pictures.IncludesKey(pictureAddr))
-				{
-					lock (this.VideoLatch)
-					{
-						VGABitmap display = this.displays.ObtainValueByKey(box.DisplayIdx);
-						VGABitmap picture = this.pictures.ObtainValueByKey(pictureAddr);
-
-						display.RenderImage(box.Horiz + horizLoc, box.Vert + vertLoc, picture, true);
-					}
-				}
-				else
-				{
-					this.processor.Journal.EmitLine($"The bitmap 0x{pictureAddr:x4} is not allocated");
-				}
-			}
-			else
-			{
-				throw new Exception($"The screen {box.DisplayIdx} is not allocated");
-			}
+			RenderPictureToDisplay(box.DisplayIdx, box.Horiz + horizLoc, box.Vert + vertLoc, pictureAddr);
 		}
 
 		public void RenderPictureToScreen(ushort boxAddr, int horizLoc, int vertLoc, int pictureAddr)
 		{
-			// function body
-			CivRectangle box = new CivRectangle(this.processor, CPU.AsLinearAddress(this.processor.SegData.Value16, boxAddr));
-
-			if (this.displays.IncludesKey(box.DisplayIdx))
-			{
-				if (this.pictures.IncludesKey(pictureAddr))
-				{
-					lock (this.VideoLatch)
-					{
-						VGABitmap display = this.displays.ObtainValueByKey(box.DisplayIdx);
-						VGABitmap picture = this.pictures.ObtainValueByKey(pictureAddr);
-
-						display.RenderImage(box.Horiz + horizLoc, box.Vert + vertLoc, picture, true);
-					}
-				}
-				else
-				{
-					this.processor.Journal.EmitLine($"The bitmap 0x{pictureAddr:x4} is not allocated");
-				}
-			}
-			else
-			{
-				throw new Exception($"The screen {box.DisplayIdx} is not allocated");
-			}
+			RenderPictureToScreen(boxAddr, horizLoc, vertLoc, (ushort)pictureAddr);
 		}
 
 		public ushort ImportIcon(string docname)

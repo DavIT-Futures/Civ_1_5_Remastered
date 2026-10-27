@@ -96,12 +96,10 @@ namespace Civilization1Remaster.Engine
 				this.processor.RegCount.Value16, this.processor.RegData.Value16, this.processor.RegSource.Value16,
 				this.processor.RegDest.Value16, this.processor.SegData.Value16);
 
-			this.processor.RegAcc.Value16 = this.processor.RegStack.Value16;
-			this.processor.RegBase.Value16 = this.processor.SegStack.Value16;
+			ushort oldSP = this.processor.RegStack.Value16;
+			ushort oldSS = this.processor.SegStack.Value16;
 			this.processor.SegStack.Value16 = 0x1000;
 			this.processor.RegStack.Value16 = 0x1a1;
-			this.processor.StackWord(this.processor.RegBase.Value16);
-			this.processor.StackWord(this.processor.RegAcc.Value16);
 			this.processor.SegData.Value16 = 0x3b01;
 
 			uint oldTime = this.processor.PullUInt32(this.processor.SegData.Value16, TimerTicksLowAddress);
@@ -149,9 +147,8 @@ namespace Civilization1Remaster.Engine
 				this.processor.EmitGlobalWord(TimerTicksHighAddress, (ushort)(this.processor.PullGlobalWord(TimerTicksHighAddress) - 1));
 			}
 
-			this.processor.RegAcc.Value16 = this.processor.UnstackWord();
-			this.processor.SegStack.Value16 = this.processor.UnstackWord();
-			this.processor.RegStack.Value16 = this.processor.RegAcc.Value16;
+			this.processor.SegStack.Value16 = oldSS;
+			this.processor.RegStack.Value16 = oldSP;
 
 			(this.processor.RegFrame.Value16, this.processor.RegAcc.Value16, this.processor.RegBase.Value16,
 				this.processor.RegCount.Value16, this.processor.RegData.Value16, this.processor.RegSource.Value16,
@@ -419,9 +416,9 @@ namespace Civilization1Remaster.Engine
 		{
 			this.processor.Journal.OpenScope("RefreshHueCycling()");
 
-			this.processor.PreserveSource();
-			this.processor.StackWord(this.processor.RegDest.Value16);
-			this.processor.StackWord(this.processor.SegData.Value16);
+			ushort savedDest = this.processor.RegDest.Value16;
+			ushort savedData = this.processor.SegData.Value16;
+			ushort savedSource = this.processor.RegSource.Value16;
 			this.processor.SegData.Value16 = 0x35cf;
 			this.processor.RegDest.Value16 = 2;
 
@@ -505,9 +502,9 @@ namespace Civilization1Remaster.Engine
 				}
 			}
 
-			this.processor.SegData.Value16 = this.processor.UnstackWord();
-			this.processor.RestoreDest();
-			this.processor.RestoreSource();
+			this.processor.SegData.Value16 = savedData;
+			this.processor.RegDest.Value16 = savedDest;
+			this.processor.RegSource.Value16 = savedSource;
 
 			this.processor.Journal.CloseScope("RefreshHueCycling");
 		}
