@@ -7,12 +7,30 @@ namespace Civilization1Remaster.UI
 	public class CityView : GameModule
 	{
 
+		private const ushort WonderPicturesTableAddress = 0x68a0;
+		private const ushort CityWallPicturesTableAddress = 0x6880;
+		private const ushort CityStructurePicturesTableAddress = 0x81a2;
+		private const ushort CitySceneryPiecesTableAddress = 0x817a;
+
+		private const ushort CitySceneryPiecesPictureAddress = 0x4ec8;
+		private const ushort CityBuildingsModernPictureAddress = 0x4ed5;
+		private const ushort CityBuildingsAncientPictureAddress = 0x4ee2;
+		private const ushort CityWondersPictureAddress = 0x4eef;
+		private const ushort CityWondersInMaskPictureAddress = 0x4efb;
+
 		/// <summary>Picture handle of a city view structure from table at 0x81a2</summary>
-		private ushort CityStructurePicture(int structureIdx) => this.processor.PullGlobalWord((ushort)((structureIdx << 1) + 0x81a2));
+		private ushort CityStructurePicture(int structureIdx) => this.processor.PullGlobalWord((ushort)((structureIdx << 1) + CityStructurePicturesTableAddress));
+		private void SetCityStructurePicture(int structureIdx, ushort handle) => this.processor.EmitGlobalWord((ushort)((structureIdx << 1) + CityStructurePicturesTableAddress), handle);
 
 		/// <summary>Picture handle of the city scenery</summary>
-		private ushort CitySceneryHandle => this.processor.PullGlobalWord(0x817a);
-		private ushort CitySceneryPiecePicture(int x, int y) => this.processor.PullGlobalWord((ushort)((x << 1) + (y << 3) + 0x817a));
+		private ushort CitySceneryHandle => this.processor.PullGlobalWord(CitySceneryPiecesTableAddress);
+		private ushort CitySceneryPiecePicture(int x, int y) => this.processor.PullGlobalWord((ushort)((x << 1) + (y << 3) + CitySceneryPiecesTableAddress));
+
+		private ushort CityWallPicture(int pictureIdx) => this.processor.PullGlobalWord((ushort)((pictureIdx << 1) + CityWallPicturesTableAddress));
+		private void SetCityWallPicture(int wallIdx, ushort handle) => this.processor.EmitGlobalWord((ushort)((wallIdx << 1) + CityWallPicturesTableAddress), handle);
+
+		private ushort WonderPicture(int marvelIdx) => this.processor.PullGlobalWord((ushort)((marvelIdx << 1) + WonderPicturesTableAddress));
+		private void SetWonderPicture(int wonderIdx, ushort handle) => this.processor.EmitGlobalWord((ushort)((wonderIdx << 1) + WonderPicturesTableAddress), handle);
 
 
 		public CityView(GameEngine owner)
@@ -308,7 +326,7 @@ namespace Civilization1Remaster.UI
 										((this.processor.PullInt16(0x3767, (ushort)((marvelIdx << 3) + 0x0)) < 10) ? -1 : 2) +
 										this.processor.PullInt16(0x3767, (ushort)((marvelIdx << 3) + 0x0))),
 									((marvelIdx <= 7) ? 0 : (this.processor.PullInt16(0x3767, (ushort)((marvelIdx << 3) + 0x2)) - 6)),
-									this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((marvelIdx << 1) + 0x68a0)));
+									WonderPicture(marvelIdx));
 							}
 						}
 					}
@@ -594,7 +612,7 @@ namespace Civilization1Remaster.UI
 			this.owner.Services.RenderPictureToScreen(BackScreenBox,
 				((arg2 & 1) * 8) + (arg1 * 16) - 5,
 				(arg2 * 8) + 50,
-				this.processor.PullGlobalWord((ushort)((pictureIdx << 1) + 0x6880)));
+				CityWallPicture(pictureIdx));
 
 			this.processor.Journal.CloseScope("RenderCityPicture");
 		}
@@ -643,7 +661,7 @@ namespace Civilization1Remaster.UI
 				this.owner.Services.RenderPictureToScreen(BackScreenBox,
 					(short)horizLoc,
 					(short)arg2 - 10,
-					this.processor.PullGlobalWord((ushort)((arg3 << 1) + 0x68a0)));
+					WonderPicture(arg3));
 			}
 
 			this.processor.Journal.CloseScope("RenderCityResourceBar");
@@ -742,12 +760,12 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope($"RenderCityBuildings({arg1}, {participantIdx}, {townIdx})");
 
-			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x4ec8, 0);
+			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, CitySceneryPiecesPictureAddress, 0);
 
 			for (int pieceIdx = 0; pieceIdx <= 4; pieceIdx++)
 			{
 				ushort horizLoc = (ushort)(pieceIdx << 6);
-				ushort pictures = (ushort)((pieceIdx << 3) + 0x817a);
+				ushort pictures = (ushort)((pieceIdx << 3) + CitySceneryPiecesTableAddress);
 
 				this.processor.EmitGlobalWord(pictures, this.owner.VideoCard.ScreenToPicture(1, (ushort)(horizLoc + 1), 1, 0x1f, 0x1f));
 				this.processor.EmitGlobalWord((ushort)(pictures + 4), this.owner.VideoCard.ScreenToPicture(1, (ushort)(horizLoc + 1), 0x21, 0x1f, 0x1f));
@@ -759,11 +777,11 @@ namespace Civilization1Remaster.UI
 			{
 				ushort top = (ushort)(((wallIdx >> 3) << 3) + (this.owner.Advisors.PlayerKnowsTechnology(participantIdx, 0x3a) == 0 ? 0x41 : 0x51));
 
-				this.processor.EmitGlobalWord((ushort)((wallIdx << 1) + 0x6880),
+				SetCityWallPicture(wallIdx,
 					this.owner.VideoCard.ScreenToPicture(1, (ushort)((wallIdx & 7) * 0x18), top, 0x18, 0x8));
 			}
 
-			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, (ushort)(this.owner.Advisors.PlayerKnowsTechnology(participantIdx, 0x25) != 0 ? 0x4ed5 : 0x4ee2), 0);
+			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, (ushort)(this.owner.Advisors.PlayerKnowsTechnology(participantIdx, 0x25) != 0 ? CityBuildingsModernPictureAddress : CityBuildingsAncientPictureAddress), 0);
 
 			City town = this.owner.World.Towns[townIdx];
 
@@ -774,13 +792,13 @@ namespace Civilization1Remaster.UI
 
 				if (built || (ushort)(arg1 - 1) == structureIdx || structureIdx > 0x14)
 				{
-					this.processor.EmitGlobalWord((ushort)((structureIdx << 1) + 0x81a2),
+					SetCityStructurePicture(structureIdx,
 						this.owner.VideoCard.ScreenToPicture(1, (ushort)(((structureIdx >> 2) * 0x32) + 1), (ushort)(((structureIdx & 3) * 0x32) + 1), 0x31, 0x31));
 				}
 			}
 
-			CutWonderPictures(townIdx, false, 0x4eef);
-			CutWonderPictures(townIdx, true, 0x4efb);
+			CutWonderPictures(townIdx, false, CityWondersPictureAddress);
+			CutWonderPictures(townIdx, true, CityWondersInMaskPictureAddress);
 
 			this.processor.Journal.CloseScope("RenderCityBuildings");
 		}
@@ -807,7 +825,7 @@ namespace Civilization1Remaster.UI
 
 				SeizeCityScenery((ushort)wonderIdx);
 
-				this.processor.EmitGlobalWord((ushort)((wonderIdx << 1) + 0x68a0), this.processor.RegAcc.Value16);
+				SetWonderPicture(wonderIdx, this.processor.RegAcc.Value16);
 			}
 		}
 

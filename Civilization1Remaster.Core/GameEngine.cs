@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using Civilization1Remaster.Emulation;
 
@@ -6,6 +6,17 @@ namespace Civilization1Remaster
 {
 	public partial class GameEngine
 	{
+		private const ushort StartupExecutablePathAddress = 0x6156;
+		private const ushort StartupDriveFlagAddress = 0x61ee;
+		private const ushort StartupStackLimitAddress = 0x5890;
+		private const ushort StartupStackBaseAddress = 0x588c;
+		private const ushort StartupFreeMemoryAddress = 0x588a;
+		private const ushort StartupDataSegmentAddress = 0x5901;
+		private const ushort DosVersionAddress = 0x5903;
+		private const ushort DosDriveInfoAddress = 0x591e;
+		private const ushort DosArgumentBlockAddress = 0x5920;
+		private const ushort DosEnvironmentBlockAddress = 0x5922;
+
 		private readonly CPU processor;
 
 		#region Segment definitions
@@ -244,8 +255,8 @@ namespace Civilization1Remaster
 			// Not important, but just for case it's still needed, to be removed later
 			string trail = Path.Combine(this.processor.StandardFolder, "CIV.EXE");
 
-			this.processor.EmitGlobalByte(0x61ee, (byte)'C');
-			this.processor.EmitText(CPU.AsLinearAddress(this.processor.SegData.Value16, 0x6156), trail, trail.Length);
+			this.processor.EmitGlobalByte(StartupDriveFlagAddress, (byte)'C');
+			this.processor.EmitText(CPU.AsLinearAddress(this.processor.SegData.Value16, StartupExecutablePathAddress), trail, trail.Length);
 
 			this.processor.SegData.Value16 = this.processor.UnstackWord();
 			this.processor.SegExtra.Value16 = this.processor.SegData.Value16;
@@ -263,9 +274,9 @@ namespace Civilization1Remaster
 
 			this.processor.RegStack.Value16 &= 0xfffe;
 
-			this.processor.EmitUInt16(contentSection, 0x5890, this.processor.RegStack.Value16);
-			this.processor.EmitUInt16(contentSection, 0x588c, this.processor.RegStack.Value16);
-			this.processor.EmitUInt16(contentSection, 0x588a, (ushort)(((topSection - contentSection) << 4) - 1));
+			this.processor.EmitUInt16(contentSection, StartupStackLimitAddress, this.processor.RegStack.Value16);
+			this.processor.EmitUInt16(contentSection, StartupStackBaseAddress, this.processor.RegStack.Value16);
+			this.processor.EmitUInt16(contentSection, StartupFreeMemoryAddress, (ushort)(((topSection - contentSection) << 4) - 1));
 
 			ushort programSection = this.processor.SegExtra.Value16;
 			ushort blockSize = (ushort)(topSection - programSection);
@@ -282,7 +293,7 @@ namespace Civilization1Remaster
 				this.processor.RegBase.Value16 = 0;
 			}
 
-			this.processor.EmitUInt16(contentSection, 0x5901, this.processor.SegData.Value16);
+			this.processor.EmitUInt16(contentSection, StartupDataSegmentAddress, this.processor.SegData.Value16);
 
 			this.processor.SegExtra.Value16 = contentSection;
 			this.processor.SegData.Value16 = contentSection;
@@ -371,13 +382,13 @@ namespace Civilization1Remaster
 			#endregion
 
 			// DOS version
-			this.processor.EmitGlobalWord(0x5903, 0x616);
+			this.processor.EmitGlobalWord(DosVersionAddress, 0x616);
 
 			// Environment block is not used
 			// Argument block in not used
-			this.processor.EmitGlobalWord(0x5922, 0);
-			this.processor.EmitGlobalWord(0x5920, 0);
-			this.processor.EmitGlobalWord(0x591e, 0);
+			this.processor.EmitGlobalWord(DosEnvironmentBlockAddress, 0);
+			this.processor.EmitGlobalWord(DosArgumentBlockAddress, 0);
+			this.processor.EmitGlobalWord(DosDriveInfoAddress, 0);
 
 			// Get special devices information
 			// Defaults are OK, no need to modify bytes at 0x590a - 0x590e

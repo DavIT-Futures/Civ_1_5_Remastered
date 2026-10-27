@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Civilization1Remaster.Emulation;
 using Civilization1Remaster.Engine;
 
@@ -7,6 +7,7 @@ namespace Civilization1Remaster.Game
 	public class GameInitAndIntro : GameModule
 	{
 		private const ushort SeaBlocksAddress = 0x7f38;
+		private const ushort SeaBlocksAlternateAddress = 0x802f;
 
 
 
@@ -1180,13 +1181,13 @@ namespace Civilization1Remaster.Game
 			for (ushort row = 0; row < 0xc; row++)
 			{
 				this.processor.EmitGlobalByte((ushort)(row + SeaBlocksAddress), (byte)(this.processor.PullGlobalByte((ushort)(row + SeaBlocksAddress)) | 0xe0));
-				this.processor.EmitGlobalByte((ushort)(row + 0x802f), (byte)(this.processor.PullGlobalByte((ushort)(row + 0x802f)) | 0xe));
+				this.processor.EmitGlobalByte((ushort)(row + SeaBlocksAlternateAddress), (byte)(this.processor.PullGlobalByte((ushort)(row + SeaBlocksAlternateAddress)) | 0xe));
 			}
 
 			this.processor.EmitGlobalByte(SeaBlocksAddress, (byte)(this.processor.PullGlobalByte(SeaBlocksAddress) & 0x7f));
-			this.processor.EmitGlobalByte(0x7f43, (byte)(this.processor.PullGlobalByte(0x7f43) & 0xdf));
-			this.processor.EmitGlobalByte(0x802f, (byte)(this.processor.PullGlobalByte(0x802f) & 0xfd));
-			this.processor.EmitGlobalByte(0x803a, (byte)(this.processor.PullGlobalByte(0x803a) & 0xf7));
+			this.processor.EmitGlobalByte((ushort)(SeaBlocksAddress + 11), (byte)(this.processor.PullGlobalByte((ushort)(SeaBlocksAddress + 11)) & 0xdf));
+			this.processor.EmitGlobalByte(SeaBlocksAlternateAddress, (byte)(this.processor.PullGlobalByte(SeaBlocksAlternateAddress) & 0xfd));
+			this.processor.EmitGlobalByte((ushort)(SeaBlocksAlternateAddress + 11), (byte)(this.processor.PullGlobalByte((ushort)(SeaBlocksAlternateAddress + 11)) & 0xf7));
 
 			// Far return
 			this.processor.Journal.CloseScope("ReckonContinentSizes");

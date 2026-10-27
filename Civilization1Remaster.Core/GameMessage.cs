@@ -1,4 +1,4 @@
-﻿namespace Civilization1Remaster
+namespace Civilization1Remaster
 {
 	/// <summary>
 	/// A text built in the message buffer at 0xba06 and shown in a dialog: the same calls as the original makes (CopyText,
@@ -68,7 +68,7 @@
 		/// <summary>The style of the dialog that will show it (the word 0x2f9e)</summary>
 		public GameMessage Style(ushort style)
 		{
-			this.game.Processor.EmitGlobalWord(0x2f9e, style);
+			this.game.Globals.DialogStyle.Value = style;
 			return this;
 		}
 
