@@ -752,7 +752,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Startup.ConcealMouseCursor();
 
-			this.processor.EmitGlobalByte(0xb1d4, 0x0);
+			FallenLeadersCount = 0;
 
 			for (int idx = 0; idx < 0xe; idx++)
 			{
@@ -877,12 +877,12 @@ namespace Civilization1Remaster.UI
 				this.owner.Services.ImportColorsFromBuffer(8, 0xbdee);
 			}
 
-			sbyte fallen = (sbyte)this.processor.PullGlobalByte(0xb1d4);
+			sbyte fallen = (sbyte)FallenLeadersCount;
 			short place = (short)(fallen % 7);
 
 			place = (place & 1) != 0 ? (short)-((place / 2) - 6) : (short)(place / 2);
 
-			this.processor.EmitGlobalByte(0xb1d4, (byte)(fallen + 1));
+			FallenLeadersCount = (ushort)(fallen + 1);
 
 			if (fallen >= 7)
 				place += 7;

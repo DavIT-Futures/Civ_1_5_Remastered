@@ -6,6 +6,14 @@ namespace Civilization1Remaster.UI
 {
 	public class CityView : GameModule
 	{
+
+		/// <summary>Picture handle of a city view structure from table at 0x81a2</summary>
+		private ushort CityStructurePicture(int structureIdx) => this.processor.PullGlobalWord((ushort)((structureIdx << 1) + 0x81a2));
+
+		/// <summary>Picture handle of the city scenery</summary>
+		private ushort CitySceneryHandle => this.processor.PullGlobalWord(0x817a);
+
+
 		public CityView(GameEngine owner)
 			: base(owner)
 		{
@@ -310,7 +318,7 @@ namespace Civilization1Remaster.UI
 					for (int idx = (townIdx == this.owner.World.MarvelTownIdx[7]) ? 69 : 0; idx < 310; idx += 45)
 					{
 						this.owner.Services.RenderPictureToScreenAlternate(BackScreenBox,
-							idx, 2, this.processor.PullGlobalWord(0x81c4));
+							idx, 2, CityStructurePicture(17));
 					}
 				}
 
@@ -431,11 +439,11 @@ namespace Civilization1Remaster.UI
 						}
 
 						this.owner.Services.RenderPictureToScreenAlternate(BackScreenBox,
-							idx, 108, this.processor.PullGlobalWord(0x81ce));
+							idx, 108, CityStructurePicture(22));
 					}
 
 					this.owner.Services.RenderPictureToScreen(BackScreenBox,
-						142, 108, this.processor.PullGlobalWord(0x81ae));
+						142, 108, CityStructurePicture(6));
 				}
 
 				if (settlement.Has(CityStructure.MassTransit) && arg2 != 13)
@@ -443,11 +451,11 @@ namespace Civilization1Remaster.UI
 					for (int idx = 0; idx < 310; idx += 46)
 					{
 						this.owner.Services.RenderPictureToScreenAlternate(BackScreenBox,
-							idx, 115, this.processor.PullGlobalWord(0x81cc));
+							idx, 115, CityStructurePicture(21));
 					}
 
 					this.owner.Services.RenderPictureToScreen(BackScreenBox,
-						0, 115, this.processor.PullGlobalWord(0x81b8));
+						0, 115, CityStructurePicture(11));
 				}
 
 				this.processor.RegBase.Value16 = ScreenBox;
@@ -516,7 +524,7 @@ namespace Civilization1Remaster.UI
 
 				if (arg2 == -1 && idx3 == 0)
 				{
-					this.owner.Helpers.ReleaseResource(this.processor.PullGlobalWord(0x817a), 0x4eb3);
+					this.owner.Helpers.ReleaseResource(CitySceneryHandle, 0x4eb3);
 
 					RenderCityScenery(townIdx, 0x18, 0x8c, 0x100);
 				}
@@ -533,7 +541,7 @@ namespace Civilization1Remaster.UI
 
 			if (arg2 != -1 || idx3 != 0)
 			{
-				this.owner.Helpers.ReleaseResource(this.processor.PullGlobalWord(0x817a), 0x4eb8);
+				this.owner.Helpers.ReleaseResource(CitySceneryHandle, 0x4eb8);
 			}
 
 			if (arg2 == -2)
@@ -621,7 +629,7 @@ namespace Civilization1Remaster.UI
 				this.owner.Services.RenderPictureToScreenAlternate(BackScreenBox,
 					(short)horizLoc,
 					(short)((short)(arg2 << 3) + 16),
-					this.processor.PullGlobalWord((ushort)((arg3 << 1) + 0x81a2)));
+					CityStructurePicture(arg3));
 			}
 			else
 			{

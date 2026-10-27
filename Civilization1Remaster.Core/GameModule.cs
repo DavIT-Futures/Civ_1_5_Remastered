@@ -1488,6 +1488,27 @@ namespace Civilization1Remaster
 			set => this.owner.Globals.SavedGovernmentTitleMonarchy.Value = value;
 		}
 
+		/// <summary>0x687a: frame counter of the spaceship star field</summary>
+		protected ushort SpaceshipStarFieldFrame
+		{
+			get => this.owner.Globals.SpaceshipStarFieldFrame.Value;
+			set => this.owner.Globals.SpaceshipStarFieldFrame.Value = value;
+		}
+
+		/// <summary>0xb1d4: count of fallen leaders placed on the conquest screen</summary>
+		protected ushort FallenLeadersCount
+		{
+			get => this.owner.Globals.FallenLeadersCount.Value;
+			set => this.owner.Globals.FallenLeadersCount.Value = value;
+		}
+
+		/// <summary>0x4cd9: game end state flags</summary>
+		protected ushort GameEndFlags
+		{
+			get => this.owner.Globals.GameEndFlags.Value;
+			set => this.owner.Globals.GameEndFlags.Value = value;
+		}
+
 		#endregion
 
 		#region Tables of CIV.EXE in the data segment, read where the original reads them

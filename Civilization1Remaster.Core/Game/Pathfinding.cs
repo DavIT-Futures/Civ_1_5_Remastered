@@ -13,9 +13,12 @@ namespace Civilization1Remaster.Game
 
 		/// <summary>The words of the frame of ShiftToward, shared by its helpers (B3: in C#)</summary>
 
+		private readonly UnitMemory troops;
+
 		public Pathfinding(GameEngine owner)
 			: base(owner)
 		{
+			this.troops = new UnitMemory(owner.Processor);
 		}
 
 		/// <summary>
@@ -902,15 +905,15 @@ namespace Civilization1Remaster.Game
 			// function body
 			if (Math.Abs(horizLoc - horizSpot1) <= 7 && Math.Abs(vertLoc - vertSpot1) <= 7)
 			{
-				this.processor.EmitGlobalByte(0x87c9, (byte)((sbyte)horizLoc));
-				this.processor.EmitGlobalByte(0x87ca, (byte)((sbyte)vertLoc));				
-				this.processor.EmitGlobalByte(0x87cb, (byte)((marker == 0) ? 1 : 0x10));
+				this.troops.Assign(0, 127, UnitMemory.Horiz, (byte)((sbyte)horizLoc));
+				this.troops.Assign(0, 127, UnitMemory.Vert, (byte)((sbyte)vertLoc));
+				this.troops.Assign(0, 127, UnitMemory.Kind, (byte)((marker == 0) ? 1 : 0x10));
 				GoalHoriz = (ushort)((short)horizSpot1);
 				GoalVert = (ushort)((short)vertSpot1);
 
 				ushort direction = ShiftToward(0, 127, arg6);
 
-				this.processor.EmitGlobalByte(0x87cb, 0xff);
+				this.troops.Assign(0, 127, UnitMemory.Kind, 0xff);
 
 				if (direction == 0xffff)
 				{

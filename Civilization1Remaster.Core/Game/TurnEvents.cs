@@ -795,7 +795,7 @@ namespace Civilization1Remaster.Game
 
 			RepaintMainScreen();
 
-			this.processor.EmitGlobalByte(0x4cd9, (byte)(this.processor.PullGlobalByte(0x4cd9) | 0x1));
+			GameEndFlags |= 0x1;
 
 			if (ConquestEnd == 0)
 			{

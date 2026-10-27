@@ -574,7 +574,7 @@ namespace Civilization1Remaster.UI
 						break;
 
 					default:
-						if ((this.processor.PullGlobalByte(0x687a) & 0x1) != 0)
+						if ((SpaceshipStarFieldFrame & 0x1) != 0)
 						{
 							this.processor.EmitGlobalByte(column, (byte)(this.processor.PullGlobalByte(column) + 1));
 						}
@@ -602,7 +602,7 @@ namespace Civilization1Remaster.UI
 				}
 			}
 
-			this.processor.EmitGlobalWord(0x687a, (ushort)(this.processor.PullGlobalWord(0x687a) + 1));
+			SpaceshipStarFieldFrame++;
 
 			this.processor.Journal.CloseScope("RenderStarField");
 		}
