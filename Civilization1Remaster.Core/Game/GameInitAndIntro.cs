@@ -8,6 +8,8 @@ namespace Civilization1Remaster.Game
 	{
 		private const ushort SeaBlocksAddress = 0x7f38;
 		private const ushort SeaBlocksAlternateAddress = 0x802f;
+		private const ushort StorySegment = 0x3710;
+		private const ushort StoryTimingTableOffset = 0x83;
 
 
 
@@ -1486,7 +1488,7 @@ namespace Civilization1Remaster.Game
 			}
 
 			StoryLineTime = (ushort)this.owner.Helpers.VerifyValueSpan(
-				this.processor.PullInt16(0x3710, (ushort)((StoryLinesTold << 1) + 0x83)),
+				this.processor.PullInt16(StorySegment, (ushort)((StoryLinesTold << 1) + StoryTimingTableOffset)),
 				(45 * (short)StoryLineTime) + (short)StoryMusicTime,
 				32767);
 		}
@@ -1529,7 +1531,7 @@ namespace Civilization1Remaster.Game
 			// The colour cycles of the picture: first colour, last colour, speed (300 / speed beats a step), 0 at the end
 			StoryCycleCount = 0x0;
 
-			while (this.processor.PullUInt8(0x3710, StoryCycleRecord) != 0)
+			while (this.processor.PullUInt8(StorySegment, StoryCycleRecord) != 0)
 			{
 				ushort first = NextStoryCycleByte();
 				ushort last = NextStoryCycleByte();
@@ -1559,7 +1561,7 @@ namespace Civilization1Remaster.Game
 			ushort spot = StoryCycleRecord;
 			StoryCycleRecord = (ushort)(StoryCycleRecord + 1);
 
-			return this.processor.PullUInt8(0x3710, spot);
+			return this.processor.PullUInt8(StorySegment, spot);
 		}
 
 		/// <summary>

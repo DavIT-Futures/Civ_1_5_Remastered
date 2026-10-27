@@ -33,6 +33,7 @@ namespace Civilization1Remaster.Game
 
 		private const ushort AdvisorPaletteResourceAddress = 0x1e56;
 		private const ushort PalaceSectionSpritesTableAddress = 0xd21c;
+		private const ushort ReplayHistoryScoresSegment = 0x3772;
 
 		public TurnEvents(GameEngine owner)
 			: base(owner)
@@ -1125,8 +1126,8 @@ namespace Civilization1Remaster.Game
 				if (this.owner.World.RoundTally < 600)
 				{
 					// The power graph is in the segment 0x3772 (ES is left there, like in the original)
-					this.processor.SegExtra.Value16 = 0x3772;
-					this.processor.EmitUInt8(0x3772, GraphPlace(participantIdx), (byte)this.owner.Helpers.VerifyValueSpan((short)power / 8, 0, 255));
+					this.processor.SegExtra.Value16 = ReplayHistoryScoresSegment;
+					this.processor.EmitUInt8(ReplayHistoryScoresSegment, GraphPlace(participantIdx), (byte)this.owner.Helpers.VerifyValueSpan((short)power / 8, 0, 255));
 				}
 
 				treaties = 0;

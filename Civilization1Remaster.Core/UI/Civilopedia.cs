@@ -10,6 +10,24 @@ namespace Civilization1Remaster.UI
 		private const ushort CivilopediaNoneStringAddress = 0x3dee;
 		private const ushort CivilopediaAllowsStringAddress = 0x3e03;
 
+		private const ushort CivilopediaPageHistorySegment = 0x3772;
+		private const ushort CivilopediaChosenIndexTableAddress = 0x1c80;
+		private const ushort CivilopediaChosenCategoryTableAddress = 0x36fc;
+
+		private const ushort CivilopediaSciencePaletteAddress = 0x3ce6;
+		private const ushort CivilopediaScienceCategoryHeaderAddress = 0x3cf2;
+		private const ushort CivilopediaBuildingsPictureAddress = 0x3d07;
+		private const ushort CivilopediaBuildingPaletteAddress = 0x3d14;
+		private const ushort CivilopediaBuildingCategoryHeaderAddress = 0x3d1d;
+		private const ushort CivilopediaWonderCategoryHeaderAddress = 0x3d2e;
+		private const ushort CivilopediaUnitPaletteAddress = 0x3d4e;
+		private const ushort CivilopediaUnitsCategoryHeaderAddress = 0x3d5a;
+		private const ushort CivilopediaUnitIconsTableAddress = 0xd58e;
+		private const ushort CivilopediaTerrainPaletteAddress = 0x3d75;
+		private const ushort TerrainPaletteBufferAddress = 0xc5be;
+		private const ushort CivilopediaTerrainCategoryHeaderAddress = 0x3d7f;
+		private const ushort CivilopediaConceptsCategoryHeaderAddress = 0x3d8c;
+
 
 		public Civilopedia(GameEngine owner)
 			: base(owner)
@@ -142,8 +160,8 @@ namespace Civilization1Remaster.UI
 
 					ushort line = (ushort)((entryTally - firstEntry) << 1);
 
-					this.processor.EmitUInt16(0x3772, (ushort)(line + 0x1c80), nextIdx);
-					this.processor.EmitUInt16(0x3772, (ushort)(line + 0x36fc), nextKind);
+					this.processor.EmitUInt16(CivilopediaPageHistorySegment, (ushort)(line + CivilopediaChosenIndexTableAddress), nextIdx);
+					this.processor.EmitUInt16(CivilopediaPageHistorySegment, (ushort)(line + CivilopediaChosenCategoryTableAddress), nextKind);
 
 					vertLoc += 7;
 
@@ -335,8 +353,8 @@ namespace Civilization1Remaster.UI
 
 				ushort line = (ushort)(chosen << 1);
 
-				DisplayCivilopediaRecord(this.processor.PullUInt16(0x3772, (ushort)(line + 0x1c80)),
-					this.processor.PullUInt16(0x3772, (ushort)(line + 0x36fc)));
+				DisplayCivilopediaRecord(this.processor.PullUInt16(CivilopediaPageHistorySegment, (ushort)(line + CivilopediaChosenIndexTableAddress)),
+					this.processor.PullUInt16(CivilopediaPageHistorySegment, (ushort)(line + CivilopediaChosenCategoryTableAddress)));
 			}
 			else
 			{
@@ -485,7 +503,7 @@ namespace Civilization1Remaster.UI
 						byte pageDigit = (byte)CPU.SignedQuotient((short)iconIdx, 9);
 						this.owner.Words[6] = (byte)(this.owner.Words[6] + pageDigit);
 						this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, TextBuffer.Address, 0);
-						this.owner.Helpers.PullAndAssignColors(0x3ce6);
+						this.owner.Helpers.PullAndAssignColors(CivilopediaSciencePaletteAddress);
 						RenderIcon(
 							(ushort)(((iconIdx % 3) * 111) + 1),
 							(ushort)((((iconIdx % 9) / 3) * 69) + 1),
@@ -493,7 +511,7 @@ namespace Civilization1Remaster.UI
 					}
 
 					this.owner.Words.Set(TechnologyText((short)scienceIdx));
-					this.owner.TextPainter.RenderCenteredTextToScreen0(0x3cf2, titleX, 36, 7);
+					this.owner.TextPainter.RenderCenteredTextToScreen0(CivilopediaScienceCategoryHeaderAddress, titleX, 36, 7);
 					break;
 
 				case 1:
@@ -504,8 +522,8 @@ namespace Civilization1Remaster.UI
 
 					if ((short)scienceIdx > 1 && (short)scienceIdx <= 0x15 && CivilopediaWithoutPictures == 0)
 					{
-						this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x3d07, 0);
-						this.owner.Helpers.PullAndAssignColors(0x3d14);
+						this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, CivilopediaBuildingsPictureAddress, 0);
+						this.owner.Helpers.PullAndAssignColors(CivilopediaBuildingPaletteAddress);
 						ushort iconSlot = (ushort)(scienceIdx - 2);
 						ushort picHandle = this.owner.VideoCard.ScreenToPicture(
 							1,
@@ -518,7 +536,7 @@ namespace Civilization1Remaster.UI
 
 					this.owner.Words.Set(BuildingRecordText((short)scienceIdx));
 					this.owner.TextPainter.RenderCenteredTextToScreen0(
-						(short)scienceIdx > 0x18 ? (ushort)0x3d2e : (ushort)0x3d1d,
+						(short)scienceIdx > 0x18 ? CivilopediaWonderCategoryHeaderAddress : CivilopediaBuildingCategoryHeaderAddress,
 						titleX, 36, 7);
 					break;
 
@@ -530,7 +548,7 @@ namespace Civilization1Remaster.UI
 						byte pageChar = (byte)CPU.SignedQuotient((short)iconIdx, 6);
 						this.owner.Words[6] = (byte)(this.owner.Words[6] + pageChar);
 						this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, TextBuffer.Address, 0);
-						this.owner.Helpers.PullAndAssignColors(0x3d4e);
+						this.owner.Helpers.PullAndAssignColors(CivilopediaUnitPaletteAddress);
 						RenderIcon(
 							(ushort)(((iconIdx & 1) * 160) + 1),
 							(ushort)(((iconIdx % 6) >> 1) * 61),
@@ -538,11 +556,11 @@ namespace Civilization1Remaster.UI
 					}
 
 					this.owner.Words.Set(UnitText((short)scienceIdx));
-					this.owner.TextPainter.RenderCenteredTextToScreen0(0x3d5a, titleX, 36, 7);
+					this.owner.TextPainter.RenderCenteredTextToScreen0(CivilopediaUnitsCategoryHeaderAddress, titleX, 36, 7);
 					this.owner.Services.RenderPictureToScreen(
 						ScreenBox,
 						216, 48,
-						this.processor.PullUInt16(dataSeg, (ushort)((scienceIdx << 1) + 0xd58e)));
+						this.processor.PullUInt16(dataSeg, (ushort)((scienceIdx << 1) + CivilopediaUnitIconsTableAddress)));
 					break;
 
 				case 3:
@@ -555,8 +573,8 @@ namespace Civilization1Remaster.UI
 						this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, TextBuffer.Address, 0);
 						if (VgaMode != 0)
 						{
-							this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, 0x3d75, 0xc5be);
-							this.owner.VideoCard.AssignHuesFromHueStruct(0xc5be);
+							this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, CivilopediaTerrainPaletteAddress, TerrainPaletteBufferAddress);
+							this.owner.VideoCard.AssignHuesFromHueStruct(TerrainPaletteBufferAddress);
 							this.owner.VideoCard.AssignHue(0xfd, VGABitmap.Hue18ToHue(0x3d, 0x3d, 0x3d));
 						}
 
@@ -568,12 +586,12 @@ namespace Civilization1Remaster.UI
 
 					EmptyMessage()
 						.Text(TerrainText(scienceIdx));
-					this.owner.TextPainter.RenderCenteredTextToScreen0(0x3d7f, titleX, 36, 7);
+					this.owner.TextPainter.RenderCenteredTextToScreen0(CivilopediaTerrainCategoryHeaderAddress, titleX, 36, 7);
 					break;
 
 				case 4:
 					this.owner.Words.Append(this.processor.PullUInt16(dataSeg, (ushort)((scienceIdx << 1) + CivilopediaConceptTitlesTableAddress)));
-					this.owner.TextPainter.RenderCenteredTextToScreen0(0x3d8c, titleX, 36, 7);
+					this.owner.TextPainter.RenderCenteredTextToScreen0(CivilopediaConceptsCategoryHeaderAddress, titleX, 36, 7);
 					break;
 			}
 		}

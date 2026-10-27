@@ -1,4 +1,4 @@
-﻿using Civilization1Remaster.Emulation;
+using Civilization1Remaster.Emulation;
 using Civilization1Remaster.Game;
 
 namespace Civilization1Remaster.UI
@@ -8,6 +8,11 @@ namespace Civilization1Remaster.UI
 		private const ushort KingEyesHueAddress = 0x3a9a;
 		private const ushort KingGestureHue1Address = 0x3ab4;
 		private const ushort KingGestureHue2Address = 0x3ab7;
+		private const ushort LeaderFontTableSegment = 0x36fa;
+		private const ushort AdvisorKingVisualsSegment = 0x36fa;
+		private const ushort AdvisorHorizOffsetsTableAddress = 0x3afe;
+		private const ushort AdvisorSpritesTableAddress = 0x804e;
+		private const ushort KingEyesPicturesTableAddress = 0x7efe;
 
 
 		private readonly UnitMemory troops;
@@ -1060,7 +1065,7 @@ namespace Civilization1Remaster.UI
 					this.owner.Words.Append(" Check Intelligence\n");
 				}
 
-				this.owner.Services.PerformSound(this.processor.PullGlobalWord(LeaderRecord(participantIdx, 0x1518)), 3);
+				this.owner.Services.PerformSound(LeaderWord(this.owner.World.Participants[participantIdx].ChiefVisuals, LeaderTable.ShortTune), 3);
 
 				this.owner.Startup.DisplayMouseCursorFully();
 
@@ -1082,12 +1087,12 @@ namespace Civilization1Remaster.UI
 
 			DisplayKingScreen(participantIdx);
 
-			this.owner.Services.PerformSound(this.processor.PullGlobalWord(LeaderRecord(participantIdx, 0x151a)), 3);
+			this.owner.Services.PerformSound(LeaderWord(this.owner.World.Participants[participantIdx].ChiefVisuals, LeaderTable.Tune), 3);
 
 			this.owner.Startup.DisplayMouseCursor();
 
 			// The font of the leader (table at 0x36fa), font 3 instead of 10
-			ushort typeface = (ushort)((sbyte)this.processor.PullUInt8(0x36fa, (ushort)this.owner.World.Participants[participantIdx].ChiefVisuals) + 8);
+			ushort typeface = (ushort)((sbyte)this.processor.PullUInt8(LeaderFontTableSegment, (ushort)this.owner.World.Participants[participantIdx].ChiefVisuals) + 8);
 			SavedScreenStyle = typeface == 0xa ? (ushort)3 : typeface;
 
 			DrawingBox.TypefaceIdx = SavedScreenStyle;
@@ -1100,12 +1105,6 @@ namespace Civilization1Remaster.UI
 			ObtainKingSalutation(participantIdx);
 
 			DisplayKingDialog(TextBuffer.Address, 0x14, 0x8b);
-		}
-
-		/// <summary>A word of the player's leader record (0x3a bytes per leader)</summary>
-		private ushort LeaderRecord(short participantIdx, ushort field)
-		{
-			return (ushort)((this.owner.World.Participants[participantIdx].ChiefVisuals * 0x3a) + field);
 		}
 
 		/// <summary>
@@ -1662,16 +1661,16 @@ namespace Civilization1Remaster.UI
 						ushort place = (ushort)((style << 4) + (seat << 2));
 
 						// The tables of the advisors are in the segment 0x36fa (ES is left there, like in the original)
-						this.processor.SegExtra.Value16 = 0x36fa;
+						this.processor.SegExtra.Value16 = AdvisorKingVisualsSegment;
 
-						short horizLoc = (short)(this.processor.PullGlobalWord((ushort)((advisorIdx << 1) + 0x3afe)) +
-							(this.processor.PullUInt16(0x36fa, (ushort)(place + 0x80)) - (0x50 * seat)) -
-							(this.processor.PullUInt16(0x36fa, (ushort)(place + 0x82)) - 0xa0));
-						short vertLoc = (short)((this.processor.PullUInt16(0x36fa, (ushort)(place + 0xf0)) - 0x64) -
-							(this.processor.PullUInt16(0x36fa, (ushort)(place + 0xf2)) - (0x19 * seat)));
+						short horizLoc = (short)(this.processor.PullGlobalWord((ushort)((advisorIdx << 1) + AdvisorHorizOffsetsTableAddress)) +
+							(this.processor.PullUInt16(AdvisorKingVisualsSegment, (ushort)(place + 0x80)) - (0x50 * seat)) -
+							(this.processor.PullUInt16(AdvisorKingVisualsSegment, (ushort)(place + 0x82)) - 0xa0));
+						short vertLoc = (short)((this.processor.PullUInt16(AdvisorKingVisualsSegment, (ushort)(place + 0xf0)) - 0x64) -
+							(this.processor.PullUInt16(AdvisorKingVisualsSegment, (ushort)(place + 0xf2)) - (0x19 * seat)));
 
 						this.owner.Services.RenderPictureToScreen(ScreenBox, horizLoc, vertLoc + 34,
-							this.processor.PullGlobalWord((ushort)((arg3 << 1) + (0x6 * seat) + 0x804e)));
+							this.processor.PullGlobalWord((ushort)((arg3 << 1) + (0x6 * seat) + AdvisorSpritesTableAddress)));
 
 						AdvisorPoseShown = arg3;
 					}
@@ -1679,15 +1678,15 @@ namespace Civilization1Remaster.UI
 
 				ushort king = (ushort)(KingPicture << 2);
 
-				this.processor.SegExtra.Value16 = 0x36fa;
+				this.processor.SegExtra.Value16 = AdvisorKingVisualsSegment;
 
-				short faceHoriz = (short)(0x5a + (this.processor.PullUInt16(0x36fa, (ushort)(king + 0x10)) - 0xb4) - this.processor.PullUInt16(0x36fa, (ushort)(king + 0x12)));
-				short faceVert = (short)((this.processor.PullUInt16(0x36fa, (ushort)(king + 0x48)) - 0x40) - this.processor.PullUInt16(0x36fa, (ushort)(king + 0x4a)));
+				short faceHoriz = (short)(0x5a + (this.processor.PullUInt16(AdvisorKingVisualsSegment, (ushort)(king + 0x10)) - 0xb4) - this.processor.PullUInt16(AdvisorKingVisualsSegment, (ushort)(king + 0x12)));
+				short faceVert = (short)((this.processor.PullUInt16(AdvisorKingVisualsSegment, (ushort)(king + 0x48)) - 0x40) - this.processor.PullUInt16(AdvisorKingVisualsSegment, (ushort)(king + 0x4a)));
 
 				if (arg1 != 0xffff)
 				{
 					this.owner.Services.RenderPictureToScreen(ScreenBox, faceHoriz, faceVert - 2,
-						this.processor.PullGlobalWord((ushort)((arg1 << 2) + 0x7efe)));
+						this.processor.PullGlobalWord((ushort)((arg1 << 2) + KingEyesPicturesTableAddress)));
 				}
 
 				if (arg2 != 0xffff)

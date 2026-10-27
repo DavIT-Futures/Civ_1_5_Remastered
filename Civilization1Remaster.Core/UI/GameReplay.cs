@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Civilization1Remaster.Emulation;
 using Civilization1Remaster.Engine;
 using Civilization1Remaster.Game.Rules;
@@ -86,7 +86,7 @@ namespace Civilization1Remaster.UI
 			// No city shown on the replay map yet (segment 0x3725, 128 cities)
 			for (int townIdx = 0; townIdx < 0x80; townIdx++)
 			{
-				this.processor.EmitUInt16(0x3725, (ushort)(townIdx << 1), 0xffff);
+				EmitReplayCity(townIdx, ReplayCityActiveColumnOffset, 0xffff);
 			}
 
 			short[] leaders = new short[8];
@@ -525,12 +525,12 @@ namespace Civilization1Remaster.UI
 
 			for (int idx = 0; idx < 0x80; idx++)
 			{
-				if (PullReplayCity(idx, 0) != 0xffff)
+				if (PullReplayCity(idx, ReplayCityActiveColumnOffset) != 0xffff)
 					continue;
 
-				EmitReplayCity(idx, 0, arg1);
-				EmitReplayCity(idx, 0x100, arg2);
-				EmitReplayCity(idx, 0x200, arg3);
+				EmitReplayCity(idx, ReplayCityActiveColumnOffset, arg1);
+				EmitReplayCity(idx, ReplayCityXColumnOffset, arg2);
+				EmitReplayCity(idx, ReplayCityYColumnOffset, arg3);
 				break;
 			}
 
@@ -538,6 +538,13 @@ namespace Civilization1Remaster.UI
 		}
 
 		private const ushort ReplayCitySegment = 0x3725;
+		private const ushort ReplayCityActiveColumnOffset = 0x0;
+		private const ushort ReplayCityXColumnOffset = 0x100;
+		private const ushort ReplayCityYColumnOffset = 0x200;
+
+		private const ushort ReplayFallenLeadersSegment = 0x3772;
+		private const ushort ReplayFallenLeadersTableAddress = 0x37c4;
+		private const ushort ReplayLeaderFaceSegment = 0x36fa;
 
 		private ushort PullReplayCity(int idx, int column)
 		{
@@ -560,10 +567,10 @@ namespace Civilization1Remaster.UI
 
 			for (int idx = 0; idx < 0x80; idx++)
 			{
-				if (PullReplayCity(idx, 0x100) != arg2 || PullReplayCity(idx, 0x200) != arg3)
+				if (PullReplayCity(idx, ReplayCityXColumnOffset) != arg2 || PullReplayCity(idx, ReplayCityYColumnOffset) != arg3)
 					continue;
 
-				EmitReplayCity(idx, 0, arg1);
+				EmitReplayCity(idx, ReplayCityActiveColumnOffset, arg1);
 				break;
 			}
 
@@ -587,11 +594,11 @@ namespace Civilization1Remaster.UI
 
 			for (int idx = 0; idx < 0x80; idx++)
 			{
-				if (PullReplayCity(idx, 0) == 0xffff)
+				if (PullReplayCity(idx, ReplayCityActiveColumnOffset) == 0xffff)
 					continue;
 
-				short distance = (short)this.owner.Helpers.ObtainDistance(horizLoc, (short)PullReplayCity(idx, 0x100),
-					vertLoc, (short)PullReplayCity(idx, 0x200));
+				short distance = (short)this.owner.Helpers.ObtainDistance(horizLoc, (short)PullReplayCity(idx, ReplayCityXColumnOffset),
+					vertLoc, (short)PullReplayCity(idx, ReplayCityYColumnOffset));
 
 				if (distance < (short)ReplayCityDistance)
 				{
@@ -636,10 +643,10 @@ namespace Civilization1Remaster.UI
 						ushort hue = 8;
 
 						if ((short)ReplayCityDistance < 6 &&
-							this.owner.MapOps.ObtainContinentID((short)PullReplayCity(cityIdx, 0x100), (short)PullReplayCity(cityIdx, 0x200)) ==
+							this.owner.MapOps.ObtainContinentID((short)PullReplayCity(cityIdx, ReplayCityXColumnOffset), (short)PullReplayCity(cityIdx, ReplayCityYColumnOffset)) ==
 							this.owner.MapOps.ObtainContinentID(tileHoriz, tileVert))
 						{
-							ushort cityOwner = PullReplayCity(cityIdx, 0);
+							ushort cityOwner = PullReplayCity(cityIdx, ReplayCityActiveColumnOffset);
 
 							hue = ReplayCityDistance == 0 ? (ushort)(cityOwner == 1 ? 7 : 15) :
 								PlayerColour(cityOwner);
@@ -756,7 +763,7 @@ namespace Civilization1Remaster.UI
 
 			for (int idx = 0; idx < 0xe; idx++)
 			{
-				this.processor.EmitUInt8(0x3772, (ushort)(idx + 0x37c4), 0xff);
+				this.processor.EmitUInt8(ReplayFallenLeadersSegment, (ushort)(idx + ReplayFallenLeadersTableAddress), 0xff);
 			}
 
 			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
@@ -850,10 +857,10 @@ namespace Civilization1Remaster.UI
 			short mouthVert = 0;
 			ushort mouths = (ushort)(leaderIdx << 2);
 
-			mouthHoriz += (short)(this.processor.PullUInt16(0x36fa, (ushort)(mouths + 0x10)) - 0xb4);
-			mouthHoriz -= (short)this.processor.PullUInt16(0x36fa, (ushort)(mouths + 0x12));
-			mouthVert += (short)(this.processor.PullUInt16(0x36fa, (ushort)(mouths + 0x48)) - 0x40);
-			mouthVert -= (short)this.processor.PullUInt16(0x36fa, (ushort)(mouths + 0x4a));
+			mouthHoriz += (short)(this.processor.PullUInt16(ReplayLeaderFaceSegment, (ushort)(mouths + 0x10)) - 0xb4);
+			mouthHoriz -= (short)this.processor.PullUInt16(ReplayLeaderFaceSegment, (ushort)(mouths + 0x12));
+			mouthVert += (short)(this.processor.PullUInt16(ReplayLeaderFaceSegment, (ushort)(mouths + 0x48)) - 0x40);
+			mouthVert -= (short)this.processor.PullUInt16(ReplayLeaderFaceSegment, (ushort)(mouths + 0x4a));
 
 			this.owner.Services.RenderPictureToScreen(ScreenBox, 90, 0, portrait);
 
@@ -887,7 +894,7 @@ namespace Civilization1Remaster.UI
 			if (fallen >= 7)
 				place += 7;
 
-			this.processor.EmitUInt8(0x3772, (ushort)(place + 0x37c4), (byte)leaderIdx);
+			this.processor.EmitUInt8(ReplayFallenLeadersSegment, (ushort)(place + ReplayFallenLeadersTableAddress), (byte)leaderIdx);
 
 			this.owner.Services.RestoreTimer();
 
@@ -955,7 +962,7 @@ namespace Civilization1Remaster.UI
 
 			for (placeIdx = 0; (short)placeIdx < 0xe; placeIdx++)
 			{
-				byte leaderIdx = this.processor.PullUInt8(0x3772, (ushort)(placeIdx + 0x37c4));
+				byte leaderIdx = this.processor.PullUInt8(ReplayFallenLeadersSegment, (ushort)(placeIdx + ReplayFallenLeadersTableAddress));
 
 				if (leaderIdx == 0xff)
 					continue;

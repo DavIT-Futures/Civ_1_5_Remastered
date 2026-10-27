@@ -323,9 +323,9 @@ namespace Civilization1Remaster.UI
 								this.owner.Services.RenderPictureToScreen(
 									BackScreenBox,
 									(((marvelIdx == 3) ? 80 : 0) +
-										((this.processor.PullInt16(0x3767, (ushort)((marvelIdx << 3) + 0x0)) < 10) ? -1 : 2) +
-										this.processor.PullInt16(0x3767, (ushort)((marvelIdx << 3) + 0x0))),
-									((marvelIdx <= 7) ? 0 : (this.processor.PullInt16(0x3767, (ushort)((marvelIdx << 3) + 0x2)) - 6)),
+										(((short)SceneryBoxField(marvelIdx, SceneryBoxLeft) < 10) ? -1 : 2) +
+										(short)SceneryBoxField(marvelIdx, SceneryBoxLeft)),
+									((marvelIdx <= 7) ? 0 : ((short)SceneryBoxField(marvelIdx, SceneryBoxTop) - 6)),
 									WonderPicture(marvelIdx));
 							}
 						}

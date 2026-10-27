@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Civilization1Remaster.Emulation;
 using Civilization1Remaster.Game.Rules;
 using Civilization1Remaster.Game.State;
@@ -7,6 +7,12 @@ namespace Civilization1Remaster.UI
 {
 	public class WorldMap : GameModule
 	{
+		private const ushort ReplayHistoryScoresSegment = 0x3772;
+		private const int ReplayHistoryStride = 8;
+		private const ushort WondersOfTheWorldTitleAddress = 0x43f0;
+		private const ushort WonderInCityStringAddress = 0x440e;
+		private const ushort WonderOfCityStringAddress = 0x4413;
+
 		public WorldMap(GameEngine owner)
 			: base(owner)
 		{
@@ -322,7 +328,7 @@ namespace Civilization1Remaster.UI
 		/// <summary>The score of the player in the replay history (0x3772, 8 bytes every 4 turns)</summary>
 		private byte HistoryScore(int epochIdx, int participantIdx)
 		{
-			return this.processor.PullUInt8(0x3772, (ushort)((epochIdx << 3) + participantIdx));
+			return this.processor.PullUInt8(ReplayHistoryScoresSegment, (ushort)((epochIdx * ReplayHistoryStride) + participantIdx));
 		}
 
 		/// <summary>
@@ -357,7 +363,7 @@ namespace Civilization1Remaster.UI
 
 					this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 3);
 
-					this.owner.TextPainter.RenderTextWithShadow(0x43f0, 100, 12, 15);
+					this.owner.TextPainter.RenderTextWithShadow(WondersOfTheWorldTitleAddress, 100, 12, 15);
 
 					vertLoc = 0x20;
 				}
@@ -382,7 +388,7 @@ namespace Civilization1Remaster.UI
 				}
 				else
 				{
-					this.owner.Words.Append(wonderIdx > 7 ? (ushort)0x4413 : (ushort)0x440e);
+					this.owner.Words.Append(wonderIdx > 7 ? WonderOfCityStringAddress : WonderInCityStringAddress);
 					this.owner.Conquest.ObtainCityLabel(townIdx);
 					this.owner.Words.Append(". (");
 					this.owner.Words.Append(CivilizationName(participantIdx));
