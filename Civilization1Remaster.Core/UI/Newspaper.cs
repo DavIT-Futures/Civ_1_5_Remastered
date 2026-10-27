@@ -8,6 +8,17 @@ namespace Civilization1Remaster.UI
 	/// </summary>
 	public class Newspaper : GameModule
 	{
+		private const ushort NewspaperNameSuffixTimesAddress = 0x5118;
+		private const ushort NewspaperNameSuffixGazetteAddress = 0x5120;
+		private const ushort NewspaperNameSuffixTribuneAddress = 0x512c;
+		private const ushort NewspaperNameSuffixChronicleAddress = 0x5138;
+		private const ushort NewspaperLeftPriceLabelAddress = 0x5147;
+		private const ushort NewspaperRightPriceLabelAddress = 0x514b;
+		private const ushort NewspaperMotto1Address = 0x514f;
+		private const ushort NewspaperMotto2Address = 0x5156;
+		private const ushort NewspaperTextFileNameAddress = 0x5178;
+		private const ushort NewspaperMenuPromptAddress = 0x5181;
+
 		public Newspaper(GameEngine owner)
 			: base(owner)
 		{
@@ -90,24 +101,24 @@ namespace Civilization1Remaster.UI
 			{
 				case 0:
 					this.owner.Conquest.ObtainCityLabel(townIdx);
-					this.owner.Words.Append(0x5118);
+					this.owner.Words.Append(NewspaperNameSuffixTimesAddress);
 					break;
 
 				case 1:
 					this.owner.Conquest.ObtainCityLabel(townIdx);
-					this.owner.Words.Append(0x5120);
+					this.owner.Words.Append(NewspaperNameSuffixGazetteAddress);
 					break;
 
 				case 2:
 					Message("The ")
 						.City(townIdx)
-						.Text(0x512c);
+						.Text(NewspaperNameSuffixTribuneAddress);
 					break;
 
 				case 3:
 					Message("The ")
 						.City(townIdx)
-						.Text(0x5138);
+						.Text(NewspaperNameSuffixChronicleAddress);
 					break;
 			}
 
@@ -124,14 +135,14 @@ namespace Civilization1Remaster.UI
 
 			if (width < 0xc8)
 			{
-				this.owner.TextPainter.RenderText(0x5147, 8, 11, 0);
+				this.owner.TextPainter.RenderText(NewspaperLeftPriceLabelAddress, 8, 11, 0);
 
-				this.owner.TextPainter.RenderText(0x514b, 268, 11, 0);
+				this.owner.TextPainter.RenderText(NewspaperRightPriceLabelAddress, 268, 11, 0);
 			}
 
 			this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 160, 11, 0);
 
-			this.owner.Words.Set(this.owner.Libc.Dice.DrawInt(2) != 0 ? (ushort)0x514f : (ushort)0x5156);
+			this.owner.Words.Set(this.owner.Libc.Dice.DrawInt(2) != 0 ? NewspaperMotto1Address : NewspaperMotto2Address);
 
 			DrawingBox.TypefaceIdx = 0x3;
 
@@ -160,7 +171,7 @@ namespace Civilization1Remaster.UI
 			this.owner.Libc.CopyText(topic, $"*NEWS{letter}");
 			this.owner.Words.Clear();
 
-			this.owner.BlockText.ImportTextFromFile(0x5178, topic);
+			this.owner.BlockText.ImportTextFromFile(NewspaperTextFileNameAddress, topic);
 
 			this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 160, 3, 0);
 
@@ -168,7 +179,7 @@ namespace Civilization1Remaster.UI
 
 			if (shown)
 			{
-				this.owner.Dialogs.DisplayMenu(0x5181, 80, 128, 1);
+				this.owner.Dialogs.DisplayMenu(NewspaperMenuPromptAddress, 80, 128, 1);
 
 				this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
 			}

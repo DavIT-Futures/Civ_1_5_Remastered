@@ -5,9 +5,69 @@ namespace Civilization1Remaster.UI
 {
 	public class HallOfFame : GameModule
 	{
+		public const ushort HallOfFameSegment = 0x3772;
+		public const ushort HallOfFameBaseAddress = 0x37d2;
+		public const int HallOfFameRecordCount = 6;
+		public const int HallOfFameRecordSize = 0x2e;
+		public const int HallOfFameTotalSize = 0x114;
+
+		private const ushort HallOfFameTitleStringAddress = 0x33be;
+		private const ushort HallOfFameSubtitleStringAddress = 0x33cb;
+		private const ushort HallOfFameClearPromptStringAddress = 0x346a;
+		private const ushort HallOfFameRulerTitlesTableAddress = 0x33a2;
+		private const ushort HallOfFameBcEraStringAddress = 0x33f1;
+		private const ushort HallOfFameAdEraStringAddress = 0x33f6;
+		private const ushort HallOfFameRetiresEndingStringAddress = 0x3471;
+		private const ushort HallOfFameExceedsEvenEndingStringAddress = 0x3482;
+		private const ushort TopCitiesTitleStringAddress = 0x3486;
+
+		private const ushort RulerRankTitlesSegment = 0x36d4;
+
+		private static readonly ushort[] DifficultyNameAddresses = [0x3412, 0x341e, 0x3429, 0x3433, 0x343b];
+
+		private const ushort OffsetScore = 0x0;
+		private const ushort OffsetDifficulty = 0x2;
+		private const ushort OffsetSchismShare = 0x4;
+		private const ushort OffsetYear = 0x6;
+		private const ushort OffsetWonderScore = 0x8;
+		private const ushort OffsetCitizenScore = 0xa;
+		private const ushort OffsetPopulation = 0xc;
+		private const ushort OffsetLeaderName = 0xe;
+		private const ushort OffsetCivilizationPlural = 0x1e;
+
 		public HallOfFame(GameEngine owner)
 			: base(owner)
 		{
+		}
+
+		private static ushort HallOfFameRecordAddress(int entryIdx)
+		{
+			return (ushort)(HallOfFameBaseAddress + (entryIdx * HallOfFameRecordSize));
+		}
+
+		private short FameScore(int entryIdx)
+		{
+			return this.processor.PullInt16(HallOfFameSegment, (ushort)(HallOfFameRecordAddress(entryIdx) + OffsetScore));
+		}
+
+		private void SetFameScore(int entryIdx, short score)
+		{
+			this.processor.EmitUInt16(HallOfFameSegment, (ushort)(HallOfFameRecordAddress(entryIdx) + OffsetScore), (ushort)score);
+		}
+
+		private ushort FameDifficulty(int entryIdx)
+		{
+			return this.processor.PullUInt16(HallOfFameSegment, (ushort)(HallOfFameRecordAddress(entryIdx) + OffsetDifficulty));
+		}
+
+		private short FameYear(int entryIdx)
+		{
+			return (short)this.processor.PullUInt16(HallOfFameSegment, (ushort)(HallOfFameRecordAddress(entryIdx) + OffsetYear));
+		}
+
+		private short FamePopulation(int entryIdx)
+		{
+			return this.processor.PullInt16(HallOfFameSegment, (ushort)(HallOfFameRecordAddress(entryIdx) + OffsetPopulation));
 		}
 
 		/// <summary>
@@ -17,11 +77,11 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope("WipeHallOfFame()");
 
-			this.processor.SegExtra.Value16 = 0x3772;
+			this.processor.SegExtra.Value16 = HallOfFameSegment;
 
-			for (int entryIdx = 0; entryIdx < 6; entryIdx++)
+			for (int entryIdx = 0; entryIdx < HallOfFameRecordCount; entryIdx++)
 			{
-				this.processor.EmitUInt16(this.processor.SegExtra.Value16, (ushort)((0x2e * entryIdx) + 0x37d2), 0xffff);
+				SetFameScore(entryIdx, -1);
 			}
 
 			this.processor.Journal.CloseScope("WipeHallOfFame");
@@ -38,9 +98,9 @@ namespace Civilization1Remaster.UI
 
 			short handle = this.owner.Libc.OpenHandle("fame.dta", 0x8102, 0x80);
 
-			this.owner.Libc.ReadHandle(handle, TextBuffer.Address, 0x114);
+			this.owner.Libc.ReadHandle(handle, TextBuffer.Address, HallOfFameTotalSize);
 
-			this.owner.Libc.MoveFarData(this.processor.SegData.Value16, TextBuffer.Address, 0x3772, 0x37d2, 0x114);
+			this.owner.Libc.MoveFarData(this.processor.SegData.Value16, TextBuffer.Address, HallOfFameSegment, HallOfFameBaseAddress, HallOfFameTotalSize);
 
 			this.owner.Libc.CloseHandle(handle);
 
@@ -56,9 +116,9 @@ namespace Civilization1Remaster.UI
 
 			short handle = this.owner.Libc.OpenHandle("fame.dta", 0x8302, 0x80);
 
-			this.owner.Libc.MoveFarData(0x3772, 0x37d2, this.processor.SegData.Value16, TextBuffer.Address, 0x114);
+			this.owner.Libc.MoveFarData(HallOfFameSegment, HallOfFameBaseAddress, this.processor.SegData.Value16, TextBuffer.Address, HallOfFameTotalSize);
 
-			this.owner.Libc.WriteHandle(handle, TextBuffer.Address, 0x114);
+			this.owner.Libc.WriteHandle(handle, TextBuffer.Address, HallOfFameTotalSize);
 
 			this.owner.Libc.CloseHandle(handle);
 
@@ -77,9 +137,9 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 15);
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0(0x33be, 160, 16, 0);
+			this.owner.TextPainter.RenderCenteredTextToScreen0(HallOfFameTitleStringAddress, 160, 16, 0);
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0(0x33cb, 160, 24, 0);
+			this.owner.TextPainter.RenderCenteredTextToScreen0(HallOfFameSubtitleStringAddress, 160, 24, 0);
 
 			this.owner.VideoCard.RenderLine(ScreenBox, 80, 32, 240, 32, 14);
 
@@ -98,7 +158,7 @@ namespace Civilization1Remaster.UI
 
 			if (arg1 != 0xffff)
 			{
-				this.owner.TextPainter.RenderTextToScreen0(0x346a, 252, 189, 0);
+				this.owner.TextPainter.RenderTextToScreen0(HallOfFameClearPromptStringAddress, 252, 189, 0);
 
 				this.owner.Dialogs.RenderBox(236, 187, 60, 10, 11);
 			}
@@ -124,7 +184,7 @@ namespace Civilization1Remaster.UI
 			ushort record = (ushort)(0x2e * placeIdx);
 
 			// The records are in the segment 0x3772: ES is set to it where the original sets it, the functions called may change it
-			this.processor.SegExtra.Value16 = 0x3772;
+			this.processor.SegExtra.Value16 = HallOfFameSegment;
 
 			short score = (short)this.processor.PullUInt16(0x3772, (ushort)(record + 0x37d2));
 
@@ -145,7 +205,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Words.Append(", ");
 
-			this.processor.SegExtra.Value16 = 0x3772;
+			this.processor.SegExtra.Value16 = HallOfFameSegment;
 			this.owner.Words.Append(this.processor.PullGlobalWord((ushort)((this.processor.PullUInt16(0x3772, (ushort)(record + 0x37d4)) << 1) + 0x33a2)));
 
 			this.owner.Words.Append(" of the ");
@@ -156,7 +216,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Words.Append(" to ");
 
-			this.processor.SegExtra.Value16 = 0x3772;
+			this.processor.SegExtra.Value16 = HallOfFameSegment;
 			short year = (short)this.processor.PullUInt16(0x3772, (ushort)(record + 0x37d8));
 
 			this.owner.Words.Append(this.owner.Libc.IntegerToText(Math.Abs(year), 10));
@@ -175,15 +235,15 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Words.Set("Population: ");
 
-			this.processor.SegExtra.Value16 = 0x3772;
+			this.processor.SegExtra.Value16 = HallOfFameSegment;
 			this.owner.Helpers.PopulationToText(this.processor.PullInt16(0x3772, (ushort)(record + 0x37de)));
 
 			this.owner.Words.Append(", Score: ");
 
-			this.processor.SegExtra.Value16 = 0x3772;
+			this.processor.SegExtra.Value16 = HallOfFameSegment;
 			this.owner.Words.Append(this.owner.Libc.IntegerToText((short)this.processor.PullUInt16(0x3772, (ushort)(record + 0x37d2)), 10));
 
-			this.processor.SegExtra.Value16 = 0x3772;
+			this.processor.SegExtra.Value16 = HallOfFameSegment;
 			ushort hardness = this.processor.PullUInt16(0x3772, (ushort)(record + 0x37d4));
 
 			if (hardness <= 4)
@@ -256,7 +316,7 @@ namespace Civilization1Remaster.UI
 
 				ushort population = this.owner.Helpers.ObtainPlayerPopulation(humanIdx);
 
-				this.processor.SegExtra.Value16 = 0x3772;
+				this.processor.SegExtra.Value16 = HallOfFameSegment;
 				this.processor.EmitUInt16(0x3772, (ushort)(record + 0xc), population);
 
 				if (DisplayHallOfFame((ushort)slotIdx) == 0)
@@ -339,7 +399,7 @@ namespace Civilization1Remaster.UI
 					PullRankTitle(0x20d);
 					this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 160, 14, 15);
 
-					ending = 0x3471;
+					ending = HallOfFameRetiresEndingStringAddress;
 				}
 				else
 				{
@@ -351,7 +411,7 @@ namespace Civilization1Remaster.UI
 					this.owner.Words.Append("% exceeds even");
 					this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 160, 14, 15);
 
-					ending = 0x3482;
+					ending = HallOfFameExceedsEvenEndingStringAddress;
 				}
 
 				PullRankTitle((ushort)((0x13 - rank) * 0x19));
@@ -383,7 +443,7 @@ namespace Civilization1Remaster.UI
 		/// <summary>Copies the text (0x20 bytes) at 0x36d4:offset, the ranking titles, to TextBuffer.Address</summary>
 		private void PullRankTitle(ushort offset)
 		{
-			this.owner.Libc.MoveFarData(0x36d4, offset, this.processor.SegData.Value16, TextBuffer.Address, 0x20);
+			this.owner.Libc.MoveFarData(RulerRankTitlesSegment, offset, this.processor.SegData.Value16, TextBuffer.Address, 0x20);
 		}
 
 		/// <summary>
@@ -445,7 +505,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 3);
 
-			this.owner.TextPainter.RenderTextWithShadow(0x3486, 80, 12, 15);
+			this.owner.TextPainter.RenderTextWithShadow(TopCitiesTitleStringAddress, 80, 12, 15);
 
 			short vertLoc = 0x20;
 

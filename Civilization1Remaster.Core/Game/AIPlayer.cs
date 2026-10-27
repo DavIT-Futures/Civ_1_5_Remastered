@@ -2,6 +2,7 @@
 using Civilization1Remaster.Emulation;
 using Civilization1Remaster.Game.Rules;
 using Civilization1Remaster.Game.State;
+using Civilization1Remaster.UI;
 
 namespace Civilization1Remaster.Game
 {
@@ -63,13 +64,13 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>The strategic locations of a player (32): the role of the unit wanted there, the place and the priority</summary>
-		private static ushort LocationRole(int participantIdx, int locationIdx) => (ushort)(0xe2c2 + (participantIdx << 5) + locationIdx);
+		private static ushort LocationRole(int participantIdx, int locationIdx) => (ushort)(ArmySelection.StrategicLocationRoleTableAddress + (participantIdx << 5) + locationIdx);
 
-		private static ushort LocationHoriz(int participantIdx, int locationIdx) => (ushort)(0xe598 + (participantIdx << 5) + locationIdx);
+		private static ushort LocationHoriz(int participantIdx, int locationIdx) => (ushort)(ArmySelection.StrategicLocationHorizTableAddress + (participantIdx << 5) + locationIdx);
 
-		private static ushort LocationVert(int participantIdx, int locationIdx) => (ushort)(0xe798 + (participantIdx << 5) + locationIdx);
+		private static ushort LocationVert(int participantIdx, int locationIdx) => (ushort)(ArmySelection.StrategicLocationVertTableAddress + (participantIdx << 5) + locationIdx);
 
-		private static ushort LocationPriority(int participantIdx, int locationIdx) => (ushort)(0xb2be + (participantIdx << 5) + locationIdx);
+		private static ushort LocationPriority(int participantIdx, int locationIdx) => (ushort)(ArmySelection.StrategicLocationPriorityTableAddress + (participantIdx << 5) + locationIdx);
 
 		/// <summary>
 		/// Strength of the units of the player by continent, the units of the player (without the nuclear weapons), the
@@ -2570,8 +2571,8 @@ namespace Civilization1Remaster.Game
 			{
 				ushort entry = (ushort)((participantIdx << 5) + entryIdx);
 
-				this.processor.EmitGlobalByte((ushort)(entry + 0xe2c2), 0xff);
-				this.processor.EmitGlobalByte((ushort)(entry + 0xb2be), 0x0);
+				this.processor.EmitGlobalByte((ushort)(entry + ArmySelection.StrategicLocationRoleTableAddress), 0xff);
+				this.processor.EmitGlobalByte((ushort)(entry + ArmySelection.StrategicLocationPriorityTableAddress), 0x0);
 			}
 
 			for (int siteIdx = 0; siteIdx < 0x10; siteIdx++)
@@ -2602,10 +2603,10 @@ namespace Civilization1Remaster.Game
 			{
 				ushort place = (ushort)((participantIdx << 5) + placeIdx);
 
-				if (this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(place + 0xe598)) == horizLoc &&
-					this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(place + 0xe798)) == vertLoc &&
-					this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(place + 0xe2c2)) == live &&
-					this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(place + 0xb2be)) <= strategy)
+				if (this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(place + ArmySelection.StrategicLocationHorizTableAddress)) == horizLoc &&
+					this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(place + ArmySelection.StrategicLocationVertTableAddress)) == vertLoc &&
+					this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(place + ArmySelection.StrategicLocationRoleTableAddress)) == live &&
+					this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(place + ArmySelection.StrategicLocationPriorityTableAddress)) <= strategy)
 				{
 					this.processor.Journal.CloseScope("SendUnitToStrategicLocation");
 					return;
@@ -2622,16 +2623,16 @@ namespace Civilization1Remaster.Game
 			{
 				ushort place = (ushort)((participantIdx << 5) + placeIdx);
 
-				if (this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(place + 0xe2c2)) != 0xff &&
-					this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(place + 0xb2be)) >= strategy)
+				if (this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(place + ArmySelection.StrategicLocationRoleTableAddress)) != 0xff &&
+					this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(place + ArmySelection.StrategicLocationPriorityTableAddress)) >= strategy)
 					continue;
 
 				FreeStrategicLocation(participantIdx, (ushort)placeIdx);
 
-				this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(place + 0xe598), (byte)horizLoc);
-				this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(place + 0xe798), (byte)vertLoc);
-				this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(place + 0xe2c2), (byte)live);
-				this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(place + 0xb2be), (byte)strategy);
+				this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(place + ArmySelection.StrategicLocationHorizTableAddress), (byte)horizLoc);
+				this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(place + ArmySelection.StrategicLocationVertTableAddress), (byte)vertLoc);
+				this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(place + ArmySelection.StrategicLocationRoleTableAddress), (byte)live);
+				this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(place + ArmySelection.StrategicLocationPriorityTableAddress), (byte)strategy);
 				break;
 			}
 
@@ -2683,13 +2684,13 @@ namespace Civilization1Remaster.Game
 			{
 				int entry = (participantIdx << 5) + idx;
 
-				if (this.processor.PullGlobalByte((ushort)(0xb2be + entry)) == 0)
+				if (this.processor.PullGlobalByte((ushort)(ArmySelection.StrategicLocationPriorityTableAddress + entry)) == 0)
 					continue;
 
-				MoveListEntryOn(0xe598, entry);
-				MoveListEntryOn(0xe798, entry);
-				MoveListEntryOn(0xe2c2, entry);
-				MoveListEntryOn(0xb2be, entry);
+				MoveListEntryOn(ArmySelection.StrategicLocationHorizTableAddress, entry);
+				MoveListEntryOn(ArmySelection.StrategicLocationVertTableAddress, entry);
+				MoveListEntryOn(ArmySelection.StrategicLocationRoleTableAddress, entry);
+				MoveListEntryOn(ArmySelection.StrategicLocationPriorityTableAddress, entry);
 			}
 
 			this.processor.Journal.CloseScope("FreeStrategicLocation");

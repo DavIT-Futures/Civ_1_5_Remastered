@@ -8,6 +8,15 @@ namespace Civilization1Remaster.UI
 	/// </summary>
 	public class ArmySelection : GameModule
 	{
+		public const ushort StrategicLocationRoleTableAddress = 0xe2c2;
+		public const ushort StrategicLocationHorizTableAddress = 0xe598;
+		public const ushort StrategicLocationVertTableAddress = 0xe798;
+		public const ushort StrategicLocationPriorityTableAddress = 0xb2be;
+
+		private const ushort TacticalSiteRoleFortAddress = 0x417f;
+		private const ushort TacticalSiteRoleCityAddress = 0x4181;
+		private const ushort TacticalSiteRolePassAddress = 0x4183;
+
 		private readonly UnitMemory troops;
 
 		public ArmySelection(GameEngine owner)
@@ -80,7 +89,7 @@ namespace Civilization1Remaster.UI
 			for (int placeIdx = 0; placeIdx < 0x20; placeIdx++)
 			{
 				ushort place = (ushort)((participantIdx << 5) + placeIdx);
-				byte live = this.processor.PullGlobalByte((ushort)(place + 0xe2c2));
+				byte live = this.processor.PullGlobalByte((ushort)(place + StrategicLocationRoleTableAddress));
 
 				if (live == 0xff)
 					continue;
@@ -104,8 +113,8 @@ namespace Civilization1Remaster.UI
 						break;
 				}
 
-				this.owner.TextPainter.RenderTextWithShadow(TextBuffer.Address, this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(place + 0xe598)) << 2,
-					this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(place + 0xe798)) << 2, 13);
+				this.owner.TextPainter.RenderTextWithShadow(TextBuffer.Address, this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(place + StrategicLocationHorizTableAddress)) << 2,
+					this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(place + StrategicLocationVertTableAddress)) << 2, 13);
 			}
 
 			// The tactical sites; another kind keeps the text of the one before
@@ -119,15 +128,15 @@ namespace Civilization1Remaster.UI
 				switch ((sbyte)live)
 				{
 					case 0:
-						this.owner.Words.Set(0x417f);
+						this.owner.Words.Set(TacticalSiteRoleFortAddress);
 						break;
 
 					case 1:
-						this.owner.Words.Set(0x4181);
+						this.owner.Words.Set(TacticalSiteRoleCityAddress);
 						break;
 
 					case 2:
-						this.owner.Words.Set(0x4183);
+						this.owner.Words.Set(TacticalSiteRolePassAddress);
 						break;
 				}
 
