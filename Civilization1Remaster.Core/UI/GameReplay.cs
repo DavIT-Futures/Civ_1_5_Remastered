@@ -469,6 +469,8 @@ namespace Civilization1Remaster.UI
 			this.processor.Journal.OpenScope($"ObtainReplayYear({arg1})");
 
 			// function body
+			ushort replayYear;
+
 			if (arg1 > 250)
 			{
 				arg1 -= 250;
@@ -485,32 +487,32 @@ namespace Civilization1Remaster.UI
 						{
 							arg1 -= 50;
 
-							this.processor.RegAcc.Value16 = (ushort)(arg1 + 1850);
+							replayYear = (ushort)(arg1 + 1850);
 						}
 						else
 						{
-							this.processor.RegAcc.Value16 = (ushort)((arg1 << 1) + 1750);
+							replayYear = (ushort)((arg1 << 1) + 1750);
 						}
 					}
 					else
 					{
-						this.processor.RegAcc.Value16 = (ushort)((arg1 * 5) + 1500);
+						replayYear = (ushort)((arg1 * 5) + 1500);
 					}
 				}
 				else
 				{
-					this.processor.RegAcc.Value16 = (ushort)((arg1 * 10) + 1000);
+					replayYear = (ushort)((arg1 * 10) + 1000);
 				}
 			}
 			else
 			{
-				this.processor.RegAcc.Value16 = (ushort)((arg1 * 20) - 4000);
+				replayYear = (ushort)((arg1 * 20) - 4000);
 			}
 
 			// Far return
 			this.processor.Journal.CloseScope("ObtainReplayYear");
 
-			return this.processor.RegAcc.Value16;
+			return replayYear;
 		}
 
 		/// <summary>
@@ -607,7 +609,6 @@ namespace Civilization1Remaster.UI
 				}
 			}
 
-			this.processor.RegAcc.Value16 = nearest;
 
 			this.processor.Journal.CloseScope("ObtainDistanceToReplayCity");
 

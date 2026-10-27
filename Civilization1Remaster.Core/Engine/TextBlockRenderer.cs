@@ -1,4 +1,4 @@
-﻿using Civilization1Remaster.Emulation;
+using Civilization1Remaster.Emulation;
 
 namespace Civilization1Remaster.Engine
 {
@@ -118,7 +118,6 @@ namespace Civilization1Remaster.Engine
 				vertLoc += (short)lineHeight;
 			}
 
-			this.processor.RegAcc.Value16 = (ushort)vertLoc;
 			this.processor.Journal.CloseScope("RenderTextChunk");
 
 			return vertLoc;
@@ -203,9 +202,9 @@ namespace Civilization1Remaster.Engine
 
 				do
 				{
-					this.owner.Libc.TellStream((short)handle);
+					int streamPos = this.owner.Libc.TellStream((short)handle);
 
-					this.processor.EmitGlobalWord(entry, this.processor.RegAcc.Value16);
+					this.processor.EmitGlobalWord(entry, (ushort)streamPos);
 
 					scanned = (ushort)this.owner.Libc.ScanStream((short)handle, "%[^\n]\n", line);
 
@@ -254,12 +253,12 @@ namespace Civilization1Remaster.Engine
 				this.owner.Libc.CloseStream((short)handle);
 			}
 
-			this.processor.RegAcc.Value16 = found ? lines : (ushort)0xffff;
+			ushort result = found ? lines : (ushort)0xffff;
 
 			// Far return
 			this.processor.Journal.CloseScope("ImportTextFromFile");
 
-			return this.processor.RegAcc.Value16;
+			return result;
 		}
 
 		/// <summary>
@@ -296,12 +295,12 @@ namespace Civilization1Remaster.Engine
 
 				while (true)
 				{
-					this.owner.Libc.FindSubtext(TextBuffer.Address, code);
+					int matchOffset = this.owner.Libc.FindSubtext(TextBuffer.Address, code);
 
-					ushort found = this.processor.RegAcc.Value16;
-
-					if (found == 0)
+					if (matchOffset < 0)
 						break;
+
+					ushort found = (ushort)(TextBuffer.Address + matchOffset);
 
 					ushort codeLen = this.owner.Libc.TextLength(code);
 					string rest = this.processor.PullText(CPU.AsLinearAddress(this.processor.SegData.Value16, (ushort)(found + codeLen)));

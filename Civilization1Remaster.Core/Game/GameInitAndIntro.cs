@@ -34,7 +34,6 @@ namespace Civilization1Remaster.Game
 			this.owner.Startup.QueryForDisk(7, 1);
 
 			ushort screenZero = ScreenBox;
-			this.processor.RegBase.Value16 = screenZero;
 			this.processor.EmitUInt16(this.processor.SegData.Value16, screenZero, 0x1);
 			StoryKeyAllowed = 0x0;
 
@@ -383,14 +382,10 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"BlendTerrainTile({horizLoc}, {vertLoc})");
 
-			if (this.owner.VideoCard.ObtainDot(1, horizLoc - 1, vertLoc - 1) == 1 ||
-				this.owner.VideoCard.ObtainDot(1, horizLoc - 1, vertLoc + 1) == 1 ||
-				this.owner.VideoCard.ObtainDot(1, horizLoc + 1, vertLoc - 1) == 1 ||
-				this.owner.VideoCard.ObtainDot(1, horizLoc + 1, vertLoc + 1) == 1)
-			{
-				this.processor.RegAcc.Value16 = 0;
-			}
-			else
+			if (this.owner.VideoCard.ObtainDot(1, horizLoc - 1, vertLoc - 1) != 1 &&
+				this.owner.VideoCard.ObtainDot(1, horizLoc - 1, vertLoc + 1) != 1 &&
+				this.owner.VideoCard.ObtainDot(1, horizLoc + 1, vertLoc - 1) != 1 &&
+				this.owner.VideoCard.ObtainDot(1, horizLoc + 1, vertLoc + 1) != 1)
 			{
 				this.owner.Services.AssignDot(1, horizLoc, vertLoc, 1);
 			}
@@ -823,7 +818,6 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private void RankLandOrSea(ushort pass)
 		{
-			ushort frame = this.processor.RegFrame.Value16;
 			const int ranking = 0xce;
 			const int numbers = 0xa4;
 
@@ -1224,9 +1218,9 @@ namespace Civilization1Remaster.Game
 				if (ObtainTerrainTypeFromScreen(tileHoriz, tileVert) != 0xa)
 					continue;
 
-				ObtainContinentIDFromScreen(tileHoriz, tileVert);
+				ushort continentId = ObtainContinentIDFromScreen(tileHoriz, tileVert);
 
-				return this.processor.RegAcc.Value16;
+				return continentId;
 			}
 
 			return null;
@@ -1281,7 +1275,6 @@ namespace Civilization1Remaster.Game
 			ushort colour = this.owner.VideoCard.ObtainDot(displayIdx, horizLoc, vertLoc);
 			ushort terrain = this.processor.PullGlobalWord((ushort)(0x2ba6 + (colour << 1)));
 
-			this.processor.RegAcc.Value16 = terrain;
 
 			this.processor.Journal.CloseScope("ObtainTerrainTypeFromScreen");
 
@@ -1299,14 +1292,14 @@ namespace Civilization1Remaster.Game
 			this.processor.Journal.OpenScope($"ObtainContinentIDFromScreen({horizLoc}, {vertLoc})");
 
 			// function body
-			this.owner.VideoCard.ObtainDot(
+			ushort dot = this.owner.VideoCard.ObtainDot(
 				DrawingBox.DisplayIdx,
 				horizLoc, vertLoc + 50);
 
 			// Far return
 			this.processor.Journal.CloseScope("ObtainContinentIDFromScreen");
 
-			return this.processor.RegAcc.Value16;
+			return dot;
 		}
 
 		/// <summary>
@@ -1328,7 +1321,6 @@ namespace Civilization1Remaster.Game
 			bool waiting = StoryStep();
 
 			ushort result = (ushort)(waiting ? 1 : 0);
-			this.processor.RegAcc.Value16 = result;
 
 			this.processor.Journal.CloseScope("DisplayStoryIntro");
 

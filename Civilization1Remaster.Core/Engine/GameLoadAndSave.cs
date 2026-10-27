@@ -341,7 +341,6 @@ namespace Civilization1Remaster.Engine
 			// Far return
 			this.processor.Journal.CloseScope("ImportGameFromMenu");
 
-			this.processor.RegAcc.Value16 = bay;
 
 			return bay;
 		}
@@ -437,7 +436,6 @@ namespace Civilization1Remaster.Engine
 				this.owner.World.StarshipMarkers &= 0x7ffe;
 			}
 
-			this.processor.RegAcc.Value16 = result;
 
 			// Far return
 			this.processor.Journal.CloseScope("ImportGame");
@@ -563,7 +561,6 @@ namespace Civilization1Remaster.Engine
 
 			StoreGameContent(this.processor.PullText(CPU.AsLinearAddress(this.processor.SegData.Value16, docnameAddr)));
 
-			this.processor.RegAcc.Value16 = 0x1;
 
 			this.processor.Journal.CloseScope("StoreGame");
 
@@ -643,7 +640,6 @@ namespace Civilization1Remaster.Engine
 
 					this.owner.Dialogs.DisplayMenu(TextBuffer.Address, 100, 80, 1);
 
-					this.processor.RegAcc.Value16 = 0xffff;
 					this.processor.Journal.CloseScope("QueryForStoreDrive");
 
 					return 0xffff;
@@ -653,7 +649,6 @@ namespace Civilization1Remaster.Engine
 			this.processor.EmitGlobalByte(SaveFileNameAddress, (byte)((byte)SaveDrive + 0x61));
 
 			drive = SaveDrive;
-			this.processor.RegAcc.Value16 = drive;
 
 			// Far return
 			this.processor.Journal.CloseScope("QueryForStoreDrive");
@@ -696,7 +691,6 @@ namespace Civilization1Remaster.Engine
 				}
 			}
 
-			this.processor.RegAcc.Value16 = ready;
 
 			this.processor.Journal.CloseScope("VerifyDrive");
 
