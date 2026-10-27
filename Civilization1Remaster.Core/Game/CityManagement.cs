@@ -1,4 +1,4 @@
-﻿
+
 using System;
 using Civilization1Remaster.Emulation;
 using Civilization1Remaster.Engine;
@@ -339,7 +339,6 @@ namespace Civilization1Remaster.Game
 			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 			MapViewHoriz = (ushort)((short)town.Place.X - 5);
 			MapViewVert = (ushort)((short)town.Place.Y - 3);
-			this.processor.RegSource.Value16 = (ushort)(townIdx * 0x1c);
 
 			this.owner.MapOps.RenderMapTile(town.Place.X, town.Place.Y);
 
@@ -372,9 +371,7 @@ namespace Civilization1Remaster.Game
 
 				this.owner.MapOps.RenderMapTile(horizLoc, vertLoc);
 
-				this.processor.RegSource.Value16 = (ushort)(tile << 1);
 				ushort spot = (ushort)(short)(10 * this.owner.TownDeltas[tile].X + this.owner.TownDeltas[tile].Y * 2);
-				this.processor.RegDest.Value16 = spot;
 
 				if (this.round.Frame(0x8e - spot) != 0)
 				{
@@ -415,7 +412,6 @@ namespace Civilization1Remaster.Game
 				{
 					this.round.Index = troop;
 					this.processor.RegBase.Value16 = (ushort)(owner * UnitMemory.ParticipantStride);
-					this.processor.RegSource.Value16 = (ushort)(troop * UnitMemory.TroopStride);
 
 					if (this.troops.Pull(owner, troop, UnitMemory.Kind) == 0 && this.troops.PullSigned(owner, troop, UnitMemory.BaseTown) == townIdx)
 					{
@@ -463,7 +459,6 @@ namespace Civilization1Remaster.Game
 		/// <summary>The starving city is lost (see FeedCity); false</summary>
 		private bool LoseStarvingCity(City town, short townIdx)
 		{
-			this.processor.RegSource.Value16 = (ushort)(townIdx * 0x1c);
 			this.owner.Advisors.FinalizeProduction(townIdx, (ushort)(short)town.Place.X, (ushort)(short)town.Place.Y);
 			this.owner.NewGameWizard.EliminateCivilization((short)CityOwner, 0);
 			this.owner.Startup.DisplayMouseCursor();
@@ -474,14 +469,12 @@ namespace Civilization1Remaster.Game
 		private bool GrowCity(City town, short townIdx)
 		{
 			// Growth
-			this.processor.RegSource.Value16 = (ushort)(townIdx * 0x1c);
 
 			if ((short)((town.TrueExtent + 1) * (short)this.round.CostFactor) > town.GrainTally)
 				return true;
 
 			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 			town.TrueExtent++;
-			this.processor.RegSource.Value16 = (ushort)(townIdx * 0x1c);
 
 			// A granary keeps half of the food
 			town.GrainTally = (short)(town.Has(CityStructure.Granary) ? (short)(5 * town.TrueExtent) + 5 : 0);
@@ -533,7 +526,6 @@ namespace Civilization1Remaster.Game
 			{
 				this.round.Index = troop;
 				this.processor.RegBase.Value16 = (ushort)(owner * UnitMemory.ParticipantStride);
-				this.processor.RegSource.Value16 = (ushort)(troop * UnitMemory.TroopStride);
 
 				if (this.troops.Pull(owner, troop, UnitMemory.Kind) == 0xff || this.troops.PullSigned(owner, troop, UnitMemory.BaseTown) != townIdx)
 					continue;
@@ -558,7 +550,6 @@ namespace Civilization1Remaster.Game
 					}
 
 					this.processor.RegBase.Value16 = (ushort)(owner * UnitMemory.ParticipantStride);
-					this.processor.RegSource.Value16 = (ushort)(troop * UnitMemory.TroopStride);
 				}
 
 				if (this.troops.Pull(owner, troop, UnitMemory.Kind) == 0)
@@ -584,7 +575,6 @@ namespace Civilization1Remaster.Game
 			for (; (short)tile < (short)CityTiles; tile++)
 			{
 				this.round.Index = tile;
-				this.processor.RegSource.Value16 = (ushort)(tile << 1);
 				int unavailable = 0x3e - (ushort)(tile << 1);
 				this.round.SetFrame(unavailable, 0);
 
@@ -606,7 +596,6 @@ namespace Civilization1Remaster.Game
 				if (this.round.Value != 0xffff && this.round.Value != CityOwner)
 				{
 					// A tile of another player
-					this.processor.RegDest.Value16 = shared;
 					this.processor.RegAcc.Value16 = 1;
 					this.round.SetFrame(0x8e - shared, 1);
 					this.round.SetFrame(unavailable, 1);
@@ -617,7 +606,6 @@ namespace Civilization1Remaster.Game
 				}
 
 				// A tile worked by a neighbouring city
-				this.processor.RegDest.Value16 = shared;
 
 				if (this.round.Frame(0x8e - shared) != 0)
 					this.round.SetFrame(unavailable, 1);
@@ -629,7 +617,6 @@ namespace Civilization1Remaster.Game
 				uint mask = ~(1u << (tile & 0xff));
 				this.processor.RegCount.Value16 = (ushort)mask;
 				this.processor.RegBase.Value16 = (ushort)(mask >> 16);
-				this.processor.RegSource.Value16 = (ushort)(townIdx * 0x1c);
 				town.LaborerMarkers0 &= this.processor.RegCount.Value16;
 				town.LaborerMarkers1 &= this.processor.RegBase.Value16;
 			}
@@ -696,7 +683,6 @@ namespace Civilization1Remaster.Game
 					if (this.round.Workers == 0 || !TestWorker(townIdx, tile))
 						continue;
 
-					this.processor.RegSource.Value16 = (ushort)(tile << 1);
 					this.round.SetFrame(0x3e - ((ushort)(tile << 1)), 1);
 
 					RenderCityTile(townIdx, tile, marker);
@@ -739,7 +725,6 @@ namespace Civilization1Remaster.Game
 
 			this.processor.RegCount.Value16 = (ushort)(mask & town.LaborerMarkers0);
 			this.processor.RegBase.Value16 = (ushort)(((mask >> 16) & town.LaborerMarkers1) | this.processor.RegCount.Value16);
-			this.processor.RegSource.Value16 = (ushort)(townIdx * 0x1c);
 
 			return this.processor.RegBase.Value16 != 0;
 		}
@@ -866,7 +851,6 @@ namespace Civilization1Remaster.Game
 							(short)CityFood - (town.TrueExtent * 2) - ((short)this.round.SettlerFood * (short)CitySettlers), 1, 99);
 						short weight = (short)(16 / divisor);
 						this.processor.RegCount.Value16 = (ushort)weight;
-						this.processor.RegSource.Value16 = (ushort)weight;
 
 						short yield = (short)MayCityWorkTile(horizLoc, vertLoc, 0);
 						this.round.TileFood = (ushort)yield;
@@ -874,7 +858,6 @@ namespace Civilization1Remaster.Game
 
 						// Shields
 						yield = (short)MayCityWorkTile(horizLoc, vertLoc, 1);
-						this.processor.RegSource.Value16 = (ushort)yield;
 						this.round.TileShields = (ushort)yield;
 
 						divisor = (short)this.owner.Helpers.VerifyValueSpan((short)CityShields - (short)CityUnitUpkeep, 1, 99);
@@ -884,7 +867,6 @@ namespace Civilization1Remaster.Game
 
 						// Trade
 						yield = (short)MayCityWorkTile(horizLoc, vertLoc, 2);
-						this.processor.RegSource.Value16 = (ushort)yield;
 						this.round.TileTrade = (ushort)yield;
 
 						divisor = (short)this.owner.Helpers.VerifyValueSpan((short)CityTrade, 1, 99);
@@ -920,7 +902,6 @@ namespace Civilization1Remaster.Game
 				(((uint)this.round.WorkersHigh << 16) | this.round.WorkersLow);
 			this.processor.RegCount.Value16 = (ushort)workers;
 			this.processor.RegBase.Value16 = (ushort)(workers >> 16);
-			this.processor.RegSource.Value16 = (ushort)(townIdx * 0x1c);
 			town.LaborerMarkers0 = this.processor.RegCount.Value16;
 			town.LaborerMarkers1 = this.processor.RegBase.Value16;
 			this.round.WorkersGained = (ushort)-(short)this.round.Workers;
@@ -932,7 +913,6 @@ namespace Civilization1Remaster.Game
 		{
 			City town = this.owner.World.Towns[townIdx];
 
-			this.processor.RegSource.Value16 = (ushort)(tile << 1);
 
 			if (this.round.Frame(0x3e - (tile << 1)) != 0)
 				return false;
@@ -947,7 +927,6 @@ namespace Civilization1Remaster.Game
 		{
 			ushort tile = this.round.Found;
 
-			this.processor.RegSource.Value16 = (ushort)(tile << 1);
 			this.round.SetFrame(0x3e - ((ushort)(tile << 1)), 1);
 
 			RenderCityTile(townIdx, tile, marker);
@@ -1029,8 +1008,6 @@ namespace Civilization1Remaster.Game
 			{
 				// The wonder powers the cities on its continent
 				short marvelIdx = this.owner.World.MarvelTownIdx[15];
-				this.processor.RegSource.Value16 = (ushort)(marvelIdx * 0x1c);
-				this.processor.RegDest.Value16 = (ushort)(townIdx * 0x1c);
 
 				this.round.Continent = this.owner.MapOps.ObtainContinentID(this.owner.World.Towns[marvelIdx].Place.X, this.owner.World.Towns[marvelIdx].Place.Y);
 
@@ -1096,7 +1073,6 @@ namespace Civilization1Remaster.Game
 			short owner = (short)CityOwner;
 
 			// The food and the shields of the turn
-			this.processor.RegSource.Value16 = (ushort)(townIdx * 0x1c);
 			this.processor.RegCount.Value16 = (ushort)(town.TrueExtent * 2);
 			this.processor.RegAcc.Value16 = (ushort)((short)this.round.SettlerFood * (short)CitySettlers);
 			this.processor.RegData.Value16 = (ushort)(CityFood - ((ushort)((short)this.round.SettlerFood * (short)CitySettlers)) - this.processor.RegCount.Value16);
@@ -1116,7 +1092,6 @@ namespace Civilization1Remaster.Game
 				return ProductionStep.Improvement;
 
 			// A unit
-			this.processor.RegSource.Value16 = (ushort)(townIdx * 0x1c);
 			this.processor.RegBase.Value16 = (ushort)(town.PresentMakingIdx * UnitKindTable.Stride);
 			short cost = (short)((short)this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + UnitKindTable.Origin + UnitKindTable.Price)) *
 				(short)this.round.CostFactor);
@@ -1129,7 +1104,6 @@ namespace Civilization1Remaster.Game
 			if (town.PresentMakingIdx == 0 && town.TrueExtent == 1 && this.owner.World.HardnessTier == 0)
 				return ProductionStep.SettlersWait;
 
-			this.processor.RegSource.Value16 = (ushort)(townIdx * 0x1c);
 			this.processor.RegBase.Value16 = (ushort)(town.PresentMakingIdx * UnitKindTable.Stride);
 			town.MaterialsTally -= cost;
 			this.round.NewUnit = 0xffff;
@@ -1137,7 +1111,6 @@ namespace Civilization1Remaster.Game
 			if (owner == this.owner.World.PersonParticipantIdx || town.PresentMakingIdx != 0x1a)
 			{
 				// (a computer player builds no diplomats)
-				this.processor.RegSource.Value16 = (ushort)(townIdx * 0x1c);
 				this.round.NewUnit = this.owner.UnitOps.ConstructUnit(owner, town.PresentMakingIdx, town.Place.X, town.Place.Y);
 			}
 
@@ -1155,7 +1128,6 @@ namespace Civilization1Remaster.Game
 				// The barracks make it veteran
 				short troopIdx = (short)this.round.NewUnit;
 				this.processor.RegBase.Value16 = (ushort)(owner * UnitMemory.ParticipantStride);
-				this.processor.RegSource.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
 				this.troops.Assign(owner, troopIdx, UnitMemory.Status, (byte)(this.troops.Pull(owner, troopIdx, UnitMemory.Status) | 0x20));
 			}
 
@@ -1178,9 +1150,7 @@ namespace Civilization1Remaster.Game
 			if (size != 1)
 				return ProductionStep.UnitBuilt;
 
-			this.processor.RegSource.Value16 = (ushort)(townIdx * 0x1c);
 			this.owner.Advisors.FinalizeProduction(townIdx, (ushort)(short)town.Place.X, (ushort)(short)town.Place.Y);
-			this.processor.RegSource.Value16 = (ushort)(townIdx * 0x1c);
 			this.round.NewUnit = this.owner.UnitOps.ConstructUnit(owner, town.PresentMakingIdx, town.Place.X, town.Place.Y);
 			this.owner.NewGameWizard.EliminateCivilization((short)CityOwner, 0);
 			this.owner.Startup.DisplayMouseCursor();
@@ -1295,7 +1265,6 @@ namespace Civilization1Remaster.Game
 				if (other.ParticipantIdx != this.owner.World.PersonParticipantIdx || other.ConditionMarker == 0xff)
 					continue;
 
-				this.processor.RegSource.Value16 = (ushort)(otherIdx * 0x1c);
 				this.round.Value = this.owner.Helpers.LocateNearestUnit(owner, (short)this.round.NewUnit, other.Place.X, other.Place.Y);
 
 				this.processor.RegAcc.Value16 = (ushort)(FoundDistance - 3);
@@ -1321,13 +1290,10 @@ namespace Civilization1Remaster.Game
 
 				// The unit must stand on land of the continent of the city
 				short troopIdx = (short)this.round.Value;
-				this.processor.RegSource.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride + owner * UnitMemory.ParticipantStride);
 
 				if (this.owner.MapOps.ObtainTerrainType(this.troops.PullSigned(owner, troopIdx, UnitMemory.Horiz), this.troops.PullSigned(owner, troopIdx, UnitMemory.Vert)) == MapRules.OceanTerrain)
 					continue;
 
-				this.processor.RegSource.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride + owner * UnitMemory.ParticipantStride);
-				this.processor.RegDest.Value16 = (ushort)(otherIdx * 0x1c);
 
 				this.round.Continent = this.owner.MapOps.ObtainContinentID(this.troops.PullSigned(owner, troopIdx, UnitMemory.Horiz), this.troops.PullSigned(owner, troopIdx, UnitMemory.Vert));
 				if (this.owner.MapOps.ObtainContinentID(other.Place.X, other.Place.Y) != this.round.Continent)
@@ -1347,7 +1313,6 @@ namespace Civilization1Remaster.Game
 
 			if ((short)this.round.Best <= 3)
 			{
-				this.processor.RegSource.Value16 = (ushort)(owner << 4);
 				this.processor.RegCount.LowByte = 4;
 				this.processor.RegBase.Value16 = (ushort)(this.owner.World.PersonParticipantIdx << 1);
 
@@ -1355,7 +1320,6 @@ namespace Civilization1Remaster.Game
 				{
 					// The diplomat goes from the unit 0x108 to the city 0xb0
 					short fromIdx = (short)this.round.Found;
-					this.processor.RegSource.Value16 = (ushort)(fromIdx * UnitMemory.TroopStride + owner * UnitMemory.ParticipantStride);
 					this.round.NewUnit = this.owner.UnitOps.ConstructUnit(owner, 0x1a,
 						this.troops.PullSigned(owner, fromIdx, UnitMemory.Horiz), this.troops.PullSigned(owner, fromIdx, UnitMemory.Vert));
 
@@ -1364,7 +1328,6 @@ namespace Civilization1Remaster.Game
 						short troopIdx = (short)this.round.NewUnit;
 						City target = this.owner.World.Towns[this.round.Target];
 						this.processor.RegBase.Value16 = (ushort)(owner * UnitMemory.ParticipantStride);
-						this.processor.RegSource.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
 						this.troops.Assign(owner, troopIdx, UnitMemory.TravelHoriz, (byte)(sbyte)target.Place.X);
 						this.troops.Assign(owner, troopIdx, UnitMemory.TravelVert, (byte)(sbyte)target.Place.Y);
 					}
@@ -1374,7 +1337,6 @@ namespace Civilization1Remaster.Game
 			}
 
 			// The shields come back
-			this.processor.RegSource.Value16 = (ushort)(townIdx * 0x1c);
 			this.processor.RegBase.Value16 = (ushort)(town.PresentMakingIdx * UnitKindTable.Stride);
 			town.MaterialsTally += (short)((short)this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + UnitKindTable.Origin + UnitKindTable.Price)) *
 				(short)this.round.CostFactor);
@@ -1393,7 +1355,6 @@ namespace Civilization1Remaster.Game
 			City town = this.owner.World.Towns[townIdx];
 			short owner = (short)CityOwner;
 
-			this.processor.RegSource.Value16 = (ushort)(townIdx * 0x1c);
 			this.processor.RegCount.Value16 = 0x1e;
 			this.processor.RegBase.Value16 = (ushort)(-town.PresentMakingIdx * 0x1e);
 
@@ -1447,13 +1408,11 @@ namespace Civilization1Remaster.Game
 				uint mask = 1u << ((byte)(built - 1) & 0xff);
 				this.processor.RegCount.Value16 = (ushort)mask;
 				this.processor.RegBase.Value16 = (ushort)(mask >> 16);
-				this.processor.RegSource.Value16 = (ushort)(townIdx * 0x1c);
 				town.StructureMarkers0 |= this.processor.RegCount.Value16;
 				town.StructureMarkers1 |= this.processor.RegBase.Value16;
 			}
 
 			// The price paid
-			this.processor.RegSource.Value16 = (ushort)(townIdx * 0x1c);
 			this.processor.RegCount.Value16 = 0x1e;
 			this.processor.RegBase.Value16 = (ushort)(-town.PresentMakingIdx * 0x1e);
 			town.MaterialsTally -= (short)((short)BuildingWordAt(this.processor.RegBase.Value16, BuildingTable.Price) *
@@ -1487,7 +1446,6 @@ namespace Civilization1Remaster.Game
 			}
 			else
 			{
-				this.processor.RegSource.Value16 = (ushort)(townIdx * 0x1c);
 				this.owner.World.ChartSight[town.Place.X, town.Place.Y] = -1;
 			}
 
@@ -1529,7 +1487,6 @@ namespace Civilization1Remaster.Game
 
 			this.processor.RegCount.Value16 = (ushort)(mask & town.StructureMarkers0);
 			this.processor.RegBase.Value16 = (ushort)(((mask >> 16) & town.StructureMarkers1) | this.processor.RegCount.Value16);
-			this.processor.RegSource.Value16 = (ushort)(townIdx * 0x1c);
 
 			return this.processor.RegBase.Value16 != 0;
 		}
@@ -1597,7 +1554,6 @@ namespace Civilization1Remaster.Game
 			}
 			else
 			{
-				this.processor.RegSource.Value16 = (ushort)(owner << 1);
 				Player ahead = this.owner.World.Participants[person];
 				Player computer = this.owner.World.Participants[owner];
 
@@ -1674,7 +1630,6 @@ namespace Civilization1Remaster.Game
 
 				if (!told)
 				{
-					this.processor.RegSource.Value16 = (ushort)(person << 4);
 					this.processor.RegCount.LowByte = 4;
 					this.processor.RegBase.Value16 = (ushort)(owner << 1);
 					told = (this.owner.World.Participants[person].Relations[owner] & 0x40) != 0;
@@ -1727,7 +1682,6 @@ namespace Civilization1Remaster.Game
 				if (other.ConditionMarker == 0xff || other.ParticipantIdx == owner)
 					continue;
 
-				this.processor.RegSource.Value16 = (ushort)(otherIdx * 0x1c);
 				other.ShownExtent = other.TrueExtent;
 
 				this.processor.RegCount.Value16 = (ushort)(byte)(1 << (owner & 0x1f));
@@ -1842,7 +1796,6 @@ namespace Civilization1Remaster.Game
 			// An improvement of a city with the flag 1
 			if ((town.ConditionMarker & 1) != 0 && town.PresentMakingIdx < 0 && town.MaterialsTally != 0)
 			{
-				this.processor.RegSource.Value16 = (ushort)(0x1c * townIdx);
 				this.round.Amount = (ushort)this.owner.Helpers.VerifyValueSpan(
 					(short)BuildingWord(-town.PresentMakingIdx, BuildingTable.Price) * (short)this.round.CostFactor -
 						town.MaterialsTally,
@@ -1898,7 +1851,6 @@ namespace Civilization1Remaster.Game
 		{
 			City town = this.owner.World.Towns[townIdx];
 
-			this.processor.RegSource.Value16 = (ushort)(0x1c * townIdx);
 			this.round.Amount = (ushort)this.owner.Helpers.VerifyValueSpan(
 				(short)UnitKindWord(town.PresentMakingIdx, UnitKindTable.Price) * (short)this.round.CostFactor -
 					town.MaterialsTally,
@@ -2111,7 +2063,6 @@ namespace Civilization1Remaster.Game
 					throw new Exception("Division by zero");
 
 				this.processor.RegBase.Value16 = (ushort)town.TrueExtent;
-				this.processor.RegSource.Value16 = (ushort)(owner << 1);
 				short spread = (short)((short)(townIdx % step + player.TownTally - step) / step);
 				this.processor.RegAcc.Value16 = (ushort)(spread + town.TrueExtent + this.owner.World.HardnessTier - 6);
 				this.processor.RegCount.Value16 = (ushort)step;
@@ -2300,7 +2251,6 @@ namespace Civilization1Remaster.Game
 						break;
 
 					short troopIdx = (short)this.round.NewUnit;
-					this.processor.RegSource.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
 					this.processor.RegBase.Value16 = (ushort)(this.troops.TroopKind(owner, troopIdx) * UnitKindTable.Stride);
 
 					if (this.troops.KindField(owner, troopIdx, UnitKindTable.AssaultPower) != 0)
@@ -2317,7 +2267,6 @@ namespace Civilization1Remaster.Game
 					}
 
 					this.processor.RegBase.Value16 = (ushort)(owner * UnitMemory.ParticipantStride);
-					this.processor.RegSource.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
 					this.round.NewUnit = (ushort)this.troops.PullSigned(owner, troopIdx, UnitMemory.FollowingInStack);
 					this.processor.RegAcc.Value16 = this.round.Value;
 
@@ -2333,7 +2282,6 @@ namespace Civilization1Remaster.Game
 					if (CityUnhappy == 0)
 						continue;
 
-					this.processor.RegSource.Value16 = (ushort)(townIdx * 0x1c);
 					this.processor.RegBase.Value16 = slot;
 
 					if ((byte)town.Unfamiliar[slot] == 0xff)
@@ -2424,9 +2372,7 @@ namespace Civilization1Remaster.Game
 			{
 				// The wonder 13 on the continent of the city
 				short marvelIdx = this.owner.World.MarvelTownIdx[13];
-				this.processor.RegSource.Value16 = (ushort)(marvelIdx * 0x1c);
 				ushort marvelContinent = this.owner.MapOps.ObtainContinentID(this.owner.World.Towns[marvelIdx].Place.X, this.owner.World.Towns[marvelIdx].Place.Y);
-				this.processor.RegDest.Value16 = marvelContinent;
 				if (this.owner.MapOps.ObtainContinentID((short)this.round.Horiz, (short)this.round.Vert) == marvelContinent)
 					CityUnhappy = (ushort)(CityUnhappy - 2);
 			}
@@ -2488,7 +2434,6 @@ namespace Civilization1Remaster.Game
 			short troopIdx = (short)this.round.Index;
 
 			this.processor.RegBase.Value16 = (ushort)(owner * UnitMemory.ParticipantStride);
-			this.processor.RegSource.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
 
 			if (this.troops.Pull(owner, troopIdx, UnitMemory.Kind) != 0xff && this.troops.PullSigned(owner, troopIdx, UnitMemory.BaseTown) == townIdx)
 			{
@@ -2549,7 +2494,6 @@ namespace Civilization1Remaster.Game
 				this.round.Selected = otherIdx;
 				short other = (short)otherIdx;
 				this.processor.RegBase.Value16 = (ushort)(owner * UnitMemory.ParticipantStride);
-				this.processor.RegSource.Value16 = (ushort)(otherIdx * UnitMemory.TroopStride);
 
 				if (this.troops.Pull(owner, other, UnitMemory.Kind) == 0xff || this.troops.PullSigned(owner, other, UnitMemory.BaseTown) != townIdx ||
 					this.troops.PullSigned(owner, other, UnitMemory.Kind) >= 0x1a)
@@ -2557,8 +2501,6 @@ namespace Civilization1Remaster.Game
 					continue;
 				}
 
-				this.processor.RegSource.Value16 = (ushort)(townIdx * 0x1c);
-				this.processor.RegDest.Value16 = (ushort)(otherIdx * UnitMemory.TroopStride + owner * UnitMemory.ParticipantStride);
 
 				this.round.Distance = (ushort)this.owner.Helpers.ObtainDistance(town.Place.X, this.troops.PullSigned(owner, other, UnitMemory.Horiz),
 					town.Place.Y, this.troops.PullSigned(owner, other, UnitMemory.Vert));
@@ -2585,7 +2527,6 @@ namespace Civilization1Remaster.Game
 				else if ((short)this.round.Best > 0)
 				{
 					this.processor.RegBase.Value16 = (ushort)(owner * UnitMemory.ParticipantStride);
-					this.processor.RegSource.Value16 = (ushort)(farthest * UnitMemory.TroopStride);
 
 					if (this.troops.KindField(owner, farthest, UnitKindTable.LandGroup) == UnitKindTable.LandUnits && this.troops.Pull(owner, farthest, UnitMemory.Kind) != 0)
 					{
@@ -2605,7 +2546,6 @@ namespace Civilization1Remaster.Game
 					.City(townIdx)
 					.Text(" can't support\n");
 				this.processor.RegBase.Value16 = (ushort)(owner * UnitMemory.ParticipantStride);
-				this.processor.RegSource.Value16 = (ushort)(farthest * UnitMemory.TroopStride);
 				this.processor.RegAcc.Value16 = (ushort)(this.troops.TroopKind(owner, farthest) * UnitKindTable.Stride + UnitKindTable.Origin);
 				this.owner.Words.Append(this.processor.RegAcc.Value16);
 				this.owner.Words.Append(".\n Unit Disbanded.\n");
@@ -2631,7 +2571,6 @@ namespace Civilization1Remaster.Game
 			Player player = this.owner.World.Participants[owner];
 
 			this.processor.RegBase.Value16 = (ushort)(owner * UnitMemory.ParticipantStride);
-			this.processor.RegSource.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
 
 			if (this.troops.PullSigned(owner, troopIdx, UnitMemory.Kind) < 0x1a)
 			{
@@ -2683,7 +2622,6 @@ namespace Civilization1Remaster.Game
 			this.owner.Services.RenderPictureToScreen(ScreenBox, (short)this.round.DrawHoriz, (short)this.round.DrawVert,
 				SpritePicture((this.troops.Pull(owner, troopIdx, UnitMemory.Kind) + (owner << 5) + 0x40)));
 
-			this.processor.RegSource.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride + owner * UnitMemory.ParticipantStride);
 			RenderMiniMapDot(this.troops.Pull(owner, troopIdx, UnitMemory.Horiz), this.troops.Pull(owner, troopIdx, UnitMemory.Vert), 7);
 
 			this.round.DrawHoriz = (ushort)(this.round.DrawHoriz + 0x10);
@@ -2711,7 +2649,6 @@ namespace Civilization1Remaster.Game
 				return;
 
 			this.processor.RegBase.Value16 = (ushort)(owner * UnitMemory.ParticipantStride);
-			this.processor.RegSource.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
 
 			if (this.troops.Pull(owner, troopIdx, UnitMemory.Kind) == 0xff || marker != 1 ||
 				this.troops.Pull(owner, troopIdx, UnitMemory.Horiz) != this.round.Horiz ||
@@ -2725,7 +2662,6 @@ namespace Civilization1Remaster.Game
 			// The abbreviation of the home city (3 letters and a dot)
 			this.owner.Words.Clear();
 			this.processor.RegBase.Value16 = (ushort)(owner * UnitMemory.ParticipantStride);
-			this.processor.RegSource.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
 			this.owner.Conquest.ObtainCityLabel(this.troops.PullSigned(owner, troopIdx, UnitMemory.BaseTown));
 			this.owner.Words[3] = 0x2e;
 			this.owner.Words[4] = 0;
@@ -2733,7 +2669,6 @@ namespace Civilization1Remaster.Game
 
 			ushort drawn = this.round.UnitsDrawn;
 			this.round.UnitsDrawn = (ushort)(drawn + 1);
-			this.processor.RegSource.Value16 = (ushort)(drawn << 1);
 			this.processor.RegAcc.Value16 = (ushort)troopIdx;
 			this.round.SetFrame(0x74 - ((ushort)(drawn << 1)), (ushort)troopIdx);
 			this.round.UnitHoriz = (ushort)(this.round.UnitHoriz + 0x12);
@@ -2825,7 +2760,6 @@ namespace Civilization1Remaster.Game
 				uint mask = 1u << (improvement & 0xff);
 				this.processor.RegCount.Value16 = (ushort)(mask & town.StructureMarkers0);
 				this.processor.RegBase.Value16 = (ushort)(((mask >> 16) & town.StructureMarkers1) | this.processor.RegCount.Value16);
-				this.processor.RegSource.Value16 = (ushort)(townIdx * 0x1c);
 
 				if (this.processor.RegBase.Value16 == 0)
 					continue;
@@ -3022,12 +2956,10 @@ namespace Civilization1Remaster.Game
 			for (ushort grain = 0; ; grain++)
 			{
 				this.round.Index = grain;
-				this.processor.RegSource.Value16 = (ushort)(0x1c * townIdx);
 				if ((short)this.owner.Helpers.VerifyValueSpan(town.GrainTally, 0, (town.TrueExtent + 1) * (short)this.round.CostFactor) <= (short)grain)
 					break;
 
 				short perRow = (short)(town.TrueExtent + 1);
-				this.processor.RegSource.Value16 = (ushort)perRow;
 				this.owner.Services.RenderPictureToScreen(ScreenBox,
 					(((short)this.round.Index % perRow) * (short)this.round.Value) + 4,
 					(((short)this.round.Index / perRow) * (short)this.round.DrawVert) + 116,
@@ -3987,9 +3919,6 @@ namespace Civilization1Remaster.Game
 			int horiz = town.Place.X + this.owner.TownDeltas[tile].X;
 			int vert = town.Place.Y + this.owner.TownDeltas[tile].Y;
 
-			// SI and DI as the original leaves them (the menus keep them on the stack)
-			this.processor.RegSource.Value16 = (ushort)(tile << 1);
-			this.processor.RegDest.Value16 = (ushort)(townIdx * 0x1c);
 
 			if ((this.owner.World.ChartSight[(ushort)(short)horiz, (ushort)(short)vert] & (short)(1 << (byte)CityOwner)) == 0)
 				return CityScreenStep.Restart;
@@ -4003,13 +3932,11 @@ namespace Civilization1Remaster.Game
 			if ((Workers() & bit) == 0)
 			{
 				ushort place = (ushort)(short)((10 * this.owner.TownDeltas[tile].X) + (this.owner.TownDeltas[tile].Y * 2));
-				this.processor.RegDest.Value16 = place;
 
 				if (this.round.Frame(0x8e - place) != 0)
 					return CityScreenStep.Redraw;
 			}
 
-			this.processor.RegSource.Value16 = (ushort)(townIdx * 0x1c);
 			uint workers = Workers() ^ bit;
 			town.LaborerMarkers0 = (ushort)workers;
 			town.LaborerMarkers1 = (ushort)(workers >> 16);
@@ -4034,7 +3961,6 @@ namespace Civilization1Remaster.Game
 				for (ushort resource = 0; resource < 3; resource++)
 				{
 					this.round.Item = resource;
-					this.processor.RegSource.Value16 = (ushort)(tile << 1);
 					this.round.Amount = MayCityWorkTile(town.Place.X + this.owner.TownDeltas[tile].X, town.Place.Y + this.owner.TownDeltas[tile].Y, resource);
 					ushort word = (ushort)((resource << 1) + 0x70da);
 					this.processor.EmitUInt16(this.processor.SegData.Value16, word,
@@ -4042,14 +3968,12 @@ namespace Civilization1Remaster.Game
 				}
 
 				this.round.Item = 3;
-				this.processor.RegSource.Value16 = (ushort)(tile << 1);
 				this.owner.MapOps.RenderMapTile(town.Place.X + this.owner.TownDeltas[tile].X, town.Place.Y + this.owner.TownDeltas[tile].Y);
 				CitySpecialists = (ushort)(CitySpecialists + 1);
 				this.round.Workers = (ushort)(this.round.Workers + 1);
 			}
 
 			// The specialists in the top six bits
-			this.processor.RegSource.Value16 = (ushort)(townIdx * 0x1c);
 			uint counted = (uint)((short)this.round.Workers << 26) + (Workers() & 0x3ffffff);
 			town.LaborerMarkers0 = (ushort)counted;
 			town.LaborerMarkers1 = (ushort)(counted >> 16);
@@ -4068,7 +3992,6 @@ namespace Civilization1Remaster.Game
 			for (ushort slot = 0; slot < 2; slot++)
 			{
 				this.round.Index = slot;
-				this.processor.RegSource.Value16 = (ushort)(townIdx * 0x1c);
 				this.processor.RegBase.Value16 = slot;
 
 				if ((byte)town.Unfamiliar[slot] != 0xff)
@@ -4104,7 +4027,6 @@ namespace Civilization1Remaster.Game
 		{
 			if (town.PresentMakingIdx >= 0)
 			{
-				this.processor.RegSource.Value16 = (ushort)(town.PresentMakingIdx << 1);
 
 				if (withBase)
 					this.processor.RegBase.Value16 = (ushort)(owner * 0x38);
@@ -4118,7 +4040,6 @@ namespace Civilization1Remaster.Game
 		{
 			if (town.PresentMakingIdx >= 0)
 			{
-				this.processor.RegSource.Value16 = (ushort)(town.PresentMakingIdx << 1);
 
 				if (withBase)
 					this.processor.RegBase.Value16 = (ushort)(owner * 0x38);
@@ -4503,7 +4424,6 @@ namespace Civilization1Remaster.Game
 			for (; (short)improvement < 0x18; improvement++)
 			{
 				this.round.Item = improvement;
-				this.processor.RegSource.Value16 = (ushort)(townIdx * 0x1c);
 				uint bit = 1u << (byte)improvement;
 
 				if ((town.Structures & bit) == 0 || player.RegimeKind == 0)
@@ -4555,7 +4475,6 @@ namespace Civilization1Remaster.Game
 
 			if ((town.ConditionMarker & 4) != 0)
 			{
-				this.processor.RegSource.Value16 = (ushort)(townIdx * 0x1c);
 				if (this.owner.UnitOps.ContainsAdjacentForeignUnit(town.ParticipantIdx, town.Place.X, town.Place.Y) == 0)
 					this.owner.UnitOps.KeepUnitsInCityList(townIdx);
 			}
@@ -4599,7 +4518,6 @@ namespace Civilization1Remaster.Game
 				for (ushort row = 0; row < 5; row++)
 				{
 					this.round.Vert = row;
-					this.processor.RegSource.Value16 = (ushort)(column * 0xa + row * 2);
 					this.round.SetFrame(0xa6 - ((ushort)(column * 0xa + row * 2)), 0);
 				}
 
@@ -4625,7 +4543,6 @@ namespace Civilization1Remaster.Game
 				if (other.ConditionMarker == 0xff || otherIdx == (ushort)townIdx)
 					continue;
 
-				this.processor.RegSource.Value16 = (ushort)(otherIdx * 0x1c);
 
 				short distance = (short)(ushort)this.owner.Helpers.ObtainDistance((short)this.round.Horiz, other.Place.X, (short)this.round.Vert, other.Place.Y);
 				this.round.Target = (ushort)distance;
@@ -4650,7 +4567,6 @@ namespace Civilization1Remaster.Game
 					uint mask = 1u << tile;
 					this.processor.RegCount.Value16 = (ushort)(mask & other.LaborerMarkers0);
 					this.processor.RegBase.Value16 = (ushort)(((mask >> 16) & other.LaborerMarkers1) | this.processor.RegCount.Value16);
-					this.processor.RegSource.Value16 = (ushort)(otherIdx * 0x1c);
 
 					if (this.processor.RegBase.Value16 == 0 && tile != 20)
 						continue;
@@ -4669,9 +4585,9 @@ namespace Civilization1Remaster.Game
 						continue;
 
 					this.processor.RegCount.Value16 = 0xa;
-					this.processor.RegSource.Value16 = (ushort)((horizLoc - (short)this.round.Horiz) * 0xa +
-						((vertLoc - (short)this.round.Vert) << 1));
-					this.round.SetFrame(0x8e - this.processor.RegSource.Value16, 1);
+					int frameOffset = (horizLoc - (short)this.round.Horiz) * 0xa +
+						((vertLoc - (short)this.round.Vert) << 1);
+					this.round.SetFrame(0x8e - frameOffset, 1);
 				}
 
 				this.round.Index = 21;
