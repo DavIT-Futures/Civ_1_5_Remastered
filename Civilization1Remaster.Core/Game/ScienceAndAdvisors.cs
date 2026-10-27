@@ -672,7 +672,7 @@ namespace Civilization1Remaster.Game
 				return 1;
 
 			if (participantIdx == 0)
-				return (ushort)((this.processor.PullUInt8(0x3772, 0x520) & 7) != 0 ? 7 : 3);
+				return (ushort)((this.owner.World.ScienceLeadingFoundVia[56] & 7) != 0 ? 7 : 3);
 
 			return null;
 		}

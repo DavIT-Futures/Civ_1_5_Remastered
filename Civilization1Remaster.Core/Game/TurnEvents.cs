@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using Civilization1Remaster.Emulation;
@@ -13,6 +13,27 @@ namespace Civilization1Remaster.Game
 	/// </summary>
 	public class TurnEvents : GameModule
 	{
+		private const ushort BankruptcyWarningDialogAddress = 0x1c2a;
+		private const ushort RetirementContinuePromptAddress = 0x1cf0;
+		private const ushort EndGameTitlePictureAddress = 0x1cf8;
+		private const ushort EndGameTitlePaletteAddress = 0x1d05;
+
+		private const ushort TravellersReportGunpowderAddress = 0x1d26;
+		private const ushort TravellersReportIronWorkingAddress = 0x1d3f;
+		private const ushort TravellersReportAncientAddress = 0x1d53;
+
+		private const ushort MenuBarGameLabelAddress = 0x1d6f;
+		private const ushort MenuBarOrdersLabelAddress = 0x1d75;
+		private const ushort MenuBarAdvisorsLabelAddress = 0x1d7d;
+		private const ushort MenuBarWorldLabelAddress = 0x1d87;
+		private const ushort MenuBarCivilopediaLabelAddress = 0x1d8e;
+
+		private const ushort EraBcStringAddress = 0x1df0;
+		private const ushort EraAdStringAddress = 0x1df4;
+
+		private const ushort AdvisorPaletteResourceAddress = 0x1e56;
+		private const ushort PalaceSectionSpritesTableAddress = 0xd21c;
+
 		public TurnEvents(GameEngine owner)
 			: base(owner)
 		{
@@ -552,7 +573,7 @@ namespace Civilization1Remaster.Game
 
 			this.owner.Words.Clear();
 
-			this.owner.BlockText.DisplayTextDialog(0x1c2a);
+			this.owner.BlockText.DisplayTextDialog(BankruptcyWarningDialogAddress);
 
 			DialogStyle = 0x4;
 
@@ -802,7 +823,7 @@ namespace Civilization1Remaster.Game
 			{
 				this.owner.Words.Clear();
 
-				this.owner.BlockText.DisplayTextDialog(0x1cf0);
+				this.owner.BlockText.DisplayTextDialog(RetirementContinuePromptAddress);
 
 				// The first line goes on with the game, the second one ends it
 				GameEndRequest = (ushort)(1 - DisplayDialog(TextBuffer.Address, 80, 80));
@@ -865,13 +886,13 @@ namespace Civilization1Remaster.Game
 
 			this.owner.Startup.QueryForDisk(1, 1);
 
-			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x1cf8, 0);
+			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, EndGameTitlePictureAddress, 0);
 
 			this.owner.Startup.ConcealMouseCursor();
 
 			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 0);
 
-			this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, 0x1d05, 1);
+			this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, EndGameTitlePaletteAddress, 1);
 
 			this.owner.VideoCard.RenderImage(
 				BackScreenBox,
@@ -1017,15 +1038,15 @@ namespace Civilization1Remaster.Game
 
 				if ((this.owner.World.ScienceLeadingFoundVia[35] & 7) != 0)
 				{
-					this.owner.Words.Append(0x1d26);
+					this.owner.Words.Append(TravellersReportGunpowderAddress);
 				}
-				else if ((this.processor.PullUInt8(this.processor.SegExtra.Value16, 0x4f4) & 7) != 0)
+				else if ((this.owner.World.ScienceLeadingFoundVia[34] & 7) != 0)
 				{
-					this.owner.Words.Append(0x1d3f);
+					this.owner.Words.Append(TravellersReportIronWorkingAddress);
 				}
 				else
 				{
-					this.owner.Words.Append(0x1d53);
+					this.owner.Words.Append(TravellersReportAncientAddress);
 				}
 
 				this.owner.Conquest.ObtainCityLabel((short)townIdx);
@@ -1197,15 +1218,15 @@ namespace Civilization1Remaster.Game
 			// function body
 			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 8, 0);
 
-			this.owner.TextPainter.RenderTextToScreen0(0x1d6f, 8, 1, 15);
+			this.owner.TextPainter.RenderTextToScreen0(MenuBarGameLabelAddress, 8, 1, 15);
 
-			this.owner.TextPainter.RenderTextToScreen0(0x1d75, 64, 1, 15);
+			this.owner.TextPainter.RenderTextToScreen0(MenuBarOrdersLabelAddress, 64, 1, 15);
 
-			this.owner.TextPainter.RenderTextToScreen0(0x1d7d, 128, 1, 15);
+			this.owner.TextPainter.RenderTextToScreen0(MenuBarAdvisorsLabelAddress, 128, 1, 15);
 
-			this.owner.TextPainter.RenderTextToScreen0(0x1d87, 192, 1, 15);
+			this.owner.TextPainter.RenderTextToScreen0(MenuBarWorldLabelAddress, 192, 1, 15);
 
-			this.owner.TextPainter.RenderTextToScreen0(0x1d8e, 240, 1, 15);
+			this.owner.TextPainter.RenderTextToScreen0(MenuBarCivilopediaLabelAddress, 240, 1, 15);
 
 			// Far return
 			this.processor.Journal.CloseScope("WipeStatusLine");
@@ -1456,7 +1477,7 @@ namespace Civilization1Remaster.Game
 					int height = this.owner.Helpers.VerifyValueSpan(sectionLevel - 1, 0, 3);
 
 					this.owner.Services.RenderPictureToScreen(ScreenBox, (7 * sectionIdx) + horizLoc, vertLoc - 1,
-						this.processor.PullGlobalWord((ushort)((0x28 * SectionWord(styles, sectionIdx)) + ((((short)height * 5) + shape) << 1) + 0xd21c)));
+						this.processor.PullGlobalWord((ushort)((0x28 * SectionWord(styles, sectionIdx)) + ((((short)height * 5) + shape) << 1) + PalaceSectionSpritesTableAddress)));
 				}
 			}
 
@@ -1510,7 +1531,7 @@ namespace Civilization1Remaster.Game
 		{
 			this.owner.Words.Append(this.owner.Libc.IntegerToText(Math.Abs(this.owner.World.Season), 10));
 
-			this.owner.Words.Append((ushort)((this.owner.World.Season >= 0) ? 0x1df4 : 0x1df0));
+			this.owner.Words.Append((ushort)((this.owner.World.Season >= 0) ? EraAdStringAddress : EraBcStringAddress));
 		}
 
 		/// <summary>
@@ -1608,12 +1629,10 @@ namespace Civilization1Remaster.Game
 			if (this.owner.World.MarvelTownIdx[wonderIdx] != -1)
 				return false;
 
-			ushort wonder = (ushort)(0x1e * wonderIdx);
-
-			if (this.owner.World.Towns[cityIdx].TrueExtent <= CPU.SignedQuotient((short)this.processor.PullGlobalWord((ushort)(wonder + 0xe82)), 10))
+			if (this.owner.World.Towns[cityIdx].TrueExtent <= CPU.SignedQuotient((short)BuildingWord(24 + wonderIdx, BuildingTable.Price), 10))
 				return false;
 
-			if (this.owner.Advisors.PlayerKnowsTechnology((short)rivalIdx, (short)this.processor.PullGlobalWord((ushort)(wonder + 0xe86))) == 0)
+			if (this.owner.Advisors.PlayerKnowsTechnology((short)rivalIdx, (short)BuildingWord(24 + wonderIdx, BuildingTable.Technology)) == 0)
 				return false;
 
 			this.owner.World.MarvelTownIdx[wonderIdx] = (short)cityIdx;
@@ -1626,11 +1645,11 @@ namespace Civilization1Remaster.Game
 				.Text(" (")
 				.Text(CivilizationName(rivalIdx))
 				.Text(")\nbuilds ")
-				.Text((ushort)(wonder + 0xe6a))
+				.Text(BuildingRecordText(24 + wonderIdx))
 				.Text(".\n");
 
 			this.owner.World.Participants[rivalIdx].Gold -= (short)this.owner.Helpers.VerifyValueSpan(this.owner.World.Participants[rivalIdx].Gold / 3, 0,
-				(10 * (short)this.processor.PullGlobalWord((ushort)(wonder + 0xe82))) - this.owner.World.Towns[cityIdx].MaterialsTally);
+				(10 * (short)BuildingWord(24 + wonderIdx, BuildingTable.Price)) - this.owner.World.Towns[cityIdx].MaterialsTally);
 
 			if (WorldMapView != 1)
 			{
@@ -1744,7 +1763,7 @@ namespace Civilization1Remaster.Game
 
 				this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, docname, 0xc1d6);
 
-				this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, 0x1e56, 0xc5be);
+				this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, AdvisorPaletteResourceAddress, 0xc5be);
 
 				this.owner.Libc.CopyBytes(0xc744, 0xc35c, 0x180);
 

@@ -1,4 +1,4 @@
-﻿using Civilization1Remaster.Emulation;
+using Civilization1Remaster.Emulation;
 using Civilization1Remaster.Engine;
 using Civilization1Remaster.Game;
 
@@ -71,14 +71,14 @@ namespace Civilization1Remaster.UI
 			while (this.introPathFound == 0);
 		}
 
-		/// <summary>The first letter of the driver name (0x1a22): m = VGA / MCGA (0xd762), e = EGA (0xb20e)</summary>
+		/// <summary>The first letter of the driver name: m = VGA / MCGA (0xd762), e = EGA (0xb20e)</summary>
 		private void DetectGraphicsDriver()
 		{
-			bool colourful = this.processor.PullGlobalByte(0x1a22) == 0x6d || this.processor.PullGlobalByte(0x1a22) == 0x4d;
+			bool colourful = this.processor.PullGlobalByte(GameStartup.VideoDriverOptionAddress) == 0x6d || this.processor.PullGlobalByte(GameStartup.VideoDriverOptionAddress) == 0x4d;
 			VgaMode = (ushort)(colourful ? 1 : 0);
 			this.processor.RegAcc.Value16 = VgaMode;
 
-			bool ega = this.processor.PullGlobalByte(0x1a22) == 0x65 || this.processor.PullGlobalByte(0x1a22) == 0x45;
+			bool ega = this.processor.PullGlobalByte(GameStartup.VideoDriverOptionAddress) == 0x65 || this.processor.PullGlobalByte(GameStartup.VideoDriverOptionAddress) == 0x45;
 			EgaMode = (ushort)(ega ? 1 : 0);
 			this.processor.RegAcc.Value16 = EgaMode;
 

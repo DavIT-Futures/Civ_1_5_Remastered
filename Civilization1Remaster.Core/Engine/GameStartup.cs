@@ -1,4 +1,4 @@
-﻿using Civilization1Remaster.Emulation;
+using Civilization1Remaster.Emulation;
 
 namespace Civilization1Remaster.Engine
 {
@@ -7,9 +7,9 @@ namespace Civilization1Remaster.Engine
 	/// </summary>
 	public class GameStartup : GameModule
 	{
-		private const ushort VideoDriverOptionAddress = 0x1a22;
-		private const ushort SoundDriverOptionAddress = 0x1a30;
-		private const ushort DiskNumberPromptAddress = 0x1ade;
+		public const ushort VideoDriverOptionAddress = 0x1a22;
+		public const ushort SoundDriverOptionAddress = 0x1a30;
+		public const ushort DiskNumberPromptAddress = 0x1ade;
 
 
 		/// <summary>The words of the frame of TitleLogoAndMainChoices, shared by its helpers (B3: in C#, new for every call)</summary>

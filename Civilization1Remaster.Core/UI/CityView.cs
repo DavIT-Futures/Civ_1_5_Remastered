@@ -1,4 +1,4 @@
-﻿using Civilization1Remaster.Emulation;
+using Civilization1Remaster.Emulation;
 using System;
 using Civilization1Remaster.Game.State;
 
@@ -821,32 +821,45 @@ namespace Civilization1Remaster.UI
 
 			this.processor.SegExtra.Value16 = CitySceneryBoxes;
 
-			if ((short)this.processor.PullUInt16(CitySceneryBoxes, 0xc) > 0x12c)
+			if ((short)SceneryBoxField(1, SceneryBoxRight) > 0x12c)
 			{
 				for (int boxIdx = 1; boxIdx <= 0x15; boxIdx++)
 				{
-					ushort box = (ushort)(boxIdx << 3);
-
-					this.processor.EmitUInt16(CitySceneryBoxes, (ushort)(box + 4),
-						(ushort)(this.processor.PullUInt16(CitySceneryBoxes, (ushort)(box + 4)) - this.processor.PullUInt16(CitySceneryBoxes, box) + 1));
-					this.processor.EmitUInt16(CitySceneryBoxes, (ushort)(box + 6),
-						(ushort)(this.processor.PullUInt16(CitySceneryBoxes, (ushort)(box + 6)) - this.processor.PullUInt16(CitySceneryBoxes, (ushort)(box + 2)) + 1));
+					SetSceneryBoxField(boxIdx, SceneryBoxWidth,
+						(ushort)(SceneryBoxField(boxIdx, SceneryBoxRight) - SceneryBoxField(boxIdx, SceneryBoxLeft) + 1));
+					SetSceneryBoxField(boxIdx, SceneryBoxHeight,
+						(ushort)(SceneryBoxField(boxIdx, SceneryBoxBottom) - SceneryBoxField(boxIdx, SceneryBoxTop) + 1));
 				}
 			}
 
-			ushort picked = (ushort)(arg1 << 3);
-
 			this.owner.VideoCard.ScreenToPicture(1,
-				this.processor.PullUInt16(CitySceneryBoxes, picked),
-				this.processor.PullUInt16(CitySceneryBoxes, (ushort)(picked + 2)),
-				this.processor.PullUInt16(CitySceneryBoxes, (ushort)(picked + 4)),
-				this.processor.PullUInt16(CitySceneryBoxes, (ushort)(picked + 6)));
+				SceneryBoxField(arg1, SceneryBoxLeft),
+				SceneryBoxField(arg1, SceneryBoxTop),
+				SceneryBoxField(arg1, SceneryBoxWidth),
+				SceneryBoxField(arg1, SceneryBoxHeight));
 
 			this.processor.Journal.CloseScope("SeizeCityScenery");
 		}
 
 		/// <summary>The segment of the rectangles of the city view pictures</summary>
 		private const ushort CitySceneryBoxes = 0x3767;
+		private const int SceneryBoxStride = 8;
+		private const int SceneryBoxLeft = 0;
+		private const int SceneryBoxTop = 2;
+		private const int SceneryBoxRight = 4;
+		private const int SceneryBoxBottom = 6;
+		private const int SceneryBoxWidth = 4;
+		private const int SceneryBoxHeight = 6;
+
+		private const ushort ParadeAutomobilePictureAddress = 0x4f08;
+		private const ushort ParadeTrainPictureAddress = 0x4f15;
+		private const ushort ParadeWalkPictureAddress = 0x4f22;
+
+		private ushort SceneryBoxField(int boxIdx, int fieldOffset) =>
+			this.processor.PullUInt16(CitySceneryBoxes, (ushort)((boxIdx * SceneryBoxStride) + fieldOffset));
+
+		private void SetSceneryBoxField(int boxIdx, int fieldOffset, ushort value) =>
+			this.processor.EmitUInt16(CitySceneryBoxes, (ushort)((boxIdx * SceneryBoxStride) + fieldOffset), value);
 
 		/// <summary>
 		/// The parade of the player's people over the bottom of the screen until a key or a click (frame by frame, 10 timer
@@ -872,13 +885,13 @@ namespace Civilization1Remaster.UI
 
 			if (this.owner.Advisors.PlayerKnowsTechnology(participantIdx, 0x22) != 0)
 			{
-				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, this.owner.Advisors.PlayerKnowsTechnology(participantIdx, 0x3a) != 0 ? (ushort)0x4f08 : (ushort)0x4f15, 0);
+				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, this.owner.Advisors.PlayerKnowsTechnology(participantIdx, 0x3a) != 0 ? ParadeAutomobilePictureAddress : ParadeTrainPictureAddress, 0);
 
 				CutParadePictures(pictures, 0, 0x3d, 2, 0x3c);
 			}
 			else
 			{
-				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x4f22, 0);
+				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, ParadeWalkPictureAddress, 0);
 
 				CutParadePictures(pictures, 1, 0x42, 1, 0x41);
 			}

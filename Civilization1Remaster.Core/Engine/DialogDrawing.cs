@@ -1,4 +1,4 @@
-﻿using Civilization1Remaster.Emulation;
+using Civilization1Remaster.Emulation;
 
 namespace Civilization1Remaster.Engine
 {
@@ -7,7 +7,10 @@ namespace Civilization1Remaster.Engine
 	/// </summary>
 	public class DialogDrawing : GameModule
 	{
-
+		private const ushort MenuItemHotkeysTableAddress = 0xdc4a;
+		private const ushort AdvisorTitlesTableAddress = 0x2fa6;
+		private const ushort AdvisorPortraitsTableAddress = 0xdf62;
+		private const ushort MenuLineOffsetsTableAddress = 0x654e;
 
 		public DialogDrawing(GameEngine owner)
 			: base(owner)
@@ -202,7 +205,7 @@ namespace Civilization1Remaster.Engine
 							while ((short)searchIdx < 0x20)
 							{
 								this.processor.RegBase.Value16 = searchIdx;
-								byte hotkey = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(searchIdx + 0xdc4a));
+								byte hotkey = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(searchIdx + MenuItemHotkeysTableAddress));
 
 								if (hotkey != 0xff)
 								{
@@ -447,7 +450,7 @@ namespace Civilization1Remaster.Engine
 				else
 				{
 					ushort titleAddr = (ushort)(this.processor.RegFrame.Value16 - 0x50);
-					this.owner.Libc.CopyText(titleAddr, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((advisor << 1) + 0x2fa6)));
+					this.owner.Libc.CopyText(titleAddr, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((advisor << 1) + AdvisorTitlesTableAddress)));
 
 					if ((short)advisor <= 2)
 					{
@@ -475,7 +478,7 @@ namespace Civilization1Remaster.Engine
 					{
 						this.owner.Services.RenderPictureToScreen(ScreenBox,
 							horizLoc - 40, vertLoc - 5,
-							this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((advisor << 1) + 0xdf62)));
+							this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((advisor << 1) + AdvisorPortraitsTableAddress)));
 					}
 					else if (portraitExtra > 0)
 					{
@@ -555,7 +558,7 @@ namespace Civilization1Remaster.Engine
 				if (drawLine)
 				{
 					ushort lineSlot = (ushort)(lineIdx << 1);
-					ushort nextLineStart = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(lineSlot + 0x6550));
+					ushort nextLineStart = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(lineSlot + MenuLineOffsetsTableAddress + 2));
 					this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(charsAddr + nextLineStart - 1), 0);
 
 					bool checkedOption = optionIdx >= 0 &&
@@ -563,7 +566,7 @@ namespace Civilization1Remaster.Engine
 
 					if (checkedOption)
 					{
-						ushort lineAddr = (ushort)(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(lineSlot + 0x654e)) + charsAddr);
+						ushort lineAddr = (ushort)(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(lineSlot + MenuLineOffsetsTableAddress)) + charsAddr);
 						this.processor.EmitUInt8(this.processor.SegData.Value16, lineAddr, 0x5e);
 
 						ushort hue = (ushort)(((1 << (optionIdx & 0x1f)) & DisabledLines) != 0 ? 3 : 0);
@@ -573,7 +576,7 @@ namespace Civilization1Remaster.Engine
 							((short)lineIdx * (short)MenuLineHeight) + vertLoc + 5,
 							hue);
 
-						ushort restoreAddr = (ushort)(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(lineSlot + 0x654e)) + charsAddr);
+						ushort restoreAddr = (ushort)(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(lineSlot + MenuLineOffsetsTableAddress)) + charsAddr);
 						this.processor.EmitUInt8(this.processor.SegData.Value16, restoreAddr, 0x20);
 					}
 					else
@@ -581,7 +584,7 @@ namespace Civilization1Remaster.Engine
 						if (optionIdx < 0 && (short)MenuLineHeight > 9)
 						{
 							this.owner.TextPainter.RenderTextToScreen0(
-								(ushort)(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(lineSlot + 0x654e)) + charsAddr),
+								(ushort)(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(lineSlot + MenuLineOffsetsTableAddress)) + charsAddr),
 								horizLoc + 5,
 								((short)lineIdx * (short)MenuLineHeight) + vertLoc + 6,
 								0);
@@ -602,17 +605,17 @@ namespace Civilization1Remaster.Engine
 						this.processor.StackWord(hue);
 
 						this.owner.TextPainter.RenderTextToScreen0(
-							(ushort)(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(lineSlot + 0x654e)) + charsAddr),
+							(ushort)(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(lineSlot + MenuLineOffsetsTableAddress)) + charsAddr),
 							horizLoc + 5,
 							((short)lineIdx * (short)MenuLineHeight) + vertLoc + 5,
 							hue);
 					}
 
-					ushort endOffset = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(lineSlot + 0x6550));
+					ushort endOffset = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(lineSlot + MenuLineOffsetsTableAddress + 2));
 					this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(charsAddr + endOffset - 1), 0xa);
 				}
 
-				ushort nextOffset = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((lineIdx << 1) + 0x6550));
+				ushort nextOffset = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((lineIdx << 1) + MenuLineOffsetsTableAddress + 2));
 				byte nextLineChar = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(charsAddr + nextOffset));
 
 				if (nextLineChar == 0x20 || nextLineChar == 0x5f)
