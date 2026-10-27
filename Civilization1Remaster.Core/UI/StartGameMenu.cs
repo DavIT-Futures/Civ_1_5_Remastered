@@ -4,6 +4,16 @@ namespace Civilization1Remaster.UI
 {
 	public class StartGameMenu : GameModule
 	{
+		private const ushort SoundDriverOptionAddress = 0x1a30;
+		private const ushort PalaceSectionLevelsAddress = 0xd91e;
+		private const ushort PalaceSectionStylesAddress = 0xb222;
+		private const ushort ParticipantCountersAddress = 0xd20c;
+		private const ushort LeaderEarthStartPositionTableAddress = 0x35da;
+		private const ushort VgaPaletteBufferAddress = 0x6b34;
+		private const ushort ImportedPaletteBufferAddress = 0xbdf4;
+		private const ushort VgaUnitSpritesTableAddress = 0xb886;
+		private const ushort AdvisorTitleTextTableAddress = 0x2fac;
+
 		public StartGameMenu(GameEngine owner)
 			: base(owner)
 		{
@@ -175,7 +185,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.World.SessionPrefMarkers = 0xfa;
 
-			if (this.processor.PullGlobalByte(0x1a30) == 0x4e)
+			if (this.processor.PullGlobalByte(SoundDriverOptionAddress) == 0x4e)
 			{
 				this.owner.World.SessionPrefMarkers &= 0x7fef;
 			}
@@ -236,14 +246,14 @@ namespace Civilization1Remaster.UI
 
 			for (int idx = 0; idx < 0xc; idx++)
 			{
-				this.processor.EmitGlobalWord((ushort)(0xd91e + (idx << 1)), 0xffff);
-				this.processor.EmitGlobalWord((ushort)(0xb222 + (idx << 1)), 0x0);
+				this.processor.EmitGlobalWord((ushort)(PalaceSectionLevelsAddress + (idx << 1)), 0xffff);
+				this.processor.EmitGlobalWord((ushort)(PalaceSectionStylesAddress + (idx << 1)), 0x0);
 			}
 
 			for (int idx = 3; idx <= 5; idx++)
 			{
 				this.processor.EmitGlobalWord((ushort)(0xd92a + (idx << 1)), 0);
-				this.processor.EmitGlobalWord((ushort)(0xd91e + (idx << 1)), 0);
+				this.processor.EmitGlobalWord((ushort)(PalaceSectionLevelsAddress + (idx << 1)), 0);
 			}
 
 			bool randomTribe = this.owner.World.PersonParticipantIdx == 0;
@@ -489,7 +499,7 @@ namespace Civilization1Remaster.UI
 				this.Troops.AssignAt(troop, UnitMemory.Status, 0x0);
 			}
 
-			this.processor.EmitGlobalWord((ushort)(0xd20c + (participantIdx << 1)), 0);
+			this.processor.EmitGlobalWord((ushort)(ParticipantCountersAddress + (participantIdx << 1)), 0);
 			player.Tally = 0;
 
 			if (participantIdx == this.owner.World.PersonParticipantIdx)
@@ -585,8 +595,8 @@ namespace Civilization1Remaster.UI
 				// EARTH: the start place of the leader
 				ushort place = (ushort)(player.ChiefVisuals << 1);
 
-				horizLoc = (sbyte)this.processor.PullGlobalByte((ushort)(place + 0x35da));
-				vertLoc = (sbyte)this.processor.PullGlobalByte((ushort)(place + 0x35db));
+				horizLoc = (sbyte)this.processor.PullGlobalByte((ushort)(place + LeaderEarthStartPositionTableAddress));
+				vertLoc = (sbyte)this.processor.PullGlobalByte((ushort)(place + LeaderEarthStartPositionTableAddress + 1));
 				attemptTally = 0;
 			}
 
@@ -1151,7 +1161,7 @@ namespace Civilization1Remaster.UI
 
 				for (int idx = 0; idx < 0x30; idx++)
 				{
-					this.processor.EmitGlobalByte((ushort)(0x6b34 + idx), this.processor.PullGlobalByte((ushort)(0xbdf4 + idx)));
+					this.processor.EmitGlobalByte((ushort)(VgaPaletteBufferAddress + idx), this.processor.PullGlobalByte((ushort)(ImportedPaletteBufferAddress + idx)));
 				}
 			}
 
@@ -1243,7 +1253,7 @@ namespace Civilization1Remaster.UI
 			{
 				for (int column = 0; column < 0x10; column++)
 				{
-					ushort entry = (ushort)(0xb886 + (row << 5) + (column << 1));
+					ushort entry = (ushort)(VgaUnitSpritesTableAddress + (row << 5) + (column << 1));
 
 					// Rows 6 - 9 (and all rows with 0x1a3e) have one sprite, repeated in every column
 					if ((row >= 6 || LowMemoryVga != 0) && column != 0)
@@ -1307,22 +1317,24 @@ namespace Civilization1Remaster.UI
 				BackScreenBox, 0, 0x80);
 
 			ushort colours = (ushort)(playerIdx << 1);
+			ushort primaryColour = PlayerColourAt(colours);
+			ushort secondaryColour = PlayerSecondaryColourAt(colours);
 
-			if (this.processor.PullGlobalWord((ushort)(0x1946 + colours)) == 0xf)
+			if (primaryColour == 0xf)
 			{
 				this.owner.VideoCard.SubstituteHue(BackScreenBox, 0, 128, 320, 32, 15, 11);
 			}
 
-			if (this.processor.PullGlobalWord((ushort)(0x1946 + colours)) == 0x7)
+			if (primaryColour == 0x7)
 			{
 				this.owner.VideoCard.SubstituteHue(BackScreenBox, 0, 128, 320, 32, 7, 3);
 			}
 
 			this.owner.VideoCard.SubstituteHue(BackScreenBox, 0, 128, 320, 32, 10,
-				(byte)this.processor.PullGlobalWord((ushort)(0x1946 + colours)));
+				(byte)primaryColour);
 
 			this.owner.VideoCard.SubstituteHue(BackScreenBox, 0, 128, 320, 32, 2,
-				(byte)this.processor.PullGlobalWord((ushort)(0x1956 + colours)));
+				(byte)secondaryColour);
 
 			for (int idx = 0; idx < 0x1c; idx++)
 			{
@@ -1394,7 +1406,7 @@ namespace Civilization1Remaster.UI
 					this.owner.VideoCard.RenderImage(PictureScreenBox, (ushort)((0x28 * advisorIdx) + 0xa0), 0x8c, 0x28, 0x3c,
 						ScreenBox, (ushort)((0x50 * advisorIdx) + 0x14), 0x76);
 
-					this.owner.Words.Set(this.processor.PullGlobalWord((ushort)((advisorIdx << 1) + 0x2fac)));
+					this.owner.Words.Set(this.processor.PullGlobalWord((ushort)((advisorIdx << 1) + AdvisorTitleTextTableAddress)));
 					this.owner.Words[this.owner.Words.Length - 1] = 0x0;
 
 					this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, (80 * advisorIdx) + 40, (advisorIdx & 1) != 0 ? 186 : 180, 0);

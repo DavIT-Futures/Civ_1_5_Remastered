@@ -7,6 +7,10 @@ namespace Civilization1Remaster.Engine
 	/// </summary>
 	public class TextBlockRenderer : GameModule
 	{
+		private const ushort MacroCodesTableAddress = 0x30ae;
+		private const ushort MacroReplacementsTableAddress = 0x30b8;
+
+
 		public TextBlockRenderer(GameEngine owner)
 			: base(owner)
 		{
@@ -23,25 +27,27 @@ namespace Civilization1Remaster.Engine
 
 			short column = 0;
 
-			for (ushort place = TextBuffer.Address; (short)this.owner.Words.Length > (short)(place - TextBuffer.Address); place++)
+			int length = this.owner.Words.Length;
+
+			for (int index = 0; index < length; index++)
 			{
-				if (this.processor.PullGlobalByte(place) == '^')
+				if (this.owner.Words[index] == '^')
 				{
-					this.processor.EmitGlobalByte(place, 0x20);
-					this.processor.EmitGlobalByte((ushort)(place + 1), 0xa);
+					this.owner.Words[index] = 0x20;
+					this.owner.Words[index + 1] = 0xa;
 					column = -1;
 				}
 
-				if (this.processor.PullGlobalByte(place) == 0xa)
+				if (this.owner.Words[index] == 0xa)
 				{
 					column = -1;
 				}
 
 				column++;
 
-				if (column > breadth && this.processor.PullGlobalByte(place) == 0x20 && this.processor.PullGlobalByte((ushort)(place + 1)) != 0x20)
+				if (column > breadth && this.owner.Words[index] == 0x20 && this.owner.Words[index + 1] != 0x20)
 				{
-					this.processor.EmitGlobalByte(place, 0xa);
+					this.owner.Words[index] = 0xa;
 					column = 0;
 				}
 			}
@@ -83,12 +89,11 @@ namespace Civilization1Remaster.Engine
 					continue;
 
 				// The line ends at the last break: draw it alone
-				ushort breakAddr = (ushort)(TextBuffer.Address + lastBreak);
-				byte broken = this.processor.PullGlobalByte(breakAddr);
+				byte broken = this.owner.Words[lastBreak];
 
-				this.processor.EmitGlobalByte(breakAddr, 0);
+				this.owner.Words[lastBreak] = 0;
 				this.owner.TextPainter.RenderTextToScreen0((ushort)(TextBuffer.Address + lineStart), horizLoc, vertLoc, style);
-				this.processor.EmitGlobalByte(breakAddr, broken);
+				this.owner.Words[lastBreak] = broken;
 
 				vertLoc += (short)lineHeight;
 				lineBreadth = 0;
@@ -286,8 +291,8 @@ namespace Civilization1Remaster.Engine
 
 			for (int codeIdx = 0; codeIdx < 5; codeIdx++)
 			{
-				ushort code = this.processor.PullGlobalWord((ushort)((codeIdx << 1) + 0x30ae));
-				ushort replacement = this.processor.PullGlobalWord((ushort)((codeIdx << 1) + 0x30b8));
+				ushort code = this.processor.PullGlobalWord((ushort)((codeIdx << 1) + MacroCodesTableAddress));
+				ushort replacement = this.processor.PullGlobalWord((ushort)((codeIdx << 1) + MacroReplacementsTableAddress));
 
 				while (true)
 				{
@@ -300,7 +305,7 @@ namespace Civilization1Remaster.Engine
 
 					ushort codeLen = this.owner.Libc.TextLength(code);
 					string rest = this.processor.PullText(CPU.AsLinearAddress(this.processor.SegData.Value16, (ushort)(found + codeLen)));
-					this.processor.EmitGlobalByte(found, 0);
+					this.owner.Words[found - TextBuffer.Address] = 0;
 					this.owner.Words.Append(replacement);
 					this.owner.Words.Append(rest);
 				}
@@ -319,12 +324,14 @@ namespace Civilization1Remaster.Engine
 
 			while ((short)this.owner.TextPainter.ObtainTextWidth(charsAddr) > (short)peakBreadth)
 			{
-				if (this.processor.PullGlobalByte((ushort)(charsAddr + this.owner.Libc.TextLength(charsAddr) - 3)) != 0x20)
+				int len = this.owner.Libc.TextLength(charsAddr);
+
+				if (this.processor.PullGlobalByte((ushort)(charsAddr + len - 3)) != 0x20)
 				{
-					this.processor.EmitGlobalByte((ushort)(charsAddr + this.owner.Libc.TextLength(charsAddr) - 2), 0x2e);
+					this.processor.EmitGlobalByte((ushort)(charsAddr + len - 2), 0x2e);
 				}
 
-				this.processor.EmitGlobalByte((ushort)(charsAddr + this.owner.Libc.TextLength(charsAddr) - 1), 0x0);
+				this.processor.EmitGlobalByte((ushort)(charsAddr + len - 1), 0x0);
 			}
 
 			this.processor.Journal.CloseScope("ShrinkTextToWidth");

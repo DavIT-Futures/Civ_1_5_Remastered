@@ -1576,6 +1576,9 @@ namespace Civilization1Remaster
 		/// <summary>PlayerColour through the offset 2 * index computed before</summary>
 		protected ushort PlayerColourAt(int offset) => this.owner.Tables.Word((ushort)(offset + 0x1946));
 
+		/// <summary>PlayerSecondaryColour through the offset 2 * index computed before</summary>
+		protected ushort PlayerSecondaryColourAt(int offset) => this.owner.Tables.Word((ushort)(offset + 0x1956));
+
 		/// <summary>DirectionHoriz through the offset 2 * index computed before</summary>
 		protected ushort DirectionHorizAt(int offset) => this.owner.Tables.Word((ushort)(offset + 0x1882));
 
