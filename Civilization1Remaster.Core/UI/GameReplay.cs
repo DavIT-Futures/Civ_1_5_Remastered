@@ -750,8 +750,6 @@ namespace Civilization1Remaster.UI
 		public void DisplayConquerorScreen()
 		{
 			this.processor.Journal.OpenScope("DisplayConquerorScreen()");
-			// The frame stays: on some paths the original leaves it on the stack (the tests compare the stack pointer)
-			this.processor.EnterFrame(0x2);
 
 			ReplayAtGameEnd = 0x1;
 
@@ -804,8 +802,6 @@ namespace Civilization1Remaster.UI
 			this.owner.TurnHooks.RepaintMainScreen();
 
 			ReplayAtGameEnd = 0x0;
-
-			this.processor.LeaveFrame();
 
 			this.processor.Journal.CloseScope("DisplayConquerorScreen");
 		}

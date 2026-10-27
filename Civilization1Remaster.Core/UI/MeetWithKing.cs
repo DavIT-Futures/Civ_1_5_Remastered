@@ -33,9 +33,6 @@ namespace Civilization1Remaster.UI
 		public void LaunchAudience(short participantIdx, int horizLoc, int vertLoc, ushort arg4)
 		{
 			this.processor.Journal.OpenScope($"LaunchAudience({participantIdx}, {horizLoc}, {vertLoc}, {arg4})");
-			// The frame stays: on some paths the original leaves it on the stack (the tests compare the stack pointer)
-			this.processor.EnterFrame(0x36);
-			this.processor.PreserveIndexRegisters();
 
 			this.owner.MapOps.KeepKnownTileImprovements(horizLoc, vertLoc);
 			this.owner.MapOps.RepaintMapTile(horizLoc, vertLoc);
@@ -105,8 +102,6 @@ namespace Civilization1Remaster.UI
 			EmissaryAudience = 0;
 			KingAnswer = 0xffff;
 			KingMood = 0xffff;
-			this.processor.RestoreIndexRegisters();
-			this.processor.LeaveFrame();
 			this.processor.Journal.CloseScope("LaunchAudience");
 		}
 

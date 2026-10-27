@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -253,7 +253,6 @@ namespace Civilization1Remaster.Video
 			this.processor.Journal.OpenScope($"DuplicateScreenToMainScreen(0x{displayIdx:x4})");
 
 			// function body
-			this.processor.EnterFrame();
 			this.processor.PreserveSource();
 			this.processor.StackWord(this.processor.RegDest.Value16);
 			this.processor.StackWord(this.processor.SegData.Value16);
@@ -291,7 +290,6 @@ namespace Civilization1Remaster.Video
 			this.processor.SegData.Value16 = this.processor.UnstackWord();
 			this.processor.RestoreDest();
 			this.processor.RestoreSource();
-			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
 			// Far return
 			this.processor.Journal.CloseScope("'CopyScreenToMainScreen'");
 			this.processor.Journal = scratchJournal;

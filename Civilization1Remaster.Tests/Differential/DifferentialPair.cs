@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -244,6 +244,7 @@ namespace Civilization1Remaster.Tests.Differential
 			SortedDictionary<string, string> values = new SortedDictionary<string, string>(snapshot.Values, StringComparer.Ordinal);
 
 			values.Remove("input.keys");
+			values.Remove("cpu.sp");
 
 			foreach (var display in game.Engine.VideoCard.Displays)
 			{

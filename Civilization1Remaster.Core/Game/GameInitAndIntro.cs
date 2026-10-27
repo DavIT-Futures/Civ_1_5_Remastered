@@ -30,9 +30,6 @@ namespace Civilization1Remaster.Game
 		public void OpeningSequence()
 		{
 			this.processor.Journal.OpenScope("OpeningSequence()");
-			// The frame stays: on some paths the original leaves it on the stack (the tests compare the stack pointer)
-			this.processor.EnterFrame(0xe);
-			this.processor.PreserveIndexRegisters();
 
 			this.owner.Startup.QueryForDisk(7, 1);
 
@@ -88,8 +85,6 @@ namespace Civilization1Remaster.Game
 				PictureScreenBox,
 				0, 0);
 
-			this.processor.RestoreIndexRegisters();
-			this.processor.LeaveFrame();
 			this.processor.Journal.CloseScope("OpeningSequence");
 		}
 
