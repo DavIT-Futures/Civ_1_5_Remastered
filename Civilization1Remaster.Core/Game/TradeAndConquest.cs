@@ -352,8 +352,6 @@ namespace Civilization1Remaster.Game
 				CPU.SignedQuotient((short)(victim.Gold * size), divisor) :
 				(short)(CPU.SignedQuotient(victim.Gold, divisor) * size);
 
-			this.processor.RegAcc.Value16 = (ushort)plunder;
-
 			this.processor.Journal.CloseScope("ComputeCityPlunder");
 
 			return (ushort)plunder;
@@ -449,14 +447,6 @@ namespace Civilization1Remaster.Game
 						this.owner.Bot.RefreshCityProduction(participantIdx1, 0xffff);
 					}
 				}
-				else
-				{
-					this.processor.RegAcc.Value16 = 0x47;
-				}
-			}
-			else
-			{
-				this.processor.RegAcc.Value16 = 0;
 			}
 
 			// Far return
@@ -491,7 +481,7 @@ namespace Civilization1Remaster.Game
 		/// <summary>
 		/// Waits for a key or a mouse click; a key is taken (with the second code of an extended key)
 		/// </summary>
-		public void AwaitForKeyPressOrMouseClick()
+		public short AwaitForKeyPressOrMouseClick()
 		{
 			this.processor.Journal.OpenScope("AwaitForKeyPressOrMouseClick()");
 
@@ -506,12 +496,15 @@ namespace Civilization1Remaster.Game
 			}
 			while (this.owner.Libc.KeyAvailable() == 0);
 
-			if (this.owner.GlobDb3a == 0 && this.owner.Libc.ReadKey() == 0)
+			short key = 0;
+			if (this.owner.GlobDb3a == 0 && (key = this.owner.Libc.ReadKey()) == 0)
 			{
-				this.owner.Libc.ReadKey();
+				key = this.owner.Libc.ReadKey();
 			}
 
 			this.processor.Journal.CloseScope("AwaitForKeyPressOrMouseClick");
+
+			return key;
 		}
 
 		/// <summary>
@@ -610,8 +603,6 @@ namespace Civilization1Remaster.Game
 			{
 				home.CommerceTownIndices[replacedIdx] = (sbyte)townIdx;
 			}
-
-			this.processor.RegAcc.Value16 = 1;
 
 			// Far return
 			this.processor.Journal.CloseScope("FoundTradeRoute");

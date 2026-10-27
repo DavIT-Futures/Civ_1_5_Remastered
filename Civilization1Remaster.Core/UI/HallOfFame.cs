@@ -164,12 +164,8 @@ namespace Civilization1Remaster.UI
 				this.owner.Dialogs.RenderBox(236, 187, 60, 10, 11);
 			}
 
-			this.owner.Conquest.AwaitForKeyPressOrMouseClick();
-
-			ushort key = this.processor.RegAcc.Value16;
+			ushort key = (ushort)this.owner.Conquest.AwaitForKeyPressOrMouseClick();
 			ushort result = (ushort)(arg1 != 0xffff && (key == 'c' || key == 'C') ? 1 : 0);
-
-			this.processor.RegAcc.Value16 = result;
 
 			// Far return
 			this.processor.Journal.CloseScope("DisplayHallOfFame");
@@ -331,7 +327,6 @@ namespace Civilization1Remaster.UI
 				slotIdx = -1;
 			}
 
-			this.processor.RegAcc.Value16 = place;
 			this.processor.Journal.CloseScope("AttachHallOfFameRecord");
 
 			return place;

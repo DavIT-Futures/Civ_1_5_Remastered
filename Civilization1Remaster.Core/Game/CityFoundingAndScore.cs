@@ -85,8 +85,6 @@ namespace Civilization1Remaster.Game
 				result = FoundCity(participantIdx, (short)townIdx, horizLoc, vertLoc, townExtent);
 			}
 
-			this.processor.RegAcc.Value16 = result;
-
 			// Far return
 			this.processor.Journal.CloseScope("EstablishCity");
 
@@ -697,7 +695,6 @@ namespace Civilization1Remaster.Game
 				this.owner.Startup.DisplayMouseCursor();
 				this.owner.TurnHooks.RepaintMainScreen();
 
-				this.processor.RegAcc.Value16 = 0;
 				this.processor.Journal.CloseScope("DisplayFinalScore");
 				return 0;
 			}
@@ -925,9 +922,8 @@ namespace Civilization1Remaster.Game
 				this.owner.TurnHooks.RepaintMainScreen();
 			}
 
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.Participants[0].Tally;
 			this.processor.Journal.CloseScope("DisplayFinalScore");
-			return this.processor.RegAcc.Value16;
+			return (ushort)this.owner.World.Participants[0].Tally;
 		}
 
 		/// <summary>

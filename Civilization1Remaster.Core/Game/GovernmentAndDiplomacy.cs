@@ -530,8 +530,6 @@ namespace Civilization1Remaster.Game
 
 			ushort accepted = WeighTreaty(participantIdx1, participantIdx2) ? (ushort)1 : (ushort)0;
 
-			this.processor.RegAcc.Value16 = accepted;
-
 			// Far return
 			this.processor.Journal.CloseScope("AIWeighsTreaty");
 
@@ -628,12 +626,6 @@ namespace Civilization1Remaster.Game
 				this.owner.Advisors.EarnTechnology(participantIdx1, firstGains, participantIdx2);
 
 				this.owner.Advisors.EarnTechnology(participantIdx2, secondGains, participantIdx1);
-
-				this.processor.RegAcc.Value16 = 0x1;
-			}
-			else
-			{
-				this.processor.RegAcc.Value16 = 0;
 			}
 
 			this.processor.Journal.CloseScope("SwapTechnology");
@@ -661,8 +653,6 @@ namespace Civilization1Remaster.Game
 					nearest = distance;
 				}
 			}
-
-			this.processor.RegAcc.Value16 = (ushort)nearest;
 
 			this.processor.Journal.CloseScope("LocateNearestCityOfPlayer");
 

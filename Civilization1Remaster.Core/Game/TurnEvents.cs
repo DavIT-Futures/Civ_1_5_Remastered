@@ -273,8 +273,6 @@ namespace Civilization1Remaster.Game
 
 			this.owner.Startup.DisplayMouseCursor();
 
-			this.processor.RegAcc.Value16 = answer;
-
 			this.processor.Journal.CloseScope("DisplayDialog");
 
 			return answer;
@@ -1506,8 +1504,6 @@ namespace Civilization1Remaster.Game
 
 			ushort score = (ushort)((sum / 2) + 1);
 
-			this.processor.RegAcc.Value16 = score;
-
 			this.processor.Journal.CloseScope("ObtainPalaceScoreForLevel");
 
 			return score;
@@ -1542,7 +1538,7 @@ namespace Civilization1Remaster.Game
 
 			this.owner.World.SmogImpactTier = (short)this.owner.Helpers.VerifyValueSpan((short)(Math.Sign(pull) + this.owner.World.SmogImpactTier), 0, 99);
 
-			if (this.processor.RegAcc.Value16 == 0xc && this.owner.World.DirtyCellTally > 6)
+			if (this.owner.World.SmogImpactTier == 12 && this.owner.World.DirtyCellTally > 6)
 			{
 				this.owner.Words.Set("Scientists alarmed by\nrising temperatures.\nGlobal Warming feared!\n");
 

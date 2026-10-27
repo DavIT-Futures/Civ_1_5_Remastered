@@ -208,9 +208,6 @@ namespace Civilization1Remaster.Game
 			{
 				// Only estimate the odds (used by AI), don't fight
 				int chances = (short)(assault * 8) / (short)(guard + 1);
-				int leftover = (short)(assault * 8) % (short)(guard + 1);
-				this.processor.RegAcc.Value16 = (ushort)chances;
-				this.processor.RegData.Value16 = (ushort)leftover;
 				return FinishSettleBattle((ushort)chances);
 			}
 
@@ -281,7 +278,6 @@ namespace Civilization1Remaster.Game
 
 		private ushort FinishSettleBattle(ushort outcome)
 		{
-			this.processor.RegAcc.Value16 = outcome;
 			this.processor.Journal.CloseScope("SettleBattle");
 			return outcome;
 		}
@@ -714,7 +710,7 @@ namespace Civilization1Remaster.Game
 
 			if ((person.Relations[participantIdx] & 2) != 0)
 			{
-				Message("We have signed a\npeace treaty with\nthe ")
+				ushort choice = Message("We have signed a\npeace treaty with\nthe ")
 					.Text(CivilizationPlural(participantIdx))
 					.Text("!\n Cancel action.\n Break treaty.\n")
 					.Style(0x5)
@@ -722,7 +718,7 @@ namespace Civilization1Remaster.Game
 
 				affirmed = 0xffff;
 
-				if (this.processor.RegAcc.Value16 == 1)
+				if (choice == 1)
 				{
 					if (person.RegimeKind < 4)
 					{
@@ -736,8 +732,6 @@ namespace Civilization1Remaster.Game
 					}
 				}
 			}
-
-			this.processor.RegAcc.Value16 = affirmed;
 
 			this.processor.Journal.CloseScope("AffirmBreakTreaty");
 

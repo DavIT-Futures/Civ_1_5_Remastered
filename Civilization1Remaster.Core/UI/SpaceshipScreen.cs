@@ -270,7 +270,6 @@ namespace Civilization1Remaster.UI
 			this.owner.World.Participants[participantIdx].StarshipInhabitants = (short)SpaceshipColonists;
 
 			ushort result = (ushort)success;
-			this.processor.RegAcc.Value16 = result;
 
 			this.processor.Journal.CloseScope("RenderSpaceship");
 
@@ -589,8 +588,6 @@ namespace Civilization1Remaster.UI
 
 			ushort taken = (ushort)(part != -1 && part < 3 ? 1 : 0);
 
-			this.processor.RegAcc.Value16 = taken;
-
 			this.processor.Journal.CloseScope("ObtainSpaceshipPartValue");
 
 			return taken;
@@ -734,9 +731,6 @@ namespace Civilization1Remaster.UI
 
 				result = 0;
 			}
-
-			this.processor.RegAcc.Value16 = result;
-
 
 			this.processor.Journal.CloseScope("ComputeSpaceshipSuccess");
 
