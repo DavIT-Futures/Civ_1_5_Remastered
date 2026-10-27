@@ -132,9 +132,6 @@ namespace Civilization1Remaster.Game
 				this.owner.MapOps.AssignTileImprovements(2, horizLoc, vertLoc);
 			}
 
-			ushort townOffset = (ushort)(0x1c * townIdx);
-			this.processor.RegSource.Value16 = townOffset;
-
 			town.ConditionMarker = 0;
 			town.Place.X = horizLoc;
 			town.Place.Y = vertLoc;
@@ -155,8 +152,6 @@ namespace Civilization1Remaster.Game
 			if (this.owner.Advisors.PlayerKnowsTechnology(participantIdx, 0x40) != 0)
 				town.PresentMakingIdx = 5;
 
-			this.processor.RegSource.Value16 = townOffset;
-
 			town.Unfamiliar[0] = -1;
 			town.Unfamiliar[1] = -1;
 
@@ -174,8 +169,6 @@ namespace Civilization1Remaster.Game
 				town.StructureMarkers0 = 1;
 				town.StructureMarkers1 = 0;
 			}
-
-			this.processor.RegSource.Value16 = townOffset;
 
 			town.RootCommerce = 0;
 			town.ParticipantIdx = participantIdx;
@@ -211,8 +204,6 @@ namespace Civilization1Remaster.Game
 			}
 			else
 			{
-				this.processor.RegSource.Value16 = townOffset;
-
 				town.PresentMakingIdx = (sbyte)this.owner.Advisors.PickCityProduction(participantIdx, townIdx);
 
 				if (this.owner.CityOps.PlayerEnjoysWonderEffect(person, 0x13) != 0)
@@ -297,8 +288,6 @@ namespace Civilization1Remaster.Game
 
 			for (neighbourIdx = 1; neighbourIdx <= 8; neighbourIdx++)
 			{
-				this.processor.RegSource.Value16 = (ushort)(neighbourIdx << 1);
-
 				int tileHoriz = (short)DirectionHoriz(neighbourIdx) + horizLoc;
 				int tileVert = (short)DirectionVert(neighbourIdx) + vertLoc;
 
@@ -329,8 +318,6 @@ namespace Civilization1Remaster.Game
 
 			for (tileIdx = 0; tileIdx < 0x2d; tileIdx++)
 			{
-				this.processor.RegSource.Value16 = (ushort)(tileIdx << 1);
-
 				short tileHoriz = (short)(ushort)this.owner.Routing.TunePosition((short)DirectionHoriz(tileIdx) + horizLoc);
 				short tileVert = (short)(DirectionVert(tileIdx) + (ushort)vertLoc);
 
@@ -377,18 +364,13 @@ namespace Civilization1Remaster.Game
 			// The final values of the locals stay in the stack frame, like in the original
 
 			City town = this.owner.World.Towns[townIdx];
-			ushort townOffset = (ushort)(0x1c * townIdx);
 
 			// The terrains of the city's tile and its 8 neighbours
 			ushort terrains = 0;
 			ushort neighbourIdx;
 
-			this.processor.RegDest.Value16 = townOffset;
-
 			for (neighbourIdx = 0; neighbourIdx <= 8; neighbourIdx++)
 			{
-				this.processor.RegSource.Value16 = (ushort)(neighbourIdx << 1);
-
 				ushort terrain = this.owner.MapOps.ObtainTerrainType(
 					town.Place.X + (short)DirectionHoriz(neighbourIdx),
 					town.Place.Y + (short)DirectionVert(neighbourIdx));
@@ -420,8 +402,6 @@ namespace Civilization1Remaster.Game
 					break;
 
 				case 1:
-					this.processor.RegSource.Value16 = townOffset;
-
 					if (this.owner.Advisors.PlayerKnowsTechnology(town.ParticipantIdx, 10) == 0 && !town.Has(CityStructure.Aqueduct) &&
 						this.owner.Advisors.PlayerKnowsTechnology(town.ParticipantIdx, (short)BuildingWord(9, BuildingTable.Technology)) != 0)
 					{
@@ -435,8 +415,6 @@ namespace Civilization1Remaster.Game
 				case 2:
 					if ((terrains & 0x800) != 0)
 					{
-						this.processor.RegSource.Value16 = townOffset;
-
 						if (!town.Has(CityStructure.CityWalls) && this.owner.Advisors.PlayerKnowsTechnology(town.ParticipantIdx, (short)BuildingWord(8, BuildingTable.Technology)) != 0)
 						{
 							this.owner.BlockText.DisplayTextDialog(0x4f9d);
@@ -450,8 +428,6 @@ namespace Civilization1Remaster.Game
 				case 3:
 					if ((terrains & 0x20) != 0)
 					{
-						this.processor.RegSource.Value16 = townOffset;
-
 						if (!town.Has(CityStructure.Temple) && this.owner.Advisors.PlayerKnowsTechnology(town.ParticipantIdx, (short)BuildingWord(4, BuildingTable.Technology)) != 0)
 						{
 							this.owner.BlockText.DisplayTextDialog(0x4fa1);
@@ -463,8 +439,6 @@ namespace Civilization1Remaster.Game
 					break;
 
 				case 4:
-					this.processor.RegSource.Value16 = townOffset;
-
 					if (town.TrueExtent != 0 && !town.Has(CityStructure.Granary) &&
 						this.owner.Advisors.PlayerKnowsTechnology(town.ParticipantIdx, (short)BuildingWord(3, BuildingTable.Technology)) != 0)
 					{
@@ -478,8 +452,6 @@ namespace Civilization1Remaster.Game
 					break;
 
 				case 5:
-					this.processor.RegSource.Value16 = townOffset;
-
 					if ((town.StructureMarkers0 & 0xfffe) != 0 && !town.Has(CityStructure.Aqueduct) &&
 						this.owner.Advisors.PlayerKnowsTechnology(town.ParticipantIdx, (short)BuildingWord(9, BuildingTable.Technology)) != 0)
 					{
@@ -494,8 +466,6 @@ namespace Civilization1Remaster.Game
 				case 6:
 					if ((terrains & 0x400) != 0)
 					{
-						this.processor.RegSource.Value16 = townOffset;
-
 						if (!town.Has(CityStructure.Barracks))
 						{
 							this.owner.BlockText.DisplayTextDialog(0x4fc7);
@@ -548,7 +518,6 @@ namespace Civilization1Remaster.Game
 		private void HandleCityRevolt(short townIdx)
 		{
 			City town = this.owner.World.Towns[townIdx];
-			ushort townOffset = (ushort)(0x1c * townIdx);
 
 			this.owner.CityOps.HandleCity(townIdx, -1);
 
@@ -590,13 +559,9 @@ namespace Civilization1Remaster.Game
 			}
 			else
 			{
-				this.processor.RegSource.Value16 = townOffset;
-
 				this.owner.Words.Append(this.owner.Advisors.PlayerKnowsTechnology(town.ParticipantIdx, 0x1d) != 0 &&
 					!town.Has(CityStructure.Cathedral) ? (ushort)0x5026 : (ushort)0x5031);
 			}
-
-			this.processor.RegSource.Value16 = townOffset;
 
 			if (this.owner.World.IsHuman(town.ParticipantIdx))
 			{
@@ -606,8 +571,6 @@ namespace Civilization1Remaster.Game
 
 				this.owner.Words.Clear();
 			}
-
-			this.processor.RegSource.Value16 = townOffset;
 
 			town.GrainTally = 0;
 			town.MaterialsTally = 0;
@@ -624,9 +587,6 @@ namespace Civilization1Remaster.Game
 
 			for (otherIdx = 0; otherIdx < 0x80 && otherIdx != (ushort)townIdx && this.owner.World.Towns[otherIdx].ConditionMarker != 0xff; otherIdx++)
 			{
-				this.processor.RegSource.Value16 = townOffset;
-				this.processor.RegDest.Value16 = (ushort)(0x1c * otherIdx);
-
 				short distance = (short)(ushort)this.owner.Helpers.ObtainDistance(town.Place.X, this.owner.World.Towns[otherIdx].Place.X, town.Place.Y, this.owner.World.Towns[otherIdx].Place.Y);
 
 				this.owner.CityOps.HandleCity((short)otherIdx, -1);
@@ -644,8 +604,6 @@ namespace Civilization1Remaster.Game
 
 			if (rivalIdx == -1)
 				return;
-
-			this.processor.RegSource.Value16 = townOffset;
 
 			if (this.owner.World.Towns[rivalIdx].ParticipantIdx == town.ParticipantIdx)
 				return;
@@ -675,8 +633,6 @@ namespace Civilization1Remaster.Game
 
 			if (this.owner.Words[0] == 0)
 				return;
-
-			this.processor.RegSource.Value16 = (ushort)(0x1c * townIdx);
 
 			if (this.owner.World.IsHuman(town.ParticipantIdx))
 			{
@@ -716,9 +672,6 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"DisplayFinalScore({participantIdx}, {marker})");
 
-			// The original keeps SI for its caller and returns the score in AX (TurnEvents compares them for the palace)
-			ushort savedSource = this.processor.RegSource.Value16;
-
 			if (marker)
 			{
 				ushort screenBufferPtr = ScreenBox;
@@ -744,7 +697,6 @@ namespace Civilization1Remaster.Game
 				this.owner.Startup.DisplayMouseCursor();
 				this.owner.TurnHooks.RepaintMainScreen();
 
-				this.processor.RegSource.Value16 = savedSource;
 				this.processor.RegAcc.Value16 = 0;
 				this.processor.Journal.CloseScope("DisplayFinalScore");
 				return 0;
@@ -973,7 +925,6 @@ namespace Civilization1Remaster.Game
 				this.owner.TurnHooks.RepaintMainScreen();
 			}
 
-			this.processor.RegSource.Value16 = savedSource;
 			this.processor.RegAcc.Value16 = (ushort)this.owner.World.Participants[0].Tally;
 			this.processor.Journal.CloseScope("DisplayFinalScore");
 			return this.processor.RegAcc.Value16;

@@ -37,8 +37,6 @@ namespace Civilization1Remaster.Game
 			{
 				if (participantIdx == person && (this.owner.World.RoundTally & 3) == 0)
 				{
-					this.processor.RegSource.Value16 = (ushort)(participantIdx << 4);
-
 					if ((player.Relations[0] & 4) != 0)
 					{
 						player.Relations[0] &= 0xfffb;
@@ -76,7 +74,6 @@ namespace Civilization1Remaster.Game
 				{
 					SendWarEmissary(participantIdx, otherIdx);
 
-					this.processor.RegSource.Value16 = (ushort)(participantIdx << 4);
 					player.Relations[otherIdx] &= 0xffdf;
 				}
 
@@ -99,8 +96,6 @@ namespace Civilization1Remaster.Game
 			ushort[] relations = this.owner.World.Participants[participantIdx].Relations;
 			ushort[] others = this.owner.World.Participants[otherIdx].Relations;
 
-			this.processor.RegSource.Value16 = (ushort)((participantIdx << 4) + (otherIdx << 1));
-
 			if ((relations[otherIdx] & 0x100) != 0 && this.owner.Libc.Dice.DrawInt(3) == 0)
 			{
 				relations[otherIdx] &= 0xfefd;
@@ -110,14 +105,10 @@ namespace Civilization1Remaster.Game
 			if ((this.owner.World.RoundTally & 0xf) != 0)
 				return;
 
-			this.processor.RegSource.Value16 = (ushort)(otherIdx << 1);
-
 			if ((relations[otherIdx] & 0x10) == 0)
 			{
 				if ((relations[otherIdx] & 1) != 0 && (relations[otherIdx] & 2) == 0)
 				{
-					this.processor.RegDest.Value16 = (ushort)(person << 4);
-
 					ushort[] known = this.owner.World.Participants[person].Relations;
 
 					if (((known[participantIdx] & 0x40) != 0 || (known[otherIdx] & 0x40) != 0) &&
@@ -137,7 +128,6 @@ namespace Civilization1Remaster.Game
 				others[participantIdx] &= 0xfffe;
 			}
 
-			this.processor.RegSource.Value16 = (ushort)(otherIdx << 4);
 			relations[otherIdx] &= 0xffef;
 			others[participantIdx] &= 0xffef;
 		}
@@ -153,9 +143,6 @@ namespace Civilization1Remaster.Game
 			Player player = this.owner.World.Participants[participantIdx];
 			Player other = this.owner.World.Participants[otherIdx];
 
-			this.processor.RegSource.Value16 = (ushort)(otherIdx << 1);
-			this.processor.RegDest.Value16 = (ushort)(participantIdx << 4);
-
 			if ((player.Relations[otherIdx] & 0x20) == 0 ||
 				(this.owner.World.Participants[person].Relations[otherIdx] & 2) == 0 ||
 				(player.Relations[person] & 0x20) != 0)
@@ -167,7 +154,7 @@ namespace Civilization1Remaster.Game
 				{
 					short tribute = (short)((ushort)this.owner.Helpers.VerifyValueSpan(player.Gold / 100, 1, 10) * 0x32);
 
-					this.owner.Libc.CopyText(CodeText2, CivilizationPluralAt(this.processor.RegSource.Value16));
+					this.owner.Libc.CopyText(CodeText2, CivilizationPlural(otherIdx));
 
 					EmptyMessage()
 						.Number(tribute);
@@ -198,8 +185,7 @@ namespace Civilization1Remaster.Game
 
 			// $THEM of the threat: the enemy (the translated code read the offset from DI, player << 4 when nothing called
 			// changes it: TurnEndRules.EmissaryEnemyName)
-			ushort enemyName = this.owner.TurnHooks.ClassicEmissaryThreat ? this.processor.RegDest.Value16 :
-				TurnEndRules.EmissaryEnemyName(participantIdx, otherIdx, classic: false);
+			ushort enemyName = TurnEndRules.EmissaryEnemyName(participantIdx, otherIdx, this.owner.TurnHooks.ClassicEmissaryThreat);
 			this.owner.Libc.CopyText(CodeText2, CivilizationPluralAt(enemyName));
 
 			this.owner.Libc.CopyText(CodeText4, (player.Relations[person] & 2) == 0 ? (ushort)0x299b : (ushort)0x2990);
@@ -247,10 +233,6 @@ namespace Civilization1Remaster.Game
 		public void SwitchGovernment(short participantIdx, short regimeKind)
 		{
 			this.processor.Journal.OpenScope($"SwitchGovernment({participantIdx}, {regimeKind})");
-
-			// DisplayDialog leaves SI in DI: both are given back to the caller as they were
-			ushort source = this.processor.RegSource.Value16;
-			ushort dest = this.processor.RegDest.Value16;
 
 			Player participant = this.owner.World.Participants[participantIdx];
 			short formerRegime = participant.RegimeKind;
@@ -349,9 +331,6 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			this.processor.RegSource.Value16 = source;
-			this.processor.RegDest.Value16 = dest;
-
 			// Far return
 			this.processor.Journal.CloseScope("SwitchGovernment");
 		}
@@ -375,17 +354,10 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"BargainPeaceTreaty({participantIdx1}, {participantIdx2}, {horizLoc}, {vertLoc})");
 
-			// DisplayDialog leaves SI in DI: both are given back to the caller as they were
-			ushort source = this.processor.RegSource.Value16;
-			ushort dest = this.processor.RegDest.Value16;
-
 			if (participantIdx1 != 0 && participantIdx2 != 0)
 			{
 				Bargain(participantIdx1, participantIdx2, horizLoc, vertLoc);
 			}
-
-			this.processor.RegSource.Value16 = source;
-			this.processor.RegDest.Value16 = dest;
 
 			// Far return
 			this.processor.Journal.CloseScope("BargainPeaceTreaty");

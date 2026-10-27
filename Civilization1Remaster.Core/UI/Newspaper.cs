@@ -52,9 +52,6 @@ namespace Civilization1Remaster.UI
 						townIdx = cityIdx;
 					}
 				}
-
-				// The search leaves 0x1c * 127 in SI, and DisplayMenu leaves SI in DI, which goes back to the caller
-				this.processor.RegSource.Value16 = 0x1c * 0x7f;
 			}
 
 			this.owner.Startup.ConcealMouseCursor();

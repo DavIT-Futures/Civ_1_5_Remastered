@@ -1334,7 +1334,6 @@ namespace Civilization1Remaster.Game
 				if ((short)(PopulationMark * 10) < population)
 				{
 					short mark = (short)(population / 10);
-					this.processor.RegSource.Value16 = (ushort)mark;
 
 					this.owner.Words.Append(this.owner.Libc.IntegerToText(mark, 10));
 
@@ -1344,7 +1343,6 @@ namespace Civilization1Remaster.Game
 			else if ((short)((PopulationMark - 9) * 100) < population)
 			{
 				short hundreds = (short)(population / 100);
-				this.processor.RegSource.Value16 = (ushort)hundreds;
 
 				this.owner.Words.Append(this.owner.Libc.IntegerToText(hundreds, 10));
 				this.owner.Words.Append(",0");

@@ -61,15 +61,12 @@ namespace Civilization1Remaster.Game
 
 			for (ushort townIdx = 0; townIdx < 0x80; townIdx++)
 			{
-				this.processor.RegSource.Value16 = (ushort)(0x1c * townIdx);
-
 				City town = this.owner.World.Towns[townIdx];
 
 				if (town.ConditionMarker == 0xff || town.ParticipantIdx != participantIdx)
 					continue;
 
 				ushort continent = this.owner.MapOps.ObtainContinentID(town.Place.X, town.Place.Y);
-				this.processor.RegDest.Value16 = (ushort)(continent << 1);
 				continentShares[continent] = (ushort)(continentShares[continent] + town.TrueExtent);
 
 				if (!town.Has(CityStructure.Palace))
@@ -77,8 +74,6 @@ namespace Civilization1Remaster.Game
 
 				if (capitalContinent != 0xffff && (ushort)this.owner.World.Participants[participantIdx].HorizBegin != (ushort)(short)town.Place.X)
 					continue;
-
-				this.processor.RegSource.Value16 = (ushort)(0x1c * townIdx);
 
 				capitalContinent = this.owner.MapOps.ObtainContinentID(town.Place.X, town.Place.Y);
 				capitalX = (short)town.Place.X;
@@ -102,7 +97,6 @@ namespace Civilization1Remaster.Game
 
 			ushort capitalIdx = ObtainDistanceToCapital(rebelIdx);
 			this.processor.RegAcc.Value16 = (ushort)(0x1c * capitalIdx);
-			this.processor.RegSource.Value16 = ((ushort)(0x1c * capitalIdx));
 
 			// The new civilization without a city gets no capital (ClassicSchism: Towns[0xffff] throws)
 			if (classic || capitalIdx != 0xffff)
@@ -118,7 +112,6 @@ namespace Civilization1Remaster.Game
 			else
 			{
 				this.processor.RegAcc.Value16 = (ushort)(0x1c * oldCapital);
-				this.processor.RegSource.Value16 = ((ushort)(0x1c * oldCapital));
 
 				this.owner.World.Towns[oldCapital].ParticipantIdx = -1;
 
@@ -129,7 +122,6 @@ namespace Civilization1Remaster.Game
 					newCapital = oldCapital;
 
 				this.processor.RegAcc.Value16 = (ushort)(0x1c * newCapital);
-				this.processor.RegDest.Value16 = ((ushort)(0x1c * newCapital));
 
 				this.owner.World.Towns[newCapital].StructureMarkers0 |= 1;
 				this.owner.World.Participants[participantIdx].HorizBegin = (short)this.owner.World.Towns[newCapital].Place.X;
@@ -161,7 +153,6 @@ namespace Civilization1Remaster.Game
 			if (!barbarians)
 			{
 				ushort leader = (ushort)rebel.ChiefVisuals;
-				this.processor.RegSource.Value16 = leader;
 
 				newLeader = ((rebelIdx != 7 ? 1 : 0) & leader) != 0 || (short)leader > 0xf;
 			}
@@ -179,7 +170,6 @@ namespace Civilization1Remaster.Game
 			}
 
 			ushort names = (ushort)(rebelIdx << 1);
-			this.processor.RegSource.Value16 = names;
 
 			ushort leaderNames = (ushort)(0x3a * rebel.ChiefVisuals);
 
@@ -195,13 +185,9 @@ namespace Civilization1Remaster.Game
 					.Text("s");
 			}
 
-			this.processor.RegSource.Value16 = names;
-
 			this.owner.Libc.CopyText(CivilizationPluralAt(names), TextBuffer.Address);
 
 			this.owner.Words.Clear();
-
-			this.processor.RegDest.Value16 = (ushort)(participantIdx << 1);
 
 			this.owner.Libc.CopyText(CodeText1, CivilizationName((ushort)participantIdx));
 
@@ -227,19 +213,14 @@ namespace Civilization1Remaster.Game
 
 			for (ushort scienceIdx = 0; scienceIdx < 5; scienceIdx++)
 			{
-				this.processor.RegSource.Value16 = (ushort)(scienceIdx << 1);
 				learner.FoundScienceMarkers[scienceIdx] = player.FoundScienceMarkers[scienceIdx];
 			}
-
-			this.processor.RegSource.Value16 = names;
 
 			rebel.TouchParticipantTimeleft = (short)(this.owner.World.RoundTally - 8);
 
 			// War: the player's relation to the new civilization and the new civilization's to the player (ClassicSchism: both
 			// flags go into the player's relation, like in the translated code)
 			player.Relations[rebelIdx] |= 1;
-
-			this.processor.RegDest.Value16 = (ushort)(rebelIdx << 4);
 
 			if (classic)
 				player.Relations[rebelIdx] |= 9;
@@ -260,8 +241,6 @@ namespace Civilization1Remaster.Game
 
 			for (ushort continent = 0; continent < 0x10; continent++)
 			{
-				this.processor.RegSource.Value16 = (ushort)(continent << 1);
-
 				short size = (short)continentShares[continent];
 
 				if (size == 0)
@@ -279,7 +258,6 @@ namespace Civilization1Remaster.Game
 					rest += size;
 				}
 
-				this.processor.RegSource.Value16 = (ushort)(continent << 1);
 				continentShares[continent] = 1;
 			}
 
@@ -287,15 +265,12 @@ namespace Civilization1Remaster.Game
 			{
 				for (ushort townIdx = 0; townIdx < 0x80; townIdx++)
 				{
-					this.processor.RegSource.Value16 = (ushort)(0x1c * townIdx);
-
 					City town = this.owner.World.Towns[townIdx];
 
 					if (town.ConditionMarker == 0xff || town.ParticipantIdx != participantIdx)
 						continue;
 
 					ushort townContinent = this.owner.MapOps.ObtainContinentID(town.Place.X, town.Place.Y);
-					this.processor.RegDest.Value16 = (ushort)(townContinent << 1);
 
 					if (continentShares[townContinent] == 2)
 						AssignCityOwner((short)townIdx, rebelIdx);
@@ -313,8 +288,6 @@ namespace Civilization1Remaster.Game
 
 				for (ushort townIdx = 0; townIdx < 0x80; townIdx++)
 				{
-					this.processor.RegSource.Value16 = (ushort)(0x1c * townIdx);
-
 					City town = this.owner.World.Towns[townIdx];
 
 					if (town.ConditionMarker == 0xff || town.ParticipantIdx != participantIdx)
@@ -354,12 +327,10 @@ namespace Civilization1Remaster.Game
 			for (ushort troopIdx = 0; troopIdx < 0x80; troopIdx++)
 			{
 				ushort troop = (ushort)((ushort)(0x600 * participantIdx) + (ushort)(0xc * troopIdx));
-				this.processor.RegSource.Value16 = (ushort)(0x600 * participantIdx);
 
 				if (this.Troops.PullAt(troop, UnitMemory.Kind) == 0xff)
 					continue;
 
-				this.processor.RegSource.Value16 = troop;
 				short unitKind = (sbyte)this.Troops.PullAt(troop, UnitMemory.Kind);
 
 				if ((this.owner.MapOps.ObtainTileImprovements((sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert)) & 1) != 0)
@@ -376,7 +347,6 @@ namespace Civilization1Remaster.Game
 			short unitKind = (sbyte)this.Troops.PullAt(troop, UnitMemory.Kind);
 
 			ushort townRecord = (ushort)(0x1c * townIdx);
-			this.processor.RegDest.Value16 = townRecord;
 
 			byte homeIdx = this.Troops.PullAt(troop, UnitMemory.BaseTown);
 
@@ -406,15 +376,12 @@ namespace Civilization1Remaster.Game
 
 			this.owner.UnitOps.EliminateUnit(participantIdx, (short)troopIdx);
 
-			this.processor.RegSource.Value16 = troop;
-
 			this.owner.MapOps.TagTileOwned((sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert));
 
 			ushort newTroop = this.owner.UnitOps.ConstructUnit(rebelIdx, unitKind,
 				(sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert));
 
 			ushort copy = (ushort)((ushort)(0xc * newTroop) + (ushort)(0x600 * rebelIdx));
-			this.processor.RegDest.Value16 = (ushort)(0x600 * rebelIdx);
 
 			this.Troops.AssignAt(copy, UnitMemory.Status, (byte)(this.Troops.PullAt(troop, UnitMemory.Status) & 0xfe));
 		}
@@ -435,10 +402,7 @@ namespace Civilization1Remaster.Game
 				// The stack's units homed elsewhere get the unit's home city
 				while (next != -1 && (ushort)next != troopIdx)
 				{
-					this.processor.RegSource.Value16 = playerUnits;
-
 					ushort other = (ushort)((ushort)(0xc * next) + playerUnits);
-					this.processor.RegDest.Value16 = other;
 
 					short following = (sbyte)this.Troops.PullAt(other, UnitMemory.FollowingInStack);
 					this.processor.RegAcc.Value16 = (ushort)(0x1c * (sbyte)this.Troops.PullAt(other, UnitMemory.BaseTown));
@@ -464,7 +428,6 @@ namespace Civilization1Remaster.Game
 				(sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert));
 
 			ushort copy = (ushort)((ushort)(0x600 * rebelIdx) + (ushort)(0xc * newTroop));
-			this.processor.RegDest.Value16 = copy;
 
 			this.Troops.AssignAt(copy, UnitMemory.Status, (byte)(this.Troops.PullAt(troop, UnitMemory.Status) & 0xfe));
 			this.Troops.AssignAt(copy, UnitMemory.BaseTown, this.Troops.PullAt(troop, UnitMemory.BaseTown));
@@ -472,10 +435,7 @@ namespace Civilization1Remaster.Game
 			// The rest of the stack changes sides too, on the unit's tile, with its status and (homed elsewhere) home city
 			while (next != -1 && (ushort)next != troopIdx)
 			{
-				this.processor.RegSource.Value16 = playerUnits;
-
 				ushort other = (ushort)((ushort)(0xc * next) + playerUnits);
-				this.processor.RegDest.Value16 = other;
 
 				short following = (sbyte)this.Troops.PullAt(other, UnitMemory.FollowingInStack);
 				short kind = (sbyte)this.Troops.PullAt(other, UnitMemory.Kind);

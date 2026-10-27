@@ -310,8 +310,6 @@ namespace Civilization1Remaster.UI
 				SetPalaceSectionStyleMarkers(styleIdx, marker0, marker1);
 			}
 
-			this.processor.RegSource.Value16 = selWordOff;
-			this.processor.RegDest.Value16 = 6;
 			PalaceFirstPicture = 0xffff;
 
 			ImportPalaceCastle((ushort)(1 << (byte)nextLevel), 0);
@@ -372,8 +370,8 @@ namespace Civilization1Remaster.UI
 						this.owner.Services.RenderPictureToScreen(
 							ScreenBox,
 							drawX,
-							(short)(this.processor.PullInt8(dataSeg, (ushort)(this.processor.RegSource.Value16 + PalacePartHeightTable3Address)) + 1),
-							this.processor.PullUInt16(dataSeg, (ushort)(this.processor.RegDest.Value16 + PalacePicturesTableAddress + 2)));
+							(short)(this.processor.PullInt8(dataSeg, (ushort)(selWordOff + PalacePartHeightTable3Address)) + 1),
+							this.processor.PullUInt16(dataSeg, (ushort)(6 + PalacePicturesTableAddress + 2)));
 						break;
 
 					case 2:

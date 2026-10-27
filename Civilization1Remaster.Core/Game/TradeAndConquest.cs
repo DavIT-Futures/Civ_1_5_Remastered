@@ -31,9 +31,6 @@ namespace Civilization1Remaster.Game
 
 			short person = this.owner.World.PersonParticipantIdx;
 			City town = this.owner.World.Towns[townIdx];
-			ushort townOffset = (ushort)(0x1c * townIdx);
-
-			this.processor.RegSource.Value16 = townOffset;
 
 			ushort formerIdx = (ushort)town.ParticipantIdx;
 			ushort horizLoc = (ushort)(short)town.Place.X;
@@ -44,12 +41,8 @@ namespace Civilization1Remaster.Game
 
 			if (formerIdx != (ushort)person)
 			{
-				this.processor.RegSource.Value16 = townOffset;
-
 				if ((town.Has(CityStructure.Palace) || (byte)town.PresentMakingIdx == 0xff) && marker == 0 && town.Has(CityStructure.Palace))
 				{
-					this.processor.RegDest.Value16 = (ushort)(formerIdx << 1);
-
 					if (this.owner.World.Participants[formerIdx].TownTally > 4 &&
 						this.owner.World.Participants[person].Standing < this.owner.World.Participants[formerIdx].Standing)
 					{
@@ -72,8 +65,6 @@ namespace Civilization1Remaster.Game
 
 			if (!BarbariansRazeCity(participantIdx, townIdx, horizLoc, vertLoc))
 			{
-				this.processor.RegSource.Value16 = townOffset;
-
 				town.MaterialsTally = 0;
 				town.ConditionMarker &= 0xae;
 				town.StructureMarkers0 &= 0xfbb6;
@@ -102,8 +93,6 @@ namespace Civilization1Remaster.Game
 			if (participantIdx != 0)
 				this.owner.World.Participants[participantIdx].Gold += plunder;
 
-			this.processor.RegSource.Value16 = townOffset;
-
 			if (town.TrueExtent != 0)
 			{
 				MarkCapturedCity(participantIdx, town, horizLoc, vertLoc);
@@ -129,13 +118,10 @@ namespace Civilization1Remaster.Game
 			for (troopIdx = 0; troopIdx < 0x80; troopIdx++)
 			{
 				ushort troop = (ushort)((ushort)(0x600 * formerIdx) + (ushort)(0xc * troopIdx));
-				this.processor.RegSource.Value16 = troop;
 
 				if (this.Troops.PullAt(troop, UnitMemory.Kind) == 0xff ||
 					(sbyte)this.Troops.PullAt(troop, UnitMemory.BaseTown) != townIdx)
 					continue;
-
-				this.processor.RegDest.Value16 = townOffset;
 
 				if (this.Troops.PullAt(troop, UnitMemory.Horiz) == (byte)(sbyte)town.Place.X &&
 					this.Troops.PullAt(troop, UnitMemory.Vert) == (byte)(sbyte)town.Place.Y &&
@@ -150,14 +136,10 @@ namespace Civilization1Remaster.Game
 				town.ConditionMarker |= 1;
 			}
 
-			this.processor.RegSource.Value16 = townOffset;
-
 			if (town.TrueExtent != 0)
 			{
 				if (town.PresentMakingIdx >= 0)
 				{
-					this.processor.RegDest.Value16 = (ushort)(town.PresentMakingIdx << 1);
-
 					this.owner.World.Participants[formerIdx].TroopsInsideMaking[town.PresentMakingIdx]--;
 				}
 
@@ -169,16 +151,12 @@ namespace Civilization1Remaster.Game
 				}
 				else
 				{
-					this.processor.RegSource.Value16 = townOffset;
-
 					town.PresentMakingIdx = 0;
 
 					town.PresentMakingIdx = (sbyte)this.owner.Advisors.PickCityProduction(participantIdx, townIdx);
 
 					if (town.PresentMakingIdx >= 0)
 					{
-						this.processor.RegDest.Value16 = (ushort)(0x38 * participantIdx);
-
 						this.owner.World.Participants[participantIdx].TroopsInsideMaking[town.PresentMakingIdx]++;
 					}
 				}
@@ -217,7 +195,6 @@ namespace Civilization1Remaster.Game
 				return false;
 
 			ushort troop = (ushort)(0xc * this.owner.MapOps.ObtainUnitAtTile((short)horizLoc, (short)vertLoc));
-			this.processor.RegSource.Value16 = troop;
 
 			sbyte kind = (sbyte)this.Troops.PullAt(((ushort)(0x600 * participantIdx) + troop), UnitMemory.Kind);
 
@@ -244,10 +221,8 @@ namespace Civilization1Remaster.Game
 
 			for (markIdx = 0; markIdx < 0x14; markIdx++)
 			{
-				this.processor.RegSource.Value16 = (ushort)(markIdx << 1);
-
-				ushort markHoriz = (ushort)this.owner.Routing.TunePosition((short)DirectionHorizAt(this.processor.RegSource.Value16) + (short)horizLoc);
-				ushort markVert = (ushort)(DirectionVertAt(this.processor.RegSource.Value16) + vertLoc);
+				ushort markHoriz = (ushort)this.owner.Routing.TunePosition((short)DirectionHoriz(markIdx) + (short)horizLoc);
+				ushort markVert = (ushort)(DirectionVert(markIdx) + vertLoc);
 
 				this.owner.Services.AssignDot(2, (short)markHoriz + 0x50, (short)markVert, (ushort)participantIdx);
 			}
@@ -269,9 +244,7 @@ namespace Civilization1Remaster.Game
 
 			this.owner.MapOps.RenderMapTile((short)horizLoc, (short)vertLoc);
 
-			this.processor.RegSource.Value16 = (ushort)(participantIdx << 1);
-
-			Message(CivilizationPluralAt(this.processor.RegSource.Value16))
+			Message(CivilizationPlural(participantIdx))
 				.Text(" capture\n");
 
 			ObtainCityLabel(townIdx);
@@ -314,8 +287,6 @@ namespace Civilization1Remaster.Game
 		private void ReportCaptureBySpies(short participantIdx, short townIdx, short formerIdx)
 		{
 			ushort[] known = this.owner.World.Participants[this.owner.World.PersonParticipantIdx].Relations;
-
-			this.processor.RegSource.Value16 = (ushort)(this.owner.World.PersonParticipantIdx << 4);
 
 			if ((known[participantIdx] & 0x40) == 0 && (known[formerIdx] & 0x40) == 0)
 				return;
@@ -419,9 +390,7 @@ namespace Civilization1Remaster.Game
 						this.owner.Words.Append(TechnologyText(techId));
 						this.owner.Words.Append("\n ");
 
-						ushort slotOffset = (ushort)(count << 1);
 						count++;
-						this.processor.RegSource.Value16 = slotOffset;
 						techs[count - 1] = (ushort)techId;
 
 						if ((short)this.owner.Advisors.ObtainTechnologyInfo(participantIdx1, (ushort)techId) > bestScore)
@@ -452,7 +421,6 @@ namespace Civilization1Remaster.Game
 						}
 						while (choice == 0xffff);
 
-						this.processor.RegSource.Value16 = (ushort)(choice << 1);
 						short chosenTech = (short)techs[choice];
 
 						this.owner.Advisors.EarnTechnology(participantIdx1, chosenTech, participantIdx2);
@@ -558,10 +526,6 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"FoundTradeRoute({participantIdx}, {troopIdx}, {townIdx})");
 
-			// DisplayDialog leaves SI in DI: both are given back to the caller as they were
-			ushort source = this.processor.RegSource.Value16;
-			ushort dest = this.processor.RegDest.Value16;
-
 			UnitMemory troops = new UnitMemory(this.processor);
 			ushort homeIdx = (ushort)troops.PullSigned(participantIdx, troopIdx, UnitMemory.BaseTown);
 			City town = this.owner.World.Towns[townIdx];
@@ -647,8 +611,6 @@ namespace Civilization1Remaster.Game
 				home.CommerceTownIndices[replacedIdx] = (sbyte)townIdx;
 			}
 
-			this.processor.RegSource.Value16 = source;
-			this.processor.RegDest.Value16 = dest;
 			this.processor.RegAcc.Value16 = 1;
 
 			// Far return

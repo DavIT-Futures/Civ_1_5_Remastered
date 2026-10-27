@@ -1086,8 +1086,6 @@ namespace Civilization1Remaster.UI
 					this.owner.Words.Set("Village");
 				}
 
-				this.processor.RegSource.Value16 = (ushort)(heading << 1);
-
 				RenderTutorialPointer((chart.DirectionHoriz(heading) << 4) + 200, (chart.DirectionVert(heading) << 4) + 112,
 					(chart.DirectionHoriz(heading) << 6) + 170, (chart.DirectionVert(heading) * 48) + 100);
 			}
