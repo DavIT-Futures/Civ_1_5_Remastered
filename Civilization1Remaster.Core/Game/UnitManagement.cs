@@ -29,10 +29,6 @@ namespace Civilization1Remaster.Game
 
 			if (town.ParticipantIdx == this.owner.World.PersonParticipantIdx)
 			{
-				// The original keeps SI and DI for its caller
-				ushort savedSource = this.processor.RegSource.Value16;
-				ushort savedDest = this.processor.RegDest.Value16;
-
 				QuietUnitSetup = 0x1;
 
 				for (int keptIdx = 0; keptIdx < 2; keptIdx++)
@@ -58,9 +54,6 @@ namespace Civilization1Remaster.Game
 
 				QuietUnitSetup = 0x0;
 				town.ConditionMarker |= KeptUnitsCondition;
-
-				this.processor.RegSource.Value16 = savedSource;
-				this.processor.RegDest.Value16 = savedDest;
 			}
 
 			this.processor.Journal.CloseScope("ConstructUnitsFromCityList");
@@ -86,10 +79,6 @@ namespace Civilization1Remaster.Game
 
 			if (participantIdx == this.owner.World.PersonParticipantIdx)
 			{
-				// The original keeps SI and DI for its caller
-				ushort savedSource = this.processor.RegSource.Value16;
-				ushort savedDest = this.processor.RegDest.Value16;
-
 				ushort countLosses = CountLosses;
 				CountLosses = 0;
 				QuietUnitSetup = 0x1;
@@ -123,9 +112,6 @@ namespace Civilization1Remaster.Game
 				QuietUnitSetup = 0x0;
 				CountLosses = countLosses;
 				town.ConditionMarker &= unchecked((byte)~KeptUnitsCondition);
-
-				this.processor.RegSource.Value16 = savedSource;
-				this.processor.RegDest.Value16 = savedDest;
 			}
 
 			this.processor.Journal.CloseScope("KeepUnitsInCityList");
@@ -576,9 +562,6 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"ChoreographUnitMove({participantIdx}, {troopIdx}, {cursorHoriz}, {cursorVert})");
 
-			// The original keeps SI for its caller
-			ushort savedSource = this.processor.RegSource.Value16;
-
 			// Screen position of the cursor frame, -1 when there is none or it is outside the map view
 			short frameHoriz = -1;
 			short frameVert = 0;
@@ -660,8 +643,6 @@ namespace Civilization1Remaster.Game
 			}
 			while (this.owner.Libc.KeyAvailable() == 0 && this.owner.GlobDb3a == 0);
 
-			this.processor.RegSource.Value16 = savedSource;
-
 			this.processor.Journal.CloseScope("ChoreographUnitMove");
 		}
 
@@ -685,8 +666,6 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"ConstructUnit({participantIdx}, {kind}, {horizLoc}, {vertLoc})");
 
-			// The original keeps SI for its caller
-			ushort savedSource = this.processor.RegSource.Value16;
 			short troopIdx = -1;
 
 			for (short idx = 0; idx < UnitMemory.TroopTally - 1; idx++)
@@ -723,7 +702,6 @@ namespace Civilization1Remaster.Game
 				result = (ushort)troopIdx;
 			}
 
-			this.processor.RegSource.Value16 = savedSource;
 			this.processor.RegAcc.Value16 = result;
 
 			this.processor.Journal.CloseScope("ConstructUnit");
@@ -816,10 +794,6 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"EliminateUnit({participantIdx}, {troopIdx})");
 
-			// The original keeps SI and DI for its caller
-			ushort savedSource = this.processor.RegSource.Value16;
-			ushort savedDest = this.processor.RegDest.Value16;
-
 			if (CountLosses != 0)
 			{
 				// Losses are counted (the kind as an unsigned word: an empty record, -1, is not counted)
@@ -867,9 +841,6 @@ namespace Civilization1Remaster.Game
 					this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert));
 			}
 
-			this.processor.RegSource.Value16 = savedSource;
-			this.processor.RegDest.Value16 = savedDest;
-
 			this.processor.Journal.CloseScope("EliminateUnit");
 		}
 
@@ -890,9 +861,6 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"LocateStackLeader({participantIdx}, {troopIdx})");
 
-			// The original keeps SI and DI for its caller
-			ushort savedSource = this.processor.RegSource.Value16;
-			ushort savedDest = this.processor.RegDest.Value16;
 			ushort leader = (ushort)troopIdx;
 
 			if (this.troops.Following(participantIdx, troopIdx) != -1)
@@ -914,8 +882,6 @@ namespace Civilization1Remaster.Game
 				leader = StackLeader;
 			}
 
-			this.processor.RegSource.Value16 = savedSource;
-			this.processor.RegDest.Value16 = savedDest;
 			this.processor.RegAcc.Value16 = leader;
 
 			this.processor.Journal.CloseScope("LocateStackLeader");
@@ -931,8 +897,6 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"LocateBestGuardianInStack({participantIdx}, {troopIdx})");
 
-			// The original keeps SI for its caller
-			ushort savedSource = this.processor.RegSource.Value16;
 			ushort guardian = (ushort)troopIdx;
 
 			if (this.troops.Following(participantIdx, troopIdx) != -1)
@@ -945,7 +909,6 @@ namespace Civilization1Remaster.Game
 				guardian = StackLeader;
 			}
 
-			this.processor.RegSource.Value16 = savedSource;
 			this.processor.RegAcc.Value16 = guardian;
 
 			this.processor.Journal.CloseScope("LocateBestGuardianInStack");
@@ -1318,9 +1281,6 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"RestoreUnitStatus({participantIdx}, {troopIdx})");
 
-			// The original keeps SI for its caller
-			ushort savedSource = this.processor.RegSource.Value16;
-
 			byte status = this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status);
 
 			if ((status & (int)UnitStatusEnum.SettlerBuildMask) != 0)
@@ -1341,8 +1301,6 @@ namespace Civilization1Remaster.Game
 			{
 				this.owner.MapOps.RenderUnitOnWorldMap(participantIdx, troopIdx);
 			}
-
-			this.processor.RegSource.Value16 = savedSource;
 
 			this.processor.Journal.CloseScope("RestoreUnitStatus");
 		}
@@ -1448,10 +1406,6 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"VerifyTileOccupation({participantIdx}, {horizLoc}, {vertLoc})");
 
-			// The original keeps SI and DI for its caller
-			ushort savedSource = this.processor.RegSource.Value16;
-			ushort savedDest = this.processor.RegDest.Value16;
-
 			bool onOcean = this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) == MapRules.OceanTerrain;
 			ushort found = 0;
 
@@ -1479,8 +1433,6 @@ namespace Civilization1Remaster.Game
 				break;
 			}
 
-			this.processor.RegSource.Value16 = savedSource;
-			this.processor.RegDest.Value16 = savedDest;
 			this.processor.RegAcc.Value16 = found;
 
 			this.processor.Journal.CloseScope("VerifyTileOccupation");
@@ -1559,10 +1511,6 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"VisitHut({participantIdx}, {troopIdx})");
 
-			// The original keeps SI and DI for its caller
-			ushort savedSource = this.processor.RegSource.Value16;
-			ushort savedDest = this.processor.RegDest.Value16;
-
 			if (participantIdx != 0 &&
 				this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) != UnitKindTable.AirUnits)
 			{
@@ -1620,9 +1568,6 @@ namespace Civilization1Remaster.Game
 						break;
 				}
 			}
-
-			this.processor.RegSource.Value16 = savedSource;
-			this.processor.RegDest.Value16 = savedDest;
 
 			this.processor.Journal.CloseScope("VisitHut");
 		}
@@ -1754,10 +1699,6 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"ChoreographUnitCombat({participantIdx}, {troopIdx}, {arg3})");
 
-			// The original keeps SI and DI for its caller
-			ushort savedSource = this.processor.RegSource.Value16;
-			ushort savedDest = this.processor.RegDest.Value16;
-
 			int horizLoc = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz);
 			int vertLoc = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert);
 
@@ -1779,9 +1720,6 @@ namespace Civilization1Remaster.Game
 
 				this.owner.Startup.DisplayMouseCursor();
 			}
-
-			this.processor.RegSource.Value16 = savedSource;
-			this.processor.RegDest.Value16 = savedDest;
 
 			this.processor.Journal.CloseScope("ChoreographUnitCombat");
 		}
@@ -1839,10 +1777,6 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"DisplayBattleScreen({participantIdx}, {troopIdx})");
 
-			// The original keeps SI and DI for its caller
-			ushort savedSource = this.processor.RegSource.Value16;
-			ushort savedDest = this.processor.RegDest.Value16;
-
 			ushort screen = ScreenBox;
 			ushort backScreen = BackScreenBox;
 
@@ -1898,8 +1832,6 @@ namespace Civilization1Remaster.Game
 
 			this.owner.TurnLogic.AwaitForKey();
 
-			this.processor.RegSource.Value16 = savedSource;
-			this.processor.RegDest.Value16 = savedDest;
 			this.processor.RegAcc.Value16 = picked;
 
 			this.processor.Journal.CloseScope("DisplayBattleScreen");
@@ -2022,10 +1954,6 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"LocateNearestFriendlyCity({participantIdx}, {troopIdx})");
 
-			// The original keeps SI and DI for its caller
-			ushort savedSource = this.processor.RegSource.Value16;
-			ushort savedDest = this.processor.RegDest.Value16;
-
 			// Without an own city or carrier the target is the place of the unit, so it stays (direction 0; the original took
 			// what was left on the stack)
 			int unitHoriz = this.troops.Pull(participantIdx, troopIdx, UnitMemory.Horiz);
@@ -2095,8 +2023,6 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			this.processor.RegSource.Value16 = savedSource;
-			this.processor.RegDest.Value16 = savedDest;
 			this.processor.RegAcc.Value16 = heading;
 
 			this.processor.Journal.CloseScope("LocateNearestFriendlyCity");

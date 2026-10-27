@@ -91,10 +91,9 @@ namespace Civilization1Remaster.Engine
 
 			// The interrupted registers are kept outside the emulated stack (the original pushes them onto the stack of the game):
 			// what an interrupt leaves below SP would depend on when it comes, and the game reads uninitialized locals there
-			(ushort frame, ushort acc, ushort basis, ushort count, ushort data, ushort source, ushort dest, ushort dataSection) =
+			(ushort frame, ushort acc, ushort basis, ushort count, ushort data, ushort dataSection) =
 				(this.processor.RegFrame.Value16, this.processor.RegAcc.Value16, this.processor.RegBase.Value16,
-				this.processor.RegCount.Value16, this.processor.RegData.Value16, this.processor.RegSource.Value16,
-				this.processor.RegDest.Value16, this.processor.SegData.Value16);
+				this.processor.RegCount.Value16, this.processor.RegData.Value16, this.processor.SegData.Value16);
 
 			ushort oldSP = this.processor.RegStack.Value16;
 			ushort oldSS = this.processor.SegStack.Value16;
@@ -151,8 +150,7 @@ namespace Civilization1Remaster.Engine
 			this.processor.RegStack.Value16 = oldSP;
 
 			(this.processor.RegFrame.Value16, this.processor.RegAcc.Value16, this.processor.RegBase.Value16,
-				this.processor.RegCount.Value16, this.processor.RegData.Value16, this.processor.RegSource.Value16,
-				this.processor.RegDest.Value16, this.processor.SegData.Value16) = (frame, acc, basis, count, data, source, dest, dataSection);
+				this.processor.RegCount.Value16, this.processor.RegData.Value16, this.processor.SegData.Value16) = (frame, acc, basis, count, data, dataSection);
 			// IRET - Pop flags and Far return
 
 			this.processor.Journal.CloseScope("ClockInterrupt");
@@ -416,17 +414,15 @@ namespace Civilization1Remaster.Engine
 		{
 			this.processor.Journal.OpenScope("RefreshHueCycling()");
 
-			ushort savedDest = this.processor.RegDest.Value16;
 			ushort savedData = this.processor.SegData.Value16;
-			ushort savedSource = this.processor.RegSource.Value16;
 			this.processor.SegData.Value16 = 0x35cf;
-			this.processor.RegDest.Value16 = 2;
+			ushort cycleOffset = 2;
 
 			while (true)
 			{
-				ushort cycle = this.owner.HueCycles.Word(this.processor.RegDest.Value16);
+				ushort cycle = this.owner.HueCycles.Word(cycleOffset);
 				this.processor.RegBase.Value16 = cycle;
-				this.processor.RegDest.Value16 = (ushort)(this.processor.RegDest.Value16 + 2);
+				cycleOffset = (ushort)(cycleOffset + 2);
 
 				if (cycle == 0xffff)
 				{
@@ -468,12 +464,10 @@ namespace Civilization1Remaster.Engine
 					source = 0;
 				}
 
-				this.processor.RegSource.Value16 = (ushort)source;
 				this.owner.HueCycles.SetWord((ushort)(cycle + 2), (ushort)source);
 
 				ushort paletteOffset = (ushort)(cycle + 9);
 				this.processor.RegAcc.Value16 = paletteOffset;
-				this.processor.RegSource.Value16 = (ushort)(this.processor.RegSource.Value16 + paletteOffset);
 
 				byte startHue = this.owner.HueCycles.Byte((ushort)(cycle + 6));
 				this.processor.RegAcc.LowByte = startHue;
@@ -483,7 +477,7 @@ namespace Civilization1Remaster.Engine
 					lock (this.owner.VideoCard.VideoLatch)
 					{
 						VGABitmap display = this.owner.VideoCard.Displays.ObtainValueByKey(0);
-						ushort stagingLoc = this.processor.RegSource.Value16;
+						ushort stagingLoc = (ushort)(source + paletteOffset);
 						int total = count / 3;
 
 						for (int idx = 0; idx < total; idx++)
@@ -503,8 +497,6 @@ namespace Civilization1Remaster.Engine
 			}
 
 			this.processor.SegData.Value16 = savedData;
-			this.processor.RegDest.Value16 = savedDest;
-			this.processor.RegSource.Value16 = savedSource;
 
 			this.processor.Journal.CloseScope("RefreshHueCycling");
 		}

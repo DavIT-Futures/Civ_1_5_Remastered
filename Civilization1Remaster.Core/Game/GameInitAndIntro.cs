@@ -609,7 +609,6 @@ namespace Civilization1Remaster.Game
 
 			for (ushort terrain = 0; terrain < 0xc; terrain++)
 			{
-				this.processor.RegSource.Value16 = (ushort)(terrain << 1);
 				this.terrainFrame.SetFrame(terrainCounts - (terrain << 1), 0);
 			}
 
@@ -708,7 +707,6 @@ namespace Civilization1Remaster.Game
 					if (pass == 0)
 					{
 						int count = terrainCounts - (terrain << 1);
-						this.processor.RegSource.Value16 = (ushort)(terrain << 1);
 						this.terrainFrame.SetFrame(count, (ushort)(this.terrainFrame.Frame(count) + 1));
 					}
 
@@ -734,7 +732,6 @@ namespace Civilization1Remaster.Game
 							do
 							{
 								newLabel++;
-								this.processor.RegSource.Value16 = (ushort)(pass << 7);
 							}
 							while (this.processor.PullGlobalWord(LabelSizeAddress(pass, newLabel)) != 0);
 
@@ -746,8 +743,6 @@ namespace Civilization1Remaster.Game
 					}
 
 					this.owner.World.ChartSight[horizLoc, vertLoc] = (sbyte)(byte)run;
-
-					this.processor.RegSource.Value16 = (ushort)(pass << 7);
 
 					ushort size = LabelSizeAddress(pass, run);
 					this.processor.EmitGlobalWord(size, (ushort)(this.processor.PullGlobalWord(size) + 1));
@@ -801,9 +796,6 @@ namespace Civilization1Remaster.Game
 							ushort from = LabelSizeAddress(pass, run);
 							ushort to = LabelSizeAddress(pass, label);
 
-							this.processor.RegSource.Value16 = (ushort)(pass << 7);
-							this.processor.RegDest.Value16 = (ushort)(from);
-
 							this.processor.EmitGlobalWord(to, (ushort)(this.processor.PullGlobalWord(to) + this.processor.PullGlobalWord(from)));
 							this.processor.EmitGlobalWord(from, 0);
 						}
@@ -837,7 +829,6 @@ namespace Civilization1Remaster.Game
 
 			for (ushort rank = 0; rank < 0x10; rank++)
 			{
-				this.processor.RegSource.Value16 = (ushort)(rank << 1);
 				this.terrainFrame.SetFrame(ranking - ((rank << 1)), 0);
 			}
 
@@ -855,8 +846,6 @@ namespace Civilization1Remaster.Game
 
 				for (rank = 1; rank < 0xf; rank++)
 				{
-					this.processor.RegSource.Value16 = (ushort)(pass << 7);
-
 					ushort ranked = this.terrainFrame.Frame(ranking - ((rank << 1)));
 
 					if ((short)this.processor.PullGlobalWord(LabelSizeAddress(pass, ranked)) >= (short)size)
@@ -869,14 +858,12 @@ namespace Civilization1Remaster.Game
 					{
 						ushort moved = this.terrainFrame.Frame(ranking - ((lower << 1) - 2));
 
-						this.processor.RegSource.Value16 = (ushort)((lower << 1) + frame);
 						this.terrainFrame.SetFrame(numbers - ((moved << 1)), lower);
 						this.terrainFrame.SetFrame(ranking - ((lower << 1)), moved);
 					}
 
 					this.terrainFrame.SetFrame(0xac, lower);
 
-					this.processor.RegSource.Value16 = (ushort)(rank << 1);
 					this.terrainFrame.SetFrame(numbers - ((label << 1)), rank);
 					this.terrainFrame.SetFrame(ranking - ((rank << 1)), label);
 					break;
@@ -902,7 +889,6 @@ namespace Civilization1Remaster.Game
 					this.terrainFrame.SetFrame(0xa8, vertLoc);
 
 					short tileLabel = this.owner.World.ChartSight[horizLoc, vertLoc];
-					this.processor.RegSource.Value16 = (ushort)(tileLabel << 1);
 
 					ushort number = classicNumbers || (tileLabel >= 0 && tileLabel < 0x40) ?
 						this.terrainFrame.Frame(numbers - (tileLabel << 1)) : (ushort)0xf;
@@ -919,20 +905,16 @@ namespace Civilization1Remaster.Game
 			{
 				int entry = ranking - (rank << 1);
 
-				this.processor.RegSource.Value16 = (ushort)(frame - entry);
-				this.processor.RegDest.Value16 = (ushort)(pass << 7);
 				this.terrainFrame.SetFrame(entry, this.processor.PullGlobalWord(LabelSizeAddress(pass, this.terrainFrame.Frame(entry))));
 			}
 
 			for (ushort rank = 1; rank < 0xf; rank++)
 			{
-				this.processor.RegSource.Value16 = (ushort)(rank << 1);
 				this.processor.EmitGlobalWord(LabelSizeAddress(pass, rank), this.terrainFrame.Frame(ranking - ((rank << 1))));
 			}
 
 			this.terrainFrame.SetFrame(0x24, 0xf);
 
-			this.processor.RegSource.Value16 = (ushort)(pass << 7);
 			this.processor.EmitGlobalWord(LabelSizeAddress(pass, 0), 0);
 			this.processor.EmitGlobalWord(LabelSizeAddress(pass, 0xf), 1);
 		}
