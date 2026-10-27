@@ -7,6 +7,10 @@ namespace Civilization1Remaster.Engine
 {
 	public class GameLoadAndSave : GameModule
 	{
+		private const ushort SaveFileNameAddress = 0x41c6;
+		private const ushort SaveSlotDigitAddress = 0x41cd;
+
+
 		public GameLoadAndSave(GameEngine owner)
 			: base(owner)
 		{
@@ -146,7 +150,7 @@ namespace Civilization1Remaster.Engine
 					for (int idx = 0; idx < backups.Count; idx++)
 					{
 						AssignAutosaveFileLabel(backups[idx].Bay);
-						ImportGame(0x41c6, 1);
+						ImportGame(SaveFileNameAddress, 1);
 						bays.Add(BackupBayMarker + backups[idx].Bay);
 					}
 
@@ -164,9 +168,9 @@ namespace Civilization1Remaster.Engine
 
 					for (int idx = 0; idx < HandBayTally; idx++)
 					{
-						this.processor.EmitGlobalByte(0x41cd, (byte)(0x30 + idx));
+						this.processor.EmitGlobalByte(SaveSlotDigitAddress, (byte)(0x30 + idx));
 
-						bays.Add(ImportGame(0x41c6, 1) != 0 ? idx : 0xffff);
+						bays.Add(ImportGame(SaveFileNameAddress, 1) != 0 ? idx : 0xffff);
 					}
 				}
 
@@ -259,7 +263,7 @@ namespace Civilization1Remaster.Engine
 				AssignAutosaveFileLabel(bay & 0xff);
 				this.FetchingBackup = true;
 
-				outcome = ImportGame(0x41c6, 0);
+				outcome = ImportGame(SaveFileNameAddress, 0);
 
 				this.FetchingBackup = false;
 				AssignManualFileLabel(Math.Clamp((int)LastSaveSlot, 0, HandBayTally - 1));
@@ -267,9 +271,9 @@ namespace Civilization1Remaster.Engine
 			else
 			{
 				LastSaveSlot = bay;
-				this.processor.EmitGlobalByte(0x41cd, (byte)(0x30 + bay));
+				this.processor.EmitGlobalByte(SaveSlotDigitAddress, (byte)(0x30 + bay));
 
-				outcome = ImportGame(0x41c6, 0);
+				outcome = ImportGame(SaveFileNameAddress, 0);
 			}
 
 			return outcome;
@@ -437,9 +441,9 @@ namespace Civilization1Remaster.Engine
 
 				for (int bayIdx = 0; bayIdx < HandBayTally; bayIdx++)
 				{
-					this.processor.EmitGlobalByte(0x41cd, (byte)(bayIdx + 0x30));
+					this.processor.EmitGlobalByte(SaveSlotDigitAddress, (byte)(bayIdx + 0x30));
 
-					ImportGame(0x41c6, 1);
+					ImportGame(SaveFileNameAddress, 1);
 				}
 
 				DefaultLine = (ushort)this.owner.Helpers.VerifyValueSpan((short)LastSaveSlot, 0, HandBayTally - 1);
@@ -456,9 +460,9 @@ namespace Civilization1Remaster.Engine
 				if (arg1 != 0xffff)
 				{
 					LastSaveSlot = arg1;
-					this.processor.EmitGlobalByte(0x41cd, (byte)(arg1 + 0x30));
+					this.processor.EmitGlobalByte(SaveSlotDigitAddress, (byte)(arg1 + 0x30));
 
-					if (StoreGame(0x41c6) != 0)
+					if (StoreGame(SaveFileNameAddress) != 0)
 					{
 						if (FileError == 0)
 						{
@@ -620,7 +624,7 @@ namespace Civilization1Remaster.Engine
 				}
 			}
 
-			this.processor.EmitGlobalByte(0x41c6, (byte)((byte)SaveDrive + 0x61));
+			this.processor.EmitGlobalByte(SaveFileNameAddress, (byte)((byte)SaveDrive + 0x61));
 
 			drive = SaveDrive;
 			this.processor.RegAcc.Value16 = drive;

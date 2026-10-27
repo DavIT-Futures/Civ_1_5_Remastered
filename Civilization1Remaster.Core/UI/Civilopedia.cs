@@ -4,6 +4,10 @@ namespace Civilization1Remaster.UI
 {
 	public class Civilopedia : GameModule
 	{
+		private const ushort CivilopediaFileName = 0x3fa4;
+		private const ushort CivilopediaFileNumberOffset = 0x3fa9;
+
+
 		public Civilopedia(GameEngine owner)
 			: base(owner)
 		{
@@ -351,7 +355,7 @@ namespace Civilization1Remaster.UI
 			this.processor.Journal.OpenScope($"DisplayCivilopediaRecord({scienceIdx}, {arg2})");
 
 			ushort dataSeg = this.processor.SegData.Value16;
-			this.processor.EmitGlobalByte(0x3fa9, (byte)((byte)arg2 + 0x30));
+			this.processor.EmitGlobalByte(CivilopediaFileNumberOffset, (byte)((byte)arg2 + 0x30));
 
 			this.owner.Helpers.HaltHueCycling();
 			this.owner.Startup.ConcealMouseCursor();
@@ -411,7 +415,7 @@ namespace Civilization1Remaster.UI
 			{
 				if (((byte)(this.owner.World.SessionPrefMarkers & 0xff) & 0x40) != 0)
 				{
-					ushort imported = this.owner.BlockText.ImportTextFromFile(0x3fa4, tagBuf);
+					ushort imported = this.owner.BlockText.ImportTextFromFile(CivilopediaFileName, tagBuf);
 					if ((ushort)(imported + 1) != 0)
 					{
 						this.owner.BlockText.RenderTextChunk(37, 12, 76, 1);
@@ -424,7 +428,7 @@ namespace Civilization1Remaster.UI
 				this.owner.Words.Clear();
 				if (arg2 != 0)
 				{
-					this.owner.BlockText.ImportTextFromFile(0x3fa4, tagBuf);
+					this.owner.BlockText.ImportTextFromFile(CivilopediaFileName, tagBuf);
 					cursorY = (short)((ushort)this.owner.BlockText.RenderTextChunk(36, 12, cursorY, 1) + 8);
 				}
 			}

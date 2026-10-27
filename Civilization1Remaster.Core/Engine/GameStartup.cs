@@ -7,6 +7,11 @@ namespace Civilization1Remaster.Engine
 	/// </summary>
 	public class GameStartup : GameModule
 	{
+		private const ushort VideoDriverOptionAddress = 0x1a22;
+		private const ushort SoundDriverOptionAddress = 0x1a30;
+		private const ushort DiskNumberPromptAddress = 0x1ade;
+
+
 		/// <summary>The words of the frame of TitleLogoAndMainChoices, shared by its helpers (B3: in C#, new for every call)</summary>
 
 		public GameStartup(GameEngine owner)
@@ -26,9 +31,9 @@ namespace Civilization1Remaster.Engine
 
 			// Main menu selection
 			// '1' - VGA; first letter of driver
-			this.processor.EmitGlobalByte(0x1a22, 0x4d);
+			this.processor.EmitGlobalByte(VideoDriverOptionAddress, 0x4d);
 			// '1' - No sound 0x4e, '4' - Sound blaster 0x41, '5' - Roland MIDI board 0x52; first letter of driver
-			this.processor.EmitGlobalByte(0x1a30, 0x4e);
+			this.processor.EmitGlobalByte(SoundDriverOptionAddress, 0x4e);
 			// '1' - Mouse and Keyboard 0x1, '2' - Keyboard only 0x0
 			MousePresent = 0x1;
 
@@ -317,7 +322,7 @@ namespace Civilization1Remaster.Engine
 
 					this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 15);
 
-					this.processor.EmitGlobalByte(0x1ade,
+					this.processor.EmitGlobalByte(DiskNumberPromptAddress,
 						(byte)(CPU.SignedQuotient((short)diskIdx, (short)FirstMissingDisk) + 0x31));
 
 					ushort message = (ushort)(this.processor.RegStack.Value16 - 0x100);

@@ -425,7 +425,7 @@ namespace Civilization1Remaster.UI
 
 			if ((short)PalaceGardenBackground > 0)
 			{
-				string gardenPicture = $"cbacks{(char)(this.processor.PullGlobalByte(0xd932) + '0')}.pic";
+				string gardenPicture = $"cbacks{(char)(PalaceGardenBackground + '0')}.pic";
 				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0x87, gardenPicture, 0);
 			}
 

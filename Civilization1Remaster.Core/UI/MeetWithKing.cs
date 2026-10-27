@@ -5,6 +5,11 @@ namespace Civilization1Remaster.UI
 {
 	public class MeetWithKing : GameModule
 	{
+		private const ushort KingEyesHueAddress = 0x3a9a;
+		private const ushort KingGestureHue1Address = 0x3ab4;
+		private const ushort KingGestureHue2Address = 0x3ab7;
+
+
 		private readonly UnitMemory troops;
 
 		public MeetWithKing(GameEngine owner)
@@ -1333,7 +1338,7 @@ namespace Civilization1Remaster.UI
 			switch (KingMood)
 			{
 				case 0:
-					this.processor.EmitGlobalByte(0x3a9a, AudienceWelcomed != 0 ? (byte)4 : (byte)2);
+					this.processor.EmitGlobalByte(KingEyesHueAddress, AudienceWelcomed != 0 ? (byte)4 : (byte)2);
 
 					if (KingStep != 6)
 						gesture = 3;
@@ -1345,8 +1350,8 @@ namespace Civilization1Remaster.UI
 					break;
 
 				case 2:
-					this.processor.EmitGlobalByte(0x3ab4, AudienceWelcomed != 0 ? (byte)0xb : (byte)7);
-					this.processor.EmitGlobalByte(0x3ab7, AudienceWelcomed != 0 ? (byte)0xb : (byte)7);
+					this.processor.EmitGlobalByte(KingGestureHue1Address, AudienceWelcomed != 0 ? (byte)0xb : (byte)7);
+					this.processor.EmitGlobalByte(KingGestureHue2Address, AudienceWelcomed != 0 ? (byte)0xb : (byte)7);
 
 					if (KingStep != 0xe)
 						gesture = 0xc;

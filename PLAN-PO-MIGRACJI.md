@@ -579,6 +579,8 @@ bez wyjątku (czyta 0), `DifferentialPair` po wyjątku w scenariuszu przywraca S
 
 **B6.4 / B6.2 część 2 (2026-10-27):** eliminacja surowych odwołań bajtowych i ostatnich uchwytów tabel. W `Pathfinding.ComputeRouteCost` zastąpiono `EmitGlobalByte(0x87c9..0x87cb)` przez `this.troops.Assign(0, 127, ...)` z `UnitMemory` (czyszcząc ostatnie bezpośrednie dostępy do pamięci jednostek). W `GameGlobals` i `GameModule` dodano zmienne: `SpaceshipStarFieldFrame` (0x687a), `FallenLeadersCount` (0xb1d4) i `GameEndFlags` (0x4cd9) i zaktualizowano moduły `SpaceshipScreen`, `GameReplay` i `TurnEvents`. W `CityView` wprowadzono akcesor `CityStructurePicture(int)` i `CitySceneryHandle`, eliminując surowe adresy 0x81c4, 0x81ce, 0x81ae, 0x81cc, 0x81b8, 0x817a. 2/2 mutacji złapanych (GoldenMaster `PlayedTurnsMatchBaseline`), Golden Master 15/15 zielony.
 
+**B6.4 część 3 (2026-10-27):** eliminacja surowych adresów w modułach UI, zapisu i inicjalizacji: `Palace.cs` (`PalaceGardenBackground`), `CityView.cs` (akcesor `CitySceneryPiecePicture`), `Civilopedia.cs` (`CivilopediaFileName`, `CivilopediaFileNumberOffset`), `GameLoadAndSave.cs` (`SaveFileNameAddress`, `SaveSlotDigitAddress`), `MeetWithKing.cs` (`KingEyesHueAddress`, `KingGestureHue1Address`, `KingGestureHue2Address`), `GameStartup.cs` (`VideoDriverOptionAddress`, `SoundDriverOptionAddress`, `DiskNumberPromptAddress`), `GameInitAndIntro.cs` (`SeaBlocksAddress`). 2/2 mutacji złapanych (`ReckonContinentSizesMatchesOriginalCode`, `ChoreographKingSpeakingMatchesOriginalCode`), Golden Master 15/15 zielony.
+
 
 
 **Faza 3 – sprzątanie i drugi baseline:** usunięcie przełączników i kodu „classic”, zamrożonej gry

@@ -12,6 +12,7 @@ namespace Civilization1Remaster.UI
 
 		/// <summary>Picture handle of the city scenery</summary>
 		private ushort CitySceneryHandle => this.processor.PullGlobalWord(0x817a);
+		private ushort CitySceneryPiecePicture(int x, int y) => this.processor.PullGlobalWord((ushort)((x << 1) + (y << 3) + 0x817a));
 
 
 		public CityView(GameEngine owner)
@@ -609,7 +610,7 @@ namespace Civilization1Remaster.UI
 			this.owner.Services.RenderPictureToScreen(BackScreenBox,
 				((arg2 & 1) << 3) + (arg1 << 4),
 				(arg2 << 3) + 26,
-				this.processor.PullGlobalWord((ushort)((arg3 << 1) + (arg4 << 3) + 0x817a)));
+				CitySceneryPiecePicture(arg3, arg4));
 
 			this.processor.Journal.CloseScope("RenderCityPictureRegion");
 		}

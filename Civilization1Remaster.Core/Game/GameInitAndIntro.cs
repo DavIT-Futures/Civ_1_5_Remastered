@@ -6,6 +6,9 @@ namespace Civilization1Remaster.Game
 {
 	public class GameInitAndIntro : GameModule
 	{
+		private const ushort SeaBlocksAddress = 0x7f38;
+
+
 
 
 		/// <summary>The words of the frame of ReckonContinentSizes, shared by its helpers (B3: in C#, new for every call)</summary>
@@ -1157,7 +1160,7 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"ReckonContinentSizes({marker})");
 
-			this.owner.Libc.FillBytes(0x7f38, 0, 0x104);
+			this.owner.Libc.FillBytes(SeaBlocksAddress, 0, 0x104);
 
 			short lastNextSea = 0;
 
@@ -1176,11 +1179,11 @@ namespace Civilization1Remaster.Game
 
 			for (ushort row = 0; row < 0xc; row++)
 			{
-				this.processor.EmitGlobalByte((ushort)(row + 0x7f38), (byte)(this.processor.PullGlobalByte((ushort)(row + 0x7f38)) | 0xe0));
+				this.processor.EmitGlobalByte((ushort)(row + SeaBlocksAddress), (byte)(this.processor.PullGlobalByte((ushort)(row + SeaBlocksAddress)) | 0xe0));
 				this.processor.EmitGlobalByte((ushort)(row + 0x802f), (byte)(this.processor.PullGlobalByte((ushort)(row + 0x802f)) | 0xe));
 			}
 
-			this.processor.EmitGlobalByte(0x7f38, (byte)(this.processor.PullGlobalByte(0x7f38) & 0x7f));
+			this.processor.EmitGlobalByte(SeaBlocksAddress, (byte)(this.processor.PullGlobalByte(SeaBlocksAddress) & 0x7f));
 			this.processor.EmitGlobalByte(0x7f43, (byte)(this.processor.PullGlobalByte(0x7f43) & 0xdf));
 			this.processor.EmitGlobalByte(0x802f, (byte)(this.processor.PullGlobalByte(0x802f) & 0xfd));
 			this.processor.EmitGlobalByte(0x803a, (byte)(this.processor.PullGlobalByte(0x803a) & 0xf7));
@@ -1281,7 +1284,7 @@ namespace Civilization1Remaster.Game
 		/// <summary>Sets bit bitIdx of the block's sea links (0x7f38 + 13 * column + row)</summary>
 		private void LinkSeaBlockBit(short column, short row, int bitIdx)
 		{
-			ushort links = (ushort)((0xd * column) + row + 0x7f38);
+			ushort links = (ushort)((0xd * column) + row + SeaBlocksAddress);
 
 			this.processor.EmitGlobalByte(links, (byte)(this.processor.PullGlobalByte(links) | (1 << bitIdx)));
 		}
