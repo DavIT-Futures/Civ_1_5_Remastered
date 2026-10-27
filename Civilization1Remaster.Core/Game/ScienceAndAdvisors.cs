@@ -1243,7 +1243,6 @@ namespace Civilization1Remaster.Game
 				return false;
 
 			ushort science = (ushort)(0x16 * scienceIdx);
-			this.processor.RegSource.Value16 = science;
 
 			return PlayerKnowsTechnology(participantIdx, (sbyte)this.processor.PullGlobalByte((ushort)(science + TechnologyTable.Prerequisite1Address))) != 0 &&
 				PlayerKnowsTechnology(participantIdx, (sbyte)this.processor.PullGlobalByte((ushort)(science + TechnologyTable.Prerequisite2Address))) != 0;
@@ -1310,8 +1309,6 @@ namespace Civilization1Remaster.Game
 
 				if (choice == 0xffff)
 					choice = 0;
-
-				this.processor.RegSource.Value16 = (ushort)(choice << 1);
 
 				ushort scienceIdx = choiceList[choice];
 
@@ -1461,7 +1458,6 @@ namespace Civilization1Remaster.Game
 			for (ushort kindIdx = 0; kindIdx < 0x1c; kindIdx++)
 			{
 				ushort kindRecord = (ushort)(0x22 * kindIdx);
-				this.processor.RegSource.Value16 = kindRecord;
 
 				if (UnitKindWordAt(kindRecord, UnitKindTable.Technology) != (ushort)pick)
 					continue;
@@ -1476,7 +1472,6 @@ namespace Civilization1Remaster.Game
 			for (ushort wonderIdx = 0; wonderIdx < 0x18; wonderIdx++)
 			{
 				ushort wonderRecord = (ushort)(0x1e * wonderIdx);
-				this.processor.RegSource.Value16 = wonderRecord;
 
 				if (BuildingWordAt(wonderRecord, BuildingTable.Technology) != (ushort)pick)
 					continue;
@@ -1525,8 +1520,6 @@ namespace Civilization1Remaster.Game
 				}
 				else
 				{
-					this.processor.RegSource.Value16 = (ushort)(choices << 1);
-
 					if (choiceList[choices] != (ushort)scienceIdx)
 						continue;
 				}
@@ -1535,7 +1528,6 @@ namespace Civilization1Remaster.Game
 
 				this.owner.Words.Append("\n ");
 
-				this.processor.RegSource.Value16 = (ushort)(choices << 1);
 				choiceList[choices] = (ushort)scienceIdx;
 				choices++;
 			}
@@ -1586,8 +1578,6 @@ namespace Civilization1Remaster.Game
 
 			if (participantIdx != person)
 			{
-				this.processor.RegSource.Value16 = (ushort)(participantIdx << 1);
-
 				if ((this.owner.World.Participants[person].Relations[participantIdx] & 0x40) == 0)
 				{
 					SendTechnologyEmissary(participantIdx, scienceIdx);
@@ -1622,7 +1612,6 @@ namespace Civilization1Remaster.Game
 				for (ushort wonderIdx = 0; wonderIdx < 0x18; wonderIdx++)
 				{
 					ushort wonderRecord = (ushort)(0x1e * wonderIdx);
-					this.processor.RegSource.Value16 = wonderRecord;
 
 					if (BuildingWordAt(wonderRecord, BuildingTable.Technology) == (ushort)scienceIdx)
 					{
@@ -1635,7 +1624,6 @@ namespace Civilization1Remaster.Game
 				for (ushort kindIdx = 0; kindIdx < 0x1c; kindIdx++)
 				{
 					ushort kindRecord = (ushort)(0x22 * kindIdx);
-					this.processor.RegSource.Value16 = kindRecord;
 
 					if (UnitKindWordAt(kindRecord, UnitKindTable.Technology) == (ushort)scienceIdx)
 					{
@@ -1722,8 +1710,6 @@ namespace Civilization1Remaster.Game
 			{
 				// The exchange of ambassadors that followed never happens: the test of the original, ((Relations == 0) & 0x40),
 				// is always false
-				this.processor.RegSource.Value16 = (ushort)(participantIdx << 1);
-				this.processor.RegDest.Value16 = (ushort)(((ushort)person << 4) + ((ushort)(participantIdx << 1)));
 			}
 
 			if (ScienceRules.DoesTechObsoleteBarracks(scienceIdx))
@@ -1756,9 +1742,7 @@ namespace Civilization1Remaster.Game
 				// The human player's wonders (0x10fe: the technology that makes each obsolete) lose their effect
 				for (ushort wonderIdx = 1; wonderIdx <= 0x15; wonderIdx++)
 				{
-					this.processor.RegSource.Value16 = (ushort)(wonderIdx << 1);
-
-					if (this.processor.PullGlobalWord((ushort)(this.processor.RegSource.Value16 + 0x10fe)) != (ushort)scienceIdx ||
+					if (WonderObsoleteTechnology(wonderIdx) != (ushort)scienceIdx ||
 						!WonderCityRules.ReadsCity(this.owner.World.MarvelTownIdx[wonderIdx], this.owner.TurnHooks.ClassicWonderCities) ||
 						this.owner.World.Towns[this.owner.World.MarvelTownIdx[wonderIdx]].ParticipantIdx != person)
 						continue;

@@ -619,29 +619,20 @@ namespace Civilization1Remaster.UI
 				return true;
 			}
 
-			// The original addresses the leader's word through SI (its gold tribute below uses it)
-			this.processor.RegSource.Value16 = (ushort)(participantIdx << 4);
-
 			if ((Relation(participantIdx) & 2) != 0)
 				this.owner.Politics.WipeDiplomacyFlags(personIdx, participantIdx, 2);
 
 			if ((short)this.audienceDanger >= 4 && this.audienceWantedTechnology != 0xffff)
 			{
-				this.processor.RegSource.Value16 = (ushort)(participantIdx << 4);
-
 				if ((Relation(participantIdx) & 0xa) == 0)
 					OfferTechnologyForPeace(participantIdx);
 			}
-
-			this.processor.RegDest.Value16 = (ushort)(participantIdx << 4);
 
 			if ((Relation(participantIdx) & 0xa) == 0)
 				OfferGoldForPeace(participantIdx);
 
 			if (this.audienceDanger != 0 && Leader(participantIdx).TownTally <= 1)
 			{
-				this.processor.RegDest.Value16 = (ushort)(participantIdx << 4);
-
 				if ((Relation(participantIdx) & 0xa) == 0)
 					OfferEverythingForPeace(participantIdx);
 			}
@@ -705,7 +696,7 @@ namespace Civilization1Remaster.UI
 			Person.Gold += (short)amount;
 
 			// A translation slip: the gold is taken from the word at SI (the leader << 4), not from the leader
-			ushort taken = this.processor.RegSource.Value16;
+			ushort taken = (ushort)(participantIdx << 4);
 			this.processor.EmitUInt16(this.processor.SegData.Value16, taken, (ushort)(this.processor.PullUInt16(this.processor.SegData.Value16, taken) - amount));
 			this.audienceLastAudience = (ushort)this.owner.World.RoundTally;
 		}
@@ -932,10 +923,6 @@ namespace Civilization1Remaster.UI
 				return true;
 			}
 
-			// The names below are addressed through SI and DI, as the original keeps them over the calls
-			this.processor.RegSource.Value16 = (ushort)(participantIdx << 1);
-			this.processor.RegDest.Value16 = (ushort)(enemyIdx << 1);
-
 			short amount = (short)((ushort)this.owner.Helpers.VerifyValueSpan(((Leader(enemyIdx).MartialMight / 2) * (Leader(participantIdx).Gold / 100)) / 50, 2, 9999) * 0x32);
 
 			EmptyMessage()
@@ -957,9 +944,9 @@ namespace Civilization1Remaster.UI
 				Leader(participantIdx).Gold += amount;
 				Person.Gold -= amount;
 
-				Message(CivilizationPluralAt(this.processor.RegSource.Value16))
+				Message(CivilizationPlural(participantIdx))
 					.Text(" declare war\non the ")
-					.Text(CivilizationPluralAt(this.processor.RegDest.Value16))
+					.Text(CivilizationPlural(enemyIdx))
 					.Text(".\n");
 			}
 

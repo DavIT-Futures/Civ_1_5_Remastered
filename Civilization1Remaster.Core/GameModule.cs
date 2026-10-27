@@ -1,4 +1,4 @@
-﻿using Civilization1Remaster.Emulation;
+using Civilization1Remaster.Emulation;
 using Civilization1Remaster.Video;
 using Civilization1Remaster.Game;
 
@@ -1596,6 +1596,9 @@ namespace Civilization1Remaster
 
 		/// <summary>The address of the name of the wonder (records of 0x1e bytes, the name at 0xe6a + 0x1e * wonder)</summary>
 		protected static ushort WonderText(int index) => (ushort)(0x1e * index + 0xe6a);
+
+		/// <summary>0x10fe + 2 * wonder: the technology that makes the wonder obsolete (WonderObsoleteTable)</summary>
+		protected ushort WonderObsoleteTechnology(int wonder) => this.owner.Tables.Word((ushort)((wonder << 1) + WonderObsoleteTable.Origin));
 
 		/// <summary>The address of the name of the unit kind (records of 0x22 bytes at 0x112a, UnitKindTable)</summary>
 		protected static ushort UnitText(int index) => (ushort)(0x22 * index + 0x112a);

@@ -53,8 +53,6 @@ namespace Civilization1Remaster.Game
 		/// <summary>The human player's unit next to its goal: the direction there (0 for its own tile); false when not near</summary>
 		private bool StepToNearGoal(ushort troop, short troopIdx, out ushort direction)
 		{
-			this.processor.RegSource.Value16 = troop;
-
 			short shiftHoriz = troopIdx < 128 ? (short)(this.Troops.PullAt(troop, UnitMemory.TravelHoriz) - this.Troops.PullAt(troop, UnitMemory.Horiz)) : (short)0;
 			short shiftVert = troopIdx < 128 ? (short)(this.Troops.PullAt(troop, UnitMemory.TravelVert) - this.Troops.PullAt(troop, UnitMemory.Vert)) : (short)0;
 
@@ -70,7 +68,6 @@ namespace Civilization1Remaster.Game
 
 			if (troopIdx < 128)
 			{
-				this.processor.RegSource.Value16 = (ushort)(troop - (0xc * troopIdx));
 				this.Troops.AssignAt(troop, UnitMemory.TravelHoriz, 0xff);
 			}
 
@@ -78,8 +75,6 @@ namespace Civilization1Remaster.Game
 
 			for (candidate = 1; candidate <= 8; candidate++)
 			{
-				this.processor.RegSource.Value16 = (ushort)(candidate << 1);
-
 				if ((short)DirectionHoriz(candidate) == shiftHoriz &&
 					(short)DirectionVert(candidate) == shiftVert)
 				{
@@ -95,8 +90,6 @@ namespace Civilization1Remaster.Game
 		/// <summary>Where the unit heads (0x6590 / 0x6592) and its step there (see CarryOutGoto)</summary>
 		private ushort StepTowardsGoal(short participantIdx, short troopIdx, ushort troop)
 		{
-			this.processor.RegSource.Value16 = troop;
-
 			ushort kind = (ushort)(0x22 * (sbyte)this.Troops.PullAt(troop, UnitMemory.Kind));
 
 			if (UnitKindWordAt(kind, UnitKindTable.LandGroup) == 1)
@@ -153,8 +146,6 @@ namespace Civilization1Remaster.Game
 		/// <summary>The cheapest neighbour towards 0x6590 / 0x6592 (see CarryOutGoto)</summary>
 		private ushort ChooseGotoStep(short participantIdx, short troopIdx, ushort troop)
 		{
-			this.processor.RegSource.Value16 = troop;
-
 			short unitHoriz = this.Troops.PullAt(troop, UnitMemory.Horiz);
 			short unitVert = this.Troops.PullAt(troop, UnitMemory.Vert);
 			short shiftHoriz = (short)(GoalHoriz - unitHoriz);
@@ -191,9 +182,6 @@ namespace Civilization1Remaster.Game
 				short nextVert = (short)(this.Troops.PullAt(troop, UnitMemory.Vert) + stepVert);
 				short leftHoriz = (short)(shiftHoriz - stepHoriz);
 				short leftVert = (short)(shiftVert - stepVert);
-
-				this.processor.RegSource.Value16 = (ushort)(direction << 1);
-				this.processor.RegDest.Value16 = troop;
 
 				short nextDistance = GotoDistance(leftHoriz, leftVert);
 
@@ -242,8 +230,6 @@ namespace Civilization1Remaster.Game
 			}
 
 
-			this.processor.RegSource.Value16 = troop;
-
 			byte previous = this.Troops.PullAt(troop, UnitMemory.TravelHeading);
 
 			// Straight back: the unit stops for this turn
@@ -281,7 +267,6 @@ namespace Civilization1Remaster.Game
 			if (ownerIdx == 0xffff || ownerIdx == (ushort)participantIdx)
 			{
 				ushort kind = (ushort)(0x22 * (sbyte)this.Troops.PullAt(troop, UnitMemory.Kind));
-				this.processor.RegSource.Value16 = terrain == 0xa ? (ushort)1 : (ushort)0;
 
 				if ((UnitKindWordAt(kind, UnitKindTable.LandGroup) == 2) == (terrain == 0xa) &&
 					(occupied == 0 || this.owner.UnitOps.MayOccupyTile(participantIdx, horizLoc, vertLoc) == 0))
@@ -290,8 +275,6 @@ namespace Civilization1Remaster.Game
 				}
 				else
 				{
-					this.processor.RegSource.Value16 = (ushort)(0x600 * participantIdx);
-
 					if (UnitKindWord((sbyte)this.Troops.PullAt(troop, UnitMemory.Kind), UnitKindTable.LandGroup) == 1)
 						allowed = true;
 				}
@@ -647,7 +630,6 @@ namespace Civilization1Remaster.Game
 
 
 			ushort troop = (ushort)((ushort)(0x600 * participantIdx) + (ushort)(0xc * troopIdx));
-			this.processor.RegSource.Value16 = troop;
 
 			short unitHoriz = this.Troops.PullAt(troop, UnitMemory.Horiz);
 			short unitVert = this.Troops.PullAt(troop, UnitMemory.Vert);
@@ -672,8 +654,6 @@ namespace Civilization1Remaster.Game
 
 			if (step == -1)
 			{
-				this.processor.RegSource.Value16 = troop;
-
 				GoalHoriz = this.Troops.PullAt(troop, UnitMemory.TravelHoriz);
 				GoalVert = this.Troops.PullAt(troop, UnitMemory.TravelVert);
 			}
@@ -710,7 +690,6 @@ namespace Civilization1Remaster.Game
 			GotoCost = arg3;
 
 			ushort kind = (ushort)(0x22 * (sbyte)this.Troops.PullAt(((ushort)(0xc * troopIdx) + (ushort)(0x600 * participantIdx)), UnitMemory.Kind));
-			this.processor.RegSource.Value16 = kind;
 
 			bool sea = UnitKindWordAt(kind, UnitKindTable.LandGroup) == 2;
 			bool air = UnitKindWordAt(kind, UnitKindTable.ShiftTally) == 1;
@@ -836,7 +815,6 @@ namespace Civilization1Remaster.Game
 				bool seaTile = this.owner.MapOps.ObtainTerrainType(tileHoriz, nextVert) == 0xa;
 
 				ushort kind = (ushort)(0x22 * (sbyte)this.Troops.PullAt(((ushort)(0xc * troopIdx) + (ushort)(0x600 * participantIdx)), UnitMemory.Kind));
-				this.processor.RegSource.Value16 = seaTile ? (ushort)1 : (ushort)0;
 
 				if ((UnitKindWordAt(kind, UnitKindTable.LandGroup) == 2) != seaTile &&
 					(this.owner.MapOps.ObtainTileImprovements(tileHoriz, nextVert) & 1) == 0)

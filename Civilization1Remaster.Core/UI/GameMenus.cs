@@ -1,4 +1,4 @@
-﻿using Civilization1Remaster.Emulation;
+using Civilization1Remaster.Emulation;
 
 namespace Civilization1Remaster.UI
 {
@@ -200,17 +200,10 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope($"DisplayOrdersMenu({participantIdx}, {troopIdx})");
 
-			// DisplayMenu leaves SI in DI: both are given back to the caller as they were
-			ushort source = this.processor.RegSource.Value16;
-			ushort dest = this.processor.RegDest.Value16;
-
 			if (troopIdx != -1 && troopIdx != 128)
 			{
 				ChooseOrder(participantIdx, troopIdx);
 			}
-
-			this.processor.RegSource.Value16 = source;
-			this.processor.RegDest.Value16 = dest;
 
 			// Far return
 			this.processor.Journal.CloseScope("DisplayOrdersMenu");

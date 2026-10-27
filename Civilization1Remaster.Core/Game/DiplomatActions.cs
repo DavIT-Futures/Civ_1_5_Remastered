@@ -30,7 +30,6 @@ namespace Civilization1Remaster.Game
 			short ownerIdx = town.ParticipantIdx;
 			ushort troop = (ushort)((ushort)(0xc * troopIdx) + (ushort)(0x600 * participantIdx));
 
-			this.processor.RegSource.Value16 = (ushort)(0x600 * participantIdx);
 			this.Troops.AssignAt(troop, UnitMemory.TravelHoriz, 0xff);
 
 			Message(CivilizationName((ushort)participantIdx))
@@ -42,8 +41,6 @@ namespace Civilization1Remaster.Game
 
 			if (participantIdx == person)
 			{
-				this.processor.RegSource.Value16 = (ushort)(ownerIdx << 1);
-
 				if ((this.owner.World.Participants[person].Relations[ownerIdx] & 0x40) != 0 || ownerIdx == 0)
 					DisabledLines = 0x1;
 
@@ -64,8 +61,6 @@ namespace Civilization1Remaster.Game
 
 				if (ownerIdx == person)
 				{
-					this.processor.RegSource.Value16 = (ushort)(participantIdx << 1);
-
 					if ((this.owner.World.Participants[person].Relations[participantIdx] & 2) != 0)
 					{
 						this.owner.UnitOps.EliminateUnit(participantIdx, troopIdx);
@@ -78,8 +73,6 @@ namespace Civilization1Remaster.Game
 			switch (choice)
 			{
 				case 0:
-					this.processor.RegSource.Value16 = (ushort)(ownerIdx << 1);
-
 					this.owner.World.Participants[person].Relations[ownerIdx] |= 0x40;
 
 					this.owner.UnitOps.EliminateUnit(participantIdx, troopIdx);
@@ -108,13 +101,10 @@ namespace Civilization1Remaster.Game
 				case 5:
 					if (ownerIdx != 0)
 					{
-						this.processor.RegSource.Value16 = troop;
-
 						this.owner.Audience.LaunchAudience(ownerIdx, (sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz),
 							(sbyte)this.Troops.PullAt(troop, UnitMemory.Vert), 1);
 					}
 
-					this.processor.RegSource.Value16 = (ushort)(0x600 * participantIdx);
 					this.Troops.AssignAt(troop, UnitMemory.LeftoverSteps, 0);
 					break;
 			}
@@ -233,8 +223,6 @@ namespace Civilization1Remaster.Game
 
 			if (!destroyed)
 			{
-				this.processor.RegSource.Value16 = (ushort)(0x1c * townIdx);
-
 				town.MaterialsTally = 0;
 
 				Message(town.PresentMakingIdx >= 0 ? UnitText(town.PresentMakingIdx) : BuildingRecordText(-town.PresentMakingIdx))
@@ -262,8 +250,6 @@ namespace Civilization1Remaster.Game
 		{
 			City town = this.owner.World.Towns[townIdx];
 
-			this.processor.RegSource.Value16 = (ushort)(0x1c * townIdx);
-
 			ushort distance = this.owner.Politics.LocateNearestCityOfPlayer(ownerIdx, town.Place.X, town.Place.Y);
 
 			if (distance == 0)
@@ -286,8 +272,6 @@ namespace Civilization1Remaster.Game
 
 				if ((short)(cost << 1) <= this.owner.World.Participants[participantIdx].Gold)
 				{
-					this.processor.RegDest.Value16 = (ushort)(participantIdx << 4);
-
 					if ((this.owner.World.Participants[participantIdx].Relations[ownerIdx] & 2) != 0)
 					{
 						this.owner.Words.Append(" Subvert city ($x2)\n");
@@ -304,8 +288,6 @@ namespace Civilization1Remaster.Game
 
 			if (choice == 1)
 			{
-				this.processor.RegSource.Value16 = (ushort)((ownerIdx << 4) + (participantIdx << 1));
-
 				if ((this.owner.World.Participants[ownerIdx].Relations[participantIdx] & 2) != 0)
 				{
 					this.owner.Politics.WipeDiplomacyFlags(ownerIdx, participantIdx, 2);
@@ -317,8 +299,6 @@ namespace Civilization1Remaster.Game
 			this.owner.World.Participants[participantIdx].Gold -= (short)(cost * choice);
 
 			ComputeInciteCost(townIdx, participantIdx);
-
-			this.processor.RegSource.Value16 = (ushort)(0x1c * townIdx);
 
 			this.owner.MapOps.RepaintMapTile(town.Place.X, town.Place.Y);
 

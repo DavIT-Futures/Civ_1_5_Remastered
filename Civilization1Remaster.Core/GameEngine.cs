@@ -281,7 +281,6 @@ namespace Civilization1Remaster
 			ushort programSection = this.processor.SegExtra.Value16;
 			ushort blockSize = (ushort)(topSection - programSection);
 
-			this.processor.RegSource.Value16 = topSection;
 			this.processor.RegBase.Value16 = blockSize;
 
 			bool resized = this.processor.Storage.RescaleStorageChunk(programSection, blockSize);

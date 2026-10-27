@@ -884,7 +884,6 @@ namespace Civilization1Remaster.UI
 			for (participantIdx = 1; participantIdx < 8; participantIdx++)
 			{
 				ushort troop = (ushort)(0x600 * participantIdx);
-				this.processor.RegSource.Value16 = troop;
 
 				if (this.Troops.PullAt(troop, UnitMemory.Kind) == 0xff)
 					continue;
@@ -898,7 +897,6 @@ namespace Civilization1Remaster.UI
 			for (participantIdx = 1; participantIdx < 8; participantIdx++)
 			{
 				ushort troop = (ushort)(0x600 * participantIdx);
-				this.processor.RegSource.Value16 = troop;
 
 				if (this.Troops.PullAt(troop, UnitMemory.Kind) == 0xff)
 					continue;
@@ -917,7 +915,6 @@ namespace Civilization1Remaster.UI
 					best = start;
 				}
 
-				this.processor.RegSource.Value16 = (ushort)(participantIdx << 1);
 				points[participantIdx] = start;
 			}
 
@@ -926,7 +923,6 @@ namespace Civilization1Remaster.UI
 			for (participantIdx = 1; participantIdx < 8; participantIdx++)
 			{
 				ushort troop = (ushort)(0x600 * participantIdx);
-				this.processor.RegSource.Value16 = troop;
 
 				if (this.Troops.PullAt(troop, UnitMemory.Kind) == 0xff)
 					continue;
@@ -945,15 +941,11 @@ namespace Civilization1Remaster.UI
 
 				for (ushort given = 0; (short)(best - points[participantIdx]) > (short)given; given++)
 				{
-					this.processor.RegSource.Value16 = (ushort)(participantIdx << 1);
-
 					if (given != 0)
 						this.owner.Words.Append("+");
 
 					this.owner.Words.Append((ushort)((ushort)(this.owner.Advisors.UncoverTechnology((short)participantIdx, 0) * 0x16) + 0x4da));
 				}
-
-				this.processor.RegSource.Value16 = (ushort)(participantIdx << 1);
 
 				if (points[participantIdx] != best)
 					continue;
@@ -991,12 +983,9 @@ namespace Civilization1Remaster.UI
 					continue;
 
 				ushort other = (ushort)(0x600 * otherIdx);
-				this.processor.RegSource.Value16 = other;
 
 				if (this.Troops.PullAt(other, UnitMemory.Kind) == 0xff)
 					continue;
-
-				this.processor.RegDest.Value16 = troop;
 
 				ushort otherContinent = this.owner.MapOps.ObtainContinentID((sbyte)this.Troops.PullAt(other, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(other, UnitMemory.Vert));
 
@@ -1049,9 +1038,6 @@ namespace Civilization1Remaster.UI
 
 			for (neighbourIdx = 0; neighbourIdx <= 8; neighbourIdx++)
 			{
-				this.processor.RegSource.Value16 = (ushort)(neighbourIdx << 1);
-				this.processor.RegDest.Value16 = troop;
-
 				ushort terrain = this.owner.MapOps.ObtainTerrainType(
 					(sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz) + (short)DirectionHoriz(neighbourIdx),
 					(sbyte)this.Troops.PullAt(troop, UnitMemory.Vert) + (short)DirectionVert(neighbourIdx));
@@ -1084,8 +1070,6 @@ namespace Civilization1Remaster.UI
 			{
 				this.owner.Words.Append("plains on a ");
 			}
-
-			this.processor.RegSource.Value16 = troop;
 
 			switch (CPU.SignedQuotient((short)this.owner.MapOps.ObtainLandMassSize((sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert)), 0x32))
 			{

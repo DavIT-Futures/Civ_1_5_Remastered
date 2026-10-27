@@ -50,6 +50,12 @@ namespace Civilization1Remaster.Game
 		public const int Stride = 0x16;
 	}
 
+	/// <summary>The technology that makes each wonder obsolete (word table at 0x10fe)</summary>
+	public static class WonderObsoleteTable
+	{
+		public const ushort Origin = 0x10fe;
+	}
+
 	/// <summary>The leaders and their civilizations (records of 0x3a bytes) in the data segment</summary>
 	public static class LeaderTable
 	{

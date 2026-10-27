@@ -771,8 +771,6 @@ namespace Civilization1Remaster.Game
 
 			for (int heading = 8; heading >= 0; heading--)
 			{
-				this.processor.RegSource.Value16 = (ushort)(heading << 1);
-
 				short tileHoriz = (short)(chart.DirectionHoriz(heading) + horizLoc);
 				short tileVert = (short)(chart.DirectionVert(heading) + vertLoc);
 
