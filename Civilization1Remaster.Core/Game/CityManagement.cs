@@ -2922,11 +2922,11 @@ namespace Civilization1Remaster.Game
 			City town = this.owner.World.Towns[townIdx];
 
 			if (town.TrueExtent != 0)
-				this.owner.Helpers.VerifyValueSpan(80 / town.TrueExtent, 1, 8);
+				this.round.Value = (ushort)this.owner.Helpers.VerifyValueSpan(80 / town.TrueExtent, 1, 8);
 			else
-				this.processor.RegAcc.Value16 = 1;
+				this.round.Value = 1;
 
-			this.round.Value = this.processor.RegAcc.Value16;
+			this.processor.RegAcc.Value16 = this.round.Value;
 
 			short box = (short)this.round.CostFactor;
 

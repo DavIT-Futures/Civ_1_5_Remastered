@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Civilization1Remaster.Emulation;
 
 namespace Civilization1Remaster.Engine
@@ -22,11 +22,11 @@ namespace Civilization1Remaster.Engine
 		public void SeedRandomizer()
 		{
 			// function body
-			ushort seed = (ushort)(this.owner.Libc.CurrentTime(0) & 0x7fff);
+			this.processor.RegAcc.Value16 = (ushort)(this.owner.Libc.CurrentTime(0) & 0x7fff);
 
-			this.owner.World.ChanceRoot = seed;
+			this.owner.World.ChanceRoot = this.processor.RegAcc.Value16;
 
-			this.owner.Libc.SeedRandom(seed);
+			this.owner.Libc.SeedRandom(this.processor.RegAcc.Value16);
 		}
 
 		/// <summary>
@@ -44,6 +44,7 @@ namespace Civilization1Remaster.Engine
 				throw new Exception("Minimum value is greater than maximum value");
 
 			int backAmountInt = Math.Min(Math.Max(amount, floorAmount), peakAmount);
+			this.processor.RegAcc.Value16 = (ushort)((short)backAmountInt);
 
 			return backAmountInt;
 		}
@@ -69,6 +70,7 @@ namespace Civilization1Remaster.Engine
 				}
 			}
 
+			this.processor.RegAcc.Value16 = found;
 
 			this.processor.Journal.CloseScope("LocateCityAtPosition");
 
@@ -104,6 +106,7 @@ namespace Civilization1Remaster.Engine
 			}
 
 			FoundDistance = (ushort)nearestDistance;
+			this.processor.RegAcc.Value16 = nearest;
 
 			this.processor.Journal.CloseScope("LocateNearestCity");
 
@@ -140,6 +143,7 @@ namespace Civilization1Remaster.Engine
 			}
 
 			FoundDistance = (ushort)nearestDistance;
+			this.processor.RegAcc.Value16 = nearest;
 
 			this.processor.Journal.CloseScope("LocateNearestUnit");
 
@@ -152,6 +156,7 @@ namespace Civilization1Remaster.Engine
 		public int MergeCoordinates(int horizLoc, int vertLoc)
 		{
 			int merged = MapRules.LongerPlusHalfShorter(horizLoc, vertLoc);
+			this.processor.RegAcc.Value16 = (ushort)((short)merged);
 
 			return merged;
 		}
@@ -163,11 +168,11 @@ namespace Civilization1Remaster.Engine
 		{
 			this.owner.Journal.OpenScope($"ObtainDistanceFromOffsets({horizLoc}, {vertLoc})");
 
-			ushort distance = (ushort)MapRules.DoubledDistance(horizLoc, vertLoc);
+			this.processor.RegAcc.Value16 = (ushort)MapRules.DoubledDistance(horizLoc, vertLoc);
 
 			this.owner.Journal.CloseScope("ObtainDistanceFromOffsets");
 
-			return distance;
+			return this.processor.RegAcc.Value16;
 		}
 
 		/// <summary>
@@ -176,6 +181,7 @@ namespace Civilization1Remaster.Engine
 		public int ObtainDistance(int horizLoc, int horizSpot1, int vertLoc, int vertSpot1)
 		{
 			int distance = MapRules.Distance(horizLoc, vertLoc, horizSpot1, vertSpot1);
+			this.processor.RegAcc.Value16 = (ushort)((short)distance);
 
 			return distance;
 		}
@@ -200,6 +206,7 @@ namespace Civilization1Remaster.Engine
 
 			PopulationToText((short)population);
 
+			this.processor.RegAcc.Value16 = population;
 
 			this.processor.Journal.CloseScope("ObtainPlayerPopulation");
 
