@@ -768,7 +768,6 @@ namespace Civilization1Remaster.Game
 				if (town.ParticipantIdx != participantIdx)
 				{
 					// (DI and DX as the original leaves them: the unit and the high word of its multiplications)
-					this.processor.RegData.Value16 = 0;
 					this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHoriz, (byte)(sbyte)town.Place.X);
 					this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelVert, (byte)(sbyte)town.Place.Y);
 
@@ -1383,9 +1382,9 @@ namespace Civilization1Remaster.Game
 					ushort continent = this.look.Continent;
 					short wish = (short)(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(0x1514 + 0x3a * player.ChiefVisuals)) + 1);
 					short wanted = (short)MultiplyWords((ushort)wish, (ushort)this.owner.World.Landmasses[continent].ConstructionSpotTally);
-					this.processor.RegData.Value16 = (ushort)(player.Landmasses[continent].TownTally << 4);
+					short maxTownsScore = (short)(player.Landmasses[continent].TownTally << 4);
 
-					if (wanted > (short)this.processor.RegData.Value16)
+					if (wanted > maxTownsScore)
 						return 0;
 				}
 

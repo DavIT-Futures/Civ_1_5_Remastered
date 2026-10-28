@@ -882,10 +882,7 @@ namespace Civilization1Remaster.Game
 		{
 			this.turn.TargetHoriz = (ushort)this.owner.Routing.TunePosition(
 				(((short)this.owner.GlobDb3c - 80) / 16) + (short)MapViewHoriz);
-			this.processor.RegAcc.Value16 = (ushort)(this.owner.GlobDb3e - 8);
-			this.processor.DivideAccumulatorByPowerOfTwo(0x4);
-			this.processor.RegAcc.Value16 = (ushort)(this.processor.RegAcc.Value16 + MapViewVert);
-			this.turn.TargetVert = this.processor.RegAcc.Value16;
+			this.turn.TargetVert = (ushort)(((this.owner.GlobDb3e - 8) >> 4) + MapViewVert);
 		}
 
 		/// <summary>The palace of the human player, until a key or a click</summary>
@@ -1429,7 +1426,7 @@ namespace Civilization1Remaster.Game
 			}
 
 			if ((this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 0x21) != 0 ||
-				(this.processor.RegAcc.Value16 = this.owner.Advisors.PlayerKnowsTechnology(participantIdx, 0x2d)) == 0)
+				this.owner.Advisors.PlayerKnowsTechnology(participantIdx, 0x2d) == 0)
 			{
 				this.troops.Assign(participantIdx, troopIdx, UnitMemory.Status, (byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 0x3f));
 				this.troops.Assign(participantIdx, troopIdx, UnitMemory.UnusualSteps, 0);
@@ -1498,7 +1495,7 @@ namespace Civilization1Remaster.Game
 			if ((improvements & 8) != 0)
 			{
 				// A railroad on the road: with Railroad, not in a city
-				refused = (this.processor.RegAcc.Value16 = this.owner.Advisors.PlayerKnowsTechnology(participantIdx, 0x31)) == 0 ||
+				refused = this.owner.Advisors.PlayerKnowsTechnology(participantIdx, 0x31) == 0 ||
 					(improvements & 1) != 0 || (improvements & 0x10) != 0;
 			}
 			else
@@ -1519,7 +1516,7 @@ namespace Civilization1Remaster.Game
 			this.turn.TargetTerrain = this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
 
 			if (this.turn.TargetTerrain == 0xb &&
-				(this.processor.RegAcc.Value16 = this.owner.Advisors.PlayerKnowsTechnology(participantIdx, 0x13)) == 0)
+				this.owner.Advisors.PlayerKnowsTechnology(participantIdx, 0x13) == 0)
 			{
 				return;
 			}
@@ -2446,8 +2443,7 @@ namespace Civilization1Remaster.Game
 			if (participantIdx == person || UnitAtTilePlayer == (ushort)person || MapRevealed != 0)
 			{
 				// The human sees the new size
-				this.processor.RegAcc.LowByte = (byte)town.TrueExtent;
-				town.ShownExtent = (sbyte)this.processor.RegAcc.LowByte;
+				town.ShownExtent = (sbyte)town.TrueExtent;
 
 				this.owner.MapOps.RepaintMapTile(horizLoc, vertLoc);
 			}
@@ -2662,9 +2658,9 @@ namespace Civilization1Remaster.Game
 
 			this.turn.Result = this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, (short)this.turn.OtherUnit, 2);
 			this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
-			this.processor.RegAcc.Value16 = (ushort)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.LeftoverSteps) != 0 ? 4 : 2);
+			short threshold = (short)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.LeftoverSteps) != 0 ? 4 : 2);
 
-			return (short)this.processor.RegAcc.Value16 > (short)this.turn.Result;
+			return threshold > (short)this.turn.Result;
 		}
 
 		/// <summary>
@@ -3003,9 +2999,7 @@ namespace Civilization1Remaster.Game
 
 			if (roundsAway != 0)
 			{
-				this.processor.RegAcc.Value16 = roundsAway;
-				this.processor.RegAcc.LowByte = (byte)(this.processor.RegAcc.LowByte - 1);
-				this.troops.Assign(participantIdx, member, UnitMemory.UnusualSteps, this.processor.RegAcc.LowByte);
+				this.troops.Assign(participantIdx, member, UnitMemory.UnusualSteps, (byte)(roundsAway - 1));
 			}
 
 			this.turn.Count = (ushort)(this.turn.Count + 1);
@@ -3177,7 +3171,6 @@ namespace Civilization1Remaster.Game
 			short person = this.owner.World.PersonParticipantIdx;
 			bool everythingShown = MapRevealed != 0;
 
-			this.processor.RegAcc.Value16 = key;
 
 			switch (key)
 			{
@@ -3468,7 +3461,6 @@ namespace Civilization1Remaster.Game
 
 			participant.ResearchLevyRatio += (short)(participant.LevyRatio - (short)this.turn.Result);
 			participant.LevyRatio = (short)this.turn.Result;
-			this.processor.RegAcc.Value16 = this.turn.Result;
 
 			this.owner.TurnHooks.RenderStatusBar();
 		}
@@ -3503,7 +3495,6 @@ namespace Civilization1Remaster.Game
 				return;
 
 			participant.ResearchLevyRatio = (short)-(participant.LevyRatio + (short)this.turn.Result - 10);
-			this.processor.RegAcc.Value16 = (ushort)participant.ResearchLevyRatio;
 
 			this.owner.TurnHooks.RenderStatusBar();
 		}
@@ -3516,10 +3507,10 @@ namespace Civilization1Remaster.Game
 		{
 			if (GameEndRequest != GameLoadAndSave.FetchSessionAsk)
 			{
-				Message("Are you sure you\nwant to Quit?\n Keep Playing\n Yes, Quit\n")
+				ushort quitChoice = Message("Are you sure you\nwant to Quit?\n Keep Playing\n Yes, Quit\n")
 					.Dialog(100, 80);
 
-				if (this.processor.RegAcc.Value16 != 1)
+				if (quitChoice != 1)
 				{
 					GameEndRequest = 0;
 					return;
@@ -3774,7 +3765,6 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			this.processor.RegAcc.Value16 = cost;
 
 			this.processor.Journal.CloseScope("ObtainTileMoveCost");
 
@@ -3815,7 +3805,6 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			this.processor.RegAcc.Value16 = coastal;
 
 			this.processor.Journal.CloseScope("VerifyCoastalTile");
 
@@ -4007,7 +3996,7 @@ namespace Civilization1Remaster.Game
 		public ushort VerifyPositionOnScreen(int horizLoc, int vertLoc)
 		{
 			this.owner.Journal.OpenScope($"VerifyPositionOnScreen({horizLoc}, {vertLoc})");
-
+			ushort onScreen;
 			// function body
 			if (horizLoc < 16 && (short)MapViewHoriz >= 65)
 			{
@@ -4019,16 +4008,16 @@ namespace Civilization1Remaster.Game
 				vertLoc < (short)MapViewVert ||
 				vertLoc >= (short)MapViewVert + 12)
 			{
-				this.processor.RegAcc.Value16 = 0;
+				onScreen = 1;
 			}
 			else
 			{
-				this.processor.RegAcc.Value16 = 1;
+				onScreen = 1;
 			}
 
 			this.owner.Journal.CloseScope("VerifyPositionOnScreen");
 
-			return this.processor.RegAcc.Value16;
+			return onScreen;
 		}
 
 		/// <summary>
@@ -4088,7 +4077,6 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			this.processor.RegAcc.Value16 = best;
 
 			this.processor.Journal.CloseScope("LocateBestGuardian");
 

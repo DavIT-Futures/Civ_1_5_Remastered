@@ -702,7 +702,6 @@ namespace Civilization1Remaster.Game
 				result = (ushort)troopIdx;
 			}
 
-			this.processor.RegAcc.Value16 = result;
 
 			this.processor.Journal.CloseScope("ConstructUnit");
 
@@ -882,7 +881,6 @@ namespace Civilization1Remaster.Game
 				leader = StackLeader;
 			}
 
-			this.processor.RegAcc.Value16 = leader;
 
 			this.processor.Journal.CloseScope("LocateStackLeader");
 
@@ -909,7 +907,6 @@ namespace Civilization1Remaster.Game
 				guardian = StackLeader;
 			}
 
-			this.processor.RegAcc.Value16 = guardian;
 
 			this.processor.Journal.CloseScope("LocateBestGuardianInStack");
 
@@ -971,7 +968,6 @@ namespace Civilization1Remaster.Game
 			VisitEachUnitInStack(participantIdx, troopIdx, 0x1280);
 
 			ushort result = StackDomainTally;
-			this.processor.RegAcc.Value16 = result;
 
 			this.processor.Journal.CloseScope("TallyUnitsByDomainInStack");
 
@@ -1035,7 +1031,6 @@ namespace Civilization1Remaster.Game
 			VisitEachUnitInStack(participantIdx, troopIdx, 0x135a);
 
 			ushort result = StackTally;
-			this.processor.RegAcc.Value16 = result;
 
 			this.processor.Journal.CloseScope("TallyUnitsOfTypeInStack");
 
@@ -1070,7 +1065,6 @@ namespace Civilization1Remaster.Game
 			VisitEachUnitInStack(participantIdx, troopIdx, 0x13a9);
 
 			ushort result = StackTally;
-			this.processor.RegAcc.Value16 = result;
 
 			this.processor.Journal.CloseScope("TallyUnitsWithFlagInStack");
 
@@ -1105,7 +1099,6 @@ namespace Civilization1Remaster.Game
 			VisitEachUnitInStack(participantIdx, troopIdx, 0x13f8);
 
 			ushort result = StackTally;
-			this.processor.RegAcc.Value16 = result;
 
 			this.processor.Journal.CloseScope("TallySpecialUnitsInStack");
 
@@ -1390,7 +1383,6 @@ namespace Civilization1Remaster.Game
 			ushort blocked = (this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) != 0 ? (ushort)0 :
 				VerifyTileOccupation(participantIdx, horizLoc, vertLoc);
 
-			this.processor.RegAcc.Value16 = blocked;
 
 			this.processor.Journal.CloseScope("MayOccupyTile");
 
@@ -1433,7 +1425,6 @@ namespace Civilization1Remaster.Game
 				break;
 			}
 
-			this.processor.RegAcc.Value16 = found;
 
 			this.processor.Journal.CloseScope("VerifyTileOccupation");
 
@@ -1491,7 +1482,6 @@ namespace Civilization1Remaster.Game
 			});
 
 			ushort result = (ushort)(found ? 1 : 0);
-			this.processor.RegAcc.Value16 = result;
 
 			// Far return
 			this.processor.Journal.CloseScope("ContainsAdjacentForeignUnit");
@@ -1832,7 +1822,6 @@ namespace Civilization1Remaster.Game
 
 			this.owner.TurnLogic.AwaitForKey();
 
-			this.processor.RegAcc.Value16 = picked;
 
 			this.processor.Journal.CloseScope("DisplayBattleScreen");
 
@@ -2023,7 +2012,6 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			this.processor.RegAcc.Value16 = heading;
 
 			this.processor.Journal.CloseScope("LocateNearestFriendlyCity");
 
