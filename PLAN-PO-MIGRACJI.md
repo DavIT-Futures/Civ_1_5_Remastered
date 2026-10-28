@@ -629,6 +629,8 @@ bez wyjątku (czyta 0), `DifferentialPair` po wyjątku w scenariuszu przywraca S
 
 **Poprawka okna miasta (2026-10-28):** naprawa rysowania dolnego panelu okna miasta (`CityManagement.RenderFoodBox`). Oryginalny kod wywoływał `VerifyValueSpan(80 / town.TrueExtent, 1, 8)` bez przypisania wartości zwracanej do zmiennej, polegając na rejestrze emulacji `RegAcc`. Bezpośrednie przypisanie `this.round.Value = (ushort)VerifyValueSpan(...)` wyeliminowało błąd wyliczania szerokości paska magazynu żywności `(town.TrueExtent * round.Value) + 9`, który przy losowej wartości w rejestrze zalewał motywem tła cały dolny obszar ekranu i zamalowywał ramki paneli. Golden Master 15/15 w pełni zielony (46.8s); 0 błędów i 0 ostrzeżeń; przebudowano `.exe`.
 
+**Poprawka demografii świata (2026-10-28):** naprawa oryginalnego błędu 16-bitowego przepełnienia (overflow) w ekranie demografii (`DisplayCensus` / `WorldMap.cs`). W dużych imperiach w późnej fazie gry `50 * approval` oraz `10 * output` przekraczały 32 767, co w arytmetyce x86 dawało ujemne wskaźniki poparcia i produktywności. Wprowadzono klasę `CensusRules` w `GameModel/Rules` z 32-bitową arytmetyką i bezpiecznym zakresem w Remasterze oraz przełącznik `TurnHooks.ClassicCensus` zachowujący 100% zgodności z baseline Golden Master. 5/5 testów `CensusRulesTests` zielonych; Golden Master 15/15 w pełni zielony; kompilacja 0 błędów, 0 ostrzeżeń; przebudowano `.exe`.
+
 
 
 **Faza 3 – sprzątanie i drugi baseline:** usunięcie przełączników i kodu „classic”, zamrożonej gry

@@ -1472,6 +1472,12 @@ te błędy są odtwarzane jawnie:
 - `DisplayCensus`: wielkość rodziny wypisywana jako „x/10.x/10” zamiast „x/10.x%10”. Po naprawie: reszta z dzielenia.
   **Naprawione w grze 2026-10-25** za przełącznikiem `TurnHooks.ClassicTenths` (`TenthsRules`, razem z masą i czasem
   lotu statku). Test: `TenthsAndSpaceshipTests.CensusWritesTheTenths` (w tym autozapisie „2.2” kontra „2.6”).
+- `DisplayCensus` (przepełnienie 16-bitowe w demografii): w oryginalnym CIV.EXE z 1991 roku statystyki demografii (Approval rating,
+  Productivity, Disease, Family size) liczone były w 16-bitowej arytmetyce ze znakiem (`short`, max 32767). W rozwiniętych imperiach
+  po podbiciu miast, gdy wskaźnik aprobaty przekracza 655 ($50 \times 656 = 32800$), a produkcja 3276 ($10 \times 3277 = 32770$),
+  następował overflow do liczb ujemnych, dając ujemny wskaźnik poparcia (np. -76%) i ujemną produktywność. Po naprawie:
+  pełna arytmetyka 32-bitowa `int` z bezpiecznym zakresem `Math.Clamp` / `Math.Max`. **Naprawione w grze 2026-10-28** za
+  przełącznikiem `TurnHooks.ClassicCensus` (`CensusRules`). Testy: `CensusRulesTests` (5/5).
 - `RenderSpaceship`: obrazek części statku spod `word[część << 1 + 0x682a]` – w C# to przesunięcie o 0x682b, czyli o 11 bitów,
   więc adres jest zły (obrazek zwykle nie istnieje i nic się nie rysuje); masa i czas lotu wypisywane jako „x/10,x/10” zamiast
   „x/10,x%10”. Po naprawie: `word[0x682a + 2 * część]`, reszta z dzielenia. **Naprawione w grze 2026-10-25** za

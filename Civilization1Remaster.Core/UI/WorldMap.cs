@@ -771,7 +771,8 @@ namespace Civilization1Remaster.UI
 			// Approval rating
 			RenderCensusRow(0x4544, ref vertLoc, false, 0x4557, participantIdx =>
 			{
-				SetCensusValue(participantIdx, CPU.SignedQuotient((short)(0x32 * tally.Approval[participantIdx]), tally.Size[participantIdx]));
+				SetCensusValue(participantIdx, CensusRules.ApprovalRating(
+					tally.Approval[participantIdx], tally.Size[participantIdx], this.owner.TurnHooks.ClassicCensus));
 
 				if (participantIdx == shownIdx)
 				{
@@ -874,8 +875,8 @@ namespace Civilization1Remaster.UI
 
 			RenderCensusRow(0x45c3, ref vertLoc, true, 0x45ce, participantIdx =>
 			{
-				SetCensusValue(participantIdx, CPU.SignedQuotient((short)(0x32 * tally.Size[participantIdx]),
-					(short)(tally.Size[participantIdx] + tally.Health[participantIdx])));
+				SetCensusValue(participantIdx, CensusRules.DiseaseRate(
+					tally.Size[participantIdx], tally.Health[participantIdx], this.owner.TurnHooks.ClassicCensus));
 
 				if (this.owner.Advisors.PlayerKnowsTechnology(participantIdx, 10) != 0)
 				{
@@ -923,7 +924,8 @@ namespace Civilization1Remaster.UI
 
 			RenderCensusRow(0x460b, ref vertLoc, false, 0x4624, participantIdx =>
 			{
-				SetCensusValue(participantIdx, (short)(CPU.SignedQuotient((short)(0x28 * tally.Unrest[participantIdx]), tally.Size[participantIdx]) + 0x14));
+				SetCensusValue(participantIdx, CensusRules.FamilySize(
+					tally.Unrest[participantIdx], tally.Size[participantIdx], this.owner.TurnHooks.ClassicCensus));
 
 				if (participantIdx == shownIdx)
 				{
@@ -976,7 +978,8 @@ namespace Civilization1Remaster.UI
 
 			RenderCensusRow(0x4661, ref vertLoc, false, 0x466f, participantIdx =>
 			{
-				SetCensusValue(participantIdx, CPU.SignedQuotient((short)(0xa * tally.Output[participantIdx]), tally.Size[participantIdx]));
+				SetCensusValue(participantIdx, CensusRules.Productivity(
+					tally.Output[participantIdx], tally.Size[participantIdx], this.owner.TurnHooks.ClassicCensus));
 
 				if (participantIdx == shownIdx)
 				{

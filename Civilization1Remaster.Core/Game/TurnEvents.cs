@@ -158,6 +158,13 @@ namespace Civilization1Remaster.Game
 		public bool ClassicLabelNumbers { get; set; }
 
 		/// <summary>
+		/// The demographics screen uses 16-bit signed integer arithmetic as in the original DOS CIV.EXE (which overflows
+		/// and produces negative values for approval rating, productivity, and disease in large empires); off it uses
+		/// 32-bit math clamped to valid ranges (CensusRules). The tests turn it on (HeadlessGame), like ClassicHealing.
+		/// </summary>
+		public bool ClassicCensus { get; set; }
+
+		/// <summary>
 		/// Units heal lost hit points every turn (HealingRules): 2 in an own city; outside cities 1 for a fortified land unit
 		/// and for a resting ship (sentry or not moved this turn) next to land, at most 3 tiles from an own city.
 		/// Runs at the end of the game turn, so the moves left (reset at the start of each player's turn) show whether the

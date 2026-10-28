@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.IO;
@@ -98,6 +98,7 @@ namespace Civilization1Remaster.Tests.GoldenMaster
 			turnHooks.ClassicFreshGameRuins = true;
 			turnHooks.ClassicSpaceshipSlots = true;
 			turnHooks.ClassicLabelNumbers = true;
+			turnHooks.ClassicCensus = true;
 		}
 
 		public GameEngine Engine { get; }
