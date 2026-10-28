@@ -29,7 +29,6 @@ namespace Civilization1Remaster.Game
 
 			ushort result = SplitCivilization(participantIdx);
 
-			this.processor.RegAcc.Value16 = result;
 			// Far return
 			this.processor.Journal.CloseScope("DivideCivilization");
 
@@ -96,7 +95,6 @@ namespace Civilization1Remaster.Game
 			bool classic = this.owner.TurnHooks.ClassicSchism;
 
 			ushort capitalIdx = ObtainDistanceToCapital(rebelIdx);
-			this.processor.RegAcc.Value16 = (ushort)(0x1c * capitalIdx);
 
 			// The new civilization without a city gets no capital (ClassicSchism: Towns[0xffff] throws)
 			if (classic || capitalIdx != 0xffff)
@@ -111,7 +109,6 @@ namespace Civilization1Remaster.Game
 			}
 			else
 			{
-				this.processor.RegAcc.Value16 = (ushort)(0x1c * oldCapital);
 
 				this.owner.World.Towns[oldCapital].ParticipantIdx = -1;
 
@@ -121,7 +118,6 @@ namespace Civilization1Remaster.Game
 				if (!classic && newCapital == 0xffff)
 					newCapital = oldCapital;
 
-				this.processor.RegAcc.Value16 = (ushort)(0x1c * newCapital);
 
 				this.owner.World.Towns[newCapital].StructureMarkers0 |= 1;
 				this.owner.World.Participants[participantIdx].HorizBegin = (short)this.owner.World.Towns[newCapital].Place.X;
@@ -307,8 +303,6 @@ namespace Civilization1Remaster.Game
 				if (!this.owner.TurnHooks.ClassicSchism && farthest == 1)
 					break;
 
-				this.processor.RegAcc.Value16 = (ushort)(0x1c * farthestIdx);
-				this.processor.RegBase.Value16 = ((ushort)(0x1c * farthestIdx));
 
 				given += this.owner.World.Towns[farthestIdx].TrueExtent;
 
@@ -351,7 +345,6 @@ namespace Civilization1Remaster.Game
 			byte homeIdx = this.Troops.PullAt(troop, UnitMemory.BaseTown);
 
 			// AX holds the home city's offset like in the original (for a unit without a home, 0xff, see HomeOwner)
-			this.processor.RegAcc.Value16 = (ushort)(0x1c * (sbyte)homeIdx);
 
 			if (HomeOwner(participantIdx, homeIdx) != this.owner.World.Towns[townIdx].ParticipantIdx)
 			{
@@ -392,7 +385,6 @@ namespace Civilization1Remaster.Game
 			ushort playerUnits = (ushort)(0x600 * participantIdx);
 
 			// AX holds the home city's offset like in the original (for a unit without a home, 0xff, see HomeOwner)
-			this.processor.RegAcc.Value16 = (ushort)(0x1c * (sbyte)this.Troops.PullAt(troop, UnitMemory.BaseTown));
 
 			short homeOwner = HomeOwner(participantIdx, this.Troops.PullAt(troop, UnitMemory.BaseTown));
 			short next = (sbyte)this.Troops.PullAt(troop, UnitMemory.FollowingInStack);
@@ -405,7 +397,6 @@ namespace Civilization1Remaster.Game
 					ushort other = (ushort)((ushort)(0xc * next) + playerUnits);
 
 					short following = (sbyte)this.Troops.PullAt(other, UnitMemory.FollowingInStack);
-					this.processor.RegAcc.Value16 = (ushort)(0x1c * (sbyte)this.Troops.PullAt(other, UnitMemory.BaseTown));
 
 					if (HomeOwner(participantIdx, this.Troops.PullAt(other, UnitMemory.BaseTown)) != homeOwner)
 					{
@@ -454,7 +445,6 @@ namespace Civilization1Remaster.Game
 					ushort joinedCopy = (ushort)((ushort)(0x600 * rebelIdx) + (ushort)(0xc * joined));
 
 					this.Troops.AssignAt(joinedCopy, UnitMemory.Status, (byte)(this.Troops.PullAt(troop, UnitMemory.Status) & 0xfe));
-					this.processor.RegAcc.Value16 = (ushort)(0x1c * (sbyte)this.Troops.PullAt(other, UnitMemory.BaseTown));
 
 					if (HomeOwner(participantIdx, this.Troops.PullAt(other, UnitMemory.BaseTown)) != homeOwner)
 					{
@@ -533,7 +523,6 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			this.processor.RegAcc.Value16 = central;
 
 			this.processor.Journal.CloseScope("ObtainDistanceToCapital");
 

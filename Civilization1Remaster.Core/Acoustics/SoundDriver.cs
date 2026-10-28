@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Civilization1Remaster.Emulation;
 using Civilization1Remaster.Acoustics;
 
@@ -71,11 +71,7 @@ namespace Civilization1Remaster.Acoustics
 			// The driver is initialized when it is loaded
 			_ = this.Handler;
 			stagingPlace = 0x0;
-			this.processor.RegAcc.Value16 = 0x0;
-
-			// Far return
-
-			return this.processor.RegAcc.Value16;
+			return 0x0;
 		}
 
 		/// <summary>
@@ -88,10 +84,7 @@ namespace Civilization1Remaster.Acoustics
 		{
 			// function body
 			stagingPlace++;
-			this.processor.RegAcc.Value16 = 0x0;
-			// Far return
-
-			return this.processor.RegAcc.Value16;
+			return 0x0;
 		}
 
 		/// <summary>
@@ -111,10 +104,7 @@ namespace Civilization1Remaster.Acoustics
 		{
 			// function body
 			SoundDriverHost? handler = this.Handler;
-			this.processor.RegAcc.Value16 = handler != null ? handler.CurrentOffset() : stagingPlace;
-			// Far return
-
-			return this.processor.RegAcc.Value16;
+			return handler != null ? handler.CurrentOffset() : stagingPlace;
 		}
 
 		/// <summary>
@@ -146,10 +136,7 @@ namespace Civilization1Remaster.Acoustics
 		{
 			// function body
 			this.handler?.Halt();
-			this.processor.RegAcc.Value16 = 0x0;
-			// Far return
-
-			return this.processor.RegAcc.Value16;
+			return 0x0;
 		}
 	}
 }

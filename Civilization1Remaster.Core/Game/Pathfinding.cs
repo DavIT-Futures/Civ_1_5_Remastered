@@ -42,7 +42,6 @@ namespace Civilization1Remaster.Game
 			if (participantIdx != this.owner.World.PersonParticipantIdx || !StepToNearGoal(troop, troopIdx, out direction))
 				direction = StepTowardsGoal(participantIdx, troopIdx, troop);
 
-			this.processor.RegAcc.Value16 = direction;
 
 			// Far return
 			this.processor.Journal.CloseScope("CarryOutGoto");
@@ -339,7 +338,6 @@ namespace Civilization1Remaster.Game
 				result = SearchRouteBlocks(troop, unitColumn, unitRow) ? (ushort)1 : (ushort)0;
 			}
 
-			this.processor.RegAcc.Value16 = result;
 
 			// Far return
 			this.processor.Journal.CloseScope("ChartRoute");
@@ -588,7 +586,6 @@ namespace Civilization1Remaster.Game
 				result = 1;
 			}
 
-			this.processor.RegAcc.Value16 = result;
 
 			// Far return
 			this.processor.Journal.CloseScope("LocateRouteStep");
@@ -658,7 +655,6 @@ namespace Civilization1Remaster.Game
 				GoalVert = this.Troops.PullAt(troop, UnitMemory.TravelVert);
 			}
 
-			this.processor.RegAcc.Value16 = (ushort)step;
 
 			// Far return
 			this.processor.Journal.CloseScope("ShiftToward");
@@ -876,6 +872,8 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope($"ComputeRouteCost({horizLoc}, {vertLoc}, {horizSpot1}, {vertSpot1}, {marker}, {arg6})");
 
+			ushort cost;
+
 			// function body
 			if (Math.Abs(horizLoc - horizSpot1) <= 7 && Math.Abs(vertLoc - vertSpot1) <= 7)
 			{
@@ -891,22 +889,22 @@ namespace Civilization1Remaster.Game
 
 				if (direction == 0xffff)
 				{
-					this.processor.RegAcc.Value16 = 0xffff;
+					cost = 0xffff;
 				}
 				else
 				{
-					this.processor.RegAcc.Value16 = GotoCost;
+					cost = GotoCost;
 				}
 			}
 			else
 			{
-				this.processor.RegAcc.Value16 = 0xffff;
+				cost = 0xffff;
 			}
 
 			// Far return
 			this.processor.Journal.CloseScope("ComputeRouteCost");
 
-			return this.processor.RegAcc.Value16;
+			return cost;
 		}
 
 		/// <summary>
@@ -928,7 +926,6 @@ namespace Civilization1Remaster.Game
 				backAmountInt = horizLoc - 80;
 			}
 
-			this.processor.RegAcc.Value16 = (ushort)((short)backAmountInt);
 
 			return backAmountInt;
 		}

@@ -50,9 +50,9 @@ namespace Civilization1Remaster.Engine
 				freeStorage = 0;
 			}
 
-			this.processor.RegAcc.Value16 = (ushort)(VgaMode != 0 ? 0x1f40 : 0xfa0);
+			short requiredStorage = (short)(VgaMode != 0 ? 0x1f40 : 0xfa0);
 
-			if ((short)this.processor.RegAcc.Value16 > freeStorage)
+			if (requiredStorage > freeStorage)
 			{
 				// Not enough memory: the amount in the text 0x270, then a menu with it
 				this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 12);
@@ -238,7 +238,7 @@ namespace Civilization1Remaster.Engine
 				this.owner.Services.BlankMouseCursor();
 			}
 		
-			PointerShowLevel = this.processor.DecrementWord(PointerShowLevel);
+			PointerShowLevel = (ushort)(PointerShowLevel - 1);
 
 			// Far return
 			this.processor.Journal.CloseScope("ConcealMouseCursor");

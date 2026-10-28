@@ -100,7 +100,7 @@ namespace Civilization1Remaster.Engine
 			if (DialogNeedsRedraw != 0)
 			{
 				DialogNeedsRedraw = 0;
-				this.processor.RegAcc.Value16 = 0xffff;
+				currentChoice = 0xffff;
 			}
 			else
 			{
@@ -127,15 +127,13 @@ namespace Civilization1Remaster.Engine
 						}
 
 						ushort rawLine = (ushort)((short)this.owner.GlobDb3e - (short)vertLoc - 4);
-						this.processor.RegCount.Value16 = MenuLineHeight;
-						currentChoice = (ushort)(DivideWords(rawLine, this.processor.RegCount.Value16) - MenuFirstChoice);
+						currentChoice = (ushort)(DivideWords(rawLine, MenuLineHeight) - MenuFirstChoice);
 
 						if (horizLoc > (short)this.owner.GlobDb3c || (short)this.owner.GlobDb3c > (short)MenuRightEdge)
 						{
 							currentChoice = 0xffff;
 						}
 
-						this.processor.RegCount.LowByte = (byte)(currentChoice & 0xff);
 
 						if (((1 << (currentChoice & 0x1f)) & DisabledLines) != 0)
 						{
@@ -158,7 +156,6 @@ namespace Civilization1Remaster.Engine
 						}
 						else if (key == 0x20 || key == 0xd)
 						{
-							this.processor.RegCount.LowByte = (byte)(currentChoice & 0xff);
 
 							if (((1 << (currentChoice & 0x1f)) & DisabledLines) == 0)
 							{
@@ -204,12 +201,10 @@ namespace Civilization1Remaster.Engine
 
 							while ((short)searchIdx < 0x20)
 							{
-								this.processor.RegBase.Value16 = searchIdx;
 								byte hotkey = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(searchIdx + MenuItemHotkeysTableAddress));
 
 								if (hotkey != 0xff)
 								{
-									this.processor.RegCount.LowByte = (byte)(key & 0x1f);
 
 									if ((hotkey & 0x1f) == (key & 0x1f))
 									{
@@ -276,14 +271,13 @@ namespace Civilization1Remaster.Engine
 				MenuAnyKey = 0;
 				DisabledLines = 0;
 				MenuOptions = 0;
-				this.processor.RegAcc.Value16 = currentChoice;
 			}
 
 			this.processor.RestoreSource();
 			// Far return
 			this.processor.Journal.CloseScope("DisplayMenu");
 
-			return this.processor.RegAcc.Value16;
+			return currentChoice;
 		}
 
 		private void SwapMenuOptionHue(int horizLoc, int vertLoc, ushort choice, ushort highlightHeight, ushort backHue, ushort shadowHue, bool highlight)
@@ -333,7 +327,6 @@ namespace Civilization1Remaster.Engine
 
 			RenderMenuLines(charsAddr, horizLoc, vertLoc, arg4);
 
-			this.processor.RegAcc.Value16 = arg4;
 			this.processor.RestoreIndexRegisters();
 			this.processor.LeaveFrame();
 			// Far return
@@ -648,7 +641,6 @@ namespace Civilization1Remaster.Engine
 					horizLoc + 1, vertLoc + 1, breadth, altitude, style);
 			}
 		
-			this.processor.RegBase.Value16 = ScreenBox;
 			DrawingBox.RearHues = style;
 
 			RenderShadowBox(horizLoc + 1, vertLoc + 1, breadth, altitude, 15, 8);
@@ -736,7 +728,6 @@ namespace Civilization1Remaster.Engine
 				_ => (key & 0xff) != 0 ? (ushort)(key & 0xff) : key
 			};
 
-			this.processor.RegAcc.Value16 = key;
 
 			// Far return
 			this.processor.Journal.CloseScope("ObtainNavigationKey");

@@ -306,7 +306,6 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			this.processor.RegAcc.Value16 = choice;
 			this.pickFrame = outerFrame;
 			this.processor.Journal.CloseScope("PickCityProduction");
 
@@ -726,10 +725,8 @@ namespace Civilization1Remaster.Game
 
 				if (Score < (short)FrameWord(BestScoreLocal))
 				{
-					this.processor.RegAcc.Value16 = FrameWord(ChoiceLoopLocal);
-					FrameWord(BestChoiceLocal, this.processor.RegAcc.Value16);
-					this.processor.RegAcc.Value16 = FrameWord(ScoreLocal);
-					FrameWord(BestScoreLocal, this.processor.RegAcc.Value16);
+					FrameWord(BestChoiceLocal, FrameWord(ChoiceLoopLocal));
+					FrameWord(BestScoreLocal, FrameWord(ScoreLocal));
 				}
 
 				if (choice < 0 || choice >= 0x1a)
@@ -737,15 +734,13 @@ namespace Civilization1Remaster.Game
 					if (Score < (short)FrameWord(BestImprovementScoreLocal))
 					{
 						FrameWord(BestImprovementScoreLocal, (ushort)Score);
-						this.processor.RegAcc.Value16 = FrameWord(ChoiceLoopLocal);
-						FrameWord(BestImprovementLocal, this.processor.RegAcc.Value16);
+						FrameWord(BestImprovementLocal, FrameWord(ChoiceLoopLocal));
 					}
 				}
 				else if (Score < (short)FrameWord(BestUnitScoreLocal))
 				{
 					FrameWord(BestUnitScoreLocal, (ushort)Score);
-					this.processor.RegAcc.Value16 = FrameWord(ChoiceLoopLocal);
-					FrameWord(BestUnitLocal, this.processor.RegAcc.Value16);
+					FrameWord(BestUnitLocal, FrameWord(ChoiceLoopLocal));
 				}
 			}
 		}
@@ -1185,7 +1180,6 @@ namespace Civilization1Remaster.Game
 
 			ushort result = participantIdx == 0 ? (ushort)0xffff : UncoverTechnologyOf(participantIdx, participantIdx1);
 
-			this.processor.RegAcc.Value16 = result;
 
 			// Far return
 			this.processor.Journal.CloseScope("UncoverTechnology");
@@ -1338,9 +1332,7 @@ namespace Civilization1Remaster.Game
 			short person = this.owner.World.PersonParticipantIdx;
 			Player human = this.owner.World.Participants[person];
 
-			this.owner.Encyclopedia.ObtainFirstPrerequisite((ushort)human.PresentInquiryIdx);
-
-			short first = (short)this.processor.RegAcc.Value16;
+			short first = (short)this.owner.Encyclopedia.ObtainFirstPrerequisite((ushort)human.PresentInquiryIdx);
 			bool picture = human.PresentInquiryIdx != 71 && (short)FirstMissingDisk > 3 &&
 				this.owner.Startup.QueryForDisk(1, 0) != 0 && (this.owner.World.SessionPrefMarkers & 8) != 0;
 
@@ -1812,7 +1804,6 @@ namespace Civilization1Remaster.Game
 			int leaderVisuals = this.owner.World.Participants[participantIdx].ChiefVisuals;
 			short leaderFactor = (short)LeaderWord(leaderVisuals, LeaderTable.Leaning);
 			ushort result = ScienceRules.CalculateTechnologyInfo(b0, b1, leaderFactor);
-			this.processor.RegAcc.Value16 = result;
 
 			this.processor.Journal.CloseScope("ObtainTechnologyInfo");
 			return result;

@@ -64,9 +64,8 @@ namespace Civilization1Remaster.UI
 
 			do
 			{
-				this.owner.Services.PathPresent(0x324a);
-				this.processor.RegAcc.Value16 = (ushort)(this.processor.RegAcc.Value16 == 0xffff ? 0 : 1);
-				this.introPathFound = this.processor.RegAcc.Value16;
+				ushort found = this.owner.Services.PathPresent(0x324a);
+				this.introPathFound = (ushort)(found == 0xffff ? 0 : 1);
 			}
 			while (this.introPathFound == 0);
 		}
@@ -76,11 +75,9 @@ namespace Civilization1Remaster.UI
 		{
 			bool colourful = this.processor.PullGlobalByte(GameStartup.VideoDriverOptionAddress) == 0x6d || this.processor.PullGlobalByte(GameStartup.VideoDriverOptionAddress) == 0x4d;
 			VgaMode = (ushort)(colourful ? 1 : 0);
-			this.processor.RegAcc.Value16 = VgaMode;
 
 			bool ega = this.processor.PullGlobalByte(GameStartup.VideoDriverOptionAddress) == 0x65 || this.processor.PullGlobalByte(GameStartup.VideoDriverOptionAddress) == 0x45;
 			EgaMode = (ushort)(ega ? 1 : 0);
-			this.processor.RegAcc.Value16 = EgaMode;
 
 			// Change Num-Lock state
 			DrawingBox.TypefaceIdx = 1;
@@ -90,8 +87,7 @@ namespace Civilization1Remaster.UI
 		private void ReserveIntroScreens()
 		{
 			ScreenReserveFailed = 0;
-			this.processor.RegAcc.Value16 = (ushort)(VgaMode != 0 ? 3 : 4);
-			this.introScreenCount = ((ushort)(VgaMode != 0 ? 3 : 4));
+			this.introScreenCount = (ushort)(VgaMode != 0 ? 3 : 4);
 
 			this.introColumn = 0;
 
@@ -104,7 +100,7 @@ namespace Civilization1Remaster.UI
 
 				IntroReservedScreen = this.owner.VideoCard.ReserveScreen(this.introColumn);
 
-				if (this.processor.RegAcc.Value16 == 0)
+				if (IntroReservedScreen == 0)
 					ScreenReserveFailed = 1;
 
 				this.introColumn++;
@@ -370,10 +366,9 @@ namespace Civilization1Remaster.UI
 			this.owner.Services.AssignDot(0, 0, 0);
 
 			screen = ScreenBox;
-			this.processor.RegAcc.Value16 = this.introSavedFlag;
-			this.processor.EmitUInt16(this.processor.SegData.Value16, screen, this.processor.RegAcc.Value16);
+			this.processor.EmitUInt16(this.processor.SegData.Value16, screen, this.introSavedFlag);
 
-			this.owner.Services.DisplayScreen(this.processor.RegAcc.Value16);
+			this.owner.Services.DisplayScreen(this.introSavedFlag);
 		}
 
 		/// <summary>
@@ -623,9 +618,8 @@ namespace Civilization1Remaster.UI
 			DrawingBox.TypefaceIdx = 6;
 			this.screenFrame.SetFrame(ScreenStarHoriz, 0xfff6);
 			this.screenFrame.SetFrame(ScreenStarVert, 0x5c);
-			this.processor.RegAcc.Value16 = 0xffff;
 			this.screenFrame.SetFrame(ScreenPartEnd, 0xffff);
-			this.screenFrame.SetFrame(ScreenPartBegin, this.processor.RegAcc.Value16);
+			this.screenFrame.SetFrame(ScreenPartBegin, 0xffff);
 
 			this.screenFrame.SetFrame(ScreenTextLength, this.owner.Words.Length);
 
@@ -798,10 +792,10 @@ namespace Civilization1Remaster.UI
 				this.owner.Services.AssignDot(0, 0, 0);
 
 				screen = ScreenBox;
-				this.processor.RegAcc.Value16 = this.screenFrame.Frame(ScreenSavedFlag);
-				this.processor.EmitUInt16(this.processor.SegData.Value16, screen, this.processor.RegAcc.Value16);
+				ushort savedFlag = this.screenFrame.Frame(ScreenSavedFlag);
+				this.processor.EmitUInt16(this.processor.SegData.Value16, screen, savedFlag);
 
-				this.owner.Services.DisplayScreen(this.processor.RegAcc.Value16);
+				this.owner.Services.DisplayScreen(savedFlag);
 			}
 
 			if ((short)this.owner.Timer.Beats > 0xc && (this.screenFrame.FrameByte(ScreenColumn) & 1) == 0)
