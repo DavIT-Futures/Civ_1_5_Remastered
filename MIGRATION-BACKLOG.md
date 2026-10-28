@@ -1478,6 +1478,11 @@ te błędy są odtwarzane jawnie:
   następował overflow do liczb ujemnych, dając ujemny wskaźnik poparcia (np. -76%) i ujemną produktywność. Po naprawie:
   pełna arytmetyka 32-bitowa `int` z bezpiecznym zakresem `Math.Clamp` / `Math.Max`. **Naprawione w grze 2026-10-28** za
   przełącznikiem `TurnHooks.ClassicCensus` (`CensusRules`). Testy: `CensusRulesTests` (5/5).
+- `MeetWithKing.DemandGoldUnderPeace` (żądanie trybutu w czasie pokoju): w oryginalnym CIV.EXE z 1991 roku po zaakceptowaniu przez
+  komputer żądania złota (`amount`), graczowi dopisywano do skarbca wynik wywołania okna dialogowego (`Person.Gold += (short)answer`),
+  czyli 0 lub 1 sztukę złota, podczas gdy komputerowi odejmowano pełną kwotę `amount` (reszta złota przepadała).
+  **Naprawione w grze 2026-10-28** za przełącznikiem `TurnHooks.ClassicTributeDemand`: w Remasterze gracz otrzymuje pełną
+  uzgodnioną kwotę trybutu (`amount`).
 - `RenderSpaceship`: obrazek części statku spod `word[część << 1 + 0x682a]` – w C# to przesunięcie o 0x682b, czyli o 11 bitów,
   więc adres jest zły (obrazek zwykle nie istnieje i nic się nie rysuje); masa i czas lotu wypisywane jako „x/10,x/10” zamiast
   „x/10,x%10”. Po naprawie: `word[0x682a + 2 * część]`, reszta z dzielenia. **Naprawione w grze 2026-10-25** za

@@ -165,6 +165,13 @@ namespace Civilization1Remaster.Game
 		public bool ClassicCensus { get; set; }
 
 		/// <summary>
+		/// In diplomacy, demanding gold under peace gives the human player the button answer of the dialog (0 or 1)
+		/// instead of the gold amount, as in the original CIV.EXE translation slip (DemandGoldUnderPeace). Off: the human
+		/// player receives the actual gold amount demanded. The tests turn it on (HeadlessGame), like ClassicHealing.
+		/// </summary>
+		public bool ClassicTributeDemand { get; set; }
+
+		/// <summary>
 		/// Units heal lost hit points every turn (HealingRules): 2 in an own city; outside cities 1 for a fortified land unit
 		/// and for a resting ship (sentry or not moved this turn) next to land, at most 3 tiles from an own city.
 		/// Runs at the end of the game turn, so the moves left (reset at the start of each player's turn) show whether the

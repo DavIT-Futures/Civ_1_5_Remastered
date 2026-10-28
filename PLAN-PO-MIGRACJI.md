@@ -631,6 +631,8 @@ bez wyjątku (czyta 0), `DifferentialPair` po wyjątku w scenariuszu przywraca S
 
 **Poprawka demografii świata (2026-10-28):** naprawa oryginalnego błędu 16-bitowego przepełnienia (overflow) w ekranie demografii (`DisplayCensus` / `WorldMap.cs`). W dużych imperiach w późnej fazie gry `50 * approval` oraz `10 * output` przekraczały 32 767, co w arytmetyce x86 dawało ujemne wskaźniki poparcia i produktywności. Wprowadzono klasę `CensusRules` w `GameModel/Rules` z 32-bitową arytmetyką i bezpiecznym zakresem w Remasterze oraz przełącznik `TurnHooks.ClassicCensus` zachowujący 100% zgodności z baseline Golden Master. 5/5 testów `CensusRulesTests` zielonych; Golden Master 15/15 w pełni zielony; kompilacja 0 błędów, 0 ostrzeżeń; przebudowano `.exe`.
 
+**Poprawka trybutu w dyplomacji (2026-10-28):** naprawa błędu niedopisywania złota z trybutu zażądanego w czasie pokoju (`MeetWithKing.DemandGoldUnderPeace`). Oryginalny kod CIV.EXE zamiast kwoty trybutu (`amount`) dopisywał do skarbca gracza kod odpowiedzi z okna dialogowego (`Person.Gold += (short)answer`, czyli 0 lub 1 złoto). Wprowadzono przełącznik `TurnHooks.ClassicTributeDemand`: w Remasterze gracz otrzymuje pełną kwotę trybutu zaakceptowaną przez AI. Golden Master 15/15 w pełni zielony; kompilacja 0 błędów, 0 ostrzeżeń; przebudowano `.exe`.
+
 
 
 **Faza 3 – sprzątanie i drugi baseline:** usunięcie przełączników i kodu „classic”, zamrożonej gry

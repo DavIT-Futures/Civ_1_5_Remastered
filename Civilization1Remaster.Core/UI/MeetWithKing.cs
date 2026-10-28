@@ -845,9 +845,10 @@ namespace Civilization1Remaster.UI
 				KingMood = 0;
 				KingSpeaking = 0xc;
 
-				// A translation slip: the human player gets the answer of the dialog, not the gold
+				// The human player gets the gold amount (classic translation slip gave the dialog button answer 0 or 1)
 				ushort answer = DisplayKingDialog(TextBuffer.Address, 0x14, 0x8b);
-				Person.Gold += (short)answer;
+				short goldGiven = this.owner.TurnHooks.ClassicTributeDemand ? (short)answer : amount;
+				Person.Gold += goldGiven;
 				Leader(participantIdx).Gold -= amount;
 				Leader(participantIdx).TouchParticipantTimeleft = this.owner.World.RoundTally;
 				return;
