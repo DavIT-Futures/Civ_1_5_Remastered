@@ -43,8 +43,13 @@ public partial class MainWindow : Window, IGameHost
 		{
 			this.WindowState = WindowState.FullScreen;
 		}
+		else if (settings.Maximized)
+		{
+			this.WindowState = WindowState.Maximized;
+		}
 		else
 		{
+			this.WindowState = WindowState.Normal;
 			this.Width = GameWidth * this.currentScale;
 			this.Height = (GameHeight * this.currentScale) + 30;
 		}
@@ -194,9 +199,17 @@ public partial class MainWindow : Window, IGameHost
 		{
 			this.WindowState = WindowState.FullScreen;
 		}
-		else
+		else if (scale == -1)
 		{
 			if (this.WindowState == WindowState.FullScreen)
+			{
+				this.WindowState = WindowState.Normal;
+			}
+			this.WindowState = WindowState.Maximized;
+		}
+		else
+		{
+			if (this.WindowState == WindowState.FullScreen || this.WindowState == WindowState.Maximized)
 			{
 				this.WindowState = WindowState.Normal;
 			}
@@ -229,7 +242,8 @@ public partial class MainWindow : Window, IGameHost
 		var settings = new AppSettings
 		{
 			Scale = this.currentScale > 0 ? this.currentScale : 4,
-			FullScreen = this.WindowState == WindowState.FullScreen
+			FullScreen = this.WindowState == WindowState.FullScreen,
+			Maximized = this.WindowState == WindowState.Maximized
 		};
 		settings.Save();
 	}
