@@ -367,11 +367,22 @@ namespace Civilization1Remaster.UI
 							PalacePicture(optIdx, 0));
 
 						drawX = (short)(drawX + (short)PalacePartWidth);
-						this.owner.Services.RenderPictureToScreen(
-							ScreenBox,
-							drawX,
-							(short)(this.processor.PullInt8(dataSeg, (ushort)(selWordOff + PalacePartHeightTable3Address)) + 1),
-							this.processor.PullUInt16(dataSeg, (ushort)(6 + PalacePicturesTableAddress + 2)));
+						if (this.owner.TurnHooks.ClassicPalaceStyleGlitch)
+						{
+							this.owner.Services.RenderPictureToScreen(
+								ScreenBox,
+								drawX,
+								(short)(this.processor.PullInt8(dataSeg, (ushort)(selWordOff + PalacePartHeightTable3Address)) + 1),
+								this.processor.PullUInt16(dataSeg, (ushort)(6 + PalacePicturesTableAddress + 2)));
+						}
+						else
+						{
+							this.owner.Services.RenderPictureToScreen(
+								ScreenBox,
+								drawX,
+								(short)(this.processor.PullInt8(dataSeg, (ushort)(0xf * nextLevel + 5 * optIdx + PalacePartHeightTable3Address)) + 1),
+								PalacePicture(optIdx, 1));
+						}
 						break;
 
 					case 2:

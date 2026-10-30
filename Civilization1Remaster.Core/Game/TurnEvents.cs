@@ -172,6 +172,14 @@ namespace Civilization1Remaster.Game
 		public bool ClassicTributeDemand { get; set; }
 
 		/// <summary>
+		/// In palace improvement style selection, thickened/inner wall segments (look == 1) in the original CIV.EXE DOS
+		/// used dirty uninitialized registers for the second half of the segment, always drawing the Medieval tile
+		/// (offset 6 + 2) and using an incorrect height offset (SelectPalaceArchitectureStyle). Off: the second half is
+		/// drawn with the correct style tile and height for the selected option. The tests turn it on (HeadlessGame), like ClassicHealing.
+		/// </summary>
+		public bool ClassicPalaceStyleGlitch { get; set; }
+
+		/// <summary>
 		/// Units heal lost hit points every turn (HealingRules): 2 in an own city; outside cities 1 for a fortified land unit
 		/// and for a resting ship (sentry or not moved this turn) next to land, at most 3 tiles from an own city.
 		/// Runs at the end of the game turn, so the moves left (reset at the start of each player's turn) show whether the

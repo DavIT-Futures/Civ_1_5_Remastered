@@ -100,6 +100,7 @@ namespace Civilization1Remaster.Tests.GoldenMaster
 			turnHooks.ClassicLabelNumbers = true;
 			turnHooks.ClassicCensus = true;
 			turnHooks.ClassicTributeDemand = true;
+			turnHooks.ClassicPalaceStyleGlitch = true;
 		}
 
 		public GameEngine Engine { get; }
