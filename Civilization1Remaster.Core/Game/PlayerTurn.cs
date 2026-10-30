@@ -780,8 +780,7 @@ namespace Civilization1Remaster.Game
 			if (this.turn.Troop < UnitMemory.TroopTally)
 			{
 				short troopIdx = (short)this.turn.Troop;
-				this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
-
+	
 				if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) == 0 && this.turn.LaterPass == 0)
 				{
 					this.owner.HelpSystem.DisplayTileInfo(participantIdx, this.turn.Troop);
@@ -1037,7 +1036,6 @@ namespace Civilization1Remaster.Game
 							(short)this.turn.Order);
 
 						short chosen = (short)this.turn.Result;
-						this.processor.RegBase.Value16 = (ushort)(chosen * UnitMemory.TroopStride);
 
 						if ((this.troops.Pull(participantIdx, chosen, UnitMemory.Status) & 9) == 0)
 						{
@@ -1192,7 +1190,6 @@ namespace Civilization1Remaster.Game
 		private void SkipUnit(short participantIdx)
 		{
 			short troopIdx = (short)this.turn.Troop;
-			this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.LeftoverSteps, 0);
 		}
 
@@ -1291,8 +1288,7 @@ namespace Civilization1Remaster.Game
 
 			if (FoundDistance == 0)
 			{
-				this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
-				this.troops.Assign(participantIdx, troopIdx, UnitMemory.BaseTown, (byte)this.turn.City);
+					this.troops.Assign(participantIdx, troopIdx, UnitMemory.BaseTown, (byte)this.turn.City);
 
 				return false;
 			}
@@ -1311,13 +1307,11 @@ namespace Civilization1Remaster.Game
 
 			if (participantIdx == this.owner.World.PersonParticipantIdx)
 			{
-				this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
-				this.troops.Assign(participantIdx, troopIdx, UnitMemory.Status, (byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 0xfd));
+					this.troops.Assign(participantIdx, troopIdx, UnitMemory.Status, (byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 0xfd));
 
 				return false;
 			}
 
-			this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.LeftoverSteps, 0);
 
 			this.owner.UnitOps.EliminateUnit(participantIdx, (short)this.turn.Troop);
@@ -1334,7 +1328,6 @@ namespace Civilization1Remaster.Game
 		{
 			short troopIdx = (short)this.turn.Troop;
 			ushort unit = UnitMemory.Offset(participantIdx, troopIdx);
-			this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
 
 			if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) != 0)
 			{
@@ -1461,7 +1454,6 @@ namespace Civilization1Remaster.Game
 			ushort unit = UnitMemory.Offset(participantIdx, troopIdx);
 			short horizLoc = (short)this.turn.UnitHoriz;
 			short vertLoc = (short)this.turn.UnitVert;
-			this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
 
 			return (troopIdx, unit, horizLoc, vertLoc);
 		}
@@ -1560,8 +1552,7 @@ namespace Civilization1Remaster.Game
 			{
 				this.owner.UnitOps.PanMapToPosition(participantIdx, horizLoc, vertLoc);
 
-				this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
-
+	
 				if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) != 0)
 					DisplayHelpForHuman(0x1ea0);
 				else
@@ -1622,8 +1613,7 @@ namespace Civilization1Remaster.Game
 			{
 				this.owner.UnitOps.PanMapToPosition(participantIdx, horizLoc, vertLoc);
 
-				this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
-
+	
 				if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) != 0)
 					DisplayHelpForHuman(0x1eba);
 				else
@@ -1651,8 +1641,7 @@ namespace Civilization1Remaster.Game
 			if ((short)this.turn.Result >= 0)
 			{
 				// (a second step of the counter, the change only over 5)
-				this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
-				this.troops.Assign(participantIdx, troopIdx, UnitMemory.UnusualSteps, (byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.UnusualSteps) + 1));
+					this.troops.Assign(participantIdx, troopIdx, UnitMemory.UnusualSteps, (byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.UnusualSteps) + 1));
 
 				if (this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.UnusualSteps) <= 5)
 					return;
@@ -1671,7 +1660,6 @@ namespace Civilization1Remaster.Game
 		/// <summary>The work of the settlers stops: their status loses the bit (mask), BX / SI as the original leaves them</summary>
 		private void StopWork(short participantIdx, short troopIdx, byte mask)
 		{
-			this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Status, (byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & mask));
 		}
 
@@ -1795,7 +1783,6 @@ namespace Civilization1Remaster.Game
 			short troopIdx = (short)this.turn.Troop;
 			short horizLoc = (short)this.turn.UnitHoriz;
 			short vertLoc = (short)this.turn.UnitVert;
-			this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
 
 			if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) != 0)
 			{
@@ -1818,8 +1805,7 @@ namespace Civilization1Remaster.Game
 				}
 
 				this.owner.World.Towns[this.turn.City].TrueExtent++;
-				this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
-				this.processor.ScaleIndex(0x600, (ushort)participantIdx);
+					this.processor.ScaleIndex(0x600, (ushort)participantIdx);
 				this.troops.Assign(participantIdx, troopIdx, UnitMemory.LeftoverSteps, 0);
 
 				this.owner.UnitOps.EliminateUnit(participantIdx, (short)this.turn.Troop);
@@ -1829,7 +1815,6 @@ namespace Civilization1Remaster.Game
 				return;
 			}
 
-			this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.LeftoverSteps, 0);
 
 			this.turn.Result = this.owner.Founding.EstablishCity(participantIdx,
@@ -1948,7 +1933,6 @@ namespace Civilization1Remaster.Game
 				this.owner.MapOps.RepaintMapTile(horizLoc, vertLoc);
 			}
 
-			this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.LeftoverSteps, 0);
 
 			return true;
@@ -1978,7 +1962,6 @@ namespace Civilization1Remaster.Game
 			this.turn.OtherUnit = this.owner.MapOps.ObtainUnitAtTile((short)this.turn.TargetHoriz, (short)this.turn.TargetVert);
 
 			this.processor.RegDest.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride);
-			this.processor.RegBase.Value16 = (ushort)(this.troops.TroopKind(participantIdx, troopIdx) * UnitKindTable.Stride);
 
 			return this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == UnitKindTable.LandUnits;
 		}
@@ -1998,7 +1981,6 @@ namespace Civilization1Remaster.Game
 			}
 
 			short troopIdx = (short)this.turn.Troop;
-			this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
 
 			if (this.troops.TroopKind(participantIdx, troopIdx) >= UnitKindTable.Diplomat || this.turn.StartTerrain == MapRules.OceanTerrain)
 				return false;
@@ -2009,7 +1991,6 @@ namespace Civilization1Remaster.Game
 			if ((this.owner.World.SessionPrefMarkers & 1) != 0)
 				DisplayHelpForHuman(0x1edf);
 
-			this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHoriz, 0xff);
 
 			return true;
@@ -2039,7 +2020,6 @@ namespace Civilization1Remaster.Game
 		{
 			short troopIdx = (short)this.turn.Troop;
 			ushort unit = UnitMemory.Offset(participantIdx, troopIdx);
-			this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
 
 			if (this.troops.TroopKind(participantIdx, troopIdx) < UnitKindTable.Diplomat)
 				return MoveStep.GoesOn;
@@ -2050,7 +2030,6 @@ namespace Civilization1Remaster.Game
 				return MoveStep.NoCity;
 
 			Game.State.City town = this.owner.World.Towns[this.turn.City];
-			this.processor.RegBase.Value16 = (ushort)(this.turn.City * 0x1c);
 
 			if (town.ParticipantIdx != participantIdx && this.turn.StartTerrain == MapRules.OceanTerrain)
 				return MoveStep.Done;
@@ -2058,7 +2037,6 @@ namespace Civilization1Remaster.Game
 
 			if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) == UnitKindTable.Diplomat)
 			{
-				this.processor.RegBase.Value16 = (ushort)(this.turn.City * 0x1c);
 
 				if (participantIdx != town.ParticipantIdx)
 				{
@@ -2105,8 +2083,7 @@ namespace Civilization1Remaster.Game
 			if (town.ParticipantIdx == participantIdx && (sbyte)town.PresentMakingIdx >= -24 && (short)this.turn.Result < 10)
 			{
 				// Near its home city, building no wonder: on the same continent it just moves in
-				this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
-
+	
 				ushort homeContinent = this.owner.MapOps.ObtainContinentID(
 					this.owner.World.Towns[homeIdx].Place.X,
 					this.owner.World.Towns[homeIdx].Place.Y);
@@ -2125,7 +2102,6 @@ namespace Civilization1Remaster.Game
 					DisabledLines = 0x2;
 			}
 
-			this.processor.RegBase.Value16 = (ushort)(this.turn.City * 0x1c);
 
 			if (town.ParticipantIdx == participantIdx)
 			{
@@ -2204,7 +2180,6 @@ namespace Civilization1Remaster.Game
 
 			if (this.turn.TargetTerrain == MapRules.OceanTerrain)
 			{
-				this.processor.RegBase.Value16 = (ushort)(this.troops.TroopKind(participantIdx, troopIdx) * UnitKindTable.Stride);
 
 				if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == UnitKindTable.LandUnits)
 				{
@@ -2231,7 +2206,6 @@ namespace Civilization1Remaster.Game
 
 			if (this.turn.StartTerrain == MapRules.OceanTerrain)
 			{
-				this.processor.RegBase.Value16 = (ushort)(this.troops.TroopKind(participantIdx, troopIdx) * UnitKindTable.Stride);
 
 				if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == UnitKindTable.LandUnits)
 				{
@@ -2243,20 +2217,17 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
 
 			if (this.turn.TargetTerrain != MapRules.OceanTerrain && this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) == UnitKindTable.Submarine)
 				return MoveCheck.Done;
 
 			if (participantIdx != this.owner.World.PersonParticipantIdx)
 			{
-				this.processor.RegBase.Value16 = (ushort)(this.troops.TroopKind(participantIdx, troopIdx) * UnitKindTable.Stride);
 
 				if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.AssaultPower) == 0)
 					return MoveCheck.Done;
 			}
 
-			this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
 			this.processor.RegSource.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride);
 
 			if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) == UnitKindTable.Diplomat)
@@ -2265,7 +2236,6 @@ namespace Civilization1Remaster.Game
 			// A plane outside a city is attacked only by a fighter
 			short guardian = (short)this.turn.OtherUnit;
 			this.processor.RegDest.Value16 = (ushort)(guardian * UnitMemory.TroopStride);
-			this.processor.RegBase.Value16 = (ushort)(this.troops.TroopKind(owner, guardian) * UnitKindTable.Stride);
 
 			if (this.troops.KindField(owner, guardian, UnitKindTable.LandGroup) == UnitKindTable.AirUnits)
 			{
@@ -2308,7 +2278,6 @@ namespace Civilization1Remaster.Game
 				return false;
 			}
 
-			this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
 
 			return this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.LeftoverSteps) >= 2;
 		}
@@ -2348,7 +2317,6 @@ namespace Civilization1Remaster.Game
 				(short)this.turn.OtherUnit,
 				1);
 
-			this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHoriz, 0xff);
 			CountLosses = 0x0;
 
@@ -2376,8 +2344,7 @@ namespace Civilization1Remaster.Game
 			{
 				if (((byte)this.turn.TargetImprovements & 0x20) == 0)
 				{
-					this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
-				}
+						}
 
 				return false;
 			}
@@ -2389,7 +2356,6 @@ namespace Civilization1Remaster.Game
 			if (town.ParticipantIdx != person)
 				town.ConditionMarker |= 0x10;
 
-			this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
 
 			if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) != 0xff && !town.Has(CityStructure.CityWalls) &&
 				this.turn.StartTerrain != MapRules.OceanTerrain &&
@@ -2398,7 +2364,6 @@ namespace Civilization1Remaster.Game
 				town.TrueExtent--;
 			}
 
-			this.processor.RegBase.Value16 = (ushort)(this.turn.City * 0x1c);
 
 			if (town.TrueExtent == 0)
 			{
@@ -2418,7 +2383,6 @@ namespace Civilization1Remaster.Game
 					{
 						short owner = (short)UnitAtTilePlayer;
 						short left = (short)this.turn.OtherUnit;
-						this.processor.RegBase.Value16 = (ushort)(owner * UnitMemory.ParticipantStride);
 						this.troops.Assign(owner, left, UnitMemory.ShownToParticipants,
 							(byte)(this.troops.Pull(owner, left, UnitMemory.ShownToParticipants) | (1 << (person & 0xff))));
 					}
@@ -2490,7 +2454,6 @@ namespace Civilization1Remaster.Game
 
 			if (this.turn.TargetTerrain != MapRules.OceanTerrain && ((byte)this.turn.TargetImprovements & 1) == 0)
 			{
-				this.processor.RegBase.Value16 = (ushort)kindOffset;
 
 				if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == UnitKindTable.SeaUnits)
 				{
@@ -2499,7 +2462,6 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			this.processor.RegBase.Value16 = (ushort)kindOffset;
 
 			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) != UnitKindTable.LandUnits && ((byte)this.turn.TargetImprovements & 1) != 0 &&
 				this.owner.MapOps.ObtainTileOwnerBits((short)this.turn.TargetHoriz, (short)this.turn.TargetVert) != (ushort)participantIdx)
@@ -2520,12 +2482,10 @@ namespace Civilization1Remaster.Game
 				return false;
 			}
 
-			this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
 
 			if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.LeftoverSteps) == 0)
 				return false;
 
-			this.processor.RegBase.Value16 = (ushort)kindOffset;
 
 			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == UnitKindTable.LandUnits)
 			{
@@ -2542,8 +2502,7 @@ namespace Civilization1Remaster.Game
 					{
 						if ((this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 0x10) != 0 && participantIdx == this.owner.World.PersonParticipantIdx)
 						{
-							this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
-
+				
 							if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.TravelHoriz) == 0xff)
 								cost = 0;
 						}
@@ -2614,8 +2573,7 @@ namespace Civilization1Remaster.Game
 					return false;
 				}
 
-				this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
-				this.processor.RegAcc.LowByte = (byte)this.turn.Direction;
+					this.processor.RegAcc.LowByte = (byte)this.turn.Direction;
 				this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHeading, (byte)this.turn.Direction);
 			}
 
@@ -2626,7 +2584,6 @@ namespace Civilization1Remaster.Game
 			}
 
 			this.processor.RegSource.Value16 = unit;
-			this.processor.RegBase.Value16 = (ushort)(this.troops.TroopKind(participantIdx, troopIdx) * UnitKindTable.Stride);
 			ushort group = this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup);
 			this.processor.RegDest.Value16 = group;
 
@@ -2637,7 +2594,6 @@ namespace Civilization1Remaster.Game
 			}
 
 			this.turn.Result = this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, (short)this.turn.OtherUnit, 2);
-			this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
 			short threshold = (short)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.LeftoverSteps) != 0 ? 4 : 2);
 
 			return threshold > (short)this.turn.Result;
@@ -2679,12 +2635,10 @@ namespace Civilization1Remaster.Game
 				}
 				else if (this.turn.Dot == (ushort)person)
 				{
-					this.processor.RegBase.Value16 = (ushort)(participantIdx << 1);
 
 					if ((this.owner.World.Participants[this.turn.Dot].Relations[participantIdx] & 2) != 0)
 					{
-						this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
-						this.troops.Assign(participantIdx, troopIdx, UnitMemory.LeftoverSteps, 0);
+									this.troops.Assign(participantIdx, troopIdx, UnitMemory.LeftoverSteps, 0);
 
 						return false;
 					}
@@ -2707,7 +2661,6 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private bool MayTreatyStop(short participantIdx, short troopIdx, ushort unit, short owner, short person)
 		{
-			this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
 
 			if (this.troops.TroopKind(participantIdx, troopIdx) >= UnitKindTable.Diplomat || ((byte)this.turn.TargetImprovements & 0xf) == 0 ||
 				owner == participantIdx || (participantIdx != person && owner != person))
@@ -2715,7 +2668,6 @@ namespace Civilization1Remaster.Game
 				return false;
 			}
 
-			this.processor.RegBase.Value16 = (ushort)(this.troops.TroopKind(participantIdx, troopIdx) * UnitKindTable.Stride);
 
 			return this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == UnitKindTable.LandUnits &&
 				this.owner.MapOps.ObtainTileOwner((short)this.turn.TargetHoriz, (short)this.turn.TargetVert) != (ushort)participantIdx;
@@ -2756,19 +2708,16 @@ namespace Civilization1Remaster.Game
 				((sbyte)this.owner.World.ChartSight[this.turn.TargetHoriz, this.turn.TargetVert] & personBit) != 0)
 			{
 				// Into a foreign city the human sees: with an embassy
-				this.processor.RegBase.Value16 = (ushort)(participantIdx << 1);
 				bool embassy = (this.owner.World.Participants[person].Relations[participantIdx] & 0x40) != 0;
 
 				if (!embassy)
 				{
-					this.processor.RegBase.Value16 = (ushort)(this.turn.TileOwner << 1);
 					embassy = (this.owner.World.Participants[person].Relations[this.turn.TileOwner] & 0x40) != 0;
 				}
 
 				if (embassy)
 				{
-					this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
-					this.troops.Assign(participantIdx, troopIdx, UnitMemory.ShownToParticipants,
+							this.troops.Assign(participantIdx, troopIdx, UnitMemory.ShownToParticipants,
 						(byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.ShownToParticipants) | personBit));
 				}
 			}
@@ -2776,13 +2725,11 @@ namespace Civilization1Remaster.Game
 			if (this.turn.TargetTerrain == MapRules.OceanTerrain &&
 				(this.owner.MapOps.ObtainTileImprovements((short)this.turn.TargetHoriz, (short)this.turn.TargetVert) & 2) != 0)
 			{
-				this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
-				this.troops.Assign(participantIdx, troopIdx, UnitMemory.ShownToParticipants,
+					this.troops.Assign(participantIdx, troopIdx, UnitMemory.ShownToParticipants,
 					(byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.ShownToParticipants) | (byte)(1 << ((byte)this.turn.TileOwner & 0x1f))));
 			}
 
 			// The move on the screen
-			this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
 
 			if ((this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.ShownToParticipants) & personBit) == 0 && participantIdx != person &&
 				(MapRevealed == 0 || participantIdx == 0))
@@ -2840,7 +2787,6 @@ namespace Civilization1Remaster.Game
 
 			if (participantIdx != person)
 			{
-				this.processor.RegBase.Value16 = (ushort)(this.troops.TroopKind(participantIdx, troopIdx) * UnitKindTable.Stride);
 
 				if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) != UnitKindTable.AirUnits)
 					this.troops.Assign(participantIdx, troopIdx, UnitMemory.Status, (byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 0x30));
@@ -2881,13 +2827,11 @@ namespace Civilization1Remaster.Game
 
 			if (this.turn.StartTerrain == MapRules.OceanTerrain && this.turn.TargetTerrain != MapRules.OceanTerrain)
 			{
-				this.processor.RegBase.Value16 = (ushort)(this.troops.TroopKind(participantIdx, troopIdx) * UnitKindTable.Stride);
 
 				if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) != UnitKindTable.AirUnits)
 					this.troops.Assign(participantIdx, troopIdx, UnitMemory.LeftoverSteps, 0);
 			}
 
-			this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
 			this.turn.CarrierKind = (ushort)((this.turn.CarrierKind & 0xff00) | this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind));
 
 			if ((UnitKindWord((sbyte)(byte)this.turn.CarrierKind, UnitKindTable.FerryRoom) == 0 &&
@@ -2908,7 +2852,6 @@ namespace Civilization1Remaster.Game
 				// A transport takes land units, a carrier (no room) planes
 				ushort cargoGroup = (ushort)(this.troops.KindField(participantIdx, troopIdx, UnitKindTable.FerryRoom) == 0 ? 1 : 0);
 				this.processor.RegCount.Value16 = cargoGroup;
-				this.processor.RegBase.Value16 = (ushort)(this.troops.TroopKind(participantIdx, member) * UnitKindTable.Stride);
 
 				if (cargoGroup == this.troops.KindField(participantIdx, member, UnitKindTable.LandGroup))
 				{
@@ -2917,7 +2860,6 @@ namespace Civilization1Remaster.Game
 
 					if (!taken && participantIdx != this.owner.World.PersonParticipantIdx && (status & 0xc) == 0)
 					{
-						this.processor.RegBase.Value16 = (ushort)(member * UnitMemory.TroopStride);
 						taken = this.troops.Pull(participantIdx, member, UnitMemory.FollowingInStack) != 0xff;
 					}
 
@@ -2931,9 +2873,7 @@ namespace Civilization1Remaster.Game
 				if ((short)this.turn.CargoTally >= 0x14 || this.turn.Cargo == 0xffff)
 					return;
 
-				this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
-				this.turn.CarrierKind = (ushort)((this.turn.CarrierKind & 0xff00) | this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind));
-				this.processor.RegBase.Value16 = (ushort)((sbyte)(byte)this.turn.CarrierKind * UnitKindTable.Stride);
+					this.turn.CarrierKind = (ushort)((this.turn.CarrierKind & 0xff00) | this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind));
 				this.processor.RegAcc.Value16 = this.turn.Count;
 
 				if ((short)UnitKindWord((sbyte)(byte)this.turn.CarrierKind, UnitKindTable.FerryRoom) <= (short)this.turn.Count &&
@@ -2962,16 +2902,13 @@ namespace Civilization1Remaster.Game
 			this.troops.Assign(participantIdx, member, UnitMemory.ShownToParticipants, 0);
 			this.troops.Assign(participantIdx, member, UnitMemory.TravelHeading, 0xff);
 
-			this.processor.RegBase.Value16 = (ushort)(this.troops.TroopKind(participantIdx, troopIdx) * UnitKindTable.Stride);
 
 			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.FerryRoom) != 0)
 			{
-				this.processor.RegBase.Value16 = (ushort)(member * UnitMemory.TroopStride);
 				this.troops.Assign(participantIdx, member, UnitMemory.Status, (byte)(this.troops.Pull(participantIdx, member, UnitMemory.Status) | 1));
 			}
 
 			// A plane on a carrier: a round of fuel less
-			this.processor.RegBase.Value16 = (ushort)(this.troops.TroopKind(participantIdx, member) * UnitKindTable.Stride);
 			ushort roundsAway = this.troops.KindField(participantIdx, member, UnitKindTable.RoundsAway);
 
 			if (roundsAway != 0)
@@ -3026,7 +2963,6 @@ namespace Civilization1Remaster.Game
 
 			if (this.turn.TargetTerrain == MapRules.OceanTerrain)
 			{
-				this.processor.RegBase.Value16 = (ushort)(this.troops.TroopKind(participantIdx, troopIdx) * UnitKindTable.Stride);
 
 				if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) != UnitKindTable.SeaUnits)
 					this.owner.UnitOps.VisitEachUnitInStack(participantIdx, (short)this.turn.Troop, 0x1560);
@@ -3062,7 +2998,6 @@ namespace Civilization1Remaster.Game
 			ushort unit = UnitMemory.Offset(participantIdx, troopIdx);
 			short person = this.owner.World.PersonParticipantIdx;
 
-			this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
 
 			if ((this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.ShownToParticipants) & (1 << (person & 0xff))) != 0 || participantIdx == person ||
 				(MapRevealed != 0 && participantIdx != 0))
@@ -3087,7 +3022,6 @@ namespace Civilization1Remaster.Game
 			if (((byte)this.turn.TargetImprovements & 1) != 0)
 			{
 				// A plane lands in a city
-				this.processor.RegBase.Value16 = (ushort)(this.troops.TroopKind(participantIdx, troopIdx) * UnitKindTable.Stride);
 
 				if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.RoundsAway) != 0)
 				{
@@ -3566,8 +3500,7 @@ namespace Civilization1Remaster.Game
 
 			if (troopIdx < UnitMemory.TroopTally)
 			{
-				this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
-
+	
 				if (this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.LeftoverSteps) > 0 && this.turn.Ordered == 0 &&
 					GameEndRequest == 0)
 				{
@@ -3602,7 +3535,6 @@ namespace Civilization1Remaster.Game
 		{
 			ushort unit = UnitMemory.Offset(participantIdx, troopIdx);
 
-			this.processor.RegBase.Value16 = (ushort)(this.troops.TroopKind(participantIdx, troopIdx) * UnitKindTable.Stride);
 
 			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.RoundsAway) == 0)
 				return;
@@ -3634,7 +3566,6 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private void MayLoseTrireme(short participantIdx, short troopIdx)
 		{
-			this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
 
 			if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) != 0x10 || participantIdx != this.owner.World.PersonParticipantIdx)
 				return;

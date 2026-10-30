@@ -2009,58 +2009,43 @@ namespace Civilization1Remaster.Game
 
 				if (PlayerEnjoysWonderEffect(owner, 0xc) != 0)
 				{
-					this.processor.RegCount.Value16 = 3;
-					this.processor.RegAcc.Value16 = (ushort)((short)CityScience / 3);
-					this.round.Value = (ushort)(this.round.Value + ((ushort)((short)CityScience / 3)));
+					this.round.Value = (ushort)(this.round.Value + (CityScience / 3));
 				}
 			}
 
 			// The city of the wonder 10
 			if (ObtainWonderCityID(10) == (ushort)townIdx)
 			{
-				this.processor.RegAcc.Value16 = this.round.Value;
-				this.round.Value = (ushort)(this.round.Value + this.round.Value);
+				this.round.Value = (ushort)(this.round.Value * 2);
 			}
 
 			CityScience = this.round.Value;
-			this.processor.RegAcc.Value16 = CityScience;
 			CityHappy = 0;
 
 			// The content citizens
 			if (owner == this.owner.World.PersonParticipantIdx)
 			{
-				this.round.Value = (ushort)-(this.owner.World.HardnessTier * 2 - 0xe);
-				this.processor.RegCount.Value16 = (ushort)((short)this.round.Value / 2);
-				this.processor.RegAcc.Value16 = (ushort)(player.RegimeKind / 2 + 2);
-				this.round.Value = (ushort)((short)((ushort)(player.RegimeKind / 2 + 2)) * (short)this.processor.RegCount.Value16);
-
-				short step = (short)this.round.Value;
+				short step = (short)(-(this.owner.World.HardnessTier * 2 - 0xe) / 2 * (player.RegimeKind / 2 + 2));
 
 				if (step == 0)
 					throw new Exception("Division by zero");
 
-				this.processor.RegBase.Value16 = (ushort)town.TrueExtent;
 				short spread = (short)((short)(townIdx % step + player.TownTally - step) / step);
-				this.processor.RegAcc.Value16 = (ushort)(spread + town.TrueExtent + this.owner.World.HardnessTier - 6);
-				this.processor.RegCount.Value16 = (ushort)step;
+				this.round.Content = (ushort)(spread + town.TrueExtent + this.owner.World.HardnessTier - 6);
 			}
 			else
 			{
-				this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
-				this.processor.RegAcc.Value16 = (ushort)(town.TrueExtent - 3);
+				this.round.Content = (ushort)(town.TrueExtent - 3);
 			}
 
-			CityUnhappy = this.processor.RegAcc.Value16;
-			this.round.Content = this.processor.RegAcc.Value16;
+			CityUnhappy = this.round.Content;
 
 			// The citizens above the size
 			CityExcessUnhappy = 0;
-			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 
 			if (town.TrueExtent < (short)CityUnhappy)
 			{
-				this.processor.RegCount.Value16 = (ushort)(CityUnhappy - town.TrueExtent);
-				CityExcessUnhappy = this.processor.RegCount.Value16;
+				CityExcessUnhappy = (ushort)(CityUnhappy - town.TrueExtent);
 				CityUnhappy = (ushort)town.TrueExtent;
 			}
 
@@ -2084,7 +2069,6 @@ namespace Civilization1Remaster.Game
 			}
 
 			CityHappy = (ushort)((short)CityLuxuries / 2);
-			this.processor.RegAcc.Value16 = CityHappy;
 
 			ReshuffleCitizens(townIdx, this.round.Specialists);
 
@@ -2098,8 +2082,6 @@ namespace Civilization1Remaster.Game
 					100, (short)this.round.IconVert - 2, 222, (short)this.round.IconVert - 2, 1);
 			}
 
-			this.processor.RegAcc.Value16 = (ushort)marker;
-			this.processor.RegData.Value16 = (ushort)(marker < 0 ? 0xffff : 0);
 		}
 
 		/// <summary>
@@ -2133,11 +2115,10 @@ namespace Civilization1Remaster.Game
 				this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 
 				if (town.Has(CityStructure.Cathedral))
-					this.processor.RegAcc.Value16 = (ushort)(PlayerEnjoysWonderEffect(owner, 9) != 0 ? 6 : 4);
-				else
-					this.processor.RegAcc.Value16 = 0;
-
-				CityUnhappy = (ushort)(CityUnhappy - this.processor.RegAcc.Value16);
+				{
+					ushort relief = (ushort)(PlayerEnjoysWonderEffect(owner, 9) != 0 ? 6 : 4);
+					CityUnhappy = (ushort)(CityUnhappy - relief);
+				}
 
 				if (tab)
 				{
@@ -2160,8 +2141,8 @@ namespace Civilization1Remaster.Game
 
 				if (PlayerEnjoysWonderEffect(owner, 6) != 0)
 				{
-					this.processor.RegAcc.Value16 = (ushort)(this.owner.Advisors.PlayerKnowsTechnology(owner, 0x1a) != 0 ? 2 : 1);
-					CityUnhappy = (ushort)(CityUnhappy - this.processor.RegAcc.Value16);
+					ushort relief = (ushort)(this.owner.Advisors.PlayerKnowsTechnology(owner, 0x1a) != 0 ? 2 : 1);
+					CityUnhappy = (ushort)(CityUnhappy - relief);
 				}
 
 				if (tab)
@@ -2183,8 +2164,6 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			this.processor.RegAcc.Value16 = (ushort)marker;
-			this.processor.RegData.Value16 = (ushort)(marker < 0 ? 0xffff : 0);
 		}
 
 		/// <summary>An icon of the citizens' contentment on the city screen at the column 0x6 (which moves 16 left)</summary>
@@ -2213,12 +2192,11 @@ namespace Civilization1Remaster.Game
 			if (player.RegimeKind < 4)
 			{
 				// Martial law: the attack units in the city
-				this.processor.RegAcc.Value16 = 0;
 				this.round.MartialLawUnits = 0;
 				this.round.UnitsAway = 0;
 
 				this.round.Value = this.owner.MapOps.ObtainUnitAtTile((short)this.round.Horiz, (short)this.round.Vert);
-				this.round.NewUnit = this.processor.RegAcc.Value16;
+				this.round.NewUnit = this.round.Value;
 
 				while (this.round.NewUnit != 0xffff)
 				{
@@ -2228,7 +2206,6 @@ namespace Civilization1Remaster.Game
 						break;
 
 					short troopIdx = (short)this.round.NewUnit;
-					this.processor.RegBase.Value16 = (ushort)(this.troops.TroopKind(owner, troopIdx) * UnitKindTable.Stride);
 
 					if (this.troops.KindField(owner, troopIdx, UnitKindTable.AssaultPower) != 0)
 					{
@@ -2243,9 +2220,7 @@ namespace Civilization1Remaster.Game
 						}
 					}
 
-					this.processor.RegBase.Value16 = (ushort)(owner * UnitMemory.ParticipantStride);
 					this.round.NewUnit = (ushort)this.troops.PullSigned(owner, troopIdx, UnitMemory.FollowingInStack);
-					this.processor.RegAcc.Value16 = this.round.Value;
 
 					if (this.round.NewUnit == this.round.Value)
 						this.round.NewUnit = 0xffff;
@@ -2365,7 +2340,6 @@ namespace Civilization1Remaster.Game
 
 			if ((this.owner.World.DiagMarkers & 2) == 0)
 			{
-				this.processor.RegAcc.Value16 = 0;
 				CityUnhappy = 0;
 				CityHappy = 0;
 			}

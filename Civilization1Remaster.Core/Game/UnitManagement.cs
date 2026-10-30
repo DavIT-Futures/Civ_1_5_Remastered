@@ -1138,12 +1138,6 @@ namespace Civilization1Remaster.Game
 
 			ForEachUnitInStack(participantIdx, troopIdx, (stepParticipantIdx, stepTroopIdx) =>
 			{
-				// The translated original left BX = 0xc * unit and SI = 0x600 * player before every step, so SI = 0x600 * player
-				// after the call. A caller depends on it: AIPlayer divides by SI after TallyUnitsByDomainInStack (L2947),
-				// where the DOS code had kept its own SI. Kept until the end of the migration, see MIGRATION-BACKLOG.md.
-				this.processor.RegBase.Value16 = (ushort)(UnitMemory.TroopStride * stepTroopIdx);
-				this.processor.RegSource.Value16 = (ushort)(UnitMemory.ParticipantStride * stepParticipantIdx);
-
 				step(stepParticipantIdx, stepTroopIdx);
 			});
 

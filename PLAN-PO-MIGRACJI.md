@@ -649,6 +649,23 @@ bez wyjątku (czyta 0), `DifferentialPair` po wyjątku w scenariuszu przywraca S
   - Role na kontynencie (`TroopGroup`), siła ataku jednostek (`AssaultPower`) oraz nacisk demokracji (`DemocracyPressure` z `LeaderWord`).
 - 2/2 mutacje zweryfikowane (`PlayerTurn:SpendMoves` -> fail w turze 2, `CityManagement:TestWorker` -> fail w turze 1); Golden Master 15/15 w pełni zielony (43.5s); kompilacja 0 błędów i 0 ostrzeżeń; przebudowano standalone `.exe` (Release i Debug).
 
+**Faza 3 część 15 (Uderzenie 5/6, 2026-10-30):** kompleksowa eliminacja rejestrów x86 (`RegAcc`, `RegBase`, `RegCount`, `RegData`, `RegSource`) w modułach pomocniczych, tury gracza, logiki i interfejsu miast:
+- `UnitManagement.cs`: usunięcie ostatnich 2 przypisań rejestrów w `VisitEachUnitInStack` — moduł osiągnął **Total = 0 rejestrów x86**.
+- `CommonUtilities.cs`: eliminacja wszystkich 12 odwołań do rejestru `RegAcc` we wszystkich procedurach (`SeedRandomizer`, `VerifyValueSpan`, `LocateCityAtPosition`, `LocateNearestCity`, `LocateNearestUnit`, `MergeCoordinates`, `ObtainDistanceFromOffsets`, `ObtainDistance`, `ObtainPlayerPopulation`) — moduł osiągnął **Total = 0 rejestrów x86**.
+- `PlayerTurn.cs`: usunięcie 69 martwych przypisań `this.processor.RegBase.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride)` oraz indeksowania tabel jednostek bez odczytów; w pliku pozostało jedynie 26 celowych rejestrów powiązanych ze stanem maszynowym.
+- `CityManagement.cs`: przepisanie na czysty C# kluczowych partii logiki ekonomicznej, zadowolenia, nauki, cudów i renderowania interfejsu:
+  - `SplitTrade`: obliczenia taryf handlowych i specjalistów (`TallySpecialists`) bez użycia rejestrów.
+  - `CountScienceAndContent`: podwojenie nauki cudem 10, premia cudu 0xc, wyliczanie `CityUnhappy` i `CityExcessUnhappy` bezpośrednio w zmiennych C#.
+  - `ApplyLuxuries`, `ApplyContentImprovements`, `ApplyMilitaryHappiness`, `ApplyWonderHappiness`: świątynie, katedry, stan wojenny i relaksujące efekty cudów oczyszczone z rejestrów emulacji.
+  - Procedury UI widoku miasta: `RenderFoodBox`, `RenderTradeRow`, `RenderTradeIcons`, `RenderShieldsInBox`, `RenderProductionBox`, `RenderImprovementList`, `RenderImprovementName`, `RenderCityScreenFrames` przepisane z bezpośrednim przekazywaniem parametrów C#.
+- Weryfikacja jakości i odporności:
+  - Pełny zestaw 16/16 testów Golden Master w 100% zielony (45.6s).
+  - 2/2 mutacje zweryfikowane:
+    - Mutacja 1 (`CommonUtilities:VerifyValueSpan` + 1) -> natychmiastowe wykrycie błędu i zadziałanie bezpiecznika runnera `run_tests_with_timeout.ps1`.
+    - Mutacja 2 (`CityManagement:CityHappy` + 1) -> natychmiastowe wykrycie rozbieżności po turze 1 (`AUTO07 diverges from baseline after turn 1: state.Participants[0].Tally: 508 -> 517`).
+  - Obie mutacje natychmiast wycofane, powrót do 100% zielonego stanu.
+  - Kompilacja projektu `Civilization1Remaster.Core` i binarki `Civilization1Remaster.Desktop` (Release): 0 błędów i 0 ostrzeżeń.
+
 
 
 **Faza 3 – sprzątanie i drugi baseline:** usunięcie przełączników i kodu „classic”, zamrożonej gry
