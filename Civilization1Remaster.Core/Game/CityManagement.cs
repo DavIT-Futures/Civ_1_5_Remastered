@@ -615,10 +615,8 @@ namespace Civilization1Remaster.Game
 
 				// Its worker is taken off
 				uint mask = ~(1u << (tile & 0xff));
-				this.processor.RegCount.Value16 = (ushort)mask;
-				this.processor.RegBase.Value16 = (ushort)(mask >> 16);
-				town.LaborerMarkers0 &= this.processor.RegCount.Value16;
-				town.LaborerMarkers1 &= this.processor.RegBase.Value16;
+				town.LaborerMarkers0 &= (ushort)mask;
+				town.LaborerMarkers1 &= (ushort)(mask >> 16);
 			}
 
 			this.round.Index = tile;
@@ -626,8 +624,7 @@ namespace Civilization1Remaster.Game
 			for (ushort slot = 0; slot < 4; slot++)
 			{
 				this.round.Index = slot;
-				this.processor.RegBase.Value16 = (ushort)(slot << 1);
-				this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x70da), 0);
+				this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)((slot << 1) + 0x70da), 0);
 			}
 
 			this.round.Index = 4;
@@ -717,16 +714,13 @@ namespace Civilization1Remaster.Game
 			return this.round.Workers != CitySpecialists && this.round.Workers != 0;
 		}
 
-		/// <summary>Whether the tile is worked by the city (CX, BX the masked words of the workers, SI the city, as in the original)</summary>
+		/// <summary>Whether the tile is worked by the city</summary>
 		private bool TestWorker(short townIdx, ushort tile)
 		{
 			City town = this.owner.World.Towns[townIdx];
 			uint mask = 1u << (tile & 0xff);
 
-			this.processor.RegCount.Value16 = (ushort)(mask & town.LaborerMarkers0);
-			this.processor.RegBase.Value16 = (ushort)(((mask >> 16) & town.LaborerMarkers1) | this.processor.RegCount.Value16);
-
-			return this.processor.RegBase.Value16 != 0;
+			return ((mask & town.LaborerMarkers0) | ((mask >> 16) & town.LaborerMarkers1)) != 0;
 		}
 
 		/// <summary>
@@ -758,11 +752,9 @@ namespace Civilization1Remaster.Game
 				// Food first
 				while (true)
 				{
-					this.processor.RegCount.Value16 = (ushort)((short)this.round.Workers / 2 + CityFood);
-					this.processor.RegAcc.Value16 = (ushort)((short)this.round.SettlerFood * (short)CitySettlers);
-					this.processor.RegBase.Value16 = (ushort)(town.TrueExtent * 2 + ((ushort)((short)this.round.SettlerFood * (short)CitySettlers)));
-
-					bool hungry = (short)this.processor.RegBase.Value16 > (short)this.processor.RegCount.Value16 || town.TrueExtent < 3;
+					int neededFood = town.TrueExtent * 2 + ((short)this.round.SettlerFood * (short)CitySettlers);
+					int availableFood = (short)this.round.Workers / 2 + CityFood;
+					bool hungry = neededFood > availableFood || town.TrueExtent < 3;
 
 					if (!hungry || (short)this.round.Workers <= (short)CitySpecialists ||
 						this.round.Found == 0xffff)
@@ -900,12 +892,9 @@ namespace Civilization1Remaster.Game
 			// The workers and the specialists (bits 26 - 31) stored
 			uint workers = (uint)((int)(short)this.round.Workers << 0x1a) +
 				(((uint)this.round.WorkersHigh << 16) | this.round.WorkersLow);
-			this.processor.RegCount.Value16 = (ushort)workers;
-			this.processor.RegBase.Value16 = (ushort)(workers >> 16);
-			town.LaborerMarkers0 = this.processor.RegCount.Value16;
-			town.LaborerMarkers1 = this.processor.RegBase.Value16;
+			town.LaborerMarkers0 = (ushort)workers;
+			town.LaborerMarkers1 = (ushort)(workers >> 16);
 			this.round.WorkersGained = (ushort)-(short)this.round.Workers;
-			this.processor.RegAcc.Value16 = this.round.WorkersGained;
 		}
 
 		/// <summary>A tile around the city still free for a worker (the array at BP-0x3e); 0xc6 / 0xd2 its place</summary>
@@ -1092,8 +1081,7 @@ namespace Civilization1Remaster.Game
 				return ProductionStep.Improvement;
 
 			// A unit
-			this.processor.RegBase.Value16 = (ushort)(town.PresentMakingIdx * UnitKindTable.Stride);
-			short cost = (short)((short)this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + UnitKindTable.Origin + UnitKindTable.Price)) *
+			short cost = (short)((short)UnitKindWord(town.PresentMakingIdx, UnitKindTable.Price) *
 				(short)this.round.CostFactor);
 
 			if (cost > town.MaterialsTally)
@@ -1406,18 +1394,13 @@ namespace Civilization1Remaster.Game
 			{
 				// The improvement
 				uint mask = 1u << ((byte)(built - 1) & 0xff);
-				this.processor.RegCount.Value16 = (ushort)mask;
-				this.processor.RegBase.Value16 = (ushort)(mask >> 16);
-				town.StructureMarkers0 |= this.processor.RegCount.Value16;
-				town.StructureMarkers1 |= this.processor.RegBase.Value16;
+				town.StructureMarkers0 |= (ushort)mask;
+				town.StructureMarkers1 |= (ushort)(mask >> 16);
 			}
 
 			// The price paid
-			this.processor.RegCount.Value16 = 0x1e;
-			this.processor.RegBase.Value16 = (ushort)(-town.PresentMakingIdx * 0x1e);
-			town.MaterialsTally -= (short)((short)BuildingWordAt(this.processor.RegBase.Value16, BuildingTable.Price) *
+			town.MaterialsTally -= (short)((short)BuildingWord(-town.PresentMakingIdx, BuildingTable.Price) *
 				(short)this.round.CostFactor);
-			this.processor.RegCount.LowByte = (byte)CityOwner;
 
 			bool humanPlayed = this.owner.World.IsHuman(owner);
 
@@ -1479,16 +1462,13 @@ namespace Civilization1Remaster.Game
 			return true;
 		}
 
-		/// <summary>Whether the city has the improvement (1 - 0x18: its bit; CX, BX the masked words, SI the city, as in the original)</summary>
+		/// <summary>Whether the city has the improvement</summary>
 		private bool TestImprovement(short townIdx, short improvement)
 		{
 			City town = this.owner.World.Towns[townIdx];
 			uint mask = 1u << ((byte)(improvement - 1) & 0xff);
 
-			this.processor.RegCount.Value16 = (ushort)(mask & town.StructureMarkers0);
-			this.processor.RegBase.Value16 = (ushort)(((mask >> 16) & town.StructureMarkers1) | this.processor.RegCount.Value16);
-
-			return this.processor.RegBase.Value16 != 0;
+			return ((mask & town.StructureMarkers0) | ((mask >> 16) & town.StructureMarkers1)) != 0;
 		}
 
 		/// <summary>
@@ -1772,10 +1752,7 @@ namespace Civilization1Remaster.Game
 				if (town.PresentMakingIdx >= 0)
 				{
 					// A unit of the role the continent needs
-					this.processor.RegBase.Value16 = (ushort)(town.PresentMakingIdx * UnitKindTable.Stride);
-					this.processor.RegAcc.Value16 = approach;
-
-					if (this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + UnitKindTable.Origin + UnitKindTable.TroopGroup)) == approach)
+					if (UnitKindWord(town.PresentMakingIdx, UnitKindTable.TroopGroup) == approach)
 						this.round.Amount = (ushort)(player.Gold / 64);
 				}
 			}
@@ -2287,10 +2264,7 @@ namespace Civilization1Remaster.Game
 					if ((byte)town.Unfamiliar[slot] == 0xff)
 						continue;
 
-					this.processor.RegCount.Value16 = 0x22;
-					this.processor.RegBase.Value16 = (ushort)((town.Unfamiliar[slot] & 0x3f) * 0x22);
-
-					if (UnitKindWordAt(this.processor.RegBase.Value16, UnitKindTable.AssaultPower) != 0)
+					if (UnitKindWord(town.Unfamiliar[slot] & 0x3f, UnitKindTable.AssaultPower) != 0)
 						this.round.UnitsAway = (ushort)(this.round.UnitsAway + 1);
 				}
 
@@ -2701,12 +2675,8 @@ namespace Civilization1Remaster.Game
 
 			AnarchyPressure = (ushort)(AnarchyPressure + (ushort)this.owner.Helpers.VerifyValueSpan((short)CitySpecialSlots, 0, town.TrueExtent));
 
-			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
-			this.processor.RegCount.Value16 = (ushort)(town.Has(CityStructure.Marketplace) ? 5 : 7);
-			this.processor.RegBase.Value16 = (ushort)(player.ChiefVisuals * 0x3a);
-
-			short factor = (short)(this.processor.RegCount.Value16 - LeaderWordAt(this.processor.RegBase.Value16, LeaderTable.Leaning));
-			this.processor.RegAcc.Value16 = (ushort)(factor * (short)CityAttackersAway);
+			short basePressure = (short)(town.Has(CityStructure.Marketplace) ? 5 : 7);
+			short factor = (short)(basePressure - LeaderWord(player.ChiefVisuals, LeaderTable.Leaning));
 			DemocracyPressure = (ushort)(DemocracyPressure - ((ushort)(factor * (short)CityAttackersAway)));
 		}
 

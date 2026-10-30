@@ -633,6 +633,22 @@ bez wyjątku (czyta 0), `DifferentialPair` po wyjątku w scenariuszu przywraca S
 
 **Poprawka trybutu w dyplomacji (2026-10-28):** naprawa błędu niedopisywania złota z trybutu zażądanego w czasie pokoju (`MeetWithKing.DemandGoldUnderPeace`). Oryginalny kod CIV.EXE zamiast kwoty trybutu (`amount`) dopisywał do skarbca gracza kod odpowiedzi z okna dialogowego (`Person.Gold += (short)answer`, czyli 0 lub 1 złoto). Wprowadzono przełącznik `TurnHooks.ClassicTributeDemand`: w Remasterze gracz otrzymuje pełną kwotę trybutu zaakceptowaną przez AI. Golden Master 15/15 w pełni zielony; kompilacja 0 błędów, 0 ostrzeżeń; przebudowano `.exe`.
 
+**Faza 3 część 14 (Uderzenie 4/6, 2026-10-30):** głęboka eliminacja rejestrów x86 (`RegAcc`, `RegBase`, `RegCount`, `RegSource`) w modułach `PlayerTurn.cs` i `CityManagement.cs`.
+- W `PlayerTurn.cs`: eliminacja ponad 62 odwołań do rejestrów i operacji bitowych maszynowych:
+  - `SpendMoves`: całkowicie przepisane na czysty C# z użyciem `TerrainField(terrain, TerrainTable.MoveCost)` oraz zmiennej lokalnej `roll` rzutu kością, bez użycia `RegBase`, `RegAcc`, `RegCount`.
+  - `Caravan`: pomoc przy budowie cudu wyliczana bezpośrednio do `MaterialsTally` ze zmiennej `materials`, bez `RegBase` i `RegCount`.
+  - Tereny i ulepszenia: `TerrainWorkByte`, `IrrigateTile`, `MineTile`, `DoTileWork` przepisane z użyciem `TerrainField` i lokalnych offsetów.
+  - Widoczność jednostek i ruchy: zamiana masek bitowych `RegAcc` w 4 miejscach na zmienne lokalne `mask` i `sight`.
+  - Samoloty na lotniskowcu (`PlaneMovesByTurn`) i zużycie paliwa (`BurnPlaneFuel`): bezpośrednie wywołania `troops.Assign` i `troops.KindField(..., RoundsAway)`, usunięcie zależności od `RegSource` i `RegAcc`.
+  - Usunięcie martwych zapisów i kursorów myszy (`AssignMouseCursorImage`, `CivilizationPlural`, `ScreenBox`).
+- W `CityManagement.cs`: eliminacja rejestrów w kluczowych metodach zarządzania miastem:
+  - `TestWorker`: czytelna operacja bitowa na znacznikach robotników bez `RegCount`/`RegBase`.
+  - `PickWorkers`: wyliczanie żywności i warunku głodu (`neededFood > availableFood`) oraz zapis robotników bezpośrednio do pól miasta.
+  - `ConstructCityProduction` i `CompleteBuilding`: wyliczanie kosztów jednostek i budynków przez `UnitKindWord` i `BuildingWord` bez `RegBase` i `RegCount`.
+  - `TestImprovement`: czysta operacja sprawdzania struktur bez rejestrów maszynowych.
+  - Role na kontynencie (`TroopGroup`), siła ataku jednostek (`AssaultPower`) oraz nacisk demokracji (`DemocracyPressure` z `LeaderWord`).
+- 2/2 mutacje zweryfikowane (`PlayerTurn:SpendMoves` -> fail w turze 2, `CityManagement:TestWorker` -> fail w turze 1); Golden Master 15/15 w pełni zielony (43.5s); kompilacja 0 błędów i 0 ostrzeżeń; przebudowano standalone `.exe` (Release i Debug).
+
 
 
 **Faza 3 – sprzątanie i drugi baseline:** usunięcie przełączników i kodu „classic”, zamrożonej gry
