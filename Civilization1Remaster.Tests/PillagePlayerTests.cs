@@ -11,7 +11,7 @@ using Xunit;
 namespace Civilization1Remaster.Tests
 {
 	/// <summary>
-	/// A unit of the human pillages a road next to a city of another player (PlayerTurn.PillageTile): off (the game) the
+	/// A unit of the human pillages a road next to a city of another player (TurnController.PillageTile): off (the game) the
 	/// owner of the city gets the tile as a strategic location to defend (role 1, priority 4); on (ClassicPillagePlayer, the
 	/// tests) the player is DI as the original leaves it (the unit's column), so the owner's table stays as it was.
 	/// </summary>
@@ -43,7 +43,7 @@ namespace Civilization1Remaster.Tests
 				.Select(step => (Horiz: town.Place.X + step.Item1, Vert: town.Place.Y + step.Item2))
 				.First(place => place.Vert > 1 && place.Vert < 48 && place.Horiz >= 0 && place.Horiz < 80 &&
 					engine.MapOps.Chart.Terrain(place.Horiz, place.Vert) != MapRules.OceanTerrain &&
-					(engine.MapOps.Chart.OwnerBits(place.Horiz, place.Vert) & MapLayers.UnitsPresent) == 0 &&
+					(engine.MapOps.Chart.OwnerBits(place.Horiz, place.Vert) & MapPlanes.UnitsPresent) == 0 &&
 					(engine.MapOps.Chart.Improvements(place.Horiz, place.Vert) & 1) == 0);
 			short troop = (short)Enumerable.Range(0, 128).First(unit => UnitByte(unit, UnitMemory.Kind) is < 0x1a and not 0xe and not 0);
 
@@ -66,15 +66,15 @@ namespace Civilization1Remaster.Tests
 			engine.Processor.EmitUInt8(0x3b01, (ushort)(address + UnitMemory.Horiz), (byte)spot.Horiz);
 			engine.Processor.EmitUInt8(0x3b01, (ushort)(address + UnitMemory.Vert), (byte)spot.Vert);
 			engine.Processor.EmitUInt8(0x3b01, (ushort)(address + UnitMemory.FollowingInStack), 0xff);
-			engine.MapOps.Chart.AssignOwnerBits(spot.Horiz, spot.Vert, MapLayers.UnitsPresent | person);
+			engine.MapOps.Chart.AssignOwnerBits(spot.Horiz, spot.Vert, MapPlanes.UnitsPresent | person);
 			engine.MapOps.AssignTileImprovements(8, spot.Horiz, spot.Vert);
 
 			bool Listed() => Enumerable.Range(0, 0x20).Any(placeIdx =>
 			{
 				ushort place = (ushort)((owner << 5) + placeIdx);
-				return engine.Processor.PullInt8(0x3b01, (ushort)(place + ArmySelection.StrategicLocationHorizTableAddress)) == spot.Horiz &&
-					engine.Processor.PullInt8(0x3b01, (ushort)(place + ArmySelection.StrategicLocationVertTableAddress)) == spot.Vert &&
-					engine.Processor.PullInt8(0x3b01, (ushort)(place + ArmySelection.StrategicLocationRoleTableAddress)) == 1;
+				return engine.Processor.PullInt8(0x3b01, (ushort)(place + UnitPicker.StrategicLocationHorizTableAddress)) == spot.Horiz &&
+					engine.Processor.PullInt8(0x3b01, (ushort)(place + UnitPicker.StrategicLocationVertTableAddress)) == spot.Vert &&
+					engine.Processor.PullInt8(0x3b01, (ushort)(place + UnitPicker.StrategicLocationRoleTableAddress)) == 1;
 			});
 
 			Assert.False(Listed());

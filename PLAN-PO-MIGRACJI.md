@@ -1021,3 +1021,19 @@ w tej samej kolejności; pola z inicjalizatorami zostały w plikach głównych (
   inicjalizatorów pól w 7 klasach sprawdzona – same niezależne wartości.
 - 43 interfejsy modułów `I<Klasa>` (publiczne metody i właściwości z opisami, w klasach `<inheritdoc/>`); `GameEngine` i
   `MapManagement.Chart` wystawiają moduły przez interfejsy. Pełny zestaw 813/813.
+
+**Nowe nazwy modułów (2026-10-31):** `AIPlayer` → `ComputerPlayer`, `CityManagement` → `Cities`, `PlayerTurn` →
+`TurnController`, `UnitManagement` → `UnitRoster`, `MapManagement` → `MapService`, `MapLayers` → `MapPlanes`,
+`Pathfinding` → `RoutePlanner`, `TradeAndConquest` → `CityCapture`, `UnitCombat` → `Battles`, `GovernmentAndDiplomacy`
+→ `ForeignAffairs`, `ScienceAndAdvisors` → `ResearchOffice`, `GameInitAndIntro` → `WorldBuilder`, `MainIntro` →
+`IntroSequence`, `StartGameMenu` → `NewGameSetup`, `GameStartup` → `GameLauncher`, `GameLoadAndSave` →
+`SaveGameStore`, `SystemServices` → `PlatformServices`, `CommonUtilities` → `GameHelpers`, `CRuntime` →
+`RuntimeLibrary`, `DialogDrawing` → `DialogPainter`, `TextDrawing` → `TextPainter`, `TextBlockRenderer` →
+`TextBlockPainter`, `ImageTools` → `PictureLoader`, `MeetWithKing` → `RulerAudience`, `AdvisorReports` →
+`AdvisorScreens`, `WorldMap` → `WorldStatistics`, `CivilizationInfo` → `RivalOverview`, `CivilizationSchism` →
+`CivilWar`, `Civilopedia` → `Encyclopedia`, `Newspaper` → `Gazette`, `Palace` → `PalaceBuilder`, `CityView` →
+`CityPanorama`, `NewCityScreen` → `CityNamingScreen`, `ArmySelection` → `UnitPicker`, `GameReplay` → `ReplayViewer`,
+`HallOfFame` → `FameRecords`, `InGameHelp` → `HelpPopups`, `SpaceshipScreen` → `SpaceshipBay`, `CityFoundingAndScore`
+→ `SettlementAndScoring`, `DiplomatActions` → `DiplomatMissions`, `TurnEvents` → `WorldEvents`, `SoundDriver` →
+`AudioOutput`, `GameModule` → `GameComponent` (z interfejsami, plikami i kopiami `…Reference` w testach). Napisy
+dziennika bez zmian (ślady i baseline'y te same). Wpisy wyżej w tym pliku i w MIGRATION-BACKLOG.md używają starych nazw.

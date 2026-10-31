@@ -67,7 +67,7 @@ public sealed class BatchSeventyOneDifferentialTests(ITestOutputHelper output)
 						}
 					}
 				},
-				game => new PalaceReference(game).DisplayPalace(),
+				game => new PalaceBuilderReference(game).DisplayPalace(),
 				game => game.Throne.DisplayPalace(),
 				Register.Kept,
 				_ => mode == 0 ? "maxed" : "upgrade-section");
@@ -103,7 +103,7 @@ public sealed class BatchSeventyOneDifferentialTests(ITestOutputHelper output)
 					game.Processor.EmitGlobalWord(0x3934, 0xffff);
 					game.VideoCard.ReserveScreen(3);
 				},
-				game => new CivilopediaReference(game).DisplayCivilopediaRecord(index, category),
+				game => new EncyclopediaReference(game).DisplayCivilopediaRecord(index, category),
 				game => game.Encyclopedia.DisplayCivilopediaRecord(index, category),
 				Register.Kept,
 				_ => category switch

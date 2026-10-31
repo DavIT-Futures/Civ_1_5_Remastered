@@ -70,7 +70,7 @@ public sealed class BatchHundredFiveDifferentialTests(ITestOutputHelper output)
 						}
 					}
 				},
-				game => new PlayerTurnReference(game).HandlePlayerTurn(participantIdx),
+				game => new TurnControllerReference(game).HandlePlayerTurn(participantIdx),
 				game => game.TurnLogic.HandlePlayerTurn(participantIdx),
 				Register.Kept,
 				// How the moves were shown, from the calls

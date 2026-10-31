@@ -40,7 +40,7 @@ public sealed class BatchSeventyTwoDifferentialTests(ITestOutputHelper output)
 					game.Processor.EmitGlobalWord(0xd762, isVga);
 					game.VideoCard.ReserveScreen(3);
 				},
-				game => new MainIntroReference(game).DisplayCivilizationScreen(participantIdx),
+				game => new IntroSequenceReference(game).DisplayCivilizationScreen(participantIdx),
 				game => game.Prologue.DisplayCivilizationScreen(participantIdx),
 				Register.Kept,
 				// What the function did: the landing of the human player (its colour cycles with VGA) or the palace of
@@ -127,7 +127,7 @@ public sealed class BatchSeventyTwoDifferentialTests(ITestOutputHelper output)
 						}
 					};
 				},
-				game => new MainIntroReference(game).DisplayMainIntro(),
+				game => new IntroSequenceReference(game).DisplayMainIntro(),
 				game => game.Prologue.DisplayMainIntro(),
 				Register.Kept,
 				// What the function did, from its calls and the choice it left in 0x6b32

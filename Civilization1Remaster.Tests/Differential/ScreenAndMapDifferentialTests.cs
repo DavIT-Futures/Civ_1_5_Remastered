@@ -30,7 +30,7 @@ namespace Civilization1Remaster.Tests.Differential
 				bool polluted = (pair.Original.Engine.MapOps.Chart.Improvements(horizLoc, vertLoc) & 0x40) != 0;
 
 				return new Scenario($"AttachSmog({horizLoc}, {vertLoc})", game => { },
-					game => new CityManagementReference(game).AttachSmog(horizLoc, vertLoc),
+					game => new CitiesReference(game).AttachSmog(horizLoc, vertLoc),
 					game => game.CityOps.AttachSmog(horizLoc, vertLoc),
 					Register.Kept, game => polluted ? "polluted already" : "new pollution");
 			}, output, ["polluted already", "new pollution"]);
@@ -53,7 +53,7 @@ namespace Civilization1Remaster.Tests.Differential
 						game.Processor.EmitGlobalWord(0xb2bc, iconTop);
 						game.Processor.EmitGlobalWord(0x5116, rowHeight);
 					},
-					game => new CityFoundingAndScoreReference(game).RenderScoreIcon(picture),
+					game => new SettlementAndScoringReference(game).RenderScoreIcon(picture),
 					game => game.Founding.RenderScoreIcon(picture),
 					Register.Kept,
 					game => (short)(iconLeft + 8) > 0x124 ? "new row" : (short)iconTop <= 0xa0 ? "drawn" : "below the screen");
@@ -80,7 +80,7 @@ namespace Civilization1Remaster.Tests.Differential
 							game.VideoCard.AssignDot(1, horizLoc + 1, vertLoc - 1, corners[2], 0);
 							game.VideoCard.AssignDot(1, horizLoc + 1, vertLoc + 1, corners[3], 0);
 						},
-						game => new GameInitAndIntroReference(game).BlendTerrainTile((short)horizLoc, (short)vertLoc),
+						game => new WorldBuilderReference(game).BlendTerrainTile((short)horizLoc, (short)vertLoc),
 						game => game.WorldSetup.BlendTerrainTile((short)horizLoc, (short)vertLoc),
 						// (no AX: the result nobody read was dropped in phase 3)
 						Register.Kept, game => corners.Contains((byte)1) ? "land corner" : "becomes land");
@@ -90,7 +90,7 @@ namespace Civilization1Remaster.Tests.Differential
 				short pixelVert = (short)chance.Next(200);
 
 				return new Scenario($"ObtainTerrainTypeFromScreen({pixelHoriz}, {pixelVert})", game => { },
-					game => new GameInitAndIntroReference(game).ObtainTerrainTypeFromScreen(pixelHoriz, pixelVert),
+					game => new WorldBuilderReference(game).ObtainTerrainTypeFromScreen(pixelHoriz, pixelVert),
 					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.WorldSetup.ObtainTerrainTypeFromScreen(pixelHoriz, pixelVert)),
 					Register.Acc | Register.Kept, game => "terrain");
 			}, output, ["land corner", "becomes land", "terrain"]);
@@ -116,7 +116,7 @@ namespace Civilization1Remaster.Tests.Differential
 				}
 
 				return new Scenario($"LocateNearestCityOfPlayer({participantIdx}, {horizLoc}, {vertLoc})", game => { },
-					game => new GovernmentAndDiplomacyReference(game).LocateNearestCityOfPlayer(participantIdx, horizLoc, vertLoc),
+					game => new ForeignAffairsReference(game).LocateNearestCityOfPlayer(participantIdx, horizLoc, vertLoc),
 					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Politics.LocateNearestCityOfPlayer(participantIdx, horizLoc, vertLoc)),
 					Register.Acc | Register.Kept, game => game.Processor.RegAcc.Value16 < 16 ? "near a palace" : "far");
 			}, output, ["near a palace", "far"]);
@@ -132,7 +132,7 @@ namespace Civilization1Remaster.Tests.Differential
 				if (chance.Next(10) == 0)
 				{
 					return new Scenario($"WipeSpaceshipContent({participantIdx})", game => { },
-						game => new StartGameMenuReference(game).WipeSpaceshipContent(participantIdx),
+						game => new NewGameSetupReference(game).WipeSpaceshipContent(participantIdx),
 						game => game.NewGameWizard.WipeSpaceshipContent(participantIdx),
 						Register.Kept, game => "wiped", [SpaceshipLayout]);
 				}
@@ -143,7 +143,7 @@ namespace Civilization1Remaster.Tests.Differential
 
 				return new Scenario($"ObtainSpaceshipPartValue({participantIdx}, {row}, {column}), part 0x{part:x2}",
 					game => game.Processor.EmitUInt8(0x3772, (ushort)(0x16e0 + (0xb4 * participantIdx) + (0xc * row) + column), part),
-					game => new SpaceshipScreenReference(game).ObtainSpaceshipPartValue(participantIdx, row, column),
+					game => new SpaceshipBayReference(game).ObtainSpaceshipPartValue(participantIdx, row, column),
 					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.RocketScreen.ObtainSpaceshipPartValue(participantIdx, row, column)),
 					Register.Acc | Register.Kept, game => game.Processor.RegAcc.Value16 != 0 ? "taken" : "free", [SpaceshipLayout]);
 			}, output, ["wiped", "taken", "free"]);
@@ -174,9 +174,9 @@ namespace Civilization1Remaster.Tests.Differential
 					game =>
 					{
 						if (alternate)
-							new GameReplayReference(game).AssignReplayCityContentAlt(first, second, third);
+							new ReplayViewerReference(game).AssignReplayCityContentAlt(first, second, third);
 						else
-							new GameReplayReference(game).AssignReplayCityContent(first, second, third);
+							new ReplayViewerReference(game).AssignReplayCityContent(first, second, third);
 					},
 					game =>
 					{
@@ -213,7 +213,7 @@ namespace Civilization1Remaster.Tests.Differential
 						short townIdx = towns[chance.Next(towns.Length)];
 
 						return new Scenario($"RenewCityScreen({townIdx})", game => { },
-							game => new ScienceAndAdvisorsReference(game).RenewCityScreen(townIdx),
+							game => new ResearchOfficeReference(game).RenewCityScreen(townIdx),
 							game => game.Advisors.RenewCityScreen(townIdx),
 							Register.Kept, game => game.Processor.PullGlobalWord(0x6b64) != 0 ? "main screen" : "advisor screen");
 
@@ -221,7 +221,7 @@ namespace Civilization1Remaster.Tests.Differential
 						short participantIdx = (short)chance.Next(1, 8);
 
 						return new Scenario($"DisplayKingMessage({participantIdx})", game => { },
-							game => new MeetWithKingReference(game).DisplayKingMessage(participantIdx),
+							game => new RulerAudienceReference(game).DisplayKingMessage(participantIdx),
 							game => game.Audience.DisplayKingMessage(participantIdx),
 							Register.Kept, game => "king");
 
@@ -230,7 +230,7 @@ namespace Civilization1Remaster.Tests.Differential
 
 						return new Scenario($"FreshWorldChoices(), mouse {mouse}",
 							game => game.Processor.EmitGlobalWord(0x1a3c, mouse),
-							game => new GameStartupReference(game).FreshWorldChoices(),
+							game => new GameLauncherReference(game).FreshWorldChoices(),
 							game => game.Startup.FreshWorldChoices(),
 							Register.Kept, game => mouse != 0 ? "choices with mouse" : "choices");
 				}

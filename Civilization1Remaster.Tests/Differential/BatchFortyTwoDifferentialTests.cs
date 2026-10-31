@@ -49,7 +49,7 @@ namespace Civilization1Remaster.Tests.Differential
 
 						game.Processor.EmitGlobalWord((ushort)(sp - 2 - 0xa), leftover);
 					},
-					game => new PathfindingReference(game).ChartRoute(participantIdx, troopIdx),
+					game => new RoutePlannerReference(game).ChartRoute(participantIdx, troopIdx),
 					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Routing.ChartRoute(participantIdx, troopIdx)),
 					Register.Acc | Register.Kept,
 					game => Calls(game, pair, "LocateRouteStep") - steps == 1 ? "no step" : game.Processor.RegAcc.Value16 != 0 ? "found" : "not found");
@@ -95,7 +95,7 @@ namespace Civilization1Remaster.Tests.Differential
 								game.World.Participants[first].Relations[second] = relations[first, second];
 						}
 					},
-					game => new GovernmentAndDiplomacyReference(game).HandlePeaceTreaties(participantIdx),
+					game => new ForeignAffairsReference(game).HandlePeaceTreaties(participantIdx),
 					game => game.Politics.HandlePeaceTreaties(participantIdx),
 					Register.Kept,
 					game => Calls(game, pair, "WelcomeEmissary") > emissaries ? "emissary" : regime == 0 ? "anarchy" : (round & 0xf) == 0 ? "16th turn" : "other turn");
@@ -135,7 +135,7 @@ namespace Civilization1Remaster.Tests.Differential
 						game.Processor.EmitGlobalWord((ushort)(sp - 2 - 0x12), leftover[0]);
 						game.Processor.EmitGlobalWord((ushort)(sp - 2 - 0x18), leftover[1]);
 					},
-					game => new PalaceReference(game).ImportPalaceGraphics(marker),
+					game => new PalaceBuilderReference(game).ImportPalaceGraphics(marker),
 					game => game.Throne.ImportPalaceGraphics(marker),
 					Register.Kept,
 					game => $"{(marker != 0 ? "palace screen" : "picture")}{(left != 0 || right != 0 ? ", bushes" : "")}");
@@ -170,7 +170,7 @@ namespace Civilization1Remaster.Tests.Differential
 					},
 					game =>
 					{
-						new GameInitAndIntroReference(game).ReckonContinentSizes(marker);
+						new WorldBuilderReference(game).ReckonContinentSizes(marker);
 						game.Processor.EmitGlobalWord(0x6800, 0);
 					},
 					game =>

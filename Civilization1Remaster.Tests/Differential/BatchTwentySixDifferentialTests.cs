@@ -47,7 +47,7 @@ namespace Civilization1Remaster.Tests.Differential
 								player.FoundScienceMarkers[idx] = unchecked((ushort)0xffff);
 						}
 					},
-					game => new AdvisorReportsReference(game).DisplayScienceReport(participantIdx),
+					game => new AdvisorScreensReference(game).DisplayScienceReport(participantIdx),
 					game => game.Briefings.DisplayScienceReport(participantIdx),
 					Register.Kept,
 					game => allKnown ? "page full" : inquiry == -1 ? "no research" : "research");
@@ -84,7 +84,7 @@ namespace Civilization1Remaster.Tests.Differential
 						if (route)
 							game.World.Towns[otherIdx].CommerceTownIndices[0] = (sbyte)townIdx;
 					},
-					game => new ScienceAndAdvisorsReference(game).FinalizeProduction(townIdx, horizLoc, vertLoc),
+					game => new ResearchOfficeReference(game).FinalizeProduction(townIdx, horizLoc, vertLoc),
 					game => game.Advisors.FinalizeProduction(townIdx, horizLoc, vertLoc),
 					Register.Kept,
 					game => (making >= 0 ? "unit, " : "building, ") +
@@ -144,7 +144,7 @@ namespace Civilization1Remaster.Tests.Differential
 							game.VideoCard.AssignDot(2, horizLoc + 80, vertLoc, 15, 0);
 						}
 					},
-					game => new InGameHelpReference(game).DisplayTileInfo(participantIdx, arg2),
+					game => new HelpPopupsReference(game).DisplayTileInfo(participantIdx, arg2),
 					game => game.HelpSystem.DisplayTileInfo(participantIdx, arg2),
 					Register.Kept,
 					game => arg2 >= 0x80 ? "no unit" : Calls(game, pair, "FocusMapView") > focus ? "city place" :
@@ -182,7 +182,7 @@ namespace Civilization1Remaster.Tests.Differential
 					},
 					game =>
 					{
-						new GameInitAndIntroReference(game).ProduceElevation();
+						new WorldBuilderReference(game).ProduceElevation();
 						HideStoryClock(game);
 					},
 					game =>

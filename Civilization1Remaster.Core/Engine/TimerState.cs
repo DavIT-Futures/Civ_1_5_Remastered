@@ -4,7 +4,7 @@ namespace Civilization1Remaster.Engine
 {
 	/// <summary>
 	/// The variables of the timer and sound driver at 0x40 - 0x6f of the data segment, kept in C# (B6.7, part 1): the timer
-	/// interrupt (SystemServices.ClockInterrupt) and the waits of the game work on them. The game code reads the beat counter
+	/// interrupt (PlatformServices.ClockInterrupt) and the waits of the game work on them. The game code reads the beat counter
 	/// through the CPU (Beats): under the fixed clock of the tests every read of these variables is a poll of the timer
 	/// (CPU.PollTimer), and the interrupts come after so many polls, so the reads stay where and as many as they were.
 	/// </summary>

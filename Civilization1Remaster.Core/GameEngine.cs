@@ -18,47 +18,47 @@ namespace Civilization1Remaster
 		private const ushort DosEnvironmentBlockAddress = 0x5922;
 
 		private readonly CPU processor;
-		private readonly GameStartup sessionBoot;
-		private readonly SystemServices machineDuties;
-		private readonly TurnEvents roundHappenings;
-		private readonly DialogDrawing promptPainting;
-		private readonly PlayerTurn participantRound;
-		private readonly CommonUtilities sharedHelpers;
-		private readonly TextDrawing wordsPainting;
-		private readonly ImageTools visualUtils;
-		private readonly TextBlockRenderer wordsChunkPainter;
-		private readonly MapManagement chartControl;
-		private readonly UnitManagement troopControl;
-		private readonly Pathfinding routing;
-		private readonly TradeAndConquest commerceWithCapture;
-		private readonly AIPlayer botParticipant;
-		private readonly ScienceAndAdvisors researchWithCounselors;
-		private readonly CityManagement townControl;
-		private readonly UnitCombat troopWarfare;
-		private readonly GovernmentAndDiplomacy regimeWithRelations;
+		private readonly GameLauncher sessionBoot;
+		private readonly PlatformServices machineDuties;
+		private readonly WorldEvents roundHappenings;
+		private readonly DialogPainter promptPainting;
+		private readonly TurnController participantRound;
+		private readonly GameHelpers sharedHelpers;
+		private readonly TextPainter wordsPainting;
+		private readonly PictureLoader visualUtils;
+		private readonly TextBlockPainter wordsChunkPainter;
+		private readonly MapService chartControl;
+		private readonly UnitRoster troopControl;
+		private readonly RoutePlanner routing;
+		private readonly CityCapture commerceWithCapture;
+		private readonly ComputerPlayer botParticipant;
+		private readonly ResearchOffice researchWithCounselors;
+		private readonly Cities townControl;
+		private readonly Battles troopWarfare;
+		private readonly ForeignAffairs regimeWithRelations;
 		private readonly GameMenus sessionLists;
-		private readonly MainIntro primaryPrologue;
-		private readonly MeetWithKing greetUsingMonarch;
-		private readonly GameInitAndIntro sessionSetupWithPrologue;
-		private readonly InGameHelp insideSessionGuide;
-		private readonly GameLoadAndSave sessionFetchWithStore;
-		private readonly HallOfFame chamberForGlory;
-		private readonly StartGameMenu beginSessionChoices;
-		private readonly NewCityScreen freshTownDisplay;
-		private readonly AdvisorReports counselorBriefings;
-		private readonly Civilopedia encyclopedia;
-		private readonly Newspaper gazette;
-		private readonly CityView townScene;
-		private readonly SpaceshipScreen starshipDisplay;
-		private readonly DiplomatActions envoyDeeds;
-		private readonly GameReplay sessionRerun;
-		private readonly CivilizationInfo realmDetails;
-		private readonly WorldMap globeChart;
-		private readonly CityFoundingAndScore townSettlingWithTally;
-		private readonly Palace castle;
-		private readonly ArmySelection forceChoice;
-		private readonly CivilizationSchism realmSplit;
-		private readonly CRuntime chrLibc;
+		private readonly IntroSequence primaryPrologue;
+		private readonly RulerAudience greetUsingMonarch;
+		private readonly WorldBuilder sessionSetupWithPrologue;
+		private readonly HelpPopups insideSessionGuide;
+		private readonly SaveGameStore sessionFetchWithStore;
+		private readonly FameRecords chamberForGlory;
+		private readonly NewGameSetup beginSessionChoices;
+		private readonly CityNamingScreen freshTownDisplay;
+		private readonly AdvisorScreens counselorBriefings;
+		private readonly Encyclopedia encyclopedia;
+		private readonly Gazette gazette;
+		private readonly CityPanorama townScene;
+		private readonly SpaceshipBay starshipDisplay;
+		private readonly DiplomatMissions envoyDeeds;
+		private readonly ReplayViewer sessionRerun;
+		private readonly RivalOverview realmDetails;
+		private readonly WorldStatistics globeChart;
+		private readonly SettlementAndScoring townSettlingWithTally;
+		private readonly PalaceBuilder castle;
+		private readonly UnitPicker forceChoice;
+		private readonly CivilWar realmSplit;
+		private readonly RuntimeLibrary chrLibc;
 		private readonly TextBuffer words;
 		private readonly CodeTexts codes;
 		private readonly NameTexts names;
@@ -69,7 +69,7 @@ namespace Civilization1Remaster
 		private readonly TimerState timer;
 		private readonly PointerState pointer = new PointerState();
 		private readonly VGADriver videoHandler;
-		private readonly SoundDriver audioHandler;
+		private readonly AudioOutput audioHandler;
 		private readonly LogWrapper journal;
 		private readonly LogWrapper signalJournal;
 		private readonly LogWrapper videoHandlerJournal;
@@ -95,7 +95,7 @@ namespace Civilization1Remaster
 
 			this.sessionCondition = new GameState();
 
-			this.chrLibc = new CRuntime(this);
+			this.chrLibc = new RuntimeLibrary(this);
 			this.words = new TextBuffer(this);
 			this.codes = new CodeTexts(this);
 			this.names = new NameTexts(this);
@@ -103,48 +103,48 @@ namespace Civilization1Remaster
 			this.hueCycles = new HueCycles(this.processor);
 			this.timer = new TimerState(this.processor);
 			this.videoHandler = new VGADriver(this, host);
-			this.audioHandler = new SoundDriver(this);
+			this.audioHandler = new AudioOutput(this);
 
-			this.sessionBoot = new GameStartup(this);
-			this.machineDuties = new SystemServices(this);
-			this.roundHappenings = new TurnEvents(this);
-			this.promptPainting = new DialogDrawing(this);
-			this.participantRound = new PlayerTurn(this);
-			this.sharedHelpers = new CommonUtilities(this);
-			this.wordsPainting = new TextDrawing(this);
-			this.visualUtils = new ImageTools(this);
-			this.wordsChunkPainter = new TextBlockRenderer(this);
-			this.chartControl = new MapManagement(this);
-			this.troopControl = new UnitManagement(this);
-			this.routing = new Pathfinding(this);
-			this.commerceWithCapture = new TradeAndConquest(this);
-			this.botParticipant = new AIPlayer(this);
-			this.researchWithCounselors = new ScienceAndAdvisors(this);
-			this.townControl = new CityManagement(this);
-			this.troopWarfare = new UnitCombat(this);
-			this.regimeWithRelations = new GovernmentAndDiplomacy(this);
+			this.sessionBoot = new GameLauncher(this);
+			this.machineDuties = new PlatformServices(this);
+			this.roundHappenings = new WorldEvents(this);
+			this.promptPainting = new DialogPainter(this);
+			this.participantRound = new TurnController(this);
+			this.sharedHelpers = new GameHelpers(this);
+			this.wordsPainting = new TextPainter(this);
+			this.visualUtils = new PictureLoader(this);
+			this.wordsChunkPainter = new TextBlockPainter(this);
+			this.chartControl = new MapService(this);
+			this.troopControl = new UnitRoster(this);
+			this.routing = new RoutePlanner(this);
+			this.commerceWithCapture = new CityCapture(this);
+			this.botParticipant = new ComputerPlayer(this);
+			this.researchWithCounselors = new ResearchOffice(this);
+			this.townControl = new Cities(this);
+			this.troopWarfare = new Battles(this);
+			this.regimeWithRelations = new ForeignAffairs(this);
 			this.sessionLists = new GameMenus(this);
-			this.primaryPrologue = new MainIntro(this);
-			this.greetUsingMonarch = new MeetWithKing(this);
-			this.sessionSetupWithPrologue = new GameInitAndIntro(this);
-			this.insideSessionGuide = new InGameHelp(this);
-			this.sessionFetchWithStore = new GameLoadAndSave(this);
-			this.chamberForGlory = new HallOfFame(this);
-			this.beginSessionChoices = new StartGameMenu(this);
-			this.freshTownDisplay = new NewCityScreen(this);
-			this.counselorBriefings = new AdvisorReports(this);
-			this.encyclopedia = new Civilopedia(this);
-			this.gazette = new Newspaper(this);
-			this.townScene = new CityView(this);
-			this.starshipDisplay = new SpaceshipScreen(this);
-			this.envoyDeeds = new DiplomatActions(this);
-			this.sessionRerun = new GameReplay(this);
-			this.realmDetails = new CivilizationInfo(this);
-			this.globeChart = new WorldMap(this);
-			this.townSettlingWithTally = new CityFoundingAndScore(this);
-			this.castle = new Palace(this);
-			this.forceChoice = new ArmySelection(this);
-			this.realmSplit = new CivilizationSchism(this);
+			this.primaryPrologue = new IntroSequence(this);
+			this.greetUsingMonarch = new RulerAudience(this);
+			this.sessionSetupWithPrologue = new WorldBuilder(this);
+			this.insideSessionGuide = new HelpPopups(this);
+			this.sessionFetchWithStore = new SaveGameStore(this);
+			this.chamberForGlory = new FameRecords(this);
+			this.beginSessionChoices = new NewGameSetup(this);
+			this.freshTownDisplay = new CityNamingScreen(this);
+			this.counselorBriefings = new AdvisorScreens(this);
+			this.encyclopedia = new Encyclopedia(this);
+			this.gazette = new Gazette(this);
+			this.townScene = new CityPanorama(this);
+			this.starshipDisplay = new SpaceshipBay(this);
+			this.envoyDeeds = new DiplomatMissions(this);
+			this.sessionRerun = new ReplayViewer(this);
+			this.realmDetails = new RivalOverview(this);
+			this.globeChart = new WorldStatistics(this);
+			this.townSettlingWithTally = new SettlementAndScoring(this);
+			this.castle = new PalaceBuilder(this);
+			this.forceChoice = new UnitPicker(this);
+			this.realmSplit = new CivilWar(this);
 		}
 
 		public CPU Processor
@@ -177,92 +177,92 @@ namespace Civilization1Remaster
 			get { return this.prologueJournal; }
 		}
 
-		public IGameStartup Startup
+		public IGameLauncher Startup
 		{
 			get { return this.sessionBoot; }
 		}
 
-		public ISystemServices Services
+		public IPlatformServices Services
 		{
 			get { return this.machineDuties; }
 		}
 
-		public ITurnEvents TurnHooks
+		public IWorldEvents TurnHooks
 		{
 			get { return this.roundHappenings; }
 		}
 
-		public IDialogDrawing Dialogs
+		public IDialogPainter Dialogs
 		{
 			get { return this.promptPainting; }
 		}
 
-		public IPlayerTurn TurnLogic
+		public ITurnController TurnLogic
 		{
 			get { return this.participantRound; }
 		}
 
-		public ICommonUtilities Helpers
+		public IGameHelpers Helpers
 		{
 			get { return this.sharedHelpers; }
 		}
 
-		public ITextDrawing TextPainter
+		public ITextPainter TextPainter
 		{
 			get { return this.wordsPainting; }
 		}
 
-		public IImageTools ImageToolkit
+		public IPictureLoader ImageToolkit
 		{
 			get { return this.visualUtils; }
 		}
 
-		public ITextBlockRenderer BlockText
+		public ITextBlockPainter BlockText
 		{
 			get { return this.wordsChunkPainter; }
 		}
 
-		public IMapManagement MapOps
+		public IMapService MapOps
 		{
 			get { return this.chartControl; }
 		}
 
-		public IUnitManagement UnitOps
+		public IUnitRoster UnitOps
 		{
 			get { return this.troopControl; }
 		}
 
-		public IPathfinding Routing
+		public IRoutePlanner Routing
 		{
 			get { return this.routing; }
 		}
 
-		public ITradeAndConquest Conquest
+		public ICityCapture Conquest
 		{
 			get { return this.commerceWithCapture; }
 		}
 
-		public IAIPlayer Bot
+		public IComputerPlayer Bot
 		{
 			get { return this.botParticipant; }
 		}
 
-		public IScienceAndAdvisors Advisors
+		public IResearchOffice Advisors
 		{
 			get { return this.researchWithCounselors; }
 		}
 
-		public ICityManagement CityOps
+		public ICities CityOps
 		{
 			get { return this.townControl; }
 		}
 
-		public IUnitCombat Combat
+		public IBattles Combat
 		{
 			get { return this.troopWarfare; }
 		}
 
-		public IGovernmentAndDiplomacy Politics
+		public IForeignAffairs Politics
 		{
 			get { return this.regimeWithRelations; }
 		}
@@ -272,112 +272,112 @@ namespace Civilization1Remaster
 			get { return this.sessionLists; }
 		}
 
-		public IMainIntro Prologue
+		public IIntroSequence Prologue
 		{
 			get { return this.primaryPrologue; }
 		}
 
-		public IMeetWithKing Audience
+		public IRulerAudience Audience
 		{
 			get { return this.greetUsingMonarch; }
 		}
 
-		public IGameInitAndIntro WorldSetup
+		public IWorldBuilder WorldSetup
 		{
 			get { return this.sessionSetupWithPrologue; }
 		}
 
-		public IInGameHelp HelpSystem
+		public IHelpPopups HelpSystem
 		{
 			get { return this.insideSessionGuide; }
 		}
 
-		public IGameLoadAndSave SaveLoad
+		public ISaveGameStore SaveLoad
 		{
 			get { return this.sessionFetchWithStore; }
 		}
 
-		public IHallOfFame Legends
+		public IFameRecords Legends
 		{
 			get { return this.chamberForGlory; }
 		}
 
-		public IStartGameMenu NewGameWizard
+		public INewGameSetup NewGameWizard
 		{
 			get { return this.beginSessionChoices; }
 		}
 
-		public INewCityScreen CityNaming
+		public ICityNamingScreen CityNaming
 		{
 			get { return this.freshTownDisplay; }
 		}
 
-		public IAdvisorReports Briefings
+		public IAdvisorScreens Briefings
 		{
 			get { return this.counselorBriefings; }
 		}
 
-		public ICivilopedia Encyclopedia
+		public IEncyclopedia Encyclopedia
 		{
 			get { return this.encyclopedia; }
 		}
 
-		public INewspaper Paper
+		public IGazette Paper
 		{
 			get { return this.gazette; }
 		}
 
-		public ICityView CityScene
+		public ICityPanorama CityScene
 		{
 			get { return this.townScene; }
 		}
 
-		public ISpaceshipScreen RocketScreen
+		public ISpaceshipBay RocketScreen
 		{
 			get { return this.starshipDisplay; }
 		}
 
-		public IDiplomatActions Diplomats
+		public IDiplomatMissions Diplomats
 		{
 			get { return this.envoyDeeds; }
 		}
 
-		public IGameReplay Replayer
+		public IReplayViewer Replayer
 		{
 			get { return this.sessionRerun; }
 		}
 
-		public ICivilizationInfo RealmInfo
+		public IRivalOverview RealmInfo
 		{
 			get { return this.realmDetails; }
 		}
 
-		public IWorldMap Atlas
+		public IWorldStatistics Atlas
 		{
 			get { return this.globeChart; }
 		}
 
-		public ICityFoundingAndScore Founding
+		public ISettlementAndScoring Founding
 		{
 			get { return this.townSettlingWithTally; }
 		}
 
-		public IPalace Throne
+		public IPalaceBuilder Throne
 		{
 			get { return this.castle; }
 		}
 
-		public IArmySelection ArmyPicker
+		public IUnitPicker ArmyPicker
 		{
 			get { return this.forceChoice; }
 		}
 
-		public ICivilizationSchism Secession
+		public ICivilWar Secession
 		{
 			get { return this.realmSplit; }
 		}
 
-		public ICRuntime Libc
+		public IRuntimeLibrary Libc
 		{
 			get { return this.chrLibc; }
 		}
@@ -445,7 +445,7 @@ namespace Civilization1Remaster
 			get { return this.videoHandler; }
 		}
 
-		public ISoundDriver Audio
+		public IAudioOutput Audio
 		{
 			get { return this.audioHandler; }
 		}

@@ -75,11 +75,11 @@ public sealed class BatchNinetySixDifferentialTests(ITestOutputHelper output)
 							game.MapOps.DiscardUnitFromTile(person, (short)first, UnitByte(game, person, first, UnitMemory.Horiz), UnitByte(game, person, first, UnitMemory.Vert));
 							game.Processor.EmitUInt8(0x3b01, (ushort)(unit + UnitMemory.Horiz), (byte)town.Place.X);
 							game.Processor.EmitUInt8(0x3b01, (ushort)(unit + UnitMemory.Vert), (byte)town.Place.Y);
-							game.MapOps.Chart.AssignOwnerBits(town.Place.X, town.Place.Y, MapLayers.UnitsPresent | person);
+							game.MapOps.Chart.AssignOwnerBits(town.Place.X, town.Place.Y, MapPlanes.UnitsPresent | person);
 						}
 					}
 				},
-				game => new PlayerTurnReference(game).HandlePlayerTurn(person),
+				game => new TurnControllerReference(game).HandlePlayerTurn(person),
 				game => game.TurnLogic.HandlePlayerTurn(person),
 				Register.Kept,
 				// What the orders did, from the cities and the calls

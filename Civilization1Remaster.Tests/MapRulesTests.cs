@@ -19,7 +19,7 @@ namespace Civilization1Remaster.Tests
 		}
 
 		/// <summary>
-		/// The expressions of MapManagement.ContainsSpecialResource and ContainsHut before the refactoring (commit 4df3d73)
+		/// The expressions of MapService.ContainsSpecialResource and ContainsHut before the refactoring (commit 4df3d73)
 		/// </summary>
 		[Fact]
 		public void SpecialResourceAndHut_MatchTheTranslatedOriginal()
@@ -44,7 +44,7 @@ namespace Civilization1Remaster.Tests
 		}
 
 		/// <summary>
-		/// The expressions of CommonUtilities.ObtainDistance, MergeCoordinates and ObtainDistanceFromOffsets before the refactoring
+		/// The expressions of GameHelpers.ObtainDistance, MergeCoordinates and ObtainDistanceFromOffsets before the refactoring
 		/// </summary>
 		[Fact]
 		public void Distances_MatchTheTranslatedOriginal()

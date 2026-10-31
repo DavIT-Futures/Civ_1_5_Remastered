@@ -71,7 +71,7 @@ public sealed class PillageDifferentialTests(ITestOutputHelper output)
 			var spots = new[] { (1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (-1, -1), (1, -1), (-1, 1) }
 				.Select(step => (Horiz: town.Place.X + step.Item1, Vert: town.Place.Y + step.Item2))
 				.Where(spot => spot.Vert > 1 && spot.Vert < 48 && spot.Horiz >= 0 && spot.Horiz < 80 &&
-					engine.MapOps.Chart.Terrain(spot.Horiz, spot.Vert) != Civilization1Remaster.Game.Rules.MapRules.OceanTerrain && (engine.MapOps.Chart.OwnerBits(spot.Horiz, spot.Vert) & MapLayers.UnitsPresent) == 0 &&
+					engine.MapOps.Chart.Terrain(spot.Horiz, spot.Vert) != Civilization1Remaster.Game.Rules.MapRules.OceanTerrain && (engine.MapOps.Chart.OwnerBits(spot.Horiz, spot.Vert) & MapPlanes.UnitsPresent) == 0 &&
 					(engine.MapOps.Chart.Improvements(spot.Horiz, spot.Vert) & 1) == 0)
 				.ToList();
 
@@ -117,12 +117,12 @@ public sealed class PillageDifferentialTests(ITestOutputHelper output)
 						game.Processor.EmitUInt8(0x3b01, (ushort)(unit + UnitMemory.Horiz), (byte)spot.Horiz);
 						game.Processor.EmitUInt8(0x3b01, (ushort)(unit + UnitMemory.Vert), (byte)spot.Vert);
 						game.Processor.EmitUInt8(0x3b01, (ushort)(unit + UnitMemory.FollowingInStack), 0xff);
-						game.MapOps.Chart.AssignOwnerBits(spot.Horiz, spot.Vert, MapLayers.UnitsPresent | person);
+						game.MapOps.Chart.AssignOwnerBits(spot.Horiz, spot.Vert, MapPlanes.UnitsPresent | person);
 					}
 
 					game.MapOps.AssignTileImprovements(8, spots[1].Horiz, spots[1].Vert);
 				},
-				game => new PlayerTurnReference(game).HandlePlayerTurn(person),
+				game => new TurnControllerReference(game).HandlePlayerTurn(person),
 				game => game.TurnLogic.HandlePlayerTurn(person),
 				Register.Kept,
 				// From the calls and the first unit's place

@@ -102,7 +102,7 @@ public sealed class BatchNinetyOneDifferentialTests(ITestOutputHelper output)
 						game.Processor.EmitUInt8(0x3b01, (ushort)(unit + UnitMemory.TravelVert), game.Processor.PullUInt8(0x3b01, (ushort)(unit + UnitMemory.Vert)));
 					}
 				},
-				game => new PlayerTurnReference(game).HandlePlayerTurn(participantIdx),
+				game => new TurnControllerReference(game).HandlePlayerTurn(participantIdx),
 				game => game.TurnLogic.HandlePlayerTurn(participantIdx),
 				Register.Kept,
 				// What the turn met, from the calls

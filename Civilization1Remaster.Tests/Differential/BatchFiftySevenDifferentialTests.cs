@@ -60,7 +60,7 @@ namespace Civilization1Remaster.Tests.Differential
 						else
 							game.World.LiveRealms &= (short)~(1 << participantIdx);
 					},
-					game => new StartGameMenuReference(game).ConstructCivilization(participantIdx),
+					game => new NewGameSetupReference(game).ConstructCivilization(participantIdx),
 					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.NewGameWizard.ConstructCivilization(participantIdx)),
 					// (the human in a running game: the original left AX as it was, nobody reads it; the rewritten code returns 0)
 					person && round != 0 ? Register.Kept : Register.Kept | Register.Acc,

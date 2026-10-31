@@ -12,8 +12,8 @@ namespace Civilization1Remaster.Tests.GoldenMaster
 	/// fixed value and plays whole turns, the human player is played by a scripted keyboard (ScriptedKeyboard).
 	/// </summary>
 	/// <remarks>
-	/// The start does what GameStartup.RunGame does before the main loop, without the intro and the menus:
-	/// the parts of MainIntro.DisplayMainIntro that set up the machine, then the steps of GameStartup.ImportGameDuringPlay
+	/// The start does what GameLauncher.RunGame does before the main loop, without the intro and the menus:
+	/// the parts of IntroSequence.DisplayMainIntro that set up the machine, then the steps of GameLauncher.ImportGameDuringPlay
 	/// (Load Game during play). The game runs on a copy of the game folder, without the sound drivers (*.CVL),
 	/// because every turn writes an autosave; the saved games of the test (savesFolder) replace the ones of the player.
 	/// </remarks>
@@ -75,11 +75,11 @@ namespace Civilization1Remaster.Tests.GoldenMaster
 
 		/// <summary>
 		/// The game as the translated code of the original played it: every remaster change off (the Classic switches of
-		/// TurnEvents). The leftovers of the stack are gone for good (2026-10-26, the switch ClassicStackLeftovers removed):
+		/// WorldEvents). The leftovers of the stack are gone for good (2026-10-26, the switch ClassicStackLeftovers removed):
 		/// the frames start at 0 on both sides of the comparisons with the original code (CPU.EnterFrame, DualGame with the
 		/// frozen game's CPU.ClearFrameLocals). At the tag classic-final the leftovers were on.
 		/// </summary>
-		public static void TurnClassic(Civilization1Remaster.Game.ITurnEvents turnHooks)
+		public static void TurnClassic(Civilization1Remaster.Game.IWorldEvents turnHooks)
 		{
 			turnHooks.ClassicHealing = true;
 			turnHooks.ClassicTechnologyNews = true;
@@ -129,18 +129,18 @@ namespace Civilization1Remaster.Tests.GoldenMaster
 		{
 			this.Engine.PrepareMachine();
 
-			// The frame of GameStartup.RunGame, the game functions below are called from it (some of them leave
+			// The frame of GameLauncher.RunGame, the game functions below are called from it (some of them leave
 			// through the frame pointer of their caller)
 			this.processor.EnterFrame(0xa);
 
-			// GameStartup.RunGame: VGA, no sound, keyboard only (no mouse)
+			// GameLauncher.RunGame: VGA, no sound, keyboard only (no mouse)
 			this.processor.EmitGlobalByte(0x1a22, 0x4d);
 			this.processor.EmitGlobalByte(0x1a30, 0x4e);
 			this.processor.EmitGlobalWord(0x1a3c, 0x0);
 
 			PrepareLikeMainIntro(randomSeed);
 
-			// GameStartup.RunGame after the intro
+			// GameLauncher.RunGame after the intro
 			this.Engine.Startup.QueryForDisk(0, 1);
 
 			this.processor.StackWord(0);
@@ -161,7 +161,7 @@ namespace Civilization1Remaster.Tests.GoldenMaster
 		}
 
 		/// <summary>
-		/// Plays one turn of all players (TurnEvents.HandleGameEnd, one step of the main loop of GameStartup.RunGame)
+		/// Plays one turn of all players (WorldEvents.HandleGameEnd, one step of the main loop of GameLauncher.RunGame)
 		/// </summary>
 		public void PlayTurn()
 		{
@@ -177,7 +177,7 @@ namespace Civilization1Remaster.Tests.GoldenMaster
 		}
 
 		/// <summary>
-		/// The parts of MainIntro.DisplayMainIntro that set up the machine; the pictures, the credits and the menu are left out
+		/// The parts of IntroSequence.DisplayMainIntro that set up the machine; the pictures, the credits and the menu are left out
 		/// </summary>
 		private void PrepareLikeMainIntro(uint randomSeed)
 		{
@@ -211,20 +211,20 @@ namespace Civilization1Remaster.Tests.GoldenMaster
 			this.Engine.Services.PrepareSoundDriver();
 			this.Engine.Services.LaunchTimer();
 
-			// Instead of CommonUtilities.SeedRandomizer, which takes the clock. The random generator is used already while
-			// loading (the dissolve of MapManagement.FocusMapView). The world seed (ChanceRoot) comes from the save.
+			// Instead of GameHelpers.SeedRandomizer, which takes the clock. The random generator is used already while
+			// loading (the dissolve of MapService.FocusMapView). The world seed (ChanceRoot) comes from the save.
 			this.Engine.Libc.SeedRandom(randomSeed);
 		}
 
 		/// <summary>
-		/// The steps of GameStartup.ImportGameDuringPlay with an autosave
+		/// The steps of GameLauncher.ImportGameDuringPlay with an autosave
 		/// </summary>
 		private void LoadLikeImportGameDuringPlay(int bay)
 		{
 			this.processor.EmitGlobalWord(0xdc48, 0x0);
 			this.processor.EmitGlobalWord(0xd4ca, 0x0);
 
-			if (this.Engine.SaveLoad.ImportGameFromSlot((ushort)(GameLoadAndSave.BackupBayMarker | bay)) == 0)
+			if (this.Engine.SaveLoad.ImportGameFromSlot((ushort)(SaveGameStore.BackupBayMarker | bay)) == 0)
 				throw new InvalidOperationException($"Autosave AUTO{bay:00} could not be loaded");
 
 			this.Engine.Startup.ConcealMouseCursor();

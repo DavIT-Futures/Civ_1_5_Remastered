@@ -55,13 +55,13 @@ namespace Civilization1Remaster.Tests.Differential
 				{
 					case 0:
 						return new Scenario($"RenderMouseCursor(), {state}", Setup,
-							game => new SystemServicesReference(game).RenderMouseCursor(),
+							game => new PlatformServicesReference(game).RenderMouseCursor(),
 							game => game.Services.RenderMouseCursor(),
 							Register.Kept, game => "render " + Drawn(game), mouseState);
 
 					case 1:
 						return new Scenario($"BlankMouseCursor(), {state}", Setup,
-							game => new SystemServicesReference(game).BlankMouseCursor(),
+							game => new PlatformServicesReference(game).BlankMouseCursor(),
 							game => game.Services.BlankMouseCursor(),
 							Register.Kept, game => "blank " + Drawn(game), mouseState);
 
@@ -69,13 +69,13 @@ namespace Civilization1Remaster.Tests.Differential
 						ushort toHoriz = (ushort)chance.Next(320), toVert = (ushort)chance.Next(200);
 
 						return new Scenario($"AssignMousePosition({toHoriz}, {toVert}), {state}", Setup,
-							game => new SystemServicesReference(game).AssignMousePosition(toHoriz, toVert),
+							game => new PlatformServicesReference(game).AssignMousePosition(toHoriz, toVert),
 							game => game.Services.AssignMousePosition(toHoriz, toVert),
 							Register.Kept, game => "position", mouseState);
 
 					default:
 						return new Scenario($"DisplayMouseCursor(), {state}", Setup,
-							game => new GameStartupReference(game).DisplayMouseCursor(),
+							game => new GameLauncherReference(game).DisplayMouseCursor(),
 							game => game.Startup.DisplayMouseCursor(),
 							Register.Kept, game => "display " + Drawn(game), mouseState);
 				}
@@ -96,13 +96,13 @@ namespace Civilization1Remaster.Tests.Differential
 
 					return new Scenario($"DisplayFoundCityMessage(), human {personIdx}",
 						game => game.World.PersonParticipantIdx = personIdx,
-						game => new NewCityScreenReference(game).DisplayFoundCityMessage(),
+						game => new CityNamingScreenReference(game).DisplayFoundCityMessage(),
 						game => game.CityNaming.DisplayFoundCityMessage(),
 						Register.Kept, game => "name");
 				}
 
 				return new Scenario("DisplayWhichArmy()", game => { },
-					game => new ArmySelectionReference(game).DisplayWhichArmy(),
+					game => new UnitPickerReference(game).DisplayWhichArmy(),
 					game => game.ArmyPicker.DisplayWhichArmy(),
 					Register.Acc | Register.Kept, game => "army");
 			}, output, ["name", "army"], keys);
@@ -122,7 +122,7 @@ namespace Civilization1Remaster.Tests.Differential
 				ushort driveIdx = drives[scenarioIdx++ % drives.Length];
 
 				return new Scenario($"VerifyDrive({driveIdx})", game => { },
-					game => new GameLoadAndSaveReference(game).VerifyDrive(driveIdx),
+					game => new SaveGameStoreReference(game).VerifyDrive(driveIdx),
 					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.SaveLoad.VerifyDrive(driveIdx)),
 					Register.Acc | Register.Kept,
 					game => (short)driveIdx > 1 ? "not a floppy" : game.Processor.RegAcc.Value16 != 0 ? "ready" : "no disk");
@@ -159,7 +159,7 @@ namespace Civilization1Remaster.Tests.Differential
 
 				return new Scenario($"ReflowText(), text \"{composed}\"",
 					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Libc.CopyText(0xba06, composed)),
-					game => new TextBlockRendererReference(game).ReflowText(),
+					game => new TextBlockPainterReference(game).ReflowText(),
 					game => game.BlockText.ReflowText(),
 					Register.Kept, game => codeTally == 0 ? "no code" : codeTally == 1 ? "one code" : "several codes");
 			}, output, ["no code", "one code", "several codes"]);
@@ -177,7 +177,7 @@ namespace Civilization1Remaster.Tests.Differential
 				int pages = Calls(pair.Rewritten.Engine, pair, "DisplayCivilopediaIndex");
 
 				return new Scenario($"DisplayCivilopedia({part})", game => { },
-					game => new CivilopediaReference(game).DisplayCivilopedia(part),
+					game => new EncyclopediaReference(game).DisplayCivilopedia(part),
 					game => game.Encyclopedia.DisplayCivilopedia(part),
 					Register.Kept, game => Calls(game, pair, "DisplayCivilopediaIndex") - pages > 1 ? "several pages" : "one page",
 					[(0x3772, 0, 0x8000)]);

@@ -26,7 +26,7 @@ namespace Civilization1Remaster.Tests.Differential
 						game.Processor.EmitGlobalWord(0x4e, rate);
 						game.Processor.EmitGlobalByte(0x5e, skip);
 					},
-					game => new SystemServicesReference(game).OnClockBeat(),
+					game => new PlatformServicesReference(game).OnClockBeat(),
 					game => game.Services.OnClockBeat(),
 					Register.Kept,
 					game => rate != 4 ? "music" : (sbyte)skip - 1 > 0 ? "music" : "skipped",

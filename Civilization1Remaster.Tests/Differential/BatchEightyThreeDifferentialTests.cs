@@ -47,7 +47,7 @@ public sealed class BatchEightyThreeDifferentialTests(ITestOutputHelper output)
 	/// </summary>
 	private static void ArrangeSurroundings(GameEngine game, short participantIdx, short troopIdx, List<short> members, int pole, int[] around)
 	{
-		IMapLayers chart = game.MapOps.Chart;
+		IMapPlanes chart = game.MapOps.Chart;
 		short person = game.World.PersonParticipantIdx;
 		int horizLoc = UnitByte(game, participantIdx, troopIdx, UnitMemory.Horiz);
 		int vertLoc = UnitByte(game, participantIdx, troopIdx, UnitMemory.Vert);
@@ -76,13 +76,13 @@ public sealed class BatchEightyThreeDifferentialTests(ITestOutputHelper output)
 			var places = pole % 2 == 0
 				? (from vert in new[] { 2, 3, 0x2e, 0x2f }
 					from horiz in Enumerable.Range(0, 80)
-					where Sea(horiz, vert) && (chart.OwnerBits(horiz, vert) & MapLayers.UnitsPresent) == 0 &&
+					where Sea(horiz, vert) && (chart.OwnerBits(horiz, vert) & MapPlanes.UnitsPresent) == 0 &&
 						Enumerable.Range(1, 8).Any(heading => vert + chart.DirectionVert(heading) is int landVert && (landVert == 2 || landVert == 0x2f) &&
 							!Sea(horiz + chart.DirectionHoriz(heading), landVert))
 					select (Horiz: horiz, Vert: vert)).ToList()
 				: (from vert in Enumerable.Range(3, 44)
 					from horiz in Enumerable.Range(0, 80)
-					where Sea(horiz, vert) && (chart.OwnerBits(horiz, vert) & MapLayers.UnitsPresent) == 0 &&
+					where Sea(horiz, vert) && (chart.OwnerBits(horiz, vert) & MapPlanes.UnitsPresent) == 0 &&
 						Enumerable.Range(1, 8).Count(heading => Sea(horiz + chart.DirectionHoriz(heading), vert + chart.DirectionVert(heading))) <= 1
 					select (Horiz: horiz, Vert: vert)).ToList();
 
@@ -96,7 +96,7 @@ public sealed class BatchEightyThreeDifferentialTests(ITestOutputHelper output)
 					game.Processor.EmitUInt8(0x3b01, (ushort)(UnitMemory.Address(participantIdx, member) + UnitMemory.Vert), (byte)vertLoc);
 				}
 
-				chart.AssignOwnerBits(horizLoc, vertLoc, MapLayers.UnitsPresent | participantIdx);
+				chart.AssignOwnerBits(horizLoc, vertLoc, MapPlanes.UnitsPresent | participantIdx);
 			}
 		}
 
@@ -112,7 +112,7 @@ public sealed class BatchEightyThreeDifferentialTests(ITestOutputHelper output)
 			int landVert = vertLoc + chart.DirectionVert(heading);
 
 			if (landVert < 0 || landVert >= 50 || chart.Terrain(landHoriz, landVert) == MapRules.OceanTerrain ||
-				(chart.OwnerBits(landHoriz, landVert) & MapLayers.UnitsPresent) != 0 || around[heading] == 0)
+				(chart.OwnerBits(landHoriz, landVert) & MapPlanes.UnitsPresent) != 0 || around[heading] == 0)
 			{
 				continue;
 			}
@@ -139,7 +139,7 @@ public sealed class BatchEightyThreeDifferentialTests(ITestOutputHelper output)
 
 				game.Processor.EmitUInt8(0x3b01, (ushort)(UnitMemory.Address(participantIdx, first) + UnitMemory.FollowingInStack), (byte)second);
 				game.Processor.EmitUInt8(0x3b01, (ushort)(UnitMemory.Address(participantIdx, second) + UnitMemory.FollowingInStack), (byte)first);
-				chart.AssignOwnerBits(landHoriz, landVert, MapLayers.UnitsPresent | participantIdx);
+				chart.AssignOwnerBits(landHoriz, landVert, MapPlanes.UnitsPresent | participantIdx);
 			}
 		}
 	}
@@ -224,7 +224,7 @@ public sealed class BatchEightyThreeDifferentialTests(ITestOutputHelper output)
 
 					ArrangeSurroundings(game, participantIdx, troopIdx, members, pole, around);
 				},
-				game => new AIPlayerReference(game).ShiftAIUnit(participantIdx, troopIdx),
+				game => new ComputerPlayerReference(game).ShiftAIUnit(participantIdx, troopIdx),
 				game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Bot.ShiftAIUnit(participantIdx, troopIdx)),
 				Register.Kept | Register.Acc,
 				// What the transport did: entered a landing tile, unloaded its units, forgot its destination (then the code after chooses

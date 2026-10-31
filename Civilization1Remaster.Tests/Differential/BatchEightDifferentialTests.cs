@@ -24,7 +24,7 @@ namespace Civilization1Remaster.Tests.Differential
 
 				return new Scenario($"PickNewCityProduction({townIdx}), making {making}",
 					game => game.World.Towns[townIdx].PresentMakingIdx = making,
-					game => new AIPlayerReference(game).PickNewCityProduction(townIdx),
+					game => new ComputerPlayerReference(game).PickNewCityProduction(townIdx),
 					game => game.Bot.PickNewCityProduction(townIdx),
 					Register.Kept,
 					game => (making >= 0 ? "from a unit" : "from a building") + (game.World.Towns[townIdx].PresentMakingIdx >= 0 ? " to a unit" : " to a building"));
@@ -48,7 +48,7 @@ namespace Civilization1Remaster.Tests.Differential
 								if (noPlural)
 									game.Processor.EmitGlobalByte((ushort)(0x14f2 + (0x3a * game.World.Participants[participantIdx].ChiefVisuals)), 0);
 							},
-							game => new GameReplayReference(game).ObtainReplayPlayerLabel(participantIdx),
+							game => new ReplayViewerReference(game).ObtainReplayPlayerLabel(participantIdx),
 							game => game.Replayer.ObtainReplayPlayerLabel(participantIdx),
 							Register.Kept, game => noPlural ? "name with s" : "plural name");
 
@@ -59,7 +59,7 @@ namespace Civilization1Remaster.Tests.Differential
 						ushort kind = (ushort)chance.Next(8);
 
 						return new Scenario($"RenderCityPictureRegion({column}, {row}, {picture}, {kind})", game => { },
-							game => new CityViewReference(game).RenderCityPictureRegion(column, row, picture, kind),
+							game => new CityPanoramaReference(game).RenderCityPictureRegion(column, row, picture, kind),
 							game => game.CityScene.RenderCityPictureRegion(column, row, picture, kind),
 							Register.Kept, game => "city picture");
 
@@ -88,7 +88,7 @@ namespace Civilization1Remaster.Tests.Differential
 								for (int idx = 0; idx < boxes.Length; idx++)
 									game.Processor.EmitUInt16(0x3767, (ushort)(idx << 1), boxes[idx]);
 							},
-							game => new CityViewReference(game).SeizeCityScenery(box),
+							game => new CityPanoramaReference(game).SeizeCityScenery(box),
 							game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.CityScene.SeizeCityScenery(box)),
 							Register.Kept, game => firstTime ? "first time" : "boxes ready",
 							[(0x3767, 0, 0xb0)]);
@@ -108,7 +108,7 @@ namespace Civilization1Remaster.Tests.Differential
 
 						return new Scenario($"ReleaseKingResources(), loaded {loaded}",
 							game => game.Processor.EmitGlobalWord(0x67ea, loaded),
-							game => new MeetWithKingReference(game).ReleaseKingResources(),
+							game => new RulerAudienceReference(game).ReleaseKingResources(),
 							game => game.Audience.ReleaseKingResources(),
 							Register.Kept, game => loaded != 0 ? "release" : "nothing loaded");
 
@@ -118,7 +118,7 @@ namespace Civilization1Remaster.Tests.Differential
 
 						return new Scenario($"DisplayKingDialog(0xba06, {horizLoc}, {vertLoc})",
 							game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Libc.CopyText(0xba06, "We meet again.\n")),
-							game => new MeetWithKingReference(game).DisplayKingDialog(0xba06, horizLoc, vertLoc),
+							game => new RulerAudienceReference(game).DisplayKingDialog(0xba06, horizLoc, vertLoc),
 							game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Audience.DisplayKingDialog(0xba06, horizLoc, vertLoc)),
 							Register.Acc | Register.Kept, game => horizLoc == 0x14 ? "moved dialog" : "dialog");
 
@@ -127,7 +127,7 @@ namespace Civilization1Remaster.Tests.Differential
 
 						return new Scenario($"RenderTutorialPointer({fromHoriz}, {fromVert}, {toHoriz}, {toVert})",
 							game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Libc.CopyText(0xba06, "Hint")),
-							game => new MainIntroReference(game).RenderTutorialPointer(fromHoriz, fromVert, toHoriz, toVert),
+							game => new IntroSequenceReference(game).RenderTutorialPointer(fromHoriz, fromVert, toHoriz, toVert),
 							game => game.Prologue.RenderTutorialPointer(fromHoriz, fromVert, toHoriz, toVert),
 							Register.Kept, game => "tutorial");
 				}
@@ -163,7 +163,7 @@ namespace Civilization1Remaster.Tests.Differential
 						if (flip)
 							game.World.Participants[game.World.PersonParticipantIdx].FoundScienceMarkers[1] ^= 0x10;
 					},
-					game => new StartGameMenuReference(game).ImportGovernmentGraphics(),
+					game => new NewGameSetupReference(game).ImportGovernmentGraphics(),
 					game => game.NewGameWizard.ImportGovernmentGraphics(),
 					Register.Kept,
 					game => regime == 3 ? "government 3" :

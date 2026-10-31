@@ -46,7 +46,7 @@ namespace Civilization1Remaster.Tests.Differential
 		public void DisplayCityStatusReportMatchesOriginalCode()
 		{
 			Check(3, 30, (chance, pair) => ReportScenario(chance, pair, "DisplayCityStatusReport",
-				(game, participantIdx) => new AdvisorReportsReference(game).DisplayCityStatusReport(participantIdx),
+				(game, participantIdx) => new AdvisorScreensReference(game).DisplayCityStatusReport(participantIdx),
 				(game, participantIdx) => game.Briefings.DisplayCityStatusReport(participantIdx),
 				(tally, making) => (tally > 20 ? "pages, " : "") + (making.Any(idx => idx < 0) && making.Any(idx => idx >= 0 && idx < 0x40) &&
 					making.Any(idx => idx >= 0x40) ? "all productions" : "some productions")),
@@ -57,7 +57,7 @@ namespace Civilization1Remaster.Tests.Differential
 		public void DisplayAttitudeReportMatchesOriginalCode()
 		{
 			Check(3, 30, (chance, pair) => ReportScenario(chance, pair, "DisplayAttitudeReport",
-				(game, participantIdx) => new AdvisorReportsReference(game).DisplayAttitudeReport(participantIdx),
+				(game, participantIdx) => new AdvisorScreensReference(game).DisplayAttitudeReport(participantIdx),
 				(game, participantIdx) => game.Briefings.DisplayAttitudeReport(participantIdx),
 				(tally, making) => tally > 16 ? "pages" : tally > 0 ? "one page" : "no cities"),
 				output, ["pages", "one page", "no cities"]);
@@ -72,7 +72,7 @@ namespace Civilization1Remaster.Tests.Differential
 
 				return new Scenario($"DisplayTerrainTutorial(), 0xd762 {shadow}",
 					game => game.Processor.EmitGlobalWord(0xd762, shadow),
-					game => new MainIntroReference(game).DisplayTerrainTutorial(),
+					game => new IntroSequenceReference(game).DisplayTerrainTutorial(),
 					game => game.Prologue.DisplayTerrainTutorial(),
 					Register.Kept,
 					game => shadow != 0 ? "shadow" : "plain");
@@ -102,7 +102,7 @@ namespace Civilization1Remaster.Tests.Differential
 						memory.Assign(participantIdx, troopIdx, UnitMemory.Kind, kind);
 						memory.Assign(participantIdx, troopIdx, UnitMemory.TravelHoriz, travel);
 					},
-					game => new MapManagementReference(game).RenderUnitSprite(participantIdx, troopIdx, horizLoc, vertLoc),
+					game => new MapServiceReference(game).RenderUnitSprite(participantIdx, troopIdx, horizLoc, vertLoc),
 					game => game.MapOps.RenderUnitSprite(participantIdx, troopIdx, horizLoc, vertLoc),
 					// (no AX: the 0x600 x player the original left, which every caller overwrites, is gone in Uderzenie 6/6)
 					Register.Kept,

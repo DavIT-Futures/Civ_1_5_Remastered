@@ -15,7 +15,7 @@ byte of the game turns them red and tells in which turn and in which value the g
    so the autosaves the game writes every turn and the player's own autosaves don't matter;
 2. prepares the machine (`GameEngine.PrepareMachine`), skips the intro and the menus, seeds the C runtime random
    generator with `1991` (instead of the clock) and loads the autosave like *Load Game* during play;
-3. plays 5 turns (`TurnEvents.HandleGameEnd`, one turn of all players). The human player is played by
+3. plays 5 turns (`WorldEvents.HandleGameEnd`, one turn of all players). The human player is played by
    `ScriptedKeyboard`: when the game looks for a key, it types the next one of `Space, Enter, '1'`
    (skip the unit, accept the default, first part of the palace);
 4. after loading and after every turn takes a `GameSnapshot`.
@@ -23,10 +23,10 @@ byte of the game turns them red and tells in which turn and in which value the g
 Determinism comes from test seams that do nothing in the desktop game:
 `CPU.FixedClockSpan` (instead of the real time a timer interrupt after every 50 calls of game functions, at every wait for
 the timer (`Idle`) or a key, and after every 16 reads of the timer variables 0x40 – 0x6f or polls of the music position
-(`CPU.PollMusic`, a one-line seam in `SystemServices.ObtainSongPosition` of both games) for the loops that wait without
+(`CPU.PollMusic`, a one-line seam in `PlatformServices.ObtainSongPosition` of both games) for the loops that wait without
 calling a game function; the calls are counted in every journal the game switches to (`CPU.Journal`) – since B6.0, 2026-10-25; before, after every 10 000 memory accesses, which moved the interrupts whenever
 the code made fewer accesses), `CPU.InputStarved` (the scripted keyboard), `LogWrapper.ScopeListener` (call counts),
-and a stable hash for the city picture in `CityView` (`string.GetHashCode` is different in every process).
+and a stable hash for the city picture in `CityPanorama` (`string.GetHashCode` is different in every process).
 The data moved out of the emulated memory into C# is written back at its address before the data segment is hashed
 (`Dual/MovedData.Project`), so the baselines stay valid while the state leaves the memory.
 `GoldenMasterDeterminismTests` plays the same game twice and requires identical snapshots.
@@ -67,7 +67,7 @@ WinForms project"), the last commit before the first refactoring (075f753). Its 
 and `VGADriver`, the Avalonia window). a3b5a3b is used because it already has the headless-capable `Civilization1Remaster.Core`.
 
 The original code throws `IndexOutOfRangeException` in 7 of the 15 runs (the map visibility array at the poles and
-`MissingTroops[-1]` in `UnitManagement.EliminateUnit`), so two crash guards that HEAD also has were added to it
+`MissingTroops[-1]` in `UnitRoster.EliminateUnit`), so two crash guards that HEAD also has were added to it
 (`baseline-crash-guards.patch`): `ChartSightGrid` instead of `sbyte[,]` and the bounds check of `MissingTroops`.
 Both change only what happens where the original code crashed. HEAD's other change in `EliminateUnit` (leave at once
 for an eliminated unit) is **not** in the baseline, it also changes cases that didn't crash.

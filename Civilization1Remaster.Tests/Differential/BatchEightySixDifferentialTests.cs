@@ -39,10 +39,10 @@ public sealed class BatchEightySixDifferentialTests(ITestOutputHelper output)
 	/// <summary>A lone land unit of another computer player moves to the free land tile</summary>
 	private static void PlaceStranger(GameEngine game, short participantIdx, int horizLoc, int vertLoc, int pick)
 	{
-		IMapLayers chart = game.MapOps.Chart;
+		IMapPlanes chart = game.MapOps.Chart;
 		short person = game.World.PersonParticipantIdx;
 
-		if (vertLoc <= 0 || vertLoc >= 49 || chart.Terrain(horizLoc, vertLoc) == MapRules.OceanTerrain || (chart.OwnerBits(horizLoc, vertLoc) & MapLayers.UnitsPresent) != 0)
+		if (vertLoc <= 0 || vertLoc >= 49 || chart.Terrain(horizLoc, vertLoc) == MapRules.OceanTerrain || (chart.OwnerBits(horizLoc, vertLoc) & MapPlanes.UnitsPresent) != 0)
 			return;
 
 		var lone = Enumerable.Range(1, 7).Where(player => player != participantIdx && player != person)
@@ -58,7 +58,7 @@ public sealed class BatchEightySixDifferentialTests(ITestOutputHelper output)
 		var (player, troop) = lone[pick % lone.Count];
 		game.Processor.EmitUInt8(0x3b01, (ushort)(UnitMemory.Address(player, troop) + UnitMemory.Horiz), (byte)horizLoc);
 		game.Processor.EmitUInt8(0x3b01, (ushort)(UnitMemory.Address(player, troop) + UnitMemory.Vert), (byte)vertLoc);
-		chart.AssignOwnerBits(horizLoc, vertLoc, MapLayers.UnitsPresent | player);
+		chart.AssignOwnerBits(horizLoc, vertLoc, MapPlanes.UnitsPresent | player);
 	}
 
 	private void CheckDecisions(int bay, HashSet<string> ways)
@@ -71,7 +71,7 @@ public sealed class BatchEightySixDifferentialTests(ITestOutputHelper output)
 			// leave ShiftAIUnit earlier), as the save has it; the defenders half of the time in a stack or at sea
 			int wanted = new[] { 0, 2, 3 }[chance.Next(3)];
 			int place = chance.Next(4);
-			IMapLayers sight = engine.MapOps.Chart;
+			IMapPlanes sight = engine.MapOps.Chart;
 			var candidates = Enumerable.Range(1, 7).Where(idx => idx != person)
 				.SelectMany(player => Enumerable.Range(0, 128).Select(troop => (Player: (short)player, Troop: (short)troop)))
 				.Where(unit => UnitByte(engine, unit.Player, unit.Troop, UnitMemory.Kind) is byte kind && kind != 0xff &&
@@ -120,7 +120,7 @@ public sealed class BatchEightySixDifferentialTests(ITestOutputHelper output)
 					game.Processor.EmitUInt16(0x3b01, (ushort)(frame - 0xc), terrainLeft);
 					// (0x5c gets 0 or 1 only when the look starts)
 					game.Processor.EmitUInt16(0x3b01, (ushort)(frame - 0x5c), 0x1234);
-					IMapLayers chart = game.MapOps.Chart;
+					IMapPlanes chart = game.MapOps.Chart;
 					ushort unit = UnitMemory.Address(participantIdx, troopIdx);
 					int unitHoriz = game.Processor.PullUInt8(0x3b01, (ushort)(unit + UnitMemory.Horiz));
 					int unitVert = game.Processor.PullUInt8(0x3b01, (ushort)(unit + UnitMemory.Vert));
@@ -130,12 +130,12 @@ public sealed class BatchEightySixDifferentialTests(ITestOutputHelper output)
 						int homeH = (home.Place.X + homeHoriz + 80) % 80;
 						int homeV = home.Place.Y + homeVert;
 
-						if (homeV > 0 && homeV < 49 && chart.Terrain(homeH, homeV) != MapRules.OceanTerrain && (chart.OwnerBits(homeH, homeV) & MapLayers.UnitsPresent) == 0 &&
+						if (homeV > 0 && homeV < 49 && chart.Terrain(homeH, homeV) != MapRules.OceanTerrain && (chart.OwnerBits(homeH, homeV) & MapPlanes.UnitsPresent) == 0 &&
 							game.Processor.PullUInt8(0x3b01, (ushort)(unit + UnitMemory.FollowingInStack)) == 0xff)
 						{
 							game.Processor.EmitUInt8(0x3b01, (ushort)(unit + UnitMemory.Horiz), (byte)homeH);
 							game.Processor.EmitUInt8(0x3b01, (ushort)(unit + UnitMemory.Vert), (byte)homeV);
-							chart.AssignOwnerBits(homeH, homeV, MapLayers.UnitsPresent | participantIdx);
+							chart.AssignOwnerBits(homeH, homeV, MapPlanes.UnitsPresent | participantIdx);
 							(unitHoriz, unitVert) = (homeH, homeV);
 						}
 					}
@@ -149,11 +149,11 @@ public sealed class BatchEightySixDifferentialTests(ITestOutputHelper output)
 							int seaHoriz = (unitHoriz + chart.DirectionHoriz(heading) + 80) % 80;
 							int seaVert = unitVert + chart.DirectionVert(heading);
 
-							if (seaVert > 0 && seaVert < 49 && chart.Terrain(seaHoriz, seaVert) == MapRules.OceanTerrain && (chart.OwnerBits(seaHoriz, seaVert) & MapLayers.UnitsPresent) == 0)
+							if (seaVert > 0 && seaVert < 49 && chart.Terrain(seaHoriz, seaVert) == MapRules.OceanTerrain && (chart.OwnerBits(seaHoriz, seaVert) & MapPlanes.UnitsPresent) == 0)
 							{
 								game.Processor.EmitUInt8(0x3b01, (ushort)(unit + UnitMemory.Horiz), (byte)seaHoriz);
 								game.Processor.EmitUInt8(0x3b01, (ushort)(unit + UnitMemory.Vert), (byte)seaVert);
-								chart.AssignOwnerBits(seaHoriz, seaVert, MapLayers.UnitsPresent | participantIdx);
+								chart.AssignOwnerBits(seaHoriz, seaVert, MapPlanes.UnitsPresent | participantIdx);
 								(unitHoriz, unitVert) = (seaHoriz, seaVert);
 								break;
 							}
@@ -167,9 +167,9 @@ public sealed class BatchEightySixDifferentialTests(ITestOutputHelper output)
 						int besideVert = unitVert + chart.DirectionVert(stranger);
 
 						if (besideVert >= 0 && besideVert < 50 && chart.Terrain(besideHoriz, besideVert) == MapRules.OceanTerrain &&
-							(chart.OwnerBits(besideHoriz, besideVert) & MapLayers.UnitsPresent) == 0)
+							(chart.OwnerBits(besideHoriz, besideVert) & MapPlanes.UnitsPresent) == 0)
 						{
-							chart.AssignOwnerBits(besideHoriz, besideVert, MapLayers.UnitsPresent | ((participantIdx + 1 + strangerPick % 6) % 8));
+							chart.AssignOwnerBits(besideHoriz, besideVert, MapPlanes.UnitsPresent | ((participantIdx + 1 + strangerPick % 6) % 8));
 						}
 					}
 					else if (stranger >= 0)
@@ -203,7 +203,7 @@ public sealed class BatchEightySixDifferentialTests(ITestOutputHelper output)
 						game.World.Landmasses[continentIdx].ConstructionSpotTally = sites[continentIdx];
 					}
 				},
-				game => new AIPlayerReference(game).ShiftAIUnit(participantIdx, troopIdx),
+				game => new ComputerPlayerReference(game).ShiftAIUnit(participantIdx, troopIdx),
 				game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Bot.ShiftAIUnit(participantIdx, troopIdx)),
 				Register.Kept | Register.Acc,
 				// What the unit decided: goes on to its destination, fortifies, builds a city, goes to its small city, or looks

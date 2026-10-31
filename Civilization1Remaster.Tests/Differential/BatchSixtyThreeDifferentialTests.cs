@@ -26,7 +26,7 @@ namespace Civilization1Remaster.Tests.Differential
 			Check(bay, 1, (chance, pair) =>
 				new Scenario($"DisplayReplay(), at the end {atGameEnd}",
 					game => game.Processor.EmitGlobalWord(0x680e, (ushort)atGameEnd),
-					game => { new GameReplayReference(game).DisplayReplay(); ShowReplayFile(game); },
+					game => { new ReplayViewerReference(game).DisplayReplay(); ShowReplayFile(game); },
 					game => { game.Replayer.DisplayReplay(); ShowReplayFile(game); },
 					Register.Kept,
 					game => $"mode {(short)game.Processor.Storage.PullUInt16(0x3b01, 0x680a)}",

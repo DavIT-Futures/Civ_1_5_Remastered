@@ -49,7 +49,7 @@ namespace Civilization1Remaster.Tests.Differential
 						for (int step = 0; step < songPosition; step++)
 							game.Audio.PerformNextStep();
 					},
-					game => new GameStartupReference(game).TitleLogoAndMainChoices(),
+					game => new GameLauncherReference(game).TitleLogoAndMainChoices(),
 					game => game.Startup.TitleLogoAndMainChoices(),
 					Register.Kept,
 					game => $"choice {(short)game.Processor.Storage.PullUInt16(0x3b01, 0x6b32)}",

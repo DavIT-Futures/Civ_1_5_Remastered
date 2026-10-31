@@ -42,7 +42,7 @@ public sealed class BatchSeventyThreeDifferentialTests(ITestOutputHelper output)
 					game.Processor.EmitGlobalByte(0x5402, busy);
 					game.Processor.EmitGlobalWord(0x5874, pressed);
 				},
-				game => new SystemServicesReference(game).PointerEvent(),
+				game => new PlatformServicesReference(game).PointerEvent(),
 				game => game.Services.PointerEvent(),
 				Register.Kept | Register.Acc | Register.Count,
 				// From what the call did: the screen renewed, the marker 0x5402 taken (busy before) or left alone, and the
@@ -93,7 +93,7 @@ public sealed class BatchSeventyThreeDifferentialTests(ITestOutputHelper output)
 					game.Processor.EmitGlobalWord(0x4c, beat4c);
 					game.Processor.EmitGlobalByte(0x58, flag58);
 				},
-				game => new SystemServicesReference(game).ClockInterrupt(),
+				game => new PlatformServicesReference(game).ClockInterrupt(),
 				game => game.Services.ClockInterrupt(),
 				Register.Kept | Register.Acc | Register.Base | Register.Count | Register.Data,
 				// From the variables after the call: a beat (0x54 reloaded and OnClockBeat), the 20th beat (0x59 reloaded) with
@@ -141,7 +141,7 @@ public sealed class BatchSeventyThreeDifferentialTests(ITestOutputHelper output)
 					game.Processor.EmitUInt8(0x35cf, (ushort)(cycle + 8), (byte)timer);
 					game.Processor.EmitUInt16(0x35cf, (ushort)(cycle + 2), (ushort)position);
 				},
-				game => new SystemServicesReference(game).RefreshHueCycling(),
+				game => new PlatformServicesReference(game).RefreshHueCycling(),
 				game => game.Services.RefreshHueCycling(),
 				Register.Kept,
 				// From the cycle after the call: not active (timer 0), waiting (timer counted down), or a step (timer reloaded,
@@ -183,7 +183,7 @@ public sealed class BatchSeventyThreeDifferentialTests(ITestOutputHelper output)
 					headless.Keyboard.TurnKeyLimit = 300;
 					game.Libc.Clock = () => new DateTime(2026, 10, 16, 12, 0, 0);
 				},
-				game => new GameStartupReference(game).RunGame(),
+				game => new GameLauncherReference(game).RunGame(),
 				game => game.Startup.RunGame(),
 				Register.Kept,
 				game => (Calls(game, pair, "AssignMouseCursorImage") > mouse ? "mouse, " : "no mouse, ") +

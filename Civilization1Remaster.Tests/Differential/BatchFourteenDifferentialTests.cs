@@ -35,7 +35,7 @@ namespace Civilization1Remaster.Tests.Differential
 				int smog = Calls(pair.Rewritten.Engine, pair, "AttachSmog");
 
 				return new Scenario($"EnactNuclearFallout({horizLoc}, {vertLoc})", game => { },
-					game => new UnitCombatReference(game).EnactNuclearFallout((short)horizLoc, (short)vertLoc),
+					game => new BattlesReference(game).EnactNuclearFallout((short)horizLoc, (short)vertLoc),
 					game => game.Combat.EnactNuclearFallout((short)horizLoc, (short)vertLoc),
 					Register.Kept,
 					game => (Calls(game, pair, "LocateCityAtPosition") > cities ? "city hit" : "no city") +
@@ -58,7 +58,7 @@ namespace Civilization1Remaster.Tests.Differential
 						if (flip >= 0)
 							game.World.Participants[first].FoundScienceMarkers[flip >> 4] ^= (ushort)(1 << (flip & 0xf));
 					},
-					game => new GovernmentAndDiplomacyReference(game).SwapTechnology(first, second),
+					game => new ForeignAffairsReference(game).SwapTechnology(first, second),
 					game =>
 					{
 						ushort[] before = (ushort[])game.World.Participants[first].FoundScienceMarkers.Clone();
@@ -88,7 +88,7 @@ namespace Civilization1Remaster.Tests.Differential
 
 				return new Scenario($"RenderSpaceScenery(), colour cycles {cycling}",
 					game => game.Processor.EmitGlobalWord(0xd762, cycling),
-					game => new SpaceshipScreenReference(game).RenderSpaceScenery(),
+					game => new SpaceshipBayReference(game).RenderSpaceScenery(),
 					game => game.RocketScreen.RenderSpaceScenery(),
 					Register.Kept, game => cycling != 0 ? "cycles started" : "no cycles", HueCyclesWithoutCounters);
 			}, output, ["cycles started", "no cycles"]);

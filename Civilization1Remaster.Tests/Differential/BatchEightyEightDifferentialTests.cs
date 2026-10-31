@@ -39,9 +39,9 @@ public sealed class BatchEightyEightDifferentialTests(ITestOutputHelper output)
 	/// <summary>Moves a lone unit of the player (any player but the excluded ones when -1) to the tile; false when none</summary>
 	private static bool MoveLoneUnit(GameEngine game, short participantIdx, short[] excluded, short exceptTroop, int horizLoc, int vertLoc, int pick, int domain)
 	{
-		IMapLayers chart = game.MapOps.Chart;
+		IMapPlanes chart = game.MapOps.Chart;
 
-		if (vertLoc <= 0 || vertLoc >= 49 || (chart.OwnerBits(horizLoc, vertLoc) & MapLayers.UnitsPresent) != 0)
+		if (vertLoc <= 0 || vertLoc >= 49 || (chart.OwnerBits(horizLoc, vertLoc) & MapPlanes.UnitsPresent) != 0)
 			return false;
 
 		var lone = Enumerable.Range(0, 8).Where(player => participantIdx >= 0 ? player == participantIdx : !excluded.Contains((short)player))
@@ -61,7 +61,7 @@ public sealed class BatchEightyEightDifferentialTests(ITestOutputHelper output)
 		game.MapOps.DiscardUnitFromTile(player, troop, oldHoriz, oldVert);
 		game.Processor.EmitUInt8(0x3b01, (ushort)(unit + UnitMemory.Horiz), (byte)horizLoc);
 		game.Processor.EmitUInt8(0x3b01, (ushort)(unit + UnitMemory.Vert), (byte)vertLoc);
-		chart.AssignOwnerBits(horizLoc, vertLoc, MapLayers.UnitsPresent | player);
+		chart.AssignOwnerBits(horizLoc, vertLoc, MapPlanes.UnitsPresent | player);
 		return true;
 	}
 
@@ -74,7 +74,7 @@ public sealed class BatchEightyEightDifferentialTests(ITestOutputHelper output)
 	/// <summary>The tile gets the terrain of another tile (its colour on the map layer)</summary>
 	private static void CopyTerrain(GameEngine game, int horizLoc, int vertLoc, int terrain)
 	{
-		IMapLayers chart = game.MapOps.Chart;
+		IMapPlanes chart = game.MapOps.Chart;
 
 		for (int at = 0; at < 80 * 50; at++)
 		{
@@ -160,7 +160,7 @@ public sealed class BatchEightyEightDifferentialTests(ITestOutputHelper output)
 					MapRules.IsHutPlace(tile.Horiz, tile.Vert, engine.World.ChanceRoot) &&
 					engine.MapOps.Chart.Terrain(tile.Horiz, tile.Vert) != MapRules.OceanTerrain &&
 					engine.MapOps.Chart.Terrain(tile.Horiz - 1, tile.Vert) != MapRules.OceanTerrain &&
-					(engine.MapOps.Chart.OwnerBits(tile.Horiz - 1, tile.Vert) & MapLayers.UnitsPresent) == 0 &&
+					(engine.MapOps.Chart.OwnerBits(tile.Horiz - 1, tile.Vert) & MapPlanes.UnitsPresent) == 0 &&
 					(engine.MapOps.Chart.Improvements(tile.Horiz, tile.Vert) & 1) == 0)
 				.ToList();
 			var hut = huts.Count > 0 ? huts[neighbourPick % huts.Count] : (Horiz: -1, Vert: -1);
@@ -184,7 +184,7 @@ public sealed class BatchEightyEightDifferentialTests(ITestOutputHelper output)
 						game.Processor.EmitUInt16(0x3b01, (ushort)(frame - local), 0x1234);
 
 					game.Processor.EmitUInt16(0x3b01, (ushort)(frame - 0x5e), 0x1234);
-					IMapLayers chart = game.MapOps.Chart;
+					IMapPlanes chart = game.MapOps.Chart;
 					ushort unit = UnitMemory.Address(participantIdx, troopIdx);
 					short strangerPlayer = -1;
 					bool alone = game.Processor.PullUInt8(0x3b01, (ushort)(unit + UnitMemory.FollowingInStack)) == 0xff;
@@ -193,11 +193,11 @@ public sealed class BatchEightyEightDifferentialTests(ITestOutputHelper output)
 					{
 						// The stack goes next to a city of another player with units, at war with it
 						var towns = game.World.Towns.Where(town => town.ConditionMarker != 0xff && town.ParticipantIdx != participantIdx &&
-							(chart.OwnerBits(town.Place.X, town.Place.Y) & MapLayers.UnitsPresent) != 0).ToList();
+							(chart.OwnerBits(town.Place.X, town.Place.Y) & MapPlanes.UnitsPresent) != 0).ToList();
 						var spots = towns.SelectMany(town => Enumerable.Range(1, 8).Select(direction => (Town: town,
 								Horiz: (town.Place.X + chart.DirectionHoriz(direction) + 80) % 80, Vert: town.Place.Y + chart.DirectionVert(direction))))
 							.Where(spot => spot.Vert > 0 && spot.Vert < 49 && chart.Terrain(spot.Horiz, spot.Vert) != MapRules.OceanTerrain &&
-								(chart.OwnerBits(spot.Horiz, spot.Vert) & MapLayers.UnitsPresent) == 0 && (chart.Improvements(spot.Horiz, spot.Vert) & 1) == 0)
+								(chart.OwnerBits(spot.Horiz, spot.Vert) & MapPlanes.UnitsPresent) == 0 && (chart.Improvements(spot.Horiz, spot.Vert) & 1) == 0)
 							.ToList();
 
 						if (spots.Count > 0)
@@ -217,7 +217,7 @@ public sealed class BatchEightyEightDifferentialTests(ITestOutputHelper output)
 							while (member != troopIdx && member != 0xff);
 
 							chart.AssignOwnerBits(oldHoriz, oldVert, chart.OwnerBits(oldHoriz, oldVert) & 7);
-							chart.AssignOwnerBits(spot.Horiz, spot.Vert, MapLayers.UnitsPresent | participantIdx);
+							chart.AssignOwnerBits(spot.Horiz, spot.Vert, MapPlanes.UnitsPresent | participantIdx);
 							strangerPlayer = spot.Town.ParticipantIdx;
 						}
 					}
@@ -235,7 +235,7 @@ public sealed class BatchEightyEightDifferentialTests(ITestOutputHelper output)
 						game.MapOps.DiscardUnitFromTile(participantIdx, troopIdx, oldHoriz, oldVert);
 						game.Processor.EmitUInt8(0x3b01, (ushort)(unit + UnitMemory.Horiz), (byte)(hut.Horiz - 1));
 						game.Processor.EmitUInt8(0x3b01, (ushort)(unit + UnitMemory.Vert), (byte)hut.Vert);
-						chart.AssignOwnerBits(hut.Horiz - 1, hut.Vert, MapLayers.UnitsPresent | participantIdx);
+						chart.AssignOwnerBits(hut.Horiz - 1, hut.Vert, MapPlanes.UnitsPresent | participantIdx);
 						game.World.ChartSight[hut.Horiz, hut.Vert] &= ~1;
 					}
 
@@ -263,7 +263,7 @@ public sealed class BatchEightyEightDifferentialTests(ITestOutputHelper output)
 						int direction = (heading - 1 + turn) % 8 + 1;
 						besideHoriz = (unitHoriz + chart.DirectionHoriz(direction) + 80) % 80;
 						besideVert = unitVert + chart.DirectionVert(direction);
-						fits = besideVert > 0 && besideVert < 49 && (chart.OwnerBits(besideHoriz, besideVert) & MapLayers.UnitsPresent) == 0 &&
+						fits = besideVert > 0 && besideVert < 49 && (chart.OwnerBits(besideHoriz, besideVert) & MapPlanes.UnitsPresent) == 0 &&
 							(chart.Terrain(besideHoriz, besideVert) == MapRules.OceanTerrain) == (wanted == 3);
 					}
 
@@ -299,7 +299,7 @@ public sealed class BatchEightyEightDifferentialTests(ITestOutputHelper output)
 						MoveLoneUnit(game, participantIdx, [], troopIdx, besideHoriz, besideVert, neighbourPick, domain);
 					}
 					else if (neighbour == 3 && besideVert > 0 && besideVert < 49 && chart.Terrain(besideHoriz, besideVert) != MapRules.OceanTerrain &&
-						(chart.OwnerBits(besideHoriz, besideVert) & MapLayers.UnitsPresent) == 0 && !AnyUnitAt(game, besideHoriz, besideVert))
+						(chart.OwnerBits(besideHoriz, besideVert) & MapPlanes.UnitsPresent) == 0 && !AnyUnitAt(game, besideHoriz, besideVert))
 					{
 						// (no unit of any player may stand there: the original fights it with the owner of the tile)
 						lastCity = (besideHoriz, besideVert, chart.OwnerBits(besideHoriz, besideVert), chart.LowImprovements(besideHoriz, besideVert));
@@ -345,7 +345,7 @@ public sealed class BatchEightyEightDifferentialTests(ITestOutputHelper output)
 						game.World.Participants[person].Landmasses[continentIdx].TownTally = buyMode == 1 ? (short)(humanCities[continentIdx] + 1) : humanCities[continentIdx];
 					}
 				},
-				game => new AIPlayerReference(game).ShiftAIUnit(participantIdx, troopIdx),
+				game => new ComputerPlayerReference(game).ShiftAIUnit(participantIdx, troopIdx),
 				game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Bot.ShiftAIUnit(participantIdx, troopIdx)),
 				Register.Kept | Register.Acc,
 				// What the look met, from the calls and the locals left in the frame (the last tile scored)

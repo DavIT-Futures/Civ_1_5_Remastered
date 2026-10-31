@@ -5,7 +5,7 @@ namespace Civilization1Remaster.UI
 	/// <summary>
 	/// Translated from the original CIV.EXE segment 0x2c84.
 	/// </summary>
-	public class GameMenus : GameModule, IGameMenus
+	public class GameMenus : GameComponent, IGameMenus
 	{
 		public GameMenus(GameEngine owner)
 			: base(owner)
@@ -124,7 +124,7 @@ namespace Civilization1Remaster.UI
 
 					if (this.Owner.SaveLoad.FetchBay != 0xffff)
 					{
-						GameEndRequest = GameLoadAndSave.FetchSessionAsk;
+						GameEndRequest = SaveGameStore.FetchSessionAsk;
 						ChosenOrder = 0x1000;
 					}
 					break;
@@ -466,7 +466,7 @@ namespace Civilization1Remaster.UI
 		{
 			this.Owner.Words.Append(" Change to ");
 
-			this.Owner.Words.Append(TerrainText(this.Processor.PullGlobalWord((ushort)((this.Processor.PullGlobalWord(work) << 1) + MapLayers.TerrainOfColour))));
+			this.Owner.Words.Append(TerrainText(this.Processor.PullGlobalWord((ushort)((this.Processor.PullGlobalWord(work) << 1) + MapPlanes.TerrainOfColour))));
 		}
 
 		/// <summary>After a menu of the menu bar: the screen put back from the back screen 0x19d4, 0x654a set to 0xffff</summary>

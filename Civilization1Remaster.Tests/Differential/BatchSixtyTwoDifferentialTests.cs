@@ -47,7 +47,7 @@ namespace Civilization1Remaster.Tests.Differential
 							game.World.Participants[idx].FoundScienceTally = sciences[idx];
 						}
 					},
-					game => new WorldMapReference(game).DisplayCensus(participantIdx),
+					game => new WorldStatisticsReference(game).DisplayCensus(participantIdx),
 					game => game.Atlas.DisplayCensus(participantIdx),
 					Register.Kept,
 					game => participantIdx == engine.World.PersonParticipantIdx ? "human" : "other");

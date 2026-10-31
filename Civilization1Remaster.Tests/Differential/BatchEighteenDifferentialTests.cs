@@ -28,7 +28,7 @@ namespace Civilization1Remaster.Tests.Differential
 						game.Libc.CopyText(0xba06, text);
 						game.Processor.EmitGlobalWord(0x68cc, cursor);
 					},
-					game => new NewCityScreenReference(game).RenderTextInputField(horizLoc, vertLoc, breadth),
+					game => new CityNamingScreenReference(game).RenderTextInputField(horizLoc, vertLoc, breadth),
 					game => game.CityNaming.RenderTextInputField(horizLoc, vertLoc, breadth),
 					Register.Kept,
 					game => cursor < text.Length && cursor < breadth ? "cursor on a character" : text.Length > breadth ? "text cut" : "rest empty");
@@ -60,7 +60,7 @@ namespace Civilization1Remaster.Tests.Differential
 						if (missing)
 							game.Processor.EmitGlobalWord((ushort)(0x1ace + (diskIdx << 1)), 0xbb80);
 					},
-					game => new GameStartupReference(game).QueryForDisk(diskIdx, marker),
+					game => new GameLauncherReference(game).QueryForDisk(diskIdx, marker),
 					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Startup.QueryForDisk(diskIdx, marker)),
 					Register.Acc | Register.Kept,
 					game => missing ? "disk 0 instead" : marker == 0xffff ? "asked once" : marker == 0 ? "found at once" : "found");
@@ -99,7 +99,7 @@ namespace Civilization1Remaster.Tests.Differential
 						if (sdi >= 0)
 							game.World.Towns[sdi].StructureMarkers1 |= 1;
 					},
-					game => new UnitCombatReference(game).ExplodeNuclearWeapon(participantIdx, (short)horizLoc, (short)vertLoc),
+					game => new BattlesReference(game).ExplodeNuclearWeapon(participantIdx, (short)horizLoc, (short)vertLoc),
 					game => game.Combat.ExplodeNuclearWeapon(participantIdx, (short)horizLoc, (short)vertLoc),
 					Register.Kept,
 					game => (sdi >= 0 ? "SDI, " : "") + (Calls(game, pair, "VisitEachUnitInStack") > destroyed ? "units destroyed" : "no units"));
@@ -129,7 +129,7 @@ namespace Civilization1Remaster.Tests.Differential
 							memory.Assign(participantIdx, troopIdx, UnitMemory.TravelVert, 34);
 						}
 					},
-					game => new ArmySelectionReference(game).DisplayUnitInfo(participantIdx, troopIdx),
+					game => new UnitPickerReference(game).DisplayUnitInfo(participantIdx, troopIdx),
 					game => game.ArmyPicker.DisplayUnitInfo(participantIdx, troopIdx),
 					Register.Kept,
 					game => (new UnitMemory(game.Processor).Pull(participantIdx, troopIdx, UnitMemory.TravelHoriz) != 0xff ? "go to, " : "") +

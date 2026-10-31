@@ -9,7 +9,7 @@ using Xunit;
 namespace Civilization1Remaster.Tests
 {
 	/// <summary>
-	/// A spaceship part of a kind without a free place (SpaceshipSlotRules, TurnEvents.ClassicSpaceshipSlots): off (the game)
+	/// A spaceship part of a kind without a free place (SpaceshipSlotRules, WorldEvents.ClassicSpaceshipSlots): off (the game)
 	/// the kind is marked complete and the player told "No further ... required."; on (the tests) the part goes past the
 	/// table of places, as the translated code did.
 	/// </summary>

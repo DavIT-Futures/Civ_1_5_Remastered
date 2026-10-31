@@ -41,7 +41,7 @@ namespace Civilization1Remaster.Tests.Differential
 							for (int vertLoc = 0; vertLoc < 50; vertLoc++)
 								game.MapOps.Chart.ClearImprovements(1, horizLoc, vertLoc);
 					},
-					game => new StartGameMenuReference(game).ConfigureFreshGame(),
+					game => new NewGameSetupReference(game).ConfigureFreshGame(),
 					game => game.NewGameWizard.ConfigureFreshGame(),
 					Register.Kept | Register.Acc,
 					game => Calls(game, pair, "DisplayCityFoundedMessage") > foundedMessages ? "random tribe" : (game.World.Participants[game.World.PersonParticipantIdx].ChiefVisuals >= 8 ? "second leader" : "first leader") +

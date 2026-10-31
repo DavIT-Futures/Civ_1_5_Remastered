@@ -41,7 +41,7 @@ namespace Civilization1Remaster.Tests.Differential
 						memory.Assign(participantIdx, troopIdx, UnitMemory.Status,
 							(byte)((memory.Pull(participantIdx, troopIdx, UnitMemory.Status) & ~0x20) | (veteran ? 0x20 : 0)));
 					},
-					game => new PlayerTurnReference(game).RenderUnitInfo(participantIdx, arg2),
+					game => new TurnControllerReference(game).RenderUnitInfo(participantIdx, arg2),
 					game => game.TurnLogic.RenderUnitInfo(participantIdx, arg2),
 					Register.Kept,
 					game => arg2 == 0x80 ? "no unit" : city ? "in a city" : "outside");
@@ -104,7 +104,7 @@ namespace Civilization1Remaster.Tests.Differential
 						ushort[] science = game.World.Participants[participantIdx].FoundScienceMarkers;
 						science[2] = (ushort)((science[2] & ~0x24) | (technologies[0] ? 4 : 0) | (technologies[1] ? 0x20 : 0));
 					},
-					game => new AdvisorReportsReference(game).DisplayTradeReport(participantIdx),
+					game => new AdvisorScreensReference(game).DisplayTradeReport(participantIdx),
 					game => game.Briefings.DisplayTradeReport(participantIdx),
 					Register.Kept,
 					game => towns == 0 ? "no cities" : towns > 17 ? "two pages" : "one page");
@@ -121,7 +121,7 @@ namespace Civilization1Remaster.Tests.Differential
 
 				return new Scenario($"DisplayArmyList({participantIdx}), all shown {all}",
 					game => game.Processor.EmitGlobalWord(0xd806, all),
-					game => new ArmySelectionReference(game).DisplayArmyList(participantIdx),
+					game => new UnitPickerReference(game).DisplayArmyList(participantIdx),
 					game => game.ArmyPicker.DisplayArmyList(participantIdx),
 					Register.Kept,
 					game => all != 0 ? "all shown" : "what it sees");

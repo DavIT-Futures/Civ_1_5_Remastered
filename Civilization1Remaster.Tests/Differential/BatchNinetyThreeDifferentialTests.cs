@@ -84,7 +84,7 @@ public sealed class BatchNinetyThreeDifferentialTests(ITestOutputHelper output)
 					if (first)
 						game.World.RoundTally = 0;
 
-					IMapLayers layers = game.MapOps.Chart;
+					IMapPlanes layers = game.MapOps.Chart;
 
 					for (int idx = 0; idx < improved.Length; idx++)
 					{
@@ -140,7 +140,7 @@ public sealed class BatchNinetyThreeDifferentialTests(ITestOutputHelper output)
 					int scriptIdx = 0;
 					int typed = 0;
 					bool withhold = false;
-					IMapLayers chart = game.MapOps.Chart;
+					IMapPlanes chart = game.MapOps.Chart;
 
 					game.Processor.InputStarved = waiting =>
 					{
@@ -219,7 +219,7 @@ public sealed class BatchNinetyThreeDifferentialTests(ITestOutputHelper output)
 							game.VideoCard.Tokens.Enqueue(key);
 					};
 				},
-				game => new PlayerTurnReference(game).HandlePlayerTurn(person),
+				game => new TurnControllerReference(game).HandlePlayerTurn(person),
 				game => game.TurnLogic.HandlePlayerTurn(person),
 				Register.Kept,
 				// What the turn met, from the calls

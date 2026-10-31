@@ -46,7 +46,7 @@ namespace Civilization1Remaster.Tests.Differential
 						ushort[] relations = game.World.Participants[person].Relations;
 						relations[participantIdx] = (ushort)((relations[participantIdx] & ~0x40) | (known ? 0x40 : 0));
 					},
-					game => new TradeAndConquestReference(game).SeizeCity(participantIdx, townIdx, marker),
+					game => new CityCaptureReference(game).SeizeCity(participantIdx, townIdx, marker),
 					game => game.Conquest.SeizeCity(participantIdx, townIdx, marker),
 					Register.Kept,
 					game => game.World.Towns[townIdx].TrueExtent == 0 ? "destroyed" :
@@ -87,7 +87,7 @@ namespace Civilization1Remaster.Tests.Differential
 						game.World.Towns[townIdx].ConditionMarker = (byte)((game.World.Towns[townIdx].ConditionMarker & ~0x21) | (robbed ? 0x20 : 0) | (disorder ? 1 : 0));
 						game.Processor.EmitGlobalWord(0xb276, mask);
 					},
-					game => new DiplomatActionsReference(game).DiplomatArrivesAtCity(townIdx, participantIdx, troopIdx),
+					game => new DiplomatMissionsReference(game).DiplomatArrivesAtCity(townIdx, participantIdx, troopIdx),
 					game => game.Diplomats.DiplomatArrivesAtCity(townIdx, participantIdx, troopIdx),
 					Register.Kept,
 					game =>
@@ -126,7 +126,7 @@ namespace Civilization1Remaster.Tests.Differential
 						game.Processor.EmitGlobalWord(0x6590, placeHoriz);
 						game.Processor.EmitGlobalWord(0x6592, placeVert);
 					},
-					game => new PathfindingReference(game).ShiftToward(participantIdx, troopIdx, limit),
+					game => new RoutePlannerReference(game).ShiftToward(participantIdx, troopIdx, limit),
 					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Routing.ShiftToward(participantIdx, troopIdx, limit)),
 					Register.Acc | Register.Kept,
 					game => game.Processor.RegAcc.Value16 == 0xffff ? "no step" : "step");

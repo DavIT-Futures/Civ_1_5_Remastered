@@ -57,7 +57,7 @@ public sealed class BatchNinetyEightDifferentialTests(ITestOutputHelper output)
 				{
 					HumanTurnScript.Install(game, inputs);
 					game.World.SessionPrefMarkers = (short)((game.World.SessionPrefMarkers & ~1) | (help ? 1 : 0));
-					IMapLayers chart = game.MapOps.Chart;
+					IMapPlanes chart = game.MapOps.Chart;
 
 					// The first unit of the human that moves, a land unit on land outside a city
 					int first = Enumerable.Range(0, 128).FirstOrDefault(troop => UnitByte(game, person, troop, UnitMemory.Kind) != 0xff &&
@@ -75,7 +75,7 @@ public sealed class BatchNinetyEightDifferentialTests(ITestOutputHelper output)
 					int strangerVert = vertLoc + chart.DirectionVert(side);
 
 					if (strangerVert <= 0 || strangerVert >= 49 || chart.Terrain(strangerHoriz, strangerVert) == MapRules.OceanTerrain ||
-						(chart.OwnerBits(strangerHoriz, strangerVert) & MapLayers.UnitsPresent) != 0 || (chart.Improvements(strangerHoriz, strangerVert) & 1) != 0)
+						(chart.OwnerBits(strangerHoriz, strangerVert) & MapPlanes.UnitsPresent) != 0 || (chart.Improvements(strangerHoriz, strangerVert) & 1) != 0)
 					{
 						return;
 					}
@@ -93,9 +93,9 @@ public sealed class BatchNinetyEightDifferentialTests(ITestOutputHelper output)
 					game.MapOps.DiscardUnitFromTile(player, troop, UnitByte(game, player, troop, UnitMemory.Horiz), UnitByte(game, player, troop, UnitMemory.Vert));
 					game.Processor.EmitUInt8(0x3b01, (ushort)(UnitMemory.Address(player, troop) + UnitMemory.Horiz), (byte)strangerHoriz);
 					game.Processor.EmitUInt8(0x3b01, (ushort)(UnitMemory.Address(player, troop) + UnitMemory.Vert), (byte)strangerVert);
-					chart.AssignOwnerBits(strangerHoriz, strangerVert, MapLayers.UnitsPresent | player);
+					chart.AssignOwnerBits(strangerHoriz, strangerVert, MapPlanes.UnitsPresent | player);
 				},
-				game => new PlayerTurnReference(game).HandlePlayerTurn(person),
+				game => new TurnControllerReference(game).HandlePlayerTurn(person),
 				game => game.TurnLogic.HandlePlayerTurn(person),
 				Register.Kept,
 				// What the moves met, from the calls and the units

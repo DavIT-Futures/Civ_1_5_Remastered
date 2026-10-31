@@ -51,7 +51,7 @@ namespace Civilization1Remaster.Tests.Differential
 					},
 					game =>
 					{
-						new GameInitAndIntroReference(game).OpeningSequence();
+						new WorldBuilderReference(game).OpeningSequence();
 						game.Processor.EmitGlobalWord(0x6800, 0);
 					},
 					game =>
@@ -188,7 +188,7 @@ namespace Civilization1Remaster.Tests.Differential
 						{
 							// Put an AI unit on an adjacent tile (x2, y2 - 1) to exercise the adjacent stack loop at L0a4c
 							SetupUnit(game, 3, 0, 0, (byte)x2, (byte)(y2 - 1), 2, 3, 0xff);
-							game.MapOps.Chart.AssignOwnerBits(x2, y2 - 1, 3 | MapLayers.UnitsPresent);
+							game.MapOps.Chart.AssignOwnerBits(x2, y2 - 1, 3 | MapPlanes.UnitsPresent);
 						}
 
 						ushort rel = 0;
@@ -198,7 +198,7 @@ namespace Civilization1Remaster.Tests.Differential
 						game.World.Participants[participant2].Relations[participant1] = rel;
 						game.World.Participants[personIdx].RegimeKind = 2;
 					},
-					game => new UnitCombatReference(game).SettleBattle(participant1, troop1, participant2, troop2, marker),
+					game => new BattlesReference(game).SettleBattle(participant1, troop1, participant2, troop2, marker),
 					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Combat.SettleBattle(participant1, troop1, participant2, troop2, marker)),
 					Register.Kept | Register.Acc,
 					game =>

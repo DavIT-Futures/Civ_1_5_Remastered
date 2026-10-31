@@ -33,7 +33,7 @@ namespace Civilization1Remaster.Tests.Differential
 						game.Processor.EmitGlobalWord(0x70e4, taxmen);
 						game.Processor.EmitGlobalWord(0x6542, scientists);
 					},
-					game => new CityManagementReference(game).ReshuffleCitizens(townIdx, workers),
+					game => new CitiesReference(game).ReshuffleCitizens(townIdx, workers),
 					game => game.CityOps.ReshuffleCitizens(townIdx, workers),
 					Register.Kept,
 					game => game.Processor.PullGlobalWord(0x6542) < scientists ? "scientists moved" :
@@ -68,7 +68,7 @@ namespace Civilization1Remaster.Tests.Differential
 							site.Place = new System.Drawing.Point(horiz, vert);
 						}
 					},
-					game => new AIPlayerReference(game).AttachStrategicLocation(participantIdx, horizLoc, vertLoc, live, strategy),
+					game => new ComputerPlayerReference(game).AttachStrategicLocation(participantIdx, horizLoc, vertLoc, live, strategy),
 					game => game.Bot.AttachStrategicLocation(participantIdx, horizLoc, vertLoc, live, strategy),
 					Register.Kept,
 					game => game.World.Participants[participantIdx].TacticalSites.Any(site => site.Place.X == horizLoc && site.Place.Y == vertLoc &&
@@ -103,7 +103,7 @@ namespace Civilization1Remaster.Tests.Differential
 						for (int idx = 0; idx < ring.Length; idx++)
 							memory.AssignFollowing(participantIdx, ring[idx], (byte)ring[(idx + 1) % ring.Length]);
 					},
-					game => new PlayerTurnReference(game).LocateBestGuardian(participantIdx, (ushort)troopIdx),
+					game => new TurnControllerReference(game).LocateBestGuardian(participantIdx, (ushort)troopIdx),
 					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.TurnLogic.LocateBestGuardian(participantIdx, (ushort)troopIdx)),
 					Register.Acc | Register.Kept,
 					game => new UnitMemory(game.Processor).Following(participantIdx, troopIdx) == -1 ? "alone" :
@@ -128,7 +128,7 @@ namespace Civilization1Remaster.Tests.Differential
 
 				return new Scenario($"ArrangeTextRow({breadth}), text \"{composed.Replace("\n", "\\n")}\"",
 					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Libc.CopyText(0xba06, composed)),
-					game => new TextBlockRendererReference(game).ArrangeTextRow(breadth),
+					game => new TextBlockPainterReference(game).ArrangeTextRow(breadth),
 					game => game.BlockText.ArrangeTextRow(breadth),
 					Register.Kept,
 					game => (composed.Contains('^') ? "^, " : "") + (composed.Length > breadth ? "wrapped" : "short"));

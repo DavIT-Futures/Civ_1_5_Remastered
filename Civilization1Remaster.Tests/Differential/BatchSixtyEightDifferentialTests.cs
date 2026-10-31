@@ -22,7 +22,7 @@ namespace Civilization1Remaster.Tests.Differential
 
 				return new Scenario($"DisplayHelpTopic(\"{topic}\")",
 					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Libc.CopyText(0xbc00, topic)),
-					game => new InGameHelpReference(game).DisplayHelpTopic(0xbc00),
+					game => new HelpPopupsReference(game).DisplayHelpTopic(0xbc00),
 					game => game.HelpSystem.DisplayHelpTopic(0xbc00),
 					Register.Kept,
 					game => topic == "MISSING_TOPIC" ? "missing" : "found");
@@ -95,7 +95,7 @@ namespace Civilization1Remaster.Tests.Differential
 
 						game.Processor.EmitGlobalWord(0x3934, (ushort)(kingDialog ? 1 : 0xffff));
 					},
-					game => new TradeAndConquestReference(game).ChooseTechnologyToTake(p1, p2),
+					game => new CityCaptureReference(game).ChooseTechnologyToTake(p1, p2),
 					game => game.Conquest.ChooseTechnologyToTake(p1, p2),
 					Register.Kept,
 					game =>
@@ -171,7 +171,7 @@ namespace Civilization1Remaster.Tests.Differential
 								game.VideoCard.Tokens.Enqueue(k);
 						}
 					},
-					game => new DialogDrawingReference(game).DisplayMenu(0xba06, horizLoc, vertLoc, marker),
+					game => new DialogPainterReference(game).DisplayMenu(0xba06, horizLoc, vertLoc, marker),
 					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Dialogs.DisplayMenu(0xba06, horizLoc, vertLoc, marker)),
 					Register.Kept | Register.Acc,
 					game =>

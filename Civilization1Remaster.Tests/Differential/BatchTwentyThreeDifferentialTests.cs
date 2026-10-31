@@ -16,7 +16,7 @@ namespace Civilization1Remaster.Tests.Differential
 	public class BatchTwentyThreeDifferentialTests(ITestOutputHelper output)
 	{
 		/// <summary>The Hall of Fame: 6 records of 0x2e bytes at 0x3772:0x37d2</summary>
-		private static readonly (ushort, ushort, int) HallOfFame = (0x3772, 0x37d2, 0x114);
+		private static readonly (ushort, ushort, int) FameRecords = (0x3772, 0x37d2, 0x114);
 
 		[Fact]
 		public void AttachHallOfFameRecordMatchesOriginalCode()
@@ -40,11 +40,11 @@ namespace Civilization1Remaster.Tests.Differential
 						game.Processor.EmitGlobalWord(0xb77e, score);
 						game.World.HardnessTier = tier;
 					},
-					game => new HallOfFameReference(game).AttachHallOfFameRecord(),
+					game => new FameRecordsReference(game).AttachHallOfFameRecord(),
 					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Legends.AttachHallOfFameRecord()),
 					Register.Acc | Register.Kept,
 					game => game.Processor.RegAcc.Value16 switch { 0 => "first", 5 => "last", 0xffff => "none", _ => "between" },
-					[HallOfFame]);
+					[FameRecords]);
 			}, output, ["first", "last", "between"]);
 		}
 
@@ -75,7 +75,7 @@ namespace Civilization1Remaster.Tests.Differential
 						ref ushort relation = ref game.World.Participants[humanIdx].Relations[participantIdx];
 						relation = (ushort)(intelligence ? relation | 0x40 : relation & ~0x40);
 					},
-					game => new MeetWithKingReference(game).WelcomeEmissary(participantIdx, horizLoc, vertLoc),
+					game => new RulerAudienceReference(game).WelcomeEmissary(participantIdx, horizLoc, vertLoc),
 					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Audience.WelcomeEmissary(participantIdx, horizLoc, vertLoc)),
 					Register.Acc | Register.Kept,
 					game => asked != 0 ? "asked before" : answer != 0 ? (answer == 0xffff ? "refused before" : "answer known") :
@@ -110,7 +110,7 @@ namespace Civilization1Remaster.Tests.Differential
 
 						game.World.LiveRealms = (short)realms;
 					},
-					game => new WorldMapReference(game).RenderCensusLine(0xbb00, vertLoc, charsAddr),
+					game => new WorldStatisticsReference(game).RenderCensusLine(0xbb00, vertLoc, charsAddr),
 					game => game.Atlas.RenderCensusLine(0xbb00, vertLoc, charsAddr),
 					Register.Kept,
 					game =>
@@ -169,7 +169,7 @@ namespace Civilization1Remaster.Tests.Differential
 						memory.Assign(participantIdx, troopIdx, UnitMemory.Vert, (byte)seaVert);
 						memory.Assign(participantIdx, troopIdx, UnitMemory.Status, status);
 					},
-					game => new MapManagementReference(game).RenderUnitOnWorldMap(participantIdx, troopIdx),
+					game => new MapServiceReference(game).RenderUnitOnWorldMap(participantIdx, troopIdx),
 					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.MapOps.RenderUnitOnWorldMap(participantIdx, troopIdx)),
 					Register.Acc | Register.Kept,
 					game => worldMap == 1 ? "world map" : game.Processor.RegAcc.Value16 == 1 ?

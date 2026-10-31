@@ -44,7 +44,7 @@ namespace Civilization1Remaster.Tests.Differential
 					},
 					game =>
 					{
-						new GameInitAndIntroReference(game).ProduceTerrain();
+						new WorldBuilderReference(game).ProduceTerrain();
 						game.Processor.EmitGlobalWord(0x6800, 0);
 					},
 					game =>

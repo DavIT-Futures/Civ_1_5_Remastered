@@ -42,7 +42,7 @@ namespace Civilization1Remaster.Tests.Differential
 						game.World.Towns[townIdx].ConditionMarker = (byte)(celebrating ? game.World.Towns[townIdx].ConditionMarker | 0x40 :
 							game.World.Towns[townIdx].ConditionMarker & ~0x40);
 					},
-					game => new CityManagementReference(game).MayCityWorkTile(horizLoc, vertLoc, resource),
+					game => new CitiesReference(game).MayCityWorkTile(horizLoc, vertLoc, resource),
 					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.CityOps.MayCityWorkTile(horizLoc, vertLoc, resource)),
 					Register.Acc | Register.Kept,
 					game => vertLoc < 0 || vertLoc >= 50 ? "outside" : real ? "real improvements" : "assumed improvements");
@@ -85,7 +85,7 @@ namespace Civilization1Remaster.Tests.Differential
 								town.TrueExtent = 1;
 						}
 					},
-					game => new TurnEventsReference(game).RenderStatusBar(),
+					game => new WorldEventsReference(game).RenderStatusBar(),
 					game => game.TurnHooks.RenderStatusBar(),
 					Register.Kept,
 					game => worldMap == 1 ? "world map" : announced != 0 ? "panel" :
@@ -104,7 +104,7 @@ namespace Civilization1Remaster.Tests.Differential
 
 				return new Scenario($"DisplayGameResultsScreen({(short)rank}, {score}), difficulty {tier}",
 					game => game.World.HardnessTier = tier,
-					game => new HallOfFameReference(game).DisplayGameResultsScreen(rank, score),
+					game => new FameRecordsReference(game).DisplayGameResultsScreen(rank, score),
 					game => game.Legends.DisplayGameResultsScreen(rank, score),
 					Register.Kept,
 					game => score != 0 ? "score" : (short)rank < 0 ? "nothing" : "rank");
@@ -137,7 +137,7 @@ namespace Civilization1Remaster.Tests.Differential
 						game.World.Participants[participantIdx].Gold = gold;
 						game.World.Participants[briberIdx].Gold = briberGold;
 					},
-					game => new DiplomatActionsReference(game).BuyUnit(participantIdx, troopIdx, briberIdx),
+					game => new DiplomatMissionsReference(game).BuyUnit(participantIdx, troopIdx, briberIdx),
 					game => game.Diplomats.BuyUnit(participantIdx, troopIdx, briberIdx),
 					Register.Kept,
 					game => Calls(game, pair, "ConstructUnit") > built ? (participantIdx == humanIdx ? "human bribed" : "bribed") :

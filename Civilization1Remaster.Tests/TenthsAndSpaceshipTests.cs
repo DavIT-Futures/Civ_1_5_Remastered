@@ -9,8 +9,8 @@ using Xunit;
 namespace Civilization1Remaster.Tests
 {
 	/// <summary>
-	/// The tenths of the census and of the spaceship (TenthsRules, TurnEvents.ClassicTenths) and the pictures of the spaceship
-	/// parts (SpaceshipPictureRules, TurnEvents.ClassicSpaceshipPictures): off (the game) the remaster writes "4.5" for 45 and
+	/// The tenths of the census and of the spaceship (TenthsRules, WorldEvents.ClassicTenths) and the pictures of the spaceship
+	/// parts (SpaceshipPictureRules, WorldEvents.ClassicSpaceshipPictures): off (the game) the remaster writes "4.5" for 45 and
 	/// draws the parts, on (the tests) it writes "4.4" and reads the picture from part &lt;&lt; 11, as the translated code did.
 	/// </summary>
 	public class TenthsAndSpaceshipTests

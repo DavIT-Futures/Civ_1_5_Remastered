@@ -42,7 +42,7 @@ namespace Civilization1Remaster.Tests.Differential
 						for (int playerIdx = 0; playerIdx < 8; playerIdx++)
 							losses[playerIdx].CopyTo(game.World.Participants[playerIdx].MissingTroops, 0);
 					},
-					game => new AdvisorReportsReference(game).RenderUnitCountsChart(participantIdx),
+					game => new AdvisorScreensReference(game).RenderUnitCountsChart(participantIdx),
 					game => game.Briefings.RenderUnitCountsChart(participantIdx),
 					Register.Kept,
 					game => Enumerable.Range(0, 28).Any(kind => active[kind] > 0 && making[kind] > 0) ? "active and in production" :
@@ -82,7 +82,7 @@ namespace Civilization1Remaster.Tests.Differential
 					},
 					game =>
 					{
-						new GameReplayReference(game).DumpReplayCities();
+						new ReplayViewerReference(game).DumpReplayCities();
 						HashReplayFile(game);
 					},
 					game =>
@@ -127,7 +127,7 @@ namespace Civilization1Remaster.Tests.Differential
 						ref ushort relation = ref game.World.Participants[participantIdx].Relations[game.World.PersonParticipantIdx];
 						relation = (ushort)(friendly ? relation | 8 : relation & ~8);
 					},
-					game => new MeetWithKingReference(game).ObtainKingSalutation(participantIdx),
+					game => new RulerAudienceReference(game).ObtainKingSalutation(participantIdx),
 					game => game.Audience.ObtainKingSalutation(participantIdx),
 					Register.Kept,
 					game =>
@@ -167,7 +167,7 @@ namespace Civilization1Remaster.Tests.Differential
 						ref ushort relation = ref game.World.Participants[humanIdx].Relations[participantIdx];
 						relation = (ushort)(met ? relation | 0x40 : relation & ~0x40);
 					},
-					game => new StartGameMenuReference(game).EliminateCivilization(participantIdx, destroyerIdx),
+					game => new NewGameSetupReference(game).EliminateCivilization(participantIdx, destroyerIdx),
 					game => game.NewGameWizard.EliminateCivilization(participantIdx, destroyerIdx),
 					Register.Kept,
 					game => participantIdx == 0 || participantIdx == humanIdx ? "kept" : !razed && towns.Length > 0 ? "has cities" :

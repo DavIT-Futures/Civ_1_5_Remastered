@@ -32,7 +32,7 @@ namespace Civilization1Remaster.Tests.Differential
 
 				return new Scenario($"RenderTextChunk({peakBreadth}, {horizLoc}, {vertLoc}, {style}), text \"{text.Replace("\n", "\\n")}\"",
 					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Libc.CopyText(0xba06, text)),
-					game => new TextBlockRendererReference(game).RenderTextChunk(peakBreadth, horizLoc, vertLoc, style),
+					game => new TextBlockPainterReference(game).RenderTextChunk(peakBreadth, horizLoc, vertLoc, style),
 					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.BlockText.RenderTextChunk(peakBreadth, horizLoc, vertLoc, style)),
 					Register.Acc | Register.Kept,
 					game => (short)game.Processor.RegAcc.Value16 > 192 ? "page full" :
@@ -50,7 +50,7 @@ namespace Civilization1Remaster.Tests.Differential
 
 				return new Scenario($"RenderMiniMap(), view from column {horizBegin}",
 					game => game.World.Participants[humanIdx].HorizBegin = horizBegin,
-					game => new CityManagementReference(game).RenderMiniMap(),
+					game => new CitiesReference(game).RenderMiniMap(),
 					game => game.CityOps.RenderMiniMap(),
 					Register.Kept,
 					game => horizBegin < 40 ? "wraps left" : horizBegin > 40 ? "wraps right" : "no wrap");
@@ -76,7 +76,7 @@ namespace Civilization1Remaster.Tests.Differential
 					$"0x67ee {technology}, king {king}, 0x67f0 {skip}",
 					game =>
 					{
-						// The pictures the audience loads before (MeetWithKing, L1e3e)
+						// The pictures the audience loads before (RulerAudience, L1e3e)
 						if (load)
 						{
 							game.Libc.CopyText(0xbb80, "govt0a.pic");
@@ -97,7 +97,7 @@ namespace Civilization1Remaster.Tests.Differential
 						game.Processor.EmitGlobalWord(0x67f8, king);
 						game.Processor.EmitGlobalWord(0x67f0, skip);
 					},
-					game => new MeetWithKingReference(game).ImportKingScenery(participantIdx),
+					game => new RulerAudienceReference(game).ImportKingScenery(participantIdx),
 					game => game.Audience.ImportKingScenery(participantIdx),
 					Register.Kept,
 					game => skip != 0 ? "skipped" : regime == 3 ? "government 3" : technology != 0 ? "m" : "a");
@@ -132,7 +132,7 @@ namespace Civilization1Remaster.Tests.Differential
 						ref ushort relation = ref game.World.Participants[participantIdx].Relations[humanIdx];
 						relation = (ushort)(contact ? relation | 2 : relation & ~2);
 					},
-					game => new AIPlayerReference(game).MayAIEnterTile(participantIdx, (ushort)horizLoc, (ushort)vertLoc),
+					game => new ComputerPlayerReference(game).MayAIEnterTile(participantIdx, (ushort)horizLoc, (ushort)vertLoc),
 					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Bot.MayAIEnterTile(participantIdx, (ushort)horizLoc, (ushort)vertLoc)),
 					Register.Acc | Register.Kept,
 					game => (short)game.Processor.RegAcc.Value16 switch { -1 => "no ocean", 0 => "the tile itself", _ => "around" });

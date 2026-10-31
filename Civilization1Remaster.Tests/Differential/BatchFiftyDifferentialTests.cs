@@ -30,7 +30,7 @@ namespace Civilization1Remaster.Tests.Differential
 				if (chance.Next(2) == 0)
 				{
 					return new Scenario($"RecoverScreenUnderCursor(), {state}", Setup,
-						game => new SystemServicesReference(game).RecoverScreenUnderCursor(),
+						game => new PlatformServicesReference(game).RecoverScreenUnderCursor(),
 						game => game.Services.RecoverScreenUnderCursor(),
 						Register.Kept, game => "recover, " + Latch(game));
 				}
@@ -39,7 +39,7 @@ namespace Civilization1Remaster.Tests.Differential
 				ushort picture = (ushort)chance.Next(0x400);
 
 				return new Scenario($"RenderCursorToScreen({horizLoc}, {vertLoc}, {picture}), {state}", Setup,
-					game => new SystemServicesReference(game).RenderCursorToScreen(horizLoc, vertLoc, picture),
+					game => new PlatformServicesReference(game).RenderCursorToScreen(horizLoc, vertLoc, picture),
 					game => game.Services.RenderCursorToScreen(horizLoc, vertLoc, picture),
 					Register.Kept, game => "render, " + Latch(game));
 			}, output, ["recover, latch cleared", "recover, latch kept", "render, latch cleared", "render, latch kept"]);

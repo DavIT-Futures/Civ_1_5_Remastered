@@ -38,7 +38,7 @@ public sealed class BatchNinetySevenDifferentialTests(ITestOutputHelper output)
 		{
 			GameEngine engine = pair.Rewritten.Engine;
 			short person = engine.World.PersonParticipantIdx;
-			IMapLayers sight = engine.MapOps.Chart;
+			IMapPlanes sight = engine.MapOps.Chart;
 			// A barbarian turn now and then: a barbarian unit on an irrigated tile next to a city of the human
 			bool barbarian = chance.Next(3) == 0;
 			int[] keys = { 0x4800, 0x4900, 0x4d00, 0x5100, 0x5000, 0x4f00, 0x4b00, 0x4700, 'c', 0x20, 0x0d, 0x31 };
@@ -66,7 +66,7 @@ public sealed class BatchNinetySevenDifferentialTests(ITestOutputHelper output)
 			var spots = towns.SelectMany(town => Enumerable.Range(1, 8).Select(direction =>
 					(Horiz: (town.Place.X + sight.DirectionHoriz(direction) + 80) % 80, Vert: town.Place.Y + sight.DirectionVert(direction))))
 				.Where(spot => spot.Vert > 0 && spot.Vert < 49 && sight.Terrain(spot.Horiz, spot.Vert) != MapRules.OceanTerrain &&
-					(sight.OwnerBits(spot.Horiz, spot.Vert) & MapLayers.UnitsPresent) == 0 && (sight.Improvements(spot.Horiz, spot.Vert) & 1) == 0)
+					(sight.OwnerBits(spot.Horiz, spot.Vert) & MapPlanes.UnitsPresent) == 0 && (sight.Improvements(spot.Horiz, spot.Vert) & 1) == 0)
 				.ToList();
 			var spot = spots.Count > 0 ? spots[chance.Next(spots.Count)] : (Horiz: -1, Vert: -1);
 			byte barbarianKind = (byte)new[] { 1, 2, 3, 6, 7, 0x1a }[chance.Next(6)];
@@ -99,11 +99,11 @@ public sealed class BatchNinetySevenDifferentialTests(ITestOutputHelper output)
 						for (int offset = 0; offset < record.Length; offset++)
 							game.Processor.EmitUInt8(0x3b01, (ushort)(unit + offset), record[offset]);
 
-						game.MapOps.Chart.AssignOwnerBits(spot.Horiz, spot.Vert, MapLayers.UnitsPresent);
+						game.MapOps.Chart.AssignOwnerBits(spot.Horiz, spot.Vert, MapPlanes.UnitsPresent);
 						game.VideoCard.AssignDot(2, spot.Horiz, spot.Vert + 100, (byte)(game.MapOps.Chart.LowImprovements(spot.Horiz, spot.Vert) | improvement), 0);
 					}
 				},
-				game => new PlayerTurnReference(game).HandlePlayerTurn(participantIdx),
+				game => new TurnControllerReference(game).HandlePlayerTurn(participantIdx),
 				game => game.TurnLogic.HandlePlayerTurn(participantIdx),
 				Register.Kept,
 				// What the moves did, from the units, the tile and the calls

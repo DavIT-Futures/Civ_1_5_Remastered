@@ -42,7 +42,7 @@ namespace Civilization1Remaster.Tests.Differential
 						relations[ownerIdx] = (ushort)((relations[ownerIdx] & ~0x40) | known);
 						game.Processor.EmitGlobalWord(0xdeba, disks);
 					},
-					game => new DiplomatActionsReference(game).ComputeInciteCost(townIdx, participantIdx),
+					game => new DiplomatMissionsReference(game).ComputeInciteCost(townIdx, participantIdx),
 					game => game.Diplomats.ComputeInciteCost(townIdx, participantIdx),
 					Register.Kept,
 					game => Calls(game, pair, "SeizeCity") == seized ? "no rival" :
@@ -85,7 +85,7 @@ namespace Civilization1Remaster.Tests.Differential
 								game.Processor.EmitGlobalByte((ushort)(0x290 + (0x13 * idx) + part), specials[(idx * 0x13) + part]);
 						}
 					},
-					game => new GameInitAndIntroReference(game).SituateSpecialTerrain(),
+					game => new WorldBuilderReference(game).SituateSpecialTerrain(),
 					game => game.WorldSetup.SituateSpecialTerrain(),
 					Register.Kept, game => "sites");
 			}, output, ["sites"]);
@@ -130,7 +130,7 @@ namespace Civilization1Remaster.Tests.Differential
 								game.Processor.EmitUInt8(0x3772, (ushort)(0x37d2 + (place * 0x2e) + idx), records[place][idx]);
 						}
 					},
-					game => new HallOfFameReference(game).DisplayHallOfFame(arg1),
+					game => new FameRecordsReference(game).DisplayHallOfFame(arg1),
 					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Legends.DisplayHallOfFame(arg1)),
 					Register.Acc | Register.Kept,
 					game => arg1 == 0xffff ? "no hint" : arg1 == 5 ? "sixth place" : game.Processor.RegAcc.Value16 != 0 ? "C pressed" : "other key");
@@ -156,7 +156,7 @@ namespace Civilization1Remaster.Tests.Differential
 						game.World.LiveRealms = realms;
 						known.CopyTo(game.World.Participants[human].Relations, 0);
 					},
-					game => new WorldMapReference(game).DisplayEpicChronicle(),
+					game => new WorldStatisticsReference(game).DisplayEpicChronicle(),
 					game => game.Atlas.DisplayEpicChronicle(),
 					Register.Kept,
 					// The measure stays in the frame of the original under the stack (local 4)

@@ -46,7 +46,7 @@ namespace Civilization1Remaster.Tests.Differential
 							game.Processor.EmitGlobalByte((ushort)(0xba06 + idx), to[idx]);
 						}
 					},
-					game => { if (timer) new SystemServicesReference(game).ColorsFadeStepInterrupt(); else new SystemServicesReference(game).ColorsFadeStep(); },
+					game => { if (timer) new PlatformServicesReference(game).ColorsFadeStepInterrupt(); else new PlatformServicesReference(game).ColorsFadeStep(); },
 					game => { if (timer) game.Services.ColorsFadeStepInterrupt(); else game.Services.ColorsFadeStep(); },
 					Register.Kept | Register.Acc | Register.Base | Register.Count | Register.Data,
 					game => ((first + count) & 0xff) * 3 + (3 * count) > 0x300 ? "wraps" : "inside",

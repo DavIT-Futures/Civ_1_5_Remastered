@@ -41,7 +41,7 @@ public sealed class BatchHundredDifferentialTests(ITestOutputHelper output)
 		game.MapOps.DiscardUnitFromTile(participantIdx, (short)troopIdx, UnitByte(game, participantIdx, troopIdx, UnitMemory.Horiz), UnitByte(game, participantIdx, troopIdx, UnitMemory.Vert));
 		game.Processor.EmitUInt8(0x3b01, (ushort)(unit + UnitMemory.Horiz), (byte)horizLoc);
 		game.Processor.EmitUInt8(0x3b01, (ushort)(unit + UnitMemory.Vert), (byte)vertLoc);
-		game.MapOps.Chart.AssignOwnerBits(horizLoc, vertLoc, MapLayers.UnitsPresent | participantIdx);
+		game.MapOps.Chart.AssignOwnerBits(horizLoc, vertLoc, MapPlanes.UnitsPresent | participantIdx);
 	}
 
 	private void CheckTiles(int bay, HashSet<string> ways)
@@ -66,7 +66,7 @@ public sealed class BatchHundredDifferentialTests(ITestOutputHelper output)
 				$"HandlePlayerTurn({person}), mode {mode}, fighter {fighter}, answers {string.Join(" ", answers.Select(key => key.ToString("x")))}",
 				game =>
 				{
-					IMapLayers chart = game.MapOps.Chart;
+					IMapPlanes chart = game.MapOps.Chart;
 					inputs.Clear();
 					int mover = Enumerable.Range(0, 128).FirstOrDefault(troop => UnitByte(game, person, troop, UnitMemory.Kind) != 0xff &&
 						(UnitByte(game, person, troop, UnitMemory.Status) & 9) == 0, -1);
@@ -76,12 +76,12 @@ public sealed class BatchHundredDifferentialTests(ITestOutputHelper output)
 					// A place: the mover on land (or on the sea for 4 / 5), the target next to it on the sea (0 / 1) or on land
 					var places = Enumerable.Range(0, 80 * 48).Select(at => (Horiz: at % 80, Vert: 1 + at / 80))
 						.Where(tile => (chart.Terrain(tile.Horiz, tile.Vert) == MapRules.OceanTerrain) == onSea &&
-							(chart.OwnerBits(tile.Horiz, tile.Vert) & MapLayers.UnitsPresent) == 0 && (chart.Improvements(tile.Horiz, tile.Vert) & 1) == 0)
+							(chart.OwnerBits(tile.Horiz, tile.Vert) & MapPlanes.UnitsPresent) == 0 && (chart.Improvements(tile.Horiz, tile.Vert) & 1) == 0)
 						.SelectMany(tile => Enumerable.Range(1, 8).Select(direction => (Tile: tile, Direction: direction,
 							Target: (Horiz: (tile.Horiz + chart.DirectionHoriz(direction) + 80) % 80, Vert: tile.Vert + chart.DirectionVert(direction)))))
 						.Where(spot => spot.Target.Vert > 0 && spot.Target.Vert < 49 &&
 							(chart.Terrain(spot.Target.Horiz, spot.Target.Vert) == MapRules.OceanTerrain) == wantSea &&
-							(chart.OwnerBits(spot.Target.Horiz, spot.Target.Vert) & MapLayers.UnitsPresent) == 0 && (chart.Improvements(spot.Target.Horiz, spot.Target.Vert) & 1) == 0)
+							(chart.OwnerBits(spot.Target.Horiz, spot.Target.Vert) & MapPlanes.UnitsPresent) == 0 && (chart.Improvements(spot.Target.Horiz, spot.Target.Vert) & 1) == 0)
 						.Take(400)
 						.ToList();
 
@@ -138,7 +138,7 @@ public sealed class BatchHundredDifferentialTests(ITestOutputHelper output)
 					inputs.AddRange(answers.Select(key => new HumanTurnScript.Input(key)));
 					HumanTurnScript.Install(game, inputs);
 				},
-				game => new PlayerTurnReference(game).HandlePlayerTurn(person),
+				game => new TurnControllerReference(game).HandlePlayerTurn(person),
 				game => game.TurnLogic.HandlePlayerTurn(person),
 				Register.Kept,
 				// What the move met, from the calls and the mover

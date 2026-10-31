@@ -86,7 +86,7 @@ public sealed class BatchSeventyEightDifferentialTests(ITestOutputHelper output)
 					foreach (var town in game.World.Towns.Where(town => town.ConditionMarker != 0xff))
 						town.TrueExtent = (sbyte)Math.Min(20, town.TrueExtent + growth);
 				},
-				game => new AIPlayerReference(game).ShiftAIUnit(participantIdx, troopIdx),
+				game => new ComputerPlayerReference(game).ShiftAIUnit(participantIdx, troopIdx),
 				game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Bot.ShiftAIUnit(participantIdx, troopIdx)),
 				Register.Kept | Register.Acc,
 				// What the weapon did: placed next to a target (the answer is the direction ^ 4), no target, or a target but too few weapons

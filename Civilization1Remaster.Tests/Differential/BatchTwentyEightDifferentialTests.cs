@@ -34,7 +34,7 @@ namespace Civilization1Remaster.Tests.Differential
 
 				return new Scenario($"DisplayTopCities(), wonders {string.Join(" ", wonders)}",
 					game => wonders.CopyTo(game.World.MarvelTownIdx, 0),
-					game => new HallOfFameReference(game).DisplayTopCities(),
+					game => new FameRecordsReference(game).DisplayTopCities(),
 					game => game.Legends.DisplayTopCities(),
 					Register.Kept,
 					game => wonders.Skip(1).Any(townIdx => townIdx != -1) ? "wonders" : "no wonders");
@@ -63,7 +63,7 @@ namespace Civilization1Remaster.Tests.Differential
 						science.CopyTo(game.World.Participants[participantIdx].FoundScienceMarkers, 0);
 						wonders.CopyTo(game.World.MarvelTownIdx, 0);
 					},
-					game => new CityViewReference(game).RenderCityBuildings(arg1, participantIdx, townIdx),
+					game => new CityPanoramaReference(game).RenderCityBuildings(arg1, participantIdx, townIdx),
 					game => game.CityScene.RenderCityBuildings(arg1, participantIdx, townIdx),
 					Register.Kept,
 					game => Enumerable.Range(1, 21).Any(idx => wonders[idx] == townIdx && ((1 << idx) & 0x808a) != 0) ? "wonder in the mask" :
@@ -91,7 +91,7 @@ namespace Civilization1Remaster.Tests.Differential
 						for (int idx = 0; idx < history.Length; idx++)
 							game.Processor.EmitUInt8(0x3772, (ushort)idx, history[idx]);
 					},
-					game => new WorldMapReference(game).DisplayCivilizationGraph(),
+					game => new WorldStatisticsReference(game).DisplayCivilizationGraph(),
 					game => game.Atlas.DisplayCivilizationGraph(),
 					Register.Kept,
 					game => rounds > 600 ? "long game" : rounds >= 4 ? "game" : "start",
@@ -121,7 +121,7 @@ namespace Civilization1Remaster.Tests.Differential
 							units[participantIdx + 8].CopyTo(game.World.Participants[participantIdx].TroopsInsideMaking, 0);
 						}
 					},
-					game => new CivilizationInfoReference(game).DisplayCivilizationScoreList(),
+					game => new RivalOverviewReference(game).DisplayCivilizationScoreList(),
 					game => game.RealmInfo.DisplayCivilizationScoreList(),
 					Register.Kept,
 					game => shown != 0 ? "all columns" : "human column");

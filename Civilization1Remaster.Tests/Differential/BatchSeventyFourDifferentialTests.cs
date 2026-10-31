@@ -162,7 +162,7 @@ public sealed class BatchSeventyFourDifferentialTests(ITestOutputHelper output)
 							game.Processor.EmitUInt8(game.Processor.SegData.Value16, (ushort)(UnitMemory.Address(participantIdx, troopIdx) + UnitMemory.Kind), 0xff);
 					}
 				},
-				game => new AIPlayerReference(game).OperateAITurn(participantIdx),
+				game => new ComputerPlayerReference(game).OperateAITurn(participantIdx),
 				game => game.Bot.OperateAITurn(participantIdx),
 				Register.Kept,
 				// What the survey did: nothing for the barbarians or a marked player beyond the counting, else the elimination of

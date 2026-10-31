@@ -47,7 +47,7 @@ namespace Civilization1Remaster.Tests.Differential
 						game.Processor.EmitGlobalWord(0xdc48, 0);
 						game.Processor.EmitGlobalWord(0xdf60, 0);
 					},
-					game => new TurnEventsReference(game).HandleGameEnd(),
+					game => new WorldEventsReference(game).HandleGameEnd(),
 					game => game.TurnHooks.HandleGameEnd(),
 					Register.Kept,
 					game => game.World.RoundTally == round ? "turn not finished" :

@@ -9,7 +9,7 @@ using Xunit;
 namespace Civilization1Remaster.Tests
 {
 	/// <summary>
-	/// The numbers of the continents and seas of a new map (GameInitAndIntro.RankLandOrSea) for a label past the 63 ranked
+	/// The numbers of the continents and seas of a new map (WorldBuilder.RankLandOrSea) for a label past the 63 ranked
 	/// ones: off (the game) it gets 15 like the other unranked labels; on (ClassicLabelNumbers, the tests) it takes the word
 	/// past the table of numbers, as the translated code did it (here a word of the frame of ProduceTerrain, 0)
 	/// </summary>

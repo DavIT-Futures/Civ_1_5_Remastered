@@ -95,7 +95,7 @@ public sealed class BatchNinetyTwoDifferentialTests(ITestOutputHelper output)
 					int scriptIdx = 0;
 					int typed = 0;
 					bool withhold = false;
-					IMapLayers chart = game.MapOps.Chart;
+					IMapPlanes chart = game.MapOps.Chart;
 
 					game.Processor.InputStarved = waiting =>
 					{
@@ -173,7 +173,7 @@ public sealed class BatchNinetyTwoDifferentialTests(ITestOutputHelper output)
 							game.VideoCard.Tokens.Enqueue(key);
 					};
 				},
-				game => new PlayerTurnReference(game).HandlePlayerTurn(person),
+				game => new TurnControllerReference(game).HandlePlayerTurn(person),
 				game => game.TurnLogic.HandlePlayerTurn(person),
 				Register.Kept,
 				// What the turn met, from the calls

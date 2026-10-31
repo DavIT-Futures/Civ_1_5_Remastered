@@ -36,7 +36,7 @@ namespace Civilization1Remaster.Tests.Differential
 						game.Processor.EmitGlobalWord(0xd4cc, viewLeft);
 						game.Processor.EmitGlobalWord(0xd75e, viewTop);
 					},
-					game => new DiplomatActionsReference(game).RenderExplosion((short)horizLoc, (short)vertLoc),
+					game => new DiplomatMissionsReference(game).RenderExplosion((short)horizLoc, (short)vertLoc),
 					game => game.Diplomats.RenderExplosion((short)horizLoc, (short)vertLoc),
 					Register.Kept,
 					game =>
@@ -68,7 +68,7 @@ namespace Civilization1Remaster.Tests.Differential
 					game => game.Processor.EmitGlobalWord(0xe168, last),
 					game =>
 					{
-						new GameLoadAndSaveReference(game).DisplayStoreGameDialog(slot);
+						new SaveGameStoreReference(game).DisplayStoreGameDialog(slot);
 						ShowSaves(game);
 					},
 					game =>
@@ -177,7 +177,7 @@ namespace Civilization1Remaster.Tests.Differential
 						for (int idx = 0; idx < towns.Length; idx++)
 							game.World.Towns[towns[idx]].TrueExtent = sizes[idx];
 					},
-					game => new ScienceAndAdvisorsReference(game).HandleAllCities(participantIdx),
+					game => new ResearchOfficeReference(game).HandleAllCities(participantIdx),
 					game => game.Advisors.HandleAllCities(participantIdx),
 					Register.Kept,
 					game => participantIdx == game.World.PersonParticipantIdx ? (Calls(game, pair, "RepaintMainScreen") > shown ? "human, city shown" : "human") :

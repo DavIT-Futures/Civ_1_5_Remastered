@@ -21,7 +21,7 @@ namespace Civilization1Remaster.Tests.Differential
 				int terrain = pair.Original.Engine.MapOps.Chart.Terrain(horizLoc, vertLoc);
 
 				return new Scenario($"VerifyCoastalTile({horizLoc}, {vertLoc})", game => { },
-					game => new PlayerTurnReference(game).VerifyCoastalTile(horizLoc, vertLoc),
+					game => new TurnControllerReference(game).VerifyCoastalTile(horizLoc, vertLoc),
 					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.TurnLogic.VerifyCoastalTile(horizLoc, vertLoc)),
 					Register.Acc | Register.Kept,
 					game => terrain == 0xb ? "terrain 11" : game.Processor.RegAcc.Value16 != 0 ? "coastal" : "inland");
@@ -67,7 +67,7 @@ namespace Civilization1Remaster.Tests.Differential
 						memory.AssignFollowing(participantIdx, troopIdx, (byte)partner);
 						memory.AssignFollowing(participantIdx, partner, (byte)troopIdx);
 					},
-					game => new MapManagementReference(game).RepaintUnitTile(participantIdx, troopIdx),
+					game => new MapServiceReference(game).RepaintUnitTile(participantIdx, troopIdx),
 					game => game.MapOps.RepaintUnitTile(participantIdx, troopIdx),
 					Register.Kept, game => kind switch { 1 => "ship drawn", 2 => "itself at sea", _ => "as it is" });
 			}, output, ["ship drawn", "itself at sea", "as it is"]);
@@ -82,7 +82,7 @@ namespace Civilization1Remaster.Tests.Differential
 
 				return new Scenario($"DisplayRevolutionScreen(), government {regime}",
 					game => game.World.Participants[game.World.PersonParticipantIdx].RegimeKind = regime,
-					game => new StartGameMenuReference(game).DisplayRevolutionScreen(),
+					game => new NewGameSetupReference(game).DisplayRevolutionScreen(),
 					game => game.NewGameWizard.DisplayRevolutionScreen(),
 					Register.Kept, game => regime == 0 ? "government 0" : "shown");
 			}, output, ["government 0", "shown"]);
@@ -108,7 +108,7 @@ namespace Civilization1Remaster.Tests.Differential
 						if (named >= 0)
 							game.World.Towns[named].LabelIdx = 0;
 					},
-					game => new NewCityScreenReference(game).DisplayLabelInputBox(0x53ce),
+					game => new CityNamingScreenReference(game).DisplayLabelInputBox(0x53ce),
 					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.CityNaming.DisplayLabelInputBox(0x53ce)),
 					Register.Acc | Register.Kept, game => game.Processor.RegAcc.Value16 == 0xffff ? "no city" : "city found");
 			}, output, ["no city", "city found"], keys);

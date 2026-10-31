@@ -39,7 +39,7 @@ the stack and frame pointers back (`DifferentialPair.Invoke`), since the version
 
 1. Generate its reference copy from the last commit with the original code (one file per function, the calls of other
    methods of its class go to the current code), and add the class to `Reference/ReferenceClasses.cs` when it is new:
-   `python Civilization1Remaster.Tests/Differential/Reference/extract_reference.py <commit> Civilization1Remaster.Core/Game/UnitManagement.cs UnitOps ShiftUnit`
+   `python Civilization1Remaster.Tests/Differential/Reference/extract_reference.py <commit> Civilization1Remaster.Core/Game/UnitRoster.cs UnitOps ShiftUnit`
 2. Write the scenarios with `DifferentialRun.Check` (see `UnitDifferentialTests.cs`): random inputs with a fixed seed (`new Random(bay)`) plus the edge cases, set up identically in both
    games through `Prepare`, and an assertion that every branch was met.
 3. Check that the test catches a mistake: change the rewritten function a little (for example a constant), the test must

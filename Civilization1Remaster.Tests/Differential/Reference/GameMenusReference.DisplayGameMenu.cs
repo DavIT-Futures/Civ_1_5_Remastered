@@ -79,7 +79,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			if (this.owner.SaveLoad.FetchBay != 0xffff)
 			{
-				this.processor.EmitGlobalWord(0xdc48, Civilization1Remaster.Engine.GameLoadAndSave.FetchSessionAsk);
+				this.processor.EmitGlobalWord(0xdc48, Civilization1Remaster.Engine.SaveGameStore.FetchSessionAsk);
 				this.processor.EmitGlobalWord(0xd4ca, 0x1000);
 			}
 			goto L01d4;

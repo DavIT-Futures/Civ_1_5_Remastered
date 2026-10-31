@@ -33,7 +33,7 @@ namespace Civilization1Remaster.Tests.Differential
 								game.World.Towns[townIdx].ConditionMarker = 0xff;
 						}
 					},
-					game => new CivilizationSchismReference(game).ObtainDistanceToCapital(participantIdx),
+					game => new CivilWarReference(game).ObtainDistanceToCapital(participantIdx),
 					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Secession.ObtainDistanceToCapital(participantIdx)),
 					Register.Acc | Register.Kept, game => game.Processor.RegAcc.Value16 == 0xffff ? "no city" : tie ? "tie" : "central city");
 			}, output, ["no city", "tie", "central city"]);
@@ -71,7 +71,7 @@ namespace Civilization1Remaster.Tests.Differential
 
 						game.Processor.EmitGlobalWord(0x687a, frame);
 					},
-					game => new SpaceshipScreenReference(game).RenderStarField(),
+					game => new SpaceshipBayReference(game).RenderStarField(),
 					game => game.RocketScreen.RenderStarField(),
 					Register.Kept, game => (frame & 1) != 0 ? "odd frame" : wraps ? "even frame, stars start again" : "even frame");
 			}, output, ["odd frame", "even frame, stars start again", "even frame"]);
@@ -81,7 +81,7 @@ namespace Civilization1Remaster.Tests.Differential
 		public void ProduceCloudLayerMatchesOriginalCode()
 		{
 			Check(3, 20, (chance, pair) => new Scenario("ProduceCloudLayer()", game => { },
-				game => new GameInitAndIntroReference(game).ProduceCloudLayer(),
+				game => new WorldBuilderReference(game).ProduceCloudLayer(),
 				game => game.WorldSetup.ProduceCloudLayer(),
 				Register.Kept, game => "clouds"), output, ["clouds"]);
 		}
@@ -95,7 +95,7 @@ namespace Civilization1Remaster.Tests.Differential
 
 				return new Scenario($"DisplayConquerorScreen(), colour cycles {cycling}",
 					game => game.Processor.EmitGlobalWord(0xd762, cycling),
-					game => new GameReplayReference(game).DisplayConquerorScreen(),
+					game => new ReplayViewerReference(game).DisplayConquerorScreen(),
 					game => game.Replayer.DisplayConquerorScreen(),
 					Register.Kept, game => cycling != 0 ? "with colour cycles" : "without colour cycles",
 					[ScreenAndMapDifferentialTests.ReplayCities, (0x3772, 0x37c4, 0xe)]);

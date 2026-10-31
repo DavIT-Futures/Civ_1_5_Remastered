@@ -99,7 +99,7 @@ public sealed class BatchNinetyDifferentialTests(ITestOutputHelper output)
 					if (wonderTown >= 0)
 						game.World.MarvelTownIdx[wonder] = wonderTown;
 				},
-				game => new PlayerTurnReference(game).HandlePlayerTurn(participantIdx),
+				game => new TurnControllerReference(game).HandlePlayerTurn(participantIdx),
 				game => game.TurnLogic.HandlePlayerTurn(participantIdx),
 				Register.Kept,
 				// What the turn met, from the calls and the units after it

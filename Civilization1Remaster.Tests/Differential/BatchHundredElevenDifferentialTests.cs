@@ -37,7 +37,7 @@ public sealed class BatchHundredElevenDifferentialTests(ITestOutputHelper output
 		game.MapOps.DiscardUnitFromTile(participantIdx, (short)troopIdx, UnitByte(game, participantIdx, troopIdx, UnitMemory.Horiz), UnitByte(game, participantIdx, troopIdx, UnitMemory.Vert));
 		game.Processor.EmitUInt8(0x3b01, (ushort)(unit + UnitMemory.Horiz), (byte)horizLoc);
 		game.Processor.EmitUInt8(0x3b01, (ushort)(unit + UnitMemory.Vert), (byte)vertLoc);
-		game.MapOps.Chart.AssignOwnerBits(horizLoc, vertLoc, MapLayers.UnitsPresent | participantIdx);
+		game.MapOps.Chart.AssignOwnerBits(horizLoc, vertLoc, MapPlanes.UnitsPresent | participantIdx);
 	}
 
 	private void CheckEndOfMove(int bay, HashSet<string> ways)
@@ -61,7 +61,7 @@ public sealed class BatchHundredElevenDifferentialTests(ITestOutputHelper output
 				$"HandlePlayerTurn({person}), place {place}, kind {kind}, fuel {fuel}, steps {steps}",
 				game =>
 				{
-					IMapLayers chart = game.MapOps.Chart;
+					IMapPlanes chart = game.MapOps.Chart;
 					moverIdx = -1;
 					game.Processor.EmitUInt16(0x3b01, 0xdc48, 0);
 					// (0xdf60 = 1: the turn gives no new moves, so the waiting unit keeps its steps)
@@ -74,7 +74,7 @@ public sealed class BatchHundredElevenDifferentialTests(ITestOutputHelper output
 						(UnitByte(game, person, troop, UnitMemory.Status) & 9) == 0).ToList();
 					bool Around(int horizLoc, int vertLoc, Func<int, bool> terrain) => Enumerable.Range(1, 8)
 						.Any(direction => terrain(chart.Terrain((horizLoc + chart.DirectionHoriz(direction) + 80) % 80, vertLoc + chart.DirectionVert(direction))));
-					bool Free(int horizLoc, int vertLoc) => (chart.OwnerBits(horizLoc, vertLoc) & MapLayers.UnitsPresent) == 0;
+					bool Free(int horizLoc, int vertLoc) => (chart.OwnerBits(horizLoc, vertLoc) & MapPlanes.UnitsPresent) == 0;
 					var tiles = Enumerable.Range(0, 80 * 46).Select(at => (Horiz: at % 80, Vert: 2 + at / 80));
 					var spots = place switch
 					{
@@ -125,7 +125,7 @@ public sealed class BatchHundredElevenDifferentialTests(ITestOutputHelper output
 					game.Processor.EmitUInt16(0x3b01, 0xd75e, (ushort)Math.Max(0, spot.Item2 - 5));
 					HumanTurnScript.Install(game, new[] { 0x31, 0x1b, place == 5 ? 0x77 : 0x20 }.Select(key => new HumanTurnScript.Input(key)));
 				},
-				game => new PlayerTurnReference(game).HandlePlayerTurn(person),
+				game => new TurnControllerReference(game).HandlePlayerTurn(person),
 				game => game.TurnLogic.HandlePlayerTurn(person),
 				Register.Kept,
 				// What became of the mover, from its slot

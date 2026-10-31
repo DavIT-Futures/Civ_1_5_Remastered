@@ -60,7 +60,7 @@ namespace Civilization1Remaster.Tests.Differential
 						game.Processor.EmitGlobalWord(0x67f0, skip);
 						game.Processor.EmitGlobalWord(0x67f2, (ushort)game.World.PersonParticipantIdx);
 					},
-					game => new MeetWithKingReference(game).ChoreographKingSpeaking(),
+					game => new RulerAudienceReference(game).ChoreographKingSpeaking(),
 					game => game.Audience.ChoreographKingSpeaking(),
 					Register.Acc | Register.Kept,
 					game => speaking != 0 && step == 0 ? "speaking" : next > 0 ? "next step" : next < 0 ? "back" : $"gesture ends, mood {Math.Min((int)mood, 3)}");
@@ -91,7 +91,7 @@ namespace Civilization1Remaster.Tests.Differential
 						for (int idx = 0; idx < wall.Length; idx++)
 							game.Processor.EmitUInt8(0x3772, (ushort)(0x37c4 + idx), wall[idx]);
 					},
-					game => new GameReplayReference(game).DisplayCivilizationDestroyedScreen(participantIdx, season),
+					game => new ReplayViewerReference(game).DisplayCivilizationDestroyedScreen(participantIdx, season),
 					game => game.Replayer.DisplayCivilizationDestroyedScreen(participantIdx, season),
 					Register.Kept,
 					game => $"{(cycling != 0 ? "VGA" : "EGA")}, {(fallen >= 7 ? "second row" : "first row")}",
@@ -119,7 +119,7 @@ namespace Civilization1Remaster.Tests.Differential
 						for (int idx = 0; idx < dots.Length; idx++)
 							game.VideoCard.AssignDot(displayIdx, idx % 82, idx / 82, dots[idx], 0);
 					},
-					game => new GameInitAndIntroReference(game).LabelLandmasses(),
+					game => new WorldBuilderReference(game).LabelLandmasses(),
 					game => game.WorldSetup.LabelLandmasses(),
 					Register.Kept,
 					game => Enumerable.Range(0, 0x104).Any(idx => game.Processor.PullGlobalByte((ushort)(0xdb44 + idx)) != 0) ? "linked" : "no links");
@@ -161,7 +161,7 @@ namespace Civilization1Remaster.Tests.Differential
 
 						game.Processor.EmitGlobalWord((ushort)(sp - 2 - 2), leftover);
 					},
-					game => new TurnEventsReference(game).DisplayTravellersReport(),
+					game => new WorldEventsReference(game).DisplayTravellersReport(),
 					game => game.TurnHooks.DisplayTravellersReport(),
 					Register.Kept,
 					game =>

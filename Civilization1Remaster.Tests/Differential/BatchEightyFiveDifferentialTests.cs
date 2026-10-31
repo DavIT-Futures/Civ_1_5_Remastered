@@ -45,10 +45,10 @@ public sealed class BatchEightyFiveDifferentialTests(ITestOutputHelper output)
 	/// <summary>A lone land unit of another computer player moves to the free land tile</summary>
 	private static void PlaceStranger(GameEngine game, short participantIdx, int horizLoc, int vertLoc, int pick)
 	{
-		IMapLayers chart = game.MapOps.Chart;
+		IMapPlanes chart = game.MapOps.Chart;
 		short person = game.World.PersonParticipantIdx;
 
-		if (vertLoc <= 0 || vertLoc >= 49 || chart.Terrain(horizLoc, vertLoc) == MapRules.OceanTerrain || (chart.OwnerBits(horizLoc, vertLoc) & MapLayers.UnitsPresent) != 0)
+		if (vertLoc <= 0 || vertLoc >= 49 || chart.Terrain(horizLoc, vertLoc) == MapRules.OceanTerrain || (chart.OwnerBits(horizLoc, vertLoc) & MapPlanes.UnitsPresent) != 0)
 			return;
 
 		var lone = Enumerable.Range(1, 7).Where(player => player != participantIdx && player != person)
@@ -64,7 +64,7 @@ public sealed class BatchEightyFiveDifferentialTests(ITestOutputHelper output)
 		var (player, troop) = lone[pick % lone.Count];
 		game.Processor.EmitUInt8(0x3b01, (ushort)(UnitMemory.Address(player, troop) + UnitMemory.Horiz), (byte)horizLoc);
 		game.Processor.EmitUInt8(0x3b01, (ushort)(UnitMemory.Address(player, troop) + UnitMemory.Vert), (byte)vertLoc);
-		chart.AssignOwnerBits(horizLoc, vertLoc, MapLayers.UnitsPresent | player);
+		chart.AssignOwnerBits(horizLoc, vertLoc, MapPlanes.UnitsPresent | player);
 	}
 
 	private void CheckSettlers(int bay, HashSet<string> ways)
@@ -123,7 +123,7 @@ public sealed class BatchEightyFiveDifferentialTests(ITestOutputHelper output)
 				game =>
 				{
 					game.Processor.EmitUInt16(0x3b01, (ushort)(frame - 0xc), terrainLeft);
-					IMapLayers chart = game.MapOps.Chart;
+					IMapPlanes chart = game.MapOps.Chart;
 					ushort unit = UnitMemory.Address(participantIdx, troopIdx);
 
 					if (town != null)
@@ -132,11 +132,11 @@ public sealed class BatchEightyFiveDifferentialTests(ITestOutputHelper output)
 						int vertLoc = town.Place.Y + offsetVert;
 
 						if (vertLoc > 0 && vertLoc < 49 && chart.Terrain(horizLoc, vertLoc) != MapRules.OceanTerrain &&
-							(chart.OwnerBits(horizLoc, vertLoc) & MapLayers.UnitsPresent) == 0)
+							(chart.OwnerBits(horizLoc, vertLoc) & MapPlanes.UnitsPresent) == 0)
 						{
 							game.Processor.EmitUInt8(0x3b01, (ushort)(unit + UnitMemory.Horiz), (byte)horizLoc);
 							game.Processor.EmitUInt8(0x3b01, (ushort)(unit + UnitMemory.Vert), (byte)vertLoc);
-							chart.AssignOwnerBits(horizLoc, vertLoc, MapLayers.UnitsPresent | participantIdx);
+							chart.AssignOwnerBits(horizLoc, vertLoc, MapPlanes.UnitsPresent | participantIdx);
 						}
 					}
 
@@ -195,7 +195,7 @@ public sealed class BatchEightyFiveDifferentialTests(ITestOutputHelper output)
 						game.World.Landmasses[continentIdx].ConstructionSpotTally = sites[continentIdx];
 					}
 				},
-				game => new AIPlayerReference(game).ShiftAIUnit(participantIdx, troopIdx),
+				game => new ComputerPlayerReference(game).ShiftAIUnit(participantIdx, troopIdx),
 				game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Bot.ShiftAIUnit(participantIdx, troopIdx)),
 				Register.Kept | Register.Acc,
 				// What the unit did: by the order it gives, or a new destination

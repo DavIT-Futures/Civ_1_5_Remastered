@@ -35,7 +35,7 @@ namespace Civilization1Remaster.Tests.Differential
 						town.TrueExtent = size;
 						game.World.ChartSight[town.Place.X, town.Place.Y] = (sbyte)((game.World.ChartSight[town.Place.X, town.Place.Y] & ~(1 << person)) | (seen ? 1 << person : 0));
 					},
-					game => new CityFoundingAndScoreReference(game).HandleCityDisasters(townIdx),
+					game => new SettlementAndScoringReference(game).HandleCityDisasters(townIdx),
 					game => game.Founding.HandleCityDisasters(townIdx),
 					Register.Kept,
 					game => Calls(game, pair, "HandleCity") > before[1] ? (Calls(game, pair, "ObtainCityLabel") > before[3] + 1 ? "demand" : "revolt") : Calls(game, pair, "DisplayTextDialog") > before[0] ? "disaster" :
@@ -66,7 +66,7 @@ namespace Civilization1Remaster.Tests.Differential
 							game.Processor.EmitGlobalByte((ushort)(troop + 2), (byte)places[participantIdx].Item2);
 						}
 					},
-					game => new StartGameMenuReference(game).CharacterizeStartLocation(),
+					game => new NewGameSetupReference(game).CharacterizeStartLocation(),
 					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.NewGameWizard.CharacterizeStartLocation()),
 					Register.Acc | Register.Kept,
 					game => Calls(game, pair, "UncoverTechnology") > learned ? "compensated" : "even");

@@ -59,7 +59,7 @@ namespace Civilization1Remaster.Tests.Differential
 						for (int idx = 0; idx < layout.Length; idx++)
 							game.Processor.EmitUInt8(0x3772, (ushort)(0x16e0 + (0xb4 * participantIdx) + idx), layout[idx]);
 					},
-					game => new SpaceshipScreenReference(game).RenderSpaceship(participantIdx, arg2, arg3),
+					game => new SpaceshipBayReference(game).RenderSpaceship(participantIdx, arg2, arg3),
 					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.RocketScreen.RenderSpaceship(participantIdx, arg2, arg3)),
 					Register.Kept | Register.Acc,
 					game => Calls(game, pair, "FireSpaceship") > launches ? "launched now" :

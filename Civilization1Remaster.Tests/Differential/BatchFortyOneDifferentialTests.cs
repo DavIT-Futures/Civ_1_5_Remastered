@@ -40,7 +40,7 @@ namespace Civilization1Remaster.Tests.Differential
 					},
 					game =>
 					{
-						new MeetWithKingReference(game).DisplayKingScreen(participantIdx);
+						new RulerAudienceReference(game).DisplayKingScreen(participantIdx);
 						ShowKingPictures(game);
 					},
 					game =>
@@ -101,7 +101,7 @@ namespace Civilization1Remaster.Tests.Differential
 						if (pole)
 							game.World.ChartSight[column, poleRow] |= (sbyte)(1 << person);
 					},
-					game => new WorldMapReference(game).DisplayWorldMap(marker),
+					game => new WorldStatisticsReference(game).DisplayWorldMap(marker),
 					game => game.Atlas.DisplayWorldMap(marker),
 					Register.Kept,
 					game => $"{(cheat != 0 ? "everything" : "seen")}, marker {marker}");
@@ -148,7 +148,7 @@ namespace Civilization1Remaster.Tests.Differential
 								game.World.MarvelTownIdx[wonderIdx] = -1;
 						}
 					},
-					game => new TurnEventsReference(game).HandleEndOfTurnEvents(),
+					game => new WorldEventsReference(game).HandleEndOfTurnEvents(),
 					game => game.TurnHooks.HandleEndOfTurnEvents(),
 					Register.Kept,
 					game => $"{(Calls(game, pair, "EnactGlobalWarming") > warmed ? "global warming" : Calls(game, pair, "DisplayNewspaper") > printed ? "warming feared" : "pollution")}, " +
@@ -205,7 +205,7 @@ namespace Civilization1Remaster.Tests.Differential
 
 						game.World.MarvelTownIdx[5] = library;
 					},
-					game => new ScienceAndAdvisorsReference(game).EarnTechnology(participantIdx, scienceIdx, source),
+					game => new ResearchOfficeReference(game).EarnTechnology(participantIdx, scienceIdx, source),
 					game => game.Advisors.EarnTechnology(participantIdx, scienceIdx, source),
 					Register.Kept,
 					game => known ? "known" : round == 0 ? "turn 0" :

@@ -38,7 +38,7 @@ namespace Civilization1Remaster.Tests.Differential
 							game.Processor.EmitGlobalWord((ushort)(0xb222 + (idx << 1)), styles[idx]);
 						}
 					},
-					game => new TurnEventsReference(game).RenderPalace(participantIdx, castleTier, horizLoc, vertLoc),
+					game => new WorldEventsReference(game).RenderPalace(participantIdx, castleTier, horizLoc, vertLoc),
 					game => game.TurnHooks.RenderPalace(participantIdx, castleTier, horizLoc, vertLoc),
 					Register.Kept,
 					game => towns == 0 ? "no cities" : participantIdx == human ? "human" : castleTier > 20 ? "AI, big" : "AI");
@@ -63,7 +63,7 @@ namespace Civilization1Remaster.Tests.Differential
 						ushort[] science = game.World.Participants[participantIdx].FoundScienceMarkers;
 						science[0] = (ushort)((science[0] & ~0x100) | (chart ? 0x100 : 0));
 					},
-					game => new MapManagementReference(game).FocusMapView(participantIdx, horizLoc, vertLoc),
+					game => new MapServiceReference(game).FocusMapView(participantIdx, horizLoc, vertLoc),
 					game => game.MapOps.FocusMapView(participantIdx, horizLoc, vertLoc),
 					Register.Kept,
 					game => all != 0 ? "all shown" : horizLoc < 0x20 || horizLoc > 0x20 ? (chart ? "wrapped, from the top" : "wrapped") : "not wrapped");
@@ -120,7 +120,7 @@ namespace Civilization1Remaster.Tests.Differential
 						participant2.RegimeKind = regimes[1];
 						game.World.DiagMarkers = (short)((game.World.DiagMarkers & ~1) | diagnostics);
 					},
-					game => new GovernmentAndDiplomacyReference(game).BargainPeaceTreaty(participantIdx1, participantIdx2, 40, 20),
+					game => new ForeignAffairsReference(game).BargainPeaceTreaty(participantIdx1, participantIdx2, 40, 20),
 					game => game.Politics.BargainPeaceTreaty(participantIdx1, participantIdx2, 40, 20),
 					Register.Kept,
 					game => participantIdx1 == 0 ? "barbarians" : Calls(game, pair, "LaunchAudience") > calls[0] ? "audience" :
@@ -155,7 +155,7 @@ namespace Civilization1Remaster.Tests.Differential
 							participant.Landmasses[idx].Approach = continents[(idx * 2) + 1];
 						}
 					},
-					game => new CivilizationInfoReference(game).DisplayCivilizationOverview(participantIdx),
+					game => new RivalOverviewReference(game).DisplayCivilizationOverview(participantIdx),
 					game => game.RealmInfo.DisplayCivilizationOverview(participantIdx),
 					Register.Kept,
 					game => knownTechnologies > 50 ? "screen full" : "all technologies");

@@ -39,13 +39,13 @@ namespace Civilization1Remaster.Tests.Differential
 				if (chance.Next(2) == 0)
 				{
 					return new Scenario($"StoreHallOfFame(), file missing {missing}", Setup,
-						game => new HallOfFameReference(game).StoreHallOfFame(),
+						game => new FameRecordsReference(game).StoreHallOfFame(),
 						game => game.Legends.StoreHallOfFame(),
 						Register.Kept, game => "store", hallOfFame);
 				}
 
 				return new Scenario($"ImportHallOfFame(), file missing {missing}", Setup,
-					game => new HallOfFameReference(game).ImportHallOfFame(),
+					game => new FameRecordsReference(game).ImportHallOfFame(),
 					game => game.Legends.ImportHallOfFame(),
 					Register.Kept, game => missing ? "import without file" : "import", hallOfFame);
 			}, output, ["store", "import", "import without file"]);
@@ -72,7 +72,7 @@ namespace Civilization1Remaster.Tests.Differential
 						if (empty)
 							game.Processor.EmitGlobalByte(game.Processor.PullGlobalWord((ushort)((personIdx << 1) + 0x1992)), 0);
 					},
-					game => new NewCityScreenReference(game).DisplayCityFoundedMessage(),
+					game => new CityNamingScreenReference(game).DisplayCityFoundedMessage(),
 					game => game.CityNaming.DisplayCityFoundedMessage(),
 					Register.Kept,
 					game =>
@@ -122,7 +122,7 @@ namespace Civilization1Remaster.Tests.Differential
 							troops.Assign(participantIdx, troopIdx, UnitMemory.Vert, (byte)vertLoc);
 						}
 					},
-					game => new MeetWithKingReference(game).LogAudience(participantIdx),
+					game => new RulerAudienceReference(game).LogAudience(participantIdx),
 					game => game.Audience.LogAudience(participantIdx),
 					Register.Kept,
 					game => hardness != 0 ? "not the easiest level" : Calls(game, pair, "EliminateUnit") > eliminations ? "units removed" : "none near");
@@ -155,7 +155,7 @@ namespace Civilization1Remaster.Tests.Differential
 
 					try
 					{
-						new TradeAndConquestReference(game).ComputeCityPlunder(townIdx);
+						new CityCaptureReference(game).ComputeCityPlunder(townIdx);
 					}
 					catch
 					{

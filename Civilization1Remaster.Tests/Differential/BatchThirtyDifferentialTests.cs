@@ -49,7 +49,7 @@ namespace Civilization1Remaster.Tests.Differential
 						}
 						game.SaveLoad.FetchingBackup = backup;
 					},
-					game => new GameLoadAndSaveReference(game).ImportGame(0x41c6, marker),
+					game => new SaveGameStoreReference(game).ImportGame(0x41c6, marker),
 					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.SaveLoad.ImportGame(0x41c6, marker)),
 					Register.Acc | Register.Kept,
 					game => marker == 0 ? (backup ? "loaded autosave" : "loaded") :
@@ -77,7 +77,7 @@ namespace Civilization1Remaster.Tests.Differential
 						for (int idx = 0; idx < levels.Length; idx++)
 							game.Processor.EmitGlobalWord((ushort)(0xd91a + (idx << 1)), levels[idx]);
 					},
-					game => new PalaceReference(game).RenderPalaceSection(section, marker),
+					game => new PalaceBuilderReference(game).RenderPalaceSection(section, marker),
 					game => game.Throne.RenderPalaceSection(section, marker),
 					Register.Kept,
 					game => $"{place}{(higher ? ", left higher" : "")}{(marker == 0 ? ", marker 0" : "")}");
@@ -156,7 +156,7 @@ namespace Civilization1Remaster.Tests.Differential
 							memory.Assign(participantIdx, troopIdx, UnitMemory.TravelHoriz, 0xff);
 						}
 					},
-					game => new AIPlayerReference(game).SendUnitToStrategicLocation(participantIdx, horizLoc, vertLoc, live, strategy),
+					game => new ComputerPlayerReference(game).SendUnitToStrategicLocation(participantIdx, horizLoc, vertLoc, live, strategy),
 					game => game.Bot.SendUnitToStrategicLocation(participantIdx, horizLoc, vertLoc, live, strategy),
 					Register.Kept,
 					game => already ? "already listed" :
@@ -213,7 +213,7 @@ namespace Civilization1Remaster.Tests.Differential
 					},
 					game =>
 					{
-						new TextBlockRendererReference(game).ImportTextFromFile(docname, 0xbb80);
+						new TextBlockPainterReference(game).ImportTextFromFile(docname, 0xbb80);
 						ShowFile(game, DocName(game, docname));
 					},
 					game =>

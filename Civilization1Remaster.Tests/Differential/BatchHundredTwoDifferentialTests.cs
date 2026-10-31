@@ -40,7 +40,7 @@ public sealed class BatchHundredTwoDifferentialTests(ITestOutputHelper output)
 		game.MapOps.DiscardUnitFromTile(participantIdx, (short)troopIdx, UnitByte(game, participantIdx, troopIdx, UnitMemory.Horiz), UnitByte(game, participantIdx, troopIdx, UnitMemory.Vert));
 		game.Processor.EmitUInt8(0x3b01, (ushort)(unit + UnitMemory.Horiz), (byte)horizLoc);
 		game.Processor.EmitUInt8(0x3b01, (ushort)(unit + UnitMemory.Vert), (byte)vertLoc);
-		game.MapOps.Chart.AssignOwnerBits(horizLoc, vertLoc, MapLayers.UnitsPresent | participantIdx);
+		game.MapOps.Chart.AssignOwnerBits(horizLoc, vertLoc, MapPlanes.UnitsPresent | participantIdx);
 	}
 
 	private void CheckCosts(int bay, HashSet<string> ways)
@@ -64,7 +64,7 @@ public sealed class BatchHundredTwoDifferentialTests(ITestOutputHelper output)
 				$"HandlePlayerTurn({person}), mode {mode}, steps {steps}, roads {roads[0]:x}/{roads[1]:x}",
 				game =>
 				{
-					IMapLayers chart = game.MapOps.Chart;
+					IMapPlanes chart = game.MapOps.Chart;
 					inputs.Clear();
 					int mover = Enumerable.Range(0, 128).FirstOrDefault(troop => UnitByte(game, person, troop, UnitMemory.Kind) != 0xff &&
 						(UnitByte(game, person, troop, UnitMemory.Status) & 9) == 0, -1);
@@ -73,15 +73,15 @@ public sealed class BatchHundredTwoDifferentialTests(ITestOutputHelper output)
 					bool toCity = mode >= 2;
 					var targets = toCity
 						? Enumerable.Range(0, 128).Where(idx => game.World.Towns[idx].ConditionMarker != 0xff && game.World.Towns[idx].ParticipantIdx != person &&
-								(mode == 2 || (chart.OwnerBits(game.World.Towns[idx].Place.X, game.World.Towns[idx].Place.Y) & MapLayers.UnitsPresent) == 0))
+								(mode == 2 || (chart.OwnerBits(game.World.Towns[idx].Place.X, game.World.Towns[idx].Place.Y) & MapPlanes.UnitsPresent) == 0))
 							.Select(idx => (Horiz: (int)game.World.Towns[idx].Place.X, Vert: (int)game.World.Towns[idx].Place.Y)).ToList()
 						: Enumerable.Range(0, 80 * 48).Select(at => (Horiz: at % 80, Vert: 1 + at / 80))
-							.Where(tile => chart.Terrain(tile.Horiz, tile.Vert) != MapRules.OceanTerrain && (chart.OwnerBits(tile.Horiz, tile.Vert) & MapLayers.UnitsPresent) == 0 &&
+							.Where(tile => chart.Terrain(tile.Horiz, tile.Vert) != MapRules.OceanTerrain && (chart.OwnerBits(tile.Horiz, tile.Vert) & MapPlanes.UnitsPresent) == 0 &&
 								(chart.Improvements(tile.Horiz, tile.Vert) & 1) == 0).Take(400).ToList();
 					var spots = targets.SelectMany(target => Enumerable.Range(1, 8).Select(direction => (Target: target, Direction: direction,
 							From: (Horiz: (target.Horiz - chart.DirectionHoriz(direction) + 80) % 80, Vert: target.Vert - chart.DirectionVert(direction)))))
 						.Where(spot => spot.From.Vert > 0 && spot.From.Vert < 49 && (chart.Terrain(spot.From.Horiz, spot.From.Vert) == MapRules.OceanTerrain) == fromSea &&
-							(chart.OwnerBits(spot.From.Horiz, spot.From.Vert) & MapLayers.UnitsPresent) == 0 && (chart.Improvements(spot.From.Horiz, spot.From.Vert) & 1) == 0)
+							(chart.OwnerBits(spot.From.Horiz, spot.From.Vert) & MapPlanes.UnitsPresent) == 0 && (chart.Improvements(spot.From.Horiz, spot.From.Vert) & 1) == 0)
 						.ToList();
 
 					if (mover < 0 || spots.Count == 0)
@@ -119,7 +119,7 @@ public sealed class BatchHundredTwoDifferentialTests(ITestOutputHelper output)
 					inputs.Add(new HumanTurnScript.Input(Arrows[spot.Direction]));
 					HumanTurnScript.Install(game, inputs);
 				},
-				game => new PlayerTurnReference(game).HandlePlayerTurn(person),
+				game => new TurnControllerReference(game).HandlePlayerTurn(person),
 				game => game.TurnLogic.HandlePlayerTurn(person),
 				Register.Kept,
 				// What the move cost, from the mover and the calls

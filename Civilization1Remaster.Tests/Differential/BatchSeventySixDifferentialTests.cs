@@ -192,7 +192,7 @@ public sealed class BatchSeventySixDifferentialTests(ITestOutputHelper output)
 							game.VideoCard.Tokens.Enqueue(pending.Count > 0 ? pending.Dequeue() : 0x0d);
 					};
 				},
-				game => new MeetWithKingReference(game).LaunchAudience(participantIdx, 10, 10, arg4),
+				game => new RulerAudienceReference(game).LaunchAudience(participantIdx, 10, 10, arg4),
 				game => game.Audience.LaunchAudience(participantIdx, 10, 10, arg4),
 				Register.Kept,
 				// What the audience did, from its calls and the gold

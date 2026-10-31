@@ -47,7 +47,7 @@ namespace Civilization1Remaster.Tests.Differential
 						byte red = (byte)chance.Next(64), green = (byte)chance.Next(64), blue = (byte)chance.Next(64);
 
 						return new Scenario($"FloodColors({steps}, {red}, {green}, {blue}), {state}", Setup,
-							game => new SystemServicesReference(game).FloodColors(steps, red, green, blue),
+							game => new PlatformServicesReference(game).FloodColors(steps, red, green, blue),
 							game => game.Services.FloodColors(steps, red, green, blue),
 							Register.Kept | Register.Acc | Register.Base | Register.Count | Register.Data, game => "flood " + Speed(game));
 
@@ -64,13 +64,13 @@ namespace Civilization1Remaster.Tests.Differential
 								for (int idx = 0; idx < palette.Length; idx++)
 									game.Processor.EmitGlobalByte((ushort)(swatch + 6 + idx), (byte)(palette[idx] & 0x3f));
 							},
-							game => new SystemServicesReference(game).ImportColorsFromBuffer(steps, swatch),
+							game => new PlatformServicesReference(game).ImportColorsFromBuffer(steps, swatch),
 							game => game.Services.ImportColorsFromBuffer(steps, swatch),
 							Register.Kept | Register.Acc | Register.Base | Register.Count | Register.Data, game => "import " + Speed(game));
 
 					default:
 						return new Scenario($"FadeColors({steps}), {state}", Setup,
-							game => new SystemServicesReference(game).FadeColors(steps),
+							game => new PlatformServicesReference(game).FadeColors(steps),
 							game => game.Services.FadeColors(steps),
 							Register.Kept | Register.Acc | Register.Base | Register.Count | Register.Data, game => "fade " + Speed(game));
 				}

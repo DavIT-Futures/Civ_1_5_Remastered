@@ -43,7 +43,7 @@ namespace Civilization1Remaster.Tests.Differential
 						for (int continentIdx = 0; continentIdx < 16; continentIdx++)
 							game.Processor.EmitGlobalWord((ushort)(0xdcfe + (continentIdx << 1)), values[continentIdx]);
 					},
-					game => new WorldMapReference(game).DisplayGameFigures(),
+					game => new WorldStatisticsReference(game).DisplayGameFigures(),
 					game => game.Atlas.DisplayGameFigures(),
 					Register.Kept,
 					game => armed ? "armies" : "no armies");
@@ -64,7 +64,7 @@ namespace Civilization1Remaster.Tests.Differential
 
 				return new Scenario($"DisplayWondersOfTheWorld(), wonders {string.Join(" ", wonders)}",
 					game => wonders.CopyTo(game.World.MarvelTownIdx, 0),
-					game => new WorldMapReference(game).DisplayWondersOfTheWorld(),
+					game => new WorldStatisticsReference(game).DisplayWondersOfTheWorld(),
 					game => game.Atlas.DisplayWondersOfTheWorld(),
 					Register.Kept,
 					game => built > 7 ? "pages" : built > 0 ? "one page" : "none");
@@ -89,7 +89,7 @@ namespace Civilization1Remaster.Tests.Differential
 
 				return new Scenario($"RenderCityTile({townIdx}, {townTile}, {marker}), city at {horizLoc}, {vertLoc}",
 					game => game.World.Towns[townIdx].Place = new System.Drawing.Point(horizLoc, vertLoc),
-					game => new CityManagementReference(game).RenderCityTile(townIdx, townTile, marker),
+					game => new CitiesReference(game).RenderCityTile(townIdx, townTile, marker),
 					game => game.CityOps.RenderCityTile(townIdx, townTile, marker),
 					Register.Kept,
 					game => marker != 1 ? "map layer" : polar && vertLoc + engine.TownDeltas[townTile].Y == 0 ? "polar tile shown" : "shown");
@@ -104,7 +104,7 @@ namespace Civilization1Remaster.Tests.Differential
 				short tally = (short)chance.Next(0, 8);
 
 				return new Scenario($"EnactGlobalWarming({tally})", game => { },
-					game => new GameInitAndIntroReference(game).EnactGlobalWarming(tally),
+					game => new WorldBuilderReference(game).EnactGlobalWarming(tally),
 					game => game.WorldSetup.EnactGlobalWarming(tally),
 					Register.Kept,
 					game => tally < 3 ? "coasts" : "more");

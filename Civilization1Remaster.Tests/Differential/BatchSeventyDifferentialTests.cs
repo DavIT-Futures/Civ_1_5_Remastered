@@ -98,7 +98,7 @@ public sealed class BatchSeventyDifferentialTests(ITestOutputHelper output)
 						game.VideoCard.AssignDot(2, 10, 10, 2, 0);
 						game.VideoCard.AssignDot(2, 10, 10 + 100, 0x19, 0);
 						game.VideoCard.AssignDot(2, 10 + 80, 10 + 100, 0x19, 0);
-						game.VideoCard.AssignDot(2, 10 + 160, 10, 1 | MapLayers.UnitsPresent, 0);
+						game.VideoCard.AssignDot(2, 10 + 160, 10, 1 | MapPlanes.UnitsPresent, 0);
 
 						game.World.Towns[0].ConditionMarker = 0x01;
 						game.World.Towns[0].StructureMarkers0 = 0x80;
@@ -119,7 +119,7 @@ public sealed class BatchSeventyDifferentialTests(ITestOutputHelper output)
 				},
 				game =>
 				{
-					var reference = new MapManagementReference(game);
+					var reference = new MapServiceReference(game);
 					if (mode == 0)
 					{
 						reference.RenderMapTile(10, 10);
@@ -261,7 +261,7 @@ public sealed class BatchSeventyDifferentialTests(ITestOutputHelper output)
 					else if (mode == 1)
 					{
 						game.VideoCard.AssignDot(2, 12, 12, 1, 0);
-						game.VideoCard.AssignDot(2, 12 + 160, 12, MapLayers.UnitsPresent, 0);
+						game.VideoCard.AssignDot(2, 12 + 160, 12, MapPlanes.UnitsPresent, 0);
 						game.Processor.EmitUInt8(dataSeg, (ushort)(unit0Addr + 0x81d4), 0);
 						game.Processor.EmitUInt8(dataSeg, (ushort)(unit0Addr + 0x81d5), 12);
 						game.Processor.EmitUInt8(dataSeg, (ushort)(unit0Addr + 0x81d6), 12);
@@ -334,7 +334,7 @@ public sealed class BatchSeventyDifferentialTests(ITestOutputHelper output)
 					{
 						game.World.Towns[0].Place = new Point(16, 12);
 						game.VideoCard.AssignDot(2, 14, 12 + 100, 0x2, 0);
-						game.VideoCard.AssignDot(2, 13 + 160, 12, 1 | MapLayers.UnitsPresent, 0);
+						game.VideoCard.AssignDot(2, 13 + 160, 12, 1 | MapPlanes.UnitsPresent, 0);
 
 						ushort enemyUnitAddr = (ushort)(1 * 0x600 + 0 * 0xc);
 						game.Processor.EmitUInt8(dataSeg, (ushort)(enemyUnitAddr + 0x81d5), 13);
@@ -349,7 +349,7 @@ public sealed class BatchSeventyDifferentialTests(ITestOutputHelper output)
 						game.Processor.EmitUInt8(dataSeg, (ushort)(unit0Addr + 0x81de), 0xff);
 					}
 				},
-				game => new AIPlayerReference(game).ManageBarbarianUnit(0, 0),
+				game => new ComputerPlayerReference(game).ManageBarbarianUnit(0, 0),
 				game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Bot.ManageBarbarianUnit(0, 0)),
 				Register.Kept | Register.Acc,
 				game => $"mode{mode}");

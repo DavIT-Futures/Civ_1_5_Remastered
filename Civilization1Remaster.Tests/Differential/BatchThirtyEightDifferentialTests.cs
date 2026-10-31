@@ -38,7 +38,7 @@ namespace Civilization1Remaster.Tests.Differential
 						game.Processor.EmitGlobalWord(0x6542, marked);
 						game.Processor.EmitGlobalWord((ushort)(sp - 2 - 2), leftover);
 					},
-					game => new CityManagementReference(game).RenderCitizenIcons(townIdx, horizLoc, vertLoc, specialists, breadth),
+					game => new CitiesReference(game).RenderCitizenIcons(townIdx, horizLoc, vertLoc, specialists, breadth),
 					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.CityOps.RenderCitizenIcons(townIdx, horizLoc, vertLoc, specialists, breadth)),
 					Register.Acc | Register.Kept,
 					game => $"{(7 * size > (short)breadth ? "narrow" : "wide")}{(leftover != 0 ? ", gap" : "")}");

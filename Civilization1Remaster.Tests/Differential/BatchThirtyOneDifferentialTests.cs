@@ -64,7 +64,7 @@ namespace Civilization1Remaster.Tests.Differential
 						game.Processor.EmitGlobalWord(0x67fa, advisors);
 						game.Processor.EmitGlobalWord(0x67e8, shown);
 					},
-					game => new MeetWithKingReference(game).ChoreographKingLikeness(face, mouth, pose),
+					game => new RulerAudienceReference(game).ChoreographKingLikeness(face, mouth, pose),
 					game => game.Audience.ChoreographKingLikeness(face, mouth, pose),
 					Register.Kept,
 					game => skip != 0 ? "skipped" :
@@ -95,7 +95,7 @@ namespace Civilization1Remaster.Tests.Differential
 						game.Processor.EmitGlobalWord(0x1ad0, missing ? (ushort)0xbb80 : diskPath.Value);
 						game.Processor.EmitGlobalWord(0xd762, colours);
 					},
-					game => new DiplomatActionsReference(game).ExamineCity(townIdx),
+					game => new DiplomatMissionsReference(game).ExamineCity(townIdx),
 					game => game.Diplomats.ExamineCity(townIdx),
 					Register.Kept,
 					game => missing ? "no disk" : Calls(game, pair, "DisplayCityScreen") > screens ? "city screen" : "scenery");
@@ -178,7 +178,7 @@ namespace Civilization1Remaster.Tests.Differential
 						science[3] = (ushort)((science[3] & ~2) | (technologies[0] ? 2 : 0));
 						science[2] = (ushort)((science[2] & ~0x40) | (technologies[1] ? 0x40 : 0));
 					},
-					game => new TradeAndConquestReference(game).FoundTradeRoute(participantIdx, troopIdx, townIdx),
+					game => new CityCaptureReference(game).FoundTradeRoute(participantIdx, troopIdx, townIdx),
 					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Conquest.FoundTradeRoute(participantIdx, troopIdx, townIdx)),
 					Register.Acc | Register.Kept,
 					game => $"{(participantIdx == game.World.PersonParticipantIdx ? "human" : "AI")}, {outcome}");
@@ -225,7 +225,7 @@ namespace Civilization1Remaster.Tests.Differential
 							Array.Copy(relations, idx * 8, participant.Relations, 0, 8);
 						}
 					},
-					game => new TurnEventsReference(game).RefreshPeaceGraphContent(),
+					game => new WorldEventsReference(game).RefreshPeaceGraphContent(),
 					game => game.TurnHooks.RefreshPeaceGraphContent(),
 					Register.Kept,
 					game => game.Processor.PullGlobalWord(0x8078) != 0 ? "feared" : rounds >= 600 ? "after turn 600" :

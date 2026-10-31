@@ -94,7 +94,7 @@ public sealed class BatchEightyTwoDifferentialTests(ITestOutputHelper output)
 						game.World.Participants[participantIdx].Landmasses[continentIdx].Approach = approach;
 					}
 				},
-				game => new AIPlayerReference(game).ShiftAIUnit(participantIdx, troopIdx),
+				game => new ComputerPlayerReference(game).ShiftAIUnit(participantIdx, troopIdx),
 				game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Bot.ShiftAIUnit(participantIdx, troopIdx)),
 				Register.Kept | Register.Acc,
 				// What the transport did: strategic locations marked at a staging city, a city chosen only, or no staging city

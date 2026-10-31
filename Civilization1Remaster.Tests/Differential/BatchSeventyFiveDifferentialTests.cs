@@ -168,7 +168,7 @@ public sealed class BatchSeventyFiveDifferentialTests(ITestOutputHelper output)
 							game.VideoCard.Tokens.Enqueue(pending.Count > 0 ? pending.Dequeue() : 0x0d);
 					};
 				},
-				game => new ScienceAndAdvisorsReference(game).PickCityProduction(participantIdx, townIdx),
+				game => new ResearchOfficeReference(game).PickCityProduction(participantIdx, townIdx),
 				game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Advisors.PickCityProduction(participantIdx, townIdx)),
 				Register.Kept | Register.Acc,
 				// The way the function answered, from its calls and its result

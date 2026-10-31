@@ -105,7 +105,7 @@ public sealed class BatchHundredTenDifferentialTests(ITestOutputHelper output)
 					HumanTurnScript.Install(game, (unitless ? new[] { 0x31 } : new[] { 0x31, 0x1b }).Concat(keys)
 						.Select(key => key < 0 ? new HumanTurnScript.Input(0, 1, 10, 3) : new HumanTurnScript.Input(key)));
 				},
-				game => new PlayerTurnReference(game).HandlePlayerTurn(person),
+				game => new TurnControllerReference(game).HandlePlayerTurn(person),
 				game => game.TurnLogic.HandlePlayerTurn(person),
 				Register.Kept,
 				// What the key did, from the screens it showed and the state it changed

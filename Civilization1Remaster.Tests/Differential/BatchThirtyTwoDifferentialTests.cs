@@ -35,7 +35,7 @@ namespace Civilization1Remaster.Tests.Differential
 
 						game.Processor.EmitGlobalWord(0x6590, 0xffff);
 					},
-					game => new PathfindingReference(game).LocateRouteStep(horizLoc, vertLoc, marker),
+					game => new RoutePlannerReference(game).LocateRouteStep(horizLoc, vertLoc, marker),
 					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Routing.LocateRouteStep(horizLoc, vertLoc, marker)),
 					Register.Acc | Register.Kept,
 					game => own ? "own block" : game.Processor.RegAcc.Value16 != 0 ? $"neighbour, {(marker != 0 ? "sea" : "land")}" : "none");
@@ -83,7 +83,7 @@ namespace Civilization1Remaster.Tests.Differential
 							}
 						}
 					},
-					game => new GovernmentAndDiplomacyReference(game).AIWeighsTreaty(participantIdx1, participantIdx2),
+					game => new ForeignAffairsReference(game).AIWeighsTreaty(participantIdx1, participantIdx2),
 					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Politics.AIWeighsTreaty(participantIdx1, participantIdx2)),
 					Register.Acc | Register.Kept,
 					game =>
@@ -118,7 +118,7 @@ namespace Civilization1Remaster.Tests.Differential
 						game.Processor.EmitGlobalWord(0x4384, drive);
 						game.Processor.EmitGlobalWord(0x681a, saved);
 					},
-					game => new GameLoadAndSaveReference(game).QueryForStoreDrive(),
+					game => new SaveGameStoreReference(game).QueryForStoreDrive(),
 					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.SaveLoad.QueryForStoreDrive()),
 					Register.Acc | Register.Kept,
 					game => Calls(game, pair, "DisplayMenu") > menus ? "no disk" : game.Processor.RegAcc.Value16 == 0xffff ? "cancelled" : "drive");
@@ -163,7 +163,7 @@ namespace Civilization1Remaster.Tests.Differential
 					},
 					game =>
 					{
-						new PalaceReference(game).ImportPalaceCastle(castles, levelsOnly);
+						new PalaceBuilderReference(game).ImportPalaceCastle(castles, levelsOnly);
 						ShowPictures(game);
 					},
 					game =>

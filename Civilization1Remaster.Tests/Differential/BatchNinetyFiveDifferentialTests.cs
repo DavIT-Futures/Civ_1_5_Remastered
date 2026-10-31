@@ -47,7 +47,7 @@ public sealed class BatchNinetyFiveDifferentialTests(ITestOutputHelper output)
 			short water = (short)(chance.Next(3) == 0 ? 0 : 2);
 			bool railroad = chance.Next(2) == 0;
 			bool bridges = chance.Next(2) == 0;
-			IMapLayers sight = engine.MapOps.Chart;
+			IMapPlanes sight = engine.MapOps.Chart;
 			var settlers = Enumerable.Range(0, 128)
 				.Select(troop => (Troop: troop, Horiz: (int)UnitByte(engine, person, troop, UnitMemory.Horiz), Vert: (int)UnitByte(engine, person, troop, UnitMemory.Vert)))
 				.Where(unit => UnitByte(engine, person, unit.Troop, UnitMemory.Kind) == 0 && unit.Vert < 50)
@@ -63,7 +63,7 @@ public sealed class BatchNinetyFiveDifferentialTests(ITestOutputHelper output)
 				game =>
 				{
 					HumanTurnScript.Install(game, inputs);
-					IMapLayers layers = game.MapOps.Chart;
+					IMapPlanes layers = game.MapOps.Chart;
 					game.World.DiagMarkers = (short)((game.World.DiagMarkers & ~2) | water);
 					ushort[] science = game.World.Participants[person].FoundScienceMarkers;
 
@@ -87,14 +87,14 @@ public sealed class BatchNinetyFiveDifferentialTests(ITestOutputHelper output)
 						game.VideoCard.AssignDot(2, horizLoc, vertLoc + 150, (byte)((layers.HighImprovements(horizLoc, vertLoc) & ~1) | (tiles[troop] >> 4)), 0);
 					}
 				},
-				game => new PlayerTurnReference(game).HandlePlayerTurn(person),
+				game => new TurnControllerReference(game).HandlePlayerTurn(person),
 				game => game.TurnLogic.HandlePlayerTurn(person),
 				Register.Kept,
 				// What the work did, from the tiles of the settlers and the calls
 				game =>
 				{
 					int Delta(string name) => Calls(game, pair, name) - before.GetValueOrDefault(name);
-					IMapLayers after = game.MapOps.Chart;
+					IMapPlanes after = game.MapOps.Chart;
 					List<string> met = [];
 
 					for (int idx = 0; idx < settlers.Count; idx++)

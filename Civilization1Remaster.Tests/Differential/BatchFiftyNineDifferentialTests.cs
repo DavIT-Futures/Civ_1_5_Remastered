@@ -36,7 +36,7 @@ namespace Civilization1Remaster.Tests.Differential
 						lock (game.VideoCard.VideoLatch)
 							game.VideoCard.Tokens.Clear();
 					},
-					game => new CivilopediaReference(game).DisplayCivilopediaIndex(firstEntry, part),
+					game => new EncyclopediaReference(game).DisplayCivilopediaIndex(firstEntry, part),
 					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Encyclopedia.DisplayCivilopediaIndex(firstEntry, part)),
 					Register.Kept | Register.Acc,
 					game => game.Processor.RegAcc.Value16 switch { 0xffff => "next page", 0xfffe => "leave", 0 => "nothing", _ => "entry" });

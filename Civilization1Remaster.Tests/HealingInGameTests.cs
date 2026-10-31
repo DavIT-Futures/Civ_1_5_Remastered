@@ -11,7 +11,7 @@ using Xunit;
 namespace Civilization1Remaster.Tests
 {
 	/// <summary>
-	/// HealingRules in a loaded game (TurnEvents.MendFortifiedUnits without ClassicHealing): units placed in free slots of
+	/// HealingRules in a loaded game (WorldEvents.MendFortifiedUnits without ClassicHealing): units placed in free slots of
 	/// a player with a coastal city, with lost hit points, then one healing step
 	/// </summary>
 	public class HealingInGameTests
@@ -28,7 +28,7 @@ namespace Civilization1Remaster.Tests
 			GameEngine engine = game.Engine;
 			engine.TurnHooks.ClassicHealing = false;
 
-			IMapLayers chart = engine.MapOps.Chart;
+			IMapPlanes chart = engine.MapOps.Chart;
 			UnitMemory troops = new UnitMemory(engine.Processor);
 			bool IsOcean(int horizLoc, int vertLoc) => chart.Terrain(horizLoc, vertLoc) == MapRules.OceanTerrain;
 

@@ -33,7 +33,7 @@ namespace Civilization1Remaster.Tests.Differential
 						game.World.SessionPrefMarkers = (short)(helpOn ? game.World.SessionPrefMarkers | 1 : game.World.SessionPrefMarkers & ~1);
 						game.World.Season = season;
 					},
-					game => new InGameHelpReference(game).DisplayHelpPopup(topic),
+					game => new HelpPopupsReference(game).DisplayHelpPopup(topic),
 					game => game.HelpSystem.DisplayHelpPopup(topic),
 					Register.Kept, game => Calls(game, pair, "ReflowText") > reflowed ? "shown" : !helpOn ? "help off" : "after year 0");
 			}, output, ["help off", "after year 0", "shown"]);
@@ -49,7 +49,7 @@ namespace Civilization1Remaster.Tests.Differential
 
 				return new Scenario($"FireSpaceship({participantIdx}), arrival {arrival}",
 					game => game.World.Participants[participantIdx].StarshipArrivalSeason = arrival,
-					game => new SpaceshipScreenReference(game).FireSpaceship(participantIdx),
+					game => new SpaceshipBayReference(game).FireSpaceship(participantIdx),
 					game => game.RocketScreen.FireSpaceship(participantIdx),
 					Register.Kept, game => participantIdx == game.World.PersonParticipantIdx ? "human" : "other player", Spaceships);
 			}, output, ["human", "other player"]);
@@ -70,7 +70,7 @@ namespace Civilization1Remaster.Tests.Differential
 						game.Libc.CopyText(0xbb80, "TRADE ADVISOR");
 						game.Libc.CopyText(0xba06, "Leftover");
 					},
-					game => new AdvisorReportsReference(game).RenderReportPreamble(0xbb80, style),
+					game => new AdvisorScreensReference(game).RenderReportPreamble(0xbb80, style),
 					game => game.Briefings.RenderReportPreamble(0xbb80, style),
 					Register.Kept, game => regime / 2 is 0 or 1 or 2 ? $"kind {regime / 2}" : "no kind");
 			}, output, ["kind 0", "kind 1", "kind 2", "no kind"]);
@@ -89,7 +89,7 @@ namespace Civilization1Remaster.Tests.Differential
 				short townIdx = towns[chance.Next(towns.Length)];
 
 				return new Scenario($"DisplayCityLabelPrompt({townIdx})", game => { },
-					game => new NewCityScreenReference(game).DisplayCityLabelPrompt(townIdx),
+					game => new CityNamingScreenReference(game).DisplayCityLabelPrompt(townIdx),
 					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.CityNaming.DisplayCityLabelPrompt(townIdx)),
 					Register.Acc | Register.Kept, game => game.Processor.RegAcc.Value16 != 0 ? "renamed" : "cancelled");
 			}, output, ["renamed", "cancelled"], keys);
@@ -115,7 +115,7 @@ namespace Civilization1Remaster.Tests.Differential
 						person.Relations[participantIdx] = (ushort)(treaty ? person.Relations[participantIdx] | 2 : person.Relations[participantIdx] & ~2);
 						person.RegimeKind = regime;
 					},
-					game => new UnitCombatReference(game).AffirmBreakTreaty(participantIdx),
+					game => new BattlesReference(game).AffirmBreakTreaty(participantIdx),
 					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Combat.AffirmBreakTreaty(participantIdx)),
 					Register.Acc | Register.Kept,
 					game => game.Processor.RegAcc.Value16 switch

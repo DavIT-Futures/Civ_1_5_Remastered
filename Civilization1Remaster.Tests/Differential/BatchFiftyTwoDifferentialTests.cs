@@ -52,19 +52,19 @@ namespace Civilization1Remaster.Tests.Differential
 				{
 					case 0:
 						return new Scenario($"LaunchTimer(), {state}", Setup,
-							game => WithoutClock(game, () => new SystemServicesReference(game).LaunchTimer()),
+							game => WithoutClock(game, () => new PlatformServicesReference(game).LaunchTimer()),
 							game => WithoutClock(game, () => game.Services.LaunchTimer()),
 							All, game => running != 0 ? "launch running" : "launch stopped", Timer);
 
 					case 1:
 						return new Scenario($"HaltTimer(), {state}", Setup,
-							game => new SystemServicesReference(game).HaltTimer(),
+							game => new PlatformServicesReference(game).HaltTimer(),
 							game => game.Services.HaltTimer(),
 							All, game => "halt", Timer);
 
 					case 2:
 						return new Scenario($"PrepareTimer(), {state}", Setup,
-							game => WithoutClock(game, () => new SystemServicesReference(game).PrepareTimer()),
+							game => WithoutClock(game, () => new PlatformServicesReference(game).PrepareTimer()),
 							game => WithoutClock(game, () => game.Services.PrepareTimer()),
 							All, game => "prepare " + Rate(game), Timer);
 
@@ -75,7 +75,7 @@ namespace Civilization1Remaster.Tests.Differential
 						ushort last = (ushort)(chance.Next(4) == 0 ? first - chance.Next(0, 3) : first + chance.Next(1, 16));
 
 						return new Scenario($"AssignHueCycleSpan({cycle}, {delay}, {first}, {last})", game => { },
-							game => new SystemServicesReference(game).AssignHueCycleSpan(cycle, delay, first, last),
+							game => new PlatformServicesReference(game).AssignHueCycleSpan(cycle, delay, first, last),
 							game => game.Services.AssignHueCycleSpan(cycle, delay, first, last),
 							All, game => cycle < 1 || cycle > 8 ? "cycle out of range" : last <= first ? "empty span" : "span", Cycles);
 				}

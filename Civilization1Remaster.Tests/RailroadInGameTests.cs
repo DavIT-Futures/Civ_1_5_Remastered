@@ -9,7 +9,7 @@ using Xunit;
 namespace Civilization1Remaster.Tests
 {
 	/// <summary>
-	/// The remaster's railroads in a loaded game (PlayerTurn.RideForFree, without ClassicRailroads): a step out of a city
+	/// The remaster's railroads in a loaded game (TurnController.RideForFree, without ClassicRailroads): a step out of a city
 	/// is free once the player knows Railroad; the human player's unit moved by hand rides for ever, a unit with GoTo or of
 	/// a computer player 30 times a turn
 	/// </summary>
@@ -75,7 +75,7 @@ namespace Civilization1Remaster.Tests
 			// Every player knows Railroad and the land around the cities has railroads: the units of the computer players
 			// ride for free (at most 30 times a turn), the turns still end
 			using HeadlessGame game = Load(out GameEngine engine);
-			IMapLayers chart = engine.MapOps.Chart;
+			IMapPlanes chart = engine.MapOps.Chart;
 
 			for (short participantIdx = 1; participantIdx < 8; participantIdx++)
 				KnowRailroad(engine, participantIdx, true);
@@ -106,7 +106,7 @@ namespace Civilization1Remaster.Tests
 			game.Deadline = 0;
 
 			// The computer players did ride for free (the counts of the last turn)
-			var rides = ((int Round, System.Collections.Generic.Dictionary<(short, short), int> Steps))typeof(PlayerTurn)
+			var rides = ((int Round, System.Collections.Generic.Dictionary<(short, short), int> Steps))typeof(TurnController)
 				.GetField("freeRides", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
 				.GetValue(engine.TurnLogic)!;
 			Assert.NotEmpty(rides.Steps);

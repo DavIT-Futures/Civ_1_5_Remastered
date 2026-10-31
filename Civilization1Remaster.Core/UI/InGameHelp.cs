@@ -2,7 +2,7 @@ using Civilization1Remaster.Emulation;
 
 namespace Civilization1Remaster.UI
 {
-	public class InGameHelp : GameModule, IInGameHelp
+	public class HelpPopups : GameComponent, IHelpPopups
 	{
 		private static readonly GameText HelpFileNameAddress = new(0x34b2, "help.txt");
 		private static readonly GameText HelpFileName2Address = new(0x34de, "help.txt");
@@ -14,7 +14,7 @@ namespace Civilization1Remaster.UI
 		private static readonly GameText HelpAdviceHeaderAddress = new(0x34e7, "--- Civilization Note ---");
 		private static readonly GameText HelpAdviceHeader2Address = new(0x350b, "--- Civilization Note ---");
 
-		public InGameHelp(GameEngine owner)
+		public HelpPopups(GameEngine owner)
 			: base(owner)
 		{
 		}
@@ -80,7 +80,7 @@ namespace Civilization1Remaster.UI
 					cityPlace = false;
 				}
 
-				IMapLayers chart = this.Owner.MapOps.Chart;
+				IMapPlanes chart = this.Owner.MapOps.Chart;
 
 				for (int heading = 1; heading <= 8; heading++)
 				{

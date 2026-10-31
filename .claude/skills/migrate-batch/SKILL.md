@@ -14,10 +14,10 @@ Narzędzia (`Civilization1Remaster.Tests/Differential/Reference`, uruchamiać z 
 - `find_asm_methods.py Civilization1Remaster.Core 60` – kandydaci od najkrótszych;
 - `extract_reference.py <commit HEAD> <plik .cs> <właściwość GameEngine> <metody…>` – kopia oryginału do testu (właściwości:
   `grep -n "public <Klasa> " Civilization1Remaster.Core/GameEngine.cs`; nową klasę `XReference` dopisać do `ReferenceClasses.cs`; stałe klasy, np. `HandBayTally`, trzeba w kopii poprzedzić nazwą klasy);
-- `CityManagement`, `PlayerTurn`, `AIPlayer` są podzielone na pliki `partial` po tematach (`CityManagement.Production.cs`
+- `Cities`, `TurnController`, `ComputerPlayer` są podzielone na pliki `partial` po tematach (`Cities.Production.cs`
   …; pola zostają w pliku głównym): metody szukać przez `grep -n "Nazwa(" Civilization1Remaster.Core/Game/Klasa*.cs`, a
   narzędziom podawać plik, w którym metoda leży;
-- Moduły gry (`GameModule`) mają interfejsy `I<Klasa>` (np. `ICityManagement`) z publicznymi metodami i opisami; w klasach
+- Moduły gry (`GameComponent`) mają interfejsy `I<Klasa>` (np. `ICities`) z publicznymi metodami i opisami; w klasach
   `/// <inheritdoc/>`. `GameEngine` wystawia moduły przez interfejsy – zmiana publicznej sygnatury to zmiana w interfejsie;
   pola są prywatne (reszta to właściwości), `this.Owner` / `this.Processor` zamiast pól; kolejność składowych jak u
   Microsoftu (pola, konstruktory, …, właściwości, metody, typy zagnieżdżone; public przed private, static przed instancją);
@@ -45,7 +45,7 @@ Testy zawsze w **Release** z `-parallelMode all` (ok. 7 razy szybciej niż Debug
   `--jobs 6`. Ocalała: jeden celowany przypadek w tabeli albo opis (nieosiągalna / równoważna / martwy zapis) – bez kolejnych
   rund.
 - **Pełny zestaw tylko przy kamieniach milowych:** po zmianie wspólnego kodu (`Civilization1Remaster.Machine`, harness,
-  `UnitMemory`, `MapLayers`, `CommonUtilities`), po skończeniu dużego fragmentu (np. całej metody) i na koniec sesji.
+  `UnitMemory`, `MapPlanes`, `GameHelpers`), po skończeniu dużego fragmentu (np. całej metody) i na koniec sesji.
   Między nimi golden master (16 s) na porcję. **Wyjątek – B2 (zmienne lokalne ze stosu): pełny zestaw po każdej porcji**,
   bo usunięcie zapisu do ramki może zmienić śmieci, które inna funkcja na tej samej głębokości stosu czyta jako
   niezainicjowaną zmienną (`RenderCitizenIcons` 0x2, `HandlePlayerTurn` 0x12 / 0x24 / 0x36 / 0x3e …); wychodzi to w testach
@@ -54,7 +54,7 @@ Testy zawsze w **Release** z `-parallelMode all` (ok. 7 razy szybciej niż Debug
   porcją i `po.txt` po niej, potem `python Civilization1Remaster.Tests/Dual/compare_leftovers.py przed.txt po.txt` – każdy
   czytelnik z innymi wartościami i utraconym autorem to zapis do przywrócenia. Klasy zmiennych ramki (`CityRound`,
   `TurnLocals`) zapisują każdą wartość także do ramki (`Keep`); samych zapisów ramki nie usuwać jako „martwych”.
-  Najprostsza i dokładna postać B2 (porcja 10, `UnitLook` w `AIPlayer`): klasa z nazwanymi właściwościami, których
+  Najprostsza i dokładna postać B2 (porcja 10, `UnitLook` w `ComputerPlayer`): klasa z nazwanymi właściwościami, których
   get / set to `PullLocalWord` / `EmitLocalWord` danego offsetu – zero zmian dostępów, raport sondy identyczny co do bajtu.
 
 ## Kroki
@@ -77,7 +77,7 @@ Testy zawsze w **Release** z `-parallelMode all` (ok. 7 razy szybciej niż Debug
      wywołań i wiersze `OpenScope` muszą zostać jak w oryginale; pętla czekania na zegar musi czytać licznik (0x5c, 0x6800…)
      z pamięci tyle razy co oryginał albo wołać `Idle`. Dane wyjęte z pamięci do C#: wpis w `Tests/Dual/MovedData.cs`
      (bajty w starym układzie) – migawka wpisuje je z powrotem pod adres przed haszami.
-   - Jednostki: `UnitMemory` (pamięć 0x81d4), typy: `UnitKindTable`, mapa: `MapOps.Chart` (`MapLayers`), stałe: `MapRules`.
+   - Jednostki: `UnitMemory` (pamięć 0x81d4), typy: `UnitKindTable`, mapa: `MapOps.Chart` (`MapPlanes`), stałe: `MapRules`.
    - Teksty (B6.1): bufor komunikatu to `Words` (`Set` / `Append` / `ToString` / `TextFrom(k)`, tablica C#); rysowanie,
      szerokość, `DisplayMenu`, `ImportTextFromFile`, `ShrinkTextToWidth`, `CompareTextNoCase` mają wersje na `string` (wersje z
      adresem to adaptery dla tekstów w segmencie danych i kopii w testach). Tekstu pod SP / w ramce nie składać – `string`;
@@ -127,7 +127,7 @@ Testy zawsze w **Release** z `-parallelMode all` (ok. 7 razy szybciej niż Debug
 7. Po każdej porcji: golden master + testy porcji (ok. 30 s):
    `$T -parallelMode all -class "*GoldenMaster*" -class "*BatchNN*" 2>&1 | grep -E "\[FAIL\]|Total:"`.
    Pełny zestaw (ok. 13 min w Release): przy kamieniach milowych (wyżej), przed końcem sesji i po każdej zmianie wspólnego kodu (`Civilization1Remaster.Machine`,
-   `MapLayers`, `UnitMemory`, `CommonUtilities`, `GameSnapshot`/harness): `$T -parallelMode all 2>&1 | grep -E "\[FAIL\]|Total:"`.
+   `MapPlanes`, `UnitMemory`, `GameHelpers`, `GameSnapshot`/harness): `$T -parallelMode all 2>&1 | grep -E "\[FAIL\]|Total:"`.
    Uzasadnienie: test różnicowy funkcji G woła bieżący kod innych funkcji w obu grach, więc błąd w przepisanej F wykrywa test F
    i golden master, nie stare testy.
 8. `MIGRATION-BACKLOG.md`: wpis porcji (wnioski!), lista kandydatów, stan (`find_asm_methods.py … 0 | tail -1`).
@@ -137,15 +137,15 @@ Testy zawsze w **Release** z `-parallelMode all` (ok. 7 razy szybciej niż Debug
 ## B4: zmienne globalne jako nazwane właściwości (od 2026-10-24)
 
 - Właściwość `protected ushort Nazwa { get => PullGlobalWord(adres); set => EmitGlobalWord(adres, value); }` w regionie
-  „Global variables” `GameModule.cs`; zamiana skryptem (`b4*.py` w scratchpadzie: `PullGlobalWord(a)` → `Nazwa`,
+  „Global variables” `GameComponent.cs`; zamiana skryptem (`b4*.py` w scratchpadzie: `PullGlobalWord(a)` → `Nazwa`,
   `PullGlobalSignedWord(a)` → `(short)Nazwa`, cała instrukcja `EmitGlobalWord(a, x);` → `Nazwa = x;`, zapis z `newline=''`,
   regex z `\r?$`). Te same dostępy do pamięci, więc zachowanie bez zmian. Tylko adresy czytane słowem i tylko w klasach
-  `GameModule`; bez dostępów bajtowych do adresu i do adresu + 1; nazwa sprawdzona na kolizje.
+  `GameComponent`; bez dostępów bajtowych do adresu i do adresu + 1; nazwa sprawdzona na kolizje.
 - Na prośbę użytkownika: kilka porcji (3 – 5) naraz, potem jeden pełny zestaw, jedna runda mutacji, jeden commit.
 - Mutacja musi leżeć w funkcji, którą test naprawdę wykonuje: przypisać test po nazwie funkcji z miejscem użycia
   (`<Funkcja>MatchesOriginalCode`); ocalałe mutacje w B4 to prawie zawsze zły test. W `check_mutations.py` kontekst z `\n`.
 - Literały w poleceniach powłoki: backticki w `python -c "..."` wykonują się jako polecenia – wpisy do backlogu przez Edit.
-- B5 (tabele z CIV.EXE) tak samo: akcesory `GameModule` (region „Tables of CIV.EXE”), stałe pól w `UnitKindTable` i
+- B5 (tabele z CIV.EXE) tak samo: akcesory `GameComponent` (region „Tables of CIV.EXE”), stałe pól w `UnitKindTable` i
   `Game/RecordTables.cs`. Odczyt ze znakiem (`PullInt16`, `PullInt8`, `PullGlobalSignedWord`) dostaje `(short)` /
   `(sbyte)` przed akcesorem – rozpoznawać po nazwie metody, nie po prefiksie z segmentem; po zamianie porównać parami
   usunięte odczyty ze znakiem z nowymi rzutowaniami. Indeks rekordu bez `+` / `-` na najwyższym poziomie (kolejność

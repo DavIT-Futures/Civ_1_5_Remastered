@@ -38,7 +38,7 @@ namespace Civilization1Remaster.Tests.Differential
 							site.Place = new System.Drawing.Point(horizLoc, vertLoc);
 						}
 					},
-					game => new AIPlayerReference(game).ReimposeStrategicLocations(participantIdx),
+					game => new ComputerPlayerReference(game).ReimposeStrategicLocations(participantIdx),
 					game => game.Bot.ReimposeStrategicLocations(participantIdx),
 					Register.Kept, game => Calls(game, pair, "SendUnitToStrategicLocation") > sent ? "units sent" : "none sent");
 			}, output, ["units sent", "none sent"]);
@@ -85,7 +85,7 @@ namespace Civilization1Remaster.Tests.Differential
 							}
 						}
 					},
-					game => new MapManagementReference(game).RepaintMapTile(horizLoc, vertLoc),
+					game => new MapServiceReference(game).RepaintMapTile(horizLoc, vertLoc),
 					game => game.MapOps.RepaintMapTile(horizLoc, vertLoc),
 					Register.Kept,
 					game => hidden != 0 ? "units hidden" : Calls(game, pair, "RepaintUnitTile") > drawn ? "unit drawn" :
@@ -107,7 +107,7 @@ namespace Civilization1Remaster.Tests.Differential
 
 				return new Scenario($"ChooseNationToView(), spaceships 0x{(ushort)markers:x4}",
 					game => game.World.StarshipMarkers = markers,
-					game => new SpaceshipScreenReference(game).ChooseNationToView(),
+					game => new SpaceshipBayReference(game).ChooseNationToView(),
 					game => game.RocketScreen.ChooseNationToView(),
 					Register.Kept,
 					game => (markers & 0xfe00) == 0 ? "no spaceship" : Calls(game, pair, "RenderSpaceship") > shown ? "shown" : "cancelled",
@@ -136,7 +136,7 @@ namespace Civilization1Remaster.Tests.Differential
 					},
 					game =>
 					{
-						new GameReplayReference(game).RenderReplayPreamble();
+						new ReplayViewerReference(game).RenderReplayPreamble();
 						ShowReplayFile(game, mode);
 					},
 					game =>
@@ -185,7 +185,7 @@ namespace Civilization1Remaster.Tests.Differential
 						if (flip)
 							game.World.Participants[game.World.PersonParticipantIdx].FoundScienceMarkers[1] ^= 0x10;
 					},
-					game => new TurnEventsReference(game).DisplayCivilizationScenery(),
+					game => new WorldEventsReference(game).DisplayCivilizationScenery(),
 					game => game.TurnHooks.DisplayCivilizationScenery(),
 					Register.Kept,
 					game => shown == 0 ? "not shown" : regime == 3 ? "government 3" :
@@ -204,7 +204,7 @@ namespace Civilization1Remaster.Tests.Differential
 
 				return new Scenario($"EliminateSpaceship({participantIdx}), spaceships 0x{(ushort)markers:x4}",
 					game => game.World.StarshipMarkers = markers,
-					game => new TradeAndConquestReference(game).EliminateSpaceship(participantIdx),
+					game => new CityCaptureReference(game).EliminateSpaceship(participantIdx),
 					game => game.Conquest.EliminateSpaceship(participantIdx),
 					Register.Kept,
 					game => (markers & (1 << (participantIdx + 8))) == 0 ? "not launched" :

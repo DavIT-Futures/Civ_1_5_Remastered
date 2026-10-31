@@ -35,7 +35,7 @@ namespace Civilization1Remaster.Tests.Differential
 						for (int idx = 0; idx < playerColours.Length; idx++)
 							game.Processor.EmitGlobalWord((ushort)(0x1946 + (idx << 1)), playerColours[idx]);
 					},
-					game => { new StartGameMenuReference(game).DisplayTribeSelection(); HashPictures(game); },
+					game => { new NewGameSetupReference(game).DisplayTribeSelection(); HashPictures(game); },
 					game => { game.NewGameWizard.DisplayTribeSelection(); HashPictures(game); },
 					Register.Kept | Register.Acc,
 					game => sameUnits != 0 ? "same units" : "units");

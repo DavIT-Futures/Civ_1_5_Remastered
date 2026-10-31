@@ -114,12 +114,12 @@ public sealed class BatchEightyFourDifferentialTests(ITestOutputHelper output)
 
 					if (neighbour >= 0)
 					{
-						IMapLayers chart = game.MapOps.Chart;
+						IMapPlanes chart = game.MapOps.Chart;
 						int besideHoriz = (game.Processor.PullUInt8(0x3b01, (ushort)(unit + UnitMemory.Horiz)) + chart.DirectionHoriz(neighbour) + 80) % 80;
 						int besideVert = game.Processor.PullUInt8(0x3b01, (ushort)(unit + UnitMemory.Vert)) + chart.DirectionVert(neighbour);
 
-						if (besideVert >= 0 && besideVert < 50 && (chart.OwnerBits(besideHoriz, besideVert) & MapLayers.UnitsPresent) == 0)
-							chart.AssignOwnerBits(besideHoriz, besideVert, MapLayers.UnitsPresent | stranger);
+						if (besideVert >= 0 && besideVert < 50 && (chart.OwnerBits(besideHoriz, besideVert) & MapPlanes.UnitsPresent) == 0)
+							chart.AssignOwnerBits(besideHoriz, besideVert, MapPlanes.UnitsPresent | stranger);
 					}
 
 					// (the land units on board of a sailing ship, not a trireme: a trireme goes nowhere)
@@ -147,7 +147,7 @@ public sealed class BatchEightyFourDifferentialTests(ITestOutputHelper output)
 						game.World.Participants[participantIdx].Landmasses[continentIdx].TownTally = townTally[continentIdx];
 					}
 				},
-				game => new AIPlayerReference(game).ShiftAIUnit(participantIdx, troopIdx),
+				game => new ComputerPlayerReference(game).ShiftAIUnit(participantIdx, troopIdx),
 				game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Bot.ShiftAIUnit(participantIdx, troopIdx)),
 				Register.Kept | Register.Acc,
 				// Where the transport went: a city of another player, an own city, a land tile without cities, or nowhere

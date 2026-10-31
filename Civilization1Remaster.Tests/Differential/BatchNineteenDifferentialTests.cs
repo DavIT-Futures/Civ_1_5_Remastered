@@ -15,7 +15,7 @@ namespace Civilization1Remaster.Tests.Differential
 		private static readonly string[] WorldReports = { "DisplayWondersOfTheWorld", "DisplayTopCities", "DisplayFinalScore",
 			"DisplayWorldMap", "DisplayCensus", "ChooseNationToView" };
 
-		private static readonly string[] AdvisorReports = { "DisplayCityStatusReport", "RenderUnitCountsChart",
+		private static readonly string[] AdvisorScreens = { "DisplayCityStatusReport", "RenderUnitCountsChart",
 			"DisplayCivilizationScoreList", "DisplayMilitaryReport", "DisplayAttitudeReport", "DisplayTradeReport", "DisplayScienceReport" };
 
 		private static string Opened(Civilization1Remaster.GameEngine game, DifferentialPair pair, string[] reports, int[] before)
@@ -57,7 +57,7 @@ namespace Civilization1Remaster.Tests.Differential
 			{
 				ushort allShown = (ushort)chance.Next(2);
 				ushort line = (ushort)(chance.Next(3) == 0 ? 1 : chance.Next(6)); // line 1 has two reports
-				int[] before = AdvisorReports.Select(report => Calls(pair.Rewritten.Engine, pair, report)).ToArray();
+				int[] before = AdvisorScreens.Select(report => Calls(pair.Rewritten.Engine, pair, report)).ToArray();
 
 				return new Scenario($"DisplayAdvisorMenu(), all units shown {allShown}, line {line}",
 					game =>
@@ -67,8 +67,8 @@ namespace Civilization1Remaster.Tests.Differential
 					},
 					game => new GameMenusReference(game).DisplayAdvisorMenu(),
 					game => game.MenuSystem.DisplayAdvisorMenu(),
-					Register.Kept, game => Opened(game, pair, AdvisorReports, before));
-			}, output, AdvisorReports, MenuKeys);
+					Register.Kept, game => Opened(game, pair, AdvisorScreens, before));
+			}, output, AdvisorScreens, MenuKeys);
 		}
 
 		[Fact]
@@ -87,7 +87,7 @@ namespace Civilization1Remaster.Tests.Differential
 						for (int idx = 0; idx < 64; idx++)
 							game.World.Participants[idx >> 3].TroopsRuined[idx & 7] = ruined[idx];
 					},
-					game => new CivilizationInfoReference(game).RenderScoreListRecord(),
+					game => new RivalOverviewReference(game).RenderScoreListRecord(),
 					game => game.RealmInfo.RenderScoreListRecord(),
 					Register.Kept, game => allShown != 0 ? "all players" : "the human only");
 			}, output, ["all players", "the human only"], [0x0d]);

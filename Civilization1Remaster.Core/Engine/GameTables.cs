@@ -7,7 +7,7 @@ namespace Civilization1Remaster.Engine
 	/// (0x4da), buildings and wonders (0xb9a), the technologies that make the wonders obsolete (0x10fe), unit types (0x112a,
 	/// saved with the game), leaders (0x14e2), directions (0x1882 / 0x18e4), colours (0x1946), the texts of the
 	/// governments, civilizations, leaders and titles (0x1966 - 0x19c1) and the few bytes between them. The accessors of
-	/// GameModule (B5) read them here, the rest of the code through the memory (the overlay).
+	/// GameComponent (B5) read them here, the rest of the code through the memory (the overlay).
 	/// </summary>
 	public sealed class GameTables
 	{

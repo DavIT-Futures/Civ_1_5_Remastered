@@ -12,7 +12,7 @@ using Xunit;
 namespace Civilization1Remaster.Tests.Differential
 {
 	/// <summary>
-	/// UnitManagement.VisitHut against its original code: units of every player (also the barbarians, the human player and
+	/// UnitRoster.VisitHut against its original code: units of every player (also the barbarians, the human player and
 	/// planes) enter a hut at random land tiles, near cities and far from them, before and after the year 1000 and in the
 	/// first turn, with many random seeds. Every outcome of the hut must be met.
 	/// </summary>
@@ -77,7 +77,7 @@ namespace Civilization1Remaster.Tests.Differential
 				int foundings = pair.Rewritten.Calls.GetValueOrDefault("EstablishCity");
 
 				string? difference = pair.Run(scenario,
-					game => new UnitManagementReference(game).VisitHut(participantIdx, troopIdx),
+					game => new UnitRosterReference(game).VisitHut(participantIdx, troopIdx),
 					game => game.UnitOps.VisitHut(participantIdx, troopIdx),
 					DifferentialPair.Register.Kept);
 

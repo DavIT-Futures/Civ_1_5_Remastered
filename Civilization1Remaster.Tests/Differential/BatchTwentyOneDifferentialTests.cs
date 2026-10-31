@@ -63,7 +63,7 @@ namespace Civilization1Remaster.Tests.Differential
 						ref ushort relation = ref game.World.Participants[ownerIdx].Relations[game.World.PersonParticipantIdx];
 						relation = (ushort)(contact ? relation | 2 : relation & ~2);
 					},
-					game => new AIPlayerReference(game).PostCityDefenders(townIdx),
+					game => new ComputerPlayerReference(game).PostCityDefenders(townIdx),
 					game => game.Bot.PostCityDefenders(townIdx),
 					Register.Kept,
 					game => !plant ? "as loaded" : ownerIdx == game.World.PersonParticipantIdx ? "human" : contact ? "contact" : !loaded ? "empty" :
@@ -96,7 +96,7 @@ namespace Civilization1Remaster.Tests.Differential
 
 						game.Processor.EmitGlobalWord(0x680a, mode);
 					},
-					game => new GameReplayReference(game).RenderReplayMapTile(horizLoc, vertLoc),
+					game => new ReplayViewerReference(game).RenderReplayMapTile(horizLoc, vertLoc),
 					game => game.Replayer.RenderReplayMapTile(horizLoc, vertLoc),
 					Register.Kept,
 					game => mode == 4 ? "off" : tally == 0 ? "no cities" : "cities",
@@ -121,7 +121,7 @@ namespace Civilization1Remaster.Tests.Differential
 						for (int playerIdx = 0; playerIdx < 8; playerIdx++)
 							losses[playerIdx].CopyTo(game.World.Participants[playerIdx].MissingTroops, 0);
 					},
-					game => new AdvisorReportsReference(game).RenderPlayerComparisonChart(participantIdx),
+					game => new AdvisorScreensReference(game).RenderPlayerComparisonChart(participantIdx),
 					game => game.Briefings.RenderPlayerComparisonChart(participantIdx),
 					Register.Kept,
 					game => participantIdx == 0 ? "player 0" : "player in the columns");
@@ -155,7 +155,7 @@ namespace Civilization1Remaster.Tests.Differential
 						game.Processor.EmitGlobalWord(0xd4cc, horizBegin);
 						game.Processor.EmitGlobalWord(0xd75e, vertBegin);
 					},
-					game => new MainIntroReference(game).DisplayInterfaceTutorial(),
+					game => new IntroSequenceReference(game).DisplayInterfaceTutorial(),
 					game => game.Prologue.DisplayInterfaceTutorial(),
 					Register.Kept,
 					game => (special ? "special" : "") + (hut ? " hut place" : ""));

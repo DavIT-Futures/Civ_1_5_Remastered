@@ -4,7 +4,7 @@ using Civilization1Remaster.Emulation;
 namespace Civilization1Remaster.Engine
 {
 	/// <summary>
-	/// The global variables of the game named in GameModule (B4) as C# fields (B6.4); GameModule reads and writes them
+	/// The global variables of the game named in GameComponent (B4) as C# fields (B6.4); GameComponent reads and writes them
 	/// through its properties of the same names, the rest of the code through the memory (the overlays).
 	/// </summary>
 	public sealed class GameGlobals

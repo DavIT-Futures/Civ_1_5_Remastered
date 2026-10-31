@@ -155,7 +155,7 @@ public sealed class BatchSeventyNineDifferentialTests(ITestOutputHelper output)
 						game.World.ChartSight[hutHoriz, place & 0xff] = (sbyte)(game.World.ChartSight[hutHoriz, place & 0xff] & ~1);
 					}
 				},
-				game => new AIPlayerReference(game).ShiftAIUnit(participantIdx, troopIdx),
+				game => new ComputerPlayerReference(game).ShiftAIUnit(participantIdx, troopIdx),
 				game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Bot.ShiftAIUnit(participantIdx, troopIdx)),
 				Register.Kept | Register.Acc,
 				// What the move did, from the answer, the destination and the calls

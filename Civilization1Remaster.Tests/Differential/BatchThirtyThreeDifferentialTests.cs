@@ -56,7 +56,7 @@ namespace Civilization1Remaster.Tests.Differential
 						game.World.MarvelTownIdx[1] = wonder;
 						game.Processor.EmitGlobalWord(0x2f9a, line);
 					},
-					game => new GovernmentAndDiplomacyReference(game).SwitchGovernment(participantIdx, regimeKind),
+					game => new ForeignAffairsReference(game).SwitchGovernment(participantIdx, regimeKind),
 					game => game.Politics.SwitchGovernment(participantIdx, regimeKind),
 					Register.Kept, game => branch, Replay);
 			}, output, ["human, anarchy", "human, chosen", "AI, not announced", "AI, changed", "AI, overthrown"], [0x0d, 0x1b, 0x0d, 0x0d]);
@@ -80,7 +80,7 @@ namespace Civilization1Remaster.Tests.Differential
 						foreach (short idx in towns)
 							game.World.Towns[idx].StructureMarkers0 = (ushort)((game.World.Towns[idx].StructureMarkers0 & ~1) | (idx == palaceIdx ? 1 : 0));
 					},
-					game => new NewspaperReference(game).DisplayNewspaper(townIdx),
+					game => new GazetteReference(game).DisplayNewspaper(townIdx),
 					game => game.Paper.DisplayNewspaper(townIdx),
 					Register.Kept,
 					game => townIdx == -1 ? (palaceIdx == -1 ? "first city" : "palace city") : townIdx == -2 ? "palace city, not shown" : "given city");
@@ -102,7 +102,7 @@ namespace Civilization1Remaster.Tests.Differential
 
 				return new Scenario($"PullTextInput({horizLoc}, {vertLoc}, {breadth}), text \"{text}\"",
 					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Libc.CopyText(0xba06, text)),
-					game => new NewCityScreenReference(game).PullTextInput(horizLoc, vertLoc, breadth),
+					game => new CityNamingScreenReference(game).PullTextInput(horizLoc, vertLoc, breadth),
 					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.CityNaming.PullTextInput(horizLoc, vertLoc, breadth)),
 					Register.Acc | Register.Kept,
 					game => game.Processor.RegAcc.Value16 != 0 ? "accepted" : "cancelled");
@@ -137,7 +137,7 @@ namespace Civilization1Remaster.Tests.Differential
 						relations.CopyTo(participant.Relations, 0);
 						science.CopyTo(participant.FoundScienceMarkers, 0);
 					},
-					game => new AdvisorReportsReference(game).DisplayIntelligenceReport(participantIdx),
+					game => new AdvisorScreensReference(game).DisplayIntelligenceReport(participantIdx),
 					game => game.Briefings.DisplayIntelligenceReport(participantIdx),
 					Register.Kept,
 					game => $"{(hardness <= 1 ? "military" : "no military")}{(knownTechnologies > 12 ? ", screen full" : "")}");

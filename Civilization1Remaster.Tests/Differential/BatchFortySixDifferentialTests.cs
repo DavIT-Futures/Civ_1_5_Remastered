@@ -32,7 +32,7 @@ namespace Civilization1Remaster.Tests.Differential
 						if (wonder)
 							game.World.MarvelTownIdx[0x13] = -1;
 					},
-					game => new CityFoundingAndScoreReference(game).EstablishCity(participantIdx, 0, horizLoc, vertLoc, size),
+					game => new SettlementAndScoringReference(game).EstablishCity(participantIdx, 0, horizLoc, vertLoc, size),
 					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Founding.EstablishCity(participantIdx, 0, horizLoc, vertLoc, size)),
 					Register.Acc | Register.Kept,
 					game => game.Processor.RegAcc.Value16 == 0xffff ? "no city" : participantIdx == person ? "human city" : "AI city");

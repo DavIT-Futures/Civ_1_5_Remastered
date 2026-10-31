@@ -8,7 +8,7 @@ using Xunit;
 namespace Civilization1Remaster.Tests
 {
 	/// <summary>
-	/// The strength of an own stack a computer unit weighs (AIPlayer.ScoreTile): divided by the tally + 1, or with
+	/// The strength of an own stack a computer unit weighs (ComputerPlayer.ScoreTile): divided by the tally + 1, or with
 	/// ClassicStackStrength (the tests) by SI as the second tally leaves it (0x600 * player), as the translated code did.
 	/// </summary>
 	public class StackStrengthTests

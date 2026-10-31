@@ -43,7 +43,7 @@ namespace Civilization1Remaster.Tests.Differential
 
 				return new Scenario($"ShiftUnit({horizLoc}, {vertLoc}, {participantIdx}, {troopIdx}, {marker})",
 					game => { },
-					game => new UnitManagementReference(game).ShiftUnit(horizLoc, vertLoc, participantIdx, troopIdx, marker),
+					game => new UnitRosterReference(game).ShiftUnit(horizLoc, vertLoc, participantIdx, troopIdx, marker),
 					game => game.UnitOps.ShiftUnit(horizLoc, vertLoc, participantIdx, troopIdx, marker),
 					Register.Kept,
 					game => Calls(game, pair, "BargainPeaceTreaty") > treaties ? "peace offer" :
@@ -81,7 +81,7 @@ namespace Civilization1Remaster.Tests.Differential
 
 				return new Scenario($"DisplayBattleScreen({participantIdx}, {troopIdx}), mouse {mouse}",
 					game => game.Processor.EmitGlobalWord(0x1a3c, mouse),
-					game => new UnitManagementReference(game).DisplayBattleScreen(participantIdx, troopIdx),
+					game => new UnitRosterReference(game).DisplayBattleScreen(participantIdx, troopIdx),
 					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.UnitOps.DisplayBattleScreen(participantIdx, troopIdx)),
 					Register.Acc | Register.Kept,
 					game => mouse != 0 ? "mouse" : troops.Following(participantIdx, troopIdx) != -1 ? "stack" : "single unit");
@@ -118,7 +118,7 @@ namespace Civilization1Remaster.Tests.Differential
 
 				return new Scenario($"LocateNearestFriendlyCity({participantIdx}, {troopIdx})",
 					game => { },
-					game => new UnitManagementReference(game).LocateNearestFriendlyCity(participantIdx, troopIdx),
+					game => new UnitRosterReference(game).LocateNearestFriendlyCity(participantIdx, troopIdx),
 					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.UnitOps.LocateNearestFriendlyCity(participantIdx, troopIdx)),
 					Register.Acc | Register.Kept,
 					game => game.Processor.RegAcc.Value16 == 0 ? "no step" : "step");
@@ -150,7 +150,7 @@ namespace Civilization1Remaster.Tests.Differential
 							gameTroops.Assign(participantIdx, troopIdx, UnitMemory.Status, status);
 							gameTroops.Assign(participantIdx, troopIdx, UnitMemory.UnusualSteps, unusual);
 						},
-						game => new UnitManagementReference(game).RestoreUnitOrders(participantIdx, troopIdx),
+						game => new UnitRosterReference(game).RestoreUnitOrders(participantIdx, troopIdx),
 						game => game.UnitOps.RestoreUnitOrders(participantIdx, troopIdx),
 						Register.Kept, game => "orders");
 				}
@@ -161,7 +161,7 @@ namespace Civilization1Remaster.Tests.Differential
 						if (plane)
 							new UnitMemory(game.Processor).Assign(participantIdx, troopIdx, UnitMemory.Kind, 14);
 					},
-					game => new UnitManagementReference(game).EliminateSeaUnit(participantIdx, troopIdx),
+					game => new UnitRosterReference(game).EliminateSeaUnit(participantIdx, troopIdx),
 					game => game.UnitOps.EliminateSeaUnit(participantIdx, troopIdx),
 					Register.Kept, game => plane ? "plane" : "other unit");
 			}, output, ["orders", "plane", "other unit"]);

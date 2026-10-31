@@ -50,7 +50,7 @@ namespace Civilization1Remaster.Tests.Differential
 
 						game.World.BotRivalTally = rivals;
 					},
-					game => new CivilizationSchismReference(game).DivideCivilization(participantIdx),
+					game => new CivilWarReference(game).DivideCivilization(participantIdx),
 					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Secession.DivideCivilization(participantIdx)),
 					Register.Acc | Register.Kept,
 					game => game.Processor.RegAcc.Value16 != 0 ? "divided" : "not divided");

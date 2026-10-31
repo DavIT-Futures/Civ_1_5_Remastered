@@ -40,7 +40,7 @@ public sealed class BatchNinetyNineDifferentialTests(ITestOutputHelper output)
 		{
 			GameEngine engine = pair.Rewritten.Engine;
 			short person = engine.World.PersonParticipantIdx;
-			IMapLayers sight = engine.MapOps.Chart;
+			IMapPlanes sight = engine.MapOps.Chart;
 			// The mover: the first unit of the human that moves, or (a third of the time) a unit of a computer player next to a
 			// city of the human, as a diplomat or caravan; the city: own or foreign, its production (a wonder from -25 down)
 			bool computer = chance.Next(3) == 0;
@@ -64,7 +64,7 @@ public sealed class BatchNinetyNineDifferentialTests(ITestOutputHelper output)
 				$"HandlePlayerTurn({participantIdx}), kind {kind:x}, own city {ownCity}, making {making}, near home {nearHome}, side {side}, answers {string.Join(" ", answers.Select(key => key.ToString("x")))}",
 				game =>
 				{
-					IMapLayers chart = game.MapOps.Chart;
+					IMapPlanes chart = game.MapOps.Chart;
 					var towns = Enumerable.Range(0, 128).Where(townIdx => game.World.Towns[townIdx].ConditionMarker != 0xff &&
 						(ownCity || computer ? game.World.Towns[townIdx].ParticipantIdx == person : game.World.Towns[townIdx].ParticipantIdx != person)).ToList();
 					int mover = Enumerable.Range(0, 128).FirstOrDefault(troop => UnitByte(game, participantIdx, troop, UnitMemory.Kind) != 0xff &&
@@ -79,7 +79,7 @@ public sealed class BatchNinetyNineDifferentialTests(ITestOutputHelper output)
 						int horizLoc = (town.Place.X + chart.DirectionHoriz(side) + 80) % 80;
 						int vertLoc = town.Place.Y + chart.DirectionVert(side);
 
-						if (vertLoc > 0 && vertLoc < 49 && chart.Terrain(horizLoc, vertLoc) != MapRules.OceanTerrain && (chart.OwnerBits(horizLoc, vertLoc) & MapLayers.UnitsPresent) == 0)
+						if (vertLoc > 0 && vertLoc < 49 && chart.Terrain(horizLoc, vertLoc) != MapRules.OceanTerrain && (chart.OwnerBits(horizLoc, vertLoc) & MapPlanes.UnitsPresent) == 0)
 						{
 							ushort unit = UnitMemory.Address(participantIdx, mover);
 							game.MapOps.DiscardUnitFromTile(participantIdx, (short)mover, UnitByte(game, participantIdx, mover, UnitMemory.Horiz), UnitByte(game, participantIdx, mover, UnitMemory.Vert));
@@ -88,7 +88,7 @@ public sealed class BatchNinetyNineDifferentialTests(ITestOutputHelper output)
 							game.Processor.EmitUInt8(0x3b01, (ushort)(unit + UnitMemory.Kind), kind);
 							game.Processor.EmitUInt8(0x3b01, (ushort)(unit + UnitMemory.TravelHoriz), 0xff);
 							game.Processor.EmitUInt8(0x3b01, (ushort)(unit + UnitMemory.Status), 0);
-							chart.AssignOwnerBits(horizLoc, vertLoc, MapLayers.UnitsPresent | participantIdx);
+							chart.AssignOwnerBits(horizLoc, vertLoc, MapPlanes.UnitsPresent | participantIdx);
 							game.Processor.EmitUInt16(0x3b01, 0xd4cc, (ushort)Math.Max(0, horizLoc - 7));
 							game.Processor.EmitUInt16(0x3b01, 0xd75e, (ushort)Math.Max(0, vertLoc - 5));
 
@@ -108,7 +108,7 @@ public sealed class BatchNinetyNineDifferentialTests(ITestOutputHelper output)
 
 					HumanTurnScript.Install(game, inputs);
 				},
-				game => new PlayerTurnReference(game).HandlePlayerTurn(participantIdx),
+				game => new TurnControllerReference(game).HandlePlayerTurn(participantIdx),
 				game => game.TurnLogic.HandlePlayerTurn(participantIdx),
 				Register.Kept,
 				// What the move met, from the calls and the cities

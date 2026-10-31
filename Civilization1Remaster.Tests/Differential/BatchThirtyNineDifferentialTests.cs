@@ -52,7 +52,7 @@ namespace Civilization1Remaster.Tests.Differential
 						ushort[] science = game.World.Participants[person].FoundScienceMarkers;
 						science[2] = (ushort)((science[2] & ~8) | (temple ? 8 : 0));
 					},
-					game => new CityViewReference(game).RenderCityScenery(townIdx, 0x18, 0x8c, breadth),
+					game => new CityPanoramaReference(game).RenderCityScenery(townIdx, 0x18, 0x8c, breadth),
 					game => game.CityScene.RenderCityScenery(townIdx, 0x18, 0x8c, breadth),
 					Register.Acc | Register.Kept,
 					game =>
@@ -91,7 +91,7 @@ namespace Civilization1Remaster.Tests.Differential
 							game.VideoCard.Tokens.Enqueue(key);
 						}
 					},
-					game => new DialogDrawingReference(game).ObtainNavigationKey(),
+					game => new DialogPainterReference(game).ObtainNavigationKey(),
 					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Dialogs.ObtainNavigationKey()),
 					Register.Acc | Register.Kept,
 					game => mapped.Contains(key) ? "navigation" : (key & 0xff) != 0 ? "character" : "other scan code");
@@ -145,7 +145,7 @@ namespace Civilization1Remaster.Tests.Differential
 						for (int idx = 0; idx < 8; idx++)
 							game.Processor.EmitGlobalWord((ushort)(sp - 2 - 0x16 + (idx << 1)), leftover[idx]);
 					},
-					game => new AdvisorReportsReference(game).DisplayMilitaryReport(),
+					game => new AdvisorScreensReference(game).DisplayMilitaryReport(),
 					game => game.Briefings.DisplayMilitaryReport(),
 					Register.Acc | Register.Kept,
 					game => $"{(mouse ? "mouse" : "keys")}, {(Calls(game, pair, "DisplayIntelligenceReport") > reports ? "report" : "no report")}",
@@ -191,7 +191,7 @@ namespace Civilization1Remaster.Tests.Differential
 						for (int idx = 0; idx < before.Length; idx++)
 							before[idx] = game.Processor.PullUInt8(0x3772, (ushort)(grid - 0x100 + idx));
 					},
-					game => new SpaceshipScreenReference(game).AttachSpaceshipPart(participantIdx, kind),
+					game => new SpaceshipBayReference(game).AttachSpaceshipPart(participantIdx, kind),
 					game => game.RocketScreen.AttachSpaceshipPart(participantIdx, kind),
 					Register.Acc | Register.Kept,
 					game =>
