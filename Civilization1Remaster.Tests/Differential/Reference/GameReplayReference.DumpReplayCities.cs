@@ -36,9 +36,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullLocalWord(0x4), 0x50);
 			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0c68;
 
-			this.owner.MapOps.ObtainTerrainType(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainTerrainType(
 				this.processor.PullLocalSignedWord(0x4),
-				this.processor.PullLocalSignedWord(0x6));
+				this.processor.PullLocalSignedWord(0x6)));
 
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
 			if (this.processor.FlagSet.IsNotEqual) goto L0c3f;
@@ -80,9 +80,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullLocalWord(0x4), 0x50);
 			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0d24;
 
-			this.owner.MapOps.ObtainTerrainType(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainTerrainType(
 				this.processor.PullLocalSignedWord(0x4),
-				this.processor.PullLocalSignedWord(0x6));
+				this.processor.PullLocalSignedWord(0x6)));
 
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
 			if (this.processor.FlagSet.IsEqual) goto L0cbc;
@@ -104,9 +104,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x6));
 			if (this.processor.FlagSet.IsNotEqual) goto L0cdf;
 
-			this.owner.MapOps.ObtainTileImprovements(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainTileImprovements(
 				this.processor.PullLocalSignedWord(0x4),
-				this.processor.PullLocalSignedWord(0x6));
+				this.processor.PullLocalSignedWord(0x6)));
 
 			this.processor.TestBitsByte(this.processor.RegAcc.LowByte, 0x1);
 			if (this.processor.FlagSet.IsNotEqual) goto L0d1f;
@@ -117,7 +117,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L0c71;
 
 		L0d24:
-			this.owner.Libc.WriteHandle((short)this.processor.PullGlobalWord(0x680c), 0xba06, 0x52);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.WriteHandle((short)this.processor.PullGlobalWord(0x680c), 0xba06, 0x52));
 
 			this.processor.IncrementLocalWord(0x6);
 

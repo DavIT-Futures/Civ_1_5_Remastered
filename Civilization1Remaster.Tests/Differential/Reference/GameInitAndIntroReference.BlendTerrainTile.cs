@@ -21,7 +21,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			// function body
 			this.processor.EnterFrame();
 
-			this.owner.VideoCard.ObtainDot(1, horizLoc - 1, vertLoc - 1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.VideoCard.ObtainDot(1, horizLoc - 1, vertLoc - 1));
 
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1);
 			if (this.processor.FlagSet.IsNotEqual) goto L05f6;
@@ -31,17 +31,17 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L065a;
 
 		L05f6:
-			this.owner.VideoCard.ObtainDot(1, horizLoc - 1, vertLoc + 1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.VideoCard.ObtainDot(1, horizLoc - 1, vertLoc + 1));
 
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1);
 			if (this.processor.FlagSet.IsEqual) goto L05f2;
 
-			this.owner.VideoCard.ObtainDot(1, horizLoc + 1, vertLoc - 1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.VideoCard.ObtainDot(1, horizLoc + 1, vertLoc - 1));
 
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1);
 			if (this.processor.FlagSet.IsEqual) goto L05f2;
 
-			this.owner.VideoCard.ObtainDot(1, horizLoc + 1, vertLoc + 1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.VideoCard.ObtainDot(1, horizLoc + 1, vertLoc + 1));
 
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1);
 			if (this.processor.FlagSet.IsEqual) goto L05f2;

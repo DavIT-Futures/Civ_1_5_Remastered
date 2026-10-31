@@ -41,27 +41,27 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L063d:
 			this.processor.CompareWord(this.processor.PullGlobalWord(0x681a), 0x0);
 			if (this.processor.FlagSet.IsEqual) goto L0649;
-			this.owner.Libc.CopyText(0xba06, "  Which drive contains your\n    saved game files?\n\n            ");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "  Which drive contains your\n    saved game files?\n\n            "));
 			goto L064c;
 
 		L0649:
-			this.owner.Libc.CopyText(0xba06, "  Which drive contains your\n     Save Game disk?\n\n            ");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "  Which drive contains your\n     Save Game disk?\n\n            "));
 
 		L064c:
-			this.owner.Libc.TextLength(0xba06);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.TextLength(0xba06));
 
 			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
 			this.processor.RegAcc.LowByte = this.processor.PullGlobalByte(0x4384);
 			this.processor.RegAcc.LowByte = this.processor.SumByte(this.processor.RegAcc.LowByte, 0x41);
 			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xba05), this.processor.RegAcc.LowByte);
 
-			this.owner.Libc.AppendText(0xba06, ":\n\n    Press drive letter and\nReturn when disk is inserted.\n");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, ":\n\n    Press drive letter and\nReturn when disk is inserted.\n"));
 
-			this.owner.Libc.AppendText(0xba06, "    Press Escape to cancel.\n");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "    Press Escape to cancel.\n"));
 
-			this.owner.BlockText.RenderTextChunk(99, 80, 72, 0);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.BlockText.RenderTextChunk(99, 80, 72, 0));
 
-			this.owner.Dialogs.ObtainNavigationKey();
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Dialogs.ObtainNavigationKey());
 
 			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x41);
@@ -137,21 +137,21 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullGlobalWord(0x4384), 0xffff);
 			if (this.processor.FlagSet.IsEqual) goto L07c7;
 
-			this.owner.SaveLoad.VerifyDrive(this.processor.PullGlobalWord(0x4384));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.SaveLoad.VerifyDrive(this.processor.PullGlobalWord(0x4384)));
 
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsNotEqual) goto L07c7;
 
-			this.owner.Libc.CopyText(0xba06, "No Disk in Drive A.\n");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "No Disk in Drive A.\n"));
 
-			this.owner.Libc.TextLength(0xba06);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.TextLength(0xba06));
 
 			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
 			this.processor.RegAcc.LowByte = this.processor.PullGlobalByte(0x4384);
 			this.processor.RegAcc.LowByte = this.processor.SumByte(this.processor.RegAcc.LowByte, 0x41);
 			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xba03), this.processor.RegAcc.LowByte);
 
-			this.owner.Dialogs.DisplayMenu(0xba06, 100, 80, 1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Dialogs.DisplayMenu(0xba06, 100, 80, 1));
 
 			this.processor.RegAcc.Value16 = 0xffff;
 			goto L07d2;

@@ -225,7 +225,7 @@ public sealed class BatchEightyThreeDifferentialTests(ITestOutputHelper output)
 					ArrangeSurroundings(game, participantIdx, troopIdx, members, pole, around);
 				},
 				game => new AIPlayerReference(game).ShiftAIUnit(participantIdx, troopIdx),
-				game => game.Bot.ShiftAIUnit(participantIdx, troopIdx),
+				game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Bot.ShiftAIUnit(participantIdx, troopIdx)),
 				Register.Kept | Register.Acc,
 				// What the transport did: entered a landing tile, unloaded its units, forgot its destination (then the code after chooses
 				// another one), or else

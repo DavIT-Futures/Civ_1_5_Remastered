@@ -148,10 +148,10 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 				0xba06,
 				0x20);
 
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText((short)this.processor.PullLocalWord(0x2), 10));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06,
+				this.owner.Libc.IntegerToText((short)this.processor.PullLocalWord(0x2), 10)));
 
-			this.owner.Libc.AppendText(0xba06, "% exceeds even");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "% exceeds even"));
 
 			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 14, 15);
 
@@ -165,7 +165,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.Value16 = 0x3482;
 
 		L08cd:
-			this.owner.Libc.AppendText(0xba06, this.processor.RegAcc.Value16);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, this.processor.RegAcc.Value16));
 
 			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 22, 15);
 
@@ -204,7 +204,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 				80, 183 - (short)arg1 * 8,
 				160, 8, 15, 14);
 
-			this.owner.Conquest.AwaitForKeyPressOrMouseClick();
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Conquest.AwaitForKeyPressOrMouseClick());
 
 			this.owner.Services.PerformSound(1, 0);
 

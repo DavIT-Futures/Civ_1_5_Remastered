@@ -43,7 +43,7 @@ namespace Civilization1Remaster.Tests.Differential
 							game.World.Towns[townIdx].ConditionMarker & ~0x40);
 					},
 					game => new CityManagementReference(game).MayCityWorkTile(horizLoc, vertLoc, resource),
-					game => game.CityOps.MayCityWorkTile(horizLoc, vertLoc, resource),
+					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.CityOps.MayCityWorkTile(horizLoc, vertLoc, resource)),
 					Register.Acc | Register.Kept,
 					game => vertLoc < 0 || vertLoc >= 50 ? "outside" : real ? "real improvements" : "assumed improvements");
 			}, output, ["outside", "real improvements", "assumed improvements"]);

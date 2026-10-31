@@ -58,21 +58,21 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegData.Value16 = this.processor.BitOrWord(this.processor.RegData.Value16, this.processor.RegData.Value16);
 			if (this.processor.FlagSet.IsNotEqual) goto L066f;
 
-			this.owner.Replayer.ObtainReplayYear(this.processor.PullLocalWord(0xa));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Replayer.ObtainReplayYear(this.processor.PullLocalWord(0xa)));
 
 			this.processor.EmitLocalWord(0x10, this.processor.RegAcc.Value16);
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText(Math.Abs((short)this.processor.PullLocalWord(0x10)), 10));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06,
+				this.owner.Libc.IntegerToText(Math.Abs((short)this.processor.PullLocalWord(0x10)), 10)));
 
 			if (this.processor.PullLocalSignedWord(0x10) < 0)
 			{
-				this.owner.Libc.AppendText(0xba06, 0x43d2);
+				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, 0x43d2));
 			}
 			else
 			{
-				this.owner.Libc.AppendText(0xba06, 0x43d5);
+				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, 0x43d5));
 			}
 
 			this.owner.TextPainter.RenderTextToScreen0(0xba06, (short)this.processor.RegSource.Value16, 194, 15);
@@ -208,7 +208,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L079c;
 
 		L07ea:
-			this.owner.Conquest.AwaitForKeyPressOrMouseClick();
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Conquest.AwaitForKeyPressOrMouseClick());
 
 			this.owner.VideoCard.RenderImage(
 				this.processor.PullGlobalWord(0x19d4),

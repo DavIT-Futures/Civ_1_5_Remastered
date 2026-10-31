@@ -40,10 +40,10 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EmitLocalWord(0x24, 0x0);
 
 		L1b20:
-			this.owner.VideoCard.ScreenToPicture(1,
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.VideoCard.ScreenToPicture(1,
 				(ushort)(((this.processor.PullLocalWord(0x24) % 4) * 0x4f) + 1),
 				(ushort)(((this.processor.PullLocalWord(0x24) >> 2) * 0x42) + 1),
-				0x4e, 0x41);
+				0x4e, 0x41));
 
 			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x24);
 			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
@@ -73,7 +73,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L1c89;
 
 		L1bb5:
-			this.owner.Services.RestoreTimer();
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Services.RestoreTimer());
 
 			this.owner.VideoCard.RenderImage(
 				this.processor.PullGlobalWord(0x19d4),
@@ -128,7 +128,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.Startup.ObtainMouseState();
 
-			this.owner.Libc.KeyAvailable();
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.KeyAvailable());
 
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsNotEqual) goto L1c89;

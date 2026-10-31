@@ -26,23 +26,23 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L0480:
 			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x204);
 			this.processor.RegSource.Value16 <<= 1;
-			this.owner.Libc.FindSubtext(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x30ae)));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.FindSubtext(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x30ae))));
 
 			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsEqual) goto L04e0;
 
-			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x202), this.processor.RegAcc.Value16);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x202), this.processor.RegAcc.Value16));
 
 			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x2);
 			this.processor.EmitUInt8(this.processor.SegData.Value16, this.processor.RegBase.Value16, 0x0);
 
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x30b8)));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x30b8))));
 
-			this.owner.Libc.TextLength(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x30ae)));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.TextLength(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x30ae))));
 
 			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
-			this.owner.Libc.AppendText(0xba06, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegDest.Value16 - 0x202));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, (ushort)(this.processor.RegFrame.Value16 + this.processor.RegDest.Value16 - 0x202)));
 
 		L04e0:
 			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x0);

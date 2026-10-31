@@ -30,7 +30,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 				this.processor.PullGlobalWord(0x19d4),
 				0, 0);
 
-			this.owner.CityNaming.DisplayLabelInputBox(0x53ce);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.CityNaming.DisplayLabelInputBox(0x53ce));
 
 			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xffff);
@@ -56,7 +56,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.TextPainter.RenderTextToScreen0(0x53f3, 82, 80, 0);
 
-			this.owner.Conquest.AwaitForKeyPressOrMouseClick();
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Conquest.AwaitForKeyPressOrMouseClick());
 
 			this.owner.VideoCard.RenderImage(
 				this.processor.PullGlobalWord(0x19d4),

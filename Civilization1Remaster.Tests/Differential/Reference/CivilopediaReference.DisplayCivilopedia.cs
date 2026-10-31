@@ -29,7 +29,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EmitLocalWord(0x4, 0x0);
 
 		L0015:
-			this.owner.Encyclopedia.DisplayCivilopediaIndex(this.processor.PullLocalWord(0x4), arg1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Encyclopedia.DisplayCivilopediaIndex(this.processor.PullLocalWord(0x4), arg1));
 			
 			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xffff);
@@ -46,7 +46,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0xfffe);
 			if (this.processor.FlagSet.IsNotEqual) goto L0015;
 
-			this.owner.Startup.QueryForDisk(0, 1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Startup.QueryForDisk(0, 1));
 
 			this.owner.TurnHooks.RepaintMainScreen();
 

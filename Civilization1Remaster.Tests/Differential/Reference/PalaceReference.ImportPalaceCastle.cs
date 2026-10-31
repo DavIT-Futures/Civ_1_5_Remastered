@@ -27,10 +27,10 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L104e;
 
 		L0ea4:
-			this.owner.VideoCard.ScreenToPicture(1,
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.VideoCard.ScreenToPicture(1,
 				this.processor.PullLocalWord(0x16),
 				(ushort)(this.processor.PullLocalWord(0x18) + 1),
-				0x34, 0x63);
+				0x34, 0x63));
 
 		L0eb4:
 			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x12);
@@ -82,19 +82,19 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L0ed0;
 
 		L0f29:
-			this.owner.VideoCard.ScreenToPicture(1,
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.VideoCard.ScreenToPicture(1,
 				(ushort)(this.processor.PullLocalWord(0x16) + 0x35),
 				(ushort)(this.processor.PullLocalWord(0x18) + 1),
-				0x18, 0x63);
+				0x18, 0x63));
 
 		L0f3c:
 			goto L0eb4;
 
 		L0f40:
-			this.owner.VideoCard.ScreenToPicture(1,
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.VideoCard.ScreenToPicture(1,
 				(ushort)(this.processor.PullLocalWord(0x16) + 0x4e),
 				(ushort)(this.processor.PullLocalWord(0x18) + 1),
-				0x18, 0x63);
+				0x18, 0x63));
 			goto L0f3c;
 
 		L0f55:
@@ -112,14 +112,14 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			if (this.processor.FlagSet.IsEqual) goto L0f88;
 
 		L0f73:
-			this.owner.VideoCard.ScreenToPicture(1,
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.VideoCard.ScreenToPicture(1,
 				(ushort)(this.processor.PullLocalWord(0x16) + 0x67),
 				(ushort)(this.processor.PullLocalWord(0x18) + 1),
-				0x1c, 0x63);
+				0x1c, 0x63));
 			goto L0f3c;
 
 		L0f88:
-			this.owner.VideoCard.ScreenToPicture(1, 0xa0, 0x65, 0x23, 0x63);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.VideoCard.ScreenToPicture(1, 0xa0, 0x65, 0x23, 0x63));
 			goto L0f3c;
 
 		L0f99:
@@ -137,14 +137,14 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			if (this.processor.FlagSet.IsEqual) goto L0fcd;
 
 		L0fb7:
-			this.owner.VideoCard.ScreenToPicture(1,
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.VideoCard.ScreenToPicture(1,
 				(ushort)(this.processor.PullLocalWord(0x16) + 0x84),
 				(ushort)(this.processor.PullLocalWord(0x18) + 1),
-				0x1b, 0x63);
+				0x1b, 0x63));
 			goto L0f3c;
 
 		L0fcd:
-			this.owner.VideoCard.ScreenToPicture(1, 0xc4, 0x65, 0x23, 0x63);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.VideoCard.ScreenToPicture(1, 0xc4, 0x65, 0x23, 0x63));
 			goto L0f3c;
 
 		L0fdf:
@@ -206,7 +206,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.TestBitsWord(this.processor.RegAcc.Value16, arg1);
 			if (this.processor.FlagSet.IsEqual) goto L104b;
 
-			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x10), "castle0.pic");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x10), "castle0.pic"));
 
 			this.processor.RegAcc.LowByte = this.processor.PullLocalByte(0x1a);
 			this.processor.RegAcc.LowByte = this.processor.SumByte(this.processor.RegAcc.LowByte, 0x30);

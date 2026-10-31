@@ -42,19 +42,19 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
 			this.processor.RegDest.Value16 = this.processor.IncrementWord(this.processor.RegDest.Value16);
 
-			this.owner.VideoCard.ScreenToPicture(1, this.processor.RegDest.Value16, 1, 0x1f, 0x1f);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.VideoCard.ScreenToPicture(1, this.processor.RegDest.Value16, 1, 0x1f, 0x1f));
 			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x817a), this.processor.RegAcc.Value16);
 			
-			this.owner.VideoCard.ScreenToPicture(1, this.processor.RegDest.Value16, 0x21, 0x1f, 0x1f);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.VideoCard.ScreenToPicture(1, this.processor.RegDest.Value16, 0x21, 0x1f, 0x1f));
 			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x817e), this.processor.RegAcc.Value16);
 
 			this.processor.RegDest.Value16 = this.processor.PullLocalWord(0x6);
 			this.processor.RegDest.Value16 = this.processor.SumWord(this.processor.RegDest.Value16, 0x21);
 
-			this.owner.VideoCard.ScreenToPicture(1, this.processor.RegDest.Value16, 1, 0x1f, 0x1f);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.VideoCard.ScreenToPicture(1, this.processor.RegDest.Value16, 1, 0x1f, 0x1f));
 			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x817c), this.processor.RegAcc.Value16);
 
-			this.owner.VideoCard.ScreenToPicture(1, this.processor.RegDest.Value16, 0x21, 0x1f, 0x1f);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.VideoCard.ScreenToPicture(1, this.processor.RegDest.Value16, 0x21, 0x1f, 0x1f));
 			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x8180), this.processor.RegAcc.Value16);
 
 			this.processor.IncrementLocalWord(0x4);
@@ -80,17 +80,17 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsEqual)
 			{
-				this.owner.VideoCard.ScreenToPicture(1,
+				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.VideoCard.ScreenToPicture(1,
 					(ushort)((this.processor.PullLocalWord(0x4) & 0x7) * 0x18),
 					(ushort)(((this.processor.PullLocalWord(0x4) >> 3) << 3) + 0x41),
-					0x18, 0x8);
+					0x18, 0x8));
 			}
 			else
 			{
-				this.owner.VideoCard.ScreenToPicture(1,
+				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.VideoCard.ScreenToPicture(1,
 					(ushort)((this.processor.PullLocalWord(0x4) & 0x7) * 0x18),
 					(ushort)(((this.processor.PullLocalWord(0x4) >> 3) << 3) + 0x51),
-					0x18, 0x8);
+					0x18, 0x8));
 			}
 			goto L1433;
 
@@ -134,10 +134,10 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			if (this.processor.FlagSet.IsLessOrEqual) goto L153a;
 
 		L14fb:
-			this.owner.VideoCard.ScreenToPicture(1,
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.VideoCard.ScreenToPicture(1,
 				(ushort)(((this.processor.PullLocalWord(0x4) >> 2) * 0x32) + 1),
 				(ushort)(((this.processor.PullLocalWord(0x4) & 0x3) * 0x32) + 1),
-				0x31, 0x31);
+				0x31, 0x31));
 
 			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x4);
 			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
@@ -167,7 +167,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L157e:
 			this.processor.EmitLocalWord(0x2, 0x1);
 
-			this.owner.CityScene.SeizeCityScenery(this.processor.PullLocalWord(0x4));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.CityScene.SeizeCityScenery(this.processor.PullLocalWord(0x4)));
 
 			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x4);
 			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
@@ -197,7 +197,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L15da:
 			this.processor.EmitLocalWord(0x2, 0x1);
 
-			this.owner.CityScene.SeizeCityScenery(this.processor.PullLocalWord(0x4));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.CityScene.SeizeCityScenery(this.processor.PullLocalWord(0x4)));
 
 			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x4);
 			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);

@@ -33,15 +33,15 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			if ((this.owner.World.Participants[this.owner.World.PersonParticipantIdx].Relations[participantIdx] & 2) == 0)
 				goto L0d48;
 
-			this.owner.Libc.CopyText(0xba06, "We have signed a\npeace treaty with\nthe ");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "We have signed a\npeace treaty with\nthe "));
 
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1992)));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1992))));
 
-			this.owner.Libc.AppendText(0xba06, "!\n Cancel action.\n Break treaty.\n");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "!\n Cancel action.\n Break treaty.\n"));
 
 			this.processor.EmitGlobalWord(0x2f9e, 0x5);
 
-			this.owner.TurnHooks.DisplayDialog(0xba06, 80, 80);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 80, 80));
 
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1);
 			if (this.processor.FlagSet.IsEqual) goto L0d0a;
@@ -53,11 +53,11 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L0d0a:
 			if (this.owner.World.Participants[this.owner.World.PersonParticipantIdx].RegimeKind < 4) goto L0d43;
 
-			this.owner.Libc.CopyText(0xba06, "Overruled by\nthe Senate.\nAction canceled.\n");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "Overruled by\nthe Senate.\nAction canceled.\n"));
 
 			this.processor.EmitGlobalWord(0x2f9e, 0x4);
 
-			this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80));
 
 			goto L0d05;
 

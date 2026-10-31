@@ -33,16 +33,16 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			if (marker != 1 || marker < 0)
 				goto L69bb;
 
-			this.owner.MapOps.RenderMapTile(this.processor.PullLocalSignedWord(0x6),
-				this.processor.PullLocalSignedWord(0xa));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.RenderMapTile(this.processor.PullLocalSignedWord(0x6),
+				this.processor.PullLocalSignedWord(0xa)));
 
 			this.processor.EmitLocalWord(0x10, 0x0);
 			this.processor.EmitLocalWord(0x2, 0x0);
 
 		L6981:
-			this.owner.CityOps.MayCityWorkTile(this.processor.PullLocalSignedWord(0x6),
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.CityOps.MayCityWorkTile(this.processor.PullLocalSignedWord(0x6),
 				this.processor.PullLocalSignedWord(0xa),
-				this.processor.PullLocalWord(0x2));
+				this.processor.PullLocalWord(0x2)));
 
 			this.processor.EmitLocalWord(0x10, this.processor.SumWord(this.processor.PullLocalWord(0x10), this.processor.RegAcc.Value16));
 			this.processor.IncrementLocalWord(0x2);
@@ -95,9 +95,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x3);
 			if (this.processor.FlagSet.IsGreaterOrEqual) goto L6a76;
 
-			this.owner.CityOps.MayCityWorkTile(this.processor.PullLocalSignedWord(0x6),
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.CityOps.MayCityWorkTile(this.processor.PullLocalSignedWord(0x6),
 				this.processor.PullLocalSignedWord(0xa),
-				this.processor.PullLocalWord(0x2));
+				this.processor.PullLocalWord(0x2)));
 
 			this.processor.EmitLocalWord(0xc, this.processor.RegAcc.Value16);
 			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x2);

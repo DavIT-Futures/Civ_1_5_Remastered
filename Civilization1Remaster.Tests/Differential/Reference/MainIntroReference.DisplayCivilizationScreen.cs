@@ -23,17 +23,17 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EnterFrame(0x246);
 			this.processor.PreserveSource();
 
-			this.owner.Startup.QueryForDisk(6, 1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Startup.QueryForDisk(6, 1));
 
 			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x32d8, 0);
 
 			this.processor.EmitLocalWord(0x23e, 0x0);
 
 		L0c0c:
-			this.owner.VideoCard.ScreenToPicture(1,
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.VideoCard.ScreenToPicture(1,
 				(ushort)(((this.processor.PullLocalWord(0x23e) % 6) * 0x32) + 1),
 				(ushort)(((this.processor.PullLocalWord(0x23e) / 6) * 0x32) + 1),
-				0x31, 0x31);
+				0x31, 0x31));
 
 			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x23e);
 			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
@@ -71,7 +71,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 				this.processor.PullGlobalWord(0x19d4),
 				0, 0xb0);
 
-			this.owner.Startup.QueryForDisk(0, 1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Startup.QueryForDisk(0, 1));
 
 			this.processor.CompareWord(this.processor.PullGlobalWord(0xd762), 0x0);
 			if (this.processor.FlagSet.IsNotEqual) goto L0d17;
@@ -87,48 +87,48 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.RegBase.Value16 = (ushort)this.owner.World.Participants[this.owner.World.PersonParticipantIdx].RegimeKind;
 			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x19b2)));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x19b2))));
 
-			this.owner.Libc.AppendText(0xba06, " ");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " "));
 
 			this.processor.RegBase.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
 			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x19a2)));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x19a2))));
 
-			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30b8), 0xba06);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30b8), 0xba06));
 
 			this.processor.RegSource.Value16 = (ushort)participantIdx;
 			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30ba), 
-				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1982)));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30ba), 
+				this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1982))));
 
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText(this.owner.World.Participants[participantIdx].StarshipInhabitants, 10));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06,
+				this.owner.Libc.IntegerToText(this.owner.World.Participants[participantIdx].StarshipInhabitants, 10)));
 
-			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30bc), 0xba06);
-
-			this.processor.EmitGlobalByte(0xba06, 0x0);
-
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText(this.owner.World.Participants[participantIdx].StarshipLiftoffSeason, 10));
-
-			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be), 0xba06);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30bc), 0xba06));
 
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText(this.owner.World.Season, 10));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06,
+				this.owner.Libc.IntegerToText(this.owner.World.Participants[participantIdx].StarshipLiftoffSeason, 10)));
 
-			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30c0), 0xba06);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be), 0xba06));
 
-			this.owner.BlockText.ImportTextFromFile(0x3301, 
-				(ushort)((participantIdx != this.owner.World.PersonParticipantIdx) ? 0x32f9 : 0x32f2));
+			this.processor.EmitGlobalByte(0xba06, 0x0);
+
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06,
+				this.owner.Libc.IntegerToText(this.owner.World.Season, 10)));
+
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30c0), 0xba06));
+
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.BlockText.ImportTextFromFile(0x3301, 
+				(ushort)((participantIdx != this.owner.World.PersonParticipantIdx) ? 0x32f9 : 0x32f2)));
 
 			this.owner.BlockText.ReflowText();
 
-			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x200), 0xba06);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x200), 0xba06));
 
 			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
 			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 0x6);
@@ -138,7 +138,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EmitLocalWord(0x204, this.processor.RegAcc.Value16);
 			this.processor.EmitLocalWord(0x23c, this.processor.RegAcc.Value16);
 
-			this.owner.Libc.TextLength(0xba06);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.TextLength(0xba06));
 
 			this.processor.EmitLocalWord(0x240, this.processor.RegAcc.Value16);
 
@@ -287,7 +287,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L119f;
 
 		L10d7:
-			this.owner.Services.RestoreTimer();
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Services.RestoreTimer());
 
 			this.processor.CompareWord(this.processor.PullLocalWord(0x23e), 0x140);
 			if (this.processor.FlagSet.IsGreaterOrEqual) goto L1107;
@@ -361,7 +361,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x204);
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0xba07);
-			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x200), this.processor.RegAcc.Value16);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x200), this.processor.RegAcc.Value16));
 
 			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x204);
 			this.processor.RegAcc.Value16 = this.processor.IncrementWord(this.processor.RegAcc.Value16);
@@ -372,7 +372,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L1350;
 
 		L11ed:
-			this.owner.Startup.QueryForDisk(6, 1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Startup.QueryForDisk(6, 1));
 
 			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x330a, 0);
 
@@ -388,7 +388,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, 0x3316, 1);
 
-			this.owner.Startup.QueryForDisk(0, 1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Startup.QueryForDisk(0, 1));
 
 			this.owner.Services.PerformSound(0x22, 0);
 
@@ -492,7 +492,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L137e;
 
 		L146c:
-			this.owner.Conquest.AwaitForKeyPressOrMouseClick();
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Conquest.AwaitForKeyPressOrMouseClick());
 
 			if (participantIdx != this.owner.World.PersonParticipantIdx) goto L149d;
 
@@ -514,18 +514,18 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.Services.PerformSound(1, 0);
 			
-			this.owner.Libc.CloseStream((short)this.owner.GlobD768);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CloseStream((short)this.owner.GlobD768));
 
 			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
 			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 0x1);
 			this.processor.CompareWord(this.processor.PullGlobalWord(0xd762), 0x0);
 			if (this.processor.FlagSet.IsNotEqual) goto L1500;
 
-			this.owner.Startup.QueryForDisk(7, 1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Startup.QueryForDisk(7, 1));
 
 			this.owner.ImageToolkit.ImportPictureOrColors(3, 0, 0, 0x3322, 0);
 
-			this.owner.Startup.QueryForDisk(0, 1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Startup.QueryForDisk(0, 1));
 
 		L1500:
 			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 0);

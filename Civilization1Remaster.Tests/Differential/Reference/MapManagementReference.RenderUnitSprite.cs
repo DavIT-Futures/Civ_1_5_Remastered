@@ -125,7 +125,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EmitLocalWord(0x2, 0x50);
 
 		L1120:
-			this.owner.Libc.CopyText(0xba06, " ");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, " "));
 
 			this.processor.RegAcc.LowByte = this.processor.PullLocalByte(0x2);
 			this.processor.EmitGlobalByte(0xba06, this.processor.RegAcc.LowByte);

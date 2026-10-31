@@ -204,7 +204,7 @@ public sealed class BatchEightySixDifferentialTests(ITestOutputHelper output)
 					}
 				},
 				game => new AIPlayerReference(game).ShiftAIUnit(participantIdx, troopIdx),
-				game => game.Bot.ShiftAIUnit(participantIdx, troopIdx),
+				game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Bot.ShiftAIUnit(participantIdx, troopIdx)),
 				Register.Kept | Register.Acc,
 				// What the unit decided: goes on to its destination, fortifies, builds a city, goes to its small city, or looks
 				// around for a fight (the look sets 0x5c)

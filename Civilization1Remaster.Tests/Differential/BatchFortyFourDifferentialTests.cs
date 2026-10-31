@@ -44,7 +44,7 @@ namespace Civilization1Remaster.Tests.Differential
 							game.Processor.EmitGlobalByte((ushort)(0xdb44 + idx), land[idx]);
 					},
 					game => new PathfindingReference(game).CarryOutGoto(participantIdx, troopIdx),
-					game => game.Routing.CarryOutGoto(participantIdx, troopIdx),
+					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Routing.CarryOutGoto(participantIdx, troopIdx)),
 					Register.Acc | Register.Kept,
 					game => near ? "near goal" : game.Processor.RegAcc.Value16 == 0xffff ? "no step" : "step");
 			}, output, ["near goal", "no step", "step"]);
@@ -79,7 +79,7 @@ namespace Civilization1Remaster.Tests.Differential
 						game.Processor.EmitGlobalWord(0x2f9c, 0);
 					},
 					game => new ScienceAndAdvisorsReference(game).UncoverTechnology(participantIdx, source),
-					game => game.Advisors.UncoverTechnology(participantIdx, source),
+					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Advisors.UncoverTechnology(participantIdx, source)),
 					Register.Acc | Register.Kept,
 					game => participantIdx == 0 ? "barbarians" : participantIdx != person || round == 0 ?
 						(Calls(game, pair, "EarnTechnology") > earned ? "AI learns" : "AI doesn't") :

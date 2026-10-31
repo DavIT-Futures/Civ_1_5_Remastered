@@ -21,7 +21,7 @@ namespace Civilization1Remaster.Tests.Differential
 				string topic = topics[chance.Next(topics.Length)];
 
 				return new Scenario($"DisplayHelpTopic(\"{topic}\")",
-					game => game.Libc.CopyText(0xbc00, topic),
+					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Libc.CopyText(0xbc00, topic)),
 					game => new InGameHelpReference(game).DisplayHelpTopic(0xbc00),
 					game => game.HelpSystem.DisplayHelpTopic(0xbc00),
 					Register.Kept,
@@ -172,7 +172,7 @@ namespace Civilization1Remaster.Tests.Differential
 						}
 					},
 					game => new DialogDrawingReference(game).DisplayMenu(0xba06, horizLoc, vertLoc, marker),
-					game => game.Dialogs.DisplayMenu(0xba06, horizLoc, vertLoc, marker),
+					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Dialogs.DisplayMenu(0xba06, horizLoc, vertLoc, marker)),
 					Register.Kept | Register.Acc,
 					game =>
 					{

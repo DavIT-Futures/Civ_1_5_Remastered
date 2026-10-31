@@ -22,9 +22,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EnterFrame(0x12);
 			this.processor.PreserveSource();
 
-			this.owner.Startup.QueryForDisk(2, 1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Startup.QueryForDisk(2, 1));
 
-			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x10), "govt0a.pic");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x10), "govt0a.pic"));
 
 			this.processor.RegSource.Value16 = (ushort)this.owner.World.Participants[this.owner.World.PersonParticipantIdx].RegimeKind;
 			this.processor.RegAcc.Value16 = this.processor.RegSource.Value16;
@@ -53,7 +53,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 				this.processor.PullGlobalWord(0x19e8),
 				0xa0, 0x8c);
 
-			this.owner.Startup.QueryForDisk(0, 1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Startup.QueryForDisk(0, 1));
 
 			this.processor.RestoreSource();
 			this.processor.LeaveFrame();

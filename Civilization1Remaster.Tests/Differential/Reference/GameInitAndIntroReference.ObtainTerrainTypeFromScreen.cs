@@ -22,9 +22,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			// function body
 			this.processor.EnterFrame();
 
-			this.owner.VideoCard.ObtainDot(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.VideoCard.ObtainDot(
 				this.processor.PullUInt16(this.processor.SegData.Value16, this.processor.PullGlobalWord(0xaa)),
-				horizLoc, vertLoc);
+				horizLoc, vertLoc));
 
 			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
 			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);

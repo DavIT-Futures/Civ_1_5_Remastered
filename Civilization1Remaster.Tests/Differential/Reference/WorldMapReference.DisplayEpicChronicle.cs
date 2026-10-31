@@ -40,19 +40,19 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
 			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x4516)));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x4516))));
 
-			this.owner.Libc.AppendText(0xba06, " completes his epic history:");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " completes his epic history:"));
 
 			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 0, 4, 15);
 
-			this.owner.Libc.CopyText(0xba06, "'The ");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "'The "));
 
 			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x4);
 			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x452c)));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x452c))));
 
-			this.owner.Libc.AppendText(0xba06, " Civilizations in the World'");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " Civilizations in the World'"));
 
 			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 12, 15);
 			
@@ -74,7 +74,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareByte(this.owner.World.Towns[this.processor.PullLocalWord(0xc)].ConditionMarker, 0xff);
 			if (this.processor.FlagSet.IsEqual) goto L0b36;
 
-			this.owner.CityOps.HandleCity(this.processor.PullLocalSignedWord(0xc), -1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.CityOps.HandleCity(this.processor.PullLocalSignedWord(0xc), -1));
 
 			this.processor.CompareWord(this.processor.PullLocalWord(0x4), 0x3);
 			if (this.processor.FlagSet.IsNotEqual) goto L0b17;
@@ -201,23 +201,23 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L0c02:
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText((short)(this.processor.PullLocalWord(0x20) + 1), 10));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06,
+				this.owner.Libc.IntegerToText((short)(this.processor.PullLocalWord(0x20) + 1), 10)));
 
-			this.owner.Libc.AppendText(0xba06, ". The ");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, ". The "));
 
 			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x20);
 			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x451e)));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x451e))));
 
-			this.owner.Libc.AppendText(0xba06, " Civilization of the ");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " Civilization of the "));
 
 			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x1e);
 			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
 
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1992)));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1992))));
 
-			this.owner.Libc.AppendText(0xba06, ".");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "."));
 
 			this.processor.RegBase.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
 			this.processor.RegCount.LowByte = 0x4;
@@ -281,7 +281,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.TurnLogic.AwaitForKey();
 
-			this.owner.Conquest.AwaitForKeyPressOrMouseClick();
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Conquest.AwaitForKeyPressOrMouseClick());
 
 			this.owner.VideoCard.RenderImage(
 				this.processor.PullGlobalWord(0x19d4),

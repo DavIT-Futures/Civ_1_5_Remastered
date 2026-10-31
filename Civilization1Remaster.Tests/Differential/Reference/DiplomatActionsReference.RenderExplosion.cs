@@ -23,7 +23,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EnterFrame(0x3a);
 			this.processor.PreserveSource();
 
-			this.owner.Startup.QueryForDisk(1, 0);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Startup.QueryForDisk(1, 0));
 
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsNotEqual) goto L0985;
@@ -35,10 +35,10 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EmitLocalWord(0x3a, 0x0);
 
 		L099f:
-			this.owner.VideoCard.ScreenToPicture(1,
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.VideoCard.ScreenToPicture(1,
 				(ushort)(((this.processor.PullLocalWord(0x3a) % 7) * 0x2d) + 1),
 				(ushort)(((this.processor.PullLocalWord(0x3a) / 7) * 0x2d) + 1),
-				0x2c, 0x2c);
+				0x2c, 0x2c));
 
 			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x3a);
 			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
@@ -47,8 +47,8 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullLocalWord(0x3a), 0x1c);
 			if (this.processor.FlagSet.IsLess) goto L099f;
 
-			this.owner.Routing.TunePosition(
-				horizLoc - this.processor.PullGlobalSignedWord(0xd4cc));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Routing.TunePosition(
+				horizLoc - this.processor.PullGlobalSignedWord(0xd4cc)));
 
 			this.processor.RegCount.LowByte = 0x4;
 			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
@@ -60,11 +60,11 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, 0x6);
 			vertLoc = (short)this.processor.RegAcc.Value16;
 
-			this.owner.Helpers.VerifyValueSpan(horizLoc, 80, 276);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.VerifyValueSpan(horizLoc, 80, 276));
 
 			horizLoc = (short)this.processor.RegAcc.Value16;
 
-			this.owner.Helpers.VerifyValueSpan(vertLoc, 8, 0x9c);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.VerifyValueSpan(vertLoc, 8, 0x9c));
 
 			vertLoc = (short)this.processor.RegAcc.Value16;
 
@@ -112,7 +112,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L0acf:
 			this.owner.Helpers.ReleaseResource(this.processor.PullLocalWord(0x38), 0);
 
-			this.owner.Startup.QueryForDisk(0, 1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Startup.QueryForDisk(0, 1));
 
 			this.owner.TurnHooks.DisplayCivilizationScenery();
 

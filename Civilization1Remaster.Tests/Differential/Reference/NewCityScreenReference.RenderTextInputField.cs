@@ -31,7 +31,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L06d7:
 			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), horizLoc, vertLoc, 8, 8, 15);
 
-			this.owner.Libc.TextLength(0xba06);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.TextLength(0xba06));
 
 			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x2));
 			if (this.processor.FlagSet.IsLessOrEqual) goto L0774;
@@ -53,7 +53,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EmitGlobalWord(0x68d0, this.processor.RegAcc.Value16);
 			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xba06));
 
-			this.owner.VideoCard.ObtainCharWidth(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.PullGlobalWord(0xaa) + 0x10)), this.processor.RegAcc.LowByte);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.VideoCard.ObtainCharWidth(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.PullGlobalWord(0xaa) + 0x10)), this.processor.RegAcc.LowByte));
 
 			this.processor.EmitGlobalWord(0x68ce, this.processor.RegAcc.Value16);
 
@@ -61,7 +61,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x2);
 			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xba06));
 			
-			this.owner.VideoCard.ObtainCharWidth(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.PullGlobalWord(0xaa) + 0x10)), this.processor.RegAcc.LowByte);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.VideoCard.ObtainCharWidth(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.PullGlobalWord(0xaa) + 0x10)), this.processor.RegAcc.LowByte));
 
 			horizLoc += (short)this.processor.RegAcc.Value16;
 

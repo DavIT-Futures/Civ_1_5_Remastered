@@ -32,7 +32,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L16e1;
 
 		L14dc:
-			this.owner.Helpers.VerifyValueSpan(castleTier + 3, 3, 36);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.VerifyValueSpan(castleTier + 3, 3, 36));
 
 			this.processor.EmitLocalWord(0x36, this.processor.RegAcc.Value16);
 			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
@@ -219,8 +219,8 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
 			this.processor.RegSource.Value16 = this.processor.SumWord(this.processor.RegSource.Value16, this.processor.RegFrame.Value16);
 
-			this.owner.Helpers.VerifyValueSpan(
-				this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0x32)) - 1, 0, 3);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.VerifyValueSpan(
+				this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 - 0x32)) - 1, 0, 3));
 			
 			this.processor.RegCount.Value16 = 0x5;
 			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);

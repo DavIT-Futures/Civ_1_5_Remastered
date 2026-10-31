@@ -32,7 +32,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
-			this.owner.CityNaming.PullTextInput(0x42, 0x59, 0x10);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.CityNaming.PullTextInput(0x42, 0x59, 0x10));
 			
 			this.processor.EmitLocalWord(0x14, 0x0);
 			goto L03bc;
@@ -68,9 +68,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 				this.processor.Storage.EmitUInt8(this.processor.SegStack.Value16, (ushort)(charsDisplacement + idx), this.owner.World.TownLabels[settlementTitleIdent][idx]);
 			}
 
-			this.owner.Libc.TextLength(0xba06);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.TextLength(0xba06));
 
-			this.owner.Libc.CompareTextPrefixNoCase(0xba06, (ushort)(this.processor.RegFrame.Value16 - 0x10), this.processor.RegAcc.Value16);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CompareTextPrefixNoCase(0xba06, (ushort)(this.processor.RegFrame.Value16 - 0x10), this.processor.RegAcc.Value16));
 
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsNotEqual) goto L03b9;

@@ -34,7 +34,7 @@ namespace Civilization1Remaster.Tests.Differential
 						}
 					},
 					game => new CivilizationSchismReference(game).ObtainDistanceToCapital(participantIdx),
-					game => game.Secession.ObtainDistanceToCapital(participantIdx),
+					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Secession.ObtainDistanceToCapital(participantIdx)),
 					Register.Acc | Register.Kept, game => game.Processor.RegAcc.Value16 == 0xffff ? "no city" : tie ? "tie" : "central city");
 			}, output, ["no city", "tie", "central city"]);
 		}

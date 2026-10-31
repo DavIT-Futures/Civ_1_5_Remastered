@@ -30,14 +30,14 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.Value16 = (ushort)Math.Sign((short)this.processor.RegAcc.Value16);
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, (ushort)this.owner.World.SmogImpactTier);
 			
-			this.owner.Helpers.VerifyValueSpan((short)this.processor.RegAcc.Value16, 0, 99);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.VerifyValueSpan((short)this.processor.RegAcc.Value16, 0, 99));
 
 			owner.World.SmogImpactTier = (short)this.processor.RegAcc.Value16;
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xc);
 			if (this.processor.FlagSet.IsNotEqual) goto L17ca;
 			if (this.owner.World.DirtyCellTally <= 6) goto L17ca;
 
-			this.owner.Libc.CopyText(0xba06, "Scientists alarmed by\nrising temperatures.\nGlobal Warming feared!\n");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "Scientists alarmed by\nrising temperatures.\nGlobal Warming feared!\n"));
 
 			this.owner.Paper.DisplayNewspaper(-1);
 
@@ -59,7 +59,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L17f2:
 			this.processor.EmitGlobalWord(0x2f9e, this.processor.RegAcc.Value16);
 
-			this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80));
 
 			this.owner.Encyclopedia.DisplayCivilopediaRecord((ushort)(this.processor.PullLocalWord(0x8) + 0x18), 1);
 			
@@ -71,9 +71,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullLocalWord(0x8), 0xe);
 			if (this.processor.FlagSet.IsNotEqual) goto L184d;
 
-			this.owner.Advisors.UncoverTechnology(this.processor.PullLocalSignedWord(0xc), 0);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Advisors.UncoverTechnology(this.processor.PullLocalSignedWord(0xc), 0));
 			
-			this.owner.Advisors.UncoverTechnology(this.processor.PullLocalSignedWord(0xc), 0);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Advisors.UncoverTechnology(this.processor.PullLocalSignedWord(0xc), 0));
 
 		L184d:
 			this.processor.EmitLocalWord(0x2, 0x0);
@@ -282,26 +282,26 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.Conquest.ObtainCityLabel(this.processor.PullLocalSignedWord(0x2));
 
-			this.owner.Libc.AppendText(0xba06, " (");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " ("));
 
 			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0xc);
 			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
 
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1982)));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1982))));
 
-			this.owner.Libc.AppendText(0xba06, ")\nbuilds ");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, ")\nbuilds "));
 
 			this.processor.RegAcc.Value16 = this.processor.RegDest.Value16;
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0xe6a);
-			this.owner.Libc.AppendText(0xba06, this.processor.RegAcc.Value16);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, this.processor.RegAcc.Value16));
 
-			this.owner.Libc.AppendText(0xba06, ".\n");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, ".\n"));
 
-			this.owner.Helpers.VerifyValueSpan(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.VerifyValueSpan(
 				this.owner.World.Participants[this.processor.PullLocalWord(0xc)].Gold / 3, 
 				0,
 				(10 * this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 + 0xe82))) -
-					this.owner.World.Towns[this.processor.PullLocalWord(0x2)].MaterialsTally);
+					this.owner.World.Towns[this.processor.PullLocalWord(0x2)].MaterialsTally));
 
 			this.owner.World.Participants[this.processor.PullLocalWord(0xc)].Gold -= (short)this.processor.RegAcc.Value16;
 

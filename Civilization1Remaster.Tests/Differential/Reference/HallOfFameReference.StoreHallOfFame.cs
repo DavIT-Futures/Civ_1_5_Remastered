@@ -21,7 +21,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			// function body
 			this.processor.EnterFrame(0x2);
 
-			this.owner.Libc.OpenHandle("fame.dta", 0x8302, 0x80);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.OpenHandle("fame.dta", 0x8302, 0x80));
 
 			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
 
@@ -32,10 +32,10 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 				0xba06,
 				0x114);
 
-			this.owner.Libc.WriteHandle((short)this.processor.PullLocalWord(0x2),
-				0xba06, 0x114);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.WriteHandle((short)this.processor.PullLocalWord(0x2),
+				0xba06, 0x114));
 			
-			this.owner.Libc.CloseHandle((short)this.processor.PullLocalWord(0x2));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CloseHandle((short)this.processor.PullLocalWord(0x2)));
 
 			this.processor.LeaveFrame();
 			// Far return

@@ -1177,7 +1177,8 @@ namespace Civilization1Remaster.Game
 				this.look.TileVert = (ushort)((DirectionVertAt(direction) << 2) + this.look.Vert);
 
 				// (the divisions as the original makes them)
-				int cellOffset = ((this.look.TileHoriz >> 2) * 13) + (this.look.TileVert >> 2);
+				// (signed divisions toward zero: a place off the map, -2, is in cell 0 like in the original)
+				int cellOffset = (short)(((short)this.look.TileHoriz / 4) * 13) + ((short)this.look.TileVert / 4);
 				this.processor.SegExtra.Value16 = 0x3772;
 
 				short farHoriz = (short)this.look.TileHoriz;
@@ -1227,6 +1228,10 @@ namespace Civilization1Remaster.Game
 
 			if (this.look.Foreign != 0 && this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.LeftoverSteps) < 3)
 			{
+				// The size of the stack, as the original computes it (unused, but the tally sets the globals of the stack and
+				// the calls stay, like in the original)
+				this.owner.Helpers.VerifyValueSpan((short)this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, troopIdx, 3), 1, 99);
+
 				ushort weighed = MultiplyWords(this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, troopIdx, 1), this.look.Score);
 				// (the original divides by SI as the tally leaves it, not by the number of units kept there)
 				this.look.Score = DivideWords(weighed, (ushort)(participantIdx * UnitMemory.ParticipantStride));
@@ -1289,7 +1294,7 @@ namespace Civilization1Remaster.Game
 			if (role == 0)
 			{
 				ushort continent = this.look.Continent;
-				int spotThreshold = (short)this.owner.World.Landmasses[continent].ConstructionSpotTally >> 3;
+				int spotThreshold = (short)this.owner.World.Landmasses[continent].ConstructionSpotTally / 8;
 
 				if (this.owner.World.Participants[participantIdx].Landmasses[continent].TownTally > spotThreshold)
 				{

@@ -200,7 +200,7 @@ namespace Civilization1Remaster.Tests.Differential
 						game.World.Participants[personIdx].RegimeKind = 2;
 					},
 					game => new UnitCombatReference(game).SettleBattle(participant1, troop1, participant2, troop2, marker),
-					game => game.Combat.SettleBattle(participant1, troop1, participant2, troop2, marker),
+					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Combat.SettleBattle(participant1, troop1, participant2, troop2, marker)),
 					Register.Kept | Register.Acc,
 					game =>
 					{

@@ -38,11 +38,11 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.ScaleIndex(0x1c, this.processor.PullLocalWord(0x8));
 			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
 
-			this.owner.Helpers.ObtainDistance(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.ObtainDistance(
 				this.owner.World.Towns[this.processor.PullLocalWord(0x6)].Place.X,
 				this.owner.World.Towns[this.processor.PullLocalWord(0x8)].Place.X,
 				this.owner.World.Towns[this.processor.PullLocalWord(0x6)].Place.Y,
-				this.owner.World.Towns[this.processor.PullLocalWord(0x8)].Place.Y);
+				this.owner.World.Towns[this.processor.PullLocalWord(0x8)].Place.Y));
 
 			this.processor.EmitLocalWord(0x4, this.processor.SumWord(this.processor.PullLocalWord(0x4), this.processor.RegAcc.Value16));
 

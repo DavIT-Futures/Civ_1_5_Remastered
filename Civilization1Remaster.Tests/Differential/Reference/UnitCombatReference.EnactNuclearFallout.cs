@@ -31,9 +31,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsEqual) goto L0f02;
 
-			this.owner.MapOps.ObtainTerrainType(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainTerrainType(
 				this.processor.PullLocalSignedWord(0x4),
-				this.processor.PullLocalSignedWord(0x6));
+				this.processor.PullLocalSignedWord(0x6)));
 
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
 			if (this.processor.FlagSet.IsEqual) goto L0f02;
@@ -55,24 +55,24 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x8);
 			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
 
-			this.owner.Routing.TunePosition(
-				this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1882)) + horizLoc);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Routing.TunePosition(
+				this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1882)) + horizLoc));
 
 			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
 			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x18e4));
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, (ushort)vertLoc);
 			this.processor.EmitLocalWord(0x6, this.processor.RegAcc.Value16);
 
-			this.owner.MapOps.ObtainTileImprovements(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainTileImprovements(
 				this.processor.PullLocalSignedWord(0x4),
-				this.processor.PullLocalSignedWord(0x6));
+				this.processor.PullLocalSignedWord(0x6)));
 
 			this.processor.TestBitsByte(this.processor.RegAcc.LowByte, 0x1);
 			if (this.processor.FlagSet.IsEqual) goto L0ed1;
 
-			this.owner.Helpers.LocateCityAtPosition(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.LocateCityAtPosition(
 				this.processor.PullLocalSignedWord(0x4),
-				this.processor.PullLocalSignedWord(0x6));
+				this.processor.PullLocalSignedWord(0x6)));
 
 			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
 

@@ -32,11 +32,11 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 					this.owner.World.Towns[this.processor.PullLocalWord(0x6)].ParticipantIdx == participantIdx &&
 					(this.owner.World.Towns[this.processor.PullLocalWord(0x6)].StructureMarkers0 & 0x1) != 0)
 				{
-					this.owner.Helpers.ObtainDistance(
+					this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.ObtainDistance(
 						this.owner.World.Towns[this.processor.PullLocalWord(0x6)].Place.X,
 						horizLoc,
 						this.owner.World.Towns[this.processor.PullLocalWord(0x6)].Place.Y,
-						vertLoc);
+						vertLoc));
 
 					this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
 					this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x4);

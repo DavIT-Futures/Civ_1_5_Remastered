@@ -23,7 +23,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EnterFrame(0x2e);
 			this.processor.PreserveSource();
 
-			this.owner.Startup.QueryForDisk(2, 1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Startup.QueryForDisk(2, 1));
 
 			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
 			this.processor.EmitUInt16(this.processor.SegData.Value16, this.processor.RegBase.Value16, 0x1);
@@ -82,7 +82,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullGlobalWord(0xd932), 0x0);
 			if (this.processor.FlagSet.IsLessOrEqual) goto L08e0;
 
-			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x10), "cbacks0.pic");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x10), "cbacks0.pic"));
 
 			this.processor.RegAcc.LowByte = this.processor.PullGlobalByte(0xd932);
 			this.processor.RegAcc.LowByte = this.processor.SumByte(this.processor.RegAcc.LowByte, 0x30);
@@ -390,7 +390,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L0c94;
 
 		L0be1:
-			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x10), "cbrush0.pic");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x10), "cbrush0.pic"));
 
 			this.processor.CompareWord(this.processor.PullGlobalWord(0xd930), 0x0);
 			if (this.processor.FlagSet.IsEqual) goto L0c36;
@@ -399,7 +399,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.LowByte = this.processor.SumByte(this.processor.RegAcc.LowByte, 0x2e);
 			this.processor.EmitLocalByte(0xa, this.processor.RegAcc.LowByte);
 
-			this.owner.ImageToolkit.ImportIcon((ushort)(this.processor.RegFrame.Value16 - 0x10));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.ImageToolkit.ImportIcon((ushort)(this.processor.RegFrame.Value16 - 0x10)));
 
 			this.processor.EmitLocalWord(0x2a, this.processor.RegAcc.Value16);
 
@@ -417,7 +417,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.LowByte = this.processor.SumByte(this.processor.RegAcc.LowByte, 0x2f);
 			this.processor.EmitLocalByte(0xa, this.processor.RegAcc.LowByte);
 
-			this.owner.ImageToolkit.ImportIcon((ushort)(this.processor.RegFrame.Value16 - 0x10));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.ImageToolkit.ImportIcon((ushort)(this.processor.RegFrame.Value16 - 0x10)));
 
 			this.processor.EmitLocalWord(0x2c, this.processor.RegAcc.Value16);
 
@@ -456,7 +456,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, 0x4bb0, 1);
 
-			this.owner.Startup.QueryForDisk(0, 1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Startup.QueryForDisk(0, 1));
 
 		L0cf9:
 			this.processor.RegSource.Value16 = this.processor.UnstackWord();

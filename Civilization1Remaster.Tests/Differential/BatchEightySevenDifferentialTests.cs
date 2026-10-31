@@ -218,7 +218,7 @@ public sealed class BatchEightySevenDifferentialTests(ITestOutputHelper output)
 					}
 				},
 				game => new AIPlayerReference(game).ShiftAIUnit(participantIdx, troopIdx),
-				game => game.Bot.ShiftAIUnit(participantIdx, troopIdx),
+				game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Bot.ShiftAIUnit(participantIdx, troopIdx)),
 				Register.Kept | Register.Acc,
 				// How the heading came: the surroundings scored (0x44 went round), an enemy next to the unit (0x5c zero), and the
 				// answer: a heading (1 - 8, kept by the unit) or none after a look

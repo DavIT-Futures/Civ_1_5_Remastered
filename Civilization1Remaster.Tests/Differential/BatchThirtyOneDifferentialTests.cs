@@ -179,7 +179,7 @@ namespace Civilization1Remaster.Tests.Differential
 						science[2] = (ushort)((science[2] & ~0x40) | (technologies[1] ? 0x40 : 0));
 					},
 					game => new TradeAndConquestReference(game).FoundTradeRoute(participantIdx, troopIdx, townIdx),
-					game => game.Conquest.FoundTradeRoute(participantIdx, troopIdx, townIdx),
+					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Conquest.FoundTradeRoute(participantIdx, troopIdx, townIdx)),
 					Register.Acc | Register.Kept,
 					game => $"{(participantIdx == game.World.PersonParticipantIdx ? "human" : "AI")}, {outcome}");
 			}, output, ["human, route replaced", "AI, route replaced", "AI, empty slot", "AI, kept", "AI, already a route"], [0x0d]);

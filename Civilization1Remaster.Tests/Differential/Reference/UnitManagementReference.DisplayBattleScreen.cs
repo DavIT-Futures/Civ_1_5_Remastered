@@ -30,7 +30,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 				this.processor.PullGlobalWord(0x19d4),
 				0, 0);
 
-			this.owner.UnitOps.LocateStackLeader(participantIdx, troopIdx);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.UnitOps.LocateStackLeader(participantIdx, troopIdx));
 
 			this.processor.EmitLocalWord(0x26, this.processor.RegAcc.Value16);
 			this.processor.EmitLocalWord(0x28, 0x0);
@@ -86,12 +86,12 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.LowByte = 0x22;
 			this.processor.MultiplySignedByte(this.processor.RegAcc, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d7)));
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x112a);
-			this.owner.Libc.CopyText(0xba06, this.processor.RegAcc.Value16);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, this.processor.RegAcc.Value16));
 
 			this.processor.TestBitsByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d4)), 0x20);
 			if (this.processor.FlagSet.IsEqual) goto L206a;
 
-			this.owner.Libc.AppendText(0xba06, " (V)");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " (V)"));
 
 		L206a:
 			this.owner.TextPainter.RenderTextToScreen0(0xba06, 128, this.processor.PullLocalSignedWord(0x20), 15);
@@ -134,7 +134,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L21b7;
 
 		L2104:
-			this.owner.Libc.KeyAvailable();
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.KeyAvailable());
 
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsEqual) goto L20f5;
@@ -149,7 +149,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.CopyLocalWord(0x2, 0x1c);
 
-			this.owner.Dialogs.ObtainNavigationKey();
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Dialogs.ObtainNavigationKey());
 
 			this.processor.EmitLocalWord(0x24, this.processor.RegAcc.Value16);
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x4800);

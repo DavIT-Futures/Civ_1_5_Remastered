@@ -23,12 +23,12 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EnterFrame(0x2);
 			this.processor.PreserveSource();
 
-			this.owner.MapOps.RenderMapTile(horizLoc, vertLoc);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.RenderMapTile(horizLoc, vertLoc));
 
 			this.processor.CompareWord(this.processor.PullGlobalWord(0xdcfc), 0x0);
 			if (this.processor.FlagSet.IsNotEqual) goto L1256;
 
-			this.owner.MapOps.ObtainUnitAtTile(horizLoc, vertLoc);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainUnitAtTile(horizLoc, vertLoc));
 
 			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xffff);
@@ -49,7 +49,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			if (this.processor.FlagSet.IsEqual) goto L1256;
 
 		L1237:
-			this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc));
 
 			this.processor.TestBitsByte(this.processor.RegAcc.LowByte, 0x1);
 			if (this.processor.FlagSet.IsNotEqual) goto L1256;

@@ -28,14 +28,14 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x1c16, 1);
 
-			this.owner.Startup.QueryForDisk(0, 1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Startup.QueryForDisk(0, 1));
 
 			this.owner.NewGameWizard.ConfigureFreshGame();
 
 		L08c5:
 			this.owner.NewGameWizard.ImportGovernmentGraphics();
 
-			this.owner.Startup.QueryForDisk(0, 1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Startup.QueryForDisk(0, 1));
 
 			this.processor.LeaveFrame();
 			// Far return

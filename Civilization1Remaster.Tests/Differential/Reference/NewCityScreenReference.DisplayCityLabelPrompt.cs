@@ -42,11 +42,11 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			
 			this.owner.Conquest.ObtainCityLabel(townIdx);
 			
-			this.owner.CityNaming.PullTextInput(0x58, 0x60, 0xc);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.CityNaming.PullTextInput(0x58, 0x60, 0xc));
 			
 			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
 
-			this.owner.Libc.TextLength(0xba06);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.TextLength(0xba06));
 
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsNotEqual) goto L0096;

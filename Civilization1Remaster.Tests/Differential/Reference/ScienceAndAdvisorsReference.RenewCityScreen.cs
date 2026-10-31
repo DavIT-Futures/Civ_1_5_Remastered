@@ -24,7 +24,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.EmitGlobalWord(0x6b64, 0x0);
 
-			this.owner.CityOps.HandleCity(townIdx, 1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.CityOps.HandleCity(townIdx, 1));
 
 			this.processor.CompareWord(this.processor.PullGlobalWord(0x6b64), 0x0);
 			if (this.processor.FlagSet.IsEqual) goto L0419;

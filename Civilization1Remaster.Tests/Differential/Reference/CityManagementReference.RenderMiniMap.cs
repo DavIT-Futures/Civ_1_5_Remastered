@@ -40,9 +40,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L73bc;
 
 		L730b:
-			this.owner.Routing.TunePosition(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Routing.TunePosition(
 				this.owner.World.Participants[this.owner.World.PersonParticipantIdx].HorizBegin +
-					this.processor.PullLocalSignedWord(0x4) - 40);
+					this.processor.PullLocalSignedWord(0x4) - 40));
 
 			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
 			this.processor.CopyLocalWord(0xa, 0x6);
@@ -83,9 +83,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegCount.Value16 = this.processor.SumWord(this.processor.RegCount.Value16, 0x76);
 			this.processor.EmitLocalWord(0xe, this.processor.RegCount.Value16);
 
-			this.owner.MapOps.ObtainTerrainType(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainTerrainType(
 				this.processor.PullLocalSignedWord(0x2),
-				this.processor.PullLocalSignedWord(0x6));
+				this.processor.PullLocalSignedWord(0x6)));
 
 			this.processor.EmitLocalWord(0xc, this.processor.RegAcc.Value16);
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);

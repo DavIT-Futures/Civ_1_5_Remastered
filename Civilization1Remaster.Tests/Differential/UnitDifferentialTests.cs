@@ -82,7 +82,7 @@ namespace Civilization1Remaster.Tests.Differential
 				return new Scenario($"DisplayBattleScreen({participantIdx}, {troopIdx}), mouse {mouse}",
 					game => game.Processor.EmitGlobalWord(0x1a3c, mouse),
 					game => new UnitManagementReference(game).DisplayBattleScreen(participantIdx, troopIdx),
-					game => game.UnitOps.DisplayBattleScreen(participantIdx, troopIdx),
+					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.UnitOps.DisplayBattleScreen(participantIdx, troopIdx)),
 					Register.Acc | Register.Kept,
 					game => mouse != 0 ? "mouse" : troops.Following(participantIdx, troopIdx) != -1 ? "stack" : "single unit");
 			}, output, ["mouse", "stack", "single unit"], Keys);
@@ -119,7 +119,7 @@ namespace Civilization1Remaster.Tests.Differential
 				return new Scenario($"LocateNearestFriendlyCity({participantIdx}, {troopIdx})",
 					game => { },
 					game => new UnitManagementReference(game).LocateNearestFriendlyCity(participantIdx, troopIdx),
-					game => game.UnitOps.LocateNearestFriendlyCity(participantIdx, troopIdx),
+					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.UnitOps.LocateNearestFriendlyCity(participantIdx, troopIdx)),
 					Register.Acc | Register.Kept,
 					game => game.Processor.RegAcc.Value16 == 0 ? "no step" : "step");
 			}, output, ["no step", "step"]);

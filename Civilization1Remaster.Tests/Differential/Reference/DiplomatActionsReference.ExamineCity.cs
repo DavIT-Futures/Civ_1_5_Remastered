@@ -22,7 +22,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EnterFrame(0x10);
 			this.processor.PreserveSource();
 
-			this.owner.Startup.QueryForDisk(1, 0);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Startup.QueryForDisk(1, 0));
 
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsNotEqual) goto L0ecd;
@@ -38,9 +38,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EmitLocalWord(0xc, 0x0);
 
 		L0ef1:
-			this.owner.VideoCard.ScreenToPicture(1, 1,
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.VideoCard.ScreenToPicture(1, 1,
 				(ushort)((this.processor.PullLocalWord(0xc) << 4) + 1),
-				0x2f, 0xf);
+				0x2f, 0xf));
 
 			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0xc);
 			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
@@ -65,11 +65,11 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.Conquest.ObtainCityLabel(townIdx);
 
-			this.owner.Libc.AppendText(0xba06, " founded: ");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " founded: "));
 
 			this.owner.TurnHooks.ObtainCurrentYearAsText();
 
-			this.owner.Libc.AppendText(0xba06, ".");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "."));
 
 			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
 			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 0x6);
@@ -101,7 +101,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L10cc;
 
 		L101a:
-			this.owner.Services.RestoreTimer();
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Services.RestoreTimer());
 
 			this.owner.VideoCard.RenderImage(
 				this.processor.PullGlobalWord(0x19d4),
@@ -142,7 +142,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.Startup.ObtainMouseState();
 
-			this.owner.Libc.KeyAvailable();
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.KeyAvailable());
 
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsNotEqual) goto L10cc;
@@ -153,7 +153,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L10cc:
 			this.owner.Helpers.ReleaseResource(this.processor.PullLocalWord(0x8), 0x539a);
 
-			this.owner.Startup.QueryForDisk(0, 1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Startup.QueryForDisk(0, 1));
 
 			this.processor.CompareWord(this.processor.PullGlobalWord(0xd762), 0x0);
 			if (this.processor.FlagSet.IsEqual) goto L1104;
@@ -163,7 +163,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L1104:
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
-			this.owner.Libc.KeyAvailable();
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.KeyAvailable());
 
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsNotEqual) goto L1123;

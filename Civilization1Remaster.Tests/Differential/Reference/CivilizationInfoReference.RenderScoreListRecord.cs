@@ -88,19 +88,19 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L08ee:
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
-			this.owner.Libc.AppendText(0xba06,
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06,
 				this.owner.Libc.IntegerToText(
 					this.owner.World.Participants[this.processor.PullLocalWord(0x2)].TroopsRuined[this.processor.PullLocalWord(0x6)],
-					10));
+					10)));
 
-			this.owner.Libc.AppendText(0xba06, "/");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "/"));
 
 			this.processor.RegSource.Value16 = (ushort)(this.processor.PullLocalWord(0x2) << 1);
 
-			this.owner.Libc.AppendText(0xba06,
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06,
 				this.owner.Libc.IntegerToText(
 					this.owner.World.Participants[this.processor.PullLocalWord(0x6)].TroopsRuined[this.processor.PullLocalWord(0x2)],
-					10));
+					10)));
 
 			this.owner.TextPainter.RenderTextToScreen0(0xba06,
 				this.processor.PullLocalSignedWord(0x2) * 40,
@@ -119,7 +119,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L08c9;
 
 		L0992:
-			this.owner.Conquest.AwaitForKeyPressOrMouseClick();
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Conquest.AwaitForKeyPressOrMouseClick());
 
 			this.owner.VideoCard.RenderImage(
 				this.processor.PullGlobalWord(0x19d4),

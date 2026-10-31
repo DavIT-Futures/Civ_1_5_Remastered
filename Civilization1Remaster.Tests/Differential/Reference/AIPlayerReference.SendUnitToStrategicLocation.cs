@@ -98,22 +98,22 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1148)), this.processor.RegAcc.Value16);
 			if (this.processor.FlagSet.IsNotEqual) goto L30c6;
 
-			this.owner.MapOps.ObtainContinentID(horizLoc, vertLoc);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainContinentID(horizLoc, vertLoc));
 
 			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
 
-			this.owner.MapOps.ObtainContinentID(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainContinentID(
 				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)),
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6)));
+				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6))));
 
 			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.RegDest.Value16);
 			if (this.processor.FlagSet.IsNotEqual) goto L30c6;
 
-			this.owner.Helpers.ObtainDistance(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.ObtainDistance(
 				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)),
 				horizLoc,
 				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6)),
-				vertLoc);
+				vertLoc));
 
 			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
 			this.processor.RegAcc.LowByte = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d8));

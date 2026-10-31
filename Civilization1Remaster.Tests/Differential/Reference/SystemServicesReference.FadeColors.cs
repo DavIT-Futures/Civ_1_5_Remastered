@@ -28,7 +28,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsNotEqual) goto L051f;
 
-			this.owner.Services.GaugeColorsPerformance();
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Services.GaugeColorsPerformance());
 
 			this.processor.EmitGlobalWord(0x66, this.processor.RegAcc.Value16);
 

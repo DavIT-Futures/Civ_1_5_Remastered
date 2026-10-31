@@ -40,7 +40,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L2559:
 			this.owner.Startup.DisplayMouseCursorFully();
 
-			this.owner.Dialogs.DisplayMenu(charsAddr, (short)horizLoc, (short)vertLoc, 1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Dialogs.DisplayMenu(charsAddr, (short)horizLoc, (short)vertLoc, 1));
 
 			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
 

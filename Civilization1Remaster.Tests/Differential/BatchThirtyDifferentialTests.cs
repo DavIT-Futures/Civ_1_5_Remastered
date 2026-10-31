@@ -50,7 +50,7 @@ namespace Civilization1Remaster.Tests.Differential
 						game.SaveLoad.FetchingBackup = backup;
 					},
 					game => new GameLoadAndSaveReference(game).ImportGame(0x41c6, marker),
-					game => game.SaveLoad.ImportGame(0x41c6, marker),
+					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.SaveLoad.ImportGame(0x41c6, marker)),
 					Register.Acc | Register.Kept,
 					game => marker == 0 ? (backup ? "loaded autosave" : "loaded") :
 						game.Processor.RegAcc.Value16 == 0 ? "empty" : (short)game.Processor.PullGlobalWord(0x6826) < 0 ? "listed BC" : "listed AD");

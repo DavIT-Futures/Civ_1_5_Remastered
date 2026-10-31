@@ -35,7 +35,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 				this.processor.PullGlobalWord(0x19d4),
 				0, 0);
 
-			this.owner.SaveLoad.QueryForStoreDrive();
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.SaveLoad.QueryForStoreDrive());
 
 			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xffff);
@@ -43,7 +43,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L04d0;
 
 		L0391:
-			this.owner.Libc.CopyText(0xba06, "\x008cSelect Save File...\n");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "\x008cSelect Save File...\n"));
 
 			this.processor.EmitLocalWord(0x2, 0x0);
 
@@ -52,13 +52,13 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.LowByte = this.processor.SumByte(this.processor.RegAcc.LowByte, 0x30);
 			this.processor.EmitGlobalByte(0x41cd, this.processor.RegAcc.LowByte);
 
-			this.owner.SaveLoad.ImportGame(0x41c6, 1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.SaveLoad.ImportGame(0x41c6, 1));
 			
 			this.processor.IncrementLocalWord(0x2);
 			this.processor.CompareWord(this.processor.PullLocalWord(0x2), GameLoadAndSave.HandBayTally);
 			if (this.processor.FlagSet.IsLess) goto L03a6;
 
-			this.owner.Helpers.VerifyValueSpan(this.processor.PullGlobalSignedWord(0xe168), 0, GameLoadAndSave.HandBayTally - 1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.VerifyValueSpan(this.processor.PullGlobalSignedWord(0xe168), 0, GameLoadAndSave.HandBayTally - 1));
 
 			this.processor.EmitGlobalWord(0x2f9a, this.processor.RegAcc.Value16);
 			this.processor.CompareWord(arg1, 0xffff);
@@ -66,7 +66,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.Startup.DisplayMouseCursor();
 
-			this.owner.Dialogs.DisplayMenu(0xba06, 48, 33, 1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Dialogs.DisplayMenu(0xba06, 48, 33, 1));
 
 			arg1 = this.processor.RegAcc.Value16;
 
@@ -83,7 +83,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.LowByte = this.processor.SumByte(this.processor.RegAcc.LowByte, 0x30);
 			this.processor.EmitGlobalByte(0x41cd, this.processor.RegAcc.LowByte);
 
-			this.owner.SaveLoad.StoreGame(0x41c6);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.SaveLoad.StoreGame(0x41c6));
 			
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsNotEqual) goto L042e;
@@ -95,12 +95,12 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegData.Value16 = this.processor.BitOrWord(this.processor.RegData.Value16, this.processor.RegAcc.Value16);
 			if (this.processor.FlagSet.IsNotEqual) goto L0448;
 
-			this.owner.Libc.CopyText(0xba06, " Game has been saved.\n");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, " Game has been saved.\n"));
 
 			goto L0478;
 
 		L0448:
-			this.owner.Libc.CopyText(0xba06, " Game NOT saved.\n");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, " Game NOT saved.\n"));
 
 			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 64, 127, 192, 34, 12);
 
@@ -108,23 +108,23 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullGlobalWord(0x681c), 0xd);
 			if (this.processor.FlagSet.IsNotEqual) goto L048f;
 
-			this.owner.Libc.AppendText(0xba06, " Write access denied.\n");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " Write access denied.\n"));
 
 		L048f:
 			this.processor.CompareWord(this.processor.PullGlobalWord(0x681c), 0x1c);
 			if (this.processor.FlagSet.IsNotEqual) goto L04a6;
 
-			this.owner.Libc.AppendText(0xba06, " Disk Full.\n");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " Disk Full.\n"));
 
 		L04a6:
-			this.owner.Libc.AppendText(0xba06, " Press key to continue.\n");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " Press key to continue.\n"));
 
 			this.processor.EmitGlobalWord(0xd206, 0x1);
 
-			this.owner.Dialogs.DisplayMenu(0xba06, 64, 127, 1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Dialogs.DisplayMenu(0xba06, 64, 127, 1));
 
 		L04d0:
-			this.owner.Startup.QueryForDisk(0, 1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Startup.QueryForDisk(0, 1));
 
 			this.owner.VideoCard.RenderImage(
 				this.processor.PullGlobalWord(0x19d4),

@@ -25,16 +25,16 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L15bf;
 
 		L1538:
-			this.owner.Libc.CopyText(0xba06, "Which nation?\n ");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "Which nation?\n "));
 
 			this.processor.EmitLocalWord(0x4, 0x1);
 
 		L154d:
 			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x4);
 			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1982)));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1982))));
 
-			this.owner.Libc.AppendText(0xba06, "\n ");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "\n "));
 
 			this.processor.IncrementLocalWord(0x4);
 			this.processor.CompareWord(this.processor.PullLocalWord(0x4), 0x8);
@@ -45,7 +45,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.LowByte = this.processor.BitXorByte(this.processor.RegAcc.LowByte, 0xff);
 			this.processor.EmitGlobalWord(0xb276, this.processor.RegAcc.Value16);
 
-			this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80));
 
 			this.processor.RegAcc.Value16 = this.processor.IncrementWord(this.processor.RegAcc.Value16);
 			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
@@ -54,7 +54,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.RocketScreen.RenderSpaceScenery();
 
-			this.owner.RocketScreen.RenderSpaceship(this.processor.PullLocalSignedWord(0x2), -1, 1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.RocketScreen.RenderSpaceship(this.processor.PullLocalSignedWord(0x2), -1, 1));
 
 			this.owner.RocketScreen.ImportSpaceScenery();
 

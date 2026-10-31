@@ -123,7 +123,7 @@ namespace Civilization1Remaster.Tests.Differential
 
 				return new Scenario($"VerifyDrive({driveIdx})", game => { },
 					game => new GameLoadAndSaveReference(game).VerifyDrive(driveIdx),
-					game => game.SaveLoad.VerifyDrive(driveIdx),
+					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.SaveLoad.VerifyDrive(driveIdx)),
 					Register.Acc | Register.Kept,
 					game => (short)driveIdx > 1 ? "not a floppy" : game.Processor.RegAcc.Value16 != 0 ? "ready" : "no disk");
 			}, output, floppy ? ["not a floppy", "ready"] : ["not a floppy", "no disk"]);
@@ -158,7 +158,7 @@ namespace Civilization1Remaster.Tests.Differential
 				string composed = text.ToString();
 
 				return new Scenario($"ReflowText(), text \"{composed}\"",
-					game => game.Libc.CopyText(0xba06, composed),
+					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Libc.CopyText(0xba06, composed)),
 					game => new TextBlockRendererReference(game).ReflowText(),
 					game => game.BlockText.ReflowText(),
 					Register.Kept, game => codeTally == 0 ? "no code" : codeTally == 1 ? "one code" : "several codes");

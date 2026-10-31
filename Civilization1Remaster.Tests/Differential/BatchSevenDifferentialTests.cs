@@ -63,7 +63,7 @@ namespace Civilization1Remaster.Tests.Differential
 						}
 					},
 					game => new GameReplayReference(game).ObtainDistanceToReplayCity(horizLoc, vertLoc),
-					game => game.Replayer.ObtainDistanceToReplayCity(horizLoc, vertLoc),
+					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Replayer.ObtainDistanceToReplayCity(horizLoc, vertLoc)),
 					Register.Acc | Register.Kept,
 					game => game.Processor.PullGlobalWord(0x6812) == 0 ? "on a city" : "near a city",
 					[ScreenAndMapDifferentialTests.ReplayCities]);

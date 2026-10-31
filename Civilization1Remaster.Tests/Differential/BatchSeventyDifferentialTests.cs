@@ -350,7 +350,7 @@ public sealed class BatchSeventyDifferentialTests(ITestOutputHelper output)
 					}
 				},
 				game => new AIPlayerReference(game).ManageBarbarianUnit(0, 0),
-				game => game.Bot.ManageBarbarianUnit(0, 0),
+				game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Bot.ManageBarbarianUnit(0, 0)),
 				Register.Kept | Register.Acc,
 				game => $"mode{mode}");
 		}, output, ["mode0", "mode1", "mode2", "mode3", "mode4", "mode5", "mode6", "mode7"],

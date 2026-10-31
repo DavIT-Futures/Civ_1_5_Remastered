@@ -81,12 +81,12 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EmitUInt16(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x37dc), this.processor.RegAcc.Value16);
 			this.processor.EmitInt16(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x37d8), owner.World.Season);
 			
-			this.owner.Helpers.ObtainPlayerPopulation(this.owner.World.PersonParticipantIdx);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.ObtainPlayerPopulation(this.owner.World.PersonParticipantIdx));
 
 			this.processor.SegExtra.Value16 = 0x3772; // segment
 			this.processor.EmitUInt16(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x37de), this.processor.RegAcc.Value16);
 
-			this.owner.Legends.DisplayHallOfFame(this.processor.PullLocalWord(0x4));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Legends.DisplayHallOfFame(this.processor.PullLocalWord(0x4)));
 
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsEqual) goto L0612;

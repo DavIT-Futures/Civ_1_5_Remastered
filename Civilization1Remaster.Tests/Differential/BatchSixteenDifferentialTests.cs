@@ -22,7 +22,7 @@ namespace Civilization1Remaster.Tests.Differential
 
 				return new Scenario($"VerifyCoastalTile({horizLoc}, {vertLoc})", game => { },
 					game => new PlayerTurnReference(game).VerifyCoastalTile(horizLoc, vertLoc),
-					game => game.TurnLogic.VerifyCoastalTile(horizLoc, vertLoc),
+					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.TurnLogic.VerifyCoastalTile(horizLoc, vertLoc)),
 					Register.Acc | Register.Kept,
 					game => terrain == 0xb ? "terrain 11" : game.Processor.RegAcc.Value16 != 0 ? "coastal" : "inland");
 			}, output, ["terrain 11", "coastal", "inland"]);
@@ -109,7 +109,7 @@ namespace Civilization1Remaster.Tests.Differential
 							game.World.Towns[named].LabelIdx = 0;
 					},
 					game => new NewCityScreenReference(game).DisplayLabelInputBox(0x53ce),
-					game => game.CityNaming.DisplayLabelInputBox(0x53ce),
+					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.CityNaming.DisplayLabelInputBox(0x53ce)),
 					Register.Acc | Register.Kept, game => game.Processor.RegAcc.Value16 == 0xffff ? "no city" : "city found");
 			}, output, ["no city", "city found"], keys);
 		}

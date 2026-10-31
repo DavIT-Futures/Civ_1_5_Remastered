@@ -21,7 +21,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			// function body
 			this.processor.EnterFrame();
 
-			this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc));
 
 			this.processor.TestBitsByte(this.processor.RegAcc.LowByte, 0x40);
 			if (this.processor.FlagSet.IsNotEqual) goto L6d6c;

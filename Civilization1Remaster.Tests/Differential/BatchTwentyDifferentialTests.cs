@@ -31,9 +31,9 @@ namespace Civilization1Remaster.Tests.Differential
 				ushort style = (ushort)chance.Next(16);
 
 				return new Scenario($"RenderTextChunk({peakBreadth}, {horizLoc}, {vertLoc}, {style}), text \"{text.Replace("\n", "\\n")}\"",
-					game => game.Libc.CopyText(0xba06, text),
+					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Libc.CopyText(0xba06, text)),
 					game => new TextBlockRendererReference(game).RenderTextChunk(peakBreadth, horizLoc, vertLoc, style),
-					game => game.BlockText.RenderTextChunk(peakBreadth, horizLoc, vertLoc, style),
+					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.BlockText.RenderTextChunk(peakBreadth, horizLoc, vertLoc, style)),
 					Register.Acc | Register.Kept,
 					game => (short)game.Processor.RegAcc.Value16 > 192 ? "page full" :
 						text.Contains('^') ? "with ^" : text.Length > peakBreadth ? "lines" : "one line");
@@ -133,7 +133,7 @@ namespace Civilization1Remaster.Tests.Differential
 						relation = (ushort)(contact ? relation | 2 : relation & ~2);
 					},
 					game => new AIPlayerReference(game).MayAIEnterTile(participantIdx, (ushort)horizLoc, (ushort)vertLoc),
-					game => game.Bot.MayAIEnterTile(participantIdx, (ushort)horizLoc, (ushort)vertLoc),
+					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Bot.MayAIEnterTile(participantIdx, (ushort)horizLoc, (ushort)vertLoc)),
 					Register.Acc | Register.Kept,
 					game => (short)game.Processor.RegAcc.Value16 switch { -1 => "no ocean", 0 => "the tile itself", _ => "around" });
 			}, output, ["no ocean", "the tile itself", "around"]);

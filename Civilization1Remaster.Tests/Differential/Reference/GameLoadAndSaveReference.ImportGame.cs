@@ -26,75 +26,75 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			// function body
 			this.processor.EnterFrame(0x10);
 
-			this.owner.Libc.CopyText((ushort)(docnameAddr + 9), "SVE");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText((ushort)(docnameAddr + 9), "SVE"));
 
 			this.processor.CompareWord(marker, 0x0);
 			if (this.processor.FlagSet.IsNotEqual) goto L0125;
 			goto L02fd;
 
 		L0125:
-			this.owner.Libc.OpenHandle(docnameAddr, 0x8000);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.OpenHandle(docnameAddr, 0x8000));
 
 			this.processor.EmitGlobalWord(0x681e, this.processor.RegAcc.Value16);
 			
 			if (this.processor.RegAcc.Value16 == 0xffff)
 			{
-				this.owner.Libc.AppendText(0xba06, " (EMPTY)\n");
+				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " (EMPTY)\n"));
 			}
 			else
 			{
-				this.owner.Libc.SeekHandle((short)this.processor.PullGlobalWord(0x681e), 2, 0);
+				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.SeekHandle((short)this.processor.PullGlobalWord(0x681e), 2, 0));
 
-				this.owner.Libc.ReadHandle((short)this.processor.PullGlobalWord(0x681e), 0x6822, 2);
+				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.ReadHandle((short)this.processor.PullGlobalWord(0x681e), 0x6822, 2));
 
-				this.owner.Libc.SeekHandle((short)this.processor.PullGlobalWord(0x681e), 8, 0);
+				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.SeekHandle((short)this.processor.PullGlobalWord(0x681e), 8, 0));
 
-				this.owner.Libc.ReadHandle((short)this.processor.PullGlobalWord(0x681e), 0x6826, 2);
+				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.ReadHandle((short)this.processor.PullGlobalWord(0x681e), 0x6826, 2));
 
-				this.owner.Libc.AppendText(0xba06, " ");
+				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " "));
 
-				this.owner.Libc.SeekHandle((short)this.processor.PullGlobalWord(0x681e), 10, 0);
+				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.SeekHandle((short)this.processor.PullGlobalWord(0x681e), 10, 0));
 
-				this.owner.Libc.ReadHandle((short)this.processor.PullGlobalWord(0x681e), 0x6824, 2);
+				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.ReadHandle((short)this.processor.PullGlobalWord(0x681e), 0x6824, 2));
 
 				this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0x6824);
 				this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-				this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x33a2)));
+				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x33a2))));
 
-				this.owner.Libc.AppendText(0xba06, " ");
+				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " "));
 
-				this.owner.Libc.SeekHandle((short)this.processor.PullGlobalWord(0x681e),
-					((14 * (int)((short)this.processor.PullGlobalWord(0x6822))) + 16), 0);
+				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.SeekHandle((short)this.processor.PullGlobalWord(0x681e),
+					((14 * (int)((short)this.processor.PullGlobalWord(0x6822))) + 16), 0));
 
-				this.owner.Libc.ReadHandle((short)this.processor.PullGlobalWord(0x681e), (ushort)(this.processor.RegFrame.Value16 - 0x10), 14);
+				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.ReadHandle((short)this.processor.PullGlobalWord(0x681e), (ushort)(this.processor.RegFrame.Value16 - 0x10), 14));
 
-				this.owner.Libc.AppendText(0xba06, (ushort)(this.processor.RegFrame.Value16 - 0x10));
+				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, (ushort)(this.processor.RegFrame.Value16 - 0x10)));
 
-				this.owner.Libc.SeekHandle((short)this.processor.PullGlobalWord(0x681e),
-					((12 * (int)((short)this.processor.PullGlobalWord(0x6822))) + 0x80), 0);
+				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.SeekHandle((short)this.processor.PullGlobalWord(0x681e),
+					((12 * (int)((short)this.processor.PullGlobalWord(0x6822))) + 0x80), 0));
 
-				this.owner.Libc.ReadHandle((short)this.processor.PullGlobalWord(0x681e), (ushort)(this.processor.RegFrame.Value16 - 0x10), 0xc);
+				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.ReadHandle((short)this.processor.PullGlobalWord(0x681e), (ushort)(this.processor.RegFrame.Value16 - 0x10), 0xc));
 
-				this.owner.Libc.AppendText(0xba06, ", ");
+				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, ", "));
 
-				this.owner.Libc.AppendText(0xba06, (ushort)(this.processor.RegFrame.Value16 - 0x10));
+				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, (ushort)(this.processor.RegFrame.Value16 - 0x10)));
 
-				this.owner.Libc.AppendText(0xba06, "/");
+				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "/"));
 
-				this.owner.Libc.AppendText(0xba06,
-					this.owner.Libc.IntegerToText(Math.Abs((short)this.processor.PullGlobalWord(0x6826)), 10));
+				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06,
+					this.owner.Libc.IntegerToText(Math.Abs((short)this.processor.PullGlobalWord(0x6826)), 10)));
 
 				if (this.processor.PullGlobalSignedWord(0x6826) < 0)
 				{
-					this.owner.Libc.AppendText(0xba06, " BC\n");
+					this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " BC\n"));
 				}
 				else
 				{
-					this.owner.Libc.AppendText(0xba06, " AD\n");
+					this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " AD\n"));
 				}
 			}
 		
-			this.owner.Libc.CloseHandle((short)this.processor.PullGlobalWord(0x681e));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CloseHandle((short)this.processor.PullGlobalWord(0x681e)));
 
 			this.processor.CompareWord(this.processor.PullGlobalWord(0x681e), 0xffff);
 			if (this.processor.FlagSet.IsEqual) goto L02f9;
@@ -110,9 +110,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L02fd:
 			string route = this.processor.PullText(CPU.AsLinearAddress(this.processor.SegData.Value16, docnameAddr));
 
-			this.owner.SaveLoad.ImportGameContent(route);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.SaveLoad.ImportGameContent(route));
 
-			this.owner.Startup.QueryForDisk(0, 1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Startup.QueryForDisk(0, 1));
 
 			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
 			this.processor.EmitUInt16(this.processor.SegData.Value16, this.processor.RegBase.Value16, 0x2);

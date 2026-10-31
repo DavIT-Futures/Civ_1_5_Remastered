@@ -38,25 +38,25 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegCount.Value16 = 0x1e;
 			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0xb9a);
-			this.owner.Libc.CopyText(0xba06, this.processor.RegAcc.Value16);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, this.processor.RegAcc.Value16));
 
 			this.owner.BlockText.ShrinkTextToWidth(0xba06, 96);
 
-			this.owner.Libc.AppendText(0xba06, "\x0087 (");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "\x0087 ("));
 
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText(this.owner.World.Towns[this.processor.PullLocalWord(0x4)].MaterialsTally, 10));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06,
+				this.owner.Libc.IntegerToText(this.owner.World.Towns[this.processor.PullLocalWord(0x4)].MaterialsTally, 10)));
 
-			this.owner.Libc.AppendText(0xba06, "/");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "/"));
 
-			this.owner.Libc.AppendText(0xba06,
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06,
 				this.owner.Libc.IntegerToText((short)((short)0xa * (short)this.processor.PullUInt16(this.processor.SegData.Value16,
 					(ushort)(((-((short)this.owner.World.Towns[
 						this.processor.PullLocalWord(0x4)].PresentMakingIdx * 
 					0x1e)) + 0xbb2) & 0xffff))),
-						10));
+						10)));
 
-			this.owner.Libc.AppendText(0xba06, ")");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, ")"));
 
 		L194a:
 			this.owner.TextPainter.RenderTextToScreen0(0xba06, 172, this.processor.PullLocalSignedWord(0x6), 15);
@@ -83,14 +83,14 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullLocalWord(0x6), 0xc0);
 			if (this.processor.FlagSet.IsLess) goto L19ab;
 
-			this.owner.Conquest.AwaitForKeyPressOrMouseClick();
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Conquest.AwaitForKeyPressOrMouseClick());
 
 			this.owner.Briefings.RenderReportPreamble(0x49f0, 8);
 			
 			this.processor.EmitLocalWord(0x6, 0x20);
 
 		L19ab:
-			this.owner.CityOps.HandleCity(this.processor.PullLocalSignedWord(0x4), -1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.CityOps.HandleCity(this.processor.PullLocalSignedWord(0x4), -1));
 
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
@@ -101,25 +101,25 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 			this.processor.ScaleIndexToSource(0x1c, this.processor.PullLocalWord(0x4));
 
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText(this.owner.World.Towns[this.processor.PullLocalWord(0x4)].TrueExtent, 10));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06,
+				this.owner.Libc.IntegerToText(this.owner.World.Towns[this.processor.PullLocalWord(0x4)].TrueExtent, 10)));
 
-			this.owner.Libc.AppendText(0xba06, "-");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "-"));
 
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText((short)this.processor.PullGlobalWord(0x70da), 10));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06,
+				this.owner.Libc.IntegerToText((short)this.processor.PullGlobalWord(0x70da), 10)));
 
-			this.owner.Libc.AppendText(0xba06, "{ ");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "{ "));
 
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText((short)this.processor.PullGlobalWord(0x70dc), 10));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06,
+				this.owner.Libc.IntegerToText((short)this.processor.PullGlobalWord(0x70dc), 10)));
 
-			this.owner.Libc.AppendText(0xba06, "| ");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "| "));
 
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText((short)this.processor.PullGlobalWord(0x70de), 10));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06,
+				this.owner.Libc.IntegerToText((short)this.processor.PullGlobalWord(0x70de), 10)));
 
-			this.owner.Libc.AppendText(0xba06, "}");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "}"));
 
 			this.owner.TextPainter.RenderTextToScreen0(0xba06, 80, this.processor.PullLocalSignedWord(0x6), 15);
 
@@ -136,20 +136,20 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.LowByte = 0x22;
 			this.processor.MultiplySignedByte(this.processor.RegAcc, (byte)this.owner.World.Towns[this.processor.PullLocalWord(0x4)].PresentMakingIdx);
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x112a);
-			this.owner.Libc.CopyText(0xba06, this.processor.RegAcc.Value16);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, this.processor.RegAcc.Value16));
 
-			this.owner.Libc.AppendText(0xba06, "\x0087 (");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "\x0087 ("));
 
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText(this.owner.World.Towns[this.processor.PullLocalWord(0x4)].MaterialsTally, 10));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06,
+				this.owner.Libc.IntegerToText(this.owner.World.Towns[this.processor.PullLocalWord(0x4)].MaterialsTally, 10)));
 
-			this.owner.Libc.AppendText(0xba06, "/");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "/"));
 
-			this.owner.Libc.AppendText(0xba06,
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06,
 				this.owner.Libc.IntegerToText((short)(0xa * this.processor.PullUInt16(this.processor.SegData.Value16,
-					(ushort)(0x22 * this.owner.World.Towns[this.processor.PullLocalWord(0x4)].PresentMakingIdx + 0x1142))), 10));
+					(ushort)(0x22 * this.owner.World.Towns[this.processor.PullLocalWord(0x4)].PresentMakingIdx + 0x1142))), 10)));
 
-			this.owner.Libc.AppendText(0xba06, ")");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, ")"));
 
 			goto L194a;
 

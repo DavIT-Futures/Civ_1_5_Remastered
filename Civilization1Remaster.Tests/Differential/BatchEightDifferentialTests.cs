@@ -89,7 +89,7 @@ namespace Civilization1Remaster.Tests.Differential
 									game.Processor.EmitUInt16(0x3767, (ushort)(idx << 1), boxes[idx]);
 							},
 							game => new CityViewReference(game).SeizeCityScenery(box),
-							game => game.CityScene.SeizeCityScenery(box),
+							game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.CityScene.SeizeCityScenery(box)),
 							Register.Kept, game => firstTime ? "first time" : "boxes ready",
 							[(0x3767, 0, 0xb0)]);
 				}
@@ -117,16 +117,16 @@ namespace Civilization1Remaster.Tests.Differential
 						ushort vertLoc = (ushort)chance.Next(130, 180);
 
 						return new Scenario($"DisplayKingDialog(0xba06, {horizLoc}, {vertLoc})",
-							game => game.Libc.CopyText(0xba06, "We meet again.\n"),
+							game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Libc.CopyText(0xba06, "We meet again.\n")),
 							game => new MeetWithKingReference(game).DisplayKingDialog(0xba06, horizLoc, vertLoc),
-							game => game.Audience.DisplayKingDialog(0xba06, horizLoc, vertLoc),
+							game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Audience.DisplayKingDialog(0xba06, horizLoc, vertLoc)),
 							Register.Acc | Register.Kept, game => horizLoc == 0x14 ? "moved dialog" : "dialog");
 
 					default:
 						int fromHoriz = chance.Next(320), fromVert = chance.Next(200), toHoriz = chance.Next(200), toVert = chance.Next(150);
 
 						return new Scenario($"RenderTutorialPointer({fromHoriz}, {fromVert}, {toHoriz}, {toVert})",
-							game => game.Libc.CopyText(0xba06, "Hint"),
+							game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Libc.CopyText(0xba06, "Hint")),
 							game => new MainIntroReference(game).RenderTutorialPointer(fromHoriz, fromVert, toHoriz, toVert),
 							game => game.Prologue.RenderTutorialPointer(fromHoriz, fromVert, toHoriz, toVert),
 							Register.Kept, game => "tutorial");

@@ -34,11 +34,11 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.EmitLocalWord(0x2, this.processor.PullGlobalWord(0xd20a));
 
-			this.owner.Routing.TunePosition(horizLoc);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Routing.TunePosition(horizLoc));
 
 			this.processor.EmitGlobalWord(0xd4cc, this.processor.RegAcc.Value16);
 
-			this.owner.Helpers.VerifyValueSpan(vertLoc, 0, 38);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.VerifyValueSpan(vertLoc, 0, 38));
 			this.processor.EmitGlobalWord(0xd75e, this.processor.RegAcc.Value16);
 
 			// Another error, the code modified first parameter (playerID) to a
@@ -86,9 +86,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullGlobalWord(0xd806), 0x0);
 			if (this.processor.FlagSet.IsNotEqual) goto L0108;
 
-			this.owner.Routing.TunePosition(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Routing.TunePosition(
 				this.processor.PullLocalSignedWord(0x18) +
-					this.processor.PullGlobalSignedWord(0xd4cc));
+					this.processor.PullGlobalSignedWord(0xd4cc)));
 
 			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0x1c);
 			this.processor.RegBase.Value16 = this.processor.SumWord(this.processor.RegBase.Value16, this.processor.PullGlobalWord(0xd75e));
@@ -99,9 +99,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L0074;
 
 		L0108:
-			this.owner.Routing.TunePosition(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Routing.TunePosition(
 				this.processor.PullLocalSignedWord(0x18) +
-					this.processor.PullGlobalSignedWord(0xd4cc));
+					this.processor.PullGlobalSignedWord(0xd4cc)));
 
 			this.owner.MapOps.RepaintMapTile((short)this.processor.RegAcc.Value16,
 				this.processor.PullLocalSignedWord(0x1c) + this.processor.PullGlobalSignedWord(0xd75e));
@@ -196,14 +196,14 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullGlobalWord(0xd806), 0x0);
 			if (this.processor.FlagSet.IsNotEqual)
 			{
-				this.owner.Helpers.VerifyValueSpan(
-					this.processor.PullLocalSignedWord(0xc), 0, 16);
+				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.VerifyValueSpan(
+					this.processor.PullLocalSignedWord(0xc), 0, 16));
 
 				this.processor.EmitLocalWord(0xc, this.processor.RegAcc.Value16);
 				this.processor.EmitGlobalWord(0x6ed6, this.processor.RegAcc.Value16);
 
-				this.owner.Helpers.VerifyValueSpan(
-					this.processor.PullLocalSignedWord(0x12), 0, 65530);
+				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.VerifyValueSpan(
+					this.processor.PullLocalSignedWord(0x12), 0, 65530));
 
 				this.processor.EmitLocalWord(0x12, this.processor.RegAcc.Value16);
 				this.processor.EmitGlobalWord(0x70ea, this.processor.RegAcc.Value16);
@@ -259,9 +259,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.Value16 = 0x1c;
 			this.processor.ScaleAccumulatorToSource(this.processor.PullLocalWord(0xa));
 
-			this.owner.Routing.TunePosition(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Routing.TunePosition(
 				this.owner.World.Towns[this.processor.PullLocalWord(0xa)].Place.X -
-					this.processor.PullLocalSignedWord(0x16));
+					this.processor.PullLocalSignedWord(0x16)));
 
 			this.processor.EmitLocalWord(0x18, this.processor.RegAcc.Value16);
 			this.processor.RegAcc.Value16 = (ushort)((short)this.owner.World.Towns[this.processor.PullLocalWord(0xa)].Place.Y);

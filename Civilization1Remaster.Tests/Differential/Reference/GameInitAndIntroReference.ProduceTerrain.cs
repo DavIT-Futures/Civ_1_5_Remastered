@@ -168,7 +168,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0xd0);
 			this.processor.EmitLocalWord(0x22, this.processor.RegAcc.Value16);
 
-			this.owner.WorldSetup.DisplayStoryIntro();
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.WorldSetup.DisplayStoryIntro());
 
 		L0b87:
 			this.processor.EmitLocalWord(0xac, this.processor.IncrementWord(this.processor.PullLocalWord(0xac)));
@@ -231,9 +231,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullLocalWord(0x24), 0x50);
 			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0c3e;
 
-			this.owner.WorldSetup.ObtainTerrainTypeFromScreen(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.WorldSetup.ObtainTerrainTypeFromScreen(
 				this.processor.PullLocalSignedWord(0x24),
-				this.processor.PullLocalSignedWord(0xa8));
+				this.processor.PullLocalSignedWord(0xa8)));
 			
 			this.processor.EmitLocalWord(0xaa, this.processor.RegAcc.Value16);
 			this.processor.CompareWord(this.processor.PullLocalWord(0x8), 0x0);
@@ -253,7 +253,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L0aa1;
 
 		L0c3e:
-			this.owner.WorldSetup.DisplayStoryIntro();
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.WorldSetup.DisplayStoryIntro());
 
 			this.processor.IncrementLocalWord(0xa8);
 
@@ -417,7 +417,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L0a82;
 
 		L0df0:
-			this.owner.WorldSetup.DisplayStoryIntro();
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.WorldSetup.DisplayStoryIntro());
 
 			this.owner.VideoCard.RenderImage(
 				this.processor.PullGlobalWord(0xaa),
@@ -429,7 +429,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.WorldSetup.ReckonContinentSizes(1);
 
-			this.owner.WorldSetup.DisplayStoryIntro();
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.WorldSetup.DisplayStoryIntro());
 
 			this.owner.WorldSetup.SituateSpecialTerrain();
 

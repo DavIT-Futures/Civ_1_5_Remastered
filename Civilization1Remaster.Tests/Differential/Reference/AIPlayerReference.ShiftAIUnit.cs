@@ -27,7 +27,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord((ushort)participantIdx, 0x0);
 			if (this.processor.FlagSet.IsNotEqual) goto L0ccf;
 
-			this.owner.Bot.ManageBarbarianUnit(participantIdx, troopIdx);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Bot.ManageBarbarianUnit(participantIdx, troopIdx));
 
 			goto L2fd0;
 
@@ -94,11 +94,11 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.ScaleIndex(0xc, (ushort)troopIdx);
 			this.processor.RegDest.Value16 = this.processor.SumWord(this.processor.RegDest.Value16, this.processor.RegAcc.Value16);
 
-			this.owner.Helpers.ObtainDistance(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.ObtainDistance(
 				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 + 0x81d5)),
 				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)),
 				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 + 0x81d6)),
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6)));
+				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6))));
 
 			this.processor.EmitLocalWord(0x12, this.processor.RegAcc.Value16);
 			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x14);
@@ -154,11 +154,11 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.ScaleIndex(0x1c, this.processor.PullLocalWord(0x40));
 			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
 			
-			this.owner.Helpers.ObtainDistance(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.ObtainDistance(
 				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)),
 				this.owner.World.Towns[this.processor.PullLocalWord(0x40)].Place.X,
 				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6)),
-				this.owner.World.Towns[this.processor.PullLocalWord(0x40)].Place.Y);
+				this.owner.World.Towns[this.processor.PullLocalWord(0x40)].Place.Y));
 
 			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
 			this.processor.RegAcc.LowByte = 0x22;
@@ -190,11 +190,11 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.ScaleIndex(0x1c, this.processor.PullLocalWord(0x40));
 			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
 
-			this.owner.Helpers.ObtainDistance(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.ObtainDistance(
 				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)),
 				this.owner.World.Towns[this.processor.PullLocalWord(0x40)].Place.X,
 				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6)),
-				this.owner.World.Towns[this.processor.PullLocalWord(0x40)].Place.Y);
+				this.owner.World.Towns[this.processor.PullLocalWord(0x40)].Place.Y));
 
 			this.processor.EmitLocalWord(0x12, this.processor.RegAcc.Value16);
 			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x14);
@@ -226,9 +226,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.ScaleAccumulatorToSource((ushort)participantIdx);
 			this.processor.AddScaledToSource(0xc, (ushort)troopIdx);
 
-			this.owner.UnitOps.MayOccupyTile(participantIdx,
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.UnitOps.MayOccupyTile(participantIdx,
 				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)),
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6)));
+				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6))));
 
 			this.processor.EmitLocalWord(0x4c, this.processor.RegAcc.Value16);
 			this.processor.EmitLocalWord(0x2c, 0x0);
@@ -241,18 +241,18 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.SignExtendByte(this.processor.RegAcc);
 			this.processor.EmitLocalWord(0x8, this.processor.RegAcc.Value16);
 
-			this.owner.Helpers.LocateNearestCity(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.LocateNearestCity(
 				this.processor.PullLocalSignedWord(0x30),
-				this.processor.PullLocalSignedWord(0x36));
+				this.processor.PullLocalSignedWord(0x36)));
 
 			this.processor.EmitLocalWord(0x34, this.processor.RegAcc.Value16);
 			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x6c9a);
 			this.processor.EmitLocalWord(0x2a, this.processor.RegAcc.Value16);
 			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d7), 0xff);
 
-			this.owner.Helpers.LocateNearestUnit(participantIdx, troopIdx,
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.LocateNearestUnit(participantIdx, troopIdx,
 				this.processor.PullLocalSignedWord(0x30),
-				this.processor.PullLocalSignedWord(0x36));
+				this.processor.PullLocalSignedWord(0x36)));
 
 			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
 			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x6c9a);
@@ -260,9 +260,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.LowByte = this.processor.PullLocalByte(0x8);
 			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d7), this.processor.RegAcc.LowByte);
 
-			this.owner.MapOps.ObtainTerrainType(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainTerrainType(
 				this.processor.PullLocalSignedWord(0x30),
-				this.processor.PullLocalSignedWord(0x36));
+				this.processor.PullLocalSignedWord(0x36)));
 
 			this.processor.EmitLocalWord(0x42, this.processor.RegAcc.Value16);
 			this.processor.RegAcc.LowByte = 0x22;
@@ -271,9 +271,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1148));
 			this.processor.EmitLocalWord(0x56, this.processor.RegAcc.Value16);
 
-			this.owner.MapOps.ObtainContinentID(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainContinentID(
 				this.processor.PullLocalSignedWord(0x30),
-				this.processor.PullLocalSignedWord(0x36));
+				this.processor.PullLocalSignedWord(0x36)));
 
 			this.processor.EmitLocalWord(0x1a, this.processor.RegAcc.Value16);
 			this.processor.RegAcc.Value16 = (ushort)this.owner.World.Participants[participantIdx].Landmasses[this.processor.RegAcc.Value16].Approach;
@@ -318,9 +318,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x18e4)));
 			this.processor.EmitLocalWord(0x2e, this.processor.RegAcc.Value16);
 
-			this.owner.MapOps.ObtainTileOwner(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainTileOwner(
 				this.processor.PullLocalSignedWord(0x26),
-				this.processor.PullLocalSignedWord(0x2e));
+				this.processor.PullLocalSignedWord(0x2e)));
 
 			this.processor.EmitLocalWord(0x20, this.processor.RegAcc.Value16);
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xffff);
@@ -371,11 +371,11 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.ScaleIndex(0x1c, this.processor.PullLocalWord(0xc));
 			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
 			
-			this.owner.Helpers.ObtainDistance(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.ObtainDistance(
 				this.owner.World.Towns[this.processor.PullLocalWord(0xc)].Place.X,
 				this.owner.World.Towns[this.processor.PullLocalWord(0x22)].Place.X,
 				this.owner.World.Towns[this.processor.PullLocalWord(0xc)].Place.Y,
-				this.owner.World.Towns[this.processor.PullLocalWord(0x22)].Place.Y);
+				this.owner.World.Towns[this.processor.PullLocalWord(0x22)].Place.Y));
 
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x10);
 			if (this.processor.FlagSet.IsGreater) goto L1097;
@@ -506,9 +506,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 + 0x18e4)));
 			this.processor.EmitLocalWord(0x2e, this.processor.RegAcc.Value16);
 
-			this.owner.MapOps.ObtainTileOwner(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainTileOwner(
 				this.processor.PullLocalSignedWord(0x26),
-				this.processor.PullLocalSignedWord(0x2e));
+				this.processor.PullLocalSignedWord(0x2e)));
 
 			this.processor.RegAcc.Value16 = this.processor.IncrementWord(this.processor.RegAcc.Value16);
 			if (this.processor.FlagSet.IsNotEqual) goto L11fd;
@@ -580,9 +580,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 				0);
 
 		L1321:
-			this.owner.VideoCard.ObtainDot(2,
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.VideoCard.ObtainDot(2,
 				this.processor.PullLocalSignedWord(0x30) + 0x50,
-				this.processor.PullLocalSignedWord(0x36));
+				this.processor.PullLocalSignedWord(0x36)));
 
 			this.processor.EmitLocalWord(0x28, this.processor.RegAcc.Value16);
 			this.processor.TestAccumulator();
@@ -609,9 +609,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x40);
 			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
 
-			this.owner.Routing.TunePosition(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Routing.TunePosition(
 				this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1882)) +
-					this.processor.PullLocalSignedWord(0x30));
+					this.processor.PullLocalSignedWord(0x30)));
 
 			this.processor.EmitLocalWord(0x26, this.processor.RegAcc.Value16);
 
@@ -619,9 +619,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x36));
 			this.processor.EmitLocalWord(0x2e, this.processor.RegAcc.Value16);
 
-			this.owner.VideoCard.ObtainDot(2,
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.VideoCard.ObtainDot(2,
 				this.processor.PullLocalSignedWord(0x26) + 0x50,
-				this.processor.PullLocalSignedWord(0x2e));
+				this.processor.PullLocalSignedWord(0x2e)));
 
 			this.processor.EmitLocalWord(0x10, this.processor.RegAcc.Value16);
 			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x28);
@@ -631,14 +631,14 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CopyLocalWord(0x40, 0x2c);
 
 		L13ac:
-			this.owner.MapOps.ObtainTerrainType(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainTerrainType(
 				this.processor.PullLocalSignedWord(0x26),
-				this.processor.PullLocalSignedWord(0x2e));
+				this.processor.PullLocalSignedWord(0x2e)));
 
-			this.owner.MapOps.ContainsHut(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ContainsHut(
 				this.processor.RegAcc.Value16,
 				this.processor.PullLocalSignedWord(0x26),
-				this.processor.PullLocalSignedWord(0x2e));
+				this.processor.PullLocalSignedWord(0x2e)));
 
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsEqual) goto L1356;
@@ -707,9 +707,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			if (this.owner.World.Participants[participantIdx].FoundScienceTally >= this.owner.World.Participants[this.owner.World.PersonParticipantIdx].FoundScienceTally)
 				goto L14ac;
 
-			this.owner.VideoCard.ObtainDot(2,
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.VideoCard.ObtainDot(2,
 				this.processor.PullLocalSignedWord(0x30) + 0x50,
-				this.processor.PullLocalSignedWord(0x36) + 0x32);
+				this.processor.PullLocalSignedWord(0x36) + 0x32));
 
 			this.processor.EmitLocalWord(0x3a, this.processor.RegAcc.Value16);
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x9);
@@ -721,9 +721,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L1417;
 
 		L14ac:
-			this.owner.MapOps.ObtainTileImprovements(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainTileImprovements(
 				this.processor.PullLocalSignedWord(0x30),
-				this.processor.PullLocalSignedWord(0x36));
+				this.processor.PullLocalSignedWord(0x36)));
 
 			this.processor.TestBitsByte(this.processor.RegAcc.LowByte, 0x1);
 			if (this.processor.FlagSet.IsNotEqual) goto L14c1;
@@ -757,7 +757,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EmitLocalWord(0x3a, this.processor.RegAcc.Value16);
 			this.processor.EmitUInt8(this.processor.SegData.Value16, this.processor.RegDest.Value16, 0x1a);
 
-			this.owner.UnitOps.LocateStackLeader(participantIdx, troopIdx);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.UnitOps.LocateStackLeader(participantIdx, troopIdx));
 
 			this.processor.EmitLocalWord(0x20, this.processor.RegAcc.Value16);
 			this.processor.RegAcc.LowByte = this.processor.PullLocalByte(0x3a);
@@ -777,9 +777,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			if (this.processor.FlagSet.IsLess) goto L14e1;
 
 		L1545:
-			this.owner.UnitOps.VerifyTileOccupation(participantIdx,
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.UnitOps.VerifyTileOccupation(participantIdx,
 				this.processor.PullLocalSignedWord(0x30),
-				this.processor.PullLocalSignedWord(0x36));
+				this.processor.PullLocalSignedWord(0x36)));
 
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsEqual) goto L155f;
@@ -803,7 +803,8 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.IncrementLocalWord(0x6);
 
 		L1582:
-			this.owner.UnitOps.TallyUnitsWithFlagInStack(participantIdx, troopIdx, 2);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.UnitOps.TallyUnitsWithFlagInStack(participantIdx, troopIdx, 2));
+			this.processor.RegSource.Value16 = (ushort)(0x600 * (participantIdx)); // (as VisitEachUnitInStack left it)
 
 			this.processor.EmitLocalWord(0x3a, this.processor.RegAcc.Value16);
 			this.processor.ScaleIndexToBase(0x1c, this.processor.PullLocalWord(0x34));
@@ -844,12 +845,13 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EmitLocalWord(0x3a, this.processor.RegAcc.Value16);
 			this.processor.EmitUInt8(this.processor.SegData.Value16, this.processor.RegSource.Value16, this.processor.BitOrByte(this.processor.PullUInt8(this.processor.SegData.Value16, this.processor.RegSource.Value16), 0x8));
 
-			this.owner.UnitOps.LocateStackLeader(participantIdx, troopIdx);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.UnitOps.LocateStackLeader(participantIdx, troopIdx));
 
 			this.processor.CompareWord(this.processor.RegAcc.Value16, (ushort)troopIdx);
 			if (this.processor.FlagSet.IsNotEqual) goto L1645;
 
-			this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, troopIdx, 4);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, troopIdx, 4));
+			this.processor.RegSource.Value16 = (ushort)(0x600 * (participantIdx)); // (as VisitEachUnitInStack left it)
 
 			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
 			this.processor.ScaleIndexToBase(0x1c, this.processor.PullLocalWord(0x34));
@@ -996,17 +998,17 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.Value16 = 0x1c;
 			this.processor.ScaleAccumulatorToSource(this.processor.PullLocalWord(0xc));
 
-			this.owner.Helpers.ObtainDistance(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.ObtainDistance(
 				this.processor.PullLocalSignedWord(0x30),
 				this.owner.World.Towns[this.processor.PullLocalWord(0xc)].Place.X,
 				this.processor.PullLocalSignedWord(0x36),
-				this.owner.World.Towns[this.processor.PullLocalWord(0xc)].Place.Y);
+				this.owner.World.Towns[this.processor.PullLocalWord(0xc)].Place.Y));
 
 			this.processor.EmitLocalWord(0x12, this.processor.RegAcc.Value16);
 
-			this.owner.MapOps.ObtainContinentID(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainContinentID(
 				this.owner.World.Towns[this.processor.PullLocalWord(0xc)].Place.X,
-				this.owner.World.Towns[this.processor.PullLocalWord(0xc)].Place.Y);
+				this.owner.World.Towns[this.processor.PullLocalWord(0xc)].Place.Y));
 
 			this.processor.EmitLocalWord(0x4a, this.processor.RegAcc.Value16);
 
@@ -1044,15 +1046,16 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.Value16 = 0x1c;
 			this.processor.ScaleAccumulatorToSource(this.processor.PullLocalWord(0xc));
 
-			this.owner.MapOps.ObtainUnitAtTile(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainUnitAtTile(
 				this.owner.World.Towns[this.processor.PullLocalWord(0xc)].Place.X,
-				this.owner.World.Towns[this.processor.PullLocalWord(0xc)].Place.Y);
+				this.owner.World.Towns[this.processor.PullLocalWord(0xc)].Place.Y));
 
 			this.processor.EmitLocalWord(0x24, this.processor.RegAcc.Value16);
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xffff);
 			if (this.processor.FlagSet.IsEqual) goto L1846;
 
-			this.owner.UnitOps.TallyUnitsWithFlagInStack(participantIdx, this.processor.PullLocalSignedWord(0x24), 5);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.UnitOps.TallyUnitsWithFlagInStack(participantIdx, this.processor.PullLocalSignedWord(0x24), 5));
+			this.processor.RegSource.Value16 = (ushort)(0x600 * (participantIdx)); // (as VisitEachUnitInStack left it)
 
 			this.processor.CompareWord(this.processor.PullLocalWord(0x12), 0x1);
 			this.processor.RegCount.Value16 = this.processor.SubtractBorrowWord(this.processor.RegCount.Value16, this.processor.RegCount.Value16);
@@ -1218,9 +1221,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			if (this.processor.FlagSet.IsEqual)
 				goto L1c37;
 
-			this.owner.MapOps.ObtainTerrainType(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainTerrainType(
 				this.processor.PullLocalSignedWord(0x26),
-				this.processor.PullLocalSignedWord(0x2e));
+				this.processor.PullLocalSignedWord(0x2e)));
 
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
 			if (this.processor.FlagSet.IsNotEqual) goto L1a62;
@@ -1238,31 +1241,31 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x40);
 			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
 
-			this.owner.Routing.TunePosition(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Routing.TunePosition(
 				this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1882)) +
-					this.processor.PullLocalSignedWord(0x30));
+					this.processor.PullLocalSignedWord(0x30)));
 
 			this.processor.EmitLocalWord(0x26, this.processor.RegAcc.Value16);
 			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x18e4));
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x36));
 			this.processor.EmitLocalWord(0x2e, this.processor.RegAcc.Value16);
 
-			this.owner.MapOps.ObtainTileOwner(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainTileOwner(
 				this.processor.PullLocalSignedWord(0x26),
-				this.processor.PullLocalSignedWord(0x2e));
+				this.processor.PullLocalSignedWord(0x2e)));
 
 			this.processor.EmitLocalWord(0x20, this.processor.RegAcc.Value16);
 
-			this.owner.MapOps.ObtainTerrainType(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainTerrainType(
 				this.processor.PullLocalSignedWord(0x26),
-				this.processor.PullLocalSignedWord(0x2e));
+				this.processor.PullLocalSignedWord(0x2e)));
 
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
 			if (this.processor.FlagSet.IsEqual) goto L1a65;
 
-			this.owner.MapOps.VerifyMapLimits(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.VerifyMapLimits(
 				this.processor.PullLocalSignedWord(0x26),
-				this.processor.PullLocalSignedWord(0x2e));
+				this.processor.PullLocalSignedWord(0x2e)));
 
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsEqual) goto L1a65;
@@ -1277,11 +1280,12 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullLocalWord(0x20), this.processor.RegAcc.Value16);
 			if (this.processor.FlagSet.IsNotEqual) goto L1b00;
 
-			this.owner.MapOps.ObtainUnitAtTile(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainUnitAtTile(
 				this.processor.PullLocalSignedWord(0x26),
-				this.processor.PullLocalSignedWord(0x2e));
+				this.processor.PullLocalSignedWord(0x2e)));
 
-			this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, (short)this.processor.RegAcc.Value16, 2);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, (short)this.processor.RegAcc.Value16, 2));
+			this.processor.RegSource.Value16 = (ushort)(0x600 * (participantIdx)); // (as VisitEachUnitInStack left it)
 
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x2);
 			if (this.processor.FlagSet.IsLess) goto L1b00;
@@ -1298,25 +1302,25 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			if ((this.owner.World.Participants[participantIdx].Relations[this.owner.World.PersonParticipantIdx] & 2) == 0)
 				goto L1b3d;
 
-			this.owner.MapOps.ObtainTileOwnerBits(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainTileOwnerBits(
 				this.processor.PullLocalSignedWord(0x26),
-				this.processor.PullLocalSignedWord(0x2e));
+				this.processor.PullLocalSignedWord(0x2e)));
 
 			this.processor.CompareWord(this.processor.RegAcc.Value16, (ushort)this.owner.World.PersonParticipantIdx);
 			if (this.processor.FlagSet.IsNotEqual) goto L1b3d;
 
-			this.owner.MapOps.ObtainTileImprovements(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainTileImprovements(
 				this.processor.PullLocalSignedWord(0x26),
-				this.processor.PullLocalSignedWord(0x2e));
+				this.processor.PullLocalSignedWord(0x2e)));
 
 			this.processor.TestBitsByte(this.processor.RegAcc.LowByte, 0xf);
 			if (this.processor.FlagSet.IsEqual) goto L1b3d;
 			goto L1a65;
 
 		L1b3d:
-			this.owner.MapOps.ObtainContinentID(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainContinentID(
 				this.processor.PullLocalSignedWord(0x26),
-				this.processor.PullLocalSignedWord(0x2e));
+				this.processor.PullLocalSignedWord(0x2e)));
 
 			this.processor.EmitLocalWord(0x4a, this.processor.RegAcc.Value16);
 			this.processor.EmitLocalWord(0x3c, 0x0);
@@ -1351,9 +1355,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81da)), 0xff);
 			if (this.processor.FlagSet.IsEqual) goto L1bc1;
 
-			this.owner.MapOps.ObtainContinentID(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainContinentID(
 				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81da)),
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81db)));
+				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81db))));
 
 			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x4a));
 			if (this.processor.FlagSet.IsNotEqual) goto L1bc1;
@@ -1388,9 +1392,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L199f;
 
 		L1c05:
-			this.owner.Bot.MayAIEnterTile(participantIdx, 
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Bot.MayAIEnterTile(participantIdx, 
 				this.processor.PullLocalWord(0x30),
-				this.processor.PullLocalWord(0x36));
+				this.processor.PullLocalWord(0x36)));
 			
 			this.processor.EmitLocalWord(0x3a, this.processor.RegAcc.Value16);
 			this.processor.TestAccumulator();
@@ -1476,11 +1480,11 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.Value16 = 0x1c;
 			this.processor.ScaleAccumulatorToSource(this.processor.PullLocalWord(0x40));
 
-			this.owner.Helpers.ObtainDistance(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.ObtainDistance(
 				this.processor.PullLocalSignedWord(0x30),
 				this.owner.World.Towns[this.processor.PullLocalWord(0x40)].Place.X,
 				this.processor.PullLocalSignedWord(0x36),
-				this.owner.World.Towns[this.processor.PullLocalWord(0x40)].Place.Y);
+				this.owner.World.Towns[this.processor.PullLocalWord(0x40)].Place.Y));
 
 			this.processor.EmitLocalWord(0x12, this.processor.RegAcc.Value16);
 			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x14);
@@ -1521,9 +1525,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EmitLocalWord(0x14, 0x3e7);
 			this.processor.EmitLocalWord(0x10, 0xffff);
 
-			this.owner.MapOps.ObtainTerrainType(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainTerrainType(
 				this.processor.PullLocalSignedWord(0x30),
-				this.processor.PullLocalSignedWord(0x36));
+				this.processor.PullLocalSignedWord(0x36)));
 
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
 			if (this.processor.FlagSet.IsEqual) goto L1d90;
@@ -1547,11 +1551,11 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L1e6b;
 
 		L1dba:
-			this.owner.Helpers.ObtainDistance(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.ObtainDistance(
 				this.processor.PullLocalSignedWord(0x30),
 				this.owner.World.Towns[this.processor.PullLocalWord(0x40)].Place.X,
 				this.processor.PullLocalSignedWord(0x36),
-				this.owner.World.Towns[this.processor.PullLocalWord(0x40)].Place.Y);
+				this.owner.World.Towns[this.processor.PullLocalWord(0x40)].Place.Y));
 
 			this.processor.EmitLocalWord(0x12, this.processor.RegAcc.Value16);
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x8);
@@ -1562,9 +1566,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.Value16 = 0x1c;
 			this.processor.ScaleAccumulatorToSource(this.processor.PullLocalWord(0x40));
 
-			this.owner.MapOps.ObtainContinentID(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainContinentID(
 				this.owner.World.Towns[this.processor.PullLocalWord(0x40)].Place.X,
-				this.owner.World.Towns[this.processor.PullLocalWord(0x40)].Place.Y);
+				this.owner.World.Towns[this.processor.PullLocalWord(0x40)].Place.Y));
 
 			this.processor.EmitLocalWord(0x4a, this.processor.RegAcc.Value16);
 			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x10);
@@ -1632,10 +1636,10 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegDest.Value16 = this.processor.PullLocalWord(0x3a);
 			this.processor.RegDest.Value16 = this.processor.ShiftLeftWord(this.processor.RegDest.Value16, 0x1);
 
-			this.owner.Routing.TunePosition(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Routing.TunePosition(
 				(this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 + 0x1882)) *
 					this.processor.PullLocalSignedWord(0x40)) +
-					this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)));
+					this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5))));
 
 			this.processor.EmitLocalWord(0x26, this.processor.RegAcc.Value16);
 			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegDest.Value16 + 0x18e4));
@@ -1649,16 +1653,16 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x2f);
 			if (this.processor.FlagSet.IsGreaterOrEqual) goto L1e99;
 
-			this.owner.MapOps.ObtainTerrainType(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainTerrainType(
 				this.processor.PullLocalSignedWord(0x26),
-				this.processor.PullLocalSignedWord(0x2e));
+				this.processor.PullLocalSignedWord(0x2e)));
 
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
 			if (this.processor.FlagSet.IsEqual) goto L1e99;
 
-			this.owner.MapOps.ObtainContinentID(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainContinentID(
 				this.processor.PullLocalSignedWord(0x26),
-				this.processor.PullLocalSignedWord(0x2e));
+				this.processor.PullLocalSignedWord(0x2e)));
 			
 			if (this.owner.World.Participants[participantIdx].Landmasses[this.processor.RegAcc.Value16].TownTally == 0) goto L1f36;
 			goto L1e99;
@@ -1696,9 +1700,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			if ((this.owner.World.Participants[this.owner.World.PersonParticipantIdx].Relations[participantIdx] & 2) != 0)
 				goto L1fb2;
 
-			this.owner.MapOps.ObtainTileImprovements(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainTileImprovements(
 				this.processor.PullLocalSignedWord(0x30),
-				this.processor.PullLocalSignedWord(0x36));
+				this.processor.PullLocalSignedWord(0x36)));
 
 			this.processor.TestBitsByte(this.processor.RegAcc.LowByte, 0x6);
 			if (this.processor.FlagSet.IsEqual) goto L1fb2;
@@ -1771,9 +1775,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullLocalWord(0x42), 0x4);
 			if (this.processor.FlagSet.IsNotEqual) goto L2060;
 
-			this.owner.MapOps.ContainsSpecialResource(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ContainsSpecialResource(
 				this.processor.PullLocalSignedWord(0x30),
-				this.processor.PullLocalSignedWord(0x36));
+				this.processor.PullLocalSignedWord(0x36)));
 
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsNotEqual) goto L2060;
@@ -1785,17 +1789,17 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L213b;
 
 		L206a:
-			this.owner.TurnLogic.ObtainTileMoveCost(this.processor.PullLocalSignedWord(0x30),
-				this.processor.PullLocalSignedWord(0x36));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnLogic.ObtainTileMoveCost(this.processor.PullLocalSignedWord(0x30),
+				this.processor.PullLocalSignedWord(0x36)));
 
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1);
 			if (this.processor.FlagSet.IsEqual) goto L20c0;
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x2);
 			if (this.processor.FlagSet.IsEqual) goto L20db;
 
-			this.owner.MapOps.ObtainTileImprovements(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainTileImprovements(
 				this.processor.PullLocalSignedWord(0x30),
-				this.processor.PullLocalSignedWord(0x36));
+				this.processor.PullLocalSignedWord(0x36)));
 
 			this.processor.EmitLocalWord(0x3a, this.processor.RegAcc.Value16);
 			this.processor.TestBitsByte(this.processor.PullLocalByte(0x3a), 0x6);
@@ -1842,8 +1846,8 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			if (this.processor.FlagSet.IsEqual)
 				goto L213b;
 
-			this.owner.CityOps.MayCityWorkTile(this.processor.PullLocalSignedWord(0x30),
-				this.processor.PullLocalSignedWord(0x36), 1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.CityOps.MayCityWorkTile(this.processor.PullLocalSignedWord(0x30),
+				this.processor.PullLocalSignedWord(0x36), 1));
 
 			this.processor.RegSource.Value16 = this.processor.RegAcc.Value16;
 			this.processor.TestBitsByte(this.processor.PullLocalByte(0x3a), 0x8);
@@ -1860,9 +1864,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L20a5;
 
 		L213b:
-			this.owner.MapOps.ObtainTileImprovements(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainTileImprovements(
 				this.processor.PullLocalSignedWord(0x30),
-				this.processor.PullLocalSignedWord(0x36));
+				this.processor.PullLocalSignedWord(0x36)));
 
 			this.processor.TestBitsByte(this.processor.RegAcc.LowByte, 0x40);
 			if (this.processor.FlagSet.IsEqual) goto L2153;
@@ -1918,9 +1922,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L22a6;
 
 		L21cc:
-			this.owner.MapOps.ObtainTerrainType(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainTerrainType(
 				this.processor.PullLocalSignedWord(0x26),
-				this.processor.PullLocalSignedWord(0x2e));
+				this.processor.PullLocalSignedWord(0x2e)));
 
 			this.processor.RegCount.Value16 = 0xc;
 			this.processor.ScaleAccumulatorToSource(this.processor.RegCount.Value16);
@@ -1942,8 +1946,8 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L22a3;
 
 		L220a:
-			this.owner.TurnLogic.ObtainTileMoveCost(this.processor.PullLocalSignedWord(0x26),
-				this.processor.PullLocalSignedWord(0x2e));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnLogic.ObtainTileMoveCost(this.processor.PullLocalSignedWord(0x26),
+				this.processor.PullLocalSignedWord(0x2e)));
 
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsNotEqual) goto L221f;
@@ -1955,16 +1959,16 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareByte((byte)this.owner.World.Towns[this.processor.PullLocalWord(0x34)].TrueExtent, 0x3);
 			if (this.processor.FlagSet.IsGreaterOrEqual) goto L2257;
 
-			this.owner.MapOps.ObtainTerrainType(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainTerrainType(
 				this.processor.PullLocalSignedWord(0x26),
-				this.processor.PullLocalSignedWord(0x2e));
+				this.processor.PullLocalSignedWord(0x2e)));
 
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x4);
 			if (this.processor.FlagSet.IsNotEqual) goto L2257;
 
-			this.owner.MapOps.ContainsSpecialResource(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ContainsSpecialResource(
 				this.processor.PullLocalSignedWord(0x26),
-				this.processor.PullLocalSignedWord(0x2e));
+				this.processor.PullLocalSignedWord(0x2e)));
 
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsEqual) goto L22a3;
@@ -1973,11 +1977,11 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.Value16 = 0x1c;
 			this.processor.ScaleAccumulatorToSource(this.processor.PullLocalWord(0x34));
 
-			this.owner.Helpers.MergeCoordinates(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.MergeCoordinates(
 				(short)(this.processor.PullLocalSignedWord(0x26) -
 					this.owner.World.Towns[this.processor.PullLocalWord(0x34)].Place.X),
 				(short)(this.processor.PullLocalSignedWord(0x2e) -
-					this.owner.World.Towns[this.processor.PullLocalWord(0x34)].Place.Y));
+					this.owner.World.Towns[this.processor.PullLocalWord(0x34)].Place.Y)));
 
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x2);
 			if (this.processor.FlagSet.IsGreater) goto L22a3;
@@ -2009,9 +2013,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x36));
 			this.processor.EmitLocalWord(0x2e, this.processor.RegAcc.Value16);
 
-			this.owner.MapOps.ObtainUnitAtTile(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainUnitAtTile(
 				this.processor.PullLocalSignedWord(0x26),
-				this.processor.PullLocalSignedWord(0x2e));
+				this.processor.PullLocalSignedWord(0x2e)));
 
 			this.processor.EmitLocalWord(0x20, this.processor.RegAcc.Value16);
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xffff);
@@ -2023,7 +2027,8 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord((ushort)participantIdx, this.processor.RegAcc.Value16);
 			if (this.processor.FlagSet.IsNotEqual) goto L22a3;
 
-			this.owner.UnitOps.TallyUnitsOfTypeInStack(participantIdx, this.processor.PullLocalSignedWord(0x20), 0);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.UnitOps.TallyUnitsOfTypeInStack(participantIdx, this.processor.PullLocalSignedWord(0x20), 0));
+			this.processor.RegSource.Value16 = (ushort)(0x600 * (participantIdx)); // (as VisitEachUnitInStack left it)
 
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsNotEqual) goto L2309;
@@ -2033,9 +2038,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L22a3;
 
 		L230b:
-			this.owner.MapOps.ObtainTileImprovements(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainTileImprovements(
 				this.processor.PullLocalSignedWord(0x30),
-				this.processor.PullLocalSignedWord(0x36));
+				this.processor.PullLocalSignedWord(0x36)));
 
 			this.processor.TestBitsByte(this.processor.RegAcc.LowByte, 0x8);
 			if (this.processor.FlagSet.IsEqual) goto L2320;
@@ -2090,9 +2095,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x40);
 			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
 
-			this.owner.MapOps.ObtainTileImprovements(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainTileImprovements(
 				this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1882)) + this.processor.PullLocalSignedWord(0x30),
-				this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x18e4)) + this.processor.PullLocalSignedWord(0x36));
+				this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x18e4)) + this.processor.PullLocalSignedWord(0x36)));
 
 			this.processor.TestBitsByte(this.processor.RegAcc.LowByte, 0x8);
 			if (this.processor.FlagSet.IsEqual) goto L23cf;
@@ -2103,9 +2108,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EmitLocalWord(0x10, this.processor.BitOrWord(this.processor.PullLocalWord(0x10), this.processor.RegAcc.Value16));
 			this.processor.IncrementLocalWord(0x54);
 
-			this.owner.MapOps.ObtainTileImprovements(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainTileImprovements(
 				this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1882)) * 2 + this.processor.PullLocalSignedWord(0x30),
-				this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x18e4)) * 2 + this.processor.PullLocalSignedWord(0x36));
+				this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x18e4)) * 2 + this.processor.PullLocalSignedWord(0x36)));
 
 			this.processor.TestBitsByte(this.processor.RegAcc.LowByte, 0x8);
 			if (this.processor.FlagSet.IsEqual) goto L23cf;
@@ -2190,25 +2195,25 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.LowByte = this.processor.SumByte(this.processor.RegAcc.LowByte, this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6)));
 			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81db), this.processor.RegAcc.LowByte);
 
-			this.owner.MapOps.VerifyMapLimits(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.VerifyMapLimits(
 				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81da)),
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81db)));
+				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81db))));
 
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsEqual) goto L250b;
 
-			this.owner.MapOps.ObtainTerrainType(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainTerrainType(
 				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81da)),
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81db)));
+				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81db))));
 
 			this.processor.RegCount.Value16 = 0x13;
 			this.processor.ScaleAccumulatorToBase(this.processor.RegCount.Value16);
 			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x291)), 0x0);
 			if (this.processor.FlagSet.IsEqual) goto L250b;
 
-			this.owner.MapOps.ObtainContinentID(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainContinentID(
 				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81da)),
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81db)));
+				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81db))));
 
 			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x1a));
 			if (this.processor.FlagSet.IsNotEqual) goto L250b;
@@ -2231,9 +2236,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L12c0;
 
 		L2540:
-			this.owner.UnitOps.ContainsAdjacentForeignUnit(participantIdx,
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.UnitOps.ContainsAdjacentForeignUnit(participantIdx,
 				this.processor.PullLocalSignedWord(0x30),
-				this.processor.PullLocalSignedWord(0x36));
+				this.processor.PullLocalSignedWord(0x36)));
 
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsNotEqual) goto L2558;
@@ -2294,9 +2299,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EmitLocalWord(0x2c, 0x0);
 			this.processor.EmitLocalWord(0x5c, 0x0);
 
-			this.owner.UnitOps.VerifyTileOccupation(participantIdx,
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.UnitOps.VerifyTileOccupation(participantIdx,
 				this.processor.PullLocalSignedWord(0x30),
-				this.processor.PullLocalSignedWord(0x36));
+				this.processor.PullLocalSignedWord(0x36)));
 
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsEqual) goto L262d;
@@ -2331,7 +2336,8 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L2857;
 
 		L265e:
-			this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, this.processor.PullLocalSignedWord(0x24), 2);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, this.processor.PullLocalSignedWord(0x24), 2));
+			this.processor.RegSource.Value16 = (ushort)(0x600 * (participantIdx)); // (as VisitEachUnitInStack left it)
 
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x2);
 			if (this.processor.FlagSet.IsGreaterOrEqual) goto L2678;
@@ -2349,31 +2355,31 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x40);
 			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
 
-			this.owner.Routing.TunePosition(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Routing.TunePosition(
 				this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1882)) +
-					this.processor.PullLocalSignedWord(0x30));
+					this.processor.PullLocalSignedWord(0x30)));
 
 			this.processor.EmitLocalWord(0x26, this.processor.RegAcc.Value16);
 			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x18e4));
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x36));
 			this.processor.EmitLocalWord(0x2e, this.processor.RegAcc.Value16);
 
-			this.owner.MapOps.VerifyMapLimits(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.VerifyMapLimits(
 				this.processor.PullLocalSignedWord(0x26),
-				this.processor.PullLocalSignedWord(0x2e));
+				this.processor.PullLocalSignedWord(0x2e)));
 
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsEqual) goto L2678;
 
-			this.owner.MapOps.ObtainTileOwnerBits(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainTileOwnerBits(
 				this.processor.PullLocalSignedWord(0x26),
-				this.processor.PullLocalSignedWord(0x2e));
+				this.processor.PullLocalSignedWord(0x2e)));
 
 			this.processor.EmitLocalWord(0x58, this.processor.RegAcc.Value16);
 
-			this.owner.MapOps.ObtainTerrainType(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainTerrainType(
 				this.processor.PullLocalSignedWord(0x26),
-				this.processor.PullLocalSignedWord(0x2e));
+				this.processor.PullLocalSignedWord(0x2e)));
 
 			this.processor.EmitLocalWord(0x38, this.processor.RegAcc.Value16);
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
@@ -2388,9 +2394,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L2678;
 
 		L26ff:
-			this.owner.MapOps.ObtainUnitAtTile(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainUnitAtTile(
 				this.processor.PullLocalSignedWord(0x26),
-				this.processor.PullLocalSignedWord(0x2e));
+				this.processor.PullLocalSignedWord(0x2e)));
 
 			this.processor.EmitLocalWord(0x24, this.processor.RegAcc.Value16);
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xffff);
@@ -2437,9 +2443,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullLocalWord(0x24), 0xffff);
 			if (this.processor.FlagSet.IsNotEqual) goto L27cd;
 
-			this.owner.UnitOps.MayOccupyTile(participantIdx,
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.UnitOps.MayOccupyTile(participantIdx,
 				this.processor.PullLocalSignedWord(0x26),
-				this.processor.PullLocalSignedWord(0x2e));
+				this.processor.PullLocalSignedWord(0x2e)));
 
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsEqual) goto L27cd;
@@ -2515,9 +2521,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L29ed;
 
 		L286b:
-			this.owner.UnitOps.VerifyTileOccupation(participantIdx,
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.UnitOps.VerifyTileOccupation(participantIdx,
 				this.processor.PullLocalSignedWord(0x26),
-				this.processor.PullLocalSignedWord(0x2e));
+				this.processor.PullLocalSignedWord(0x2e)));
 
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsNotEqual) goto L2883;
@@ -2577,13 +2583,15 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullLocalWord(0x56), 0x1);
 			if (this.processor.FlagSet.IsNotEqual) goto L2947;
 
-			this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, this.processor.PullLocalSignedWord(0x24), 2);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, this.processor.PullLocalSignedWord(0x24), 2));
+			this.processor.RegSource.Value16 = (ushort)(0x600 * (participantIdx)); // (as VisitEachUnitInStack left it)
 
 			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
 			this.processor.RegCount.Value16 = this.processor.IncrementWord(this.processor.RegCount.Value16);
 			this.processor.RegSource.Value16 = this.processor.RegCount.Value16;
 
-			this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, this.processor.PullLocalSignedWord(0x24), 1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, this.processor.PullLocalSignedWord(0x24), 1));
+			this.processor.RegSource.Value16 = (ushort)(0x600 * (participantIdx)); // (as VisitEachUnitInStack left it)
 
 			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, 0x1);
 			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, 0x1);
@@ -2595,7 +2603,8 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullLocalWord(0x56), 0x0);
 			if (this.processor.FlagSet.IsNotEqual) goto L2975;
 
-			this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, this.processor.PullLocalSignedWord(0x24), 1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, this.processor.PullLocalSignedWord(0x24), 1));
+			this.processor.RegSource.Value16 = (ushort)(0x600 * (participantIdx)); // (as VisitEachUnitInStack left it)
 
 			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
 			this.processor.ScaleIndexToBase(0x13, this.processor.PullLocalWord(0x38));
@@ -2609,13 +2618,15 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullLocalWord(0x56), 0x2);
 			if (this.processor.FlagSet.IsNotEqual) goto L29bf;
 
-			this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, this.processor.PullLocalSignedWord(0x24), 1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, this.processor.PullLocalSignedWord(0x24), 1));
+			this.processor.RegSource.Value16 = (ushort)(0x600 * (participantIdx)); // (as VisitEachUnitInStack left it)
 
 			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
 			this.processor.RegCount.Value16 = this.processor.IncrementWord(this.processor.RegCount.Value16);
 			this.processor.RegSource.Value16 = this.processor.RegCount.Value16;
 
-			this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, this.processor.PullLocalSignedWord(0x24), 3);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, this.processor.PullLocalSignedWord(0x24), 3));
+			this.processor.RegSource.Value16 = (ushort)(0x600 * (participantIdx)); // (as VisitEachUnitInStack left it)
 
 			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, 0x1);
 			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
@@ -2658,7 +2669,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.SignExtendByte(this.processor.RegAcc);
 			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x40));
 			
-			this.owner.Libc.AbsoluteValue((short)this.processor.RegAcc.Value16);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AbsoluteValue((short)this.processor.RegAcc.Value16));
 
 			this.processor.EmitLocalWord(0xa, this.processor.RegAcc.Value16);
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x4);
@@ -2702,8 +2713,8 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			if ((this.owner.World.Participants[this.processor.RegAcc.Value16].Relations[this.processor.PullLocalWord(0x58)] & 2) != 0)
 				goto L2c6a;
 
-			this.owner.UnitOps.LocateBestGuardianInStack(this.processor.PullLocalSignedWord(0x58),
-				this.processor.PullLocalSignedWord(0x24));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.UnitOps.LocateBestGuardianInStack(this.processor.PullLocalSignedWord(0x58),
+				this.processor.PullLocalSignedWord(0x24)));
 
 			this.processor.EmitLocalWord(0x24, this.processor.RegAcc.Value16);
 			this.processor.ScaleIndexToBase(0xc, this.processor.PullLocalWord(0x24));
@@ -2718,24 +2729,25 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d7)), 0xe);
 			if (this.processor.FlagSet.IsEqual) goto L2ac8;
 
-			this.owner.MapOps.ObtainTileImprovements(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainTileImprovements(
 				this.processor.PullLocalSignedWord(0x26),
-				this.processor.PullLocalSignedWord(0x2e));
+				this.processor.PullLocalSignedWord(0x2e)));
 
 			this.processor.TestBitsByte(this.processor.RegAcc.LowByte, 0x1);
 			if (this.processor.FlagSet.IsNotEqual) goto L2ac8;
 			goto L2678;
 
 		L2ac8:
-			this.owner.Combat.SettleBattle(participantIdx, troopIdx,
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Combat.SettleBattle(participantIdx, troopIdx,
 				this.processor.PullLocalSignedWord(0x58),
 				this.processor.PullLocalSignedWord(0x24),
-				0);
+				0));
 			
 			this.processor.EmitLocalWord(0x5a, this.processor.RegAcc.Value16);
 
-			this.owner.UnitOps.TallyUnitsByDomainInStack(this.processor.PullLocalSignedWord(0x58),
-				this.processor.PullLocalSignedWord(0x24), 0);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.UnitOps.TallyUnitsByDomainInStack(this.processor.PullLocalSignedWord(0x58),
+				this.processor.PullLocalSignedWord(0x24), 0));
+			this.processor.RegSource.Value16 = (ushort)(0x600 * (this.processor.PullLocalSignedWord(0x58))); // (as VisitEachUnitInStack left it)
 
 			this.processor.RegAcc.Value16 = this.processor.IncrementWord(this.processor.RegAcc.Value16);
 			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.PullLocalWord(0x5a));
@@ -2751,9 +2763,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
 			this.processor.EmitLocalWord(0x5a, this.processor.RegAcc.Value16);
 
-			this.owner.MapOps.ObtainTileImprovements(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainTileImprovements(
 				this.processor.PullLocalSignedWord(0x26),
-				this.processor.PullLocalSignedWord(0x2e));
+				this.processor.PullLocalSignedWord(0x2e)));
 
 			this.processor.TestBitsByte(this.processor.RegAcc.LowByte, 0x1);
 			if (this.processor.FlagSet.IsEqual) goto L2b3b;
@@ -2772,7 +2784,8 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullLocalWord(0x56), 0x1);
 			if (this.processor.FlagSet.IsNotEqual) goto L2b8f;
 
-			this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, troopIdx, 3);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, troopIdx, 3));
+			this.processor.RegSource.Value16 = (ushort)(0x600 * (participantIdx)); // (as VisitEachUnitInStack left it)
 
 			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
 			this.processor.ScaleIndexToBase(0xc, (ushort)troopIdx);
@@ -2842,8 +2855,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L2dbd;
 
 		L2c14:
-			this.owner.UnitOps.TallyUnitsByDomainInStack(this.processor.PullLocalSignedWord(0x58),
-				this.processor.PullLocalSignedWord(0x24), 2);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.UnitOps.TallyUnitsByDomainInStack(this.processor.PullLocalSignedWord(0x58),
+				this.processor.PullLocalSignedWord(0x24), 2));
+			this.processor.RegSource.Value16 = (ushort)(0x600 * (this.processor.PullLocalSignedWord(0x58))); // (as VisitEachUnitInStack left it)
 
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x2);
 			if (this.processor.FlagSet.IsLess) goto L2c2e;
@@ -2857,9 +2871,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L2dbd;
 
 		L2c41:
-			this.owner.MapOps.ObtainTileImprovements(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainTileImprovements(
 				this.processor.PullLocalSignedWord(0x26),
-				this.processor.PullLocalSignedWord(0x2e));
+				this.processor.PullLocalSignedWord(0x2e)));
 
 			this.processor.TestBitsByte(this.processor.RegAcc.LowByte, 0x1);
 			if (this.processor.FlagSet.IsEqual) goto L2c56;
@@ -2924,8 +2938,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			if (this.owner.World.Participants[this.owner.World.PersonParticipantIdx].Landmasses[this.processor.PullLocalWord(0x1a)].TownTally == 0)
 				goto L2678;
 
-			this.owner.UnitOps.TallyUnitsByDomainInStack(this.processor.PullLocalSignedWord(0x58),
-				this.processor.PullLocalSignedWord(0x24), 2);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.UnitOps.TallyUnitsByDomainInStack(this.processor.PullLocalSignedWord(0x58),
+				this.processor.PullLocalSignedWord(0x24), 2));
+			this.processor.RegSource.Value16 = (ushort)(0x600 * (this.processor.PullLocalSignedWord(0x58))); // (as VisitEachUnitInStack left it)
 
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x2);
 			if (this.processor.FlagSet.IsLess) goto L2d15;
@@ -2942,9 +2957,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 				goto L2678;
 
 		L2d3b:
-			this.owner.MapOps.ObtainTileImprovements(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainTileImprovements(
 				this.processor.PullLocalSignedWord(0x26),
-				this.processor.PullLocalSignedWord(0x2e));
+				this.processor.PullLocalSignedWord(0x2e)));
 
 			this.processor.TestBitsByte(this.processor.RegAcc.LowByte, 0x1);
 			if (this.processor.FlagSet.IsEqual) goto L2d50;
@@ -2969,9 +2984,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L2dbd;
 
 		L2d85:
-			this.owner.MapOps.ObtainTileImprovements(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainTileImprovements(
 				this.processor.PullLocalSignedWord(0x26),
-				this.processor.PullLocalSignedWord(0x2e));
+				this.processor.PullLocalSignedWord(0x2e)));
 
 			this.processor.TestBitsByte(this.processor.RegAcc.LowByte, 0x1);
 			if (this.processor.FlagSet.IsEqual) goto L2da4;
@@ -2981,10 +2996,10 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EmitLocalWord(0x10, 0x3e7);
 
 		L2da4:
-			this.owner.MapOps.ContainsHut(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ContainsHut(
 				this.processor.PullLocalWord(0x38),
 				this.processor.PullLocalSignedWord(0x26),
-				this.processor.PullLocalSignedWord(0x2e));
+				this.processor.PullLocalSignedWord(0x2e)));
 
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsEqual) goto L2dbd;
@@ -3019,16 +3034,16 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegExtra.Value16, (ushort)(this.processor.RegBase.Value16 + 0x2438)), 0x0);
 			if (this.processor.FlagSet.IsNotEqual) goto L2e47;
 
-			this.owner.MapOps.ObtainTerrainType(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainTerrainType(
 				this.processor.PullLocalSignedWord(0x26),
-				this.processor.PullLocalSignedWord(0x2e));
+				this.processor.PullLocalSignedWord(0x2e)));
 
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
 			if (this.processor.FlagSet.IsEqual) goto L2e47;
 
-			this.owner.MapOps.VerifyMapLimits(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.VerifyMapLimits(
 				this.processor.PullLocalSignedWord(0x26),
-				this.processor.PullLocalSignedWord(0x2e));
+				this.processor.PullLocalSignedWord(0x2e)));
 
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsEqual) goto L2e47;
@@ -3041,18 +3056,18 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x44);
 			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
 
-			this.owner.Routing.TunePosition(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Routing.TunePosition(
 				this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1882)) +
-					this.processor.PullLocalSignedWord(0x26));
+					this.processor.PullLocalSignedWord(0x26)));
 
 			this.processor.EmitLocalWord(0xe, this.processor.RegAcc.Value16);
 			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x18e4));
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x2e));
 			this.processor.EmitLocalWord(0x16, this.processor.RegAcc.Value16);
 
-			this.owner.MapOps.VerifyMapLimits(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.VerifyMapLimits(
 				this.processor.PullLocalSignedWord(0xe),
-				this.processor.PullLocalSignedWord(0x16));
+				this.processor.PullLocalSignedWord(0x16)));
 
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsNotEqual) goto L2e81;
@@ -3065,9 +3080,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.TestBitsWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x50));
 			if (this.processor.FlagSet.IsNotEqual) goto L2ed1;
 
-			this.owner.MapOps.ObtainTerrainType(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainTerrainType(
 				this.processor.PullLocalSignedWord(0xe),
-				this.processor.PullLocalSignedWord(0x16));
+				this.processor.PullLocalSignedWord(0x16)));
 
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
 			if (this.processor.FlagSet.IsNotEqual) goto L2ecd;
@@ -3083,9 +3098,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EmitLocalWord(0x10, this.processor.SumWord(this.processor.PullLocalWord(0x10), 0x2));
 
 		L2ed1:
-			this.owner.MapOps.ObtainUnitAtTile(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainUnitAtTile(
 				this.processor.PullLocalSignedWord(0xe),
-				this.processor.PullLocalSignedWord(0x16));
+				this.processor.PullLocalSignedWord(0x16)));
 
 			this.processor.RegAcc.Value16 = this.processor.IncrementWord(this.processor.RegAcc.Value16);
 			if (this.processor.FlagSet.IsEqual) goto L2ee6;
@@ -3095,9 +3110,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullLocalWord(0x56), 0x0);
 			if (this.processor.FlagSet.IsNotEqual) goto L2f09;
 
-			this.owner.MapOps.ObtainTerrainType(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainTerrainType(
 				this.processor.PullLocalSignedWord(0xe),
-				this.processor.PullLocalSignedWord(0x16));
+				this.processor.PullLocalSignedWord(0x16)));
 
 			this.processor.RegCount.Value16 = 0x13;
 			this.processor.ScaleAccumulatorToBase(this.processor.RegCount.Value16);
@@ -3119,14 +3134,16 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareByte(this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + this.processor.RegSource.Value16 + 0x81d8)), 0x3);
 			if (this.processor.FlagSet.IsGreaterOrEqual) goto L2f74;
 
-			this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, troopIdx, 3);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, troopIdx, 3));
+			this.processor.RegSource.Value16 = (ushort)(0x600 * (participantIdx)); // (as VisitEachUnitInStack left it)
 
-			this.owner.Helpers.VerifyValueSpan((short)this.processor.RegAcc.Value16, 1, 99);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.VerifyValueSpan((short)this.processor.RegAcc.Value16, 1, 99));
 
 			this.processor.RegCount.Value16 = this.processor.RegAcc.Value16;
 			this.processor.RegSource.Value16 = this.processor.RegCount.Value16;
 
-			this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, troopIdx, 1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, troopIdx, 1));
+			this.processor.RegSource.Value16 = (ushort)(0x600 * (participantIdx)); // (as VisitEachUnitInStack left it)
 
 			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.PullLocalWord(0x10));
 			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);

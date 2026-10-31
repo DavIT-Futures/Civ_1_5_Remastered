@@ -37,7 +37,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 		L036c:
 			// sound driver call
-			this.owner.Services.AdvanceSong();
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Services.AdvanceSong());
 
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsSigned) goto L0378;

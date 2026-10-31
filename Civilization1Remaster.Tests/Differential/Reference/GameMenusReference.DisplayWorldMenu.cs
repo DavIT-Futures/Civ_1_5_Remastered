@@ -25,11 +25,11 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EmitGlobalWord(0xb276, 0x20);
 
 		L06f8:
-			this.owner.Libc.CopyText(0xba06, " Wonders of the World (F7)\n Top 5 Cities (F8)\n Civilization Score (F9)\n");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, " Wonders of the World (F7)\n Top 5 Cities (F8)\n Civilization Score (F9)\n"));
 
-			this.owner.Libc.AppendText(0xba06, " World Map (F10)\n Demographics\n SpaceShips\n");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " World Map (F10)\n Demographics\n SpaceShips\n"));
 
-			this.owner.Dialogs.DisplayMenu(0xba06, 144, 8, 0);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Dialogs.DisplayMenu(0xba06, 144, 8, 0));
 
 			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
 
@@ -70,7 +70,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L07ab;
 
 		L077b:
-			this.owner.Founding.DisplayFinalScore(this.owner.World.PersonParticipantIdx, true);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Founding.DisplayFinalScore(this.owner.World.PersonParticipantIdx, true));
 
 			goto L07ab;
 

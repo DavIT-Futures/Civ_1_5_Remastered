@@ -1057,7 +1057,7 @@ namespace Civilization1Remaster.Game
 				{
 					this.owner.Words.Append(TravellersReportGunpowderAddress);
 				}
-				else if ((this.owner.World.ScienceLeadingFoundVia[34] & 7) != 0)
+				else if ((this.processor.PullUInt8(this.processor.SegExtra.Value16, 0x4f4) & 7) != 0)
 				{
 					this.owner.Words.Append(TravellersReportIronWorkingAddress);
 				}

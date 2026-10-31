@@ -45,15 +45,15 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsEqual)
 			{
-				this.owner.VideoCard.ScreenToPicture(1,
+				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.VideoCard.ScreenToPicture(1,
 					(ushort)(((0x23 * this.processor.PullLocalWord(0x18))) + 1),
-					0x34, 0x22, 0x32);
+					0x34, 0x22, 0x32));
 			}
 			else
 			{
-				this.owner.VideoCard.ScreenToPicture(1,
+				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.VideoCard.ScreenToPicture(1,
 					(ushort)(((0x23 * this.processor.PullLocalWord(0x18))) + 1),
-					1, 0x22, 0x32);
+					1, 0x22, 0x32));
 			}
 			goto L1145;
 
@@ -82,38 +82,38 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EmitLocalWord(0x1a, 0xc);
 
 		L11c0:
-			this.owner.Helpers.VerifyValueSpan(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.VerifyValueSpan(
 				this.processor.PullGlobalSignedWord(0x70e2),
-				0, this.owner.World.Towns[townIdx].TrueExtent);
+				0, this.owner.World.Towns[townIdx].TrueExtent));
 
 			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
 
-			this.owner.Helpers.VerifyValueSpan(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.VerifyValueSpan(
 				this.processor.PullGlobalSignedWord(0x70e4), 
-				0, this.owner.World.Towns[townIdx].TrueExtent);
+				0, this.owner.World.Towns[townIdx].TrueExtent));
 			goto L1214;
 
 		L11ef:
 			this.processor.EmitLocalWord(0x2, this.processor.DecrementWord(this.processor.PullLocalWord(0x2)));
 
-			this.owner.Helpers.VerifyValueSpan(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.VerifyValueSpan(
 				this.processor.PullLocalSignedWord(0x2),
-				0, this.owner.World.Towns[townIdx].TrueExtent);
+				0, this.owner.World.Towns[townIdx].TrueExtent));
 
 			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
 			
 			this.processor.DecrementLocalWord(0x4);
 			
-			this.owner.Helpers.VerifyValueSpan(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.VerifyValueSpan(
 				this.processor.PullLocalSignedWord(0x4),
-				0, this.owner.World.Towns[townIdx].TrueExtent);
+				0, this.owner.World.Towns[townIdx].TrueExtent));
 
 		L1214:
 			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
 			
-			this.owner.Helpers.VerifyValueSpan(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.VerifyValueSpan(
 				this.owner.World.Towns[townIdx].TrueExtent - this.processor.PullGlobalSignedWord(0xe8b8),
-				0, 99);
+				0, 99));
 
 			this.processor.RegCount.Value16 = this.processor.PullLocalWord(0x2);
 			this.processor.RegCount.Value16 = this.processor.SumWord(this.processor.RegCount.Value16, this.processor.PullLocalWord(0x4));
@@ -209,7 +209,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L1363;
 
 		L1336:
-			this.owner.CityOps.ObtainCitizenType(this.processor.PullLocalWord(0x18));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.CityOps.ObtainCitizenType(this.processor.PullLocalWord(0x18)));
 
 			this.processor.RegSource.Value16 = this.processor.RegAcc.Value16;
 			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);

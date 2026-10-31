@@ -101,9 +101,9 @@ namespace Civilization1Remaster.Tests.Differential
 				short horizLoc = (short)chance.Next(0, 160), vertLoc = (short)chance.Next(10, 150);
 
 				return new Scenario($"PullTextInput({horizLoc}, {vertLoc}, {breadth}), text \"{text}\"",
-					game => game.Libc.CopyText(0xba06, text),
+					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Libc.CopyText(0xba06, text)),
 					game => new NewCityScreenReference(game).PullTextInput(horizLoc, vertLoc, breadth),
-					game => game.CityNaming.PullTextInput(horizLoc, vertLoc, breadth),
+					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.CityNaming.PullTextInput(horizLoc, vertLoc, breadth)),
 					Register.Acc | Register.Kept,
 					game => game.Processor.RegAcc.Value16 != 0 ? "accepted" : "cancelled");
 			}, output, ["accepted", "cancelled"], EditKeys);

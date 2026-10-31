@@ -45,16 +45,16 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.owner.MapOps.FocusMapView(owner.World.PersonParticipantIdx, horizLoc - 8, vertLoc - 2);
 
 		L170d:
-			this.owner.Libc.CopyText(0xba06, "An emissary from the\n");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "An emissary from the\n"));
 
 			this.processor.RegSource.Value16 = (ushort)participantIdx;
 			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
 
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1992)));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1992))));
 
-			this.owner.Libc.AppendText(0xba06, " wishes to\nspeak with you.\n");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " wishes to\nspeak with you.\n"));
 
-			this.owner.Libc.AppendText(0xba06, "Will you receive him?\n Yes.\n No.\n");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "Will you receive him?\n Yes.\n No.\n"));
 
 			this.processor.RegBase.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
 			this.processor.RegCount.LowByte = 0x4;
@@ -63,7 +63,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			if ((this.owner.World.Participants[this.owner.World.PersonParticipantIdx].Relations[participantIdx] & 0x40) == 0)
 				goto L1771;
 
-			this.owner.Libc.AppendText(0xba06, " Check Intelligence\n");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " Check Intelligence\n"));
 
 		L1771:
 			this.processor.RegAcc.Value16 = 0x3a;
@@ -73,7 +73,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.Startup.DisplayMouseCursorFully();
 
-			this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80));
 
 			this.processor.RegAcc.Value16 = this.processor.NegateWord(this.processor.RegAcc.Value16);
 			this.processor.EmitGlobalWord(0x3934, this.processor.RegAcc.Value16);
@@ -128,7 +128,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.Audience.ObtainKingSalutation(participantIdx);
 			
-			this.owner.Audience.DisplayKingDialog(0xba06, 0x14, 0x8b);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Audience.DisplayKingDialog(0xba06, 0x14, 0x8b));
 			
 			goto L16d8;
 

@@ -126,7 +126,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullLocalWord(0xa), 0x80);
 			if (this.processor.FlagSet.IsLess) goto L029b;
 
-			this.owner.MapOps.ObtainUnitAtTile(horizLoc, vertLoc);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainUnitAtTile(horizLoc, vertLoc));
 
 			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xffff);
@@ -134,6 +134,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.UnitOps.VisitEachUnitInStack(this.owner.World.Towns[townIdx].ParticipantIdx, 
 				this.processor.PullLocalSignedWord(0x4), 0x1643);
+			this.processor.RegSource.Value16 = (ushort)(0x600 * (this.owner.World.Towns[townIdx].ParticipantIdx)); // (as VisitEachUnitInStack left it)
 
 		L0317:
 			this.processor.EmitLocalWord(0xa, 0x0);
@@ -142,17 +143,17 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0xa);
 			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
 
-			this.owner.Routing.TunePosition(
-				this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1882)) + horizLoc);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Routing.TunePosition(
+				this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1882)) + horizLoc));
 
 			this.processor.EmitLocalWord(0x6, this.processor.RegAcc.Value16);
 			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x18e4));
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, vertLoc);
 			this.processor.EmitLocalWord(0x8, this.processor.RegAcc.Value16);
 
-			this.owner.Helpers.LocateNearestCity(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.LocateNearestCity(
 				this.processor.PullLocalSignedWord(0x6),
-				this.processor.PullLocalSignedWord(0x8));
+				this.processor.PullLocalSignedWord(0x8)));
 
 			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
 			this.processor.CompareWord(this.processor.PullLocalWord(0xa), 0x14);
@@ -164,9 +165,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x6);
 			this.processor.RegSource.Value16 = this.processor.SumWord(this.processor.RegSource.Value16, 0x50);
 
-			this.owner.VideoCard.ObtainDot(2,
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.VideoCard.ObtainDot(2,
 				this.processor.PullLocalSignedWord(0x6) + 0x50,
-				this.processor.PullLocalSignedWord(0x8) + 0x32);
+				this.processor.PullLocalSignedWord(0x8) + 0x32));
 
 			this.owner.Services.AssignDot(2, this.processor.PullLocalSignedWord(0x6) + 0x50,
 				this.processor.PullLocalSignedWord(0x8),

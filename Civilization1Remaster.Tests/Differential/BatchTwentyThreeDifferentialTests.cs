@@ -41,7 +41,7 @@ namespace Civilization1Remaster.Tests.Differential
 						game.World.HardnessTier = tier;
 					},
 					game => new HallOfFameReference(game).AttachHallOfFameRecord(),
-					game => game.Legends.AttachHallOfFameRecord(),
+					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Legends.AttachHallOfFameRecord()),
 					Register.Acc | Register.Kept,
 					game => game.Processor.RegAcc.Value16 switch { 0 => "first", 5 => "last", 0xffff => "none", _ => "between" },
 					[HallOfFame]);
@@ -76,7 +76,7 @@ namespace Civilization1Remaster.Tests.Differential
 						relation = (ushort)(intelligence ? relation | 0x40 : relation & ~0x40);
 					},
 					game => new MeetWithKingReference(game).WelcomeEmissary(participantIdx, horizLoc, vertLoc),
-					game => game.Audience.WelcomeEmissary(participantIdx, horizLoc, vertLoc),
+					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Audience.WelcomeEmissary(participantIdx, horizLoc, vertLoc)),
 					Register.Acc | Register.Kept,
 					game => asked != 0 ? "asked before" : answer != 0 ? (answer == 0xffff ? "refused before" : "answer known") :
 						(Calls(game, pair, "DisplayIntelligenceReport") > reports ? "intelligence, " : "") +
@@ -170,7 +170,7 @@ namespace Civilization1Remaster.Tests.Differential
 						memory.Assign(participantIdx, troopIdx, UnitMemory.Status, status);
 					},
 					game => new MapManagementReference(game).RenderUnitOnWorldMap(participantIdx, troopIdx),
-					game => game.MapOps.RenderUnitOnWorldMap(participantIdx, troopIdx),
+					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.MapOps.RenderUnitOnWorldMap(participantIdx, troopIdx)),
 					Register.Acc | Register.Kept,
 					game => worldMap == 1 ? "world map" : game.Processor.RegAcc.Value16 == 1 ?
 						(new UnitMemory(game.Processor).Following(participantIdx, troopIdx) != -1 ? "drawn with stack" : "drawn") :

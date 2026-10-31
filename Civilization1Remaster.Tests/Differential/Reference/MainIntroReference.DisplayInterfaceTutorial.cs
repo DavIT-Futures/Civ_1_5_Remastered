@@ -36,46 +36,46 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x6);
 			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
 
-			this.owner.Routing.TunePosition(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Routing.TunePosition(
 				this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1882)) + 
-					this.processor.PullLocalSignedWord(0xa));
+					this.processor.PullLocalSignedWord(0xa)));
 
 			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
 			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x18e4));
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0xc));
 			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
 
-			this.owner.MapOps.ObtainTerrainType(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainTerrainType(
 				this.processor.PullLocalSignedWord(0x2),
-				this.processor.PullLocalSignedWord(0x4));
+				this.processor.PullLocalSignedWord(0x4)));
 
 			this.processor.EmitLocalWord(0x8, this.processor.RegAcc.Value16);
 
 			this.processor.ScaleIndexToSource(0x13, this.processor.PullLocalWord(0x8));
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x282);
-			this.owner.Libc.CopyText(0xba06, this.processor.RegAcc.Value16);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, this.processor.RegAcc.Value16));
 
-			this.owner.MapOps.ContainsSpecialResource(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ContainsSpecialResource(
 				this.processor.PullLocalSignedWord(0x2),
-				this.processor.PullLocalSignedWord(0x4));
+				this.processor.PullLocalSignedWord(0x4)));
 
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsEqual) goto L186c;
 
 			this.processor.RegAcc.Value16 = this.processor.RegSource.Value16;
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x366);
-			this.owner.Libc.CopyText(0xba06, this.processor.RegAcc.Value16);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, this.processor.RegAcc.Value16));
 
 		L186c:
-			this.owner.MapOps.ContainsHut(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ContainsHut(
 				this.processor.PullLocalWord(0x8),
 				this.processor.PullLocalSignedWord(0x2),
-				this.processor.PullLocalSignedWord(0x4));
+				this.processor.PullLocalSignedWord(0x4)));
 
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsEqual) goto L1891;
 
-			this.owner.Libc.CopyText(0xba06, "Village");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "Village"));
 
 		L1891:
 			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x6);
@@ -93,21 +93,21 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L17fc;
 
 		L18d6:
-			this.owner.Libc.CopyText(0xba06, "Menu Bar");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "Menu Bar"));
 
 			this.owner.Prologue.RenderTutorialPointer(160, 6, 200, 16);
 
-			this.owner.Libc.CopyText(0xba06, "Map Window");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "Map Window"));
 
 			this.owner.Prologue.RenderTutorialPointer(48, 32, 88, 24);
 
-			this.owner.Libc.CopyText(0xba06, "Active Unit");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "Active Unit"));
 
 			this.owner.Prologue.RenderTutorialPointer(40, 128, 88, 170);
 			
 			this.owner.Startup.DisplayMouseCursor();
 
-			this.owner.Conquest.AwaitForKeyPressOrMouseClick();
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Conquest.AwaitForKeyPressOrMouseClick());
 
 			this.processor.RestoreSource();
 			this.processor.LeaveFrame();

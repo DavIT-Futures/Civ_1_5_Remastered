@@ -169,7 +169,7 @@ public sealed class BatchSeventyFiveDifferentialTests(ITestOutputHelper output)
 					};
 				},
 				game => new ScienceAndAdvisorsReference(game).PickCityProduction(participantIdx, townIdx),
-				game => game.Advisors.PickCityProduction(participantIdx, townIdx),
+				game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Advisors.PickCityProduction(participantIdx, townIdx)),
 				Register.Kept | Register.Acc,
 				// The way the function answered, from its calls and its result
 				game =>

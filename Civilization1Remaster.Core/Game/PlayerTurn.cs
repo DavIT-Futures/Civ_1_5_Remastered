@@ -880,7 +880,7 @@ namespace Civilization1Remaster.Game
 		{
 			this.turn.TargetHoriz = (ushort)this.owner.Routing.TunePosition(
 				(((short)this.owner.GlobDb3c - 80) / 16) + (short)MapViewHoriz);
-			this.turn.TargetVert = (ushort)(((this.owner.GlobDb3e - 8) >> 4) + MapViewVert);
+			this.turn.TargetVert = (ushort)(((short)(ushort)(this.owner.GlobDb3e - 8) / 16) + MapViewVert);
 		}
 
 		/// <summary>The palace of the human player, until a key or a click</summary>

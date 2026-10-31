@@ -141,12 +141,12 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			if ((this.owner.World.Participants[participantIdx2].Relations[participantIdx1] & 8) != 0)
 				goto L0a2a;
 
-			this.owner.Politics.AIWeighsTreaty(participantIdx1, participantIdx2);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Politics.AIWeighsTreaty(participantIdx1, participantIdx2));
 			
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsEqual) goto L087e;
 
-			this.owner.CityOps.PlayerEnjoysWonderEffect(participantIdx2, 7);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.CityOps.PlayerEnjoysWonderEffect(participantIdx2, 7));
 			
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsNotEqual) goto L087e;
@@ -155,12 +155,12 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L0966;
 
 		L087e:
-			this.owner.Politics.AIWeighsTreaty(participantIdx2, participantIdx1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Politics.AIWeighsTreaty(participantIdx2, participantIdx1));
 			
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsEqual) goto L08b1;
 
-			this.owner.CityOps.PlayerEnjoysWonderEffect(participantIdx1, 7);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.CityOps.PlayerEnjoysWonderEffect(participantIdx1, 7));
 
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsNotEqual) goto L08b1;
@@ -201,19 +201,19 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L08f1:
 			this.processor.RegBase.Value16 = (ushort)participantIdx1;
 			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1992)));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1992))));
 
-			this.owner.Libc.AppendText(0xba06, " and\n");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " and\n"));
 
 			this.processor.RegBase.Value16 = (ushort)participantIdx2;
 			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1992)));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1992))));
 
-			this.owner.Libc.AppendText(0xba06, " sign\na peace treaty.\n");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " sign\na peace treaty.\n"));
 
 			this.processor.EmitGlobalWord(0x2f9e, 0x1);
 
-			this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80));
 
 		L0955:
 			this.owner.Politics.AssignDiplomacyFlags(participantIdx1, participantIdx2, 2);
@@ -254,14 +254,14 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L09a2:
 			this.processor.RegBase.Value16 = (ushort)participantIdx1;
 			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1992)));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1992))));
 
-			this.owner.Libc.AppendText(0xba06, " and\n");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " and\n"));
 
 			this.processor.RegSource.Value16 = (ushort)participantIdx2;
 			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
 
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1992)));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1992))));
 
 			this.processor.RegBase.Value16 = (ushort)participantIdx1;
 			this.processor.RegCount.LowByte = 0x4;
@@ -269,16 +269,16 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			if ((this.owner.World.Participants[participantIdx1].Relations[participantIdx2] & 2) != 0)
 			{
-				this.owner.Libc.AppendText(0xba06, 0x2a36);
+				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, 0x2a36));
 			}
 			else
 			{
-				this.owner.Libc.AppendText(0xba06, 0x2a4d);
+				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, 0x2a4d));
 			}
 
 			this.processor.EmitGlobalWord(0x2f9e, 0x1);
 
-			this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80));
 
 		L0a19:
 			this.owner.Politics.WipeDiplomacyFlags(participantIdx1, participantIdx2, 2);

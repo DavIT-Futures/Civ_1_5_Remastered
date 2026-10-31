@@ -28,7 +28,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.RocketScreen.RenderSpaceScenery();
 
-			this.owner.RocketScreen.RenderSpaceship(participantIdx, 15, 0);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.RocketScreen.RenderSpaceship(participantIdx, 15, 0));
 
 			this.owner.TurnLogic.AwaitForKey();
 
@@ -46,7 +46,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L12c2;
 
 		L0fde:
-			this.owner.TurnHooks.DisplayDialog(0x4df9, 100, 80);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0x4df9, 100, 80));
 
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x3);
 			this.processor.EmitLocalWord(0x16, this.processor.RegAcc.Value16);
@@ -65,7 +65,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L12c2;
 
 		L1014:
-			this.owner.TurnHooks.DisplayDialog(0x4e12, 100, 80);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0x4e12, 100, 80));
 
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x6);
 			this.processor.EmitLocalWord(0x16, this.processor.RegAcc.Value16);
@@ -243,7 +243,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
 			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x687a), this.processor.BitOrWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x687a)), this.processor.RegAcc.Value16));
 
-			this.owner.Libc.CopyText(0xba06, "No further ");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "No further "));
 
 			this.processor.ScaleIndex(0x3, arg2);
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0x16));
@@ -251,11 +251,11 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x4bd0);
 
-			this.owner.Libc.AppendText(0xba06, this.processor.RegAcc.Value16);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, this.processor.RegAcc.Value16));
 
-			this.owner.Libc.AppendText(0xba06, " required.\n");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " required.\n"));
 
-			this.owner.TurnHooks.DisplayDialog(0xba06, 120, 80);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 120, 80));
 
 			goto L0fc0;
 
@@ -291,7 +291,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L12c2:
 			this.owner.Startup.DisplayMouseCursor();
 
-			this.owner.RocketScreen.RenderSpaceship(participantIdx, -1, 1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.RocketScreen.RenderSpaceship(participantIdx, -1, 1));
 			
 			this.owner.World.Participants[this.owner.World.PersonParticipantIdx].StarshipVictoryRatio = (short)this.processor.RegAcc.Value16;
 

@@ -196,7 +196,7 @@ public sealed class BatchEightyFiveDifferentialTests(ITestOutputHelper output)
 					}
 				},
 				game => new AIPlayerReference(game).ShiftAIUnit(participantIdx, troopIdx),
-				game => game.Bot.ShiftAIUnit(participantIdx, troopIdx),
+				game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Bot.ShiftAIUnit(participantIdx, troopIdx)),
 				Register.Kept | Register.Acc,
 				// What the unit did: by the order it gives, or a new destination
 				game =>

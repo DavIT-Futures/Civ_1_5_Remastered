@@ -50,7 +50,7 @@ namespace Civilization1Remaster.Tests.Differential
 						game.Processor.EmitGlobalWord((ushort)(sp - 2 - 0xa), leftover);
 					},
 					game => new PathfindingReference(game).ChartRoute(participantIdx, troopIdx),
-					game => game.Routing.ChartRoute(participantIdx, troopIdx),
+					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Routing.ChartRoute(participantIdx, troopIdx)),
 					Register.Acc | Register.Kept,
 					game => Calls(game, pair, "LocateRouteStep") - steps == 1 ? "no step" : game.Processor.RegAcc.Value16 != 0 ? "found" : "not found");
 			}, output, ["no step", "found", "not found"]);

@@ -127,7 +127,7 @@ namespace Civilization1Remaster.Tests.Differential
 						game.Processor.EmitGlobalWord(0x6592, placeVert);
 					},
 					game => new PathfindingReference(game).ShiftToward(participantIdx, troopIdx, limit),
-					game => game.Routing.ShiftToward(participantIdx, troopIdx, limit),
+					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Routing.ShiftToward(participantIdx, troopIdx, limit)),
 					Register.Acc | Register.Kept,
 					game => game.Processor.RegAcc.Value16 == 0xffff ? "no step" : "step");
 			}, output, ["no step", "step"]);

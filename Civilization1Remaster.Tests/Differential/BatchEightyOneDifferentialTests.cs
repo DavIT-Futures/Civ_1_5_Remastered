@@ -85,7 +85,7 @@ public sealed class BatchEightyOneDifferentialTests(ITestOutputHelper output)
 					game.World.Participants[participantIdx].Landmasses[continent].Approach = (short)(attack ? 5 : 0);
 				},
 				game => new AIPlayerReference(game).ShiftAIUnit(participantIdx, troopIdx),
-				game => game.Bot.ShiftAIUnit(participantIdx, troopIdx),
+				game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Bot.ShiftAIUnit(participantIdx, troopIdx)),
 				Register.Kept | Register.Acc,
 				// What the look at the stack did: a fortified member released (bit 3 cleared), or the members only counted
 				game =>

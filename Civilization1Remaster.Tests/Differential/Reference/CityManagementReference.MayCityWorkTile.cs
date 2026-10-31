@@ -25,18 +25,18 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EnterFrame(0x6);
 			this.processor.PreserveSource();
 
-			this.owner.MapOps.VerifyMapLimits(horizLoc, vertLoc);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.VerifyMapLimits(horizLoc, vertLoc));
 
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsNotEqual) goto L6ad8;
 			goto L6c90;
 
 		L6ad8:
-			this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc));
 
 			this.processor.EmitLocalWord(0x6, this.processor.RegAcc.Value16);
 
-			this.owner.MapOps.ContainsSpecialResource(horizLoc, vertLoc);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ContainsSpecialResource(horizLoc, vertLoc));
 
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsEqual) goto L6b0d;
@@ -55,7 +55,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.SignExtendByte(this.processor.RegAcc);
 			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
 
-			this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc));
 
 			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
 			this.processor.TestBitsByte((byte)(this.owner.World.DiagMarkers & 0xff), 0x2);
@@ -129,7 +129,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(arg3, 0x2);
 			if (this.processor.FlagSet.IsNotEqual) goto L6bf6;
 
-			this.owner.CityOps.ObtainWonderCityID(3);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.CityOps.ObtainWonderCityID(3));
 
 			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.PullGlobalWord(0x653e));
 			if (this.processor.FlagSet.IsNotEqual) goto L6bf6;

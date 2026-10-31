@@ -49,7 +49,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 				goto L0024;
 
 		L004a:
-			this.owner.CityOps.HandleCity(this.processor.PullLocalSignedWord(0x2), 0);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.CityOps.HandleCity(this.processor.PullLocalSignedWord(0x2), 0));
 
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsNotEqual) goto L0070;
@@ -69,7 +69,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullGlobalWord(0xb1e8), 0x0);
 			if (this.processor.FlagSet.IsEqual) goto L0024;
 
-			this.owner.CityOps.HandleCity(this.processor.PullLocalSignedWord(0x2), 1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.CityOps.HandleCity(this.processor.PullLocalSignedWord(0x2), 1));
 
 			this.owner.TurnHooks.RepaintMainScreen();
 
@@ -113,8 +113,8 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.DecrementLocalWord(0x6);
 
 		L010c:
-			this.owner.Helpers.VerifyValueSpan(
-				this.processor.PullLocalSignedWord(0x6), 0, 4);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.VerifyValueSpan(
+				this.processor.PullLocalSignedWord(0x6), 0, 4));
 
 			this.processor.EmitLocalWord(0x6, this.processor.RegAcc.Value16);
 			this.processor.RegAcc.Value16 = 0x3a;

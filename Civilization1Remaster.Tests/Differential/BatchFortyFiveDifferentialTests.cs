@@ -67,7 +67,7 @@ namespace Civilization1Remaster.Tests.Differential
 						}
 					},
 					game => new StartGameMenuReference(game).CharacterizeStartLocation(),
-					game => game.NewGameWizard.CharacterizeStartLocation(),
+					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.NewGameWizard.CharacterizeStartLocation()),
 					Register.Acc | Register.Kept,
 					game => Calls(game, pair, "UncoverTechnology") > learned ? "compensated" : "even");
 			}, output, ["compensated"]);

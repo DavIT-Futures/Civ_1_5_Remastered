@@ -253,7 +253,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.EmitGlobalWord(0x2f9e, 0x4);
 
-			this.owner.TurnHooks.DisplayDialog(0xba06, 80, 80);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 80, 80));
 
 		L036d:
 			owner.World.RoundTally++;
@@ -341,14 +341,14 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			
 			if (this.owner.World.Season < 0) goto L048f;
 
-			this.owner.Helpers.VerifyValueSpan(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.VerifyValueSpan(
 				this.owner.World.HighestScienceTally - (this.owner.World.RoundTally / 9),
-				0, 6);
+				0, 6));
 
 			this.processor.EmitGlobalWord(0xd2de, this.processor.RegAcc.Value16);
 
 		L048f:
-			this.owner.Helpers.ObtainPlayerPopulation(this.owner.World.PersonParticipantIdx);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.ObtainPlayerPopulation(this.owner.World.PersonParticipantIdx));
 
 			this.processor.EmitLocalWord(0x18, this.processor.RegAcc.Value16);
 
@@ -481,11 +481,11 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.TestBitsWord((ushort)this.owner.World.StarshipMarkers, 0x100);
 			if (this.processor.FlagSet.IsNotEqual) goto L066e;
 
-			this.owner.TurnHooks.ObtainPalaceScoreForLevel((short)(this.owner.World.CastleTier + 1));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.ObtainPalaceScoreForLevel((short)(this.owner.World.CastleTier + 1)));
 
 			this.processor.RegSource.Value16 = this.processor.RegAcc.Value16;
 
-			this.owner.Founding.DisplayFinalScore(this.owner.World.PersonParticipantIdx, false);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Founding.DisplayFinalScore(this.owner.World.PersonParticipantIdx, false));
 
 			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.RegSource.Value16);
 			if (this.processor.FlagSet.IsLess) goto L066e;
@@ -526,15 +526,15 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.RegBase.Value16 = (ushort)this.owner.World.Participants[this.owner.World.PersonParticipantIdx].RegimeKind;
 			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x19b2)));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x19b2))));
 
-			this.owner.Libc.AppendText(0xba06, " ");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " "));
 
 			this.processor.RegBase.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
 			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x19a2)));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x19a2))));
 
-			this.owner.Libc.AppendText(0xba06, "\nplans retirement\nin 20 years.\n");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "\nplans retirement\nin 20 years.\n"));
 
 			this.owner.Paper.DisplayNewspaper(-1);
 
@@ -555,12 +555,12 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L073b:
 			this.owner.Startup.ConcealMouseCursor();
 
-			this.owner.Libc.CopyText(0xba06, "*** GAME OVER ***\n");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "*** GAME OVER ***\n"));
 
 			this.processor.CompareWord(this.processor.PullGlobalWord(0xb884), 0x0);
 			if (this.processor.FlagSet.IsEqual) goto L077e;
 
-			this.owner.Libc.CopyText(0xba06, "Your civilization\nhas conquered\nthe entire planet!\n");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "Your civilization\nhas conquered\nthe entire planet!\n"));
 
 			this.processor.EmitGlobalWord(0x1cf6, 0xffff);
 
@@ -578,9 +578,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0x1cf6);
 			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1982)));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1982))));
 
-			this.owner.Libc.AppendText(0xba06, " spaceship\narrives at Alpha Centauri.\n");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " spaceship\narrives at Alpha Centauri.\n"));
 
 			this.owner.Paper.DisplayNewspaper(-1);
 
@@ -593,9 +593,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.RegBase.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
 			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x19a2)));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x19a2))));
 
-			this.owner.Libc.AppendText(0xba06, " dynasty\nends after glorious\n6000 year reign!\n");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " dynasty\nends after glorious\n6000 year reign!\n"));
 
 			this.processor.RegAcc.Value16 = 0x3a;
 			this.processor.ScaleAccumulatorToBase((ushort)this.owner.World.Participants[this.owner.World.PersonParticipantIdx].ChiefVisuals);
@@ -624,7 +624,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.BlockText.DisplayTextDialog(0x1cf0);
 			
-			this.owner.TurnHooks.DisplayDialog(0xba06, 80, 80);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 80, 80));
 
 			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, 0x1);
 			this.processor.RegAcc.Value16 = this.processor.NegateWord(this.processor.RegAcc.Value16);

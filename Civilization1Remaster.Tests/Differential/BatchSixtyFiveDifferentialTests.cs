@@ -47,7 +47,7 @@ namespace Civilization1Remaster.Tests.Differential
 							game.World.Participants[game.World.PersonParticipantIdx].StarshipArrivalSeason = humanArrival;
 					},
 					game => new SpaceshipScreenReference(game).ComputeSpaceshipSuccess(participantIdx, kind),
-					game => game.RocketScreen.ComputeSpaceshipSuccess(participantIdx, kind),
+					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.RocketScreen.ComputeSpaceshipSuccess(participantIdx, kind)),
 					Register.Kept | Register.Acc,
 					game => $"result {game.Processor.RegAcc.Value16}");
 			}, output, ["result 0", "result 1", "result 2"], [0x0d]);

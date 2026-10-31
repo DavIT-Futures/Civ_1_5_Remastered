@@ -27,7 +27,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L1bfc:
 			this.owner.Helpers.HaltHueCycling();
 
-			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x10), "back0a.pal");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x10), "back0a.pal"));
 
 			this.processor.RegSource.Value16 = (ushort)this.owner.World.Participants[this.owner.World.PersonParticipantIdx].RegimeKind;
 			this.processor.RegAcc.Value16 = this.processor.RegSource.Value16;
@@ -52,7 +52,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, 0x1e56, 0xc5be);
 
-			this.owner.Libc.CopyBytes(0xc744, 0xc35c, 0x180);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyBytes(0xc744, 0xc35c, 0x180));
 
 			this.owner.Services.ImportColorsFromBuffer(5, 0xc5be);
 			

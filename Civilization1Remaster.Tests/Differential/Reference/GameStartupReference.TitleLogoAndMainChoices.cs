@@ -24,9 +24,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L04bb;
 
 		L0494:
-			this.owner.Libc.CopyText(0xba06, " Start a New Game\n Load a Saved Game\n EARTH\n Customize World\n View Hall of Fame\n");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, " Start a New Game\n Load a Saved Game\n EARTH\n Customize World\n View Hall of Fame\n"));
 
-			this.owner.Dialogs.DisplayMenu(0xba06, 100, 140, 1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Dialogs.DisplayMenu(0xba06, 100, 140, 1));
 
 			this.processor.EmitGlobalWord(0x6b32, this.processor.RegAcc.Value16);
 
@@ -35,7 +35,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			if (this.processor.FlagSet.IsEqual) goto L0494;
 
 		L04c2:
-			this.owner.Services.ObtainSongPosition();
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Services.ObtainSongPosition());
 
 			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1495);
@@ -116,14 +116,14 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 				this.processor.PullGlobalWord(0x19e8),
 				0xa0, 0x32);
 
-			this.owner.Startup.QueryForDisk(0, 1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Startup.QueryForDisk(0, 1));
 
 			goto L0810;
 
 		L0591:
 			this.owner.Startup.ConcealMouseCursor();
 
-			this.owner.Startup.QueryForDisk(7, 1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Startup.QueryForDisk(7, 1));
 
 			this.processor.CompareWord(this.processor.PullGlobalWord(0xd762), 0x0);
 			if (this.processor.FlagSet.IsEqual) goto L05be;
@@ -135,7 +135,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x1b3d, 1);
 
-			this.owner.Startup.QueryForDisk(0, 1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Startup.QueryForDisk(0, 1));
 
 			this.owner.VideoCard.RenderImage(
 				this.processor.PullGlobalWord(0x19d4),
@@ -150,9 +150,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L0623:
 			this.owner.Services.AssignMousePosition(210, 11);
 
-			this.owner.Libc.CopyText(0xba06, "LAND MASS:\n Small\n Normal\n Large\n");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "LAND MASS:\n Small\n Normal\n Large\n"));
 
-			this.owner.Dialogs.DisplayMenu(0xba06, 200, 1, 1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Dialogs.DisplayMenu(0xba06, 200, 1, 1));
 
 			this.processor.EmitGlobalWord(0x7ef6, this.processor.RegAcc.Value16);
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xffff);
@@ -172,9 +172,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L0680:
 			this.owner.Services.AssignMousePosition(210, 61);
 
-			this.owner.Libc.CopyText(0xba06, "TEMPERATURE:\n Cool\n Temperate\n Warm\n");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "TEMPERATURE:\n Cool\n Temperate\n Warm\n"));
 
-			this.owner.Dialogs.DisplayMenu(0xba06, 200, 51, 1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Dialogs.DisplayMenu(0xba06, 200, 51, 1));
 
 			this.processor.EmitGlobalWord(0x7ef8, this.processor.RegAcc.Value16);
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xffff);
@@ -194,9 +194,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L06dd:
 			this.owner.Services.AssignMousePosition(210, 111);
 
-			this.owner.Libc.CopyText(0xba06, "CLIMATE:\n Arid\n Normal\n Wet\n");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "CLIMATE:\n Arid\n Normal\n Wet\n"));
 
-			this.owner.Dialogs.DisplayMenu(0xba06, 200, 101, 1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Dialogs.DisplayMenu(0xba06, 200, 101, 1));
 
 			this.processor.EmitGlobalWord(0x7efa, this.processor.RegAcc.Value16);
 
@@ -220,9 +220,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L073a:
 			this.owner.Services.AssignMousePosition(210, 161);
 
-			this.owner.Libc.CopyText(0xba06, "AGE:\n 3 billion years\n 4 billion years\n 5 billion years\n");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "AGE:\n 3 billion years\n 4 billion years\n 5 billion years\n"));
 
-			this.owner.Dialogs.DisplayMenu(0xba06, 200, 151, 1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Dialogs.DisplayMenu(0xba06, 200, 151, 1));
 
 			this.processor.EmitGlobalWord(0x7efc, this.processor.RegAcc.Value16);
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xffff);
@@ -257,7 +257,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L0549;
 
 		L07bd:
-			this.owner.SaveLoad.ImportGameFromMenu(0xffff);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.SaveLoad.ImportGameFromMenu(0xffff));
 			
 			this.processor.RegAcc.Value16 = this.processor.IncrementWord(this.processor.RegAcc.Value16);
 			if (this.processor.FlagSet.IsEqual) goto L0807;
@@ -272,7 +272,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.Legends.ImportHallOfFame();
 
-			this.owner.Legends.DisplayHallOfFame(0xffff);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Legends.DisplayHallOfFame(0xffff));
 
 			this.owner.Startup.DisplayMouseCursor();
 

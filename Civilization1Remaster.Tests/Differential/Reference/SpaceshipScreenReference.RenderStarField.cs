@@ -42,9 +42,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x6866), 0x0);
 
 		L0c8d:
-			this.owner.VideoCard.ObtainDot(0, 
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.VideoCard.ObtainDot(0, 
 				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(0x683e + this.processor.RegBase.Value16)),
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(0x6852 + this.processor.RegBase.Value16)));
+				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(0x6852 + this.processor.RegBase.Value16))));
 
 			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
 			this.processor.TestAccumulator();

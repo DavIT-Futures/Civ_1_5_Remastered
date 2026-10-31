@@ -54,7 +54,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			if (this.processor.FlagSet.IsEqual) 
 				goto L162c;
 
-			this.owner.Advisors.ObtainTechnologyInfo(participantIdx, this.processor.PullLocalWord(0x46));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Advisors.ObtainTechnologyInfo(participantIdx, this.processor.PullLocalWord(0x46)));
 
 			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, 0x1);
 			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, 0x1);
@@ -124,7 +124,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L19d4;
 
 		L16af:
-			this.owner.Encyclopedia.ObtainFirstPrerequisite((ushort)this.owner.World.Participants[this.owner.World.PersonParticipantIdx].PresentInquiryIdx);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Encyclopedia.ObtainFirstPrerequisite((ushort)this.owner.World.Participants[this.owner.World.PersonParticipantIdx].PresentInquiryIdx));
 			
 			this.processor.EmitLocalWord(0x44, this.processor.RegAcc.Value16);
 			this.processor.EmitLocalWord(0x42, 0x0);
@@ -133,7 +133,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullGlobalWord(0xdeba), 0x3);
 			if (this.processor.FlagSet.IsLessOrEqual) goto L16f1;
 
-			this.owner.Startup.QueryForDisk(1, 0);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Startup.QueryForDisk(1, 0));
 
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsEqual) goto L16f1;
@@ -149,7 +149,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L16fa:
 			this.owner.Startup.ConcealMouseCursor();
 
-			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x10), "discovr1.pic");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x10), "discovr1.pic"));
 
 			this.processor.EmitLocalWord(0x12, 0x0);
 
@@ -179,37 +179,37 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L178c:
 			this.processor.RegBase.Value16 = (ushort)participantIdx;
 			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1982)));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1982))));
 
 			this.processor.RegAcc.Value16 = this.owner.Advisors.PlayerKnowsTechnology(this.owner.World.PersonParticipantIdx, 0x14);
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsNotEqual)
 			{
-				this.owner.Libc.AppendText(0xba06, 0x22cc);
+				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, 0x22cc));
 			}
 			else
 			{
-				this.owner.Libc.AppendText(0xba06, 0x22d8);
+				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, 0x22d8));
 			}
 
-			this.owner.Libc.AppendText(0xba06, "\ndiscover the secret\nof ");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "\ndiscover the secret\nof "));
 
 			this.processor.RegAcc.Value16 = 0x16;
 			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, (ushort)this.owner.World.Participants[this.owner.World.PersonParticipantIdx].PresentInquiryIdx);
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x4da);
-			this.owner.Libc.AppendText(0xba06, this.processor.RegAcc.Value16);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, this.processor.RegAcc.Value16));
 
 			if (this.owner.World.Participants[this.owner.World.PersonParticipantIdx].PresentInquiryIdx != 71) goto L182c;
 
-			this.owner.Libc.AppendText(0xba06, " ");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " "));
 
 			this.owner.World.Participants[this.owner.World.PersonParticipantIdx].ComingScienceTally++;
 
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText(this.owner.World.Participants[this.owner.World.PersonParticipantIdx].ComingScienceTally, 10));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06,
+				this.owner.Libc.IntegerToText(this.owner.World.Participants[this.owner.World.PersonParticipantIdx].ComingScienceTally, 10)));
 
 		L182c:
-			this.owner.Libc.AppendText(0xba06, "!\n");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "!\n"));
 
 			this.processor.RegAcc.Value16 = 0x3a;
 			this.processor.ScaleAccumulatorToBase((ushort)this.owner.World.Participants[participantIdx].ChiefVisuals);
@@ -240,12 +240,12 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.Value16 = 1;
 
 		L1882:
-			this.owner.Dialogs.DisplayMenu(0xba06, 96, (short)this.processor.RegAcc.Value16, 1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Dialogs.DisplayMenu(0xba06, 96, (short)this.processor.RegAcc.Value16, 1));
 
 			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
 			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 0x1);
 
-			this.owner.Libc.CopyText(0xba06, "iconpg1.pic");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "iconpg1.pic"));
 
 			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x44);
 			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
@@ -253,11 +253,11 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.DivideSignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.RegCount.Value16);
 			this.processor.EmitGlobalByte(0xba0c, this.processor.SumByte(this.processor.PullGlobalByte(0xba0c), this.processor.RegAcc.LowByte));
 
-			this.owner.Startup.QueryForDisk(3, 1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Startup.QueryForDisk(3, 1));
 
 			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0xba06, 0);
 
-			this.owner.Startup.QueryForDisk(0, 1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Startup.QueryForDisk(0, 1));
 
 			this.owner.Encyclopedia.RenderIcon(
 				(ushort)(((this.processor.PullLocalSignedWord(0x44) % 3) * 111) + 1),
@@ -270,18 +270,18 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullGlobalWord(0xd762), 0x0);
 			if (this.processor.FlagSet.IsEqual) goto L1994;
 
-			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x8), ".pal");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x8), ".pal"));
 
 			this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, (ushort)(this.processor.RegFrame.Value16 - 0x10), 0xc1d6);
 
 			this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, 0x2311, 0xc5be);
 
-			this.owner.Libc.CopyBytes(0xc5c4, 0xc1dc, 0xff);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyBytes(0xc5c4, 0xc1dc, 0xff));
 
 			this.owner.Services.ImportColorsFromBuffer(30, 0xc5be);
 
 		L1994:
-			this.owner.Conquest.AwaitForKeyPressOrMouseClick();
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Conquest.AwaitForKeyPressOrMouseClick());
 
 			this.owner.Startup.DisplayMouseCursor();
 
@@ -331,20 +331,20 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L1b3d;
 
 		L1a18:
-			this.owner.Libc.CopyText(0xba06, "Science Advisor:\nI recommend we\ndevelop ");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "Science Advisor:\nI recommend we\ndevelop "));
 
 			this.processor.ScaleIndex(0x16, this.processor.PullLocalWord(0x14));
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x4da);
-			this.owner.Libc.AppendText(0xba06, this.processor.RegAcc.Value16);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, this.processor.RegAcc.Value16));
 
-			this.owner.Libc.AppendText(0xba06, ".\n");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, ".\n"));
 
-			this.owner.Libc.TextLength(0xba06);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.TextLength(0xba06));
 
 			this.processor.EmitLocalWord(0x40, this.processor.RegAcc.Value16);
 			this.processor.EmitLocalWord(0x12, 0x0);
 
-			this.owner.Libc.AppendText(0xba06, "So we can build:\n-");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "So we can build:\n-"));
 
 			this.processor.EmitLocalWord(0x18, 0x0);
 
@@ -357,9 +357,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.RegAcc.Value16 = this.processor.RegSource.Value16;
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x112a);
-			this.owner.Libc.AppendText(0xba06, this.processor.RegAcc.Value16);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, this.processor.RegAcc.Value16));
 
-			this.owner.Libc.AppendText(0xba06, "\n-");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "\n-"));
 
 			this.processor.IncrementLocalWord(0x12);
 
@@ -378,9 +378,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.RegAcc.Value16 = this.processor.RegSource.Value16;
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0xb9a);
-			this.owner.Libc.AppendText(0xba06, this.processor.RegAcc.Value16);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, this.processor.RegAcc.Value16));
 
-			this.owner.Libc.AppendText(0xba06, "\n-");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "\n-"));
 
 			this.processor.IncrementLocalWord(0x12);
 
@@ -403,26 +403,26 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, this.processor.RegCount.LowByte);
 			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, 0xa8);
 			this.processor.RegAcc.Value16 = this.processor.NegateWord(this.processor.RegAcc.Value16);
-			this.owner.Dialogs.DisplayMenu(0xba06, 8, (short)this.processor.RegAcc.Value16, 1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Dialogs.DisplayMenu(0xba06, 8, (short)this.processor.RegAcc.Value16, 1));
 
 			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
 			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 0x1);
 
 		L1b3d:
-			this.owner.Libc.CopyText(0xba06, "Which discovery should our\n");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "Which discovery should our\n"));
 
 			this.processor.RegAcc.Value16 = this.owner.Advisors.PlayerKnowsTechnology(this.owner.World.PersonParticipantIdx, 0x14);
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsNotEqual)
 			{
-				this.owner.Libc.AppendText(0xba06, 0x2388);
+				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, 0x2388));
 			}
 			else
 			{
-				this.owner.Libc.AppendText(0xba06, 0x2393);
+				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, 0x2393));
 			}
 
-			this.owner.Libc.AppendText(0xba06, " be pursuing, sire?\nPick one...\n ");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " be pursuing, sire?\nPick one...\n "));
 
 			this.processor.EmitLocalWord(0x12, 0x0);
 			this.processor.EmitLocalWord(0x46, 0x0);
@@ -477,9 +477,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.Value16 = 0x16;
 			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.PullLocalWord(0x46));
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x4da);
-			this.owner.Libc.AppendText(0xba06, this.processor.RegAcc.Value16);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, this.processor.RegAcc.Value16));
 
-			this.owner.Libc.AppendText(0xba06, "\n ");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "\n "));
 
 			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x12);
 			this.processor.IncrementLocalWord(0x12);
@@ -499,7 +499,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			if (this.processor.FlagSet.IsEqual) goto L1cca;
 			this.processor.EmitGlobalWord(0x2fa0, 0x1);
 
-			this.owner.Dialogs.DisplayMenu(0xba06, 80, 64, 1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Dialogs.DisplayMenu(0xba06, 80, 64, 1));
 
 			this.processor.EmitLocalWord(0x46, this.processor.RegAcc.Value16);
 
@@ -538,14 +538,14 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L1d26;
 
 		L1cca:
-			this.owner.Libc.AppendText(0xba06, " Future Technology ");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " Future Technology "));
 
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText((short)(this.owner.World.Participants[this.owner.World.PersonParticipantIdx].ComingScienceTally + 1), 10));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06,
+				this.owner.Libc.IntegerToText((short)(this.owner.World.Participants[this.owner.World.PersonParticipantIdx].ComingScienceTally + 1), 10)));
 
-			this.owner.Libc.AppendText(0xba06, "\n");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "\n"));
 
-			this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80));
 
 			this.owner.World.Participants[this.owner.World.PersonParticipantIdx].PresentInquiryIdx = 71;
 

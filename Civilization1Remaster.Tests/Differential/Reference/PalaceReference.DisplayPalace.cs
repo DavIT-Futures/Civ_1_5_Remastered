@@ -28,9 +28,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.BlockText.DisplayTextDialog(0x4ade);
 
-			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x100), 0xba06);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x100), 0xba06));
 
-			this.owner.Startup.QueryForDisk(2, 1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Startup.QueryForDisk(2, 1));
 
 			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
 			this.processor.EmitUInt16(this.processor.SegData.Value16, this.processor.RegBase.Value16, 0x1);
@@ -57,7 +57,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 				this.processor.PullGlobalWord(0xaa),
 				0, 0);
 
-			this.owner.Dialogs.DisplayMenu((ushort)(this.processor.RegFrame.Value16 - 0x100), 20, 16, 1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Dialogs.DisplayMenu((ushort)(this.processor.RegFrame.Value16 - 0x100), 20, 16, 1));
 
 			this.owner.VideoCard.RenderImage(
 				this.processor.PullGlobalWord(0x19d4),
@@ -73,7 +73,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.EmitGlobalWord(0xdb38, 0x1);
 
-			this.owner.Dialogs.DisplayMenu(0x4af0, 40, 16, 1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Dialogs.DisplayMenu(0x4af0, 40, 16, 1));
 
 			this.processor.EmitLocalWord(0x102, 0x0);
 			this.processor.EmitLocalWord(0x108, 0x1);
@@ -97,8 +97,8 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EmitLocalWord(0x104, this.processor.RegAcc.Value16);
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText((short)this.processor.PullLocalWord(0x108), 10));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06,
+				this.owner.Libc.IntegerToText((short)this.processor.PullLocalWord(0x108), 10)));
 
 			this.owner.TextPainter.RenderTextWithShadow(
 				0xba06,
@@ -120,7 +120,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0xd930)), 0x3);
 			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0217;
 
-			this.owner.Libc.CopyText(0xba06, "A");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "A"));
 
 			this.processor.RegAcc.LowByte = this.processor.PullLocalByte(0x108);
 			this.processor.EmitGlobalByte(0xba06, this.processor.SumByte(this.processor.PullGlobalByte(0xba06), this.processor.RegAcc.LowByte));
@@ -150,13 +150,13 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.owner.GlobDb3a, 0x0);
 			if (this.processor.FlagSet.IsNotEqual) goto L0246;
 
-			this.owner.Libc.KeyAvailable();
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.KeyAvailable());
 
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsEqual) goto L0231;
 
 		L0246:
-			this.owner.Libc.KeyAvailable();
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.KeyAvailable());
 
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsNotEqual) goto L02a0;
@@ -198,7 +198,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L0264;
 
 		L02a0:
-			this.owner.Dialogs.ObtainNavigationKey();
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Dialogs.ObtainNavigationKey());
 
 			this.processor.EmitLocalWord(0x10e, this.processor.RegAcc.Value16);
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x38);
@@ -255,10 +255,10 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 				this.processor.PullGlobalWord(0xaa),
 				0, 0);
 
-			this.owner.Helpers.VerifyValueSpan(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.VerifyValueSpan(
 				this.processor.PullInt16(this.processor.SegData.Value16,
 					(ushort)((this.processor.PullLocalWord(0x10e) << 1) + 0xd91e)) + 1,
-				1, 4);
+				1, 4));
 
 			this.processor.EmitLocalWord(0x110, this.processor.RegAcc.Value16);
 			this.processor.CompareWord(this.processor.PullLocalWord(0x10e), 0x9);
@@ -392,8 +392,8 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L053e:
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText((short)this.processor.PullLocalWord(0x108), 10));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06,
+				this.owner.Libc.IntegerToText((short)this.processor.PullLocalWord(0x108), 10)));
 
 			this.owner.TextPainter.RenderTextWithShadow(
 				0xba06,
@@ -515,13 +515,13 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.owner.GlobDb3a, 0x0);
 			if (this.processor.FlagSet.IsNotEqual) goto L06dd;
 
-			this.owner.Libc.KeyAvailable();
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.KeyAvailable());
 
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsEqual) goto L06c8;
 
 		L06dd:
-			this.owner.Libc.KeyAvailable();
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.KeyAvailable());
 
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsNotEqual) goto L06f5;
@@ -533,7 +533,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L070a;
 
 		L06f5:
-			this.owner.Dialogs.ObtainNavigationKey();
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Dialogs.ObtainNavigationKey());
 
 			this.processor.RegAcc.Value16 = this.processor.SubtractWord(this.processor.RegAcc.Value16, 0x31);
 			this.processor.EmitLocalWord(0x10a, this.processor.RegAcc.Value16);
@@ -578,14 +578,14 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.TurnLogic.AwaitForKey();
 
-			this.owner.Conquest.AwaitForKeyPressOrMouseClick();
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Conquest.AwaitForKeyPressOrMouseClick());
 
 		L0792:
 			this.owner.Services.DisplayScreen(0);
 			
 			this.owner.Services.PerformSound(1, 0);
 
-			this.owner.Startup.QueryForDisk(0, 1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Startup.QueryForDisk(0, 1));
 
 			this.processor.CompareWord(this.processor.PullGlobalWord(0xd762), 0x0);
 			if (this.processor.FlagSet.IsNotEqual) goto L07dc;

@@ -27,11 +27,11 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			
 			this.owner.VideoCard.RenderLine(this.processor.PullGlobalWord(0xaa), horizSpot1, vertSpot1, horizSpot2, vertSpot2 + 6, 15);
 
-			this.owner.Libc.AppendText(0xba06, "\n");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "\n"));
 
 			this.processor.EmitGlobalWord(0xdb38, 0x1);
 
-			this.owner.Dialogs.DisplayMenu(0xba06, horizSpot2, vertSpot2, 1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Dialogs.DisplayMenu(0xba06, horizSpot2, vertSpot2, 1));
 
 			this.processor.RegFrame.Value16 = this.processor.UnstackWord();
 			// Far return

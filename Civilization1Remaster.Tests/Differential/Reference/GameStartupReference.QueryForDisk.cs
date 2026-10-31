@@ -28,7 +28,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegBase.Value16 = arg1;
 			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
 
-			this.owner.Services.PathPresent(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1ace)));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Services.PathPresent(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1ace))));
 			
 			this.processor.RegAcc.Value16 = this.processor.IncrementWord(this.processor.RegAcc.Value16);
 			if (this.processor.FlagSet.IsEqual) goto L02d4;
@@ -44,7 +44,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegBase.Value16 = arg1;
 			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
 
-			this.owner.Services.PathPresent(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1ace)));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Services.PathPresent(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1ace))));
 			
 			this.processor.RegAcc.Value16 = this.processor.IncrementWord(this.processor.RegAcc.Value16);
 			if (this.processor.FlagSet.IsEqual) goto L02f9;
@@ -72,18 +72,18 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.LowByte = this.processor.SumByte(this.processor.RegAcc.LowByte, 0x31);
 			this.processor.EmitGlobalByte(0x1ade, this.processor.RegAcc.LowByte);
 
-			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x100), "Please insert Disk ");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x100), "Please insert Disk "));
 
-			this.owner.Libc.AppendText((ushort)(this.processor.RegFrame.Value16 - 0x100), "A");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText((ushort)(this.processor.RegFrame.Value16 - 0x100), "A"));
 
-			this.owner.Libc.AppendText((ushort)(this.processor.RegFrame.Value16 - 0x100), ".\n \n    Press Return\n    to continue.\n");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText((ushort)(this.processor.RegFrame.Value16 - 0x100), ".\n \n    Press Return\n    to continue.\n"));
 
 			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0x3936);
 			this.processor.EmitLocalWord(0x102, this.processor.RegAcc.Value16);
 			this.processor.EmitGlobalWord(0x3936, 0xffff);
 			this.processor.EmitGlobalWord(0xd206, 0x1);
 
-			this.owner.Dialogs.DisplayMenu((ushort)(this.processor.RegFrame.Value16 - 0x100), 100, 81, 1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Dialogs.DisplayMenu((ushort)(this.processor.RegFrame.Value16 - 0x100), 100, 81, 1));
 
 			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x102);
 			this.processor.EmitGlobalWord(0x3936, this.processor.RegAcc.Value16);

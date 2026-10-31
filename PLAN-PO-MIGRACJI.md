@@ -692,3 +692,32 @@ miasto bez osadnika zawsze ginie). Wtedy testy różnicowe przestają porównywa
 4. B1 → B2 → B3, moduł po module, od najmniejszych.
 5. B4, B5.
 6. B6 i poprawki zachowania, po decyzji.
+
+## Regresje po Fazie 3 (2026-10-31, w toku)
+
+Pełny zestaw na `main` (4ff05cb): **173 / 808 niezaliczonych** – poprzedni agent sprawdzał tylko golden master. Macierz
+(18 testów kontrolnych na każdym commicie, `.mutants/w1`): czysto do `ae3778d`, pierwsza regresja w `42ed1c7`, skoki w
+Uderzeniach 2/6 (`23ad586`) i 3/6 (`e8a2e3e`). Testy podwójnej gry (niezależna, zamrożona gra – prawdziwe zachowanie):
+`HandleCityProduction` od `8b6a7ca` (B6.8), AUTO09 od `9609da4`, `HandleCity` / `Spaceship` od Uderzeń 3/6 i 5/6.
+
+**Przyczyny i poprawki (dotąd):**
+- Ponad 140 to **artefakt testów**: kopie oryginału (`Differential/Reference`) czytają AX / SI po wywołaniu bieżących
+  funkcji, a Faza 3 przestała je ustawiać. Poprawka w testach: `ReturnInAx.Of(...)` – wywołania w kopiach i lambdy testów
+  wkładają do AX wartość zwracaną (skrypt `axwrap.py`, 2430 miejsc); po wywołaniach funkcji przechodzących po stosie
+  jednostek kopie dostają SI = 0x600 x gracz (`siwrap.py`, 35 miejsc) – w grze tego nie przywracamy (przepisany kod na
+  ścieżce chaty czyta SI). Spadek do 30 niezaliczonych.
+- `ArrangeTextRow` (`42ed1c7`): długość tekstu czytana raz – oryginał co obrót (`^` na końcu nadpisuje zero).
+- AUTO09 (`9609da4`): `0x3772:0x520` i `ES:0x4f4` zamienione na `World.ScienceLeadingFoundVia[...]` – to nie ta sama
+  pamięć; przywrócone odczyty.
+- `ShiftAIUnit`: usunięte jako martwe wywołanie `VerifyValueSpan(TallyUnitsByDomainInStack(..., 3))` (skutki uboczne,
+  ślad) – przywrócone; dzielenia przez potęgę 2 zamienione na `>>` bez znaku (komórka mapy AI, `spotThreshold`,
+  `TargetVert`) – oryginał dzieli ze znakiem w stronę zera.
+- Testy podwójnej gry `HandleCity`: AX pomijany, gdy miasto znikło (wynik nieczytany).
+
+Stan po tym etapie: **14 / 808 niezaliczonych** (HandlePlayerTurn naprawione przez dzielenia ze znakiem).
+**Zostało (do zbadania):** `HandleCity` zwraca inne `CityHappy − CityUnhappy` (0 → 0xff) – liczenie zadowolenia
+(Uderzenie 5/6: `CountScienceAndContent`, `Apply*`), macierz `matrix_happy` w toku; `DivideCivilization`, `HandleGameEnd` (pamięć); `DisplayStoryIntro`,
+`VerifyDrive` (wywołania); funkcje zwracające inną wartość niż AX oryginału (`ObtainTechnologyCategory`,
+`SwapTechnology`, `StoreGame`, `ConstructCivilization`, `ImportTextFromFile`, `ManageBarbarianUnit`, `BlendTerrainTile`)
+– sprawdzić, czy wołający używają wyniku. Lekcja: po każdym kroku **pełny zestaw**, nie tylko golden master; „martwe”
+wywołania funkcji gry nie są martwe (ślad, globalne); `>>` ≠ dzielenie ze znakiem.

@@ -131,7 +131,7 @@ namespace Civilization1Remaster.Tests.Differential
 						}
 					},
 					game => new HallOfFameReference(game).DisplayHallOfFame(arg1),
-					game => game.Legends.DisplayHallOfFame(arg1),
+					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Legends.DisplayHallOfFame(arg1)),
 					Register.Acc | Register.Kept,
 					game => arg1 == 0xffff ? "no hint" : arg1 == 5 ? "sixth place" : game.Processor.RegAcc.Value16 != 0 ? "C pressed" : "other key");
 			}, output, ["no hint", "sixth place", "C pressed", "other key"], [0x63, 0x0d, 0x43, 0x78]);

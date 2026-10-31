@@ -73,10 +73,10 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 				goto L0b7f;
 
 		L0aac:
-			this.owner.Routing.ComputeRouteCost(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Routing.ComputeRouteCost(
 				this.processor.PullLocalSignedWord(0x2),
 				this.processor.PullLocalSignedWord(0x8),
-				horizLoc, vertLoc, marker, 18);
+				horizLoc, vertLoc, marker, 18));
 
 			this.processor.RegAcc.Value16 = this.processor.IncrementWord(this.processor.RegAcc.Value16);
 			if (this.processor.FlagSet.IsEqual) goto L0ad5;
@@ -122,9 +122,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegDest.Value16 = this.processor.PullLocalWord(0xc);
 			this.processor.RegDest.Value16 <<= 2;
 
-			this.owner.Helpers.MergeCoordinates(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.MergeCoordinates(
 				horizLoc - (this.processor.PullLocalSignedWord(0xa) * 4) - 1,
-				vertLoc - (this.processor.PullLocalSignedWord(0xc) * 4) - 1);
+				vertLoc - (this.processor.PullLocalSignedWord(0xc) * 4) - 1));
 
 			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
 
@@ -141,9 +141,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.Value16 = (ushort)(this.processor.RegDest.Value16 + 0x1);
 			this.processor.EmitLocalWord(0x8, this.processor.RegAcc.Value16);
 
-			this.owner.MapOps.ObtainTerrainType(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainTerrainType(
 				this.processor.PullLocalSignedWord(0x2),
-				this.processor.PullLocalSignedWord(0x8));
+				this.processor.PullLocalSignedWord(0x8)));
 
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
 			if (this.processor.FlagSet.IsEqual) goto L0b79;
@@ -156,9 +156,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L0b7f:
 			this.processor.EmitLocalWord(0x2, this.processor.IncrementWord(this.processor.PullLocalWord(0x2)));
 
-			this.owner.MapOps.ObtainTerrainType(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainTerrainType(
 				this.processor.PullLocalSignedWord(0x2),
-				this.processor.PullLocalSignedWord(0x8));
+				this.processor.PullLocalSignedWord(0x8)));
 
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
 			if (this.processor.FlagSet.IsNotEqual) goto L0b9a;
@@ -174,9 +174,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.IncrementLocalWord(0x8);
 
-			this.owner.MapOps.ObtainTerrainType(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainTerrainType(
 				this.processor.PullLocalSignedWord(0x2),
-				this.processor.PullLocalSignedWord(0x8));
+				this.processor.PullLocalSignedWord(0x8)));
 
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
 			if (this.processor.FlagSet.IsNotEqual) goto L0bbf;
@@ -192,9 +192,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.DecrementLocalWord(0x2);
 
-			this.owner.MapOps.ObtainTerrainType(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainTerrainType(
 				this.processor.PullLocalSignedWord(0x2),
-				this.processor.PullLocalSignedWord(0x8));
+				this.processor.PullLocalSignedWord(0x8)));
 
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
 			if (this.processor.FlagSet.IsNotEqual) goto L0be4;

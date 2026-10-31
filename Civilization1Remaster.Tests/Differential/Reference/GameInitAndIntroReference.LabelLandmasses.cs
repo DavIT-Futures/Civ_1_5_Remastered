@@ -21,7 +21,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EnterFrame(0x26);
 			this.processor.PreserveIndexRegisters();
 
-			this.owner.Libc.FillBytes(0xdb44, 0, 0x104);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.FillBytes(0xdb44, 0, 0x104));
 
 			this.processor.EmitLocalWord(0x14, 0x0);
 			goto L142c;
@@ -30,16 +30,16 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x8);
 			this.processor.RegSource.Value16 = this.processor.IncrementWord(this.processor.RegSource.Value16);
 
-			this.owner.WorldSetup.ObtainTerrainTypeFromScreen(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.WorldSetup.ObtainTerrainTypeFromScreen(
 				(short)this.processor.RegSource.Value16,
-				this.processor.PullLocalSignedWord(0xc));
+				this.processor.PullLocalSignedWord(0xc)));
 			
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
 			if (this.processor.FlagSet.IsEqual) goto L11d4;
 
-			this.owner.MapOps.ObtainContinentID(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainContinentID(
 				(short)this.processor.RegSource.Value16,
-				this.processor.PullLocalSignedWord(0xc));
+				this.processor.PullLocalSignedWord(0xc)));
 
 			this.processor.EmitLocalWord(0x18, this.processor.RegAcc.Value16);
 			this.processor.EmitLocalWord(0x20, this.processor.RegSource.Value16);
@@ -49,16 +49,16 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0xc);
 			this.processor.RegSource.Value16 = this.processor.IncrementWord(this.processor.RegSource.Value16);
 
-			this.owner.WorldSetup.ObtainTerrainTypeFromScreen(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.WorldSetup.ObtainTerrainTypeFromScreen(
 				this.processor.PullLocalSignedWord(0x8),
-				(short)this.processor.RegSource.Value16);
+				(short)this.processor.RegSource.Value16));
 			
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
 			if (this.processor.FlagSet.IsEqual) goto L1262;
 
-			this.owner.MapOps.ObtainContinentID(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainContinentID(
 				this.processor.PullLocalSignedWord(0x8),
-				(short)this.processor.RegSource.Value16);
+				(short)this.processor.RegSource.Value16));
 
 			this.processor.EmitLocalWord(0x18, this.processor.RegAcc.Value16);
 			this.processor.CopyLocalWord(0x8, 0x20);
@@ -90,18 +90,18 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EmitLocalWord(0xc, this.processor.RegAcc.Value16);
 			this.processor.EmitLocalWord(0x18, 0xffff);
 
-			this.owner.WorldSetup.ObtainTerrainTypeFromScreen(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.WorldSetup.ObtainTerrainTypeFromScreen(
 				this.processor.PullLocalSignedWord(0x8),
-				(short)this.processor.RegAcc.Value16);
+				(short)this.processor.RegAcc.Value16));
 			
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
 			if (this.processor.FlagSet.IsNotEqual) goto L1243;
 			goto L11ab;
 
 		L1243:
-			this.owner.MapOps.ObtainContinentID(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainContinentID(
 				this.processor.PullLocalSignedWord(0x8),
-				this.processor.PullLocalSignedWord(0xc));
+				this.processor.PullLocalSignedWord(0xc)));
 
 			this.processor.EmitLocalWord(0x18, this.processor.RegAcc.Value16);
 			this.processor.CopyLocalWord(0x8, 0x20);
@@ -117,14 +117,14 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegDest.Value16 = this.processor.PullLocalWord(0xc);
 			this.processor.RegDest.Value16 = this.processor.IncrementWord(this.processor.RegDest.Value16);
 
-			this.owner.WorldSetup.ObtainTerrainTypeFromScreen((short)this.processor.RegSource.Value16, (short)this.processor.RegDest.Value16);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.WorldSetup.ObtainTerrainTypeFromScreen((short)this.processor.RegSource.Value16, (short)this.processor.RegDest.Value16));
 			
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
 			if (this.processor.FlagSet.IsEqual) goto L1200;
 
-			this.owner.MapOps.ObtainContinentID(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainContinentID(
 				(short)this.processor.RegSource.Value16,
-				(short)this.processor.RegDest.Value16);
+				(short)this.processor.RegDest.Value16));
 
 			this.processor.EmitLocalWord(0x18, this.processor.RegAcc.Value16);
 			this.processor.EmitLocalWord(0x20, this.processor.RegSource.Value16);
@@ -139,16 +139,16 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x2);
 			this.processor.RegSource.Value16 = this.processor.IncrementWord(this.processor.RegSource.Value16);
 
-			this.owner.WorldSetup.ObtainTerrainTypeFromScreen(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.WorldSetup.ObtainTerrainTypeFromScreen(
 				(short)this.processor.RegSource.Value16,
-				this.processor.PullLocalSignedWord(0x4));
+				this.processor.PullLocalSignedWord(0x4)));
 			
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
 			if (this.processor.FlagSet.IsEqual) goto L12be;
 
-			this.owner.MapOps.ObtainContinentID(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainContinentID(
 				(short)this.processor.RegSource.Value16,
-				this.processor.PullLocalSignedWord(0x4));
+				this.processor.PullLocalSignedWord(0x4)));
 
 			this.processor.EmitLocalWord(0xe, this.processor.RegAcc.Value16);
 			this.processor.EmitLocalWord(0x16, this.processor.RegSource.Value16);
@@ -158,18 +158,18 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0x4);
 			this.processor.RegSource.Value16 = this.processor.IncrementWord(this.processor.RegSource.Value16);
 
-			this.owner.WorldSetup.ObtainTerrainTypeFromScreen(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.WorldSetup.ObtainTerrainTypeFromScreen(
 				this.processor.PullLocalSignedWord(0x2),
-				(short)this.processor.RegSource.Value16);
+				(short)this.processor.RegSource.Value16));
 			
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
 			if (this.processor.FlagSet.IsNotEqual) goto L12d5;
 			goto L135c;
 
 		L12d5:
-			this.owner.MapOps.ObtainContinentID(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainContinentID(
 				this.processor.PullLocalSignedWord(0x2),
-				(short)this.processor.RegSource.Value16);
+				(short)this.processor.RegSource.Value16));
 
 			this.processor.EmitLocalWord(0xe, this.processor.RegAcc.Value16);
 			this.processor.CopyLocalWord(0x2, 0x16);
@@ -204,18 +204,18 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
 			this.processor.EmitLocalWord(0xe, 0xffff);
 
-			this.owner.WorldSetup.ObtainTerrainTypeFromScreen(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.WorldSetup.ObtainTerrainTypeFromScreen(
 				this.processor.PullLocalSignedWord(0x2),
-				(short)this.processor.RegAcc.Value16);
+				(short)this.processor.RegAcc.Value16));
 			
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
 			if (this.processor.FlagSet.IsNotEqual) goto L133d;
 			goto L1295;
 
 		L133d:
-			this.owner.MapOps.ObtainContinentID(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainContinentID(
 				this.processor.PullLocalSignedWord(0x2),
-				this.processor.PullLocalSignedWord(0x4));
+				this.processor.PullLocalSignedWord(0x4)));
 
 			this.processor.EmitLocalWord(0xe, this.processor.RegAcc.Value16);
 			this.processor.CopyLocalWord(0x2, 0x16);
@@ -231,16 +231,16 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegDest.Value16 = this.processor.PullLocalWord(0x4);
 			this.processor.RegDest.Value16 = this.processor.IncrementWord(this.processor.RegDest.Value16);
 
-			this.owner.WorldSetup.ObtainTerrainTypeFromScreen((short)this.processor.RegSource.Value16, (short)this.processor.RegDest.Value16);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.WorldSetup.ObtainTerrainTypeFromScreen((short)this.processor.RegSource.Value16, (short)this.processor.RegDest.Value16));
 			
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
 			if (this.processor.FlagSet.IsNotEqual) goto L1375;
 			goto L12ed;
 
 		L1375:
-			this.owner.MapOps.ObtainContinentID(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainContinentID(
 				(short)this.processor.RegSource.Value16,
-				(short)this.processor.RegDest.Value16);
+				(short)this.processor.RegDest.Value16));
 
 			this.processor.EmitLocalWord(0xe, this.processor.RegAcc.Value16);
 			this.processor.EmitLocalWord(0x16, this.processor.RegSource.Value16);
@@ -248,12 +248,12 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L12ed;
 
 		L138b:
-			this.owner.Routing.ComputeRouteCost(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Routing.ComputeRouteCost(
 				this.processor.PullLocalSignedWord(0x20),
 				this.processor.PullLocalSignedWord(0x24),
 				this.processor.PullLocalSignedWord(0x16),
 				this.processor.PullLocalSignedWord(0x1c),
-				0, 20);
+				0, 20));
 
 			this.processor.EmitLocalWord(0x10, this.processor.RegAcc.Value16);
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xffff);

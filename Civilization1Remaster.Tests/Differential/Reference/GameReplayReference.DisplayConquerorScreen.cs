@@ -60,7 +60,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 18, 150, 284, 32, 7);
 
 		L0e6a:
-			this.owner.Libc.CopyText(0xba06, "The entire world hails");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "The entire world hails"));
 
 			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 152, 20);
 
@@ -76,9 +76,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			
 			this.processor.RegBase.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
 			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x19a2)));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x19a2))));
 
-			this.owner.Libc.AppendText(0xba06, " the CONQUEROR!");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " the CONQUEROR!"));
 
 			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 168, 20);
 
@@ -94,14 +94,14 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.TurnLogic.AwaitForKey();
 
-			this.owner.Conquest.AwaitForKeyPressOrMouseClick();
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Conquest.AwaitForKeyPressOrMouseClick());
 
 			this.owner.Services.PerformSound(1, 0);
 
 			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
 			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 0x1);
 
-			this.owner.Startup.QueryForDisk(0, 1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Startup.QueryForDisk(0, 1));
 
 			this.owner.Startup.DisplayMouseCursor();
 

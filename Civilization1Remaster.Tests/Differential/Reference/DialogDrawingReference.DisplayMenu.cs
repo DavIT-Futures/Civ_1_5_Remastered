@@ -60,7 +60,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EmitGlobalWord(0xb1ec, 0xffff);
 			this.processor.EmitGlobalWord(0xd2e2, 0x1);
 
-			this.owner.VideoCard.ObtainTextHeight(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.PullGlobalWord(0xaa) + 0x10)));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.VideoCard.ObtainTextHeight(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.PullGlobalWord(0xaa) + 0x10))));
 
 			this.processor.EmitGlobalWord(0x2fa4, this.processor.RegAcc.Value16);
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x9);
@@ -83,7 +83,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			if ((vertLoc & 1) != 0 && vertLoc != 139)
 			{
-				this.owner.VideoCard.ObtainDot(0, horizLoc, vertLoc);
+				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.VideoCard.ObtainDot(0, horizLoc, vertLoc));
 
 				this.processor.EmitLocalWord(0xc, this.processor.RegAcc.Value16);
 				this.processor.EmitLocalWord(0xe, 0xffff);
@@ -191,12 +191,12 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L0217;
 
 		L01db:
-			this.owner.Libc.KeyAvailable();
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.KeyAvailable());
 
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsEqual) goto L0217;
 
-			this.owner.Dialogs.ObtainNavigationKey();
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Dialogs.ObtainNavigationKey());
 
 			this.processor.EmitLocalWord(0x6, this.processor.RegAcc.Value16);
 

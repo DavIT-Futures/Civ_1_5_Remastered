@@ -27,9 +27,9 @@ namespace Civilization1Remaster.Engine
 
 			short column = 0;
 
-			int length = this.owner.Words.Length;
-
-			for (int index = 0; index < length; index++)
+			// The length is read again every round, like in the original: a '^' at the end overwrites the 0 after it with a
+			// line feed, so the text goes on into what follows in the buffer
+			for (int index = 0; (short)this.owner.Words.Length > (short)index; index++)
 			{
 				if (this.owner.Words[index] == '^')
 				{

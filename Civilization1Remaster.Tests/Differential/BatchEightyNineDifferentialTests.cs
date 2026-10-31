@@ -366,7 +366,7 @@ public sealed class BatchEightyNineDifferentialTests(ITestOutputHelper output)
 					}
 				},
 				game => new AIPlayerReference(game).ShiftAIUnit(participantIdx, troopIdx),
-				game => game.Bot.ShiftAIUnit(participantIdx, troopIdx),
+				game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Bot.ShiftAIUnit(participantIdx, troopIdx)),
 				Register.Kept | Register.Acc,
 				// What the look met, from the calls and the locals left in the frame
 				game =>

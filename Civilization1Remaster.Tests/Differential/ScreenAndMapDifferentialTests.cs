@@ -90,7 +90,7 @@ namespace Civilization1Remaster.Tests.Differential
 
 				return new Scenario($"ObtainTerrainTypeFromScreen({pixelHoriz}, {pixelVert})", game => { },
 					game => new GameInitAndIntroReference(game).ObtainTerrainTypeFromScreen(pixelHoriz, pixelVert),
-					game => game.WorldSetup.ObtainTerrainTypeFromScreen(pixelHoriz, pixelVert),
+					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.WorldSetup.ObtainTerrainTypeFromScreen(pixelHoriz, pixelVert)),
 					Register.Acc | Register.Kept, game => "terrain");
 			}, output, ["land corner", "becomes land", "terrain"]);
 		}
@@ -116,7 +116,7 @@ namespace Civilization1Remaster.Tests.Differential
 
 				return new Scenario($"LocateNearestCityOfPlayer({participantIdx}, {horizLoc}, {vertLoc})", game => { },
 					game => new GovernmentAndDiplomacyReference(game).LocateNearestCityOfPlayer(participantIdx, horizLoc, vertLoc),
-					game => game.Politics.LocateNearestCityOfPlayer(participantIdx, horizLoc, vertLoc),
+					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Politics.LocateNearestCityOfPlayer(participantIdx, horizLoc, vertLoc)),
 					Register.Acc | Register.Kept, game => game.Processor.RegAcc.Value16 < 16 ? "near a palace" : "far");
 			}, output, ["near a palace", "far"]);
 		}
@@ -143,7 +143,7 @@ namespace Civilization1Remaster.Tests.Differential
 				return new Scenario($"ObtainSpaceshipPartValue({participantIdx}, {row}, {column}), part 0x{part:x2}",
 					game => game.Processor.EmitUInt8(0x3772, (ushort)(0x16e0 + (0xb4 * participantIdx) + (0xc * row) + column), part),
 					game => new SpaceshipScreenReference(game).ObtainSpaceshipPartValue(participantIdx, row, column),
-					game => game.RocketScreen.ObtainSpaceshipPartValue(participantIdx, row, column),
+					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.RocketScreen.ObtainSpaceshipPartValue(participantIdx, row, column)),
 					Register.Acc | Register.Kept, game => game.Processor.RegAcc.Value16 != 0 ? "taken" : "free", [SpaceshipLayout]);
 			}, output, ["wiped", "taken", "free"]);
 		}

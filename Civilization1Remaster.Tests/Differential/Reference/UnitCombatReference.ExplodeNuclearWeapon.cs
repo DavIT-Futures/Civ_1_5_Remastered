@@ -30,11 +30,11 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.RegBase.Value16 = (ushort)participantIdx;
 			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1992)));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1992))));
 
-			this.owner.Libc.AppendText(0xba06, " use\nnuclear weapons!\n");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " use\nnuclear weapons!\n"));
 
-			this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80));
 
 		L0d9b:
 			this.owner.Diplomats.RenderExplosion(horizLoc, vertLoc);
@@ -51,35 +51,35 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, (ushort)vertLoc);
 			this.processor.EmitLocalWord(0x6, this.processor.RegAcc.Value16);
 
-			this.owner.MapOps.ObtainUnitAtTile(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainUnitAtTile(
 				this.processor.PullLocalSignedWord(0x4),
-				this.processor.PullLocalSignedWord(0x6));
+				this.processor.PullLocalSignedWord(0x6)));
 
 			this.processor.EmitLocalWord(0xa, this.processor.RegAcc.Value16);
 
-			this.owner.MapOps.ObtainTileImprovements(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainTileImprovements(
 				this.processor.PullLocalSignedWord(0x4),
-				this.processor.PullLocalSignedWord(0x6));
+				this.processor.PullLocalSignedWord(0x6)));
 
 			this.processor.TestBitsByte(this.processor.RegAcc.LowByte, 0x1);
 			if (this.processor.FlagSet.IsEqual) goto L0e4d;
 
-			this.owner.Helpers.LocateCityAtPosition(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.LocateCityAtPosition(
 				this.processor.PullLocalSignedWord(0x4),
-				this.processor.PullLocalSignedWord(0x6));
+				this.processor.PullLocalSignedWord(0x6)));
 
 			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
 			this.processor.ScaleIndexToBase(0x1c, this.processor.PullLocalWord(0x2));
 			this.processor.TestBitsWord(this.owner.World.Towns[this.processor.PullLocalWord(0x2)].StructureMarkers1, 0x1);
 			if (this.processor.FlagSet.IsEqual) goto L0e4d;
 
-			this.owner.Libc.CopyText(0xba06, "SDI protects ");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "SDI protects "));
 
 			this.owner.Conquest.ObtainCityLabel(this.processor.PullLocalSignedWord(0x2));
 
-			this.owner.Libc.AppendText(0xba06, ".\n");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, ".\n"));
 
-			this.owner.TurnHooks.DisplayDialog(0xba06, 80, 100);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 80, 100));
 
 			this.processor.EmitLocalWord(0xa, 0xffff);
 
@@ -87,8 +87,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullLocalWord(0xa), 0xffff);
 			if (this.processor.FlagSet.IsEqual) goto L0ea9;
 
-			this.owner.UnitOps.TallyUnitsByDomainInStack(this.processor.PullGlobalSignedWord(0xd7f0),
-				this.processor.PullLocalSignedWord(0xa), 2);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.UnitOps.TallyUnitsByDomainInStack(this.processor.PullGlobalSignedWord(0xd7f0),
+				this.processor.PullLocalSignedWord(0xa), 2));
+			this.processor.RegSource.Value16 = (ushort)(0x600 * (this.processor.PullGlobalSignedWord(0xd7f0))); // (as VisitEachUnitInStack left it)
 
 			this.processor.EmitLocalWord(0xc, this.processor.RegAcc.Value16);
 			
@@ -103,6 +104,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.UnitOps.VisitEachUnitInStack(this.processor.PullGlobalSignedWord(0xd7f0),
 				this.processor.PullLocalSignedWord(0xa), 0xf10);
+			this.processor.RegSource.Value16 = (ushort)(0x600 * (this.processor.PullGlobalSignedWord(0xd7f0))); // (as VisitEachUnitInStack left it)
 
 			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(0xd7f0);
 			this.processor.CompareWord((ushort)participantIdx, this.processor.RegAcc.Value16);

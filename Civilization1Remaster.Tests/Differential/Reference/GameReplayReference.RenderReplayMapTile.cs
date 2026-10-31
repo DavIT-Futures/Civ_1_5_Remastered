@@ -28,19 +28,19 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L0c2a;
 
 		L0ada:
-			this.owner.Helpers.VerifyValueSpan(horizLoc - 5, 0, 80);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.VerifyValueSpan(horizLoc - 5, 0, 80));
 
 			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
 
-			this.owner.Helpers.VerifyValueSpan(horizLoc + 5, 0, 80);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.VerifyValueSpan(horizLoc + 5, 0, 80));
 
 			this.processor.EmitLocalWord(0x6, this.processor.RegAcc.Value16);
 
-			this.owner.Helpers.VerifyValueSpan(vertLoc - 5, 2, 49);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.VerifyValueSpan(vertLoc - 5, 2, 49));
 
 			this.processor.EmitLocalWord(0x8, this.processor.RegAcc.Value16);
 
-			this.owner.Helpers.VerifyValueSpan(vertLoc + 5, 2, 49);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.VerifyValueSpan(vertLoc + 5, 2, 49));
 
 			this.processor.EmitLocalWord(0xa, this.processor.RegAcc.Value16);
 
@@ -72,13 +72,13 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			if (horizLoc >= this.processor.PullLocalSignedWord(0x6))
 				goto L0c16;
 
-			this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc));
 
 			this.processor.EmitLocalWord(0xc, this.processor.RegAcc.Value16);
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
 			if (this.processor.FlagSet.IsEqual) goto L0b8c;
 
-			this.owner.Replayer.ObtainDistanceToReplayCity(horizLoc, vertLoc);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Replayer.ObtainDistanceToReplayCity(horizLoc, vertLoc));
 
 			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
 			this.processor.CompareWord(this.processor.PullGlobalWord(0x6812), 0x6);
@@ -87,13 +87,13 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
 			this.processor.SegExtra.Value16 = 0x3725; // segment
 
-			this.owner.MapOps.ObtainContinentID(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainContinentID(
 				this.processor.PullInt16(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x100)),
-				this.processor.PullInt16(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x200)));
+				this.processor.PullInt16(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x200))));
 
 			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
 
-			this.owner.MapOps.ObtainContinentID(horizLoc, vertLoc);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainContinentID(horizLoc, vertLoc));
 
 			this.processor.CompareWord(this.processor.RegAcc.Value16, this.processor.RegDest.Value16);
 			if (this.processor.FlagSet.IsEqual) goto L0bf5;

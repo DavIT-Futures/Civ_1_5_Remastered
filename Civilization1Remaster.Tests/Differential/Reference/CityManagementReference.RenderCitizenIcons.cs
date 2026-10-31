@@ -128,7 +128,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L7036;
 
 		L7009:
-			this.owner.CityOps.ObtainCitizenType(this.processor.PullLocalWord(0x6));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.CityOps.ObtainCitizenType(this.processor.PullLocalWord(0x6)));
 
 			this.owner.Services.RenderPictureToScreen(
 				this.processor.PullGlobalWord(0xaa),

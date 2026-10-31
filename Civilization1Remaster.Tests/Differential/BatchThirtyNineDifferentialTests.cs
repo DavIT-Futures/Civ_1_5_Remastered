@@ -92,7 +92,7 @@ namespace Civilization1Remaster.Tests.Differential
 						}
 					},
 					game => new DialogDrawingReference(game).ObtainNavigationKey(),
-					game => game.Dialogs.ObtainNavigationKey(),
+					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Dialogs.ObtainNavigationKey()),
 					Register.Acc | Register.Kept,
 					game => mapped.Contains(key) ? "navigation" : (key & 0xff) != 0 ? "character" : "other scan code");
 			}, output, ["navigation", "character", "other scan code"]);

@@ -61,7 +61,7 @@ namespace Civilization1Remaster.Tests.Differential
 							game.World.LiveRealms &= (short)~(1 << participantIdx);
 					},
 					game => new StartGameMenuReference(game).ConstructCivilization(participantIdx),
-					game => game.NewGameWizard.ConstructCivilization(participantIdx),
+					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.NewGameWizard.ConstructCivilization(participantIdx)),
 					Register.Kept | Register.Acc,
 					game => person && round != 0 ? "human in a running game" :
 						participantIdx == 0 || !alive ? "wiped only" :

@@ -22,15 +22,15 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			// function body
 			this.processor.EnterFrame(0x18);
 
-			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x18), "*");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x18), "*"));
 
-			this.owner.Libc.UppercaseText(charsAddr);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.UppercaseText(charsAddr));
 
-			this.owner.Libc.AppendText((ushort)(this.processor.RegFrame.Value16 - 0x18), this.processor.RegAcc.Value16);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText((ushort)(this.processor.RegFrame.Value16 - 0x18), this.processor.RegAcc.Value16));
 
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
-			this.owner.BlockText.ImportTextFromFile(0x34b2, (ushort)(this.processor.RegFrame.Value16 - 0x18));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.BlockText.ImportTextFromFile(0x34b2, (ushort)(this.processor.RegFrame.Value16 - 0x18)));
 
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsEqual) goto L00a5;
@@ -47,9 +47,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.TextPainter.RenderCenteredTextToScreen0((ushort)(this.processor.RegFrame.Value16 - 0x18), 160, 192, 0);
 
-			this.owner.BlockText.RenderTextChunk(32, 32, 32, 15);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.BlockText.RenderTextChunk(32, 32, 32, 15));
 
-			this.owner.Conquest.AwaitForKeyPressOrMouseClick();
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Conquest.AwaitForKeyPressOrMouseClick());
 
 			this.owner.VideoCard.RenderImage(
 				this.processor.PullGlobalWord(0x19d4),

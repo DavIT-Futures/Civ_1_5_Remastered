@@ -175,7 +175,7 @@ namespace Civilization1Remaster.Tests.Differential
 						game.World.Participants[ownerIdx].GrandTownExtent = extent;
 					},
 					Original,
-					game => game.Conquest.ComputeCityPlunder(townIdx),
+					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Conquest.ComputeCityPlunder(townIdx)),
 					fails ? Register.Kept : Register.Acc | Register.Kept,
 					game => fails ? "division by zero" : 32000 / size > gold ? "multiplied first" : 32000 / size == gold ? "edge" : "divided first");
 			}, output, ["division by zero", "multiplied first", "edge", "divided first"]);

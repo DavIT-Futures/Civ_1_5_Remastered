@@ -98,7 +98,11 @@ public sealed class DualCityCaseTests(ITestOutputHelper output)
 			ushort frozenAx = games.Frozen.Engine.Processor.RegAcc.Value16;
 			ushort currentAx = games.Current.Engine.Processor.RegAcc.Value16;
 
-			if (difference == null && frozenAx != currentAx)
+			// (a city gone in its turn leaves what the last function put in AX, which nobody reads: HandleAllCities asks for
+			// the result only of a city above size 5)
+			bool gone = games.Current.Engine.World.Towns[townIdx].ConditionMarker == 0xff;
+
+			if (difference == null && frozenAx != currentAx && !gone)
 				difference = $"{label}: AX 0x{frozenAx:x4} in the frozen game, 0x{currentAx:x4} in the current one";
 
 			if (difference != null)

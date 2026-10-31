@@ -40,13 +40,13 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EmitLocalWord(0x2, 0x0);
 
 		L0806:
-			this.owner.Libc.BiosDiskCall(4, (ushort)(this.processor.RegFrame.Value16 - 0x12));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.BiosDiskCall(4, (ushort)(this.processor.RegFrame.Value16 - 0x12)));
 
 			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
 			this.processor.TestBitsWord(this.processor.PullLocalWord(0x4), 0xff00);
 			if (this.processor.FlagSet.IsEqual) goto L07e2;
 
-			this.owner.Libc.BiosDiskCall(0, 0);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.BiosDiskCall(0, 0));
 
 			this.processor.IncrementLocalWord(0x2);
 			this.processor.CompareWord(this.processor.PullLocalWord(0x2), 0x3);

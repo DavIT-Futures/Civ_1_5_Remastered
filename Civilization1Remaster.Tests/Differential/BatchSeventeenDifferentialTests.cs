@@ -104,7 +104,7 @@ namespace Civilization1Remaster.Tests.Differential
 							memory.AssignFollowing(participantIdx, ring[idx], (byte)ring[(idx + 1) % ring.Length]);
 					},
 					game => new PlayerTurnReference(game).LocateBestGuardian(participantIdx, (ushort)troopIdx),
-					game => game.TurnLogic.LocateBestGuardian(participantIdx, (ushort)troopIdx),
+					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.TurnLogic.LocateBestGuardian(participantIdx, (ushort)troopIdx)),
 					Register.Acc | Register.Kept,
 					game => new UnitMemory(game.Processor).Following(participantIdx, troopIdx) == -1 ? "alone" :
 						game.Processor.RegAcc.Value16 == (ushort)troopIdx ? "itself" : ring.Length > 16 ? "next of a long ring" : "next");
@@ -127,7 +127,7 @@ namespace Civilization1Remaster.Tests.Differential
 				short breadth = (short)chance.Next(5, 40);
 
 				return new Scenario($"ArrangeTextRow({breadth}), text \"{composed.Replace("\n", "\\n")}\"",
-					game => game.Libc.CopyText(0xba06, composed),
+					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Libc.CopyText(0xba06, composed)),
 					game => new TextBlockRendererReference(game).ArrangeTextRow(breadth),
 					game => game.BlockText.ArrangeTextRow(breadth),
 					Register.Kept,

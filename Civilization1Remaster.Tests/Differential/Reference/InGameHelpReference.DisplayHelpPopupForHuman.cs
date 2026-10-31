@@ -30,7 +30,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L03bd:
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
-			this.owner.BlockText.ImportTextFromFile(0x3501, charsAddr);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.BlockText.ImportTextFromFile(0x3501, charsAddr));
 
 			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
 
@@ -56,12 +56,12 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.TextPainter.RenderCenteredTextToScreen0(0x350b, 160, 19, 0);
 
-			this.owner.BlockText.RenderTextChunk(32, 64, 25, 15);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.BlockText.RenderTextChunk(32, 64, 25, 15));
 
 			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
 			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 0x1);
 
-			this.owner.Conquest.AwaitForKeyPressOrMouseClick();
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Conquest.AwaitForKeyPressOrMouseClick());
 
 			this.owner.VideoCard.RenderImage(
 				this.processor.PullGlobalWord(0x19d4),

@@ -61,7 +61,7 @@ namespace Civilization1Remaster.Tests.Differential
 							game.Processor.EmitGlobalWord((ushort)(0x1ace + (diskIdx << 1)), 0xbb80);
 					},
 					game => new GameStartupReference(game).QueryForDisk(diskIdx, marker),
-					game => game.Startup.QueryForDisk(diskIdx, marker),
+					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Startup.QueryForDisk(diskIdx, marker)),
 					Register.Acc | Register.Kept,
 					game => missing ? "disk 0 instead" : marker == 0xffff ? "asked once" : marker == 0 ? "found at once" : "found");
 			}, output, ["disk 0 instead", "asked once", "found at once", "found"], [0x0d]);

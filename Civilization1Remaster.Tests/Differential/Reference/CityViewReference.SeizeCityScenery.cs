@@ -49,11 +49,11 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L164f:
 			this.processor.RegSource.Value16 = arg1;
 			this.processor.RegSource.Value16 <<= 3;
-			this.owner.VideoCard.ScreenToPicture(1,
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.VideoCard.ScreenToPicture(1,
 				this.processor.PullUInt16(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x0)),
 				this.processor.PullUInt16(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x2)),
 				this.processor.PullUInt16(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x4)),
-				this.processor.PullUInt16(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x6)));
+				this.processor.PullUInt16(this.processor.SegExtra.Value16, (ushort)(this.processor.RegSource.Value16 + 0x6))));
 
 			this.processor.RestoreSource();
 			this.processor.LeaveFrame();

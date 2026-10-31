@@ -31,11 +31,11 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.owner.Prologue.DisplayMainIntro();
 
-			this.owner.Startup.QueryForDisk(0, 1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Startup.QueryForDisk(0, 1));
 
 			this.processor.StackWord(0); // stack management - push return segment, ignored
 			this.processor.StackWord(0x0055); // stack management - push return offset
-			this.owner.VideoCard.ObtainFreeStorage();
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.VideoCard.ObtainFreeStorage());
 			this.processor.UnstackDoubleWord(); // stack management - pop return offset and segment
 			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
 			this.processor.CompareWord(this.processor.PullGlobalWord(0x6dfc), 0x0);
@@ -59,16 +59,16 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText((short)this.processor.PullLocalWord(0x4), 10));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06,
+				this.owner.Libc.IntegerToText((short)this.processor.PullLocalWord(0x4), 10)));
 
-			this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be), 0xba06);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(this.processor.PullGlobalWord(0x30be), 0xba06));
 
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
 			this.owner.BlockText.DisplayTextDialog(0x270);
 
-			this.owner.Dialogs.DisplayMenu(0xba06, 64, 49, 1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Dialogs.DisplayMenu(0xba06, 64, 49, 1));
 
 		L00ee:
 			this.processor.CompareWord(this.processor.PullGlobalWord(0xd762), 0x0);
@@ -80,7 +80,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L0102:
 			this.processor.StackWord(0); // stack management - push return segment, ignored
 			this.processor.StackWord(0x0110); // stack management - push return offset
-			this.owner.ImageToolkit.ImportIcon(0x277);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.ImageToolkit.ImportIcon(0x277));
 			this.processor.UnstackDoubleWord(); // stack management - pop return offset and segment
 
 			this.processor.EmitGlobalWord(0x6e92, this.processor.RegAcc.Value16);
@@ -88,7 +88,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullGlobalWord(0x1a3c), 0x0);
 			if (this.processor.FlagSet.IsEqual) goto L012a;
 
-			this.owner.Services.PrepareMouse();
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Services.PrepareMouse());
 
 			this.processor.EmitGlobalWord(0x1a3c, this.processor.RegAcc.Value16);
 
@@ -144,7 +144,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L018d:
 			this.owner.Services.PerformSound(0, 0);
 
-			this.owner.Services.HaltSound();
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Services.HaltSound());
 
 			this.owner.Services.HaltTimer();
 			

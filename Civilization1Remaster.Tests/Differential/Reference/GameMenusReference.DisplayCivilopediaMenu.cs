@@ -21,11 +21,11 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			// function body
 			this.processor.EnterFrame(0x2);
 
-			this.owner.Libc.CopyText(0xba06, " Complete\n Civilization Advances\n City Improvements\n Military Units\n Terrain Types\n");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, " Complete\n Civilization Advances\n City Improvements\n Military Units\n Terrain Types\n"));
 
-			this.owner.Libc.AppendText(0xba06, " Miscellaneous\n");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " Miscellaneous\n"));
 
-			this.owner.Dialogs.DisplayMenu(0xba06, 182, 8, 0);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Dialogs.DisplayMenu(0xba06, 182, 8, 0));
 
 			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xffff);

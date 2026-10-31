@@ -41,15 +41,15 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.ScaleAccumulatorToSource((ushort)participantIdx);
 			this.processor.AddScaledToSource(0xc, (ushort)troopIdx);
 
-			this.owner.Helpers.LocateNearestCity(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.LocateNearestCity(
 				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)),
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6)));
+				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6))));
 
 			this.processor.EmitLocalWord(0xc, this.processor.RegAcc.Value16);
 			this.processor.ScaleIndex(0x1c, this.processor.PullLocalWord(0xc));
 			this.processor.RegDest.Value16 = this.processor.RegAcc.Value16;
 
-			this.owner.Helpers.ObtainDistance(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.ObtainDistance(
 				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)),
 				// !!! Added if city doesn't exist at that location
 				(this.processor.PullLocalSignedWord(0xc) >= 0 && this.processor.PullLocalSignedWord(0xc) < 128) ?
@@ -57,7 +57,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6)),
 				// !!! Added if city doesn't exist at that location
 				(this.processor.PullLocalSignedWord(0xc) >= 0 && this.processor.PullLocalSignedWord(0xc) < 128) ?
-					this.owner.World.Towns[this.processor.PullLocalWord(0xc)].Place.Y : -1);
+					this.owner.World.Towns[this.processor.PullLocalWord(0xc)].Place.Y : -1));
 
 			this.processor.EmitLocalWord(0x8, this.processor.RegAcc.Value16);
 
@@ -92,9 +92,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.ScaleAccumulatorToSource((ushort)participantIdx);
 			this.processor.AddScaledToSource(0xc, (ushort)troopIdx);
 
-			this.owner.VideoCard.ObtainDot(2,
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.VideoCard.ObtainDot(2,
 				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)) + 80,
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6)));
+				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6))));
 
 			this.processor.RegAcc.Value16 = this.processor.BitAndWord(this.processor.RegAcc.Value16, 0x7);
 			this.processor.EmitLocalWord(0xe, this.processor.RegAcc.Value16);
@@ -106,23 +106,23 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x4);
 			if (this.processor.FlagSet.IsLessOrEqual) goto L1a8e;
 
-			this.owner.Libc.CopyText(0xba06, "You have discovered\nan advanced tribe.\n");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "You have discovered\nan advanced tribe.\n"));
 
 			if (participantIdx != this.owner.World.PersonParticipantIdx)
 				goto L1a51;
 
-			this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80));
 
 		L1a51:
 			this.processor.RegAcc.Value16 = 0x600;
 			this.processor.ScaleAccumulatorToSource((ushort)participantIdx);
 			this.processor.AddScaledToSource(0xc, (ushort)troopIdx);
 			
-			this.owner.Founding.EstablishCity(participantIdx,
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Founding.EstablishCity(participantIdx,
 				0,
 				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)),
 				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6)),
-				1);
+				1));
 
 			goto L1d30;
 
@@ -134,22 +134,22 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 				goto L1ac7;
 
 			L1a8e:
-			this.owner.Libc.CopyText(0xba06, "You have discovered\nvaluable metal deposits\nworth 50$\n");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "You have discovered\nvaluable metal deposits\nworth 50$\n"));
 
 			if (participantIdx == this.owner.World.PersonParticipantIdx)
 			{
-				this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80));
 			}
 
 			this.owner.World.Participants[participantIdx].Gold += 50;
 			goto L1d4f;
 
 		L1ac7:
-			this.owner.Libc.CopyText(0xba06, "You have discovered\nscrolls of ancient wisdom.\n");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "You have discovered\nscrolls of ancient wisdom.\n"));
 
 			if (participantIdx == this.owner.World.PersonParticipantIdx)
 			{
-				this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80));
 			}
 		
 			this.processor.EmitLocalWord(0x2, 0x0);
@@ -210,21 +210,21 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			if (this.owner.World.Participants[participantIdx].TownTally != 0) goto L1bff;
 
 		L1b9a:
-			this.owner.Libc.CopyText(0xba06, "You have discovered\na friendly tribe of\nskilled mercenaries.\n");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "You have discovered\na friendly tribe of\nskilled mercenaries.\n"));
 
 			if (participantIdx == this.owner.World.PersonParticipantIdx)
 			{
-				this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80));
 			}
 		
 			goto L1d28;
 
 		L1bff:
-			this.owner.Libc.CopyText(0xba06, "You have unleashed\na horde of barbarians!\n");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "You have unleashed\na horde of barbarians!\n"));
 
 			if (participantIdx == this.owner.World.PersonParticipantIdx)
 			{
-				this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80);
+				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.TurnHooks.DisplayDialog(0xba06, 100, 80));
 			}
 
 			this.processor.EmitLocalWord(0x10, 0x1);
@@ -236,11 +236,11 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L1c35:
 			this.processor.EmitLocalWord(0x4, this.processor.RegAcc.Value16);
 
-			this.owner.UnitOps.ConstructUnit(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.UnitOps.ConstructUnit(
 				0,
 				this.processor.PullLocalSignedWord(0x4),
 				this.processor.PullLocalSignedWord(0x6),
-				this.processor.PullLocalSignedWord(0xa));
+				this.processor.PullLocalSignedWord(0xa)));
 			
 			this.processor.RegCount.Value16 = 0xc;
 			this.processor.ScaleAccumulatorToBase(this.processor.RegCount.Value16);
@@ -258,8 +258,8 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			}
 
 		L1c71:
-			this.owner.Helpers.VerifyValueSpan(
-				4 - this.owner.World.Participants[participantIdx].TownTally,	1, 4);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.VerifyValueSpan(
+				4 - this.owner.World.Participants[participantIdx].TownTally,	1, 4));
 
 			this.processor.EmitLocalWord(0x10, this.processor.SumWord(this.processor.PullLocalWord(0x10), this.processor.RegAcc.Value16));
 
@@ -284,32 +284,32 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x18e4)));
 			this.processor.EmitLocalWord(0xa, this.processor.RegAcc.Value16);
 
-			this.owner.MapOps.ObtainTileOwner(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainTileOwner(
 				this.processor.PullLocalSignedWord(0x6),
-				this.processor.PullLocalSignedWord(0xa));
+				this.processor.PullLocalSignedWord(0xa)));
 
 			this.processor.RegAcc.Value16 = this.processor.IncrementWord(this.processor.RegAcc.Value16);
 			if (this.processor.FlagSet.IsNotEqual) goto L1c71;
 
-			this.owner.MapOps.ObtainTileImprovements(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainTileImprovements(
 				this.processor.PullLocalSignedWord(0x6),
-				this.processor.PullLocalSignedWord(0xa));
+				this.processor.PullLocalSignedWord(0xa)));
 
 			this.processor.TestBitsByte(this.processor.RegAcc.LowByte, 0x1);
 			if (this.processor.FlagSet.IsNotEqual) goto L1c71;
 
-			this.owner.MapOps.ObtainTerrainType(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainTerrainType(
 				this.processor.PullLocalSignedWord(0x6),
-				this.processor.PullLocalSignedWord(0xa));
+				this.processor.PullLocalSignedWord(0xa)));
 
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
 			if (this.processor.FlagSet.IsNotEqual) goto L1d00;
 			goto L1c71;
 
 		L1d00:
-			this.owner.MapOps.ObtainTerrainType(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainTerrainType(
 				this.processor.PullLocalSignedWord(0x6),
-				this.processor.PullLocalSignedWord(0xa));
+				this.processor.PullLocalSignedWord(0xa)));
 
 			this.processor.RegCount.Value16 = 0x13;
 			this.processor.ScaleAccumulatorToBase(this.processor.RegCount.Value16);
@@ -326,11 +326,11 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.ScaleAccumulatorToSource((ushort)participantIdx);
 			this.processor.AddScaledToSource(0xc, (ushort)troopIdx);
 
-			this.owner.UnitOps.ConstructUnit(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.UnitOps.ConstructUnit(
 				participantIdx,
 				(short)((this.owner.Libc.Dice.DrawInt(2) != 0) ? 3 : 6),
 				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d5)),
-				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6)));
+				this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x81d6))));
 
 		L1d30:
 			if (participantIdx == this.owner.World.PersonParticipantIdx)

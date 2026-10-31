@@ -29,7 +29,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.SignExtendByte(this.processor.RegAcc);
 			this.processor.EmitLocalWord(0x32, this.processor.RegAcc.Value16);
 
-			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x10), "king00.pic");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x10), "king00.pic"));
 
 			this.processor.RegAcc.Value16 = this.processor.PullLocalWord(0x32);
 			this.processor.SignExtendWord(this.processor.RegAcc, this.processor.RegData);
@@ -51,19 +51,19 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.EmitLocalByte(0xd, 0x6b);
 
 		L0fd2:
-			this.owner.Startup.QueryForDisk((ushort)((this.processor.PullLocalWord(0x32) / 7) + 4), 1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Startup.QueryForDisk((ushort)((this.processor.PullLocalWord(0x32) / 7) + 4), 1));
 
 			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, (ushort)(this.processor.RegFrame.Value16 - 0x10), 0);
 
-			this.owner.VideoCard.ScreenToPicture(1, 0xb5, 0x43, 0x8b, 0x85);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.VideoCard.ScreenToPicture(1, 0xb5, 0x43, 0x8b, 0x85));
 
 			this.processor.EmitLocalWord(0x12, this.processor.RegAcc.Value16);
 
-			this.owner.VideoCard.ScreenToPicture(1, 1, 0x33, 0x3b, 0x31);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.VideoCard.ScreenToPicture(1, 1, 0x33, 0x3b, 0x31));
 
 			this.processor.EmitLocalWord(0x36, this.processor.RegAcc.Value16);
 
-			this.owner.VideoCard.ScreenToPicture(1,1,0x97,0x3b,0x31);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.VideoCard.ScreenToPicture(1,1,0x97,0x3b,0x31));
 
 			this.processor.EmitLocalWord(0x30, this.processor.RegAcc.Value16);
 
@@ -81,7 +81,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 				this.processor.PullGlobalWord(0xaa),
 				0, 0);
 
-			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x24), "slam2.pic");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x24), "slam2.pic"));
 
 			this.processor.CompareWord(this.processor.PullGlobalWord(0xd762), 0x0);
 			if (this.processor.FlagSet.IsNotEqual) goto L10bc;
@@ -154,7 +154,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullGlobalWord(0xd762), 0x0);
 			if (this.processor.FlagSet.IsEqual) goto L1254;
 
-			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x9), "pal");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - 0x9), "pal"));
 
 			this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, (ushort)(this.processor.RegFrame.Value16 - 0x10), 0xc1d6);
 
@@ -208,7 +208,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.SegExtra.Value16 = 0x3772; // segment
 			this.processor.EmitUInt8(this.processor.SegExtra.Value16, (ushort)(this.processor.RegBase.Value16 + 0x37c4), this.processor.RegAcc.LowByte);
 
-			this.owner.Services.RestoreTimer();
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Services.RestoreTimer());
 
 			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x4134, 0);
 
@@ -250,25 +250,25 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xf0);
 			if (this.processor.FlagSet.IsLess) goto L135a;
 
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText(Math.Abs((short)arg2), 10));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06,
+				this.owner.Libc.IntegerToText(Math.Abs((short)arg2), 10)));
 
 			if ((short)arg2 < 0)
 			{
-				this.owner.Libc.AppendText(0xba06, " BC");
+				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " BC"));
 			}
 			else
 			{
-				this.owner.Libc.AppendText(0xba06, " AD");
+				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " AD"));
 			}
 
-			this.owner.Libc.AppendText(0xba06, ": ");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, ": "));
 
 			this.processor.RegBase.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
 			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1992)));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1992))));
 
-			this.owner.Libc.AppendText(0xba06, " destroy");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " destroy"));
 
 			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 152, 20);
 
@@ -282,13 +282,13 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 				this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 151, 15);
 			}
 			
-			this.owner.Libc.CopyText(0xba06, "the ");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "the "));
 
 			this.processor.RegBase.Value16 = (ushort)participantIdx;
 			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1982)));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1982))));
 
-			this.owner.Libc.AppendText(0xba06, " civilization!");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " civilization!"));
 
 			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 168, 20);
 

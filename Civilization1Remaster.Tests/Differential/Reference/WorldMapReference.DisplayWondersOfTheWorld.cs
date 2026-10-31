@@ -34,22 +34,22 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L0902;
 
 		L082a:
-			this.owner.Libc.AppendText(0xba06, 0x4413);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, 0x4413));
 
 		L082d:
 			this.owner.Conquest.ObtainCityLabel(this.processor.PullLocalSignedWord(0x4));
 
-			this.owner.Libc.AppendText(0xba06, ". (");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, ". ("));
 
 			this.processor.RegBase.Value16 = this.processor.PullLocalWord(0xc);
 			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1982)));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x1982))));
 
-			this.owner.Libc.AppendText(0xba06, ")");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, ")"));
 			goto L0891;
 
 		L087c:
-			this.owner.Libc.AppendText(0xba06, " (Destroyed)");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " (Destroyed)"));
 
 			this.processor.EmitLocalWord(0xc, 0x0);
 
@@ -90,7 +90,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullLocalWord(0x6), 0x3e7);
 			if (this.processor.FlagSet.IsEqual) goto L092a;
 
-			this.owner.Conquest.AwaitForKeyPressOrMouseClick();
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Conquest.AwaitForKeyPressOrMouseClick());
 
 		L092a:
 			this.owner.Services.FloodBox(this.processor.PullGlobalWord(0xaa), 0, 0, 320, 200, 3);
@@ -109,13 +109,13 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullLocalWord(0x8), 0x7);
 			if (this.processor.FlagSet.IsGreater) goto L099a;
 
-			this.owner.Libc.AppendText(0xba06, "The ");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "The "));
 
 		L099a:
 			this.processor.RegAcc.Value16 = 0x1e;
 			this.processor.MultiplySignedWord(this.processor.RegAcc, this.processor.RegData, this.processor.PullLocalWord(0x8));
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0xe6a);
-			this.owner.Libc.AppendText(0xba06, this.processor.RegAcc.Value16);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, this.processor.RegAcc.Value16));
 
 			if (this.owner.World.MarvelTownIdx[this.processor.PullLocalWord(0x8)] != 128)
 				goto L09c0;
@@ -128,12 +128,12 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L082a;
 
 		L09c9:
-			this.owner.Libc.AppendText(0xba06, 0x440e);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, 0x440e));
 
 			goto L082d;
 
 		L09cf:
-			this.owner.Conquest.AwaitForKeyPressOrMouseClick();
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Conquest.AwaitForKeyPressOrMouseClick());
 
 			this.owner.VideoCard.RenderImage(
 				this.processor.PullGlobalWord(0x19d4),

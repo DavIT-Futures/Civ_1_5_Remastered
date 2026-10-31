@@ -39,7 +39,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.Value16 = 0x1c;
 			this.processor.ScaleAccumulatorToSource((ushort)townIdx);
 
-			this.owner.Advisors.PickCityProduction(this.processor.PullLocalSignedWord(0x2), townIdx);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Advisors.PickCityProduction(this.processor.PullLocalSignedWord(0x2), townIdx));
 			
 			this.owner.World.Towns[townIdx].PresentMakingIdx = (sbyte)this.processor.RegAcc.LowByte;
 

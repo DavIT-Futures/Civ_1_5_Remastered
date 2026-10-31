@@ -460,7 +460,11 @@ produce = false;
 			if (difference == null && frozenFailure != currentFailure)
 				difference = $"{label}: the frozen game {frozenFailure ?? "finished"}, the current one {currentFailure ?? "finished"}";
 
-			if (difference == null && games.Frozen.Engine.Processor.RegAcc.Value16 != games.Current.Engine.Processor.RegAcc.Value16)
+			// (a city gone in its turn leaves what the last function put in AX, which nobody reads: HandleAllCities asks for
+			// the result only of a city above size 5)
+			bool gone = games.Current.Engine.World.Towns[townIdx].ConditionMarker == 0xff;
+
+			if (difference == null && !gone && games.Frozen.Engine.Processor.RegAcc.Value16 != games.Current.Engine.Processor.RegAcc.Value16)
 				difference = $"{label}: AX 0x{games.Frozen.Engine.Processor.RegAcc.Value16:x4} in the frozen game, 0x{games.Current.Engine.Processor.RegAcc.Value16:x4} in the current one";
 
 			if (frozenFailure != null && frozenFailure.StartsWith("RuntimeBinderException", StringComparison.Ordinal))

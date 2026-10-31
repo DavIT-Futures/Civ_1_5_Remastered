@@ -40,9 +40,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.Value16 = (ushort)(this.owner.Libc.Dice.DrawInt(50));
 			this.processor.EmitLocalWord(0xa, this.processor.RegAcc.Value16);
 
-			this.owner.VideoCard.ObtainDot(1,
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.VideoCard.ObtainDot(1,
 				this.processor.PullLocalSignedWord(0x6),
-				this.processor.PullLocalSignedWord(0xa));
+				this.processor.PullLocalSignedWord(0xa)));
 
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xc);
 			if (this.processor.FlagSet.IsNotEqual) goto L0693;
@@ -67,11 +67,11 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegSource.Value16 = this.processor.PullLocalWord(0xc);
 			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
 			
-			this.owner.VideoCard.ObtainDot(1,
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.VideoCard.ObtainDot(1,
 				this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1882)) +
 					this.processor.PullLocalSignedWord(0x6),
 				this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x18e4)) +
-					this.processor.PullLocalSignedWord(0xa));
+					this.processor.PullLocalSignedWord(0xa)));
 
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x1);
 			if (this.processor.FlagSet.IsNotEqual) goto L0731;
@@ -109,9 +109,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x18e6));
 			this.processor.EmitLocalWord(0xa, this.processor.SumWord(this.processor.PullLocalWord(0xa), this.processor.RegAcc.Value16));
 
-			this.owner.VideoCard.ObtainDot(1,
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.VideoCard.ObtainDot(1,
 				this.processor.PullLocalSignedWord(0x6),
-				this.processor.PullLocalSignedWord(0xa));
+				this.processor.PullLocalSignedWord(0xa)));
 
 			this.processor.EmitLocalWord(0x2, this.processor.RegAcc.Value16);
 			this.processor.IncrementLocalWord(0x16);
@@ -160,9 +160,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, this.processor.PullLocalWord(0xe));
 			this.processor.EmitLocalWord(0xa, this.processor.RegAcc.Value16);
 
-			this.owner.VideoCard.ObtainDot(1,
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.VideoCard.ObtainDot(1,
 				this.processor.PullLocalSignedWord(0x6),
-				this.processor.PullLocalSignedWord(0xa));
+				this.processor.PullLocalSignedWord(0xa)));
 
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0x2);
 			if (this.processor.FlagSet.IsNotEqual) goto L084a;
@@ -177,7 +177,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			if (this.processor.FlagSet.IsLessOrEqual) goto L0806;
 
 		L0853:
-			this.owner.WorldSetup.DisplayStoryIntro();
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.WorldSetup.DisplayStoryIntro());
 
 			this.processor.IncrementLocalWord(0x14);
 			this.processor.CompareWord(this.processor.PullLocalWord(0x14), 0x100);

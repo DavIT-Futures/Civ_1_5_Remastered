@@ -47,20 +47,20 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullLocalWord(0xc), 0xbe);
 			if (this.processor.FlagSet.IsLessOrEqual) goto L165f;
 
-			this.owner.Conquest.AwaitForKeyPressOrMouseClick();
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Conquest.AwaitForKeyPressOrMouseClick());
 
 			this.owner.Briefings.RenderReportPreamble(0x49a5, 9);
 
 			this.processor.EmitLocalWord(0xc, 0x20);
 
 		L165f:
-			this.owner.CityOps.HandleCity(this.processor.PullLocalSignedWord(0xa), -1);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.CityOps.HandleCity(this.processor.PullLocalSignedWord(0xa), -1));
 
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
 			this.owner.Conquest.ObtainCityLabel(this.processor.PullLocalSignedWord(0xa));
 
-			this.owner.Libc.AppendText(0xba06, ":");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, ":"));
 
 			this.owner.TextPainter.RenderTextToScreen0(0xba06, 16, this.processor.PullLocalSignedWord(0xc), 15);
 
@@ -69,10 +69,10 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.Value16 = this.processor.SumWord(this.processor.RegAcc.Value16, 0x50);
 			this.processor.EmitLocalWord(0x8, this.processor.RegAcc.Value16);
 
-			this.owner.CityOps.RenderCitizenIcons(this.processor.PullLocalSignedWord(0xa),
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.CityOps.RenderCitizenIcons(this.processor.PullLocalSignedWord(0xa),
 				this.processor.PullLocalSignedWord(0x8),
 				(short)(this.processor.PullLocalSignedWord(0xc) - 3),
-				this.processor.PullGlobalWord(0xe8b8), 124);
+				this.processor.PullGlobalWord(0xe8b8), 124));
 
 			this.processor.EmitLocalWord(0x8, 0xd4);
 
@@ -125,17 +125,17 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.IncrementLocalWord(0x6);
 
 		L1770:
-			this.owner.Libc.CopyText(0xba06, "Population: ");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "Population: "));
 
-			this.owner.Helpers.ObtainPlayerPopulation(participantIdx);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Helpers.ObtainPlayerPopulation(participantIdx));
 
-			this.owner.Libc.AppendText(0xba06, " Happy:");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " Happy:"));
 
 			this.owner.Briefings.AffixProductionCount(
 				this.processor.PullLocalSignedWord(0x4),
 				this.processor.PullLocalSignedWord(0x6));
 
-			this.owner.Libc.AppendText(0xba06, "% Content:");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "% Content:"));
 
 			this.owner.Briefings.AffixProductionCount(
 				(short)(this.processor.PullLocalSignedWord(0x6) -
@@ -143,13 +143,13 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 					this.processor.PullLocalSignedWord(0x2)),
 				this.processor.PullLocalSignedWord(0x6));
 
-			this.owner.Libc.AppendText(0xba06, "% Unhappy:");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "% Unhappy:"));
 
 			this.owner.Briefings.AffixProductionCount(
 				this.processor.PullLocalSignedWord(0x2),
 				this.processor.PullLocalSignedWord(0x6));
 
-			this.owner.Libc.AppendText(0xba06, "%");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "%"));
 
 			this.owner.TextPainter.RenderTextToScreen0(0xba06, 
 				16,

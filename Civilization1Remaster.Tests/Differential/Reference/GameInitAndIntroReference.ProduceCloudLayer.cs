@@ -52,16 +52,16 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.CompareWord(this.processor.PullLocalWord(0x4), 0x32);
 			if (this.processor.FlagSet.IsGreaterOrEqual) goto L0974;
 			
-			this.owner.VideoCard.ObtainDot(1,
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.VideoCard.ObtainDot(1,
 				this.processor.PullLocalSignedWord(0x2) + 0xa0,
-				this.processor.PullLocalSignedWord(0x4));
+				this.processor.PullLocalSignedWord(0x4)));
 
 			this.processor.TestAccumulator();
 			if (this.processor.FlagSet.IsEqual) goto L0928;
 
-			this.owner.VideoCard.ObtainDot(1,
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.VideoCard.ObtainDot(1,
 				this.processor.PullLocalSignedWord(0x2),
-				this.processor.PullLocalSignedWord(0x4));
+				this.processor.PullLocalSignedWord(0x4)));
 
 			this.owner.Services.AssignDot(1, this.processor.PullLocalSignedWord(0x2),
 				this.processor.PullLocalSignedWord(0x4),

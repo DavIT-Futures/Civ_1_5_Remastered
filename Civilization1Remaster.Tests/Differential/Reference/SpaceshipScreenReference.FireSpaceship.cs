@@ -35,18 +35,18 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.RegSource.Value16 = (ushort)participantIdx;
 			this.processor.RegSource.Value16 = this.processor.ShiftLeftWord(this.processor.RegSource.Value16, 0x1);
-			this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1992)));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1992))));
 
-			this.owner.Libc.AppendText(0xba06, " LAUNCH space ship!");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " LAUNCH space ship!"));
 
 			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 92, 15);
 
-			this.owner.Libc.CopyText(0xba06, "Estimate arrival in ");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "Estimate arrival in "));
 
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText(this.owner.World.Participants[participantIdx].StarshipArrivalSeason, 10));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06,
+				this.owner.Libc.IntegerToText(this.owner.World.Participants[participantIdx].StarshipArrivalSeason, 10)));
 
-			this.owner.Libc.AppendText(0xba06, ".\n");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, ".\n"));
 
 			this.owner.TextPainter.RenderCenteredTextToScreen0(0xba06, 160, 100, 15);
 
@@ -60,9 +60,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 		L16a1:
 			this.owner.TurnLogic.AwaitForKey();
 
-			this.owner.Conquest.AwaitForKeyPressOrMouseClick();
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Conquest.AwaitForKeyPressOrMouseClick());
 
-			this.owner.RocketScreen.RenderSpaceship(participantIdx, -1, 0);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.RocketScreen.RenderSpaceship(participantIdx, -1, 0));
 
 			this.owner.Startup.DisplayMouseCursor();
 			

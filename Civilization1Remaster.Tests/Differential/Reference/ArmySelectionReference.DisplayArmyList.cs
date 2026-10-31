@@ -41,16 +41,16 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 				4, 4, 2);
 
 		L00b6:
-			this.owner.MapOps.ObtainTileImprovements(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainTileImprovements(
 				this.processor.PullLocalSignedWord(0x4),
-				this.processor.PullLocalSignedWord(0x8));
+				this.processor.PullLocalSignedWord(0x8)));
 
 			this.processor.TestBitsByte(this.processor.RegAcc.LowByte, 0x1);
 			if (this.processor.FlagSet.IsEqual) goto L00ff;
 
-			this.owner.MapOps.ObtainTileOwnerBits(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainTileOwnerBits(
 				this.processor.PullLocalSignedWord(0x4),
-				this.processor.PullLocalSignedWord(0x8));
+				this.processor.PullLocalSignedWord(0x8)));
 
 			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
 			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
@@ -66,16 +66,16 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L0161;
 
 		L00ff:
-			this.owner.MapOps.ObtainTileOwner(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainTileOwner(
 				this.processor.PullLocalSignedWord(0x4),
-				this.processor.PullLocalSignedWord(0x8));
+				this.processor.PullLocalSignedWord(0x8)));
 
 			this.processor.RegAcc.Value16 = this.processor.IncrementWord(this.processor.RegAcc.Value16);
 			if (this.processor.FlagSet.IsEqual) goto L0161;
 
-			this.owner.MapOps.ObtainTileOwner(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainTileOwner(
 				this.processor.PullLocalSignedWord(0x4),
-				this.processor.PullLocalSignedWord(0x8));
+				this.processor.PullLocalSignedWord(0x8)));
 
 			this.processor.RegBase.Value16 = this.processor.RegAcc.Value16;
 			this.processor.RegBase.Value16 = this.processor.ShiftLeftWord(this.processor.RegBase.Value16, 0x1);
@@ -118,9 +118,9 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, 0x1);
 			this.processor.EmitLocalWord(0xe, this.processor.RegAcc.Value16);
 
-			this.owner.MapOps.ObtainTerrainType(
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.MapOps.ObtainTerrainType(
 				this.processor.PullLocalSignedWord(0x4),
-				this.processor.PullLocalSignedWord(0x8));
+				this.processor.PullLocalSignedWord(0x8)));
 
 			this.processor.EmitLocalWord(0xc, this.processor.RegAcc.Value16);
 			this.processor.CompareWord(this.processor.RegAcc.Value16, 0xa);
@@ -145,7 +145,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L0164;
 
 		L01ce:
-			this.owner.Libc.ReadKey();
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.ReadKey());
 
 			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
 			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 0x2);
@@ -153,7 +153,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L0224;
 
 		L01e3:
-			this.owner.Libc.CopyText(0xba06, "S");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "S"));
 
 		L01f3:
 			this.processor.RegSource.Value16 = (ushort)participantIdx;
@@ -192,15 +192,15 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L01f3;
 
 		L0255:
-			this.owner.Libc.CopyText(0xba06, "A");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "A"));
 			goto L01f3;
 
 		L025a:
-			this.owner.Libc.CopyText(0xba06, "D");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "D"));
 			goto L01f3;
 
 		L025f:
-			this.owner.Libc.CopyText(0xba06, "N");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "N"));
 			goto L01f3;
 
 		L0264:
@@ -211,7 +211,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.Value16 = 0x417f;
 
 		L026e:
-			this.owner.Libc.CopyText(0xba06, this.processor.RegAcc.Value16);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, this.processor.RegAcc.Value16));
 
 		L027b:
 			this.processor.RegSource.Value16 = (ushort)participantIdx;
@@ -260,7 +260,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L026e;
 
 		L02e2:
-			this.owner.Libc.ReadKey();
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.ReadKey());
 
 			this.processor.EmitLocalWord(0x8, 0x1);
 			this.processor.EmitLocalWord(0x6, 0x1);
@@ -277,32 +277,32 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText((short)this.processor.PullLocalWord(0x6), 10));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06,
+				this.owner.Libc.IntegerToText((short)this.processor.PullLocalWord(0x6), 10)));
 
-			this.owner.Libc.AppendText(0xba06, "/");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "/"));
 
 			if (this.owner.World.Participants[participantIdx].Landmasses[this.processor.PullLocalWord(0x6)].Approach == 0)
 			{
-				this.owner.Libc.AppendText(0xba06, "S");
+				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "S"));
 			}
 		
 			if (this.owner.World.Participants[participantIdx].Landmasses[this.processor.PullLocalWord(0x6)].Approach == 2)
 			{
-				this.owner.Libc.AppendText(0xba06, "D");
+				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "D"));
 			}
 		
 			if (this.owner.World.Participants[participantIdx].Landmasses[this.processor.PullLocalWord(0x6)].Approach == 1)
 			{
-				this.owner.Libc.AppendText(0xba06, "A");
+				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "A"));
 			}
 		
 			if (this.owner.World.Participants[participantIdx].Landmasses[this.processor.PullLocalWord(0x6)].Approach == 5)
 			{
-				this.owner.Libc.AppendText(0xba06, "T");
+				this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "T"));
 			}
 
-			this.owner.Libc.AppendText(0xba06, " ");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, " "));
 
 			this.processor.RegSource.Value16 = (ushort)participantIdx;
 			this.processor.RegCount.LowByte = 0x5;
@@ -311,13 +311,13 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.Value16 = this.processor.ShiftLeftWord(this.processor.RegAcc.Value16, 0x1);
 			this.processor.RegSource.Value16 = this.processor.SumWord(this.processor.RegSource.Value16, this.processor.RegAcc.Value16);
 
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText(this.owner.World.Participants[participantIdx].Landmasses[this.processor.PullLocalWord(0x6)].Guard, 10));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06,
+				this.owner.Libc.IntegerToText(this.owner.World.Participants[participantIdx].Landmasses[this.processor.PullLocalWord(0x6)].Guard, 10)));
 
-			this.owner.Libc.AppendText(0xba06, "/");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, "/"));
 
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText(this.owner.World.Participants[participantIdx].Landmasses[this.processor.PullLocalWord(0x6)].Assault, 10));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06,
+				this.owner.Libc.IntegerToText(this.owner.World.Participants[participantIdx].Landmasses[this.processor.PullLocalWord(0x6)].Assault, 10)));
 
 			this.owner.TextPainter.RenderTextToScreen0(0xba06, 2, this.processor.PullLocalSignedWord(0x8), 7);
 
@@ -330,7 +330,7 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			goto L02f1;
 
 		L045f:
-			this.owner.Libc.ReadKey();
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.ReadKey());
 
 			this.processor.RegBase.Value16 = this.processor.PullGlobalWord(0xaa);
 			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + 0x10), 0x1);

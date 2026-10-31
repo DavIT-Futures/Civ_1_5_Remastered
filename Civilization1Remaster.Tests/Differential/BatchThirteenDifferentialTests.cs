@@ -90,7 +90,7 @@ namespace Civilization1Remaster.Tests.Differential
 
 				return new Scenario($"DisplayCityLabelPrompt({townIdx})", game => { },
 					game => new NewCityScreenReference(game).DisplayCityLabelPrompt(townIdx),
-					game => game.CityNaming.DisplayCityLabelPrompt(townIdx),
+					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.CityNaming.DisplayCityLabelPrompt(townIdx)),
 					Register.Acc | Register.Kept, game => game.Processor.RegAcc.Value16 != 0 ? "renamed" : "cancelled");
 			}, output, ["renamed", "cancelled"], keys);
 		}
@@ -116,7 +116,7 @@ namespace Civilization1Remaster.Tests.Differential
 						person.RegimeKind = regime;
 					},
 					game => new UnitCombatReference(game).AffirmBreakTreaty(participantIdx),
-					game => game.Combat.AffirmBreakTreaty(participantIdx),
+					game => game.Processor.RegAcc.Value16 = ReturnInAx.Of(game.Combat.AffirmBreakTreaty(participantIdx)),
 					Register.Acc | Register.Kept,
 					game => game.Processor.RegAcc.Value16 switch
 					{

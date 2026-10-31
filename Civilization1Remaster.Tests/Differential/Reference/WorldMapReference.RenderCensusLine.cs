@@ -75,25 +75,25 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			if (this.processor.FlagSet.IsLess) goto L1985;
 			this.processor.EmitGlobalByte(0xba06, 0x0);
 
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText((short)this.processor.PullLocalWord(0x2), 10));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06,
+				this.owner.Libc.IntegerToText((short)this.processor.PullLocalWord(0x2), 10)));
 
 			switch (this.processor.PullLocalWord(0x2))
 			{
 				case 1:
-					this.owner.Libc.AppendText(0xba06, 0x4670);
+					this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, 0x4670));
 					break;
 
 				case 2:
-					this.owner.Libc.AppendText(0xba06, 0x4673);
+					this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, 0x4673));
 					break;
 
 				case 3:
-					this.owner.Libc.AppendText(0xba06, 0x4676);
+					this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, 0x4676));
 					break;
 
 				default:
-					this.owner.Libc.AppendText(0xba06, 0x4679);
+					this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, 0x4679));
 					break;
 			}
 
@@ -118,18 +118,18 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			if ((this.owner.World.Participants[this.owner.World.PersonParticipantIdx].Relations[this.processor.PullLocalWord(0x8)] & 0x40) == 0)
 				goto L1b52;
 
-			this.owner.Libc.CopyText(0xba06, "(");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.CopyText(0xba06, "("));
 
-			this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1992)));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegSource.Value16 + 0x1992))));
 
-			this.owner.Libc.AppendText(0xba06, ": ");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, ": "));
 
-			this.owner.Libc.AppendText(0xba06,
-				this.owner.Libc.IntegerToText(Math.Abs((short)this.processor.PullLocalWord(0x4)), 10));
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06,
+				this.owner.Libc.IntegerToText(Math.Abs((short)this.processor.PullLocalWord(0x4)), 10)));
 
-			this.owner.Libc.AppendText(0xba06, charsAddr);
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, charsAddr));
 
-			this.owner.Libc.AppendText(0xba06, ")");
+			this.processor.RegAcc.Value16 = ReturnInAx.Of(this.owner.Libc.AppendText(0xba06, ")"));
 
 			this.owner.TextPainter.RenderTextToScreen0(0xba06,
 				-(this.owner.TextPainter.ObtainTextWidth(0xba06) - 318),
