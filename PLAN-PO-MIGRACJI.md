@@ -1002,3 +1002,10 @@ CIV.EXE nie jest potrzebne grze: segment danych pochodzi z zasobu, w pamięci je
    specjalnym zasobem (rekordy 12 – 23 tabeli terenu), napisy miast na mapie (`CityLabel…`), nazwy towarów karawan
    (`TradeGoodsNamesAddress`), `MapLayers.TerrainOfColour`, kolumny figur parady.
 Golden master i tury 27/27 po każdej porcji; pełny zestaw na koniec 813/813.
+
+**Podział dużych plików (2026-10-31):** `CityManagement` (5224 wiersze), `PlayerTurn` (3965) i `AIPlayer` (3289) to
+klasy `partial` w plikach po tematach – `CityManagement`: `Growth`, `Production`, `Economy`, `ScreenDrawing`,
+`ScreenInput`, `Turn`, `Tiles`; `PlayerTurn`: `Orders`, `Movement`, `Keys`, `Units`; `AIPlayer`: `UnitMoves`, `Settlers`,
+`Transport`, `Military`, `Strategy`, `Barbarians`. Metody przeniesione bez zmian (sprawdzone: te same wiersze, każdy raz),
+w tej samej kolejności; pola z inicjalizatorami zostały w plikach głównych (kolejność inicjalizacji między plikami
+`partial` nie jest określona). Pliki główne mają 400 – 740 wierszy. Golden master i tury 27/27.

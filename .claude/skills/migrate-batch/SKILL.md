@@ -14,6 +14,9 @@ Narzędzia (`Civilization1Remaster.Tests/Differential/Reference`, uruchamiać z 
 - `find_asm_methods.py Civilization1Remaster.Core 60` – kandydaci od najkrótszych;
 - `extract_reference.py <commit HEAD> <plik .cs> <właściwość GameEngine> <metody…>` – kopia oryginału do testu (właściwości:
   `grep -n "public <Klasa> " Civilization1Remaster.Core/GameEngine.cs`; nową klasę `XReference` dopisać do `ReferenceClasses.cs`; stałe klasy, np. `HandBayTally`, trzeba w kopii poprzedzić nazwą klasy);
+- `CityManagement`, `PlayerTurn`, `AIPlayer` są podzielone na pliki `partial` po tematach (`CityManagement.Production.cs`
+  …; pola zostają w pliku głównym): metody szukać przez `grep -n "Nazwa(" Civilization1Remaster.Core/Game/Klasa*.cs`, a
+  narzędziom podawać plik, w którym metoda leży;
 - `replace_methods.py <plik .cs> <plik z metodami>` – podmienia metody po nazwie, nowe pomocnicze wstawia za poprzednią;
 - `check_mutations.py <mutations.json> [--jobs N]` – kontrola mutacjami, równolegle (domyślnie 4) w trwałych kopiach repo
   `.mutants/w1…` (git worktree, budowanie przyrostowe); drzewo robocze nietknięte, więc można dalej pracować (nie budować
