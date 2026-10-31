@@ -1,4 +1,4 @@
-# Plan po migracji asm → C# (2026-10-19)
+﻿# Plan po migracji asm → C# (2026-10-19)
 
 Migracja się skończyła: `find_asm_methods.py` nie znajduje już metod w stylu asm. Kod nadal działa jednak na emulowanej
 maszynie. Ten plan ma dwie części: najpierw porządki (duplikaty, wspólne części), potem usuwanie śladów emulacji.
@@ -747,3 +747,23 @@ i liczenie zadowolenia (`CountScienceAndContent`, `Apply*`) z tego commitu; `Han
   zabrała nieczytany AX (`SwapTechnology`, `BlendTerrainTile`) – AX nieporównywany (etykieta `SwapTechnology` z
   wiedzy graczy); `ConstructCivilization` dla człowieka w trwającej grze – oryginał zostawiał AX bez zmian, nikt go nie
   czyta.
+
+## Uderzenie 6/6: PlayerTurn i MapManagement (2026-10-31)
+
+Najpierw lista wszystkich odczytów rejestrów w `Core`: AX czytają tylko funkcje, które same go chwilę wcześniej
+ustawiają (`MultiplyWords`, `VGADriver`, mysz), oraz dwa przecieki z `MapManagement`: `ManageBarbarianUnit` (AX po
+`EliminateUnit`) i `CityManagement` (`Participants[AX]` po `ObtainContinentID`). SI i CX czyta tylko `CityManagement`, z
+lokalnych zapisów. DI czyta tylko `PillageTile`.
+- `PlayerTurn`: usunięte wszystkie zapisy AX, SI, CX i para Preserve / Restore `HandlePlayerTurn`; DI to pole
+  `indexDest` (zapisywane przy wejściu do tury, odtwarzane przy wyjściu, 0 na starcie jak rejestr). **Prawdziwa
+  regresja:** część 8 Fazy 3 (`054afeb`) usunęła 14 zapisów DI w turze, więc `PillageTile` przekazywał
+  `SendUnitToStrategicLocation` złego „gracza” (kolumna jednostki z `FocusOnUnit`, właściciel miasta dyplomaty, dom
+  karawany i jego kontynent, ładunek, ...) – przywrócone jako zapisy `indexDest`. Nowy test `PillageTileMatchesOriginalCode`
+  (przed poprawką pada); mutacje: 2 złapane, 2 równoważne (wartość z wejścia do tury nigdy nie dociera do `PillageTile`
+  człowieka, bo `FocusOnUnit` zapisuje DI przed każdą jednostką).
+- `MapManagement`: usunięty tylko martwy AX w `RenderUnitSprite` (zaraz nadpisany; jego test nie porównuje już AX). `ReturnAcc`, AX `RenderMapTile`
+  i `RenderUnitOnWorldMap` **zostają**: docierają do dwóch odczytów wyżej. Zniknięcie ich wymaga najpierw jawnego wyniku
+  w `EliminateUnit` / `RepaintMapTile` i poprawki `Participants[AX]` (która sama jest dziwactwem tłumaczenia).
+- **Znalezione przy okazji, starsze niż Faza 3** (jest już na `ae3778d`): ruch jednostki człowieka obok obcego
+  miasta – kopia referencyjna woła `MayOccupyTile` / `VerifyTileOccupation` (strefa kontroli), obecna tura nie;
+  inne wywołania rysowania i pamięć 0x6c00 – 0x6eff. Do zbadania osobno (może artefakt skryptu klawiatury).

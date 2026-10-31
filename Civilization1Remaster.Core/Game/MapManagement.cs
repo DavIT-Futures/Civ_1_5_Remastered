@@ -826,8 +826,6 @@ namespace Civilization1Remaster.Game
 				this.owner.Dialogs.RenderBox(horizLoc - 1, vertLoc - 1, 15, 15, 7);
 			}
 
-			this.processor.RegAcc.Value16 = (ushort)(participantIdx * UnitMemory.ParticipantStride);
-
 			if ((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 1) != 0)
 			{
 				this.owner.VideoCard.SubstituteHue(ScreenBox, horizLoc, vertLoc, 16, 16, 5, 7);

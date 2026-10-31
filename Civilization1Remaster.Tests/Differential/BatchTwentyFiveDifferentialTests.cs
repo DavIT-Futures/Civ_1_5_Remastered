@@ -104,7 +104,8 @@ namespace Civilization1Remaster.Tests.Differential
 					},
 					game => new MapManagementReference(game).RenderUnitSprite(participantIdx, troopIdx, horizLoc, vertLoc),
 					game => game.MapOps.RenderUnitSprite(participantIdx, troopIdx, horizLoc, vertLoc),
-					Register.Acc | Register.Kept,
+					// (no AX: the 0x600 x player the original left, which every caller overwrites, is gone in Uderzenie 6/6)
+					Register.Kept,
 					game => (status & 8) != 0 ? "fortified" : (status & 0xc2) != 0 ? "letter" : (status & 1) != 0 ? "sleeping" : "plain");
 			}, output, ["fortified", "letter", "sleeping", "plain"]);
 		}
