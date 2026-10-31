@@ -1617,6 +1617,12 @@ namespace Civilization1Remaster
 		/// <summary>0x1946 + 2 * index: the colour of the player</summary>
 		protected ushort PlayerColour(int index) => this.owner.Tables.Word((ushort)((index << 1) + 0x1946));
 
+		/// <summary>The pictures of the citizens (0x6e96, a word each): 0 - 1 happy, 2 - 3 content, 4 - 5 unhappy, then the others</summary>
+		protected const ushort CitizenPicturesAddress = 0x6e96;
+
+		/// <summary>The picture of the citizen (see CitizenPicturesAddress)</summary>
+		protected ushort CitizenPicture(int kind) => this.processor.PullGlobalWord((ushort)((kind << 1) + CitizenPicturesAddress));
+
 		/// <summary>0x1882 + 2 * index: the x step of the direction (0 the tile itself, 1 - 8 the neighbours, then the second ring)</summary>
 		protected ushort DirectionHoriz(int index) => this.owner.Tables.Word((ushort)((index << 1) + 0x1882));
 

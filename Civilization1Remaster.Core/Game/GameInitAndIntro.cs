@@ -1260,7 +1260,7 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// Terrain type of the pixel of the current screen (the screen of the box at 0xaa), by the terrain colour table at 0x2ba6
+		/// Terrain type of the pixel of the current screen (the screen of the box at 0xaa), by the terrain of the colour (MapLayers.TerrainOfColour)
 		/// </summary>
 		/// <returns>Terrain type, also in AX</returns>
 		public ushort ObtainTerrainTypeFromScreen(short horizLoc, short vertLoc)
@@ -1269,7 +1269,7 @@ namespace Civilization1Remaster.Game
 
 			ushort displayIdx = DrawingBox.DisplayIdx;
 			ushort colour = this.owner.VideoCard.ObtainDot(displayIdx, horizLoc, vertLoc);
-			ushort terrain = this.processor.PullGlobalWord((ushort)(0x2ba6 + (colour << 1)));
+			ushort terrain = this.processor.PullGlobalWord((ushort)(MapLayers.TerrainOfColour + (colour << 1)));
 
 
 			this.processor.Journal.CloseScope("ObtainTerrainTypeFromScreen");

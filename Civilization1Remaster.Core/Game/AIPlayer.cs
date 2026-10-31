@@ -1160,7 +1160,7 @@ namespace Civilization1Remaster.Game
 		/// The score 0x10 of the direction 0x40 grows by the surroundings when no enemy stands next to the unit (0x5c): +8 for
 		/// an unmarked land tile four steps away (the pattern 0x3772:0x2438), and for each tile around the tile of the direction
 		/// (0x44, at 0xe / 0x16) +2 when the player has not seen it (land, or the sea for a ship), -2 with units there and the
-		/// worth of its terrain (byte 0x290) for settlers. Next to an enemy (0x1c) with fewer than 3 moves left it is scaled by
+		/// food of its terrain for settlers. Next to an enemy (0x1c) with fewer than 3 moves left it is scaled by
 		/// the share of the attackers in the stack. The best score (0x28) keeps the direction (0x2c) and the enemy mark (0x52).
 		/// The locals of ShiftAIUnit are used as in the original.
 		/// </summary>
@@ -1217,7 +1217,7 @@ namespace Civilization1Remaster.Game
 					{
 						ushort terrain = this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
 						this.look.Score = (ushort)(this.look.Score +
-							(sbyte)this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(terrain * 0x13 + 0x290)));
+							(sbyte)TerrainField(terrain, TerrainTable.Food));
 					}
 				}
 			}

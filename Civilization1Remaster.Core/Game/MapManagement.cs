@@ -10,6 +10,13 @@ namespace Civilization1Remaster.Game
 	/// </summary>
 	public class MapManagement : GameModule
 	{
+		/// <summary>The names of the cities drawn on the map (up to 0x20, CityLabelCount): their columns on the screen</summary>
+		private const ushort CityLabelHorizAddress = 0x6dac;
+		/// <summary>The rows on the screen of the city names</summary>
+		private const ushort CityLabelVertAddress = 0x6e3e;
+		/// <summary>The cities of the city names</summary>
+		private const ushort CityLabelTownAddress = 0xdf20;
+
 		private readonly MapLayers chart;
 		private readonly UnitMemory troops;
 
@@ -103,17 +110,17 @@ namespace Civilization1Remaster.Game
 			{
 				ushort place = (ushort)(labelIdx << 1);
 
-				if (this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(place + 0x6e3e)) >= 0xb8)
+				if (this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(place + CityLabelVertAddress)) >= 0xb8)
 					continue;
 
 				EmptyMessage()
-					.City(this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(place + 0xdf20)));
+					.City(this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(place + CityLabelTownAddress)));
 
-				this.owner.BlockText.ShrinkTextToWidth(TextBuffer.Address, (ushort)(327 - this.processor.PullGlobalWord((ushort)(place + 0x6dac))));
+				this.owner.BlockText.ShrinkTextToWidth(TextBuffer.Address, (ushort)(327 - this.processor.PullGlobalWord((ushort)(place + CityLabelHorizAddress))));
 
 				this.owner.TextPainter.RenderTextWithShadow(this.owner.Words.ToString(),
-					this.owner.Helpers.VerifyValueSpan(this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(place + 0x6dac)) - 8, 80, 999),
-					this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(place + 0x6e3e)) + 16, Hues.LightCyan);
+					this.owner.Helpers.VerifyValueSpan(this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(place + CityLabelHorizAddress)) - 8, 80, 999),
+					this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(place + CityLabelVertAddress)) + 16, Hues.LightCyan);
 			}
 
 			// The part of the world map in the corner (80 x 50), the screen 0x19e8 has the world map at column 0xf0
@@ -660,10 +667,10 @@ namespace Civilization1Remaster.Game
 			if ((short)labelIdx < 0x20)
 			{
 				ushort slot = (ushort)(labelIdx << 1);
-				this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(slot + 0x6dac), (ushort)screenX);
-				this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(slot + 0x6e3e), (ushort)screenY);
+				this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(slot + CityLabelHorizAddress), (ushort)screenX);
+				this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(slot + CityLabelVertAddress), (ushort)screenY);
 				CityLabelCount = (ushort)(labelIdx + 1);
-				this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(slot + 0xdf20), cityIdx);
+				this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(slot + CityLabelTownAddress), cityIdx);
 			}
 		}
 

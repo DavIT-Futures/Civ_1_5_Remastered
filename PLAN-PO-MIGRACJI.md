@@ -986,3 +986,19 @@ Sprawdzone tymczasową kontrolą w `GameText.Read` (napis = pamięć przy każdy
 jedyna różnica to test `BatchSixtyNine.OpeningSequence`, który sam wpisywał „earth.mp” pod `map.pic` (0x3b20) – zapis
 usunięty z testu (gra tego adresu nie zmienia), test zielony; po usunięciu kontroli golden master i tury 27/27.
 CIV.EXE nie jest potrzebne grze: segment danych pochodzi z zasobu, w pamięci jest tylko napis ścieżki „CIV.EXE”.
+
+**Sprawdzone 2026-10-31:** pełny zestaw 813/813 na 66e5174 (teksty CIV.EXE jako napisy C#).
+
+**Tabele po nazwie (2026-10-31, trzy porcje):** gołe adresy tabel zamienione na nazwy, z tymi samymi odczytami pamięci
+(albo kopii tabel `GameTables` – ta sama nakładka):
+1. Teren, ulepszenia terenu, przywódcy (02f6cad): `TerrainImprovementWord` (`Irrigation` / `Mining`, opis wartości),
+   `TerrainField(…, Food / Shields / Trade / MoveCost)`, `LeaderTable.Aggression` / `Expansion` / `Leaning` (cechy z
+   raportu wywiadu; ich napisy jako `GameText`). W `SituateSpecialTerrain` zmienne `irrigation` / `mining` miały
+   zamienione nazwy (+4 to kopalnia) – poprawione nazwy, obliczenie bez zmian.
+2. Szukanie drogi (25f6e9e): kolejka przeszukiwania wszerz (`Enqueue`, `QueuedHoriz` / `QueuedVert`), kroki bloków
+   (`BlockStepsCell`), połączenia bloków lądu i morza, okno kosztów ruchu; `MapLayers.DirectionHoriz` / `Vert` przez
+   akcesory `GameModule`.
+3. Ekran miasta i reszta: `CitizenPicture` (obrazki obywateli 0x6e96), przesunięcia minimapy, plon terenu ze
+   specjalnym zasobem (rekordy 12 – 23 tabeli terenu), napisy miast na mapie (`CityLabel…`), nazwy towarów karawan
+   (`TradeGoodsNamesAddress`), `MapLayers.TerrainOfColour`, kolumny figur parady.
+Golden master i tury 27/27 po każdej porcji; pełny zestaw na koniec 813/813.

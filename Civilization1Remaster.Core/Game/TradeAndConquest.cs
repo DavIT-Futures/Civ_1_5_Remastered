@@ -8,6 +8,9 @@ namespace Civilization1Remaster.Game
 	/// </summary>
 	public class TradeAndConquest : GameModule
 	{
+		/// <summary>The addresses of the names of the 8 trade goods (Silk, Silver, Wine, Copper, Gems, Dye, Salt, Spice)</summary>
+		private const ushort TradeGoodsNamesAddress = 0x1972;
+
 		public TradeAndConquest(GameEngine owner)
 			: base(owner)
 		{
@@ -551,7 +554,7 @@ namespace Civilization1Remaster.Game
 
 			if (participantIdx == this.owner.World.PersonParticipantIdx)
 			{
-				Message(this.processor.PullGlobalWord((ushort)(((troopIdx & 7) << 1) + 0x1972)))
+				Message(this.processor.PullGlobalWord((ushort)(((troopIdx & 7) << 1) + TradeGoodsNamesAddress)))
 					.Text(" caravan from ");
 
 				ObtainCityLabel((short)homeIdx);

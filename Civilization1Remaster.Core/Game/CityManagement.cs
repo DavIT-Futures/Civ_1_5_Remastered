@@ -4690,7 +4690,7 @@ namespace Civilization1Remaster.Game
 
 		/// <summary>
 		/// What the tile yields to the city 0x653e of player 0x6548: food (resource 0), shields (1) or trade (2). The terrain's
-		/// value (0x290, or 0x374 with the special resource) with irrigation (bit 2), mine (4) and road (8, trade on terrain 0 - 2)
+		/// value (of the terrain, or of the terrain with the special resource) with irrigation (bit 2), mine (4) and road (8, trade on terrain 0 - 2)
 		/// — the real improvements only with DiagMarkers bit 2, else irrigation (terrain 0 - 2) or mine and a road (not on terrain
 		/// 1) assumed; no shields on every other tile of terrain 2 and 11; the Colossus, the railroad (bit 0x10: 1.5 times), -1 above
 		/// 2 under governments 0 - 1 unless the city celebrates (0x40; 0xe3c2 -= 2 while 0x2494), +1 trade under government 2+
@@ -4705,10 +4705,10 @@ namespace Civilization1Remaster.Game
 			if (this.owner.MapOps.VerifyMapLimits(horizLoc, vertLoc) != 0)
 			{
 				ushort terrain = this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
-				ushort terrainRecord = (ushort)((terrain * 0x13) + resource);
-				ushort yieldTable = (ushort)(this.owner.MapOps.ContainsSpecialResource(horizLoc, vertLoc) != 0 ? 0x374 : 0x290);
+				// The terrains with a special resource are the records 12 - 23
+				int kind = this.owner.MapOps.ContainsSpecialResource(horizLoc, vertLoc) != 0 ? terrain + 12 : terrain;
 
-				yield = (sbyte)this.processor.PullGlobalByte((ushort)(terrainRecord + yieldTable));
+				yield = (sbyte)TerrainField(kind, TerrainTable.Food + resource);
 
 				ushort improvements = this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc);
 
@@ -4987,14 +4987,14 @@ namespace Civilization1Remaster.Game
 
 			for (citizenIdx = 0; citizenIdx < (short)CityHappy; citizenIdx++)
 			{
-				horizLoc = RenderCitizen(horizLoc, vertLoc, this.processor.PullGlobalWord((ushort)(((citizenIdx & 1) << 1) + 0x6e96)), step);
+				horizLoc = RenderCitizen(horizLoc, vertLoc, CitizenPicture(citizenIdx & 1), step);
 			}
 
 
 			for (citizenIdx = 0; (short)(this.owner.World.Towns[townIdx].TrueExtent - specialists - CityHappy -
 				CityUnhappy) > citizenIdx; citizenIdx++)
 			{
-				horizLoc = RenderCitizen(horizLoc, vertLoc, this.processor.PullGlobalWord((ushort)(((citizenIdx & 1) << 1) + 0x6e9a)), step);
+				horizLoc = RenderCitizen(horizLoc, vertLoc, CitizenPicture(2 + (citizenIdx & 1)), step);
 			}
 
 			if (citizenIdx != 0)
@@ -5005,7 +5005,7 @@ namespace Civilization1Remaster.Game
 			for (citizenIdx = 0; citizenIdx < (short)CityUnhappy; citizenIdx++)
 			{
 				this.owner.Services.RenderPictureToScreen(ScreenBox, horizLoc, vertLoc,
-					this.processor.PullGlobalWord((ushort)(((citizenIdx & 1) << 1) + 0x6e9e)));
+					CitizenPicture(4 + (citizenIdx & 1)));
 
 				if (citizenIdx < (short)CityExcessUnhappy)
 				{
@@ -5168,8 +5168,14 @@ namespace Civilization1Remaster.Game
 		/// <summary>
 		/// Draws the small map of the city screen: the 80 x 50 tiles around the human player's view (columns from HorizBegin - 40),
 		/// every seen tile as a 2 x 2 dot (ocean in colour 1, land in colour 2), two tiles in every 3 pixels: the four tiles of
-		/// a 2 x 2 block are shifted by the offsets at 0x280c (columns) and 0x2810 (rows)
+		/// a 2 x 2 block are shifted by the offsets of MiniMapColumnShifts and MiniMapRowShifts
 		/// </summary>
+		/// <summary>The column shifts of the four tiles of a 2 x 2 block of the small map (bytes 0, 2, 0, 1)</summary>
+		private const ushort MiniMapColumnShifts = 0x280c;
+
+		/// <summary>The row shifts of the four tiles of a 2 x 2 block of the small map (bytes -1, 0, 1, 2)</summary>
+		private const ushort MiniMapRowShifts = 0x2810;
+
 		public void RenderMiniMap()
 		{
 			this.processor.Journal.OpenScope("RenderMiniMap()");
@@ -5188,8 +5194,8 @@ namespace Civilization1Remaster.Game
 						continue;
 
 					ushort quarter = (ushort)(((vertLoc & 1) << 1) + (column & 1));
-					int dotHoriz = (column / 2) * 3 + (sbyte)this.processor.PullGlobalByte((ushort)(0x280c + quarter)) + 0x65;
-					int dotVert = (vertLoc / 2) * 3 + (sbyte)this.processor.PullGlobalByte((ushort)(0x2810 + quarter)) + 0x76;
+					int dotHoriz = (column / 2) * 3 + (sbyte)this.processor.PullGlobalByte((ushort)(MiniMapColumnShifts + quarter)) + 0x65;
+					int dotVert = (vertLoc / 2) * 3 + (sbyte)this.processor.PullGlobalByte((ushort)(MiniMapRowShifts + quarter)) + 0x76;
 					ushort hue = (ushort)(this.owner.MapOps.ObtainTerrainType((short)horizLoc, vertLoc) == MapRules.OceanTerrain ? 1 : 2);
 
 					this.owner.Services.FloodBox(ScreenBox, dotHoriz, dotVert, 2, 2, hue);

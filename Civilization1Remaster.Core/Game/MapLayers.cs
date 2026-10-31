@@ -25,7 +25,7 @@ namespace Civilization1Remaster.Game
 		private const int HighImprovementsOffset = 150;
 
 		/// <summary>Terrain type of each terrain colour, a word array in the data segment</summary>
-		private const ushort TerrainOfColour = 0x2ba6;
+		public const ushort TerrainOfColour = 0x2ba6;
 
 		/// <summary>Bit of the tile owner layer: units stand on the tile</summary>
 		public const int UnitsPresent = 8;

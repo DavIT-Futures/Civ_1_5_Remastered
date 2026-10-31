@@ -924,7 +924,7 @@ namespace Civilization1Remaster.Game
 		/// The next icon of the score screen: 8 pixels right of the last one (0xb25c); after x 292 a new row (0xb2bc grows by
 		/// 0x5116) starting at x 16 or 20. Nothing is drawn below row 160.
 		/// </summary>
-		/// <param name="icon">Picture of the icon, from the table at 0x6e96</param>
+		/// <param name="icon">The citizen picture of the icon (CitizenPicture)</param>
 		public void RenderScoreIcon(ushort icon)
 		{
 			this.processor.Journal.OpenScope($"RenderScoreIcon({icon})");
@@ -944,7 +944,7 @@ namespace Civilization1Remaster.Game
 				this.owner.Services.RenderPictureToScreen(ScreenBox,
 					(short)ScoreIconHoriz,
 					(short)ScoreIconVert,
-					this.processor.PullGlobalWord((ushort)((icon << 1) + 0x6e96)));
+					CitizenPicture(icon));
 			}
 
 			this.processor.Journal.CloseScope("RenderScoreIcon");

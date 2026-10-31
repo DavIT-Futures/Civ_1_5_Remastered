@@ -6,6 +6,9 @@ namespace Civilization1Remaster.UI
 {
 	public class CityView : GameModule
 	{
+		/// <summary>The columns of the four figures of the parade (words -96, -36, 0, -56; the rows follow at 0x4f4a)</summary>
+		private const ushort ParadeFigureColumnsAddress = 0x4f42;
+
 		private const ushort WonderPicturesTableAddress = 0x68a0;
 		private const ushort CityWallPicturesTableAddress = 0x6880;
 		private const ushort CityStructurePicturesTableAddress = 0x81a2;
@@ -1023,7 +1026,7 @@ namespace Civilization1Remaster.UI
 
 				for (int kdx = 0; kdx < 4; kdx++)
 				{
-					int horizSpot = this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(0x4f42 + (kdx << 1))) + idx;
+					int horizSpot = this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(ParadeFigureColumnsAddress + (kdx << 1))) + idx;
 
 					if (horizSpot > -48 && horizSpot < 320)
 					{
@@ -1062,7 +1065,7 @@ namespace Civilization1Remaster.UI
 
 		/// <summary>
 		/// The parade of the human player's people (the 10 pictures of 0x4f5c with technology 0x23, else 0x4f52): 4 figures
-		/// (columns 0x4f42, rows 0x4f4a) moving left, each with its own picture, until a key or a click.
+		/// (ParadeFigureColumnsAddress, the rows after it) moving left, each with its own picture, until a key or a click.
 		/// </summary>
 		public void RenderCitySceneryForHuman()
 		{
@@ -1095,7 +1098,7 @@ namespace Civilization1Remaster.UI
 
 				for (short figureIdx = 0; figureIdx < 4; figureIdx++)
 				{
-					figureHoriz = (short)(((short)(3 * this.processor.PullGlobalWord((ushort)((figureIdx << 1) + 0x4f42))) / 2) + offset);
+					figureHoriz = (short)(((short)(3 * this.processor.PullGlobalWord((ushort)((figureIdx << 1) + ParadeFigureColumnsAddress))) / 2) + offset);
 
 					if (figureHoriz >= 0x140 || figureHoriz <= -0x30)
 						continue;
