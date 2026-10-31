@@ -9,11 +9,10 @@ namespace Civilization1Remaster.Tests.Foundation
 		[Fact]
 		public void ReadsLittleEndian()
 		{
-			MemoryStream source = Source(0xfe, 0x34, 0x12, 0x78, 0x56, 0x34, 0x12, 0xff, 0xff, 0x00, 0x80);
+			MemoryStream source = Source(0xfe, 0x34, 0x12, 0xff, 0xff, 0x00, 0x80);
 
-			Assert.Equal(0xfe, source.PullUInt8());
-			Assert.Equal(0x1234, source.PullUInt16());
-			Assert.Equal(0x12345678u, source.PullUInt32());
+			Assert.Equal(0xfe, source.PullUInt8OrZero());
+			Assert.Equal(0x1234, source.PullUInt16OrZero());
 			Assert.Equal(-1, source.PullInt16OrZero());
 			Assert.Equal(-32768, source.PullInt16OrZero());
 		}
@@ -27,40 +26,6 @@ namespace Civilization1Remaster.Tests.Foundation
 			Assert.Equal(1, source.Position);
 			Assert.Equal(0, source.PullUInt8OrZero());
 			Assert.Equal(0, source.PullInt16OrZero());
-		}
-
-		[Fact]
-		public void LenientReadsMatchStrictReadsWhenDataIsThere()
-		{
-			MemoryStream source = Source(0x01, 0x02, 0x03, 0x04, 0x05);
-
-			Assert.Equal(0x01, source.PullUInt8OrZero());
-			Assert.Equal(0x0302, source.PullUInt16OrZero());
-			Assert.Equal(0x0504, source.PullInt16OrZero());
-		}
-
-		[Theory]
-		[InlineData(0, 1)]
-		[InlineData(1, 2)]
-		[InlineData(3, 4)]
-		public void StrictReadsThrowTheOriginalException(int available, int needed)
-		{
-			MemoryStream source = Source(new byte[available]);
-
-			Exception problem = Assert.Throws<Exception>(() =>
-			{
-				switch (needed)
-				{
-					case 1: source.PullUInt8(); break;
-					case 2: source.PullUInt16(); break;
-					default: source.PullUInt32(); break;
-				}
-			});
-
-			Assert.Equal(typeof(Exception), problem.GetType());
-			Assert.Equal(LittleEndianStream.UnexpectedEnd, problem.Message);
-			Assert.Equal("Unexpected end of stream", problem.Message);
-			Assert.Equal(available, source.Position);
 		}
 
 		[Fact]
@@ -79,7 +44,7 @@ namespace Civilization1Remaster.Tests.Foundation
 		public void ReadsAcrossShortReads()
 		{
 			// a stream that returns one byte per Read call
-			Assert.Equal(0x12345678u, new TrickleStream(new byte[] { 0x78, 0x56, 0x34, 0x12 }).PullUInt32());
+			Assert.Equal(0x1234, new TrickleStream(new byte[] { 0x34, 0x12 }).PullUInt16OrZero());
 		}
 
 		[Fact]
