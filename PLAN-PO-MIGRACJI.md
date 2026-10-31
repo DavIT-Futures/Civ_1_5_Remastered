@@ -948,3 +948,6 @@ Proponowana kolejność: 1 → 2 → 5 → 4 → 6 → 3 → 7 → 8 → 9 → 1
 - Krok 6 (`FrameWords` → pola) – bez zmian: słowa ramek nie dotykają już pamięci (poza `ProduceTerrain` z
   `ClassicLabelNumbers`), zamiana dałaby tylko czytelność, a układ słów (tablice z indeksem -1 czytające sąsiednią
   zmienną) trzeba by odtworzyć ręcznie.
+
+**Sprawdzone 2026-10-31:** pełny zestaw 813/813 na 6841954 (B6.1 kroki 3 – 5, Alt+H, teksty kodów, nazwy graczy,
+rozkaz barbarzyńców, ramka `ProduceTerrain`) – bez zmian baseline'ów; użytkownik sprawdził grę ręcznie.
