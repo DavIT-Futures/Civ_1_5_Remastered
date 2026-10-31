@@ -37,16 +37,6 @@ namespace Civilization1Remaster.GameModel.State
 			return troop;
 		}
 
-		public void WipeStatus(short condition)
-		{
-			this.Condition &= condition;
-		}
-
-		public bool InspectStatus(short condition)
-		{
-			return (this.Condition & condition) != 0;
-		}
-
 		public void WriteTo(Stream flow)
 		{
 			flow.WriteByte((byte)((sbyte)this.Condition));

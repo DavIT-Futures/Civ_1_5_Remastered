@@ -46,7 +46,6 @@ namespace Civilization1Remaster.Acoustics
 		public ushort SegCode { get => this.sections[1]; set => this.sections[1] = value; }
 		public ushort SegStack { get => this.sections[2]; set => this.sections[2] = value; }
 		public ushort SegData { get => this.sections[3]; set => this.sections[3] = value; }
-		public ushort RegInstr { get => this.regInstr; set => this.regInstr = value; }
 		public bool CyMarker { get => this.carryBit; set => this.carryBit = value; }
 
 		/// <summary>

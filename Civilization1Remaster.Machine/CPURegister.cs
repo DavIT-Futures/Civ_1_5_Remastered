@@ -60,18 +60,6 @@
 			}
 		}
 
-		public uint Value32
-		{
-			get
-			{
-				return this.quantity;
-			}
-			set
-			{
-				this.quantity = value;
-			}
-		}
-
 		public override string ToString()
 		{
 			return $"0x{this.UpperWord:x4}:0x{this.Value16:x4}";

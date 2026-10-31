@@ -9,6 +9,5 @@ namespace Civilization1Remaster.GameModel.State
 	{
 		public short ConstructionSpotTally { get; set; } = 0;
 		public short Extent { get; set; } = 0;
-		public short SeaExtent { get; set; } = 0;
 	}
 }

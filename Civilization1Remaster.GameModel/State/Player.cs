@@ -63,8 +63,6 @@ namespace Civilization1Remaster.GameModel.State
 		}
 
 		public string Label { get; set; } = "";
-		public string Citizenship { get; set; } = "";
-		public string ChiefLabel { get; set; } = "";
 		public short ChiefVisuals { get; set; } = 0;
 		public short Gold { get; set; } = 0;
 		public short RegimeKind { get; set; } = 0;

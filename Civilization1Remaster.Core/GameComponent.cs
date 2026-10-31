@@ -1575,9 +1575,6 @@ namespace Civilization1Remaster.Core
 		/// <summary>LeaderName through the offset 2 * index computed before</summary>
 		protected ushort LeaderNameAt(int offset) => this.Owner.Tables.Word((ushort)(offset + 0x19a2));
 
-		/// <summary>GovernmentName through the offset 2 * index computed before</summary>
-		protected ushort GovernmentNameAt(int offset) => this.Owner.Tables.Word((ushort)(offset + 0x1966));
-
 		/// <summary>GovernmentTitle through the offset 2 * index computed before</summary>
 		protected ushort GovernmentTitleAt(int offset) => this.Owner.Tables.Word((ushort)(offset + 0x19b2));
 

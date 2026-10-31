@@ -220,16 +220,6 @@ namespace Civilization1Remaster.Tests.GameModel
 			Assert.Equal(0, copy.FollowingTroopIdx);
 		}
 
-		[Fact]
-		public void StatusBits()
-		{
-			Unit troop = new Unit { Condition = 0x0f };
-
-			Assert.True(troop.InspectStatus(0x04));
-			Assert.False(troop.InspectStatus(0x10));
-			troop.WipeStatus(0x0c);
-			Assert.Equal(0x0c, troop.Condition);
-		}
 	}
 
 	public class UnitHealthTests

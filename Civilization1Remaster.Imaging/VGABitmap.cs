@@ -987,13 +987,5 @@ namespace Civilization1Remaster.Imaging
 			return (int)(0xff000000 | (uint)(c.ToArgb() & 0x00ffffff));
 		}
 
-		private void AssignPictureColors(Color[] shades)
-		{
-			for (int idx = 0; idx < this.swatchRgba.Length && idx < shades.Length; idx++)
-			{
-				this.palette[idx] = shades[idx];
-				this.swatchRgba[idx] = ToFullArgb(shades[idx]);
-			}
-		}
 	}
 }

@@ -86,17 +86,6 @@ namespace Civilization1Remaster.Acoustics
 		public bool HasSynth => string.Equals(this.Label, "RSOUND.CVL", StringComparison.OrdinalIgnoreCase);
 
 		/// <summary>
-		/// Finds the first sound driver in the game folder, in the order of DriverFiles
-		/// </summary>
-		public static SoundDriverHost? Construct(string sessionFolder, int sliceRatio)
-		{
-			foreach (SoundDriverHost handler in ConstructAll(sessionFolder, sliceRatio))
-				return handler;
-
-			return null;
-		}
-
-		/// <summary>
 		/// Loads the sound drivers from the game folder, in the order of DriverFiles,
 		/// so the next one can be used when the sound output for a driver is missing
 		/// </summary>

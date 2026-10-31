@@ -190,36 +190,6 @@ namespace Civilization1Remaster.GameModel.State
 		public short HighestScienceTally { get; set; } = 0;
 
 		// Units
-		public UnitDefinition[] TroopSpecs { get; set; } = new UnitDefinition[]{
-			new UnitDefinition("Settlers", 127, 0, 1, 0, 0, 1, 4, 0, 0, 0, -1),
-			new UnitDefinition("Militia", 34, 0, 1, 0, 1, 1, 1, 0, 0, 2, -1),
-			new UnitDefinition("Phalanx", 34, 0, 1, 0, 1, 2, 2, 0, 0, 2, 17),
-			new UnitDefinition("Legion", 64, 0, 1, 0, 3, 1, 2, 0, 0, 1, 18),
-			new UnitDefinition("Musketeers", 64, 0, 1, 0, 2, 3, 3, 0, 0, 2, 34),
-			new UnitDefinition("Riflemen", 127, 0, 1, 0, 3, 5, 3, 0, 0, 2, 64),
-			new UnitDefinition("Cavalry", 64, 0, 2, 0, 2, 1, 2, 0, 0, 1, 31),
-			new UnitDefinition("Knights", 58, 0, 2, 0, 4, 2, 4, 0, 0, 1, 62),
-			new UnitDefinition("Catapult", 48, 0, 1, 0, 6, 1, 4, 0, 0, 1, 9),
-			new UnitDefinition("Cannon", 63, 0, 1, 0, 8, 1, 4, 0, 0, 1, 48),
-			new UnitDefinition("Chariot", 62, 0, 2, 0, 4, 1, 4, 0, 0, 1, 33),
-			new UnitDefinition("Armor", 127, 0, 3, 0, 10, 5, 8, 0, 0, 1, 58),
-			new UnitDefinition("Mech. Inf.", 127, 0, 3, 0, 6, 6, 5, 0, 0, 2, 65),
-			new UnitDefinition("Artillery", 127, 0, 2, 0, 12, 2, 6, 0, 0, 1, 63),
-			new UnitDefinition("Fighter", 127, 1, 10, 1, 4, 2, 6, 2, 0, 4, 38),
-			new UnitDefinition("Bomber", 127, 1, 8, 2, 12, 1, 12, 2, 0, 1, 39),
-			new UnitDefinition("Trireme", 8, 2, 3, 0, 1, 0, 4, 0, 2, 5, 7),
-			new UnitDefinition("Sail", 14, 2, 3, 0, 1, 1, 4, 0, 3, 5, 8),
-			new UnitDefinition("Frigate", 35, 2, 3, 0, 2, 2, 4, 0, 4, 5, 14),
-			new UnitDefinition("Ironclad", 37, 2, 4, 0, 4, 4, 6, 0, 0, 3, 23),
-			new UnitDefinition("Cruiser", 127, 2, 6, 0, 6, 6, 8, 3, 0, 3, 37),
-			new UnitDefinition("Battleship", 127, 2, 4, 0, 18, 12, 16, 3, 0, 3, 52),
-			new UnitDefinition("Submarine", 127, 2, 3, 0, 8, 2, 5, 3, 0, 3, 41),
-			new UnitDefinition("Carrier", 127, 2, 5, 0, 1, 12, 16, 3, 0, 3, 39),
-			new UnitDefinition("Transport", 127, 2, 4, 0, 0, 3, 5, 0, 8, 5, 35),
-			new UnitDefinition("Nuclear", 127, 1, 16, 1, 99, 0, 16, 0, 0, 1, 46),
-			new UnitDefinition("Diplomat", 127, 0, 2, 0, 0, 0, 3, 0, 0, 6, 22),
-			new UnitDefinition("Caravan", 127, 0, 1, 0, 0, 1, 5, 0, 0, 6, 24)};
-
 		// Map
 		public ChartSightGrid ChartSight { get; set; } = new ChartSightGrid();
 
