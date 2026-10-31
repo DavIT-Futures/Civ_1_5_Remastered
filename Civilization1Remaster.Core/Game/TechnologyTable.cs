@@ -1,4 +1,4 @@
-namespace Civilization1Remaster.Game
+namespace Civilization1Remaster.Core.Game
 {
 	/// <summary>The technology prerequisite requirements table</summary>
 	public static class TechnologyTable

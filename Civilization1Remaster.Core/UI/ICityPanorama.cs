@@ -1,8 +1,6 @@
-using Civilization1Remaster.Emulation;
 using System;
-using Civilization1Remaster.Game.State;
 
-namespace Civilization1Remaster.UI
+namespace Civilization1Remaster.Core.UI
 {
 	/// <summary>The operations of CityPanorama that the other parts of the game use</summary>
 	public interface ICityPanorama

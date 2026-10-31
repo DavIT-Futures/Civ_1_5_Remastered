@@ -1,8 +1,7 @@
-using Civilization1Remaster.Emulation;
 using Microsoft.Win32;
 using System.Threading;
 
-namespace Civilization1Remaster.Engine
+namespace Civilization1Remaster.Core.Engine
 {
 	/// <summary>The operations of TextPainter that the other parts of the game use</summary>
 	public interface ITextPainter

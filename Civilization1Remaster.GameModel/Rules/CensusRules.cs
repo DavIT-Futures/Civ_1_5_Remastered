@@ -1,6 +1,6 @@
 using System;
 
-namespace Civilization1Remaster.Game.Rules
+namespace Civilization1Remaster.GameModel.Rules
 {
 	/// <summary>
 	/// Calculations for the world demographics screen (DisplayCensus).

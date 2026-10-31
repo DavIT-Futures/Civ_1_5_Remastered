@@ -8,8 +8,11 @@ using Avalonia.Interactivity;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia.Threading;
-using Civilization1Remaster.Containers;
-using Civilization1Remaster.Video;
+using Civilization1Remaster.Core;
+using Civilization1Remaster.Foundation.Containers;
+using Civilization1Remaster.Foundation.Support;
+using Civilization1Remaster.Imaging;
+using Civilization1Remaster.Machine;
 
 namespace Civilization1Remaster.Desktop;
 

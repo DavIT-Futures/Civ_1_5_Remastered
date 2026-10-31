@@ -1,6 +1,6 @@
 using System;
 
-namespace Civilization1Remaster.Game.Rules
+namespace Civilization1Remaster.GameModel.Rules
 {
 	/// <summary>
 	/// Combat and defense rules for units.

@@ -1,8 +1,7 @@
 using System;
 using System.Collections.Generic;
-using Civilization1Remaster.Game.State;
 
-namespace Civilization1Remaster.Game.Rules
+namespace Civilization1Remaster.GameModel.Rules
 {
 	/// <summary>
 	/// Pure C# domain rules for Civilization civil wars / schisms.

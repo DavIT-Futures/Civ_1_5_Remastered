@@ -1,10 +1,6 @@
 using System;
-using Civilization1Remaster.Emulation;
-using Civilization1Remaster.Game.Rules;
-using Civilization1Remaster.Game.State;
-using Civilization1Remaster.UI;
 
-namespace Civilization1Remaster.Game
+namespace Civilization1Remaster.Core.Game
 {
 	/// <summary>The AI settlers: cities, terrain improvements, roads</summary>
 	partial class ComputerPlayer
@@ -18,7 +14,7 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private ushort? DirectSettlers(short participantIdx, short troopIdx)
 		{
-			Game.State.Player player = this.Owner.World.Participants[participantIdx];
+			GameModel.State.Player player = this.Owner.World.Participants[participantIdx];
 			short horizLoc = (short)this.look.Horiz;
 			short vertLoc = (short)this.look.Vert;
 
@@ -130,7 +126,7 @@ namespace Civilization1Remaster.Game
 			}
 
 			short distance = (short)this.look.CityDistance;
-			Game.State.City town = this.Owner.World.Towns[this.look.NearestCity];
+			GameModel.State.City town = this.Owner.World.Towns[this.look.NearestCity];
 
 			if (distance <= 0 || distance > 2 || town.ParticipantIdx != participantIdx)
 				return null;
@@ -206,7 +202,7 @@ namespace Civilization1Remaster.Game
 					continue;
 				}
 
-				Game.State.City town = this.Owner.World.Towns[this.look.NearestCity];
+				GameModel.State.City town = this.Owner.World.Towns[this.look.NearestCity];
 
 				if ((sbyte)town.TrueExtent < 3 && this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) == 4 &&
 					this.Owner.MapOps.ContainsSpecialResource(horizLoc, vertLoc) == 0)

@@ -1,8 +1,5 @@
-using Civilization1Remaster.Emulation;
-using Civilization1Remaster.Game.Rules;
-using Civilization1Remaster.Game.State;
 
-namespace Civilization1Remaster.Game
+namespace Civilization1Remaster.Core.Game
 {
 	/// <summary>
 	/// Translated from the original CIV.EXE segment 0x1ade.

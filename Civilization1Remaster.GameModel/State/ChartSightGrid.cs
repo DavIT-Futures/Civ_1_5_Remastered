@@ -1,6 +1,6 @@
 using System;
 
-namespace Civilization1Remaster
+namespace Civilization1Remaster.GameModel.State
 {
 	/// <summary>
 	/// 80x50 map visibility grid with safe coordinate wrapping and pole bounds clamping.

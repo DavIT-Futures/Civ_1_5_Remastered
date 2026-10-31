@@ -32,7 +32,7 @@ namespace Civilization1Remaster.Acoustics
 		/// Opens the MIDI output, initializes the driver and starts playing.
 		/// Returns null when there is no MIDI output (or when not running on Windows).
 		/// </summary>
-		public static MidiOutPlayer Launch(SoundDriverHost handler)
+		public static MidiOutPlayer? Launch(SoundDriverHost handler)
 		{
 			if (!OperatingSystem.IsWindows())
 				return null;

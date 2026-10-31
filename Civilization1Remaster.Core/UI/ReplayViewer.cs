@@ -1,9 +1,6 @@
 using System;
-using Civilization1Remaster.Emulation;
-using Civilization1Remaster.Engine;
-using Civilization1Remaster.Game.Rules;
 
-namespace Civilization1Remaster.UI
+namespace Civilization1Remaster.Core.UI
 {
 	public class ReplayViewer : GameComponent, IReplayViewer
 	{

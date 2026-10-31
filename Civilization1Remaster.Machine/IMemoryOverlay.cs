@@ -1,4 +1,4 @@
-namespace Civilization1Remaster.Emulation
+namespace Civilization1Remaster.Machine
 {
 	/// <summary>
 	/// A range of the emulated memory kept in C# by its owner (B6 of PLAN-PO-MIGRACJI.md): every access of the memory to the

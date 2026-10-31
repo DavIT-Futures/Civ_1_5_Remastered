@@ -1,6 +1,5 @@
-using Civilization1Remaster.Emulation;
 
-namespace Civilization1Remaster.UI
+namespace Civilization1Remaster.Core.UI
 {
 	/// <summary>The operations of CityNamingScreen that the other parts of the game use</summary>
 	public interface ICityNamingScreen

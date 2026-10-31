@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Civilization1Remaster.Game.State
+namespace Civilization1Remaster.GameModel.State
 {
 	public class Player
 	{

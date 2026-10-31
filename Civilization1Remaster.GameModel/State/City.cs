@@ -2,7 +2,7 @@
 using System.Drawing;
 using System.IO;
 
-namespace Civilization1Remaster.Game.State
+namespace Civilization1Remaster.GameModel.State
 {
 	public class City
 	{

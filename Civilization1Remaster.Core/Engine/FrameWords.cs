@@ -1,6 +1,5 @@
-using Civilization1Remaster.Emulation;
 
-namespace Civilization1Remaster.Engine
+namespace Civilization1Remaster.Core.Engine
 {
 	/// <summary>
 	/// The words of a stack frame of the original kept in C# (B3, 2026-10-26): the locals and the arrays of a function that

@@ -1,7 +1,5 @@
-using Civilization1Remaster.Emulation;
-using Civilization1Remaster.Game.State;
 
-namespace Civilization1Remaster.Game
+namespace Civilization1Remaster.Core.Game
 {
 	/// <summary>The end of a unit's move (fuel, triremes), the tiles and the unit panel</summary>
 	partial class TurnController

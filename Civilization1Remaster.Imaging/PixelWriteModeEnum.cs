@@ -1,4 +1,4 @@
-namespace Civilization1Remaster.Video
+namespace Civilization1Remaster.Imaging
 {
 	public enum PixelWriteModeEnum
 	{

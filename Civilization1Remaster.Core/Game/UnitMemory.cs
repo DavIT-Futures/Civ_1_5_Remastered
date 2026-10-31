@@ -1,7 +1,6 @@
 ﻿using System;
-using Civilization1Remaster.Emulation;
 
-namespace Civilization1Remaster.Game
+namespace Civilization1Remaster.Core.Game
 {
 	/// <summary>
 	/// The live units of all players: 128 records of 12 bytes for each of the 8 players at 0x81d4 of the data segment.
@@ -47,7 +46,7 @@ namespace Civilization1Remaster.Game
 
 		private readonly CPU processor;
 
-		private byte[] records;
+		private byte[]? records;
 
 		public UnitMemory(CPU processor)
 		{
@@ -55,7 +54,7 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>The records in C#, found once (null before the machine is prepared: then through the memory)</summary>
-		private byte[] Records => this.records ??= this.processor.Storage.OverlayAt(CPU.AsLinearAddress(this.processor.SegData.Value16, Origin));
+		private byte[]? Records => this.records ??= this.processor.Storage.OverlayAt(CPU.AsLinearAddress(this.processor.SegData.Value16, Origin));
 
 		/// <summary>The place of the unit in the table of units, from its start (Origin)</summary>
 		public static ushort Offset(int participantIdx, int troopIdx)
@@ -90,7 +89,7 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public byte PullAt(int recordOffset, int offset)
 		{
-			byte[] records = Records;
+			byte[]? records = Records;
 			ushort place = (ushort)(recordOffset + offset);
 
 			return records != null && place < records.Length ? records[place] :
@@ -100,7 +99,7 @@ namespace Civilization1Remaster.Game
 		/// <summary>Writes a byte of a unit through the place of its record computed before (see PullAt)</summary>
 		public void AssignAt(int recordOffset, int offset, byte amount)
 		{
-			byte[] records = Records;
+			byte[]? records = Records;
 			ushort place = (ushort)(recordOffset + offset);
 
 			if (records != null && place < records.Length)

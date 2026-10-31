@@ -1,6 +1,6 @@
 using System;
 
-namespace Civilization1Remaster.Emulation
+namespace Civilization1Remaster.Machine
 {
 	[Flags]
 	public enum CPUMemoryFlagsEnum

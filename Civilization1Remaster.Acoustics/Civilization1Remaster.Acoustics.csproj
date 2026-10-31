@@ -2,12 +2,6 @@
 
   <!-- Music and sound: the 8086 interpreter that runs the original sound drivers, the AdLib and PC speaker emulation,
        the MIDI translation and the players -->
-  <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <RootNamespace>Civilization1Remaster</RootNamespace>
-    <WarningsAsErrors>nullable</WarningsAsErrors>
-  </PropertyGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\Civilization1Remaster.Foundation\Civilization1Remaster.Foundation.csproj" />
   </ItemGroup>

@@ -1,4 +1,4 @@
-namespace Civilization1Remaster.Emulation
+namespace Civilization1Remaster.Machine
 {
 	/// <summary>
 	/// Test seam: sees what the game does with its stack segment. The translated functions read some of their locals before

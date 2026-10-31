@@ -1,6 +1,6 @@
 using System;
 
-namespace Civilization1Remaster.Game.State
+namespace Civilization1Remaster.GameModel.State
 {
 	[Flags]
 	public enum UnitStatusEnum

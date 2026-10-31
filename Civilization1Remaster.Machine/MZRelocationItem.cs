@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace Civilization1Remaster.Emulation
+namespace Civilization1Remaster.Machine
 {
 	public struct MZRelocationItem
 	{

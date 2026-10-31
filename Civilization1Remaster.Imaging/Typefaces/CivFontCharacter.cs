@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Xml.Serialization;
 
-namespace Civilization1Remaster.Video
+namespace Civilization1Remaster.Imaging.Typefaces
 {
 	[Serializable]
 	public class CivFontCharacter

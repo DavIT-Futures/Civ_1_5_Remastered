@@ -1,6 +1,5 @@
-using Civilization1Remaster.Emulation;
 
-namespace Civilization1Remaster.Engine
+namespace Civilization1Remaster.Core.Engine
 {
 	/// <summary>
 	/// The texts of the 5 codes of the text blocks ($US, $THEM, $BUCKS, $RPLC1, $RPLC2 at 0x3018 - 0x3030), which

@@ -1,4 +1,4 @@
-namespace Civilization1Remaster.Game.Rules
+namespace Civilization1Remaster.GameModel.Rules
 {
 	/// <summary>
 	/// Small rules of the end of a turn and of the start of a game that the translated code got wrong; each one with the

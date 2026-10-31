@@ -1,6 +1,6 @@
 using System;
 
-namespace Civilization1Remaster.Game.Rules
+namespace Civilization1Remaster.GameModel.Rules
 {
 	/// <summary>
 	/// Types of city disasters that can strike a city in Civilization 1.

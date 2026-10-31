@@ -1,9 +1,6 @@
 using System;
-using Civilization1Remaster.Emulation;
-using Civilization1Remaster.Game.Rules;
-using Civilization1Remaster.Game.State;
 
-namespace Civilization1Remaster.UI
+namespace Civilization1Remaster.Core.UI
 {
 	partial class WorldStatistics
 	{

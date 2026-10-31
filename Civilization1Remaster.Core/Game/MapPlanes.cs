@@ -1,7 +1,6 @@
 ﻿using System;
-using Civilization1Remaster.Emulation;
 
-namespace Civilization1Remaster.Game
+namespace Civilization1Remaster.Core.Game
 {
 	/// <summary>
 	/// The world map data of the original game, kept as a picture (screen 2, loaded from the .MAP file) where every area of

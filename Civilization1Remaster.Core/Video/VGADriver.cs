@@ -4,19 +4,16 @@ using System.Drawing;
 using System.IO;
 using System.Threading;
 using System.IO.Compression;
-using Civilization1Remaster.Emulation;
-using Civilization1Remaster.Video;
-using Civilization1Remaster.Containers;
 using System.Runtime.InteropServices;
-using Civilization1Remaster.Properties;
+using Civilization1Remaster.Core.Properties;
 
-namespace Civilization1Remaster.Video
+namespace Civilization1Remaster.Core.Video
 {
 	public class VGADriver
 	{
 		private readonly GameEngine owner;
 		private readonly CPU processor;
-		private readonly IGameHost primaryHost = null;
+		private readonly IGameHost primaryHost;
 		private readonly BDictionary<int, VGABitmap> displays = new BDictionary<int, VGABitmap>();
 		private readonly BDictionary<int, VGABitmap> pictures = new BDictionary<int, VGABitmap>();
 		private readonly Queue<int> tokens = new Queue<int>();
@@ -42,7 +39,7 @@ namespace Civilization1Remaster.Video
 
 			this.displays.Add(0, new VGABitmap()); // our Main screen
 
-			byte[] typefaces = (byte[])Resources.ResourceManager.GetObject("Fonts_xml");
+			byte[]? typefaces = (byte[]?)Resources.ResourceManager.GetObject("Fonts_xml");
 
 			if (typefaces == null)
 			{
@@ -469,7 +466,7 @@ namespace Civilization1Remaster.Video
 		public ushort LoadIcon(string docname)
 		{
 			byte[] scratchList;
-			VGABitmap picture = VGABitmap.ViaFile(this.processor.StandardFolder + docname.ToUpper(), out scratchList);
+			VGABitmap? picture = VGABitmap.ViaFile(this.processor.StandardFolder + docname.ToUpper(), out scratchList);
 
 			if (picture != null)
 			{

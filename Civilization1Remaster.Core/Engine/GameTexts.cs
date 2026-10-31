@@ -1,4 +1,4 @@
-namespace Civilization1Remaster.Engine
+namespace Civilization1Remaster.Core.Engine
 {
 	/// <summary>
 	/// The texts of the data segment of CIV.EXE that the code passes to the text calls (the topics of the text files with "*",

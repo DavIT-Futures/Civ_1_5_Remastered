@@ -4,13 +4,10 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 using System.Threading;
-using Civilization1Remaster;
-using Civilization1Remaster.Containers;
-using Civilization1Remaster.Emulation;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
 
-namespace Civilization1Remaster.Emulation
+namespace Civilization1Remaster.Machine
 {
 	public partial class CPU
 	{
@@ -186,7 +183,7 @@ namespace Civilization1Remaster.Emulation
 				if (this.disk == 0)
 				{
 					byte drive = 2;
-					string top = Path.GetPathRoot(Assembly.GetExecutingAssembly().Location);
+					string? top = Path.GetPathRoot(Assembly.GetExecutingAssembly().Location);
 
 					if (top != null && top.Length == 3 && top[1] == ':' && top[2] == Path.PathSeparator)
 					{

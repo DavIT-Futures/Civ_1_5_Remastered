@@ -1,4 +1,4 @@
-namespace Civilization1Remaster.Game.Rules
+namespace Civilization1Remaster.GameModel.Rules
 {
 	/// <summary>
 	/// The places of the parts of a spaceship (table 0x375a: column, row, kind of place, ended by 0xff): structures 0 - 2,

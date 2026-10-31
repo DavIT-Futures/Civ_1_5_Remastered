@@ -1,7 +1,6 @@
 using System;
-using Civilization1Remaster.Emulation;
 
-namespace Civilization1Remaster.Engine
+namespace Civilization1Remaster.Core.Engine
 {
 	/// <summary>
 	/// The message buffer of the game at 0xba06 of the data segment, where the texts of the messages, dialogs and menus are

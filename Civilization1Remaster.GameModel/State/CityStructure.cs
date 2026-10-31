@@ -1,4 +1,4 @@
-namespace Civilization1Remaster.Game.State
+namespace Civilization1Remaster.GameModel.State
 {
 	/// <summary>
 	/// The improvements of a city as bits of its structure words (City.StructureMarkers0 / 1): the improvement n of the

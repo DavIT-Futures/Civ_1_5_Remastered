@@ -1,6 +1,6 @@
 using System;
 
-namespace Civilization1Remaster.Game.Rules
+namespace Civilization1Remaster.GameModel.Rules
 {
 	/// <summary>
 	/// Pure C# domain rules for Civilization 1 scoring calculation.

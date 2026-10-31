@@ -1,6 +1,5 @@
-﻿using Civilization1Remaster.Emulation;
-
-namespace Civilization1Remaster.Video
+﻿
+namespace Civilization1Remaster.Core.Video
 {
 	public class CivRectangle
 	{

@@ -1,4 +1,4 @@
-namespace Civilization1Remaster.Emulation
+namespace Civilization1Remaster.Machine
 {
 	/// <summary>
 	/// Access to the variables of the translated DOS program. The program keeps its local variables on the stack, next to the

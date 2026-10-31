@@ -1,6 +1,5 @@
-using Civilization1Remaster.Emulation;
 
-namespace Civilization1Remaster.Engine
+namespace Civilization1Remaster.Core.Engine
 {
 	/// <summary>
 	/// The variables of the timer and sound driver at 0x40 - 0x6f of the data segment, kept in C# (B6.7, part 1): the timer

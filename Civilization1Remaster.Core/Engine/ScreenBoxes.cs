@@ -1,4 +1,4 @@
-namespace Civilization1Remaster.Engine
+namespace Civilization1Remaster.Core.Engine
 {
 	/// <summary>
 	/// The four boxes of the screens (B6.5): a display index, a rectangle, flags, hues and a typeface (CivRectangle), 0x12

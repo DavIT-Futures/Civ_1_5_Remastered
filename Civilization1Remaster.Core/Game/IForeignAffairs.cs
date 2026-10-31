@@ -1,8 +1,6 @@
-using Civilization1Remaster.Emulation;
 using System.Runtime.InteropServices;
-using Civilization1Remaster.Game.State;
 
-namespace Civilization1Remaster.Game
+namespace Civilization1Remaster.Core.Game
 {
 	/// <summary>The operations of ForeignAffairs that the other parts of the game use</summary>
 	public interface IForeignAffairs

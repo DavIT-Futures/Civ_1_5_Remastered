@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Civilization1Remaster
+namespace Civilization1Remaster.Core
 {
 	partial class GameEngine
 	{

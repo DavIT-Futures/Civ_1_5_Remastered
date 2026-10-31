@@ -1,4 +1,4 @@
-namespace Civilization1Remaster.Emulation
+namespace Civilization1Remaster.Machine
 {
 	/// <summary>
 	/// Every function of the translated DOS program opens a stack frame when it starts and closes it before it returns.

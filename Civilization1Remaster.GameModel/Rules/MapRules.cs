@@ -1,6 +1,6 @@
 using System;
 
-namespace Civilization1Remaster.Game.Rules
+namespace Civilization1Remaster.GameModel.Rules
 {
 	/// <summary>
 	/// Rules of the world map that don't need the map data: its size and where special resources and huts are.

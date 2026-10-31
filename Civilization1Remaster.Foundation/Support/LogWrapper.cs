@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 
-namespace Civilization1Remaster
+namespace Civilization1Remaster.Foundation.Support
 {
 	/// <summary>
 	/// Log of the called game functions, for debugging. Every line is written to the disk immediately, which makes
@@ -10,11 +10,11 @@ namespace Civilization1Remaster
 	/// </summary>
 	public class LogWrapper
 	{
-		private readonly StreamWriter journal;
+		private readonly StreamWriter? journal;
 		private readonly Stack<ushort> pile = new Stack<ushort>();
 
 		private int journalIndentTier = 0;
-		private IStackProbe probe = null;
+		private IStackProbe? probe;
 
 		public LogWrapper(string route)
 		{
@@ -29,18 +29,16 @@ namespace Civilization1Remaster
 		/// <summary>
 		/// Test seam: receives the text of every opened scope (the called game function), also when the log file is off
 		/// </summary>
-		public Action<string> ScopeListener { get; set; }
+		public Action<string>? ScopeListener { get; set; }
 
 		/// <summary>Test seam: called at the start of every scope, before ScopeListener (the fixed test clock counts them)</summary>
-		public Action ScopeOpened { get; set; }
+		public Action? ScopeOpened { get; set; }
 
-		public IStackProbe Probe
+		public IStackProbe? Probe
 		{
 			get { return this.probe; }
 			set { this.probe = value; }
 		}
-
-        public StreamWriter Journal => journal;
 
         public void OpenScope(string words)
 		{

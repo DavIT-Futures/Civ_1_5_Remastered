@@ -1,8 +1,6 @@
-using Civilization1Remaster.Emulation;
-using Civilization1Remaster.Game.State;
 using System.Collections.Generic;
 
-namespace Civilization1Remaster.Game
+namespace Civilization1Remaster.Core.Game
 {
 	/// <summary>The move of a unit: the target tile, zones of control, cities, fights, the cost of the move</summary>
 	partial class TurnController
@@ -247,7 +245,7 @@ namespace Civilization1Remaster.Game
 			if (this.turn.City == 0xffff)
 				return MoveStep.NoCity;
 
-			Game.State.City town = this.Owner.World.Towns[this.turn.City];
+			GameModel.State.City town = this.Owner.World.Towns[this.turn.City];
 
 			if (town.ParticipantIdx != participantIdx && this.turn.StartTerrain == MapRules.OceanTerrain)
 				return MoveStep.Done;
@@ -546,7 +544,7 @@ namespace Civilization1Remaster.Game
 
 			// The attacked city
 			this.turn.City = this.Owner.Helpers.FindCityAtPosition(horizLoc, vertLoc);
-			Game.State.City town = this.Owner.World.Towns[this.turn.City];
+			GameModel.State.City town = this.Owner.World.Towns[this.turn.City];
 
 			if (town.ParticipantIdx != person)
 				town.ConditionMarker |= 0x10;

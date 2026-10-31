@@ -1,6 +1,5 @@
-using Civilization1Remaster.Emulation;
 
-namespace Civilization1Remaster.UI
+namespace Civilization1Remaster.Core.UI
 {
 	/// <summary>
 	/// Translated from the original CIV.EXE overlay 13.

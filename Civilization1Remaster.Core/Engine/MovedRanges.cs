@@ -1,8 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using Civilization1Remaster.Game;
 
-namespace Civilization1Remaster.Engine
+namespace Civilization1Remaster.Core.Engine
 {
 	/// <summary>
 	/// The ranges of the data segment that live in C# (B6): the message buffer (B6.1), the units (B6.2), the tables of

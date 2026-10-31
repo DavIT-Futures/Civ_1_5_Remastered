@@ -1,6 +1,5 @@
-using Civilization1Remaster.Emulation;
 
-namespace Civilization1Remaster.Engine
+namespace Civilization1Remaster.Core.Engine
 {
 	partial class DialogPainter
 	{
@@ -11,10 +10,10 @@ namespace Civilization1Remaster.Engine
 		/// </summary>
 		private sealed class MenuText
 		{
-			private readonly GameEngine game;
+			private readonly GameEngine? game;
 			private readonly ushort address;
 			private readonly int bufferIndex;
-			private readonly byte[] own;
+			private readonly byte[]? own;
 
 			public MenuText(GameEngine game, ushort address)
 			{

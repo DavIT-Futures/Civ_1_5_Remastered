@@ -1,4 +1,4 @@
-namespace Civilization1Remaster.Game.Rules
+namespace Civilization1Remaster.GameModel.Rules
 {
 	/// <summary>
 	/// The home city of a unit (byte 0xb of the unit): the index of a city, or 0xff for a unit without a home city.

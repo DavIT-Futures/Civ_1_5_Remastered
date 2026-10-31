@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Civilization1Remaster.Squeeze
+namespace Civilization1Remaster.Foundation.Squeeze
 {
 	public class LZWWord : IEquatable<LZWWord>, IEquatable<List<byte>>,
 		IComparable<LZWWord>, IComparable<List<byte>>
@@ -93,7 +93,7 @@ namespace Civilization1Remaster.Squeeze
 			return !lhs.Equals(rhs);
 		}
 
-		public int CompareTo(LZWWord alternate)
+		public int CompareTo(LZWWord? alternate)
 		{
 			if (alternate is null)
 				return 1;
@@ -110,7 +110,7 @@ namespace Civilization1Remaster.Squeeze
 			return 0;
 		}
 
-		public int CompareTo(List<byte> alternate)
+		public int CompareTo(List<byte>? alternate)
 		{
 			if (alternate is null)
 				return 1;
@@ -127,17 +127,17 @@ namespace Civilization1Remaster.Squeeze
 			return 0;
 		}
 
-		public bool Equals(LZWWord alternate)
+		public bool Equals(LZWWord? alternate)
 		{
 			return this.CompareTo(alternate) == 0;
 		}
 
-		public bool Equals(List<byte> alternate)
+		public bool Equals(List<byte>? alternate)
 		{
 			return this.CompareTo(alternate) == 0;
 		}
 
-		public override bool Equals(object thing)
+		public override bool Equals(object? thing)
 		{
 			if (thing is null)
 			{

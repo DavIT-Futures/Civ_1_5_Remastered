@@ -1,4 +1,4 @@
-namespace Civilization1Remaster.Game.Rules
+namespace Civilization1Remaster.GameModel.Rules
 {
 	/// <summary>
 	/// Moving on railroads. A land unit pays nothing for a step along a road when the tile it leaves has a railroad.

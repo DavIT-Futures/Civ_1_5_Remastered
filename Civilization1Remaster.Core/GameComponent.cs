@@ -1,8 +1,5 @@
-using Civilization1Remaster.Emulation;
-using Civilization1Remaster.Video;
-using Civilization1Remaster.Game;
 
-namespace Civilization1Remaster
+namespace Civilization1Remaster.Core
 {
 	/// <summary>A part of the game (a segment of the original CIV.EXE): the game it belongs to and its processor</summary>
 	public abstract class GameComponent
@@ -13,7 +10,7 @@ namespace Civilization1Remaster
 		protected GameEngine Owner { get; }
 		protected CPU Processor { get; }
 
-		private UnitMemory unitTable;
+		private UnitMemory? unitTable;
 
 		protected GameComponent(GameEngine owner)
 		{

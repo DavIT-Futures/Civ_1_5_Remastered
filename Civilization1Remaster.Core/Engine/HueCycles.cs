@@ -1,6 +1,5 @@
-using Civilization1Remaster.Emulation;
 
-namespace Civilization1Remaster.Engine
+namespace Civilization1Remaster.Core.Engine
 {
 	/// <summary>
 	/// The colour cycles of the driver (B6.5) at 0x35cf:0000 - 0x0343, kept in C#: a word at 0 (0xffff), the addresses of

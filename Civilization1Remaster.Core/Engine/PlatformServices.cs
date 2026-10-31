@@ -1,9 +1,8 @@
 using System;
 using System.Drawing;
 using System.IO;
-using Civilization1Remaster.Emulation;
 
-namespace Civilization1Remaster.Engine
+namespace Civilization1Remaster.Core.Engine
 {
 	/// <summary>
 	/// Translated from the original CIV.EXE segment 0x1000.

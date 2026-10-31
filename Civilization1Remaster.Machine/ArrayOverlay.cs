@@ -1,4 +1,4 @@
-namespace Civilization1Remaster.Emulation
+namespace Civilization1Remaster.Machine
 {
 	/// <summary>A range kept in a byte array (the message buffer, the units, the tables of CIV.EXE)</summary>
 	public sealed class ArrayOverlay : IMemoryOverlay

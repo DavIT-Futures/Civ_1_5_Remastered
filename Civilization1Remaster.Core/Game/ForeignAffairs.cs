@@ -1,9 +1,7 @@
-using Civilization1Remaster.Emulation;
 using System.Runtime.InteropServices;
-using Civilization1Remaster.Game.State;
 using System.Collections.Generic;
 
-namespace Civilization1Remaster.Game
+namespace Civilization1Remaster.Core.Game
 {
 	/// <summary>
 	/// Translated from the original CIV.EXE segment 0x2517.

@@ -1,4 +1,4 @@
-namespace Civilization1Remaster.Engine
+namespace Civilization1Remaster.Core.Engine
 {
 	/// <summary>
 	/// The codes of the keys as the game reads them (ReadKey, ReadNavigationKey): a character in the low byte, or for a

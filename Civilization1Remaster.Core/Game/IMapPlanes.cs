@@ -1,7 +1,6 @@
 ﻿using System;
-using Civilization1Remaster.Emulation;
 
-namespace Civilization1Remaster.Game
+namespace Civilization1Remaster.Core.Game
 {
 	/// <summary>The operations of MapPlanes that the other parts of the game use</summary>
 	public interface IMapPlanes

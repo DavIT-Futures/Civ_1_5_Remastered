@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace Civilization1Remaster.Emulation
+namespace Civilization1Remaster.Machine
 {
 	public class MZExecutable
 	{
@@ -189,7 +189,7 @@ namespace Civilization1Remaster.Emulation
 			return scratchBytes;
 		}
 
-		public static string PullText(Stream flow)
+		public static string? PullText(Stream flow)
 		{
 			int spanInt = PullByte(flow);
 			byte[] scratchBytes = new byte[spanInt];

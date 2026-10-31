@@ -1,6 +1,6 @@
 ﻿using System.IO;
 
-namespace Civilization1Remaster.Emulation
+namespace Civilization1Remaster.Machine
 {
 	public class FileStreamItem
 	{

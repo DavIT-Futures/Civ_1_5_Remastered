@@ -1,7 +1,5 @@
-using Civilization1Remaster.Emulation;
-using Civilization1Remaster.Game;
 
-namespace Civilization1Remaster.UI
+namespace Civilization1Remaster.Core.UI
 {
 	public class RulerAudience : GameComponent, IRulerAudience
 	{
@@ -35,7 +33,7 @@ namespace Civilization1Remaster.UI
 		}
 
 		private ushort HostileValue => this.audienceHostile;
-		private Game.State.Player Person => this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx];
+		private GameModel.State.Player Person => this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx];
 
 		/// <inheritdoc/>
 		public void LaunchAudience(short participantIdx, int horizLoc, int vertLoc, ushort occasion)
@@ -614,7 +612,7 @@ namespace Civilization1Remaster.UI
 		/// <summary>The name of a technology (records of 0x16 bytes from 0x4da)</summary>
 		private static ushort TechnologyName(ushort scienceIdx) => TechnologyText(scienceIdx);
 
-		private Game.State.Player Leader(int participantIdx) => this.Owner.World.Participants[participantIdx];
+		private GameModel.State.Player Leader(int participantIdx) => this.Owner.World.Participants[participantIdx];
 
 		/// <summary>The relation of the computer player to the human player</summary>
 		private ushort Relation(short participantIdx) => Leader(participantIdx).Relations[this.Owner.World.PersonParticipantIdx];
@@ -644,7 +642,7 @@ namespace Civilization1Remaster.UI
 		/// </summary>
 		private void WeighContinents(short participantIdx)
 		{
-			Game.State.Player leader = Leader(participantIdx);
+			GameModel.State.Player leader = Leader(participantIdx);
 
 			for (int continentIdx = 1; continentIdx < 0xf; continentIdx++)
 			{
@@ -689,8 +687,8 @@ namespace Civilization1Remaster.UI
 		/// </summary>
 		private void WeighNuclearWeapons(short participantIdx)
 		{
-			Game.State.Player leader = Leader(participantIdx);
-			Game.State.Player person = Person;
+			GameModel.State.Player leader = Leader(participantIdx);
+			GameModel.State.Player person = Person;
 			short personIdx = this.Owner.World.PersonParticipantIdx;
 
 			bool threat = person.Standing == 7 && person.TownTally > 4 && leader.TownTally > 1 && person.LiveTroops[25] == 0 &&
@@ -779,7 +777,7 @@ namespace Civilization1Remaster.UI
 		/// </summary>
 		private void WeighEnemies(short participantIdx)
 		{
-			Game.State.Player leader = Leader(participantIdx);
+			GameModel.State.Player leader = Leader(participantIdx);
 			short personIdx = this.Owner.World.PersonParticipantIdx;
 
 			this.audienceWasHostile = HostileValue;

@@ -1,8 +1,7 @@
 using System;
 using System.IO;
-using Civilization1Remaster.Emulation;
 
-namespace Civilization1Remaster
+namespace Civilization1Remaster.Core
 {
 	public partial class GameEngine
 	{
@@ -478,7 +477,7 @@ namespace Civilization1Remaster
 			uint programBegin = CPU.AsLinearAddress(beginSection, 0);
 			uint programSpan = 0x3a0e0;
 
-			byte[] assets = (byte[])Properties.Resources.ResourceManager.GetObject("BinaryResources");
+			byte[]? assets = (byte[]?)Properties.Resources.ResourceManager.GetObject("BinaryResources");
 
 			if (assets == null)
 			{

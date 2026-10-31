@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 
-namespace Civilization1Remaster.Game.Rules
+namespace Civilization1Remaster.GameModel.Rules
 {
 	/// <summary>
 	/// Hit points that units lost in battles, and which units are elite.

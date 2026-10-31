@@ -1,8 +1,6 @@
 using System;
-using Civilization1Remaster.Emulation;
-using Civilization1Remaster.Acoustics;
 
-namespace Civilization1Remaster.Acoustics
+namespace Civilization1Remaster.Core.Acoustics
 {
 	public class AudioOutput : GameComponent, IAudioOutput
 	{
@@ -12,15 +10,15 @@ namespace Civilization1Remaster.Acoustics
 
 		private ushort stagingPlace = 0;
 		private bool handlerFetched = false;
-		private SoundDriverHost handler = null;
-		private IDisposable participant = null;
+		private SoundDriverHost? handler;
+		private IDisposable? participant;
 
 		public AudioOutput(GameEngine owner)
 			: base(owner)
 		{
 		}
 
-		private SoundDriverHost Handler
+		private SoundDriverHost? Handler
 		{
 			get
 			{
@@ -85,7 +83,7 @@ namespace Civilization1Remaster.Acoustics
 		/// <inheritdoc/>
 		public ushort ReadSongPosition()
 		{
-			SoundDriverHost handler = this.Handler;
+			SoundDriverHost? handler = this.Handler;
 			return handler != null ? handler.CurrentOffset() : stagingPlace;
 		}
 

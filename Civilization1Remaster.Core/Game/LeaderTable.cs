@@ -1,4 +1,4 @@
-namespace Civilization1Remaster.Game
+namespace Civilization1Remaster.Core.Game
 {
 	/// <summary>The leaders and their civilizations (records of 0x3a bytes) in the data segment</summary>
 	public static class LeaderTable

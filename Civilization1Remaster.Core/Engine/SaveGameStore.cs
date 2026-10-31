@@ -1,11 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Civilization1Remaster.Emulation;
-using Civilization1Remaster.Game;
-using Civilization1Remaster.UI;
 
-namespace Civilization1Remaster.Engine
+namespace Civilization1Remaster.Core.Engine
 {
 	public class SaveGameStore : GameComponent, ISaveGameStore
 	{
@@ -515,7 +512,7 @@ namespace Civilization1Remaster.Engine
 			{
 				// read map file
 				byte[] scratchAlt;
-				VGABitmap chart = VGABitmap.ViaFile(Path.Combine(this.Processor.StandardFolder, $"{docname}.MAP"), out scratchAlt);
+				VGABitmap? chart = VGABitmap.ViaFile(Path.Combine(this.Processor.StandardFolder, $"{docname}.MAP"), out scratchAlt);
 
 				if (chart == null)
 					throw new Exception($"Can't read Map file '{docname}.MAP'");

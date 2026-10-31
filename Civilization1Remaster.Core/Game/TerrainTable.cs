@@ -1,4 +1,4 @@
-namespace Civilization1Remaster.Game
+namespace Civilization1Remaster.Core.Game
 {
 	/// <summary>The terrain types (records of 0x13 bytes) in the data segment</summary>
 	public static class TerrainTable

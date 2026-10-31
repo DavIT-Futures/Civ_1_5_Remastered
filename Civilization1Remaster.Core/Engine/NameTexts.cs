@@ -1,6 +1,5 @@
-using Civilization1Remaster.Emulation;
 
-namespace Civilization1Remaster.Engine
+namespace Civilization1Remaster.Core.Engine
 {
 	/// <summary>
 	/// The names of the players at 0x0111 - 0x0266 of the data segment, which the pointer tables of CIV.EXE (0x1982 the

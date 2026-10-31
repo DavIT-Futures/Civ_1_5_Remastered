@@ -1,8 +1,7 @@
-using Civilization1Remaster.Emulation;
 using Microsoft.Win32;
 using System.Threading;
 
-namespace Civilization1Remaster.Engine
+namespace Civilization1Remaster.Core.Engine
 {
 	/// <summary>
 	/// Translated from the original CIV.EXE segment 0x1182. B6.1: the texts are C# strings; the versions with the address

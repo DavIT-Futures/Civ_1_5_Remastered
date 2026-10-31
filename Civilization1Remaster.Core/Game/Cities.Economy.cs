@@ -1,11 +1,7 @@
 
 using System;
-using Civilization1Remaster.Emulation;
-using Civilization1Remaster.Engine;
-using Civilization1Remaster.Game.Rules;
-using Civilization1Remaster.Game.State;
 
-namespace Civilization1Remaster.Game
+namespace Civilization1Remaster.Core.Game
 {
 	/// <summary>The trade, corruption, science and happiness of a city, the support of its units</summary>
 	partial class Cities

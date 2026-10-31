@@ -1,9 +1,6 @@
 using System;
-using Civilization1Remaster.Emulation;
-using Civilization1Remaster.Engine;
-using Civilization1Remaster.Game.Rules;
 
-namespace Civilization1Remaster.Game
+namespace Civilization1Remaster.Core.Game
 {
 	/// <summary>The operations of UnitRoster that the other parts of the game use</summary>
 	public interface IUnitRoster

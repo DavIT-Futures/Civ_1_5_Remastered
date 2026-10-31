@@ -1,8 +1,6 @@
-using Civilization1Remaster.Emulation;
 using System;
-using Civilization1Remaster.Game.State;
 
-namespace Civilization1Remaster.UI
+namespace Civilization1Remaster.Core.UI
 {
 	public class CityPanorama : GameComponent, ICityPanorama
 	{

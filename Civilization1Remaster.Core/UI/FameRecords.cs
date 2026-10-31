@@ -1,7 +1,6 @@
 using System;
-using Civilization1Remaster.Emulation;
 
-namespace Civilization1Remaster.UI
+namespace Civilization1Remaster.Core.UI
 {
 	public class FameRecords : GameComponent, IFameRecords
 	{

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace Civilization1Remaster.Emulation
+namespace Civilization1Remaster.Machine
 {
 	/// <summary>
 	/// Helpers for the file names that the DOS program passes to the emulated services.
@@ -32,9 +32,9 @@ namespace Civilization1Remaster.Emulation
 		/// Looks for a folder with the given name next to the executable and in every folder above it.
 		/// </summary>
 		/// <returns>The full path with a closing separator, or null when there is no such folder.</returns>
-		public static string LocateGameDirectory(string directoryLabel)
+		public static string? LocateGameDirectory(string directoryLabel)
 		{
-			DirectoryInfo folder = new DirectoryInfo(AppContext.BaseDirectory);
+			DirectoryInfo? folder = new DirectoryInfo(AppContext.BaseDirectory);
 
 			while (folder != null)
 			{

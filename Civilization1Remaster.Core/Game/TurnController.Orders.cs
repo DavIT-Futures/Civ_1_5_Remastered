@@ -1,7 +1,5 @@
-using Civilization1Remaster.Emulation;
-using Civilization1Remaster.Game.State;
 
-namespace Civilization1Remaster.Game
+namespace Civilization1Remaster.Core.Game
 {
 	/// <summary>The orders of a unit: from the human (keys, clicks) or the AI, and carrying them out</summary>
 	partial class TurnController

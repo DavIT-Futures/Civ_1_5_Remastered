@@ -1,10 +1,6 @@
 using System;
-using Civilization1Remaster.Emulation;
-using Civilization1Remaster.Game.Rules;
-using Civilization1Remaster.Game.State;
-using Civilization1Remaster.UI;
 
-namespace Civilization1Remaster.Game
+namespace Civilization1Remaster.Core.Game
 {
 	/// <summary>The AI guards, explorers, diplomats, nuclear weapons, aircraft and city defenders</summary>
 	partial class ComputerPlayer
@@ -98,7 +94,7 @@ namespace Civilization1Remaster.Game
 
 			this.look.GuardShare = (ushort)(this.Owner.UnitOps.CheckTileOccupation(participantIdx, horizLoc, vertLoc) != 0 ? 3 : 4);
 
-			Game.State.City town = this.Owner.World.Towns[this.look.NearestCity];
+			GameModel.State.City town = this.Owner.World.Towns[this.look.NearestCity];
 
 			if (town.Has(CityStructure.Palace))
 				this.look.GuardShare = this.Processor.DecrementWord(this.look.GuardShare);
@@ -239,14 +235,14 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private ushort AimNuclearWeapon(short participantIdx, short troopIdx)
 		{
-			Game.State.Player player = this.Owner.World.Participants[participantIdx];
+			GameModel.State.Player player = this.Owner.World.Participants[participantIdx];
 
 			this.look.BestScore = 0xffff;
 
 			for (this.look.Harbour = 0; (short)this.look.Harbour < 0x80;
 				this.look.Harbour = (ushort)(this.look.Harbour + 1))
 			{
-				Game.State.City town = this.Owner.World.Towns[this.look.Harbour];
+				GameModel.State.City town = this.Owner.World.Towns[this.look.Harbour];
 
 				// The score starts as the owner: a dead city or one with bit 0 of the second word is compared with that
 				this.look.Round = (ushort)town.ParticipantIdx;
@@ -265,7 +261,7 @@ namespace Civilization1Remaster.Game
 				return 0x20;
 
 			this.look.Harbour = this.look.NearestCity;
-			Game.State.City target = this.Owner.World.Towns[this.look.Harbour];
+			GameModel.State.City target = this.Owner.World.Towns[this.look.Harbour];
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHoriz, (byte)(sbyte)target.Place.X);
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelVert, (byte)(sbyte)target.Place.Y);
 
@@ -300,9 +296,9 @@ namespace Civilization1Remaster.Game
 		/// much stronger (3 * its strength below twice the owner's), the owner is warned (bit 8), or the owner has no nuclear
 		/// weapons and its strength is more than half the player's
 		/// </summary>
-		private bool IsNuclearTarget(short participantIdx, Game.State.City town)
+		private bool IsNuclearTarget(short participantIdx, GameModel.State.City town)
 		{
-			Game.State.Player player = this.Owner.World.Participants[participantIdx];
+			GameModel.State.Player player = this.Owner.World.Participants[participantIdx];
 			ushort owner = (ushort)town.ParticipantIdx;
 			short ownerMight = (short)(this.Owner.World.Participants[owner].MartialMight << 1);
 
@@ -323,9 +319,9 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>The score of a target: the tiles around it (+1 an enemy's, -2 own, -99 another player's) and half its size</summary>
-		private void ScoreNuclearTarget(short participantIdx, Game.State.City town)
+		private void ScoreNuclearTarget(short participantIdx, GameModel.State.City town)
 		{
-			Game.State.Player player = this.Owner.World.Participants[participantIdx];
+			GameModel.State.Player player = this.Owner.World.Participants[participantIdx];
 
 			this.look.Round = 0;
 
@@ -350,14 +346,14 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>An own city of the player within 16 tiles of the target (0x3e), searched with 0x22</summary>
-		private bool HasCityNear(short participantIdx, Game.State.City target)
+		private bool HasCityNear(short participantIdx, GameModel.State.City target)
 		{
 			this.look.CityNear = 0;
 
 			for (this.look.CityLoop = 0; (short)this.look.CityLoop < 0x80;
 				this.look.CityLoop = (ushort)(this.look.CityLoop + 1))
 			{
-				Game.State.City town = this.Owner.World.Towns[this.look.CityLoop];
+				GameModel.State.City town = this.Owner.World.Towns[this.look.CityLoop];
 
 				if (town.ConditionMarker == 0xff || town.ParticipantIdx != participantIdx)
 					continue;
@@ -455,7 +451,7 @@ namespace Civilization1Remaster.Game
 			for (this.look.Direction = 0; (short)this.look.Direction < 0x80;
 				this.look.Direction = (ushort)(this.look.Direction + 1))
 			{
-				Game.State.City town = this.Owner.World.Towns[this.look.Direction];
+				GameModel.State.City town = this.Owner.World.Towns[this.look.Direction];
 
 				if (town.ConditionMarker == 0xff || town.ParticipantIdx != participantIdx)
 					continue;
@@ -482,7 +478,7 @@ namespace Civilization1Remaster.Game
 			if (this.look.NearestCity == 0xffff)
 				return 0x20;
 
-			Game.State.City landing = this.Owner.World.Towns[this.look.NearestCity];
+			GameModel.State.City landing = this.Owner.World.Towns[this.look.NearestCity];
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHoriz, (byte)(sbyte)landing.Place.X);
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelVert, (byte)(sbyte)landing.Place.Y);
 

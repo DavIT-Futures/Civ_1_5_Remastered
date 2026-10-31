@@ -1,6 +1,6 @@
 using System;
 
-namespace Civilization1Remaster.Emulation
+namespace Civilization1Remaster.Machine
 {
 	/// <summary>
 	/// Short sequences of instructions that the translated program uses over and over, with names that say what they do.

@@ -4,7 +4,7 @@ using System.Drawing;
 using System.Net.Sockets;
 using System.Text;
 
-namespace Civilization1Remaster.Squeeze
+namespace Civilization1Remaster.Foundation.Squeeze
 {
 	public static class CRC32
 	{

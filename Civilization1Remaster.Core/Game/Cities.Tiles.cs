@@ -1,11 +1,7 @@
 
 using System;
-using Civilization1Remaster.Emulation;
-using Civilization1Remaster.Engine;
-using Civilization1Remaster.Game.Rules;
-using Civilization1Remaster.Game.State;
 
-namespace Civilization1Remaster.Game
+namespace Civilization1Remaster.Core.Game
 {
 	/// <summary>The tiles, wonders and citizens of the cities; the frames, labels and the small map of the city screen</summary>
 	partial class Cities

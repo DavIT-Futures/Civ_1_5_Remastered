@@ -1,4 +1,4 @@
-namespace Civilization1Remaster.Game.Rules
+namespace Civilization1Remaster.GameModel.Rules
 {
 	/// <summary>
 	/// Defense strength of a unit in a battle, with the bonuses of the original game.

@@ -1,9 +1,8 @@
-﻿using Civilization1Remaster.Containers;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace Civilization1Remaster.Squeeze
+namespace Civilization1Remaster.Foundation.Squeeze
 {
 	/// <summary>
 	/// Lempel–Ziv–Welch compression algorithm as implemented in old CIV

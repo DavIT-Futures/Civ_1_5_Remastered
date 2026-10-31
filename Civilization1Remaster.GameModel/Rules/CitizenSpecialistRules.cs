@@ -1,7 +1,7 @@
 using System;
 using System.Drawing;
 
-namespace Civilization1Remaster.Game.Rules
+namespace Civilization1Remaster.GameModel.Rules
 {
 	/// <summary>
 	/// Pure C# domain rules for city citizen specialization (Scientist, Taxman, Entertainer)

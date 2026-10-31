@@ -1,10 +1,6 @@
 using System;
-using Civilization1Remaster.Emulation;
-using Civilization1Remaster.Game.Rules;
-using Civilization1Remaster.Game.State;
-using Civilization1Remaster.UI;
 
-namespace Civilization1Remaster.Game
+namespace Civilization1Remaster.Core.Game
 {
 	/// <summary>The move of an AI unit: the scores of the tiles around it and the choice of the heading</summary>
 	partial class ComputerPlayer
@@ -66,7 +62,7 @@ namespace Civilization1Remaster.Game
 				if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.TravelHoriz) != 0xff)
 					return 0;
 
-				Game.State.City town = this.Owner.World.Towns[this.look.NearestCity];
+				GameModel.State.City town = this.Owner.World.Towns[this.look.NearestCity];
 
 				if (town.ParticipantIdx != participantIdx)
 				{
@@ -601,7 +597,7 @@ namespace Civilization1Remaster.Game
 
 				if (this.Owner.World.Participants[participantIdx].Landmasses[continent].TownTally > spotThreshold)
 				{
-					Game.State.City town = this.Owner.World.Towns[this.look.NearestCity];
+					GameModel.State.City town = this.Owner.World.Towns[this.look.NearestCity];
 
 					if (this.look.CityDistance == 0 && (sbyte)town.TrueExtent < 10)
 						return 0x62;

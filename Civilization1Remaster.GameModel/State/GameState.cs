@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Drawing;
 
-namespace Civilization1Remaster.Game.State
+namespace Civilization1Remaster.GameModel.State
 {
 	public class GameState
 	{

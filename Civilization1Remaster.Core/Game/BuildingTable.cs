@@ -1,4 +1,4 @@
-namespace Civilization1Remaster.Game
+namespace Civilization1Remaster.Core.Game
 {
 	/// <summary>
 	/// The buildings and wonders (records of 0x1e bytes) in the data segment. Record n + 1 is the building n of the

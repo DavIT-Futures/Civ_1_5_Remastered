@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Civilization1Remaster
+namespace Civilization1Remaster.Machine
 {
 	public class ApplicationExitException : Exception
 	{

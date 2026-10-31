@@ -1,8 +1,7 @@
 ﻿using System;
 using System.IO;
-using Civilization1Remaster.Emulation;
 
-namespace Civilization1Remaster.Engine
+namespace Civilization1Remaster.Core.Engine
 {
 	/// <summary>
 	/// Image loading functions - RLE and LZW compression was used

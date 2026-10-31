@@ -1,4 +1,4 @@
-namespace Civilization1Remaster.Game.Rules
+namespace Civilization1Remaster.GameModel.Rules
 {
 	/// <summary>
 	/// The news of a new technology: "Babylonians discover Mass Transit!" for the player's own research, "Babylonians

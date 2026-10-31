@@ -1,11 +1,7 @@
 using System;
 using System.Linq;
-using Civilization1Remaster.Emulation;
-using Civilization1Remaster.Game.Rules;
-using Civilization1Remaster.Game.State;
-using Civilization1Remaster.UI;
 
-namespace Civilization1Remaster.Game
+namespace Civilization1Remaster.Core.Game
 {
 	/// <summary>The strategic locations of the AI players, their city production and the tiles they may enter</summary>
 	partial class ComputerPlayer

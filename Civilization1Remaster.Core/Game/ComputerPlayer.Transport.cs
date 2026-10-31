@@ -1,10 +1,6 @@
 using System;
-using Civilization1Remaster.Emulation;
-using Civilization1Remaster.Game.Rules;
-using Civilization1Remaster.Game.State;
-using Civilization1Remaster.UI;
 
-namespace Civilization1Remaster.Game
+namespace Civilization1Remaster.Core.Game
 {
 	/// <summary>The AI transports and the staging cities</summary>
 	partial class ComputerPlayer
@@ -23,7 +19,7 @@ namespace Civilization1Remaster.Game
 			if (this.look.MayStay != 0 && this.look.Role != 5)
 				return;
 
-			Game.State.Player player = this.Owner.World.Participants[participantIdx];
+			GameModel.State.Player player = this.Owner.World.Participants[participantIdx];
 			ushort unit = UnitMemory.Offset(participantIdx, troopIdx);
 			byte roles = (byte)this.look.StackRoles;
 
@@ -36,7 +32,7 @@ namespace Civilization1Remaster.Game
 				for (this.look.Direction = (ushort)(this.Owner.World.RoundTally & 7); (short)this.look.Direction < 0x80;
 					this.look.Direction = (ushort)(this.look.Direction + 8))
 				{
-					Game.State.City town = this.Owner.World.Towns[this.look.Direction];
+					GameModel.State.City town = this.Owner.World.Towns[this.look.Direction];
 					this.look.Round = (ushort)town.ParticipantIdx;
 
 					if (town.ConditionMarker == 0xff || this.look.Round == (ushort)participantIdx ||
@@ -74,7 +70,7 @@ namespace Civilization1Remaster.Game
 				for (this.look.Direction = 0; (short)this.look.Direction < 0x80;
 					this.look.Direction = (ushort)(this.look.Direction + 1))
 				{
-					Game.State.City town = this.Owner.World.Towns[this.look.Direction];
+					GameModel.State.City town = this.Owner.World.Towns[this.look.Direction];
 					this.look.Round = (ushort)town.ParticipantIdx;
 
 					if (town.ConditionMarker == 0xff || this.look.Round != (ushort)participantIdx)
@@ -154,7 +150,7 @@ namespace Civilization1Remaster.Game
 			if (this.look.Role != 5)
 				return null;
 
-			Game.State.Player player = this.Owner.World.Participants[participantIdx];
+			GameModel.State.Player player = this.Owner.World.Participants[participantIdx];
 			short person = this.Owner.World.PersonParticipantIdx;
 			bool forgets = false;
 
@@ -271,14 +267,14 @@ namespace Civilization1Remaster.Game
 			if ((capacity <= (short)this.look.LandUnits && this.look.StackRoles != 1) || this.look.Role != 5)
 				return false;
 
-			Game.State.Player player = this.Owner.World.Participants[participantIdx];
+			GameModel.State.Player player = this.Owner.World.Participants[participantIdx];
 
 			this.look.BestDistance = 0x3e7;
 
 			for (this.look.Harbour = 0; (short)this.look.Harbour < 0x80;
 				this.look.Harbour = (ushort)(this.look.Harbour + 1))
 			{
-				Game.State.City town = this.Owner.World.Towns[this.look.Harbour];
+				GameModel.State.City town = this.Owner.World.Towns[this.look.Harbour];
 
 				if (town.ConditionMarker == 0xff || town.ParticipantIdx != participantIdx || (town.ConditionMarker & 2) == 0)
 					continue;

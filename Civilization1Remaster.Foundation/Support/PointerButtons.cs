@@ -1,7 +1,7 @@
 using System;
 using System.Drawing;
 
-namespace Civilization1Remaster
+namespace Civilization1Remaster.Foundation.Support
 {
 	[Flags]
 	public enum PointerButtons : ushort

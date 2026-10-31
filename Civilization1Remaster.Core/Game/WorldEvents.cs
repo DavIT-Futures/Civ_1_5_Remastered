@@ -1,12 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using Civilization1Remaster.Emulation;
-using Civilization1Remaster.Engine;
-using Civilization1Remaster.Game.State;
-using Civilization1Remaster.UI;
 
-namespace Civilization1Remaster.Game
+namespace Civilization1Remaster.Core.Game
 {
 	/// <summary>
 	/// Translated from the original CIV.EXE segment 0x1238.

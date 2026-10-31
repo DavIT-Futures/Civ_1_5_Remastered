@@ -1,4 +1,4 @@
-namespace Civilization1Remaster.Game.Rules
+namespace Civilization1Remaster.GameModel.Rules
 {
 	/// <summary>
 	/// The strength of an own stack a computer unit weighs when it scores a tile (AIPlayer.ScoreTile): a defender

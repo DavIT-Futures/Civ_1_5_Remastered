@@ -1,7 +1,6 @@
-using Civilization1Remaster.Emulation;
 using System.Collections.Generic;
 
-namespace Civilization1Remaster.UI
+namespace Civilization1Remaster.Core.UI
 {
 	/// <summary>
 	/// Translated from the original CIV.EXE segment 0x2c84.

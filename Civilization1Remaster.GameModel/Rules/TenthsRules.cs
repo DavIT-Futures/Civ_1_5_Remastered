@@ -1,4 +1,4 @@
-namespace Civilization1Remaster.Game.Rules
+namespace Civilization1Remaster.GameModel.Rules
 {
 	/// <summary>
 	/// A number in tenths written with one decimal, "4.5" for 45: the census (children of a family), the mass of a spaceship

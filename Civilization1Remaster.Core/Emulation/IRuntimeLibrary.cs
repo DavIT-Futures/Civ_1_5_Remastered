@@ -2,9 +2,8 @@
 using System.IO;
 using System.Text;
 using System.Threading;
-using Civilization1Remaster.Emulation;
 
-namespace Civilization1Remaster.Emulation
+namespace Civilization1Remaster.Core.Emulation
 {
 	/// <summary>The operations of RuntimeLibrary that the other parts of the game use</summary>
 	public interface IRuntimeLibrary

@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
-using Civilization1Remaster.Emulation;
 
-namespace Civilization1Remaster.Engine
+namespace Civilization1Remaster.Core.Engine
 {
 	/// <summary>
 	/// The global variables of the game named in GameComponent (B4) as C# fields (B6.4); GameComponent reads and writes them

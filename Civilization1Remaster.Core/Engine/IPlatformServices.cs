@@ -1,9 +1,8 @@
 using System;
 using System.Drawing;
 using System.IO;
-using Civilization1Remaster.Emulation;
 
-namespace Civilization1Remaster.Engine
+namespace Civilization1Remaster.Core.Engine
 {
 	/// <summary>The operations of PlatformServices that the other parts of the game use</summary>
 	public interface IPlatformServices

@@ -1,8 +1,6 @@
 using System;
-using Civilization1Remaster.Emulation;
-using Civilization1Remaster.Acoustics;
 
-namespace Civilization1Remaster.Acoustics
+namespace Civilization1Remaster.Core.Acoustics
 {
 	/// <summary>The operations of AudioOutput that the other parts of the game use</summary>
 	public interface IAudioOutput

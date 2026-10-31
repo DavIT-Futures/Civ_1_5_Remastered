@@ -1,8 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Drawing;
-using Civilization1Remaster.Emulation;
 
-namespace Civilization1Remaster
+namespace Civilization1Remaster.Core
 {
 	/// <summary>
 	/// The game engine is the host of the emulated processor.

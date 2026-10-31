@@ -1,4 +1,4 @@
-namespace Civilization1Remaster.Game.Rules
+namespace Civilization1Remaster.GameModel.Rules
 {
 	/// <summary>
 	/// The city of a wonder (GameState.MarvelTownIdx): the index of the city it stands in, -1 while nobody has built it and

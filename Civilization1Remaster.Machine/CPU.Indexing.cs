@@ -1,4 +1,4 @@
-namespace Civilization1Remaster.Emulation
+namespace Civilization1Remaster.Machine
 {
 	/// <summary>
 	/// The translated program reaches the element number "index" of a table, whose elements are "elementSize" bytes long,

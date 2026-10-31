@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
-using Civilization1Remaster.Emulation;
 
-namespace Civilization1Remaster.Engine
+namespace Civilization1Remaster.Core.Engine
 {
 	/// <summary>
 	/// A global word variable of the game kept in C# (B6.4): the code reads and writes Value, and the memory reaches it

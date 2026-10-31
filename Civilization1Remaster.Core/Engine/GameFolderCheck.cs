@@ -3,9 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using Civilization1Remaster.Emulation;
 
-namespace Civilization1Remaster
+namespace Civilization1Remaster.Core.Engine
 {
 	/// <summary>
 	/// Checks, before the window opens, that the files of the original DOS game are where the program looks for them,
@@ -55,7 +54,7 @@ namespace Civilization1Remaster
 		/// or what is missing and where to copy it.</returns>
 		public static bool Verify(out string message)
 		{
-			string folder = DosPaths.LocateGameDirectory(FolderLabel);
+			string? folder = DosPaths.LocateGameDirectory(FolderLabel);
 			List<string> candidates = new List<string>();
 
 			if (folder != null)
@@ -188,7 +187,7 @@ namespace Civilization1Remaster
 		/// </summary>
 		private static string ExpectedLocation()
 		{
-			DirectoryInfo folder = new DirectoryInfo(AppContext.BaseDirectory);
+			DirectoryInfo? folder = new DirectoryInfo(AppContext.BaseDirectory);
 
 			while (folder != null)
 			{

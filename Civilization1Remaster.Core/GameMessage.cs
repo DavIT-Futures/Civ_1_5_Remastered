@@ -1,4 +1,4 @@
-namespace Civilization1Remaster
+namespace Civilization1Remaster.Core
 {
 	/// <summary>
 	/// A text built in the message buffer at 0xba06 and shown in a dialog: the same calls as the original makes (CopyText,

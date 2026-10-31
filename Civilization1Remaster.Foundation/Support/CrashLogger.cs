@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 
-namespace Civilization1Remaster
+namespace Civilization1Remaster.Foundation.Support
 {
 	/// <summary>
 	/// Diagnostic and crash logger that always records critical failures to disk.

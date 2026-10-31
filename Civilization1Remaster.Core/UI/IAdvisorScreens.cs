@@ -1,7 +1,5 @@
-using Civilization1Remaster.Emulation;
-using Civilization1Remaster.Game.State;
 
-namespace Civilization1Remaster.UI
+namespace Civilization1Remaster.Core.UI
 {
 	/// <summary>The operations of AdvisorScreens that the other parts of the game use</summary>
 	public interface IAdvisorScreens

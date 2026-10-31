@@ -47,7 +47,7 @@ namespace Civilization1Remaster.Acoustics
 		// Chopping wood effect (new city): MIDI percussion ticks or synthesized samples mixed into the audio
 		private int impactBeat = -1;
 
-		private short[] impactSlices;
+		private short[]? impactSlices;
 		private int impactPlace = -1;
 
 		public SoundDriverHost(byte[] handlerDocument, int sliceRatio, string label)
@@ -88,7 +88,7 @@ namespace Civilization1Remaster.Acoustics
 		/// <summary>
 		/// Finds the first sound driver in the game folder, in the order of DriverFiles
 		/// </summary>
-		public static SoundDriverHost Construct(string sessionFolder, int sliceRatio)
+		public static SoundDriverHost? Construct(string sessionFolder, int sliceRatio)
 		{
 			foreach (SoundDriverHost handler in ConstructAll(sessionFolder, sliceRatio))
 				return handler;
@@ -104,7 +104,7 @@ namespace Civilization1Remaster.Acoustics
 		{
 			foreach (string document in DriverFileNames(Environment.GetEnvironmentVariable("CIVILIZATION1REMASTER_SOUND")))
 			{
-				string route = LocateFile(sessionFolder, document);
+				string? route = LocateFile(sessionFolder, document);
 
 				if (route != null)
 					yield return new SoundDriverHost(File.ReadAllBytes(route), sliceRatio, document);
@@ -115,7 +115,7 @@ namespace Civilization1Remaster.Acoustics
 		/// Sound drivers to try, best first: Roland MT-32 music (played by the General MIDI synthesizer of the computer),
 		/// AdLib, PC speaker. The CIVILIZATION1REMASTER_SOUND environment variable can choose one: "roland", "adlib", "speaker" or "none".
 		/// </summary>
-		public static string[] DriverFileNames(string option)
+		public static string[] DriverFileNames(string? option)
 		{
 			switch (option?.Trim().ToLowerInvariant())
 			{
@@ -259,7 +259,7 @@ namespace Civilization1Remaster.Acoustics
 			}
 		}
 
-		private static string LocateFile(string folder, string label)
+		private static string? LocateFile(string folder, string label)
 		{
 			if (string.IsNullOrEmpty(folder) || !Directory.Exists(folder))
 				folder = ".";

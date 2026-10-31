@@ -1,11 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Civilization1Remaster.Emulation;
-using Civilization1Remaster.Game;
-using Civilization1Remaster.UI;
 
-namespace Civilization1Remaster.Engine
+namespace Civilization1Remaster.Core.Engine
 {
 	/// <summary>The operations of SaveGameStore that the other parts of the game use</summary>
 	public interface ISaveGameStore

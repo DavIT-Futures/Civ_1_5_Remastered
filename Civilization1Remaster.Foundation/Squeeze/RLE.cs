@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace Civilization1Remaster.Squeeze
+namespace Civilization1Remaster.Foundation.Squeeze
 {
 	/// <summary>
 	/// Run-length compression algorithm as implemented in original CIV

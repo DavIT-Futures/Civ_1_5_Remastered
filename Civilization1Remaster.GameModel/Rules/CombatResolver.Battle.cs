@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Civilization1Remaster.Game.Rules
+namespace Civilization1Remaster.GameModel.Rules
 {
 	public static partial class CombatResolver
 	{

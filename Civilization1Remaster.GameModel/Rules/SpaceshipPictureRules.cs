@@ -1,4 +1,4 @@
-namespace Civilization1Remaster.Game.Rules
+namespace Civilization1Remaster.GameModel.Rules
 {
 	/// <summary>The pictures of the spaceship parts, cut out by the spaceship screen into the words 0x682a + 2 * part</summary>
 	public static class SpaceshipPictureRules
