@@ -4,9 +4,9 @@ namespace Civilization1Remaster.Game.State
 {
 	public class PlayerContinent
 	{
-		public short Approach = 0;
-		public short TownTally = 0;
-		public short Assault = 0;
-		public short Guard = 0;
+		public short Approach { get; set; } = 0;
+		public short TownTally { get; set; } = 0;
+		public short Assault { get; set; } = 0;
+		public short Guard { get; set; } = 0;
 	}
 }

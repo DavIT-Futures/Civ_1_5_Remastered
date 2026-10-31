@@ -151,8 +151,8 @@ namespace Civilization1Remaster.Tests.Differential.Reference
 			this.processor.RegAcc.Value16 = 0x1c;
 			this.processor.ScaleAccumulatorToSource(this.processor.PullLocalWord(0x8));
 			this.owner.World.Towns[this.processor.PullLocalWord(0x8)].ConditionMarker = 0;
-			this.owner.World.Towns[this.processor.PullLocalWord(0x8)].Place.X = horizLoc;
-			this.owner.World.Towns[this.processor.PullLocalWord(0x8)].Place.Y = vertLoc;
+			this.owner.World.Towns[this.processor.PullLocalWord(0x8)].Place = new Point(horizLoc, this.owner.World.Towns[this.processor.PullLocalWord(0x8)].Place.Y);
+			this.owner.World.Towns[this.processor.PullLocalWord(0x8)].Place = new Point(this.owner.World.Towns[this.processor.PullLocalWord(0x8)].Place.X, vertLoc);
 			this.owner.World.Towns[this.processor.PullLocalWord(0x8)].TrueExtent = (sbyte)townExtent;
 			this.processor.RegAcc.LowByte = 0;
 			this.owner.World.Towns[this.processor.PullLocalWord(0x8)].ShownExtent = 0;

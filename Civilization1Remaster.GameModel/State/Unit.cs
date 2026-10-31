@@ -6,16 +6,16 @@ namespace Civilization1Remaster.Game.State
 {
 	public class Unit
 	{
-		public short Condition = 0;
-		public Point Place = new Point(-1, -1);
-		public short KindIdx = 0;
-		public short LeftoverSteps = 0;
-		public short UnusualSteps = 0;
-		public Point TravelTowardPlace = new Point(-1, -1);
-		public short TravelTowardFollowingHeading = 0;
-		public ushort ShownViaParticipant = 0;
-		public short FollowingTroopIdx = 0;
-		public short BaseTownIdx = 0;
+		public short Condition { get; set; } = 0;
+		public Point Place { get; set; } = new Point(-1, -1);
+		public short KindIdx { get; set; } = 0;
+		public short LeftoverSteps { get; set; } = 0;
+		public short UnusualSteps { get; set; } = 0;
+		public Point TravelTowardPlace { get; set; } = new Point(-1, -1);
+		public short TravelTowardFollowingHeading { get; set; } = 0;
+		public ushort ShownViaParticipant { get; set; } = 0;
+		public short FollowingTroopIdx { get; set; } = 0;
+		public short BaseTownIdx { get; set; } = 0;
 
 		public void WipeStatus(short condition)
 		{
@@ -32,13 +32,13 @@ namespace Civilization1Remaster.Game.State
 			Unit troop = new Unit();
 
 			troop.Condition = StreamIo.PullUInt8(flow);
-			troop.Place.X = (sbyte)StreamIo.PullUInt8(flow);
-			troop.Place.Y = (sbyte)StreamIo.PullUInt8(flow);
+			troop.Place = new Point((sbyte)StreamIo.PullUInt8(flow), troop.Place.Y);
+			troop.Place = new Point(troop.Place.X, (sbyte)StreamIo.PullUInt8(flow));
 			troop.KindIdx = (sbyte)StreamIo.PullUInt8(flow);
 			troop.LeftoverSteps = (sbyte)StreamIo.PullUInt8(flow);
 			troop.UnusualSteps = (sbyte)StreamIo.PullUInt8(flow);
-			troop.TravelTowardPlace.X = (sbyte)StreamIo.PullUInt8(flow);
-			troop.TravelTowardPlace.Y = (sbyte)StreamIo.PullUInt8(flow);
+			troop.TravelTowardPlace = new Point((sbyte)StreamIo.PullUInt8(flow), troop.TravelTowardPlace.Y);
+			troop.TravelTowardPlace = new Point(troop.TravelTowardPlace.X, (sbyte)StreamIo.PullUInt8(flow));
 			troop.TravelTowardFollowingHeading = (sbyte)StreamIo.PullUInt8(flow);
 			troop.ShownViaParticipant = StreamIo.PullUInt8(flow);
 			troop.FollowingTroopIdx = (sbyte)StreamIo.PullUInt8(flow);

@@ -9,14 +9,14 @@ namespace Civilization1Remaster.Acoustics
 		[StructLayout(LayoutKind.Sequential)]
 		private struct WaveHeader
 		{
-			public IntPtr Content;
-			public uint StagingSpan;
-			public uint OctetsCaptured;
-			public IntPtr Person;
-			public uint FlagSet;
-			public uint Repeats;
-			public IntPtr Following;
-			public IntPtr Held;
+			public IntPtr Content { get; set; }
+			public uint StagingSpan { get; set; }
+			public uint OctetsCaptured { get; set; }
+			public IntPtr Person { get; set; }
+			public uint FlagSet { get; set; }
+			public uint Repeats { get; set; }
+			public IntPtr Following { get; set; }
+			public IntPtr Held { get; set; }
 		}
 	}
 }

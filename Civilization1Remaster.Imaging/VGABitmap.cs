@@ -19,7 +19,7 @@ namespace Civilization1Remaster.Video
 		protected bool Shown = true;
 
 		#region Default palette
-		public static Color[] StandardSwatch = new Color[] {
+		public static Color[] StandardSwatch { get; } = new Color[] {
 			Color.FromArgb(0x000000),
 			Color.FromArgb(0x00002a),
 			Color.FromArgb(0x002a00),
@@ -152,7 +152,7 @@ namespace Civilization1Remaster.Video
 		#endregion
 
 		#region Palette 1
-		public static Color[] Swatch1 = new Color[] {
+		public static Color[] Swatch1 { get; } = new Color[] {
 			Color.FromArgb(0x000000),
 			Color.FromArgb(0x0000a7),
 			Color.FromArgb(0x00a700),

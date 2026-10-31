@@ -65,7 +65,7 @@ namespace Civilization1Remaster.Engine
 		/// <summary>
 		/// Saved game chosen with Load Game in the GAME menu, 0xffff when none
 		/// </summary>
-		public ushort FetchBay = 0xffff;
+		public ushort FetchBay { get; set; } = 0xffff;
 
 		// The load list remembers which tab was open
 		private bool displayBackups = false;
@@ -942,7 +942,7 @@ namespace Civilization1Remaster.Engine
 				{
 					for (int jdx = 0; jdx < 16; jdx++)
 					{
-						this.owner.World.Participants[idx].TacticalSites[jdx].Place.X = (sbyte)PullUInt8(source);
+						this.owner.World.Participants[idx].TacticalSites[jdx].Place = new Point((sbyte)PullUInt8(source), this.owner.World.Participants[idx].TacticalSites[jdx].Place.Y);
 					}
 				}
 
@@ -950,7 +950,7 @@ namespace Civilization1Remaster.Engine
 				{
 					for (int jdx = 0; jdx < 16; jdx++)
 					{
-						this.owner.World.Participants[idx].TacticalSites[jdx].Place.Y = (sbyte)PullUInt8(source);
+						this.owner.World.Participants[idx].TacticalSites[jdx].Place = new Point(this.owner.World.Participants[idx].TacticalSites[jdx].Place.X, (sbyte)PullUInt8(source));
 					}
 				}
 

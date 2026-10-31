@@ -6,47 +6,47 @@ namespace Civilization1Remaster.Game.State
 	public class GameState
 	{
 		// Game common data
-		public short RoundTally = 0;
+		public short RoundTally { get; set; } = 0;
 
 		/// <summary>
 		/// Hit points lost in battles and elite units, saved in a separate file next to the saved game
 		/// </summary>
-		public UnitHealth Vitals = new UnitHealth();
-		public short Season = 0;
-		public ushort ChanceRoot = 0;
-		public short HardnessTier = 0;
-		public short PersonParticipantIdx = 0;
-		public short ParticipantMarkers = 0;
-		public short ParticipantIdentMarkers = 0;
-		public short LiveRealms = 0;
+		public UnitHealth Vitals { get; set; } = new UnitHealth();
+		public short Season { get; set; } = 0;
+		public ushort ChanceRoot { get; set; } = 0;
+		public short HardnessTier { get; set; } = 0;
+		public short PersonParticipantIdx { get; set; } = 0;
+		public short ParticipantMarkers { get; set; } = 0;
+		public short ParticipantIdentMarkers { get; set; } = 0;
+		public short LiveRealms { get; set; } = 0;
 
-		public short TruceRoundTally = 0;
-		public short BotRivalTally = 0;
-		public short FollowingCollectionRound = 80;
+		public short TruceRoundTally { get; set; } = 0;
+		public short BotRivalTally { get; set; } = 0;
+		public short FollowingCollectionRound { get; set; } = 80;
 
 		// Game settings
-		public short SessionPrefMarkers = 2;
-		public short DiagMarkers = 0;
+		public short SessionPrefMarkers { get; set; } = 2;
+		public short DiagMarkers { get; set; } = 0;
 
 		// Players
-		public Player[] Participants = new Player[8];
+		public Player[] Participants { get; set; } = new Player[8];
 
 		// Palace
-		public short CastleTier = 0;
-		public short[] CastleContent1 = new short[13];
-		public short[] CastleContent2 = new short[13];
+		public short CastleTier { get; set; } = 0;
+		public short[] CastleContent1 { get; set; } = new short[13];
+		public short[] CastleContent2 { get; set; } = new short[13];
 
 		// Continents
-		public short[] EachLandmassExtentWithEachSeaExtent = new short[128];
-		public Continent[] Landmasses = new Continent[16];
+		public short[] EachLandmassExtentWithEachSeaExtent { get; set; } = new short[128];
+		public Continent[] Landmasses { get; set; } = new Continent[16];
 
 		// Graphs
-		public byte[] TallyPlotContent = new byte[1200];
-		public byte[] TrucePlotContent = new byte[1200];
+		public byte[] TallyPlotContent { get; set; } = new byte[1200];
+		public byte[] TrucePlotContent { get; set; } = new byte[1200];
 
 		// Cities
-		public City[] Towns = new City[128];
-		public string[] TownLabels = new string[] {
+		public City[] Towns { get; set; } = new City[128];
+		public string[] TownLabels { get; set; } = new string[] {
 			"Rome        \0", "Caesarea    \0", "Carthage    \0", "Nicopolis   \0", "Byzantium   \0",
 			"Brundisium  \0", "Syracuse    \0", "Antioch     \0", "Palmyra     \0", "Cyrene      \0",
 			"Gordion     \0", "Tyrus       \0", "Jerusalem   \0", "Seleucia    \0", "Ravenna     \0",
@@ -99,17 +99,17 @@ namespace Civilization1Remaster.Game.State
 			"Bergen      \0", "Venice      \0", "Milan       \0", "Ghent       \0", "Pisa        \0",
 			"Cordoba     \0", "Seville     \0", "Dublin      \0", "Toronto     \0", "Melbourne   \0",
 			"Sydney      \0" };
-		public Point[] TownPlaces = new Point[256];
+		public Point[] TownPlaces { get; set; } = new Point[256];
 
 		// Wonders
-		public short[] MarvelTownIdx = new short[22];
+		public short[] MarvelTownIdx { get; set; } = new short[22];
 
 		// Technology
-		public short[] ScienceLeadingFoundVia = new short[72];
-		public short HighestScienceTally = 0;
+		public short[] ScienceLeadingFoundVia { get; set; } = new short[72];
+		public short HighestScienceTally { get; set; } = 0;
 
 		// Units
-		public UnitDefinition[] TroopSpecs = new UnitDefinition[]{
+		public UnitDefinition[] TroopSpecs { get; set; } = new UnitDefinition[]{
 			new UnitDefinition("Settlers", 127, 0, 1, 0, 0, 1, 4, 0, 0, 0, -1),
 			new UnitDefinition("Militia", 34, 0, 1, 0, 1, 1, 1, 0, 0, 2, -1),
 			new UnitDefinition("Phalanx", 34, 0, 1, 0, 1, 2, 2, 0, 0, 2, 17),
@@ -140,21 +140,21 @@ namespace Civilization1Remaster.Game.State
 			new UnitDefinition("Caravan", 127, 0, 1, 0, 0, 1, 5, 0, 0, 6, 24)};
 
 		// Map
-		public ChartSightGrid ChartSight = new ChartSightGrid();
-		public short DirtyCellTally = 0;
-		public short SmogImpactTier = 0;
-		public short WorldHeatingTally = 0;
+		public ChartSightGrid ChartSight { get; set; } = new ChartSightGrid();
+		public short DirtyCellTally { get; set; } = 0;
+		public short SmogImpactTier { get; set; } = 0;
+		public short WorldHeatingTally { get; set; } = 0;
 
 		// Replay data
-		public short RerunContentSpan = 0;
-		public byte[] RerunContent = new byte[4096];
+		public short RerunContentSpan { get; set; } = 0;
+		public byte[] RerunContent { get; set; } = new byte[4096];
 
 		// ?
-		public byte[] SoilRouting = new byte[260];
+		public byte[] SoilRouting { get; set; } = new byte[260];
 
 		// Spaceships
-		public short StarshipMarkers = 0;
-		public short BotStarshipVictoryRatio = 0;
+		public short StarshipMarkers { get; set; } = 0;
+		public short BotStarshipVictoryRatio { get; set; } = 0;
 
 		/// <summary>Whether a human plays the player: its bit in ParticipantMarkers (the players 0 - 7)</summary>
 		public bool IsHuman(int participantIdx) => (this.ParticipantMarkers & (1 << (participantIdx & 0xff))) != 0;

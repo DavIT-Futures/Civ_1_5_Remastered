@@ -12,7 +12,7 @@ namespace Civilization1Remaster.Engine
 		public const int Size = 0x12;
 
 		/// <summary>The addresses of the boxes in the data segment</summary>
-		public static readonly ushort[] Addresses = [0x98, 0x19c2, 0x19d6, 0x19ea];
+		public static ushort[] Addresses { get; } = [0x98, 0x19c2, 0x19d6, 0x19ea];
 
 		/// <summary>The bytes of each box, in the order of Addresses</summary>
 		public byte[][] Content { get; } = [new byte[Size], new byte[Size], new byte[Size], new byte[Size]];

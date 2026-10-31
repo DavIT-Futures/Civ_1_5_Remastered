@@ -28,9 +28,9 @@ namespace Civilization1Remaster.Acoustics
 		private ushort realDisplacement;
 		private int realSection;
 
-		public Func<ushort, byte> GatePull = gate => 0xff;
-		public Action<ushort, byte> GateEmit = (gate, amount) => { };
-		public Action<X86Interpreter, byte> Signal = (processor, numeral) => { };
+		public Func<ushort, byte> GatePull { get; set; } = gate => 0xff;
+		public Action<ushort, byte> GateEmit { get; set; } = (gate, amount) => { };
+		public Action<X86Interpreter, byte> Signal { get; set; } = (processor, numeral) => { };
 
 		public byte[] Storage => this.store;
 

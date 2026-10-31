@@ -182,8 +182,8 @@ namespace Civilization1Remaster.Game
 					{
 						AffixStrategicLocation(participantIdx, place);
 
-						sites[place].Place.X = (sbyte)horizLoc;
-						sites[place].Place.Y = (sbyte)vertLoc;
+						sites[place].Place = new Point((sbyte)horizLoc, sites[place].Place.Y);
+						sites[place].Place = new Point(sites[place].Place.X, (sbyte)vertLoc);
 						sites[place].Live = (sbyte)live;
 						sites[place].Strategy = (byte)strategy;
 						break;
@@ -208,8 +208,8 @@ namespace Civilization1Remaster.Game
 				if (sites[idx].Strategy == 0)
 					continue;
 
-				sites[idx + 1].Place.X = sites[idx].Place.X;
-				sites[idx + 1].Place.Y = sites[idx].Place.Y;
+				sites[idx + 1].Place = new Point(sites[idx].Place.X, sites[idx + 1].Place.Y);
+				sites[idx + 1].Place = new Point(sites[idx + 1].Place.X, sites[idx].Place.Y);
 				sites[idx + 1].Live = sites[idx].Live;
 				sites[idx + 1].Strategy = sites[idx].Strategy;
 			}

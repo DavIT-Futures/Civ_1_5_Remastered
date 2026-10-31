@@ -56,10 +56,11 @@ namespace Civilization1Remaster.Tests.GoldenMaster
 
 			ObjectWalker.Walk("state", engine.World, snapshot.Values);
 
-			foreach (FieldInfo field in typeof(GameEngine).GetFields(BindingFlags.Public | BindingFlags.Instance)
-				.Where(f => f.FieldType.IsPrimitive))
+			// The public fields of the engine and the fields behind its public auto-properties, by their names
+			foreach (FieldInfo field in typeof(GameEngine).GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+				.Where(f => f.FieldType.IsPrimitive && (f.IsPublic || IsPublicPropertyField(typeof(GameEngine), f))))
 			{
-				ObjectWalker.Walk($"engine.{field.Name}", field.GetValue(engine), snapshot.Values);
+				ObjectWalker.Walk($"engine.{ObjectWalker.MemberName(field)}", field.GetValue(engine), snapshot.Values);
 			}
 
 			CaptureDataSegment(engine, snapshot.Values);
@@ -181,8 +182,25 @@ namespace Civilization1Remaster.Tests.GoldenMaster
 		/// ("key[0..15]=1,0,2,..."), so the baselines stay small. A class with GetLength(int) and an [x, y] indexer
 		/// (ChartSightGrid) is written like a two dimensional array, so it matches the sbyte[,] it replaced.
 		/// </summary>
+		/// <summary>The field is the one behind a public auto-property of the type</summary>
+		private static bool IsPublicPropertyField(Type kind, FieldInfo field)
+		{
+			string name = ObjectWalker.MemberName(field);
+			return name != field.Name && kind.GetProperty(name, BindingFlags.Public | BindingFlags.Instance) != null;
+		}
+
 		private static class ObjectWalker
 		{
+			/// <summary>
+			/// The name of the field in the snapshot: the name of the property for the field behind an auto-property
+			/// ("&lt;Gold&gt;k__BackingField" is "Gold"), so a public field turned into a property keeps its key
+			/// </summary>
+			public static string MemberName(FieldInfo field)
+			{
+				string name = field.Name;
+				return name.StartsWith('<') && name.EndsWith(">k__BackingField", StringComparison.Ordinal) ? name[1..name.IndexOf('>')] : name;
+			}
+
 			private const int ChunkSpan = 16;
 
 			public static void Walk(string key, object? value, IDictionary<string, string> values)
@@ -250,9 +268,9 @@ namespace Civilization1Remaster.Tests.GoldenMaster
 				else if (kind.Namespace != null && kind.Namespace.StartsWith("Civilization1Remaster", StringComparison.Ordinal))
 				{
 					foreach (FieldInfo field in kind.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
-						.OrderBy(f => f.Name, StringComparer.Ordinal))
+						.OrderBy(MemberName, StringComparer.Ordinal))
 					{
-						Walk($"{key}.{field.Name}", field.GetValue(value), values);
+						Walk($"{key}.{MemberName(field)}", field.GetValue(value), values);
 					}
 				}
 				else

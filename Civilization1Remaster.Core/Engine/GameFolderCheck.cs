@@ -13,7 +13,7 @@ namespace Civilization1Remaster
 		public const string FolderLabel = "CIVILIZATION";
 
 		/// <summary>The pictures, palettes and texts the program cannot start without.</summary>
-		public static readonly string[] RequiredFiles = new string[] {
+		public static string[] RequiredFiles { get; } = new string[] {
 			"ADSCREEN.PIC", "ARCH.PIC", "BACK0A.PIC", "BACK0M.PIC", "BACK1A.PIC", "BACK1M.PIC",
 			"BACK2A.PIC", "BACK2M.PIC", "BACK3A.PIC", "BIRTH0.PIC", "BIRTH1.PIC", "BIRTH2.PIC",
 			"BIRTH3.PIC", "BIRTH4.PIC", "BIRTH5.PIC", "BIRTH6.PIC", "BIRTH7.PIC", "BIRTH8.PIC",

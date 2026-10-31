@@ -18,7 +18,7 @@ namespace Civilization1Remaster.Video
 		private readonly CPU processor;
 
 		private readonly IGameHost? primaryHost = null;
-		public object VideoLatch = new object();
+		public object VideoLatch { get; set; } = new object();
 		private readonly BDictionary<int, VGABitmap> displays = new BDictionary<int, VGABitmap>();
 		private int pictureFollowingIdx = 0xb000;
 		private readonly BDictionary<int, VGABitmap> pictures = new BDictionary<int, VGABitmap>();

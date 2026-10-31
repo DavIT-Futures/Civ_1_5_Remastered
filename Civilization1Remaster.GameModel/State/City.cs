@@ -6,23 +6,23 @@ namespace Civilization1Remaster.Game.State
 {
 	public class City
 	{
-		public ushort StructureMarkers0 = 0;
-		public ushort StructureMarkers1 = 0;
-		public Point Place = new Point(0, 0);
-		public byte ConditionMarker = 0;
-		public sbyte TrueExtent = 0;
-		public sbyte ShownExtent = 0;
-		public sbyte PresentMakingIdx = 0;
-		public sbyte RootCommerce = 0;
-		public short ParticipantIdx = 0;
-		public short GrainTally = 0;
-		public short MaterialsTally = 0;
-		public ushort LaborerMarkers0 = 0;
-		public ushort LaborerMarkers1 = 0;
-		public ushort LaborerMarkers2 = 0;
-		public byte LabelIdx = 0;
-		public sbyte[] CommerceTownIndices = new sbyte[3];
-		public sbyte[] Unfamiliar = new sbyte[2];
+		public ushort StructureMarkers0 { get; set; } = 0;
+		public ushort StructureMarkers1 { get; set; } = 0;
+		public Point Place { get; set; } = new Point(0, 0);
+		public byte ConditionMarker { get; set; } = 0;
+		public sbyte TrueExtent { get; set; } = 0;
+		public sbyte ShownExtent { get; set; } = 0;
+		public sbyte PresentMakingIdx { get; set; } = 0;
+		public sbyte RootCommerce { get; set; } = 0;
+		public short ParticipantIdx { get; set; } = 0;
+		public short GrainTally { get; set; } = 0;
+		public short MaterialsTally { get; set; } = 0;
+		public ushort LaborerMarkers0 { get; set; } = 0;
+		public ushort LaborerMarkers1 { get; set; } = 0;
+		public ushort LaborerMarkers2 { get; set; } = 0;
+		public byte LabelIdx { get; set; } = 0;
+		public sbyte[] CommerceTownIndices { get; set; } = new sbyte[3];
+		public sbyte[] Unfamiliar { get; set; } = new sbyte[2];
 
 		/// <summary>Both structure words as one 32-bit mask (bit n: CityStructure n)</summary>
 		public uint Structures
@@ -71,8 +71,8 @@ namespace Civilization1Remaster.Game.State
 
 			town.StructureMarkers0 = StreamIo.PullUInt16(flow);
 			town.StructureMarkers1 = StreamIo.PullUInt16(flow);
-			town.Place.X = StreamIo.PullUInt8(flow);
-			town.Place.Y = StreamIo.PullUInt8(flow);
+			town.Place = new Point(StreamIo.PullUInt8(flow), town.Place.Y);
+			town.Place = new Point(town.Place.X, StreamIo.PullUInt8(flow));
 			town.ConditionMarker = StreamIo.PullUInt8(flow);
 			town.TrueExtent = (sbyte)StreamIo.PullUInt8(flow);
 			town.ShownExtent = (sbyte)StreamIo.PullUInt8(flow);

@@ -6,17 +6,17 @@ namespace Civilization1Remaster.Game.State
 	{
 		// Total size: 34 bytes
 		public string Label; // (12 bytes)
-		public short AbortScience;
-		public short LandGroup;
-		public short ShiftTally;
-		public short RoundsAway;
-		public short AssaultPower;
-		public short GuardPower;
-		public short Price;
-		public short VisionSpan;
-		public short FerryRoom;
-		public short TroopGroup;
-		public short ScienceNeeded;
+		public short AbortScience { get; set; }
+		public short LandGroup { get; set; }
+		public short ShiftTally { get; set; }
+		public short RoundsAway { get; set; }
+		public short AssaultPower { get; set; }
+		public short GuardPower { get; set; }
+		public short Price { get; set; }
+		public short VisionSpan { get; set; }
+		public short FerryRoom { get; set; }
+		public short TroopGroup { get; set; }
+		public short ScienceNeeded { get; set; }
 
 		public UnitDefinition(string label, short abortScience, short landGroup,
 			short shiftTally, short roundsAway, short assaultPower, short guardPower,

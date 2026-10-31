@@ -7,8 +7,8 @@ namespace Civilization1Remaster.Game.State
 {
 	public class Continent
 	{
-		public short ConstructionSpotTally = 0;
-		public short Extent = 0;
-		public short SeaExtent = 0;
+		public short ConstructionSpotTally { get; set; } = 0;
+		public short Extent { get; set; } = 0;
+		public short SeaExtent { get; set; } = 0;
 	}
 }

@@ -128,8 +128,8 @@ namespace Civilization1Remaster.Game
 			}
 
 			town.ConditionMarker = 0;
-			town.Place.X = horizLoc;
-			town.Place.Y = vertLoc;
+			town.Place = new Point(horizLoc, town.Place.Y);
+			town.Place = new Point(town.Place.X, vertLoc);
 			town.TrueExtent = (sbyte)townExtent;
 			town.ShownExtent = 0;
 			town.LaborerMarkers0 = 0;

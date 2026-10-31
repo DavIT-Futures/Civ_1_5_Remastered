@@ -21,12 +21,12 @@ namespace Civilization1Remaster.Engine
 		/// When set, Tab, Left and Right close the menu (ShowMenu) like Escape and set MenuTabKeyPressed,
 		/// so a menu with tabs can switch between them
 		/// </summary>
-		public bool ChoicesIndentTokens = false;
+		public bool ChoicesIndentTokens { get; set; } = false;
 
 		/// <summary>
 		/// Set when the last menu was closed with Tab, Left or Right (see MenuTabKeys)
 		/// </summary>
-		public bool ChoicesIndentTokenDown = false;
+		public bool ChoicesIndentTokenDown { get; set; } = false;
 
 		/// <summary>
 		/// Displays a menu or dialog box from the text at charsAddr at (horizLoc, vertLoc), handles keyboard and mouse navigation,

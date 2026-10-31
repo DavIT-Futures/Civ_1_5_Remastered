@@ -24,7 +24,7 @@ namespace Civilization1Remaster.Game.Rules
 		/// Standard 21 tile offsets around a city center in Civilization 1 (TownDeltas).
 		/// Indices 0..19 are the 20 surrounding fat cross tiles, and Index 20 is the city center (0,0).
 		/// </summary>
-		public static readonly Point[] CityRadiusOffsets = new Point[21]
+		public static Point[] CityRadiusOffsets { get; } = new Point[21]
 		{
 			new Point(0, -1),
 			new Point(1, 0),
