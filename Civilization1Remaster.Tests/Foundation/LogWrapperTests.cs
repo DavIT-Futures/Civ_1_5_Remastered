@@ -115,41 +115,6 @@ namespace Civilization1Remaster.Tests.Foundation
 			Assert.False(journal.NeedsText);
 		}
 
-		[Fact]
-		public void ListenerGetsTheTextAlsoWhenTheJournalIsOff()
-		{
-			LogWrapper journal = new LogWrapper((TextWriter?)null);
-			List<string> heard = new List<string>();
-			int opened = 0;
-			journal.ScopeListener = heard.Add;
-			journal.ScopeOpened = () => opened++;
-			int place = 7;
-
-			using (journal.Scope($"Go({place})"))
-			{
-				using (journal.Scope("Stop()"))
-				{
-				}
-			}
-
-			Assert.Equal(new[] { "Go(7)", "Stop()" }, heard);
-			Assert.Equal(2, opened);
-		}
-
-		[Fact]
-		public void OpenedCallbackRunsAlsoWithoutListenerOrJournal()
-		{
-			LogWrapper journal = new LogWrapper((TextWriter?)null);
-			int opened = 0;
-			journal.ScopeOpened = () => opened++;
-
-			using (journal.Scope($"Tick({opened})"))
-			{
-			}
-
-			Assert.Equal(1, opened);
-		}
-
 		[Theory]
 		[InlineData("Name(1, 2)", "Name")]
 		[InlineData("Name()", "Name")]

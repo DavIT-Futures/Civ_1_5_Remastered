@@ -8,8 +8,7 @@ namespace Civilization1Remaster.Core.Engine
 	/// 0x300 bytes (0xba06 - 0xbd05, 0xbd06 is the next variable) live in a C# array (Attach): the code that still gets the
 	/// address (dialogs, menus, painters, files) reads and writes the array through the memory (CPUMemory.AttachOverlay).
 	/// B6.1 part 3: the texts are built on the array (strcpy / strcat / strlen in C#, with the same bytes and AX as the C
-	/// runtime; a text that would run past the buffer still goes through the C runtime and the memory after it); the
-	/// snapshots of the tests write the array back at its address (MovedData).
+	/// runtime; a text that would run past the buffer still goes through the C runtime and the memory after it).
 	/// </summary>
 	public sealed class TextBuffer
 	{
@@ -21,7 +20,7 @@ namespace Civilization1Remaster.Core.Engine
 
 		/// <summary>
 		/// The address logged for a text the original kept under SP or in a stack frame and the remaster keeps in a C# string:
-		/// the bottom of the stack (the comparisons of the tests take every stack address for one)
+		/// the bottom of the stack
 		/// </summary>
 		public const ushort StackTextAddress = 0xe8c0;
 

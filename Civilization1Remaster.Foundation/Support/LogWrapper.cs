@@ -32,24 +32,14 @@ namespace Civilization1Remaster.Foundation.Support
 
 		public static bool On { get; } = Environment.GetEnvironmentVariable("CIVILIZATION1REMASTER_LOG")?.Trim() == "1";
 
-		/// <summary>
-		/// Test seam: receives the text of every opened scope (the called game function), also when the log file is off
-		/// </summary>
-		public Action<string>? ScopeListener { get; set; }
-
-		/// <summary>Test seam: called at the start of every scope, before ScopeListener (the fixed test clock counts them)</summary>
-		public Action? ScopeOpened { get; set; }
-
 		public IStackProbe? Probe
 		{
 			get { return this.probe; }
 			set { this.probe = value; }
 		}
 
-		/// <summary>
-		/// True when somebody reads the text of a scope (the log file or the ScopeListener)
-		/// </summary>
-		public bool NeedsText => this.journal != null || this.ScopeListener != null;
+		/// <summary>True when the log is written (only then the texts of the scopes are formatted)</summary>
+		public bool NeedsText => this.journal != null;
 
 		/// <summary>
 		/// Opens a scope (a block of the log) that is closed when the result is disposed:
@@ -64,7 +54,7 @@ namespace Civilization1Remaster.Foundation.Support
 		}
 
 		/// <summary>
-		/// Like <see cref="Scope(string)"/>, but the interpolated text is only formatted when somebody reads it
+		/// Like <see cref="Scope(string)"/>, but the interpolated text is only formatted when the log is written
 		/// </summary>
 		public JournalScope Scope([InterpolatedStringHandlerArgument("")] ref ScopeText words)
 		{
@@ -73,9 +63,6 @@ namespace Civilization1Remaster.Foundation.Support
 
 		private void OpenScope(string words)
 		{
-			this.ScopeOpened?.Invoke();
-			this.ScopeListener?.Invoke(words);
-
 			if (this.journal != null)
 			{
 				if (this.pile.Count != this.journalIndentTier)

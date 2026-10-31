@@ -4,7 +4,7 @@ namespace Civilization1Remaster.Core.Engine
 	/// The four boxes of the screens (B6.5): a display index, a rectangle, flags, hues and a typeface (CivRectangle), 0x12
 	/// bytes each, every one followed in the data segment by the word pointing at it (0xaa the drawing box, 0x19d4 the back
 	/// screen, 0x19e8 the picture screen, 0x19fc the sprites). Kept in C# arrays: the drivers and CivRectangle reach them
-	/// through the memory (CPUMemory.AttachOverlay), the snapshots of the tests write them back (MovedData).
+	/// through the memory (CPUMemory.AttachOverlay).
 	/// </summary>
 	public sealed class ScreenBoxes
 	{

@@ -5,8 +5,7 @@ namespace Civilization1Remaster.Core.Engine
 	/// The texts of the 5 codes of the text blocks ($US, $THEM, $BUCKS, $RPLC1, $RPLC2 at 0x3018 - 0x3030), which
 	/// TextBlockPainter.ReflowText puts in place of the codes: 5 buffers of 0x16 bytes at 0x3037 - 0x30a4 of the data
 	/// segment (their addresses at 0x30b8 - 0x30c0, CodeText1 - 5). B6.1: the block lives in a C# array (Attach), the code
-	/// that still gets an address reads it through the memory (CPUMemory.AttachOverlay); the snapshots of the tests write
-	/// it back at its address (MovedData). A text longer than its buffer runs into the next one (and past the block into
+	/// that still gets an address reads it through the memory (CPUMemory.AttachOverlay). A text longer than its buffer runs into the next one (and past the block into
 	/// the memory), like strcpy in the original.
 	/// </summary>
 	public sealed class CodeTexts

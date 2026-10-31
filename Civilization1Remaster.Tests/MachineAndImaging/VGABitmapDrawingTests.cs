@@ -1,6 +1,4 @@
 using System.Drawing;
-using System.IO.Compression;
-using Civilization1Remaster.Core.Properties;
 using Civilization1Remaster.Foundation.Squeeze;
 using Civilization1Remaster.Imaging;
 using Civilization1Remaster.Imaging.Typefaces;
@@ -19,9 +17,7 @@ namespace Civilization1Remaster.Tests.MachineAndImaging
 
 		private static Dictionary<int, CivFont> LoadFonts()
 		{
-			byte[] packed = (byte[])Resources.ResourceManager.GetObject("Fonts_xml")!;
-			using GZipStream source = new GZipStream(new MemoryStream(packed), CompressionMode.Decompress);
-			return CivFonts.Unpack(source);
+			return CivFonts.Unpack(GameFiles.FontsXml());
 		}
 
 		private static byte[] Pixels(VGABitmap picture)

@@ -1,28 +1,15 @@
-using System.IO.Compression;
 using System.Xml.Linq;
-using Civilization1Remaster.Core.Properties;
 using Civilization1Remaster.Imaging.Typefaces;
 
 namespace Civilization1Remaster.Tests.MachineAndImaging
 {
 	public class CivFontsTests
 	{
-		private static MemoryStream FontsXml()
-		{
-			byte[] packed = (byte[])Resources.ResourceManager.GetObject("Fonts_xml")!;
-			MemoryStream content = new MemoryStream();
-			using (GZipStream source = new GZipStream(new MemoryStream(packed), CompressionMode.Decompress))
-				source.CopyTo(content);
-
-			content.Position = 0;
-			return content;
-		}
-
 		[Fact]
 		public void BuiltInFontsMatchTheXmlResource()
 		{
-			Dictionary<int, CivFont> fonts = CivFonts.Unpack(FontsXml());
-			XElement root = XDocument.Load(FontsXml()).Root!;
+			Dictionary<int, CivFont> fonts = CivFonts.Unpack(GameFiles.FontsXml());
+			XElement root = XDocument.Load(GameFiles.FontsXml()).Root!;
 			XElement[] entries = root.Elements("BKeyValuePairOfInt32CivFont").ToArray();
 
 			Assert.Equal(9, entries.Length);
@@ -55,7 +42,7 @@ namespace Civilization1Remaster.Tests.MachineAndImaging
 		[Fact]
 		public void EveryFontHasTheQuestionMarkFallback()
 		{
-			foreach (CivFont font in CivFonts.Unpack(FontsXml()).Values)
+			foreach (CivFont font in CivFonts.Unpack(GameFiles.FontsXml()).Values)
 				Assert.True(font.Letters.ContainsKey('?'));
 		}
 	}

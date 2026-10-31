@@ -50,7 +50,6 @@ namespace Civilization1Remaster.Machine
 			this.Processor.PumpMessages();
 
 			if (this.host.InputTokens.Count == 0)
-				this.Processor.InputStarved?.Invoke(false);
 
 			this.Processor.RegAcc.Value16 = (ushort)((this.host.InputTokens.Count > 0) ? 0xffff : 0);
 
@@ -61,7 +60,6 @@ namespace Civilization1Remaster.Machine
 		{
 			while (this.host.InputTokens.Count == 0)
 			{
-				this.Processor.InputStarved?.Invoke(true);
 				if (this.host.InputTokens.Count > 0)
 					break;
 

@@ -26,14 +26,12 @@ namespace Civilization1Remaster.Machine
 		{
 			EnterFrame();
 			this.regStack.Value16 = SubtractWord(this.regStack.Value16, localsSize);
-			this.StackWatcher?.OpenFrame(this.regFrame.Value16, localsSize);
 
 			if (localsSize != 0)
 			{
 				for (int place = 0; place < localsSize; place++)
 					this.storage.EmitUInt8(this.segStack.Value16, (ushort)(this.regStack.Value16 + place), 0);
 
-				this.StackWatcher?.Write(this.regStack.Value16, localsSize);
 			}
 		}
 
@@ -42,7 +40,6 @@ namespace Civilization1Remaster.Machine
 		/// </summary>
 		public void LeaveFrame()
 		{
-			this.StackWatcher?.CloseFrame(this.regFrame.Value16);
 			this.regStack.Value16 = this.regFrame.Value16;
 			this.regFrame.Value16 = UnstackWord();
 		}

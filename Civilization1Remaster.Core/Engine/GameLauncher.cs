@@ -432,7 +432,7 @@ namespace Civilization1Remaster.Core.Engine
 
 		/// <summary>
 		/// Waits until the title music is at the start (up to 0x1495) or at a measure (0x120 after it); the position is kept
-		/// in the frame, like the original (a memory access every round, so the timer of the tests goes on)
+		/// in the frame, like the original (a memory access every round)
 		/// </summary>
 		private void WaitForTitleSongMeasure()
 		{

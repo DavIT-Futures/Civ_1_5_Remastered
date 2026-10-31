@@ -111,7 +111,7 @@ namespace Civilization1Remaster.Core.Engine
 					}
 					else
 					{
-						// The new tempo (0x46) is read again when it is taken: the accesses to memory are counted by the timer of the tests
+						// The new tempo (0x46) is read again when it is taken
 						if (this.Processor.PullGlobalWord(TimerTargetBeatsAddress) != this.Processor.PullGlobalWord(TimerBeatsAddress))
 						{
 							this.Processor.EmitGlobalWord(TimerBeatsAddress, this.Processor.PullGlobalWord(TimerTargetBeatsAddress));
@@ -753,9 +753,6 @@ namespace Civilization1Remaster.Core.Engine
 		/// <inheritdoc/>
 		public ushort ReadSongPosition()
 		{
-			// Test seam: the fixed test clock counts the polls of the music (nothing in the game)
-			this.Processor.PollMusic();
-
 			this.Processor.RegAcc.Value16 = this.Owner.Audio.ReadSongPosition();
 
 			return this.Processor.RegAcc.Value16;

@@ -5,9 +5,8 @@ namespace Civilization1Remaster.Core.Engine
 	/// The names of the players at 0x0111 - 0x0266 of the data segment, which the pointer tables of CIV.EXE (0x1982 the
 	/// civilizations, 0x1992 their plurals, 0x19a2 the leaders, 0x19b2 the titles of the governments) point into; the game
 	/// changes them (a new game, a civil war, the titles of a woman) and they go with the saved games. B6.1: the block lives
-	/// in a C# array (Attach), the code that still gets an address reads it through the memory (CPUMemory.AttachOverlay);
-	/// the snapshots of the tests write it back at its address (MovedData). A name longer than its place runs into the next
-	/// one (and past the block into the memory), like strcpy in the original.
+	/// in a C# array (Attach), the code that still gets an address reads it through the memory (CPUMemory.AttachOverlay).
+	/// A name longer than its place runs into the next one (and past the block into the memory), like strcpy in the original.
 	/// </summary>
 	public sealed class NameTexts
 	{
