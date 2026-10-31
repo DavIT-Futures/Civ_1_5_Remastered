@@ -721,3 +721,9 @@ Stan po tym etapie: **14 / 808 niezaliczonych** (HandlePlayerTurn naprawione prz
 `SwapTechnology`, `StoreGame`, `ConstructCivilization`, `ImportTextFromFile`, `ManageBarbarianUnit`, `BlendTerrainTile`)
 – sprawdzić, czy wołający używają wyniku. Lekcja: po każdym kroku **pełny zestaw**, nie tylko golden master; „martwe”
 wywołania funkcji gry nie są martwe (ślad, globalne); `>>` ≠ dzielenie ze znakiem.
+
+**Macierz `HandleCity` (z regułą „miasto zniknęło”, `.mutants/w3`):** `HandleCityProduction` od `8b6a7ca` – AX po
+`DisplayCivilizationScenery` (oryginał zostawiał adres bufora z `CopyText`, np. 0xee08; obie wartości niezerowe, więc
+`HandleAllCities` się nie zmienia – do decyzji, czy test ma to ignorować); `HandleCitySpaceship` od `648c1ac`
+(Uderzenie 5/6): części statku (ulepszenia 22 / 23) – zamrożona gra AX 0, obecna 5 / 2 – sprawdzić `BuildSpaceshipPart`
+i liczenie zadowolenia (`CountScienceAndContent`, `Apply*`) z tego commitu; `HandleCity` naprawione już w `b6cbb13`.
