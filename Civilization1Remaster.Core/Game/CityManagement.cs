@@ -5140,9 +5140,9 @@ namespace Civilization1Remaster.Game
 		/// A raised box from (horizLoc, vertLoc) to (horizSpot1, vertSpot1) in the colour, with the text at the address
 		/// centered in it
 		/// </summary>
-		public void RenderLabelBox(int horizLoc, int vertLoc, int horizSpot1, int vertSpot1, ushort charsAddr, ushort style)
+		public void RenderLabelBox(int horizLoc, int vertLoc, int horizSpot1, int vertSpot1, GameText label, ushort style)
 		{
-			this.processor.Journal.OpenScope($"RenderLabelBox({horizLoc}, {vertLoc}, {horizSpot1}, {vertSpot1}, 0x{charsAddr:x4}, {style})");
+			this.processor.Journal.OpenScope($"RenderLabelBox({horizLoc}, {vertLoc}, {horizSpot1}, {vertSpot1}, 0x{label.Address:x4}, {style})");
 
 			this.owner.Services.FloodBox(ScreenBox,
 				horizLoc, vertLoc, horizSpot1 - horizLoc, vertSpot1 - vertLoc, style);
@@ -5159,7 +5159,7 @@ namespace Civilization1Remaster.Game
 			this.owner.VideoCard.RenderLine(ScreenBox,
 				horizSpot1, vertLoc, horizSpot1, vertSpot1, (ushort)((style < 0x8) ? 8 : (style - 8)));
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0(charsAddr,
+			this.owner.TextPainter.RenderCenteredTextToScreen0(label,
 				((horizLoc + horizSpot1) / 2) + 1, ((vertLoc + vertSpot1) / 2) - 2, (ushort)(style ^ 8));
 
 			this.processor.Journal.CloseScope("RenderLabelBox");

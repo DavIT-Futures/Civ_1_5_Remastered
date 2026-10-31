@@ -1,517 +1,517 @@
 namespace Civilization1Remaster.Engine
 {
 	/// <summary>
-	/// The texts of the data segment of CIV.EXE that the code passes by address (the topics of the text files with "*",
+	/// The texts of the data segment of CIV.EXE that the code passes to the text calls (the topics of the text files with "*",
 	/// the names of the picture and text files, the texts drawn on the screens), named by their texts (as loaded; the
 	/// same text at two addresses gets a number)
 	/// </summary>
 	public static class GameTexts
 	{
 		/// <summary>"*LOMEM"</summary>
-		public const ushort TopicLomem = 0x0270;
+		public static readonly GameText TopicLomem = new(0x0270, "*LOMEM");
 
 		/// <summary>"custom.pic"</summary>
-		public const ushort FileCustomPic = 0x1b3d;
+		public static readonly GameText FileCustomPic = new(0x1b3d, "custom.pic");
 
 		/// <summary>"sp257.pic"</summary>
-		public const ushort FileSp257Pic = 0x1c0c;
+		public static readonly GameText FileSp257Pic = new(0x1c0c, "sp257.pic");
 
 		/// <summary>"diffs.pic"</summary>
-		public const ushort FileDiffsPic = 0x1c16;
+		public static readonly GameText FileDiffsPic = new(0x1c16, "diffs.pic");
 
 		/// <summary>"*HELP1"</summary>
-		public const ushort TopicHelp1 = 0x1e60;
+		public static readonly GameText TopicHelp1 = new(0x1e60, "*HELP1");
 
 		/// <summary>"*HELP2"</summary>
-		public const ushort TopicHelp2 = 0x1e67;
+		public static readonly GameText TopicHelp2 = new(0x1e67, "*HELP2");
 
 		/// <summary>"*FIRSTMOVE"</summary>
-		public const ushort TopicFirstmove = 0x1e6e;
+		public static readonly GameText TopicFirstmove = new(0x1e6e, "*FIRSTMOVE");
 
 		/// <summary>"cback.pic"</summary>
-		public const ushort FileCbackPic = 0x1e79;
+		public static readonly GameText FileCbackPic = new(0x1e79, "cback.pic");
 
 		/// <summary>"*PILLAGE"</summary>
-		public const ushort TopicPillage = 0x1e83;
+		public static readonly GameText TopicPillage = new(0x1e83, "*PILLAGE");
 
 		/// <summary>"*SETTLERS"</summary>
-		public const ushort TopicSettlers = 0x1e8c;
+		public static readonly GameText TopicSettlers = new(0x1e8c, "*SETTLERS");
 
 		/// <summary>"*SETTLERS"</summary>
-		public const ushort TopicSettlersB = 0x1e96;
+		public static readonly GameText TopicSettlersB = new(0x1e96, "*SETTLERS");
 
 		/// <summary>"*SETTLERS"</summary>
-		public const ushort TopicSettlersC = 0x1ea0;
+		public static readonly GameText TopicSettlersC = new(0x1ea0, "*SETTLERS");
 
 		/// <summary>"*NOIRR"</summary>
-		public const ushort TopicNoirr = 0x1eaa;
+		public static readonly GameText TopicNoirr = new(0x1eaa, "*NOIRR");
 
 		/// <summary>"*NOWATER"</summary>
-		public const ushort TopicNowater = 0x1eb1;
+		public static readonly GameText TopicNowater = new(0x1eb1, "*NOWATER");
 
 		/// <summary>"*SETTLERS"</summary>
-		public const ushort TopicSettlersD = 0x1eba;
+		public static readonly GameText TopicSettlersD = new(0x1eba, "*SETTLERS");
 
 		/// <summary>"*NOMINE"</summary>
-		public const ushort TopicNomine = 0x1ec4;
+		public static readonly GameText TopicNomine = new(0x1ec4, "*NOMINE");
 
 		/// <summary>"*SETTLERS"</summary>
-		public const ushort TopicSettlersE = 0x1ecc;
+		public static readonly GameText TopicSettlersE = new(0x1ecc, "*SETTLERS");
 
 		/// <summary>"*ADDCITY"</summary>
-		public const ushort TopicAddcity = 0x1ed6;
+		public static readonly GameText TopicAddcity = new(0x1ed6, "*ADDCITY");
 
 		/// <summary>"*ZOC"</summary>
-		public const ushort TopicZoc = 0x1edf;
+		public static readonly GameText TopicZoc = new(0x1edf, "*ZOC");
 
 		/// <summary>"*AMPHIB"</summary>
-		public const ushort TopicAmphib = 0x1f28;
+		public static readonly GameText TopicAmphib = new(0x1f28, "*AMPHIB");
 
 		/// <summary>"*FIGHTER"</summary>
-		public const ushort TopicFighter = 0x1f30;
+		public static readonly GameText TopicFighter = new(0x1f30, "*FIGHTER");
 
 		/// <summary>"*OCCUPY"</summary>
-		public const ushort TopicOccupy = 0x1f62;
+		public static readonly GameText TopicOccupy = new(0x1f62, "*OCCUPY");
 
 		/// <summary>"*REV"</summary>
-		public const ushort TopicRev = 0x1f6a;
+		public static readonly GameText TopicRev = new(0x1f6a, "*REV");
 
 		/// <summary>"Leaders randomized. / "</summary>
-		public const ushort TextLeadersRandomized = 0x2003;
+		public static readonly GameText TextLeadersRandomized = new(0x2003, "Leaders randomized.\n");
 
 		/// <summary>"*HELP1"</summary>
-		public const ushort TopicHelp1B = 0x2029;
+		public static readonly GameText TopicHelp1B = new(0x2029, "*HELP1");
 
 		/// <summary>"*HELP2"</summary>
-		public const ushort TopicHelp2B = 0x2030;
+		public static readonly GameText TopicHelp2B = new(0x2030, "*HELP2");
 
 		/// <summary>"*FUEL"</summary>
-		public const ushort TopicFuel = 0x2070;
+		public static readonly GameText TopicFuel = new(0x2070, "*FUEL");
 
 		/// <summary>"*TRIREME"</summary>
-		public const ushort TopicTrireme = 0x2076;
+		public static readonly GameText TopicTrireme = new(0x2076, "*TRIREME");
 
 		/// <summary>"End of Turn"</summary>
-		public const ushort TextEndOfTurn = 0x207f;
+		public static readonly GameText TextEndOfTurn = new(0x207f, "End of Turn");
 
 		/// <summary>"Press Enter"</summary>
-		public const ushort TextPressEnter = 0x208b;
+		public static readonly GameText TextPressEnter = new(0x208b, "Press Enter");
 
 		/// <summary>"to continue"</summary>
-		public const ushort TextToContinue = 0x2097;
+		public static readonly GameText TextToContinue = new(0x2097, "to continue");
 
 		/// <summary>"Veteran"</summary>
-		public const ushort TextVeteran = 0x20a3;
+		public static readonly GameText TextVeteran = new(0x20a3, "Veteran");
 
 		/// <summary>"+"</summary>
-		public const ushort TextPlus = 0x20f1;
+		public static readonly GameText TextPlus = new(0x20f1, "+");
 
 		/// <summary>"End of Turn"</summary>
-		public const ushort TextEndOfTurnB = 0x20f6;
+		public static readonly GameText TextEndOfTurnB = new(0x20f6, "End of Turn");
 
 		/// <summary>"End of Turn"</summary>
-		public const ushort TextEndOfTurnC = 0x2102;
+		public static readonly GameText TextEndOfTurnC = new(0x2102, "End of Turn");
 
 		/// <summary>"*FIRSTUNIT1"</summary>
-		public const ushort TopicFirstunit1 = 0x210e;
+		public static readonly GameText TopicFirstunit1 = new(0x210e, "*FIRSTUNIT1");
 
 		/// <summary>"*FIRSTUNIT2"</summary>
-		public const ushort TopicFirstunit2 = 0x211a;
+		public static readonly GameText TopicFirstunit2 = new(0x211a, "*FIRSTUNIT2");
 
 		/// <summary>"*UMAX"</summary>
-		public const ushort TopicUmax = 0x2126;
+		public static readonly GameText TopicUmax = new(0x2126, "*UMAX");
 
 		/// <summary>"iconpg1.pal"</summary>
-		public const ushort FileIconpg1Pal = 0x2311;
+		public static readonly GameText FileIconpg1Pal = new(0x2311, "iconpg1.pal");
 
 		/// <summary>"*FIRSTCIV"</summary>
-		public const ushort TopicFirstciv = 0x231d;
+		public static readonly GameText TopicFirstciv = new(0x231d, "*FIRSTCIV");
 
 		/// <summary>"*GAPE"</summary>
-		public const ushort TopicGape = 0x240e;
+		public static readonly GameText TopicGape = new(0x240e, "*GAPE");
 
 		/// <summary>"*MONARCHY"</summary>
-		public const ushort TopicMonarchy = 0x2414;
+		public static readonly GameText TopicMonarchy = new(0x2414, "*MONARCHY");
 
 		/// <summary>"INFO"</summary>
-		public const ushort TextInfo = 0x25ea;
+		public static readonly GameText TextInfo = new(0x25ea, "INFO");
 
 		/// <summary>"HAPPY"</summary>
-		public const ushort TextHappy = 0x25ef;
+		public static readonly GameText TextHappy = new(0x25ef, "HAPPY");
 
 		/// <summary>"MAP"</summary>
-		public const ushort TextMap = 0x25f5;
+		public static readonly GameText TextMap = new(0x25f5, "MAP");
 
 		/// <summary>"VIEW"</summary>
-		public const ushort TextView = 0x25f9;
+		public static readonly GameText TextView = new(0x25f9, "VIEW");
 
 		/// <summary>"WONDERS"</summary>
-		public const ushort TextWonders = 0x25fe;
+		public static readonly GameText TextWonders = new(0x25fe, "WONDERS");
 
 		/// <summary>"MORE"</summary>
-		public const ushort TextMore = 0x262a;
+		public static readonly GameText TextMore = new(0x262a, "MORE");
 
 		/// <summary>"BUY"</summary>
-		public const ushort TextBuy = 0x263c;
+		public static readonly GameText TextBuy = new(0x263c, "BUY");
 
 		/// <summary>"Food Storage"</summary>
-		public const ushort TextFoodStorage = 0x2640;
+		public static readonly GameText TextFoodStorage = new(0x2640, "Food Storage");
 
 		/// <summary>"City Resources"</summary>
-		public const ushort TextCityResources = 0x264d;
+		public static readonly GameText TextCityResources = new(0x264d, "City Resources");
 
 		/// <summary>"EXIT"</summary>
-		public const ushort TextExit = 0x2662;
+		public static readonly GameText TextExit = new(0x2662, "EXIT");
 
 		/// <summary>"RENAME"</summary>
-		public const ushort TextRename = 0x2667;
+		public static readonly GameText TextRename = new(0x2667, "RENAME");
 
 		/// <summary>"*DISORDER"</summary>
-		public const ushort TopicDisorder = 0x2708;
+		public static readonly GameText TopicDisorder = new(0x2708, "*DISORDER");
 
 		/// <summary>"*LEADER"</summary>
-		public const ushort TopicLeader = 0x2ae7;
+		public static readonly GameText TopicLeader = new(0x2ae7, "*LEADER");
 
 		/// <summary>"F"</summary>
-		public const ushort TextF = 0x2ba0;
+		public static readonly GameText TextF = new(0x2ba0, "F");
 
 		/// <summary>"G"</summary>
-		public const ushort TextG = 0x2ba2;
+		public static readonly GameText TextG = new(0x2ba2, "G");
 
 		/// <summary>"CityAt Error / "</summary>
-		public const ushort TextCityAtError = 0x2bc6;
+		public static readonly GameText TextCityAtError = new(0x2bc6, "CityAt Error\n");
 
 		/// <summary>"(HELP AVAILABLE)"</summary>
-		public const ushort TextHelpAvailable = 0x2fbd;
+		public static readonly GameText TextHelpAvailable = new(0x2fbd, "(HELP AVAILABLE)");
 
 		/// <summary>"king.txt"</summary>
-		public const ushort FileKingTxt = 0x30a5;
+		public static readonly GameText FileKingTxt = new(0x30a5, "king.txt");
 
 		/// <summary>"logo.pic"</summary>
-		public const ushort FileLogoPic = 0x328a;
+		public static readonly GameText FileLogoPic = new(0x328a, "logo.pic");
 
 		/// <summary>"birth0.pic"</summary>
-		public const ushort FileBirth0Pic = 0x3293;
+		public static readonly GameText FileBirth0Pic = new(0x3293, "birth0.pic");
 
 		/// <summary>"birth1.pic"</summary>
-		public const ushort FileBirth1Pic = 0x329e;
+		public static readonly GameText FileBirth1Pic = new(0x329e, "birth1.pic");
 
 		/// <summary>"logo.pic"</summary>
-		public const ushort FileLogoPicB = 0x32a9;
+		public static readonly GameText FileLogoPicB = new(0x32a9, "logo.pic");
 
 		/// <summary>"planet2.pic"</summary>
-		public const ushort FilePlanet2Pic = 0x32d8;
+		public static readonly GameText FilePlanet2Pic = new(0x32d8, "planet2.pic");
 
 		/// <summary>"planet1.pic"</summary>
-		public const ushort FilePlanet1Pic = 0x32e4;
+		public static readonly GameText FilePlanet1Pic = new(0x32e4, "planet1.pic");
 
 		/// <summary>"king.txt"</summary>
-		public const ushort FileKingTxtB = 0x3301;
+		public static readonly GameText FileKingTxtB = new(0x3301, "king.txt");
 
 		/// <summary>"spacest.pic"</summary>
-		public const ushort FileSpacestPic = 0x330a;
+		public static readonly GameText FileSpacestPic = new(0x330a, "spacest.pic");
 
 		/// <summary>"spacest.pic"</summary>
-		public const ushort FileSpacestPicB = 0x3316;
+		public static readonly GameText FileSpacestPicB = new(0x3316, "spacest.pic");
 
 		/// <summary>"sprites.pic"</summary>
-		public const ushort FileSpritesPic = 0x3322;
+		public static readonly GameText FileSpritesPic = new(0x3322, "sprites.pic");
 
 		/// <summary>"arch.pic"</summary>
-		public const ushort FileArchPic = 0x332e;
+		public static readonly GameText FileArchPic = new(0x332e, "arch.pic");
 
 		/// <summary>"*ARCH"</summary>
-		public const ushort TopicArch = 0x3342;
+		public static readonly GameText TopicArch = new(0x3342, "*ARCH");
 
 		/// <summary>"king.txt"</summary>
-		public const ushort FileKingTxtC = 0x3348;
+		public static readonly GameText FileKingTxtC = new(0x3348, "king.txt");
 
 		/// <summary>"*INIT"</summary>
-		public const ushort TopicInit = 0x35c3;
+		public static readonly GameText TopicInit = new(0x35c3, "*INIT");
 
 		/// <summary>"sp299.pic"</summary>
-		public const ushort FileSp299Pic = 0x36ff;
+		public static readonly GameText FileSp299Pic = new(0x36ff, "sp299.pic");
 
 		/// <summary>"ter257.pic"</summary>
-		public const ushort FileTer257Pic = 0x3709;
+		public static readonly GameText FileTer257Pic = new(0x3709, "ter257.pic");
 
 		/// <summary>"sprites.pic"</summary>
-		public const ushort FileSpritesPicB = 0x3714;
+		public static readonly GameText FileSpritesPicB = new(0x3714, "sprites.pic");
 
 		/// <summary>"sp257.pic"</summary>
-		public const ushort FileSp257PicB = 0x3720;
+		public static readonly GameText FileSp257PicB = new(0x3720, "sp257.pic");
 
 		/// <summary>"sp256.pal"</summary>
-		public const ushort FileSp256Pal = 0x372a;
+		public static readonly GameText FileSp256Pal = new(0x372a, "sp256.pal");
 
 		/// <summary>"New Cabinet:"</summary>
-		public const ushort TextNewCabinet = 0x375a;
+		public static readonly GameText TextNewCabinet = new(0x375a, "New Cabinet:");
 
 		/// <summary>"*EXCHANGE"</summary>
-		public const ushort TopicExchange = 0x3776;
+		public static readonly GameText TopicExchange = new(0x3776, "*EXCHANGE");
 
 		/// <summary>"*CANCEL"</summary>
-		public const ushort TopicCancel = 0x378f;
+		public static readonly GameText TopicCancel = new(0x378f, "*CANCEL");
 
 		/// <summary>"*TRIBUTE"</summary>
-		public const ushort TopicTribute = 0x3797;
+		public static readonly GameText TopicTribute = new(0x3797, "*TRIBUTE");
 
 		/// <summary>"*TAKECIV"</summary>
-		public const ushort TopicTakeciv = 0x37a0;
+		public static readonly GameText TopicTakeciv = new(0x37a0, "*TAKECIV");
 
 		/// <summary>"*PEACE"</summary>
-		public const ushort TopicPeace = 0x37cd;
+		public static readonly GameText TopicPeace = new(0x37cd, "*PEACE");
 
 		/// <summary>"*GIVECIV"</summary>
-		public const ushort TopicGiveciv = 0x3805;
+		public static readonly GameText TopicGiveciv = new(0x3805, "*GIVECIV");
 
 		/// <summary>"*GIVECASH"</summary>
-		public const ushort TopicGivecash = 0x380e;
+		public static readonly GameText TopicGivecash = new(0x380e, "*GIVECASH");
 
 		/// <summary>"*GROVEL"</summary>
-		public const ushort TopicGrovel = 0x3818;
+		public static readonly GameText TopicGrovel = new(0x3818, "*GROVEL");
 
 		/// <summary>"*MOBILIZE"</summary>
-		public const ushort TopicMobilize = 0x3820;
+		public static readonly GameText TopicMobilize = new(0x3820, "*MOBILIZE");
 
 		/// <summary>"*ATTITUDE"</summary>
-		public const ushort TopicAttitude = 0x382a;
+		public static readonly GameText TopicAttitude = new(0x382a, "*ATTITUDE");
 
 		/// <summary>"*THREAT"</summary>
-		public const ushort TopicThreat = 0x388f;
+		public static readonly GameText TopicThreat = new(0x388f, "*THREAT");
 
 		/// <summary>"*GIVEMORE"</summary>
-		public const ushort TopicGivemore = 0x3897;
+		public static readonly GameText TopicGivemore = new(0x3897, "*GIVEMORE");
 
 		/// <summary>"*PROVOKE"</summary>
-		public const ushort TopicProvoke = 0x38a1;
+		public static readonly GameText TopicProvoke = new(0x38a1, "*PROVOKE");
 
 		/// <summary>"*NOCONTACT"</summary>
-		public const ushort TopicNocontact = 0x38e9;
+		public static readonly GameText TopicNocontact = new(0x38e9, "*NOCONTACT");
 
 		/// <summary>"*ATWAR"</summary>
-		public const ushort TopicAtwar = 0x38f4;
+		public static readonly GameText TopicAtwar = new(0x38f4, "*ATWAR");
 
 		/// <summary>"*MERCENARY"</summary>
-		public const ushort TopicMercenary = 0x38fb;
+		public static readonly GameText TopicMercenary = new(0x38fb, "*MERCENARY");
 
 		/// <summary>"*UNFORTUNATE"</summary>
-		public const ushort TopicUnfortunate = 0x391e;
+		public static readonly GameText TopicUnfortunate = new(0x391e, "*UNFORTUNATE");
 
 		/// <summary>"*SCHISM"</summary>
-		public const ushort TopicSchism = 0x392b;
+		public static readonly GameText TopicSchism = new(0x392b, "*SCHISM");
 
 		/// <summary>"*TREATY"</summary>
-		public const ushort TopicTreaty = 0x3a8c;
+		public static readonly GameText TopicTreaty = new(0x3a8c, "*TREATY");
 
 		/// <summary>"map.pic"</summary>
-		public const ushort FileMapPic = 0x3b20;
+		public static readonly GameText FileMapPic = new(0x3b20, "map.pic");
 
 		/// <summary>"BUILDING NEW WORLD..."</summary>
-		public const ushort TextBuildingNewWorld = 0x3b28;
+		public static readonly GameText TextBuildingNewWorld = new(0x3b28, "BUILDING NEW WORLD...");
 
 		/// <summary>"ENCYCLOPAEDIA of CIVILIZATION"</summary>
-		public const ushort TextEncyclopaediaOfCivilization = 0x3c90;
+		public static readonly GameText TextEncyclopaediaOfCivilization = new(0x3c90, "ENCYCLOPAEDIA of CIVILIZATION");
 
 		/// <summary>"ENCYCLOPAEDIA of CIVILIZATION"</summary>
-		public const ushort TextEncyclopaediaOfCivilizationB = 0x3cae;
+		public static readonly GameText TextEncyclopaediaOfCivilizationB = new(0x3cae, "ENCYCLOPAEDIA of CIVILIZATION");
 
 		/// <summary>"EXIT"</summary>
-		public const ushort TextExitB = 0x3ccc;
+		public static readonly GameText TextExitB = new(0x3ccc, "EXIT");
 
 		/// <summary>"MORE"</summary>
-		public const ushort TextMoreB = 0x3cd1;
+		public static readonly GameText TextMoreB = new(0x3cd1, "MORE");
 
 		/// <summary>"Allows: "</summary>
-		public const ushort TextAllows = 0x3dad;
+		public static readonly GameText TextAllows = new(0x3dad, "Allows: ");
 
 		/// <summary>"Allows: "</summary>
-		public const ushort TextAllowsB = 0x3de5;
+		public static readonly GameText TextAllowsB = new(0x3de5, "Allows: ");
 
 		/// <summary>"nothing"</summary>
-		public const ushort TextNothing = 0x3f20;
+		public static readonly GameText TextNothing = new(0x3f20, "nothing");
 
 		/// <summary>"*  -1 if government is Despotism/Anarchy."</summary>
-		public const ushort Topic1IfGovernmentIsDespotismAnarchy = 0x3f28;
+		public static readonly GameText Topic1IfGovernmentIsDespotismAnarchy = new(0x3f28, "*  -1 if government is Despotism/Anarchy.");
 
 		/// <summary>"%  +1 if government is Republic/Democracy."</summary>
-		public const ushort Text1IfGovernmentIsRepublicDemocracy = 0x3f52;
+		public static readonly GameText Text1IfGovernmentIsRepublicDemocracy = new(0x3f52, "%  +1 if government is Republic/Democracy.");
 
 		/// <summary>"See Replay? /  No replay /  Quick Replay /  Complete Replay /  Write Replay to Disk / "</summary>
-		public const ushort TextSeeReplayNoReplayQuickReplayCompleteRepl = 0x3fb0;
+		public static readonly GameText TextSeeReplayNoReplayQuickReplayCompleteRepl = new(0x3fb0, "See Replay?\n No replay\n Quick Replay\n Complete Replay\n Write Replay to Disk\n");
 
 		/// <summary>"slam1.pic"</summary>
-		public const ushort FileSlam1Pic = 0x4112;
+		public static readonly GameText FileSlam1Pic = new(0x4112, "slam1.pic");
 
 		/// <summary>"slam1.pal"</summary>
-		public const ushort FileSlam1Pal = 0x412a;
+		public static readonly GameText FileSlam1Pal = new(0x412a, "slam1.pal");
 
 		/// <summary>"slam1.pic"</summary>
-		public const ushort FileSlam1PicB = 0x4134;
+		public static readonly GameText FileSlam1PicB = new(0x4134, "slam1.pic");
 
 		/// <summary>"CIVILIZATION POWERGraph"</summary>
-		public const ushort TextCivilizationPOWERGraph = 0x43d8;
+		public static readonly GameText TextCivilizationPOWERGraph = new(0x43d8, "CIVILIZATION POWERGraph");
 
 		/// <summary>"Approval Rating:"</summary>
-		public const ushort TextApprovalRating = 0x4544;
+		public static readonly GameText TextApprovalRating = new(0x4544, "Approval Rating:");
 
 		/// <summary>"Population:"</summary>
-		public const ushort TextPopulation = 0x4559;
+		public static readonly GameText TextPopulation = new(0x4559, "Population:");
 
 		/// <summary>"GNP:"</summary>
-		public const ushort TextGnp = 0x456a;
+		public static readonly GameText TextGnp = new(0x456a, "GNP:");
 
 		/// <summary>"Mfg. Goods:"</summary>
-		public const ushort TextMfgGoods = 0x457d;
+		public static readonly GameText TextMfgGoods = new(0x457d, "Mfg. Goods:");
 
 		/// <summary>"Land Area:"</summary>
-		public const ushort TextLandArea = 0x4597;
+		public static readonly GameText TextLandArea = new(0x4597, "Land Area:");
 
 		/// <summary>"Literacy:"</summary>
-		public const ushort TextLiteracy = 0x45b5;
+		public static readonly GameText TextLiteracy = new(0x45b5, "Literacy:");
 
 		/// <summary>"Disease:"</summary>
-		public const ushort TextDisease = 0x45c3;
+		public static readonly GameText TextDisease = new(0x45c3, "Disease:");
 
 		/// <summary>"Pollution:"</summary>
-		public const ushort TextPollution = 0x45d0;
+		public static readonly GameText TextPollution = new(0x45d0, "Pollution:");
 
 		/// <summary>"Life Expectancy:"</summary>
-		public const ushort TextLifeExpectancy = 0x45ee;
+		public static readonly GameText TextLifeExpectancy = new(0x45ee, "Life Expectancy:");
 
 		/// <summary>"Family Size:"</summary>
-		public const ushort TextFamilySize = 0x460b;
+		public static readonly GameText TextFamilySize = new(0x460b, "Family Size:");
 
 		/// <summary>"Military Service:"</summary>
-		public const ushort TextMilitaryService = 0x4625;
+		public static readonly GameText TextMilitaryService = new(0x4625, "Military Service:");
 
 		/// <summary>"Annual Income:"</summary>
-		public const ushort TextAnnualIncome = 0x4643;
+		public static readonly GameText TextAnnualIncome = new(0x4643, "Annual Income:");
 
 		/// <summary>"Productivity:"</summary>
-		public const ushort TextProductivity = 0x4661;
+		public static readonly GameText TextProductivity = new(0x4661, "Productivity:");
 
 		/// <summary>"SCIENCE REPORT"</summary>
-		public const ushort TextScienceReport = 0x4762;
+		public static readonly GameText TextScienceReport = new(0x4762, "SCIENCE REPORT");
 
 		/// <summary>"MILITARY STATUS"</summary>
-		public const ushort TextMilitaryStatus = 0x477e;
+		public static readonly GameText TextMilitaryStatus = new(0x477e, "MILITARY STATUS");
 
 		/// <summary>"MILITARY LOSSES"</summary>
-		public const ushort TextMilitaryLosses = 0x47ad;
+		public static readonly GameText TextMilitaryLosses = new(0x47ad, "MILITARY LOSSES");
 
 		/// <summary>"TRADE REPORT"</summary>
-		public const ushort TextTradeReport = 0x47bd;
+		public static readonly GameText TextTradeReport = new(0x47bd, "TRADE REPORT");
 
 		/// <summary>"City Trade"</summary>
-		public const ushort TextCityTrade = 0x47ca;
+		public static readonly GameText TextCityTrade = new(0x47ca, "City Trade");
 
 		/// <summary>"TRADE REPORT"</summary>
-		public const ushort TextTradeReportB = 0x47d5;
+		public static readonly GameText TextTradeReportB = new(0x47d5, "TRADE REPORT");
 
 		/// <summary>"Maintenance Costs"</summary>
-		public const ushort TextMaintenanceCosts = 0x481f;
+		public static readonly GameText TextMaintenanceCosts = new(0x481f, "Maintenance Costs");
 
 		/// <summary>"INTELLIGENCE REPORT"</summary>
-		public const ushort TextIntelligenceReport = 0x4847;
+		public static readonly GameText TextIntelligenceReport = new(0x4847, "INTELLIGENCE REPORT");
 
 		/// <summary>"No embassy established."</summary>
-		public const ushort TextNoEmbassyEstablished = 0x485b;
+		public static readonly GameText TextNoEmbassyEstablished = new(0x485b, "No embassy established.");
 
 		/// <summary>"INTELLIGENCE REPORT"</summary>
-		public const ushort TextIntelligenceReportB = 0x48a5;
+		public static readonly GameText TextIntelligenceReportB = new(0x48a5, "INTELLIGENCE REPORT");
 
 		/// <summary>"Foreign Affairs:"</summary>
-		public const ushort TextForeignAffairs = 0x4956;
+		public static readonly GameText TextForeignAffairs = new(0x4956, "Foreign Affairs:");
 
 		/// <summary>"Technologies:"</summary>
-		public const ushort TextTechnologies = 0x4987;
+		public static readonly GameText TextTechnologies = new(0x4987, "Technologies:");
 
 		/// <summary>"ATTITUDE SURVEY"</summary>
-		public const ushort TextAttitudeSurvey = 0x4995;
+		public static readonly GameText TextAttitudeSurvey = new(0x4995, "ATTITUDE SURVEY");
 
 		/// <summary>"ATTITUDE SURVEY"</summary>
-		public const ushort TextAttitudeSurveyB = 0x49a5;
+		public static readonly GameText TextAttitudeSurveyB = new(0x49a5, "ATTITUDE SURVEY");
 
 		/// <summary>"CITY STATUS"</summary>
-		public const ushort TextCityStatus = 0x49e4;
+		public static readonly GameText TextCityStatus = new(0x49e4, "CITY STATUS");
 
 		/// <summary>"CITY STATUS"</summary>
-		public const ushort TextCityStatusB = 0x49f0;
+		public static readonly GameText TextCityStatusB = new(0x49f0, "CITY STATUS");
 
 		/// <summary>"hill.pic"</summary>
-		public const ushort FileHillPic = 0x4e98;
+		public static readonly GameText FileHillPic = new(0x4e98, "hill.pic");
 
 		/// <summary>"hill.pic"</summary>
-		public const ushort FileHillPicB = 0x4ea1;
+		public static readonly GameText FileHillPicB = new(0x4ea1, "hill.pic");
 
 		/// <summary>"hill.pal"</summary>
-		public const ushort FileHillPal = 0x4eaa;
+		public static readonly GameText FileHillPal = new(0x4eaa, "hill.pal");
 
 		/// <summary>"pop.pic"</summary>
-		public const ushort FilePopPic = 0x4ebc;
+		public static readonly GameText FilePopPic = new(0x4ebc, "pop.pic");
 
 		/// <summary>"riot.pic"</summary>
-		public const ushort FileRiotPic = 0x4f2f;
+		public static readonly GameText FileRiotPic = new(0x4f2f, "riot.pic");
 
 		/// <summary>"riot2.pic"</summary>
-		public const ushort FileRiot2Pic = 0x4f38;
+		public static readonly GameText FileRiot2Pic = new(0x4f38, "riot2.pic");
 
 		/// <summary>"*FIRSTPRODUCT"</summary>
-		public const ushort TopicFirstproduct = 0x4f66;
+		public static readonly GameText TopicFirstproduct = new(0x4f66, "*FIRSTPRODUCT");
 
 		/// <summary>"*PMAX"</summary>
-		public const ushort TopicPmax = 0x4f74;
+		public static readonly GameText TopicPmax = new(0x4f74, "*PMAX");
 
 		/// <summary>"*D1"</summary>
-		public const ushort TopicD1 = 0x4f99;
+		public static readonly GameText TopicD1 = new(0x4f99, "*D1");
 
 		/// <summary>"*D2"</summary>
-		public const ushort TopicD2 = 0x4f9d;
+		public static readonly GameText TopicD2 = new(0x4f9d, "*D2");
 
 		/// <summary>"*D3"</summary>
-		public const ushort TopicD3 = 0x4fa1;
+		public static readonly GameText TopicD3 = new(0x4fa1, "*D3");
 
 		/// <summary>"*D4"</summary>
-		public const ushort TopicD4 = 0x4fa5;
+		public static readonly GameText TopicD4 = new(0x4fa5, "*D4");
 
 		/// <summary>"*D5"</summary>
-		public const ushort TopicD5 = 0x4fc3;
+		public static readonly GameText TopicD5 = new(0x4fc3, "*D5");
 
 		/// <summary>"*D6"</summary>
-		public const ushort TopicD6 = 0x4fc7;
+		public static readonly GameText TopicD6 = new(0x4fc7, "*D6");
 
 		/// <summary>"CIVILIZATION SCORE"</summary>
-		public const ushort TextCivilizationScore = 0x506b;
+		public static readonly GameText TextCivilizationScore = new(0x506b, "CIVILIZATION SCORE");
 
 		/// <summary>"SCORING COMPLETED"</summary>
-		public const ushort TextScoringCompleted = 0x507e;
+		public static readonly GameText TextScoringCompleted = new(0x507e, "SCORING COMPLETED");
 
 		/// <summary>"No new technology found. / "</summary>
-		public const ushort TextNoNewTechnologyFound = 0x5231;
+		public static readonly GameText TextNoNewTechnologyFound = new(0x5231, "No new technology found.\n");
 
 		/// <summary>"nuke1.pic"</summary>
-		public const ushort FileNuke1Pic = 0x5318;
+		public static readonly GameText FileNuke1Pic = new(0x5318, "nuke1.pic");
 
 		/// <summary>"settlers.pic"</summary>
-		public const ushort FileSettlersPic = 0x536e;
+		public static readonly GameText FileSettlersPic = new(0x536e, "settlers.pic");
 
 		/// <summary>"hill.pic"</summary>
-		public const ushort FileHillPicC = 0x537b;
+		public static readonly GameText FileHillPicC = new(0x537b, "hill.pic");
 
 		/// <summary>"hill.pic"</summary>
-		public const ushort FileHillPicD = 0x5384;
+		public static readonly GameText FileHillPicD = new(0x5384, "hill.pic");
 
 		/// <summary>"City Name..."</summary>
-		public const ushort TextCityName = 0x539e;
+		public static readonly GameText TextCityName = new(0x539e, "City Name...");
 
 		/// <summary>"Your Name..."</summary>
-		public const ushort TextYourName = 0x53ab;
+		public static readonly GameText TextYourName = new(0x53ab, "Your Name...");
 
 		/// <summary>"Name of your Tribe..."</summary>
-		public const ushort TextNameOfYourTribe = 0x53b8;
+		public static readonly GameText TextNameOfYourTribe = new(0x53b8, "Name of your Tribe...");
 
 		/// <summary>"Unknown city."</summary>
-		public const ushort TextUnknownCity = 0x53f3;
+		public static readonly GameText TextUnknownCity = new(0x53f3, "Unknown city.");
 	}
 }

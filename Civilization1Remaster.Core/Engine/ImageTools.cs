@@ -24,9 +24,9 @@ namespace Civilization1Remaster.Engine
 		/// <param name="filenamePtr"></param>
 		/// <param name="palettePtr"></param>
 		/// <exception cref="Exception"></exception>
-		public void ImportPictureOrColors(short displayIdx, ushort horizLoc, ushort vertLoc, ushort docnameAddr, ushort swatchAddr)
+		public void ImportPictureOrColors(short displayIdx, ushort horizLoc, ushort vertLoc, GameText docname, ushort swatchAddr)
 		{
-			string fileName = this.processor.PullText(CPU.AsLinearAddress(this.processor.SegData.Value16, docnameAddr));
+			string fileName = docname.Read(this.processor);
 			ImportPictureOrColors(displayIdx, horizLoc, vertLoc, fileName, swatchAddr);
 		}
 

@@ -7,8 +7,8 @@ namespace Civilization1Remaster.UI
 	/// </summary>
 	public class CivilizationInfo : GameModule
 	{
-		private const ushort CivilizationOverviewSummaryHeaderAddress = 0x46be;
-		private const ushort CivilizationOverviewTechnologiesHeaderAddress = 0x4729;
+		private static readonly GameText CivilizationOverviewSummaryHeaderAddress = new(0x46be, "/Units/Cities/Settlers/Land");
+		private static readonly GameText CivilizationOverviewTechnologiesHeaderAddress = new(0x4729, "Civilization:");
 
 		public CivilizationInfo(GameEngine owner)
 			: base(owner)

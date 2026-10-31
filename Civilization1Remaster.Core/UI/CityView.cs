@@ -11,9 +11,9 @@ namespace Civilization1Remaster.UI
 		private const ushort CityStructurePicturesTableAddress = 0x81a2;
 		private const ushort CitySceneryPiecesTableAddress = 0x817a;
 
-		private const ushort CitySceneryPiecesPictureAddress = 0x4ec8;
-		private const ushort CityBuildingsModernPictureAddress = 0x4ed5;
-		private const ushort CityBuildingsAncientPictureAddress = 0x4ee2;
+		private static readonly GameText CitySceneryPiecesPictureAddress = new(0x4ec8, "citypix1.pic");
+		private static readonly GameText CityBuildingsModernPictureAddress = new(0x4ed5, "citypix3.pic");
+		private static readonly GameText CityBuildingsAncientPictureAddress = new(0x4ee2, "citypix2.pic");
 		private const ushort CityWondersPictureAddress = 0x4eef;
 		private const ushort CityWondersInMaskPictureAddress = 0x4efb;
 
@@ -863,9 +863,9 @@ namespace Civilization1Remaster.UI
 		private const int SceneryBoxWidth = 4;
 		private const int SceneryBoxHeight = 6;
 
-		private const ushort ParadeAutomobilePictureAddress = 0x4f08;
-		private const ushort ParadeTrainPictureAddress = 0x4f15;
-		private const ushort ParadeWalkPictureAddress = 0x4f22;
+		private static readonly GameText ParadeAutomobilePictureAddress = new(0x4f08, "invaders.pic");
+		private static readonly GameText ParadeTrainPictureAddress = new(0x4f15, "invader2.pic");
+		private static readonly GameText ParadeWalkPictureAddress = new(0x4f22, "invader3.pic");
 
 		private ushort SceneryBoxField(int boxIdx, int fieldOffset) =>
 			this.processor.PullUInt16(CitySceneryBoxes, (ushort)((boxIdx * SceneryBoxStride) + fieldOffset));

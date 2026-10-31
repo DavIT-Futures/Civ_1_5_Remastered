@@ -973,3 +973,16 @@ tekstowym (tematy plików tekstowych `Topic…`, np. `TopicSettlers`, `TopicZoc`
 napisy ekranów `Text…`, np. `TextEndOfTurn`), nazwane po swojej treści odczytanej sondą z wczytanej gry (ten sam tekst
 pod kilkoma adresami: przyrostek B, C, …); 170 literałów w wywołaniach podmienionych. Golden master i tury 27/27.
 Zostają: adresy tablic (tabele obrazków, rekordy), numery obrazków w `SpritePicture`, adresy globalne `ForbidAccess`.
+
+**Teksty CIV.EXE jako napisy C# (2026-10-31):** `GameText` (adres + napis) – `GameTexts` (169) i 51 nazwanych stałych
+tekstów (tematy pomocy, nazwy plików obrazków i palet, nagłówki ekranów) niosą napis z wbudowanego segmentu danych
+(`Assets/BinaryResources.bin`); funkcje tekstowe (`DisplayTextDialog`, `DisplayHelpPopup…`, `DisplayHelpForHuman`,
+`DisplayReportPreamble` / `RenderReportPreamble`, `RenderLabelBox`, `RenderCensusRow`, `ImportPictureOrColors`,
+`ImportTextFromFile` – plik i temat, rysowanie tekstu na ekranie 0) biorą `GameText` i używają napisu zamiast pamięci.
+Dziennik dalej pisze adres (ślady bez zmian). Goły adres (`ushort`, np. tekst zbudowany w buforze) zamienia się na
+`GameText` bez napisu: `Read` czyta wtedy pamięć w tej samej chwili co dotąd. Zostają na adresach: `DisplayDialog` /
+`DisplayMenu` ze stałymi tekstami (menu zmieniają bajty źródła), `blurb0.txt` Civilopedii (cyfra wpisywana w trakcie).
+Sprawdzone tymczasową kontrolą w `GameText.Read` (napis = pamięć przy każdym użyciu) na pełnym zestawie: 812/813,
+jedyna różnica to test `BatchSixtyNine.OpeningSequence`, który sam wpisywał „earth.mp” pod `map.pic` (0x3b20) – zapis
+usunięty z testu (gra tego adresu nie zmienia), test zielony; po usunięciu kontroli golden master i tury 27/27.
+CIV.EXE nie jest potrzebne grze: segment danych pochodzi z zasobu, w pamięci jest tylko napis ścieżki „CIV.EXE”.

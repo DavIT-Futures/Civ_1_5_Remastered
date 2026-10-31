@@ -4,17 +4,17 @@ namespace Civilization1Remaster.UI
 {
 	public class InGameHelp : GameModule
 	{
-		private const ushort HelpFileNameAddress = 0x34b2;
-		private const ushort HelpFileName2Address = 0x34de;
-		private const ushort HelpFileName3Address = 0x3501;
+		private static readonly GameText HelpFileNameAddress = new(0x34b2, "help.txt");
+		private static readonly GameText HelpFileName2Address = new(0x34de, "help.txt");
+		private static readonly GameText HelpFileName3Address = new(0x3501, "error.txt");
 
-		private const ushort HelpCitySiteTopicAddress = 0x34bb;
-		private const ushort HelpIrrigateTopicAddress = 0x34c6;
-		private const ushort HelpIrrigate2TopicAddress = 0x34ce;
-		private const ushort HelpMineTopicAddress = 0x34d8;
+		private static readonly GameText HelpCitySiteTopicAddress = new(0x34bb, "*BUILDCITY");
+		private static readonly GameText HelpIrrigateTopicAddress = new(0x34c6, "*MINING");
+		private static readonly GameText HelpIrrigate2TopicAddress = new(0x34ce, "*IRRIGATE");
+		private static readonly GameText HelpMineTopicAddress = new(0x34d8, "*ROAD");
 
-		private const ushort HelpAdviceHeaderAddress = 0x34e7;
-		private const ushort HelpAdviceHeader2Address = 0x350b;
+		private static readonly GameText HelpAdviceHeaderAddress = new(0x34e7, "--- Civilization Note ---");
+		private static readonly GameText HelpAdviceHeader2Address = new(0x350b, "--- Civilization Note ---");
 
 		public InGameHelp(GameEngine owner)
 			: base(owner)
@@ -154,15 +154,15 @@ namespace Civilization1Remaster.UI
 		/// click. The screen is kept in the back screen 0x19d4 meanwhile. Always: whatever the option and the year (the help
 		/// key of the remaster).
 		/// </summary>
-		public void DisplayHelpPopup(ushort charsAddr, bool always = false)
+		public void DisplayHelpPopup(GameText topic, bool always = false)
 		{
-			this.processor.Journal.OpenScope($"DisplayHelpPopup(0x{charsAddr:x4})");
+			this.processor.Journal.OpenScope($"DisplayHelpPopup(0x{topic.Address:x4})");
 
 			if (always || ((this.owner.World.SessionPrefMarkers & 0x1) != 0 && this.owner.World.Season < 0))
 			{
 				this.owner.Words.Clear();
 
-				ushort lineTally = this.owner.BlockText.ImportTextFromFile(HelpFileName2Address, charsAddr);
+				ushort lineTally = this.owner.BlockText.ImportTextFromFile(HelpFileName2Address, topic);
 
 				this.owner.BlockText.ReflowText();
 
@@ -200,15 +200,15 @@ namespace Civilization1Remaster.UI
 		/// For the human player only (0x6b90): a help window with the text from the help file (0x3501) for the topic, its codes
 		/// replaced (ReflowText), 6 pixels per line, until a key or click. The screen is kept in the back screen 0x19d4 meanwhile.
 		/// </summary>
-		public void DisplayHelpPopupForHuman(ushort charsAddr)
+		public void DisplayHelpPopupForHuman(GameText topic)
 		{
-			this.processor.Journal.OpenScope($"DisplayHelpPopupForHuman(0x{charsAddr:x4})");
+			this.processor.Journal.OpenScope($"DisplayHelpPopupForHuman(0x{topic.Address:x4})");
 
 			if (TurnPlayer == (ushort)this.owner.World.PersonParticipantIdx)
 			{
 				this.owner.Words.Clear();
 
-				ushort lineTally = this.owner.BlockText.ImportTextFromFile(HelpFileName3Address, charsAddr);
+				ushort lineTally = this.owner.BlockText.ImportTextFromFile(HelpFileName3Address, topic);
 
 				this.owner.BlockText.ReflowText();
 

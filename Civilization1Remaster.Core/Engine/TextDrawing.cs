@@ -45,8 +45,8 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <summary>RenderTextToScreen0 of the text at the address</summary>
-		public void RenderTextToScreen0(ushort charsAddr, int horizLoc, int vertLoc, ushort style) =>
-			RenderTextToScreen0(TextAt(charsAddr), horizLoc, vertLoc, style);
+		public void RenderTextToScreen0(GameText text, int horizLoc, int vertLoc, ushort style) =>
+			RenderTextToScreen0(text.Read(this.processor), horizLoc, vertLoc, style);
 
 		/// <summary>Draws the text with a shadow (colour 0, one row lower) on screen 0</summary>
 		public void RenderTextWithShadow(string text, int horizLoc, int vertLoc, ushort style)
@@ -56,8 +56,8 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <summary>RenderTextWithShadow of the text at the address</summary>
-		public void RenderTextWithShadow(ushort charsAddr, int horizLoc, int vertLoc, ushort style) =>
-			RenderTextWithShadow(TextAt(charsAddr), horizLoc, vertLoc, style);
+		public void RenderTextWithShadow(GameText text, int horizLoc, int vertLoc, ushort style) =>
+			RenderTextWithShadow(text.Read(this.processor), horizLoc, vertLoc, style);
 
 		/// <summary>Draws the text centered at horizLoc on screen 0</summary>
 		public void RenderCenteredTextToScreen0(string text, int horizLoc, int vertLoc, ushort style)
@@ -72,8 +72,8 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <summary>RenderCenteredTextToScreen0 of the text at the address</summary>
-		public void RenderCenteredTextToScreen0(ushort charsAddr, int horizLoc, int vertLoc, ushort style) =>
-			RenderCenteredTextToScreen0(TextAt(charsAddr), horizLoc, vertLoc, style);
+		public void RenderCenteredTextToScreen0(GameText text, int horizLoc, int vertLoc, ushort style) =>
+			RenderCenteredTextToScreen0(text.Read(this.processor), horizLoc, vertLoc, style);
 
 		/// <summary>Draws the text centered at horizLoc with a shadow (colour 0, one right and one lower) on screen 0</summary>
 		public void RenderCenteredTextWithShadowToScreen0(string text, ushort horizLoc, ushort vertLoc, ushort style)
@@ -89,8 +89,8 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <summary>RenderCenteredTextWithShadowToScreen0 of the text at the address</summary>
-		public void RenderCenteredTextWithShadowToScreen0(ushort charsAddr, ushort horizLoc, ushort vertLoc, ushort style) =>
-			RenderCenteredTextWithShadowToScreen0(TextAt(charsAddr), horizLoc, vertLoc, style);
+		public void RenderCenteredTextWithShadowToScreen0(GameText text, ushort horizLoc, ushort vertLoc, ushort style) =>
+			RenderCenteredTextWithShadowToScreen0(text.Read(this.processor), horizLoc, vertLoc, style);
 
 		/// <summary>The width of the text in the typeface of the box at 0xaa</summary>
 		public int ObtainTextWidth(string text)

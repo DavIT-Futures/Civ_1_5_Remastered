@@ -13,10 +13,10 @@ namespace Civilization1Remaster.Game
 	/// </summary>
 	public class TurnEvents : GameModule
 	{
-		private const ushort BankruptcyWarningDialogAddress = 0x1c2a;
-		private const ushort RetirementContinuePromptAddress = 0x1cf0;
-		private const ushort EndGameTitlePictureAddress = 0x1cf8;
-		private const ushort EndGameTitlePaletteAddress = 0x1d05;
+		private static readonly GameText BankruptcyWarningDialogAddress = new(0x1c2a, "*TAXES");
+		private static readonly GameText RetirementContinuePromptAddress = new(0x1cf0, "*FAME");
+		private static readonly GameText EndGameTitlePictureAddress = new(0x1cf8, "adscreen.pic");
+		private static readonly GameText EndGameTitlePaletteAddress = new(0x1d05, "adscreen.pic");
 
 		private const ushort TravellersReportGunpowderAddress = 0x1d26;
 		private const ushort TravellersReportIronWorkingAddress = 0x1d3f;
@@ -31,7 +31,7 @@ namespace Civilization1Remaster.Game
 		private const ushort EraBcStringAddress = 0x1df0;
 		private const ushort EraAdStringAddress = 0x1df4;
 
-		private const ushort AdvisorPaletteResourceAddress = 0x1e56;
+		private static readonly GameText AdvisorPaletteResourceAddress = new(0x1e56, "sp256.pal");
 		private const ushort PalaceSectionSpritesTableAddress = 0xd21c;
 		private const ushort ReplayHistoryScoresSegment = 0x3772;
 

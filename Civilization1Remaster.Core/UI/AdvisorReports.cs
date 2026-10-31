@@ -16,9 +16,9 @@ namespace Civilization1Remaster.UI
 		/// <summary>
 		/// Keeps the screen in the back screen and draws the header of a report (the title at the address, in the style)
 		/// </summary>
-		public void DisplayReportPreamble(ushort charsAddr, ushort style)
+		public void DisplayReportPreamble(GameText title, ushort style)
 		{
-			this.processor.Journal.OpenScope($"DisplayReportPreamble(0x{charsAddr:x4}, {style})");
+			this.processor.Journal.OpenScope($"DisplayReportPreamble(0x{title.Address:x4}, {style})");
 
 			this.owner.Startup.ConcealMouseCursor();
 
@@ -28,7 +28,7 @@ namespace Civilization1Remaster.UI
 				BackScreenBox,
 				0, 0);
 
-			RenderReportPreamble(charsAddr, style);
+			RenderReportPreamble(title, style);
 
 			this.processor.Journal.CloseScope("DisplayReportPreamble");
 		}
@@ -38,16 +38,16 @@ namespace Civilization1Remaster.UI
 		/// (0x473c, 0x4743, 0x474b; for the others the text at TextBuffer.Address stays) " of the " civilization, then the ruler's title
 		/// (0x19b2 + 2 * government), the leader's name and the year
 		/// </summary>
-		public void RenderReportPreamble(ushort charsAddr, ushort style)
+		public void RenderReportPreamble(GameText title, ushort style)
 		{
-			this.processor.Journal.OpenScope($"RenderReportPreamble(0x{charsAddr:x4}, {style})");
+			this.processor.Journal.OpenScope($"RenderReportPreamble(0x{title.Address:x4}, {style})");
 
 			Player person = this.owner.World.Participants[this.owner.World.PersonParticipantIdx];
 			ushort personSlot = (ushort)(this.owner.World.PersonParticipantIdx << 1);
 
 			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, style);
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0(charsAddr, 160, 2, Hues.White);
+			this.owner.TextPainter.RenderCenteredTextToScreen0(title, 160, 2, Hues.White);
 
 			switch (person.RegimeKind / 2)
 			{

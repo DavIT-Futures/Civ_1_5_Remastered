@@ -3950,13 +3950,13 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>The help popup of the topic, only in the turn of the human player</summary>
-		public void DisplayHelpForHuman(ushort charsAddr)
+		public void DisplayHelpForHuman(GameText topic)
 		{
-			this.processor.Journal.OpenScope($"DisplayHelpForHuman(0x{charsAddr:x4})");
+			this.processor.Journal.OpenScope($"DisplayHelpForHuman(0x{topic.Address:x4})");
 
 			if ((short)TurnPlayer == this.owner.World.PersonParticipantIdx)
 			{
-				this.owner.HelpSystem.DisplayHelpPopupForHuman(charsAddr);
+				this.owner.HelpSystem.DisplayHelpPopupForHuman(topic);
 			}
 		
 			this.processor.Journal.CloseScope("DisplayHelpForHuman");

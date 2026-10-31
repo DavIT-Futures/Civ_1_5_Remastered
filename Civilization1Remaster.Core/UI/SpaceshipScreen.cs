@@ -28,21 +28,21 @@ namespace Civilization1Remaster.UI
 		private const byte SpaceshipSlotEndMarker = 0xff;
 		private const byte SpaceshipSlotEmptyMarker = 0xff;
 
-		private const ushort SpaceshipBackgroundPictureAddress = 0x4bc4;
+		private static readonly GameText SpaceshipBackgroundPictureAddress = new(0x4bc4, "docker.pic");
 		private const ushort SpaceshipResourceBlockAddress = 0x4cda;
-		private const ushort SpaceshipPaletteAddress = 0x4cea;
+		private static readonly GameText SpaceshipPaletteAddress = new(0x4cea, "sp256.pal");
 		private const ushort PaletteBufferAddress1 = 0xc1d6;
 		private const ushort PaletteBufferAddress2 = 0xc5be;
 		private const ushort PaletteCopySourceAddress = 0xc744;
 		private const ushort PaletteCopyTargetAddress = 0xc35c;
 
-		private const ushort SpaceshipPopulationHeaderAddress = 0x4d08;
-		private const ushort SpaceshipMassHeaderAddress = 0x4d31;
-		private const ushort SpaceshipFlightTimeHeaderAddress = 0x4d4a;
-		private const ushort SpaceshipSuccessRateHeaderAddress = 0x4d60;
-		private const ushort ArrivalPassedStringAddress = 0x4d7c;
-		private const ushort ArrivalExpectedStringAddress = 0x4d84;
-		private const ushort SpaceshipLaunchInstructionsStringAddress = 0x4d8e;
+		private static readonly GameText SpaceshipPopulationHeaderAddress = new(0x4d08, "Population:");
+		private static readonly GameText SpaceshipMassHeaderAddress = new(0x4d31, "Mass:");
+		private static readonly GameText SpaceshipFlightTimeHeaderAddress = new(0x4d4a, "Flight Time:");
+		private static readonly GameText SpaceshipSuccessRateHeaderAddress = new(0x4d60, "Prob. of Success");
+		private static readonly GameText ArrivalPassedStringAddress = new(0x4d7c, "Landed!");
+		private static readonly GameText ArrivalExpectedStringAddress = new(0x4d84, "Launched!");
+		private static readonly GameText SpaceshipLaunchInstructionsStringAddress = new(0x4d8e, "LAUNCH");
 		private const ushort SpaceshipComponentChoiceDialogAddress = 0x4df9;
 		private const ushort SpaceshipModuleChoiceDialogAddress = 0x4e12;
 

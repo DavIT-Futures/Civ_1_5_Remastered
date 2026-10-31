@@ -16,7 +16,7 @@ namespace Civilization1Remaster.UI
 		private const ushort NewspaperRightPriceLabelAddress = 0x514b;
 		private const ushort NewspaperMotto1Address = 0x514f;
 		private const ushort NewspaperMotto2Address = 0x5156;
-		private const ushort NewspaperTextFileNameAddress = 0x5178;
+		private static readonly GameText NewspaperTextFileNameAddress = new(0x5178, "king.txt");
 		private const ushort NewspaperMenuPromptAddress = 0x5181;
 
 		public Newspaper(GameEngine owner)

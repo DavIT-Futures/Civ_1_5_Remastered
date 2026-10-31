@@ -4,10 +4,10 @@ namespace Civilization1Remaster.UI
 {
 	public class Palace : GameModule
 	{
-		private const ushort PalaceUpgradeAnnouncementDialogAddress = 0x4ade;
-		private const ushort PalaceInitialScreenPictureAddress = 0x4ae6;
+		private static readonly GameText PalaceUpgradeAnnouncementDialogAddress = new(0x4ade, "*PALACE");
+		private static readonly GameText PalaceInitialScreenPictureAddress = new(0x4ae6, "cback.pic");
 		private const ushort PalaceUpgradeOptionsPromptAddress = 0x4af0;
-		private const ushort PalaceStyleChoiceHeaderAddress = 0x4b13;
+		private static readonly GameText PalaceStyleChoiceHeaderAddress = new(0x4b13, "Select new section.");
 		private const ushort PalaceCastleResourceAddress = 0x4b27;
 		private const ushort PalacePartHeightTable1Address = 0x4b31;
 		private const ushort PalacePartHeightTable2Address = 0x4b32;
@@ -15,10 +15,10 @@ namespace Civilization1Remaster.UI
 		private const ushort PalacePartHeightTable4Address = 0x4b34;
 		private const ushort PalacePartHeightTable5Address = 0x4b35;
 		private const ushort PalacePartHeightTableAddress = 0x4b36;
-		private const ushort PalaceScreenBackgroundPictureAddress = 0x4b81;
-		private const ushort PalaceDefaultBackgroundPictureAddress = 0x4b89;
+		private static readonly GameText PalaceScreenBackgroundPictureAddress = new(0x4b81, "sad.pic");
+		private static readonly GameText PalaceDefaultBackgroundPictureAddress = new(0x4b89, "cback.pic");
 		private const ushort PalaceGraphicsResourceAddress = 0x4b9f;
-		private const ushort PalacePaletteAddress = 0x4bb0;
+		private static readonly GameText PalacePaletteAddress = new(0x4bb0, "sad.pic");
 
 		public const ushort PalaceSectionStylesAddress = 0xb222;
 		public const ushort PalacePicturesTableAddress = 0xb23c;

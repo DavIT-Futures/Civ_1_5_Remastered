@@ -15,18 +15,18 @@ namespace Civilization1Remaster.UI
 		private const ushort CivilopediaChosenCategoryTableAddress = 0x36fc;
 
 		private const ushort CivilopediaSciencePaletteAddress = 0x3ce6;
-		private const ushort CivilopediaScienceCategoryHeaderAddress = 0x3cf2;
-		private const ushort CivilopediaBuildingsPictureAddress = 0x3d07;
+		private static readonly GameText CivilopediaScienceCategoryHeaderAddress = new(0x3cf2, "Civilization Advance");
+		private static readonly GameText CivilopediaBuildingsPictureAddress = new(0x3d07, "citypix2.pic");
 		private const ushort CivilopediaBuildingPaletteAddress = 0x3d14;
-		private const ushort CivilopediaBuildingCategoryHeaderAddress = 0x3d1d;
-		private const ushort CivilopediaWonderCategoryHeaderAddress = 0x3d2e;
+		private static readonly GameText CivilopediaBuildingCategoryHeaderAddress = new(0x3d1d, "City Improvement");
+		private static readonly GameText CivilopediaWonderCategoryHeaderAddress = new(0x3d2e, "Wonder of the World");
 		private const ushort CivilopediaUnitPaletteAddress = 0x3d4e;
-		private const ushort CivilopediaUnitsCategoryHeaderAddress = 0x3d5a;
+		private static readonly GameText CivilopediaUnitsCategoryHeaderAddress = new(0x3d5a, "Military Unit");
 		private const ushort CivilopediaUnitIconsTableAddress = 0xd58e;
-		private const ushort CivilopediaTerrainPaletteAddress = 0x3d75;
+		private static readonly GameText CivilopediaTerrainPaletteAddress = new(0x3d75, "sp256.pal");
 		private const ushort TerrainPaletteBufferAddress = 0xc5be;
-		private const ushort CivilopediaTerrainCategoryHeaderAddress = 0x3d7f;
-		private const ushort CivilopediaConceptsCategoryHeaderAddress = 0x3d8c;
+		private static readonly GameText CivilopediaTerrainCategoryHeaderAddress = new(0x3d7f, "Terrain Type");
+		private static readonly GameText CivilopediaConceptsCategoryHeaderAddress = new(0x3d8c, "Game Concept");
 
 
 		public Civilopedia(GameEngine owner)

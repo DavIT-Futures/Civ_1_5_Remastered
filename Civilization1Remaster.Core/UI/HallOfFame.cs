@@ -11,15 +11,15 @@ namespace Civilization1Remaster.UI
 		public const int HallOfFameRecordSize = 0x2e;
 		public const int HallOfFameTotalSize = 0x114;
 
-		private const ushort HallOfFameTitleStringAddress = 0x33be;
-		private const ushort HallOfFameSubtitleStringAddress = 0x33cb;
+		private static readonly GameText HallOfFameTitleStringAddress = new(0x33be, "CIVILIZATION");
+		private static readonly GameText HallOfFameSubtitleStringAddress = new(0x33cb, "HALL OF FAME");
 		private const ushort HallOfFameClearPromptStringAddress = 0x346a;
 		private const ushort HallOfFameRulerTitlesTableAddress = 0x33a2;
 		private const ushort HallOfFameBcEraStringAddress = 0x33f1;
 		private const ushort HallOfFameAdEraStringAddress = 0x33f6;
 		private const ushort HallOfFameRetiresEndingStringAddress = 0x3471;
 		private const ushort HallOfFameExceedsEvenEndingStringAddress = 0x3482;
-		private const ushort TopCitiesTitleStringAddress = 0x3486;
+		private static readonly GameText TopCitiesTitleStringAddress = new(0x3486, "The Top Five Cities in the World");
 
 		private const ushort RulerRankTitlesSegment = 0x36d4;
 		private const int RulerRankEntryStride = 0x19;

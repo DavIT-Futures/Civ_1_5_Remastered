@@ -38,7 +38,6 @@ namespace Civilization1Remaster.Tests.Differential
 						game.Processor.EmitGlobalWord(0x7efa, climate);
 						game.Processor.EmitGlobalWord(0x7efc, age);
 						game.Processor.EmitGlobalWord(0x5386, rngSeed);
-						game.Libc.CopyText(0x3b20, "earth.mp");
 
 						// Stage 5 with empty prompt at 0x3b28 and no key pressed makes DisplayStoryIntro return 0 fast without opening story.txt
 						for (int idx = 0; idx < 0x80; idx++)

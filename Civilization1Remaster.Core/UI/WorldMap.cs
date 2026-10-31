@@ -9,7 +9,7 @@ namespace Civilization1Remaster.UI
 	{
 		private const ushort ReplayHistoryScoresSegment = 0x3772;
 		private const int ReplayHistoryStride = 8;
-		private const ushort WondersOfTheWorldTitleAddress = 0x43f0;
+		private static readonly GameText WondersOfTheWorldTitleAddress = new(0x43f0, "The Wonders of the World");
 		private const ushort WonderInCityStringAddress = 0x440e;
 		private const ushort WonderOfCityStringAddress = 0x4413;
 
@@ -729,7 +729,7 @@ namespace Civilization1Remaster.UI
 		/// One line: the title, the values of the players 1 - 7 (the player's one written at 104), the rank (a negative row:
 		/// a lower value is better)
 		/// </summary>
-		private void RenderCensusRow(ushort title, ref short vertLoc, bool lowerIsBetter, ushort unit, Action<short> valueOfPlayer)
+		private void RenderCensusRow(GameText title, ref short vertLoc, bool lowerIsBetter, ushort unit, Action<short> valueOfPlayer)
 		{
 			this.owner.TextPainter.RenderTextWithShadow(title, 8, vertLoc, Hues.White);
 

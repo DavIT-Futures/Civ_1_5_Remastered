@@ -135,15 +135,15 @@ namespace Civilization1Remaster.Engine
 		/// The index is written at ((hash >> (5 + hash)) * 2, not at the place it is read from ((hash >> 5) + hash) * 2: an
 		/// operator precedence mistake of the translation, kept (see MIGRATION-BACKLOG.md).
 		/// </remarks>
-		public ushort ImportTextFromFile(ushort docnameAddr, ushort charsAddr) =>
-			ImportTextFromFile(docnameAddr, this.processor.PullText(CPU.AsLinearAddress(this.processor.SegData.Value16, charsAddr)), charsAddr);
+		public ushort ImportTextFromFile(GameText docname, GameText topic) =>
+			ImportTextFromFile(docname, topic.Read(this.processor), topic.Address);
 
 		/// <summary>ImportTextFromFile of the topic in a C# string</summary>
-		public ushort ImportTextFromFile(ushort docnameAddr, string topic) => ImportTextFromFile(docnameAddr, topic, TextBuffer.StackTextAddress);
+		public ushort ImportTextFromFile(GameText docname, string topic) => ImportTextFromFile(docname, topic, TextBuffer.StackTextAddress);
 
-		private ushort ImportTextFromFile(ushort docnameAddr, string topic, ushort topicAddr)
+		private ushort ImportTextFromFile(GameText docname, string topic, ushort topicAddr)
 		{
-			this.processor.Journal.OpenScope($"ImportTextFromFile(0x{docnameAddr:x4}, 0x{topicAddr:x4})");
+			this.processor.Journal.OpenScope($"ImportTextFromFile(0x{docname.Address:x4}, 0x{topicAddr:x4})");
 
 			// The line and the index word (buffers of the file functions under SP in the original)
 			string line = "";
@@ -162,7 +162,7 @@ namespace Civilization1Remaster.Engine
 
 			while (true)
 			{
-				handle = (ushort)this.owner.Libc.OpenStream(docnameAddr, "rb");
+				handle = (ushort)this.owner.Libc.OpenStream(docname.Read(this.processor), "rb");
 
 				this.owner.Libc.SeekStream((short)handle, (((int)(short)hash >> 5) + hash) << 1, 0);
 
@@ -170,7 +170,7 @@ namespace Civilization1Remaster.Engine
 
 				this.owner.Libc.CloseStream((short)handle);
 
-				handle = (ushort)this.owner.Libc.OpenStream(docnameAddr, "rt");
+				handle = (ushort)this.owner.Libc.OpenStream(docname.Read(this.processor), "rt");
 
 				ushort offset = entry;
 
@@ -240,7 +240,7 @@ namespace Civilization1Remaster.Engine
 
 			if (!indexed && found)
 			{
-				handle = (ushort)this.owner.Libc.OpenStream(docnameAddr, "r+b");
+				handle = (ushort)this.owner.Libc.OpenStream(docname.Read(this.processor), "r+b");
 
 				this.owner.Libc.SeekStream((short)handle, ((int)(short)hash >> (5 + hash)) << 1, 0);
 
@@ -260,11 +260,11 @@ namespace Civilization1Remaster.Engine
 		/// The text of the topic at the address from the text file 0x30a5 into the message buffer, its codes replaced, arranged
 		/// in rows of 0x50 for a dialog
 		/// </summary>
-		public void DisplayTextDialog(ushort charsAddr)
+		public void DisplayTextDialog(GameText topic)
 		{
-			this.processor.Journal.OpenScope($"DisplayTextDialog(0x{charsAddr:x4})");
+			this.processor.Journal.OpenScope($"DisplayTextDialog(0x{topic.Address:x4})");
 
-			ImportTextFromFile(GameTexts.FileKingTxt, charsAddr);
+			ImportTextFromFile(GameTexts.FileKingTxt, topic);
 
 			ReflowText();
 
