@@ -507,7 +507,10 @@ namespace Civilization1Remaster.Core.Engine
 				if (chart == null)
 					throw new Exception($"Can't read Map file '{docname}.MAP'");
 
-				this.Owner.VideoCard.Displays.AssignValueByKey(2, chart);
+				if (!this.Owner.VideoCard.Displays.ContainsKey(2))
+					throw new InvalidOperationException("This collection doesn't contain key '2'");
+
+				this.Owner.VideoCard.Displays[2] = chart;
 
 				// read sve file
 				FileStream source = new FileStream(Path.Combine(this.Processor.StandardFolder, $"{docname}.SVE"), FileMode.Open);
@@ -905,7 +908,7 @@ namespace Civilization1Remaster.Core.Engine
 			try
 			{
 				// write map file
-				this.Owner.VideoCard.Displays.ObtainValueByKey(2).Store(Path.Combine(this.Processor.StandardFolder, $"{docname}.MAP"), false);
+				this.Owner.VideoCard.Displays[2].Store(Path.Combine(this.Processor.StandardFolder, $"{docname}.MAP"), false);
 
 				// write sve file
 				FileStream sink = new FileStream(Path.Combine(this.Processor.StandardFolder, $"{docname}.SVE"), FileMode.Create);

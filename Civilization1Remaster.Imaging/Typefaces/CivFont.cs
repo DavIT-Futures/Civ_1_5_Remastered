@@ -1,37 +1,13 @@
-﻿using System;
-using System.Xml.Serialization;
+﻿using System.Collections.Generic;
 
 namespace Civilization1Remaster.Imaging.Typefaces
 {
-	[Serializable]
 	public class CivFont
 	{
-		private readonly BDictionary<char, CivFontCharacter> letters = new BDictionary<char, CivFontCharacter>();
+		public int StrokeGap { get; set; } = 1;
 
-		private int letterBreadthGap = 1;
-		private int strokeGap = 1;
+		public int LetterBreadthGap { get; set; } = 1;
 
-		public CivFont()
-		{ }
-
-		[XmlElement("LineSpacing")]
-		public int StrokeGap
-		{
-			get { return this.strokeGap; }
-			set { this.strokeGap = value; }
-		}
-
-		[XmlElement("CharacterWidthSpacing")]
-		public int LetterBreadthGap
-		{
-			get { return this.letterBreadthGap; }
-			set { this.letterBreadthGap = value; }
-		}
-
-		[XmlArray("Characters")]
-		public BDictionary<char, CivFontCharacter> Letters
-		{
-			get { return this.letters; }
-		}
+		public Dictionary<char, CivFontCharacter> Letters { get; } = new Dictionary<char, CivFontCharacter>();
 	}
 }

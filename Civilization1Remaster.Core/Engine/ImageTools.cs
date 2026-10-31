@@ -30,11 +30,11 @@ namespace Civilization1Remaster.Core.Engine
 			if (displayIdx >= 0 && (Path.GetExtension(docname).Equals(".pic", StringComparison.InvariantCultureIgnoreCase) ||
 				Path.GetExtension(docname).Equals(".map", StringComparison.InvariantCultureIgnoreCase)))
 			{
-				if (this.Owner.VideoCard.Displays.IncludesKey(displayIdx))
+				if (this.Owner.VideoCard.Displays.ContainsKey(displayIdx))
 				{
 					byte[] swatch;
 					ushort beginAddr;
-					this.Owner.VideoCard.Displays.ObtainValueByKey(displayIdx).ImportPicture(docname, horizLoc, vertLoc, out swatch);
+					this.Owner.VideoCard.Displays[displayIdx].ImportPicture(docname, horizLoc, vertLoc, out swatch);
 
 					if (swatch != null)
 					{

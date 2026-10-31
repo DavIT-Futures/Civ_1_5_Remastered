@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Net.Sockets;
-using System.Text;
 
 namespace Civilization1Remaster.Foundation.Squeeze
 {
@@ -37,18 +33,6 @@ namespace Civilization1Remaster.Foundation.Squeeze
 			uint checksum = 0xffffffff;
 
 			for (int idx = 0; idx < stageAlt.Length; idx++)
-			{
-				checksum = (checksum >> 8) ^ Grid[(checksum & 0xff) ^ stageAlt[idx]];
-			}
-
-			return ~checksum;
-		}
-
-		public static uint ObtainCRC32(List<byte> stageAlt)
-		{
-			uint checksum = 0xffffffff;
-
-			for (int idx = 0; idx < stageAlt.Count; idx++)
 			{
 				checksum = (checksum >> 8) ^ Grid[(checksum & 0xff) ^ stageAlt[idx]];
 			}

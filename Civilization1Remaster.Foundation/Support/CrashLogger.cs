@@ -38,16 +38,6 @@ namespace Civilization1Remaster.Foundation.Support
 			}
 		}
 
-		public static void LogEvent(string category, string message)
-		{
-			lock (Latch)
-			{
-				string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
-				string line = $"[{timestamp}] [{category}] {message}\n";
-				TryWriteFile("game.log", line);
-			}
-		}
-
 		private static void TryWriteFile(string filename, string content)
 		{
 			try

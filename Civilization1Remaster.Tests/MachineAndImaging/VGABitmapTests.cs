@@ -162,12 +162,12 @@ namespace Civilization1Remaster.Tests.MachineAndImaging
 			{
 				foreach (var couple in VGABitmap.ColorsFromFile(route, out byte[] swatch))
 				{
-					decoded.AddRange(BitConverter.GetBytes(couple.Token));
-					decoded.AddRange(BitConverter.GetBytes(couple.Datum.ToArgb()));
+					decoded.AddRange(BitConverter.GetBytes(couple.Key));
+					decoded.AddRange(BitConverter.GetBytes(couple.Value.ToArgb()));
 				}
 			}
 
-			Assert.Equal(OriginalPicturesDigest, CRC32.ObtainCRC32(decoded));
+			Assert.Equal(OriginalPicturesDigest, CRC32.ObtainCRC32(decoded.ToArray()));
 		}
 
 		private static void AppendImageBlock(MemoryStream content, int width, int height, byte[] pixels)

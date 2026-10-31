@@ -282,12 +282,12 @@ namespace Civilization1Remaster.Core.Engine
 
 					this.Processor.DisableInterrupts();
 
-					if (!this.Owner.VideoCard.Displays.IncludesKey(0))
+					if (!this.Owner.VideoCard.Displays.ContainsKey(0))
 						throw new Exception($"The screen {0} is not allocated");
 
 					lock (this.Owner.VideoCard.VideoLatch)
 					{
-						VGABitmap display = this.Owner.VideoCard.Displays.ObtainValueByKey(0);
+						VGABitmap display = this.Owner.VideoCard.Displays[0];
 						ushort stagingLoc = (ushort)(cycle + 0x9);
 
 						for (int idx = 0; idx < colours; idx++)
@@ -427,11 +427,11 @@ namespace Civilization1Remaster.Core.Engine
 				byte startHue = this.Owner.HueCycles.Byte((ushort)(cycle + 6));
 				this.Processor.RegAcc.LowByte = startHue;
 
-				if (this.Owner.VideoCard.Displays.IncludesKey(0))
+				if (this.Owner.VideoCard.Displays.ContainsKey(0))
 				{
 					lock (this.Owner.VideoCard.VideoLatch)
 					{
-						VGABitmap display = this.Owner.VideoCard.Displays.ObtainValueByKey(0);
+						VGABitmap display = this.Owner.VideoCard.Displays[0];
 						ushort stagingLoc = (ushort)(source + paletteOffset);
 						int total = count / 3;
 
@@ -551,11 +551,11 @@ namespace Civilization1Remaster.Core.Engine
 			this.Processor.Journal.OpenScope("PullCurrentColors()");
 
 			this.Processor.DisableInterrupts();
-			if (this.Owner.VideoCard.Displays.IncludesKey(0))
+			if (this.Owner.VideoCard.Displays.ContainsKey(0))
 			{
 				lock (this.Owner.VideoCard.VideoLatch)
 				{
-					VGABitmap display = this.Owner.VideoCard.Displays.ObtainValueByKey(0);
+					VGABitmap display = this.Owner.VideoCard.Displays[0];
 					uint stagingLoc = CPU.AsLinearAddress(this.Processor.SegData.Value16, 0xbd06);
 
 					for (int idx = 0; idx < 0x100; idx++)
@@ -586,11 +586,11 @@ namespace Civilization1Remaster.Core.Engine
 			this.Processor.EmitGlobalWord(HueMixerActiveAddress, 0xffff);
 
 			this.Processor.DisableInterrupts();
-			if (this.Owner.VideoCard.Displays.IncludesKey(0))
+			if (this.Owner.VideoCard.Displays.ContainsKey(0))
 			{
 				lock (this.Owner.VideoCard.VideoLatch)
 				{
-					VGABitmap display = this.Owner.VideoCard.Displays.ObtainValueByKey(0);
+					VGABitmap display = this.Owner.VideoCard.Displays[0];
 					uint stagingLoc = CPU.AsLinearAddress(this.Processor.SegData.Value16, 0xbd06);
 
 					for (int idx = 0; idx < 10; idx++)
@@ -647,11 +647,11 @@ namespace Civilization1Remaster.Core.Engine
 				this.Processor.RegAcc.Value16 = this.Processor.PullGlobalWord(HueMixerColorAddress);
 				this.Processor.RegBase.Value16 = this.Processor.PullGlobalWord(HueMixerCountAddress);
 				
-				if (this.Owner.VideoCard.Displays.IncludesKey(0))
+				if (this.Owner.VideoCard.Displays.ContainsKey(0))
 				{
 					lock (this.Owner.VideoCard.VideoLatch)
 					{
-						VGABitmap display = this.Owner.VideoCard.Displays.ObtainValueByKey(0);
+						VGABitmap display = this.Owner.VideoCard.Displays[0];
 						uint stagingLoc = CPU.AsLinearAddress(this.Processor.SegData.Value16, 0xc006);
 
 						for (int idx = 0; idx < this.Processor.RegBase.Value16; idx++)

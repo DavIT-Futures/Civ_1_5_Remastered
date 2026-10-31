@@ -14,10 +14,10 @@ namespace Civilization1Remaster.Core.Video
 		private readonly GameEngine owner;
 		private readonly CPU processor;
 		private readonly IGameHost primaryHost;
-		private readonly BDictionary<int, VGABitmap> displays = new BDictionary<int, VGABitmap>();
-		private readonly BDictionary<int, VGABitmap> pictures = new BDictionary<int, VGABitmap>();
+		private readonly Dictionary<int, VGABitmap> displays = new Dictionary<int, VGABitmap>();
+		private readonly Dictionary<int, VGABitmap> pictures = new Dictionary<int, VGABitmap>();
 		private readonly Queue<int> tokens = new Queue<int>();
-		private readonly CivFonts typefaces;
+		private readonly Dictionary<int, CivFont> typefaces;
 		private readonly ushort glob15c0 = 0;
 		private readonly short glob15c2HorizLoc = 0;
 		private readonly short glob15c4VertLoc = 0;
@@ -61,12 +61,12 @@ namespace Civilization1Remaster.Core.Video
 			get { return this.processor; }
 		}
 
-		public BDictionary<int, VGABitmap> Displays
+		public Dictionary<int, VGABitmap> Displays
 		{
 			get { return this.displays; }
 		}
 
-		public BDictionary<int, VGABitmap> Pictures
+		public Dictionary<int, VGABitmap> Pictures
 		{
 			get { return this.pictures; }
 		}
@@ -112,7 +112,7 @@ namespace Civilization1Remaster.Core.Video
 
 		public ushort ReserveScreen(ushort displayIdx)
 		{
-			if (!this.displays.IncludesKey(displayIdx))
+			if (!this.displays.ContainsKey(displayIdx))
 			{
 				lock (this.VideoLatch)
 				{
@@ -141,7 +141,7 @@ namespace Civilization1Remaster.Core.Video
 				lock (this.VideoLatch)
 				{
 					int cacheSpot = 0;
-					VGABitmap primaryDisplay = this.displays.ObtainValueByKey(0);
+					VGABitmap primaryDisplay = this.displays[0];
 
 					for (int idx = 0; idx < this.glob15d0StagingAltitude; idx++) // height
 					{
@@ -182,11 +182,11 @@ namespace Civilization1Remaster.Core.Video
 
 			if (this.glob15d2StagingMarker != 0)
 			{
-				if (this.displays.IncludesKey(displayIdx))
+				if (this.displays.ContainsKey(displayIdx))
 				{
 					lock (this.VideoLatch)
 					{
-						VGABitmap display = this.displays.ObtainValueByKey(displayIdx);
+						VGABitmap display = this.displays[displayIdx];
 
 						int cacheSpot = 0;
 
@@ -223,14 +223,14 @@ namespace Civilization1Remaster.Core.Video
 			{
 				FillBuffer(displayIdx);
 
-				if (this.displays.IncludesKey(0))
+				if (this.displays.ContainsKey(0))
 				{
-					if (this.displays.IncludesKey(displayIdx))
+					if (this.displays.ContainsKey(displayIdx))
 					{
 						lock (this.VideoLatch)
 						{
-							VGABitmap primaryDisplay = this.displays.ObtainValueByKey(0);
-							VGABitmap display = this.displays.ObtainValueByKey(displayIdx);
+							VGABitmap primaryDisplay = this.displays[0];
+							VGABitmap display = this.displays[displayIdx];
 
 							primaryDisplay.RenderImage(Point.Empty, display, new Rectangle(0, 0, 320, 100), false);
 						}
@@ -264,9 +264,9 @@ namespace Civilization1Remaster.Core.Video
 				}
 
 				// set colors to all planes, as this is what original code does
-				for (int idx = 0; idx < this.displays.Count; idx++)
+				foreach (VGABitmap screen in this.displays.Values)
 				{
-					this.displays[idx].Datum.AssignHuesFromArray(hues, 0, 0, 16);
+					screen.AssignHuesFromArray(hues, 0, 0, 16);
 				}
 			}
 		}
@@ -276,9 +276,9 @@ namespace Civilization1Remaster.Core.Video
 			lock (this.VideoLatch)
 			{
 				// set colors to all planes, as this is what original code does
-				for (int idx = 0; idx < this.displays.Count; idx++)
+				foreach (VGABitmap screen in this.displays.Values)
 				{
-					this.displays[idx].Datum.AssignHue(ordinal, hue);
+					screen.AssignHue(ordinal, hue);
 				}
 			}
 		}
@@ -306,9 +306,9 @@ namespace Civilization1Remaster.Core.Video
 					}
 
 					// set colors to all planes, as this is what original code does
-					for (int idx = 0; idx < this.displays.Count; idx++)
+					foreach (VGABitmap screen in this.displays.Values)
 					{
-						this.displays[idx].Datum.AssignHuesFromArray(hues, since, since, total);
+						screen.AssignHuesFromArray(hues, since, since, total);
 					}
 				}
 			}
@@ -337,9 +337,9 @@ namespace Civilization1Remaster.Core.Video
 					}
 
 					// set colors to all screens, as this is what original code does
-					for (int idx = 0; idx < this.displays.Count; idx++)
+					foreach (VGABitmap screen in this.displays.Values)
 					{
-						this.displays[idx].Datum.AssignHuesFromArray(hues, since, since, total);
+						screen.AssignHuesFromArray(hues, since, since, total);
 					}
 				}
 			}
@@ -350,13 +350,13 @@ namespace Civilization1Remaster.Core.Video
 			// this is either random fade in image, or a scrolling from right to left
 			if (displayIdx != 0)
 			{
-				if (this.displays.IncludesKey(displayIdx))
+				if (this.displays.ContainsKey(displayIdx))
 				{
 					lock (this.VideoLatch)
 					{
-						VGABitmap display0 = this.displays.ObtainValueByKey(0);
+						VGABitmap display0 = this.displays[0];
 
-						display0.RenderImage(this.displays.ObtainValueByKey(displayIdx));
+						display0.RenderImage(this.displays[displayIdx]);
 					}
 				}
 				else
@@ -376,15 +376,15 @@ namespace Civilization1Remaster.Core.Video
 			int horizDisplacementToward = boxToward.Horiz + horizToward;
 			int vertDisplacementToward = boxToward.Vert + vertToward;
 
-			if (this.displays.IncludesKey(boxSince.DisplayIdx))
+			if (this.displays.ContainsKey(boxSince.DisplayIdx))
 			{
-				VGABitmap originPicture = this.displays.ObtainValueByKey(boxSince.DisplayIdx);
+				VGABitmap originPicture = this.displays[boxSince.DisplayIdx];
 
-				if (this.displays.IncludesKey(boxToward.DisplayIdx))
+				if (this.displays.ContainsKey(boxToward.DisplayIdx))
 				{
 					lock (this.VideoLatch)
 					{
-						VGABitmap targetPicture = this.displays.ObtainValueByKey(boxToward.DisplayIdx);
+						VGABitmap targetPicture = this.displays[boxToward.DisplayIdx];
 
 						targetPicture.RenderImage(horizDisplacementToward, vertDisplacementToward, originPicture, new Rectangle(horizDisplacementSince, vertDisplacementSince, breadth, altitude), false);
 					}
@@ -402,18 +402,18 @@ namespace Civilization1Remaster.Core.Video
 
 		public ushort ScreenToPicture(ushort displayIdx, ushort horizLoc, ushort vertLoc, ushort breadth, ushort altitude)
 		{
-			if (this.displays.IncludesKey(displayIdx))
+			if (this.displays.ContainsKey(displayIdx))
 			{
 				lock (this.VideoLatch)
 				{
-					VGABitmap display = this.displays.ObtainValueByKey(displayIdx);
+					VGABitmap display = this.displays[displayIdx];
 					VGABitmap picture = new VGABitmap(breadth, altitude);
 					Rectangle box = new Rectangle(horizLoc, vertLoc, breadth, altitude);
 					display.DuplicateColors(picture);
 
 					picture.RenderImage(Point.Empty, display, box, false);
 
-					this.pictures.Add(this.pictureFollowingIdx, picture);
+					this.pictures[this.pictureFollowingIdx] = picture;
 
 					this.processor.RegAcc.Value16 = (ushort)this.pictureFollowingIdx;
 					this.pictureFollowingIdx++;
@@ -429,14 +429,14 @@ namespace Civilization1Remaster.Core.Video
 
 		public void DrawPictureToDisplay(ushort displayIdx, int horizLoc, int vertLoc, ushort pictureAddr)
 		{
-			if (this.displays.IncludesKey(displayIdx))
+			if (this.displays.ContainsKey(displayIdx))
 			{
-				if (this.pictures.IncludesKey(pictureAddr))
+				if (this.pictures.ContainsKey(pictureAddr))
 				{
 					lock (this.VideoLatch)
 					{
-						VGABitmap display = this.displays.ObtainValueByKey(displayIdx);
-						VGABitmap picture = this.pictures.ObtainValueByKey(pictureAddr);
+						VGABitmap display = this.displays[displayIdx];
+						VGABitmap picture = this.pictures[pictureAddr];
 
 						display.RenderImage(horizLoc, vertLoc, picture, true);
 					}
@@ -470,7 +470,7 @@ namespace Civilization1Remaster.Core.Video
 
 			if (picture != null)
 			{
-				this.pictures.Add(this.pictureFollowingIdx, picture);
+				this.pictures[this.pictureFollowingIdx] = picture;
 
 				this.processor.RegAcc.Value16 = (ushort)this.pictureFollowingIdx;
 				this.pictureFollowingIdx++;
@@ -485,11 +485,11 @@ namespace Civilization1Remaster.Core.Video
 
 		public ushort ObtainDot(ushort displayIdx, int horizLoc, int vertLoc)
 		{
-			if (this.displays.IncludesKey(displayIdx))
+			if (this.displays.ContainsKey(displayIdx))
 			{
 				lock (this.VideoLatch)
 				{
-					this.processor.RegAcc.Value16 = this.displays.ObtainValueByKey(displayIdx).ObtainDot(horizLoc, vertLoc);
+					this.processor.RegAcc.Value16 = this.displays[displayIdx].ObtainDot(horizLoc, vertLoc);
 				}
 			}
 			else
@@ -502,11 +502,11 @@ namespace Civilization1Remaster.Core.Video
 
 		public void AssignDot(ushort displayIdx, int horizLoc, int vertLoc, byte foreHue, byte dotStyle)
 		{
-			if (this.displays.IncludesKey(displayIdx))
+			if (this.displays.ContainsKey(displayIdx))
 			{
 				lock (this.VideoLatch)
 				{
-					VGABitmap display = this.displays.ObtainValueByKey(displayIdx);
+					VGABitmap display = this.displays[displayIdx];
 
 					display.AssignDot(horizLoc, vertLoc, foreHue, (PixelWriteModeEnum)dotStyle);
 				}
@@ -521,11 +521,11 @@ namespace Civilization1Remaster.Core.Video
 		{
 			CivRectangle box = new CivRectangle(this.processor, CPU.AsLinearAddress(this.processor.SegData.Value16, boxAddr));
 
-			if (this.displays.IncludesKey(box.DisplayIdx))
+			if (this.displays.ContainsKey(box.DisplayIdx))
 			{
 				lock (this.VideoLatch)
 				{
-					VGABitmap display = this.displays.ObtainValueByKey(box.DisplayIdx);
+					VGABitmap display = this.displays[box.DisplayIdx];
 
 					horiz1 += box.Horiz;
 					vert1 += box.Vert;
@@ -543,11 +543,11 @@ namespace Civilization1Remaster.Core.Video
 
 		public void FloodBox(int displayIdx, Rectangle box, byte foreHue, byte dotStyle)
 		{
-			if (this.displays.IncludesKey(displayIdx))
+			if (this.displays.ContainsKey(displayIdx))
 			{
 				lock (this.VideoLatch)
 				{
-					this.displays.ObtainValueByKey(displayIdx).FloodBox(box, foreHue, (PixelWriteModeEnum)dotStyle);
+					this.displays[displayIdx].FloodBox(box, foreHue, (PixelWriteModeEnum)dotStyle);
 				}
 			}
 			else
@@ -564,9 +564,9 @@ namespace Civilization1Remaster.Core.Video
 				int headInt = box.Horiz + horizLoc;
 				int remainingInt = box.Vert + vertLoc;
 
-				if (this.displays.IncludesKey(box.DisplayIdx))
+				if (this.displays.ContainsKey(box.DisplayIdx))
 				{
-					this.displays.ObtainValueByKey(box.DisplayIdx).SubstituteHue(new Rectangle(headInt, remainingInt, breadth, altitude), priorHue, freshHue);
+					this.displays[box.DisplayIdx].SubstituteHue(new Rectangle(headInt, remainingInt, breadth, altitude), priorHue, freshHue);
 				}
 				else
 				{
@@ -587,12 +587,12 @@ namespace Civilization1Remaster.Core.Video
 			int breadthInt = 0;
 			int elevation = 0;
 
-			if (!this.typefaces.IncludesKey(typefaceIdx))
+			if (!this.typefaces.ContainsKey(typefaceIdx))
 			{
 				typefaceIdx = 1; // default font
 			}
 
-			CivFont typeface = this.typefaces.ObtainValueByKey(typefaceIdx);
+			CivFont typeface = this.typefaces[typefaceIdx];
 
 			for (int idx = 0; idx < words.Length; idx++)
 			{
@@ -601,14 +601,14 @@ namespace Civilization1Remaster.Core.Video
 
 				breadthInt += typeface.LetterBreadthGap;
 
-				if (typeface.Letters.IncludesKey(chr))
+				if (typeface.Letters.ContainsKey(chr))
 				{
-					typefaceChr = typeface.Letters.ObtainValueByKey(chr);
+					typefaceChr = typeface.Letters[chr];
 				}
 				else
 				{
 					// unknown char, use '?'
-					typefaceChr = typeface.Letters.ObtainValueByKey('?');
+					typefaceChr = typeface.Letters['?'];
 				}
 				breadthInt += typefaceChr.Breadth;
 				elevation = Math.Max(elevation, typefaceChr.Altitude);
@@ -633,18 +633,18 @@ namespace Civilization1Remaster.Core.Video
 		{
 			CivRectangle box = new CivRectangle(this.processor, CPU.AsLinearAddress(this.processor.SegData.Value16, boxAddr));
 
-			if (!this.typefaces.IncludesKey(box.TypefaceIdx))
+			if (!this.typefaces.ContainsKey(box.TypefaceIdx))
 			{
 				box.TypefaceIdx = 1; // default font
 			}
 
-			CivFont typeface = this.typefaces.ObtainValueByKey(box.TypefaceIdx);
+			CivFont typeface = this.typefaces[box.TypefaceIdx];
 
-			if (this.displays.IncludesKey(box.DisplayIdx))
+			if (this.displays.ContainsKey(box.DisplayIdx))
 			{
 				lock (this.VideoLatch)
 				{
-					VGABitmap display = this.displays.ObtainValueByKey(box.DisplayIdx);
+					VGABitmap display = this.displays[box.DisplayIdx];
 					Rectangle box1 = new Rectangle(box.Horiz + horizLoc, box.Vert + vertLoc, box.Breadth, box.Altitude);
 
 					display.RenderText(words, typeface, box1, box.ForeHue, box.RearHue, (PixelWriteModeEnum)box.DotStyle);

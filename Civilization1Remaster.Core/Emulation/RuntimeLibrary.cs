@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -8,7 +9,7 @@ namespace Civilization1Remaster.Core.Emulation
 	public class RuntimeLibrary : GameComponent, IRuntimeLibrary
 	{
 		/// <summary>The open files by handle (B6.6: kept here, no longer in the CPU); the first handle is 0x20, like DOS gave</summary>
-		private readonly BDictionary<short, FileStreamItem> files = new BDictionary<short, FileStreamItem>();
+		private readonly Dictionary<short, FileStreamItem> files = new Dictionary<short, FileStreamItem>();
 
 		private RandomMT19937 dice = new RandomMT19937();
 		private short nextHandle = 0x20;
@@ -155,10 +156,10 @@ namespace Civilization1Remaster.Core.Emulation
 			if (section >= 0xb000)
 			{
 				// this is a graphics bitmap
-				if (!this.Owner.VideoCard.Pictures.IncludesKey(section))
+				if (!this.Owner.VideoCard.Pictures.ContainsKey(section))
 					throw new Exception($"The bitmap 0x{section:x4} is not allocated");
 
-				this.Owner.VideoCard.Pictures.DiscardByKey(section);
+				this.Owner.VideoCard.Pictures.Remove(section);
 				released = true;
 			}
 			else
@@ -231,7 +232,7 @@ namespace Civilization1Remaster.Core.Emulation
 
 			try
 			{
-				this.files.Add(this.nextHandle, new FileStreamItem(new FileStream($"{trail}", variant, rights), kind));
+				this.files[this.nextHandle] = new FileStreamItem(new FileStream($"{trail}", variant, rights), kind);
 				grip = this.nextHandle;
 				this.nextHandle++;
 			}
@@ -254,9 +255,9 @@ namespace Civilization1Remaster.Core.Emulation
 			ushort elementTally = 0;
 			uint spot = CPU.AsLinearAddress(this.Processor.SegData.Value16, addr);
 
-			if (this.files.IncludesKey(hnd))
+			if (this.files.ContainsKey(hnd))
 			{
-				FileStreamItem documentElement = this.files.ObtainValueByKey(hnd);
+				FileStreamItem documentElement = this.files[hnd];
 				byte[] cache = new byte[elementExtent];
 
 				for (int idx = 0; idx < elementTallyAlt; idx++)
@@ -326,9 +327,9 @@ namespace Civilization1Remaster.Core.Emulation
 			short tallyShort = -1;
 			line = "";
 
-			if (this.files.IncludesKey(hnd))
+			if (this.files.ContainsKey(hnd))
 			{
-				FileStreamItem documentElement = this.files.ObtainValueByKey(hnd);
+				FileStreamItem documentElement = this.files[hnd];
 				StringBuilder answer = new StringBuilder();
 				short chr;
 
@@ -357,13 +358,13 @@ namespace Civilization1Remaster.Core.Emulation
 		/// <inheritdoc/>
 		public ushort ReadStreamWord(short hnd, ushort word)
 		{
-			if (!this.files.IncludesKey(hnd))
+			if (!this.files.ContainsKey(hnd))
 			{
 				this.Processor.Journal.EmitLine($"Can't find file handle {hnd}");
 				return word;
 			}
 
-			FileStreamItem documentElement = this.files.ObtainValueByKey(hnd);
+			FileStreamItem documentElement = this.files[hnd];
 			byte[] cache = new byte[2];
 
 			if (documentElement.Kind == FileStreamTypeEnum.Binary)
@@ -401,13 +402,13 @@ namespace Civilization1Remaster.Core.Emulation
 		/// <inheritdoc/>
 		public void WriteStreamWord(ushort word, short hnd)
 		{
-			if (!this.files.IncludesKey(hnd))
+			if (!this.files.ContainsKey(hnd))
 			{
 				this.Processor.Journal.EmitLine($"Can't find file handle {hnd}");
 				return;
 			}
 
-			FileStreamItem documentElement = this.files.ObtainValueByKey(hnd);
+			FileStreamItem documentElement = this.files[hnd];
 
 			if (documentElement.Kind != FileStreamTypeEnum.Binary)
 				throw new InvalidOperationException("WriteStreamWord writes binary files only");
@@ -420,10 +421,10 @@ namespace Civilization1Remaster.Core.Emulation
 			short tallyShort = -1;
 			uint globLocation = CPU.AsLinearAddress(this.Processor.SegData.Value16, globAddr);
 
-			if (this.files.IncludesKey(hnd))
+			if (this.files.ContainsKey(hnd))
 			{
 				tallyShort = 0;
-				FileStreamItem documentElement = this.files.ObtainValueByKey(hnd);
+				FileStreamItem documentElement = this.files[hnd];
 				StringBuilder answer = new StringBuilder();
 
 				switch (layout.ToLower())
@@ -467,9 +468,9 @@ namespace Civilization1Remaster.Core.Emulation
 			ushort elementTally = 0;
 			uint spot = CPU.AsLinearAddress(this.Processor.SegData.Value16, addr);
 
-			if (this.files.IncludesKey(hnd))
+			if (this.files.ContainsKey(hnd))
 			{
-				FileStreamItem documentElement = this.files.ObtainValueByKey(hnd);
+				FileStreamItem documentElement = this.files[hnd];
 				byte[] cache = new byte[elementExtent];
 
 				if (documentElement.Kind == FileStreamTypeEnum.Binary)
@@ -535,11 +536,11 @@ namespace Civilization1Remaster.Core.Emulation
 		{
 			short backAmount = -1;
 
-			if (this.files.IncludesKey(hnd))
+			if (this.files.ContainsKey(hnd))
 			{
 				if (originOther >= 0 && originOther < 3)
 				{
-					FileStreamItem documentElement = this.files.ObtainValueByKey(hnd);
+					FileStreamItem documentElement = this.files[hnd];
 					short scratch = documentElement.PutbackChar;
 					SeekOrigin anchor = SeekOrigin.Begin;
 
@@ -573,9 +574,9 @@ namespace Civilization1Remaster.Core.Emulation
 		{
 			int placeInt = -1;
 
-			if (this.files.IncludesKey(hnd))
+			if (this.files.ContainsKey(hnd))
 			{
-				FileStreamItem documentElement = this.files.ObtainValueByKey(hnd);
+				FileStreamItem documentElement = this.files[hnd];
 				short scratch = documentElement.PutbackChar;
 				placeInt = (int)documentElement.Flow.Position;
 			}
@@ -592,11 +593,11 @@ namespace Civilization1Remaster.Core.Emulation
 		{
 			int backAmountInt = -1;
 
-			if (this.files.IncludesKey(hnd))
+			if (this.files.ContainsKey(hnd))
 			{
 				if (originOther >= 0 && originOther < 3)
 				{
-					FileStreamItem documentElement = this.files.ObtainValueByKey(hnd);
+					FileStreamItem documentElement = this.files[hnd];
 					short scratch = documentElement.PutbackChar;
 					SeekOrigin anchor = SeekOrigin.Begin;
 
@@ -690,7 +691,7 @@ namespace Civilization1Remaster.Core.Emulation
 
 			try
 			{
-				this.files.Add(this.nextHandle, new FileStreamItem(new FileStream($"{trail}", variant, rights), kind));
+				this.files[this.nextHandle] = new FileStreamItem(new FileStream($"{trail}", variant, rights), kind);
 				grip = this.nextHandle;
 				this.nextHandle++;
 			}
@@ -707,10 +708,10 @@ namespace Civilization1Remaster.Core.Emulation
 		{
 			short scratch = 0;
 
-			if (this.files.IncludesKey(hnd))
+			if (this.files.ContainsKey(hnd))
 			{
-				this.files.ObtainValueByKey(hnd).Flow.Close();
-				this.files.DiscardByKey(hnd);
+				this.files[hnd].Flow.Close();
+				this.files.Remove(hnd);
 			}
 			else
 			{
@@ -724,9 +725,9 @@ namespace Civilization1Remaster.Core.Emulation
 
 		public string ReadText(short hnd, int span)
 		{
-			if (this.files.IncludesKey(hnd))
+			if (this.files.ContainsKey(hnd))
 			{
-				FileStreamItem documentElement = this.files.ObtainValueByKey(hnd);
+				FileStreamItem documentElement = this.files[hnd];
 				char[] chars = new char[span];
 				int count = 0;
 				for (int idx = 0; idx < span; idx++)
@@ -750,9 +751,9 @@ namespace Civilization1Remaster.Core.Emulation
 			uint location = CPU.AsLinearAddress(this.Processor.SegData.Value16, stagingAddr);
 			short entryTotal = -1;
 
-			if (this.files.IncludesKey(hnd))
+			if (this.files.ContainsKey(hnd))
 			{
-				FileStreamItem documentElement = this.files.ObtainValueByKey(hnd);
+				FileStreamItem documentElement = this.files[hnd];
 
 				for (int idx = 0; idx < span; idx++)
 				{
@@ -783,9 +784,9 @@ namespace Civilization1Remaster.Core.Emulation
 			uint location = CPU.AsLinearAddress(this.Processor.SegData.Value16, stagingAddr);
 			short entryTotal = -1;
 
-			if (this.files.IncludesKey(hnd))
+			if (this.files.ContainsKey(hnd))
 			{
-				FileStreamItem documentElement = this.files.ObtainValueByKey(hnd);
+				FileStreamItem documentElement = this.files[hnd];
 
 				if (documentElement.Kind == FileStreamTypeEnum.Binary)
 				{
@@ -864,7 +865,7 @@ namespace Civilization1Remaster.Core.Emulation
 			string trail = Path.Combine(this.Processor.StandardFolder, ObtainDOSFileLabel(title.ToUpper()));
 			if (File.Exists(trail))
 			{
-				this.files.Add(this.nextHandle, new FileStreamItem(new FileStream(trail, variant, rights), kind));
+				this.files[this.nextHandle] = new FileStreamItem(new FileStream(trail, variant, rights), kind);
 				short grip = this.nextHandle;
 				this.nextHandle++;
 				this.Processor.Storage.EmitUInt16(CPU.AsLinearAddress(this.Processor.SegData.Value16, hndAddr), (ushort)grip);
@@ -889,9 +890,9 @@ namespace Civilization1Remaster.Core.Emulation
 			ushort backAmountShort = 1;
 			ushort elementTally = 0;
 
-			if (this.files.IncludesKey(hnd))
+			if (this.files.ContainsKey(hnd))
 			{
-				FileStreamItem documentElement = this.files.ObtainValueByKey(hnd);
+				FileStreamItem documentElement = this.files[hnd];
 
 				for (int idx = 0; idx < span; idx++)
 				{

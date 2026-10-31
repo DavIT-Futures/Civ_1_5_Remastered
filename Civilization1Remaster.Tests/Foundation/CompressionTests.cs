@@ -122,7 +122,6 @@ namespace Civilization1Remaster.Tests.Foundation
 		{
 			byte[] content = Encoding.ASCII.GetBytes(text);
 			Assert.Equal(expected, CRC32.ObtainCRC32(content));
-			Assert.Equal(expected, CRC32.ObtainCRC32(content.ToList()));
 		}
 
 		[Fact]

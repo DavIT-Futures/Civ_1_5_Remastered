@@ -15,7 +15,7 @@ namespace Civilization1Remaster.Foundation.Squeeze
 			int binaryFilter = (1 << binaryTally) - 1;
 			int emittedSpan = 0;
 			int emittedContent = 0;
-			BDictionary<LZWWord, int> lookup = new BDictionary<LZWWord, int>();
+			Dictionary<LZWWord, int> lookup = new Dictionary<LZWWord, int>();
 			List<byte> wid = new List<byte>();
 			List<byte> wcount = new List<byte>();
 
@@ -37,7 +37,7 @@ namespace Civilization1Remaster.Foundation.Squeeze
 				wcount.AddRange(wid);
 				wcount.Add((byte)chrAlt);
 
-				if (lookup.IncludesKey(new LZWWord(wcount)))
+				if (lookup.ContainsKey(new LZWWord(wcount)))
 				{
 					wid.Clear();
 					wid.AddRange(wcount);
@@ -45,7 +45,7 @@ namespace Civilization1Remaster.Foundation.Squeeze
 				else
 				{
 					// write w to output
-					int freshAmount = lookup.ObtainValueByKey(new LZWWord(wid));
+					int freshAmount = lookup[new LZWWord(wid)];
 
 					emittedContent |= freshAmount << emittedSpan;
 					emittedSpan += binaryTally;
@@ -97,7 +97,7 @@ namespace Civilization1Remaster.Foundation.Squeeze
 			// write remaining output, if necessary
 			if (wid.Count > 0)
 			{
-				int freshAmount = lookup.ObtainValueByKey(new LZWWord(wid));
+				int freshAmount = lookup[new LZWWord(wid)];
 
 				emittedContent |= freshAmount << emittedSpan;
 				emittedSpan += binaryTally;
@@ -124,7 +124,7 @@ namespace Civilization1Remaster.Foundation.Squeeze
 			int binaryTally = beginBinaryTally;
 			int binaryFilter = (1 << binaryTally) - 1;
 
-			BDictionary<int, byte[]> lookup = new BDictionary<int, byte[]>();
+			Dictionary<int, byte[]> lookup = new Dictionary<int, byte[]>();
 
 			// initial dictionary
 			for (int idx = 0; idx < 256; idx++)
@@ -163,9 +163,9 @@ namespace Civilization1Remaster.Foundation.Squeeze
 				// compare encoded value against dictionary
 				List<byte> item = new List<byte>();
 
-				if (lookup.IncludesKey(freshAmount))
+				if (lookup.ContainsKey(freshAmount))
 				{
-					item.AddRange(lookup.ObtainValueByKey(freshAmount));
+					item.AddRange(lookup[freshAmount]);
 				}
 				else if (freshAmount == lookup.Count)
 				{
@@ -194,7 +194,7 @@ namespace Civilization1Remaster.Foundation.Squeeze
 					binaryTally = beginBinaryTally;
 					binaryFilter = (1 << binaryTally) - 1;
 
-					lookup = new BDictionary<int, byte[]>();
+					lookup = new Dictionary<int, byte[]>();
 
 					for (int idx = 0; idx < 256; idx++)
 					{

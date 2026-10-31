@@ -9,7 +9,6 @@ using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia.Threading;
 using Civilization1Remaster.Core;
-using Civilization1Remaster.Foundation.Containers;
 using Civilization1Remaster.Foundation.Support;
 using Civilization1Remaster.Imaging;
 using Civilization1Remaster.Machine;
@@ -149,19 +148,18 @@ public partial class MainWindow : Window, IGameHost
 		{
 			// Check screen 0 or active seen screens
 			VGABitmap? display = null;
-			for (int idx = 0; idx < this.session.VideoCard.Displays.Count; idx++)
+			foreach (VGABitmap candidate in this.session.VideoCard.Displays.Values)
 			{
-				var entry = this.session.VideoCard.Displays[idx];
-				if (entry.Datum.Seen)
+				if (candidate.Seen)
 				{
-					display = entry.Datum;
+					display = candidate;
 					break;
 				}
 			}
 
-			if (display == null && this.session.VideoCard.Displays.IncludesKey(0))
+			if (display == null && this.session.VideoCard.Displays.TryGetValue(0, out VGABitmap? primary))
 			{
-				display = this.session.VideoCard.Displays.ObtainValueByKey(0);
+				display = primary;
 			}
 
 			if (display != null && display.Edited)

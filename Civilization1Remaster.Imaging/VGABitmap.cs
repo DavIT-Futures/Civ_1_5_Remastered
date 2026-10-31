@@ -252,7 +252,7 @@ namespace Civilization1Remaster.Imaging
 		{
 			VGABitmap? picture = null;
 			using FileStream flow = new FileStream(route, FileMode.Open, FileAccess.Read);
-			List<BKeyValuePair<int, Color>> colors = new List<BKeyValuePair<int, Color>>();
+			List<KeyValuePair<int, Color>> colors = new List<KeyValuePair<int, Color>>();
 			swatch = new byte[0];
 			
 			// PIC file is written in blocks
@@ -312,7 +312,7 @@ namespace Civilization1Remaster.Imaging
 								{
 									throw new Exception($"Palette block type 0x{stamp:x4} malformed");
 								}
-								colors.Add(new BKeyValuePair<int, Color>(slot + idx,
+								colors.Add(new KeyValuePair<int, Color>(slot + idx,
 									VGABitmap.Hue18ToHue(scarlet, lime, sapphire)));
 							}
 						}
@@ -363,8 +363,8 @@ namespace Civilization1Remaster.Imaging
 							// set bitmap palette
 							for (int idx = 0; idx < colors.Count; idx++)
 							{
-								picture.palette[colors[idx].Token] = colors[idx].Datum;
-								picture.swatchRgba[colors[idx].Token] = colors[idx].Datum.ToArgb();
+								picture.palette[colors[idx].Key] = colors[idx].Value;
+								picture.swatchRgba[colors[idx].Key] = colors[idx].Value.ToArgb();
 							}
 						}
 						else
@@ -416,8 +416,8 @@ namespace Civilization1Remaster.Imaging
 							// set bitmap palette
 							for (int idx = 0; idx < colors.Count; idx++)
 							{
-								picture.palette[colors[idx].Token] = colors[idx].Datum;
-								picture.swatchRgba[colors[idx].Token] = ToFullArgb(colors[idx].Datum);
+								picture.palette[colors[idx].Key] = colors[idx].Value;
+								picture.swatchRgba[colors[idx].Key] = ToFullArgb(colors[idx].Value);
 							}
 						}
 						else
@@ -434,10 +434,10 @@ namespace Civilization1Remaster.Imaging
 			return picture;
 		}
 
-		public static List<BKeyValuePair<int, Color>> ColorsFromFile(string route, out byte[] swatch)
+		public static List<KeyValuePair<int, Color>> ColorsFromFile(string route, out byte[] swatch)
 		{
 			using FileStream flow = new FileStream(route, FileMode.Open, FileAccess.Read);
-			List<BKeyValuePair<int, Color>> colors = new List<BKeyValuePair<int, Color>>();
+			List<KeyValuePair<int, Color>> colors = new List<KeyValuePair<int, Color>>();
 			swatch = new byte[0];
 
 			// PIC file is written in blocks
@@ -493,7 +493,7 @@ namespace Civilization1Remaster.Imaging
 								{
 									throw new Exception($"Palette block type 0x{stamp:x4} malformed");
 								}
-								colors.Add(new BKeyValuePair<int, Color>(slot + idx,
+								colors.Add(new KeyValuePair<int, Color>(slot + idx,
 									VGABitmap.Hue18ToHue(scarlet, lime, sapphire)));
 							}
 						}
@@ -840,14 +840,14 @@ namespace Civilization1Remaster.Imaging
 					if (idx > 0)
 						picturePlace += typeface.LetterBreadthGap;
 
-					if (typeface.Letters.IncludesKey(chr))
+					if (typeface.Letters.ContainsKey(chr))
 					{
-						typefaceChr = typeface.Letters.ObtainValueByKey(chr);
+						typefaceChr = typeface.Letters[chr];
 					}
 					else
 					{
 						// unknown char, use '?'
-						typefaceChr = typeface.Letters.ObtainValueByKey('?');
+						typefaceChr = typeface.Letters['?'];
 					}
 
 					int picturePlace1 = picturePlace;
