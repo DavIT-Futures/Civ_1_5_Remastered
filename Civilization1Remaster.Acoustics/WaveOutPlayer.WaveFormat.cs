@@ -9,13 +9,13 @@ namespace Civilization1Remaster.Acoustics
 		[StructLayout(LayoutKind.Sequential)]
 		private struct WaveFormat
 		{
-			public ushort LayoutLabel { get; set; }
-			public ushort Lanes { get; set; }
-			public uint SlicesEachOther { get; set; }
-			public uint MeanOctetsEachOther { get; set; }
-			public ushort ChunkSnap { get; set; }
-			public ushort DigitsEachSlice { get; set; }
-			public ushort AdditionalExtent { get; set; }
+			public ushort LayoutLabel;
+			public ushort Lanes;
+			public uint SlicesEachOther;
+			public uint MeanOctetsEachOther;
+			public ushort ChunkSnap;
+			public ushort DigitsEachSlice;
+			public ushort AdditionalExtent;
 		}
 	}
 }
