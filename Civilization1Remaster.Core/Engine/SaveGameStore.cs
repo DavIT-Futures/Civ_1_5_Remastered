@@ -74,7 +74,7 @@ namespace Civilization1Remaster.Core.Engine
 		/// <inheritdoc/>
 		public ushort ChooseGameToImport()
 		{
-			this.Processor.Journal.OpenScope("ChooseGameToImport()");
+			using var _ = this.Processor.Journal.Scope("ChooseGameToImport()");
 
 			ushort bay = 0xffff;
 			LoadingGame = 0x1;
@@ -101,8 +101,6 @@ namespace Civilization1Remaster.Core.Engine
 				0, 0);
 
 			this.Owner.Startup.ShowMouseCursor();
-
-			this.Processor.Journal.CloseScope("ChooseGameToImport");
 
 			return bay;
 		}
@@ -136,7 +134,7 @@ namespace Civilization1Remaster.Core.Engine
 		/// <inheritdoc/>
 		public ushort LoadGameFromMenu(ushort marker)
 		{
-			this.Processor.Journal.OpenScope($"ImportGameFromMenu({marker})");
+			using var _ = this.Processor.Journal.Scope($"ImportGameFromMenu({marker})");
 
 			ushort bay = 0xffff;
 			LoadingGame = 0x1;
@@ -161,8 +159,6 @@ namespace Civilization1Remaster.Core.Engine
 				this.Owner.Startup.ShowMouseCursor();
 			}
 
-			this.Processor.Journal.CloseScope("ImportGameFromMenu");
-
 
 			return bay;
 		}
@@ -170,7 +166,7 @@ namespace Civilization1Remaster.Core.Engine
 		/// <inheritdoc/>
 		public ushort LoadGame(ushort docnameAddr, ushort marker)
 		{
-			this.Processor.Journal.OpenScope($"ImportGame(0x{docnameAddr:x4}, {marker})");
+			using var _ = this.Processor.Journal.Scope($"ImportGame(0x{docnameAddr:x4}, {marker})");
 
 			this.Owner.Libc.CopyText((ushort)(docnameAddr + 9), "SVE");
 
@@ -253,15 +249,13 @@ namespace Civilization1Remaster.Core.Engine
 			}
 
 
-			this.Processor.Journal.CloseScope("ImportGame");
-
 			return result;
 		}
 
 		/// <inheritdoc/>
 		public void ShowStoreGameDialog(ushort slot)
 		{
-			this.Processor.Journal.OpenScope($"DisplayStoreGameDialog({slot})");
+			using var _ = this.Processor.Journal.Scope($"DisplayStoreGameDialog({slot})");
 
 			FileError = 0;
 			LoadingGame = 0;
@@ -334,14 +328,12 @@ namespace Civilization1Remaster.Core.Engine
 			this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
 
 			this.Owner.Startup.ShowMouseCursor();
-
-			this.Processor.Journal.CloseScope("DisplayStoreGameDialog");
 		}
 
 		/// <inheritdoc/>
 		public ushort SaveGame(ushort docnameAddr)
 		{
-			this.Processor.Journal.OpenScope($"StoreGame(0x{docnameAddr:x4})");
+			using var _ = this.Processor.Journal.Scope($"StoreGame(0x{docnameAddr:x4})");
 
 			ushort personSlot = (ushort)(this.Owner.World.PersonParticipantIdx << 1);
 
@@ -368,15 +360,13 @@ namespace Civilization1Remaster.Core.Engine
 			SaveGameContent(this.Processor.PullText(CPU.AsLinearAddress(this.Processor.SegData.Value16, docnameAddr)));
 
 
-			this.Processor.Journal.CloseScope("StoreGame");
-
 			return 0x1;
 		}
 
 		/// <inheritdoc/>
 		public ushort AskForSaveDrive()
 		{
-			this.Processor.Journal.OpenScope("QueryForStoreDrive()");
+			using var _ = this.Processor.Journal.Scope("QueryForStoreDrive()");
 
 			if (SaveDrive == 0xffff)
 			{
@@ -443,8 +433,6 @@ namespace Civilization1Remaster.Core.Engine
 
 					this.Owner.Dialogs.ShowMenu(TextBuffer.Address, 100, 80, 1);
 
-					this.Processor.Journal.CloseScope("QueryForStoreDrive");
-
 					return 0xffff;
 				}
 			}
@@ -453,15 +441,13 @@ namespace Civilization1Remaster.Core.Engine
 
 			drive = SaveDrive;
 
-			this.Processor.Journal.CloseScope("QueryForStoreDrive");
-
 			return drive;
 		}
 
 		/// <inheritdoc/>
 		public ushort CheckDrive(ushort driveIdx)
 		{
-			this.Processor.Journal.OpenScope($"VerifyDrive({driveIdx})");
+			using var _ = this.Processor.Journal.Scope($"VerifyDrive({driveIdx})");
 
 			ushort ready = 1;
 
@@ -483,8 +469,6 @@ namespace Civilization1Remaster.Core.Engine
 			}
 
 
-			this.Processor.Journal.CloseScope("VerifyDrive");
-
 			return ready;
 		}
 
@@ -493,7 +477,7 @@ namespace Civilization1Remaster.Core.Engine
 		{
 			route = route.ToUpper();
 
-			this.Processor.Journal.OpenScope($"ImportGameContent('{route}')");
+			using var _ = this.Processor.Journal.Scope($"ImportGameContent('{route}')");
 
 			bool victory = false;
 			string docname = Path.GetFileNameWithoutExtension(RuntimeLibrary.ObtainDOSFileLabel(route));
@@ -789,7 +773,6 @@ namespace Civilization1Remaster.Core.Engine
 					for (int jdx = 0; jdx < this.Owner.World.Participants[idx].MissingTroops.Length; jdx++)
 					{
 						this.Owner.World.Participants[idx].MissingTroops[jdx] = source.PullInt16OrZero();
-
 					}
 				}
 
@@ -890,8 +873,6 @@ namespace Civilization1Remaster.Core.Engine
 				victory = false;
 			}
 
-			this.Processor.Journal.CloseScope("ImportGameContent");
-
 			return victory;
 		}
 
@@ -900,7 +881,7 @@ namespace Civilization1Remaster.Core.Engine
 		{
 			route = route.ToUpper();
 
-			this.Processor.Journal.OpenScope($"StoreGameContent('{route}')");
+			using var _ = this.Processor.Journal.Scope($"StoreGameContent('{route}')");
 
 			bool victory = false;
 			string docname = Path.GetFileNameWithoutExtension(RuntimeLibrary.ObtainDOSFileLabel(route));
@@ -1255,8 +1236,6 @@ namespace Civilization1Remaster.Core.Engine
 
 				victory = false;
 			}
-
-			this.Processor.Journal.CloseScope("StoreGameContent");
 
 			return victory;
 		}

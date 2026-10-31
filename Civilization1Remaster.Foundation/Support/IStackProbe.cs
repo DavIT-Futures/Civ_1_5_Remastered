@@ -6,8 +6,5 @@
 	public interface IStackProbe
 	{
 		ushort StackPointer { get; }
-		ushort StackSegment { get; }
-		ushort DataSegment { get; }
-		ushort FramePointer { get; }
 	}
 }

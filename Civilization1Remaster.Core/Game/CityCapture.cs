@@ -17,7 +17,7 @@ namespace Civilization1Remaster.Core.Game
 		/// <inheritdoc/>
 		public void SeizeCity(short participantIdx, short townIdx, ushort marker)
 		{
-			this.Processor.Journal.OpenScope($"SeizeCity({participantIdx}, {townIdx}, {marker})");
+			using var _ = this.Processor.Journal.Scope($"SeizeCity({participantIdx}, {townIdx}, {marker})");
 
 
 			short person = this.Owner.World.PersonParticipantIdx;
@@ -154,14 +154,12 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 			this.Owner.NewGameWizard.DestroyCivilization((short)formerIdx, participantIdx);
-
-			this.Processor.Journal.CloseScope("SeizeCity");
 		}
 
 		/// <inheritdoc/>
 		public void DestroySpaceship(short participantIdx)
 		{
-			this.Processor.Journal.OpenScope($"EliminateSpaceship({participantIdx})");
+			using var _ = this.Processor.Journal.Scope($"EliminateSpaceship({participantIdx})");
 
 			ushort built = (ushort)(1 << participantIdx);
 			ushort launched = (ushort)(1 << (participantIdx + 8));
@@ -180,14 +178,12 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.World.StarshipMarkers &= (short)~launched;
 
 			this.Owner.NewGameWizard.ClearSpaceshipContent(participantIdx);
-
-			this.Processor.Journal.CloseScope("EliminateSpaceship");
 		}
 
 		/// <inheritdoc/>
 		public ushort ComputeCityPlunder(short townIdx)
 		{
-			this.Processor.Journal.OpenScope($"ComputeCityPlunder({townIdx})");
+			using var _ = this.Processor.Journal.Scope($"ComputeCityPlunder({townIdx})");
 
 			short size = this.Owner.World.Towns[townIdx].TrueExtent;
 			Player victim = this.Owner.World.Participants[(ushort)this.Owner.World.Towns[townIdx].ParticipantIdx];
@@ -197,15 +193,13 @@ namespace Civilization1Remaster.Core.Game
 				CPU.SignedQuotient((short)(victim.Gold * size), divisor) :
 				(short)(CPU.SignedQuotient(victim.Gold, divisor) * size);
 
-			this.Processor.Journal.CloseScope("ComputeCityPlunder");
-
 			return (ushort)plunder;
 		}
 
 		/// <inheritdoc/>
 		public void ChooseTechnologyToTake(short participantIdx1, short participantIdx2)
 		{
-			this.Processor.Journal.OpenScope($"ChooseTechnologyToTake({participantIdx1}, {participantIdx2})");
+			using var _ = this.Processor.Journal.Scope($"ChooseTechnologyToTake({participantIdx1}, {participantIdx2})");
 
 			// The best technology for the AI is 0 when no technology has ObtainTechnologyInfo > -1 (the local 0x4 of the
 			// original, read uninitialized); the list of up to 72 technologies of the frame is in C# (B3)
@@ -255,7 +249,6 @@ namespace Civilization1Remaster.Core.Game
 							{
 								choice = this.Owner.Audience.ShowKingDialog(TextBuffer.Address, 0x14, 0x8b);
 							}
-
 						}
 						while (choice == 0xffff);
 
@@ -287,14 +280,12 @@ namespace Civilization1Remaster.Core.Game
 					}
 				}
 			}
-
-			this.Processor.Journal.CloseScope("ChooseTechnologyToTake");
 		}
 
 		/// <inheritdoc/>
 		public void ObtainCityLabel(short townIdx)
 		{
-			this.Processor.Journal.OpenScope($"ObtainCityLabel({townIdx})");
+			using var _ = this.Processor.Journal.Scope($"ObtainCityLabel({townIdx})");
 
 			if (townIdx != -1)
 			{
@@ -310,14 +301,12 @@ namespace Civilization1Remaster.Core.Game
 			{
 				this.Owner.Words.Append("NONE");
 			}
-
-			this.Processor.Journal.CloseScope("ObtainCityLabel");
 		}
 
 		/// <inheritdoc/>
 		public short WaitForKeyPressOrMouseClick()
 		{
-			this.Processor.Journal.OpenScope("AwaitForKeyPressOrMouseClick()");
+			using var _ = this.Processor.Journal.Scope("AwaitForKeyPressOrMouseClick()");
 
 			this.Owner.TurnLogic.WaitForKey();
 
@@ -336,15 +325,13 @@ namespace Civilization1Remaster.Core.Game
 				key = this.Owner.Libc.ReadKey();
 			}
 
-			this.Processor.Journal.CloseScope("AwaitForKeyPressOrMouseClick");
-
 			return key;
 		}
 
 		/// <inheritdoc/>
 		public ushort FoundTradeRoute(short participantIdx, short troopIdx, short townIdx)
 		{
-			this.Processor.Journal.OpenScope($"FoundTradeRoute({participantIdx}, {troopIdx}, {townIdx})");
+			using var _ = this.Processor.Journal.Scope($"FoundTradeRoute({participantIdx}, {troopIdx}, {townIdx})");
 
 			UnitMemory troops = new UnitMemory(this.Processor);
 			ushort homeIdx = (ushort)troops.PullSigned(participantIdx, troopIdx, UnitMemory.BaseTown);
@@ -431,8 +418,6 @@ namespace Civilization1Remaster.Core.Game
 				home.CommerceTownIndices[replacedIdx] = (sbyte)townIdx;
 			}
 
-			this.Processor.Journal.CloseScope("FoundTradeRoute");
-
 			return 1;
 		}
 
@@ -494,7 +479,6 @@ namespace Civilization1Remaster.Core.Game
 
 				this.Owner.Services.AssignDot(2, (short)markHoriz + 0x50, (short)markVert, (ushort)participantIdx);
 			}
-
 		}
 
 		/// <summary>The human player takes or loses the city: the map, the capture message, the city screen or the newspaper</summary>

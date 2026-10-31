@@ -22,12 +22,11 @@ namespace Civilization1Remaster.Core.Game
 		/// <inheritdoc/>
 		public ushort ObtainCityTileIndex(short horizLoc, short vertLoc)
 		{
-			this.Processor.Journal.OpenScope($"ObtainCityTileIndex({horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"ObtainCityTileIndex({horizLoc}, {vertLoc})");
 
 			int index = CitizenSpecialistRules.FindCityTileIndex(horizLoc, vertLoc);
 			ushort result = (index >= 0) ? (ushort)index : (ushort)0xffff;
 
-			this.Processor.Journal.CloseScope("ObtainCityTileIndex");
 			return result;
 		}
 

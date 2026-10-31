@@ -34,7 +34,7 @@ namespace Civilization1Remaster.Core.UI
 		/// <inheritdoc/>
 		public void ShowCivilopedia(ushort part)
 		{
-			this.Processor.Journal.OpenScope($"DisplayCivilopedia({part})");
+			using var _ = this.Processor.Journal.Scope($"DisplayCivilopedia({part})");
 
 			this.Owner.Helpers.HaltHueCycling();
 
@@ -61,14 +61,12 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.Helpers.LaunchHueCycling();
 
 			this.Owner.Startup.ShowMouseCursor();
-
-			this.Processor.Journal.CloseScope("DisplayCivilopedia");
 		}
 
 		/// <inheritdoc/>
 		public ushort ShowCivilopediaIndex(ushort firstEntry, ushort part)
 		{
-			this.Processor.Journal.OpenScope($"DisplayCivilopediaIndex({firstEntry}, {part})");
+			using var _ = this.Processor.Journal.Scope($"DisplayCivilopediaIndex({firstEntry}, {part})");
 
 			this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Yellow);
 
@@ -94,8 +92,6 @@ namespace Civilization1Remaster.Core.UI
 				? ChooseCivilopediaEntryWithMouse(firstEntry, width, entryTally)
 				: ChooseCivilopediaEntryWithKeys(firstEntry, width, entryTally));
 
-			this.Processor.Journal.CloseScope("DisplayCivilopediaIndex");
-
 			return answer;
 		}
 
@@ -105,7 +101,7 @@ namespace Civilization1Remaster.Core.UI
 /// </summary>
 		public void ShowCivilopediaRecord(ushort scienceIdx, ushort part)
 		{
-			this.Processor.Journal.OpenScope($"DisplayCivilopediaRecord({scienceIdx}, {part})");
+			using var _ = this.Processor.Journal.Scope($"DisplayCivilopediaRecord({scienceIdx}, {part})");
 
 			ushort dataSeg = this.Processor.SegData.Value16;
 			this.Processor.EmitGlobalByte(CivilopediaFileNumberOffset, (byte)((byte)part + 0x30));
@@ -218,17 +214,14 @@ namespace Civilization1Remaster.Core.UI
 			}
 
 			this.Owner.Startup.ShowMouseCursor();
-			this.Processor.Journal.CloseScope("DisplayCivilopediaRecord");
 		}
 
 		/// <inheritdoc/>
 		public ushort ObtainFirstPrerequisite(ushort scienceIdx)
 		{
-			this.Processor.Journal.OpenScope($"ObtainFirstPrerequisite({scienceIdx})");
+			using var _ = this.Processor.Journal.Scope($"ObtainFirstPrerequisite({scienceIdx})");
 
 			ushort found = FindInScienceList(0x0, 0x48, scienceIdx);
-
-			this.Processor.Journal.CloseScope("ObtainFirstPrerequisite");
 
 			return found;
 		}
@@ -236,7 +229,7 @@ namespace Civilization1Remaster.Core.UI
 		/// <inheritdoc/>
 		public void DrawIcon(ushort left, ushort top, ushort breadth, ushort height, ushort centreHoriz, ushort centreVert)
 		{
-			this.Processor.Journal.OpenScope($"RenderIcon({left}, {top}, {breadth}, {height}, {centreHoriz}, {centreVert})");
+			using var _ = this.Processor.Journal.Scope($"RenderIcon({left}, {top}, {breadth}, {height}, {centreHoriz}, {centreVert})");
 
 			if ((short)(left + breadth) > 0x13f)
 			{
@@ -258,18 +251,14 @@ namespace Civilization1Remaster.Core.UI
 
 			this.Owner.VideoCard.RenderImage(BackScreenBox, left, top, breadth, height,
 				ScreenBox, (ushort)(centreHoriz - (breadth >> 1)), (ushort)(centreVert - (height >> 1)));
-
-			this.Processor.Journal.CloseScope("RenderIcon");
 		}
 
 		/// <inheritdoc/>
 		public ushort ObtainSecondPrerequisite(ushort scienceIdx)
 		{
-			this.Processor.Journal.OpenScope($"ObtainSecondPrerequisite({scienceIdx})");
+			using var _ = this.Processor.Journal.Scope($"ObtainSecondPrerequisite({scienceIdx})");
 
 			ushort found = FindInScienceList(0x44, 0x1c, scienceIdx);
-
-			this.Processor.Journal.CloseScope("ObtainSecondPrerequisite");
 
 			return found;
 		}
@@ -277,11 +266,9 @@ namespace Civilization1Remaster.Core.UI
 		/// <inheritdoc/>
 		public ushort ObtainTechnologyCategory(ushort scienceIdx)
 		{
-			this.Processor.Journal.OpenScope($"ObtainTechnologyCategory({scienceIdx})");
+			using var _ = this.Processor.Journal.Scope($"ObtainTechnologyCategory({scienceIdx})");
 
 			ushort found = FindInScienceList(0x61, 0xc, scienceIdx);
-
-			this.Processor.Journal.CloseScope("ObtainTechnologyCategory");
 
 			return found;
 		}

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.CompilerServices;
 
 namespace Civilization1Remaster.Foundation.Support
 {
@@ -10,18 +11,23 @@ namespace Civilization1Remaster.Foundation.Support
 	/// </summary>
 	public class LogWrapper
 	{
-		private readonly StreamWriter? journal;
+		private readonly TextWriter? journal;
 		private readonly Stack<ushort> pile = new Stack<ushort>();
 
 		private int journalIndentTier = 0;
 		private IStackProbe? probe;
 
 		public LogWrapper(string route)
+			: this(On ? new StreamWriter(route) : null)
 		{
-			if (On)
-			{
-				this.journal = new StreamWriter(route);
-			}
+		}
+
+		/// <summary>
+		/// A log written to the given writer, or no log when it is null
+		/// </summary>
+		public LogWrapper(TextWriter? journal)
+		{
+			this.journal = journal;
 		}
 
 		public static bool On { get; } = Environment.GetEnvironmentVariable("CIVILIZATION1REMASTER_LOG")?.Trim() == "1";
@@ -40,12 +46,32 @@ namespace Civilization1Remaster.Foundation.Support
 			set { this.probe = value; }
 		}
 
-        public void OpenScope(string words)
+		/// <summary>
+		/// True when somebody reads the text of a scope (the log file or the ScopeListener)
+		/// </summary>
+		public bool NeedsText => this.journal != null || this.ScopeListener != null;
+
+		/// <summary>
+		/// Opens a scope (a block of the log) that is closed when the result is disposed:
+		/// <c>using var _ = journal.Scope("Name(...)")</c>. The scope is closed with the name before the first '(' of the
+		/// text, and in this journal even when the processor switches to another journal meanwhile.
+		/// </summary>
+		public JournalScope Scope(string words)
 		{
-			OpenScope(words, false);
+			OpenScope(words);
+
+			return new JournalScope(this, this.journal != null ? ScopeName(words) : "");
 		}
 
-		public void OpenScope(string words, bool displayLatches)
+		/// <summary>
+		/// Like <see cref="Scope(string)"/>, but the interpolated text is only formatted when somebody reads it
+		/// </summary>
+		public JournalScope Scope([InterpolatedStringHandlerArgument("")] ref ScopeText words)
+		{
+			return Scope(words.ToStringAndClear());
+		}
+
+		private void OpenScope(string words)
 		{
 			this.ScopeOpened?.Invoke();
 			this.ScopeListener?.Invoke(words);
@@ -59,12 +85,7 @@ namespace Civilization1Remaster.Foundation.Support
 					this.pile.Push(this.probe.StackPointer);
 
 				EmitTabs(this.journalIndentTier);
-				this.journal.Write($"{words}");
-
-				if (this.probe != null && displayLatches)
-					this.journal.Write($" // Stack: 0x{this.probe.StackSegment:x4}:0x{this.probe.StackPointer:x4}, DS 0x{this.probe.DataSegment:x4}, BP 0x{this.probe.FramePointer:x4}");
-
-				this.journal.WriteLine();
+				this.journal.WriteLine(words);
 
 				EmitTabs(this.journalIndentTier);
 				this.journal.WriteLine("{");
@@ -73,7 +94,7 @@ namespace Civilization1Remaster.Foundation.Support
 			}
 		}
 
-		public void CloseScope(string words)
+		internal void CloseScope(string words)
 		{
 			if (this.journal != null)
 			{
@@ -120,9 +141,69 @@ namespace Civilization1Remaster.Foundation.Support
 			}
 		}
 
+		/// <summary>
+		/// The name a scope is closed with: the text up to the first '('
+		/// </summary>
+		public static string ScopeName(string words)
+		{
+			int bracket = words.IndexOf('(');
+
+			return bracket < 0 ? words : words.Substring(0, bracket);
+		}
+
 		private void EmitTabs(int tier)
 		{
 			this.journal?.Write($"{new string('\t', tier)}");
 		}
+	}
+
+	/// <summary>
+	/// An open scope of a <see cref="LogWrapper"/>; disposing it closes the scope
+	/// </summary>
+	public readonly struct JournalScope : IDisposable
+	{
+		private readonly LogWrapper? journal;
+		private readonly string name;
+
+		internal JournalScope(LogWrapper journal, string name)
+		{
+			this.journal = journal;
+			this.name = name;
+		}
+
+		public void Dispose()
+		{
+			this.journal?.CloseScope(this.name);
+		}
+	}
+
+	/// <summary>
+	/// The interpolated text of <see cref="LogWrapper.Scope(ref ScopeText)"/>: formatted only when the log needs it
+	/// </summary>
+	[InterpolatedStringHandler]
+	public ref struct ScopeText
+	{
+		private DefaultInterpolatedStringHandler inner;
+		private readonly bool enabled;
+
+		public ScopeText(int literalLength, int formattedCount, LogWrapper journal, out bool enabled)
+		{
+			this.enabled = enabled = journal.NeedsText;
+			this.inner = enabled ? new DefaultInterpolatedStringHandler(literalLength, formattedCount) : default;
+		}
+
+		public void AppendLiteral(string value) => this.inner.AppendLiteral(value);
+
+		public void AppendFormatted<T>(T value) => this.inner.AppendFormatted(value);
+
+		public void AppendFormatted<T>(T value, string? format) => this.inner.AppendFormatted(value, format);
+
+		public void AppendFormatted<T>(T value, int alignment) => this.inner.AppendFormatted(value, alignment);
+
+		public void AppendFormatted<T>(T value, int alignment, string? format) => this.inner.AppendFormatted(value, alignment, format);
+
+		public void AppendFormatted(string? value) => this.inner.AppendFormatted(value);
+
+		internal string ToStringAndClear() => this.enabled ? this.inner.ToStringAndClear() : "";
 	}
 }

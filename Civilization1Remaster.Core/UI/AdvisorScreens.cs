@@ -14,7 +14,7 @@ namespace Civilization1Remaster.Core.UI
 		/// <inheritdoc/>
 		public void ShowReportPreamble(GameText title, ushort style)
 		{
-			this.Processor.Journal.OpenScope($"DisplayReportPreamble(0x{title.Address:x4}, {style})");
+			using var _ = this.Processor.Journal.Scope($"DisplayReportPreamble(0x{title.Address:x4}, {style})");
 
 			this.Owner.Startup.HideMouseCursor();
 
@@ -25,14 +25,12 @@ namespace Civilization1Remaster.Core.UI
 				0, 0);
 
 			DrawReportPreamble(title, style);
-
-			this.Processor.Journal.CloseScope("DisplayReportPreamble");
 		}
 
 		/// <inheritdoc/>
 		public void DrawReportPreamble(GameText title, ushort style)
 		{
-			this.Processor.Journal.OpenScope($"RenderReportPreamble(0x{title.Address:x4}, {style})");
+			using var _ = this.Processor.Journal.Scope($"RenderReportPreamble(0x{title.Address:x4}, {style})");
 
 			Player person = this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx];
 			ushort personSlot = (ushort)(this.Owner.World.PersonParticipantIdx << 1);
@@ -69,14 +67,12 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.TurnHooks.FormatCurrentYear();
 
 			this.Owner.TextPainter.DrawCenteredTextToScreen0(this.Owner.Words.ToString(), 160, 18, Hues.White);
-
-			this.Processor.Journal.CloseScope("RenderReportPreamble");
 		}
 
 		/// <inheritdoc/>
 		public void FinishReportScreen()
 		{
-			this.Processor.Journal.OpenScope("FinishReportScreen()");
+			using var _ = this.Processor.Journal.Scope("FinishReportScreen()");
 
 			this.Owner.Conquest.WaitForKeyPressOrMouseClick();
 
@@ -87,14 +83,12 @@ namespace Civilization1Remaster.Core.UI
 				0, 0);
 
 			this.Owner.Startup.ShowMouseCursor();
-
-			this.Processor.Journal.CloseScope("FinishReportScreen");
 		}
 
 		/// <inheritdoc/>
 		public void ShowScienceReport(short participantIdx)
 		{
-			this.Processor.Journal.OpenScope($"DisplayScienceReport({participantIdx})");
+			using var _ = this.Processor.Journal.Scope($"DisplayScienceReport({participantIdx})");
 
 			ShowReportPreamble(GameTexts.TextScienceReport, 1);
 
@@ -165,14 +159,12 @@ namespace Civilization1Remaster.Core.UI
 			}
 
 			FinishReportScreen();
-
-			this.Processor.Journal.CloseScope("DisplayScienceReport");
 		}
 
 		/// <inheritdoc/>
 		public void DrawUnitCountsChart(short participantIdx)
 		{
-			this.Processor.Journal.OpenScope($"RenderUnitCountsChart({participantIdx})");
+			using var _ = this.Processor.Journal.Scope($"RenderUnitCountsChart({participantIdx})");
 
 			ShowReportPreamble(GameTexts.TextMilitaryStatus, 1);
 
@@ -232,14 +224,12 @@ namespace Civilization1Remaster.Core.UI
 			FinishReportScreen();
 
 			DrawPlayerComparisonChart(participantIdx);
-
-			this.Processor.Journal.CloseScope("RenderUnitCountsChart");
 		}
 
 		/// <inheritdoc/>
 		public void DrawPlayerComparisonChart(short participantIdx)
 		{
-			this.Processor.Journal.OpenScope($"RenderPlayerComparisonChart({participantIdx})");
+			using var _ = this.Processor.Journal.Scope($"RenderPlayerComparisonChart({participantIdx})");
 
 			ShowReportPreamble(GameTexts.TextMilitaryLosses, 4);
 
@@ -305,14 +295,12 @@ namespace Civilization1Remaster.Core.UI
 				PlayerColour(this.Owner.World.PersonParticipantIdx));
 
 			FinishReportScreen();
-
-			this.Processor.Journal.CloseScope("RenderPlayerComparisonChart");
 		}
 
 		/// <inheritdoc/>
 		public void ShowTradeReport(short participantIdx)
 		{
-			this.Processor.Journal.OpenScope($"DisplayTradeReport({participantIdx})");
+			using var _ = this.Processor.Journal.Scope($"DisplayTradeReport({participantIdx})");
 
 
 			ushort[] costs = new ushort[0x18];
@@ -498,14 +486,12 @@ namespace Civilization1Remaster.Core.UI
 
 
 			FinishReportScreen();
-
-			this.Processor.Journal.CloseScope("DisplayTradeReport");
 		}
 
 		/// <inheritdoc/>
 		public void ShowMilitaryReport()
 		{
-			this.Processor.Journal.OpenScope("DisplayMilitaryReport()");
+			using var _ = this.Processor.Journal.Scope("DisplayMilitaryReport()");
 
 			// The list of the rows' players of the frame of the original (B3: in C#; the rows without contact keep 0, the
 			// classic rows read it)
@@ -635,14 +621,12 @@ namespace Civilization1Remaster.Core.UI
 			}
 
 			this.Owner.Startup.ShowMouseCursor();
-
-			this.Processor.Journal.CloseScope("DisplayMilitaryReport");
 		}
 
 		/// <inheritdoc/>
 		public void ShowIntelligenceReport(short participantIdx)
 		{
-			this.Processor.Journal.OpenScope($"DisplayIntelligenceReport({participantIdx})");
+			using var _ = this.Processor.Journal.Scope($"DisplayIntelligenceReport({participantIdx})");
 
 			Player participant = this.Owner.World.Participants[participantIdx];
 
@@ -783,14 +767,12 @@ namespace Civilization1Remaster.Core.UI
 			}
 
 			FinishReportScreen();
-
-			this.Processor.Journal.CloseScope("DisplayIntelligenceReport");
 		}
 
 		/// <inheritdoc/>
 		public void ShowAttitudeReport(short participantIdx)
 		{
-			this.Processor.Journal.OpenScope($"DisplayAttitudeReport({participantIdx})");
+			using var _ = this.Processor.Journal.Scope($"DisplayAttitudeReport({participantIdx})");
 
 
 			ShowReportPreamble(GameTexts.TextAttitudeSurvey, 9);
@@ -865,15 +847,12 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 16, vertLoc + 8, Hues.White);
 
 			FinishReportScreen();
-
-
-			this.Processor.Journal.CloseScope("DisplayAttitudeReport");
 		}
 
 		/// <inheritdoc/>
 		public void AffixProductionCount(short count, short total)
 		{
-			this.Processor.Journal.OpenScope($"AffixProductionCount({count}, {total})");
+			using var _ = this.Processor.Journal.Scope($"AffixProductionCount({count}, {total})");
 
 			if (count < 300)
 			{
@@ -883,14 +862,12 @@ namespace Civilization1Remaster.Core.UI
 			{
 				this.Owner.Words.Append(this.Owner.Libc.IntegerToText((10 * count) / (total / 10), 10));
 			}
-
-			this.Processor.Journal.CloseScope("AffixProductionCount");
 		}
 
 		/// <inheritdoc/>
 		public void ShowCityStatusReport(short participantIdx)
 		{
-			this.Processor.Journal.OpenScope($"DisplayCityStatusReport({participantIdx})");
+			using var _ = this.Processor.Journal.Scope($"DisplayCityStatusReport({participantIdx})");
 
 			ShowReportPreamble(GameTexts.TextCityStatus, 8);
 
@@ -949,8 +926,6 @@ namespace Civilization1Remaster.Core.UI
 			}
 
 			FinishReportScreen();
-
-			this.Processor.Journal.CloseScope("DisplayCityStatusReport");
 		}
 
 		/// <summary>
@@ -1032,7 +1007,6 @@ namespace Civilization1Remaster.Core.UI
 
 				horizLoc += 0x60;
 			}
-
 		}
 
 		/// <summary>Appends " (shields/cost)" of the city's production to the text at TextBuffer.Address (0x87 is the shield)</summary>

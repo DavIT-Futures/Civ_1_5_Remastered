@@ -38,7 +38,7 @@ namespace Civilization1Remaster.Core.UI
 		/// <inheritdoc/>
 		public void LaunchAudience(short participantIdx, int horizLoc, int vertLoc, ushort occasion)
 		{
-			this.Processor.Journal.OpenScope($"LaunchAudience({participantIdx}, {horizLoc}, {vertLoc}, {occasion})");
+			using var _ = this.Processor.Journal.Scope($"LaunchAudience({participantIdx}, {horizLoc}, {vertLoc}, {occasion})");
 
 			this.Owner.MapOps.KeepKnownTileImprovements(horizLoc, vertLoc);
 			this.Owner.MapOps.RepaintMapTile(horizLoc, vertLoc);
@@ -108,13 +108,12 @@ namespace Civilization1Remaster.Core.UI
 			EmissaryAudience = 0;
 			KingAnswer = 0xffff;
 			KingMood = 0xffff;
-			this.Processor.Journal.CloseScope("LaunchAudience");
 		}
 
 		/// <inheritdoc/>
 		public void FinishAudience()
 		{
-			this.Processor.Journal.OpenScope("FinishAudience()");
+			using var _ = this.Processor.Journal.Scope("FinishAudience()");
 
 			ReleaseKingResources();
 
@@ -125,14 +124,12 @@ namespace Civilization1Remaster.Core.UI
 			KingMood = 0xffff;
 			KingAnswer = 0;
 			EmissaryAudience = KingAnswer;
-
-			this.Processor.Journal.CloseScope("FinishAudience");
 		}
 
 		/// <inheritdoc/>
 		public ushort WelcomeEmissary(short participantIdx, int horizLoc, int vertLoc)
 		{
-			this.Processor.Journal.OpenScope($"WelcomeEmissary({participantIdx}, {horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"WelcomeEmissary({participantIdx}, {horizLoc}, {vertLoc})");
 
 			if (EmissaryAudience == 0)
 			{
@@ -151,15 +148,13 @@ namespace Civilization1Remaster.Core.UI
 
 			ushort answer = KingAnswer;
 
-			this.Processor.Journal.CloseScope("WelcomeEmissary");
-
 			return answer;
 		}
 
 		/// <inheritdoc/>
 		public void ObtainKingSalutation(short participantIdx)
 		{
-			this.Processor.Journal.OpenScope($"ObtainKingSalutation({participantIdx})");
+			using var _ = this.Processor.Journal.Scope($"ObtainKingSalutation({participantIdx})");
 
 			ushort leader = (ushort)((participantIdx << 1) + 0x19a2);
 			ushort Regime() => GovernmentTitle(this.Owner.World.Participants[participantIdx].RegimeKind);
@@ -206,14 +201,12 @@ namespace Civilization1Remaster.Core.UI
 			{
 				this.Owner.Words.Append("Our words are backed\nwith NUCLEAR WEAPONS!\n");
 			}
-
-			this.Processor.Journal.CloseScope("ObtainKingSalutation");
 		}
 
 		/// <inheritdoc/>
 		public void ShowKingMessage(short participantIdx)
 		{
-			this.Processor.Journal.OpenScope($"DisplayKingMessage({participantIdx})");
+			using var _ = this.Processor.Journal.Scope($"DisplayKingMessage({participantIdx})");
 
 			this.Owner.Codes.Set(3, CivilizationNameAddr(participantIdx));
 
@@ -225,14 +218,12 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.BlockText.ShowTextDialog(GameTexts.TopicTreaty);
 
 			ShowKingDialog(TextBuffer.Address, 0x14, 0x8b);
-
-			this.Processor.Journal.CloseScope("DisplayKingMessage");
 		}
 
 		/// <inheritdoc/>
 		public void LogAudience(short participantIdx)
 		{
-			this.Processor.Journal.OpenScope($"LogAudience({participantIdx})");
+			using var _ = this.Processor.Journal.Scope($"LogAudience({participantIdx})");
 
 			this.Owner.Politics.AssignDiplomacyFlags(this.Owner.World.PersonParticipantIdx, participantIdx, 2);
 
@@ -255,14 +246,12 @@ namespace Civilization1Remaster.Core.UI
 					}
 				}
 			}
-
-			this.Processor.Journal.CloseScope("LogAudience");
 		}
 
 		/// <inheritdoc/>
 		public void ChoreographKingSpeaking()
 		{
-			this.Processor.Journal.OpenScope("ChoreographKingSpeaking()");
+			using var _ = this.Processor.Journal.Scope("ChoreographKingSpeaking()");
 
 			// The final values of the locals stay in the stack frame, like in the original
 
@@ -316,14 +305,12 @@ namespace Civilization1Remaster.Core.UI
 			ChoreographKingLikeness((ushort)eyes, (ushort)mouth, KingPose);
 
 			this.Owner.TextPainter.WaitForTime(10);
-
-			this.Processor.Journal.CloseScope("ChoreographKingSpeaking");
 		}
 
 		/// <inheritdoc/>
 		public void ShowKingScreen(short participantIdx)
 		{
-			this.Processor.Journal.OpenScope($"DisplayKingScreen({participantIdx})");
+			using var _ = this.Processor.Journal.Scope($"DisplayKingScreen({participantIdx})");
 
 
 			AudiencePlayer = (ushort)participantIdx;
@@ -339,7 +326,6 @@ namespace Civilization1Remaster.Core.UI
 				{
 					ShowKingLine(participantIdx);
 
-					this.Processor.Journal.CloseScope("DisplayKingScreen");
 					return;
 				}
 			}
@@ -429,14 +415,12 @@ namespace Civilization1Remaster.Core.UI
 			}
 
 			KingPictureLoaded = 1;
-
-			this.Processor.Journal.CloseScope("DisplayKingScreen");
 		}
 
 		/// <inheritdoc/>
 		public void LoadKingScenery(short participantIdx)
 		{
-			this.Processor.Journal.OpenScope($"ImportKingScenery({participantIdx})");
+			using var _ = this.Processor.Journal.Scope($"ImportKingScenery({participantIdx})");
 
 			if (AudienceWithoutPictures == 0)
 			{
@@ -488,14 +472,12 @@ namespace Civilization1Remaster.Core.UI
 
 				this.Owner.Startup.ShowMouseCursor();
 			}
-
-			this.Processor.Journal.CloseScope("'LoadKingBackground'");
 		}
 
 		/// <inheritdoc/>
 		public void ReleaseKingResources()
 		{
-			this.Processor.Journal.OpenScope("ReleaseKingResources()");
+			using var _ = this.Processor.Journal.Scope("ReleaseKingResources()");
 
 			this.Owner.Services.PerformSound(1, 0);
 
@@ -505,14 +487,12 @@ namespace Civilization1Remaster.Core.UI
 			}
 
 			KingPictureLoaded = 0x0;
-
-			this.Processor.Journal.CloseScope("ReleaseKingResources");
 		}
 
 		/// <inheritdoc/>
 		public void ChoreographKingLikeness(ushort eyes, ushort mouth, ushort advisorPose)
 		{
-			this.Processor.Journal.OpenScope($"ChoreographKingLikeness({eyes}, {mouth}, {advisorPose})");
+			using var _ = this.Processor.Journal.Scope($"ChoreographKingLikeness({eyes}, {mouth}, {advisorPose})");
 
 			if (AudienceWithoutPictures == 0)
 			{
@@ -574,14 +554,12 @@ namespace Civilization1Remaster.Core.UI
 
 				this.Owner.Startup.ShowMouseCursor();
 			}
-
-			this.Processor.Journal.CloseScope("ChoreographKingLikeness");
 		}
 
 		/// <inheritdoc/>
 		public ushort ShowKingDialog(ushort charsAddr, ushort horizLoc, ushort vertLoc)
 		{
-			this.Processor.Journal.OpenScope($"DisplayKingDialog(0x{charsAddr:x4}, {horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"DisplayKingDialog(0x{charsAddr:x4}, {horizLoc}, {vertLoc})");
 
 			this.Owner.Startup.HideMouseCursor();
 
@@ -603,8 +581,6 @@ namespace Civilization1Remaster.Core.UI
 				ScreenBox, 0, 0x80);
 
 			this.Owner.Startup.ShowMouseCursor();
-
-			this.Processor.Journal.CloseScope("DisplayKingDialog");
 
 			return answer;
 		}

@@ -73,7 +73,7 @@ namespace Civilization1Remaster.Core.Emulation
 
 		public ushort CopyBytes(ushort endpoint, ushort originAlt, ushort tally)
 		{
-			this.Processor.Journal.OpenScope($"CopyBytes(0x{endpoint:x4}, 0x{originAlt:x4}, {tally})");
+			using var _ = this.Processor.Journal.Scope($"CopyBytes(0x{endpoint:x4}, 0x{originAlt:x4}, {tally})");
 
 			int heading = 1;
 			uint target = CPU.AsLinearAddress(this.Processor.SegData.Value16, endpoint);
@@ -95,14 +95,13 @@ namespace Civilization1Remaster.Core.Emulation
 				total--;
 			}
 
-			this.Processor.Journal.CloseScope("CopyBytes");
 			this.Processor.RegAcc.Value16 = endpoint; // for compatibility reasons
 			return endpoint;
 		}
 
 		public ushort FillBytes(ushort endpoint, byte amount, ushort tally)
 		{
-			this.Processor.Journal.OpenScope($"FillBytes(0x{endpoint:x4}, 0x{amount:x2}, {tally})");
+			using var _ = this.Processor.Journal.Scope($"FillBytes(0x{endpoint:x4}, 0x{amount:x2}, {tally})");
 
 			uint target = CPU.AsLinearAddress(this.Processor.SegData.Value16, endpoint);
 			int total = tally;
@@ -114,14 +113,13 @@ namespace Civilization1Remaster.Core.Emulation
 				total--;
 			}
 
-			this.Processor.Journal.CloseScope("FillBytes");
 			this.Processor.RegAcc.Value16 = endpoint; // for compatibility reasons
 			return endpoint;
 		}
 
 		public void MoveFarData(ushort originSection, ushort originDisplacement, ushort targetSection, ushort targetDisplacement, ushort tally)
 		{
-			this.Processor.Journal.OpenScope($"MoveFarData(0x{originSection:x4}, 0x{originDisplacement:x4}, 0x{targetSection:x4}, 0x{targetDisplacement:x4}, {tally})");
+			using var _ = this.Processor.Journal.Scope($"MoveFarData(0x{originSection:x4}, 0x{originDisplacement:x4}, 0x{targetSection:x4}, 0x{targetDisplacement:x4}, {tally})");
 
 			int heading = 1;
 			uint target = CPU.AsLinearAddress(targetSection, targetDisplacement);
@@ -142,14 +140,12 @@ namespace Civilization1Remaster.Core.Emulation
 				origin = (uint)((long)origin + heading);
 				total--;
 			}
-
-			this.Processor.Journal.CloseScope("MoveFarData");
 		}
 
 		/// <inheritdoc/>
 		public bool DosReleaseMemory(ushort section)
 		{
-			this.Processor.Journal.OpenScope($"DosReleaseMemory(0x{section:x4})");
+			using var _ = this.Processor.Journal.Scope($"DosReleaseMemory(0x{section:x4})");
 
 			bool released;
 
@@ -168,7 +164,6 @@ namespace Civilization1Remaster.Core.Emulation
 			}
 
 			this.Processor.RegAcc.Value16 = (ushort)(released ? 0 : 9);
-			this.Processor.Journal.CloseScope("DosReleaseMemory");
 
 			return released;
 		}
@@ -924,7 +919,7 @@ namespace Civilization1Remaster.Core.Emulation
 		/// <inheritdoc/>
 		public bool BiosDiskCall(ushort directive, int volume)
 		{
-			this.Processor.Journal.OpenScope("'_bios_disk'(Cdecl) at 0x3045:0x3062");
+			using var _ = this.Processor.Journal.Scope("'_bios_disk'(Cdecl) at 0x3045:0x3062");
 
 			DriveInfo[] diskDetails = DriveInfo.GetDrives();
 			char chrDisk = (char)((volume >= 0x80) ? (volume - 0x80 + 'C') : ('A' + volume));
@@ -934,7 +929,6 @@ namespace Civilization1Remaster.Core.Emulation
 				case 0:
 					// reset disk system
 					this.Processor.RegAcc.HighByte = 0;
-					this.Processor.Journal.CloseScope("'_bios_disk'");
 					return true;
 
 				case 4:
@@ -946,7 +940,6 @@ namespace Civilization1Remaster.Core.Emulation
 							if (diskDetails[idx].IsReady)
 							{
 								this.Processor.RegAcc.HighByte = 0;
-								this.Processor.Journal.CloseScope("'_bios_disk'");
 								return true;
 							}
 							else
@@ -959,14 +952,13 @@ namespace Civilization1Remaster.Core.Emulation
 			}
 
 			this.Processor.RegAcc.HighByte = 0x80;
-			this.Processor.Journal.CloseScope("'_bios_disk'");
 
 			return false;
 		}
 
 		public bool BiosDiskCall(ushort directive, ushort driveaDetailsAddr)
 		{
-			this.Processor.Journal.OpenScope("'_bios_disk'(Cdecl) at 0x3045:0x3062");
+			using var _ = this.Processor.Journal.Scope("'_bios_disk'(Cdecl) at 0x3045:0x3062");
 
 			DriveInfo[] diskDetails = DriveInfo.GetDrives();
 			uint spot = CPU.AsLinearAddress(this.Processor.SegData.Value16, driveaDetailsAddr);
@@ -978,7 +970,6 @@ namespace Civilization1Remaster.Core.Emulation
 				case 0:
 					// reset disk system
 					this.Processor.RegAcc.HighByte = 0;
-					this.Processor.Journal.CloseScope("'_bios_disk'");
 					return true;
 
 				case 4:
@@ -991,7 +982,6 @@ namespace Civilization1Remaster.Core.Emulation
 							if (diskDetails[idx].IsReady)
 							{
 								this.Processor.RegAcc.HighByte = 0;
-								this.Processor.Journal.CloseScope("'_bios_disk'");
 								return true;
 							}
 							else
@@ -1004,7 +994,6 @@ namespace Civilization1Remaster.Core.Emulation
 			}
 
 			this.Processor.RegAcc.HighByte = 0x80;
-			this.Processor.Journal.CloseScope("'_bios_disk'");
 
 			return false;
 		}

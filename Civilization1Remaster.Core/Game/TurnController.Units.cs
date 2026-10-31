@@ -7,21 +7,19 @@ namespace Civilization1Remaster.Core.Game
 		/// <inheritdoc/>
 		public void RepaintTileIfVisible(int horizLoc, int vertLoc)
 		{
-			this.Processor.Journal.OpenScope($"RepaintTileIfVisible({horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"RepaintTileIfVisible({horizLoc}, {vertLoc})");
 
 			if ((this.Owner.World.ChartSight[horizLoc, vertLoc] & (ushort)(1 << this.Owner.World.PersonParticipantIdx)) != 0 ||
 				MapRevealed != 0)
 			{
 				this.Owner.MapOps.RepaintMapTile(horizLoc, vertLoc);
 			}
-
-			this.Processor.Journal.CloseScope("RepaintTileIfVisible");
 		}
 
 		/// <inheritdoc/>
 		public void RepaintUnitIfVisible(short participantIdx, short troopIdx)
 		{
-			this.Processor.Journal.OpenScope($"RepaintUnitIfVisible({participantIdx}, {troopIdx})");
+			using var _ = this.Processor.Journal.Scope($"RepaintUnitIfVisible({participantIdx}, {troopIdx})");
 
 			short human = this.Owner.World.PersonParticipantIdx;
 
@@ -32,14 +30,12 @@ namespace Civilization1Remaster.Core.Game
 					this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
 					this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert));
 			}
-
-			this.Processor.Journal.CloseScope("RepaintUnitIfVisible");
 		}
 
 		/// <inheritdoc/>
 		public ushort ObtainTileMoveCost(int horizLoc, int vertLoc)
 		{
-			this.Processor.Journal.OpenScope($"ObtainTileMoveCost({horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"ObtainTileMoveCost({horizLoc}, {vertLoc})");
 
 			ushort cost = 0;
 
@@ -58,15 +54,13 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 
-			this.Processor.Journal.CloseScope("ObtainTileMoveCost");
-
 			return cost;
 		}
 
 		/// <inheritdoc/>
 		public ushort CheckCoastalTile(int horizLoc, int vertLoc)
 		{
-			this.Processor.Journal.OpenScope($"VerifyCoastalTile({horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"VerifyCoastalTile({horizLoc}, {vertLoc})");
 
 			IMapPlanes chart = this.Owner.MapOps.Chart;
 			ushort coastal = 0;
@@ -93,15 +87,13 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 
-			this.Processor.Journal.CloseScope("VerifyCoastalTile");
-
 			return coastal;
 		}
 
 		/// <inheritdoc/>
 		public void DrawUnitInfo(short participantIdx, ushort troopIdx)
 		{
-			this.Processor.Journal.OpenScope($"RenderUnitInfo({participantIdx}, {troopIdx})");
+			using var _ = this.Processor.Journal.Scope($"RenderUnitInfo({participantIdx}, {troopIdx})");
 
 			this.Owner.Startup.HideMouseCursor();
 
@@ -121,14 +113,12 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 			this.Owner.Startup.ShowMouseCursor();
-
-			this.Processor.Journal.CloseScope("RenderUnitInfo");
 		}
 
 		/// <inheritdoc/>
 		public ushort CheckPositionOnScreen(int horizLoc, int vertLoc)
 		{
-			this.Owner.Journal.OpenScope($"VerifyPositionOnScreen({horizLoc}, {vertLoc})");
+			using var _ = this.Owner.Journal.Scope($"VerifyPositionOnScreen({horizLoc}, {vertLoc})");
 			ushort onScreen;
 			if (horizLoc < 16 && (short)MapViewHoriz >= 65)
 			{
@@ -147,15 +137,13 @@ namespace Civilization1Remaster.Core.Game
 				onScreen = 1;
 			}
 
-			this.Owner.Journal.CloseScope("VerifyPositionOnScreen");
-
 			return onScreen;
 		}
 
 		/// <inheritdoc/>
 		public void WaitForKey()
 		{
-			this.Processor.Journal.OpenScope("AwaitForKey()");
+			using var _ = this.Processor.Journal.Scope("AwaitForKey()");
 
 			while (this.Owner.Libc.KeyAvailable() != 0)
 			{
@@ -167,14 +155,12 @@ namespace Civilization1Remaster.Core.Game
 				this.Owner.Startup.ReadMouseState();
 			}
 			while (this.Owner.GlobDb3a != 0);
-
-			this.Processor.Journal.CloseScope("AwaitForKey");
 		}
 
 		/// <inheritdoc/>
 		public ushort FindBestGuardian(short participantIdx, ushort troopIdx)
 		{
-			this.Processor.Journal.OpenScope("LocateBestGuardian()");
+			using var _ = this.Processor.Journal.Scope("LocateBestGuardian()");
 
 			ushort best = troopIdx;
 			short current = this.troops.Following(participantIdx, troopIdx);
@@ -204,22 +190,18 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 
-			this.Processor.Journal.CloseScope("LocateBestGuardian");
-
 			return best;
 		}
 
 		/// <inheritdoc/>
 		public void ShowHelpForHuman(GameText topic)
 		{
-			this.Processor.Journal.OpenScope($"DisplayHelpForHuman(0x{topic.Address:x4})");
+			using var _ = this.Processor.Journal.Scope($"DisplayHelpForHuman(0x{topic.Address:x4})");
 
 			if ((short)TurnPlayer == this.Owner.World.PersonParticipantIdx)
 			{
 				this.Owner.HelpSystem.ShowHelpPopupForHuman(topic);
 			}
-		
-			this.Processor.Journal.CloseScope("DisplayHelpForHuman");
 		}
 
 		/// <summary>

@@ -41,7 +41,7 @@ namespace Civilization1Remaster.Core.UI
 		/// <inheritdoc/>
 		public void ClearHallOfFame()
 		{
-			this.Processor.Journal.OpenScope("WipeHallOfFame()");
+			using var _ = this.Processor.Journal.Scope("WipeHallOfFame()");
 
 			this.Processor.SegExtra.Value16 = HallOfFameSegment;
 
@@ -49,14 +49,12 @@ namespace Civilization1Remaster.Core.UI
 			{
 				SetFameScore(entryIdx, -1);
 			}
-
-			this.Processor.Journal.CloseScope("WipeHallOfFame");
 		}
 
 		/// <inheritdoc/>
 		public void LoadHallOfFame()
 		{
-			this.Processor.Journal.OpenScope("ImportHallOfFame()");
+			using var _ = this.Processor.Journal.Scope("ImportHallOfFame()");
 
 			ClearHallOfFame();
 
@@ -67,14 +65,12 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.Libc.MoveFarData(this.Processor.SegData.Value16, TextBuffer.Address, HallOfFameSegment, HallOfFameBaseAddress, HallOfFameTotalSize);
 
 			this.Owner.Libc.CloseHandle(handle);
-
-			this.Processor.Journal.CloseScope("ImportHallOfFame");
 		}
 
 		/// <inheritdoc/>
 		public void SaveHallOfFame()
 		{
-			this.Processor.Journal.OpenScope("StoreHallOfFame()");
+			using var _ = this.Processor.Journal.Scope("StoreHallOfFame()");
 
 			short handle = this.Owner.Libc.OpenHandle("fame.dta", 0x8302, 0x80);
 
@@ -83,14 +79,12 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.Libc.WriteHandle(handle, TextBuffer.Address, HallOfFameTotalSize);
 
 			this.Owner.Libc.CloseHandle(handle);
-
-			this.Processor.Journal.CloseScope("StoreHallOfFame");
 		}
 
 		/// <inheritdoc/>
 		public ushort ShowHallOfFame(ushort newPlace)
 		{
-			this.Processor.Journal.OpenScope($"DisplayHallOfFame({newPlace})");
+			using var _ = this.Processor.Journal.Scope($"DisplayHallOfFame({newPlace})");
 
 			this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.White);
 
@@ -123,15 +117,13 @@ namespace Civilization1Remaster.Core.UI
 			ushort key = (ushort)this.Owner.Conquest.WaitForKeyPressOrMouseClick();
 			ushort result = (ushort)(newPlace != 0xffff && (key == 'c' || key == 'C') ? 1 : 0);
 
-			this.Processor.Journal.CloseScope("DisplayHallOfFame");
-
 			return result;
 		}
 
 		/// <inheritdoc/>
 		public ushort AttachHallOfFameRecord()
 		{
-			this.Processor.Journal.OpenScope("AttachHallOfFameRecord()");
+			using var _ = this.Processor.Journal.Scope("AttachHallOfFameRecord()");
 
 			ushort place = 0xffff;
 
@@ -178,15 +170,13 @@ namespace Civilization1Remaster.Core.UI
 				slotIdx = -1;
 			}
 
-			this.Processor.Journal.CloseScope("AttachHallOfFameRecord");
-
 			return place;
 		}
 
 		/// <inheritdoc/>
 		public void ShowGameResultsScreen(ushort rankGiven, ushort score)
 		{
-			this.Processor.Journal.OpenScope($"DisplayGameResultsScreen({rankGiven}, {score})");
+			using var _ = this.Processor.Journal.Scope($"DisplayGameResultsScreen({rankGiven}, {score})");
 
 			short rank = (short)rankGiven;
 			short percentage = 0;
@@ -279,14 +269,12 @@ namespace Civilization1Remaster.Core.UI
 
 				this.Owner.Startup.ShowMouseCursor();
 			}
-
-			this.Processor.Journal.CloseScope("DisplayGameResultsScreen");
 		}
 
 		/// <inheritdoc/>
 		public void ShowTopCities()
 		{
-			this.Processor.Journal.OpenScope("DisplayTopCities()");
+			using var _ = this.Processor.Journal.Scope("DisplayTopCities()");
 
 			short[] scores = new short[5];
 			short[] towns = new short[5];
@@ -389,8 +377,6 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
 
 			this.Owner.Startup.ShowMouseCursor();
-
-			this.Processor.Journal.CloseScope("DisplayTopCities");
 		}
 
 		private static ushort HallOfFameRecordAddress(int entryIdx)

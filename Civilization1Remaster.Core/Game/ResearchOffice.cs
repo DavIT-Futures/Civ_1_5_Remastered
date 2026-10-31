@@ -63,7 +63,7 @@ namespace Civilization1Remaster.Core.Game
 		/// <inheritdoc/>
 		public void HandleAllCities(short participantIdx)
 		{
-			this.Processor.Journal.OpenScope($"HandleAllCities({participantIdx})");
+			using var _ = this.Processor.Journal.Scope($"HandleAllCities({participantIdx})");
 
 
 			DemocracyPressure = 0;
@@ -107,7 +107,6 @@ namespace Civilization1Remaster.Core.Game
 
 			if (participantIdx == this.Owner.World.PersonParticipantIdx || (this.Owner.World.DiagMarkers & 4) == 0)
 			{
-				this.Processor.Journal.CloseScope("HandleAllCities");
 				return;
 			}
 
@@ -141,14 +140,12 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 			participant.LevyRatio = (short)(10 - participant.ResearchLevyRatio - luxuries);
-
-			this.Processor.Journal.CloseScope("HandleAllCities");
 		}
 
 		/// <inheritdoc/>
 		public void FinalizeProduction(short townIdx, ushort horizLoc, ushort vertLoc)
 		{
-			this.Processor.Journal.OpenScope($"FinalizeProduction({townIdx}, {horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"FinalizeProduction({townIdx}, {horizLoc}, {vertLoc})");
 
 
 			City town = this.Owner.World.Towns[townIdx];
@@ -218,15 +215,12 @@ namespace Civilization1Remaster.Core.Game
 					this.Owner.Services.AssignDot(2, spotHoriz + 0x50, spotVert, holder);
 				}
 			}
-
-
-			this.Processor.Journal.CloseScope("FinalizeProduction");
 		}
 
 		/// <inheritdoc/>
 		public void DrawAdvisorScenery()
 		{
-			this.Processor.Journal.OpenScope("RenderAdvisorScenery()");
+			using var _ = this.Processor.Journal.Scope("RenderAdvisorScenery()");
 
 			this.Owner.Startup.HideMouseCursor();
 
@@ -237,14 +231,12 @@ namespace Civilization1Remaster.Core.Game
 				0, 0);
 
 			this.Owner.Startup.ShowMouseCursor();
-
-			this.Processor.Journal.CloseScope("RenderAdvisorScenery");
 		}
 
 		/// <inheritdoc/>
 		public void RecoverAdvisorScenery()
 		{
-			this.Processor.Journal.OpenScope("RecoverAdvisorScenery()");
+			using var _ = this.Processor.Journal.Scope("RecoverAdvisorScenery()");
 
 			this.Owner.Startup.HideMouseCursor();
 
@@ -255,14 +247,12 @@ namespace Civilization1Remaster.Core.Game
 				0, 0);
 
 			this.Owner.Startup.ShowMouseCursor();
-
-			this.Processor.Journal.CloseScope("RecoverAdvisorScenery");
 		}
 
 		/// <inheritdoc/>
 		public void RenewCityScreen(short townIdx)
 		{
-			this.Processor.Journal.OpenScope($"RenewCityScreen({townIdx})");
+			using var _ = this.Processor.Journal.Scope($"RenewCityScreen({townIdx})");
 
 			DrawAdvisorScenery();
 
@@ -278,14 +268,12 @@ namespace Civilization1Remaster.Core.Game
 			{
 				RecoverAdvisorScenery();
 			}
-
-			this.Processor.Journal.CloseScope("RenewCityScreen");
 		}
 
 		/// <inheritdoc/>
 		public ushort PickCityProduction(short participantIdx, short townIdx)
 		{
-			this.Processor.Journal.OpenScope($"PickCityProduction({participantIdx}, {townIdx})");
+			using var _ = this.Processor.Journal.Scope($"PickCityProduction({participantIdx}, {townIdx})");
 
 			// The words of the frame are in C# (B3, properties below; some are read before they are written: 0)
 			FrameWords outerFrame = this.pickFrame;
@@ -321,7 +309,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 			this.pickFrame = outerFrame;
-			this.Processor.Journal.CloseScope("PickCityProduction");
 
 			return choice;
 		}
@@ -329,7 +316,7 @@ namespace Civilization1Remaster.Core.Game
 		/// <inheritdoc/>
 		public void ComposeProductionOption(short townIdx, ushort price)
 		{
-			this.Processor.Journal.OpenScope($"ComposeProductionOption({townIdx}, {price})");
+			using var _ = this.Processor.Journal.Scope($"ComposeProductionOption({townIdx}, {price})");
 
 			int perTurn = this.Owner.Helpers.ClampValue(
 				(short)CityShields - (short)CityUnitUpkeep, 1, 99);
@@ -342,20 +329,16 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.Words.Append(this.Owner.Libc.IntegerToText((short)turns, 10));
 
 			this.Owner.Words.Append((ushort)(turns != 1 ? 0x22b2 : 0x22b9));
-
-			this.Processor.Journal.CloseScope("ComposeProductionOption");
 		}
 
 		/// <inheritdoc/>
 		public ushort UncoverTechnology(short participantIdx, short participantIdx1)
 		{
-			this.Processor.Journal.OpenScope($"UncoverTechnology({participantIdx}, {participantIdx1})");
+			using var _ = this.Processor.Journal.Scope($"UncoverTechnology({participantIdx}, {participantIdx1})");
 
 
 			ushort result = participantIdx == 0 ? (ushort)0xffff : UncoverTechnologyOf(participantIdx, participantIdx1);
 
-
-			this.Processor.Journal.CloseScope("UncoverTechnology");
 
 			return result;
 		}
@@ -363,7 +346,7 @@ namespace Civilization1Remaster.Core.Game
 		/// <inheritdoc/>
 		public void EarnTechnology(short participantIdx, short scienceIdx, short participantIdx1)
 		{
-			this.Processor.Journal.OpenScope($"EarnTechnology({participantIdx}, {scienceIdx}, {participantIdx1})");
+			using var _ = this.Processor.Journal.Scope($"EarnTechnology({participantIdx}, {scienceIdx}, {participantIdx1})");
 
 
 			if (PlayerKnowsTechnology(participantIdx, scienceIdx) == 0)
@@ -383,8 +366,6 @@ namespace Civilization1Remaster.Core.Game
 					ApplyTechnology(participantIdx, scienceIdx);
 				}
 			}
-
-			this.Processor.Journal.CloseScope("EarnTechnology");
 		}
 
 		/// <inheritdoc/>
@@ -399,7 +380,7 @@ namespace Civilization1Remaster.Core.Game
 		/// <inheritdoc/>
 		public ushort ObtainTechnologyInfo(short participantIdx, ushort scienceIdx)
 		{
-			this.Processor.Journal.OpenScope($"ObtainTechnologyInfo({participantIdx}, {scienceIdx})");
+			using var _ = this.Processor.Journal.Scope($"ObtainTechnologyInfo({participantIdx}, {scienceIdx})");
 
 			sbyte b0 = (sbyte)this.Processor.PullUInt8(this.Processor.SegData.Value16, (ushort)(scienceIdx * 2 + 0xb0a));
 			sbyte b1 = (sbyte)this.Processor.PullUInt8(this.Processor.SegData.Value16, (ushort)(scienceIdx * 2 + 0xb0b));
@@ -407,7 +388,6 @@ namespace Civilization1Remaster.Core.Game
 			short leaderFactor = (short)LeaderWord(leaderVisuals, LeaderTable.Leaning);
 			ushort result = ScienceRules.CalculateTechnologyInfo(b0, b1, leaderFactor);
 
-			this.Processor.Journal.CloseScope("ObtainTechnologyInfo");
 			return result;
 		}
 

@@ -17,7 +17,7 @@ namespace Civilization1Remaster.Core.Engine
 		/// <inheritdoc/>
 		public void ArrangeTextRow(short breadth)
 		{
-			this.Processor.Journal.OpenScope($"ArrangeTextRow({breadth})");
+			using var _ = this.Processor.Journal.Scope($"ArrangeTextRow({breadth})");
 
 			short column = 0;
 
@@ -50,14 +50,12 @@ namespace Civilization1Remaster.Core.Engine
 			{
 				this.Owner.Words.Append("\n");
 			}
-
-			this.Processor.Journal.CloseScope("ArrangeTextRow");
 		}
 
 		/// <inheritdoc/>
 		public int DrawTextChunk(int peakBreadth, int horizLoc, int vertLoc, ushort style)
 		{
-			this.Processor.Journal.OpenScope($"RenderTextChunk({peakBreadth}, {horizLoc}, {vertLoc}, {style})");
+			using var _ = this.Processor.Journal.Scope($"RenderTextChunk({peakBreadth}, {horizLoc}, {vertLoc}, {style})");
 
 			ushort lastBreak = 0;
 			ushort lineStart = 0;
@@ -108,8 +106,6 @@ namespace Civilization1Remaster.Core.Engine
 				vertLoc += (short)lineHeight;
 			}
 
-			this.Processor.Journal.CloseScope("RenderTextChunk");
-
 			return vertLoc;
 		}
 
@@ -123,21 +119,19 @@ namespace Civilization1Remaster.Core.Engine
 		/// <inheritdoc/>
 		public void ShowTextDialog(GameText topic)
 		{
-			this.Processor.Journal.OpenScope($"DisplayTextDialog(0x{topic.Address:x4})");
+			using var _ = this.Processor.Journal.Scope($"DisplayTextDialog(0x{topic.Address:x4})");
 
 			LoadTextFromFile(GameTexts.FileKingTxt, topic);
 
 			ReflowText();
 
 			ArrangeTextRow(0x50);
-
-			this.Processor.Journal.CloseScope("DisplayTextDialog");
 		}
 
 		/// <inheritdoc/>
 		public void ReflowText()
 		{
-			this.Processor.Journal.OpenScope("ReflowText()");
+			using var _ = this.Processor.Journal.Scope("ReflowText()");
 
 			for (int codeIdx = 0; codeIdx < 5; codeIdx++)
 			{
@@ -160,14 +154,12 @@ namespace Civilization1Remaster.Core.Engine
 					this.Owner.Words.Append(rest);
 				}
 			}
-
-			this.Processor.Journal.CloseScope("ReflowText");
 		}
 
 		/// <inheritdoc/>
 		public string ShrinkTextToWidth(string text, ushort peakBreadth)
 		{
-			this.Processor.Journal.OpenScope($"ShrinkTextToWidth(0x{TextBuffer.StackTextAddress:x4}, {peakBreadth})");
+			using var _ = this.Processor.Journal.Scope($"ShrinkTextToWidth(0x{TextBuffer.StackTextAddress:x4}, {peakBreadth})");
 
 			char[] letters = text.ToCharArray();
 			int len = letters.Length;
@@ -183,14 +175,12 @@ namespace Civilization1Remaster.Core.Engine
 				len--;
 			}
 
-			this.Processor.Journal.CloseScope("ShrinkTextToWidth");
-
 			return new string(letters, 0, len);
 		}
 
 		public void ShrinkTextToWidth(ushort charsAddr, ushort peakBreadth)
 		{
-			this.Processor.Journal.OpenScope($"ShrinkTextToWidth(0x{charsAddr:x4}, {peakBreadth})");
+			using var _ = this.Processor.Journal.Scope($"ShrinkTextToWidth(0x{charsAddr:x4}, {peakBreadth})");
 
 			while ((short)this.Owner.TextPainter.MeasureTextWidth(charsAddr) > (short)peakBreadth)
 			{
@@ -203,13 +193,11 @@ namespace Civilization1Remaster.Core.Engine
 
 				this.Processor.EmitGlobalByte((ushort)(charsAddr + len - 1), 0x0);
 			}
-
-			this.Processor.Journal.CloseScope("ShrinkTextToWidth");
 		}
 
 		private ushort LoadTextFromFile(GameText docname, string topic, ushort topicAddr)
 		{
-			this.Processor.Journal.OpenScope($"ImportTextFromFile(0x{docname.Address:x4}, 0x{topicAddr:x4})");
+			using var _ = this.Processor.Journal.Scope($"ImportTextFromFile(0x{docname.Address:x4}, 0x{topicAddr:x4})");
 
 			// The line and the index word (buffers of the file functions under SP in the original)
 			string line = "";
@@ -316,8 +304,6 @@ namespace Civilization1Remaster.Core.Engine
 			}
 
 			ushort result = found ? lines : (ushort)0xffff;
-
-			this.Processor.Journal.CloseScope("ImportTextFromFile");
 
 			return result;
 		}

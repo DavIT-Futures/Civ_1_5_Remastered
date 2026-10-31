@@ -26,7 +26,7 @@ namespace Civilization1Remaster.Core.UI
 		/// <inheritdoc/>
 		public void ShowWhichArmy()
 		{
-			this.Processor.Journal.OpenScope("DisplayWhichArmy()");
+			using var _ = this.Processor.Journal.Scope("DisplayWhichArmy()");
 
 			this.Owner.Words.Set("Which army?\n ");
 
@@ -46,14 +46,12 @@ namespace Civilization1Remaster.Core.UI
 
 			this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8,
 				ScreenBox, 0, 0);
-
-			this.Processor.Journal.CloseScope("DisplayWhichArmy");
 		}
 
 		/// <inheritdoc/>
 		public void ShowArmyList(short participantIdx)
 		{
-			this.Processor.Journal.OpenScope($"DisplayArmyList({participantIdx})");
+			using var _ = this.Processor.Journal.Scope($"DisplayArmyList({participantIdx})");
 
 			this.Owner.Startup.HideMouseCursor();
 
@@ -176,14 +174,12 @@ namespace Civilization1Remaster.Core.UI
 			DrawingBox.TypefaceIdx = 0x1;
 
 			this.Owner.Startup.ShowMouseCursor();
-
-			this.Processor.Journal.CloseScope("DisplayArmyList");
 		}
 
 		/// <inheritdoc/>
 		public void ShowUnitInfo(short participantIdx, short troopIdx)
 		{
-			this.Processor.Journal.OpenScope($"DisplayUnitInfo({participantIdx}, {troopIdx})");
+			using var _ = this.Processor.Journal.Scope($"DisplayUnitInfo({participantIdx}, {troopIdx})");
 
 			Message(CivilizationName(participantIdx))
 				.Text("\n")
@@ -218,8 +214,6 @@ namespace Civilization1Remaster.Core.UI
 			}
 
 			this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 10, 10);
-
-			this.Processor.Journal.CloseScope("DisplayUnitInfo");
 		}
 
 		/// <summary>A tile of the strategic map: sea or land, then a city in the colour of its owner or the owner of the tile</summary>

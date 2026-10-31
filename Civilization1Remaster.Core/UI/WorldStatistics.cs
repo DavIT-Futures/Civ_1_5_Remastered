@@ -22,7 +22,7 @@ namespace Civilization1Remaster.Core.UI
 		/// <inheritdoc/>
 		public void ShowWorldMap(ushort marker)
 		{
-			this.Processor.Journal.OpenScope($"DisplayWorldMap({marker})");
+			using var _ = this.Processor.Journal.Scope($"DisplayWorldMap({marker})");
 
 			this.Owner.Startup.HideMouseCursor();
 
@@ -90,14 +90,12 @@ namespace Civilization1Remaster.Core.UI
 			}
 
 			this.Owner.Startup.ShowMouseCursor();
-
-			this.Processor.Journal.CloseScope("DisplayWorldMap");
 		}
 
 		/// <inheritdoc/>
 		public void ShowGameFigures()
 		{
-			this.Processor.Journal.OpenScope("DisplayGameFigures()");
+			using var _ = this.Processor.Journal.Scope("DisplayGameFigures()");
 
 			this.Owner.Startup.HideMouseCursor();
 
@@ -146,14 +144,12 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
 
 			this.Owner.Startup.ShowMouseCursor();
-
-			this.Processor.Journal.CloseScope("DisplayGameFigures");
 		}
 
 		/// <inheritdoc/>
 		public void ShowCivilizationGraph()
 		{
-			this.Processor.Journal.OpenScope("DisplayCivilizationGraph()");
+			using var _ = this.Processor.Journal.Scope("DisplayCivilizationGraph()");
 
 			this.Owner.Startup.HideMouseCursor();
 
@@ -235,14 +231,12 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
 
 			this.Owner.Startup.ShowMouseCursor();
-
-			this.Processor.Journal.CloseScope("DisplayCivilizationGraph");
 		}
 
 		/// <inheritdoc/>
 		public void ShowWondersOfTheWorld()
 		{
-			this.Processor.Journal.OpenScope("DisplayWondersOfTheWorld()");
+			using var _ = this.Processor.Journal.Scope("DisplayWondersOfTheWorld()");
 
 			this.Owner.Startup.HideMouseCursor();
 
@@ -315,14 +309,12 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
 
 			this.Owner.Startup.ShowMouseCursor();
-
-			this.Processor.Journal.CloseScope("DisplayWondersOfTheWorld");
 		}
 
 		/// <inheritdoc/>
 		public void ShowEpicChronicle()
 		{
-			this.Processor.Journal.OpenScope("DisplayEpicChronicle()");
+			using var _ = this.Processor.Journal.Scope("DisplayEpicChronicle()");
 
 			// The values of the players of the frame of the original (B3: in C#; the barbarians' one never set for the
 			// measures 3 and 4)
@@ -467,14 +459,12 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
 
 			this.Owner.Startup.ShowMouseCursor();
-
-			this.Processor.Journal.CloseScope("DisplayEpicChronicle");
 		}
 
 		/// <inheritdoc/>
 		public void ShowCensus(short participantIdx)
 		{
-			this.Processor.Journal.OpenScope($"DisplayCensus({participantIdx})");
+			using var _ = this.Processor.Journal.Scope($"DisplayCensus({participantIdx})");
 
 			this.Owner.Startup.HideMouseCursor();
 
@@ -496,8 +486,6 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
 
 			this.Owner.Startup.ShowMouseCursor();
-
-			this.Processor.Journal.CloseScope("DisplayCensus");
 		}
 
 		/// <inheritdoc/>
@@ -938,7 +926,7 @@ namespace Civilization1Remaster.Core.UI
 
 		private void DrawCensusLine(short[] values, ushort valuesAddr, short vertLoc, ushort charsAddr)
 		{
-			this.Processor.Journal.OpenScope($"RenderCensusLine({valuesAddr}, {vertLoc}, 0x{charsAddr:x4})");
+			using var scope = this.Processor.Journal.Scope($"RenderCensusLine({valuesAddr}, {vertLoc}, 0x{charsAddr:x4})");
 
 			short humanIdx = this.Owner.World.PersonParticipantIdx;
 			short rank = 1;
@@ -991,8 +979,6 @@ namespace Civilization1Remaster.Core.UI
 				this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), -(this.Owner.TextPainter.MeasureTextWidth(this.Owner.Words.ToString()) - 318), Math.Abs(vertLoc),
 					PlayerColour(bestIdx));
 			}
-
-			this.Processor.Journal.CloseScope("RenderCensusLine");
 		}
 	}
 }

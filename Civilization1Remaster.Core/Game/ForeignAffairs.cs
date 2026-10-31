@@ -16,7 +16,7 @@ namespace Civilization1Remaster.Core.Game
 		/// <inheritdoc/>
 		public void HandlePeaceTreaties(short participantIdx)
 		{
-			this.Processor.Journal.OpenScope($"HandlePeaceTreaties({participantIdx})");
+			using var _ = this.Processor.Journal.Scope($"HandlePeaceTreaties({participantIdx})");
 
 
 			short person = this.Owner.World.PersonParticipantIdx;
@@ -65,16 +65,13 @@ namespace Civilization1Remaster.Core.Game
 
 					player.Relations[otherIdx] &= 0xffdf;
 				}
-
 			}
-
-			this.Processor.Journal.CloseScope("HandlePeaceTreaties");
 		}
 
 		/// <inheritdoc/>
 		public void SwitchGovernment(short participantIdx, short regimeKind)
 		{
-			this.Processor.Journal.OpenScope($"SwitchGovernment({participantIdx}, {regimeKind})");
+			using var _ = this.Processor.Journal.Scope($"SwitchGovernment({participantIdx}, {regimeKind})");
 
 			Player participant = this.Owner.World.Participants[participantIdx];
 			short formerRegime = participant.RegimeKind;
@@ -172,27 +169,23 @@ namespace Civilization1Remaster.Core.Game
 					participant.Relations[otherIdx] &= 0xfff7;
 				}
 			}
-
-			this.Processor.Journal.CloseScope("SwitchGovernment");
 		}
 
 		/// <inheritdoc/>
 		public void BargainPeaceTreaty(short participantIdx1, short participantIdx2, int horizLoc, int vertLoc)
 		{
-			this.Processor.Journal.OpenScope($"BargainPeaceTreaty({participantIdx1}, {participantIdx2}, {horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"BargainPeaceTreaty({participantIdx1}, {participantIdx2}, {horizLoc}, {vertLoc})");
 
 			if (participantIdx1 != 0 && participantIdx2 != 0)
 			{
 				Bargain(participantIdx1, participantIdx2, horizLoc, vertLoc);
 			}
-
-			this.Processor.Journal.CloseScope("BargainPeaceTreaty");
 		}
 
 		/// <inheritdoc/>
 		public void AssignDiplomacyFlags(short participantIdx1, short participantIdx2, ushort markers)
 		{
-			this.Processor.Journal.OpenScope($"AssignDiplomacyFlags({participantIdx1}, {participantIdx2}, {markers})");
+			using var _ = this.Processor.Journal.Scope($"AssignDiplomacyFlags({participantIdx1}, {participantIdx2}, {markers})");
 
 			if (markers == 2 &&
 				(this.Owner.World.Participants[participantIdx1].Relations[participantIdx2] & markers) == 0)
@@ -208,14 +201,12 @@ namespace Civilization1Remaster.Core.Game
 				this.Owner.World.Participants[participantIdx1].Relations[participantIdx2] &= 0xffdf;
 				this.Owner.World.Participants[participantIdx2].Relations[participantIdx1] &= 0xffdf;
 			}
-
-			this.Processor.Journal.CloseScope("AssignDiplomacyFlags");
 		}
 
 		/// <inheritdoc/>
 		public void ClearDiplomacyFlags(short participantIdx1, short participantIdx2, ushort markers)
 		{
-			this.Processor.Journal.OpenScope($"WipeDiplomacyFlags({participantIdx1}, {participantIdx2}, {markers})");
+			using var _ = this.Processor.Journal.Scope($"WipeDiplomacyFlags({participantIdx1}, {participantIdx2}, {markers})");
 
 			if (markers == 2 &&
 				(this.Owner.World.Participants[participantIdx1].Relations[participantIdx2] & markers) != 0)
@@ -231,18 +222,14 @@ namespace Civilization1Remaster.Core.Game
 				this.Owner.World.Participants[participantIdx1].Relations[participantIdx2] &= 0xfffb;
 				this.Owner.World.Participants[participantIdx2].Relations[participantIdx1] &= 0xfffb;
 			}
-
-			this.Processor.Journal.CloseScope("WipeDiplomacyFlags");
 		}
 
 		/// <inheritdoc/>
 		public ushort AIWeighsTreaty(short participantIdx1, short participantIdx2)
 		{
-			this.Processor.Journal.OpenScope($"AIWeighsTreaty({participantIdx1}, {participantIdx2})");
+			using var _ = this.Processor.Journal.Scope($"AIWeighsTreaty({participantIdx1}, {participantIdx2})");
 
 			ushort accepted = WeighTreaty(participantIdx1, participantIdx2) ? (ushort)1 : (ushort)0;
-
-			this.Processor.Journal.CloseScope("AIWeighsTreaty");
 
 			return accepted;
 		}
@@ -250,7 +237,7 @@ namespace Civilization1Remaster.Core.Game
 		/// <inheritdoc/>
 		public void SwapTechnology(short participantIdx1, short participantIdx2)
 		{
-			this.Processor.Journal.OpenScope($"SwapTechnology({participantIdx1}, {participantIdx2})");
+			using var _ = this.Processor.Journal.Scope($"SwapTechnology({participantIdx1}, {participantIdx2})");
 
 			short firstGains = -1, secondGains = -1;
 
@@ -275,14 +262,12 @@ namespace Civilization1Remaster.Core.Game
 
 				this.Owner.Advisors.EarnTechnology(participantIdx2, secondGains, participantIdx1);
 			}
-
-			this.Processor.Journal.CloseScope("SwapTechnology");
 		}
 
 		/// <inheritdoc/>
 		public ushort FindNearestCityOfPlayer(short participantIdx, int horizLoc, int vertLoc)
 		{
-			this.Processor.Journal.OpenScope($"LocateNearestCityOfPlayer({participantIdx}, {horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"LocateNearestCityOfPlayer({participantIdx}, {horizLoc}, {vertLoc})");
 
 			short nearest = 16;
 
@@ -298,8 +283,6 @@ namespace Civilization1Remaster.Core.Game
 					nearest = distance;
 				}
 			}
-
-			this.Processor.Journal.CloseScope("LocateNearestCityOfPlayer");
 
 			return (ushort)nearest;
 		}

@@ -43,7 +43,7 @@ namespace Civilization1Remaster.Core.UI
 		/// <inheritdoc/>
 		public void ShowCityScreen(short townIdx, short improvement)
 		{
-			this.Processor.Journal.OpenScope($"DisplayCityScreen({townIdx}, {improvement})");
+			using var _ = this.Processor.Journal.Scope($"DisplayCityScreen({townIdx}, {improvement})");
 
 			City settlement = this.Owner.World.Towns[townIdx];
 
@@ -591,40 +591,34 @@ namespace Civilization1Remaster.Core.UI
 
 				this.Owner.Helpers.LaunchHueCycling();
 			}
-
-			this.Processor.Journal.CloseScope("DisplayCityScreen");
 		}
 
 		/// <inheritdoc/>
 		public void DrawCityPicture(ushort column, ushort row, ushort pictureIdx)
 		{
-			this.Processor.Journal.OpenScope($"RenderCityPicture({column}, {row}, {pictureIdx})");
+			using var _ = this.Processor.Journal.Scope($"RenderCityPicture({column}, {row}, {pictureIdx})");
 
 			this.Owner.Services.DrawPictureToScreen(BackScreenBox,
 				((row & 1) * 8) + (column * 16) - 5,
 				(row * 8) + 50,
 				CityWallPicture(pictureIdx));
-
-			this.Processor.Journal.CloseScope("RenderCityPicture");
 		}
 
 		/// <inheritdoc/>
 		public void DrawCityPictureRegion(ushort column, ushort row, ushort picture, ushort kind)
 		{
-			this.Processor.Journal.OpenScope($"RenderCityPictureRegion({column}, {row}, {picture}, {kind})");
+			using var _ = this.Processor.Journal.Scope($"RenderCityPictureRegion({column}, {row}, {picture}, {kind})");
 
 			this.Owner.Services.DrawPictureToScreen(BackScreenBox,
 				((row & 1) << 3) + (column << 4),
 				(row << 3) + 26,
 				CitySceneryPiecePicture(picture, kind));
-
-			this.Processor.Journal.CloseScope("RenderCityPictureRegion");
 		}
 
 		/// <inheritdoc/>
 		public void DrawCityResourceBar(ushort column, ushort row, ushort picture)
 		{
-			this.Processor.Journal.OpenScope($"RenderCityResourceBar({column}, {row}, {picture})");
+			using var _ = this.Processor.Journal.Scope($"RenderCityResourceBar({column}, {row}, {picture})");
 
 			if ((short)picture < 0x30)
 			{
@@ -648,14 +642,12 @@ namespace Civilization1Remaster.Core.UI
 					(short)row - 10,
 					WonderPicture(picture));
 			}
-
-			this.Processor.Journal.CloseScope("RenderCityResourceBar");
 		}
 
 		/// <inheritdoc/>
 		public void DrawCityScenery(short townIdx, ushort rowHoriz, ushort rowVert, ushort breadth)
 		{
-			this.Processor.Journal.OpenScope($"RenderCityScenery({townIdx}, {rowHoriz}, {rowVert}, {breadth})");
+			using var _ = this.Processor.Journal.Scope($"RenderCityScenery({townIdx}, {rowHoriz}, {rowVert}, {breadth})");
 
 			// The pictures are in the stack frame, like in the original, and the final values of the locals stay there
 
@@ -713,14 +705,12 @@ namespace Civilization1Remaster.Core.UI
 			}
 
 			this.Owner.Helpers.ReleaseResource(pictures[0], 0x4ec4);
-
-			this.Processor.Journal.CloseScope("RenderCityScenery");
 		}
 
 		/// <inheritdoc/>
 		public void DrawCityBuildings(ushort improvement, short participantIdx, short townIdx)
 		{
-			this.Processor.Journal.OpenScope($"RenderCityBuildings({improvement}, {participantIdx}, {townIdx})");
+			using var _ = this.Processor.Journal.Scope($"RenderCityBuildings({improvement}, {participantIdx}, {townIdx})");
 
 			this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, CitySceneryPiecesPictureAddress, 0);
 
@@ -761,14 +751,12 @@ namespace Civilization1Remaster.Core.UI
 
 			CutWonderPictures(townIdx, false, CityWondersPictureAddress);
 			CutWonderPictures(townIdx, true, CityWondersInMaskPictureAddress);
-
-			this.Processor.Journal.CloseScope("RenderCityBuildings");
 		}
 
 		/// <inheritdoc/>
 		public ushort SeizeCityScenery(ushort picture)
 		{
-			this.Processor.Journal.OpenScope($"SeizeCityScenery({picture})");
+			using var _ = this.Processor.Journal.Scope($"SeizeCityScenery({picture})");
 
 			this.Processor.SegExtra.Value16 = CitySceneryBoxes;
 
@@ -789,15 +777,13 @@ namespace Civilization1Remaster.Core.UI
 				SceneryBoxField(picture, SceneryBoxWidth),
 				SceneryBoxField(picture, SceneryBoxHeight));
 
-			this.Processor.Journal.CloseScope("SeizeCityScenery");
-
 			return handle;
 		}
 
 		/// <inheritdoc/>
 		public void DrawCitySceneryForPlayer(short participantIdx)
 		{
-			this.Processor.Journal.OpenScope($"RenderCitySceneryForPlayer({participantIdx})");
+			using var _ = this.Processor.Journal.Scope($"RenderCitySceneryForPlayer({participantIdx})");
 
 			// The pictures are in the stack frame, like in the original, and the final values of the locals stay there
 
@@ -863,14 +849,12 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.Helpers.ReleaseResource(pictures[0], 0);
 
 			this.Owner.Helpers.LaunchHueCycling();
-
-			this.Processor.Journal.CloseScope("RenderCitySceneryForPlayer");
 		}
 
 		/// <inheritdoc/>
 		public void RiotAnimation()
 		{
-			this.Processor.Journal.OpenScope("RiotAnimation()");
+			using var _ = this.Processor.Journal.Scope("RiotAnimation()");
 
 			ushort[] pictures = new ushort[10];
 
@@ -950,14 +934,12 @@ namespace Civilization1Remaster.Core.UI
 			{
 				this.Owner.Helpers.ReleaseResource(pictures[idx], 0);
 			}
-
-			this.Processor.Journal.CloseScope("RiotAnimation");
 		}
 
 		/// <inheritdoc/>
 		public void DrawCitySceneryForHuman()
 		{
-			this.Processor.Journal.OpenScope("RenderCitySceneryForHuman()");
+			using var _ = this.Processor.Journal.Scope("RenderCitySceneryForHuman()");
 
 			// The pictures are in the stack frame, like in the original, and the final values of the locals stay there
 
@@ -1009,8 +991,6 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.TurnLogic.WaitForKey();
 
 			this.Owner.Helpers.ReleaseResource(pictures[0], 0);
-
-			this.Processor.Journal.CloseScope("RenderCitySceneryForHuman");
 		}
 
 		/// <summary>

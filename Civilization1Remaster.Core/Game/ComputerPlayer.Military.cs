@@ -20,7 +20,7 @@ namespace Civilization1Remaster.Core.Game
 		/// <inheritdoc/>
 		public void PostCityDefenders(short townIdx)
 		{
-			this.Processor.Journal.OpenScope($"PostCityDefenders({townIdx})");
+			using var _ = this.Processor.Journal.Scope($"PostCityDefenders({townIdx})");
 
 			short townHoriz = (short)this.Owner.World.Towns[townIdx].Place.X;
 			short townVert = (short)this.Owner.World.Towns[townIdx].Place.Y;
@@ -53,8 +53,6 @@ namespace Civilization1Remaster.Core.Game
 					}
 				}
 			}
-
-			this.Processor.Journal.CloseScope("PostCityDefenders");
 		}
 
 		/// <summary>

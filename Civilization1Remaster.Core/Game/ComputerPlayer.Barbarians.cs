@@ -8,7 +8,7 @@ namespace Civilization1Remaster.Core.Game
 		/// <inheritdoc/>
 		public ushort ManageBarbarianUnit(short participantIdx, short troopIdx)
 		{
-			this.Processor.Journal.OpenScope($"ManageBarbarianUnit({participantIdx}, {troopIdx})");
+			using var _ = this.Processor.Journal.Scope($"ManageBarbarianUnit({participantIdx}, {troopIdx})");
 
 			ushort dataSeg = this.Processor.SegData.Value16;
 			ushort unitAddr = (ushort)((ushort)participantIdx * 0x600 + (ushort)troopIdx * 0xc);
@@ -20,13 +20,11 @@ namespace Civilization1Remaster.Core.Game
 				if (!this.Owner.TurnHooks.ClassicBarbarianOrder)
 				{
 					this.Owner.UnitOps.DestroyUnit(participantIdx, troopIdx);
-					this.Processor.Journal.CloseScope("ManageBarbarianUnit");
 					return 0xffff;
 				}
 
 				this.Processor.RegAcc.Value16 = (ushort)(((0x600 * (ushort)participantIdx) & 0xff00) | unitYByte);
 				this.Owner.UnitOps.DestroyUnit(participantIdx, troopIdx);
-				this.Processor.Journal.CloseScope("ManageBarbarianUnit");
 				return this.Processor.RegAcc.Value16;
 			}
 
@@ -42,12 +40,10 @@ namespace Civilization1Remaster.Core.Game
 			if (UnitKindWordAt(unitSpecOffset, UnitKindTable.TroopGroup) == 0x5)
 			{
 				ushort seaResult = this.ManageBarbarianSeaTransport(participantIdx, troopIdx, unitAddr, unitX, unitY);
-				this.Processor.Journal.CloseScope("ManageBarbarianUnit");
 				return seaResult;
 			}
 
 			ushort landResult = this.ManageBarbarianFieldUnit(participantIdx, troopIdx, unitAddr, unitX, unitY, mayOccupyCurrent);
-			this.Processor.Journal.CloseScope("ManageBarbarianUnit");
 			return landResult;
 		}
 

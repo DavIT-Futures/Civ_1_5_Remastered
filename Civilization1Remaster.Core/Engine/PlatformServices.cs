@@ -45,7 +45,7 @@ namespace Civilization1Remaster.Core.Engine
 		/// <inheritdoc/>
 		public void LaunchTimer()
 		{
-			this.Processor.Journal.OpenScope("LaunchTimer()");
+			using var _ = this.Processor.Journal.Scope("LaunchTimer()");
 
 			byte running = this.Processor.PullGlobalByte(TimerRunningFlagAddress);
 			this.Processor.EmitGlobalByte(TimerRunningFlagAddress, 0x1);
@@ -62,25 +62,21 @@ namespace Civilization1Remaster.Core.Engine
 
 				this.Processor.AllowClock = true;
 			}
-
-			this.Processor.Journal.CloseScope("LaunchTimer");
 		}
 
 		/// <inheritdoc/>
 		public void HaltTimer()
 		{
-			this.Processor.Journal.OpenScope("HaltTimer()");
+			using var _ = this.Processor.Journal.Scope("HaltTimer()");
 
 			this.Processor.RegAcc.LowByte = this.Processor.PullGlobalByte(TimerRunningFlagAddress);
 			this.Processor.EmitGlobalByte(TimerRunningFlagAddress, 0x0);
-
-			this.Processor.Journal.CloseScope("HaltTimer");
 		}
 
 		/// <inheritdoc/>
 		public void ClockInterrupt()
 		{
-			this.Processor.Journal.OpenScope("ClockInterrupt()");
+			using var _ = this.Processor.Journal.Scope("ClockInterrupt()");
 
 			// The interrupted registers are kept outside the emulated stack (the original pushes them onto the stack of the game):
 			// what an interrupt leaves below SP would depend on when it comes, and the game reads uninitialized locals there
@@ -145,14 +141,12 @@ namespace Civilization1Remaster.Core.Engine
 			(this.Processor.RegFrame.Value16, this.Processor.RegAcc.Value16, this.Processor.RegBase.Value16,
 				this.Processor.RegCount.Value16, this.Processor.RegData.Value16, this.Processor.SegData.Value16) = (frame, acc, basis, count, data, dataSection);
 			// IRET - Pop flags and Far return
-
-			this.Processor.Journal.CloseScope("ClockInterrupt");
 		}
 
 		/// <inheritdoc/>
 		public void PrepareTimer()
 		{
-			this.Processor.Journal.OpenScope("PrepareTimer()");
+			using var _ = this.Processor.Journal.Scope("PrepareTimer()");
 
 			const ushort measured = 0xff9c;
 			const ushort beatLength = 0x4dae;
@@ -180,19 +174,15 @@ namespace Civilization1Remaster.Core.Engine
 			this.Processor.RegData.Value16 = (ushort)(beatLength % divisor);
 			this.Processor.RegBase.Value16 = 0xf89;
 			this.Processor.RegCount.Value16 = 0x10;
-
-			this.Processor.Journal.CloseScope("PrepareTimer");
 		}
 
 		/// <inheritdoc/>
 		public ushort RestoreTimer()
 		{
-			this.Processor.Journal.OpenScope("RestoreTimer()");
+			using var _ = this.Processor.Journal.Scope("RestoreTimer()");
 
 			this.Processor.RegAcc.Value16 = this.Processor.PullGlobalWord(TimerCallbackCountAddress);
 			this.Processor.EmitGlobalWord(TimerCallbackCountAddress, 0);
-
-			this.Processor.Journal.CloseScope("RestoreTimer");
 
 			return this.Processor.RegAcc.Value16;
 		}
@@ -200,7 +190,7 @@ namespace Civilization1Remaster.Core.Engine
 		/// <inheritdoc/>
 		public void OnClockBeat()
 		{
-			this.Processor.Journal.OpenScope("OnClockBeat()");
+			using var _ = this.Processor.Journal.Scope("OnClockBeat()");
 
 			this.Processor.EmitGlobalWord(TimerCallbackCountAddress, (ushort)(this.Processor.PullGlobalWord(TimerCallbackCountAddress) + 1));
 
@@ -218,7 +208,6 @@ namespace Civilization1Remaster.Core.Engine
 				{
 					this.Processor.EmitGlobalByte(TimerSkipCounterAddress, 0x7);
 
-					this.Processor.Journal.CloseScope("OnClockBeat");
 					return;
 				}
 			}
@@ -249,14 +238,12 @@ namespace Civilization1Remaster.Core.Engine
 				this.Processor.EmitGlobalWord(TimerTargetBeatsAddress, this.Processor.RegAcc.Value16);
 				this.Processor.EmitGlobalByte(TimerChannelCounterAddress, 0x1);
 			}
-
-			this.Processor.Journal.CloseScope("OnClockBeat");
 		}
 
 		/// <inheritdoc/>
 		public void AssignHueCycleSpan(ushort cycleNumber, ushort delay, ushort firstHue, ushort lastHue)
 		{
-			this.Processor.Journal.OpenScope($"AssignHueCycleSpan({cycleNumber}, {delay}, {firstHue}, {lastHue})");
+			using var _ = this.Processor.Journal.Scope($"AssignHueCycleSpan({cycleNumber}, {delay}, {firstHue}, {lastHue})");
 
 			this.Owner.HueCycles.SetWord(0x0, 0xffff);
 			this.Processor.RegAcc.Value16 = 0xffff;
@@ -323,14 +310,12 @@ namespace Civilization1Remaster.Core.Engine
 					this.Processor.RegCount.Value16 = 0;
 				}
 			}
-
-			this.Processor.Journal.CloseScope("AssignHueCycleSpan");
 		}
 
 		/// <inheritdoc/>
 		public void ActivateHueCycle(ushort cycleNumber)
 		{
-			this.Processor.Journal.OpenScope($"ActivateHueCycle({cycleNumber})");
+			using var _ = this.Processor.Journal.Scope($"ActivateHueCycle({cycleNumber})");
 
 			// Like the original: AX = |cycleNumber| - 1, DX = the sign of cycleNumber
 			bool backwards = (short)cycleNumber < 0;
@@ -344,14 +329,12 @@ namespace Civilization1Remaster.Core.Engine
 				this.Owner.HueCycles.SetWord(cycle, (ushort)(backwards ? -3 : 3));
 				this.Owner.HueCycles.SetByte((ushort)(cycle + 8), this.Owner.HueCycles.Byte((ushort)(cycle + 7)));
 			}
-
-			this.Processor.Journal.CloseScope("ActivateHueCycle");
 		}
 
 		/// <inheritdoc/>
 		public void DeactivateHueCycle(ushort cycleNumber)
 		{
-			this.Processor.Journal.OpenScope($"DeactivateHueCycle({cycleNumber})");
+			using var _ = this.Processor.Journal.Scope($"DeactivateHueCycle({cycleNumber})");
 
 			ushort cycleIdx = (ushort)(cycleNumber - 1);
 			this.Processor.RegBase.Value16 = cycleIdx;
@@ -360,14 +343,12 @@ namespace Civilization1Remaster.Core.Engine
 			{
 				this.Owner.HueCycles.SetByte((ushort)(HueCycleRecord(cycleIdx) + 8), 0);
 			}
-
-			this.Processor.Journal.CloseScope("DeactivateHueCycle");
 		}
 
 		/// <inheritdoc/>
 		public void RefreshHueCycling()
 		{
-			this.Processor.Journal.OpenScope("RefreshHueCycling()");
+			using var _ = this.Processor.Journal.Scope("RefreshHueCycling()");
 
 			ushort savedData = this.Processor.SegData.Value16;
 			this.Processor.SegData.Value16 = 0x35cf;
@@ -452,14 +433,12 @@ namespace Civilization1Remaster.Core.Engine
 			}
 
 			this.Processor.SegData.Value16 = savedData;
-
-			this.Processor.Journal.CloseScope("RefreshHueCycling");
 		}
 
 		/// <inheritdoc/>
 		public void LoadColorsFromBuffer(ushort steps, ushort swatchAddr)
 		{
-			this.Processor.Journal.OpenScope($"ImportColorsFromBuffer({steps}, 0x{swatchAddr:x4})");
+			using var _ = this.Processor.Journal.Scope($"ImportColorsFromBuffer({steps}, 0x{swatchAddr:x4})");
 
 			// The target palette goes to TextBuffer.Address (rep movsb with ES = DS, which the original leaves in ES). Copied straight in the
 			// memory like rep movsb, without clock steps: with a colour cycle on, an earlier timer beat would change the
@@ -473,14 +452,12 @@ namespace Civilization1Remaster.Core.Engine
 			}
 
 			FadeToTargetColors(steps);
-
-			this.Processor.Journal.CloseScope("ImportColorsFromBuffer");
 		}
 
 		/// <inheritdoc/>
 		public void FillColors(ushort steps, byte red, byte green, byte blue)
 		{
-			this.Processor.Journal.OpenScope($"FloodColors({steps}, {red}, {green}, {blue})");
+			using var _ = this.Processor.Journal.Scope($"FloodColors({steps}, {red}, {green}, {blue})");
 
 			// The original leaves DS in ES
 			this.Processor.SegExtra.Value16 = this.Processor.SegData.Value16;
@@ -495,14 +472,12 @@ namespace Civilization1Remaster.Core.Engine
 			}
 
 			FadeToTargetColors(steps);
-
-			this.Processor.Journal.CloseScope("FloodColors");
 		}
 
 		/// <inheritdoc/>
 		public void FadeColors(ushort steps)
 		{
-			this.Processor.Journal.OpenScope($"FadeColors({steps})");
+			using var _ = this.Processor.Journal.Scope($"FadeColors({steps})");
 
 			ushort beats = (ushort)(steps * 6);
 			ushort speed = this.Processor.PullGlobalWord(HueMixerSpeedAddress);
@@ -541,14 +516,12 @@ namespace Civilization1Remaster.Core.Engine
 			ColorsFadeStep();
 
 			this.Processor.EmitGlobalWord(HueMixerBeatsAddress, beats);
-
-			this.Processor.Journal.CloseScope("FadeColors");
 		}
 
 		/// <inheritdoc/>
 		public void PullCurrentColors()
 		{
-			this.Processor.Journal.OpenScope("PullCurrentColors()");
+			using var _ = this.Processor.Journal.Scope("PullCurrentColors()");
 
 			this.Processor.DisableInterrupts();
 			if (this.Owner.VideoCard.Displays.ContainsKey(0))
@@ -575,13 +548,12 @@ namespace Civilization1Remaster.Core.Engine
 			this.Processor.EnableInterrupts();
 
 			// Near return
-			this.Processor.Journal.CloseScope("PullCurrentColors");
 		}
 
 		/// <inheritdoc/>
 		public ushort GaugeColorsPerformance()
 		{
-			this.Processor.Journal.OpenScope("GaugeColorsPerformance()");
+			using var _ = this.Processor.Journal.Scope("GaugeColorsPerformance()");
 
 			this.Processor.EmitGlobalWord(HueMixerActiveAddress, 0xffff);
 
@@ -612,7 +584,6 @@ namespace Civilization1Remaster.Core.Engine
 			this.Processor.RegAcc.Value16 = 6553 * 10; // maximum performance
 
 			// Near return
-			this.Processor.Journal.CloseScope("GaugeColorsPerformance");
 
 			return this.Processor.RegAcc.Value16;
 		}
@@ -620,27 +591,23 @@ namespace Civilization1Remaster.Core.Engine
 		/// <inheritdoc/>
 		public void ColorsFadeStep()
 		{
-			this.Processor.Journal.OpenScope("ColorsFadeStep()");
+			using var _ = this.Processor.Journal.Scope("ColorsFadeStep()");
 
 			MixFadeColours();
-
-			this.Processor.Journal.CloseScope("ColorsFadeStep");
 		}
 
 		/// <inheritdoc/>
 		public void ColorsFadeStepInterrupt()
 		{
-			this.Processor.Journal.OpenScope("ColorsFadeStepInterrupt()");
+			using var _ = this.Processor.Journal.Scope("ColorsFadeStepInterrupt()");
 
 			MixFadeColours();
-
-			this.Processor.Journal.CloseScope("ColorsFadeStepInterrupt");
 		}
 
 		/// <inheritdoc/>
 		public void AssignColors()
 		{
-			this.Processor.Journal.OpenScope("AssignColors()");
+			using var _ = this.Processor.Journal.Scope("AssignColors()");
 
 			if (this.Processor.PullGlobalWord(HueMixerBeatsAddress) != 0)
 			{
@@ -673,8 +640,6 @@ namespace Civilization1Remaster.Core.Engine
 
 				ColorsFadeStepInterrupt();
 			}
-			
-			this.Processor.Journal.CloseScope("AssignColors");
 		}
 
 		/// <inheritdoc/>
@@ -682,7 +647,7 @@ namespace Civilization1Remaster.Core.Engine
 		{
 			string documentLabel = RuntimeLibrary.ObtainDOSFileLabel(this.Owner.Processor.PullText(CPU.AsLinearAddress(this.Owner.Processor.SegData.Value16, documentLabelAddr)).ToUpper());
 
-			this.Processor.Journal.OpenScope($"PathPresent('{documentLabel}')");
+			using var _ = this.Processor.Journal.Scope($"PathPresent('{documentLabel}')");
 
 			if (File.Exists($"{this.Owner.Processor.StandardFolder}{documentLabel}"))
 			{
@@ -693,62 +658,50 @@ namespace Civilization1Remaster.Core.Engine
 				this.Processor.RegAcc.Value16 = 0xffff;
 			}
 
-			this.Processor.Journal.CloseScope("PathPresent");
-
 			return this.Processor.RegAcc.Value16;
 		}
 
 		/// <inheritdoc/>
 		public void RecoverScreenUnderCursor()
 		{
-			this.Processor.Journal.OpenScope("RecoverScreenUnderCursor()");
+			using var _ = this.Processor.Journal.Scope("RecoverScreenUnderCursor()");
 
 			this.Owner.VideoCard.DrawBufferToScreen();
 			ClearPointerLatch();
-
-			this.Processor.Journal.CloseScope("RecoverScreenUnderCursor");
 		}
 
 		/// <inheritdoc/>
 		public void DrawCursorToScreen(short horizLoc, short vertLoc, ushort picture)
 		{
-			this.Processor.Journal.OpenScope($"RenderCursorToScreen({horizLoc}, {vertLoc}, {picture})");
+			using var _ = this.Processor.Journal.Scope($"RenderCursorToScreen({horizLoc}, {vertLoc}, {picture})");
 
 			ClearPointerLatch();
-
-			this.Processor.Journal.CloseScope("RenderCursorToScreen");
 		}
 
 		/// <inheritdoc/>
 		public void ShowScreen(ushort displayIdx)
 		{
-			this.Processor.Journal.OpenScope($"DisplayScreen({displayIdx})");
+			using var _ = this.Processor.Journal.Scope($"DisplayScreen({displayIdx})");
 
 			this.Owner.VideoCard.DuplicateScreenToMainScreen(displayIdx);
 			ClearPointerLatch();
-
-			this.Processor.Journal.CloseScope("DisplayScreen");
 		}
 
 		/// <inheritdoc/>
 		public void DrawPictureToScreenAlternate(ushort boxAddr, int horizLoc, int vertLoc, ushort pictureAddr)
 		{
-			this.Processor.Journal.OpenScope($"RenderPictureToScreenAlternate(0x{boxAddr:x4}, {horizLoc}, {vertLoc}, 0x{pictureAddr:x4})");
+			using var _ = this.Processor.Journal.Scope($"RenderPictureToScreenAlternate(0x{boxAddr:x4}, {horizLoc}, {vertLoc}, 0x{pictureAddr:x4})");
 
 			this.Owner.VideoCard.DrawPictureToScreen(boxAddr, horizLoc, vertLoc, pictureAddr);
 			ClearPointerLatch();
-
-			this.Processor.Journal.CloseScope("RenderPictureToScreenAlternate");
 		}
 
 		/// <inheritdoc/>
 		public void DrawPictureToScreen(ushort boxAddr, int horizLoc, int vertLoc, ushort pictureAddr)
 		{
-			this.Processor.Journal.OpenScope($"RenderPictureToScreen(0x{boxAddr:x4}, {horizLoc}, {vertLoc}, 0x{pictureAddr:x4})");
+			using var _ = this.Processor.Journal.Scope($"RenderPictureToScreen(0x{boxAddr:x4}, {horizLoc}, {vertLoc}, 0x{pictureAddr:x4})");
 
 			this.Owner.VideoCard.DrawPictureToScreen(boxAddr, horizLoc, vertLoc, pictureAddr);
-
-			this.Processor.Journal.CloseScope("RenderPictureToScreen");
 		}
 
 		/// <inheritdoc/>
@@ -811,7 +764,7 @@ namespace Civilization1Remaster.Core.Engine
 		/// <inheritdoc/>
 		public void FloodBox(ushort boxAddr, int horizLoc, int vertLoc, int breadth, int altitude, ushort style)
 		{
-			this.Processor.Journal.OpenScope($"FloodBox(0x{boxAddr:x4}, {horizLoc}, {vertLoc}, {breadth}, {altitude}, 0x{style:x4})");
+			using var _ = this.Processor.Journal.Scope($"FloodBox(0x{boxAddr:x4}, {horizLoc}, {vertLoc}, {breadth}, {altitude}, 0x{style:x4})");
 
 			CivRectangle box = new CivRectangle(this.Processor, CPU.AsLinearAddress(this.Processor.SegData.Value16, boxAddr));
 
@@ -820,8 +773,6 @@ namespace Civilization1Remaster.Core.Engine
 				Rectangle box1 = new Rectangle(box.Horiz + horizLoc, box.Vert + vertLoc, breadth, altitude);
 				this.Owner.VideoCard.FloodBox(box.DisplayIdx, box1, (byte)(style & 0xff), (byte)((style & 0xff00) >> 8));
 			}
-
-			this.Processor.Journal.CloseScope("FloodBox");
 		}
 
 		/// <inheritdoc/>
@@ -829,14 +780,12 @@ namespace Civilization1Remaster.Core.Engine
 		{
 			CivRectangle box = new CivRectangle(this.Owner.Processor, CPU.AsLinearAddress(this.Owner.Processor.SegData.Value16, this.Owner.Processor.PullUInt16(this.Owner.Processor.SegData.Value16, ActiveRectanglePointerAddress)));
 
-			this.Processor.Journal.OpenScope($"AssignDot({box.DisplayIdx}, {horizLoc}, {vertLoc}, 0x{style:x4})");
+			using var _ = this.Processor.Journal.Scope($"AssignDot({box.DisplayIdx}, {horizLoc}, {vertLoc}, 0x{style:x4})");
 
 			if (horizLoc >= 0 && horizLoc <= box.Breadth && vertLoc >= 0 && vertLoc <= box.Altitude)
 			{
 				this.Owner.VideoCard.AssignDot(box.DisplayIdx, box.Horiz + horizLoc, box.Vert + vertLoc, (byte)(style & 0xff), (byte)((style & 0xff00) >> 8));
 			}
-
-			this.Processor.Journal.CloseScope("AssignDot");
 		}
 
 		/// <inheritdoc/>
@@ -844,20 +793,18 @@ namespace Civilization1Remaster.Core.Engine
 		{
 			CivRectangle box = new CivRectangle(this.Owner.Processor, CPU.AsLinearAddress(this.Owner.Processor.SegData.Value16, this.Owner.Processor.PullUInt16(this.Owner.Processor.SegData.Value16, ActiveRectanglePointerAddress)));
 
-			this.Processor.Journal.OpenScope($"AssignDot({displayIdx}, {horizLoc}, {vertLoc}, 0x{style:x4})");
+			using var _ = this.Processor.Journal.Scope($"AssignDot({displayIdx}, {horizLoc}, {vertLoc}, 0x{style:x4})");
 
 			if (horizLoc >= 0 && horizLoc <= box.Breadth && vertLoc >= 0 && vertLoc <= box.Altitude)
 			{
 				this.Owner.VideoCard.AssignDot(displayIdx, box.Horiz + horizLoc, box.Vert + vertLoc, (byte)(style & 0xff), (byte)((style & 0xff00) >> 8));
 			}
-
-			this.Processor.Journal.CloseScope("AssignDot");
 		}
 
 		/// <inheritdoc/>
 		public ushort PrepareMouse()
 		{
-			this.Processor.Journal.OpenScope("PrepareMouse()");
+			using var _ = this.Processor.Journal.Scope("PrepareMouse()");
 
 			// assume our mouse is initialized
 
@@ -871,15 +818,13 @@ namespace Civilization1Remaster.Core.Engine
 
 			this.Owner.Pointer.DriverActive = this.Processor.RegAcc.LowByte;
 
-			this.Processor.Journal.CloseScope("PrepareMouse");
-
 			return this.Processor.RegAcc.Value16;
 		}
 
 		/// <inheritdoc/>
 		public void DeactivateMouse()
 		{
-			this.Processor.Journal.OpenScope("DeactivateMouse()");
+			using var _ = this.Processor.Journal.Scope("DeactivateMouse()");
 
 			// The flag 0x587d of the mouse cleared; when it was on, AX -1 and BX 2 (as the original leaves them)
 			byte active = this.Owner.Pointer.DriverActive;
@@ -892,31 +837,25 @@ namespace Civilization1Remaster.Core.Engine
 				this.Processor.RegAcc.Value16 = 0xffff;
 				this.Processor.RegBase.Value16 = 2;
 			}
-
-			this.Processor.Journal.CloseScope("DeactivateMouse");
 		}
 
 		/// <inheritdoc/>
 		public void AssignMouseCursorImage(ushort hotHoriz, ushort hotVert, ushort picture)
 		{
-			this.Processor.Journal.OpenScope($"AssignMouseCursorImage({hotHoriz}, {hotVert}, {picture})");
+			using var _ = this.Processor.Journal.Scope($"AssignMouseCursorImage({hotHoriz}, {hotVert}, {picture})");
 
 			PointerHotHoriz = hotHoriz;
 			PointerHotVert = hotVert;
 			PointerImage = picture;
-
-			this.Processor.Journal.CloseScope("AssignMouseCursorImage");
 		}
 
 		/// <inheritdoc/>
 		public void AssignMousePosition(ushort horizLoc, ushort vertLoc)
 		{
-			this.Processor.Journal.OpenScope($"AssignMousePosition({horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"AssignMousePosition({horizLoc}, {vertLoc})");
 
 			this.Owner.Pointer.Horiz = horizLoc;
 			this.Owner.Pointer.Vert = vertLoc;
-
-			this.Processor.Journal.CloseScope("AssignMousePosition");
 		}
 
 		/// <inheritdoc/>
@@ -934,7 +873,7 @@ namespace Civilization1Remaster.Core.Engine
 		/// <inheritdoc/>
 		public void DrawMouseCursor()
 		{
-			this.Processor.Journal.OpenScope("RenderMouseCursor()");
+			using var _ = this.Processor.Journal.Scope("RenderMouseCursor()");
 
 			if (PointerImage != 0 && this.Owner.Pointer.PointerShown == 0)
 			{
@@ -944,14 +883,12 @@ namespace Civilization1Remaster.Core.Engine
 
 				this.Owner.Pointer.PointerShown = 0x1;
 			}
-
-			this.Processor.Journal.CloseScope("RenderMouseCursor");
 		}
 
 		/// <inheritdoc/>
 		public void BlankMouseCursor()
 		{
-			this.Processor.Journal.OpenScope("BlankMouseCursor()");
+			using var _ = this.Processor.Journal.Scope("BlankMouseCursor()");
 
 			if (PointerImage != 0 && this.Owner.Pointer.PointerShown != 0)
 			{
@@ -959,14 +896,12 @@ namespace Civilization1Remaster.Core.Engine
 
 				RecoverScreenUnderCursor();
 			}
-
-			this.Processor.Journal.CloseScope("BlankMouseCursor");
 		}
 
 		/// <inheritdoc/>
 		public void RenewScreen()
 		{
-			this.Processor.Journal.OpenScope("RenewScreen()");
+			using var _ = this.Processor.Journal.Scope("RenewScreen()");
 
 			// Called from the mouse interrupt: the registers are kept outside the emulated stack, like in ClockInterrupt
 			(ushort acc, ushort data, ushort extraSection) =
@@ -976,8 +911,6 @@ namespace Civilization1Remaster.Core.Engine
 			this.Owner.VideoCard.DrawBufferToScreen();
 
 			(this.Processor.RegAcc.Value16, this.Processor.RegData.Value16, this.Processor.SegExtra.Value16) = (acc, data, extraSection);
-
-			this.Processor.Journal.CloseScope("RenewScreen");
 		}
 
 		/// <inheritdoc/>

@@ -20,7 +20,7 @@ namespace Civilization1Remaster.Core.Game
 		/// <inheritdoc/>
 		public void DrawCityTile(short townIdx, ushort townTile, short marker)
 		{
-			this.Processor.Journal.OpenScope($"RenderCityTile({townIdx}, {townTile}, {marker})");
+			using var _ = this.Processor.Journal.Scope($"RenderCityTile({townIdx}, {townTile}, {marker})");
 
 			short horizLoc = (short)(this.Owner.World.Towns[townIdx].Place.X + this.Owner.TownDeltas[townTile].X);
 			short vertLoc = (short)(this.Owner.World.Towns[townIdx].Place.Y + this.Owner.TownDeltas[townTile].Y);
@@ -84,14 +84,12 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 			CityTileDotted = 0;
-
-			this.Processor.Journal.CloseScope("RenderCityTile");
 		}
 
 		/// <inheritdoc/>
 		public ushort MayCityWorkTile(int horizLoc, int vertLoc, ushort resource)
 		{
-			this.Processor.Journal.OpenScope($"MayCityWorkTile({horizLoc}, {vertLoc}, {resource})");
+			using var _ = this.Processor.Journal.Scope($"MayCityWorkTile({horizLoc}, {vertLoc}, {resource})");
 
 			short yield = 0;
 
@@ -190,15 +188,13 @@ namespace Civilization1Remaster.Core.Game
 				}
 			}
 
-			this.Processor.Journal.CloseScope("MayCityWorkTile");
-
 			return (ushort)yield;
 		}
 
 		/// <inheritdoc/>
 		public ushort PlayerEnjoysWonderEffect(short participantIdx, short miracleIdent)
 		{
-			this.Processor.Journal.OpenScope($"PlayerEnjoysWonderEffect({participantIdx}, {miracleIdent})");
+			using var _ = this.Processor.Journal.Scope($"PlayerEnjoysWonderEffect({participantIdx}, {miracleIdent})");
 
 			bool enjoys = false;
 
@@ -212,19 +208,15 @@ namespace Civilization1Remaster.Core.Game
 
 			ushort result = (ushort)(enjoys ? 1 : 0);
 
-			this.Processor.Journal.CloseScope("PlayerEnjoysWonderEffect");
-
 			return result;
 		}
 
 		/// <inheritdoc/>
 		public ushort ObtainWonderCityID(short miracleIdent)
 		{
-			this.Processor.Journal.OpenScope($"ObtainWonderCityID({miracleIdent})");
+			using var _ = this.Processor.Journal.Scope($"ObtainWonderCityID({miracleIdent})");
 
 			ushort townIdx = IsWonderObsolete(miracleIdent) ? (ushort)0xffff : (ushort)this.Owner.World.MarvelTownIdx[miracleIdent];
-
-			this.Processor.Journal.CloseScope("ObtainWonderCityID");
 
 			return townIdx;
 		}
@@ -232,7 +224,7 @@ namespace Civilization1Remaster.Core.Game
 		/// <inheritdoc/>
 		public void AttachSmog(int horizLoc, int vertLoc)
 		{
-			this.Processor.Journal.OpenScope($"AttachSmog({horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"AttachSmog({horizLoc}, {vertLoc})");
 
 			if ((this.Owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 0x40) == 0)
 			{
@@ -242,53 +234,47 @@ namespace Civilization1Remaster.Core.Game
 
 				this.Owner.World.DirtyCellTally++;
 			}
-
-			this.Processor.Journal.CloseScope("AttachSmog");
 		}
 
 		/// <inheritdoc/>
 		public void AssignCitizenType(ushort citizen, ushort specialist)
 		{
-			this.Processor.Journal.OpenScope($"AssignCitizenType({citizen}, {specialist})");
+			using var _ = this.Processor.Journal.Scope($"AssignCitizenType({citizen}, {specialist})");
 
 			short cityIdx = (short)ShownCity;
 			ushort currentMarkers = this.Owner.World.Towns[cityIdx].LaborerMarkers2;
 			ushort updated = CitizenSpecialistRules.SetSpecialistType(currentMarkers, citizen, (CitizenSpecialistRules.SpecialistType)specialist);
 			this.Owner.World.Towns[cityIdx].LaborerMarkers2 = updated;
-
-			this.Processor.Journal.CloseScope("AssignCitizenType");
 		}
 
 		/// <inheritdoc/>
 		public ushort ObtainCitizenType(ushort citizen)
 		{
-			this.Processor.Journal.OpenScope($"ObtainCitizenType({citizen})");
+			using var _ = this.Processor.Journal.Scope($"ObtainCitizenType({citizen})");
 
 			short cityIdx = (short)ShownCity;
 			ushort markers = this.Owner.World.Towns[cityIdx].LaborerMarkers2;
 			var specType = CitizenSpecialistRules.GetSpecialistType(markers, citizen);
 			ushort result = (ushort)specType;
 
-			this.Processor.Journal.CloseScope("ObtainCitizenType");
 			return result;
 		}
 
 		/// <inheritdoc/>
 		public ushort TallySpecialists(ushort specialist)
 		{
-			this.Processor.Journal.OpenScope($"TallySpecialists({specialist})");
+			using var _ = this.Processor.Journal.Scope($"TallySpecialists({specialist})");
 
 			short cityIdx = (short)ShownCity;
 			ushort markers = this.Owner.World.Towns[cityIdx].LaborerMarkers2;
 			int tally = CitizenSpecialistRules.CountSpecialists(markers, (CitizenSpecialistRules.SpecialistType)specialist);
-			this.Processor.Journal.CloseScope("TallySpecialists");
 			return (ushort)tally;
 		}
 
 		/// <inheritdoc/>
 		public void ReshuffleCitizens(short townIdx, ushort workerTally)
 		{
-			this.Processor.Journal.OpenScope($"ReshuffleCitizens({townIdx}, {workerTally})");
+			using var _ = this.Processor.Journal.Scope($"ReshuffleCitizens({townIdx}, {workerTally})");
 
 			City town = this.Owner.World.Towns[townIdx];
 
@@ -327,14 +313,12 @@ namespace Civilization1Remaster.Core.Game
 				CityUnhappy = (ushort)(CityUnhappy - 1);
 				taxmen = (ushort)this.Owner.Helpers.ClampValue((short)CityUnhappy, 0, town.TrueExtent);
 			}
-
-			this.Processor.Journal.CloseScope("ReshuffleCitizens");
 		}
 
 		/// <inheritdoc/>
 		public ushort DrawCitizenIcons(short townIdx, short horizLoc, short vertLoc, ushort specialists, ushort breadth)
 		{
-			this.Processor.Journal.OpenScope($"RenderCitizenIcons({townIdx}, {horizLoc}, {vertLoc}, {specialists}, {breadth})");
+			using var _ = this.Processor.Journal.Scope($"RenderCitizenIcons({townIdx}, {horizLoc}, {vertLoc}, {specialists}, {breadth})");
 
 			// No gap after the happy citizens: the original made it on the frame word 0x2, which is never written (0)
 
@@ -380,15 +364,13 @@ namespace Civilization1Remaster.Core.Game
 				horizLoc = DrawCitizen(horizLoc, vertLoc, this.Processor.PullGlobalWord((ushort)((ObtainCitizenType((ushort)citizenIdx) << 1) + 0x6ea0)), step);
 			}
 
-			this.Processor.Journal.CloseScope("RenderCitizenIcons");
-
 			return step;
 		}
 
 		/// <inheritdoc/>
 		public void DrawResourceIcon(short horizLocOrigin, short horizLocTo, short vertLocTo)
 		{
-			this.Processor.Journal.OpenScope($"RenderResourceIcon({horizLocOrigin}, {horizLocTo}, {vertLocTo})");
+			using var _ = this.Processor.Journal.Scope($"RenderResourceIcon({horizLocOrigin}, {horizLocTo}, {vertLocTo})");
 
 			if (horizLocOrigin < 22 || horizLocOrigin > 24)
 			{
@@ -418,14 +400,12 @@ namespace Civilization1Remaster.Core.Game
 						horizLocTo, vertLocTo);
 				}
 			}
-
-			this.Processor.Journal.CloseScope("RenderResourceIcon");
 		}
 
 		/// <inheritdoc/>
 		public void DrawFrame(int horizLoc, int vertLoc, int horizSpot1, int vertSpot1)
 		{
-			this.Processor.Journal.OpenScope($"RenderFrame({horizLoc}, {vertLoc}, {horizSpot1}, {vertSpot1})");
+			using var _ = this.Processor.Journal.Scope($"RenderFrame({horizLoc}, {vertLoc}, {horizSpot1}, {vertSpot1})");
 
 			int breadth = horizSpot1 - horizLoc;
 			int altitude = vertSpot1 - vertLoc;
@@ -433,14 +413,12 @@ namespace Civilization1Remaster.Core.Game
 			FillBoxWithMotif(horizLoc, vertLoc, breadth, altitude);
 
 			this.Owner.Dialogs.DrawBox(horizLoc, vertLoc, breadth, altitude, Hues.Blue);
-
-			this.Processor.Journal.CloseScope("RenderFrame");
 		}
 
 		/// <inheritdoc/>
 		public void FillBoxWithMotif(int horizLoc, int vertLoc, int breadth, int altitude)
 		{
-			this.Processor.Journal.OpenScope($"FloodBoxWithMotif({horizLoc}, {vertLoc}, {breadth}, {altitude})");
+			using var _ = this.Processor.Journal.Scope($"FloodBoxWithMotif({horizLoc}, {vertLoc}, {breadth}, {altitude})");
 
 			if (VgaMode == 0)
 			{
@@ -474,14 +452,12 @@ namespace Civilization1Remaster.Core.Game
 					boxAltitude -= tileAltitude;
 				}
 			}
-		
-			this.Processor.Journal.CloseScope("FloodBoxWithMotif");
 		}
 
 		/// <inheritdoc/>
 		public void DrawLabelBox(int horizLoc, int vertLoc, int horizSpot1, int vertSpot1, GameText label, ushort style)
 		{
-			this.Processor.Journal.OpenScope($"RenderLabelBox({horizLoc}, {vertLoc}, {horizSpot1}, {vertSpot1}, 0x{label.Address:x4}, {style})");
+			using var _ = this.Processor.Journal.Scope($"RenderLabelBox({horizLoc}, {vertLoc}, {horizSpot1}, {vertSpot1}, 0x{label.Address:x4}, {style})");
 
 			this.Owner.Services.FloodBox(ScreenBox,
 				horizLoc, vertLoc, horizSpot1 - horizLoc, vertSpot1 - vertLoc, style);
@@ -500,13 +476,11 @@ namespace Civilization1Remaster.Core.Game
 
 			this.Owner.TextPainter.DrawCenteredTextToScreen0(label,
 				((horizLoc + horizSpot1) / 2) + 1, ((vertLoc + vertSpot1) / 2) - 2, (ushort)(style ^ 8));
-
-			this.Processor.Journal.CloseScope("RenderLabelBox");
 		}
 
 		public void DrawMiniMap()
 		{
-			this.Processor.Journal.OpenScope("RenderMiniMap()");
+			using var _ = this.Processor.Journal.Scope("RenderMiniMap()");
 
 			this.Owner.Services.FloodBox(ScreenBox, 101, 117, 120, 75, Hues.Black);
 
@@ -531,14 +505,12 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 			this.Owner.Dialogs.DrawBox(100, 117, 121, 75, Hues.LightBlue);
-
-			this.Processor.Journal.CloseScope("RenderMiniMap");
 		}
 
 		/// <inheritdoc/>
 		public void DrawMiniMapDot(int horizLoc, int vertLoc, ushort style)
 		{
-			this.Processor.Journal.OpenScope($"RenderMiniMapDot({horizLoc}, {vertLoc}, {style})");
+			using var _ = this.Processor.Journal.Scope($"RenderMiniMapDot({horizLoc}, {vertLoc}, {style})");
 
 			if (CityScreenTab == 2)
 			{
@@ -548,8 +520,6 @@ namespace Civilization1Remaster.Core.Game
 				this.Owner.Services.FloodBox(ScreenBox,
 					((horizLoc * 3) / 2) + 101, ((vertLoc * 3) / 2) + 118, 2, 2, style);
 			}
-
-			this.Processor.Journal.CloseScope("RenderMiniMapDot");
 		}
 
 		/// <summary>

@@ -172,7 +172,7 @@ namespace Civilization1Remaster.Core.Game
 		/// <inheritdoc/>
 		public ushort ShowDialog(ushort charsAddr, int horizLoc, int vertLoc)
 		{
-			this.Processor.Journal.OpenScope($"DisplayDialog(0x{charsAddr:x4}, {horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"DisplayDialog(0x{charsAddr:x4}, {horizLoc}, {vertLoc})");
 
 			this.Owner.Startup.HideMouseCursor();
 
@@ -190,28 +190,24 @@ namespace Civilization1Remaster.Core.Game
 
 			this.Owner.Startup.ShowMouseCursor();
 
-			this.Processor.Journal.CloseScope("DisplayDialog");
-
 			return answer;
 		}
 
 		/// <inheritdoc/>
 		public void HandleGameEnd()
 		{
-			this.Processor.Journal.OpenScope("HandleGameEnd()");
+			using var _ = this.Processor.Journal.Scope("HandleGameEnd()");
 
 			if (PlayTurnOfPlayers(out short startGold))
 			{
 				FinishTurn(startGold);
 			}
-
-			this.Processor.Journal.CloseScope("HandleGameEnd");
 		}
 
 		/// <inheritdoc/>
 		public void ShowEndGameSequence()
 		{
-			this.Processor.Journal.OpenScope("DisplayEndGameSequence()");
+			using var _ = this.Processor.Journal.Scope("DisplayEndGameSequence()");
 
 			this.Owner.Atlas.ShowCivilizationGraph();
 
@@ -235,14 +231,12 @@ namespace Civilization1Remaster.Core.Game
 			}
 		
 			this.Owner.Startup.ShowMouseCursor();
-
-			this.Processor.Journal.CloseScope("DisplayEndGameSequence");
 		}
 
 		/// <inheritdoc/>
 		public void ShowTitleScreen()
 		{
-			this.Processor.Journal.OpenScope("DisplayTitleScreen()");
+			using var _ = this.Processor.Journal.Scope("DisplayTitleScreen()");
 
 			this.Owner.Helpers.HaltHueCycling();
 
@@ -263,14 +257,12 @@ namespace Civilization1Remaster.Core.Game
 				0, 0);
 
 			this.Owner.Conquest.WaitForKeyPressOrMouseClick();
-
-			this.Processor.Journal.CloseScope("DisplayTitleScreen");
 		}
 
 		/// <inheritdoc/>
 		public void ShowTravellersReport()
 		{
-			this.Processor.Journal.OpenScope("DisplayTravellersReport()");
+			using var _ = this.Processor.Journal.Scope("DisplayTravellersReport()");
 
 			if ((ushort)((ushort)(5 - (ushort)this.Owner.World.HardnessTier) * 0x1e) <= this.Owner.World.RoundTally)
 			{
@@ -281,14 +273,12 @@ namespace Civilization1Remaster.Core.Game
 
 				RaidHumanCity();
 			}
-
-			this.Processor.Journal.CloseScope("DisplayTravellersReport");
 		}
 
 		/// <inheritdoc/>
 		public void RefreshPeaceGraphContent()
 		{
-			this.Processor.Journal.OpenScope("RefreshPeaceGraphContent()");
+			using var _ = this.Processor.Journal.Scope("RefreshPeaceGraphContent()");
 
 			// The powers of the frame of the original (B3: in C#): when no power is above -1, the ranking takes the player of the
 			// rank before (at first 0, the local 0x1a of the original read before it is written)
@@ -386,14 +376,12 @@ namespace Civilization1Remaster.Core.Game
 					}
 				}
 			}
-
-			this.Processor.Journal.CloseScope("RefreshPeaceGraphContent");
 		}
 
 		/// <inheritdoc/>
 		public void ClearStatusLine()
 		{
-			this.Processor.Journal.OpenScope("WipeStatusLine()");
+			using var _ = this.Processor.Journal.Scope("WipeStatusLine()");
 
 			this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 8, Hues.Black);
 
@@ -406,14 +394,12 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.TextPainter.DrawTextToScreen0(MenuBarWorldLabelAddress, 192, 1, Hues.White);
 
 			this.Owner.TextPainter.DrawTextToScreen0(MenuBarCivilopediaLabelAddress, 240, 1, Hues.White);
-
-			this.Processor.Journal.CloseScope("WipeStatusLine");
 		}
 
 		/// <inheritdoc/>
 		public void DrawStatusBar()
 		{
-			this.Processor.Journal.OpenScope("RenderStatusBar()");
+			using var _ = this.Processor.Journal.Scope("RenderStatusBar()");
 
 			if (WorldMapView != 1)
 			{
@@ -486,14 +472,12 @@ namespace Civilization1Remaster.Core.Game
 					AnnouncePopulationMark(population);
 				}
 			}
-
-			this.Processor.Journal.CloseScope("RenderStatusBar");
 		}
 
 		/// <inheritdoc/>
 		public void DrawPalace(short participantIdx, short castleTier, short horizLoc, short vertLoc)
 		{
-			this.Processor.Journal.OpenScope($"RenderPalace({participantIdx}, {castleTier}, {horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"RenderPalace({participantIdx}, {castleTier}, {horizLoc}, {vertLoc})");
 
 			// The levels and the styles of the sections are in the words of the frame of the original (B3: in C#): the left
 			// neighbour of section 0 is the frame word 0x34 (never written, 0), the right neighbour of section 8 the style of
@@ -594,14 +578,12 @@ namespace Civilization1Remaster.Core.Game
 						this.Processor.PullGlobalWord((ushort)((0x28 * SectionWord(styles, sectionIdx)) + ((((short)height * 5) + shape) << 1) + PalaceSectionSpritesTableAddress)));
 				}
 			}
-
-			this.Processor.Journal.CloseScope("RenderPalace");
 		}
 
 		/// <inheritdoc/>
 		public ushort ObtainPalaceScoreForLevel(short castleTier)
 		{
-			this.Processor.Journal.OpenScope($"ObtainPalaceScoreForLevel({castleTier})");
+			using var _ = this.Processor.Journal.Scope($"ObtainPalaceScoreForLevel({castleTier})");
 
 			short sum = 0;
 
@@ -611,8 +593,6 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 			ushort score = (ushort)((sum / 2) + 1);
-
-			this.Processor.Journal.CloseScope("ObtainPalaceScoreForLevel");
 
 			return score;
 		}
@@ -628,7 +608,7 @@ namespace Civilization1Remaster.Core.Game
 		/// <inheritdoc/>
 		public void HandleEndOfTurnEvents()
 		{
-			this.Processor.Journal.OpenScope("HandleEndOfTurnEvents()");
+			using var _ = this.Processor.Journal.Scope("HandleEndOfTurnEvents()");
 
 			short pull = (short)(((ushort)this.Owner.World.DirtyCellTally << 1) - ((ushort)this.Owner.World.WorldHeatingTally << 2) - (ushort)this.Owner.World.SmogImpactTier);
 
@@ -654,14 +634,12 @@ namespace Civilization1Remaster.Core.Game
 				if (TryRivalWonder(attempt))
 					break;
 			}
-
-			this.Processor.Journal.CloseScope("HandleEndOfTurnEvents");
 		}
 
 		/// <inheritdoc/>
 		public void RepaintMainScreen()
 		{
-			this.Processor.Journal.OpenScope("RepaintMainScreen()");
+			using var _ = this.Processor.Journal.Scope("RepaintMainScreen()");
 
 			this.Owner.Helpers.HaltHueCycling();
 
@@ -687,8 +665,6 @@ namespace Civilization1Remaster.Core.Game
 			RepaintingMainScreen = 0x0;
 
 			this.Owner.Helpers.LaunchHueCycling();
-
-			this.Processor.Journal.CloseScope("RepaintMainScreen");
 		}
 
 		/// <inheritdoc/>
@@ -702,7 +678,7 @@ namespace Civilization1Remaster.Core.Game
 		/// <inheritdoc/>
 		public void ShowCivilizationScenery()
 		{
-			this.Processor.Journal.OpenScope("DisplayCivilizationScenery()");
+			using var _ = this.Processor.Journal.Scope("DisplayCivilizationScenery()");
 
 			if (VgaMode != 0)
 			{
@@ -723,8 +699,6 @@ namespace Civilization1Remaster.Core.Game
 
 				this.Owner.Helpers.LaunchHueCycling();
 			}
-
-			this.Processor.Journal.CloseScope("DisplayCivilizationScenery");
 		}
 
 		/// <inheritdoc/>
@@ -1354,7 +1328,6 @@ namespace Civilization1Remaster.Core.Game
 				int marker = (ushort)(UnitMemory.TroopStride * troopIdx);
 				this.Troops.AssignAt(marker, UnitMemory.Status, (byte)(this.Troops.PullAt(marker, UnitMemory.Status) | 1));
 			}
-
 		}
 
 		/// <summary>The barbarians landing near a city of the human player (see ShowTravellersReport)</summary>
@@ -1460,7 +1433,6 @@ namespace Civilization1Remaster.Core.Game
 					this.Owner.MapOps.RepaintMapTile(horizLoc, vertLoc);
 				}
 			}
-
 		}
 
 		/// <summary>The place of the player in the power and peace graphs: 8 * (turn / 4 % 150) + player</summary>
@@ -1529,7 +1501,6 @@ namespace Civilization1Remaster.Core.Game
 					if (HumanCityBuilds(townIdx, wonderIdx))
 						wonderIdx = 0x11;
 				}
-
 					}
 
 			ushort cityIdx = (ushort)this.Owner.Libc.Dice.DrawInt(128);

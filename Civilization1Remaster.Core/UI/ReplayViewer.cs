@@ -22,7 +22,7 @@ namespace Civilization1Remaster.Core.UI
 		/// <inheritdoc/>
 		public void ShowReplay()
 		{
-			this.Processor.Journal.OpenScope("DisplayReplay()");
+			using var _ = this.Processor.Journal.Scope("DisplayReplay()");
 
 			// The frame like the original (the functions called see the stack at the same depth)
 
@@ -67,15 +67,12 @@ namespace Civilization1Remaster.Core.UI
 				if ((short)ReplayMode >= 3)
 					break;
 			}
-
-
-			this.Processor.Journal.CloseScope("DisplayReplay");
 		}
 
 		/// <inheritdoc/>
 		public void DrawReplayPreamble()
 		{
-			this.Processor.Journal.OpenScope("RenderReplayPreamble()");
+			using var _ = this.Processor.Journal.Scope("RenderReplayPreamble()");
 
 			if (ReplayMode != 4)
 			{
@@ -105,14 +102,12 @@ namespace Civilization1Remaster.Core.UI
 
 				this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 4, 1, Hues.Black);
 			}
-
-			this.Processor.Journal.CloseScope("RenderReplayPreamble");
 		}
 
 		/// <inheritdoc/>
 		public ushort ObtainReplayYear(ushort round)
 		{
-			this.Processor.Journal.OpenScope($"ObtainReplayYear({round})");
+			using var _ = this.Processor.Journal.Scope($"ObtainReplayYear({round})");
 
 			ushort replayYear;
 
@@ -154,15 +149,13 @@ namespace Civilization1Remaster.Core.UI
 				replayYear = (ushort)((round * 20) - 4000);
 			}
 
-			this.Processor.Journal.CloseScope("ObtainReplayYear");
-
 			return replayYear;
 		}
 
 		/// <inheritdoc/>
 		public void AssignReplayCityContent(ushort content, ushort horizLoc, ushort vertLoc)
 		{
-			this.Processor.Journal.OpenScope($"AssignReplayCityContent({content}, {horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"AssignReplayCityContent({content}, {horizLoc}, {vertLoc})");
 
 			this.Processor.SegExtra.Value16 = ReplayCitySegment;
 
@@ -176,14 +169,12 @@ namespace Civilization1Remaster.Core.UI
 				EmitReplayCity(idx, ReplayCityYColumnOffset, vertLoc);
 				break;
 			}
-
-			this.Processor.Journal.CloseScope("AssignReplayCityContent");
 		}
 
 		/// <inheritdoc/>
 		public void AssignReplayCityContentAlt(ushort content, ushort horizLoc, ushort vertLoc)
 		{
-			this.Processor.Journal.OpenScope($"AssignReplayCityContentAlt({content}, {horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"AssignReplayCityContentAlt({content}, {horizLoc}, {vertLoc})");
 
 			this.Processor.SegExtra.Value16 = ReplayCitySegment;
 
@@ -195,14 +186,12 @@ namespace Civilization1Remaster.Core.UI
 				EmitReplayCity(idx, ReplayCityActiveColumnOffset, content);
 				break;
 			}
-
-			this.Processor.Journal.CloseScope("AssignReplayCityContentAlt");
 		}
 
 		/// <inheritdoc/>
 		public ushort ComputeDistanceToReplayCity(int horizLoc, int vertLoc)
 		{
-			this.Processor.Journal.OpenScope($"ObtainDistanceToReplayCity({horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"ObtainDistanceToReplayCity({horizLoc}, {vertLoc})");
 
 			ushort nearest = 0;
 
@@ -225,15 +214,13 @@ namespace Civilization1Remaster.Core.UI
 			}
 
 
-			this.Processor.Journal.CloseScope("ObtainDistanceToReplayCity");
-
 			return nearest;
 		}
 
 		/// <inheritdoc/>
 		public void DrawReplayMapTile(int horizLoc, int vertLoc)
 		{
-			this.Processor.Journal.OpenScope($"RenderReplayMapTile({horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"RenderReplayMapTile({horizLoc}, {vertLoc})");
 
 
 			if (ReplayMode != 4)
@@ -267,15 +254,12 @@ namespace Civilization1Remaster.Core.UI
 					}
 				}
 			}
-
-
-			this.Processor.Journal.CloseScope("RenderReplayMapTile");
 		}
 
 		/// <inheritdoc/>
 		public void DumpReplayCities()
 		{
-			this.Processor.Journal.OpenScope("DumpReplayCities()");
+			using var _ = this.Processor.Journal.Scope("DumpReplayCities()");
 
 			for (int vertLoc = 0; vertLoc < 50; vertLoc++)
 			{
@@ -317,14 +301,12 @@ namespace Civilization1Remaster.Core.UI
 
 				this.Owner.Libc.WriteHandle((short)ReplayFile, TextBuffer.Address, 0x52);
 			}
-
-			this.Processor.Journal.CloseScope("DumpReplayCities");
 		}
 
 		/// <inheritdoc/>
 		public void ObtainReplayPlayerLabel(short participantIdx)
 		{
-			this.Processor.Journal.OpenScope($"ObtainReplayPlayerLabel({participantIdx})");
+			using var _ = this.Processor.Journal.Scope($"ObtainReplayPlayerLabel({participantIdx})");
 
 			ushort leader = (ushort)(0x3a * this.Owner.World.Participants[participantIdx].ChiefVisuals);
 			ushort civName = LeaderTextAt(leader, LeaderTable.Civilization);
@@ -341,14 +323,12 @@ namespace Civilization1Remaster.Core.UI
 			{
 				this.Owner.Names.Set(CivilizationPlural(participantIdx), pluralName);
 			}
-
-			this.Processor.Journal.CloseScope("ObtainReplayPlayerLabel");
 		}
 
 		/// <inheritdoc/>
 		public void ShowConquerorScreen()
 		{
-			this.Processor.Journal.OpenScope("DisplayConquerorScreen()");
+			using var _ = this.Processor.Journal.Scope("DisplayConquerorScreen()");
 
 			ReplayAtGameEnd = 0x1;
 
@@ -401,14 +381,12 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.TurnHooks.RepaintMainScreen();
 
 			ReplayAtGameEnd = 0x0;
-
-			this.Processor.Journal.CloseScope("DisplayConquerorScreen");
 		}
 
 		/// <inheritdoc/>
 		public void ShowCivilizationDestroyedScreen(short participantIdx, ushort year)
 		{
-			this.Processor.Journal.OpenScope($"DisplayCivilizationDestroyedScreen({participantIdx}, {year})");
+			using var _ = this.Processor.Journal.Scope($"DisplayCivilizationDestroyedScreen({participantIdx}, {year})");
 
 			short leaderIdx = (sbyte)this.Processor.PullGlobalByte((ushort)((ushort)this.Owner.World.Participants[participantIdx].ChiefVisuals + 0x3938));
 			char tens = (char)('0' + (leaderIdx / 10));
@@ -536,8 +514,6 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.Services.ShowScreen(0);
 
 			this.Owner.Services.PerformSound(1, 0);
-
-			this.Processor.Journal.CloseScope("DisplayCivilizationDestroyedScreen");
 		}
 
 		/// <summary>
@@ -919,7 +895,6 @@ namespace Civilization1Remaster.Core.UI
 					(ushort)((placeIdx % 7 * 0x2e) + 8),
 					(ushort)((-(placeIdx / 7) * 0x2a) + 0x31));
 			}
-
 		}
 
 		/// <summary>The text TextBuffer.Address centred at x 160 in colour 20, with the text in colour 23 (VGA) or 15 one line higher</summary>

@@ -52,7 +52,7 @@ namespace Civilization1Remaster.Core.UI
 		/// <inheritdoc/>
 		public void DrawSpaceScenery()
 		{
-			this.Processor.Journal.OpenScope("RenderSpaceScenery()");
+			using var _ = this.Processor.Journal.Scope("RenderSpaceScenery()");
 
 			this.Owner.Startup.HideMouseCursor();
 
@@ -99,14 +99,12 @@ namespace Civilization1Remaster.Core.UI
 					this.Owner.Services.ActivateHueCycle(cycleIdx);
 				}
 			}
-
-			this.Processor.Journal.CloseScope("RenderSpaceScenery");
 		}
 
 		/// <inheritdoc/>
 		public void LoadSpaceScenery()
 		{
-			this.Processor.Journal.OpenScope("ImportSpaceScenery()");
+			using var _ = this.Processor.Journal.Scope("ImportSpaceScenery()");
 
 			this.Owner.Helpers.ReleaseResource(SpaceshipPicture, SpaceshipResourceBlockAddress);
 
@@ -138,14 +136,12 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.Helpers.SetupHueCycling();
 
 			this.Owner.TurnHooks.RepaintMainScreen();
-
-			this.Processor.Journal.CloseScope("ImportSpaceScenery");
 		}
 
 		/// <inheritdoc/>
 		public ushort DrawSpaceship(short participantIdx, short frames, short launchable)
 		{
-			this.Processor.Journal.OpenScope($"RenderSpaceship({participantIdx}, {frames}, {launchable})");
+			using var _ = this.Processor.Journal.Scope($"RenderSpaceship({participantIdx}, {frames}, {launchable})");
 
 
 
@@ -230,15 +226,13 @@ namespace Civilization1Remaster.Core.UI
 
 			ushort result = (ushort)success;
 
-			this.Processor.Journal.CloseScope("RenderSpaceship");
-
 			return result;
 		}
 
 		/// <inheritdoc/>
 		public ushort ObtainSpaceshipPartValue(short participantIdx, ushort row, ushort column)
 		{
-			this.Processor.Journal.OpenScope($"ObtainSpaceshipPartValue({participantIdx}, {row}, {column})");
+			using var _ = this.Processor.Journal.Scope($"ObtainSpaceshipPartValue({participantIdx}, {row}, {column})");
 
 			this.Processor.SegExtra.Value16 = SpaceshipGridSegment;
 
@@ -247,15 +241,13 @@ namespace Civilization1Remaster.Core.UI
 
 			ushort taken = (ushort)(part != -1 && part < 3 ? 1 : 0);
 
-			this.Processor.Journal.CloseScope("ObtainSpaceshipPartValue");
-
 			return taken;
 		}
 
 		/// <inheritdoc/>
 		public void DrawStarField()
 		{
-			this.Processor.Journal.OpenScope("RenderStarField()");
+			using var _ = this.Processor.Journal.Scope("RenderStarField()");
 
 			for (int starIdx = 0; starIdx < 0x14; starIdx++)
 			{
@@ -308,14 +300,12 @@ namespace Civilization1Remaster.Core.UI
 			}
 
 			SpaceshipStarFieldFrame++;
-
-			this.Processor.Journal.CloseScope("RenderStarField");
 		}
 
 		/// <inheritdoc/>
 		public ushort ComputeSpaceshipSuccess(short participantIdx, short partKind)
 		{
-			this.Processor.Journal.OpenScope($"ComputeSpaceshipSuccess({participantIdx}, {partKind})");
+			using var _ = this.Processor.Journal.Scope($"ComputeSpaceshipSuccess({participantIdx}, {partKind})");
 
 			// The frame like the original (the functions called see the stack at the same depth)
 
@@ -378,15 +368,13 @@ namespace Civilization1Remaster.Core.UI
 				result = 0;
 			}
 
-			this.Processor.Journal.CloseScope("ComputeSpaceshipSuccess");
-
 			return result;
 		}
 
 		/// <inheritdoc/>
 		public void AttachSpaceshipPart(short participantIdx, ushort partKind)
 		{
-			this.Processor.Journal.OpenScope($"AttachSpaceshipPart({participantIdx}, {partKind})");
+			using var _ = this.Processor.Journal.Scope($"AttachSpaceshipPart({participantIdx}, {partKind})");
 
 
 			this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
@@ -496,7 +484,7 @@ namespace Civilization1Remaster.Core.UI
 		/// <inheritdoc/>
 		public void ChooseNationToView()
 		{
-			this.Processor.Journal.OpenScope("ChooseNationToView()");
+			using var _ = this.Processor.Journal.Scope("ChooseNationToView()");
 
 			if ((this.Owner.World.StarshipMarkers & 0xfe00) != 0)
 			{
@@ -522,14 +510,12 @@ namespace Civilization1Remaster.Core.UI
 					LoadSpaceScenery();
 				}
 			}
-
-			this.Processor.Journal.CloseScope("ChooseNationToView");
 		}
 
 		/// <inheritdoc/>
 		public void FireSpaceship(short participantIdx)
 		{
-			this.Processor.Journal.OpenScope($"FireSpaceship({participantIdx})");
+			using var _ = this.Processor.Journal.Scope($"FireSpaceship({participantIdx})");
 
 			this.Owner.World.StarshipMarkers |= (short)(1 << participantIdx);
 
@@ -569,8 +555,6 @@ namespace Civilization1Remaster.Core.UI
 			{
 				LoadSpaceScenery();
 			}
-
-			this.Processor.Journal.CloseScope("FireSpaceship");
 		}
 
 		private sbyte LayoutSlotColumn(int slotIdx) => (sbyte)this.Processor.PullUInt8(SpaceshipLayoutSegment, (ushort)((slotIdx * SpaceshipSlotStride) + SpaceshipSlotColumnOffset));
@@ -962,8 +946,6 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.Startup.HideMouseCursor();
 
 			LoadSpaceScenery();
-
-			this.Processor.Journal.CloseScope("AttachSpaceshipPart");
 		}
 
 		/// <summary>The offset of the slot slotIdx (table 0x375a) in the player's spaceship grid, segment 0x3772</summary>

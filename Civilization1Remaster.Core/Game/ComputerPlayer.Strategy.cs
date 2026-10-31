@@ -9,7 +9,7 @@ namespace Civilization1Remaster.Core.Game
 		/// <inheritdoc/>
 		public void ReimposeStrategicLocations(short participantIdx)
 		{
-			this.Processor.Journal.OpenScope($"ReimposeStrategicLocations({participantIdx})");
+			using var _ = this.Processor.Journal.Scope($"ReimposeStrategicLocations({participantIdx})");
 
 			for (int entryIdx = 0; entryIdx < 0x20; entryIdx++)
 			{
@@ -28,14 +28,12 @@ namespace Civilization1Remaster.Core.Game
 					SendUnitToStrategicLocation(participantIdx, (short)site.Place.X, (short)site.Place.Y, site.Live, site.Strategy);
 				}
 			}
-
-			this.Processor.Journal.CloseScope("ReimposeStrategicLocations");
 		}
 
 		/// <inheritdoc/>
 		public void SendUnitToStrategicLocation(short participantIdx, short horizLoc, short vertLoc, short live, short strategy)
 		{
-			this.Processor.Journal.OpenScope($"SendUnitToStrategicLocation({participantIdx}, {horizLoc}, {vertLoc}, {live}, {strategy})");
+			using var _ = this.Processor.Journal.Scope($"SendUnitToStrategicLocation({participantIdx}, {horizLoc}, {vertLoc}, {live}, {strategy})");
 
 			for (int placeIdx = 0; placeIdx < 0x20; placeIdx++)
 			{
@@ -46,7 +44,6 @@ namespace Civilization1Remaster.Core.Game
 					this.Processor.PullInt8(this.Processor.SegData.Value16, (ushort)(place + UnitPicker.StrategicLocationRoleTableAddress)) == live &&
 					this.Processor.PullInt8(this.Processor.SegData.Value16, (ushort)(place + UnitPicker.StrategicLocationPriorityTableAddress)) <= strategy)
 				{
-					this.Processor.Journal.CloseScope("SendUnitToStrategicLocation");
 					return;
 				}
 			}
@@ -73,14 +70,12 @@ namespace Civilization1Remaster.Core.Game
 				this.Processor.EmitUInt8(this.Processor.SegData.Value16, (ushort)(place + UnitPicker.StrategicLocationPriorityTableAddress), (byte)strategy);
 				break;
 			}
-
-			this.Processor.Journal.CloseScope("SendUnitToStrategicLocation");
 		}
 
 		/// <inheritdoc/>
 		public void FreeStrategicLocation(short participantIdx, ushort place)
 		{
-			this.Processor.Journal.OpenScope($"FreeStrategicLocation({participantIdx}, {place})");
+			using var _ = this.Processor.Journal.Scope($"FreeStrategicLocation({participantIdx}, {place})");
 
 			for (int idx = 30; idx >= (short)place; idx--)
 			{
@@ -94,8 +89,6 @@ namespace Civilization1Remaster.Core.Game
 				MoveListEntryOn(UnitPicker.StrategicLocationRoleTableAddress, entry);
 				MoveListEntryOn(UnitPicker.StrategicLocationPriorityTableAddress, entry);
 			}
-
-			this.Processor.Journal.CloseScope("FreeStrategicLocation");
 		}
 
 		/// <inheritdoc/>
@@ -111,7 +104,7 @@ namespace Civilization1Remaster.Core.Game
 		/// <inheritdoc/>
 		public void AttachStrategicLocation(short participantIdx, ushort horizLoc, ushort vertLoc, ushort live, ushort strategy)
 		{
-			this.Processor.Journal.OpenScope($"AttachStrategicLocation({participantIdx}, {horizLoc}, {vertLoc}, {live}, {strategy})");
+			using var _ = this.Processor.Journal.Scope($"AttachStrategicLocation({participantIdx}, {horizLoc}, {vertLoc}, {live}, {strategy})");
 
 			StrategicLocation[] sites = this.Owner.World.Participants[participantIdx].TacticalSites;
 
@@ -134,14 +127,12 @@ namespace Civilization1Remaster.Core.Game
 					}
 				}
 			}
-
-			this.Processor.Journal.CloseScope("AttachStrategicLocation");
 		}
 
 		/// <inheritdoc/>
 		public void AffixStrategicLocation(short participantIdx, ushort place)
 		{
-			this.Processor.Journal.OpenScope($"AffixStrategicLocation({participantIdx}, {place})");
+			using var _ = this.Processor.Journal.Scope($"AffixStrategicLocation({participantIdx}, {place})");
 
 			StrategicLocation[] sites = this.Owner.World.Participants[participantIdx].TacticalSites;
 
@@ -155,14 +146,12 @@ namespace Civilization1Remaster.Core.Game
 				sites[idx + 1].Live = sites[idx].Live;
 				sites[idx + 1].Strategy = sites[idx].Strategy;
 			}
-
-			this.Processor.Journal.CloseScope("AffixStrategicLocation");
 		}
 
 		/// <inheritdoc/>
 		public void DisableStrategicLocation(short participantIdx, ushort role, int horizLoc, int vertLoc, ushort reach)
 		{
-			this.Processor.Journal.OpenScope($"DisableStrategicLocation({participantIdx}, {role}, {horizLoc}, {vertLoc}, {reach})");
+			using var _ = this.Processor.Journal.Scope($"DisableStrategicLocation({participantIdx}, {role}, {horizLoc}, {vertLoc}, {reach})");
 
 			StrategicLocation[] sites = this.Owner.World.Participants[participantIdx].TacticalSites;
 
@@ -178,14 +167,12 @@ namespace Civilization1Remaster.Core.Game
 					sites[idx].Live = -1;
 				}
 			}
-
-			this.Processor.Journal.CloseScope("DisableStrategicLocation");
 		}
 
 		/// <inheritdoc/>
 		public void RefreshCityProduction(short participantIdx, ushort continent)
 		{
-			this.Processor.Journal.OpenScope($"RefreshCityProduction({participantIdx}, {continent})");
+			using var _ = this.Processor.Journal.Scope($"RefreshCityProduction({participantIdx}, {continent})");
 
 			for (short townIdx = 0; townIdx < 0x80; townIdx++)
 			{
@@ -199,14 +186,12 @@ namespace Civilization1Remaster.Core.Game
 
 				PickNewCityProduction(townIdx);
 			}
-
-			this.Processor.Journal.CloseScope("RefreshCityProduction");
 		}
 
 		/// <inheritdoc/>
 		public void PickNewCityProduction(short townIdx)
 		{
-			this.Processor.Journal.OpenScope($"PickNewCityProduction({townIdx})");
+			using var _ = this.Processor.Journal.Scope($"PickNewCityProduction({townIdx})");
 
 			City town = this.Owner.World.Towns[townIdx];
 			ushort participantIdx = (byte)town.ParticipantIdx;
@@ -214,14 +199,12 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.World.Participants[participantIdx].StopMaking(town.PresentMakingIdx);
 			town.PresentMakingIdx = (sbyte)this.Owner.Advisors.PickCityProduction((short)participantIdx, townIdx);
 			this.Owner.World.Participants[participantIdx].StartMaking(town.PresentMakingIdx);
-
-			this.Processor.Journal.CloseScope("PickNewCityProduction");
 		}
 
 		/// <inheritdoc/>
 		public ushort MayAIEnterTile(short participantIdx, ushort horizLoc, ushort vertLoc)
 		{
-			this.Processor.Journal.OpenScope($"MayAIEnterTile({participantIdx}, {horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"MayAIEnterTile({participantIdx}, {horizLoc}, {vertLoc})");
 
 			short bestHeading = -1;
 			short bestShore = -1;
@@ -264,8 +247,6 @@ namespace Civilization1Remaster.Core.Game
 					bestHeading = heading;
 				}
 			}
-
-			this.Processor.Journal.CloseScope("MayAIEnterTile");
 
 			return (ushort)bestHeading;
 		}

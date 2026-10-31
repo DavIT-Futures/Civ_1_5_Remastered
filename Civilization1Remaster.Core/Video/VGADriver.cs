@@ -134,7 +134,7 @@ namespace Civilization1Remaster.Core.Video
 			LogWrapper scratchJournal = this.processor.Journal;
 			this.processor.Journal.EmitLine($"// Calling: DrawBufferToScreen()");
 			this.processor.Journal = this.owner.VideoJournal;
-			this.processor.Journal.OpenScope("RenderBufferToScreen()");
+			using var _ = this.processor.Journal.Scope("RenderBufferToScreen()");
 
 			if (this.glob15d2StagingMarker != 0)
 			{
@@ -155,7 +155,6 @@ namespace Civilization1Remaster.Core.Video
 			}
 			this.glob15d2StagingMarker = 0x0;
 
-			this.processor.Journal.CloseScope("RenderBufferToScreen");
 			this.processor.Journal = scratchJournal;
 		}
 
@@ -164,9 +163,8 @@ namespace Civilization1Remaster.Core.Video
 			LogWrapper scratchJournal = this.processor.Journal;
 			this.processor.Journal.EmitLine($"// Calling: DrawBufferAt({horizLoc}, {vertLoc}, 0x{stagingAddr:x4})");
 			this.processor.Journal = this.owner.VideoJournal;
-			this.processor.Journal.OpenScope($"RenderBufferAt({horizLoc}, {vertLoc}, 0x{stagingAddr:x4})");
+			using var _ = this.processor.Journal.Scope($"RenderBufferAt({horizLoc}, {vertLoc}, 0x{stagingAddr:x4})");
 
-			this.processor.Journal.CloseScope("RenderBufferAt");
 			this.processor.Journal = scratchJournal;
 			return;
 		}
@@ -176,7 +174,7 @@ namespace Civilization1Remaster.Core.Video
 			LogWrapper scratchJournal = this.processor.Journal;
 			this.processor.Journal.EmitLine($"// Calling: FillBuffer({displayIdx})");
 			this.processor.Journal = this.owner.VideoJournal;
-			this.processor.Journal.OpenScope($"FloodBuffer({displayIdx})");
+			using var _ = this.processor.Journal.Scope($"FloodBuffer({displayIdx})");
 
 			this.glob15d4DisplayIdx = displayIdx;
 
@@ -208,7 +206,6 @@ namespace Civilization1Remaster.Core.Video
 				}
 			}
 
-			this.processor.Journal.CloseScope("FloodBuffer");
 			this.processor.Journal = scratchJournal;
 		}
 
@@ -217,7 +214,7 @@ namespace Civilization1Remaster.Core.Video
 			LogWrapper scratchJournal = this.processor.Journal;
 			this.processor.Journal.EmitLine($"// Calling: CopyScreenToMainScreen(0x{displayIdx:x4})");
 			this.processor.Journal = this.owner.VideoJournal;
-			this.processor.Journal.OpenScope($"DuplicateScreenToMainScreen(0x{displayIdx:x4})");
+			using var _ = this.processor.Journal.Scope($"DuplicateScreenToMainScreen(0x{displayIdx:x4})");
 
 			if (displayIdx != 0)
 			{
@@ -246,7 +243,6 @@ namespace Civilization1Remaster.Core.Video
 				}
 			}
 
-			this.processor.Journal.CloseScope("'CopyScreenToMainScreen'");
 			this.processor.Journal = scratchJournal;
 		}
 

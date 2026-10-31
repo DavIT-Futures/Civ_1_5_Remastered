@@ -15,7 +15,7 @@ namespace Civilization1Remaster.Core.UI
 		/// <inheritdoc/>
 		public ushort ShowCityLabelPrompt(short townIdx)
 		{
-			this.Processor.Journal.OpenScope($"DisplayCityLabelPrompt({townIdx})");
+			using var _ = this.Processor.Journal.Scope($"DisplayCityLabelPrompt({townIdx})");
 
 			this.Owner.Startup.HideMouseCursor();
 
@@ -57,15 +57,13 @@ namespace Civilization1Remaster.Core.UI
 
 			this.Owner.Startup.ShowMouseCursor();
 
-			this.Processor.Journal.CloseScope("DisplayCityLabelPrompt");
-
 			return answer;
 		}
 
 		/// <inheritdoc/>
 		public void ShowFoundCityMessage()
 		{
-			this.Processor.Journal.OpenScope("DisplayFoundCityMessage()");
+			using var _ = this.Processor.Journal.Scope("DisplayFoundCityMessage()");
 
 			short playerIdx = this.Owner.World.PersonParticipantIdx;
 
@@ -84,14 +82,12 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.Names.Set(LeaderName(playerIdx), this.Owner.Words.ToString());
 
 			this.Owner.Startup.ShowMouseCursor();
-
-			this.Processor.Journal.CloseScope("DisplayFoundCityMessage");
 		}
 
 		/// <inheritdoc/>
 		public void ShowCityFoundedMessage()
 		{
-			this.Processor.Journal.OpenScope("DisplayCityFoundedMessage()");
+			using var _ = this.Processor.Journal.Scope("DisplayCityFoundedMessage()");
 
 			short playerIdx = this.Owner.World.PersonParticipantIdx;
 
@@ -121,14 +117,12 @@ namespace Civilization1Remaster.Core.UI
 			this.Processor.EmitGlobalByte((ushort)(CivilizationName(playerIdx) + 0xa), 0);
 
 			this.Owner.Startup.ShowMouseCursor();
-
-			this.Processor.Journal.CloseScope("DisplayCityFoundedMessage");
 		}
 
 		/// <inheritdoc/>
 		public void ShowNewCityLocation()
 		{
-			this.Processor.Journal.OpenScope("DisplayNewCityLocation()");
+			using var _ = this.Processor.Journal.Scope("DisplayNewCityLocation()");
 
 			this.Owner.Startup.HideMouseCursor();
 
@@ -156,14 +150,12 @@ namespace Civilization1Remaster.Core.UI
 			}
 
 			this.Owner.Startup.ShowMouseCursor();
-
-			this.Processor.Journal.CloseScope("DisplayNewCityLocation");
 		}
 
 		/// <inheritdoc/>
 		public ushort ShowLabelInputBox(ushort charsAddr)
 		{
-			this.Processor.Journal.OpenScope($"DisplayLabelInputBox(0x{charsAddr:x4})");
+			using var _ = this.Processor.Journal.Scope($"DisplayLabelInputBox(0x{charsAddr:x4})");
 
 			this.Owner.Services.FloodBox(ScreenBox, 64, 78, 224, 24, Hues.White);
 
@@ -198,15 +190,13 @@ namespace Civilization1Remaster.Core.UI
 				}
 			}
 
-			this.Processor.Journal.CloseScope("DisplayLabelInputBox");
-
 			return found;
 		}
 
 		/// <inheritdoc/>
 		public ushort PullTextInput(short horizLoc, short vertLoc, ushort breadth)
 		{
-			this.Processor.Journal.OpenScope($"PullTextInput({horizLoc}, {vertLoc}, {breadth})");
+			using var _ = this.Processor.Journal.Scope($"PullTextInput({horizLoc}, {vertLoc}, {breadth})");
 
 
 
@@ -351,15 +341,13 @@ namespace Civilization1Remaster.Core.UI
 
 			this.Owner.TurnLogic.WaitForKey();
 
-			this.Processor.Journal.CloseScope("PullTextInput");
-
 			return accepted;
 		}
 
 		/// <inheritdoc/>
 		public void DrawTextInputField(short horizLoc, short vertLoc, ushort breadth)
 		{
-			this.Processor.Journal.OpenScope($"RenderTextInputField({horizLoc}, {vertLoc}, {breadth})");
+			using var _ = this.Processor.Journal.Scope($"RenderTextInputField({horizLoc}, {vertLoc}, {breadth})");
 
 			horizLoc += 2;
 			vertLoc += 2;
@@ -391,8 +379,6 @@ namespace Civilization1Remaster.Core.UI
 
 				horizLoc += (short)this.Owner.VideoCard.ObtainCharWidth(typeface, character);
 			}
-
-			this.Processor.Journal.CloseScope("RenderTextInputField");
 		}
 	}
 }

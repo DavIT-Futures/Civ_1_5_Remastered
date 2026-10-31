@@ -9,7 +9,7 @@ namespace Civilization1Remaster.Core.Game
 		/// <inheritdoc/>
 		public ushort HandleCity(short townIdx, short marker)
 		{
-			this.Processor.Journal.OpenScope($"HandleCity({townIdx}, {marker})");
+			using var _ = this.Processor.Journal.Scope($"HandleCity({townIdx}, {marker})");
 
 			// HandleCity calls itself (the advisor counts the city), each call has its own locals as its own frame
 			CityRound outer = this.round;
@@ -22,8 +22,6 @@ namespace Civilization1Remaster.Core.Game
 				result = RunCity(townIdx, marker);
 
 			this.round = outer;
-
-			this.Processor.Journal.CloseScope("HandleCity");
 
 			return result;
 		}

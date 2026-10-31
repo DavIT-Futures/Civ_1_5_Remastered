@@ -25,7 +25,7 @@ namespace Civilization1Remaster.Core.Game
 		/// <inheritdoc/>
 		public void OperateAITurn(short participantIdx)
 		{
-			this.Processor.Journal.OpenScope($"OperateAITurn({participantIdx})");
+			using var _ = this.Processor.Journal.Scope($"OperateAITurn({participantIdx})");
 
 			CountUnits(participantIdx);
 			ushort sentBase = CountCities(participantIdx);
@@ -44,8 +44,6 @@ namespace Civilization1Remaster.Core.Game
 
 				DirectUnits(participantIdx, sentBase);
 			}
-
-			this.Processor.Journal.CloseScope("OperateAITurn");
 		}
 
 		private static ushort Block(int horizLoc, int vertLoc)

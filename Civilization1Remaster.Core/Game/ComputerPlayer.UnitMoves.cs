@@ -7,7 +7,7 @@ namespace Civilization1Remaster.Core.Game
 	{
 		public ushort ShiftAIUnit(short participantIdx, short troopIdx)
 		{
-			this.Processor.Journal.OpenScope($"ShiftAIUnit({participantIdx}, {troopIdx})");
+			using var _ = this.Processor.Journal.Scope($"ShiftAIUnit({participantIdx}, {troopIdx})");
 
 			ushort move;
 
@@ -31,8 +31,6 @@ namespace Civilization1Remaster.Core.Game
 					this.look = outer;
 				}
 			}
-
-			this.Processor.Journal.CloseScope("ShiftAIUnit");
 
 			return move;
 		}

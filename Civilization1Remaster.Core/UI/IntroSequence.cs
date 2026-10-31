@@ -44,7 +44,7 @@ namespace Civilization1Remaster.Core.UI
 		/// <inheritdoc/>
 		public void ShowMainIntro()
 		{
-			this.Processor.Journal.OpenScope("DisplayMainIntro()");
+			using var _ = this.Processor.Journal.Scope("DisplayMainIntro()");
 
 			FindIntroDisks();
 			DetectGraphicsDriver();
@@ -54,14 +54,12 @@ namespace Civilization1Remaster.Core.UI
 			ScrollPlanet();
 			TakeIntroChoice();
 			CloseIntro();
-
-			this.Processor.Journal.CloseScope("DisplayMainIntro");
 		}
 
 		/// <inheritdoc/>
 		public void ShowCivilizationScreen(short participantIdx)
 		{
-			this.Processor.Journal.OpenScope($"DisplayCivilizationScreen({participantIdx})");
+			using var _ = this.Processor.Journal.Scope($"DisplayCivilizationScreen({participantIdx})");
 
 			FrameWords outerFrame = this.screenFrame;
 			byte[] outerText = this.screenText;
@@ -77,13 +75,12 @@ namespace Civilization1Remaster.Core.UI
 
 			this.screenFrame = outerFrame;
 			this.screenText = outerText;
-			this.Processor.Journal.CloseScope("DisplayCivilizationScreen");
 		}
 
 		/// <inheritdoc/>
 		public void ShowTerrainTutorial()
 		{
-			this.Processor.Journal.OpenScope("DisplayTerrainTutorial()");
+			using var _ = this.Processor.Journal.Scope("DisplayTerrainTutorial()");
 
 			this.Owner.Helpers.HaltHueCycling();
 
@@ -179,14 +176,12 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.TurnHooks.ShowCivilizationScenery();
 
 			DrawingBox.TypefaceIdx = 1;
-
-			this.Processor.Journal.CloseScope("DisplayTerrainTutorial");
 		}
 
 		/// <inheritdoc/>
 		public void ShowInterfaceTutorial()
 		{
-			this.Processor.Journal.OpenScope("DisplayInterfaceTutorial()");
+			using var _ = this.Processor.Journal.Scope("DisplayInterfaceTutorial()");
 
 
 			this.Owner.Startup.HideMouseCursor();
@@ -233,15 +228,12 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.Startup.ShowMouseCursor();
 
 			this.Owner.Conquest.WaitForKeyPressOrMouseClick();
-
-
-			this.Processor.Journal.CloseScope("DisplayInterfaceTutorial");
 		}
 
 		/// <inheritdoc/>
 		public void DrawTutorialPointer(int horizSpot1, int vertSpot1, int horizSpot2, int vertSpot2)
 		{
-			this.Processor.Journal.OpenScope($"RenderTutorialPointer({horizSpot1}, {vertSpot1}, {horizSpot2}, {vertSpot2})");
+			using var _ = this.Processor.Journal.Scope($"RenderTutorialPointer({horizSpot1}, {vertSpot1}, {horizSpot2}, {vertSpot2})");
 
 			this.Owner.VideoCard.RenderLine(ScreenBox, horizSpot1, vertSpot1, horizSpot2, vertSpot2 + 6, Hues.White);
 
@@ -250,8 +242,6 @@ namespace Civilization1Remaster.Core.UI
 			DialogNeedsRedraw = 1;
 
 			this.Owner.Dialogs.ShowMenu(TextBuffer.Address, horizSpot2, vertSpot2, 1);
-
-			this.Processor.Journal.CloseScope("RenderTutorialPointer");
 		}
 
 		/// <summary>The disks 1 - 7 that are present one after the other (0xdeba: the first one missing), then waits for the path 0x324a</summary>

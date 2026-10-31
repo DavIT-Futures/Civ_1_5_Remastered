@@ -24,7 +24,7 @@ namespace Civilization1Remaster.Core.Engine
 		{
 			string docname = this.Processor.StandardFolder +
 				RuntimeLibrary.ObtainDOSFileLabel(fileName.ToUpper());
-			this.Processor.Journal.OpenScope($"ImportPictureOrColors(0x{displayIdx:x4}, 0x{horizLoc:x4}, 0x{vertLoc:x4}, " +
+			using var _ = this.Processor.Journal.Scope($"ImportPictureOrColors(0x{displayIdx:x4}, 0x{horizLoc:x4}, 0x{vertLoc:x4}, " +
 				$"'{docname}', 0x{swatchAddr:x4})");
 
 			if (displayIdx >= 0 && (Path.GetExtension(docname).Equals(".pic", StringComparison.InvariantCultureIgnoreCase) ||
@@ -109,8 +109,6 @@ namespace Civilization1Remaster.Core.Engine
 						this.Owner.VideoCard.AssignHuesFromHueStruct(swatch);
 				}
 			}
-
-			this.Processor.Journal.CloseScope("ImportPictureOrColors");
 		}
 
 		/// <inheritdoc/>

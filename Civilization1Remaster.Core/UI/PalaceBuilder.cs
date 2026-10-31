@@ -36,7 +36,7 @@ namespace Civilization1Remaster.Core.UI
 		/// <inheritdoc/>
 		public void DisplayPalace()
 		{
-			this.Processor.Journal.OpenScope("DisplayPalace()");
+			using var _ = this.Processor.Journal.Scope("DisplayPalace()");
 
 
 			ushort dataSeg = this.Processor.SegData.Value16;
@@ -126,14 +126,12 @@ namespace Civilization1Remaster.Core.UI
 
 			this.Owner.TurnHooks.RepaintMainScreen();
 			this.Owner.Startup.ShowMouseCursor();
-
-			this.Processor.Journal.CloseScope("DisplayPalace");
 		}
 
 		/// <inheritdoc/>
 		public void LoadPalaceGraphics(ushort marker)
 		{
-			this.Processor.Journal.OpenScope($"ImportPalaceGraphics({marker})");
+			using var _ = this.Processor.Journal.Scope($"ImportPalaceGraphics({marker})");
 
 			// Locals 0x12 and 0x18 of the original (B3: in C#), read before written on some paths: they start at 0
 			ushort lastLeftEnd = 0;
@@ -331,14 +329,12 @@ namespace Civilization1Remaster.Core.UI
 
 				this.Owner.Startup.AskForDisk(0, 1);
 			}
-
-			this.Processor.Journal.CloseScope("ImportPalaceGraphics");
 		}
 
 		/// <inheritdoc/>
 		public void DrawPalaceSection(ushort sectionIdx, ushort marker)
 		{
-			this.Processor.Journal.OpenScope($"RenderPalaceSection({sectionIdx}, {marker})");
+			using var _ = this.Processor.Journal.Scope($"RenderPalaceSection({sectionIdx}, {marker})");
 
 			short section = (short)sectionIdx;
 			ushort level = PalaceSectionLevel(sectionIdx);
@@ -396,14 +392,12 @@ namespace Civilization1Remaster.Core.UI
 					SetPalaceSectionStyleMarker(sectionIdx, 1, 0x4);
 					break;
 			}
-
-			this.Processor.Journal.CloseScope("RenderPalaceSection");
 		}
 
 		/// <inheritdoc/>
 		public void DrawPalacePart(ushort level, ushort section, ushort horizLoc, ushort vertShift, ushort marker)
 		{
-			this.Processor.Journal.OpenScope($"RenderPalacePart({level}, {section}, {horizLoc}, {vertShift}, {marker})");
+			using var _ = this.Processor.Journal.Scope($"RenderPalacePart({level}, {section}, {horizLoc}, {vertShift}, {marker})");
 
 			ushort partPlace = PalaceSectionStyle(section);
 			sbyte styleShift = (sbyte)PalaceSectionStyleMarker(section, marker);
@@ -415,14 +409,12 @@ namespace Civilization1Remaster.Core.UI
 				(short)horizLoc,
 				(short)vertLoc,
 				PalacePicture(section, marker));
-
-			this.Processor.Journal.CloseScope("RenderPalacePart");
 		}
 
 		/// <inheritdoc/>
 		public void LoadPalaceCastle(ushort levelMask, ushort onlyBuilt)
 		{
-			this.Processor.Journal.OpenScope($"ImportPalaceCastle({levelMask}, {onlyBuilt})");
+			using var _ = this.Processor.Journal.Scope($"ImportPalaceCastle({levelMask}, {onlyBuilt})");
 
 			ushort level;
 
@@ -498,11 +490,8 @@ namespace Civilization1Remaster.Core.UI
 							PalaceFirstPicture = PalacePicture(section, partIdx);
 						}
 					}
-
 				}
 			}
-
-			this.Processor.Journal.CloseScope("ImportPalaceCastle");
 		}
 
 		private static ushort PalacePictureAddress(ushort sectionIdx, ushort partIdx)

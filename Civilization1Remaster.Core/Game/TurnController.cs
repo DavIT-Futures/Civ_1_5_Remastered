@@ -57,7 +57,7 @@ namespace Civilization1Remaster.Core.Game
 		/// <inheritdoc/>
 		public void HandlePlayerTurn(short participantIdx)
 		{
-			this.Processor.Journal.OpenScope($"HandlePlayerTurn({participantIdx})");
+			using var _ = this.Processor.Journal.Scope($"HandlePlayerTurn({participantIdx})");
 
 			TurnLocals outer = this.turn;
 			this.turn = new TurnLocals();
@@ -127,7 +127,6 @@ namespace Civilization1Remaster.Core.Game
 
 			this.indexDest = outerDest;
 			this.turn = outer;
-			this.Processor.Journal.CloseScope("HandlePlayerTurn");
 		}
 
 		/// <summary>

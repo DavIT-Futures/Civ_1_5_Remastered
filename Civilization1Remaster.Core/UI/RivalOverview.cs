@@ -17,7 +17,7 @@ namespace Civilization1Remaster.Core.UI
 		/// <inheritdoc/>
 		public void ShowCivilizationOverview(short participantIdx)
 		{
-			this.Processor.Journal.OpenScope($"DisplayCivilizationOverview({participantIdx})");
+			using var _ = this.Processor.Journal.Scope($"DisplayCivilizationOverview({participantIdx})");
 
 			Player participant = this.Owner.World.Participants[participantIdx];
 
@@ -169,14 +169,12 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
 
 			this.Owner.Startup.ShowMouseCursor();
-
-			this.Processor.Journal.CloseScope("DisplayCivilizationOverview");
 		}
 
 		/// <inheritdoc/>
 		public void ShowCivilizationScoreList()
 		{
-			this.Processor.Journal.OpenScope("DisplayCivilizationScoreList()");
+			using var _ = this.Processor.Journal.Scope("DisplayCivilizationScoreList()");
 
 			this.Owner.Startup.HideMouseCursor();
 
@@ -249,14 +247,12 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.Startup.ShowMouseCursor();
 
 			DrawScoreListRecord();
-
-			this.Processor.Journal.CloseScope("DisplayCivilizationScoreList");
 		}
 
 		/// <inheritdoc/>
 		public void DrawScoreListRecord()
 		{
-			this.Processor.Journal.OpenScope("RenderScoreListRecord()");
+			using var _ = this.Processor.Journal.Scope("RenderScoreListRecord()");
 
 			this.Owner.Startup.HideMouseCursor();
 
@@ -306,8 +302,6 @@ namespace Civilization1Remaster.Core.UI
 				ScreenBox, 0, 0);
 
 			this.Owner.Startup.ShowMouseCursor();
-
-			this.Processor.Journal.CloseScope("RenderScoreListRecord");
 		}
 
 		/// <summary>One of the players 1 - 7 has or builds units of the type</summary>

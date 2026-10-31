@@ -21,7 +21,7 @@ namespace Civilization1Remaster.Core.UI
 		/// <inheritdoc/>
 		public void ShowHelpTopic(ushort charsAddr)
 		{
-			this.Processor.Journal.OpenScope($"DisplayHelpTopic(0x{charsAddr:x4})");
+			using var _ = this.Processor.Journal.Scope($"DisplayHelpTopic(0x{charsAddr:x4})");
 
 			// "*" and the topic in upper case (also in place, like the original)
 			ushort upper = this.Owner.Libc.UppercaseText(charsAddr);
@@ -54,13 +54,12 @@ namespace Civilization1Remaster.Core.UI
 			}
 
 			MenuHelpTopic = 0x0;
-			this.Processor.Journal.CloseScope("DisplayHelpTopic");
 		}
 
 		/// <inheritdoc/>
 		public void ShowTileInfo(short participantIdx, ushort troopIdx)
 		{
-			this.Processor.Journal.OpenScope($"DisplayTileInfo({participantIdx}, {troopIdx})");
+			using var _ = this.Processor.Journal.Scope($"DisplayTileInfo({participantIdx}, {troopIdx})");
 
 			if ((short)troopIdx < 0x80)
 			{
@@ -100,14 +99,12 @@ namespace Civilization1Remaster.Core.UI
 					ShowImprovementHints(participantIdx, horizLoc, vertLoc, terrain);
 				}
 			}
-
-			this.Processor.Journal.CloseScope("DisplayTileInfo");
 		}
 
 		/// <inheritdoc/>
 		public void ShowHelpPopup(GameText topic, bool always = false)
 		{
-			this.Processor.Journal.OpenScope($"DisplayHelpPopup(0x{topic.Address:x4})");
+			using var _ = this.Processor.Journal.Scope($"DisplayHelpPopup(0x{topic.Address:x4})");
 
 			if (always || ((this.Owner.World.SessionPrefMarkers & 0x1) != 0 && this.Owner.World.Season < 0))
 			{
@@ -143,14 +140,12 @@ namespace Civilization1Remaster.Core.UI
 
 				this.Owner.Startup.ShowMouseCursor();
 			}
-
-			this.Processor.Journal.CloseScope("DisplayHelpPopup");
 		}
 
 		/// <inheritdoc/>
 		public void ShowHelpPopupForHuman(GameText topic)
 		{
-			this.Processor.Journal.OpenScope($"DisplayHelpPopupForHuman(0x{topic.Address:x4})");
+			using var _ = this.Processor.Journal.Scope($"DisplayHelpPopupForHuman(0x{topic.Address:x4})");
 
 			if (TurnPlayer == (ushort)this.Owner.World.PersonParticipantIdx)
 			{
@@ -186,8 +181,6 @@ namespace Civilization1Remaster.Core.UI
 
 				this.Owner.Startup.ShowMouseCursor();
 			}
-
-			this.Processor.Journal.CloseScope("DisplayHelpPopupForHuman");
 		}
 
 		/// <summary>The hints of ShowTileInfo for a tile next to a city of the player (the city's name in code text 0x30b8)</summary>

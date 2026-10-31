@@ -42,7 +42,7 @@ namespace Civilization1Remaster.Core.Game
 		/// <inheritdoc/>
 		public void CreateUnitsFromCityList(short townIdx)
 		{
-			this.Processor.Journal.OpenScope($"ConstructUnitsFromCityList({townIdx})");
+			using var _ = this.Processor.Journal.Scope($"ConstructUnitsFromCityList({townIdx})");
 
 			City town = this.Owner.World.Towns[townIdx];
 
@@ -74,14 +74,12 @@ namespace Civilization1Remaster.Core.Game
 				QuietUnitSetup = 0x0;
 				town.ConditionMarker |= KeptUnitsCondition;
 			}
-
-			this.Processor.Journal.CloseScope("ConstructUnitsFromCityList");
 		}
 
 		/// <inheritdoc/>
 		public void KeepUnitsInCityList(short townIdx)
 		{
-			this.Processor.Journal.OpenScope($"KeepUnitsInCityList({townIdx})");
+			using var _ = this.Processor.Journal.Scope($"KeepUnitsInCityList({townIdx})");
 
 			City town = this.Owner.World.Towns[townIdx];
 			short participantIdx = town.ParticipantIdx;
@@ -122,14 +120,12 @@ namespace Civilization1Remaster.Core.Game
 				CountLosses = countLosses;
 				town.ConditionMarker &= unchecked((byte)~KeptUnitsCondition);
 			}
-
-			this.Processor.Journal.CloseScope("KeepUnitsInCityList");
 		}
 
 		/// <inheritdoc/>
 		public void ShiftUnit(int horizLoc, int vertLoc, short participantIdx, short troopIdx, ushort marker)
 		{
-			this.Processor.Journal.OpenScope($"ShiftUnit({horizLoc}, {vertLoc}, {participantIdx}, {troopIdx}, {marker})");
+			using var _ = this.Processor.Journal.Scope($"ShiftUnit({horizLoc}, {vertLoc}, {participantIdx}, {troopIdx}, {marker})");
 
 
 			int startTerrain = this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
@@ -167,17 +163,14 @@ namespace Civilization1Remaster.Core.Game
 						this.Owner.MapOps.RepaintMapTile(ringHoriz, ringVert);
 					}
 				}
-
 			}
 
-
-			this.Processor.Journal.CloseScope("ShiftUnit");
 		}
 
 		/// <inheritdoc/>
 		public void ChoreographUnitMove(short participantIdx, short troopIdx, ushort cursorHoriz, ushort cursorVert)
 		{
-			this.Processor.Journal.OpenScope($"ChoreographUnitMove({participantIdx}, {troopIdx}, {cursorHoriz}, {cursorVert})");
+			using var _ = this.Processor.Journal.Scope($"ChoreographUnitMove({participantIdx}, {troopIdx}, {cursorHoriz}, {cursorVert})");
 
 			// Screen position of the cursor frame, -1 when there is none or it is outside the map view
 			short frameHoriz = -1;
@@ -259,14 +252,12 @@ namespace Civilization1Remaster.Core.Game
 				this.Owner.Startup.ReadMouseState();
 			}
 			while (this.Owner.Libc.KeyAvailable() == 0 && this.Owner.GlobDb3a == 0);
-
-			this.Processor.Journal.CloseScope("ChoreographUnitMove");
 		}
 
 		/// <inheritdoc/>
 		public ushort CreateUnit(short participantIdx, short kind, int horizLoc, int vertLoc)
 		{
-			this.Processor.Journal.OpenScope($"ConstructUnit({participantIdx}, {kind}, {horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"ConstructUnit({participantIdx}, {kind}, {horizLoc}, {vertLoc})");
 
 			short troopIdx = -1;
 
@@ -305,15 +296,13 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 
-			this.Processor.Journal.CloseScope("ConstructUnit");
-
 			return result;
 		}
 
 		/// <inheritdoc/>
 		public void DestroyUnit(short participantIdx, short troopIdx)
 		{
-			this.Processor.Journal.OpenScope($"EliminateUnit({participantIdx}, {troopIdx})");
+			using var _ = this.Processor.Journal.Scope($"EliminateUnit({participantIdx}, {troopIdx})");
 
 			if (CountLosses != 0)
 			{
@@ -361,14 +350,12 @@ namespace Civilization1Remaster.Core.Game
 					this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
 					this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert));
 			}
-
-			this.Processor.Journal.CloseScope("EliminateUnit");
 		}
 
 		/// <inheritdoc/>
 		public ushort FindStackLeader(short participantIdx, short troopIdx)
 		{
-			this.Processor.Journal.OpenScope($"LocateStackLeader({participantIdx}, {troopIdx})");
+			using var _ = this.Processor.Journal.Scope($"LocateStackLeader({participantIdx}, {troopIdx})");
 
 			ushort leader = (ushort)troopIdx;
 
@@ -392,15 +379,13 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 
-			this.Processor.Journal.CloseScope("LocateStackLeader");
-
 			return leader;
 		}
 
 		/// <inheritdoc/>
 		public ushort FindBestGuardianInStack(short participantIdx, short troopIdx)
 		{
-			this.Processor.Journal.OpenScope($"LocateBestGuardianInStack({participantIdx}, {troopIdx})");
+			using var _ = this.Processor.Journal.Scope($"LocateBestGuardianInStack({participantIdx}, {troopIdx})");
 
 			ushort guardian = (ushort)troopIdx;
 
@@ -415,15 +400,13 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 
-			this.Processor.Journal.CloseScope("LocateBestGuardianInStack");
-
 			return guardian;
 		}
 
 		/// <inheritdoc/>
 		public void FindBestGuardianStep(short participantIdx, short troopIdx)
 		{
-			this.Processor.Journal.OpenScope($"LocateBestGuardianStep({participantIdx}, {troopIdx})");
+			using var _ = this.Processor.Journal.Scope($"LocateBestGuardianStep({participantIdx}, {troopIdx})");
 
 			// Extract unit parameters
 			int unitKind = this.Troops.PullSigned(participantIdx, troopIdx, UnitMemory.Kind);
@@ -451,14 +434,12 @@ namespace Civilization1Remaster.Core.Game
 					StackLeader = (ushort)troopIdx;
 				}
 			}
-
-			this.Processor.Journal.CloseScope("LocateBestGuardianStep");
 		}
 
 		/// <inheritdoc/>
 		public ushort CountUnitsByDomainInStack(short participantIdx, short troopIdx, ushort mode)
 		{
-			this.Processor.Journal.OpenScope($"TallyUnitsByDomainInStack({participantIdx}, {troopIdx}, {mode})");
+			using var _ = this.Processor.Journal.Scope($"TallyUnitsByDomainInStack({participantIdx}, {troopIdx}, {mode})");
 
 			StackDomainTally = 0x0;
 			StackDomainMode = mode;
@@ -468,15 +449,13 @@ namespace Civilization1Remaster.Core.Game
 
 			ushort result = StackDomainTally;
 
-			this.Processor.Journal.CloseScope("TallyUnitsByDomainInStack");
-
 			return result;
 		}
 
 		/// <inheritdoc/>
 		public void CountUnitsByDomainStep(short participantIdx, short troopIdx)
 		{
-			this.Processor.Journal.OpenScope($"TallyUnitsByDomainStep({participantIdx}, {troopIdx})");
+			using var _ = this.Processor.Journal.Scope($"TallyUnitsByDomainStep({participantIdx}, {troopIdx})");
 
 			switch (StackDomainMode)
 			{
@@ -504,14 +483,12 @@ namespace Civilization1Remaster.Core.Game
 					}
 					break;
 			}
-
-			this.Processor.Journal.CloseScope("TallyUnitsByDomainStep");
 		}
 
 		/// <inheritdoc/>
 		public ushort CountUnitsOfTypeInStack(short participantIdx, short troopIdx, ushort kind)
 		{
-			this.Processor.Journal.OpenScope($"TallyUnitsOfTypeInStack({participantIdx}, {troopIdx}, {kind})");
+			using var _ = this.Processor.Journal.Scope($"TallyUnitsOfTypeInStack({participantIdx}, {troopIdx}, {kind})");
 
 			StackKind = kind;
 			StackTally = 0x0;
@@ -520,28 +497,24 @@ namespace Civilization1Remaster.Core.Game
 
 			ushort result = StackTally;
 
-			this.Processor.Journal.CloseScope("TallyUnitsOfTypeInStack");
-
 			return result;
 		}
 
 		/// <inheritdoc/>
 		public void CountUnitsOfTypeStep(short participantIdx, short troopIdx)
 		{
-			this.Processor.Journal.OpenScope($"TallyUnitsOfTypeStep({participantIdx}, {troopIdx})");
+			using var _ = this.Processor.Journal.Scope($"TallyUnitsOfTypeStep({participantIdx}, {troopIdx})");
 
 			if ((ushort)this.troops.TroopKind(participantIdx, troopIdx) == StackKind)
 			{
 				AddToGlobal(0x653c, 1);
 			}
-
-			this.Processor.Journal.CloseScope("TallyUnitsOfTypeStep");
 		}
 
 		/// <inheritdoc/>
 		public ushort CountUnitsWithFlagInStack(short participantIdx, short troopIdx, ushort group)
 		{
-			this.Processor.Journal.OpenScope($"TallyUnitsWithFlagInStack({participantIdx}, {troopIdx}, {group})");
+			using var _ = this.Processor.Journal.Scope($"TallyUnitsWithFlagInStack({participantIdx}, {troopIdx}, {group})");
 
 			StackKind = group;
 			StackTally = 0x0;
@@ -550,28 +523,24 @@ namespace Civilization1Remaster.Core.Game
 
 			ushort result = StackTally;
 
-			this.Processor.Journal.CloseScope("TallyUnitsWithFlagInStack");
-
 			return result;
 		}
 
 		/// <inheritdoc/>
 		public void CountUnitsWithFlagStep(short participantIdx, short troopIdx)
 		{
-			this.Processor.Journal.OpenScope($"TallyUnitsWithFlagStep({participantIdx}, {troopIdx})");
+			using var _ = this.Processor.Journal.Scope($"TallyUnitsWithFlagStep({participantIdx}, {troopIdx})");
 
 			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.TroopGroup) == StackKind)
 			{
 				AddToGlobal(0x653c, 1);
 			}
-
-			this.Processor.Journal.CloseScope("TallyUnitsWithFlagStep");
 		}
 
 		/// <inheritdoc/>
 		public ushort CountSpecialUnitsInStack(short participantIdx, short troopIdx)
 		{
-			this.Processor.Journal.OpenScope($"TallySpecialUnitsInStack({participantIdx}, {troopIdx})");
+			using var _ = this.Processor.Journal.Scope($"TallySpecialUnitsInStack({participantIdx}, {troopIdx})");
 
 			StackTally = 0x0;
 
@@ -579,15 +548,13 @@ namespace Civilization1Remaster.Core.Game
 
 			ushort result = StackTally;
 
-			this.Processor.Journal.CloseScope("TallySpecialUnitsInStack");
-
 			return result;
 		}
 
 		/// <inheritdoc/>
 		public void CountSpecialUnitsStep(short participantIdx, short troopIdx)
 		{
-			this.Processor.Journal.OpenScope($"TallySpecialUnitsStep({participantIdx}, {troopIdx})");
+			using var _ = this.Processor.Journal.Scope($"TallySpecialUnitsStep({participantIdx}, {troopIdx})");
 
 			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == UnitKindTable.LandUnits)
 			{
@@ -598,14 +565,12 @@ namespace Civilization1Remaster.Core.Game
 			{
 				AddToGlobal(0x653c, this.troops.KindField(participantIdx, troopIdx, UnitKindTable.FerryRoom));
 			}
-
-			this.Processor.Journal.CloseScope("TallySpecialUnitsStep");
 		}
 
 		/// <inheritdoc/>
 		public void VisitEachUnitInStack(short participantIdx, short troopIdx, int funcAddr)
 		{
-			this.Processor.Journal.OpenScope($"VisitEachUnitInStack({participantIdx}, {troopIdx}, 0x{funcAddr:x4})");
+			using var _ = this.Processor.Journal.Scope($"VisitEachUnitInStack({participantIdx}, {troopIdx}, 0x{funcAddr:x4})");
 
 			Action<short, short> step = StackStep(funcAddr);
 
@@ -613,8 +578,6 @@ namespace Civilization1Remaster.Core.Game
 			{
 				step(stepParticipantIdx, stepTroopIdx);
 			});
-
-			this.Processor.Journal.CloseScope("VisitEachUnitInStack");
 		}
 
 		/// <inheritdoc/>
@@ -638,7 +601,7 @@ namespace Civilization1Remaster.Core.Game
 		/// <inheritdoc/>
 		public void CheckUnitTerrainFlag(short participantIdx, short troopIdx)
 		{
-			this.Processor.Journal.OpenScope($"VerifyUnitTerrainFlag({participantIdx}, {troopIdx})");
+			using var _ = this.Processor.Journal.Scope($"VerifyUnitTerrainFlag({participantIdx}, {troopIdx})");
 
 			bool carried = IsOnOcean(participantIdx, troopIdx) &&
 				this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == UnitKindTable.LandUnits;
@@ -647,14 +610,12 @@ namespace Civilization1Remaster.Core.Game
 			{
 				ClearStatus(participantIdx, troopIdx, UnitStatusEnum.Sentry);
 			}
-
-			this.Processor.Journal.CloseScope("VerifyUnitTerrainFlag");
 		}
 
 		/// <inheritdoc/>
 		public void ClearUnitOrders(short participantIdx, short troopIdx)
 		{
-			this.Processor.Journal.OpenScope($"WipeUnitOrders({participantIdx}, {troopIdx})");
+			using var _ = this.Processor.Journal.Scope($"WipeUnitOrders({participantIdx}, {troopIdx})");
 
 			if ((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & (int)UnitStatusEnum.Sentry) != 0)
 			{
@@ -671,27 +632,23 @@ namespace Civilization1Remaster.Core.Game
 
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHeading, 0xff);
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHoriz, 0xff);
-
-			this.Processor.Journal.CloseScope("WipeUnitOrders");
 		}
 
 		/// <inheritdoc/>
 		public void RestoreUnitOrders(short participantIdx, short troopIdx)
 		{
-			this.Processor.Journal.OpenScope($"RestoreUnitOrders({participantIdx}, {troopIdx})");
+			using var _ = this.Processor.Journal.Scope($"RestoreUnitOrders({participantIdx}, {troopIdx})");
 
 			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == UnitKindTable.SeaUnits)
 			{
 				RestoreUnitStatus(participantIdx, troopIdx);
 			}
-
-			this.Processor.Journal.CloseScope("RestoreUnitOrders");
 		}
 
 		/// <inheritdoc/>
 		public void RestoreUnitStatus(short participantIdx, short troopIdx)
 		{
-			this.Processor.Journal.OpenScope($"RestoreUnitStatus({participantIdx}, {troopIdx})");
+			using var _ = this.Processor.Journal.Scope($"RestoreUnitStatus({participantIdx}, {troopIdx})");
 
 			byte status = this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status);
 
@@ -713,53 +670,45 @@ namespace Civilization1Remaster.Core.Game
 			{
 				this.Owner.MapOps.DrawUnitOnWorldMap(participantIdx, troopIdx);
 			}
-
-			this.Processor.Journal.CloseScope("RestoreUnitStatus");
 		}
 
 		/// <inheritdoc/>
 		public void DestroyLandUnit(short participantIdx, short troopIdx)
 		{
-			this.Processor.Journal.OpenScope($"EliminateLandUnit({participantIdx}, {troopIdx})");
+			using var _ = this.Processor.Journal.Scope($"EliminateLandUnit({participantIdx}, {troopIdx})");
 
 			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == UnitKindTable.LandUnits)
 			{
 				DestroyUnit(participantIdx, troopIdx);
 			}
-
-			this.Processor.Journal.CloseScope("EliminateLandUnit");
 		}
 
 		/// <inheritdoc/>
 		public void DestroyNonLandUnit(short participantIdx, short troopIdx)
 		{
-			this.Processor.Journal.OpenScope($"EliminateNonLandUnit({participantIdx}, {troopIdx})");
+			using var _ = this.Processor.Journal.Scope($"EliminateNonLandUnit({participantIdx}, {troopIdx})");
 
 			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) != UnitKindTable.LandUnits)
 			{
 				DestroyUnit(participantIdx, troopIdx);
 			}
-
-			this.Processor.Journal.CloseScope("EliminateNonLandUnit");
 		}
 
 		/// <inheritdoc/>
 		public void DestroySeaUnit(short participantIdx, short troopIdx)
 		{
-			this.Processor.Journal.OpenScope($"EliminateSeaUnit({participantIdx}, {troopIdx})");
+			using var _ = this.Processor.Journal.Scope($"EliminateSeaUnit({participantIdx}, {troopIdx})");
 
 			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == UnitKindTable.AirUnits)
 			{
 				DestroyUnit(participantIdx, troopIdx);
 			}
-
-			this.Processor.Journal.CloseScope("EliminateSeaUnit");
 		}
 
 		/// <inheritdoc/>
 		public void PanMapToPosition(short participantIdx, int horizLoc, int vertLoc)
 		{
-			this.Processor.Journal.OpenScope($"PanMapToPosition({participantIdx}, {horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"PanMapToPosition({participantIdx}, {horizLoc}, {vertLoc})");
 
 			int viewLeft = (short)MapViewHoriz;
 
@@ -778,20 +727,16 @@ namespace Civilization1Remaster.Core.Game
 
 				this.Owner.MapOps.FocusMapView(participantIdx, left, vertLoc - 6);
 			}
-
-			this.Processor.Journal.CloseScope("PanMapToPosition");
 		}
 
 		/// <inheritdoc/>
 		public ushort MayOccupyTile(short participantIdx, int horizLoc, int vertLoc)
 		{
-			this.Processor.Journal.OpenScope($"MayOccupyTile({participantIdx}, {horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"MayOccupyTile({participantIdx}, {horizLoc}, {vertLoc})");
 
 			ushort blocked = (this.Owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) != 0 ? (ushort)0 :
 				CheckTileOccupation(participantIdx, horizLoc, vertLoc);
 
-
-			this.Processor.Journal.CloseScope("MayOccupyTile");
 
 			return blocked;
 		}
@@ -799,7 +744,7 @@ namespace Civilization1Remaster.Core.Game
 		/// <inheritdoc/>
 		public ushort CheckTileOccupation(short participantIdx, int horizLoc, int vertLoc)
 		{
-			this.Processor.Journal.OpenScope($"VerifyTileOccupation({participantIdx}, {horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"VerifyTileOccupation({participantIdx}, {horizLoc}, {vertLoc})");
 
 			bool onOcean = this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) == MapRules.OceanTerrain;
 			ushort found = 0;
@@ -829,15 +774,13 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 
-			this.Processor.Journal.CloseScope("VerifyTileOccupation");
-
 			return found;
 		}
 
 		/// <inheritdoc/>
 		public ushort ContainsAdjacentForeignUnit(short participantIdx, int horizLoc, int vertLoc)
 		{
-			this.Processor.Journal.OpenScope($"ContainsAdjacentForeignUnit({participantIdx}, {horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"ContainsAdjacentForeignUnit({participantIdx}, {horizLoc}, {vertLoc})");
 
 			// Check the 8 neighboring tiles for any foreign unit (Zone of Control)
 			bool found = MovementRules.HasAdjacentForeignUnit(horizLoc, vertLoc, participantIdx, (x, y) =>
@@ -847,15 +790,13 @@ namespace Civilization1Remaster.Core.Game
 
 			ushort result = (ushort)(found ? 1 : 0);
 
-			this.Processor.Journal.CloseScope("ContainsAdjacentForeignUnit");
-
 			return result;
 		}
 
 		/// <inheritdoc/>
 		public void VisitHut(short participantIdx, short troopIdx)
 		{
-			this.Processor.Journal.OpenScope($"VisitHut({participantIdx}, {troopIdx})");
+			using var _ = this.Processor.Journal.Scope($"VisitHut({participantIdx}, {troopIdx})");
 
 			if (participantIdx != 0 &&
 				this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) != UnitKindTable.AirUnits)
@@ -914,14 +855,12 @@ namespace Civilization1Remaster.Core.Game
 						break;
 				}
 			}
-
-			this.Processor.Journal.CloseScope("VisitHut");
 		}
 
 		/// <inheritdoc/>
 		public void ChoreographUnitCombat(short participantIdx, short troopIdx, ushort direction)
 		{
-			this.Processor.Journal.OpenScope($"ChoreographUnitCombat({participantIdx}, {troopIdx}, {direction})");
+			using var _ = this.Processor.Journal.Scope($"ChoreographUnitCombat({participantIdx}, {troopIdx}, {direction})");
 
 			int horizLoc = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz);
 			int vertLoc = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert);
@@ -944,14 +883,12 @@ namespace Civilization1Remaster.Core.Game
 
 				this.Owner.Startup.ShowMouseCursor();
 			}
-
-			this.Processor.Journal.CloseScope("ChoreographUnitCombat");
 		}
 
 		/// <inheritdoc/>
 		public ushort ShowBattleScreen(short participantIdx, short troopIdx)
 		{
-			this.Processor.Journal.OpenScope($"DisplayBattleScreen({participantIdx}, {troopIdx})");
+			using var _ = this.Processor.Journal.Scope($"DisplayBattleScreen({participantIdx}, {troopIdx})");
 
 			ushort screen = ScreenBox;
 			ushort backScreen = BackScreenBox;
@@ -1009,15 +946,13 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.TurnLogic.WaitForKey();
 
 
-			this.Processor.Journal.CloseScope("DisplayBattleScreen");
-
 			return picked;
 		}
 
 		/// <inheritdoc/>
 		public ushort FindNearestFriendlyCity(short participantIdx, short troopIdx)
 		{
-			this.Processor.Journal.OpenScope($"LocateNearestFriendlyCity({participantIdx}, {troopIdx})");
+			using var _ = this.Processor.Journal.Scope($"LocateNearestFriendlyCity({participantIdx}, {troopIdx})");
 
 			// Without an own city or carrier the target is the place of the unit, so it stays (direction 0; the original took
 			// what was left on the stack)
@@ -1089,47 +1024,41 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 
-			this.Processor.Journal.CloseScope("LocateNearestFriendlyCity");
-
 			return heading;
 		}
 
 		/// <inheritdoc/>
 		public void AttachReplayContent(ushort rerunIdx, byte content1)
 		{
-			this.Processor.Journal.OpenScope($"AttachReplayContent({rerunIdx}, {content1})");
+			using var _ = this.Processor.Journal.Scope($"AttachReplayContent({rerunIdx}, {content1})");
 			WriteReplayEntry(rerunIdx, content1);
-			this.Processor.Journal.CloseScope("AttachReplayContent");
 		}
 
 		/// <inheritdoc/>
 		public void AttachReplayContent(ushort rerunIdx, byte content1, byte content2)
 		{
-			this.Processor.Journal.OpenScope($"AttachReplayContent({rerunIdx}, {content1}, {content2})");
+			using var _ = this.Processor.Journal.Scope($"AttachReplayContent({rerunIdx}, {content1}, {content2})");
 			WriteReplayEntry(rerunIdx, content1, content2);
-			this.Processor.Journal.CloseScope("AttachReplayContent");
 		}
 
 		/// <inheritdoc/>
 		public void AttachReplayContent(ushort rerunIdx, byte content1, byte content2, byte content3)
 		{
-			this.Processor.Journal.OpenScope($"AttachReplayContent({rerunIdx}, {content1}, {content2}, {content3})");
+			using var _ = this.Processor.Journal.Scope($"AttachReplayContent({rerunIdx}, {content1}, {content2}, {content3})");
 			WriteReplayEntry(rerunIdx, content1, content2, content3);
-			this.Processor.Journal.CloseScope("AttachReplayContent");
 		}
 
 		/// <inheritdoc/>
 		public void AttachReplayContent(ushort rerunIdx, byte content1, byte content2, byte content3, byte content4)
 		{
-			this.Processor.Journal.OpenScope($"AttachReplayContent({rerunIdx}, {content1}, {content2}, {content3}, {content4})");
+			using var _ = this.Processor.Journal.Scope($"AttachReplayContent({rerunIdx}, {content1}, {content2}, {content3}, {content4})");
 			WriteReplayEntry(rerunIdx, content1, content2, content3, content4);
-			this.Processor.Journal.CloseScope("AttachReplayContent");
 		}
 
 		/// <inheritdoc/>
 		public void DrawBusyIndicator()
 		{
-			this.Processor.Journal.OpenScope("RenderBusyIndicator()");
+			using var _ = this.Processor.Journal.Scope("RenderBusyIndicator()");
 
 			int styleLeft = (this.Owner.Libc.Dice.DrawInt(2) << 5) + 0xc0;
 
@@ -1149,8 +1078,6 @@ namespace Civilization1Remaster.Core.Game
 				DrawBorderPiece(styleLeft, 0x80, column << 3, 0);
 				DrawBorderPiece(styleLeft + 0x10, 0x80, column << 3, 0xc0);
 			}
-
-			this.Processor.Journal.CloseScope("RenderBusyIndicator");
 		}
 
 		/// <summary>The larger of the two steps, the horizontal one wrapping over 40</summary>

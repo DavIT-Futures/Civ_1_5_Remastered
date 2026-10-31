@@ -54,7 +54,7 @@ namespace Civilization1Remaster.Core.Game
 		/// <inheritdoc/>
 		public ushort SettleBattle(short participantIdx1, short troopIdx1, short participantIdx2, short troopIdx2, ushort marker)
 		{
-			this.Processor.Journal.OpenScope($"SettleBattle({participantIdx1}, {troopIdx1}, {participantIdx2}, {troopIdx2}, {marker})");
+			using var _ = this.Processor.Journal.Scope($"SettleBattle({participantIdx1}, {troopIdx1}, {participantIdx2}, {troopIdx2}, {marker})");
 
 
 			int assailantKind = PullUnitByte(participantIdx1, troopIdx1, TroopKindDisplacement);
@@ -137,7 +137,7 @@ namespace Civilization1Remaster.Core.Game
 			{
 				// Only estimate the odds (used by AI), don't fight
 				int chances = (short)(assault * 8) / (short)(guard + 1);
-				return FinishSettleBattle((ushort)chances);
+				return (ushort)chances;
 			}
 
 			if (participantIdx1 != 0)
@@ -161,7 +161,7 @@ namespace Civilization1Remaster.Core.Game
 				if (AffirmBreakTreaty(participantIdx2) == 0xffff)
 				{
 					this.troops.Assign(participantIdx1, troopIdx1, UnitMemory.TravelHoriz, 0xff);
-					return FinishSettleBattle(0xffff);
+					return 0xffff;
 				}
 			}
 
@@ -185,13 +185,13 @@ namespace Civilization1Remaster.Core.Game
 					participantIdx1,
 					(short)PullUnitByte(participantIdx2, troopIdx2, TroopHorizDisplacement),
 					(short)PullUnitByte(participantIdx2, troopIdx2, TroopVertDisplacement));
-				return FinishSettleBattle(1);
+				return 1;
 			}
 
 			if (assailantWins)
 			{
 				ResolveAttackerVictory(participantIdx1, troopIdx1, participantIdx2, troopIdx2, (short)townIdx);
-				return FinishSettleBattle(1);
+				return 1;
 			}
 
 			this.Owner.World.Participants[participantIdx2].TroopsRuined[participantIdx1]++;
@@ -202,13 +202,13 @@ namespace Civilization1Remaster.Core.Game
 				PromoteUnitToVeteran(participantIdx2, troopIdx2);
 			}
 
-			return FinishSettleBattle(0);
+			return 0;
 		}
 
 		/// <inheritdoc/>
 		public void AttachUnitToStack(short participantIdx, short troopIdx, ushort stackTroopIdx)
 		{
-			this.Processor.Journal.OpenScope($"AttachUnitToStack({participantIdx}, {troopIdx}, {stackTroopIdx})");
+			using var _ = this.Processor.Journal.Scope($"AttachUnitToStack({participantIdx}, {troopIdx}, {stackTroopIdx})");
 
 			if (this.troops.Following(participantIdx, stackTroopIdx) == -1)
 			{
@@ -221,14 +221,12 @@ namespace Civilization1Remaster.Core.Game
 				this.troops.AssignFollowing(participantIdx, troopIdx, (byte)this.troops.Following(participantIdx, stackTroopIdx));
 				this.troops.AssignFollowing(participantIdx, stackTroopIdx, (byte)troopIdx);
 			}
-
-			this.Processor.Journal.CloseScope("AttachUnitToStack");
 		}
 
 		/// <inheritdoc/>
 		public void RemoveUnitFromStack(short participantIdx, short troopIdx)
 		{
-			this.Processor.Journal.OpenScope($"DiscardUnitFromStack({participantIdx}, {troopIdx})");
+			using var _ = this.Processor.Journal.Scope($"DiscardUnitFromStack({participantIdx}, {troopIdx})");
 
 			int following = this.troops.Following(participantIdx, troopIdx);
 
@@ -259,14 +257,12 @@ namespace Civilization1Remaster.Core.Game
 
 				this.troops.AssignFollowing(participantIdx, troopIdx, 0xff);
 			}
-
-			this.Processor.Journal.CloseScope("DiscardUnitFromStack");
 		}
 
 		/// <inheritdoc/>
 		public ushort AffirmBreakTreaty(short participantIdx)
 		{
-			this.Processor.Journal.OpenScope($"AffirmBreakTreaty({participantIdx})");
+			using var _ = this.Processor.Journal.Scope($"AffirmBreakTreaty({participantIdx})");
 
 			Player person = this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx];
 			ushort affirmed = 0;
@@ -296,15 +292,13 @@ namespace Civilization1Remaster.Core.Game
 				}
 			}
 
-			this.Processor.Journal.CloseScope("AffirmBreakTreaty");
-
 			return affirmed;
 		}
 
 		/// <inheritdoc/>
 		public void ExplodeNuclearWeapon(short participantIdx, short horizLoc, short vertLoc)
 		{
-			this.Processor.Journal.OpenScope($"ExplodeNuclearWeapon({participantIdx}, {horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"ExplodeNuclearWeapon({participantIdx}, {horizLoc}, {vertLoc})");
 
 
 			IMapPlanes chart = this.Owner.MapOps.Chart;
@@ -360,15 +354,12 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 			EnactNuclearFallout(horizLoc, vertLoc);
-
-
-			this.Processor.Journal.CloseScope("ExplodeNuclearWeapon");
 		}
 
 		/// <inheritdoc/>
 		public void EnactNuclearFallout(short horizLoc, short vertLoc)
 		{
-			this.Processor.Journal.OpenScope($"EnactNuclearFallout({horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"EnactNuclearFallout({horizLoc}, {vertLoc})");
 
 			IMapPlanes chart = this.Owner.MapOps.Chart;
 
@@ -390,8 +381,6 @@ namespace Civilization1Remaster.Core.Game
 
 				this.Owner.MapOps.RepaintMapTile(tileHoriz, tileVert);
 			}
-
-			this.Processor.Journal.CloseScope("EnactNuclearFallout");
 		}
 
 		/// <summary>
@@ -460,12 +449,6 @@ namespace Civilization1Remaster.Core.Game
 		private int ObtainUnitTerrainCategory(int troopKind)
 		{
 			return PullUnitDefinitionWord(troopKind, TroopLandGroupDisplacement);
-		}
-
-		private ushort FinishSettleBattle(ushort outcome)
-		{
-			this.Processor.Journal.CloseScope("SettleBattle");
-			return outcome;
 		}
 
 		private bool ExecuteBattleClash(

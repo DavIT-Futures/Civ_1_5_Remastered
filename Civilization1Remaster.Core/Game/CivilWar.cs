@@ -14,11 +14,9 @@ namespace Civilization1Remaster.Core.Game
 		/// <inheritdoc/>
 		public ushort DivideCivilization(short participantIdx)
 		{
-			this.Processor.Journal.OpenScope($"DivideCivilization({participantIdx})");
+			using var _ = this.Processor.Journal.Scope($"DivideCivilization({participantIdx})");
 
 			ushort result = SplitCivilization(participantIdx);
-
-			this.Processor.Journal.CloseScope("DivideCivilization");
 
 			return result;
 		}
@@ -26,7 +24,7 @@ namespace Civilization1Remaster.Core.Game
 		/// <inheritdoc/>
 		public void AssignCityOwner(short townIdx, short participantIdx)
 		{
-			this.Processor.Journal.OpenScope($"AssignCityOwner({townIdx}, {participantIdx})");
+			using var _ = this.Processor.Journal.Scope($"AssignCityOwner({townIdx}, {participantIdx})");
 
 			this.Owner.World.Towns[townIdx].ParticipantIdx = participantIdx;
 
@@ -34,14 +32,12 @@ namespace Civilization1Remaster.Core.Game
 				this.Owner.World.Towns[townIdx].Place.X, this.Owner.World.Towns[townIdx].Place.Y);
 
 			this.Owner.World.Participants[participantIdx].GrandTownExtent += this.Owner.World.Towns[townIdx].TrueExtent;
-
-			this.Processor.Journal.CloseScope("AssignCityOwner");
 		}
 
 		/// <inheritdoc/>
 		public ushort ComputeDistanceToCapital(short participantIdx)
 		{
-			this.Processor.Journal.OpenScope($"ObtainDistanceToCapital({participantIdx})");
+			using var _ = this.Processor.Journal.Scope($"ObtainDistanceToCapital({participantIdx})");
 
 			short smallestSum = 0x7fff;
 			ushort central = 0xffff;
@@ -72,8 +68,6 @@ namespace Civilization1Remaster.Core.Game
 				}
 			}
 
-
-			this.Processor.Journal.CloseScope("ObtainDistanceToCapital");
 
 			return central;
 		}

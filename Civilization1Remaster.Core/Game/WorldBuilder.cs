@@ -22,7 +22,7 @@ namespace Civilization1Remaster.Core.Game
 		/// <inheritdoc/>
 		public void OpeningSequence()
 		{
-			this.Processor.Journal.OpenScope("OpeningSequence()");
+			using var _ = this.Processor.Journal.Scope("OpeningSequence()");
 
 			this.Owner.Startup.AskForDisk(7, 1);
 
@@ -76,14 +76,12 @@ namespace Civilization1Remaster.Core.Game
 				0, 0, 0x140, 0xc8,
 				PictureScreenBox,
 				0, 0);
-
-			this.Processor.Journal.CloseScope("OpeningSequence");
 		}
 
 		/// <inheritdoc/>
 		public void BlendTerrainTile(short horizLoc, short vertLoc)
 		{
-			this.Processor.Journal.OpenScope($"BlendTerrainTile({horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"BlendTerrainTile({horizLoc}, {vertLoc})");
 
 			if (this.Owner.VideoCard.ObtainDot(1, horizLoc - 1, vertLoc - 1) != 1 &&
 				this.Owner.VideoCard.ObtainDot(1, horizLoc - 1, vertLoc + 1) != 1 &&
@@ -92,14 +90,12 @@ namespace Civilization1Remaster.Core.Game
 			{
 				this.Owner.Services.AssignDot(1, horizLoc, vertLoc, 1);
 			}
-
-			this.Processor.Journal.CloseScope("BlendTerrainTile");
 		}
 
 		/// <inheritdoc/>
 		public void ProduceElevation()
 		{
-			this.Processor.Journal.OpenScope($"ProduceElevation()");
+			using var _ = this.Processor.Journal.Scope($"ProduceElevation()");
 
 			IMapPlanes chart = this.Owner.MapOps.Chart;
 			short riverTally = 0;
@@ -188,14 +184,12 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.VideoCard.RenderImage(ScreenBox, 0, 0x32, 0x50, 0x32, ScreenBox, 0, 0x96);
 
 			this.Owner.Services.FloodBox(ScreenBox, 0, 50, 80, 50, Hues.Black);
-
-			this.Processor.Journal.CloseScope("ProduceElevation");
 		}
 
 		/// <inheritdoc/>
 		public void ProduceCloudLayer()
 		{
-			this.Processor.Journal.OpenScope("ProduceCloudLayer()");
+			using var _ = this.Processor.Journal.Scope("ProduceCloudLayer()");
 
 			this.Owner.Services.FloodBox(ScreenBox, 160, 0, 80, 50, Hues.Black);
 
@@ -218,14 +212,12 @@ namespace Civilization1Remaster.Core.Game
 					}
 				}
 			}
-
-			this.Processor.Journal.CloseScope("ProduceCloudLayer");
 		}
 
 		/// <inheritdoc/>
 		public void ProduceCloud(short horizLoc, short vertLoc)
 		{
-			this.Processor.Journal.OpenScope($"ProduceCloud({horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"ProduceCloud({horizLoc}, {vertLoc})");
 
 			int vaporExtent = this.Owner.Libc.Dice.DrawInt(64) + 1;
 
@@ -261,14 +253,12 @@ namespace Civilization1Remaster.Core.Game
 				vaporExtent--;
 
 			} while (vaporExtent > 0 && horizLoc > 2 && horizLoc < 77 && vertLoc > 2 && vertLoc < 46);
-
-			this.Processor.Journal.CloseScope("ProduceCloud");
 		}
 
 		/// <inheritdoc/>
 		public void ProduceTerrain()
 		{
-			this.Processor.Journal.OpenScope("ProduceTerrain()");
+			using var _ = this.Processor.Journal.Scope("ProduceTerrain()");
 
 			// ClassicLabelNumbers: the frame of the original, as the numbers of the labels past the 63 ranked ones are read past
 			// their table, above BP (the frames of the callers) and under the frame (the saved SI / DI); without it they are 15
@@ -338,14 +328,12 @@ namespace Civilization1Remaster.Core.Game
 
 			if (classicFrame)
 				this.Processor.LeaveFrame();
-
-			this.Processor.Journal.CloseScope("ProduceTerrain");
 		}
 
 		/// <inheritdoc/>
 		public void PlaceSpecialTerrain()
 		{
-			this.Processor.Journal.OpenScope("SituateSpecialTerrain()");
+			using var _ = this.Processor.Journal.Scope("SituateSpecialTerrain()");
 
 			for (int continentIdx = 0; continentIdx < 0x10; continentIdx++)
 			{
@@ -444,14 +432,12 @@ namespace Civilization1Remaster.Core.Game
 					this.Owner.World.Landmasses[ObtainContinentIDFromScreen(horizLoc, vertLoc)].ConstructionSpotTally++;
 				}
 			}
-
-			this.Processor.Journal.CloseScope("SituateSpecialTerrain");
 		}
 
 		/// <inheritdoc/>
 		public void LabelLandmasses()
 		{
-			this.Processor.Journal.OpenScope("LabelLandmasses()");
+			using var _ = this.Processor.Journal.Scope("LabelLandmasses()");
 
 			this.Owner.Libc.FillBytes(0xdb44, 0, 0x104);
 
@@ -497,14 +483,12 @@ namespace Civilization1Remaster.Core.Game
 					}
 				}
 			}
-
-			this.Processor.Journal.CloseScope("LabelLandmasses");
 		}
 
 		/// <inheritdoc/>
 		public void ReckonContinentSizes(ushort marker)
 		{
-			this.Processor.Journal.OpenScope($"ReckonContinentSizes({marker})");
+			using var _ = this.Processor.Journal.Scope($"ReckonContinentSizes({marker})");
 
 			this.Owner.Libc.FillBytes(SeaBlocksAddress, 0, 0x104);
 
@@ -533,21 +517,17 @@ namespace Civilization1Remaster.Core.Game
 			this.Processor.EmitGlobalByte((ushort)(SeaBlocksAddress + 11), (byte)(this.Processor.PullGlobalByte((ushort)(SeaBlocksAddress + 11)) & 0xdf));
 			this.Processor.EmitGlobalByte(SeaBlocksAlternateAddress, (byte)(this.Processor.PullGlobalByte(SeaBlocksAlternateAddress) & 0xfd));
 			this.Processor.EmitGlobalByte((ushort)(SeaBlocksAlternateAddress + 11), (byte)(this.Processor.PullGlobalByte((ushort)(SeaBlocksAlternateAddress + 11)) & 0xf7));
-
-			this.Processor.Journal.CloseScope("ReckonContinentSizes");
 		}
 
 		/// <inheritdoc/>
 		public ushort ObtainTerrainTypeFromScreen(short horizLoc, short vertLoc)
 		{
-			this.Processor.Journal.OpenScope($"ObtainTerrainTypeFromScreen({horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"ObtainTerrainTypeFromScreen({horizLoc}, {vertLoc})");
 
 			ushort displayIdx = DrawingBox.DisplayIdx;
 			ushort colour = this.Owner.VideoCard.ObtainDot(displayIdx, horizLoc, vertLoc);
 			ushort terrain = this.Processor.PullGlobalWord((ushort)(MapPlanes.TerrainOfColour + (colour << 1)));
 
-
-			this.Processor.Journal.CloseScope("ObtainTerrainTypeFromScreen");
 
 			return terrain;
 		}
@@ -555,13 +535,11 @@ namespace Civilization1Remaster.Core.Game
 		/// <inheritdoc/>
 		public ushort ObtainContinentIDFromScreen(short horizLoc, short vertLoc)
 		{
-			this.Processor.Journal.OpenScope($"ObtainContinentIDFromScreen({horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"ObtainContinentIDFromScreen({horizLoc}, {vertLoc})");
 
 			ushort dot = this.Owner.VideoCard.ObtainDot(
 				DrawingBox.DisplayIdx,
 				horizLoc, vertLoc + 50);
-
-			this.Processor.Journal.CloseScope("ObtainContinentIDFromScreen");
 
 			return dot;
 		}
@@ -569,7 +547,7 @@ namespace Civilization1Remaster.Core.Game
 		/// <inheritdoc/>
 		public ushort ShowStoryIntro()
 		{
-			this.Processor.Journal.OpenScope("DisplayStoryIntro()");
+			using var _ = this.Processor.Journal.Scope("DisplayStoryIntro()");
 
 			DrawingBox.DisplayIdx = 0x0;
 
@@ -577,15 +555,13 @@ namespace Civilization1Remaster.Core.Game
 
 			ushort result = (ushort)(waiting ? 1 : 0);
 
-			this.Processor.Journal.CloseScope("DisplayStoryIntro");
-
 			return result;
 		}
 
 		/// <inheritdoc/>
 		public void EnactGlobalWarming(short worldHeatingTally)
 		{
-			this.Processor.Journal.OpenScope($"EnactGlobalWarming({worldHeatingTally})");
+			using var _ = this.Processor.Journal.Scope($"EnactGlobalWarming({worldHeatingTally})");
 
 			this.Owner.Words.Set("Global temperature\nrises! Icecaps melt.\nSevere Drought.\n");
 
@@ -634,8 +610,6 @@ namespace Civilization1Remaster.Core.Game
 					}
 				}
 			}
-
-			this.Processor.Journal.CloseScope("EnactGlobalWarming");
 		}
 
 		/// <summary>The tile is off the pattern of 7 * x + 11 * y (bit 1 of the low byte set)</summary>
@@ -758,7 +732,6 @@ namespace Civilization1Remaster.Core.Game
 
 				this.ShowStoryIntro();
 			}
-
 		}
 
 		/// <summary>
@@ -862,7 +835,6 @@ namespace Civilization1Remaster.Core.Game
 
 				this.ShowStoryIntro();
 			}
-
 		}
 
 		/// <summary>

@@ -20,7 +20,7 @@ namespace Civilization1Remaster.Core.Engine
 		/// <inheritdoc/>
 		public void RunGame()
 		{
-			this.Processor.Journal.OpenScope("RunGame()");
+			using var _ = this.Processor.Journal.Scope("RunGame()");
 
 
 			// Main menu selection
@@ -117,14 +117,12 @@ namespace Civilization1Remaster.Core.Engine
 			this.Owner.Services.PerformSound(0, 0);
 			this.Owner.Services.HaltSound();
 			this.Owner.Services.HaltTimer();
-
-			this.Processor.Journal.CloseScope("RunGame");
 		}
 
 		/// <inheritdoc/>
 		public void LoadGameDuringPlay(ushort arrowTier)
 		{
-			this.Processor.Journal.OpenScope($"ImportGameDuringPlay({arrowTier})");
+			using var _ = this.Processor.Journal.Scope($"ImportGameDuringPlay({arrowTier})");
 
 			GameEndRequest = 0x0;
 			ChosenOrder = 0x0;
@@ -164,8 +162,6 @@ namespace Civilization1Remaster.Core.Engine
 			MapViewVert = 0x13;
 
 			this.Owner.TurnHooks.RepaintMainScreen();
-
-			this.Processor.Journal.CloseScope("ImportGameDuringPlay");
 		}
 
 		/// <inheritdoc/>
@@ -194,7 +190,7 @@ namespace Civilization1Remaster.Core.Engine
 		/// <inheritdoc/>
 		public void ShowMouseCursor()
 		{
-			this.Processor.Journal.OpenScope("DisplayMouseCursor()");
+			using var _ = this.Processor.Journal.Scope("DisplayMouseCursor()");
 
 			PointerShowLevel = (ushort)(PointerShowLevel + 1);
 
@@ -202,14 +198,12 @@ namespace Civilization1Remaster.Core.Engine
 			{
 				this.Owner.Services.DrawMouseCursor();
 			}
-
-			this.Processor.Journal.CloseScope("DisplayMouseCursor");
 		}
 
 		/// <inheritdoc/>
 		public void HideMouseCursor()
 		{
-			this.Processor.Journal.OpenScope("ConcealMouseCursor()");
+			using var _ = this.Processor.Journal.Scope("ConcealMouseCursor()");
 
 			if (MousePresent != 0 && PointerShowLevel == 1)
 			{
@@ -217,14 +211,12 @@ namespace Civilization1Remaster.Core.Engine
 			}
 		
 			PointerShowLevel = (ushort)(PointerShowLevel - 1);
-
-			this.Processor.Journal.CloseScope("ConcealMouseCursor");
 		}
 
 		/// <inheritdoc/>
 		public void ShowMouseCursorFully()
 		{
-			this.Processor.Journal.OpenScope("DisplayMouseCursorFully()");
+			using var _ = this.Processor.Journal.Scope("DisplayMouseCursorFully()");
 
 			SavedPointerShowLevel = PointerShowLevel;
 
@@ -232,27 +224,23 @@ namespace Civilization1Remaster.Core.Engine
 			{
 				ShowMouseCursor();
 			}
-
-			this.Processor.Journal.CloseScope("DisplayMouseCursorFully");
 		}
 
 		/// <inheritdoc/>
 		public void HideMouseCursorToSavedLevel()
 		{
-			this.Processor.Journal.OpenScope("ConcealMouseCursorToSavedLevel()");
+			using var _ = this.Processor.Journal.Scope("ConcealMouseCursorToSavedLevel()");
 
 			while ((short)PointerShowLevel > (short)SavedPointerShowLevel)
 			{
 				HideMouseCursor();
 			}
-
-			this.Processor.Journal.CloseScope("ConcealMouseCursorToSavedLevel");
 		}
 
 		/// <inheritdoc/>
 		public ushort AskForDisk(ushort diskIdx, ushort marker)
 		{
-			this.Processor.Journal.OpenScope($"QueryForDisk({diskIdx}, {marker})");
+			using var _ = this.Processor.Journal.Scope($"QueryForDisk({diskIdx}, {marker})");
 
 
 			ushort result;
@@ -309,15 +297,13 @@ namespace Civilization1Remaster.Core.Engine
 
 
 
-			this.Processor.Journal.CloseScope("QueryForDisk");
-
 			return result;
 		}
 
 		/// <inheritdoc/>
 		public void ShowTitleAndMainMenu()
 		{
-			this.Processor.Journal.OpenScope("TitleLogoAndMainChoices()");
+			using var _ = this.Processor.Journal.Scope("TitleLogoAndMainChoices()");
 
 			EarthGame = 0x0;
 
@@ -418,14 +404,12 @@ namespace Civilization1Remaster.Core.Engine
 			this.Owner.Helpers.SetupHueCycling();
 
 			ShowMouseCursor();
-
-			this.Processor.Journal.CloseScope("TitleLogoAndMainChoices");
 		}
 
 		/// <inheritdoc/>
 		public void ChooseNewWorldOptions()
 		{
-			this.Processor.Journal.OpenScope("FreshWorldChoices()");
+			using var _ = this.Processor.Journal.Scope("FreshWorldChoices()");
 
 			if (MousePresent != 0)
 			{
@@ -444,8 +428,6 @@ namespace Civilization1Remaster.Core.Engine
 			this.Owner.NewGameWizard.LoadGovernmentGraphics();
 
 			AskForDisk(0, 1);
-
-			this.Processor.Journal.CloseScope("FreshWorldChoices");
 		}
 
 		/// <summary>
@@ -459,7 +441,6 @@ namespace Civilization1Remaster.Core.Engine
 			do
 			{
 				position = (short)this.Owner.Services.ReadSongPosition();
-
 			}
 			while (position > 0x1495 && (short)(position - 0x1495) % 0x120 != 0);
 		}
@@ -470,15 +451,13 @@ namespace Civilization1Remaster.Core.Engine
 		private void MakeNewWorld()
 		{
 			this.Processor.Journal = this.Owner.PrologueJournal;
-			this.Processor.Journal.OpenScope("'Intro start'");
-			this.Owner.VideoJournal.OpenScope("'Intro start'");
-			this.Owner.IrqJournal.OpenScope("'Intro start'");
+			using (this.Processor.Journal.Scope("'Intro start'"))
+			using (this.Owner.VideoJournal.Scope("'Intro start'"))
+			using (this.Owner.IrqJournal.Scope("'Intro start'"))
+			{
+				this.Owner.WorldSetup.OpeningSequence();
+			}
 
-			this.Owner.WorldSetup.OpeningSequence();
-
-			this.Owner.IrqJournal.CloseScope("'Intro end'");
-			this.Owner.VideoJournal.CloseScope("'Intro end'");
-			this.Processor.Journal.CloseScope("'Intro end'");
 			this.Processor.Journal = this.Owner.Journal;
 
 			ShowMadeWorld(0x1b33);

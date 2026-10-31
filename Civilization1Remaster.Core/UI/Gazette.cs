@@ -26,7 +26,7 @@ namespace Civilization1Remaster.Core.UI
 		/// <inheritdoc/>
 		public void ShowNewspaper(short townIdx)
 		{
-			this.Processor.Journal.OpenScope($"DisplayNewspaper({townIdx})");
+			using var _ = this.Processor.Journal.Scope($"DisplayNewspaper({townIdx})");
 
 
 			short givenIdx = townIdx;
@@ -173,8 +173,6 @@ namespace Civilization1Remaster.Core.UI
 			}
 
 			this.Owner.Startup.ShowMouseCursor();
-
-			this.Processor.Journal.CloseScope("DisplayNewspaper");
 		}
 	}
 }

@@ -21,7 +21,7 @@ namespace Civilization1Remaster.Core.UI
 		/// <inheritdoc/>
 		public void ConfigureFreshGame()
 		{
-			this.Processor.Journal.OpenScope("ConfigureFreshGame()");
+			using var _ = this.Processor.Journal.Scope("ConfigureFreshGame()");
 
 			// The frame like the original (the functions called see the stack at the same depth)
 
@@ -45,15 +45,12 @@ namespace Civilization1Remaster.Core.UI
 			StartCivilizations();
 
 			WelcomeHumanPlayer();
-
-
-			this.Processor.Journal.CloseScope("ConfigureFreshGame");
 		}
 
 		/// <inheritdoc/>
 		public ushort CreateCivilization(short participantIdx)
 		{
-			this.Processor.Journal.OpenScope($"ConstructCivilization({participantIdx})");
+			using var _ = this.Processor.Journal.Scope($"ConstructCivilization({participantIdx})");
 
 			// The frame like the original (the functions called see the stack at the same depth)
 
@@ -63,15 +60,13 @@ namespace Civilization1Remaster.Core.UI
 				result = RemakeCivilization(participantIdx);
 			}
 
-			this.Processor.Journal.CloseScope("ConstructCivilization");
-
 			return result;
 		}
 
 		/// <inheritdoc/>
 		public void DestroyCivilization(short participantIdx, short participantIdx1)
 		{
-			this.Processor.Journal.OpenScope($"EliminateCivilization({participantIdx}, {participantIdx1})");
+			using var _ = this.Processor.Journal.Scope($"EliminateCivilization({participantIdx}, {participantIdx1})");
 
 			if (participantIdx != 0 && participantIdx != this.Owner.World.PersonParticipantIdx && !OwnsCity(participantIdx))
 			{
@@ -116,14 +111,12 @@ namespace Civilization1Remaster.Core.UI
 
 				CreateCivilization(participantIdx);
 			}
-
-			this.Processor.Journal.CloseScope("EliminateCivilization");
 		}
 
 		/// <inheritdoc/>
 		public ushort CharacterizeStartLocation()
 		{
-			this.Processor.Journal.OpenScope("CharacterizeStartLocation()");
+			using var _ = this.Processor.Journal.Scope("CharacterizeStartLocation()");
 
 
 			short[] points = new short[8];
@@ -207,15 +200,13 @@ namespace Civilization1Remaster.Core.UI
 				}
 			}
 
-			this.Processor.Journal.CloseScope("CharacterizeStartLocation");
-
 			return (ushort)chosen;
 		}
 
 		/// <inheritdoc/>
 		public void ShowTribeSelection()
 		{
-			this.Processor.Journal.OpenScope("DisplayTribeSelection()");
+			using var _ = this.Processor.Journal.Scope("DisplayTribeSelection()");
 
 			this.Owner.Startup.AskForDisk(7, 1);
 
@@ -312,14 +303,12 @@ namespace Civilization1Remaster.Core.UI
 			{
 				CutPlayerCitySprites(playerIdx);
 			}
-
-			this.Processor.Journal.CloseScope("DisplayTribeSelection");
 		}
 
 		/// <inheritdoc/>
 		public void LoadGovernmentGraphics()
 		{
-			this.Processor.Journal.OpenScope("ImportGovernmentGraphics()");
+			using var _ = this.Processor.Journal.Scope("ImportGovernmentGraphics()");
 
 			this.Owner.Startup.AskForDisk(2, 1);
 
@@ -334,14 +323,12 @@ namespace Civilization1Remaster.Core.UI
 				PictureScreenBox, 0xa0, 0x8c);
 
 			this.Owner.Startup.AskForDisk(0, 1);
-
-			this.Processor.Journal.CloseScope("ImportGovernmentGraphics");
 		}
 
 		/// <inheritdoc/>
 		public void ShowRevolutionScreen()
 		{
-			this.Processor.Journal.OpenScope("DisplayRevolutionScreen()");
+			using var _ = this.Processor.Journal.Scope("DisplayRevolutionScreen()");
 
 			short regime = this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx].RegimeKind;
 
@@ -385,14 +372,12 @@ namespace Civilization1Remaster.Core.UI
 
 				this.Owner.Advisors.RecoverAdvisorScenery();
 			}
-
-			this.Processor.Journal.CloseScope("DisplayRevolutionScreen");
 		}
 
 		/// <inheritdoc/>
 		public void ClearSpaceshipContent(short participantIdx)
 		{
-			this.Processor.Journal.OpenScope($"WipeSpaceshipContent({participantIdx})");
+			using var _ = this.Processor.Journal.Scope($"WipeSpaceshipContent({participantIdx})");
 
 			this.Owner.World.Participants[participantIdx].StarshipArrivalSeason = -1;
 
@@ -406,8 +391,6 @@ namespace Civilization1Remaster.Core.UI
 						(ushort)((0xb4 * participantIdx) + (0xc * row) + column + 0x16e0), 0xff);
 				}
 			}
-
-			this.Processor.Journal.CloseScope("WipeSpaceshipContent");
 		}
 
 		/// <summary>

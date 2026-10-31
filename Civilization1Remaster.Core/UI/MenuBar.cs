@@ -15,7 +15,7 @@ namespace Civilization1Remaster.Core.UI
 		/// <inheritdoc/>
 		public void ManageMenuBar(short participantIdx, short troopIdx, short marker)
 		{
-			this.Processor.Journal.OpenScope($"ManageMenuBar({participantIdx}, {troopIdx}, {marker})");
+			using var _ = this.Processor.Journal.Scope($"ManageMenuBar({participantIdx}, {troopIdx}, {marker})");
 
 			ChosenOrder = 0xffff;
 			MenuResult = 0x0;
@@ -69,14 +69,12 @@ namespace Civilization1Remaster.Core.UI
 			}
 
 			this.Owner.Startup.ShowMouseCursor();
-
-			this.Processor.Journal.CloseScope("ManageMenuBar");
 		}
 
 		/// <inheritdoc/>
 		public void ShowGameMenu()
 		{
-			this.Processor.Journal.OpenScope("DisplayGameMenu()");
+			using var _ = this.Processor.Journal.Scope("DisplayGameMenu()");
 
 			if (this.Owner.World.RoundTally == 0)
 			{
@@ -147,27 +145,23 @@ namespace Civilization1Remaster.Core.UI
 					this.Owner.Replayer.ShowReplay();
 					break;
 			}
-
-			this.Processor.Journal.CloseScope("DisplayGameMenu");
 		}
 
 		/// <inheritdoc/>
 		public void ShowOrdersMenu(short participantIdx, short troopIdx)
 		{
-			this.Processor.Journal.OpenScope($"DisplayOrdersMenu({participantIdx}, {troopIdx})");
+			using var _ = this.Processor.Journal.Scope($"DisplayOrdersMenu({participantIdx}, {troopIdx})");
 
 			if (troopIdx != -1 && troopIdx != 128)
 			{
 				ChooseOrder(participantIdx, troopIdx);
 			}
-
-			this.Processor.Journal.CloseScope("DisplayOrdersMenu");
 		}
 
 		/// <inheritdoc/>
 		public void ShowAdvisorMenu()
 		{
-			this.Processor.Journal.OpenScope("DisplayAdvisorMenu()");
+			using var _ = this.Processor.Journal.Scope("DisplayAdvisorMenu()");
 
 			Message(" City Status (F1)\n Military Advisor (F2)\n Intelligence Advisor (F3)\n Attitude Advisor (F4)\n")
 				.Text(" Trade Advisor (F5)\n Science Advisor (F6)\n");
@@ -212,14 +206,12 @@ namespace Civilization1Remaster.Core.UI
 					this.Owner.Briefings.ShowScienceReport(personIdx);
 					break;
 			}
-
-			this.Processor.Journal.CloseScope("DisplayAdvisorMenu");
 		}
 
 		/// <inheritdoc/>
 		public void ShowWorldMenu()
 		{
-			this.Processor.Journal.OpenScope("DisplayWorldMenu()");
+			using var _ = this.Processor.Journal.Scope("DisplayWorldMenu()");
 
 			if ((this.Owner.World.StarshipMarkers & 0xfe00) == 0)
 			{
@@ -259,14 +251,12 @@ namespace Civilization1Remaster.Core.UI
 					this.Owner.RocketScreen.ChooseNationToView();
 					break;
 			}
-
-			this.Processor.Journal.CloseScope("DisplayWorldMenu");
 		}
 
 		/// <inheritdoc/>
 		public void ShowCivilopediaMenu()
 		{
-			this.Processor.Journal.OpenScope("DisplayCivilopediaMenu()");
+			using var _ = this.Processor.Journal.Scope("DisplayCivilopediaMenu()");
 
 			Message(" Complete\n Civilization Advances\n City Improvements\n Military Units\n Terrain Types\n")
 				.Text(" Miscellaneous\n");
@@ -283,8 +273,6 @@ namespace Civilization1Remaster.Core.UI
 			{
 				MenuResult = 0x1;
 			}
-
-			this.Processor.Journal.CloseScope("DisplayCivilopediaMenu");
 		}
 
 		/// <summary>

@@ -40,7 +40,7 @@ namespace Civilization1Remaster.Core.Game
 		/// <inheritdoc/>
 		public ushort CarryOutGoto(short participantIdx, short troopIdx)
 		{
-			this.Processor.Journal.OpenScope($"CarryOutGoto({participantIdx}, {troopIdx})");
+			using var _ = this.Processor.Journal.Scope($"CarryOutGoto({participantIdx}, {troopIdx})");
 
 
 			ushort troop = (ushort)((ushort)(0x600 * participantIdx) + (ushort)(0xc * troopIdx));
@@ -50,15 +50,13 @@ namespace Civilization1Remaster.Core.Game
 				direction = StepTowardsGoal(participantIdx, troopIdx, troop);
 
 
-			this.Processor.Journal.CloseScope("CarryOutGoto");
-
 			return direction;
 		}
 
 		/// <inheritdoc/>
 		public ushort ChartRoute(short participantIdx, short troopIdx)
 		{
-			this.Processor.Journal.OpenScope($"ChartRoute({participantIdx}, {troopIdx})");
+			using var _ = this.Processor.Journal.Scope($"ChartRoute({participantIdx}, {troopIdx})");
 
 
 
@@ -95,15 +93,13 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 
-			this.Processor.Journal.CloseScope("ChartRoute");
-
 			return result;
 		}
 
 		/// <inheritdoc/>
 		public ushort FindRouteStep(int horizLoc, int vertLoc, ushort marker)
 		{
-			this.Processor.Journal.OpenScope($"LocateRouteStep({horizLoc}, {vertLoc}, {marker})");
+			using var _ = this.Processor.Journal.Scope($"LocateRouteStep({horizLoc}, {vertLoc}, {marker})");
 
 			short blockHoriz = DivideByFour((short)horizLoc);
 			short blockVert = DivideByFour((short)vertLoc);
@@ -157,15 +153,13 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 
-			this.Processor.Journal.CloseScope("LocateRouteStep");
-
 			return result;
 		}
 
 		/// <inheritdoc/>
 		public ushort ShiftToward(short participantIdx, short troopIdx, ushort costLimit)
 		{
-			this.Processor.Journal.OpenScope($"ShiftToward({participantIdx}, {troopIdx}, {costLimit})");
+			using var _ = this.Processor.Journal.Scope($"ShiftToward({participantIdx}, {troopIdx}, {costLimit})");
 
 
 			ushort troop = (ushort)((ushort)(0x600 * participantIdx) + (ushort)(0xc * troopIdx));
@@ -198,15 +192,13 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 
-			this.Processor.Journal.CloseScope("ShiftToward");
-
 			return (ushort)step;
 		}
 
 		/// <inheritdoc/>
 		public ushort ComputeRouteCost(int horizLoc, int vertLoc, int horizSpot1, int vertSpot1, ushort marker, ushort costLimit)
 		{
-			this.Processor.Journal.OpenScope($"ComputeRouteCost({horizLoc}, {vertLoc}, {horizSpot1}, {vertSpot1}, {marker}, {costLimit})");
+			using var _ = this.Processor.Journal.Scope($"ComputeRouteCost({horizLoc}, {vertLoc}, {horizSpot1}, {vertSpot1}, {marker}, {costLimit})");
 
 			ushort cost;
 
@@ -235,8 +227,6 @@ namespace Civilization1Remaster.Core.Game
 			{
 				cost = 0xffff;
 			}
-
-			this.Processor.Journal.CloseScope("ComputeRouteCost");
 
 			return cost;
 		}
@@ -449,7 +439,6 @@ namespace Civilization1Remaster.Core.Game
 				{
 					best = (short)direction;
 					lowest = cost;
-
 				}
 			}
 
@@ -761,7 +750,6 @@ namespace Civilization1Remaster.Core.Game
 				tail = ExpandWindowCell(horizLoc, vertLoc, cost, tail, sea, air, windowHoriz, windowVert);
 			}
 			while (head != tail && (short)head < 0xe1);
-
 		}
 
 		/// <summary>The neighbours of a tile of the window get its cost plus the move cost (see ShiftToward); the new tail</summary>

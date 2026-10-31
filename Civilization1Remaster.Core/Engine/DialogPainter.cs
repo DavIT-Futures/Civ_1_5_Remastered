@@ -89,7 +89,7 @@ namespace Civilization1Remaster.Core.Engine
 		/// <inheritdoc/>
 		public ushort ReadNavigationKey()
 		{
-			this.Processor.Journal.OpenScope("ObtainNavigationKey()");
+			using var scope = this.Processor.Journal.Scope("ObtainNavigationKey()");
 
 			ushort key = (ushort)this.Owner.Libc.ReadKey();
 
@@ -114,14 +114,12 @@ namespace Civilization1Remaster.Core.Engine
 				_ => (key & 0xff) != 0 ? (ushort)(key & 0xff) : key
 			};
 
-			this.Processor.Journal.CloseScope("ObtainNavigationKey");
-
 			return key;
 		}
 
 		private ushort ShowMenu(MenuText text, ushort charsAddr, int horizLoc, int vertLoc, ushort marker)
 		{
-			this.Processor.Journal.OpenScope($"DisplayMenu(0x{charsAddr:x4}, {horizLoc}, {vertLoc}, {marker})");
+			using var _ = this.Processor.Journal.Scope($"DisplayMenu(0x{charsAddr:x4}, {horizLoc}, {vertLoc}, {marker})");
 
 			if (marker != 0)
 			{
@@ -355,8 +353,6 @@ namespace Civilization1Remaster.Core.Engine
 				MenuOptions = 0;
 			}
 
-			this.Processor.Journal.CloseScope("DisplayMenu");
-
 			return currentChoice;
 		}
 
@@ -387,7 +383,7 @@ namespace Civilization1Remaster.Core.Engine
 
 		private void RunMenu(MenuText text, ushort charsAddr, int horizLoc, int vertLoc, ushort shownChoice)
 		{
-			this.Processor.Journal.OpenScope($"OperateMenu(0x{charsAddr:x4}, {horizLoc}, {vertLoc}, {shownChoice})");
+			using var _ = this.Processor.Journal.Scope($"OperateMenu(0x{charsAddr:x4}, {horizLoc}, {vertLoc}, {shownChoice})");
 
 			MenuLineOffsets = 0;
 
@@ -397,8 +393,6 @@ namespace Civilization1Remaster.Core.Engine
 			}
 
 			DrawMenuLines(text, horizLoc, vertLoc, shownChoice);
-
-			this.Processor.Journal.CloseScope("OperateMenu");
 		}
 
 		private void MeasureAndDrawMenuFrame(MenuText text, int horizLoc, int vertLoc)

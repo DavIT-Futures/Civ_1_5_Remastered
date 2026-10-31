@@ -265,9 +265,6 @@ namespace Civilization1Remaster.Machine
 		}
 
 		ushort IStackProbe.StackPointer { get { return this.regStack.Value16; } }
-		ushort IStackProbe.StackSegment { get { return this.segStack.Value16; } }
-		ushort IStackProbe.DataSegment { get { return this.segData.Value16; } }
-		ushort IStackProbe.FramePointer { get { return this.regFrame.Value16; } }
 
 		public static uint AsLinearAddress(ushort section, ushort displacement)
 		{

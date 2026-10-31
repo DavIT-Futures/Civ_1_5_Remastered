@@ -14,7 +14,7 @@ namespace Civilization1Remaster.Core.Game
 		/// <inheritdoc/>
 		public void DiplomatArrivesAtCity(short townIdx, short participantIdx, short troopIdx)
 		{
-			this.Processor.Journal.OpenScope($"DiplomatArrivesAtCity({townIdx}, {participantIdx}, {troopIdx})");
+			using var _ = this.Processor.Journal.Scope($"DiplomatArrivesAtCity({townIdx}, {participantIdx}, {troopIdx})");
 
 
 			short person = this.Owner.World.PersonParticipantIdx;
@@ -56,7 +56,6 @@ namespace Civilization1Remaster.Core.Game
 					if ((this.Owner.World.Participants[person].Relations[participantIdx] & 2) != 0)
 					{
 						this.Owner.UnitOps.DestroyUnit(participantIdx, troopIdx);
-						FinishDiplomatArrival();
 						return;
 					}
 				}
@@ -100,14 +99,12 @@ namespace Civilization1Remaster.Core.Game
 					this.Troops.AssignAt(troop, UnitMemory.LeftoverSteps, 0);
 					break;
 			}
-
-			FinishDiplomatArrival();
 		}
 
 		/// <inheritdoc/>
 		public void BuyUnit(short participantIdx, short troopIdx, short participantIdx1)
 		{
-			this.Processor.Journal.OpenScope($"BuyUnit({participantIdx}, {troopIdx}, {participantIdx1})");
+			using var _ = this.Processor.Journal.Scope($"BuyUnit({participantIdx}, {troopIdx}, {participantIdx1})");
 
 
 			short humanIdx = this.Owner.World.PersonParticipantIdx;
@@ -131,15 +128,12 @@ namespace Civilization1Remaster.Core.Game
 					OfferBribe(participantIdx, troopIdx, participantIdx1, price);
 				}
 			}
-
-
-			this.Processor.Journal.CloseScope("BuyUnit");
 		}
 
 		/// <inheritdoc/>
 		public void DrawExplosion(short horizLoc, short vertLoc)
 		{
-			this.Processor.Journal.OpenScope($"RenderExplosion({horizLoc}, {vertLoc})");
+			using var _ = this.Processor.Journal.Scope($"RenderExplosion({horizLoc}, {vertLoc})");
 
 			if (this.Owner.Startup.AskForDisk(1, 0) != 0)
 			{
@@ -183,14 +177,12 @@ namespace Civilization1Remaster.Core.Game
 
 				this.Owner.TurnHooks.ShowCivilizationScenery();
 			}
-
-			this.Processor.Journal.CloseScope("RenderExplosion");
 		}
 
 		/// <inheritdoc/>
 		public void ComputeInciteCost(short townIdx, short participantIdx)
 		{
-			this.Processor.Journal.OpenScope($"ComputeInciteCost({townIdx}, {participantIdx})");
+			using var _ = this.Processor.Journal.Scope($"ComputeInciteCost({townIdx}, {participantIdx})");
 
 
 			City town = this.Owner.World.Towns[townIdx];
@@ -234,14 +226,12 @@ namespace Civilization1Remaster.Core.Game
 			{
 				Revolt(townIdx, participantIdx, ownerIdx, horizLoc, vertLoc);
 			}
-
-			this.Processor.Journal.CloseScope("ComputeInciteCost");
 		}
 
 		/// <inheritdoc/>
 		public void ExamineCity(short townIdx)
 		{
-			this.Processor.Journal.OpenScope($"ExamineCity({townIdx})");
+			using var _ = this.Processor.Journal.Scope($"ExamineCity({townIdx})");
 
 			if (this.Owner.Startup.AskForDisk(1, 0) != 0)
 			{
@@ -337,13 +327,6 @@ namespace Civilization1Remaster.Core.Game
 
 				this.Owner.TurnLogic.WaitForKey();
 			}
-
-			this.Processor.Journal.CloseScope("ExamineCity");
-		}
-
-		private void FinishDiplomatArrival()
-		{
-			this.Processor.Journal.CloseScope("DiplomatArrivesAtCity");
 		}
 
 		/// <summary>

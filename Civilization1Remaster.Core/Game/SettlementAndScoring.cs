@@ -30,7 +30,7 @@ namespace Civilization1Remaster.Core.Game
 		/// <inheritdoc/>
 		public ushort EstablishCity(short participantIdx, ushort unused, int horizLoc, int vertLoc, ushort townExtent)
 		{
-			this.Processor.Journal.OpenScope($"EstablishCity({participantIdx}, {unused}, {horizLoc}, {vertLoc}, {townExtent})");
+			using var _ = this.Processor.Journal.Scope($"EstablishCity({participantIdx}, {unused}, {horizLoc}, {vertLoc}, {townExtent})");
 
 			// The final values of the locals stay in the stack frame, like in the original
 
@@ -65,15 +65,13 @@ namespace Civilization1Remaster.Core.Game
 				result = FoundCity(participantIdx, (short)townIdx, horizLoc, vertLoc, townExtent);
 			}
 
-			this.Processor.Journal.CloseScope("EstablishCity");
-
 			return result;
 		}
 
 		/// <inheritdoc/>
 		public void HandleCityDisasters(short townIdx)
 		{
-			this.Processor.Journal.OpenScope($"HandleCityDisasters({townIdx})");
+			using var _ = this.Processor.Journal.Scope($"HandleCityDisasters({townIdx})");
 
 			// The final values of the locals stay in the stack frame, like in the original
 
@@ -196,14 +194,12 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 			ReportCityDisaster(townIdx);
-
-			this.Processor.Journal.CloseScope("HandleCityDisasters");
 		}
 
 		/// <inheritdoc/>
 		public ushort ShowFinalScore(short participantIdx, bool marker)
 		{
-			this.Processor.Journal.OpenScope($"DisplayFinalScore({participantIdx}, {marker})");
+			using var _ = this.Processor.Journal.Scope($"DisplayFinalScore({participantIdx}, {marker})");
 
 			if (marker)
 			{
@@ -230,7 +226,6 @@ namespace Civilization1Remaster.Core.Game
 				this.Owner.Startup.ShowMouseCursor();
 				this.Owner.TurnHooks.RepaintMainScreen();
 
-				this.Processor.Journal.CloseScope("DisplayFinalScore");
 				return 0;
 			}
 
@@ -457,14 +452,13 @@ namespace Civilization1Remaster.Core.Game
 				this.Owner.TurnHooks.RepaintMainScreen();
 			}
 
-			this.Processor.Journal.CloseScope("DisplayFinalScore");
 			return (ushort)this.Owner.World.Participants[0].Tally;
 		}
 
 		/// <inheritdoc/>
 		public void DrawScoreIcon(ushort icon)
 		{
-			this.Processor.Journal.OpenScope($"RenderScoreIcon({icon})");
+			using var _ = this.Processor.Journal.Scope($"RenderScoreIcon({icon})");
 
 			short iconLeft = (short)(ScoreIconHoriz + 8);
 			ScoreIconHoriz = (ushort)iconLeft;
@@ -483,8 +477,6 @@ namespace Civilization1Remaster.Core.Game
 					(short)ScoreIconVert,
 					CitizenPicture(icon));
 			}
-
-			this.Processor.Journal.CloseScope("RenderScoreIcon");
 		}
 
 		/// <summary>The city in the free slot (see EstablishCity); -1 when the human player cancels its name</summary>
@@ -672,7 +664,6 @@ namespace Civilization1Remaster.Core.Game
 				this.Owner.World.TownLabels[labelIdx] = new string(label);
 				letterIdx--;
 			}
-
 		}
 
 		/// <summary>The flags of the city's neighbours: 2 coastal (big ocean, or any for the human player), 8 river or hills</summary>
@@ -698,7 +689,6 @@ namespace Civilization1Remaster.Core.Game
 					town.ConditionMarker |= 8;
 				}
 			}
-
 		}
 
 		/// <summary>
@@ -739,7 +729,6 @@ namespace Civilization1Remaster.Core.Game
 
 				this.Owner.MapOps.KeepKnownTileImprovements(horizLoc, vertLoc);
 			}
-
 		}
 
 		/// <summary>
@@ -852,7 +841,6 @@ namespace Civilization1Remaster.Core.Game
 				{
 					highest = prosperity;
 					rivalIdx = (short)otherIdx;
-
 				}
 			}
 
