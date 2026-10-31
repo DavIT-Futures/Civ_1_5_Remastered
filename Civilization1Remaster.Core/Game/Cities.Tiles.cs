@@ -62,7 +62,7 @@ namespace Civilization1Remaster.Core.Game
 
 					this.Owner.Services.DrawPictureToScreen(Screen.Box,
 						161 + (this.Owner.TownDeltas[townTile].X * 16) + iconHoriz, 57 + (this.Owner.TownDeltas[townTile].Y * 16) + iconVert,
-						SpritePicture((resource + 8)));
+						Tables.SpritePicture((resource + 8)));
 
 					if (iconHoriz < 8)
 					{
@@ -80,7 +80,7 @@ namespace Civilization1Remaster.Core.Game
 			{
 				this.Owner.Services.DrawPictureToScreen(Screen.Box,
 					165 + (this.Owner.TownDeltas[townTile].X * 16), 61 + (this.Owner.TownDeltas[townTile].Y * 16),
-					SpritePicture(0xd));
+					Tables.SpritePicture(0xd));
 			}
 
 			CityTurn.TileDotted = 0;
@@ -99,7 +99,7 @@ namespace Civilization1Remaster.Core.Game
 				// The terrains with a special resource are the records 12 - 23
 				int kind = this.Owner.MapOps.ContainsSpecialResource(horizLoc, vertLoc) != 0 ? terrain + 12 : terrain;
 
-				yield = (sbyte)TerrainField(kind, TerrainTable.Food + resource);
+				yield = (sbyte)Tables.TerrainField(kind, TerrainTable.Food + resource);
 
 				ushort improvements = this.Owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc);
 
@@ -118,12 +118,12 @@ namespace Civilization1Remaster.Core.Game
 					// The bonus of irrigation and of a mine: -1 - the value of the terrain improvement table
 					if (resource == 0 && (improvements & 2) != 0)
 					{
-						yield += (short)(0xffff - TerrainImprovementWord(terrain, TerrainImprovementTable.Irrigation));
+						yield += (short)(0xffff - Tables.TerrainImprovementWord(terrain, TerrainImprovementTable.Irrigation));
 					}
 
 					if (resource == 1 && (improvements & 4) != 0)
 					{
-						yield += (short)(0xffff - TerrainImprovementWord(terrain, TerrainImprovementTable.Mining));
+						yield += (short)(0xffff - Tables.TerrainImprovementWord(terrain, TerrainImprovementTable.Mining));
 					}
 
 					if (resource == 2 && (improvements & 8) != 0 && (short)terrain <= 2)

@@ -151,23 +151,23 @@ namespace Civilization1Remaster.Core.Game
 				if (kind == 0x19 && (this.Owner.World.MarvelTownIdx[17] == -1 || PlayerKnowsTechnology(participantIdx, 0x1b) == 0))
 					continue;
 
-				if (PlayerKnowsTechnology(participantIdx, (short)UnitKindWord(kind, 0x20)) == 0 ||
-					PlayerKnowsTechnology(participantIdx, (short)UnitKindWord(kind, 0xc)) != 0)
+				if (PlayerKnowsTechnology(participantIdx, (short)Tables.UnitKindWord(kind, 0x20)) == 0 ||
+					PlayerKnowsTechnology(participantIdx, (short)Tables.UnitKindWord(kind, 0xc)) != 0)
 				{
 					continue;
 				}
 
-				if ((town.ConditionMarker & 2) == 0 && UnitKindWord(kind, UnitKindTable.LandGroup) == UnitKindTable.SeaUnits)
+				if ((town.ConditionMarker & 2) == 0 && Tables.UnitKindWord(kind, UnitKindTable.LandGroup) == UnitKindTable.SeaUnits)
 					continue;
 
 				this.Owner.Words.Append((ushort)(UnitKindTable.Origin + kind * UnitKindTable.Stride));
-				ComposeProductionOption(townIdx, UnitKindWord(kind, UnitKindTable.Price));
+				ComposeProductionOption(townIdx, Tables.UnitKindWord(kind, UnitKindTable.Price));
 				this.Owner.Words.Append(", ADM:");
-				this.Owner.Words.Append(this.Owner.Libc.IntegerToText((short)UnitKindWord(kind, UnitKindTable.AssaultPower), 10));
+				this.Owner.Words.Append(this.Owner.Libc.IntegerToText((short)Tables.UnitKindWord(kind, UnitKindTable.AssaultPower), 10));
 				this.Owner.Words.Append("/");
-				this.Owner.Words.Append(this.Owner.Libc.IntegerToText((short)UnitKindWord(kind, UnitKindTable.GuardPower), 10));
+				this.Owner.Words.Append(this.Owner.Libc.IntegerToText((short)Tables.UnitKindWord(kind, UnitKindTable.GuardPower), 10));
 				this.Owner.Words.Append("/");
-				this.Owner.Words.Append(this.Owner.Libc.IntegerToText((short)UnitKindWord(kind, UnitKindTable.ShiftTally), 10));
+				this.Owner.Words.Append(this.Owner.Libc.IntegerToText((short)Tables.UnitKindWord(kind, UnitKindTable.ShiftTally), 10));
 				this.Owner.Words.Append(")\n ");
 
 				AddChoice((ushort)kind);
@@ -205,13 +205,13 @@ namespace Civilization1Remaster.Core.Game
 					continue;
 
 				if (improvementIdx == 0xa && !town.Has(CityStructure.Marketplace) &&
-					PlayerKnowsTechnology(participantIdx, (short)BuildingWord(5, BuildingTable.Technology)) != 0)
+					PlayerKnowsTechnology(participantIdx, (short)Tables.BuildingWord(5, BuildingTable.Technology)) != 0)
 				{
 					continue;
 				}
 
 				if (improvementIdx == 0xc && !town.Has(CityStructure.Library) &&
-					PlayerKnowsTechnology(participantIdx, (short)BuildingWord(6, BuildingTable.Technology)) != 0)
+					PlayerKnowsTechnology(participantIdx, (short)Tables.BuildingWord(6, BuildingTable.Technology)) != 0)
 				{
 					continue;
 				}
@@ -579,7 +579,7 @@ namespace Civilization1Remaster.Core.Game
 				short weight = (short)(FrameWord(DefensiveLocal) == FrameWord(DefensiveImprovementLocal) ? 10 : 20);
 				Score = (short)(weight * Score);
 
-				short character = (short)(LeaderWord(this.Owner.World.Participants[participantIdx].ChiefVisuals, LeaderTable.Leaning) + 3);
+				short character = (short)(Tables.LeaderWord(this.Owner.World.Participants[participantIdx].ChiefVisuals, LeaderTable.Leaning) + 3);
 				Score = CPU.SignedQuotient((short)(3 * Score), character);
 			}
 
@@ -650,7 +650,7 @@ namespace Civilization1Remaster.Core.Game
 				}
 			}
 
-			if (UnitKindWord(kind, UnitKindTable.LandGroup) == UnitKindTable.LandUnits)
+			if (Tables.UnitKindWord(kind, UnitKindTable.LandGroup) == UnitKindTable.LandUnits)
 			{
 				Score = (short)((FrameWord(TableWord(MakingElsewhereTable, choice)) << 1) +
 					FrameWord(TableWord(UnitsOnContinentTable, choice)));
@@ -668,13 +668,13 @@ namespace Civilization1Remaster.Core.Game
 
 			if (FrameWord(DefenceNeedLocal) != 0)
 			{
-				if (UnitKindWord(kind, UnitKindTable.TroopGroup) != UnitKindTable.DefenceTroops)
+				if (Tables.UnitKindWord(kind, UnitKindTable.TroopGroup) != UnitKindTable.DefenceTroops)
 					return false;
 
 				Score = CPU.SignedQuotient(2, (short)FrameWord(DefenceNeedLocal));
 			}
 
-			ushort role = UnitKindWord(kind, UnitKindTable.TroopGroup);
+			ushort role = Tables.UnitKindWord(kind, UnitKindTable.TroopGroup);
 
 			if (role != UnitKindTable.DefenceTroops && role != 0)
 			{
@@ -684,7 +684,7 @@ namespace Civilization1Remaster.Core.Game
 					Score <<= 1;
 			}
 
-			if (UnitKindWord(kind, UnitKindTable.TroopGroup) == UnitKindTable.TransportTroops)
+			if (Tables.UnitKindWord(kind, UnitKindTable.TroopGroup) == UnitKindTable.TransportTroops)
 			{
 				if (FrameWord(ApproachLocal) != 5)
 					return false;
@@ -694,19 +694,19 @@ namespace Civilization1Remaster.Core.Game
 
 			short weight = choice == 0
 				? (short)((town.Has(CityStructure.Granary) ? 4 : 6) -
-					LeaderWord(player.ChiefVisuals, LeaderTable.Leaning))
+					Tables.LeaderWord(player.ChiefVisuals, LeaderTable.Leaning))
 				: (short)0x10;
 
-			short price = (short)(weight * (short)(UnitKindWord(kind, UnitKindTable.Price) + 2) * Score);
-			short strength = (short)((short)(UnitKindWord(kind, UnitKindTable.AssaultPower) +
-				UnitKindWord(kind, UnitKindTable.GuardPower)) *
-				(short)(UnitKindWord(kind, UnitKindTable.ShiftTally) + 1));
+			short price = (short)(weight * (short)(Tables.UnitKindWord(kind, UnitKindTable.Price) + 2) * Score);
+			short strength = (short)((short)(Tables.UnitKindWord(kind, UnitKindTable.AssaultPower) +
+				Tables.UnitKindWord(kind, UnitKindTable.GuardPower)) *
+				(short)(Tables.UnitKindWord(kind, UnitKindTable.ShiftTally) + 1));
 			Score = CPU.SignedQuotient(price, strength);
 
-			if (UnitKindWord(kind, UnitKindTable.TroopGroup) == 3)
+			if (Tables.UnitKindWord(kind, UnitKindTable.TroopGroup) == 3)
 				Score = (short)((FrameWord(DefensiveLocal) != 0 ? 4 : 2) * Score);
 
-			if (UnitKindWord(kind, UnitKindTable.LandGroup) == UnitKindTable.AirUnits)
+			if (Tables.UnitKindWord(kind, UnitKindTable.LandGroup) == UnitKindTable.AirUnits)
 				Score <<= 1;
 
 			if (player.TroopTally > 120)

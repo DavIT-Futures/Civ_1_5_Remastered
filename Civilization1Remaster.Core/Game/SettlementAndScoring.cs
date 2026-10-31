@@ -16,7 +16,7 @@ namespace Civilization1Remaster.Core.Game
 		public void ClearCitySquare(int horizLoc, int vertLoc)
 		{
 			ushort landKind = this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
-			short freshLand = (short)TerrainImprovementWord(landKind, TerrainImprovementTable.Irrigation);
+			short freshLand = (short)Tables.TerrainImprovementWord(landKind, TerrainImprovementTable.Irrigation);
 
 			if (freshLand >= 0)
 			{
@@ -84,8 +84,8 @@ namespace Civilization1Remaster.Core.Game
 			for (neighbourIdx = 0; neighbourIdx <= 8; neighbourIdx++)
 			{
 				ushort terrain = this.Owner.MapOps.ObtainTerrainType(
-					town.Place.X + (short)DirectionHoriz(neighbourIdx),
-					town.Place.Y + (short)DirectionVert(neighbourIdx));
+					town.Place.X + (short)Tables.DirectionHoriz(neighbourIdx),
+					town.Place.Y + (short)Tables.DirectionVert(neighbourIdx));
 
 				terrains |= (ushort)(1 << (byte)terrain);
 			}
@@ -108,14 +108,14 @@ namespace Civilization1Remaster.Core.Game
 						Message("Earthquake in ")
 							.City(townIdx)
 							.Text("!\n")
-							.Text(BuildingText(buildingIdx))
+							.Text(GameTables.BuildingText(buildingIdx))
 							.Text(" destroyed.\n");
 					}
 					break;
 
 				case 1:
 					if (this.Owner.Advisors.PlayerKnowsTechnology(town.ParticipantIdx, 10) == 0 && !town.Has(CityStructure.Aqueduct) &&
-						this.Owner.Advisors.PlayerKnowsTechnology(town.ParticipantIdx, (short)BuildingWord(9, BuildingTable.Technology)) != 0)
+						this.Owner.Advisors.PlayerKnowsTechnology(town.ParticipantIdx, (short)Tables.BuildingWord(9, BuildingTable.Technology)) != 0)
 					{
 						this.Owner.BlockText.ShowTextDialog(GameTexts.TopicD1);
 
@@ -127,7 +127,7 @@ namespace Civilization1Remaster.Core.Game
 				case 2:
 					if ((terrains & 0x800) != 0)
 					{
-						if (!town.Has(CityStructure.CityWalls) && this.Owner.Advisors.PlayerKnowsTechnology(town.ParticipantIdx, (short)BuildingWord(8, BuildingTable.Technology)) != 0)
+						if (!town.Has(CityStructure.CityWalls) && this.Owner.Advisors.PlayerKnowsTechnology(town.ParticipantIdx, (short)Tables.BuildingWord(8, BuildingTable.Technology)) != 0)
 						{
 							this.Owner.BlockText.ShowTextDialog(GameTexts.TopicD2);
 
@@ -140,7 +140,7 @@ namespace Civilization1Remaster.Core.Game
 				case 3:
 					if ((terrains & 0x20) != 0)
 					{
-						if (!town.Has(CityStructure.Temple) && this.Owner.Advisors.PlayerKnowsTechnology(town.ParticipantIdx, (short)BuildingWord(4, BuildingTable.Technology)) != 0)
+						if (!town.Has(CityStructure.Temple) && this.Owner.Advisors.PlayerKnowsTechnology(town.ParticipantIdx, (short)Tables.BuildingWord(4, BuildingTable.Technology)) != 0)
 						{
 							this.Owner.BlockText.ShowTextDialog(GameTexts.TopicD3);
 
@@ -152,7 +152,7 @@ namespace Civilization1Remaster.Core.Game
 
 				case 4:
 					if (town.TrueExtent != 0 && !town.Has(CityStructure.Granary) &&
-						this.Owner.Advisors.PlayerKnowsTechnology(town.ParticipantIdx, (short)BuildingWord(3, BuildingTable.Technology)) != 0)
+						this.Owner.Advisors.PlayerKnowsTechnology(town.ParticipantIdx, (short)Tables.BuildingWord(3, BuildingTable.Technology)) != 0)
 					{
 						this.Owner.BlockText.ShowTextDialog(GameTexts.TopicD4);
 
@@ -165,11 +165,11 @@ namespace Civilization1Remaster.Core.Game
 
 				case 5:
 					if ((town.StructureMarkers0 & 0xfffe) != 0 && !town.Has(CityStructure.Aqueduct) &&
-						this.Owner.Advisors.PlayerKnowsTechnology(town.ParticipantIdx, (short)BuildingWord(9, BuildingTable.Technology)) != 0)
+						this.Owner.Advisors.PlayerKnowsTechnology(town.ParticipantIdx, (short)Tables.BuildingWord(9, BuildingTable.Technology)) != 0)
 					{
 						ushort buildingIdx = DestroyRandomBuilding(town);
 
-						this.Owner.Codes.Set(0, BuildingText(buildingIdx));
+						this.Owner.Codes.Set(0, GameTables.BuildingText(buildingIdx));
 
 						this.Owner.BlockText.ShowTextDialog(GameTexts.TopicD5);
 					}
@@ -279,7 +279,7 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.World.Participants[participantIdx].LevyRatio = savedLevyRatio;
 			Scoring.CitizenScore = (ushort)totalCitizenScore;
 
-			ushort civNamePtr = CivilizationName(participantIdx);
+			ushort civNamePtr = Tables.CivilizationName(participantIdx);
 			Message(civNamePtr)
 				.Text(" Citizens (")
 				.Number((short)totalCitizenScore)
@@ -312,7 +312,7 @@ namespace Civilization1Remaster.Core.Game
 						if (marker && wondersY < 0xb4)
 						{
 							this.Owner.CityOps.DrawResourceIcon((short)(wonderIdx + 0x18), (short)wonderColX, (short)(wondersY - 2));
-							this.Owner.TextPainter.DrawTextToScreen0(WonderText(wonderIdx), (short)(wonderColX + 20), (short)wondersY, Hues.LightCyan);
+							this.Owner.TextPainter.DrawTextToScreen0(GameTables.WonderText(wonderIdx), (short)(wonderColX + 20), (short)wondersY, Hues.LightCyan);
 						}
 
 						totalWonderScore += 20;
@@ -513,7 +513,7 @@ namespace Civilization1Remaster.Core.Game
 
 			this.Owner.MapOps.AssignTileImprovements(9, horizLoc, vertLoc);
 
-			if ((short)TerrainImprovementWord(this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc), TerrainImprovementTable.Irrigation) < -1)
+			if ((short)Tables.TerrainImprovementWord(this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc), TerrainImprovementTable.Irrigation) < -1)
 			{
 				this.Owner.MapOps.AssignTileImprovements(2, horizLoc, vertLoc);
 			}
@@ -673,8 +673,8 @@ namespace Civilization1Remaster.Core.Game
 
 			for (neighbourIdx = 1; neighbourIdx <= 8; neighbourIdx++)
 			{
-				int tileHoriz = (short)DirectionHoriz(neighbourIdx) + horizLoc;
-				int tileVert = (short)DirectionVert(neighbourIdx) + vertLoc;
+				int tileHoriz = (short)Tables.DirectionHoriz(neighbourIdx) + horizLoc;
+				int tileVert = (short)Tables.DirectionVert(neighbourIdx) + vertLoc;
 
 				ushort terrain = this.Owner.MapOps.ObtainTerrainType(tileHoriz, tileVert);
 
@@ -702,8 +702,8 @@ namespace Civilization1Remaster.Core.Game
 
 			for (tileIdx = 0; tileIdx < 0x2d; tileIdx++)
 			{
-				short tileHoriz = (short)(ushort)this.Owner.Routing.TunePosition((short)DirectionHoriz(tileIdx) + horizLoc);
-				short tileVert = (short)(DirectionVert(tileIdx) + (ushort)vertLoc);
+				short tileHoriz = (short)(ushort)this.Owner.Routing.TunePosition((short)Tables.DirectionHoriz(tileIdx) + horizLoc);
+				short tileVert = (short)(Tables.DirectionVert(tileIdx) + (ushort)vertLoc);
 
 
 				if (tileIdx <= 0x14)

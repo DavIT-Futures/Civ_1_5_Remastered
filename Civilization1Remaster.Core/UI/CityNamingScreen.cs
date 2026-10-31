@@ -75,11 +75,11 @@ namespace Civilization1Remaster.Core.UI
 
 			this.Owner.TextPainter.DrawTextToScreen0(GameTexts.TextYourName, 166, 90, Hues.Black);
 
-			this.Owner.Words.Set(LeaderName(playerIdx));
+			this.Owner.Words.Set(Tables.LeaderName(playerIdx));
 
 			PullTextInput(0xa6, 0x68, 0xd);
 
-			this.Owner.Names.Set(LeaderName(playerIdx), this.Owner.Words.ToString());
+			this.Owner.Names.Set(Tables.LeaderName(playerIdx), this.Owner.Words.ToString());
 
 			this.Owner.Startup.ShowMouseCursor();
 		}
@@ -99,11 +99,11 @@ namespace Civilization1Remaster.Core.UI
 
 			this.Owner.TextPainter.DrawTextToScreen0(GameTexts.TextNameOfYourTribe, 166, 90, Hues.Black);
 
-			this.Owner.Words.Set(CivilizationPlural(playerIdx));
+			this.Owner.Words.Set(Tables.CivilizationPlural(playerIdx));
 
 			PullTextInput(0xa6, 0x68, 0xb);
 
-			this.Owner.Names.Set(CivilizationPlural(playerIdx), this.Owner.Words.ToString());
+			this.Owner.Names.Set(Tables.CivilizationPlural(playerIdx), this.Owner.Words.ToString());
 
 			// The last character (the one before the text when it is empty)
 			int lastIndex = this.Owner.Words.Length - 1;
@@ -113,8 +113,8 @@ namespace Civilization1Remaster.Core.UI
 				this.Owner.Words[lastIndex] = 0;
 			}
 
-			this.Owner.Names.Set(CivilizationName(playerIdx), this.Owner.Words.ToString());
-			this.Processor.EmitGlobalByte((ushort)(CivilizationName(playerIdx) + 0xa), 0);
+			this.Owner.Names.Set(Tables.CivilizationName(playerIdx), this.Owner.Words.ToString());
+			this.Processor.EmitGlobalByte((ushort)(Tables.CivilizationName(playerIdx) + 0xa), 0);
 
 			this.Owner.Startup.ShowMouseCursor();
 		}

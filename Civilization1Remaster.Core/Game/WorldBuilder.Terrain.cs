@@ -256,15 +256,15 @@ namespace Civilization1Remaster.Core.Game
 			{
 				int kind = terrainIdx % 12;
 
-				weights[terrainIdx] = (ushort)((3 * (sbyte)TerrainField(terrainIdx, TerrainTable.Food)) +
-					(sbyte)TerrainField(terrainIdx, TerrainTable.Trade));
+				weights[terrainIdx] = (ushort)((3 * (sbyte)Tables.TerrainField(terrainIdx, TerrainTable.Food)) +
+					(sbyte)Tables.TerrainField(terrainIdx, TerrainTable.Trade));
 
 				if (kind != 2 && kind != 11)
 				{
-					weights[terrainIdx] += (ushort)((sbyte)TerrainField(terrainIdx, TerrainTable.Shields) << 1);
+					weights[terrainIdx] += (ushort)((sbyte)Tables.TerrainField(terrainIdx, TerrainTable.Shields) << 1);
 				}
 
-				short mining = (short)TerrainImprovementWord(kind, TerrainImprovementTable.Mining);
+				short mining = (short)Tables.TerrainImprovementWord(kind, TerrainImprovementTable.Mining);
 
 				if (mining < 0)
 				{
@@ -272,7 +272,7 @@ namespace Civilization1Remaster.Core.Game
 				}
 				else
 				{
-					short irrigation = (short)TerrainImprovementWord(kind, TerrainImprovementTable.Irrigation);
+					short irrigation = (short)Tables.TerrainImprovementWord(kind, TerrainImprovementTable.Irrigation);
 
 					if (irrigation < 0)
 					{
@@ -657,9 +657,9 @@ namespace Civilization1Remaster.Core.Game
 				{
 					ushort heading = (ushort)(this.Owner.Libc.Dice.DrawInt(8) + 1);
 
-					horizLoc = (short)(horizLoc + (short)DirectionHoriz(heading));
+					horizLoc = (short)(horizLoc + (short)Tables.DirectionHoriz(heading));
 
-					vertLoc = (short)(vertLoc + (short)DirectionVert(heading));
+					vertLoc = (short)(vertLoc + (short)Tables.DirectionVert(heading));
 				}
 
 				ushort dot = this.Owner.VideoCard.ObtainDot(1, horizLoc, vertLoc);

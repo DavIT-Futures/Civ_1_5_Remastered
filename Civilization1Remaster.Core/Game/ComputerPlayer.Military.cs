@@ -83,10 +83,10 @@ namespace Civilization1Remaster.Core.Game
 
 			if (this.look.TileOwner != 0xffff)
 			{
-				short defence = (short)UnitKindWord((sbyte)(byte)this.look.Round, UnitKindTable.GuardPower);
+				short defence = (short)Tables.UnitKindWord((sbyte)(byte)this.look.Round, UnitKindTable.GuardPower);
 				short leader = (short)this.look.TileOwner;
 
-				if ((short)UnitKindWord(this.troops.TroopKind(participantIdx, leader), UnitKindTable.GuardPower) < defence)
+				if ((short)Tables.UnitKindWord(this.troops.TroopKind(participantIdx, leader), UnitKindTable.GuardPower) < defence)
 					return CityGuard.Stays;
 			}
 
@@ -160,8 +160,8 @@ namespace Civilization1Remaster.Core.Game
 				{
 					ushort direction = this.look.Direction;
 
-					this.look.TileHoriz = (ushort)this.Owner.Routing.TunePosition((short)DirectionHoriz(direction) + horizLoc);
-					this.look.TileVert = (ushort)(DirectionVert(direction) + this.look.Vert);
+					this.look.TileHoriz = (ushort)this.Owner.Routing.TunePosition((short)Tables.DirectionHoriz(direction) + horizLoc);
+					this.look.TileVert = (ushort)(Tables.DirectionVert(direction) + this.look.Vert);
 
 					short nextHoriz = (short)this.look.TileHoriz;
 					short nextVert = (short)this.look.TileVert;
@@ -268,9 +268,9 @@ namespace Civilization1Remaster.Core.Game
 			{
 				ushort direction = this.look.Direction;
 				this.look.TileHoriz = (ushort)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.TravelHoriz) +
-					DirectionHoriz(direction));
+					Tables.DirectionHoriz(direction));
 				this.look.TileVert = (ushort)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.TravelVert) +
-					DirectionVert(direction));
+					Tables.DirectionVert(direction));
 
 				if (this.Owner.MapOps.ObtainTileOwner((short)this.look.TileHoriz, (short)this.look.TileVert) != 0xffff)
 					continue;
@@ -327,8 +327,8 @@ namespace Civilization1Remaster.Core.Game
 				this.look.Direction = (ushort)(this.look.Direction + 1))
 			{
 				ushort direction = this.look.Direction;
-				this.look.TileHoriz = (ushort)(town.Place.X + DirectionHoriz(direction));
-				this.look.TileVert = (ushort)(town.Place.Y + DirectionVert(direction));
+				this.look.TileHoriz = (ushort)(town.Place.X + Tables.DirectionHoriz(direction));
+				this.look.TileVert = (ushort)(town.Place.Y + Tables.DirectionVert(direction));
 
 				this.look.TileOwner = this.Owner.MapOps.ObtainTileOwner((short)this.look.TileHoriz, (short)this.look.TileVert);
 				ushort tileOwner = this.look.TileOwner;
@@ -386,7 +386,7 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 			sbyte kind = this.troops.TroopKind(participantIdx, troopIdx);
-			short range = (short)(CPU.SignedQuotient((short)UnitKindWord(kind, UnitKindTable.ShiftTally), 2) * 3);
+			short range = (short)(CPU.SignedQuotient((short)Tables.UnitKindWord(kind, UnitKindTable.ShiftTally), 2) * 3);
 
 			if (range >= this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.LeftoverSteps))
 				return 0x68;
@@ -435,7 +435,7 @@ namespace Civilization1Remaster.Core.Game
 
 			short bomber = (short)this.look.NearestUnit;
 
-			if ((short)UnitKindWord(this.troops.TroopKind(participantIdx, troopIdx), UnitKindTable.ShiftTally) >
+			if ((short)Tables.UnitKindWord(this.troops.TroopKind(participantIdx, troopIdx), UnitKindTable.ShiftTally) >
 				(short)this.look.BestDistance)
 			{
 				this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHoriz, this.troops.Pull(person, bomber, UnitMemory.Horiz));
@@ -458,7 +458,7 @@ namespace Civilization1Remaster.Core.Game
 					this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz), town.Place.X,
 					this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert), town.Place.Y);
 
-				if ((short)UnitKindWord(this.troops.TroopKind(participantIdx, troopIdx), UnitKindTable.ShiftTally) < reach)
+				if ((short)Tables.UnitKindWord(this.troops.TroopKind(participantIdx, troopIdx), UnitKindTable.ShiftTally) < reach)
 					continue;
 
 				short distance = (short)this.Owner.Helpers.ObtainDistance(
@@ -510,7 +510,7 @@ namespace Civilization1Remaster.Core.Game
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Kind, (byte)this.look.Kind);
 
 			this.look.Terrain = this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
-			this.look.Role = UnitKindWord(this.troops.TroopKind(participantIdx, troopIdx), UnitKindTable.TroopGroup);
+			this.look.Role = Tables.UnitKindWord(this.troops.TroopKind(participantIdx, troopIdx), UnitKindTable.TroopGroup);
 
 			this.look.Continent = this.Owner.MapOps.ObtainContinentID(horizLoc, vertLoc);
 			this.look.Approach = (ushort)this.Owner.World.Participants[participantIdx].Landmasses[this.look.Continent].Approach;

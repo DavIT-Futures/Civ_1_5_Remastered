@@ -67,8 +67,8 @@ namespace Civilization1Remaster.Core.Game
 			int vert = this.Troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert);
 			int terrainType = this.Owner.MapOps.ObtainTerrainType(horiz, vert);
 
-			int landGroup = (short)UnitKindWord(unitKind, UnitKindTable.LandGroup);
-			int baseGuardPower = (short)UnitKindWord(unitKind, UnitKindTable.GuardPower);
+			int landGroup = (short)Tables.UnitKindWord(unitKind, UnitKindTable.LandGroup);
+			int baseGuardPower = (short)Tables.UnitKindWord(unitKind, UnitKindTable.GuardPower);
 			int terrainDefenseFactor = (sbyte)this.Owner.Tables.Byte((ushort)(TerrainTable.Stride * terrainType + TerrainTable.Origin + TerrainTable.DefenseBonus));
 
 			byte condition = this.Troops.Pull(participantIdx, troopIdx, UnitMemory.Status);

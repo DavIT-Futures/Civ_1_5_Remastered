@@ -62,7 +62,7 @@ namespace Civilization1Remaster.Core.Game
 
 				this.round.ImprovementCount = (ushort)(this.round.ImprovementCount + 1);
 				this.Owner.Services.DrawPictureToScreen(Screen.Box, 309, (short)this.round.Vert + 1,
-					SpritePicture(0xb));
+					Tables.SpritePicture(0xb));
 				DrawImprovementName(improvement, 56, false);
 			}
 		}
@@ -70,7 +70,7 @@ namespace Civilization1Remaster.Core.Game
 		/// <summary>A row of the improvement list: the name (upper case, within the width), the icon (left or right by the row)</summary>
 		private void DrawImprovementName(ushort improvement, ushort width, bool shrinkFirst)
 		{
-			this.Owner.Words.Set(BuildingText(improvement));
+			this.Owner.Words.Set(GameTables.BuildingText(improvement));
 
 			if (shrinkFirst)
 			{
@@ -114,7 +114,7 @@ namespace Civilization1Remaster.Core.Game
 			}
 			else
 			{
-				this.round.ProductionPrice = BuildingWordAt((ushort)(-town.PresentMakingIdx * 0x1e), BuildingTable.Price);
+				this.round.ProductionPrice = Tables.BuildingWordAt((ushort)(-town.PresentMakingIdx * 0x1e), BuildingTable.Price);
 			}
 		}
 
@@ -152,11 +152,11 @@ namespace Civilization1Remaster.Core.Game
 			if (town.PresentMakingIdx >= 0)
 			{
 				this.Owner.Services.DrawPictureToScreen(Screen.Box, 264, 100,
-					SpritePicture(((byte)town.PresentMakingIdx + (owner << 5) + 0x40)));
+					Tables.SpritePicture(((byte)town.PresentMakingIdx + (owner << 5) + 0x40)));
 			}
 			else
 			{
-				this.Owner.Words.Set(BuildingRecordText(-town.PresentMakingIdx));
+				this.Owner.Words.Set(GameTables.BuildingRecordText(-town.PresentMakingIdx));
 				this.Owner.BlockText.ShrinkTextToWidth(TextBuffer.Address, 0x56);
 				this.Owner.TextPainter.DrawCenteredTextToScreen0(this.Owner.Words.ToString(), 274, 100, Hues.White);
 			}
@@ -178,7 +178,7 @@ namespace Civilization1Remaster.Core.Game
 					((((short)this.round.Index % ((short)this.round.CostFactor * (short)this.round.ShieldsPerRow)) *
 						(short)this.round.Value) / (short)this.round.ShieldsPerRow) + 232,
 					(((short)this.round.Index / ((short)this.round.CostFactor * (short)this.round.ShieldsPerRow)) * 8) + 117,
-					SpritePicture(0x9));
+					Tables.SpritePicture(0x9));
 			}
 
 			this.round.Index = shield;
@@ -228,7 +228,7 @@ namespace Civilization1Remaster.Core.Game
 				this.Owner.Services.DrawPictureToScreen(Screen.Box,
 					(((short)this.round.Index % perRow) * (short)this.round.Value) + 4,
 					(((short)this.round.Index / perRow) * (short)this.round.DrawVert) + 116,
-					SpritePicture(0x8));
+					Tables.SpritePicture(0x8));
 			}
 		}
 
@@ -277,7 +277,7 @@ namespace Civilization1Remaster.Core.Game
 
 					this.Owner.Services.DrawPictureToScreen(Screen.Box, (short)this.round.Horiz,
 						((short)this.round.Item * 8) + (short)this.round.DrawVert,
-						SpritePicture((row + 8)));
+						Tables.SpritePicture((row + 8)));
 
 					this.round.Horiz = (ushort)(this.round.Horiz + this.round.Value);
 				}
@@ -322,7 +322,7 @@ namespace Civilization1Remaster.Core.Game
 			{
 				this.round.Index = drawn;
 				this.Owner.Services.DrawPictureToScreen(Screen.Box, (short)this.round.Horiz / 2,
-					(short)this.round.DrawVert + 24, SpritePicture(icon));
+					(short)this.round.DrawVert + 24, Tables.SpritePicture(icon));
 				this.round.Horiz = (ushort)(this.round.Horiz + this.round.Value);
 			}
 
@@ -352,7 +352,7 @@ namespace Civilization1Remaster.Core.Game
 					this.Owner.Services.DrawPictureToScreen(Screen.Box,
 						((short)this.round.Index * (short)this.round.Value) + 8,
 						(short)this.round.DrawVert,
-						SpritePicture(0x8));
+						Tables.SpritePicture(0x8));
 				}
 
 				this.round.Index = icon;
@@ -375,7 +375,7 @@ namespace Civilization1Remaster.Core.Game
 					this.Owner.Services.DrawPictureToScreen(Screen.Box,
 						((short)this.round.Index * (short)this.round.Value) + 8,
 						(short)this.round.DrawVert + 8,
-						SpritePicture(0x9));
+						Tables.SpritePicture(0x9));
 				}
 
 				this.round.Index = icon;

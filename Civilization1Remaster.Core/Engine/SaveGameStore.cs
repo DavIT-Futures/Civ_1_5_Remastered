@@ -342,9 +342,9 @@ namespace Civilization1Remaster.Core.Engine
 				.Text("\n ")
 				.Text(this.Processor.PullGlobalWord((ushort)((this.Owner.World.HardnessTier << 1) + DifficultyNamesTableAddress)))
 				.Text(" ")
-				.Text(LeaderNameAt(personSlot))
+				.Text(Tables.LeaderNameAt(personSlot))
 				.Text("\n ")
-				.Text(CivilizationPluralAt(personSlot))
+				.Text(Tables.CivilizationPluralAt(personSlot))
 				.Text("/");
 
 			this.Owner.TurnHooks.FormatCurrentYear();

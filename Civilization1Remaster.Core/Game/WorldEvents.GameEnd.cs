@@ -70,9 +70,9 @@ namespace Civilization1Remaster.Core.Game
 			{
 				Player person = this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx];
 
-				Message(GovernmentTitle(person.RegimeKind))
+				Message(Tables.GovernmentTitle(person.RegimeKind))
 					.Text(" ")
-					.Text(LeaderName(this.Owner.World.PersonParticipantIdx))
+					.Text(Tables.LeaderName(this.Owner.World.PersonParticipantIdx))
 					.Text("\nplans retirement\nin 20 years.\n");
 
 				this.Owner.Paper.ShowNewspaper(-1);
@@ -109,7 +109,7 @@ namespace Civilization1Remaster.Core.Game
 
 				RepaintMainScreen();
 
-				Message(CivilizationName(Spaceship.ArrivedSpaceship))
+				Message(Tables.CivilizationName(Spaceship.ArrivedSpaceship))
 					.Text(" spaceship\narrives at Alpha Centauri.\n");
 
 				this.Owner.Paper.ShowNewspaper(-1);
@@ -117,12 +117,12 @@ namespace Civilization1Remaster.Core.Game
 
 			if ((short)(0x834 - (0x14 * this.Owner.World.HardnessTier)) == this.Owner.World.Season)
 			{
-				Message(LeaderName(this.Owner.World.PersonParticipantIdx))
+				Message(Tables.LeaderName(this.Owner.World.PersonParticipantIdx))
 					.Text(" dynasty\nends after glorious\n6000 year reign!\n");
 
 				ushort leader = (ushort)(0x3a * this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx].ChiefVisuals);
 
-				this.Owner.Services.PerformSound(LeaderWordAt(leader, LeaderTable.Tune), 3);
+				this.Owner.Services.PerformSound(Tables.LeaderWordAt(leader, LeaderTable.Tune), 3);
 
 				this.Owner.Paper.ShowNewspaper(-1);
 

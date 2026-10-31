@@ -568,7 +568,7 @@ namespace Civilization1Remaster.Core.Game
 			short previousMark = (short)Turn.PopulationMark;
 
 			Message("The population of the\nfertile ")
-				.Text(CivilizationName(this.Owner.World.PersonParticipantIdx))
+				.Text(Tables.CivilizationName(this.Owner.World.PersonParticipantIdx))
 				.Text(" empire now\nexceeds ");
 
 			if (population < 100)
@@ -609,7 +609,7 @@ namespace Civilization1Remaster.Core.Game
 			ushort wonderIdx = (ushort)(this.Owner.Libc.Dice.DrawInt(21) + 1);
 
 			if (this.Owner.World.HardnessTier == 0 &&
-				this.Owner.Advisors.PlayerKnowsTechnology(person, (short)BuildingWord(wonderIdx, BuildingTable.Technology)) == 0)
+				this.Owner.Advisors.PlayerKnowsTechnology(person, (short)Tables.BuildingWord(wonderIdx, BuildingTable.Technology)) == 0)
 				return false;
 
 			if (this.Owner.World.HardnessTier < 2)
@@ -650,10 +650,10 @@ namespace Civilization1Remaster.Core.Game
 			if (this.Owner.World.MarvelTownIdx[wonderIdx] != -1)
 				return false;
 
-			if (this.Owner.World.Towns[cityIdx].TrueExtent <= CPU.SignedQuotient((short)BuildingWord(24 + wonderIdx, BuildingTable.Price), 10))
+			if (this.Owner.World.Towns[cityIdx].TrueExtent <= CPU.SignedQuotient((short)Tables.BuildingWord(24 + wonderIdx, BuildingTable.Price), 10))
 				return false;
 
-			if (this.Owner.Advisors.PlayerKnowsTechnology((short)rivalIdx, (short)BuildingWord(24 + wonderIdx, BuildingTable.Technology)) == 0)
+			if (this.Owner.Advisors.PlayerKnowsTechnology((short)rivalIdx, (short)Tables.BuildingWord(24 + wonderIdx, BuildingTable.Technology)) == 0)
 				return false;
 
 			this.Owner.World.MarvelTownIdx[wonderIdx] = (short)cityIdx;
@@ -664,17 +664,17 @@ namespace Civilization1Remaster.Core.Game
 			EmptyMessage()
 				.City((short)cityIdx)
 				.Text(" (")
-				.Text(CivilizationName(rivalIdx))
+				.Text(Tables.CivilizationName(rivalIdx))
 				.Text(")\nbuilds ")
-				.Text(BuildingRecordText(24 + wonderIdx))
+				.Text(GameTables.BuildingRecordText(24 + wonderIdx))
 				.Text(".\n");
 
 			this.Owner.World.Participants[rivalIdx].Gold -= (short)this.Owner.Helpers.ClampValue(this.Owner.World.Participants[rivalIdx].Gold / 3, 0,
-				(10 * (short)BuildingWord(24 + wonderIdx, BuildingTable.Price)) - this.Owner.World.Towns[cityIdx].MaterialsTally);
+				(10 * (short)Tables.BuildingWord(24 + wonderIdx, BuildingTable.Price)) - this.Owner.World.Towns[cityIdx].MaterialsTally);
 
 			if (MapView.WorldMapView != 1)
 			{
-				this.Owner.Services.PerformSound(LeaderWord(this.Owner.World.Participants[rivalIdx].ChiefVisuals, LeaderTable.ShortTune), 0);
+				this.Owner.Services.PerformSound(Tables.LeaderWord(this.Owner.World.Participants[rivalIdx].ChiefVisuals, LeaderTable.ShortTune), 0);
 
 				Screen.DialogStyle = (this.Owner.World.Participants[person].Relations[rivalIdx] & 0x40) == 0 ? (ushort)2 : (ushort)5;
 

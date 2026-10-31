@@ -29,7 +29,7 @@ namespace Civilization1Remaster.Core.Game
 			byte unitKind = this.Troops.PullAt(unitAddr, UnitMemory.Kind);
 			ushort unitSpecOffset = (ushort)((short)(sbyte)0x22 * (short)(sbyte)unitKind);
 
-			if (UnitKindWordAt(unitSpecOffset, UnitKindTable.TroopGroup) == 0x5)
+			if (Tables.UnitKindWordAt(unitSpecOffset, UnitKindTable.TroopGroup) == 0x5)
 			{
 				ushort seaResult = this.ManageBarbarianSeaTransport(participantIdx, troopIdx, unitAddr, unitX, unitY);
 				return seaResult;
@@ -53,8 +53,8 @@ namespace Civilization1Remaster.Core.Game
 			{
 				ushort dirOffset = (ushort)(dir << 1);
 				ushort adjX = (ushort)this.Owner.Routing.TunePosition(
-					(short)DirectionHorizAt(dirOffset) + (short)unitX);
-				ushort adjY = (ushort)(DirectionVertAt(dirOffset) + unitY);
+					(short)Tables.DirectionHorizAt(dirOffset) + (short)unitX);
+				ushort adjY = (ushort)(Tables.DirectionVertAt(dirOffset) + unitY);
 
 				if ((short)Search.FoundDistance <= 8 &&
 					this.Owner.MapOps.ObtainTerrainType((short)adjX, (short)adjY) != 0xa &&
@@ -156,7 +156,7 @@ namespace Civilization1Remaster.Core.Game
 
 				byte curKind = this.Troops.PullAt(unitAddr, UnitMemory.Kind);
 				ushort curSpecOffset = (ushort)((short)(sbyte)0x22 * (short)(sbyte)curKind);
-				if (UnitKindWordAt(curSpecOffset, UnitKindTable.TroopGroup) == 0x2)
+				if (Tables.UnitKindWordAt(curSpecOffset, UnitKindTable.TroopGroup) == 0x2)
 				{
 					return 0x66;
 				}
@@ -270,16 +270,16 @@ namespace Civilization1Remaster.Core.Game
 				ushort dirOffset = (ushort)(dir << 1);
 				ushort adjX = (ushort)this.Owner.Routing.TunePosition(
 					(sbyte)this.Troops.PullAt(unitAddr, UnitMemory.Horiz) +
-					(short)DirectionHorizAt(dirOffset));
+					(short)Tables.DirectionHorizAt(dirOffset));
 				ushort adjY = (ushort)(this.Troops.PullAt(unitAddr, UnitMemory.Vert) +
-					DirectionVertAt(dirOffset));
+					Tables.DirectionVertAt(dirOffset));
 
 				ushort adjTerrain = this.Owner.MapOps.ObtainTerrainType((short)adjX, (short)adjY);
 				ushort isOcean = adjTerrain == 0xa ? (ushort)1 : (ushort)0;
 
 				byte curKind = this.Troops.PullAt(unitAddr, UnitMemory.Kind);
 				ushort curSpecOff = (ushort)((short)(sbyte)0x22 * (short)(sbyte)curKind);
-				ushort isSeaDomain = UnitKindWordAt(curSpecOff, UnitKindTable.LandGroup) == 0x2 ? (ushort)1 : (ushort)0;
+				ushort isSeaDomain = Tables.UnitKindWordAt(curSpecOff, UnitKindTable.LandGroup) == 0x2 ? (ushort)1 : (ushort)0;
 				if (isSeaDomain != isOcean)
 				{
 					continue;
@@ -303,7 +303,7 @@ namespace Civilization1Remaster.Core.Game
 
 					this.Owner.Helpers.FindNearestCity((short)adjX, (short)adjY);
 					short randBonus = (short)this.Owner.Libc.Dice.DrawInt(4);
-					short defenseBonus = (short)(sbyte)TerrainField(adjTerrain, TerrainTable.MoveCost);
+					short defenseBonus = (short)(sbyte)Tables.TerrainField(adjTerrain, TerrainTable.MoveCost);
 					short distPenalty = (short)(Search.FoundDistance << 2);
 					dirScore = (short)(dirScore + defenseBonus + randBonus + distPenalty);
 				}
@@ -362,7 +362,7 @@ namespace Civilization1Remaster.Core.Game
 					{
 						byte kindNow = this.Troops.PullAt(unitAddr, UnitMemory.Kind);
 						ushort specNow = (ushort)((short)(sbyte)0x22 * (short)(sbyte)kindNow);
-						if (UnitKindWordAt(specNow, UnitKindTable.LandGroup) == 0 &&
+						if (Tables.UnitKindWordAt(specNow, UnitKindTable.LandGroup) == 0 &&
 							unitAtAdj == 0xffff &&
 							this.Owner.UnitOps.MayOccupyTile(participantIdx, (short)adjX, (short)adjY) != 0)
 						{
@@ -376,12 +376,12 @@ namespace Civilization1Remaster.Core.Game
 						dirScore = (short)(dirScore + 0x6);
 					}
 
-					if (DirectionHorizAt(dirOffset) == targetDirX)
+					if (Tables.DirectionHorizAt(dirOffset) == targetDirX)
 					{
 						dirScore = (short)(dirScore + 0x2);
 					}
 
-					if (DirectionVertAt(dirOffset) == targetDirY)
+					if (Tables.DirectionVertAt(dirOffset) == targetDirY)
 					{
 						dirScore = (short)(dirScore + 0x2);
 					}

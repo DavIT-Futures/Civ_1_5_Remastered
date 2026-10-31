@@ -55,13 +55,13 @@ namespace Civilization1Remaster.Core.UI
 			}
 
 			this.Owner.Words.Append(" of the ");
-			this.Owner.Words.Append(CivilizationPluralAt(personSlot));
+			this.Owner.Words.Append(Tables.CivilizationPluralAt(personSlot));
 
 			this.Owner.TextPainter.DrawCenteredTextToScreen0(this.Owner.Words.ToString(), 160, 10, Hues.White);
 
-			Message(GovernmentTitle(person.RegimeKind))
+			Message(Tables.GovernmentTitle(person.RegimeKind))
 				.Text(" ")
-				.Text(LeaderNameAt(personSlot))
+				.Text(Tables.LeaderNameAt(personSlot))
 				.Text(": ");
 
 			this.Owner.TurnHooks.FormatCurrentYear();
@@ -117,7 +117,7 @@ namespace Civilization1Remaster.Core.UI
 			for (short bulbIdx = 0; (short)this.Owner.Helpers.ClampValue(this.Owner.World.Participants[participantIdx].InquiryHeadway, 0, cost) > bulbIdx; bulbIdx++)
 			{
 				this.Owner.Services.DrawPictureToScreen(Screen.Box, (progress / 8) + barLeft, 33,
-					SpritePicture(0xc));
+					Tables.SpritePicture(0xc));
 
 				progress += (short)step;
 			}
@@ -127,7 +127,7 @@ namespace Civilization1Remaster.Core.UI
 			if (inquiry != -1)
 			{
 				Message("Researching ")
-					.Text(TechnologyText(inquiry));
+					.Text(GameTables.TechnologyText(inquiry));
 
 				this.Owner.TextPainter.DrawCenteredTextToScreen0(this.Owner.Words.ToString(), 161, 26, Hues.Black);
 				this.Owner.TextPainter.DrawCenteredTextToScreen0(this.Owner.Words.ToString(), 160, 26, Hues.White);
@@ -141,7 +141,7 @@ namespace Civilization1Remaster.Core.UI
 				if (this.Owner.Advisors.PlayerKnowsTechnology(participantIdx, technologyIdx) == 0)
 					continue;
 
-				this.Owner.Words.Set(TechnologyText(technologyIdx));
+				this.Owner.Words.Set(GameTables.TechnologyText(technologyIdx));
 
 				ushort hue = (ushort)((this.Owner.World.ScienceLeadingFoundVia[technologyIdx] & 7) == participantIdx ? 0xf : 0xb);
 
@@ -182,7 +182,7 @@ namespace Civilization1Remaster.Core.UI
 				this.Owner.VideoCard.RenderLine(Screen.Box, 36, vertLoc - 2, 319, vertLoc - 2, Hues.LightBlue);
 
 				this.Owner.Services.DrawPictureToScreen(Screen.Box, ((rowIdx & 1) << 4) + 2, vertLoc - 4,
-					SpritePicture(((participantIdx << 5) + kind + 0x40)));
+					Tables.SpritePicture(((participantIdx << 5) + kind + 0x40)));
 
 				rowIdx++;
 
@@ -254,11 +254,11 @@ namespace Civilization1Remaster.Core.UI
 				this.Owner.VideoCard.RenderLine(Screen.Box, 36, vertLoc - 1, 319, vertLoc - 1, Hues.DarkGray);
 
 				this.Owner.Services.DrawPictureToScreen(Screen.Box, ((rowIdx & 1) << 4) + 2, vertLoc - 4,
-					SpritePicture(((participantIdx << 5) + kind + 0x40)));
+					Tables.SpritePicture(((participantIdx << 5) + kind + 0x40)));
 
 				rowIdx++;
 
-				this.Owner.TextPainter.DrawTextToScreen0(UnitText(kind), 36, vertLoc, Hues.White);
+				this.Owner.TextPainter.DrawTextToScreen0(GameTables.UnitText(kind), 36, vertLoc, Hues.White);
 
 				short losses = this.Owner.World.Participants[participantIdx].MissingTroops[kind];
 
@@ -284,7 +284,7 @@ namespace Civilization1Remaster.Core.UI
 						EmptyMessage()
 							.Number(losses);
 						this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), horizLoc, vertLoc,
-							PlayerColour(playerIdx));
+							Tables.PlayerColour(playerIdx));
 					}
 				}
 
@@ -292,7 +292,7 @@ namespace Civilization1Remaster.Core.UI
 			}
 
 			this.Owner.Dialogs.DrawBox(100, 25, 18, vertLoc - 25,
-				PlayerColour(this.Owner.World.PersonParticipantIdx));
+				Tables.PlayerColour(this.Owner.World.PersonParticipantIdx));
 
 			FinishReportScreen();
 		}
@@ -401,7 +401,7 @@ namespace Civilization1Remaster.Core.UI
 					if (((ushort)structure & town.StructureMarkers0) == 0 && ((ushort)(structure >> 16) & town.StructureMarkers1) == 0)
 						continue;
 
-					costs[structureIdx] = (ushort)(costs[structureIdx] + BuildingWord(structureIdx + 1, BuildingTable.Upkeep));
+					costs[structureIdx] = (ushort)(costs[structureIdx] + Tables.BuildingWord(structureIdx + 1, BuildingTable.Upkeep));
 
 					if (structureIdx == 1)
 					{
@@ -452,13 +452,13 @@ namespace Civilization1Remaster.Core.UI
 
 				// The number of the buildings: the cost by the upkeep (the palace by its own cost)
 				short tally = structureIdx == 1 ? (short)(cost / palaceCost) :
-					(short)(cost / (short)BuildingWord(structureIdx + 1, BuildingTable.Upkeep));
+					(short)(cost / (short)Tables.BuildingWord(structureIdx + 1, BuildingTable.Upkeep));
 
 				this.Owner.Words.Append(this.Owner.Libc.IntegerToText(tally, 10));
 
 				this.Owner.Words.Append(" ");
 
-				this.Owner.Words.Append(BuildingText(structureIdx));
+				this.Owner.Words.Append(GameTables.BuildingText(structureIdx));
 
 				this.Owner.Words.Append(", ");
 
@@ -512,12 +512,12 @@ namespace Civilization1Remaster.Core.UI
 
 				this.Owner.VideoCard.RenderLine(Screen.Box, 4, (short)(vertLoc - 2), 316, (short)(vertLoc - 2), Hues.LightBlue);
 
-				this.Owner.Words.Set(CivilizationPlural(participantIdx));
+				this.Owner.Words.Set(Tables.CivilizationPlural(participantIdx));
 
 				if ((short)participantIdx != this.Owner.World.PersonParticipantIdx &&
 					(this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx].Relations[participantIdx] & 0x40) == 0)
 				{
-					this.Owner.TextPainter.DrawTextToScreen0(GameTexts.TextNoEmbassyEstablished, 96, vertLoc, PlayerColour(participantIdx));
+					this.Owner.TextPainter.DrawTextToScreen0(GameTexts.TextNoEmbassyEstablished, 96, vertLoc, Tables.PlayerColour(participantIdx));
 
 					rowCount++;
 					continue;
@@ -536,7 +536,7 @@ namespace Civilization1Remaster.Core.UI
 
 				short boxTop = (short)(0x18 * rowCount);
 
-				this.Owner.CityOps.DrawLabelBox(281, boxTop + 20, 318, boxTop + 29, TextBuffer.Address, PlayerColour(participantIdx));
+				this.Owner.CityOps.DrawLabelBox(281, boxTop + 20, 318, boxTop + 29, TextBuffer.Address, Tables.PlayerColour(participantIdx));
 			}
 
 			this.Owner.Startup.ShowMouseCursor();
@@ -627,16 +627,16 @@ namespace Civilization1Remaster.Core.UI
 			short vertLoc = 0x20;
 
 			Message("Subject: the ")
-				.Text(CivilizationPlural(participantIdx));
+				.Text(Tables.CivilizationPlural(participantIdx));
 
 			this.Owner.TextPainter.DrawTextWithShadow(this.Owner.Words.ToString(), 16, 32, Hues.White);
 
 			vertLoc += 0xc;
 
 			Message("Leader:\x008f ")
-				.Text(GovernmentTitle(participant.RegimeKind))
+				.Text(Tables.GovernmentTitle(participant.RegimeKind))
 				.Text(" ")
-				.Text(LeaderName(participantIdx));
+				.Text(Tables.LeaderName(participantIdx));
 
 			this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 16, vertLoc, Hues.LightBlue);
 
@@ -651,7 +651,7 @@ namespace Civilization1Remaster.Core.UI
 
 			for (int traitIdx = 0; traitIdx < 6; traitIdx++)
 			{
-				ushort trait = LeaderWord(participant.ChiefVisuals, LeaderTable.Aggression + ((traitIdx >> 1) << 1));
+				ushort trait = Tables.LeaderWord(participant.ChiefVisuals, LeaderTable.Aggression + ((traitIdx >> 1) << 1));
 
 				if (trait == ((traitIdx & 1) == 0 ? 1 : 0xffff))
 				{
@@ -683,7 +683,7 @@ namespace Civilization1Remaster.Core.UI
 			vertLoc += 8;
 
 			Message("Government:\x008f ")
-				.Text(GovernmentName(participant.RegimeKind));
+				.Text(Tables.GovernmentName(participant.RegimeKind));
 
 			this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 16, vertLoc, Hues.LightBlue);
 
@@ -730,7 +730,7 @@ namespace Civilization1Remaster.Core.UI
 
 				this.Owner.Words.Append("\x0087 with the ");
 
-				this.Owner.Words.Append(CivilizationPlural(otherIdx));
+				this.Owner.Words.Append(Tables.CivilizationPlural(otherIdx));
 
 				this.Owner.Words.Append(".");
 
@@ -750,7 +750,7 @@ namespace Civilization1Remaster.Core.UI
 				if (this.Owner.Advisors.PlayerKnowsTechnology(participantIdx, scienceIdx) == 0)
 					continue;
 
-				this.Owner.TextPainter.DrawTextToScreen0(TechnologyText(scienceIdx), 24, vertLoc, Hues.LightGray);
+				this.Owner.TextPainter.DrawTextToScreen0(GameTables.TechnologyText(scienceIdx), 24, vertLoc, Hues.LightGray);
 
 				vertLoc += 8;
 
@@ -901,9 +901,9 @@ namespace Civilization1Remaster.Core.UI
 				if (making < 0)
 				{
 					// A building: names of 0x1e bytes at 0xb9a, costs at 0xbb2
-					this.Owner.Words.Set(BuildingRecordText(-making));
+					this.Owner.Words.Set(GameTables.BuildingRecordText(-making));
 					this.Owner.BlockText.ShrinkTextToWidth(TextBuffer.Address, 96);
-					AppendProductionCost(townIdx, (short)(10 * BuildingWord(-making, BuildingTable.Price)));
+					AppendProductionCost(townIdx, (short)(10 * Tables.BuildingWord(-making, BuildingTable.Price)));
 				}
 				else if (making < 0x40)
 				{
@@ -943,11 +943,11 @@ namespace Civilization1Remaster.Core.UI
 
 			this.Owner.Words.Append(": ");
 
-			this.Owner.Words.Append(LeaderName(participantIdx));
+			this.Owner.Words.Append(Tables.LeaderName(participantIdx));
 
 			this.Owner.TextPainter.DrawTextWithShadow(this.Owner.Words.ToString(), 8, vertLoc, Hues.White);
 
-			Message(GovernmentName((ushort)this.Owner.World.Participants[participantIdx].RegimeKind))
+			Message(Tables.GovernmentName((ushort)this.Owner.World.Participants[participantIdx].RegimeKind))
 				.Text(", ")
 				.Number(this.Owner.World.Participants[participantIdx].Gold)
 				.Text("$");
@@ -961,7 +961,7 @@ namespace Civilization1Remaster.Core.UI
 				this.Owner.Words.Append(" Units.");
 			}
 
-			this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 160, vertLoc, PlayerColour(participantIdx));
+			this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 160, vertLoc, Tables.PlayerColour(participantIdx));
 
 			vertLoc += 8;
 
@@ -972,7 +972,7 @@ namespace Civilization1Remaster.Core.UI
 			{
 				this.Owner.Words.Clear();
 
-				this.Owner.Words.Set(CivilizationPlural(otherIdx));
+				this.Owner.Words.Set(Tables.CivilizationPlural(otherIdx));
 
 				if (horizLoc > 0xf0)
 				{

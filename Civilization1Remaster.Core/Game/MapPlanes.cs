@@ -97,10 +97,10 @@ namespace Civilization1Remaster.Core.Game
 		}
 
 		/// <inheritdoc/>
-		public new int DirectionHoriz(int heading) => (short)base.DirectionHoriz(heading);
+		public int DirectionHoriz(int heading) => (short)Tables.DirectionHoriz(heading);
 
 		/// <inheritdoc/>
-		public new int DirectionVert(int heading) => (short)base.DirectionVert(heading);
+		public int DirectionVert(int heading) => (short)Tables.DirectionVert(heading);
 
 		/// <inheritdoc/>
 		public int OwnerBits(int horizLoc, int vertLoc)

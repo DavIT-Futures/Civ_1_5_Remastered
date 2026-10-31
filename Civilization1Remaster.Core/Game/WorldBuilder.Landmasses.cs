@@ -28,8 +28,8 @@ namespace Civilization1Remaster.Core.Game
 
 					for (short direction = 1; direction <= 4; direction++)
 					{
-						short nextHoriz = (short)((DirectionHoriz(direction) << 2) + horizLoc);
-						short nextVert = (short)((DirectionVert(direction) << 2) + vertLoc);
+						short nextHoriz = (short)((Tables.DirectionHoriz(direction) << 2) + horizLoc);
+						short nextVert = (short)((Tables.DirectionVert(direction) << 2) + vertLoc);
 
 						short nextContinent = FindBlockLand(nextHoriz, nextVert, ref neighbourLand);
 
@@ -44,8 +44,8 @@ namespace Civilization1Remaster.Core.Game
 
 						LinkLandmassBlock(column, row, direction - 1);
 
-						short nextColumn = (short)(DirectionHoriz(direction) + column);
-						short nextRow = (short)(DirectionVert(direction) + row);
+						short nextColumn = (short)(Tables.DirectionHoriz(direction) + column);
+						short nextRow = (short)(Tables.DirectionVert(direction) + row);
 
 						if (nextColumn < 0 || nextColumn >= 0x14 || nextRow < 0 || nextRow >= 0xd)
 							continue;
@@ -398,8 +398,8 @@ namespace Civilization1Remaster.Core.Game
 			for (short direction = 1; direction <= 8; direction++)
 			{
 				ushort offset = (ushort)(direction << 1);
-				short nextHoriz = (short)((DirectionHorizAt(offset) << 2) + horizLoc);
-				short nextVert = (short)((DirectionVertAt(offset) << 2) + vertLoc);
+				short nextHoriz = (short)((Tables.DirectionHorizAt(offset) << 2) + horizLoc);
+				short nextVert = (short)((Tables.DirectionVertAt(offset) << 2) + vertLoc);
 
 				// A neighbour without sea leaves lastNextSea as it was
 				if (FindBlockSea(nextHoriz, nextVert) is ushort nextSea)
@@ -411,14 +411,14 @@ namespace Civilization1Remaster.Core.Game
 				if (!SeaPassageOpen(horizLoc, vertLoc, offset) && (row != 0xb || direction != 3))
 					continue;
 
-				short nextRow = (short)(DirectionVertAt(offset) + row);
+				short nextRow = (short)(Tables.DirectionVertAt(offset) + row);
 
 				if (nextRow >= 0xc)
 					continue;
 
 				LinkSeaBlockBit(column, row, direction - 1);
 
-				short nextColumn = (short)(DirectionHorizAt(offset) + column);
+				short nextColumn = (short)(Tables.DirectionHorizAt(offset) + column);
 
 				if (nextColumn < 0 || nextColumn >= 0x14 || nextRow < 0 || nextRow > 0xc)
 					continue;
@@ -455,8 +455,8 @@ namespace Civilization1Remaster.Core.Game
 		{
 			for (short step = 0; step <= 4; step++)
 			{
-				horizLoc = (short)(horizLoc + DirectionHorizAt(offset));
-				vertLoc = (short)(vertLoc + DirectionVertAt(offset));
+				horizLoc = (short)(horizLoc + Tables.DirectionHorizAt(offset));
+				vertLoc = (short)(vertLoc + Tables.DirectionVertAt(offset));
 
 				short ocean = 4;
 

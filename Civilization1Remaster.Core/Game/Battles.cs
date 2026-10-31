@@ -270,7 +270,7 @@ namespace Civilization1Remaster.Core.Game
 			if ((person.Relations[participantIdx] & 2) != 0)
 			{
 				ushort choice = Message("We have signed a\npeace treaty with\nthe ")
-					.Text(CivilizationPlural(participantIdx))
+					.Text(Tables.CivilizationPlural(participantIdx))
 					.Text("!\n Cancel action.\n Break treaty.\n")
 					.Style(0x5)
 					.Dialog(80, 80);
@@ -307,7 +307,7 @@ namespace Civilization1Remaster.Core.Game
 			{
 				Screen.DialogStyle = 0x3;
 
-				Message(CivilizationPlural(participantIdx))
+				Message(Tables.CivilizationPlural(participantIdx))
 					.Text(" use\nnuclear weapons!\n")
 					.Dialog(100, 80);
 			}
@@ -646,7 +646,7 @@ namespace Civilization1Remaster.Core.Game
 						Screen.Box,
 						loserX + 1,
 						loserY + 1,
-						SpritePicture((frame + 0x20)));
+						Tables.SpritePicture((frame + 0x20)));
 
 					this.Owner.TextPainter.WaitForTime(4);
 
@@ -688,7 +688,7 @@ namespace Civilization1Remaster.Core.Game
 				Screen.DialogStyle = 0x3;
 
 				Message("Sneak attack by\n")
-					.Text(CivilizationName(participantIdx1))
+					.Text(Tables.CivilizationName(participantIdx1))
 					.Text(" forces!\n")
 					.Dialog(100, 80);
 
@@ -702,9 +702,9 @@ namespace Civilization1Remaster.Core.Game
 				{
 					Screen.DialogStyle = 0x5;
 
-					Message(CivilizationPlural(participantIdx2))
+					Message(Tables.CivilizationPlural(participantIdx2))
 						.Text(" cancel\npeace treaty\nwith ")
-						.Text(CivilizationPlural(participantIdx1))
+						.Text(Tables.CivilizationPlural(participantIdx1))
 						.Text(".\n")
 						.Dialog(100, 80);
 				}
@@ -764,10 +764,10 @@ namespace Civilization1Remaster.Core.Game
 					{
 
 						short checkX = (short)((byte)PullUnitByte(participantIdx2, troopIdx2, TroopHorizDisplacement) +
-							(short)DirectionHoriz(dir));
+							(short)Tables.DirectionHoriz(dir));
 
 						short checkY = (short)((byte)PullUnitByte(participantIdx2, troopIdx2, TroopVertDisplacement) +
-							(short)DirectionVert(dir));
+							(short)Tables.DirectionVert(dir));
 
 						ushort unitAtTile = this.Owner.MapOps.ObtainUnitAtTile(checkX, checkY);
 

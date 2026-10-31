@@ -40,7 +40,7 @@ namespace Civilization1Remaster.Core.Game
 
 			if (this.Owner.World.RoundTally == 0 && this.turn.LaterPass == 0)
 			{
-				this.Owner.Codes.Set(0, CivilizationPlural(participantIdx));
+				this.Owner.Codes.Set(0, Tables.CivilizationPlural(participantIdx));
 
 				this.Owner.HelpSystem.ShowHelpPopup(GameTexts.TopicFirstmove);
 
@@ -482,7 +482,7 @@ namespace Civilization1Remaster.Core.Game
 			short troopIdx = (short)this.turn.Troop;
 			this.turn.UnitDetail = (ushort)((this.turn.UnitDetail & 0xff00) | this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind));
 
-			if (UnitKindWord((sbyte)(byte)this.turn.UnitDetail, UnitKindTable.FerryRoom) == 0 &&
+			if (Tables.UnitKindWord((sbyte)(byte)this.turn.UnitDetail, UnitKindTable.FerryRoom) == 0 &&
 				(byte)this.turn.UnitDetail != UnitKindTable.Carrier)
 			{
 				return;
@@ -537,7 +537,7 @@ namespace Civilization1Remaster.Core.Game
 			if (Mouse.Present != 0)
 			{
 				// GoTo mouse pointer, or the normal one when GoTo is cancelled
-				this.Owner.Services.AssignMouseCursorImage(0, 0, SpritePictureAt((ushort)((this.turn.MouseCursorSet != 0 ? 7 : 2) << 1)));
+				this.Owner.Services.AssignMouseCursorImage(0, 0, Tables.SpritePictureAt((ushort)((this.turn.MouseCursorSet != 0 ? 7 : 2) << 1)));
 			}
 
 			this.turn.MouseCursorSet = (ushort)(this.turn.MouseCursorSet ^ 1);
@@ -699,7 +699,7 @@ namespace Civilization1Remaster.Core.Game
 
 			RepaintUnitIfVisible(participantIdx, (short)this.turn.Troop);
 
-			short work = (short)((sbyte)TerrainField(this.turn.TargetTerrain, TerrainTable.MoveCost) + 4);
+			short work = (short)((sbyte)Tables.TerrainField(this.turn.TargetTerrain, TerrainTable.MoveCost) + 4);
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.UnusualSteps, (byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.UnusualSteps) + 1));
 
 			if (work > this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.UnusualSteps))
@@ -832,7 +832,7 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 			this.turn.TargetTerrain = this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
-			this.turn.Result = TerrainImprovementWord(this.turn.TargetTerrain, TerrainImprovementTable.Irrigation);
+			this.turn.Result = Tables.TerrainImprovementWord(this.turn.TargetTerrain, TerrainImprovementTable.Irrigation);
 
 			if (this.turn.Result == 0xffff)
 			{
@@ -892,7 +892,7 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 			this.turn.TargetTerrain = this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
-			this.turn.Result = TerrainImprovementWord(this.turn.TargetTerrain, TerrainImprovementTable.Mining);
+			this.turn.Result = Tables.TerrainImprovementWord(this.turn.TargetTerrain, TerrainImprovementTable.Mining);
 
 			if (this.turn.Result == 0xffff)
 			{

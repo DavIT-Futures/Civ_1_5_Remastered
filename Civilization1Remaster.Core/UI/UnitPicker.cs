@@ -32,7 +32,7 @@ namespace Civilization1Remaster.Core.UI
 
 			for (int participantIdx = 1; participantIdx < 8; participantIdx++)
 			{
-				this.Owner.Words.Append(CivilizationName(participantIdx));
+				this.Owner.Words.Append(Tables.CivilizationName(participantIdx));
 
 				this.Owner.Words.Append("\n ");
 			}
@@ -181,7 +181,7 @@ namespace Civilization1Remaster.Core.UI
 		{
 			using var _ = this.Processor.Journal.Scope($"DisplayUnitInfo({participantIdx}, {troopIdx})");
 
-			Message(CivilizationName(participantIdx))
+			Message(Tables.CivilizationName(participantIdx))
 				.Text("\n")
 				.Number(troopIdx)
 				.Text(KindLabel(participantIdx, troopIdx))
@@ -228,13 +228,13 @@ namespace Civilization1Remaster.Core.UI
 			if ((this.Owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) != 0)
 			{
 				this.Owner.Services.FloodBox(Screen.Box, boxHoriz, boxVert, 4, 4,
-					PlayerColour(this.Owner.MapOps.ObtainTileOwnerBits(horizLoc, vertLoc)));
+					Tables.PlayerColour(this.Owner.MapOps.ObtainTileOwnerBits(horizLoc, vertLoc)));
 			}
 			else
 			{
 				if (this.Owner.MapOps.ObtainTileOwner(horizLoc, vertLoc) != 0xffff)
 				{
-					ushort hue = PlayerColour(this.Owner.MapOps.ObtainTileOwner(horizLoc, vertLoc));
+					ushort hue = Tables.PlayerColour(this.Owner.MapOps.ObtainTileOwner(horizLoc, vertLoc));
 
 					this.Owner.Services.FloodBox(Screen.Box, boxHoriz + 1, boxVert + 1, 3, 3, Hues.Black);
 

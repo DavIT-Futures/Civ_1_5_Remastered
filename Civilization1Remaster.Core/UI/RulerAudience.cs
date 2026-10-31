@@ -157,7 +157,7 @@ namespace Civilization1Remaster.Core.UI
 			using var _ = this.Processor.Journal.Scope($"ObtainKingSalutation({participantIdx})");
 
 			ushort leader = (ushort)((participantIdx << 1) + 0x19a2);
-			ushort Regime() => GovernmentTitle(this.Owner.World.Participants[participantIdx].RegimeKind);
+			ushort Regime() => Tables.GovernmentTitle(this.Owner.World.Participants[participantIdx].RegimeKind);
 
 			this.Owner.Words.Set((this.Owner.World.Participants[participantIdx].Relations[this.Owner.World.PersonParticipantIdx] & 8) != 0 ? (ushort)0x39b1 : (ushort)0x39e8);
 
@@ -194,7 +194,7 @@ namespace Civilization1Remaster.Core.UI
 			}
 
 			this.Owner.Words.Append("of the ");
-			this.Owner.Words.Append(CivilizationPlural(participantIdx));
+			this.Owner.Words.Append(Tables.CivilizationPlural(participantIdx));
 			this.Owner.Words.Append("...\n");
 
 			if (this.Owner.World.Participants[participantIdx].LiveTroops[25] != 0)
@@ -232,7 +232,7 @@ namespace Civilization1Remaster.Core.UI
 		}
 
 		/// <summary>The name of a technology (records of 0x16 bytes from 0x4da)</summary>
-		private static ushort TechnologyName(ushort scienceIdx) => TechnologyText(scienceIdx);
+		private static ushort TechnologyName(ushort scienceIdx) => GameTables.TechnologyText(scienceIdx);
 
 		private GameModel.State.Player Leader(int participantIdx) => this.Owner.World.Participants[participantIdx];
 
@@ -244,8 +244,8 @@ namespace Civilization1Remaster.Core.UI
 		{
 			if (Leader(participantIdx).ChiefVisuals == 14)
 			{
-				this.Owner.Names.Set(GovernmentTitleAt(2), "Empress");
-				this.Owner.Names.Set(GovernmentTitleAt(4), "Empress");
+				this.Owner.Names.Set(Tables.GovernmentTitleAt(2), "Empress");
+				this.Owner.Names.Set(Tables.GovernmentTitleAt(4), "Empress");
 			}
 		}
 
@@ -253,14 +253,14 @@ namespace Civilization1Remaster.Core.UI
 		{
 			if (Leader(participantIdx).ChiefVisuals == 14)
 			{
-				this.Owner.Names.Set(GovernmentTitleAt(2), Turn.SavedGovernmentTitleMonarchy);
-				this.Owner.Names.Set(GovernmentTitleAt(4), Turn.SavedGovernmentTitleCommunism);
+				this.Owner.Names.Set(Tables.GovernmentTitleAt(2), Turn.SavedGovernmentTitleMonarchy);
+				this.Owner.Names.Set(Tables.GovernmentTitleAt(4), Turn.SavedGovernmentTitleCommunism);
 			}
 		}
 
 		private ushort CivilizationNameAddr(short participantIdx)
 		{
-			return CivilizationName(participantIdx);
+			return Tables.CivilizationName(participantIdx);
 		}
 	}
 }

@@ -55,7 +55,7 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.Helpers.HaltHueCycling();
 
 			ushort chiefVisuals = (ushort)this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx].ChiefVisuals;
-			this.Owner.Services.PerformSound(LeaderWord(chiefVisuals, LeaderTable.Tune), 3);
+			this.Owner.Services.PerformSound(Tables.LeaderWord(chiefVisuals, LeaderTable.Tune), 3);
 
 			this.Owner.ImageToolkit.LoadPictureOrColors(-1, 0, 0, PalaceInitialScreenPictureAddress, 1);
 

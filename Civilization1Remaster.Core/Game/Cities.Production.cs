@@ -53,7 +53,7 @@ namespace Civilization1Remaster.Core.Game
 				return ProductionStep.Improvement;
 
 			// A unit
-			short cost = (short)((short)UnitKindWord(town.PresentMakingIdx, UnitKindTable.Price) *
+			short cost = (short)((short)Tables.UnitKindWord(town.PresentMakingIdx, UnitKindTable.Price) *
 				(short)this.round.CostFactor);
 
 			if (cost > town.MaterialsTally)
@@ -286,7 +286,7 @@ namespace Civilization1Remaster.Core.Game
 			City town = this.Owner.World.Towns[townIdx];
 			short owner = (short)CityTurn.Owner;
 
-			if ((short)((short)BuildingWordAt((ushort)(-town.PresentMakingIdx * 0x1e), BuildingTable.Price) *
+			if ((short)((short)Tables.BuildingWordAt((ushort)(-town.PresentMakingIdx * 0x1e), BuildingTable.Price) *
 				(short)this.round.CostFactor) > town.MaterialsTally)
 			{
 				return false;
@@ -337,7 +337,7 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 			// The price paid
-			town.MaterialsTally -= (short)((short)BuildingWord(-town.PresentMakingIdx, BuildingTable.Price) *
+			town.MaterialsTally -= (short)((short)Tables.BuildingWord(-town.PresentMakingIdx, BuildingTable.Price) *
 				(short)this.round.CostFactor);
 
 			bool humanPlayed = this.Owner.World.IsHuman(owner);
@@ -370,7 +370,7 @@ namespace Civilization1Remaster.Core.Game
 			EmptyMessage()
 				.City(townIdx)
 				.Text(" builds\n");
-			this.Owner.Words.Append(BuildingRecordText(built));
+			this.Owner.Words.Append(GameTables.BuildingRecordText(built));
 			this.Owner.Words.Append(".\n");
 
 			bool screen = false;
@@ -430,7 +430,7 @@ namespace Civilization1Remaster.Core.Game
 			if (this.round.Best != 0 && part < 0x18)
 			{
 				// The shields come back, the city builds the part again
-				ushort refund = (ushort)((short)BuildingWordAt((ushort)(part * 0x1e), BuildingTable.Price) * (short)this.round.CostFactor);
+				ushort refund = (ushort)((short)Tables.BuildingWordAt((ushort)(part * 0x1e), BuildingTable.Price) * (short)this.round.CostFactor);
 				town.MaterialsTally += (short)refund;
 
 				if (town.PresentMakingIdx <= -0x16 && town.PresentMakingIdx >= -0x18)
@@ -543,7 +543,7 @@ namespace Civilization1Remaster.Core.Game
 							.Style(1);
 					}
 
-					this.Owner.Words.Append(CivilizationNameAt((ushort)(owner << 1)));
+					this.Owner.Words.Append(Tables.CivilizationNameAt((ushort)(owner << 1)));
 					this.Owner.Words.Append(" capital\nmoved to ");
 					this.Owner.Conquest.ObtainCityLabel(townIdx);
 					this.Owner.Words.Append(".\n");
@@ -653,7 +653,7 @@ namespace Civilization1Remaster.Core.Game
 				if (town.PresentMakingIdx >= 0)
 				{
 					// A unit of the role the continent needs
-					if (UnitKindWord(town.PresentMakingIdx, UnitKindTable.TroopGroup) == approach)
+					if (Tables.UnitKindWord(town.PresentMakingIdx, UnitKindTable.TroopGroup) == approach)
 						this.round.Amount = (ushort)(player.Gold / 64);
 				}
 			}
@@ -669,7 +669,7 @@ namespace Civilization1Remaster.Core.Game
 			if ((town.ConditionMarker & 1) != 0 && town.PresentMakingIdx < 0 && town.MaterialsTally != 0)
 			{
 				this.round.Amount = (ushort)this.Owner.Helpers.ClampValue(
-					(short)BuildingWord(-town.PresentMakingIdx, BuildingTable.Price) * (short)this.round.CostFactor -
+					(short)Tables.BuildingWord(-town.PresentMakingIdx, BuildingTable.Price) * (short)this.round.CostFactor -
 						town.MaterialsTally,
 					0, player.Gold / 8);
 			}
@@ -713,7 +713,7 @@ namespace Civilization1Remaster.Core.Game
 			City town = this.Owner.World.Towns[townIdx];
 
 			this.round.Amount = (ushort)this.Owner.Helpers.ClampValue(
-				(short)UnitKindWord(town.PresentMakingIdx, UnitKindTable.Price) * (short)this.round.CostFactor -
+				(short)Tables.UnitKindWord(town.PresentMakingIdx, UnitKindTable.Price) * (short)this.round.CostFactor -
 					town.MaterialsTally,
 				0, limit);
 		}

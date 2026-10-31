@@ -144,9 +144,9 @@ namespace Civilization1Remaster.Core.UI
 				short humanIdx = this.Owner.World.PersonParticipantIdx;
 
 				this.Processor.EmitUInt16(HallOfFameSegment, (ushort)(record + OffsetScore), Scoring.HallOfFameScore);
-				this.Owner.Libc.MoveFarData(this.Processor.SegData.Value16, LeaderName(humanIdx),
+				this.Owner.Libc.MoveFarData(this.Processor.SegData.Value16, Tables.LeaderName(humanIdx),
 					HallOfFameSegment, (ushort)(record + OffsetLeaderName), 0xe);
-				this.Owner.Libc.MoveFarData(this.Processor.SegData.Value16, CivilizationPlural(humanIdx),
+				this.Owner.Libc.MoveFarData(this.Processor.SegData.Value16, Tables.CivilizationPlural(humanIdx),
 					HallOfFameSegment, (ushort)(record + OffsetCivilizationPlural), 0x10);
 				this.Processor.EmitUInt16(HallOfFameSegment, (ushort)(record + OffsetDifficulty), (ushort)this.Owner.World.HardnessTier);
 				this.Processor.EmitUInt16(HallOfFameSegment, (ushort)(record + OffsetSchismShare), Scoring.SchismShareDc6a);
@@ -341,11 +341,11 @@ namespace Civilization1Remaster.Core.UI
 					.Text(". ")
 					.City(townIdx)
 					.Text(" (")
-					.Text(CivilizationName(this.Owner.World.Towns[townIdx].ParticipantIdx))
+					.Text(Tables.CivilizationName(this.Owner.World.Towns[townIdx].ParticipantIdx))
 					.Text(")");
 
 				this.Owner.TextPainter.DrawCenteredTextToScreen0(this.Owner.Words.ToString(), 160, vertLoc + 3,
-					PlayerColour(this.Owner.World.Towns[townIdx].ParticipantIdx));
+					Tables.PlayerColour(this.Owner.World.Towns[townIdx].ParticipantIdx));
 
 				this.Owner.CityOps.HandleCity(townIdx, -1);
 
@@ -367,7 +367,7 @@ namespace Civilization1Remaster.Core.UI
 				}
 
 				this.Owner.Dialogs.DrawBox(8, vertLoc, 303, 25,
-					PlayerColour(this.Owner.World.Towns[townIdx].ParticipantIdx));
+					Tables.PlayerColour(this.Owner.World.Towns[townIdx].ParticipantIdx));
 
 				vertLoc += 0x20;
 			}

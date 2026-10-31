@@ -666,7 +666,7 @@ namespace Civilization1Remaster.Core.Game
 		/// <summary>Move cost of the terrain type</summary>
 		private sbyte TerrainMoveCost(int terrain)
 		{
-			return (sbyte)TerrainField(terrain, TerrainTable.MoveCost);
+			return (sbyte)Tables.TerrainField(terrain, TerrainTable.MoveCost);
 		}
 	}
 }

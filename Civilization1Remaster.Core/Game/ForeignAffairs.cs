@@ -93,7 +93,7 @@ namespace Civilization1Remaster.Core.Game
 
 						regimes.Add(regime);
 
-						this.Owner.Words.Append(GovernmentName(regime));
+						this.Owner.Words.Append(Tables.GovernmentName(regime));
 
 						this.Owner.Words.Append("\n ");
 					}
@@ -130,11 +130,11 @@ namespace Civilization1Remaster.Core.Game
 
 					if ((participant.Relations[0] & 4) != 0)
 					{
-						this.Owner.Words.Append(CivilizationName(participantIdx));
+						this.Owner.Words.Append(Tables.CivilizationName(participantIdx));
 
 						this.Owner.Words.Append(" government\nchanged to ");
 
-						this.Owner.Words.Append(GovernmentName(regimeKind));
+						this.Owner.Words.Append(Tables.GovernmentName(regimeKind));
 
 						this.Owner.Words.Append("!\n");
 
@@ -144,7 +144,7 @@ namespace Civilization1Remaster.Core.Game
 					{
 						this.Owner.Words.Append("The ");
 
-						this.Owner.Words.Append(CivilizationName(participantIdx));
+						this.Owner.Words.Append(Tables.CivilizationName(participantIdx));
 
 						this.Owner.Words.Append(" government\nhas been overthrown!\n");
 
@@ -319,9 +319,9 @@ namespace Civilization1Remaster.Core.Game
 						participantIdx != person && otherIdx != (ushort)person)
 					{
 						Message("The war between\nthe ")
-							.Text(CivilizationPlural((ushort)participantIdx))
+							.Text(Tables.CivilizationPlural((ushort)participantIdx))
 							.Text(" and the\n")
-							.Text(CivilizationPlural(otherIdx))
+							.Text(Tables.CivilizationPlural(otherIdx))
 							.Text(" has ended.\n")
 							.Style(0x1)
 							.Dialog(100, 80);
@@ -358,7 +358,7 @@ namespace Civilization1Remaster.Core.Game
 				{
 					short tribute = (short)((ushort)this.Owner.Helpers.ClampValue(player.Gold / 100, 1, 10) * 0x32);
 
-					this.Owner.Codes.Set(1, CivilizationPlural(otherIdx));
+					this.Owner.Codes.Set(1, Tables.CivilizationPlural(otherIdx));
 
 					EmptyMessage()
 						.Number(tribute);
@@ -390,7 +390,7 @@ namespace Civilization1Remaster.Core.Game
 			// $THEM of the threat: the enemy (the translated code read the offset from DI, player << 4 when nothing called
 			// changes it: TurnEndRules.EmissaryEnemyName)
 			ushort enemyName = TurnEndRules.EmissaryEnemyName(participantIdx, otherIdx);
-			this.Owner.Codes.Set(1, CivilizationPluralAt(enemyName));
+			this.Owner.Codes.Set(1, Tables.CivilizationPluralAt(enemyName));
 
 			this.Owner.Codes.Set(3, (player.Relations[person] & 2) == 0 ? (ushort)0x299b : (ushort)0x2990);
 
@@ -522,9 +522,9 @@ namespace Civilization1Remaster.Core.Game
 		/// <summary>"X and\nY" of the two civilizations at TextBuffer.Address</summary>
 		private void AppendPair(short participantIdx1, short participantIdx2)
 		{
-			Message(CivilizationPlural(participantIdx1))
+			Message(Tables.CivilizationPlural(participantIdx1))
 				.Text(" and\n")
-				.Text(CivilizationPlural(participantIdx2));
+				.Text(Tables.CivilizationPlural(participantIdx2));
 		}
 
 		private bool WeighTreaty(short participantIdx1, short participantIdx2)
@@ -562,7 +562,7 @@ namespace Civilization1Remaster.Core.Game
 				treaties++;
 			}
 
-			treaties = (short)(treaties - LeaderWord(participant1.ChiefVisuals, LeaderTable.Aggression));
+			treaties = (short)(treaties - Tables.LeaderWord(participant1.ChiefVisuals, LeaderTable.Aggression));
 
 			short towns = 0;
 			short defence = 0;

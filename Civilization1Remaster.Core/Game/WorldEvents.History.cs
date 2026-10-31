@@ -26,7 +26,7 @@ namespace Civilization1Remaster.Core.Game
 
 				for (int kind = 0; kind < 0x1c; kind++)
 				{
-					power += (ushort)(UnitKindWord((sbyte)kind, UnitKindTable.Price) * participant.LiveTroops[kind]);
+					power += (ushort)(Tables.UnitKindWord((sbyte)kind, UnitKindTable.Price) * participant.LiveTroops[kind]);
 				}
 
 				if (((1 << participantIdx) & this.Owner.World.LiveRealms) == 0)

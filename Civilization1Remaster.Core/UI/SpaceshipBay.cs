@@ -171,7 +171,7 @@ namespace Civilization1Remaster.Core.UI
 
 			if (shown)
 			{
-				ushort colour = PlayerColour(participantIdx);
+				ushort colour = Tables.PlayerColour(participantIdx);
 
 				this.Owner.Services.FloodBox(Screen.Box, 240, 8, 80, 192, colour);
 
@@ -342,7 +342,7 @@ namespace Civilization1Remaster.Core.UI
 					continue;
 
 				if (this.Owner.Advisors.PlayerKnowsTechnology(participantIdx,
-					(short)BuildingWord(23 + partKind, BuildingTable.Technology)) != 0)
+					(short)Tables.BuildingWord(23 + partKind, BuildingTable.Technology)) != 0)
 					break;
 			}
 
@@ -491,7 +491,7 @@ namespace Civilization1Remaster.Core.UI
 
 				for (int participantIdx = 1; participantIdx < 8; participantIdx++)
 				{
-					this.Owner.Words.Append(CivilizationName(participantIdx));
+					this.Owner.Words.Append(Tables.CivilizationName(participantIdx));
 
 					this.Owner.Words.Append("\n ");
 				}
@@ -524,7 +524,7 @@ namespace Civilization1Remaster.Core.UI
 
 			this.Owner.TurnLogic.WaitForKey();
 
-			Message(CivilizationPlural(participantIdx))
+			Message(Tables.CivilizationPlural(participantIdx))
 				.Text(" LAUNCH space ship!");
 
 			this.Owner.TextPainter.DrawCenteredTextToScreen0(this.Owner.Words.ToString(), 160, 92, Hues.White);
@@ -595,17 +595,17 @@ namespace Civilization1Remaster.Core.UI
 
 			this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 200, Hues.Black);
 
-			this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 8, PlayerColourAt(names));
+			this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 8, Tables.PlayerColourAt(names));
 
-			Message(CivilizationNameAt(names))
+			Message(Tables.CivilizationNameAt(names))
 				.Text(" SpaceShip: X.S.S. ");
 
 			ushort length = this.Owner.Words.Length;
 
-			this.Owner.Words.Append(LeaderNameAt(names));
+			this.Owner.Words.Append(Tables.LeaderNameAt(names));
 
 			// The "X" of "X.S.S." becomes the first letter of the civilization
-			this.Owner.Words[length - 7] = this.Processor.PullGlobalByte(CivilizationNameAt(names));
+			this.Owner.Words[length - 7] = this.Processor.PullGlobalByte(Tables.CivilizationNameAt(names));
 
 			this.Owner.TextPainter.DrawCenteredTextToScreen0(this.Owner.Words.ToString(), 160, 1, Hues.Black);
 		}
@@ -916,7 +916,7 @@ namespace Civilization1Remaster.Core.UI
 		{
 			this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 200, Hues.Black);
 
-			Message(CivilizationPlural(participantIdx))
+			Message(Tables.CivilizationPlural(participantIdx))
 				.Text(" build space ship.\n");
 
 			this.Owner.TextPainter.DrawCenteredTextToScreen0(this.Owner.Words.ToString(), 160, 96, Hues.White);

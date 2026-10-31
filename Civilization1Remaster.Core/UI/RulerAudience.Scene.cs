@@ -474,11 +474,11 @@ namespace Civilization1Remaster.Core.UI
 
 			this.Owner.Dialogs.DrawShadowBox(0, 128, 319, 71, Hues.White, Hues.DarkGray);
 
-			Message(LeaderName((ushort)participantIdx))
+			Message(Tables.LeaderName((ushort)participantIdx))
 				.Text(": ")
-				.Text(GovernmentTitle((ushort)this.Owner.World.Participants[participantIdx].RegimeKind))
+				.Text(Tables.GovernmentTitle((ushort)this.Owner.World.Participants[participantIdx].RegimeKind))
 				.Text(" of the ")
-				.Text(CivilizationPlural((ushort)participantIdx))
+				.Text(Tables.CivilizationPlural((ushort)participantIdx))
 				.Text(".");
 
 			this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 8, 130, Hues.White);

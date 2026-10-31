@@ -113,11 +113,11 @@ namespace Civilization1Remaster.Core.Game
 				this.look.Round = (ushort)this.Owner.Libc.Dice.DrawInt(9);
 				ushort round = (ushort)(this.look.Round << 1);
 
-				this.look.TileHoriz = (ushort)this.Owner.Routing.TunePosition((short)DirectionHorizAt(round) *
+				this.look.TileHoriz = (ushort)this.Owner.Routing.TunePosition((short)Tables.DirectionHorizAt(round) *
 					(short)this.look.Direction + this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz));
 
 				// (the registers of the multiplication as in the original)
-				ushort step = MultiplyWords(DirectionVertAt(round),
+				ushort step = MultiplyWords(Tables.DirectionVertAt(round),
 					this.look.Direction);
 				this.look.TileVert = (ushort)(step + this.troops.Pull(participantIdx, troopIdx, UnitMemory.Vert));
 
@@ -159,9 +159,9 @@ namespace Civilization1Remaster.Core.Game
 			{
 				ushort direction = this.look.Direction;
 
-				this.look.TileHoriz = (ushort)this.Owner.Routing.TunePosition((short)DirectionHoriz(direction) +
+				this.look.TileHoriz = (ushort)this.Owner.Routing.TunePosition((short)Tables.DirectionHoriz(direction) +
 					(short)this.look.Horiz);
-				this.look.TileVert = (ushort)(DirectionVert(direction) + this.look.Vert);
+				this.look.TileVert = (ushort)(Tables.DirectionVert(direction) + this.look.Vert);
 
 				short horizLoc = (short)this.look.TileHoriz;
 				short vertLoc = (short)this.look.TileVert;
@@ -369,10 +369,10 @@ namespace Civilization1Remaster.Core.Game
 				if ((this.Processor.PullUInt8(this.Processor.SegData.Value16, status) & 8) == 0)
 				{
 					sbyte kind = this.troops.TroopKind(participantIdx, member);
-					byte role = (byte)UnitKindWord(kind, UnitKindTable.TroopGroup);
+					byte role = (byte)Tables.UnitKindWord(kind, UnitKindTable.TroopGroup);
 					this.look.StackRoles = (ushort)(this.look.StackRoles | (ushort)(1 << role));
 
-					if (UnitKindWord(kind, UnitKindTable.LandGroup) == UnitKindTable.LandUnits)
+					if (Tables.UnitKindWord(kind, UnitKindTable.LandGroup) == UnitKindTable.LandUnits)
 						this.look.LandUnits = (ushort)(this.look.LandUnits + 1);
 				}
 				else if (this.look.Approach == 5)

@@ -255,10 +255,10 @@ namespace Civilization1Remaster.Core.Game
 		/// <summary>The view moves four tiles in the direction 0x24 (SI = 2 * the direction, as in the original)</summary>
 		private void PanViewByDirection()
 		{
-			ushort horiz = (ushort)(DirectionHorizAt((ushort)(this.turn.Direction << 1)) << 2);
+			ushort horiz = (ushort)(Tables.DirectionHorizAt((ushort)(this.turn.Direction << 1)) << 2);
 			MapView.Horiz = (ushort)(MapView.Horiz + horiz);
 
-			ushort vert = (ushort)(DirectionVertAt((ushort)(this.turn.Direction << 1)) << 2);
+			ushort vert = (ushort)(Tables.DirectionVertAt((ushort)(this.turn.Direction << 1)) << 2);
 			MapView.Vert = (ushort)(MapView.Vert + vert);
 
 			this.Owner.MapOps.FocusMapView(this.Owner.World.PersonParticipantIdx,
@@ -280,7 +280,7 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.World.Participants[participantIdx].RegimeKind = 0;
 
 			Message("The ")
-				.Text(CivilizationPluralAt((ushort)(participantIdx << 1)))
+				.Text(Tables.CivilizationPluralAt((ushort)(participantIdx << 1)))
 				.Text(" are\nrevolting! Citizens\ndemand new govt.\n");
 			this.Owner.Paper.ShowNewspaper(-1);
 			this.Owner.NewGameWizard.LoadGovernmentGraphics();

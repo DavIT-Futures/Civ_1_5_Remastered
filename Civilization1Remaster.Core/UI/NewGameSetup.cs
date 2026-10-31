@@ -70,9 +70,9 @@ namespace Civilization1Remaster.Core.UI
 
 			if (participantIdx != 0 && participantIdx != this.Owner.World.PersonParticipantIdx && !OwnsCity(participantIdx))
 			{
-				Message(CivilizationName(participantIdx))
+				Message(Tables.CivilizationName(participantIdx))
 					.Text("\ncivilization\ndestroyed\nby ")
-					.Text(CivilizationPlural(participantIdx1))
+					.Text(Tables.CivilizationPlural(participantIdx1))
 					.Text("!\n");
 
 				short humanIdx = this.Owner.World.PersonParticipantIdx;
@@ -336,9 +336,9 @@ namespace Civilization1Remaster.Core.UI
 			{
 				this.Owner.Advisors.DrawAdvisorScenery();
 
-				Message(CivilizationName(this.Owner.World.PersonParticipantIdx))
+				Message(Tables.CivilizationName(this.Owner.World.PersonParticipantIdx))
 					.Text(" government\nchanged to ");
-				this.Owner.Words.Append(GovernmentName(this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx].RegimeKind));
+				this.Owner.Words.Append(Tables.GovernmentName(this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx].RegimeKind));
 				this.Owner.Words.Append("!\n");
 
 				this.Owner.Paper.ShowNewspaper(-2);
@@ -540,7 +540,7 @@ namespace Civilization1Remaster.Core.UI
 
 			for (int leader = 1; leader < this.Owner.World.BotRivalTally + 2; leader++)
 			{
-				this.Owner.Words.Append(LeaderText(leader, LeaderTable.Civilization));
+				this.Owner.Words.Append(GameTables.LeaderText(leader, LeaderTable.Civilization));
 
 				this.Owner.Words.Append("\n ");
 			}
@@ -607,7 +607,7 @@ namespace Civilization1Remaster.Core.UI
 			short personIdx = this.Owner.World.PersonParticipantIdx;
 			ushort names = (ushort)(personIdx << 1);
 
-			this.Processor.EmitGlobalByte(CivilizationNameAt(names), 0x0);
+			this.Processor.EmitGlobalByte(Tables.CivilizationNameAt(names), 0x0);
 
 			if (randomTribe)
 			{
@@ -615,7 +615,7 @@ namespace Civilization1Remaster.Core.UI
 
 				this.Owner.World.Participants[personIdx].ChiefVisuals = personIdx;
 
-				this.Owner.Names.Set(LeaderNameAt(names), LeaderText(personIdx, LeaderTable.Name));
+				this.Owner.Names.Set(Tables.LeaderNameAt(names), GameTables.LeaderText(personIdx, LeaderTable.Name));
 			}
 			else
 			{
@@ -625,22 +625,22 @@ namespace Civilization1Remaster.Core.UI
 
 				ushort leader = (ushort)(0x3a * person.ChiefVisuals);
 
-				this.Owner.Names.Set(LeaderNameAt(names), LeaderTextAt(leader, LeaderTable.Name));
+				this.Owner.Names.Set(Tables.LeaderNameAt(names), GameTables.LeaderTextAt(leader, LeaderTable.Name));
 
-				this.Owner.Names.Set(CivilizationNameAt(names), LeaderTextAt(leader, LeaderTable.Civilization));
+				this.Owner.Names.Set(Tables.CivilizationNameAt(names), GameTables.LeaderTextAt(leader, LeaderTable.Civilization));
 
-				this.Owner.Words.Set(LeaderTextAt(leader, LeaderTable.CivilizationPlural));
+				this.Owner.Words.Set(GameTables.LeaderTextAt(leader, LeaderTable.CivilizationPlural));
 
 				if (this.Owner.Words[0] == 0)
 				{
-					Message(CivilizationNameAt(names))
+					Message(Tables.CivilizationNameAt(names))
 						.Text("s");
 				}
 
-				this.Owner.Names.Set(CivilizationPluralAt(names), this.Owner.Words.ToString());
+				this.Owner.Names.Set(Tables.CivilizationPluralAt(names), this.Owner.Words.ToString());
 			}
 
-			this.Owner.TextPainter.DrawCenteredTextToScreen0(CivilizationPluralAt(names), 46, 92, Hues.White);
+			this.Owner.TextPainter.DrawCenteredTextToScreen0(Tables.CivilizationPluralAt(names), 46, 92, Hues.White);
 		}
 
 		/// <summary>
@@ -704,9 +704,9 @@ namespace Civilization1Remaster.Core.UI
 
 			ushort names = (ushort)(this.Owner.World.PersonParticipantIdx << 1);
 
-			this.Owner.Codes.Set(3, LeaderNameAt(names));
+			this.Owner.Codes.Set(3, Tables.LeaderNameAt(names));
 
-			this.Owner.Codes.Set(0, CivilizationPluralAt(names));
+			this.Owner.Codes.Set(0, Tables.CivilizationPluralAt(names));
 
 			this.Owner.Words.Clear();
 
@@ -721,7 +721,7 @@ namespace Civilization1Remaster.Core.UI
 				if (this.Owner.Advisors.PlayerKnowsTechnology(this.Owner.World.PersonParticipantIdx, scienceIdx) == 0)
 					continue;
 
-				this.Owner.Words.Append(TechnologyText(scienceIdx));
+				this.Owner.Words.Append(GameTables.TechnologyText(scienceIdx));
 
 				this.Owner.Words.Append(", ");
 
@@ -737,7 +737,7 @@ namespace Civilization1Remaster.Core.UI
 
 			ushort leader = (ushort)(0x3a * this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx].ChiefVisuals);
 
-			this.Owner.Services.PerformSound(LeaderWordAt(leader, LeaderTable.Tune), 3);
+			this.Owner.Services.PerformSound(Tables.LeaderWordAt(leader, LeaderTable.Tune), 3);
 
 			this.Owner.Startup.HideMouseCursor();
 
@@ -919,7 +919,7 @@ namespace Civilization1Remaster.Core.UI
 
 			if (participantIdx != this.Owner.World.PersonParticipantIdx)
 			{
-				player.ResearchLevyRatio = (short)(LeaderWord(player.ChiefVisuals, LeaderTable.Leaning) + 3);
+				player.ResearchLevyRatio = (short)(Tables.LeaderWord(player.ChiefVisuals, LeaderTable.Leaning) + 3);
 				player.LevyRatio = (short)(9 - player.ResearchLevyRatio);
 			}
 
@@ -1076,23 +1076,23 @@ namespace Civilization1Remaster.Core.UI
 			ushort leader = (ushort)(0x3a * this.Owner.World.Participants[participantIdx].ChiefVisuals);
 			ushort names = (ushort)(participantIdx << 1);
 
-			this.Owner.Names.Set(LeaderNameAt(names), LeaderTextAt(leader, LeaderTable.Name));
+			this.Owner.Names.Set(Tables.LeaderNameAt(names), GameTables.LeaderTextAt(leader, LeaderTable.Name));
 
 			if (participantIdx == this.Owner.World.PersonParticipantIdx &&
-				this.Processor.PullGlobalByte(CivilizationNameAt(names)) != 0)
+				this.Processor.PullGlobalByte(Tables.CivilizationNameAt(names)) != 0)
 				return;
 
-			this.Owner.Names.Set(CivilizationNameAt(names), LeaderTextAt(leader, LeaderTable.Civilization));
+			this.Owner.Names.Set(Tables.CivilizationNameAt(names), GameTables.LeaderTextAt(leader, LeaderTable.Civilization));
 
-			this.Owner.Words.Set(LeaderTextAt(leader, LeaderTable.CivilizationPlural));
+			this.Owner.Words.Set(GameTables.LeaderTextAt(leader, LeaderTable.CivilizationPlural));
 
 			if (this.Owner.Words[0] == 0)
 			{
-				Message(CivilizationNameAt(names))
+				Message(Tables.CivilizationNameAt(names))
 					.Text("s");
 			}
 
-			this.Owner.Names.Set(CivilizationPluralAt(names), this.Owner.Words.ToString());
+			this.Owner.Names.Set(Tables.CivilizationPluralAt(names), this.Owner.Words.ToString());
 		}
 
 		/// <summary>True when one of the 128 cities belongs to the player</summary>
@@ -1179,8 +1179,8 @@ namespace Civilization1Remaster.Core.UI
 			for (neighbourIdx = 0; neighbourIdx <= 8; neighbourIdx++)
 			{
 				ushort terrain = this.Owner.MapOps.ObtainTerrainType(
-					(sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz) + (short)DirectionHoriz(neighbourIdx),
-					(sbyte)this.Troops.PullAt(troop, UnitMemory.Vert) + (short)DirectionVert(neighbourIdx));
+					(sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz) + (short)Tables.DirectionHoriz(neighbourIdx),
+					(sbyte)this.Troops.PullAt(troop, UnitMemory.Vert) + (short)Tables.DirectionVert(neighbourIdx));
 
 
 				if (terrain == 0xa)
@@ -1327,8 +1327,8 @@ namespace Civilization1Remaster.Core.UI
 				Screen.BackScreenBox, 0, 0x80);
 
 			ushort colours = (ushort)(playerIdx << 1);
-			ushort primaryColour = PlayerColourAt(colours);
-			ushort secondaryColour = PlayerSecondaryColourAt(colours);
+			ushort primaryColour = Tables.PlayerColourAt(colours);
+			ushort secondaryColour = Tables.PlayerSecondaryColourAt(colours);
 
 			if (primaryColour == 0xf)
 			{

@@ -180,13 +180,13 @@ namespace Civilization1Remaster.Core.Game
 
 			if (making >= 0)
 			{
-				this.round.Selected = UnitKindWord(making, UnitKindTable.Price);
+				this.round.Selected = Tables.UnitKindWord(making, UnitKindTable.Price);
 				short missing = (short)this.Owner.Helpers.ClampValue((10 * (short)this.round.Selected) - town.MaterialsTally, 0, 999);
 				this.round.Value = (ushort)((short)(missing * missing) / 20 + (missing * 2));
 			}
 			else
 			{
-				this.round.Selected = BuildingWord(-making, BuildingTable.Price);
+				this.round.Selected = Tables.BuildingWord(-making, BuildingTable.Price);
 				this.round.Value = (ushort)((ushort)this.Owner.Helpers.ClampValue((10 * (short)this.round.Selected) - town.MaterialsTally, 0, 999) << 1);
 
 				if (-making > 0x15)
@@ -519,10 +519,10 @@ namespace Civilization1Remaster.Core.Game
 				if (line != 0 || (town.ConditionMarker & 0x80) != 0)
 					continue;
 
-				ushort price = BuildingWord(improvement + 1, BuildingTable.Price);
+				ushort price = Tables.BuildingWord(improvement + 1, BuildingTable.Price);
 
 				Message("Do you want to sell\nyour ")
-					.Text(BuildingText(improvement))
+					.Text(GameTables.BuildingText(improvement))
 					.Text(" for ")
 					.Number((short)(0xa * (short)price))
 					.Text("$?\n No.\n Yes.\n");

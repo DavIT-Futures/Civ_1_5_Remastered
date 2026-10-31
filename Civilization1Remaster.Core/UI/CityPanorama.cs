@@ -105,8 +105,8 @@ namespace Civilization1Remaster.Core.UI
 
 				vertLoc2 = dice.DrawInt(8) + 1;
 
-				horizLoc1 = Math.Min(Math.Max((short)DirectionHoriz(vertLoc2) + horizLoc1, 0), 18);
-				vertLoc1 = Math.Min(Math.Max((short)DirectionVert(vertLoc2) + (ushort)vertLoc1, 0), 11);
+				horizLoc1 = Math.Min(Math.Max((short)Tables.DirectionHoriz(vertLoc2) + horizLoc1, 0), 18);
+				vertLoc1 = Math.Min(Math.Max((short)Tables.DirectionVert(vertLoc2) + (ushort)vertLoc1, 0), 11);
 			}
 
 			vertLoc2 = 4 + dice.DrawInt(2);
@@ -353,15 +353,15 @@ namespace Civilization1Remaster.Core.UI
 
 								if ((vertLoc1 & 0x1) == 0)
 								{
-									leadScratch = (((short)DirectionVert(idx) <= 0) ? 0 : -1);
+									leadScratch = (((short)Tables.DirectionVert(idx) <= 0) ? 0 : -1);
 								}
 								else
 								{
-									leadScratch = ((short)DirectionVert(idx) >= 0) ? 0 : 1;
+									leadScratch = ((short)Tables.DirectionVert(idx) >= 0) ? 0 : 1;
 								}
 
-								int horizScratch = leadScratch + (short)DirectionHoriz(idx) + horizLoc1;
-								int vertScratch = (short)DirectionVert(idx) + vertLoc1;
+								int horizScratch = leadScratch + (short)Tables.DirectionHoriz(idx) + horizLoc1;
+								int vertScratch = (short)Tables.DirectionVert(idx) + vertLoc1;
 
 								if (vertScratch < 12 && townArrangement[horizScratch, vertScratch] >= 0)
 								{
@@ -417,15 +417,15 @@ namespace Civilization1Remaster.Core.UI
 									int leadScratch;
 									if ((vertLoc1 & 1) == 0)
 									{
-										leadScratch = ((short)DirectionVert(idx) <= 0) ? 0 : -1;
+										leadScratch = ((short)Tables.DirectionVert(idx) <= 0) ? 0 : -1;
 									}
 									else
 									{
-										leadScratch = ((short)DirectionVert(idx) >= 0) ? 0 : 1;
+										leadScratch = ((short)Tables.DirectionVert(idx) >= 0) ? 0 : 1;
 									}
 
-									int horizScratch = leadScratch + (short)DirectionHoriz(idx) + horizLoc1;
-									int vertScratch = (short)DirectionVert(idx) + vertLoc1;
+									int horizScratch = leadScratch + (short)Tables.DirectionHoriz(idx) + horizLoc1;
+									int vertScratch = (short)Tables.DirectionVert(idx) + vertLoc1;
 
 									if ((idx & 1) != 0)
 									{

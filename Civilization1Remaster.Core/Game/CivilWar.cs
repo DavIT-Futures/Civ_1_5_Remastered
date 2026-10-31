@@ -203,25 +203,25 @@ namespace Civilization1Remaster.Core.Game
 
 			ushort leaderNames = (ushort)(0x3a * rebel.ChiefVisuals);
 
-			this.Owner.Names.Set(LeaderNameAt(names), LeaderTextAt(leaderNames, LeaderTable.Name));
+			this.Owner.Names.Set(Tables.LeaderNameAt(names), GameTables.LeaderTextAt(leaderNames, LeaderTable.Name));
 
-			this.Owner.Names.Set(CivilizationNameAt(names), LeaderText(rebel.ChiefVisuals, LeaderTable.Civilization));
+			this.Owner.Names.Set(Tables.CivilizationNameAt(names), GameTables.LeaderText(rebel.ChiefVisuals, LeaderTable.Civilization));
 
-			this.Owner.Words.Set(LeaderText(rebel.ChiefVisuals, LeaderTable.CivilizationPlural));
+			this.Owner.Words.Set(GameTables.LeaderText(rebel.ChiefVisuals, LeaderTable.CivilizationPlural));
 
 			if (this.Owner.Words[0] == 0)
 			{
-				Message(CivilizationNameAt(names))
+				Message(Tables.CivilizationNameAt(names))
 					.Text("s");
 			}
 
-			this.Owner.Names.Set(CivilizationPluralAt(names), this.Owner.Words.ToString());
+			this.Owner.Names.Set(Tables.CivilizationPluralAt(names), this.Owner.Words.ToString());
 
 			this.Owner.Words.Clear();
 
-			this.Owner.Codes.Set(0, CivilizationName((ushort)participantIdx));
+			this.Owner.Codes.Set(0, Tables.CivilizationName((ushort)participantIdx));
 
-			this.Owner.Codes.Set(1, CivilizationNameAt(names));
+			this.Owner.Codes.Set(1, Tables.CivilizationNameAt(names));
 
 			this.Owner.BlockText.ShowTextDialog(participantIdx == this.Owner.World.PersonParticipantIdx ? (ushort)0x4a18 : (ushort)0x4a20);
 

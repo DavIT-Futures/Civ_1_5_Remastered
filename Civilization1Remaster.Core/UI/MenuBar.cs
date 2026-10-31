@@ -454,7 +454,7 @@ namespace Civilization1Remaster.Core.UI
 		{
 			this.Owner.Words.Append(" Change to ");
 
-			this.Owner.Words.Append(TerrainText(this.Processor.PullGlobalWord((ushort)((this.Processor.PullGlobalWord(work) << 1) + MapPlanes.TerrainOfColour))));
+			this.Owner.Words.Append(GameTables.TerrainText(this.Processor.PullGlobalWord((ushort)((this.Processor.PullGlobalWord(work) << 1) + MapPlanes.TerrainOfColour))));
 		}
 
 		/// <summary>After a menu of the menu bar: the screen put back from the back screen 0x19d4, 0x654a set to 0xffff</summary>

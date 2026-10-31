@@ -96,7 +96,7 @@ namespace Civilization1Remaster.Core.UI
 				return;
 
 			this.Owner.Words.Clear();
-			this.Owner.Codes.Set(1, CivilizationPlural(this.audienceCommonEnemy));
+			this.Owner.Codes.Set(1, Tables.CivilizationPlural(this.audienceCommonEnemy));
 			this.Owner.Codes.Set(3, (ushort)(HostileValue != 0 ? 0x3780 : 0x3787));
 			this.Owner.BlockText.ShowTextDialog(GameTexts.TopicCancel);
 
@@ -430,11 +430,11 @@ namespace Civilization1Remaster.Core.UI
 				King.Mood = 0;
 				King.Speaking = 0xc;
 				Message("We welcome the friendship of the\n")
-					.Text(CivilizationName(personIdx))
+					.Text(Tables.CivilizationName(personIdx))
 					.Text(" people and their most\nwise and munificent leader:\n")
-					.Text(GovernmentTitle(Person.RegimeKind))
+					.Text(Tables.GovernmentTitle(Person.RegimeKind))
 					.Text(" ")
-					.Text(LeaderName(personIdx))
+					.Text(Tables.LeaderName(personIdx))
 					.Text(".\n");
 			}
 
@@ -451,7 +451,7 @@ namespace Civilization1Remaster.Core.UI
 
 			while (true)
 			{
-				this.Owner.Codes.Set(3, CivilizationPlural(participantIdx));
+				this.Owner.Codes.Set(3, Tables.CivilizationPlural(participantIdx));
 				this.Owner.Words.Clear();
 				this.Owner.BlockText.ShowTextDialog(GameTexts.TopicThreat);
 
@@ -534,7 +534,7 @@ namespace Civilization1Remaster.Core.UI
 
 				enemyTable[enemyCount++] = otherIdx;
 
-				this.Owner.Words.Append(CivilizationPlural(otherIdx));
+				this.Owner.Words.Append(Tables.CivilizationPlural(otherIdx));
 				this.Owner.Words.Append("\n ");
 			}
 
@@ -546,7 +546,7 @@ namespace Civilization1Remaster.Core.UI
 
 			short enemyIdx = enemyTable[choice];
 
-			this.Owner.Codes.Set(3, CivilizationPlural(enemyIdx));
+			this.Owner.Codes.Set(3, Tables.CivilizationPlural(enemyIdx));
 			King.Speaking = 4;
 
 			if ((Leader(participantIdx).Relations[enemyIdx] & 1) == 0)
@@ -586,9 +586,9 @@ namespace Civilization1Remaster.Core.UI
 				Leader(participantIdx).Gold += amount;
 				Person.Gold -= amount;
 
-				Message(CivilizationPlural(participantIdx))
+				Message(Tables.CivilizationPlural(participantIdx))
 					.Text(" declare war\non the ")
-					.Text(CivilizationPlural(enemyIdx))
+					.Text(Tables.CivilizationPlural(enemyIdx))
 					.Text(".\n");
 			}
 
@@ -606,7 +606,7 @@ namespace Civilization1Remaster.Core.UI
 				return;
 			}
 
-			this.Owner.Codes.Set(1, CivilizationPlural(participantIdx));
+			this.Owner.Codes.Set(1, Tables.CivilizationPlural(participantIdx));
 			this.Owner.HelpSystem.ShowHelpPopup(GameTexts.TopicSchism);
 		}
 
@@ -621,7 +621,7 @@ namespace Civilization1Remaster.Core.UI
 			while (true)
 			{
 				Message("An emissary from the\n")
-					.Text(CivilizationPlural(participantIdx))
+					.Text(Tables.CivilizationPlural(participantIdx))
 					.Text(" wishes to\nspeak with you.\n")
 					.Text("Will you receive him?\n Yes.\n No.\n");
 
@@ -630,7 +630,7 @@ namespace Civilization1Remaster.Core.UI
 					this.Owner.Words.Append(" Check Intelligence\n");
 				}
 
-				this.Owner.Services.PerformSound(LeaderWord(this.Owner.World.Participants[participantIdx].ChiefVisuals, LeaderTable.ShortTune), 3);
+				this.Owner.Services.PerformSound(Tables.LeaderWord(this.Owner.World.Participants[participantIdx].ChiefVisuals, LeaderTable.ShortTune), 3);
 
 				this.Owner.Startup.ShowMouseCursorFully();
 
@@ -652,7 +652,7 @@ namespace Civilization1Remaster.Core.UI
 
 			ShowKingScreen(participantIdx);
 
-			this.Owner.Services.PerformSound(LeaderWord(this.Owner.World.Participants[participantIdx].ChiefVisuals, LeaderTable.Tune), 3);
+			this.Owner.Services.PerformSound(Tables.LeaderWord(this.Owner.World.Participants[participantIdx].ChiefVisuals, LeaderTable.Tune), 3);
 
 			this.Owner.Startup.ShowMouseCursor();
 

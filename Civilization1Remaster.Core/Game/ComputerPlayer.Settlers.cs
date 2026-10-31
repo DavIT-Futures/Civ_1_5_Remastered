@@ -63,9 +63,9 @@ namespace Civilization1Remaster.Core.Game
 			this.look.Round = (ushort)(this.Owner.Libc.Dice.DrawInt(20) + 1);
 			ushort direction = (ushort)(this.look.Round << 1);
 			this.look.TileHoriz = (ushort)((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Horiz) >> 2) +
-				DirectionHorizAt(direction));
+				Tables.DirectionHorizAt(direction));
 			this.look.TileVert = (ushort)((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Vert) >> 2) +
-				DirectionVertAt(direction));
+				Tables.DirectionVertAt(direction));
 			this.Processor.SegExtra.Value16 = 0x3772;
 
 			if ((this.Processor.PullUInt8(this.Processor.SegExtra.Value16,
@@ -119,7 +119,7 @@ namespace Civilization1Remaster.Core.Game
 			short vertLoc = (short)this.look.Vert;
 			ushort terrain = this.look.Terrain;
 
-			if (TerrainImprovementWord(terrain, SettlersTerrainColumn(participantIdx)) == 0 &&
+			if (Tables.TerrainImprovementWord(terrain, SettlersTerrainColumn(participantIdx)) == 0 &&
 				this.look.Approach != 5)
 			{
 				return null;
@@ -178,8 +178,8 @@ namespace Civilization1Remaster.Core.Game
 			{
 				this.look.Round = (ushort)(((this.look.Direction + this.Owner.World.RoundTally) & 7) + 1);
 				ushort direction = (ushort)(this.look.Round << 1);
-				this.look.TileHoriz = (ushort)(DirectionHorizAt(direction) + this.look.Horiz);
-				this.look.TileVert = (ushort)(DirectionVertAt(direction) + this.look.Vert);
+				this.look.TileHoriz = (ushort)(Tables.DirectionHorizAt(direction) + this.look.Horiz);
+				this.look.TileVert = (ushort)(Tables.DirectionVertAt(direction) + this.look.Vert);
 
 				short horizLoc = (short)this.look.TileHoriz;
 				short vertLoc = (short)this.look.TileVert;
@@ -196,7 +196,7 @@ namespace Civilization1Remaster.Core.Game
 
 				ushort terrain = this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
 
-				if (TerrainImprovementWord(terrain, SettlersTerrainColumn(participantIdx)) == 0 ||
+				if (Tables.TerrainImprovementWord(terrain, SettlersTerrainColumn(participantIdx)) == 0 ||
 					this.Owner.TurnLogic.ObtainTileMoveCost(horizLoc, vertLoc) == 0)
 				{
 					continue;
@@ -254,8 +254,8 @@ namespace Civilization1Remaster.Core.Game
 				this.look.Direction = (ushort)(this.look.Direction + 1))
 			{
 				ushort direction = (ushort)(this.look.Direction << 1);
-				short stepHoriz = (short)DirectionHorizAt(direction);
-				short stepVert = (short)DirectionVertAt(direction);
+				short stepHoriz = (short)Tables.DirectionHorizAt(direction);
+				short stepVert = (short)Tables.DirectionVertAt(direction);
 
 				if ((this.Owner.MapOps.ObtainTileImprovements(stepHoriz + horizLoc, stepVert + vertLoc) & 8) == 0)
 					continue;
@@ -280,7 +280,7 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 			if (this.look.LandUnits == 1 && this.look.Round != 0 &&
-				TerrainField(this.look.Terrain, TerrainTable.MoveCost) == 1)
+				Tables.TerrainField(this.look.Terrain, TerrainTable.MoveCost) == 1)
 			{
 				return 0x72;
 			}

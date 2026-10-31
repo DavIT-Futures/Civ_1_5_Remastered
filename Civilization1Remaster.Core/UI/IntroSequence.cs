@@ -98,7 +98,7 @@ namespace Civilization1Remaster.Core.UI
 
 			short humanIdx = this.Owner.World.PersonParticipantIdx;
 
-			this.Owner.Words.Set(LeaderName(humanIdx));
+			this.Owner.Words.Set(Tables.LeaderName(humanIdx));
 			this.Owner.Words.Uppercase();
 			this.Owner.Codes.Set(0, this.Owner.Words.ToString());
 
@@ -108,7 +108,7 @@ namespace Civilization1Remaster.Core.UI
 			{
 				if (this.Owner.Advisors.PlayerKnowsTechnology(humanIdx, technologyIdx) != 0)
 				{
-					this.Owner.Words.Set(TechnologyText(technologyIdx));
+					this.Owner.Words.Set(GameTables.TechnologyText(technologyIdx));
 				}
 			}
 
@@ -165,7 +165,7 @@ namespace Civilization1Remaster.Core.UI
 
 			this.Owner.Services.PerformSound(1, 0);
 
-			this.Owner.Services.PerformSound(LeaderWord(this.Owner.World.Participants[humanIdx].ChiefVisuals, LeaderTable.ShortTune), 0);
+			this.Owner.Services.PerformSound(Tables.LeaderWord(this.Owner.World.Participants[humanIdx].ChiefVisuals, LeaderTable.ShortTune), 0);
 
 			this.Owner.TextPainter.WaitForTime(300);
 
@@ -197,7 +197,7 @@ namespace Civilization1Remaster.Core.UI
 				ushort terrain = this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
 
 				// Terrain names of 0x13 bytes at 0x282, names of their special resources at 0x366
-				this.Owner.Words.Set(TerrainText(terrain));
+				this.Owner.Words.Set(GameTables.TerrainText(terrain));
 
 				if (this.Owner.MapOps.ContainsSpecialResource(horizLoc, vertLoc) != 0)
 				{
@@ -762,14 +762,14 @@ namespace Civilization1Remaster.Core.UI
 		private void PrepareLandingText(short participantIdx)
 		{
 			ushort regime = (ushort)this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx].RegimeKind;
-			Message(GovernmentTitle(regime))
+			Message(Tables.GovernmentTitle(regime))
 				.Text(" ");
 
 			ushort person = (ushort)this.Owner.World.PersonParticipantIdx;
-			this.Owner.Words.Append(LeaderName(person));
+			this.Owner.Words.Append(Tables.LeaderName(person));
 			this.Owner.Codes.Set(0, this.Owner.Words.ToString());
 
-			this.Owner.Codes.Set(1, CivilizationName((ushort)participantIdx));
+			this.Owner.Codes.Set(1, Tables.CivilizationName((ushort)participantIdx));
 
 			EmptyMessage()
 				.Number(this.Owner.World.Participants[participantIdx].StarshipInhabitants);

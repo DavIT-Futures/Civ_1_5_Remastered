@@ -105,11 +105,11 @@ namespace Civilization1Remaster.Core.UI
 
 			for (int participantIdx = 1; participantIdx < 8; participantIdx++)
 			{
-				this.Owner.TextPainter.DrawTextWithShadow(CivilizationName(participantIdx), participantIdx * 40, 8,
-					PlayerColour(participantIdx));
+				this.Owner.TextPainter.DrawTextWithShadow(Tables.CivilizationName(participantIdx), participantIdx * 40, 8,
+					Tables.PlayerColour(participantIdx));
 
 				this.Owner.Services.DrawPictureToScreen(Screen.Box, participantIdx * 40, 16,
-					SpritePicture(((participantIdx << 5) + 0x40)));
+					Tables.SpritePicture(((participantIdx << 5) + 0x40)));
 			}
 
 			for (int continentIdx = 1; continentIdx < 0xf; continentIdx++)
@@ -135,7 +135,7 @@ namespace Civilization1Remaster.Core.UI
 						.Number(landmass.TownTally);
 
 					this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), participantIdx * 40, vertLoc,
-						PlayerColour(participantIdx));
+						Tables.PlayerColour(participantIdx));
 				}
 			}
 
@@ -189,8 +189,8 @@ namespace Civilization1Remaster.Core.UI
 				if (!InGraph(participantIdx))
 					continue;
 
-				this.Owner.TextPainter.DrawTextToScreen0(CivilizationName(participantIdx), 8, (participantIdx << 3) + 4,
-					PlayerColour(participantIdx));
+				this.Owner.TextPainter.DrawTextToScreen0(Tables.CivilizationName(participantIdx), 8, (participantIdx << 3) + 4,
+					Tables.PlayerColour(participantIdx));
 
 				for (int epochIdx = 0; epochIdx < epochTally; epochIdx++)
 				{
@@ -219,7 +219,7 @@ namespace Civilization1Remaster.Core.UI
 					short vertLoc = (short)((ushort)(0xb4 * HistoryScore(epochIdx, participantIdx)) / peak);
 
 					this.Owner.VideoCard.RenderLine(Screen.Box, previousHoriz + 4, 192 - previousVert, horizLoc + 4, 192 - vertLoc,
-						PlayerColour(participantIdx));
+						Tables.PlayerColour(participantIdx));
 
 					previousHoriz = horizLoc;
 					previousVert = vertLoc;
@@ -276,7 +276,7 @@ namespace Civilization1Remaster.Core.UI
 					this.Owner.Words.Append("The ");
 				}
 
-				this.Owner.Words.Append(WonderText(wonderIdx));
+				this.Owner.Words.Append(GameTables.WonderText(wonderIdx));
 
 				if (townIdx == 128)
 				{
@@ -289,11 +289,11 @@ namespace Civilization1Remaster.Core.UI
 					this.Owner.Words.Append(wonderIdx > 7 ? WonderOfCityStringAddress : WonderInCityStringAddress);
 					this.Owner.Conquest.ObtainCityLabel(townIdx);
 					this.Owner.Words.Append(". (");
-					this.Owner.Words.Append(CivilizationName(participantIdx));
+					this.Owner.Words.Append(Tables.CivilizationName(participantIdx));
 					this.Owner.Words.Append(")");
 				}
 
-				this.Owner.Dialogs.DrawBox(8, vertLoc, 303, 15, PlayerColour(participantIdx));
+				this.Owner.Dialogs.DrawBox(8, vertLoc, 303, 15, Tables.PlayerColour(participantIdx));
 
 				this.Owner.CityOps.DrawResourceIcon((short)(wonderIdx + 0x18), 16, (short)(vertLoc + 3));
 
@@ -427,7 +427,7 @@ namespace Civilization1Remaster.Core.UI
 					.Text(". The ")
 					.Text(this.Processor.PullGlobalWord((ushort)((rank << 1) + 0x451e)))
 					.Text(" Civilization of the ")
-					.Text(CivilizationPlural(best))
+					.Text(Tables.CivilizationPlural(best))
 					.Text(".");
 
 				short humanIdx = this.Owner.World.PersonParticipantIdx;
@@ -438,7 +438,7 @@ namespace Civilization1Remaster.Core.UI
 
 					this.Owner.TurnHooks.DrawPalace(best, this.Owner.TurnHooks.ObtainPalaceLevel(this.Owner.World.Participants[best].Tally), 128, (short)(vertLoc - 13));
 
-					this.Owner.Dialogs.DrawBox(8, vertLoc, 303, 15, PlayerColour(best));
+					this.Owner.Dialogs.DrawBox(8, vertLoc, 303, 15, Tables.PlayerColour(best));
 
 					this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 40, vertLoc + 5, Hues.White);
 
@@ -472,7 +472,7 @@ namespace Civilization1Remaster.Core.UI
 
 			this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 200, Hues.Blue);
 
-			Message(CivilizationName(participantIdx))
+			Message(Tables.CivilizationName(participantIdx))
 				.Text(" Demographics");
 
 			this.Owner.TextPainter.DrawCenteredTextToScreen0(this.Owner.Words.ToString(), 160, 4, Hues.White);
@@ -542,7 +542,7 @@ namespace Civilization1Remaster.Core.UI
 				if (this.Owner.World.Towns[townIdx].ShownExtent != 0 || MapView.Revealed != 0 ||
 					this.Owner.World.Towns[townIdx].ParticipantIdx == this.Owner.World.PersonParticipantIdx)
 				{
-					ushort colour = PlayerColour(this.Owner.MapOps.ObtainTileOwnerBits(horizLoc, vertLoc));
+					ushort colour = Tables.PlayerColour(this.Owner.MapOps.ObtainTileOwnerBits(horizLoc, vertLoc));
 
 					this.Owner.Services.FloodBox(Screen.Box, pixelHoriz, pixelVert, 4, 4, colour);
 				}
@@ -564,7 +564,7 @@ namespace Civilization1Remaster.Core.UI
 					return;
 			}
 
-			ushort ownerColour = PlayerColour(ownerIdx);
+			ushort ownerColour = Tables.PlayerColour(ownerIdx);
 
 			this.Owner.Services.FloodBox(Screen.Box, pixelHoriz + 1, pixelVert + 1, 3, 3, Hues.Black);
 
@@ -970,14 +970,14 @@ namespace Civilization1Remaster.Core.UI
 			if (bestIdx != humanIdx && (this.Owner.World.Participants[humanIdx].Relations[bestIdx] & 0x40) != 0)
 			{
 				Message("(")
-					.Text(CivilizationPlural(bestIdx))
+					.Text(Tables.CivilizationPlural(bestIdx))
 					.Text(": ")
 					.Number(Math.Abs(best))
 					.Text(charsAddr)
 					.Text(")");
 
 				this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), -(this.Owner.TextPainter.MeasureTextWidth(this.Owner.Words.ToString()) - 318), Math.Abs(vertLoc),
-					PlayerColour(bestIdx));
+					Tables.PlayerColour(bestIdx));
 			}
 		}
 	}

@@ -58,7 +58,7 @@ namespace Civilization1Remaster.Core.Game
 			sbyte b0 = (sbyte)this.Processor.PullUInt8(this.Processor.SegData.Value16, (ushort)(scienceIdx * 2 + 0xb0a));
 			sbyte b1 = (sbyte)this.Processor.PullUInt8(this.Processor.SegData.Value16, (ushort)(scienceIdx * 2 + 0xb0b));
 			int leaderVisuals = this.Owner.World.Participants[participantIdx].ChiefVisuals;
-			short leaderFactor = (short)LeaderWord(leaderVisuals, LeaderTable.Leaning);
+			short leaderFactor = (short)Tables.LeaderWord(leaderVisuals, LeaderTable.Leaning);
 			ushort result = ScienceRules.CalculateTechnologyInfo(b0, b1, leaderFactor);
 
 			return result;
@@ -231,10 +231,10 @@ namespace Civilization1Remaster.Core.Game
 				this.Owner.VideoCard.RenderImage(Screen.BackScreenBox, 0, 0, 0x140, 0xc8, Screen.Box, 0, 0);
 			}
 
-			Message(CivilizationName((ushort)participantIdx))
+			Message(Tables.CivilizationName((ushort)participantIdx))
 				.Text(PlayerKnowsTechnology(person, 0x14) != 0 ? (ushort)0x22cc : (ushort)0x22d8)
 				.Text("\ndiscover the secret\nof ")
-				.Text(TechnologyText(human.PresentInquiryIdx));
+				.Text(GameTables.TechnologyText(human.PresentInquiryIdx));
 
 			if (human.PresentInquiryIdx == 71)
 			{
@@ -249,7 +249,7 @@ namespace Civilization1Remaster.Core.Game
 
 			// The original plays only a short fanfare (table at 0x1518, one to five seconds),
 			// the national anthem (table at 0x151a, as in the palace and the throne room) plays until the next research is chosen
-			this.Owner.Services.PerformSound(LeaderWord(this.Owner.World.Participants[participantIdx].ChiefVisuals, LeaderTable.Tune), 3);
+			this.Owner.Services.PerformSound(Tables.LeaderWord(this.Owner.World.Participants[participantIdx].ChiefVisuals, LeaderTable.Tune), 3);
 
 			if (picture)
 			{
@@ -315,7 +315,7 @@ namespace Civilization1Remaster.Core.Game
 		private void RecommendResearch(short pick)
 		{
 			Message("Science Advisor:\nI recommend we\ndevelop ")
-				.Text(TechnologyText(pick))
+				.Text(GameTables.TechnologyText(pick))
 				.Text(".\n");
 
 			ushort length = this.Owner.Words.Length;
@@ -328,10 +328,10 @@ namespace Civilization1Remaster.Core.Game
 			{
 				ushort kindRecord = (ushort)(0x22 * kindIdx);
 
-				if (UnitKindWordAt(kindRecord, UnitKindTable.Technology) != (ushort)pick)
+				if (Tables.UnitKindWordAt(kindRecord, UnitKindTable.Technology) != (ushort)pick)
 					continue;
 
-				this.Owner.Words.Append(UnitTextAt(kindRecord));
+				this.Owner.Words.Append(GameTables.UnitTextAt(kindRecord));
 
 				this.Owner.Words.Append("\n-");
 
@@ -342,10 +342,10 @@ namespace Civilization1Remaster.Core.Game
 			{
 				ushort wonderRecord = (ushort)(0x1e * wonderIdx);
 
-				if (BuildingWordAt(wonderRecord, BuildingTable.Technology) != (ushort)pick)
+				if (Tables.BuildingWordAt(wonderRecord, BuildingTable.Technology) != (ushort)pick)
 					continue;
 
-				this.Owner.Words.Append(BuildingRecordTextAt(wonderRecord));
+				this.Owner.Words.Append(GameTables.BuildingRecordTextAt(wonderRecord));
 
 				this.Owner.Words.Append("\n-");
 
@@ -393,7 +393,7 @@ namespace Civilization1Remaster.Core.Game
 						continue;
 				}
 
-				this.Owner.Words.Append(TechnologyText(scienceIdx));
+				this.Owner.Words.Append(GameTables.TechnologyText(scienceIdx));
 
 				this.Owner.Words.Append("\n ");
 
@@ -419,9 +419,9 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 			EmptyMessage()
-				.Text(CivilizationPlural((ushort)participantIdx))
+				.Text(Tables.CivilizationPlural((ushort)participantIdx))
 				.Text(participantIdx == participantIdx1 || participantIdx1 == 0 ? (ushort)0x23d7 : (ushort)0x23e1)
-				.Text(TechnologyText(scienceIdx));
+				.Text(GameTables.TechnologyText(scienceIdx));
 
 			if (TechnologyNewsRules.NamesSource(participantIdx, participantIdx1))
 			{
@@ -433,7 +433,7 @@ namespace Civilization1Remaster.Core.Game
 				}
 				else
 				{
-					this.Owner.Words.Append(CivilizationPlural((ushort)participantIdx1));
+					this.Owner.Words.Append(Tables.CivilizationPlural((ushort)participantIdx1));
 				}
 			}
 
@@ -446,9 +446,9 @@ namespace Civilization1Remaster.Core.Game
 				{
 					ushort wonderRecord = (ushort)(0x1e * wonderIdx);
 
-					if (BuildingWordAt(wonderRecord, BuildingTable.Technology) == (ushort)scienceIdx)
+					if (Tables.BuildingWordAt(wonderRecord, BuildingTable.Technology) == (ushort)scienceIdx)
 					{
-						this.Owner.Words.Append(BuildingRecordTextAt(wonderRecord));
+						this.Owner.Words.Append(GameTables.BuildingRecordTextAt(wonderRecord));
 
 						this.Owner.Words.Append("\n ");
 					}
@@ -458,9 +458,9 @@ namespace Civilization1Remaster.Core.Game
 				{
 					ushort kindRecord = (ushort)(0x22 * kindIdx);
 
-					if (UnitKindWordAt(kindRecord, UnitKindTable.Technology) == (ushort)scienceIdx)
+					if (Tables.UnitKindWordAt(kindRecord, UnitKindTable.Technology) == (ushort)scienceIdx)
 					{
-						this.Owner.Words.Append(UnitTextAt(kindRecord));
+						this.Owner.Words.Append(GameTables.UnitTextAt(kindRecord));
 
 						this.Owner.Words.Append("\n ");
 					}
@@ -496,9 +496,9 @@ namespace Civilization1Remaster.Core.Game
 			King.EmissaryAudience = 0;
 			this.Owner.Words.Clear();
 
-			this.Owner.Codes.Set(0, CivilizationPlural((ushort)participantIdx));
+			this.Owner.Codes.Set(0, Tables.CivilizationPlural((ushort)participantIdx));
 
-			this.Owner.Codes.Set(3, TechnologyText(scienceIdx));
+			this.Owner.Codes.Set(3, GameTables.TechnologyText(scienceIdx));
 
 			this.Owner.BlockText.ShowTextDialog(GameTexts.TopicGape);
 
@@ -559,7 +559,7 @@ namespace Civilization1Remaster.Core.Game
 				if (participantIdx == person && King.Answer == 0xffff)
 				{
 					Message("Development of ")
-						.Text(TechnologyText(scienceIdx))
+						.Text(GameTables.TechnologyText(scienceIdx))
 						.Text("\nmakes existing Barracks\nobsolete.\n")
 						.Style(0x3)
 						.Dialog(80, 100);
@@ -575,14 +575,14 @@ namespace Civilization1Remaster.Core.Game
 				// The human player's wonders (0x10fe: the technology that makes each obsolete) lose their effect
 				for (ushort wonderIdx = 1; wonderIdx <= 0x15; wonderIdx++)
 				{
-					if (WonderObsoleteTechnology(wonderIdx) != (ushort)scienceIdx ||
+					if (Tables.WonderObsoleteTechnology(wonderIdx) != (ushort)scienceIdx ||
 						!WonderCityRules.ReadsCity(this.Owner.World.MarvelTownIdx[wonderIdx]) ||
 						this.Owner.World.Towns[this.Owner.World.MarvelTownIdx[wonderIdx]].ParticipantIdx != person)
 						continue;
 
-					Message(TechnologyText(scienceIdx))
+					Message(GameTables.TechnologyText(scienceIdx))
 						.Text(" cancels\nthe effect of\n")
-						.Text(WonderText(wonderIdx))
+						.Text(GameTables.WonderText(wonderIdx))
 						.Text(".\n");
 
 					this.Owner.Paper.ShowNewspaper(-1);

@@ -112,11 +112,11 @@ namespace Civilization1Remaster.Core.Game
 
 
 			this.turn.CursorHoriz = (ushort)this.Owner.Routing.TunePosition(
-				(short)DirectionHorizAt((ushort)(this.turn.Direction << 1)) +
+				(short)Tables.DirectionHorizAt((ushort)(this.turn.Direction << 1)) +
 					(short)this.turn.CursorHoriz);
 
 			this.turn.CursorVert = (ushort)this.Owner.Helpers.ClampValue(
-				(short)DirectionVertAt((ushort)(this.turn.Direction << 1)) +
+				(short)Tables.DirectionVertAt((ushort)(this.turn.Direction << 1)) +
 					(short)this.turn.CursorVert,
 				0, 49);
 
@@ -177,11 +177,11 @@ namespace Civilization1Remaster.Core.Game
 			short troopIdx = (short)this.turn.Troop;
 
 			this.turn.TargetHoriz = (ushort)this.Owner.Routing.TunePosition(
-				(short)DirectionHorizAt((ushort)(this.turn.Direction << 1)) +
+				(short)Tables.DirectionHorizAt((ushort)(this.turn.Direction << 1)) +
 					(short)this.turn.UnitHoriz);
 
 			this.turn.TargetVert = (ushort)this.Owner.Helpers.ClampValue(
-				(short)DirectionVertAt((ushort)(this.turn.Direction << 1)) +
+				(short)Tables.DirectionVertAt((ushort)(this.turn.Direction << 1)) +
 					(short)this.turn.UnitVert,
 				0, 49);
 
@@ -666,7 +666,7 @@ namespace Civilization1Remaster.Core.Game
 				else
 				{
 					// The terrain: with fewer moves than full a die may stop the unit
-					short terrainCost = (short)(3 * (sbyte)TerrainField(this.turn.TargetTerrain, TerrainTable.MoveCost));
+					short terrainCost = (short)(3 * (sbyte)Tables.TerrainField(this.turn.TargetTerrain, TerrainTable.MoveCost));
 
 					if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.LeftoverSteps) != 3)
 					{
@@ -975,7 +975,7 @@ namespace Civilization1Remaster.Core.Game
 
 			this.turn.CarrierKind = (ushort)((this.turn.CarrierKind & 0xff00) | this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind));
 
-			if ((UnitKindWord((sbyte)(byte)this.turn.CarrierKind, UnitKindTable.FerryRoom) == 0 &&
+			if ((Tables.UnitKindWord((sbyte)(byte)this.turn.CarrierKind, UnitKindTable.FerryRoom) == 0 &&
 				(byte)this.turn.CarrierKind != UnitKindTable.Carrier) || this.turn.Cargo == 0xffff)
 			{
 				return;
@@ -1015,7 +1015,7 @@ namespace Civilization1Remaster.Core.Game
 
 					this.turn.CarrierKind = (ushort)((this.turn.CarrierKind & 0xff00) | this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind));
 
-				if ((short)UnitKindWord((sbyte)(byte)this.turn.CarrierKind, UnitKindTable.FerryRoom) <= (short)this.turn.Count &&
+				if ((short)Tables.UnitKindWord((sbyte)(byte)this.turn.CarrierKind, UnitKindTable.FerryRoom) <= (short)this.turn.Count &&
 					(byte)this.turn.CarrierKind != UnitKindTable.Carrier && participantIdx != 0)
 				{
 					return;

@@ -187,7 +187,7 @@ namespace Civilization1Remaster.Core.Game
 					if (human && player.RegimeKind != 0)
 					{
 						Message("'We love the ")
-							.Text(GovernmentTitle(player.RegimeKind))
+							.Text(Tables.GovernmentTitle(player.RegimeKind))
 							.Text("'\nday celebrated in\n")
 							.City(townIdx)
 							.Text("!\n");
@@ -230,7 +230,7 @@ namespace Civilization1Remaster.Core.Game
 			{
 				this.Owner.Services.PerformSound(0x23, 0);
 				Message("'We love the ")
-					.Text(GovernmentTitle(player.RegimeKind))
+					.Text(Tables.GovernmentTitle(player.RegimeKind))
 					.Text("'\ncelebration canceled\nin ")
 					.City(townIdx)
 					.Text(".\n");
@@ -428,7 +428,7 @@ namespace Civilization1Remaster.Core.Game
 				if ((town.Structures & bit) == 0 || player.RegimeKind == 0)
 					continue;
 
-				player.Gold -= (short)BuildingWord(improvement + 1, BuildingTable.Upkeep);
+				player.Gold -= (short)Tables.BuildingWord(improvement + 1, BuildingTable.Upkeep);
 
 				if (improvement == 1)
 				{
@@ -454,11 +454,11 @@ namespace Civilization1Remaster.Core.Game
 				EmptyMessage()
 					.City(townIdx)
 					.Text("\ncan't maintain\n")
-					.Text(BuildingText(improvement))
+					.Text(GameTables.BuildingText(improvement))
 					.Text(".\n")
 					.Style(4)
 					.Dialog(100, 80);
-				player.Gold += (short)(0xa * BuildingWord(improvement + 1, BuildingTable.Price));
+				player.Gold += (short)(0xa * Tables.BuildingWord(improvement + 1, BuildingTable.Price));
 			}
 
 			this.round.Item = improvement;

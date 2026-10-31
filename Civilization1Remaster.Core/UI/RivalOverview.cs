@@ -27,13 +27,13 @@ namespace Civilization1Remaster.Core.UI
 
 			this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 200, Hues.Blue);
 
-			this.Owner.TextPainter.DrawTextToScreen0(CivilizationName(participantIdx), 128, 4, Hues.White);
+			this.Owner.TextPainter.DrawTextToScreen0(Tables.CivilizationName(participantIdx), 128, 4, Hues.White);
 
 			this.Owner.Services.DrawPictureToScreen(Screen.Box, 16, 4,
-				SpritePicture(((participantIdx << 5) + 0x40)));
+				Tables.SpritePicture(((participantIdx << 5) + 0x40)));
 
 			Message("Government: ")
-				.Text(GovernmentName(participant.RegimeKind));
+				.Text(Tables.GovernmentName(participant.RegimeKind));
 
 			this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 16, 24, Hues.White);
 
@@ -109,7 +109,7 @@ namespace Civilization1Remaster.Core.UI
 
 				ushort relation = participant.Relations[otherIdx];
 
-				this.Owner.Words.Set(CivilizationName(otherIdx));
+				this.Owner.Words.Set(Tables.CivilizationName(otherIdx));
 
 				if ((relation & 0xb) == 1)
 				{
@@ -147,7 +147,7 @@ namespace Civilization1Remaster.Core.UI
 				if (this.Owner.Advisors.PlayerKnowsTechnology(participantIdx, scienceIdx) == 0)
 					continue;
 
-				this.Owner.Words.Set(TechnologyText(scienceIdx));
+				this.Owner.Words.Set(GameTables.TechnologyText(scienceIdx));
 
 				ushort hue = (ushort)(((byte)this.Owner.World.ScienceLeadingFoundVia[scienceIdx] & 7) == participantIdx ? 0xf : 0x7);
 
@@ -193,11 +193,11 @@ namespace Civilization1Remaster.Core.UI
 				this.Owner.VideoCard.RenderLine(Screen.Box, 36, vertLoc - 1, 319, vertLoc - 1, Hues.LightBlue);
 
 				this.Owner.Services.DrawPictureToScreen(Screen.Box, ((rowIdx & 1) << 4) + 2, vertLoc - 4,
-					SpritePicture((kind + 0x60)));
+					Tables.SpritePicture((kind + 0x60)));
 
 				rowIdx++;
 
-				this.Owner.TextPainter.DrawTextToScreen0(UnitText(kind), 36, vertLoc, Hues.White);
+				this.Owner.TextPainter.DrawTextToScreen0(GameTables.UnitText(kind), 36, vertLoc, Hues.White);
 
 				vertLoc += 8;
 			}
@@ -213,7 +213,7 @@ namespace Civilization1Remaster.Core.UI
 				}
 
 				this.Owner.Services.DrawPictureToScreen(Screen.Box, (30 * participantIdx) + 90, 2,
-					SpritePicture(((participantIdx << 5) + 0x40)));
+					Tables.SpritePicture(((participantIdx << 5) + 0x40)));
 
 				if (participantIdx != this.Owner.World.PersonParticipantIdx && MapView.Revealed == 0)
 					continue;
@@ -263,13 +263,13 @@ namespace Civilization1Remaster.Core.UI
 
 			for (int participantIdx = 1; participantIdx < 8; participantIdx++)
 			{
-				ushort name = CivilizationName(participantIdx);
-				ushort hue = PlayerColour(participantIdx);
+				ushort name = Tables.CivilizationName(participantIdx);
+				ushort hue = Tables.PlayerColour(participantIdx);
 
 				this.Owner.TextPainter.DrawTextWithShadow(name, participantIdx * 40, 8, hue);
 
 				this.Owner.Services.DrawPictureToScreen(Screen.Box, (short)(0x28 * participantIdx), 16,
-					SpritePicture(((participantIdx << 5) + 0x40)));
+					Tables.SpritePicture(((participantIdx << 5) + 0x40)));
 
 				this.Owner.TextPainter.DrawTextWithShadow(name, 4, (participantIdx * 12) + 32, hue);
 			}
@@ -292,7 +292,7 @@ namespace Civilization1Remaster.Core.UI
 						.Number(this.Owner.World.Participants[columnIdx].TroopsRuined[rowIdx]);
 
 					this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), rowIdx * 40, (columnIdx * 12) + 32,
-						PlayerColour(rowIdx));
+						Tables.PlayerColour(rowIdx));
 				}
 			}
 

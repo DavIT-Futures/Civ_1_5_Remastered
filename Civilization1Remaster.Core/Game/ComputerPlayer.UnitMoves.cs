@@ -157,9 +157,9 @@ namespace Civilization1Remaster.Core.Game
 		{
 			ushort direction = (ushort)(this.look.Direction << 1);
 
-			this.look.TileHoriz = (ushort)this.Owner.Routing.TunePosition((short)DirectionHorizAt(direction) +
+			this.look.TileHoriz = (ushort)this.Owner.Routing.TunePosition((short)Tables.DirectionHorizAt(direction) +
 				(short)this.look.Horiz);
-			this.look.TileVert = (ushort)(DirectionVertAt(direction) + this.look.Vert);
+			this.look.TileVert = (ushort)(Tables.DirectionVertAt(direction) + this.look.Vert);
 
 			short horizLoc = (short)this.look.TileHoriz;
 			short vertLoc = (short)this.look.TileVert;
@@ -467,8 +467,8 @@ namespace Civilization1Remaster.Core.Game
 			if (this.look.NoEnemyNear != 0)
 			{
 				ushort direction = (ushort)(this.look.Direction << 1);
-				this.look.TileHoriz = (ushort)((DirectionHorizAt(direction) << 2) + this.look.Horiz);
-				this.look.TileVert = (ushort)((DirectionVertAt(direction) << 2) + this.look.Vert);
+				this.look.TileHoriz = (ushort)((Tables.DirectionHorizAt(direction) << 2) + this.look.Horiz);
+				this.look.TileVert = (ushort)((Tables.DirectionVertAt(direction) << 2) + this.look.Vert);
 
 				// (the divisions as the original makes them)
 				// (signed divisions toward zero: a place off the map, -2, is in cell 0 like in the original)
@@ -490,9 +490,9 @@ namespace Civilization1Remaster.Core.Game
 				{
 					ushort around = (ushort)(this.look.Around << 1);
 
-					this.look.AroundHoriz = (ushort)this.Owner.Routing.TunePosition((short)DirectionHorizAt(around) +
+					this.look.AroundHoriz = (ushort)this.Owner.Routing.TunePosition((short)Tables.DirectionHorizAt(around) +
 						(short)this.look.TileHoriz);
-					this.look.AroundVert = (ushort)(DirectionVertAt(around) + this.look.TileVert);
+					this.look.AroundVert = (ushort)(Tables.DirectionVertAt(around) + this.look.TileVert);
 
 					short horizLoc = (short)this.look.AroundHoriz;
 					short vertLoc = (short)this.look.AroundVert;
@@ -503,7 +503,7 @@ namespace Civilization1Remaster.Core.Game
 					// Not seen by the player: land, or the sea for a ship
 					if ((this.Owner.World.ChartSight[this.look.AroundHoriz, this.look.AroundVert] & (short)this.look.PlayerBit) == 0 &&
 						(this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) != MapRules.OceanTerrain ||
-							UnitKindWord(this.troops.TroopKind(participantIdx, troopIdx), UnitKindTable.LandGroup) == UnitKindTable.SeaUnits))
+							Tables.UnitKindWord(this.troops.TroopKind(participantIdx, troopIdx), UnitKindTable.LandGroup) == UnitKindTable.SeaUnits))
 					{
 						this.look.Score = (ushort)(this.look.Score + 2);
 					}
@@ -515,7 +515,7 @@ namespace Civilization1Remaster.Core.Game
 					{
 						ushort terrain = this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
 						this.look.Score = (ushort)(this.look.Score +
-							(sbyte)TerrainField(terrain, TerrainTable.Food));
+							(sbyte)Tables.TerrainField(terrain, TerrainTable.Food));
 					}
 				}
 			}
@@ -631,7 +631,7 @@ namespace Civilization1Remaster.Core.Game
 		{
 			sbyte kind = this.troops.TroopKind(participantIdx, troopIdx);
 
-			if ((short)UnitKindWord(kind, UnitKindTable.ShiftTally) >= 2 || (short)this.look.CityDistance >= 4)
+			if ((short)Tables.UnitKindWord(kind, UnitKindTable.ShiftTally) >= 2 || (short)this.look.CityDistance >= 4)
 				return false;
 
 			short person = this.Owner.World.PersonParticipantIdx;

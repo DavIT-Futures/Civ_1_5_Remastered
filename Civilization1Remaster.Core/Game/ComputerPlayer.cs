@@ -109,8 +109,8 @@ namespace Civilization1Remaster.Core.Game
 			Player player = this.Owner.World.Participants[participantIdx];
 			sbyte kind = this.troops.TroopKind(participantIdx, troopIdx);
 
-			player.MartialMight += (short)(UnitKindWord(kind, UnitKindTable.AssaultPower) +
-				UnitKindWord(kind, UnitKindTable.GuardPower));
+			player.MartialMight += (short)(Tables.UnitKindWord(kind, UnitKindTable.AssaultPower) +
+				Tables.UnitKindWord(kind, UnitKindTable.GuardPower));
 
 			byte status = this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status);
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Status, (byte)(status & 0xef));
@@ -130,10 +130,10 @@ namespace Civilization1Remaster.Core.Game
 
 				kind = this.troops.TroopKind(participantIdx, troopIdx);
 
-				player.Landmasses[continentIdx].Assault += (short)UnitKindWord(kind, UnitKindTable.GuardPower);
-				player.Landmasses[continentIdx].Guard += (short)UnitKindWord(kind, UnitKindTable.AssaultPower);
+				player.Landmasses[continentIdx].Assault += (short)Tables.UnitKindWord(kind, UnitKindTable.GuardPower);
+				player.Landmasses[continentIdx].Guard += (short)Tables.UnitKindWord(kind, UnitKindTable.AssaultPower);
 			}
-			else if (UnitKindWord(this.troops.TroopKind(participantIdx, troopIdx), UnitKindTable.LandGroup) == UnitKindTable.LandUnits)
+			else if (Tables.UnitKindWord(this.troops.TroopKind(participantIdx, troopIdx), UnitKindTable.LandGroup) == UnitKindTable.LandUnits)
 			{
 				// A land unit at sea (on a ship)
 				status = this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status);
@@ -141,7 +141,7 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 			// The role of the unit (0 - 6) as a bit of its block
-			byte role = (byte)UnitKindWord(this.troops.TroopKind(participantIdx, troopIdx), UnitKindTable.TroopGroup);
+			byte role = (byte)Tables.UnitKindWord(this.troops.TroopKind(participantIdx, troopIdx), UnitKindTable.TroopGroup);
 			byte roleBit = (byte)(2 << role);
 			ushort block = Block(this.troops.Pull(participantIdx, troopIdx, UnitMemory.Horiz), this.troops.Pull(participantIdx, troopIdx, UnitMemory.Vert));
 			this.Processor.EmitUInt8(BlockSegment, block, (byte)(this.Processor.PullUInt8(BlockSegment, block) | roleBit));
@@ -216,15 +216,15 @@ namespace Civilization1Remaster.Core.Game
 				{
 					sbyte kind = (sbyte)((byte)town.Unfamiliar[unfamiliarIdx] & 0x3f);
 
-					player.MartialMight = (short)(UnitKindWord(kind, UnitKindTable.AssaultPower) +
-						UnitKindWord(kind, UnitKindTable.GuardPower));
+					player.MartialMight = (short)(Tables.UnitKindWord(kind, UnitKindTable.AssaultPower) +
+						Tables.UnitKindWord(kind, UnitKindTable.GuardPower));
 
 					ushort continentIdx = this.Owner.MapOps.ObtainContinentID(town.Place.X, town.Place.Y);
 
 					kind = (sbyte)((byte)town.Unfamiliar[unfamiliarIdx] & 0x3f);
 
-					player.Landmasses[continentIdx].Assault = (short)UnitKindWord(kind, UnitKindTable.GuardPower);
-					player.Landmasses[continentIdx].Guard += (short)UnitKindWord(kind, UnitKindTable.AssaultPower);
+					player.Landmasses[continentIdx].Assault = (short)Tables.UnitKindWord(kind, UnitKindTable.GuardPower);
+					player.Landmasses[continentIdx].Guard += (short)Tables.UnitKindWord(kind, UnitKindTable.AssaultPower);
 				}
 			}
 		}
@@ -435,7 +435,7 @@ namespace Civilization1Remaster.Core.Game
 
 			sbyte kind = this.troops.TroopKind(participantIdx, troopIdx);
 
-			if (this.Owner.Advisors.PlayerKnowsTechnology(participantIdx, (short)UnitKindWord(kind, 0xc)) == 0)
+			if (this.Owner.Advisors.PlayerKnowsTechnology(participantIdx, (short)Tables.UnitKindWord(kind, 0xc)) == 0)
 			{
 				if (player.RegimeKind <= 1 && player.Landmasses[continentIdx].Approach != 5)
 					return false;
@@ -517,7 +517,7 @@ namespace Civilization1Remaster.Core.Game
 
 			sbyte kind = this.troops.TroopKind(participantIdx, troopIdx);
 
-			if (UnitKindWord(kind, UnitKindTable.TroopGroup) == (ushort)(sbyte)role &&
+			if (Tables.UnitKindWord(kind, UnitKindTable.TroopGroup) == (ushort)(sbyte)role &&
 				this.Owner.MapOps.ObtainContinentID(this.Processor.PullInt8(this.Processor.SegData.Value16, LocationHoriz(participantIdx, locationIdx)),
 					this.Processor.PullInt8(this.Processor.SegData.Value16, LocationVert(participantIdx, locationIdx))) == continentIdx)
 			{
@@ -531,7 +531,7 @@ namespace Civilization1Remaster.Core.Game
 
 			sbyte bomberRole = (sbyte)this.Processor.PullUInt8(this.Processor.SegData.Value16, LocationRole(participantIdx, locationIdx));
 
-			return UnitKindWord((sbyte)kindByte, UnitKindTable.TroopGroup) == (ushort)bomberRole ||
+			return Tables.UnitKindWord((sbyte)kindByte, UnitKindTable.TroopGroup) == (ushort)bomberRole ||
 				bomberRole == 3;
 		}
 
@@ -556,7 +556,7 @@ namespace Civilization1Remaster.Core.Game
 					this.Processor.PullInt8(this.Processor.SegData.Value16, LocationHoriz(participantIdx, locationIdx)),
 					vertLoc, this.Processor.PullInt8(this.Processor.SegData.Value16, LocationVert(participantIdx, locationIdx)));
 
-				short range = (short)UnitKindWord(this.troops.TroopKind(participantIdx, troopIdx), UnitKindTable.ShiftTally);
+				short range = (short)Tables.UnitKindWord(this.troops.TroopKind(participantIdx, troopIdx), UnitKindTable.ShiftTally);
 				weighed = (short)((range >= distance ? 2 : 4) * distance);
 			}
 			else

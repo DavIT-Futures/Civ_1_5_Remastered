@@ -164,7 +164,7 @@ namespace Civilization1Remaster.Core.Game
 			ushort built = (ushort)(1 << participantIdx);
 			ushort launched = (ushort)(1 << (participantIdx + 8));
 
-			Message(CivilizationName(participantIdx))
+			Message(Tables.CivilizationName(participantIdx))
 				.Text(" spaceship\n");
 
 			if ((this.Owner.World.StarshipMarkers & launched) != 0)
@@ -219,7 +219,7 @@ namespace Civilization1Remaster.Core.Game
 					if (this.Owner.Advisors.PlayerKnowsTechnology(participantIdx1, techId) == 0 &&
 						this.Owner.Advisors.PlayerKnowsTechnology(participantIdx2, techId) != 0)
 					{
-						this.Owner.Words.Append(TechnologyText(techId));
+						this.Owner.Words.Append(GameTables.TechnologyText(techId));
 						this.Owner.Words.Append("\n ");
 
 						count++;
@@ -260,9 +260,9 @@ namespace Civilization1Remaster.Core.Game
 					{
 						if (participantIdx2 == this.Owner.World.PersonParticipantIdx)
 						{
-							this.Owner.Words.Set(CivilizationPlural(participantIdx1));
+							this.Owner.Words.Set(Tables.CivilizationPlural(participantIdx1));
 							this.Owner.Words.Append(" take\n");
-							this.Owner.Words.Append(TechnologyText(bestTech));
+							this.Owner.Words.Append(GameTables.TechnologyText(bestTech));
 							this.Owner.Words.Append(".\n");
 
 							if (King.Answer == 0xffff)
@@ -451,7 +451,7 @@ namespace Civilization1Remaster.Core.Game
 
 			sbyte kind = (sbyte)this.Troops.PullAt(((ushort)(0x600 * participantIdx) + troop), UnitMemory.Kind);
 
-			if ((short)UnitKindWord(kind, UnitKindTable.AssaultPower) > 2 || Turn.NoConquestAnimation != 0)
+			if ((short)Tables.UnitKindWord(kind, UnitKindTable.AssaultPower) > 2 || Turn.NoConquestAnimation != 0)
 				return false;
 
 			this.Owner.Advisors.FinalizeProduction(townIdx, horizLoc, vertLoc);
@@ -474,8 +474,8 @@ namespace Civilization1Remaster.Core.Game
 
 			for (markIdx = 0; markIdx < 0x14; markIdx++)
 			{
-				ushort markHoriz = (ushort)this.Owner.Routing.TunePosition((short)DirectionHoriz(markIdx) + (short)horizLoc);
-				ushort markVert = (ushort)(DirectionVert(markIdx) + vertLoc);
+				ushort markHoriz = (ushort)this.Owner.Routing.TunePosition((short)Tables.DirectionHoriz(markIdx) + (short)horizLoc);
+				ushort markVert = (ushort)(Tables.DirectionVert(markIdx) + vertLoc);
 
 				this.Owner.Services.AssignDot(2, (short)markHoriz + 0x50, (short)markVert, (ushort)participantIdx);
 			}
@@ -496,7 +496,7 @@ namespace Civilization1Remaster.Core.Game
 
 			this.Owner.MapOps.DrawMapTile((short)horizLoc, (short)vertLoc);
 
-			Message(CivilizationPlural(participantIdx))
+			Message(Tables.CivilizationPlural(participantIdx))
 				.Text(" capture\n");
 
 			ObtainCityLabel(townIdx);
@@ -507,7 +507,7 @@ namespace Civilization1Remaster.Core.Game
 
 			this.Owner.Words.Append(" gold\npieces plundered.\n");
 
-			this.Owner.Services.PerformSound(LeaderWord(this.Owner.World.Participants[participantIdx].ChiefVisuals, LeaderTable.ShortTune), 0);
+			this.Owner.Services.PerformSound(Tables.LeaderWord(this.Owner.World.Participants[participantIdx].ChiefVisuals, LeaderTable.ShortTune), 0);
 
 			if ((this.Owner.World.SessionPrefMarkers & 8) != 0)
 			{
@@ -546,9 +546,9 @@ namespace Civilization1Remaster.Core.Game
 			Screen.DialogStyle = 0x0;
 
 			Message("Spies report:\n")
-				.Text(CivilizationPlural((ushort)participantIdx))
+				.Text(Tables.CivilizationPlural((ushort)participantIdx))
 				.Text(this.Owner.World.Towns[townIdx].TrueExtent != 0 ? (ushort)0x2893 : (ushort)0x28a1)
-				.Text(CivilizationName((ushort)formerIdx))
+				.Text(Tables.CivilizationName((ushort)formerIdx))
 				.Text(" city\nof ");
 
 			ObtainCityLabel(townIdx);

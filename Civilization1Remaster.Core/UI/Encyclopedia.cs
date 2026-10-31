@@ -295,10 +295,10 @@ namespace Civilization1Remaster.Core.UI
 				ushort nextKind = 0xffff;
 
 				// Technologies, improvements and wonders (1 - 0x2d), units, terrains, concepts (names through 0x3c64)
-				FindNextCivilopediaEntry(part, 0, 0, 0x43, idx => TechnologyText(idx), lastName, ref nextName, ref nextIdx, ref nextKind);
-				FindNextCivilopediaEntry(part, 1, 1, 0x2e, idx => BuildingRecordText(idx), lastName, ref nextName, ref nextIdx, ref nextKind);
-				FindNextCivilopediaEntry(part, 2, 0, 0x1c, idx => UnitText(idx), lastName, ref nextName, ref nextIdx, ref nextKind);
-				FindNextCivilopediaEntry(part, 3, 0, 0xc, idx => TerrainText(idx), lastName, ref nextName, ref nextIdx, ref nextKind);
+				FindNextCivilopediaEntry(part, 0, 0, 0x43, idx => GameTables.TechnologyText(idx), lastName, ref nextName, ref nextIdx, ref nextKind);
+				FindNextCivilopediaEntry(part, 1, 1, 0x2e, idx => GameTables.BuildingRecordText(idx), lastName, ref nextName, ref nextIdx, ref nextKind);
+				FindNextCivilopediaEntry(part, 2, 0, 0x1c, idx => GameTables.UnitText(idx), lastName, ref nextName, ref nextIdx, ref nextKind);
+				FindNextCivilopediaEntry(part, 3, 0, 0xc, idx => GameTables.TerrainText(idx), lastName, ref nextName, ref nextIdx, ref nextKind);
 				FindNextCivilopediaEntry(part, 4, 0, 0x15, idx => this.Processor.PullGlobalWord((ushort)((idx << 1) + CivilopediaConceptTitlesTableAddress)), lastName, ref nextName, ref nextIdx, ref nextKind);
 
 				if (nextKind == 0xffff)
@@ -539,7 +539,7 @@ namespace Civilization1Remaster.Core.UI
 							110, 68, 62, 42);
 					}
 
-					this.Owner.Words.Set(TechnologyText((short)scienceIdx));
+					this.Owner.Words.Set(GameTables.TechnologyText((short)scienceIdx));
 					this.Owner.TextPainter.DrawCenteredTextToScreen0(CivilopediaScienceCategoryHeaderAddress, titleX, 36, Hues.LightGray);
 					break;
 
@@ -563,7 +563,7 @@ namespace Civilization1Remaster.Core.UI
 						this.Owner.Helpers.ReleaseResource(picHandle, 0);
 					}
 
-					this.Owner.Words.Set(BuildingRecordText((short)scienceIdx));
+					this.Owner.Words.Set(GameTables.BuildingRecordText((short)scienceIdx));
 					this.Owner.TextPainter.DrawCenteredTextToScreen0(
 						(short)scienceIdx > 0x18 ? CivilopediaWonderCategoryHeaderAddress : CivilopediaBuildingCategoryHeaderAddress,
 						titleX, 36, Hues.LightGray);
@@ -584,7 +584,7 @@ namespace Civilization1Remaster.Core.UI
 							158, 61, 88, 42);
 					}
 
-					this.Owner.Words.Set(UnitText((short)scienceIdx));
+					this.Owner.Words.Set(GameTables.UnitText((short)scienceIdx));
 					this.Owner.TextPainter.DrawCenteredTextToScreen0(CivilopediaUnitsCategoryHeaderAddress, titleX, 36, Hues.LightGray);
 					this.Owner.Services.DrawPictureToScreen(
 						Screen.Box,
@@ -614,7 +614,7 @@ namespace Civilization1Remaster.Core.UI
 					}
 
 					EmptyMessage()
-						.Text(TerrainText(scienceIdx));
+						.Text(GameTables.TerrainText(scienceIdx));
 					this.Owner.TextPainter.DrawCenteredTextToScreen0(CivilopediaTerrainCategoryHeaderAddress, titleX, 36, Hues.LightGray);
 					break;
 
@@ -635,14 +635,14 @@ namespace Civilization1Remaster.Core.UI
 			if (req1 != 0xff)
 			{
 				Message("Requires ")
-					.Text(TechnologyText((short)(sbyte)req1));
+					.Text(GameTables.TechnologyText((short)(sbyte)req1));
 			}
 
 			byte req2 = this.Processor.PullUInt8(dataSeg, (ushort)(techSpecAddr + TechnologyTable.Prerequisite2Address));
 			if (req2 != 0xff)
 			{
 				this.Owner.Words.Append(" and ");
-				this.Owner.Words.Append(TechnologyText((short)(sbyte)req2));
+				this.Owner.Words.Append(GameTables.TechnologyText((short)(sbyte)req2));
 			}
 
 			this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 32, cursorY, Hues.Blue);
@@ -662,7 +662,7 @@ namespace Civilization1Remaster.Core.UI
 					if (companion != 0xff)
 					{
 						this.Owner.Words.Append(" (with ");
-						this.Owner.Words.Append(TechnologyText((short)(sbyte)companion));
+						this.Owner.Words.Append(GameTables.TechnologyText((short)(sbyte)companion));
 						this.Owner.Words.Append(")");
 					}
 
@@ -678,7 +678,7 @@ namespace Civilization1Remaster.Core.UI
 					if (companion != 0xff)
 					{
 						this.Owner.Words.Append(" (with ");
-						this.Owner.Words.Append(TechnologyText((short)(sbyte)companion));
+						this.Owner.Words.Append(GameTables.TechnologyText((short)(sbyte)companion));
 						this.Owner.Words.Append(")");
 					}
 
@@ -691,7 +691,7 @@ namespace Civilization1Remaster.Core.UI
 			for (ushort unitIdx = 0; (short)unitIdx < 0x1c; unitIdx++)
 			{
 				ushort unitSpec = (ushort)(0x22 * unitIdx);
-				if (UnitKindWordAt(unitSpec, UnitKindTable.Technology) == scienceIdx)
+				if (Tables.UnitKindWordAt(unitSpec, UnitKindTable.Technology) == scienceIdx)
 				{
 					this.Owner.Services.DrawPictureToScreen(
 						Screen.Box,
@@ -701,7 +701,7 @@ namespace Civilization1Remaster.Core.UI
 							dataSeg,
 							(ushort)((((unitIdx + (this.Owner.World.PersonParticipantIdx << 5)) + 0x40) << 1) + 0xd4ce)));
 
-					Message(UnitTextAt(unitSpec))
+					Message(GameTables.UnitTextAt(unitSpec))
 						.Text(" unit");
 					this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 60, cursorY, Hues.LightRed);
 					cursorY = (short)(cursorY + 0xc);
@@ -711,10 +711,10 @@ namespace Civilization1Remaster.Core.UI
 			for (ushort impIdx = 1; (short)impIdx <= 0x2d; impIdx++)
 			{
 				ushort impSpec = (ushort)(0x1e * impIdx);
-				if (BuildingWordAt(impSpec, BuildingTable.Technology) == scienceIdx)
+				if (Tables.BuildingWordAt(impSpec, BuildingTable.Technology) == scienceIdx)
 				{
 					this.Owner.CityOps.DrawResourceIcon((short)impIdx, 40, (short)(cursorY - 2));
-					Message(BuildingRecordTextAt(impSpec))
+					Message(GameTables.BuildingRecordTextAt(impSpec))
 						.Text((short)impIdx > 0x18 ? " Wonder" : " improvement");
 					this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 60, cursorY, Hues.Green);
 					cursorY = (short)(cursorY + 0xc);
@@ -742,7 +742,7 @@ namespace Civilization1Remaster.Core.UI
 			else
 			{
 				Message("(Taken from ")
-					.Text(CivilizationPlural(obtainedFrom))
+					.Text(Tables.CivilizationPlural(obtainedFrom))
 					.Text(")");
 			}
 
@@ -753,21 +753,21 @@ namespace Civilization1Remaster.Core.UI
 		{
 			ushort impSpec = (ushort)(0x1e * scienceIdx);
 			this.Owner.Words.Set("Requires ");
-			ushort reqTech = BuildingWordAt(impSpec, BuildingTable.Technology);
-			this.Owner.Words.Append(TechnologyText((short)reqTech));
+			ushort reqTech = Tables.BuildingWordAt(impSpec, BuildingTable.Technology);
+			this.Owner.Words.Append(GameTables.TechnologyText((short)reqTech));
 			this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 12, cursorY, Hues.LightBlue);
 			cursorY = (short)(cursorY + 8);
 
 			this.Owner.Words.Set("Cost: ");
 			this.Owner.Words.Append(
-				this.Owner.Libc.IntegerToText((short)(0xa * (short)BuildingWordAt(impSpec, BuildingTable.Price)), 10));
+				this.Owner.Libc.IntegerToText((short)(0xa * (short)Tables.BuildingWordAt(impSpec, BuildingTable.Price)), 10));
 			this.Owner.Words.Append(" shields.");
 			this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 12, cursorY, Hues.LightBlue);
 			cursorY = (short)(cursorY + 8);
 
 			this.Owner.Words.Set("Maintenance: $");
 			this.Owner.Words.Append(
-				this.Owner.Libc.IntegerToText((short)BuildingWordAt(impSpec, BuildingTable.Upkeep), 10));
+				this.Owner.Libc.IntegerToText((short)Tables.BuildingWordAt(impSpec, BuildingTable.Upkeep), 10));
 			this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 12, cursorY, Hues.LightRed);
 		}
 
@@ -775,8 +775,8 @@ namespace Civilization1Remaster.Core.UI
 		{
 			ushort unitSpec = (ushort)(0x22 * scienceIdx);
 			this.Owner.Words.Set("Requires ");
-			ushort reqTech = UnitKindWordAt(unitSpec, UnitKindTable.Technology);
-			this.Owner.Words.Append(TechnologyText((short)reqTech));
+			ushort reqTech = Tables.UnitKindWordAt(unitSpec, UnitKindTable.Technology);
+			this.Owner.Words.Append(GameTables.TechnologyText((short)reqTech));
 			if (scienceIdx == 0x19)
 			{
 				this.Owner.Words.Append(" and Nuclear Fission");
@@ -787,26 +787,26 @@ namespace Civilization1Remaster.Core.UI
 
 			this.Owner.Words.Set("Cost: ");
 			this.Owner.Words.Append(
-				this.Owner.Libc.IntegerToText((short)(0xa * (short)UnitKindWordAt(unitSpec, UnitKindTable.Price)), 10));
+				this.Owner.Libc.IntegerToText((short)(0xa * (short)Tables.UnitKindWordAt(unitSpec, UnitKindTable.Price)), 10));
 			this.Owner.Words.Append(" resources.");
 			this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 100, cursorY, Hues.LightBlue);
 			cursorY = (short)(cursorY + 8);
 
 			this.Owner.Words.Set("Attack Strength: ");
 			this.Owner.Words.Append(
-				this.Owner.Libc.IntegerToText((short)UnitKindWordAt(unitSpec, UnitKindTable.AssaultPower), 10));
+				this.Owner.Libc.IntegerToText((short)Tables.UnitKindWordAt(unitSpec, UnitKindTable.AssaultPower), 10));
 			this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 100, cursorY, Hues.LightRed);
 			cursorY = (short)(cursorY + 8);
 
 			this.Owner.Words.Set("Defense Strength: ");
 			this.Owner.Words.Append(
-				this.Owner.Libc.IntegerToText((short)UnitKindWordAt(unitSpec, UnitKindTable.GuardPower), 10));
+				this.Owner.Libc.IntegerToText((short)Tables.UnitKindWordAt(unitSpec, UnitKindTable.GuardPower), 10));
 			this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 100, cursorY, Hues.LightRed);
 			cursorY = (short)(cursorY + 8);
 
 			this.Owner.Words.Set("Movement Rate: ");
 			this.Owner.Words.Append(
-				this.Owner.Libc.IntegerToText((short)UnitKindWordAt(unitSpec, UnitKindTable.ShiftTally), 10));
+				this.Owner.Libc.IntegerToText((short)Tables.UnitKindWordAt(unitSpec, UnitKindTable.ShiftTally), 10));
 			this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 100, cursorY, Hues.Black);
 		}
 
@@ -815,16 +815,16 @@ namespace Civilization1Remaster.Core.UI
 			for (ushort variantIdx = scienceIdx; (short)(scienceIdx + 0xc) >= (short)variantIdx; variantIdx = (ushort)(variantIdx + 0xc))
 			{
 				if (variantIdx != scienceIdx &&
-					TerrainField(scienceIdx, TerrainTable.Food) == 2)
+					Tables.TerrainField(scienceIdx, TerrainTable.Food) == 2)
 				{
 					continue;
 				}
 
 				ushort varSpec = (ushort)(0x13 * variantIdx);
-				this.Owner.TextPainter.DrawTextToScreen0(TerrainTextAt(varSpec), 12, cursorY, Hues.Blue);
+				this.Owner.TextPainter.DrawTextToScreen0(GameTables.TerrainTextAt(varSpec), 12, cursorY, Hues.Blue);
 				cursorY = (short)(cursorY + 8);
 
-				sbyte foodVal = (sbyte)TerrainFieldAt(varSpec, TerrainTable.Food);
+				sbyte foodVal = (sbyte)Tables.TerrainFieldAt(varSpec, TerrainTable.Food);
 				short irrigEffect = (short)this.Processor.PullUInt16(dataSeg, (ushort)(TerrainImprovementTable.Origin + (0xc * scienceIdx) + TerrainImprovementTable.Irrigation));
 				if (foodVal != 0 || irrigEffect < -1)
 				{
@@ -852,7 +852,7 @@ namespace Civilization1Remaster.Core.UI
 					cursorY = (short)(cursorY + 8);
 				}
 
-				sbyte prodVal = (sbyte)TerrainFieldAt(varSpec, TerrainTable.Shields);
+				sbyte prodVal = (sbyte)Tables.TerrainFieldAt(varSpec, TerrainTable.Shields);
 				short mineEffect = (short)this.Processor.PullUInt16(dataSeg, (ushort)(TerrainImprovementTable.Origin + (0xc * scienceIdx) + TerrainImprovementTable.Mining));
 				if (prodVal != 0 || mineEffect < -1)
 				{
@@ -881,7 +881,7 @@ namespace Civilization1Remaster.Core.UI
 					cursorY = (short)(cursorY + 8);
 				}
 
-				sbyte tradeVal = (sbyte)TerrainFieldAt(varSpec, TerrainTable.Trade);
+				sbyte tradeVal = (sbyte)Tables.TerrainFieldAt(varSpec, TerrainTable.Trade);
 				if (tradeVal != 0 || (short)scienceIdx <= 2)
 				{
 					Message("Trade: ")
@@ -924,7 +924,7 @@ namespace Civilization1Remaster.Core.UI
 			ushort baseSpec = (ushort)(0x13 * scienceIdx);
 			this.Owner.Words.Set("Movement cost: ");
 			this.Owner.Words.Append(
-				this.Owner.Libc.IntegerToText((sbyte)TerrainFieldAt(baseSpec, TerrainTable.MoveCost), 10));
+				this.Owner.Libc.IntegerToText((sbyte)Tables.TerrainFieldAt(baseSpec, TerrainTable.MoveCost), 10));
 			this.Owner.Words.Append(" MP");
 			this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 12, cursorY, Hues.LightRed);
 			cursorY = (short)(cursorY + 8);
@@ -932,7 +932,7 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.Words.Set("Defense bonus: +");
 			this.Owner.Words.Append(
 				this.Owner.Libc.IntegerToText(
-					(short)((0x32 * (short)(sbyte)TerrainFieldAt(baseSpec, TerrainTable.DefenseBonus)) - 0x64),
+					(short)((0x32 * (short)(sbyte)Tables.TerrainFieldAt(baseSpec, TerrainTable.DefenseBonus)) - 0x64),
 					10));
 			this.Owner.Words.Append("%");
 			this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 12, cursorY, Hues.LightRed);

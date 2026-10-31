@@ -24,7 +24,7 @@ namespace Civilization1Remaster.Core.Game
 
 			this.Troops.AssignAt(troop, UnitMemory.TravelHoriz, 0xff);
 
-			Message(CivilizationName((ushort)participantIdx))
+			Message(Tables.CivilizationName((ushort)participantIdx))
 				.Text(" diplomat arrives\nin ")
 				.City(townIdx)
 				.Text("...\n Establish Embassy\n Investigate City\n Steal Technology\n Industrial Sabotage\n Incite a Revolt\n Meet with King\n");
@@ -116,7 +116,7 @@ namespace Civilization1Remaster.Core.Game
 					troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz), troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert));
 				sbyte kind = troops.TroopKind(participantIdx, troopIdx);
 				short price = (short)(CPU.SignedQuotient((short)(this.Owner.World.Participants[participantIdx].Gold + 0x2ee), (short)(distance + 2)) *
-					UnitKindWord(kind, UnitKindTable.Price));
+					Tables.UnitKindWord(kind, UnitKindTable.Price));
 
 				if (kind != 0)
 				{
@@ -370,9 +370,9 @@ namespace Civilization1Remaster.Core.Game
 
 				this.Owner.Advisors.EarnTechnology(participantIdx, scienceIdx, ownerIdx);
 
-				Message(CivilizationPlural((ushort)participantIdx))
+				Message(Tables.CivilizationPlural((ushort)participantIdx))
 					.Text(" steal\n")
-					.Text(TechnologyText(scienceIdx))
+					.Text(GameTables.TechnologyText(scienceIdx))
 					.Text(".\n")
 					.Style(0x0)
 					.Dialog(80, 80);
@@ -425,7 +425,7 @@ namespace Civilization1Remaster.Core.Game
 					town.StructureMarkers0 &= keep;
 					town.StructureMarkers1 &= (keep & 0x8000) != 0 ? (ushort)0xffff : (ushort)0;
 
-					Message(BuildingText(buildingIdx))
+					Message(GameTables.BuildingText(buildingIdx))
 						.Text(" destroyed\n");
 
 					destroyed = true;
@@ -436,7 +436,7 @@ namespace Civilization1Remaster.Core.Game
 			{
 				town.MaterialsTally = 0;
 
-				Message(town.PresentMakingIdx >= 0 ? UnitText(town.PresentMakingIdx) : BuildingRecordText(-town.PresentMakingIdx))
+				Message(town.PresentMakingIdx >= 0 ? GameTables.UnitText(town.PresentMakingIdx) : GameTables.BuildingRecordText(-town.PresentMakingIdx))
 					.Text(" production sabotaged\n");
 			}
 
@@ -525,7 +525,7 @@ namespace Civilization1Remaster.Core.Game
 			UnitMemory troops = new UnitMemory(this.Processor);
 			ushort kindName = (ushort)((troops.TroopKind(participantIdx, troopIdx) * UnitKindTable.Stride) + UnitKindTable.Origin);
 
-			Message(CivilizationName(participantIdx))
+			Message(Tables.CivilizationName(participantIdx))
 				.Text(" ")
 				.Text(kindName)
 				.Text("\nwill desert for ")
@@ -550,11 +550,11 @@ namespace Civilization1Remaster.Core.Game
 				this.Owner.MapOps.FocusMapView(participantIdx, troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz) - 8,
 					troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert) - 6);
 
-				Message(CivilizationName(participantIdx))
+				Message(Tables.CivilizationName(participantIdx))
 					.Text(" ")
 					.Text(kindName)
 					.Text(" unit\nbribed by ")
-					.Text(CivilizationPlural(participantIdx1))
+					.Text(Tables.CivilizationPlural(participantIdx1))
 					.Text("!\n")
 					.Style(0)
 					.Dialog(80, 40);
@@ -618,7 +618,7 @@ namespace Civilization1Remaster.Core.Game
 					this.Owner.MapOps.FocusMapView(humanIdx, town.Place.X - 8, town.Place.Y - 5);
 				}
 
-				Message(CivilizationPlural(ownerIdx))
+				Message(Tables.CivilizationPlural(ownerIdx))
 					.Text(participantIdx == 0 ? (ushort)0x5322 : (ushort)0x533c)
 					.City(townIdx);
 
@@ -630,7 +630,7 @@ namespace Civilization1Remaster.Core.Game
 				{
 					this.Owner.Words.Append(".\n");
 
-					this.Owner.Words.Append(CivilizationName(participantIdx));
+					this.Owner.Words.Append(Tables.CivilizationName(participantIdx));
 
 					this.Owner.Words.Append(0x5355);
 				}

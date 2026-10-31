@@ -41,9 +41,9 @@ namespace Civilization1Remaster.Core.Engine
 				this.Owner.World.HardnessTier = source.PullInt16OrZero();
 				this.Owner.World.LiveRealms = source.PullInt16OrZero();
 				this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx].PresentInquiryIdx = source.PullInt16OrZero();
-				PullContent(source, LeaderNameAt(0), 0x70);
-				PullContent(source, CivilizationPluralAt(0), 0x60);
-				PullContent(source, CivilizationNameAt(0), 0x58);
+				PullContent(source, Tables.LeaderNameAt(0), 0x70);
+				PullContent(source, Tables.CivilizationPluralAt(0), 0x60);
+				PullContent(source, Tables.CivilizationNameAt(0), 0x58);
 
 				for (int idx = 0; idx < this.Owner.World.Participants.Length; idx++)
 				{
@@ -436,9 +436,9 @@ namespace Civilization1Remaster.Core.Engine
 				sink.EmitInt16(this.Owner.World.HardnessTier);
 				sink.EmitInt16(this.Owner.World.LiveRealms);
 				sink.EmitInt16(this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx].PresentInquiryIdx);
-				EmitContent(sink, LeaderNameAt(0), 0x70);
-				EmitContent(sink, CivilizationPluralAt(0), 0x60);
-				EmitContent(sink, CivilizationNameAt(0), 0x58);
+				EmitContent(sink, Tables.LeaderNameAt(0), 0x70);
+				EmitContent(sink, Tables.CivilizationPluralAt(0), 0x60);
+				EmitContent(sink, Tables.CivilizationNameAt(0), 0x58);
 
 				for (int idx = 0; idx < this.Owner.World.Participants.Length; idx++)
 				{

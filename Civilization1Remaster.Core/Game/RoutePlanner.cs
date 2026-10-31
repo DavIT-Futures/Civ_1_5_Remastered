@@ -116,8 +116,8 @@ namespace Civilization1Remaster.Core.Game
 
 				for (int directionIdx = 1; directionIdx <= 8; directionIdx++)
 				{
-					short nextHoriz = (short)(DirectionHoriz(directionIdx) + blockHoriz);
-					short nextVert = (short)(DirectionVert(directionIdx) + blockVert);
+					short nextHoriz = (short)(Tables.DirectionHoriz(directionIdx) + blockHoriz);
+					short nextVert = (short)(Tables.DirectionVert(directionIdx) + blockVert);
 
 					if (!BlockMarked(blocks, nextHoriz, nextVert))
 						continue;
@@ -147,8 +147,8 @@ namespace Civilization1Remaster.Core.Game
 
 			if (found != -1)
 			{
-				Search.GoalHoriz = (ushort)(DirectionHoriz(found) + blockHoriz);
-				Search.GoalVert = (ushort)(DirectionVert(found) + blockVert);
+				Search.GoalHoriz = (ushort)(Tables.DirectionHoriz(found) + blockHoriz);
+				Search.GoalVert = (ushort)(Tables.DirectionVert(found) + blockVert);
 				result = 1;
 			}
 
@@ -299,8 +299,8 @@ namespace Civilization1Remaster.Core.Game
 
 			for (candidate = 1; candidate <= 8; candidate++)
 			{
-				if ((short)DirectionHoriz(candidate) == shiftHoriz &&
-					(short)DirectionVert(candidate) == shiftVert)
+				if ((short)Tables.DirectionHoriz(candidate) == shiftHoriz &&
+					(short)Tables.DirectionVert(candidate) == shiftVert)
 				{
 					direction = candidate;
 					break;
@@ -316,7 +316,7 @@ namespace Civilization1Remaster.Core.Game
 		{
 			ushort kind = (ushort)(0x22 * (sbyte)this.Troops.PullAt(troop, UnitMemory.Kind));
 
-			if (UnitKindWordAt(kind, UnitKindTable.LandGroup) == 1)
+			if (Tables.UnitKindWordAt(kind, UnitKindTable.LandGroup) == 1)
 			{
 				Search.GoalHoriz = this.Troops.PullAt(troop, UnitMemory.TravelHoriz);
 				Search.GoalVert = this.Troops.PullAt(troop, UnitMemory.TravelVert);
@@ -390,8 +390,8 @@ namespace Civilization1Remaster.Core.Game
 
 			for (direction = 1; direction < 9; direction++)
 			{
-				short stepHoriz = (short)DirectionHoriz(direction);
-				short stepVert = (short)DirectionVert(direction);
+				short stepHoriz = (short)Tables.DirectionHoriz(direction);
+				short stepVert = (short)Tables.DirectionVert(direction);
 				short nextHoriz = (short)(this.Troops.PullAt(troop, UnitMemory.Horiz) + stepHoriz);
 				short nextVert = (short)(this.Troops.PullAt(troop, UnitMemory.Vert) + stepVert);
 				short leftHoriz = (short)(shiftHoriz - stepHoriz);
@@ -415,8 +415,8 @@ namespace Civilization1Remaster.Core.Game
 				{
 					ushort unitKind = (ushort)(0x22 * (sbyte)this.Troops.PullAt(troop, UnitMemory.Kind));
 
-					cost = (short)UnitKindWordAt(unitKind, UnitKindTable.ShiftTally) <= 1 ? (short)3 :
-						(short)(3 * (sbyte)TerrainField(terrain, TerrainTable.MoveCost));
+					cost = (short)Tables.UnitKindWordAt(unitKind, UnitKindTable.ShiftTally) <= 1 ? (short)3 :
+						(short)(3 * (sbyte)Tables.TerrainField(terrain, TerrainTable.MoveCost));
 				}
 
 				cost += (short)((nextDistance << 2) + Math.Abs(leftHoriz) + Math.Abs(leftVert));
@@ -481,14 +481,14 @@ namespace Civilization1Remaster.Core.Game
 			{
 				ushort kind = (ushort)(0x22 * (sbyte)this.Troops.PullAt(troop, UnitMemory.Kind));
 
-				if ((UnitKindWordAt(kind, UnitKindTable.LandGroup) == 2) == (terrain == 0xa) &&
+				if ((Tables.UnitKindWordAt(kind, UnitKindTable.LandGroup) == 2) == (terrain == 0xa) &&
 					(occupied == 0 || this.Owner.UnitOps.MayOccupyTile(participantIdx, horizLoc, vertLoc) == 0))
 				{
 					allowed = true;
 				}
 				else
 				{
-					if (UnitKindWord((sbyte)this.Troops.PullAt(troop, UnitMemory.Kind), UnitKindTable.LandGroup) == 1)
+					if (Tables.UnitKindWord((sbyte)this.Troops.PullAt(troop, UnitMemory.Kind), UnitKindTable.LandGroup) == 1)
 						allowed = true;
 				}
 			}
@@ -509,7 +509,7 @@ namespace Civilization1Remaster.Core.Game
 		/// <summary>Whether the unit (offset from 0x81d4) is of a sea kind (domain 2, 0x1138 + 0x22 * kind)</summary>
 		private bool UnitMovesBySea(ushort troop)
 		{
-			return UnitKindWord((sbyte)this.Troops.PullAt(troop, UnitMemory.Kind), UnitKindTable.LandGroup) == 2;
+			return Tables.UnitKindWord((sbyte)this.Troops.PullAt(troop, UnitMemory.Kind), UnitKindTable.LandGroup) == 2;
 		}
 
 		/// <summary>The links of the block (the bits of directions 1 - 8): sea or land blocks</summary>
@@ -521,7 +521,7 @@ namespace Civilization1Remaster.Core.Game
 		/// <summary>The column of the block in the direction, wrapping at 20</summary>
 		private short RouteNeighbourColumn(short direction, short column)
 		{
-			short nextColumn = (short)(DirectionHoriz(direction) + column);
+			short nextColumn = (short)(Tables.DirectionHoriz(direction) + column);
 
 			if (nextColumn == 0x14)
 				nextColumn = 0;
@@ -590,7 +590,7 @@ namespace Civilization1Remaster.Core.Game
 						continue;
 
 					nextColumn = RouteNeighbourColumn(direction, column);
-					nextRow = (short)(DirectionVert(direction) + row);
+					nextRow = (short)(Tables.DirectionVert(direction) + row);
 					neighbourSet = true;
 
 					ushort block = BlockStepsCell(nextColumn, nextRow);
@@ -622,7 +622,7 @@ namespace Civilization1Remaster.Core.Game
 						continue;
 
 					nextColumn = RouteNeighbourColumn(direction, unitColumn);
-					nextRow = (short)(DirectionVert(direction) + unitRow);
+					nextRow = (short)(Tables.DirectionVert(direction) + unitRow);
 					neighbourSet = true;
 
 					short blockSteps = (sbyte)this.Processor.PullGlobalByte(BlockStepsCell(nextColumn, nextRow));
@@ -679,10 +679,10 @@ namespace Civilization1Remaster.Core.Game
 		/// </summary>
 		private void AimRouteStep(short direction, short unitColumn, short unitRow, bool sea)
 		{
-			Search.GoalHoriz = (ushort)((((short)DirectionHoriz(direction) + unitColumn) << 2) + 1);
+			Search.GoalHoriz = (ushort)((((short)Tables.DirectionHoriz(direction) + unitColumn) << 2) + 1);
 
 			Search.GoalHoriz = (ushort)TunePosition((short)Search.GoalHoriz);
-			Search.GoalVert = (ushort)((((short)DirectionVert(direction) + unitRow) << 2) + 1);
+			Search.GoalVert = (ushort)((((short)Tables.DirectionVert(direction) + unitRow) << 2) + 1);
 
 			if ((this.Owner.MapOps.ObtainTerrainType((short)Search.GoalHoriz, (short)Search.GoalVert) == 0xa) == sea)
 				return;
@@ -725,8 +725,8 @@ namespace Civilization1Remaster.Core.Game
 
 			ushort kind = (ushort)(0x22 * (sbyte)this.Troops.PullAt(((ushort)(0xc * troopIdx) + (ushort)(0x600 * participantIdx)), UnitMemory.Kind));
 
-			bool sea = UnitKindWordAt(kind, UnitKindTable.LandGroup) == 2;
-			bool air = UnitKindWordAt(kind, UnitKindTable.ShiftTally) == 1;
+			bool sea = Tables.UnitKindWordAt(kind, UnitKindTable.LandGroup) == 2;
+			bool air = Tables.UnitKindWordAt(kind, UnitKindTable.ShiftTally) == 1;
 
 
 			do
@@ -761,14 +761,14 @@ namespace Civilization1Remaster.Core.Game
 
 			for (direction = 1; direction <= 8; direction++)
 			{
-				short nextHoriz = (short)(DirectionHoriz(direction) + horizLoc);
+				short nextHoriz = (short)(Tables.DirectionHoriz(direction) + horizLoc);
 
 				if (this.Owner.Libc.AbsoluteValue((short)(nextHoriz - Search.GoalHoriz)) >= 8)
 					continue;
 
 				short tileHoriz = (short)TunePosition(nextHoriz);
 
-				short nextVert = (short)(DirectionVert(direction) + vertLoc);
+				short nextVert = (short)(Tables.DirectionVert(direction) + vertLoc);
 
 				if (this.Owner.Libc.AbsoluteValue((short)(nextVert - Search.GoalVert)) >= 8)
 					continue;
@@ -793,7 +793,7 @@ namespace Civilization1Remaster.Core.Game
 				}
 				else
 				{
-					nextCost = (short)((3 * (sbyte)TerrainField(terrain, TerrainTable.MoveCost)) + cost);
+					nextCost = (short)((3 * (sbyte)Tables.TerrainField(terrain, TerrainTable.MoveCost)) + cost);
 				}
 
 
@@ -825,7 +825,7 @@ namespace Civilization1Remaster.Core.Game
 
 			for (direction = 1; direction <= 8; direction++)
 			{
-				short nextHoriz = (short)(DirectionHoriz(direction) + unitHoriz);
+				short nextHoriz = (short)(Tables.DirectionHoriz(direction) + unitHoriz);
 				short place = (short)Search.GoalHoriz;
 
 				if (this.Owner.Libc.AbsoluteValue((short)(nextHoriz - place)) >= 0x48)
@@ -837,7 +837,7 @@ namespace Civilization1Remaster.Core.Game
 
 				short tileHoriz = (short)TunePosition(nextHoriz);
 
-				short nextVert = (short)(DirectionVert(direction) + unitVert);
+				short nextVert = (short)(Tables.DirectionVert(direction) + unitVert);
 
 				if (this.Owner.Libc.AbsoluteValue((short)(nextVert - Search.GoalVert)) >= 8)
 					continue;
@@ -846,7 +846,7 @@ namespace Civilization1Remaster.Core.Game
 
 				ushort kind = (ushort)(0x22 * (sbyte)this.Troops.PullAt(((ushort)(0xc * troopIdx) + (ushort)(0x600 * participantIdx)), UnitMemory.Kind));
 
-				if ((UnitKindWordAt(kind, UnitKindTable.LandGroup) == 2) != seaTile &&
+				if ((Tables.UnitKindWordAt(kind, UnitKindTable.LandGroup) == 2) != seaTile &&
 					(this.Owner.MapOps.ObtainTileImprovements(tileHoriz, nextVert) & 1) == 0)
 					continue;
 

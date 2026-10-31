@@ -247,7 +247,7 @@ namespace Civilization1Remaster.Core.UI
 							ushort cityOwner = PullReplayCity(cityIdx, ReplayCityActiveColumnOffset);
 
 							hue = Replay.CityDistance == 0 ? (ushort)(cityOwner == 1 ? 7 : 15) :
-								PlayerColour(cityOwner);
+								Tables.PlayerColour(cityOwner);
 						}
 
 						this.Owner.Services.FloodBox(Screen.Box, tileHoriz * 4, (tileVert * 4) + 4, 4, 4, hue);
@@ -309,19 +309,19 @@ namespace Civilization1Remaster.Core.UI
 			using var _ = this.Processor.Journal.Scope($"ObtainReplayPlayerLabel({participantIdx})");
 
 			ushort leader = (ushort)(0x3a * this.Owner.World.Participants[participantIdx].ChiefVisuals);
-			ushort civName = LeaderTextAt(leader, LeaderTable.Civilization);
-			ushort pluralName = LeaderTextAt(leader, LeaderTable.CivilizationPlural);
+			ushort civName = GameTables.LeaderTextAt(leader, LeaderTable.Civilization);
+			ushort pluralName = GameTables.LeaderTextAt(leader, LeaderTable.CivilizationPlural);
 
-			this.Owner.Names.Set(CivilizationName(participantIdx), civName);
+			this.Owner.Names.Set(Tables.CivilizationName(participantIdx), civName);
 
 			if (this.Processor.PullGlobalByte(pluralName) == 0)
 			{
 				string plural = this.Processor.PullText(CPU.AsLinearAddress(this.Processor.SegData.Value16, civName)) + "s";
-				this.Owner.Names.Set(CivilizationPlural(participantIdx), plural);
+				this.Owner.Names.Set(Tables.CivilizationPlural(participantIdx), plural);
 			}
 			else
 			{
-				this.Owner.Names.Set(CivilizationPlural(participantIdx), pluralName);
+				this.Owner.Names.Set(Tables.CivilizationPlural(participantIdx), pluralName);
 			}
 		}
 
@@ -350,7 +350,7 @@ namespace Civilization1Remaster.Core.UI
 			ShowReplay();
 
 			ushort leader = (ushort)(0x3a * this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx].ChiefVisuals);
-			this.Owner.Services.PerformSound(LeaderWordAt(leader, LeaderTable.Tune), 3);
+			this.Owner.Services.PerformSound(Tables.LeaderWordAt(leader, LeaderTable.Tune), 3);
 
 			this.Owner.Services.FloodBox(Screen.Box, 18, 150, 284, 32,
 				(ushort)(Screen.VgaMode != 0 ? 34 : 7));
@@ -360,7 +360,7 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.TextPainter.DrawCenteredTextToScreen0(this.Owner.Words.ToString(), 160, 152, 20);
 			this.Owner.TextPainter.DrawCenteredTextToScreen0(this.Owner.Words.ToString(), 160, 151, (ushort)(Screen.VgaMode != 0 ? 23 : 15));
 
-			Message(LeaderName(this.Owner.World.PersonParticipantIdx))
+			Message(Tables.LeaderName(this.Owner.World.PersonParticipantIdx))
 				.Text(" the CONQUEROR!");
 
 			this.Owner.TextPainter.DrawCenteredTextToScreen0(this.Owner.Words.ToString(), 160, 168, 20);
@@ -433,7 +433,7 @@ namespace Civilization1Remaster.Core.UI
 
 			this.Owner.Services.DrawPictureToScreen(Screen.Box, mouthHoriz, mouthVert - 2, speakingMouth);
 
-			this.Owner.Services.PerformSound(LeaderWord(this.Owner.World.Participants[participantIdx].ChiefVisuals, LeaderTable.Tune), 3);
+			this.Owner.Services.PerformSound(Tables.LeaderWord(this.Owner.World.Participants[participantIdx].ChiefVisuals, LeaderTable.Tune), 3);
 
 			if (Screen.VgaMode != 0)
 			{
@@ -482,7 +482,7 @@ namespace Civilization1Remaster.Core.UI
 
 			this.Owner.Words.Append(": ");
 
-			this.Owner.Words.Append(CivilizationPlural((ushort)this.Owner.World.PersonParticipantIdx));
+			this.Owner.Words.Append(Tables.CivilizationPlural((ushort)this.Owner.World.PersonParticipantIdx));
 
 			this.Owner.Words.Append(" destroy");
 
@@ -490,7 +490,7 @@ namespace Civilization1Remaster.Core.UI
 
 			this.Owner.Words.Set("the ");
 
-			Message(CivilizationName((ushort)participantIdx))
+			Message(Tables.CivilizationName((ushort)participantIdx))
 				.Text(" civilization!");
 
 			DrawShadowedCentredLine(168);
@@ -505,7 +505,7 @@ namespace Civilization1Remaster.Core.UI
 
 			this.Owner.TextPainter.WaitForTime(60);
 
-			this.Owner.Services.PerformSound(LeaderWord(this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx].ChiefVisuals, LeaderTable.Tune), 3);
+			this.Owner.Services.PerformSound(Tables.LeaderWord(this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx].ChiefVisuals, LeaderTable.Tune), 3);
 
 			this.Owner.VideoCard.DrawScreenToMainScreen(1, 0x1e);
 
@@ -603,7 +603,7 @@ namespace Civilization1Remaster.Core.UI
 		/// <summary>The plural name (0x1992) of the player</summary>
 		private ushort ReplayPlural(int participantIdx)
 		{
-			return CivilizationPlural(participantIdx);
+			return Tables.CivilizationPlural(participantIdx);
 		}
 
 		/// <summary>
@@ -664,17 +664,17 @@ namespace Civilization1Remaster.Core.UI
 					{
 						case 5:
 							this.Owner.Words.Append(" discover ");
-							this.Owner.Words.Append(TechnologyText(thing));
+							this.Owner.Words.Append(GameTables.TechnologyText(thing));
 							break;
 
 						case 6:
 							this.Owner.Words.Append(" produce first ");
-							this.Owner.Words.Append(UnitText(thing));
+							this.Owner.Words.Append(GameTables.UnitText(thing));
 							break;
 
 						case 8:
 							this.Owner.Words.Append(" form ");
-							this.Owner.Words.Append(GovernmentName(thing));
+							this.Owner.Words.Append(Tables.GovernmentName(thing));
 							break;
 
 						default:
@@ -685,7 +685,7 @@ namespace Civilization1Remaster.Core.UI
 								this.Owner.Words.Append("the ");
 							}
 
-							this.Owner.Words.Append(WonderText(thing));
+							this.Owner.Words.Append(GameTables.WonderText(thing));
 							break;
 					}
 
@@ -730,7 +730,7 @@ namespace Civilization1Remaster.Core.UI
 
 					short destroyer = ReplayByte(ref spot);
 
-					this.Owner.Words.Append(CivilizationName(Replay.Actor));
+					this.Owner.Words.Append(Tables.CivilizationName(Replay.Actor));
 
 					this.Owner.Words.Append(" civilization destroyed by ");
 

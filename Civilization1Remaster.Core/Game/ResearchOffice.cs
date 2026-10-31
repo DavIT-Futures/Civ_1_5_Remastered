@@ -125,7 +125,7 @@ namespace Civilization1Remaster.Core.Game
 
 			luxuries = (short)this.Owner.Helpers.ClampValue(luxuries, 0, 4);
 
-			participant.ResearchLevyRatio = (short)(LeaderWord(participant.ChiefVisuals, LeaderTable.Leaning) +
+			participant.ResearchLevyRatio = (short)(Tables.LeaderWord(participant.ChiefVisuals, LeaderTable.Leaning) +
 				((10 - luxuries) / 2));
 
 			if (participant.Gold > (short)(this.Owner.World.RoundTally + 0x64))
@@ -202,8 +202,8 @@ namespace Civilization1Remaster.Core.Game
 
 			for (int spotIdx = 0; spotIdx < 0x2d; spotIdx++)
 			{
-				int spotHoriz = this.Owner.Routing.TunePosition((short)DirectionHoriz(spotIdx) + horizLoc);
-				short spotVert = (short)(DirectionVert(spotIdx) + vertLoc);
+				int spotHoriz = this.Owner.Routing.TunePosition((short)Tables.DirectionHoriz(spotIdx) + horizLoc);
+				short spotVert = (short)(Tables.DirectionVert(spotIdx) + vertLoc);
 
 				this.Owner.Helpers.FindNearestCity(spotHoriz, spotVert);
 

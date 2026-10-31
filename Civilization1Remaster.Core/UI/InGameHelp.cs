@@ -68,8 +68,8 @@ namespace Civilization1Remaster.Core.UI
 				sbyte vertLoc = troops.PullSigned(participantIdx, (short)troopIdx, UnitMemory.Vert);
 				ushort terrain = this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
 
-				bool cityPlace = (short)((sbyte)TerrainField(terrain, TerrainTable.Food) +
-					(sbyte)TerrainField(terrain, TerrainTable.Shields)) >= 2;
+				bool cityPlace = (short)((sbyte)Tables.TerrainField(terrain, TerrainTable.Food) +
+					(sbyte)Tables.TerrainField(terrain, TerrainTable.Shields)) >= 2;
 
 				short worth = (short)this.Owner.VideoCard.ObtainDot(2, horizLoc + 80, vertLoc);
 
@@ -209,7 +209,7 @@ namespace Civilization1Remaster.Core.UI
 				return;
 			}
 
-			if (TerrainField(terrain, TerrainTable.MoveCost) == 1 && (improvements & 8) == 0 && terrain != 0xb &&
+			if (Tables.TerrainField(terrain, TerrainTable.MoveCost) == 1 && (improvements & 8) == 0 && terrain != 0xb &&
 				this.Owner.World.Participants[participantIdx].LiveTroops[0] < 2)
 			{
 				ShowHelpPopup(HelpMineTopicAddress);

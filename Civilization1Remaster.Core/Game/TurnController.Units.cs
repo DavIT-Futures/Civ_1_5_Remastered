@@ -42,11 +42,11 @@ namespace Civilization1Remaster.Core.Game
 			if ((this.Owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 0x7) == 0)
 			{
 				int terrain = this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
-				if ((short)TerrainImprovementWord(terrain, TerrainImprovementTable.Mining) <= -3)
+				if ((short)Tables.TerrainImprovementWord(terrain, TerrainImprovementTable.Mining) <= -3)
 				{
 					cost = 2;
 				}
-				else if (TerrainImprovementWord(terrain, TerrainImprovementTable.Irrigation) == 0xfffe)
+				else if (Tables.TerrainImprovementWord(terrain, TerrainImprovementTable.Irrigation) == 0xfffe)
 				{
 					if (CheckCoastalTile(horizLoc, vertLoc) != 0)
 						cost = 1;
@@ -296,8 +296,8 @@ namespace Civilization1Remaster.Core.Game
 				this.indexDest = UnitMemory.Offset(participantIdx, troopIdx);
 
 				if (this.Owner.MapOps.ObtainTerrainType(
-					this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz) + (short)DirectionHorizAt((ushort)(direction << 1)),
-					this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert) + (short)DirectionVertAt((ushort)(direction << 1))) != MapRules.OceanTerrain)
+					this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz) + (short)Tables.DirectionHorizAt((ushort)(direction << 1)),
+					this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert) + (short)Tables.DirectionVertAt((ushort)(direction << 1))) != MapRules.OceanTerrain)
 				{
 					this.turn.Found = 1;
 					break;
@@ -319,13 +319,13 @@ namespace Civilization1Remaster.Core.Game
 			short troopIdx = (short)troop;
 			short vertLoc = 0x63;
 
-			this.Owner.Words.Set(CivilizationName(participantIdx));
+			this.Owner.Words.Set(Tables.CivilizationName(participantIdx));
 
 			this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 4, 99, Hues.Black);
 
 			vertLoc += 8;
 
-			this.Owner.Words.Set(UnitText(this.troops.TroopKind(participantIdx, troopIdx)));
+			this.Owner.Words.Set(GameTables.UnitText(this.troops.TroopKind(participantIdx, troopIdx)));
 
 			this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 4, vertLoc, Hues.Black);
 
@@ -378,7 +378,7 @@ namespace Civilization1Remaster.Core.Game
 			vertLoc += 8;
 
 			Message("(")
-				.Text(TerrainText(this.Owner.MapOps.ObtainTerrainType(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz), this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert))))
+				.Text(GameTables.TerrainText(this.Owner.MapOps.ObtainTerrainType(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz), this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert))))
 				.Text(")");
 
 			this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 4, vertLoc, Hues.Black);
