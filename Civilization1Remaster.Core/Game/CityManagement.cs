@@ -10,7 +10,7 @@ namespace Civilization1Remaster.Game
 	/// <summary>
 	/// Translated from the original CIV.EXE segment 0x1d12.
 	/// </summary>
-	public partial class CityManagement : GameModule
+	public partial class CityManagement : GameModule, ICityManagement
 	{
 		private readonly UnitMemory troops;
 
@@ -23,7 +23,7 @@ namespace Civilization1Remaster.Game
 			this.round = new CityRound(owner.Processor);
 		}
 
-		/// <summary>The index (0 - 20) of the offset among the tiles of a city, 0xffff when it is none of them</summary>
+		/// <inheritdoc/>
 		public ushort ObtainCityTileIndex(short horizLoc, short vertLoc)
 		{
 			this.Processor.Journal.OpenScope($"ObtainCityTileIndex({horizLoc}, {vertLoc})");

@@ -9,11 +9,7 @@ namespace Civilization1Remaster.Game
 	/// <summary>The barbarian units</summary>
 	partial class AIPlayer
 	{
-		/// <summary>
-		/// The move of a barbarian unit for ShiftAIUnit: a unit in the rows 0 - 1 or from 48 on is taken off; a ship (group 5)
-		/// carries its troops to land, the others attack, take or wander (ManageBarbarianSeaTransport,
-		/// ManageBarbarianFieldUnit). Returns the order.
-		/// </summary>
+		/// <inheritdoc/>
 		public ushort ManageBarbarianUnit(short participantIdx, short troopIdx)
 		{
 			this.Processor.Journal.OpenScope($"ManageBarbarianUnit({participantIdx}, {troopIdx})");

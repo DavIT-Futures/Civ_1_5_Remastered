@@ -57,7 +57,7 @@ public sealed class BatchNinetyEightDifferentialTests(ITestOutputHelper output)
 				{
 					HumanTurnScript.Install(game, inputs);
 					game.World.SessionPrefMarkers = (short)((game.World.SessionPrefMarkers & ~1) | (help ? 1 : 0));
-					MapLayers chart = game.MapOps.Chart;
+					IMapLayers chart = game.MapOps.Chart;
 
 					// The first unit of the human that moves, a land unit on land outside a city
 					int first = Enumerable.Range(0, 128).FirstOrDefault(troop => UnitByte(game, person, troop, UnitMemory.Kind) != 0xff &&

@@ -67,7 +67,7 @@ public sealed class BatchHundredOneDifferentialTests(ITestOutputHelper output)
 				$"HandlePlayerTurn({person}), city {city}, steps {steps}, kind {kind:x}, walls {walls}, size {size}, hardness {hardness}",
 				game =>
 				{
-					MapLayers chart = game.MapOps.Chart;
+					IMapLayers chart = game.MapOps.Chart;
 					inputs.Clear();
 					townIdx = -1;
 					game.World.HardnessTier = hardness;

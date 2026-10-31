@@ -47,7 +47,7 @@ public sealed class BatchNinetyFiveDifferentialTests(ITestOutputHelper output)
 			short water = (short)(chance.Next(3) == 0 ? 0 : 2);
 			bool railroad = chance.Next(2) == 0;
 			bool bridges = chance.Next(2) == 0;
-			MapLayers sight = engine.MapOps.Chart;
+			IMapLayers sight = engine.MapOps.Chart;
 			var settlers = Enumerable.Range(0, 128)
 				.Select(troop => (Troop: troop, Horiz: (int)UnitByte(engine, person, troop, UnitMemory.Horiz), Vert: (int)UnitByte(engine, person, troop, UnitMemory.Vert)))
 				.Where(unit => UnitByte(engine, person, unit.Troop, UnitMemory.Kind) == 0 && unit.Vert < 50)
@@ -63,7 +63,7 @@ public sealed class BatchNinetyFiveDifferentialTests(ITestOutputHelper output)
 				game =>
 				{
 					HumanTurnScript.Install(game, inputs);
-					MapLayers layers = game.MapOps.Chart;
+					IMapLayers layers = game.MapOps.Chart;
 					game.World.DiagMarkers = (short)((game.World.DiagMarkers & ~2) | water);
 					ushort[] science = game.World.Participants[person].FoundScienceMarkers;
 
@@ -94,7 +94,7 @@ public sealed class BatchNinetyFiveDifferentialTests(ITestOutputHelper output)
 				game =>
 				{
 					int Delta(string name) => Calls(game, pair, name) - before.GetValueOrDefault(name);
-					MapLayers after = game.MapOps.Chart;
+					IMapLayers after = game.MapOps.Chart;
 					List<string> met = [];
 
 					for (int idx = 0; idx < settlers.Count; idx++)

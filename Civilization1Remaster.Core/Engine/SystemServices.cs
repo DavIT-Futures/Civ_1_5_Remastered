@@ -8,7 +8,7 @@ namespace Civilization1Remaster.Engine
 	/// <summary>
 	/// Translated from the original CIV.EXE segment 0x1000.
 	/// </summary>
-	public class SystemServices : GameModule
+	public class SystemServices : GameModule, ISystemServices
 	{
 		private const ushort TimerTicksLowAddress = 0x42;
 		private const ushort TimerTicksHighAddress = 0x44;
@@ -43,10 +43,7 @@ namespace Civilization1Remaster.Engine
 		{
 		}
 
-		/// <summary>
-		/// Starts the timer (0x5a = 1) unless it runs already: the beat counters (0x4c, 0x54), the time (0x42) and the
-		/// calibration (PrepareTimer), then the clock interrupt is allowed. AL = the old 0x5a, like the original.
-		/// </summary>
+		/// <inheritdoc/>
 		public void LaunchTimer()
 		{
 			this.Processor.Journal.OpenScope("LaunchTimer()");
@@ -70,9 +67,7 @@ namespace Civilization1Remaster.Engine
 			this.Processor.Journal.CloseScope("LaunchTimer");
 		}
 
-		/// <summary>
-		/// Stops the timer (0x5a = 0); AL = the old 0x5a, like the original
-		/// </summary>
+		/// <inheritdoc/>
 		public void HaltTimer()
 		{
 			this.Processor.Journal.OpenScope("HaltTimer()");
@@ -83,9 +78,7 @@ namespace Civilization1Remaster.Engine
 			this.Processor.Journal.CloseScope("HaltTimer");
 		}
 
-		/// <summary>
-		/// Timer function, it should fire appoximately every 20-25 ms
-		/// </summary>
+		/// <inheritdoc/>
 		public void ClockInterrupt()
 		{
 			this.Processor.Journal.OpenScope("ClockInterrupt()");
@@ -157,12 +150,7 @@ namespace Civilization1Remaster.Engine
 			this.Processor.Journal.CloseScope("ClockInterrupt");
 		}
 
-		/// <summary>
-		/// The timer calibration. The original measures the timer 16 times (100 - 200 the first time, 200 - 200 after), so in
-		/// the emulator it always adds 0xff9c to the time (0x42, 32 bit), gets the rate 0 (not 4 - 6) and falls back to the
-		/// default: the beat length 0x4dae (0x50), the rate 5 (0x4e, also 0x4c unless it is 1), the beat counters
-		/// 0x46 = 0x48 = 0x4dae / 0x4c; 0x58 = 0, 0x59 = 1. The registers as the original leaves them.
-		/// </summary>
+		/// <inheritdoc/>
 		public void PrepareTimer()
 		{
 			this.Processor.Journal.OpenScope("PrepareTimer()");
@@ -197,10 +185,7 @@ namespace Civilization1Remaster.Engine
 			this.Processor.Journal.CloseScope("PrepareTimer");
 		}
 
-		/// <summary>
-		/// Reset timer count
-		/// </summary>
-		/// <returns></returns>
+		/// <inheritdoc/>
 		public ushort RestoreTimer()
 		{
 			this.Processor.Journal.OpenScope("RestoreTimer()");
@@ -213,12 +198,7 @@ namespace Civilization1Remaster.Engine
 			return this.Processor.RegAcc.Value16;
 		}
 
-		/// <summary>
-		/// A beat of the timer (from ClockInterrupt): the beat counter 0x5c, the colour fade and cycles, then the music. With the
-		/// rate 4 (0x4e) the music skips every 7th beat (counter 0x5e). The music step tells a new speed: below 0 the normal one
-		/// (rate 1, beat length 0x50), above 0 the rate 0x4e (beat length 0x50 / rate); the beat counters 0x46 and 0x59 restart.
-		/// The memory accesses are those of the original (the beats of the test timer depend on them).
-		/// </summary>
+		/// <inheritdoc/>
 		public void OnClockBeat()
 		{
 			this.Processor.Journal.OpenScope("OnClockBeat()");
@@ -274,11 +254,7 @@ namespace Civilization1Remaster.Engine
 			this.Processor.Journal.CloseScope("OnClockBeat");
 		}
 
-		/// <summary>
-		/// Sets the colour cycle 1 - 8 (a record of the segment 0x35cf, see ActivateHueCycle) to the colours first - last (at
-		/// most 16), with the delay in beats; the current colours are kept twice in the record, so that a cycle is one copy.
-		/// Also writes 0xffff to 0x35cf:0. The registers as the original leaves them.
-		/// </summary>
+		/// <inheritdoc/>
 		public void AssignHueCycleSpan(ushort cycleNumber, ushort delay, ushort firstHue, ushort lastHue)
 		{
 			this.Processor.Journal.OpenScope($"AssignHueCycleSpan({cycleNumber}, {delay}, {firstHue}, {lastHue})");
@@ -352,10 +328,7 @@ namespace Civilization1Remaster.Engine
 			this.Processor.Journal.CloseScope("AssignHueCycleSpan");
 		}
 
-		/// <summary>
-		/// Starts the colour cycle 1 - 8 (the cycle records of the segment 0x35cf), forwards for a positive number, backwards
-		/// for a negative one (step 3 or -3), from its first colour
-		/// </summary>
+		/// <inheritdoc/>
 		public void ActivateHueCycle(ushort cycleNumber)
 		{
 			this.Processor.Journal.OpenScope($"ActivateHueCycle({cycleNumber})");
@@ -376,9 +349,7 @@ namespace Civilization1Remaster.Engine
 			this.Processor.Journal.CloseScope("ActivateHueCycle");
 		}
 
-		/// <summary>
-		/// Stops the colour cycle 1 - 8
-		/// </summary>
+		/// <inheritdoc/>
 		public void DeactivateHueCycle(ushort cycleNumber)
 		{
 			this.Processor.Journal.OpenScope($"DeactivateHueCycle({cycleNumber})");
@@ -394,9 +365,7 @@ namespace Civilization1Remaster.Engine
 			this.Processor.Journal.CloseScope("DeactivateHueCycle");
 		}
 
-		/// <summary>
-		/// One step of every active colour cycle whose delay has run out (the cycle records of the segment 0x35cf)
-		/// </summary>
+		/// <inheritdoc/>
 		public void RefreshHueCycling()
 		{
 			this.Processor.Journal.OpenScope("RefreshHueCycling()");
@@ -488,10 +457,7 @@ namespace Civilization1Remaster.Engine
 			this.Processor.Journal.CloseScope("RefreshHueCycling");
 		}
 
-		/// <summary>
-		/// Fades the colours to the palette of a picture (the 0x300 colour bytes after the 6 byte header at swatchAddr) in
-		/// steps * 6 timer beats and waits until the fade is done
-		/// </summary>
+		/// <inheritdoc/>
 		public void ImportColorsFromBuffer(ushort steps, ushort swatchAddr)
 		{
 			this.Processor.Journal.OpenScope($"ImportColorsFromBuffer({steps}, 0x{swatchAddr:x4})");
@@ -512,10 +478,7 @@ namespace Civilization1Remaster.Engine
 			this.Processor.Journal.CloseScope("ImportColorsFromBuffer");
 		}
 
-		/// <summary>
-		/// Fades all 256 colours to one colour (red, green, blue: 0 - 63) in steps * 6 timer beats and waits until the fade
-		/// is done
-		/// </summary>
+		/// <inheritdoc/>
 		public void FloodColors(ushort steps, byte red, byte green, byte blue)
 		{
 			this.Processor.Journal.OpenScope($"FloodColors({steps}, {red}, {green}, {blue})");
@@ -537,11 +500,7 @@ namespace Civilization1Remaster.Engine
 			this.Processor.Journal.CloseScope("FloodColors");
 		}
 
-		/// <summary>
-		/// Starts a fade from the colours at 0xbd06 to the colours at TextBuffer.Address in steps * 6 timer beats (0x68): the colours per
-		/// beat (0x64, from the measured speed 0x66 / 14, at most 0x100), the first colour (0x62), the mix step (0x6c) and the
-		/// mix (0x6a); the first step is done at once
-		/// </summary>
+		/// <inheritdoc/>
 		public void FadeColors(ushort steps)
 		{
 			this.Processor.Journal.OpenScope($"FadeColors({steps})");
@@ -587,7 +546,7 @@ namespace Civilization1Remaster.Engine
 			this.Processor.Journal.CloseScope("FadeColors");
 		}
 
-		/// <summary>Copies the 256 colours of screen 0 to 0xbd06 (red, green, blue of 6 bits), the start of a fade</summary>
+		/// <inheritdoc/>
 		public void PullCurrentColors()
 		{
 			this.Processor.Journal.OpenScope("PullCurrentColors()");
@@ -620,10 +579,7 @@ namespace Civilization1Remaster.Engine
 			this.Processor.Journal.CloseScope("PullCurrentColors");
 		}
 
-		/// <summary>
-		/// Measures how fast the colours can be set (the first 10 colours from 0xbd06); returns the speed, always the highest
-		/// (65530)
-		/// </summary>
+		/// <inheritdoc/>
 		public ushort GaugeColorsPerformance()
 		{
 			this.Processor.Journal.OpenScope("GaugeColorsPerformance()");
@@ -662,9 +618,7 @@ namespace Civilization1Remaster.Engine
 			return this.Processor.RegAcc.Value16;
 		}
 
-		/// <summary>
-		/// The first step of a colour fade (FadeColors); see MixFadeColours
-		/// </summary>
+		/// <inheritdoc/>
 		public void ColorsFadeStep()
 		{
 			this.Processor.Journal.OpenScope("ColorsFadeStep()");
@@ -674,9 +628,7 @@ namespace Civilization1Remaster.Engine
 			this.Processor.Journal.CloseScope("ColorsFadeStep");
 		}
 
-		/// <summary>
-		/// A step of a colour fade from the timer (AssignColors); see MixFadeColours
-		/// </summary>
+		/// <inheritdoc/>
 		public void ColorsFadeStepInterrupt()
 		{
 			this.Processor.Journal.OpenScope("ColorsFadeStepInterrupt()");
@@ -686,10 +638,7 @@ namespace Civilization1Remaster.Engine
 			this.Processor.Journal.CloseScope("ColorsFadeStepInterrupt");
 		}
 
-		/// <summary>
-		/// A step of a fade: while beats are left (HueMixerBeats), the colours from 0xc006 go to screen 0 from the first colour
-		/// of the step on, then the next step is mixed
-		/// </summary>
+		/// <inheritdoc/>
 		public void AssignColors()
 		{
 			this.Processor.Journal.OpenScope("AssignColors()");
@@ -729,7 +678,7 @@ namespace Civilization1Remaster.Engine
 			this.Processor.Journal.CloseScope("AssignColors");
 		}
 
-		/// <summary>Whether the file named at the address is in the folder of the game: 0, else 0xffff</summary>
+		/// <inheritdoc/>
 		public ushort PathPresent(ushort documentLabelAddr)
 		{
 			string documentLabel = CRuntime.ObtainDOSFileLabel(this.Owner.Processor.PullText(CPU.AsLinearAddress(this.Owner.Processor.SegData.Value16, documentLabelAddr)).ToUpper());
@@ -750,10 +699,7 @@ namespace Civilization1Remaster.Engine
 			return this.Processor.RegAcc.Value16;
 		}
 
-		/// <summary>
-		/// Copies the screen buffer to the screen (over the mouse pointer) and clears the pointer latch (0x5402) when the
-		/// pointer is drawn
-		/// </summary>
+		/// <inheritdoc/>
 		public void RecoverScreenUnderCursor()
 		{
 			this.Processor.Journal.OpenScope("RecoverScreenUnderCursor()");
@@ -764,10 +710,7 @@ namespace Civilization1Remaster.Engine
 			this.Processor.Journal.CloseScope("RecoverScreenUnderCursor");
 		}
 
-		/// <summary>
-		/// Only clears the pointer latch (0x5402) when the pointer is drawn: the pointer itself is drawn by the host, the
-		/// position and the picture are not used
-		/// </summary>
+		/// <inheritdoc/>
 		public void RenderCursorToScreen(short horizLoc, short vertLoc, ushort picture)
 		{
 			this.Processor.Journal.OpenScope($"RenderCursorToScreen({horizLoc}, {vertLoc}, {picture})");
@@ -777,10 +720,7 @@ namespace Civilization1Remaster.Engine
 			this.Processor.Journal.CloseScope("RenderCursorToScreen");
 		}
 
-		/// <summary>
-		/// Copies the screen buffer to the main screen and clears the pointer latch (0x5402) when the pointer is drawn
-		/// </summary>
-		/// <param name="displayIdx">The screen buffer</param>
+		/// <inheritdoc/>
 		public void DisplayScreen(ushort displayIdx)
 		{
 			this.Processor.Journal.OpenScope($"DisplayScreen({displayIdx})");
@@ -791,9 +731,7 @@ namespace Civilization1Remaster.Engine
 			this.Processor.Journal.CloseScope("DisplayScreen");
 		}
 
-		/// <summary>
-		/// Draws a picture on the screen and clears the pointer latch (0x5402) when the pointer is drawn
-		/// </summary>
+		/// <inheritdoc/>
 		public void RenderPictureToScreenAlternate(ushort boxAddr, int horizLoc, int vertLoc, ushort pictureAddr)
 		{
 			this.Processor.Journal.OpenScope($"RenderPictureToScreenAlternate(0x{boxAddr:x4}, {horizLoc}, {vertLoc}, 0x{pictureAddr:x4})");
@@ -804,7 +742,7 @@ namespace Civilization1Remaster.Engine
 			this.Processor.Journal.CloseScope("RenderPictureToScreenAlternate");
 		}
 
-		/// <summary>Draws the picture into the box at (horizLoc, vertLoc)</summary>
+		/// <inheritdoc/>
 		public void RenderPictureToScreen(ushort boxAddr, int horizLoc, int vertLoc, ushort pictureAddr)
 		{
 			this.Processor.Journal.OpenScope($"RenderPictureToScreen(0x{boxAddr:x4}, {horizLoc}, {vertLoc}, 0x{pictureAddr:x4})");
@@ -814,17 +752,13 @@ namespace Civilization1Remaster.Engine
 			this.Processor.Journal.CloseScope("RenderPictureToScreen");
 		}
 
-		/// <summary>Prepares the sound driver</summary>
+		/// <inheritdoc/>
 		public void PrepareSoundDriver()
 		{
 			this.Owner.Audio.Prepare();
 		}
 
-		/// <summary>
-		/// Sound function, possibly: Play Music
-		/// </summary>
-		/// <param name="param1"></param>
-		/// <param name="param2"></param>
+		/// <inheritdoc/>
 		public void PerformSound(ushort audio, ushort argument)
 		{
 			if ((this.Owner.World.SessionPrefMarkers & 0x10) != 0)
@@ -833,9 +767,7 @@ namespace Civilization1Remaster.Engine
 			}
 		}
 
-		/// <summary>
-		/// Plays the sound of chopping wood when a city is founded, if the sound is on
-		/// </summary>
+		/// <inheritdoc/>
 		public void PerformCityFoundedSound()
 		{
 			if ((this.Owner.World.SessionPrefMarkers & 0x10) != 0)
@@ -844,10 +776,7 @@ namespace Civilization1Remaster.Engine
 			}
 		}
 
-		/// <summary>
-		/// Sound function
-		/// </summary>
-		/// <returns></returns>
+		/// <inheritdoc/>
 		public ushort HaltSound()
 		{
 			this.Processor.RegAcc.Value16 =  this.Owner.Audio.Halt();
@@ -855,10 +784,7 @@ namespace Civilization1Remaster.Engine
 			return this.Processor.RegAcc.Value16;
 		}
 
-		/// <summary>
-		/// Sound function
-		/// </summary>
-		/// <returns></returns>
+		/// <inheritdoc/>
 		public ushort AdvanceSong()
 		{
 			this.Processor.RegAcc.Value16 =  this.Owner.Audio.PerformNextStep();
@@ -866,18 +792,13 @@ namespace Civilization1Remaster.Engine
 			return this.Processor.RegAcc.Value16;
 		}
 
-		/// <summary>
-		/// Sound function, possibly advance sound buffer
-		/// </summary>
+		/// <inheritdoc/>
 		public void RefreshSoundEffects()
 		{
 			this.Owner.Audio.RefreshVibratoTremolo();
 		}
 
-		/// <summary>
-		/// Sound function
-		/// </summary>
-		/// <returns></returns>
+		/// <inheritdoc/>
 		public ushort ObtainSongPosition()
 		{
 			// Test seam: the fixed test clock counts the polls of the music (nothing in the game)
@@ -888,15 +809,7 @@ namespace Civilization1Remaster.Engine
 			return this.Processor.RegAcc.Value16;
 		}
 
-		/// <summary>
-		/// Fills the rectangle with color
-		/// </summary>
-		/// <param name="rectPtr"></param>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
-		/// <param name="width"></param>
-		/// <param name="height"></param>
-		/// <param name="mode"></param>
+		/// <inheritdoc/>
 		public void FloodBox(ushort boxAddr, int horizLoc, int vertLoc, int breadth, int altitude, ushort style)
 		{
 			this.Processor.Journal.OpenScope($"FloodBox(0x{boxAddr:x4}, {horizLoc}, {vertLoc}, {breadth}, {altitude}, 0x{style:x4})");
@@ -912,12 +825,7 @@ namespace Civilization1Remaster.Engine
 			this.Processor.Journal.CloseScope("FloodBox");
 		}
 
-		/// <summary>
-		/// Sets a pixel on screen set by structure at 0xaa
-		/// </summary>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
-		/// <param name="mode"></param>
+		/// <inheritdoc/>
 		public void AssignDot(int horizLoc, int vertLoc, ushort style)
 		{
 			CivRectangle box = new CivRectangle(this.Owner.Processor, CPU.AsLinearAddress(this.Owner.Processor.SegData.Value16, this.Owner.Processor.PullUInt16(this.Owner.Processor.SegData.Value16, ActiveRectanglePointerAddress)));
@@ -932,13 +840,7 @@ namespace Civilization1Remaster.Engine
 			this.Processor.Journal.CloseScope("AssignDot");
 		}
 
-		/// <summary>
-		/// Sets a pixel on selected screen
-		/// </summary>
-		/// <param name="screenID"></param>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
-		/// <param name="mode"></param>
+		/// <inheritdoc/>
 		public void AssignDot(ushort displayIdx, int horizLoc, int vertLoc, ushort style)
 		{
 			CivRectangle box = new CivRectangle(this.Owner.Processor, CPU.AsLinearAddress(this.Owner.Processor.SegData.Value16, this.Owner.Processor.PullUInt16(this.Owner.Processor.SegData.Value16, ActiveRectanglePointerAddress)));
@@ -953,10 +855,7 @@ namespace Civilization1Remaster.Engine
 			this.Processor.Journal.CloseScope("AssignDot");
 		}
 
-		/// <summary>
-		/// Resets and inits the mouse subsystem
-		/// </summary>
-		/// <returns>true if mouse is detected</returns>
+		/// <inheritdoc/>
 		public ushort PrepareMouse()
 		{
 			this.Processor.Journal.OpenScope("PrepareMouse()");
@@ -978,9 +877,7 @@ namespace Civilization1Remaster.Engine
 			return this.Processor.RegAcc.Value16;
 		}
 
-		/// <summary>
-		/// Turns the mouse driver off (the flag 0x587d cleared; when it was on, AX -1 and BX 2, as the original leaves them)
-		/// </summary>
+		/// <inheritdoc/>
 		public void DeactivateMouse()
 		{
 			this.Processor.Journal.OpenScope("DeactivateMouse()");
@@ -1000,7 +897,7 @@ namespace Civilization1Remaster.Engine
 			this.Processor.Journal.CloseScope("DeactivateMouse");
 		}
 
-		/// <summary>The picture of the mouse pointer and its hot spot</summary>
+		/// <inheritdoc/>
 		public void AssignMouseCursorImage(ushort hotHoriz, ushort hotVert, ushort picture)
 		{
 			this.Processor.Journal.OpenScope($"AssignMouseCursorImage({hotHoriz}, {hotVert}, {picture})");
@@ -1012,9 +909,7 @@ namespace Civilization1Remaster.Engine
 			this.Processor.Journal.CloseScope("AssignMouseCursorImage");
 		}
 
-		/// <summary>
-		/// Moves the mouse pointer to the position (0x586e, 0x5870)
-		/// </summary>
+		/// <inheritdoc/>
 		public void AssignMousePosition(ushort horizLoc, ushort vertLoc)
 		{
 			this.Processor.Journal.OpenScope($"AssignMousePosition({horizLoc}, {vertLoc})");
@@ -1025,7 +920,7 @@ namespace Civilization1Remaster.Engine
 			this.Processor.Journal.CloseScope("AssignMousePosition");
 		}
 
-		/// <summary>The clicks since the last call (cleared); the interrupts are served first</summary>
+		/// <inheritdoc/>
 		public ushort ObtainAndWipeMouseClick()
 		{
 			// The interrupts come before the clicks are read (see GameStartup.ObtainMouseState)
@@ -1037,10 +932,7 @@ namespace Civilization1Remaster.Engine
 			return clicks;
 		}
 
-		/// <summary>
-		/// Draws the mouse pointer (picture 0x5876, hot spot 0x5878, 0x587a) at the mouse position (0x586e, 0x5870), when there
-		/// is a picture and the pointer is not drawn yet (0x5403)
-		/// </summary>
+		/// <inheritdoc/>
 		public void RenderMouseCursor()
 		{
 			this.Processor.Journal.OpenScope("RenderMouseCursor()");
@@ -1057,9 +949,7 @@ namespace Civilization1Remaster.Engine
 			this.Processor.Journal.CloseScope("RenderMouseCursor");
 		}
 
-		/// <summary>
-		/// Puts back the screen under the mouse pointer, when the pointer has a picture (0x5876) and is drawn (0x5403)
-		/// </summary>
+		/// <inheritdoc/>
 		public void BlankMouseCursor()
 		{
 			this.Processor.Journal.OpenScope("BlankMouseCursor()");
@@ -1074,9 +964,7 @@ namespace Civilization1Remaster.Engine
 			this.Processor.Journal.CloseScope("BlankMouseCursor");
 		}
 
-		/// <summary>
-		/// Copies the screen buffer to the window (from the mouse interrupt; the registers kept outside the emulated stack)
-		/// </summary>
+		/// <inheritdoc/>
 		public void RenewScreen()
 		{
 			this.Processor.Journal.OpenScope("RenewScreen()");
@@ -1093,9 +981,7 @@ namespace Civilization1Remaster.Engine
 			this.Processor.Journal.CloseScope("RenewScreen");
 		}
 
-		/// <summary>
-		/// Handles mouse events
-		/// </summary>
+		/// <inheritdoc/>
 		public void PointerEvent()
 		{
 			this.Processor.SegData.Value16 = 0x3b01;

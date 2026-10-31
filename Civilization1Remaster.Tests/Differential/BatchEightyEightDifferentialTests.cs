@@ -39,7 +39,7 @@ public sealed class BatchEightyEightDifferentialTests(ITestOutputHelper output)
 	/// <summary>Moves a lone unit of the player (any player but the excluded ones when -1) to the tile; false when none</summary>
 	private static bool MoveLoneUnit(GameEngine game, short participantIdx, short[] excluded, short exceptTroop, int horizLoc, int vertLoc, int pick, int domain)
 	{
-		MapLayers chart = game.MapOps.Chart;
+		IMapLayers chart = game.MapOps.Chart;
 
 		if (vertLoc <= 0 || vertLoc >= 49 || (chart.OwnerBits(horizLoc, vertLoc) & MapLayers.UnitsPresent) != 0)
 			return false;
@@ -74,7 +74,7 @@ public sealed class BatchEightyEightDifferentialTests(ITestOutputHelper output)
 	/// <summary>The tile gets the terrain of another tile (its colour on the map layer)</summary>
 	private static void CopyTerrain(GameEngine game, int horizLoc, int vertLoc, int terrain)
 	{
-		MapLayers chart = game.MapOps.Chart;
+		IMapLayers chart = game.MapOps.Chart;
 
 		for (int at = 0; at < 80 * 50; at++)
 		{
@@ -184,7 +184,7 @@ public sealed class BatchEightyEightDifferentialTests(ITestOutputHelper output)
 						game.Processor.EmitUInt16(0x3b01, (ushort)(frame - local), 0x1234);
 
 					game.Processor.EmitUInt16(0x3b01, (ushort)(frame - 0x5e), 0x1234);
-					MapLayers chart = game.MapOps.Chart;
+					IMapLayers chart = game.MapOps.Chart;
 					ushort unit = UnitMemory.Address(participantIdx, troopIdx);
 					short strangerPlayer = -1;
 					bool alone = game.Processor.PullUInt8(0x3b01, (ushort)(unit + UnitMemory.FollowingInStack)) == 0xff;

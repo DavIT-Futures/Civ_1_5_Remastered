@@ -6,7 +6,7 @@ namespace Civilization1Remaster.UI
 	/// <summary>
 	/// Translated from the original CIV.EXE overlay 10.
 	/// </summary>
-	public class ArmySelection : GameModule
+	public class ArmySelection : GameModule, IArmySelection
 	{
 		public const ushort StrategicLocationRoleTableAddress = 0xe2c2;
 		public const ushort StrategicLocationHorizTableAddress = 0xe598;
@@ -25,10 +25,7 @@ namespace Civilization1Remaster.UI
 			this.troops = new UnitMemory(owner.Processor);
 		}
 
-		/// <summary>
-		/// Asks which civilization's army to show (the names at 0x1982 + 2 * player, players 1 - 7) and shows its list;
-		/// the screen is kept in the back screen 0x19d4 and put back
-		/// </summary>
+		/// <inheritdoc/>
 		public void DisplayWhichArmy()
 		{
 			this.Processor.Journal.OpenScope("DisplayWhichArmy()");
@@ -55,11 +52,7 @@ namespace Civilization1Remaster.UI
 			this.Processor.Journal.CloseScope("DisplayWhichArmy");
 		}
 
-		/// <summary>
-		/// The strategic map of a player (diagnostics), each step after a key: the tiles it sees (all with 0xd806) as 4 x 4
-		/// boxes (sea 1, land 2), cities and the owners of the tiles in their colours; then its strategic locations (S, A, D, N by
-		/// the role) and its tactical sites; then its strategy on each continent (S, D, A, T) with defence / attack.
-		/// </summary>
+		/// <inheritdoc/>
 		public void DisplayArmyList(short participantIdx)
 		{
 			this.Processor.Journal.OpenScope($"DisplayArmyList({participantIdx})");
@@ -189,10 +182,7 @@ namespace Civilization1Remaster.UI
 			this.Processor.Journal.CloseScope("DisplayArmyList");
 		}
 
-		/// <summary>
-		/// A window about the unit: civilization, number, unit type, home city, position, the target of its "go to" order, then
-		/// the types of the other units of its stack (following the ring, while the text is shorter than 512)
-		/// </summary>
+		/// <inheritdoc/>
 		public void DisplayUnitInfo(short participantIdx, short troopIdx)
 		{
 			this.Processor.Journal.OpenScope($"DisplayUnitInfo({participantIdx}, {troopIdx})");

@@ -15,7 +15,7 @@ namespace Civilization1Remaster.Game
 	/// </code>
 	/// "Known" improvements are what the human player saw last time. Like VGADriver.ObtainDot, reading outside the picture gives 0.
 	/// </summary>
-	public sealed class MapLayers : GameModule
+	public sealed class MapLayers : GameModule, IMapLayers
 	{
 		/// <summary>Terrain type of each terrain colour, a word array in the data segment</summary>
 		public const ushort TerrainOfColour = 0x2ba6;
@@ -35,7 +35,7 @@ namespace Civilization1Remaster.Game
 		{
 		}
 
-		/// <summary>Terrain type (0 - 10, 10 = ocean) of the tile</summary>
+		/// <inheritdoc/>
 		public int Terrain(int horizLoc, int vertLoc)
 		{
 			int colour = Dot(horizLoc, vertLoc);
@@ -43,45 +43,45 @@ namespace Civilization1Remaster.Game
 			return this.Processor.PullGlobalWord((ushort)(TerrainOfColour + (colour << 1)));
 		}
 
-		/// <summary>Number of the continent or the sea of the tile</summary>
+		/// <inheritdoc/>
 		public int Continent(int horizLoc, int vertLoc)
 		{
 			return Dot(horizLoc, vertLoc + ContinentOffset);
 		}
 
-		/// <summary>Improvements of the tile (bit 0 city, 1 irrigation, 2 mine, 3 road, ...)</summary>
+		/// <inheritdoc/>
 		public int Improvements(int horizLoc, int vertLoc)
 		{
 			return (Dot(horizLoc, vertLoc + HighImprovementsOffset) << 4) | Dot(horizLoc, vertLoc + LowImprovementsOffset);
 		}
 
-		/// <summary>The layer of the improvement bits 0 - 3</summary>
+		/// <inheritdoc/>
 		public int LowImprovements(int horizLoc, int vertLoc)
 		{
 			return Dot(horizLoc, vertLoc + LowImprovementsOffset);
 		}
 
-		/// <summary>The layer of the improvement bits 4 - 7, shifted to bits 0 - 3</summary>
+		/// <inheritdoc/>
 		public int HighImprovements(int horizLoc, int vertLoc)
 		{
 			return Dot(horizLoc, vertLoc + HighImprovementsOffset);
 		}
 
-		/// <summary>Improvements of the tile as the human player saw them last time</summary>
+		/// <inheritdoc/>
 		public int KnownImprovements(int horizLoc, int vertLoc)
 		{
 			return (Dot(horizLoc + KnownOffset, vertLoc + HighImprovementsOffset) << 4) +
 				Dot(horizLoc + KnownOffset, vertLoc + LowImprovementsOffset);
 		}
 
-		/// <summary>The human player sees the improvements of the tile as they are now</summary>
+		/// <inheritdoc/>
 		public void RevealImprovements(int horizLoc, int vertLoc)
 		{
 			AssignDot(horizLoc + KnownOffset, vertLoc + LowImprovementsOffset, (byte)Dot(horizLoc, vertLoc + LowImprovementsOffset));
 			AssignDot(horizLoc + KnownOffset, vertLoc + HighImprovementsOffset, (byte)Dot(horizLoc, vertLoc + HighImprovementsOffset));
 		}
 
-		/// <summary>Removes the improvement bits from the tile</summary>
+		/// <inheritdoc/>
 		public void ClearImprovements(int improvements, int horizLoc, int vertLoc)
 		{
 			if ((improvements & 0xf) != 0)
@@ -97,17 +97,13 @@ namespace Civilization1Remaster.Game
 			}
 		}
 
-		/// <summary>
-		/// Horizontal step of a direction (1 - 8, 0 is no move)
-		/// </summary>
+		/// <inheritdoc/>
 		public new int DirectionHoriz(int heading) => (short)base.DirectionHoriz(heading);
 
-		/// <summary>
-		/// Vertical step of a direction (1 - 8, 0 is no move)
-		/// </summary>
+		/// <inheritdoc/>
 		public new int DirectionVert(int heading) => (short)base.DirectionVert(heading);
 
-		/// <summary>The tile owner layer: bit 3 when units stand on the tile, bits 0 - 2 the player</summary>
+		/// <inheritdoc/>
 		public int OwnerBits(int horizLoc, int vertLoc)
 		{
 			return Dot(horizLoc + OwnerOffset, vertLoc);

@@ -79,7 +79,7 @@ namespace Civilization1Remaster.Tests.GoldenMaster
 		/// the frames start at 0 on both sides of the comparisons with the original code (CPU.EnterFrame, DualGame with the
 		/// frozen game's CPU.ClearFrameLocals). At the tag classic-final the leftovers were on.
 		/// </summary>
-		public static void TurnClassic(Civilization1Remaster.Game.TurnEvents turnHooks)
+		public static void TurnClassic(Civilization1Remaster.Game.ITurnEvents turnHooks)
 		{
 			turnHooks.ClassicHealing = true;
 			turnHooks.ClassicTechnologyNews = true;

@@ -84,7 +84,7 @@ public sealed class BatchNinetyThreeDifferentialTests(ITestOutputHelper output)
 					if (first)
 						game.World.RoundTally = 0;
 
-					MapLayers layers = game.MapOps.Chart;
+					IMapLayers layers = game.MapOps.Chart;
 
 					for (int idx = 0; idx < improved.Length; idx++)
 					{
@@ -140,7 +140,7 @@ public sealed class BatchNinetyThreeDifferentialTests(ITestOutputHelper output)
 					int scriptIdx = 0;
 					int typed = 0;
 					bool withhold = false;
-					MapLayers chart = game.MapOps.Chart;
+					IMapLayers chart = game.MapOps.Chart;
 
 					game.Processor.InputStarved = waiting =>
 					{

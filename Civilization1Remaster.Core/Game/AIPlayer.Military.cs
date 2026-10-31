@@ -21,10 +21,7 @@ namespace Civilization1Remaster.Game
 			Stays,
 		}
 
-		/// <summary>
-		/// Sends to the city the loaded transports at sea of the players 1 - 7 (not the human player, and only those without
-		/// relations bit 2 towards the human player) that are closer to it than 3 turns of moves
-		/// </summary>
+		/// <inheritdoc/>
 		public void PostCityDefenders(short townIdx)
 		{
 			this.Processor.Journal.OpenScope($"PostCityDefenders({townIdx})");

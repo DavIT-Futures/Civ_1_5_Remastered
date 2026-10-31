@@ -10,11 +10,7 @@ namespace Civilization1Remaster.Game
 	/// <summary>The city round: civil order, celebration, research, pollution, upkeep, the steps of HandleCity</summary>
 	partial class CityManagement
 	{
-		/// <summary>
-		/// The work of a city: marker -1 only counts (food, shields, trade, the citizens), 0 is the city's turn (growth,
-		/// production, disorder, celebration, science, pollution, upkeep), 1 the city screen with its input. It gives back
-		/// the happy less the unhappy citizens. The frame of 0x10c bytes holds the locals of all the parts.
-		/// </summary>
+		/// <inheritdoc/>
 		public ushort HandleCity(short townIdx, short marker)
 		{
 			this.Processor.Journal.OpenScope($"HandleCity({townIdx}, {marker})");

@@ -66,7 +66,7 @@ public sealed class BatchHundredDifferentialTests(ITestOutputHelper output)
 				$"HandlePlayerTurn({person}), mode {mode}, fighter {fighter}, answers {string.Join(" ", answers.Select(key => key.ToString("x")))}",
 				game =>
 				{
-					MapLayers chart = game.MapOps.Chart;
+					IMapLayers chart = game.MapOps.Chart;
 					inputs.Clear();
 					int mover = Enumerable.Range(0, 128).FirstOrDefault(troop => UnitByte(game, person, troop, UnitMemory.Kind) != 0xff &&
 						(UnitByte(game, person, troop, UnitMemory.Status) & 9) == 0, -1);

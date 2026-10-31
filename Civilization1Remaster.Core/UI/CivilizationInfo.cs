@@ -5,7 +5,7 @@ namespace Civilization1Remaster.UI
 	/// <summary>
 	/// Translated from the original CIV.EXE overlay 13.
 	/// </summary>
-	public class CivilizationInfo : GameModule
+	public class CivilizationInfo : GameModule, ICivilizationInfo
 	{
 		private static readonly GameText CivilizationOverviewSummaryHeaderAddress = new(0x46be, "/Units/Cities/Settlers/Land");
 		private static readonly GameText CivilizationOverviewTechnologiesHeaderAddress = new(0x4729, "Civilization:");
@@ -15,12 +15,7 @@ namespace Civilization1Remaster.UI
 		{
 		}
 
-		/// <summary>
-		/// The overview of a civilization (diagnostics): its name and picture, government, population, treasury and rates, the
-		/// counts of units / cities / settlers / land, the strategy on each continent with an attack value, the relations with
-		/// the others and its technologies, three a row (white the ones it found first), until the screen is full; after a key
-		/// or a click the screen is put back.
-		/// </summary>
+		/// <inheritdoc/>
 		public void DisplayCivilizationOverview(short participantIdx)
 		{
 			this.Processor.Journal.OpenScope($"DisplayCivilizationOverview({participantIdx})");
@@ -179,11 +174,7 @@ namespace Civilization1Remaster.UI
 			this.Processor.Journal.CloseScope("DisplayCivilizationOverview");
 		}
 
-		/// <summary>
-		/// The table of units: a row for every unit type some player 1 - 7 has or builds, a column for every player 0 - 7 (its
-		/// picture, and its standing with 0xd806); the human player's column (all columns with 0xd806) shows "active/in
-		/// production" of each row. After a key or a click, the table of units destroyed.
-		/// </summary>
+		/// <inheritdoc/>
 		public void DisplayCivilizationScoreList()
 		{
 			this.Processor.Journal.OpenScope("DisplayCivilizationScoreList()");
@@ -263,11 +254,7 @@ namespace Civilization1Remaster.UI
 			this.Processor.Journal.CloseScope("DisplayCivilizationScoreList");
 		}
 
-		/// <summary>
-		/// The table of units destroyed between the players 1 - 7 (TroopsRuined of the row's player against the column's / the
-		/// other way round), each player in its colour (0x1946) with its picture (0xd4ce); only the human's row and column
-		/// unless all units are shown (0xd806). Until a key or click, with the screen kept in the back screen 0x19d4.
-		/// </summary>
+		/// <inheritdoc/>
 		public void RenderScoreListRecord()
 		{
 			this.Processor.Journal.OpenScope("RenderScoreListRecord()");

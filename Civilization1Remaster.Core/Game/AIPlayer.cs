@@ -9,7 +9,7 @@ namespace Civilization1Remaster.Game
 	/// <summary>
 	/// Translated from the original CIV.EXE segment 0x25fb.
 	/// </summary>
-	public partial class AIPlayer : GameModule
+	public partial class AIPlayer : GameModule, IAIPlayer
 	{
 		/// <summary>The 20 x 13 blocks of 4 x 4 tiles of the map in the segment 0x3772: bit 0 a city, bits 1 - 7 the unit roles</summary>
 		private const ushort BlockSegment = 0x3772;
@@ -26,12 +26,7 @@ namespace Civilization1Remaster.Game
 			this.troops = new UnitMemory(owner.Processor);
 		}
 
-		/// <summary>
-		/// The yearly survey of a player (every player, also the human one): counts the units and cities by continent, marks
-		/// the 4 x 4 blocks of the map where they are (0x3772:0x2438), picks the approach of every continent (0 build up,
-		/// 1 defend, 2 the enemy is stronger, 5 attack), and for a computer player also changes the government, gives up
-		/// obsolete units and sends the units to the strategic locations (0xe2c2, a table of 32 per player)
-		/// </summary>
+		/// <inheritdoc/>
 		public void OperateAITurn(short participantIdx)
 		{
 			this.Processor.Journal.OpenScope($"OperateAITurn({participantIdx})");

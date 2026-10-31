@@ -17,6 +17,10 @@ Narzędzia (`Civilization1Remaster.Tests/Differential/Reference`, uruchamiać z 
 - `CityManagement`, `PlayerTurn`, `AIPlayer` są podzielone na pliki `partial` po tematach (`CityManagement.Production.cs`
   …; pola zostają w pliku głównym): metody szukać przez `grep -n "Nazwa(" Civilization1Remaster.Core/Game/Klasa*.cs`, a
   narzędziom podawać plik, w którym metoda leży;
+- Moduły gry (`GameModule`) mają interfejsy `I<Klasa>` (np. `ICityManagement`) z publicznymi metodami i opisami; w klasach
+  `/// <inheritdoc/>`. `GameEngine` wystawia moduły przez interfejsy – zmiana publicznej sygnatury to zmiana w interfejsie;
+  pola są prywatne (reszta to właściwości), `this.Owner` / `this.Processor` zamiast pól; kolejność składowych jak u
+  Microsoftu (pola, konstruktory, …, właściwości, metody, typy zagnieżdżone; public przed private, static przed instancją);
 - `replace_methods.py <plik .cs> <plik z metodami>` – podmienia metody po nazwie, nowe pomocnicze wstawia za poprzednią;
 - `check_mutations.py <mutations.json> [--jobs N]` – kontrola mutacjami, równolegle (domyślnie 4) w trwałych kopiach repo
   `.mutants/w1…` (git worktree, budowanie przyrostowe); drzewo robocze nietknięte, więc można dalej pracować (nie budować

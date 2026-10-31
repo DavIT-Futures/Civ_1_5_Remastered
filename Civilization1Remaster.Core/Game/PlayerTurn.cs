@@ -6,7 +6,7 @@ namespace Civilization1Remaster.Game
 	/// <summary>
 	/// Translated from the original CIV.EXE segment 0x1403.
 	/// </summary>
-	public partial class PlayerTurn : GameModule
+	public partial class PlayerTurn : GameModule, IPlayerTurn
 	{
 		private readonly UnitMemory troops;
 
@@ -53,16 +53,10 @@ namespace Civilization1Remaster.Game
 			EndOfTurn,
 		}
 
-		/// <summary>The unit of the running HandlePlayerTurn (the local 0x32), for the tests that click next to it</summary>
+		/// <inheritdoc/>
 		public ushort ActiveTroop => this.turn.Troop;
 
-		/// <summary>
-		/// The turn of a player: passes over his units (another pass while some unit waited or was off the view), each unit
-		/// gets its orders (from ShiftAIUnit, its standing orders or the keys and clicks of the human) and carries them out
-		/// or moves; the human gets a last look without a unit at the end of the turn. The locals (TurnLocals) are shared by
-		/// the methods it calls, as in the original; the frame (0x52) stays so that the called functions run at the same
-		/// depth of the stack.
-		/// </summary>
+		/// <inheritdoc/>
 		public void HandlePlayerTurn(short participantIdx)
 		{
 			this.Processor.Journal.OpenScope($"HandlePlayerTurn({participantIdx})");

@@ -6,9 +6,7 @@ namespace Civilization1Remaster.Game
 	/// <summary>The end of a unit's move (fuel, triremes), the tiles and the unit panel</summary>
 	partial class PlayerTurn
 	{
-		/// <summary>
-		/// Repaints the tile when the human player has seen it (or everything is shown, 0xd806)
-		/// </summary>
+		/// <inheritdoc/>
 		public void RepaintTileIfVisible(int horizLoc, int vertLoc)
 		{
 			this.Processor.Journal.OpenScope($"RepaintTileIfVisible({horizLoc}, {vertLoc})");
@@ -22,9 +20,7 @@ namespace Civilization1Remaster.Game
 			this.Processor.Journal.CloseScope("RepaintTileIfVisible");
 		}
 
-		/// <summary>
-		/// Repaints the tile of the unit when the human player sees it (own unit, or the unit is shown to the human)
-		/// </summary>
+		/// <inheritdoc/>
 		public void RepaintUnitIfVisible(short participantIdx, short troopIdx)
 		{
 			this.Processor.Journal.OpenScope($"RepaintUnitIfVisible({participantIdx}, {troopIdx})");
@@ -42,11 +38,7 @@ namespace Civilization1Remaster.Game
 			this.Processor.Journal.CloseScope("RepaintUnitIfVisible");
 		}
 
-		/// <summary>
-		/// 0 on a tile with a city, irrigation or a mine (improvement bits 0 - 2). Otherwise from the terrain table at 0x44a
-		/// (12 bytes a terrain): 2 when the word at +4 is -3 or less, 1 when the word at +0 is -2 and the tile is at the coast
-		/// (VerifyCoastalTile), else 0.
-		/// </summary>
+		/// <inheritdoc/>
 		public ushort ObtainTileMoveCost(int horizLoc, int vertLoc)
 		{
 			this.Processor.Journal.OpenScope($"ObtainTileMoveCost({horizLoc}, {vertLoc})");
@@ -73,17 +65,12 @@ namespace Civilization1Remaster.Game
 			return cost;
 		}
 
-		/// <summary>
-		/// Whether the tile is on the coast: it is terrain 11 itself, or one of the 4 tiles next to it in a straight line
-		/// (headings 1, 3, 5, 7; the column is not wrapped) is terrain 10 or 11 or has improvement bit 1 - but tiles with a city
-		/// do not count
-		/// </summary>
-		/// <returns>1 on the coast, else 0 (also in AX)</returns>
+		/// <inheritdoc/>
 		public ushort VerifyCoastalTile(int horizLoc, int vertLoc)
 		{
 			this.Processor.Journal.OpenScope($"VerifyCoastalTile({horizLoc}, {vertLoc})");
 
-			MapLayers chart = this.Owner.MapOps.Chart;
+			IMapLayers chart = this.Owner.MapOps.Chart;
 			ushort coastal = 0;
 
 			if (this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) == 0xb)
@@ -113,12 +100,7 @@ namespace Civilization1Remaster.Game
 			return coastal;
 		}
 
-		/// <summary>
-		/// The panel of the active unit (left, under the world map): the civilization, the type (Veteran), the moves (with the
-		/// fuel of aircraft), the home city, the terrain and its improvements, then the units of the city on the tile (the two
-		/// supported at 0x1c * city ... Unfamiliar, drawn through the unit 127) and the stack (up to row 0xb8, "more" after).
-		/// Unit 0x80: no unit.
-		/// </summary>
+		/// <inheritdoc/>
 		public void RenderUnitInfo(short participantIdx, ushort troopIdx)
 		{
 			this.Processor.Journal.OpenScope($"RenderUnitInfo({participantIdx}, {troopIdx})");
@@ -145,7 +127,7 @@ namespace Civilization1Remaster.Game
 			this.Processor.Journal.CloseScope("RenderUnitInfo");
 		}
 
-		/// <summary>1 when the place is inside the map view (15 x 12 tiles, also across the edge of the map), else 0</summary>
+		/// <inheritdoc/>
 		public ushort VerifyPositionOnScreen(int horizLoc, int vertLoc)
 		{
 			this.Owner.Journal.OpenScope($"VerifyPositionOnScreen({horizLoc}, {vertLoc})");
@@ -172,9 +154,7 @@ namespace Civilization1Remaster.Game
 			return onScreen;
 		}
 
-		/// <summary>
-		/// Throws away the keys waiting and waits until the mouse buttons are released
-		/// </summary>
+		/// <inheritdoc/>
 		public void AwaitForKey()
 		{
 			this.Processor.Journal.OpenScope("AwaitForKey()");
@@ -193,11 +173,7 @@ namespace Civilization1Remaster.Game
 			this.Processor.Journal.CloseScope("AwaitForKey");
 		}
 
-		/// <summary>
-		/// The next unit to activate in the stack of the unit: following the ring (at most 16 steps), the non-ship unit with the
-		/// smallest index after the unit, counting round past 127
-		/// </summary>
-		/// <returns>That unit, the unit itself when it stands alone or nothing comes (also in AX)</returns>
+		/// <inheritdoc/>
 		public ushort LocateBestGuardian(short participantIdx, ushort troopIdx)
 		{
 			this.Processor.Journal.OpenScope("LocateBestGuardian()");
@@ -235,7 +211,7 @@ namespace Civilization1Remaster.Game
 			return best;
 		}
 
-		/// <summary>The help popup of the topic, only in the turn of the human player</summary>
+		/// <inheritdoc/>
 		public void DisplayHelpForHuman(GameText topic)
 		{
 			this.Processor.Journal.OpenScope($"DisplayHelpForHuman(0x{topic.Address:x4})");

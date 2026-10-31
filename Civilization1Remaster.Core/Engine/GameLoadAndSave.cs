@@ -7,7 +7,7 @@ using Civilization1Remaster.UI;
 
 namespace Civilization1Remaster.Engine
 {
-	public class GameLoadAndSave : GameModule
+	public class GameLoadAndSave : GameModule, IGameLoadAndSave
 	{
 		/// <summary>
 		/// Value of the game end flag (0xdc48) that asks the main loop to load the game in LoadSlot
@@ -57,12 +57,10 @@ namespace Civilization1Remaster.Engine
 		{
 		}
 
-		/// <summary>
-		/// Saved game chosen with Load Game in the GAME menu, 0xffff when none
-		/// </summary>
+		/// <inheritdoc/>
 		public ushort FetchBay { get; set; } = 0xffff;
 
-		/// <summary>An autosave is being loaded (ImportGame continues it like the original autosaves)</summary>
+		/// <inheritdoc/>
 		public bool FetchingBackup { get; set; } = false;
 
 		public static byte PullUInt8(Stream source) { return StreamIo.PullUInt8(source); }
@@ -75,9 +73,7 @@ namespace Civilization1Remaster.Engine
 
 		public static void EmitInt16(Stream sink, short amount) { StreamIo.EmitInt16(sink, amount); }
 
-		/// <summary>
-		/// Saves the game into the next autosave, called once every turn
-		/// </summary>
+		/// <inheritdoc/>
 		public void PerformBackup()
 		{
 			int bay = this.Owner.World.RoundTally % BackupBayTally;
@@ -88,11 +84,7 @@ namespace Civilization1Remaster.Engine
 			StoreGameContent($"{AutosaveLabel(bay)}.SVE");
 		}
 
-		/// <summary>
-		/// Shows the list of saved games for Load Game in the GAME menu, without loading anything.
-		/// The screen is restored afterwards.
-		/// </summary>
-		/// <returns>The chosen saved game (see ShowLoadList), or 0xffff when cancelled</returns>
+		/// <inheritdoc/>
 		public ushort ChooseGameToImport()
 		{
 			this.Processor.Journal.OpenScope("ChooseGameToImport()");
@@ -128,11 +120,7 @@ namespace Civilization1Remaster.Engine
 			return bay;
 		}
 
-		/// <summary>
-		/// Loads a saved game chosen with ShowLoadList, from the same drive
-		/// </summary>
-		/// <param name="slot">Manual saved game (0 - 9) or AutosaveSlotFlag + autosave (0 - 19)</param>
-		/// <returns>1 when the game was loaded</returns>
+		/// <inheritdoc/>
 		public ushort ImportGameFromSlot(ushort bay)
 		{
 			ushort outcome;
@@ -158,11 +146,7 @@ namespace Civilization1Remaster.Engine
 			return outcome;
 		}
 
-		/// <summary>
-		/// Load a Saved Game from the start menu
-		/// </summary>
-		/// <param name="flag">0xffff to choose the saved game from the list, otherwise the manual saved game to load</param>
-		/// <returns>The loaded game (see ShowLoadList), or 0xffff when nothing was loaded</returns>
+		/// <inheritdoc/>
 		public ushort ImportGameFromMenu(ushort marker)
 		{
 			this.Processor.Journal.OpenScope($"ImportGameFromMenu({marker})");
@@ -196,13 +180,7 @@ namespace Civilization1Remaster.Engine
 			return bay;
 		}
 
-		/// <summary>
-		/// Marker 0: loads the saved game (the extension of the file name becomes SVE), the continents are counted again and
-		/// the game continues in the middle of the turn (0xdf60: 2 for an autosave, 1 for a manual save). Otherwise appends the
-		/// line of the file to the list of saved games at TextBuffer.Address: " (EMPTY)", or the difficulty, the leader and the civilization
-		/// of the human player and the year.
-		/// </summary>
-		/// <returns>1, 0 for a missing file in the list, also in AX</returns>
+		/// <inheritdoc/>
 		public ushort ImportGame(ushort docnameAddr, ushort marker)
 		{
 			this.Processor.Journal.OpenScope($"ImportGame(0x{docnameAddr:x4}, {marker})");
@@ -293,11 +271,7 @@ namespace Civilization1Remaster.Engine
 			return result;
 		}
 
-		/// <summary>
-		/// Save Game: the drive, the list of the 10 save files (the slot -1 asks the player, starting at the last one, 0xe168),
-		/// the game stored into the chosen file and the message whether it was saved (with write access denied, 0xd, or disk
-		/// full, 0x1c, from the error 0x681c).
-		/// </summary>
+		/// <inheritdoc/>
 		public void DisplayStoreGameDialog(ushort slot)
 		{
 			this.Processor.Journal.OpenScope($"DisplayStoreGameDialog({slot})");
@@ -377,11 +351,7 @@ namespace Civilization1Remaster.Engine
 			this.Processor.Journal.CloseScope("DisplayStoreGameDialog");
 		}
 
-		/// <summary>
-		/// Saves the game into the file: first a message with the file name, the difficulty (0x33a2 + 2 * level), the leader
-		/// (0x19a2 + 2 * player), the civilization (0x1992 + 2 * player) and the year, "... save in progress."
-		/// </summary>
-		/// <returns>1, also in AX</returns>
+		/// <inheritdoc/>
 		public ushort StoreGame(ushort docnameAddr)
 		{
 			this.Processor.Journal.OpenScope($"StoreGame(0x{docnameAddr:x4})");
@@ -416,12 +386,7 @@ namespace Civilization1Remaster.Engine
 			return 0x1;
 		}
 
-		/// <summary>
-		/// Asks for the drive of the saved games (0x4384, the current drive the first time): a letter A - F chooses it, Return
-		/// takes it, Escape cancels. A floppy drive without a disk gives the message "No Disk in Drive ...". The drive letter
-		/// goes into the file name at 0x41c6.
-		/// </summary>
-		/// <returns>The drive (0 = A), or 0xffff when cancelled or without a disk, also in AX</returns>
+		/// <inheritdoc/>
 		public ushort QueryForStoreDrive()
 		{
 			this.Processor.Journal.OpenScope("QueryForStoreDrive()");
@@ -506,12 +471,7 @@ namespace Civilization1Remaster.Engine
 			return drive;
 		}
 
-		/// <summary>
-		/// Whether there is a disk in a floppy drive (0 = A, 1 = B; other drives are always ready): the BIOS verifies one sector
-		/// (head 0, track 0, sector 2), up to 3 times with a reset of the disk system after each failure. The request is in the
-		/// stack frame, like in the original.
-		/// </summary>
-		/// <returns>1 when the drive is ready, else 0 (also in AX)</returns>
+		/// <inheritdoc/>
 		public ushort VerifyDrive(ushort driveIdx)
 		{
 			this.Processor.Journal.OpenScope($"VerifyDrive({driveIdx})");
@@ -541,10 +501,7 @@ namespace Civilization1Remaster.Engine
 			return ready;
 		}
 
-		/// <summary>
-		/// Loads the saved game of the path: the map (.MAP into screen 2) and the state (.SVE); false when a file cannot be
-		/// read
-		/// </summary>
+		/// <inheritdoc/>
 		public bool ImportGameContent(string route)
 		{
 			route = route.ToUpper();
@@ -948,9 +905,7 @@ namespace Civilization1Remaster.Engine
 			return victory;
 		}
 
-		/// <summary>
-		/// Saves the game as the path: the map (screen 2 into .MAP) and the state (.SVE); false when a file cannot be written
-		/// </summary>
+		/// <inheritdoc/>
 		public bool StoreGameContent(string route)
 		{
 			route = route.ToUpper();

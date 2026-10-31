@@ -28,7 +28,7 @@ namespace Civilization1Remaster.Tests
 			GameEngine engine = game.Engine;
 			engine.TurnHooks.ClassicHealing = false;
 
-			MapLayers chart = engine.MapOps.Chart;
+			IMapLayers chart = engine.MapOps.Chart;
 			UnitMemory troops = new UnitMemory(engine.Processor);
 			bool IsOcean(int horizLoc, int vertLoc) => chart.Terrain(horizLoc, vertLoc) == MapRules.OceanTerrain;
 

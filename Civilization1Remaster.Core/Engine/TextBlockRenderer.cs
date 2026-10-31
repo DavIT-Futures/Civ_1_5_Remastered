@@ -5,7 +5,7 @@ namespace Civilization1Remaster.Engine
 	/// <summary>
 	/// Translated from the original CIV.EXE segment 0x2f4d.
 	/// </summary>
-	public class TextBlockRenderer : GameModule
+	public class TextBlockRenderer : GameModule, ITextBlockRenderer
 	{
 		private const ushort MacroCodesTableAddress = 0x30ae;
 		private const ushort MacroReplacementsTableAddress = 0x30b8;
@@ -15,11 +15,7 @@ namespace Civilization1Remaster.Engine
 		{
 		}
 
-		/// <summary>
-		/// Breaks the text at TextBuffer.Address into lines of the width (in characters): a space after the width becomes a line break
-		/// (unless a space follows), "^" becomes a space with a line break after it (over the next character); a line break
-		/// is added at the end of a text that does not end with one
-		/// </summary>
+		/// <inheritdoc/>
 		public void ArrangeTextRow(short breadth)
 		{
 			this.Processor.Journal.OpenScope($"ArrangeTextRow({breadth})");
@@ -59,11 +55,7 @@ namespace Civilization1Remaster.Engine
 			this.Processor.Journal.CloseScope("ArrangeTextRow");
 		}
 
-		/// <summary>
-		/// Draws the text at TextBuffer.Address in lines of at most peakBreadth * 8 pixels, from vertLoc down while the lines start at most at
-		/// row 192: a line ends at the last space, line break or "^" before it gets too wide (or at a line break or "^", which also
-		/// skips the character after a "^"). Returns the row below the last drawn line.
-		/// </summary>
+		/// <inheritdoc/>
 		public int RenderTextChunk(int peakBreadth, int horizLoc, int vertLoc, ushort style)
 		{
 			this.Processor.Journal.OpenScope($"RenderTextChunk({peakBreadth}, {horizLoc}, {vertLoc}, {style})");
@@ -122,28 +114,14 @@ namespace Civilization1Remaster.Engine
 			return vertLoc;
 		}
 
-		/// <summary>
-		/// Appends the text of the topic charsAddr from the text file (lines after the "*TOPIC" line up to the next "*" line,
-		/// joined with spaces, without trailing spaces and '^') to TextBuffer.Address. The file starts with an index of 256 words, by a
-		/// hash of the topic (the low byte of the sum of character * position): a word above 0x1ff (not "00") is the offset of the
-		/// topic line, a wrong topic tries the next hash. Without an index entry, the topic is searched from 0x200 and its offset
-		/// written into the index.
-		/// </summary>
-		/// <returns>The number of lines of the text, 0xffff when the topic is missing, also in AX</returns>
-		/// <remarks>
-		/// The index is written at ((hash >> (5 + hash)) * 2, not at the place it is read from ((hash >> 5) + hash) * 2: an
-		/// operator precedence mistake of the translation, kept (see MIGRATION-BACKLOG.md).
-		/// </remarks>
+		/// <inheritdoc/>
 		public ushort ImportTextFromFile(GameText docname, GameText topic) =>
 			ImportTextFromFile(docname, topic.Read(this.Processor), topic.Address);
 
-		/// <summary>ImportTextFromFile of the topic in a C# string</summary>
+		/// <inheritdoc/>
 		public ushort ImportTextFromFile(GameText docname, string topic) => ImportTextFromFile(docname, topic, TextBuffer.StackTextAddress);
 
-		/// <summary>
-		/// The text of the topic at the address from the text file 0x30a5 into the message buffer, its codes replaced, arranged
-		/// in rows of 0x50 for a dialog
-		/// </summary>
+		/// <inheritdoc/>
 		public void DisplayTextDialog(GameText topic)
 		{
 			this.Processor.Journal.OpenScope($"DisplayTextDialog(0x{topic.Address:x4})");
@@ -157,10 +135,7 @@ namespace Civilization1Remaster.Engine
 			this.Processor.Journal.CloseScope("DisplayTextDialog");
 		}
 
-		/// <summary>
-		/// Replaces in the text at TextBuffer.Address every occurrence of the 5 codes (texts pointed to by 0x30ae + 2 * code) by their
-		/// texts (0x30b8 + 2 * code), one code after the other.
-		/// </summary>
+		/// <inheritdoc/>
 		public void ReflowText()
 		{
 			this.Processor.Journal.OpenScope("ReflowText()");
@@ -190,11 +165,7 @@ namespace Civilization1Remaster.Engine
 			this.Processor.Journal.CloseScope("ReflowText");
 		}
 
-		/// <summary>
-		/// Shortens the text until it fits the width: the last character goes, and the one before becomes a dot (unless the
-		/// character two before the end is a space)
-		/// </summary>
-		/// <summary>ShrinkTextToWidth of a text in a C# string (the original kept it on the stack): the shortened text</summary>
+		/// <inheritdoc/>
 		public string ShrinkTextToWidth(string text, ushort peakBreadth)
 		{
 			this.Processor.Journal.OpenScope($"ShrinkTextToWidth(0x{TextBuffer.StackTextAddress:x4}, {peakBreadth})");

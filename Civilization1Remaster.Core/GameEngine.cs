@@ -177,207 +177,207 @@ namespace Civilization1Remaster
 			get { return this.prologueJournal; }
 		}
 
-		public GameStartup Startup
+		public IGameStartup Startup
 		{
 			get { return this.sessionBoot; }
 		}
 
-		public SystemServices Services
+		public ISystemServices Services
 		{
 			get { return this.machineDuties; }
 		}
 
-		public TurnEvents TurnHooks
+		public ITurnEvents TurnHooks
 		{
 			get { return this.roundHappenings; }
 		}
 
-		public DialogDrawing Dialogs
+		public IDialogDrawing Dialogs
 		{
 			get { return this.promptPainting; }
 		}
 
-		public PlayerTurn TurnLogic
+		public IPlayerTurn TurnLogic
 		{
 			get { return this.participantRound; }
 		}
 
-		public CommonUtilities Helpers
+		public ICommonUtilities Helpers
 		{
 			get { return this.sharedHelpers; }
 		}
 
-		public TextDrawing TextPainter
+		public ITextDrawing TextPainter
 		{
 			get { return this.wordsPainting; }
 		}
 
-		public ImageTools ImageToolkit
+		public IImageTools ImageToolkit
 		{
 			get { return this.visualUtils; }
 		}
 
-		public TextBlockRenderer BlockText
+		public ITextBlockRenderer BlockText
 		{
 			get { return this.wordsChunkPainter; }
 		}
 
-		public MapManagement MapOps
+		public IMapManagement MapOps
 		{
 			get { return this.chartControl; }
 		}
 
-		public UnitManagement UnitOps
+		public IUnitManagement UnitOps
 		{
 			get { return this.troopControl; }
 		}
 
-		public Pathfinding Routing
+		public IPathfinding Routing
 		{
 			get { return this.routing; }
 		}
 
-		public TradeAndConquest Conquest
+		public ITradeAndConquest Conquest
 		{
 			get { return this.commerceWithCapture; }
 		}
 
-		public AIPlayer Bot
+		public IAIPlayer Bot
 		{
 			get { return this.botParticipant; }
 		}
 
-		public ScienceAndAdvisors Advisors
+		public IScienceAndAdvisors Advisors
 		{
 			get { return this.researchWithCounselors; }
 		}
 
-		public CityManagement CityOps
+		public ICityManagement CityOps
 		{
 			get { return this.townControl; }
 		}
 
-		public UnitCombat Combat
+		public IUnitCombat Combat
 		{
 			get { return this.troopWarfare; }
 		}
 
-		public GovernmentAndDiplomacy Politics
+		public IGovernmentAndDiplomacy Politics
 		{
 			get { return this.regimeWithRelations; }
 		}
 
-		public GameMenus MenuSystem
+		public IGameMenus MenuSystem
 		{
 			get { return this.sessionLists; }
 		}
 
-		public MainIntro Prologue
+		public IMainIntro Prologue
 		{
 			get { return this.primaryPrologue; }
 		}
 
-		public MeetWithKing Audience
+		public IMeetWithKing Audience
 		{
 			get { return this.greetUsingMonarch; }
 		}
 
-		public GameInitAndIntro WorldSetup
+		public IGameInitAndIntro WorldSetup
 		{
 			get { return this.sessionSetupWithPrologue; }
 		}
 
-		public InGameHelp HelpSystem
+		public IInGameHelp HelpSystem
 		{
 			get { return this.insideSessionGuide; }
 		}
 
-		public GameLoadAndSave SaveLoad
+		public IGameLoadAndSave SaveLoad
 		{
 			get { return this.sessionFetchWithStore; }
 		}
 
-		public HallOfFame Legends
+		public IHallOfFame Legends
 		{
 			get { return this.chamberForGlory; }
 		}
 
-		public StartGameMenu NewGameWizard
+		public IStartGameMenu NewGameWizard
 		{
 			get { return this.beginSessionChoices; }
 		}
 
-		public NewCityScreen CityNaming
+		public INewCityScreen CityNaming
 		{
 			get { return this.freshTownDisplay; }
 		}
 
-		public AdvisorReports Briefings
+		public IAdvisorReports Briefings
 		{
 			get { return this.counselorBriefings; }
 		}
 
-		public Civilopedia Encyclopedia
+		public ICivilopedia Encyclopedia
 		{
 			get { return this.encyclopedia; }
 		}
 
-		public Newspaper Paper
+		public INewspaper Paper
 		{
 			get { return this.gazette; }
 		}
 
-		public CityView CityScene
+		public ICityView CityScene
 		{
 			get { return this.townScene; }
 		}
 
-		public SpaceshipScreen RocketScreen
+		public ISpaceshipScreen RocketScreen
 		{
 			get { return this.starshipDisplay; }
 		}
 
-		public DiplomatActions Diplomats
+		public IDiplomatActions Diplomats
 		{
 			get { return this.envoyDeeds; }
 		}
 
-		public GameReplay Replayer
+		public IGameReplay Replayer
 		{
 			get { return this.sessionRerun; }
 		}
 
-		public CivilizationInfo RealmInfo
+		public ICivilizationInfo RealmInfo
 		{
 			get { return this.realmDetails; }
 		}
 
-		public WorldMap Atlas
+		public IWorldMap Atlas
 		{
 			get { return this.globeChart; }
 		}
 
-		public CityFoundingAndScore Founding
+		public ICityFoundingAndScore Founding
 		{
 			get { return this.townSettlingWithTally; }
 		}
 
-		public Palace Throne
+		public IPalace Throne
 		{
 			get { return this.castle; }
 		}
 
-		public ArmySelection ArmyPicker
+		public IArmySelection ArmyPicker
 		{
 			get { return this.forceChoice; }
 		}
 
-		public CivilizationSchism Secession
+		public ICivilizationSchism Secession
 		{
 			get { return this.realmSplit; }
 		}
 
-		public CRuntime Libc
+		public ICRuntime Libc
 		{
 			get { return this.chrLibc; }
 		}
@@ -445,7 +445,7 @@ namespace Civilization1Remaster
 			get { return this.videoHandler; }
 		}
 
-		public SoundDriver Audio
+		public ISoundDriver Audio
 		{
 			get { return this.audioHandler; }
 		}

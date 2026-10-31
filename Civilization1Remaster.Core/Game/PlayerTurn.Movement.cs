@@ -35,12 +35,8 @@ namespace Civilization1Remaster.Game
 			Attacks,
 		}
 
-		/// <summary>
-		/// The remaster's railroads (RailroadRules): a step along a road from a tile with a railroad (or a city, once the player
-		/// knows Railroad) is free for every unit; a unit not moved by hand (GoTo or a computer player) rides for free at most
-		/// 30 times a turn, counted here.
-		/// </summary>
-		internal bool RideForFree(short participantIdx, short troopIdx, short horizLoc, short vertLoc)
+		/// <inheritdoc/>
+		public bool RideForFree(short participantIdx, short troopIdx, short horizLoc, short vertLoc)
 		{
 			bool knowsRailroad = this.Owner.Advisors.PlayerKnowsTechnology(participantIdx, RailroadRules.RailroadTechnology) != 0;
 

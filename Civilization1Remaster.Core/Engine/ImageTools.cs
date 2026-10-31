@@ -7,22 +7,14 @@ namespace Civilization1Remaster.Engine
 	/// <summary>
 	/// Image loading functions - RLE and LZW compression was used
 	/// </summary>
-	public class ImageTools : GameModule
+	public class ImageTools : GameModule, IImageTools
 	{
 		public ImageTools(GameEngine owner)
 			: base(owner)
 		{
 		}
 
-		/// <summary>
-		/// Loads and .pic or .map Image from given filename with optional palette data
-		/// </summary>
-		/// <param name="screenID"></param>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
-		/// <param name="filenamePtr"></param>
-		/// <param name="palettePtr"></param>
-		/// <exception cref="Exception"></exception>
+		/// <inheritdoc/>
 		public void ImportPictureOrColors(short displayIdx, ushort horizLoc, ushort vertLoc, GameText docname, ushort swatchAddr)
 		{
 			string fileName = docname.Read(this.Processor);
@@ -122,10 +114,7 @@ namespace Civilization1Remaster.Engine
 			this.Processor.Journal.CloseScope("ImportPictureOrColors");
 		}
 
-		/// <summary>
-		/// Loads an Bitmap (Icon) from given image Filename
-		/// </summary>
-		/// <param name="filenamePtr"></param>
+		/// <inheritdoc/>
 		public ushort ImportIcon(string docname)
 		{
 			return this.Owner.VideoCard.ImportIcon(CRuntime.ObtainDOSFileLabel(docname));

@@ -1009,3 +1009,15 @@ klasy `partial` w plikach po tematach – `CityManagement`: `Growth`, `Productio
 `Transport`, `Military`, `Strategy`, `Barbarians`. Metody przeniesione bez zmian (sprawdzone: te same wiersze, każdy raz),
 w tej samej kolejności; pola z inicjalizatorami zostały w plikach głównych (kolejność inicjalizacji między plikami
 `partial` nie jest określona). Pliki główne mają 400 – 740 wierszy. Golden master i tury 27/27.
+
+**Struktura wg zaleceń Microsoftu (2026-10-31):**
+- Każdy typ w osobnym pliku (8 plików z kilkoma typami rozdzielonych), klasy zagnieżdżone w swoich plikach `partial`
+  (`CityManagement.CityRound.cs`, `PlayerTurn.TurnLocals.cs`, …).
+- Żadnych widocznych pól: 548 pól publicznych i 30 chronionych / wielokrotnych to właściwości (wyjątek: struktury interop
+  `WaveFormat` / `WaveHeader`); `GameModule.Owner` / `Processor` zamiast pól `owner` / `processor`; `readonly`, gdzie się
+  da. Golden master zapisuje pole za auto-właściwością pod nazwą właściwości (`ObjectWalker.MemberName`) – baseline'y bez
+  zmian.
+- Kolejność składowych (StyleCop SA1201 – SA1204, SA1214: 0 ostrzeżeń), bez `#region`; zmieniona kolejność
+  inicjalizatorów pól w 7 klasach sprawdzona – same niezależne wartości.
+- 43 interfejsy modułów `I<Klasa>` (publiczne metody i właściwości z opisami, w klasach `<inheritdoc/>`); `GameEngine` i
+  `MapManagement.Chart` wystawiają moduły przez interfejsy.

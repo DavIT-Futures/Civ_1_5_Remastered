@@ -4,7 +4,7 @@ using Civilization1Remaster.Acoustics;
 
 namespace Civilization1Remaster.Acoustics
 {
-	public class SoundDriver : GameModule
+	public class SoundDriver : GameModule, ISoundDriver
 	{
 		// The original sound driver from the game folder (RSOUND.CVL, ASOUND.CVL or ISOUND.CVL) and the audio or MIDI output.
 		// When the driver or the audio output is missing, the functions below keep the old silent behaviour.
@@ -61,10 +61,7 @@ namespace Civilization1Remaster.Acoustics
 			}
 		}
 
-		/// <summary>
-		/// Initializes the sound driver
-		/// </summary>
-		/// <returns></returns>
+		/// <inheritdoc/>
 		public ushort Prepare()
 		{
 			// The driver is initialized when it is loaded
@@ -73,58 +70,39 @@ namespace Civilization1Remaster.Acoustics
 			return 0x0;
 		}
 
-		/// <summary>
-		/// Plays the next step of the song, the game calls it from its timer.
-		/// The loaded driver is stepped by the audio thread instead, so the tempo is exact.
-		/// It returns 0, so the game doesn't change its timer speed.
-		/// </summary>
-		/// <returns></returns>
+		/// <inheritdoc/>
 		public ushort PerformNextStep()
 		{
 			stagingPlace++;
 			return 0x0;
 		}
 
-		/// <summary>
-		/// Updates the vibrato and tremolo, the audio thread does it for the loaded driver
-		/// </summary>
+		/// <inheritdoc/>
 		public void RefreshVibratoTremolo()
 		{
 		}
 
-		/// <summary>
-		/// Returns the song position, the intro uses it to synchronize pictures with the music
-		/// </summary>
-		/// <returns></returns>
+		/// <inheritdoc/>
 		public ushort ObtainSongPosition()
 		{
 			SoundDriverHost? handler = this.Handler;
 			return handler != null ? handler.CurrentOffset() : stagingPlace;
 		}
 
-		/// <summary>
-		/// Starts a song or a sound effect
-		/// </summary>
-		/// <param name="param1">Song or sound effect number</param>
-		/// <param name="param2"></param>
+		/// <inheritdoc/>
 		public void PerformSound(ushort audio, ushort argument)
 		{
 			this.Handler?.Perform(audio, argument);
 			stagingPlace = 0x0;
 		}
 
-		/// <summary>
-		/// Plays the sound of chopping wood (a new city is founded), together with the current song
-		/// </summary>
+		/// <inheritdoc/>
 		public void PerformChopping()
 		{
 			this.Handler?.PerformChopping();
 		}
 
-		/// <summary>
-		/// Stops the sound, the game calls it when it exits
-		/// </summary>
-		/// <returns></returns>
+		/// <inheritdoc/>
 		public ushort Halt()
 		{
 			this.handler?.Halt();

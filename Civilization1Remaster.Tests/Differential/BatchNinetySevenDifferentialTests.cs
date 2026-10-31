@@ -38,7 +38,7 @@ public sealed class BatchNinetySevenDifferentialTests(ITestOutputHelper output)
 		{
 			GameEngine engine = pair.Rewritten.Engine;
 			short person = engine.World.PersonParticipantIdx;
-			MapLayers sight = engine.MapOps.Chart;
+			IMapLayers sight = engine.MapOps.Chart;
 			// A barbarian turn now and then: a barbarian unit on an irrigated tile next to a city of the human
 			bool barbarian = chance.Next(3) == 0;
 			int[] keys = { 0x4800, 0x4900, 0x4d00, 0x5100, 0x5000, 0x4f00, 0x4b00, 0x4700, 'c', 0x20, 0x0d, 0x31 };

@@ -39,7 +39,7 @@ public sealed class BatchEightySevenDifferentialTests(ITestOutputHelper output)
 	/// <summary>A lone land unit of another computer player moves to the free land tile</summary>
 	private static void PlaceStranger(GameEngine game, short participantIdx, int horizLoc, int vertLoc, int pick)
 	{
-		MapLayers chart = game.MapOps.Chart;
+		IMapLayers chart = game.MapOps.Chart;
 		short person = game.World.PersonParticipantIdx;
 
 		if (vertLoc <= 0 || vertLoc >= 49 || chart.Terrain(horizLoc, vertLoc) == MapRules.OceanTerrain || (chart.OwnerBits(horizLoc, vertLoc) & MapLayers.UnitsPresent) != 0)
@@ -71,7 +71,7 @@ public sealed class BatchEightySevenDifferentialTests(ITestOutputHelper output)
 			// leave ShiftAIUnit earlier), as the save has it; the defenders half of the time in a stack or at sea
 			int wanted = new[] { 0, 2, 3 }[chance.Next(3)];
 			int place = chance.Next(4);
-			MapLayers sight = engine.MapOps.Chart;
+			IMapLayers sight = engine.MapOps.Chart;
 			var candidates = Enumerable.Range(1, 7).Where(idx => idx != person)
 				.SelectMany(player => Enumerable.Range(0, 128).Select(troop => (Player: (short)player, Troop: (short)troop)))
 				.Where(unit => UnitByte(engine, unit.Player, unit.Troop, UnitMemory.Kind) is byte kind && kind != 0xff &&
@@ -125,7 +125,7 @@ public sealed class BatchEightySevenDifferentialTests(ITestOutputHelper output)
 					game.Processor.EmitUInt16(0x3b01, (ushort)(frame - 0xc), terrainLeft);
 					// (0x5c gets 0 or 1 only when the look starts)
 					game.Processor.EmitUInt16(0x3b01, (ushort)(frame - 0x5c), 0x1234);
-					MapLayers chart = game.MapOps.Chart;
+					IMapLayers chart = game.MapOps.Chart;
 					ushort unit = UnitMemory.Address(participantIdx, troopIdx);
 					int unitHoriz = game.Processor.PullUInt8(0x3b01, (ushort)(unit + UnitMemory.Horiz));
 					int unitVert = game.Processor.PullUInt8(0x3b01, (ushort)(unit + UnitMemory.Vert));

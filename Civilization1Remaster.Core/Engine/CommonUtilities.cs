@@ -6,7 +6,7 @@ namespace Civilization1Remaster.Engine
 	/// <summary>
 	/// Translated from the original CIV.EXE segment 0x2dc4.
 	/// </summary>
-	public class CommonUtilities : GameModule
+	public class CommonUtilities : GameModule, ICommonUtilities
 	{
 		private readonly UnitMemory troops;
 
@@ -16,9 +16,7 @@ namespace Civilization1Remaster.Engine
 			this.troops = new UnitMemory(owner.Processor);
 		}
 
-		/// <summary>
-		/// Seeds the random generator with the clock (15 bits of the seconds), kept as the seed of the world (ChanceRoot)
-		/// </summary>
+		/// <inheritdoc/>
 		public void SeedRandomizer()
 		{
 			ushort seed = (ushort)(this.Owner.Libc.CurrentTime(0) & 0x7fff);
@@ -26,14 +24,7 @@ namespace Civilization1Remaster.Engine
 			this.Owner.Libc.SeedRandom(seed);
 		}
 
-		/// <summary>
-		/// Check and adjusts value to given range
-		/// </summary>
-		/// <param name="value"></param>
-		/// <param name="minValue"></param>
-		/// <param name="maxValue"></param>
-		/// <returns></returns>
-		/// <exception cref="Exception"></exception>
+		/// <inheritdoc/>
 		public int VerifyValueSpan(int amount, int floorAmount, int peakAmount)
 		{
 			if (floorAmount > peakAmount)
@@ -42,10 +33,7 @@ namespace Civilization1Remaster.Engine
 			return Math.Min(Math.Max(amount, floorAmount), peakAmount);
 		}
 
-		/// <summary>
-		/// The city standing on the tile
-		/// </summary>
-		/// <returns>City index, or 0xffff</returns>
+		/// <inheritdoc/>
 		public ushort LocateCityAtPosition(int horizLoc, int vertLoc)
 		{
 			this.Processor.Journal.OpenScope($"LocateCityAtPosition({horizLoc}, {vertLoc})");
@@ -68,11 +56,7 @@ namespace Civilization1Remaster.Engine
 			return found;
 		}
 
-		/// <summary>
-		/// The nearest city of any player (MapRules.Distance, the first one of equally near cities).
-		/// Its distance goes to 0x6c9a, 999 when there is no city.
-		/// </summary>
-		/// <returns>City index, or 0xffff</returns>
+		/// <inheritdoc/>
 		public ushort LocateNearestCity(int horizLoc, int vertLoc)
 		{
 			this.Processor.Journal.OpenScope($"LocateNearestCity({horizLoc}, {vertLoc})");
@@ -103,12 +87,7 @@ namespace Civilization1Remaster.Engine
 			return nearest;
 		}
 
-		/// <summary>
-		/// The nearest other unit of the player (MapRules.Distance, the first one of equally near units).
-		/// Its distance goes to 0x6c9a, 999 when there is none.
-		/// </summary>
-		/// <param name="troopIdx">The unit itself, it is skipped</param>
-		/// <returns>Unit index, or 0xffff</returns>
+		/// <inheritdoc/>
 		public ushort LocateNearestUnit(short participantIdx, short troopIdx, int horizLoc, int vertLoc)
 		{
 			this.Processor.Journal.OpenScope($"LocateNearestUnit({participantIdx}, {troopIdx}, {horizLoc}, {vertLoc})");
@@ -139,17 +118,13 @@ namespace Civilization1Remaster.Engine
 			return nearest;
 		}
 
-		/// <summary>
-		/// The larger of the two steps plus half of the smaller one (MapRules.LongerPlusHalfShorter)
-		/// </summary>
+		/// <inheritdoc/>
 		public int MergeCoordinates(int horizLoc, int vertLoc)
 		{
 			return MapRules.LongerPlusHalfShorter(horizLoc, vertLoc);
 		}
 
-		/// <summary>
-		/// Twice the larger step plus the smaller one (MapRules.DoubledDistance)
-		/// </summary>
+		/// <inheritdoc/>
 		public ushort ObtainDistanceFromOffsets(int horizLoc, int vertLoc)
 		{
 			this.Owner.Journal.OpenScope($"ObtainDistanceFromOffsets({horizLoc}, {vertLoc})");
@@ -161,18 +136,13 @@ namespace Civilization1Remaster.Engine
 			return result;
 		}
 
-		/// <summary>
-		/// Distance of two positions (MapRules.Distance)
-		/// </summary>
+		/// <inheritdoc/>
 		public int ObtainDistance(int horizLoc, int horizSpot1, int vertLoc, int vertSpot1)
 		{
 			return MapRules.Distance(horizLoc, vertLoc, horizSpot1, vertSpot1);
 		}
 
-		/// <summary>
-		/// Population of the civilization (PopulationRules.CityPopulation of all its cities), also written as text
-		/// by PopulationToText
-		/// </summary>
+		/// <inheritdoc/>
 		public ushort ObtainPlayerPopulation(short participantIdx)
 		{
 			this.Processor.Journal.OpenScope($"ObtainPlayerPopulation({participantIdx})");
@@ -194,10 +164,7 @@ namespace Civilization1Remaster.Engine
 			return population;
 		}
 
-		/// <summary>
-		/// Converts population to string
-		/// </summary>
-		/// <param name="population"></param>
+		/// <inheritdoc/>
 		public void PopulationToText(int inhabitants)
 		{
 			if (inhabitants >= 100)
@@ -217,10 +184,7 @@ namespace Civilization1Remaster.Engine
 			this.Owner.Words.Append("0,000");
 		}
 
-		/// <summary>
-		/// Fills the box with the background motif: on VGA tiles of 32 x 16 from (288, 120) of the picture screen, on EGA
-		/// colour 7
-		/// </summary>
+		/// <inheritdoc/>
 		public void FloodBoxWithMotif(int horizLoc, int vertLoc, int breadth, int altitude)
 		{
 			if ((short)VgaMode != 0)
@@ -259,10 +223,7 @@ namespace Civilization1Remaster.Engine
 			}		
 		}
 
-		/// <summary>
-		/// On VGA (0xd762) loads the colours of the picture file into the palette record at 0xbdee, puts back the 48 colour
-		/// bytes kept at 0x6b34 at its start, sets the palette and colour 45
-		/// </summary>
+		/// <inheritdoc/>
 		public void PullAndAssignColors(ushort docnameAddr)
 		{
 			this.Processor.Journal.OpenScope($"PullAndAssignColors(0x{docnameAddr:x4})");
@@ -283,11 +244,7 @@ namespace Civilization1Remaster.Engine
 			this.Processor.Journal.CloseScope("PullAndAssignColors");
 		}
 
-		/// <summary>
-		/// Free resource, show Memory error dialog if error happens
-		/// </summary>
-		/// <param name="param1"></param>
-		/// <param name="stringPtr"></param>
+		/// <inheritdoc/>
 		public void ReleaseResource(ushort resource, ushort charsAddr)
 		{
 			this.Processor.Journal.OpenScope($"ReleaseResource({resource}, 0x{charsAddr:x4})");
@@ -308,9 +265,7 @@ namespace Civilization1Remaster.Engine
 			this.Processor.Journal.CloseScope("ReleaseResource");
 		}
 
-		/// <summary>
-		/// Sets the colour cycles 1 - 3 of the map: the colours 96 - 103, 104 - 111 and 112 - 127, 15 beats a step
-		/// </summary>
+		/// <inheritdoc/>
 		public void SetupHueCycling()
 		{
 			this.Processor.Journal.OpenScope("SetupHueCycling()");
@@ -324,7 +279,7 @@ namespace Civilization1Remaster.Engine
 			this.Processor.Journal.CloseScope("SetupHueCycling");
 		}
 
-		/// <summary>Starts the colour cycles 1 - 3 (on VGA, unless they run already, HueCyclingOn)</summary>
+		/// <inheritdoc/>
 		public void LaunchHueCycling()
 		{
 			if (HueCyclingOn == 0 && VgaMode != 0)
@@ -339,7 +294,7 @@ namespace Civilization1Remaster.Engine
 			HueCyclingOn = 0x1;
 		}
 
-		/// <summary>Stops the colour cycles 1 - 3 (on VGA, when they run)</summary>
+		/// <inheritdoc/>
 		public void HaltHueCycling()
 		{
 			this.Processor.Journal.OpenScope("HaltHueCycling()");

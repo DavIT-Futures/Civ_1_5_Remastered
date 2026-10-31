@@ -64,7 +64,7 @@ public sealed class BatchHundredTwoDifferentialTests(ITestOutputHelper output)
 				$"HandlePlayerTurn({person}), mode {mode}, steps {steps}, roads {roads[0]:x}/{roads[1]:x}",
 				game =>
 				{
-					MapLayers chart = game.MapOps.Chart;
+					IMapLayers chart = game.MapOps.Chart;
 					inputs.Clear();
 					int mover = Enumerable.Range(0, 128).FirstOrDefault(troop => UnitByte(game, person, troop, UnitMemory.Kind) != 0xff &&
 						(UnitByte(game, person, troop, UnitMemory.Status) & 9) == 0, -1);

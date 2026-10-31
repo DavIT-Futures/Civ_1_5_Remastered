@@ -4,7 +4,7 @@ using Civilization1Remaster.Game.State;
 
 namespace Civilization1Remaster.UI
 {
-	public class CityView : GameModule
+	public class CityView : GameModule, ICityView
 	{
 		/// <summary>The columns of the four figures of the parade (words -96, -36, 0, -56; the rows follow at 0x4f4a)</summary>
 		private const ushort ParadeFigureColumnsAddress = 0x4f42;
@@ -42,10 +42,7 @@ namespace Civilization1Remaster.UI
 		/// <summary>Picture handle of the city scenery</summary>
 		private ushort CitySceneryHandle => this.Processor.PullGlobalWord(CitySceneryPiecesTableAddress);
 
-		/// <summary>
-		/// The view of the city: the land, the walls, the buildings, the wonders and the people; the improvement (or 24 + the
-		/// wonder) just built is shown too
-		/// </summary>
+		/// <inheritdoc/>
 		public void DisplayCityScreen(short townIdx, short improvement)
 		{
 			this.Processor.Journal.OpenScope($"DisplayCityScreen({townIdx}, {improvement})");
@@ -600,9 +597,7 @@ namespace Civilization1Remaster.UI
 			this.Processor.Journal.CloseScope("DisplayCityScreen");
 		}
 
-		/// <summary>
-		/// One picture of the city view (table at 0x6880) into the back screen (0x19d4), in the column and row of the view
-		/// </summary>
+		/// <inheritdoc/>
 		public void RenderCityPicture(ushort column, ushort row, ushort pictureIdx)
 		{
 			this.Processor.Journal.OpenScope($"RenderCityPicture({column}, {row}, {pictureIdx})");
@@ -615,10 +610,7 @@ namespace Civilization1Remaster.UI
 			this.Processor.Journal.CloseScope("RenderCityPicture");
 		}
 
-		/// <summary>
-		/// One picture of the city view (table at 0x817a by picture and kind) into the back screen (0x19d4), in the column and
-		/// row of the view
-		/// </summary>
+		/// <inheritdoc/>
 		public void RenderCityPictureRegion(ushort column, ushort row, ushort picture, ushort kind)
 		{
 			this.Processor.Journal.OpenScope($"RenderCityPictureRegion({column}, {row}, {picture}, {kind})");
@@ -631,10 +623,7 @@ namespace Civilization1Remaster.UI
 			this.Processor.Journal.CloseScope("RenderCityPictureRegion");
 		}
 
-		/// <summary>
-		/// One picture of a row of the city screen into the back screen (0x19d4): pictures below 0x30 from the table at 0x81a2,
-		/// the others from the table at 0x68a0, moved up by their height (segment 0x3767)
-		/// </summary>
+		/// <inheritdoc/>
 		public void RenderCityResourceBar(ushort column, ushort row, ushort picture)
 		{
 			this.Processor.Journal.OpenScope($"RenderCityResourceBar({column}, {row}, {picture})");
@@ -665,12 +654,7 @@ namespace Civilization1Remaster.UI
 			this.Processor.Journal.CloseScope("RenderCityResourceBar");
 		}
 
-		/// <summary>
-		/// The citizens of the city in a row from (rowHoriz, rowVert), at most breadth wide: the 9 pictures 0x23 apart of 0x4ebc (row 0x34
-		/// without technology 0x23, else row 1) are cut into the stack frame; then the happy (0x70e2), content, unhappy (0x70e4)
-		/// people (clamped, so that with the specialists 0xe8b8 they fit the size) with two alternating pictures each and a gap of
-		/// 8 after a non-empty group (12 after the unhappy), then the specialists (picture 5 + their type)
-		/// </summary>
+		/// <inheritdoc/>
 		public void RenderCityScenery(short townIdx, ushort rowHoriz, ushort rowVert, ushort breadth)
 		{
 			this.Processor.Journal.OpenScope($"RenderCityScenery({townIdx}, {rowHoriz}, {rowVert}, {breadth})");
@@ -735,12 +719,7 @@ namespace Civilization1Remaster.UI
 			this.Processor.Journal.CloseScope("RenderCityScenery");
 		}
 
-		/// <summary>
-		/// Cuts the pictures of the city view out of screen 1: from 0x4ec8 the 5 x 4 land pieces (0x817a) and the 16 wall pieces
-		/// (0x6880, the second set with technology 0x3a), from 0x4ed5 (technology 0x25) or 0x4ee2 the buildings 0 - 22 the city has
-		/// (StructureMarkers bit index + 1), improvement - 1 and 21 - 22 (0x81a2), and the city's wonders (0x68a0): from 0x4eef those
-		/// outside mask 0x808a, from 0x4efb those in it
-		/// </summary>
+		/// <inheritdoc/>
 		public void RenderCityBuildings(ushort improvement, short participantIdx, short townIdx)
 		{
 			this.Processor.Journal.OpenScope($"RenderCityBuildings({improvement}, {participantIdx}, {townIdx})");
@@ -788,10 +767,7 @@ namespace Civilization1Remaster.UI
 			this.Processor.Journal.CloseScope("RenderCityBuildings");
 		}
 
-		/// <summary>
-		/// Cuts a picture of the city view out of screen 1. The rectangles (segment 0x3767, records of 4 words: left, top, right,
-		/// bottom) are turned into left, top, width, height once, the first time (when the right of rectangle 1 is above 300).
-		/// </summary>
+		/// <inheritdoc/>
 		public ushort SeizeCityScenery(ushort picture)
 		{
 			this.Processor.Journal.OpenScope($"SeizeCityScenery({picture})");
@@ -820,11 +796,7 @@ namespace Civilization1Remaster.UI
 			return handle;
 		}
 
-		/// <summary>
-		/// The parade of the player's people over the bottom of the screen until a key or a click (frame by frame, 10 timer
-		/// ticks each): with technology 0x22 the 10 pictures of 0x4f08 (with 0x3a) or 0x4f15, else 0x4f22; 8 figures 0x30
-		/// apart moving right, all with the same picture. The pictures are cut into the stack frame, like in the original.
-		/// </summary>
+		/// <inheritdoc/>
 		public void RenderCitySceneryForPlayer(short participantIdx)
 		{
 			this.Processor.Journal.OpenScope($"RenderCitySceneryForPlayer({participantIdx})");
@@ -897,7 +869,7 @@ namespace Civilization1Remaster.UI
 			this.Processor.Journal.CloseScope("RenderCitySceneryForPlayer");
 		}
 
-		/// <summary>The animation of a riot in the city (10 pictures, others with the technology 13)</summary>
+		/// <inheritdoc/>
 		public void RiotAnimation()
 		{
 			this.Processor.Journal.OpenScope("RiotAnimation()");
@@ -984,10 +956,7 @@ namespace Civilization1Remaster.UI
 			this.Processor.Journal.CloseScope("RiotAnimation");
 		}
 
-		/// <summary>
-		/// The parade of the human player's people (the 10 pictures of 0x4f5c with technology 0x23, else 0x4f52): 4 figures
-		/// (ParadeFigureColumnsAddress, the rows after it) moving left, each with its own picture, until a key or a click.
-		/// </summary>
+		/// <inheritdoc/>
 		public void RenderCitySceneryForHuman()
 		{
 			this.Processor.Journal.OpenScope("RenderCitySceneryForHuman()");

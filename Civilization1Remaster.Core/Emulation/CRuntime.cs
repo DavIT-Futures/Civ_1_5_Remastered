@@ -6,7 +6,7 @@ using Civilization1Remaster.Emulation;
 
 namespace Civilization1Remaster.Emulation
 {
-	public class CRuntime : GameModule
+	public class CRuntime : GameModule, ICRuntime
 	{
 		/// <summary>The open files by handle (B6.6: kept here, no longer in the CPU); the first handle is 0x20, like DOS gave</summary>
 		private readonly BDictionary<short, FileStreamItem> files = new BDictionary<short, FileStreamItem>();
@@ -19,10 +19,7 @@ namespace Civilization1Remaster.Emulation
 		{
 		}
 
-		/// <summary>
-		/// The clock of time(): the wall clock of the computer; a test sets a fixed moment, so that the random seed taken from
-		/// it (SeedRandomizer) is the same in both games it compares
-		/// </summary>
+		/// <inheritdoc/>
 		public Func<DateTime> Clock { get; set; } = () => DateTime.Now;
 
 		public RandomMT19937 Dice
@@ -149,10 +146,7 @@ namespace Civilization1Remaster.Emulation
 			this.Processor.Journal.CloseScope("MoveFarData");
 		}
 
-		/// <summary>
-		/// Frees the memory block (a picture from 0xb000 up). True: freed (AX 0); false: no such block (AX 9, the DOS error
-		/// of an invalid block)
-		/// </summary>
+		/// <inheritdoc/>
 		public bool DosReleaseMemory(ushort section)
 		{
 			this.Processor.Journal.OpenScope($"DosReleaseMemory(0x{section:x4})");
@@ -327,10 +321,7 @@ namespace Civilization1Remaster.Emulation
 			return ScanStream(hnd, this.Processor.PullText(CPU.AsLinearAddress(this.Processor.SegData.Value16, layoutAddr)), globAddr);
 		}
 
-		/// <summary>
-		/// fscanf(hnd, "%[^\n]\n", line) into a C# string: the line without '\r' and its tally (1); -1 and the empty text at the
-		/// end of the file or for an empty line, like the emulated fscanf
-		/// </summary>
+		/// <inheritdoc/>
 		public short ScanStreamLine(short hnd, out string line)
 		{
 			short tallyShort = -1;
@@ -364,7 +355,7 @@ namespace Civilization1Remaster.Emulation
 			return tallyShort;
 		}
 
-		/// <summary>fread of one little-endian word: the word read, or the word given when the file ends before it</summary>
+		/// <inheritdoc/>
 		public ushort ReadStreamWord(short hnd, ushort word)
 		{
 			if (!this.files.IncludesKey(hnd))
@@ -408,7 +399,7 @@ namespace Civilization1Remaster.Emulation
 			return (ushort)(cache[0] | (cache[1] << 8));
 		}
 
-		/// <summary>fwrite of one little-endian word to a binary file (the text file translation of WriteStream is not needed)</summary>
+		/// <inheritdoc/>
 		public void WriteStreamWord(ushort word, short hnd)
 		{
 			if (!this.files.IncludesKey(hnd))
@@ -930,10 +921,7 @@ namespace Civilization1Remaster.Emulation
 			return backAmountShort;
 		}
 
-		/// <summary>
-		/// The BIOS disk call: 0 resets the disks, 4 checks the drive of the request is ready. True: done (AH 0); false: not
-		/// ready (AH 0x80)
-		/// </summary>
+		/// <inheritdoc/>
 		public bool BiosDiskCall(ushort directive, int volume)
 		{
 			this.Processor.Journal.OpenScope("'_bios_disk'(Cdecl) at 0x3045:0x3062");
@@ -1026,12 +1014,7 @@ namespace Civilization1Remaster.Emulation
 			this.Processor.EmitUInt16(this.Processor.SegData.Value16, amountAddr, 3);
 		}
 
-		/// <summary>
-		/// Join two strings together
-		/// </summary>
-		/// <param name="destinationPtr">The destination string ptr</param>
-		/// <param name="sourcePtr">The source string ptr</param>
-		/// <returns></returns>
+		/// <inheritdoc/>
 		public ushort AppendText(ushort targetAddr, ushort originAddr)
 		{
 			string goal = this.Processor.PullText(CPU.AsLinearAddress(this.Processor.SegData.Value16, targetAddr));
@@ -1088,7 +1071,7 @@ namespace Civilization1Remaster.Emulation
 			return CompareTextNoCase(txt1, txt2);
 		}
 
-		/// <summary>stricmp of two texts</summary>
+		/// <inheritdoc/>
 		public short CompareTextNoCase(string txt1, string txt2)
 		{
 			short backAmount = (short)string.Compare(txt1, txt2, StringComparison.CurrentCultureIgnoreCase);

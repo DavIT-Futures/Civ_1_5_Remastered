@@ -47,7 +47,7 @@ public sealed class BatchEightyThreeDifferentialTests(ITestOutputHelper output)
 	/// </summary>
 	private static void ArrangeSurroundings(GameEngine game, short participantIdx, short troopIdx, List<short> members, int pole, int[] around)
 	{
-		MapLayers chart = game.MapOps.Chart;
+		IMapLayers chart = game.MapOps.Chart;
 		short person = game.World.PersonParticipantIdx;
 		int horizLoc = UnitByte(game, participantIdx, troopIdx, UnitMemory.Horiz);
 		int vertLoc = UnitByte(game, participantIdx, troopIdx, UnitMemory.Vert);

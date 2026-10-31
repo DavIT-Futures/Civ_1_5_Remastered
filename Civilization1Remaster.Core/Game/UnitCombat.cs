@@ -7,7 +7,7 @@ namespace Civilization1Remaster.Game
 	/// <summary>
 	/// Translated from the original CIV.EXE segment 0x29f3.
 	/// </summary>
-	public class UnitCombat : GameModule
+	public class UnitCombat : GameModule, IUnitCombat
 	{
 		// Unit data in memory: 12 bytes per unit, 0x600 bytes (128 units) per player
 		private const int TroopConditionDisplacement = 0;
@@ -53,11 +53,7 @@ namespace Civilization1Remaster.Game
 			this.troops = new UnitMemory(owner.Processor);
 		}
 
-		/// <summary>
-		/// Resolves or estimates (`marker == 0`) combat between attacker (`participantIdx1`, `troopIdx1`) and defender
-		/// (`participantIdx2`, `troopIdx2`), including treaty confirmation, hit-point combat rounds, map/explosion animation,
-		/// diplomacy updates, nuclear detonation, stack/city aftermath, and veteran promotion.
-		/// </summary>
+		/// <inheritdoc/>
 		public ushort SettleBattle(short participantIdx1, short troopIdx1, short participantIdx2, short troopIdx2, ushort marker)
 		{
 			this.Processor.Journal.OpenScope($"SettleBattle({participantIdx1}, {troopIdx1}, {participantIdx2}, {troopIdx2}, {marker})");
@@ -211,11 +207,7 @@ namespace Civilization1Remaster.Game
 			return FinishSettleBattle(0);
 		}
 
-		/// <summary>
-		/// Puts the unit into the stack of another unit of the same player, right after it. The units of a stack form a ring
-		/// through the FollowingInStack field; a unit alone has -1 there.
-		/// </summary>
-		/// <param name="stackTroopIdx">A unit of the stack</param>
+		/// <inheritdoc/>
 		public void AttachUnitToStack(short participantIdx, short troopIdx, ushort stackTroopIdx)
 		{
 			this.Processor.Journal.OpenScope($"AttachUnitToStack({participantIdx}, {troopIdx}, {stackTroopIdx})");
@@ -235,10 +227,7 @@ namespace Civilization1Remaster.Game
 			this.Processor.Journal.CloseScope("AttachUnitToStack");
 		}
 
-		/// <summary>
-		/// Takes the unit out of its stack (the ring of FollowingInStack), the unit stands alone afterwards.
-		/// Like the original, the unit before it is searched in at most 32 steps.
-		/// </summary>
+		/// <inheritdoc/>
 		public void DiscardUnitFromStack(short participantIdx, short troopIdx)
 		{
 			this.Processor.Journal.OpenScope($"DiscardUnitFromStack({participantIdx}, {troopIdx})");
@@ -276,11 +265,7 @@ namespace Civilization1Remaster.Game
 			this.Processor.Journal.CloseScope("DiscardUnitFromStack");
 		}
 
-		/// <summary>
-		/// Before the human player attacks a player with whom it has a peace treaty (Relations bit 1): asks whether to break the
-		/// treaty; the Senate overrules it under governments 4 and up
-		/// </summary>
-		/// <returns>0 without a treaty, 1 when the treaty is broken, 0xffff when the action is cancelled (also in AX)</returns>
+		/// <inheritdoc/>
 		public ushort AffirmBreakTreaty(short participantIdx)
 		{
 			this.Processor.Journal.OpenScope($"AffirmBreakTreaty({participantIdx})");
@@ -318,19 +303,13 @@ namespace Civilization1Remaster.Game
 			return affirmed;
 		}
 
-		/// <summary>
-		/// A nuclear attack by the player on the tile: a message "... use nuclear weapons!" (unless the human attacks), the
-		/// explosion, then on the tile and the 8 around it (headings 8 down to 0) every unit stack is destroyed (counted in
-		/// TroopsRuined of the attacker, the victim 0xd7f0 turns against it) unless the tile is a city with SDI (structure bit
-		/// 0 of the second word); last the fallout. The stack frame and the saved SI stay, and SI holds 2 * heading in the
-		/// loop, like in the original: a called function copies SI into DI, which the caller gets back.
-		/// </summary>
+		/// <inheritdoc/>
 		public void ExplodeNuclearWeapon(short participantIdx, short horizLoc, short vertLoc)
 		{
 			this.Processor.Journal.OpenScope($"ExplodeNuclearWeapon({participantIdx}, {horizLoc}, {vertLoc})");
 
 
-			MapLayers chart = this.Owner.MapOps.Chart;
+			IMapLayers chart = this.Owner.MapOps.Chart;
 
 			if (participantIdx != this.Owner.World.PersonParticipantIdx)
 			{
@@ -388,16 +367,12 @@ namespace Civilization1Remaster.Game
 			this.Processor.Journal.CloseScope("ExplodeNuclearWeapon");
 		}
 
-		/// <summary>
-		/// The fallout of a nuclear attack on the tile and the 8 tiles around it (direction tables 0x1882 and 0x18e4): a city
-		/// there loses half of its size, any other tile gets pollution with chance 2 in 3 (unless its terrain is 10); every tile
-		/// is drawn again
-		/// </summary>
+		/// <inheritdoc/>
 		public void EnactNuclearFallout(short horizLoc, short vertLoc)
 		{
 			this.Processor.Journal.OpenScope($"EnactNuclearFallout({horizLoc}, {vertLoc})");
 
-			MapLayers chart = this.Owner.MapOps.Chart;
+			IMapLayers chart = this.Owner.MapOps.Chart;
 
 			for (int heading = 0; heading <= 8; heading++)
 			{

@@ -7,7 +7,7 @@ namespace Civilization1Remaster.Game
 	/// <summary>
 	/// Translated from the original CIV.EXE segment 0x1ade.
 	/// </summary>
-	public class ScienceAndAdvisors : GameModule
+	public class ScienceAndAdvisors : GameModule, IScienceAndAdvisors
 	{
 		// The frame of PickCityProduction (distances below bp)
 		private const int HappyRoomLocal = 0x2;
@@ -63,12 +63,7 @@ namespace Civilization1Remaster.Game
 
 		private short Score { get => (short)FrameWord(ScoreLocal); set => FrameWord(ScoreLocal, (ushort)value); }
 
-		/// <summary>
-		/// The turn of every city of the player (a city that needs it, 0xb1e8, is handled once more with the screen, 2 = again
-		/// from the start); then an AI player (with the 4 of the diagnostic markers) sets its taxes: more luxuries with a city
-		/// in disorder, less with no city of size above 5 that ended its turn well every fourth turn, science by the leaning of
-		/// its leader and its gold, none after the last technology (0x3f).
-		/// </summary>
+		/// <inheritdoc/>
 		public void HandleAllCities(short participantIdx)
 		{
 			this.Processor.Journal.OpenScope($"HandleAllCities({participantIdx})");
@@ -153,13 +148,7 @@ namespace Civilization1Remaster.Game
 			this.Processor.Journal.CloseScope("HandleAllCities");
 		}
 
-		/// <summary>
-		/// Destroys the city at the position: notes it in the replay, takes it from its player (and the unit it was building),
-		/// removes it from the map, the trade routes of the other cities and the wonders (city 128 = destroyed), eliminates the
-		/// units it supported, applies 0x1643 to the stack still on the tile, and redraws the territory around it (map layer 2;
-		/// the outer ring only when the nearest city, 0x6c9a, is more than 3 away). The stack frame and the saved SI and DI stay
-		/// like in the original: VisitEachUnitInStack changes SI, and the unit functions run at the same stack depth.
-		/// </summary>
+		/// <inheritdoc/>
 		public void FinalizeProduction(short townIdx, ushort horizLoc, ushort vertLoc)
 		{
 			this.Processor.Journal.OpenScope($"FinalizeProduction({townIdx}, {horizLoc}, {vertLoc})");
@@ -237,7 +226,7 @@ namespace Civilization1Remaster.Game
 			this.Processor.Journal.CloseScope("FinalizeProduction");
 		}
 
-		/// <summary>Keeps the screen in the back screen before the screen of an advisor</summary>
+		/// <inheritdoc/>
 		public void RenderAdvisorScenery()
 		{
 			this.Processor.Journal.OpenScope("RenderAdvisorScenery()");
@@ -255,7 +244,7 @@ namespace Civilization1Remaster.Game
 			this.Processor.Journal.CloseScope("RenderAdvisorScenery");
 		}
 
-		/// <summary>Puts the screen back from the back screen after the screen of an advisor</summary>
+		/// <inheritdoc/>
 		public void RecoverAdvisorScenery()
 		{
 			this.Processor.Journal.OpenScope("RecoverAdvisorScenery()");
@@ -273,10 +262,7 @@ namespace Civilization1Remaster.Game
 			this.Processor.Journal.CloseScope("RecoverAdvisorScenery");
 		}
 
-		/// <summary>
-		/// Opens the city screen from an advisor: the advisor screen is kept, the city is handled with its screen (HandleCity),
-		/// then the advisor screen comes back, or the main screen when the city screen asked for it (0x6b64)
-		/// </summary>
+		/// <inheritdoc/>
 		public void RenewCityScreen(short townIdx)
 		{
 			this.Processor.Journal.OpenScope($"RenewCityScreen({townIdx})");
@@ -299,13 +285,7 @@ namespace Civilization1Remaster.Game
 			this.Processor.Journal.CloseScope("RenewCityScreen");
 		}
 
-		/// <summary>
-		/// What a city builds next. The menu text (TextBuffer.Address, "What shall we build in ...") lists the units, improvements and
-		/// wonders the player can build, with a list of the choices in the frame (bp - 0xdc, units >= 0, improvements and
-		/// wonders negative, 0x63 / 0x62 for "more..."); every choice gets a score for the city (lower is better). A computer
-		/// player takes the best one (1 / 3 / 7 for a player without units or the barbarians); for the human player the advisors
-		/// name their best unit and improvement once, then the menu asks, with the Civilopedia on demand.
-		/// </summary>
+		/// <inheritdoc/>
 		public ushort PickCityProduction(short participantIdx, short townIdx)
 		{
 			this.Processor.Journal.OpenScope($"PickCityProduction({participantIdx}, {townIdx})");
@@ -349,10 +329,7 @@ namespace Civilization1Remaster.Game
 			return choice;
 		}
 
-		/// <summary>
-		/// Appends " (n turns)" or " (1 turn)" to the text at TextBuffer.Address: the turns the city needs for the production of cost price
-		/// (in tens of shields), with the shields per turn 0x70dc - 0xd2f6 (1 - 99); 1 - 999 turns
-		/// </summary>
+		/// <inheritdoc/>
 		public void ComposeProductionOption(short townIdx, ushort price)
 		{
 			this.Processor.Journal.OpenScope($"ComposeProductionOption({townIdx}, {price})");
@@ -372,17 +349,7 @@ namespace Civilization1Remaster.Game
 			this.Processor.Journal.CloseScope("ComposeProductionOption");
 		}
 
-		/// <summary>
-		/// The player's research is done (participantIdx1: where it came from, see EarnTechnology). An AI player (and the
-		/// human player in turn 0) takes the researchable technology with the highest random draw of 4 * ObtainTechnologyInfo
-		/// (not the human player's current research for himself); on the easiest level a technology the human player doesn't
-		/// know only one time in 2; returns it (-1 for none or barbarians). The human player gets his research (the discovery
-		/// picture with its icon, or the newspaper), the science advisor's recommendation (easiest level, preference 1) and
-		/// chooses the next research from the menu (on harder levels from the third on only every third one; asking for the
-		/// Civilopedia shows it and asks again with the same choices; none left: future technology 71); returns the choice.
-		/// The list of the choices and the file name are in the stack frame, and SI gets the values of the original before the
-		/// calls (DisplayMenu leaves it in DI), like in the original.
-		/// </summary>
+		/// <inheritdoc/>
 		public ushort UncoverTechnology(short participantIdx, short participantIdx1)
 		{
 			this.Processor.Journal.OpenScope($"UncoverTechnology({participantIdx}, {participantIdx1})");
@@ -396,15 +363,7 @@ namespace Civilization1Remaster.Game
 			return result;
 		}
 
-		/// <summary>
-		/// The player learns a technology (from participantIdx1: himself or 0 by research, -2 the Great Library, else a player);
-		/// 0x47 (future technology) is only counted. After turn 0: the human player and the players he has contact with
-		/// announce it (with the wonders and units it allows, for the others), a player without contact may send an emissary
-		/// the first time anybody learns it (technology 8, one time in 3); the human player sees the Civilopedia, the new
-		/// governments with 0x14, the help with 5; technologies that make barracks obsolete sell them; the first player to learn
-		/// a technology cancels the effect of the human player's wonders it makes obsolete; the owner of the Great Library
-		/// (wonder 5) learns it when two players know it. SI and DI get the values of the original before the calls.
-		/// </summary>
+		/// <inheritdoc/>
 		public void EarnTechnology(short participantIdx, short scienceIdx, short participantIdx1)
 		{
 			this.Processor.Journal.OpenScope($"EarnTechnology({participantIdx}, {scienceIdx}, {participantIdx1})");
@@ -431,7 +390,7 @@ namespace Civilization1Remaster.Game
 			this.Processor.Journal.CloseScope("EarnTechnology");
 		}
 
-		/// <summary>1 when the player knows the technology, else 0</summary>
+		/// <inheritdoc/>
 		public ushort PlayerKnowsTechnology(short participantIdx, short scienceIdx)
 		{
 			return (ushort)(ScienceRules.PlayerKnowsTechnology(
@@ -440,11 +399,7 @@ namespace Civilization1Remaster.Game
 				scienceIdx) ? 1 : 0);
 		}
 
-		/// <summary>
-		/// Calculates the AI leader preference value for technology research.
-		/// </summary>
-		/// <param name="participantIdx"></param>
-		/// <param name="scienceIdx"></param>
+		/// <inheritdoc/>
 		public ushort ObtainTechnologyInfo(short participantIdx, ushort scienceIdx)
 		{
 			this.Processor.Journal.OpenScope($"ObtainTechnologyInfo({participantIdx}, {scienceIdx})");

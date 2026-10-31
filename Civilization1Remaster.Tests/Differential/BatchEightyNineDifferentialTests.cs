@@ -61,7 +61,7 @@ public sealed class BatchEightyNineDifferentialTests(ITestOutputHelper output)
 	/// <summary>Moves the whole stack of the unit to the tile</summary>
 	private static void MoveStack(GameEngine game, int participantIdx, int troopIdx, int horizLoc, int vertLoc)
 	{
-		MapLayers chart = game.MapOps.Chart;
+		IMapLayers chart = game.MapOps.Chart;
 		int oldHoriz = UnitByte(game, participantIdx, troopIdx, UnitMemory.Horiz);
 		int oldVert = UnitByte(game, participantIdx, troopIdx, UnitMemory.Vert);
 
@@ -78,7 +78,7 @@ public sealed class BatchEightyNineDifferentialTests(ITestOutputHelper output)
 	/// <summary>Moves a lone land unit of a player other than the excluded ones to the tile; its player, or -1</summary>
 	private static short MoveLoneStranger(GameEngine game, short excluded, int horizLoc, int vertLoc, int pick)
 	{
-		MapLayers chart = game.MapOps.Chart;
+		IMapLayers chart = game.MapOps.Chart;
 		var lone = Enumerable.Range(1, 7).Where(player => player != excluded)
 			.SelectMany(player => Enumerable.Range(0, 128).Select(troop => (Player: (short)player, Troop: (short)troop)))
 			.Where(unit => Group(game, unit.Player, unit.Troop, UnitKindTable.LandGroup) == UnitKindTable.LandUnits &&
@@ -101,7 +101,7 @@ public sealed class BatchEightyNineDifferentialTests(ITestOutputHelper output)
 		Check(bay, 128, (chance, pair) =>
 		{
 			GameEngine engine = pair.Rewritten.Engine;
-			MapLayers sight = engine.MapOps.Chart;
+			IMapLayers sight = engine.MapOps.Chart;
 			short person = engine.World.PersonParticipantIdx;
 			// The battles of the earlier scenarios may leave the city mark of a city that is gone: the mark goes away
 			var orphans = Enumerable.Range(0, 80 * 50).Select(at => (Horiz: at / 50, Vert: at % 50))
@@ -189,7 +189,7 @@ public sealed class BatchEightyNineDifferentialTests(ITestOutputHelper output)
 				$"ShiftAIUnit({participantIdx}, {troopIdx}) mode {mode}, host {host.Player}/{host.Troop}",
 				game =>
 				{
-					MapLayers chart = game.MapOps.Chart;
+					IMapLayers chart = game.MapOps.Chart;
 
 					foreach (var orphan in orphans)
 						chart.ClearImprovements(1, orphan.Horiz, orphan.Vert);

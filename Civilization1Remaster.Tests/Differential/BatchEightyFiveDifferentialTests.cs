@@ -45,7 +45,7 @@ public sealed class BatchEightyFiveDifferentialTests(ITestOutputHelper output)
 	/// <summary>A lone land unit of another computer player moves to the free land tile</summary>
 	private static void PlaceStranger(GameEngine game, short participantIdx, int horizLoc, int vertLoc, int pick)
 	{
-		MapLayers chart = game.MapOps.Chart;
+		IMapLayers chart = game.MapOps.Chart;
 		short person = game.World.PersonParticipantIdx;
 
 		if (vertLoc <= 0 || vertLoc >= 49 || chart.Terrain(horizLoc, vertLoc) == MapRules.OceanTerrain || (chart.OwnerBits(horizLoc, vertLoc) & MapLayers.UnitsPresent) != 0)
@@ -123,7 +123,7 @@ public sealed class BatchEightyFiveDifferentialTests(ITestOutputHelper output)
 				game =>
 				{
 					game.Processor.EmitUInt16(0x3b01, (ushort)(frame - 0xc), terrainLeft);
-					MapLayers chart = game.MapOps.Chart;
+					IMapLayers chart = game.MapOps.Chart;
 					ushort unit = UnitMemory.Address(participantIdx, troopIdx);
 
 					if (town != null)

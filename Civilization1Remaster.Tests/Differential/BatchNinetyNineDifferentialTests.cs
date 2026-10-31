@@ -40,7 +40,7 @@ public sealed class BatchNinetyNineDifferentialTests(ITestOutputHelper output)
 		{
 			GameEngine engine = pair.Rewritten.Engine;
 			short person = engine.World.PersonParticipantIdx;
-			MapLayers sight = engine.MapOps.Chart;
+			IMapLayers sight = engine.MapOps.Chart;
 			// The mover: the first unit of the human that moves, or (a third of the time) a unit of a computer player next to a
 			// city of the human, as a diplomat or caravan; the city: own or foreign, its production (a wonder from -25 down)
 			bool computer = chance.Next(3) == 0;
@@ -64,7 +64,7 @@ public sealed class BatchNinetyNineDifferentialTests(ITestOutputHelper output)
 				$"HandlePlayerTurn({participantIdx}), kind {kind:x}, own city {ownCity}, making {making}, near home {nearHome}, side {side}, answers {string.Join(" ", answers.Select(key => key.ToString("x")))}",
 				game =>
 				{
-					MapLayers chart = game.MapOps.Chart;
+					IMapLayers chart = game.MapOps.Chart;
 					var towns = Enumerable.Range(0, 128).Where(townIdx => game.World.Towns[townIdx].ConditionMarker != 0xff &&
 						(ownCity || computer ? game.World.Towns[townIdx].ParticipantIdx == person : game.World.Towns[townIdx].ParticipantIdx != person)).ToList();
 					int mover = Enumerable.Range(0, 128).FirstOrDefault(troop => UnitByte(game, participantIdx, troop, UnitMemory.Kind) != 0xff &&

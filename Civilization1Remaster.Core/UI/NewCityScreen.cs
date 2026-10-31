@@ -5,19 +5,14 @@ namespace Civilization1Remaster.UI
 	/// <summary>
 	/// Translated from the original CIV.EXE overlay 23.
 	/// </summary>
-	public class NewCityScreen : GameModule
+	public class NewCityScreen : GameModule, INewCityScreen
 	{
 		public NewCityScreen(GameEngine owner)
 			: base(owner)
 		{
 		}
 
-		/// <summary>
-		/// Asks for the name of the city (question 0x539e, starting from its name) until the answer is not empty; when the
-		/// answer is accepted (PullTextInput not 0) its 13 characters become the city's name. The screen is kept in the back
-		/// screen 0x19d4 meanwhile.
-		/// </summary>
-		/// <returns>The answer of PullTextInput, also in AX</returns>
+		/// <inheritdoc/>
 		public ushort DisplayCityLabelPrompt(short townIdx)
 		{
 			this.Processor.Journal.OpenScope($"DisplayCityLabelPrompt({townIdx})");
@@ -67,10 +62,7 @@ namespace Civilization1Remaster.UI
 			return answer;
 		}
 
-		/// <summary>
-		/// Asks the human player for a name in a box with the question at 0x53ab: the answer starts as the text that
-		/// 0x19a2 + 2 * player points to, and is written back there
-		/// </summary>
+		/// <inheritdoc/>
 		public void DisplayFoundCityMessage()
 		{
 			this.Processor.Journal.OpenScope("DisplayFoundCityMessage()");
@@ -96,11 +88,7 @@ namespace Civilization1Remaster.UI
 			this.Processor.Journal.CloseScope("DisplayFoundCityMessage");
 		}
 
-		/// <summary>
-		/// Asks the human player for the name of their civilization in a box with the question at 0x53b8: the plural is typed
-		/// (the text that 0x1992 + 2 * player points to); without its final "s" and cut to 10 characters it is also the name
-		/// (0x1982 + 2 * player)
-		/// </summary>
+		/// <inheritdoc/>
 		public void DisplayCityFoundedMessage()
 		{
 			this.Processor.Journal.OpenScope("DisplayCityFoundedMessage()");
@@ -137,11 +125,7 @@ namespace Civilization1Remaster.UI
 			this.Processor.Journal.CloseScope("DisplayCityFoundedMessage");
 		}
 
-		/// <summary>
-		/// Asks for the name of a city (0x53ce) and centres the map on it when the human player knows its tile (ChartSight);
-		/// otherwise (or when no city is chosen) shows the message 0x53f3 until a key or click. The screen is kept in the back
-		/// screen 0x19d4 meanwhile.
-		/// </summary>
+		/// <inheritdoc/>
 		public void DisplayNewCityLocation()
 		{
 			this.Processor.Journal.OpenScope("DisplayNewCityLocation()");
@@ -176,12 +160,7 @@ namespace Civilization1Remaster.UI
 			this.Processor.Journal.CloseScope("DisplayNewCityLocation");
 		}
 
-		/// <summary>
-		/// Asks for a city name (the question at charsAddr) and looks for it: the first of the 256 city names that starts with
-		/// the answer (any case), and the first city with that name; names without a city are skipped. Each name is copied into
-		/// a buffer in the stack frame for the comparison, like in the original.
-		/// </summary>
-		/// <returns>City index, 0xffff when none (also in AX)</returns>
+		/// <inheritdoc/>
 		public ushort DisplayLabelInputBox(ushort charsAddr)
 		{
 			this.Processor.Journal.OpenScope($"DisplayLabelInputBox(0x{charsAddr:x4})");
@@ -224,13 +203,7 @@ namespace Civilization1Remaster.UI
 			return found;
 		}
 
-		/// <summary>
-		/// Edits the text at TextBuffer.Address in a field of breadth characters (padded with spaces): the cursor (0x68cc) blinks until a
-		/// key or a click; Left / Right move it, Insert and Delete shift the rest, Backspace deletes before it, a character
-		/// overwrites (the first one typed clears the field). Return or a click accepts, Escape cancels; the trailing spaces
-		/// are cut off.
-		/// </summary>
-		/// <returns>1 when accepted, 0 when cancelled, also in AX</returns>
+		/// <inheritdoc/>
 		public ushort PullTextInput(short horizLoc, short vertLoc, ushort breadth)
 		{
 			this.Processor.Journal.OpenScope($"PullTextInput({horizLoc}, {vertLoc}, {breadth})");
@@ -383,10 +356,7 @@ namespace Civilization1Remaster.UI
 			return accepted;
 		}
 
-		/// <summary>
-		/// Draws the text of an input field (TextBuffer.Address) character by character on white boxes of 8 x 8, the field the width in
-		/// characters; at the cursor (0x68cc) the column and the width of its character go to 0x68d0 and 0x68ce
-		/// </summary>
+		/// <inheritdoc/>
 		public void RenderTextInputField(short horizLoc, short vertLoc, ushort breadth)
 		{
 			this.Processor.Journal.OpenScope($"RenderTextInputField({horizLoc}, {vertLoc}, {breadth})");

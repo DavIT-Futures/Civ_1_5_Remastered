@@ -114,7 +114,7 @@ public sealed class BatchEightyFourDifferentialTests(ITestOutputHelper output)
 
 					if (neighbour >= 0)
 					{
-						MapLayers chart = game.MapOps.Chart;
+						IMapLayers chart = game.MapOps.Chart;
 						int besideHoriz = (game.Processor.PullUInt8(0x3b01, (ushort)(unit + UnitMemory.Horiz)) + chart.DirectionHoriz(neighbour) + 80) % 80;
 						int besideVert = game.Processor.PullUInt8(0x3b01, (ushort)(unit + UnitMemory.Vert)) + chart.DirectionVert(neighbour);
 

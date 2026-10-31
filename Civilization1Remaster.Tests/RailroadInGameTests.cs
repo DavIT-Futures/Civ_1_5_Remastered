@@ -75,7 +75,7 @@ namespace Civilization1Remaster.Tests
 			// Every player knows Railroad and the land around the cities has railroads: the units of the computer players
 			// ride for free (at most 30 times a turn), the turns still end
 			using HeadlessGame game = Load(out GameEngine engine);
-			MapLayers chart = engine.MapOps.Chart;
+			IMapLayers chart = engine.MapOps.Chart;
 
 			for (short participantIdx = 1; participantIdx < 8; participantIdx++)
 				KnowRailroad(engine, participantIdx, true);

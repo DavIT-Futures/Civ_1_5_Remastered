@@ -95,7 +95,7 @@ public sealed class BatchNinetyTwoDifferentialTests(ITestOutputHelper output)
 					int scriptIdx = 0;
 					int typed = 0;
 					bool withhold = false;
-					MapLayers chart = game.MapOps.Chart;
+					IMapLayers chart = game.MapOps.Chart;
 
 					game.Processor.InputStarved = waiting =>
 					{

@@ -61,7 +61,7 @@ public sealed class BatchHundredElevenDifferentialTests(ITestOutputHelper output
 				$"HandlePlayerTurn({person}), place {place}, kind {kind}, fuel {fuel}, steps {steps}",
 				game =>
 				{
-					MapLayers chart = game.MapOps.Chart;
+					IMapLayers chart = game.MapOps.Chart;
 					moverIdx = -1;
 					game.Processor.EmitUInt16(0x3b01, 0xdc48, 0);
 					// (0xdf60 = 1: the turn gives no new moves, so the waiting unit keeps its steps)

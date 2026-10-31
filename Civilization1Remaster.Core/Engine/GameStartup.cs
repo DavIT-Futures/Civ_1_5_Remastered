@@ -5,7 +5,7 @@ namespace Civilization1Remaster.Engine
 	/// <summary>
 	/// Translated from the original CIV.EXE segment 0x11a8.
 	/// </summary>
-	public class GameStartup : GameModule
+	public class GameStartup : GameModule, IGameStartup
 	{
 		public const ushort VideoDriverOptionAddress = 0x1a22;
 		public const ushort SoundDriverOptionAddress = 0x1a30;
@@ -18,11 +18,7 @@ namespace Civilization1Remaster.Engine
 		{
 		}
 
-		/// <summary>
-		/// Main game entry: the intro, the check of the free memory (a warning below 8000 paragraphs with VGA, 4000 without;
-		/// 0x1a3e set below 9150 with VGA), the mouse cursor, the main menu and the new world, then the turns of the game
-		/// until it ends (a game loaded during play starts the turns again)
-		/// </summary>
+		/// <inheritdoc/>
 		public void RunGame()
 		{
 			this.Processor.Journal.OpenScope("RunGame()");
@@ -126,11 +122,7 @@ namespace Civilization1Remaster.Engine
 			this.Processor.Journal.CloseScope("RunGame");
 		}
 
-		/// <summary>
-		/// Loads the game chosen with Load Game in the GAME menu, after the main loop has left the turn.
-		/// It does the same steps as Load a Saved Game in the start menu.
-		/// </summary>
-		/// <param name="pointerLevel">Mouse pointer show/hide level at the start of the game</param>
+		/// <inheritdoc/>
 		public void ImportGameDuringPlay(ushort arrowTier)
 		{
 			this.Processor.Journal.OpenScope($"ImportGameDuringPlay({arrowTier})");
@@ -177,10 +169,7 @@ namespace Civilization1Remaster.Engine
 			this.Processor.Journal.CloseScope("ImportGameDuringPlay");
 		}
 
-		/// <summary>
-		/// The mouse: GlobDb3a the clicks since the last call and the buttons held, GlobDb3c / GlobDb3e the place; all 0
-		/// without a mouse. The interrupts are served first.
-		/// </summary>
+		/// <inheritdoc/>
 		public void ObtainMouseState()
 		{
 			// The game waits for the buttons in loops of this call alone: the interrupts (the mouse of the window, the timer)
@@ -203,10 +192,7 @@ namespace Civilization1Remaster.Engine
 			}
 		}
 
-		/// <summary>
-		/// Raises the show level of the mouse pointer (0xdeea); the pointer is drawn when the level reaches 1 and there is a
-		/// mouse (0x1a3c)
-		/// </summary>
+		/// <inheritdoc/>
 		public void DisplayMouseCursor()
 		{
 			this.Processor.Journal.OpenScope("DisplayMouseCursor()");
@@ -221,9 +207,7 @@ namespace Civilization1Remaster.Engine
 			this.Processor.Journal.CloseScope("DisplayMouseCursor");
 		}
 
-		/// <summary>
-		/// Hides the mouse pointer one level more (PointerShowLevel); it is blanked when it goes from shown, level 1
-		/// </summary>
+		/// <inheritdoc/>
 		public void ConcealMouseCursor()
 		{
 			this.Processor.Journal.OpenScope("ConcealMouseCursor()");
@@ -238,9 +222,7 @@ namespace Civilization1Remaster.Engine
 			this.Processor.Journal.CloseScope("ConcealMouseCursor");
 		}
 
-		/// <summary>
-		/// Remembers the show level of the mouse pointer (0xdeea) in 0x652e and shows the pointer until the level is at least 1
-		/// </summary>
+		/// <inheritdoc/>
 		public void DisplayMouseCursorFully()
 		{
 			this.Processor.Journal.OpenScope("DisplayMouseCursorFully()");
@@ -255,9 +237,7 @@ namespace Civilization1Remaster.Engine
 			this.Processor.Journal.CloseScope("DisplayMouseCursorFully");
 		}
 
-		/// <summary>
-		/// Hides the mouse pointer back to the show level remembered by DisplayMouseCursorFully (0x652e)
-		/// </summary>
+		/// <inheritdoc/>
 		public void ConcealMouseCursorToSavedLevel()
 		{
 			this.Processor.Journal.OpenScope("ConcealMouseCursorToSavedLevel()");
@@ -270,13 +250,7 @@ namespace Civilization1Remaster.Engine
 			this.Processor.Journal.CloseScope("ConcealMouseCursorToSavedLevel");
 		}
 
-		/// <summary>
-		/// Makes sure the file that marks game disk "diskIdx" (path at 0x1ace + 2 * disk) is there, asking "Please insert
-		/// Disk ..." until it is; the disk in use goes to 0xe17c. Marker 0: disk 0 instead when the disk is missing, without
-		/// asking; marker 0xffff: ask once even when it is there (then marker 1). The message is made in a buffer in the stack
-		/// frame, like in the original.
-		/// </summary>
-		/// <returns>1 when found at once with marker 0, else the marker (also left in AX)</returns>
+		/// <inheritdoc/>
 		public ushort QueryForDisk(ushort diskIdx, ushort marker)
 		{
 			this.Processor.Journal.OpenScope($"QueryForDisk({diskIdx}, {marker})");
@@ -341,12 +315,7 @@ namespace Civilization1Remaster.Engine
 			return result;
 		}
 
-		/// <summary>
-		/// The main menu after the title (the choice in 0x6b32, asked when it is -1): 0 = a new game (all world options 1,
-		/// the world is made with the story), 1 = a saved game, 2 = EARTH (0xd76a = 1), 3 = a new game with the world options
-		/// asked (land mass, temperature, climate, age in 0x7ef6 - 0x7efc), 4 = the Hall of Fame and the menu again. The choice
-		/// is played at a measure of the title music. Then the tribe is chosen and the game screen prepared.
-		/// </summary>
+		/// <inheritdoc/>
 		public void TitleLogoAndMainChoices()
 		{
 			this.Processor.Journal.OpenScope("TitleLogoAndMainChoices()");
@@ -454,9 +423,7 @@ namespace Civilization1Remaster.Engine
 			this.Processor.Journal.CloseScope("TitleLogoAndMainChoices");
 		}
 
-		/// <summary>
-		/// The choices of a new game (only before the first turn, after the picture 0x1c16) and the government pictures
-		/// </summary>
+		/// <inheritdoc/>
 		public void FreshWorldChoices()
 		{
 			this.Processor.Journal.OpenScope("FreshWorldChoices()");

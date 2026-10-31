@@ -100,7 +100,7 @@ public sealed class BatchNinetyFourDifferentialTests(ITestOutputHelper output)
 						}
 					}
 
-					MapLayers layers = game.MapOps.Chart;
+					IMapLayers layers = game.MapOps.Chart;
 
 					for (int troop = 0; troop < 128 && homeless; troop++)
 					{
@@ -143,7 +143,7 @@ public sealed class BatchNinetyFourDifferentialTests(ITestOutputHelper output)
 					int scriptIdx = 0;
 					int typed = 0;
 					bool withhold = false;
-					MapLayers chart = game.MapOps.Chart;
+					IMapLayers chart = game.MapOps.Chart;
 
 					game.Processor.InputStarved = waiting =>
 					{

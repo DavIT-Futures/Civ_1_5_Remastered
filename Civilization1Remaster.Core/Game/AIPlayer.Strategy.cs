@@ -9,10 +9,7 @@ namespace Civilization1Remaster.Game
 	/// <summary>The strategic locations of the AI players, their city production and the tiles they may enter</summary>
 	partial class AIPlayer
 	{
-		/// <summary>
-		/// Sets up the strategic locations of the player again: its 32 entries at 0xe2c2 + 32 * player become empty (0xff, with
-		/// 0 at 0xb2be + ...), then a unit is sent to each of its 16 locations that is in use with a state up to 2
-		/// </summary>
+		/// <inheritdoc/>
 		public void ReimposeStrategicLocations(short participantIdx)
 		{
 			this.Processor.Journal.OpenScope($"ReimposeStrategicLocations({participantIdx})");
@@ -38,13 +35,7 @@ namespace Civilization1Remaster.Game
 			this.Processor.Journal.CloseScope("ReimposeStrategicLocations");
 		}
 
-		/// <summary>
-		/// Puts the place into the list of strategic locations of the player (32 entries a player in the byte arrays at 0xe598
-		/// horizontal, 0xe798 vertical, 0xe2c2 role, 0xb2be strategy), unless it is there already for the role with no higher
-		/// strategy. On the turn of an AI player (0x6b90), for the roles 3 and 4 the first unit of the role on the same continent
-		/// with enough moves left (twice the distance) goes there. The place takes the first free entry or the first one with a
-		/// lower strategy (the rest move one on); with none, it is not listed.
-		/// </summary>
+		/// <inheritdoc/>
 		public void SendUnitToStrategicLocation(short participantIdx, short horizLoc, short vertLoc, short live, short strategy)
 		{
 			this.Processor.Journal.OpenScope($"SendUnitToStrategicLocation({participantIdx}, {horizLoc}, {vertLoc}, {live}, {strategy})");
@@ -89,10 +80,7 @@ namespace Civilization1Remaster.Game
 			this.Processor.Journal.CloseScope("SendUnitToStrategicLocation");
 		}
 
-		/// <summary>
-		/// Makes room at the place of the list of the player (32 entries a player in the byte arrays at 0xb2be, 0xe2c2, 0xe598
-		/// and 0xe798): the used entries from the place up to 30 move one place on
-		/// </summary>
+		/// <inheritdoc/>
 		public void FreeStrategicLocation(short participantIdx, ushort place)
 		{
 			this.Processor.Journal.OpenScope($"FreeStrategicLocation({participantIdx}, {place})");
@@ -113,7 +101,7 @@ namespace Civilization1Remaster.Game
 			this.Processor.Journal.CloseScope("FreeStrategicLocation");
 		}
 
-		/// <summary>Clears the 16 tactical sites of the player (none, no strategy)</summary>
+		/// <inheritdoc/>
 		public void WipeStrategicLocations(short participantIdx)
 		{
 			for (int idx = 0; idx < 16; idx++)
@@ -123,11 +111,7 @@ namespace Civilization1Remaster.Game
 			}
 		}
 
-		/// <summary>
-		/// Notes a strategic location of the player (the 16 places are sorted by strategy, highest first): nothing when it is
-		/// already there with the same state and at least the strategy; otherwise it goes in before the first free place or
-		/// the first place with a lower strategy (AffixStrategicLocation moves the rest down); no room, no change
-		/// </summary>
+		/// <inheritdoc/>
 		public void AttachStrategicLocation(short participantIdx, ushort horizLoc, ushort vertLoc, ushort live, ushort strategy)
 		{
 			this.Processor.Journal.OpenScope($"AttachStrategicLocation({participantIdx}, {horizLoc}, {vertLoc}, {live}, {strategy})");
@@ -157,9 +141,7 @@ namespace Civilization1Remaster.Game
 			this.Processor.Journal.CloseScope("AttachStrategicLocation");
 		}
 
-		/// <summary>
-		/// Makes room at the place of the strategic locations of the player: the used ones from the place up to 14 move one place on
-		/// </summary>
+		/// <inheritdoc/>
 		public void AffixStrategicLocation(short participantIdx, ushort place)
 		{
 			this.Processor.Journal.OpenScope($"AffixStrategicLocation({participantIdx}, {place})");
@@ -180,10 +162,7 @@ namespace Civilization1Remaster.Game
 			this.Processor.Journal.CloseScope("AffixStrategicLocation");
 		}
 
-		/// <summary>
-		/// The strategic locations of the player of the kind (Live = role) not farther than reach from the position are given up
-		/// (Live = -1)
-		/// </summary>
+		/// <inheritdoc/>
 		public void DisableStrategicLocation(short participantIdx, ushort role, int horizLoc, int vertLoc, ushort reach)
 		{
 			this.Processor.Journal.OpenScope($"DisableStrategicLocation({participantIdx}, {role}, {horizLoc}, {vertLoc}, {reach})");
@@ -206,10 +185,7 @@ namespace Civilization1Remaster.Game
 			this.Processor.Journal.CloseScope("DisableStrategicLocation");
 		}
 
-		/// <summary>
-		/// The cities of the player choose their production again (PickNewCityProduction): all of them, or with continent not 0xffff
-		/// only the cities on that continent
-		/// </summary>
+		/// <inheritdoc/>
 		public void RefreshCityProduction(short participantIdx, ushort continent)
 		{
 			this.Processor.Journal.OpenScope($"RefreshCityProduction({participantIdx}, {continent})");
@@ -230,10 +206,7 @@ namespace Civilization1Remaster.Game
 			this.Processor.Journal.CloseScope("RefreshCityProduction");
 		}
 
-		/// <summary>
-		/// The city chooses its production again (ScienceAndAdvisors.PickCityProduction); the count of the units of each type
-		/// its player is making (TroopsInsideMaking) follows the change
-		/// </summary>
+		/// <inheritdoc/>
 		public void PickNewCityProduction(short townIdx)
 		{
 			this.Processor.Journal.OpenScope($"PickNewCityProduction({townIdx})");
@@ -248,18 +221,14 @@ namespace Civilization1Remaster.Game
 			this.Processor.Journal.CloseScope("PickNewCityProduction");
 		}
 
-		/// <summary>
-		/// The direction (0 - 8, 0 is the tile itself) of the ocean tile at or around (horizLoc, vertLoc), without units
-		/// unless it is the tile itself, with the most empty land tiles around it (with relations bit 2 towards the human
-		/// player, land of the human player, map layer 2 at column + 80, does not count); -1 without such an ocean tile
-		/// </summary>
+		/// <inheritdoc/>
 		public ushort MayAIEnterTile(short participantIdx, ushort horizLoc, ushort vertLoc)
 		{
 			this.Processor.Journal.OpenScope($"MayAIEnterTile({participantIdx}, {horizLoc}, {vertLoc})");
 
 			short bestHeading = -1;
 			short bestShore = -1;
-			MapLayers chart = this.Owner.MapOps.Chart;
+			IMapLayers chart = this.Owner.MapOps.Chart;
 
 			for (short heading = 0; heading <= 8; heading++)
 			{
