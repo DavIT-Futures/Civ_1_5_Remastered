@@ -4724,15 +4724,15 @@ namespace Civilization1Remaster.Game
 
 				if (terrain != MapRules.OceanTerrain)
 				{
-					// Terrain records of 0xc words at 0x44a: irrigation and mining bonus minus 1
+					// The bonus of irrigation and of a mine: -1 - the value of the terrain improvement table
 					if (resource == 0 && (improvements & 2) != 0)
 					{
-						yield += (short)(0xffff - this.processor.PullGlobalWord((ushort)((terrain * 0xc) + 0x44a)));
+						yield += (short)(0xffff - TerrainImprovementWord(terrain, TerrainImprovementTable.Irrigation));
 					}
 
 					if (resource == 1 && (improvements & 4) != 0)
 					{
-						yield += (short)(0xffff - this.processor.PullGlobalWord((ushort)((terrain * 0xc) + 0x44e)));
+						yield += (short)(0xffff - TerrainImprovementWord(terrain, TerrainImprovementTable.Mining));
 					}
 
 					if (resource == 2 && (improvements & 8) != 0 && (short)terrain <= 2)

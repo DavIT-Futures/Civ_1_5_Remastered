@@ -25,7 +25,7 @@ namespace Civilization1Remaster.Game
 		public void WipeCitySquare(int horizLoc, int vertLoc)
 		{
 			ushort landKind = this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
-			short freshLand = (short)this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(landKind * 12 + 0x44a));
+			short freshLand = (short)TerrainImprovementWord(landKind, TerrainImprovementTable.Irrigation);
 
 			if (freshLand >= 0)
 			{
@@ -122,7 +122,7 @@ namespace Civilization1Remaster.Game
 
 			this.owner.MapOps.AssignTileImprovements(9, horizLoc, vertLoc);
 
-			if ((short)this.processor.PullGlobalWord((ushort)((ushort)(this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) * 0xc) + 0x44a)) < -1)
+			if ((short)TerrainImprovementWord(this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc), TerrainImprovementTable.Irrigation) < -1)
 			{
 				this.owner.MapOps.AssignTileImprovements(2, horizLoc, vertLoc);
 			}

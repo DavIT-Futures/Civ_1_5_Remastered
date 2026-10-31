@@ -1444,7 +1444,7 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// The column of the terrain table (word 0x44a + terrain * 12) for the improvements the player may make: 5 with the
+		/// The column of the terrain improvement table for the improvements the player may make: 5 with the
 		/// technology 5, else 4
 		/// </summary>
 		private ushort SettlersTerrainColumn(short participantIdx)
@@ -1464,7 +1464,7 @@ namespace Civilization1Remaster.Game
 			short vertLoc = (short)this.look.Vert;
 			ushort terrain = this.look.Terrain;
 
-			if (this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(0x44a + terrain * 0xc + SettlersTerrainColumn(participantIdx))) == 0 &&
+			if (TerrainImprovementWord(terrain, SettlersTerrainColumn(participantIdx)) == 0 &&
 				this.look.Approach != 5)
 			{
 				return null;
@@ -1541,7 +1541,7 @@ namespace Civilization1Remaster.Game
 
 				ushort terrain = this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
 
-				if (this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(0x44a + terrain * 0xc + SettlersTerrainColumn(participantIdx))) == 0 ||
+				if (TerrainImprovementWord(terrain, SettlersTerrainColumn(participantIdx)) == 0 ||
 					this.owner.TurnLogic.ObtainTileMoveCost(horizLoc, vertLoc) == 0)
 				{
 					continue;

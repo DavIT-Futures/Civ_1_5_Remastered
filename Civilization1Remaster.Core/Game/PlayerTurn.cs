@@ -1565,8 +1565,7 @@ namespace Civilization1Remaster.Game
 			}
 
 			this.turn.TargetTerrain = this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
-			ushort irrigateTable = (ushort)(this.turn.TargetTerrain * 0xc);
-			this.turn.Result = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(irrigateTable + 0x44a));
+			this.turn.Result = TerrainImprovementWord(this.turn.TargetTerrain, TerrainImprovementTable.Irrigation);
 
 			if (this.turn.Result == 0xffff)
 			{
@@ -1626,8 +1625,7 @@ namespace Civilization1Remaster.Game
 			}
 
 			this.turn.TargetTerrain = this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
-			ushort mineTable = (ushort)(this.turn.TargetTerrain * 0xc);
-			this.turn.Result = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(mineTable + 0x44e));
+			this.turn.Result = TerrainImprovementWord(this.turn.TargetTerrain, TerrainImprovementTable.Mining);
 
 			if (this.turn.Result == 0xffff)
 			{
@@ -3625,13 +3623,11 @@ namespace Civilization1Remaster.Game
 			if ((this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 0x7) == 0)
 			{
 				int terrain = this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
-				ushort terrainRecord = (ushort)(0x44a + 0xc * terrain);
-
-				if ((short)this.processor.PullGlobalWord((ushort)(terrainRecord + 4)) <= -3)
+				if ((short)TerrainImprovementWord(terrain, TerrainImprovementTable.Mining) <= -3)
 				{
 					cost = 2;
 				}
-				else if (this.processor.PullGlobalWord(terrainRecord) == 0xfffe)
+				else if (TerrainImprovementWord(terrain, TerrainImprovementTable.Irrigation) == 0xfffe)
 				{
 					if (VerifyCoastalTile(horizLoc, vertLoc) != 0)
 						cost = 1;

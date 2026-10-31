@@ -1534,6 +1534,9 @@ namespace Civilization1Remaster
 		protected byte TerrainFieldAt(int offset, int field) => this.owner.Tables.Byte((ushort)(offset + TerrainTable.Origin + field));
 
 		/// <summary>The address of the name of the terrain type: 0x282 + 0x13 * terrain</summary>
+		protected ushort TerrainImprovementWord(int terrain, int field) =>
+			this.owner.Tables.Word((ushort)(TerrainImprovementTable.Stride * terrain + TerrainImprovementTable.Origin + field));
+
 		protected static ushort TerrainText(int terrain) => (ushort)(TerrainTable.Stride * terrain + TerrainTable.Origin);
 
 		/// <summary>The address of the name of the terrain type through the offset 0x13 * terrain computed before</summary>

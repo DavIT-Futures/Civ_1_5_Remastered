@@ -752,7 +752,7 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// The intelligence report on a civilization: its leader (with the traits of the leader table, 0x1512 + 0x3a * leader),
+		/// The intelligence report on a civilization: its leader (with the traits of the leader table),
 		/// capital (the last city with a palace), government, treasury, military (on the easiest two levels), its relations
 		/// with the others (peace or war) and its technologies from the newest, until the screen is full.
 		/// </summary>
@@ -783,11 +783,15 @@ namespace Civilization1Remaster.UI
 			vertLoc += 8;
 
 			// The traits of the leader: three words, each 1 or -1, each with its own text
-			ushort[] traits = { 0x48d3, 0x48de, 0x48e7, 0x48f6, 0x4904, 0x490e };
+			GameText[] traits =
+			{
+				new(0x48d3, "Aggressive"), new(0x48de, "Friendly"), new(0x48e7, "Expansionistic"),
+				new(0x48f6, "Perfectionist"), new(0x4904, "Civilized"), new(0x490e, "Militaristic")
+			};
 
 			for (int traitIdx = 0; traitIdx < 6; traitIdx++)
 			{
-				ushort trait = this.processor.PullGlobalWord((ushort)((0x3a * participant.ChiefVisuals) + 0x1512 + ((traitIdx >> 1) << 1)));
+				ushort trait = LeaderWord(participant.ChiefVisuals, LeaderTable.Aggression + ((traitIdx >> 1) << 1));
 
 				if (trait == ((traitIdx & 1) == 0 ? 1 : 0xffff))
 				{

@@ -1659,10 +1659,10 @@ namespace Civilization1Remaster.Game
 			}
 		}
 
-		/// <summary>Move cost of the terrain type (byte of the terrain records of 0x13 bytes at 0x28e)</summary>
+		/// <summary>Move cost of the terrain type</summary>
 		private sbyte TerrainMoveCost(int terrain)
 		{
-			return (sbyte)this.processor.PullGlobalByte((ushort)(0x28e + (0x13 * terrain)));
+			return (sbyte)TerrainField(terrain, TerrainTable.MoveCost);
 		}
 
 		/// <summary>

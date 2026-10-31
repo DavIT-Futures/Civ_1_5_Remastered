@@ -20,8 +20,8 @@ namespace Civilization1Remaster.Game
 		/// <summary>
 		/// The turn of every city of the player (a city that needs it, 0xb1e8, is handled once more with the screen, 2 = again
 		/// from the start); then an AI player (with the 4 of the diagnostic markers) sets its taxes: more luxuries with a city
-		/// in disorder, less with no city of size above 5 that ended its turn well every fourth turn, science by its leader
-		/// (0x1516 + 0x3a * leader) and its gold, none after the last technology (0x3f).
+		/// in disorder, less with no city of size above 5 that ended its turn well every fourth turn, science by the leaning of
+		/// its leader and its gold, none after the last technology (0x3f).
 		/// </summary>
 		public void HandleAllCities(short participantIdx)
 		{
@@ -89,7 +89,7 @@ namespace Civilization1Remaster.Game
 
 			luxuries = (short)this.owner.Helpers.VerifyValueSpan(luxuries, 0, 4);
 
-			participant.ResearchLevyRatio = (short)(this.processor.PullGlobalWord((ushort)(0x1516 + (0x3a * participant.ChiefVisuals))) +
+			participant.ResearchLevyRatio = (short)(LeaderWord(participant.ChiefVisuals, LeaderTable.Leaning) +
 				((10 - luxuries) / 2));
 
 			if (participant.Gold > (short)(this.owner.World.RoundTally + 0x64))
@@ -878,8 +878,7 @@ namespace Civilization1Remaster.Game
 				short weight = (short)(FrameWord(DefensiveLocal) == FrameWord(DefensiveImprovementLocal) ? 10 : 20);
 				Score = (short)(weight * Score);
 
-				short character = (short)(this.processor.PullUInt16(this.processor.SegData.Value16,
-					(ushort)(0x1516 + 0x3a * this.owner.World.Participants[participantIdx].ChiefVisuals)) + 3);
+				short character = (short)(LeaderWord(this.owner.World.Participants[participantIdx].ChiefVisuals, LeaderTable.Leaning) + 3);
 				Score = CPU.SignedQuotient((short)(3 * Score), character);
 			}
 
@@ -994,7 +993,7 @@ namespace Civilization1Remaster.Game
 
 			short weight = choice == 0
 				? (short)((town.Has(CityStructure.Granary) ? 4 : 6) -
-					this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(0x1516 + 0x3a * player.ChiefVisuals)))
+					LeaderWord(player.ChiefVisuals, LeaderTable.Leaning))
 				: (short)0x10;
 
 			short price = (short)(weight * (short)(UnitKindWord(kind, UnitKindTable.Price) + 2) * Score);

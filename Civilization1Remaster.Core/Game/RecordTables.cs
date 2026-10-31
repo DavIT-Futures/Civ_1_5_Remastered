@@ -38,7 +38,9 @@ namespace Civilization1Remaster.Game
 	{
 		public const ushort Origin = 0x44a;
 		public const int Stride = 0xc;
+		/// <summary>Irrigation: -1 not possible, -2 the bonus of one food, else the terrain it turns into</summary>
 		public const int Irrigation = 0x0;
+		/// <summary>A mine: -1 not possible, a negative number the bonus of (-1 - it) shields, else the terrain it turns into</summary>
 		public const int Mining = 0x4;
 	}
 
@@ -67,7 +69,11 @@ namespace Civilization1Remaster.Game
 		public const int CivilizationPlural = 0x10;
 		/// <summary>The text of the name of the civilization</summary>
 		public const int Civilization = 0x20;
-		/// <summary>The leaning of the leader (ResearchLevyRatio is 3 more)</summary>
+		/// <summary>1 aggressive, -1 friendly</summary>
+		public const int Aggression = 0x30;
+		/// <summary>1 expansionistic, -1 perfectionist</summary>
+		public const int Expansion = 0x32;
+		/// <summary>The leaning of the leader, 1 civilized, -1 militaristic (ResearchLevyRatio is 3 more)</summary>
 		public const int Leaning = 0x34;
 		/// <summary>The short tune of the leader (PerformSound with 0)</summary>
 		public const int ShortTune = 0x36;

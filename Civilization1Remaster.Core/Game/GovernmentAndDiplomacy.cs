@@ -510,7 +510,7 @@ namespace Civilization1Remaster.Game
 		/// other's relation), not with fewer spaceship parts (unit 25), not when on a continent with its cities its defence (half)
 		/// plus attack is below the other's defence; then it accepts when 4 * its defence / (1 + the other's attack) on the
 		/// shared continents is at least its peace treaties with the others (+1 with the 2 of the relation) minus the leader's
-		/// trait (0x1512 + 0x3a * leader) plus 4, or when it has no cities on them.
+		/// aggression plus 4, or when it has no cities on them.
 		/// </summary>
 		/// <returns>1 when it accepts, else 0, also in AX</returns>
 		public ushort AIWeighsTreaty(short participantIdx1, short participantIdx2)
@@ -559,7 +559,7 @@ namespace Civilization1Remaster.Game
 				treaties++;
 			}
 
-			treaties = (short)(treaties - this.processor.PullGlobalWord((ushort)(0x1512 + (0x3a * participant1.ChiefVisuals))));
+			treaties = (short)(treaties - LeaderWord(participant1.ChiefVisuals, LeaderTable.Aggression));
 
 			short towns = 0;
 			short defence = 0;

@@ -915,7 +915,7 @@ namespace Civilization1Remaster.Game
 
 		/// <summary>
 		/// The value of every land tile as a city site (in the map screen): the weights of the 12 terrains and their specials
-		/// (3 * food + trade, + 2 * shields except on 2 and 11, + the bonus of irrigation 0x44e or twice of mining 0x44a), summed
+		/// (3 * food + trade, + 2 * shields except on 2 and 11, + the bonus of a mine or twice that of irrigation), summed
 		/// over the 21 tiles of a city (the inner 8 twice, the centre four times, +2 for rivers on terrains 2 and 11), less 16 off
 		/// the river pattern unless on terrain 1; the value 8 - 15 is drawn at (x + 80, y) and (x + 80, y + 50), the other tiles
 		/// get 0. Every site counts for its continent (ConstructionSpotTally).
@@ -933,30 +933,29 @@ namespace Civilization1Remaster.Game
 
 			for (int terrainIdx = 0; terrainIdx < 0x18; terrainIdx++)
 			{
-				ushort terrain = (ushort)(0x13 * terrainIdx);
 				int kind = terrainIdx % 12;
 
-				weights[terrainIdx] = (ushort)((3 * (sbyte)this.processor.PullGlobalByte((ushort)(terrain + 0x290))) +
-					(sbyte)this.processor.PullGlobalByte((ushort)(terrain + 0x292)));
+				weights[terrainIdx] = (ushort)((3 * (sbyte)TerrainField(terrainIdx, TerrainTable.Food)) +
+					(sbyte)TerrainField(terrainIdx, TerrainTable.Trade));
 
 				if (kind != 2 && kind != 11)
 				{
-					weights[terrainIdx] += (ushort)((sbyte)this.processor.PullGlobalByte((ushort)(terrain + 0x291)) << 1);
+					weights[terrainIdx] += (ushort)((sbyte)TerrainField(terrainIdx, TerrainTable.Shields) << 1);
 				}
 
-				short irrigation = (short)this.processor.PullGlobalWord((ushort)((0xc * kind) + 0x44e));
+				short mining = (short)TerrainImprovementWord(kind, TerrainImprovementTable.Mining);
 
-				if (irrigation < 0)
+				if (mining < 0)
 				{
-					weights[terrainIdx] += (ushort)(0xffff - irrigation);
+					weights[terrainIdx] += (ushort)(0xffff - mining);
 				}
 				else
 				{
-					short mining = (short)this.processor.PullGlobalWord((ushort)((0xc * kind) + 0x44a));
+					short irrigation = (short)TerrainImprovementWord(kind, TerrainImprovementTable.Irrigation);
 
-					if (mining < 0)
+					if (irrigation < 0)
 					{
-						weights[terrainIdx] += (ushort)((0xffff - mining) << 1);
+						weights[terrainIdx] += (ushort)((0xffff - irrigation) << 1);
 					}
 				}
 			}
