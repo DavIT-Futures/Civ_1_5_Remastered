@@ -9,6 +9,7 @@ namespace Civilization1Remaster.Squeeze
 	{
 		protected byte[] Elements = new byte[] { };
 		protected int DigestCipher = 0;
+
 		private static readonly LZWWord BlankWord = new LZWWord();
 
 		public LZWWord()
@@ -44,14 +45,14 @@ namespace Civilization1Remaster.Squeeze
 			get { return BlankWord; }
 		}
 
-		public byte this[int ordinal]
-		{
-			get { return this.Elements[ordinal]; }
-		}
-
 		public int Span
 		{
 			get { return this.Elements.Length; }
+		}
+
+		public byte this[int ordinal]
+		{
+			get { return this.Elements[ordinal]; }
 		}
 
 		public static LZWWord operator +(LZWWord lhs, LZWWord rhs)

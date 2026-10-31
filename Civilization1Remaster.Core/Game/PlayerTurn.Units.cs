@@ -7,116 +7,6 @@ namespace Civilization1Remaster.Game
 	partial class PlayerTurn
 	{
 		/// <summary>
-		/// After an order or a move: a unit with moves left goes on (true; unless 0x28 or the quit 0xdc48). Else its move
-		/// ends (0x1e = 0 while it still had moves): a plane gets its fuel back in a city or on a carrier, burns one round and
-		/// is lost without fuel; a trireme of the human may be lost (one in two) on a tile without land around. The panel of
-		/// the unit is shown again for a human player (not for an emptied slot). The locals of HandlePlayerTurn and BX, SI, DI
-		/// are used as in the original.
-		/// </summary>
-		private bool ContinueOrFinishUnit(short participantIdx)
-		{
-			short troopIdx = (short)this.turn.Troop;
-
-			if (troopIdx < UnitMemory.TroopTally)
-			{
-				if (this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.LeftoverSteps) > 0 && this.turn.Ordered == 0 &&
-					GameEndRequest == 0)
-				{
-					return true;
-				}
-
-				if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) == 0xff)
-					return false;
-
-				if (this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.LeftoverSteps) > 0)
-				{
-					this.turn.AllMoved = 0;
-				}
-				else
-				{
-					BurnPlaneFuel(participantIdx, troopIdx);
-					MayLoseTrireme(participantIdx, troopIdx);
-				}
-			}
-
-			if (this.owner.World.IsHuman(participantIdx))
-				RenderUnitInfo(participantIdx, this.turn.Troop);
-
-			return false;
-		}
-
-		/// <summary>
-		/// A plane at the end of its move: in a city or on a carrier it gets all its rounds back, then it burns one; below
-		/// zero it is lost (help 0x2070)
-		/// </summary>
-		private void BurnPlaneFuel(short participantIdx, short troopIdx)
-		{
-			ushort unit = UnitMemory.Offset(participantIdx, troopIdx);
-
-
-			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.RoundsAway) == 0)
-				return;
-
-			ushort tileImprovements = this.owner.MapOps.ObtainTileImprovements(
-				this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
-				this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert));
-
-			if ((tileImprovements & 1) != 0 ||
-				this.owner.UnitOps.TallyUnitsOfTypeInStack(participantIdx, (short)this.turn.Troop, 23) != 0)
-			{
-				// In a city or on a carrier
-				this.troops.Assign(participantIdx, troopIdx, UnitMemory.UnusualSteps, (byte)this.troops.KindField(participantIdx, troopIdx, UnitKindTable.RoundsAway));
-			}
-
-			byte rounds = (byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.UnusualSteps) - 1);
-			this.troops.Assign(participantIdx, troopIdx, UnitMemory.UnusualSteps, rounds);
-
-			if ((sbyte)rounds < 0)
-			{
-				this.owner.UnitOps.EliminateUnit(participantIdx, (short)this.turn.Troop);
-				DisplayHelpForHuman(GameTexts.TopicFuel);
-			}
-		}
-
-		/// <summary>
-		/// A trireme of the human at the end of its move is lost (help 0x2076) one time in two when no tile around is land
-		/// (0x3c the last direction looked at, 0x38 land found; SI and DI as in the original)
-		/// </summary>
-		private void MayLoseTrireme(short participantIdx, short troopIdx)
-		{
-			if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) != 0x10 || participantIdx != this.owner.World.PersonParticipantIdx)
-				return;
-
-			if (this.owner.Libc.Dice.DrawInt(2) == 0)
-				return;
-
-			this.turn.Found = 0;
-
-			for (ushort direction = 1; direction <= 8; direction++)
-			{
-				this.turn.Count = direction;
-				this.indexDest = UnitMemory.Offset(participantIdx, troopIdx);
-
-				if (this.owner.MapOps.ObtainTerrainType(
-					this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz) + (short)DirectionHorizAt((ushort)(direction << 1)),
-					this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert) + (short)DirectionVertAt((ushort)(direction << 1))) != MapRules.OceanTerrain)
-				{
-					this.turn.Found = 1;
-					break;
-				}
-
-				if (direction == 8)
-					this.turn.Count = 9;
-			}
-
-			if (this.turn.Found != 0)
-				return;
-
-			this.owner.UnitOps.EliminateUnit(participantIdx, (short)this.turn.Troop);
-			DisplayHelpForHuman(GameTexts.TopicTrireme);
-		}
-
-		/// <summary>
 		/// Repaints the tile when the human player has seen it (or everything is shown, 0xd806)
 		/// </summary>
 		public void RepaintTileIfVisible(int horizLoc, int vertLoc)
@@ -253,6 +143,219 @@ namespace Civilization1Remaster.Game
 			this.owner.Startup.DisplayMouseCursor();
 
 			this.processor.Journal.CloseScope("RenderUnitInfo");
+		}
+
+		/// <summary>1 when the place is inside the map view (15 x 12 tiles, also across the edge of the map), else 0</summary>
+		public ushort VerifyPositionOnScreen(int horizLoc, int vertLoc)
+		{
+			this.owner.Journal.OpenScope($"VerifyPositionOnScreen({horizLoc}, {vertLoc})");
+			ushort onScreen;
+			if (horizLoc < 16 && (short)MapViewHoriz >= 65)
+			{
+				horizLoc += 80;
+			}
+
+			if (horizLoc < (short)MapViewHoriz ||
+				horizLoc >= (short)MapViewHoriz + 15 ||
+				vertLoc < (short)MapViewVert ||
+				vertLoc >= (short)MapViewVert + 12)
+			{
+				onScreen = 0;
+			}
+			else
+			{
+				onScreen = 1;
+			}
+
+			this.owner.Journal.CloseScope("VerifyPositionOnScreen");
+
+			return onScreen;
+		}
+
+		/// <summary>
+		/// Throws away the keys waiting and waits until the mouse buttons are released
+		/// </summary>
+		public void AwaitForKey()
+		{
+			this.processor.Journal.OpenScope("AwaitForKey()");
+
+			while (this.owner.Libc.KeyAvailable() != 0)
+			{
+				this.owner.Dialogs.ObtainNavigationKey();
+			}
+
+			do
+			{
+				this.owner.Startup.ObtainMouseState();
+			}
+			while (this.owner.GlobDb3a != 0);
+
+			this.processor.Journal.CloseScope("AwaitForKey");
+		}
+
+		/// <summary>
+		/// The next unit to activate in the stack of the unit: following the ring (at most 16 steps), the non-ship unit with the
+		/// smallest index after the unit, counting round past 127
+		/// </summary>
+		/// <returns>That unit, the unit itself when it stands alone or nothing comes (also in AX)</returns>
+		public ushort LocateBestGuardian(short participantIdx, ushort troopIdx)
+		{
+			this.processor.Journal.OpenScope("LocateBestGuardian()");
+
+			ushort best = troopIdx;
+			short current = this.troops.Following(participantIdx, troopIdx);
+
+			if (current != -1)
+			{
+				short smallestStep = 999;
+
+				for (int stepIdx = 0; stepIdx < 0x10; stepIdx++)
+				{
+					if (this.troops.KindField(participantIdx, current, UnitKindTable.LandGroup) != UnitKindTable.SeaUnits)
+					{
+						short step = (short)(current > (short)troopIdx ? current - troopIdx : current - troopIdx + 0x80);
+
+						if (step < smallestStep)
+						{
+							smallestStep = step;
+							best = (ushort)current;
+						}
+					}
+
+					current = this.troops.Following(participantIdx, current);
+
+					if (current == (short)troopIdx)
+						break;
+				}
+			}
+
+
+			this.processor.Journal.CloseScope("LocateBestGuardian");
+
+			return best;
+		}
+
+		/// <summary>The help popup of the topic, only in the turn of the human player</summary>
+		public void DisplayHelpForHuman(GameText topic)
+		{
+			this.processor.Journal.OpenScope($"DisplayHelpForHuman(0x{topic.Address:x4})");
+
+			if ((short)TurnPlayer == this.owner.World.PersonParticipantIdx)
+			{
+				this.owner.HelpSystem.DisplayHelpPopupForHuman(topic);
+			}
+		
+			this.processor.Journal.CloseScope("DisplayHelpForHuman");
+		}
+
+		/// <summary>
+		/// After an order or a move: a unit with moves left goes on (true; unless 0x28 or the quit 0xdc48). Else its move
+		/// ends (0x1e = 0 while it still had moves): a plane gets its fuel back in a city or on a carrier, burns one round and
+		/// is lost without fuel; a trireme of the human may be lost (one in two) on a tile without land around. The panel of
+		/// the unit is shown again for a human player (not for an emptied slot). The locals of HandlePlayerTurn and BX, SI, DI
+		/// are used as in the original.
+		/// </summary>
+		private bool ContinueOrFinishUnit(short participantIdx)
+		{
+			short troopIdx = (short)this.turn.Troop;
+
+			if (troopIdx < UnitMemory.TroopTally)
+			{
+				if (this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.LeftoverSteps) > 0 && this.turn.Ordered == 0 &&
+					GameEndRequest == 0)
+				{
+					return true;
+				}
+
+				if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) == 0xff)
+					return false;
+
+				if (this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.LeftoverSteps) > 0)
+				{
+					this.turn.AllMoved = 0;
+				}
+				else
+				{
+					BurnPlaneFuel(participantIdx, troopIdx);
+					MayLoseTrireme(participantIdx, troopIdx);
+				}
+			}
+
+			if (this.owner.World.IsHuman(participantIdx))
+				RenderUnitInfo(participantIdx, this.turn.Troop);
+
+			return false;
+		}
+
+		/// <summary>
+		/// A plane at the end of its move: in a city or on a carrier it gets all its rounds back, then it burns one; below
+		/// zero it is lost (help 0x2070)
+		/// </summary>
+		private void BurnPlaneFuel(short participantIdx, short troopIdx)
+		{
+			ushort unit = UnitMemory.Offset(participantIdx, troopIdx);
+
+
+			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.RoundsAway) == 0)
+				return;
+
+			ushort tileImprovements = this.owner.MapOps.ObtainTileImprovements(
+				this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
+				this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert));
+
+			if ((tileImprovements & 1) != 0 ||
+				this.owner.UnitOps.TallyUnitsOfTypeInStack(participantIdx, (short)this.turn.Troop, 23) != 0)
+			{
+				// In a city or on a carrier
+				this.troops.Assign(participantIdx, troopIdx, UnitMemory.UnusualSteps, (byte)this.troops.KindField(participantIdx, troopIdx, UnitKindTable.RoundsAway));
+			}
+
+			byte rounds = (byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.UnusualSteps) - 1);
+			this.troops.Assign(participantIdx, troopIdx, UnitMemory.UnusualSteps, rounds);
+
+			if ((sbyte)rounds < 0)
+			{
+				this.owner.UnitOps.EliminateUnit(participantIdx, (short)this.turn.Troop);
+				DisplayHelpForHuman(GameTexts.TopicFuel);
+			}
+		}
+
+		/// <summary>
+		/// A trireme of the human at the end of its move is lost (help 0x2076) one time in two when no tile around is land
+		/// (0x3c the last direction looked at, 0x38 land found; SI and DI as in the original)
+		/// </summary>
+		private void MayLoseTrireme(short participantIdx, short troopIdx)
+		{
+			if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) != 0x10 || participantIdx != this.owner.World.PersonParticipantIdx)
+				return;
+
+			if (this.owner.Libc.Dice.DrawInt(2) == 0)
+				return;
+
+			this.turn.Found = 0;
+
+			for (ushort direction = 1; direction <= 8; direction++)
+			{
+				this.turn.Count = direction;
+				this.indexDest = UnitMemory.Offset(participantIdx, troopIdx);
+
+				if (this.owner.MapOps.ObtainTerrainType(
+					this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz) + (short)DirectionHorizAt((ushort)(direction << 1)),
+					this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert) + (short)DirectionVertAt((ushort)(direction << 1))) != MapRules.OceanTerrain)
+				{
+					this.turn.Found = 1;
+					break;
+				}
+
+				if (direction == 8)
+					this.turn.Count = 9;
+			}
+
+			if (this.turn.Found != 0)
+				return;
+
+			this.owner.UnitOps.EliminateUnit(participantIdx, (short)this.turn.Troop);
+			DisplayHelpForHuman(GameTexts.TopicTrireme);
 		}
 
 		private void RenderUnitPanel(short participantIdx, ushort troop)
@@ -396,109 +499,6 @@ namespace Civilization1Remaster.Game
 			{
 				this.owner.TextPainter.RenderTextToScreen0(GameTexts.TextPlus, 74, 192, Hues.Black);
 			}
-		}
-
-		/// <summary>1 when the place is inside the map view (15 x 12 tiles, also across the edge of the map), else 0</summary>
-		public ushort VerifyPositionOnScreen(int horizLoc, int vertLoc)
-		{
-			this.owner.Journal.OpenScope($"VerifyPositionOnScreen({horizLoc}, {vertLoc})");
-			ushort onScreen;
-			if (horizLoc < 16 && (short)MapViewHoriz >= 65)
-			{
-				horizLoc += 80;
-			}
-
-			if (horizLoc < (short)MapViewHoriz ||
-				horizLoc >= (short)MapViewHoriz + 15 ||
-				vertLoc < (short)MapViewVert ||
-				vertLoc >= (short)MapViewVert + 12)
-			{
-				onScreen = 0;
-			}
-			else
-			{
-				onScreen = 1;
-			}
-
-			this.owner.Journal.CloseScope("VerifyPositionOnScreen");
-
-			return onScreen;
-		}
-
-		/// <summary>
-		/// Throws away the keys waiting and waits until the mouse buttons are released
-		/// </summary>
-		public void AwaitForKey()
-		{
-			this.processor.Journal.OpenScope("AwaitForKey()");
-
-			while (this.owner.Libc.KeyAvailable() != 0)
-			{
-				this.owner.Dialogs.ObtainNavigationKey();
-			}
-
-			do
-			{
-				this.owner.Startup.ObtainMouseState();
-			}
-			while (this.owner.GlobDb3a != 0);
-
-			this.processor.Journal.CloseScope("AwaitForKey");
-		}
-
-		/// <summary>
-		/// The next unit to activate in the stack of the unit: following the ring (at most 16 steps), the non-ship unit with the
-		/// smallest index after the unit, counting round past 127
-		/// </summary>
-		/// <returns>That unit, the unit itself when it stands alone or nothing comes (also in AX)</returns>
-		public ushort LocateBestGuardian(short participantIdx, ushort troopIdx)
-		{
-			this.processor.Journal.OpenScope("LocateBestGuardian()");
-
-			ushort best = troopIdx;
-			short current = this.troops.Following(participantIdx, troopIdx);
-
-			if (current != -1)
-			{
-				short smallestStep = 999;
-
-				for (int stepIdx = 0; stepIdx < 0x10; stepIdx++)
-				{
-					if (this.troops.KindField(participantIdx, current, UnitKindTable.LandGroup) != UnitKindTable.SeaUnits)
-					{
-						short step = (short)(current > (short)troopIdx ? current - troopIdx : current - troopIdx + 0x80);
-
-						if (step < smallestStep)
-						{
-							smallestStep = step;
-							best = (ushort)current;
-						}
-					}
-
-					current = this.troops.Following(participantIdx, current);
-
-					if (current == (short)troopIdx)
-						break;
-				}
-			}
-
-
-			this.processor.Journal.CloseScope("LocateBestGuardian");
-
-			return best;
-		}
-
-		/// <summary>The help popup of the topic, only in the turn of the human player</summary>
-		public void DisplayHelpForHuman(GameText topic)
-		{
-			this.processor.Journal.OpenScope($"DisplayHelpForHuman(0x{topic.Address:x4})");
-
-			if ((short)TurnPlayer == this.owner.World.PersonParticipantIdx)
-			{
-				this.owner.HelpSystem.DisplayHelpPopupForHuman(topic);
-			}
-		
-			this.processor.Journal.CloseScope("DisplayHelpForHuman");
 		}
 	}
 }

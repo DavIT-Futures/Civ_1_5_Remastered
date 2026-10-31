@@ -4,10 +4,15 @@ namespace Civilization1Remaster.UI
 {
 	public class Palace : GameModule
 	{
-		private static readonly GameText PalaceUpgradeAnnouncementDialogAddress = new(0x4ade, "*PALACE");
-		private static readonly GameText PalaceInitialScreenPictureAddress = new(0x4ae6, "cback.pic");
+		public const ushort PalaceSectionStylesAddress = 0xb222;
+		public const ushort PalacePicturesTableAddress = 0xb23c;
+		public const ushort PalaceSectionStyleMarkersAddress = 0xb25e;
+		public const ushort PalaceSectionLevelsAddress = 0xd91e;
+		public const ushort PalaceLeftBushesAddress = 0xd930;
+		public const ushort PalaceGardenLevelsAddress = 0xd930;
+		public const ushort PalaceRightBushesAddress = 0xd934;
+
 		private const ushort PalaceUpgradeOptionsPromptAddress = 0x4af0;
-		private static readonly GameText PalaceStyleChoiceHeaderAddress = new(0x4b13, "Select new section.");
 		private const ushort PalaceCastleResourceAddress = 0x4b27;
 		private const ushort PalacePartHeightTable1Address = 0x4b31;
 		private const ushort PalacePartHeightTable2Address = 0x4b32;
@@ -15,80 +20,18 @@ namespace Civilization1Remaster.UI
 		private const ushort PalacePartHeightTable4Address = 0x4b34;
 		private const ushort PalacePartHeightTable5Address = 0x4b35;
 		private const ushort PalacePartHeightTableAddress = 0x4b36;
+		private const ushort PalaceGraphicsResourceAddress = 0x4b9f;
+
+		private static readonly GameText PalaceUpgradeAnnouncementDialogAddress = new(0x4ade, "*PALACE");
+		private static readonly GameText PalaceInitialScreenPictureAddress = new(0x4ae6, "cback.pic");
+		private static readonly GameText PalaceStyleChoiceHeaderAddress = new(0x4b13, "Select new section.");
 		private static readonly GameText PalaceScreenBackgroundPictureAddress = new(0x4b81, "sad.pic");
 		private static readonly GameText PalaceDefaultBackgroundPictureAddress = new(0x4b89, "cback.pic");
-		private const ushort PalaceGraphicsResourceAddress = 0x4b9f;
 		private static readonly GameText PalacePaletteAddress = new(0x4bb0, "sad.pic");
-
-		public const ushort PalaceSectionStylesAddress = 0xb222;
-		public const ushort PalacePicturesTableAddress = 0xb23c;
-		public const ushort PalaceSectionStyleMarkersAddress = 0xb25e;
-
-		public const ushort PalaceSectionLevelsAddress = 0xd91e;
-		public const ushort PalaceLeftBushesAddress = 0xd930;
-		public const ushort PalaceGardenLevelsAddress = 0xd930;
-		public const ushort PalaceRightBushesAddress = 0xd934;
 
 		public Palace(GameEngine owner)
 			: base(owner)
 		{
-		}
-
-		private ushort PalaceSectionLevel(ushort sectionIdx)
-		{
-			return this.processor.PullGlobalWord((ushort)(PalaceSectionLevelsAddress + (sectionIdx << 1)));
-		}
-
-		private void SetPalaceSectionLevel(ushort sectionIdx, ushort level)
-		{
-			this.processor.EmitGlobalWord((ushort)(PalaceSectionLevelsAddress + (sectionIdx << 1)), level);
-		}
-
-		private ushort PalaceGardenLevel(ushort gardenIdx)
-		{
-			return this.processor.PullGlobalWord((ushort)(PalaceGardenLevelsAddress + (gardenIdx << 1)));
-		}
-
-		private ushort PalaceSectionStyle(ushort sectionIdx)
-		{
-			return this.processor.PullGlobalWord((ushort)(PalaceSectionStylesAddress + (sectionIdx << 1)));
-		}
-
-		private void SetPalaceSectionStyle(ushort sectionIdx, ushort style)
-		{
-			this.processor.EmitGlobalWord((ushort)(PalaceSectionStylesAddress + (sectionIdx << 1)), style);
-		}
-
-		private byte PalaceSectionStyleMarker(ushort sectionIdx, ushort markerIdx)
-		{
-			return this.processor.PullGlobalByte((ushort)(PalaceSectionStyleMarkersAddress + (sectionIdx << 1) + markerIdx));
-		}
-
-		private void SetPalaceSectionStyleMarker(ushort sectionIdx, ushort markerIdx, byte marker)
-		{
-			this.processor.EmitGlobalByte((ushort)(PalaceSectionStyleMarkersAddress + (sectionIdx << 1) + markerIdx), marker);
-		}
-
-		private void SetPalaceSectionStyleMarkers(ushort sectionIdx, byte marker0, byte marker1)
-		{
-			ushort addr = (ushort)(PalaceSectionStyleMarkersAddress + (sectionIdx << 1));
-			this.processor.EmitGlobalByte(addr, marker0);
-			this.processor.EmitGlobalByte((ushort)(addr + 1), marker1);
-		}
-
-		private static ushort PalacePictureAddress(ushort sectionIdx, ushort partIdx)
-		{
-			return (ushort)(PalacePicturesTableAddress + (sectionIdx << 2) + (partIdx << 1));
-		}
-
-		private ushort PalacePicture(ushort sectionIdx, ushort partIdx)
-		{
-			return this.processor.PullGlobalWord(PalacePictureAddress(sectionIdx, partIdx));
-		}
-
-		private void SetPalacePicture(ushort sectionIdx, ushort partIdx, ushort pictureHandle)
-		{
-			this.processor.EmitGlobalWord(PalacePictureAddress(sectionIdx, partIdx), pictureHandle);
 		}
 
 		/// <summary>
@@ -189,6 +132,460 @@ namespace Civilization1Remaster.UI
 			this.owner.Startup.DisplayMouseCursor();
 
 			this.processor.Journal.CloseScope("DisplayPalace");
+		}
+
+		/// <summary>
+		/// Draws the palace on screen 1 (the parts of sections 0 - 8 in the words at 0xd91e, 0xffff not built): the looks of
+		/// sections 1 - 7, the castle, the background (0x4b81 for the palace screen, 0x4b89), the garden "cbacksN.pic" (N =
+		/// 0xd932), the sections from x 0x10 (8 further left without section 2, one with 0xb22a = 1): the left ones with their
+		/// wings, the middle one, the right ones with their towers, each joined to a neighbour of the same style (0xb222), and
+		/// the bushes "cbrushN.pic" left (0xd930) and right (0xd934). For the palace screen (marker) screen 1 is shown with the
+		/// palette 0x4bb0. The file name is in the stack frame, like in the original, and the rightmost built section (0x18)
+		/// and the last left section (0x12) are read from the frame even when this call didn't set them, like in the original.
+		/// </summary>
+		public void ImportPalaceGraphics(ushort marker)
+		{
+			this.processor.Journal.OpenScope($"ImportPalaceGraphics({marker})");
+
+			// Locals 0x12 and 0x18 of the original (B3: in C#), read before written on some paths: they start at 0
+			ushort lastLeftEnd = 0;
+			ushort builtRightmost = 0;
+
+			this.owner.Startup.QueryForDisk(2, 1);
+
+			DrawingBox.DisplayIdx = 1;
+			PalaceFirstPicture = 0xffff;
+
+			ushort built = 0;
+
+			for (ushort sectionIdx = 0; sectionIdx < 9; sectionIdx++)
+			{
+				ushort part = PalacePart(sectionIdx);
+
+				if (part != 0xffff)
+					built |= (ushort)(1 << (byte)part);
+			}
+
+			for (ushort sectionIdx = 1; sectionIdx < 8; sectionIdx++)
+			{
+				SetPalaceSectionStyleMarkers(sectionIdx, 0xff, 0xff);
+
+				if (PalacePart(sectionIdx) != 0xffff)
+					RenderPalaceSection(sectionIdx, 1);
+			}
+
+			ImportPalaceCastle(built, 1);
+
+			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, marker != 0 ? PalaceScreenBackgroundPictureAddress : PalaceDefaultBackgroundPictureAddress, 0);
+
+			if ((short)PalaceGardenBackground > 0)
+			{
+				string gardenPicture = $"cbacks{(char)(PalaceGardenBackground + '0')}.pic";
+				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0x87, gardenPicture, 0);
+			}
+
+			ushort horizLoc = 0x10;
+
+			if (PalaceStyleShift == 0xffff)
+				horizLoc -= 0x18;
+
+			if (PalaceLayout == 1)
+				horizLoc++;
+
+			const ushort vertLoc = 0x24;
+
+			// The rightmost built section (0x18 is written only when section 8 isn't built)
+			short rightmost = 8;
+
+			while (PalacePart((ushort)rightmost) == 0xffff)
+			{
+				rightmost--;
+				builtRightmost = (ushort)rightmost;
+			}
+
+			ushort section;
+
+			for (section = 1; section < 8; section++)
+			{
+				ushort part = PalacePart(section);
+
+				if (part == 0xffff)
+				{
+					horizLoc += 0x30;
+					continue;
+				}
+
+				ushort look = 2;
+
+				if (section < 4)
+					look = PalacePart((ushort)(section - 1)) == 0xffff || section == 1 ? (ushort)0 : (ushort)1;
+
+				if (section > 4)
+					look = PalacePart((ushort)(section + 1)) == 0xffff || section == 7 ? (ushort)3 : (ushort)1;
+
+				switch (look)
+				{
+					case 0:
+						// A left end with its wing
+						if (section == 3)
+							RenderPalacePart(part, section, (ushort)(horizLoc + PalaceWingShift), vertLoc, 1);
+
+						if (PalaceStyle(section) != 1 || section == 3)
+							RenderPalacePart(part, section, horizLoc, vertLoc, 0);
+
+						horizLoc += PalaceWingShift;
+
+						if (section == 3)
+							horizLoc += PalacePartWidth;
+
+						lastLeftEnd = section;
+						break;
+
+					case 1:
+						// A section between two, joined to the left end before it and to the rightmost one after it
+						ushort leftEnd = lastLeftEnd;
+
+						if ((ushort)(leftEnd + 1) == section && PalaceStyle(section) == PalaceStyle(leftEnd))
+							RenderPalacePart(part, leftEnd, (ushort)(horizLoc + PalacePartWidth - 17), vertLoc - 2, 0);
+
+						ushort rightEnd = builtRightmost;
+
+						if ((ushort)(rightEnd - 1) == section && PalaceStyle(section) == PalaceStyle(rightEnd))
+							RenderPalacePart(part, rightEnd, (ushort)(horizLoc + PalacePartWidth - 17), vertLoc - 2, 1);
+
+						RenderPalacePart(part, section, horizLoc, vertLoc, 0);
+
+						horizLoc += PalacePartWidth;
+
+						RenderPalacePart(part, section, horizLoc, vertLoc, 1);
+
+						horizLoc += PalacePartWidth;
+						break;
+
+					case 2:
+						// The middle
+						if (PalaceLayout == 1)
+							horizLoc--;
+
+						RenderPalacePart(part, section, (ushort)(horizLoc - 2), vertLoc, 0);
+
+						horizLoc += PalaceLeftWingWidth;
+
+						if (PalaceLayout == 1)
+							horizLoc--;
+						break;
+
+					case 3:
+						// A right end with its tower
+						if (section == 5)
+						{
+							RenderPalacePart(part, section, horizLoc, vertLoc, 0);
+
+							horizLoc += PalacePartWidth;
+						}
+
+						ushort level = PalacePart((ushort)(section - 1));
+
+						if (PalaceStyle(section) == 1 && (short)level > (short)PalacePart(section))
+						{
+							RenderPalacePart(part, section, (ushort)(horizLoc - 3), (ushort)(level - PalacePart(section) + vertLoc + 1), 1);
+						}
+						else
+						{
+							RenderPalacePart(part, section, (ushort)(horizLoc - (PalaceStyle(section) == 1 ? 3 : 2)), vertLoc, 1);
+						}
+
+						horizLoc += PalaceRightWingWidth;
+						break;
+				}
+			}
+
+			// The wing of the last left end, unless it is section 3
+			ushort lastLeft = lastLeftEnd;
+
+			if (PalaceStyle(lastLeft) == 1 && lastLeft != 3)
+			{
+				RenderPalacePart(PalacePart(lastLeft), lastLeft, (ushort)((lastLeft * 48) - 36),
+					(ushort)(PalacePart((ushort)(lastLeft + 1)) - PalacePart(lastLeft) + vertLoc), 0);
+			}
+
+			this.owner.Helpers.ReleaseResource(PalaceFirstPicture, PalaceGraphicsResourceAddress);
+
+			if (PalaceLeftBushes != 0 || PalaceRightBushes != 0)
+			{
+				ushort leftBush = 0, rightBush = 0;
+
+				if (PalaceLeftBushes != 0)
+				{
+					leftBush = RenderPalaceBush(PalaceLeftBushesAddress, 0x2e, 0);
+				}
+
+				if (PalaceRightBushes != 0)
+				{
+					rightBush = RenderPalaceBush(PalaceRightBushesAddress, 0x2f, 184);
+				}
+
+				this.owner.Helpers.ReleaseResource(PalaceLeftBushes != 0 ? leftBush : rightBush, 0);
+			}
+
+			if (marker != 0)
+			{
+				DrawingBox.DisplayIdx = 0;
+
+				if (VgaMode != 0 && (short)FirstMissingDisk > 7)
+				{
+					this.owner.Services.FloodColors(5, 0, 0, 0);
+				}
+
+				this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
+
+				this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, PalacePaletteAddress, 1);
+
+				this.owner.Startup.QueryForDisk(0, 1);
+			}
+
+			this.processor.Journal.CloseScope("ImportPalaceGraphics");
+		}
+
+		/// <summary>
+		/// The look of the palace section sectionIdx (0 - 7, levels in the words at 0xd91c...) by its neighbours: the style (0xb25e
+		/// + 2 * section) and the shape (0xb25f + 2 * section). Section 4 is the middle; a left section (0 - 3) without a
+		/// built neighbour to the left (or section 1) is the left end, a right section (5 - 7) without one to the right (or
+		/// section 7) the right end.
+		/// </summary>
+		public void RenderPalaceSection(ushort sectionIdx, ushort marker)
+		{
+			this.processor.Journal.OpenScope($"RenderPalaceSection({sectionIdx}, {marker})");
+
+			short section = (short)sectionIdx;
+			ushort level = PalaceSectionLevel(sectionIdx);
+
+			// 0: left end, 1: inner section, 2: middle, 3: right end
+			int place = 2;
+
+			if (section < 4)
+			{
+				place = 1;
+
+				if (PalaceSectionLevel((ushort)(sectionIdx - 1)) == 0xffff || sectionIdx == 1)
+				{
+					place = 0;
+				}
+			}
+
+			if (section > 4)
+			{
+				place = 1;
+
+				if (PalaceSectionLevel((ushort)(sectionIdx + 1)) == 0xffff || sectionIdx == 7)
+				{
+					place = 3;
+				}
+			}
+
+			switch (place)
+			{
+				case 0:
+					SetPalaceSectionStyleMarker(sectionIdx, 0, 0x3);
+
+					if (sectionIdx == 3 || marker == 0)
+					{
+						SetPalaceSectionStyleMarker(sectionIdx, 1, (byte)(level != 0 ? 1 : 2));
+					}
+					break;
+
+				case 1:
+					SetPalaceSectionStyleMarker(sectionIdx, 0, (byte)(LeftNeighbourHigher(sectionIdx) || sectionIdx == 5 ||
+						PalaceSectionLevel((ushort)(sectionIdx - 2)) == 0xffff ? 1 : 2));
+					SetPalaceSectionStyleMarker(sectionIdx, 1, 0x2);
+					break;
+
+				case 2:
+					SetPalaceSectionStyleMarker(sectionIdx, 0, 0x0);
+					break;
+
+				case 3:
+					if (sectionIdx == 5 || marker == 0)
+					{
+						SetPalaceSectionStyleMarker(sectionIdx, 0, (byte)(LeftNeighbourHigher(sectionIdx) || sectionIdx == 5 ? 1 : 2));
+					}
+
+					SetPalaceSectionStyleMarker(sectionIdx, 1, 0x4);
+					break;
+			}
+
+			this.processor.Journal.CloseScope("RenderPalaceSection");
+		}
+
+		/// <summary>
+		/// One part of the palace: picture (table at 0xb23c, by the part section and its style marker) at column horizLoc; the row comes
+		/// from the height table at 0x4b36 (records of 15 bytes by level, by the place of the part) plus vertShift and level
+		/// </summary>
+		public void RenderPalacePart(ushort level, ushort section, ushort horizLoc, ushort vertShift, ushort marker)
+		{
+			this.processor.Journal.OpenScope($"RenderPalacePart({level}, {section}, {horizLoc}, {vertShift}, {marker})");
+
+			ushort partPlace = PalaceSectionStyle(section);
+			sbyte styleShift = (sbyte)PalaceSectionStyleMarker(section, marker);
+			ushort heightIdx = (ushort)(styleShift + (5 * partPlace));
+			sbyte height = (sbyte)this.processor.PullGlobalByte((ushort)((0xf * level) + heightIdx + PalacePartHeightTableAddress));
+			ushort vertLoc = (ushort)(height + vertShift + level);
+
+			this.owner.Services.RenderPictureToScreen(ScreenBox,
+				(short)horizLoc,
+				(short)vertLoc,
+				PalacePicture(section, marker));
+
+			this.processor.Journal.CloseScope("RenderPalacePart");
+		}
+
+		/// <summary>
+		/// Cuts the pictures of the palace sections 1 - 7 from the castle pictures castle0 - castle4.pic (each one in the mask
+		/// levelMask): with onlyBuilt the sections of that level (0xd91e) from the place of the section (0xb222: bit 0 the column, bit 1 the
+		/// row), without onlyBuilt all sections from the place of the section before. Each section has two parts (styles at 0xb25e:
+		/// 0 the whole wall, 1 and 2 left and right pieces, 3 and 4 the ends, cut from the middle picture for section 2 or a
+		/// section at the place 1), the picture goes to 0xb23c + 4 * section + 2 * part, the first one also to 0x6828 when unset.
+		/// </summary>
+		public void ImportPalaceCastle(ushort levelMask, ushort onlyBuilt)
+		{
+			this.processor.Journal.OpenScope($"ImportPalaceCastle({levelMask}, {onlyBuilt})");
+
+			ushort level;
+
+			for (level = 0; level < 5; level++)
+			{
+				if (((1 << level) & levelMask) == 0)
+					continue;
+
+				string docname = $"castle{level}.pic";
+
+				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, docname, 0);
+
+				ushort section;
+
+				for (section = 1; section < 8; section++)
+				{
+					if (PalaceSectionLevel(section) != level && onlyBuilt != 0)
+						continue;
+
+					ushort place = PalaceSectionStyle(section);
+
+					if (onlyBuilt == 0)
+					{
+						place = (ushort)(section - 1);
+					}
+
+					ushort horizLoc = (ushort)((place & 1) * 0xa0);
+					ushort vertLoc = (ushort)((place & 2) * 0x32);
+
+					for (ushort partIdx = 0; partIdx < 2; partIdx++)
+					{
+						ushort picture = PalacePictureAddress(section, partIdx);
+						sbyte style = (sbyte)PalaceSectionStyleMarker(section, partIdx);
+						bool middle = onlyBuilt != 0 ? PalaceSectionStyle(section) == 1 : section == 2;
+
+						ushort picHandle = 0;
+						switch (style)
+						{
+							case 0:
+								picHandle = this.owner.VideoCard.ScreenToPicture(1, horizLoc, (ushort)(vertLoc + 1), 0x34, 0x63);
+								break;
+
+							case 1:
+								picHandle = this.owner.VideoCard.ScreenToPicture(1, (ushort)(horizLoc + 0x35), (ushort)(vertLoc + 1), 0x18, 0x63);
+								break;
+
+							case 2:
+								picHandle = this.owner.VideoCard.ScreenToPicture(1, (ushort)(horizLoc + 0x4e), (ushort)(vertLoc + 1), 0x18, 0x63);
+								break;
+
+							case 3:
+								if (middle)
+									picHandle = this.owner.VideoCard.ScreenToPicture(1, 0xa0, 0x65, 0x23, 0x63);
+								else
+									picHandle = this.owner.VideoCard.ScreenToPicture(1, (ushort)(horizLoc + 0x67), (ushort)(vertLoc + 1), 0x1c, 0x63);
+								break;
+
+							case 4:
+								if (middle)
+									picHandle = this.owner.VideoCard.ScreenToPicture(1, 0xc4, 0x65, 0x23, 0x63);
+								else
+									picHandle = this.owner.VideoCard.ScreenToPicture(1, (ushort)(horizLoc + 0x84), (ushort)(vertLoc + 1), 0x1b, 0x63);
+								break;
+						}
+
+						if (style is >= 0 and <= 4)
+						{
+							SetPalacePicture(section, partIdx, picHandle);
+						}
+
+						if (style != -1 && PalaceFirstPicture == 0xffff)
+						{
+							PalaceFirstPicture = PalacePicture(section, partIdx);
+						}
+					}
+
+				}
+			}
+
+			this.processor.Journal.CloseScope("ImportPalaceCastle");
+		}
+
+		private static ushort PalacePictureAddress(ushort sectionIdx, ushort partIdx)
+		{
+			return (ushort)(PalacePicturesTableAddress + (sectionIdx << 2) + (partIdx << 1));
+		}
+
+		private ushort PalaceSectionLevel(ushort sectionIdx)
+		{
+			return this.processor.PullGlobalWord((ushort)(PalaceSectionLevelsAddress + (sectionIdx << 1)));
+		}
+
+		private void SetPalaceSectionLevel(ushort sectionIdx, ushort level)
+		{
+			this.processor.EmitGlobalWord((ushort)(PalaceSectionLevelsAddress + (sectionIdx << 1)), level);
+		}
+
+		private ushort PalaceGardenLevel(ushort gardenIdx)
+		{
+			return this.processor.PullGlobalWord((ushort)(PalaceGardenLevelsAddress + (gardenIdx << 1)));
+		}
+
+		private ushort PalaceSectionStyle(ushort sectionIdx)
+		{
+			return this.processor.PullGlobalWord((ushort)(PalaceSectionStylesAddress + (sectionIdx << 1)));
+		}
+
+		private void SetPalaceSectionStyle(ushort sectionIdx, ushort style)
+		{
+			this.processor.EmitGlobalWord((ushort)(PalaceSectionStylesAddress + (sectionIdx << 1)), style);
+		}
+
+		private byte PalaceSectionStyleMarker(ushort sectionIdx, ushort markerIdx)
+		{
+			return this.processor.PullGlobalByte((ushort)(PalaceSectionStyleMarkersAddress + (sectionIdx << 1) + markerIdx));
+		}
+
+		private void SetPalaceSectionStyleMarker(ushort sectionIdx, ushort markerIdx, byte marker)
+		{
+			this.processor.EmitGlobalByte((ushort)(PalaceSectionStyleMarkersAddress + (sectionIdx << 1) + markerIdx), marker);
+		}
+
+		private void SetPalaceSectionStyleMarkers(ushort sectionIdx, byte marker0, byte marker1)
+		{
+			ushort addr = (ushort)(PalaceSectionStyleMarkersAddress + (sectionIdx << 1));
+			this.processor.EmitGlobalByte(addr, marker0);
+			this.processor.EmitGlobalByte((ushort)(addr + 1), marker1);
+		}
+
+		private ushort PalacePicture(ushort sectionIdx, ushort partIdx)
+		{
+			return this.processor.PullGlobalWord(PalacePictureAddress(sectionIdx, partIdx));
+		}
+
+		private void SetPalacePicture(ushort sectionIdx, ushort partIdx, ushort pictureHandle)
+		{
+			this.processor.EmitGlobalWord(PalacePictureAddress(sectionIdx, partIdx), pictureHandle);
 		}
 
 		private void UpgradePalaceSectionInteractive(ushort dataSeg)
@@ -459,219 +856,6 @@ namespace Civilization1Remaster.UI
 			return chosenStyle;
 		}
 
-		/// <summary>
-		/// Draws the palace on screen 1 (the parts of sections 0 - 8 in the words at 0xd91e, 0xffff not built): the looks of
-		/// sections 1 - 7, the castle, the background (0x4b81 for the palace screen, 0x4b89), the garden "cbacksN.pic" (N =
-		/// 0xd932), the sections from x 0x10 (8 further left without section 2, one with 0xb22a = 1): the left ones with their
-		/// wings, the middle one, the right ones with their towers, each joined to a neighbour of the same style (0xb222), and
-		/// the bushes "cbrushN.pic" left (0xd930) and right (0xd934). For the palace screen (marker) screen 1 is shown with the
-		/// palette 0x4bb0. The file name is in the stack frame, like in the original, and the rightmost built section (0x18)
-		/// and the last left section (0x12) are read from the frame even when this call didn't set them, like in the original.
-		/// </summary>
-		public void ImportPalaceGraphics(ushort marker)
-		{
-			this.processor.Journal.OpenScope($"ImportPalaceGraphics({marker})");
-
-			// Locals 0x12 and 0x18 of the original (B3: in C#), read before written on some paths: they start at 0
-			ushort lastLeftEnd = 0;
-			ushort builtRightmost = 0;
-
-			this.owner.Startup.QueryForDisk(2, 1);
-
-			DrawingBox.DisplayIdx = 1;
-			PalaceFirstPicture = 0xffff;
-
-			ushort built = 0;
-
-			for (ushort sectionIdx = 0; sectionIdx < 9; sectionIdx++)
-			{
-				ushort part = PalacePart(sectionIdx);
-
-				if (part != 0xffff)
-					built |= (ushort)(1 << (byte)part);
-			}
-
-			for (ushort sectionIdx = 1; sectionIdx < 8; sectionIdx++)
-			{
-				SetPalaceSectionStyleMarkers(sectionIdx, 0xff, 0xff);
-
-				if (PalacePart(sectionIdx) != 0xffff)
-					RenderPalaceSection(sectionIdx, 1);
-			}
-
-			ImportPalaceCastle(built, 1);
-
-			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, marker != 0 ? PalaceScreenBackgroundPictureAddress : PalaceDefaultBackgroundPictureAddress, 0);
-
-			if ((short)PalaceGardenBackground > 0)
-			{
-				string gardenPicture = $"cbacks{(char)(PalaceGardenBackground + '0')}.pic";
-				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0x87, gardenPicture, 0);
-			}
-
-			ushort horizLoc = 0x10;
-
-			if (PalaceStyleShift == 0xffff)
-				horizLoc -= 0x18;
-
-			if (PalaceLayout == 1)
-				horizLoc++;
-
-			const ushort vertLoc = 0x24;
-
-			// The rightmost built section (0x18 is written only when section 8 isn't built)
-			short rightmost = 8;
-
-			while (PalacePart((ushort)rightmost) == 0xffff)
-			{
-				rightmost--;
-				builtRightmost = (ushort)rightmost;
-			}
-
-			ushort section;
-
-			for (section = 1; section < 8; section++)
-			{
-				ushort part = PalacePart(section);
-
-				if (part == 0xffff)
-				{
-					horizLoc += 0x30;
-					continue;
-				}
-
-				ushort look = 2;
-
-				if (section < 4)
-					look = PalacePart((ushort)(section - 1)) == 0xffff || section == 1 ? (ushort)0 : (ushort)1;
-
-				if (section > 4)
-					look = PalacePart((ushort)(section + 1)) == 0xffff || section == 7 ? (ushort)3 : (ushort)1;
-
-				switch (look)
-				{
-					case 0:
-						// A left end with its wing
-						if (section == 3)
-							RenderPalacePart(part, section, (ushort)(horizLoc + PalaceWingShift), vertLoc, 1);
-
-						if (PalaceStyle(section) != 1 || section == 3)
-							RenderPalacePart(part, section, horizLoc, vertLoc, 0);
-
-						horizLoc += PalaceWingShift;
-
-						if (section == 3)
-							horizLoc += PalacePartWidth;
-
-						lastLeftEnd = section;
-						break;
-
-					case 1:
-						// A section between two, joined to the left end before it and to the rightmost one after it
-						ushort leftEnd = lastLeftEnd;
-
-						if ((ushort)(leftEnd + 1) == section && PalaceStyle(section) == PalaceStyle(leftEnd))
-							RenderPalacePart(part, leftEnd, (ushort)(horizLoc + PalacePartWidth - 17), vertLoc - 2, 0);
-
-						ushort rightEnd = builtRightmost;
-
-						if ((ushort)(rightEnd - 1) == section && PalaceStyle(section) == PalaceStyle(rightEnd))
-							RenderPalacePart(part, rightEnd, (ushort)(horizLoc + PalacePartWidth - 17), vertLoc - 2, 1);
-
-						RenderPalacePart(part, section, horizLoc, vertLoc, 0);
-
-						horizLoc += PalacePartWidth;
-
-						RenderPalacePart(part, section, horizLoc, vertLoc, 1);
-
-						horizLoc += PalacePartWidth;
-						break;
-
-					case 2:
-						// The middle
-						if (PalaceLayout == 1)
-							horizLoc--;
-
-						RenderPalacePart(part, section, (ushort)(horizLoc - 2), vertLoc, 0);
-
-						horizLoc += PalaceLeftWingWidth;
-
-						if (PalaceLayout == 1)
-							horizLoc--;
-						break;
-
-					case 3:
-						// A right end with its tower
-						if (section == 5)
-						{
-							RenderPalacePart(part, section, horizLoc, vertLoc, 0);
-
-							horizLoc += PalacePartWidth;
-						}
-
-						ushort level = PalacePart((ushort)(section - 1));
-
-						if (PalaceStyle(section) == 1 && (short)level > (short)PalacePart(section))
-						{
-							RenderPalacePart(part, section, (ushort)(horizLoc - 3), (ushort)(level - PalacePart(section) + vertLoc + 1), 1);
-						}
-						else
-						{
-							RenderPalacePart(part, section, (ushort)(horizLoc - (PalaceStyle(section) == 1 ? 3 : 2)), vertLoc, 1);
-						}
-
-						horizLoc += PalaceRightWingWidth;
-						break;
-				}
-			}
-
-			// The wing of the last left end, unless it is section 3
-			ushort lastLeft = lastLeftEnd;
-
-			if (PalaceStyle(lastLeft) == 1 && lastLeft != 3)
-			{
-				RenderPalacePart(PalacePart(lastLeft), lastLeft, (ushort)((lastLeft * 48) - 36),
-					(ushort)(PalacePart((ushort)(lastLeft + 1)) - PalacePart(lastLeft) + vertLoc), 0);
-			}
-
-			this.owner.Helpers.ReleaseResource(PalaceFirstPicture, PalaceGraphicsResourceAddress);
-
-			if (PalaceLeftBushes != 0 || PalaceRightBushes != 0)
-			{
-				ushort leftBush = 0, rightBush = 0;
-
-				if (PalaceLeftBushes != 0)
-				{
-					leftBush = RenderPalaceBush(PalaceLeftBushesAddress, 0x2e, 0);
-				}
-
-				if (PalaceRightBushes != 0)
-				{
-					rightBush = RenderPalaceBush(PalaceRightBushesAddress, 0x2f, 184);
-				}
-
-				this.owner.Helpers.ReleaseResource(PalaceLeftBushes != 0 ? leftBush : rightBush, 0);
-			}
-
-			if (marker != 0)
-			{
-				DrawingBox.DisplayIdx = 0;
-
-				if (VgaMode != 0 && (short)FirstMissingDisk > 7)
-				{
-					this.owner.Services.FloodColors(5, 0, 0, 0);
-				}
-
-				this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
-
-				this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, PalacePaletteAddress, 1);
-
-				this.owner.Startup.QueryForDisk(0, 1);
-			}
-
-			this.processor.Journal.CloseScope("ImportPalaceGraphics");
-		}
-
 		/// <summary>The part built in the palace section (0xd91e + 2 * section), 0xffff for none</summary>
 		private ushort PalacePart(ushort sectionIdx)
 		{
@@ -698,194 +882,10 @@ namespace Civilization1Remaster.UI
 			return picture;
 		}
 
-		/// <summary>
-		/// The look of the palace section sectionIdx (0 - 7, levels in the words at 0xd91c...) by its neighbours: the style (0xb25e
-		/// + 2 * section) and the shape (0xb25f + 2 * section). Section 4 is the middle; a left section (0 - 3) without a
-		/// built neighbour to the left (or section 1) is the left end, a right section (5 - 7) without one to the right (or
-		/// section 7) the right end.
-		/// </summary>
-		public void RenderPalaceSection(ushort sectionIdx, ushort marker)
-		{
-			this.processor.Journal.OpenScope($"RenderPalaceSection({sectionIdx}, {marker})");
-
-			short section = (short)sectionIdx;
-			ushort level = PalaceSectionLevel(sectionIdx);
-
-			// 0: left end, 1: inner section, 2: middle, 3: right end
-			int place = 2;
-
-			if (section < 4)
-			{
-				place = 1;
-
-				if (PalaceSectionLevel((ushort)(sectionIdx - 1)) == 0xffff || sectionIdx == 1)
-				{
-					place = 0;
-				}
-			}
-
-			if (section > 4)
-			{
-				place = 1;
-
-				if (PalaceSectionLevel((ushort)(sectionIdx + 1)) == 0xffff || sectionIdx == 7)
-				{
-					place = 3;
-				}
-			}
-
-			switch (place)
-			{
-				case 0:
-					SetPalaceSectionStyleMarker(sectionIdx, 0, 0x3);
-
-					if (sectionIdx == 3 || marker == 0)
-					{
-						SetPalaceSectionStyleMarker(sectionIdx, 1, (byte)(level != 0 ? 1 : 2));
-					}
-					break;
-
-				case 1:
-					SetPalaceSectionStyleMarker(sectionIdx, 0, (byte)(LeftNeighbourHigher(sectionIdx) || sectionIdx == 5 ||
-						PalaceSectionLevel((ushort)(sectionIdx - 2)) == 0xffff ? 1 : 2));
-					SetPalaceSectionStyleMarker(sectionIdx, 1, 0x2);
-					break;
-
-				case 2:
-					SetPalaceSectionStyleMarker(sectionIdx, 0, 0x0);
-					break;
-
-				case 3:
-					if (sectionIdx == 5 || marker == 0)
-					{
-						SetPalaceSectionStyleMarker(sectionIdx, 0, (byte)(LeftNeighbourHigher(sectionIdx) || sectionIdx == 5 ? 1 : 2));
-					}
-
-					SetPalaceSectionStyleMarker(sectionIdx, 1, 0x4);
-					break;
-			}
-
-			this.processor.Journal.CloseScope("RenderPalaceSection");
-		}
-
 		/// <summary>The section to the left is higher than the section</summary>
 		private bool LeftNeighbourHigher(ushort sectionIdx)
 		{
 			return (short)PalaceSectionLevel((ushort)(sectionIdx - 1)) > (short)PalaceSectionLevel(sectionIdx);
-		}
-
-		/// <summary>
-		/// One part of the palace: picture (table at 0xb23c, by the part section and its style marker) at column horizLoc; the row comes
-		/// from the height table at 0x4b36 (records of 15 bytes by level, by the place of the part) plus vertShift and level
-		/// </summary>
-		public void RenderPalacePart(ushort level, ushort section, ushort horizLoc, ushort vertShift, ushort marker)
-		{
-			this.processor.Journal.OpenScope($"RenderPalacePart({level}, {section}, {horizLoc}, {vertShift}, {marker})");
-
-			ushort partPlace = PalaceSectionStyle(section);
-			sbyte styleShift = (sbyte)PalaceSectionStyleMarker(section, marker);
-			ushort heightIdx = (ushort)(styleShift + (5 * partPlace));
-			sbyte height = (sbyte)this.processor.PullGlobalByte((ushort)((0xf * level) + heightIdx + PalacePartHeightTableAddress));
-			ushort vertLoc = (ushort)(height + vertShift + level);
-
-			this.owner.Services.RenderPictureToScreen(ScreenBox,
-				(short)horizLoc,
-				(short)vertLoc,
-				PalacePicture(section, marker));
-
-			this.processor.Journal.CloseScope("RenderPalacePart");
-		}
-
-		/// <summary>
-		/// Cuts the pictures of the palace sections 1 - 7 from the castle pictures castle0 - castle4.pic (each one in the mask
-		/// levelMask): with onlyBuilt the sections of that level (0xd91e) from the place of the section (0xb222: bit 0 the column, bit 1 the
-		/// row), without onlyBuilt all sections from the place of the section before. Each section has two parts (styles at 0xb25e:
-		/// 0 the whole wall, 1 and 2 left and right pieces, 3 and 4 the ends, cut from the middle picture for section 2 or a
-		/// section at the place 1), the picture goes to 0xb23c + 4 * section + 2 * part, the first one also to 0x6828 when unset.
-		/// </summary>
-		public void ImportPalaceCastle(ushort levelMask, ushort onlyBuilt)
-		{
-			this.processor.Journal.OpenScope($"ImportPalaceCastle({levelMask}, {onlyBuilt})");
-
-			ushort level;
-
-			for (level = 0; level < 5; level++)
-			{
-				if (((1 << level) & levelMask) == 0)
-					continue;
-
-				string docname = $"castle{level}.pic";
-
-				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, docname, 0);
-
-				ushort section;
-
-				for (section = 1; section < 8; section++)
-				{
-					if (PalaceSectionLevel(section) != level && onlyBuilt != 0)
-						continue;
-
-					ushort place = PalaceSectionStyle(section);
-
-					if (onlyBuilt == 0)
-					{
-						place = (ushort)(section - 1);
-					}
-
-					ushort horizLoc = (ushort)((place & 1) * 0xa0);
-					ushort vertLoc = (ushort)((place & 2) * 0x32);
-
-					for (ushort partIdx = 0; partIdx < 2; partIdx++)
-					{
-						ushort picture = PalacePictureAddress(section, partIdx);
-						sbyte style = (sbyte)PalaceSectionStyleMarker(section, partIdx);
-						bool middle = onlyBuilt != 0 ? PalaceSectionStyle(section) == 1 : section == 2;
-
-						ushort picHandle = 0;
-						switch (style)
-						{
-							case 0:
-								picHandle = this.owner.VideoCard.ScreenToPicture(1, horizLoc, (ushort)(vertLoc + 1), 0x34, 0x63);
-								break;
-
-							case 1:
-								picHandle = this.owner.VideoCard.ScreenToPicture(1, (ushort)(horizLoc + 0x35), (ushort)(vertLoc + 1), 0x18, 0x63);
-								break;
-
-							case 2:
-								picHandle = this.owner.VideoCard.ScreenToPicture(1, (ushort)(horizLoc + 0x4e), (ushort)(vertLoc + 1), 0x18, 0x63);
-								break;
-
-							case 3:
-								if (middle)
-									picHandle = this.owner.VideoCard.ScreenToPicture(1, 0xa0, 0x65, 0x23, 0x63);
-								else
-									picHandle = this.owner.VideoCard.ScreenToPicture(1, (ushort)(horizLoc + 0x67), (ushort)(vertLoc + 1), 0x1c, 0x63);
-								break;
-
-							case 4:
-								if (middle)
-									picHandle = this.owner.VideoCard.ScreenToPicture(1, 0xc4, 0x65, 0x23, 0x63);
-								else
-									picHandle = this.owner.VideoCard.ScreenToPicture(1, (ushort)(horizLoc + 0x84), (ushort)(vertLoc + 1), 0x1b, 0x63);
-								break;
-						}
-
-						if (style is >= 0 and <= 4)
-						{
-							SetPalacePicture(section, partIdx, picHandle);
-						}
-
-						if (style != -1 && PalaceFirstPicture == 0xffff)
-						{
-							PalaceFirstPicture = PalacePicture(section, partIdx);
-						}
-					}
-
-				}
-			}
-
-			this.processor.Journal.CloseScope("ImportPalaceCastle");
 		}
 	}
 }

@@ -13,17 +13,23 @@ namespace Civilization1Remaster.Game
 
 		// Word fields of a record, after the 12 bytes of the name
 		public const int LandGroup = 0xe;
+
 		/// <summary>Moves per turn</summary>
 		public const int ShiftTally = 0x10;
+
 		/// <summary>Turns a plane can stay in the air</summary>
 		public const int RoundsAway = 0x12;
+
 		public const int AssaultPower = 0x14;
 		public const int GuardPower = 0x16;
 		public const int Price = 0x18;
+
 		/// <summary>How far the unit sees: 1 the tiles next to it, 2 also the tiles 2 tiles far</summary>
 		public const int Sight = 0x1a;
+
 		public const int FerryRoom = 0x1c;
 		public const int TroopGroup = 0x1e;
+
 		/// <summary>The technology that allows the unit</summary>
 		public const int Technology = 0x20;
 

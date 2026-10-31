@@ -90,38 +90,6 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// The first unit of the role with moves left, on the continent of the place and with at least twice the distance in
-		/// moves, gets the place as its goal (status 0x10, no orders)
-		/// </summary>
-		private void SendUnitOfRole(short participantIdx, short horizLoc, short vertLoc, short live)
-		{
-			for (int troopIdx = 0; troopIdx < UnitMemory.TroopTally; troopIdx++)
-			{
-				if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) == 0xff ||
-					this.troops.Pull(participantIdx, troopIdx, UnitMemory.LeftoverSteps) == 0 ||
-					this.troops.KindField(participantIdx, troopIdx, UnitKindTable.TroopGroup) != (ushort)live)
-					continue;
-
-				sbyte troopHoriz = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz);
-				sbyte troopVert = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert);
-
-				if (this.owner.MapOps.ObtainContinentID(horizLoc, vertLoc) != this.owner.MapOps.ObtainContinentID(troopHoriz, troopVert))
-					continue;
-
-				int distance = this.owner.Helpers.ObtainDistance(troopHoriz, horizLoc, troopVert, vertLoc);
-
-				if (this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.LeftoverSteps) < (short)(distance << 1))
-					continue;
-
-				this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHoriz, (byte)horizLoc);
-				this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelVert, (byte)vertLoc);
-				this.troops.Assign(participantIdx, troopIdx, UnitMemory.Status,
-					(byte)((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) | 0x10) & 0xf0));
-				return;
-			}
-		}
-
-		/// <summary>
 		/// Makes room at the place of the list of the player (32 entries a player in the byte arrays at 0xb2be, 0xe2c2, 0xe598
 		/// and 0xe798): the used entries from the place up to 30 move one place on
 		/// </summary>
@@ -143,11 +111,6 @@ namespace Civilization1Remaster.Game
 			}
 
 			this.processor.Journal.CloseScope("FreeStrategicLocation");
-		}
-
-		private void MoveListEntryOn(ushort origin, int entry)
-		{
-			this.processor.EmitGlobalByte((ushort)(origin + entry + 1), this.processor.PullGlobalByte((ushort)(origin + entry)));
 		}
 
 		/// <summary>Clears the 16 tactical sites of the player (none, no strategy)</summary>
@@ -339,6 +302,43 @@ namespace Civilization1Remaster.Game
 			this.processor.Journal.CloseScope("MayAIEnterTile");
 
 			return (ushort)bestHeading;
+		}
+
+		/// <summary>
+		/// The first unit of the role with moves left, on the continent of the place and with at least twice the distance in
+		/// moves, gets the place as its goal (status 0x10, no orders)
+		/// </summary>
+		private void SendUnitOfRole(short participantIdx, short horizLoc, short vertLoc, short live)
+		{
+			for (int troopIdx = 0; troopIdx < UnitMemory.TroopTally; troopIdx++)
+			{
+				if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) == 0xff ||
+					this.troops.Pull(participantIdx, troopIdx, UnitMemory.LeftoverSteps) == 0 ||
+					this.troops.KindField(participantIdx, troopIdx, UnitKindTable.TroopGroup) != (ushort)live)
+					continue;
+
+				sbyte troopHoriz = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz);
+				sbyte troopVert = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert);
+
+				if (this.owner.MapOps.ObtainContinentID(horizLoc, vertLoc) != this.owner.MapOps.ObtainContinentID(troopHoriz, troopVert))
+					continue;
+
+				int distance = this.owner.Helpers.ObtainDistance(troopHoriz, horizLoc, troopVert, vertLoc);
+
+				if (this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.LeftoverSteps) < (short)(distance << 1))
+					continue;
+
+				this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHoriz, (byte)horizLoc);
+				this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelVert, (byte)vertLoc);
+				this.troops.Assign(participantIdx, troopIdx, UnitMemory.Status,
+					(byte)((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) | 0x10) & 0xf0));
+				return;
+			}
+		}
+
+		private void MoveListEntryOn(ushort origin, int entry)
+		{
+			this.processor.EmitGlobalByte((ushort)(origin + entry + 1), this.processor.PullGlobalByte((ushort)(origin + entry)));
 		}
 	}
 }

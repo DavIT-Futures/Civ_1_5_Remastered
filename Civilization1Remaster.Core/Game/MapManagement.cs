@@ -12,10 +12,20 @@ namespace Civilization1Remaster.Game
 	{
 		/// <summary>The names of the cities drawn on the map (up to 0x20, CityLabelCount): their columns on the screen</summary>
 		private const ushort CityLabelHorizAddress = 0x6dac;
+
 		/// <summary>The rows on the screen of the city names</summary>
 		private const ushort CityLabelVertAddress = 0x6e3e;
+
 		/// <summary>The cities of the city names</summary>
 		private const ushort CityLabelTownAddress = 0xdf20;
+
+		// Colors of the hit point squares
+		private const ushort VitalityStripBackdrop = 0;
+
+		private const ushort VitalityStripComplete = 10;
+		private const ushort VitalityStripBlank = 8;
+		private const int VitalityStripCellBreadth = 2;
+		private const int VitalityStripCellAltitude = 1;
 
 		private readonly MapLayers chart;
 		private readonly UnitMemory troops;
@@ -31,17 +41,6 @@ namespace Civilization1Remaster.Game
 		public MapLayers Chart
 		{
 			get { return this.chart; }
-		}
-
-		/// <summary>
-		/// Returns the value also in AX, like the original function: the translated callers read it from there.
-		/// </summary>
-		private ushort ReturnAcc(int amount)
-		{
-			ushort result = (ushort)amount;
-			this.processor.RegAcc.Value16 = result;
-
-			return result;
 		}
 
 		/// <summary>
@@ -286,6 +285,579 @@ namespace Civilization1Remaster.Game
 			this.owner.Startup.DisplayMouseCursor();
 
 			return FinishRenderMapTile(1);
+		}
+
+		/// <summary>
+		/// Draws the unit: on the world map (0xb278 = 1) as a dot of 3 x 3 pixels in the player's colour with a shadow (colour 6
+		/// under settlers, 0 under the others), returning 0xc * troopIdx (left in AX by the address of the unit); else on the map window (16 pixels a tile,
+		/// from 0xd4cc, 0xd75e) when it is in view and is not a land unit sleeping at sea (status bit 1), with the shadow of
+		/// a stack under it.
+		/// </summary>
+		/// <returns>On the map window 1 when drawn, 0 when not (also in AX)</returns>
+		public ushort RenderUnitOnWorldMap(short participantIdx, short troopIdx)
+		{
+			this.processor.Journal.OpenScope($"RenderUnitOnWorldMap({participantIdx}, {troopIdx})");
+
+			sbyte horizLoc = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz);
+			sbyte vertLoc = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert);
+			sbyte kind = this.troops.TroopKind(participantIdx, troopIdx);
+
+			if (WorldMapView == 1)
+			{
+				this.processor.RegAcc.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
+
+				this.owner.Services.FloodBox(ScreenBox, (horizLoc * 4) + 1, (vertLoc * 4) + 1, 3, 3, (ushort)(kind == 0 ? 6 : 0));
+				this.owner.Services.FloodBox(ScreenBox, horizLoc * 4, vertLoc * 4, 3, 3,
+					PlayerColour(participantIdx));
+
+				this.processor.Journal.CloseScope("RenderUnitOnWorldMap");
+
+				return this.processor.RegAcc.Value16;
+			}
+
+			short viewHoriz = (short)((this.owner.Routing.TunePosition(horizLoc - (short)MapViewHoriz) << 4) + 0x50);
+			short viewVert = (short)((((byte)vertLoc - MapViewVert) << 4) + 8);
+			ushort drawn = 0;
+
+			if (viewHoriz >= 0x50 && viewHoriz < 0x140 && viewVert >= 8 && viewVert <= 0xc0 &&
+				(ObtainTerrainType(horizLoc, vertLoc) != MapRules.OceanTerrain ||
+				(this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 1) == 0 ||
+				this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == UnitKindTable.SeaUnits))
+			{
+				this.owner.Startup.ConcealMouseCursor();
+
+				if (this.troops.Following(participantIdx, troopIdx) != -1)
+				{
+					this.owner.Services.RenderPictureToScreen(ScreenBox, viewHoriz + 1, viewVert + 1,
+						SpritePicture(((participantIdx << 5) + kind + 0x40)));
+				}
+
+				RenderUnitSprite(participantIdx, troopIdx, viewHoriz, viewVert);
+
+				this.owner.Startup.DisplayMouseCursor();
+
+				drawn = 1;
+			}
+
+			this.processor.RegAcc.Value16 = drawn;
+			this.processor.Journal.CloseScope("RenderUnitOnWorldMap");
+
+			return drawn;
+		}
+
+		/// <summary>
+		/// Draws the hit points of a unit as a row of flat rectangles at the top of its 16 x 16 map square:
+		/// green for each hit point the unit has, gray for each lost hit point.
+		/// </summary>
+		/// <param name="xPos">Left side of the map square on the screen</param>
+		/// <param name="yPos">Top side of the map square on the screen</param>
+		public void RenderHealthBar(int horizLoc, int vertLoc, int completeStrikeMarks, int strikeMarks)
+		{
+			ushort display = ScreenBox;
+
+			// The unit image covers the map square without its left column and top row,
+			// the bar stays inside the unit image so it is erased together with the unit
+			int breadth = Math.Min(completeStrikeMarks * (VitalityStripCellBreadth + 1) + 1, 15);
+			int remaining = horizLoc + 1 + (15 - breadth) / 2;
+			int head = vertLoc + 1;
+
+			this.owner.Services.FloodBox(display, remaining, head, breadth, VitalityStripCellAltitude + 2, VitalityStripBackdrop);
+
+			for (int idx = 0; idx < completeStrikeMarks; idx++)
+			{
+				this.owner.Services.FloodBox(display, remaining + 1 + idx * (VitalityStripCellBreadth + 1), head + 1,
+					VitalityStripCellBreadth, VitalityStripCellAltitude, idx < strikeMarks ? VitalityStripComplete : VitalityStripBlank);
+			}
+		}
+
+		/// <summary>
+		/// Draws the unit's picture at the position with the marks of its status: the fortification (status bit 8), the
+		/// mark 0x2ba0 (bit 4), the "go to" mark 0x2ba2 of the human player's units, a letter in a box for
+		/// the orders of a unit that is not a plane (bits 0xc2: "R", "I"/"?" for bit 0x40, "M"/"F" for bit 0x80, "P" for bit 2
+		/// with 0x80), faded colours when sleeping (bit 1), and its hit points. AX is left 0x600 * participantIdx (from the address
+		/// of the unit), like in the original.
+		/// </summary>
+		public void RenderUnitSprite(short participantIdx, short troopIdx, int horizLoc, int vertLoc)
+		{
+			this.processor.Journal.OpenScope($"RenderUnitSprite({participantIdx}, {troopIdx}, {horizLoc}, {vertLoc})");
+
+			byte kind = this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind);
+			ushort markHue = (ushort)(participantIdx == 1 ? 9 : 15);
+
+			this.owner.Services.RenderPictureToScreen(ScreenBox, horizLoc, vertLoc,
+				SpritePicture((kind + (participantIdx << 5) + 0x40)));
+
+			if ((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 8) != 0)
+			{
+				this.owner.Services.RenderPictureToScreen(ScreenBox, horizLoc, vertLoc, SpritePicture(0x1d));
+			}
+			else if ((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 4) != 0)
+			{
+				this.owner.TextPainter.RenderTextWithShadow(GameTexts.TextF, horizLoc + 4, vertLoc + 7, markHue);
+			}
+
+			if (participantIdx == this.owner.World.PersonParticipantIdx && this.troops.Pull(participantIdx, troopIdx, UnitMemory.TravelHoriz) != 0xff)
+			{
+				this.owner.TextPainter.RenderTextWithShadow(GameTexts.TextG, horizLoc + 4, vertLoc + 7, markHue);
+			}
+
+			if ((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 0xc2) != 0 &&
+				UnitKindWord((sbyte)kind, UnitKindTable.LandGroup) != UnitKindTable.AirUnits)
+			{
+				byte status = this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status);
+				byte letter = 0x52;
+
+				if ((status & 0x40) != 0)
+				{
+					letter = (byte)(kind == 0 ? 0x49 : 0x3f);
+				}
+
+				if ((status & 0x80) != 0)
+				{
+					letter = (byte)((status & 0x40) != 0 ? 0x46 : 0x4d);
+
+					if ((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 2) != 0)
+					{
+						letter = 0x50;
+					}
+				}
+
+				this.owner.Words.Set(" ");
+				this.processor.EmitGlobalByte(TextBuffer.Address, letter);
+
+				this.owner.TextPainter.RenderTextWithShadow(this.owner.Words.ToString(), horizLoc + 4, vertLoc + 7, markHue);
+
+				this.owner.Dialogs.RenderBox(horizLoc - 1, vertLoc - 1, 15, 15, Hues.LightGray);
+			}
+
+			if ((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 1) != 0)
+			{
+				this.owner.VideoCard.SubstituteHue(ScreenBox, horizLoc, vertLoc, 16, 16, Hues.Magenta, Hues.LightGray);
+
+				this.owner.VideoCard.SubstituteHue(ScreenBox, horizLoc, vertLoc, 16, 16, Hues.DarkGray, Hues.LightGray);
+			}
+
+			{
+				// Every unit shows its hit points: green squares, and gray squares for lost hit points until it heals
+				int troopKind = this.Troops.Pull(participantIdx, troopIdx, UnitMemory.Kind);
+				int missingStrikeMarks = this.owner.World.Vitals.ObtainLostHitPoints(participantIdx, troopIdx, troopKind);
+
+				if (troopKind != 0xff)
+				{
+					bool seasoned = (this.Troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & (int)UnitStatusEnum.Veteran) != 0;
+					int completeStrikeMarks = this.owner.World.Vitals.ObtainFullHitPoints(participantIdx, troopIdx, troopKind, seasoned);
+
+					RenderHealthBar(horizLoc - 1, vertLoc - 1, completeStrikeMarks, completeStrikeMarks - missingStrikeMarks);
+				}
+			}
+
+			this.processor.Journal.CloseScope("RenderUnitSprite");
+		}
+
+		/// <summary>
+		/// Draws the tile again and, unless units are hidden (0xdcfc), the unit on it: when the human sees it (all units are
+		/// shown with 0xd806, the human's own, or the unit's bit of the human), and the tile has no city
+		/// </summary>
+		public void RepaintMapTile(int horizLoc, int vertLoc)
+		{
+			this.processor.Journal.OpenScope($"RepaintMapTile({horizLoc}, {vertLoc})");
+
+			RenderMapTile(horizLoc, vertLoc);
+
+			if (UnitsHidden == 0)
+			{
+				ushort troopIdx = ObtainUnitAtTile(horizLoc, vertLoc);
+
+				if (troopIdx != 0xffff)
+				{
+					short ownerIdx = (short)UnitAtTilePlayer;
+					short personIdx = this.owner.World.PersonParticipantIdx;
+
+					bool seen = MapRevealed != 0 || ownerIdx == personIdx ||
+						(this.troops.Pull(ownerIdx, troopIdx, UnitMemory.ShownToParticipants) & (1 << personIdx)) != 0;
+
+					if (seen && (ObtainTileImprovements(horizLoc, vertLoc) & 0x1) == 0)
+					{
+						RepaintUnitTile((short)UnitAtTilePlayer, (short)troopIdx);
+					}
+				}
+			}
+
+			this.processor.Journal.CloseScope("RepaintMapTile");
+		}
+
+		/// <summary>
+		/// Draws the unit shown on the tile of the unit: on terrain 10, a non-ship unit in a stack is drawn as the first ship
+		/// of its stack (following the ring from the unit; itself when there is none); otherwise the best defender of the stack
+		/// </summary>
+		public void RepaintUnitTile(short participantIdx, short troopIdx)
+		{
+			this.processor.Journal.OpenScope($"RepaintUnitTile({participantIdx}, {troopIdx})");
+
+			ushort terrain = ObtainTerrainType(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
+				this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert));
+
+			if (terrain == 0xa && this.troops.Following(participantIdx, troopIdx) != -1 &&
+				this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) != UnitKindTable.SeaUnits)
+			{
+				short current = troopIdx;
+
+				do
+				{
+					current = this.troops.Following(participantIdx, current);
+
+					if (this.troops.KindField(participantIdx, current, UnitKindTable.LandGroup) == UnitKindTable.SeaUnits)
+					{
+						RenderUnitOnWorldMap(participantIdx, current);
+						current = -1;
+					}
+				}
+				while (current != -1 && current != troopIdx);
+
+				if (current == troopIdx)
+				{
+					RenderUnitOnWorldMap(participantIdx, troopIdx);
+				}
+			}
+			else
+			{
+				RenderUnitOnWorldMap(participantIdx, (short)this.owner.UnitOps.LocateBestGuardianInStack(participantIdx, troopIdx));
+			}
+
+			this.processor.Journal.CloseScope("RepaintUnitTile");
+		}
+
+		/// <summary>
+		/// Is the position on the map
+		/// </summary>
+		/// <returns>1 on the map, 0 outside</returns>
+		public ushort VerifyMapLimits(int horizLoc, int vertLoc)
+		{
+			this.processor.Journal.OpenScope($"VerifyMapLimits({horizLoc}, {vertLoc})");
+
+			ushort onMap = ReturnAcc(MapRules.IsOnMap(horizLoc, vertLoc) ? 1 : 0);
+
+			this.processor.Journal.CloseScope("VerifyMapLimits");
+
+			return onMap;
+		}
+
+		/// <summary>
+		/// Terrain type of the tile (MapRules.OceanTerrain is the ocean)
+		/// </summary>
+		public ushort ObtainTerrainType(int horizLoc, int vertLoc)
+		{
+			this.processor.Journal.OpenScope($"ObtainTerrainType({horizLoc}, {vertLoc})");
+
+			ushort terrain = ReturnAcc(this.chart.Terrain(horizLoc, vertLoc));
+
+			this.processor.Journal.CloseScope("ObtainTerrainType");
+
+			return terrain;
+		}
+
+		/// <summary>
+		/// The player of the tile owner layer (bits 0 - 2), also when no units stand there
+		/// </summary>
+		public ushort ObtainTileOwnerBits(int horizLoc, int vertLoc)
+		{
+			return ReturnAcc(this.chart.OwnerBits(horizLoc, vertLoc) & 0x7);
+		}
+
+		/// <summary>
+		/// Sets the player of the tile owner layer (of a city), keeps the units bit
+		/// </summary>
+		public void MapAssignCityOwner(short participantIdx, int horizLoc, int vertLoc)
+		{
+			int bits = ReturnAcc(this.chart.OwnerBits(horizLoc, vertLoc));
+
+			this.chart.AssignOwnerBits(horizLoc, vertLoc, (bits & MapLayers.UnitsPresent) + participantIdx);
+		}
+
+		/// <summary>
+		/// Puts the unit on the tile: into the stack of the units standing there, and marks the tile as having units of the player
+		/// </summary>
+		public void SituateUnitOnTile(short participantIdx, short troopIdx, int horizLoc, int vertLoc)
+		{
+			this.processor.Journal.OpenScope($"SituateUnitOnTile({participantIdx}, {troopIdx}, {horizLoc}, {vertLoc})");
+
+			ushort stackTroopIdx = ObtainUnitAtTile(horizLoc, vertLoc);
+
+			if (stackTroopIdx != 0xffff)
+			{
+				this.owner.Combat.AttachUnitToStack(participantIdx, troopIdx, stackTroopIdx);
+			}
+
+			AssignChartDot(horizLoc + 160, vertLoc, (ushort)(participantIdx + MapLayers.UnitsPresent));
+
+			this.processor.Journal.CloseScope("SituateUnitOnTile");
+		}
+
+		/// <summary>
+		/// Takes the unit off the tile: out of its stack, or when it stood alone, the tile has no units any more
+		/// </summary>
+		public void DiscardUnitFromTile(short participantIdx, short troopIdx, int horizLoc, int vertLoc)
+		{
+			this.processor.Journal.OpenScope($"DiscardUnitFromTile({participantIdx}, {troopIdx}, {horizLoc}, {vertLoc})");
+
+			if (this.troops.Following(participantIdx, troopIdx) != -1)
+			{
+				this.owner.Combat.DiscardUnitFromStack(participantIdx, troopIdx);
+			}
+			else
+			{
+				AssignChartDot(horizLoc + 160, vertLoc, (byte)participantIdx);
+			}
+
+			this.processor.Journal.CloseScope("DiscardUnitFromTile");
+		}
+
+		/// <summary>
+		/// The first unit standing on the tile. Sets the player of the unit into 0xd7f0 and 0xd20a.
+		/// When the tile owner layer says that units are there but none is found, the layer is cleared.
+		/// </summary>
+		/// <returns>Unit index, or 0xffff when no unit stands on the tile</returns>
+		public ushort ObtainUnitAtTile(int horizLoc, int vertLoc)
+		{
+			this.processor.Journal.OpenScope($"ObtainUnitAtTile({horizLoc}, {vertLoc})");
+
+			ushort found = 0xffff;
+			ushort participantIdx = ObtainTileOwner(horizLoc, vertLoc);
+
+			if (participantIdx != 0xffff)
+			{
+				for (int troopIdx = 0; troopIdx < UnitMemory.TroopTally; troopIdx++)
+				{
+					if (this.troops.Exists(participantIdx, troopIdx) && this.troops.StandsAt(participantIdx, troopIdx, horizLoc, vertLoc))
+					{
+						found = (ushort)troopIdx;
+						break;
+					}
+				}
+
+				if (found != 0xffff)
+				{
+					FoundPlayer = participantIdx;
+					UnitAtTilePlayer = participantIdx;
+				}
+				else
+				{
+					this.owner.Services.AssignDot(2, horizLoc + 160, vertLoc, 0);
+				}
+			}
+
+			ReturnAcc(found);
+
+			this.processor.Journal.CloseScope("ObtainUnitAtTile");
+
+			return found;
+		}
+
+		/// <summary>
+		/// The player whose units stand on the tile
+		/// </summary>
+		/// <returns>Player, or 0xffff when no units stand on the tile</returns>
+		public ushort ObtainTileOwner(int horizLoc, int vertLoc)
+		{
+			int bits = this.chart.OwnerBits(horizLoc, vertLoc);
+
+			return ReturnAcc((bits & MapLayers.UnitsPresent) != 0 ? bits & 0x7 : 0xffff);
+		}
+
+		/// <summary>
+		/// Marks that units stand on the tile, keeps the player
+		/// </summary>
+		public void TagTileOwned(int horizLoc, int vertLoc)
+		{
+			int bits = ReturnAcc(this.chart.OwnerBits(horizLoc, vertLoc));
+
+			this.chart.AssignOwnerBits(horizLoc, vertLoc, (bits & 0x7) + MapLayers.UnitsPresent);
+		}
+
+		/// <summary>
+		/// The road bit (8) of the tile improvements
+		/// </summary>
+		public ushort ContainsRoad(int horizLoc, int vertLoc)
+		{
+			return ReturnAcc(this.chart.Improvements(horizLoc, vertLoc) & 0x8);
+		}
+
+		/// <summary>
+		/// Improvements of the tile (bit 0 city, 1 irrigation, 2 mine, 3 road, ...)
+		/// </summary>
+		public ushort ObtainTileImprovements(int horizLoc, int vertLoc)
+		{
+			return ReturnAcc(this.chart.Improvements(horizLoc, vertLoc));
+		}
+
+		/// <summary>
+		/// Improvements of the tile as the human player saw them last time
+		/// </summary>
+		public ushort ObtainKnownTileImprovements(int horizLoc, int vertLoc)
+		{
+			this.processor.Journal.OpenScope($"ObtainKnownTileImprovements({horizLoc}, {vertLoc})");
+
+			ushort known = ReturnAcc(this.chart.KnownImprovements(horizLoc, vertLoc));
+
+			this.processor.Journal.CloseScope("ObtainKnownTileImprovements");
+
+			return known;
+		}
+
+		/// <summary>
+		/// The human player sees the improvements of the tile as they are now
+		/// </summary>
+		public void KeepKnownTileImprovements(int horizLoc, int vertLoc)
+		{
+			this.chart.RevealImprovements(horizLoc, vertLoc);
+
+			ReturnAcc(this.chart.Improvements(horizLoc, vertLoc) >> 4);
+		}
+
+		/// <summary>
+		/// Adds improvements to the tile: 0 removes all, a value from 0x10 sets the high bits, a smaller one the low bits.
+		/// In the turn of the human player the human sees the change at once.
+		/// </summary>
+		public void AssignTileImprovements(ushort improvements, int horizLoc, int vertLoc)
+		{
+			this.processor.Journal.OpenScope($"AssignTileImprovements({improvements}, {horizLoc}, {vertLoc})");
+
+			if (improvements == 0)
+			{
+				AssignChartDot(horizLoc, vertLoc + 100, 0);
+				AssignChartDot(horizLoc, vertLoc + 150, 0);
+			}
+			else if (improvements >= 0x10)
+			{
+				int high = ReturnAcc(this.chart.HighImprovements(horizLoc, vertLoc));
+				AssignChartDot(horizLoc, vertLoc + 150, (ushort)((improvements >> 4) | high));
+			}
+			else
+			{
+				int low = ReturnAcc(this.chart.LowImprovements(horizLoc, vertLoc));
+				AssignChartDot(horizLoc, vertLoc + 100, (ushort)(low | improvements));
+			}
+
+			if ((short)TurnPlayer == this.owner.World.PersonParticipantIdx)
+			{
+				KeepKnownTileImprovements(horizLoc, vertLoc);
+			}
+
+			this.processor.Journal.CloseScope("AssignTileImprovements");
+		}
+
+		/// <summary>
+		/// Removes the improvement bits from the tile
+		/// </summary>
+		public void DiscardTileImprovements(ushort improvements, int horizLoc, int vertLoc)
+		{
+			this.chart.ClearImprovements(improvements, horizLoc, vertLoc);
+		}
+
+		/// <summary>
+		/// The city on the tile. Sets the player of the tile owner layer into 0xd7f0 and 0xd20a.
+		/// When there is no city, an error message is shown.
+		/// </summary>
+		/// <returns>City index, or 0xffff</returns>
+		public ushort LocateCityAtTile(int horizLoc, int vertLoc)
+		{
+			this.processor.Journal.OpenScope($"LocateCityAtTile({horizLoc}, {vertLoc})");
+
+			ushort participantIdx = ObtainTileOwnerBits(horizLoc, vertLoc);
+			ushort found = 0xffff;
+
+			for (int townIdx = 0; townIdx < this.owner.World.Towns.Length; townIdx++)
+			{
+				City town = this.owner.World.Towns[townIdx];
+
+				if (town.ConditionMarker != 0xff && town.Place.X == horizLoc && town.Place.Y == vertLoc)
+				{
+					FoundPlayer = participantIdx;
+					UnitAtTilePlayer = participantIdx;
+					found = (ushort)townIdx;
+					break;
+				}
+			}
+
+			if (found == 0xffff)
+			{
+				this.owner.TurnHooks.DisplayDialog(GameTexts.TextCityAtError, 100, 80);
+			}
+
+			ReturnAcc(found);
+
+			this.processor.Journal.CloseScope("LocateCityAtTile");
+
+			return found;
+		}
+
+		/// <summary>
+		/// Does the tile have a special resource (MapRules.HasSpecialResource with the world seed)
+		/// </summary>
+		public ushort ContainsSpecialResource(int horizLoc, int vertLoc)
+		{
+			this.processor.Journal.OpenScope($"ContainsSpecialResource({horizLoc}, {vertLoc})");
+
+			ushort special = ReturnAcc(MapRules.HasSpecialResource(horizLoc, vertLoc, this.owner.World.ChanceRoot) ? 1 : 0);
+
+			this.processor.Journal.CloseScope("ContainsSpecialResource");
+
+			return special;
+		}
+
+		/// <summary>
+		/// Is there a hut (tribal village) on the tile: not on the ocean, on a tile nobody has visited and without a city
+		/// </summary>
+		/// <param name="terrain">Terrain type of the tile</param>
+		public ushort ContainsHut(ushort terrain, int horizLoc, int vertLoc)
+		{
+			this.processor.Journal.OpenScope($"ContainsHut({terrain}, {horizLoc}, {vertLoc})");
+
+			bool hut = terrain != MapRules.OceanTerrain &&
+				(this.owner.World.ChartSight[horizLoc, vertLoc] & 1) == 0 &&
+				MapRules.IsHutPlace(horizLoc, vertLoc, this.owner.World.ChanceRoot) &&
+				(ObtainTileImprovements(horizLoc, vertLoc) & 1) == 0;
+
+			ushort result = ReturnAcc(hut ? 1 : 0);
+
+			this.processor.Journal.CloseScope("ContainsHut");
+
+			return result;
+		}
+
+		/// <summary>
+		/// Number of the continent or the sea of the tile
+		/// </summary>
+		public ushort ObtainContinentID(int horizLoc, int vertLoc)
+		{
+			return ReturnAcc(this.chart.Continent(horizLoc, vertLoc));
+		}
+
+		/// <summary>
+		/// Size of the continent (land) or the sea (ocean) of the tile, from the word arrays at 0xdcfe and 0xdd7e
+		/// </summary>
+		public ushort ObtainLandMassSize(int horizLoc, int vertLoc)
+		{
+			this.processor.Journal.OpenScope($"ObtainLandMassSize({horizLoc}, {vertLoc})");
+
+			ushort sizes = ObtainTerrainType(horizLoc, vertLoc) != MapRules.OceanTerrain ? (ushort)0xdcfe : (ushort)0xdd7e;
+			int continent = ObtainContinentID(horizLoc, vertLoc);
+			ushort size = ReturnAcc(this.processor.PullGlobalWord((ushort)(sizes + (continent << 1))));
+
+			this.processor.Journal.CloseScope("ObtainLandMassSize");
+
+			return size;
+		}
+
+		/// <summary>
+		/// Returns the value also in AX, like the original function: the translated callers read it from there.
+		/// </summary>
+		private ushort ReturnAcc(int amount)
+		{
+			ushort result = (ushort)amount;
+			this.processor.RegAcc.Value16 = result;
+
+			return result;
 		}
 
 		private ushort FinishRenderMapTile(ushort result)
@@ -675,580 +1247,11 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// Draws the unit: on the world map (0xb278 = 1) as a dot of 3 x 3 pixels in the player's colour with a shadow (colour 6
-		/// under settlers, 0 under the others), returning 0xc * troopIdx (left in AX by the address of the unit); else on the map window (16 pixels a tile,
-		/// from 0xd4cc, 0xd75e) when it is in view and is not a land unit sleeping at sea (status bit 1), with the shadow of
-		/// a stack under it.
-		/// </summary>
-		/// <returns>On the map window 1 when drawn, 0 when not (also in AX)</returns>
-		public ushort RenderUnitOnWorldMap(short participantIdx, short troopIdx)
-		{
-			this.processor.Journal.OpenScope($"RenderUnitOnWorldMap({participantIdx}, {troopIdx})");
-
-			sbyte horizLoc = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz);
-			sbyte vertLoc = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert);
-			sbyte kind = this.troops.TroopKind(participantIdx, troopIdx);
-
-			if (WorldMapView == 1)
-			{
-				this.processor.RegAcc.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
-
-				this.owner.Services.FloodBox(ScreenBox, (horizLoc * 4) + 1, (vertLoc * 4) + 1, 3, 3, (ushort)(kind == 0 ? 6 : 0));
-				this.owner.Services.FloodBox(ScreenBox, horizLoc * 4, vertLoc * 4, 3, 3,
-					PlayerColour(participantIdx));
-
-				this.processor.Journal.CloseScope("RenderUnitOnWorldMap");
-
-				return this.processor.RegAcc.Value16;
-			}
-
-			short viewHoriz = (short)((this.owner.Routing.TunePosition(horizLoc - (short)MapViewHoriz) << 4) + 0x50);
-			short viewVert = (short)((((byte)vertLoc - MapViewVert) << 4) + 8);
-			ushort drawn = 0;
-
-			if (viewHoriz >= 0x50 && viewHoriz < 0x140 && viewVert >= 8 && viewVert <= 0xc0 &&
-				(ObtainTerrainType(horizLoc, vertLoc) != MapRules.OceanTerrain ||
-				(this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 1) == 0 ||
-				this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == UnitKindTable.SeaUnits))
-			{
-				this.owner.Startup.ConcealMouseCursor();
-
-				if (this.troops.Following(participantIdx, troopIdx) != -1)
-				{
-					this.owner.Services.RenderPictureToScreen(ScreenBox, viewHoriz + 1, viewVert + 1,
-						SpritePicture(((participantIdx << 5) + kind + 0x40)));
-				}
-
-				RenderUnitSprite(participantIdx, troopIdx, viewHoriz, viewVert);
-
-				this.owner.Startup.DisplayMouseCursor();
-
-				drawn = 1;
-			}
-
-			this.processor.RegAcc.Value16 = drawn;
-			this.processor.Journal.CloseScope("RenderUnitOnWorldMap");
-
-			return drawn;
-		}
-
-		// Colors of the hit point squares
-		private const ushort VitalityStripBackdrop = 0;
-		private const ushort VitalityStripComplete = 10;
-		private const ushort VitalityStripBlank = 8;
-		private const int VitalityStripCellBreadth = 2;
-		private const int VitalityStripCellAltitude = 1;
-
-		/// <summary>
-		/// Draws the hit points of a unit as a row of flat rectangles at the top of its 16 x 16 map square:
-		/// green for each hit point the unit has, gray for each lost hit point.
-		/// </summary>
-		/// <param name="xPos">Left side of the map square on the screen</param>
-		/// <param name="yPos">Top side of the map square on the screen</param>
-		public void RenderHealthBar(int horizLoc, int vertLoc, int completeStrikeMarks, int strikeMarks)
-		{
-			ushort display = ScreenBox;
-
-			// The unit image covers the map square without its left column and top row,
-			// the bar stays inside the unit image so it is erased together with the unit
-			int breadth = Math.Min(completeStrikeMarks * (VitalityStripCellBreadth + 1) + 1, 15);
-			int remaining = horizLoc + 1 + (15 - breadth) / 2;
-			int head = vertLoc + 1;
-
-			this.owner.Services.FloodBox(display, remaining, head, breadth, VitalityStripCellAltitude + 2, VitalityStripBackdrop);
-
-			for (int idx = 0; idx < completeStrikeMarks; idx++)
-			{
-				this.owner.Services.FloodBox(display, remaining + 1 + idx * (VitalityStripCellBreadth + 1), head + 1,
-					VitalityStripCellBreadth, VitalityStripCellAltitude, idx < strikeMarks ? VitalityStripComplete : VitalityStripBlank);
-			}
-		}
-
-		/// <summary>
-		/// Draws the unit's picture at the position with the marks of its status: the fortification (status bit 8), the
-		/// mark 0x2ba0 (bit 4), the "go to" mark 0x2ba2 of the human player's units, a letter in a box for
-		/// the orders of a unit that is not a plane (bits 0xc2: "R", "I"/"?" for bit 0x40, "M"/"F" for bit 0x80, "P" for bit 2
-		/// with 0x80), faded colours when sleeping (bit 1), and its hit points. AX is left 0x600 * participantIdx (from the address
-		/// of the unit), like in the original.
-		/// </summary>
-		public void RenderUnitSprite(short participantIdx, short troopIdx, int horizLoc, int vertLoc)
-		{
-			this.processor.Journal.OpenScope($"RenderUnitSprite({participantIdx}, {troopIdx}, {horizLoc}, {vertLoc})");
-
-			byte kind = this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind);
-			ushort markHue = (ushort)(participantIdx == 1 ? 9 : 15);
-
-			this.owner.Services.RenderPictureToScreen(ScreenBox, horizLoc, vertLoc,
-				SpritePicture((kind + (participantIdx << 5) + 0x40)));
-
-			if ((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 8) != 0)
-			{
-				this.owner.Services.RenderPictureToScreen(ScreenBox, horizLoc, vertLoc, SpritePicture(0x1d));
-			}
-			else if ((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 4) != 0)
-			{
-				this.owner.TextPainter.RenderTextWithShadow(GameTexts.TextF, horizLoc + 4, vertLoc + 7, markHue);
-			}
-
-			if (participantIdx == this.owner.World.PersonParticipantIdx && this.troops.Pull(participantIdx, troopIdx, UnitMemory.TravelHoriz) != 0xff)
-			{
-				this.owner.TextPainter.RenderTextWithShadow(GameTexts.TextG, horizLoc + 4, vertLoc + 7, markHue);
-			}
-
-			if ((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 0xc2) != 0 &&
-				UnitKindWord((sbyte)kind, UnitKindTable.LandGroup) != UnitKindTable.AirUnits)
-			{
-				byte status = this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status);
-				byte letter = 0x52;
-
-				if ((status & 0x40) != 0)
-				{
-					letter = (byte)(kind == 0 ? 0x49 : 0x3f);
-				}
-
-				if ((status & 0x80) != 0)
-				{
-					letter = (byte)((status & 0x40) != 0 ? 0x46 : 0x4d);
-
-					if ((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 2) != 0)
-					{
-						letter = 0x50;
-					}
-				}
-
-				this.owner.Words.Set(" ");
-				this.processor.EmitGlobalByte(TextBuffer.Address, letter);
-
-				this.owner.TextPainter.RenderTextWithShadow(this.owner.Words.ToString(), horizLoc + 4, vertLoc + 7, markHue);
-
-				this.owner.Dialogs.RenderBox(horizLoc - 1, vertLoc - 1, 15, 15, Hues.LightGray);
-			}
-
-			if ((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 1) != 0)
-			{
-				this.owner.VideoCard.SubstituteHue(ScreenBox, horizLoc, vertLoc, 16, 16, Hues.Magenta, Hues.LightGray);
-
-				this.owner.VideoCard.SubstituteHue(ScreenBox, horizLoc, vertLoc, 16, 16, Hues.DarkGray, Hues.LightGray);
-			}
-
-			{
-				// Every unit shows its hit points: green squares, and gray squares for lost hit points until it heals
-				int troopKind = this.Troops.Pull(participantIdx, troopIdx, UnitMemory.Kind);
-				int missingStrikeMarks = this.owner.World.Vitals.ObtainLostHitPoints(participantIdx, troopIdx, troopKind);
-
-				if (troopKind != 0xff)
-				{
-					bool seasoned = (this.Troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & (int)UnitStatusEnum.Veteran) != 0;
-					int completeStrikeMarks = this.owner.World.Vitals.ObtainFullHitPoints(participantIdx, troopIdx, troopKind, seasoned);
-
-					RenderHealthBar(horizLoc - 1, vertLoc - 1, completeStrikeMarks, completeStrikeMarks - missingStrikeMarks);
-				}
-			}
-
-			this.processor.Journal.CloseScope("RenderUnitSprite");
-		}
-
-		/// <summary>
-		/// Draws the tile again and, unless units are hidden (0xdcfc), the unit on it: when the human sees it (all units are
-		/// shown with 0xd806, the human's own, or the unit's bit of the human), and the tile has no city
-		/// </summary>
-		public void RepaintMapTile(int horizLoc, int vertLoc)
-		{
-			this.processor.Journal.OpenScope($"RepaintMapTile({horizLoc}, {vertLoc})");
-
-			RenderMapTile(horizLoc, vertLoc);
-
-			if (UnitsHidden == 0)
-			{
-				ushort troopIdx = ObtainUnitAtTile(horizLoc, vertLoc);
-
-				if (troopIdx != 0xffff)
-				{
-					short ownerIdx = (short)UnitAtTilePlayer;
-					short personIdx = this.owner.World.PersonParticipantIdx;
-
-					bool seen = MapRevealed != 0 || ownerIdx == personIdx ||
-						(this.troops.Pull(ownerIdx, troopIdx, UnitMemory.ShownToParticipants) & (1 << personIdx)) != 0;
-
-					if (seen && (ObtainTileImprovements(horizLoc, vertLoc) & 0x1) == 0)
-					{
-						RepaintUnitTile((short)UnitAtTilePlayer, (short)troopIdx);
-					}
-				}
-			}
-
-			this.processor.Journal.CloseScope("RepaintMapTile");
-		}
-
-		/// <summary>
-		/// Draws the unit shown on the tile of the unit: on terrain 10, a non-ship unit in a stack is drawn as the first ship
-		/// of its stack (following the ring from the unit; itself when there is none); otherwise the best defender of the stack
-		/// </summary>
-		public void RepaintUnitTile(short participantIdx, short troopIdx)
-		{
-			this.processor.Journal.OpenScope($"RepaintUnitTile({participantIdx}, {troopIdx})");
-
-			ushort terrain = ObtainTerrainType(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
-				this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert));
-
-			if (terrain == 0xa && this.troops.Following(participantIdx, troopIdx) != -1 &&
-				this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) != UnitKindTable.SeaUnits)
-			{
-				short current = troopIdx;
-
-				do
-				{
-					current = this.troops.Following(participantIdx, current);
-
-					if (this.troops.KindField(participantIdx, current, UnitKindTable.LandGroup) == UnitKindTable.SeaUnits)
-					{
-						RenderUnitOnWorldMap(participantIdx, current);
-						current = -1;
-					}
-				}
-				while (current != -1 && current != troopIdx);
-
-				if (current == troopIdx)
-				{
-					RenderUnitOnWorldMap(participantIdx, troopIdx);
-				}
-			}
-			else
-			{
-				RenderUnitOnWorldMap(participantIdx, (short)this.owner.UnitOps.LocateBestGuardianInStack(participantIdx, troopIdx));
-			}
-
-			this.processor.Journal.CloseScope("RepaintUnitTile");
-		}
-
-		/// <summary>
-		/// Is the position on the map
-		/// </summary>
-		/// <returns>1 on the map, 0 outside</returns>
-		public ushort VerifyMapLimits(int horizLoc, int vertLoc)
-		{
-			this.processor.Journal.OpenScope($"VerifyMapLimits({horizLoc}, {vertLoc})");
-
-			ushort onMap = ReturnAcc(MapRules.IsOnMap(horizLoc, vertLoc) ? 1 : 0);
-
-			this.processor.Journal.CloseScope("VerifyMapLimits");
-
-			return onMap;
-		}
-
-		/// <summary>
-		/// Terrain type of the tile (MapRules.OceanTerrain is the ocean)
-		/// </summary>
-		public ushort ObtainTerrainType(int horizLoc, int vertLoc)
-		{
-			this.processor.Journal.OpenScope($"ObtainTerrainType({horizLoc}, {vertLoc})");
-
-			ushort terrain = ReturnAcc(this.chart.Terrain(horizLoc, vertLoc));
-
-			this.processor.Journal.CloseScope("ObtainTerrainType");
-
-			return terrain;
-		}
-
-		/// <summary>
-		/// The player of the tile owner layer (bits 0 - 2), also when no units stand there
-		/// </summary>
-		public ushort ObtainTileOwnerBits(int horizLoc, int vertLoc)
-		{
-			return ReturnAcc(this.chart.OwnerBits(horizLoc, vertLoc) & 0x7);
-		}
-
-		/// <summary>
-		/// Sets the player of the tile owner layer (of a city), keeps the units bit
-		/// </summary>
-		public void MapAssignCityOwner(short participantIdx, int horizLoc, int vertLoc)
-		{
-			int bits = ReturnAcc(this.chart.OwnerBits(horizLoc, vertLoc));
-
-			this.chart.AssignOwnerBits(horizLoc, vertLoc, (bits & MapLayers.UnitsPresent) + participantIdx);
-		}
-
-		/// <summary>
-		/// Puts the unit on the tile: into the stack of the units standing there, and marks the tile as having units of the player
-		/// </summary>
-		public void SituateUnitOnTile(short participantIdx, short troopIdx, int horizLoc, int vertLoc)
-		{
-			this.processor.Journal.OpenScope($"SituateUnitOnTile({participantIdx}, {troopIdx}, {horizLoc}, {vertLoc})");
-
-			ushort stackTroopIdx = ObtainUnitAtTile(horizLoc, vertLoc);
-
-			if (stackTroopIdx != 0xffff)
-			{
-				this.owner.Combat.AttachUnitToStack(participantIdx, troopIdx, stackTroopIdx);
-			}
-
-			AssignChartDot(horizLoc + 160, vertLoc, (ushort)(participantIdx + MapLayers.UnitsPresent));
-
-			this.processor.Journal.CloseScope("SituateUnitOnTile");
-		}
-
-		/// <summary>
 		/// Writes a value of a map layer through SystemServices.AssignDot (bounds of the current screen), as the original
 		/// </summary>
 		private void AssignChartDot(int horizLoc, int vertLoc, ushort style)
 		{
 			this.owner.Services.AssignDot(2, horizLoc, vertLoc, style);
-		}
-
-		/// <summary>
-		/// Takes the unit off the tile: out of its stack, or when it stood alone, the tile has no units any more
-		/// </summary>
-		public void DiscardUnitFromTile(short participantIdx, short troopIdx, int horizLoc, int vertLoc)
-		{
-			this.processor.Journal.OpenScope($"DiscardUnitFromTile({participantIdx}, {troopIdx}, {horizLoc}, {vertLoc})");
-
-			if (this.troops.Following(participantIdx, troopIdx) != -1)
-			{
-				this.owner.Combat.DiscardUnitFromStack(participantIdx, troopIdx);
-			}
-			else
-			{
-				AssignChartDot(horizLoc + 160, vertLoc, (byte)participantIdx);
-			}
-
-			this.processor.Journal.CloseScope("DiscardUnitFromTile");
-		}
-
-		/// <summary>
-		/// The first unit standing on the tile. Sets the player of the unit into 0xd7f0 and 0xd20a.
-		/// When the tile owner layer says that units are there but none is found, the layer is cleared.
-		/// </summary>
-		/// <returns>Unit index, or 0xffff when no unit stands on the tile</returns>
-		public ushort ObtainUnitAtTile(int horizLoc, int vertLoc)
-		{
-			this.processor.Journal.OpenScope($"ObtainUnitAtTile({horizLoc}, {vertLoc})");
-
-			ushort found = 0xffff;
-			ushort participantIdx = ObtainTileOwner(horizLoc, vertLoc);
-
-			if (participantIdx != 0xffff)
-			{
-				for (int troopIdx = 0; troopIdx < UnitMemory.TroopTally; troopIdx++)
-				{
-					if (this.troops.Exists(participantIdx, troopIdx) && this.troops.StandsAt(participantIdx, troopIdx, horizLoc, vertLoc))
-					{
-						found = (ushort)troopIdx;
-						break;
-					}
-				}
-
-				if (found != 0xffff)
-				{
-					FoundPlayer = participantIdx;
-					UnitAtTilePlayer = participantIdx;
-				}
-				else
-				{
-					this.owner.Services.AssignDot(2, horizLoc + 160, vertLoc, 0);
-				}
-			}
-
-			ReturnAcc(found);
-
-			this.processor.Journal.CloseScope("ObtainUnitAtTile");
-
-			return found;
-		}
-
-		/// <summary>
-		/// The player whose units stand on the tile
-		/// </summary>
-		/// <returns>Player, or 0xffff when no units stand on the tile</returns>
-		public ushort ObtainTileOwner(int horizLoc, int vertLoc)
-		{
-			int bits = this.chart.OwnerBits(horizLoc, vertLoc);
-
-			return ReturnAcc((bits & MapLayers.UnitsPresent) != 0 ? bits & 0x7 : 0xffff);
-		}
-
-		/// <summary>
-		/// Marks that units stand on the tile, keeps the player
-		/// </summary>
-		public void TagTileOwned(int horizLoc, int vertLoc)
-		{
-			int bits = ReturnAcc(this.chart.OwnerBits(horizLoc, vertLoc));
-
-			this.chart.AssignOwnerBits(horizLoc, vertLoc, (bits & 0x7) + MapLayers.UnitsPresent);
-		}
-
-		/// <summary>
-		/// The road bit (8) of the tile improvements
-		/// </summary>
-		public ushort ContainsRoad(int horizLoc, int vertLoc)
-		{
-			return ReturnAcc(this.chart.Improvements(horizLoc, vertLoc) & 0x8);
-		}
-
-		/// <summary>
-		/// Improvements of the tile (bit 0 city, 1 irrigation, 2 mine, 3 road, ...)
-		/// </summary>
-		public ushort ObtainTileImprovements(int horizLoc, int vertLoc)
-		{
-			return ReturnAcc(this.chart.Improvements(horizLoc, vertLoc));
-		}
-
-		/// <summary>
-		/// Improvements of the tile as the human player saw them last time
-		/// </summary>
-		public ushort ObtainKnownTileImprovements(int horizLoc, int vertLoc)
-		{
-			this.processor.Journal.OpenScope($"ObtainKnownTileImprovements({horizLoc}, {vertLoc})");
-
-			ushort known = ReturnAcc(this.chart.KnownImprovements(horizLoc, vertLoc));
-
-			this.processor.Journal.CloseScope("ObtainKnownTileImprovements");
-
-			return known;
-		}
-
-		/// <summary>
-		/// The human player sees the improvements of the tile as they are now
-		/// </summary>
-		public void KeepKnownTileImprovements(int horizLoc, int vertLoc)
-		{
-			this.chart.RevealImprovements(horizLoc, vertLoc);
-
-			ReturnAcc(this.chart.Improvements(horizLoc, vertLoc) >> 4);
-		}
-
-		/// <summary>
-		/// Adds improvements to the tile: 0 removes all, a value from 0x10 sets the high bits, a smaller one the low bits.
-		/// In the turn of the human player the human sees the change at once.
-		/// </summary>
-		public void AssignTileImprovements(ushort improvements, int horizLoc, int vertLoc)
-		{
-			this.processor.Journal.OpenScope($"AssignTileImprovements({improvements}, {horizLoc}, {vertLoc})");
-
-			if (improvements == 0)
-			{
-				AssignChartDot(horizLoc, vertLoc + 100, 0);
-				AssignChartDot(horizLoc, vertLoc + 150, 0);
-			}
-			else if (improvements >= 0x10)
-			{
-				int high = ReturnAcc(this.chart.HighImprovements(horizLoc, vertLoc));
-				AssignChartDot(horizLoc, vertLoc + 150, (ushort)((improvements >> 4) | high));
-			}
-			else
-			{
-				int low = ReturnAcc(this.chart.LowImprovements(horizLoc, vertLoc));
-				AssignChartDot(horizLoc, vertLoc + 100, (ushort)(low | improvements));
-			}
-
-			if ((short)TurnPlayer == this.owner.World.PersonParticipantIdx)
-			{
-				KeepKnownTileImprovements(horizLoc, vertLoc);
-			}
-
-			this.processor.Journal.CloseScope("AssignTileImprovements");
-		}
-
-		/// <summary>
-		/// Removes the improvement bits from the tile
-		/// </summary>
-		public void DiscardTileImprovements(ushort improvements, int horizLoc, int vertLoc)
-		{
-			this.chart.ClearImprovements(improvements, horizLoc, vertLoc);
-		}
-
-		/// <summary>
-		/// The city on the tile. Sets the player of the tile owner layer into 0xd7f0 and 0xd20a.
-		/// When there is no city, an error message is shown.
-		/// </summary>
-		/// <returns>City index, or 0xffff</returns>
-		public ushort LocateCityAtTile(int horizLoc, int vertLoc)
-		{
-			this.processor.Journal.OpenScope($"LocateCityAtTile({horizLoc}, {vertLoc})");
-
-			ushort participantIdx = ObtainTileOwnerBits(horizLoc, vertLoc);
-			ushort found = 0xffff;
-
-			for (int townIdx = 0; townIdx < this.owner.World.Towns.Length; townIdx++)
-			{
-				City town = this.owner.World.Towns[townIdx];
-
-				if (town.ConditionMarker != 0xff && town.Place.X == horizLoc && town.Place.Y == vertLoc)
-				{
-					FoundPlayer = participantIdx;
-					UnitAtTilePlayer = participantIdx;
-					found = (ushort)townIdx;
-					break;
-				}
-			}
-
-			if (found == 0xffff)
-			{
-				this.owner.TurnHooks.DisplayDialog(GameTexts.TextCityAtError, 100, 80);
-			}
-
-			ReturnAcc(found);
-
-			this.processor.Journal.CloseScope("LocateCityAtTile");
-
-			return found;
-		}
-
-		/// <summary>
-		/// Does the tile have a special resource (MapRules.HasSpecialResource with the world seed)
-		/// </summary>
-		public ushort ContainsSpecialResource(int horizLoc, int vertLoc)
-		{
-			this.processor.Journal.OpenScope($"ContainsSpecialResource({horizLoc}, {vertLoc})");
-
-			ushort special = ReturnAcc(MapRules.HasSpecialResource(horizLoc, vertLoc, this.owner.World.ChanceRoot) ? 1 : 0);
-
-			this.processor.Journal.CloseScope("ContainsSpecialResource");
-
-			return special;
-		}
-
-		/// <summary>
-		/// Is there a hut (tribal village) on the tile: not on the ocean, on a tile nobody has visited and without a city
-		/// </summary>
-		/// <param name="terrain">Terrain type of the tile</param>
-		public ushort ContainsHut(ushort terrain, int horizLoc, int vertLoc)
-		{
-			this.processor.Journal.OpenScope($"ContainsHut({terrain}, {horizLoc}, {vertLoc})");
-
-			bool hut = terrain != MapRules.OceanTerrain &&
-				(this.owner.World.ChartSight[horizLoc, vertLoc] & 1) == 0 &&
-				MapRules.IsHutPlace(horizLoc, vertLoc, this.owner.World.ChanceRoot) &&
-				(ObtainTileImprovements(horizLoc, vertLoc) & 1) == 0;
-
-			ushort result = ReturnAcc(hut ? 1 : 0);
-
-			this.processor.Journal.CloseScope("ContainsHut");
-
-			return result;
-		}
-
-		/// <summary>
-		/// Number of the continent or the sea of the tile
-		/// </summary>
-		public ushort ObtainContinentID(int horizLoc, int vertLoc)
-		{
-			return ReturnAcc(this.chart.Continent(horizLoc, vertLoc));
-		}
-
-		/// <summary>
-		/// Size of the continent (land) or the sea (ocean) of the tile, from the word arrays at 0xdcfe and 0xdd7e
-		/// </summary>
-		public ushort ObtainLandMassSize(int horizLoc, int vertLoc)
-		{
-			this.processor.Journal.OpenScope($"ObtainLandMassSize({horizLoc}, {vertLoc})");
-
-			ushort sizes = ObtainTerrainType(horizLoc, vertLoc) != MapRules.OceanTerrain ? (ushort)0xdcfe : (ushort)0xdd7e;
-			int continent = ObtainContinentID(horizLoc, vertLoc);
-			ushort size = ReturnAcc(this.processor.PullGlobalWord((ushort)(sizes + (continent << 1))));
-
-			this.processor.Journal.CloseScope("ObtainLandMassSize");
-
-			return size;
 		}
 	}
 }

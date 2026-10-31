@@ -11,13 +11,13 @@ namespace Civilization1Remaster.Engine
 	/// </summary>
 	public readonly record struct GameText(ushort Address, string? Text) : IFormattable
 	{
-		/// <summary>The text: the C# string, or the bytes at the address of the data segment when there is none</summary>
-		public string Read(CPU processor) =>
-			this.Text ?? processor.PullText(CPU.AsLinearAddress(processor.SegData.Value16, this.Address));
-
 		public static implicit operator ushort(GameText text) => text.Address;
 
 		public static implicit operator GameText(ushort address) => new(address, null);
+
+		/// <summary>The text: the C# string, or the bytes at the address of the data segment when there is none</summary>
+		public string Read(CPU processor) =>
+			this.Text ?? processor.PullText(CPU.AsLinearAddress(processor.SegData.Value16, this.Address));
 
 		public string ToString(string? format, IFormatProvider? formatProvider) => this.Address.ToString(format, formatProvider);
 

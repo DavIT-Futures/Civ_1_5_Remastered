@@ -7,8 +7,6 @@ namespace Civilization1Remaster.Emulation
 	/// </summary>
 	public partial class CPU
 	{
-		#region Local variables of a function (stack segment, below the frame pointer)
-
 		public byte PullLocalByte(int distance)
 		{
 			return PullUInt8(this.segStack.Value16, (ushort)(this.regFrame.Value16 - distance));
@@ -44,10 +42,6 @@ namespace Civilization1Remaster.Emulation
 			EmitInt16(this.segStack.Value16, (ushort)(this.regFrame.Value16 - distance), amount);
 		}
 
-		#endregion
-
-		#region Global variables of the program (data segment)
-
 		public byte PullGlobalByte(ushort address)
 		{
 			return PullUInt8(this.segData.Value16, address);
@@ -82,7 +76,5 @@ namespace Civilization1Remaster.Emulation
 		{
 			EmitInt16(this.segData.Value16, address, amount);
 		}
-
-		#endregion
 	}
 }

@@ -16,15 +16,11 @@ namespace Civilization1Remaster.Video
 	{
 		private readonly GameEngine owner;
 		private readonly CPU processor;
-
 		private readonly IGameHost? primaryHost = null;
-		public object VideoLatch { get; set; } = new object();
 		private readonly BDictionary<int, VGABitmap> displays = new BDictionary<int, VGABitmap>();
-		private int pictureFollowingIdx = 0xb000;
 		private readonly BDictionary<int, VGABitmap> pictures = new BDictionary<int, VGABitmap>();
 		private readonly Queue<int> tokens = new Queue<int>();
 		private readonly CivFonts typefaces;
-
 		private readonly ushort glob15c0 = 0;
 		private readonly short glob15c2HorizLoc = 0;
 		private readonly short glob15c4VertLoc = 0;
@@ -32,10 +28,11 @@ namespace Civilization1Remaster.Video
 		private readonly ushort glob15ccStagingVert = 0;
 		private readonly ushort glob15ceStagingBreadth = 0;
 		private readonly ushort glob15d0StagingAltitude = 0;
+		private readonly byte[] glob15d6Staging = new byte[512];
+
+		private int pictureFollowingIdx = 0xb000;
 		private ushort glob15d2StagingMarker = 0;
 		private ushort glob15d4DisplayIdx = 0;
-
-		private readonly byte[] glob15d6Staging = new byte[512];
 
 		public VGADriver(GameEngine owner, IGameHost? host)
 		{
@@ -59,6 +56,8 @@ namespace Civilization1Remaster.Video
 			this.typefaces = CivFonts.Unpack(typefaces1);
 			typefaces1.Close();
 		}
+
+		public object VideoLatch { get; set; } = new object();
 
 		public CPU Processor
 		{
@@ -107,7 +106,6 @@ namespace Civilization1Remaster.Video
 			}
 		}
 
-		#region Memory and Initialization functions
 		public ushort ObtainFreeStorage()
 		{
 			this.processor.RegAcc.Value16 = (ushort)((this.processor.Storage.UnusedStorage.Extent >> 4) & 0xffff);
@@ -133,7 +131,6 @@ namespace Civilization1Remaster.Video
 
 			return this.processor.RegAcc.Value16;
 		}
-		#endregion
 
 		public void RenderBufferToScreen()
 		{
@@ -256,7 +253,6 @@ namespace Civilization1Remaster.Video
 			this.processor.Journal = scratchJournal;
 		}
 
-		#region Palette functions
 		public void AssignHuesByIndexArray(ushort ordinalListAddr)
 		{
 			lock (this.VideoLatch)
@@ -351,9 +347,7 @@ namespace Civilization1Remaster.Video
 				}
 			}
 		}
-		#endregion
 
-		#region Drawing functions
 		public void RenderScreenToMainScreen(ushort displayIdx, ushort effect)
 		{
 			// this is either random fade in image, or a scrolling from right to left
@@ -583,9 +577,7 @@ namespace Civilization1Remaster.Video
 				}
 			}
 		}
-		#endregion
 
-		#region Fonts
 		public ushort ObtainCharWidth(ushort typefaceIdx, byte chr)
 		{
 			this.processor.RegAcc.Value16 = (ushort)ObtainRenderTextSize(typefaceIdx, new string((char)chr, 1)).Width;
@@ -666,6 +658,5 @@ namespace Civilization1Remaster.Video
 				throw new Exception($"The screen {box.DisplayIdx} is not allocated");
 			}
 		}
-		#endregion
 	}
 }

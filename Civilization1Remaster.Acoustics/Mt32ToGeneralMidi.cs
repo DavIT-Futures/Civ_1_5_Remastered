@@ -47,11 +47,13 @@ namespace Civilization1Remaster.Acoustics
 		private readonly string[] voiceLabels = new string[64];
 		private readonly int[] laneNoteShift = new int[16];
 		private readonly int[] laneBendSpan = new int[16];
+
 		// Note that was sent for each received note, so the note off matches even when the key shift changes
 		private readonly byte[,] dispatchedTones = new byte[16, 128];
 
 		private readonly byte[] note = new byte[3];
 		private readonly byte[] systemExtra = new byte[1024];
+
 		private int systemExtraSpan = -1;
 		private int state = 0;
 		private int noteSpan = 0;

@@ -9,39 +9,6 @@ namespace Civilization1Remaster.Engine
 {
 	public class GameLoadAndSave : GameModule
 	{
-		private const ushort SaveFileNameAddress = 0x41c6;
-		private const ushort SaveFileNamePatternAddress = 0x41c8;
-		private const ushort SaveSlotDigitAddress = 0x41cd;
-		private const ushort DifficultyNamesTableAddress = 0x33a2;
-		private const ushort SavedGameDriveLetterAddress = 0x4384;
-
-		private const ushort ExploredMapSegment = 0xdcfe;
-		private const ushort ExploredMapSize = 0x100;
-
-		private const ushort CivilizationHistorySegment = 0x3772;
-		private const ushort CivilizationHistoryBaseAddress = 0x0;
-		private const ushort CivilizationHistorySize = 0x4b0;
-
-		private const ushort CityNamesStatusAddress = 0x112a;
-		private const ushort CityNamesStatusSize = 0x3b8;
-
-		private const ushort UnitsBufferSize = 0x3000;
-
-		private const ushort ReplayTurnsAddress = 0xdb44;
-		private const ushort ReplayTurnsSize = 0x104;
-
-		private const ushort SpaceshipGridSegment = 0x3772;
-		private const ushort SpaceshipGridBaseAddress = 0x16e0;
-		private const ushort SpaceshipGridTotalSize = 0x5a0;
-
-		private const ushort PalaceSectionRecordSize = 0x18;
-
-
-		public GameLoadAndSave(GameEngine owner)
-			: base(owner)
-		{
-		}
-
 		/// <summary>
 		/// Value of the game end flag (0xdc48) that asks the main loop to load the game in LoadSlot
 		/// </summary>
@@ -62,15 +29,51 @@ namespace Civilization1Remaster.Engine
 		/// </summary>
 		public const ushort BackupBayMarker = 0x100;
 
+		private const ushort SaveFileNameAddress = 0x41c6;
+		private const ushort SaveFileNamePatternAddress = 0x41c8;
+		private const ushort SaveSlotDigitAddress = 0x41cd;
+		private const ushort DifficultyNamesTableAddress = 0x33a2;
+		private const ushort SavedGameDriveLetterAddress = 0x4384;
+		private const ushort ExploredMapSegment = 0xdcfe;
+		private const ushort ExploredMapSize = 0x100;
+		private const ushort CivilizationHistorySegment = 0x3772;
+		private const ushort CivilizationHistoryBaseAddress = 0x0;
+		private const ushort CivilizationHistorySize = 0x4b0;
+		private const ushort CityNamesStatusAddress = 0x112a;
+		private const ushort CityNamesStatusSize = 0x3b8;
+		private const ushort UnitsBufferSize = 0x3000;
+		private const ushort ReplayTurnsAddress = 0xdb44;
+		private const ushort ReplayTurnsSize = 0x104;
+		private const ushort SpaceshipGridSegment = 0x3772;
+		private const ushort SpaceshipGridBaseAddress = 0x16e0;
+		private const ushort SpaceshipGridTotalSize = 0x5a0;
+		private const ushort PalaceSectionRecordSize = 0x18;
+
+		// The load list remembers which tab was open
+		private bool displayBackups = false;
+
+		public GameLoadAndSave(GameEngine owner)
+			: base(owner)
+		{
+		}
+
 		/// <summary>
 		/// Saved game chosen with Load Game in the GAME menu, 0xffff when none
 		/// </summary>
 		public ushort FetchBay { get; set; } = 0xffff;
 
-		// The load list remembers which tab was open
-		private bool displayBackups = false;
 		/// <summary>An autosave is being loaded (ImportGame continues it like the original autosaves)</summary>
 		public bool FetchingBackup { get; set; } = false;
+
+		public static byte PullUInt8(Stream source) { return StreamIo.PullUInt8(source); }
+
+		public static ushort PullUInt16(Stream source) { return StreamIo.PullUInt16(source); }
+
+		public static short PullInt16(Stream source) { return StreamIo.PullInt16(source); }
+
+		public static void EmitUInt16(Stream sink, ushort amount) { StreamIo.EmitUInt16(sink, amount); }
+
+		public static void EmitInt16(Stream sink, short amount) { StreamIo.EmitInt16(sink, amount); }
 
 		/// <summary>
 		/// Saves the game into the next autosave, called once every turn
@@ -83,156 +86,6 @@ namespace Civilization1Remaster.Engine
 				bay += BackupBayTally;
 
 			StoreGameContent($"{AutosaveLabel(bay)}.SVE");
-		}
-
-		private static string AutosaveLabel(int bay)
-		{
-			return $"AUTO{bay:00}";
-		}
-
-		/// <summary>
-		/// Turn of the game saved in an autosave, or -1 when the autosave doesn't exist
-		/// </summary>
-		private int PullAutosaveTurn(int bay)
-		{
-			string route = Path.Combine(this.processor.StandardFolder, $"{AutosaveLabel(bay)}.SVE");
-
-			try
-			{
-				if (File.Exists(route) && File.Exists(Path.ChangeExtension(route, ".MAP")))
-				{
-					using (FileStream source = new FileStream(route, FileMode.Open, FileAccess.Read))
-					{
-						int lower = source.ReadByte();
-						int upper = source.ReadByte();
-
-						if (lower >= 0 && upper >= 0)
-							return (short)(lower | (upper << 8));
-					}
-				}
-			}
-			catch
-			{ }
-
-			return -1;
-		}
-
-		/// <summary>
-		/// Sets the save file name (0x41c6, drive letter, colon, file name) to an autosave.
-		/// "AUTO00" has the same length as "CIVIL0", so the rest of the name stays in place.
-		/// </summary>
-		private void AssignAutosaveFileLabel(int bay)
-		{
-			string label = AutosaveLabel(bay);
-
-			for (int idx = 0; idx < label.Length; idx++)
-			{
-				this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(SaveFileNamePatternAddress + idx), (byte)label[idx]);
-			}
-		}
-
-		/// <summary>
-		/// Sets the save file name (0x41c6) back to a manual saved game
-		/// </summary>
-		private void AssignManualFileLabel(int bay)
-		{
-			string label = $"CIVIL{bay}";
-
-			for (int idx = 0; idx < label.Length; idx++)
-			{
-				this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(SaveFileNamePatternAddress + idx), (byte)label[idx]);
-			}
-		}
-
-		/// <summary>
-		/// Shows the list of saved games on two tabs, the manual saves and the autosaves (newest first).
-		/// Tab, Left and Right switch the tab, the first line of the list does the same.
-		/// The drive must already be chosen (AskForSaveDrive) and the mouse pointer hidden, as before the original list.
-		/// </summary>
-		/// <returns>Manual saved game (0 - 9), AutosaveSlotFlag + autosave (0 - 19), or 0xffff when cancelled</returns>
-		private ushort DisplayImportList()
-		{
-			while (true)
-			{
-				List<int> bays = new List<int>();
-				int strokeTally;
-
-				if (this.displayBackups)
-				{
-					this.owner.Words.Set("\x008cLoad Game: Autosaves\n Show Saved Games...\n");
-
-					List<(int Bay, int Round)> backups = new List<(int Bay, int Round)>();
-
-					for (int idx = 0; idx < BackupBayTally; idx++)
-					{
-						int round = PullAutosaveTurn(idx);
-
-						if (round >= 0)
-							backups.Add((idx, round));
-					}
-
-					backups.Sort((px, py) => py.Round.CompareTo(px.Round));
-
-					for (int idx = 0; idx < backups.Count; idx++)
-					{
-						AssignAutosaveFileLabel(backups[idx].Bay);
-						ImportGame(SaveFileNameAddress, 1);
-						bays.Add(BackupBayMarker + backups[idx].Bay);
-					}
-
-					if (backups.Count == 0)
-					{
-						this.owner.Words.Append(" (no autosaves yet)\n");
-						bays.Add(0xffff);
-					}
-
-					AssignManualFileLabel(Math.Clamp((int)LastSaveSlot, 0, HandBayTally - 1));
-				}
-				else
-				{
-					this.owner.Words.Set("\x008cLoad Game: Saved Games\n Show Autosaves...\n");
-
-					for (int idx = 0; idx < HandBayTally; idx++)
-					{
-						this.processor.EmitGlobalByte(SaveSlotDigitAddress, (byte)(0x30 + idx));
-
-						bays.Add(ImportGame(SaveFileNameAddress, 1) != 0 ? idx : 0xffff);
-					}
-				}
-
-				// Title, tab line and the saved games, centered on the screen
-				strokeTally = bays.Count + 2;
-				int vertLoc = Math.Max(4, (100 - (strokeTally * 8 + 8) / 2) & 0xfffe);
-
-				this.owner.Startup.DisplayMouseCursor();
-
-				// Start on the first saved game, not on the tab line
-				DefaultLine = 0x1;
-				this.owner.Dialogs.ChoicesIndentTokens = true;
-				this.owner.Dialogs.ChoicesIndentTokenDown = false;
-
-				ushort option = this.owner.Dialogs.DisplayMenu(TextBuffer.Address, 48, vertLoc, 1);
-
-				this.owner.Dialogs.ChoicesIndentTokens = false;
-
-				this.owner.Startup.ConcealMouseCursor();
-
-				if (option == 0 || (option == 0xffff && this.owner.Dialogs.ChoicesIndentTokenDown))
-				{
-					// Switch the tab
-					this.displayBackups = !this.displayBackups;
-					this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.White);
-					continue;
-				}
-
-				if (option == 0xffff)
-					return 0xffff;
-
-				if (option <= bays.Count && bays[option - 1] != 0xffff)
-					return (ushort)bays[option - 1];
-
-				// An empty slot was chosen, show the list again
-			}
 		}
 
 		/// <summary>
@@ -651,12 +504,6 @@ namespace Civilization1Remaster.Engine
 			this.processor.Journal.CloseScope("QueryForStoreDrive");
 
 			return drive;
-		}
-
-		/// <summary>The letter of the drive (0x4384) is written at the end of the text at TextBuffer.Address, place: (ushort)(TextBuffer.Address - 1) the last character</summary>
-		private void AppendDriveLetter(ushort place)
-		{
-			this.processor.EmitGlobalByte((ushort)(this.owner.Words.Length + place), (byte)((byte)SaveDrive + 0x41));
 		}
 
 		/// <summary>
@@ -1101,34 +948,6 @@ namespace Civilization1Remaster.Engine
 			return victory;
 		}
 
-		/// <summary>Reads span bytes of the file into the data segment at the address</summary>
-		private void PullContent(Stream source, ushort stagingAddr, ushort span)
-		{
-			ReadIntoMemory(source, CPU.AsLinearAddress(this.processor.SegData.Value16, stagingAddr), span);
-		}
-
-		/// <summary>Reads span bytes of the file into the segment at the address</summary>
-		private void PullContent(Stream source, ushort stagingSect, ushort stagingAddr, ushort span)
-		{
-			ReadIntoMemory(source, CPU.AsLinearAddress(stagingSect, stagingAddr), span);
-		}
-
-		/// <summary>Bytes of a file into the memory, also into the ranges kept in C# arrays (B6: the units)</summary>
-		private void ReadIntoMemory(Stream source, uint location, ushort span)
-		{
-			byte[] content = new byte[span];
-			source.ReadExactly(content, 0, span);
-			this.processor.Storage.EmitChunk(location, content, 0, span);
-		}
-
-		/// <summary>Bytes of the memory into a file, also of the ranges kept in C# arrays</summary>
-		private void WriteFromMemory(Stream sink, uint location, ushort span)
-		{
-			byte[] content = new byte[span];
-			this.processor.Storage.ReadChunk(location, content, 0, span);
-			sink.Write(content, 0, span);
-		}
-
 		/// <summary>
 		/// Saves the game as the path: the map (screen 2 into .MAP) and the state (.SVE); false when a file cannot be written
 		/// </summary>
@@ -1497,6 +1316,190 @@ namespace Civilization1Remaster.Engine
 			return victory;
 		}
 
+		private static string AutosaveLabel(int bay)
+		{
+			return $"AUTO{bay:00}";
+		}
+
+		/// <summary>
+		/// Turn of the game saved in an autosave, or -1 when the autosave doesn't exist
+		/// </summary>
+		private int PullAutosaveTurn(int bay)
+		{
+			string route = Path.Combine(this.processor.StandardFolder, $"{AutosaveLabel(bay)}.SVE");
+
+			try
+			{
+				if (File.Exists(route) && File.Exists(Path.ChangeExtension(route, ".MAP")))
+				{
+					using (FileStream source = new FileStream(route, FileMode.Open, FileAccess.Read))
+					{
+						int lower = source.ReadByte();
+						int upper = source.ReadByte();
+
+						if (lower >= 0 && upper >= 0)
+							return (short)(lower | (upper << 8));
+					}
+				}
+			}
+			catch
+			{ }
+
+			return -1;
+		}
+
+		/// <summary>
+		/// Sets the save file name (0x41c6, drive letter, colon, file name) to an autosave.
+		/// "AUTO00" has the same length as "CIVIL0", so the rest of the name stays in place.
+		/// </summary>
+		private void AssignAutosaveFileLabel(int bay)
+		{
+			string label = AutosaveLabel(bay);
+
+			for (int idx = 0; idx < label.Length; idx++)
+			{
+				this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(SaveFileNamePatternAddress + idx), (byte)label[idx]);
+			}
+		}
+
+		/// <summary>
+		/// Sets the save file name (0x41c6) back to a manual saved game
+		/// </summary>
+		private void AssignManualFileLabel(int bay)
+		{
+			string label = $"CIVIL{bay}";
+
+			for (int idx = 0; idx < label.Length; idx++)
+			{
+				this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(SaveFileNamePatternAddress + idx), (byte)label[idx]);
+			}
+		}
+
+		/// <summary>
+		/// Shows the list of saved games on two tabs, the manual saves and the autosaves (newest first).
+		/// Tab, Left and Right switch the tab, the first line of the list does the same.
+		/// The drive must already be chosen (AskForSaveDrive) and the mouse pointer hidden, as before the original list.
+		/// </summary>
+		/// <returns>Manual saved game (0 - 9), AutosaveSlotFlag + autosave (0 - 19), or 0xffff when cancelled</returns>
+		private ushort DisplayImportList()
+		{
+			while (true)
+			{
+				List<int> bays = new List<int>();
+				int strokeTally;
+
+				if (this.displayBackups)
+				{
+					this.owner.Words.Set("\x008cLoad Game: Autosaves\n Show Saved Games...\n");
+
+					List<(int Bay, int Round)> backups = new List<(int Bay, int Round)>();
+
+					for (int idx = 0; idx < BackupBayTally; idx++)
+					{
+						int round = PullAutosaveTurn(idx);
+
+						if (round >= 0)
+							backups.Add((idx, round));
+					}
+
+					backups.Sort((px, py) => py.Round.CompareTo(px.Round));
+
+					for (int idx = 0; idx < backups.Count; idx++)
+					{
+						AssignAutosaveFileLabel(backups[idx].Bay);
+						ImportGame(SaveFileNameAddress, 1);
+						bays.Add(BackupBayMarker + backups[idx].Bay);
+					}
+
+					if (backups.Count == 0)
+					{
+						this.owner.Words.Append(" (no autosaves yet)\n");
+						bays.Add(0xffff);
+					}
+
+					AssignManualFileLabel(Math.Clamp((int)LastSaveSlot, 0, HandBayTally - 1));
+				}
+				else
+				{
+					this.owner.Words.Set("\x008cLoad Game: Saved Games\n Show Autosaves...\n");
+
+					for (int idx = 0; idx < HandBayTally; idx++)
+					{
+						this.processor.EmitGlobalByte(SaveSlotDigitAddress, (byte)(0x30 + idx));
+
+						bays.Add(ImportGame(SaveFileNameAddress, 1) != 0 ? idx : 0xffff);
+					}
+				}
+
+				// Title, tab line and the saved games, centered on the screen
+				strokeTally = bays.Count + 2;
+				int vertLoc = Math.Max(4, (100 - (strokeTally * 8 + 8) / 2) & 0xfffe);
+
+				this.owner.Startup.DisplayMouseCursor();
+
+				// Start on the first saved game, not on the tab line
+				DefaultLine = 0x1;
+				this.owner.Dialogs.ChoicesIndentTokens = true;
+				this.owner.Dialogs.ChoicesIndentTokenDown = false;
+
+				ushort option = this.owner.Dialogs.DisplayMenu(TextBuffer.Address, 48, vertLoc, 1);
+
+				this.owner.Dialogs.ChoicesIndentTokens = false;
+
+				this.owner.Startup.ConcealMouseCursor();
+
+				if (option == 0 || (option == 0xffff && this.owner.Dialogs.ChoicesIndentTokenDown))
+				{
+					// Switch the tab
+					this.displayBackups = !this.displayBackups;
+					this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.White);
+					continue;
+				}
+
+				if (option == 0xffff)
+					return 0xffff;
+
+				if (option <= bays.Count && bays[option - 1] != 0xffff)
+					return (ushort)bays[option - 1];
+
+				// An empty slot was chosen, show the list again
+			}
+		}
+
+		/// <summary>The letter of the drive (0x4384) is written at the end of the text at TextBuffer.Address, place: (ushort)(TextBuffer.Address - 1) the last character</summary>
+		private void AppendDriveLetter(ushort place)
+		{
+			this.processor.EmitGlobalByte((ushort)(this.owner.Words.Length + place), (byte)((byte)SaveDrive + 0x41));
+		}
+
+		/// <summary>Reads span bytes of the file into the data segment at the address</summary>
+		private void PullContent(Stream source, ushort stagingAddr, ushort span)
+		{
+			ReadIntoMemory(source, CPU.AsLinearAddress(this.processor.SegData.Value16, stagingAddr), span);
+		}
+
+		/// <summary>Reads span bytes of the file into the segment at the address</summary>
+		private void PullContent(Stream source, ushort stagingSect, ushort stagingAddr, ushort span)
+		{
+			ReadIntoMemory(source, CPU.AsLinearAddress(stagingSect, stagingAddr), span);
+		}
+
+		/// <summary>Bytes of a file into the memory, also into the ranges kept in C# arrays (B6: the units)</summary>
+		private void ReadIntoMemory(Stream source, uint location, ushort span)
+		{
+			byte[] content = new byte[span];
+			source.ReadExactly(content, 0, span);
+			this.processor.Storage.EmitChunk(location, content, 0, span);
+		}
+
+		/// <summary>Bytes of the memory into a file, also of the ranges kept in C# arrays</summary>
+		private void WriteFromMemory(Stream sink, uint location, ushort span)
+		{
+			byte[] content = new byte[span];
+			this.processor.Storage.ReadChunk(location, content, 0, span);
+			sink.Write(content, 0, span);
+		}
+
 		/// <summary>Writes span bytes of the data segment at the address into the file</summary>
 		private void EmitContent(Stream sink, ushort stagingAddr, ushort span)
 		{
@@ -1508,15 +1511,5 @@ namespace Civilization1Remaster.Engine
 		{
 			WriteFromMemory(sink, CPU.AsLinearAddress(stagingSect, stagingAddr), span);
 		}
-
-		public static byte PullUInt8(Stream source) { return StreamIo.PullUInt8(source); }
-
-		public static ushort PullUInt16(Stream source) { return StreamIo.PullUInt16(source); }
-
-		public static short PullInt16(Stream source) { return StreamIo.PullInt16(source); }
-
-		public static void EmitUInt16(Stream sink, ushort amount) { StreamIo.EmitUInt16(sink, amount); }
-
-		public static void EmitInt16(Stream sink, short amount) { StreamIo.EmitInt16(sink, amount); }
 	}
 }

@@ -19,9 +19,11 @@ namespace Civilization1Remaster.Emulation
 			private readonly bool enlarged;
 			private readonly uint pnt;
 			private readonly CPUMemory storage;
+			private readonly byte[] held = new byte[4];  // 4
 
 			// struct sFCB
 			private byte disk;         // Drive number 0=default, 1=A, etc.
+
 			private string docname;        // 8 Space padded name
 			private string suffix;         // 3 Space padded extension
 			private ushort nowChunk;       // Current Block
@@ -29,14 +31,17 @@ namespace Civilization1Remaster.Emulation
 			private uint docsize;      // File Size
 			private ushort day;
 			private ushort moment;
+
 			// Reserved Block should be 8 bytes
 			private byte filetableRecords;
+
 			private byte divideTraits;
 			private byte additionalDetails;
 			private byte documentHnd;
-			private readonly byte[] held = new byte[4];  // 4
+
 													// end
 			private byte nowRecord;           // Current record in current block
+
 			private uint diceAlt;          // Current relative record number
 
 			// -7   byte	if FF this is an extended FCB 0
@@ -92,58 +97,6 @@ namespace Civilization1Remaster.Emulation
 				}
 			}
 
-			private void PullFCBFromStorage()
-			{
-				this.disk = storage.PullUInt8(pnt);
-				this.docname = PullText(pnt + 1, 8);
-				this.suffix = PullText(pnt + 9, 3);
-				this.nowChunk = storage.PullUInt16(pnt + 0xc);
-				this.recordExtent = storage.PullUInt16(pnt + 0xe);
-				this.docsize = (uint)storage.PullUInt16(pnt + 0x10) |
-					((uint)storage.PullUInt16(pnt + 0x12) << 16);
-				this.day = storage.PullUInt16(pnt + 0x14);
-				this.moment = storage.PullUInt16(pnt + 0x16);
-				this.filetableRecords = storage.PullUInt8(pnt + 0x18);
-				this.divideTraits = storage.PullUInt8(pnt + 0x19);
-				this.additionalDetails = storage.PullUInt8(pnt + 0x1a);
-				this.documentHnd = storage.PullUInt8(pnt + 0x1b);
-				this.held[0] = storage.PullUInt8(pnt + 0x1c);
-				this.held[1] = storage.PullUInt8(pnt + 0x1d);
-				this.held[2] = storage.PullUInt8(pnt + 0x1e);
-				this.held[3] = storage.PullUInt8(pnt + 0x1f);
-				this.nowRecord = storage.PullUInt8(pnt + 0x20);
-				this.diceAlt = (uint)storage.PullUInt16(pnt + 0x21) |
-						((uint)storage.PullUInt16(pnt + 0x23) << 16);
-			}
-
-			private string PullText(uint location, int extent)
-			{
-				StringBuilder words = new StringBuilder();
-
-				for (int idx = 0; idx < extent; idx++)
-				{
-					byte chr = storage.PullUInt8((uint)(location + idx));
-					if (chr == 0x20 || chr == 0)
-						break;
-					words.Append((char)chr);
-				}
-
-				return words.ToString();
-			}
-
-			private void EmitText(uint location, int extent, string words)
-			{
-				for (int idx = 0; idx < extent; idx++)
-				{
-					byte chr;
-					if (idx >= words.Length)
-						chr = 0x20;
-					else
-						chr = (byte)words[idx];
-					storage.EmitUInt8((uint)(location + idx), chr);
-				}
-			}
-
 			//public void Create(bool _extended);
 			//public void SetSizeDateTime(uint _size, ushort _date, ushort _time);
 			//public void GetSizeDateTime(ref uint _size, ref ushort _date, ref ushort _time);
@@ -186,35 +139,6 @@ namespace Civilization1Remaster.Emulation
 				storage.EmitUInt16(pnt + 0x14, this.day);
 				this.moment = AsDosTime(details.LastWriteTime);
 				storage.EmitUInt16(pnt + 0x16, this.moment);
-			}
-
-			// 16   word	time of last write
-			// |F|E|D|C|B|A|9|8|7|6|5|4|3|2|1|0| 17,16 (Intel reverse order)
-			// | | | | | | | | | | | `---------- secs in 2 second increments
-			// | | | | | `--------------------- minutes (0-59)
-			// `------------------------------ hours (0-23)
-			private ushort AsDosTime(DateTime moment)
-			{
-				ushort amountAlt = 0;
-				amountAlt |= (ushort)((moment.Second / 2) & 0x1f);
-				amountAlt |= (ushort)(((moment.Minute) & 0x3f) << 5);
-				amountAlt |= (ushort)(((moment.Hour) & 0x1f) << 11);
-
-				return amountAlt;
-			}
-
-			// |F|E|D|C|B|A|9|8|7|6|5|4|3|2|1|0| 15,14 (Intel reverse order)
-			// | | | | | | | | | | | `--------- day 1-31
-			// | | | | | | | `---------------- month 1-12
-			// `----------------------------- year + 1980
-			private ushort AsDosDate(DateTime moment)
-			{
-				ushort amountAlt = 0;
-				amountAlt |= (ushort)((moment.Day) & 0x1f);
-				amountAlt |= (ushort)(((moment.Minute) & 0xf) << 5);
-				amountAlt |= (ushort)(((moment.Year - 1980) & 0x7f) << 9);
-
-				return amountAlt;
 			}
 
 			public void ReleaseFile(out byte filehnd)
@@ -305,6 +229,87 @@ namespace Civilization1Remaster.Emulation
 					return false;
 
 				return true;
+			}
+
+			private void PullFCBFromStorage()
+			{
+				this.disk = storage.PullUInt8(pnt);
+				this.docname = PullText(pnt + 1, 8);
+				this.suffix = PullText(pnt + 9, 3);
+				this.nowChunk = storage.PullUInt16(pnt + 0xc);
+				this.recordExtent = storage.PullUInt16(pnt + 0xe);
+				this.docsize = (uint)storage.PullUInt16(pnt + 0x10) |
+					((uint)storage.PullUInt16(pnt + 0x12) << 16);
+				this.day = storage.PullUInt16(pnt + 0x14);
+				this.moment = storage.PullUInt16(pnt + 0x16);
+				this.filetableRecords = storage.PullUInt8(pnt + 0x18);
+				this.divideTraits = storage.PullUInt8(pnt + 0x19);
+				this.additionalDetails = storage.PullUInt8(pnt + 0x1a);
+				this.documentHnd = storage.PullUInt8(pnt + 0x1b);
+				this.held[0] = storage.PullUInt8(pnt + 0x1c);
+				this.held[1] = storage.PullUInt8(pnt + 0x1d);
+				this.held[2] = storage.PullUInt8(pnt + 0x1e);
+				this.held[3] = storage.PullUInt8(pnt + 0x1f);
+				this.nowRecord = storage.PullUInt8(pnt + 0x20);
+				this.diceAlt = (uint)storage.PullUInt16(pnt + 0x21) |
+						((uint)storage.PullUInt16(pnt + 0x23) << 16);
+			}
+
+			private string PullText(uint location, int extent)
+			{
+				StringBuilder words = new StringBuilder();
+
+				for (int idx = 0; idx < extent; idx++)
+				{
+					byte chr = storage.PullUInt8((uint)(location + idx));
+					if (chr == 0x20 || chr == 0)
+						break;
+					words.Append((char)chr);
+				}
+
+				return words.ToString();
+			}
+
+			private void EmitText(uint location, int extent, string words)
+			{
+				for (int idx = 0; idx < extent; idx++)
+				{
+					byte chr;
+					if (idx >= words.Length)
+						chr = 0x20;
+					else
+						chr = (byte)words[idx];
+					storage.EmitUInt8((uint)(location + idx), chr);
+				}
+			}
+
+			// 16   word	time of last write
+			// |F|E|D|C|B|A|9|8|7|6|5|4|3|2|1|0| 17,16 (Intel reverse order)
+			// | | | | | | | | | | | `---------- secs in 2 second increments
+			// | | | | | `--------------------- minutes (0-59)
+			// `------------------------------ hours (0-23)
+			private ushort AsDosTime(DateTime moment)
+			{
+				ushort amountAlt = 0;
+				amountAlt |= (ushort)((moment.Second / 2) & 0x1f);
+				amountAlt |= (ushort)(((moment.Minute) & 0x3f) << 5);
+				amountAlt |= (ushort)(((moment.Hour) & 0x1f) << 11);
+
+				return amountAlt;
+			}
+
+			// |F|E|D|C|B|A|9|8|7|6|5|4|3|2|1|0| 15,14 (Intel reverse order)
+			// | | | | | | | | | | | `--------- day 1-31
+			// | | | | | | | `---------------- month 1-12
+			// `----------------------------- year + 1980
+			private ushort AsDosDate(DateTime moment)
+			{
+				ushort amountAlt = 0;
+				amountAlt |= (ushort)((moment.Day) & 0x1f);
+				amountAlt |= (ushort)(((moment.Minute) & 0xf) << 5);
+				amountAlt |= (ushort)(((moment.Year - 1980) & 0x7f) << 9);
+
+				return amountAlt;
 			}
 		}
 	}

@@ -22,6 +22,49 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
+		/// Sends to the city the loaded transports at sea of the players 1 - 7 (not the human player, and only those without
+		/// relations bit 2 towards the human player) that are closer to it than 3 turns of moves
+		/// </summary>
+		public void PostCityDefenders(short townIdx)
+		{
+			this.processor.Journal.OpenScope($"PostCityDefenders({townIdx})");
+
+			short townHoriz = (short)this.owner.World.Towns[townIdx].Place.X;
+			short townVert = (short)this.owner.World.Towns[townIdx].Place.Y;
+
+			for (short participantIdx = 1; participantIdx < 8; participantIdx++)
+			{
+				if (participantIdx == this.owner.World.PersonParticipantIdx ||
+					(this.owner.World.Participants[participantIdx].Relations[this.owner.World.PersonParticipantIdx] & 2) != 0)
+					continue;
+
+				for (int troopIdx = 0; troopIdx < UnitMemory.TroopTally; troopIdx++)
+				{
+					if (!this.troops.Exists(participantIdx, troopIdx) ||
+						this.troops.KindField(participantIdx, troopIdx, UnitKindTable.FerryRoom) == 0 ||
+						this.troops.Following(participantIdx, troopIdx) == -1)
+						continue;
+
+					sbyte horizLoc = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz);
+					sbyte vertLoc = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert);
+
+					if (this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) != MapRules.OceanTerrain)
+						continue;
+
+					int distance = this.owner.Helpers.ObtainDistance(horizLoc, townHoriz, vertLoc, townVert);
+
+					if ((short)(3 * this.troops.KindField(participantIdx, troopIdx, UnitKindTable.ShiftTally)) > distance)
+					{
+						this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHoriz, (byte)townHoriz);
+						this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelVert, (byte)townVert);
+					}
+				}
+			}
+
+			this.processor.Journal.CloseScope("PostCityDefenders");
+		}
+
+		/// <summary>
 		/// A defender (role 2) in a city: alone, or better than the leader of its stack, it stays; it calls for more defenders
 		/// when the city (size / need + 1; need 4, 3 with a unit of another player next to it, one less with the palace, one more
 		/// on a continent at peace) has fewer, and stays while they are too few; the leader of the stack fortifies (bit 3) while
@@ -481,49 +524,6 @@ namespace Civilization1Remaster.Game
 			this.look.Continent = this.owner.MapOps.ObtainContinentID(horizLoc, vertLoc);
 			this.look.Approach = (ushort)this.owner.World.Participants[participantIdx].Landmasses[this.look.Continent].Approach;
 			this.look.PlayerBit = (ushort)(1 << (byte)participantIdx);
-		}
-
-		/// <summary>
-		/// Sends to the city the loaded transports at sea of the players 1 - 7 (not the human player, and only those without
-		/// relations bit 2 towards the human player) that are closer to it than 3 turns of moves
-		/// </summary>
-		public void PostCityDefenders(short townIdx)
-		{
-			this.processor.Journal.OpenScope($"PostCityDefenders({townIdx})");
-
-			short townHoriz = (short)this.owner.World.Towns[townIdx].Place.X;
-			short townVert = (short)this.owner.World.Towns[townIdx].Place.Y;
-
-			for (short participantIdx = 1; participantIdx < 8; participantIdx++)
-			{
-				if (participantIdx == this.owner.World.PersonParticipantIdx ||
-					(this.owner.World.Participants[participantIdx].Relations[this.owner.World.PersonParticipantIdx] & 2) != 0)
-					continue;
-
-				for (int troopIdx = 0; troopIdx < UnitMemory.TroopTally; troopIdx++)
-				{
-					if (!this.troops.Exists(participantIdx, troopIdx) ||
-						this.troops.KindField(participantIdx, troopIdx, UnitKindTable.FerryRoom) == 0 ||
-						this.troops.Following(participantIdx, troopIdx) == -1)
-						continue;
-
-					sbyte horizLoc = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz);
-					sbyte vertLoc = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert);
-
-					if (this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) != MapRules.OceanTerrain)
-						continue;
-
-					int distance = this.owner.Helpers.ObtainDistance(horizLoc, townHoriz, vertLoc, townVert);
-
-					if ((short)(3 * this.troops.KindField(participantIdx, troopIdx, UnitKindTable.ShiftTally)) > distance)
-					{
-						this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHoriz, (byte)townHoriz);
-						this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelVert, (byte)townVert);
-					}
-				}
-			}
-
-			this.processor.Journal.CloseScope("PostCityDefenders");
 		}
 	}
 }

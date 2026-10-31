@@ -11,6 +11,32 @@ namespace Civilization1Remaster.Game
 	partial class CityManagement
 	{
 		/// <summary>
+		/// The work of a city: marker -1 only counts (food, shields, trade, the citizens), 0 is the city's turn (growth,
+		/// production, disorder, celebration, science, pollution, upkeep), 1 the city screen with its input. It gives back
+		/// the happy less the unhappy citizens. The frame of 0x10c bytes holds the locals of all the parts.
+		/// </summary>
+		public ushort HandleCity(short townIdx, short marker)
+		{
+			this.processor.Journal.OpenScope($"HandleCity({townIdx}, {marker})");
+
+			// HandleCity calls itself (the advisor counts the city), each call has its own locals as its own frame
+			CityRound outer = this.round;
+			this.round = new CityRound(this.processor);
+
+			// (a city that is gone, also in its turn, is at most of size 1: HandleAllCities reads no result of it)
+			ushort result = 0;
+
+			if (this.owner.World.Towns[townIdx].ConditionMarker != 0xff)
+				result = RunCity(townIdx, marker);
+
+			this.round = outer;
+
+			this.processor.Journal.CloseScope("HandleCity");
+
+			return result;
+		}
+
+		/// <summary>
 		/// The shields and the trade of the city back as they were before the factories and the power (0x70dc / 0x70de from
 		/// the words 0x10a / 0xa of the frame) before the city screen counts them again; the trade
 		/// </summary>
@@ -618,32 +644,6 @@ namespace Civilization1Remaster.Game
 				town.LaborerMarkers0 = 0;
 				town.LaborerMarkers1 = 0;
 			}
-		}
-
-		/// <summary>
-		/// The work of a city: marker -1 only counts (food, shields, trade, the citizens), 0 is the city's turn (growth,
-		/// production, disorder, celebration, science, pollution, upkeep), 1 the city screen with its input. It gives back
-		/// the happy less the unhappy citizens. The frame of 0x10c bytes holds the locals of all the parts.
-		/// </summary>
-		public ushort HandleCity(short townIdx, short marker)
-		{
-			this.processor.Journal.OpenScope($"HandleCity({townIdx}, {marker})");
-
-			// HandleCity calls itself (the advisor counts the city), each call has its own locals as its own frame
-			CityRound outer = this.round;
-			this.round = new CityRound(this.processor);
-
-			// (a city that is gone, also in its turn, is at most of size 1: HandleAllCities reads no result of it)
-			ushort result = 0;
-
-			if (this.owner.World.Towns[townIdx].ConditionMarker != 0xff)
-				result = RunCity(townIdx, marker);
-
-			this.round = outer;
-
-			this.processor.Journal.CloseScope("HandleCity");
-
-			return result;
 		}
 
 		/// <summary>

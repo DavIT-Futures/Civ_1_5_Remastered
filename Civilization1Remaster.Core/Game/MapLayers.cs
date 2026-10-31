@@ -17,19 +17,18 @@ namespace Civilization1Remaster.Game
 	/// </summary>
 	public sealed class MapLayers : GameModule
 	{
-		private const ushort ChartDisplay = 2;
-		private const int KnownOffset = 80;
-		private const int OwnerOffset = 160;
-		private const int ContinentOffset = 50;
-		private const int LowImprovementsOffset = 100;
-		private const int HighImprovementsOffset = 150;
-
 		/// <summary>Terrain type of each terrain colour, a word array in the data segment</summary>
 		public const ushort TerrainOfColour = 0x2ba6;
 
 		/// <summary>Bit of the tile owner layer: units stand on the tile</summary>
 		public const int UnitsPresent = 8;
 
+		private const ushort ChartDisplay = 2;
+		private const int KnownOffset = 80;
+		private const int OwnerOffset = 160;
+		private const int ContinentOffset = 50;
+		private const int LowImprovementsOffset = 100;
+		private const int HighImprovementsOffset = 150;
 
 		public MapLayers(GameEngine owner)
 			: base(owner)

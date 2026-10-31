@@ -19,6 +19,22 @@ namespace Civilization1Remaster.Game
 			EndOfTurn,
 		}
 
+		/// <summary>The direction 1 - 8 of Shift and an arrow (the keypad digits in the low byte)</summary>
+		private static ushort ShiftedKeyDirection(ushort key)
+		{
+			switch (key)
+			{
+				case KeyCodes.ShiftUp: return 1;
+				case KeyCodes.ShiftPageUp: return 2;
+				case KeyCodes.ShiftRight: return 3;
+				case KeyCodes.ShiftPageDown: return 4;
+				case KeyCodes.ShiftDown: return 5;
+				case KeyCodes.ShiftEnd: return 6;
+				case KeyCodes.ShiftLeft: return 7;
+				default: return 8;
+			}
+		}
+
 		/// <summary>
 		/// The key 0x44 that is neither an order nor a move: the reports (F1 - F10, other ones with everything shown, 0xd806),
 		/// the view moved by Shift and an arrow (Alt+D toggles 0xd806), Enter and Space (without a unit the end of the turn),
@@ -236,22 +252,6 @@ namespace Civilization1Remaster.Game
 			}
 
 			return KeyStep.NextLook;
-		}
-
-		/// <summary>The direction 1 - 8 of Shift and an arrow (the keypad digits in the low byte)</summary>
-		private static ushort ShiftedKeyDirection(ushort key)
-		{
-			switch (key)
-			{
-				case KeyCodes.ShiftUp: return 1;
-				case KeyCodes.ShiftPageUp: return 2;
-				case KeyCodes.ShiftRight: return 3;
-				case KeyCodes.ShiftPageDown: return 4;
-				case KeyCodes.ShiftDown: return 5;
-				case KeyCodes.ShiftEnd: return 6;
-				case KeyCodes.ShiftLeft: return 7;
-				default: return 8;
-			}
 		}
 
 		/// <summary>The view moves four tiles in the direction 0x24 (SI = 2 * the direction, as in the original)</summary>

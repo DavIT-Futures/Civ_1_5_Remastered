@@ -7,7 +7,22 @@ namespace Civilization1Remaster.Emulation
 	/// </summary>
 	public partial class CPU
 	{
-		#region Counters in local variables
+		/// <summary>
+		/// The quotient of a signed division of words (cwd; idiv), rounded towards zero, with the exceptions of DivideSignedWord:
+		/// a division by zero and a quotient that is not a word (-32768 / -1)
+		/// </summary>
+		public static short SignedQuotient(short dividend, short divisor)
+		{
+			if (divisor == 0)
+				throw new Exception("Division by zero");
+
+			int quotient = dividend / divisor;
+
+			if (quotient != (short)quotient)
+				throw new Exception("Division error");
+
+			return (short)quotient;
+		}
 
 		/// <summary>Adds one to a local variable (loop counters; inc word [bp - distance]).</summary>
 		public void IncrementLocalWord(int distance)
@@ -27,10 +42,6 @@ namespace Civilization1Remaster.Emulation
 			this.regAcc.Value16 = PullLocalWord(source);
 			EmitLocalWord(destination, this.regAcc.Value16);
 		}
-
-		#endregion
-
-		#region Registers that a function has to give back unchanged
 
 		/// <summary>Saves the destination and source index registers on the stack (push di; push si).</summary>
 		public void PreserveIndexRegisters()
@@ -62,27 +73,6 @@ namespace Civilization1Remaster.Emulation
 		public void RestoreDest()
 		{
 			this.regDest.Value16 = UnstackWord();
-		}
-
-		#endregion
-
-		#region Arithmetic on the accumulator
-
-		/// <summary>
-		/// The quotient of a signed division of words (cwd; idiv), rounded towards zero, with the exceptions of DivideSignedWord:
-		/// a division by zero and a quotient that is not a word (-32768 / -1)
-		/// </summary>
-		public static short SignedQuotient(short dividend, short divisor)
-		{
-			if (divisor == 0)
-				throw new Exception("Division by zero");
-
-			int quotient = dividend / divisor;
-
-			if (quotient != (short)quotient)
-				throw new Exception("Division error");
-
-			return (short)quotient;
 		}
 
 		/// <summary>Sets the flags from the accumulator without changing it (or ax, ax).</summary>
@@ -125,7 +115,5 @@ namespace Civilization1Remaster.Emulation
 			this.regAcc.Value16 = BitXorWord(this.regAcc.Value16, this.regData.Value16);
 			this.regAcc.Value16 = SubtractWord(this.regAcc.Value16, this.regData.Value16);
 		}
-
-		#endregion
 	}
 }

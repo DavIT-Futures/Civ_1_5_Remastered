@@ -6,11 +6,11 @@ namespace Civilization1Remaster.Acoustics
 {
 	public class SoundDriver : GameModule
 	{
-		private ushort stagingPlace = 0;
-
 		// The original sound driver from the game folder (RSOUND.CVL, ASOUND.CVL or ISOUND.CVL) and the audio or MIDI output.
 		// When the driver or the audio output is missing, the functions below keep the old silent behaviour.
 		private const int SliceRatio = 44100;
+
+		private ushort stagingPlace = 0;
 		private bool handlerFetched = false;
 		private SoundDriverHost? handler = null;
 		private IDisposable? participant = null;

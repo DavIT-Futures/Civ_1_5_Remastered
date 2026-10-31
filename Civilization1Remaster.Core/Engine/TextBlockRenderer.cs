@@ -10,7 +10,6 @@ namespace Civilization1Remaster.Engine
 		private const ushort MacroCodesTableAddress = 0x30ae;
 		private const ushort MacroReplacementsTableAddress = 0x30b8;
 
-
 		public TextBlockRenderer(GameEngine owner)
 			: base(owner)
 		{
@@ -141,6 +140,103 @@ namespace Civilization1Remaster.Engine
 		/// <summary>ImportTextFromFile of the topic in a C# string</summary>
 		public ushort ImportTextFromFile(GameText docname, string topic) => ImportTextFromFile(docname, topic, TextBuffer.StackTextAddress);
 
+		/// <summary>
+		/// The text of the topic at the address from the text file 0x30a5 into the message buffer, its codes replaced, arranged
+		/// in rows of 0x50 for a dialog
+		/// </summary>
+		public void DisplayTextDialog(GameText topic)
+		{
+			this.processor.Journal.OpenScope($"DisplayTextDialog(0x{topic.Address:x4})");
+
+			ImportTextFromFile(GameTexts.FileKingTxt, topic);
+
+			ReflowText();
+
+			ArrangeTextRow(0x50);
+
+			this.processor.Journal.CloseScope("DisplayTextDialog");
+		}
+
+		/// <summary>
+		/// Replaces in the text at TextBuffer.Address every occurrence of the 5 codes (texts pointed to by 0x30ae + 2 * code) by their
+		/// texts (0x30b8 + 2 * code), one code after the other.
+		/// </summary>
+		public void ReflowText()
+		{
+			this.processor.Journal.OpenScope("ReflowText()");
+
+			for (int codeIdx = 0; codeIdx < 5; codeIdx++)
+			{
+				ushort code = this.processor.PullGlobalWord((ushort)((codeIdx << 1) + MacroCodesTableAddress));
+				ushort replacement = this.processor.PullGlobalWord((ushort)((codeIdx << 1) + MacroReplacementsTableAddress));
+
+				while (true)
+				{
+					int matchOffset = this.owner.Libc.FindSubtext(TextBuffer.Address, code);
+
+					if (matchOffset < 0)
+						break;
+
+					ushort found = (ushort)(TextBuffer.Address + matchOffset);
+
+					ushort codeLen = this.owner.Libc.TextLength(code);
+					string rest = this.processor.PullText(CPU.AsLinearAddress(this.processor.SegData.Value16, (ushort)(found + codeLen)));
+					this.owner.Words[found - TextBuffer.Address] = 0;
+					this.owner.Words.Append(replacement);
+					this.owner.Words.Append(rest);
+				}
+			}
+
+			this.processor.Journal.CloseScope("ReflowText");
+		}
+
+		/// <summary>
+		/// Shortens the text until it fits the width: the last character goes, and the one before becomes a dot (unless the
+		/// character two before the end is a space)
+		/// </summary>
+		/// <summary>ShrinkTextToWidth of a text in a C# string (the original kept it on the stack): the shortened text</summary>
+		public string ShrinkTextToWidth(string text, ushort peakBreadth)
+		{
+			this.processor.Journal.OpenScope($"ShrinkTextToWidth(0x{TextBuffer.StackTextAddress:x4}, {peakBreadth})");
+
+			char[] letters = text.ToCharArray();
+			int len = letters.Length;
+
+			while ((short)this.owner.TextPainter.ObtainTextWidth(new string(letters, 0, len)) > (short)peakBreadth && len > 0)
+			{
+				if (len < 3 || letters[len - 3] != ' ')
+				{
+					if (len >= 2)
+						letters[len - 2] = '.';
+				}
+
+				len--;
+			}
+
+			this.processor.Journal.CloseScope("ShrinkTextToWidth");
+
+			return new string(letters, 0, len);
+		}
+
+		public void ShrinkTextToWidth(ushort charsAddr, ushort peakBreadth)
+		{
+			this.processor.Journal.OpenScope($"ShrinkTextToWidth(0x{charsAddr:x4}, {peakBreadth})");
+
+			while ((short)this.owner.TextPainter.ObtainTextWidth(charsAddr) > (short)peakBreadth)
+			{
+				int len = this.owner.Libc.TextLength(charsAddr);
+
+				if (this.processor.PullGlobalByte((ushort)(charsAddr + len - 3)) != 0x20)
+				{
+					this.processor.EmitGlobalByte((ushort)(charsAddr + len - 2), 0x2e);
+				}
+
+				this.processor.EmitGlobalByte((ushort)(charsAddr + len - 1), 0x0);
+			}
+
+			this.processor.Journal.CloseScope("ShrinkTextToWidth");
+		}
+
 		private ushort ImportTextFromFile(GameText docname, string topic, ushort topicAddr)
 		{
 			this.processor.Journal.OpenScope($"ImportTextFromFile(0x{docname.Address:x4}, 0x{topicAddr:x4})");
@@ -254,103 +350,6 @@ namespace Civilization1Remaster.Engine
 			this.processor.Journal.CloseScope("ImportTextFromFile");
 
 			return result;
-		}
-
-		/// <summary>
-		/// The text of the topic at the address from the text file 0x30a5 into the message buffer, its codes replaced, arranged
-		/// in rows of 0x50 for a dialog
-		/// </summary>
-		public void DisplayTextDialog(GameText topic)
-		{
-			this.processor.Journal.OpenScope($"DisplayTextDialog(0x{topic.Address:x4})");
-
-			ImportTextFromFile(GameTexts.FileKingTxt, topic);
-
-			ReflowText();
-
-			ArrangeTextRow(0x50);
-
-			this.processor.Journal.CloseScope("DisplayTextDialog");
-		}
-
-		/// <summary>
-		/// Replaces in the text at TextBuffer.Address every occurrence of the 5 codes (texts pointed to by 0x30ae + 2 * code) by their
-		/// texts (0x30b8 + 2 * code), one code after the other.
-		/// </summary>
-		public void ReflowText()
-		{
-			this.processor.Journal.OpenScope("ReflowText()");
-
-			for (int codeIdx = 0; codeIdx < 5; codeIdx++)
-			{
-				ushort code = this.processor.PullGlobalWord((ushort)((codeIdx << 1) + MacroCodesTableAddress));
-				ushort replacement = this.processor.PullGlobalWord((ushort)((codeIdx << 1) + MacroReplacementsTableAddress));
-
-				while (true)
-				{
-					int matchOffset = this.owner.Libc.FindSubtext(TextBuffer.Address, code);
-
-					if (matchOffset < 0)
-						break;
-
-					ushort found = (ushort)(TextBuffer.Address + matchOffset);
-
-					ushort codeLen = this.owner.Libc.TextLength(code);
-					string rest = this.processor.PullText(CPU.AsLinearAddress(this.processor.SegData.Value16, (ushort)(found + codeLen)));
-					this.owner.Words[found - TextBuffer.Address] = 0;
-					this.owner.Words.Append(replacement);
-					this.owner.Words.Append(rest);
-				}
-			}
-
-			this.processor.Journal.CloseScope("ReflowText");
-		}
-
-		/// <summary>
-		/// Shortens the text until it fits the width: the last character goes, and the one before becomes a dot (unless the
-		/// character two before the end is a space)
-		/// </summary>
-		/// <summary>ShrinkTextToWidth of a text in a C# string (the original kept it on the stack): the shortened text</summary>
-		public string ShrinkTextToWidth(string text, ushort peakBreadth)
-		{
-			this.processor.Journal.OpenScope($"ShrinkTextToWidth(0x{TextBuffer.StackTextAddress:x4}, {peakBreadth})");
-
-			char[] letters = text.ToCharArray();
-			int len = letters.Length;
-
-			while ((short)this.owner.TextPainter.ObtainTextWidth(new string(letters, 0, len)) > (short)peakBreadth && len > 0)
-			{
-				if (len < 3 || letters[len - 3] != ' ')
-				{
-					if (len >= 2)
-						letters[len - 2] = '.';
-				}
-
-				len--;
-			}
-
-			this.processor.Journal.CloseScope("ShrinkTextToWidth");
-
-			return new string(letters, 0, len);
-		}
-
-		public void ShrinkTextToWidth(ushort charsAddr, ushort peakBreadth)
-		{
-			this.processor.Journal.OpenScope($"ShrinkTextToWidth(0x{charsAddr:x4}, {peakBreadth})");
-
-			while ((short)this.owner.TextPainter.ObtainTextWidth(charsAddr) > (short)peakBreadth)
-			{
-				int len = this.owner.Libc.TextLength(charsAddr);
-
-				if (this.processor.PullGlobalByte((ushort)(charsAddr + len - 3)) != 0x20)
-				{
-					this.processor.EmitGlobalByte((ushort)(charsAddr + len - 2), 0x2e);
-				}
-
-				this.processor.EmitGlobalByte((ushort)(charsAddr + len - 1), 0x0);
-			}
-
-			this.processor.Journal.CloseScope("ShrinkTextToWidth");
 		}
 	}
 }

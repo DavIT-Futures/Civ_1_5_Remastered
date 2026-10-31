@@ -96,11 +96,6 @@ namespace Civilization1Remaster.Video
 			return typefaces;
 		}
 
-		private static ushort FontStructPullWord(byte[] typefaceStaging, int place)
-		{
-			return (ushort)((ushort)typefaceStaging[place] | ((ushort)typefaceStaging[place + 1] << 8));
-		}
-
 		/// <summary>
 		/// Deserializes a CivFonts object.
 		/// </summary>
@@ -193,6 +188,11 @@ namespace Civilization1Remaster.Video
 		{
 			XmlSerializer xml = new XmlSerializer(typeof(CivFonts));
 			xml.Serialize(sink, this);
+		}
+
+		private static ushort FontStructPullWord(byte[] typefaceStaging, int place)
+		{
+			return (ushort)((ushort)typefaceStaging[place] | ((ushort)typefaceStaging[place + 1] << 8));
 		}
 	}
 }

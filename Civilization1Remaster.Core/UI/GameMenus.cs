@@ -160,6 +160,156 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
+		/// The Orders menu of the unit (not for -1 and 128): No Orders, for settlers the city, road / railroad, irrigation or
+		/// the change of terrain (0x44a), mines or the change (0x44e), pollution, fortress (needs technology 0x2d); Fortify for
+		/// land units; Wait, Sentry, GoTo; Pillage on an improved tile; Home City in a city; Unload for transports (role 5 or
+		/// type 0x17) with units; Disband. Lines that cannot be chosen are set in 0xb276. The key of the chosen line goes to 0xd4ca
+		/// (-1 when none).
+		/// </summary>
+		public void DisplayOrdersMenu(short participantIdx, short troopIdx)
+		{
+			this.processor.Journal.OpenScope($"DisplayOrdersMenu({participantIdx}, {troopIdx})");
+
+			if (troopIdx != -1 && troopIdx != 128)
+			{
+				ChooseOrder(participantIdx, troopIdx);
+			}
+
+			this.processor.Journal.CloseScope("DisplayOrdersMenu");
+		}
+
+		/// <summary>
+		/// The Advisors menu: City Status, Military (the score list when all units are shown, 0xd806, else the unit counts),
+		/// Intelligence, Attitude, Trade and Science; the screen is put back from 0x19d4 before the chosen report
+		/// </summary>
+		public void DisplayAdvisorMenu()
+		{
+			this.processor.Journal.OpenScope("DisplayAdvisorMenu()");
+
+			Message(" City Status (F1)\n Military Advisor (F2)\n Intelligence Advisor (F3)\n Attitude Advisor (F4)\n")
+				.Text(" Trade Advisor (F5)\n Science Advisor (F6)\n");
+
+			ushort choice = this.owner.Dialogs.DisplayMenu(TextBuffer.Address, 112, 8, 0);
+
+			RestoreMenuScreen();
+
+			short personIdx = this.owner.World.PersonParticipantIdx;
+
+			switch (choice)
+			{
+				case 0:
+					this.owner.Briefings.DisplayCityStatusReport(personIdx);
+					break;
+
+				case 1:
+					if (MapRevealed != 0)
+					{
+						this.owner.RealmInfo.DisplayCivilizationScoreList();
+					}
+					else
+					{
+						this.owner.Briefings.RenderUnitCountsChart(personIdx);
+					}
+
+					break;
+
+				case 2:
+					this.owner.Briefings.DisplayMilitaryReport();
+					break;
+
+				case 3:
+					this.owner.Briefings.DisplayAttitudeReport(personIdx);
+					break;
+
+				case 4:
+					this.owner.Briefings.DisplayTradeReport(personIdx);
+					break;
+
+				case 5:
+					this.owner.Briefings.DisplayScienceReport(personIdx);
+					break;
+			}
+
+			this.processor.Journal.CloseScope("DisplayAdvisorMenu");
+		}
+
+		/// <summary>
+		/// The World menu: Wonders, Top 5 Cities, Civilization Score, World Map, Demographics and SpaceShips (disabled, 0xb276,
+		/// when nobody has a spaceship); the screen is put back from 0x19d4 before the chosen report
+		/// </summary>
+		public void DisplayWorldMenu()
+		{
+			this.processor.Journal.OpenScope("DisplayWorldMenu()");
+
+			if ((this.owner.World.StarshipMarkers & 0xfe00) == 0)
+			{
+				DisabledLines = 0x20;
+			}
+
+			Message(" Wonders of the World (F7)\n Top 5 Cities (F8)\n Civilization Score (F9)\n")
+				.Text(" World Map (F10)\n Demographics\n SpaceShips\n");
+
+			ushort choice = this.owner.Dialogs.DisplayMenu(TextBuffer.Address, 144, 8, 0);
+
+			RestoreMenuScreen();
+
+			switch (choice)
+			{
+				case 0:
+					this.owner.Atlas.DisplayWondersOfTheWorld();
+					break;
+
+				case 1:
+					this.owner.Legends.DisplayTopCities();
+					break;
+
+				case 2:
+					this.owner.Founding.DisplayFinalScore(this.owner.World.PersonParticipantIdx, true);
+					break;
+
+				case 3:
+					this.owner.Atlas.DisplayWorldMap(1);
+					break;
+
+				case 4:
+					this.owner.Atlas.DisplayCensus(this.owner.World.PersonParticipantIdx);
+					break;
+
+				case 5:
+					this.owner.RocketScreen.ChooseNationToView();
+					break;
+			}
+
+			this.processor.Journal.CloseScope("DisplayWorldMenu");
+		}
+
+		/// <summary>
+		/// The Civilopedia menu: the chosen part is shown (0x654a = -1 afterwards), Escape sets 0x654a to 1
+		/// </summary>
+		public void DisplayCivilopediaMenu()
+		{
+			this.processor.Journal.OpenScope("DisplayCivilopediaMenu()");
+
+			Message(" Complete\n Civilization Advances\n City Improvements\n Military Units\n Terrain Types\n")
+				.Text(" Miscellaneous\n");
+
+			ushort choice = this.owner.Dialogs.DisplayMenu(TextBuffer.Address, 182, 8, 0);
+
+			if (choice != 0xffff)
+			{
+				this.owner.Encyclopedia.DisplayCivilopedia((ushort)(choice - 1));
+
+				MenuResult = 0xffff;
+			}
+			else
+			{
+				MenuResult = 0x1;
+			}
+
+			this.processor.Journal.CloseScope("DisplayCivilopediaMenu");
+		}
+
+		/// <summary>
 		/// The Options menu: each chosen option is toggled (0xd7f2 shows the options) and the menu stays on it, until Escape
 		/// (while 0x2f9c is set, the menu comes back even after Escape and toggles nothing)
 		/// </summary>
@@ -186,25 +336,6 @@ namespace Civilization1Remaster.UI
 				}
 			}
 			while (choice != 0xffff || MenuHelpTopic != 0);
-		}
-
-		/// <summary>
-		/// The Orders menu of the unit (not for -1 and 128): No Orders, for settlers the city, road / railroad, irrigation or
-		/// the change of terrain (0x44a), mines or the change (0x44e), pollution, fortress (needs technology 0x2d); Fortify for
-		/// land units; Wait, Sentry, GoTo; Pillage on an improved tile; Home City in a city; Unload for transports (role 5 or
-		/// type 0x17) with units; Disband. Lines that cannot be chosen are set in 0xb276. The key of the chosen line goes to 0xd4ca
-		/// (-1 when none).
-		/// </summary>
-		public void DisplayOrdersMenu(short participantIdx, short troopIdx)
-		{
-			this.processor.Journal.OpenScope($"DisplayOrdersMenu({participantIdx}, {troopIdx})");
-
-			if (troopIdx != -1 && troopIdx != 128)
-			{
-				ChooseOrder(participantIdx, troopIdx);
-			}
-
-			this.processor.Journal.CloseScope("DisplayOrdersMenu");
 		}
 
 		private void ChooseOrder(short participantIdx, short troopIdx)
@@ -360,61 +491,6 @@ namespace Civilization1Remaster.UI
 			this.owner.Words.Append(TerrainText(this.processor.PullGlobalWord((ushort)((this.processor.PullGlobalWord(work) << 1) + MapLayers.TerrainOfColour))));
 		}
 
-		/// <summary>
-		/// The Advisors menu: City Status, Military (the score list when all units are shown, 0xd806, else the unit counts),
-		/// Intelligence, Attitude, Trade and Science; the screen is put back from 0x19d4 before the chosen report
-		/// </summary>
-		public void DisplayAdvisorMenu()
-		{
-			this.processor.Journal.OpenScope("DisplayAdvisorMenu()");
-
-			Message(" City Status (F1)\n Military Advisor (F2)\n Intelligence Advisor (F3)\n Attitude Advisor (F4)\n")
-				.Text(" Trade Advisor (F5)\n Science Advisor (F6)\n");
-
-			ushort choice = this.owner.Dialogs.DisplayMenu(TextBuffer.Address, 112, 8, 0);
-
-			RestoreMenuScreen();
-
-			short personIdx = this.owner.World.PersonParticipantIdx;
-
-			switch (choice)
-			{
-				case 0:
-					this.owner.Briefings.DisplayCityStatusReport(personIdx);
-					break;
-
-				case 1:
-					if (MapRevealed != 0)
-					{
-						this.owner.RealmInfo.DisplayCivilizationScoreList();
-					}
-					else
-					{
-						this.owner.Briefings.RenderUnitCountsChart(personIdx);
-					}
-
-					break;
-
-				case 2:
-					this.owner.Briefings.DisplayMilitaryReport();
-					break;
-
-				case 3:
-					this.owner.Briefings.DisplayAttitudeReport(personIdx);
-					break;
-
-				case 4:
-					this.owner.Briefings.DisplayTradeReport(personIdx);
-					break;
-
-				case 5:
-					this.owner.Briefings.DisplayScienceReport(personIdx);
-					break;
-			}
-
-			this.processor.Journal.CloseScope("DisplayAdvisorMenu");
-		}
-
 		/// <summary>After a menu of the menu bar: the screen put back from the back screen 0x19d4, 0x654a set to 0xffff</summary>
 		private void RestoreMenuScreen()
 		{
@@ -426,82 +502,6 @@ namespace Civilization1Remaster.UI
 			this.owner.Startup.DisplayMouseCursor();
 
 			MenuResult = 0xffff;
-		}
-
-		/// <summary>
-		/// The World menu: Wonders, Top 5 Cities, Civilization Score, World Map, Demographics and SpaceShips (disabled, 0xb276,
-		/// when nobody has a spaceship); the screen is put back from 0x19d4 before the chosen report
-		/// </summary>
-		public void DisplayWorldMenu()
-		{
-			this.processor.Journal.OpenScope("DisplayWorldMenu()");
-
-			if ((this.owner.World.StarshipMarkers & 0xfe00) == 0)
-			{
-				DisabledLines = 0x20;
-			}
-
-			Message(" Wonders of the World (F7)\n Top 5 Cities (F8)\n Civilization Score (F9)\n")
-				.Text(" World Map (F10)\n Demographics\n SpaceShips\n");
-
-			ushort choice = this.owner.Dialogs.DisplayMenu(TextBuffer.Address, 144, 8, 0);
-
-			RestoreMenuScreen();
-
-			switch (choice)
-			{
-				case 0:
-					this.owner.Atlas.DisplayWondersOfTheWorld();
-					break;
-
-				case 1:
-					this.owner.Legends.DisplayTopCities();
-					break;
-
-				case 2:
-					this.owner.Founding.DisplayFinalScore(this.owner.World.PersonParticipantIdx, true);
-					break;
-
-				case 3:
-					this.owner.Atlas.DisplayWorldMap(1);
-					break;
-
-				case 4:
-					this.owner.Atlas.DisplayCensus(this.owner.World.PersonParticipantIdx);
-					break;
-
-				case 5:
-					this.owner.RocketScreen.ChooseNationToView();
-					break;
-			}
-
-			this.processor.Journal.CloseScope("DisplayWorldMenu");
-		}
-
-		/// <summary>
-		/// The Civilopedia menu: the chosen part is shown (0x654a = -1 afterwards), Escape sets 0x654a to 1
-		/// </summary>
-		public void DisplayCivilopediaMenu()
-		{
-			this.processor.Journal.OpenScope("DisplayCivilopediaMenu()");
-
-			Message(" Complete\n Civilization Advances\n City Improvements\n Military Units\n Terrain Types\n")
-				.Text(" Miscellaneous\n");
-
-			ushort choice = this.owner.Dialogs.DisplayMenu(TextBuffer.Address, 182, 8, 0);
-
-			if (choice != 0xffff)
-			{
-				this.owner.Encyclopedia.DisplayCivilopedia((ushort)(choice - 1));
-
-				MenuResult = 0xffff;
-			}
-			else
-			{
-				MenuResult = 0x1;
-			}
-
-			this.processor.Journal.CloseScope("DisplayCivilopediaMenu");
 		}
 	}
 }

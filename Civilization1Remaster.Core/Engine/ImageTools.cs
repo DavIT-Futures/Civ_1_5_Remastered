@@ -14,7 +14,6 @@ namespace Civilization1Remaster.Engine
 		{
 		}
 
-		#region New Image loading functions
 		/// <summary>
 		/// Loads and .pic or .map Image from given filename with optional palette data
 		/// </summary>
@@ -136,6 +135,5 @@ namespace Civilization1Remaster.Engine
 		{
 			return ImportIcon(this.processor.PullText(CPU.AsLinearAddress(this.processor.SegData.Value16, docnameAddr)));
 		}
-		#endregion
 	}
 }

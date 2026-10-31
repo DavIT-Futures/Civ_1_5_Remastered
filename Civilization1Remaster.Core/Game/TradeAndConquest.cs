@@ -171,144 +171,6 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// The captured capital may split the old civilization; when it does, the new capital (ObtainDistanceToCapital, in the
-		/// frame 0x2) stops its production (the city belongs to the player meanwhile)
-		/// </summary>
-		private void SplitCapturedCivilization(short participantIdx, City town, short formerIdx)
-		{
-			if (this.owner.Secession.DivideCivilization(formerIdx) != 0)
-				return;
-
-			town.ParticipantIdx = (sbyte)participantIdx;
-
-			ushort capitalIdx = this.owner.Secession.ObtainDistanceToCapital(formerIdx);
-
-			this.owner.World.Towns[capitalIdx].PresentMakingIdx = -1;
-
-			town.ParticipantIdx = (sbyte)formerIdx;
-		}
-
-		/// <summary>
-		/// Barbarians with a land unit (role 0x113e of its kind up to 2) on the city destroy it, unless 0x28bc; true when they did
-		/// </summary>
-		private bool BarbariansRazeCity(short participantIdx, short townIdx, ushort horizLoc, ushort vertLoc)
-		{
-			if (participantIdx != 0)
-				return false;
-
-			ushort troop = (ushort)(0xc * this.owner.MapOps.ObtainUnitAtTile((short)horizLoc, (short)vertLoc));
-
-			sbyte kind = (sbyte)this.Troops.PullAt(((ushort)(0x600 * participantIdx) + troop), UnitMemory.Kind);
-
-			if ((short)UnitKindWord(kind, UnitKindTable.AssaultPower) > 2 || NoConquestAnimation != 0)
-				return false;
-
-			this.owner.Advisors.FinalizeProduction(townIdx, horizLoc, vertLoc);
-
-			this.owner.World.Towns[townIdx].TrueExtent = 0;
-
-			return true;
-		}
-
-		/// <summary>The replay, the strategic location and the 20 power map marks around the captured city (screen 2)</summary>
-		private void MarkCapturedCity(short participantIdx, City town, ushort horizLoc, ushort vertLoc)
-		{
-			this.owner.UnitOps.AttachReplayContent(9, (byte)participantIdx, town.LabelIdx, (byte)horizLoc, (byte)vertLoc);
-
-			this.owner.Bot.DisableStrategicLocation(participantIdx, 0, (short)horizLoc, (short)vertLoc, 4);
-
-			town.ConditionMarker &= 0x9b;
-
-			ushort markIdx;
-
-			for (markIdx = 0; markIdx < 0x14; markIdx++)
-			{
-				ushort markHoriz = (ushort)this.owner.Routing.TunePosition((short)DirectionHoriz(markIdx) + (short)horizLoc);
-				ushort markVert = (ushort)(DirectionVert(markIdx) + vertLoc);
-
-				this.owner.Services.AssignDot(2, (short)markHoriz + 0x50, (short)markVert, (ushort)participantIdx);
-			}
-
-		}
-
-		/// <summary>The human player takes or loses the city: the map, the capture message, the city screen or the newspaper</summary>
-		private void AnnounceCapture(short participantIdx, short townIdx, short formerIdx, ushort horizLoc, ushort vertLoc, short plunder)
-		{
-			short person = this.owner.World.PersonParticipantIdx;
-			City town = this.owner.World.Towns[townIdx];
-
-			this.owner.MapOps.KeepKnownTileImprovements((short)horizLoc, (short)vertLoc);
-
-			if (formerIdx == person)
-			{
-				this.owner.UnitOps.PanMapToPosition(person, (short)horizLoc, (short)vertLoc);
-			}
-
-			this.owner.MapOps.RenderMapTile((short)horizLoc, (short)vertLoc);
-
-			Message(CivilizationPlural(participantIdx))
-				.Text(" capture\n");
-
-			ObtainCityLabel(townIdx);
-
-			this.owner.Words.Append(". ");
-
-			this.owner.Words.Append(this.owner.Libc.IntegerToText(plunder, 10));
-
-			this.owner.Words.Append(" gold\npieces plundered.\n");
-
-			this.owner.Services.PerformSound(LeaderWord(this.owner.World.Participants[participantIdx].ChiefVisuals, LeaderTable.ShortTune), 0);
-
-			if ((this.owner.World.SessionPrefMarkers & 8) != 0)
-			{
-				this.owner.Startup.ConcealMouseCursor();
-
-				this.owner.CityScene.DisplayCityScreen(townIdx, -2);
-
-				this.owner.Startup.DisplayMouseCursor();
-
-				this.owner.Startup.QueryForDisk(1, 1);
-
-				this.owner.CityScene.RenderCitySceneryForPlayer(participantIdx);
-
-				this.owner.Startup.QueryForDisk(0, 1);
-
-				this.owner.TurnHooks.RepaintMainScreen();
-			}
-			else
-			{
-				this.owner.Paper.DisplayNewspaper(townIdx);
-			}
-
-			this.owner.Services.PerformSound(1, 0);
-
-			town.ShownExtent = participantIdx == person ? (sbyte)0 : town.TrueExtent;
-		}
-
-		/// <summary>Spies report the capture when the human player knows one of the two players</summary>
-		private void ReportCaptureBySpies(short participantIdx, short townIdx, short formerIdx)
-		{
-			ushort[] known = this.owner.World.Participants[this.owner.World.PersonParticipantIdx].Relations;
-
-			if ((known[participantIdx] & 0x40) == 0 && (known[formerIdx] & 0x40) == 0)
-				return;
-
-			DialogStyle = 0x0;
-
-			Message("Spies report:\n")
-				.Text(CivilizationPlural((ushort)participantIdx))
-				.Text(this.owner.World.Towns[townIdx].TrueExtent != 0 ? (ushort)0x2893 : (ushort)0x28a1)
-				.Text(CivilizationName((ushort)formerIdx))
-				.Text(" city\nof ");
-
-			ObtainCityLabel(townIdx);
-
-			this.owner.Words.Append(".\n");
-
-			this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 80);
-		}
-
-		/// <summary>
 		/// The player loses its spaceship: when it was launched (StarshipMarkers bit 8 + player) a message "... spaceship" with
 		/// the text 0x28ca (also built: bit player) or 0x28dd; both bits are cleared and the parts wiped
 		/// </summary>
@@ -606,6 +468,144 @@ namespace Civilization1Remaster.Game
 			this.processor.Journal.CloseScope("FoundTradeRoute");
 
 			return 1;
+		}
+
+		/// <summary>
+		/// The captured capital may split the old civilization; when it does, the new capital (ObtainDistanceToCapital, in the
+		/// frame 0x2) stops its production (the city belongs to the player meanwhile)
+		/// </summary>
+		private void SplitCapturedCivilization(short participantIdx, City town, short formerIdx)
+		{
+			if (this.owner.Secession.DivideCivilization(formerIdx) != 0)
+				return;
+
+			town.ParticipantIdx = (sbyte)participantIdx;
+
+			ushort capitalIdx = this.owner.Secession.ObtainDistanceToCapital(formerIdx);
+
+			this.owner.World.Towns[capitalIdx].PresentMakingIdx = -1;
+
+			town.ParticipantIdx = (sbyte)formerIdx;
+		}
+
+		/// <summary>
+		/// Barbarians with a land unit (role 0x113e of its kind up to 2) on the city destroy it, unless 0x28bc; true when they did
+		/// </summary>
+		private bool BarbariansRazeCity(short participantIdx, short townIdx, ushort horizLoc, ushort vertLoc)
+		{
+			if (participantIdx != 0)
+				return false;
+
+			ushort troop = (ushort)(0xc * this.owner.MapOps.ObtainUnitAtTile((short)horizLoc, (short)vertLoc));
+
+			sbyte kind = (sbyte)this.Troops.PullAt(((ushort)(0x600 * participantIdx) + troop), UnitMemory.Kind);
+
+			if ((short)UnitKindWord(kind, UnitKindTable.AssaultPower) > 2 || NoConquestAnimation != 0)
+				return false;
+
+			this.owner.Advisors.FinalizeProduction(townIdx, horizLoc, vertLoc);
+
+			this.owner.World.Towns[townIdx].TrueExtent = 0;
+
+			return true;
+		}
+
+		/// <summary>The replay, the strategic location and the 20 power map marks around the captured city (screen 2)</summary>
+		private void MarkCapturedCity(short participantIdx, City town, ushort horizLoc, ushort vertLoc)
+		{
+			this.owner.UnitOps.AttachReplayContent(9, (byte)participantIdx, town.LabelIdx, (byte)horizLoc, (byte)vertLoc);
+
+			this.owner.Bot.DisableStrategicLocation(participantIdx, 0, (short)horizLoc, (short)vertLoc, 4);
+
+			town.ConditionMarker &= 0x9b;
+
+			ushort markIdx;
+
+			for (markIdx = 0; markIdx < 0x14; markIdx++)
+			{
+				ushort markHoriz = (ushort)this.owner.Routing.TunePosition((short)DirectionHoriz(markIdx) + (short)horizLoc);
+				ushort markVert = (ushort)(DirectionVert(markIdx) + vertLoc);
+
+				this.owner.Services.AssignDot(2, (short)markHoriz + 0x50, (short)markVert, (ushort)participantIdx);
+			}
+
+		}
+
+		/// <summary>The human player takes or loses the city: the map, the capture message, the city screen or the newspaper</summary>
+		private void AnnounceCapture(short participantIdx, short townIdx, short formerIdx, ushort horizLoc, ushort vertLoc, short plunder)
+		{
+			short person = this.owner.World.PersonParticipantIdx;
+			City town = this.owner.World.Towns[townIdx];
+
+			this.owner.MapOps.KeepKnownTileImprovements((short)horizLoc, (short)vertLoc);
+
+			if (formerIdx == person)
+			{
+				this.owner.UnitOps.PanMapToPosition(person, (short)horizLoc, (short)vertLoc);
+			}
+
+			this.owner.MapOps.RenderMapTile((short)horizLoc, (short)vertLoc);
+
+			Message(CivilizationPlural(participantIdx))
+				.Text(" capture\n");
+
+			ObtainCityLabel(townIdx);
+
+			this.owner.Words.Append(". ");
+
+			this.owner.Words.Append(this.owner.Libc.IntegerToText(plunder, 10));
+
+			this.owner.Words.Append(" gold\npieces plundered.\n");
+
+			this.owner.Services.PerformSound(LeaderWord(this.owner.World.Participants[participantIdx].ChiefVisuals, LeaderTable.ShortTune), 0);
+
+			if ((this.owner.World.SessionPrefMarkers & 8) != 0)
+			{
+				this.owner.Startup.ConcealMouseCursor();
+
+				this.owner.CityScene.DisplayCityScreen(townIdx, -2);
+
+				this.owner.Startup.DisplayMouseCursor();
+
+				this.owner.Startup.QueryForDisk(1, 1);
+
+				this.owner.CityScene.RenderCitySceneryForPlayer(participantIdx);
+
+				this.owner.Startup.QueryForDisk(0, 1);
+
+				this.owner.TurnHooks.RepaintMainScreen();
+			}
+			else
+			{
+				this.owner.Paper.DisplayNewspaper(townIdx);
+			}
+
+			this.owner.Services.PerformSound(1, 0);
+
+			town.ShownExtent = participantIdx == person ? (sbyte)0 : town.TrueExtent;
+		}
+
+		/// <summary>Spies report the capture when the human player knows one of the two players</summary>
+		private void ReportCaptureBySpies(short participantIdx, short townIdx, short formerIdx)
+		{
+			ushort[] known = this.owner.World.Participants[this.owner.World.PersonParticipantIdx].Relations;
+
+			if ((known[participantIdx] & 0x40) == 0 && (known[formerIdx] & 0x40) == 0)
+				return;
+
+			DialogStyle = 0x0;
+
+			Message("Spies report:\n")
+				.Text(CivilizationPlural((ushort)participantIdx))
+				.Text(this.owner.World.Towns[townIdx].TrueExtent != 0 ? (ushort)0x2893 : (ushort)0x28a1)
+				.Text(CivilizationName((ushort)formerIdx))
+				.Text(" city\nof ");
+
+			ObtainCityLabel(townIdx);
+
+			this.owner.Words.Append(".\n");
+
+			this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 80);
 		}
 
 		/// <summary>The trade of the city as a trade route of the player: doubled for a foreign city</summary>

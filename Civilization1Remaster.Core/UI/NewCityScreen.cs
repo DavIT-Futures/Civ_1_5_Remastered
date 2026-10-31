@@ -382,7 +382,7 @@ namespace Civilization1Remaster.UI
 
 			return accepted;
 		}
-		
+
 		/// <summary>
 		/// Draws the text of an input field (TextBuffer.Address) character by character on white boxes of 8 x 8, the field the width in
 		/// characters; at the cursor (0x68cc) the column and the width of its character go to 0x68d0 and 0x68ce

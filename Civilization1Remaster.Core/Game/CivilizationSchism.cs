@@ -34,6 +34,67 @@ namespace Civilization1Remaster.Game
 			return result;
 		}
 
+		/// <summary>
+		/// The city goes to the player: its owner, the map layer of the owners and the total size of the cities of the player
+		/// </summary>
+		public void AssignCityOwner(short townIdx, short participantIdx)
+		{
+			this.processor.Journal.OpenScope($"AssignCityOwner({townIdx}, {participantIdx})");
+
+			this.owner.World.Towns[townIdx].ParticipantIdx = participantIdx;
+
+			this.owner.MapOps.MapAssignCityOwner(participantIdx, 
+				this.owner.World.Towns[townIdx].Place.X, this.owner.World.Towns[townIdx].Place.Y);
+
+			this.owner.World.Participants[participantIdx].GrandTownExtent += this.owner.World.Towns[townIdx].TrueExtent;
+
+			this.processor.Journal.CloseScope("AssignCityOwner");
+		}
+
+		/// <summary>
+		/// The most central city of the player: the one with the smallest sum of distances to all its cities (a signed word sum,
+		/// the first one of equal sums; sums of 0x7fff and more never count)
+		/// </summary>
+		/// <returns>City index, 0xffff when none (also in AX)</returns>
+		public ushort ObtainDistanceToCapital(short participantIdx)
+		{
+			this.processor.Journal.OpenScope($"ObtainDistanceToCapital({participantIdx})");
+
+			short smallestSum = 0x7fff;
+			ushort central = 0xffff;
+
+			for (int townIdx = 0; townIdx < 0x80; townIdx++)
+			{
+				City town = this.owner.World.Towns[townIdx];
+
+				if (town.ParticipantIdx != participantIdx || town.ConditionMarker == 0xff)
+					continue;
+
+				short sum = 0;
+
+				for (int otherIdx = 0; otherIdx < 0x80; otherIdx++)
+				{
+					City other = this.owner.World.Towns[otherIdx];
+
+					if (other.ParticipantIdx == participantIdx && other.ConditionMarker != 0xff)
+					{
+						sum = (short)(sum + this.owner.Helpers.ObtainDistance(town.Place.X, other.Place.X, town.Place.Y, other.Place.Y));
+					}
+				}
+
+				if (sum < smallestSum)
+				{
+					smallestSum = sum;
+					central = (ushort)townIdx;
+				}
+			}
+
+
+			this.processor.Journal.CloseScope("ObtainDistanceToCapital");
+
+			return central;
+		}
+
 		/// <summary>The civil war (see DivideCivilization)</summary>
 		private ushort SplitCivilization(short participantIdx)
 		{
@@ -461,66 +522,5 @@ namespace Civilization1Remaster.Game
 		private short HomeOwner(short participantIdx, byte homeIdx) =>
 			HomeCityRules.HasHome(homeIdx, this.owner.TurnHooks.ClassicSchismHomes) ?
 				this.owner.World.Towns[homeIdx].ParticipantIdx : participantIdx;
-
-		/// <summary>
-		/// The city goes to the player: its owner, the map layer of the owners and the total size of the cities of the player
-		/// </summary>
-		public void AssignCityOwner(short townIdx, short participantIdx)
-		{
-			this.processor.Journal.OpenScope($"AssignCityOwner({townIdx}, {participantIdx})");
-
-			this.owner.World.Towns[townIdx].ParticipantIdx = participantIdx;
-
-			this.owner.MapOps.MapAssignCityOwner(participantIdx, 
-				this.owner.World.Towns[townIdx].Place.X, this.owner.World.Towns[townIdx].Place.Y);
-
-			this.owner.World.Participants[participantIdx].GrandTownExtent += this.owner.World.Towns[townIdx].TrueExtent;
-
-			this.processor.Journal.CloseScope("AssignCityOwner");
-		}
-
-		/// <summary>
-		/// The most central city of the player: the one with the smallest sum of distances to all its cities (a signed word sum,
-		/// the first one of equal sums; sums of 0x7fff and more never count)
-		/// </summary>
-		/// <returns>City index, 0xffff when none (also in AX)</returns>
-		public ushort ObtainDistanceToCapital(short participantIdx)
-		{
-			this.processor.Journal.OpenScope($"ObtainDistanceToCapital({participantIdx})");
-
-			short smallestSum = 0x7fff;
-			ushort central = 0xffff;
-
-			for (int townIdx = 0; townIdx < 0x80; townIdx++)
-			{
-				City town = this.owner.World.Towns[townIdx];
-
-				if (town.ParticipantIdx != participantIdx || town.ConditionMarker == 0xff)
-					continue;
-
-				short sum = 0;
-
-				for (int otherIdx = 0; otherIdx < 0x80; otherIdx++)
-				{
-					City other = this.owner.World.Towns[otherIdx];
-
-					if (other.ParticipantIdx == participantIdx && other.ConditionMarker != 0xff)
-					{
-						sum = (short)(sum + this.owner.Helpers.ObtainDistance(town.Place.X, other.Place.X, town.Place.Y, other.Place.Y));
-					}
-				}
-
-				if (sum < smallestSum)
-				{
-					smallestSum = sum;
-					central = (ushort)townIdx;
-				}
-			}
-
-
-			this.processor.Journal.CloseScope("ObtainDistanceToCapital");
-
-			return central;
-		}
 	}
 }

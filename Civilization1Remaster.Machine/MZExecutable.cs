@@ -7,34 +7,42 @@ namespace Civilization1Remaster.Emulation
 {
 	public class MZExecutable
 	{
-		// 0x00 - Signature, word (0x5A4D (ASCII for 'M' and 'Z'))
-		private ushort stamp = 0;
-		// 0x0A - Minimum allocation, word (The number of paragraphs required by the program, excluding the PSP and program image. If no free block is big enough, the loading stops.)
-		private ushort lowestReservation = 0;
-		// 0x0C - Maximum allocation, word (The number of paragraphs requested by the program. If no free block is big enough, the biggest one possible is allocated.)
-		private ushort highestReservation = 0;
-		// 0x0E - Initial SS, word (Relocatable segment address for SS.)
-		private ushort startingStackseg = 0;
-		// 0x10 - Initial SP, word (Initial value for SP.)
-		private ushort startingStackptr = 0;
-		// 0x14 - Initial IP, word (Initial value for IP.)
-		private ushort startingInstrptr = 0;
-		// 0x16 - Initial CS, word (Relocatable segment address for CS.)
-		private ushort startingCodeseg = 0;
-		// 0x1A - Overlay, word (Value used for overlay management. If zero, this is the main executable.)
-		private ushort layerOrdinal = 0;
-		// 0x1C - Overlay information, word (Files sometimes contain extra information for the main's program overlay management.)
-		// always 1 in thiscase
-		private ushort layerIdx = 0;
-		// actual code or data
-		private byte[] content = new byte[0];
 		// relocation data
 		private readonly List<MZRelocationItem> rebases = new List<MZRelocationItem>();
+
 		// overlays
 		private readonly List<MZExecutable> layers = new List<MZExecutable>();
 
-		protected MZExecutable()
-		{ }
+		// 0x00 - Signature, word (0x5A4D (ASCII for 'M' and 'Z'))
+		private ushort stamp = 0;
+
+		// 0x0A - Minimum allocation, word (The number of paragraphs required by the program, excluding the PSP and program image. If no free block is big enough, the loading stops.)
+		private ushort lowestReservation = 0;
+
+		// 0x0C - Maximum allocation, word (The number of paragraphs requested by the program. If no free block is big enough, the biggest one possible is allocated.)
+		private ushort highestReservation = 0;
+
+		// 0x0E - Initial SS, word (Relocatable segment address for SS.)
+		private ushort startingStackseg = 0;
+
+		// 0x10 - Initial SP, word (Initial value for SP.)
+		private ushort startingStackptr = 0;
+
+		// 0x14 - Initial IP, word (Initial value for IP.)
+		private ushort startingInstrptr = 0;
+
+		// 0x16 - Initial CS, word (Relocatable segment address for CS.)
+		private ushort startingCodeseg = 0;
+
+		// 0x1A - Overlay, word (Value used for overlay management. If zero, this is the main executable.)
+		private ushort layerOrdinal = 0;
+
+		// 0x1C - Overlay information, word (Files sometimes contain extra information for the main's program overlay management.)
+		// always 1 in thiscase
+		private ushort layerIdx = 0;
+
+		// actual code or data
+		private byte[] content = new byte[0];
 
 		public MZExecutable(string route)
 			: this(new FileStream(route, FileMode.Open, FileAccess.Read, FileShare.Read))
@@ -56,58 +64,145 @@ namespace Civilization1Remaster.Emulation
 			}
 		}
 
-		private static int PullPreamble(Stream flow, int place, MZExecutable program)
+		protected MZExecutable()
+		{ }
+
+		public ushort Stamp
 		{
-			// load header
-			program.stamp = PullUInt16(flow);
-			if (program.stamp != 0x5a4d)
+			get { return this.stamp; }
+		}
+
+		public ushort LowestReservation
+		{
+			get { return this.lowestReservation; }
+			set { this.lowestReservation = value; }
+		}
+
+		public ushort HighestReservation
+		{
+			get { return this.highestReservation; }
+			set { this.highestReservation = value; }
+		}
+
+		public ushort StartingStackseg
+		{
+			get { return this.startingStackseg; }
+			set { this.startingStackseg = value; }
+		}
+
+		public ushort StartingStackptr
+		{
+			get { return this.startingStackptr; }
+			set { this.startingStackptr = value; }
+		}
+
+		public ushort StartingInstrptr
+		{
+			get { return this.startingInstrptr; }
+			set { this.startingInstrptr = value; }
+		}
+
+		public ushort StartingCodeseg
+		{
+			get { return this.startingCodeseg; }
+			set { this.startingCodeseg = value; }
+		}
+
+		public ushort LayerOrdinal
+		{
+			get { return this.layerOrdinal; }
+			set { this.layerOrdinal = value; }
+		}
+
+		public ushort LayerIdx
+		{
+			get { return this.layerIdx; }
+			set { this.layerIdx = value; }
+		}
+
+		public byte[] Content
+		{
+			get { return this.content; }
+			set { this.content = value; }
+		}
+
+		public List<MZRelocationItem> Rebases
+		{
+			get { return this.rebases; }
+		}
+
+		public List<MZExecutable> Layers
+		{
+			get { return this.layers; }
+		}
+
+		public static byte PullByte(Stream flow)
+		{
+			int rhs0 = flow.ReadByte();
+
+			if (rhs0 < 0)
 			{
-				throw new Exception("Not an MS-DOS executable file");
+				throw new Exception("Unexpected end of stream");
 			}
 
-			// 0x02 - Extra bytes, word (Number of bytes in the last page.)
-			int additionalOctetsInt = PullUInt16(flow);
-			// 0x04 - Pages, word (Number of whole/partial pages.)
-			int sheets = PullUInt16(flow);
-			// 0x06 - Relocation items, word (Number of entries in the relocation table.)
-			int rebaseElements = PullUInt16(flow);
-			// 0x08 - Header size, word (The number of paragraphs taken up by the header. It can be any value, as the loader just uses it to find where the actual executable data starts. It may be larger than what the "standard" fields take up, and you may use it if you want to include your own header metadata, or put the relocation table there, or use it for any other purpose.)
-			int preambleExtentInt = PullUInt16(flow);
-			program.lowestReservation = PullUInt16(flow);
-			program.highestReservation = PullUInt16(flow);
-			program.startingStackseg = PullUInt16(flow);
-			program.startingStackptr = PullUInt16(flow);
-			// 0x12 - Checksum, word (When added to the sum of all other words in the file, the result should be zero.)
-			int sum = PullUInt16(flow);
-			program.startingInstrptr = PullUInt16(flow);
-			program.startingCodeseg = PullUInt16(flow);
-			// 0x18 - Relocation table, word (The (absolute) offset to the relocation table.)
-			int rebaseLookupDisplacement = PullUInt16(flow);
-			program.layerOrdinal = PullUInt16(flow);
-			program.layerIdx = PullUInt16(flow);
+			return (byte)(rhs0 & 0xff);
+		}
 
-			// read relocations
-			if (rebaseElements > 0)
+		public static ushort PullUInt16(Stream flow)
+		{
+			int rhs0 = flow.ReadByte();
+			int rhs1 = flow.ReadByte();
+
+			if (rhs0 < 0 || rhs1 < 0)
 			{
-				flow.Seek(place + rebaseLookupDisplacement, SeekOrigin.Begin);
-				for (int idx = 0; idx < rebaseElements; idx++)
-				{
-					ushort delta = PullUInt16(flow);
-					ushort seg = PullUInt16(flow);
-					program.rebases.Add(new MZRelocationItem(seg, delta));
-				}
-
-				flow.Seek(place + preambleExtentInt << 4, SeekOrigin.Begin);
+				throw new Exception("Unexpected end of stream");
 			}
 
-			// read data
-			int contentExtent = (additionalOctetsInt > 0) ? (((sheets - 1) << 9) + additionalOctetsInt) - (preambleExtentInt << 4) : (sheets << 9) - (preambleExtentInt << 4);
-			flow.Seek(place + (preambleExtentInt << 4), SeekOrigin.Begin);
-			byte[] staging = new byte[contentExtent];
-			flow.ReadExactly(staging, 0, contentExtent);
-			program.content = staging;
+			return (ushort)((rhs0 & 0xff) | ((rhs1 & 0xff) << 8));
+		}
 
-			return (sheets << 9);
+		public static uint PullUInt32(Stream flow)
+		{
+			int rhs0 = flow.ReadByte();
+			int rhs1 = flow.ReadByte();
+			int rhs2 = flow.ReadByte();
+			int rhs3 = flow.ReadByte();
+
+			if (rhs0 < 0 || rhs1 < 0 || rhs2 < 0 || rhs3 < 0)
+			{
+				throw new Exception("Unexpected end of stream");
+			}
+
+			return (uint)((uint)((uint)rhs0 & 0xff) | (uint)(((uint)rhs1 & 0xff) << 8) |
+				(uint)(((uint)rhs2 & 0xff) << 16) | (uint)(((uint)rhs3 & 0xff) << 24));
+		}
+
+		public static byte[] PullChunk(Stream flow, int extent)
+		{
+			byte[] scratchBytes = new byte[extent];
+
+			if (flow.Read(scratchBytes, 0, extent) != extent)
+			{
+				throw new Exception("Unexpected end of stream");
+			}
+
+			return scratchBytes;
+		}
+
+		public static string? PullText(Stream flow)
+		{
+			int spanInt = PullByte(flow);
+			byte[] scratchBytes = new byte[spanInt];
+
+			if (spanInt == 0)
+				return null;
+
+			if (flow.Read(scratchBytes, 0, spanInt) != spanInt)
+			{
+				throw new Exception("Unexpected end of stream");
+			}
+
+			return Encoding.ASCII.GetString(scratchBytes);
 		}
 
 		public void EmitToFile(string route)
@@ -228,150 +323,64 @@ namespace Civilization1Remaster.Emulation
 			}
 		}
 
-		#region Helper functions
-		public static byte PullByte(Stream flow)
-		{
-			int rhs0 = flow.ReadByte();
-
-			if (rhs0 < 0)
-			{
-				throw new Exception("Unexpected end of stream");
-			}
-
-			return (byte)(rhs0 & 0xff);
-		}
-
-		public static ushort PullUInt16(Stream flow)
-		{
-			int rhs0 = flow.ReadByte();
-			int rhs1 = flow.ReadByte();
-
-			if (rhs0 < 0 || rhs1 < 0)
-			{
-				throw new Exception("Unexpected end of stream");
-			}
-
-			return (ushort)((rhs0 & 0xff) | ((rhs1 & 0xff) << 8));
-		}
-
-		public static uint PullUInt32(Stream flow)
-		{
-			int rhs0 = flow.ReadByte();
-			int rhs1 = flow.ReadByte();
-			int rhs2 = flow.ReadByte();
-			int rhs3 = flow.ReadByte();
-
-			if (rhs0 < 0 || rhs1 < 0 || rhs2 < 0 || rhs3 < 0)
-			{
-				throw new Exception("Unexpected end of stream");
-			}
-
-			return (uint)((uint)((uint)rhs0 & 0xff) | (uint)(((uint)rhs1 & 0xff) << 8) |
-				(uint)(((uint)rhs2 & 0xff) << 16) | (uint)(((uint)rhs3 & 0xff) << 24));
-		}
-
-		public static byte[] PullChunk(Stream flow, int extent)
-		{
-			byte[] scratchBytes = new byte[extent];
-
-			if (flow.Read(scratchBytes, 0, extent) != extent)
-			{
-				throw new Exception("Unexpected end of stream");
-			}
-
-			return scratchBytes;
-		}
-
-		public static string? PullText(Stream flow)
-		{
-			int spanInt = PullByte(flow);
-			byte[] scratchBytes = new byte[spanInt];
-
-			if (spanInt == 0)
-				return null;
-
-			if (flow.Read(scratchBytes, 0, spanInt) != spanInt)
-			{
-				throw new Exception("Unexpected end of stream");
-			}
-
-			return Encoding.ASCII.GetString(scratchBytes);
-		}
-
 		public void EmitUInt16(Stream flow, uint amount)
 		{
 			flow.WriteByte((byte)(amount & 0xff));
 			flow.WriteByte((byte)((amount & 0xff00) >> 8));
 		}
-		#endregion
 
-		public ushort Stamp
+		private static int PullPreamble(Stream flow, int place, MZExecutable program)
 		{
-			get { return this.stamp; }
-		}
+			// load header
+			program.stamp = PullUInt16(flow);
+			if (program.stamp != 0x5a4d)
+			{
+				throw new Exception("Not an MS-DOS executable file");
+			}
 
-		public ushort LowestReservation
-		{
-			get { return this.lowestReservation; }
-			set { this.lowestReservation = value; }
-		}
+			// 0x02 - Extra bytes, word (Number of bytes in the last page.)
+			int additionalOctetsInt = PullUInt16(flow);
+			// 0x04 - Pages, word (Number of whole/partial pages.)
+			int sheets = PullUInt16(flow);
+			// 0x06 - Relocation items, word (Number of entries in the relocation table.)
+			int rebaseElements = PullUInt16(flow);
+			// 0x08 - Header size, word (The number of paragraphs taken up by the header. It can be any value, as the loader just uses it to find where the actual executable data starts. It may be larger than what the "standard" fields take up, and you may use it if you want to include your own header metadata, or put the relocation table there, or use it for any other purpose.)
+			int preambleExtentInt = PullUInt16(flow);
+			program.lowestReservation = PullUInt16(flow);
+			program.highestReservation = PullUInt16(flow);
+			program.startingStackseg = PullUInt16(flow);
+			program.startingStackptr = PullUInt16(flow);
+			// 0x12 - Checksum, word (When added to the sum of all other words in the file, the result should be zero.)
+			int sum = PullUInt16(flow);
+			program.startingInstrptr = PullUInt16(flow);
+			program.startingCodeseg = PullUInt16(flow);
+			// 0x18 - Relocation table, word (The (absolute) offset to the relocation table.)
+			int rebaseLookupDisplacement = PullUInt16(flow);
+			program.layerOrdinal = PullUInt16(flow);
+			program.layerIdx = PullUInt16(flow);
 
-		public ushort HighestReservation
-		{
-			get { return this.highestReservation; }
-			set { this.highestReservation = value; }
-		}
+			// read relocations
+			if (rebaseElements > 0)
+			{
+				flow.Seek(place + rebaseLookupDisplacement, SeekOrigin.Begin);
+				for (int idx = 0; idx < rebaseElements; idx++)
+				{
+					ushort delta = PullUInt16(flow);
+					ushort seg = PullUInt16(flow);
+					program.rebases.Add(new MZRelocationItem(seg, delta));
+				}
 
-		public ushort StartingStackseg
-		{
-			get { return this.startingStackseg; }
-			set { this.startingStackseg = value; }
-		}
+				flow.Seek(place + preambleExtentInt << 4, SeekOrigin.Begin);
+			}
 
-		public ushort StartingStackptr
-		{
-			get { return this.startingStackptr; }
-			set { this.startingStackptr = value; }
-		}
+			// read data
+			int contentExtent = (additionalOctetsInt > 0) ? (((sheets - 1) << 9) + additionalOctetsInt) - (preambleExtentInt << 4) : (sheets << 9) - (preambleExtentInt << 4);
+			flow.Seek(place + (preambleExtentInt << 4), SeekOrigin.Begin);
+			byte[] staging = new byte[contentExtent];
+			flow.ReadExactly(staging, 0, contentExtent);
+			program.content = staging;
 
-		public ushort StartingInstrptr
-		{
-			get { return this.startingInstrptr; }
-			set { this.startingInstrptr = value; }
-		}
-
-		public ushort StartingCodeseg
-		{
-			get { return this.startingCodeseg; }
-			set { this.startingCodeseg = value; }
-		}
-
-		public ushort LayerOrdinal
-		{
-			get { return this.layerOrdinal; }
-			set { this.layerOrdinal = value; }
-		}
-
-		public ushort LayerIdx
-		{
-			get { return this.layerIdx; }
-			set { this.layerIdx = value; }
-		}
-
-		public byte[] Content
-		{
-			get { return this.content; }
-			set { this.content = value; }
-		}
-
-		public List<MZRelocationItem> Rebases
-		{
-			get { return this.rebases; }
-		}
-
-		public List<MZExecutable> Layers
-		{
-			get { return this.layers; }
+			return (sheets << 9);
 		}
 	}
 }

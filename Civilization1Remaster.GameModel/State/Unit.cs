@@ -17,16 +17,6 @@ namespace Civilization1Remaster.Game.State
 		public short FollowingTroopIdx { get; set; } = 0;
 		public short BaseTownIdx { get; set; } = 0;
 
-		public void WipeStatus(short condition)
-		{
-			this.Condition &= condition;
-		}
-
-		public bool InspectStatus(short condition)
-		{
-			return (this.Condition & condition) != 0;
-		}
-
 		public static Unit ReadFrom(Stream flow)
 		{
 			Unit troop = new Unit();
@@ -45,6 +35,16 @@ namespace Civilization1Remaster.Game.State
 			troop.BaseTownIdx = (sbyte)StreamIo.PullUInt8(flow);
 
 			return troop;
+		}
+
+		public void WipeStatus(short condition)
+		{
+			this.Condition &= condition;
+		}
+
+		public bool InspectStatus(short condition)
+		{
+			return (this.Condition & condition) != 0;
 		}
 
 		public void WriteTo(Stream flow)

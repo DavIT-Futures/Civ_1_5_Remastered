@@ -11,7 +11,6 @@ namespace Civilization1Remaster.Engine
 		public const ushort SoundDriverOptionAddress = 0x1a30;
 		public const ushort DiskNumberPromptAddress = 0x1ade;
 
-
 		/// <summary>The words of the frame of TitleLogoAndMainChoices, shared by its helpers (B3: in C#, new for every call)</summary>
 
 		public GameStartup(GameEngine owner)
@@ -456,6 +455,34 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <summary>
+		/// The choices of a new game (only before the first turn, after the picture 0x1c16) and the government pictures
+		/// </summary>
+		public void FreshWorldChoices()
+		{
+			this.processor.Journal.OpenScope("FreshWorldChoices()");
+
+			if (MousePresent != 0)
+			{
+				this.owner.Services.AssignMouseCursorImage(0, 0, PointerPicture);
+			}
+
+			if (this.owner.World.RoundTally == 0)
+			{
+				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, GameTexts.FileDiffsPic, 1);
+
+				QueryForDisk(0, 1);
+
+				this.owner.NewGameWizard.ConfigureFreshGame();
+			}
+
+			this.owner.NewGameWizard.ImportGovernmentGraphics();
+
+			QueryForDisk(0, 1);
+
+			this.processor.Journal.CloseScope("FreshWorldChoices");
+		}
+
+		/// <summary>
 		/// Waits until the title music is at the start (up to 0x1495) or at a measure (0x120 after it); the position is kept
 		/// in the frame, like the original (a memory access every round, so the timer of the tests goes on)
 		/// </summary>
@@ -567,34 +594,6 @@ namespace Civilization1Remaster.Engine
 
 				DefaultLine = this.processor.PullGlobalWord(optionAddr);
 			}
-		}
-
-		/// <summary>
-		/// The choices of a new game (only before the first turn, after the picture 0x1c16) and the government pictures
-		/// </summary>
-		public void FreshWorldChoices()
-		{
-			this.processor.Journal.OpenScope("FreshWorldChoices()");
-
-			if (MousePresent != 0)
-			{
-				this.owner.Services.AssignMouseCursorImage(0, 0, PointerPicture);
-			}
-
-			if (this.owner.World.RoundTally == 0)
-			{
-				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, GameTexts.FileDiffsPic, 1);
-
-				QueryForDisk(0, 1);
-
-				this.owner.NewGameWizard.ConfigureFreshGame();
-			}
-
-			this.owner.NewGameWizard.ImportGovernmentGraphics();
-
-			QueryForDisk(0, 1);
-
-			this.processor.Journal.CloseScope("FreshWorldChoices");
 		}
 	}
 }

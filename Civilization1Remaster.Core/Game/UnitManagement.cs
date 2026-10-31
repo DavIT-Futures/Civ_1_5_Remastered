@@ -10,6 +10,24 @@ namespace Civilization1Remaster.Game
 	/// </summary>
 	public class UnitManagement : GameModule
 	{
+		/// <summary>Bit of a kept unit type (City.Unfamiliar): the unit was a veteran</summary>
+		private const sbyte KeptVeteran = 0x40;
+
+		/// <summary>Bit of City.ConditionMarker changed when the kept units are put back or taken away</summary>
+		private const byte KeptUnitsCondition = 4;
+
+		/// <summary>Bit of Player.Relations: the two players have peace</summary>
+		private const int PeaceRelation = 2;
+
+		/// <summary>Bit of the tile improvements: a city</summary>
+		private const int CityImprovement = 1;
+
+		/// <summary>Number of technologies</summary>
+		private const int ScienceTally = 72;
+
+		/// <summary>Most units shown in the list of DisplayBattleScreen</summary>
+		private const int StackListTally = 12;
+
 		private readonly UnitMemory troops;
 
 		public UnitManagement(GameEngine owner)
@@ -17,6 +35,12 @@ namespace Civilization1Remaster.Game
 		{
 			this.troops = new UnitMemory(owner.Processor);
 		}
+
+		/// <summary>The player whose unit ObtainUnitAtTile found last (0xd7f0)</summary>
+		private short FoundUnitParticipant => (short)FoundPlayer;
+
+		/// <summary>The AI players see all units (0xd806, a debug option of the original)</summary>
+		private bool RevealAll => MapRevealed != 0;
 
 		/// <summary>
 		/// Puts the units kept in a city of the human player (KeepUnitsInCityList) back on the map, fortified
@@ -58,12 +82,6 @@ namespace Civilization1Remaster.Game
 
 			this.processor.Journal.CloseScope("ConstructUnitsFromCityList");
 		}
-
-		/// <summary>Bit of a kept unit type (City.Unfamiliar): the unit was a veteran</summary>
-		private const sbyte KeptVeteran = 0x40;
-
-		/// <summary>Bit of City.ConditionMarker changed when the kept units are put back or taken away</summary>
-		private const byte KeptUnitsCondition = 4;
 
 		/// <summary>
 		/// A city of the human player keeps up to two of its fortified home units standing in it: they are taken off the map and
@@ -115,16 +133,6 @@ namespace Civilization1Remaster.Game
 			}
 
 			this.processor.Journal.CloseScope("KeepUnitsInCityList");
-		}
-
-		/// <summary>A fortified unit of the city standing in it</summary>
-		private bool IsFortifiedHomeUnitIn(City town, short townIdx, short participantIdx, short troopIdx)
-		{
-			return this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) != 0xff &&
-				this.troops.Pull(participantIdx, troopIdx, UnitMemory.Horiz) == (byte)(sbyte)town.Place.X &&
-				this.troops.Pull(participantIdx, troopIdx, UnitMemory.Vert) == (byte)(sbyte)town.Place.Y &&
-				this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.BaseTown) == townIdx &&
-				(this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & (int)UnitStatusEnum.Fortified) != 0;
 		}
 
 		/// <summary>
@@ -180,17 +188,1103 @@ namespace Civilization1Remaster.Game
 			this.processor.Journal.CloseScope("ShiftUnit");
 		}
 
-		/// <summary>Bit of Player.Relations: the two players have peace</summary>
-		private const int PeaceRelation = 2;
+		/// <summary>
+		/// Blinks the active unit on the map and its dot on the world map, and the cursor frame on a map tile, until a key is
+		/// pressed or the mouse is clicked. A unit index from 128 blinks a text instead (no unit).
+		/// </summary>
+		/// <param name="cursorHoriz">Map position of the cursor frame, 0xffff for none</param>
+		/// <param name="cursorVert">Map position of the cursor frame</param>
+		public void ChoreographUnitMove(short participantIdx, short troopIdx, ushort cursorHoriz, ushort cursorVert)
+		{
+			this.processor.Journal.OpenScope($"ChoreographUnitMove({participantIdx}, {troopIdx}, {cursorHoriz}, {cursorVert})");
 
-		/// <summary>Bit of the tile improvements: a city</summary>
-		private const int CityImprovement = 1;
+			// Screen position of the cursor frame, -1 when there is none or it is outside the map view
+			short frameHoriz = -1;
+			short frameVert = 0;
 
-		/// <summary>The player whose unit ObtainUnitAtTile found last (0xd7f0)</summary>
-		private short FoundUnitParticipant => (short)FoundPlayer;
+			if (cursorHoriz != 0xffff)
+			{
+				frameHoriz = (short)((this.owner.Routing.TunePosition((short)cursorHoriz - (short)MapViewHoriz) << 4) + 0x50);
+				frameVert = (short)(((cursorVert - MapViewVert) << 4) + 0x8);
 
-		/// <summary>The AI players see all units (0xd806, a debug option of the original)</summary>
-		private bool RevealAll => MapRevealed != 0;
+				if (frameHoriz < 0x50 || frameHoriz >= 0x140 || frameVert < 0x8 || frameVert > 0xc0)
+					frameHoriz = -1;
+			}
+
+			// Position of the unit on the world map (top left corner of the screen)
+			short worldMapTop = (short)MapFocusTop;
+			short dotHoriz = (short)this.owner.Routing.TunePosition(
+				this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz) - (short)MapFocusLeft);
+			int unitVert = troopIdx < 127 ? this.troops.Pull(participantIdx, troopIdx, UnitMemory.Vert) : 0xff;
+			short dotVert = (short)(unitVert - worldMapTop);
+			bool dotVisible = dotVert >= 0 && dotVert < 50;
+
+			do
+			{
+				// Hidden phase
+				this.owner.Startup.ConcealMouseCursor();
+
+				if (troopIdx >= UnitMemory.TroopTally)
+				{
+					this.owner.TextPainter.RenderTextToScreen0(GameTexts.TextEndOfTurnB, 4, 124, Hues.LightGray);
+				}
+				else
+				{
+					this.owner.MapOps.RenderMapTile(
+						this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
+						this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert));
+
+					if (dotVisible)
+					{
+						this.owner.Services.AssignDot(dotHoriz, dotVert + 8, 15);
+					}
+				}
+
+				if (frameHoriz != -1)
+				{
+					this.owner.Dialogs.RenderBox(frameHoriz, frameVert, 15, 15, Hues.White);
+				}
+
+				AwaitBlink();
+
+				// Shown phase
+				this.owner.Startup.ConcealMouseCursor();
+
+				if (troopIdx >= UnitMemory.TroopTally)
+				{
+					this.owner.TextPainter.RenderTextToScreen0(GameTexts.TextEndOfTurnC, 4, 124, Hues.Black);
+				}
+				else
+				{
+					this.owner.MapOps.RenderUnitOnWorldMap(participantIdx, troopIdx);
+
+					if (dotVisible)
+					{
+						ushort dotColour = this.owner.MapOps.ObtainTerrainType(
+							this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
+							this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert)) == MapRules.OceanTerrain ? (ushort)1 : (ushort)2;
+
+						this.owner.Services.AssignDot(dotHoriz, dotVert + 8, dotColour);
+					}
+				}
+
+				if (frameHoriz != -1)
+				{
+					this.owner.Dialogs.RenderBox(frameHoriz, frameVert, 15, 15, Hues.Black);
+				}
+
+				AwaitBlink();
+
+				this.owner.Startup.ObtainMouseState();
+			}
+			while (this.owner.Libc.KeyAvailable() == 0 && this.owner.GlobDb3a == 0);
+
+			this.processor.Journal.CloseScope("ChoreographUnitMove");
+		}
+
+		/// <summary>
+		/// Creates a unit of the type on the tile in the first free record (0 - 126). Its home city is the nearest city when that
+		/// city belongs to the player. When there is no free record, the human player is told once.
+		/// </summary>
+		/// <param name="kind">Unit type</param>
+		/// <returns>Index of the new unit, or 0xffff</returns>
+		public ushort ConstructUnit(short participantIdx, short kind, int horizLoc, int vertLoc)
+		{
+			this.processor.Journal.OpenScope($"ConstructUnit({participantIdx}, {kind}, {horizLoc}, {vertLoc})");
+
+			short troopIdx = -1;
+
+			for (short idx = 0; idx < UnitMemory.TroopTally - 1; idx++)
+			{
+				if (this.troops.Pull(participantIdx, idx, UnitMemory.Kind) == 0xff)
+				{
+					troopIdx = idx;
+					break;
+				}
+			}
+
+			ushort result;
+
+			if (troopIdx == -1)
+			{
+				if (participantIdx == this.owner.World.PersonParticipantIdx && UnitLimitTold == 0)
+				{
+					DialogStyle = 0x3;
+					this.owner.Words.Clear();
+
+					this.owner.BlockText.DisplayTextDialog(GameTexts.TopicUmax);
+
+					this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 80, 64);
+
+					UnitLimitTold = 0x1;
+				}
+
+				result = 0xffff;
+			}
+			else
+			{
+				SetUpUnit(participantIdx, troopIdx, kind, horizLoc, vertLoc);
+
+				result = (ushort)troopIdx;
+			}
+
+
+			this.processor.Journal.CloseScope("ConstructUnit");
+
+			return result;
+		}
+
+		/// <summary>
+		/// Removes the unit. A transport sinking on the ocean takes the land units of its stack along, a carrier its planes.
+		/// The tile is repainted when the human player saw the unit.
+		/// </summary>
+		public void EliminateUnit(short participantIdx, short troopIdx)
+		{
+			this.processor.Journal.OpenScope($"EliminateUnit({participantIdx}, {troopIdx})");
+
+			if (CountLosses != 0)
+			{
+				// Losses are counted (the kind as an unsigned word: an empty record, -1, is not counted)
+				ushort lostKind = (ushort)this.troops.TroopKind(participantIdx, troopIdx);
+
+				if (lostKind < this.owner.World.Participants[participantIdx].MissingTroops.Length)
+				{
+					this.owner.World.Participants[participantIdx].MissingTroops[lostKind]++;
+				}
+			}
+
+			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.FerryRoom) != 0 &&
+				this.troops.Following(participantIdx, troopIdx) != -1 &&
+				IsOnOcean(participantIdx, troopIdx))
+			{
+				VisitEachUnitInStack(participantIdx, troopIdx, 0x1610);
+			}
+
+			if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) == UnitKindTable.Carrier &&
+				this.troops.Following(participantIdx, troopIdx) != -1 &&
+				IsOnOcean(participantIdx, troopIdx))
+			{
+				VisitEachUnitInStack(participantIdx, troopIdx, 0x1676);
+			}
+
+			sbyte kind = this.troops.TroopKind(participantIdx, troopIdx);
+
+			if (kind >= 0 && kind < this.owner.World.Participants[participantIdx].LiveTroops.Length)
+				this.owner.World.Participants[participantIdx].LiveTroops[kind]--;
+
+			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Kind, 0xff);
+			this.troops.Assign(participantIdx, troopIdx, UnitMemory.LeftoverSteps, 0);
+
+			int horizLoc = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz);
+			int vertLoc = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert);
+
+			this.owner.MapOps.DiscardUnitFromTile(participantIdx, troopIdx, horizLoc, vertLoc);
+
+			if (QuietUnitSetup == 0 && KingMood == 0xffff &&
+				(MapRevealed != 0 || participantIdx == this.owner.World.PersonParticipantIdx ||
+				(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.ShownToParticipants) & (ushort)(1 << this.owner.World.PersonParticipantIdx)) != 0))
+			{
+				this.owner.MapOps.RepaintMapTile(
+					this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
+					this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert));
+			}
+
+			this.processor.Journal.CloseScope("EliminateUnit");
+		}
+
+		/// <summary>
+		/// The best defender of the tile of the unit: the stack of the first unit of the player standing there is searched with
+		/// LocateBestGuardianStep. A unit alone is its own defender.
+		/// </summary>
+		/// <returns>Unit index</returns>
+		public ushort LocateStackLeader(short participantIdx, short troopIdx)
+		{
+			this.processor.Journal.OpenScope($"LocateStackLeader({participantIdx}, {troopIdx})");
+
+			ushort leader = (ushort)troopIdx;
+
+			if (this.troops.Following(participantIdx, troopIdx) != -1)
+			{
+				StackLeader = (ushort)troopIdx;
+				StackLeaderScore = 0;
+
+				for (short firstIdx = 0; firstIdx < UnitMemory.TroopTally; firstIdx++)
+				{
+					if (this.troops.Pull(participantIdx, firstIdx, UnitMemory.Kind) != 0xff &&
+						this.troops.Pull(participantIdx, firstIdx, UnitMemory.Horiz) == this.troops.Pull(participantIdx, troopIdx, UnitMemory.Horiz) &&
+						this.troops.Pull(participantIdx, firstIdx, UnitMemory.Vert) == this.troops.Pull(participantIdx, troopIdx, UnitMemory.Vert))
+					{
+						VisitEachUnitInStack(participantIdx, firstIdx, 0x1169);
+						break;
+					}
+				}
+
+				leader = StackLeader;
+			}
+
+
+			this.processor.Journal.CloseScope("LocateStackLeader");
+
+			return leader;
+		}
+
+		/// <summary>
+		/// The best defender in the stack of the unit (LocateBestGuardianStep). A unit alone is its own defender.
+		/// </summary>
+		/// <returns>Unit index</returns>
+		public ushort LocateBestGuardianInStack(short participantIdx, short troopIdx)
+		{
+			this.processor.Journal.OpenScope($"LocateBestGuardianInStack({participantIdx}, {troopIdx})");
+
+			ushort guardian = (ushort)troopIdx;
+
+			if (this.troops.Following(participantIdx, troopIdx) != -1)
+			{
+				StackLeader = (ushort)troopIdx;
+				StackLeaderScore = 0xffff;
+
+				VisitEachUnitInStack(participantIdx, troopIdx, 0x1169);
+
+				guardian = StackLeader;
+			}
+
+
+			this.processor.Journal.CloseScope("LocateBestGuardianInStack");
+
+			return guardian;
+		}
+
+		/// <summary>
+		/// One unit of the stack in the search for its best defender (the guardian score by kind, terrain, fortification,
+		/// veteran)
+		/// </summary>
+		public void LocateBestGuardianStep(short participantIdx, short troopIdx)
+		{
+			this.processor.Journal.OpenScope($"LocateBestGuardianStep({participantIdx}, {troopIdx})");
+
+			// Extract unit parameters
+			int unitKind = this.Troops.PullSigned(participantIdx, troopIdx, UnitMemory.Kind);
+			int horiz = this.Troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz);
+			int vert = this.Troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert);
+			int terrainType = this.owner.MapOps.ObtainTerrainType(horiz, vert);
+
+			int landGroup = (short)UnitKindWord(unitKind, UnitKindTable.LandGroup);
+			int baseGuardPower = (short)UnitKindWord(unitKind, UnitKindTable.GuardPower);
+			int terrainDefenseFactor = (sbyte)this.owner.Tables.Byte((ushort)(TerrainTable.Stride * terrainType + TerrainTable.Origin + TerrainTable.DefenseBonus));
+
+			byte condition = this.Troops.Pull(participantIdx, troopIdx, UnitMemory.Status);
+			bool isFortified = (condition & 0x8) != 0;
+			bool isVeteran = (condition & 0x20) != 0;
+
+			int score = CombatRules.ComputeGuardianScore(
+				unitKind, landGroup, baseGuardPower, terrainType, terrainDefenseFactor, isFortified, isVeteran);
+
+			if (score >= 0)
+			{
+				int bestScore = (short)StackLeaderScore;
+				if (score > bestScore)
+				{
+					StackLeaderScore = (ushort)score;
+					StackLeader = (ushort)troopIdx;
+				}
+			}
+
+			this.processor.Journal.CloseScope("LocateBestGuardianStep");
+		}
+
+		/// <summary>
+		/// Sum over the stack of the unit, the mode chooses what (TallyUnitsByDomainStep: 0 price, 1 defence, 2 units,
+		/// 3 attack, 4 defensive units before the unit). Leaves SI = 0x600 * player like the translated original,
+		/// AIPlayer depends on it (see MIGRATION-BACKLOG.md).
+		/// </summary>
+		public ushort TallyUnitsByDomainInStack(short participantIdx, short troopIdx, ushort mode)
+		{
+			this.processor.Journal.OpenScope($"TallyUnitsByDomainInStack({participantIdx}, {troopIdx}, {mode})");
+
+			StackDomainTally = 0x0;
+			StackDomainMode = mode;
+			StackIndexLimit = (ushort)troopIdx;
+
+			VisitEachUnitInStack(participantIdx, troopIdx, 0x1280);
+
+			ushort result = StackDomainTally;
+
+			this.processor.Journal.CloseScope("TallyUnitsByDomainInStack");
+
+			return result;
+		}
+
+		/// <summary>
+		/// Step of TallyUnitsByDomainInStack, adds to the total in 0x6532 what the mode in 0x6536 asks for:
+		/// 0 the price, 1 the defence, 2 one per unit, 3 the attack, 4 one per defensive unit with an index below 0x6538.
+		/// </summary>
+		public void TallyUnitsByDomainStep(short participantIdx, short troopIdx)
+		{
+			this.processor.Journal.OpenScope($"TallyUnitsByDomainStep({participantIdx}, {troopIdx})");
+
+			switch (StackDomainMode)
+			{
+				case 0:
+					AddToGlobal(0x6532, this.troops.KindField(participantIdx, troopIdx, UnitKindTable.Price));
+					break;
+
+				case 1:
+					AddToGlobal(0x6532, this.troops.KindField(participantIdx, troopIdx, UnitKindTable.GuardPower));
+					break;
+
+				case 2:
+					AddToGlobal(0x6532, 1);
+					break;
+
+				case 3:
+					AddToGlobal(0x6532, this.troops.KindField(participantIdx, troopIdx, UnitKindTable.AssaultPower));
+					break;
+
+				case 4:
+					if (troopIdx < (short)StackIndexLimit &&
+						this.troops.KindField(participantIdx, troopIdx, UnitKindTable.TroopGroup) == UnitKindTable.DefenceTroops)
+					{
+						AddToGlobal(0x6532, 1);
+					}
+					break;
+			}
+
+			this.processor.Journal.CloseScope("TallyUnitsByDomainStep");
+		}
+
+		/// <summary>
+		/// Number of the units of the type in the stack of the unit. Leaves SI = 0x600 * player like the translated original (VisitEachUnitInStack).
+		/// </summary>
+		public ushort TallyUnitsOfTypeInStack(short participantIdx, short troopIdx, ushort kind)
+		{
+			this.processor.Journal.OpenScope($"TallyUnitsOfTypeInStack({participantIdx}, {troopIdx}, {kind})");
+
+			StackKind = kind;
+			StackTally = 0x0;
+
+			VisitEachUnitInStack(participantIdx, troopIdx, 0x135a);
+
+			ushort result = StackTally;
+
+			this.processor.Journal.CloseScope("TallyUnitsOfTypeInStack");
+
+			return result;
+		}
+
+		/// <summary>
+		/// Step of TallyUnitsOfTypeInStack: counts in 0x653c the units of the type in 0x653a
+		/// </summary>
+		public void TallyUnitsOfTypeStep(short participantIdx, short troopIdx)
+		{
+			this.processor.Journal.OpenScope($"TallyUnitsOfTypeStep({participantIdx}, {troopIdx})");
+
+			if ((ushort)this.troops.TroopKind(participantIdx, troopIdx) == StackKind)
+			{
+				AddToGlobal(0x653c, 1);
+			}
+
+			this.processor.Journal.CloseScope("TallyUnitsOfTypeStep");
+		}
+
+		/// <summary>
+		/// Number of the units with the TroopGroup in the stack of the unit. Leaves SI = 0x600 * player like the translated original (VisitEachUnitInStack).
+		/// </summary>
+		public ushort TallyUnitsWithFlagInStack(short participantIdx, short troopIdx, ushort group)
+		{
+			this.processor.Journal.OpenScope($"TallyUnitsWithFlagInStack({participantIdx}, {troopIdx}, {group})");
+
+			StackKind = group;
+			StackTally = 0x0;
+
+			VisitEachUnitInStack(participantIdx, troopIdx, 0x13a9);
+
+			ushort result = StackTally;
+
+			this.processor.Journal.CloseScope("TallyUnitsWithFlagInStack");
+
+			return result;
+		}
+
+		/// <summary>
+		/// Step of TallyUnitsWithFlagInStack: counts in 0x653c the units whose TroopGroup is the one in 0x653a
+		/// </summary>
+		public void TallyUnitsWithFlagStep(short participantIdx, short troopIdx)
+		{
+			this.processor.Journal.OpenScope($"TallyUnitsWithFlagStep({participantIdx}, {troopIdx})");
+
+			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.TroopGroup) == StackKind)
+			{
+				AddToGlobal(0x653c, 1);
+			}
+
+			this.processor.Journal.CloseScope("TallyUnitsWithFlagStep");
+		}
+
+		/// <summary>
+		/// The free room on the transports of the stack of the unit (TallySpecialUnitsStep).
+		/// Leaves SI = 0x600 * player like the translated original (VisitEachUnitInStack).
+		/// </summary>
+		public ushort TallySpecialUnitsInStack(short participantIdx, short troopIdx)
+		{
+			this.processor.Journal.OpenScope($"TallySpecialUnitsInStack({participantIdx}, {troopIdx})");
+
+			StackTally = 0x0;
+
+			VisitEachUnitInStack(participantIdx, troopIdx, 0x13f8);
+
+			ushort result = StackTally;
+
+			this.processor.Journal.CloseScope("TallySpecialUnitsInStack");
+
+			return result;
+		}
+
+		/// <summary>
+		/// Step of TallySpecialUnitsInStack, the free room on the transports in 0x653c: a land unit takes one place,
+		/// a transport adds its room (FerryRoom)
+		/// </summary>
+		public void TallySpecialUnitsStep(short participantIdx, short troopIdx)
+		{
+			this.processor.Journal.OpenScope($"TallySpecialUnitsStep({participantIdx}, {troopIdx})");
+
+			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == UnitKindTable.LandUnits)
+			{
+				AddToGlobal(0x653c, -1);
+			}
+
+			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.TroopGroup) == UnitKindTable.TransportTroops)
+			{
+				AddToGlobal(0x653c, this.troops.KindField(participantIdx, troopIdx, UnitKindTable.FerryRoom));
+			}
+
+			this.processor.Journal.CloseScope("TallySpecialUnitsStep");
+		}
+
+		/// <summary>
+		/// Calls a step function for every unit of the stack of the unit, at most for 10 units. The step function is given by
+		/// its address in the original code.
+		/// </summary>
+		public void VisitEachUnitInStack(short participantIdx, short troopIdx, int funcAddr)
+		{
+			this.processor.Journal.OpenScope($"VisitEachUnitInStack({participantIdx}, {troopIdx}, 0x{funcAddr:x4})");
+
+			Action<short, short> step = StackStep(funcAddr);
+
+			ForEachUnitInStack(participantIdx, troopIdx, (stepParticipantIdx, stepTroopIdx) =>
+			{
+				step(stepParticipantIdx, stepTroopIdx);
+			});
+
+			this.processor.Journal.CloseScope("VisitEachUnitInStack");
+		}
+
+		/// <summary>
+		/// Calls the action for every unit of the stack of the unit, starting with it, at most for 10 units.
+		/// The following unit is read before the action, so the action may remove the unit from the stack.
+		/// </summary>
+		public void ForEachUnitInStack(short participantIdx, short troopIdx, Action<short, short> visit)
+		{
+			short present = troopIdx;
+
+			for (int idx = 0; idx < 10; idx++)
+			{
+				short following = this.troops.Following(participantIdx, present);
+
+				visit(participantIdx, present);
+
+				present = following;
+
+				if (present == -1 || present == troopIdx)
+					break;
+			}
+		}
+
+		/// <summary>
+		/// Stack step: wakes the unit (clears Sentry), except a land unit carried on the ocean
+		/// </summary>
+		public void VerifyUnitTerrainFlag(short participantIdx, short troopIdx)
+		{
+			this.processor.Journal.OpenScope($"VerifyUnitTerrainFlag({participantIdx}, {troopIdx})");
+
+			bool carried = IsOnOcean(participantIdx, troopIdx) &&
+				this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == UnitKindTable.LandUnits;
+
+			if (!carried)
+			{
+				ClearStatus(participantIdx, troopIdx, UnitStatusEnum.Sentry);
+			}
+
+			this.processor.Journal.CloseScope("VerifyUnitTerrainFlag");
+		}
+
+		/// <summary>
+		/// Stack step: a sleeping (Sentry) unit wakes up with full moves (and full fuel for a plane); every unit loses its
+		/// "go to" order
+		/// </summary>
+		public void WipeUnitOrders(short participantIdx, short troopIdx)
+		{
+			this.processor.Journal.OpenScope($"WipeUnitOrders({participantIdx}, {troopIdx})");
+
+			if ((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & (int)UnitStatusEnum.Sentry) != 0)
+			{
+				ClearStatus(participantIdx, troopIdx, UnitStatusEnum.Sentry);
+				this.troops.Assign(participantIdx, troopIdx, UnitMemory.LeftoverSteps, FullSteps(participantIdx, troopIdx));
+
+				ushort roundsAway = this.troops.KindField(participantIdx, troopIdx, UnitKindTable.RoundsAway);
+
+				if (roundsAway != 0)
+				{
+					this.troops.Assign(participantIdx, troopIdx, UnitMemory.UnusualSteps, (byte)(roundsAway - 1));
+				}
+			}
+
+			this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHeading, 0xff);
+			this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHoriz, 0xff);
+
+			this.processor.Journal.CloseScope("WipeUnitOrders");
+		}
+
+		/// <summary>
+		/// Stack step: RestoreUnitStatus for the ships of the stack
+		/// </summary>
+		public void RestoreUnitOrders(short participantIdx, short troopIdx)
+		{
+			this.processor.Journal.OpenScope($"RestoreUnitOrders({participantIdx}, {troopIdx})");
+
+			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == UnitKindTable.SeaUnits)
+			{
+				RestoreUnitStatus(participantIdx, troopIdx);
+			}
+
+			this.processor.Journal.CloseScope("RestoreUnitOrders");
+		}
+
+		/// <summary>
+		/// Gives the unit back to the player without orders: settler work stops, a sleeping, fortified or working unit gets
+		/// its full moves, only the Veteran (and 0x10) status stays, the "go to" order is removed
+		/// </summary>
+		public void RestoreUnitStatus(short participantIdx, short troopIdx)
+		{
+			this.processor.Journal.OpenScope($"RestoreUnitStatus({participantIdx}, {troopIdx})");
+
+			byte status = this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status);
+
+			if ((status & (int)UnitStatusEnum.SettlerBuildMask) != 0)
+			{
+				this.troops.Assign(participantIdx, troopIdx, UnitMemory.UnusualSteps, 0);
+			}
+
+			if ((status & (int)(UnitStatusEnum.SettlerBuildMask | UnitStatusEnum.Fortified | UnitStatusEnum.Sentry)) != 0)
+			{
+				this.troops.Assign(participantIdx, troopIdx, UnitMemory.LeftoverSteps, FullSteps(participantIdx, troopIdx));
+			}
+
+			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Status,
+				(byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & (int)(UnitStatusEnum.Veteran | UnitStatusEnum.Unknown1)));
+			this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHoriz, 0xff);
+
+			if (participantIdx == this.owner.World.PersonParticipantIdx)
+			{
+				this.owner.MapOps.RenderUnitOnWorldMap(participantIdx, troopIdx);
+			}
+
+			this.processor.Journal.CloseScope("RestoreUnitStatus");
+		}
+
+		/// <summary>
+		/// Stack step: removes the unit when it is a land unit (cargo of a sinking transport)
+		/// </summary>
+		public void EliminateLandUnit(short participantIdx, short troopIdx)
+		{
+			this.processor.Journal.OpenScope($"EliminateLandUnit({participantIdx}, {troopIdx})");
+
+			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == UnitKindTable.LandUnits)
+			{
+				EliminateUnit(participantIdx, troopIdx);
+			}
+
+			this.processor.Journal.CloseScope("EliminateLandUnit");
+		}
+
+		/// <summary>
+		/// Stack step: removes the unit when it is a plane or a ship
+		/// </summary>
+		public void EliminateNonLandUnit(short participantIdx, short troopIdx)
+		{
+			this.processor.Journal.OpenScope($"EliminateNonLandUnit({participantIdx}, {troopIdx})");
+
+			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) != UnitKindTable.LandUnits)
+			{
+				EliminateUnit(participantIdx, troopIdx);
+			}
+
+			this.processor.Journal.CloseScope("EliminateNonLandUnit");
+		}
+
+		/// <summary>
+		/// Stack step: removes the unit when it is a plane (LandGroup 1, despite the name: the planes of a sinking carrier)
+		/// </summary>
+		public void EliminateSeaUnit(short participantIdx, short troopIdx)
+		{
+			this.processor.Journal.OpenScope($"EliminateSeaUnit({participantIdx}, {troopIdx})");
+
+			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == UnitKindTable.AirUnits)
+			{
+				EliminateUnit(participantIdx, troopIdx);
+			}
+
+			this.processor.Journal.CloseScope("EliminateSeaUnit");
+		}
+
+		/// <summary>
+		/// Scrolls the map view (left column 0xd4cc, top row 0xd75e) so that the tile is in its inner part
+		/// (columns 2 - 13, rows 2 - 9 of the view); otherwise the view stays
+		/// </summary>
+		public void PanMapToPosition(short participantIdx, int horizLoc, int vertLoc)
+		{
+			this.processor.Journal.OpenScope($"PanMapToPosition({participantIdx}, {horizLoc}, {vertLoc})");
+
+			int viewLeft = (short)MapViewHoriz;
+
+			// The view may reach over the right edge of the world
+			if (horizLoc < 16 && viewLeft > 64)
+			{
+				horizLoc += MapRules.Width;
+			}
+
+			int viewTop = (short)MapViewVert;
+			bool outside = horizLoc < viewLeft + 2 || horizLoc > viewLeft + 13 || vertLoc < viewTop + 2 || vertLoc > viewTop + 9;
+
+			if (outside)
+			{
+				int left = (short)this.owner.Routing.TunePosition(horizLoc - 8);
+
+				this.owner.MapOps.FocusMapView(participantIdx, left, vertLoc - 6);
+			}
+
+			this.processor.Journal.CloseScope("PanMapToPosition");
+		}
+
+		/// <summary>
+		/// Is the move onto the tile blocked by the zone of control: never into a city, otherwise VerifyTileOccupation
+		/// </summary>
+		/// <returns>1 when a foreign unit stands next to the tile</returns>
+		public ushort MayOccupyTile(short participantIdx, int horizLoc, int vertLoc)
+		{
+			this.processor.Journal.OpenScope($"MayOccupyTile({participantIdx}, {horizLoc}, {vertLoc})");
+
+			ushort blocked = (this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) != 0 ? (ushort)0 :
+				VerifyTileOccupation(participantIdx, horizLoc, vertLoc);
+
+
+			this.processor.Journal.CloseScope("MayOccupyTile");
+
+			return blocked;
+		}
+
+		/// <summary>
+		/// Does a unit of another player stand on one of the 8 tiles around, on the same kind of tile (land or ocean).
+		/// In the turn of the human player that unit, and its city, become visible to the human.
+		/// </summary>
+		/// <returns>1 when a foreign unit stands next to the tile, 0 otherwise</returns>
+		public ushort VerifyTileOccupation(short participantIdx, int horizLoc, int vertLoc)
+		{
+			this.processor.Journal.OpenScope($"VerifyTileOccupation({participantIdx}, {horizLoc}, {vertLoc})");
+
+			bool onOcean = this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) == MapRules.OceanTerrain;
+			ushort found = 0;
+
+			for (int heading = 1; heading < 9; heading++)
+			{
+				int nearHoriz = this.owner.Routing.TunePosition(this.owner.MapOps.Chart.DirectionHoriz(heading) + horizLoc);
+				int nearVert = (short)(this.owner.MapOps.Chart.DirectionVert(heading) + vertLoc);
+
+				bool nearOcean = this.owner.MapOps.ObtainTerrainType(nearHoriz, nearVert) == MapRules.OceanTerrain;
+
+				if (nearOcean != onOcean)
+					continue;
+
+				ushort nearParticipantIdx = this.owner.MapOps.ObtainTileOwner(nearHoriz, nearVert);
+
+				if (nearParticipantIdx == 0xffff || nearParticipantIdx == (ushort)participantIdx)
+					continue;
+
+				if (participantIdx == this.owner.World.PersonParticipantIdx)
+				{
+					RevealToHuman((short)nearParticipantIdx, nearHoriz, nearVert);
+				}
+
+				found = 1;
+				break;
+			}
+
+
+			this.processor.Journal.CloseScope("VerifyTileOccupation");
+
+			return found;
+		}
+
+		/// <summary>1 when a unit of another player stands on one of the 8 tiles around (the zone of control), else 0</summary>
+		public ushort ContainsAdjacentForeignUnit(short participantIdx, int horizLoc, int vertLoc)
+		{
+			this.processor.Journal.OpenScope($"ContainsAdjacentForeignUnit({participantIdx}, {horizLoc}, {vertLoc})");
+
+			// Check the 8 neighboring tiles for any foreign unit (Zone of Control)
+			bool found = MovementRules.HasAdjacentForeignUnit(horizLoc, vertLoc, participantIdx, (x, y) =>
+			{
+				return (int)(short)this.owner.MapOps.ObtainTileOwner(x, y);
+			});
+
+			ushort result = (ushort)(found ? 1 : 0);
+
+			this.processor.Journal.CloseScope("ContainsAdjacentForeignUnit");
+
+			return result;
+		}
+
+		/// <summary>
+		/// A unit enters a hut (not a barbarian, not a plane). DrawInt(4) chooses:
+		/// 0: an advanced tribe founds a city for the player, when no city is 4 tiles near and the hut layer says so; 50 gold
+		/// otherwise, mercenaries near a city;
+		/// 1: scrolls of ancient wisdom (a technology) after the first turn up to the year 1000, 50 gold otherwise;
+		/// 2: 50 gold;
+		/// 3: barbarians around the unit when no city is 4 tiles near and the player has a city, mercenaries otherwise.
+		/// </summary>
+		public void VisitHut(short participantIdx, short troopIdx)
+		{
+			this.processor.Journal.OpenScope($"VisitHut({participantIdx}, {troopIdx})");
+
+			if (participantIdx != 0 &&
+				this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) != UnitKindTable.AirUnits)
+			{
+				int horizLoc = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz);
+				int vertLoc = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert);
+				short townDistance = DistanceToNearestCity(horizLoc, vertLoc);
+
+				switch (this.owner.Libc.Dice.DrawInt(4))
+				{
+					case 0:
+						int hutKind = this.owner.VideoCard.ObtainDot(2, horizLoc + 80, vertLoc) & 0x7;
+
+						if (townDistance < 4)
+						{
+							MeetMercenaries(participantIdx, horizLoc, vertLoc);
+						}
+						else if (hutKind <= 4)
+						{
+							FindMetalDeposits(participantIdx);
+						}
+						else
+						{
+							AnnounceHut(participantIdx, "You have discovered\nan advanced tribe.\n");
+
+							this.owner.Founding.EstablishCity(participantIdx, 0, horizLoc, vertLoc, 1);
+
+							RepaintForHuman(participantIdx, horizLoc, vertLoc);
+						}
+						break;
+
+					case 1:
+						if (this.owner.World.RoundTally != 0 && this.owner.World.Season <= 1000)
+						{
+							FindAncientScrolls(participantIdx);
+						}
+						else
+						{
+							FindMetalDeposits(participantIdx);
+						}
+						break;
+
+					case 2:
+						FindMetalDeposits(participantIdx);
+						break;
+
+					case 3:
+						if (townDistance >= 4 && this.owner.World.Participants[participantIdx].TownTally != 0)
+						{
+							UnleashBarbarians(participantIdx, troopIdx);
+						}
+						else
+						{
+							MeetMercenaries(participantIdx, horizLoc, vertLoc);
+						}
+						break;
+				}
+			}
+
+			this.processor.Journal.CloseScope("VisitHut");
+		}
+
+		/// <summary>
+		/// The attack animation: the unit slides one tile towards the attacked tile in 17 frames, over the next unit of its
+		/// stack. Only when the map view shows both tiles; with 0xb278 = 1 the tile of the unit is only drawn.
+		/// </summary>
+		/// <param name="direction">Direction of the attack (1 - 8)</param>
+		public void ChoreographUnitCombat(short participantIdx, short troopIdx, ushort direction)
+		{
+			this.processor.Journal.OpenScope($"ChoreographUnitCombat({participantIdx}, {troopIdx}, {direction})");
+
+			int horizLoc = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz);
+			int vertLoc = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert);
+
+			if (WorldMapView == 1)
+			{
+				this.owner.MapOps.RenderMapTile(horizLoc, vertLoc);
+			}
+			else
+			{
+				this.owner.Startup.ConcealMouseCursor();
+
+				if (this.owner.MapOps.RenderMapTile(horizLoc, vertLoc) != 0 &&
+					this.owner.TurnLogic.VerifyPositionOnScreen(horizLoc, vertLoc) != 0 &&
+					this.owner.TurnLogic.VerifyPositionOnScreen(this.owner.MapOps.Chart.DirectionHoriz(direction) + horizLoc,
+						this.owner.MapOps.Chart.DirectionVert(direction) + vertLoc) != 0)
+				{
+					AnimateAttack(participantIdx, troopIdx, direction, horizLoc, vertLoc);
+				}
+
+				this.owner.Startup.DisplayMouseCursor();
+			}
+
+			this.processor.Journal.CloseScope("ChoreographUnitCombat");
+		}
+
+		/// <summary>
+		/// The list of the units of the stack (at most 12): the human player wakes up units (the cursor keys and Enter or Space,
+		/// or a click) and picks the one to go on with. Woken units lose their orders and a settler at work gets its full moves.
+		/// </summary>
+		/// <returns>The picked unit, the stack leader (LocateStackLeader) when none; also in AX</returns>
+		public ushort DisplayBattleScreen(short participantIdx, short troopIdx)
+		{
+			this.processor.Journal.OpenScope($"DisplayBattleScreen({participantIdx}, {troopIdx})");
+
+			ushort screen = ScreenBox;
+			ushort backScreen = BackScreenBox;
+
+			this.owner.Startup.ConcealMouseCursor();
+
+			this.owner.VideoCard.RenderImage(screen, 0, 0, 0x140, 0xc8, backScreen, 0, 0);
+
+			ushort picked = LocateStackLeader(participantIdx, troopIdx);
+			short[] stack = new short[StackListTally];
+			int stackTally = 0;
+			short present = troopIdx;
+
+			do
+			{
+				stack[stackTally] = present;
+				present = this.troops.Following(participantIdx, present);
+				stackTally++;
+			}
+			while (stackTally < StackListTally && present != -1 && present != troopIdx);
+
+			short listTop = (short)(0x60 - (stackTally << 3));
+			int selected = 0;
+
+			while (true)
+			{
+				stackTally = RenderStackList(participantIdx, troopIdx, listTop, stackTally);
+
+				int choice = ChooseFromStackList(listTop, stackTally, ref selected);
+
+				if (choice < 0 || choice >= stackTally)
+					break;
+
+				picked = (ushort)stack[choice];
+
+				if ((this.troops.Pull(participantIdx, picked, UnitMemory.Status) & (int)UnitStatusEnum.SettlerBuildMask) != 0)
+				{
+					this.troops.Assign(participantIdx, picked, UnitMemory.LeftoverSteps,
+						(byte)(3 * this.troops.KindField(participantIdx, picked, UnitKindTable.ShiftTally)));
+				}
+
+				// Only Unknown1 and Veteran stay
+				this.troops.Assign(participantIdx, picked, UnitMemory.Status,
+					(byte)(this.troops.Pull(participantIdx, picked, UnitMemory.Status) & 0x30));
+				ClearTravel(participantIdx, (short)picked);
+
+				if (stackTally <= 1)
+					break;
+			}
+
+			this.owner.VideoCard.RenderImage(backScreen, 0, 0, 0x140, 0xc8, screen, 0, 0);
+
+			this.owner.Startup.DisplayMouseCursor();
+
+			this.owner.TurnLogic.AwaitForKey();
+
+
+			this.processor.Journal.CloseScope("DisplayBattleScreen");
+
+			return picked;
+		}
+
+		/// <summary>
+		/// The direction (1 - 8) of the step of the unit towards the nearest own city or carrier (a plane flying home). Tiles with
+		/// foreign units and foreign cities are avoided, 0 when no step gets nearer.
+		/// </summary>
+		/// <returns>Direction, also in AX</returns>
+		public ushort LocateNearestFriendlyCity(short participantIdx, short troopIdx)
+		{
+			this.processor.Journal.OpenScope($"LocateNearestFriendlyCity({participantIdx}, {troopIdx})");
+
+			// Without an own city or carrier the target is the place of the unit, so it stays (direction 0; the original took
+			// what was left on the stack)
+			int unitHoriz = this.troops.Pull(participantIdx, troopIdx, UnitMemory.Horiz);
+			int unitVert = this.troops.Pull(participantIdx, troopIdx, UnitMemory.Vert);
+			int targetHoriz = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz);
+			int targetVert = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert);
+			int nearest = 999;
+
+			foreach (City town in this.owner.World.Towns)
+			{
+				if (town.ConditionMarker == 0xff || town.ParticipantIdx != participantIdx)
+					continue;
+
+				int distance = WrappedChebyshev(unitHoriz - town.Place.X, unitVert - town.Place.Y);
+
+				if (distance < nearest)
+				{
+					nearest = distance;
+					targetHoriz = town.Place.X;
+					targetVert = town.Place.Y;
+				}
+			}
+
+			for (short carrierIdx = 0; carrierIdx < UnitMemory.TroopTally; carrierIdx++)
+			{
+				if (this.troops.Pull(participantIdx, carrierIdx, UnitMemory.Kind) != UnitKindTable.Carrier)
+					continue;
+
+				int carrierHoriz = this.troops.Pull(participantIdx, carrierIdx, UnitMemory.Horiz);
+				int carrierVert = this.troops.Pull(participantIdx, carrierIdx, UnitMemory.Vert);
+				int distance = WrappedChebyshev(unitHoriz - carrierHoriz, unitVert - carrierVert);
+
+				if (distance < nearest)
+				{
+					nearest = distance;
+					targetHoriz = carrierHoriz;
+					targetVert = carrierVert;
+				}
+			}
+
+			int best = this.owner.Helpers.ObtainDistanceFromOffsets(
+				this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz) - targetHoriz,
+				this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert) - targetVert);
+			ushort heading = 0;
+
+			for (int direction = 1; direction <= 8; direction++)
+			{
+				// Like the original, the step doesn't wrap around the map
+				int stepHoriz = (short)(unitHoriz + this.owner.MapOps.Chart.DirectionHoriz(direction));
+				int stepVert = (short)(unitVert + this.owner.MapOps.Chart.DirectionVert(direction));
+
+				ushort stepOwner = this.owner.MapOps.ObtainTileOwner(stepHoriz, stepVert);
+
+				if (stepOwner != 0xffff && stepOwner != (ushort)participantIdx)
+					continue;
+
+				if ((this.owner.MapOps.ObtainTileImprovements(stepHoriz, stepVert) & 1) != 0 &&
+					this.owner.MapOps.ObtainTileOwnerBits(stepHoriz, stepVert) != (ushort)participantIdx)
+					continue;
+
+				int distance = this.owner.Helpers.ObtainDistanceFromOffsets(stepHoriz - targetHoriz, stepVert - targetVert);
+
+				if (distance < best)
+				{
+					best = distance;
+					heading = (ushort)direction;
+				}
+			}
+
+
+			this.processor.Journal.CloseScope("LocateNearestFriendlyCity");
+
+			return heading;
+		}
+
+		/// <summary>An entry of the replay with 1 byte(s): the kind rerunIdx, the turn, the bytes</summary>
+		public void AttachReplayContent(ushort rerunIdx, byte content1)
+		{
+			this.processor.Journal.OpenScope($"AttachReplayContent({rerunIdx}, {content1})");
+			WriteReplayEntry(rerunIdx, content1);
+			this.processor.Journal.CloseScope("AttachReplayContent");
+		}
+
+		/// <summary>An entry of the replay with 2 byte(s): the kind rerunIdx, the turn, the bytes</summary>
+		public void AttachReplayContent(ushort rerunIdx, byte content1, byte content2)
+		{
+			this.processor.Journal.OpenScope($"AttachReplayContent({rerunIdx}, {content1}, {content2})");
+			WriteReplayEntry(rerunIdx, content1, content2);
+			this.processor.Journal.CloseScope("AttachReplayContent");
+		}
+
+		/// <summary>An entry of the replay with 3 byte(s): the kind rerunIdx, the turn, the bytes</summary>
+		public void AttachReplayContent(ushort rerunIdx, byte content1, byte content2, byte content3)
+		{
+			this.processor.Journal.OpenScope($"AttachReplayContent({rerunIdx}, {content1}, {content2}, {content3})");
+			WriteReplayEntry(rerunIdx, content1, content2, content3);
+			this.processor.Journal.CloseScope("AttachReplayContent");
+		}
+
+		/// <summary>An entry of the replay with 4 byte(s): the kind rerunIdx, the turn, the bytes</summary>
+		public void AttachReplayContent(ushort rerunIdx, byte content1, byte content2, byte content3, byte content4)
+		{
+			this.processor.Journal.OpenScope($"AttachReplayContent({rerunIdx}, {content1}, {content2}, {content3}, {content4})");
+			WriteReplayEntry(rerunIdx, content1, content2, content3, content4);
+			this.processor.Journal.CloseScope("AttachReplayContent");
+		}
+
+		/// <summary>
+		/// Draws the border of the screen (320 x 200) from pieces of 8 x 8 pixels of the picture 0x19e8 (from row 120), in one of
+		/// two styles (DrawInt(2)): the four corners, the left and right edges, then the top and bottom edges
+		/// </summary>
+		public void RenderBusyIndicator()
+		{
+			this.processor.Journal.OpenScope("RenderBusyIndicator()");
+
+			int styleLeft = (this.owner.Libc.Dice.DrawInt(2) << 5) + 0xc0;
+
+			RenderBorderPiece(styleLeft, 0x78, 0, 0);
+			RenderBorderPiece(styleLeft + 8, 0x78, 0x138, 0);
+			RenderBorderPiece(styleLeft + 0x18, 0x78, 0x138, 0xc0);
+			RenderBorderPiece(styleLeft + 0x10, 0x78, 0, 0xc0);
+
+			for (int row = 1; row < 0x18; row++)
+			{
+				RenderBorderPiece(styleLeft + 0x18, 0x80, 0, row << 3);
+				RenderBorderPiece(styleLeft + 8, 0x80, 0x138, row << 3);
+			}
+
+			for (int column = 1; column < 0x27; column++)
+			{
+				RenderBorderPiece(styleLeft, 0x80, column << 3, 0);
+				RenderBorderPiece(styleLeft + 0x10, 0x80, column << 3, 0xc0);
+			}
+
+			this.processor.Journal.CloseScope("RenderBusyIndicator");
+		}
+
+		/// <summary>The larger of the two steps, the horizontal one wrapping over 40</summary>
+		private static int WrappedChebyshev(int horizStep, int vertStep)
+		{
+			horizStep = Math.Abs(horizStep);
+
+			if (horizStep > 40)
+				horizStep = 80 - horizStep;
+
+			return Math.Max(horizStep, Math.Abs(vertStep));
+		}
+
+		/// <summary>A fortified unit of the city standing in it</summary>
+		private bool IsFortifiedHomeUnitIn(City town, short townIdx, short participantIdx, short troopIdx)
+		{
+			return this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) != 0xff &&
+				this.troops.Pull(participantIdx, troopIdx, UnitMemory.Horiz) == (byte)(sbyte)town.Place.X &&
+				this.troops.Pull(participantIdx, troopIdx, UnitMemory.Vert) == (byte)(sbyte)town.Place.Y &&
+				this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.BaseTown) == townIdx &&
+				(this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & (int)UnitStatusEnum.Fortified) != 0;
+		}
 
 		/// <summary>
 		/// Column of a tile around: the step of the direction table (1 - 8 the tiles next to it, 9 - 24 the ring 2 tiles far,
@@ -552,100 +1646,6 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// Blinks the active unit on the map and its dot on the world map, and the cursor frame on a map tile, until a key is
-		/// pressed or the mouse is clicked. A unit index from 128 blinks a text instead (no unit).
-		/// </summary>
-		/// <param name="cursorHoriz">Map position of the cursor frame, 0xffff for none</param>
-		/// <param name="cursorVert">Map position of the cursor frame</param>
-		public void ChoreographUnitMove(short participantIdx, short troopIdx, ushort cursorHoriz, ushort cursorVert)
-		{
-			this.processor.Journal.OpenScope($"ChoreographUnitMove({participantIdx}, {troopIdx}, {cursorHoriz}, {cursorVert})");
-
-			// Screen position of the cursor frame, -1 when there is none or it is outside the map view
-			short frameHoriz = -1;
-			short frameVert = 0;
-
-			if (cursorHoriz != 0xffff)
-			{
-				frameHoriz = (short)((this.owner.Routing.TunePosition((short)cursorHoriz - (short)MapViewHoriz) << 4) + 0x50);
-				frameVert = (short)(((cursorVert - MapViewVert) << 4) + 0x8);
-
-				if (frameHoriz < 0x50 || frameHoriz >= 0x140 || frameVert < 0x8 || frameVert > 0xc0)
-					frameHoriz = -1;
-			}
-
-			// Position of the unit on the world map (top left corner of the screen)
-			short worldMapTop = (short)MapFocusTop;
-			short dotHoriz = (short)this.owner.Routing.TunePosition(
-				this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz) - (short)MapFocusLeft);
-			int unitVert = troopIdx < 127 ? this.troops.Pull(participantIdx, troopIdx, UnitMemory.Vert) : 0xff;
-			short dotVert = (short)(unitVert - worldMapTop);
-			bool dotVisible = dotVert >= 0 && dotVert < 50;
-
-			do
-			{
-				// Hidden phase
-				this.owner.Startup.ConcealMouseCursor();
-
-				if (troopIdx >= UnitMemory.TroopTally)
-				{
-					this.owner.TextPainter.RenderTextToScreen0(GameTexts.TextEndOfTurnB, 4, 124, Hues.LightGray);
-				}
-				else
-				{
-					this.owner.MapOps.RenderMapTile(
-						this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
-						this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert));
-
-					if (dotVisible)
-					{
-						this.owner.Services.AssignDot(dotHoriz, dotVert + 8, 15);
-					}
-				}
-
-				if (frameHoriz != -1)
-				{
-					this.owner.Dialogs.RenderBox(frameHoriz, frameVert, 15, 15, Hues.White);
-				}
-
-				AwaitBlink();
-
-				// Shown phase
-				this.owner.Startup.ConcealMouseCursor();
-
-				if (troopIdx >= UnitMemory.TroopTally)
-				{
-					this.owner.TextPainter.RenderTextToScreen0(GameTexts.TextEndOfTurnC, 4, 124, Hues.Black);
-				}
-				else
-				{
-					this.owner.MapOps.RenderUnitOnWorldMap(participantIdx, troopIdx);
-
-					if (dotVisible)
-					{
-						ushort dotColour = this.owner.MapOps.ObtainTerrainType(
-							this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
-							this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert)) == MapRules.OceanTerrain ? (ushort)1 : (ushort)2;
-
-						this.owner.Services.AssignDot(dotHoriz, dotVert + 8, dotColour);
-					}
-				}
-
-				if (frameHoriz != -1)
-				{
-					this.owner.Dialogs.RenderBox(frameHoriz, frameVert, 15, 15, Hues.Black);
-				}
-
-				AwaitBlink();
-
-				this.owner.Startup.ObtainMouseState();
-			}
-			while (this.owner.Libc.KeyAvailable() == 0 && this.owner.GlobDb3a == 0);
-
-			this.processor.Journal.CloseScope("ChoreographUnitMove");
-		}
-
-		/// <summary>
 		/// Shows the mouse pointer and waits 10 timer ticks, 1 when a key is waiting
 		/// </summary>
 		private void AwaitBlink()
@@ -653,58 +1653,6 @@ namespace Civilization1Remaster.Game
 			this.owner.Startup.DisplayMouseCursor();
 
 			this.owner.TextPainter.AwaitTime((short)(this.owner.Libc.KeyAvailable() != 0 ? 1 : 10));
-		}
-
-		/// <summary>
-		/// Creates a unit of the type on the tile in the first free record (0 - 126). Its home city is the nearest city when that
-		/// city belongs to the player. When there is no free record, the human player is told once.
-		/// </summary>
-		/// <param name="kind">Unit type</param>
-		/// <returns>Index of the new unit, or 0xffff</returns>
-		public ushort ConstructUnit(short participantIdx, short kind, int horizLoc, int vertLoc)
-		{
-			this.processor.Journal.OpenScope($"ConstructUnit({participantIdx}, {kind}, {horizLoc}, {vertLoc})");
-
-			short troopIdx = -1;
-
-			for (short idx = 0; idx < UnitMemory.TroopTally - 1; idx++)
-			{
-				if (this.troops.Pull(participantIdx, idx, UnitMemory.Kind) == 0xff)
-				{
-					troopIdx = idx;
-					break;
-				}
-			}
-
-			ushort result;
-
-			if (troopIdx == -1)
-			{
-				if (participantIdx == this.owner.World.PersonParticipantIdx && UnitLimitTold == 0)
-				{
-					DialogStyle = 0x3;
-					this.owner.Words.Clear();
-
-					this.owner.BlockText.DisplayTextDialog(GameTexts.TopicUmax);
-
-					this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 80, 64);
-
-					UnitLimitTold = 0x1;
-				}
-
-				result = 0xffff;
-			}
-			else
-			{
-				SetUpUnit(participantIdx, troopIdx, kind, horizLoc, vertLoc);
-
-				result = (ushort)troopIdx;
-			}
-
-
-			this.processor.Journal.CloseScope("ConstructUnit");
-
-			return result;
 		}
 
 		/// <summary>
@@ -784,64 +1732,6 @@ namespace Civilization1Remaster.Game
 			}
 		}
 
-		/// <summary>
-		/// Removes the unit. A transport sinking on the ocean takes the land units of its stack along, a carrier its planes.
-		/// The tile is repainted when the human player saw the unit.
-		/// </summary>
-		public void EliminateUnit(short participantIdx, short troopIdx)
-		{
-			this.processor.Journal.OpenScope($"EliminateUnit({participantIdx}, {troopIdx})");
-
-			if (CountLosses != 0)
-			{
-				// Losses are counted (the kind as an unsigned word: an empty record, -1, is not counted)
-				ushort lostKind = (ushort)this.troops.TroopKind(participantIdx, troopIdx);
-
-				if (lostKind < this.owner.World.Participants[participantIdx].MissingTroops.Length)
-				{
-					this.owner.World.Participants[participantIdx].MissingTroops[lostKind]++;
-				}
-			}
-
-			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.FerryRoom) != 0 &&
-				this.troops.Following(participantIdx, troopIdx) != -1 &&
-				IsOnOcean(participantIdx, troopIdx))
-			{
-				VisitEachUnitInStack(participantIdx, troopIdx, 0x1610);
-			}
-
-			if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) == UnitKindTable.Carrier &&
-				this.troops.Following(participantIdx, troopIdx) != -1 &&
-				IsOnOcean(participantIdx, troopIdx))
-			{
-				VisitEachUnitInStack(participantIdx, troopIdx, 0x1676);
-			}
-
-			sbyte kind = this.troops.TroopKind(participantIdx, troopIdx);
-
-			if (kind >= 0 && kind < this.owner.World.Participants[participantIdx].LiveTroops.Length)
-				this.owner.World.Participants[participantIdx].LiveTroops[kind]--;
-
-			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Kind, 0xff);
-			this.troops.Assign(participantIdx, troopIdx, UnitMemory.LeftoverSteps, 0);
-
-			int horizLoc = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz);
-			int vertLoc = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert);
-
-			this.owner.MapOps.DiscardUnitFromTile(participantIdx, troopIdx, horizLoc, vertLoc);
-
-			if (QuietUnitSetup == 0 && KingMood == 0xffff &&
-				(MapRevealed != 0 || participantIdx == this.owner.World.PersonParticipantIdx ||
-				(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.ShownToParticipants) & (ushort)(1 << this.owner.World.PersonParticipantIdx)) != 0))
-			{
-				this.owner.MapOps.RepaintMapTile(
-					this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
-					this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert));
-			}
-
-			this.processor.Journal.CloseScope("EliminateUnit");
-		}
-
 		/// <summary>Does the unit stand on an ocean tile</summary>
 		private bool IsOnOcean(short participantIdx, short troopIdx)
 		{
@@ -850,317 +1740,10 @@ namespace Civilization1Remaster.Game
 				this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert)) == MapRules.OceanTerrain;
 		}
 
-		/// <summary>
-		/// The best defender of the tile of the unit: the stack of the first unit of the player standing there is searched with
-		/// LocateBestGuardianStep. A unit alone is its own defender.
-		/// </summary>
-		/// <returns>Unit index</returns>
-		public ushort LocateStackLeader(short participantIdx, short troopIdx)
-		{
-			this.processor.Journal.OpenScope($"LocateStackLeader({participantIdx}, {troopIdx})");
-
-			ushort leader = (ushort)troopIdx;
-
-			if (this.troops.Following(participantIdx, troopIdx) != -1)
-			{
-				StackLeader = (ushort)troopIdx;
-				StackLeaderScore = 0;
-
-				for (short firstIdx = 0; firstIdx < UnitMemory.TroopTally; firstIdx++)
-				{
-					if (this.troops.Pull(participantIdx, firstIdx, UnitMemory.Kind) != 0xff &&
-						this.troops.Pull(participantIdx, firstIdx, UnitMemory.Horiz) == this.troops.Pull(participantIdx, troopIdx, UnitMemory.Horiz) &&
-						this.troops.Pull(participantIdx, firstIdx, UnitMemory.Vert) == this.troops.Pull(participantIdx, troopIdx, UnitMemory.Vert))
-					{
-						VisitEachUnitInStack(participantIdx, firstIdx, 0x1169);
-						break;
-					}
-				}
-
-				leader = StackLeader;
-			}
-
-
-			this.processor.Journal.CloseScope("LocateStackLeader");
-
-			return leader;
-		}
-
-		/// <summary>
-		/// The best defender in the stack of the unit (LocateBestGuardianStep). A unit alone is its own defender.
-		/// </summary>
-		/// <returns>Unit index</returns>
-		public ushort LocateBestGuardianInStack(short participantIdx, short troopIdx)
-		{
-			this.processor.Journal.OpenScope($"LocateBestGuardianInStack({participantIdx}, {troopIdx})");
-
-			ushort guardian = (ushort)troopIdx;
-
-			if (this.troops.Following(participantIdx, troopIdx) != -1)
-			{
-				StackLeader = (ushort)troopIdx;
-				StackLeaderScore = 0xffff;
-
-				VisitEachUnitInStack(participantIdx, troopIdx, 0x1169);
-
-				guardian = StackLeader;
-			}
-
-
-			this.processor.Journal.CloseScope("LocateBestGuardianInStack");
-
-			return guardian;
-		}
-
-		/// <summary>
-		/// One unit of the stack in the search for its best defender (the guardian score by kind, terrain, fortification,
-		/// veteran)
-		/// </summary>
-		public void LocateBestGuardianStep(short participantIdx, short troopIdx)
-		{
-			this.processor.Journal.OpenScope($"LocateBestGuardianStep({participantIdx}, {troopIdx})");
-
-			// Extract unit parameters
-			int unitKind = this.Troops.PullSigned(participantIdx, troopIdx, UnitMemory.Kind);
-			int horiz = this.Troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz);
-			int vert = this.Troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert);
-			int terrainType = this.owner.MapOps.ObtainTerrainType(horiz, vert);
-
-			int landGroup = (short)UnitKindWord(unitKind, UnitKindTable.LandGroup);
-			int baseGuardPower = (short)UnitKindWord(unitKind, UnitKindTable.GuardPower);
-			int terrainDefenseFactor = (sbyte)this.owner.Tables.Byte((ushort)(TerrainTable.Stride * terrainType + TerrainTable.Origin + TerrainTable.DefenseBonus));
-
-			byte condition = this.Troops.Pull(participantIdx, troopIdx, UnitMemory.Status);
-			bool isFortified = (condition & 0x8) != 0;
-			bool isVeteran = (condition & 0x20) != 0;
-
-			int score = CombatRules.ComputeGuardianScore(
-				unitKind, landGroup, baseGuardPower, terrainType, terrainDefenseFactor, isFortified, isVeteran);
-
-			if (score >= 0)
-			{
-				int bestScore = (short)StackLeaderScore;
-				if (score > bestScore)
-				{
-					StackLeaderScore = (ushort)score;
-					StackLeader = (ushort)troopIdx;
-				}
-			}
-
-			this.processor.Journal.CloseScope("LocateBestGuardianStep");
-		}
-
-		/// <summary>
-		/// Sum over the stack of the unit, the mode chooses what (TallyUnitsByDomainStep: 0 price, 1 defence, 2 units,
-		/// 3 attack, 4 defensive units before the unit). Leaves SI = 0x600 * player like the translated original,
-		/// AIPlayer depends on it (see MIGRATION-BACKLOG.md).
-		/// </summary>
-		public ushort TallyUnitsByDomainInStack(short participantIdx, short troopIdx, ushort mode)
-		{
-			this.processor.Journal.OpenScope($"TallyUnitsByDomainInStack({participantIdx}, {troopIdx}, {mode})");
-
-			StackDomainTally = 0x0;
-			StackDomainMode = mode;
-			StackIndexLimit = (ushort)troopIdx;
-
-			VisitEachUnitInStack(participantIdx, troopIdx, 0x1280);
-
-			ushort result = StackDomainTally;
-
-			this.processor.Journal.CloseScope("TallyUnitsByDomainInStack");
-
-			return result;
-		}
-
-		/// <summary>
-		/// Step of TallyUnitsByDomainInStack, adds to the total in 0x6532 what the mode in 0x6536 asks for:
-		/// 0 the price, 1 the defence, 2 one per unit, 3 the attack, 4 one per defensive unit with an index below 0x6538.
-		/// </summary>
-		public void TallyUnitsByDomainStep(short participantIdx, short troopIdx)
-		{
-			this.processor.Journal.OpenScope($"TallyUnitsByDomainStep({participantIdx}, {troopIdx})");
-
-			switch (StackDomainMode)
-			{
-				case 0:
-					AddToGlobal(0x6532, this.troops.KindField(participantIdx, troopIdx, UnitKindTable.Price));
-					break;
-
-				case 1:
-					AddToGlobal(0x6532, this.troops.KindField(participantIdx, troopIdx, UnitKindTable.GuardPower));
-					break;
-
-				case 2:
-					AddToGlobal(0x6532, 1);
-					break;
-
-				case 3:
-					AddToGlobal(0x6532, this.troops.KindField(participantIdx, troopIdx, UnitKindTable.AssaultPower));
-					break;
-
-				case 4:
-					if (troopIdx < (short)StackIndexLimit &&
-						this.troops.KindField(participantIdx, troopIdx, UnitKindTable.TroopGroup) == UnitKindTable.DefenceTroops)
-					{
-						AddToGlobal(0x6532, 1);
-					}
-					break;
-			}
-
-			this.processor.Journal.CloseScope("TallyUnitsByDomainStep");
-		}
-
 		/// <summary>Adds to a word of the data segment (with the 16 bit overflow of the original)</summary>
 		private void AddToGlobal(ushort address, int amount)
 		{
 			this.processor.EmitGlobalWord(address, (ushort)(this.processor.PullGlobalWord(address) + amount));
-		}
-
-		/// <summary>
-		/// Number of the units of the type in the stack of the unit. Leaves SI = 0x600 * player like the translated original (VisitEachUnitInStack).
-		/// </summary>
-		public ushort TallyUnitsOfTypeInStack(short participantIdx, short troopIdx, ushort kind)
-		{
-			this.processor.Journal.OpenScope($"TallyUnitsOfTypeInStack({participantIdx}, {troopIdx}, {kind})");
-
-			StackKind = kind;
-			StackTally = 0x0;
-
-			VisitEachUnitInStack(participantIdx, troopIdx, 0x135a);
-
-			ushort result = StackTally;
-
-			this.processor.Journal.CloseScope("TallyUnitsOfTypeInStack");
-
-			return result;
-		}
-
-		/// <summary>
-		/// Step of TallyUnitsOfTypeInStack: counts in 0x653c the units of the type in 0x653a
-		/// </summary>
-		public void TallyUnitsOfTypeStep(short participantIdx, short troopIdx)
-		{
-			this.processor.Journal.OpenScope($"TallyUnitsOfTypeStep({participantIdx}, {troopIdx})");
-
-			if ((ushort)this.troops.TroopKind(participantIdx, troopIdx) == StackKind)
-			{
-				AddToGlobal(0x653c, 1);
-			}
-
-			this.processor.Journal.CloseScope("TallyUnitsOfTypeStep");
-		}
-
-		/// <summary>
-		/// Number of the units with the TroopGroup in the stack of the unit. Leaves SI = 0x600 * player like the translated original (VisitEachUnitInStack).
-		/// </summary>
-		public ushort TallyUnitsWithFlagInStack(short participantIdx, short troopIdx, ushort group)
-		{
-			this.processor.Journal.OpenScope($"TallyUnitsWithFlagInStack({participantIdx}, {troopIdx}, {group})");
-
-			StackKind = group;
-			StackTally = 0x0;
-
-			VisitEachUnitInStack(participantIdx, troopIdx, 0x13a9);
-
-			ushort result = StackTally;
-
-			this.processor.Journal.CloseScope("TallyUnitsWithFlagInStack");
-
-			return result;
-		}
-
-		/// <summary>
-		/// Step of TallyUnitsWithFlagInStack: counts in 0x653c the units whose TroopGroup is the one in 0x653a
-		/// </summary>
-		public void TallyUnitsWithFlagStep(short participantIdx, short troopIdx)
-		{
-			this.processor.Journal.OpenScope($"TallyUnitsWithFlagStep({participantIdx}, {troopIdx})");
-
-			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.TroopGroup) == StackKind)
-			{
-				AddToGlobal(0x653c, 1);
-			}
-
-			this.processor.Journal.CloseScope("TallyUnitsWithFlagStep");
-		}
-
-		/// <summary>
-		/// The free room on the transports of the stack of the unit (TallySpecialUnitsStep).
-		/// Leaves SI = 0x600 * player like the translated original (VisitEachUnitInStack).
-		/// </summary>
-		public ushort TallySpecialUnitsInStack(short participantIdx, short troopIdx)
-		{
-			this.processor.Journal.OpenScope($"TallySpecialUnitsInStack({participantIdx}, {troopIdx})");
-
-			StackTally = 0x0;
-
-			VisitEachUnitInStack(participantIdx, troopIdx, 0x13f8);
-
-			ushort result = StackTally;
-
-			this.processor.Journal.CloseScope("TallySpecialUnitsInStack");
-
-			return result;
-		}
-
-		/// <summary>
-		/// Step of TallySpecialUnitsInStack, the free room on the transports in 0x653c: a land unit takes one place,
-		/// a transport adds its room (FerryRoom)
-		/// </summary>
-		public void TallySpecialUnitsStep(short participantIdx, short troopIdx)
-		{
-			this.processor.Journal.OpenScope($"TallySpecialUnitsStep({participantIdx}, {troopIdx})");
-
-			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == UnitKindTable.LandUnits)
-			{
-				AddToGlobal(0x653c, -1);
-			}
-
-			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.TroopGroup) == UnitKindTable.TransportTroops)
-			{
-				AddToGlobal(0x653c, this.troops.KindField(participantIdx, troopIdx, UnitKindTable.FerryRoom));
-			}
-
-			this.processor.Journal.CloseScope("TallySpecialUnitsStep");
-		}
-
-		/// <summary>
-		/// Calls a step function for every unit of the stack of the unit, at most for 10 units. The step function is given by
-		/// its address in the original code.
-		/// </summary>
-		public void VisitEachUnitInStack(short participantIdx, short troopIdx, int funcAddr)
-		{
-			this.processor.Journal.OpenScope($"VisitEachUnitInStack({participantIdx}, {troopIdx}, 0x{funcAddr:x4})");
-
-			Action<short, short> step = StackStep(funcAddr);
-
-			ForEachUnitInStack(participantIdx, troopIdx, (stepParticipantIdx, stepTroopIdx) =>
-			{
-				step(stepParticipantIdx, stepTroopIdx);
-			});
-
-			this.processor.Journal.CloseScope("VisitEachUnitInStack");
-		}
-
-		/// <summary>
-		/// Calls the action for every unit of the stack of the unit, starting with it, at most for 10 units.
-		/// The following unit is read before the action, so the action may remove the unit from the stack.
-		/// </summary>
-		public void ForEachUnitInStack(short participantIdx, short troopIdx, Action<short, short> visit)
-		{
-			short present = troopIdx;
-
-			for (int idx = 0; idx < 10; idx++)
-			{
-				short following = this.troops.Following(participantIdx, present);
-
-				visit(participantIdx, present);
-
-				present = following;
-
-				if (present == -1 || present == troopIdx)
-					break;
-			}
 		}
 
 		/// <summary>The step functions of VisitEachUnitInStack by their address in the original code</summary>
@@ -1185,24 +1768,6 @@ namespace Civilization1Remaster.Game
 			};
 		}
 
-		/// <summary>
-		/// Stack step: wakes the unit (clears Sentry), except a land unit carried on the ocean
-		/// </summary>
-		public void VerifyUnitTerrainFlag(short participantIdx, short troopIdx)
-		{
-			this.processor.Journal.OpenScope($"VerifyUnitTerrainFlag({participantIdx}, {troopIdx})");
-
-			bool carried = IsOnOcean(participantIdx, troopIdx) &&
-				this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == UnitKindTable.LandUnits;
-
-			if (!carried)
-			{
-				ClearStatus(participantIdx, troopIdx, UnitStatusEnum.Sentry);
-			}
-
-			this.processor.Journal.CloseScope("VerifyUnitTerrainFlag");
-		}
-
 		private void ClearStatus(short participantIdx, short troopIdx, UnitStatusEnum flags)
 		{
 			byte status = this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status);
@@ -1214,213 +1779,6 @@ namespace Civilization1Remaster.Game
 		private byte FullSteps(short participantIdx, short troopIdx)
 		{
 			return (byte)(3 * this.troops.KindField(participantIdx, troopIdx, UnitKindTable.ShiftTally));
-		}
-
-		/// <summary>
-		/// Stack step: a sleeping (Sentry) unit wakes up with full moves (and full fuel for a plane); every unit loses its
-		/// "go to" order
-		/// </summary>
-		public void WipeUnitOrders(short participantIdx, short troopIdx)
-		{
-			this.processor.Journal.OpenScope($"WipeUnitOrders({participantIdx}, {troopIdx})");
-
-			if ((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & (int)UnitStatusEnum.Sentry) != 0)
-			{
-				ClearStatus(participantIdx, troopIdx, UnitStatusEnum.Sentry);
-				this.troops.Assign(participantIdx, troopIdx, UnitMemory.LeftoverSteps, FullSteps(participantIdx, troopIdx));
-
-				ushort roundsAway = this.troops.KindField(participantIdx, troopIdx, UnitKindTable.RoundsAway);
-
-				if (roundsAway != 0)
-				{
-					this.troops.Assign(participantIdx, troopIdx, UnitMemory.UnusualSteps, (byte)(roundsAway - 1));
-				}
-			}
-
-			this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHeading, 0xff);
-			this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHoriz, 0xff);
-
-			this.processor.Journal.CloseScope("WipeUnitOrders");
-		}
-
-		/// <summary>
-		/// Stack step: RestoreUnitStatus for the ships of the stack
-		/// </summary>
-		public void RestoreUnitOrders(short participantIdx, short troopIdx)
-		{
-			this.processor.Journal.OpenScope($"RestoreUnitOrders({participantIdx}, {troopIdx})");
-
-			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == UnitKindTable.SeaUnits)
-			{
-				RestoreUnitStatus(participantIdx, troopIdx);
-			}
-
-			this.processor.Journal.CloseScope("RestoreUnitOrders");
-		}
-
-		/// <summary>
-		/// Gives the unit back to the player without orders: settler work stops, a sleeping, fortified or working unit gets
-		/// its full moves, only the Veteran (and 0x10) status stays, the "go to" order is removed
-		/// </summary>
-		public void RestoreUnitStatus(short participantIdx, short troopIdx)
-		{
-			this.processor.Journal.OpenScope($"RestoreUnitStatus({participantIdx}, {troopIdx})");
-
-			byte status = this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status);
-
-			if ((status & (int)UnitStatusEnum.SettlerBuildMask) != 0)
-			{
-				this.troops.Assign(participantIdx, troopIdx, UnitMemory.UnusualSteps, 0);
-			}
-
-			if ((status & (int)(UnitStatusEnum.SettlerBuildMask | UnitStatusEnum.Fortified | UnitStatusEnum.Sentry)) != 0)
-			{
-				this.troops.Assign(participantIdx, troopIdx, UnitMemory.LeftoverSteps, FullSteps(participantIdx, troopIdx));
-			}
-
-			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Status,
-				(byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & (int)(UnitStatusEnum.Veteran | UnitStatusEnum.Unknown1)));
-			this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHoriz, 0xff);
-
-			if (participantIdx == this.owner.World.PersonParticipantIdx)
-			{
-				this.owner.MapOps.RenderUnitOnWorldMap(participantIdx, troopIdx);
-			}
-
-			this.processor.Journal.CloseScope("RestoreUnitStatus");
-		}
-
-		/// <summary>
-		/// Stack step: removes the unit when it is a land unit (cargo of a sinking transport)
-		/// </summary>
-		public void EliminateLandUnit(short participantIdx, short troopIdx)
-		{
-			this.processor.Journal.OpenScope($"EliminateLandUnit({participantIdx}, {troopIdx})");
-
-			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == UnitKindTable.LandUnits)
-			{
-				EliminateUnit(participantIdx, troopIdx);
-			}
-
-			this.processor.Journal.CloseScope("EliminateLandUnit");
-		}
-
-		/// <summary>
-		/// Stack step: removes the unit when it is a plane or a ship
-		/// </summary>
-		public void EliminateNonLandUnit(short participantIdx, short troopIdx)
-		{
-			this.processor.Journal.OpenScope($"EliminateNonLandUnit({participantIdx}, {troopIdx})");
-
-			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) != UnitKindTable.LandUnits)
-			{
-				EliminateUnit(participantIdx, troopIdx);
-			}
-
-			this.processor.Journal.CloseScope("EliminateNonLandUnit");
-		}
-
-		/// <summary>
-		/// Stack step: removes the unit when it is a plane (LandGroup 1, despite the name: the planes of a sinking carrier)
-		/// </summary>
-		public void EliminateSeaUnit(short participantIdx, short troopIdx)
-		{
-			this.processor.Journal.OpenScope($"EliminateSeaUnit({participantIdx}, {troopIdx})");
-
-			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == UnitKindTable.AirUnits)
-			{
-				EliminateUnit(participantIdx, troopIdx);
-			}
-
-			this.processor.Journal.CloseScope("EliminateSeaUnit");
-		}
-
-		/// <summary>
-		/// Scrolls the map view (left column 0xd4cc, top row 0xd75e) so that the tile is in its inner part
-		/// (columns 2 - 13, rows 2 - 9 of the view); otherwise the view stays
-		/// </summary>
-		public void PanMapToPosition(short participantIdx, int horizLoc, int vertLoc)
-		{
-			this.processor.Journal.OpenScope($"PanMapToPosition({participantIdx}, {horizLoc}, {vertLoc})");
-
-			int viewLeft = (short)MapViewHoriz;
-
-			// The view may reach over the right edge of the world
-			if (horizLoc < 16 && viewLeft > 64)
-			{
-				horizLoc += MapRules.Width;
-			}
-
-			int viewTop = (short)MapViewVert;
-			bool outside = horizLoc < viewLeft + 2 || horizLoc > viewLeft + 13 || vertLoc < viewTop + 2 || vertLoc > viewTop + 9;
-
-			if (outside)
-			{
-				int left = (short)this.owner.Routing.TunePosition(horizLoc - 8);
-
-				this.owner.MapOps.FocusMapView(participantIdx, left, vertLoc - 6);
-			}
-
-			this.processor.Journal.CloseScope("PanMapToPosition");
-		}
-
-		/// <summary>
-		/// Is the move onto the tile blocked by the zone of control: never into a city, otherwise VerifyTileOccupation
-		/// </summary>
-		/// <returns>1 when a foreign unit stands next to the tile</returns>
-		public ushort MayOccupyTile(short participantIdx, int horizLoc, int vertLoc)
-		{
-			this.processor.Journal.OpenScope($"MayOccupyTile({participantIdx}, {horizLoc}, {vertLoc})");
-
-			ushort blocked = (this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) != 0 ? (ushort)0 :
-				VerifyTileOccupation(participantIdx, horizLoc, vertLoc);
-
-
-			this.processor.Journal.CloseScope("MayOccupyTile");
-
-			return blocked;
-		}
-
-		/// <summary>
-		/// Does a unit of another player stand on one of the 8 tiles around, on the same kind of tile (land or ocean).
-		/// In the turn of the human player that unit, and its city, become visible to the human.
-		/// </summary>
-		/// <returns>1 when a foreign unit stands next to the tile, 0 otherwise</returns>
-		public ushort VerifyTileOccupation(short participantIdx, int horizLoc, int vertLoc)
-		{
-			this.processor.Journal.OpenScope($"VerifyTileOccupation({participantIdx}, {horizLoc}, {vertLoc})");
-
-			bool onOcean = this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) == MapRules.OceanTerrain;
-			ushort found = 0;
-
-			for (int heading = 1; heading < 9; heading++)
-			{
-				int nearHoriz = this.owner.Routing.TunePosition(this.owner.MapOps.Chart.DirectionHoriz(heading) + horizLoc);
-				int nearVert = (short)(this.owner.MapOps.Chart.DirectionVert(heading) + vertLoc);
-
-				bool nearOcean = this.owner.MapOps.ObtainTerrainType(nearHoriz, nearVert) == MapRules.OceanTerrain;
-
-				if (nearOcean != onOcean)
-					continue;
-
-				ushort nearParticipantIdx = this.owner.MapOps.ObtainTileOwner(nearHoriz, nearVert);
-
-				if (nearParticipantIdx == 0xffff || nearParticipantIdx == (ushort)participantIdx)
-					continue;
-
-				if (participantIdx == this.owner.World.PersonParticipantIdx)
-				{
-					RevealToHuman((short)nearParticipantIdx, nearHoriz, nearVert);
-				}
-
-				found = 1;
-				break;
-			}
-
-
-			this.processor.Journal.CloseScope("VerifyTileOccupation");
-
-			return found;
 		}
 
 		/// <summary>
@@ -1454,97 +1812,6 @@ namespace Civilization1Remaster.Game
 
 				this.owner.MapOps.RepaintMapTile(horizLoc, vertLoc);
 			}
-		}
-
-		/// <summary>1 when a unit of another player stands on one of the 8 tiles around (the zone of control), else 0</summary>
-		public ushort ContainsAdjacentForeignUnit(short participantIdx, int horizLoc, int vertLoc)
-		{
-			this.processor.Journal.OpenScope($"ContainsAdjacentForeignUnit({participantIdx}, {horizLoc}, {vertLoc})");
-
-			// Check the 8 neighboring tiles for any foreign unit (Zone of Control)
-			bool found = MovementRules.HasAdjacentForeignUnit(horizLoc, vertLoc, participantIdx, (x, y) =>
-			{
-				return (int)(short)this.owner.MapOps.ObtainTileOwner(x, y);
-			});
-
-			ushort result = (ushort)(found ? 1 : 0);
-
-			this.processor.Journal.CloseScope("ContainsAdjacentForeignUnit");
-
-			return result;
-		}
-
-		/// <summary>
-		/// A unit enters a hut (not a barbarian, not a plane). DrawInt(4) chooses:
-		/// 0: an advanced tribe founds a city for the player, when no city is 4 tiles near and the hut layer says so; 50 gold
-		/// otherwise, mercenaries near a city;
-		/// 1: scrolls of ancient wisdom (a technology) after the first turn up to the year 1000, 50 gold otherwise;
-		/// 2: 50 gold;
-		/// 3: barbarians around the unit when no city is 4 tiles near and the player has a city, mercenaries otherwise.
-		/// </summary>
-		public void VisitHut(short participantIdx, short troopIdx)
-		{
-			this.processor.Journal.OpenScope($"VisitHut({participantIdx}, {troopIdx})");
-
-			if (participantIdx != 0 &&
-				this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) != UnitKindTable.AirUnits)
-			{
-				int horizLoc = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz);
-				int vertLoc = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert);
-				short townDistance = DistanceToNearestCity(horizLoc, vertLoc);
-
-				switch (this.owner.Libc.Dice.DrawInt(4))
-				{
-					case 0:
-						int hutKind = this.owner.VideoCard.ObtainDot(2, horizLoc + 80, vertLoc) & 0x7;
-
-						if (townDistance < 4)
-						{
-							MeetMercenaries(participantIdx, horizLoc, vertLoc);
-						}
-						else if (hutKind <= 4)
-						{
-							FindMetalDeposits(participantIdx);
-						}
-						else
-						{
-							AnnounceHut(participantIdx, "You have discovered\nan advanced tribe.\n");
-
-							this.owner.Founding.EstablishCity(participantIdx, 0, horizLoc, vertLoc, 1);
-
-							RepaintForHuman(participantIdx, horizLoc, vertLoc);
-						}
-						break;
-
-					case 1:
-						if (this.owner.World.RoundTally != 0 && this.owner.World.Season <= 1000)
-						{
-							FindAncientScrolls(participantIdx);
-						}
-						else
-						{
-							FindMetalDeposits(participantIdx);
-						}
-						break;
-
-					case 2:
-						FindMetalDeposits(participantIdx);
-						break;
-
-					case 3:
-						if (townDistance >= 4 && this.owner.World.Participants[participantIdx].TownTally != 0)
-						{
-							UnleashBarbarians(participantIdx, troopIdx);
-						}
-						else
-						{
-							MeetMercenaries(participantIdx, horizLoc, vertLoc);
-						}
-						break;
-				}
-			}
-
-			this.processor.Journal.CloseScope("VisitHut");
 		}
 
 		/// <summary>Distance to the nearest city, from position -1, -1 when there is no city</summary>
@@ -1593,9 +1860,6 @@ namespace Civilization1Remaster.Game
 
 			RepaintForHuman(participantIdx, horizLoc, vertLoc);
 		}
-
-		/// <summary>Number of technologies</summary>
-		private const int ScienceTally = 72;
 
 		/// <summary>
 		/// The player learns the first technology from a random one on (at most 999 tries) that it does not know and whose two
@@ -1666,40 +1930,6 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// The attack animation: the unit slides one tile towards the attacked tile in 17 frames, over the next unit of its
-		/// stack. Only when the map view shows both tiles; with 0xb278 = 1 the tile of the unit is only drawn.
-		/// </summary>
-		/// <param name="direction">Direction of the attack (1 - 8)</param>
-		public void ChoreographUnitCombat(short participantIdx, short troopIdx, ushort direction)
-		{
-			this.processor.Journal.OpenScope($"ChoreographUnitCombat({participantIdx}, {troopIdx}, {direction})");
-
-			int horizLoc = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz);
-			int vertLoc = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert);
-
-			if (WorldMapView == 1)
-			{
-				this.owner.MapOps.RenderMapTile(horizLoc, vertLoc);
-			}
-			else
-			{
-				this.owner.Startup.ConcealMouseCursor();
-
-				if (this.owner.MapOps.RenderMapTile(horizLoc, vertLoc) != 0 &&
-					this.owner.TurnLogic.VerifyPositionOnScreen(horizLoc, vertLoc) != 0 &&
-					this.owner.TurnLogic.VerifyPositionOnScreen(this.owner.MapOps.Chart.DirectionHoriz(direction) + horizLoc,
-						this.owner.MapOps.Chart.DirectionVert(direction) + vertLoc) != 0)
-				{
-					AnimateAttack(participantIdx, troopIdx, direction, horizLoc, vertLoc);
-				}
-
-				this.owner.Startup.DisplayMouseCursor();
-			}
-
-			this.processor.Journal.CloseScope("ChoreographUnitCombat");
-		}
-
-		/// <summary>
 		/// Draws the next unit of the stack on the tile (on the ocean only a ship), keeps the map view in the back screen (0x19d4)
 		/// and moves the picture of the unit 16 pixels in the direction, restoring the background after every frame
 		/// </summary>
@@ -1742,79 +1972,6 @@ namespace Civilization1Remaster.Game
 				this.owner.VideoCard.RenderImage(backScreen, frameLeft, frameTop, 0x10, 0x10, screen, frameLeft, frameTop);
 			}
 		}
-
-		/// <summary>
-		/// The list of the units of the stack (at most 12): the human player wakes up units (the cursor keys and Enter or Space,
-		/// or a click) and picks the one to go on with. Woken units lose their orders and a settler at work gets its full moves.
-		/// </summary>
-		/// <returns>The picked unit, the stack leader (LocateStackLeader) when none; also in AX</returns>
-		public ushort DisplayBattleScreen(short participantIdx, short troopIdx)
-		{
-			this.processor.Journal.OpenScope($"DisplayBattleScreen({participantIdx}, {troopIdx})");
-
-			ushort screen = ScreenBox;
-			ushort backScreen = BackScreenBox;
-
-			this.owner.Startup.ConcealMouseCursor();
-
-			this.owner.VideoCard.RenderImage(screen, 0, 0, 0x140, 0xc8, backScreen, 0, 0);
-
-			ushort picked = LocateStackLeader(participantIdx, troopIdx);
-			short[] stack = new short[StackListTally];
-			int stackTally = 0;
-			short present = troopIdx;
-
-			do
-			{
-				stack[stackTally] = present;
-				present = this.troops.Following(participantIdx, present);
-				stackTally++;
-			}
-			while (stackTally < StackListTally && present != -1 && present != troopIdx);
-
-			short listTop = (short)(0x60 - (stackTally << 3));
-			int selected = 0;
-
-			while (true)
-			{
-				stackTally = RenderStackList(participantIdx, troopIdx, listTop, stackTally);
-
-				int choice = ChooseFromStackList(listTop, stackTally, ref selected);
-
-				if (choice < 0 || choice >= stackTally)
-					break;
-
-				picked = (ushort)stack[choice];
-
-				if ((this.troops.Pull(participantIdx, picked, UnitMemory.Status) & (int)UnitStatusEnum.SettlerBuildMask) != 0)
-				{
-					this.troops.Assign(participantIdx, picked, UnitMemory.LeftoverSteps,
-						(byte)(3 * this.troops.KindField(participantIdx, picked, UnitKindTable.ShiftTally)));
-				}
-
-				// Only Unknown1 and Veteran stay
-				this.troops.Assign(participantIdx, picked, UnitMemory.Status,
-					(byte)(this.troops.Pull(participantIdx, picked, UnitMemory.Status) & 0x30));
-				ClearTravel(participantIdx, (short)picked);
-
-				if (stackTally <= 1)
-					break;
-			}
-
-			this.owner.VideoCard.RenderImage(backScreen, 0, 0, 0x140, 0xc8, screen, 0, 0);
-
-			this.owner.Startup.DisplayMouseCursor();
-
-			this.owner.TurnLogic.AwaitForKey();
-
-
-			this.processor.Journal.CloseScope("DisplayBattleScreen");
-
-			return picked;
-		}
-
-		/// <summary>Most units shown in the list of DisplayBattleScreen</summary>
-		private const int StackListTally = 12;
 
 		/// <summary>
 		/// The box with the units of the stack: picture, name with " (V)" for a veteran, home city. The units are counted again
@@ -1920,101 +2077,6 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// The direction (1 - 8) of the step of the unit towards the nearest own city or carrier (a plane flying home). Tiles with
-		/// foreign units and foreign cities are avoided, 0 when no step gets nearer.
-		/// </summary>
-		/// <returns>Direction, also in AX</returns>
-		public ushort LocateNearestFriendlyCity(short participantIdx, short troopIdx)
-		{
-			this.processor.Journal.OpenScope($"LocateNearestFriendlyCity({participantIdx}, {troopIdx})");
-
-			// Without an own city or carrier the target is the place of the unit, so it stays (direction 0; the original took
-			// what was left on the stack)
-			int unitHoriz = this.troops.Pull(participantIdx, troopIdx, UnitMemory.Horiz);
-			int unitVert = this.troops.Pull(participantIdx, troopIdx, UnitMemory.Vert);
-			int targetHoriz = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz);
-			int targetVert = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert);
-			int nearest = 999;
-
-			foreach (City town in this.owner.World.Towns)
-			{
-				if (town.ConditionMarker == 0xff || town.ParticipantIdx != participantIdx)
-					continue;
-
-				int distance = WrappedChebyshev(unitHoriz - town.Place.X, unitVert - town.Place.Y);
-
-				if (distance < nearest)
-				{
-					nearest = distance;
-					targetHoriz = town.Place.X;
-					targetVert = town.Place.Y;
-				}
-			}
-
-			for (short carrierIdx = 0; carrierIdx < UnitMemory.TroopTally; carrierIdx++)
-			{
-				if (this.troops.Pull(participantIdx, carrierIdx, UnitMemory.Kind) != UnitKindTable.Carrier)
-					continue;
-
-				int carrierHoriz = this.troops.Pull(participantIdx, carrierIdx, UnitMemory.Horiz);
-				int carrierVert = this.troops.Pull(participantIdx, carrierIdx, UnitMemory.Vert);
-				int distance = WrappedChebyshev(unitHoriz - carrierHoriz, unitVert - carrierVert);
-
-				if (distance < nearest)
-				{
-					nearest = distance;
-					targetHoriz = carrierHoriz;
-					targetVert = carrierVert;
-				}
-			}
-
-			int best = this.owner.Helpers.ObtainDistanceFromOffsets(
-				this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz) - targetHoriz,
-				this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert) - targetVert);
-			ushort heading = 0;
-
-			for (int direction = 1; direction <= 8; direction++)
-			{
-				// Like the original, the step doesn't wrap around the map
-				int stepHoriz = (short)(unitHoriz + this.owner.MapOps.Chart.DirectionHoriz(direction));
-				int stepVert = (short)(unitVert + this.owner.MapOps.Chart.DirectionVert(direction));
-
-				ushort stepOwner = this.owner.MapOps.ObtainTileOwner(stepHoriz, stepVert);
-
-				if (stepOwner != 0xffff && stepOwner != (ushort)participantIdx)
-					continue;
-
-				if ((this.owner.MapOps.ObtainTileImprovements(stepHoriz, stepVert) & 1) != 0 &&
-					this.owner.MapOps.ObtainTileOwnerBits(stepHoriz, stepVert) != (ushort)participantIdx)
-					continue;
-
-				int distance = this.owner.Helpers.ObtainDistanceFromOffsets(stepHoriz - targetHoriz, stepVert - targetVert);
-
-				if (distance < best)
-				{
-					best = distance;
-					heading = (ushort)direction;
-				}
-			}
-
-
-			this.processor.Journal.CloseScope("LocateNearestFriendlyCity");
-
-			return heading;
-		}
-
-		/// <summary>The larger of the two steps, the horizontal one wrapping over 40</summary>
-		private static int WrappedChebyshev(int horizStep, int vertStep)
-		{
-			horizStep = Math.Abs(horizStep);
-
-			if (horizStep > 40)
-				horizStep = 80 - horizStep;
-
-			return Math.Max(horizStep, Math.Abs(vertStep));
-		}
-
-		/// <summary>
 		/// An entry of the replay of the game: the kind and the turn (4 and 12 bits, high byte first), then its bytes; nothing
 		/// when the 0x1000 bytes of the replay have no room for all of it
 		/// </summary>
@@ -2029,68 +2091,6 @@ namespace Civilization1Remaster.Game
 
 			foreach (byte entry in content)
 				this.owner.World.RerunContent[this.owner.World.RerunContentSpan++] = entry;
-		}
-
-		/// <summary>An entry of the replay with 1 byte(s): the kind rerunIdx, the turn, the bytes</summary>
-		public void AttachReplayContent(ushort rerunIdx, byte content1)
-		{
-			this.processor.Journal.OpenScope($"AttachReplayContent({rerunIdx}, {content1})");
-			WriteReplayEntry(rerunIdx, content1);
-			this.processor.Journal.CloseScope("AttachReplayContent");
-		}
-
-		/// <summary>An entry of the replay with 2 byte(s): the kind rerunIdx, the turn, the bytes</summary>
-		public void AttachReplayContent(ushort rerunIdx, byte content1, byte content2)
-		{
-			this.processor.Journal.OpenScope($"AttachReplayContent({rerunIdx}, {content1}, {content2})");
-			WriteReplayEntry(rerunIdx, content1, content2);
-			this.processor.Journal.CloseScope("AttachReplayContent");
-		}
-
-		/// <summary>An entry of the replay with 3 byte(s): the kind rerunIdx, the turn, the bytes</summary>
-		public void AttachReplayContent(ushort rerunIdx, byte content1, byte content2, byte content3)
-		{
-			this.processor.Journal.OpenScope($"AttachReplayContent({rerunIdx}, {content1}, {content2}, {content3})");
-			WriteReplayEntry(rerunIdx, content1, content2, content3);
-			this.processor.Journal.CloseScope("AttachReplayContent");
-		}
-
-		/// <summary>An entry of the replay with 4 byte(s): the kind rerunIdx, the turn, the bytes</summary>
-		public void AttachReplayContent(ushort rerunIdx, byte content1, byte content2, byte content3, byte content4)
-		{
-			this.processor.Journal.OpenScope($"AttachReplayContent({rerunIdx}, {content1}, {content2}, {content3}, {content4})");
-			WriteReplayEntry(rerunIdx, content1, content2, content3, content4);
-			this.processor.Journal.CloseScope("AttachReplayContent");
-		}
-
-		/// <summary>
-		/// Draws the border of the screen (320 x 200) from pieces of 8 x 8 pixels of the picture 0x19e8 (from row 120), in one of
-		/// two styles (DrawInt(2)): the four corners, the left and right edges, then the top and bottom edges
-		/// </summary>
-		public void RenderBusyIndicator()
-		{
-			this.processor.Journal.OpenScope("RenderBusyIndicator()");
-
-			int styleLeft = (this.owner.Libc.Dice.DrawInt(2) << 5) + 0xc0;
-
-			RenderBorderPiece(styleLeft, 0x78, 0, 0);
-			RenderBorderPiece(styleLeft + 8, 0x78, 0x138, 0);
-			RenderBorderPiece(styleLeft + 0x18, 0x78, 0x138, 0xc0);
-			RenderBorderPiece(styleLeft + 0x10, 0x78, 0, 0xc0);
-
-			for (int row = 1; row < 0x18; row++)
-			{
-				RenderBorderPiece(styleLeft + 0x18, 0x80, 0, row << 3);
-				RenderBorderPiece(styleLeft + 8, 0x80, 0x138, row << 3);
-			}
-
-			for (int column = 1; column < 0x27; column++)
-			{
-				RenderBorderPiece(styleLeft, 0x80, column << 3, 0);
-				RenderBorderPiece(styleLeft + 0x10, 0x80, column << 3, 0xc0);
-			}
-
-			this.processor.Journal.CloseScope("RenderBusyIndicator");
 		}
 
 		private void RenderBorderPiece(int pieceLeft, int pieceTop, int horizLoc, int vertLoc)

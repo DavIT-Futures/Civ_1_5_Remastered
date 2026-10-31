@@ -11,9 +11,10 @@ namespace Civilization1Remaster
 	public class LogWrapper
 	{
 		private readonly StreamWriter? journal;
+		private readonly Stack<ushort> pile = new Stack<ushort>();
+
 		private int journalIndentTier = 0;
 		private IStackProbe? probe = null;
-		private readonly Stack<ushort> pile = new Stack<ushort>();
 
 		public LogWrapper(string route)
 		{

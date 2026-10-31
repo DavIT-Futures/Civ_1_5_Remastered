@@ -9,9 +9,13 @@ namespace Civilization1Remaster.UI
 	{
 		private const ushort ReplayHistoryScoresSegment = 0x3772;
 		private const int ReplayHistoryStride = 8;
-		private static readonly GameText WondersOfTheWorldTitleAddress = new(0x43f0, "The Wonders of the World");
 		private const ushort WonderInCityStringAddress = 0x440e;
 		private const ushort WonderOfCityStringAddress = 0x4413;
+
+		private static readonly GameText WondersOfTheWorldTitleAddress = new(0x43f0, "The Wonders of the World");
+
+		/// <summary>The values of the players for the current line of the census (the original kept them under SP)</summary>
+		private readonly short[] censusValues = new short[8];
 
 		public WorldMap(GameEngine owner)
 			: base(owner)
@@ -97,70 +101,6 @@ namespace Civilization1Remaster.UI
 			this.owner.Startup.DisplayMouseCursor();
 
 			this.processor.Journal.CloseScope("DisplayWorldMap");
-		}
-
-		/// <summary>The rows of the world map widen to the row (unsigned) of a unit or a city of the player</summary>
-		private static void FitWorldMapRows(byte vertLoc, ref ushort top, ref ushort bottom)
-		{
-			if (top > vertLoc)
-				top = vertLoc;
-
-			if (bottom < vertLoc)
-				bottom = vertLoc;
-		}
-
-		/// <summary>One tile of the world map (see DisplayWorldMap)</summary>
-		private void RenderWorldMapTile(ushort marker, short horizLoc, short vertLoc, short shiftHoriz, short shiftVert)
-		{
-			short pixelHoriz = (short)(this.owner.Routing.TunePosition(horizLoc + shiftHoriz) << 2);
-			short pixelVert = (short)((vertLoc + shiftVert) << 2);
-
-			ushort terrain = this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
-
-			if (marker == 0)
-			{
-				this.owner.Services.FloodBox(ScreenBox, pixelHoriz, pixelVert, 4, 4, terrain == 0xa ? (ushort)1 : (ushort)2);
-			}
-			else
-			{
-				this.owner.VideoCard.RenderImage(PictureScreenBox, (ushort)((terrain << 2) + 0xa0), (ushort)((((horizLoc + vertLoc) & 1) << 2) + 0x6f),
-					4, 4, ScreenBox, (ushort)pixelHoriz, (ushort)pixelVert);
-			}
-
-			if ((this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) != 0)
-			{
-				ushort townIdx = this.owner.Helpers.LocateCityAtPosition(horizLoc, vertLoc);
-
-				if (this.owner.World.Towns[townIdx].ShownExtent != 0 || MapRevealed != 0 ||
-					this.owner.World.Towns[townIdx].ParticipantIdx == this.owner.World.PersonParticipantIdx)
-				{
-					ushort colour = PlayerColour(this.owner.MapOps.ObtainTileOwnerBits(horizLoc, vertLoc));
-
-					this.owner.Services.FloodBox(ScreenBox, pixelHoriz, pixelVert, 4, 4, colour);
-				}
-
-				return;
-			}
-
-			ushort ownerIdx = this.owner.MapOps.ObtainTileOwner(horizLoc, vertLoc);
-
-			if (ownerIdx == 0xffff)
-				return;
-
-			if (ownerIdx != (ushort)this.owner.World.PersonParticipantIdx && MapRevealed == 0)
-			{
-				ushort troopIdx = this.owner.MapOps.ObtainUnitAtTile(horizLoc, vertLoc);
-				sbyte visibility = (sbyte)this.Troops.PullAt(((ushort)(0xc * troopIdx) + (ushort)(0x600 * ownerIdx)), UnitMemory.ShownToParticipants);
-
-				if ((visibility & (1 << (byte)this.owner.World.PersonParticipantIdx)) == 0)
-					return;
-			}
-
-			ushort ownerColour = PlayerColour(ownerIdx);
-
-			this.owner.Services.FloodBox(ScreenBox, pixelHoriz + 1, pixelVert + 1, 3, 3, Hues.Black);
-
-			this.owner.Services.FloodBox(ScreenBox, pixelHoriz, pixelVert, 3, 3, ownerColour);
 		}
 
 		/// <summary>
@@ -315,18 +255,6 @@ namespace Civilization1Remaster.UI
 			this.owner.Startup.DisplayMouseCursor();
 
 			this.processor.Journal.CloseScope("DisplayCivilizationGraph");
-		}
-
-		/// <summary>The player is shown in the graph: alive, or one of the players the game started with</summary>
-		private bool InGraph(int participantIdx)
-		{
-			return (this.owner.World.LiveRealms & (1 << participantIdx)) != 0 || (short)participantIdx <= (short)(this.owner.World.BotRivalTally + 1);
-		}
-
-		/// <summary>The score of the player in the replay history (0x3772, 8 bytes every 4 turns)</summary>
-		private byte HistoryScore(int epochIdx, int participantIdx)
-		{
-			return this.processor.PullUInt8(ReplayHistoryScoresSegment, (ushort)((epochIdx * ReplayHistoryStride) + participantIdx));
 		}
 
 		/// <summary>
@@ -605,6 +533,106 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
+		/// A line of the demographics: the human player's rank ("1st" ...) among the living players 1 - 7 by the words at valuesAddr
+		/// (one per player; with a negative row they are negated first, a lower value is better), and the best player's value
+		/// "(civilization: value text)" in its colour when the human player has relations bit 0x40 towards it. The values are
+		/// read from memory as they change, like in the original: the human player's own value is negated in the loop too.
+		/// </summary>
+		public void RenderCensusLine(ushort valuesAddr, short vertLoc, ushort charsAddr)
+		{
+			short[] values = new short[8];
+
+			for (int participantIdx = 0; participantIdx < 8; participantIdx++)
+				values[participantIdx] = (short)this.processor.PullGlobalWord((ushort)(valuesAddr + (participantIdx << 1)));
+
+			RenderCensusLine(values, valuesAddr, vertLoc, charsAddr);
+
+			// (the values made positive for a line where lower is better, back in the memory)
+			for (int participantIdx = 0; participantIdx < 8; participantIdx++)
+				this.processor.EmitGlobalWord((ushort)(valuesAddr + (participantIdx << 1)), (ushort)values[participantIdx]);
+		}
+
+		/// <summary>RenderCensusLine of the values of the players 1 - 7 in a C# array (made positive in it for a negative row)</summary>
+		public void RenderCensusLine(short[] values, short vertLoc, ushort charsAddr) =>
+			RenderCensusLine(values, TextBuffer.StackTextAddress, vertLoc, charsAddr);
+
+		/// <summary>The rows of the world map widen to the row (unsigned) of a unit or a city of the player</summary>
+		private static void FitWorldMapRows(byte vertLoc, ref ushort top, ref ushort bottom)
+		{
+			if (top > vertLoc)
+				top = vertLoc;
+
+			if (bottom < vertLoc)
+				bottom = vertLoc;
+		}
+
+		/// <summary>One tile of the world map (see DisplayWorldMap)</summary>
+		private void RenderWorldMapTile(ushort marker, short horizLoc, short vertLoc, short shiftHoriz, short shiftVert)
+		{
+			short pixelHoriz = (short)(this.owner.Routing.TunePosition(horizLoc + shiftHoriz) << 2);
+			short pixelVert = (short)((vertLoc + shiftVert) << 2);
+
+			ushort terrain = this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
+
+			if (marker == 0)
+			{
+				this.owner.Services.FloodBox(ScreenBox, pixelHoriz, pixelVert, 4, 4, terrain == 0xa ? (ushort)1 : (ushort)2);
+			}
+			else
+			{
+				this.owner.VideoCard.RenderImage(PictureScreenBox, (ushort)((terrain << 2) + 0xa0), (ushort)((((horizLoc + vertLoc) & 1) << 2) + 0x6f),
+					4, 4, ScreenBox, (ushort)pixelHoriz, (ushort)pixelVert);
+			}
+
+			if ((this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) != 0)
+			{
+				ushort townIdx = this.owner.Helpers.LocateCityAtPosition(horizLoc, vertLoc);
+
+				if (this.owner.World.Towns[townIdx].ShownExtent != 0 || MapRevealed != 0 ||
+					this.owner.World.Towns[townIdx].ParticipantIdx == this.owner.World.PersonParticipantIdx)
+				{
+					ushort colour = PlayerColour(this.owner.MapOps.ObtainTileOwnerBits(horizLoc, vertLoc));
+
+					this.owner.Services.FloodBox(ScreenBox, pixelHoriz, pixelVert, 4, 4, colour);
+				}
+
+				return;
+			}
+
+			ushort ownerIdx = this.owner.MapOps.ObtainTileOwner(horizLoc, vertLoc);
+
+			if (ownerIdx == 0xffff)
+				return;
+
+			if (ownerIdx != (ushort)this.owner.World.PersonParticipantIdx && MapRevealed == 0)
+			{
+				ushort troopIdx = this.owner.MapOps.ObtainUnitAtTile(horizLoc, vertLoc);
+				sbyte visibility = (sbyte)this.Troops.PullAt(((ushort)(0xc * troopIdx) + (ushort)(0x600 * ownerIdx)), UnitMemory.ShownToParticipants);
+
+				if ((visibility & (1 << (byte)this.owner.World.PersonParticipantIdx)) == 0)
+					return;
+			}
+
+			ushort ownerColour = PlayerColour(ownerIdx);
+
+			this.owner.Services.FloodBox(ScreenBox, pixelHoriz + 1, pixelVert + 1, 3, 3, Hues.Black);
+
+			this.owner.Services.FloodBox(ScreenBox, pixelHoriz, pixelVert, 3, 3, ownerColour);
+		}
+
+		/// <summary>The player is shown in the graph: alive, or one of the players the game started with</summary>
+		private bool InGraph(int participantIdx)
+		{
+			return (this.owner.World.LiveRealms & (1 << participantIdx)) != 0 || (short)participantIdx <= (short)(this.owner.World.BotRivalTally + 1);
+		}
+
+		/// <summary>The score of the player in the replay history (0x3772, 8 bytes every 4 turns)</summary>
+		private byte HistoryScore(int epochIdx, int participantIdx)
+		{
+			return this.processor.PullUInt8(ReplayHistoryScoresSegment, (ushort)((epochIdx * ReplayHistoryStride) + participantIdx));
+		}
+
+		/// <summary>
 		/// The land tiles of each player (rows 2 - 47) and the statistics of every city (HandleCity with -1 fills the city
 		/// figures 0x70da - 0x70e4)
 		/// </summary>
@@ -676,9 +704,6 @@ namespace Civilization1Remaster.UI
 
 			return tally;
 		}
-
-		/// <summary>The values of the players for the current line of the census (the original kept them under SP)</summary>
-		private readonly short[] censusValues = new short[8];
 
 		private short CensusValue(int participantIdx)
 		{
@@ -947,30 +972,6 @@ namespace Civilization1Remaster.UI
 				}
 			});
 		}
-
-		/// <summary>
-		/// A line of the demographics: the human player's rank ("1st" ...) among the living players 1 - 7 by the words at valuesAddr
-		/// (one per player; with a negative row they are negated first, a lower value is better), and the best player's value
-		/// "(civilization: value text)" in its colour when the human player has relations bit 0x40 towards it. The values are
-		/// read from memory as they change, like in the original: the human player's own value is negated in the loop too.
-		/// </summary>
-		public void RenderCensusLine(ushort valuesAddr, short vertLoc, ushort charsAddr)
-		{
-			short[] values = new short[8];
-
-			for (int participantIdx = 0; participantIdx < 8; participantIdx++)
-				values[participantIdx] = (short)this.processor.PullGlobalWord((ushort)(valuesAddr + (participantIdx << 1)));
-
-			RenderCensusLine(values, valuesAddr, vertLoc, charsAddr);
-
-			// (the values made positive for a line where lower is better, back in the memory)
-			for (int participantIdx = 0; participantIdx < 8; participantIdx++)
-				this.processor.EmitGlobalWord((ushort)(valuesAddr + (participantIdx << 1)), (ushort)values[participantIdx]);
-		}
-
-		/// <summary>RenderCensusLine of the values of the players 1 - 7 in a C# array (made positive in it for a negative row)</summary>
-		public void RenderCensusLine(short[] values, short vertLoc, ushort charsAddr) =>
-			RenderCensusLine(values, TextBuffer.StackTextAddress, vertLoc, charsAddr);
 
 		private void RenderCensusLine(short[] values, ushort valuesAddr, short vertLoc, ushort charsAddr)
 		{

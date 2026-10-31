@@ -9,13 +9,14 @@ namespace Civilization1Remaster.Acoustics
 	/// </summary>
 	public static partial class ChoppingEffect
 	{
-		// Axe strikes: time in seconds and strength, a little irregular like real chopping
-		private static readonly double[] StrikeMoments = { 0.0, 0.43, 0.82, 1.28, 1.66 };
-		private static readonly double[] StrikePower = { 0.85, 0.75, 0.9, 0.8, 1.0 };
-
 		private const byte DrumsLane = 9;
 		private const byte LowerTimberChunk = 77;
 		private const byte LowerGroundDrum = 41;
+
+		// Axe strikes: time in seconds and strength, a little irregular like real chopping
+		private static readonly double[] StrikeMoments = { 0.0, 0.43, 0.82, 1.28, 1.66 };
+
+		private static readonly double[] StrikePower = { 0.85, 0.75, 0.9, 0.8, 1.0 };
 
 		/// <summary>
 		/// MIDI messages (status, note, velocity) to send on the given tick, the tick rate is SoundDriverHost.TickRate.

@@ -15,28 +15,11 @@ namespace Civilization1Remaster.Acoustics
 		private const uint HookOccurrence = 0x50000;
 		private const uint RipplePreambleFinished = 1;
 
-		[DllImport("winmm.dll", EntryPoint = "waveOutOpen")]
-		private static extern int OpenWaveDevice(out IntPtr hnd, uint gadgetIdx, ref WaveFormat layout, IntPtr hook, IntPtr copy, uint markers);
-
-		[DllImport("winmm.dll", EntryPoint = "waveOutPrepareHeader")]
-		private static extern int PrepareWaveHeader(IntPtr hnd, IntPtr preamble, int extent);
-
-		[DllImport("winmm.dll", EntryPoint = "waveOutUnprepareHeader")]
-		private static extern int ReleaseWaveHeader(IntPtr hnd, IntPtr preamble, int extent);
-
-		[DllImport("winmm.dll", EntryPoint = "waveOutWrite")]
-		private static extern int QueueWaveBlock(IntPtr hnd, IntPtr preamble, int extent);
-
-		[DllImport("winmm.dll", EntryPoint = "waveOutReset")]
-		private static extern int ResetWaveDevice(IntPtr hnd);
-
-		[DllImport("winmm.dll", EntryPoint = "waveOutClose")]
-		private static extern int CloseWaveDevice(IntPtr hnd);
-
 		private readonly SoundDriverHost handler;
 		private readonly int stagingSlices;
 		private readonly AutoResetEvent stagingFinished = new AutoResetEvent(false);
 		private readonly Thread worker;
+
 		private volatile bool busy = true;
 
 		private WaveOutPlayer(SoundDriverHost handler)
@@ -59,6 +42,33 @@ namespace Civilization1Remaster.Acoustics
 			participant.worker.Start();
 			return participant;
 		}
+
+		public void Dispose()
+		{
+			this.busy = false;
+			this.stagingFinished.Set();
+
+			if (this.worker.IsAlive && Thread.CurrentThread != this.worker)
+				this.worker.Join(1000);
+		}
+
+		[DllImport("winmm.dll", EntryPoint = "waveOutOpen")]
+		private static extern int OpenWaveDevice(out IntPtr hnd, uint gadgetIdx, ref WaveFormat layout, IntPtr hook, IntPtr copy, uint markers);
+
+		[DllImport("winmm.dll", EntryPoint = "waveOutPrepareHeader")]
+		private static extern int PrepareWaveHeader(IntPtr hnd, IntPtr preamble, int extent);
+
+		[DllImport("winmm.dll", EntryPoint = "waveOutUnprepareHeader")]
+		private static extern int ReleaseWaveHeader(IntPtr hnd, IntPtr preamble, int extent);
+
+		[DllImport("winmm.dll", EntryPoint = "waveOutWrite")]
+		private static extern int QueueWaveBlock(IntPtr hnd, IntPtr preamble, int extent);
+
+		[DllImport("winmm.dll", EntryPoint = "waveOutReset")]
+		private static extern int ResetWaveDevice(IntPtr hnd);
+
+		[DllImport("winmm.dll", EntryPoint = "waveOutClose")]
+		private static extern int CloseWaveDevice(IntPtr hnd);
 
 		private void Operate()
 		{
@@ -139,15 +149,6 @@ namespace Civilization1Remaster.Acoustics
 			this.handler.Mix(slices, 0, slices.Length);
 			WaveHeader preamble = Marshal.PtrToStructure<WaveHeader>(preambleArrow);
 			Marshal.Copy(slices, 0, preamble.Content, slices.Length);
-		}
-
-		public void Dispose()
-		{
-			this.busy = false;
-			this.stagingFinished.Set();
-
-			if (this.worker.IsAlive && Thread.CurrentThread != this.worker)
-				this.worker.Join(1000);
 		}
 	}
 }

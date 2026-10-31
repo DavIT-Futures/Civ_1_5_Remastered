@@ -112,6 +112,263 @@ namespace Civilization1Remaster.Game
 			FinishDiplomatArrival();
 		}
 
+		/// <summary>
+		/// A diplomat of participantIdx1 bribes the unit (only a unit without others in its stack): the price is (gold + 750) /
+		/// (distance to the owner's capital + 2) * the unit's cost, halved for all but settlers. The AI pays when it has twice the
+		/// price; the human player is asked ("Forget it." / "Pay" when the treasury covers it). The unit changes sides (seen by its
+		/// former owner) and the human player, if bribed, is told. The stack frame and the saved SI and DI stay like in the
+		/// original: TallyUnitsByDomainInStack changes SI.
+		/// </summary>
+		public void BuyUnit(short participantIdx, short troopIdx, short participantIdx1)
+		{
+			this.processor.Journal.OpenScope($"BuyUnit({participantIdx}, {troopIdx}, {participantIdx1})");
+
+
+			short humanIdx = this.owner.World.PersonParticipantIdx;
+			UnitMemory troops = new UnitMemory(this.processor);
+
+			if ((short)this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, troopIdx, 2) <= 1)
+			{
+				short distance = (short)this.owner.Politics.LocateNearestCityOfPlayer(participantIdx,
+					troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz), troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert));
+				sbyte kind = troops.TroopKind(participantIdx, troopIdx);
+				short price = (short)(CPU.SignedQuotient((short)(this.owner.World.Participants[participantIdx].Gold + 0x2ee), (short)(distance + 2)) *
+					UnitKindWord(kind, UnitKindTable.Price));
+
+				if (kind != 0)
+				{
+					price = CPU.SignedQuotient(price, 2);
+				}
+
+				if (participantIdx1 == humanIdx || this.owner.World.Participants[participantIdx1].Gold / 2 >= price)
+				{
+					OfferBribe(participantIdx, troopIdx, participantIdx1, price);
+				}
+			}
+
+
+			this.processor.Journal.CloseScope("BuyUnit");
+		}
+
+		/// <summary>
+		/// The nuclear explosion on the tile: 28 pictures cut from the explosion picture (0x5318) into the stack frame, the
+		/// sound, then 35 steps of the animation (the last 7 repeat the pictures 21 - 27), each put on the screen for a while and
+		/// taken away again from the back screen.
+		/// </summary>
+		public void RenderExplosion(short horizLoc, short vertLoc)
+		{
+			this.processor.Journal.OpenScope($"RenderExplosion({horizLoc}, {vertLoc})");
+
+			if (this.owner.Startup.QueryForDisk(1, 0) != 0)
+			{
+				// The pictures of the frame of the original (B3: in C#)
+				ushort[] pictures = new ushort[0x1c];
+
+				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, GameTexts.FileNuke1Pic, 1);
+
+				for (int pictureIdx = 0; pictureIdx < 0x1c; pictureIdx++)
+				{
+					pictures[pictureIdx] = this.owner.VideoCard.ScreenToPicture(1, (ushort)(((pictureIdx % 7) * 0x2d) + 1), (ushort)(((pictureIdx / 7) * 0x2d) + 1), 0x2c, 0x2c);
+				}
+
+				horizLoc = (short)((this.owner.Routing.TunePosition(horizLoc - (short)MapViewHoriz) << 4) + 0x42);
+				vertLoc = (short)(((vertLoc - MapViewVert) << 4) - 6);
+
+				horizLoc = (short)this.owner.Helpers.VerifyValueSpan(horizLoc, 80, 276);
+				vertLoc = (short)this.owner.Helpers.VerifyValueSpan(vertLoc, 8, 0x9c);
+
+				this.owner.Services.PerformSound(0x2a, 0);
+
+				this.owner.VideoCard.RenderImage(ScreenBox, horizLoc, vertLoc, 0x2c, 0x2c,
+					BackScreenBox, horizLoc, vertLoc);
+
+				for (int stepIdx = 0; stepIdx < 0x23; stepIdx++)
+				{
+					int pictureIdx = stepIdx < 0x1c ? stepIdx : stepIdx - 7;
+
+					this.owner.Services.RenderPictureToScreenAlternate(ScreenBox, horizLoc, vertLoc,
+						pictures[pictureIdx]);
+
+					this.owner.TextPainter.AwaitTime(5);
+
+					this.owner.VideoCard.RenderImage(BackScreenBox, horizLoc, vertLoc, 0x2c, 0x2c,
+						ScreenBox, horizLoc, vertLoc);
+				}
+
+				this.owner.Helpers.ReleaseResource(pictures[0], 0);
+
+				this.owner.Startup.QueryForDisk(0, 1);
+
+				this.owner.TurnHooks.DisplayCivilizationScenery();
+			}
+
+			this.processor.Journal.CloseScope("RenderExplosion");
+		}
+
+		/// <summary>
+		/// In fact the revolt of a city: it goes over to the player (for -1 to the owner of the city of another player with the
+		/// highest (food surplus * 32) / distance, scanning the cities from 0 until the first city that does not qualify; when
+		/// none, nothing happens). The new owner sees around the city; the human player hears of it when it is involved or knows
+		/// one of them (the map shows the city when it sees it). The old owner's units in and next to the city (not in another
+		/// city) change sides, then the city is seized (without the animations with one disk, 0x28bc set).
+		/// </summary>
+		public void ComputeInciteCost(short townIdx, short participantIdx)
+		{
+			this.processor.Journal.OpenScope($"ComputeInciteCost({townIdx}, {participantIdx})");
+
+
+			City town = this.owner.World.Towns[townIdx];
+			short ownerIdx = town.ParticipantIdx;
+			short horizLoc = (short)town.Place.X;
+			short vertLoc = (short)town.Place.Y;
+			short bestSurplus = 0;
+			ushort bestIdx = 0xffff;
+
+			if (participantIdx == -1)
+			{
+				ushort otherIdx;
+
+				for (otherIdx = 0; otherIdx < 0x80; otherIdx++)
+				{
+					City other = this.owner.World.Towns[otherIdx];
+
+					if (otherIdx == (ushort)townIdx || other.ConditionMarker == 0xff || other.ParticipantIdx == ownerIdx)
+						break;
+
+					int distance = this.owner.Helpers.ObtainDistance(town.Place.X, other.Place.X, town.Place.Y, other.Place.Y);
+
+					this.owner.CityOps.HandleCity((short)otherIdx, -1);
+
+					short surplus = CPU.SignedQuotient((short)((CityHappy - CityUnhappy) << 5), (short)distance);
+
+					if (surplus > bestSurplus)
+					{
+						bestSurplus = surplus;
+						bestIdx = otherIdx;
+					}
+				}
+
+				if (bestSurplus != 0)
+				{
+					participantIdx = this.owner.World.Towns[bestIdx].ParticipantIdx;
+				}
+			}
+
+			if (participantIdx != -1)
+			{
+				Revolt(townIdx, participantIdx, ownerIdx, horizLoc, vertLoc);
+			}
+
+			this.processor.Journal.CloseScope("ComputeInciteCost");
+		}
+
+		/// <summary>
+		/// A diplomat establishes an embassy... in fact investigates the city: the title "... founded: year." over a picture with
+		/// four walking figures (cut from 0x536e) moving to the right until a key or a click (frame by
+		/// frame, 10 timer ticks each), then the city screen (unless a key is still waiting).
+		/// </summary>
+		public void ExamineCity(short townIdx)
+		{
+			this.processor.Journal.OpenScope($"ExamineCity({townIdx})");
+
+			if (this.owner.Startup.QueryForDisk(1, 0) != 0)
+			{
+				// The pictures of the frame of the original (B3: in C#)
+				ushort[] figures = new ushort[4];
+
+				this.owner.Helpers.HaltHueCycling();
+
+				this.owner.Startup.ConcealMouseCursor();
+
+				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, GameTexts.FileSettlersPic, 0);
+
+				for (int figureIdx = 0; figureIdx < 4; figureIdx++)
+				{
+					figures[figureIdx] = this.owner.VideoCard.ScreenToPicture(1, 1, (ushort)((figureIdx << 4) + 1), 0x2f, 0xf);
+				}
+
+				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, GameTexts.FileHillPicC, 0);
+
+				this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
+
+				this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, GameTexts.FileHillPicD, 1);
+
+				this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
+
+				EmptyMessage()
+					.City(townIdx)
+					.Text(" founded: ");
+
+				this.owner.TurnHooks.ObtainCurrentYearAsText();
+
+				this.owner.Words.Append(".");
+
+				DrawingBox.TypefaceIdx = 0x6;
+
+				this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 160, 4, Hues.Black);
+
+				DrawingBox.TypefaceIdx = 0x1;
+
+				this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0x78, 0x140, 0x28, BackScreenBox, 0, 0);
+
+				this.owner.TurnLogic.AwaitForKey();
+
+				short horizLoc = 0x50;
+
+				for (; horizLoc < 0x78; horizLoc++)
+				{
+					this.owner.Services.RestoreTimer();
+
+					this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0x28, BackScreenBox, 0, 0x78);
+
+					for (short figureIdx = 0; figureIdx < 4; figureIdx++)
+					{
+						this.owner.Services.RenderPictureToScreen(BackScreenBox, (13 * figureIdx) + horizLoc,
+							((10 * figureIdx) & 0xf) + 120, figures[(figureIdx + horizLoc) & 3]);
+					}
+
+					this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0x78, 0x140, 0x28, ScreenBox, 0, 0x78);
+
+					while ((short)this.owner.Timer.Beats < 0xa)
+					{
+					}
+
+					this.owner.Startup.ObtainMouseState();
+
+					if ((ushort)this.owner.Libc.KeyAvailable() != 0 || this.owner.GlobDb3a != 0)
+						break;
+				}
+
+				this.owner.Helpers.ReleaseResource(figures[0], 0x539a);
+
+				this.owner.Startup.QueryForDisk(0, 1);
+
+				if (VgaMode != 0)
+				{
+					this.owner.Services.FloodColors(10, 0, 0, 0);
+				}
+
+				this.owner.Words.Clear();
+
+				if ((ushort)this.owner.Libc.KeyAvailable() == 0)
+				{
+					this.owner.CityScene.DisplayCityScreen(townIdx, -3);
+				}
+				else
+				{
+					this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
+
+					this.owner.TurnHooks.DisplayCivilizationScenery();
+				}
+
+				this.owner.Startup.DisplayMouseCursor();
+
+				this.owner.TurnLogic.AwaitForKey();
+			}
+
+			this.processor.Journal.CloseScope("ExamineCity");
+		}
+
 		private void FinishDiplomatArrival()
 		{
 			this.processor.Journal.CloseScope("DiplomatArrivesAtCity");
@@ -306,44 +563,6 @@ namespace Civilization1Remaster.Game
 			this.owner.TurnHooks.RenderStatusBar();
 		}
 
-		/// <summary>
-		/// A diplomat of participantIdx1 bribes the unit (only a unit without others in its stack): the price is (gold + 750) /
-		/// (distance to the owner's capital + 2) * the unit's cost, halved for all but settlers. The AI pays when it has twice the
-		/// price; the human player is asked ("Forget it." / "Pay" when the treasury covers it). The unit changes sides (seen by its
-		/// former owner) and the human player, if bribed, is told. The stack frame and the saved SI and DI stay like in the
-		/// original: TallyUnitsByDomainInStack changes SI.
-		/// </summary>
-		public void BuyUnit(short participantIdx, short troopIdx, short participantIdx1)
-		{
-			this.processor.Journal.OpenScope($"BuyUnit({participantIdx}, {troopIdx}, {participantIdx1})");
-
-
-			short humanIdx = this.owner.World.PersonParticipantIdx;
-			UnitMemory troops = new UnitMemory(this.processor);
-
-			if ((short)this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, troopIdx, 2) <= 1)
-			{
-				short distance = (short)this.owner.Politics.LocateNearestCityOfPlayer(participantIdx,
-					troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz), troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert));
-				sbyte kind = troops.TroopKind(participantIdx, troopIdx);
-				short price = (short)(CPU.SignedQuotient((short)(this.owner.World.Participants[participantIdx].Gold + 0x2ee), (short)(distance + 2)) *
-					UnitKindWord(kind, UnitKindTable.Price));
-
-				if (kind != 0)
-				{
-					price = CPU.SignedQuotient(price, 2);
-				}
-
-				if (participantIdx1 == humanIdx || this.owner.World.Participants[participantIdx1].Gold / 2 >= price)
-				{
-					OfferBribe(participantIdx, troopIdx, participantIdx1, price);
-				}
-			}
-
-
-			this.processor.Journal.CloseScope("BuyUnit");
-		}
-
 		/// <summary>The offer of BuyUnit and, when it is taken, the unit changing sides</summary>
 		private void OfferBribe(short participantIdx, short troopIdx, short participantIdx1, short price)
 		{
@@ -415,118 +634,6 @@ namespace Civilization1Remaster.Game
 
 				this.owner.TextPainter.AwaitTime(30);
 			}
-		}
-
-		/// <summary>
-		/// The nuclear explosion on the tile: 28 pictures cut from the explosion picture (0x5318) into the stack frame, the
-		/// sound, then 35 steps of the animation (the last 7 repeat the pictures 21 - 27), each put on the screen for a while and
-		/// taken away again from the back screen.
-		/// </summary>
-		public void RenderExplosion(short horizLoc, short vertLoc)
-		{
-			this.processor.Journal.OpenScope($"RenderExplosion({horizLoc}, {vertLoc})");
-
-			if (this.owner.Startup.QueryForDisk(1, 0) != 0)
-			{
-				// The pictures of the frame of the original (B3: in C#)
-				ushort[] pictures = new ushort[0x1c];
-
-				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, GameTexts.FileNuke1Pic, 1);
-
-				for (int pictureIdx = 0; pictureIdx < 0x1c; pictureIdx++)
-				{
-					pictures[pictureIdx] = this.owner.VideoCard.ScreenToPicture(1, (ushort)(((pictureIdx % 7) * 0x2d) + 1), (ushort)(((pictureIdx / 7) * 0x2d) + 1), 0x2c, 0x2c);
-				}
-
-				horizLoc = (short)((this.owner.Routing.TunePosition(horizLoc - (short)MapViewHoriz) << 4) + 0x42);
-				vertLoc = (short)(((vertLoc - MapViewVert) << 4) - 6);
-
-				horizLoc = (short)this.owner.Helpers.VerifyValueSpan(horizLoc, 80, 276);
-				vertLoc = (short)this.owner.Helpers.VerifyValueSpan(vertLoc, 8, 0x9c);
-
-				this.owner.Services.PerformSound(0x2a, 0);
-
-				this.owner.VideoCard.RenderImage(ScreenBox, horizLoc, vertLoc, 0x2c, 0x2c,
-					BackScreenBox, horizLoc, vertLoc);
-
-				for (int stepIdx = 0; stepIdx < 0x23; stepIdx++)
-				{
-					int pictureIdx = stepIdx < 0x1c ? stepIdx : stepIdx - 7;
-
-					this.owner.Services.RenderPictureToScreenAlternate(ScreenBox, horizLoc, vertLoc,
-						pictures[pictureIdx]);
-
-					this.owner.TextPainter.AwaitTime(5);
-
-					this.owner.VideoCard.RenderImage(BackScreenBox, horizLoc, vertLoc, 0x2c, 0x2c,
-						ScreenBox, horizLoc, vertLoc);
-				}
-
-				this.owner.Helpers.ReleaseResource(pictures[0], 0);
-
-				this.owner.Startup.QueryForDisk(0, 1);
-
-				this.owner.TurnHooks.DisplayCivilizationScenery();
-			}
-
-			this.processor.Journal.CloseScope("RenderExplosion");
-		}
-
-		/// <summary>
-		/// In fact the revolt of a city: it goes over to the player (for -1 to the owner of the city of another player with the
-		/// highest (food surplus * 32) / distance, scanning the cities from 0 until the first city that does not qualify; when
-		/// none, nothing happens). The new owner sees around the city; the human player hears of it when it is involved or knows
-		/// one of them (the map shows the city when it sees it). The old owner's units in and next to the city (not in another
-		/// city) change sides, then the city is seized (without the animations with one disk, 0x28bc set).
-		/// </summary>
-		public void ComputeInciteCost(short townIdx, short participantIdx)
-		{
-			this.processor.Journal.OpenScope($"ComputeInciteCost({townIdx}, {participantIdx})");
-
-
-			City town = this.owner.World.Towns[townIdx];
-			short ownerIdx = town.ParticipantIdx;
-			short horizLoc = (short)town.Place.X;
-			short vertLoc = (short)town.Place.Y;
-			short bestSurplus = 0;
-			ushort bestIdx = 0xffff;
-
-			if (participantIdx == -1)
-			{
-				ushort otherIdx;
-
-				for (otherIdx = 0; otherIdx < 0x80; otherIdx++)
-				{
-					City other = this.owner.World.Towns[otherIdx];
-
-					if (otherIdx == (ushort)townIdx || other.ConditionMarker == 0xff || other.ParticipantIdx == ownerIdx)
-						break;
-
-					int distance = this.owner.Helpers.ObtainDistance(town.Place.X, other.Place.X, town.Place.Y, other.Place.Y);
-
-					this.owner.CityOps.HandleCity((short)otherIdx, -1);
-
-					short surplus = CPU.SignedQuotient((short)((CityHappy - CityUnhappy) << 5), (short)distance);
-
-					if (surplus > bestSurplus)
-					{
-						bestSurplus = surplus;
-						bestIdx = otherIdx;
-					}
-				}
-
-				if (bestSurplus != 0)
-				{
-					participantIdx = this.owner.World.Towns[bestIdx].ParticipantIdx;
-				}
-			}
-
-			if (participantIdx != -1)
-			{
-				Revolt(townIdx, participantIdx, ownerIdx, horizLoc, vertLoc);
-			}
-
-			this.processor.Journal.CloseScope("ComputeInciteCost");
 		}
 
 		/// <summary>The city goes over to the player (see ComputeInciteCost)</summary>
@@ -629,113 +736,6 @@ namespace Civilization1Remaster.Game
 			this.owner.World.SessionPrefMarkers = preferences;
 
 			this.owner.MapOps.MapAssignCityOwner(participantIdx, town.Place.X, town.Place.Y);
-		}
-
-		/// <summary>
-		/// A diplomat establishes an embassy... in fact investigates the city: the title "... founded: year." over a picture with
-		/// four walking figures (cut from 0x536e) moving to the right until a key or a click (frame by
-		/// frame, 10 timer ticks each), then the city screen (unless a key is still waiting).
-		/// </summary>
-		public void ExamineCity(short townIdx)
-		{
-			this.processor.Journal.OpenScope($"ExamineCity({townIdx})");
-
-			if (this.owner.Startup.QueryForDisk(1, 0) != 0)
-			{
-				// The pictures of the frame of the original (B3: in C#)
-				ushort[] figures = new ushort[4];
-
-				this.owner.Helpers.HaltHueCycling();
-
-				this.owner.Startup.ConcealMouseCursor();
-
-				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, GameTexts.FileSettlersPic, 0);
-
-				for (int figureIdx = 0; figureIdx < 4; figureIdx++)
-				{
-					figures[figureIdx] = this.owner.VideoCard.ScreenToPicture(1, 1, (ushort)((figureIdx << 4) + 1), 0x2f, 0xf);
-				}
-
-				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, GameTexts.FileHillPicC, 0);
-
-				this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
-
-				this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, GameTexts.FileHillPicD, 1);
-
-				this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
-
-				EmptyMessage()
-					.City(townIdx)
-					.Text(" founded: ");
-
-				this.owner.TurnHooks.ObtainCurrentYearAsText();
-
-				this.owner.Words.Append(".");
-
-				DrawingBox.TypefaceIdx = 0x6;
-
-				this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 160, 4, Hues.Black);
-
-				DrawingBox.TypefaceIdx = 0x1;
-
-				this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0x78, 0x140, 0x28, BackScreenBox, 0, 0);
-
-				this.owner.TurnLogic.AwaitForKey();
-
-				short horizLoc = 0x50;
-
-				for (; horizLoc < 0x78; horizLoc++)
-				{
-					this.owner.Services.RestoreTimer();
-
-					this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0x28, BackScreenBox, 0, 0x78);
-
-					for (short figureIdx = 0; figureIdx < 4; figureIdx++)
-					{
-						this.owner.Services.RenderPictureToScreen(BackScreenBox, (13 * figureIdx) + horizLoc,
-							((10 * figureIdx) & 0xf) + 120, figures[(figureIdx + horizLoc) & 3]);
-					}
-
-					this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0x78, 0x140, 0x28, ScreenBox, 0, 0x78);
-
-					while ((short)this.owner.Timer.Beats < 0xa)
-					{
-					}
-
-					this.owner.Startup.ObtainMouseState();
-
-					if ((ushort)this.owner.Libc.KeyAvailable() != 0 || this.owner.GlobDb3a != 0)
-						break;
-				}
-
-				this.owner.Helpers.ReleaseResource(figures[0], 0x539a);
-
-				this.owner.Startup.QueryForDisk(0, 1);
-
-				if (VgaMode != 0)
-				{
-					this.owner.Services.FloodColors(10, 0, 0, 0);
-				}
-
-				this.owner.Words.Clear();
-
-				if ((ushort)this.owner.Libc.KeyAvailable() == 0)
-				{
-					this.owner.CityScene.DisplayCityScreen(townIdx, -3);
-				}
-				else
-				{
-					this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
-
-					this.owner.TurnHooks.DisplayCivilizationScenery();
-				}
-
-				this.owner.Startup.DisplayMouseCursor();
-
-				this.owner.TurnLogic.AwaitForKey();
-			}
-
-			this.processor.Journal.CloseScope("ExamineCity");
 		}
 	}
 }

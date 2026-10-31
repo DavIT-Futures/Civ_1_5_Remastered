@@ -18,20 +18,18 @@ public partial class MainWindow : Window, IGameHost
 	private const int GameWidth = 320;
 	private const int GameHeight = 200;
 
+	private readonly int[] rgbBuffer = new int[GameWidth * GameHeight];
+	private readonly int[] colors = new int[256];
+
 	private GameEngine? session;
 	private Thread? sessionWorker;
 	private WriteableBitmap? writeableBitmap;
-	private readonly int[] rgbBuffer = new int[GameWidth * GameHeight];
-	private readonly int[] colors = new int[256];
 	private DispatcherTimer? renderTimer;
 	private int currentScale = 4;
-
 	private System.Drawing.Point pointerSite = System.Drawing.Point.Empty;
 	private PointerButtons pointerClicks = PointerButtons.None;
 	private volatile bool shutting;
-
-	public System.Drawing.Point PointerSite => this.pointerSite;
-	public PointerButtons PointerClicks => this.pointerClicks;
+	private bool confirmedExit;
 
 	public MainWindow()
 	{
@@ -74,6 +72,25 @@ public partial class MainWindow : Window, IGameHost
 
 		this.Opened += OnWindowOpened;
 		this.Closing += OnWindowClosing;
+	}
+
+	public System.Drawing.Point PointerSite => this.pointerSite;
+	public PointerButtons PointerClicks => this.pointerClicks;
+
+	public void OnDisplayCountChanged()
+	{
+	}
+
+	public void ShowMessage(string message, string caption)
+	{
+		// Fallback log or simple console output for non-blocking notifications
+		Console.WriteLine($"[{caption}] {message}");
+	}
+
+	public HostDialogResult ShowRetryCancel(string message, string caption)
+	{
+		Console.WriteLine($"[{caption}] {message} - Cancelling...");
+		return HostDialogResult.Cancel;
 	}
 
 	private void OnWindowOpened(object? sender, EventArgs e)
@@ -442,8 +459,6 @@ public partial class MainWindow : Window, IGameHost
 			this.pointerClicks &= ~PointerButtons.Right;
 	}
 
-	private bool confirmedExit;
-
 	private void OnWindowClosing(object? sender, WindowClosingEventArgs e)
 	{
 		if (this.shutting)
@@ -476,22 +491,4 @@ public partial class MainWindow : Window, IGameHost
 	{
 		this.ExitConfirmOverlay.IsVisible = false;
 	}
-
-	#region IGameHost implementation
-	public void OnDisplayCountChanged()
-	{
-	}
-
-	public void ShowMessage(string message, string caption)
-	{
-		// Fallback log or simple console output for non-blocking notifications
-		Console.WriteLine($"[{caption}] {message}");
-	}
-
-	public HostDialogResult ShowRetryCancel(string message, string caption)
-	{
-		Console.WriteLine($"[{caption}] {message} - Cancelling...");
-		return HostDialogResult.Cancel;
-	}
-	#endregion
 }

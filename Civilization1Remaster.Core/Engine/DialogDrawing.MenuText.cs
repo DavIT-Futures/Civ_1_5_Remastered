@@ -32,6 +32,9 @@ namespace Civilization1Remaster.Engine
 					this.own[idx] = (byte)text[idx];
 			}
 
+			/// <summary>The length of the text (strlen)</summary>
+			public ushort Length => (ushort)From(0).Length;
+
 			public byte this[int index]
 			{
 				get => this.own != null ? (index >= 0 && index < this.own.Length ? this.own[index] : (byte)0) :
@@ -67,9 +70,6 @@ namespace Civilization1Remaster.Engine
 				return this.bufferIndex >= 0 ? this.game!.Words.TextFrom(this.bufferIndex + index) :
 					this.game!.Processor.PullText(CPU.AsLinearAddress(this.game.Processor.SegData.Value16, (ushort)(this.address + index)));
 			}
-
-			/// <summary>The length of the text (strlen)</summary>
-			public ushort Length => (ushort)From(0).Length;
 		}
 	}
 }

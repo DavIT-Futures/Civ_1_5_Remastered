@@ -14,27 +14,10 @@ namespace Civilization1Remaster.Acoustics
 	{
 		private const uint SynthRouter = 0xffffffff;
 
-		[DllImport("winmm.dll", EntryPoint = "midiOutOpen")]
-		private static extern int OpenMidiDevice(out IntPtr hnd, uint gadgetIdx, IntPtr hook, IntPtr copy, uint markers);
-
-		[DllImport("winmm.dll", EntryPoint = "midiOutShortMsg")]
-		private static extern int SendShortMessage(IntPtr hnd, uint note);
-
-		[DllImport("winmm.dll", EntryPoint = "midiOutReset")]
-		private static extern int ResetMidiDevice(IntPtr hnd);
-
-		[DllImport("winmm.dll", EntryPoint = "midiOutClose")]
-		private static extern int CloseMidiDevice(IntPtr hnd);
-
-		[DllImport("winmm.dll", EntryPoint = "timeBeginPeriod")]
-		private static extern uint RequestTimerResolution(uint interval);
-
-		[DllImport("winmm.dll", EntryPoint = "timeEndPeriod")]
-		private static extern uint ReleaseTimerResolution(uint interval);
-
 		private readonly SoundDriverHost handler;
 		private readonly IntPtr ptrGadget;
 		private readonly Thread worker;
+
 		private volatile bool busy = true;
 		private bool shut = false;
 
@@ -69,6 +52,34 @@ namespace Civilization1Remaster.Acoustics
 			participant.worker.Start();
 			return participant;
 		}
+
+		public void Dispose()
+		{
+			this.busy = false;
+
+			if (this.worker.IsAlive && Thread.CurrentThread != this.worker)
+				this.worker.Join(1000);
+
+			Shut();
+		}
+
+		[DllImport("winmm.dll", EntryPoint = "midiOutOpen")]
+		private static extern int OpenMidiDevice(out IntPtr hnd, uint gadgetIdx, IntPtr hook, IntPtr copy, uint markers);
+
+		[DllImport("winmm.dll", EntryPoint = "midiOutShortMsg")]
+		private static extern int SendShortMessage(IntPtr hnd, uint note);
+
+		[DllImport("winmm.dll", EntryPoint = "midiOutReset")]
+		private static extern int ResetMidiDevice(IntPtr hnd);
+
+		[DllImport("winmm.dll", EntryPoint = "midiOutClose")]
+		private static extern int CloseMidiDevice(IntPtr hnd);
+
+		[DllImport("winmm.dll", EntryPoint = "timeBeginPeriod")]
+		private static extern uint RequestTimerResolution(uint interval);
+
+		[DllImport("winmm.dll", EntryPoint = "timeEndPeriod")]
+		private static extern uint ReleaseTimerResolution(uint interval);
 
 		private void Dispatch(byte condition, byte content1, byte content2)
 		{
@@ -128,16 +139,6 @@ namespace Civilization1Remaster.Acoustics
 					CloseMidiDevice(this.ptrGadget);
 				}
 			}
-		}
-
-		public void Dispose()
-		{
-			this.busy = false;
-
-			if (this.worker.IsAlive && Thread.CurrentThread != this.worker)
-				this.worker.Join(1000);
-
-			Shut();
 		}
 	}
 }

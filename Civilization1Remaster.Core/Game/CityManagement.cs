@@ -13,6 +13,7 @@ namespace Civilization1Remaster.Game
 	public partial class CityManagement : GameModule
 	{
 		private readonly UnitMemory troops;
+
 		private CityRound round;
 
 		public CityManagement(GameEngine owner)

@@ -14,14 +14,28 @@ namespace Civilization1Remaster.UI
 		private const ushort AdvisorSpritesTableAddress = 0x804e;
 		private const ushort KingEyesPicturesTableAddress = 0x7efe;
 
-
 		private readonly UnitMemory troops;
+
+		private ushort audienceNuclearThreat;
+		private ushort audienceTribute;
+		private ushort audienceDemand;
+		private ushort audienceWantedTechnology;
+		private ushort audienceOfferedTechnology;
+		private ushort audienceWasHostile;
+		private ushort audienceHostile;
+		private ushort audiencePeaceBroken;
+		private ushort audienceDanger;
+		private ushort audienceCommonEnemy;
+		private ushort audienceLastAudience;
 
 		public MeetWithKing(GameEngine owner)
 			: base(owner)
 		{
 			this.troops = new UnitMemory(owner.Processor);
 		}
+
+		private ushort HostileValue => this.audienceHostile;
+		private Game.State.Player Person => this.owner.World.Participants[this.owner.World.PersonParticipantIdx];
 
 		/// <summary>
 		/// An audience of the human player with the leader of a computer player (occasion 0: the player asked for it, the
@@ -105,23 +119,557 @@ namespace Civilization1Remaster.UI
 			this.processor.Journal.CloseScope("LaunchAudience");
 		}
 
-		private ushort audienceNuclearThreat;
-		private ushort audienceTribute;
-		private ushort audienceDemand;
-		private ushort audienceWantedTechnology;
-		private ushort audienceOfferedTechnology;
-		private ushort audienceWasHostile;
-		private ushort audienceHostile;
-		private ushort audiencePeaceBroken;
-		private ushort audienceDanger;
-		private ushort audienceCommonEnemy;
-		private ushort audienceLastAudience;
+		/// <summary>
+		/// The end of an audience: the pictures of the leader released, the main screen repainted, no audience any more
+		/// </summary>
+		public void FinishAudience()
+		{
+			this.processor.Journal.OpenScope("FinishAudience()");
 
-		private ushort HostileValue => this.audienceHostile;
+			ReleaseKingResources();
+
+			DrawingBox.TypefaceIdx = 0x1;
+
+			this.owner.TurnHooks.RepaintMainScreen();
+
+			KingMood = 0xffff;
+			KingAnswer = 0;
+			EmissaryAudience = KingAnswer;
+
+			this.processor.Journal.CloseScope("FinishAudience");
+		}
+
+		/// <summary>
+		/// The audience with the player's emissary, once a turn (0xd804): unless the answer 0x3934 is known, shows the map at
+		/// the position (horizLoc -1: not moved) and asks whether to receive the emissary (with "Check Intelligence" when the human player
+		/// has relations bit 0x40 towards the player, which shows the report and asks again); 0x3934 is minus the choice. Unless
+		/// refused (-1), shows the king and his greeting in the player's font (0x36fa).
+		/// </summary>
+		/// <returns>0x3934, also in AX</returns>
+		public ushort WelcomeEmissary(short participantIdx, int horizLoc, int vertLoc)
+		{
+			this.processor.Journal.OpenScope($"WelcomeEmissary({participantIdx}, {horizLoc}, {vertLoc})");
+
+			if (EmissaryAudience == 0)
+			{
+				EmissaryAudience = 1;
+
+				if (KingAnswer == 0)
+				{
+					AskToReceiveEmissary(participantIdx, horizLoc, vertLoc);
+				}
+
+				if (KingAnswer != 0xffff)
+				{
+					ReceiveEmissary(participantIdx);
+				}
+			}
+
+			ushort answer = KingAnswer;
+
+			this.processor.Journal.CloseScope("WelcomeEmissary");
+
+			return answer;
+		}
+
+		/// <summary>
+		/// The greeting of the king at TextBuffer.Address: the opening (0x39b1 with relations bit 8 towards the human player, else 0x39e8),
+		/// one of 4 random titles with the government (0x19b2) and the leader's name (0x19a2), "of the" civilization (0x1992),
+		/// and the nuclear threat when the player has nuclear units (type 25)
+		/// </summary>
+		public void ObtainKingSalutation(short participantIdx)
+		{
+			this.processor.Journal.OpenScope($"ObtainKingSalutation({participantIdx})");
+
+			ushort leader = (ushort)((participantIdx << 1) + 0x19a2);
+			ushort Regime() => GovernmentTitle(this.owner.World.Participants[participantIdx].RegimeKind);
+
+			this.owner.Words.Set((this.owner.World.Participants[participantIdx].Relations[this.owner.World.PersonParticipantIdx] & 8) != 0 ? (ushort)0x39b1 : (ushort)0x39e8);
+
+			switch (this.owner.Libc.Dice.DrawInt(4))
+			{
+				case 0:
+					this.owner.Words.Append("the most exalted\n");
+					this.owner.Words.Append(Regime());
+					this.owner.Words.Append(": ");
+					this.owner.Words.Append(this.processor.PullGlobalWord(leader));
+					this.owner.Words.Append(" ");
+					break;
+
+				case 1:
+					this.owner.Words.Append(this.processor.PullGlobalWord(leader));
+					this.owner.Words.Append(", ruler\nand ");
+					this.owner.Words.Append(Regime());
+					this.owner.Words.Append(" ");
+					break;
+
+				case 2:
+					this.owner.Words.Append("our most wise\n");
+					this.owner.Words.Append(Regime());
+					this.owner.Words.Append(": ");
+					this.owner.Words.Append(this.processor.PullGlobalWord(leader));
+					this.owner.Words.Append(" ");
+					break;
+
+				case 3:
+					this.owner.Words.Append("he who makes mortals\ntremble: ");
+					this.owner.Words.Append(this.processor.PullGlobalWord(leader));
+					this.owner.Words.Append(" ");
+					break;
+			}
+
+			this.owner.Words.Append("of the ");
+			this.owner.Words.Append(CivilizationPlural(participantIdx));
+			this.owner.Words.Append("...\n");
+
+			if (this.owner.World.Participants[participantIdx].LiveTroops[25] != 0)
+			{
+				this.owner.Words.Append("Our words are backed\nwith NUCLEAR WEAPONS!\n");
+			}
+
+			this.processor.Journal.CloseScope("ObtainKingSalutation");
+		}
+
+		/// <summary>
+		/// The message of the leader of the player to the human player (text 0x3a8c, with the names of both civilizations from
+		/// the table at 0x1982 put into the text parameters 0x30be and 0x30b8)
+		/// </summary>
+		public void DisplayKingMessage(short participantIdx)
+		{
+			this.processor.Journal.OpenScope($"DisplayKingMessage({participantIdx})");
+
+			this.owner.Codes.Set(3, CivilizationNameAddr(participantIdx));
+
+			this.owner.Codes.Set(0, CivilizationNameAddr(this.owner.World.PersonParticipantIdx));
+
+			KingSpeaking = 0xc;
+			this.owner.Words.Clear();
+
+			this.owner.BlockText.DisplayTextDialog(GameTexts.TopicTreaty);
+
+			DisplayKingDialog(TextBuffer.Address, 0x14, 0x8b);
+
+			this.processor.Journal.CloseScope("DisplayKingMessage");
+		}
+
+		/// <summary>
+		/// After an audience: the player and the human have met (diplomacy flag 2), the player waits 16 turns before the next
+		/// contact. At the easiest level the units of the player whose nearest city is one of the human's, at most 2 away, are
+		/// removed.
+		/// </summary>
+		public void LogAudience(short participantIdx)
+		{
+			this.processor.Journal.OpenScope($"LogAudience({participantIdx})");
+
+			this.owner.Politics.AssignDiplomacyFlags(this.owner.World.PersonParticipantIdx, participantIdx, 2);
+
+			this.owner.World.Participants[participantIdx].TouchParticipantTimeleft = (short)(this.owner.World.RoundTally + 16);
+
+			if (this.owner.World.HardnessTier == 0)
+			{
+				for (short troopIdx = 0; troopIdx < UnitMemory.TroopTally; troopIdx++)
+				{
+					if (!this.troops.Exists(participantIdx, troopIdx))
+						continue;
+
+					ushort townIdx = this.owner.Helpers.LocateNearestCity(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
+						this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert));
+
+					if (this.owner.World.Towns[townIdx].ParticipantIdx == this.owner.World.PersonParticipantIdx &&
+						(short)FoundDistance <= 2)
+					{
+						this.owner.UnitOps.EliminateUnit(participantIdx, troopIdx);
+					}
+				}
+			}
+
+			this.processor.Journal.CloseScope("LogAudience");
+		}
+
+		/// <summary>
+		/// One frame of the king's animation. While he speaks (0xd76c counts down) and stands still (step 0x67f4 = 0), the mouth
+		/// moves: eyes 5 or -1, mouth 0, 9 or (every 4th frame) 8, then a pause of 4 frames (0x67f6). Otherwise the step goes on
+		/// along table 0x3ab8 (positive: next step, -1, -2, -3: back to step 0, 6, 14); at the end of a gesture (0) the mood
+		/// 0x3936 picks the next one (0: step 3, the eyes colour 0x3a9a; 1: step 0; 2: step 12, the colours 0x3ab4 / 0x3ab7)
+		/// and 0x7ef4 says which pose he holds (0, 1 at step 14, 2 at step 6); without a pause one time in 12 a still pose
+		/// starts a short gesture. The eyes and the mouth come from the tables 0x3a94 and 0x3aa6.
+		/// </summary>
+		public void ChoreographKingSpeaking()
+		{
+			this.processor.Journal.OpenScope("ChoreographKingSpeaking()");
+
+			// The final values of the locals stay in the stack frame, like in the original
+
+			KingPose = 0xffff;
+
+			short eyes, mouth;
+
+			if (KingSpeaking != 0 && KingStep == 0)
+			{
+				eyes = KingStep != 0 ? (short)5 : (short)-1;
+
+				mouth = this.owner.Libc.Dice.DrawInt(2) != 0 ? (short)9 : (short)0;
+
+				if (((byte)KingSpeaking & 3) == 0)
+					mouth = 8;
+
+				KingSpeaking = (ushort)(KingSpeaking - 1);
+				KingPause = 4;
+			}
+			else
+			{
+				AdvanceKingGesture();
+
+				if (KingPause == 0 && this.owner.Libc.Dice.DrawInt(12) == 0 && KingGestureStep() == 0)
+				{
+					switch (KingStep)
+					{
+						case 0:
+							KingStep = 1;
+							break;
+
+						case 6:
+							KingStep = 0xa;
+							break;
+
+						case 0xe:
+							KingStep = 0x11;
+							break;
+					}
+				}
+
+				ushort step = KingStep;
+
+				eyes = (sbyte)this.processor.PullGlobalByte((ushort)(step + 0x3a94));
+				mouth = (sbyte)this.processor.PullGlobalByte((ushort)(step + 0x3aa6));
+			}
+
+			if (KingPause != 0)
+				KingPause = (ushort)(KingPause - 1);
+
+			ChoreographKingLikeness((ushort)eyes, (ushort)mouth, KingPose);
+
+			this.owner.TextPainter.AwaitTime(10);
+
+			this.processor.Journal.CloseScope("ChoreographKingSpeaking");
+		}
+
+		/// <summary>
+		/// Opens the audience with the player's king (0x67f2): without the pictures (disk 2 missing and no preference bit 8) only
+		/// a line "&lt;title&gt;: &lt;government&gt; of the &lt;civilization&gt;." over a motif (0x67f0 = 1). Otherwise the advisors of
+		/// govtNa.pic (N the government / 2, 3 for government 3, "m" with technology 0x14, 0x67ee) into 0x804e, the king of
+		/// kingNN.pic (NN = 0x3938 + ChiefVisuals, 0x67f8; kink on EGA for kings 0 and 3) into 0xb1e6, the throne room
+		/// (ImportKingScenery), the 14 faces and mouths into 0x7efe / 0x7f00 and, when disk 2 answers, the 12 small advisors
+		/// (0x67fa = 1). The file name is in the stack frame, like in the original.
+		/// </summary>
+		public void DisplayKingScreen(short participantIdx)
+		{
+			this.processor.Journal.OpenScope($"DisplayKingScreen({participantIdx})");
+
+
+			AudiencePlayer = (ushort)participantIdx;
+			AudienceWithoutPictures = 0;
+
+			if ((this.owner.World.SessionPrefMarkers & 8) != 0)
+			{
+				this.owner.Startup.QueryForDisk(2, 1);
+			}
+			else
+			{
+				if (this.owner.Startup.QueryForDisk(2, 0) == 0)
+				{
+					DisplayKingLine(participantIdx);
+
+					this.processor.Journal.CloseScope("DisplayKingScreen");
+					return;
+				}
+			}
+
+			string advisorsPic = NameAdvisorsPicture(participantIdx, true);
+
+			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, advisorsPic, 0);
+
+			for (int advisorIdx = 0; advisorIdx < 4; advisorIdx++)
+			{
+				this.processor.EmitGlobalWord((ushort)((6 * advisorIdx) + 0x804e), this.owner.VideoCard.ScreenToPicture(1, (ushort)((0x50 * advisorIdx) + 1), 0x65, 0x4e, 0x63));
+			}
+
+			short king = (sbyte)this.processor.PullGlobalByte((ushort)((ushort)this.owner.World.Participants[participantIdx].ChiefVisuals + 0x3938));
+			KingPicture = (ushort)king;
+
+			this.owner.Startup.QueryForDisk((ushort)((KingPicture / 7) + 4), 1);
+
+			king = (short)KingPicture;
+			char tens = (char)('0' + (king / 10));
+			char ones = (char)('0' + (king % 10));
+			string kingPic = (VgaMode == 0 && (KingPicture == 0 || KingPicture == 3))
+				? $"kink{tens}{ones}.pic"
+				: $"king{tens}{ones}.pic";
+
+			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, kingPic, 0);
+
+			KingScenePicture = this.owner.VideoCard.ScreenToPicture(1, 0xb5, 0x43, 0x8b, 0x85);
+
+			ImportKingScenery(participantIdx);
+
+			this.owner.Helpers.ReleaseResource(GovernmentPicture, 0x3aee);
+
+			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, kingPic, 0);
+
+			// The 14 faces with their mouths, 5 a row (the 9th and the 12th skip two places)
+			short place = 0;
+			ushort faceIdx;
+
+			for (faceIdx = 0; faceIdx < 0xe; faceIdx++)
+			{
+				if (faceIdx == 8 || faceIdx == 0xb)
+					place += 2;
+
+				ushort horizLoc = (ushort)(((place % 5) * 0x3c) + 1);
+				ushort vertLoc = (ushort)((place / 5) * 0x32);
+
+				this.processor.EmitGlobalWord((ushort)((faceIdx << 2) + 0x7efe), this.owner.VideoCard.ScreenToPicture(1, horizLoc, (ushort)(vertLoc + 1), 0x3b, 0x14));
+
+				this.processor.EmitGlobalWord((ushort)((faceIdx << 2) + 0x7f00), this.owner.VideoCard.ScreenToPicture(1, horizLoc, (ushort)(vertLoc + 0x15), 0x3b, 0x1d));
+
+				place++;
+			}
+
+			this.owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, BackScreenBox, 0, 0);
+
+			if (this.owner.Startup.QueryForDisk(2, 0) != 0)
+			{
+				string secondAdvisorsPic = NameAdvisorsPicture(participantIdx, false);
+
+				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, secondAdvisorsPic, 0);
+
+				// The 12 small advisors, 3 a row
+				ushort row, column = 0;
+
+				for (row = 0; row < 4; row++)
+				{
+					for (column = 0; column < 3; column++)
+					{
+						this.processor.EmitGlobalWord((ushort)((column << 1) + (6 * row) + 0x804e), this.owner.VideoCard.ScreenToPicture(1, (ushort)((0x1d * column) + 0xa1), (ushort)((0x19 * row) + 1), 0x1c, 0x18));
+					}
+				}
+
+				KingScreenKept = 1;
+
+				this.owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, BackScreenBox, 0, 0);
+
+				this.owner.Startup.QueryForDisk(0, 1);
+
+				this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
+			}
+			else
+			{
+				this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
+
+				KingScreenKept = 0;
+			}
+
+			KingPictureLoaded = 1;
+
+			this.processor.Journal.CloseScope("DisplayKingScreen");
+		}
+
+		/// <summary>
+		/// Unless 0x67f0 is set: shows the throne room of the player, the background "backNa.pic" (N is the government / 2, 3 for
+		/// government 3, "m" instead of "a" when 0x67ee is set) with (Standing + 1) / 2 figures (columns at 0x3afe, pictures at
+		/// 0x804e) and the king (0xb1e6), with the colours of "kingNN.pal" (NN is 0x67f8) and of the background. The file names are
+		/// made in buffers in the stack frame, like in the original.
+		/// </summary>
+		public void ImportKingScenery(short participantIdx)
+		{
+			this.processor.Journal.OpenScope($"ImportKingScenery({participantIdx})");
+
+			if (AudienceWithoutPictures == 0)
+			{
+				this.owner.Startup.ConcealMouseCursor();
+
+				short regime = this.owner.World.Participants[participantIdx].RegimeKind;
+				char regimeChar = regime == 3 ? '3' : (char)((regime / 2) + '0');
+				char techChar = regime != 3 && KingModernPictures != 0 ? 'm' : 'a';
+				string sceneryPic = $"back{regimeChar}{techChar}.pic";
+
+				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, sceneryPic, 0);
+
+				for (int figureIdx = 0; (short)((this.owner.World.Participants[participantIdx].Standing + 1) >> 1) > figureIdx; figureIdx++)
+				{
+					this.owner.Services.RenderPictureToScreen(BackScreenBox,
+						(short)this.processor.PullGlobalWord((ushort)((figureIdx << 1) + 0x3afe)), 34,
+						this.processor.PullGlobalWord((ushort)((((figureIdx + participantIdx) & 3) * 6) + 0x804e)));
+				}
+
+				this.owner.Services.RenderPictureToScreen(BackScreenBox, 90, 0, KingScenePicture);
+
+				KingStep = 0;
+
+				// The background's colours: "backNa.pal"
+				string sceneryPal = $"back{regimeChar}{techChar}.pal";
+
+				short king = (short)KingPicture;
+				char tens = (char)('0' + (king / 10));
+				char ones = (char)('0' + (king % 10));
+				string hueName = $"king{tens}{ones}.pal";
+
+				this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, hueName, 0xc1d6);
+
+				this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, sceneryPal, 0xbdee);
+
+				// The colours 0x40 - 0x8f of the king over the background's
+				for (ushort place = 0xc0; place < 0x1b0; place++)
+				{
+					this.processor.EmitGlobalByte((ushort)(place + 0xbdf4), this.processor.PullGlobalByte((ushort)(place + 0xc1dc)));
+				}
+
+				this.owner.Helpers.HaltHueCycling();
+
+				this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
+
+				this.owner.VideoCard.AssignHuesFromHueStruct(0xbdee);
+
+				this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
+
+				this.owner.Startup.DisplayMouseCursor();
+			}
+
+			this.processor.Journal.CloseScope("'LoadKingBackground'");
+		}
+
+		/// <summary>
+		/// Ends the meeting music and frees the picture of the king (0x7efe), when one is loaded (0x67ea)
+		/// </summary>
+		public void ReleaseKingResources()
+		{
+			this.processor.Journal.OpenScope("ReleaseKingResources()");
+
+			this.owner.Services.PerformSound(1, 0);
+
+			if (KingPictureLoaded != 0)
+			{
+				this.owner.Helpers.ReleaseResource(KingFacesPicture, 0);
+			}
+
+			KingPictureLoaded = 0x0;
+
+			this.processor.Journal.CloseScope("ReleaseKingResources");
+		}
+
+		/// <summary>
+		/// The king's picture (unless 0x67f0 is set): with the advisors' pose advisorPose (not -1, not the one shown, 0x67e8, and with
+		/// 0x67fa) the advisors, one for every two ranks of the standing, by the style of the government (6 for the monarchy,
+		/// +3 with 0x67ee); then the face (eyes) and the mouth (mouth) of the king, placed by the table of the king (0x67f8) in the
+		/// segment 0x36fa.
+		/// </summary>
+		public void ChoreographKingLikeness(ushort eyes, ushort mouth, ushort advisorPose)
+		{
+			this.processor.Journal.OpenScope($"ChoreographKingLikeness({eyes}, {mouth}, {advisorPose})");
+
+			if (AudienceWithoutPictures == 0)
+			{
+				this.owner.Startup.ConcealMouseCursor();
+
+				short regime = this.owner.World.Participants[AudiencePlayer].RegimeKind;
+				short style = (short)((regime / 2) % 3);
+
+				if (regime == 3)
+				{
+					style = 6;
+				}
+				else if (KingModernPictures != 0)
+				{
+					style += 3;
+				}
+
+				if (advisorPose != 0xffff && advisorPose != AdvisorPoseShown && KingScreenKept != 0)
+				{
+					for (short advisorIdx = 0; advisorIdx < (short)((this.owner.World.Participants[AudiencePlayer].Standing + 1) >> 1); advisorIdx++)
+					{
+						ushort seat = (ushort)((advisorIdx + AudiencePlayer) & 3);
+						ushort place = (ushort)((style << 4) + (seat << 2));
+
+						// The tables of the advisors are in the segment 0x36fa (ES is left there, like in the original)
+						this.processor.SegExtra.Value16 = AdvisorKingVisualsSegment;
+
+						short horizLoc = (short)(this.processor.PullGlobalWord((ushort)((advisorIdx << 1) + AdvisorHorizOffsetsTableAddress)) +
+							(this.processor.PullUInt16(AdvisorKingVisualsSegment, (ushort)(place + 0x80)) - (0x50 * seat)) -
+							(this.processor.PullUInt16(AdvisorKingVisualsSegment, (ushort)(place + 0x82)) - 0xa0));
+						short vertLoc = (short)((this.processor.PullUInt16(AdvisorKingVisualsSegment, (ushort)(place + 0xf0)) - 0x64) -
+							(this.processor.PullUInt16(AdvisorKingVisualsSegment, (ushort)(place + 0xf2)) - (0x19 * seat)));
+
+						this.owner.Services.RenderPictureToScreen(ScreenBox, horizLoc, vertLoc + 34,
+							this.processor.PullGlobalWord((ushort)((advisorPose << 1) + (0x6 * seat) + AdvisorSpritesTableAddress)));
+
+						AdvisorPoseShown = advisorPose;
+					}
+				}
+
+				ushort king = (ushort)(KingPicture << 2);
+
+				this.processor.SegExtra.Value16 = AdvisorKingVisualsSegment;
+
+				short faceHoriz = (short)(0x5a + (this.processor.PullUInt16(AdvisorKingVisualsSegment, (ushort)(king + 0x10)) - 0xb4) - this.processor.PullUInt16(AdvisorKingVisualsSegment, (ushort)(king + 0x12)));
+				short faceVert = (short)((this.processor.PullUInt16(AdvisorKingVisualsSegment, (ushort)(king + 0x48)) - 0x40) - this.processor.PullUInt16(AdvisorKingVisualsSegment, (ushort)(king + 0x4a)));
+
+				if (eyes != 0xffff)
+				{
+					this.owner.Services.RenderPictureToScreen(ScreenBox, faceHoriz, faceVert - 2,
+						this.processor.PullGlobalWord((ushort)((eyes << 2) + KingEyesPicturesTableAddress)));
+				}
+
+				if (mouth != 0xffff)
+				{
+					this.owner.Services.RenderPictureToScreen(ScreenBox, faceHoriz, faceVert + 18,
+						this.processor.PullGlobalWord((ushort)((mouth << 2) + 0x7f00)));
+				}
+
+				this.owner.Startup.DisplayMouseCursor();
+			}
+
+			this.processor.Journal.CloseScope("ChoreographKingLikeness");
+		}
+
+		/// <summary>
+		/// A dialog over the bottom part of the king screen (rows 128 - 199, kept in the back screen 0x19d4 and put back);
+		/// column 20 is moved to 36
+		/// </summary>
+		/// <returns>The answer of DisplayMenu, also in AX</returns>
+		public ushort DisplayKingDialog(ushort charsAddr, ushort horizLoc, ushort vertLoc)
+		{
+			this.processor.Journal.OpenScope($"DisplayKingDialog(0x{charsAddr:x4}, {horizLoc}, {vertLoc})");
+
+			this.owner.Startup.ConcealMouseCursor();
+
+			this.owner.VideoCard.RenderImage(ScreenBox, 0, 0x80, 0x140, 0x48,
+				BackScreenBox, 0, 0x80);
+
+			if (horizLoc == 0x14)
+			{
+				horizLoc = 0x24;
+			}
+
+			this.owner.Startup.DisplayMouseCursorFully();
+
+			ushort answer = this.owner.Dialogs.DisplayMenu(charsAddr, (short)horizLoc, (short)vertLoc, 1);
+
+			this.owner.Startup.ConcealMouseCursorToSavedLevel();
+
+			this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0x80, 0x140, 0x48,
+				ScreenBox, 0, 0x80);
+
+			this.owner.Startup.DisplayMouseCursor();
+
+			this.processor.Journal.CloseScope("DisplayKingDialog");
+
+			return answer;
+		}
+
+		/// <summary>The name of a technology (records of 0x16 bytes from 0x4da)</summary>
+		private static ushort TechnologyName(ushort scienceIdx) => TechnologyText(scienceIdx);
 
 		private Game.State.Player Leader(int participantIdx) => this.owner.World.Participants[participantIdx];
-
-		private Game.State.Player Person => this.owner.World.Participants[this.owner.World.PersonParticipantIdx];
 
 		/// <summary>The relation of the computer player to the human player</summary>
 		private ushort Relation(short participantIdx) => Leader(participantIdx).Relations[this.owner.World.PersonParticipantIdx];
@@ -347,9 +895,6 @@ namespace Civilization1Remaster.UI
 				this.audienceDemand = 0;
 			}
 		}
-
-		/// <summary>The name of a technology (records of 0x16 bytes from 0x4da)</summary>
-		private static ushort TechnologyName(ushort scienceIdx) => TechnologyText(scienceIdx);
 
 		/// <summary>
 		/// The technologies each side knows (0xe, 0x32), one the leader knows and the human player doesn't (0xa), the most
@@ -965,59 +1510,6 @@ namespace Civilization1Remaster.UI
 			this.owner.HelpSystem.DisplayHelpPopup(GameTexts.TopicSchism);
 		}
 
-		/// <summary>
-		/// The end of an audience: the pictures of the leader released, the main screen repainted, no audience any more
-		/// </summary>
-		public void FinishAudience()
-		{
-			this.processor.Journal.OpenScope("FinishAudience()");
-
-			ReleaseKingResources();
-
-			DrawingBox.TypefaceIdx = 0x1;
-
-			this.owner.TurnHooks.RepaintMainScreen();
-
-			KingMood = 0xffff;
-			KingAnswer = 0;
-			EmissaryAudience = KingAnswer;
-
-			this.processor.Journal.CloseScope("FinishAudience");
-		}
-
-		/// <summary>
-		/// The audience with the player's emissary, once a turn (0xd804): unless the answer 0x3934 is known, shows the map at
-		/// the position (horizLoc -1: not moved) and asks whether to receive the emissary (with "Check Intelligence" when the human player
-		/// has relations bit 0x40 towards the player, which shows the report and asks again); 0x3934 is minus the choice. Unless
-		/// refused (-1), shows the king and his greeting in the player's font (0x36fa).
-		/// </summary>
-		/// <returns>0x3934, also in AX</returns>
-		public ushort WelcomeEmissary(short participantIdx, int horizLoc, int vertLoc)
-		{
-			this.processor.Journal.OpenScope($"WelcomeEmissary({participantIdx}, {horizLoc}, {vertLoc})");
-
-			if (EmissaryAudience == 0)
-			{
-				EmissaryAudience = 1;
-
-				if (KingAnswer == 0)
-				{
-					AskToReceiveEmissary(participantIdx, horizLoc, vertLoc);
-				}
-
-				if (KingAnswer != 0xffff)
-				{
-					ReceiveEmissary(participantIdx);
-				}
-			}
-
-			ushort answer = KingAnswer;
-
-			this.processor.Journal.CloseScope("WelcomeEmissary");
-
-			return answer;
-		}
-
 		/// <summary>The question of WelcomeEmissary: 0x3934 becomes minus the chosen line (-2 shows the intelligence report first)</summary>
 		private void AskToReceiveEmissary(short participantIdx, int horizLoc, int vertLoc)
 		{
@@ -1080,191 +1572,9 @@ namespace Civilization1Remaster.UI
 			DisplayKingDialog(TextBuffer.Address, 0x14, 0x8b);
 		}
 
-		/// <summary>
-		/// The greeting of the king at TextBuffer.Address: the opening (0x39b1 with relations bit 8 towards the human player, else 0x39e8),
-		/// one of 4 random titles with the government (0x19b2) and the leader's name (0x19a2), "of the" civilization (0x1992),
-		/// and the nuclear threat when the player has nuclear units (type 25)
-		/// </summary>
-		public void ObtainKingSalutation(short participantIdx)
-		{
-			this.processor.Journal.OpenScope($"ObtainKingSalutation({participantIdx})");
-
-			ushort leader = (ushort)((participantIdx << 1) + 0x19a2);
-			ushort Regime() => GovernmentTitle(this.owner.World.Participants[participantIdx].RegimeKind);
-
-			this.owner.Words.Set((this.owner.World.Participants[participantIdx].Relations[this.owner.World.PersonParticipantIdx] & 8) != 0 ? (ushort)0x39b1 : (ushort)0x39e8);
-
-			switch (this.owner.Libc.Dice.DrawInt(4))
-			{
-				case 0:
-					this.owner.Words.Append("the most exalted\n");
-					this.owner.Words.Append(Regime());
-					this.owner.Words.Append(": ");
-					this.owner.Words.Append(this.processor.PullGlobalWord(leader));
-					this.owner.Words.Append(" ");
-					break;
-
-				case 1:
-					this.owner.Words.Append(this.processor.PullGlobalWord(leader));
-					this.owner.Words.Append(", ruler\nand ");
-					this.owner.Words.Append(Regime());
-					this.owner.Words.Append(" ");
-					break;
-
-				case 2:
-					this.owner.Words.Append("our most wise\n");
-					this.owner.Words.Append(Regime());
-					this.owner.Words.Append(": ");
-					this.owner.Words.Append(this.processor.PullGlobalWord(leader));
-					this.owner.Words.Append(" ");
-					break;
-
-				case 3:
-					this.owner.Words.Append("he who makes mortals\ntremble: ");
-					this.owner.Words.Append(this.processor.PullGlobalWord(leader));
-					this.owner.Words.Append(" ");
-					break;
-			}
-
-			this.owner.Words.Append("of the ");
-			this.owner.Words.Append(CivilizationPlural(participantIdx));
-			this.owner.Words.Append("...\n");
-
-			if (this.owner.World.Participants[participantIdx].LiveTroops[25] != 0)
-			{
-				this.owner.Words.Append("Our words are backed\nwith NUCLEAR WEAPONS!\n");
-			}
-
-			this.processor.Journal.CloseScope("ObtainKingSalutation");
-		}
-
-		/// <summary>
-		/// The message of the leader of the player to the human player (text 0x3a8c, with the names of both civilizations from
-		/// the table at 0x1982 put into the text parameters 0x30be and 0x30b8)
-		/// </summary>
-		public void DisplayKingMessage(short participantIdx)
-		{
-			this.processor.Journal.OpenScope($"DisplayKingMessage({participantIdx})");
-
-			this.owner.Codes.Set(3, CivilizationNameAddr(participantIdx));
-
-			this.owner.Codes.Set(0, CivilizationNameAddr(this.owner.World.PersonParticipantIdx));
-
-			KingSpeaking = 0xc;
-			this.owner.Words.Clear();
-
-			this.owner.BlockText.DisplayTextDialog(GameTexts.TopicTreaty);
-
-			DisplayKingDialog(TextBuffer.Address, 0x14, 0x8b);
-
-			this.processor.Journal.CloseScope("DisplayKingMessage");
-		}
-
 		private ushort CivilizationNameAddr(short participantIdx)
 		{
 			return CivilizationName(participantIdx);
-		}
-
-		/// <summary>
-		/// After an audience: the player and the human have met (diplomacy flag 2), the player waits 16 turns before the next
-		/// contact. At the easiest level the units of the player whose nearest city is one of the human's, at most 2 away, are
-		/// removed.
-		/// </summary>
-		public void LogAudience(short participantIdx)
-		{
-			this.processor.Journal.OpenScope($"LogAudience({participantIdx})");
-
-			this.owner.Politics.AssignDiplomacyFlags(this.owner.World.PersonParticipantIdx, participantIdx, 2);
-
-			this.owner.World.Participants[participantIdx].TouchParticipantTimeleft = (short)(this.owner.World.RoundTally + 16);
-
-			if (this.owner.World.HardnessTier == 0)
-			{
-				for (short troopIdx = 0; troopIdx < UnitMemory.TroopTally; troopIdx++)
-				{
-					if (!this.troops.Exists(participantIdx, troopIdx))
-						continue;
-
-					ushort townIdx = this.owner.Helpers.LocateNearestCity(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
-						this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert));
-
-					if (this.owner.World.Towns[townIdx].ParticipantIdx == this.owner.World.PersonParticipantIdx &&
-						(short)FoundDistance <= 2)
-					{
-						this.owner.UnitOps.EliminateUnit(participantIdx, troopIdx);
-					}
-				}
-			}
-
-			this.processor.Journal.CloseScope("LogAudience");
-		}
-
-		/// <summary>
-		/// One frame of the king's animation. While he speaks (0xd76c counts down) and stands still (step 0x67f4 = 0), the mouth
-		/// moves: eyes 5 or -1, mouth 0, 9 or (every 4th frame) 8, then a pause of 4 frames (0x67f6). Otherwise the step goes on
-		/// along table 0x3ab8 (positive: next step, -1, -2, -3: back to step 0, 6, 14); at the end of a gesture (0) the mood
-		/// 0x3936 picks the next one (0: step 3, the eyes colour 0x3a9a; 1: step 0; 2: step 12, the colours 0x3ab4 / 0x3ab7)
-		/// and 0x7ef4 says which pose he holds (0, 1 at step 14, 2 at step 6); without a pause one time in 12 a still pose
-		/// starts a short gesture. The eyes and the mouth come from the tables 0x3a94 and 0x3aa6.
-		/// </summary>
-		public void ChoreographKingSpeaking()
-		{
-			this.processor.Journal.OpenScope("ChoreographKingSpeaking()");
-
-			// The final values of the locals stay in the stack frame, like in the original
-
-			KingPose = 0xffff;
-
-			short eyes, mouth;
-
-			if (KingSpeaking != 0 && KingStep == 0)
-			{
-				eyes = KingStep != 0 ? (short)5 : (short)-1;
-
-				mouth = this.owner.Libc.Dice.DrawInt(2) != 0 ? (short)9 : (short)0;
-
-				if (((byte)KingSpeaking & 3) == 0)
-					mouth = 8;
-
-				KingSpeaking = (ushort)(KingSpeaking - 1);
-				KingPause = 4;
-			}
-			else
-			{
-				AdvanceKingGesture();
-
-				if (KingPause == 0 && this.owner.Libc.Dice.DrawInt(12) == 0 && KingGestureStep() == 0)
-				{
-					switch (KingStep)
-					{
-						case 0:
-							KingStep = 1;
-							break;
-
-						case 6:
-							KingStep = 0xa;
-							break;
-
-						case 0xe:
-							KingStep = 0x11;
-							break;
-					}
-				}
-
-				ushort step = KingStep;
-
-				eyes = (sbyte)this.processor.PullGlobalByte((ushort)(step + 0x3a94));
-				mouth = (sbyte)this.processor.PullGlobalByte((ushort)(step + 0x3aa6));
-			}
-
-			if (KingPause != 0)
-				KingPause = (ushort)(KingPause - 1);
-
-			ChoreographKingLikeness((ushort)eyes, (ushort)mouth, KingPose);
-
-			this.owner.TextPainter.AwaitTime(10);
-
-			this.processor.Journal.CloseScope("ChoreographKingSpeaking");
 		}
 
 		/// <summary>The entry of table 0x3ab8 for the king's step 0x67f4</summary>
@@ -1348,126 +1658,6 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// Opens the audience with the player's king (0x67f2): without the pictures (disk 2 missing and no preference bit 8) only
-		/// a line "&lt;title&gt;: &lt;government&gt; of the &lt;civilization&gt;." over a motif (0x67f0 = 1). Otherwise the advisors of
-		/// govtNa.pic (N the government / 2, 3 for government 3, "m" with technology 0x14, 0x67ee) into 0x804e, the king of
-		/// kingNN.pic (NN = 0x3938 + ChiefVisuals, 0x67f8; kink on EGA for kings 0 and 3) into 0xb1e6, the throne room
-		/// (ImportKingScenery), the 14 faces and mouths into 0x7efe / 0x7f00 and, when disk 2 answers, the 12 small advisors
-		/// (0x67fa = 1). The file name is in the stack frame, like in the original.
-		/// </summary>
-		public void DisplayKingScreen(short participantIdx)
-		{
-			this.processor.Journal.OpenScope($"DisplayKingScreen({participantIdx})");
-
-
-			AudiencePlayer = (ushort)participantIdx;
-			AudienceWithoutPictures = 0;
-
-			if ((this.owner.World.SessionPrefMarkers & 8) != 0)
-			{
-				this.owner.Startup.QueryForDisk(2, 1);
-			}
-			else
-			{
-				if (this.owner.Startup.QueryForDisk(2, 0) == 0)
-				{
-					DisplayKingLine(participantIdx);
-
-					this.processor.Journal.CloseScope("DisplayKingScreen");
-					return;
-				}
-			}
-
-			string advisorsPic = NameAdvisorsPicture(participantIdx, true);
-
-			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, advisorsPic, 0);
-
-			for (int advisorIdx = 0; advisorIdx < 4; advisorIdx++)
-			{
-				this.processor.EmitGlobalWord((ushort)((6 * advisorIdx) + 0x804e), this.owner.VideoCard.ScreenToPicture(1, (ushort)((0x50 * advisorIdx) + 1), 0x65, 0x4e, 0x63));
-			}
-
-			short king = (sbyte)this.processor.PullGlobalByte((ushort)((ushort)this.owner.World.Participants[participantIdx].ChiefVisuals + 0x3938));
-			KingPicture = (ushort)king;
-
-			this.owner.Startup.QueryForDisk((ushort)((KingPicture / 7) + 4), 1);
-
-			king = (short)KingPicture;
-			char tens = (char)('0' + (king / 10));
-			char ones = (char)('0' + (king % 10));
-			string kingPic = (VgaMode == 0 && (KingPicture == 0 || KingPicture == 3))
-				? $"kink{tens}{ones}.pic"
-				: $"king{tens}{ones}.pic";
-
-			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, kingPic, 0);
-
-			KingScenePicture = this.owner.VideoCard.ScreenToPicture(1, 0xb5, 0x43, 0x8b, 0x85);
-
-			ImportKingScenery(participantIdx);
-
-			this.owner.Helpers.ReleaseResource(GovernmentPicture, 0x3aee);
-
-			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, kingPic, 0);
-
-			// The 14 faces with their mouths, 5 a row (the 9th and the 12th skip two places)
-			short place = 0;
-			ushort faceIdx;
-
-			for (faceIdx = 0; faceIdx < 0xe; faceIdx++)
-			{
-				if (faceIdx == 8 || faceIdx == 0xb)
-					place += 2;
-
-				ushort horizLoc = (ushort)(((place % 5) * 0x3c) + 1);
-				ushort vertLoc = (ushort)((place / 5) * 0x32);
-
-				this.processor.EmitGlobalWord((ushort)((faceIdx << 2) + 0x7efe), this.owner.VideoCard.ScreenToPicture(1, horizLoc, (ushort)(vertLoc + 1), 0x3b, 0x14));
-
-				this.processor.EmitGlobalWord((ushort)((faceIdx << 2) + 0x7f00), this.owner.VideoCard.ScreenToPicture(1, horizLoc, (ushort)(vertLoc + 0x15), 0x3b, 0x1d));
-
-				place++;
-			}
-
-			this.owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, BackScreenBox, 0, 0);
-
-			if (this.owner.Startup.QueryForDisk(2, 0) != 0)
-			{
-				string secondAdvisorsPic = NameAdvisorsPicture(participantIdx, false);
-
-				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, secondAdvisorsPic, 0);
-
-				// The 12 small advisors, 3 a row
-				ushort row, column = 0;
-
-				for (row = 0; row < 4; row++)
-				{
-					for (column = 0; column < 3; column++)
-					{
-						this.processor.EmitGlobalWord((ushort)((column << 1) + (6 * row) + 0x804e), this.owner.VideoCard.ScreenToPicture(1, (ushort)((0x1d * column) + 0xa1), (ushort)((0x19 * row) + 1), 0x1c, 0x18));
-					}
-				}
-
-				KingScreenKept = 1;
-
-				this.owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, BackScreenBox, 0, 0);
-
-				this.owner.Startup.QueryForDisk(0, 1);
-
-				this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
-			}
-			else
-			{
-				this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
-
-				KingScreenKept = 0;
-			}
-
-			KingPictureLoaded = 1;
-
-			this.processor.Journal.CloseScope("DisplayKingScreen");
-		}
-
-		/// <summary>
 		/// "govtNa.pic" in the buffer: N the government / 2 ('3' for government 3), "m" instead of "a" with technology 0x14
 		/// (0x67ee, read from the player the first time)
 		/// </summary>
@@ -1506,198 +1696,6 @@ namespace Civilization1Remaster.UI
 			this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 8, 130, Hues.White);
 
 			this.owner.Startup.DisplayMouseCursor();
-		}
-
-		/// <summary>
-		/// Unless 0x67f0 is set: shows the throne room of the player, the background "backNa.pic" (N is the government / 2, 3 for
-		/// government 3, "m" instead of "a" when 0x67ee is set) with (Standing + 1) / 2 figures (columns at 0x3afe, pictures at
-		/// 0x804e) and the king (0xb1e6), with the colours of "kingNN.pal" (NN is 0x67f8) and of the background. The file names are
-		/// made in buffers in the stack frame, like in the original.
-		/// </summary>
-		public void ImportKingScenery(short participantIdx)
-		{
-			this.processor.Journal.OpenScope($"ImportKingScenery({participantIdx})");
-
-			if (AudienceWithoutPictures == 0)
-			{
-				this.owner.Startup.ConcealMouseCursor();
-
-				short regime = this.owner.World.Participants[participantIdx].RegimeKind;
-				char regimeChar = regime == 3 ? '3' : (char)((regime / 2) + '0');
-				char techChar = regime != 3 && KingModernPictures != 0 ? 'm' : 'a';
-				string sceneryPic = $"back{regimeChar}{techChar}.pic";
-
-				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, sceneryPic, 0);
-
-				for (int figureIdx = 0; (short)((this.owner.World.Participants[participantIdx].Standing + 1) >> 1) > figureIdx; figureIdx++)
-				{
-					this.owner.Services.RenderPictureToScreen(BackScreenBox,
-						(short)this.processor.PullGlobalWord((ushort)((figureIdx << 1) + 0x3afe)), 34,
-						this.processor.PullGlobalWord((ushort)((((figureIdx + participantIdx) & 3) * 6) + 0x804e)));
-				}
-
-				this.owner.Services.RenderPictureToScreen(BackScreenBox, 90, 0, KingScenePicture);
-
-				KingStep = 0;
-
-				// The background's colours: "backNa.pal"
-				string sceneryPal = $"back{regimeChar}{techChar}.pal";
-
-				short king = (short)KingPicture;
-				char tens = (char)('0' + (king / 10));
-				char ones = (char)('0' + (king % 10));
-				string hueName = $"king{tens}{ones}.pal";
-
-				this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, hueName, 0xc1d6);
-
-				this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, sceneryPal, 0xbdee);
-
-				// The colours 0x40 - 0x8f of the king over the background's
-				for (ushort place = 0xc0; place < 0x1b0; place++)
-				{
-					this.processor.EmitGlobalByte((ushort)(place + 0xbdf4), this.processor.PullGlobalByte((ushort)(place + 0xc1dc)));
-				}
-
-				this.owner.Helpers.HaltHueCycling();
-
-				this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
-
-				this.owner.VideoCard.AssignHuesFromHueStruct(0xbdee);
-
-				this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
-
-				this.owner.Startup.DisplayMouseCursor();
-			}
-
-			this.processor.Journal.CloseScope("'LoadKingBackground'");
-		}
-
-		/// <summary>
-		/// Ends the meeting music and frees the picture of the king (0x7efe), when one is loaded (0x67ea)
-		/// </summary>
-		public void ReleaseKingResources()
-		{
-			this.processor.Journal.OpenScope("ReleaseKingResources()");
-
-			this.owner.Services.PerformSound(1, 0);
-
-			if (KingPictureLoaded != 0)
-			{
-				this.owner.Helpers.ReleaseResource(KingFacesPicture, 0);
-			}
-
-			KingPictureLoaded = 0x0;
-
-			this.processor.Journal.CloseScope("ReleaseKingResources");
-		}
-
-		/// <summary>
-		/// The king's picture (unless 0x67f0 is set): with the advisors' pose advisorPose (not -1, not the one shown, 0x67e8, and with
-		/// 0x67fa) the advisors, one for every two ranks of the standing, by the style of the government (6 for the monarchy,
-		/// +3 with 0x67ee); then the face (eyes) and the mouth (mouth) of the king, placed by the table of the king (0x67f8) in the
-		/// segment 0x36fa.
-		/// </summary>
-		public void ChoreographKingLikeness(ushort eyes, ushort mouth, ushort advisorPose)
-		{
-			this.processor.Journal.OpenScope($"ChoreographKingLikeness({eyes}, {mouth}, {advisorPose})");
-
-			if (AudienceWithoutPictures == 0)
-			{
-				this.owner.Startup.ConcealMouseCursor();
-
-				short regime = this.owner.World.Participants[AudiencePlayer].RegimeKind;
-				short style = (short)((regime / 2) % 3);
-
-				if (regime == 3)
-				{
-					style = 6;
-				}
-				else if (KingModernPictures != 0)
-				{
-					style += 3;
-				}
-
-				if (advisorPose != 0xffff && advisorPose != AdvisorPoseShown && KingScreenKept != 0)
-				{
-					for (short advisorIdx = 0; advisorIdx < (short)((this.owner.World.Participants[AudiencePlayer].Standing + 1) >> 1); advisorIdx++)
-					{
-						ushort seat = (ushort)((advisorIdx + AudiencePlayer) & 3);
-						ushort place = (ushort)((style << 4) + (seat << 2));
-
-						// The tables of the advisors are in the segment 0x36fa (ES is left there, like in the original)
-						this.processor.SegExtra.Value16 = AdvisorKingVisualsSegment;
-
-						short horizLoc = (short)(this.processor.PullGlobalWord((ushort)((advisorIdx << 1) + AdvisorHorizOffsetsTableAddress)) +
-							(this.processor.PullUInt16(AdvisorKingVisualsSegment, (ushort)(place + 0x80)) - (0x50 * seat)) -
-							(this.processor.PullUInt16(AdvisorKingVisualsSegment, (ushort)(place + 0x82)) - 0xa0));
-						short vertLoc = (short)((this.processor.PullUInt16(AdvisorKingVisualsSegment, (ushort)(place + 0xf0)) - 0x64) -
-							(this.processor.PullUInt16(AdvisorKingVisualsSegment, (ushort)(place + 0xf2)) - (0x19 * seat)));
-
-						this.owner.Services.RenderPictureToScreen(ScreenBox, horizLoc, vertLoc + 34,
-							this.processor.PullGlobalWord((ushort)((advisorPose << 1) + (0x6 * seat) + AdvisorSpritesTableAddress)));
-
-						AdvisorPoseShown = advisorPose;
-					}
-				}
-
-				ushort king = (ushort)(KingPicture << 2);
-
-				this.processor.SegExtra.Value16 = AdvisorKingVisualsSegment;
-
-				short faceHoriz = (short)(0x5a + (this.processor.PullUInt16(AdvisorKingVisualsSegment, (ushort)(king + 0x10)) - 0xb4) - this.processor.PullUInt16(AdvisorKingVisualsSegment, (ushort)(king + 0x12)));
-				short faceVert = (short)((this.processor.PullUInt16(AdvisorKingVisualsSegment, (ushort)(king + 0x48)) - 0x40) - this.processor.PullUInt16(AdvisorKingVisualsSegment, (ushort)(king + 0x4a)));
-
-				if (eyes != 0xffff)
-				{
-					this.owner.Services.RenderPictureToScreen(ScreenBox, faceHoriz, faceVert - 2,
-						this.processor.PullGlobalWord((ushort)((eyes << 2) + KingEyesPicturesTableAddress)));
-				}
-
-				if (mouth != 0xffff)
-				{
-					this.owner.Services.RenderPictureToScreen(ScreenBox, faceHoriz, faceVert + 18,
-						this.processor.PullGlobalWord((ushort)((mouth << 2) + 0x7f00)));
-				}
-
-				this.owner.Startup.DisplayMouseCursor();
-			}
-
-			this.processor.Journal.CloseScope("ChoreographKingLikeness");
-		}
-
-		/// <summary>
-		/// A dialog over the bottom part of the king screen (rows 128 - 199, kept in the back screen 0x19d4 and put back);
-		/// column 20 is moved to 36
-		/// </summary>
-		/// <returns>The answer of DisplayMenu, also in AX</returns>
-		public ushort DisplayKingDialog(ushort charsAddr, ushort horizLoc, ushort vertLoc)
-		{
-			this.processor.Journal.OpenScope($"DisplayKingDialog(0x{charsAddr:x4}, {horizLoc}, {vertLoc})");
-
-			this.owner.Startup.ConcealMouseCursor();
-
-			this.owner.VideoCard.RenderImage(ScreenBox, 0, 0x80, 0x140, 0x48,
-				BackScreenBox, 0, 0x80);
-
-			if (horizLoc == 0x14)
-			{
-				horizLoc = 0x24;
-			}
-
-			this.owner.Startup.DisplayMouseCursorFully();
-
-			ushort answer = this.owner.Dialogs.DisplayMenu(charsAddr, (short)horizLoc, (short)vertLoc, 1);
-
-			this.owner.Startup.ConcealMouseCursorToSavedLevel();
-
-			this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0x80, 0x140, 0x48,
-				ScreenBox, 0, 0x80);
-
-			this.owner.Startup.DisplayMouseCursor();
-
-			this.processor.Journal.CloseScope("DisplayKingDialog");
-
-			return answer;
 		}
 	}
 }

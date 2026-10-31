@@ -9,6 +9,7 @@ namespace Civilization1Remaster.Acoustics
 			private readonly double lhs1;
 			private readonly double lhs2;
 			private readonly double boost;
+
 			private double vert1;
 			private double vert2;
 

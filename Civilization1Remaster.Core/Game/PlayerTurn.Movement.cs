@@ -6,6 +6,64 @@ namespace Civilization1Remaster.Game
 	/// <summary>The move of a unit: the target tile, zones of control, cities, fights, the cost of the move</summary>
 	partial class PlayerTurn
 	{
+		/// <summary>The free railroad steps of the units not moved by hand in the turn (RideForFree)</summary>
+		private (int Round, Dictionary<(short, short), int> Steps) freeRides = (-1, new Dictionary<(short, short), int>());
+
+		/// <summary>Where the move of the unit goes on after a step of HandlePlayerTurn</summary>
+		private enum MoveStep
+		{
+			/// <summary>The move goes on (L219c)</summary>
+			GoesOn,
+
+			/// <summary>A diplomat or caravan where no city is (L2157)</summary>
+			NoCity,
+
+			/// <summary>The order is done (L3365)</summary>
+			Done,
+		}
+
+		/// <summary>Where the move goes on after CheckMoveTile</summary>
+		private enum MoveCheck
+		{
+			/// <summary>The unit moves (L267b)</summary>
+			Moves,
+
+			/// <summary>No move, the order is done (L3365)</summary>
+			Done,
+
+			/// <summary>A foreign unit there is attacked (L2329)</summary>
+			Attacks,
+		}
+
+		/// <summary>
+		/// The remaster's railroads (RailroadRules): a step along a road from a tile with a railroad (or a city, once the player
+		/// knows Railroad) is free for every unit; a unit not moved by hand (GoTo or a computer player) rides for free at most
+		/// 30 times a turn, counted here.
+		/// </summary>
+		internal bool RideForFree(short participantIdx, short troopIdx, short horizLoc, short vertLoc)
+		{
+			bool knowsRailroad = this.owner.Advisors.PlayerKnowsTechnology(participantIdx, RailroadRules.RailroadTechnology) != 0;
+
+			if (!RailroadRules.HasRailroad(this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc), knowsRailroad, classic: false))
+				return false;
+
+			bool byHand = participantIdx == this.owner.World.PersonParticipantIdx &&
+				this.troops.Pull(participantIdx, troopIdx, UnitMemory.TravelHoriz) == 0xff;
+
+			if (this.freeRides.Round != this.owner.World.RoundTally)
+				this.freeRides = (this.owner.World.RoundTally, new Dictionary<(short, short), int>());
+
+			int ridden = this.freeRides.Steps.GetValueOrDefault((participantIdx, troopIdx));
+
+			if (!RailroadRules.IsFreeStep(byHand, ridden, classic: false))
+				return false;
+
+			if (!byHand)
+				this.freeRides.Steps[(participantIdx, troopIdx)] = ridden + 1;
+
+			return true;
+		}
+
 		/// <summary>
 		/// The direction (1 - 8) of a move order: the numbers 1 - 8 (GoTo and the computer), Home / Up / PgUp / Right / PgDn /
 		/// Down / End / Left; 0 for other keys (the signed comparisons of the original: no direction from 0x8000 on)
@@ -172,19 +230,6 @@ namespace Civilization1Remaster.Game
 			return true;
 		}
 
-		/// <summary>Where the move of the unit goes on after a step of HandlePlayerTurn</summary>
-		private enum MoveStep
-		{
-			/// <summary>The move goes on (L219c)</summary>
-			GoesOn,
-
-			/// <summary>A diplomat or caravan where no city is (L2157)</summary>
-			NoCity,
-
-			/// <summary>The order is done (L3365)</summary>
-			Done,
-		}
-
 		/// <summary>
 		/// A diplomat or caravan moves to the tile 0x1c / 0x26: no city there (NoCity); not from the sea into a foreign city
 		/// (Done). A diplomat in a foreign city acts there (Done; into a city of the human it is shown, with the view on it and
@@ -306,19 +351,6 @@ namespace Civilization1Remaster.Game
 			this.owner.UnitOps.EliminateUnit(participantIdx, (short)this.turn.Troop);
 
 			return MoveStep.Done;
-		}
-
-		/// <summary>Where the move goes on after CheckMoveTile</summary>
-		private enum MoveCheck
-		{
-			/// <summary>The unit moves (L267b)</summary>
-			Moves,
-
-			/// <summary>No move, the order is done (L3365)</summary>
-			Done,
-
-			/// <summary>A foreign unit there is attacked (L2329)</summary>
-			Attacks,
 		}
 
 		/// <summary>
@@ -570,38 +602,6 @@ namespace Civilization1Remaster.Game
 
 			return false;
 		}
-
-		/// <summary>
-		/// The remaster's railroads (RailroadRules): a step along a road from a tile with a railroad (or a city, once the player
-		/// knows Railroad) is free for every unit; a unit not moved by hand (GoTo or a computer player) rides for free at most
-		/// 30 times a turn, counted here.
-		/// </summary>
-		internal bool RideForFree(short participantIdx, short troopIdx, short horizLoc, short vertLoc)
-		{
-			bool knowsRailroad = this.owner.Advisors.PlayerKnowsTechnology(participantIdx, RailroadRules.RailroadTechnology) != 0;
-
-			if (!RailroadRules.HasRailroad(this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc), knowsRailroad, classic: false))
-				return false;
-
-			bool byHand = participantIdx == this.owner.World.PersonParticipantIdx &&
-				this.troops.Pull(participantIdx, troopIdx, UnitMemory.TravelHoriz) == 0xff;
-
-			if (this.freeRides.Round != this.owner.World.RoundTally)
-				this.freeRides = (this.owner.World.RoundTally, new Dictionary<(short, short), int>());
-
-			int ridden = this.freeRides.Steps.GetValueOrDefault((participantIdx, troopIdx));
-
-			if (!RailroadRules.IsFreeStep(byHand, ridden, classic: false))
-				return false;
-
-			if (!byHand)
-				this.freeRides.Steps[(participantIdx, troopIdx)] = ridden + 1;
-
-			return true;
-		}
-
-		/// <summary>The free railroad steps of the units not moved by hand in the turn (RideForFree)</summary>
-		private (int Round, Dictionary<(short, short), int> Steps) freeRides = (-1, new Dictionary<(short, short), int>());
 
 		/// <summary>
 		/// The cost of the move to 0x1c / 0x26: a ship does not go on land outside a city (the destination is forgotten); a

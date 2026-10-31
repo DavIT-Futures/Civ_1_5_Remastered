@@ -23,6 +23,7 @@ namespace Civilization1Remaster.Engine
 
 		private readonly GameEngine game;
 		private readonly byte[] store = new byte[Size];
+
 		private bool attached;
 
 		public CodeTexts(GameEngine game)
@@ -45,15 +46,6 @@ namespace Civilization1Remaster.Engine
 		public ushort Set(int code, ushort textAddr) =>
 			Set(code, this.game.Processor.PullText(CPU.AsLinearAddress(this.game.Processor.SegData.Value16, textAddr)));
 
-		/// <summary>A byte of the block (past it: the memory after it)</summary>
-		private void Poke(int index, byte value)
-		{
-			if (this.attached && index >= 0 && index < Size)
-				this.store[index] = value;
-			else
-				this.game.Processor.EmitGlobalByte((ushort)(Address + index), value);
-		}
-
 		/// <summary>
 		/// The store moves from the memory into the array (after the machine is prepared): the current bytes are taken over,
 		/// every access of the memory to the block goes to the array from now on
@@ -62,6 +54,15 @@ namespace Civilization1Remaster.Engine
 		{
 			this.game.Processor.Storage.AttachOverlay(CPU.AsLinearAddress(this.game.Processor.SegData.Value16, Address), this.store);
 			this.attached = true;
+		}
+
+		/// <summary>A byte of the block (past it: the memory after it)</summary>
+		private void Poke(int index, byte value)
+		{
+			if (this.attached && index >= 0 && index < Size)
+				this.store[index] = value;
+			else
+				this.game.Processor.EmitGlobalByte((ushort)(Address + index), value);
 		}
 	}
 }

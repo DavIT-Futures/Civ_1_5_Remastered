@@ -10,12 +10,6 @@ namespace Civilization1Remaster.Game
 	{
 		private readonly UnitMemory troops;
 
-		public PlayerTurn(GameEngine owner)
-			: base(owner)
-		{
-			this.troops = new UnitMemory(owner.Processor);
-		}
-
 		/// <summary>The locals of the running HandlePlayerTurn</summary>
 		private TurnLocals turn = new TurnLocals();
 
@@ -27,6 +21,37 @@ namespace Civilization1Remaster.Game
 		/// the game keep DI for their callers.
 		/// </summary>
 		private ushort indexDest;
+
+		public PlayerTurn(GameEngine owner)
+			: base(owner)
+		{
+			this.troops = new UnitMemory(owner.Processor);
+		}
+
+		/// <summary>Where the look at a unit goes on (LookAtUnit)</summary>
+		private enum LookStep
+		{
+			/// <summary>The order 0x44 is carried out (L0d0a)</summary>
+			Order,
+
+			/// <summary>The order of a unit, or the key without a unit (L0d00)</summary>
+			OrderOrKey,
+
+			/// <summary>The direction of a move from the order (L1b5e)</summary>
+			Direction,
+
+			/// <summary>The marked tile or the unit moves in the direction 0x24 (L1c10)</summary>
+			Move,
+
+			/// <summary>The key that is neither an order nor a move (L3365)</summary>
+			Key,
+
+			/// <summary>The unit goes on or its move ends (L3c40)</summary>
+			NextLook,
+
+			/// <summary>The end of the turn (L3ea1)</summary>
+			EndOfTurn,
+		}
 
 		/// <summary>The unit of the running HandlePlayerTurn (the local 0x32), for the tests that click next to it</summary>
 		public ushort ActiveTroop => this.turn.Troop;
@@ -111,31 +136,6 @@ namespace Civilization1Remaster.Game
 			this.indexDest = outerDest;
 			this.turn = outer;
 			this.processor.Journal.CloseScope("HandlePlayerTurn");
-		}
-
-		/// <summary>Where the look at a unit goes on (LookAtUnit)</summary>
-		private enum LookStep
-		{
-			/// <summary>The order 0x44 is carried out (L0d0a)</summary>
-			Order,
-
-			/// <summary>The order of a unit, or the key without a unit (L0d00)</summary>
-			OrderOrKey,
-
-			/// <summary>The direction of a move from the order (L1b5e)</summary>
-			Direction,
-
-			/// <summary>The marked tile or the unit moves in the direction 0x24 (L1c10)</summary>
-			Move,
-
-			/// <summary>The key that is neither an order nor a move (L3365)</summary>
-			Key,
-
-			/// <summary>The unit goes on or its move ends (L3c40)</summary>
-			NextLook,
-
-			/// <summary>The end of the turn (L3ea1)</summary>
-			EndOfTurn,
 		}
 
 		/// <summary>

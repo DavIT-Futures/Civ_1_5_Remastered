@@ -8,6 +8,12 @@ namespace Civilization1Remaster.Game.Rules
 	/// </summary>
 	public static class SettlerActionRules
 	{
+		/// <summary>
+		/// Turns required to construct a Fortress.
+		/// Standard Civ 1 formula: 4 turns.
+		/// </summary>
+		public const int FortressTurns = 4;
+
 		public enum SettlerTask
 		{
 			None = 0,
@@ -73,12 +79,6 @@ namespace Civilization1Remaster.Game.Rules
 				_ => 10
 			};
 		}
-
-		/// <summary>
-		/// Turns required to construct a Fortress.
-		/// Standard Civ 1 formula: 4 turns.
-		/// </summary>
-		public const int FortressTurns = 4;
 
 		/// <summary>
 		/// Checks whether a Settler can irrigate a given tile.

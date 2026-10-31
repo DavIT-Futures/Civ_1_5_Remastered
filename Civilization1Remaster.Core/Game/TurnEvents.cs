@@ -13,27 +13,24 @@ namespace Civilization1Remaster.Game
 	/// </summary>
 	public partial class TurnEvents : GameModule
 	{
-		private static readonly GameText BankruptcyWarningDialogAddress = new(0x1c2a, "*TAXES");
-		private static readonly GameText RetirementContinuePromptAddress = new(0x1cf0, "*FAME");
-		private static readonly GameText EndGameTitlePictureAddress = new(0x1cf8, "adscreen.pic");
-		private static readonly GameText EndGameTitlePaletteAddress = new(0x1d05, "adscreen.pic");
-
 		private const ushort TravellersReportGunpowderAddress = 0x1d26;
 		private const ushort TravellersReportIronWorkingAddress = 0x1d3f;
 		private const ushort TravellersReportAncientAddress = 0x1d53;
-
 		private const ushort MenuBarGameLabelAddress = 0x1d6f;
 		private const ushort MenuBarOrdersLabelAddress = 0x1d75;
 		private const ushort MenuBarAdvisorsLabelAddress = 0x1d7d;
 		private const ushort MenuBarWorldLabelAddress = 0x1d87;
 		private const ushort MenuBarCivilopediaLabelAddress = 0x1d8e;
-
 		private const ushort EraBcStringAddress = 0x1df0;
 		private const ushort EraAdStringAddress = 0x1df4;
-
-		private static readonly GameText AdvisorPaletteResourceAddress = new(0x1e56, "sp256.pal");
 		private const ushort PalaceSectionSpritesTableAddress = 0xd21c;
 		private const ushort ReplayHistoryScoresSegment = 0x3772;
+
+		private static readonly GameText BankruptcyWarningDialogAddress = new(0x1c2a, "*TAXES");
+		private static readonly GameText RetirementContinuePromptAddress = new(0x1cf0, "*FAME");
+		private static readonly GameText EndGameTitlePictureAddress = new(0x1cf8, "adscreen.pic");
+		private static readonly GameText EndGameTitlePaletteAddress = new(0x1d05, "adscreen.pic");
+		private static readonly GameText AdvisorPaletteResourceAddress = new(0x1e56, "sp256.pal");
 
 		public TurnEvents(GameEngine owner)
 			: base(owner)
@@ -274,26 +271,6 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// The healing before HealingRules (the golden master baselines have it): fortified units heal one lost hit point every
-		/// turn, ships and planes never heal. Kept for the tests, see <see cref="ClassicHealing"/>.
-		/// </summary>
-		private void MendOnlyFortifiedUnits()
-		{
-			for (int participantIdx = 0; participantIdx < UnitHealth.ParticipantTally; participantIdx++)
-			{
-				for (int troopIdx = 0; troopIdx < UnitHealth.TroopTally; troopIdx++)
-				{
-					int troopKind = this.Troops.Pull(participantIdx, troopIdx, UnitMemory.Kind);
-
-					if (troopKind != 0xff && (this.Troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & (int)UnitStatusEnum.Fortified) != 0)
-					{
-						this.owner.World.Vitals.MendOne(participantIdx, troopIdx, troopKind);
-					}
-				}
-			}
-		}
-
-		/// <summary>
 		/// Shows the text as a dialog (DisplayMenu) and puts back the screen as it was before (kept in the back screen 0x19d4);
 		/// the answer of DisplayMenu given back (and left in AX)
 		/// </summary>
@@ -340,6 +317,632 @@ namespace Civilization1Remaster.Game
 			}
 
 			this.processor.Journal.CloseScope("HandleGameEnd");
+		}
+
+		/// <summary>
+		/// The end of the game: the civilization graph, the replay (not when the game was quit) and, without the landing of the
+		/// player, the results, the final score and the Hall of Fame
+		/// </summary>
+		public void DisplayEndGameSequence()
+		{
+			this.processor.Journal.OpenScope("DisplayEndGameSequence()");
+
+			this.owner.Atlas.DisplayCivilizationGraph();
+
+			if (GameEndRequest != 2)
+			{
+				this.owner.Replayer.DisplayReplay();
+			}
+
+			this.owner.Startup.ConcealMouseCursor();
+
+			if ((this.owner.World.StarshipMarkers & 0x100) == 0)
+			{
+				this.owner.Legends.DisplayGameResultsScreen((ushort)((this.owner.World.CastleTier >> 1) - 1),
+					this.owner.Founding.DisplayFinalScore(this.owner.World.PersonParticipantIdx, true));
+
+				this.owner.Legends.ImportHallOfFame();
+
+				this.owner.Legends.AttachHallOfFameRecord();
+
+				this.owner.Legends.StoreHallOfFame();
+			}
+		
+			this.owner.Startup.DisplayMouseCursor();
+
+			this.processor.Journal.CloseScope("DisplayEndGameSequence");
+		}
+
+		/// <summary>The title picture of the end of the game, until a key or a click</summary>
+		public void DisplayTitleScreen()
+		{
+			this.processor.Journal.OpenScope("DisplayTitleScreen()");
+
+			this.owner.Helpers.HaltHueCycling();
+
+			this.owner.Startup.QueryForDisk(1, 1);
+
+			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, EndGameTitlePictureAddress, 0);
+
+			this.owner.Startup.ConcealMouseCursor();
+
+			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
+
+			this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, EndGameTitlePaletteAddress, 1);
+
+			this.owner.VideoCard.RenderImage(
+				BackScreenBox,
+				0, 0, 0x140, 0xc8,
+				ScreenBox,
+				0, 0);
+
+			this.owner.Conquest.AwaitForKeyPressOrMouseClick();
+
+			this.processor.Journal.CloseScope("DisplayTitleScreen");
+		}
+
+		/// <summary>
+		/// Barbarians, from turn 30 * (5 - level): every 8th turn, while nobody knows technology 58, a landing ship (0x11, from
+		/// turn 300 0x12) on an ocean tile nobody owns of a sea of at least 16 tiles with 1 - 3 units (3, with technology 56: 7)
+		/// and a leader (0x1a), all on board (flag 1). Then a random city of the human player is attacked with a chance of its
+		/// plunder %: up to 0x63 tries for a free land tile nobody owns, at least 6 from its nearest city and on its continent
+		/// (the nearest city becomes the target; the occupation test asks for the player in the never written local 0x2 of the
+		/// frame, like in the original); a human city the player sees gets the travellers' report, then size / 2 (2 - 99) units
+		/// (4 / 9 or 6 / 10 with technology 35) and a leader land there, seen like the tile. The final values of the locals
+		/// stay in the stack frame, like in the original.
+		/// </summary>
+		public void DisplayTravellersReport()
+		{
+			this.processor.Journal.OpenScope("DisplayTravellersReport()");
+
+			if ((ushort)((ushort)(5 - (ushort)this.owner.World.HardnessTier) * 0x1e) <= this.owner.World.RoundTally)
+			{
+				if ((((byte)(this.owner.World.RoundTally & 0xff) + 1) & 7) == 0 && (this.owner.World.ScienceLeadingFoundVia[58] & 7) == 0)
+				{
+					LandBarbariansFromSea();
+				}
+
+				RaidHumanCity();
+			}
+
+			this.processor.Journal.CloseScope("DisplayTravellersReport");
+		}
+
+		/// <summary>
+		/// The power of every player 1 - 7 (gold / 32 + 8 * citizens + technologies + the price of all units, 0 for a destroyed
+		/// civilization): before turn 600 it goes (/ 8, at most 255) into the power graph (segment 0x3772) and the players' peace
+		/// treaties into the peace graph (TrucePlotContent), both at 8 * (turn / 4 % 150) + player. The players are ranked by
+		/// power (Standing 7 - 1). A human player first in power, with more than 4 cities, no spaceship part (unit 25) and after
+		/// turn 200 is feared (0x8078): the others with more than one city make peace, or with a treaty get 0x100.
+		/// </summary>
+		public void RefreshPeaceGraphContent()
+		{
+			this.processor.Journal.OpenScope("RefreshPeaceGraphContent()");
+
+			// The powers of the frame of the original (B3: in C#): when no power is above -1, the ranking takes the player of the
+			// rank before (at first 0, the local 0x1a of the original read before it is written)
+
+			ushort[] powers = new ushort[8];
+			short strongest = 0;
+			ushort treaties = 0;
+
+			for (short participantIdx = 1; participantIdx < 8; participantIdx++)
+			{
+				Player participant = this.owner.World.Participants[participantIdx];
+				ushort power = (ushort)(DivideByPowerOfTwo(participant.Gold, 5) + (participant.GrandTownExtent << 3) + participant.FoundScienceTally);
+
+				for (int kind = 0; kind < 0x1c; kind++)
+				{
+					power += (ushort)(UnitKindWord((sbyte)kind, UnitKindTable.Price) * participant.LiveTroops[kind]);
+				}
+
+				if (((1 << participantIdx) & this.owner.World.LiveRealms) == 0)
+				{
+					power = 0;
+				}
+
+				powers[participantIdx] = power;
+
+				if (participantIdx != this.owner.World.PersonParticipantIdx && strongest < (short)power)
+				{
+					strongest = (short)power;
+				}
+
+				if (this.owner.World.RoundTally < 600)
+				{
+					// The power graph is in the segment 0x3772 (ES is left there, like in the original)
+					this.processor.SegExtra.Value16 = ReplayHistoryScoresSegment;
+					this.processor.EmitUInt8(ReplayHistoryScoresSegment, GraphPlace(participantIdx), (byte)this.owner.Helpers.VerifyValueSpan((short)power / 8, 0, 255));
+				}
+
+				treaties = 0;
+
+				for (int otherIdx = 0; otherIdx < 8; otherIdx++)
+				{
+					if ((participant.Relations[otherIdx] & 3) == 1)
+					{
+						treaties |= (ushort)(1 << otherIdx);
+					}
+				}
+
+				if (this.owner.World.RoundTally < 600)
+				{
+					this.owner.World.TrucePlotContent[GraphPlace(participantIdx)] = (byte)treaties;
+				}
+			}
+
+			ushort best = 0;
+
+			for (short rank = 1; rank < 8; rank++)
+			{
+				strongest = -1;
+
+				for (short participantIdx = 1; participantIdx < 8; participantIdx++)
+				{
+					short power = (short)powers[participantIdx];
+
+					if (strongest < power)
+					{
+						best = (ushort)participantIdx;
+						strongest = power;
+					}
+				}
+
+				this.owner.World.Participants[best].Standing = (short)(8 - rank);
+				powers[best] = 0xffff;
+			}
+
+			LateGameNudge = 0x0;
+
+			Player human = this.owner.World.Participants[this.owner.World.PersonParticipantIdx];
+
+			if (human.Standing == 7 && human.TownTally > 4 && human.LiveTroops[25] == 0 && this.owner.World.RoundTally > 200)
+			{
+				LateGameNudge = 0x1;
+
+				for (short participantIdx = 1; participantIdx < 8; participantIdx++)
+				{
+					if (participantIdx == this.owner.World.PersonParticipantIdx || this.owner.World.Participants[participantIdx].TownTally <= 1)
+						continue;
+
+					if ((this.owner.World.Participants[participantIdx].Relations[this.owner.World.PersonParticipantIdx] & 2) == 0)
+					{
+						this.owner.World.Participants[participantIdx].Relations[this.owner.World.PersonParticipantIdx] |= 1;
+					}
+					else
+					{
+						this.owner.World.Participants[participantIdx].Relations[this.owner.World.PersonParticipantIdx] |= 0x100;
+					}
+				}
+			}
+
+			this.processor.Journal.CloseScope("RefreshPeaceGraphContent");
+		}
+
+		/// <summary>Clears the top line and draws the menu bar (Game, Orders, Advisors, World, Civilopedia)</summary>
+		public void WipeStatusLine()
+		{
+			this.processor.Journal.OpenScope("WipeStatusLine()");
+
+			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 8, Hues.Black);
+
+			this.owner.TextPainter.RenderTextToScreen0(MenuBarGameLabelAddress, 8, 1, Hues.White);
+
+			this.owner.TextPainter.RenderTextToScreen0(MenuBarOrdersLabelAddress, 64, 1, Hues.White);
+
+			this.owner.TextPainter.RenderTextToScreen0(MenuBarAdvisorsLabelAddress, 128, 1, Hues.White);
+
+			this.owner.TextPainter.RenderTextToScreen0(MenuBarWorldLabelAddress, 192, 1, Hues.White);
+
+			this.owner.TextPainter.RenderTextToScreen0(MenuBarCivilopediaLabelAddress, 240, 1, Hues.White);
+
+			this.processor.Journal.CloseScope("WipeStatusLine");
+		}
+
+		/// <summary>
+		/// The status panel (not on the world map, 0xb278 = 1): peace bar, palace, free memory (with 0xd806), population, year,
+		/// research bulb (progress * 4 / (cost + 1), 0 - 3), pollution sun, gold and the tax / luxury / science rates; then, while
+		/// 0x1c28 is 0, tells when the population passes the next mark (0x1c24: tens below 100, then hundreds + 9). The stack
+		/// frame, the saved SI, the return address pushed for ObtainFreeStorage and SI = the new mark before DisplayDialog stay
+		/// like in the original (DisplayDialog leaves a value made from SI in DI).
+		/// </summary>
+		public void RenderStatusBar()
+		{
+			this.processor.Journal.OpenScope("RenderStatusBar()");
+
+			if (WorldMapView != 1)
+			{
+				Player human = this.owner.World.Participants[this.owner.World.PersonParticipantIdx];
+
+				FloodBoxWithShadow(0, 58, 80, 39);
+
+				this.owner.Services.FloodBox(ScreenBox, 3, 60, 74, 11, Hues.LightCyan);
+
+				if (this.owner.World.TruceRoundTally > 1)
+				{
+					int peace = this.owner.Helpers.VerifyValueSpan(this.owner.World.TruceRoundTally * 2, 0, 60);
+
+					this.owner.Services.FloodBox(ScreenBox, 3, 60, (short)peace, 2, Hues.White);
+				}
+
+				RenderPalace(this.owner.World.PersonParticipantIdx, this.owner.World.CastleTier, 8, 58);
+
+				if (MapRevealed != 0)
+				{
+					short storage = (short)this.owner.VideoCard.ObtainFreeStorage();
+
+					EmptyMessage()
+						.Number(storage);
+					this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 2, 59, Hues.Black);
+				}
+
+				this.owner.Words.Clear();
+				short population = (short)this.owner.Helpers.ObtainPlayerPopulation(this.owner.World.PersonParticipantIdx);
+				this.owner.Words.Append("#");
+
+				if (population != 0)
+				{
+					this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 2, 73, Hues.Black);
+				}
+
+				this.owner.Words.Clear();
+				ObtainCurrentYearAsText();
+				this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 2, 81, Hues.Black);
+
+				short cost = (short)(((this.owner.World.HardnessTier << 1) + TechnologyLevel + 6) *
+					human.FoundScienceTally * (this.owner.World.Season < 0 ? 1 : 2));
+				short progress = CPU.SignedQuotient((short)(human.InquiryHeadway << 2), (short)(cost + 1));
+				int bulb = this.owner.Helpers.VerifyValueSpan(progress, 0, 3);
+
+				this.owner.VideoCard.RenderImage(PictureScreenBox, (ushort)((bulb << 3) + 0xa0), 0x78, 8, 8,
+					ScreenBox, 0x30, 0x50);
+
+				if (this.owner.World.SmogImpactTier != 0)
+				{
+					int smog = this.owner.Helpers.VerifyValueSpan(this.owner.World.SmogImpactTier / 4, 0, 3);
+
+					this.owner.VideoCard.RenderImage(PictureScreenBox, (ushort)((smog << 3) + 0xa0), 0x80, 8, 8,
+						ScreenBox, 0x38, 0x50);
+				}
+
+				EmptyMessage()
+					.Number(human.Gold)
+					.Text("$")
+					.Text(" ")
+					.Number((short)(-(human.LevyRatio + human.ResearchLevyRatio - 10)))
+					.Text(".")
+					.Number(human.LevyRatio)
+					.Text(".")
+					.Number(human.ResearchLevyRatio);
+				this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 2, 89, Hues.Black);
+
+				if (RepaintingMainScreen == 0)
+				{
+					AnnouncePopulationMark(population);
+				}
+			}
+
+			this.processor.Journal.CloseScope("RenderStatusBar");
+		}
+
+		/// <summary>
+		/// The small palace of a player with cities, on a line at (horizLoc, vertLoc): the human player's from its palace
+		/// (levels 0xd91e, styles 0xb222), an AI player's built from castleTier + 3 parts (3 - 36) by a generator seeded with
+		/// player * ChanceRoot (levels up to 3 and parts / 5, a section only next to a higher one, its style player % 3). Each built
+		/// section is drawn from the pictures at 0xd21c by its style, level and place (ends and middle).
+		/// </summary>
+		public void RenderPalace(short participantIdx, short castleTier, short horizLoc, short vertLoc)
+		{
+			this.processor.Journal.OpenScope($"RenderPalace({participantIdx}, {castleTier}, {horizLoc}, {vertLoc})");
+
+			// The levels and the styles of the sections are in the words of the frame of the original (B3: in C#): the left
+			// neighbour of section 0 is the frame word 0x34 (never written, 0), the right neighbour of section 8 the style of
+			// section 0 (0 for an AI player without it)
+
+			this.owner.VideoCard.RenderLine(ScreenBox, horizLoc - 5, vertLoc + 13, horizLoc + 68, vertLoc + 13, Hues.Green);
+
+			if (this.owner.World.Participants[participantIdx].TownTally != 0)
+			{
+				FrameWords frame = new FrameWords(this.processor, 0x36);
+				SectionTable levels = new SectionTable(frame, 0x32);
+				SectionTable styles = new SectionTable(frame, 0x20);
+
+				short parts = (short)this.owner.Helpers.VerifyValueSpan(castleTier + 3, 3, 36);
+				short highest = (short)(parts / 5);
+
+				for (int sectionIdx = 0; sectionIdx < 9; sectionIdx++)
+				{
+					SetSectionWord(levels, sectionIdx, sectionIdx is >= 3 and <= 5 ? (ushort)0 : (ushort)0xffff);
+				}
+
+				ushort seed = (ushort)(participantIdx * this.owner.World.ChanceRoot);
+				short built = 0;
+
+				if (participantIdx == this.owner.World.PersonParticipantIdx)
+				{
+					for (int sectionIdx = 0; sectionIdx < 9; sectionIdx++)
+					{
+						SetSectionWord(levels, sectionIdx, this.processor.PullGlobalWord((ushort)((sectionIdx << 1) + Palace.PalaceSectionLevelsAddress)));
+						SetSectionWord(styles, sectionIdx, this.processor.PullGlobalWord((ushort)((sectionIdx << 1) + Palace.PalaceSectionStylesAddress)));
+					}
+
+					built = 9;
+				}
+				else
+				{
+					for (built = 0; built < parts; built++)
+					{
+						ushort attempts = 0;
+						bool fits;
+						short chosen;
+						short level;
+
+						while (true)
+						{
+							fits = true;
+							seed = (ushort)((seed * 5) + 1);
+							chosen = (short)((byte)seed % 9);
+							level = (short)(SectionWord(levels, chosen) + 1);
+
+							if (chosen < 4 && ((short)SectionWord(levels, chosen + 1) < level || SectionWord(levels, 7 - chosen) == 0xffff))
+							{
+								fits = false;
+							}
+
+							if (chosen > 4 && ((short)SectionWord(levels, chosen - 1) < level || SectionWord(levels, 9 - chosen) == 0xffff))
+							{
+								fits = false;
+							}
+
+							if (level > highest || level > 3)
+							{
+								fits = false;
+							}
+
+							if (fits || ++attempts >= 0x3e7)
+								break;
+						}
+
+						SetSectionWord(levels, chosen, (ushort)level);
+						SetSectionWord(styles, chosen, (ushort)(participantIdx % 3));
+					}
+				}
+
+				for (int sectionIdx = 0; sectionIdx < 9; sectionIdx++)
+				{
+					short sectionLevel = (short)SectionWord(levels, sectionIdx);
+
+					if (sectionLevel <= 0)
+						continue;
+
+					// 0: left end, 1: left, 2: middle, 3: right, 4: right end
+					ushort shape = 2;
+
+					if (sectionIdx < 4)
+					{
+						shape = (ushort)(SectionWord(levels, sectionIdx - 1) == 0xffff || sectionIdx == 1 ? 0 : 1);
+					}
+
+					if (sectionIdx > 4)
+					{
+						shape = (ushort)(SectionWord(levels, sectionIdx + 1) == 0xffff || sectionIdx == 7 ? 4 : 3);
+					}
+
+					int height = this.owner.Helpers.VerifyValueSpan(sectionLevel - 1, 0, 3);
+
+					this.owner.Services.RenderPictureToScreen(ScreenBox, (7 * sectionIdx) + horizLoc, vertLoc - 1,
+						this.processor.PullGlobalWord((ushort)((0x28 * SectionWord(styles, sectionIdx)) + ((((short)height * 5) + shape) << 1) + PalaceSectionSpritesTableAddress)));
+				}
+			}
+
+			this.processor.Journal.CloseScope("RenderPalace");
+		}
+
+		/// <summary>
+		/// Score needed for the palace level: the sum of level * (7 - difficulty) for the levels 0 up to the given one, halved,
+		/// plus 1
+		/// </summary>
+		/// <returns>Score, also in AX</returns>
+		public ushort ObtainPalaceScoreForLevel(short castleTier)
+		{
+			this.processor.Journal.OpenScope($"ObtainPalaceScoreForLevel({castleTier})");
+
+			short sum = 0;
+
+			for (short tier = 0; tier <= castleTier; tier++)
+			{
+				sum = (short)(sum + (tier * (short)(7 - this.owner.World.HardnessTier)));
+			}
+
+			ushort score = (ushort)((sum / 2) + 1);
+
+			this.processor.Journal.CloseScope("ObtainPalaceScoreForLevel");
+
+			return score;
+		}
+
+		/// <summary>
+		/// Gets current year as a String, appends buffer at TextBuffer.Address
+		/// </summary>
+		public void ObtainCurrentYearAsText()
+		{
+			this.owner.Words.Append(this.owner.Libc.IntegerToText(Math.Abs(this.owner.World.Season), 10));
+
+			this.owner.Words.Append((ushort)((this.owner.World.Season >= 0) ? EraAdStringAddress : EraBcStringAddress));
+		}
+
+		/// <summary>
+		/// The end of a turn: the pollution level SmogImpactTier moves one step towards 2 * DirtyCellTally - 4 * WorldHeatingTally
+		/// (0 - 99; the newspaper warns at 12 with more than 6 polluted tiles, above 16 global warming comes). Then up to level + 1
+		/// tries for a wonder 1 - 21 built by a rival: on the easiest level only a wonder the human player could build, on the
+		/// two easiest the one a human city builds becomes 0x11 (the Manhattan Project with technology 0x2e, also in the first try
+		/// when the rival has 0x2e and the human player not, unless built), not stronger rivals than him for 0x11 once he has
+		/// 0x2e; a city of size above cost / 10 of a player at peace with the barbarians and with the wonder's technology builds
+		/// it with up to a third of the treasury (announced unless 0xb278 is 1), the human cities building it get a new
+		/// production. The final values of the locals stay in the stack frame, like in the original.
+		/// </summary>
+		public void HandleEndOfTurnEvents()
+		{
+			this.processor.Journal.OpenScope("HandleEndOfTurnEvents()");
+
+			short pull = (short)(((ushort)this.owner.World.DirtyCellTally << 1) - ((ushort)this.owner.World.WorldHeatingTally << 2) - (ushort)this.owner.World.SmogImpactTier);
+
+			this.owner.World.SmogImpactTier = (short)this.owner.Helpers.VerifyValueSpan((short)(Math.Sign(pull) + this.owner.World.SmogImpactTier), 0, 99);
+
+			if (this.owner.World.SmogImpactTier == 12 && this.owner.World.DirtyCellTally > 6)
+			{
+				this.owner.Words.Set("Scientists alarmed by\nrising temperatures.\nGlobal Warming feared!\n");
+
+				this.owner.Paper.DisplayNewspaper(-1);
+			}
+
+			if (this.owner.World.SmogImpactTier > 16)
+			{
+				this.owner.WorldSetup.EnactGlobalWarming(this.owner.World.WorldHeatingTally);
+
+				this.owner.World.WorldHeatingTally++;
+				this.owner.World.SmogImpactTier = 0;
+			}
+
+			for (short attempt = 0; attempt <= this.owner.World.HardnessTier; attempt++)
+			{
+				if (TryRivalWonder(attempt))
+					break;
+			}
+
+			this.processor.Journal.CloseScope("HandleEndOfTurnEvents");
+		}
+
+		/// <summary>
+		/// Draws the main screen again: the map view, the box of the left column and the civilization panels, with the colour
+		/// cycling stopped meanwhile (0x1c28 = 1 while drawing)
+		/// </summary>
+		public void RepaintMainScreen()
+		{
+			this.processor.Journal.OpenScope("RepaintMainScreen()");
+
+			this.owner.Helpers.HaltHueCycling();
+
+			RepaintingMainScreen = 0x1;
+
+			if (VgaMode != 0)
+			{
+				this.owner.Services.FloodColors(5, 0, 0, 0);
+			}
+
+			this.owner.Startup.ConcealMouseCursor();
+
+			this.owner.MapOps.FocusMapView(this.owner.World.PersonParticipantIdx,
+				(short)MapViewHoriz,
+				(short)MapViewVert);
+
+			FloodBoxWithShadow(0, 97, 80, 103);
+
+			this.owner.Startup.DisplayMouseCursor();
+
+			DisplayCivilizationScenery();
+
+			RepaintingMainScreen = 0x0;
+
+			this.owner.Helpers.LaunchHueCycling();
+
+			this.processor.Journal.CloseScope("RepaintMainScreen");
+		}
+
+		/// <summary>Fills the box with the motif and draws its shadow</summary>
+		public void FloodBoxWithShadow(int horizLoc, int vertLoc, int breadth, int altitude)
+		{
+			this.owner.Helpers.FloodBoxWithMotif(horizLoc, vertLoc, breadth, altitude);
+
+			this.owner.Dialogs.RenderShadowBox(horizLoc, vertLoc, breadth - 1, altitude - 1, Hues.White, Hues.DarkGray);
+		}
+
+		/// <summary>
+		/// When 0xd762 is set: loads the palette of the human player's government, "backNa.pal" (N is the government / 2, 3 for
+		/// government 3, "m" instead of "a" with technology 20), and the palette 0x1e56, and puts colours 5 on. The file name is
+		/// made in a buffer in the stack frame, like in the original.
+		/// </summary>
+		public void DisplayCivilizationScenery()
+		{
+			this.processor.Journal.OpenScope("DisplayCivilizationScenery()");
+
+			if (VgaMode != 0)
+			{
+				this.owner.Helpers.HaltHueCycling();
+
+				short regime = this.owner.World.Participants[this.owner.World.PersonParticipantIdx].RegimeKind;
+				char regimeChar = regime == 3 ? '3' : (char)((regime / 2) + '0');
+				char techChar = regime != 3 && this.owner.Advisors.PlayerKnowsTechnology(this.owner.World.PersonParticipantIdx, 0x14) != 0 ? 'm' : 'a';
+				string docname = $"back{regimeChar}{techChar}.pal";
+
+				this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, docname, 0xc1d6);
+
+				this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, AdvisorPaletteResourceAddress, 0xc5be);
+
+				this.owner.Libc.CopyBytes(0xc744, 0xc35c, 0x180);
+
+				this.owner.Services.ImportColorsFromBuffer(5, 0xc5be);
+
+				this.owner.Helpers.LaunchHueCycling();
+			}
+
+			this.processor.Journal.CloseScope("DisplayCivilizationScenery");
+		}
+
+		/// <summary>The level of the palace for the rating: how many of the steps 5, 10, 15, ... it takes, less one</summary>
+		public short ObtainPalaceLevel(short rating)
+		{
+			short castleTier = 0;
+
+			do
+			{
+				castleTier += 5;
+				rating -= castleTier;
+			} while (rating > 0);
+
+			castleTier /= 5;
+			castleTier--;
+
+			return castleTier;
+		}
+
+		/// <summary>Signed division toward zero by 2^shift of the original (-32768 gives a positive quotient)</summary>
+		private static short DivideByPowerOfTwo(short amount, int shift)
+		{
+			short quotient = (short)((short)Math.Abs((int)amount) >> shift);
+
+			return amount < 0 ? (short)-quotient : quotient;
+		}
+
+		/// <summary>A word of a table of the sections (the index may be -1 or 9, like in the original)</summary>
+		private static ushort SectionWord(SectionTable table, int sectionIdx)
+		{
+			return table.Frame.Frame(table.Distance - (sectionIdx << 1));
+		}
+
+		private static void SetSectionWord(SectionTable table, int sectionIdx, ushort amount)
+		{
+			table.Frame.SetFrame(table.Distance - (sectionIdx << 1), amount);
+		}
+
+		/// <summary>
+		/// The healing before HealingRules (the golden master baselines have it): fortified units heal one lost hit point every
+		/// turn, ships and planes never heal. Kept for the tests, see <see cref="ClassicHealing"/>.
+		/// </summary>
+		private void MendOnlyFortifiedUnits()
+		{
+			for (int participantIdx = 0; participantIdx < UnitHealth.ParticipantTally; participantIdx++)
+			{
+				for (int troopIdx = 0; troopIdx < UnitHealth.TroopTally; troopIdx++)
+				{
+					int troopKind = this.Troops.Pull(participantIdx, troopIdx, UnitMemory.Kind);
+
+					if (troopKind != 0xff && (this.Troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & (int)UnitStatusEnum.Fortified) != 0)
+					{
+						this.owner.World.Vitals.MendOne(participantIdx, troopIdx, troopKind);
+					}
+				}
+			}
 		}
 
 		/// <summary>
@@ -879,95 +1482,6 @@ namespace Civilization1Remaster.Game
 			}
 		}
 
-		/// <summary>
-		/// The end of the game: the civilization graph, the replay (not when the game was quit) and, without the landing of the
-		/// player, the results, the final score and the Hall of Fame
-		/// </summary>
-		public void DisplayEndGameSequence()
-		{
-			this.processor.Journal.OpenScope("DisplayEndGameSequence()");
-
-			this.owner.Atlas.DisplayCivilizationGraph();
-
-			if (GameEndRequest != 2)
-			{
-				this.owner.Replayer.DisplayReplay();
-			}
-
-			this.owner.Startup.ConcealMouseCursor();
-
-			if ((this.owner.World.StarshipMarkers & 0x100) == 0)
-			{
-				this.owner.Legends.DisplayGameResultsScreen((ushort)((this.owner.World.CastleTier >> 1) - 1),
-					this.owner.Founding.DisplayFinalScore(this.owner.World.PersonParticipantIdx, true));
-
-				this.owner.Legends.ImportHallOfFame();
-
-				this.owner.Legends.AttachHallOfFameRecord();
-
-				this.owner.Legends.StoreHallOfFame();
-			}
-		
-			this.owner.Startup.DisplayMouseCursor();
-
-			this.processor.Journal.CloseScope("DisplayEndGameSequence");
-		}
-
-		/// <summary>The title picture of the end of the game, until a key or a click</summary>
-		public void DisplayTitleScreen()
-		{
-			this.processor.Journal.OpenScope("DisplayTitleScreen()");
-
-			this.owner.Helpers.HaltHueCycling();
-
-			this.owner.Startup.QueryForDisk(1, 1);
-
-			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, EndGameTitlePictureAddress, 0);
-
-			this.owner.Startup.ConcealMouseCursor();
-
-			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
-
-			this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, EndGameTitlePaletteAddress, 1);
-
-			this.owner.VideoCard.RenderImage(
-				BackScreenBox,
-				0, 0, 0x140, 0xc8,
-				ScreenBox,
-				0, 0);
-
-			this.owner.Conquest.AwaitForKeyPressOrMouseClick();
-
-			this.processor.Journal.CloseScope("DisplayTitleScreen");
-		}
-
-		/// <summary>
-		/// Barbarians, from turn 30 * (5 - level): every 8th turn, while nobody knows technology 58, a landing ship (0x11, from
-		/// turn 300 0x12) on an ocean tile nobody owns of a sea of at least 16 tiles with 1 - 3 units (3, with technology 56: 7)
-		/// and a leader (0x1a), all on board (flag 1). Then a random city of the human player is attacked with a chance of its
-		/// plunder %: up to 0x63 tries for a free land tile nobody owns, at least 6 from its nearest city and on its continent
-		/// (the nearest city becomes the target; the occupation test asks for the player in the never written local 0x2 of the
-		/// frame, like in the original); a human city the player sees gets the travellers' report, then size / 2 (2 - 99) units
-		/// (4 / 9 or 6 / 10 with technology 35) and a leader land there, seen like the tile. The final values of the locals
-		/// stay in the stack frame, like in the original.
-		/// </summary>
-		public void DisplayTravellersReport()
-		{
-			this.processor.Journal.OpenScope("DisplayTravellersReport()");
-
-			if ((ushort)((ushort)(5 - (ushort)this.owner.World.HardnessTier) * 0x1e) <= this.owner.World.RoundTally)
-			{
-				if ((((byte)(this.owner.World.RoundTally & 0xff) + 1) & 7) == 0 && (this.owner.World.ScienceLeadingFoundVia[58] & 7) == 0)
-				{
-					LandBarbariansFromSea();
-				}
-
-				RaidHumanCity();
-			}
-
-			this.processor.Journal.CloseScope("DisplayTravellersReport");
-		}
-
 		/// <summary>The landing ship of the barbarians with its units (see DisplayTravellersReport)</summary>
 		private void LandBarbariansFromSea()
 		{
@@ -1111,235 +1625,10 @@ namespace Civilization1Remaster.Game
 
 		}
 
-		/// <summary>
-		/// The power of every player 1 - 7 (gold / 32 + 8 * citizens + technologies + the price of all units, 0 for a destroyed
-		/// civilization): before turn 600 it goes (/ 8, at most 255) into the power graph (segment 0x3772) and the players' peace
-		/// treaties into the peace graph (TrucePlotContent), both at 8 * (turn / 4 % 150) + player. The players are ranked by
-		/// power (Standing 7 - 1). A human player first in power, with more than 4 cities, no spaceship part (unit 25) and after
-		/// turn 200 is feared (0x8078): the others with more than one city make peace, or with a treaty get 0x100.
-		/// </summary>
-		public void RefreshPeaceGraphContent()
-		{
-			this.processor.Journal.OpenScope("RefreshPeaceGraphContent()");
-
-			// The powers of the frame of the original (B3: in C#): when no power is above -1, the ranking takes the player of the
-			// rank before (at first 0, the local 0x1a of the original read before it is written)
-
-			ushort[] powers = new ushort[8];
-			short strongest = 0;
-			ushort treaties = 0;
-
-			for (short participantIdx = 1; participantIdx < 8; participantIdx++)
-			{
-				Player participant = this.owner.World.Participants[participantIdx];
-				ushort power = (ushort)(DivideByPowerOfTwo(participant.Gold, 5) + (participant.GrandTownExtent << 3) + participant.FoundScienceTally);
-
-				for (int kind = 0; kind < 0x1c; kind++)
-				{
-					power += (ushort)(UnitKindWord((sbyte)kind, UnitKindTable.Price) * participant.LiveTroops[kind]);
-				}
-
-				if (((1 << participantIdx) & this.owner.World.LiveRealms) == 0)
-				{
-					power = 0;
-				}
-
-				powers[participantIdx] = power;
-
-				if (participantIdx != this.owner.World.PersonParticipantIdx && strongest < (short)power)
-				{
-					strongest = (short)power;
-				}
-
-				if (this.owner.World.RoundTally < 600)
-				{
-					// The power graph is in the segment 0x3772 (ES is left there, like in the original)
-					this.processor.SegExtra.Value16 = ReplayHistoryScoresSegment;
-					this.processor.EmitUInt8(ReplayHistoryScoresSegment, GraphPlace(participantIdx), (byte)this.owner.Helpers.VerifyValueSpan((short)power / 8, 0, 255));
-				}
-
-				treaties = 0;
-
-				for (int otherIdx = 0; otherIdx < 8; otherIdx++)
-				{
-					if ((participant.Relations[otherIdx] & 3) == 1)
-					{
-						treaties |= (ushort)(1 << otherIdx);
-					}
-				}
-
-				if (this.owner.World.RoundTally < 600)
-				{
-					this.owner.World.TrucePlotContent[GraphPlace(participantIdx)] = (byte)treaties;
-				}
-			}
-
-			ushort best = 0;
-
-			for (short rank = 1; rank < 8; rank++)
-			{
-				strongest = -1;
-
-				for (short participantIdx = 1; participantIdx < 8; participantIdx++)
-				{
-					short power = (short)powers[participantIdx];
-
-					if (strongest < power)
-					{
-						best = (ushort)participantIdx;
-						strongest = power;
-					}
-				}
-
-				this.owner.World.Participants[best].Standing = (short)(8 - rank);
-				powers[best] = 0xffff;
-			}
-
-			LateGameNudge = 0x0;
-
-			Player human = this.owner.World.Participants[this.owner.World.PersonParticipantIdx];
-
-			if (human.Standing == 7 && human.TownTally > 4 && human.LiveTroops[25] == 0 && this.owner.World.RoundTally > 200)
-			{
-				LateGameNudge = 0x1;
-
-				for (short participantIdx = 1; participantIdx < 8; participantIdx++)
-				{
-					if (participantIdx == this.owner.World.PersonParticipantIdx || this.owner.World.Participants[participantIdx].TownTally <= 1)
-						continue;
-
-					if ((this.owner.World.Participants[participantIdx].Relations[this.owner.World.PersonParticipantIdx] & 2) == 0)
-					{
-						this.owner.World.Participants[participantIdx].Relations[this.owner.World.PersonParticipantIdx] |= 1;
-					}
-					else
-					{
-						this.owner.World.Participants[participantIdx].Relations[this.owner.World.PersonParticipantIdx] |= 0x100;
-					}
-				}
-			}
-
-			this.processor.Journal.CloseScope("RefreshPeaceGraphContent");
-		}
-
 		/// <summary>The place of the player in the power and peace graphs: 8 * (turn / 4 % 150) + player</summary>
 		private ushort GraphPlace(short participantIdx)
 		{
 			return (ushort)(((DivideByPowerOfTwo(this.owner.World.RoundTally, 2) % 150) << 3) + participantIdx);
-		}
-
-		/// <summary>Signed division toward zero by 2^shift of the original (-32768 gives a positive quotient)</summary>
-		private static short DivideByPowerOfTwo(short amount, int shift)
-		{
-			short quotient = (short)((short)Math.Abs((int)amount) >> shift);
-
-			return amount < 0 ? (short)-quotient : quotient;
-		}
-
-		/// <summary>Clears the top line and draws the menu bar (Game, Orders, Advisors, World, Civilopedia)</summary>
-		public void WipeStatusLine()
-		{
-			this.processor.Journal.OpenScope("WipeStatusLine()");
-
-			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 8, Hues.Black);
-
-			this.owner.TextPainter.RenderTextToScreen0(MenuBarGameLabelAddress, 8, 1, Hues.White);
-
-			this.owner.TextPainter.RenderTextToScreen0(MenuBarOrdersLabelAddress, 64, 1, Hues.White);
-
-			this.owner.TextPainter.RenderTextToScreen0(MenuBarAdvisorsLabelAddress, 128, 1, Hues.White);
-
-			this.owner.TextPainter.RenderTextToScreen0(MenuBarWorldLabelAddress, 192, 1, Hues.White);
-
-			this.owner.TextPainter.RenderTextToScreen0(MenuBarCivilopediaLabelAddress, 240, 1, Hues.White);
-
-			this.processor.Journal.CloseScope("WipeStatusLine");
-		}
-
-		/// <summary>
-		/// The status panel (not on the world map, 0xb278 = 1): peace bar, palace, free memory (with 0xd806), population, year,
-		/// research bulb (progress * 4 / (cost + 1), 0 - 3), pollution sun, gold and the tax / luxury / science rates; then, while
-		/// 0x1c28 is 0, tells when the population passes the next mark (0x1c24: tens below 100, then hundreds + 9). The stack
-		/// frame, the saved SI, the return address pushed for ObtainFreeStorage and SI = the new mark before DisplayDialog stay
-		/// like in the original (DisplayDialog leaves a value made from SI in DI).
-		/// </summary>
-		public void RenderStatusBar()
-		{
-			this.processor.Journal.OpenScope("RenderStatusBar()");
-
-			if (WorldMapView != 1)
-			{
-				Player human = this.owner.World.Participants[this.owner.World.PersonParticipantIdx];
-
-				FloodBoxWithShadow(0, 58, 80, 39);
-
-				this.owner.Services.FloodBox(ScreenBox, 3, 60, 74, 11, Hues.LightCyan);
-
-				if (this.owner.World.TruceRoundTally > 1)
-				{
-					int peace = this.owner.Helpers.VerifyValueSpan(this.owner.World.TruceRoundTally * 2, 0, 60);
-
-					this.owner.Services.FloodBox(ScreenBox, 3, 60, (short)peace, 2, Hues.White);
-				}
-
-				RenderPalace(this.owner.World.PersonParticipantIdx, this.owner.World.CastleTier, 8, 58);
-
-				if (MapRevealed != 0)
-				{
-					short storage = (short)this.owner.VideoCard.ObtainFreeStorage();
-
-					EmptyMessage()
-						.Number(storage);
-					this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 2, 59, Hues.Black);
-				}
-
-				this.owner.Words.Clear();
-				short population = (short)this.owner.Helpers.ObtainPlayerPopulation(this.owner.World.PersonParticipantIdx);
-				this.owner.Words.Append("#");
-
-				if (population != 0)
-				{
-					this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 2, 73, Hues.Black);
-				}
-
-				this.owner.Words.Clear();
-				ObtainCurrentYearAsText();
-				this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 2, 81, Hues.Black);
-
-				short cost = (short)(((this.owner.World.HardnessTier << 1) + TechnologyLevel + 6) *
-					human.FoundScienceTally * (this.owner.World.Season < 0 ? 1 : 2));
-				short progress = CPU.SignedQuotient((short)(human.InquiryHeadway << 2), (short)(cost + 1));
-				int bulb = this.owner.Helpers.VerifyValueSpan(progress, 0, 3);
-
-				this.owner.VideoCard.RenderImage(PictureScreenBox, (ushort)((bulb << 3) + 0xa0), 0x78, 8, 8,
-					ScreenBox, 0x30, 0x50);
-
-				if (this.owner.World.SmogImpactTier != 0)
-				{
-					int smog = this.owner.Helpers.VerifyValueSpan(this.owner.World.SmogImpactTier / 4, 0, 3);
-
-					this.owner.VideoCard.RenderImage(PictureScreenBox, (ushort)((smog << 3) + 0xa0), 0x80, 8, 8,
-						ScreenBox, 0x38, 0x50);
-				}
-
-				EmptyMessage()
-					.Number(human.Gold)
-					.Text("$")
-					.Text(" ")
-					.Number((short)(-(human.LevyRatio + human.ResearchLevyRatio - 10)))
-					.Text(".")
-					.Number(human.LevyRatio)
-					.Text(".")
-					.Number(human.ResearchLevyRatio);
-				this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 2, 89, Hues.Black);
-
-				if (RepaintingMainScreen == 0)
-				{
-					AnnouncePopulationMark(population);
-				}
-			}
-
-			this.processor.Journal.CloseScope("RenderStatusBar");
 		}
 
 		/// <summary>
@@ -1383,205 +1672,6 @@ namespace Civilization1Remaster.Game
 
 				DisplayDialog(TextBuffer.Address, 100, 80);
 			}
-		}
-
-		/// <summary>
-		/// The small palace of a player with cities, on a line at (horizLoc, vertLoc): the human player's from its palace
-		/// (levels 0xd91e, styles 0xb222), an AI player's built from castleTier + 3 parts (3 - 36) by a generator seeded with
-		/// player * ChanceRoot (levels up to 3 and parts / 5, a section only next to a higher one, its style player % 3). Each built
-		/// section is drawn from the pictures at 0xd21c by its style, level and place (ends and middle).
-		/// </summary>
-		public void RenderPalace(short participantIdx, short castleTier, short horizLoc, short vertLoc)
-		{
-			this.processor.Journal.OpenScope($"RenderPalace({participantIdx}, {castleTier}, {horizLoc}, {vertLoc})");
-
-			// The levels and the styles of the sections are in the words of the frame of the original (B3: in C#): the left
-			// neighbour of section 0 is the frame word 0x34 (never written, 0), the right neighbour of section 8 the style of
-			// section 0 (0 for an AI player without it)
-
-			this.owner.VideoCard.RenderLine(ScreenBox, horizLoc - 5, vertLoc + 13, horizLoc + 68, vertLoc + 13, Hues.Green);
-
-			if (this.owner.World.Participants[participantIdx].TownTally != 0)
-			{
-				FrameWords frame = new FrameWords(this.processor, 0x36);
-				SectionTable levels = new SectionTable(frame, 0x32);
-				SectionTable styles = new SectionTable(frame, 0x20);
-
-				short parts = (short)this.owner.Helpers.VerifyValueSpan(castleTier + 3, 3, 36);
-				short highest = (short)(parts / 5);
-
-				for (int sectionIdx = 0; sectionIdx < 9; sectionIdx++)
-				{
-					SetSectionWord(levels, sectionIdx, sectionIdx is >= 3 and <= 5 ? (ushort)0 : (ushort)0xffff);
-				}
-
-				ushort seed = (ushort)(participantIdx * this.owner.World.ChanceRoot);
-				short built = 0;
-
-				if (participantIdx == this.owner.World.PersonParticipantIdx)
-				{
-					for (int sectionIdx = 0; sectionIdx < 9; sectionIdx++)
-					{
-						SetSectionWord(levels, sectionIdx, this.processor.PullGlobalWord((ushort)((sectionIdx << 1) + Palace.PalaceSectionLevelsAddress)));
-						SetSectionWord(styles, sectionIdx, this.processor.PullGlobalWord((ushort)((sectionIdx << 1) + Palace.PalaceSectionStylesAddress)));
-					}
-
-					built = 9;
-				}
-				else
-				{
-					for (built = 0; built < parts; built++)
-					{
-						ushort attempts = 0;
-						bool fits;
-						short chosen;
-						short level;
-
-						while (true)
-						{
-							fits = true;
-							seed = (ushort)((seed * 5) + 1);
-							chosen = (short)((byte)seed % 9);
-							level = (short)(SectionWord(levels, chosen) + 1);
-
-							if (chosen < 4 && ((short)SectionWord(levels, chosen + 1) < level || SectionWord(levels, 7 - chosen) == 0xffff))
-							{
-								fits = false;
-							}
-
-							if (chosen > 4 && ((short)SectionWord(levels, chosen - 1) < level || SectionWord(levels, 9 - chosen) == 0xffff))
-							{
-								fits = false;
-							}
-
-							if (level > highest || level > 3)
-							{
-								fits = false;
-							}
-
-							if (fits || ++attempts >= 0x3e7)
-								break;
-						}
-
-						SetSectionWord(levels, chosen, (ushort)level);
-						SetSectionWord(styles, chosen, (ushort)(participantIdx % 3));
-					}
-				}
-
-				for (int sectionIdx = 0; sectionIdx < 9; sectionIdx++)
-				{
-					short sectionLevel = (short)SectionWord(levels, sectionIdx);
-
-					if (sectionLevel <= 0)
-						continue;
-
-					// 0: left end, 1: left, 2: middle, 3: right, 4: right end
-					ushort shape = 2;
-
-					if (sectionIdx < 4)
-					{
-						shape = (ushort)(SectionWord(levels, sectionIdx - 1) == 0xffff || sectionIdx == 1 ? 0 : 1);
-					}
-
-					if (sectionIdx > 4)
-					{
-						shape = (ushort)(SectionWord(levels, sectionIdx + 1) == 0xffff || sectionIdx == 7 ? 4 : 3);
-					}
-
-					int height = this.owner.Helpers.VerifyValueSpan(sectionLevel - 1, 0, 3);
-
-					this.owner.Services.RenderPictureToScreen(ScreenBox, (7 * sectionIdx) + horizLoc, vertLoc - 1,
-						this.processor.PullGlobalWord((ushort)((0x28 * SectionWord(styles, sectionIdx)) + ((((short)height * 5) + shape) << 1) + PalaceSectionSpritesTableAddress)));
-				}
-			}
-
-			this.processor.Journal.CloseScope("RenderPalace");
-		}
-
-		/// <summary>A word of a table of the sections (the index may be -1 or 9, like in the original)</summary>
-		private static ushort SectionWord(SectionTable table, int sectionIdx)
-		{
-			return table.Frame.Frame(table.Distance - (sectionIdx << 1));
-		}
-
-		private static void SetSectionWord(SectionTable table, int sectionIdx, ushort amount)
-		{
-			table.Frame.SetFrame(table.Distance - (sectionIdx << 1), amount);
-		}
-
-		/// <summary>
-		/// Score needed for the palace level: the sum of level * (7 - difficulty) for the levels 0 up to the given one, halved,
-		/// plus 1
-		/// </summary>
-		/// <returns>Score, also in AX</returns>
-		public ushort ObtainPalaceScoreForLevel(short castleTier)
-		{
-			this.processor.Journal.OpenScope($"ObtainPalaceScoreForLevel({castleTier})");
-
-			short sum = 0;
-
-			for (short tier = 0; tier <= castleTier; tier++)
-			{
-				sum = (short)(sum + (tier * (short)(7 - this.owner.World.HardnessTier)));
-			}
-
-			ushort score = (ushort)((sum / 2) + 1);
-
-			this.processor.Journal.CloseScope("ObtainPalaceScoreForLevel");
-
-			return score;
-		}
-
-		/// <summary>
-		/// Gets current year as a String, appends buffer at TextBuffer.Address
-		/// </summary>
-		public void ObtainCurrentYearAsText()
-		{
-			this.owner.Words.Append(this.owner.Libc.IntegerToText(Math.Abs(this.owner.World.Season), 10));
-
-			this.owner.Words.Append((ushort)((this.owner.World.Season >= 0) ? EraAdStringAddress : EraBcStringAddress));
-		}
-
-		/// <summary>
-		/// The end of a turn: the pollution level SmogImpactTier moves one step towards 2 * DirtyCellTally - 4 * WorldHeatingTally
-		/// (0 - 99; the newspaper warns at 12 with more than 6 polluted tiles, above 16 global warming comes). Then up to level + 1
-		/// tries for a wonder 1 - 21 built by a rival: on the easiest level only a wonder the human player could build, on the
-		/// two easiest the one a human city builds becomes 0x11 (the Manhattan Project with technology 0x2e, also in the first try
-		/// when the rival has 0x2e and the human player not, unless built), not stronger rivals than him for 0x11 once he has
-		/// 0x2e; a city of size above cost / 10 of a player at peace with the barbarians and with the wonder's technology builds
-		/// it with up to a third of the treasury (announced unless 0xb278 is 1), the human cities building it get a new
-		/// production. The final values of the locals stay in the stack frame, like in the original.
-		/// </summary>
-		public void HandleEndOfTurnEvents()
-		{
-			this.processor.Journal.OpenScope("HandleEndOfTurnEvents()");
-
-			short pull = (short)(((ushort)this.owner.World.DirtyCellTally << 1) - ((ushort)this.owner.World.WorldHeatingTally << 2) - (ushort)this.owner.World.SmogImpactTier);
-
-			this.owner.World.SmogImpactTier = (short)this.owner.Helpers.VerifyValueSpan((short)(Math.Sign(pull) + this.owner.World.SmogImpactTier), 0, 99);
-
-			if (this.owner.World.SmogImpactTier == 12 && this.owner.World.DirtyCellTally > 6)
-			{
-				this.owner.Words.Set("Scientists alarmed by\nrising temperatures.\nGlobal Warming feared!\n");
-
-				this.owner.Paper.DisplayNewspaper(-1);
-			}
-
-			if (this.owner.World.SmogImpactTier > 16)
-			{
-				this.owner.WorldSetup.EnactGlobalWarming(this.owner.World.WorldHeatingTally);
-
-				this.owner.World.WorldHeatingTally++;
-				this.owner.World.SmogImpactTier = 0;
-			}
-
-			for (short attempt = 0; attempt <= this.owner.World.HardnessTier; attempt++)
-			{
-				if (TryRivalWonder(attempt))
-					break;
-			}
-
-			this.processor.Journal.CloseScope("HandleEndOfTurnEvents");
 		}
 
 		/// <summary>One try for a wonder built by a rival (see HandleEndOfTurnEvents), true when one was built</summary>
@@ -1692,99 +1782,6 @@ namespace Civilization1Remaster.Game
 			return this.owner.World.Towns[townIdx].ConditionMarker != 0xff &&
 				this.owner.World.Towns[townIdx].ParticipantIdx == this.owner.World.PersonParticipantIdx &&
 				this.owner.World.Towns[townIdx].PresentMakingIdx == (short)-(wonderIdx + 0x18);
-		}
-
-		/// <summary>
-		/// Draws the main screen again: the map view, the box of the left column and the civilization panels, with the colour
-		/// cycling stopped meanwhile (0x1c28 = 1 while drawing)
-		/// </summary>
-		public void RepaintMainScreen()
-		{
-			this.processor.Journal.OpenScope("RepaintMainScreen()");
-
-			this.owner.Helpers.HaltHueCycling();
-
-			RepaintingMainScreen = 0x1;
-
-			if (VgaMode != 0)
-			{
-				this.owner.Services.FloodColors(5, 0, 0, 0);
-			}
-
-			this.owner.Startup.ConcealMouseCursor();
-
-			this.owner.MapOps.FocusMapView(this.owner.World.PersonParticipantIdx,
-				(short)MapViewHoriz,
-				(short)MapViewVert);
-
-			FloodBoxWithShadow(0, 97, 80, 103);
-
-			this.owner.Startup.DisplayMouseCursor();
-
-			DisplayCivilizationScenery();
-
-			RepaintingMainScreen = 0x0;
-
-			this.owner.Helpers.LaunchHueCycling();
-
-			this.processor.Journal.CloseScope("RepaintMainScreen");
-		}
-
-		/// <summary>Fills the box with the motif and draws its shadow</summary>
-		public void FloodBoxWithShadow(int horizLoc, int vertLoc, int breadth, int altitude)
-		{
-			this.owner.Helpers.FloodBoxWithMotif(horizLoc, vertLoc, breadth, altitude);
-
-			this.owner.Dialogs.RenderShadowBox(horizLoc, vertLoc, breadth - 1, altitude - 1, Hues.White, Hues.DarkGray);
-		}
-
-		/// <summary>
-		/// When 0xd762 is set: loads the palette of the human player's government, "backNa.pal" (N is the government / 2, 3 for
-		/// government 3, "m" instead of "a" with technology 20), and the palette 0x1e56, and puts colours 5 on. The file name is
-		/// made in a buffer in the stack frame, like in the original.
-		/// </summary>
-		public void DisplayCivilizationScenery()
-		{
-			this.processor.Journal.OpenScope("DisplayCivilizationScenery()");
-
-			if (VgaMode != 0)
-			{
-				this.owner.Helpers.HaltHueCycling();
-
-				short regime = this.owner.World.Participants[this.owner.World.PersonParticipantIdx].RegimeKind;
-				char regimeChar = regime == 3 ? '3' : (char)((regime / 2) + '0');
-				char techChar = regime != 3 && this.owner.Advisors.PlayerKnowsTechnology(this.owner.World.PersonParticipantIdx, 0x14) != 0 ? 'm' : 'a';
-				string docname = $"back{regimeChar}{techChar}.pal";
-
-				this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, docname, 0xc1d6);
-
-				this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, AdvisorPaletteResourceAddress, 0xc5be);
-
-				this.owner.Libc.CopyBytes(0xc744, 0xc35c, 0x180);
-
-				this.owner.Services.ImportColorsFromBuffer(5, 0xc5be);
-
-				this.owner.Helpers.LaunchHueCycling();
-			}
-
-			this.processor.Journal.CloseScope("DisplayCivilizationScenery");
-		}
-
-		/// <summary>The level of the palace for the rating: how many of the steps 5, 10, 15, ... it takes, less one</summary>
-		public short ObtainPalaceLevel(short rating)
-		{
-			short castleTier = 0;
-
-			do
-			{
-				castleTier += 5;
-				rating -= castleTier;
-			} while (rating > 0);
-
-			castleTier /= 5;
-			castleTier--;
-
-			return castleTier;
 		}
 	}
 }

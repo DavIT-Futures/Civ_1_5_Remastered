@@ -7,6 +7,14 @@ namespace Civilization1Remaster.UI
 {
 	public class GameReplay : GameModule
 	{
+		private const ushort ReplayCitySegment = 0x3725;
+		private const ushort ReplayCityActiveColumnOffset = 0x0;
+		private const ushort ReplayCityXColumnOffset = 0x100;
+		private const ushort ReplayCityYColumnOffset = 0x200;
+		private const ushort ReplayFallenLeadersSegment = 0x3772;
+		private const ushort ReplayFallenLeadersTableAddress = 0x37c4;
+		private const ushort ReplayLeaderFaceSegment = 0x36fa;
+
 		/// <summary>The words of the frame of ObtainDistanceToReplayCity, shared by its helpers (B3: in C#, new for every call)</summary>
 
 		public GameReplay(GameEngine owner)
@@ -71,351 +79,6 @@ namespace Civilization1Remaster.UI
 
 
 			this.processor.Journal.CloseScope("DisplayReplay");
-		}
-
-		/// <summary>
-		/// One replay: the screen kept, the leaders as at the start (put back at the end), the miniature map (not in mode 4),
-		/// all events
-		/// </summary>
-		private void ReplayGame()
-		{
-			this.owner.Startup.ConcealMouseCursor();
-
-			this.owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, BackScreenBox, 0, 0);
-
-			// No city shown on the replay map yet (segment 0x3725, 128 cities)
-			for (int townIdx = 0; townIdx < 0x80; townIdx++)
-			{
-				EmitReplayCity(townIdx, ReplayCityActiveColumnOffset, 0xffff);
-			}
-
-			short[] leaders = new short[8];
-
-			for (int participantIdx = 1; participantIdx < 8; participantIdx++)
-			{
-				leaders[participantIdx] = this.owner.World.Participants[participantIdx].ChiefVisuals;
-			}
-
-			for (short participantIdx = 1; participantIdx < 8; participantIdx++)
-			{
-				if (participantIdx == this.owner.World.PersonParticipantIdx)
-					continue;
-
-				bool secondLeader = (this.owner.World.ParticipantIdentMarkers & (1 << participantIdx)) != 0;
-
-				this.owner.World.Participants[participantIdx].ChiefVisuals = (short)(secondLeader ? participantIdx + 8 : participantIdx);
-
-				ObtainReplayPlayerLabel(participantIdx);
-			}
-
-			if (ReplayMode != 4)
-			{
-				this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
-
-				for (short vertLoc = 1; vertLoc < 0x31; vertLoc++)
-				{
-					for (short horizLoc = 0; horizLoc < 0x50; horizLoc++)
-					{
-						bool ocean = this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) == MapRules.OceanTerrain;
-
-						this.owner.Services.FloodBox(ScreenBox, horizLoc * 4, (vertLoc * 4) + 4, 4, 4, (ushort)(ocean ? 1 : 8));
-					}
-				}
-			}
-
-			ushort spot = 0;
-
-			while ((short)spot < this.owner.World.RerunContentSpan)
-			{
-				spot = ReplayEvent(spot);
-
-				if (ReplayMode == 2 && this.owner.Libc.ReadKey() == 0x1b)
-					break;
-			}
-
-			for (int participantIdx = 1; participantIdx < 8; participantIdx++)
-			{
-				this.owner.World.Participants[participantIdx].ChiefVisuals = leaders[participantIdx];
-			}
-
-			for (short participantIdx = 1; participantIdx < 8; participantIdx++)
-			{
-				if (participantIdx != this.owner.World.PersonParticipantIdx)
-				{
-					ObtainReplayPlayerLabel(participantIdx);
-				}
-			}
-
-			this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
-
-			this.owner.Startup.DisplayMouseCursor();
-		}
-
-		/// <summary>The next byte of the replay</summary>
-		private byte ReplayByte(ref ushort spot)
-		{
-			return this.owner.World.RerunContent[spot++];
-		}
-
-		/// <summary>The plural name (0x1992) of the player</summary>
-		private ushort ReplayPlural(int participantIdx)
-		{
-			return CivilizationPlural(participantIdx);
-		}
-
-		/// <summary>
-		/// One event: the kind (high 4 bits) and the turn (low 4 bits and the next byte), the year ("x BC: " / "x AD: "), then
-		/// the event; the acting player in 0x6810 (-1: none)
-		/// </summary>
-		/// <returns>The spot of the next event</returns>
-		private ushort ReplayEvent(ushort spot)
-		{
-			byte head = ReplayByte(ref spot);
-			ushort kind = (ushort)(head >> 4);
-			ushort turn = (ushort)(((head & 0xf) << 8) + ReplayByte(ref spot));
-
-			short year = (short)ObtainReplayYear(turn);
-
-			ReplayActor = 0xffff;
-			EmptyMessage()
-				.Number(Math.Abs(year))
-				.Text(year < 0 ? " BC" : " AD")
-				.Text(": ");
-
-			switch (kind)
-			{
-				case 1:
-				case 9:
-					ReplayCityEvent(ref spot, kind);
-					break;
-
-				case 2:
-				case 3:
-				{
-					byte pair = ReplayByte(ref spot);
-
-					this.owner.Words.Append(ReplayPlural(pair >> 4));
-
-					this.owner.Words.Append(kind == 2 ? " declare war on " : " make peace with ");
-
-					this.owner.Words.Append(ReplayPlural(pair & 0xf));
-
-					RenderReplayPreamble();
-					break;
-				}
-
-				case 5:
-				case 6:
-				case 8:
-				case 10:
-				{
-					ushort actor = ReplayByte(ref spot);
-
-					ReplayActor = actor;
-
-					ushort thing = ReplayByte(ref spot);
-
-					this.owner.Words.Append(ReplayPlural(ReplayActor));
-
-					switch (kind)
-					{
-						case 5:
-							this.owner.Words.Append(" discover ");
-							this.owner.Words.Append(TechnologyText(thing));
-							break;
-
-						case 6:
-							this.owner.Words.Append(" produce first ");
-							this.owner.Words.Append(UnitText(thing));
-							break;
-
-						case 8:
-							this.owner.Words.Append(" form ");
-							this.owner.Words.Append(GovernmentName(thing));
-							break;
-
-						default:
-							this.owner.Words.Append(" build ");
-
-							if ((short)thing <= 7)
-							{
-								this.owner.Words.Append("the ");
-							}
-
-							this.owner.Words.Append(WonderText(thing));
-							break;
-					}
-
-					RenderReplayPreamble();
-					break;
-				}
-
-				case 11:
-				{
-					// The status of the human player: cities, population (two parts)
-					ReplayActor = (ushort)this.owner.World.PersonParticipantIdx;
-
-					short towns = ReplayByte(ref spot);
-					sbyte populationHigh = (sbyte)ReplayByte(ref spot);
-					short populationLow = ReplayByte(ref spot);
-
-					this.owner.Words.Append(ReplayPlural(this.owner.World.PersonParticipantIdx));
-
-					this.owner.Words.Append(": ");
-
-					this.owner.Words.Append(this.owner.Libc.IntegerToText(towns, 10));
-
-					this.owner.Words.Append(" cities; ");
-
-					this.owner.Helpers.PopulationToText(populationHigh + populationLow);
-
-					this.owner.Words.Append(" population");
-
-					RenderReplayPreamble();
-					break;
-				}
-
-				case 12:
-					ReplayRanking(ref spot);
-					break;
-
-				case 13:
-				{
-					ushort fallen = ReplayByte(ref spot);
-
-					ReplayActor = fallen;
-
-					short destroyer = ReplayByte(ref spot);
-
-					this.owner.Words.Append(CivilizationName(ReplayActor));
-
-					this.owner.Words.Append(" civilization destroyed by ");
-
-					this.owner.Words.Append(ReplayPlural(destroyer));
-
-					if (ReplayMode == 4 && destroyer == this.owner.World.PersonParticipantIdx)
-					{
-						DisplayCivilizationDestroyedScreen((short)ReplayActor, (ushort)year);
-					}
-
-					this.owner.World.Participants[ReplayActor].ChiefVisuals ^= 8;
-
-					ObtainReplayPlayerLabel((short)ReplayActor);
-
-					RenderReplayPreamble();
-					break;
-				}
-			}
-
-			return spot;
-		}
-
-		/// <summary>
-		/// A city founded (kind 1) or captured (kind 9) by the player, or destroyed (player 0xff): the text with the city name
-		/// (13 bytes of TownLabels), the city on the replay map, a pause in mode 1
-		/// </summary>
-		private void ReplayCityEvent(ref ushort spot, ushort kind)
-		{
-			ushort actor = ReplayByte(ref spot);
-
-			ReplayActor = actor;
-
-			ushort labelIdx = ReplayByte(ref spot);
-			ushort horizLoc = ReplayByte(ref spot);
-			ushort vertLoc = ReplayByte(ref spot);
-
-			if (ReplayActor != 0xff)
-			{
-				this.owner.Words.Append(ReplayPlural(ReplayActor));
-
-				if (kind == 1)
-				{
-					this.owner.Words.Append(" found the city of ");
-
-					AssignReplayCityContent(ReplayActor, horizLoc, vertLoc);
-				}
-				else
-				{
-					this.owner.Words.Append(" capture ");
-
-					AssignReplayCityContentAlt(ReplayActor, horizLoc, vertLoc);
-				}
-
-				AppendReplayCityName(labelIdx);
-
-				RenderReplayPreamble();
-			}
-			else
-			{
-				AppendReplayCityName(labelIdx);
-
-				this.owner.Words.Append(" destroyed");
-
-				RenderReplayPreamble();
-
-				AssignReplayCityContentAlt(0xffff, horizLoc, vertLoc);
-			}
-
-			RenderReplayMapTile(horizLoc, vertLoc);
-
-			if (ReplayMode == 1)
-			{
-				this.owner.TextPainter.AwaitTime(30);
-			}
-		}
-
-		/// <summary>The 13 bytes of the city name (TownLabels) after the text at TextBuffer.Address</summary>
-		private void AppendReplayCityName(ushort labelIdx)
-		{
-			ushort end = (ushort)(TextBuffer.Address + this.owner.Words.Length);
-
-			for (int idx = 0; idx < 0xd; idx++)
-			{
-				this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(end + idx), (byte)this.owner.World.TownLabels[labelIdx][idx]);
-			}
-		}
-
-		/// <summary>
-		/// The ranking ("*** 1:x 2:y ..."): 4 bytes of two places each (high and low 4 bits, 0 = none); written only into the
-		/// replay file (mode 3)
-		/// </summary>
-		private void ReplayRanking(ref ushort spot)
-		{
-			this.owner.Words.Set("*** ");
-
-			for (short pairIdx = 0; pairIdx < 4; pairIdx++)
-			{
-				byte places = this.owner.World.RerunContent[spot];
-
-				if ((places & 0xf0) != 0)
-				{
-					this.owner.Words.Append(this.owner.Libc.IntegerToText((short)((pairIdx << 1) + 1), 10));
-
-					this.owner.Words.Append(":");
-
-					this.owner.Words.Append(ReplayPlural(places >> 4));
-
-					this.owner.Words.Append(" ");
-				}
-
-				if ((places & 0xf) != 0)
-				{
-					this.owner.Words.Append(this.owner.Libc.IntegerToText((short)((pairIdx << 1) + 2), 10));
-
-					this.owner.Words.Append(":");
-
-					this.owner.Words.Append(ReplayPlural(places & 0xf));
-
-					this.owner.Words.Append(" ");
-				}
-
-				spot++;
-			}
-
-			if (ReplayMode == 3)
-			{
-				RenderReplayPreamble();
-			}
 		}
 
 		/// <summary>
@@ -534,25 +197,6 @@ namespace Civilization1Remaster.UI
 			}
 
 			this.processor.Journal.CloseScope("AssignReplayCityContent");
-		}
-
-		private const ushort ReplayCitySegment = 0x3725;
-		private const ushort ReplayCityActiveColumnOffset = 0x0;
-		private const ushort ReplayCityXColumnOffset = 0x100;
-		private const ushort ReplayCityYColumnOffset = 0x200;
-
-		private const ushort ReplayFallenLeadersSegment = 0x3772;
-		private const ushort ReplayFallenLeadersTableAddress = 0x37c4;
-		private const ushort ReplayLeaderFaceSegment = 0x36fa;
-
-		private ushort PullReplayCity(int idx, int column)
-		{
-			return this.processor.PullUInt16(ReplayCitySegment, (ushort)((idx << 1) + column));
-		}
-
-		private void EmitReplayCity(int idx, int column, ushort amount)
-		{
-			this.processor.EmitUInt16(ReplayCitySegment, (ushort)((idx << 1) + column), amount);
 		}
 
 		/// <summary>
@@ -943,6 +587,361 @@ namespace Civilization1Remaster.UI
 			this.owner.Services.PerformSound(1, 0);
 
 			this.processor.Journal.CloseScope("DisplayCivilizationDestroyedScreen");
+		}
+
+		/// <summary>
+		/// One replay: the screen kept, the leaders as at the start (put back at the end), the miniature map (not in mode 4),
+		/// all events
+		/// </summary>
+		private void ReplayGame()
+		{
+			this.owner.Startup.ConcealMouseCursor();
+
+			this.owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, BackScreenBox, 0, 0);
+
+			// No city shown on the replay map yet (segment 0x3725, 128 cities)
+			for (int townIdx = 0; townIdx < 0x80; townIdx++)
+			{
+				EmitReplayCity(townIdx, ReplayCityActiveColumnOffset, 0xffff);
+			}
+
+			short[] leaders = new short[8];
+
+			for (int participantIdx = 1; participantIdx < 8; participantIdx++)
+			{
+				leaders[participantIdx] = this.owner.World.Participants[participantIdx].ChiefVisuals;
+			}
+
+			for (short participantIdx = 1; participantIdx < 8; participantIdx++)
+			{
+				if (participantIdx == this.owner.World.PersonParticipantIdx)
+					continue;
+
+				bool secondLeader = (this.owner.World.ParticipantIdentMarkers & (1 << participantIdx)) != 0;
+
+				this.owner.World.Participants[participantIdx].ChiefVisuals = (short)(secondLeader ? participantIdx + 8 : participantIdx);
+
+				ObtainReplayPlayerLabel(participantIdx);
+			}
+
+			if (ReplayMode != 4)
+			{
+				this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
+
+				for (short vertLoc = 1; vertLoc < 0x31; vertLoc++)
+				{
+					for (short horizLoc = 0; horizLoc < 0x50; horizLoc++)
+					{
+						bool ocean = this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) == MapRules.OceanTerrain;
+
+						this.owner.Services.FloodBox(ScreenBox, horizLoc * 4, (vertLoc * 4) + 4, 4, 4, (ushort)(ocean ? 1 : 8));
+					}
+				}
+			}
+
+			ushort spot = 0;
+
+			while ((short)spot < this.owner.World.RerunContentSpan)
+			{
+				spot = ReplayEvent(spot);
+
+				if (ReplayMode == 2 && this.owner.Libc.ReadKey() == 0x1b)
+					break;
+			}
+
+			for (int participantIdx = 1; participantIdx < 8; participantIdx++)
+			{
+				this.owner.World.Participants[participantIdx].ChiefVisuals = leaders[participantIdx];
+			}
+
+			for (short participantIdx = 1; participantIdx < 8; participantIdx++)
+			{
+				if (participantIdx != this.owner.World.PersonParticipantIdx)
+				{
+					ObtainReplayPlayerLabel(participantIdx);
+				}
+			}
+
+			this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
+
+			this.owner.Startup.DisplayMouseCursor();
+		}
+
+		/// <summary>The next byte of the replay</summary>
+		private byte ReplayByte(ref ushort spot)
+		{
+			return this.owner.World.RerunContent[spot++];
+		}
+
+		/// <summary>The plural name (0x1992) of the player</summary>
+		private ushort ReplayPlural(int participantIdx)
+		{
+			return CivilizationPlural(participantIdx);
+		}
+
+		/// <summary>
+		/// One event: the kind (high 4 bits) and the turn (low 4 bits and the next byte), the year ("x BC: " / "x AD: "), then
+		/// the event; the acting player in 0x6810 (-1: none)
+		/// </summary>
+		/// <returns>The spot of the next event</returns>
+		private ushort ReplayEvent(ushort spot)
+		{
+			byte head = ReplayByte(ref spot);
+			ushort kind = (ushort)(head >> 4);
+			ushort turn = (ushort)(((head & 0xf) << 8) + ReplayByte(ref spot));
+
+			short year = (short)ObtainReplayYear(turn);
+
+			ReplayActor = 0xffff;
+			EmptyMessage()
+				.Number(Math.Abs(year))
+				.Text(year < 0 ? " BC" : " AD")
+				.Text(": ");
+
+			switch (kind)
+			{
+				case 1:
+				case 9:
+					ReplayCityEvent(ref spot, kind);
+					break;
+
+				case 2:
+				case 3:
+				{
+					byte pair = ReplayByte(ref spot);
+
+					this.owner.Words.Append(ReplayPlural(pair >> 4));
+
+					this.owner.Words.Append(kind == 2 ? " declare war on " : " make peace with ");
+
+					this.owner.Words.Append(ReplayPlural(pair & 0xf));
+
+					RenderReplayPreamble();
+					break;
+				}
+
+				case 5:
+				case 6:
+				case 8:
+				case 10:
+				{
+					ushort actor = ReplayByte(ref spot);
+
+					ReplayActor = actor;
+
+					ushort thing = ReplayByte(ref spot);
+
+					this.owner.Words.Append(ReplayPlural(ReplayActor));
+
+					switch (kind)
+					{
+						case 5:
+							this.owner.Words.Append(" discover ");
+							this.owner.Words.Append(TechnologyText(thing));
+							break;
+
+						case 6:
+							this.owner.Words.Append(" produce first ");
+							this.owner.Words.Append(UnitText(thing));
+							break;
+
+						case 8:
+							this.owner.Words.Append(" form ");
+							this.owner.Words.Append(GovernmentName(thing));
+							break;
+
+						default:
+							this.owner.Words.Append(" build ");
+
+							if ((short)thing <= 7)
+							{
+								this.owner.Words.Append("the ");
+							}
+
+							this.owner.Words.Append(WonderText(thing));
+							break;
+					}
+
+					RenderReplayPreamble();
+					break;
+				}
+
+				case 11:
+				{
+					// The status of the human player: cities, population (two parts)
+					ReplayActor = (ushort)this.owner.World.PersonParticipantIdx;
+
+					short towns = ReplayByte(ref spot);
+					sbyte populationHigh = (sbyte)ReplayByte(ref spot);
+					short populationLow = ReplayByte(ref spot);
+
+					this.owner.Words.Append(ReplayPlural(this.owner.World.PersonParticipantIdx));
+
+					this.owner.Words.Append(": ");
+
+					this.owner.Words.Append(this.owner.Libc.IntegerToText(towns, 10));
+
+					this.owner.Words.Append(" cities; ");
+
+					this.owner.Helpers.PopulationToText(populationHigh + populationLow);
+
+					this.owner.Words.Append(" population");
+
+					RenderReplayPreamble();
+					break;
+				}
+
+				case 12:
+					ReplayRanking(ref spot);
+					break;
+
+				case 13:
+				{
+					ushort fallen = ReplayByte(ref spot);
+
+					ReplayActor = fallen;
+
+					short destroyer = ReplayByte(ref spot);
+
+					this.owner.Words.Append(CivilizationName(ReplayActor));
+
+					this.owner.Words.Append(" civilization destroyed by ");
+
+					this.owner.Words.Append(ReplayPlural(destroyer));
+
+					if (ReplayMode == 4 && destroyer == this.owner.World.PersonParticipantIdx)
+					{
+						DisplayCivilizationDestroyedScreen((short)ReplayActor, (ushort)year);
+					}
+
+					this.owner.World.Participants[ReplayActor].ChiefVisuals ^= 8;
+
+					ObtainReplayPlayerLabel((short)ReplayActor);
+
+					RenderReplayPreamble();
+					break;
+				}
+			}
+
+			return spot;
+		}
+
+		/// <summary>
+		/// A city founded (kind 1) or captured (kind 9) by the player, or destroyed (player 0xff): the text with the city name
+		/// (13 bytes of TownLabels), the city on the replay map, a pause in mode 1
+		/// </summary>
+		private void ReplayCityEvent(ref ushort spot, ushort kind)
+		{
+			ushort actor = ReplayByte(ref spot);
+
+			ReplayActor = actor;
+
+			ushort labelIdx = ReplayByte(ref spot);
+			ushort horizLoc = ReplayByte(ref spot);
+			ushort vertLoc = ReplayByte(ref spot);
+
+			if (ReplayActor != 0xff)
+			{
+				this.owner.Words.Append(ReplayPlural(ReplayActor));
+
+				if (kind == 1)
+				{
+					this.owner.Words.Append(" found the city of ");
+
+					AssignReplayCityContent(ReplayActor, horizLoc, vertLoc);
+				}
+				else
+				{
+					this.owner.Words.Append(" capture ");
+
+					AssignReplayCityContentAlt(ReplayActor, horizLoc, vertLoc);
+				}
+
+				AppendReplayCityName(labelIdx);
+
+				RenderReplayPreamble();
+			}
+			else
+			{
+				AppendReplayCityName(labelIdx);
+
+				this.owner.Words.Append(" destroyed");
+
+				RenderReplayPreamble();
+
+				AssignReplayCityContentAlt(0xffff, horizLoc, vertLoc);
+			}
+
+			RenderReplayMapTile(horizLoc, vertLoc);
+
+			if (ReplayMode == 1)
+			{
+				this.owner.TextPainter.AwaitTime(30);
+			}
+		}
+
+		/// <summary>The 13 bytes of the city name (TownLabels) after the text at TextBuffer.Address</summary>
+		private void AppendReplayCityName(ushort labelIdx)
+		{
+			ushort end = (ushort)(TextBuffer.Address + this.owner.Words.Length);
+
+			for (int idx = 0; idx < 0xd; idx++)
+			{
+				this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(end + idx), (byte)this.owner.World.TownLabels[labelIdx][idx]);
+			}
+		}
+
+		/// <summary>
+		/// The ranking ("*** 1:x 2:y ..."): 4 bytes of two places each (high and low 4 bits, 0 = none); written only into the
+		/// replay file (mode 3)
+		/// </summary>
+		private void ReplayRanking(ref ushort spot)
+		{
+			this.owner.Words.Set("*** ");
+
+			for (short pairIdx = 0; pairIdx < 4; pairIdx++)
+			{
+				byte places = this.owner.World.RerunContent[spot];
+
+				if ((places & 0xf0) != 0)
+				{
+					this.owner.Words.Append(this.owner.Libc.IntegerToText((short)((pairIdx << 1) + 1), 10));
+
+					this.owner.Words.Append(":");
+
+					this.owner.Words.Append(ReplayPlural(places >> 4));
+
+					this.owner.Words.Append(" ");
+				}
+
+				if ((places & 0xf) != 0)
+				{
+					this.owner.Words.Append(this.owner.Libc.IntegerToText((short)((pairIdx << 1) + 2), 10));
+
+					this.owner.Words.Append(":");
+
+					this.owner.Words.Append(ReplayPlural(places & 0xf));
+
+					this.owner.Words.Append(" ");
+				}
+
+				spot++;
+			}
+
+			if (ReplayMode == 3)
+			{
+				RenderReplayPreamble();
+			}
+		}
+
+		private ushort PullReplayCity(int idx, int column)
+		{
+			return this.processor.PullUInt16(ReplayCitySegment, (ushort)((idx << 1) + column));
+		}
+
+		private void EmitReplayCity(int idx, int column, ushort amount)
+		{
+			this.processor.EmitUInt16(ReplayCitySegment, (ushort)((idx << 1) + column), amount);
 		}
 
 		/// <summary>

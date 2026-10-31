@@ -28,11 +28,42 @@ namespace Civilization1Remaster.Engine
 
 		private readonly GameEngine game;
 		private readonly byte[] store = new byte[Size];
+
 		private bool attached;
 
 		public TextBuffer(GameEngine game)
 		{
 			this.game = game;
+		}
+
+		/// <summary>The length of the text of the buffer (strlen, also in AX)</summary>
+		public ushort Length
+		{
+			get
+			{
+				int length = End();
+
+				if (length < 0)
+					return this.game.Libc.TextLength(Address);
+
+				return (ushort)length;
+			}
+		}
+
+		/// <summary>The bytes of the buffer, all of them (also after the end of the text, like the memory of the original)</summary>
+		public byte[] Bytes => (byte[])this.store.Clone();
+
+		/// <summary>A byte of the buffer (past its end: the memory after it)</summary>
+		public byte this[int index]
+		{
+			get => this.attached && index >= 0 && index < Size ? this.store[index] : this.game.Processor.PullGlobalByte((ushort)(Address + index));
+			set
+			{
+				if (this.attached && index >= 0 && index < Size)
+					this.store[index] = value;
+				else
+					this.game.Processor.EmitGlobalByte((ushort)(Address + index), value);
+			}
 		}
 
 		/// <summary>The text of the buffer is the text (strcpy); returns the address, like the C runtime (also in AX)</summary>
@@ -52,61 +83,6 @@ namespace Civilization1Remaster.Engine
 
 		/// <summary>The buffer holds the empty text (its first byte 0)</summary>
 		public void Clear() => this[0] = 0;
-
-		/// <summary>The length of the text of the buffer (strlen, also in AX)</summary>
-		public ushort Length
-		{
-			get
-			{
-				int length = End();
-
-				if (length < 0)
-					return this.game.Libc.TextLength(Address);
-
-				return (ushort)length;
-			}
-		}
-
-		/// <summary>A byte of the buffer (past its end: the memory after it)</summary>
-		public byte this[int index]
-		{
-			get => this.attached && index >= 0 && index < Size ? this.store[index] : this.game.Processor.PullGlobalByte((ushort)(Address + index));
-			set
-			{
-				if (this.attached && index >= 0 && index < Size)
-					this.store[index] = value;
-				else
-					this.game.Processor.EmitGlobalByte((ushort)(Address + index), value);
-			}
-		}
-
-		/// <summary>
-		/// The end of the text (its 0 byte), -1 when the text runs past the buffer or the buffer is not attached yet (then the
-		/// C runtime works on the memory, like before)
-		/// </summary>
-		private int End() => this.attached ? Array.IndexOf(this.store, (byte)0) : -1;
-
-		/// <summary>The text at the address of the data segment</summary>
-		private string TextAt(ushort textAddr) => this.game.Processor.PullText(CPU.AsLinearAddress(this.game.Processor.SegData.Value16, textAddr));
-
-		/// <summary>
-		/// The text from the place on, closed with 0, bytes as the low bytes of the characters (like CPU.EmitText); AX and the
-		/// result are the address. A text that does not fit (or a buffer not attached yet) goes through the C runtime.
-		/// </summary>
-		private ushort Write(int place, string text)
-		{
-			if (!this.attached || place < 0 || place + text.Length >= Size)
-				return place == 0 ? this.game.Libc.CopyText(Address, text) : this.game.Libc.AppendText(Address, text);
-
-			for (int idx = 0; idx < text.Length; idx++)
-				this.store[place + idx] = (byte)text[idx];
-
-			this.store[place + text.Length] = 0;
-			return Address;
-		}
-
-		/// <summary>The bytes of the buffer, all of them (also after the end of the text, like the memory of the original)</summary>
-		public byte[] Bytes => (byte[])this.store.Clone();
 
 		/// <summary>
 		/// The store moves from the memory into the array (after the machine is prepared): the current bytes are taken over,
@@ -138,6 +114,31 @@ namespace Civilization1Remaster.Engine
 				letters[idx - index] = (char)this.store[idx];
 
 			return new string(letters);
+		}
+
+		/// <summary>
+		/// The end of the text (its 0 byte), -1 when the text runs past the buffer or the buffer is not attached yet (then the
+		/// C runtime works on the memory, like before)
+		/// </summary>
+		private int End() => this.attached ? Array.IndexOf(this.store, (byte)0) : -1;
+
+		/// <summary>The text at the address of the data segment</summary>
+		private string TextAt(ushort textAddr) => this.game.Processor.PullText(CPU.AsLinearAddress(this.game.Processor.SegData.Value16, textAddr));
+
+		/// <summary>
+		/// The text from the place on, closed with 0, bytes as the low bytes of the characters (like CPU.EmitText); AX and the
+		/// result are the address. A text that does not fit (or a buffer not attached yet) goes through the C runtime.
+		/// </summary>
+		private ushort Write(int place, string text)
+		{
+			if (!this.attached || place < 0 || place + text.Length >= Size)
+				return place == 0 ? this.game.Libc.CopyText(Address, text) : this.game.Libc.AppendText(Address, text);
+
+			for (int idx = 0; idx < text.Length; idx++)
+				this.store[place + idx] = (byte)text[idx];
+
+			this.store[place + text.Length] = 0;
+			return Address;
 		}
 	}
 }

@@ -11,7 +11,13 @@ namespace Civilization1Remaster.Game
 	/// </summary>
 	public partial class AIPlayer : GameModule
 	{
+		/// <summary>The 20 x 13 blocks of 4 x 4 tiles of the map in the segment 0x3772: bit 0 a city, bits 1 - 7 the unit roles</summary>
+		private const ushort BlockSegment = 0x3772;
+
+		private const ushort BlockOrigin = 0x2438;
+
 		private readonly UnitMemory troops;
+
 		private UnitLook look = new UnitLook();
 
 		public AIPlayer(GameEngine owner)
@@ -50,10 +56,6 @@ namespace Civilization1Remaster.Game
 
 			this.processor.Journal.CloseScope("OperateAITurn");
 		}
-
-		/// <summary>The 20 x 13 blocks of 4 x 4 tiles of the map in the segment 0x3772: bit 0 a city, bits 1 - 7 the unit roles</summary>
-		private const ushort BlockSegment = 0x3772;
-		private const ushort BlockOrigin = 0x2438;
 
 		private static ushort Block(int horizLoc, int vertLoc)
 		{

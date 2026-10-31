@@ -670,88 +670,6 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// The details of a player in the foreign minister's report (his name is in TextBuffer.Address): title, government, treasury, units
-		/// and then peace, alliance or war with each player, 0x60 apart, in rows of 8 from x 0x10
-		/// </summary>
-		private void RenderMilitaryReportRow(ushort participantIdx, short vertLoc)
-		{
-			// The last city of the player with a palace, never used
-			ushort capitalIdx = 0xffff;
-			ushort townIdx;
-
-			for (townIdx = 0; (short)townIdx < 0x80; townIdx++)
-			{
-				if ((ushort)this.owner.World.Towns[townIdx].ParticipantIdx == participantIdx &&
-					this.owner.World.Towns[townIdx].ConditionMarker != 0xff &&
-					this.owner.World.Towns[townIdx].Has(CityStructure.Palace))
-				{
-					capitalIdx = townIdx;
-				}
-			}
-
-
-			this.owner.Words.Append(": ");
-
-			this.owner.Words.Append(LeaderName(participantIdx));
-
-			this.owner.TextPainter.RenderTextWithShadow(this.owner.Words.ToString(), 8, vertLoc, Hues.White);
-
-			Message(GovernmentName((ushort)this.owner.World.Participants[participantIdx].RegimeKind))
-				.Text(", ")
-				.Number(this.owner.World.Participants[participantIdx].Gold)
-				.Text("$");
-
-			if (this.owner.World.HardnessTier <= 1)
-			{
-				this.owner.Words.Append(", ");
-
-				this.owner.Words.Append(this.owner.Libc.IntegerToText(this.owner.World.Participants[participantIdx].TroopTally, 10));
-
-				this.owner.Words.Append(" Units.");
-			}
-
-			this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 160, vertLoc, PlayerColour(participantIdx));
-
-			vertLoc += 8;
-
-			short horizLoc = 0x10;
-			ushort otherIdx;
-
-			for (otherIdx = 1; (short)otherIdx < 8; otherIdx++)
-			{
-				this.owner.Words.Clear();
-
-				this.owner.Words.Set(CivilizationPlural(otherIdx));
-
-				if (horizLoc > 0xf0)
-				{
-					horizLoc = 0x10;
-					vertLoc += 8;
-				}
-
-				ushort relation = this.owner.World.Participants[participantIdx].Relations[otherIdx];
-
-				if ((relation & 2) != 0)
-				{
-					this.owner.Words.Append((relation & 4) != 0 ? ":\x008f ALLIED" : ":\x008f PEACE");
-				}
-				else if ((relation & 3) != 1)
-				{
-					continue;
-				}
-				else
-				{
-					this.owner.Words.Append(":\x008c WAR");
-				}
-
-				this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), horizLoc, vertLoc, Hues.LightGray);
-
-				horizLoc += 0x60;
-			}
-
-		}
-
-		/// <summary>
 		/// The intelligence report on a civilization: its leader (with the traits of the leader table),
 		/// capital (the last city with a palace), government, treasury, military (on the easiest two levels), its relations
 		/// with the others (peace or war) and its technologies from the newest, until the screen is full.
@@ -1079,6 +997,88 @@ namespace Civilization1Remaster.UI
 			FinishReportScreen();
 
 			this.processor.Journal.CloseScope("DisplayCityStatusReport");
+		}
+
+		/// <summary>
+		/// The details of a player in the foreign minister's report (his name is in TextBuffer.Address): title, government, treasury, units
+		/// and then peace, alliance or war with each player, 0x60 apart, in rows of 8 from x 0x10
+		/// </summary>
+		private void RenderMilitaryReportRow(ushort participantIdx, short vertLoc)
+		{
+			// The last city of the player with a palace, never used
+			ushort capitalIdx = 0xffff;
+			ushort townIdx;
+
+			for (townIdx = 0; (short)townIdx < 0x80; townIdx++)
+			{
+				if ((ushort)this.owner.World.Towns[townIdx].ParticipantIdx == participantIdx &&
+					this.owner.World.Towns[townIdx].ConditionMarker != 0xff &&
+					this.owner.World.Towns[townIdx].Has(CityStructure.Palace))
+				{
+					capitalIdx = townIdx;
+				}
+			}
+
+
+			this.owner.Words.Append(": ");
+
+			this.owner.Words.Append(LeaderName(participantIdx));
+
+			this.owner.TextPainter.RenderTextWithShadow(this.owner.Words.ToString(), 8, vertLoc, Hues.White);
+
+			Message(GovernmentName((ushort)this.owner.World.Participants[participantIdx].RegimeKind))
+				.Text(", ")
+				.Number(this.owner.World.Participants[participantIdx].Gold)
+				.Text("$");
+
+			if (this.owner.World.HardnessTier <= 1)
+			{
+				this.owner.Words.Append(", ");
+
+				this.owner.Words.Append(this.owner.Libc.IntegerToText(this.owner.World.Participants[participantIdx].TroopTally, 10));
+
+				this.owner.Words.Append(" Units.");
+			}
+
+			this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 160, vertLoc, PlayerColour(participantIdx));
+
+			vertLoc += 8;
+
+			short horizLoc = 0x10;
+			ushort otherIdx;
+
+			for (otherIdx = 1; (short)otherIdx < 8; otherIdx++)
+			{
+				this.owner.Words.Clear();
+
+				this.owner.Words.Set(CivilizationPlural(otherIdx));
+
+				if (horizLoc > 0xf0)
+				{
+					horizLoc = 0x10;
+					vertLoc += 8;
+				}
+
+				ushort relation = this.owner.World.Participants[participantIdx].Relations[otherIdx];
+
+				if ((relation & 2) != 0)
+				{
+					this.owner.Words.Append((relation & 4) != 0 ? ":\x008f ALLIED" : ":\x008f PEACE");
+				}
+				else if ((relation & 3) != 1)
+				{
+					continue;
+				}
+				else
+				{
+					this.owner.Words.Append(":\x008c WAR");
+				}
+
+				this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), horizLoc, vertLoc, Hues.LightGray);
+
+				horizLoc += 0x60;
+			}
+
 		}
 
 		/// <summary>Appends " (shields/cost)" of the city's production to the text at TextBuffer.Address (0x87 is the shield)</summary>

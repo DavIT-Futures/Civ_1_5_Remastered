@@ -15,9 +15,6 @@ namespace Civilization1Remaster.Engine
 		{
 		}
 
-		/// <summary>The text at the address of the data segment</summary>
-		private string TextAt(ushort charsAddr) => this.processor.PullText(CPU.AsLinearAddress(this.processor.SegData.Value16, charsAddr));
-
 		/// <summary>Draws the text at (horizLoc, vertLoc) of the box at 0xaa (twice as far right with DoubleWidthText) in the style</summary>
 		public void RenderText(string text, int horizLoc, int vertLoc, ushort style)
 		{
@@ -114,5 +111,8 @@ namespace Civilization1Remaster.Engine
 				this.processor.Idle();
 			}
 		}
+
+		/// <summary>The text at the address of the data segment</summary>
+		private string TextAt(ushort charsAddr) => this.processor.PullText(CPU.AsLinearAddress(this.processor.SegData.Value16, charsAddr));
 	}
 }

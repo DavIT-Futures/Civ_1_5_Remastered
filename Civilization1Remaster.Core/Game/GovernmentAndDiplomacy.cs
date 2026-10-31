@@ -82,6 +82,271 @@ namespace Civilization1Remaster.Game
 			this.processor.Journal.CloseScope("HandlePeaceTreaties");
 		}
 
+		/// <summary>
+		/// The player's government becomes regimeKind. A human player (ParticipantMarkers) chooses it from the governments it
+		/// may have (all with the wonder effect 1, else despotism plus those of the technologies 5, 0x2b, 0x2c and 4; regimeKind 0
+		/// gives anarchy without asking), then the revolution screen. For an AI player a known civilization (0x40 of the human's
+		/// relation) is announced as overthrown (anarchy, 4 of the relation 0) or as changed to the new government after it;
+		/// the luxuries become 4 - government / 2. A new government goes into the replay and ends the 8 of every relation.
+		/// </summary>
+		public void SwitchGovernment(short participantIdx, short regimeKind)
+		{
+			this.processor.Journal.OpenScope($"SwitchGovernment({participantIdx}, {regimeKind})");
+
+			Player participant = this.owner.World.Participants[participantIdx];
+			short formerRegime = participant.RegimeKind;
+
+			if (this.owner.World.IsHuman(participantIdx))
+			{
+				short chosen;
+
+				while (true)
+				{
+					this.owner.Words.Set("Select type of\nGovernment...\n ");
+
+					List<short> regimes = new List<short>();
+
+					for (short regime = 1; regime < 6; regime++)
+					{
+						if (this.owner.CityOps.PlayerEnjoysWonderEffect(participantIdx, 1) == 0 && !RegimeKnown(participantIdx, regime))
+							continue;
+
+						regimes.Add(regime);
+
+						this.owner.Words.Append(GovernmentName(regime));
+
+						this.owner.Words.Append("\n ");
+					}
+
+					if (regimeKind == 0)
+					{
+						chosen = 0;
+						break;
+					}
+
+					short choice = (short)this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 64);
+
+					if (choice >= 0)
+					{
+						chosen = regimes[choice];
+						break;
+					}
+				}
+
+				participant.RegimeKind = chosen;
+
+				this.owner.NewGameWizard.ImportGovernmentGraphics();
+
+				this.owner.TurnHooks.RepaintMainScreen();
+
+				this.owner.NewGameWizard.DisplayRevolutionScreen();
+			}
+			else
+			{
+				if ((participant.RegimeKind != regimeKind || (participant.Relations[0] & 4) != 0) &&
+					(this.owner.World.Participants[this.owner.World.PersonParticipantIdx].Relations[participantIdx] & 0x40) != 0)
+				{
+					this.owner.Words.Clear();
+
+					if ((participant.Relations[0] & 4) != 0)
+					{
+						this.owner.Words.Append(CivilizationName(participantIdx));
+
+						this.owner.Words.Append(" government\nchanged to ");
+
+						this.owner.Words.Append(GovernmentName(regimeKind));
+
+						this.owner.Words.Append("!\n");
+
+						participant.Relations[0] &= 0xfffb;
+					}
+					else
+					{
+						this.owner.Words.Append("The ");
+
+						this.owner.Words.Append(CivilizationName(participantIdx));
+
+						this.owner.Words.Append(" government\nhas been overthrown!\n");
+
+						participant.Relations[0] |= 4;
+					}
+
+					DialogStyle = 0x1;
+
+					this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 80, 64);
+				}
+
+				participant.RegimeKind = regimeKind;
+				participant.LevyRatio = (short)(4 - (regimeKind / 2));
+			}
+
+			if (formerRegime != participant.RegimeKind)
+			{
+				this.owner.UnitOps.AttachReplayContent(8, (byte)participantIdx, (byte)participant.RegimeKind);
+
+				for (int otherIdx = 0; otherIdx < 8; otherIdx++)
+				{
+					participant.Relations[otherIdx] &= 0xfff7;
+				}
+			}
+
+			this.processor.Journal.CloseScope("SwitchGovernment");
+		}
+
+		/// <summary>
+		/// Two players (not the barbarians) meet: with the human player an audience with the other one (unless in contact and
+		/// met in the last 16 turns); both get contact (0x11). Two AI players (one meeting in four, or the first one) without
+		/// vendetta (8) decide: when one of them wants war (AIWeighsTreaty, without the wonder effect 7 of the other and with a
+		/// government below 4) a treaty or a first contact ends in war, else they exchange technologies and make peace; the
+		/// human player hears of it when it knows one of them (0x40).
+		/// </summary>
+		public void BargainPeaceTreaty(short participantIdx1, short participantIdx2, int horizLoc, int vertLoc)
+		{
+			this.processor.Journal.OpenScope($"BargainPeaceTreaty({participantIdx1}, {participantIdx2}, {horizLoc}, {vertLoc})");
+
+			if (participantIdx1 != 0 && participantIdx2 != 0)
+			{
+				Bargain(participantIdx1, participantIdx2, horizLoc, vertLoc);
+			}
+
+			this.processor.Journal.CloseScope("BargainPeaceTreaty");
+		}
+
+		/// <summary>
+		/// Sets the relation bits between the two players (both ways); a new peace (2) goes into the replay and clears the bit
+		/// 0x20
+		/// </summary>
+		public void AssignDiplomacyFlags(short participantIdx1, short participantIdx2, ushort markers)
+		{
+			this.processor.Journal.OpenScope($"AssignDiplomacyFlags({participantIdx1}, {participantIdx2}, {markers})");
+
+			if (markers == 2 &&
+				(this.owner.World.Participants[participantIdx1].Relations[participantIdx2] & markers) == 0)
+			{
+				this.owner.UnitOps.AttachReplayContent(3, (byte)(((ushort)participantIdx1 << 4) | (ushort)participantIdx2));
+			}
+
+			this.owner.World.Participants[participantIdx1].Relations[participantIdx2] |= markers;
+			this.owner.World.Participants[participantIdx2].Relations[participantIdx1] |= markers;
+
+			if (markers == 2)
+			{
+				this.owner.World.Participants[participantIdx1].Relations[participantIdx2] &= 0xffdf;
+				this.owner.World.Participants[participantIdx2].Relations[participantIdx1] &= 0xffdf;
+			}
+
+			this.processor.Journal.CloseScope("AssignDiplomacyFlags");
+		}
+
+		/// <summary>
+		/// Clears the relation bits between the two players (both ways); a peace ended (2) goes into the replay and clears the
+		/// bit 4
+		/// </summary>
+		public void WipeDiplomacyFlags(short participantIdx1, short participantIdx2, ushort markers)
+		{
+			this.processor.Journal.OpenScope($"WipeDiplomacyFlags({participantIdx1}, {participantIdx2}, {markers})");
+
+			if (markers == 2 &&
+				(this.owner.World.Participants[participantIdx1].Relations[participantIdx2] & markers) != 0)
+			{
+				this.owner.UnitOps.AttachReplayContent(2, (byte)((short)(participantIdx1 << 4) | participantIdx2));
+			}
+		
+			this.owner.World.Participants[participantIdx1].Relations[participantIdx2] &= (ushort)(~markers);
+			this.owner.World.Participants[participantIdx2].Relations[participantIdx1] &= (ushort)(~markers);
+
+			if ((markers & 2) != 0)
+			{
+				this.owner.World.Participants[participantIdx1].Relations[participantIdx2] &= 0xfffb;
+				this.owner.World.Participants[participantIdx2].Relations[participantIdx1] &= 0xfffb;
+			}
+
+			this.processor.Journal.CloseScope("WipeDiplomacyFlags");
+		}
+
+		/// <summary>
+		/// Whether the AI player 1 accepts peace with the AI player 2 (only with the 1 of the diagnostic markers, else always):
+		/// not when the other one is weaker than the human player and the first is at peace with the human (without the 4 of the
+		/// other's relation), not with fewer spaceship parts (unit 25), not when on a continent with its cities its defence (half)
+		/// plus attack is below the other's defence; then it accepts when 4 * its defence / (1 + the other's attack) on the
+		/// shared continents is at least its peace treaties with the others (+1 with the 2 of the relation) minus the leader's
+		/// aggression plus 4, or when it has no cities on them.
+		/// </summary>
+		/// <returns>1 when it accepts, else 0, also in AX</returns>
+		public ushort AIWeighsTreaty(short participantIdx1, short participantIdx2)
+		{
+			this.processor.Journal.OpenScope($"AIWeighsTreaty({participantIdx1}, {participantIdx2})");
+
+			ushort accepted = WeighTreaty(participantIdx1, participantIdx2) ? (ushort)1 : (ushort)0;
+
+			this.processor.Journal.CloseScope("AIWeighsTreaty");
+
+			return accepted;
+		}
+
+		/// <summary>
+		/// Two players exchange technologies when each knows one the other does not (the last such of the 72 for each side)
+		/// </summary>
+		/// <remarks>In AX: 1 when they exchanged, else 0</remarks>
+		public void SwapTechnology(short participantIdx1, short participantIdx2)
+		{
+			this.processor.Journal.OpenScope($"SwapTechnology({participantIdx1}, {participantIdx2})");
+
+			short firstGains = -1, secondGains = -1;
+
+			for (short scienceIdx = 0; scienceIdx < 0x48; scienceIdx++)
+			{
+				if (this.owner.Advisors.PlayerKnowsTechnology(participantIdx1, scienceIdx) == 0 &&
+					this.owner.Advisors.PlayerKnowsTechnology(participantIdx2, scienceIdx) != 0)
+				{
+					firstGains = scienceIdx;
+				}
+
+				if (this.owner.Advisors.PlayerKnowsTechnology(participantIdx2, scienceIdx) == 0 &&
+					this.owner.Advisors.PlayerKnowsTechnology(participantIdx1, scienceIdx) != 0)
+				{
+					secondGains = scienceIdx;
+				}
+			}
+
+			if (firstGains >= 0 && secondGains >= 0)
+			{
+				this.owner.Advisors.EarnTechnology(participantIdx1, firstGains, participantIdx2);
+
+				this.owner.Advisors.EarnTechnology(participantIdx2, secondGains, participantIdx1);
+			}
+
+			this.processor.Journal.CloseScope("SwapTechnology");
+		}
+
+		/// <summary>
+		/// Distance from the position to the nearest city of the player with a palace (structure bit 0), at most 16
+		/// </summary>
+		/// <returns>Distance, also in AX</returns>
+		public ushort LocateNearestCityOfPlayer(short participantIdx, int horizLoc, int vertLoc)
+		{
+			this.processor.Journal.OpenScope($"LocateNearestCityOfPlayer({participantIdx}, {horizLoc}, {vertLoc})");
+
+			short nearest = 16;
+
+			foreach (City town in this.owner.World.Towns)
+			{
+				if (town.ConditionMarker == 0xff || town.ParticipantIdx != participantIdx || !town.Has(CityStructure.Palace))
+					continue;
+
+				short distance = (short)this.owner.Helpers.ObtainDistance(town.Place.X, horizLoc, town.Place.Y, vertLoc);
+
+				if (distance < nearest)
+				{
+					nearest = distance;
+				}
+			}
+
+			this.processor.Journal.CloseScope("LocateNearestCityOfPlayer");
+
+			return (ushort)nearest;
+		}
+
 		/// <summary>The wonder effect 1 for the player (AX of PlayerEnjoysWonderEffect)</summary>
 		private bool EnjoysWonderEffectOne(short participantIdx)
 		{
@@ -222,142 +487,12 @@ namespace Civilization1Remaster.Game
 			this.owner.World.Participants[otherIdx].Relations[person] |= 8;
 		}
 
-		/// <summary>
-		/// The player's government becomes regimeKind. A human player (ParticipantMarkers) chooses it from the governments it
-		/// may have (all with the wonder effect 1, else despotism plus those of the technologies 5, 0x2b, 0x2c and 4; regimeKind 0
-		/// gives anarchy without asking), then the revolution screen. For an AI player a known civilization (0x40 of the human's
-		/// relation) is announced as overthrown (anarchy, 4 of the relation 0) or as changed to the new government after it;
-		/// the luxuries become 4 - government / 2. A new government goes into the replay and ends the 8 of every relation.
-		/// </summary>
-		public void SwitchGovernment(short participantIdx, short regimeKind)
-		{
-			this.processor.Journal.OpenScope($"SwitchGovernment({participantIdx}, {regimeKind})");
-
-			Player participant = this.owner.World.Participants[participantIdx];
-			short formerRegime = participant.RegimeKind;
-
-			if (this.owner.World.IsHuman(participantIdx))
-			{
-				short chosen;
-
-				while (true)
-				{
-					this.owner.Words.Set("Select type of\nGovernment...\n ");
-
-					List<short> regimes = new List<short>();
-
-					for (short regime = 1; regime < 6; regime++)
-					{
-						if (this.owner.CityOps.PlayerEnjoysWonderEffect(participantIdx, 1) == 0 && !RegimeKnown(participantIdx, regime))
-							continue;
-
-						regimes.Add(regime);
-
-						this.owner.Words.Append(GovernmentName(regime));
-
-						this.owner.Words.Append("\n ");
-					}
-
-					if (regimeKind == 0)
-					{
-						chosen = 0;
-						break;
-					}
-
-					short choice = (short)this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 64);
-
-					if (choice >= 0)
-					{
-						chosen = regimes[choice];
-						break;
-					}
-				}
-
-				participant.RegimeKind = chosen;
-
-				this.owner.NewGameWizard.ImportGovernmentGraphics();
-
-				this.owner.TurnHooks.RepaintMainScreen();
-
-				this.owner.NewGameWizard.DisplayRevolutionScreen();
-			}
-			else
-			{
-				if ((participant.RegimeKind != regimeKind || (participant.Relations[0] & 4) != 0) &&
-					(this.owner.World.Participants[this.owner.World.PersonParticipantIdx].Relations[participantIdx] & 0x40) != 0)
-				{
-					this.owner.Words.Clear();
-
-					if ((participant.Relations[0] & 4) != 0)
-					{
-						this.owner.Words.Append(CivilizationName(participantIdx));
-
-						this.owner.Words.Append(" government\nchanged to ");
-
-						this.owner.Words.Append(GovernmentName(regimeKind));
-
-						this.owner.Words.Append("!\n");
-
-						participant.Relations[0] &= 0xfffb;
-					}
-					else
-					{
-						this.owner.Words.Append("The ");
-
-						this.owner.Words.Append(CivilizationName(participantIdx));
-
-						this.owner.Words.Append(" government\nhas been overthrown!\n");
-
-						participant.Relations[0] |= 4;
-					}
-
-					DialogStyle = 0x1;
-
-					this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 80, 64);
-				}
-
-				participant.RegimeKind = regimeKind;
-				participant.LevyRatio = (short)(4 - (regimeKind / 2));
-			}
-
-			if (formerRegime != participant.RegimeKind)
-			{
-				this.owner.UnitOps.AttachReplayContent(8, (byte)participantIdx, (byte)participant.RegimeKind);
-
-				for (int otherIdx = 0; otherIdx < 8; otherIdx++)
-				{
-					participant.Relations[otherIdx] &= 0xfff7;
-				}
-			}
-
-			this.processor.Journal.CloseScope("SwitchGovernment");
-		}
-
 		/// <summary>The player knows the technology of the government: despotism always, monarchy 5, communism 0x2b, democracy 0x2c, republic 4</summary>
 		private bool RegimeKnown(short participantIdx, short regime)
 		{
 			short scienceIdx = regime switch { 2 => 5, 3 => 0x2b, 4 => 0x2c, 5 => 4, _ => -1 };
 
 			return scienceIdx < 0 || this.owner.Advisors.PlayerKnowsTechnology(participantIdx, scienceIdx) != 0;
-		}
-
-		/// <summary>
-		/// Two players (not the barbarians) meet: with the human player an audience with the other one (unless in contact and
-		/// met in the last 16 turns); both get contact (0x11). Two AI players (one meeting in four, or the first one) without
-		/// vendetta (8) decide: when one of them wants war (AIWeighsTreaty, without the wonder effect 7 of the other and with a
-		/// government below 4) a treaty or a first contact ends in war, else they exchange technologies and make peace; the
-		/// human player hears of it when it knows one of them (0x40).
-		/// </summary>
-		public void BargainPeaceTreaty(short participantIdx1, short participantIdx2, int horizLoc, int vertLoc)
-		{
-			this.processor.Journal.OpenScope($"BargainPeaceTreaty({participantIdx1}, {participantIdx2}, {horizLoc}, {vertLoc})");
-
-			if (participantIdx1 != 0 && participantIdx2 != 0)
-			{
-				Bargain(participantIdx1, participantIdx2, horizLoc, vertLoc);
-			}
-
-			this.processor.Journal.CloseScope("BargainPeaceTreaty");
 		}
 
 		private void Bargain(short participantIdx1, short participantIdx2, int horizLoc, int vertLoc)
@@ -452,78 +587,6 @@ namespace Civilization1Remaster.Game
 				.Text(CivilizationPlural(participantIdx2));
 		}
 
-		/// <summary>
-		/// Sets the relation bits between the two players (both ways); a new peace (2) goes into the replay and clears the bit
-		/// 0x20
-		/// </summary>
-		public void AssignDiplomacyFlags(short participantIdx1, short participantIdx2, ushort markers)
-		{
-			this.processor.Journal.OpenScope($"AssignDiplomacyFlags({participantIdx1}, {participantIdx2}, {markers})");
-
-			if (markers == 2 &&
-				(this.owner.World.Participants[participantIdx1].Relations[participantIdx2] & markers) == 0)
-			{
-				this.owner.UnitOps.AttachReplayContent(3, (byte)(((ushort)participantIdx1 << 4) | (ushort)participantIdx2));
-			}
-
-			this.owner.World.Participants[participantIdx1].Relations[participantIdx2] |= markers;
-			this.owner.World.Participants[participantIdx2].Relations[participantIdx1] |= markers;
-
-			if (markers == 2)
-			{
-				this.owner.World.Participants[participantIdx1].Relations[participantIdx2] &= 0xffdf;
-				this.owner.World.Participants[participantIdx2].Relations[participantIdx1] &= 0xffdf;
-			}
-
-			this.processor.Journal.CloseScope("AssignDiplomacyFlags");
-		}
-
-		/// <summary>
-		/// Clears the relation bits between the two players (both ways); a peace ended (2) goes into the replay and clears the
-		/// bit 4
-		/// </summary>
-		public void WipeDiplomacyFlags(short participantIdx1, short participantIdx2, ushort markers)
-		{
-			this.processor.Journal.OpenScope($"WipeDiplomacyFlags({participantIdx1}, {participantIdx2}, {markers})");
-
-			if (markers == 2 &&
-				(this.owner.World.Participants[participantIdx1].Relations[participantIdx2] & markers) != 0)
-			{
-				this.owner.UnitOps.AttachReplayContent(2, (byte)((short)(participantIdx1 << 4) | participantIdx2));
-			}
-		
-			this.owner.World.Participants[participantIdx1].Relations[participantIdx2] &= (ushort)(~markers);
-			this.owner.World.Participants[participantIdx2].Relations[participantIdx1] &= (ushort)(~markers);
-
-			if ((markers & 2) != 0)
-			{
-				this.owner.World.Participants[participantIdx1].Relations[participantIdx2] &= 0xfffb;
-				this.owner.World.Participants[participantIdx2].Relations[participantIdx1] &= 0xfffb;
-			}
-
-			this.processor.Journal.CloseScope("WipeDiplomacyFlags");
-		}
-
-		/// <summary>
-		/// Whether the AI player 1 accepts peace with the AI player 2 (only with the 1 of the diagnostic markers, else always):
-		/// not when the other one is weaker than the human player and the first is at peace with the human (without the 4 of the
-		/// other's relation), not with fewer spaceship parts (unit 25), not when on a continent with its cities its defence (half)
-		/// plus attack is below the other's defence; then it accepts when 4 * its defence / (1 + the other's attack) on the
-		/// shared continents is at least its peace treaties with the others (+1 with the 2 of the relation) minus the leader's
-		/// aggression plus 4, or when it has no cities on them.
-		/// </summary>
-		/// <returns>1 when it accepts, else 0, also in AX</returns>
-		public ushort AIWeighsTreaty(short participantIdx1, short participantIdx2)
-		{
-			this.processor.Journal.OpenScope($"AIWeighsTreaty({participantIdx1}, {participantIdx2})");
-
-			ushort accepted = WeighTreaty(participantIdx1, participantIdx2) ? (ushort)1 : (ushort)0;
-
-			this.processor.Journal.CloseScope("AIWeighsTreaty");
-
-			return accepted;
-		}
-
 		private bool WeighTreaty(short participantIdx1, short participantIdx2)
 		{
 			if ((this.owner.World.DiagMarkers & 1) == 0)
@@ -582,69 +645,6 @@ namespace Civilization1Remaster.Game
 			}
 
 			return CPU.SignedQuotient((short)(defence << 2), attack) >= (short)(treaties + 4) || towns == 0;
-		}
-
-		/// <summary>
-		/// Two players exchange technologies when each knows one the other does not (the last such of the 72 for each side)
-		/// </summary>
-		/// <remarks>In AX: 1 when they exchanged, else 0</remarks>
-		public void SwapTechnology(short participantIdx1, short participantIdx2)
-		{
-			this.processor.Journal.OpenScope($"SwapTechnology({participantIdx1}, {participantIdx2})");
-
-			short firstGains = -1, secondGains = -1;
-
-			for (short scienceIdx = 0; scienceIdx < 0x48; scienceIdx++)
-			{
-				if (this.owner.Advisors.PlayerKnowsTechnology(participantIdx1, scienceIdx) == 0 &&
-					this.owner.Advisors.PlayerKnowsTechnology(participantIdx2, scienceIdx) != 0)
-				{
-					firstGains = scienceIdx;
-				}
-
-				if (this.owner.Advisors.PlayerKnowsTechnology(participantIdx2, scienceIdx) == 0 &&
-					this.owner.Advisors.PlayerKnowsTechnology(participantIdx1, scienceIdx) != 0)
-				{
-					secondGains = scienceIdx;
-				}
-			}
-
-			if (firstGains >= 0 && secondGains >= 0)
-			{
-				this.owner.Advisors.EarnTechnology(participantIdx1, firstGains, participantIdx2);
-
-				this.owner.Advisors.EarnTechnology(participantIdx2, secondGains, participantIdx1);
-			}
-
-			this.processor.Journal.CloseScope("SwapTechnology");
-		}
-
-		/// <summary>
-		/// Distance from the position to the nearest city of the player with a palace (structure bit 0), at most 16
-		/// </summary>
-		/// <returns>Distance, also in AX</returns>
-		public ushort LocateNearestCityOfPlayer(short participantIdx, int horizLoc, int vertLoc)
-		{
-			this.processor.Journal.OpenScope($"LocateNearestCityOfPlayer({participantIdx}, {horizLoc}, {vertLoc})");
-
-			short nearest = 16;
-
-			foreach (City town in this.owner.World.Towns)
-			{
-				if (town.ConditionMarker == 0xff || town.ParticipantIdx != participantIdx || !town.Has(CityStructure.Palace))
-					continue;
-
-				short distance = (short)this.owner.Helpers.ObtainDistance(town.Place.X, horizLoc, town.Place.Y, vertLoc);
-
-				if (distance < nearest)
-				{
-					nearest = distance;
-				}
-			}
-
-			this.processor.Journal.CloseScope("LocateNearestCityOfPlayer");
-
-			return (ushort)nearest;
 		}
 	}
 }

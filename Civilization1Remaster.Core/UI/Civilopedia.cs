@@ -9,25 +9,23 @@ namespace Civilization1Remaster.UI
 		private const ushort CivilopediaConceptTitlesTableAddress = 0x3c64;
 		private const ushort CivilopediaNoneStringAddress = 0x3dee;
 		private const ushort CivilopediaAllowsStringAddress = 0x3e03;
-
 		private const ushort CivilopediaPageHistorySegment = 0x3772;
 		private const ushort CivilopediaChosenIndexTableAddress = 0x1c80;
 		private const ushort CivilopediaChosenCategoryTableAddress = 0x36fc;
-
 		private const ushort CivilopediaSciencePaletteAddress = 0x3ce6;
+		private const ushort CivilopediaBuildingPaletteAddress = 0x3d14;
+		private const ushort CivilopediaUnitPaletteAddress = 0x3d4e;
+		private const ushort CivilopediaUnitIconsTableAddress = 0xd58e;
+		private const ushort TerrainPaletteBufferAddress = 0xc5be;
+
 		private static readonly GameText CivilopediaScienceCategoryHeaderAddress = new(0x3cf2, "Civilization Advance");
 		private static readonly GameText CivilopediaBuildingsPictureAddress = new(0x3d07, "citypix2.pic");
-		private const ushort CivilopediaBuildingPaletteAddress = 0x3d14;
 		private static readonly GameText CivilopediaBuildingCategoryHeaderAddress = new(0x3d1d, "City Improvement");
 		private static readonly GameText CivilopediaWonderCategoryHeaderAddress = new(0x3d2e, "Wonder of the World");
-		private const ushort CivilopediaUnitPaletteAddress = 0x3d4e;
 		private static readonly GameText CivilopediaUnitsCategoryHeaderAddress = new(0x3d5a, "Military Unit");
-		private const ushort CivilopediaUnitIconsTableAddress = 0xd58e;
 		private static readonly GameText CivilopediaTerrainPaletteAddress = new(0x3d75, "sp256.pal");
-		private const ushort TerrainPaletteBufferAddress = 0xc5be;
 		private static readonly GameText CivilopediaTerrainCategoryHeaderAddress = new(0x3d7f, "Terrain Type");
 		private static readonly GameText CivilopediaConceptsCategoryHeaderAddress = new(0x3d8c, "Game Concept");
-
 
 		public Civilopedia(GameEngine owner)
 			: base(owner)
@@ -111,6 +109,205 @@ namespace Civilization1Remaster.UI
 			this.processor.Journal.CloseScope("DisplayCivilopediaIndex");
 
 			return answer;
+		}
+
+/// <summary>
+/// The Civilopedia page of the entry of the part (0 technologies, 1 improvements and wonders, 2 units, 3 terrains, 4
+/// concepts): the title, the picture and the texts of the file BLURBn
+/// </summary>
+		public void DisplayCivilopediaRecord(ushort scienceIdx, ushort part)
+		{
+			this.processor.Journal.OpenScope($"DisplayCivilopediaRecord({scienceIdx}, {part})");
+
+			ushort dataSeg = this.processor.SegData.Value16;
+			this.processor.EmitGlobalByte(CivilopediaFileNumberOffset, (byte)((byte)part + 0x30));
+
+			this.owner.Helpers.HaltHueCycling();
+			this.owner.Startup.ConcealMouseCursor();
+
+			ushort diskStatus = 0xffff;
+			if (DiskInUse != 0x3)
+			{
+				diskStatus = this.owner.Startup.QueryForDisk(3, 0);
+				if (diskStatus == 0)
+				{
+					CivilopediaWithoutPictures = 0x1;
+				}
+			}
+
+			ushort bgColor = 0xf;
+			if (VgaMode != 0)
+			{
+				if (CivilopediaWithoutPictures == 0)
+				{
+					bgColor = 0xfd;
+					this.owner.VideoCard.AssignHue(0xfd, VGABitmap.Hue18ToHue(0x3d, 0x3d, 0x3d));
+				}
+				else
+				{
+					bgColor = 0xff;
+				}
+			}
+
+			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, bgColor);
+			this.owner.UnitOps.RenderBusyIndicator();
+
+			DrawingBox.TypefaceIdx = 0x7;
+			this.owner.Words.Clear();
+
+			short titleX = part == 0x2 ? (short)0xe0 : (short)0xcc;
+			if (part == 0x4 ||
+				(part == 0x1 && (short)scienceIdx > 0x18) ||
+				CivilopediaWithoutPictures != 0)
+			{
+				titleX = 0xa0;
+			}
+
+			this.RenderCivilopediaRecordHeader(dataSeg, scienceIdx, part, titleX);
+
+			DrawingBox.TypefaceIdx = 0x6;
+			this.owner.Words.Uppercase();
+			this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), titleX, 20, Hues.Black);
+			DrawingBox.TypefaceIdx = 0x7;
+
+			string tag = "*" + this.owner.Words.ToString();
+			this.owner.Words.Clear();
+
+			short cursorY = 0x4c;
+			if (diskStatus != 0)
+			{
+				if (((byte)(this.owner.World.SessionPrefMarkers & 0xff) & 0x40) != 0)
+				{
+					ushort imported = this.owner.BlockText.ImportTextFromFile(CivilopediaFileName, tag);
+					if ((ushort)(imported + 1) != 0)
+					{
+						this.owner.BlockText.RenderTextChunk(37, 12, 76, 1);
+						this.owner.Conquest.AwaitForKeyPressOrMouseClick();
+						this.owner.Services.FloodBox(ScreenBox, 8, 76, 304, 116, bgColor);
+					}
+				}
+
+				tag += "2";
+				this.owner.Words.Clear();
+				if (part != 0)
+				{
+					this.owner.BlockText.ImportTextFromFile(CivilopediaFileName, tag);
+					cursorY = (short)((ushort)this.owner.BlockText.RenderTextChunk(36, 12, cursorY, 1) + 8);
+				}
+			}
+
+			switch (part)
+			{
+				case 0:
+					this.RenderTechnologyCivilopediaDetails(dataSeg, scienceIdx, titleX, bgColor, cursorY);
+					break;
+				case 1:
+					this.RenderImprovementCivilopediaDetails(dataSeg, scienceIdx, cursorY);
+					break;
+				case 2:
+					this.RenderUnitCivilopediaDetails(dataSeg, scienceIdx, cursorY);
+					break;
+				case 3:
+					this.RenderTerrainCivilopediaDetails(dataSeg, scienceIdx, cursorY);
+					break;
+			}
+
+			DrawingBox.TypefaceIdx = 0x1;
+			this.owner.Startup.DisplayMouseCursor();
+			this.owner.Conquest.AwaitForKeyPressOrMouseClick();
+			this.owner.Startup.ConcealMouseCursor();
+
+			if ((short)diskStatus == 1)
+			{
+				this.owner.Startup.QueryForDisk(0, 1);
+			}
+
+			CivilopediaWithoutPictures = 0x0;
+			if (KingAnswer == 0xffff)
+			{
+				this.owner.Services.FloodBox(ScreenBox, 8, 8, 304, 184, bgColor);
+				this.owner.Helpers.LaunchHueCycling();
+			}
+
+			this.owner.Startup.DisplayMouseCursor();
+			this.processor.Journal.CloseScope("DisplayCivilopediaRecord");
+		}
+
+		/// <summary>
+		/// Index of the technology in the list of the technologies that lead to others first (72 bytes at 0x371e:0000)
+		/// </summary>
+		/// <returns>Index, or 0xffff; also in AX</returns>
+		public ushort ObtainFirstPrerequisite(ushort scienceIdx)
+		{
+			this.processor.Journal.OpenScope($"ObtainFirstPrerequisite({scienceIdx})");
+
+			ushort found = LocateInScienceList(0x0, 0x48, scienceIdx);
+
+			this.processor.Journal.CloseScope("ObtainFirstPrerequisite");
+
+			return found;
+		}
+
+		/// <summary>
+		/// Copies a picture part (left, top, width, height in the back screen 0x19d4) centred at (centreHoriz, centreVert) on the
+		/// screen: the part is cut at the screen edge (319, 199), and narrowed so that it does not start left of the screen
+		/// </summary>
+		public void RenderIcon(ushort left, ushort top, ushort breadth, ushort height, ushort centreHoriz, ushort centreVert)
+		{
+			this.processor.Journal.OpenScope($"RenderIcon({left}, {top}, {breadth}, {height}, {centreHoriz}, {centreVert})");
+
+			if ((short)(left + breadth) > 0x13f)
+			{
+				breadth = (ushort)(0x13f - left);
+			}
+
+			if ((short)(top + height) > 0xc7)
+			{
+				height = (ushort)(0xc7 - top);
+			}
+
+			short half = (short)((short)breadth / 2);
+
+			if ((short)centreHoriz < half)
+			{
+				left += (ushort)(half - centreHoriz);
+				breadth = (ushort)(centreHoriz << 1);
+			}
+
+			this.owner.VideoCard.RenderImage(BackScreenBox, left, top, breadth, height,
+				ScreenBox, (ushort)(centreHoriz - (breadth >> 1)), (ushort)(centreVert - (height >> 1)));
+
+			this.processor.Journal.CloseScope("RenderIcon");
+		}
+
+		/// <summary>
+		/// Index of the technology in the second list of the Civilopedia (28 bytes at 0x371e:0044)
+		/// </summary>
+		/// <returns>Index, or 0xffff; also in AX</returns>
+		public ushort ObtainSecondPrerequisite(ushort scienceIdx)
+		{
+			this.processor.Journal.OpenScope($"ObtainSecondPrerequisite({scienceIdx})");
+
+			ushort found = LocateInScienceList(0x44, 0x1c, scienceIdx);
+
+			this.processor.Journal.CloseScope("ObtainSecondPrerequisite");
+
+			return found;
+		}
+
+		/// <summary>
+		/// Index of the technology in the list of the technology categories of the Civilopedia (12 bytes at 0x371e:0061)
+		/// </summary>
+		/// <returns>Index, or 0xffff; also in AX</returns>
+		public ushort ObtainTechnologyCategory(ushort scienceIdx)
+		{
+			this.processor.Journal.OpenScope($"ObtainTechnologyCategory({scienceIdx})");
+
+			ushort found = LocateInScienceList(0x61, 0xc, scienceIdx);
+
+			this.processor.Journal.CloseScope("ObtainTechnologyCategory");
+
+			return found;
 		}
 
 		/// <summary>
@@ -358,128 +555,6 @@ namespace Civilization1Remaster.UI
 			this.owner.TurnLogic.AwaitForKey();
 
 			return chosen;
-		}
-
-/// <summary>
-/// The Civilopedia page of the entry of the part (0 technologies, 1 improvements and wonders, 2 units, 3 terrains, 4
-/// concepts): the title, the picture and the texts of the file BLURBn
-/// </summary>
-		public void DisplayCivilopediaRecord(ushort scienceIdx, ushort part)
-		{
-			this.processor.Journal.OpenScope($"DisplayCivilopediaRecord({scienceIdx}, {part})");
-
-			ushort dataSeg = this.processor.SegData.Value16;
-			this.processor.EmitGlobalByte(CivilopediaFileNumberOffset, (byte)((byte)part + 0x30));
-
-			this.owner.Helpers.HaltHueCycling();
-			this.owner.Startup.ConcealMouseCursor();
-
-			ushort diskStatus = 0xffff;
-			if (DiskInUse != 0x3)
-			{
-				diskStatus = this.owner.Startup.QueryForDisk(3, 0);
-				if (diskStatus == 0)
-				{
-					CivilopediaWithoutPictures = 0x1;
-				}
-			}
-
-			ushort bgColor = 0xf;
-			if (VgaMode != 0)
-			{
-				if (CivilopediaWithoutPictures == 0)
-				{
-					bgColor = 0xfd;
-					this.owner.VideoCard.AssignHue(0xfd, VGABitmap.Hue18ToHue(0x3d, 0x3d, 0x3d));
-				}
-				else
-				{
-					bgColor = 0xff;
-				}
-			}
-
-			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, bgColor);
-			this.owner.UnitOps.RenderBusyIndicator();
-
-			DrawingBox.TypefaceIdx = 0x7;
-			this.owner.Words.Clear();
-
-			short titleX = part == 0x2 ? (short)0xe0 : (short)0xcc;
-			if (part == 0x4 ||
-				(part == 0x1 && (short)scienceIdx > 0x18) ||
-				CivilopediaWithoutPictures != 0)
-			{
-				titleX = 0xa0;
-			}
-
-			this.RenderCivilopediaRecordHeader(dataSeg, scienceIdx, part, titleX);
-
-			DrawingBox.TypefaceIdx = 0x6;
-			this.owner.Words.Uppercase();
-			this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), titleX, 20, Hues.Black);
-			DrawingBox.TypefaceIdx = 0x7;
-
-			string tag = "*" + this.owner.Words.ToString();
-			this.owner.Words.Clear();
-
-			short cursorY = 0x4c;
-			if (diskStatus != 0)
-			{
-				if (((byte)(this.owner.World.SessionPrefMarkers & 0xff) & 0x40) != 0)
-				{
-					ushort imported = this.owner.BlockText.ImportTextFromFile(CivilopediaFileName, tag);
-					if ((ushort)(imported + 1) != 0)
-					{
-						this.owner.BlockText.RenderTextChunk(37, 12, 76, 1);
-						this.owner.Conquest.AwaitForKeyPressOrMouseClick();
-						this.owner.Services.FloodBox(ScreenBox, 8, 76, 304, 116, bgColor);
-					}
-				}
-
-				tag += "2";
-				this.owner.Words.Clear();
-				if (part != 0)
-				{
-					this.owner.BlockText.ImportTextFromFile(CivilopediaFileName, tag);
-					cursorY = (short)((ushort)this.owner.BlockText.RenderTextChunk(36, 12, cursorY, 1) + 8);
-				}
-			}
-
-			switch (part)
-			{
-				case 0:
-					this.RenderTechnologyCivilopediaDetails(dataSeg, scienceIdx, titleX, bgColor, cursorY);
-					break;
-				case 1:
-					this.RenderImprovementCivilopediaDetails(dataSeg, scienceIdx, cursorY);
-					break;
-				case 2:
-					this.RenderUnitCivilopediaDetails(dataSeg, scienceIdx, cursorY);
-					break;
-				case 3:
-					this.RenderTerrainCivilopediaDetails(dataSeg, scienceIdx, cursorY);
-					break;
-			}
-
-			DrawingBox.TypefaceIdx = 0x1;
-			this.owner.Startup.DisplayMouseCursor();
-			this.owner.Conquest.AwaitForKeyPressOrMouseClick();
-			this.owner.Startup.ConcealMouseCursor();
-
-			if ((short)diskStatus == 1)
-			{
-				this.owner.Startup.QueryForDisk(0, 1);
-			}
-
-			CivilopediaWithoutPictures = 0x0;
-			if (KingAnswer == 0xffff)
-			{
-				this.owner.Services.FloodBox(ScreenBox, 8, 8, 304, 184, bgColor);
-				this.owner.Helpers.LaunchHueCycling();
-			}
-
-			this.owner.Startup.DisplayMouseCursor();
-			this.processor.Journal.CloseScope("DisplayCivilopediaRecord");
 		}
 
 		private void RenderCivilopediaRecordHeader(ushort dataSeg, ushort scienceIdx, ushort part, short titleX)
@@ -898,83 +973,6 @@ namespace Civilization1Remaster.UI
 					10));
 			this.owner.Words.Append("%");
 			this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 12, cursorY, Hues.LightRed);
-		}
-
-		/// <summary>
-		/// Index of the technology in the list of the technologies that lead to others first (72 bytes at 0x371e:0000)
-		/// </summary>
-		/// <returns>Index, or 0xffff; also in AX</returns>
-		public ushort ObtainFirstPrerequisite(ushort scienceIdx)
-		{
-			this.processor.Journal.OpenScope($"ObtainFirstPrerequisite({scienceIdx})");
-
-			ushort found = LocateInScienceList(0x0, 0x48, scienceIdx);
-
-			this.processor.Journal.CloseScope("ObtainFirstPrerequisite");
-
-			return found;
-		}
-
-		/// <summary>
-		/// Copies a picture part (left, top, width, height in the back screen 0x19d4) centred at (centreHoriz, centreVert) on the
-		/// screen: the part is cut at the screen edge (319, 199), and narrowed so that it does not start left of the screen
-		/// </summary>
-		public void RenderIcon(ushort left, ushort top, ushort breadth, ushort height, ushort centreHoriz, ushort centreVert)
-		{
-			this.processor.Journal.OpenScope($"RenderIcon({left}, {top}, {breadth}, {height}, {centreHoriz}, {centreVert})");
-
-			if ((short)(left + breadth) > 0x13f)
-			{
-				breadth = (ushort)(0x13f - left);
-			}
-
-			if ((short)(top + height) > 0xc7)
-			{
-				height = (ushort)(0xc7 - top);
-			}
-
-			short half = (short)((short)breadth / 2);
-
-			if ((short)centreHoriz < half)
-			{
-				left += (ushort)(half - centreHoriz);
-				breadth = (ushort)(centreHoriz << 1);
-			}
-
-			this.owner.VideoCard.RenderImage(BackScreenBox, left, top, breadth, height,
-				ScreenBox, (ushort)(centreHoriz - (breadth >> 1)), (ushort)(centreVert - (height >> 1)));
-
-			this.processor.Journal.CloseScope("RenderIcon");
-		}
-
-		/// <summary>
-		/// Index of the technology in the second list of the Civilopedia (28 bytes at 0x371e:0044)
-		/// </summary>
-		/// <returns>Index, or 0xffff; also in AX</returns>
-		public ushort ObtainSecondPrerequisite(ushort scienceIdx)
-		{
-			this.processor.Journal.OpenScope($"ObtainSecondPrerequisite({scienceIdx})");
-
-			ushort found = LocateInScienceList(0x44, 0x1c, scienceIdx);
-
-			this.processor.Journal.CloseScope("ObtainSecondPrerequisite");
-
-			return found;
-		}
-
-		/// <summary>
-		/// Index of the technology in the list of the technology categories of the Civilopedia (12 bytes at 0x371e:0061)
-		/// </summary>
-		/// <returns>Index, or 0xffff; also in AX</returns>
-		public ushort ObtainTechnologyCategory(ushort scienceIdx)
-		{
-			this.processor.Journal.OpenScope($"ObtainTechnologyCategory({scienceIdx})");
-
-			ushort found = LocateInScienceList(0x61, 0xc, scienceIdx);
-
-			this.processor.Journal.CloseScope("ObtainTechnologyCategory");
-
-			return found;
 		}
 
 		/// <summary>

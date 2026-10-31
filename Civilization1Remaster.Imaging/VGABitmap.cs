@@ -10,15 +10,42 @@ namespace Civilization1Remaster.Video
 {
 	public class VGABitmap : IDisposable
 	{
+		protected bool Shown = true;
+
 		private readonly int pitch;
 		private readonly byte[] pictureStorage;
 		private readonly Color[] palette = new Color[256];
+		private readonly int[] swatchRgba = new int[256];
+
 		private Rectangle box;
 		private bool edited = true;
-		private readonly int[] swatchRgba = new int[256];
-		protected bool Shown = true;
 
-		#region Default palette
+		public VGABitmap() : this(new Size(320, 200))
+		{ }
+
+		public VGABitmap(Size extent) : this(extent.Width, extent.Height)
+		{ }
+
+		public VGABitmap(int breadth, int altitude)
+		{
+			// stride has to be a multiple of 4
+			this.pitch = (int)(Math.Ceiling((double)breadth / 4.0) * 4.0);
+			this.pictureStorage = new byte[this.pitch * altitude];
+			this.box = new Rectangle(0, 0, breadth, altitude);
+
+			// set default palette
+			for (int idx = 0; idx < StandardSwatch.Length && idx < this.palette.Length; idx++)
+			{
+				this.palette[idx] = StandardSwatch[idx];
+				this.swatchRgba[idx] = ToFullArgb(StandardSwatch[idx]);
+			}
+		}
+
+		~VGABitmap()
+		{
+			this.Dispose();
+		}
+
 		public static Color[] StandardSwatch { get; } = new Color[] {
 			Color.FromArgb(0x000000),
 			Color.FromArgb(0x00002a),
@@ -149,9 +176,7 @@ namespace Civilization1Remaster.Video
 			Color.FromArgb(0x350a1f),
 			Color.FromArgb(0x3f152a)
 		};
-		#endregion
 
-		#region Palette 1
 		public static Color[] Swatch1 { get; } = new Color[] {
 			Color.FromArgb(0x000000),
 			Color.FromArgb(0x0000a7),
@@ -170,44 +195,6 @@ namespace Civilization1Remaster.Video
 			Color.FromArgb(0xfbfb53),
 			Color.FromArgb(0xfbfbfb)
 		};
-		#endregion
-
-		public VGABitmap() : this(new Size(320, 200))
-		{ }
-
-		public VGABitmap(Size extent) : this(extent.Width, extent.Height)
-		{ }
-
-		private static int ToFullArgb(Color c)
-		{
-			return (int)(0xff000000 | (uint)(c.ToArgb() & 0x00ffffff));
-		}
-
-		public VGABitmap(int breadth, int altitude)
-		{
-			// stride has to be a multiple of 4
-			this.pitch = (int)(Math.Ceiling((double)breadth / 4.0) * 4.0);
-			this.pictureStorage = new byte[this.pitch * altitude];
-			this.box = new Rectangle(0, 0, breadth, altitude);
-
-			// set default palette
-			for (int idx = 0; idx < StandardSwatch.Length && idx < this.palette.Length; idx++)
-			{
-				this.palette[idx] = StandardSwatch[idx];
-				this.swatchRgba[idx] = ToFullArgb(StandardSwatch[idx]);
-			}
-		}
-
-		#region IDisposable members
-		~VGABitmap()
-		{
-			this.Dispose();
-		}
-
-		public void Dispose()
-		{
-		}
-		#endregion
 
 		public Color[] Palette
 		{
@@ -246,6 +233,14 @@ namespace Civilization1Remaster.Video
 			set { this.Shown = value; }
 		}
 
+		/// <summary>
+		/// Colors of the palette as ARGB values.
+		/// </summary>
+		public int[] SwatchRgba
+		{
+			get { return this.swatchRgba; }
+		}
+
 		public static Color Hue18ToHue(int crimson, int emerald, int azure)
 		{
 			return Color.FromArgb((255 * (crimson & 0x3f)) / 63, (255 * (emerald & 0x3f)) / 63, (255 * (azure & 0x3f)) / 63);
@@ -256,21 +251,290 @@ namespace Civilization1Remaster.Video
 			return Color.FromArgb((63 * hue.R) / 255, (63 * hue.G) / 255, (63 * hue.B) / 255);
 		}
 
-		/// <summary>
-		/// Colors of the palette as ARGB values.
-		/// </summary>
-		public int[] SwatchRgba
+		public static VGABitmap? ViaFile(string route, out byte[] swatch)
 		{
-			get { return this.swatchRgba; }
+			VGABitmap? picture = null;
+			FileStream flow = new FileStream(route, FileMode.Open, FileAccess.Read);
+			List<BKeyValuePair<int, Color>> colors = new List<BKeyValuePair<int, Color>>();
+			swatch = new byte[0];
+			
+			// PIC file is written in blocks
+			while (true)
+			{
+				int stamp = PullUInt16(flow);
+				int chunkSpan = PullUInt16(flow);
+
+				if (stamp < 0 || chunkSpan < 0)
+					break;
+
+				byte[] chunk = new byte[chunkSpan];
+				int chunkExtent = flow.Read(chunk, 0, chunkSpan);
+
+				if (chunkSpan != chunkExtent)
+				{
+					throw new Exception(
+						$"Block type 0x{stamp:x4} data missing, expected {chunkSpan} bytes, " +
+						$"but read only {chunkExtent} bytes");
+				}
+
+				MemoryStream chunkSource;
+				int breadthInt;
+				int elevation;
+				int peakDigits;
+
+				switch (stamp)
+				{
+					case 0x3045:
+						// 8bit color palette
+						break;
+
+					case 0x304d:
+						// 18bit color palette
+						List<byte> scratchList = new List<byte>();
+						scratchList.Add(0x4d);
+						scratchList.Add(0x30);
+						scratchList.Add((byte)(chunkSpan & 0xff));
+						scratchList.Add((byte)((chunkSpan & 0xff00) >> 8));
+						scratchList.AddRange(chunk);
+						swatch = scratchList.ToArray();
+
+						chunkSource = new MemoryStream(chunk);
+						int slot = chunkSource.ReadByte();
+						int hueTally = chunkSource.ReadByte();
+
+						if (slot >= 0 && hueTally >= 0)
+						{
+							hueTally -= slot;
+							hueTally++;
+
+							for (int idx = 0; idx < hueTally; idx++)
+							{
+								int scarlet = chunkSource.ReadByte();
+								int lime = chunkSource.ReadByte();
+								int sapphire = chunkSource.ReadByte();
+
+								if (scarlet < 0 || lime < 0 || sapphire < 0)
+								{
+									throw new Exception($"Palette block type 0x{stamp:x4} malformed");
+								}
+								colors.Add(new BKeyValuePair<int, Color>(slot + idx,
+									VGABitmap.Hue18ToHue(scarlet, lime, sapphire)));
+							}
+						}
+						else
+						{
+							throw new Exception($"Palette block type 0x{stamp:x4} malformed");
+						}
+						break;
+
+					case 0x3058:
+						// Image data encoded by RLE and LZW
+						chunkSource = new MemoryStream(chunk);
+						breadthInt = PullUInt16(chunkSource);
+						elevation = PullUInt16(chunkSource);
+						peakDigits = chunkSource.ReadByte();
+
+						if (breadthInt >= 0 && elevation >= 0 && peakDigits > 7)
+						{
+							// decode LZW
+							MemoryStream lzEmitted = new MemoryStream();
+							LZW.Unpack(lzEmitted, chunkSource, 9, peakDigits);
+							lzEmitted.Position = 0;
+
+							// decode RLE
+							MemoryStream runlenEmitted = new MemoryStream();
+							RLE.Unpack(runlenEmitted, lzEmitted);
+							runlenEmitted.Position = 0;
+
+							// construct bitmap with our raw data
+							int pitchSpan = (int)(Math.Ceiling((double)breadthInt / 4.0) * 4.0);
+							int sweepPlace = 0;
+
+							picture = new VGABitmap(breadthInt, elevation);
+
+							for (int idx = 0; idx < elevation; idx++)
+							{
+								for (int jdx = 0; jdx < breadthInt; jdx++)
+								{
+									int chrAlt = runlenEmitted.ReadByte();
+									if (chrAlt < 0)
+										break;
+
+									picture.pictureStorage[sweepPlace] = (byte)chrAlt;
+									sweepPlace++;
+								}
+								sweepPlace += pitchSpan - breadthInt;
+							}
+
+							// set bitmap palette
+							for (int idx = 0; idx < colors.Count; idx++)
+							{
+								picture.palette[colors[idx].Token] = colors[idx].Datum;
+								picture.swatchRgba[colors[idx].Token] = colors[idx].Datum.ToArgb();
+							}
+						}
+						else
+						{
+							throw new Exception($"Image block type 0x{stamp:x4} malformed");
+						}
+						break;
+
+					case 0x3158:
+						// Image data encoded by two pixels packed into one, RLE and LZW
+						chunkSource = new MemoryStream(chunk);
+						breadthInt = PullUInt16(chunkSource);
+						elevation = PullUInt16(chunkSource);
+						peakDigits = chunkSource.ReadByte();
+
+						if (breadthInt >= 0 && elevation >= 0 && peakDigits > 7)
+						{
+							// decode LZW
+							MemoryStream lzEmitted = new MemoryStream();
+							LZW.Unpack(lzEmitted, chunkSource, 9, peakDigits);
+							lzEmitted.Position = 0;
+
+							// decode RLE
+							MemoryStream runlenEmitted = new MemoryStream();
+							RLE.Unpack(runlenEmitted, lzEmitted);
+							runlenEmitted.Position = 0;
+
+							// construct bitmap with our raw data
+							int pitchSpan = (int)(Math.Ceiling((double)breadthInt / 2.0) * 4.0);
+							int sweepPlace = 0;
+
+							picture = new VGABitmap(breadthInt * 2, elevation);
+
+							for (int idx = 0; idx < elevation; idx++)
+							{
+								for (int jdx = 0; jdx < breadthInt; jdx += 2)
+								{
+									int chrAlt = runlenEmitted.ReadByte();
+									if (chrAlt < 0)
+										break;
+
+									picture.pictureStorage[sweepPlace] = (byte)(chrAlt & 0xf);
+									sweepPlace++;
+									picture.pictureStorage[sweepPlace] = (byte)((chrAlt & 0xf0) >> 4);
+									sweepPlace++;
+								}
+								sweepPlace += pitchSpan - breadthInt;
+							}
+
+							// set bitmap palette
+							for (int idx = 0; idx < colors.Count; idx++)
+							{
+								picture.palette[colors[idx].Token] = colors[idx].Datum;
+								picture.swatchRgba[colors[idx].Token] = ToFullArgb(colors[idx].Datum);
+							}
+						}
+						else
+						{
+							throw new Exception($"Image block type 0x{stamp:x4} malformed");
+						}
+						break;
+
+					default:
+						throw new Exception($"Undefined block type 0x{stamp:x4}");
+				}
+			}
+
+			flow.Close();
+
+			return picture;
 		}
 
-		private void AssignPictureColors(Color[] shades)
+		public static List<BKeyValuePair<int, Color>> ColorsFromFile(string route, out byte[] swatch)
 		{
-			for (int idx = 0; idx < this.swatchRgba.Length && idx < shades.Length; idx++)
+			FileStream flow = new FileStream(route, FileMode.Open, FileAccess.Read);
+			List<BKeyValuePair<int, Color>> colors = new List<BKeyValuePair<int, Color>>();
+			swatch = new byte[0];
+
+			// PIC file is written in blocks
+			while (true)
 			{
-				this.palette[idx] = shades[idx];
-				this.swatchRgba[idx] = ToFullArgb(shades[idx]);
+				int stamp = PullUInt16(flow);
+				int chunkSpan = PullUInt16(flow);
+
+				if (stamp < 0 || chunkSpan < 0)
+					break;
+
+				byte[] chunk = new byte[chunkSpan];
+				int chunkExtent = flow.Read(chunk, 0, chunkSpan);
+
+				if (chunkSpan != chunkExtent)
+				{
+					throw new Exception(
+						$"Block type 0x{stamp:x4} data missing, expected {chunkSpan} bytes, " +
+						$"but read only {chunkExtent} bytes");
+				}
+
+				MemoryStream chunkSource;
+
+				switch (stamp)
+				{
+					case 0x3045:
+						// 8bit color palette
+						break;
+
+					case 0x304d:
+						// 18bit color palette
+						List<byte> scratchList = new List<byte>();
+						scratchList.Add(0x4d);
+						scratchList.Add(0x30);
+						scratchList.Add((byte)(chunkSpan & 0xff));
+						scratchList.Add((byte)((chunkSpan & 0xff00) >> 8));
+						scratchList.AddRange(chunk);
+						swatch = scratchList.ToArray();
+
+						chunkSource = new MemoryStream(chunk);
+						int slot = chunkSource.ReadByte();
+						int hueTally = chunkSource.ReadByte();
+
+						if (slot >= 0 && hueTally >= 0)
+						{
+							hueTally -= slot;
+							hueTally++;
+
+							for (int idx = 0; idx < hueTally; idx++)
+							{
+								int scarlet = chunkSource.ReadByte();
+								int lime = chunkSource.ReadByte();
+								int sapphire = chunkSource.ReadByte();
+
+								if (scarlet < 0 || lime < 0 || sapphire < 0)
+								{
+									throw new Exception($"Palette block type 0x{stamp:x4} malformed");
+								}
+								colors.Add(new BKeyValuePair<int, Color>(slot + idx,
+									VGABitmap.Hue18ToHue(scarlet, lime, sapphire)));
+							}
+						}
+						else
+						{
+							throw new Exception($"Palette block type 0x{stamp:x4} malformed");
+						}
+						break;
+
+					case 0x3058:
+						// Image data encoded by RLE and LZW
+						break;
+
+					case 0x3158:
+						// Image data encoded by two pixels packed into one, RLE and LZW
+						break;
+
+					default:
+						throw new Exception($"Undefined block type 0x{stamp:x4}");
+				}
 			}
+
+			flow.Close();
+
+			return colors;
+		}
+
+		public void Dispose()
+		{
 		}
 
 		public Color ObtainHue(int ordinal)
@@ -738,286 +1002,9 @@ namespace Civilization1Remaster.Video
 			}
 		}
 
-		public static VGABitmap? ViaFile(string route, out byte[] swatch)
+		private static int ToFullArgb(Color c)
 		{
-			VGABitmap? picture = null;
-			FileStream flow = new FileStream(route, FileMode.Open, FileAccess.Read);
-			List<BKeyValuePair<int, Color>> colors = new List<BKeyValuePair<int, Color>>();
-			swatch = new byte[0];
-			
-			// PIC file is written in blocks
-			while (true)
-			{
-				int stamp = PullUInt16(flow);
-				int chunkSpan = PullUInt16(flow);
-
-				if (stamp < 0 || chunkSpan < 0)
-					break;
-
-				byte[] chunk = new byte[chunkSpan];
-				int chunkExtent = flow.Read(chunk, 0, chunkSpan);
-
-				if (chunkSpan != chunkExtent)
-				{
-					throw new Exception(
-						$"Block type 0x{stamp:x4} data missing, expected {chunkSpan} bytes, " +
-						$"but read only {chunkExtent} bytes");
-				}
-
-				MemoryStream chunkSource;
-				int breadthInt;
-				int elevation;
-				int peakDigits;
-
-				switch (stamp)
-				{
-					case 0x3045:
-						// 8bit color palette
-						break;
-
-					case 0x304d:
-						// 18bit color palette
-						List<byte> scratchList = new List<byte>();
-						scratchList.Add(0x4d);
-						scratchList.Add(0x30);
-						scratchList.Add((byte)(chunkSpan & 0xff));
-						scratchList.Add((byte)((chunkSpan & 0xff00) >> 8));
-						scratchList.AddRange(chunk);
-						swatch = scratchList.ToArray();
-
-						chunkSource = new MemoryStream(chunk);
-						int slot = chunkSource.ReadByte();
-						int hueTally = chunkSource.ReadByte();
-
-						if (slot >= 0 && hueTally >= 0)
-						{
-							hueTally -= slot;
-							hueTally++;
-
-							for (int idx = 0; idx < hueTally; idx++)
-							{
-								int scarlet = chunkSource.ReadByte();
-								int lime = chunkSource.ReadByte();
-								int sapphire = chunkSource.ReadByte();
-
-								if (scarlet < 0 || lime < 0 || sapphire < 0)
-								{
-									throw new Exception($"Palette block type 0x{stamp:x4} malformed");
-								}
-								colors.Add(new BKeyValuePair<int, Color>(slot + idx,
-									VGABitmap.Hue18ToHue(scarlet, lime, sapphire)));
-							}
-						}
-						else
-						{
-							throw new Exception($"Palette block type 0x{stamp:x4} malformed");
-						}
-						break;
-
-					case 0x3058:
-						// Image data encoded by RLE and LZW
-						chunkSource = new MemoryStream(chunk);
-						breadthInt = PullUInt16(chunkSource);
-						elevation = PullUInt16(chunkSource);
-						peakDigits = chunkSource.ReadByte();
-
-						if (breadthInt >= 0 && elevation >= 0 && peakDigits > 7)
-						{
-							// decode LZW
-							MemoryStream lzEmitted = new MemoryStream();
-							LZW.Unpack(lzEmitted, chunkSource, 9, peakDigits);
-							lzEmitted.Position = 0;
-
-							// decode RLE
-							MemoryStream runlenEmitted = new MemoryStream();
-							RLE.Unpack(runlenEmitted, lzEmitted);
-							runlenEmitted.Position = 0;
-
-							// construct bitmap with our raw data
-							int pitchSpan = (int)(Math.Ceiling((double)breadthInt / 4.0) * 4.0);
-							int sweepPlace = 0;
-
-							picture = new VGABitmap(breadthInt, elevation);
-
-							for (int idx = 0; idx < elevation; idx++)
-							{
-								for (int jdx = 0; jdx < breadthInt; jdx++)
-								{
-									int chrAlt = runlenEmitted.ReadByte();
-									if (chrAlt < 0)
-										break;
-
-									picture.pictureStorage[sweepPlace] = (byte)chrAlt;
-									sweepPlace++;
-								}
-								sweepPlace += pitchSpan - breadthInt;
-							}
-
-							// set bitmap palette
-							for (int idx = 0; idx < colors.Count; idx++)
-							{
-								picture.palette[colors[idx].Token] = colors[idx].Datum;
-								picture.swatchRgba[colors[idx].Token] = colors[idx].Datum.ToArgb();
-							}
-						}
-						else
-						{
-							throw new Exception($"Image block type 0x{stamp:x4} malformed");
-						}
-						break;
-
-					case 0x3158:
-						// Image data encoded by two pixels packed into one, RLE and LZW
-						chunkSource = new MemoryStream(chunk);
-						breadthInt = PullUInt16(chunkSource);
-						elevation = PullUInt16(chunkSource);
-						peakDigits = chunkSource.ReadByte();
-
-						if (breadthInt >= 0 && elevation >= 0 && peakDigits > 7)
-						{
-							// decode LZW
-							MemoryStream lzEmitted = new MemoryStream();
-							LZW.Unpack(lzEmitted, chunkSource, 9, peakDigits);
-							lzEmitted.Position = 0;
-
-							// decode RLE
-							MemoryStream runlenEmitted = new MemoryStream();
-							RLE.Unpack(runlenEmitted, lzEmitted);
-							runlenEmitted.Position = 0;
-
-							// construct bitmap with our raw data
-							int pitchSpan = (int)(Math.Ceiling((double)breadthInt / 2.0) * 4.0);
-							int sweepPlace = 0;
-
-							picture = new VGABitmap(breadthInt * 2, elevation);
-
-							for (int idx = 0; idx < elevation; idx++)
-							{
-								for (int jdx = 0; jdx < breadthInt; jdx += 2)
-								{
-									int chrAlt = runlenEmitted.ReadByte();
-									if (chrAlt < 0)
-										break;
-
-									picture.pictureStorage[sweepPlace] = (byte)(chrAlt & 0xf);
-									sweepPlace++;
-									picture.pictureStorage[sweepPlace] = (byte)((chrAlt & 0xf0) >> 4);
-									sweepPlace++;
-								}
-								sweepPlace += pitchSpan - breadthInt;
-							}
-
-							// set bitmap palette
-							for (int idx = 0; idx < colors.Count; idx++)
-							{
-								picture.palette[colors[idx].Token] = colors[idx].Datum;
-								picture.swatchRgba[colors[idx].Token] = ToFullArgb(colors[idx].Datum);
-							}
-						}
-						else
-						{
-							throw new Exception($"Image block type 0x{stamp:x4} malformed");
-						}
-						break;
-
-					default:
-						throw new Exception($"Undefined block type 0x{stamp:x4}");
-				}
-			}
-
-			flow.Close();
-
-			return picture;
-		}
-
-		public static List<BKeyValuePair<int, Color>> ColorsFromFile(string route, out byte[] swatch)
-		{
-			FileStream flow = new FileStream(route, FileMode.Open, FileAccess.Read);
-			List<BKeyValuePair<int, Color>> colors = new List<BKeyValuePair<int, Color>>();
-			swatch = new byte[0];
-
-			// PIC file is written in blocks
-			while (true)
-			{
-				int stamp = PullUInt16(flow);
-				int chunkSpan = PullUInt16(flow);
-
-				if (stamp < 0 || chunkSpan < 0)
-					break;
-
-				byte[] chunk = new byte[chunkSpan];
-				int chunkExtent = flow.Read(chunk, 0, chunkSpan);
-
-				if (chunkSpan != chunkExtent)
-				{
-					throw new Exception(
-						$"Block type 0x{stamp:x4} data missing, expected {chunkSpan} bytes, " +
-						$"but read only {chunkExtent} bytes");
-				}
-
-				MemoryStream chunkSource;
-
-				switch (stamp)
-				{
-					case 0x3045:
-						// 8bit color palette
-						break;
-
-					case 0x304d:
-						// 18bit color palette
-						List<byte> scratchList = new List<byte>();
-						scratchList.Add(0x4d);
-						scratchList.Add(0x30);
-						scratchList.Add((byte)(chunkSpan & 0xff));
-						scratchList.Add((byte)((chunkSpan & 0xff00) >> 8));
-						scratchList.AddRange(chunk);
-						swatch = scratchList.ToArray();
-
-						chunkSource = new MemoryStream(chunk);
-						int slot = chunkSource.ReadByte();
-						int hueTally = chunkSource.ReadByte();
-
-						if (slot >= 0 && hueTally >= 0)
-						{
-							hueTally -= slot;
-							hueTally++;
-
-							for (int idx = 0; idx < hueTally; idx++)
-							{
-								int scarlet = chunkSource.ReadByte();
-								int lime = chunkSource.ReadByte();
-								int sapphire = chunkSource.ReadByte();
-
-								if (scarlet < 0 || lime < 0 || sapphire < 0)
-								{
-									throw new Exception($"Palette block type 0x{stamp:x4} malformed");
-								}
-								colors.Add(new BKeyValuePair<int, Color>(slot + idx,
-									VGABitmap.Hue18ToHue(scarlet, lime, sapphire)));
-							}
-						}
-						else
-						{
-							throw new Exception($"Palette block type 0x{stamp:x4} malformed");
-						}
-						break;
-
-					case 0x3058:
-						// Image data encoded by RLE and LZW
-						break;
-
-					case 0x3158:
-						// Image data encoded by two pixels packed into one, RLE and LZW
-						break;
-
-					default:
-						throw new Exception($"Undefined block type 0x{stamp:x4}");
-				}
-			}
-
-			flow.Close();
-
-			return colors;
+			return (int)(0xff000000 | (uint)(c.ToArgb() & 0x00ffffff));
 		}
 
 		private static int PullUInt16(Stream flow)
@@ -1032,6 +1019,15 @@ namespace Civilization1Remaster.Video
 			}
 
 			return octet0Int | (octet1Int << 8);
+		}
+
+		private void AssignPictureColors(Color[] shades)
+		{
+			for (int idx = 0; idx < this.swatchRgba.Length && idx < shades.Length; idx++)
+			{
+				this.palette[idx] = shades[idx];
+				this.swatchRgba[idx] = ToFullArgb(shades[idx]);
+			}
 		}
 	}
 }

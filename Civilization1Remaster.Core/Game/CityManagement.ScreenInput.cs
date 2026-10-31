@@ -10,6 +10,21 @@ namespace Civilization1Remaster.Game
 	/// <summary>The input of the city screen: buying, selling, the specialists, the tiles, the units</summary>
 	partial class CityManagement
 	{
+		/// <summary>What the city screen does after a button</summary>
+		private enum CityScreenStep
+		{
+			/// <summary>The button wasn't used: the buttons after it</summary>
+			Others,
+			/// <summary>The city screen again from the citizens (the advisor switched, another tab)</summary>
+			Redraw,
+			/// <summary>The city from its start (the advisor gave up with 99, a purchase, a change, the view of the city)</summary>
+			Restart,
+			/// <summary>No click at all: the end of the city screen</summary>
+			Leave,
+			/// <summary>A line of the list clicked: selling the improvement</summary>
+			Sell,
+		}
+
 		/// <summary>
 		/// Waits until the mouse button is let go, then for a click, a key or the flag 0xb8; meanwhile a blinking Change button
 		/// (0xc0, counted up) changes its colours every 10 ticks.
@@ -42,21 +57,6 @@ namespace Civilization1Remaster.Game
 				this.owner.Startup.DisplayMouseCursor();
 				this.owner.TextPainter.AwaitTime(10);
 			}
-		}
-
-		/// <summary>What the city screen does after a button</summary>
-		private enum CityScreenStep
-		{
-			/// <summary>The button wasn't used: the buttons after it</summary>
-			Others,
-			/// <summary>The city screen again from the citizens (the advisor switched, another tab)</summary>
-			Redraw,
-			/// <summary>The city from its start (the advisor gave up with 99, a purchase, a change, the view of the city)</summary>
-			Restart,
-			/// <summary>No click at all: the end of the city screen</summary>
-			Leave,
-			/// <summary>A line of the list clicked: selling the improvement</summary>
-			Sell,
 		}
 
 		/// <summary>

@@ -11,7 +11,6 @@ namespace Civilization1Remaster.Game.Rules
 		public class Battle
 		{
 			public bool AssailantVictories { get; set; }
-
 			public int AssailantBeginStrikeMarks { get; set; }
 			public int GuardianBeginStrikeMarks { get; set; }
 
@@ -19,6 +18,7 @@ namespace Civilization1Remaster.Game.Rules
 			/// Hit points left after the battle, the loser has 0
 			/// </summary>
 			public int AssailantStrikeMarks { get; set; }
+
 			public int GuardianStrikeMarks { get; set; }
 
 			/// <summary>

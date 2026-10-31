@@ -12,7 +12,6 @@ namespace Civilization1Remaster.Engine
 		public const ushort Enter = 0x0d;
 		public const ushort Escape = 0x1b;
 		public const ushort Space = 0x20;
-
 		public const ushort F1 = 0x3b00;
 		public const ushort F2 = 0x3c00;
 		public const ushort F3 = 0x3d00;
@@ -23,7 +22,6 @@ namespace Civilization1Remaster.Engine
 		public const ushort F8 = 0x4200;
 		public const ushort F9 = 0x4300;
 		public const ushort F10 = 0x4400;
-
 		public const ushort Home = 0x4700;
 		public const ushort Up = 0x4800;
 		public const ushort PageUp = 0x4900;
@@ -35,6 +33,7 @@ namespace Civilization1Remaster.Engine
 
 		/// <summary>Shift and a keypad arrow: the scan code and the keypad digit</summary>
 		public const ushort ShiftHome = 0x4737;
+
 		public const ushort ShiftUp = 0x4838;
 		public const ushort ShiftPageUp = 0x4939;
 		public const ushort ShiftLeft = 0x4b34;
@@ -42,7 +41,6 @@ namespace Civilization1Remaster.Engine
 		public const ushort ShiftEnd = 0x4f31;
 		public const ushort ShiftDown = 0x5032;
 		public const ushort ShiftPageDown = 0x5133;
-
 		public const ushort AltQ = 0x1000;
 		public const ushort AltW = 0x1100;
 		public const ushort AltR = 0x1300;

@@ -14,9 +14,10 @@ namespace Civilization1Remaster.Game.Rules
 		public const int ParticipantTally = 8;
 		public const int TroopTally = 128;
 
-		private static readonly byte[] DocumentSignature = { (byte)'O', (byte)'C', (byte)'H', (byte)'P' };
 		private const byte DocumentEdition = 1;
 		private const byte NoneTroop = 0xff;
+
+		private static readonly byte[] DocumentSignature = { (byte)'O', (byte)'C', (byte)'H', (byte)'P' };
 
 		private readonly byte[,] troopKinds = new byte[ParticipantTally, TroopTally];
 		private readonly byte[,] missingStrikeMarks = new byte[ParticipantTally, TroopTally];
@@ -25,16 +26,6 @@ namespace Civilization1Remaster.Game.Rules
 		public UnitHealth()
 		{
 			WipeAll();
-		}
-
-		private static bool VerifyValid(int participantIdx, int troopIdx)
-		{
-			return participantIdx >= 0 && participantIdx < ParticipantTally && troopIdx >= 0 && troopIdx < TroopTally;
-		}
-
-		private bool IsEquivalentTo(int participantIdx, int troopIdx, int troopKind)
-		{
-			return VerifyValid(participantIdx, troopIdx) && this.troopKinds[participantIdx, troopIdx] == (byte)troopKind;
 		}
 
 		/// <summary>
@@ -186,6 +177,16 @@ namespace Civilization1Remaster.Game.Rules
 			}
 
 			return true;
+		}
+
+		private static bool VerifyValid(int participantIdx, int troopIdx)
+		{
+			return participantIdx >= 0 && participantIdx < ParticipantTally && troopIdx >= 0 && troopIdx < TroopTally;
+		}
+
+		private bool IsEquivalentTo(int participantIdx, int troopIdx, int troopKind)
+		{
+			return VerifyValid(participantIdx, troopIdx) && this.troopKinds[participantIdx, troopIdx] == (byte)troopKind;
 		}
 	}
 }

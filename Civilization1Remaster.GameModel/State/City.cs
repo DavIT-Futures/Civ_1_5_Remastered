@@ -6,6 +6,15 @@ namespace Civilization1Remaster.Game.State
 {
 	public class City
 	{
+		public City()
+		{
+			for (int idx = 0; idx < this.CommerceTownIndices.Length; idx++)
+				this.CommerceTownIndices[idx] = 0;
+
+			for (int idx = 0; idx < this.Unfamiliar.Length; idx++)
+				this.Unfamiliar[idx] = 0;
+		}
+
 		public ushort StructureMarkers0 { get; set; } = 0;
 		public ushort StructureMarkers1 { get; set; } = 0;
 		public Point Place { get; set; } = new Point(0, 0);
@@ -33,36 +42,6 @@ namespace Civilization1Remaster.Game.State
 				this.StructureMarkers0 = (ushort)value;
 				this.StructureMarkers1 = (ushort)(value >> 16);
 			}
-		}
-
-		/// <summary>Whether the city has the improvement</summary>
-		public bool Has(CityStructure structure) => (this.Structures & (1u << (int)structure)) != 0;
-
-		/// <summary>The improvement built</summary>
-		public void Add(CityStructure structure) => this.Structures |= 1u << (int)structure;
-
-		/// <summary>The improvement gone</summary>
-		public void Remove(CityStructure structure) => this.Structures &= ~(1u << (int)structure);
-
-		/// <summary>
-		/// The bit of a structure read the way the original reads it: a 16-bit mask sign extended to 32 bits, so the bit 15
-		/// also counts any of 16 - 31 and the bits 16 - 23 never count
-		/// </summary>
-		public bool HasStructureSignExtended(ushort structureIdx)
-		{
-			ushort mask = (ushort)(1 << (byte)structureIdx);
-			ushort high = (mask & 0x8000) != 0 ? (ushort)0xffff : (ushort)0;
-
-			return ((this.StructureMarkers0 & mask) | (this.StructureMarkers1 & high)) != 0;
-		}
-
-		public City()
-		{
-			for (int idx = 0; idx < this.CommerceTownIndices.Length; idx++)
-				this.CommerceTownIndices[idx] = 0;
-
-			for (int idx = 0; idx < this.Unfamiliar.Length; idx++)
-				this.Unfamiliar[idx] = 0;
 		}
 
 		public static City ReadFrom(Stream flow)
@@ -93,6 +72,27 @@ namespace Civilization1Remaster.Game.State
 				town.Unfamiliar[idx] = (sbyte)StreamIo.PullUInt8(flow);
 
 			return town;
+		}
+
+		/// <summary>Whether the city has the improvement</summary>
+		public bool Has(CityStructure structure) => (this.Structures & (1u << (int)structure)) != 0;
+
+		/// <summary>The improvement built</summary>
+		public void Add(CityStructure structure) => this.Structures |= 1u << (int)structure;
+
+		/// <summary>The improvement gone</summary>
+		public void Remove(CityStructure structure) => this.Structures &= ~(1u << (int)structure);
+
+		/// <summary>
+		/// The bit of a structure read the way the original reads it: a 16-bit mask sign extended to 32 bits, so the bit 15
+		/// also counts any of 16 - 31 and the bits 16 - 23 never count
+		/// </summary>
+		public bool HasStructureSignExtended(ushort structureIdx)
+		{
+			ushort mask = (ushort)(1 << (byte)structureIdx);
+			ushort high = (mask & 0x8000) != 0 ? (ushort)0xffff : (ushort)0;
+
+			return ((this.StructureMarkers0 & mask) | (this.StructureMarkers1 & high)) != 0;
 		}
 
 		public void WriteTo(Stream flow)

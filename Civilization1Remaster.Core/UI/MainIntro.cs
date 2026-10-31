@@ -6,22 +6,43 @@ namespace Civilization1Remaster.UI
 {
 	public class MainIntro : GameModule
 	{
-		private ushort introScreenCount;
-		private ushort introSavedFlag;
-		private ushort introColumn;
-		private ushort introPathFound;
-		private ushort introLogo;
+		// The local variables of DisplayCivilizationScreen by their distance below BP in the original (the frame of the ship
+		// animation 0x208 is never set before it is first read: 0, like a zeroed frame); the text below them is screenText
+		private const int ScreenText = 0x200;
 
-		public MainIntro(GameEngine owner)
-			: base(owner)
-		{
-		}
+		private const int ScreenPartEnd = 0x204;
+		private const int ScreenShipFrame = 0x208;
+		private const int ScreenShipPictures = 0x238;
+		private const int ScreenSavedFlag = 0x23a;
+		private const int ScreenPartBegin = 0x23c;
+		private const int ScreenColumn = 0x23e;
+		private const int ScreenTextLength = 0x240;
+		private const int ScreenStarHoriz = 0x242;
+		private const int ScreenStarVert = 0x244;
+		private const int ScreenBackground = 0x246;
 
 		/// <summary>Columns of the first part of the intro at which a line of credits.txt is read, or (0x32, 0xa0) the line is taken away</summary>
 		private static readonly ushort[] CreditColumns = [0xa, 0x32, 0x46, 0x78, 0xa0, 0xaa, 0xbe, 0xd2, 0xe6, 0xfa, 0x10e, 0x122, 0x136];
 
 		/// <summary>Columns of the second part of the intro at which a line of credits.txt is read, or (0x32, 0x74, 0x136) the line is taken away</summary>
 		private static readonly ushort[] PlanetColumns = [0xa, 0x1e, 0x32, 0x40, 0x54, 0x74, 0x82, 0x96, 0xaa, 0xbe, 0xd2, 0xe6, 0xfa, 0x10e, 0x122, 0x136];
+
+		private ushort introScreenCount;
+		private ushort introSavedFlag;
+		private ushort introColumn;
+		private ushort introPathFound;
+		private ushort introLogo;
+
+		/// <summary>The words of the frame of DisplayCivilizationScreen above its text (B3: in C#, new for every call)</summary>
+		private FrameWords screenFrame = null!;
+
+		/// <summary>The copy of the text of DisplayCivilizationScreen (0x200 bytes at BP - 0x200 in the original)</summary>
+		private byte[] screenText = new byte[ScreenText];
+
+		public MainIntro(GameEngine owner)
+			: base(owner)
+		{
+		}
 
 		/// <summary>
 		/// The intro of the game: finds the disks and the graphics driver, reserves the screens, starts the sound and the
@@ -42,6 +63,220 @@ namespace Civilization1Remaster.UI
 			CloseIntro();
 
 			this.processor.Journal.CloseScope("DisplayMainIntro");
+		}
+
+		/// <summary>
+		/// The end of the space race: the ship of the player (the human player or another one) lands on Alpha Centauri. The
+		/// pictures of the flying ship come from 0x32d8, the text (file 0x3301, part 0x32f2 for the human player, else 0x32f9)
+		/// scrolls in parts with the ship, then the landing (or the palace of another player) is shown with the closing text,
+		/// line after line, and a key closes the screen
+		/// </summary>
+		public void DisplayCivilizationScreen(short participantIdx)
+		{
+			this.processor.Journal.OpenScope($"DisplayCivilizationScreen({participantIdx})");
+
+			FrameWords outerFrame = this.screenFrame;
+			byte[] outerText = this.screenText;
+			this.screenFrame = new FrameWords(this.processor, 0x246);
+			this.screenText = new byte[ScreenText];
+
+			ImportShipPictures();
+			PrepareLandingText(participantIdx);
+			FlyShip();
+			ShowLanding(participantIdx);
+			RenderClosingText();
+			CloseLanding(participantIdx);
+
+			this.screenFrame = outerFrame;
+			this.screenText = outerText;
+			this.processor.Journal.CloseScope("DisplayCivilizationScreen");
+		}
+
+		/// <summary>
+		/// The opening news of a new game: the picture 0x332e and, with the human player's leader name in capitals (code text
+		/// 0x30b8) and the last technology the player knows ("Irrigation" without any, code text 0x30be), the text 0x3342 of
+		/// file 0x3348 shown part after part ("^" ends a part; the last part is not shown), each in a band at row 8 (colour 14
+		/// with a shadow when 0xd762 is set, else 9), waiting 200 between parts unless a part ends with "!" or a key is waiting;
+		/// then the leader's sound and the screen of the civilization
+		/// </summary>
+		public void DisplayTerrainTutorial()
+		{
+			this.processor.Journal.OpenScope("DisplayTerrainTutorial()");
+
+			this.owner.Helpers.HaltHueCycling();
+
+			this.owner.Startup.QueryForDisk(6, 1);
+
+			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
+
+			this.owner.Services.PerformSound(0x23, 0);
+
+			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, GameTexts.FileArchPic, 1);
+
+			this.owner.Startup.QueryForDisk(0, 1);
+
+			this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
+
+			short humanIdx = this.owner.World.PersonParticipantIdx;
+
+			this.owner.Words.Set(LeaderName(humanIdx));
+			this.owner.Words.Uppercase();
+			this.owner.Codes.Set(0, this.owner.Words.ToString());
+
+			this.owner.Words.Set("Irrigation");
+
+			for (short technologyIdx = 0; technologyIdx < 0x48; technologyIdx++)
+			{
+				if (this.owner.Advisors.PlayerKnowsTechnology(humanIdx, technologyIdx) != 0)
+				{
+					this.owner.Words.Set(TechnologyText(technologyIdx));
+				}
+			}
+
+			this.owner.Codes.Set(3, this.owner.Words.ToString());
+
+			this.owner.Words.Clear();
+
+			this.owner.BlockText.ImportTextFromFile(GameTexts.FileKingTxtC, GameTexts.TopicArch);
+
+			this.owner.BlockText.ReflowText();
+
+			DrawingBox.TypefaceIdx = 6;
+
+			short end = (short)this.owner.Words.Length;
+			short place = -1;
+
+			do
+			{
+				ushort partAddr = (ushort)(TextBuffer.Address + place + 1);
+
+				do
+				{
+					place++;
+				} while (this.owner.Words[place] != 0x5e && place < end);
+
+				if (place >= end)
+					break;
+
+				this.processor.EmitGlobalByte((ushort)(TextBuffer.Address + place), 0);
+
+				this.owner.VideoCard.RenderImage(BackScreenBox, 0, 6, 0x140, 0x14, ScreenBox, 0, 6);
+
+				ushort hue = 9;
+
+				if (VgaMode != 0)
+				{
+					this.owner.TextPainter.RenderCenteredTextToScreen0(partAddr, 160, 7, Hues.White);
+					this.owner.TextPainter.RenderCenteredTextToScreen0(partAddr, 160, 9, Hues.LightMagenta);
+
+					hue = 14;
+				}
+				else
+				{
+					this.owner.TextPainter.RenderCenteredTextToScreen0(partAddr, 160, 9, Hues.Blue);
+				}
+
+				this.owner.TextPainter.RenderCenteredTextToScreen0(partAddr, 160, 8, hue);
+
+				if (this.owner.Words[place - 1] != 0x21 && this.owner.Libc.KeyAvailable() == 0)
+				{
+					this.owner.TextPainter.AwaitTime(200);
+				}
+			} while (place < end);
+
+			this.owner.Services.PerformSound(1, 0);
+
+			this.owner.Services.PerformSound(LeaderWord(this.owner.World.Participants[humanIdx].ChiefVisuals, LeaderTable.ShortTune), 0);
+
+			this.owner.TextPainter.AwaitTime(300);
+
+			this.owner.Services.PerformSound(1, 0);
+
+			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
+
+			this.owner.TurnHooks.DisplayCivilizationScenery();
+
+			DrawingBox.TypefaceIdx = 1;
+
+			this.processor.Journal.CloseScope("DisplayTerrainTutorial");
+		}
+
+		/// <summary>
+		/// The tutorial of the screen: points at the 8 tiles around the centre of the map window (0xd4cc + 7, 0xd75e + 6) with
+		/// the names of their terrain (of the special resource, or "Village"), then at the menu bar, the map window and the
+		/// active unit, and waits for a key or a click. SI holds 2 * direction at the pointers, like in the original: DisplayMenu
+		/// leaves a value made from it in DI, which goes back to the caller.
+		/// </summary>
+		public void DisplayInterfaceTutorial()
+		{
+			this.processor.Journal.OpenScope("DisplayInterfaceTutorial()");
+
+
+			this.owner.Startup.ConcealMouseCursor();
+
+			short centreHoriz = (short)(MapViewHoriz + 7);
+			short centreVert = (short)(MapViewVert + 6);
+			MapLayers chart = this.owner.MapOps.Chart;
+
+			for (int heading = 1; heading <= 8; heading++)
+			{
+				int horizLoc = this.owner.Routing.TunePosition(chart.DirectionHoriz(heading) + centreHoriz);
+				short vertLoc = (short)(chart.DirectionVert(heading) + centreVert);
+				ushort terrain = this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
+
+				// Terrain names of 0x13 bytes at 0x282, names of their special resources at 0x366
+				this.owner.Words.Set(TerrainText(terrain));
+
+				if (this.owner.MapOps.ContainsSpecialResource(horizLoc, vertLoc) != 0)
+				{
+					this.owner.Words.Set((ushort)((terrain * 0x13) + 0x366));
+				}
+
+				if (this.owner.MapOps.ContainsHut(terrain, horizLoc, vertLoc) != 0)
+				{
+					this.owner.Words.Set("Village");
+				}
+
+				RenderTutorialPointer((chart.DirectionHoriz(heading) << 4) + 200, (chart.DirectionVert(heading) << 4) + 112,
+					(chart.DirectionHoriz(heading) << 6) + 170, (chart.DirectionVert(heading) * 48) + 100);
+			}
+
+			this.owner.Words.Set("Menu Bar");
+
+			RenderTutorialPointer(160, 6, 200, 16);
+
+			this.owner.Words.Set("Map Window");
+
+			RenderTutorialPointer(48, 32, 88, 24);
+
+			this.owner.Words.Set("Active Unit");
+
+			RenderTutorialPointer(40, 128, 88, 170);
+
+			this.owner.Startup.DisplayMouseCursor();
+
+			this.owner.Conquest.AwaitForKeyPressOrMouseClick();
+
+
+			this.processor.Journal.CloseScope("DisplayInterfaceTutorial");
+		}
+
+		/// <summary>
+		/// A tutorial hint: a line (colour 15) from the pointed place to the text, then the text at TextBuffer.Address as a dialog
+		/// </summary>
+		public void RenderTutorialPointer(int horizSpot1, int vertSpot1, int horizSpot2, int vertSpot2)
+		{
+			this.processor.Journal.OpenScope($"RenderTutorialPointer({horizSpot1}, {vertSpot1}, {horizSpot2}, {vertSpot2})");
+
+			this.owner.VideoCard.RenderLine(ScreenBox, horizSpot1, vertSpot1, horizSpot2, vertSpot2 + 6, Hues.White);
+
+			this.owner.Words.Append("\n");
+
+			DialogNeedsRedraw = 1;
+
+			this.owner.Dialogs.DisplayMenu(TextBuffer.Address, horizSpot2, vertSpot2, 1);
+
+			this.processor.Journal.CloseScope("RenderTutorialPointer");
 		}
 
 		/// <summary>The disks 1 - 7 that are present one after the other (0xdeba: the first one missing), then waits for the path 0x324a</summary>
@@ -485,26 +720,6 @@ namespace Civilization1Remaster.UI
 			this.owner.Helpers.ReleaseResource(this.introLogo, 0);
 		}
 
-		// The local variables of DisplayCivilizationScreen by their distance below BP in the original (the frame of the ship
-		// animation 0x208 is never set before it is first read: 0, like a zeroed frame); the text below them is screenText
-		private const int ScreenText = 0x200;
-		private const int ScreenPartEnd = 0x204;
-		private const int ScreenShipFrame = 0x208;
-		private const int ScreenShipPictures = 0x238;
-		private const int ScreenSavedFlag = 0x23a;
-		private const int ScreenPartBegin = 0x23c;
-		private const int ScreenColumn = 0x23e;
-		private const int ScreenTextLength = 0x240;
-		private const int ScreenStarHoriz = 0x242;
-		private const int ScreenStarVert = 0x244;
-		private const int ScreenBackground = 0x246;
-
-		/// <summary>The words of the frame of DisplayCivilizationScreen above its text (B3: in C#, new for every call)</summary>
-		private FrameWords screenFrame = null!;
-
-		/// <summary>The copy of the text of DisplayCivilizationScreen (0x200 bytes at BP - 0x200 in the original)</summary>
-		private byte[] screenText = new byte[ScreenText];
-
 		/// <summary>The text into screenText (strcpy; what does not fit is lost, the frame words are in C#)</summary>
 		private void SetScreenText(string text)
 		{
@@ -521,33 +736,6 @@ namespace Civilization1Remaster.UI
 				end++;
 
 			return index < 0 || index >= this.screenText.Length ? "" : System.Text.Encoding.Latin1.GetString(this.screenText, index, end - index);
-		}
-
-		/// <summary>
-		/// The end of the space race: the ship of the player (the human player or another one) lands on Alpha Centauri. The
-		/// pictures of the flying ship come from 0x32d8, the text (file 0x3301, part 0x32f2 for the human player, else 0x32f9)
-		/// scrolls in parts with the ship, then the landing (or the palace of another player) is shown with the closing text,
-		/// line after line, and a key closes the screen
-		/// </summary>
-		public void DisplayCivilizationScreen(short participantIdx)
-		{
-			this.processor.Journal.OpenScope($"DisplayCivilizationScreen({participantIdx})");
-
-			FrameWords outerFrame = this.screenFrame;
-			byte[] outerText = this.screenText;
-			this.screenFrame = new FrameWords(this.processor, 0x246);
-			this.screenText = new byte[ScreenText];
-
-			ImportShipPictures();
-			PrepareLandingText(participantIdx);
-			FlyShip();
-			ShowLanding(participantIdx);
-			RenderClosingText();
-			CloseLanding(participantIdx);
-
-			this.screenFrame = outerFrame;
-			this.screenText = outerText;
-			this.processor.Journal.CloseScope("DisplayCivilizationScreen");
 		}
 
 		/// <summary>The 24 pictures of the flying ship (6 in a row, 50 dots apart) into the table in the frame, then the background</summary>
@@ -949,193 +1137,6 @@ namespace Civilization1Remaster.UI
 			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
 			this.owner.TurnHooks.DisplayCivilizationScenery();
 			this.owner.Helpers.SetupHueCycling();
-		}
-
-		/// <summary>
-		/// The opening news of a new game: the picture 0x332e and, with the human player's leader name in capitals (code text
-		/// 0x30b8) and the last technology the player knows ("Irrigation" without any, code text 0x30be), the text 0x3342 of
-		/// file 0x3348 shown part after part ("^" ends a part; the last part is not shown), each in a band at row 8 (colour 14
-		/// with a shadow when 0xd762 is set, else 9), waiting 200 between parts unless a part ends with "!" or a key is waiting;
-		/// then the leader's sound and the screen of the civilization
-		/// </summary>
-		public void DisplayTerrainTutorial()
-		{
-			this.processor.Journal.OpenScope("DisplayTerrainTutorial()");
-
-			this.owner.Helpers.HaltHueCycling();
-
-			this.owner.Startup.QueryForDisk(6, 1);
-
-			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
-
-			this.owner.Services.PerformSound(0x23, 0);
-
-			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, GameTexts.FileArchPic, 1);
-
-			this.owner.Startup.QueryForDisk(0, 1);
-
-			this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
-
-			short humanIdx = this.owner.World.PersonParticipantIdx;
-
-			this.owner.Words.Set(LeaderName(humanIdx));
-			this.owner.Words.Uppercase();
-			this.owner.Codes.Set(0, this.owner.Words.ToString());
-
-			this.owner.Words.Set("Irrigation");
-
-			for (short technologyIdx = 0; technologyIdx < 0x48; technologyIdx++)
-			{
-				if (this.owner.Advisors.PlayerKnowsTechnology(humanIdx, technologyIdx) != 0)
-				{
-					this.owner.Words.Set(TechnologyText(technologyIdx));
-				}
-			}
-
-			this.owner.Codes.Set(3, this.owner.Words.ToString());
-
-			this.owner.Words.Clear();
-
-			this.owner.BlockText.ImportTextFromFile(GameTexts.FileKingTxtC, GameTexts.TopicArch);
-
-			this.owner.BlockText.ReflowText();
-
-			DrawingBox.TypefaceIdx = 6;
-
-			short end = (short)this.owner.Words.Length;
-			short place = -1;
-
-			do
-			{
-				ushort partAddr = (ushort)(TextBuffer.Address + place + 1);
-
-				do
-				{
-					place++;
-				} while (this.owner.Words[place] != 0x5e && place < end);
-
-				if (place >= end)
-					break;
-
-				this.processor.EmitGlobalByte((ushort)(TextBuffer.Address + place), 0);
-
-				this.owner.VideoCard.RenderImage(BackScreenBox, 0, 6, 0x140, 0x14, ScreenBox, 0, 6);
-
-				ushort hue = 9;
-
-				if (VgaMode != 0)
-				{
-					this.owner.TextPainter.RenderCenteredTextToScreen0(partAddr, 160, 7, Hues.White);
-					this.owner.TextPainter.RenderCenteredTextToScreen0(partAddr, 160, 9, Hues.LightMagenta);
-
-					hue = 14;
-				}
-				else
-				{
-					this.owner.TextPainter.RenderCenteredTextToScreen0(partAddr, 160, 9, Hues.Blue);
-				}
-
-				this.owner.TextPainter.RenderCenteredTextToScreen0(partAddr, 160, 8, hue);
-
-				if (this.owner.Words[place - 1] != 0x21 && this.owner.Libc.KeyAvailable() == 0)
-				{
-					this.owner.TextPainter.AwaitTime(200);
-				}
-			} while (place < end);
-
-			this.owner.Services.PerformSound(1, 0);
-
-			this.owner.Services.PerformSound(LeaderWord(this.owner.World.Participants[humanIdx].ChiefVisuals, LeaderTable.ShortTune), 0);
-
-			this.owner.TextPainter.AwaitTime(300);
-
-			this.owner.Services.PerformSound(1, 0);
-
-			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
-
-			this.owner.TurnHooks.DisplayCivilizationScenery();
-
-			DrawingBox.TypefaceIdx = 1;
-
-			this.processor.Journal.CloseScope("DisplayTerrainTutorial");
-		}
-
-		/// <summary>
-		/// The tutorial of the screen: points at the 8 tiles around the centre of the map window (0xd4cc + 7, 0xd75e + 6) with
-		/// the names of their terrain (of the special resource, or "Village"), then at the menu bar, the map window and the
-		/// active unit, and waits for a key or a click. SI holds 2 * direction at the pointers, like in the original: DisplayMenu
-		/// leaves a value made from it in DI, which goes back to the caller.
-		/// </summary>
-		public void DisplayInterfaceTutorial()
-		{
-			this.processor.Journal.OpenScope("DisplayInterfaceTutorial()");
-
-
-			this.owner.Startup.ConcealMouseCursor();
-
-			short centreHoriz = (short)(MapViewHoriz + 7);
-			short centreVert = (short)(MapViewVert + 6);
-			MapLayers chart = this.owner.MapOps.Chart;
-
-			for (int heading = 1; heading <= 8; heading++)
-			{
-				int horizLoc = this.owner.Routing.TunePosition(chart.DirectionHoriz(heading) + centreHoriz);
-				short vertLoc = (short)(chart.DirectionVert(heading) + centreVert);
-				ushort terrain = this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
-
-				// Terrain names of 0x13 bytes at 0x282, names of their special resources at 0x366
-				this.owner.Words.Set(TerrainText(terrain));
-
-				if (this.owner.MapOps.ContainsSpecialResource(horizLoc, vertLoc) != 0)
-				{
-					this.owner.Words.Set((ushort)((terrain * 0x13) + 0x366));
-				}
-
-				if (this.owner.MapOps.ContainsHut(terrain, horizLoc, vertLoc) != 0)
-				{
-					this.owner.Words.Set("Village");
-				}
-
-				RenderTutorialPointer((chart.DirectionHoriz(heading) << 4) + 200, (chart.DirectionVert(heading) << 4) + 112,
-					(chart.DirectionHoriz(heading) << 6) + 170, (chart.DirectionVert(heading) * 48) + 100);
-			}
-
-			this.owner.Words.Set("Menu Bar");
-
-			RenderTutorialPointer(160, 6, 200, 16);
-
-			this.owner.Words.Set("Map Window");
-
-			RenderTutorialPointer(48, 32, 88, 24);
-
-			this.owner.Words.Set("Active Unit");
-
-			RenderTutorialPointer(40, 128, 88, 170);
-
-			this.owner.Startup.DisplayMouseCursor();
-
-			this.owner.Conquest.AwaitForKeyPressOrMouseClick();
-
-
-			this.processor.Journal.CloseScope("DisplayInterfaceTutorial");
-		}
-
-		/// <summary>
-		/// A tutorial hint: a line (colour 15) from the pointed place to the text, then the text at TextBuffer.Address as a dialog
-		/// </summary>
-		public void RenderTutorialPointer(int horizSpot1, int vertSpot1, int horizSpot2, int vertSpot2)
-		{
-			this.processor.Journal.OpenScope($"RenderTutorialPointer({horizSpot1}, {vertSpot1}, {horizSpot2}, {vertSpot2})");
-
-			this.owner.VideoCard.RenderLine(ScreenBox, horizSpot1, vertSpot1, horizSpot2, vertSpot2 + 6, Hues.White);
-
-			this.owner.Words.Append("\n");
-
-			DialogNeedsRedraw = 1;
-
-			this.owner.Dialogs.DisplayMenu(TextBuffer.Address, horizSpot2, vertSpot2, 1);
-
-			this.processor.Journal.CloseScope("RenderTutorialPointer");
 		}
 	}
 }

@@ -8,6 +8,7 @@ namespace Civilization1Remaster.Video
 	public class CivFont
 	{
 		private readonly BDictionary<char, CivFontCharacter> letters = new BDictionary<char, CivFontCharacter>();
+
 		private int letterBreadthGap = 1;
 		private int strokeGap = 1;
 

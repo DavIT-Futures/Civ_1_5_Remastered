@@ -9,13 +9,59 @@ namespace Civilization1Remaster.Game
 	/// </summary>
 	public class ScienceAndAdvisors : GameModule
 	{
+		// The frame of PickCityProduction (distances below bp)
+		private const int HappyRoomLocal = 0x2;
+
+		private const int AdvisorsShownLocal = 0x4;
+		private const int SharedWallLocal = 0x6;
+		private const int DefenceNeedLocal = 0x8;
+		private const int ChoiceCountLocal = 0xa;
+		private const int BestUnitLocal = 0xc;
+		private const int UnitsOnContinentTable = 0x44;
+		private const int ChoiceLocal = 0x46;
+		private const int BestImprovementLocal = 0x48;
+		private const int TownLoopLocal = 0x4a;
+		private const int BestScoreLocal = 0x4c;
+		private const int ChoiceTable = 0xde;
+		private const int ChoiceLoopLocal = 0xe0;
+		private const int MakingElsewhereTable = 0x11a;
+		private const int UnfamiliarLoopLocal = 0x11c;
+		private const int BestUnitScoreLocal = 0x11e;
+		private const int BestImprovementScoreLocal = 0x130;
+		private const int DefensiveImprovementLocal = 0x132;
+		private const int ScoreLocal = 0x134;
+		private const int PageCutCountLocal = 0x136;
+		private const int PageCutLengthLocal = 0x138;
+		private const int PageStateLocal = 0x13a;
+		private const int DefensiveLocal = 0x13c;
+		private const int ContinentLocal = 0x13e;
+		private const int UnitTallyLocal = 0x140;
+		private const int ApproachLocal = 0x142;
+		private const int BestChoiceLocal = 0x144;
+		private const int WallContinentLocal = 0x146;
+		private const int BuiltHighLocal = 0x148;
+		private const int BuiltLowLocal = 0x14a;
+
 		private readonly UnitMemory troops;
+
+		/// <summary>The words of the frame of PickCityProduction (B3: in C#, new for every call)</summary>
+		private FrameWords pickFrame = null!;
 
 		public ScienceAndAdvisors(GameEngine owner)
 			: base(owner)
 		{
 			this.troops = new UnitMemory(owner.Processor);
 		}
+
+		/// <summary>0: one page, 1: the menu is cut after the units ("more..." leads to the rest), 2: the rest only</summary>
+		private ushort PageState { get => FrameWord(PageStateLocal); set => FrameWord(PageStateLocal, value); }
+
+		private ushort AdvisorsShown { get => FrameWord(AdvisorsShownLocal); set => FrameWord(AdvisorsShownLocal, value); }
+
+		/// <summary>The next free entry of the list of choices (entry 0 is the production of the city)</summary>
+		private short ChoiceCount { get => (short)FrameWord(ChoiceCountLocal); set => FrameWord(ChoiceCountLocal, (ushort)value); }
+
+		private short Score { get => (short)FrameWord(ScoreLocal); set => FrameWord(ScoreLocal, (ushort)value); }
 
 		/// <summary>
 		/// The turn of every city of the player (a city that needs it, 0xb1e8, is handled once more with the screen, 2 = again
@@ -303,40 +349,121 @@ namespace Civilization1Remaster.Game
 			return choice;
 		}
 
-		// The frame of PickCityProduction (distances below bp)
-		private const int HappyRoomLocal = 0x2;
-		private const int AdvisorsShownLocal = 0x4;
-		private const int SharedWallLocal = 0x6;
-		private const int DefenceNeedLocal = 0x8;
-		private const int ChoiceCountLocal = 0xa;
-		private const int BestUnitLocal = 0xc;
-		private const int UnitsOnContinentTable = 0x44;
-		private const int ChoiceLocal = 0x46;
-		private const int BestImprovementLocal = 0x48;
-		private const int TownLoopLocal = 0x4a;
-		private const int BestScoreLocal = 0x4c;
-		private const int ChoiceTable = 0xde;
-		private const int ChoiceLoopLocal = 0xe0;
-		private const int MakingElsewhereTable = 0x11a;
-		private const int UnfamiliarLoopLocal = 0x11c;
-		private const int BestUnitScoreLocal = 0x11e;
-		private const int BestImprovementScoreLocal = 0x130;
-		private const int DefensiveImprovementLocal = 0x132;
-		private const int ScoreLocal = 0x134;
-		private const int PageCutCountLocal = 0x136;
-		private const int PageCutLengthLocal = 0x138;
-		private const int PageStateLocal = 0x13a;
-		private const int DefensiveLocal = 0x13c;
-		private const int ContinentLocal = 0x13e;
-		private const int UnitTallyLocal = 0x140;
-		private const int ApproachLocal = 0x142;
-		private const int BestChoiceLocal = 0x144;
-		private const int WallContinentLocal = 0x146;
-		private const int BuiltHighLocal = 0x148;
-		private const int BuiltLowLocal = 0x14a;
+		/// <summary>
+		/// Appends " (n turns)" or " (1 turn)" to the text at TextBuffer.Address: the turns the city needs for the production of cost price
+		/// (in tens of shields), with the shields per turn 0x70dc - 0xd2f6 (1 - 99); 1 - 999 turns
+		/// </summary>
+		public void ComposeProductionOption(short townIdx, ushort price)
+		{
+			this.processor.Journal.OpenScope($"ComposeProductionOption({townIdx}, {price})");
 
-		/// <summary>The words of the frame of PickCityProduction (B3: in C#, new for every call)</summary>
-		private FrameWords pickFrame = null!;
+			int perTurn = this.owner.Helpers.VerifyValueSpan(
+				(short)CityShields - (short)CityUnitUpkeep, 1, 99);
+
+			ushort turns = (ushort)this.owner.Helpers.VerifyValueSpan(
+				(((10 * price) - this.owner.World.Towns[townIdx].MaterialsTally - 1) / (short)perTurn) + 1, 1, 999);
+
+			this.owner.Words.Append(" (");
+
+			this.owner.Words.Append(this.owner.Libc.IntegerToText((short)turns, 10));
+
+			this.owner.Words.Append((ushort)(turns != 1 ? 0x22b2 : 0x22b9));
+
+			this.processor.Journal.CloseScope("ComposeProductionOption");
+		}
+
+		/// <summary>
+		/// The player's research is done (participantIdx1: where it came from, see EarnTechnology). An AI player (and the
+		/// human player in turn 0) takes the researchable technology with the highest random draw of 4 * ObtainTechnologyInfo
+		/// (not the human player's current research for himself); on the easiest level a technology the human player doesn't
+		/// know only one time in 2; returns it (-1 for none or barbarians). The human player gets his research (the discovery
+		/// picture with its icon, or the newspaper), the science advisor's recommendation (easiest level, preference 1) and
+		/// chooses the next research from the menu (on harder levels from the third on only every third one; asking for the
+		/// Civilopedia shows it and asks again with the same choices; none left: future technology 71); returns the choice.
+		/// The list of the choices and the file name are in the stack frame, and SI gets the values of the original before the
+		/// calls (DisplayMenu leaves it in DI), like in the original.
+		/// </summary>
+		public ushort UncoverTechnology(short participantIdx, short participantIdx1)
+		{
+			this.processor.Journal.OpenScope($"UncoverTechnology({participantIdx}, {participantIdx1})");
+
+
+			ushort result = participantIdx == 0 ? (ushort)0xffff : UncoverTechnologyOf(participantIdx, participantIdx1);
+
+
+			this.processor.Journal.CloseScope("UncoverTechnology");
+
+			return result;
+		}
+
+		/// <summary>
+		/// The player learns a technology (from participantIdx1: himself or 0 by research, -2 the Great Library, else a player);
+		/// 0x47 (future technology) is only counted. After turn 0: the human player and the players he has contact with
+		/// announce it (with the wonders and units it allows, for the others), a player without contact may send an emissary
+		/// the first time anybody learns it (technology 8, one time in 3); the human player sees the Civilopedia, the new
+		/// governments with 0x14, the help with 5; technologies that make barracks obsolete sell them; the first player to learn
+		/// a technology cancels the effect of the human player's wonders it makes obsolete; the owner of the Great Library
+		/// (wonder 5) learns it when two players know it. SI and DI get the values of the original before the calls.
+		/// </summary>
+		public void EarnTechnology(short participantIdx, short scienceIdx, short participantIdx1)
+		{
+			this.processor.Journal.OpenScope($"EarnTechnology({participantIdx}, {scienceIdx}, {participantIdx1})");
+
+
+			if (PlayerKnowsTechnology(participantIdx, scienceIdx) == 0)
+			{
+				if (scienceIdx != 0x47)
+				{
+					this.owner.World.Participants[participantIdx].FoundScienceMarkers[scienceIdx >> 4] |= (ushort)(1 << (scienceIdx & 0xf));
+					this.owner.World.Participants[participantIdx].ScienceObtainedSince[scienceIdx] = participantIdx1;
+				}
+
+				if (this.owner.World.RoundTally != 0)
+				{
+					this.owner.World.Participants[participantIdx].FoundScienceTally++;
+
+					AnnounceTechnology(participantIdx, scienceIdx, participantIdx1);
+
+					ApplyTechnology(participantIdx, scienceIdx);
+				}
+			}
+
+			this.processor.Journal.CloseScope("EarnTechnology");
+		}
+
+		/// <summary>1 when the player knows the technology, else 0</summary>
+		public ushort PlayerKnowsTechnology(short participantIdx, short scienceIdx)
+		{
+			return (ushort)(ScienceRules.PlayerKnowsTechnology(
+				this.owner.World.Participants[participantIdx].FoundScienceMarkers,
+				participantIdx,
+				scienceIdx) ? 1 : 0);
+		}
+
+		/// <summary>
+		/// Calculates the AI leader preference value for technology research.
+		/// </summary>
+		/// <param name="participantIdx"></param>
+		/// <param name="scienceIdx"></param>
+		public ushort ObtainTechnologyInfo(short participantIdx, ushort scienceIdx)
+		{
+			this.processor.Journal.OpenScope($"ObtainTechnologyInfo({participantIdx}, {scienceIdx})");
+
+			sbyte b0 = (sbyte)this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(scienceIdx * 2 + 0xb0a));
+			sbyte b1 = (sbyte)this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(scienceIdx * 2 + 0xb0b));
+			int leaderVisuals = this.owner.World.Participants[participantIdx].ChiefVisuals;
+			short leaderFactor = (short)LeaderWord(leaderVisuals, LeaderTable.Leaning);
+			ushort result = ScienceRules.CalculateTechnologyInfo(b0, b1, leaderFactor);
+
+			this.processor.Journal.CloseScope("ObtainTechnologyInfo");
+			return result;
+		}
+
+		/// <summary>The distance of a word of the frame table at bp - table + 2 * index (the unit tables of 28 words)</summary>
+		private static int TableWord(int table, int index) => table - (index << 1);
+
+		/// <summary>The record of an improvement or wonder (0x1e bytes from 0xb9a, the name first)</summary>
+		private static ushort ImprovementRecord(int improvementIdx) => (ushort)(0xb9a + improvementIdx * 0x1e);
 
 		private ushort FrameWord(int distance)
 		{
@@ -347,16 +474,6 @@ namespace Civilization1Remaster.Game
 		{
 			this.pickFrame.SetFrame(distance, amount);
 		}
-
-		/// <summary>0: one page, 1: the menu is cut after the units ("more..." leads to the rest), 2: the rest only</summary>
-		private ushort PageState { get => FrameWord(PageStateLocal); set => FrameWord(PageStateLocal, value); }
-
-		private ushort AdvisorsShown { get => FrameWord(AdvisorsShownLocal); set => FrameWord(AdvisorsShownLocal, value); }
-
-		/// <summary>The next free entry of the list of choices (entry 0 is the production of the city)</summary>
-		private short ChoiceCount { get => (short)FrameWord(ChoiceCountLocal); set => FrameWord(ChoiceCountLocal, (ushort)value); }
-
-		private short Score { get => (short)FrameWord(ScoreLocal); set => FrameWord(ScoreLocal, (ushort)value); }
 
 		private ushort ChoiceEntry(int entryIdx) => FrameWord(TableWord(ChoiceTable, entryIdx));
 
@@ -369,9 +486,6 @@ namespace Civilization1Remaster.Game
 			ChoiceCount = (short)(entryIdx + 1);
 			ChoiceEntry(entryIdx, choice);
 		}
-
-		/// <summary>The distance of a word of the frame table at bp - table + 2 * index (the unit tables of 28 words)</summary>
-		private static int TableWord(int table, int index) => table - (index << 1);
 
 		/// <summary>
 		/// The menu text and the list of choices. True when the list is too long for one page the first time: it starts again,
@@ -469,9 +583,6 @@ namespace Civilization1Remaster.Game
 				AddChoice((ushort)kind);
 			}
 		}
-
-		/// <summary>The record of an improvement or wonder (0x1e bytes from 0xb9a, the name first)</summary>
-		private static ushort ImprovementRecord(int improvementIdx) => (ushort)(0xb9a + improvementIdx * 0x1e);
 
 		/// <summary>
 		/// The improvements 1 - 24 the player knows and the city hasn't built, without the ones that don't fit: a second
@@ -1127,53 +1238,6 @@ namespace Civilization1Remaster.Game
 			this.owner.Dialogs.DisplayMenu(TextBuffer.Address, horizLoc, 160, 1);
 		}
 
-		/// <summary>
-		/// Appends " (n turns)" or " (1 turn)" to the text at TextBuffer.Address: the turns the city needs for the production of cost price
-		/// (in tens of shields), with the shields per turn 0x70dc - 0xd2f6 (1 - 99); 1 - 999 turns
-		/// </summary>
-		public void ComposeProductionOption(short townIdx, ushort price)
-		{
-			this.processor.Journal.OpenScope($"ComposeProductionOption({townIdx}, {price})");
-
-			int perTurn = this.owner.Helpers.VerifyValueSpan(
-				(short)CityShields - (short)CityUnitUpkeep, 1, 99);
-
-			ushort turns = (ushort)this.owner.Helpers.VerifyValueSpan(
-				(((10 * price) - this.owner.World.Towns[townIdx].MaterialsTally - 1) / (short)perTurn) + 1, 1, 999);
-
-			this.owner.Words.Append(" (");
-
-			this.owner.Words.Append(this.owner.Libc.IntegerToText((short)turns, 10));
-
-			this.owner.Words.Append((ushort)(turns != 1 ? 0x22b2 : 0x22b9));
-
-			this.processor.Journal.CloseScope("ComposeProductionOption");
-		}
-
-		/// <summary>
-		/// The player's research is done (participantIdx1: where it came from, see EarnTechnology). An AI player (and the
-		/// human player in turn 0) takes the researchable technology with the highest random draw of 4 * ObtainTechnologyInfo
-		/// (not the human player's current research for himself); on the easiest level a technology the human player doesn't
-		/// know only one time in 2; returns it (-1 for none or barbarians). The human player gets his research (the discovery
-		/// picture with its icon, or the newspaper), the science advisor's recommendation (easiest level, preference 1) and
-		/// chooses the next research from the menu (on harder levels from the third on only every third one; asking for the
-		/// Civilopedia shows it and asks again with the same choices; none left: future technology 71); returns the choice.
-		/// The list of the choices and the file name are in the stack frame, and SI gets the values of the original before the
-		/// calls (DisplayMenu leaves it in DI), like in the original.
-		/// </summary>
-		public ushort UncoverTechnology(short participantIdx, short participantIdx1)
-		{
-			this.processor.Journal.OpenScope($"UncoverTechnology({participantIdx}, {participantIdx1})");
-
-
-			ushort result = participantIdx == 0 ? (ushort)0xffff : UncoverTechnologyOf(participantIdx, participantIdx1);
-
-
-			this.processor.Journal.CloseScope("UncoverTechnology");
-
-			return result;
-		}
-
 		/// <summary>The choice of an AI player, or the discovery and the next choice of the human player (see UncoverTechnology)</summary>
 		private ushort UncoverTechnologyOf(short participantIdx, short participantIdx1)
 		{
@@ -1514,41 +1578,6 @@ namespace Civilization1Remaster.Game
 			return choices;
 		}
 
-		/// <summary>
-		/// The player learns a technology (from participantIdx1: himself or 0 by research, -2 the Great Library, else a player);
-		/// 0x47 (future technology) is only counted. After turn 0: the human player and the players he has contact with
-		/// announce it (with the wonders and units it allows, for the others), a player without contact may send an emissary
-		/// the first time anybody learns it (technology 8, one time in 3); the human player sees the Civilopedia, the new
-		/// governments with 0x14, the help with 5; technologies that make barracks obsolete sell them; the first player to learn
-		/// a technology cancels the effect of the human player's wonders it makes obsolete; the owner of the Great Library
-		/// (wonder 5) learns it when two players know it. SI and DI get the values of the original before the calls.
-		/// </summary>
-		public void EarnTechnology(short participantIdx, short scienceIdx, short participantIdx1)
-		{
-			this.processor.Journal.OpenScope($"EarnTechnology({participantIdx}, {scienceIdx}, {participantIdx1})");
-
-
-			if (PlayerKnowsTechnology(participantIdx, scienceIdx) == 0)
-			{
-				if (scienceIdx != 0x47)
-				{
-					this.owner.World.Participants[participantIdx].FoundScienceMarkers[scienceIdx >> 4] |= (ushort)(1 << (scienceIdx & 0xf));
-					this.owner.World.Participants[participantIdx].ScienceObtainedSince[scienceIdx] = participantIdx1;
-				}
-
-				if (this.owner.World.RoundTally != 0)
-				{
-					this.owner.World.Participants[participantIdx].FoundScienceTally++;
-
-					AnnounceTechnology(participantIdx, scienceIdx, participantIdx1);
-
-					ApplyTechnology(participantIdx, scienceIdx);
-				}
-			}
-
-			this.processor.Journal.CloseScope("EarnTechnology");
-		}
-
 		/// <summary>The message about a new technology, or the emissary of a player without contact (see EarnTechnology)</summary>
 		private void AnnounceTechnology(short participantIdx, short scienceIdx, short participantIdx1)
 		{
@@ -1760,34 +1789,6 @@ namespace Civilization1Remaster.Game
 				return;
 
 			EarnTechnology((short)libraryOwner, scienceIdx, -2);
-		}
-
-		/// <summary>1 when the player knows the technology, else 0</summary>
-		public ushort PlayerKnowsTechnology(short participantIdx, short scienceIdx)
-		{
-			return (ushort)(ScienceRules.PlayerKnowsTechnology(
-				this.owner.World.Participants[participantIdx].FoundScienceMarkers,
-				participantIdx,
-				scienceIdx) ? 1 : 0);
-		}
-
-		/// <summary>
-		/// Calculates the AI leader preference value for technology research.
-		/// </summary>
-		/// <param name="participantIdx"></param>
-		/// <param name="scienceIdx"></param>
-		public ushort ObtainTechnologyInfo(short participantIdx, ushort scienceIdx)
-		{
-			this.processor.Journal.OpenScope($"ObtainTechnologyInfo({participantIdx}, {scienceIdx})");
-
-			sbyte b0 = (sbyte)this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(scienceIdx * 2 + 0xb0a));
-			sbyte b1 = (sbyte)this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(scienceIdx * 2 + 0xb0b));
-			int leaderVisuals = this.owner.World.Participants[participantIdx].ChiefVisuals;
-			short leaderFactor = (short)LeaderWord(leaderVisuals, LeaderTable.Leaning);
-			ushort result = ScienceRules.CalculateTechnologyInfo(b0, b1, leaderFactor);
-
-			this.processor.Journal.CloseScope("ObtainTechnologyInfo");
-			return result;
 		}
 	}
 }

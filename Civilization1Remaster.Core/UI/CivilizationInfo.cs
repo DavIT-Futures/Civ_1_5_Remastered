@@ -263,19 +263,6 @@ namespace Civilization1Remaster.UI
 			this.processor.Journal.CloseScope("DisplayCivilizationScoreList");
 		}
 
-		/// <summary>One of the players 1 - 7 has or builds units of the type</summary>
-		private bool AnyPlayerHasUnits(int kind)
-		{
-			for (int participantIdx = 1; participantIdx < 8; participantIdx++)
-			{
-				if (this.owner.World.Participants[participantIdx].LiveTroops[kind] != 0 ||
-					this.owner.World.Participants[participantIdx].TroopsInsideMaking[kind] != 0)
-					return true;
-			}
-
-			return false;
-		}
-
 		/// <summary>
 		/// The table of units destroyed between the players 1 - 7 (TroopsRuined of the row's player against the column's / the
 		/// other way round), each player in its colour (0x1946) with its picture (0xd4ce); only the human's row and column
@@ -335,6 +322,19 @@ namespace Civilization1Remaster.UI
 			this.owner.Startup.DisplayMouseCursor();
 
 			this.processor.Journal.CloseScope("RenderScoreListRecord");
+		}
+
+		/// <summary>One of the players 1 - 7 has or builds units of the type</summary>
+		private bool AnyPlayerHasUnits(int kind)
+		{
+			for (int participantIdx = 1; participantIdx < 8; participantIdx++)
+			{
+				if (this.owner.World.Participants[participantIdx].LiveTroops[kind] != 0 ||
+					this.owner.World.Participants[participantIdx].TroopsInsideMaking[kind] != 0)
+					return true;
+			}
+
+			return false;
 		}
 	}
 }

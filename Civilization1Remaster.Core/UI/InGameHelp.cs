@@ -7,12 +7,10 @@ namespace Civilization1Remaster.UI
 		private static readonly GameText HelpFileNameAddress = new(0x34b2, "help.txt");
 		private static readonly GameText HelpFileName2Address = new(0x34de, "help.txt");
 		private static readonly GameText HelpFileName3Address = new(0x3501, "error.txt");
-
 		private static readonly GameText HelpCitySiteTopicAddress = new(0x34bb, "*BUILDCITY");
 		private static readonly GameText HelpIrrigateTopicAddress = new(0x34c6, "*MINING");
 		private static readonly GameText HelpIrrigate2TopicAddress = new(0x34ce, "*IRRIGATE");
 		private static readonly GameText HelpMineTopicAddress = new(0x34d8, "*ROAD");
-
 		private static readonly GameText HelpAdviceHeaderAddress = new(0x34e7, "--- Civilization Note ---");
 		private static readonly GameText HelpAdviceHeader2Address = new(0x350b, "--- Civilization Note ---");
 
@@ -115,39 +113,6 @@ namespace Civilization1Remaster.UI
 			this.processor.Journal.CloseScope("DisplayTileInfo");
 		}
 
-		/// <summary>The hints of DisplayTileInfo for a tile next to a city of the player (the city's name in code text 0x30b8)</summary>
-		private void DisplayImprovementHints(short participantIdx, int horizLoc, int vertLoc, ushort terrain)
-		{
-			ushort townIdx = this.owner.Helpers.LocateNearestCity(horizLoc, vertLoc);
-
-			if (townIdx == 0xffff || (ushort)this.owner.World.Towns[townIdx].ParticipantIdx != (ushort)participantIdx ||
-				FoundDistance != 1)
-				return;
-
-			byte improvements = (byte)this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc);
-
-			EmptyMessage()
-				.City((short)townIdx);
-			this.owner.Codes.Set(0, this.owner.Words.ToString());
-
-			if (terrain == 4 && (improvements & 6) == 0)
-			{
-				DisplayHelpPopup(HelpIrrigateTopicAddress);
-			}
-
-			if (terrain == 1 && this.owner.TurnLogic.VerifyCoastalTile(horizLoc, vertLoc) != 0 && (improvements & 6) == 0)
-			{
-				DisplayHelpPopup(HelpIrrigate2TopicAddress);
-				return;
-			}
-
-			if (TerrainField(terrain, TerrainTable.MoveCost) == 1 && (improvements & 8) == 0 && terrain != 0xb &&
-				this.owner.World.Participants[participantIdx].LiveTroops[0] < 2)
-			{
-				DisplayHelpPopup(HelpMineTopicAddress);
-			}
-		}
-
 		/// <summary>
 		/// With the help option on (SessionPrefMarkers bit 0) and only before year 0 (Season below 0): a help window with the
 		/// text from the help file (0x34de) for the topic, its codes replaced (ReflowText), 6 pixels per line, until a key or
@@ -240,6 +205,39 @@ namespace Civilization1Remaster.UI
 			}
 
 			this.processor.Journal.CloseScope("DisplayHelpPopupForHuman");
+		}
+
+		/// <summary>The hints of DisplayTileInfo for a tile next to a city of the player (the city's name in code text 0x30b8)</summary>
+		private void DisplayImprovementHints(short participantIdx, int horizLoc, int vertLoc, ushort terrain)
+		{
+			ushort townIdx = this.owner.Helpers.LocateNearestCity(horizLoc, vertLoc);
+
+			if (townIdx == 0xffff || (ushort)this.owner.World.Towns[townIdx].ParticipantIdx != (ushort)participantIdx ||
+				FoundDistance != 1)
+				return;
+
+			byte improvements = (byte)this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc);
+
+			EmptyMessage()
+				.City((short)townIdx);
+			this.owner.Codes.Set(0, this.owner.Words.ToString());
+
+			if (terrain == 4 && (improvements & 6) == 0)
+			{
+				DisplayHelpPopup(HelpIrrigateTopicAddress);
+			}
+
+			if (terrain == 1 && this.owner.TurnLogic.VerifyCoastalTile(horizLoc, vertLoc) != 0 && (improvements & 6) == 0)
+			{
+				DisplayHelpPopup(HelpIrrigate2TopicAddress);
+				return;
+			}
+
+			if (TerrainField(terrain, TerrainTable.MoveCost) == 1 && (improvements & 8) == 0 && terrain != 0xb &&
+				this.owner.World.Participants[participantIdx].LiveTroops[0] < 2)
+			{
+				DisplayHelpPopup(HelpMineTopicAddress);
+			}
 		}
 	}
 }

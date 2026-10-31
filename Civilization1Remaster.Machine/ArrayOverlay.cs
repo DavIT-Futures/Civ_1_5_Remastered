@@ -9,7 +9,6 @@ namespace Civilization1Remaster.Emulation
 		}
 
 		public byte[] Content { get; }
-
 		public int Length => this.Content.Length;
 
 		public byte Read(int place) => this.Content[place];

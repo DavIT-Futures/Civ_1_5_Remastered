@@ -88,261 +88,6 @@ namespace Civilization1Remaster.Game
 			return result;
 		}
 
-		/// <summary>The city in the free slot (see EstablishCity); -1 when the human player cancels its name</summary>
-		private ushort FoundCity(short participantIdx, short townIdx, int horizLoc, int vertLoc, ushort townExtent)
-		{
-			short person = this.owner.World.PersonParticipantIdx;
-			City town = this.owner.World.Towns[townIdx];
-
-			ushort labelIdx = ChooseCityLabel(participantIdx);
-
-			town.LabelIdx = (byte)labelIdx;
-
-			this.owner.World.TownPlaces[labelIdx] = new Point(horizLoc, vertLoc);
-
-			if (this.owner.World.IsHuman(participantIdx))
-			{
-				if (this.owner.CityNaming.DisplayCityLabelPrompt(townIdx) == 0)
-					return 0xffff;
-
-				char[] label = this.owner.World.TownLabels[town.LabelIdx].ToCharArray();
-				label[12] = '\0';
-				this.owner.World.TownLabels[town.LabelIdx] = new string(label);
-			}
-
-			TrimCityLabel(town.LabelIdx);
-
-			this.owner.UnitOps.AttachReplayContent(1, (byte)participantIdx, town.LabelIdx, (byte)horizLoc, (byte)vertLoc);
-
-			this.owner.MapOps.DiscardTileImprovements(0x24, horizLoc, vertLoc);
-
-			// Remaster: the land under a new city is cleared. Forest, jungle and swamp change the same way
-			// as when settlers irrigate them (forest to plains, jungle and swamp to grassland).
-			WipeCitySquare(horizLoc, vertLoc);
-
-			this.owner.MapOps.AssignTileImprovements(9, horizLoc, vertLoc);
-
-			if ((short)TerrainImprovementWord(this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc), TerrainImprovementTable.Irrigation) < -1)
-			{
-				this.owner.MapOps.AssignTileImprovements(2, horizLoc, vertLoc);
-			}
-
-			town.ConditionMarker = 0;
-			town.Place = new Point(horizLoc, town.Place.Y);
-			town.Place = new Point(town.Place.X, vertLoc);
-			town.TrueExtent = (sbyte)townExtent;
-			town.ShownExtent = 0;
-			town.LaborerMarkers0 = 0;
-			town.LaborerMarkers1 = 0;
-			town.RootCommerce = 0;
-			town.GrainTally = 0;
-			town.MaterialsTally = 0;
-			town.StructureMarkers0 = 0;
-			town.StructureMarkers1 = 0;
-			town.PresentMakingIdx = 1;
-
-			if (this.owner.Advisors.PlayerKnowsTechnology(participantIdx, 0x22) != 0)
-				town.PresentMakingIdx = 4;
-
-			if (this.owner.Advisors.PlayerKnowsTechnology(participantIdx, 0x40) != 0)
-				town.PresentMakingIdx = 5;
-
-			town.Unfamiliar[0] = -1;
-			town.Unfamiliar[1] = -1;
-
-			bool first = true;
-
-			for (ushort otherIdx = 0; otherIdx < 0x80; otherIdx++)
-			{
-				if (this.owner.World.Towns[otherIdx].ParticipantIdx == participantIdx && otherIdx != (ushort)townIdx)
-					first = false;
-			}
-
-
-			if (first)
-			{
-				town.StructureMarkers0 = 1;
-				town.StructureMarkers1 = 0;
-			}
-
-			town.RootCommerce = 0;
-			town.ParticipantIdx = participantIdx;
-
-			for (int routeIdx = 0; routeIdx < 3; routeIdx++)
-				town.CommerceTownIndices[routeIdx] = -1;
-
-			town.LaborerMarkers2 = 0;
-
-			MarkCityNeighbourhood(participantIdx, town, horizLoc, vertLoc);
-
-			if (first && participantIdx == person)
-			{
-				this.owner.HelpSystem.DisplayHelpPopup(GameTexts.TopicFirstproduct);
-			}
-
-			MarkCityPowerArea(participantIdx, town, horizLoc, vertLoc);
-
-			if (participantIdx == person)
-			{
-				// Sound of chopping wood while the new city is built
-				this.owner.Services.PerformCityFoundedSound();
-
-				if ((this.owner.World.SessionPrefMarkers & 8) != 0)
-				{
-					if (this.owner.Startup.QueryForDisk(1, 0) != 0)
-						this.owner.Diplomats.ExamineCity(townIdx);
-				}
-
-				this.owner.Advisors.RenewCityScreen(townIdx);
-
-				this.owner.TurnHooks.RepaintMainScreen();
-			}
-			else
-			{
-				town.PresentMakingIdx = (sbyte)this.owner.Advisors.PickCityProduction(participantIdx, townIdx);
-
-				if (this.owner.CityOps.PlayerEnjoysWonderEffect(person, 0x13) != 0)
-				{
-					this.owner.World.ChartSight[town.Place.X, town.Place.Y] |= (sbyte)(byte)(1 << (byte)person);
-
-					town.ShownExtent = 1;
-
-					this.owner.MapOps.KeepKnownTileImprovements(town.Place.X, town.Place.Y);
-				}
-			}
-
-			return (ushort)townIdx;
-		}
-
-		/// <summary>
-		/// The next free name of the leader's 16 (16 * (ChiefVisuals - 1), one less from the 8th leader on), then the shared
-		/// names 0xe0 - 0xff, then from 0 on; all taken: name 0
-		/// </summary>
-		private ushort ChooseCityLabel(short participantIdx)
-		{
-			ushort labelIdx = (ushort)(this.owner.World.Participants[participantIdx].ChiefVisuals - 1);
-
-			if ((short)labelIdx >= 7)
-				labelIdx--;
-
-			labelIdx <<= 4;
-
-			ushort first = labelIdx;
-			bool found;
-
-			do
-			{
-				found = true;
-
-				if (this.owner.World.TownPlaces[labelIdx].X == -1)
-					break;
-
-				found = false;
-
-				ushort end = (ushort)(first + 0x10);
-				labelIdx++;
-
-				if (end == labelIdx)
-					labelIdx = 0xe0;
-
-				if (labelIdx == 0x100)
-				{
-					labelIdx = 0;
-
-					if (first == 0x3e7)
-						found = true;
-
-					first = 0x3e7;
-				}
-			}
-			while (!found);
-
-
-			return labelIdx;
-		}
-
-		/// <summary>The trailing spaces of the name (from its 12th letter back) become ends of text</summary>
-		private void TrimCityLabel(byte labelIdx)
-		{
-			ushort letterIdx = 0xb;
-
-			while (letterIdx > 0 && this.owner.World.TownLabels[labelIdx][letterIdx] == ' ')
-			{
-				char[] label = this.owner.World.TownLabels[labelIdx].ToCharArray();
-				label[letterIdx] = '\0';
-				this.owner.World.TownLabels[labelIdx] = new string(label);
-				letterIdx--;
-			}
-
-		}
-
-		/// <summary>The flags of the city's neighbours: 2 coastal (big ocean, or any for the human player), 8 river or hills</summary>
-		private void MarkCityNeighbourhood(short participantIdx, City town, int horizLoc, int vertLoc)
-		{
-			ushort neighbourIdx;
-
-			for (neighbourIdx = 1; neighbourIdx <= 8; neighbourIdx++)
-			{
-				int tileHoriz = (short)DirectionHoriz(neighbourIdx) + horizLoc;
-				int tileVert = (short)DirectionVert(neighbourIdx) + vertLoc;
-
-				ushort terrain = this.owner.MapOps.ObtainTerrainType(tileHoriz, tileVert);
-
-				if (terrain == 0xa &&
-					((short)this.owner.MapOps.ObtainLandMassSize(tileHoriz, tileVert) > 0x100 || participantIdx == this.owner.World.PersonParticipantIdx))
-				{
-					town.ConditionMarker |= 2;
-				}
-
-				if (terrain == 0xb || terrain == 5)
-				{
-					town.ConditionMarker |= 8;
-				}
-			}
-
-		}
-
-		/// <summary>
-		/// The power map (screen 2, 0x50 to the right): the 21 tiles of the city in the owner's colour, the next ones at most
-		/// colour 8; an AI city next to a city of the human player becomes known to him
-		/// </summary>
-		private void MarkCityPowerArea(short participantIdx, City town, int horizLoc, int vertLoc)
-		{
-			short person = this.owner.World.PersonParticipantIdx;
-			ushort tileIdx;
-
-			for (tileIdx = 0; tileIdx < 0x2d; tileIdx++)
-			{
-				short tileHoriz = (short)(ushort)this.owner.Routing.TunePosition((short)DirectionHoriz(tileIdx) + horizLoc);
-				short tileVert = (short)(DirectionVert(tileIdx) + (ushort)vertLoc);
-
-
-				if (tileIdx <= 0x14)
-				{
-					this.owner.Services.AssignDot(2, tileHoriz + 0x50, tileVert, (ushort)participantIdx);
-				}
-				else
-				{
-					ushort colour = this.owner.VideoCard.ObtainDot(2, tileHoriz + 0x50, tileVert);
-
-					if ((short)colour >= 8)
-						this.owner.Services.AssignDot(2, tileHoriz + 0x50, tileVert, 8);
-				}
-
-				if (participantIdx == person || tileIdx > 0x18)
-					continue;
-
-				if ((this.owner.MapOps.ObtainTileImprovements(tileHoriz, tileVert) & 1) == 0 ||
-					this.owner.MapOps.ObtainTileOwnerBits(tileHoriz, tileVert) != (ushort)person)
-					continue;
-
-				town.ShownExtent = 1;
-
-				this.owner.MapOps.KeepKnownTileImprovements(horizLoc, vertLoc);
-			}
-
-		}
-
 		/// <summary>
 		/// A random event in the city (one in ten each): earthquake near hills (a building), plague without aqueduct (0x100;
 		/// technology 10 protects), flood near a river (0x800 terrain, without city walls 0x80), fire near mountains (0x20,
@@ -479,181 +224,6 @@ namespace Civilization1Remaster.Game
 			ReportCityDisaster(townIdx);
 
 			this.processor.Journal.CloseScope("HandleCityDisasters");
-		}
-
-		/// <summary>
-		/// A random building of the city (1 - 23, read like the original: a 16-bit mask sign extended) is destroyed; its number
-		/// (frame 0x10)
-		/// </summary>
-		private ushort DestroyRandomBuilding(City town)
-		{
-			ushort buildingIdx;
-
-			do
-			{
-				buildingIdx = (ushort)this.owner.Libc.Dice.DrawInt(24);
-			}
-			while (buildingIdx == 0 || !town.HasStructureSignExtended(buildingIdx));
-
-			ushort keep = (ushort)~(ushort)(1 << (byte)buildingIdx);
-
-			town.StructureMarkers0 &= keep;
-			town.StructureMarkers1 &= (keep & 0x8000) != 0 ? (ushort)0xffff : (ushort)0;
-
-			return buildingIdx;
-		}
-
-		/// <summary>
-		/// The revolt (three times in ten): when the unhappy outnumber the happy the citizens demand a building (a human player
-		/// sees it), food and production are lost and, unless it is a capital of a civilization with more than 3 cities, the
-		/// city of another player with the most prosperity (from the first cities up to the first destroyed one or this city)
-		/// may buy it (ComputeInciteCost)
-		/// </summary>
-		private void HandleCityRevolt(short townIdx)
-		{
-			City town = this.owner.World.Towns[townIdx];
-
-			this.owner.CityOps.HandleCity(townIdx, -1);
-
-			this.owner.Words.Clear();
-
-			if ((short)CityHappy >= (short)CityUnhappy)
-				return;
-
-			switch (this.owner.Libc.Dice.DrawInt(3))
-			{
-				case 0:
-					this.owner.Words.Set(0x4fcb);
-					break;
-
-				case 1:
-					this.owner.Words.Set(0x4fd7);
-					break;
-
-				case 2:
-					this.owner.Words.Set(0x4fe6);
-					break;
-			}
-
-			this.owner.Conquest.ObtainCityLabel(townIdx);
-
-			this.owner.Words.Append("!\nCitizens demand ");
-
-			if (!town.Has(CityStructure.Temple))
-			{
-				this.owner.Words.Append("TEMPLE\n");
-			}
-			else if (!town.Has(CityStructure.Courthouse))
-			{
-				this.owner.Words.Append(0x500d);
-			}
-			else if (!town.Has(CityStructure.Marketplace))
-			{
-				this.owner.Words.Append(0x5019);
-			}
-			else
-			{
-				this.owner.Words.Append(this.owner.Advisors.PlayerKnowsTechnology(town.ParticipantIdx, 0x1d) != 0 &&
-					!town.Has(CityStructure.Cathedral) ? (ushort)0x5026 : (ushort)0x5031);
-			}
-
-			if (this.owner.World.IsHuman(town.ParticipantIdx))
-			{
-				this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 80);
-
-				this.owner.TurnLogic.RepaintTileIfVisible(town.Place.X, town.Place.Y);
-
-				this.owner.Words.Clear();
-			}
-
-			town.GrainTally = 0;
-			town.MaterialsTally = 0;
-
-			short highest = 4;
-			short rivalIdx = -1;
-
-
-			if ((short)CityHappy > (short)CityUnhappy ||
-				town.Has(CityStructure.Palace) || this.owner.World.Participants[town.ParticipantIdx].TownTally <= 3)
-				return;
-
-			ushort otherIdx;
-
-			for (otherIdx = 0; otherIdx < 0x80 && otherIdx != (ushort)townIdx && this.owner.World.Towns[otherIdx].ConditionMarker != 0xff; otherIdx++)
-			{
-				short distance = (short)(ushort)this.owner.Helpers.ObtainDistance(town.Place.X, this.owner.World.Towns[otherIdx].Place.X, town.Place.Y, this.owner.World.Towns[otherIdx].Place.Y);
-
-				this.owner.CityOps.HandleCity((short)otherIdx, -1);
-
-				short prosperity = CPU.SignedQuotient((short)((ushort)(CityHappy - CityUnhappy) << 5), distance);
-
-				if (prosperity > highest)
-				{
-					highest = prosperity;
-					rivalIdx = (short)otherIdx;
-
-				}
-			}
-
-
-			if (rivalIdx == -1)
-				return;
-
-			if (this.owner.World.Towns[rivalIdx].ParticipantIdx == town.ParticipantIdx)
-				return;
-
-			if ((this.owner.World.ChartSight[town.Place.X, town.Place.Y] & (1 << (byte)this.owner.World.PersonParticipantIdx)) != 0)
-			{
-				Message("Residents of ")
-					.City(townIdx)
-					.Text(" admire\nthe prosperity of ")
-					.City(rivalIdx)
-					.Text(".\n")
-					.Dialog(80, 80);
-			}
-
-			this.owner.Diplomats.ComputeInciteCost(townIdx, this.owner.World.Towns[rivalIdx].ParticipantIdx);
-
-			this.owner.Words.Clear();
-		}
-
-		/// <summary>
-		/// The message left in TextBuffer.Address: a human player's city shows it; a city the human player only sees shows its first line
-		/// and the map moves there
-		/// </summary>
-		private void ReportCityDisaster(short townIdx)
-		{
-			City town = this.owner.World.Towns[townIdx];
-
-			if (this.owner.Words[0] == 0)
-				return;
-
-			if (this.owner.World.IsHuman(town.ParticipantIdx))
-			{
-				DialogStyle = 0x4;
-
-				this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 80);
-
-				this.owner.TurnLogic.RepaintTileIfVisible(town.Place.X, town.Place.Y);
-
-				return;
-			}
-
-			if ((this.owner.World.ChartSight[town.Place.X, town.Place.Y] & (1 << (byte)this.owner.World.PersonParticipantIdx)) == 0)
-				return;
-
-			ushort lineEnd = 0;
-
-			while (this.processor.PullGlobalByte((ushort)(lineEnd++ + TextBuffer.Address)) != 0xa)
-			{
-			}
-
-			this.processor.EmitGlobalByte((ushort)(lineEnd + TextBuffer.Address), 0);
-			DialogStyle = 0x2;
-
-			this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 64);
-
-			this.owner.MapOps.FocusMapView(this.owner.World.PersonParticipantIdx, town.Place.X - 10, town.Place.Y - 6);
 		}
 
 		/// <summary>
@@ -948,6 +518,436 @@ namespace Civilization1Remaster.Game
 			}
 
 			this.processor.Journal.CloseScope("RenderScoreIcon");
+		}
+
+		/// <summary>The city in the free slot (see EstablishCity); -1 when the human player cancels its name</summary>
+		private ushort FoundCity(short participantIdx, short townIdx, int horizLoc, int vertLoc, ushort townExtent)
+		{
+			short person = this.owner.World.PersonParticipantIdx;
+			City town = this.owner.World.Towns[townIdx];
+
+			ushort labelIdx = ChooseCityLabel(participantIdx);
+
+			town.LabelIdx = (byte)labelIdx;
+
+			this.owner.World.TownPlaces[labelIdx] = new Point(horizLoc, vertLoc);
+
+			if (this.owner.World.IsHuman(participantIdx))
+			{
+				if (this.owner.CityNaming.DisplayCityLabelPrompt(townIdx) == 0)
+					return 0xffff;
+
+				char[] label = this.owner.World.TownLabels[town.LabelIdx].ToCharArray();
+				label[12] = '\0';
+				this.owner.World.TownLabels[town.LabelIdx] = new string(label);
+			}
+
+			TrimCityLabel(town.LabelIdx);
+
+			this.owner.UnitOps.AttachReplayContent(1, (byte)participantIdx, town.LabelIdx, (byte)horizLoc, (byte)vertLoc);
+
+			this.owner.MapOps.DiscardTileImprovements(0x24, horizLoc, vertLoc);
+
+			// Remaster: the land under a new city is cleared. Forest, jungle and swamp change the same way
+			// as when settlers irrigate them (forest to plains, jungle and swamp to grassland).
+			WipeCitySquare(horizLoc, vertLoc);
+
+			this.owner.MapOps.AssignTileImprovements(9, horizLoc, vertLoc);
+
+			if ((short)TerrainImprovementWord(this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc), TerrainImprovementTable.Irrigation) < -1)
+			{
+				this.owner.MapOps.AssignTileImprovements(2, horizLoc, vertLoc);
+			}
+
+			town.ConditionMarker = 0;
+			town.Place = new Point(horizLoc, town.Place.Y);
+			town.Place = new Point(town.Place.X, vertLoc);
+			town.TrueExtent = (sbyte)townExtent;
+			town.ShownExtent = 0;
+			town.LaborerMarkers0 = 0;
+			town.LaborerMarkers1 = 0;
+			town.RootCommerce = 0;
+			town.GrainTally = 0;
+			town.MaterialsTally = 0;
+			town.StructureMarkers0 = 0;
+			town.StructureMarkers1 = 0;
+			town.PresentMakingIdx = 1;
+
+			if (this.owner.Advisors.PlayerKnowsTechnology(participantIdx, 0x22) != 0)
+				town.PresentMakingIdx = 4;
+
+			if (this.owner.Advisors.PlayerKnowsTechnology(participantIdx, 0x40) != 0)
+				town.PresentMakingIdx = 5;
+
+			town.Unfamiliar[0] = -1;
+			town.Unfamiliar[1] = -1;
+
+			bool first = true;
+
+			for (ushort otherIdx = 0; otherIdx < 0x80; otherIdx++)
+			{
+				if (this.owner.World.Towns[otherIdx].ParticipantIdx == participantIdx && otherIdx != (ushort)townIdx)
+					first = false;
+			}
+
+
+			if (first)
+			{
+				town.StructureMarkers0 = 1;
+				town.StructureMarkers1 = 0;
+			}
+
+			town.RootCommerce = 0;
+			town.ParticipantIdx = participantIdx;
+
+			for (int routeIdx = 0; routeIdx < 3; routeIdx++)
+				town.CommerceTownIndices[routeIdx] = -1;
+
+			town.LaborerMarkers2 = 0;
+
+			MarkCityNeighbourhood(participantIdx, town, horizLoc, vertLoc);
+
+			if (first && participantIdx == person)
+			{
+				this.owner.HelpSystem.DisplayHelpPopup(GameTexts.TopicFirstproduct);
+			}
+
+			MarkCityPowerArea(participantIdx, town, horizLoc, vertLoc);
+
+			if (participantIdx == person)
+			{
+				// Sound of chopping wood while the new city is built
+				this.owner.Services.PerformCityFoundedSound();
+
+				if ((this.owner.World.SessionPrefMarkers & 8) != 0)
+				{
+					if (this.owner.Startup.QueryForDisk(1, 0) != 0)
+						this.owner.Diplomats.ExamineCity(townIdx);
+				}
+
+				this.owner.Advisors.RenewCityScreen(townIdx);
+
+				this.owner.TurnHooks.RepaintMainScreen();
+			}
+			else
+			{
+				town.PresentMakingIdx = (sbyte)this.owner.Advisors.PickCityProduction(participantIdx, townIdx);
+
+				if (this.owner.CityOps.PlayerEnjoysWonderEffect(person, 0x13) != 0)
+				{
+					this.owner.World.ChartSight[town.Place.X, town.Place.Y] |= (sbyte)(byte)(1 << (byte)person);
+
+					town.ShownExtent = 1;
+
+					this.owner.MapOps.KeepKnownTileImprovements(town.Place.X, town.Place.Y);
+				}
+			}
+
+			return (ushort)townIdx;
+		}
+
+		/// <summary>
+		/// The next free name of the leader's 16 (16 * (ChiefVisuals - 1), one less from the 8th leader on), then the shared
+		/// names 0xe0 - 0xff, then from 0 on; all taken: name 0
+		/// </summary>
+		private ushort ChooseCityLabel(short participantIdx)
+		{
+			ushort labelIdx = (ushort)(this.owner.World.Participants[participantIdx].ChiefVisuals - 1);
+
+			if ((short)labelIdx >= 7)
+				labelIdx--;
+
+			labelIdx <<= 4;
+
+			ushort first = labelIdx;
+			bool found;
+
+			do
+			{
+				found = true;
+
+				if (this.owner.World.TownPlaces[labelIdx].X == -1)
+					break;
+
+				found = false;
+
+				ushort end = (ushort)(first + 0x10);
+				labelIdx++;
+
+				if (end == labelIdx)
+					labelIdx = 0xe0;
+
+				if (labelIdx == 0x100)
+				{
+					labelIdx = 0;
+
+					if (first == 0x3e7)
+						found = true;
+
+					first = 0x3e7;
+				}
+			}
+			while (!found);
+
+
+			return labelIdx;
+		}
+
+		/// <summary>The trailing spaces of the name (from its 12th letter back) become ends of text</summary>
+		private void TrimCityLabel(byte labelIdx)
+		{
+			ushort letterIdx = 0xb;
+
+			while (letterIdx > 0 && this.owner.World.TownLabels[labelIdx][letterIdx] == ' ')
+			{
+				char[] label = this.owner.World.TownLabels[labelIdx].ToCharArray();
+				label[letterIdx] = '\0';
+				this.owner.World.TownLabels[labelIdx] = new string(label);
+				letterIdx--;
+			}
+
+		}
+
+		/// <summary>The flags of the city's neighbours: 2 coastal (big ocean, or any for the human player), 8 river or hills</summary>
+		private void MarkCityNeighbourhood(short participantIdx, City town, int horizLoc, int vertLoc)
+		{
+			ushort neighbourIdx;
+
+			for (neighbourIdx = 1; neighbourIdx <= 8; neighbourIdx++)
+			{
+				int tileHoriz = (short)DirectionHoriz(neighbourIdx) + horizLoc;
+				int tileVert = (short)DirectionVert(neighbourIdx) + vertLoc;
+
+				ushort terrain = this.owner.MapOps.ObtainTerrainType(tileHoriz, tileVert);
+
+				if (terrain == 0xa &&
+					((short)this.owner.MapOps.ObtainLandMassSize(tileHoriz, tileVert) > 0x100 || participantIdx == this.owner.World.PersonParticipantIdx))
+				{
+					town.ConditionMarker |= 2;
+				}
+
+				if (terrain == 0xb || terrain == 5)
+				{
+					town.ConditionMarker |= 8;
+				}
+			}
+
+		}
+
+		/// <summary>
+		/// The power map (screen 2, 0x50 to the right): the 21 tiles of the city in the owner's colour, the next ones at most
+		/// colour 8; an AI city next to a city of the human player becomes known to him
+		/// </summary>
+		private void MarkCityPowerArea(short participantIdx, City town, int horizLoc, int vertLoc)
+		{
+			short person = this.owner.World.PersonParticipantIdx;
+			ushort tileIdx;
+
+			for (tileIdx = 0; tileIdx < 0x2d; tileIdx++)
+			{
+				short tileHoriz = (short)(ushort)this.owner.Routing.TunePosition((short)DirectionHoriz(tileIdx) + horizLoc);
+				short tileVert = (short)(DirectionVert(tileIdx) + (ushort)vertLoc);
+
+
+				if (tileIdx <= 0x14)
+				{
+					this.owner.Services.AssignDot(2, tileHoriz + 0x50, tileVert, (ushort)participantIdx);
+				}
+				else
+				{
+					ushort colour = this.owner.VideoCard.ObtainDot(2, tileHoriz + 0x50, tileVert);
+
+					if ((short)colour >= 8)
+						this.owner.Services.AssignDot(2, tileHoriz + 0x50, tileVert, 8);
+				}
+
+				if (participantIdx == person || tileIdx > 0x18)
+					continue;
+
+				if ((this.owner.MapOps.ObtainTileImprovements(tileHoriz, tileVert) & 1) == 0 ||
+					this.owner.MapOps.ObtainTileOwnerBits(tileHoriz, tileVert) != (ushort)person)
+					continue;
+
+				town.ShownExtent = 1;
+
+				this.owner.MapOps.KeepKnownTileImprovements(horizLoc, vertLoc);
+			}
+
+		}
+
+		/// <summary>
+		/// A random building of the city (1 - 23, read like the original: a 16-bit mask sign extended) is destroyed; its number
+		/// (frame 0x10)
+		/// </summary>
+		private ushort DestroyRandomBuilding(City town)
+		{
+			ushort buildingIdx;
+
+			do
+			{
+				buildingIdx = (ushort)this.owner.Libc.Dice.DrawInt(24);
+			}
+			while (buildingIdx == 0 || !town.HasStructureSignExtended(buildingIdx));
+
+			ushort keep = (ushort)~(ushort)(1 << (byte)buildingIdx);
+
+			town.StructureMarkers0 &= keep;
+			town.StructureMarkers1 &= (keep & 0x8000) != 0 ? (ushort)0xffff : (ushort)0;
+
+			return buildingIdx;
+		}
+
+		/// <summary>
+		/// The revolt (three times in ten): when the unhappy outnumber the happy the citizens demand a building (a human player
+		/// sees it), food and production are lost and, unless it is a capital of a civilization with more than 3 cities, the
+		/// city of another player with the most prosperity (from the first cities up to the first destroyed one or this city)
+		/// may buy it (ComputeInciteCost)
+		/// </summary>
+		private void HandleCityRevolt(short townIdx)
+		{
+			City town = this.owner.World.Towns[townIdx];
+
+			this.owner.CityOps.HandleCity(townIdx, -1);
+
+			this.owner.Words.Clear();
+
+			if ((short)CityHappy >= (short)CityUnhappy)
+				return;
+
+			switch (this.owner.Libc.Dice.DrawInt(3))
+			{
+				case 0:
+					this.owner.Words.Set(0x4fcb);
+					break;
+
+				case 1:
+					this.owner.Words.Set(0x4fd7);
+					break;
+
+				case 2:
+					this.owner.Words.Set(0x4fe6);
+					break;
+			}
+
+			this.owner.Conquest.ObtainCityLabel(townIdx);
+
+			this.owner.Words.Append("!\nCitizens demand ");
+
+			if (!town.Has(CityStructure.Temple))
+			{
+				this.owner.Words.Append("TEMPLE\n");
+			}
+			else if (!town.Has(CityStructure.Courthouse))
+			{
+				this.owner.Words.Append(0x500d);
+			}
+			else if (!town.Has(CityStructure.Marketplace))
+			{
+				this.owner.Words.Append(0x5019);
+			}
+			else
+			{
+				this.owner.Words.Append(this.owner.Advisors.PlayerKnowsTechnology(town.ParticipantIdx, 0x1d) != 0 &&
+					!town.Has(CityStructure.Cathedral) ? (ushort)0x5026 : (ushort)0x5031);
+			}
+
+			if (this.owner.World.IsHuman(town.ParticipantIdx))
+			{
+				this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 80);
+
+				this.owner.TurnLogic.RepaintTileIfVisible(town.Place.X, town.Place.Y);
+
+				this.owner.Words.Clear();
+			}
+
+			town.GrainTally = 0;
+			town.MaterialsTally = 0;
+
+			short highest = 4;
+			short rivalIdx = -1;
+
+
+			if ((short)CityHappy > (short)CityUnhappy ||
+				town.Has(CityStructure.Palace) || this.owner.World.Participants[town.ParticipantIdx].TownTally <= 3)
+				return;
+
+			ushort otherIdx;
+
+			for (otherIdx = 0; otherIdx < 0x80 && otherIdx != (ushort)townIdx && this.owner.World.Towns[otherIdx].ConditionMarker != 0xff; otherIdx++)
+			{
+				short distance = (short)(ushort)this.owner.Helpers.ObtainDistance(town.Place.X, this.owner.World.Towns[otherIdx].Place.X, town.Place.Y, this.owner.World.Towns[otherIdx].Place.Y);
+
+				this.owner.CityOps.HandleCity((short)otherIdx, -1);
+
+				short prosperity = CPU.SignedQuotient((short)((ushort)(CityHappy - CityUnhappy) << 5), distance);
+
+				if (prosperity > highest)
+				{
+					highest = prosperity;
+					rivalIdx = (short)otherIdx;
+
+				}
+			}
+
+
+			if (rivalIdx == -1)
+				return;
+
+			if (this.owner.World.Towns[rivalIdx].ParticipantIdx == town.ParticipantIdx)
+				return;
+
+			if ((this.owner.World.ChartSight[town.Place.X, town.Place.Y] & (1 << (byte)this.owner.World.PersonParticipantIdx)) != 0)
+			{
+				Message("Residents of ")
+					.City(townIdx)
+					.Text(" admire\nthe prosperity of ")
+					.City(rivalIdx)
+					.Text(".\n")
+					.Dialog(80, 80);
+			}
+
+			this.owner.Diplomats.ComputeInciteCost(townIdx, this.owner.World.Towns[rivalIdx].ParticipantIdx);
+
+			this.owner.Words.Clear();
+		}
+
+		/// <summary>
+		/// The message left in TextBuffer.Address: a human player's city shows it; a city the human player only sees shows its first line
+		/// and the map moves there
+		/// </summary>
+		private void ReportCityDisaster(short townIdx)
+		{
+			City town = this.owner.World.Towns[townIdx];
+
+			if (this.owner.Words[0] == 0)
+				return;
+
+			if (this.owner.World.IsHuman(town.ParticipantIdx))
+			{
+				DialogStyle = 0x4;
+
+				this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 80);
+
+				this.owner.TurnLogic.RepaintTileIfVisible(town.Place.X, town.Place.Y);
+
+				return;
+			}
+
+			if ((this.owner.World.ChartSight[town.Place.X, town.Place.Y] & (1 << (byte)this.owner.World.PersonParticipantIdx)) == 0)
+				return;
+
+			ushort lineEnd = 0;
+
+			while (this.processor.PullGlobalByte((ushort)(lineEnd++ + TextBuffer.Address)) != 0xa)
+			{
+			}
+
+			this.processor.EmitGlobalByte((ushort)(lineEnd + TextBuffer.Address), 0);
+			DialogStyle = 0x2;
+
+			this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 64);
+
+			this.owner.MapOps.FocusMapView(this.owner.World.PersonParticipantIdx, town.Place.X - 10, town.Place.Y - 6);
 		}
 	}
 }

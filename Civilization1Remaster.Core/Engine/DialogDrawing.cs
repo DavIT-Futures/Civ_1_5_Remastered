@@ -39,6 +39,120 @@ namespace Civilization1Remaster.Engine
 		public ushort DisplayMenu(string text, int horizLoc, int vertLoc, ushort marker) =>
 			DisplayMenu(new MenuText(text), TextBuffer.StackTextAddress, horizLoc, vertLoc, marker);
 
+		/// <summary>
+		/// Layouts and renders the menu or dialog box for charsAddr at (horizLoc, vertLoc): on the first pass (0xd2e2 == 1) measures
+		/// the lines, records their offsets (0x654e) and hotkeys (0xdc4a), and draws the frame and advisor portrait (0x2f9e); then
+		/// renders the text lines
+		/// </summary>
+		public void OperateMenu(ushort charsAddr, int horizLoc, int vertLoc, ushort shownChoice) =>
+			OperateMenu(new MenuText(this.owner, charsAddr), charsAddr, horizLoc, vertLoc, shownChoice);
+
+		/// <summary>
+		/// Fills the box moved by (1, 1) with the colour (the motif for 7 with BoxMotif), draws its shadow (15 / 8) and a frame
+		/// of colour 0 around it
+		/// </summary>
+		public void FloodBoxWithDoubleShadow(int horizLoc, int vertLoc, int breadth, int altitude, ushort style)
+		{
+			if (style == 7 && BoxMotif != 0)
+			{
+				this.owner.Helpers.FloodBoxWithMotif(horizLoc + 1, vertLoc + 1, breadth, altitude);
+			}
+			else
+			{
+				this.owner.Services.FloodBox(ScreenBox,
+					horizLoc + 1, vertLoc + 1, breadth, altitude, style);
+			}
+		
+			DrawingBox.RearHues = style;
+
+			RenderShadowBox(horizLoc + 1, vertLoc + 1, breadth, altitude, 15, 8);
+
+			RenderBox(horizLoc, vertLoc, breadth + 2, altitude + 2, 0);
+		}
+
+		/// <summary>
+		/// Draws a rectangle
+		/// </summary>
+		/// <param name="xPos"></param>
+		/// <param name="yPos"></param>
+		/// <param name="width"></param>
+		/// <param name="height"></param>
+		/// <param name="mode"></param>
+		public void RenderBox(int horizLoc, int vertLoc, int breadth, int altitude, ushort style)
+		{
+			this.owner.VideoCard.RenderLine(ScreenBox,
+				horizLoc, vertLoc, horizLoc + breadth, vertLoc, style);
+
+			this.owner.VideoCard.RenderLine(ScreenBox,
+				horizLoc, vertLoc + altitude, horizLoc + breadth, vertLoc + altitude, style);
+
+			this.owner.VideoCard.RenderLine(ScreenBox,
+				horizLoc + breadth, vertLoc, horizLoc + breadth, vertLoc + altitude, style);
+
+			this.owner.VideoCard.RenderLine(ScreenBox,
+				horizLoc, vertLoc, horizLoc, vertLoc + altitude, style);
+		}
+
+		/// <summary>
+		/// Draws a shaddow rectangle
+		/// </summary>
+		/// <param name="xPos"></param>
+		/// <param name="yPos"></param>
+		/// <param name="width"></param>
+		/// <param name="height"></param>
+		/// <param name="mode"></param>
+		/// <param name="mode1"></param>
+		public void RenderShadowBox(int horizLoc, int vertLoc, int breadth, int altitude, ushort style, ushort style1)
+		{
+			this.owner.VideoCard.RenderLine(ScreenBox,
+				horizLoc, vertLoc, horizLoc + breadth, vertLoc, style1);
+
+			this.owner.VideoCard.RenderLine(ScreenBox,
+				horizLoc, vertLoc + altitude, horizLoc + breadth, vertLoc + altitude, style);
+
+			this.owner.VideoCard.RenderLine(ScreenBox,
+				horizLoc + breadth, vertLoc, horizLoc + breadth, vertLoc + altitude, style1);
+
+			this.owner.VideoCard.RenderLine(ScreenBox,
+				horizLoc, vertLoc + 1, horizLoc, vertLoc + altitude, style);
+		}
+
+		/// <summary>
+		/// Reads a key and gives the navigation keys one code each (the other codes of the arrows, Home and the shifted keys of
+		/// the keypad map to the usual ones); any other key with a character loses its scan code (high byte)
+		/// </summary>
+		public ushort ObtainNavigationKey()
+		{
+			this.processor.Journal.OpenScope("ObtainNavigationKey()");
+
+			ushort key = (ushort)this.owner.Libc.ReadKey();
+
+			key = key switch
+			{
+				0x4800 or 0x487e => 0x4800, // Up
+				0x4900 => 0x4900, // Page Up
+				0x4d00 or 0xf400 => 0x4d00, // Right
+				0x5100 => 0x5100, // Page Down
+				0x5000 or 0x5060 => 0x5000, // Down
+				0x4f00 => 0x4f00, // End
+				0x4b00 or 0x4b7c => 0x4b00, // Left
+				0x4700 or 0x475c => 0x4700, // Home
+				0x4838 => 0x4838, // Shift + Up
+				0x4939 => 0x4939, // Shift + Page Up
+				0x4d36 or 0x4d46 => 0x4d36, // Shift + Right
+				0x5133 => 0x5133, // Shift + Page Down
+				0x5032 => 0x5032, // Shift + Down
+				0x4f31 => 0x4f31, // Shift + End
+				0x4b34 or 0x4b43 => 0x4b34, // Shift + Left
+				0x4737 => 0x4737, // Shift + Home
+				_ => (key & 0xff) != 0 ? (ushort)(key & 0xff) : key
+			};
+
+			this.processor.Journal.CloseScope("ObtainNavigationKey");
+
+			return key;
+		}
+
 		private ushort DisplayMenu(MenuText text, ushort charsAddr, int horizLoc, int vertLoc, ushort marker)
 		{
 			this.processor.Journal.OpenScope($"DisplayMenu(0x{charsAddr:x4}, {horizLoc}, {vertLoc}, {marker})");
@@ -304,14 +418,6 @@ namespace Civilization1Remaster.Engine
 					highlight ? (byte)3 : (byte)shadowHue);
 			}
 		}
-
-		/// <summary>
-		/// Layouts and renders the menu or dialog box for charsAddr at (horizLoc, vertLoc): on the first pass (0xd2e2 == 1) measures
-		/// the lines, records their offsets (0x654e) and hotkeys (0xdc4a), and draws the frame and advisor portrait (0x2f9e); then
-		/// renders the text lines
-		/// </summary>
-		public void OperateMenu(ushort charsAddr, int horizLoc, int vertLoc, ushort shownChoice) =>
-			OperateMenu(new MenuText(this.owner, charsAddr), charsAddr, horizLoc, vertLoc, shownChoice);
 
 		private void OperateMenu(MenuText text, ushort charsAddr, int horizLoc, int vertLoc, ushort shownChoice)
 		{
@@ -610,112 +716,6 @@ namespace Civilization1Remaster.Engine
 
 				lineIdx++;
 			}
-		}
-
-		/// <summary>
-		/// Fills the box moved by (1, 1) with the colour (the motif for 7 with BoxMotif), draws its shadow (15 / 8) and a frame
-		/// of colour 0 around it
-		/// </summary>
-		public void FloodBoxWithDoubleShadow(int horizLoc, int vertLoc, int breadth, int altitude, ushort style)
-		{
-			if (style == 7 && BoxMotif != 0)
-			{
-				this.owner.Helpers.FloodBoxWithMotif(horizLoc + 1, vertLoc + 1, breadth, altitude);
-			}
-			else
-			{
-				this.owner.Services.FloodBox(ScreenBox,
-					horizLoc + 1, vertLoc + 1, breadth, altitude, style);
-			}
-		
-			DrawingBox.RearHues = style;
-
-			RenderShadowBox(horizLoc + 1, vertLoc + 1, breadth, altitude, 15, 8);
-
-			RenderBox(horizLoc, vertLoc, breadth + 2, altitude + 2, 0);
-		}
-
-		/// <summary>
-		/// Draws a rectangle
-		/// </summary>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
-		/// <param name="width"></param>
-		/// <param name="height"></param>
-		/// <param name="mode"></param>
-		public void RenderBox(int horizLoc, int vertLoc, int breadth, int altitude, ushort style)
-		{
-			this.owner.VideoCard.RenderLine(ScreenBox,
-				horizLoc, vertLoc, horizLoc + breadth, vertLoc, style);
-
-			this.owner.VideoCard.RenderLine(ScreenBox,
-				horizLoc, vertLoc + altitude, horizLoc + breadth, vertLoc + altitude, style);
-
-			this.owner.VideoCard.RenderLine(ScreenBox,
-				horizLoc + breadth, vertLoc, horizLoc + breadth, vertLoc + altitude, style);
-
-			this.owner.VideoCard.RenderLine(ScreenBox,
-				horizLoc, vertLoc, horizLoc, vertLoc + altitude, style);
-		}
-
-		/// <summary>
-		/// Draws a shaddow rectangle
-		/// </summary>
-		/// <param name="xPos"></param>
-		/// <param name="yPos"></param>
-		/// <param name="width"></param>
-		/// <param name="height"></param>
-		/// <param name="mode"></param>
-		/// <param name="mode1"></param>
-		public void RenderShadowBox(int horizLoc, int vertLoc, int breadth, int altitude, ushort style, ushort style1)
-		{
-			this.owner.VideoCard.RenderLine(ScreenBox,
-				horizLoc, vertLoc, horizLoc + breadth, vertLoc, style1);
-
-			this.owner.VideoCard.RenderLine(ScreenBox,
-				horizLoc, vertLoc + altitude, horizLoc + breadth, vertLoc + altitude, style);
-
-			this.owner.VideoCard.RenderLine(ScreenBox,
-				horizLoc + breadth, vertLoc, horizLoc + breadth, vertLoc + altitude, style1);
-
-			this.owner.VideoCard.RenderLine(ScreenBox,
-				horizLoc, vertLoc + 1, horizLoc, vertLoc + altitude, style);
-		}
-
-		/// <summary>
-		/// Reads a key and gives the navigation keys one code each (the other codes of the arrows, Home and the shifted keys of
-		/// the keypad map to the usual ones); any other key with a character loses its scan code (high byte)
-		/// </summary>
-		public ushort ObtainNavigationKey()
-		{
-			this.processor.Journal.OpenScope("ObtainNavigationKey()");
-
-			ushort key = (ushort)this.owner.Libc.ReadKey();
-
-			key = key switch
-			{
-				0x4800 or 0x487e => 0x4800, // Up
-				0x4900 => 0x4900, // Page Up
-				0x4d00 or 0xf400 => 0x4d00, // Right
-				0x5100 => 0x5100, // Page Down
-				0x5000 or 0x5060 => 0x5000, // Down
-				0x4f00 => 0x4f00, // End
-				0x4b00 or 0x4b7c => 0x4b00, // Left
-				0x4700 or 0x475c => 0x4700, // Home
-				0x4838 => 0x4838, // Shift + Up
-				0x4939 => 0x4939, // Shift + Page Up
-				0x4d36 or 0x4d46 => 0x4d36, // Shift + Right
-				0x5133 => 0x5133, // Shift + Page Down
-				0x5032 => 0x5032, // Shift + Down
-				0x4f31 => 0x4f31, // Shift + End
-				0x4b34 or 0x4b43 => 0x4b34, // Shift + Left
-				0x4737 => 0x4737, // Shift + Home
-				_ => (key & 0xff) != 0 ? (ushort)(key & 0xff) : key
-			};
-
-			this.processor.Journal.CloseScope("ObtainNavigationKey");
-
-			return key;
 		}
 	}
 }

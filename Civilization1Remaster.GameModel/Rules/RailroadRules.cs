@@ -12,6 +12,7 @@ namespace Civilization1Remaster.Game.Rules
 	{
 		/// <summary>The improvement bits of a tile</summary>
 		public const int CityBit = 0x1;
+
 		public const int RoadBit = 0x8;
 		public const int RailroadBit = 0x10;
 

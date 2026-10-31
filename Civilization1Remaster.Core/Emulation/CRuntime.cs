@@ -8,15 +8,31 @@ namespace Civilization1Remaster.Emulation
 {
 	public class CRuntime : GameModule
 	{
-		private RandomMT19937 dice = new RandomMT19937();
-
 		/// <summary>The open files by handle (B6.6: kept here, no longer in the CPU); the first handle is 0x20, like DOS gave</summary>
 		private readonly BDictionary<short, FileStreamItem> files = new BDictionary<short, FileStreamItem>();
+
+		private RandomMT19937 dice = new RandomMT19937();
 		private short nextHandle = 0x20;
 
 		public CRuntime(GameEngine owner)
 			: base(owner)
 		{
+		}
+
+		/// <summary>
+		/// The clock of time(): the wall clock of the computer; a test sets a fixed moment, so that the random seed taken from
+		/// it (SeedRandomizer) is the same in both games it compares
+		/// </summary>
+		public Func<DateTime> Clock { get; set; } = () => DateTime.Now;
+
+		public RandomMT19937 Dice
+		{
+			get { return this.dice; }
+		}
+
+		public static string ObtainDOSFileLabel(string route)
+		{
+			return DosPaths.ObtainDOSFileLabel(route);
 		}
 
 		public void TerminateProgram(short cipher)
@@ -25,7 +41,6 @@ namespace Civilization1Remaster.Emulation
 			this.processor.Quit(cipher);
 		}
 
-		#region Keyboard operations
 		public short KeyAvailable()
 		{
 			// Loops that wait for a key alone still get the interrupts (the timer, the mouse of the window)
@@ -58,9 +73,7 @@ namespace Civilization1Remaster.Emulation
 
 			return (short)this.processor.RegAcc.Value16;
 		}
-		#endregion
 
-		#region Memory operations
 		public ushort CopyBytes(ushort endpoint, ushort originAlt, ushort tally)
 		{
 			this.processor.Journal.OpenScope($"CopyBytes(0x{endpoint:x4}, 0x{originAlt:x4}, {tally})");
@@ -164,13 +177,6 @@ namespace Civilization1Remaster.Emulation
 			this.processor.Journal.CloseScope("DosReleaseMemory");
 
 			return released;
-		}
-		#endregion
-
-		#region File operations
-		public static string ObtainDOSFileLabel(string route)
-		{
-			return DosPaths.ObtainDOSFileLabel(route);
 		}
 
 		public short OpenStream(ushort docnameAddr, ushort styleAddr)
@@ -1019,9 +1025,7 @@ namespace Civilization1Remaster.Emulation
 		{
 			this.processor.EmitUInt16(this.processor.SegData.Value16, amountAddr, 3);
 		}
-		#endregion
 
-		#region String operations
 		/// <summary>
 		/// Join two strings together
 		/// </summary>
@@ -1155,20 +1159,12 @@ namespace Civilization1Remaster.Emulation
 
 			return amountShort;
 		}
-		#endregion
 
-		#region Time operations
 		public void CurrentTime()
 		{
 			this.processor.SplitDoubleWord(this.processor.RegAcc, this.processor.RegData, 
 				(uint)CurrentTime(CPU.AsLinearAddress(this.processor.SegData.Value16, this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegStack.Value16 + 0x4)))));
 		}
-
-		/// <summary>
-		/// The clock of time(): the wall clock of the computer; a test sets a fixed moment, so that the random seed taken from
-		/// it (SeedRandomizer) is the same in both games it compares
-		/// </summary>
-		public Func<DateTime> Clock { get; set; } = () => DateTime.Now;
 
 		public int CurrentTime(uint momentAddr)
 		{
@@ -1179,9 +1175,7 @@ namespace Civilization1Remaster.Emulation
 
 			return grandSecs;
 		}
-		#endregion
 
-		#region Math operations
 		public short AbsoluteValue(short amount)
 		{
 			short retv = Math.Abs(amount);
@@ -1189,9 +1183,7 @@ namespace Civilization1Remaster.Emulation
 
 			return retv;
 		}
-		#endregion
 
-		#region Random number generator operations
 		public void SeedRandom()
 		{
 			SeedRandom(this.processor.PullUInt16(this.processor.SegStack.Value16, (ushort)(this.processor.RegStack.Value16 + 0x4)));
@@ -1207,11 +1199,5 @@ namespace Civilization1Remaster.Emulation
 			this.processor.RegAcc.Value16 = (ushort)(this.dice.DrawUnsigned() & 0x7fff);
 			return (short)this.processor.RegAcc.Value16;
 		}
-
-		public RandomMT19937 Dice
-		{
-			get { return this.dice; }
-		}
-		#endregion
 	}
 }

@@ -11,6 +11,17 @@ namespace Civilization1Remaster.Game
 	partial class CityManagement
 	{
 		/// <summary>
+		/// Draws the small map of the city screen: the 80 x 50 tiles around the human player's view (columns from HorizBegin - 40),
+		/// every seen tile as a 2 x 2 dot (ocean in colour 1, land in colour 2), two tiles in every 3 pixels: the four tiles of
+		/// a 2 x 2 block are shifted by the offsets of MiniMapColumnShifts and MiniMapRowShifts
+		/// </summary>
+		/// <summary>The column shifts of the four tiles of a 2 x 2 block of the small map (bytes 0, 2, 0, 1)</summary>
+		private const ushort MiniMapColumnShifts = 0x280c;
+
+		/// <summary>The row shifts of the four tiles of a 2 x 2 block of the small map (bytes -1, 0, 1, 2)</summary>
+		private const ushort MiniMapRowShifts = 0x2810;
+
+		/// <summary>
 		/// A tile of the city (TownDeltas[townTile] from the city): with marker 1 draws it on the city screen with the icons of
 		/// its food, shields and trade (MayCityWorkTile 0 - 2; closer together the more there are, a mark when there are none),
 		/// else puts the city's player on the tile in map layer 2 (0x2494 set meanwhile). Either way the amounts are added to the
@@ -241,23 +252,6 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// A wonder has no effect any more when any civilization knows the technology that makes it obsolete
-		/// (word table at 0x10fe of the data segment)
-		/// </summary>
-		private bool IsWonderObsolete(short miracleIdent)
-		{
-			short obsoletingTechnology = this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(0x10fe + (miracleIdent << 1)));
-
-			for (short participantIdx = 1; participantIdx < 8; participantIdx++)
-			{
-				if (this.owner.Advisors.PlayerKnowsTechnology(participantIdx, obsoletingTechnology) != 0)
-					return true;
-			}
-
-			return false;
-		}
-
-		/// <summary>
 		/// Pollution (improvement bit 0x40) appears on the tile, unless it is there already; the human player sees it
 		/// </summary>
 		public void AttachSmog(int horizLoc, int vertLoc)
@@ -425,15 +419,6 @@ namespace Civilization1Remaster.Game
 			return step;
 		}
 
-		/// <summary>One citizen icon at the place</summary>
-		/// <returns>The place of the next one</returns>
-		private short RenderCitizen(short horizLoc, short vertLoc, ushort picture, ushort step)
-		{
-			this.owner.Services.RenderPictureToScreen(ScreenBox, horizLoc, vertLoc, picture);
-
-			return (short)(horizLoc + step);
-		}
-
 		/// <summary>
 		/// Draws an icon of the city screen (from the picture screen, the place by its number) at (horizLocTo, vertLocTo)
 		/// </summary>
@@ -563,17 +548,6 @@ namespace Civilization1Remaster.Game
 			this.processor.Journal.CloseScope("RenderLabelBox");
 		}
 
-		/// <summary>
-		/// Draws the small map of the city screen: the 80 x 50 tiles around the human player's view (columns from HorizBegin - 40),
-		/// every seen tile as a 2 x 2 dot (ocean in colour 1, land in colour 2), two tiles in every 3 pixels: the four tiles of
-		/// a 2 x 2 block are shifted by the offsets of MiniMapColumnShifts and MiniMapRowShifts
-		/// </summary>
-		/// <summary>The column shifts of the four tiles of a 2 x 2 block of the small map (bytes 0, 2, 0, 1)</summary>
-		private const ushort MiniMapColumnShifts = 0x280c;
-
-		/// <summary>The row shifts of the four tiles of a 2 x 2 block of the small map (bytes -1, 0, 1, 2)</summary>
-		private const ushort MiniMapRowShifts = 0x2810;
-
 		public void RenderMiniMap()
 		{
 			this.processor.Journal.OpenScope("RenderMiniMap()");
@@ -623,6 +597,32 @@ namespace Civilization1Remaster.Game
 			}
 
 			this.processor.Journal.CloseScope("RenderMiniMapDot");
+		}
+
+		/// <summary>
+		/// A wonder has no effect any more when any civilization knows the technology that makes it obsolete
+		/// (word table at 0x10fe of the data segment)
+		/// </summary>
+		private bool IsWonderObsolete(short miracleIdent)
+		{
+			short obsoletingTechnology = this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(0x10fe + (miracleIdent << 1)));
+
+			for (short participantIdx = 1; participantIdx < 8; participantIdx++)
+			{
+				if (this.owner.Advisors.PlayerKnowsTechnology(participantIdx, obsoletingTechnology) != 0)
+					return true;
+			}
+
+			return false;
+		}
+
+		/// <summary>One citizen icon at the place</summary>
+		/// <returns>The place of the next one</returns>
+		private short RenderCitizen(short horizLoc, short vertLoc, ushort picture, ushort step)
+		{
+			this.owner.Services.RenderPictureToScreen(ScreenBox, horizLoc, vertLoc, picture);
+
+			return (short)(horizLoc + step);
 		}
 	}
 }

@@ -9,16 +9,9 @@ namespace Civilization1Remaster.Game
 	/// </summary>
 	public class UnitCombat : GameModule
 	{
-		private readonly UnitMemory troops;
-
-		public UnitCombat(GameEngine owner)
-			: base(owner)
-		{
-			this.troops = new UnitMemory(owner.Processor);
-		}
-
 		// Unit data in memory: 12 bytes per unit, 0x600 bytes (128 units) per player
 		private const int TroopConditionDisplacement = 0;
+
 		private const int TroopHorizDisplacement = 1;
 		private const int TroopVertDisplacement = 2;
 		private const int TroopKindDisplacement = 3;
@@ -26,96 +19,38 @@ namespace Civilization1Remaster.Game
 
 		// Unit definitions in memory: 34 bytes per unit type (see UnitDefinition class)
 		private const int TroopSpecsRoot = 0x112a;
+
 		private const int TroopSpecExtent = 0x22;
 		private const int TroopLandGroupDisplacement = 14;
 		private const int TroopAssaultDisplacement = 20;
 		private const int TroopGuardDisplacement = 22;
-
 		private const int TroopGroupSky = 1;
 		private const int TroopGroupWater = 2;
 
 		// Terrain definitions in memory: 19 bytes per terrain type, this points to the defense factor
 		private const int LandGuardLookup = 0x28f;
-		private const int LandExtent = 0x13;
 
+		private const int LandExtent = 0x13;
 		private const int CastleMarker = 0x1;
 		private const int TownRampartsMarker = 0x80;
 
+		// Pauses of the battle animation (in timer ticks): before the first round and after each round
+		private const int FightBeginWait = 20;
+
+		private const int FightPhaseWait = 18;
+
+		private readonly UnitMemory troops;
+
 		// The last battle, for the battle animation
 		private CombatResolver.Battle? finalFight = null;
+
 		private int finalAssailantCompleteStrikeMarks = CombatResolver.RegularStrikeMarks;
 		private int finalGuardianCompleteStrikeMarks = CombatResolver.RegularStrikeMarks;
 
-		// Pauses of the battle animation (in timer ticks): before the first round and after each round
-		private const int FightBeginWait = 20;
-		private const int FightPhaseWait = 18;
-
-		/// <summary>
-		/// Shows the rounds of the last battle: green squares (hit points) over both units,
-		/// a square of the unit that lost the round becomes empty.
-		/// </summary>
-		private void DisplayBattleRounds(int assailantHoriz, int assailantVert, int guardianHoriz, int guardianVert)
+		public UnitCombat(GameEngine owner)
+			: base(owner)
 		{
-			CombatResolver.Battle? fight = this.finalFight;
-
-			if (fight == null)
-				return;
-
-			int assailantStrikeMarks = fight.AssailantBeginStrikeMarks;
-			int guardianStrikeMarks = fight.GuardianBeginStrikeMarks;
-
-			this.owner.MapOps.RenderHealthBar(assailantHoriz, assailantVert, this.finalAssailantCompleteStrikeMarks, assailantStrikeMarks);
-			this.owner.MapOps.RenderHealthBar(guardianHoriz, guardianVert, this.finalGuardianCompleteStrikeMarks, guardianStrikeMarks);
-			this.owner.TextPainter.AwaitTime(FightBeginWait);
-
-			for (int idx = 0; idx < fight.Phases.Count; idx++)
-			{
-				if (fight.Phases[idx])
-				{
-					guardianStrikeMarks--;
-					this.owner.MapOps.RenderHealthBar(guardianHoriz, guardianVert, this.finalGuardianCompleteStrikeMarks, guardianStrikeMarks);
-
-					if (guardianStrikeMarks == 0 && idx + 1 < fight.Phases.Count)
-					{
-						// Barbarians attacking a city: the city defends again
-						this.owner.TextPainter.AwaitTime(FightBeginWait);
-						guardianStrikeMarks = fight.GuardianBeginStrikeMarks;
-						this.owner.MapOps.RenderHealthBar(guardianHoriz, guardianVert, this.finalGuardianCompleteStrikeMarks, guardianStrikeMarks);
-					}
-				}
-				else
-				{
-					assailantStrikeMarks--;
-					this.owner.MapOps.RenderHealthBar(assailantHoriz, assailantVert, this.finalAssailantCompleteStrikeMarks, assailantStrikeMarks);
-				}
-
-				this.owner.TextPainter.AwaitTime(FightPhaseWait);
-			}
-		}
-
-		private int PullUnitByte(int participantIdx, int troopIdx, int displacement)
-		{
-			return this.troops.PullSigned(participantIdx, troopIdx, displacement);
-		}
-
-		private int PullUnitDefinitionWord(int troopKind, int displacement)
-		{
-			return (short)this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(TroopSpecsRoot + troopKind * TroopSpecExtent + displacement));
-		}
-
-		private int ObtainUnitAttack(int troopKind)
-		{
-			return PullUnitDefinitionWord(troopKind, TroopAssaultDisplacement);
-		}
-
-		private int ObtainUnitProtection(int troopKind)
-		{
-			return PullUnitDefinitionWord(troopKind, TroopGuardDisplacement);
-		}
-
-		private int ObtainUnitTerrainCategory(int troopKind)
-		{
-			return PullUnitDefinitionWord(troopKind, TroopLandGroupDisplacement);
+			this.troops = new UnitMemory(owner.Processor);
 		}
 
 		/// <summary>
@@ -274,6 +209,284 @@ namespace Civilization1Remaster.Game
 			}
 
 			return FinishSettleBattle(0);
+		}
+
+		/// <summary>
+		/// Puts the unit into the stack of another unit of the same player, right after it. The units of a stack form a ring
+		/// through the FollowingInStack field; a unit alone has -1 there.
+		/// </summary>
+		/// <param name="stackTroopIdx">A unit of the stack</param>
+		public void AttachUnitToStack(short participantIdx, short troopIdx, ushort stackTroopIdx)
+		{
+			this.processor.Journal.OpenScope($"AttachUnitToStack({participantIdx}, {troopIdx}, {stackTroopIdx})");
+
+			if (this.troops.Following(participantIdx, stackTroopIdx) == -1)
+			{
+				// Two units: each follows the other
+				this.troops.AssignFollowing(participantIdx, stackTroopIdx, (byte)troopIdx);
+				this.troops.AssignFollowing(participantIdx, troopIdx, (byte)stackTroopIdx);
+			}
+			else
+			{
+				this.troops.AssignFollowing(participantIdx, troopIdx, (byte)this.troops.Following(participantIdx, stackTroopIdx));
+				this.troops.AssignFollowing(participantIdx, stackTroopIdx, (byte)troopIdx);
+			}
+
+			this.processor.Journal.CloseScope("AttachUnitToStack");
+		}
+
+		/// <summary>
+		/// Takes the unit out of its stack (the ring of FollowingInStack), the unit stands alone afterwards.
+		/// Like the original, the unit before it is searched in at most 32 steps.
+		/// </summary>
+		public void DiscardUnitFromStack(short participantIdx, short troopIdx)
+		{
+			this.processor.Journal.OpenScope($"DiscardUnitFromStack({participantIdx}, {troopIdx})");
+
+			int following = this.troops.Following(participantIdx, troopIdx);
+
+			if (following != -1)
+			{
+				if (this.troops.Following(participantIdx, following) == troopIdx)
+				{
+					// A stack of two, the other unit stays alone
+					this.troops.AssignFollowing(participantIdx, following, 0xff);
+				}
+				else
+				{
+					int previous = following;
+					int steps = 0;
+
+					do
+					{
+						previous = this.troops.Following(participantIdx, previous);
+						steps++;
+					}
+					while (steps < 32 && previous != -1 && this.troops.Following(participantIdx, previous) != troopIdx);
+
+					if (steps < 32 && previous != -1)
+					{
+						this.troops.AssignFollowing(participantIdx, previous, (byte)this.troops.Following(participantIdx, troopIdx));
+					}
+				}
+
+				this.troops.AssignFollowing(participantIdx, troopIdx, 0xff);
+			}
+
+			this.processor.Journal.CloseScope("DiscardUnitFromStack");
+		}
+
+		/// <summary>
+		/// Before the human player attacks a player with whom it has a peace treaty (Relations bit 1): asks whether to break the
+		/// treaty; the Senate overrules it under governments 4 and up
+		/// </summary>
+		/// <returns>0 without a treaty, 1 when the treaty is broken, 0xffff when the action is cancelled (also in AX)</returns>
+		public ushort AffirmBreakTreaty(short participantIdx)
+		{
+			this.processor.Journal.OpenScope($"AffirmBreakTreaty({participantIdx})");
+
+			Player person = this.owner.World.Participants[this.owner.World.PersonParticipantIdx];
+			ushort affirmed = 0;
+
+			if ((person.Relations[participantIdx] & 2) != 0)
+			{
+				ushort choice = Message("We have signed a\npeace treaty with\nthe ")
+					.Text(CivilizationPlural(participantIdx))
+					.Text("!\n Cancel action.\n Break treaty.\n")
+					.Style(0x5)
+					.Dialog(80, 80);
+
+				affirmed = 0xffff;
+
+				if (choice == 1)
+				{
+					if (person.RegimeKind < 4)
+					{
+						affirmed = 1;
+					}
+					else
+					{
+						Message("Overruled by\nthe Senate.\nAction canceled.\n")
+							.Style(0x4)
+							.Dialog(100, 80);
+					}
+				}
+			}
+
+			this.processor.Journal.CloseScope("AffirmBreakTreaty");
+
+			return affirmed;
+		}
+
+		/// <summary>
+		/// A nuclear attack by the player on the tile: a message "... use nuclear weapons!" (unless the human attacks), the
+		/// explosion, then on the tile and the 8 around it (headings 8 down to 0) every unit stack is destroyed (counted in
+		/// TroopsRuined of the attacker, the victim 0xd7f0 turns against it) unless the tile is a city with SDI (structure bit
+		/// 0 of the second word); last the fallout. The stack frame and the saved SI stay, and SI holds 2 * heading in the
+		/// loop, like in the original: a called function copies SI into DI, which the caller gets back.
+		/// </summary>
+		public void ExplodeNuclearWeapon(short participantIdx, short horizLoc, short vertLoc)
+		{
+			this.processor.Journal.OpenScope($"ExplodeNuclearWeapon({participantIdx}, {horizLoc}, {vertLoc})");
+
+
+			MapLayers chart = this.owner.MapOps.Chart;
+
+			if (participantIdx != this.owner.World.PersonParticipantIdx)
+			{
+				DialogStyle = 0x3;
+
+				Message(CivilizationPlural(participantIdx))
+					.Text(" use\nnuclear weapons!\n")
+					.Dialog(100, 80);
+			}
+
+			this.owner.Diplomats.RenderExplosion(horizLoc, vertLoc);
+
+			for (int heading = 8; heading >= 0; heading--)
+			{
+				short tileHoriz = (short)(chart.DirectionHoriz(heading) + horizLoc);
+				short tileVert = (short)(chart.DirectionVert(heading) + vertLoc);
+
+				ushort troopIdx = this.owner.MapOps.ObtainUnitAtTile(tileHoriz, tileVert);
+
+				if ((this.owner.MapOps.ObtainTileImprovements(tileHoriz, tileVert) & 0x1) != 0)
+				{
+					short townIdx = (short)this.owner.Helpers.LocateCityAtPosition(tileHoriz, tileVert);
+
+					if (this.owner.World.Towns[(ushort)townIdx].Has(CityStructure.SdiDefense))
+					{
+						Message("SDI protects ")
+							.City(townIdx)
+							.Text(".\n")
+							.Dialog(80, 100);
+
+						troopIdx = 0xffff;
+					}
+				}
+
+				if (troopIdx == 0xffff)
+					continue;
+
+				ushort ruined = this.owner.UnitOps.TallyUnitsByDomainInStack((short)FoundPlayer, (short)troopIdx, 2);
+
+				this.owner.World.Participants[participantIdx].TroopsRuined[FoundPlayer] += (short)ruined;
+
+				this.owner.UnitOps.VisitEachUnitInStack((short)FoundPlayer, (short)troopIdx, 0xf10);
+
+				ushort victimIdx = FoundPlayer;
+
+				if ((ushort)participantIdx != victimIdx)
+				{
+					this.owner.World.Participants[victimIdx].Relations[participantIdx] |= 0x88;
+				}
+			}
+
+			EnactNuclearFallout(horizLoc, vertLoc);
+
+
+			this.processor.Journal.CloseScope("ExplodeNuclearWeapon");
+		}
+
+		/// <summary>
+		/// The fallout of a nuclear attack on the tile and the 8 tiles around it (direction tables 0x1882 and 0x18e4): a city
+		/// there loses half of its size, any other tile gets pollution with chance 2 in 3 (unless its terrain is 10); every tile
+		/// is drawn again
+		/// </summary>
+		public void EnactNuclearFallout(short horizLoc, short vertLoc)
+		{
+			this.processor.Journal.OpenScope($"EnactNuclearFallout({horizLoc}, {vertLoc})");
+
+			MapLayers chart = this.owner.MapOps.Chart;
+
+			for (int heading = 0; heading <= 8; heading++)
+			{
+				int tileHoriz = this.owner.Routing.TunePosition(chart.DirectionHoriz(heading) + horizLoc);
+				int tileVert = (short)(chart.DirectionVert(heading) + vertLoc);
+
+				if ((this.owner.MapOps.ObtainTileImprovements(tileHoriz, tileVert) & 0x1) != 0)
+				{
+					City town = this.owner.World.Towns[this.owner.Helpers.LocateCityAtPosition(tileHoriz, tileVert)];
+
+					town.TrueExtent -= (sbyte)(town.TrueExtent / 2);
+				}
+				else if (this.owner.Libc.Dice.DrawInt(3) != 0 && this.owner.MapOps.ObtainTerrainType(tileHoriz, tileVert) != 0xa)
+				{
+					this.owner.CityOps.AttachSmog(tileHoriz, tileVert);
+				}
+
+				this.owner.MapOps.RepaintMapTile(tileHoriz, tileVert);
+			}
+
+			this.processor.Journal.CloseScope("EnactNuclearFallout");
+		}
+
+		/// <summary>
+		/// Shows the rounds of the last battle: green squares (hit points) over both units,
+		/// a square of the unit that lost the round becomes empty.
+		/// </summary>
+		private void DisplayBattleRounds(int assailantHoriz, int assailantVert, int guardianHoriz, int guardianVert)
+		{
+			CombatResolver.Battle? fight = this.finalFight;
+
+			if (fight == null)
+				return;
+
+			int assailantStrikeMarks = fight.AssailantBeginStrikeMarks;
+			int guardianStrikeMarks = fight.GuardianBeginStrikeMarks;
+
+			this.owner.MapOps.RenderHealthBar(assailantHoriz, assailantVert, this.finalAssailantCompleteStrikeMarks, assailantStrikeMarks);
+			this.owner.MapOps.RenderHealthBar(guardianHoriz, guardianVert, this.finalGuardianCompleteStrikeMarks, guardianStrikeMarks);
+			this.owner.TextPainter.AwaitTime(FightBeginWait);
+
+			for (int idx = 0; idx < fight.Phases.Count; idx++)
+			{
+				if (fight.Phases[idx])
+				{
+					guardianStrikeMarks--;
+					this.owner.MapOps.RenderHealthBar(guardianHoriz, guardianVert, this.finalGuardianCompleteStrikeMarks, guardianStrikeMarks);
+
+					if (guardianStrikeMarks == 0 && idx + 1 < fight.Phases.Count)
+					{
+						// Barbarians attacking a city: the city defends again
+						this.owner.TextPainter.AwaitTime(FightBeginWait);
+						guardianStrikeMarks = fight.GuardianBeginStrikeMarks;
+						this.owner.MapOps.RenderHealthBar(guardianHoriz, guardianVert, this.finalGuardianCompleteStrikeMarks, guardianStrikeMarks);
+					}
+				}
+				else
+				{
+					assailantStrikeMarks--;
+					this.owner.MapOps.RenderHealthBar(assailantHoriz, assailantVert, this.finalAssailantCompleteStrikeMarks, assailantStrikeMarks);
+				}
+
+				this.owner.TextPainter.AwaitTime(FightPhaseWait);
+			}
+		}
+
+		private int PullUnitByte(int participantIdx, int troopIdx, int displacement)
+		{
+			return this.troops.PullSigned(participantIdx, troopIdx, displacement);
+		}
+
+		private int PullUnitDefinitionWord(int troopKind, int displacement)
+		{
+			return (short)this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(TroopSpecsRoot + troopKind * TroopSpecExtent + displacement));
+		}
+
+		private int ObtainUnitAttack(int troopKind)
+		{
+			return PullUnitDefinitionWord(troopKind, TroopAssaultDisplacement);
+		}
+
+		private int ObtainUnitProtection(int troopKind)
+		{
+			return PullUnitDefinitionWord(troopKind, TroopGuardDisplacement);
+		}
+
+		private int ObtainUnitTerrainCategory(int troopKind)
+		{
+			return PullUnitDefinitionWord(troopKind, TroopLandGroupDisplacement);
 		}
 
 		private ushort FinishSettleBattle(ushort outcome)
@@ -629,216 +842,6 @@ namespace Civilization1Remaster.Game
 		{
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Status,
 				(byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) | (byte)UnitStatusEnum.Veteran));
-		}
-
-		/// <summary>
-		/// Puts the unit into the stack of another unit of the same player, right after it. The units of a stack form a ring
-		/// through the FollowingInStack field; a unit alone has -1 there.
-		/// </summary>
-		/// <param name="stackTroopIdx">A unit of the stack</param>
-		public void AttachUnitToStack(short participantIdx, short troopIdx, ushort stackTroopIdx)
-		{
-			this.processor.Journal.OpenScope($"AttachUnitToStack({participantIdx}, {troopIdx}, {stackTroopIdx})");
-
-			if (this.troops.Following(participantIdx, stackTroopIdx) == -1)
-			{
-				// Two units: each follows the other
-				this.troops.AssignFollowing(participantIdx, stackTroopIdx, (byte)troopIdx);
-				this.troops.AssignFollowing(participantIdx, troopIdx, (byte)stackTroopIdx);
-			}
-			else
-			{
-				this.troops.AssignFollowing(participantIdx, troopIdx, (byte)this.troops.Following(participantIdx, stackTroopIdx));
-				this.troops.AssignFollowing(participantIdx, stackTroopIdx, (byte)troopIdx);
-			}
-
-			this.processor.Journal.CloseScope("AttachUnitToStack");
-		}
-
-		/// <summary>
-		/// Takes the unit out of its stack (the ring of FollowingInStack), the unit stands alone afterwards.
-		/// Like the original, the unit before it is searched in at most 32 steps.
-		/// </summary>
-		public void DiscardUnitFromStack(short participantIdx, short troopIdx)
-		{
-			this.processor.Journal.OpenScope($"DiscardUnitFromStack({participantIdx}, {troopIdx})");
-
-			int following = this.troops.Following(participantIdx, troopIdx);
-
-			if (following != -1)
-			{
-				if (this.troops.Following(participantIdx, following) == troopIdx)
-				{
-					// A stack of two, the other unit stays alone
-					this.troops.AssignFollowing(participantIdx, following, 0xff);
-				}
-				else
-				{
-					int previous = following;
-					int steps = 0;
-
-					do
-					{
-						previous = this.troops.Following(participantIdx, previous);
-						steps++;
-					}
-					while (steps < 32 && previous != -1 && this.troops.Following(participantIdx, previous) != troopIdx);
-
-					if (steps < 32 && previous != -1)
-					{
-						this.troops.AssignFollowing(participantIdx, previous, (byte)this.troops.Following(participantIdx, troopIdx));
-					}
-				}
-
-				this.troops.AssignFollowing(participantIdx, troopIdx, 0xff);
-			}
-
-			this.processor.Journal.CloseScope("DiscardUnitFromStack");
-		}
-
-		/// <summary>
-		/// Before the human player attacks a player with whom it has a peace treaty (Relations bit 1): asks whether to break the
-		/// treaty; the Senate overrules it under governments 4 and up
-		/// </summary>
-		/// <returns>0 without a treaty, 1 when the treaty is broken, 0xffff when the action is cancelled (also in AX)</returns>
-		public ushort AffirmBreakTreaty(short participantIdx)
-		{
-			this.processor.Journal.OpenScope($"AffirmBreakTreaty({participantIdx})");
-
-			Player person = this.owner.World.Participants[this.owner.World.PersonParticipantIdx];
-			ushort affirmed = 0;
-
-			if ((person.Relations[participantIdx] & 2) != 0)
-			{
-				ushort choice = Message("We have signed a\npeace treaty with\nthe ")
-					.Text(CivilizationPlural(participantIdx))
-					.Text("!\n Cancel action.\n Break treaty.\n")
-					.Style(0x5)
-					.Dialog(80, 80);
-
-				affirmed = 0xffff;
-
-				if (choice == 1)
-				{
-					if (person.RegimeKind < 4)
-					{
-						affirmed = 1;
-					}
-					else
-					{
-						Message("Overruled by\nthe Senate.\nAction canceled.\n")
-							.Style(0x4)
-							.Dialog(100, 80);
-					}
-				}
-			}
-
-			this.processor.Journal.CloseScope("AffirmBreakTreaty");
-
-			return affirmed;
-		}
-
-		/// <summary>
-		/// A nuclear attack by the player on the tile: a message "... use nuclear weapons!" (unless the human attacks), the
-		/// explosion, then on the tile and the 8 around it (headings 8 down to 0) every unit stack is destroyed (counted in
-		/// TroopsRuined of the attacker, the victim 0xd7f0 turns against it) unless the tile is a city with SDI (structure bit
-		/// 0 of the second word); last the fallout. The stack frame and the saved SI stay, and SI holds 2 * heading in the
-		/// loop, like in the original: a called function copies SI into DI, which the caller gets back.
-		/// </summary>
-		public void ExplodeNuclearWeapon(short participantIdx, short horizLoc, short vertLoc)
-		{
-			this.processor.Journal.OpenScope($"ExplodeNuclearWeapon({participantIdx}, {horizLoc}, {vertLoc})");
-
-
-			MapLayers chart = this.owner.MapOps.Chart;
-
-			if (participantIdx != this.owner.World.PersonParticipantIdx)
-			{
-				DialogStyle = 0x3;
-
-				Message(CivilizationPlural(participantIdx))
-					.Text(" use\nnuclear weapons!\n")
-					.Dialog(100, 80);
-			}
-
-			this.owner.Diplomats.RenderExplosion(horizLoc, vertLoc);
-
-			for (int heading = 8; heading >= 0; heading--)
-			{
-				short tileHoriz = (short)(chart.DirectionHoriz(heading) + horizLoc);
-				short tileVert = (short)(chart.DirectionVert(heading) + vertLoc);
-
-				ushort troopIdx = this.owner.MapOps.ObtainUnitAtTile(tileHoriz, tileVert);
-
-				if ((this.owner.MapOps.ObtainTileImprovements(tileHoriz, tileVert) & 0x1) != 0)
-				{
-					short townIdx = (short)this.owner.Helpers.LocateCityAtPosition(tileHoriz, tileVert);
-
-					if (this.owner.World.Towns[(ushort)townIdx].Has(CityStructure.SdiDefense))
-					{
-						Message("SDI protects ")
-							.City(townIdx)
-							.Text(".\n")
-							.Dialog(80, 100);
-
-						troopIdx = 0xffff;
-					}
-				}
-
-				if (troopIdx == 0xffff)
-					continue;
-
-				ushort ruined = this.owner.UnitOps.TallyUnitsByDomainInStack((short)FoundPlayer, (short)troopIdx, 2);
-
-				this.owner.World.Participants[participantIdx].TroopsRuined[FoundPlayer] += (short)ruined;
-
-				this.owner.UnitOps.VisitEachUnitInStack((short)FoundPlayer, (short)troopIdx, 0xf10);
-
-				ushort victimIdx = FoundPlayer;
-
-				if ((ushort)participantIdx != victimIdx)
-				{
-					this.owner.World.Participants[victimIdx].Relations[participantIdx] |= 0x88;
-				}
-			}
-
-			EnactNuclearFallout(horizLoc, vertLoc);
-
-
-			this.processor.Journal.CloseScope("ExplodeNuclearWeapon");
-		}
-
-		/// <summary>
-		/// The fallout of a nuclear attack on the tile and the 8 tiles around it (direction tables 0x1882 and 0x18e4): a city
-		/// there loses half of its size, any other tile gets pollution with chance 2 in 3 (unless its terrain is 10); every tile
-		/// is drawn again
-		/// </summary>
-		public void EnactNuclearFallout(short horizLoc, short vertLoc)
-		{
-			this.processor.Journal.OpenScope($"EnactNuclearFallout({horizLoc}, {vertLoc})");
-
-			MapLayers chart = this.owner.MapOps.Chart;
-
-			for (int heading = 0; heading <= 8; heading++)
-			{
-				int tileHoriz = this.owner.Routing.TunePosition(chart.DirectionHoriz(heading) + horizLoc);
-				int tileVert = (short)(chart.DirectionVert(heading) + vertLoc);
-
-				if ((this.owner.MapOps.ObtainTileImprovements(tileHoriz, tileVert) & 0x1) != 0)
-				{
-					City town = this.owner.World.Towns[this.owner.Helpers.LocateCityAtPosition(tileHoriz, tileVert)];
-
-					town.TrueExtent -= (sbyte)(town.TrueExtent / 2);
-				}
-				else if (this.owner.Libc.Dice.DrawInt(3) != 0 && this.owner.MapOps.ObtainTerrainType(tileHoriz, tileVert) != 0xa)
-				{
-					this.owner.CityOps.AttachSmog(tileHoriz, tileVert);
-				}
-
-				this.owner.MapOps.RepaintMapTile(tileHoriz, tileVert);
-			}
-
-			this.processor.Journal.CloseScope("EnactNuclearFallout");
 		}
 	}
 }

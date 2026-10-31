@@ -11,8 +11,8 @@ namespace Civilization1Remaster.Game
 		private const ushort StorySegment = 0x3710;
 		private const ushort StoryTimingTableOffset = 0x83;
 
-
-
+		/// <summary>The words of the frame of ProduceTerrain, shared by its helpers (B3: in C#, new for every call)</summary>
+		private FrameWords terrainFrame = null!;
 
 		/// <summary>The words of the frame of ReckonContinentSizes, shared by its helpers (B3: in C#, new for every call)</summary>
 
@@ -85,6 +85,627 @@ namespace Civilization1Remaster.Game
 				0, 0);
 
 			this.processor.Journal.CloseScope("OpeningSequence");
+		}
+
+		/// <summary>
+		/// On the map being made (screen 1) the tile becomes land (colour 1) unless one of its four diagonal neighbours is land
+		/// </summary>
+		public void BlendTerrainTile(short horizLoc, short vertLoc)
+		{
+			this.processor.Journal.OpenScope($"BlendTerrainTile({horizLoc}, {vertLoc})");
+
+			if (this.owner.VideoCard.ObtainDot(1, horizLoc - 1, vertLoc - 1) != 1 &&
+				this.owner.VideoCard.ObtainDot(1, horizLoc - 1, vertLoc + 1) != 1 &&
+				this.owner.VideoCard.ObtainDot(1, horizLoc + 1, vertLoc - 1) != 1 &&
+				this.owner.VideoCard.ObtainDot(1, horizLoc + 1, vertLoc + 1) != 1)
+			{
+				this.owner.Services.AssignDot(1, horizLoc, vertLoc, 1);
+			}
+
+			this.processor.Journal.CloseScope("BlendTerrainTile");
+		}
+
+		/// <summary>
+		/// Rivers of the new map (in fact not the elevation): up to 256 attempts, until there are more than 2 * (0x7ef6 + 0x7efa)
+		/// + 6 rivers. An attempt starts at a random hill (screen 1 value 12) and flows (colour 9) in one of 4 directions, turning
+		/// by 45 degrees at random, until it reaches a tile next to the ocean (1), a river (9) or a value 13 or 1; it stays when
+		/// it got next to the ocean or into a river after at least 5 steps (and the grassland, 2, around its spring becomes 11),
+		/// else the map is put back from the copy at column 160. The story of the intro goes on after each attempt.
+		/// </summary>
+		public void ProduceElevation()
+		{
+			this.processor.Journal.OpenScope($"ProduceElevation()");
+
+			MapLayers chart = this.owner.MapOps.Chart;
+			short riverTally = 0;
+			short attemptTally = 0;
+
+			while (true)
+			{
+				this.owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0xa0, 0x64, ScreenBox, 0xa0, 0);
+
+				short horizLoc;
+				short vertLoc;
+
+				do
+				{
+					horizLoc = (short)this.owner.Libc.Dice.DrawInt(80);
+					vertLoc = (short)this.owner.Libc.Dice.DrawInt(50);
+				} while (this.owner.VideoCard.ObtainDot(1, horizLoc, vertLoc) != 0xc);
+
+				short springHoriz = horizLoc;
+				short springVert = vertLoc;
+				short heading = (short)(this.owner.Libc.Dice.DrawInt(4) << 1);
+				short length = 0;
+				bool nearOcean;
+				ushort reached;
+
+				do
+				{
+					this.owner.Services.AssignDot(1, horizLoc, vertLoc, 9);
+
+					nearOcean = false;
+
+					for (int side = 1; side <= 8; side += 2)
+					{
+						if (this.owner.VideoCard.ObtainDot(1, chart.DirectionHoriz(side) + horizLoc, chart.DirectionVert(side) + vertLoc) == 1)
+						{
+							nearOcean = true;
+						}
+					}
+
+					short previousHeading = heading;
+					heading = (short)(((((short)this.owner.Libc.Dice.DrawInt(2) - (length & 1)) << 1) + heading) & 7);
+
+					if ((previousHeading ^ 4) > heading)
+					{
+						this.owner.Services.AssignDot(1, horizLoc, vertLoc + 0x32, 8);
+					}
+
+					// The steps of the headings 0 - 7 are the directions 1 - 8
+					horizLoc += (short)chart.DirectionHoriz(heading + 1);
+					vertLoc += (short)chart.DirectionVert(heading + 1);
+
+					reached = this.owner.VideoCard.ObtainDot(1, horizLoc, vertLoc);
+
+					length++;
+				} while (!nearOcean && reached != 0xd && reached != 1 && reached != 9);
+
+				if ((nearOcean || reached == 9) && length >= 5)
+				{
+					riverTally++;
+
+					for (int spotIdx = 1; spotIdx <= 0x15; spotIdx++)
+					{
+						horizLoc = (short)(chart.DirectionHoriz(spotIdx) + springHoriz);
+						vertLoc = (short)(chart.DirectionVert(spotIdx) + springVert);
+
+						if (this.owner.VideoCard.ObtainDot(1, horizLoc, vertLoc) == 2)
+						{
+							this.owner.Services.AssignDot(1, horizLoc, vertLoc, 11);
+						}
+					}
+				}
+				else
+				{
+					this.owner.VideoCard.RenderImage(ScreenBox, 0xa0, 0, 0xa0, 0x64, ScreenBox, 0, 0);
+				}
+
+				DisplayStoryIntro();
+
+				attemptTally++;
+
+				if (attemptTally >= 0x100 ||
+					(short)(((LandMass + Climate) << 1) + 6) <= riverTally)
+					break;
+			}
+
+			this.owner.VideoCard.RenderImage(ScreenBox, 0, 0x32, 0x50, 0x32, ScreenBox, 0, 0x96);
+
+			this.owner.Services.FloodBox(ScreenBox, 0, 50, 80, 50, Hues.Black);
+
+			this.processor.Journal.CloseScope("ProduceElevation");
+		}
+
+		/// <summary>
+		/// A cloud layer for the intro: one cloud at a random place (columns 4 - 75, rows 8 - 41) drawn in the area at column 160
+		/// of screen 1, then every pixel of the 80 x 50 area at column 0 under a cloud pixel gets one colour lighter (0x67fe
+		/// counts them)
+		/// </summary>
+		public void ProduceCloudLayer()
+		{
+			this.processor.Journal.OpenScope("ProduceCloudLayer()");
+
+			this.owner.Services.FloodBox(ScreenBox, 160, 0, 80, 50, Hues.Black);
+
+			short cloudHoriz = (short)(this.owner.Libc.Dice.DrawInt(72) + 4);
+			short cloudVert = (short)(this.owner.Libc.Dice.DrawInt(34) + 8);
+
+			ProduceCloud(cloudHoriz, cloudVert);
+
+			for (int horizLoc = 0; horizLoc < 0x50; horizLoc++)
+			{
+				for (int vertLoc = 0; vertLoc < 0x32; vertLoc++)
+				{
+					if (this.owner.VideoCard.ObtainDot(1, horizLoc + 0xa0, vertLoc) != 0)
+					{
+						ushort hue = this.owner.VideoCard.ObtainDot(1, horizLoc, vertLoc);
+
+						this.owner.Services.AssignDot(1, horizLoc, vertLoc, (ushort)(hue + 1));
+
+						LightenedPixels = (ushort)(LightenedPixels + 1);
+					}
+				}
+			}
+
+			this.processor.Journal.CloseScope("ProduceCloudLayer");
+		}
+
+		/// <summary>Draws a cloud on screen 1: 1 - 64 steps of a random walk from the place, 3 white dots a step</summary>
+		public void ProduceCloud(short horizLoc, short vertLoc)
+		{
+			this.processor.Journal.OpenScope($"ProduceCloud({horizLoc}, {vertLoc})");
+
+			int vaporExtent = this.owner.Libc.Dice.DrawInt(64) + 1;
+
+			do
+			{
+				this.owner.Services.AssignDot(1, horizLoc + 160, vertLoc, 15);
+				this.owner.Services.AssignDot(1, horizLoc + 161, vertLoc, 15);
+				this.owner.Services.AssignDot(1, horizLoc + 160, vertLoc + 1, 15);
+
+				switch (this.owner.Libc.Dice.DrawInt(4))
+				{
+					case 0:
+						horizLoc += 0;
+						vertLoc += -1;
+						break;
+
+					case 1:
+						horizLoc += 1;
+						vertLoc += 0;
+						break;
+
+					case 2:
+						horizLoc += 0;
+						vertLoc += 1;
+						break;
+
+					case 3:
+						horizLoc += -1;
+						vertLoc += 0;
+						break;
+				}
+
+				vaporExtent--;
+
+			} while (vaporExtent > 0 && horizLoc > 2 && horizLoc < 77 && vertLoc > 2 && vertLoc < 46);
+
+			this.processor.Journal.CloseScope("ProduceCloud");
+		}
+
+		/// <summary>
+		/// Numbers the continents (pass 0) and the seas (pass 1) of the screen map: the tiles of the kind are labelled row by row
+		/// in ChartSight (joined with the touching labels of the row above, a label's size in 0xdcfe + 0x80 * pass + 2 * label),
+		/// the 15 largest get the numbers 1 - 15 by size (drawn at y + 50, the others 15) and their sizes; label 0 has size 0
+		/// and 15 size 1. Then the terrain map, the block links, the special resources and the polar rows (lines and 4 * 20
+		/// random tundra dots). The terrain counts of pass 0 and the ranking are in the words of the frame (B3: in C#); the
+		/// story goes on after every row and every join.
+		/// </summary>
+		public void ProduceTerrain()
+		{
+			this.processor.Journal.OpenScope("ProduceTerrain()");
+
+			// ClassicLabelNumbers: the frame of the original, as the numbers of the labels past the 63 ranked ones are read past
+			// their table, above BP (the frames of the callers) and under the frame (the saved SI / DI); without it they are 15
+			// and the words stay in C#
+			bool classicFrame = this.owner.TurnHooks.ClassicLabelNumbers;
+
+			if (classicFrame)
+				this.processor.EnterFrame(0xd4);
+
+			FrameWords outerFrame = this.terrainFrame;
+			this.terrainFrame = new FrameWords(this.processor, 0xd4);
+
+			if (classicFrame)
+				this.processor.PreserveIndexRegisters();
+
+			const int terrainCounts = 0x20;
+
+			for (ushort terrain = 0; terrain < 0xc; terrain++)
+			{
+				this.terrainFrame.SetFrame(terrainCounts - (terrain << 1), 0);
+			}
+
+			ushort pass;
+
+			for (pass = 0; pass < 2; pass++)
+			{
+				this.terrainFrame.SetFrame(0x8, pass);
+
+				LabelLandOrSea(pass, terrainCounts);
+
+				RankLandOrSea(pass);
+			}
+
+			this.terrainFrame.SetFrame(0x8, pass);
+
+			DisplayStoryIntro();
+
+			this.owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, PictureScreenBox, 0, 0);
+
+			LabelLandmasses();
+
+			ReckonContinentSizes(1);
+
+			DisplayStoryIntro();
+
+			SituateSpecialTerrain();
+
+			this.owner.VideoCard.RenderLine(ScreenBox, 0, 0, 79, 0, Hues.White);
+			this.owner.VideoCard.RenderLine(ScreenBox, 0, 49, 79, 49, Hues.White);
+
+			ushort dotIdx;
+
+			for (dotIdx = 0; dotIdx < 0x14; dotIdx++)
+			{
+				this.owner.Services.AssignDot(this.owner.Libc.Dice.DrawInt(80), 0, 7);
+				this.owner.Services.AssignDot(this.owner.Libc.Dice.DrawInt(80), 1, 7);
+				this.owner.Services.AssignDot(this.owner.Libc.Dice.DrawInt(80), 48, 7);
+				this.owner.Services.AssignDot(this.owner.Libc.Dice.DrawInt(80), 49, 7);
+			}
+
+			this.terrainFrame.SetFrame(0x24, dotIdx);
+
+			if (classicFrame)
+				this.processor.RestoreIndexRegisters();
+
+			this.terrainFrame = outerFrame;
+
+			if (classicFrame)
+				this.processor.LeaveFrame();
+
+			this.processor.Journal.CloseScope("ProduceTerrain");
+		}
+
+		/// <summary>
+		/// The value of every land tile as a city site (in the map screen): the weights of the 12 terrains and their specials
+		/// (3 * food + trade, + 2 * shields except on 2 and 11, + the bonus of a mine or twice that of irrigation), summed
+		/// over the 21 tiles of a city (the inner 8 twice, the centre four times, +2 for rivers on terrains 2 and 11), less 16 off
+		/// the river pattern unless on terrain 1; the value 8 - 15 is drawn at (x + 80, y) and (x + 80, y + 50), the other tiles
+		/// get 0. Every site counts for its continent (ConstructionSpotTally).
+		/// </summary>
+		public void SituateSpecialTerrain()
+		{
+			this.processor.Journal.OpenScope("SituateSpecialTerrain()");
+
+			for (int continentIdx = 0; continentIdx < 0x10; continentIdx++)
+			{
+				this.owner.World.Landmasses[continentIdx].ConstructionSpotTally = 0;
+			}
+
+			ushort[] weights = new ushort[0x18];
+
+			for (int terrainIdx = 0; terrainIdx < 0x18; terrainIdx++)
+			{
+				int kind = terrainIdx % 12;
+
+				weights[terrainIdx] = (ushort)((3 * (sbyte)TerrainField(terrainIdx, TerrainTable.Food)) +
+					(sbyte)TerrainField(terrainIdx, TerrainTable.Trade));
+
+				if (kind != 2 && kind != 11)
+				{
+					weights[terrainIdx] += (ushort)((sbyte)TerrainField(terrainIdx, TerrainTable.Shields) << 1);
+				}
+
+				short mining = (short)TerrainImprovementWord(kind, TerrainImprovementTable.Mining);
+
+				if (mining < 0)
+				{
+					weights[terrainIdx] += (ushort)(0xffff - mining);
+				}
+				else
+				{
+					short irrigation = (short)TerrainImprovementWord(kind, TerrainImprovementTable.Irrigation);
+
+					if (irrigation < 0)
+					{
+						weights[terrainIdx] += (ushort)((0xffff - irrigation) << 1);
+					}
+				}
+			}
+
+			for (short horizLoc = 2; horizLoc < 0x4e; horizLoc++)
+			{
+				for (short vertLoc = 2; vertLoc < 0x30; vertLoc++)
+				{
+					ushort terrain = ObtainTerrainTypeFromScreen(horizLoc, vertLoc);
+
+					if (terrain != 0xb && terrain != 2 && terrain != 1)
+					{
+						this.owner.Services.AssignDot(horizLoc + 80, vertLoc, 0);
+						this.owner.Services.AssignDot(horizLoc + 80, vertLoc + 0x32, 0);
+						continue;
+					}
+
+					short total = 0;
+
+					for (int deltaIdx = 0; deltaIdx <= 0x14; deltaIdx++)
+					{
+						short value = 0;
+						short tileHoriz = (short)(this.owner.TownDeltas[deltaIdx].X + horizLoc);
+						short tileVert = (short)(this.owner.TownDeltas[deltaIdx].Y + vertLoc);
+
+						ushort tile = ObtainTerrainTypeFromScreen(tileHoriz, tileVert);
+
+						if ((tile == 2 || tile == 0xb) && !OffRiverPattern(tileHoriz, tileVert))
+						{
+							value += 2;
+						}
+
+						if (this.owner.MapOps.ContainsSpecialResource(tileHoriz, tileVert) != 0)
+						{
+							tile += 0xc;
+						}
+
+						value += (short)weights[tile];
+
+						if (deltaIdx < 9)
+						{
+							value += value;
+						}
+
+						if (deltaIdx == 0)
+						{
+							value += value;
+						}
+
+						total += value;
+					}
+
+					if (ObtainTerrainTypeFromScreen(horizLoc, vertLoc) != 1 && OffRiverPattern(horizLoc, vertLoc))
+					{
+						total -= 0x10;
+					}
+
+					short worth = (short)(((short)this.owner.Helpers.VerifyValueSpan((total - 120) / 8, 1, 15) / 2) + 8);
+
+					this.owner.Services.AssignDot(horizLoc + 80, vertLoc, (ushort)worth);
+					this.owner.Services.AssignDot(horizLoc + 80, vertLoc + 0x32, (ushort)worth);
+
+					this.owner.World.Landmasses[ObtainContinentIDFromScreen(horizLoc, vertLoc)].ConstructionSpotTally++;
+				}
+			}
+
+			this.processor.Journal.CloseScope("SituateSpecialTerrain");
+		}
+
+		/// <summary>
+		/// The links between the 20 x 13 blocks of 4 x 4 tiles (bits at 0xdb44 + 13 * column + row): a block with land (the
+		/// first of its tiles (1, 1), (2, 1), (1, 2), (2, 2) that isn't ocean on the screen map) gets bit direction - 1, and its
+		/// neighbour in the direction 1 - 4 (0x1882 / 0x18e4) bit (direction + 3) &amp; 7, when the neighbour's land is the same
+		/// continent and a route of less than 20 (ComputeRouteCost) joins them. The final values of the locals stay in the
+		/// stack frame, like in the original.
+		/// </summary>
+		public void LabelLandmasses()
+		{
+			this.processor.Journal.OpenScope("LabelLandmasses()");
+
+			this.owner.Libc.FillBytes(0xdb44, 0, 0x104);
+
+			(short, short)? land = null;
+			(short, short)? neighbourLand = null;
+
+			for (short column = 0; column < 0x14; column++)
+			{
+				for (short row = 0; row < 0xd; row++)
+				{
+					short horizLoc = (short)((column << 2) + 1), vertLoc = (short)((row << 2) + 1);
+
+					short continent = FindBlockLand(horizLoc, vertLoc, ref land);
+
+					if (continent == -1)
+						continue;
+
+					for (short direction = 1; direction <= 4; direction++)
+					{
+						short nextHoriz = (short)((DirectionHoriz(direction) << 2) + horizLoc);
+						short nextVert = (short)((DirectionVert(direction) << 2) + vertLoc);
+
+						short nextContinent = FindBlockLand(nextHoriz, nextVert, ref neighbourLand);
+
+						if (continent != nextContinent)
+							continue;
+
+						short cost = (short)this.owner.Routing.ComputeRouteCost(land!.Value.Item1, land.Value.Item2,
+							neighbourLand!.Value.Item1, neighbourLand.Value.Item2, 0, 20);
+
+						if (cost == -1 || cost >= 0x14)
+							continue;
+
+						LinkLandmassBlock(column, row, direction - 1);
+
+						short nextColumn = (short)(DirectionHoriz(direction) + column);
+						short nextRow = (short)(DirectionVert(direction) + row);
+
+						if (nextColumn < 0 || nextColumn >= 0x14 || nextRow < 0 || nextRow >= 0xd)
+							continue;
+
+						LinkLandmassBlock(nextColumn, nextRow, (direction + 3) & 7);
+					}
+				}
+			}
+
+			this.processor.Journal.CloseScope("LabelLandmasses");
+		}
+
+		/// <summary>
+		/// The sea links between the 20 x 12 blocks of 4 x 4 tiles (bits at 0x7f38 + 13 * column + row): a block with sea (the
+		/// first ocean tile of (1, 1), (2, 1), (1, 2), (2, 2) on the screen map) gets bit direction - 1, and its neighbour in the
+		/// direction 1 - 8 (0x1882 / 0x18e4) bit (direction + 3) &amp; 7, when the neighbour's sea is the same and a passage of
+		/// 5 steps from the block's corner has at least 2 of 4 ocean tiles inside the map at each step (always for direction 3
+		/// in the last row). The neighbour's sea is compared from the stack frame (0xe), so a neighbour without sea compares
+		/// the last one found, like in the original. With the marker the intro story goes on after each column; the edge
+		/// columns are then linked around the map (0xe0, 0x0e) except at the corners.
+		/// </summary>
+		public void ReckonContinentSizes(ushort marker)
+		{
+			this.processor.Journal.OpenScope($"ReckonContinentSizes({marker})");
+
+			this.owner.Libc.FillBytes(SeaBlocksAddress, 0, 0x104);
+
+			short lastNextSea = 0;
+
+			for (short column = 0; column < 0x14; column++)
+			{
+				for (short row = 0; row < 0xc; row++)
+				{
+					LinkSeaBlock(column, row, ref lastNextSea);
+				}
+
+				if (marker != 0)
+				{
+					DisplayStoryIntro();
+				}
+			}
+
+			for (ushort row = 0; row < 0xc; row++)
+			{
+				this.processor.EmitGlobalByte((ushort)(row + SeaBlocksAddress), (byte)(this.processor.PullGlobalByte((ushort)(row + SeaBlocksAddress)) | 0xe0));
+				this.processor.EmitGlobalByte((ushort)(row + SeaBlocksAlternateAddress), (byte)(this.processor.PullGlobalByte((ushort)(row + SeaBlocksAlternateAddress)) | 0xe));
+			}
+
+			this.processor.EmitGlobalByte(SeaBlocksAddress, (byte)(this.processor.PullGlobalByte(SeaBlocksAddress) & 0x7f));
+			this.processor.EmitGlobalByte((ushort)(SeaBlocksAddress + 11), (byte)(this.processor.PullGlobalByte((ushort)(SeaBlocksAddress + 11)) & 0xdf));
+			this.processor.EmitGlobalByte(SeaBlocksAlternateAddress, (byte)(this.processor.PullGlobalByte(SeaBlocksAlternateAddress) & 0xfd));
+			this.processor.EmitGlobalByte((ushort)(SeaBlocksAlternateAddress + 11), (byte)(this.processor.PullGlobalByte((ushort)(SeaBlocksAlternateAddress + 11)) & 0xf7));
+
+			this.processor.Journal.CloseScope("ReckonContinentSizes");
+		}
+
+		/// <summary>
+		/// Terrain type of the pixel of the current screen (the screen of the box at 0xaa), by the terrain of the colour (MapLayers.TerrainOfColour)
+		/// </summary>
+		/// <returns>Terrain type, also in AX</returns>
+		public ushort ObtainTerrainTypeFromScreen(short horizLoc, short vertLoc)
+		{
+			this.processor.Journal.OpenScope($"ObtainTerrainTypeFromScreen({horizLoc}, {vertLoc})");
+
+			ushort displayIdx = DrawingBox.DisplayIdx;
+			ushort colour = this.owner.VideoCard.ObtainDot(displayIdx, horizLoc, vertLoc);
+			ushort terrain = this.processor.PullGlobalWord((ushort)(MapLayers.TerrainOfColour + (colour << 1)));
+
+
+			this.processor.Journal.CloseScope("ObtainTerrainTypeFromScreen");
+
+			return terrain;
+		}
+
+		/// <summary>The continent number of the place, from the map layer of the drawing screen (row + 50)</summary>
+		public ushort ObtainContinentIDFromScreen(short horizLoc, short vertLoc)
+		{
+			this.processor.Journal.OpenScope($"ObtainContinentIDFromScreen({horizLoc}, {vertLoc})");
+
+			ushort dot = this.owner.VideoCard.ObtainDot(
+				DrawingBox.DisplayIdx,
+				horizLoc, vertLoc + 50);
+
+			this.processor.Journal.CloseScope("ObtainContinentIDFromScreen");
+
+			return dot;
+		}
+
+		/// <summary>
+		/// One step of the story told while the new world is made (called again and again by the map generator); the stage
+		/// 0x3b62: 0 = not started (opens story.txt, handle 0x6804), 1 = telling, 2 - 4 = told (the line under the picture is
+		/// wiped at 5), 5 = "press a key" (0x3b28) blinking with the clock (0x5c / 60). While telling, a step waits until the
+		/// music (0x6800, song position from the second line on) reaches the time of the line (0x6806), then shows the next
+		/// line of story.txt; a short line (at most 3 characters) instead shows the next picture birthN.pic (0x3b64) and,
+		/// with VGA colours (0xd762), its palette and colour cycles (records of first colour, last colour and speed in
+		/// 0x3710:0x3b66, cycle count 0x3b68). The end of the file or a key (when 0x67fc allows it) ends the story.
+		/// The screen is marked as changed ([0xaa] = 1) and AX is 1 while waiting for the music, else 0.
+		/// </summary>
+		public ushort DisplayStoryIntro()
+		{
+			this.processor.Journal.OpenScope("DisplayStoryIntro()");
+
+			DrawingBox.DisplayIdx = 0x0;
+
+			bool waiting = StoryStep();
+
+			ushort result = (ushort)(waiting ? 1 : 0);
+
+			this.processor.Journal.CloseScope("DisplayStoryIntro");
+
+			return result;
+		}
+
+		/// <summary>
+		/// Global warming (worldHeatingTally times so far): after the newspaper, changes the land tiles of terrain 0 - 3 that have
+		/// at least 7 - worldHeatingTally ocean tiles around them (map layer 2 colour 11 for terrain 3, else 3; improvement bits 6
+		/// discarded) and, of the others, those where (11 * column + 13 * row) mod 8 is worldHeatingTally
+		/// (colour 14 for terrain 0 - 1, else 6). A changed tile becomes visible to player 0 and is repainted when the human
+		/// player sees it.
+		/// </summary>
+		public void EnactGlobalWarming(short worldHeatingTally)
+		{
+			this.processor.Journal.OpenScope($"EnactGlobalWarming({worldHeatingTally})");
+
+			this.owner.Words.Set("Global temperature\nrises! Icecaps melt.\nSevere Drought.\n");
+
+			this.owner.Paper.DisplayNewspaper(-1);
+
+			MapLayers chart = this.owner.MapOps.Chart;
+
+			for (int horizLoc = 0; horizLoc < 80; horizLoc++)
+			{
+				for (int vertLoc = 0; vertLoc < 50; vertLoc++)
+				{
+					ushort terrain = this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
+
+					if ((short)terrain > 3)
+						continue;
+
+					short oceanTally = 0;
+
+					for (int heading = 1; heading <= 8; heading++)
+					{
+						if (this.owner.MapOps.ObtainTerrainType(chart.DirectionHoriz(heading) + horizLoc, chart.DirectionVert(heading) + vertLoc) == MapRules.OceanTerrain)
+						{
+							oceanTally++;
+						}
+					}
+
+					if (7 - worldHeatingTally <= oceanTally)
+					{
+						this.owner.World.ChartSight[horizLoc, vertLoc] |= 1;
+						this.owner.Services.AssignDot(2, horizLoc, vertLoc, (ushort)(terrain != 3 ? 3 : 11));
+						this.owner.MapOps.DiscardTileImprovements(6, horizLoc, vertLoc);
+					}
+					else if ((((11 * horizLoc) + (13 * vertLoc)) & 7) == (ushort)worldHeatingTally)
+					{
+						this.owner.World.ChartSight[horizLoc, vertLoc] |= 1;
+						this.owner.Services.AssignDot(2, horizLoc, vertLoc, (ushort)((short)terrain <= 1 ? 14 : 6));
+					}
+					else
+					{
+						continue;
+					}
+
+					if ((this.owner.World.ChartSight[horizLoc, vertLoc] & (1 << this.owner.World.PersonParticipantIdx)) != 0)
+					{
+						this.owner.MapOps.RepaintMapTile(horizLoc, vertLoc);
+					}
+				}
+			}
+
+			this.processor.Journal.CloseScope("EnactGlobalWarming");
+		}
+
+		/// <summary>The tile is off the pattern of 7 * x + 11 * y (bit 1 of the low byte set)</summary>
+		private static bool OffRiverPattern(short horizLoc, short vertLoc)
+		{
+			return (((7 * horizLoc) + (0xb * vertLoc)) & 2) != 0;
 		}
 
 		/// <summary>
@@ -370,290 +991,6 @@ namespace Civilization1Remaster.Game
 			}
 		}
 
-		/// <summary>
-		/// On the map being made (screen 1) the tile becomes land (colour 1) unless one of its four diagonal neighbours is land
-		/// </summary>
-		public void BlendTerrainTile(short horizLoc, short vertLoc)
-		{
-			this.processor.Journal.OpenScope($"BlendTerrainTile({horizLoc}, {vertLoc})");
-
-			if (this.owner.VideoCard.ObtainDot(1, horizLoc - 1, vertLoc - 1) != 1 &&
-				this.owner.VideoCard.ObtainDot(1, horizLoc - 1, vertLoc + 1) != 1 &&
-				this.owner.VideoCard.ObtainDot(1, horizLoc + 1, vertLoc - 1) != 1 &&
-				this.owner.VideoCard.ObtainDot(1, horizLoc + 1, vertLoc + 1) != 1)
-			{
-				this.owner.Services.AssignDot(1, horizLoc, vertLoc, 1);
-			}
-
-			this.processor.Journal.CloseScope("BlendTerrainTile");
-		}
-
-		/// <summary>
-		/// Rivers of the new map (in fact not the elevation): up to 256 attempts, until there are more than 2 * (0x7ef6 + 0x7efa)
-		/// + 6 rivers. An attempt starts at a random hill (screen 1 value 12) and flows (colour 9) in one of 4 directions, turning
-		/// by 45 degrees at random, until it reaches a tile next to the ocean (1), a river (9) or a value 13 or 1; it stays when
-		/// it got next to the ocean or into a river after at least 5 steps (and the grassland, 2, around its spring becomes 11),
-		/// else the map is put back from the copy at column 160. The story of the intro goes on after each attempt.
-		/// </summary>
-		public void ProduceElevation()
-		{
-			this.processor.Journal.OpenScope($"ProduceElevation()");
-
-			MapLayers chart = this.owner.MapOps.Chart;
-			short riverTally = 0;
-			short attemptTally = 0;
-
-			while (true)
-			{
-				this.owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0xa0, 0x64, ScreenBox, 0xa0, 0);
-
-				short horizLoc;
-				short vertLoc;
-
-				do
-				{
-					horizLoc = (short)this.owner.Libc.Dice.DrawInt(80);
-					vertLoc = (short)this.owner.Libc.Dice.DrawInt(50);
-				} while (this.owner.VideoCard.ObtainDot(1, horizLoc, vertLoc) != 0xc);
-
-				short springHoriz = horizLoc;
-				short springVert = vertLoc;
-				short heading = (short)(this.owner.Libc.Dice.DrawInt(4) << 1);
-				short length = 0;
-				bool nearOcean;
-				ushort reached;
-
-				do
-				{
-					this.owner.Services.AssignDot(1, horizLoc, vertLoc, 9);
-
-					nearOcean = false;
-
-					for (int side = 1; side <= 8; side += 2)
-					{
-						if (this.owner.VideoCard.ObtainDot(1, chart.DirectionHoriz(side) + horizLoc, chart.DirectionVert(side) + vertLoc) == 1)
-						{
-							nearOcean = true;
-						}
-					}
-
-					short previousHeading = heading;
-					heading = (short)(((((short)this.owner.Libc.Dice.DrawInt(2) - (length & 1)) << 1) + heading) & 7);
-
-					if ((previousHeading ^ 4) > heading)
-					{
-						this.owner.Services.AssignDot(1, horizLoc, vertLoc + 0x32, 8);
-					}
-
-					// The steps of the headings 0 - 7 are the directions 1 - 8
-					horizLoc += (short)chart.DirectionHoriz(heading + 1);
-					vertLoc += (short)chart.DirectionVert(heading + 1);
-
-					reached = this.owner.VideoCard.ObtainDot(1, horizLoc, vertLoc);
-
-					length++;
-				} while (!nearOcean && reached != 0xd && reached != 1 && reached != 9);
-
-				if ((nearOcean || reached == 9) && length >= 5)
-				{
-					riverTally++;
-
-					for (int spotIdx = 1; spotIdx <= 0x15; spotIdx++)
-					{
-						horizLoc = (short)(chart.DirectionHoriz(spotIdx) + springHoriz);
-						vertLoc = (short)(chart.DirectionVert(spotIdx) + springVert);
-
-						if (this.owner.VideoCard.ObtainDot(1, horizLoc, vertLoc) == 2)
-						{
-							this.owner.Services.AssignDot(1, horizLoc, vertLoc, 11);
-						}
-					}
-				}
-				else
-				{
-					this.owner.VideoCard.RenderImage(ScreenBox, 0xa0, 0, 0xa0, 0x64, ScreenBox, 0, 0);
-				}
-
-				DisplayStoryIntro();
-
-				attemptTally++;
-
-				if (attemptTally >= 0x100 ||
-					(short)(((LandMass + Climate) << 1) + 6) <= riverTally)
-					break;
-			}
-
-			this.owner.VideoCard.RenderImage(ScreenBox, 0, 0x32, 0x50, 0x32, ScreenBox, 0, 0x96);
-
-			this.owner.Services.FloodBox(ScreenBox, 0, 50, 80, 50, Hues.Black);
-
-			this.processor.Journal.CloseScope("ProduceElevation");
-		}
-
-		/// <summary>
-		/// A cloud layer for the intro: one cloud at a random place (columns 4 - 75, rows 8 - 41) drawn in the area at column 160
-		/// of screen 1, then every pixel of the 80 x 50 area at column 0 under a cloud pixel gets one colour lighter (0x67fe
-		/// counts them)
-		/// </summary>
-		public void ProduceCloudLayer()
-		{
-			this.processor.Journal.OpenScope("ProduceCloudLayer()");
-
-			this.owner.Services.FloodBox(ScreenBox, 160, 0, 80, 50, Hues.Black);
-
-			short cloudHoriz = (short)(this.owner.Libc.Dice.DrawInt(72) + 4);
-			short cloudVert = (short)(this.owner.Libc.Dice.DrawInt(34) + 8);
-
-			ProduceCloud(cloudHoriz, cloudVert);
-
-			for (int horizLoc = 0; horizLoc < 0x50; horizLoc++)
-			{
-				for (int vertLoc = 0; vertLoc < 0x32; vertLoc++)
-				{
-					if (this.owner.VideoCard.ObtainDot(1, horizLoc + 0xa0, vertLoc) != 0)
-					{
-						ushort hue = this.owner.VideoCard.ObtainDot(1, horizLoc, vertLoc);
-
-						this.owner.Services.AssignDot(1, horizLoc, vertLoc, (ushort)(hue + 1));
-
-						LightenedPixels = (ushort)(LightenedPixels + 1);
-					}
-				}
-			}
-
-			this.processor.Journal.CloseScope("ProduceCloudLayer");
-		}
-
-		/// <summary>Draws a cloud on screen 1: 1 - 64 steps of a random walk from the place, 3 white dots a step</summary>
-		public void ProduceCloud(short horizLoc, short vertLoc)
-		{
-			this.processor.Journal.OpenScope($"ProduceCloud({horizLoc}, {vertLoc})");
-
-			int vaporExtent = this.owner.Libc.Dice.DrawInt(64) + 1;
-
-			do
-			{
-				this.owner.Services.AssignDot(1, horizLoc + 160, vertLoc, 15);
-				this.owner.Services.AssignDot(1, horizLoc + 161, vertLoc, 15);
-				this.owner.Services.AssignDot(1, horizLoc + 160, vertLoc + 1, 15);
-
-				switch (this.owner.Libc.Dice.DrawInt(4))
-				{
-					case 0:
-						horizLoc += 0;
-						vertLoc += -1;
-						break;
-
-					case 1:
-						horizLoc += 1;
-						vertLoc += 0;
-						break;
-
-					case 2:
-						horizLoc += 0;
-						vertLoc += 1;
-						break;
-
-					case 3:
-						horizLoc += -1;
-						vertLoc += 0;
-						break;
-				}
-
-				vaporExtent--;
-
-			} while (vaporExtent > 0 && horizLoc > 2 && horizLoc < 77 && vertLoc > 2 && vertLoc < 46);
-
-			this.processor.Journal.CloseScope("ProduceCloud");
-		}
-
-		/// <summary>The words of the frame of ProduceTerrain, shared by its helpers (B3: in C#, new for every call)</summary>
-		private FrameWords terrainFrame = null!;
-
-		/// <summary>
-		/// Numbers the continents (pass 0) and the seas (pass 1) of the screen map: the tiles of the kind are labelled row by row
-		/// in ChartSight (joined with the touching labels of the row above, a label's size in 0xdcfe + 0x80 * pass + 2 * label),
-		/// the 15 largest get the numbers 1 - 15 by size (drawn at y + 50, the others 15) and their sizes; label 0 has size 0
-		/// and 15 size 1. Then the terrain map, the block links, the special resources and the polar rows (lines and 4 * 20
-		/// random tundra dots). The terrain counts of pass 0 and the ranking are in the words of the frame (B3: in C#); the
-		/// story goes on after every row and every join.
-		/// </summary>
-		public void ProduceTerrain()
-		{
-			this.processor.Journal.OpenScope("ProduceTerrain()");
-
-			// ClassicLabelNumbers: the frame of the original, as the numbers of the labels past the 63 ranked ones are read past
-			// their table, above BP (the frames of the callers) and under the frame (the saved SI / DI); without it they are 15
-			// and the words stay in C#
-			bool classicFrame = this.owner.TurnHooks.ClassicLabelNumbers;
-
-			if (classicFrame)
-				this.processor.EnterFrame(0xd4);
-
-			FrameWords outerFrame = this.terrainFrame;
-			this.terrainFrame = new FrameWords(this.processor, 0xd4);
-
-			if (classicFrame)
-				this.processor.PreserveIndexRegisters();
-
-			const int terrainCounts = 0x20;
-
-			for (ushort terrain = 0; terrain < 0xc; terrain++)
-			{
-				this.terrainFrame.SetFrame(terrainCounts - (terrain << 1), 0);
-			}
-
-			ushort pass;
-
-			for (pass = 0; pass < 2; pass++)
-			{
-				this.terrainFrame.SetFrame(0x8, pass);
-
-				LabelLandOrSea(pass, terrainCounts);
-
-				RankLandOrSea(pass);
-			}
-
-			this.terrainFrame.SetFrame(0x8, pass);
-
-			DisplayStoryIntro();
-
-			this.owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, PictureScreenBox, 0, 0);
-
-			LabelLandmasses();
-
-			ReckonContinentSizes(1);
-
-			DisplayStoryIntro();
-
-			SituateSpecialTerrain();
-
-			this.owner.VideoCard.RenderLine(ScreenBox, 0, 0, 79, 0, Hues.White);
-			this.owner.VideoCard.RenderLine(ScreenBox, 0, 49, 79, 49, Hues.White);
-
-			ushort dotIdx;
-
-			for (dotIdx = 0; dotIdx < 0x14; dotIdx++)
-			{
-				this.owner.Services.AssignDot(this.owner.Libc.Dice.DrawInt(80), 0, 7);
-				this.owner.Services.AssignDot(this.owner.Libc.Dice.DrawInt(80), 1, 7);
-				this.owner.Services.AssignDot(this.owner.Libc.Dice.DrawInt(80), 48, 7);
-				this.owner.Services.AssignDot(this.owner.Libc.Dice.DrawInt(80), 49, 7);
-			}
-
-			this.terrainFrame.SetFrame(0x24, dotIdx);
-
-			if (classicFrame)
-				this.processor.RestoreIndexRegisters();
-
-			this.terrainFrame = outerFrame;
-
-			if (classicFrame)
-				this.processor.LeaveFrame();
-
-			this.processor.Journal.CloseScope("ProduceTerrain");
-		}
-
 		/// <summary>The size of a label of the pass (0xdcfe + 0x80 * pass + 2 * label)</summary>
 		private ushort LabelSizeAddress(ushort pass, int label)
 		{
@@ -914,183 +1251,6 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// The value of every land tile as a city site (in the map screen): the weights of the 12 terrains and their specials
-		/// (3 * food + trade, + 2 * shields except on 2 and 11, + the bonus of a mine or twice that of irrigation), summed
-		/// over the 21 tiles of a city (the inner 8 twice, the centre four times, +2 for rivers on terrains 2 and 11), less 16 off
-		/// the river pattern unless on terrain 1; the value 8 - 15 is drawn at (x + 80, y) and (x + 80, y + 50), the other tiles
-		/// get 0. Every site counts for its continent (ConstructionSpotTally).
-		/// </summary>
-		public void SituateSpecialTerrain()
-		{
-			this.processor.Journal.OpenScope("SituateSpecialTerrain()");
-
-			for (int continentIdx = 0; continentIdx < 0x10; continentIdx++)
-			{
-				this.owner.World.Landmasses[continentIdx].ConstructionSpotTally = 0;
-			}
-
-			ushort[] weights = new ushort[0x18];
-
-			for (int terrainIdx = 0; terrainIdx < 0x18; terrainIdx++)
-			{
-				int kind = terrainIdx % 12;
-
-				weights[terrainIdx] = (ushort)((3 * (sbyte)TerrainField(terrainIdx, TerrainTable.Food)) +
-					(sbyte)TerrainField(terrainIdx, TerrainTable.Trade));
-
-				if (kind != 2 && kind != 11)
-				{
-					weights[terrainIdx] += (ushort)((sbyte)TerrainField(terrainIdx, TerrainTable.Shields) << 1);
-				}
-
-				short mining = (short)TerrainImprovementWord(kind, TerrainImprovementTable.Mining);
-
-				if (mining < 0)
-				{
-					weights[terrainIdx] += (ushort)(0xffff - mining);
-				}
-				else
-				{
-					short irrigation = (short)TerrainImprovementWord(kind, TerrainImprovementTable.Irrigation);
-
-					if (irrigation < 0)
-					{
-						weights[terrainIdx] += (ushort)((0xffff - irrigation) << 1);
-					}
-				}
-			}
-
-			for (short horizLoc = 2; horizLoc < 0x4e; horizLoc++)
-			{
-				for (short vertLoc = 2; vertLoc < 0x30; vertLoc++)
-				{
-					ushort terrain = ObtainTerrainTypeFromScreen(horizLoc, vertLoc);
-
-					if (terrain != 0xb && terrain != 2 && terrain != 1)
-					{
-						this.owner.Services.AssignDot(horizLoc + 80, vertLoc, 0);
-						this.owner.Services.AssignDot(horizLoc + 80, vertLoc + 0x32, 0);
-						continue;
-					}
-
-					short total = 0;
-
-					for (int deltaIdx = 0; deltaIdx <= 0x14; deltaIdx++)
-					{
-						short value = 0;
-						short tileHoriz = (short)(this.owner.TownDeltas[deltaIdx].X + horizLoc);
-						short tileVert = (short)(this.owner.TownDeltas[deltaIdx].Y + vertLoc);
-
-						ushort tile = ObtainTerrainTypeFromScreen(tileHoriz, tileVert);
-
-						if ((tile == 2 || tile == 0xb) && !OffRiverPattern(tileHoriz, tileVert))
-						{
-							value += 2;
-						}
-
-						if (this.owner.MapOps.ContainsSpecialResource(tileHoriz, tileVert) != 0)
-						{
-							tile += 0xc;
-						}
-
-						value += (short)weights[tile];
-
-						if (deltaIdx < 9)
-						{
-							value += value;
-						}
-
-						if (deltaIdx == 0)
-						{
-							value += value;
-						}
-
-						total += value;
-					}
-
-					if (ObtainTerrainTypeFromScreen(horizLoc, vertLoc) != 1 && OffRiverPattern(horizLoc, vertLoc))
-					{
-						total -= 0x10;
-					}
-
-					short worth = (short)(((short)this.owner.Helpers.VerifyValueSpan((total - 120) / 8, 1, 15) / 2) + 8);
-
-					this.owner.Services.AssignDot(horizLoc + 80, vertLoc, (ushort)worth);
-					this.owner.Services.AssignDot(horizLoc + 80, vertLoc + 0x32, (ushort)worth);
-
-					this.owner.World.Landmasses[ObtainContinentIDFromScreen(horizLoc, vertLoc)].ConstructionSpotTally++;
-				}
-			}
-
-			this.processor.Journal.CloseScope("SituateSpecialTerrain");
-		}
-
-		/// <summary>The tile is off the pattern of 7 * x + 11 * y (bit 1 of the low byte set)</summary>
-		private static bool OffRiverPattern(short horizLoc, short vertLoc)
-		{
-			return (((7 * horizLoc) + (0xb * vertLoc)) & 2) != 0;
-		}
-
-		/// <summary>
-		/// The links between the 20 x 13 blocks of 4 x 4 tiles (bits at 0xdb44 + 13 * column + row): a block with land (the
-		/// first of its tiles (1, 1), (2, 1), (1, 2), (2, 2) that isn't ocean on the screen map) gets bit direction - 1, and its
-		/// neighbour in the direction 1 - 4 (0x1882 / 0x18e4) bit (direction + 3) &amp; 7, when the neighbour's land is the same
-		/// continent and a route of less than 20 (ComputeRouteCost) joins them. The final values of the locals stay in the
-		/// stack frame, like in the original.
-		/// </summary>
-		public void LabelLandmasses()
-		{
-			this.processor.Journal.OpenScope("LabelLandmasses()");
-
-			this.owner.Libc.FillBytes(0xdb44, 0, 0x104);
-
-			(short, short)? land = null;
-			(short, short)? neighbourLand = null;
-
-			for (short column = 0; column < 0x14; column++)
-			{
-				for (short row = 0; row < 0xd; row++)
-				{
-					short horizLoc = (short)((column << 2) + 1), vertLoc = (short)((row << 2) + 1);
-
-					short continent = FindBlockLand(horizLoc, vertLoc, ref land);
-
-					if (continent == -1)
-						continue;
-
-					for (short direction = 1; direction <= 4; direction++)
-					{
-						short nextHoriz = (short)((DirectionHoriz(direction) << 2) + horizLoc);
-						short nextVert = (short)((DirectionVert(direction) << 2) + vertLoc);
-
-						short nextContinent = FindBlockLand(nextHoriz, nextVert, ref neighbourLand);
-
-						if (continent != nextContinent)
-							continue;
-
-						short cost = (short)this.owner.Routing.ComputeRouteCost(land!.Value.Item1, land.Value.Item2,
-							neighbourLand!.Value.Item1, neighbourLand.Value.Item2, 0, 20);
-
-						if (cost == -1 || cost >= 0x14)
-							continue;
-
-						LinkLandmassBlock(column, row, direction - 1);
-
-						short nextColumn = (short)(DirectionHoriz(direction) + column);
-						short nextRow = (short)(DirectionVert(direction) + row);
-
-						if (nextColumn < 0 || nextColumn >= 0x14 || nextRow < 0 || nextRow >= 0xd)
-							continue;
-
-						LinkLandmassBlock(nextColumn, nextRow, (direction + 3) & 7);
-					}
-				}
-			}
-
-			this.processor.Journal.CloseScope("LabelLandmasses");
-		}
-
-		/// <summary>
 		/// The continent of the first tile of (x, y), (x + 1, y), (x, y + 1), (x + 1, y + 1) that isn't ocean on the screen map
 		/// (land gets that tile), else -1 (land unchanged)
 		/// </summary>
@@ -1116,50 +1276,6 @@ namespace Civilization1Remaster.Game
 			ushort links = (ushort)((0xd * column) + row + 0xdb44);
 
 			this.processor.EmitGlobalByte(links, (byte)(this.processor.PullGlobalByte(links) | (1 << bitIdx)));
-		}
-
-		/// <summary>
-		/// The sea links between the 20 x 12 blocks of 4 x 4 tiles (bits at 0x7f38 + 13 * column + row): a block with sea (the
-		/// first ocean tile of (1, 1), (2, 1), (1, 2), (2, 2) on the screen map) gets bit direction - 1, and its neighbour in the
-		/// direction 1 - 8 (0x1882 / 0x18e4) bit (direction + 3) &amp; 7, when the neighbour's sea is the same and a passage of
-		/// 5 steps from the block's corner has at least 2 of 4 ocean tiles inside the map at each step (always for direction 3
-		/// in the last row). The neighbour's sea is compared from the stack frame (0xe), so a neighbour without sea compares
-		/// the last one found, like in the original. With the marker the intro story goes on after each column; the edge
-		/// columns are then linked around the map (0xe0, 0x0e) except at the corners.
-		/// </summary>
-		public void ReckonContinentSizes(ushort marker)
-		{
-			this.processor.Journal.OpenScope($"ReckonContinentSizes({marker})");
-
-			this.owner.Libc.FillBytes(SeaBlocksAddress, 0, 0x104);
-
-			short lastNextSea = 0;
-
-			for (short column = 0; column < 0x14; column++)
-			{
-				for (short row = 0; row < 0xc; row++)
-				{
-					LinkSeaBlock(column, row, ref lastNextSea);
-				}
-
-				if (marker != 0)
-				{
-					DisplayStoryIntro();
-				}
-			}
-
-			for (ushort row = 0; row < 0xc; row++)
-			{
-				this.processor.EmitGlobalByte((ushort)(row + SeaBlocksAddress), (byte)(this.processor.PullGlobalByte((ushort)(row + SeaBlocksAddress)) | 0xe0));
-				this.processor.EmitGlobalByte((ushort)(row + SeaBlocksAlternateAddress), (byte)(this.processor.PullGlobalByte((ushort)(row + SeaBlocksAlternateAddress)) | 0xe));
-			}
-
-			this.processor.EmitGlobalByte(SeaBlocksAddress, (byte)(this.processor.PullGlobalByte(SeaBlocksAddress) & 0x7f));
-			this.processor.EmitGlobalByte((ushort)(SeaBlocksAddress + 11), (byte)(this.processor.PullGlobalByte((ushort)(SeaBlocksAddress + 11)) & 0xdf));
-			this.processor.EmitGlobalByte(SeaBlocksAlternateAddress, (byte)(this.processor.PullGlobalByte(SeaBlocksAlternateAddress) & 0xfd));
-			this.processor.EmitGlobalByte((ushort)(SeaBlocksAlternateAddress + 11), (byte)(this.processor.PullGlobalByte((ushort)(SeaBlocksAlternateAddress + 11)) & 0xf7));
-
-			this.processor.Journal.CloseScope("ReckonContinentSizes");
 		}
 
 		/// <summary>The sea links of one block (see ReckonContinentSizes)</summary>
@@ -1257,63 +1373,6 @@ namespace Civilization1Remaster.Game
 			ushort links = (ushort)((0xd * column) + row + SeaBlocksAddress);
 
 			this.processor.EmitGlobalByte(links, (byte)(this.processor.PullGlobalByte(links) | (1 << bitIdx)));
-		}
-
-		/// <summary>
-		/// Terrain type of the pixel of the current screen (the screen of the box at 0xaa), by the terrain of the colour (MapLayers.TerrainOfColour)
-		/// </summary>
-		/// <returns>Terrain type, also in AX</returns>
-		public ushort ObtainTerrainTypeFromScreen(short horizLoc, short vertLoc)
-		{
-			this.processor.Journal.OpenScope($"ObtainTerrainTypeFromScreen({horizLoc}, {vertLoc})");
-
-			ushort displayIdx = DrawingBox.DisplayIdx;
-			ushort colour = this.owner.VideoCard.ObtainDot(displayIdx, horizLoc, vertLoc);
-			ushort terrain = this.processor.PullGlobalWord((ushort)(MapLayers.TerrainOfColour + (colour << 1)));
-
-
-			this.processor.Journal.CloseScope("ObtainTerrainTypeFromScreen");
-
-			return terrain;
-		}
-
-		/// <summary>The continent number of the place, from the map layer of the drawing screen (row + 50)</summary>
-		public ushort ObtainContinentIDFromScreen(short horizLoc, short vertLoc)
-		{
-			this.processor.Journal.OpenScope($"ObtainContinentIDFromScreen({horizLoc}, {vertLoc})");
-
-			ushort dot = this.owner.VideoCard.ObtainDot(
-				DrawingBox.DisplayIdx,
-				horizLoc, vertLoc + 50);
-
-			this.processor.Journal.CloseScope("ObtainContinentIDFromScreen");
-
-			return dot;
-		}
-
-		/// <summary>
-		/// One step of the story told while the new world is made (called again and again by the map generator); the stage
-		/// 0x3b62: 0 = not started (opens story.txt, handle 0x6804), 1 = telling, 2 - 4 = told (the line under the picture is
-		/// wiped at 5), 5 = "press a key" (0x3b28) blinking with the clock (0x5c / 60). While telling, a step waits until the
-		/// music (0x6800, song position from the second line on) reaches the time of the line (0x6806), then shows the next
-		/// line of story.txt; a short line (at most 3 characters) instead shows the next picture birthN.pic (0x3b64) and,
-		/// with VGA colours (0xd762), its palette and colour cycles (records of first colour, last colour and speed in
-		/// 0x3710:0x3b66, cycle count 0x3b68). The end of the file or a key (when 0x67fc allows it) ends the story.
-		/// The screen is marked as changed ([0xaa] = 1) and AX is 1 while waiting for the music, else 0.
-		/// </summary>
-		public ushort DisplayStoryIntro()
-		{
-			this.processor.Journal.OpenScope("DisplayStoryIntro()");
-
-			DrawingBox.DisplayIdx = 0x0;
-
-			bool waiting = StoryStep();
-
-			ushort result = (ushort)(waiting ? 1 : 0);
-
-			this.processor.Journal.CloseScope("DisplayStoryIntro");
-
-			return result;
 		}
 
 		/// <summary>
@@ -1558,68 +1617,6 @@ namespace Civilization1Remaster.Game
 		private void MarkScreenChanged()
 		{
 			DrawingBox.DisplayIdx = 0x1;
-		}
-
-		/// <summary>
-		/// Global warming (worldHeatingTally times so far): after the newspaper, changes the land tiles of terrain 0 - 3 that have
-		/// at least 7 - worldHeatingTally ocean tiles around them (map layer 2 colour 11 for terrain 3, else 3; improvement bits 6
-		/// discarded) and, of the others, those where (11 * column + 13 * row) mod 8 is worldHeatingTally
-		/// (colour 14 for terrain 0 - 1, else 6). A changed tile becomes visible to player 0 and is repainted when the human
-		/// player sees it.
-		/// </summary>
-		public void EnactGlobalWarming(short worldHeatingTally)
-		{
-			this.processor.Journal.OpenScope($"EnactGlobalWarming({worldHeatingTally})");
-
-			this.owner.Words.Set("Global temperature\nrises! Icecaps melt.\nSevere Drought.\n");
-
-			this.owner.Paper.DisplayNewspaper(-1);
-
-			MapLayers chart = this.owner.MapOps.Chart;
-
-			for (int horizLoc = 0; horizLoc < 80; horizLoc++)
-			{
-				for (int vertLoc = 0; vertLoc < 50; vertLoc++)
-				{
-					ushort terrain = this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
-
-					if ((short)terrain > 3)
-						continue;
-
-					short oceanTally = 0;
-
-					for (int heading = 1; heading <= 8; heading++)
-					{
-						if (this.owner.MapOps.ObtainTerrainType(chart.DirectionHoriz(heading) + horizLoc, chart.DirectionVert(heading) + vertLoc) == MapRules.OceanTerrain)
-						{
-							oceanTally++;
-						}
-					}
-
-					if (7 - worldHeatingTally <= oceanTally)
-					{
-						this.owner.World.ChartSight[horizLoc, vertLoc] |= 1;
-						this.owner.Services.AssignDot(2, horizLoc, vertLoc, (ushort)(terrain != 3 ? 3 : 11));
-						this.owner.MapOps.DiscardTileImprovements(6, horizLoc, vertLoc);
-					}
-					else if ((((11 * horizLoc) + (13 * vertLoc)) & 7) == (ushort)worldHeatingTally)
-					{
-						this.owner.World.ChartSight[horizLoc, vertLoc] |= 1;
-						this.owner.Services.AssignDot(2, horizLoc, vertLoc, (ushort)((short)terrain <= 1 ? 14 : 6));
-					}
-					else
-					{
-						continue;
-					}
-
-					if ((this.owner.World.ChartSight[horizLoc, vertLoc] & (1 << this.owner.World.PersonParticipantIdx)) != 0)
-					{
-						this.owner.MapOps.RepaintMapTile(horizLoc, vertLoc);
-					}
-				}
-			}
-
-			this.processor.Journal.CloseScope("EnactGlobalWarming");
 		}
 	}
 }

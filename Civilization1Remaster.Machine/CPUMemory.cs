@@ -11,97 +11,15 @@ namespace Civilization1Remaster.Emulation
 
 		private readonly byte[] store = new byte[StorageExtent];
 		private readonly List<CPUMemoryRegion> storageZones = new List<CPUMemoryRegion>();
-
 		private readonly CPUMemoryRegion gfxunitZone = new CPUMemoryRegion((ushort)0xa000, 0, 0x10000);
 		private readonly CPU processor;
+		private readonly Dictionary<uint, IMemoryOverlay> overlayStarts = new Dictionary<uint, IMemoryOverlay>();
 
 		// B6: ranges of the memory kept in C# by their owners (the message buffer, the units, the tables, the globals)
 		private readonly List<(uint Begin, IMemoryOverlay Overlay)> overlays = new List<(uint Begin, IMemoryOverlay Overlay)>();
-		private readonly Dictionary<uint, IMemoryOverlay> overlayStarts = new Dictionary<uint, IMemoryOverlay>();
+
 		// For every byte of the memory the overlay that keeps it (its index + 1), 0 for the memory itself
 		private short[]? overlayMap;
-
-		/// <summary>
-		/// The bytes from the linear address on live in the owner of the overlay from now on (B6): every access of the memory
-		/// to the range reads and writes it. The current bytes of the memory are written into it first, the memory under it
-		/// is cleared.
-		/// </summary>
-		public void AttachOverlay(uint begin, IMemoryOverlay overlay)
-		{
-			this.overlayMap ??= new short[this.store.Length];
-
-			for (int place = 0; place < overlay.Length; place++)
-			{
-				if (this.overlayMap[begin + place] != 0)
-					throw new InvalidOperationException($"The overlay at 0x{begin:x5} overlaps another one at 0x{begin + place:x5}");
-
-				overlay.Write(place, this.store[begin + place]);
-				this.store[begin + place] = 0;
-				this.overlayMap[begin + place] = (short)(this.overlays.Count + 1);
-			}
-
-			this.overlays.Add((begin, overlay));
-			this.overlayStarts[begin] = overlay;
-		}
-
-		/// <summary>A range kept in a byte array (see AttachOverlay)</summary>
-		public void AttachOverlay(uint begin, byte[] content) => AttachOverlay(begin, new ArrayOverlay(content));
-
-		/// <summary>The ranges kept in C# (the tests save and restore them with the memory)</summary>
-		public IReadOnlyList<(uint Begin, IMemoryOverlay Overlay)> Overlays => this.overlays;
-
-		/// <summary>The overlay of the range that starts at the linear address, null when the range is still in the memory</summary>
-		public IMemoryOverlay? OverlayOf(uint begin) => this.overlayStarts.TryGetValue(begin, out IMemoryOverlay? overlay) ? overlay : null;
-
-		/// <summary>The array of the range that starts at the linear address, null when the range is not kept in an array</summary>
-		public byte[]? OverlayAt(uint begin) => (OverlayOf(begin) as ArrayOverlay)?.Content;
-
-		private byte Peek(uint site)
-		{
-			int owner = this.overlayMap == null ? 0 : this.overlayMap[site];
-
-			if (owner == 0)
-				return this.store[site];
-
-			(uint start, IMemoryOverlay overlay) = this.overlays[owner - 1];
-			return overlay.Read((int)(site - start));
-		}
-
-		private void Poke(uint site, byte value)
-		{
-			int owner = this.overlayMap == null ? 0 : this.overlayMap[site];
-
-			if (owner == 0)
-			{
-				this.store[site] = value;
-				return;
-			}
-
-			(uint start, IMemoryOverlay overlay) = this.overlays[owner - 1];
-			overlay.Write((int)(site - start), value);
-		}
-
-		/// <summary>Whether a byte of the range is kept in C#</summary>
-		private bool TouchesOverlay(uint location, int span)
-		{
-			if (this.overlayMap == null)
-				return false;
-
-			for (int idx = 0; idx < span; idx++)
-			{
-				if (this.overlayMap[location + idx] != 0)
-					return true;
-			}
-
-			return false;
-		}
-
-		/// <summary>Copies bytes of the memory, also of the ranges kept in C# (a file of the game is written from them)</summary>
-		public void ReadChunk(uint location, byte[] target, int loc, int span)
-		{
-			for (int idx = 0; idx < span; idx++)
-				target[loc + idx] = Peek((uint)(location + idx));
-		}
 
 		public CPUMemory(CPU processor)
 		{
@@ -133,7 +51,48 @@ namespace Civilization1Remaster.Emulation
 			}
 		}
 
-		#region Check Flag
+		/// <summary>The ranges kept in C# (the tests save and restore them with the memory)</summary>
+		public IReadOnlyList<(uint Begin, IMemoryOverlay Overlay)> Overlays => this.overlays;
+
+		/// <summary>
+		/// The bytes from the linear address on live in the owner of the overlay from now on (B6): every access of the memory
+		/// to the range reads and writes it. The current bytes of the memory are written into it first, the memory under it
+		/// is cleared.
+		/// </summary>
+		public void AttachOverlay(uint begin, IMemoryOverlay overlay)
+		{
+			this.overlayMap ??= new short[this.store.Length];
+
+			for (int place = 0; place < overlay.Length; place++)
+			{
+				if (this.overlayMap[begin + place] != 0)
+					throw new InvalidOperationException($"The overlay at 0x{begin:x5} overlaps another one at 0x{begin + place:x5}");
+
+				overlay.Write(place, this.store[begin + place]);
+				this.store[begin + place] = 0;
+				this.overlayMap[begin + place] = (short)(this.overlays.Count + 1);
+			}
+
+			this.overlays.Add((begin, overlay));
+			this.overlayStarts[begin] = overlay;
+		}
+
+		/// <summary>A range kept in a byte array (see AttachOverlay)</summary>
+		public void AttachOverlay(uint begin, byte[] content) => AttachOverlay(begin, new ArrayOverlay(content));
+
+		/// <summary>The overlay of the range that starts at the linear address, null when the range is still in the memory</summary>
+		public IMemoryOverlay? OverlayOf(uint begin) => this.overlayStarts.TryGetValue(begin, out IMemoryOverlay? overlay) ? overlay : null;
+
+		/// <summary>The array of the range that starts at the linear address, null when the range is not kept in an array</summary>
+		public byte[]? OverlayAt(uint begin) => (OverlayOf(begin) as ArrayOverlay)?.Content;
+
+		/// <summary>Copies bytes of the memory, also of the ranges kept in C# (a file of the game is written from them)</summary>
+		public void ReadChunk(uint location, byte[] target, int loc, int span)
+		{
+			for (int idx = 0; idx < span; idx++)
+				target[loc + idx] = Peek((uint)(location + idx));
+		}
+
 		public bool VerifyFlag(uint location, uint extent, CPUMemoryFlagsEnum marker)
 		{
 			uint tallyUint = 0;
@@ -162,10 +121,7 @@ namespace Civilization1Remaster.Emulation
 
 			return false;
 		}
-		#endregion
 
-		#region Read instructions
-		#region 8 Bit
 		public sbyte PullInt8(ushort section, ushort displacement)
 		{
 			return (sbyte)this.PullUInt8(CPU.AsLinearAddress(section, displacement));
@@ -209,9 +165,7 @@ namespace Civilization1Remaster.Emulation
 			this.processor.Journal.EmitLine($"// Error: Attempt to read byte at undefined address 0x{location:x8}");
 			return 0;
 		}
-		#endregion
 
-		#region 16 bit
 		public short PullInt16(ushort section, ushort displacement)
 		{
 			return (short)this.PullUInt16(CPU.AsLinearAddress(section, displacement));
@@ -258,9 +212,7 @@ namespace Civilization1Remaster.Emulation
 			this.processor.Journal.EmitLine($"// Error: Attempt to read word at undefined address 0x{location:x8}");
 			return 0;
 		}
-		#endregion
 
-		#region 32 bit
 		public int PullInt32(ushort section, ushort displacement)
 		{
 			return (int)this.PullUInt32(CPU.AsLinearAddress(section, displacement));
@@ -309,11 +261,7 @@ namespace Civilization1Remaster.Emulation
 			this.processor.Journal.EmitLine($"Error: Attempt to read dword at undefined address 0x{location:x8}");
 			return 0;
 		}
-		#endregion
-		#endregion
 
-		#region Write instructions
-		#region 8 bit
 		public void EmitInt8(ushort section, ushort displacement, sbyte amount)
 		{
 			this.EmitUInt8(CPU.AsLinearAddress(section, displacement), (byte)amount);
@@ -392,9 +340,7 @@ namespace Civilization1Remaster.Emulation
 			if (!located)
 				this.processor.Journal.EmitLine($"// Error: Attempt to write byte at undefined address 0x{location:x8}");
 		}
-		#endregion
 
-		#region 16 bit
 		public void EmitInt16(ushort section, ushort displacement, short amount)
 		{
 			this.EmitUInt16(CPU.AsLinearAddress(section, displacement), (ushort)amount);
@@ -476,9 +422,7 @@ namespace Civilization1Remaster.Emulation
 			if (!located)
 				this.processor.Journal.EmitLine($"// Error: Attempt to write word at undefined address 0x{location:x8}");
 		}
-		#endregion
 
-		#region 32 bit
 		public void EmitInt32(ushort section, ushort displacement, int amount)
 		{
 			this.EmitUInt32(CPU.AsLinearAddress(section, displacement), (uint)amount);
@@ -529,10 +473,7 @@ namespace Civilization1Remaster.Emulation
 			if (!located)
 				this.processor.Journal.EmitLine($"// Error: Attempt to write dword at undefined address 0x{location:x8}");
 		}
-		#endregion
-		#endregion
 
-		#region Memory block instructions
 		public void EmitChunk(ushort section, ushort displacement, byte[] originContent, int loc, int span)
 		{
 			EmitChunk(CPU.AsLinearAddress(section, displacement), originContent, loc, span);
@@ -550,9 +491,7 @@ namespace Civilization1Remaster.Emulation
 				Array.Copy(originContent, loc, this.store, location, span);
 			}
 		}
-		#endregion
 
-		#region Memory allocation
 		public bool ReserveStorageChunk(uint location, uint extent)
 		{
 			return ReserveStorageChunk(location, extent, CPUMemoryFlagsEnum.ReadWrite | CPUMemoryFlagsEnum.WriteWarning);
@@ -644,6 +583,46 @@ namespace Civilization1Remaster.Emulation
 			return false;
 		}
 
+		private byte Peek(uint site)
+		{
+			int owner = this.overlayMap == null ? 0 : this.overlayMap[site];
+
+			if (owner == 0)
+				return this.store[site];
+
+			(uint start, IMemoryOverlay overlay) = this.overlays[owner - 1];
+			return overlay.Read((int)(site - start));
+		}
+
+		private void Poke(uint site, byte value)
+		{
+			int owner = this.overlayMap == null ? 0 : this.overlayMap[site];
+
+			if (owner == 0)
+			{
+				this.store[site] = value;
+				return;
+			}
+
+			(uint start, IMemoryOverlay overlay) = this.overlays[owner - 1];
+			overlay.Write((int)(site - start), value);
+		}
+
+		/// <summary>Whether a byte of the range is kept in C#</summary>
+		private bool TouchesOverlay(uint location, int span)
+		{
+			if (this.overlayMap == null)
+				return false;
+
+			for (int idx = 0; idx < span; idx++)
+			{
+				if (this.overlayMap[location + idx] != 0)
+					return true;
+			}
+
+			return false;
+		}
+
 		private void TuneFreeStorageSpan()
 		{
 			CPUMemoryRegion unused = this.storageZones[0];
@@ -659,6 +638,5 @@ namespace Civilization1Remaster.Emulation
 				}
 			}
 		}
-		#endregion
 	}
 }

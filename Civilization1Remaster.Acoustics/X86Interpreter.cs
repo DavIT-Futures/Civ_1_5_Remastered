@@ -16,14 +16,16 @@ namespace Civilization1Remaster.Acoustics
 
 		// Registers: AX, CX, DX, BX, SP, BP, SI, DI (in the same order as the instruction encoding)
 		private readonly ushort[] cells = new ushort[8];
+
 		// Segments: ES, CS, SS, DS
 		private readonly ushort[] sections = new ushort[4];
-		private ushort regInstr;
 
+		private ushort regInstr;
 		private bool carryBit, parityBit, auxBit, zeroBit, signBit, trapBit, irqBit, dirBit, overflowBit;
 
 		// Current instruction state
 		private int sectionReplace = -1;
+
 		private int modField, regField, rmField;
 		private ushort realDisplacement;
 		private int realSection;
@@ -31,9 +33,7 @@ namespace Civilization1Remaster.Acoustics
 		public Func<ushort, byte> GatePull { get; set; } = gate => 0xff;
 		public Action<ushort, byte> GateEmit { get; set; } = (gate, amount) => { };
 		public Action<X86Interpreter, byte> Signal { get; set; } = (processor, numeral) => { };
-
 		public byte[] Storage => this.store;
-
 		public ushort RegAcc { get => this.cells[0]; set => this.cells[0] = value; }
 		public ushort RegCount { get => this.cells[1]; set => this.cells[1] = value; }
 		public ushort RegData { get => this.cells[2]; set => this.cells[2] = value; }
@@ -54,51 +54,6 @@ namespace Civilization1Remaster.Acoustics
 		/// </summary>
 		public long CommandTally { get; private set; }
 
-		#region Memory access
-		private static int FlatAddress(ushort section, ushort displacement) => ((section << 4) + displacement) & (StorageExtent - 1);
-
-		public byte PullByte(ushort section, ushort displacement) => this.store[FlatAddress(section, displacement)];
-
-		public ushort PullWord(ushort section, ushort displacement) =>
-			(ushort)(this.store[FlatAddress(section, displacement)] | (this.store[FlatAddress(section, (ushort)(displacement + 1))] << 8));
-
-		public void EmitByte(ushort section, ushort displacement, byte amount) => this.store[FlatAddress(section, displacement)] = amount;
-
-		public void EmitWord(ushort section, ushort displacement, ushort amount)
-		{
-			this.store[FlatAddress(section, displacement)] = (byte)amount;
-			this.store[FlatAddress(section, (ushort)(displacement + 1))] = (byte)(amount >> 8);
-		}
-
-		private byte ConsumeByte()
-		{
-			byte amount = PullByte(this.SegCode, this.regInstr);
-			this.regInstr++;
-			return amount;
-		}
-
-		private ushort ConsumeWord()
-		{
-			ushort amount = PullWord(this.SegCode, this.regInstr);
-			this.regInstr += 2;
-			return amount;
-		}
-
-		public void PutOnStack(ushort amount)
-		{
-			this.RegStack -= 2;
-			EmitWord(this.SegStack, this.RegStack, amount);
-		}
-
-		public ushort TakeFromStack()
-		{
-			ushort amount = PullWord(this.SegStack, this.RegStack);
-			this.RegStack += 2;
-			return amount;
-		}
-		#endregion
-
-		#region Flags
 		public ushort FlagSet
 		{
 			get
@@ -120,267 +75,34 @@ namespace Civilization1Remaster.Acoustics
 			}
 		}
 
-		private static bool EvenParity(int amount)
-		{
-			amount &= 0xff;
-			amount ^= amount >> 4;
-			amount ^= amount >> 2;
-			amount ^= amount >> 1;
-			return (amount & 1) == 0;
-		}
-
-		private void AssignLogicFlags(int outcome, bool term)
-		{
-			this.carryBit = false;
-			this.overflowBit = false;
-			this.auxBit = false;
-			AssignSZP(outcome, term);
-		}
-
-		private void AssignSZP(int outcome, bool term)
-		{
-			int filter = term ? 0xffff : 0xff;
-			this.zeroBit = (outcome & filter) == 0;
-			this.signBit = (outcome & (term ? 0x8000 : 0x80)) != 0;
-			this.parityBit = EvenParity(outcome);
-		}
-		#endregion
-
-		#region Registers by index
-		private byte ObtainReg8(int ordinal)
-		{
-			ushort amount = this.cells[ordinal & 3];
-			return (byte)(ordinal < 4 ? amount : amount >> 8);
-		}
-
-		private void AssignReg8(int ordinal, byte amount)
-		{
-			int idx = ordinal & 3;
-			if (ordinal < 4)
-				this.cells[idx] = (ushort)((this.cells[idx] & 0xff00) | amount);
-			else
-				this.cells[idx] = (ushort)((this.cells[idx] & 0x00ff) | (amount << 8));
-		}
-		#endregion
-
-		#region ModRM
-		private void ParseModRm()
-		{
-			byte addrmode = ConsumeByte();
-			this.modField = addrmode >> 6;
-			this.regField = (addrmode >> 3) & 7;
-			this.rmField = addrmode & 7;
-
-			if (this.modField == 3)
-				return;
-
-			int standardSection = 3; // DS
-			int displacement;
-
-			switch (this.rmField)
-			{
-				case 0: displacement = this.RegBase + this.RegSource; break;
-				case 1: displacement = this.RegBase + this.RegDest; break;
-				case 2: displacement = this.RegFrame + this.RegSource; standardSection = 2; break;
-				case 3: displacement = this.RegFrame + this.RegDest; standardSection = 2; break;
-				case 4: displacement = this.RegSource; break;
-				case 5: displacement = this.RegDest; break;
-				case 6:
-					if (this.modField == 0)
-					{
-						displacement = ConsumeWord();
-					}
-					else
-					{
-						displacement = this.RegFrame;
-						standardSection = 2;
-					}
-					break;
-				default: displacement = this.RegBase; break;
-			}
-
-			if (this.modField == 1)
-				displacement += (sbyte)ConsumeByte();
-			else if (this.modField == 2)
-				displacement += ConsumeWord();
-
-			this.realDisplacement = (ushort)displacement;
-			this.realSection = this.sectionReplace >= 0 ? this.sectionReplace : standardSection;
-		}
-
 		private ushort RealSection => this.sections[this.realSection];
-
-		private byte PullRm8() => this.modField == 3 ? ObtainReg8(this.rmField) : PullByte(RealSection, this.realDisplacement);
-
-		private ushort PullRm16() => this.modField == 3 ? this.cells[this.rmField] : PullWord(RealSection, this.realDisplacement);
-
-		private void EmitRm8(byte amount)
-		{
-			if (this.modField == 3)
-				AssignReg8(this.rmField, amount);
-			else
-				EmitByte(RealSection, this.realDisplacement, amount);
-		}
-
-		private void EmitRm16(ushort amount)
-		{
-			if (this.modField == 3)
-				this.cells[this.rmField] = amount;
-			else
-				EmitWord(RealSection, this.realDisplacement, amount);
-		}
-
 		private ushort ContentSection => this.sections[this.sectionReplace >= 0 ? this.sectionReplace : 3];
-		#endregion
 
-		#region Arithmetic
-		// operation: 0 ADD, 1 OR, 2 ADC, 3 SBB, 4 AND, 5 SUB, 6 XOR, 7 CMP
-		private int Arith(int action, int lhs, int rhs, bool term)
+		public byte PullByte(ushort section, ushort displacement) => this.store[FlatAddress(section, displacement)];
+
+		public ushort PullWord(ushort section, ushort displacement) =>
+			(ushort)(this.store[FlatAddress(section, displacement)] | (this.store[FlatAddress(section, (ushort)(displacement + 1))] << 8));
+
+		public void EmitByte(ushort section, ushort displacement, byte amount) => this.store[FlatAddress(section, displacement)] = amount;
+
+		public void EmitWord(ushort section, ushort displacement, ushort amount)
 		{
-			int filter = term ? 0xffff : 0xff;
-			int polarityBinary = term ? 0x8000 : 0x80;
-			int outcome;
-
-			switch (action)
-			{
-				case 0:
-				case 2:
-					{
-						int cy = (action == 2 && this.carryBit) ? 1 : 0;
-						outcome = lhs + rhs + cy;
-						this.carryBit = outcome > filter;
-						this.auxBit = ((lhs ^ rhs ^ outcome) & 0x10) != 0;
-						this.overflowBit = ((~(lhs ^ rhs) & (lhs ^ outcome)) & polarityBinary) != 0;
-						AssignSZP(outcome, term);
-						return outcome & filter;
-					}
-				case 3:
-				case 5:
-				case 7:
-					{
-						int debt = (action == 3 && this.carryBit) ? 1 : 0;
-						outcome = lhs - rhs - debt;
-						this.carryBit = outcome < 0;
-						this.auxBit = ((lhs ^ rhs ^ outcome) & 0x10) != 0;
-						this.overflowBit = (((lhs ^ rhs) & (lhs ^ outcome)) & polarityBinary) != 0;
-						AssignSZP(outcome, term);
-						return action == 7 ? lhs : outcome & filter;
-					}
-				case 1:
-					outcome = lhs | rhs;
-					break;
-				case 4:
-					outcome = lhs & rhs;
-					break;
-				default:
-					outcome = lhs ^ rhs;
-					break;
-			}
-
-			AssignLogicFlags(outcome, term);
-			return outcome & filter;
+			this.store[FlatAddress(section, displacement)] = (byte)amount;
+			this.store[FlatAddress(section, (ushort)(displacement + 1))] = (byte)(amount >> 8);
 		}
 
-		private int Increase(int amount, bool term)
+		public void PutOnStack(ushort amount)
 		{
-			bool cy = this.carryBit;
-			int outcome = Arith(0, amount, 1, term);
-			this.carryBit = cy;
-			return outcome;
+			this.RegStack -= 2;
+			EmitWord(this.SegStack, this.RegStack, amount);
 		}
 
-		private int Decrease(int amount, bool term)
+		public ushort TakeFromStack()
 		{
-			bool cy = this.carryBit;
-			int outcome = Arith(5, amount, 1, term);
-			this.carryBit = cy;
-			return outcome;
+			ushort amount = PullWord(this.SegStack, this.RegStack);
+			this.RegStack += 2;
+			return amount;
 		}
-
-		// operation: 0 ROL, 1 ROR, 2 RCL, 3 RCR, 4 SHL, 5 SHR, 6 SAL, 7 SAR
-		private int ShiftOrRotate(int action, int amount, int tally, bool term)
-		{
-			int digits = term ? 16 : 8;
-			int filter = term ? 0xffff : 0xff;
-			int polarityBinary = term ? 0x8000 : 0x80;
-
-			tally &= 0x1f;
-			if (tally == 0)
-				return amount;
-
-			int outcome = amount & filter;
-
-			for (int idx = 0; idx < tally; idx++)
-			{
-				switch (action)
-				{
-					case 0:
-						this.carryBit = (outcome & polarityBinary) != 0;
-						outcome = ((outcome << 1) | (this.carryBit ? 1 : 0)) & filter;
-						break;
-					case 1:
-						this.carryBit = (outcome & 1) != 0;
-						outcome = (outcome >> 1) | (this.carryBit ? polarityBinary : 0);
-						break;
-					case 2:
-						{
-							bool cy = (outcome & polarityBinary) != 0;
-							outcome = ((outcome << 1) | (this.carryBit ? 1 : 0)) & filter;
-							this.carryBit = cy;
-						}
-						break;
-					case 3:
-						{
-							bool cy = (outcome & 1) != 0;
-							outcome = (outcome >> 1) | (this.carryBit ? polarityBinary : 0);
-							this.carryBit = cy;
-						}
-						break;
-					case 4:
-					case 6:
-						this.carryBit = (outcome & polarityBinary) != 0;
-						outcome = (outcome << 1) & filter;
-						break;
-					case 5:
-						this.carryBit = (outcome & 1) != 0;
-						outcome >>= 1;
-						break;
-					default:
-						this.carryBit = (outcome & 1) != 0;
-						outcome = (outcome >> 1) | (outcome & polarityBinary);
-						break;
-				}
-			}
-
-			switch (action)
-			{
-				case 0:
-				case 2:
-					this.overflowBit = ((outcome & polarityBinary) != 0) != this.carryBit;
-					break;
-				case 1:
-				case 3:
-					this.overflowBit = ((outcome ^ (outcome << 1)) & polarityBinary) != 0;
-					break;
-				case 4:
-				case 6:
-					this.overflowBit = ((outcome & polarityBinary) != 0) != this.carryBit;
-					AssignSZP(outcome, term);
-					break;
-				case 5:
-					this.overflowBit = tally == 1 && (amount & polarityBinary) != 0;
-					AssignSZP(outcome, term);
-					break;
-				default:
-					this.overflowBit = false;
-					AssignSZP(outcome, term);
-					break;
-			}
-
-			_ = digits;
-			return outcome;
-		}
-		#endregion
 
 		/// <summary>
 		/// Calls a far procedure and runs until it returns.
@@ -409,11 +131,6 @@ namespace Civilization1Remaster.Acoustics
 			}
 
 			this.RegStack += (ushort)(arguments.Length * 2);
-		}
-
-		private void RaiseInterrupt(byte numeral)
-		{
-			this.Signal(this, numeral);
 		}
 
 		/// <summary>
@@ -830,6 +547,278 @@ namespace Civilization1Remaster.Acoustics
 			}
 
 			throw UnsupportedOpcode(commandBegin, instruction);
+		}
+
+		private static int FlatAddress(ushort section, ushort displacement) => ((section << 4) + displacement) & (StorageExtent - 1);
+
+		private static bool EvenParity(int amount)
+		{
+			amount &= 0xff;
+			amount ^= amount >> 4;
+			amount ^= amount >> 2;
+			amount ^= amount >> 1;
+			return (amount & 1) == 0;
+		}
+
+		private byte ConsumeByte()
+		{
+			byte amount = PullByte(this.SegCode, this.regInstr);
+			this.regInstr++;
+			return amount;
+		}
+
+		private ushort ConsumeWord()
+		{
+			ushort amount = PullWord(this.SegCode, this.regInstr);
+			this.regInstr += 2;
+			return amount;
+		}
+
+		private void AssignLogicFlags(int outcome, bool term)
+		{
+			this.carryBit = false;
+			this.overflowBit = false;
+			this.auxBit = false;
+			AssignSZP(outcome, term);
+		}
+
+		private void AssignSZP(int outcome, bool term)
+		{
+			int filter = term ? 0xffff : 0xff;
+			this.zeroBit = (outcome & filter) == 0;
+			this.signBit = (outcome & (term ? 0x8000 : 0x80)) != 0;
+			this.parityBit = EvenParity(outcome);
+		}
+
+		private byte ObtainReg8(int ordinal)
+		{
+			ushort amount = this.cells[ordinal & 3];
+			return (byte)(ordinal < 4 ? amount : amount >> 8);
+		}
+
+		private void AssignReg8(int ordinal, byte amount)
+		{
+			int idx = ordinal & 3;
+			if (ordinal < 4)
+				this.cells[idx] = (ushort)((this.cells[idx] & 0xff00) | amount);
+			else
+				this.cells[idx] = (ushort)((this.cells[idx] & 0x00ff) | (amount << 8));
+		}
+
+		private void ParseModRm()
+		{
+			byte addrmode = ConsumeByte();
+			this.modField = addrmode >> 6;
+			this.regField = (addrmode >> 3) & 7;
+			this.rmField = addrmode & 7;
+
+			if (this.modField == 3)
+				return;
+
+			int standardSection = 3; // DS
+			int displacement;
+
+			switch (this.rmField)
+			{
+				case 0: displacement = this.RegBase + this.RegSource; break;
+				case 1: displacement = this.RegBase + this.RegDest; break;
+				case 2: displacement = this.RegFrame + this.RegSource; standardSection = 2; break;
+				case 3: displacement = this.RegFrame + this.RegDest; standardSection = 2; break;
+				case 4: displacement = this.RegSource; break;
+				case 5: displacement = this.RegDest; break;
+				case 6:
+					if (this.modField == 0)
+					{
+						displacement = ConsumeWord();
+					}
+					else
+					{
+						displacement = this.RegFrame;
+						standardSection = 2;
+					}
+					break;
+				default: displacement = this.RegBase; break;
+			}
+
+			if (this.modField == 1)
+				displacement += (sbyte)ConsumeByte();
+			else if (this.modField == 2)
+				displacement += ConsumeWord();
+
+			this.realDisplacement = (ushort)displacement;
+			this.realSection = this.sectionReplace >= 0 ? this.sectionReplace : standardSection;
+		}
+
+		private byte PullRm8() => this.modField == 3 ? ObtainReg8(this.rmField) : PullByte(RealSection, this.realDisplacement);
+
+		private ushort PullRm16() => this.modField == 3 ? this.cells[this.rmField] : PullWord(RealSection, this.realDisplacement);
+
+		private void EmitRm8(byte amount)
+		{
+			if (this.modField == 3)
+				AssignReg8(this.rmField, amount);
+			else
+				EmitByte(RealSection, this.realDisplacement, amount);
+		}
+
+		private void EmitRm16(ushort amount)
+		{
+			if (this.modField == 3)
+				this.cells[this.rmField] = amount;
+			else
+				EmitWord(RealSection, this.realDisplacement, amount);
+		}
+
+		// operation: 0 ADD, 1 OR, 2 ADC, 3 SBB, 4 AND, 5 SUB, 6 XOR, 7 CMP
+		private int Arith(int action, int lhs, int rhs, bool term)
+		{
+			int filter = term ? 0xffff : 0xff;
+			int polarityBinary = term ? 0x8000 : 0x80;
+			int outcome;
+
+			switch (action)
+			{
+				case 0:
+				case 2:
+					{
+						int cy = (action == 2 && this.carryBit) ? 1 : 0;
+						outcome = lhs + rhs + cy;
+						this.carryBit = outcome > filter;
+						this.auxBit = ((lhs ^ rhs ^ outcome) & 0x10) != 0;
+						this.overflowBit = ((~(lhs ^ rhs) & (lhs ^ outcome)) & polarityBinary) != 0;
+						AssignSZP(outcome, term);
+						return outcome & filter;
+					}
+				case 3:
+				case 5:
+				case 7:
+					{
+						int debt = (action == 3 && this.carryBit) ? 1 : 0;
+						outcome = lhs - rhs - debt;
+						this.carryBit = outcome < 0;
+						this.auxBit = ((lhs ^ rhs ^ outcome) & 0x10) != 0;
+						this.overflowBit = (((lhs ^ rhs) & (lhs ^ outcome)) & polarityBinary) != 0;
+						AssignSZP(outcome, term);
+						return action == 7 ? lhs : outcome & filter;
+					}
+				case 1:
+					outcome = lhs | rhs;
+					break;
+				case 4:
+					outcome = lhs & rhs;
+					break;
+				default:
+					outcome = lhs ^ rhs;
+					break;
+			}
+
+			AssignLogicFlags(outcome, term);
+			return outcome & filter;
+		}
+
+		private int Increase(int amount, bool term)
+		{
+			bool cy = this.carryBit;
+			int outcome = Arith(0, amount, 1, term);
+			this.carryBit = cy;
+			return outcome;
+		}
+
+		private int Decrease(int amount, bool term)
+		{
+			bool cy = this.carryBit;
+			int outcome = Arith(5, amount, 1, term);
+			this.carryBit = cy;
+			return outcome;
+		}
+
+		// operation: 0 ROL, 1 ROR, 2 RCL, 3 RCR, 4 SHL, 5 SHR, 6 SAL, 7 SAR
+		private int ShiftOrRotate(int action, int amount, int tally, bool term)
+		{
+			int digits = term ? 16 : 8;
+			int filter = term ? 0xffff : 0xff;
+			int polarityBinary = term ? 0x8000 : 0x80;
+
+			tally &= 0x1f;
+			if (tally == 0)
+				return amount;
+
+			int outcome = amount & filter;
+
+			for (int idx = 0; idx < tally; idx++)
+			{
+				switch (action)
+				{
+					case 0:
+						this.carryBit = (outcome & polarityBinary) != 0;
+						outcome = ((outcome << 1) | (this.carryBit ? 1 : 0)) & filter;
+						break;
+					case 1:
+						this.carryBit = (outcome & 1) != 0;
+						outcome = (outcome >> 1) | (this.carryBit ? polarityBinary : 0);
+						break;
+					case 2:
+						{
+							bool cy = (outcome & polarityBinary) != 0;
+							outcome = ((outcome << 1) | (this.carryBit ? 1 : 0)) & filter;
+							this.carryBit = cy;
+						}
+						break;
+					case 3:
+						{
+							bool cy = (outcome & 1) != 0;
+							outcome = (outcome >> 1) | (this.carryBit ? polarityBinary : 0);
+							this.carryBit = cy;
+						}
+						break;
+					case 4:
+					case 6:
+						this.carryBit = (outcome & polarityBinary) != 0;
+						outcome = (outcome << 1) & filter;
+						break;
+					case 5:
+						this.carryBit = (outcome & 1) != 0;
+						outcome >>= 1;
+						break;
+					default:
+						this.carryBit = (outcome & 1) != 0;
+						outcome = (outcome >> 1) | (outcome & polarityBinary);
+						break;
+				}
+			}
+
+			switch (action)
+			{
+				case 0:
+				case 2:
+					this.overflowBit = ((outcome & polarityBinary) != 0) != this.carryBit;
+					break;
+				case 1:
+				case 3:
+					this.overflowBit = ((outcome ^ (outcome << 1)) & polarityBinary) != 0;
+					break;
+				case 4:
+				case 6:
+					this.overflowBit = ((outcome & polarityBinary) != 0) != this.carryBit;
+					AssignSZP(outcome, term);
+					break;
+				case 5:
+					this.overflowBit = tally == 1 && (amount & polarityBinary) != 0;
+					AssignSZP(outcome, term);
+					break;
+				default:
+					this.overflowBit = false;
+					AssignSZP(outcome, term);
+					break;
+			}
+
+			_ = digits;
+			return outcome;
+		}
+
+		private void RaiseInterrupt(byte numeral)
+		{
+			this.Signal(this, numeral);
 		}
 
 		private Exception UnsupportedOpcode(ushort commandBegin, byte instruction)

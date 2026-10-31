@@ -8,10 +8,13 @@ namespace Civilization1Remaster.Game
 	{
 		public const ushort Origin = 0xb9a;
 		public const int Stride = 0x1e;
+
 		/// <summary>The price in tens of shields</summary>
 		public const int Price = 0x18;
+
 		/// <summary>The gold a turn</summary>
 		public const int Upkeep = 0x1a;
+
 		/// <summary>The technology that allows the building</summary>
 		public const int Technology = 0x1c;
 	}

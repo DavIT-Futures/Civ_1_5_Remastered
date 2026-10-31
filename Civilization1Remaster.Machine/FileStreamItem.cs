@@ -6,6 +6,7 @@ namespace Civilization1Remaster.Emulation
 	{
 		private readonly FileStreamTypeEnum kind = FileStreamTypeEnum.Binary;
 		private readonly FileStream flow;
+
 		private bool strokeFinish = false;
 		private char finalFinishLetter = '\r';
 		private short putbackChar = -1;
@@ -19,6 +20,27 @@ namespace Civilization1Remaster.Emulation
 		{
 			this.flow = flow;
 			this.kind = sort;
+		}
+
+		public FileStreamTypeEnum Kind
+		{
+			get { return this.kind; }
+		}
+
+		public FileStream Flow
+		{
+			get { return this.flow; }
+		}
+
+		public short PutbackChar
+		{
+			set { this.putbackChar = value; }
+			get
+			{
+				short scratch = this.putbackChar;
+				this.putbackChar = -1;
+				return scratch;
+			}
 		}
 
 		public short PullChar()
@@ -72,27 +94,6 @@ namespace Civilization1Remaster.Emulation
 				}
 
 				return (short)chr;
-			}
-		}
-
-		public FileStreamTypeEnum Kind
-		{
-			get { return this.kind; }
-		}
-
-		public FileStream Flow
-		{
-			get { return this.flow; }
-		}
-
-		public short PutbackChar
-		{
-			set { this.putbackChar = value; }
-			get
-			{
-				short scratch = this.putbackChar;
-				this.putbackChar = -1;
-				return scratch;
 			}
 		}
 	}

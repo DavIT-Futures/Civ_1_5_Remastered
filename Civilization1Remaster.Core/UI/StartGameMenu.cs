@@ -59,6 +59,410 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
+		/// Makes the civilization of the player anew (at the start of a game, for a new civilization in a free slot, or after a
+		/// civil war; for the human player only at the start): everything of the player is wiped (units, relations, cities,
+		/// money; government 1, rates 4 / 4; in a running game it gets the technologies the human player knows and that were
+		/// first found by a third player, each with chance 1/2). A living player other than 0 then gets a leader (a free one
+		/// of its colour at the start, else the other leader of its colour), a start place and its names, a settler there, the
+		/// barbarian units within 8 tiles removed. The start place is random on land: not too close to cities and earlier
+		/// players, on good land (screen 2 value), on a continent with room for cities and without cities of others after the
+		/// start of the game, not on a hut; the demands get lower with the attempts (0x34), after 2000 attempts it takes the
+		/// last place. EARTH (0xd76a) uses the start place of the leader at the start. A new civilization in a running game
+		/// with no place, or too late for the difficulty, does not come: the player is dead (0, and the game ends 0xdc48 when
+		/// only the human player is left).
+		/// </summary>
+		/// <returns>1 when made (also when it was not made anew), 0 when it does not come; also in AX</returns>
+		public ushort ConstructCivilization(short participantIdx)
+		{
+			this.processor.Journal.OpenScope($"ConstructCivilization({participantIdx})");
+
+			// The frame like the original (the functions called see the stack at the same depth)
+
+			ushort result = 0;
+			if (participantIdx != this.owner.World.PersonParticipantIdx || this.owner.World.RoundTally == 0)
+			{
+				result = RemakeCivilization(participantIdx);
+			}
+
+			this.processor.Journal.CloseScope("ConstructCivilization");
+
+			return result;
+		}
+
+		/// <summary>
+		/// When the player (not 0, not the human player) has no city left: tells that the civilization was destroyed by
+		/// destroyerIdx (dialog style 0x2f9e: 3 when by the human player, else 5 with relations bit 0x40 of the human player
+		/// towards it, else 2), takes away its spaceship, units and everything it saw, notes it in the replay and makes a new
+		/// civilization in its place
+		/// </summary>
+		public void EliminateCivilization(short participantIdx, short participantIdx1)
+		{
+			this.processor.Journal.OpenScope($"EliminateCivilization({participantIdx}, {participantIdx1})");
+
+			if (participantIdx != 0 && participantIdx != this.owner.World.PersonParticipantIdx && !OwnsCity(participantIdx))
+			{
+				Message(CivilizationName(participantIdx))
+					.Text("\ncivilization\ndestroyed\nby ")
+					.Text(CivilizationPlural(participantIdx1))
+					.Text("!\n");
+
+				short humanIdx = this.owner.World.PersonParticipantIdx;
+				DialogStyle = (ushort)((this.owner.World.Participants[humanIdx].Relations[participantIdx] & 0x40) != 0 ? 5 : 2);
+
+				if (participantIdx1 == humanIdx)
+				{
+					DialogStyle = 3;
+				}
+
+				this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 80);
+
+				this.owner.Conquest.EliminateSpaceship(participantIdx);
+
+				this.owner.UnitOps.AttachReplayContent(13, (byte)participantIdx, (byte)participantIdx1);
+
+				UnitMemory troops = new UnitMemory(this.processor);
+
+				for (short troopIdx = 0; troopIdx < UnitMemory.TroopTally; troopIdx++)
+				{
+					if (troops.Exists(participantIdx, troopIdx))
+					{
+						this.owner.UnitOps.EliminateUnit(participantIdx, troopIdx);
+					}
+				}
+
+				sbyte unseen = (sbyte)~(1 << participantIdx);
+
+				for (int horizLoc = 0; horizLoc < 80; horizLoc++)
+				{
+					for (int vertLoc = 0; vertLoc < 50; vertLoc++)
+					{
+						this.owner.World.ChartSight[horizLoc, vertLoc] &= unseen;
+					}
+				}
+
+				ConstructCivilization(participantIdx);
+			}
+
+			this.processor.Journal.CloseScope("EliminateCivilization");
+		}
+
+		/// <summary>
+		/// Rates the start of every player 1 - 7 by his first unit (settlers): the nearest civilization on the same continent
+		/// (close under 10, moderate under 20 +1, far away +2, isolated +4), river valley (more than one river tile +2) or
+		/// grasslands (3 grassland tiles +1), and the continent size (/ 50: 2 and 3 +1, more +2). The players behind the best
+		/// get compensation: more than 3 points behind another settlers (+3), then a technology per point (UncoverTechnology).
+		/// Returns the first player with the best start, or the last of them not too close to another civilization. The
+		/// descriptions in TextBuffer.Address are never shown. The tables of the continents and the points are in the stack frame and SI / DI
+		/// get the values of the original before the calls, like in the original.
+		/// </summary>
+		public ushort CharacterizeStartLocation()
+		{
+			this.processor.Journal.OpenScope("CharacterizeStartLocation()");
+
+
+			short[] points = new short[8];
+
+			ushort participantIdx;
+
+			for (participantIdx = 1; participantIdx < 8; participantIdx++)
+			{
+				ushort troop = (ushort)(0x600 * participantIdx);
+
+				if (this.Troops.PullAt(troop, UnitMemory.Kind) == 0xff)
+					continue;
+
+				this.owner.MapOps.ObtainContinentID((sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert));
+			}
+
+			ushort scattered = 0;
+			short best = 0;
+
+			for (participantIdx = 1; participantIdx < 8; participantIdx++)
+			{
+				ushort troop = (ushort)(0x600 * participantIdx);
+
+				if (this.Troops.PullAt(troop, UnitMemory.Kind) == 0xff)
+					continue;
+
+				short nearest = NearestCivilization(participantIdx, troop);
+
+				if (nearest >= 10 && nearest != 0x3e7)
+				{
+					scattered |= (ushort)(1 << (byte)participantIdx);
+				}
+
+				short start = RateStartLocation(participantIdx, troop, nearest);
+
+				if (start > best)
+				{
+					best = start;
+				}
+
+				points[participantIdx] = start;
+			}
+
+			short chosen = -1;
+
+			for (participantIdx = 1; participantIdx < 8; participantIdx++)
+			{
+				ushort troop = (ushort)(0x600 * participantIdx);
+
+				if (this.Troops.PullAt(troop, UnitMemory.Kind) == 0xff)
+					continue;
+
+				this.owner.Words.Set("Skills: ");
+
+				if ((short)(best - points[participantIdx]) > 3)
+				{
+					points[participantIdx] += 3;
+
+					this.owner.UnitOps.ConstructUnit((short)participantIdx, 0, (sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz),
+						(sbyte)this.Troops.PullAt(troop, UnitMemory.Vert));
+
+					this.owner.Words.Append("Settlers+");
+				}
+
+				for (ushort given = 0; (short)(best - points[participantIdx]) > (short)given; given++)
+				{
+					if (given != 0)
+						this.owner.Words.Append("+");
+
+					this.owner.Words.Append((ushort)((ushort)(this.owner.Advisors.UncoverTechnology((short)participantIdx, 0) * 0x16) + 0x4da));
+				}
+
+				if (points[participantIdx] != best)
+					continue;
+
+				this.owner.Words.Append("NONE");
+
+				if (chosen == -1 || (scattered & (1 << (byte)participantIdx)) != 0)
+				{
+					chosen = (short)participantIdx;
+				}
+			}
+
+			this.processor.Journal.CloseScope("CharacterizeStartLocation");
+
+			return (ushort)chosen;
+		}
+
+		/// <summary>
+		/// Despite the name: cuts the sprites of the game out of the sprite sheets into picture tables (the order of the
+		/// ScreenToPicture calls gives the picture numbers, like in the original). The three tribe portraits (0xdf62); with VGA
+		/// colours (0xd762) the unit sprites of 0x3709 (10 rows of 16, 0xb886; rows 6 - 9, and all rows with 0x1a3e, only
+		/// column 0 cut and copied to the others), the quarter tiles (0xd294) and 4 tiles (0xd2d4), else the EGA unit sprites
+		/// of 0x3714 (12 in two rows); with VGA its palette part (0x30 bytes to 0x6b34). Then the terrain and map pieces of
+		/// sheet 0x36ff: tiles, rivers, specials, city walls, numbers, cursors and the 8 coloured rows of city sprites (0xd54e),
+		/// coloured per player with the colours 0x1946 / 0x1956.
+		/// </summary>
+		public void DisplayTribeSelection()
+		{
+			this.processor.Journal.OpenScope("DisplayTribeSelection()");
+
+			this.owner.Startup.QueryForDisk(7, 1);
+
+			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, GameTexts.FileSp299Pic, 0);
+
+			this.owner.VideoCard.RenderImage(BackScreenBox, 0xa0, 0x32, 0xa0, 0x96,
+				PictureScreenBox, 0xa0, 0x32);
+
+			for (int idx = 0; idx < 3; idx++)
+			{
+				StorePicture(0xdf62, idx, 1, (ushort)((0x2a * idx) + 0xa0), 0x8e, 0x29, 0x3a);
+			}
+
+			if (VgaMode != 0)
+			{
+				CutVgaUnitSprites();
+			}
+			else
+			{
+				CutEgaUnitSprites();
+			}
+
+			if (VgaMode != 0)
+			{
+				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, GameTexts.FileSp257PicB, 0);
+
+				this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, GameTexts.FileSp256Pal, 0xbdee);
+
+				for (int idx = 0; idx < 0x30; idx++)
+				{
+					this.processor.EmitGlobalByte((ushort)(VgaPaletteBufferAddress + idx), this.processor.PullGlobalByte((ushort)(ImportedPaletteBufferAddress + idx)));
+				}
+			}
+
+			for (int idx = 0; idx < 8; idx++)
+			{
+				StorePicture(0xb27a, idx, 1, (ushort)(idx << 4), 0x30, 0x10, 0x10);
+				StorePicture(0xb29a, idx, 1, (ushort)((idx << 4) + 0x80), 0x60, 0x10, 0x10);
+			}
+
+			StorePicture(0xb2ba, 0, 1, 0x30, 0x20, 0x10, 0x10);
+
+			for (int idx = 1; idx < 0x10; idx++)
+			{
+				StorePicture(0x6dfe, idx, 1, (ushort)(idx << 4), 0x40, 0x10, 0x10);
+				StorePicture(0x6e1e, idx, 1, (ushort)(idx << 4), 0x50, 0x10, 0x10);
+			}
+
+			for (int idx = 0; idx < 0x14; idx++)
+			{
+				ushort horizLoc = (ushort)((7 * idx) + 0xa0);
+
+				StorePicture(0xd21c, idx, 1, horizLoc, 0, 7, 15);
+				StorePicture(0xd244, idx, 1, horizLoc, 0x10, 7, 15);
+				StorePicture(0xd26c, idx, 1, horizLoc, 0x20, 7, 15);
+			}
+
+			for (int idx = 0; idx < 4; idx++)
+			{
+				StorePicture(0x7eec, idx, 1, (ushort)((idx << 4) + 0x50), 0x80, 0x10, 0x10);
+			}
+
+			for (int idx = 0; idx < 7; idx++)
+			{
+				StorePicture(0xd4ce, idx, 1, (ushort)(idx << 4), 0x20, 0x10, 0x10);
+			}
+
+			PointerPicture = PointerIcon;
+
+			for (int idx = 0; idx < 8; idx++)
+			{
+				StorePicture(0xd4de, idx, 1, (ushort)(((idx & 3) << 3) + 0x81), (ushort)(((idx & 4) << 1) + 0x21), 7, 7);
+			}
+
+			for (int idx = 0; idx < 9; idx++)
+			{
+				StorePicture(0x6e96, idx, 1, (ushort)(idx << 3), 0x80, 8, 0x10);
+			}
+
+			for (int idx = 0; idx < 0x10; idx++)
+			{
+				StorePicture(0xd4ee, idx, 1, (ushort)((idx << 4) + 1), 0x71, 15, 15);
+			}
+
+			for (int idx = 0; idx < 8; idx++)
+			{
+				StorePicture(0xd50e, idx, 1, (ushort)((idx << 4) + 1), 0x61, 15, 15);
+			}
+
+			StorePicture(0xb880, 0, 1, 0x99, 0x29, 7, 7);
+			StorePicture(0xdf0c, 0, 1, 0xb0, 0x80, 0x14, 9);
+
+			for (int playerIdx = 0; playerIdx < 8; playerIdx++)
+			{
+				CutPlayerCitySprites(playerIdx);
+			}
+
+			this.processor.Journal.CloseScope("DisplayTribeSelection");
+		}
+
+		/// <summary>
+		/// Loads the government picture of the human player, "govtNa.pic": N is the government / 2 (3 for government 3), "m"
+		/// instead of "a" with technology 20; the leader part of it goes into the picture 0x19e8. The file name is made in a
+		/// buffer in the stack frame, like in the original.
+		/// </summary>
+		public void ImportGovernmentGraphics()
+		{
+			this.processor.Journal.OpenScope("ImportGovernmentGraphics()");
+
+			this.owner.Startup.QueryForDisk(2, 1);
+
+			short regime = this.owner.World.Participants[this.owner.World.PersonParticipantIdx].RegimeKind;
+			char regimeChar = regime == 3 ? '3' : (char)((regime / 2) + '0');
+			char techChar = regime != 3 && this.owner.Advisors.PlayerKnowsTechnology(this.owner.World.PersonParticipantIdx, 0x14) != 0 ? 'm' : 'a';
+			string docname = $"govt{regimeChar}{techChar}.pic";
+
+			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, docname, 0);
+
+			this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0xa0, 0x3c,
+				PictureScreenBox, 0xa0, 0x8c);
+
+			this.owner.Startup.QueryForDisk(0, 1);
+
+			this.processor.Journal.CloseScope("ImportGovernmentGraphics");
+		}
+
+		/// <summary>
+		/// After a revolution of the human player (not to government 0): the newspaper "... government changed to ...!", then
+		/// the advisor screen with the title 0x375a and the 4 advisors (pictures from 0x19e8, names at 0x2fac without their
+		/// last character, every second one lower) until a key or click
+		/// </summary>
+		public void DisplayRevolutionScreen()
+		{
+			this.processor.Journal.OpenScope("DisplayRevolutionScreen()");
+
+			short regime = this.owner.World.Participants[this.owner.World.PersonParticipantIdx].RegimeKind;
+
+			if (regime != 0)
+			{
+				this.owner.Advisors.RenderAdvisorScenery();
+
+				Message(CivilizationName(this.owner.World.PersonParticipantIdx))
+					.Text(" government\nchanged to ");
+				this.owner.Words.Append(GovernmentName(this.owner.World.Participants[this.owner.World.PersonParticipantIdx].RegimeKind));
+				this.owner.Words.Append("!\n");
+
+				this.owner.Paper.DisplayNewspaper(-2);
+
+				this.owner.Startup.ConcealMouseCursor();
+
+				this.owner.Services.FloodBox(ScreenBox, 0, 100, 320, 100, Hues.White);
+
+				DrawingBox.TypefaceIdx = 0x6;
+
+				this.owner.TextPainter.RenderCenteredTextToScreen0(GameTexts.TextNewCabinet, 160, 102, Hues.Black);
+
+				DrawingBox.TypefaceIdx = 0x2;
+
+				for (int advisorIdx = 0; advisorIdx < 4; advisorIdx++)
+				{
+					this.owner.VideoCard.RenderImage(PictureScreenBox, (ushort)((0x28 * advisorIdx) + 0xa0), 0x8c, 0x28, 0x3c,
+						ScreenBox, (ushort)((0x50 * advisorIdx) + 0x14), 0x76);
+
+					this.owner.Words.Set(this.processor.PullGlobalWord((ushort)((advisorIdx << 1) + AdvisorTitleTextTableAddress)));
+					this.owner.Words[this.owner.Words.Length - 1] = 0x0;
+
+					this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), (80 * advisorIdx) + 40, (advisorIdx & 1) != 0 ? 186 : 180, Hues.Black);
+				}
+
+				DrawingBox.TypefaceIdx = 0x1;
+
+				this.owner.Startup.DisplayMouseCursor();
+
+				this.owner.Conquest.AwaitForKeyPressOrMouseClick();
+
+				this.owner.Advisors.RecoverAdvisorScenery();
+			}
+
+			this.processor.Journal.CloseScope("DisplayRevolutionScreen");
+		}
+
+		/// <summary>
+		/// The player has no spaceship: no arrival, every place of the spaceship layout (15 rows of 12, segment 0x3772) empty
+		/// </summary>
+		public void WipeSpaceshipContent(short participantIdx)
+		{
+			this.processor.Journal.OpenScope($"WipeSpaceshipContent({participantIdx})");
+
+			this.owner.World.Participants[participantIdx].StarshipArrivalSeason = -1;
+
+			this.processor.SegExtra.Value16 = 0x3772;
+
+			for (int row = 0; row < 0xf; row++)
+			{
+				for (int column = 0; column < 0xc; column++)
+				{
+					this.processor.EmitUInt8(this.processor.SegExtra.Value16,
+						(ushort)((0xb4 * participantIdx) + (0xc * row) + column + 0x16e0), 0xff);
+				}
+			}
+
+			this.processor.Journal.CloseScope("WipeSpaceshipContent");
+		}
+
+		/// <summary>
 		/// The difficulty menu (a click on a portrait of the left picture chooses too), none = 0; the portrait of the
 		/// difficulty on the left
 		/// </summary>
@@ -420,37 +824,6 @@ namespace Civilization1Remaster.UI
 			this.owner.Conquest.AwaitForKeyPressOrMouseClick();
 		}
 
-		/// <summary>
-		/// Makes the civilization of the player anew (at the start of a game, for a new civilization in a free slot, or after a
-		/// civil war; for the human player only at the start): everything of the player is wiped (units, relations, cities,
-		/// money; government 1, rates 4 / 4; in a running game it gets the technologies the human player knows and that were
-		/// first found by a third player, each with chance 1/2). A living player other than 0 then gets a leader (a free one
-		/// of its colour at the start, else the other leader of its colour), a start place and its names, a settler there, the
-		/// barbarian units within 8 tiles removed. The start place is random on land: not too close to cities and earlier
-		/// players, on good land (screen 2 value), on a continent with room for cities and without cities of others after the
-		/// start of the game, not on a hut; the demands get lower with the attempts (0x34), after 2000 attempts it takes the
-		/// last place. EARTH (0xd76a) uses the start place of the leader at the start. A new civilization in a running game
-		/// with no place, or too late for the difficulty, does not come: the player is dead (0, and the game ends 0xdc48 when
-		/// only the human player is left).
-		/// </summary>
-		/// <returns>1 when made (also when it was not made anew), 0 when it does not come; also in AX</returns>
-		public ushort ConstructCivilization(short participantIdx)
-		{
-			this.processor.Journal.OpenScope($"ConstructCivilization({participantIdx})");
-
-			// The frame like the original (the functions called see the stack at the same depth)
-
-			ushort result = 0;
-			if (participantIdx != this.owner.World.PersonParticipantIdx || this.owner.World.RoundTally == 0)
-			{
-				result = RemakeCivilization(participantIdx);
-			}
-
-			this.processor.Journal.CloseScope("ConstructCivilization");
-
-			return result;
-		}
-
 		/// <summary>The work of ConstructCivilization; 0 when the civilization does not come</summary>
 		private ushort RemakeCivilization(short participantIdx)
 		{
@@ -792,63 +1165,6 @@ namespace Civilization1Remaster.UI
 			this.owner.Names.Set(CivilizationPluralAt(names), this.owner.Words.ToString());
 		}
 
-		/// <summary>
-		/// When the player (not 0, not the human player) has no city left: tells that the civilization was destroyed by
-		/// destroyerIdx (dialog style 0x2f9e: 3 when by the human player, else 5 with relations bit 0x40 of the human player
-		/// towards it, else 2), takes away its spaceship, units and everything it saw, notes it in the replay and makes a new
-		/// civilization in its place
-		/// </summary>
-		public void EliminateCivilization(short participantIdx, short participantIdx1)
-		{
-			this.processor.Journal.OpenScope($"EliminateCivilization({participantIdx}, {participantIdx1})");
-
-			if (participantIdx != 0 && participantIdx != this.owner.World.PersonParticipantIdx && !OwnsCity(participantIdx))
-			{
-				Message(CivilizationName(participantIdx))
-					.Text("\ncivilization\ndestroyed\nby ")
-					.Text(CivilizationPlural(participantIdx1))
-					.Text("!\n");
-
-				short humanIdx = this.owner.World.PersonParticipantIdx;
-				DialogStyle = (ushort)((this.owner.World.Participants[humanIdx].Relations[participantIdx] & 0x40) != 0 ? 5 : 2);
-
-				if (participantIdx1 == humanIdx)
-				{
-					DialogStyle = 3;
-				}
-
-				this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 80);
-
-				this.owner.Conquest.EliminateSpaceship(participantIdx);
-
-				this.owner.UnitOps.AttachReplayContent(13, (byte)participantIdx, (byte)participantIdx1);
-
-				UnitMemory troops = new UnitMemory(this.processor);
-
-				for (short troopIdx = 0; troopIdx < UnitMemory.TroopTally; troopIdx++)
-				{
-					if (troops.Exists(participantIdx, troopIdx))
-					{
-						this.owner.UnitOps.EliminateUnit(participantIdx, troopIdx);
-					}
-				}
-
-				sbyte unseen = (sbyte)~(1 << participantIdx);
-
-				for (int horizLoc = 0; horizLoc < 80; horizLoc++)
-				{
-					for (int vertLoc = 0; vertLoc < 50; vertLoc++)
-					{
-						this.owner.World.ChartSight[horizLoc, vertLoc] &= unseen;
-					}
-				}
-
-				ConstructCivilization(participantIdx);
-			}
-
-			this.processor.Journal.CloseScope("EliminateCivilization");
-		}
-
 		/// <summary>True when one of the 128 cities belongs to the player</summary>
 		private bool OwnsCity(short participantIdx)
 		{
@@ -859,106 +1175,6 @@ namespace Civilization1Remaster.UI
 			}
 
 			return false;
-		}
-
-		/// <summary>
-		/// Rates the start of every player 1 - 7 by his first unit (settlers): the nearest civilization on the same continent
-		/// (close under 10, moderate under 20 +1, far away +2, isolated +4), river valley (more than one river tile +2) or
-		/// grasslands (3 grassland tiles +1), and the continent size (/ 50: 2 and 3 +1, more +2). The players behind the best
-		/// get compensation: more than 3 points behind another settlers (+3), then a technology per point (UncoverTechnology).
-		/// Returns the first player with the best start, or the last of them not too close to another civilization. The
-		/// descriptions in TextBuffer.Address are never shown. The tables of the continents and the points are in the stack frame and SI / DI
-		/// get the values of the original before the calls, like in the original.
-		/// </summary>
-		public ushort CharacterizeStartLocation()
-		{
-			this.processor.Journal.OpenScope("CharacterizeStartLocation()");
-
-
-			short[] points = new short[8];
-
-			ushort participantIdx;
-
-			for (participantIdx = 1; participantIdx < 8; participantIdx++)
-			{
-				ushort troop = (ushort)(0x600 * participantIdx);
-
-				if (this.Troops.PullAt(troop, UnitMemory.Kind) == 0xff)
-					continue;
-
-				this.owner.MapOps.ObtainContinentID((sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert));
-			}
-
-			ushort scattered = 0;
-			short best = 0;
-
-			for (participantIdx = 1; participantIdx < 8; participantIdx++)
-			{
-				ushort troop = (ushort)(0x600 * participantIdx);
-
-				if (this.Troops.PullAt(troop, UnitMemory.Kind) == 0xff)
-					continue;
-
-				short nearest = NearestCivilization(participantIdx, troop);
-
-				if (nearest >= 10 && nearest != 0x3e7)
-				{
-					scattered |= (ushort)(1 << (byte)participantIdx);
-				}
-
-				short start = RateStartLocation(participantIdx, troop, nearest);
-
-				if (start > best)
-				{
-					best = start;
-				}
-
-				points[participantIdx] = start;
-			}
-
-			short chosen = -1;
-
-			for (participantIdx = 1; participantIdx < 8; participantIdx++)
-			{
-				ushort troop = (ushort)(0x600 * participantIdx);
-
-				if (this.Troops.PullAt(troop, UnitMemory.Kind) == 0xff)
-					continue;
-
-				this.owner.Words.Set("Skills: ");
-
-				if ((short)(best - points[participantIdx]) > 3)
-				{
-					points[participantIdx] += 3;
-
-					this.owner.UnitOps.ConstructUnit((short)participantIdx, 0, (sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz),
-						(sbyte)this.Troops.PullAt(troop, UnitMemory.Vert));
-
-					this.owner.Words.Append("Settlers+");
-				}
-
-				for (ushort given = 0; (short)(best - points[participantIdx]) > (short)given; given++)
-				{
-					if (given != 0)
-						this.owner.Words.Append("+");
-
-					this.owner.Words.Append((ushort)((ushort)(this.owner.Advisors.UncoverTechnology((short)participantIdx, 0) * 0x16) + 0x4da));
-				}
-
-				if (points[participantIdx] != best)
-					continue;
-
-				this.owner.Words.Append("NONE");
-
-				if (chosen == -1 || (scattered & (1 << (byte)participantIdx)) != 0)
-				{
-					chosen = (short)participantIdx;
-				}
-			}
-
-			this.processor.Journal.CloseScope("CharacterizeStartLocation");
-
-			return (ushort)chosen;
 		}
 
 		/// <summary>
@@ -1096,118 +1312,6 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// Despite the name: cuts the sprites of the game out of the sprite sheets into picture tables (the order of the
-		/// ScreenToPicture calls gives the picture numbers, like in the original). The three tribe portraits (0xdf62); with VGA
-		/// colours (0xd762) the unit sprites of 0x3709 (10 rows of 16, 0xb886; rows 6 - 9, and all rows with 0x1a3e, only
-		/// column 0 cut and copied to the others), the quarter tiles (0xd294) and 4 tiles (0xd2d4), else the EGA unit sprites
-		/// of 0x3714 (12 in two rows); with VGA its palette part (0x30 bytes to 0x6b34). Then the terrain and map pieces of
-		/// sheet 0x36ff: tiles, rivers, specials, city walls, numbers, cursors and the 8 coloured rows of city sprites (0xd54e),
-		/// coloured per player with the colours 0x1946 / 0x1956.
-		/// </summary>
-		public void DisplayTribeSelection()
-		{
-			this.processor.Journal.OpenScope("DisplayTribeSelection()");
-
-			this.owner.Startup.QueryForDisk(7, 1);
-
-			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, GameTexts.FileSp299Pic, 0);
-
-			this.owner.VideoCard.RenderImage(BackScreenBox, 0xa0, 0x32, 0xa0, 0x96,
-				PictureScreenBox, 0xa0, 0x32);
-
-			for (int idx = 0; idx < 3; idx++)
-			{
-				StorePicture(0xdf62, idx, 1, (ushort)((0x2a * idx) + 0xa0), 0x8e, 0x29, 0x3a);
-			}
-
-			if (VgaMode != 0)
-			{
-				CutVgaUnitSprites();
-			}
-			else
-			{
-				CutEgaUnitSprites();
-			}
-
-			if (VgaMode != 0)
-			{
-				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, GameTexts.FileSp257PicB, 0);
-
-				this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, GameTexts.FileSp256Pal, 0xbdee);
-
-				for (int idx = 0; idx < 0x30; idx++)
-				{
-					this.processor.EmitGlobalByte((ushort)(VgaPaletteBufferAddress + idx), this.processor.PullGlobalByte((ushort)(ImportedPaletteBufferAddress + idx)));
-				}
-			}
-
-			for (int idx = 0; idx < 8; idx++)
-			{
-				StorePicture(0xb27a, idx, 1, (ushort)(idx << 4), 0x30, 0x10, 0x10);
-				StorePicture(0xb29a, idx, 1, (ushort)((idx << 4) + 0x80), 0x60, 0x10, 0x10);
-			}
-
-			StorePicture(0xb2ba, 0, 1, 0x30, 0x20, 0x10, 0x10);
-
-			for (int idx = 1; idx < 0x10; idx++)
-			{
-				StorePicture(0x6dfe, idx, 1, (ushort)(idx << 4), 0x40, 0x10, 0x10);
-				StorePicture(0x6e1e, idx, 1, (ushort)(idx << 4), 0x50, 0x10, 0x10);
-			}
-
-			for (int idx = 0; idx < 0x14; idx++)
-			{
-				ushort horizLoc = (ushort)((7 * idx) + 0xa0);
-
-				StorePicture(0xd21c, idx, 1, horizLoc, 0, 7, 15);
-				StorePicture(0xd244, idx, 1, horizLoc, 0x10, 7, 15);
-				StorePicture(0xd26c, idx, 1, horizLoc, 0x20, 7, 15);
-			}
-
-			for (int idx = 0; idx < 4; idx++)
-			{
-				StorePicture(0x7eec, idx, 1, (ushort)((idx << 4) + 0x50), 0x80, 0x10, 0x10);
-			}
-
-			for (int idx = 0; idx < 7; idx++)
-			{
-				StorePicture(0xd4ce, idx, 1, (ushort)(idx << 4), 0x20, 0x10, 0x10);
-			}
-
-			PointerPicture = PointerIcon;
-
-			for (int idx = 0; idx < 8; idx++)
-			{
-				StorePicture(0xd4de, idx, 1, (ushort)(((idx & 3) << 3) + 0x81), (ushort)(((idx & 4) << 1) + 0x21), 7, 7);
-			}
-
-			for (int idx = 0; idx < 9; idx++)
-			{
-				StorePicture(0x6e96, idx, 1, (ushort)(idx << 3), 0x80, 8, 0x10);
-			}
-
-			for (int idx = 0; idx < 0x10; idx++)
-			{
-				StorePicture(0xd4ee, idx, 1, (ushort)((idx << 4) + 1), 0x71, 15, 15);
-			}
-
-			for (int idx = 0; idx < 8; idx++)
-			{
-				StorePicture(0xd50e, idx, 1, (ushort)((idx << 4) + 1), 0x61, 15, 15);
-			}
-
-			StorePicture(0xb880, 0, 1, 0x99, 0x29, 7, 7);
-			StorePicture(0xdf0c, 0, 1, 0xb0, 0x80, 0x14, 9);
-
-			for (int playerIdx = 0; playerIdx < 8; playerIdx++)
-			{
-				CutPlayerCitySprites(playerIdx);
-			}
-
-			this.processor.Journal.CloseScope("DisplayTribeSelection");
-		}
-
-		/// <summary>
 		/// Cuts a picture out of the screen into the table at tableAddr, entry idx
 		/// </summary>
 		private void StorePicture(ushort tableAddr, int idx, ushort displayIdx, ushort horizLoc, ushort vertLoc, ushort breadth, ushort altitude)
@@ -1316,110 +1420,6 @@ namespace Civilization1Remaster.UI
 			{
 				StorePicture(0xd54e, (playerIdx << 5) + idx, 1, (ushort)(((idx % 0x14) << 4) + 1), (ushort)(((idx / 0x14) << 4) + 0x81), 15, 15);
 			}
-		}
-
-		/// <summary>
-		/// Loads the government picture of the human player, "govtNa.pic": N is the government / 2 (3 for government 3), "m"
-		/// instead of "a" with technology 20; the leader part of it goes into the picture 0x19e8. The file name is made in a
-		/// buffer in the stack frame, like in the original.
-		/// </summary>
-		public void ImportGovernmentGraphics()
-		{
-			this.processor.Journal.OpenScope("ImportGovernmentGraphics()");
-
-			this.owner.Startup.QueryForDisk(2, 1);
-
-			short regime = this.owner.World.Participants[this.owner.World.PersonParticipantIdx].RegimeKind;
-			char regimeChar = regime == 3 ? '3' : (char)((regime / 2) + '0');
-			char techChar = regime != 3 && this.owner.Advisors.PlayerKnowsTechnology(this.owner.World.PersonParticipantIdx, 0x14) != 0 ? 'm' : 'a';
-			string docname = $"govt{regimeChar}{techChar}.pic";
-
-			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, docname, 0);
-
-			this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0xa0, 0x3c,
-				PictureScreenBox, 0xa0, 0x8c);
-
-			this.owner.Startup.QueryForDisk(0, 1);
-
-			this.processor.Journal.CloseScope("ImportGovernmentGraphics");
-		}
-
-		/// <summary>
-		/// After a revolution of the human player (not to government 0): the newspaper "... government changed to ...!", then
-		/// the advisor screen with the title 0x375a and the 4 advisors (pictures from 0x19e8, names at 0x2fac without their
-		/// last character, every second one lower) until a key or click
-		/// </summary>
-		public void DisplayRevolutionScreen()
-		{
-			this.processor.Journal.OpenScope("DisplayRevolutionScreen()");
-
-			short regime = this.owner.World.Participants[this.owner.World.PersonParticipantIdx].RegimeKind;
-
-			if (regime != 0)
-			{
-				this.owner.Advisors.RenderAdvisorScenery();
-
-				Message(CivilizationName(this.owner.World.PersonParticipantIdx))
-					.Text(" government\nchanged to ");
-				this.owner.Words.Append(GovernmentName(this.owner.World.Participants[this.owner.World.PersonParticipantIdx].RegimeKind));
-				this.owner.Words.Append("!\n");
-
-				this.owner.Paper.DisplayNewspaper(-2);
-
-				this.owner.Startup.ConcealMouseCursor();
-
-				this.owner.Services.FloodBox(ScreenBox, 0, 100, 320, 100, Hues.White);
-
-				DrawingBox.TypefaceIdx = 0x6;
-
-				this.owner.TextPainter.RenderCenteredTextToScreen0(GameTexts.TextNewCabinet, 160, 102, Hues.Black);
-
-				DrawingBox.TypefaceIdx = 0x2;
-
-				for (int advisorIdx = 0; advisorIdx < 4; advisorIdx++)
-				{
-					this.owner.VideoCard.RenderImage(PictureScreenBox, (ushort)((0x28 * advisorIdx) + 0xa0), 0x8c, 0x28, 0x3c,
-						ScreenBox, (ushort)((0x50 * advisorIdx) + 0x14), 0x76);
-
-					this.owner.Words.Set(this.processor.PullGlobalWord((ushort)((advisorIdx << 1) + AdvisorTitleTextTableAddress)));
-					this.owner.Words[this.owner.Words.Length - 1] = 0x0;
-
-					this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), (80 * advisorIdx) + 40, (advisorIdx & 1) != 0 ? 186 : 180, Hues.Black);
-				}
-
-				DrawingBox.TypefaceIdx = 0x1;
-
-				this.owner.Startup.DisplayMouseCursor();
-
-				this.owner.Conquest.AwaitForKeyPressOrMouseClick();
-
-				this.owner.Advisors.RecoverAdvisorScenery();
-			}
-
-			this.processor.Journal.CloseScope("DisplayRevolutionScreen");
-		}
-
-		/// <summary>
-		/// The player has no spaceship: no arrival, every place of the spaceship layout (15 rows of 12, segment 0x3772) empty
-		/// </summary>
-		public void WipeSpaceshipContent(short participantIdx)
-		{
-			this.processor.Journal.OpenScope($"WipeSpaceshipContent({participantIdx})");
-
-			this.owner.World.Participants[participantIdx].StarshipArrivalSeason = -1;
-
-			this.processor.SegExtra.Value16 = 0x3772;
-
-			for (int row = 0; row < 0xf; row++)
-			{
-				for (int column = 0; column < 0xc; column++)
-				{
-					this.processor.EmitUInt8(this.processor.SegExtra.Value16,
-						(ushort)((0xb4 * participantIdx) + (0xc * row) + column + 0x16e0), 0xff);
-				}
-			}
-
-			this.processor.Journal.CloseScope("WipeSpaceshipContent");
 		}
 	}
 }

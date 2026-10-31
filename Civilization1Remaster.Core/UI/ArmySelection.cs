@@ -189,33 +189,6 @@ namespace Civilization1Remaster.UI
 			this.processor.Journal.CloseScope("DisplayArmyList");
 		}
 
-		/// <summary>A tile of the strategic map: sea or land, then a city in the colour of its owner or the owner of the tile</summary>
-		private void RenderStrategicTile(short horizLoc, short vertLoc)
-		{
-			short boxHoriz = (short)(horizLoc << 2);
-			short boxVert = (short)(vertLoc << 2);
-
-			this.owner.Services.FloodBox(ScreenBox, boxHoriz, boxVert, 4, 4,
-				(ushort)(this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) == 0xa ? 1 : 2));
-
-			if ((this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) != 0)
-			{
-				this.owner.Services.FloodBox(ScreenBox, boxHoriz, boxVert, 4, 4,
-					PlayerColour(this.owner.MapOps.ObtainTileOwnerBits(horizLoc, vertLoc)));
-			}
-			else
-			{
-				if (this.owner.MapOps.ObtainTileOwner(horizLoc, vertLoc) != 0xffff)
-				{
-					ushort hue = PlayerColour(this.owner.MapOps.ObtainTileOwner(horizLoc, vertLoc));
-
-					this.owner.Services.FloodBox(ScreenBox, boxHoriz + 1, boxVert + 1, 3, 3, Hues.Black);
-
-					this.owner.Services.FloodBox(ScreenBox, boxHoriz, boxVert, 3, 3, hue);
-				}
-			}
-		}
-
 		/// <summary>
 		/// A window about the unit: civilization, number, unit type, home city, position, the target of its "go to" order, then
 		/// the types of the other units of its stack (following the ring, while the text is shorter than 512)
@@ -259,6 +232,33 @@ namespace Civilization1Remaster.UI
 			this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 10, 10);
 
 			this.processor.Journal.CloseScope("DisplayUnitInfo");
+		}
+
+		/// <summary>A tile of the strategic map: sea or land, then a city in the colour of its owner or the owner of the tile</summary>
+		private void RenderStrategicTile(short horizLoc, short vertLoc)
+		{
+			short boxHoriz = (short)(horizLoc << 2);
+			short boxVert = (short)(vertLoc << 2);
+
+			this.owner.Services.FloodBox(ScreenBox, boxHoriz, boxVert, 4, 4,
+				(ushort)(this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) == 0xa ? 1 : 2));
+
+			if ((this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) != 0)
+			{
+				this.owner.Services.FloodBox(ScreenBox, boxHoriz, boxVert, 4, 4,
+					PlayerColour(this.owner.MapOps.ObtainTileOwnerBits(horizLoc, vertLoc)));
+			}
+			else
+			{
+				if (this.owner.MapOps.ObtainTileOwner(horizLoc, vertLoc) != 0xffff)
+				{
+					ushort hue = PlayerColour(this.owner.MapOps.ObtainTileOwner(horizLoc, vertLoc));
+
+					this.owner.Services.FloodBox(ScreenBox, boxHoriz + 1, boxVert + 1, 3, 3, Hues.Black);
+
+					this.owner.Services.FloodBox(ScreenBox, boxHoriz, boxVert, 3, 3, hue);
+				}
+			}
 		}
 
 		/// <summary>The name of the unit's type: the start of its record in the unit type table (0x112a + 0x22 * type)</summary>

@@ -18,30 +18,44 @@ namespace Civilization1Remaster.Game
 
 		// Offsets in a record
 		public const int Status = 0;
+
 		public const int Horiz = 1;
 		public const int Vert = 2;
+
 		/// <summary>Unit type, -1 when the record is empty</summary>
 		public const int Kind = 3;
+
 		/// <summary>Moves left in this turn, in thirds</summary>
 		public const int LeftoverSteps = 4;
+
 		/// <summary>Work turns of settlers, fuel (turns left in the air) of planes</summary>
 		public const int UnusualSteps = 5;
+
 		/// <summary>Target of a "go to" order, -1 when none</summary>
 		public const int TravelHoriz = 6;
+
 		public const int TravelVert = 7;
 		public const int TravelHeading = 8;
+
 		/// <summary>Bit mask of the players that see the unit</summary>
 		public const int ShownToParticipants = 9;
+
 		/// <summary>Next unit in the same stack, -1 when none</summary>
 		public const int FollowingInStack = 0xa;
+
 		public const int BaseTown = 0xb;
 
 		private readonly CPU processor;
+
+		private byte[]? records;
 
 		public UnitMemory(CPU processor)
 		{
 			this.processor = processor;
 		}
+
+		/// <summary>The records in C#, found once (null before the machine is prepared: then through the memory)</summary>
+		private byte[]? Records => this.records ??= this.processor.Storage.OverlayAt(CPU.AsLinearAddress(this.processor.SegData.Value16, Origin));
 
 		/// <summary>The place of the unit in the table of units, from its start (Origin)</summary>
 		public static ushort Offset(int participantIdx, int troopIdx)
@@ -53,11 +67,6 @@ namespace Civilization1Remaster.Game
 		{
 			return (ushort)(Origin + (ParticipantStride * participantIdx) + (TroopStride * troopIdx));
 		}
-
-		private byte[]? records;
-
-		/// <summary>The records in C#, found once (null before the machine is prepared: then through the memory)</summary>
-		private byte[]? Records => this.records ??= this.processor.Storage.OverlayAt(CPU.AsLinearAddress(this.processor.SegData.Value16, Origin));
 
 		public sbyte PullSigned(int participantIdx, int troopIdx, int offset)
 		{

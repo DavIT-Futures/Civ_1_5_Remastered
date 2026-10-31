@@ -13,33 +13,35 @@ namespace Civilization1Remaster.UI
 		private const ushort CityWallPicturesTableAddress = 0x6880;
 		private const ushort CityStructurePicturesTableAddress = 0x81a2;
 		private const ushort CitySceneryPiecesTableAddress = 0x817a;
+		private const ushort CityWondersPictureAddress = 0x4eef;
+		private const ushort CityWondersInMaskPictureAddress = 0x4efb;
+
+		/// <summary>The segment of the rectangles of the city view pictures</summary>
+		private const ushort CitySceneryBoxes = 0x3767;
+
+		private const int SceneryBoxStride = 8;
+		private const int SceneryBoxLeft = 0;
+		private const int SceneryBoxTop = 2;
+		private const int SceneryBoxRight = 4;
+		private const int SceneryBoxBottom = 6;
+		private const int SceneryBoxWidth = 4;
+		private const int SceneryBoxHeight = 6;
 
 		private static readonly GameText CitySceneryPiecesPictureAddress = new(0x4ec8, "citypix1.pic");
 		private static readonly GameText CityBuildingsModernPictureAddress = new(0x4ed5, "citypix3.pic");
 		private static readonly GameText CityBuildingsAncientPictureAddress = new(0x4ee2, "citypix2.pic");
-		private const ushort CityWondersPictureAddress = 0x4eef;
-		private const ushort CityWondersInMaskPictureAddress = 0x4efb;
-
-		/// <summary>Picture handle of a city view structure from table at 0x81a2</summary>
-		private ushort CityStructurePicture(int structureIdx) => this.processor.PullGlobalWord((ushort)((structureIdx << 1) + CityStructurePicturesTableAddress));
-		private void SetCityStructurePicture(int structureIdx, ushort handle) => this.processor.EmitGlobalWord((ushort)((structureIdx << 1) + CityStructurePicturesTableAddress), handle);
-
-		/// <summary>Picture handle of the city scenery</summary>
-		private ushort CitySceneryHandle => this.processor.PullGlobalWord(CitySceneryPiecesTableAddress);
-		private ushort CitySceneryPiecePicture(int x, int y) => this.processor.PullGlobalWord((ushort)((x << 1) + (y << 3) + CitySceneryPiecesTableAddress));
-
-		private ushort CityWallPicture(int pictureIdx) => this.processor.PullGlobalWord((ushort)((pictureIdx << 1) + CityWallPicturesTableAddress));
-		private void SetCityWallPicture(int wallIdx, ushort handle) => this.processor.EmitGlobalWord((ushort)((wallIdx << 1) + CityWallPicturesTableAddress), handle);
-
-		private ushort WonderPicture(int marvelIdx) => this.processor.PullGlobalWord((ushort)((marvelIdx << 1) + WonderPicturesTableAddress));
-		private void SetWonderPicture(int wonderIdx, ushort handle) => this.processor.EmitGlobalWord((ushort)((wonderIdx << 1) + WonderPicturesTableAddress), handle);
-
+		private static readonly GameText ParadeAutomobilePictureAddress = new(0x4f08, "invaders.pic");
+		private static readonly GameText ParadeTrainPictureAddress = new(0x4f15, "invader2.pic");
+		private static readonly GameText ParadeWalkPictureAddress = new(0x4f22, "invader3.pic");
 
 		public CityView(GameEngine owner)
 			: base(owner)
 		{
 		}
-		
+
+		/// <summary>Picture handle of the city scenery</summary>
+		private ushort CitySceneryHandle => this.processor.PullGlobalWord(CitySceneryPiecesTableAddress);
+
 		/// <summary>
 		/// The view of the city: the land, the walls, the buildings, the wonders and the people; the improvement (or 24 + the
 		/// wonder) just built is shown too
@@ -612,7 +614,7 @@ namespace Civilization1Remaster.UI
 
 			this.processor.Journal.CloseScope("RenderCityPicture");
 		}
-		
+
 		/// <summary>
 		/// One picture of the city view (table at 0x817a by picture and kind) into the back screen (0x19d4), in the column and
 		/// row of the view
@@ -733,18 +735,6 @@ namespace Civilization1Remaster.UI
 			this.processor.Journal.CloseScope("RenderCityScenery");
 		}
 
-		/// <summary>One citizen of the city scenery: picture pictureIdx of the frame at (horizLoc, vertLoc), then the next place</summary>
-		private void RenderSceneryCitizen(ushort[] pictures, int pictureIdx, ref ushort horizLoc, ushort vertLoc, short spacing)
-		{
-			this.owner.Services.RenderPictureToScreen(
-				ScreenBox,
-				(short)horizLoc,
-				(short)vertLoc,
-				pictures[pictureIdx]);
-
-			horizLoc += (ushort)spacing;
-		}
-
 		/// <summary>
 		/// Cuts the pictures of the city view out of screen 1: from 0x4ec8 the 5 x 4 land pieces (0x817a) and the 16 wall pieces
 		/// (0x6880, the second set with technology 0x3a), from 0x4ed5 (technology 0x25) or 0x4ee2 the buildings 0 - 22 the city has
@@ -799,32 +789,6 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// The wonder pictures of RenderCityBuildings: for each wonder of the city inside (or outside) mask 0x808a the picture
-		/// cut by SeizeCityScenery (AX) goes to 0x68a0 + 2 * wonder; the picture file is loaded before the first one
-		/// </summary>
-		private void CutWonderPictures(short townIdx, bool inMask, ushort docnameAddr)
-		{
-			bool loaded = false;
-
-			for (int wonderIdx = 1; wonderIdx <= 0x15; wonderIdx++)
-			{
-				if (this.owner.World.MarvelTownIdx[wonderIdx] != townIdx || (((1 << wonderIdx) & 0x808a) != 0) != inMask)
-					continue;
-
-				if (!loaded)
-				{
-					this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, docnameAddr, 0);
-				}
-
-				loaded = true;
-
-				ushort pic = SeizeCityScenery((ushort)wonderIdx);
-
-				SetWonderPicture(wonderIdx, pic);
-			}
-		}
-
-		/// <summary>
 		/// Cuts a picture of the city view out of screen 1. The rectangles (segment 0x3767, records of 4 words: left, top, right,
 		/// bottom) are turned into left, top, width, height once, the first time (when the right of rectangle 1 is above 300).
 		/// </summary>
@@ -855,26 +819,6 @@ namespace Civilization1Remaster.UI
 
 			return handle;
 		}
-
-		/// <summary>The segment of the rectangles of the city view pictures</summary>
-		private const ushort CitySceneryBoxes = 0x3767;
-		private const int SceneryBoxStride = 8;
-		private const int SceneryBoxLeft = 0;
-		private const int SceneryBoxTop = 2;
-		private const int SceneryBoxRight = 4;
-		private const int SceneryBoxBottom = 6;
-		private const int SceneryBoxWidth = 4;
-		private const int SceneryBoxHeight = 6;
-
-		private static readonly GameText ParadeAutomobilePictureAddress = new(0x4f08, "invaders.pic");
-		private static readonly GameText ParadeTrainPictureAddress = new(0x4f15, "invader2.pic");
-		private static readonly GameText ParadeWalkPictureAddress = new(0x4f22, "invader3.pic");
-
-		private ushort SceneryBoxField(int boxIdx, int fieldOffset) =>
-			this.processor.PullUInt16(CitySceneryBoxes, (ushort)((boxIdx * SceneryBoxStride) + fieldOffset));
-
-		private void SetSceneryBoxField(int boxIdx, int fieldOffset, ushort value) =>
-			this.processor.EmitUInt16(CitySceneryBoxes, (ushort)((boxIdx * SceneryBoxStride) + fieldOffset), value);
 
 		/// <summary>
 		/// The parade of the player's people over the bottom of the screen until a key or a click (frame by frame, 10 timer
@@ -953,29 +897,6 @@ namespace Civilization1Remaster.UI
 			this.processor.Journal.CloseScope("RenderCitySceneryForPlayer");
 		}
 
-		/// <summary>
-		/// The 10 pictures of the parade cut from screen 1 (4 a row, 0x4f apart) into the frame
-		/// </summary>
-		private void CutParadePictures(ushort[] pictures, ushort left, ushort rowHeight, ushort top, ushort altitude)
-		{
-			for (int pictureIdx = 0; pictureIdx < 0xa; pictureIdx++)
-			{
-				pictures[pictureIdx] = this.owner.VideoCard.ScreenToPicture(1, (ushort)(((pictureIdx % 4) * 0x4f) + left), (ushort)(((pictureIdx >> 2) * rowHeight) + top), 0x4e, altitude);
-			}
-		}
-
-		/// <summary>Waits for 10 timer ticks (since RestoreTimer), then a key or a click ends the parade</summary>
-		private bool ParadeInterrupted()
-		{
-			while ((short)this.owner.Timer.Beats < 0xa)
-			{
-			}
-
-			this.owner.Startup.ObtainMouseState();
-
-			return (ushort)this.owner.Libc.KeyAvailable() != 0 || this.owner.GlobDb3a != 0;
-		}
-		
 		/// <summary>The animation of a riot in the city (10 pictures, others with the technology 13)</summary>
 		public void RiotAnimation()
 		{
@@ -1139,6 +1060,88 @@ namespace Civilization1Remaster.UI
 			}
 
 			return hash;
+		}
+
+		/// <summary>Picture handle of a city view structure from table at 0x81a2</summary>
+		private ushort CityStructurePicture(int structureIdx) => this.processor.PullGlobalWord((ushort)((structureIdx << 1) + CityStructurePicturesTableAddress));
+
+		private void SetCityStructurePicture(int structureIdx, ushort handle) => this.processor.EmitGlobalWord((ushort)((structureIdx << 1) + CityStructurePicturesTableAddress), handle);
+
+		private ushort CitySceneryPiecePicture(int x, int y) => this.processor.PullGlobalWord((ushort)((x << 1) + (y << 3) + CitySceneryPiecesTableAddress));
+
+		private ushort CityWallPicture(int pictureIdx) => this.processor.PullGlobalWord((ushort)((pictureIdx << 1) + CityWallPicturesTableAddress));
+
+		private void SetCityWallPicture(int wallIdx, ushort handle) => this.processor.EmitGlobalWord((ushort)((wallIdx << 1) + CityWallPicturesTableAddress), handle);
+
+		private ushort WonderPicture(int marvelIdx) => this.processor.PullGlobalWord((ushort)((marvelIdx << 1) + WonderPicturesTableAddress));
+
+		private void SetWonderPicture(int wonderIdx, ushort handle) => this.processor.EmitGlobalWord((ushort)((wonderIdx << 1) + WonderPicturesTableAddress), handle);
+
+		/// <summary>One citizen of the city scenery: picture pictureIdx of the frame at (horizLoc, vertLoc), then the next place</summary>
+		private void RenderSceneryCitizen(ushort[] pictures, int pictureIdx, ref ushort horizLoc, ushort vertLoc, short spacing)
+		{
+			this.owner.Services.RenderPictureToScreen(
+				ScreenBox,
+				(short)horizLoc,
+				(short)vertLoc,
+				pictures[pictureIdx]);
+
+			horizLoc += (ushort)spacing;
+		}
+
+		/// <summary>
+		/// The wonder pictures of RenderCityBuildings: for each wonder of the city inside (or outside) mask 0x808a the picture
+		/// cut by SeizeCityScenery (AX) goes to 0x68a0 + 2 * wonder; the picture file is loaded before the first one
+		/// </summary>
+		private void CutWonderPictures(short townIdx, bool inMask, ushort docnameAddr)
+		{
+			bool loaded = false;
+
+			for (int wonderIdx = 1; wonderIdx <= 0x15; wonderIdx++)
+			{
+				if (this.owner.World.MarvelTownIdx[wonderIdx] != townIdx || (((1 << wonderIdx) & 0x808a) != 0) != inMask)
+					continue;
+
+				if (!loaded)
+				{
+					this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, docnameAddr, 0);
+				}
+
+				loaded = true;
+
+				ushort pic = SeizeCityScenery((ushort)wonderIdx);
+
+				SetWonderPicture(wonderIdx, pic);
+			}
+		}
+
+		private ushort SceneryBoxField(int boxIdx, int fieldOffset) =>
+			this.processor.PullUInt16(CitySceneryBoxes, (ushort)((boxIdx * SceneryBoxStride) + fieldOffset));
+
+		private void SetSceneryBoxField(int boxIdx, int fieldOffset, ushort value) =>
+			this.processor.EmitUInt16(CitySceneryBoxes, (ushort)((boxIdx * SceneryBoxStride) + fieldOffset), value);
+
+		/// <summary>
+		/// The 10 pictures of the parade cut from screen 1 (4 a row, 0x4f apart) into the frame
+		/// </summary>
+		private void CutParadePictures(ushort[] pictures, ushort left, ushort rowHeight, ushort top, ushort altitude)
+		{
+			for (int pictureIdx = 0; pictureIdx < 0xa; pictureIdx++)
+			{
+				pictures[pictureIdx] = this.owner.VideoCard.ScreenToPicture(1, (ushort)(((pictureIdx % 4) * 0x4f) + left), (ushort)(((pictureIdx >> 2) * rowHeight) + top), 0x4e, altitude);
+			}
+		}
+
+		/// <summary>Waits for 10 timer ticks (since RestoreTimer), then a key or a click ends the parade</summary>
+		private bool ParadeInterrupted()
+		{
+			while ((short)this.owner.Timer.Beats < 0xa)
+			{
+			}
+
+			this.owner.Startup.ObtainMouseState();
+
+			return (ushort)this.owner.Libc.KeyAvailable() != 0 || this.owner.GlobDb3a != 0;
 		}
 	}
 }
