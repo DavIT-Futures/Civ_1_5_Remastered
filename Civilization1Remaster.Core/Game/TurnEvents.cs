@@ -11,7 +11,7 @@ namespace Civilization1Remaster.Game
 	/// <summary>
 	/// Translated from the original CIV.EXE segment 0x1238.
 	/// </summary>
-	public class TurnEvents : GameModule
+	public partial class TurnEvents : GameModule
 	{
 		private static readonly GameText BankruptcyWarningDialogAddress = new(0x1c2a, "*TAXES");
 		private static readonly GameText RetirementContinuePromptAddress = new(0x1cf0, "*FAME");
@@ -334,12 +334,10 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope("HandleGameEnd()");
 
-
 			if (PlayTurnOfPlayers(out short startGold))
 			{
 				FinishTurn(startGold);
 			}
-
 
 			this.processor.Journal.CloseScope("HandleGameEnd");
 		}
@@ -957,7 +955,6 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope("DisplayTravellersReport()");
 
-
 			if ((ushort)((ushort)(5 - (ushort)this.owner.World.HardnessTier) * 0x1e) <= this.owner.World.RoundTally)
 			{
 				if ((((byte)(this.owner.World.RoundTally & 0xff) + 1) & 7) == 0 && (this.owner.World.ScienceLeadingFoundVia[58] & 7) == 0)
@@ -998,7 +995,6 @@ namespace Civilization1Remaster.Game
 
 				if (unitIdx == units)
 					kind = 0x1a;
-
 
 				ushort troopIdx = this.owner.UnitOps.ConstructUnit(0, kind, horizLoc, vertLoc);
 
@@ -1103,7 +1099,6 @@ namespace Civilization1Remaster.Game
 
 				if (unitIdx == units)
 					kind = 0x1a;
-
 
 				ushort sight = (ushort)((ushort)(0xc * this.owner.UnitOps.ConstructUnit(0, kind, horizLoc, vertLoc)) + 0x81dd);
 				this.processor.EmitGlobalByte(sight, (byte)(this.processor.PullGlobalByte(sight) | (byte)this.owner.World.ChartSight[(ushort)horizLoc, (ushort)vertLoc]));
@@ -1272,7 +1267,6 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope("RenderStatusBar()");
 
-
 			if (WorldMapView != 1)
 			{
 				Player human = this.owner.World.Participants[this.owner.World.PersonParticipantIdx];
@@ -1344,7 +1338,6 @@ namespace Civilization1Remaster.Game
 					AnnouncePopulationMark(population);
 				}
 			}
-
 
 			this.processor.Journal.CloseScope("RenderStatusBar");
 		}
@@ -1505,9 +1498,6 @@ namespace Civilization1Remaster.Game
 			this.processor.Journal.CloseScope("RenderPalace");
 		}
 
-		/// <summary>A table of the sections in the frame words of RenderPalace: section 0 at the given distance below BP</summary>
-		private readonly record struct SectionTable(FrameWords Frame, int Distance);
-
 		/// <summary>A word of a table of the sections (the index may be -1 or 9, like in the original)</summary>
 		private static ushort SectionWord(SectionTable table, int sectionIdx)
 		{
@@ -1565,7 +1555,6 @@ namespace Civilization1Remaster.Game
 		public void HandleEndOfTurnEvents()
 		{
 			this.processor.Journal.OpenScope("HandleEndOfTurnEvents()");
-
 
 			short pull = (short)(((ushort)this.owner.World.DirtyCellTally << 1) - ((ushort)this.owner.World.WorldHeatingTally << 2) - (ushort)this.owner.World.SmogImpactTier);
 
@@ -1693,7 +1682,6 @@ namespace Civilization1Remaster.Game
 				if (HumanCityBuilds(townIdx, wonderIdx))
 					this.owner.Advisors.RenewCityScreen((short)townIdx);
 			}
-
 
 			return true;
 		}

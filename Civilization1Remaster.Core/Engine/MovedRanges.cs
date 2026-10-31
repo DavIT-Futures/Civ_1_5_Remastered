@@ -9,10 +9,8 @@ namespace Civilization1Remaster.Engine
 	/// CIV.EXE (B6.3), the named global variables (B6.4), the boxes of the screens (B6.5) and the timer and mouse (B6.7). GameEngine.PrepareMachine
 	/// attaches them over the memory, the snapshots of the tests write them back at their addresses (MovedData).
 	/// </summary>
-	public static class MovedRanges
+	public static partial class MovedRanges
 	{
-		public sealed record Range(string Key, ushort Address, int Length);
-
 		public static IReadOnlyList<Range> All { get; } =
 		[
 			new Range("TextBuffer", TextBuffer.Address, TextBuffer.Size),
