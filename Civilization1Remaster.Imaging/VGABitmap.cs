@@ -243,9 +243,18 @@ namespace Civilization1Remaster.Imaging
 			return Color.FromArgb((255 * (crimson & 0x3f)) / 63, (255 * (emerald & 0x3f)) / 63, (255 * (azure & 0x3f)) / 63);
 		}
 
+		/// <summary>
+		/// The 6 bit levels of the VGA DAC of a colour, rounded to the nearest, so that a colour made by Hue18ToHue gives
+		/// back exactly its levels (like the DAC, which returns what was written to it)
+		/// </summary>
 		public static Color HueToHue18(Color hue)
 		{
-			return Color.FromArgb((63 * hue.R) / 255, (63 * hue.G) / 255, (63 * hue.B) / 255);
+			return Color.FromArgb(Level18(hue.R), Level18(hue.G), Level18(hue.B));
+		}
+
+		private static int Level18(byte level)
+		{
+			return (63 * level + 127) / 255;
 		}
 
 		public static VGABitmap? ViaFile(string route, out byte[] swatch)
@@ -256,21 +265,8 @@ namespace Civilization1Remaster.Imaging
 			swatch = new byte[0];
 			
 			// PIC file is written in blocks
-			while (true)
+			foreach ((ushort stamp, byte[] chunk) in ReadBlocks(flow))
 			{
-				if (!flow.TryPullUInt16(out ushort stamp) || !flow.TryPullUInt16(out ushort chunkSpan))
-					break;
-
-				byte[] chunk = new byte[chunkSpan];
-				int chunkExtent = flow.Read(chunk, 0, chunkSpan);
-
-				if (chunkSpan != chunkExtent)
-				{
-					throw new Exception(
-						$"Block type 0x{stamp:x4} data missing, expected {chunkSpan} bytes, " +
-						$"but read only {chunkExtent} bytes");
-				}
-
 				MemoryStream chunkSource;
 				ushort breadthInt;
 				ushort elevation;
@@ -284,42 +280,7 @@ namespace Civilization1Remaster.Imaging
 						break;
 
 					case 0x304d:
-						// 18bit color palette
-						List<byte> scratchList = new List<byte>();
-						scratchList.Add(0x4d);
-						scratchList.Add(0x30);
-						scratchList.Add((byte)(chunkSpan & 0xff));
-						scratchList.Add((byte)((chunkSpan & 0xff00) >> 8));
-						scratchList.AddRange(chunk);
-						swatch = scratchList.ToArray();
-
-						chunkSource = new MemoryStream(chunk);
-						int slot = chunkSource.ReadByte();
-						int hueTally = chunkSource.ReadByte();
-
-						if (slot >= 0 && hueTally >= 0)
-						{
-							hueTally -= slot;
-							hueTally++;
-
-							for (int idx = 0; idx < hueTally; idx++)
-							{
-								int scarlet = chunkSource.ReadByte();
-								int lime = chunkSource.ReadByte();
-								int sapphire = chunkSource.ReadByte();
-
-								if (scarlet < 0 || lime < 0 || sapphire < 0)
-								{
-									throw new Exception($"Palette block type 0x{stamp:x4} malformed");
-								}
-								colors.Add(new KeyValuePair<int, Color>(slot + idx,
-									VGABitmap.Hue18ToHue(scarlet, lime, sapphire)));
-							}
-						}
-						else
-						{
-							throw new Exception($"Palette block type 0x{stamp:x4} malformed");
-						}
+						swatch = ReadPaletteBlock(stamp, chunk, colors);
 						break;
 
 					case 0x3058:
@@ -440,12 +401,33 @@ namespace Civilization1Remaster.Imaging
 			List<KeyValuePair<int, Color>> colors = new List<KeyValuePair<int, Color>>();
 			swatch = new byte[0];
 
-			// PIC file is written in blocks
-			while (true)
+			// PIC file is written in blocks; only the palettes are read
+			foreach ((ushort stamp, byte[] chunk) in ReadBlocks(flow))
 			{
-				if (!flow.TryPullUInt16(out ushort stamp) || !flow.TryPullUInt16(out ushort chunkSpan))
-					break;
+				switch (stamp)
+				{
+					case 0x304d:
+						swatch = ReadPaletteBlock(stamp, chunk, colors);
+						break;
 
+					case 0x3045: // 8bit color palette
+					case 0x3058: // Image data encoded by RLE and LZW
+					case 0x3158: // Image data encoded by two pixels packed into one, RLE and LZW
+						break;
+
+					default:
+						throw new Exception($"Undefined block type 0x{stamp:x4}");
+				}
+			}
+
+			return colors;
+		}
+
+		/// <summary>The blocks of a PIC or PAL file (type, content) up to its end; a block cut short is an error</summary>
+		private static IEnumerable<(ushort Stamp, byte[] Chunk)> ReadBlocks(Stream flow)
+		{
+			while (flow.TryPullUInt16(out ushort stamp) && flow.TryPullUInt16(out ushort chunkSpan))
+			{
 				byte[] chunk = new byte[chunkSpan];
 				int chunkExtent = flow.Read(chunk, 0, chunkSpan);
 
@@ -456,67 +438,40 @@ namespace Civilization1Remaster.Imaging
 						$"but read only {chunkExtent} bytes");
 				}
 
-				MemoryStream chunkSource;
+				yield return (stamp, chunk);
+			}
+		}
 
-				switch (stamp)
-				{
-					case 0x3045:
-						// 8bit color palette
-						break;
+		/// <summary>
+		/// An 18 bit palette block (the first and the last index, then 3 bytes a colour): its colours are added, and the
+		/// block itself (with its type and length) is returned for the swatch
+		/// </summary>
+		private static byte[] ReadPaletteBlock(ushort stamp, byte[] chunk, List<KeyValuePair<int, Color>> colors)
+		{
+			if (chunk.Length < 2)
+				throw new Exception($"Palette block type 0x{stamp:x4} malformed");
 
-					case 0x304d:
-						// 18bit color palette
-						List<byte> scratchList = new List<byte>();
-						scratchList.Add(0x4d);
-						scratchList.Add(0x30);
-						scratchList.Add((byte)(chunkSpan & 0xff));
-						scratchList.Add((byte)((chunkSpan & 0xff00) >> 8));
-						scratchList.AddRange(chunk);
-						swatch = scratchList.ToArray();
+			int slot = chunk[0];
+			int hueTally = chunk[1] - slot + 1;
 
-						chunkSource = new MemoryStream(chunk);
-						int slot = chunkSource.ReadByte();
-						int hueTally = chunkSource.ReadByte();
+			for (int idx = 0; idx < hueTally; idx++)
+			{
+				int place = 2 + idx * 3;
 
-						if (slot >= 0 && hueTally >= 0)
-						{
-							hueTally -= slot;
-							hueTally++;
+				if (place + 3 > chunk.Length)
+					throw new Exception($"Palette block type 0x{stamp:x4} malformed");
 
-							for (int idx = 0; idx < hueTally; idx++)
-							{
-								int scarlet = chunkSource.ReadByte();
-								int lime = chunkSource.ReadByte();
-								int sapphire = chunkSource.ReadByte();
-
-								if (scarlet < 0 || lime < 0 || sapphire < 0)
-								{
-									throw new Exception($"Palette block type 0x{stamp:x4} malformed");
-								}
-								colors.Add(new KeyValuePair<int, Color>(slot + idx,
-									VGABitmap.Hue18ToHue(scarlet, lime, sapphire)));
-							}
-						}
-						else
-						{
-							throw new Exception($"Palette block type 0x{stamp:x4} malformed");
-						}
-						break;
-
-					case 0x3058:
-						// Image data encoded by RLE and LZW
-						break;
-
-					case 0x3158:
-						// Image data encoded by two pixels packed into one, RLE and LZW
-						break;
-
-					default:
-						throw new Exception($"Undefined block type 0x{stamp:x4}");
-				}
+				colors.Add(new KeyValuePair<int, Color>(slot + idx, Hue18ToHue(chunk[place], chunk[place + 1], chunk[place + 2])));
 			}
 
-			return colors;
+			byte[] swatch = new byte[4 + chunk.Length];
+			swatch[0] = 0x4d;
+			swatch[1] = 0x30;
+			swatch[2] = (byte)chunk.Length;
+			swatch[3] = (byte)(chunk.Length >> 8);
+			chunk.CopyTo(swatch, 4);
+
+			return swatch;
 		}
 
 		public void Dispose()
@@ -903,7 +858,7 @@ namespace Civilization1Remaster.Imaging
 
 			if (storeSwatch)
 			{
-				spanInt = 2 + 255 * 3; // we can't write full 256 colors!
+				spanInt = 2 + 256 * 3; // the first and the last index, then 256 colours of 3 bytes
 
 				// write signature
 				sink.WriteByte(0x4d);

@@ -54,7 +54,7 @@ namespace Civilization1Remaster.Tests.MachineAndImaging
 			File.Delete(route);
 		}
 
-		[Fact(Skip = "Known bug: Store(route, true) declares a 767 byte palette block but writes 770 bytes, so ViaFile rejects it. The game only calls Store(route, false).")]
+		[Fact]
 		public void StoreWithPaletteThenLoadGivesSamePixelsAndPalette()
 		{
 			VGABitmap original = Painted(32, 8);
@@ -67,6 +67,18 @@ namespace Civilization1Remaster.Tests.MachineAndImaging
 			Assert.NotNull(copy);
 			Assert.Equal(Pixels(original), Pixels(copy!));
 			Assert.Equal(original.Palette[5], copy!.Palette[5]);
+		}
+
+		[Fact]
+		public void EveryDacLevelSurvivesTheConversionToColourAndBack()
+		{
+			for (int level = 0; level < 64; level++)
+			{
+				Color hue = VGABitmap.Hue18ToHue(level, 63 - level, level / 2);
+				Color back = VGABitmap.HueToHue18(hue);
+
+				Assert.Equal((level, 63 - level, level / 2), (back.R, back.G, back.B));
+			}
 		}
 
 		[Fact]
