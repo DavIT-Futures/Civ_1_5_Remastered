@@ -14,7 +14,6 @@ namespace Civilization1Remaster.GameModel.Rules
 	/// </summary>
 	public static class HealingRules
 	{
-		public const int OceanTerrainType = 10;
 		public const int MaxShipCoastDistanceToCity = 3;
 
 		/// <summary>

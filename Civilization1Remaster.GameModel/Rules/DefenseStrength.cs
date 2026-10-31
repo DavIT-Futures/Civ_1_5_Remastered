@@ -11,11 +11,6 @@ namespace Civilization1Remaster.GameModel.Rules
 	public static class DefenseStrength
 	{
 		/// <summary>
-		/// Terrain defense factor without a bonus
-		/// </summary>
-		public const int RegularLandMultiplier = 2;
-
-		/// <summary>
 		/// Attack strength of the Howitzer, which ignores City Walls
 		/// </summary>
 		public const int CannonAssault = 12;

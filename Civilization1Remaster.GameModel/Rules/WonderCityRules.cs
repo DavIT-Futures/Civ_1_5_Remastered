@@ -6,9 +6,6 @@ namespace Civilization1Remaster.GameModel.Rules
 	/// </summary>
 	public static class WonderCityRules
 	{
-		/// <summary>The city of a wonder nobody has built</summary>
-		public const short NotBuilt = -1;
-
 		/// <summary>The city of a wonder whose city was destroyed</summary>
 		public const short Destroyed = 128;
 

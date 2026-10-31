@@ -104,49 +104,5 @@ namespace Civilization1Remaster.GameModel.Rules
 			return fight;
 		}
 
-		/// <summary>
-		/// Fights one battle between two healthy normal units
-		/// </summary>
-		/// <returns>True if the attacker wins</returns>
-		public static bool AssailantPrevails(int assault, int guard, Func<int, int> followingChance)
-		{
-			return Clash(assault, guard, RegularStrikeMarks, RegularStrikeMarks, 1, followingChance).AssailantVictories;
-		}
-
-		/// <summary>
-		/// Chance that the attacker wins, from 0.0 to 1.0, calculated exactly (no random numbers)
-		/// </summary>
-		public static double AssailantPrevailOdds(int assault, int guard, int assailantStrikeMarks = RegularStrikeMarks, int guardianStrikeMarks = RegularStrikeMarks)
-		{
-			if (assault <= 0)
-				return 0.0;
-
-			if (guard <= 0)
-				return 1.0;
-
-			double phaseTriumph = (double)assault / (assault + guard);
-			double phaseDefeat = 1.0 - phaseTriumph;
-			double odds = 0.0;
-
-			// The attacker wins on its defenderHitPoints-th won round, after losing k rounds (k < attackerHitPoints)
-			for (int kdx = 0; kdx < assailantStrikeMarks; kdx++)
-			{
-				odds += NChooseK(guardianStrikeMarks - 1 + kdx, kdx) * Math.Pow(phaseTriumph, guardianStrikeMarks) * Math.Pow(phaseDefeat, kdx);
-			}
-
-			return odds;
-		}
-
-		private static double NChooseK(int cnt, int kdx)
-		{
-			double outcome = 1.0;
-
-			for (int idx = 1; idx <= kdx; idx++)
-			{
-				outcome = outcome * (cnt - kdx + idx) / idx;
-			}
-
-			return outcome;
-		}
 	}
 }

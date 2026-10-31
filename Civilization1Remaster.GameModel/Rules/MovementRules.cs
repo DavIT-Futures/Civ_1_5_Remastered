@@ -46,47 +46,6 @@ namespace Civilization1Remaster.GameModel.Rules
 		}
 
 		/// <summary>
-		/// Calculates delta X taking into account the cylindrical world wrap (width = 80).
-		/// </summary>
-		public static int WrappedDeltaX(int fromX, int targetX)
-		{
-			int dx = targetX - fromX;
-			if (dx >= WorldWidth / 2) dx -= WorldWidth;
-			else if (dx < -WorldWidth / 2) dx += WorldWidth;
-			return dx;
-		}
-
-		/// <summary>
-		/// Determines if target tile (targetX, targetY) is directly adjacent to (fromX, fromY).
-		/// </summary>
-		public static bool IsAdjacent(int fromX, int fromY, int targetX, int targetY)
-		{
-			int dx = Math.Abs(WrappedDeltaX(fromX, targetX));
-			int dy = Math.Abs(targetY - fromY);
-			return (dx <= 1 && dy <= 1) && (dx != 0 || dy != 0);
-		}
-
-		/// <summary>
-		/// Finds the direction index (1..8) to an adjacent tile. Returns 0 if not adjacent or same tile.
-		/// </summary>
-		public static int DirectionTo(int fromX, int fromY, int targetX, int targetY)
-		{
-			int dx = WrappedDeltaX(fromX, targetX);
-			int dy = targetY - fromY;
-
-			if (Math.Abs(dx) > 1 || Math.Abs(dy) > 1)
-				return 0;
-
-			for (int dir = 1; dir <= 8; dir++)
-			{
-				if (DirectionVectors[dir].dx == dx && DirectionVectors[dir].dy == dy)
-					return dir;
-			}
-
-			return 0;
-		}
-
-		/// <summary>
 		/// Checks whether any of the 8 adjacent tiles contains an enemy/foreign unit.
 		/// </summary>
 		public static bool HasAdjacentForeignUnit(int horizLoc, int vertLoc, short participantIdx, Func<int, int, int> getTileOwner)

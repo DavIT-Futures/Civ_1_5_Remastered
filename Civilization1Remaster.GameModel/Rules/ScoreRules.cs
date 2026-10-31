@@ -22,15 +22,6 @@ namespace Civilization1Remaster.GameModel.Rules
 		}
 
 		/// <summary>
-		/// Computes total Wonder score points.
-		/// Each Wonder of the World held by the player awards exactly 20 points.
-		/// </summary>
-		public static int ComputeWonderScore(int numberOfWonders)
-		{
-			return numberOfWonders * 20;
-		}
-
-		/// <summary>
 		/// Computes the spaceship arrival bonus score.
 		/// Formula: (StarshipVictoryRatio * StarshipInhabitants) / 2
 		/// </summary>
@@ -78,27 +69,5 @@ namespace Civilization1Remaster.GameModel.Rules
 			return bonus;
 		}
 
-		/// <summary>
-		/// Calculates the total civilization score.
-		/// </summary>
-		public static int ComputeTotalScore(
-			int citizenScore,
-			int wonderScore,
-			int spaceshipScore,
-			int peaceBonus,
-			int futureTechScore,
-			int pollutionPenalty,
-			int earlyConquestBonus = -1)
-		{
-			int rawScore = citizenScore + wonderScore + spaceshipScore + peaceBonus + futureTechScore - pollutionPenalty;
-			rawScore = Math.Max(0, rawScore);
-
-			if (earlyConquestBonus > rawScore)
-			{
-				return earlyConquestBonus;
-			}
-
-			return rawScore;
-		}
 	}
 }

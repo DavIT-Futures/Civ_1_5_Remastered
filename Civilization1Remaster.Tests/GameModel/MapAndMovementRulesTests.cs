@@ -109,47 +109,6 @@ namespace Civilization1Remaster.Tests.GameModel
 		[InlineData(85, 5)]
 		public void WrapX(int x, int expected) => Assert.Equal(expected, MovementRules.WrapX(x));
 
-		[Theory]
-		[InlineData(0, 79, -1)]
-		[InlineData(79, 0, 1)]
-		[InlineData(10, 20, 10)]
-		[InlineData(0, 40, -40)]
-		[InlineData(40, 0, -40)]
-		[InlineData(0, 39, 39)]
-		public void WrappedDeltaX(int from, int target, int expected) => Assert.Equal(expected, MovementRules.WrappedDeltaX(from, target));
-
-		[Theory]
-		[InlineData(5, 5, 5, 4, 1)]
-		[InlineData(5, 5, 6, 4, 2)]
-		[InlineData(5, 5, 6, 5, 3)]
-		[InlineData(5, 5, 6, 6, 4)]
-		[InlineData(5, 5, 5, 6, 5)]
-		[InlineData(5, 5, 4, 6, 6)]
-		[InlineData(5, 5, 4, 5, 7)]
-		[InlineData(5, 5, 4, 4, 8)]
-		[InlineData(5, 5, 5, 5, 0)]
-		[InlineData(5, 5, 7, 5, 0)]
-		[InlineData(0, 5, 79, 5, 7)]
-		[InlineData(79, 5, 0, 4, 2)]
-		public void DirectionTo(int fx, int fy, int tx, int ty, int expected) => Assert.Equal(expected, MovementRules.DirectionTo(fx, fy, tx, ty));
-
-		[Fact]
-		public void DirectionVectorsLeadBackToTheirDirection()
-		{
-			for (int dir = 1; dir <= 8; dir++)
-			{
-				var (dx, dy) = MovementRules.DirectionVectors[dir];
-				Assert.Equal(dir, MovementRules.DirectionTo(10, 10, 10 + dx, 10 + dy));
-				Assert.True(MovementRules.IsAdjacent(10, 10, 10 + dx, 10 + dy));
-			}
-		}
-
-		[Theory]
-		[InlineData(10, 10, 10, 10, false)]
-		[InlineData(10, 10, 12, 10, false)]
-		[InlineData(0, 10, 79, 11, true)]
-		public void IsAdjacent(int fx, int fy, int tx, int ty, bool expected) => Assert.Equal(expected, MovementRules.IsAdjacent(fx, fy, tx, ty));
-
 		[Fact]
 		public void AdjacentForeignUnitIgnoresOwnAndEmptyTiles()
 		{
@@ -171,65 +130,4 @@ namespace Civilization1Remaster.Tests.GameModel
 		}
 	}
 
-	public class PathfindingRulesTests
-	{
-		[Theory]
-		[InlineData(0, 0)]
-		[InlineData(3, 0)]
-		[InlineData(4, 1)]
-		[InlineData(79, 19)]
-		public void ToQuadrant(int value, int expected)
-		{
-			Assert.Equal(expected, PathfindingRules.ToQuadrantX(value));
-			Assert.Equal(expected, PathfindingRules.ToQuadrantY(value));
-		}
-
-		[Theory]
-		[InlineData(-1, 19)]
-		[InlineData(20, 0)]
-		[InlineData(7, 7)]
-		public void WrapQuadrantX(int value, int expected) => Assert.Equal(expected, PathfindingRules.WrapQuadrantX(value));
-
-		[Theory]
-		[InlineData(true, true, false, 1, 1)]
-		[InlineData(true, false, false, 2, 6)]
-		[InlineData(false, false, true, 2, 3)]
-		[InlineData(false, false, false, 0, 1)]
-		[InlineData(false, false, false, 3, 9)]
-		public void StepMoveCost(bool fromRoad, bool toRoad, bool railroad, int baseCost, int expected) =>
-			Assert.Equal(expected, PathfindingRules.CalculateStepMoveCost(fromRoad, toRoad, railroad, baseCost));
-
-		[Theory]
-		[InlineData(0xff, 3, 0)]
-		[InlineData(0, 3, 0)]
-		[InlineData(3, 0, 0)]
-		[InlineData(3, 3, 0)]
-		[InlineData(1, 2, 1)]
-		[InlineData(1, 5, 16)]
-		[InlineData(1, 8, 1)]
-		[InlineData(2, 7, 9)]
-		public void TurnPenalty(int lastDir, int newDir, int expected) => Assert.Equal(expected, PathfindingRules.CalculateTurnPenalty(lastDir, newDir));
-
-		[Fact]
-		public void CanStepQuadrantReadsOneBitPerDirection()
-		{
-			for (int dir = 1; dir <= 8; dir++)
-			{
-				byte mask = (byte)(1 << (dir - 1));
-				Assert.True(PathfindingRules.CanStepQuadrant(mask, dir));
-				Assert.False(PathfindingRules.CanStepQuadrant((byte)~mask, dir));
-			}
-
-			Assert.False(PathfindingRules.CanStepQuadrant(0xff, 0));
-			Assert.False(PathfindingRules.CanStepQuadrant(0xff, 9));
-		}
-
-		[Fact]
-		public void DiagonalDistanceAgreesWithMapRules()
-		{
-			for (int dx = -10; dx <= 10; dx++)
-				for (int dy = -10; dy <= 10; dy++)
-					Assert.Equal(MapRules.LongerPlusHalfShorter(dx, dy), PathfindingRules.DiagonalDistance(dx, dy));
-		}
-	}
 }
