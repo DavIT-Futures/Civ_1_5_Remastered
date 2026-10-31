@@ -1020,4 +1020,4 @@ w tej samej kolejności; pola z inicjalizatorami zostały w plikach głównych (
 - Kolejność składowych (StyleCop SA1201 – SA1204, SA1214: 0 ostrzeżeń), bez `#region`; zmieniona kolejność
   inicjalizatorów pól w 7 klasach sprawdzona – same niezależne wartości.
 - 43 interfejsy modułów `I<Klasa>` (publiczne metody i właściwości z opisami, w klasach `<inheritdoc/>`); `GameEngine` i
-  `MapManagement.Chart` wystawiają moduły przez interfejsy.
+  `MapManagement.Chart` wystawiają moduły przez interfejsy. Pełny zestaw 813/813.
