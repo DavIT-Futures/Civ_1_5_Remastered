@@ -25,25 +25,25 @@ namespace Civilization1Remaster.Engine
 		/// <exception cref="Exception"></exception>
 		public void ImportPictureOrColors(short displayIdx, ushort horizLoc, ushort vertLoc, GameText docname, ushort swatchAddr)
 		{
-			string fileName = docname.Read(this.processor);
+			string fileName = docname.Read(this.Processor);
 			ImportPictureOrColors(displayIdx, horizLoc, vertLoc, fileName, swatchAddr);
 		}
 
 		public void ImportPictureOrColors(short displayIdx, ushort horizLoc, ushort vertLoc, string fileName, ushort swatchAddr)
 		{
-			string docname = this.processor.StandardFolder +
+			string docname = this.Processor.StandardFolder +
 				CRuntime.ObtainDOSFileLabel(fileName.ToUpper());
-			this.processor.Journal.OpenScope($"ImportPictureOrColors(0x{displayIdx:x4}, 0x{horizLoc:x4}, 0x{vertLoc:x4}, " +
+			this.Processor.Journal.OpenScope($"ImportPictureOrColors(0x{displayIdx:x4}, 0x{horizLoc:x4}, 0x{vertLoc:x4}, " +
 				$"'{docname}', 0x{swatchAddr:x4})");
 
 			if (displayIdx >= 0 && (Path.GetExtension(docname).Equals(".pic", StringComparison.InvariantCultureIgnoreCase) ||
 				Path.GetExtension(docname).Equals(".map", StringComparison.InvariantCultureIgnoreCase)))
 			{
-				if (this.owner.VideoCard.Displays.IncludesKey(displayIdx))
+				if (this.Owner.VideoCard.Displays.IncludesKey(displayIdx))
 				{
 					byte[] swatch;
 					ushort beginAddr;
-					this.owner.VideoCard.Displays.ObtainValueByKey(displayIdx).ImportPicture(docname, horizLoc, vertLoc, out swatch);
+					this.Owner.VideoCard.Displays.ObtainValueByKey(displayIdx).ImportPicture(docname, horizLoc, vertLoc, out swatch);
 
 					if (swatch != null)
 					{
@@ -53,14 +53,14 @@ namespace Civilization1Remaster.Engine
 								beginAddr = (ushort)(TextBuffer.Address + 2);
 								for (int idx = 0; idx < swatch.Length; idx++)
 								{
-									this.processor.EmitUInt8(this.processor.SegData.Value16, beginAddr++, swatch[idx]);
+									this.Processor.EmitUInt8(this.Processor.SegData.Value16, beginAddr++, swatch[idx]);
 								}
 								break;
 							case 1:
 								beginAddr = TextBuffer.Address;
 								for (int idx = 0; idx < swatch.Length; idx++)
 								{
-									this.processor.EmitUInt8(this.processor.SegData.Value16, beginAddr++, swatch[idx]);
+									this.Processor.EmitUInt8(this.Processor.SegData.Value16, beginAddr++, swatch[idx]);
 								}
 								break;
 
@@ -68,12 +68,12 @@ namespace Civilization1Remaster.Engine
 								beginAddr = swatchAddr;
 								for (int idx = 0; idx < swatch.Length; idx++)
 								{
-									this.processor.EmitUInt8(this.processor.SegData.Value16, beginAddr++, swatch[idx]);
+									this.Processor.EmitUInt8(this.Processor.SegData.Value16, beginAddr++, swatch[idx]);
 								}
 								break;
 						}
 						if (swatchAddr == 1 || swatchAddr == TextBuffer.Address)
-							this.owner.VideoCard.AssignHuesFromHueStruct(swatch);
+							this.Owner.VideoCard.AssignHuesFromHueStruct(swatch);
 					}
 				}
 				else
@@ -95,14 +95,14 @@ namespace Civilization1Remaster.Engine
 							beginAddr = (ushort)(TextBuffer.Address + 2);
 							for (int idx = 0; idx < swatch.Length; idx++)
 							{
-								this.processor.EmitUInt8(this.processor.SegData.Value16, beginAddr++, swatch[idx]);
+								this.Processor.EmitUInt8(this.Processor.SegData.Value16, beginAddr++, swatch[idx]);
 							}
 							break;
 						case 1:
 							beginAddr = TextBuffer.Address;
 							for (int idx = 0; idx < swatch.Length; idx++)
 							{
-								this.processor.EmitUInt8(this.processor.SegData.Value16, beginAddr++, swatch[idx]);
+								this.Processor.EmitUInt8(this.Processor.SegData.Value16, beginAddr++, swatch[idx]);
 							}
 							break;
 
@@ -110,16 +110,16 @@ namespace Civilization1Remaster.Engine
 							beginAddr = swatchAddr;
 							for (int idx = 0; idx < swatch.Length; idx++)
 							{
-								this.processor.EmitUInt8(this.processor.SegData.Value16, beginAddr++, swatch[idx]);
+								this.Processor.EmitUInt8(this.Processor.SegData.Value16, beginAddr++, swatch[idx]);
 							}
 							break;
 					}
 					if (swatchAddr == 1 || swatchAddr == TextBuffer.Address)
-						this.owner.VideoCard.AssignHuesFromHueStruct(swatch);
+						this.Owner.VideoCard.AssignHuesFromHueStruct(swatch);
 				}
 			}
 
-			this.processor.Journal.CloseScope("ImportPictureOrColors");
+			this.Processor.Journal.CloseScope("ImportPictureOrColors");
 		}
 
 		/// <summary>
@@ -128,12 +128,12 @@ namespace Civilization1Remaster.Engine
 		/// <param name="filenamePtr"></param>
 		public ushort ImportIcon(string docname)
 		{
-			return this.owner.VideoCard.ImportIcon(CRuntime.ObtainDOSFileLabel(docname));
+			return this.Owner.VideoCard.ImportIcon(CRuntime.ObtainDOSFileLabel(docname));
 		}
 
 		public ushort ImportIcon(ushort docnameAddr)
 		{
-			return ImportIcon(this.processor.PullText(CPU.AsLinearAddress(this.processor.SegData.Value16, docnameAddr)));
+			return ImportIcon(this.Processor.PullText(CPU.AsLinearAddress(this.Processor.SegData.Value16, docnameAddr)));
 		}
 	}
 }

@@ -29,16 +29,16 @@ namespace Civilization1Remaster.UI
 		/// </summary>
 		public void ConfigureFreshGame()
 		{
-			this.processor.Journal.OpenScope("ConfigureFreshGame()");
+			this.Processor.Journal.OpenScope("ConfigureFreshGame()");
 
 			// The frame like the original (the functions called see the stack at the same depth)
 
-			this.owner.Startup.ConcealMouseCursor();
+			this.Owner.Startup.ConcealMouseCursor();
 
-			this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8,
+			this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8,
 				ScreenBox, 0, 0);
 
-			this.owner.Startup.DisplayMouseCursor();
+			this.Owner.Startup.DisplayMouseCursor();
 
 			DrawingBox.TypefaceIdx = 0x7;
 
@@ -55,7 +55,7 @@ namespace Civilization1Remaster.UI
 			WelcomeHumanPlayer();
 
 
-			this.processor.Journal.CloseScope("ConfigureFreshGame");
+			this.Processor.Journal.CloseScope("ConfigureFreshGame");
 		}
 
 		/// <summary>
@@ -74,17 +74,17 @@ namespace Civilization1Remaster.UI
 		/// <returns>1 when made (also when it was not made anew), 0 when it does not come; also in AX</returns>
 		public ushort ConstructCivilization(short participantIdx)
 		{
-			this.processor.Journal.OpenScope($"ConstructCivilization({participantIdx})");
+			this.Processor.Journal.OpenScope($"ConstructCivilization({participantIdx})");
 
 			// The frame like the original (the functions called see the stack at the same depth)
 
 			ushort result = 0;
-			if (participantIdx != this.owner.World.PersonParticipantIdx || this.owner.World.RoundTally == 0)
+			if (participantIdx != this.Owner.World.PersonParticipantIdx || this.Owner.World.RoundTally == 0)
 			{
 				result = RemakeCivilization(participantIdx);
 			}
 
-			this.processor.Journal.CloseScope("ConstructCivilization");
+			this.Processor.Journal.CloseScope("ConstructCivilization");
 
 			return result;
 		}
@@ -97,36 +97,36 @@ namespace Civilization1Remaster.UI
 		/// </summary>
 		public void EliminateCivilization(short participantIdx, short participantIdx1)
 		{
-			this.processor.Journal.OpenScope($"EliminateCivilization({participantIdx}, {participantIdx1})");
+			this.Processor.Journal.OpenScope($"EliminateCivilization({participantIdx}, {participantIdx1})");
 
-			if (participantIdx != 0 && participantIdx != this.owner.World.PersonParticipantIdx && !OwnsCity(participantIdx))
+			if (participantIdx != 0 && participantIdx != this.Owner.World.PersonParticipantIdx && !OwnsCity(participantIdx))
 			{
 				Message(CivilizationName(participantIdx))
 					.Text("\ncivilization\ndestroyed\nby ")
 					.Text(CivilizationPlural(participantIdx1))
 					.Text("!\n");
 
-				short humanIdx = this.owner.World.PersonParticipantIdx;
-				DialogStyle = (ushort)((this.owner.World.Participants[humanIdx].Relations[participantIdx] & 0x40) != 0 ? 5 : 2);
+				short humanIdx = this.Owner.World.PersonParticipantIdx;
+				DialogStyle = (ushort)((this.Owner.World.Participants[humanIdx].Relations[participantIdx] & 0x40) != 0 ? 5 : 2);
 
 				if (participantIdx1 == humanIdx)
 				{
 					DialogStyle = 3;
 				}
 
-				this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 80);
+				this.Owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 80);
 
-				this.owner.Conquest.EliminateSpaceship(participantIdx);
+				this.Owner.Conquest.EliminateSpaceship(participantIdx);
 
-				this.owner.UnitOps.AttachReplayContent(13, (byte)participantIdx, (byte)participantIdx1);
+				this.Owner.UnitOps.AttachReplayContent(13, (byte)participantIdx, (byte)participantIdx1);
 
-				UnitMemory troops = new UnitMemory(this.processor);
+				UnitMemory troops = new UnitMemory(this.Processor);
 
 				for (short troopIdx = 0; troopIdx < UnitMemory.TroopTally; troopIdx++)
 				{
 					if (troops.Exists(participantIdx, troopIdx))
 					{
-						this.owner.UnitOps.EliminateUnit(participantIdx, troopIdx);
+						this.Owner.UnitOps.EliminateUnit(participantIdx, troopIdx);
 					}
 				}
 
@@ -136,14 +136,14 @@ namespace Civilization1Remaster.UI
 				{
 					for (int vertLoc = 0; vertLoc < 50; vertLoc++)
 					{
-						this.owner.World.ChartSight[horizLoc, vertLoc] &= unseen;
+						this.Owner.World.ChartSight[horizLoc, vertLoc] &= unseen;
 					}
 				}
 
 				ConstructCivilization(participantIdx);
 			}
 
-			this.processor.Journal.CloseScope("EliminateCivilization");
+			this.Processor.Journal.CloseScope("EliminateCivilization");
 		}
 
 		/// <summary>
@@ -157,7 +157,7 @@ namespace Civilization1Remaster.UI
 		/// </summary>
 		public ushort CharacterizeStartLocation()
 		{
-			this.processor.Journal.OpenScope("CharacterizeStartLocation()");
+			this.Processor.Journal.OpenScope("CharacterizeStartLocation()");
 
 
 			short[] points = new short[8];
@@ -171,7 +171,7 @@ namespace Civilization1Remaster.UI
 				if (this.Troops.PullAt(troop, UnitMemory.Kind) == 0xff)
 					continue;
 
-				this.owner.MapOps.ObtainContinentID((sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert));
+				this.Owner.MapOps.ObtainContinentID((sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert));
 			}
 
 			ushort scattered = 0;
@@ -210,30 +210,30 @@ namespace Civilization1Remaster.UI
 				if (this.Troops.PullAt(troop, UnitMemory.Kind) == 0xff)
 					continue;
 
-				this.owner.Words.Set("Skills: ");
+				this.Owner.Words.Set("Skills: ");
 
 				if ((short)(best - points[participantIdx]) > 3)
 				{
 					points[participantIdx] += 3;
 
-					this.owner.UnitOps.ConstructUnit((short)participantIdx, 0, (sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz),
+					this.Owner.UnitOps.ConstructUnit((short)participantIdx, 0, (sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz),
 						(sbyte)this.Troops.PullAt(troop, UnitMemory.Vert));
 
-					this.owner.Words.Append("Settlers+");
+					this.Owner.Words.Append("Settlers+");
 				}
 
 				for (ushort given = 0; (short)(best - points[participantIdx]) > (short)given; given++)
 				{
 					if (given != 0)
-						this.owner.Words.Append("+");
+						this.Owner.Words.Append("+");
 
-					this.owner.Words.Append((ushort)((ushort)(this.owner.Advisors.UncoverTechnology((short)participantIdx, 0) * 0x16) + 0x4da));
+					this.Owner.Words.Append((ushort)((ushort)(this.Owner.Advisors.UncoverTechnology((short)participantIdx, 0) * 0x16) + 0x4da));
 				}
 
 				if (points[participantIdx] != best)
 					continue;
 
-				this.owner.Words.Append("NONE");
+				this.Owner.Words.Append("NONE");
 
 				if (chosen == -1 || (scattered & (1 << (byte)participantIdx)) != 0)
 				{
@@ -241,7 +241,7 @@ namespace Civilization1Remaster.UI
 				}
 			}
 
-			this.processor.Journal.CloseScope("CharacterizeStartLocation");
+			this.Processor.Journal.CloseScope("CharacterizeStartLocation");
 
 			return (ushort)chosen;
 		}
@@ -257,13 +257,13 @@ namespace Civilization1Remaster.UI
 		/// </summary>
 		public void DisplayTribeSelection()
 		{
-			this.processor.Journal.OpenScope("DisplayTribeSelection()");
+			this.Processor.Journal.OpenScope("DisplayTribeSelection()");
 
-			this.owner.Startup.QueryForDisk(7, 1);
+			this.Owner.Startup.QueryForDisk(7, 1);
 
-			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, GameTexts.FileSp299Pic, 0);
+			this.Owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, GameTexts.FileSp299Pic, 0);
 
-			this.owner.VideoCard.RenderImage(BackScreenBox, 0xa0, 0x32, 0xa0, 0x96,
+			this.Owner.VideoCard.RenderImage(BackScreenBox, 0xa0, 0x32, 0xa0, 0x96,
 				PictureScreenBox, 0xa0, 0x32);
 
 			for (int idx = 0; idx < 3; idx++)
@@ -282,13 +282,13 @@ namespace Civilization1Remaster.UI
 
 			if (VgaMode != 0)
 			{
-				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, GameTexts.FileSp257PicB, 0);
+				this.Owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, GameTexts.FileSp257PicB, 0);
 
-				this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, GameTexts.FileSp256Pal, 0xbdee);
+				this.Owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, GameTexts.FileSp256Pal, 0xbdee);
 
 				for (int idx = 0; idx < 0x30; idx++)
 				{
-					this.processor.EmitGlobalByte((ushort)(VgaPaletteBufferAddress + idx), this.processor.PullGlobalByte((ushort)(ImportedPaletteBufferAddress + idx)));
+					this.Processor.EmitGlobalByte((ushort)(VgaPaletteBufferAddress + idx), this.Processor.PullGlobalByte((ushort)(ImportedPaletteBufferAddress + idx)));
 				}
 			}
 
@@ -355,7 +355,7 @@ namespace Civilization1Remaster.UI
 				CutPlayerCitySprites(playerIdx);
 			}
 
-			this.processor.Journal.CloseScope("DisplayTribeSelection");
+			this.Processor.Journal.CloseScope("DisplayTribeSelection");
 		}
 
 		/// <summary>
@@ -365,23 +365,23 @@ namespace Civilization1Remaster.UI
 		/// </summary>
 		public void ImportGovernmentGraphics()
 		{
-			this.processor.Journal.OpenScope("ImportGovernmentGraphics()");
+			this.Processor.Journal.OpenScope("ImportGovernmentGraphics()");
 
-			this.owner.Startup.QueryForDisk(2, 1);
+			this.Owner.Startup.QueryForDisk(2, 1);
 
-			short regime = this.owner.World.Participants[this.owner.World.PersonParticipantIdx].RegimeKind;
+			short regime = this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx].RegimeKind;
 			char regimeChar = regime == 3 ? '3' : (char)((regime / 2) + '0');
-			char techChar = regime != 3 && this.owner.Advisors.PlayerKnowsTechnology(this.owner.World.PersonParticipantIdx, 0x14) != 0 ? 'm' : 'a';
+			char techChar = regime != 3 && this.Owner.Advisors.PlayerKnowsTechnology(this.Owner.World.PersonParticipantIdx, 0x14) != 0 ? 'm' : 'a';
 			string docname = $"govt{regimeChar}{techChar}.pic";
 
-			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, docname, 0);
+			this.Owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, docname, 0);
 
-			this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0xa0, 0x3c,
+			this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0xa0, 0x3c,
 				PictureScreenBox, 0xa0, 0x8c);
 
-			this.owner.Startup.QueryForDisk(0, 1);
+			this.Owner.Startup.QueryForDisk(0, 1);
 
-			this.processor.Journal.CloseScope("ImportGovernmentGraphics");
+			this.Processor.Journal.CloseScope("ImportGovernmentGraphics");
 		}
 
 		/// <summary>
@@ -391,52 +391,52 @@ namespace Civilization1Remaster.UI
 		/// </summary>
 		public void DisplayRevolutionScreen()
 		{
-			this.processor.Journal.OpenScope("DisplayRevolutionScreen()");
+			this.Processor.Journal.OpenScope("DisplayRevolutionScreen()");
 
-			short regime = this.owner.World.Participants[this.owner.World.PersonParticipantIdx].RegimeKind;
+			short regime = this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx].RegimeKind;
 
 			if (regime != 0)
 			{
-				this.owner.Advisors.RenderAdvisorScenery();
+				this.Owner.Advisors.RenderAdvisorScenery();
 
-				Message(CivilizationName(this.owner.World.PersonParticipantIdx))
+				Message(CivilizationName(this.Owner.World.PersonParticipantIdx))
 					.Text(" government\nchanged to ");
-				this.owner.Words.Append(GovernmentName(this.owner.World.Participants[this.owner.World.PersonParticipantIdx].RegimeKind));
-				this.owner.Words.Append("!\n");
+				this.Owner.Words.Append(GovernmentName(this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx].RegimeKind));
+				this.Owner.Words.Append("!\n");
 
-				this.owner.Paper.DisplayNewspaper(-2);
+				this.Owner.Paper.DisplayNewspaper(-2);
 
-				this.owner.Startup.ConcealMouseCursor();
+				this.Owner.Startup.ConcealMouseCursor();
 
-				this.owner.Services.FloodBox(ScreenBox, 0, 100, 320, 100, Hues.White);
+				this.Owner.Services.FloodBox(ScreenBox, 0, 100, 320, 100, Hues.White);
 
 				DrawingBox.TypefaceIdx = 0x6;
 
-				this.owner.TextPainter.RenderCenteredTextToScreen0(GameTexts.TextNewCabinet, 160, 102, Hues.Black);
+				this.Owner.TextPainter.RenderCenteredTextToScreen0(GameTexts.TextNewCabinet, 160, 102, Hues.Black);
 
 				DrawingBox.TypefaceIdx = 0x2;
 
 				for (int advisorIdx = 0; advisorIdx < 4; advisorIdx++)
 				{
-					this.owner.VideoCard.RenderImage(PictureScreenBox, (ushort)((0x28 * advisorIdx) + 0xa0), 0x8c, 0x28, 0x3c,
+					this.Owner.VideoCard.RenderImage(PictureScreenBox, (ushort)((0x28 * advisorIdx) + 0xa0), 0x8c, 0x28, 0x3c,
 						ScreenBox, (ushort)((0x50 * advisorIdx) + 0x14), 0x76);
 
-					this.owner.Words.Set(this.processor.PullGlobalWord((ushort)((advisorIdx << 1) + AdvisorTitleTextTableAddress)));
-					this.owner.Words[this.owner.Words.Length - 1] = 0x0;
+					this.Owner.Words.Set(this.Processor.PullGlobalWord((ushort)((advisorIdx << 1) + AdvisorTitleTextTableAddress)));
+					this.Owner.Words[this.Owner.Words.Length - 1] = 0x0;
 
-					this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), (80 * advisorIdx) + 40, (advisorIdx & 1) != 0 ? 186 : 180, Hues.Black);
+					this.Owner.TextPainter.RenderCenteredTextToScreen0(this.Owner.Words.ToString(), (80 * advisorIdx) + 40, (advisorIdx & 1) != 0 ? 186 : 180, Hues.Black);
 				}
 
 				DrawingBox.TypefaceIdx = 0x1;
 
-				this.owner.Startup.DisplayMouseCursor();
+				this.Owner.Startup.DisplayMouseCursor();
 
-				this.owner.Conquest.AwaitForKeyPressOrMouseClick();
+				this.Owner.Conquest.AwaitForKeyPressOrMouseClick();
 
-				this.owner.Advisors.RecoverAdvisorScenery();
+				this.Owner.Advisors.RecoverAdvisorScenery();
 			}
 
-			this.processor.Journal.CloseScope("DisplayRevolutionScreen");
+			this.Processor.Journal.CloseScope("DisplayRevolutionScreen");
 		}
 
 		/// <summary>
@@ -444,22 +444,22 @@ namespace Civilization1Remaster.UI
 		/// </summary>
 		public void WipeSpaceshipContent(short participantIdx)
 		{
-			this.processor.Journal.OpenScope($"WipeSpaceshipContent({participantIdx})");
+			this.Processor.Journal.OpenScope($"WipeSpaceshipContent({participantIdx})");
 
-			this.owner.World.Participants[participantIdx].StarshipArrivalSeason = -1;
+			this.Owner.World.Participants[participantIdx].StarshipArrivalSeason = -1;
 
-			this.processor.SegExtra.Value16 = 0x3772;
+			this.Processor.SegExtra.Value16 = 0x3772;
 
 			for (int row = 0; row < 0xf; row++)
 			{
 				for (int column = 0; column < 0xc; column++)
 				{
-					this.processor.EmitUInt8(this.processor.SegExtra.Value16,
+					this.Processor.EmitUInt8(this.Processor.SegExtra.Value16,
 						(ushort)((0xb4 * participantIdx) + (0xc * row) + column + 0x16e0), 0xff);
 				}
 			}
 
-			this.processor.Journal.CloseScope("WipeSpaceshipContent");
+			this.Processor.Journal.CloseScope("WipeSpaceshipContent");
 		}
 
 		/// <summary>
@@ -468,35 +468,35 @@ namespace Civilization1Remaster.UI
 		/// </summary>
 		private void ChooseDifficulty()
 		{
-			this.owner.Words.Set("Difficulty Level...\n Chieftain (easiest)\n Warlord\n Prince\n King\n Emperor (toughest)\n");
+			this.Owner.Words.Set("Difficulty Level...\n Chieftain (easiest)\n Warlord\n Prince\n King\n Emperor (toughest)\n");
 
-			this.owner.World.HardnessTier = (short)this.owner.Dialogs.DisplayMenu(TextBuffer.Address, 160, 35, 1);
+			this.Owner.World.HardnessTier = (short)this.Owner.Dialogs.DisplayMenu(TextBuffer.Address, 160, 35, 1);
 
 			if (MousePresent != 0 && MenuMouseUsed != 0)
 			{
-				this.owner.Startup.ObtainMouseState();
+				this.Owner.Startup.ObtainMouseState();
 
-				if ((short)this.owner.GlobDb3c < 0x87)
+				if ((short)this.Owner.GlobDb3c < 0x87)
 				{
-					this.owner.World.HardnessTier = (short)this.owner.Helpers.VerifyValueSpan(((short)this.owner.GlobDb3e - 12) / 35, 0, 4);
+					this.Owner.World.HardnessTier = (short)this.Owner.Helpers.VerifyValueSpan(((short)this.Owner.GlobDb3e - 12) / 35, 0, 4);
 				}
 			}
 
-			if (this.owner.World.HardnessTier == -1)
+			if (this.Owner.World.HardnessTier == -1)
 			{
-				this.owner.World.HardnessTier = 0;
+				this.Owner.World.HardnessTier = 0;
 			}
 
-			this.owner.Startup.ConcealMouseCursor();
+			this.Owner.Startup.ConcealMouseCursor();
 
-			this.owner.Services.FloodBox(ScreenBox, 0, 0, 150, 200, Hues.Black);
+			this.Owner.Services.FloodBox(ScreenBox, 0, 0, 150, 200, Hues.Black);
 
 			RenderDifficultyPortrait(0x14, 0x64);
 
-			this.owner.VideoCard.RenderImage(BackScreenBox, 0x96, 0, 0xa0, 0xc8,
+			this.Owner.VideoCard.RenderImage(BackScreenBox, 0x96, 0, 0xa0, 0xc8,
 				ScreenBox, 0x96, 0);
 
-			this.owner.Startup.DisplayMouseCursor();
+			this.Owner.Startup.DisplayMouseCursor();
 		}
 
 		/// <summary>
@@ -504,10 +504,10 @@ namespace Civilization1Remaster.UI
 		/// </summary>
 		private void RenderDifficultyPortrait(ushort horizLoc, ushort vertLoc)
 		{
-			ushort column = (ushort)((this.owner.World.HardnessTier & 1) != 0 ? 0x50 : 0x15);
+			ushort column = (ushort)((this.Owner.World.HardnessTier & 1) != 0 ? 0x50 : 0x15);
 
-			this.owner.VideoCard.RenderImage(BackScreenBox, column,
-				(ushort)((0x23 * this.owner.World.HardnessTier) + 6), 0x35, 0x2f, ScreenBox, horizLoc, vertLoc);
+			this.Owner.VideoCard.RenderImage(BackScreenBox, column,
+				(ushort)((0x23 * this.Owner.World.HardnessTier) + 6), 0x35, 0x2f, ScreenBox, horizLoc, vertLoc);
 		}
 
 		/// <summary>
@@ -516,27 +516,27 @@ namespace Civilization1Remaster.UI
 		/// </summary>
 		private void ChooseCompetition()
 		{
-			this.owner.Words.Set("Level of Competition...\n ");
+			this.Owner.Words.Set("Level of Competition...\n ");
 
 			for (short tally = 7; tally > 2; tally--)
 			{
-				this.owner.Words.Append(this.owner.Libc.IntegerToText(tally, 10));
+				this.Owner.Words.Append(this.Owner.Libc.IntegerToText(tally, 10));
 
-				this.owner.Words.Append(" Civilizations\n ");
+				this.Owner.Words.Append(" Civilizations\n ");
 			}
 
 			do
 			{
-				this.owner.World.BotRivalTally = (short)this.owner.Dialogs.DisplayMenu(TextBuffer.Address, 160, 35, 1);
+				this.Owner.World.BotRivalTally = (short)this.Owner.Dialogs.DisplayMenu(TextBuffer.Address, 160, 35, 1);
 			}
-			while ((ushort)this.owner.World.BotRivalTally == 0xffff);
+			while ((ushort)this.Owner.World.BotRivalTally == 0xffff);
 
-			this.owner.World.BotRivalTally = (short)this.owner.Helpers.VerifyValueSpan(6 - this.owner.World.BotRivalTally, 2, 6);
-			this.owner.World.LiveRealms = (short)(0xff >> (byte)(6 - (byte)this.owner.World.BotRivalTally));
+			this.Owner.World.BotRivalTally = (short)this.Owner.Helpers.VerifyValueSpan(6 - this.Owner.World.BotRivalTally, 2, 6);
+			this.Owner.World.LiveRealms = (short)(0xff >> (byte)(6 - (byte)this.Owner.World.BotRivalTally));
 
-			this.owner.Startup.ConcealMouseCursor();
+			this.Owner.Startup.ConcealMouseCursor();
 
-			for (short rivalIdx = this.owner.World.BotRivalTally; rivalIdx >= 0; rivalIdx--)
+			for (short rivalIdx = this.Owner.World.BotRivalTally; rivalIdx >= 0; rivalIdx--)
 			{
 				RenderDifficultyPortrait((ushort)((rivalIdx << 1) + 0x14), (ushort)((3 * rivalIdx) + 0x64));
 			}
@@ -548,33 +548,33 @@ namespace Civilization1Remaster.UI
 		/// </summary>
 		private void WipeWorld()
 		{
-			this.owner.World.Season = -4000;
-			this.owner.World.DiagMarkers = 0xf;
+			this.Owner.World.Season = -4000;
+			this.Owner.World.DiagMarkers = 0xf;
 
 			for (int townIdx = 0; townIdx < 0x80; townIdx++)
 			{
-				this.owner.World.Towns[townIdx].LabelIdx = 0xff;
-				this.owner.World.Towns[townIdx].ConditionMarker = 0xff;
+				this.Owner.World.Towns[townIdx].LabelIdx = 0xff;
+				this.Owner.World.Towns[townIdx].ConditionMarker = 0xff;
 			}
 
 			for (int idx = 0; idx < 256; idx++)
 			{
-				this.owner.World.TownPlaces[idx].X = -1;
+				this.Owner.World.TownPlaces[idx].X = -1;
 			}
 
 			for (int scienceIdx = 0; scienceIdx < 0x48; scienceIdx++)
 			{
-				this.owner.World.ScienceLeadingFoundVia[scienceIdx] = 0;
+				this.Owner.World.ScienceLeadingFoundVia[scienceIdx] = 0;
 			}
 
 			for (int marvelIdx = 0; marvelIdx <= 0x15; marvelIdx++)
 			{
-				this.owner.World.MarvelTownIdx[marvelIdx] = -1;
+				this.Owner.World.MarvelTownIdx[marvelIdx] = -1;
 			}
 
 			for (short participantIdx = 0; participantIdx < 8; participantIdx++)
 			{
-				this.owner.World.Participants[participantIdx].ChiefVisuals = -1;
+				this.Owner.World.Participants[participantIdx].ChiefVisuals = -1;
 
 				WipeSpaceshipContent(participantIdx);
 			}
@@ -583,15 +583,15 @@ namespace Civilization1Remaster.UI
 			{
 				for (int vertLoc = 0; vertLoc < 0x32; vertLoc++)
 				{
-					this.owner.World.ChartSight[horizLoc, vertLoc] = 0;
+					this.Owner.World.ChartSight[horizLoc, vertLoc] = 0;
 				}
 			}
 
-			this.owner.World.SessionPrefMarkers = 0xfa;
+			this.Owner.World.SessionPrefMarkers = 0xfa;
 
-			if (this.processor.PullGlobalByte(SoundDriverOptionAddress) == 0x4e)
+			if (this.Processor.PullGlobalByte(SoundDriverOptionAddress) == 0x4e)
 			{
-				this.owner.World.SessionPrefMarkers &= 0x7fef;
+				this.Owner.World.SessionPrefMarkers &= 0x7fef;
 			}
 		}
 
@@ -603,113 +603,113 @@ namespace Civilization1Remaster.UI
 		/// </summary>
 		private void ChooseTribe()
 		{
-			this.owner.Words.Set("Pick your tribe...\n ");
+			this.Owner.Words.Set("Pick your tribe...\n ");
 
-			_ = this.owner.Words.Length;
+			_ = this.Owner.Words.Length;
 
-			for (int leader = 1; leader < this.owner.World.BotRivalTally + 2; leader++)
+			for (int leader = 1; leader < this.Owner.World.BotRivalTally + 2; leader++)
 			{
-				this.owner.Words.Append(LeaderText(leader, LeaderTable.Civilization));
+				this.Owner.Words.Append(LeaderText(leader, LeaderTable.Civilization));
 
-				this.owner.Words.Append("\n ");
+				this.Owner.Words.Append("\n ");
 			}
 
-			for (int leader = 1; leader < this.owner.World.BotRivalTally + 2; leader++)
+			for (int leader = 1; leader < this.Owner.World.BotRivalTally + 2; leader++)
 			{
-				this.owner.Words.Append((ushort)((0x3a * leader) + 0x16d2));
+				this.Owner.Words.Append((ushort)((0x3a * leader) + 0x16d2));
 
-				this.owner.Words.Append("\n ");
+				this.Owner.Words.Append("\n ");
 			}
 
-			this.owner.VideoCard.RenderImage(BackScreenBox, 0x96, 0, 0xa0, 0xc8,
+			this.Owner.VideoCard.RenderImage(BackScreenBox, 0x96, 0, 0xa0, 0xc8,
 				ScreenBox, 0x96, 0);
 
-			this.owner.Startup.DisplayMouseCursor();
+			this.Owner.Startup.DisplayMouseCursor();
 
 			// The line: 0 - rivals the first leaders of slots 1 - rivals + 1, then the second leaders (slot + 8)
-			this.owner.World.PersonParticipantIdx = (short)this.owner.Dialogs.DisplayMenu(TextBuffer.Address, 160, 35, 1);
+			this.Owner.World.PersonParticipantIdx = (short)this.Owner.Dialogs.DisplayMenu(TextBuffer.Address, 160, 35, 1);
 
-			if (this.owner.World.PersonParticipantIdx <= this.owner.World.BotRivalTally)
+			if (this.Owner.World.PersonParticipantIdx <= this.Owner.World.BotRivalTally)
 			{
-				this.owner.World.PersonParticipantIdx++;
+				this.Owner.World.PersonParticipantIdx++;
 			}
 			else
 			{
-				this.owner.World.PersonParticipantIdx = (short)(this.owner.World.PersonParticipantIdx - this.owner.World.BotRivalTally + 8);
+				this.Owner.World.PersonParticipantIdx = (short)(this.Owner.World.PersonParticipantIdx - this.Owner.World.BotRivalTally + 8);
 			}
 
-			if (this.owner.World.HardnessTier == 0)
+			if (this.Owner.World.HardnessTier == 0)
 			{
-				this.owner.World.SessionPrefMarkers |= 1;
+				this.Owner.World.SessionPrefMarkers |= 1;
 			}
 
 			// The slot with the leader bit, made 0 - 7 only below (like the original)
-			this.owner.World.Participants[this.owner.World.PersonParticipantIdx & 7].PresentInquiryIdx = -1;
+			this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx & 7].PresentInquiryIdx = -1;
 
-			this.owner.World.FollowingCollectionRound += (short)this.owner.Libc.Dice.DrawInt(50);
+			this.Owner.World.FollowingCollectionRound += (short)this.Owner.Libc.Dice.DrawInt(50);
 
 			for (int idx = 0; idx < 0xc; idx++)
 			{
-				this.processor.EmitGlobalWord((ushort)(PalaceSectionLevelsAddress + (idx << 1)), 0xffff);
-				this.processor.EmitGlobalWord((ushort)(PalaceSectionStylesAddress + (idx << 1)), 0x0);
+				this.Processor.EmitGlobalWord((ushort)(PalaceSectionLevelsAddress + (idx << 1)), 0xffff);
+				this.Processor.EmitGlobalWord((ushort)(PalaceSectionStylesAddress + (idx << 1)), 0x0);
 			}
 
 			for (int idx = 3; idx <= 5; idx++)
 			{
-				this.processor.EmitGlobalWord((ushort)(0xd92a + (idx << 1)), 0);
-				this.processor.EmitGlobalWord((ushort)(PalaceSectionLevelsAddress + (idx << 1)), 0);
+				this.Processor.EmitGlobalWord((ushort)(0xd92a + (idx << 1)), 0);
+				this.Processor.EmitGlobalWord((ushort)(PalaceSectionLevelsAddress + (idx << 1)), 0);
 			}
 
-			bool randomTribe = this.owner.World.PersonParticipantIdx == 0;
+			bool randomTribe = this.Owner.World.PersonParticipantIdx == 0;
 			bool secondLeader = false;
 
 			if (randomTribe)
 			{
-				this.owner.World.PersonParticipantIdx = (short)(this.owner.Libc.Dice.DrawInt(this.owner.World.BotRivalTally) + 1);
+				this.Owner.World.PersonParticipantIdx = (short)(this.Owner.Libc.Dice.DrawInt(this.Owner.World.BotRivalTally) + 1);
 			}
 			else
 			{
-				secondLeader = this.owner.World.PersonParticipantIdx > 7;
-				this.owner.World.PersonParticipantIdx &= 7;
+				secondLeader = this.Owner.World.PersonParticipantIdx > 7;
+				this.Owner.World.PersonParticipantIdx &= 7;
 			}
 
-			short personIdx = this.owner.World.PersonParticipantIdx;
+			short personIdx = this.Owner.World.PersonParticipantIdx;
 			ushort names = (ushort)(personIdx << 1);
 
-			this.processor.EmitGlobalByte(CivilizationNameAt(names), 0x0);
+			this.Processor.EmitGlobalByte(CivilizationNameAt(names), 0x0);
 
 			if (randomTribe)
 			{
-				this.owner.CityNaming.DisplayCityFoundedMessage();
+				this.Owner.CityNaming.DisplayCityFoundedMessage();
 
-				this.owner.World.Participants[personIdx].ChiefVisuals = personIdx;
+				this.Owner.World.Participants[personIdx].ChiefVisuals = personIdx;
 
-				this.owner.Names.Set(LeaderNameAt(names), LeaderText(personIdx, LeaderTable.Name));
+				this.Owner.Names.Set(LeaderNameAt(names), LeaderText(personIdx, LeaderTable.Name));
 			}
 			else
 			{
-				Player person = this.owner.World.Participants[personIdx];
+				Player person = this.Owner.World.Participants[personIdx];
 
 				person.ChiefVisuals = (short)(secondLeader ? personIdx + 8 : personIdx);
 
 				ushort leader = (ushort)(0x3a * person.ChiefVisuals);
 
-				this.owner.Names.Set(LeaderNameAt(names), LeaderTextAt(leader, LeaderTable.Name));
+				this.Owner.Names.Set(LeaderNameAt(names), LeaderTextAt(leader, LeaderTable.Name));
 
-				this.owner.Names.Set(CivilizationNameAt(names), LeaderTextAt(leader, LeaderTable.Civilization));
+				this.Owner.Names.Set(CivilizationNameAt(names), LeaderTextAt(leader, LeaderTable.Civilization));
 
-				this.owner.Words.Set(LeaderTextAt(leader, LeaderTable.CivilizationPlural));
+				this.Owner.Words.Set(LeaderTextAt(leader, LeaderTable.CivilizationPlural));
 
-				if (this.owner.Words[0] == 0)
+				if (this.Owner.Words[0] == 0)
 				{
 					Message(CivilizationNameAt(names))
 						.Text("s");
 				}
 
-				this.owner.Names.Set(CivilizationPluralAt(names), this.owner.Words.ToString());
+				this.Owner.Names.Set(CivilizationPluralAt(names), this.Owner.Words.ToString());
 			}
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0(CivilizationPluralAt(names), 46, 92, Hues.White);
+			this.Owner.TextPainter.RenderCenteredTextToScreen0(CivilizationPluralAt(names), 46, 92, Hues.White);
 		}
 
 		/// <summary>
@@ -724,34 +724,34 @@ namespace Civilization1Remaster.UI
 
 				// The ruined units of the new civilization cleared (the translated code cleared player 6, the counter of an
 				// earlier loop: TurnEndRules.RuinedUnitsCleared)
-				int cleared = TurnEndRules.RuinedUnitsCleared(participantIdx, this.owner.TurnHooks.ClassicFreshGameRuins);
+				int cleared = TurnEndRules.RuinedUnitsCleared(participantIdx, this.Owner.TurnHooks.ClassicFreshGameRuins);
 
 				for (int kind = 0; kind < 8; kind++)
 				{
-					this.owner.World.Participants[cleared].TroopsRuined[kind] = 0;
+					this.Owner.World.Participants[cleared].TroopsRuined[kind] = 0;
 				}
 			}
 
 			CharacterizeStartLocation();
 
-			Player person = this.owner.World.Participants[this.owner.World.PersonParticipantIdx];
+			Player person = this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx];
 
-			this.owner.World.ParticipantMarkers = (short)(1 << this.owner.World.PersonParticipantIdx);
+			this.Owner.World.ParticipantMarkers = (short)(1 << this.Owner.World.PersonParticipantIdx);
 			person.LevyRatio = 5;
 			person.ResearchLevyRatio = 5;
 
-			if (this.owner.World.HardnessTier == 0)
+			if (this.Owner.World.HardnessTier == 0)
 			{
 				person.Gold = 50;
 			}
 
-			this.owner.World.ParticipantIdentMarkers = 0;
+			this.Owner.World.ParticipantIdentMarkers = 0;
 
 			for (int participantIdx = 0; participantIdx < 8; participantIdx++)
 			{
-				if (this.owner.World.Participants[participantIdx].ChiefVisuals >= 8)
+				if (this.Owner.World.Participants[participantIdx].ChiefVisuals >= 8)
 				{
-					this.owner.World.ParticipantIdentMarkers |= (short)(1 << participantIdx);
+					this.Owner.World.ParticipantIdentMarkers |= (short)(1 << participantIdx);
 				}
 			}
 		}
@@ -762,72 +762,72 @@ namespace Civilization1Remaster.UI
 		/// </summary>
 		private void WelcomeHumanPlayer()
 		{
-			this.owner.Startup.ConcealMouseCursor();
+			this.Owner.Startup.ConcealMouseCursor();
 
-			this.owner.Services.FloodBox(ScreenBox, 150, 0, 170, 200, Hues.Black);
+			this.Owner.Services.FloodBox(ScreenBox, 150, 0, 170, 200, Hues.Black);
 
-			this.owner.CityNaming.DisplayFoundCityMessage();
+			this.Owner.CityNaming.DisplayFoundCityMessage();
 
-			this.owner.Startup.DisplayMouseCursor();
+			this.Owner.Startup.DisplayMouseCursor();
 
 			DrawingBox.TypefaceIdx = 0x1;
 
-			ushort names = (ushort)(this.owner.World.PersonParticipantIdx << 1);
+			ushort names = (ushort)(this.Owner.World.PersonParticipantIdx << 1);
 
-			this.owner.Codes.Set(3, LeaderNameAt(names));
+			this.Owner.Codes.Set(3, LeaderNameAt(names));
 
-			this.owner.Codes.Set(0, CivilizationPluralAt(names));
+			this.Owner.Codes.Set(0, CivilizationPluralAt(names));
 
-			this.owner.Words.Clear();
+			this.Owner.Words.Clear();
 
-			this.owner.BlockText.DisplayTextDialog(GameTexts.TopicInit);
+			this.Owner.BlockText.DisplayTextDialog(GameTexts.TopicInit);
 
-			_ = this.owner.Words.Length;
+			_ = this.Owner.Words.Length;
 
 			int shown = 0;
 
 			for (short scienceIdx = 0; scienceIdx < 0x48; scienceIdx++)
 			{
-				if (this.owner.Advisors.PlayerKnowsTechnology(this.owner.World.PersonParticipantIdx, scienceIdx) == 0)
+				if (this.Owner.Advisors.PlayerKnowsTechnology(this.Owner.World.PersonParticipantIdx, scienceIdx) == 0)
 					continue;
 
-				this.owner.Words.Append(TechnologyText(scienceIdx));
+				this.Owner.Words.Append(TechnologyText(scienceIdx));
 
-				this.owner.Words.Append(", ");
+				this.Owner.Words.Append(", ");
 
 				shown++;
 
 				if (shown == 2)
 				{
-					this.owner.Words.Append("\n");
+					this.Owner.Words.Append("\n");
 				}
 			}
 
-			this.owner.Words.Append("and Roads.\n");
+			this.Owner.Words.Append("and Roads.\n");
 
-			ushort leader = (ushort)(0x3a * this.owner.World.Participants[this.owner.World.PersonParticipantIdx].ChiefVisuals);
+			ushort leader = (ushort)(0x3a * this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx].ChiefVisuals);
 
-			this.owner.Services.PerformSound(LeaderWordAt(leader, LeaderTable.Tune), 3);
+			this.Owner.Services.PerformSound(LeaderWordAt(leader, LeaderTable.Tune), 3);
 
-			this.owner.Startup.ConcealMouseCursor();
+			this.Owner.Startup.ConcealMouseCursor();
 
-			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.White);
+			this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.White);
 
-			this.owner.UnitOps.RenderBusyIndicator();
+			this.Owner.UnitOps.RenderBusyIndicator();
 
 			RenderDifficultyPortrait(0x86, 0x14);
 
-			this.owner.BlockText.RenderTextChunk(99, 88, 81, 0);
+			this.Owner.BlockText.RenderTextChunk(99, 88, 81, 0);
 
-			this.owner.Startup.DisplayMouseCursor();
+			this.Owner.Startup.DisplayMouseCursor();
 
-			this.owner.Conquest.AwaitForKeyPressOrMouseClick();
+			this.Owner.Conquest.AwaitForKeyPressOrMouseClick();
 		}
 
 		/// <summary>The work of ConstructCivilization; 0 when the civilization does not come</summary>
 		private ushort RemakeCivilization(short participantIdx)
 		{
-			Player player = this.owner.World.Participants[participantIdx];
+			Player player = this.Owner.World.Participants[participantIdx];
 
 			player.StarshipInhabitants = 0;
 			player.RunningSagaStanding = 0;
@@ -847,7 +847,7 @@ namespace Civilization1Remaster.UI
 
 				for (int otherIdx = 1; otherIdx < 8; otherIdx++)
 				{
-					foreignTowns[continentIdx] += (ushort)this.owner.World.Participants[otherIdx].Landmasses[continentIdx].TownTally;
+					foreignTowns[continentIdx] += (ushort)this.Owner.World.Participants[otherIdx].Landmasses[continentIdx].TownTally;
 				}
 			}
 
@@ -870,20 +870,20 @@ namespace Civilization1Remaster.UI
 				this.Troops.AssignAt(troop, UnitMemory.Status, 0x0);
 			}
 
-			this.processor.EmitGlobalWord((ushort)(ParticipantCountersAddress + (participantIdx << 1)), 0);
+			this.Processor.EmitGlobalWord((ushort)(ParticipantCountersAddress + (participantIdx << 1)), 0);
 			player.Tally = 0;
 
-			if (participantIdx == this.owner.World.PersonParticipantIdx)
+			if (participantIdx == this.Owner.World.PersonParticipantIdx)
 			{
-				this.owner.Services.FloodBox(PictureScreenBox, 240, 0, 80, 50, Hues.Black);
+				this.Owner.Services.FloodBox(PictureScreenBox, 240, 0, 80, 50, Hues.Black);
 			}
 
-			this.owner.Bot.WipeStrategicLocations(participantIdx);
+			this.Owner.Bot.WipeStrategicLocations(participantIdx);
 
 			for (int otherIdx = 0; otherIdx < 8; otherIdx++)
 			{
 				player.Relations[otherIdx] = 0;
-				this.owner.World.Participants[otherIdx].Relations[participantIdx] = 0;
+				this.Owner.World.Participants[otherIdx].Relations[participantIdx] = 0;
 			}
 
 			for (int idx = 0; idx < 5; idx++)
@@ -891,12 +891,12 @@ namespace Civilization1Remaster.UI
 				player.FoundScienceMarkers[idx] = 0;
 			}
 
-			if (this.owner.World.RoundTally != 0)
+			if (this.Owner.World.RoundTally != 0)
 			{
 				ShareKnownTechnologies(participantIdx);
 			}
 
-			if (participantIdx != 0 && (this.owner.World.LiveRealms & (1 << participantIdx)) != 0)
+			if (participantIdx != 0 && (this.Owner.World.LiveRealms & (1 << participantIdx)) != 0)
 			{
 				if (!SettleCivilization(participantIdx, foreignTowns))
 					return 0;
@@ -920,21 +920,21 @@ namespace Civilization1Remaster.UI
 		/// </summary>
 		private void ShareKnownTechnologies(short participantIdx)
 		{
-			short personIdx = this.owner.World.PersonParticipantIdx;
+			short personIdx = this.Owner.World.PersonParticipantIdx;
 
 			for (short scienceIdx = 0; scienceIdx < 0x48; scienceIdx++)
 			{
-				if (this.owner.Advisors.PlayerKnowsTechnology(personIdx, scienceIdx) == 0)
+				if (this.Owner.Advisors.PlayerKnowsTechnology(personIdx, scienceIdx) == 0)
 					continue;
 
-				int finder = (byte)this.owner.World.ScienceLeadingFoundVia[scienceIdx] & 7;
+				int finder = (byte)this.Owner.World.ScienceLeadingFoundVia[scienceIdx] & 7;
 
 				if (finder == 0 || finder == (ushort)personIdx)
 					continue;
 
-				if (this.owner.Libc.Dice.DrawInt(2) == 0)
+				if (this.Owner.Libc.Dice.DrawInt(2) == 0)
 				{
-					this.owner.Advisors.EarnTechnology(participantIdx, scienceIdx, participantIdx);
+					this.Owner.Advisors.EarnTechnology(participantIdx, scienceIdx, participantIdx);
 				}
 			}
 		}
@@ -945,11 +945,11 @@ namespace Civilization1Remaster.UI
 		/// </summary>
 		private bool SettleCivilization(short participantIdx, ushort[] foreignTowns)
 		{
-			Player player = this.owner.World.Participants[participantIdx];
+			Player player = this.Owner.World.Participants[participantIdx];
 
-			if (participantIdx != this.owner.World.PersonParticipantIdx)
+			if (participantIdx != this.Owner.World.PersonParticipantIdx)
 			{
-				if (this.owner.World.RoundTally == 0)
+				if (this.Owner.World.RoundTally == 0)
 				{
 					ChooseFreeLeader(participantIdx);
 				}
@@ -961,20 +961,20 @@ namespace Civilization1Remaster.UI
 
 			(short horizLoc, short vertLoc, ushort attemptTally) = ChooseStartPlace(participantIdx, foreignTowns);
 
-			if (this.owner.World.RoundTally == 0 && EarthGame != 0)
+			if (this.Owner.World.RoundTally == 0 && EarthGame != 0)
 			{
 				// EARTH: the start place of the leader
 				ushort place = (ushort)(player.ChiefVisuals << 1);
 
-				horizLoc = (sbyte)this.processor.PullGlobalByte((ushort)(place + LeaderEarthStartPositionTableAddress));
-				vertLoc = (sbyte)this.processor.PullGlobalByte((ushort)(place + LeaderEarthStartPositionTableAddress + 1));
+				horizLoc = (sbyte)this.Processor.PullGlobalByte((ushort)(place + LeaderEarthStartPositionTableAddress));
+				vertLoc = (sbyte)this.Processor.PullGlobalByte((ushort)(place + LeaderEarthStartPositionTableAddress + 1));
 				attemptTally = 0;
 			}
 
-			if (this.owner.World.RoundTally != 0)
+			if (this.Owner.World.RoundTally != 0)
 			{
 				// A new civilization must have the other leader of its slot than the one there before (identity bit)
-				bool identity = (this.owner.World.ParticipantIdentMarkers & (1 << participantIdx)) != 0;
+				bool identity = (this.Owner.World.ParticipantIdentMarkers & (1 << participantIdx)) != 0;
 
 				if (player.ChiefVisuals >= 8 && identity)
 				{
@@ -987,22 +987,22 @@ namespace Civilization1Remaster.UI
 				}
 			}
 
-			if (participantIdx != this.owner.World.PersonParticipantIdx)
+			if (participantIdx != this.Owner.World.PersonParticipantIdx)
 			{
 				player.ResearchLevyRatio = (short)(LeaderWord(player.ChiefVisuals, LeaderTable.Leaning) + 3);
 				player.LevyRatio = (short)(9 - player.ResearchLevyRatio);
 			}
 
-			ushort latestRound = (ushort)(0x15e - (0x32 * this.owner.World.HardnessTier));
+			ushort latestRound = (ushort)(0x15e - (0x32 * this.Owner.World.HardnessTier));
 
-			if ((latestRound < this.owner.World.RoundTally || attemptTally >= 0x7d0) &&
-				participantIdx != this.owner.World.PersonParticipantIdx)
+			if ((latestRound < this.Owner.World.RoundTally || attemptTally >= 0x7d0) &&
+				participantIdx != this.Owner.World.PersonParticipantIdx)
 			{
 				// It does not come: the other leader back, the player dead
 				player.ChiefVisuals ^= 8;
-				this.owner.World.LiveRealms &= (short)~(1 << participantIdx);
+				this.Owner.World.LiveRealms &= (short)~(1 << participantIdx);
 
-				if ((ushort)((1 << this.owner.World.PersonParticipantIdx) | 1) == (ushort)this.owner.World.LiveRealms)
+				if ((ushort)((1 << this.Owner.World.PersonParticipantIdx) | 1) == (ushort)this.Owner.World.LiveRealms)
 				{
 					GameEndRequest = 1;
 					ConquestEnd = 1;
@@ -1013,9 +1013,9 @@ namespace Civilization1Remaster.UI
 
 			NameCivilization(participantIdx);
 
-			this.owner.MapOps.MapAssignCityOwner(participantIdx, horizLoc, vertLoc);
+			this.Owner.MapOps.MapAssignCityOwner(participantIdx, horizLoc, vertLoc);
 
-			this.owner.UnitOps.ConstructUnit(participantIdx, 0, horizLoc, vertLoc);
+			this.Owner.UnitOps.ConstructUnit(participantIdx, 0, horizLoc, vertLoc);
 
 			player.HorizBegin = horizLoc;
 
@@ -1027,12 +1027,12 @@ namespace Civilization1Remaster.UI
 				if (this.Troops.PullAt(troop, UnitMemory.Kind) == 0xff)
 					continue;
 
-				short distance = (short)this.owner.Helpers.ObtainDistance(horizLoc, (sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz),
+				short distance = (short)this.Owner.Helpers.ObtainDistance(horizLoc, (sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz),
 					vertLoc, (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert));
 
 				if (distance <= 8)
 				{
-					this.owner.UnitOps.EliminateUnit(0, troopIdx);
+					this.Owner.UnitOps.EliminateUnit(0, troopIdx);
 				}
 			}
 
@@ -1044,18 +1044,18 @@ namespace Civilization1Remaster.UI
 		/// </summary>
 		private void ChooseFreeLeader(short participantIdx)
 		{
-			Player player = this.owner.World.Participants[participantIdx];
+			Player player = this.Owner.World.Participants[participantIdx];
 			bool free;
 
 			do
 			{
-				player.ChiefVisuals = (short)this.owner.Libc.Dice.DrawInt(16);
+				player.ChiefVisuals = (short)this.Owner.Libc.Dice.DrawInt(16);
 
 				free = (player.ChiefVisuals & 7) == participantIdx;
 
 				for (int otherIdx = 0; otherIdx < 8; otherIdx++)
 				{
-					if (otherIdx != participantIdx && this.owner.World.Participants[otherIdx].ChiefVisuals == player.ChiefVisuals)
+					if (otherIdx != participantIdx && this.Owner.World.Participants[otherIdx].ChiefVisuals == player.ChiefVisuals)
 					{
 						free = false;
 					}
@@ -1077,20 +1077,20 @@ namespace Civilization1Remaster.UI
 
 			while (true)
 			{
-				short horizLoc = (short)(this.owner.Libc.Dice.DrawInt(64) + 8);
-				short vertLoc = (short)(this.owner.Libc.Dice.DrawInt(34) + 8);
+				short horizLoc = (short)(this.Owner.Libc.Dice.DrawInt(64) + 8);
+				short vertLoc = (short)(this.Owner.Libc.Dice.DrawInt(34) + 8);
 
-				ushort townIdx = this.owner.Helpers.LocateNearestCity(horizLoc, vertLoc);
-				short nearest = townIdx == 0xffff ? (short)0x1e : (short)this.owner.Helpers.ObtainDistance(horizLoc,
-					this.owner.World.Towns[townIdx].Place.X, vertLoc, this.owner.World.Towns[townIdx].Place.Y);
+				ushort townIdx = this.Owner.Helpers.LocateNearestCity(horizLoc, vertLoc);
+				short nearest = townIdx == 0xffff ? (short)0x1e : (short)this.Owner.Helpers.ObtainDistance(horizLoc,
+					this.Owner.World.Towns[townIdx].Place.X, vertLoc, this.Owner.World.Towns[townIdx].Place.Y);
 
-				if (this.owner.World.RoundTally == 0)
+				if (this.Owner.World.RoundTally == 0)
 				{
 					for (int otherIdx = 1; otherIdx < participantIdx; otherIdx++)
 					{
 						ushort troop = (ushort)(0x600 * otherIdx);
 
-						short distance = (short)this.owner.Helpers.ObtainDistance(horizLoc, (sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz),
+						short distance = (short)this.Owner.Helpers.ObtainDistance(horizLoc, (sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz),
 							vertLoc, (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert));
 
 						if (distance < nearest)
@@ -1100,17 +1100,17 @@ namespace Civilization1Remaster.UI
 					}
 				}
 
-				short landValue = (short)this.owner.VideoCard.ObtainDot(2, horizLoc + 0x50, vertLoc);
+				short landValue = (short)this.Owner.VideoCard.ObtainDot(2, horizLoc + 0x50, vertLoc);
 
 				attemptTally++;
 
 				if ((short)attemptTally > 0x7d0 &&
-					(participantIdx != this.owner.World.PersonParticipantIdx || this.owner.World.RoundTally != 0))
+					(participantIdx != this.Owner.World.PersonParticipantIdx || this.Owner.World.RoundTally != 0))
 				{
 					return (horizLoc, vertLoc, attemptTally);
 				}
 
-				if (this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) == MapRules.OceanTerrain)
+				if (this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) == MapRules.OceanTerrain)
 					continue;
 
 				if ((short)(0xc - ((short)attemptTally / 32)) > landValue)
@@ -1121,16 +1121,16 @@ namespace Civilization1Remaster.UI
 				if (nearest < (short)(0xa - relief))
 					continue;
 
-				ushort continentIdx = this.owner.MapOps.ObtainContinentID(horizLoc, vertLoc);
-				short siteDemand = (short)(0x20 - (this.owner.World.RoundTally / 16) - relief);
+				ushort continentIdx = this.Owner.MapOps.ObtainContinentID(horizLoc, vertLoc);
+				short siteDemand = (short)(0x20 - (this.Owner.World.RoundTally / 16) - relief);
 
-				if (this.owner.World.Landmasses[continentIdx].ConstructionSpotTally < siteDemand)
+				if (this.Owner.World.Landmasses[continentIdx].ConstructionSpotTally < siteDemand)
 					continue;
 
-				if (this.owner.World.Season > 0 && foreignTowns[this.owner.MapOps.ObtainContinentID(horizLoc, vertLoc)] != 0)
+				if (this.Owner.World.Season > 0 && foreignTowns[this.Owner.MapOps.ObtainContinentID(horizLoc, vertLoc)] != 0)
 					continue;
 
-				if (this.owner.MapOps.ContainsHut(this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc), horizLoc, vertLoc) != 0)
+				if (this.Owner.MapOps.ContainsHut(this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc), horizLoc, vertLoc) != 0)
 					continue;
 
 				return (horizLoc, vertLoc, attemptTally);
@@ -1143,26 +1143,26 @@ namespace Civilization1Remaster.UI
 		/// </summary>
 		private void NameCivilization(short participantIdx)
 		{
-			ushort leader = (ushort)(0x3a * this.owner.World.Participants[participantIdx].ChiefVisuals);
+			ushort leader = (ushort)(0x3a * this.Owner.World.Participants[participantIdx].ChiefVisuals);
 			ushort names = (ushort)(participantIdx << 1);
 
-			this.owner.Names.Set(LeaderNameAt(names), LeaderTextAt(leader, LeaderTable.Name));
+			this.Owner.Names.Set(LeaderNameAt(names), LeaderTextAt(leader, LeaderTable.Name));
 
-			if (participantIdx == this.owner.World.PersonParticipantIdx &&
-				this.processor.PullGlobalByte(CivilizationNameAt(names)) != 0)
+			if (participantIdx == this.Owner.World.PersonParticipantIdx &&
+				this.Processor.PullGlobalByte(CivilizationNameAt(names)) != 0)
 				return;
 
-			this.owner.Names.Set(CivilizationNameAt(names), LeaderTextAt(leader, LeaderTable.Civilization));
+			this.Owner.Names.Set(CivilizationNameAt(names), LeaderTextAt(leader, LeaderTable.Civilization));
 
-			this.owner.Words.Set(LeaderTextAt(leader, LeaderTable.CivilizationPlural));
+			this.Owner.Words.Set(LeaderTextAt(leader, LeaderTable.CivilizationPlural));
 
-			if (this.owner.Words[0] == 0)
+			if (this.Owner.Words[0] == 0)
 			{
 				Message(CivilizationNameAt(names))
 					.Text("s");
 			}
 
-			this.owner.Names.Set(CivilizationPluralAt(names), this.owner.Words.ToString());
+			this.Owner.Names.Set(CivilizationPluralAt(names), this.Owner.Words.ToString());
 		}
 
 		/// <summary>True when one of the 128 cities belongs to the player</summary>
@@ -1170,7 +1170,7 @@ namespace Civilization1Remaster.UI
 		{
 			for (int townIdx = 0; townIdx < 0x80; townIdx++)
 			{
-				if (this.owner.World.Towns[townIdx].ConditionMarker != 0xff && this.owner.World.Towns[townIdx].ParticipantIdx == participantIdx)
+				if (this.Owner.World.Towns[townIdx].ConditionMarker != 0xff && this.Owner.World.Towns[townIdx].ParticipantIdx == participantIdx)
 					return true;
 			}
 
@@ -1197,12 +1197,12 @@ namespace Civilization1Remaster.UI
 				if (this.Troops.PullAt(other, UnitMemory.Kind) == 0xff)
 					continue;
 
-				ushort otherContinent = this.owner.MapOps.ObtainContinentID((sbyte)this.Troops.PullAt(other, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(other, UnitMemory.Vert));
+				ushort otherContinent = this.Owner.MapOps.ObtainContinentID((sbyte)this.Troops.PullAt(other, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(other, UnitMemory.Vert));
 
-				if (this.owner.MapOps.ObtainContinentID((sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert)) != otherContinent)
+				if (this.Owner.MapOps.ObtainContinentID((sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert)) != otherContinent)
 					continue;
 
-				short distance = (short)(ushort)this.owner.Helpers.ObtainDistance(
+				short distance = (short)(ushort)this.Owner.Helpers.ObtainDistance(
 					(sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(other, UnitMemory.Horiz),
 					(sbyte)this.Troops.PullAt(troop, UnitMemory.Vert), (sbyte)this.Troops.PullAt(other, UnitMemory.Vert));
 
@@ -1221,25 +1221,25 @@ namespace Civilization1Remaster.UI
 		{
 			short start = 0;
 
-			this.owner.Words.Set("Nearest civilization: ");
+			this.Owner.Words.Set("Nearest civilization: ");
 
 			if (nearest < 10)
 			{
-				this.owner.Words.Append("close");
+				this.Owner.Words.Append("close");
 			}
 			else if (nearest < 0x14)
 			{
-				this.owner.Words.Append("moderate");
+				this.Owner.Words.Append("moderate");
 				start++;
 			}
 			else if (nearest != 0x3e7)
 			{
-				this.owner.Words.Append("far away");
+				this.Owner.Words.Append("far away");
 				start += 2;
 			}
 			else
 			{
-				this.owner.Words.Append("isolated");
+				this.Owner.Words.Append("isolated");
 				start += 4;
 			}
 
@@ -1248,7 +1248,7 @@ namespace Civilization1Remaster.UI
 
 			for (neighbourIdx = 0; neighbourIdx <= 8; neighbourIdx++)
 			{
-				ushort terrain = this.owner.MapOps.ObtainTerrainType(
+				ushort terrain = this.Owner.MapOps.ObtainTerrainType(
 					(sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz) + (short)DirectionHoriz(neighbourIdx),
 					(sbyte)this.Troops.PullAt(troop, UnitMemory.Vert) + (short)DirectionVert(neighbourIdx));
 
@@ -1264,45 +1264,45 @@ namespace Civilization1Remaster.UI
 			}
 
 
-			this.owner.Words.Set(ocean != 0 ? (ushort)0x3653 : (ushort)0x365c);
+			this.Owner.Words.Set(ocean != 0 ? (ushort)0x3653 : (ushort)0x365c);
 
 			if ((short)river > 1)
 			{
-				this.owner.Words.Append("river valley on a ");
+				this.Owner.Words.Append("river valley on a ");
 				start += 2;
 			}
 			else if ((short)grassland >= 3)
 			{
-				this.owner.Words.Append("grasslands on a ");
+				this.Owner.Words.Append("grasslands on a ");
 				start++;
 			}
 			else
 			{
-				this.owner.Words.Append("plains on a ");
+				this.Owner.Words.Append("plains on a ");
 			}
 
-			switch (CPU.SignedQuotient((short)this.owner.MapOps.ObtainLandMassSize((sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert)), 0x32))
+			switch (CPU.SignedQuotient((short)this.Owner.MapOps.ObtainLandMassSize((sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert)), 0x32))
 			{
 				case 0:
-					this.owner.Words.Append(0x3695);
+					this.Owner.Words.Append(0x3695);
 					break;
 
 				case 1:
-					this.owner.Words.Append(0x36a3);
+					this.Owner.Words.Append(0x36a3);
 					break;
 
 				case 2:
-					this.owner.Words.Append(0x36b1);
+					this.Owner.Words.Append(0x36b1);
 					start++;
 					break;
 
 				case 3:
-					this.owner.Words.Append(0x36c2);
+					this.Owner.Words.Append(0x36c2);
 					start++;
 					break;
 
 				default:
-					this.owner.Words.Append("large continent.");
+					this.Owner.Words.Append("large continent.");
 					start += 2;
 					break;
 			}
@@ -1316,9 +1316,9 @@ namespace Civilization1Remaster.UI
 		/// </summary>
 		private void StorePicture(ushort tableAddr, int idx, ushort displayIdx, ushort horizLoc, ushort vertLoc, ushort breadth, ushort altitude)
 		{
-			ushort picture = this.owner.VideoCard.ScreenToPicture(displayIdx, horizLoc, vertLoc, breadth, altitude);
+			ushort picture = this.Owner.VideoCard.ScreenToPicture(displayIdx, horizLoc, vertLoc, breadth, altitude);
 
-			this.processor.EmitGlobalWord((ushort)(tableAddr + (idx << 1)), picture);
+			this.Processor.EmitGlobalWord((ushort)(tableAddr + (idx << 1)), picture);
 		}
 
 		/// <summary>
@@ -1327,7 +1327,7 @@ namespace Civilization1Remaster.UI
 		/// </summary>
 		private void CutVgaUnitSprites()
 		{
-			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, GameTexts.FileTer257Pic, 0);
+			this.Owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, GameTexts.FileTer257Pic, 0);
 
 			for (int row = 0; row < 0xa; row++)
 			{
@@ -1338,12 +1338,12 @@ namespace Civilization1Remaster.UI
 					// Rows 6 - 9 (and all rows with 0x1a3e) have one sprite, repeated in every column
 					if ((row >= 6 || LowMemoryVga != 0) && column != 0)
 					{
-						this.processor.EmitGlobalWord(entry, this.processor.PullGlobalWord((ushort)(entry - 2)));
+						this.Processor.EmitGlobalWord(entry, this.Processor.PullGlobalWord((ushort)(entry - 2)));
 					}
 					else
 					{
-						this.processor.EmitGlobalWord(entry,
-							this.owner.VideoCard.ScreenToPicture(1, (ushort)(column << 4), (ushort)(row << 4), 0x10, 0x10));
+						this.Processor.EmitGlobalWord(entry,
+							this.Owner.VideoCard.ScreenToPicture(1, (ushort)(column << 4), (ushort)(row << 4), 0x10, 0x10));
 					}
 				}
 			}
@@ -1374,9 +1374,9 @@ namespace Civilization1Remaster.UI
 		/// </summary>
 		private void CutEgaUnitSprites()
 		{
-			this.owner.ImageToolkit.ImportPictureOrColors(3, 0, 0, GameTexts.FileSpritesPicB, 1);
+			this.Owner.ImageToolkit.ImportPictureOrColors(3, 0, 0, GameTexts.FileSpritesPicB, 1);
 
-			this.owner.VideoCard.RenderImage(SpriteScreenBox, 0, 0, 0x140, 0xc8,
+			this.Owner.VideoCard.RenderImage(SpriteScreenBox, 0, 0, 0x140, 0xc8,
 				BackScreenBox, 0, 0);
 
 			for (int idx = 0; idx < 0xc; idx++)
@@ -1393,7 +1393,7 @@ namespace Civilization1Remaster.UI
 		/// </summary>
 		private void CutPlayerCitySprites(int playerIdx)
 		{
-			this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0xa0, 0x140, 0x20,
+			this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0xa0, 0x140, 0x20,
 				BackScreenBox, 0, 0x80);
 
 			ushort colours = (ushort)(playerIdx << 1);
@@ -1402,18 +1402,18 @@ namespace Civilization1Remaster.UI
 
 			if (primaryColour == 0xf)
 			{
-				this.owner.VideoCard.SubstituteHue(BackScreenBox, 0, 128, 320, 32, Hues.White, Hues.LightCyan);
+				this.Owner.VideoCard.SubstituteHue(BackScreenBox, 0, 128, 320, 32, Hues.White, Hues.LightCyan);
 			}
 
 			if (primaryColour == 0x7)
 			{
-				this.owner.VideoCard.SubstituteHue(BackScreenBox, 0, 128, 320, 32, Hues.LightGray, Hues.Cyan);
+				this.Owner.VideoCard.SubstituteHue(BackScreenBox, 0, 128, 320, 32, Hues.LightGray, Hues.Cyan);
 			}
 
-			this.owner.VideoCard.SubstituteHue(BackScreenBox, 0, 128, 320, 32, Hues.LightGreen,
+			this.Owner.VideoCard.SubstituteHue(BackScreenBox, 0, 128, 320, 32, Hues.LightGreen,
 				(byte)primaryColour);
 
-			this.owner.VideoCard.SubstituteHue(BackScreenBox, 0, 128, 320, 32, Hues.Green,
+			this.Owner.VideoCard.SubstituteHue(BackScreenBox, 0, 128, 320, 32, Hues.Green,
 				(byte)secondaryColour);
 
 			for (int idx = 0; idx < 0x1c; idx++)

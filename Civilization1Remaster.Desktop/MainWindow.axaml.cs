@@ -23,8 +23,8 @@ public partial class MainWindow : Window, IGameHost
 
 	private GameEngine? session;
 	private Thread? sessionWorker;
-	private WriteableBitmap? writeableBitmap;
-	private DispatcherTimer? renderTimer;
+	private readonly WriteableBitmap? writeableBitmap;
+	private readonly DispatcherTimer? renderTimer;
 	private int currentScale = 4;
 	private System.Drawing.Point pointerSite = System.Drawing.Point.Empty;
 	private PointerButtons pointerClicks = PointerButtons.None;

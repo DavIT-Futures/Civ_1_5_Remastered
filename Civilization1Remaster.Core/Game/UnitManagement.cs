@@ -47,11 +47,11 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public void ConstructUnitsFromCityList(short townIdx)
 		{
-			this.processor.Journal.OpenScope($"ConstructUnitsFromCityList({townIdx})");
+			this.Processor.Journal.OpenScope($"ConstructUnitsFromCityList({townIdx})");
 
-			City town = this.owner.World.Towns[townIdx];
+			City town = this.Owner.World.Towns[townIdx];
 
-			if (town.ParticipantIdx == this.owner.World.PersonParticipantIdx)
+			if (town.ParticipantIdx == this.Owner.World.PersonParticipantIdx)
 			{
 				QuietUnitSetup = 0x1;
 
@@ -80,7 +80,7 @@ namespace Civilization1Remaster.Game
 				town.ConditionMarker |= KeptUnitsCondition;
 			}
 
-			this.processor.Journal.CloseScope("ConstructUnitsFromCityList");
+			this.Processor.Journal.CloseScope("ConstructUnitsFromCityList");
 		}
 
 		/// <summary>
@@ -90,12 +90,12 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public void KeepUnitsInCityList(short townIdx)
 		{
-			this.processor.Journal.OpenScope($"KeepUnitsInCityList({townIdx})");
+			this.Processor.Journal.OpenScope($"KeepUnitsInCityList({townIdx})");
 
-			City town = this.owner.World.Towns[townIdx];
+			City town = this.Owner.World.Towns[townIdx];
 			short participantIdx = town.ParticipantIdx;
 
-			if (participantIdx == this.owner.World.PersonParticipantIdx)
+			if (participantIdx == this.Owner.World.PersonParticipantIdx)
 			{
 				ushort countLosses = CountLosses;
 				CountLosses = 0;
@@ -132,7 +132,7 @@ namespace Civilization1Remaster.Game
 				town.ConditionMarker &= unchecked((byte)~KeptUnitsCondition);
 			}
 
-			this.processor.Journal.CloseScope("KeepUnitsInCityList");
+			this.Processor.Journal.CloseScope("KeepUnitsInCityList");
 		}
 
 		/// <summary>
@@ -143,17 +143,17 @@ namespace Civilization1Remaster.Game
 		/// <param name="marker">Not 0: repaint the tiles around when the human player watches</param>
 		public void ShiftUnit(int horizLoc, int vertLoc, short participantIdx, short troopIdx, ushort marker)
 		{
-			this.processor.Journal.OpenScope($"ShiftUnit({horizLoc}, {vertLoc}, {participantIdx}, {troopIdx}, {marker})");
+			this.Processor.Journal.OpenScope($"ShiftUnit({horizLoc}, {vertLoc}, {participantIdx}, {troopIdx}, {marker})");
 
 
-			int startTerrain = this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
+			int startTerrain = this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
 
-			if (participantIdx == this.owner.World.PersonParticipantIdx)
+			if (participantIdx == this.Owner.World.PersonParticipantIdx)
 			{
 				RevealSurroundings(participantIdx, troopIdx, horizLoc, vertLoc);
 			}
 
-			int startImprovements = this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc);
+			int startImprovements = this.Owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc);
 			bool repaint = marker != 0;
 
 			for (int heading = 1; heading < 9; heading++)
@@ -167,25 +167,25 @@ namespace Civilization1Remaster.Game
 			}
 
 
-			if (participantIdx == this.owner.World.PersonParticipantIdx && repaint)
+			if (participantIdx == this.Owner.World.PersonParticipantIdx && repaint)
 			{
-				this.owner.MapOps.RepaintMapTile(horizLoc, vertLoc);
+				this.Owner.MapOps.RepaintMapTile(horizLoc, vertLoc);
 
 				for (int heading = 9; heading < 49; heading++)
 				{
 					int ringHoriz = RingHoriz(heading, horizLoc);
 					int ringVert = RingVert(heading, vertLoc);
 
-					if (this.owner.MapOps.VerifyMapLimits(ringHoriz, ringVert) != 0 && Sees(participantIdx, ringHoriz, ringVert))
+					if (this.Owner.MapOps.VerifyMapLimits(ringHoriz, ringVert) != 0 && Sees(participantIdx, ringHoriz, ringVert))
 					{
-						this.owner.MapOps.RepaintMapTile(ringHoriz, ringVert);
+						this.Owner.MapOps.RepaintMapTile(ringHoriz, ringVert);
 					}
 				}
 
 			}
 
 
-			this.processor.Journal.CloseScope("ShiftUnit");
+			this.Processor.Journal.CloseScope("ShiftUnit");
 		}
 
 		/// <summary>
@@ -196,7 +196,7 @@ namespace Civilization1Remaster.Game
 		/// <param name="cursorVert">Map position of the cursor frame</param>
 		public void ChoreographUnitMove(short participantIdx, short troopIdx, ushort cursorHoriz, ushort cursorVert)
 		{
-			this.processor.Journal.OpenScope($"ChoreographUnitMove({participantIdx}, {troopIdx}, {cursorHoriz}, {cursorVert})");
+			this.Processor.Journal.OpenScope($"ChoreographUnitMove({participantIdx}, {troopIdx}, {cursorHoriz}, {cursorVert})");
 
 			// Screen position of the cursor frame, -1 when there is none or it is outside the map view
 			short frameHoriz = -1;
@@ -204,7 +204,7 @@ namespace Civilization1Remaster.Game
 
 			if (cursorHoriz != 0xffff)
 			{
-				frameHoriz = (short)((this.owner.Routing.TunePosition((short)cursorHoriz - (short)MapViewHoriz) << 4) + 0x50);
+				frameHoriz = (short)((this.Owner.Routing.TunePosition((short)cursorHoriz - (short)MapViewHoriz) << 4) + 0x50);
 				frameVert = (short)(((cursorVert - MapViewVert) << 4) + 0x8);
 
 				if (frameHoriz < 0x50 || frameHoriz >= 0x140 || frameVert < 0x8 || frameVert > 0xc0)
@@ -213,7 +213,7 @@ namespace Civilization1Remaster.Game
 
 			// Position of the unit on the world map (top left corner of the screen)
 			short worldMapTop = (short)MapFocusTop;
-			short dotHoriz = (short)this.owner.Routing.TunePosition(
+			short dotHoriz = (short)this.Owner.Routing.TunePosition(
 				this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz) - (short)MapFocusLeft);
 			int unitVert = troopIdx < 127 ? this.troops.Pull(participantIdx, troopIdx, UnitMemory.Vert) : 0xff;
 			short dotVert = (short)(unitVert - worldMapTop);
@@ -222,64 +222,64 @@ namespace Civilization1Remaster.Game
 			do
 			{
 				// Hidden phase
-				this.owner.Startup.ConcealMouseCursor();
+				this.Owner.Startup.ConcealMouseCursor();
 
 				if (troopIdx >= UnitMemory.TroopTally)
 				{
-					this.owner.TextPainter.RenderTextToScreen0(GameTexts.TextEndOfTurnB, 4, 124, Hues.LightGray);
+					this.Owner.TextPainter.RenderTextToScreen0(GameTexts.TextEndOfTurnB, 4, 124, Hues.LightGray);
 				}
 				else
 				{
-					this.owner.MapOps.RenderMapTile(
+					this.Owner.MapOps.RenderMapTile(
 						this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
 						this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert));
 
 					if (dotVisible)
 					{
-						this.owner.Services.AssignDot(dotHoriz, dotVert + 8, 15);
+						this.Owner.Services.AssignDot(dotHoriz, dotVert + 8, 15);
 					}
 				}
 
 				if (frameHoriz != -1)
 				{
-					this.owner.Dialogs.RenderBox(frameHoriz, frameVert, 15, 15, Hues.White);
+					this.Owner.Dialogs.RenderBox(frameHoriz, frameVert, 15, 15, Hues.White);
 				}
 
 				AwaitBlink();
 
 				// Shown phase
-				this.owner.Startup.ConcealMouseCursor();
+				this.Owner.Startup.ConcealMouseCursor();
 
 				if (troopIdx >= UnitMemory.TroopTally)
 				{
-					this.owner.TextPainter.RenderTextToScreen0(GameTexts.TextEndOfTurnC, 4, 124, Hues.Black);
+					this.Owner.TextPainter.RenderTextToScreen0(GameTexts.TextEndOfTurnC, 4, 124, Hues.Black);
 				}
 				else
 				{
-					this.owner.MapOps.RenderUnitOnWorldMap(participantIdx, troopIdx);
+					this.Owner.MapOps.RenderUnitOnWorldMap(participantIdx, troopIdx);
 
 					if (dotVisible)
 					{
-						ushort dotColour = this.owner.MapOps.ObtainTerrainType(
+						ushort dotColour = this.Owner.MapOps.ObtainTerrainType(
 							this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
 							this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert)) == MapRules.OceanTerrain ? (ushort)1 : (ushort)2;
 
-						this.owner.Services.AssignDot(dotHoriz, dotVert + 8, dotColour);
+						this.Owner.Services.AssignDot(dotHoriz, dotVert + 8, dotColour);
 					}
 				}
 
 				if (frameHoriz != -1)
 				{
-					this.owner.Dialogs.RenderBox(frameHoriz, frameVert, 15, 15, Hues.Black);
+					this.Owner.Dialogs.RenderBox(frameHoriz, frameVert, 15, 15, Hues.Black);
 				}
 
 				AwaitBlink();
 
-				this.owner.Startup.ObtainMouseState();
+				this.Owner.Startup.ObtainMouseState();
 			}
-			while (this.owner.Libc.KeyAvailable() == 0 && this.owner.GlobDb3a == 0);
+			while (this.Owner.Libc.KeyAvailable() == 0 && this.Owner.GlobDb3a == 0);
 
-			this.processor.Journal.CloseScope("ChoreographUnitMove");
+			this.Processor.Journal.CloseScope("ChoreographUnitMove");
 		}
 
 		/// <summary>
@@ -290,7 +290,7 @@ namespace Civilization1Remaster.Game
 		/// <returns>Index of the new unit, or 0xffff</returns>
 		public ushort ConstructUnit(short participantIdx, short kind, int horizLoc, int vertLoc)
 		{
-			this.processor.Journal.OpenScope($"ConstructUnit({participantIdx}, {kind}, {horizLoc}, {vertLoc})");
+			this.Processor.Journal.OpenScope($"ConstructUnit({participantIdx}, {kind}, {horizLoc}, {vertLoc})");
 
 			short troopIdx = -1;
 
@@ -307,14 +307,14 @@ namespace Civilization1Remaster.Game
 
 			if (troopIdx == -1)
 			{
-				if (participantIdx == this.owner.World.PersonParticipantIdx && UnitLimitTold == 0)
+				if (participantIdx == this.Owner.World.PersonParticipantIdx && UnitLimitTold == 0)
 				{
 					DialogStyle = 0x3;
-					this.owner.Words.Clear();
+					this.Owner.Words.Clear();
 
-					this.owner.BlockText.DisplayTextDialog(GameTexts.TopicUmax);
+					this.Owner.BlockText.DisplayTextDialog(GameTexts.TopicUmax);
 
-					this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 80, 64);
+					this.Owner.TurnHooks.DisplayDialog(TextBuffer.Address, 80, 64);
 
 					UnitLimitTold = 0x1;
 				}
@@ -329,7 +329,7 @@ namespace Civilization1Remaster.Game
 			}
 
 
-			this.processor.Journal.CloseScope("ConstructUnit");
+			this.Processor.Journal.CloseScope("ConstructUnit");
 
 			return result;
 		}
@@ -340,16 +340,16 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public void EliminateUnit(short participantIdx, short troopIdx)
 		{
-			this.processor.Journal.OpenScope($"EliminateUnit({participantIdx}, {troopIdx})");
+			this.Processor.Journal.OpenScope($"EliminateUnit({participantIdx}, {troopIdx})");
 
 			if (CountLosses != 0)
 			{
 				// Losses are counted (the kind as an unsigned word: an empty record, -1, is not counted)
 				ushort lostKind = (ushort)this.troops.TroopKind(participantIdx, troopIdx);
 
-				if (lostKind < this.owner.World.Participants[participantIdx].MissingTroops.Length)
+				if (lostKind < this.Owner.World.Participants[participantIdx].MissingTroops.Length)
 				{
-					this.owner.World.Participants[participantIdx].MissingTroops[lostKind]++;
+					this.Owner.World.Participants[participantIdx].MissingTroops[lostKind]++;
 				}
 			}
 
@@ -369,8 +369,8 @@ namespace Civilization1Remaster.Game
 
 			sbyte kind = this.troops.TroopKind(participantIdx, troopIdx);
 
-			if (kind >= 0 && kind < this.owner.World.Participants[participantIdx].LiveTroops.Length)
-				this.owner.World.Participants[participantIdx].LiveTroops[kind]--;
+			if (kind >= 0 && kind < this.Owner.World.Participants[participantIdx].LiveTroops.Length)
+				this.Owner.World.Participants[participantIdx].LiveTroops[kind]--;
 
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Kind, 0xff);
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.LeftoverSteps, 0);
@@ -378,18 +378,18 @@ namespace Civilization1Remaster.Game
 			int horizLoc = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz);
 			int vertLoc = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert);
 
-			this.owner.MapOps.DiscardUnitFromTile(participantIdx, troopIdx, horizLoc, vertLoc);
+			this.Owner.MapOps.DiscardUnitFromTile(participantIdx, troopIdx, horizLoc, vertLoc);
 
 			if (QuietUnitSetup == 0 && KingMood == 0xffff &&
-				(MapRevealed != 0 || participantIdx == this.owner.World.PersonParticipantIdx ||
-				(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.ShownToParticipants) & (ushort)(1 << this.owner.World.PersonParticipantIdx)) != 0))
+				(MapRevealed != 0 || participantIdx == this.Owner.World.PersonParticipantIdx ||
+				(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.ShownToParticipants) & (ushort)(1 << this.Owner.World.PersonParticipantIdx)) != 0))
 			{
-				this.owner.MapOps.RepaintMapTile(
+				this.Owner.MapOps.RepaintMapTile(
 					this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
 					this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert));
 			}
 
-			this.processor.Journal.CloseScope("EliminateUnit");
+			this.Processor.Journal.CloseScope("EliminateUnit");
 		}
 
 		/// <summary>
@@ -399,7 +399,7 @@ namespace Civilization1Remaster.Game
 		/// <returns>Unit index</returns>
 		public ushort LocateStackLeader(short participantIdx, short troopIdx)
 		{
-			this.processor.Journal.OpenScope($"LocateStackLeader({participantIdx}, {troopIdx})");
+			this.Processor.Journal.OpenScope($"LocateStackLeader({participantIdx}, {troopIdx})");
 
 			ushort leader = (ushort)troopIdx;
 
@@ -423,7 +423,7 @@ namespace Civilization1Remaster.Game
 			}
 
 
-			this.processor.Journal.CloseScope("LocateStackLeader");
+			this.Processor.Journal.CloseScope("LocateStackLeader");
 
 			return leader;
 		}
@@ -434,7 +434,7 @@ namespace Civilization1Remaster.Game
 		/// <returns>Unit index</returns>
 		public ushort LocateBestGuardianInStack(short participantIdx, short troopIdx)
 		{
-			this.processor.Journal.OpenScope($"LocateBestGuardianInStack({participantIdx}, {troopIdx})");
+			this.Processor.Journal.OpenScope($"LocateBestGuardianInStack({participantIdx}, {troopIdx})");
 
 			ushort guardian = (ushort)troopIdx;
 
@@ -449,7 +449,7 @@ namespace Civilization1Remaster.Game
 			}
 
 
-			this.processor.Journal.CloseScope("LocateBestGuardianInStack");
+			this.Processor.Journal.CloseScope("LocateBestGuardianInStack");
 
 			return guardian;
 		}
@@ -460,17 +460,17 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public void LocateBestGuardianStep(short participantIdx, short troopIdx)
 		{
-			this.processor.Journal.OpenScope($"LocateBestGuardianStep({participantIdx}, {troopIdx})");
+			this.Processor.Journal.OpenScope($"LocateBestGuardianStep({participantIdx}, {troopIdx})");
 
 			// Extract unit parameters
 			int unitKind = this.Troops.PullSigned(participantIdx, troopIdx, UnitMemory.Kind);
 			int horiz = this.Troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz);
 			int vert = this.Troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert);
-			int terrainType = this.owner.MapOps.ObtainTerrainType(horiz, vert);
+			int terrainType = this.Owner.MapOps.ObtainTerrainType(horiz, vert);
 
 			int landGroup = (short)UnitKindWord(unitKind, UnitKindTable.LandGroup);
 			int baseGuardPower = (short)UnitKindWord(unitKind, UnitKindTable.GuardPower);
-			int terrainDefenseFactor = (sbyte)this.owner.Tables.Byte((ushort)(TerrainTable.Stride * terrainType + TerrainTable.Origin + TerrainTable.DefenseBonus));
+			int terrainDefenseFactor = (sbyte)this.Owner.Tables.Byte((ushort)(TerrainTable.Stride * terrainType + TerrainTable.Origin + TerrainTable.DefenseBonus));
 
 			byte condition = this.Troops.Pull(participantIdx, troopIdx, UnitMemory.Status);
 			bool isFortified = (condition & 0x8) != 0;
@@ -489,7 +489,7 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			this.processor.Journal.CloseScope("LocateBestGuardianStep");
+			this.Processor.Journal.CloseScope("LocateBestGuardianStep");
 		}
 
 		/// <summary>
@@ -499,7 +499,7 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public ushort TallyUnitsByDomainInStack(short participantIdx, short troopIdx, ushort mode)
 		{
-			this.processor.Journal.OpenScope($"TallyUnitsByDomainInStack({participantIdx}, {troopIdx}, {mode})");
+			this.Processor.Journal.OpenScope($"TallyUnitsByDomainInStack({participantIdx}, {troopIdx}, {mode})");
 
 			StackDomainTally = 0x0;
 			StackDomainMode = mode;
@@ -509,7 +509,7 @@ namespace Civilization1Remaster.Game
 
 			ushort result = StackDomainTally;
 
-			this.processor.Journal.CloseScope("TallyUnitsByDomainInStack");
+			this.Processor.Journal.CloseScope("TallyUnitsByDomainInStack");
 
 			return result;
 		}
@@ -520,7 +520,7 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public void TallyUnitsByDomainStep(short participantIdx, short troopIdx)
 		{
-			this.processor.Journal.OpenScope($"TallyUnitsByDomainStep({participantIdx}, {troopIdx})");
+			this.Processor.Journal.OpenScope($"TallyUnitsByDomainStep({participantIdx}, {troopIdx})");
 
 			switch (StackDomainMode)
 			{
@@ -549,7 +549,7 @@ namespace Civilization1Remaster.Game
 					break;
 			}
 
-			this.processor.Journal.CloseScope("TallyUnitsByDomainStep");
+			this.Processor.Journal.CloseScope("TallyUnitsByDomainStep");
 		}
 
 		/// <summary>
@@ -557,7 +557,7 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public ushort TallyUnitsOfTypeInStack(short participantIdx, short troopIdx, ushort kind)
 		{
-			this.processor.Journal.OpenScope($"TallyUnitsOfTypeInStack({participantIdx}, {troopIdx}, {kind})");
+			this.Processor.Journal.OpenScope($"TallyUnitsOfTypeInStack({participantIdx}, {troopIdx}, {kind})");
 
 			StackKind = kind;
 			StackTally = 0x0;
@@ -566,7 +566,7 @@ namespace Civilization1Remaster.Game
 
 			ushort result = StackTally;
 
-			this.processor.Journal.CloseScope("TallyUnitsOfTypeInStack");
+			this.Processor.Journal.CloseScope("TallyUnitsOfTypeInStack");
 
 			return result;
 		}
@@ -576,14 +576,14 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public void TallyUnitsOfTypeStep(short participantIdx, short troopIdx)
 		{
-			this.processor.Journal.OpenScope($"TallyUnitsOfTypeStep({participantIdx}, {troopIdx})");
+			this.Processor.Journal.OpenScope($"TallyUnitsOfTypeStep({participantIdx}, {troopIdx})");
 
 			if ((ushort)this.troops.TroopKind(participantIdx, troopIdx) == StackKind)
 			{
 				AddToGlobal(0x653c, 1);
 			}
 
-			this.processor.Journal.CloseScope("TallyUnitsOfTypeStep");
+			this.Processor.Journal.CloseScope("TallyUnitsOfTypeStep");
 		}
 
 		/// <summary>
@@ -591,7 +591,7 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public ushort TallyUnitsWithFlagInStack(short participantIdx, short troopIdx, ushort group)
 		{
-			this.processor.Journal.OpenScope($"TallyUnitsWithFlagInStack({participantIdx}, {troopIdx}, {group})");
+			this.Processor.Journal.OpenScope($"TallyUnitsWithFlagInStack({participantIdx}, {troopIdx}, {group})");
 
 			StackKind = group;
 			StackTally = 0x0;
@@ -600,7 +600,7 @@ namespace Civilization1Remaster.Game
 
 			ushort result = StackTally;
 
-			this.processor.Journal.CloseScope("TallyUnitsWithFlagInStack");
+			this.Processor.Journal.CloseScope("TallyUnitsWithFlagInStack");
 
 			return result;
 		}
@@ -610,14 +610,14 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public void TallyUnitsWithFlagStep(short participantIdx, short troopIdx)
 		{
-			this.processor.Journal.OpenScope($"TallyUnitsWithFlagStep({participantIdx}, {troopIdx})");
+			this.Processor.Journal.OpenScope($"TallyUnitsWithFlagStep({participantIdx}, {troopIdx})");
 
 			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.TroopGroup) == StackKind)
 			{
 				AddToGlobal(0x653c, 1);
 			}
 
-			this.processor.Journal.CloseScope("TallyUnitsWithFlagStep");
+			this.Processor.Journal.CloseScope("TallyUnitsWithFlagStep");
 		}
 
 		/// <summary>
@@ -626,7 +626,7 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public ushort TallySpecialUnitsInStack(short participantIdx, short troopIdx)
 		{
-			this.processor.Journal.OpenScope($"TallySpecialUnitsInStack({participantIdx}, {troopIdx})");
+			this.Processor.Journal.OpenScope($"TallySpecialUnitsInStack({participantIdx}, {troopIdx})");
 
 			StackTally = 0x0;
 
@@ -634,7 +634,7 @@ namespace Civilization1Remaster.Game
 
 			ushort result = StackTally;
 
-			this.processor.Journal.CloseScope("TallySpecialUnitsInStack");
+			this.Processor.Journal.CloseScope("TallySpecialUnitsInStack");
 
 			return result;
 		}
@@ -645,7 +645,7 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public void TallySpecialUnitsStep(short participantIdx, short troopIdx)
 		{
-			this.processor.Journal.OpenScope($"TallySpecialUnitsStep({participantIdx}, {troopIdx})");
+			this.Processor.Journal.OpenScope($"TallySpecialUnitsStep({participantIdx}, {troopIdx})");
 
 			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == UnitKindTable.LandUnits)
 			{
@@ -657,7 +657,7 @@ namespace Civilization1Remaster.Game
 				AddToGlobal(0x653c, this.troops.KindField(participantIdx, troopIdx, UnitKindTable.FerryRoom));
 			}
 
-			this.processor.Journal.CloseScope("TallySpecialUnitsStep");
+			this.Processor.Journal.CloseScope("TallySpecialUnitsStep");
 		}
 
 		/// <summary>
@@ -666,7 +666,7 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public void VisitEachUnitInStack(short participantIdx, short troopIdx, int funcAddr)
 		{
-			this.processor.Journal.OpenScope($"VisitEachUnitInStack({participantIdx}, {troopIdx}, 0x{funcAddr:x4})");
+			this.Processor.Journal.OpenScope($"VisitEachUnitInStack({participantIdx}, {troopIdx}, 0x{funcAddr:x4})");
 
 			Action<short, short> step = StackStep(funcAddr);
 
@@ -675,7 +675,7 @@ namespace Civilization1Remaster.Game
 				step(stepParticipantIdx, stepTroopIdx);
 			});
 
-			this.processor.Journal.CloseScope("VisitEachUnitInStack");
+			this.Processor.Journal.CloseScope("VisitEachUnitInStack");
 		}
 
 		/// <summary>
@@ -704,7 +704,7 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public void VerifyUnitTerrainFlag(short participantIdx, short troopIdx)
 		{
-			this.processor.Journal.OpenScope($"VerifyUnitTerrainFlag({participantIdx}, {troopIdx})");
+			this.Processor.Journal.OpenScope($"VerifyUnitTerrainFlag({participantIdx}, {troopIdx})");
 
 			bool carried = IsOnOcean(participantIdx, troopIdx) &&
 				this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == UnitKindTable.LandUnits;
@@ -714,7 +714,7 @@ namespace Civilization1Remaster.Game
 				ClearStatus(participantIdx, troopIdx, UnitStatusEnum.Sentry);
 			}
 
-			this.processor.Journal.CloseScope("VerifyUnitTerrainFlag");
+			this.Processor.Journal.CloseScope("VerifyUnitTerrainFlag");
 		}
 
 		/// <summary>
@@ -723,7 +723,7 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public void WipeUnitOrders(short participantIdx, short troopIdx)
 		{
-			this.processor.Journal.OpenScope($"WipeUnitOrders({participantIdx}, {troopIdx})");
+			this.Processor.Journal.OpenScope($"WipeUnitOrders({participantIdx}, {troopIdx})");
 
 			if ((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & (int)UnitStatusEnum.Sentry) != 0)
 			{
@@ -741,7 +741,7 @@ namespace Civilization1Remaster.Game
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHeading, 0xff);
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHoriz, 0xff);
 
-			this.processor.Journal.CloseScope("WipeUnitOrders");
+			this.Processor.Journal.CloseScope("WipeUnitOrders");
 		}
 
 		/// <summary>
@@ -749,14 +749,14 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public void RestoreUnitOrders(short participantIdx, short troopIdx)
 		{
-			this.processor.Journal.OpenScope($"RestoreUnitOrders({participantIdx}, {troopIdx})");
+			this.Processor.Journal.OpenScope($"RestoreUnitOrders({participantIdx}, {troopIdx})");
 
 			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == UnitKindTable.SeaUnits)
 			{
 				RestoreUnitStatus(participantIdx, troopIdx);
 			}
 
-			this.processor.Journal.CloseScope("RestoreUnitOrders");
+			this.Processor.Journal.CloseScope("RestoreUnitOrders");
 		}
 
 		/// <summary>
@@ -765,7 +765,7 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public void RestoreUnitStatus(short participantIdx, short troopIdx)
 		{
-			this.processor.Journal.OpenScope($"RestoreUnitStatus({participantIdx}, {troopIdx})");
+			this.Processor.Journal.OpenScope($"RestoreUnitStatus({participantIdx}, {troopIdx})");
 
 			byte status = this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status);
 
@@ -783,12 +783,12 @@ namespace Civilization1Remaster.Game
 				(byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & (int)(UnitStatusEnum.Veteran | UnitStatusEnum.Unknown1)));
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHoriz, 0xff);
 
-			if (participantIdx == this.owner.World.PersonParticipantIdx)
+			if (participantIdx == this.Owner.World.PersonParticipantIdx)
 			{
-				this.owner.MapOps.RenderUnitOnWorldMap(participantIdx, troopIdx);
+				this.Owner.MapOps.RenderUnitOnWorldMap(participantIdx, troopIdx);
 			}
 
-			this.processor.Journal.CloseScope("RestoreUnitStatus");
+			this.Processor.Journal.CloseScope("RestoreUnitStatus");
 		}
 
 		/// <summary>
@@ -796,14 +796,14 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public void EliminateLandUnit(short participantIdx, short troopIdx)
 		{
-			this.processor.Journal.OpenScope($"EliminateLandUnit({participantIdx}, {troopIdx})");
+			this.Processor.Journal.OpenScope($"EliminateLandUnit({participantIdx}, {troopIdx})");
 
 			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == UnitKindTable.LandUnits)
 			{
 				EliminateUnit(participantIdx, troopIdx);
 			}
 
-			this.processor.Journal.CloseScope("EliminateLandUnit");
+			this.Processor.Journal.CloseScope("EliminateLandUnit");
 		}
 
 		/// <summary>
@@ -811,14 +811,14 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public void EliminateNonLandUnit(short participantIdx, short troopIdx)
 		{
-			this.processor.Journal.OpenScope($"EliminateNonLandUnit({participantIdx}, {troopIdx})");
+			this.Processor.Journal.OpenScope($"EliminateNonLandUnit({participantIdx}, {troopIdx})");
 
 			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) != UnitKindTable.LandUnits)
 			{
 				EliminateUnit(participantIdx, troopIdx);
 			}
 
-			this.processor.Journal.CloseScope("EliminateNonLandUnit");
+			this.Processor.Journal.CloseScope("EliminateNonLandUnit");
 		}
 
 		/// <summary>
@@ -826,14 +826,14 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public void EliminateSeaUnit(short participantIdx, short troopIdx)
 		{
-			this.processor.Journal.OpenScope($"EliminateSeaUnit({participantIdx}, {troopIdx})");
+			this.Processor.Journal.OpenScope($"EliminateSeaUnit({participantIdx}, {troopIdx})");
 
 			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == UnitKindTable.AirUnits)
 			{
 				EliminateUnit(participantIdx, troopIdx);
 			}
 
-			this.processor.Journal.CloseScope("EliminateSeaUnit");
+			this.Processor.Journal.CloseScope("EliminateSeaUnit");
 		}
 
 		/// <summary>
@@ -842,7 +842,7 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public void PanMapToPosition(short participantIdx, int horizLoc, int vertLoc)
 		{
-			this.processor.Journal.OpenScope($"PanMapToPosition({participantIdx}, {horizLoc}, {vertLoc})");
+			this.Processor.Journal.OpenScope($"PanMapToPosition({participantIdx}, {horizLoc}, {vertLoc})");
 
 			int viewLeft = (short)MapViewHoriz;
 
@@ -857,12 +857,12 @@ namespace Civilization1Remaster.Game
 
 			if (outside)
 			{
-				int left = (short)this.owner.Routing.TunePosition(horizLoc - 8);
+				int left = (short)this.Owner.Routing.TunePosition(horizLoc - 8);
 
-				this.owner.MapOps.FocusMapView(participantIdx, left, vertLoc - 6);
+				this.Owner.MapOps.FocusMapView(participantIdx, left, vertLoc - 6);
 			}
 
-			this.processor.Journal.CloseScope("PanMapToPosition");
+			this.Processor.Journal.CloseScope("PanMapToPosition");
 		}
 
 		/// <summary>
@@ -871,13 +871,13 @@ namespace Civilization1Remaster.Game
 		/// <returns>1 when a foreign unit stands next to the tile</returns>
 		public ushort MayOccupyTile(short participantIdx, int horizLoc, int vertLoc)
 		{
-			this.processor.Journal.OpenScope($"MayOccupyTile({participantIdx}, {horizLoc}, {vertLoc})");
+			this.Processor.Journal.OpenScope($"MayOccupyTile({participantIdx}, {horizLoc}, {vertLoc})");
 
-			ushort blocked = (this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) != 0 ? (ushort)0 :
+			ushort blocked = (this.Owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) != 0 ? (ushort)0 :
 				VerifyTileOccupation(participantIdx, horizLoc, vertLoc);
 
 
-			this.processor.Journal.CloseScope("MayOccupyTile");
+			this.Processor.Journal.CloseScope("MayOccupyTile");
 
 			return blocked;
 		}
@@ -889,27 +889,27 @@ namespace Civilization1Remaster.Game
 		/// <returns>1 when a foreign unit stands next to the tile, 0 otherwise</returns>
 		public ushort VerifyTileOccupation(short participantIdx, int horizLoc, int vertLoc)
 		{
-			this.processor.Journal.OpenScope($"VerifyTileOccupation({participantIdx}, {horizLoc}, {vertLoc})");
+			this.Processor.Journal.OpenScope($"VerifyTileOccupation({participantIdx}, {horizLoc}, {vertLoc})");
 
-			bool onOcean = this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) == MapRules.OceanTerrain;
+			bool onOcean = this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) == MapRules.OceanTerrain;
 			ushort found = 0;
 
 			for (int heading = 1; heading < 9; heading++)
 			{
-				int nearHoriz = this.owner.Routing.TunePosition(this.owner.MapOps.Chart.DirectionHoriz(heading) + horizLoc);
-				int nearVert = (short)(this.owner.MapOps.Chart.DirectionVert(heading) + vertLoc);
+				int nearHoriz = this.Owner.Routing.TunePosition(this.Owner.MapOps.Chart.DirectionHoriz(heading) + horizLoc);
+				int nearVert = (short)(this.Owner.MapOps.Chart.DirectionVert(heading) + vertLoc);
 
-				bool nearOcean = this.owner.MapOps.ObtainTerrainType(nearHoriz, nearVert) == MapRules.OceanTerrain;
+				bool nearOcean = this.Owner.MapOps.ObtainTerrainType(nearHoriz, nearVert) == MapRules.OceanTerrain;
 
 				if (nearOcean != onOcean)
 					continue;
 
-				ushort nearParticipantIdx = this.owner.MapOps.ObtainTileOwner(nearHoriz, nearVert);
+				ushort nearParticipantIdx = this.Owner.MapOps.ObtainTileOwner(nearHoriz, nearVert);
 
 				if (nearParticipantIdx == 0xffff || nearParticipantIdx == (ushort)participantIdx)
 					continue;
 
-				if (participantIdx == this.owner.World.PersonParticipantIdx)
+				if (participantIdx == this.Owner.World.PersonParticipantIdx)
 				{
 					RevealToHuman((short)nearParticipantIdx, nearHoriz, nearVert);
 				}
@@ -919,7 +919,7 @@ namespace Civilization1Remaster.Game
 			}
 
 
-			this.processor.Journal.CloseScope("VerifyTileOccupation");
+			this.Processor.Journal.CloseScope("VerifyTileOccupation");
 
 			return found;
 		}
@@ -927,17 +927,17 @@ namespace Civilization1Remaster.Game
 		/// <summary>1 when a unit of another player stands on one of the 8 tiles around (the zone of control), else 0</summary>
 		public ushort ContainsAdjacentForeignUnit(short participantIdx, int horizLoc, int vertLoc)
 		{
-			this.processor.Journal.OpenScope($"ContainsAdjacentForeignUnit({participantIdx}, {horizLoc}, {vertLoc})");
+			this.Processor.Journal.OpenScope($"ContainsAdjacentForeignUnit({participantIdx}, {horizLoc}, {vertLoc})");
 
 			// Check the 8 neighboring tiles for any foreign unit (Zone of Control)
 			bool found = MovementRules.HasAdjacentForeignUnit(horizLoc, vertLoc, participantIdx, (x, y) =>
 			{
-				return (int)(short)this.owner.MapOps.ObtainTileOwner(x, y);
+				return (int)(short)this.Owner.MapOps.ObtainTileOwner(x, y);
 			});
 
 			ushort result = (ushort)(found ? 1 : 0);
 
-			this.processor.Journal.CloseScope("ContainsAdjacentForeignUnit");
+			this.Processor.Journal.CloseScope("ContainsAdjacentForeignUnit");
 
 			return result;
 		}
@@ -952,7 +952,7 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public void VisitHut(short participantIdx, short troopIdx)
 		{
-			this.processor.Journal.OpenScope($"VisitHut({participantIdx}, {troopIdx})");
+			this.Processor.Journal.OpenScope($"VisitHut({participantIdx}, {troopIdx})");
 
 			if (participantIdx != 0 &&
 				this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) != UnitKindTable.AirUnits)
@@ -961,10 +961,10 @@ namespace Civilization1Remaster.Game
 				int vertLoc = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert);
 				short townDistance = DistanceToNearestCity(horizLoc, vertLoc);
 
-				switch (this.owner.Libc.Dice.DrawInt(4))
+				switch (this.Owner.Libc.Dice.DrawInt(4))
 				{
 					case 0:
-						int hutKind = this.owner.VideoCard.ObtainDot(2, horizLoc + 80, vertLoc) & 0x7;
+						int hutKind = this.Owner.VideoCard.ObtainDot(2, horizLoc + 80, vertLoc) & 0x7;
 
 						if (townDistance < 4)
 						{
@@ -978,14 +978,14 @@ namespace Civilization1Remaster.Game
 						{
 							AnnounceHut(participantIdx, "You have discovered\nan advanced tribe.\n");
 
-							this.owner.Founding.EstablishCity(participantIdx, 0, horizLoc, vertLoc, 1);
+							this.Owner.Founding.EstablishCity(participantIdx, 0, horizLoc, vertLoc, 1);
 
 							RepaintForHuman(participantIdx, horizLoc, vertLoc);
 						}
 						break;
 
 					case 1:
-						if (this.owner.World.RoundTally != 0 && this.owner.World.Season <= 1000)
+						if (this.Owner.World.RoundTally != 0 && this.Owner.World.Season <= 1000)
 						{
 							FindAncientScrolls(participantIdx);
 						}
@@ -1000,7 +1000,7 @@ namespace Civilization1Remaster.Game
 						break;
 
 					case 3:
-						if (townDistance >= 4 && this.owner.World.Participants[participantIdx].TownTally != 0)
+						if (townDistance >= 4 && this.Owner.World.Participants[participantIdx].TownTally != 0)
 						{
 							UnleashBarbarians(participantIdx, troopIdx);
 						}
@@ -1012,7 +1012,7 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			this.processor.Journal.CloseScope("VisitHut");
+			this.Processor.Journal.CloseScope("VisitHut");
 		}
 
 		/// <summary>
@@ -1022,31 +1022,31 @@ namespace Civilization1Remaster.Game
 		/// <param name="direction">Direction of the attack (1 - 8)</param>
 		public void ChoreographUnitCombat(short participantIdx, short troopIdx, ushort direction)
 		{
-			this.processor.Journal.OpenScope($"ChoreographUnitCombat({participantIdx}, {troopIdx}, {direction})");
+			this.Processor.Journal.OpenScope($"ChoreographUnitCombat({participantIdx}, {troopIdx}, {direction})");
 
 			int horizLoc = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz);
 			int vertLoc = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert);
 
 			if (WorldMapView == 1)
 			{
-				this.owner.MapOps.RenderMapTile(horizLoc, vertLoc);
+				this.Owner.MapOps.RenderMapTile(horizLoc, vertLoc);
 			}
 			else
 			{
-				this.owner.Startup.ConcealMouseCursor();
+				this.Owner.Startup.ConcealMouseCursor();
 
-				if (this.owner.MapOps.RenderMapTile(horizLoc, vertLoc) != 0 &&
-					this.owner.TurnLogic.VerifyPositionOnScreen(horizLoc, vertLoc) != 0 &&
-					this.owner.TurnLogic.VerifyPositionOnScreen(this.owner.MapOps.Chart.DirectionHoriz(direction) + horizLoc,
-						this.owner.MapOps.Chart.DirectionVert(direction) + vertLoc) != 0)
+				if (this.Owner.MapOps.RenderMapTile(horizLoc, vertLoc) != 0 &&
+					this.Owner.TurnLogic.VerifyPositionOnScreen(horizLoc, vertLoc) != 0 &&
+					this.Owner.TurnLogic.VerifyPositionOnScreen(this.Owner.MapOps.Chart.DirectionHoriz(direction) + horizLoc,
+						this.Owner.MapOps.Chart.DirectionVert(direction) + vertLoc) != 0)
 				{
 					AnimateAttack(participantIdx, troopIdx, direction, horizLoc, vertLoc);
 				}
 
-				this.owner.Startup.DisplayMouseCursor();
+				this.Owner.Startup.DisplayMouseCursor();
 			}
 
-			this.processor.Journal.CloseScope("ChoreographUnitCombat");
+			this.Processor.Journal.CloseScope("ChoreographUnitCombat");
 		}
 
 		/// <summary>
@@ -1056,14 +1056,14 @@ namespace Civilization1Remaster.Game
 		/// <returns>The picked unit, the stack leader (LocateStackLeader) when none; also in AX</returns>
 		public ushort DisplayBattleScreen(short participantIdx, short troopIdx)
 		{
-			this.processor.Journal.OpenScope($"DisplayBattleScreen({participantIdx}, {troopIdx})");
+			this.Processor.Journal.OpenScope($"DisplayBattleScreen({participantIdx}, {troopIdx})");
 
 			ushort screen = ScreenBox;
 			ushort backScreen = BackScreenBox;
 
-			this.owner.Startup.ConcealMouseCursor();
+			this.Owner.Startup.ConcealMouseCursor();
 
-			this.owner.VideoCard.RenderImage(screen, 0, 0, 0x140, 0xc8, backScreen, 0, 0);
+			this.Owner.VideoCard.RenderImage(screen, 0, 0, 0x140, 0xc8, backScreen, 0, 0);
 
 			ushort picked = LocateStackLeader(participantIdx, troopIdx);
 			short[] stack = new short[StackListTally];
@@ -1107,14 +1107,14 @@ namespace Civilization1Remaster.Game
 					break;
 			}
 
-			this.owner.VideoCard.RenderImage(backScreen, 0, 0, 0x140, 0xc8, screen, 0, 0);
+			this.Owner.VideoCard.RenderImage(backScreen, 0, 0, 0x140, 0xc8, screen, 0, 0);
 
-			this.owner.Startup.DisplayMouseCursor();
+			this.Owner.Startup.DisplayMouseCursor();
 
-			this.owner.TurnLogic.AwaitForKey();
+			this.Owner.TurnLogic.AwaitForKey();
 
 
-			this.processor.Journal.CloseScope("DisplayBattleScreen");
+			this.Processor.Journal.CloseScope("DisplayBattleScreen");
 
 			return picked;
 		}
@@ -1126,7 +1126,7 @@ namespace Civilization1Remaster.Game
 		/// <returns>Direction, also in AX</returns>
 		public ushort LocateNearestFriendlyCity(short participantIdx, short troopIdx)
 		{
-			this.processor.Journal.OpenScope($"LocateNearestFriendlyCity({participantIdx}, {troopIdx})");
+			this.Processor.Journal.OpenScope($"LocateNearestFriendlyCity({participantIdx}, {troopIdx})");
 
 			// Without an own city or carrier the target is the place of the unit, so it stays (direction 0; the original took
 			// what was left on the stack)
@@ -1136,7 +1136,7 @@ namespace Civilization1Remaster.Game
 			int targetVert = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert);
 			int nearest = 999;
 
-			foreach (City town in this.owner.World.Towns)
+			foreach (City town in this.Owner.World.Towns)
 			{
 				if (town.ConditionMarker == 0xff || town.ParticipantIdx != participantIdx)
 					continue;
@@ -1168,7 +1168,7 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			int best = this.owner.Helpers.ObtainDistanceFromOffsets(
+			int best = this.Owner.Helpers.ObtainDistanceFromOffsets(
 				this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz) - targetHoriz,
 				this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert) - targetVert);
 			ushort heading = 0;
@@ -1176,19 +1176,19 @@ namespace Civilization1Remaster.Game
 			for (int direction = 1; direction <= 8; direction++)
 			{
 				// Like the original, the step doesn't wrap around the map
-				int stepHoriz = (short)(unitHoriz + this.owner.MapOps.Chart.DirectionHoriz(direction));
-				int stepVert = (short)(unitVert + this.owner.MapOps.Chart.DirectionVert(direction));
+				int stepHoriz = (short)(unitHoriz + this.Owner.MapOps.Chart.DirectionHoriz(direction));
+				int stepVert = (short)(unitVert + this.Owner.MapOps.Chart.DirectionVert(direction));
 
-				ushort stepOwner = this.owner.MapOps.ObtainTileOwner(stepHoriz, stepVert);
+				ushort stepOwner = this.Owner.MapOps.ObtainTileOwner(stepHoriz, stepVert);
 
 				if (stepOwner != 0xffff && stepOwner != (ushort)participantIdx)
 					continue;
 
-				if ((this.owner.MapOps.ObtainTileImprovements(stepHoriz, stepVert) & 1) != 0 &&
-					this.owner.MapOps.ObtainTileOwnerBits(stepHoriz, stepVert) != (ushort)participantIdx)
+				if ((this.Owner.MapOps.ObtainTileImprovements(stepHoriz, stepVert) & 1) != 0 &&
+					this.Owner.MapOps.ObtainTileOwnerBits(stepHoriz, stepVert) != (ushort)participantIdx)
 					continue;
 
-				int distance = this.owner.Helpers.ObtainDistanceFromOffsets(stepHoriz - targetHoriz, stepVert - targetVert);
+				int distance = this.Owner.Helpers.ObtainDistanceFromOffsets(stepHoriz - targetHoriz, stepVert - targetVert);
 
 				if (distance < best)
 				{
@@ -1198,7 +1198,7 @@ namespace Civilization1Remaster.Game
 			}
 
 
-			this.processor.Journal.CloseScope("LocateNearestFriendlyCity");
+			this.Processor.Journal.CloseScope("LocateNearestFriendlyCity");
 
 			return heading;
 		}
@@ -1206,33 +1206,33 @@ namespace Civilization1Remaster.Game
 		/// <summary>An entry of the replay with 1 byte(s): the kind rerunIdx, the turn, the bytes</summary>
 		public void AttachReplayContent(ushort rerunIdx, byte content1)
 		{
-			this.processor.Journal.OpenScope($"AttachReplayContent({rerunIdx}, {content1})");
+			this.Processor.Journal.OpenScope($"AttachReplayContent({rerunIdx}, {content1})");
 			WriteReplayEntry(rerunIdx, content1);
-			this.processor.Journal.CloseScope("AttachReplayContent");
+			this.Processor.Journal.CloseScope("AttachReplayContent");
 		}
 
 		/// <summary>An entry of the replay with 2 byte(s): the kind rerunIdx, the turn, the bytes</summary>
 		public void AttachReplayContent(ushort rerunIdx, byte content1, byte content2)
 		{
-			this.processor.Journal.OpenScope($"AttachReplayContent({rerunIdx}, {content1}, {content2})");
+			this.Processor.Journal.OpenScope($"AttachReplayContent({rerunIdx}, {content1}, {content2})");
 			WriteReplayEntry(rerunIdx, content1, content2);
-			this.processor.Journal.CloseScope("AttachReplayContent");
+			this.Processor.Journal.CloseScope("AttachReplayContent");
 		}
 
 		/// <summary>An entry of the replay with 3 byte(s): the kind rerunIdx, the turn, the bytes</summary>
 		public void AttachReplayContent(ushort rerunIdx, byte content1, byte content2, byte content3)
 		{
-			this.processor.Journal.OpenScope($"AttachReplayContent({rerunIdx}, {content1}, {content2}, {content3})");
+			this.Processor.Journal.OpenScope($"AttachReplayContent({rerunIdx}, {content1}, {content2}, {content3})");
 			WriteReplayEntry(rerunIdx, content1, content2, content3);
-			this.processor.Journal.CloseScope("AttachReplayContent");
+			this.Processor.Journal.CloseScope("AttachReplayContent");
 		}
 
 		/// <summary>An entry of the replay with 4 byte(s): the kind rerunIdx, the turn, the bytes</summary>
 		public void AttachReplayContent(ushort rerunIdx, byte content1, byte content2, byte content3, byte content4)
 		{
-			this.processor.Journal.OpenScope($"AttachReplayContent({rerunIdx}, {content1}, {content2}, {content3}, {content4})");
+			this.Processor.Journal.OpenScope($"AttachReplayContent({rerunIdx}, {content1}, {content2}, {content3}, {content4})");
 			WriteReplayEntry(rerunIdx, content1, content2, content3, content4);
-			this.processor.Journal.CloseScope("AttachReplayContent");
+			this.Processor.Journal.CloseScope("AttachReplayContent");
 		}
 
 		/// <summary>
@@ -1241,9 +1241,9 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public void RenderBusyIndicator()
 		{
-			this.processor.Journal.OpenScope("RenderBusyIndicator()");
+			this.Processor.Journal.OpenScope("RenderBusyIndicator()");
 
-			int styleLeft = (this.owner.Libc.Dice.DrawInt(2) << 5) + 0xc0;
+			int styleLeft = (this.Owner.Libc.Dice.DrawInt(2) << 5) + 0xc0;
 
 			RenderBorderPiece(styleLeft, 0x78, 0, 0);
 			RenderBorderPiece(styleLeft + 8, 0x78, 0x138, 0);
@@ -1262,7 +1262,7 @@ namespace Civilization1Remaster.Game
 				RenderBorderPiece(styleLeft + 0x10, 0x80, column << 3, 0xc0);
 			}
 
-			this.processor.Journal.CloseScope("RenderBusyIndicator");
+			this.Processor.Journal.CloseScope("RenderBusyIndicator");
 		}
 
 		/// <summary>The larger of the two steps, the horizontal one wrapping over 40</summary>
@@ -1292,24 +1292,24 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private int RingHoriz(int heading, int horizLoc)
 		{
-			return (short)this.owner.Routing.TunePosition(this.owner.MapOps.Chart.DirectionHoriz(heading) + horizLoc);
+			return (short)this.Owner.Routing.TunePosition(this.Owner.MapOps.Chart.DirectionHoriz(heading) + horizLoc);
 		}
 
 		/// <summary>Row of a tile around, see RingHoriz</summary>
 		private int RingVert(int heading, int vertLoc)
 		{
-			return (short)(this.owner.MapOps.Chart.DirectionVert(heading) + vertLoc);
+			return (short)(this.Owner.MapOps.Chart.DirectionVert(heading) + vertLoc);
 		}
 
 		/// <summary>The player sees the tile (GameState.ChartSight)</summary>
 		private bool Sees(short participantIdx, int horizLoc, int vertLoc)
 		{
-			return (this.owner.World.ChartSight[horizLoc, vertLoc] & (1 << participantIdx)) != 0;
+			return (this.Owner.World.ChartSight[horizLoc, vertLoc] & (1 << participantIdx)) != 0;
 		}
 
 		private void MarkSeen(short participantIdx, int horizLoc, int vertLoc)
 		{
-			this.owner.World.ChartSight[horizLoc, vertLoc] |= (sbyte)(1 << participantIdx);
+			this.Owner.World.ChartSight[horizLoc, vertLoc] |= (sbyte)(1 << participantIdx);
 		}
 
 		/// <summary>The unit becomes visible to the player</summary>
@@ -1327,7 +1327,7 @@ namespace Civilization1Remaster.Game
 
 		private bool AtPeace(short participantIdx, int otherIdx)
 		{
-			return (this.owner.World.Participants[participantIdx].Relations[otherIdx] & PeaceRelation) != 0;
+			return (this.Owner.World.Participants[participantIdx].Relations[otherIdx] & PeaceRelation) != 0;
 		}
 
 		/// <summary>
@@ -1339,7 +1339,7 @@ namespace Civilization1Remaster.Game
 				return false;
 
 			return this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) != UnitKindTable.SeaUnits ||
-				this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) == MapRules.OceanTerrain;
+				this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) == MapRules.OceanTerrain;
 		}
 
 		/// <summary>
@@ -1356,12 +1356,12 @@ namespace Civilization1Remaster.Game
 				if (heading >= 9 && !SeesFarTile(participantIdx, troopIdx, ringHoriz, ringVert))
 					continue;
 
-				if (this.owner.MapOps.VerifyMapLimits(ringHoriz, ringVert) == 0)
+				if (this.Owner.MapOps.VerifyMapLimits(ringHoriz, ringVert) == 0)
 					continue;
 
 				MarkSeen(participantIdx, ringHoriz, ringVert);
 
-				this.owner.MapOps.KeepKnownTileImprovements(ringHoriz, ringVert);
+				this.Owner.MapOps.KeepKnownTileImprovements(ringHoriz, ringVert);
 			}
 		}
 
@@ -1374,7 +1374,7 @@ namespace Civilization1Remaster.Game
 			int nearHoriz = RingHoriz(heading, horizLoc);
 			int nearVert = RingVert(heading, vertLoc);
 
-			if (this.owner.MapOps.VerifyMapLimits(nearHoriz, nearVert) == 0)
+			if (this.Owner.MapOps.VerifyMapLimits(nearHoriz, nearVert) == 0)
 				return;
 
 			if (participantIdx != 0)
@@ -1382,14 +1382,14 @@ namespace Civilization1Remaster.Game
 				MarkSeen(participantIdx, nearHoriz, nearVert);
 			}
 
-			int nearImprovements = this.owner.MapOps.ObtainTileImprovements(nearHoriz, nearVert);
+			int nearImprovements = this.Owner.MapOps.ObtainTileImprovements(nearHoriz, nearVert);
 
 			if ((nearImprovements & CityImprovement) != 0)
 			{
 				MeetNearCity(participantIdx, troopIdx, nearHoriz, nearVert);
 			}
 
-			ushort nearTroopIdx = this.owner.MapOps.ObtainUnitAtTile(nearHoriz, nearVert);
+			ushort nearTroopIdx = this.Owner.MapOps.ObtainUnitAtTile(nearHoriz, nearVert);
 
 			if (nearTroopIdx != 0xffff && participantIdx != FoundUnitParticipant)
 			{
@@ -1409,19 +1409,19 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private void MeetNearCity(short participantIdx, short troopIdx, int nearHoriz, int nearVert)
 		{
-			short cityParticipantIdx = (short)this.owner.MapOps.ObtainTileOwnerBits(nearHoriz, nearVert);
+			short cityParticipantIdx = (short)this.Owner.MapOps.ObtainTileOwnerBits(nearHoriz, nearVert);
 
 			if (cityParticipantIdx == participantIdx)
 				return;
 
 
-			ushort townIdx = this.owner.Helpers.LocateCityAtPosition(nearHoriz, nearVert);
+			ushort townIdx = this.Owner.Helpers.LocateCityAtPosition(nearHoriz, nearVert);
 
 			ConstructUnitsFromCityList((short)townIdx);
 
-			if (participantIdx == this.owner.World.PersonParticipantIdx)
+			if (participantIdx == this.Owner.World.PersonParticipantIdx)
 			{
-				this.owner.World.Towns[townIdx].ShownExtent = this.owner.World.Towns[townIdx].TrueExtent;
+				this.Owner.World.Towns[townIdx].ShownExtent = this.Owner.World.Towns[townIdx].TrueExtent;
 			}
 
 			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) != UnitKindTable.LandUnits)
@@ -1431,8 +1431,8 @@ namespace Civilization1Remaster.Game
 
 			if (!AtPeace(participantIdx, cityParticipantIdx))
 			{
-				this.owner.Bot.SendUnitToStrategicLocation(cityParticipantIdx, (short)nearHoriz, (short)nearVert, 1, 4);
-				this.owner.Bot.SendUnitToStrategicLocation(cityParticipantIdx, (short)nearHoriz, (short)nearVert, 2, 2);
+				this.Owner.Bot.SendUnitToStrategicLocation(cityParticipantIdx, (short)nearHoriz, (short)nearVert, 1, 4);
+				this.Owner.Bot.SendUnitToStrategicLocation(cityParticipantIdx, (short)nearHoriz, (short)nearVert, 2, 2);
 			}
 		}
 
@@ -1450,13 +1450,13 @@ namespace Civilization1Remaster.Game
 
 			VisitEachUnitInStack(FoundUnitParticipant, nearTroopIdx, 0x14a2);
 
-			if (this.owner.MapOps.ObtainTerrainType(nearHoriz, nearVert) == MapRules.OceanTerrain || startTerrain != MapRules.OceanTerrain)
+			if (this.Owner.MapOps.ObtainTerrainType(nearHoriz, nearVert) == MapRules.OceanTerrain || startTerrain != MapRules.OceanTerrain)
 			{
 				ClearTravel(FoundUnitParticipant, nearTroopIdx);
 			}
 
 			// A unit on land next to a foreign ship keeps its order, except a plane
-			if (this.owner.MapOps.ObtainTerrainType(nearHoriz, nearVert) != MapRules.OceanTerrain || startTerrain == MapRules.OceanTerrain ||
+			if (this.Owner.MapOps.ObtainTerrainType(nearHoriz, nearVert) != MapRules.OceanTerrain || startTerrain == MapRules.OceanTerrain ||
 				this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == UnitKindTable.AirUnits)
 			{
 				ClearTravel(participantIdx, troopIdx);
@@ -1468,18 +1468,18 @@ namespace Civilization1Remaster.Game
 			}
 
 			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == UnitKindTable.LandUnits &&
-				this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) != MapRules.OceanTerrain &&
-				this.owner.MapOps.ObtainTerrainType(nearHoriz, nearVert) != MapRules.OceanTerrain &&
+				this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) != MapRules.OceanTerrain &&
+				this.Owner.MapOps.ObtainTerrainType(nearHoriz, nearVert) != MapRules.OceanTerrain &&
 				this.troops.KindField(FoundUnitParticipant, nearTroopIdx, UnitKindTable.LandGroup) != UnitKindTable.AirUnits)
 			{
 				ConfrontNearUnit(participantIdx, troopIdx, horizLoc, vertLoc, nearHoriz, nearVert, nearTroopIdx);
 			}
 
 			// A foreign ship next to the unit
-			if (this.owner.MapOps.ObtainTerrainType(nearHoriz, nearVert) == MapRules.OceanTerrain && FoundUnitParticipant != 0 &&
+			if (this.Owner.MapOps.ObtainTerrainType(nearHoriz, nearVert) == MapRules.OceanTerrain && FoundUnitParticipant != 0 &&
 				!AtPeace(participantIdx, FoundUnitParticipant))
 			{
-				this.owner.Bot.SendUnitToStrategicLocation(participantIdx, (short)nearHoriz, (short)nearVert, 3, 2);
+				this.Owner.Bot.SendUnitToStrategicLocation(participantIdx, (short)nearHoriz, (short)nearVert, 3, 2);
 			}
 		}
 
@@ -1491,7 +1491,7 @@ namespace Civilization1Remaster.Game
 		private void ConfrontNearUnit(short participantIdx, short troopIdx, int horizLoc, int vertLoc, int nearHoriz, int nearVert,
 			short nearTroopIdx)
 		{
-			this.owner.Politics.BargainPeaceTreaty(participantIdx, FoundUnitParticipant, horizLoc, vertLoc);
+			this.Owner.Politics.BargainPeaceTreaty(participantIdx, FoundUnitParticipant, horizLoc, vertLoc);
 
 			if (!AtPeace(participantIdx, FoundUnitParticipant))
 			{
@@ -1510,12 +1510,12 @@ namespace Civilization1Remaster.Game
 				}
 
 
-				this.owner.Bot.SendUnitToStrategicLocation(participantIdx, (short)nearHoriz, (short)nearVert, 1, strategy);
+				this.Owner.Bot.SendUnitToStrategicLocation(participantIdx, (short)nearHoriz, (short)nearVert, 1, strategy);
 			}
 
 			if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) != UnitKindTable.Diplomat)
 			{
-				this.owner.Bot.SendUnitToStrategicLocation(FoundUnitParticipant, (short)horizLoc, (short)vertLoc, 2,
+				this.Owner.Bot.SendUnitToStrategicLocation(FoundUnitParticipant, (short)horizLoc, (short)vertLoc, 2,
 					(short)(participantIdx == 0 ? 1 : 2));
 			}
 		}
@@ -1530,11 +1530,11 @@ namespace Civilization1Remaster.Game
 			int farHoriz = RingHoriz(heading, horizLoc);
 			int farVert = RingVert(heading, vertLoc);
 
-			if (this.owner.MapOps.VerifyMapLimits(farHoriz, farVert) == 0)
+			if (this.Owner.MapOps.VerifyMapLimits(farHoriz, farVert) == 0)
 				return;
 
-			ushort farTroopIdx = this.owner.MapOps.ObtainUnitAtTile(farHoriz, farVert);
-			int farImprovements = this.owner.MapOps.ObtainTileImprovements(farHoriz, farVert);
+			ushort farTroopIdx = this.Owner.MapOps.ObtainUnitAtTile(farHoriz, farVert);
+			int farImprovements = this.Owner.MapOps.ObtainTileImprovements(farHoriz, farVert);
 
 			if (SeesFarTile(participantIdx, troopIdx, farHoriz, farVert))
 			{
@@ -1554,12 +1554,12 @@ namespace Civilization1Remaster.Game
 
 			// A city of the human player 2 tiles far, when the human sees the tile of the unit
 			if ((farImprovements & CityImprovement) != 0 &&
-				(short)this.owner.MapOps.ObtainTileOwnerBits(farHoriz, farVert) == this.owner.World.PersonParticipantIdx &&
-				Sees(this.owner.World.PersonParticipantIdx, horizLoc, vertLoc))
+				(short)this.Owner.MapOps.ObtainTileOwnerBits(farHoriz, farVert) == this.Owner.World.PersonParticipantIdx &&
+				Sees(this.Owner.World.PersonParticipantIdx, horizLoc, vertLoc))
 			{
-				ShowUnitTo(participantIdx, troopIdx, this.owner.World.PersonParticipantIdx);
+				ShowUnitTo(participantIdx, troopIdx, this.Owner.World.PersonParticipantIdx);
 
-				this.owner.MapOps.RepaintMapTile(horizLoc, vertLoc);
+				this.Owner.MapOps.RepaintMapTile(horizLoc, vertLoc);
 			}
 		}
 
@@ -1583,10 +1583,10 @@ namespace Civilization1Remaster.Game
 			}
 
 			// A foreign ship
-			if (this.owner.MapOps.ObtainTerrainType(farHoriz, farVert) == MapRules.OceanTerrain && FoundUnitParticipant != 0 &&
+			if (this.Owner.MapOps.ObtainTerrainType(farHoriz, farVert) == MapRules.OceanTerrain && FoundUnitParticipant != 0 &&
 				!AtPeace(participantIdx, FoundUnitParticipant))
 			{
-				this.owner.Bot.SendUnitToStrategicLocation(participantIdx, (short)farHoriz, (short)farVert, 3, 2);
+				this.Owner.Bot.SendUnitToStrategicLocation(participantIdx, (short)farHoriz, (short)farVert, 3, 2);
 			}
 		}
 
@@ -1599,7 +1599,7 @@ namespace Civilization1Remaster.Game
 		{
 			bool farSees = (this.troops.KindField(FoundUnitParticipant, farTroopIdx, UnitKindTable.Sight) & 2) != 0 &&
 				(this.troops.KindField(FoundUnitParticipant, farTroopIdx, UnitKindTable.LandGroup) != UnitKindTable.SeaUnits ||
-				this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) == MapRules.OceanTerrain);
+				this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) == MapRules.OceanTerrain);
 
 			if (farSees)
 			{
@@ -1613,19 +1613,19 @@ namespace Civilization1Remaster.Game
 				}
 
 				// Seen from a ship
-				if (this.owner.MapOps.ObtainTerrainType(farHoriz, farVert) == MapRules.OceanTerrain && FoundUnitParticipant != 0 &&
+				if (this.Owner.MapOps.ObtainTerrainType(farHoriz, farVert) == MapRules.OceanTerrain && FoundUnitParticipant != 0 &&
 					!AtPeace(participantIdx, FoundUnitParticipant))
 				{
-					this.owner.Bot.SendUnitToStrategicLocation(FoundUnitParticipant, (short)horizLoc, (short)vertLoc, 3, 2);
+					this.Owner.Bot.SendUnitToStrategicLocation(FoundUnitParticipant, (short)horizLoc, (short)vertLoc, 3, 2);
 				}
 			}
-			else if (FoundUnitParticipant == this.owner.World.PersonParticipantIdx &&
-				(this.owner.MapOps.ObtainTileImprovements(farHoriz, farVert) & CityImprovement) != 0 &&
-				Sees(this.owner.World.PersonParticipantIdx, horizLoc, vertLoc))
+			else if (FoundUnitParticipant == this.Owner.World.PersonParticipantIdx &&
+				(this.Owner.MapOps.ObtainTileImprovements(farHoriz, farVert) & CityImprovement) != 0 &&
+				Sees(this.Owner.World.PersonParticipantIdx, horizLoc, vertLoc))
 			{
 				ShowUnitTo(participantIdx, troopIdx, FoundUnitParticipant);
 
-				this.owner.MapOps.RepaintMapTile(horizLoc, vertLoc);
+				this.Owner.MapOps.RepaintMapTile(horizLoc, vertLoc);
 			}
 		}
 
@@ -1635,14 +1635,14 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private void RepaintRingTile(short participantIdx, int ringHoriz, int ringVert)
 		{
-			if (participantIdx != this.owner.World.PersonParticipantIdx && !RevealAll)
+			if (participantIdx != this.Owner.World.PersonParticipantIdx && !RevealAll)
 				return;
 
-			this.owner.MapOps.RepaintMapTile(ringHoriz, ringVert);
+			this.Owner.MapOps.RepaintMapTile(ringHoriz, ringVert);
 
-			ushort colour = this.owner.VideoCard.ObtainDot(2, ringHoriz, ringVert);
+			ushort colour = this.Owner.VideoCard.ObtainDot(2, ringHoriz, ringVert);
 
-			this.owner.Services.AssignDot(2, ringHoriz + 0xf0, ringVert, (ushort)(colour == 1 ? 1 : 2));
+			this.Owner.Services.AssignDot(2, ringHoriz + 0xf0, ringVert, (ushort)(colour == 1 ? 1 : 2));
 		}
 
 		/// <summary>
@@ -1650,9 +1650,9 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private void AwaitBlink()
 		{
-			this.owner.Startup.DisplayMouseCursor();
+			this.Owner.Startup.DisplayMouseCursor();
 
-			this.owner.TextPainter.AwaitTime((short)(this.owner.Libc.KeyAvailable() != 0 ? 1 : 10));
+			this.Owner.TextPainter.AwaitTime((short)(this.Owner.Libc.KeyAvailable() != 0 ? 1 : 10));
 		}
 
 		/// <summary>
@@ -1665,10 +1665,10 @@ namespace Civilization1Remaster.Game
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Horiz, 0xff);
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.FollowingInStack, 0xff);
 
-			this.owner.MapOps.MapAssignCityOwner(participantIdx, horizLoc, vertLoc);
-			this.owner.MapOps.SituateUnitOnTile(participantIdx, troopIdx, horizLoc, vertLoc);
+			this.Owner.MapOps.MapAssignCityOwner(participantIdx, horizLoc, vertLoc);
+			this.Owner.MapOps.SituateUnitOnTile(participantIdx, troopIdx, horizLoc, vertLoc);
 
-			this.owner.World.ChartSight[horizLoc, vertLoc] |= (sbyte)participantBit;
+			this.Owner.World.ChartSight[horizLoc, vertLoc] |= (sbyte)participantBit;
 
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Status, 0);
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Horiz, (byte)horizLoc);
@@ -1676,7 +1676,7 @@ namespace Civilization1Remaster.Game
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Kind, (byte)kind);
 
 			// A new unit is fully healthy
-			this.owner.World.Vitals.Wipe(participantIdx, troopIdx);
+			this.Owner.World.Vitals.Wipe(participantIdx, troopIdx);
 
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.ShownToParticipants, participantBit);
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.TravelHoriz, 0xff);
@@ -1684,10 +1684,10 @@ namespace Civilization1Remaster.Game
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.UnusualSteps,
 				(byte)this.troops.KindField(participantIdx, troopIdx, UnitKindTable.RoundsAway));
 
-			this.troops.Assign(participantIdx, troopIdx, UnitMemory.BaseTown, (byte)this.owner.Helpers.LocateNearestCity(horizLoc, vertLoc));
+			this.troops.Assign(participantIdx, troopIdx, UnitMemory.BaseTown, (byte)this.Owner.Helpers.LocateNearestCity(horizLoc, vertLoc));
 
 			byte baseTown = this.troops.Pull(participantIdx, troopIdx, UnitMemory.BaseTown);
-			ushort baseOwner = baseTown < 128 ? (ushort)this.owner.World.Towns[baseTown].ParticipantIdx : (ushort)0xffff;
+			ushort baseOwner = baseTown < 128 ? (ushort)this.Owner.World.Towns[baseTown].ParticipantIdx : (ushort)0xffff;
 
 			if (baseOwner != (ushort)participantIdx)
 			{
@@ -1702,14 +1702,14 @@ namespace Civilization1Remaster.Game
 				this.troops.Assign(participantIdx, troopIdx, UnitMemory.UnusualSteps, (byte)(fuel - 1));
 			}
 
-			this.owner.World.Participants[participantIdx].LiveTroops[kind]++;
+			this.Owner.World.Participants[participantIdx].LiveTroops[kind]++;
 
 			if (QuietUnitSetup == 0)
 			{
-				if (MapRevealed != 0 || participantIdx == this.owner.World.PersonParticipantIdx ||
-					(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.ShownToParticipants) & (ushort)(1 << this.owner.World.PersonParticipantIdx)) != 0)
+				if (MapRevealed != 0 || participantIdx == this.Owner.World.PersonParticipantIdx ||
+					(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.ShownToParticipants) & (ushort)(1 << this.Owner.World.PersonParticipantIdx)) != 0)
 				{
-					this.owner.MapOps.RepaintMapTile(
+					this.Owner.MapOps.RepaintMapTile(
 						this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
 						this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert));
 				}
@@ -1717,17 +1717,17 @@ namespace Civilization1Remaster.Game
 				ShiftUnit(horizLoc, vertLoc, participantIdx, troopIdx, 1);
 			}
 
-			if (participantIdx == this.owner.World.PersonParticipantIdx && this.owner.World.RoundTally != 0 &&
+			if (participantIdx == this.Owner.World.PersonParticipantIdx && this.Owner.World.RoundTally != 0 &&
 				QuietUnitSetup == 0)
 			{
-				if (this.owner.World.Participants[participantIdx].TroopTally == 0)
+				if (this.Owner.World.Participants[participantIdx].TroopTally == 0)
 				{
-					this.owner.HelpSystem.DisplayHelpPopup(GameTexts.TopicFirstunit1);
+					this.Owner.HelpSystem.DisplayHelpPopup(GameTexts.TopicFirstunit1);
 				}
 
-				if (this.owner.World.Participants[participantIdx].TroopTally == 1)
+				if (this.Owner.World.Participants[participantIdx].TroopTally == 1)
 				{
-					this.owner.HelpSystem.DisplayHelpPopup(GameTexts.TopicFirstunit2);
+					this.Owner.HelpSystem.DisplayHelpPopup(GameTexts.TopicFirstunit2);
 				}
 			}
 		}
@@ -1735,7 +1735,7 @@ namespace Civilization1Remaster.Game
 		/// <summary>Does the unit stand on an ocean tile</summary>
 		private bool IsOnOcean(short participantIdx, short troopIdx)
 		{
-			return this.owner.MapOps.ObtainTerrainType(
+			return this.Owner.MapOps.ObtainTerrainType(
 				this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
 				this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert)) == MapRules.OceanTerrain;
 		}
@@ -1743,7 +1743,7 @@ namespace Civilization1Remaster.Game
 		/// <summary>Adds to a word of the data segment (with the 16 bit overflow of the original)</summary>
 		private void AddToGlobal(ushort address, int amount)
 		{
-			this.processor.EmitGlobalWord(address, (ushort)(this.processor.PullGlobalWord(address) + amount));
+			this.Processor.EmitGlobalWord(address, (ushort)(this.Processor.PullGlobalWord(address) + amount));
 		}
 
 		/// <summary>The step functions of VisitEachUnitInStack by their address in the original code</summary>
@@ -1786,9 +1786,9 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private void RevealToHuman(short participantIdx, int horizLoc, int vertLoc)
 		{
-			short human = this.owner.World.PersonParticipantIdx;
+			short human = this.Owner.World.PersonParticipantIdx;
 			byte humanBit = (byte)(1 << human);
-			ushort troopIdx = this.owner.MapOps.ObtainUnitAtTile(horizLoc, vertLoc);
+			ushort troopIdx = this.Owner.MapOps.ObtainUnitAtTile(horizLoc, vertLoc);
 
 			// The record of 0xffff (no unit) wraps around in the data segment, like in the original
 			int shownTo = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.ShownToParticipants);
@@ -1797,50 +1797,50 @@ namespace Civilization1Remaster.Game
 			{
 				this.troops.Assign(participantIdx, troopIdx, UnitMemory.ShownToParticipants,
 					(byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.ShownToParticipants) | humanBit));
-				this.owner.World.ChartSight[horizLoc, vertLoc] |= (sbyte)humanBit;
+				this.Owner.World.ChartSight[horizLoc, vertLoc] |= (sbyte)humanBit;
 
-				this.owner.MapOps.RepaintMapTile(horizLoc, vertLoc);
+				this.Owner.MapOps.RepaintMapTile(horizLoc, vertLoc);
 			}
 
-			if ((this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) != 0)
+			if ((this.Owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) != 0)
 			{
-				ushort townIdx = this.owner.Helpers.LocateCityAtPosition(horizLoc, vertLoc);
-				this.owner.World.Towns[townIdx].ShownExtent = this.owner.World.Towns[townIdx].TrueExtent;
+				ushort townIdx = this.Owner.Helpers.LocateCityAtPosition(horizLoc, vertLoc);
+				this.Owner.World.Towns[townIdx].ShownExtent = this.Owner.World.Towns[townIdx].TrueExtent;
 
-				this.owner.MapOps.KeepKnownTileImprovements(horizLoc, vertLoc);
-				this.owner.World.ChartSight[horizLoc, vertLoc] |= (sbyte)humanBit;
+				this.Owner.MapOps.KeepKnownTileImprovements(horizLoc, vertLoc);
+				this.Owner.World.ChartSight[horizLoc, vertLoc] |= (sbyte)humanBit;
 
-				this.owner.MapOps.RepaintMapTile(horizLoc, vertLoc);
+				this.Owner.MapOps.RepaintMapTile(horizLoc, vertLoc);
 			}
 		}
 
 		/// <summary>Distance to the nearest city, from position -1, -1 when there is no city</summary>
 		private short DistanceToNearestCity(int horizLoc, int vertLoc)
 		{
-			ushort townIdx = this.owner.Helpers.LocateNearestCity(horizLoc, vertLoc);
+			ushort townIdx = this.Owner.Helpers.LocateNearestCity(horizLoc, vertLoc);
 			bool found = (short)townIdx >= 0 && (short)townIdx < 128;
 
-			return (short)this.owner.Helpers.ObtainDistance(
-				horizLoc, found ? this.owner.World.Towns[townIdx].Place.X : -1,
-				vertLoc, found ? this.owner.World.Towns[townIdx].Place.Y : -1);
+			return (short)this.Owner.Helpers.ObtainDistance(
+				horizLoc, found ? this.Owner.World.Towns[townIdx].Place.X : -1,
+				vertLoc, found ? this.Owner.World.Towns[townIdx].Place.Y : -1);
 		}
 
 		/// <summary>The text of the hut, shown to the human player</summary>
 		private void AnnounceHut(short participantIdx, string text)
 		{
-			this.owner.Words.Set(text);
+			this.Owner.Words.Set(text);
 
-			if (participantIdx == this.owner.World.PersonParticipantIdx)
+			if (participantIdx == this.Owner.World.PersonParticipantIdx)
 			{
-				this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 80);
+				this.Owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 80);
 			}
 		}
 
 		private void RepaintForHuman(short participantIdx, int horizLoc, int vertLoc)
 		{
-			if (participantIdx == this.owner.World.PersonParticipantIdx)
+			if (participantIdx == this.Owner.World.PersonParticipantIdx)
 			{
-				this.owner.MapOps.RepaintMapTile(horizLoc, vertLoc);
+				this.Owner.MapOps.RepaintMapTile(horizLoc, vertLoc);
 			}
 		}
 
@@ -1848,7 +1848,7 @@ namespace Civilization1Remaster.Game
 		{
 			AnnounceHut(participantIdx, "You have discovered\nvaluable metal deposits\nworth 50$\n");
 
-			this.owner.World.Participants[participantIdx].Gold += 50;
+			this.Owner.World.Participants[participantIdx].Gold += 50;
 		}
 
 		/// <summary>A legion or a cavalry unit (DrawInt(2)) joins the player</summary>
@@ -1856,7 +1856,7 @@ namespace Civilization1Remaster.Game
 		{
 			AnnounceHut(participantIdx, "You have discovered\na friendly tribe of\nskilled mercenaries.\n");
 
-			ConstructUnit(participantIdx, (short)(this.owner.Libc.Dice.DrawInt(2) != 0 ? 3 : 6), horizLoc, vertLoc);
+			ConstructUnit(participantIdx, (short)(this.Owner.Libc.Dice.DrawInt(2) != 0 ? 3 : 6), horizLoc, vertLoc);
 
 			RepaintForHuman(participantIdx, horizLoc, vertLoc);
 		}
@@ -1869,15 +1869,15 @@ namespace Civilization1Remaster.Game
 		{
 			AnnounceHut(participantIdx, "You have discovered\nscrolls of ancient wisdom.\n");
 
-			int scienceIdx = this.owner.Libc.Dice.DrawInt(ScienceTally);
+			int scienceIdx = this.Owner.Libc.Dice.DrawInt(ScienceTally);
 
 			for (int tries = 0; tries < 999; tries++)
 			{
-				if (this.owner.Advisors.PlayerKnowsTechnology(participantIdx, (short)scienceIdx) == 0 &&
-					this.owner.Advisors.PlayerKnowsTechnology(participantIdx, RequiredScience(scienceIdx, 0)) != 0 &&
-					this.owner.Advisors.PlayerKnowsTechnology(participantIdx, RequiredScience(scienceIdx, 1)) != 0)
+				if (this.Owner.Advisors.PlayerKnowsTechnology(participantIdx, (short)scienceIdx) == 0 &&
+					this.Owner.Advisors.PlayerKnowsTechnology(participantIdx, RequiredScience(scienceIdx, 0)) != 0 &&
+					this.Owner.Advisors.PlayerKnowsTechnology(participantIdx, RequiredScience(scienceIdx, 1)) != 0)
 				{
-					this.owner.Advisors.EarnTechnology(participantIdx, (short)scienceIdx, 0);
+					this.Owner.Advisors.EarnTechnology(participantIdx, (short)scienceIdx, 0);
 					break;
 				}
 
@@ -1888,7 +1888,7 @@ namespace Civilization1Remaster.Game
 		/// <summary>One of the two technologies required by the technology (bytes 0x4ee and 0x4ef of records of 0x16 bytes), -1 for none</summary>
 		private sbyte RequiredScience(int scienceIdx, int requiredIdx)
 		{
-			return this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(TechnologyTable.Prerequisite1Address + requiredIdx + (TechnologyTable.Stride * scienceIdx)));
+			return this.Processor.PullInt8(this.Processor.SegData.Value16, (ushort)(TechnologyTable.Prerequisite1Address + requiredIdx + (TechnologyTable.Stride * scienceIdx)));
 		}
 
 		/// <summary>
@@ -1900,18 +1900,18 @@ namespace Civilization1Remaster.Game
 			AnnounceHut(participantIdx, "You have unleashed\na horde of barbarians!\n");
 
 			for (int heading = 1; heading <= 8;
-				heading += this.owner.Helpers.VerifyValueSpan(4 - this.owner.World.Participants[participantIdx].TownTally, 1, 4))
+				heading += this.Owner.Helpers.VerifyValueSpan(4 - this.Owner.World.Participants[participantIdx].TownTally, 1, 4))
 			{
 				// No wrap around the world, like the original
-				int nearHoriz = (short)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.Horiz) + this.owner.MapOps.Chart.DirectionHoriz(heading));
-				int nearVert = (short)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.Vert) + this.owner.MapOps.Chart.DirectionVert(heading));
+				int nearHoriz = (short)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.Horiz) + this.Owner.MapOps.Chart.DirectionHoriz(heading));
+				int nearVert = (short)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.Vert) + this.Owner.MapOps.Chart.DirectionVert(heading));
 
-				if (this.owner.MapOps.ObtainTileOwner(nearHoriz, nearVert) != 0xffff ||
-					(this.owner.MapOps.ObtainTileImprovements(nearHoriz, nearVert) & CityImprovement) != 0 ||
-					this.owner.MapOps.ObtainTerrainType(nearHoriz, nearVert) == MapRules.OceanTerrain)
+				if (this.Owner.MapOps.ObtainTileOwner(nearHoriz, nearVert) != 0xffff ||
+					(this.Owner.MapOps.ObtainTileImprovements(nearHoriz, nearVert) & CityImprovement) != 0 ||
+					this.Owner.MapOps.ObtainTerrainType(nearHoriz, nearVert) == MapRules.OceanTerrain)
 					continue;
 
-				int terrain = this.owner.MapOps.ObtainTerrainType(nearHoriz, nearVert);
+				int terrain = this.Owner.MapOps.ObtainTerrainType(nearHoriz, nearVert);
 				short kind = (short)(TerrainMoveCost(terrain) > 2 ? 3 : 6);
 
 				ushort barbarianIdx = ConstructUnit(0, kind, nearHoriz, nearVert);
@@ -1938,38 +1938,38 @@ namespace Civilization1Remaster.Game
 			sbyte followingIdx = this.troops.Following(participantIdx, troopIdx);
 
 			if (followingIdx != -1 &&
-				(this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) != MapRules.OceanTerrain ||
+				(this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) != MapRules.OceanTerrain ||
 				this.troops.KindField(participantIdx, followingIdx, UnitKindTable.LandGroup) == UnitKindTable.SeaUnits))
 			{
-				this.owner.MapOps.RenderUnitOnWorldMap(participantIdx, followingIdx);
+				this.Owner.MapOps.RenderUnitOnWorldMap(participantIdx, followingIdx);
 			}
 
 			ushort screen = ScreenBox;
 			ushort backScreen = BackScreenBox;
 
-			this.owner.VideoCard.RenderImage(screen, 0x50, 0, 0xf0, 0xc8, backScreen, 0x50, 0);
+			this.Owner.VideoCard.RenderImage(screen, 0x50, 0, 0xf0, 0xc8, backScreen, 0x50, 0);
 
 			// Top left pixel of the tile in the map view (16 x 16 pixels a tile, from 80, 8)
-			short tileLeft = (short)((this.owner.Routing.TunePosition(horizLoc - (short)MapViewHoriz) << 4) + 0x50);
+			short tileLeft = (short)((this.Owner.Routing.TunePosition(horizLoc - (short)MapViewHoriz) << 4) + 0x50);
 			short tileTop = (short)(((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Vert) - MapViewVert) << 4) + 8);
 
-			int stepHoriz = this.owner.MapOps.Chart.DirectionHoriz(heading);
-			int stepVert = this.owner.MapOps.Chart.DirectionVert(heading);
+			int stepHoriz = this.Owner.MapOps.Chart.DirectionHoriz(heading);
+			int stepVert = this.Owner.MapOps.Chart.DirectionVert(heading);
 
 			for (int frame = 0; frame <= 16; frame++)
 			{
-				ushort picture = this.processor.PullGlobalWord(
+				ushort picture = this.Processor.PullGlobalWord(
 					(ushort)(0xd4ce + ((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) + (participantIdx << 5) + 0x40) << 1)));
 
-				this.owner.Services.RenderPictureToScreen(screen,
+				this.Owner.Services.RenderPictureToScreen(screen,
 					(stepHoriz * frame) + tileLeft + 1, (stepVert * frame) + tileTop + 1, picture);
 
-				this.owner.TextPainter.AwaitTime(1);
+				this.Owner.TextPainter.AwaitTime(1);
 
 				ushort frameLeft = (ushort)((stepHoriz * frame) + tileLeft);
 				ushort frameTop = (ushort)((stepVert * frame) + tileTop);
 
-				this.owner.VideoCard.RenderImage(backScreen, frameLeft, frameTop, 0x10, 0x10, screen, frameLeft, frameTop);
+				this.Owner.VideoCard.RenderImage(backScreen, frameLeft, frameTop, 0x10, 0x10, screen, frameLeft, frameTop);
 			}
 		}
 
@@ -1980,7 +1980,7 @@ namespace Civilization1Remaster.Game
 		/// <returns>Number of units in the list</returns>
 		private int RenderStackList(short participantIdx, short troopIdx, short listTop, int boxTally)
 		{
-			this.owner.Dialogs.FloodBoxWithDoubleShadow(100, listTop, 120, (boxTally << 4) + 5, Hues.Cyan);
+			this.Owner.Dialogs.FloodBoxWithDoubleShadow(100, listTop, 120, (boxTally << 4) + 5, Hues.Cyan);
 
 			int stackTally = 0;
 			short present = troopIdx;
@@ -1988,21 +1988,21 @@ namespace Civilization1Remaster.Game
 
 			do
 			{
-				this.owner.MapOps.RenderUnitSprite(participantIdx, present, 106, lineTop);
+				this.Owner.MapOps.RenderUnitSprite(participantIdx, present, 106, lineTop);
 
-				this.owner.Words.Set((ushort)(UnitKindTable.Origin + (UnitKindTable.Stride * this.troops.TroopKind(participantIdx, present))));
+				this.Owner.Words.Set((ushort)(UnitKindTable.Origin + (UnitKindTable.Stride * this.troops.TroopKind(participantIdx, present))));
 
 				if ((this.troops.Pull(participantIdx, present, UnitMemory.Status) & (int)UnitStatusEnum.Veteran) != 0)
 				{
-					this.owner.Words.Append(" (V)");
+					this.Owner.Words.Append(" (V)");
 				}
 
-				this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 128, lineTop, Hues.White);
+				this.Owner.TextPainter.RenderTextToScreen0(this.Owner.Words.ToString(), 128, lineTop, Hues.White);
 
 				EmptyMessage()
 					.City(this.troops.PullSigned(participantIdx, present, UnitMemory.BaseTown));
 
-				this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 128, lineTop + 8, Hues.Yellow);
+				this.Owner.TextPainter.RenderTextToScreen0(this.Owner.Words.ToString(), 128, lineTop + 8, Hues.Yellow);
 
 				present = this.troops.Following(participantIdx, present);
 				lineTop += 0x10;
@@ -2023,29 +2023,29 @@ namespace Civilization1Remaster.Game
 		{
 			ushort screen = ScreenBox;
 
-			this.owner.Startup.DisplayMouseCursor();
+			this.Owner.Startup.DisplayMouseCursor();
 
-			this.owner.TurnLogic.AwaitForKey();
+			this.Owner.TurnLogic.AwaitForKey();
 
 			if (MousePresent != 0)
 			{
 				do
 				{
-					this.owner.Startup.ObtainMouseState();
+					this.Owner.Startup.ObtainMouseState();
 
-					if (this.owner.GlobDb3a != 0)
+					if (this.Owner.GlobDb3a != 0)
 						break;
 				}
-				while (this.owner.Libc.KeyAvailable() == 0);
+				while (this.Owner.Libc.KeyAvailable() == 0);
 			}
 			else
 			{
 				while (true)
 				{
-					this.owner.VideoCard.SubstituteHue(screen, 105, (selected * 16) + listTop + 4, 112, 17, Hues.Cyan, Hues.LightCyan);
+					this.Owner.VideoCard.SubstituteHue(screen, 105, (selected * 16) + listTop + 4, 112, 17, Hues.Cyan, Hues.LightCyan);
 
 					int highlighted = selected;
-					ushort key = this.owner.Dialogs.ObtainNavigationKey();
+					ushort key = this.Owner.Dialogs.ObtainNavigationKey();
 
 					if (key == KeyCodes.Up)
 					{
@@ -2058,7 +2058,7 @@ namespace Civilization1Remaster.Game
 							selected++;
 					}
 
-					this.owner.VideoCard.SubstituteHue(screen, 105, (highlighted * 16) + listTop + 4, 112, 17, Hues.LightCyan, Hues.Cyan);
+					this.Owner.VideoCard.SubstituteHue(screen, 105, (highlighted * 16) + listTop + 4, 112, 17, Hues.LightCyan, Hues.Cyan);
 
 					if (key == KeyCodes.Enter || key == KeyCodes.Space)
 						return selected;
@@ -2068,10 +2068,10 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			this.owner.Startup.ConcealMouseCursor();
+			this.Owner.Startup.ConcealMouseCursor();
 
-			if (this.owner.GlobDb3a == 1 && (short)this.owner.GlobDb3c > 0x64 && (short)this.owner.GlobDb3c < 0xdc)
-				return (short)(this.owner.GlobDb3e - listTop - 5) / 16;
+			if (this.Owner.GlobDb3a == 1 && (short)this.Owner.GlobDb3c > 0x64 && (short)this.Owner.GlobDb3c < 0xdc)
+				return (short)(this.Owner.GlobDb3e - listTop - 5) / 16;
 
 			return -1;
 		}
@@ -2082,20 +2082,20 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private void WriteReplayEntry(ushort rerunIdx, params byte[] content)
 		{
-			if (this.owner.World.RerunContentSpan + 2 + content.Length >= 0x1000)
+			if (this.Owner.World.RerunContentSpan + 2 + content.Length >= 0x1000)
 				return;
 
-			ushort interim = (ushort)((rerunIdx << 12) | ((ushort)this.owner.World.RoundTally & 0xfff));
-			this.owner.World.RerunContent[this.owner.World.RerunContentSpan++] = (byte)((interim & 0xff00) >> 8);
-			this.owner.World.RerunContent[this.owner.World.RerunContentSpan++] = (byte)(interim & 0xff);
+			ushort interim = (ushort)((rerunIdx << 12) | ((ushort)this.Owner.World.RoundTally & 0xfff));
+			this.Owner.World.RerunContent[this.Owner.World.RerunContentSpan++] = (byte)((interim & 0xff00) >> 8);
+			this.Owner.World.RerunContent[this.Owner.World.RerunContentSpan++] = (byte)(interim & 0xff);
 
 			foreach (byte entry in content)
-				this.owner.World.RerunContent[this.owner.World.RerunContentSpan++] = entry;
+				this.Owner.World.RerunContent[this.Owner.World.RerunContentSpan++] = entry;
 		}
 
 		private void RenderBorderPiece(int pieceLeft, int pieceTop, int horizLoc, int vertLoc)
 		{
-			this.owner.VideoCard.RenderImage(PictureScreenBox, pieceLeft, pieceTop, 8, 8,
+			this.Owner.VideoCard.RenderImage(PictureScreenBox, pieceLeft, pieceTop, 8, 8,
 				ScreenBox, horizLoc, vertLoc);
 		}
 	}

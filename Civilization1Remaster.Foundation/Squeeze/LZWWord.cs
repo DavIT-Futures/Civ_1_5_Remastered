@@ -7,8 +7,8 @@ namespace Civilization1Remaster.Squeeze
 	public class LZWWord : IEquatable<LZWWord>, IEquatable<List<byte>>,
 		IComparable<LZWWord>, IComparable<List<byte>>
 	{
-		protected byte[] Elements = new byte[] { };
-		protected int DigestCipher = 0;
+		protected byte[] Elements { get; set; } = new byte[] { };
+		protected int DigestCipher { get; set; } = 0;
 
 		private static readonly LZWWord BlankWord = new LZWWord();
 

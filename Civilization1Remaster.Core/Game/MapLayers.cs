@@ -40,7 +40,7 @@ namespace Civilization1Remaster.Game
 		{
 			int colour = Dot(horizLoc, vertLoc);
 
-			return this.processor.PullGlobalWord((ushort)(TerrainOfColour + (colour << 1)));
+			return this.Processor.PullGlobalWord((ushort)(TerrainOfColour + (colour << 1)));
 		}
 
 		/// <summary>Number of the continent or the sea of the tile</summary>
@@ -120,12 +120,12 @@ namespace Civilization1Remaster.Game
 
 		private int Dot(int horizLoc, int vertLoc)
 		{
-			return this.owner.VideoCard.ObtainDot(ChartDisplay, horizLoc, vertLoc);
+			return this.Owner.VideoCard.ObtainDot(ChartDisplay, horizLoc, vertLoc);
 		}
 
 		private void AssignDot(int horizLoc, int vertLoc, byte hue)
 		{
-			this.owner.VideoCard.AssignDot(ChartDisplay, horizLoc, vertLoc, hue, 0);
+			this.Owner.VideoCard.AssignDot(ChartDisplay, horizLoc, vertLoc, hue, 0);
 		}
 	}
 }

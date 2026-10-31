@@ -6,8 +6,11 @@ namespace Civilization1Remaster.Acoustics
 	{
 		private class Channel
 		{
-			public int FldNumeral, Chunk, Response;
-			public bool NoteOn, Summing;
+			public int FldNumeral { get; set; }
+			public int Chunk { get; set; }
+			public int Response { get; set; }
+			public bool NoteOn { get; set; }
+			public bool Summing { get; set; }
 		}
 	}
 }

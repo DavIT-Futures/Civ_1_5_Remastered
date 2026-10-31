@@ -17,7 +17,7 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private void RenderImprovementList(short townIdx)
 		{
-			City town = this.owner.World.Towns[townIdx];
+			City town = this.Owner.World.Towns[townIdx];
 
 			DrawingBox.TypefaceIdx = 2;
 			RenderFrame(211, 1, 317, 97);
@@ -34,12 +34,12 @@ namespace Civilization1Remaster.Game
 				{
 					this.round.Item = wonder;
 
-					if (this.owner.World.MarvelTownIdx[wonder + 1] != townIdx)
+					if (this.Owner.World.MarvelTownIdx[wonder + 1] != townIdx)
 						continue;
 
 					this.round.Value = (ushort)(wonder + 0x18);
 					RenderImprovementName(this.round.Value, 63, true);
-					this.round.WonderRows = this.processor.IncrementWord(this.round.WonderRows);
+					this.round.WonderRows = this.Processor.IncrementWord(this.round.WonderRows);
 				}
 
 				this.round.Item = 0x15;
@@ -65,7 +65,7 @@ namespace Civilization1Remaster.Game
 				}
 
 				this.round.ImprovementCount = (ushort)(this.round.ImprovementCount + 1);
-				this.owner.Services.RenderPictureToScreen(ScreenBox, 309, (short)this.round.Vert + 1,
+				this.Owner.Services.RenderPictureToScreen(ScreenBox, 309, (short)this.round.Vert + 1,
 					SpritePicture(0xb));
 				RenderImprovementName(improvement, 56, false);
 			}
@@ -74,25 +74,25 @@ namespace Civilization1Remaster.Game
 		/// <summary>A row of the improvement list: the name (upper case, within the width), the icon (left or right by the row)</summary>
 		private void RenderImprovementName(ushort improvement, ushort width, bool shrinkFirst)
 		{
-			this.owner.Words.Set(BuildingText(improvement));
+			this.Owner.Words.Set(BuildingText(improvement));
 
 			if (shrinkFirst)
 			{
-				this.owner.Words.Uppercase();
-				this.owner.BlockText.ShrinkTextToWidth(TextBuffer.Address, width);
+				this.Owner.Words.Uppercase();
+				this.Owner.BlockText.ShrinkTextToWidth(TextBuffer.Address, width);
 			}
 			else
 			{
-				this.owner.BlockText.ShrinkTextToWidth(TextBuffer.Address, width);
-				this.owner.Words.Uppercase();
+				this.Owner.BlockText.ShrinkTextToWidth(TextBuffer.Address, width);
+				this.Owner.Words.Uppercase();
 			}
 
-			this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 253, (short)this.round.Vert + 2, Hues.White);
+			this.Owner.TextPainter.RenderTextToScreen0(this.Owner.Words.ToString(), 253, (short)this.round.Vert + 2, Hues.White);
 			RenderResourceIcon((short)(improvement + 1), (short)((((byte)this.round.Selected & 1) != 0) ? 213 : 233),
 				(short)((short)this.round.Vert - 2));
 
 			this.round.Vert = (ushort)(this.round.Vert + 6);
-			this.round.Selected = this.processor.IncrementWord(this.round.Selected);
+			this.round.Selected = this.Processor.IncrementWord(this.round.Selected);
 		}
 
 		/// <summary>
@@ -101,19 +101,19 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private void FinishImprovementList(short townIdx)
 		{
-			City town = this.owner.World.Towns[townIdx];
+			City town = this.Owner.World.Towns[townIdx];
 
-			this.owner.VideoCard.RenderLine(ScreenBox, 231, 0, 250, 0, Hues.Black);
-			this.owner.VideoCard.RenderLine(ScreenBox, 231, 1, 250, 1, Hues.Blue);
+			this.Owner.VideoCard.RenderLine(ScreenBox, 231, 0, 250, 0, Hues.Black);
+			this.Owner.VideoCard.RenderLine(ScreenBox, 231, 1, 250, 1, Hues.Blue);
 
 			if (((byte)this.round.ListFlags & 2) != 0)
 				RenderLabelBox(287, 88, 315, 96, GameTexts.TextMore, 9);
 
-			this.owner.VideoCard.SubstituteHue(ScreenBox, 309, 2, 8, 96, Hues.Yellow, Hues.LightRed);
+			this.Owner.VideoCard.SubstituteHue(ScreenBox, 309, 2, 8, 96, Hues.Yellow, Hues.LightRed);
 
 			if (town.PresentMakingIdx >= 0)
 			{
-				this.round.ProductionPrice = this.processor.PullUInt16(this.processor.SegData.Value16,
+				this.round.ProductionPrice = this.Processor.PullUInt16(this.Processor.SegData.Value16,
 					(ushort)((ushort)(town.PresentMakingIdx * UnitKindTable.Stride) + UnitKindTable.Origin + UnitKindTable.Price));
 			}
 			else
@@ -129,10 +129,10 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private void RenderProductionBox(short townIdx)
 		{
-			City town = this.owner.World.Towns[townIdx];
+			City town = this.Owner.World.Towns[townIdx];
 			short owner = (short)CityOwner;
 
-			this.round.ShieldsPerRow = (ushort)this.owner.Helpers.VerifyValueSpan((((short)this.round.ProductionPrice - 1) / 10) + 1, ((town.MaterialsTally - 1) / 100) + 1, 99);
+			this.round.ShieldsPerRow = (ushort)this.Owner.Helpers.VerifyValueSpan((((short)this.round.ProductionPrice - 1) / 10) + 1, ((town.MaterialsTally - 1) / 100) + 1, 99);
 
 			short box = (short)this.round.CostFactor;
 
@@ -145,9 +145,9 @@ namespace Civilization1Remaster.Game
 			this.round.DrawHoriz = (ushort)((short)((perRow << 3) - 8) / perRow + width);
 			this.round.DrawVert = (ushort)((((short)this.round.ProductionPrice - 1) / perRow << 3) + 8);
 
-			this.owner.Services.FloodBox(ScreenBox, 230, 99, (short)this.round.DrawHoriz + 3, (short)this.round.DrawVert + 19, Hues.Blue);
+			this.Owner.Services.FloodBox(ScreenBox, 230, 99, (short)this.round.DrawHoriz + 3, (short)this.round.DrawVert + 19, Hues.Blue);
 
-			if (owner == this.owner.World.PersonParticipantIdx)
+			if (owner == this.Owner.World.PersonParticipantIdx)
 			{
 				RenderLabelBox(231, 106, 263, 114, (ushort)((town.ConditionMarker & 0x10) != 0 ? 0x262f : 0x2635), 9);
 				RenderLabelBox(294, 106, 311, 114, GameTexts.TextBuy, 9);
@@ -155,21 +155,21 @@ namespace Civilization1Remaster.Game
 
 			if (town.PresentMakingIdx >= 0)
 			{
-				this.owner.Services.RenderPictureToScreen(ScreenBox, 264, 100,
+				this.Owner.Services.RenderPictureToScreen(ScreenBox, 264, 100,
 					SpritePicture(((byte)town.PresentMakingIdx + (owner << 5) + 0x40)));
 			}
 			else
 			{
-				this.owner.Words.Set(BuildingRecordText(-town.PresentMakingIdx));
-				this.owner.BlockText.ShrinkTextToWidth(TextBuffer.Address, 0x56);
-				this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 274, 100, Hues.White);
+				this.Owner.Words.Set(BuildingRecordText(-town.PresentMakingIdx));
+				this.Owner.BlockText.ShrinkTextToWidth(TextBuffer.Address, 0x56);
+				this.Owner.TextPainter.RenderCenteredTextToScreen0(this.Owner.Words.ToString(), 274, 100, Hues.White);
 			}
 		}
 
 		/// <summary>The shields of the production box (0x44 a row, 0xe8 the step)</summary>
 		private void RenderShieldsInBox(short townIdx)
 		{
-			City town = this.owner.World.Towns[townIdx];
+			City town = this.Owner.World.Towns[townIdx];
 
 			FloodBoxWithMotif(231, 116, (short)this.round.DrawHoriz + 1, (short)this.round.DrawVert + 1);
 
@@ -178,7 +178,7 @@ namespace Civilization1Remaster.Game
 			for (; town.MaterialsTally > (short)shield; shield++)
 			{
 				this.round.Index = shield;
-				this.owner.Services.RenderPictureToScreen(ScreenBox,
+				this.Owner.Services.RenderPictureToScreen(ScreenBox,
 					((((short)this.round.Index % ((short)this.round.CostFactor * (short)this.round.ShieldsPerRow)) *
 						(short)this.round.Value) / (short)this.round.ShieldsPerRow) + 232,
 					(((short)this.round.Index / ((short)this.round.CostFactor * (short)this.round.ShieldsPerRow)) * 8) + 117,
@@ -194,10 +194,10 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private void RenderFoodBox(short townIdx)
 		{
-			City town = this.owner.World.Towns[townIdx];
+			City town = this.Owner.World.Towns[townIdx];
 
 			if (town.TrueExtent != 0)
-				this.round.Value = (ushort)this.owner.Helpers.VerifyValueSpan(80 / town.TrueExtent, 1, 8);
+				this.round.Value = (ushort)this.Owner.Helpers.VerifyValueSpan(80 / town.TrueExtent, 1, 8);
 			else
 				this.round.Value = 1;
 
@@ -208,16 +208,16 @@ namespace Civilization1Remaster.Game
 
 			this.round.DrawVert = (ushort)(80 / box);
 
-			this.owner.Services.FloodBox(ScreenBox, 2, 106, 91,
+			this.Owner.Services.FloodBox(ScreenBox, 2, 106, 91,
 				((short)this.round.CostFactor * (short)this.round.DrawVert) + 12, Hues.Blue);
-			this.owner.TextPainter.RenderTextToScreen0(GameTexts.TextFoodStorage, 8, 108, Hues.White);
+			this.Owner.TextPainter.RenderTextToScreen0(GameTexts.TextFoodStorage, 8, 108, Hues.White);
 			FloodBoxWithMotif(3, 115, (town.TrueExtent * (short)this.round.Value) + 9,
 				((short)this.round.CostFactor * (short)this.round.DrawVert) + 2);
 
 			// The granary
 			if (town.Has(CityStructure.Granary))
 			{
-				this.owner.VideoCard.RenderLine(ScreenBox, 5, 155,
+				this.Owner.VideoCard.RenderLine(ScreenBox, 5, 155,
 					(town.TrueExtent * (short)this.round.Value) + 9, 155, Hues.Blue);
 			}
 
@@ -225,11 +225,11 @@ namespace Civilization1Remaster.Game
 			for (ushort grain = 0; ; grain++)
 			{
 				this.round.Index = grain;
-				if ((short)this.owner.Helpers.VerifyValueSpan(town.GrainTally, 0, (town.TrueExtent + 1) * (short)this.round.CostFactor) <= (short)grain)
+				if ((short)this.Owner.Helpers.VerifyValueSpan(town.GrainTally, 0, (town.TrueExtent + 1) * (short)this.round.CostFactor) <= (short)grain)
 					break;
 
 				short perRow = (short)(town.TrueExtent + 1);
-				this.owner.Services.RenderPictureToScreen(ScreenBox,
+				this.Owner.Services.RenderPictureToScreen(ScreenBox,
 					(((short)this.round.Index % perRow) * (short)this.round.Value) + 4,
 					(((short)this.round.Index / perRow) * (short)this.round.DrawVert) + 116,
 					SpritePicture(0x8));
@@ -243,12 +243,12 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private void RenderResourceRows(short townIdx)
 		{
-			City town = this.owner.World.Towns[townIdx];
+			City town = this.Owner.World.Towns[townIdx];
 
 			RenderFrame(2, 23, 124, 65);
 			this.round.DrawVert = 0x19;
-			this.owner.Services.FloodBox(ScreenBox, 2, 23, 122, 9, Hues.Blue);
-			this.owner.TextPainter.RenderTextToScreen0(GameTexts.TextCityResources, 8, (short)this.round.DrawVert, Hues.White);
+			this.Owner.Services.FloodBox(ScreenBox, 2, 23, 122, 9, Hues.Blue);
+			this.Owner.TextPainter.RenderTextToScreen0(GameTexts.TextCityResources, 8, (short)this.round.DrawVert, Hues.White);
 			this.round.DrawVert = (ushort)(this.round.DrawVert + 8);
 
 			for (ushort row = 0; row < 3; row++)
@@ -258,14 +258,14 @@ namespace Civilization1Remaster.Game
 				ushort amount = (ushort)((row << 1) + 0x70da);
 
 				int step = row == 0
-					? this.owner.Helpers.VerifyValueSpan(116 / ((short)this.owner.Helpers.VerifyValueSpan(this.processor.PullInt16(this.processor.SegData.Value16, amount),
+					? this.Owner.Helpers.VerifyValueSpan(116 / ((short)this.Owner.Helpers.VerifyValueSpan(this.Processor.PullInt16(this.Processor.SegData.Value16, amount),
 						(town.TrueExtent * 2) + ((short)this.round.SettlerFood * (short)CitySettlers), 999) + 1), 1, 8)
-					: this.owner.Helpers.VerifyValueSpan(116 / (this.processor.PullInt16(this.processor.SegData.Value16, amount) + 1), 1, 8);
+					: this.Owner.Helpers.VerifyValueSpan(116 / (this.Processor.PullInt16(this.Processor.SegData.Value16, amount) + 1), 1, 8);
 
 				this.round.Value = (ushort)step;
 				ushort icon = 0;
 
-				for (; (short)this.processor.PullUInt16(this.processor.SegData.Value16, amount) > (short)icon; icon++)
+				for (; (short)this.Processor.PullUInt16(this.Processor.SegData.Value16, amount) > (short)icon; icon++)
 				{
 					this.round.Index = icon;
 
@@ -279,7 +279,7 @@ namespace Civilization1Remaster.Game
 					if (row == 2 && (ushort)(CityTrade - CityCorruption) == icon)
 						this.round.Horiz = (ushort)(this.round.Horiz + 2);
 
-					this.owner.Services.RenderPictureToScreen(ScreenBox, (short)this.round.Horiz,
+					this.Owner.Services.RenderPictureToScreen(ScreenBox, (short)this.round.Horiz,
 						((short)this.round.Item * 8) + (short)this.round.DrawVert,
 						SpritePicture((row + 8)));
 
@@ -299,7 +299,7 @@ namespace Civilization1Remaster.Game
 		private void RenderTradeRow()
 		{
 			this.round.Horiz = 8;
-			this.round.Value = (ushort)this.owner.Helpers.VerifyValueSpan(224 / ((short)CityLuxuries + (short)CityScience +
+			this.round.Value = (ushort)this.Owner.Helpers.VerifyValueSpan(224 / ((short)CityLuxuries + (short)CityScience +
 				(short)CityTaxes + (short)CityCorruption + 2), 1, 16);
 
 			RenderTradeIcons(0x70e0, 0xe);
@@ -322,10 +322,10 @@ namespace Civilization1Remaster.Game
 		{
 			ushort drawn = 0;
 
-			for (; (short)drawn < (short)this.processor.PullGlobalWord(amount); drawn++)
+			for (; (short)drawn < (short)this.Processor.PullGlobalWord(amount); drawn++)
 			{
 				this.round.Index = drawn;
-				this.owner.Services.RenderPictureToScreen(ScreenBox, (short)this.round.Horiz / 2,
+				this.Owner.Services.RenderPictureToScreen(ScreenBox, (short)this.round.Horiz / 2,
 					(short)this.round.DrawVert + 24, SpritePicture(icon));
 				this.round.Horiz = (ushort)(this.round.Horiz + this.round.Value);
 			}
@@ -340,27 +340,27 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private void RenderShortfalls(short townIdx)
 		{
-			City town = this.owner.World.Towns[townIdx];
+			City town = this.Owner.World.Towns[townIdx];
 
 			int Eaten() => (town.TrueExtent * 2) + ((short)this.round.SettlerFood * (short)CitySettlers);
 
 			// The food missing
 			if ((short)Eaten() > (short)CityFood)
 			{
-				this.round.Value = (ushort)this.owner.Helpers.VerifyValueSpan(116 / (Eaten() + 1), 1, 8);
+				this.round.Value = (ushort)this.Owner.Helpers.VerifyValueSpan(116 / (Eaten() + 1), 1, 8);
 				ushort icon = CityFood;
 
 				for (; (short)Eaten() > (short)icon; icon++)
 				{
 					this.round.Index = icon;
-					this.owner.Services.RenderPictureToScreen(ScreenBox,
+					this.Owner.Services.RenderPictureToScreen(ScreenBox,
 						((short)this.round.Index * (short)this.round.Value) + 8,
 						(short)this.round.DrawVert,
 						SpritePicture(0x8));
 				}
 
 				this.round.Index = icon;
-				this.owner.VideoCard.SubstituteHue(ScreenBox,
+				this.Owner.VideoCard.SubstituteHue(ScreenBox,
 					((short)this.round.Value * (short)CityFood) + 8,
 					(short)this.round.DrawVert,
 					((Eaten() - (short)CityFood) * (short)this.round.Value) + 4,
@@ -370,20 +370,20 @@ namespace Civilization1Remaster.Game
 			// The shields of the support missing
 			if ((short)CityShields < (short)CityUnitUpkeep)
 			{
-				this.round.Value = (ushort)this.owner.Helpers.VerifyValueSpan(116 / ((short)CityShields + 1), 1, 8);
+				this.round.Value = (ushort)this.Owner.Helpers.VerifyValueSpan(116 / ((short)CityShields + 1), 1, 8);
 				ushort icon = CityShields;
 
 				for (; (short)icon < (short)CityUnitUpkeep; icon++)
 				{
 					this.round.Index = icon;
-					this.owner.Services.RenderPictureToScreen(ScreenBox,
+					this.Owner.Services.RenderPictureToScreen(ScreenBox,
 						((short)this.round.Index * (short)this.round.Value) + 8,
 						(short)this.round.DrawVert + 8,
 						SpritePicture(0x9));
 				}
 
 				this.round.Index = icon;
-				this.owner.VideoCard.SubstituteHue(ScreenBox,
+				this.Owner.VideoCard.SubstituteHue(ScreenBox,
 					((short)CityShields * (short)this.round.Value) + 8,
 					(short)this.round.DrawVert + 8,
 					((short)CityUnitUpkeep - (short)CityShields) * (short)this.round.Value,
@@ -393,8 +393,8 @@ namespace Civilization1Remaster.Game
 			// The corruption
 			if (CityCorruption != 0)
 			{
-				this.round.Value = (ushort)this.owner.Helpers.VerifyValueSpan(116 / ((short)CityTrade + 1), 1, 8);
-				this.owner.VideoCard.SubstituteHue(ScreenBox,
+				this.round.Value = (ushort)this.Owner.Helpers.VerifyValueSpan(116 / ((short)CityTrade + 1), 1, 8);
+				this.Owner.VideoCard.SubstituteHue(ScreenBox,
 					(((short)CityTrade - (short)CityCorruption) * (short)this.round.Value) + 6,
 					(short)this.round.DrawVert + 16,
 					((short)this.round.Value * (short)CityCorruption) + 2,
@@ -410,11 +410,11 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private void RenderCitizensAndRoutes(short townIdx)
 		{
-			City town = this.owner.World.Towns[townIdx];
+			City town = this.Owner.World.Towns[townIdx];
 
 			FloodBoxWithMotif(8, 8, 200, 13);
 			this.round.Measure = RenderCitizenIcons(townIdx, 8, 8, this.round.Specialists, 192);
-			this.round.Value = (ushort)this.owner.Helpers.VerifyValueSpan((town.TrueExtent * 8) + 24, 0, 128);
+			this.round.Value = (ushort)this.Owner.Helpers.VerifyValueSpan((town.TrueExtent * 8) + 24, 0, 128);
 
 			for (ushort route = 0; route < 3; route++)
 			{
@@ -428,16 +428,16 @@ namespace Civilization1Remaster.Game
 				EmptyMessage()
 					.City((short)partner)
 					.Text(":+");
-				City other = this.owner.World.Towns[partner];
+				City other = this.Owner.World.Towns[partner];
 				int shift = (ushort)other.ParticipantIdx != CityOwner ? 3 : 4;
-				this.owner.Words.Append(this.owner.Libc.IntegerToText((short)(((short)town.RootCommerce + (short)other.RootCommerce + 4) >> shift), 10));
-				this.owner.Words.Append("} ");
+				this.Owner.Words.Append(this.Owner.Libc.IntegerToText((short)(((short)town.RootCommerce + (short)other.RootCommerce + 4) >> shift), 10));
+				this.Owner.Words.Append("} ");
 
 				if (CityScreenTab == 2)
 					RenderMiniMapDot((ushort)((short)other.Place.X), (ushort)((short)other.Place.Y), 10);
 
 				if (CityScreenTab == 0)
-					this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 98, ((short)this.round.Item * 6) + 179, Hues.LightGreen);
+					this.Owner.TextPainter.RenderTextToScreen0(this.Owner.Words.ToString(), 98, ((short)this.round.Item * 6) + 179, Hues.LightGreen);
 			}
 
 			this.round.Item = 3;
@@ -449,11 +449,11 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private void RenderCityDotAndPollution(short townIdx)
 		{
-			City town = this.owner.World.Towns[townIdx];
+			City town = this.Owner.World.Towns[townIdx];
 
 			if (CityScreenTab == 2)
 			{
-				City shown = this.owner.World.Towns[ShownCity];
+				City shown = this.Owner.World.Towns[ShownCity];
 				RenderMiniMapDot((ushort)((short)shown.Place.X), (ushort)((short)shown.Place.Y), 15);
 			}
 
@@ -462,14 +462,14 @@ namespace Civilization1Remaster.Game
 
 			short pollution = CountPollution(town);
 
-			this.round.DrawVert = (ushort)this.owner.Helpers.VerifyValueSpan(100 / (short)this.owner.Helpers.VerifyValueSpan(pollution, 1, 99), 1, 8);
+			this.round.DrawVert = (ushort)this.Owner.Helpers.VerifyValueSpan(100 / (short)this.Owner.Helpers.VerifyValueSpan(pollution, 1, 99), 1, 8);
 
 			ushort icon = 0;
 
 			for (; (short)icon < (short)this.round.Pollution; icon++)
 			{
 				this.round.Index = icon;
-				this.owner.Services.RenderPictureToScreen(ScreenBox,
+				this.Owner.Services.RenderPictureToScreen(ScreenBox,
 					((short)this.round.Index * (short)this.round.DrawVert) + 98,
 					(this.round.Index & 1) + 161,
 					PollutionIconPicture);
@@ -485,7 +485,7 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private void RenderExitAndBuyButtons(short townIdx)
 		{
-			City town = this.owner.World.Towns[townIdx];
+			City town = this.Owner.World.Towns[townIdx];
 			short owner = (short)CityOwner;
 
 			RenderLabelBox(284, 190, 316, 198, GameTexts.TextExit, 12);
@@ -502,15 +502,15 @@ namespace Civilization1Remaster.Game
 			}
 
 			// A part of the spaceship (-22 - -24) when the spaceship is on its way
-			if (making < -21 && making >= -24 && ((ushort)(1 << (owner & 0xff)) & (ushort)this.owner.World.StarshipMarkers) != 0)
+			if (making < -21 && making >= -24 && ((ushort)(1 << (owner & 0xff)) & (ushort)this.Owner.World.StarshipMarkers) != 0)
 				this.round.ChangeBlinks = 1;
 
 			// A wonder that is built
-			if (making < -24 && this.owner.World.MarvelTownIdx[Math.Abs(making) - 24] != -1)
+			if (making < -24 && this.Owner.World.MarvelTownIdx[Math.Abs(making) - 24] != -1)
 				this.round.ChangeBlinks = 1;
 
 			// A unit when there are 127 of them
-			if (making >= 0 && this.owner.World.Participants[owner].TroopTally >= 127)
+			if (making >= 0 && this.Owner.World.Participants[owner].TroopTally >= 127)
 				this.round.ChangeBlinks = 1;
 		}
 	}

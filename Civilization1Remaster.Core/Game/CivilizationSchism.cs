@@ -25,11 +25,11 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public ushort DivideCivilization(short participantIdx)
 		{
-			this.processor.Journal.OpenScope($"DivideCivilization({participantIdx})");
+			this.Processor.Journal.OpenScope($"DivideCivilization({participantIdx})");
 
 			ushort result = SplitCivilization(participantIdx);
 
-			this.processor.Journal.CloseScope("DivideCivilization");
+			this.Processor.Journal.CloseScope("DivideCivilization");
 
 			return result;
 		}
@@ -39,16 +39,16 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public void AssignCityOwner(short townIdx, short participantIdx)
 		{
-			this.processor.Journal.OpenScope($"AssignCityOwner({townIdx}, {participantIdx})");
+			this.Processor.Journal.OpenScope($"AssignCityOwner({townIdx}, {participantIdx})");
 
-			this.owner.World.Towns[townIdx].ParticipantIdx = participantIdx;
+			this.Owner.World.Towns[townIdx].ParticipantIdx = participantIdx;
 
-			this.owner.MapOps.MapAssignCityOwner(participantIdx, 
-				this.owner.World.Towns[townIdx].Place.X, this.owner.World.Towns[townIdx].Place.Y);
+			this.Owner.MapOps.MapAssignCityOwner(participantIdx, 
+				this.Owner.World.Towns[townIdx].Place.X, this.Owner.World.Towns[townIdx].Place.Y);
 
-			this.owner.World.Participants[participantIdx].GrandTownExtent += this.owner.World.Towns[townIdx].TrueExtent;
+			this.Owner.World.Participants[participantIdx].GrandTownExtent += this.Owner.World.Towns[townIdx].TrueExtent;
 
-			this.processor.Journal.CloseScope("AssignCityOwner");
+			this.Processor.Journal.CloseScope("AssignCityOwner");
 		}
 
 		/// <summary>
@@ -58,14 +58,14 @@ namespace Civilization1Remaster.Game
 		/// <returns>City index, 0xffff when none (also in AX)</returns>
 		public ushort ObtainDistanceToCapital(short participantIdx)
 		{
-			this.processor.Journal.OpenScope($"ObtainDistanceToCapital({participantIdx})");
+			this.Processor.Journal.OpenScope($"ObtainDistanceToCapital({participantIdx})");
 
 			short smallestSum = 0x7fff;
 			ushort central = 0xffff;
 
 			for (int townIdx = 0; townIdx < 0x80; townIdx++)
 			{
-				City town = this.owner.World.Towns[townIdx];
+				City town = this.Owner.World.Towns[townIdx];
 
 				if (town.ParticipantIdx != participantIdx || town.ConditionMarker == 0xff)
 					continue;
@@ -74,11 +74,11 @@ namespace Civilization1Remaster.Game
 
 				for (int otherIdx = 0; otherIdx < 0x80; otherIdx++)
 				{
-					City other = this.owner.World.Towns[otherIdx];
+					City other = this.Owner.World.Towns[otherIdx];
 
 					if (other.ParticipantIdx == participantIdx && other.ConditionMarker != 0xff)
 					{
-						sum = (short)(sum + this.owner.Helpers.ObtainDistance(town.Place.X, other.Place.X, town.Place.Y, other.Place.Y));
+						sum = (short)(sum + this.Owner.Helpers.ObtainDistance(town.Place.X, other.Place.X, town.Place.Y, other.Place.Y));
 					}
 				}
 
@@ -90,7 +90,7 @@ namespace Civilization1Remaster.Game
 			}
 
 
-			this.processor.Journal.CloseScope("ObtainDistanceToCapital");
+			this.Processor.Journal.CloseScope("ObtainDistanceToCapital");
 
 			return central;
 		}
@@ -102,7 +102,7 @@ namespace Civilization1Remaster.Game
 
 			for (ushort slotIdx = 1; slotIdx < 8; slotIdx++)
 			{
-				if (this.owner.World.Participants[slotIdx].TroopTally == 0 && this.owner.World.Participants[slotIdx].TownTally == 0)
+				if (this.Owner.World.Participants[slotIdx].TroopTally == 0 && this.Owner.World.Participants[slotIdx].TownTally == 0)
 				{
 					rebelIdx = (short)slotIdx;
 					break;
@@ -120,21 +120,21 @@ namespace Civilization1Remaster.Game
 
 			for (ushort townIdx = 0; townIdx < 0x80; townIdx++)
 			{
-				City town = this.owner.World.Towns[townIdx];
+				City town = this.Owner.World.Towns[townIdx];
 
 				if (town.ConditionMarker == 0xff || town.ParticipantIdx != participantIdx)
 					continue;
 
-				ushort continent = this.owner.MapOps.ObtainContinentID(town.Place.X, town.Place.Y);
+				ushort continent = this.Owner.MapOps.ObtainContinentID(town.Place.X, town.Place.Y);
 				continentShares[continent] = (ushort)(continentShares[continent] + town.TrueExtent);
 
 				if (!town.Has(CityStructure.Palace))
 					continue;
 
-				if (capitalContinent != 0xffff && (ushort)this.owner.World.Participants[participantIdx].HorizBegin != (ushort)(short)town.Place.X)
+				if (capitalContinent != 0xffff && (ushort)this.Owner.World.Participants[participantIdx].HorizBegin != (ushort)(short)town.Place.X)
 					continue;
 
-				capitalContinent = this.owner.MapOps.ObtainContinentID(town.Place.X, town.Place.Y);
+				capitalContinent = this.Owner.MapOps.ObtainContinentID(town.Place.X, town.Place.Y);
 				capitalX = (short)town.Place.X;
 				capitalY = (short)town.Place.Y;
 				oldCapital = townIdx;
@@ -148,28 +148,28 @@ namespace Civilization1Remaster.Game
 
 			DivideContinents(participantIdx, rebelIdx, continentShares, capitalContinent, capitalX, capitalY);
 
-			this.owner.World.Participants[participantIdx].GrandTownExtent += this.owner.World.Participants[rebelIdx].GrandTownExtent;
+			this.Owner.World.Participants[participantIdx].GrandTownExtent += this.Owner.World.Participants[rebelIdx].GrandTownExtent;
 
 			TransferRebelUnits(participantIdx, rebelIdx);
 
-			bool classic = this.owner.TurnHooks.ClassicSchism;
+			bool classic = this.Owner.TurnHooks.ClassicSchism;
 
 			ushort capitalIdx = ObtainDistanceToCapital(rebelIdx);
 
 			// The new civilization without a city gets no capital (ClassicSchism: Towns[0xffff] throws)
 			if (classic || capitalIdx != 0xffff)
 			{
-				this.owner.World.Towns[capitalIdx].StructureMarkers0 |= 1;
-				this.owner.World.Participants[rebelIdx].HorizBegin = (short)this.owner.World.Towns[capitalIdx].Place.X;
+				this.Owner.World.Towns[capitalIdx].StructureMarkers0 |= 1;
+				this.Owner.World.Participants[rebelIdx].HorizBegin = (short)this.Owner.World.Towns[capitalIdx].Place.X;
 			}
 
-			if (participantIdx == this.owner.World.PersonParticipantIdx)
+			if (participantIdx == this.Owner.World.PersonParticipantIdx)
 			{
-				this.owner.MapOps.FocusMapView(this.owner.World.PersonParticipantIdx, (short)MapViewHoriz, (short)MapViewVert);
+				this.Owner.MapOps.FocusMapView(this.Owner.World.PersonParticipantIdx, (short)MapViewHoriz, (short)MapViewVert);
 			}
 			else
 			{
-				this.owner.World.Towns[oldCapital].ParticipantIdx = -1;
+				this.Owner.World.Towns[oldCapital].ParticipantIdx = -1;
 
 				ushort newCapital = ObtainDistanceToCapital(participantIdx);
 
@@ -178,9 +178,9 @@ namespace Civilization1Remaster.Game
 					newCapital = oldCapital;
 
 
-				this.owner.World.Towns[newCapital].StructureMarkers0 |= 1;
-				this.owner.World.Participants[participantIdx].HorizBegin = (short)this.owner.World.Towns[newCapital].Place.X;
-				this.owner.World.Towns[oldCapital].ParticipantIdx = participantIdx;
+				this.Owner.World.Towns[newCapital].StructureMarkers0 |= 1;
+				this.Owner.World.Participants[participantIdx].HorizBegin = (short)this.Owner.World.Towns[newCapital].Place.X;
+				this.Owner.World.Towns[oldCapital].ParticipantIdx = participantIdx;
 			}
 
 			return 1;
@@ -192,17 +192,17 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private bool RaiseRebelCivilization(short participantIdx, short rebelIdx)
 		{
-			bool barbarians = rebelIdx > (short)(this.owner.World.BotRivalTally + 1);
+			bool barbarians = rebelIdx > (short)(this.Owner.World.BotRivalTally + 1);
 
-			this.owner.World.LiveRealms &= (short)~(1 << (byte)rebelIdx);
+			this.Owner.World.LiveRealms &= (short)~(1 << (byte)rebelIdx);
 
-			if (this.owner.NewGameWizard.ConstructCivilization(rebelIdx) == 0)
+			if (this.Owner.NewGameWizard.ConstructCivilization(rebelIdx) == 0)
 				return false;
 
-			this.owner.World.LiveRealms |= (short)(1 << (byte)rebelIdx);
+			this.Owner.World.LiveRealms |= (short)(1 << (byte)rebelIdx);
 
-			Player rebel = this.owner.World.Participants[rebelIdx];
-			Player player = this.owner.World.Participants[participantIdx];
+			Player rebel = this.Owner.World.Participants[rebelIdx];
+			Player player = this.Owner.World.Participants[participantIdx];
 			bool newLeader = barbarians;
 
 			if (!barbarians)
@@ -214,10 +214,10 @@ namespace Civilization1Remaster.Game
 
 			if (newLeader)
 			{
-				rebel.ChiefVisuals = (short)(this.owner.Libc.Dice.DrawInt(2) != 0 ? rebelIdx : rebelIdx + 8);
+				rebel.ChiefVisuals = (short)(this.Owner.Libc.Dice.DrawInt(2) != 0 ? rebelIdx : rebelIdx + 8);
 
 				if ((short)rebel.ChiefVisuals >= 8)
-					this.owner.World.ParticipantIdentMarkers |= (short)(1 << (byte)rebelIdx);
+					this.Owner.World.ParticipantIdentMarkers |= (short)(1 << (byte)rebelIdx);
 			}
 			else
 			{
@@ -228,31 +228,31 @@ namespace Civilization1Remaster.Game
 
 			ushort leaderNames = (ushort)(0x3a * rebel.ChiefVisuals);
 
-			this.owner.Names.Set(LeaderNameAt(names), LeaderTextAt(leaderNames, LeaderTable.Name));
+			this.Owner.Names.Set(LeaderNameAt(names), LeaderTextAt(leaderNames, LeaderTable.Name));
 
-			this.owner.Names.Set(CivilizationNameAt(names), LeaderText(rebel.ChiefVisuals, LeaderTable.Civilization));
+			this.Owner.Names.Set(CivilizationNameAt(names), LeaderText(rebel.ChiefVisuals, LeaderTable.Civilization));
 
-			this.owner.Words.Set(LeaderText(rebel.ChiefVisuals, LeaderTable.CivilizationPlural));
+			this.Owner.Words.Set(LeaderText(rebel.ChiefVisuals, LeaderTable.CivilizationPlural));
 
-			if (this.owner.Words[0] == 0)
+			if (this.Owner.Words[0] == 0)
 			{
 				Message(CivilizationNameAt(names))
 					.Text("s");
 			}
 
-			this.owner.Names.Set(CivilizationPluralAt(names), this.owner.Words.ToString());
+			this.Owner.Names.Set(CivilizationPluralAt(names), this.Owner.Words.ToString());
 
-			this.owner.Words.Clear();
+			this.Owner.Words.Clear();
 
-			this.owner.Codes.Set(0, CivilizationName((ushort)participantIdx));
+			this.Owner.Codes.Set(0, CivilizationName((ushort)participantIdx));
 
-			this.owner.Codes.Set(1, CivilizationNameAt(names));
+			this.Owner.Codes.Set(1, CivilizationNameAt(names));
 
-			this.owner.BlockText.DisplayTextDialog(participantIdx == this.owner.World.PersonParticipantIdx ? (ushort)0x4a18 : (ushort)0x4a20);
+			this.Owner.BlockText.DisplayTextDialog(participantIdx == this.Owner.World.PersonParticipantIdx ? (ushort)0x4a18 : (ushort)0x4a20);
 
 			DialogStyle = 0x5;
 
-			this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 80, 80);
+			this.Owner.TurnHooks.DisplayDialog(TextBuffer.Address, 80, 80);
 
 			rebel.Gold = (short)(player.Gold / 2);
 			player.Gold -= rebel.Gold;
@@ -263,7 +263,7 @@ namespace Civilization1Remaster.Game
 
 			// The new civilization knows the player's technologies (ClassicSchism: they go back onto the player himself, like
 			// in the translated code, and the new civilization gets none)
-			bool classic = this.owner.TurnHooks.ClassicSchism;
+			bool classic = this.Owner.TurnHooks.ClassicSchism;
 			Player learner = classic ? player : rebel;
 
 			for (ushort scienceIdx = 0; scienceIdx < 5; scienceIdx++)
@@ -271,7 +271,7 @@ namespace Civilization1Remaster.Game
 				learner.FoundScienceMarkers[scienceIdx] = player.FoundScienceMarkers[scienceIdx];
 			}
 
-			rebel.TouchParticipantTimeleft = (short)(this.owner.World.RoundTally - 8);
+			rebel.TouchParticipantTimeleft = (short)(this.Owner.World.RoundTally - 8);
 
 			// War: the player's relation to the new civilization and the new civilization's to the player (ClassicSchism: both
 			// flags go into the player's relation, like in the translated code)
@@ -320,12 +320,12 @@ namespace Civilization1Remaster.Game
 			{
 				for (ushort townIdx = 0; townIdx < 0x80; townIdx++)
 				{
-					City town = this.owner.World.Towns[townIdx];
+					City town = this.Owner.World.Towns[townIdx];
 
 					if (town.ConditionMarker == 0xff || town.ParticipantIdx != participantIdx)
 						continue;
 
-					ushort townContinent = this.owner.MapOps.ObtainContinentID(town.Place.X, town.Place.Y);
+					ushort townContinent = this.Owner.MapOps.ObtainContinentID(town.Place.X, town.Place.Y);
 
 					if (continentShares[townContinent] == 2)
 						AssignCityOwner((short)townIdx, rebelIdx);
@@ -337,18 +337,18 @@ namespace Civilization1Remaster.Game
 			given = 0;
 			ushort farthestIdx = 0;
 
-			while (CPU.SignedQuotient((short)(9 * given), (short)(SchismShareDc6a + 3)) < this.owner.World.Participants[participantIdx].GrandTownExtent)
+			while (CPU.SignedQuotient((short)(9 * given), (short)(SchismShareDc6a + 3)) < this.Owner.World.Participants[participantIdx].GrandTownExtent)
 			{
 				short farthest = 1;
 
 				for (ushort townIdx = 0; townIdx < 0x80; townIdx++)
 				{
-					City town = this.owner.World.Towns[townIdx];
+					City town = this.Owner.World.Towns[townIdx];
 
 					if (town.ConditionMarker == 0xff || town.ParticipantIdx != participantIdx)
 						continue;
 
-					short distance = (short)(ushort)this.owner.Helpers.ObtainDistance(town.Place.X, capitalX, town.Place.Y, capitalY);
+					short distance = (short)(ushort)this.Owner.Helpers.ObtainDistance(town.Place.X, capitalX, town.Place.Y, capitalY);
 
 					if (distance > farthest)
 					{
@@ -359,11 +359,11 @@ namespace Civilization1Remaster.Game
 
 				// Without a farther city no city is left to give (ClassicSchism: the one of the last round is taken again, or
 				// city 0 of anybody, like in the translated code)
-				if (!this.owner.TurnHooks.ClassicSchism && farthest == 1)
+				if (!this.Owner.TurnHooks.ClassicSchism && farthest == 1)
 					break;
 
 
-				given += this.owner.World.Towns[farthestIdx].TrueExtent;
+				given += this.Owner.World.Towns[farthestIdx].TrueExtent;
 
 				AssignCityOwner((short)farthestIdx, rebelIdx);
 			}
@@ -386,7 +386,7 @@ namespace Civilization1Remaster.Game
 
 				short unitKind = (sbyte)this.Troops.PullAt(troop, UnitMemory.Kind);
 
-				if ((this.owner.MapOps.ObtainTileImprovements((sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert)) & 1) != 0)
+				if ((this.Owner.MapOps.ObtainTileImprovements((sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert)) & 1) != 0)
 					TransferUnitInCity(participantIdx, rebelIdx, troopIdx, troop);
 				else
 					TransferUnitOutside(participantIdx, rebelIdx, troopIdx, troop, unitKind);
@@ -396,7 +396,7 @@ namespace Civilization1Remaster.Game
 		/// <summary>A unit of the player in a city (see TransferRebelUnits)</summary>
 		private void TransferUnitInCity(short participantIdx, short rebelIdx, ushort troopIdx, ushort troop)
 		{
-			ushort townIdx = this.owner.Helpers.LocateCityAtPosition((sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert));
+			ushort townIdx = this.Owner.Helpers.LocateCityAtPosition((sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert));
 			short unitKind = (sbyte)this.Troops.PullAt(troop, UnitMemory.Kind);
 
 			ushort townRecord = (ushort)(0x1c * townIdx);
@@ -405,32 +405,32 @@ namespace Civilization1Remaster.Game
 
 			// AX holds the home city's offset like in the original (for a unit without a home, 0xff, see HomeOwner)
 
-			if (HomeOwner(participantIdx, homeIdx) != this.owner.World.Towns[townIdx].ParticipantIdx)
+			if (HomeOwner(participantIdx, homeIdx) != this.Owner.World.Towns[townIdx].ParticipantIdx)
 			{
-				this.owner.UnitOps.EliminateUnit(participantIdx, (short)troopIdx);
+				this.Owner.UnitOps.EliminateUnit(participantIdx, (short)troopIdx);
 
-				this.owner.MapOps.TagTileOwned((sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert));
+				this.Owner.MapOps.TagTileOwned((sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert));
 
 				// The unit goes to the city's owner (ClassicSchism: to the player in the raw byte at 0x1c * city of the data
 				// segment, like in the translated code, which lost the address of the city table), with its kind (ClassicSchism:
 				// the kind read after EliminateUnit, -1, like in the original: the unit vanishes, C# throws)
-				bool classic = this.owner.TurnHooks.ClassicSchism;
-				short cityOwner = classic ? (sbyte)this.processor.PullGlobalByte(townRecord) : this.owner.World.Towns[townIdx].ParticipantIdx;
+				bool classic = this.Owner.TurnHooks.ClassicSchism;
+				short cityOwner = classic ? (sbyte)this.Processor.PullGlobalByte(townRecord) : this.Owner.World.Towns[townIdx].ParticipantIdx;
 				short kind = classic ? (sbyte)this.Troops.PullAt(troop, UnitMemory.Kind) : unitKind;
 
-				this.owner.UnitOps.ConstructUnit(cityOwner, kind,
+				this.Owner.UnitOps.ConstructUnit(cityOwner, kind,
 					(sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert));
 				return;
 			}
 
-			if ((ushort)this.owner.World.Towns[townIdx].ParticipantIdx != (ushort)rebelIdx)
+			if ((ushort)this.Owner.World.Towns[townIdx].ParticipantIdx != (ushort)rebelIdx)
 				return;
 
-			this.owner.UnitOps.EliminateUnit(participantIdx, (short)troopIdx);
+			this.Owner.UnitOps.EliminateUnit(participantIdx, (short)troopIdx);
 
-			this.owner.MapOps.TagTileOwned((sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert));
+			this.Owner.MapOps.TagTileOwned((sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert));
 
-			ushort newTroop = this.owner.UnitOps.ConstructUnit(rebelIdx, unitKind,
+			ushort newTroop = this.Owner.UnitOps.ConstructUnit(rebelIdx, unitKind,
 				(sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert));
 
 			ushort copy = (ushort)((ushort)(0xc * newTroop) + (ushort)(0x600 * rebelIdx));
@@ -468,13 +468,13 @@ namespace Civilization1Remaster.Game
 				return;
 			}
 
-			this.owner.UnitOps.EliminateUnit(participantIdx, (short)troopIdx);
+			this.Owner.UnitOps.EliminateUnit(participantIdx, (short)troopIdx);
 
-			this.owner.MapOps.MapAssignCityOwner(rebelIdx, (sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert));
+			this.Owner.MapOps.MapAssignCityOwner(rebelIdx, (sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert));
 
-			this.owner.MapOps.TagTileOwned((sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert));
+			this.Owner.MapOps.TagTileOwned((sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert));
 
-			ushort newTroop = this.owner.UnitOps.ConstructUnit(rebelIdx, unitKind,
+			ushort newTroop = this.Owner.UnitOps.ConstructUnit(rebelIdx, unitKind,
 				(sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert));
 
 			ushort copy = (ushort)((ushort)(0x600 * rebelIdx) + (ushort)(0xc * newTroop));
@@ -490,15 +490,15 @@ namespace Civilization1Remaster.Game
 				short following = (sbyte)this.Troops.PullAt(other, UnitMemory.FollowingInStack);
 				short kind = (sbyte)this.Troops.PullAt(other, UnitMemory.Kind);
 
-				this.owner.UnitOps.EliminateUnit(participantIdx, next);
+				this.Owner.UnitOps.EliminateUnit(participantIdx, next);
 
-				this.owner.MapOps.MapAssignCityOwner(rebelIdx, (sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert));
+				this.Owner.MapOps.MapAssignCityOwner(rebelIdx, (sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert));
 
 				if (kind != -1)
 				{
-					this.owner.MapOps.TagTileOwned((sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert));
+					this.Owner.MapOps.TagTileOwned((sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert));
 
-					ushort joined = this.owner.UnitOps.ConstructUnit(rebelIdx, kind,
+					ushort joined = this.Owner.UnitOps.ConstructUnit(rebelIdx, kind,
 						(sbyte)this.Troops.PullAt(troop, UnitMemory.Horiz), (sbyte)this.Troops.PullAt(troop, UnitMemory.Vert));
 
 					ushort joinedCopy = (ushort)((ushort)(0x600 * rebelIdx) + (ushort)(0xc * joined));
@@ -520,7 +520,7 @@ namespace Civilization1Remaster.Game
 		/// (HomeCityRules.HasHome)
 		/// </summary>
 		private short HomeOwner(short participantIdx, byte homeIdx) =>
-			HomeCityRules.HasHome(homeIdx, this.owner.TurnHooks.ClassicSchismHomes) ?
-				this.owner.World.Towns[homeIdx].ParticipantIdx : participantIdx;
+			HomeCityRules.HasHome(homeIdx, this.Owner.TurnHooks.ClassicSchismHomes) ?
+				this.Owner.World.Towns[homeIdx].ParticipantIdx : participantIdx;
 	}
 }

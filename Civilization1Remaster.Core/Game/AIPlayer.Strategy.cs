@@ -15,19 +15,19 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public void ReimposeStrategicLocations(short participantIdx)
 		{
-			this.processor.Journal.OpenScope($"ReimposeStrategicLocations({participantIdx})");
+			this.Processor.Journal.OpenScope($"ReimposeStrategicLocations({participantIdx})");
 
 			for (int entryIdx = 0; entryIdx < 0x20; entryIdx++)
 			{
 				ushort entry = (ushort)((participantIdx << 5) + entryIdx);
 
-				this.processor.EmitGlobalByte((ushort)(entry + ArmySelection.StrategicLocationRoleTableAddress), 0xff);
-				this.processor.EmitGlobalByte((ushort)(entry + ArmySelection.StrategicLocationPriorityTableAddress), 0x0);
+				this.Processor.EmitGlobalByte((ushort)(entry + ArmySelection.StrategicLocationRoleTableAddress), 0xff);
+				this.Processor.EmitGlobalByte((ushort)(entry + ArmySelection.StrategicLocationPriorityTableAddress), 0x0);
 			}
 
 			for (int siteIdx = 0; siteIdx < 0x10; siteIdx++)
 			{
-				StrategicLocation site = this.owner.World.Participants[participantIdx].TacticalSites[siteIdx];
+				StrategicLocation site = this.Owner.World.Participants[participantIdx].TacticalSites[siteIdx];
 
 				if (site.Live != -1 && site.Live <= 2)
 				{
@@ -35,7 +35,7 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			this.processor.Journal.CloseScope("ReimposeStrategicLocations");
+			this.Processor.Journal.CloseScope("ReimposeStrategicLocations");
 		}
 
 		/// <summary>
@@ -47,23 +47,23 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public void SendUnitToStrategicLocation(short participantIdx, short horizLoc, short vertLoc, short live, short strategy)
 		{
-			this.processor.Journal.OpenScope($"SendUnitToStrategicLocation({participantIdx}, {horizLoc}, {vertLoc}, {live}, {strategy})");
+			this.Processor.Journal.OpenScope($"SendUnitToStrategicLocation({participantIdx}, {horizLoc}, {vertLoc}, {live}, {strategy})");
 
 			for (int placeIdx = 0; placeIdx < 0x20; placeIdx++)
 			{
 				ushort place = (ushort)((participantIdx << 5) + placeIdx);
 
-				if (this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(place + ArmySelection.StrategicLocationHorizTableAddress)) == horizLoc &&
-					this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(place + ArmySelection.StrategicLocationVertTableAddress)) == vertLoc &&
-					this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(place + ArmySelection.StrategicLocationRoleTableAddress)) == live &&
-					this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(place + ArmySelection.StrategicLocationPriorityTableAddress)) <= strategy)
+				if (this.Processor.PullInt8(this.Processor.SegData.Value16, (ushort)(place + ArmySelection.StrategicLocationHorizTableAddress)) == horizLoc &&
+					this.Processor.PullInt8(this.Processor.SegData.Value16, (ushort)(place + ArmySelection.StrategicLocationVertTableAddress)) == vertLoc &&
+					this.Processor.PullInt8(this.Processor.SegData.Value16, (ushort)(place + ArmySelection.StrategicLocationRoleTableAddress)) == live &&
+					this.Processor.PullInt8(this.Processor.SegData.Value16, (ushort)(place + ArmySelection.StrategicLocationPriorityTableAddress)) <= strategy)
 				{
-					this.processor.Journal.CloseScope("SendUnitToStrategicLocation");
+					this.Processor.Journal.CloseScope("SendUnitToStrategicLocation");
 					return;
 				}
 			}
 
-			if (participantIdx == (short)TurnPlayer && participantIdx != this.owner.World.PersonParticipantIdx &&
+			if (participantIdx == (short)TurnPlayer && participantIdx != this.Owner.World.PersonParticipantIdx &&
 				(live == 3 || live == 4))
 			{
 				SendUnitOfRole(participantIdx, horizLoc, vertLoc, live);
@@ -73,20 +73,20 @@ namespace Civilization1Remaster.Game
 			{
 				ushort place = (ushort)((participantIdx << 5) + placeIdx);
 
-				if (this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(place + ArmySelection.StrategicLocationRoleTableAddress)) != 0xff &&
-					this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(place + ArmySelection.StrategicLocationPriorityTableAddress)) >= strategy)
+				if (this.Processor.PullUInt8(this.Processor.SegData.Value16, (ushort)(place + ArmySelection.StrategicLocationRoleTableAddress)) != 0xff &&
+					this.Processor.PullInt8(this.Processor.SegData.Value16, (ushort)(place + ArmySelection.StrategicLocationPriorityTableAddress)) >= strategy)
 					continue;
 
 				FreeStrategicLocation(participantIdx, (ushort)placeIdx);
 
-				this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(place + ArmySelection.StrategicLocationHorizTableAddress), (byte)horizLoc);
-				this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(place + ArmySelection.StrategicLocationVertTableAddress), (byte)vertLoc);
-				this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(place + ArmySelection.StrategicLocationRoleTableAddress), (byte)live);
-				this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(place + ArmySelection.StrategicLocationPriorityTableAddress), (byte)strategy);
+				this.Processor.EmitUInt8(this.Processor.SegData.Value16, (ushort)(place + ArmySelection.StrategicLocationHorizTableAddress), (byte)horizLoc);
+				this.Processor.EmitUInt8(this.Processor.SegData.Value16, (ushort)(place + ArmySelection.StrategicLocationVertTableAddress), (byte)vertLoc);
+				this.Processor.EmitUInt8(this.Processor.SegData.Value16, (ushort)(place + ArmySelection.StrategicLocationRoleTableAddress), (byte)live);
+				this.Processor.EmitUInt8(this.Processor.SegData.Value16, (ushort)(place + ArmySelection.StrategicLocationPriorityTableAddress), (byte)strategy);
 				break;
 			}
 
-			this.processor.Journal.CloseScope("SendUnitToStrategicLocation");
+			this.Processor.Journal.CloseScope("SendUnitToStrategicLocation");
 		}
 
 		/// <summary>
@@ -95,13 +95,13 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public void FreeStrategicLocation(short participantIdx, ushort place)
 		{
-			this.processor.Journal.OpenScope($"FreeStrategicLocation({participantIdx}, {place})");
+			this.Processor.Journal.OpenScope($"FreeStrategicLocation({participantIdx}, {place})");
 
 			for (int idx = 30; idx >= (short)place; idx--)
 			{
 				int entry = (participantIdx << 5) + idx;
 
-				if (this.processor.PullGlobalByte((ushort)(ArmySelection.StrategicLocationPriorityTableAddress + entry)) == 0)
+				if (this.Processor.PullGlobalByte((ushort)(ArmySelection.StrategicLocationPriorityTableAddress + entry)) == 0)
 					continue;
 
 				MoveListEntryOn(ArmySelection.StrategicLocationHorizTableAddress, entry);
@@ -110,7 +110,7 @@ namespace Civilization1Remaster.Game
 				MoveListEntryOn(ArmySelection.StrategicLocationPriorityTableAddress, entry);
 			}
 
-			this.processor.Journal.CloseScope("FreeStrategicLocation");
+			this.Processor.Journal.CloseScope("FreeStrategicLocation");
 		}
 
 		/// <summary>Clears the 16 tactical sites of the player (none, no strategy)</summary>
@@ -118,8 +118,8 @@ namespace Civilization1Remaster.Game
 		{
 			for (int idx = 0; idx < 16; idx++)
 			{
-				this.owner.World.Participants[participantIdx].TacticalSites[idx].Live = -1;
-				this.owner.World.Participants[participantIdx].TacticalSites[idx].Strategy = 0;
+				this.Owner.World.Participants[participantIdx].TacticalSites[idx].Live = -1;
+				this.Owner.World.Participants[participantIdx].TacticalSites[idx].Strategy = 0;
 			}
 		}
 
@@ -130,9 +130,9 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public void AttachStrategicLocation(short participantIdx, ushort horizLoc, ushort vertLoc, ushort live, ushort strategy)
 		{
-			this.processor.Journal.OpenScope($"AttachStrategicLocation({participantIdx}, {horizLoc}, {vertLoc}, {live}, {strategy})");
+			this.Processor.Journal.OpenScope($"AttachStrategicLocation({participantIdx}, {horizLoc}, {vertLoc}, {live}, {strategy})");
 
-			StrategicLocation[] sites = this.owner.World.Participants[participantIdx].TacticalSites;
+			StrategicLocation[] sites = this.Owner.World.Participants[participantIdx].TacticalSites;
 
 			bool known = sites.Take(0x10).Any(site => (ushort)(sbyte)site.Place.X == horizLoc && (ushort)(sbyte)site.Place.Y == vertLoc &&
 				(ushort)site.Live == live && (sbyte)site.Strategy <= (short)strategy);
@@ -154,7 +154,7 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			this.processor.Journal.CloseScope("AttachStrategicLocation");
+			this.Processor.Journal.CloseScope("AttachStrategicLocation");
 		}
 
 		/// <summary>
@@ -162,9 +162,9 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public void AffixStrategicLocation(short participantIdx, ushort place)
 		{
-			this.processor.Journal.OpenScope($"AffixStrategicLocation({participantIdx}, {place})");
+			this.Processor.Journal.OpenScope($"AffixStrategicLocation({participantIdx}, {place})");
 
-			StrategicLocation[] sites = this.owner.World.Participants[participantIdx].TacticalSites;
+			StrategicLocation[] sites = this.Owner.World.Participants[participantIdx].TacticalSites;
 
 			for (int idx = 14; idx >= (short)place; idx--)
 			{
@@ -177,7 +177,7 @@ namespace Civilization1Remaster.Game
 				sites[idx + 1].Strategy = sites[idx].Strategy;
 			}
 
-			this.processor.Journal.CloseScope("AffixStrategicLocation");
+			this.Processor.Journal.CloseScope("AffixStrategicLocation");
 		}
 
 		/// <summary>
@@ -186,16 +186,16 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public void DisableStrategicLocation(short participantIdx, ushort role, int horizLoc, int vertLoc, ushort reach)
 		{
-			this.processor.Journal.OpenScope($"DisableStrategicLocation({participantIdx}, {role}, {horizLoc}, {vertLoc}, {reach})");
+			this.Processor.Journal.OpenScope($"DisableStrategicLocation({participantIdx}, {role}, {horizLoc}, {vertLoc}, {reach})");
 
-			StrategicLocation[] sites = this.owner.World.Participants[participantIdx].TacticalSites;
+			StrategicLocation[] sites = this.Owner.World.Participants[participantIdx].TacticalSites;
 
 			for (int idx = 0; idx < 16; idx++)
 			{
 				if ((ushort)sites[idx].Live != role)
 					continue;
 
-				short distance = (short)this.owner.Helpers.ObtainDistance(horizLoc, sites[idx].Place.X, vertLoc, sites[idx].Place.Y);
+				short distance = (short)this.Owner.Helpers.ObtainDistance(horizLoc, sites[idx].Place.X, vertLoc, sites[idx].Place.Y);
 
 				if (distance <= (short)reach)
 				{
@@ -203,7 +203,7 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			this.processor.Journal.CloseScope("DisableStrategicLocation");
+			this.Processor.Journal.CloseScope("DisableStrategicLocation");
 		}
 
 		/// <summary>
@@ -212,22 +212,22 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public void RefreshCityProduction(short participantIdx, ushort continent)
 		{
-			this.processor.Journal.OpenScope($"RefreshCityProduction({participantIdx}, {continent})");
+			this.Processor.Journal.OpenScope($"RefreshCityProduction({participantIdx}, {continent})");
 
 			for (short townIdx = 0; townIdx < 0x80; townIdx++)
 			{
-				City town = this.owner.World.Towns[townIdx];
+				City town = this.Owner.World.Towns[townIdx];
 
 				if ((byte)town.ParticipantIdx != (ushort)participantIdx || town.ConditionMarker == 0xff)
 					continue;
 
-				if (continent != 0xffff && this.owner.MapOps.ObtainContinentID(town.Place.X, town.Place.Y) != continent)
+				if (continent != 0xffff && this.Owner.MapOps.ObtainContinentID(town.Place.X, town.Place.Y) != continent)
 					continue;
 
 				PickNewCityProduction(townIdx);
 			}
 
-			this.processor.Journal.CloseScope("RefreshCityProduction");
+			this.Processor.Journal.CloseScope("RefreshCityProduction");
 		}
 
 		/// <summary>
@@ -236,16 +236,16 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public void PickNewCityProduction(short townIdx)
 		{
-			this.processor.Journal.OpenScope($"PickNewCityProduction({townIdx})");
+			this.Processor.Journal.OpenScope($"PickNewCityProduction({townIdx})");
 
-			City town = this.owner.World.Towns[townIdx];
+			City town = this.Owner.World.Towns[townIdx];
 			ushort participantIdx = (byte)town.ParticipantIdx;
 
-			this.owner.World.Participants[participantIdx].StopMaking(town.PresentMakingIdx);
-			town.PresentMakingIdx = (sbyte)this.owner.Advisors.PickCityProduction((short)participantIdx, townIdx);
-			this.owner.World.Participants[participantIdx].StartMaking(town.PresentMakingIdx);
+			this.Owner.World.Participants[participantIdx].StopMaking(town.PresentMakingIdx);
+			town.PresentMakingIdx = (sbyte)this.Owner.Advisors.PickCityProduction((short)participantIdx, townIdx);
+			this.Owner.World.Participants[participantIdx].StartMaking(town.PresentMakingIdx);
 
-			this.processor.Journal.CloseScope("PickNewCityProduction");
+			this.Processor.Journal.CloseScope("PickNewCityProduction");
 		}
 
 		/// <summary>
@@ -255,21 +255,21 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public ushort MayAIEnterTile(short participantIdx, ushort horizLoc, ushort vertLoc)
 		{
-			this.processor.Journal.OpenScope($"MayAIEnterTile({participantIdx}, {horizLoc}, {vertLoc})");
+			this.Processor.Journal.OpenScope($"MayAIEnterTile({participantIdx}, {horizLoc}, {vertLoc})");
 
 			short bestHeading = -1;
 			short bestShore = -1;
-			MapLayers chart = this.owner.MapOps.Chart;
+			MapLayers chart = this.Owner.MapOps.Chart;
 
 			for (short heading = 0; heading <= 8; heading++)
 			{
 				short oceanHoriz = (short)(chart.DirectionHoriz(heading) + horizLoc);
 				short oceanVert = (short)(chart.DirectionVert(heading) + vertLoc);
 
-				if (this.owner.MapOps.ObtainTerrainType(oceanHoriz, oceanVert) != MapRules.OceanTerrain)
+				if (this.Owner.MapOps.ObtainTerrainType(oceanHoriz, oceanVert) != MapRules.OceanTerrain)
 					continue;
 
-				if (heading != 0 && this.owner.MapOps.ObtainTileOwner(oceanHoriz, oceanVert) != 0xffff)
+				if (heading != 0 && this.Owner.MapOps.ObtainTileOwner(oceanHoriz, oceanVert) != 0xffff)
 					continue;
 
 				short shore = 0;
@@ -279,14 +279,14 @@ namespace Civilization1Remaster.Game
 					short landHoriz = (short)(chart.DirectionHoriz(around) + oceanHoriz);
 					short landVert = (short)(chart.DirectionVert(around) + oceanVert);
 
-					if (this.owner.MapOps.ObtainTerrainType(landHoriz, landVert) == MapRules.OceanTerrain ||
-						this.owner.MapOps.ObtainTileOwner(landHoriz, landVert) != 0xffff)
+					if (this.Owner.MapOps.ObtainTerrainType(landHoriz, landVert) == MapRules.OceanTerrain ||
+						this.Owner.MapOps.ObtainTileOwner(landHoriz, landVert) != 0xffff)
 						continue;
 
 					shore++;
 
-					if ((this.owner.World.Participants[participantIdx].Relations[this.owner.World.PersonParticipantIdx] & 2) != 0 &&
-						this.owner.VideoCard.ObtainDot(2, landHoriz + 0x50, landVert) == (ushort)this.owner.World.PersonParticipantIdx)
+					if ((this.Owner.World.Participants[participantIdx].Relations[this.Owner.World.PersonParticipantIdx] & 2) != 0 &&
+						this.Owner.VideoCard.ObtainDot(2, landHoriz + 0x50, landVert) == (ushort)this.Owner.World.PersonParticipantIdx)
 					{
 						shore--;
 					}
@@ -299,7 +299,7 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			this.processor.Journal.CloseScope("MayAIEnterTile");
+			this.Processor.Journal.CloseScope("MayAIEnterTile");
 
 			return (ushort)bestHeading;
 		}
@@ -320,10 +320,10 @@ namespace Civilization1Remaster.Game
 				sbyte troopHoriz = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz);
 				sbyte troopVert = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert);
 
-				if (this.owner.MapOps.ObtainContinentID(horizLoc, vertLoc) != this.owner.MapOps.ObtainContinentID(troopHoriz, troopVert))
+				if (this.Owner.MapOps.ObtainContinentID(horizLoc, vertLoc) != this.Owner.MapOps.ObtainContinentID(troopHoriz, troopVert))
 					continue;
 
-				int distance = this.owner.Helpers.ObtainDistance(troopHoriz, horizLoc, troopVert, vertLoc);
+				int distance = this.Owner.Helpers.ObtainDistance(troopHoriz, horizLoc, troopVert, vertLoc);
 
 				if (this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.LeftoverSteps) < (short)(distance << 1))
 					continue;
@@ -338,7 +338,7 @@ namespace Civilization1Remaster.Game
 
 		private void MoveListEntryOn(ushort origin, int entry)
 		{
-			this.processor.EmitGlobalByte((ushort)(origin + entry + 1), this.processor.PullGlobalByte((ushort)(origin + entry)));
+			this.Processor.EmitGlobalByte((ushort)(origin + entry + 1), this.Processor.PullGlobalByte((ushort)(origin + entry)));
 		}
 	}
 }

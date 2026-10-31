@@ -11,15 +11,15 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public void RepaintTileIfVisible(int horizLoc, int vertLoc)
 		{
-			this.processor.Journal.OpenScope($"RepaintTileIfVisible({horizLoc}, {vertLoc})");
+			this.Processor.Journal.OpenScope($"RepaintTileIfVisible({horizLoc}, {vertLoc})");
 
-			if ((this.owner.World.ChartSight[horizLoc, vertLoc] & (ushort)(1 << this.owner.World.PersonParticipantIdx)) != 0 ||
+			if ((this.Owner.World.ChartSight[horizLoc, vertLoc] & (ushort)(1 << this.Owner.World.PersonParticipantIdx)) != 0 ||
 				MapRevealed != 0)
 			{
-				this.owner.MapOps.RepaintMapTile(horizLoc, vertLoc);
+				this.Owner.MapOps.RepaintMapTile(horizLoc, vertLoc);
 			}
 
-			this.processor.Journal.CloseScope("RepaintTileIfVisible");
+			this.Processor.Journal.CloseScope("RepaintTileIfVisible");
 		}
 
 		/// <summary>
@@ -27,19 +27,19 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public void RepaintUnitIfVisible(short participantIdx, short troopIdx)
 		{
-			this.processor.Journal.OpenScope($"RepaintUnitIfVisible({participantIdx}, {troopIdx})");
+			this.Processor.Journal.OpenScope($"RepaintUnitIfVisible({participantIdx}, {troopIdx})");
 
-			short human = this.owner.World.PersonParticipantIdx;
+			short human = this.Owner.World.PersonParticipantIdx;
 
 			if (participantIdx == human ||
 				(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.ShownToParticipants) & (ushort)(1 << human)) != 0)
 			{
-				this.owner.MapOps.RepaintMapTile(
+				this.Owner.MapOps.RepaintMapTile(
 					this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
 					this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert));
 			}
 
-			this.processor.Journal.CloseScope("RepaintUnitIfVisible");
+			this.Processor.Journal.CloseScope("RepaintUnitIfVisible");
 		}
 
 		/// <summary>
@@ -49,13 +49,13 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public ushort ObtainTileMoveCost(int horizLoc, int vertLoc)
 		{
-			this.processor.Journal.OpenScope($"ObtainTileMoveCost({horizLoc}, {vertLoc})");
+			this.Processor.Journal.OpenScope($"ObtainTileMoveCost({horizLoc}, {vertLoc})");
 
 			ushort cost = 0;
 
-			if ((this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 0x7) == 0)
+			if ((this.Owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 0x7) == 0)
 			{
-				int terrain = this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
+				int terrain = this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
 				if ((short)TerrainImprovementWord(terrain, TerrainImprovementTable.Mining) <= -3)
 				{
 					cost = 2;
@@ -68,7 +68,7 @@ namespace Civilization1Remaster.Game
 			}
 
 
-			this.processor.Journal.CloseScope("ObtainTileMoveCost");
+			this.Processor.Journal.CloseScope("ObtainTileMoveCost");
 
 			return cost;
 		}
@@ -81,12 +81,12 @@ namespace Civilization1Remaster.Game
 		/// <returns>1 on the coast, else 0 (also in AX)</returns>
 		public ushort VerifyCoastalTile(int horizLoc, int vertLoc)
 		{
-			this.processor.Journal.OpenScope($"VerifyCoastalTile({horizLoc}, {vertLoc})");
+			this.Processor.Journal.OpenScope($"VerifyCoastalTile({horizLoc}, {vertLoc})");
 
-			MapLayers chart = this.owner.MapOps.Chart;
+			MapLayers chart = this.Owner.MapOps.Chart;
 			ushort coastal = 0;
 
-			if (this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) == 0xb)
+			if (this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) == 0xb)
 			{
 				coastal = 1;
 			}
@@ -97,8 +97,8 @@ namespace Civilization1Remaster.Game
 					short tileHoriz = (short)(chart.DirectionHoriz(heading) + horizLoc);
 					short tileVert = (short)(chart.DirectionVert(heading) + vertLoc);
 
-					ushort terrain = this.owner.MapOps.ObtainTerrainType(tileHoriz, tileVert);
-					ushort improvements = this.owner.MapOps.ObtainTileImprovements(tileHoriz, tileVert);
+					ushort terrain = this.Owner.MapOps.ObtainTerrainType(tileHoriz, tileVert);
+					ushort improvements = this.Owner.MapOps.ObtainTileImprovements(tileHoriz, tileVert);
 
 					if ((improvements & 0x1) == 0 && (terrain == 0xb || terrain == 0xa || (improvements & 0x2) != 0))
 					{
@@ -108,7 +108,7 @@ namespace Civilization1Remaster.Game
 			}
 
 
-			this.processor.Journal.CloseScope("VerifyCoastalTile");
+			this.Processor.Journal.CloseScope("VerifyCoastalTile");
 
 			return coastal;
 		}
@@ -121,34 +121,34 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public void RenderUnitInfo(short participantIdx, ushort troopIdx)
 		{
-			this.processor.Journal.OpenScope($"RenderUnitInfo({participantIdx}, {troopIdx})");
+			this.Processor.Journal.OpenScope($"RenderUnitInfo({participantIdx}, {troopIdx})");
 
-			this.owner.Startup.ConcealMouseCursor();
+			this.Owner.Startup.ConcealMouseCursor();
 
-			this.owner.TurnHooks.FloodBoxWithShadow(0, 97, 80, 103);
+			this.Owner.TurnHooks.FloodBoxWithShadow(0, 97, 80, 103);
 
 			if (troopIdx == 0x80)
 			{
-				this.owner.TextPainter.RenderTextToScreen0(GameTexts.TextEndOfTurn, 4, 124, Hues.Black);
+				this.Owner.TextPainter.RenderTextToScreen0(GameTexts.TextEndOfTurn, 4, 124, Hues.Black);
 
-				this.owner.TextPainter.RenderTextToScreen0(GameTexts.TextPressEnter, 4, 136, Hues.Black);
+				this.Owner.TextPainter.RenderTextToScreen0(GameTexts.TextPressEnter, 4, 136, Hues.Black);
 
-				this.owner.TextPainter.RenderTextToScreen0(GameTexts.TextToContinue, 4, 144, Hues.Black);
+				this.Owner.TextPainter.RenderTextToScreen0(GameTexts.TextToContinue, 4, 144, Hues.Black);
 			}
 			else
 			{
 				RenderUnitPanel(participantIdx, troopIdx);
 			}
 
-			this.owner.Startup.DisplayMouseCursor();
+			this.Owner.Startup.DisplayMouseCursor();
 
-			this.processor.Journal.CloseScope("RenderUnitInfo");
+			this.Processor.Journal.CloseScope("RenderUnitInfo");
 		}
 
 		/// <summary>1 when the place is inside the map view (15 x 12 tiles, also across the edge of the map), else 0</summary>
 		public ushort VerifyPositionOnScreen(int horizLoc, int vertLoc)
 		{
-			this.owner.Journal.OpenScope($"VerifyPositionOnScreen({horizLoc}, {vertLoc})");
+			this.Owner.Journal.OpenScope($"VerifyPositionOnScreen({horizLoc}, {vertLoc})");
 			ushort onScreen;
 			if (horizLoc < 16 && (short)MapViewHoriz >= 65)
 			{
@@ -167,7 +167,7 @@ namespace Civilization1Remaster.Game
 				onScreen = 1;
 			}
 
-			this.owner.Journal.CloseScope("VerifyPositionOnScreen");
+			this.Owner.Journal.CloseScope("VerifyPositionOnScreen");
 
 			return onScreen;
 		}
@@ -177,20 +177,20 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public void AwaitForKey()
 		{
-			this.processor.Journal.OpenScope("AwaitForKey()");
+			this.Processor.Journal.OpenScope("AwaitForKey()");
 
-			while (this.owner.Libc.KeyAvailable() != 0)
+			while (this.Owner.Libc.KeyAvailable() != 0)
 			{
-				this.owner.Dialogs.ObtainNavigationKey();
+				this.Owner.Dialogs.ObtainNavigationKey();
 			}
 
 			do
 			{
-				this.owner.Startup.ObtainMouseState();
+				this.Owner.Startup.ObtainMouseState();
 			}
-			while (this.owner.GlobDb3a != 0);
+			while (this.Owner.GlobDb3a != 0);
 
-			this.processor.Journal.CloseScope("AwaitForKey");
+			this.Processor.Journal.CloseScope("AwaitForKey");
 		}
 
 		/// <summary>
@@ -200,7 +200,7 @@ namespace Civilization1Remaster.Game
 		/// <returns>That unit, the unit itself when it stands alone or nothing comes (also in AX)</returns>
 		public ushort LocateBestGuardian(short participantIdx, ushort troopIdx)
 		{
-			this.processor.Journal.OpenScope("LocateBestGuardian()");
+			this.Processor.Journal.OpenScope("LocateBestGuardian()");
 
 			ushort best = troopIdx;
 			short current = this.troops.Following(participantIdx, troopIdx);
@@ -230,7 +230,7 @@ namespace Civilization1Remaster.Game
 			}
 
 
-			this.processor.Journal.CloseScope("LocateBestGuardian");
+			this.Processor.Journal.CloseScope("LocateBestGuardian");
 
 			return best;
 		}
@@ -238,14 +238,14 @@ namespace Civilization1Remaster.Game
 		/// <summary>The help popup of the topic, only in the turn of the human player</summary>
 		public void DisplayHelpForHuman(GameText topic)
 		{
-			this.processor.Journal.OpenScope($"DisplayHelpForHuman(0x{topic.Address:x4})");
+			this.Processor.Journal.OpenScope($"DisplayHelpForHuman(0x{topic.Address:x4})");
 
-			if ((short)TurnPlayer == this.owner.World.PersonParticipantIdx)
+			if ((short)TurnPlayer == this.Owner.World.PersonParticipantIdx)
 			{
-				this.owner.HelpSystem.DisplayHelpPopupForHuman(topic);
+				this.Owner.HelpSystem.DisplayHelpPopupForHuman(topic);
 			}
 		
-			this.processor.Journal.CloseScope("DisplayHelpForHuman");
+			this.Processor.Journal.CloseScope("DisplayHelpForHuman");
 		}
 
 		/// <summary>
@@ -281,7 +281,7 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			if (this.owner.World.IsHuman(participantIdx))
+			if (this.Owner.World.IsHuman(participantIdx))
 				RenderUnitInfo(participantIdx, this.turn.Troop);
 
 			return false;
@@ -299,12 +299,12 @@ namespace Civilization1Remaster.Game
 			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.RoundsAway) == 0)
 				return;
 
-			ushort tileImprovements = this.owner.MapOps.ObtainTileImprovements(
+			ushort tileImprovements = this.Owner.MapOps.ObtainTileImprovements(
 				this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
 				this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert));
 
 			if ((tileImprovements & 1) != 0 ||
-				this.owner.UnitOps.TallyUnitsOfTypeInStack(participantIdx, (short)this.turn.Troop, 23) != 0)
+				this.Owner.UnitOps.TallyUnitsOfTypeInStack(participantIdx, (short)this.turn.Troop, 23) != 0)
 			{
 				// In a city or on a carrier
 				this.troops.Assign(participantIdx, troopIdx, UnitMemory.UnusualSteps, (byte)this.troops.KindField(participantIdx, troopIdx, UnitKindTable.RoundsAway));
@@ -315,7 +315,7 @@ namespace Civilization1Remaster.Game
 
 			if ((sbyte)rounds < 0)
 			{
-				this.owner.UnitOps.EliminateUnit(participantIdx, (short)this.turn.Troop);
+				this.Owner.UnitOps.EliminateUnit(participantIdx, (short)this.turn.Troop);
 				DisplayHelpForHuman(GameTexts.TopicFuel);
 			}
 		}
@@ -326,10 +326,10 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private void MayLoseTrireme(short participantIdx, short troopIdx)
 		{
-			if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) != 0x10 || participantIdx != this.owner.World.PersonParticipantIdx)
+			if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) != 0x10 || participantIdx != this.Owner.World.PersonParticipantIdx)
 				return;
 
-			if (this.owner.Libc.Dice.DrawInt(2) == 0)
+			if (this.Owner.Libc.Dice.DrawInt(2) == 0)
 				return;
 
 			this.turn.Found = 0;
@@ -339,7 +339,7 @@ namespace Civilization1Remaster.Game
 				this.turn.Count = direction;
 				this.indexDest = UnitMemory.Offset(participantIdx, troopIdx);
 
-				if (this.owner.MapOps.ObtainTerrainType(
+				if (this.Owner.MapOps.ObtainTerrainType(
 					this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz) + (short)DirectionHorizAt((ushort)(direction << 1)),
 					this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert) + (short)DirectionVertAt((ushort)(direction << 1))) != MapRules.OceanTerrain)
 				{
@@ -354,7 +354,7 @@ namespace Civilization1Remaster.Game
 			if (this.turn.Found != 0)
 				return;
 
-			this.owner.UnitOps.EliminateUnit(participantIdx, (short)this.turn.Troop);
+			this.Owner.UnitOps.EliminateUnit(participantIdx, (short)this.turn.Troop);
 			DisplayHelpForHuman(GameTexts.TopicTrireme);
 		}
 
@@ -363,27 +363,27 @@ namespace Civilization1Remaster.Game
 			short troopIdx = (short)troop;
 			short vertLoc = 0x63;
 
-			this.owner.Words.Set(CivilizationName(participantIdx));
+			this.Owner.Words.Set(CivilizationName(participantIdx));
 
-			this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 4, 99, Hues.Black);
+			this.Owner.TextPainter.RenderTextToScreen0(this.Owner.Words.ToString(), 4, 99, Hues.Black);
 
 			vertLoc += 8;
 
-			this.owner.Words.Set(UnitText(this.troops.TroopKind(participantIdx, troopIdx)));
+			this.Owner.Words.Set(UnitText(this.troops.TroopKind(participantIdx, troopIdx)));
 
-			this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 4, vertLoc, Hues.Black);
+			this.Owner.TextPainter.RenderTextToScreen0(this.Owner.Words.ToString(), 4, vertLoc, Hues.Black);
 
 			vertLoc += 8;
 
 			if ((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 0x20) != 0)
 			{
-				this.owner.TextPainter.RenderTextToScreen0(GameTexts.TextVeteran, 8, vertLoc, Hues.Black);
+				this.Owner.TextPainter.RenderTextToScreen0(GameTexts.TextVeteran, 8, vertLoc, Hues.Black);
 
 				vertLoc += 8;
 			}
 
 			sbyte steps = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.LeftoverSteps);
-			short moves = (short)this.owner.Helpers.VerifyValueSpan(steps / 3, 0, 99);
+			short moves = (short)this.Owner.Helpers.VerifyValueSpan(steps / 3, 0, 99);
 
 			Message("Moves: ")
 				.Number(moves);
@@ -392,44 +392,44 @@ namespace Civilization1Remaster.Game
 
 			if (thirds != 0)
 			{
-				this.owner.Words.Append(".");
+				this.Owner.Words.Append(".");
 
-				this.owner.Words.Append(this.owner.Libc.IntegerToText(thirds, 10));
+				this.Owner.Words.Append(this.Owner.Libc.IntegerToText(thirds, 10));
 			}
 
 			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.RoundsAway) != 0)
 			{
 				// Aircraft: the moves left with the fuel of the next turns
-				this.owner.Words.Append("(");
+				this.Owner.Words.Append("(");
 
 				moves += (short)(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.UnusualSteps) *
 					(short)this.troops.KindField(participantIdx, troopIdx, UnitKindTable.ShiftTally));
 
-				this.owner.Words.Append(this.owner.Libc.IntegerToText(moves, 10));
+				this.Owner.Words.Append(this.Owner.Libc.IntegerToText(moves, 10));
 
-				this.owner.Words.Append(")");
+				this.Owner.Words.Append(")");
 			}
 
-			this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 4, vertLoc, Hues.Black);
+			this.Owner.TextPainter.RenderTextToScreen0(this.Owner.Words.ToString(), 4, vertLoc, Hues.Black);
 
 			vertLoc += 8;
 
 			EmptyMessage()
 				.City(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.BaseTown));
 
-			this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 4, vertLoc, Hues.Black);
+			this.Owner.TextPainter.RenderTextToScreen0(this.Owner.Words.ToString(), 4, vertLoc, Hues.Black);
 
 			vertLoc += 8;
 
 			Message("(")
-				.Text(TerrainText(this.owner.MapOps.ObtainTerrainType(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz), this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert))))
+				.Text(TerrainText(this.Owner.MapOps.ObtainTerrainType(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz), this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert))))
 				.Text(")");
 
-			this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 4, vertLoc, Hues.Black);
+			this.Owner.TextPainter.RenderTextToScreen0(this.Owner.Words.ToString(), 4, vertLoc, Hues.Black);
 
 			vertLoc += 8;
 
-			byte improvements = (byte)this.owner.MapOps.ObtainTileImprovements(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
+			byte improvements = (byte)this.Owner.MapOps.ObtainTileImprovements(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
 				this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert));
 
 			// Railroad or road, irrigation or mines, pollution
@@ -440,7 +440,7 @@ namespace Civilization1Remaster.Game
 
 				if (shown != 0)
 				{
-					this.owner.TextPainter.RenderTextToScreen0(shown, 4, vertLoc, Hues.Black);
+					this.Owner.TextPainter.RenderTextToScreen0(shown, 4, vertLoc, Hues.Black);
 
 					vertLoc += 8;
 				}
@@ -451,16 +451,16 @@ namespace Civilization1Remaster.Game
 			short followingIdx = this.troops.Following(participantIdx, troopIdx);
 			short column = 8;
 
-			if ((this.owner.MapOps.ObtainTileImprovements(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
+			if ((this.Owner.MapOps.ObtainTileImprovements(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
 				this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert)) & 1) != 0)
 			{
-				ushort townIdx = this.owner.Helpers.LocateCityAtPosition(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
+				ushort townIdx = this.Owner.Helpers.LocateCityAtPosition(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
 					this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert));
 
 				// The units the city supports elsewhere are drawn through the unit 127 of the player
 				for (int unfamiliarIdx = 0; unfamiliarIdx < 2; unfamiliarIdx++)
 				{
-					byte unfamiliar = (byte)this.owner.World.Towns[townIdx].Unfamiliar[unfamiliarIdx];
+					byte unfamiliar = (byte)this.Owner.World.Towns[townIdx].Unfamiliar[unfamiliarIdx];
 
 					if (unfamiliar == 0xff)
 						continue;
@@ -469,7 +469,7 @@ namespace Civilization1Remaster.Game
 					this.troops.Assign(participantIdx, 127, UnitMemory.Status, 0x8);
 					this.troops.Assign(participantIdx, 127, UnitMemory.TravelHoriz, 0xff);
 
-					this.owner.MapOps.RenderUnitSprite(participantIdx, 127, column, vertLoc);
+					this.Owner.MapOps.RenderUnitSprite(participantIdx, 127, column, vertLoc);
 
 					this.troops.Assign(participantIdx, 127, UnitMemory.Kind, 0xff);
 
@@ -482,7 +482,7 @@ namespace Civilization1Remaster.Game
 				if (followingIdx == troopIdx || vertLoc >= 0xb8)
 					break;
 
-				this.owner.MapOps.RenderUnitSprite(participantIdx, followingIdx, column, vertLoc);
+				this.Owner.MapOps.RenderUnitSprite(participantIdx, followingIdx, column, vertLoc);
 
 				column += 0x10;
 
@@ -497,7 +497,7 @@ namespace Civilization1Remaster.Game
 
 			if (followingIdx != -1 && followingIdx != troopIdx)
 			{
-				this.owner.TextPainter.RenderTextToScreen0(GameTexts.TextPlus, 74, 192, Hues.Black);
+				this.Owner.TextPainter.RenderTextToScreen0(GameTexts.TextPlus, 74, 192, Hues.Black);
 			}
 		}
 	}

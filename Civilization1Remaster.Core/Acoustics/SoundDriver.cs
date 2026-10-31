@@ -29,7 +29,7 @@ namespace Civilization1Remaster.Acoustics
 					this.handlerFetched = true;
 
 					// The best driver that has an output is used: Roland MT-32 music needs a MIDI output
-					foreach (SoundDriverHost handler in SoundDriverHost.ConstructAll(this.processor.StandardFolder, SliceRatio))
+					foreach (SoundDriverHost handler in SoundDriverHost.ConstructAll(this.Processor.StandardFolder, SliceRatio))
 					{
 						try
 						{

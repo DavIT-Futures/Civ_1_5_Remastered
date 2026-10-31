@@ -29,23 +29,23 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public void OpeningSequence()
 		{
-			this.processor.Journal.OpenScope("OpeningSequence()");
+			this.Processor.Journal.OpenScope("OpeningSequence()");
 
-			this.owner.Startup.QueryForDisk(7, 1);
+			this.Owner.Startup.QueryForDisk(7, 1);
 
 			ushort screenZero = ScreenBox;
-			this.processor.EmitUInt16(this.processor.SegData.Value16, screenZero, 0x1);
+			this.Processor.EmitUInt16(this.Processor.SegData.Value16, screenZero, 0x1);
 			StoryKeyAllowed = 0x0;
 
 			if (EarthGame != 0)
 			{
-				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, GameTexts.FileMapPic, 1);
+				this.Owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, GameTexts.FileMapPic, 1);
 			}
 			else
 			{
 				this.DisplayStoryIntro();
 
-				this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
+				this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
 
 				do
 				{
@@ -54,8 +54,8 @@ namespace Civilization1Remaster.Game
 				}
 				while ((short)(((LandMass << 3) * 0x28) + 0x280) > (short)LightenedPixels);
 
-				this.owner.Dialogs.RenderBox(0, 0, 79, 49, Hues.Black);
-				this.owner.Dialogs.RenderBox(1, 1, 77, 47, Hues.Black);
+				this.Owner.Dialogs.RenderBox(0, 0, 79, 49, Hues.Black);
+				this.Owner.Dialogs.RenderBox(1, 1, 77, 47, Hues.Black);
 
 				SmoothDiagonalCoastlines();
 				AssignLatitudeAndElevationTerrain();
@@ -65,7 +65,7 @@ namespace Civilization1Remaster.Game
 				this.ProduceElevation();
 			}
 
-			this.owner.Services.FloodBox(ScreenBox, 160, 0, 160, 200, Hues.Black);
+			this.Owner.Services.FloodBox(ScreenBox, 160, 0, 160, 200, Hues.Black);
 
 			this.ProduceTerrain();
 
@@ -78,13 +78,13 @@ namespace Civilization1Remaster.Game
 
 			DrawingBox.TypefaceIdx = 0x1;
 
-			this.owner.VideoCard.RenderImage(
+			this.Owner.VideoCard.RenderImage(
 				ScreenBox,
 				0, 0, 0x140, 0xc8,
 				PictureScreenBox,
 				0, 0);
 
-			this.processor.Journal.CloseScope("OpeningSequence");
+			this.Processor.Journal.CloseScope("OpeningSequence");
 		}
 
 		/// <summary>
@@ -92,17 +92,17 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public void BlendTerrainTile(short horizLoc, short vertLoc)
 		{
-			this.processor.Journal.OpenScope($"BlendTerrainTile({horizLoc}, {vertLoc})");
+			this.Processor.Journal.OpenScope($"BlendTerrainTile({horizLoc}, {vertLoc})");
 
-			if (this.owner.VideoCard.ObtainDot(1, horizLoc - 1, vertLoc - 1) != 1 &&
-				this.owner.VideoCard.ObtainDot(1, horizLoc - 1, vertLoc + 1) != 1 &&
-				this.owner.VideoCard.ObtainDot(1, horizLoc + 1, vertLoc - 1) != 1 &&
-				this.owner.VideoCard.ObtainDot(1, horizLoc + 1, vertLoc + 1) != 1)
+			if (this.Owner.VideoCard.ObtainDot(1, horizLoc - 1, vertLoc - 1) != 1 &&
+				this.Owner.VideoCard.ObtainDot(1, horizLoc - 1, vertLoc + 1) != 1 &&
+				this.Owner.VideoCard.ObtainDot(1, horizLoc + 1, vertLoc - 1) != 1 &&
+				this.Owner.VideoCard.ObtainDot(1, horizLoc + 1, vertLoc + 1) != 1)
 			{
-				this.owner.Services.AssignDot(1, horizLoc, vertLoc, 1);
+				this.Owner.Services.AssignDot(1, horizLoc, vertLoc, 1);
 			}
 
-			this.processor.Journal.CloseScope("BlendTerrainTile");
+			this.Processor.Journal.CloseScope("BlendTerrainTile");
 		}
 
 		/// <summary>
@@ -114,59 +114,59 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public void ProduceElevation()
 		{
-			this.processor.Journal.OpenScope($"ProduceElevation()");
+			this.Processor.Journal.OpenScope($"ProduceElevation()");
 
-			MapLayers chart = this.owner.MapOps.Chart;
+			MapLayers chart = this.Owner.MapOps.Chart;
 			short riverTally = 0;
 			short attemptTally = 0;
 
 			while (true)
 			{
-				this.owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0xa0, 0x64, ScreenBox, 0xa0, 0);
+				this.Owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0xa0, 0x64, ScreenBox, 0xa0, 0);
 
 				short horizLoc;
 				short vertLoc;
 
 				do
 				{
-					horizLoc = (short)this.owner.Libc.Dice.DrawInt(80);
-					vertLoc = (short)this.owner.Libc.Dice.DrawInt(50);
-				} while (this.owner.VideoCard.ObtainDot(1, horizLoc, vertLoc) != 0xc);
+					horizLoc = (short)this.Owner.Libc.Dice.DrawInt(80);
+					vertLoc = (short)this.Owner.Libc.Dice.DrawInt(50);
+				} while (this.Owner.VideoCard.ObtainDot(1, horizLoc, vertLoc) != 0xc);
 
 				short springHoriz = horizLoc;
 				short springVert = vertLoc;
-				short heading = (short)(this.owner.Libc.Dice.DrawInt(4) << 1);
+				short heading = (short)(this.Owner.Libc.Dice.DrawInt(4) << 1);
 				short length = 0;
 				bool nearOcean;
 				ushort reached;
 
 				do
 				{
-					this.owner.Services.AssignDot(1, horizLoc, vertLoc, 9);
+					this.Owner.Services.AssignDot(1, horizLoc, vertLoc, 9);
 
 					nearOcean = false;
 
 					for (int side = 1; side <= 8; side += 2)
 					{
-						if (this.owner.VideoCard.ObtainDot(1, chart.DirectionHoriz(side) + horizLoc, chart.DirectionVert(side) + vertLoc) == 1)
+						if (this.Owner.VideoCard.ObtainDot(1, chart.DirectionHoriz(side) + horizLoc, chart.DirectionVert(side) + vertLoc) == 1)
 						{
 							nearOcean = true;
 						}
 					}
 
 					short previousHeading = heading;
-					heading = (short)(((((short)this.owner.Libc.Dice.DrawInt(2) - (length & 1)) << 1) + heading) & 7);
+					heading = (short)(((((short)this.Owner.Libc.Dice.DrawInt(2) - (length & 1)) << 1) + heading) & 7);
 
 					if ((previousHeading ^ 4) > heading)
 					{
-						this.owner.Services.AssignDot(1, horizLoc, vertLoc + 0x32, 8);
+						this.Owner.Services.AssignDot(1, horizLoc, vertLoc + 0x32, 8);
 					}
 
 					// The steps of the headings 0 - 7 are the directions 1 - 8
 					horizLoc += (short)chart.DirectionHoriz(heading + 1);
 					vertLoc += (short)chart.DirectionVert(heading + 1);
 
-					reached = this.owner.VideoCard.ObtainDot(1, horizLoc, vertLoc);
+					reached = this.Owner.VideoCard.ObtainDot(1, horizLoc, vertLoc);
 
 					length++;
 				} while (!nearOcean && reached != 0xd && reached != 1 && reached != 9);
@@ -180,15 +180,15 @@ namespace Civilization1Remaster.Game
 						horizLoc = (short)(chart.DirectionHoriz(spotIdx) + springHoriz);
 						vertLoc = (short)(chart.DirectionVert(spotIdx) + springVert);
 
-						if (this.owner.VideoCard.ObtainDot(1, horizLoc, vertLoc) == 2)
+						if (this.Owner.VideoCard.ObtainDot(1, horizLoc, vertLoc) == 2)
 						{
-							this.owner.Services.AssignDot(1, horizLoc, vertLoc, 11);
+							this.Owner.Services.AssignDot(1, horizLoc, vertLoc, 11);
 						}
 					}
 				}
 				else
 				{
-					this.owner.VideoCard.RenderImage(ScreenBox, 0xa0, 0, 0xa0, 0x64, ScreenBox, 0, 0);
+					this.Owner.VideoCard.RenderImage(ScreenBox, 0xa0, 0, 0xa0, 0x64, ScreenBox, 0, 0);
 				}
 
 				DisplayStoryIntro();
@@ -200,11 +200,11 @@ namespace Civilization1Remaster.Game
 					break;
 			}
 
-			this.owner.VideoCard.RenderImage(ScreenBox, 0, 0x32, 0x50, 0x32, ScreenBox, 0, 0x96);
+			this.Owner.VideoCard.RenderImage(ScreenBox, 0, 0x32, 0x50, 0x32, ScreenBox, 0, 0x96);
 
-			this.owner.Services.FloodBox(ScreenBox, 0, 50, 80, 50, Hues.Black);
+			this.Owner.Services.FloodBox(ScreenBox, 0, 50, 80, 50, Hues.Black);
 
-			this.processor.Journal.CloseScope("ProduceElevation");
+			this.Processor.Journal.CloseScope("ProduceElevation");
 		}
 
 		/// <summary>
@@ -214,12 +214,12 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public void ProduceCloudLayer()
 		{
-			this.processor.Journal.OpenScope("ProduceCloudLayer()");
+			this.Processor.Journal.OpenScope("ProduceCloudLayer()");
 
-			this.owner.Services.FloodBox(ScreenBox, 160, 0, 80, 50, Hues.Black);
+			this.Owner.Services.FloodBox(ScreenBox, 160, 0, 80, 50, Hues.Black);
 
-			short cloudHoriz = (short)(this.owner.Libc.Dice.DrawInt(72) + 4);
-			short cloudVert = (short)(this.owner.Libc.Dice.DrawInt(34) + 8);
+			short cloudHoriz = (short)(this.Owner.Libc.Dice.DrawInt(72) + 4);
+			short cloudVert = (short)(this.Owner.Libc.Dice.DrawInt(34) + 8);
 
 			ProduceCloud(cloudHoriz, cloudVert);
 
@@ -227,34 +227,34 @@ namespace Civilization1Remaster.Game
 			{
 				for (int vertLoc = 0; vertLoc < 0x32; vertLoc++)
 				{
-					if (this.owner.VideoCard.ObtainDot(1, horizLoc + 0xa0, vertLoc) != 0)
+					if (this.Owner.VideoCard.ObtainDot(1, horizLoc + 0xa0, vertLoc) != 0)
 					{
-						ushort hue = this.owner.VideoCard.ObtainDot(1, horizLoc, vertLoc);
+						ushort hue = this.Owner.VideoCard.ObtainDot(1, horizLoc, vertLoc);
 
-						this.owner.Services.AssignDot(1, horizLoc, vertLoc, (ushort)(hue + 1));
+						this.Owner.Services.AssignDot(1, horizLoc, vertLoc, (ushort)(hue + 1));
 
 						LightenedPixels = (ushort)(LightenedPixels + 1);
 					}
 				}
 			}
 
-			this.processor.Journal.CloseScope("ProduceCloudLayer");
+			this.Processor.Journal.CloseScope("ProduceCloudLayer");
 		}
 
 		/// <summary>Draws a cloud on screen 1: 1 - 64 steps of a random walk from the place, 3 white dots a step</summary>
 		public void ProduceCloud(short horizLoc, short vertLoc)
 		{
-			this.processor.Journal.OpenScope($"ProduceCloud({horizLoc}, {vertLoc})");
+			this.Processor.Journal.OpenScope($"ProduceCloud({horizLoc}, {vertLoc})");
 
-			int vaporExtent = this.owner.Libc.Dice.DrawInt(64) + 1;
+			int vaporExtent = this.Owner.Libc.Dice.DrawInt(64) + 1;
 
 			do
 			{
-				this.owner.Services.AssignDot(1, horizLoc + 160, vertLoc, 15);
-				this.owner.Services.AssignDot(1, horizLoc + 161, vertLoc, 15);
-				this.owner.Services.AssignDot(1, horizLoc + 160, vertLoc + 1, 15);
+				this.Owner.Services.AssignDot(1, horizLoc + 160, vertLoc, 15);
+				this.Owner.Services.AssignDot(1, horizLoc + 161, vertLoc, 15);
+				this.Owner.Services.AssignDot(1, horizLoc + 160, vertLoc + 1, 15);
 
-				switch (this.owner.Libc.Dice.DrawInt(4))
+				switch (this.Owner.Libc.Dice.DrawInt(4))
 				{
 					case 0:
 						horizLoc += 0;
@@ -281,7 +281,7 @@ namespace Civilization1Remaster.Game
 
 			} while (vaporExtent > 0 && horizLoc > 2 && horizLoc < 77 && vertLoc > 2 && vertLoc < 46);
 
-			this.processor.Journal.CloseScope("ProduceCloud");
+			this.Processor.Journal.CloseScope("ProduceCloud");
 		}
 
 		/// <summary>
@@ -294,21 +294,21 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public void ProduceTerrain()
 		{
-			this.processor.Journal.OpenScope("ProduceTerrain()");
+			this.Processor.Journal.OpenScope("ProduceTerrain()");
 
 			// ClassicLabelNumbers: the frame of the original, as the numbers of the labels past the 63 ranked ones are read past
 			// their table, above BP (the frames of the callers) and under the frame (the saved SI / DI); without it they are 15
 			// and the words stay in C#
-			bool classicFrame = this.owner.TurnHooks.ClassicLabelNumbers;
+			bool classicFrame = this.Owner.TurnHooks.ClassicLabelNumbers;
 
 			if (classicFrame)
-				this.processor.EnterFrame(0xd4);
+				this.Processor.EnterFrame(0xd4);
 
 			FrameWords outerFrame = this.terrainFrame;
-			this.terrainFrame = new FrameWords(this.processor, 0xd4);
+			this.terrainFrame = new FrameWords(this.Processor, 0xd4);
 
 			if (classicFrame)
-				this.processor.PreserveIndexRegisters();
+				this.Processor.PreserveIndexRegisters();
 
 			const int terrainCounts = 0x20;
 
@@ -332,7 +332,7 @@ namespace Civilization1Remaster.Game
 
 			DisplayStoryIntro();
 
-			this.owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, PictureScreenBox, 0, 0);
+			this.Owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, PictureScreenBox, 0, 0);
 
 			LabelLandmasses();
 
@@ -342,30 +342,30 @@ namespace Civilization1Remaster.Game
 
 			SituateSpecialTerrain();
 
-			this.owner.VideoCard.RenderLine(ScreenBox, 0, 0, 79, 0, Hues.White);
-			this.owner.VideoCard.RenderLine(ScreenBox, 0, 49, 79, 49, Hues.White);
+			this.Owner.VideoCard.RenderLine(ScreenBox, 0, 0, 79, 0, Hues.White);
+			this.Owner.VideoCard.RenderLine(ScreenBox, 0, 49, 79, 49, Hues.White);
 
 			ushort dotIdx;
 
 			for (dotIdx = 0; dotIdx < 0x14; dotIdx++)
 			{
-				this.owner.Services.AssignDot(this.owner.Libc.Dice.DrawInt(80), 0, 7);
-				this.owner.Services.AssignDot(this.owner.Libc.Dice.DrawInt(80), 1, 7);
-				this.owner.Services.AssignDot(this.owner.Libc.Dice.DrawInt(80), 48, 7);
-				this.owner.Services.AssignDot(this.owner.Libc.Dice.DrawInt(80), 49, 7);
+				this.Owner.Services.AssignDot(this.Owner.Libc.Dice.DrawInt(80), 0, 7);
+				this.Owner.Services.AssignDot(this.Owner.Libc.Dice.DrawInt(80), 1, 7);
+				this.Owner.Services.AssignDot(this.Owner.Libc.Dice.DrawInt(80), 48, 7);
+				this.Owner.Services.AssignDot(this.Owner.Libc.Dice.DrawInt(80), 49, 7);
 			}
 
 			this.terrainFrame.SetFrame(0x24, dotIdx);
 
 			if (classicFrame)
-				this.processor.RestoreIndexRegisters();
+				this.Processor.RestoreIndexRegisters();
 
 			this.terrainFrame = outerFrame;
 
 			if (classicFrame)
-				this.processor.LeaveFrame();
+				this.Processor.LeaveFrame();
 
-			this.processor.Journal.CloseScope("ProduceTerrain");
+			this.Processor.Journal.CloseScope("ProduceTerrain");
 		}
 
 		/// <summary>
@@ -377,11 +377,11 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public void SituateSpecialTerrain()
 		{
-			this.processor.Journal.OpenScope("SituateSpecialTerrain()");
+			this.Processor.Journal.OpenScope("SituateSpecialTerrain()");
 
 			for (int continentIdx = 0; continentIdx < 0x10; continentIdx++)
 			{
-				this.owner.World.Landmasses[continentIdx].ConstructionSpotTally = 0;
+				this.Owner.World.Landmasses[continentIdx].ConstructionSpotTally = 0;
 			}
 
 			ushort[] weights = new ushort[0x18];
@@ -423,8 +423,8 @@ namespace Civilization1Remaster.Game
 
 					if (terrain != 0xb && terrain != 2 && terrain != 1)
 					{
-						this.owner.Services.AssignDot(horizLoc + 80, vertLoc, 0);
-						this.owner.Services.AssignDot(horizLoc + 80, vertLoc + 0x32, 0);
+						this.Owner.Services.AssignDot(horizLoc + 80, vertLoc, 0);
+						this.Owner.Services.AssignDot(horizLoc + 80, vertLoc + 0x32, 0);
 						continue;
 					}
 
@@ -433,8 +433,8 @@ namespace Civilization1Remaster.Game
 					for (int deltaIdx = 0; deltaIdx <= 0x14; deltaIdx++)
 					{
 						short value = 0;
-						short tileHoriz = (short)(this.owner.TownDeltas[deltaIdx].X + horizLoc);
-						short tileVert = (short)(this.owner.TownDeltas[deltaIdx].Y + vertLoc);
+						short tileHoriz = (short)(this.Owner.TownDeltas[deltaIdx].X + horizLoc);
+						short tileVert = (short)(this.Owner.TownDeltas[deltaIdx].Y + vertLoc);
 
 						ushort tile = ObtainTerrainTypeFromScreen(tileHoriz, tileVert);
 
@@ -443,7 +443,7 @@ namespace Civilization1Remaster.Game
 							value += 2;
 						}
 
-						if (this.owner.MapOps.ContainsSpecialResource(tileHoriz, tileVert) != 0)
+						if (this.Owner.MapOps.ContainsSpecialResource(tileHoriz, tileVert) != 0)
 						{
 							tile += 0xc;
 						}
@@ -468,16 +468,16 @@ namespace Civilization1Remaster.Game
 						total -= 0x10;
 					}
 
-					short worth = (short)(((short)this.owner.Helpers.VerifyValueSpan((total - 120) / 8, 1, 15) / 2) + 8);
+					short worth = (short)(((short)this.Owner.Helpers.VerifyValueSpan((total - 120) / 8, 1, 15) / 2) + 8);
 
-					this.owner.Services.AssignDot(horizLoc + 80, vertLoc, (ushort)worth);
-					this.owner.Services.AssignDot(horizLoc + 80, vertLoc + 0x32, (ushort)worth);
+					this.Owner.Services.AssignDot(horizLoc + 80, vertLoc, (ushort)worth);
+					this.Owner.Services.AssignDot(horizLoc + 80, vertLoc + 0x32, (ushort)worth);
 
-					this.owner.World.Landmasses[ObtainContinentIDFromScreen(horizLoc, vertLoc)].ConstructionSpotTally++;
+					this.Owner.World.Landmasses[ObtainContinentIDFromScreen(horizLoc, vertLoc)].ConstructionSpotTally++;
 				}
 			}
 
-			this.processor.Journal.CloseScope("SituateSpecialTerrain");
+			this.Processor.Journal.CloseScope("SituateSpecialTerrain");
 		}
 
 		/// <summary>
@@ -489,9 +489,9 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public void LabelLandmasses()
 		{
-			this.processor.Journal.OpenScope("LabelLandmasses()");
+			this.Processor.Journal.OpenScope("LabelLandmasses()");
 
-			this.owner.Libc.FillBytes(0xdb44, 0, 0x104);
+			this.Owner.Libc.FillBytes(0xdb44, 0, 0x104);
 
 			(short, short)? land = null;
 			(short, short)? neighbourLand = null;
@@ -517,7 +517,7 @@ namespace Civilization1Remaster.Game
 						if (continent != nextContinent)
 							continue;
 
-						short cost = (short)this.owner.Routing.ComputeRouteCost(land!.Value.Item1, land.Value.Item2,
+						short cost = (short)this.Owner.Routing.ComputeRouteCost(land!.Value.Item1, land.Value.Item2,
 							neighbourLand!.Value.Item1, neighbourLand.Value.Item2, 0, 20);
 
 						if (cost == -1 || cost >= 0x14)
@@ -536,7 +536,7 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			this.processor.Journal.CloseScope("LabelLandmasses");
+			this.Processor.Journal.CloseScope("LabelLandmasses");
 		}
 
 		/// <summary>
@@ -550,9 +550,9 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public void ReckonContinentSizes(ushort marker)
 		{
-			this.processor.Journal.OpenScope($"ReckonContinentSizes({marker})");
+			this.Processor.Journal.OpenScope($"ReckonContinentSizes({marker})");
 
-			this.owner.Libc.FillBytes(SeaBlocksAddress, 0, 0x104);
+			this.Owner.Libc.FillBytes(SeaBlocksAddress, 0, 0x104);
 
 			short lastNextSea = 0;
 
@@ -571,16 +571,16 @@ namespace Civilization1Remaster.Game
 
 			for (ushort row = 0; row < 0xc; row++)
 			{
-				this.processor.EmitGlobalByte((ushort)(row + SeaBlocksAddress), (byte)(this.processor.PullGlobalByte((ushort)(row + SeaBlocksAddress)) | 0xe0));
-				this.processor.EmitGlobalByte((ushort)(row + SeaBlocksAlternateAddress), (byte)(this.processor.PullGlobalByte((ushort)(row + SeaBlocksAlternateAddress)) | 0xe));
+				this.Processor.EmitGlobalByte((ushort)(row + SeaBlocksAddress), (byte)(this.Processor.PullGlobalByte((ushort)(row + SeaBlocksAddress)) | 0xe0));
+				this.Processor.EmitGlobalByte((ushort)(row + SeaBlocksAlternateAddress), (byte)(this.Processor.PullGlobalByte((ushort)(row + SeaBlocksAlternateAddress)) | 0xe));
 			}
 
-			this.processor.EmitGlobalByte(SeaBlocksAddress, (byte)(this.processor.PullGlobalByte(SeaBlocksAddress) & 0x7f));
-			this.processor.EmitGlobalByte((ushort)(SeaBlocksAddress + 11), (byte)(this.processor.PullGlobalByte((ushort)(SeaBlocksAddress + 11)) & 0xdf));
-			this.processor.EmitGlobalByte(SeaBlocksAlternateAddress, (byte)(this.processor.PullGlobalByte(SeaBlocksAlternateAddress) & 0xfd));
-			this.processor.EmitGlobalByte((ushort)(SeaBlocksAlternateAddress + 11), (byte)(this.processor.PullGlobalByte((ushort)(SeaBlocksAlternateAddress + 11)) & 0xf7));
+			this.Processor.EmitGlobalByte(SeaBlocksAddress, (byte)(this.Processor.PullGlobalByte(SeaBlocksAddress) & 0x7f));
+			this.Processor.EmitGlobalByte((ushort)(SeaBlocksAddress + 11), (byte)(this.Processor.PullGlobalByte((ushort)(SeaBlocksAddress + 11)) & 0xdf));
+			this.Processor.EmitGlobalByte(SeaBlocksAlternateAddress, (byte)(this.Processor.PullGlobalByte(SeaBlocksAlternateAddress) & 0xfd));
+			this.Processor.EmitGlobalByte((ushort)(SeaBlocksAlternateAddress + 11), (byte)(this.Processor.PullGlobalByte((ushort)(SeaBlocksAlternateAddress + 11)) & 0xf7));
 
-			this.processor.Journal.CloseScope("ReckonContinentSizes");
+			this.Processor.Journal.CloseScope("ReckonContinentSizes");
 		}
 
 		/// <summary>
@@ -589,14 +589,14 @@ namespace Civilization1Remaster.Game
 		/// <returns>Terrain type, also in AX</returns>
 		public ushort ObtainTerrainTypeFromScreen(short horizLoc, short vertLoc)
 		{
-			this.processor.Journal.OpenScope($"ObtainTerrainTypeFromScreen({horizLoc}, {vertLoc})");
+			this.Processor.Journal.OpenScope($"ObtainTerrainTypeFromScreen({horizLoc}, {vertLoc})");
 
 			ushort displayIdx = DrawingBox.DisplayIdx;
-			ushort colour = this.owner.VideoCard.ObtainDot(displayIdx, horizLoc, vertLoc);
-			ushort terrain = this.processor.PullGlobalWord((ushort)(MapLayers.TerrainOfColour + (colour << 1)));
+			ushort colour = this.Owner.VideoCard.ObtainDot(displayIdx, horizLoc, vertLoc);
+			ushort terrain = this.Processor.PullGlobalWord((ushort)(MapLayers.TerrainOfColour + (colour << 1)));
 
 
-			this.processor.Journal.CloseScope("ObtainTerrainTypeFromScreen");
+			this.Processor.Journal.CloseScope("ObtainTerrainTypeFromScreen");
 
 			return terrain;
 		}
@@ -604,13 +604,13 @@ namespace Civilization1Remaster.Game
 		/// <summary>The continent number of the place, from the map layer of the drawing screen (row + 50)</summary>
 		public ushort ObtainContinentIDFromScreen(short horizLoc, short vertLoc)
 		{
-			this.processor.Journal.OpenScope($"ObtainContinentIDFromScreen({horizLoc}, {vertLoc})");
+			this.Processor.Journal.OpenScope($"ObtainContinentIDFromScreen({horizLoc}, {vertLoc})");
 
-			ushort dot = this.owner.VideoCard.ObtainDot(
+			ushort dot = this.Owner.VideoCard.ObtainDot(
 				DrawingBox.DisplayIdx,
 				horizLoc, vertLoc + 50);
 
-			this.processor.Journal.CloseScope("ObtainContinentIDFromScreen");
+			this.Processor.Journal.CloseScope("ObtainContinentIDFromScreen");
 
 			return dot;
 		}
@@ -627,7 +627,7 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public ushort DisplayStoryIntro()
 		{
-			this.processor.Journal.OpenScope("DisplayStoryIntro()");
+			this.Processor.Journal.OpenScope("DisplayStoryIntro()");
 
 			DrawingBox.DisplayIdx = 0x0;
 
@@ -635,7 +635,7 @@ namespace Civilization1Remaster.Game
 
 			ushort result = (ushort)(waiting ? 1 : 0);
 
-			this.processor.Journal.CloseScope("DisplayStoryIntro");
+			this.Processor.Journal.CloseScope("DisplayStoryIntro");
 
 			return result;
 		}
@@ -649,19 +649,19 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public void EnactGlobalWarming(short worldHeatingTally)
 		{
-			this.processor.Journal.OpenScope($"EnactGlobalWarming({worldHeatingTally})");
+			this.Processor.Journal.OpenScope($"EnactGlobalWarming({worldHeatingTally})");
 
-			this.owner.Words.Set("Global temperature\nrises! Icecaps melt.\nSevere Drought.\n");
+			this.Owner.Words.Set("Global temperature\nrises! Icecaps melt.\nSevere Drought.\n");
 
-			this.owner.Paper.DisplayNewspaper(-1);
+			this.Owner.Paper.DisplayNewspaper(-1);
 
-			MapLayers chart = this.owner.MapOps.Chart;
+			MapLayers chart = this.Owner.MapOps.Chart;
 
 			for (int horizLoc = 0; horizLoc < 80; horizLoc++)
 			{
 				for (int vertLoc = 0; vertLoc < 50; vertLoc++)
 				{
-					ushort terrain = this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
+					ushort terrain = this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
 
 					if ((short)terrain > 3)
 						continue;
@@ -670,7 +670,7 @@ namespace Civilization1Remaster.Game
 
 					for (int heading = 1; heading <= 8; heading++)
 					{
-						if (this.owner.MapOps.ObtainTerrainType(chart.DirectionHoriz(heading) + horizLoc, chart.DirectionVert(heading) + vertLoc) == MapRules.OceanTerrain)
+						if (this.Owner.MapOps.ObtainTerrainType(chart.DirectionHoriz(heading) + horizLoc, chart.DirectionVert(heading) + vertLoc) == MapRules.OceanTerrain)
 						{
 							oceanTally++;
 						}
@@ -678,28 +678,28 @@ namespace Civilization1Remaster.Game
 
 					if (7 - worldHeatingTally <= oceanTally)
 					{
-						this.owner.World.ChartSight[horizLoc, vertLoc] |= 1;
-						this.owner.Services.AssignDot(2, horizLoc, vertLoc, (ushort)(terrain != 3 ? 3 : 11));
-						this.owner.MapOps.DiscardTileImprovements(6, horizLoc, vertLoc);
+						this.Owner.World.ChartSight[horizLoc, vertLoc] |= 1;
+						this.Owner.Services.AssignDot(2, horizLoc, vertLoc, (ushort)(terrain != 3 ? 3 : 11));
+						this.Owner.MapOps.DiscardTileImprovements(6, horizLoc, vertLoc);
 					}
 					else if ((((11 * horizLoc) + (13 * vertLoc)) & 7) == (ushort)worldHeatingTally)
 					{
-						this.owner.World.ChartSight[horizLoc, vertLoc] |= 1;
-						this.owner.Services.AssignDot(2, horizLoc, vertLoc, (ushort)((short)terrain <= 1 ? 14 : 6));
+						this.Owner.World.ChartSight[horizLoc, vertLoc] |= 1;
+						this.Owner.Services.AssignDot(2, horizLoc, vertLoc, (ushort)((short)terrain <= 1 ? 14 : 6));
 					}
 					else
 					{
 						continue;
 					}
 
-					if ((this.owner.World.ChartSight[horizLoc, vertLoc] & (1 << this.owner.World.PersonParticipantIdx)) != 0)
+					if ((this.Owner.World.ChartSight[horizLoc, vertLoc] & (1 << this.Owner.World.PersonParticipantIdx)) != 0)
 					{
-						this.owner.MapOps.RepaintMapTile(horizLoc, vertLoc);
+						this.Owner.MapOps.RepaintMapTile(horizLoc, vertLoc);
 					}
 				}
 			}
 
-			this.processor.Journal.CloseScope("EnactGlobalWarming");
+			this.Processor.Journal.CloseScope("EnactGlobalWarming");
 		}
 
 		/// <summary>The tile is off the pattern of 7 * x + 11 * y (bit 1 of the low byte set)</summary>
@@ -724,31 +724,31 @@ namespace Civilization1Remaster.Game
 				{
 					byte mask = 0;
 
-					if (this.owner.VideoCard.ObtainDot(1, horizLoc, vertLoc) != 0)
+					if (this.Owner.VideoCard.ObtainDot(1, horizLoc, vertLoc) != 0)
 					{
 						mask |= 0x1;
 					}
 
-					if (this.owner.VideoCard.ObtainDot(1, horizLoc + 1, vertLoc) != 0)
+					if (this.Owner.VideoCard.ObtainDot(1, horizLoc + 1, vertLoc) != 0)
 					{
 						mask |= 0x2;
 					}
 
-					if (this.owner.VideoCard.ObtainDot(1, horizLoc, vertLoc + 1) != 0)
+					if (this.Owner.VideoCard.ObtainDot(1, horizLoc, vertLoc + 1) != 0)
 					{
 						mask |= 0x4;
 					}
 
-					if (this.owner.VideoCard.ObtainDot(1, horizLoc + 1, vertLoc + 1) != 0)
+					if (this.Owner.VideoCard.ObtainDot(1, horizLoc + 1, vertLoc + 1) != 0)
 					{
 						mask |= 0x8;
 					}
 
 					if (mask == 0x6 || mask == 0x9)
 					{
-						this.owner.Services.AssignDot(1, horizLoc + 1, vertLoc, 1);
-						this.owner.Services.AssignDot(1, horizLoc, vertLoc + 1, 1);
-						this.owner.Services.AssignDot(1, horizLoc + 1, vertLoc + 1, 1);
+						this.Owner.Services.AssignDot(1, horizLoc + 1, vertLoc, 1);
+						this.Owner.Services.AssignDot(1, horizLoc, vertLoc + 1, 1);
+						this.Owner.Services.AssignDot(1, horizLoc + 1, vertLoc + 1, 1);
 
 						if (horizLoc != 0)
 						{
@@ -784,16 +784,16 @@ namespace Civilization1Remaster.Game
 
 				for (vertLoc = 0; vertLoc < 0x32; vertLoc++)
 				{
-					ushort dot = this.owner.VideoCard.ObtainDot(1, horizLoc, vertLoc);
+					ushort dot = this.Owner.VideoCard.ObtainDot(1, horizLoc, vertLoc);
 
 					if (dot == 0)
 					{
-						this.owner.Services.AssignDot(1, horizLoc, vertLoc, 1);
+						this.Owner.Services.AssignDot(1, horizLoc, vertLoc, 1);
 					}
 					else if (dot == 1)
 					{
-						short rawLat = (short)-((short)(this.owner.Libc.Dice.DrawInt(8) + vertLoc - 0x1d));
-						ushort absLat = (ushort)this.owner.Libc.AbsoluteValue(rawLat);
+						short rawLat = (short)-((short)(this.Owner.Libc.Dice.DrawInt(8) + vertLoc - 0x1d));
+						ushort absLat = (ushort)this.Owner.Libc.AbsoluteValue(rawLat);
 						short band = (short)(absLat + (1 - (short)Temperature));
 
 						ushort tier = (ushort)(CPU.SignedQuotient(band, 6) + 1);
@@ -806,16 +806,16 @@ namespace Civilization1Remaster.Game
 								2 => 7,
 								_ => 15,
 							};
-							this.owner.Services.AssignDot(1, horizLoc, vertLoc, colour);
+							this.Owner.Services.AssignDot(1, horizLoc, vertLoc, colour);
 						}
 					}
 					else if (dot == 2)
 					{
-						this.owner.Services.AssignDot(1, horizLoc, vertLoc, 12);
+						this.Owner.Services.AssignDot(1, horizLoc, vertLoc, 12);
 					}
 					else
 					{
-						this.owner.Services.AssignDot(1, horizLoc, vertLoc, 13);
+						this.Owner.Services.AssignDot(1, horizLoc, vertLoc, 13);
 					}
 				}
 
@@ -835,7 +835,7 @@ namespace Civilization1Remaster.Game
 
 			for (vertLoc = 0; vertLoc < 0x32; vertLoc++)
 			{
-				short latitudeDist = (short)this.owner.Libc.AbsoluteValue((short)(0x19 - vertLoc));
+				short latitudeDist = (short)this.Owner.Libc.AbsoluteValue((short)(0x19 - vertLoc));
 
 				short moisture = 0;
 
@@ -843,11 +843,11 @@ namespace Civilization1Remaster.Game
 
 				for (horizLoc = 0; horizLoc < 0x50; horizLoc++)
 				{
-					ushort dot = this.owner.VideoCard.ObtainDot(1, horizLoc, vertLoc);
+					ushort dot = this.Owner.VideoCard.ObtainDot(1, horizLoc, vertLoc);
 
 					if (dot == 1)
 					{
-						short cap = (short)(this.owner.Libc.AbsoluteValue((short)(0xc - latitudeDist)) + (Climate << 2));
+						short cap = (short)(this.Owner.Libc.AbsoluteValue((short)(0xc - latitudeDist)) + (Climate << 2));
 						if (cap > moisture)
 						{
 							moisture++;
@@ -855,25 +855,25 @@ namespace Civilization1Remaster.Game
 					}
 					else if (moisture > 0)
 					{
-						ushort drop = (ushort)this.owner.Libc.Dice.DrawInt((ushort)(7 - (Climate << 1)));
+						ushort drop = (ushort)this.Owner.Libc.Dice.DrawInt((ushort)(7 - (Climate << 1)));
 						moisture = (short)(moisture - drop);
 
 						switch (dot)
 						{
 							case 0x6:
-								this.owner.Services.AssignDot(1, horizLoc, vertLoc, 10);
+								this.Owner.Services.AssignDot(1, horizLoc, vertLoc, 10);
 								break;
 							case 0x7:
-								this.owner.Services.AssignDot(1, horizLoc, vertLoc, 15);
+								this.Owner.Services.AssignDot(1, horizLoc, vertLoc, 15);
 								break;
 							case 0xc:
-								this.owner.Services.AssignDot(1, horizLoc, vertLoc, 2);
+								this.Owner.Services.AssignDot(1, horizLoc, vertLoc, 2);
 								break;
 							case 0xd:
 								moisture -= 3;
 								break;
 							case 0xe:
-								this.owner.Services.AssignDot(1, horizLoc, vertLoc, 6);
+								this.Owner.Services.AssignDot(1, horizLoc, vertLoc, 6);
 								break;
 						}
 					}
@@ -884,7 +884,7 @@ namespace Civilization1Remaster.Game
 
 				for (horizLoc = 0x4f; horizLoc >= 0; horizLoc--)
 				{
-					ushort dot = this.owner.VideoCard.ObtainDot(1, horizLoc, vertLoc);
+					ushort dot = this.Owner.VideoCard.ObtainDot(1, horizLoc, vertLoc);
 
 					if (dot == 1)
 					{
@@ -896,28 +896,28 @@ namespace Civilization1Remaster.Game
 					}
 					else if (moisture > 0)
 					{
-						ushort drop = (ushort)this.owner.Libc.Dice.DrawInt((ushort)(7 - (Climate << 1)));
+						ushort drop = (ushort)this.Owner.Libc.Dice.DrawInt((ushort)(7 - (Climate << 1)));
 						moisture = (short)(moisture - drop);
 
 						switch (dot)
 						{
 							case 0x3:
 							case 0xc:
-								this.owner.Services.AssignDot(1, horizLoc, vertLoc, 2);
+								this.Owner.Services.AssignDot(1, horizLoc, vertLoc, 2);
 								break;
 							case 0x6:
-								this.owner.Services.AssignDot(1, horizLoc, vertLoc, 10);
+								this.Owner.Services.AssignDot(1, horizLoc, vertLoc, 10);
 								break;
 							case 0xa:
-								this.owner.Services.AssignDot(1, horizLoc, vertLoc, latitudeDist < 0xa ? (ushort)11 : (ushort)3);
+								this.Owner.Services.AssignDot(1, horizLoc, vertLoc, latitudeDist < 0xa ? (ushort)11 : (ushort)3);
 								moisture = -2;
 								break;
 							case 0xd:
 								moisture -= 3;
-								this.owner.Services.AssignDot(1, horizLoc, vertLoc, 2);
+								this.Owner.Services.AssignDot(1, horizLoc, vertLoc, 2);
 								break;
 							case 0xe:
-								this.owner.Services.AssignDot(1, horizLoc, vertLoc, 6);
+								this.Owner.Services.AssignDot(1, horizLoc, vertLoc, 6);
 								break;
 						}
 					}
@@ -942,48 +942,48 @@ namespace Civilization1Remaster.Game
 			{
 				if ((step & 1) == 0)
 				{
-					horizLoc = (short)this.owner.Libc.Dice.DrawInt(80);
+					horizLoc = (short)this.Owner.Libc.Dice.DrawInt(80);
 
-					vertLoc = (short)this.owner.Libc.Dice.DrawInt(50);
+					vertLoc = (short)this.Owner.Libc.Dice.DrawInt(50);
 				}
 				else
 				{
-					ushort heading = (ushort)(this.owner.Libc.Dice.DrawInt(8) + 1);
+					ushort heading = (ushort)(this.Owner.Libc.Dice.DrawInt(8) + 1);
 
 					horizLoc = (short)(horizLoc + (short)DirectionHoriz(heading));
 
 					vertLoc = (short)(vertLoc + (short)DirectionVert(heading));
 				}
 
-				ushort dot = this.owner.VideoCard.ObtainDot(1, horizLoc, vertLoc);
+				ushort dot = this.Owner.VideoCard.ObtainDot(1, horizLoc, vertLoc);
 
 				switch (dot)
 				{
 					case 2:
-						this.owner.Services.AssignDot(1, horizLoc, vertLoc, 11);
+						this.Owner.Services.AssignDot(1, horizLoc, vertLoc, 11);
 						break;
 					case 3:
-						this.owner.Services.AssignDot(1, horizLoc, vertLoc, 10);
+						this.Owner.Services.AssignDot(1, horizLoc, vertLoc, 10);
 						break;
 					case 6:
 					case 7:
-						this.owner.Services.AssignDot(1, horizLoc, vertLoc, 12);
+						this.Owner.Services.AssignDot(1, horizLoc, vertLoc, 12);
 						break;
 					case 10:
-						this.owner.Services.AssignDot(1, horizLoc, vertLoc, 2);
+						this.Owner.Services.AssignDot(1, horizLoc, vertLoc, 2);
 						break;
 					case 11:
-						this.owner.Services.AssignDot(1, horizLoc, vertLoc, 3);
+						this.Owner.Services.AssignDot(1, horizLoc, vertLoc, 3);
 						break;
 					case 12:
 					case 15:
-						this.owner.Services.AssignDot(1, horizLoc, vertLoc, 13);
+						this.Owner.Services.AssignDot(1, horizLoc, vertLoc, 13);
 						break;
 					case 13:
 						this.BlendTerrainTile(horizLoc, vertLoc);
 						break;
 					case 14:
-						this.owner.Services.AssignDot(1, horizLoc, vertLoc, 6);
+						this.Owner.Services.AssignDot(1, horizLoc, vertLoc, 6);
 						break;
 				}
 
@@ -1009,7 +1009,7 @@ namespace Civilization1Remaster.Game
 			for (horizLoc = 0; horizLoc < 0x50; horizLoc++)
 			{
 				for (vertLoc = 0; vertLoc < 0x32; vertLoc++)
-					this.owner.World.ChartSight[horizLoc, vertLoc] = 0;
+					this.Owner.World.ChartSight[horizLoc, vertLoc] = 0;
 
 				this.terrainFrame.SetFrame(0xa8, vertLoc);
 			}
@@ -1065,7 +1065,7 @@ namespace Civilization1Remaster.Game
 							{
 								newLabel++;
 							}
-							while (this.processor.PullGlobalWord(LabelSizeAddress(pass, newLabel)) != 0);
+							while (this.Processor.PullGlobalWord(LabelSizeAddress(pass, newLabel)) != 0);
 
 							this.terrainFrame.SetFrame(0xae, newLabel);
 						}
@@ -1074,10 +1074,10 @@ namespace Civilization1Remaster.Game
 						this.terrainFrame.SetFrame(0x22, (ushort)run);
 					}
 
-					this.owner.World.ChartSight[horizLoc, vertLoc] = (sbyte)(byte)run;
+					this.Owner.World.ChartSight[horizLoc, vertLoc] = (sbyte)(byte)run;
 
 					ushort size = LabelSizeAddress(pass, run);
-					this.processor.EmitGlobalWord(size, (ushort)(this.processor.PullGlobalWord(size) + 1));
+					this.Processor.EmitGlobalWord(size, (ushort)(this.Processor.PullGlobalWord(size) + 1));
 
 					inRun = true;
 					this.terrainFrame.SetFrame(0x6, 1);
@@ -1104,7 +1104,7 @@ namespace Civilization1Remaster.Game
 			{
 				this.terrainFrame.SetFrame(0xac, (ushort)shift);
 
-				short label = this.owner.World.ChartSight[(ushort)(horizLoc + shift), (ushort)(vertLoc - 1)];
+				short label = this.Owner.World.ChartSight[(ushort)(horizLoc + shift), (ushort)(vertLoc - 1)];
 				this.terrainFrame.SetFrame(0xd0, (ushort)label);
 
 				if (label == 0)
@@ -1122,14 +1122,14 @@ namespace Civilization1Remaster.Game
 
 						for (column = 0; column < 0x50; column++)
 						{
-							if (this.owner.World.ChartSight[column, row] == run)
-								this.owner.World.ChartSight[column, row] = (sbyte)(byte)label;
+							if (this.Owner.World.ChartSight[column, row] == run)
+								this.Owner.World.ChartSight[column, row] = (sbyte)(byte)label;
 
 							ushort from = LabelSizeAddress(pass, run);
 							ushort to = LabelSizeAddress(pass, label);
 
-							this.processor.EmitGlobalWord(to, (ushort)(this.processor.PullGlobalWord(to) + this.processor.PullGlobalWord(from)));
-							this.processor.EmitGlobalWord(from, 0);
+							this.Processor.EmitGlobalWord(to, (ushort)(this.Processor.PullGlobalWord(to) + this.Processor.PullGlobalWord(from)));
+							this.Processor.EmitGlobalWord(from, 0);
 						}
 
 						this.terrainFrame.SetFrame(0x2, column);
@@ -1172,14 +1172,14 @@ namespace Civilization1Remaster.Game
 				this.terrainFrame.SetFrame(0x24, label);
 				this.terrainFrame.SetFrame(numbers - ((label << 1)), 0xf);
 
-				ushort size = this.processor.PullGlobalWord(LabelSizeAddress(pass, label));
+				ushort size = this.Processor.PullGlobalWord(LabelSizeAddress(pass, label));
 				ushort rank;
 
 				for (rank = 1; rank < 0xf; rank++)
 				{
 					ushort ranked = this.terrainFrame.Frame(ranking - ((rank << 1)));
 
-					if ((short)this.processor.PullGlobalWord(LabelSizeAddress(pass, ranked)) >= (short)size)
+					if ((short)this.Processor.PullGlobalWord(LabelSizeAddress(pass, ranked)) >= (short)size)
 						continue;
 
 					// The smaller ones move down a rank
@@ -1209,7 +1209,7 @@ namespace Civilization1Remaster.Game
 
 			// A label from 0x40 on (or negative) reads past the numbers with ClassicLabelNumbers: the locals of the frame (x at
 			// 0x24, y at 0xa8, ...), the frames of the callers above them or the stack under the frame; else it gets 15
-			bool classicNumbers = this.owner.TurnHooks.ClassicLabelNumbers;
+			bool classicNumbers = this.Owner.TurnHooks.ClassicLabelNumbers;
 
 			for (horizLoc = 0; horizLoc < 0x50; horizLoc++)
 			{
@@ -1219,14 +1219,14 @@ namespace Civilization1Remaster.Game
 				{
 					this.terrainFrame.SetFrame(0xa8, vertLoc);
 
-					short tileLabel = this.owner.World.ChartSight[horizLoc, vertLoc];
+					short tileLabel = this.Owner.World.ChartSight[horizLoc, vertLoc];
 
 					ushort number = classicNumbers || (tileLabel >= 0 && tileLabel < 0x40) ?
 						this.terrainFrame.Frame(numbers - (tileLabel << 1)) : (ushort)0xf;
 					this.terrainFrame.SetFrame(0xa6, number);
 
 					if (number != 0)
-						this.owner.Services.AssignDot((short)horizLoc, (short)vertLoc + 0x32, number);
+						this.Owner.Services.AssignDot((short)horizLoc, (short)vertLoc + 0x32, number);
 				}
 			}
 
@@ -1236,18 +1236,18 @@ namespace Civilization1Remaster.Game
 			{
 				int entry = ranking - (rank << 1);
 
-				this.terrainFrame.SetFrame(entry, this.processor.PullGlobalWord(LabelSizeAddress(pass, this.terrainFrame.Frame(entry))));
+				this.terrainFrame.SetFrame(entry, this.Processor.PullGlobalWord(LabelSizeAddress(pass, this.terrainFrame.Frame(entry))));
 			}
 
 			for (ushort rank = 1; rank < 0xf; rank++)
 			{
-				this.processor.EmitGlobalWord(LabelSizeAddress(pass, rank), this.terrainFrame.Frame(ranking - ((rank << 1))));
+				this.Processor.EmitGlobalWord(LabelSizeAddress(pass, rank), this.terrainFrame.Frame(ranking - ((rank << 1))));
 			}
 
 			this.terrainFrame.SetFrame(0x24, 0xf);
 
-			this.processor.EmitGlobalWord(LabelSizeAddress(pass, 0), 0);
-			this.processor.EmitGlobalWord(LabelSizeAddress(pass, 0xf), 1);
+			this.Processor.EmitGlobalWord(LabelSizeAddress(pass, 0), 0);
+			this.Processor.EmitGlobalWord(LabelSizeAddress(pass, 0xf), 1);
 		}
 
 		/// <summary>
@@ -1264,7 +1264,7 @@ namespace Civilization1Remaster.Game
 
 				land = (tileHoriz, tileVert);
 
-				return (short)this.owner.MapOps.ObtainContinentID(tileHoriz, tileVert);
+				return (short)this.Owner.MapOps.ObtainContinentID(tileHoriz, tileVert);
 			}
 
 			return -1;
@@ -1275,7 +1275,7 @@ namespace Civilization1Remaster.Game
 		{
 			ushort links = (ushort)((0xd * column) + row + 0xdb44);
 
-			this.processor.EmitGlobalByte(links, (byte)(this.processor.PullGlobalByte(links) | (1 << bitIdx)));
+			this.Processor.EmitGlobalByte(links, (byte)(this.Processor.PullGlobalByte(links) | (1 << bitIdx)));
 		}
 
 		/// <summary>The sea links of one block (see ReckonContinentSizes)</summary>
@@ -1354,7 +1354,7 @@ namespace Civilization1Remaster.Game
 				foreach ((short tileHoriz, short tileVert) in new[] { (horizLoc, vertLoc), ((short)(horizLoc + 1), vertLoc),
 					(horizLoc, (short)(vertLoc + 1)), ((short)(horizLoc + 1), (short)(vertLoc + 1)) })
 				{
-					if (ObtainTerrainTypeFromScreen(tileHoriz, tileVert) != 0xa || this.owner.MapOps.VerifyMapLimits(tileHoriz, tileVert) == 0)
+					if (ObtainTerrainTypeFromScreen(tileHoriz, tileVert) != 0xa || this.Owner.MapOps.VerifyMapLimits(tileHoriz, tileVert) == 0)
 						ocean--;
 				}
 
@@ -1372,7 +1372,7 @@ namespace Civilization1Remaster.Game
 		{
 			ushort links = (ushort)((0xd * column) + row + SeaBlocksAddress);
 
-			this.processor.EmitGlobalByte(links, (byte)(this.processor.PullGlobalByte(links) | (1 << bitIdx)));
+			this.Processor.EmitGlobalByte(links, (byte)(this.Processor.PullGlobalByte(links) | (1 << bitIdx)));
 		}
 
 		/// <summary>
@@ -1380,7 +1380,7 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private bool StoryStep()
 		{
-			if ((short)StoryState >= 2 && this.owner.Libc.KeyAvailable() == 0)
+			if ((short)StoryState >= 2 && this.Owner.Libc.KeyAvailable() == 0)
 			{
 				// The story is told: the "press a key" line
 				if ((short)StoryState < 5)
@@ -1389,16 +1389,16 @@ namespace Civilization1Remaster.Game
 
 					if (StoryState == 5)
 					{
-						this.owner.Services.FloodBox(ScreenBox, 40, 160, 240, 8, Hues.Black);
+						this.Owner.Services.FloodBox(ScreenBox, 40, 160, 240, 8, Hues.Black);
 					}
 				}
 				else
 				{
-					StoryMusicTime = (ushort)CPU.SignedQuotient((short)this.owner.Timer.Beats, 0x3c);
+					StoryMusicTime = (ushort)CPU.SignedQuotient((short)this.Owner.Timer.Beats, 0x3c);
 
 					ushort colour = (ushort)(((byte)StoryMusicTime & 1) != 0 ? 0xf : 0x3);
 
-					this.owner.TextPainter.RenderCenteredTextToScreen0(GameTexts.TextBuildingNewWorld, 160, 160, colour);
+					this.Owner.TextPainter.RenderCenteredTextToScreen0(GameTexts.TextBuildingNewWorld, 160, 160, colour);
 				}
 
 				MarkScreenChanged();
@@ -1408,12 +1408,12 @@ namespace Civilization1Remaster.Game
 
 			if (StoryState == 0)
 			{
-				StoryFile = (ushort)this.owner.Libc.OpenStream("story.txt", "rt");
+				StoryFile = (ushort)this.Owner.Libc.OpenStream("story.txt", "rt");
 				StoryState = 0x1;
 				StoryLineTime = 0;
 				StoryMusicTime = 0;
 
-				this.owner.Words.Set("");
+				this.Owner.Words.Set("");
 
 				DrawingBox.TypefaceIdx = 0x7;
 				StoryLinesTold = 0x0;
@@ -1421,7 +1421,7 @@ namespace Civilization1Remaster.Game
 
 			if (StoryLinesTold != 0)
 			{
-				StoryMusicTime = this.owner.Services.ObtainSongPosition();
+				StoryMusicTime = this.Owner.Services.ObtainSongPosition();
 			}
 
 			if ((short)StoryMusicTime < (short)StoryLineTime)
@@ -1433,14 +1433,14 @@ namespace Civilization1Remaster.Game
 
 			if (StoryState != 2 && (short)StoryLinesTold < 0x28)
 			{
-				this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 160, 160, Hues.Cyan);
+				this.Owner.TextPainter.RenderCenteredTextToScreen0(this.Owner.Words.ToString(), 160, 160, Hues.Cyan);
 
-				this.owner.TextPainter.AwaitTime(5);
+				this.Owner.TextPainter.AwaitTime(5);
 			}
 
-			short lineRead = this.owner.Libc.ScanStream((short)StoryFile, "%[^\n]\n", TextBuffer.Address);
+			short lineRead = this.Owner.Libc.ScanStream((short)StoryFile, "%[^\n]\n", TextBuffer.Address);
 
-			if (lineRead == -1 || (this.owner.Libc.KeyAvailable() != 0 && StoryKeyAllowed != 0))
+			if (lineRead == -1 || (this.Owner.Libc.KeyAvailable() != 0 && StoryKeyAllowed != 0))
 			{
 				EndStory(lineRead == -1);
 			}
@@ -1449,7 +1449,7 @@ namespace Civilization1Remaster.Game
 				TellStoryLine();
 			}
 
-			this.owner.Services.DisplayScreen(0);
+			this.Owner.Services.DisplayScreen(0);
 
 			MarkScreenChanged();
 
@@ -1465,30 +1465,30 @@ namespace Civilization1Remaster.Game
 			if ((short)BirthPicture > 1)
 			{
 				// The line under the picture is wiped with the picture
-				this.owner.VideoCard.RenderImage(PictureScreenBox, 0, 0xa0, 0x140, 8,
+				this.Owner.VideoCard.RenderImage(PictureScreenBox, 0, 0xa0, 0x140, 8,
 					ScreenBox, 0, 0xa0);
 			}
 
-			this.owner.TextPainter.AwaitTime(10);
+			this.Owner.TextPainter.AwaitTime(10);
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 160, 160, Hues.Cyan);
+			this.Owner.TextPainter.RenderCenteredTextToScreen0(this.Owner.Words.ToString(), 160, 160, Hues.Cyan);
 
-			this.owner.TextPainter.AwaitTime(5);
+			this.Owner.TextPainter.AwaitTime(5);
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 160, 160, Hues.LightCyan);
+			this.Owner.TextPainter.RenderCenteredTextToScreen0(this.Owner.Words.ToString(), 160, 160, Hues.LightCyan);
 
 			StoryLineTime = 0x0;
 
-			if ((short)this.owner.Words.Length > 3)
+			if ((short)this.Owner.Words.Length > 3)
 			{
 				if (StoryLinesTold == 0)
 				{
 					// The first line starts the music
-					this.owner.Services.RestoreTimer();
+					this.Owner.Services.RestoreTimer();
 
-					this.owner.Services.PerformSound(1, 0);
+					this.Owner.Services.PerformSound(1, 0);
 
-					this.owner.Services.PerformSound(4, 0);
+					this.Owner.Services.PerformSound(4, 0);
 				}
 
 				StoryLineTime = (ushort)(StoryLineTime + 2);
@@ -1499,13 +1499,13 @@ namespace Civilization1Remaster.Game
 				ShowStoryPicture();
 			}
 
-			if ((short)this.owner.Words.Length > 0x13)
+			if ((short)this.Owner.Words.Length > 0x13)
 			{
 				StoryLineTime = (ushort)(StoryLineTime + 1);
 			}
 
-			StoryLineTime = (ushort)this.owner.Helpers.VerifyValueSpan(
-				this.processor.PullInt16(StorySegment, (ushort)((StoryLinesTold << 1) + StoryTimingTableOffset)),
+			StoryLineTime = (ushort)this.Owner.Helpers.VerifyValueSpan(
+				this.Processor.PullInt16(StorySegment, (ushort)((StoryLinesTold << 1) + StoryTimingTableOffset)),
 				(45 * (short)StoryLineTime) + (short)StoryMusicTime,
 				32767);
 		}
@@ -1526,14 +1526,14 @@ namespace Civilization1Remaster.Game
 				StopStoryColourCycles();
 			}
 
-			this.owner.ImageToolkit.ImportPictureOrColors(2, 0, 0, pictureName, 0);
+			this.Owner.ImageToolkit.ImportPictureOrColors(2, 0, 0, pictureName, 0);
 
 			if (VgaMode != 0)
 			{
-				this.owner.Services.FloodColors(8, 0, 0, 0);
+				this.Owner.Services.FloodColors(8, 0, 0, 0);
 			}
 
-			this.owner.VideoCard.RenderImage(PictureScreenBox, 0, 0, 0x140, 0xc8,
+			this.Owner.VideoCard.RenderImage(PictureScreenBox, 0, 0, 0x140, 0xc8,
 				ScreenBox, 0, 0);
 
 			if (VgaMode == 0)
@@ -1541,14 +1541,14 @@ namespace Civilization1Remaster.Game
 
 			string palName = $"birth{pictureIdx}.pal";
 
-			this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, palName, 0xc5be);
+			this.Owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, palName, 0xc5be);
 
-			this.owner.Services.ImportColorsFromBuffer(8, 0xc5be);
+			this.Owner.Services.ImportColorsFromBuffer(8, 0xc5be);
 
 			// The colour cycles of the picture: first colour, last colour, speed (300 / speed beats a step), 0 at the end
 			StoryCycleCount = 0x0;
 
-			while (this.processor.PullUInt8(StorySegment, StoryCycleRecord) != 0)
+			while (this.Processor.PullUInt8(StorySegment, StoryCycleRecord) != 0)
 			{
 				ushort first = NextStoryCycleByte();
 				ushort last = NextStoryCycleByte();
@@ -1561,14 +1561,14 @@ namespace Civilization1Remaster.Game
 
 				StoryCycleCount = (ushort)(StoryCycleCount + 1);
 
-				this.owner.Services.AssignHueCycleSpan(StoryCycleCount, delay, first, last);
+				this.Owner.Services.AssignHueCycleSpan(StoryCycleCount, delay, first, last);
 			}
 
 			StoryCycleRecord = (ushort)(StoryCycleRecord + 1);
 
 			for (short cycleIdx = 1; cycleIdx <= (short)StoryCycleCount; cycleIdx++)
 			{
-				this.owner.Services.ActivateHueCycle((ushort)cycleIdx);
+				this.Owner.Services.ActivateHueCycle((ushort)cycleIdx);
 			}
 		}
 
@@ -1578,7 +1578,7 @@ namespace Civilization1Remaster.Game
 			ushort spot = StoryCycleRecord;
 			StoryCycleRecord = (ushort)(StoryCycleRecord + 1);
 
-			return this.processor.PullUInt8(StorySegment, spot);
+			return this.Processor.PullUInt8(StorySegment, spot);
 		}
 
 		/// <summary>
@@ -1589,12 +1589,12 @@ namespace Civilization1Remaster.Game
 		{
 			if (endOfFile)
 			{
-				this.owner.TextPainter.AwaitTime(180);
+				this.Owner.TextPainter.AwaitTime(180);
 			}
 
-			this.owner.Libc.CloseStream((short)StoryFile);
+			this.Owner.Libc.CloseStream((short)StoryFile);
 
-			this.owner.Services.PerformSound(1, 0);
+			this.Owner.Services.PerformSound(1, 0);
 
 			if (VgaMode != 0)
 			{
@@ -1609,7 +1609,7 @@ namespace Civilization1Remaster.Game
 		{
 			for (short cycleIdx = 1; cycleIdx <= (short)StoryCycleCount; cycleIdx++)
 			{
-				this.owner.Services.DeactivateHueCycle((ushort)cycleIdx);
+				this.Owner.Services.DeactivateHueCycle((ushort)cycleIdx);
 			}
 		}
 

@@ -65,7 +65,7 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public void HandlePlayerTurn(short participantIdx)
 		{
-			this.processor.Journal.OpenScope($"HandlePlayerTurn({participantIdx})");
+			this.Processor.Journal.OpenScope($"HandlePlayerTurn({participantIdx})");
 
 			TurnLocals outer = this.turn;
 			this.turn = new TurnLocals();
@@ -108,8 +108,8 @@ namespace Civilization1Remaster.Game
 				if (this.turn.AllMoved == 0 && GameEndRequest == 0)
 					continue;
 
-				if (GameEndRequest != 0 || !this.owner.World.IsHuman(participantIdx) ||
-					(this.turn.HumanTookKey != 0 && (this.owner.World.SessionPrefMarkers & 4) == 0))
+				if (GameEndRequest != 0 || !this.Owner.World.IsHuman(participantIdx) ||
+					(this.turn.HumanTookKey != 0 && (this.Owner.World.SessionPrefMarkers & 4) == 0))
 				{
 					break;
 				}
@@ -126,16 +126,16 @@ namespace Civilization1Remaster.Game
 			}
 
 			// The end of the turn: the human's "end of turn" line goes away
-			if (participantIdx == this.owner.World.PersonParticipantIdx)
+			if (participantIdx == this.Owner.World.PersonParticipantIdx)
 			{
-				this.owner.Startup.ConcealMouseCursor();
-				this.owner.TurnHooks.FloodBoxWithShadow(0, 97, 80, 103);
-				this.owner.Startup.DisplayMouseCursor();
+				this.Owner.Startup.ConcealMouseCursor();
+				this.Owner.TurnHooks.FloodBoxWithShadow(0, 97, 80, 103);
+				this.Owner.Startup.DisplayMouseCursor();
 			}
 
 			this.indexDest = outerDest;
 			this.turn = outer;
-			this.processor.Journal.CloseScope("HandlePlayerTurn");
+			this.Processor.Journal.CloseScope("HandlePlayerTurn");
 		}
 
 		/// <summary>
@@ -146,7 +146,7 @@ namespace Civilization1Remaster.Game
 		private bool VisitUnit(short participantIdx)
 		{
 			if (ScreenRepaintRequest != 0)
-				this.owner.TurnHooks.RepaintMainScreen();
+				this.Owner.TurnHooks.RepaintMainScreen();
 
 			if (GameEndRequest != 0)
 			{
@@ -176,13 +176,13 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private bool LookAtUnit(short participantIdx)
 		{
-			if (this.owner.World.IsHuman(participantIdx))
+			if (this.Owner.World.IsHuman(participantIdx))
 				AwaitForKey();
 
 			this.turn.AITries = 0;
 
 			if (this.turn.MouseCursorSet != 0)
-				this.owner.Services.AssignMouseCursorImage(0, 0, PointerPicture);
+				this.Owner.Services.AssignMouseCursorImage(0, 0, PointerPicture);
 
 			this.turn.Clicked = 0;
 			this.turn.MouseCursorSet = 0;
@@ -240,7 +240,7 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private LookStep ObtainOrder(short participantIdx)
 		{
-			if (!this.owner.World.IsHuman(participantIdx))
+			if (!this.Owner.World.IsHuman(participantIdx))
 			{
 				ObtainAIOrder(participantIdx);
 				return LookStep.Order;
@@ -351,21 +351,21 @@ namespace Civilization1Remaster.Game
 		private void PrepareTurn(short participantIdx)
 		{
 			TurnPlayer = (ushort)participantIdx;
-			this.turn.HumanMarkers = (ushort)this.owner.World.ParticipantMarkers;
+			this.turn.HumanMarkers = (ushort)this.Owner.World.ParticipantMarkers;
 			this.turn.CursorHoriz = 0xffff;
 			this.turn.MarkedTileMode = 0;
 
-			short person = this.owner.World.PersonParticipantIdx;
+			short person = this.Owner.World.PersonParticipantIdx;
 
 			if (participantIdx == person)
 			{
-				this.owner.World.ParticipantMarkers = (short)(1 << (person & 0xff));
+				this.Owner.World.ParticipantMarkers = (short)(1 << (person & 0xff));
 
-				if (this.owner.World.RoundTally == 20 || this.owner.World.RoundTally == 60)
-					this.owner.HelpSystem.DisplayHelpPopup(GameTexts.TopicHelp1);
+				if (this.Owner.World.RoundTally == 20 || this.Owner.World.RoundTally == 60)
+					this.Owner.HelpSystem.DisplayHelpPopup(GameTexts.TopicHelp1);
 
-				if (this.owner.World.RoundTally == 40 || this.owner.World.RoundTally == 80)
-					this.owner.HelpSystem.DisplayHelpPopup(GameTexts.TopicHelp2);
+				if (this.Owner.World.RoundTally == 40 || this.Owner.World.RoundTally == 80)
+					this.Owner.HelpSystem.DisplayHelpPopup(GameTexts.TopicHelp2);
 			}
 
 			for (this.turn.Troop = 0; (short)this.turn.Troop < UnitMemory.TroopTally;
@@ -380,7 +380,7 @@ namespace Civilization1Remaster.Game
 					(byte)(3 * this.troops.KindField(participantIdx, troopIdx, UnitKindTable.ShiftTally)));
 
 				if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == UnitKindTable.SeaUnits &&
-					(this.owner.CityOps.PlayerEnjoysWonderEffect(participantIdx, 4) != 0 || this.owner.CityOps.PlayerEnjoysWonderEffect(participantIdx, 8) != 0))
+					(this.Owner.CityOps.PlayerEnjoysWonderEffect(participantIdx, 4) != 0 || this.Owner.CityOps.PlayerEnjoysWonderEffect(participantIdx, 8) != 0))
 				{
 					this.troops.Assign(participantIdx, troopIdx, UnitMemory.LeftoverSteps,
 						(byte)(this.troops.Pull(participantIdx, troopIdx, UnitMemory.LeftoverSteps) + 3));
@@ -416,7 +416,7 @@ namespace Civilization1Remaster.Game
 
 			if (this.turn.LaterPass == 0)
 			{
-				this.owner.UnitOps.ShiftUnit(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
+				this.Owner.UnitOps.ShiftUnit(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
 					this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert), participantIdx, troopIdx, 0);
 			}
 
@@ -438,22 +438,22 @@ namespace Civilization1Remaster.Game
 			sbyte horizLoc = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz);
 			sbyte vertLoc = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert);
 
-			if (participantIdx != this.owner.World.PersonParticipantIdx && (this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) != 0)
+			if (participantIdx != this.Owner.World.PersonParticipantIdx && (this.Owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) != 0)
 			{
-				this.turn.Result = this.owner.Helpers.LocateCityAtPosition(horizLoc, vertLoc);
+				this.turn.Result = this.Owner.Helpers.LocateCityAtPosition(horizLoc, vertLoc);
 
-				if ((sbyte)this.owner.World.Towns[this.turn.Result].TrueExtent >= 3)
+				if ((sbyte)this.Owner.World.Towns[this.turn.Result].TrueExtent >= 3)
 					this.troops.Assign(participantIdx, troopIdx, UnitMemory.BaseTown, (byte)this.turn.Result);
 			}
 
-			if ((this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) != 0)
+			if ((this.Owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) != 0)
 			{
-				this.turn.Result = this.owner.Helpers.LocateCityAtPosition(horizLoc, vertLoc);
+				this.turn.Result = this.Owner.Helpers.LocateCityAtPosition(horizLoc, vertLoc);
 
 				if ((ushort)this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.BaseTown) == this.turn.Result &&
-					this.owner.UnitOps.ContainsAdjacentForeignUnit(participantIdx, horizLoc, vertLoc) == 0)
+					this.Owner.UnitOps.ContainsAdjacentForeignUnit(participantIdx, horizLoc, vertLoc) == 0)
 				{
-					this.owner.UnitOps.KeepUnitsInCityList((short)this.turn.Result);
+					this.Owner.UnitOps.KeepUnitsInCityList((short)this.turn.Result);
 				}
 			}
 
@@ -468,7 +468,7 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private bool FocusOnUnit(short participantIdx)
 		{
-			if (participantIdx != this.owner.World.PersonParticipantIdx)
+			if (participantIdx != this.Owner.World.PersonParticipantIdx)
 				return true;
 
 			short troopIdx = (short)this.turn.Troop;
@@ -500,16 +500,16 @@ namespace Civilization1Remaster.Game
 			}
 
 			if (WorldMapView != 1)
-				this.owner.TextPainter.AwaitTime(30);
+				this.Owner.TextPainter.AwaitTime(30);
 
-			this.owner.MapOps.FocusMapView(participantIdx,
+			this.Owner.MapOps.FocusMapView(participantIdx,
 				this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz) - 7,
 				this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert) - 6);
 
 			this.turn.WaitingTroop = (ushort)((this.turn.Troop - 1) & 0x7f);
 			this.turn.PastWaiting = 0;
 
-			if (this.owner.World.RoundTally == 0)
+			if (this.Owner.World.RoundTally == 0)
 				RenderUnitInfo(participantIdx, this.turn.Troop);
 
 			return true;
@@ -523,7 +523,7 @@ namespace Civilization1Remaster.Game
 		private void ObtainAIOrder(short participantIdx)
 		{
 			short troopIdx = (short)this.turn.Troop;
-			this.turn.Order = this.owner.Bot.ShiftAIUnit(participantIdx, troopIdx);
+			this.turn.Order = this.Owner.Bot.ShiftAIUnit(participantIdx, troopIdx);
 
 			if (this.turn.Order != 0)
 			{

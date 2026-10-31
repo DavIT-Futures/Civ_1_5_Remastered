@@ -25,7 +25,7 @@ namespace Civilization1Remaster.Engine
 				horizLoc <<= 1;
 			}
 
-			this.owner.VideoCard.RenderText(ScreenBox, horizLoc, vertLoc, text);
+			this.Owner.VideoCard.RenderText(ScreenBox, horizLoc, vertLoc, text);
 		}
 
 		/// <summary>RenderText of the text at the address</summary>
@@ -43,7 +43,7 @@ namespace Civilization1Remaster.Engine
 
 		/// <summary>RenderTextToScreen0 of the text at the address</summary>
 		public void RenderTextToScreen0(GameText text, int horizLoc, int vertLoc, ushort style) =>
-			RenderTextToScreen0(text.Read(this.processor), horizLoc, vertLoc, style);
+			RenderTextToScreen0(text.Read(this.Processor), horizLoc, vertLoc, style);
 
 		/// <summary>Draws the text with a shadow (colour 0, one row lower) on screen 0</summary>
 		public void RenderTextWithShadow(string text, int horizLoc, int vertLoc, ushort style)
@@ -54,7 +54,7 @@ namespace Civilization1Remaster.Engine
 
 		/// <summary>RenderTextWithShadow of the text at the address</summary>
 		public void RenderTextWithShadow(GameText text, int horizLoc, int vertLoc, ushort style) =>
-			RenderTextWithShadow(text.Read(this.processor), horizLoc, vertLoc, style);
+			RenderTextWithShadow(text.Read(this.Processor), horizLoc, vertLoc, style);
 
 		/// <summary>Draws the text centered at horizLoc on screen 0</summary>
 		public void RenderCenteredTextToScreen0(string text, int horizLoc, int vertLoc, ushort style)
@@ -70,7 +70,7 @@ namespace Civilization1Remaster.Engine
 
 		/// <summary>RenderCenteredTextToScreen0 of the text at the address</summary>
 		public void RenderCenteredTextToScreen0(GameText text, int horizLoc, int vertLoc, ushort style) =>
-			RenderCenteredTextToScreen0(text.Read(this.processor), horizLoc, vertLoc, style);
+			RenderCenteredTextToScreen0(text.Read(this.Processor), horizLoc, vertLoc, style);
 
 		/// <summary>Draws the text centered at horizLoc with a shadow (colour 0, one right and one lower) on screen 0</summary>
 		public void RenderCenteredTextWithShadowToScreen0(string text, ushort horizLoc, ushort vertLoc, ushort style)
@@ -87,12 +87,12 @@ namespace Civilization1Remaster.Engine
 
 		/// <summary>RenderCenteredTextWithShadowToScreen0 of the text at the address</summary>
 		public void RenderCenteredTextWithShadowToScreen0(GameText text, ushort horizLoc, ushort vertLoc, ushort style) =>
-			RenderCenteredTextWithShadowToScreen0(text.Read(this.processor), horizLoc, vertLoc, style);
+			RenderCenteredTextWithShadowToScreen0(text.Read(this.Processor), horizLoc, vertLoc, style);
 
 		/// <summary>The width of the text in the typeface of the box at 0xaa</summary>
 		public int ObtainTextWidth(string text)
 		{
-			return this.owner.VideoCard.ObtainRenderTextSize(DrawingBox.TypefaceIdx, text).Width;
+			return this.Owner.VideoCard.ObtainRenderTextSize(DrawingBox.TypefaceIdx, text).Width;
 		}
 
 		/// <summary>ObtainTextWidth of the text at the address</summary>
@@ -104,15 +104,15 @@ namespace Civilization1Remaster.Engine
 		/// <param name="waitTime"></param>
 		public void AwaitTime(short holdMoment)
 		{
-			this.owner.Services.RestoreTimer();
+			this.Owner.Services.RestoreTimer();
 
-			while ((short)this.owner.Timer.Beats < holdMoment)
+			while ((short)this.Owner.Timer.Beats < holdMoment)
 			{
-				this.processor.Idle();
+				this.Processor.Idle();
 			}
 		}
 
 		/// <summary>The text at the address of the data segment</summary>
-		private string TextAt(ushort charsAddr) => this.processor.PullText(CPU.AsLinearAddress(this.processor.SegData.Value16, charsAddr));
+		private string TextAt(ushort charsAddr) => this.Processor.PullText(CPU.AsLinearAddress(this.Processor.SegData.Value16, charsAddr));
 	}
 }

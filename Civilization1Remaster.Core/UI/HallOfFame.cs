@@ -44,16 +44,16 @@ namespace Civilization1Remaster.UI
 		/// </summary>
 		public void WipeHallOfFame()
 		{
-			this.processor.Journal.OpenScope("WipeHallOfFame()");
+			this.Processor.Journal.OpenScope("WipeHallOfFame()");
 
-			this.processor.SegExtra.Value16 = HallOfFameSegment;
+			this.Processor.SegExtra.Value16 = HallOfFameSegment;
 
 			for (int entryIdx = 0; entryIdx < HallOfFameRecordCount; entryIdx++)
 			{
 				SetFameScore(entryIdx, -1);
 			}
 
-			this.processor.Journal.CloseScope("WipeHallOfFame");
+			this.Processor.Journal.CloseScope("WipeHallOfFame");
 		}
 
 		/// <summary>
@@ -61,19 +61,19 @@ namespace Civilization1Remaster.UI
 		/// </summary>
 		public void ImportHallOfFame()
 		{
-			this.processor.Journal.OpenScope("ImportHallOfFame()");
+			this.Processor.Journal.OpenScope("ImportHallOfFame()");
 
 			WipeHallOfFame();
 
-			short handle = this.owner.Libc.OpenHandle("fame.dta", 0x8102, 0x80);
+			short handle = this.Owner.Libc.OpenHandle("fame.dta", 0x8102, 0x80);
 
-			this.owner.Libc.ReadHandle(handle, TextBuffer.Address, HallOfFameTotalSize);
+			this.Owner.Libc.ReadHandle(handle, TextBuffer.Address, HallOfFameTotalSize);
 
-			this.owner.Libc.MoveFarData(this.processor.SegData.Value16, TextBuffer.Address, HallOfFameSegment, HallOfFameBaseAddress, HallOfFameTotalSize);
+			this.Owner.Libc.MoveFarData(this.Processor.SegData.Value16, TextBuffer.Address, HallOfFameSegment, HallOfFameBaseAddress, HallOfFameTotalSize);
 
-			this.owner.Libc.CloseHandle(handle);
+			this.Owner.Libc.CloseHandle(handle);
 
-			this.processor.Journal.CloseScope("ImportHallOfFame");
+			this.Processor.Journal.CloseScope("ImportHallOfFame");
 		}
 
 		/// <summary>
@@ -81,17 +81,17 @@ namespace Civilization1Remaster.UI
 		/// </summary>
 		public void StoreHallOfFame()
 		{
-			this.processor.Journal.OpenScope("StoreHallOfFame()");
+			this.Processor.Journal.OpenScope("StoreHallOfFame()");
 
-			short handle = this.owner.Libc.OpenHandle("fame.dta", 0x8302, 0x80);
+			short handle = this.Owner.Libc.OpenHandle("fame.dta", 0x8302, 0x80);
 
-			this.owner.Libc.MoveFarData(HallOfFameSegment, HallOfFameBaseAddress, this.processor.SegData.Value16, TextBuffer.Address, HallOfFameTotalSize);
+			this.Owner.Libc.MoveFarData(HallOfFameSegment, HallOfFameBaseAddress, this.Processor.SegData.Value16, TextBuffer.Address, HallOfFameTotalSize);
 
-			this.owner.Libc.WriteHandle(handle, TextBuffer.Address, HallOfFameTotalSize);
+			this.Owner.Libc.WriteHandle(handle, TextBuffer.Address, HallOfFameTotalSize);
 
-			this.owner.Libc.CloseHandle(handle);
+			this.Owner.Libc.CloseHandle(handle);
 
-			this.processor.Journal.CloseScope("StoreHallOfFame");
+			this.Processor.Journal.CloseScope("StoreHallOfFame");
 		}
 
 		/// <summary>
@@ -102,15 +102,15 @@ namespace Civilization1Remaster.UI
 		/// <returns>1 after the key C (c), else 0, also in AX</returns>
 		public ushort DisplayHallOfFame(ushort newPlace)
 		{
-			this.processor.Journal.OpenScope($"DisplayHallOfFame({newPlace})");
+			this.Processor.Journal.OpenScope($"DisplayHallOfFame({newPlace})");
 
-			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.White);
+			this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.White);
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0(HallOfFameTitleStringAddress, 160, 16, Hues.Black);
+			this.Owner.TextPainter.RenderCenteredTextToScreen0(HallOfFameTitleStringAddress, 160, 16, Hues.Black);
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0(HallOfFameSubtitleStringAddress, 160, 24, Hues.Black);
+			this.Owner.TextPainter.RenderCenteredTextToScreen0(HallOfFameSubtitleStringAddress, 160, 24, Hues.Black);
 
-			this.owner.VideoCard.RenderLine(ScreenBox, 80, 32, 240, 32, Hues.Yellow);
+			this.Owner.VideoCard.RenderLine(ScreenBox, 80, 32, 240, 32, Hues.Yellow);
 
 			short vertLoc = 0x28;
 
@@ -127,15 +127,15 @@ namespace Civilization1Remaster.UI
 
 			if (newPlace != 0xffff)
 			{
-				this.owner.TextPainter.RenderTextToScreen0(HallOfFameClearPromptStringAddress, 252, 189, Hues.Black);
+				this.Owner.TextPainter.RenderTextToScreen0(HallOfFameClearPromptStringAddress, 252, 189, Hues.Black);
 
-				this.owner.Dialogs.RenderBox(236, 187, 60, 10, Hues.LightCyan);
+				this.Owner.Dialogs.RenderBox(236, 187, 60, 10, Hues.LightCyan);
 			}
 
-			ushort key = (ushort)this.owner.Conquest.AwaitForKeyPressOrMouseClick();
+			ushort key = (ushort)this.Owner.Conquest.AwaitForKeyPressOrMouseClick();
 			ushort result = (ushort)(newPlace != 0xffff && (key == 'c' || key == 'C') ? 1 : 0);
 
-			this.processor.Journal.CloseScope("DisplayHallOfFame");
+			this.Processor.Journal.CloseScope("DisplayHallOfFame");
 
 			return result;
 		}
@@ -148,41 +148,41 @@ namespace Civilization1Remaster.UI
 		/// <returns>The place of the game (also in AX)</returns>
 		public ushort AttachHallOfFameRecord()
 		{
-			this.processor.Journal.OpenScope("AttachHallOfFameRecord()");
+			this.Processor.Journal.OpenScope("AttachHallOfFameRecord()");
 
 			ushort place = 0xffff;
 
 			for (int slotIdx = 0; slotIdx < 6; slotIdx++)
 			{
 				ushort record = HallOfFameRecordAddress(slotIdx);
-				short rating = (short)((this.processor.PullUInt16(HallOfFameSegment, (ushort)(record + OffsetDifficulty)) + 2) * this.processor.PullUInt16(HallOfFameSegment, (ushort)(record + OffsetScore)));
-				short gameRating = (short)((this.owner.World.HardnessTier + 2) * HallOfFameScore);
+				short rating = (short)((this.Processor.PullUInt16(HallOfFameSegment, (ushort)(record + OffsetDifficulty)) + 2) * this.Processor.PullUInt16(HallOfFameSegment, (ushort)(record + OffsetScore)));
+				short gameRating = (short)((this.Owner.World.HardnessTier + 2) * HallOfFameScore);
 
 				if (rating >= gameRating && slotIdx != 5)
 					continue;
 
 				for (int laterIdx = 5; laterIdx > slotIdx; laterIdx--)
 				{
-					this.owner.Libc.MoveFarData(HallOfFameSegment, HallOfFameRecordAddress(laterIdx - 1), HallOfFameSegment, HallOfFameRecordAddress(laterIdx), HallOfFameRecordSize);
+					this.Owner.Libc.MoveFarData(HallOfFameSegment, HallOfFameRecordAddress(laterIdx - 1), HallOfFameSegment, HallOfFameRecordAddress(laterIdx), HallOfFameRecordSize);
 				}
 
-				short humanIdx = this.owner.World.PersonParticipantIdx;
+				short humanIdx = this.Owner.World.PersonParticipantIdx;
 
-				this.processor.EmitUInt16(HallOfFameSegment, (ushort)(record + OffsetScore), HallOfFameScore);
-				this.owner.Libc.MoveFarData(this.processor.SegData.Value16, LeaderName(humanIdx),
+				this.Processor.EmitUInt16(HallOfFameSegment, (ushort)(record + OffsetScore), HallOfFameScore);
+				this.Owner.Libc.MoveFarData(this.Processor.SegData.Value16, LeaderName(humanIdx),
 					HallOfFameSegment, (ushort)(record + OffsetLeaderName), 0xe);
-				this.owner.Libc.MoveFarData(this.processor.SegData.Value16, CivilizationPlural(humanIdx),
+				this.Owner.Libc.MoveFarData(this.Processor.SegData.Value16, CivilizationPlural(humanIdx),
 					HallOfFameSegment, (ushort)(record + OffsetCivilizationPlural), 0x10);
-				this.processor.EmitUInt16(HallOfFameSegment, (ushort)(record + OffsetDifficulty), (ushort)this.owner.World.HardnessTier);
-				this.processor.EmitUInt16(HallOfFameSegment, (ushort)(record + OffsetSchismShare), SchismShareDc6a);
-				this.processor.EmitUInt16(HallOfFameSegment, (ushort)(record + OffsetWonderScore), WonderScore);
-				this.processor.EmitUInt16(HallOfFameSegment, (ushort)(record + OffsetCitizenScore), CitizenScore);
-				this.processor.EmitInt16(HallOfFameSegment, (ushort)(record + OffsetYear), this.owner.World.Season);
+				this.Processor.EmitUInt16(HallOfFameSegment, (ushort)(record + OffsetDifficulty), (ushort)this.Owner.World.HardnessTier);
+				this.Processor.EmitUInt16(HallOfFameSegment, (ushort)(record + OffsetSchismShare), SchismShareDc6a);
+				this.Processor.EmitUInt16(HallOfFameSegment, (ushort)(record + OffsetWonderScore), WonderScore);
+				this.Processor.EmitUInt16(HallOfFameSegment, (ushort)(record + OffsetCitizenScore), CitizenScore);
+				this.Processor.EmitInt16(HallOfFameSegment, (ushort)(record + OffsetYear), this.Owner.World.Season);
 
-				ushort population = this.owner.Helpers.ObtainPlayerPopulation(humanIdx);
+				ushort population = this.Owner.Helpers.ObtainPlayerPopulation(humanIdx);
 
-				this.processor.SegExtra.Value16 = HallOfFameSegment;
-				this.processor.EmitUInt16(HallOfFameSegment, (ushort)(record + OffsetPopulation), population);
+				this.Processor.SegExtra.Value16 = HallOfFameSegment;
+				this.Processor.EmitUInt16(HallOfFameSegment, (ushort)(record + OffsetPopulation), population);
 
 				if (DisplayHallOfFame((ushort)slotIdx) == 0)
 				{
@@ -195,7 +195,7 @@ namespace Civilization1Remaster.UI
 				slotIdx = -1;
 			}
 
-			this.processor.Journal.CloseScope("AttachHallOfFameRecord");
+			this.Processor.Journal.CloseScope("AttachHallOfFameRecord");
 
 			return place;
 		}
@@ -207,14 +207,14 @@ namespace Civilization1Remaster.UI
 		/// </summary>
 		public void DisplayGameResultsScreen(ushort rankGiven, ushort score)
 		{
-			this.processor.Journal.OpenScope($"DisplayGameResultsScreen({rankGiven}, {score})");
+			this.Processor.Journal.OpenScope($"DisplayGameResultsScreen({rankGiven}, {score})");
 
 			short rank = (short)rankGiven;
 			short percentage = 0;
 
 			if (score != 0)
 			{
-				percentage = CPU.SignedQuotient((short)(score * (this.owner.World.HardnessTier + 1)), 0x32);
+				percentage = CPU.SignedQuotient((short)(score * (this.Owner.World.HardnessTier + 1)), 0x32);
 				rank = -1;
 
 				for (short level = 1; level <= 0x14; level++)
@@ -233,75 +233,75 @@ namespace Civilization1Remaster.UI
 					rank = 0x13;
 				}
 
-				this.owner.Startup.ConcealMouseCursor();
+				this.Owner.Startup.ConcealMouseCursor();
 
-				this.owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, BackScreenBox, 0, 0);
+				this.Owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, BackScreenBox, 0, 0);
 
-				this.owner.Services.PerformSound(0x22, 0);
+				this.Owner.Services.PerformSound(0x22, 0);
 
-				this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.White);
+				this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.White);
 
-				this.owner.UnitOps.RenderBusyIndicator();
+				this.Owner.UnitOps.RenderBusyIndicator();
 
-				this.owner.VideoCard.RenderImage(PictureScreenBox, 0xc8, 0x8c, 0x28, 0x3c, ScreenBox, 10, 10);
+				this.Owner.VideoCard.RenderImage(PictureScreenBox, 0xc8, 0x8c, 0x28, 0x3c, ScreenBox, 10, 10);
 
-				this.owner.VideoCard.RenderImage(PictureScreenBox, 0xf0, 0x8c, 0x28, 0x3c, ScreenBox, 0x10e, 10);
+				this.Owner.VideoCard.RenderImage(PictureScreenBox, 0xf0, 0x8c, 0x28, 0x3c, ScreenBox, 0x10e, 10);
 
 				DrawingBox.TypefaceIdx = 7;
 
-				this.owner.Helpers.FloodBoxWithMotif(80, 4, 160, 27);
+				this.Owner.Helpers.FloodBoxWithMotif(80, 4, 160, 27);
 
-				this.owner.Dialogs.RenderShadowBox(80, 4, 159, 26, Hues.LightCyan, Hues.DarkGray);
+				this.Owner.Dialogs.RenderShadowBox(80, 4, 159, 26, Hues.LightCyan, Hues.DarkGray);
 
 				ushort ending;
 
 				if (score == 0)
 				{
 					PullRankTitle(20 * RulerRankEntryStride);
-					this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 160, 6, Hues.White);
+					this.Owner.TextPainter.RenderCenteredTextToScreen0(this.Owner.Words.ToString(), 160, 6, Hues.White);
 
 					PullRankTitle(21 * RulerRankEntryStride);
-					this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 160, 14, Hues.White);
+					this.Owner.TextPainter.RenderCenteredTextToScreen0(this.Owner.Words.ToString(), 160, 14, Hues.White);
 
 					ending = HallOfFameRetiresEndingStringAddress;
 				}
 				else
 				{
 					PullRankTitle(22 * RulerRankEntryStride);
-					this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 160, 6, Hues.White);
+					this.Owner.TextPainter.RenderCenteredTextToScreen0(this.Owner.Words.ToString(), 160, 6, Hues.White);
 
 					PullRankTitle(23 * RulerRankEntryStride);
-					this.owner.Words.Append(this.owner.Libc.IntegerToText(percentage, 10));
-					this.owner.Words.Append("% exceeds even");
-					this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 160, 14, Hues.White);
+					this.Owner.Words.Append(this.Owner.Libc.IntegerToText(percentage, 10));
+					this.Owner.Words.Append("% exceeds even");
+					this.Owner.TextPainter.RenderCenteredTextToScreen0(this.Owner.Words.ToString(), 160, 14, Hues.White);
 
 					ending = HallOfFameExceedsEvenEndingStringAddress;
 				}
 
 				PullRankTitle((ushort)((0x13 - rank) * RulerRankEntryStride));
-				this.owner.Words.Append(ending);
-				this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 160, 22, Hues.White);
+				this.Owner.Words.Append(ending);
+				this.Owner.TextPainter.RenderCenteredTextToScreen0(this.Owner.Words.ToString(), 160, 22, Hues.White);
 
 				for (short level = 0; level <= rank; level++)
 				{
 					PullRankTitle((ushort)((0x13 - level) * 0x19));
-					this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 160, -((level * 8) - 184), (ushort)(level == rank ? 0 : 7));
+					this.Owner.TextPainter.RenderCenteredTextToScreen0(this.Owner.Words.ToString(), 160, -((level * 8) - 184), (ushort)(level == rank ? 0 : 7));
 				}
 
-				this.owner.VideoCard.SubstituteHue(ScreenBox, 80, 183 - rank * 8, 160, 8, Hues.White, Hues.Yellow);
+				this.Owner.VideoCard.SubstituteHue(ScreenBox, 80, 183 - rank * 8, 160, 8, Hues.White, Hues.Yellow);
 
-				this.owner.Conquest.AwaitForKeyPressOrMouseClick();
+				this.Owner.Conquest.AwaitForKeyPressOrMouseClick();
 
-				this.owner.Services.PerformSound(1, 0);
+				this.Owner.Services.PerformSound(1, 0);
 
 				DrawingBox.TypefaceIdx = 1;
 
-				this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
+				this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
 
-				this.owner.Startup.DisplayMouseCursor();
+				this.Owner.Startup.DisplayMouseCursor();
 			}
 
-			this.processor.Journal.CloseScope("DisplayGameResultsScreen");
+			this.Processor.Journal.CloseScope("DisplayGameResultsScreen");
 		}
 
 		/// <summary>
@@ -312,7 +312,7 @@ namespace Civilization1Remaster.UI
 		/// </summary>
 		public void DisplayTopCities()
 		{
-			this.processor.Journal.OpenScope("DisplayTopCities()");
+			this.Processor.Journal.OpenScope("DisplayTopCities()");
 
 			short[] scores = new short[5];
 			short[] towns = new short[5];
@@ -325,16 +325,16 @@ namespace Civilization1Remaster.UI
 
 			for (short townIdx = 0; townIdx < 0x80; townIdx++)
 			{
-				if (this.owner.World.Towns[townIdx].ConditionMarker == 0xff)
+				if (this.Owner.World.Towns[townIdx].ConditionMarker == 0xff)
 					continue;
 
-				this.owner.CityOps.HandleCity(townIdx, -1);
+				this.Owner.CityOps.HandleCity(townIdx, -1);
 
-				short score = (short)(this.owner.World.Towns[townIdx].TrueExtent + CityHappy - CityUnhappy);
+				short score = (short)(this.Owner.World.Towns[townIdx].TrueExtent + CityHappy - CityUnhappy);
 
 				for (int wonderIdx = 1; wonderIdx <= 0x15; wonderIdx++)
 				{
-					if (this.owner.World.MarvelTownIdx[wonderIdx] == townIdx)
+					if (this.Owner.World.MarvelTownIdx[wonderIdx] == townIdx)
 					{
 						score += 10;
 					}
@@ -357,13 +357,13 @@ namespace Civilization1Remaster.UI
 				}
 			}
 
-			this.owner.Startup.ConcealMouseCursor();
+			this.Owner.Startup.ConcealMouseCursor();
 
-			this.owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, BackScreenBox, 0, 0);
+			this.Owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, BackScreenBox, 0, 0);
 
-			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Cyan);
+			this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Cyan);
 
-			this.owner.TextPainter.RenderTextWithShadow(TopCitiesTitleStringAddress, 80, 12, Hues.White);
+			this.Owner.TextPainter.RenderTextWithShadow(TopCitiesTitleStringAddress, 80, 12, Hues.White);
 
 			short vertLoc = 0x20;
 
@@ -379,44 +379,44 @@ namespace Civilization1Remaster.UI
 					.Text(". ")
 					.City(townIdx)
 					.Text(" (")
-					.Text(CivilizationName(this.owner.World.Towns[townIdx].ParticipantIdx))
+					.Text(CivilizationName(this.Owner.World.Towns[townIdx].ParticipantIdx))
 					.Text(")");
 
-				this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 160, vertLoc + 3,
-					PlayerColour(this.owner.World.Towns[townIdx].ParticipantIdx));
+				this.Owner.TextPainter.RenderCenteredTextToScreen0(this.Owner.Words.ToString(), 160, vertLoc + 3,
+					PlayerColour(this.Owner.World.Towns[townIdx].ParticipantIdx));
 
-				this.owner.CityOps.HandleCity(townIdx, -1);
+				this.Owner.CityOps.HandleCity(townIdx, -1);
 
-				this.owner.CityOps.RenderCitizenIcons(townIdx, 48, (short)(vertLoc + 10), CitySpecialists, 160);
+				this.Owner.CityOps.RenderCitizenIcons(townIdx, 48, (short)(vertLoc + 10), CitySpecialists, 160);
 
-				short iconHoriz = (short)(0x30 + this.owner.Helpers.VerifyValueSpan(this.owner.World.Towns[townIdx].TrueExtent * 8, 0, 160) + 8);
+				short iconHoriz = (short)(0x30 + this.Owner.Helpers.VerifyValueSpan(this.Owner.World.Towns[townIdx].TrueExtent * 8, 0, 160) + 8);
 
 				for (int wonderIdx = 1; wonderIdx <= 0x15; wonderIdx++)
 				{
-					if (this.owner.World.MarvelTownIdx[wonderIdx] != townIdx)
+					if (this.Owner.World.MarvelTownIdx[wonderIdx] != townIdx)
 						continue;
 
 					if (iconHoriz < 0x125)
 					{
-						this.owner.CityOps.RenderResourceIcon((short)(wonderIdx + 24), iconHoriz, (short)(vertLoc + 12));
+						this.Owner.CityOps.RenderResourceIcon((short)(wonderIdx + 24), iconHoriz, (short)(vertLoc + 12));
 					}
 
 					iconHoriz += 0x13;
 				}
 
-				this.owner.Dialogs.RenderBox(8, vertLoc, 303, 25,
-					PlayerColour(this.owner.World.Towns[townIdx].ParticipantIdx));
+				this.Owner.Dialogs.RenderBox(8, vertLoc, 303, 25,
+					PlayerColour(this.Owner.World.Towns[townIdx].ParticipantIdx));
 
 				vertLoc += 0x20;
 			}
 
-			this.owner.Conquest.AwaitForKeyPressOrMouseClick();
+			this.Owner.Conquest.AwaitForKeyPressOrMouseClick();
 
-			this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
+			this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
 
-			this.owner.Startup.DisplayMouseCursor();
+			this.Owner.Startup.DisplayMouseCursor();
 
-			this.processor.Journal.CloseScope("DisplayTopCities");
+			this.Processor.Journal.CloseScope("DisplayTopCities");
 		}
 
 		private static ushort HallOfFameRecordAddress(int entryIdx)
@@ -426,27 +426,27 @@ namespace Civilization1Remaster.UI
 
 		private short FameScore(int entryIdx)
 		{
-			return this.processor.PullInt16(HallOfFameSegment, (ushort)(HallOfFameRecordAddress(entryIdx) + OffsetScore));
+			return this.Processor.PullInt16(HallOfFameSegment, (ushort)(HallOfFameRecordAddress(entryIdx) + OffsetScore));
 		}
 
 		private void SetFameScore(int entryIdx, short score)
 		{
-			this.processor.EmitUInt16(HallOfFameSegment, (ushort)(HallOfFameRecordAddress(entryIdx) + OffsetScore), (ushort)score);
+			this.Processor.EmitUInt16(HallOfFameSegment, (ushort)(HallOfFameRecordAddress(entryIdx) + OffsetScore), (ushort)score);
 		}
 
 		private ushort FameDifficulty(int entryIdx)
 		{
-			return this.processor.PullUInt16(HallOfFameSegment, (ushort)(HallOfFameRecordAddress(entryIdx) + OffsetDifficulty));
+			return this.Processor.PullUInt16(HallOfFameSegment, (ushort)(HallOfFameRecordAddress(entryIdx) + OffsetDifficulty));
 		}
 
 		private short FameYear(int entryIdx)
 		{
-			return (short)this.processor.PullUInt16(HallOfFameSegment, (ushort)(HallOfFameRecordAddress(entryIdx) + OffsetYear));
+			return (short)this.Processor.PullUInt16(HallOfFameSegment, (ushort)(HallOfFameRecordAddress(entryIdx) + OffsetYear));
 		}
 
 		private short FamePopulation(int entryIdx)
 		{
-			return this.processor.PullInt16(HallOfFameSegment, (ushort)(HallOfFameRecordAddress(entryIdx) + OffsetPopulation));
+			return this.Processor.PullInt16(HallOfFameSegment, (ushort)(HallOfFameRecordAddress(entryIdx) + OffsetPopulation));
 		}
 
 		/// <summary>One place of the Hall of Fame at the row, " ---" when empty</summary>
@@ -457,15 +457,15 @@ namespace Civilization1Remaster.UI
 			ushort record = HallOfFameRecordAddress(placeIdx);
 
 			// The records are in the segment 0x3772: ES is set to it where the original sets it, the functions called may change it
-			this.processor.SegExtra.Value16 = HallOfFameSegment;
+			this.Processor.SegExtra.Value16 = HallOfFameSegment;
 
 			short score = FameScore(placeIdx);
 
 			if (score <= 0)
 			{
-				this.owner.Words.Set(" ---");
+				this.Owner.Words.Set(" ---");
 
-				this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), horizLoc, vertLoc, Hues.Black);
+				this.Owner.TextPainter.RenderTextToScreen0(this.Owner.Words.ToString(), horizLoc, vertLoc, Hues.Black);
 
 				return (short)(vertLoc + 0x1a);
 			}
@@ -474,75 +474,75 @@ namespace Civilization1Remaster.UI
 				.Number((short)(placeIdx + 1))
 				.Text(". ");
 
-			this.owner.Libc.MoveFarData(HallOfFameSegment, (ushort)(record + OffsetLeaderName), this.processor.SegData.Value16, (ushort)(TextBuffer.Address + this.owner.Words.Length), 16);
+			this.Owner.Libc.MoveFarData(HallOfFameSegment, (ushort)(record + OffsetLeaderName), this.Processor.SegData.Value16, (ushort)(TextBuffer.Address + this.Owner.Words.Length), 16);
 
-			this.owner.Words.Append(", ");
+			this.Owner.Words.Append(", ");
 
-			this.processor.SegExtra.Value16 = HallOfFameSegment;
-			this.owner.Words.Append(this.processor.PullGlobalWord((ushort)((FameDifficulty(placeIdx) << 1) + HallOfFameRulerTitlesTableAddress)));
+			this.Processor.SegExtra.Value16 = HallOfFameSegment;
+			this.Owner.Words.Append(this.Processor.PullGlobalWord((ushort)((FameDifficulty(placeIdx) << 1) + HallOfFameRulerTitlesTableAddress)));
 
-			this.owner.Words.Append(" of the ");
+			this.Owner.Words.Append(" of the ");
 
-			this.owner.Libc.MoveFarData(HallOfFameSegment, (ushort)(record + OffsetCivilizationPlural), this.processor.SegData.Value16, (ushort)(TextBuffer.Address + this.owner.Words.Length), 16);
+			this.Owner.Libc.MoveFarData(HallOfFameSegment, (ushort)(record + OffsetCivilizationPlural), this.Processor.SegData.Value16, (ushort)(TextBuffer.Address + this.Owner.Words.Length), 16);
 
-			ushort length = this.owner.Words.Length;
+			ushort length = this.Owner.Words.Length;
 
-			this.owner.Words.Append(" to ");
+			this.Owner.Words.Append(" to ");
 
-			this.processor.SegExtra.Value16 = HallOfFameSegment;
+			this.Processor.SegExtra.Value16 = HallOfFameSegment;
 			short year = FameYear(placeIdx);
 
-			this.owner.Words.Append(this.owner.Libc.IntegerToText(Math.Abs(year), 10));
+			this.Owner.Words.Append(this.Owner.Libc.IntegerToText(Math.Abs(year), 10));
 
-			this.owner.Words.Append(year < 0 ? HallOfFameBcEraStringAddress : HallOfFameAdEraStringAddress);
+			this.Owner.Words.Append(year < 0 ? HallOfFameBcEraStringAddress : HallOfFameAdEraStringAddress);
 
 			// Too wide: only up to the civilization
-			if ((short)((ushort)this.owner.TextPainter.ObtainTextWidth(this.owner.Words.ToString()) + horizLoc) >= 0x140)
+			if ((short)((ushort)this.Owner.TextPainter.ObtainTextWidth(this.Owner.Words.ToString()) + horizLoc) >= 0x140)
 			{
-				this.processor.EmitGlobalByte((ushort)(length + TextBuffer.Address), 0x0);
+				this.Processor.EmitGlobalByte((ushort)(length + TextBuffer.Address), 0x0);
 			}
 
-			this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), horizLoc, vertLoc, Hues.Black);
+			this.Owner.TextPainter.RenderTextToScreen0(this.Owner.Words.ToString(), horizLoc, vertLoc, Hues.Black);
 
 			vertLoc += 8;
 
-			this.owner.Words.Set("Population: ");
+			this.Owner.Words.Set("Population: ");
 
-			this.processor.SegExtra.Value16 = HallOfFameSegment;
-			this.owner.Helpers.PopulationToText(FamePopulation(placeIdx));
+			this.Processor.SegExtra.Value16 = HallOfFameSegment;
+			this.Owner.Helpers.PopulationToText(FamePopulation(placeIdx));
 
-			this.owner.Words.Append(", Score: ");
+			this.Owner.Words.Append(", Score: ");
 
-			this.processor.SegExtra.Value16 = HallOfFameSegment;
-			this.owner.Words.Append(this.owner.Libc.IntegerToText(FameScore(placeIdx), 10));
+			this.Processor.SegExtra.Value16 = HallOfFameSegment;
+			this.Owner.Words.Append(this.Owner.Libc.IntegerToText(FameScore(placeIdx), 10));
 
-			this.processor.SegExtra.Value16 = HallOfFameSegment;
+			this.Processor.SegExtra.Value16 = HallOfFameSegment;
 			ushort hardness = FameDifficulty(placeIdx);
 
 			if (hardness <= 4)
 			{
-				this.owner.Words.Append(DifficultyNameAddresses[hardness]);
+				this.Owner.Words.Append(DifficultyNameAddresses[hardness]);
 			}
 
-			this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), horizLoc + 0xc, vertLoc, Hues.LightGray);
+			this.Owner.TextPainter.RenderTextToScreen0(this.Owner.Words.ToString(), horizLoc + 0xc, vertLoc, Hues.LightGray);
 
 			vertLoc += 8;
 
-			this.owner.Words.Set("    --- CIVILIZATION RATING: ");
+			this.Owner.Words.Set("    --- CIVILIZATION RATING: ");
 
 			// The score is read through ES as the functions called since left it, like in the original
-			this.owner.Words.Append(this.owner.Libc.IntegerToText((short)((((short)FameDifficulty(placeIdx) + 1) *
-				(short)this.processor.PullUInt16(this.processor.SegExtra.Value16, (ushort)(record + OffsetScore))) / 0x32), 10));
+			this.Owner.Words.Append(this.Owner.Libc.IntegerToText((short)((((short)FameDifficulty(placeIdx) + 1) *
+				(short)this.Processor.PullUInt16(this.Processor.SegExtra.Value16, (ushort)(record + OffsetScore))) / 0x32), 10));
 
-			this.owner.Words.Append("% ---");
+			this.Owner.Words.Append("% ---");
 
-			this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), horizLoc + 0xc, vertLoc, Hues.LightRed);
+			this.Owner.TextPainter.RenderTextToScreen0(this.Owner.Words.ToString(), horizLoc + 0xc, vertLoc, Hues.LightRed);
 
 			vertLoc += 10;
 
 			if (placeIdx == newPlace)
 			{
-				this.owner.VideoCard.SubstituteHue(ScreenBox, horizLoc - 4, vertLoc - 28, 296, 26, Hues.White, Hues.Yellow);
+				this.Owner.VideoCard.SubstituteHue(ScreenBox, horizLoc - 4, vertLoc - 28, 296, 26, Hues.White, Hues.Yellow);
 			}
 
 			return vertLoc;
@@ -551,7 +551,7 @@ namespace Civilization1Remaster.UI
 		/// <summary>Copies the text (0x20 bytes) at 0x36d4:offset, the ranking titles, to TextBuffer.Address</summary>
 		private void PullRankTitle(ushort offset)
 		{
-			this.owner.Libc.MoveFarData(RulerRankTitlesSegment, offset, this.processor.SegData.Value16, TextBuffer.Address, 0x20);
+			this.Owner.Libc.MoveFarData(RulerRankTitlesSegment, offset, this.Processor.SegData.Value16, TextBuffer.Address, 0x20);
 		}
 	}
 }

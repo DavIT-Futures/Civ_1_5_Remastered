@@ -19,22 +19,22 @@ namespace Civilization1Remaster.UI
 		/// </summary>
 		public void ManageMenuBar(short participantIdx, short troopIdx, short marker)
 		{
-			this.processor.Journal.OpenScope($"ManageMenuBar({participantIdx}, {troopIdx}, {marker})");
+			this.Processor.Journal.OpenScope($"ManageMenuBar({participantIdx}, {troopIdx}, {marker})");
 
 			ChosenOrder = 0xffff;
 			MenuResult = 0x0;
 
 			if (marker == -1)
 			{
-				marker = (short)this.owner.Helpers.VerifyValueSpan((short)this.owner.GlobDb3c / 60, 0, 4);
+				marker = (short)this.Owner.Helpers.VerifyValueSpan((short)this.Owner.GlobDb3c / 60, 0, 4);
 			}
 
-			this.owner.Startup.ConcealMouseCursor();
+			this.Owner.Startup.ConcealMouseCursor();
 
-			this.owner.VideoCard.RenderImage(ScreenBox, 0, 0, 320, 200,
+			this.Owner.VideoCard.RenderImage(ScreenBox, 0, 0, 320, 200,
 				BackScreenBox, 0, 0);
 
-			this.owner.Startup.DisplayMouseCursor();
+			this.Owner.Startup.DisplayMouseCursor();
 
 			switch (marker)
 			{
@@ -59,22 +59,22 @@ namespace Civilization1Remaster.UI
 					break;
 			}
 
-			this.owner.Startup.ConcealMouseCursor();
+			this.Owner.Startup.ConcealMouseCursor();
 
 			if (MenuResult == 1)
 			{
-				this.owner.TurnHooks.RepaintMainScreen();
+				this.Owner.TurnHooks.RepaintMainScreen();
 			}
 
 			if (MenuResult == 0)
 			{
-				this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8,
+				this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8,
 					ScreenBox, 0, 0);
 			}
 
-			this.owner.Startup.DisplayMouseCursor();
+			this.Owner.Startup.DisplayMouseCursor();
 
-			this.processor.Journal.CloseScope("ManageMenuBar");
+			this.Processor.Journal.CloseScope("ManageMenuBar");
 		}
 
 		/// <summary>
@@ -84,23 +84,23 @@ namespace Civilization1Remaster.UI
 		/// </summary>
 		public void DisplayGameMenu()
 		{
-			this.processor.Journal.OpenScope("DisplayGameMenu()");
+			this.Processor.Journal.OpenScope("DisplayGameMenu()");
 
-			if (owner.World.RoundTally == 0)
+			if (this.Owner.World.RoundTally == 0)
 			{
 				DisabledLines = 0x10;
 			}
 
-			this.owner.Words.Set(" Tax Rate\n Luxuries Rate\n FindCity\n Options\n Save Game\n Load Game\n REVOLUTION!\n \n Retire\n QUIT to DOS\n");
+			this.Owner.Words.Set(" Tax Rate\n Luxuries Rate\n FindCity\n Options\n Save Game\n Load Game\n REVOLUTION!\n \n Retire\n QUIT to DOS\n");
 
-			if ((this.owner.World.StarshipMarkers & 0x100) != 0)
+			if ((this.Owner.World.StarshipMarkers & 0x100) != 0)
 			{
-				this.owner.Words.Append(" View Replay\n");
+				this.Owner.Words.Append(" View Replay\n");
 			}
 
-			ushort choice = this.owner.Dialogs.DisplayMenu(TextBuffer.Address, 16, 8, 0);
+			ushort choice = this.Owner.Dialogs.DisplayMenu(TextBuffer.Address, 16, 8, 0);
 
-			this.owner.TurnLogic.AwaitForKey();
+			this.Owner.TurnLogic.AwaitForKey();
 
 			// Load Game (5) is new, the items after it moved down by one
 			switch (choice)
@@ -128,9 +128,9 @@ namespace Civilization1Remaster.UI
 				case 5:
 					// The saved game is chosen now and loaded by the main loop after the turn is left,
 					// the same way Quit leaves the turn
-					this.owner.SaveLoad.FetchBay = this.owner.SaveLoad.ChooseGameToImport();
+					this.Owner.SaveLoad.FetchBay = this.Owner.SaveLoad.ChooseGameToImport();
 
-					if (this.owner.SaveLoad.FetchBay != 0xffff)
+					if (this.Owner.SaveLoad.FetchBay != 0xffff)
 					{
 						GameEndRequest = GameLoadAndSave.FetchSessionAsk;
 						ChosenOrder = 0x1000;
@@ -152,11 +152,11 @@ namespace Civilization1Remaster.UI
 					break;
 
 				case 10:
-					this.owner.Replayer.DisplayReplay();
+					this.Owner.Replayer.DisplayReplay();
 					break;
 			}
 
-			this.processor.Journal.CloseScope("DisplayGameMenu");
+			this.Processor.Journal.CloseScope("DisplayGameMenu");
 		}
 
 		/// <summary>
@@ -168,14 +168,14 @@ namespace Civilization1Remaster.UI
 		/// </summary>
 		public void DisplayOrdersMenu(short participantIdx, short troopIdx)
 		{
-			this.processor.Journal.OpenScope($"DisplayOrdersMenu({participantIdx}, {troopIdx})");
+			this.Processor.Journal.OpenScope($"DisplayOrdersMenu({participantIdx}, {troopIdx})");
 
 			if (troopIdx != -1 && troopIdx != 128)
 			{
 				ChooseOrder(participantIdx, troopIdx);
 			}
 
-			this.processor.Journal.CloseScope("DisplayOrdersMenu");
+			this.Processor.Journal.CloseScope("DisplayOrdersMenu");
 		}
 
 		/// <summary>
@@ -184,53 +184,53 @@ namespace Civilization1Remaster.UI
 		/// </summary>
 		public void DisplayAdvisorMenu()
 		{
-			this.processor.Journal.OpenScope("DisplayAdvisorMenu()");
+			this.Processor.Journal.OpenScope("DisplayAdvisorMenu()");
 
 			Message(" City Status (F1)\n Military Advisor (F2)\n Intelligence Advisor (F3)\n Attitude Advisor (F4)\n")
 				.Text(" Trade Advisor (F5)\n Science Advisor (F6)\n");
 
-			ushort choice = this.owner.Dialogs.DisplayMenu(TextBuffer.Address, 112, 8, 0);
+			ushort choice = this.Owner.Dialogs.DisplayMenu(TextBuffer.Address, 112, 8, 0);
 
 			RestoreMenuScreen();
 
-			short personIdx = this.owner.World.PersonParticipantIdx;
+			short personIdx = this.Owner.World.PersonParticipantIdx;
 
 			switch (choice)
 			{
 				case 0:
-					this.owner.Briefings.DisplayCityStatusReport(personIdx);
+					this.Owner.Briefings.DisplayCityStatusReport(personIdx);
 					break;
 
 				case 1:
 					if (MapRevealed != 0)
 					{
-						this.owner.RealmInfo.DisplayCivilizationScoreList();
+						this.Owner.RealmInfo.DisplayCivilizationScoreList();
 					}
 					else
 					{
-						this.owner.Briefings.RenderUnitCountsChart(personIdx);
+						this.Owner.Briefings.RenderUnitCountsChart(personIdx);
 					}
 
 					break;
 
 				case 2:
-					this.owner.Briefings.DisplayMilitaryReport();
+					this.Owner.Briefings.DisplayMilitaryReport();
 					break;
 
 				case 3:
-					this.owner.Briefings.DisplayAttitudeReport(personIdx);
+					this.Owner.Briefings.DisplayAttitudeReport(personIdx);
 					break;
 
 				case 4:
-					this.owner.Briefings.DisplayTradeReport(personIdx);
+					this.Owner.Briefings.DisplayTradeReport(personIdx);
 					break;
 
 				case 5:
-					this.owner.Briefings.DisplayScienceReport(personIdx);
+					this.Owner.Briefings.DisplayScienceReport(personIdx);
 					break;
 			}
 
-			this.processor.Journal.CloseScope("DisplayAdvisorMenu");
+			this.Processor.Journal.CloseScope("DisplayAdvisorMenu");
 		}
 
 		/// <summary>
@@ -239,9 +239,9 @@ namespace Civilization1Remaster.UI
 		/// </summary>
 		public void DisplayWorldMenu()
 		{
-			this.processor.Journal.OpenScope("DisplayWorldMenu()");
+			this.Processor.Journal.OpenScope("DisplayWorldMenu()");
 
-			if ((this.owner.World.StarshipMarkers & 0xfe00) == 0)
+			if ((this.Owner.World.StarshipMarkers & 0xfe00) == 0)
 			{
 				DisabledLines = 0x20;
 			}
@@ -249,38 +249,38 @@ namespace Civilization1Remaster.UI
 			Message(" Wonders of the World (F7)\n Top 5 Cities (F8)\n Civilization Score (F9)\n")
 				.Text(" World Map (F10)\n Demographics\n SpaceShips\n");
 
-			ushort choice = this.owner.Dialogs.DisplayMenu(TextBuffer.Address, 144, 8, 0);
+			ushort choice = this.Owner.Dialogs.DisplayMenu(TextBuffer.Address, 144, 8, 0);
 
 			RestoreMenuScreen();
 
 			switch (choice)
 			{
 				case 0:
-					this.owner.Atlas.DisplayWondersOfTheWorld();
+					this.Owner.Atlas.DisplayWondersOfTheWorld();
 					break;
 
 				case 1:
-					this.owner.Legends.DisplayTopCities();
+					this.Owner.Legends.DisplayTopCities();
 					break;
 
 				case 2:
-					this.owner.Founding.DisplayFinalScore(this.owner.World.PersonParticipantIdx, true);
+					this.Owner.Founding.DisplayFinalScore(this.Owner.World.PersonParticipantIdx, true);
 					break;
 
 				case 3:
-					this.owner.Atlas.DisplayWorldMap(1);
+					this.Owner.Atlas.DisplayWorldMap(1);
 					break;
 
 				case 4:
-					this.owner.Atlas.DisplayCensus(this.owner.World.PersonParticipantIdx);
+					this.Owner.Atlas.DisplayCensus(this.Owner.World.PersonParticipantIdx);
 					break;
 
 				case 5:
-					this.owner.RocketScreen.ChooseNationToView();
+					this.Owner.RocketScreen.ChooseNationToView();
 					break;
 			}
 
-			this.processor.Journal.CloseScope("DisplayWorldMenu");
+			this.Processor.Journal.CloseScope("DisplayWorldMenu");
 		}
 
 		/// <summary>
@@ -288,16 +288,16 @@ namespace Civilization1Remaster.UI
 		/// </summary>
 		public void DisplayCivilopediaMenu()
 		{
-			this.processor.Journal.OpenScope("DisplayCivilopediaMenu()");
+			this.Processor.Journal.OpenScope("DisplayCivilopediaMenu()");
 
 			Message(" Complete\n Civilization Advances\n City Improvements\n Military Units\n Terrain Types\n")
 				.Text(" Miscellaneous\n");
 
-			ushort choice = this.owner.Dialogs.DisplayMenu(TextBuffer.Address, 182, 8, 0);
+			ushort choice = this.Owner.Dialogs.DisplayMenu(TextBuffer.Address, 182, 8, 0);
 
 			if (choice != 0xffff)
 			{
-				this.owner.Encyclopedia.DisplayCivilopedia((ushort)(choice - 1));
+				this.Owner.Encyclopedia.DisplayCivilopedia((ushort)(choice - 1));
 
 				MenuResult = 0xffff;
 			}
@@ -306,7 +306,7 @@ namespace Civilization1Remaster.UI
 				MenuResult = 0x1;
 			}
 
-			this.processor.Journal.CloseScope("DisplayCivilopediaMenu");
+			this.Processor.Journal.CloseScope("DisplayCivilopediaMenu");
 		}
 
 		/// <summary>
@@ -315,21 +315,21 @@ namespace Civilization1Remaster.UI
 		/// </summary>
 		private void ChooseOptions()
 		{
-			this.owner.Words.Set("Options:\n Instant Advice\n AutoSave\n End of Turn\n Animations\n Sound\n Enemy Moves\n Civilopedia Text\n Palace\n");
+			this.Owner.Words.Set("Options:\n Instant Advice\n AutoSave\n End of Turn\n Animations\n Sound\n Enemy Moves\n Civilopedia Text\n Palace\n");
 
 			ushort choice;
 
 			do
 			{
-				MenuOptions = (ushort)this.owner.World.SessionPrefMarkers;
+				MenuOptions = (ushort)this.Owner.World.SessionPrefMarkers;
 
-				choice = this.owner.Dialogs.DisplayMenu(TextBuffer.Address, 24, 16, 0);
+				choice = this.Owner.Dialogs.DisplayMenu(TextBuffer.Address, 24, 16, 0);
 
 				if (choice != 0xffff)
 				{
 					if (MenuHelpTopic == 0)
 					{
-						this.owner.World.SessionPrefMarkers ^= (short)(1 << (byte)choice);
+						this.Owner.World.SessionPrefMarkers ^= (short)(1 << (byte)choice);
 					}
 
 					DefaultLine = choice;
@@ -340,19 +340,19 @@ namespace Civilization1Remaster.UI
 
 		private void ChooseOrder(short participantIdx, short troopIdx)
 		{
-			UnitMemory troops = new UnitMemory(this.processor);
+			UnitMemory troops = new UnitMemory(this.Processor);
 			List<byte> keys = new List<byte>();
 
-			this.owner.Words.Clear();
+			this.Owner.Words.Clear();
 
 			short horizLoc = troops.Pull(participantIdx, troopIdx, UnitMemory.Horiz);
 			short vertLoc = troops.Pull(participantIdx, troopIdx, UnitMemory.Vert);
 
-			byte improvements = (byte)this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc);
+			byte improvements = (byte)this.Owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc);
 
-			ushort terrain = this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
+			ushort terrain = this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
 
-			this.owner.Words.Append(" No Orders \x008fspace\n");
+			this.Owner.Words.Append(" No Orders \x008fspace\n");
 			keys.Add(0x20);
 
 			DisabledLines = 0x0;
@@ -360,17 +360,17 @@ namespace Civilization1Remaster.UI
 			if (troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) == 0)
 			{
 				// Settlers
-				this.owner.Words.Append((improvements & 1) != 0 ? (ushort)0x2cbc : (ushort)0x2ccd);
+				this.Owner.Words.Append((improvements & 1) != 0 ? (ushort)0x2cbc : (ushort)0x2ccd);
 				keys.Add(0x62);
 
 				if ((improvements & 0x8) == 0)
 				{
-					this.owner.Words.Append(" Build Road \x008fr\n");
+					this.Owner.Words.Append(" Build Road \x008fr\n");
 					keys.Add(0x72);
 				}
-				else if ((improvements & 0x10) == 0 && this.owner.Advisors.PlayerKnowsTechnology(participantIdx, 0x31) != 0)
+				else if ((improvements & 0x10) == 0 && this.Owner.Advisors.PlayerKnowsTechnology(participantIdx, 0x31) != 0)
 				{
-					this.owner.Words.Append(" Build RailRoad \x008fr\n");
+					this.Owner.Words.Append(" Build RailRoad \x008fr\n");
 					keys.Add(0x72);
 				}
 
@@ -378,24 +378,24 @@ namespace Civilization1Remaster.UI
 				{
 					ushort irrigation = (ushort)((0xc * terrain) + 0x44a);
 
-					if (this.processor.PullGlobalWord(irrigation) == 0xfffe)
+					if (this.Processor.PullGlobalWord(irrigation) == 0xfffe)
 					{
-						this.owner.Words.Append(" Build Irrigation");
+						this.Owner.Words.Append(" Build Irrigation");
 
-						if (this.owner.TurnLogic.VerifyCoastalTile(horizLoc, vertLoc) == 0)
+						if (this.Owner.TurnLogic.VerifyCoastalTile(horizLoc, vertLoc) == 0)
 						{
 							DisabledLines = (ushort)(DisabledLines | (1 << (byte)keys.Count));
 						}
 					}
-					else if ((short)this.processor.PullGlobalWord(irrigation) >= 0)
+					else if ((short)this.Processor.PullGlobalWord(irrigation) >= 0)
 					{
 						AppendChangeOfTerrain(irrigation);
 					}
 
-					if (this.processor.PullGlobalWord(irrigation) != 0xffff)
+					if (this.Processor.PullGlobalWord(irrigation) != 0xffff)
 					{
 						keys.Add(0x69);
-						this.owner.Words.Append(" \x008fi\n");
+						this.Owner.Words.Append(" \x008fi\n");
 					}
 				}
 
@@ -403,41 +403,41 @@ namespace Civilization1Remaster.UI
 				{
 					ushort mining = (ushort)((0xc * terrain) + 0x44e);
 
-					if ((short)this.processor.PullGlobalWord(mining) <= -2)
+					if ((short)this.Processor.PullGlobalWord(mining) <= -2)
 					{
-						this.owner.Words.Append(0x2d28);
+						this.Owner.Words.Append(0x2d28);
 					}
-					else if ((short)this.processor.PullGlobalWord(mining) >= 0)
+					else if ((short)this.Processor.PullGlobalWord(mining) >= 0)
 					{
 						AppendChangeOfTerrain(mining);
 					}
 
-					if (this.processor.PullGlobalWord(mining) != 0xffff)
+					if (this.Processor.PullGlobalWord(mining) != 0xffff)
 					{
 						keys.Add(0x6d);
-						this.owner.Words.Append(" \x008fm\n");
+						this.Owner.Words.Append(" \x008fm\n");
 					}
 				}
 
 				if ((improvements & 0x40) != 0)
 				{
-					this.owner.Words.Append(" Clean up Pollution \x008fp\n");
+					this.Owner.Words.Append(" Clean up Pollution \x008fp\n");
 					keys.Add(0x70);
 				}
 			}
 
 			if (troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) == 0)
 			{
-				this.owner.Words.Append(" Build Fortress \x008ff\n");
+				this.Owner.Words.Append(" Build Fortress \x008ff\n");
 
-				if (this.owner.Advisors.PlayerKnowsTechnology(participantIdx, 0x2d) == 0)
+				if (this.Owner.Advisors.PlayerKnowsTechnology(participantIdx, 0x2d) == 0)
 				{
 					DisabledLines = (ushort)(DisabledLines | (1 << (byte)keys.Count));
 				}
 			}
 			else if (troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == 0)
 			{
-				this.owner.Words.Append(" Fortify \x008ff\n");
+				this.Owner.Words.Append(" Fortify \x008ff\n");
 			}
 
 			if (troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == 0)
@@ -445,7 +445,7 @@ namespace Civilization1Remaster.UI
 				keys.Add(0x66);
 			}
 
-			this.owner.Words.Append(" Wait \x008fw\n Sentry \x008fs\n GoTo\n");
+			this.Owner.Words.Append(" Wait \x008fw\n Sentry \x008fs\n GoTo\n");
 			keys.Add(0x77);
 			keys.Add(0x73);
 			keys.Add(0x67);
@@ -456,29 +456,29 @@ namespace Civilization1Remaster.UI
 
 				if (kind < 0x1a && kind != 0xe)
 				{
-					this.owner.Words.Append(" Pillage \x008fP\n");
+					this.Owner.Words.Append(" Pillage \x008fP\n");
 					keys.Add(0x50);
 				}
 			}
 
 			if ((improvements & 0x1) != 0)
 			{
-				this.owner.Words.Append(" Home City \x008fh\n");
+				this.Owner.Words.Append(" Home City \x008fh\n");
 				keys.Add(0x68);
 			}
 
 			if ((troops.KindField(participantIdx, troopIdx, UnitKindTable.TroopGroup) == 5 || troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) == 0x17) &&
 				troops.Pull(participantIdx, troopIdx, UnitMemory.FollowingInStack) != 0xff)
 			{
-				this.owner.Words.Append(" Unload \x008fu\n");
+				this.Owner.Words.Append(" Unload \x008fu\n");
 				keys.Add(0x75);
 			}
 
-			this.owner.Words.Append(" \n Disband Unit \x008fD\n");
+			this.Owner.Words.Append(" \n Disband Unit \x008fD\n");
 			keys.Add(0x0);
 			keys.Add(0x44);
 
-			short choice = (short)this.owner.Dialogs.DisplayMenu(TextBuffer.Address, 72, 8, 0);
+			short choice = (short)this.Owner.Dialogs.DisplayMenu(TextBuffer.Address, 72, 8, 0);
 
 			ChosenOrder = choice >= 0 && choice < keys.Count ? (ushort)(short)(sbyte)keys[choice] : (ushort)0xffff;
 		}
@@ -486,20 +486,20 @@ namespace Civilization1Remaster.UI
 		/// <summary>" Change to " and the name of the terrain the work makes (the word at the address)</summary>
 		private void AppendChangeOfTerrain(ushort work)
 		{
-			this.owner.Words.Append(" Change to ");
+			this.Owner.Words.Append(" Change to ");
 
-			this.owner.Words.Append(TerrainText(this.processor.PullGlobalWord((ushort)((this.processor.PullGlobalWord(work) << 1) + MapLayers.TerrainOfColour))));
+			this.Owner.Words.Append(TerrainText(this.Processor.PullGlobalWord((ushort)((this.Processor.PullGlobalWord(work) << 1) + MapLayers.TerrainOfColour))));
 		}
 
 		/// <summary>After a menu of the menu bar: the screen put back from the back screen 0x19d4, 0x654a set to 0xffff</summary>
 		private void RestoreMenuScreen()
 		{
-			this.owner.Startup.ConcealMouseCursor();
+			this.Owner.Startup.ConcealMouseCursor();
 
-			this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8,
+			this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8,
 				ScreenBox, 0, 0);
 
-			this.owner.Startup.DisplayMouseCursor();
+			this.Owner.Startup.DisplayMouseCursor();
 
 			MenuResult = 0xffff;
 		}

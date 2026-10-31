@@ -31,28 +31,28 @@ namespace Civilization1Remaster.UI
 		/// </summary>
 		public void DisplayWhichArmy()
 		{
-			this.processor.Journal.OpenScope("DisplayWhichArmy()");
+			this.Processor.Journal.OpenScope("DisplayWhichArmy()");
 
-			this.owner.Words.Set("Which army?\n ");
+			this.Owner.Words.Set("Which army?\n ");
 
 			for (int participantIdx = 1; participantIdx < 8; participantIdx++)
 			{
-				this.owner.Words.Append(CivilizationName(participantIdx));
+				this.Owner.Words.Append(CivilizationName(participantIdx));
 
-				this.owner.Words.Append("\n ");
+				this.Owner.Words.Append("\n ");
 			}
 
-			short chosenIdx = (short)(this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 80) + 1);
+			short chosenIdx = (short)(this.Owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 80) + 1);
 
-			this.owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8,
+			this.Owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8,
 				BackScreenBox, 0, 0);
 
 			DisplayArmyList(chosenIdx);
 
-			this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8,
+			this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8,
 				ScreenBox, 0, 0);
 
-			this.processor.Journal.CloseScope("DisplayWhichArmy");
+			this.Processor.Journal.CloseScope("DisplayWhichArmy");
 		}
 
 		/// <summary>
@@ -62,11 +62,11 @@ namespace Civilization1Remaster.UI
 		/// </summary>
 		public void DisplayArmyList(short participantIdx)
 		{
-			this.processor.Journal.OpenScope($"DisplayArmyList({participantIdx})");
+			this.Processor.Journal.OpenScope($"DisplayArmyList({participantIdx})");
 
-			this.owner.Startup.ConcealMouseCursor();
+			this.Owner.Startup.ConcealMouseCursor();
 
-			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
+			this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
 
 			ushort sight = (ushort)(1 << (byte)participantIdx);
 
@@ -74,14 +74,14 @@ namespace Civilization1Remaster.UI
 			{
 				for (short horizLoc = 0; horizLoc < 0x50; horizLoc++)
 				{
-					if ((this.owner.World.ChartSight[(ushort)horizLoc, (ushort)vertLoc] & sight) == 0 && MapRevealed == 0)
+					if ((this.Owner.World.ChartSight[(ushort)horizLoc, (ushort)vertLoc] & sight) == 0 && MapRevealed == 0)
 						continue;
 
 					RenderStrategicTile(horizLoc, vertLoc);
 				}
 			}
 
-			this.owner.Libc.ReadKey();
+			this.Owner.Libc.ReadKey();
 
 			DrawingBox.TypefaceIdx = 0x2;
 
@@ -89,7 +89,7 @@ namespace Civilization1Remaster.UI
 			for (int placeIdx = 0; placeIdx < 0x20; placeIdx++)
 			{
 				ushort place = (ushort)((participantIdx << 5) + placeIdx);
-				byte live = this.processor.PullGlobalByte((ushort)(place + StrategicLocationRoleTableAddress));
+				byte live = this.Processor.PullGlobalByte((ushort)(place + StrategicLocationRoleTableAddress));
 
 				if (live == 0xff)
 					continue;
@@ -97,30 +97,30 @@ namespace Civilization1Remaster.UI
 				switch ((sbyte)live)
 				{
 					case 0:
-						this.owner.Words.Set("S");
+						this.Owner.Words.Set("S");
 						break;
 
 					case 1:
-						this.owner.Words.Set("A");
+						this.Owner.Words.Set("A");
 						break;
 
 					case 2:
-						this.owner.Words.Set("D");
+						this.Owner.Words.Set("D");
 						break;
 
 					case 3:
-						this.owner.Words.Set("N");
+						this.Owner.Words.Set("N");
 						break;
 				}
 
-				this.owner.TextPainter.RenderTextWithShadow(this.owner.Words.ToString(), this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(place + StrategicLocationHorizTableAddress)) << 2,
-					this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(place + StrategicLocationVertTableAddress)) << 2, Hues.LightMagenta);
+				this.Owner.TextPainter.RenderTextWithShadow(this.Owner.Words.ToString(), this.Processor.PullInt8(this.Processor.SegData.Value16, (ushort)(place + StrategicLocationHorizTableAddress)) << 2,
+					this.Processor.PullInt8(this.Processor.SegData.Value16, (ushort)(place + StrategicLocationVertTableAddress)) << 2, Hues.LightMagenta);
 			}
 
 			// The tactical sites; another kind keeps the text of the one before
 			for (int siteIdx = 0; siteIdx < 0x10; siteIdx++)
 			{
-				byte live = (byte)this.owner.World.Participants[participantIdx].TacticalSites[siteIdx].Live;
+				byte live = (byte)this.Owner.World.Participants[participantIdx].TacticalSites[siteIdx].Live;
 
 				if (live == 0xff)
 					continue;
@@ -128,29 +128,29 @@ namespace Civilization1Remaster.UI
 				switch ((sbyte)live)
 				{
 					case 0:
-						this.owner.Words.Set(TacticalSiteRoleFortAddress);
+						this.Owner.Words.Set(TacticalSiteRoleFortAddress);
 						break;
 
 					case 1:
-						this.owner.Words.Set(TacticalSiteRoleCityAddress);
+						this.Owner.Words.Set(TacticalSiteRoleCityAddress);
 						break;
 
 					case 2:
-						this.owner.Words.Set(TacticalSiteRolePassAddress);
+						this.Owner.Words.Set(TacticalSiteRolePassAddress);
 						break;
 				}
 
-				this.owner.TextPainter.RenderTextWithShadow(this.owner.Words.ToString(), this.owner.World.Participants[participantIdx].TacticalSites[siteIdx].Place.X << 2,
-					this.owner.World.Participants[participantIdx].TacticalSites[siteIdx].Place.Y << 2, Hues.Yellow);
+				this.Owner.TextPainter.RenderTextWithShadow(this.Owner.Words.ToString(), this.Owner.World.Participants[participantIdx].TacticalSites[siteIdx].Place.X << 2,
+					this.Owner.World.Participants[participantIdx].TacticalSites[siteIdx].Place.Y << 2, Hues.Yellow);
 			}
 
-			this.owner.Libc.ReadKey();
+			this.Owner.Libc.ReadKey();
 
 			short row = 1;
 
 			for (short continentIdx = 1; continentIdx < 0xf; continentIdx++)
 			{
-				PlayerContinent continent = this.owner.World.Participants[participantIdx].Landmasses[continentIdx];
+				PlayerContinent continent = this.Owner.World.Participants[participantIdx].Landmasses[continentIdx];
 
 				if (continent.Assault == 0)
 					continue;
@@ -163,30 +163,30 @@ namespace Civilization1Remaster.UI
 				{
 					if (continent.Approach == approach)
 					{
-						this.owner.Words.Append(letter);
+						this.Owner.Words.Append(letter);
 					}
 				}
 
-				this.owner.Words.Append(" ");
+				this.Owner.Words.Append(" ");
 
-				this.owner.Words.Append(this.owner.Libc.IntegerToText(continent.Guard, 10));
+				this.Owner.Words.Append(this.Owner.Libc.IntegerToText(continent.Guard, 10));
 
-				this.owner.Words.Append("/");
+				this.Owner.Words.Append("/");
 
-				this.owner.Words.Append(this.owner.Libc.IntegerToText(continent.Assault, 10));
+				this.Owner.Words.Append(this.Owner.Libc.IntegerToText(continent.Assault, 10));
 
-				this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 2, row, Hues.LightGray);
+				this.Owner.TextPainter.RenderTextToScreen0(this.Owner.Words.ToString(), 2, row, Hues.LightGray);
 
 				row += 6;
 			}
 
-			this.owner.Libc.ReadKey();
+			this.Owner.Libc.ReadKey();
 
 			DrawingBox.TypefaceIdx = 0x1;
 
-			this.owner.Startup.DisplayMouseCursor();
+			this.Owner.Startup.DisplayMouseCursor();
 
-			this.processor.Journal.CloseScope("DisplayArmyList");
+			this.Processor.Journal.CloseScope("DisplayArmyList");
 		}
 
 		/// <summary>
@@ -195,7 +195,7 @@ namespace Civilization1Remaster.UI
 		/// </summary>
 		public void DisplayUnitInfo(short participantIdx, short troopIdx)
 		{
-			this.processor.Journal.OpenScope($"DisplayUnitInfo({participantIdx}, {troopIdx})");
+			this.Processor.Journal.OpenScope($"DisplayUnitInfo({participantIdx}, {troopIdx})");
 
 			Message(CivilizationName(participantIdx))
 				.Text("\n")
@@ -212,26 +212,26 @@ namespace Civilization1Remaster.UI
 
 			if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.TravelHoriz) != 0xff)
 			{
-				this.owner.Words.Append("To:");
-				this.owner.Words.Append(this.owner.Libc.IntegerToText(this.troops.Pull(participantIdx, troopIdx, UnitMemory.TravelHoriz), 10));
-				this.owner.Words.Append(",");
-				this.owner.Words.Append(this.owner.Libc.IntegerToText(this.troops.Pull(participantIdx, troopIdx, UnitMemory.TravelVert), 10));
-				this.owner.Words.Append("\n");
+				this.Owner.Words.Append("To:");
+				this.Owner.Words.Append(this.Owner.Libc.IntegerToText(this.troops.Pull(participantIdx, troopIdx, UnitMemory.TravelHoriz), 10));
+				this.Owner.Words.Append(",");
+				this.Owner.Words.Append(this.Owner.Libc.IntegerToText(this.troops.Pull(participantIdx, troopIdx, UnitMemory.TravelVert), 10));
+				this.Owner.Words.Append("\n");
 			}
 
-			this.owner.Words.Append("*");
+			this.Owner.Words.Append("*");
 
 			for (short current = this.troops.Following(participantIdx, troopIdx);
-				current != -1 && current != troopIdx && (short)this.owner.Words.Length < 0x200;
+				current != -1 && current != troopIdx && (short)this.Owner.Words.Length < 0x200;
 				current = this.troops.Following(participantIdx, current))
 			{
-				this.owner.Words.Append(KindLabel(participantIdx, current));
-				this.owner.Words.Append("\n*");
+				this.Owner.Words.Append(KindLabel(participantIdx, current));
+				this.Owner.Words.Append("\n*");
 			}
 
-			this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 10, 10);
+			this.Owner.TurnHooks.DisplayDialog(TextBuffer.Address, 10, 10);
 
-			this.processor.Journal.CloseScope("DisplayUnitInfo");
+			this.Processor.Journal.CloseScope("DisplayUnitInfo");
 		}
 
 		/// <summary>A tile of the strategic map: sea or land, then a city in the colour of its owner or the owner of the tile</summary>
@@ -240,23 +240,23 @@ namespace Civilization1Remaster.UI
 			short boxHoriz = (short)(horizLoc << 2);
 			short boxVert = (short)(vertLoc << 2);
 
-			this.owner.Services.FloodBox(ScreenBox, boxHoriz, boxVert, 4, 4,
-				(ushort)(this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) == 0xa ? 1 : 2));
+			this.Owner.Services.FloodBox(ScreenBox, boxHoriz, boxVert, 4, 4,
+				(ushort)(this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) == 0xa ? 1 : 2));
 
-			if ((this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) != 0)
+			if ((this.Owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) != 0)
 			{
-				this.owner.Services.FloodBox(ScreenBox, boxHoriz, boxVert, 4, 4,
-					PlayerColour(this.owner.MapOps.ObtainTileOwnerBits(horizLoc, vertLoc)));
+				this.Owner.Services.FloodBox(ScreenBox, boxHoriz, boxVert, 4, 4,
+					PlayerColour(this.Owner.MapOps.ObtainTileOwnerBits(horizLoc, vertLoc)));
 			}
 			else
 			{
-				if (this.owner.MapOps.ObtainTileOwner(horizLoc, vertLoc) != 0xffff)
+				if (this.Owner.MapOps.ObtainTileOwner(horizLoc, vertLoc) != 0xffff)
 				{
-					ushort hue = PlayerColour(this.owner.MapOps.ObtainTileOwner(horizLoc, vertLoc));
+					ushort hue = PlayerColour(this.Owner.MapOps.ObtainTileOwner(horizLoc, vertLoc));
 
-					this.owner.Services.FloodBox(ScreenBox, boxHoriz + 1, boxVert + 1, 3, 3, Hues.Black);
+					this.Owner.Services.FloodBox(ScreenBox, boxHoriz + 1, boxVert + 1, 3, 3, Hues.Black);
 
-					this.owner.Services.FloodBox(ScreenBox, boxHoriz, boxVert, 3, 3, hue);
+					this.Owner.Services.FloodBox(ScreenBox, boxHoriz, boxVert, 3, 3, hue);
 				}
 			}
 		}

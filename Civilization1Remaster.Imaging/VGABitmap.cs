@@ -10,7 +10,7 @@ namespace Civilization1Remaster.Video
 {
 	public class VGABitmap : IDisposable
 	{
-		protected bool Shown = true;
+		protected bool Shown { get; set; } = true;
 
 		private readonly int pitch;
 		private readonly byte[] pictureStorage;

@@ -33,7 +33,7 @@ namespace Civilization1Remaster.UI
 		/// </summary>
 		public void DisplayNewspaper(short townIdx)
 		{
-			this.processor.Journal.OpenScope($"DisplayNewspaper({townIdx})");
+			this.Processor.Journal.OpenScope($"DisplayNewspaper({townIdx})");
 
 
 			short givenIdx = townIdx;
@@ -43,9 +43,9 @@ namespace Civilization1Remaster.UI
 			{
 				for (short cityIdx = 0; cityIdx < 0x80; cityIdx++)
 				{
-					City town = this.owner.World.Towns[cityIdx];
+					City town = this.Owner.World.Towns[cityIdx];
 
-					if (town.ConditionMarker == 0xff || town.ParticipantIdx != this.owner.World.PersonParticipantIdx)
+					if (town.ConditionMarker == 0xff || town.ParticipantIdx != this.Owner.World.PersonParticipantIdx)
 						continue;
 
 					if (town.Has(CityStructure.Palace) || townIdx == -1)
@@ -55,55 +55,55 @@ namespace Civilization1Remaster.UI
 				}
 			}
 
-			this.owner.Startup.ConcealMouseCursor();
+			this.Owner.Startup.ConcealMouseCursor();
 
 			if (shown)
 			{
-				this.owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, BackScreenBox, 0, 0);
+				this.Owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, BackScreenBox, 0, 0);
 			}
 
-			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 100, Hues.White);
+			this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 100, Hues.White);
 
 			DrawingBox.TypefaceIdx = 0x4;
 
-			this.owner.VideoCard.RenderLine(ScreenBox, 1, 1, 318, 1, Hues.Black);
+			this.Owner.VideoCard.RenderLine(ScreenBox, 1, 1, 318, 1, Hues.Black);
 
-			this.owner.Services.FloodBox(ScreenBox, 8, 3, 304, 20, Hues.White);
+			this.Owner.Services.FloodBox(ScreenBox, 8, 3, 304, 20, Hues.White);
 
 			DrawingBox.RearHues = 0xf;
 
-			this.owner.VideoCard.RenderLine(ScreenBox, 0, 35, 319, 35, Hues.Black);
+			this.Owner.VideoCard.RenderLine(ScreenBox, 0, 35, 319, 35, Hues.Black);
 
-			this.owner.VideoCard.RenderLine(ScreenBox, 1, 1, 1, 35, Hues.Black);
+			this.Owner.VideoCard.RenderLine(ScreenBox, 1, 1, 1, 35, Hues.Black);
 
-			this.owner.VideoCard.RenderLine(ScreenBox, 318, 1, 318, 35, Hues.Black);
+			this.Owner.VideoCard.RenderLine(ScreenBox, 318, 1, 318, 35, Hues.Black);
 
-			this.owner.VideoCard.RenderLine(ScreenBox, 0, 97, 319, 97, Hues.Black);
+			this.Owner.VideoCard.RenderLine(ScreenBox, 0, 97, 319, 97, Hues.Black);
 
 			if (shown)
 			{
 				for (short personIdx = 0; personIdx < 0x10; personIdx++)
 				{
-					this.owner.Services.RenderPictureToScreenAlternate(ScreenBox, 20 * personIdx,
-						100 - this.owner.Libc.Dice.DrawInt(2), NewspaperCrowdPicture);
+					this.Owner.Services.RenderPictureToScreenAlternate(ScreenBox, 20 * personIdx,
+						100 - this.Owner.Libc.Dice.DrawInt(2), NewspaperCrowdPicture);
 				}
 			}
 
-			this.owner.BlockText.RenderTextChunk(40, 16, 40, 0);
+			this.Owner.BlockText.RenderTextChunk(40, 16, 40, 0);
 
 			DrawingBox.TypefaceIdx = 0x5;
-			this.owner.Words.Clear();
+			this.Owner.Words.Clear();
 
-			switch (this.owner.Libc.Dice.DrawInt(4))
+			switch (this.Owner.Libc.Dice.DrawInt(4))
 			{
 				case 0:
-					this.owner.Conquest.ObtainCityLabel(townIdx);
-					this.owner.Words.Append(NewspaperNameSuffixTimesAddress);
+					this.Owner.Conquest.ObtainCityLabel(townIdx);
+					this.Owner.Words.Append(NewspaperNameSuffixTimesAddress);
 					break;
 
 				case 1:
-					this.owner.Conquest.ObtainCityLabel(townIdx);
-					this.owner.Words.Append(NewspaperNameSuffixGazetteAddress);
+					this.Owner.Conquest.ObtainCityLabel(townIdx);
+					this.Owner.Words.Append(NewspaperNameSuffixGazetteAddress);
 					break;
 
 				case 2:
@@ -119,7 +119,7 @@ namespace Civilization1Remaster.UI
 					break;
 			}
 
-			short width = (short)(ushort)this.owner.TextPainter.ObtainTextWidth(this.owner.Words.ToString());
+			short width = (short)(ushort)this.Owner.TextPainter.ObtainTextWidth(this.Owner.Words.ToString());
 
 			if (width > 0x12c)
 			{
@@ -127,61 +127,61 @@ namespace Civilization1Remaster.UI
 					.City(townIdx)
 					.Text(" News");
 
-				width = (short)(ushort)this.owner.TextPainter.ObtainTextWidth(this.owner.Words.ToString());
+				width = (short)(ushort)this.Owner.TextPainter.ObtainTextWidth(this.Owner.Words.ToString());
 			}
 
 			if (width < 0xc8)
 			{
-				this.owner.TextPainter.RenderText(NewspaperLeftPriceLabelAddress, 8, 11, 0);
+				this.Owner.TextPainter.RenderText(NewspaperLeftPriceLabelAddress, 8, 11, 0);
 
-				this.owner.TextPainter.RenderText(NewspaperRightPriceLabelAddress, 268, 11, 0);
+				this.Owner.TextPainter.RenderText(NewspaperRightPriceLabelAddress, 268, 11, 0);
 			}
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 160, 11, Hues.Black);
+			this.Owner.TextPainter.RenderCenteredTextToScreen0(this.Owner.Words.ToString(), 160, 11, Hues.Black);
 
-			this.owner.Words.Set(this.owner.Libc.Dice.DrawInt(2) != 0 ? NewspaperMotto1Address : NewspaperMotto2Address);
+			this.Owner.Words.Set(this.Owner.Libc.Dice.DrawInt(2) != 0 ? NewspaperMotto1Address : NewspaperMotto2Address);
 
 			DrawingBox.TypefaceIdx = 0x3;
 
-			this.owner.TextPainter.RenderText(this.owner.Words.ToString(), 6, 3, 0);
+			this.Owner.TextPainter.RenderText(this.Owner.Words.ToString(), 6, 3, 0);
 
-			this.owner.TextPainter.RenderText(this.owner.Words.ToString(), 272, 3, 0);
+			this.Owner.TextPainter.RenderText(this.Owner.Words.ToString(), 272, 3, 0);
 
 			DrawingBox.TypefaceIdx = 0x1;
 			EmptyMessage()
 				.Text("10 cents");
 
-			this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 272, 28, Hues.Black);
+			this.Owner.TextPainter.RenderTextToScreen0(this.Owner.Words.ToString(), 272, 28, Hues.Black);
 
-			this.owner.Words.Set("January 1, ");
+			this.Owner.Words.Set("January 1, ");
 
-			this.owner.TurnHooks.ObtainCurrentYearAsText();
+			this.Owner.TurnHooks.ObtainCurrentYearAsText();
 
-			this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 8, 28, Hues.Black);
+			this.Owner.TextPainter.RenderTextToScreen0(this.Owner.Words.ToString(), 8, 28, Hues.Black);
 
 			DrawingBox.TypefaceIdx = 0x2;
 
-			short storyIdx = (short)this.owner.Libc.Dice.DrawInt(14);
+			short storyIdx = (short)this.Owner.Libc.Dice.DrawInt(14);
 			char letter = (char)('A' + storyIdx);
 			string topic = $"*NEWS{letter}";
-			this.owner.Words.Clear();
+			this.Owner.Words.Clear();
 
-			this.owner.BlockText.ImportTextFromFile(NewspaperTextFileNameAddress, topic);
+			this.Owner.BlockText.ImportTextFromFile(NewspaperTextFileNameAddress, topic);
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 160, 3, Hues.Black);
+			this.Owner.TextPainter.RenderCenteredTextToScreen0(this.Owner.Words.ToString(), 160, 3, Hues.Black);
 
 			DrawingBox.TypefaceIdx = 0x1;
 
 			if (shown)
 			{
-				this.owner.Dialogs.DisplayMenu(NewspaperMenuPromptAddress, 80, 128, 1);
+				this.Owner.Dialogs.DisplayMenu(NewspaperMenuPromptAddress, 80, 128, 1);
 
-				this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
+				this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
 			}
 
-			this.owner.Startup.DisplayMouseCursor();
+			this.Owner.Startup.DisplayMouseCursor();
 
-			this.processor.Journal.CloseScope("DisplayNewspaper");
+			this.Processor.Journal.CloseScope("DisplayNewspaper");
 		}
 	}
 }

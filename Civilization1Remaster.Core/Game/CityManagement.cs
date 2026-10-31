@@ -26,12 +26,12 @@ namespace Civilization1Remaster.Game
 		/// <summary>The index (0 - 20) of the offset among the tiles of a city, 0xffff when it is none of them</summary>
 		public ushort ObtainCityTileIndex(short horizLoc, short vertLoc)
 		{
-			this.processor.Journal.OpenScope($"ObtainCityTileIndex({horizLoc}, {vertLoc})");
+			this.Processor.Journal.OpenScope($"ObtainCityTileIndex({horizLoc}, {vertLoc})");
 
 			int index = CitizenSpecialistRules.FindCityTileIndex(horizLoc, vertLoc);
 			ushort result = (index >= 0) ? (ushort)index : (ushort)0xffff;
 
-			this.processor.Journal.CloseScope("ObtainCityTileIndex");
+			this.Processor.Journal.CloseScope("ObtainCityTileIndex");
 			return result;
 		}
 
@@ -44,10 +44,10 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private void RenderCityHeaderAndMap(short townIdx)
 		{
-			City town = this.owner.World.Towns[townIdx];
+			City town = this.Owner.World.Towns[townIdx];
 
-			this.owner.UnitOps.ConstructUnitsFromCityList(townIdx);
-			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
+			this.Owner.UnitOps.ConstructUnitsFromCityList(townIdx);
+			this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
 			RenderFrame(2, 1, 208, 21);
 
 			// The population: 1 + 2 + ... + the size
@@ -65,11 +65,11 @@ namespace Civilization1Remaster.Game
 
 			EmptyMessage()
 				.City(townIdx);
-			this.owner.Words.Uppercase();
-			this.owner.Words.Append(" (Pop:");
-			this.owner.Helpers.PopulationToText((short)this.round.Value);
-			this.owner.Words.Append(")");
-			this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 104, 2, Hues.White);
+			this.Owner.Words.Uppercase();
+			this.Owner.Words.Append(" (Pop:");
+			this.Owner.Helpers.PopulationToText((short)this.round.Value);
+			this.Owner.Words.Append(")");
+			this.Owner.TextPainter.RenderCenteredTextToScreen0(this.Owner.Words.ToString(), 104, 2, Hues.White);
 
 			RenderFrame(127, 23, 208, 104);
 
@@ -77,43 +77,43 @@ namespace Civilization1Remaster.Game
 			MapViewHoriz = (ushort)((short)town.Place.X - 5);
 			MapViewVert = (ushort)((short)town.Place.Y - 3);
 
-			this.owner.MapOps.RenderMapTile(town.Place.X, town.Place.Y);
+			this.Owner.MapOps.RenderMapTile(town.Place.X, town.Place.Y);
 
 			ushort tile = 0;
 
 			for (; (short)tile < (short)CityTiles; tile++)
 			{
 				this.round.Index = tile;
-				short horizLoc = (short)(town.Place.X + this.owner.TownDeltas[tile].X);
-				short vertLoc = (short)(town.Place.Y + this.owner.TownDeltas[tile].Y);
+				short horizLoc = (short)(town.Place.X + this.Owner.TownDeltas[tile].X);
+				short vertLoc = (short)(town.Place.Y + this.Owner.TownDeltas[tile].Y);
 				this.round.TileHoriz = (ushort)horizLoc;
 				this.round.TileVert = (ushort)vertLoc;
 
 				short owner = (short)CityOwner;
 
-				if (owner == this.owner.World.PersonParticipantIdx &&
-					(this.owner.World.ChartSight[(ushort)horizLoc, (ushort)vertLoc] & (1 << (owner & 0xff))) == 0)
+				if (owner == this.Owner.World.PersonParticipantIdx &&
+					(this.Owner.World.ChartSight[(ushort)horizLoc, (ushort)vertLoc] & (1 << (owner & 0xff))) == 0)
 				{
 					continue;
 				}
 
-				this.round.Value = this.owner.MapOps.ObtainTileOwner(horizLoc, vertLoc);
+				this.round.Value = this.Owner.MapOps.ObtainTileOwner(horizLoc, vertLoc);
 
 				if (this.round.Value != 0xffff && this.round.Value != (ushort)owner)
 				{
 					// A tile of another player
-					this.owner.MapOps.RepaintMapTile(horizLoc, vertLoc);
+					this.Owner.MapOps.RepaintMapTile(horizLoc, vertLoc);
 					continue;
 				}
 
-				this.owner.MapOps.RenderMapTile(horizLoc, vertLoc);
+				this.Owner.MapOps.RenderMapTile(horizLoc, vertLoc);
 
-				ushort spot = (ushort)(short)(10 * this.owner.TownDeltas[tile].X + this.owner.TownDeltas[tile].Y * 2);
+				ushort spot = (ushort)(short)(10 * this.Owner.TownDeltas[tile].X + this.Owner.TownDeltas[tile].Y * 2);
 
 				if (this.round.Frame(0x8e - spot) != 0)
 				{
 					// A tile worked by a neighbouring city
-					this.owner.Dialogs.RenderBox(
+					this.Owner.Dialogs.RenderBox(
 						(horizLoc - (short)MapViewHoriz) * 16 + 80,
 						(vertLoc - (short)MapViewVert) * 16 + 8,
 						15, 15, Hues.LightRed);
@@ -136,7 +136,7 @@ namespace Civilization1Remaster.Game
 			RenderLabelBox(161, 106, 193, 114, GameTexts.TextMap, 9);
 			RenderLabelBox(194, 106, 226, 114, GameTexts.TextView, 9);
 
-			this.owner.VideoCard.SubstituteHue(ScreenBox, (33 * (short)CityScreenTab) + 96, 107, 32, 7, Hues.LightBlue, Hues.White);
+			this.Owner.VideoCard.SubstituteHue(ScreenBox, (33 * (short)CityScreenTab) + 96, 107, 32, 7, Hues.LightBlue, Hues.White);
 
 			if (CityScreenTab == 2)
 				RenderMiniMap();

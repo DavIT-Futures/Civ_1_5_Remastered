@@ -51,17 +51,17 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public ushort CarryOutGoto(short participantIdx, short troopIdx)
 		{
-			this.processor.Journal.OpenScope($"CarryOutGoto({participantIdx}, {troopIdx})");
+			this.Processor.Journal.OpenScope($"CarryOutGoto({participantIdx}, {troopIdx})");
 
 
 			ushort troop = (ushort)((ushort)(0x600 * participantIdx) + (ushort)(0xc * troopIdx));
 			ushort direction;
 
-			if (participantIdx != this.owner.World.PersonParticipantIdx || !StepToNearGoal(troop, troopIdx, out direction))
+			if (participantIdx != this.Owner.World.PersonParticipantIdx || !StepToNearGoal(troop, troopIdx, out direction))
 				direction = StepTowardsGoal(participantIdx, troopIdx, troop);
 
 
-			this.processor.Journal.CloseScope("CarryOutGoto");
+			this.Processor.Journal.CloseScope("CarryOutGoto");
 
 			return direction;
 		}
@@ -76,7 +76,7 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public ushort ChartRoute(short participantIdx, short troopIdx)
 		{
-			this.processor.Journal.OpenScope($"ChartRoute({participantIdx}, {troopIdx})");
+			this.Processor.Journal.OpenScope($"ChartRoute({participantIdx}, {troopIdx})");
 
 
 
@@ -113,7 +113,7 @@ namespace Civilization1Remaster.Game
 			}
 
 
-			this.processor.Journal.CloseScope("ChartRoute");
+			this.Processor.Journal.CloseScope("ChartRoute");
 
 			return result;
 		}
@@ -127,7 +127,7 @@ namespace Civilization1Remaster.Game
 		/// <returns>1 when a block was found, else 0, also in AX</returns>
 		public ushort LocateRouteStep(int horizLoc, int vertLoc, ushort marker)
 		{
-			this.processor.Journal.OpenScope($"LocateRouteStep({horizLoc}, {vertLoc}, {marker})");
+			this.Processor.Journal.OpenScope($"LocateRouteStep({horizLoc}, {vertLoc}, {marker})");
 
 			short blockHoriz = DivideByFour((short)horizLoc);
 			short blockVert = DivideByFour((short)vertLoc);
@@ -150,7 +150,7 @@ namespace Civilization1Remaster.Game
 					if (!BlockMarked(blocks, nextHoriz, nextVert))
 						continue;
 
-					short distance = (short)this.owner.Helpers.MergeCoordinates(horizLoc - (nextHoriz * 4) - 1, vertLoc - (nextVert * 4) - 1);
+					short distance = (short)this.Owner.Helpers.MergeCoordinates(horizLoc - (nextHoriz * 4) - 1, vertLoc - (nextVert * 4) - 1);
 
 					if (distance >= nearest)
 						continue;
@@ -181,7 +181,7 @@ namespace Civilization1Remaster.Game
 			}
 
 
-			this.processor.Journal.CloseScope("LocateRouteStep");
+			this.Processor.Journal.CloseScope("LocateRouteStep");
 
 			return result;
 		}
@@ -196,7 +196,7 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public ushort ShiftToward(short participantIdx, short troopIdx, ushort costLimit)
 		{
-			this.processor.Journal.OpenScope($"ShiftToward({participantIdx}, {troopIdx}, {costLimit})");
+			this.Processor.Journal.OpenScope($"ShiftToward({participantIdx}, {troopIdx}, {costLimit})");
 
 
 			ushort troop = (ushort)((ushort)(0x600 * participantIdx) + (ushort)(0xc * troopIdx));
@@ -211,7 +211,7 @@ namespace Civilization1Remaster.Game
 
 			if (GoalHoriz != RoutePlaceHoriz ||
 				GoalVert != RoutePlaceVert ||
-				this.processor.PullGlobalByte(WindowCell(windowHoriz, windowVert, unitHoriz, unitVert)) == 0)
+				this.Processor.PullGlobalByte(WindowCell(windowHoriz, windowVert, unitHoriz, unitVert)) == 0)
 			{
 				ChartWindowCosts(participantIdx, troopIdx, costLimit, unitHoriz, unitVert, windowHoriz, windowVert);
 			}
@@ -229,7 +229,7 @@ namespace Civilization1Remaster.Game
 			}
 
 
-			this.processor.Journal.CloseScope("ShiftToward");
+			this.Processor.Journal.CloseScope("ShiftToward");
 
 			return (ushort)step;
 		}
@@ -241,7 +241,7 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public ushort ComputeRouteCost(int horizLoc, int vertLoc, int horizSpot1, int vertSpot1, ushort marker, ushort costLimit)
 		{
-			this.processor.Journal.OpenScope($"ComputeRouteCost({horizLoc}, {vertLoc}, {horizSpot1}, {vertSpot1}, {marker}, {costLimit})");
+			this.Processor.Journal.OpenScope($"ComputeRouteCost({horizLoc}, {vertLoc}, {horizSpot1}, {vertSpot1}, {marker}, {costLimit})");
 
 			ushort cost;
 
@@ -271,7 +271,7 @@ namespace Civilization1Remaster.Game
 				cost = 0xffff;
 			}
 
-			this.processor.Journal.CloseScope("ComputeRouteCost");
+			this.Processor.Journal.CloseScope("ComputeRouteCost");
 
 			return cost;
 		}
@@ -431,9 +431,9 @@ namespace Civilization1Remaster.Game
 			short best = 0;
 
 
-			ushort road = (ushort)(this.owner.MapOps.ObtainTileImprovements((sbyte)unitHoriz, (sbyte)unitVert) & 8);
+			ushort road = (ushort)(this.Owner.MapOps.ObtainTileImprovements((sbyte)unitHoriz, (sbyte)unitVert) & 8);
 
-			ushort occupied = this.owner.UnitOps.MayOccupyTile(participantIdx, (sbyte)unitHoriz, (sbyte)unitVert);
+			ushort occupied = this.Owner.UnitOps.MayOccupyTile(participantIdx, (sbyte)unitHoriz, (sbyte)unitVert);
 
 			ushort direction;
 
@@ -448,7 +448,7 @@ namespace Civilization1Remaster.Game
 
 				short nextDistance = GotoDistance(leftHoriz, leftVert);
 
-				if (participantIdx == this.owner.World.PersonParticipantIdx && nextDistance > distance)
+				if (participantIdx == this.Owner.World.PersonParticipantIdx && nextDistance > distance)
 					continue;
 
 				if (!MayGotoTile(participantIdx, troopIdx, troop, nextHoriz, nextVert, occupied, out ushort terrain))
@@ -456,7 +456,7 @@ namespace Civilization1Remaster.Game
 
 				short cost;
 
-				if (road != 0 && (this.owner.MapOps.ObtainTileImprovements(nextHoriz, nextVert) & 8) != 0)
+				if (road != 0 && (this.Owner.MapOps.ObtainTileImprovements(nextHoriz, nextVert) & 8) != 0)
 				{
 					cost = 1;
 				}
@@ -521,9 +521,9 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private bool MayGotoTile(short participantIdx, short troopIdx, ushort troop, short horizLoc, short vertLoc, ushort occupied, out ushort terrain)
 		{
-			terrain = this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
+			terrain = this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);
 
-			ushort ownerIdx = this.owner.MapOps.ObtainTileOwner(horizLoc, vertLoc);
+			ushort ownerIdx = this.Owner.MapOps.ObtainTileOwner(horizLoc, vertLoc);
 
 			bool allowed = false;
 
@@ -532,7 +532,7 @@ namespace Civilization1Remaster.Game
 				ushort kind = (ushort)(0x22 * (sbyte)this.Troops.PullAt(troop, UnitMemory.Kind));
 
 				if ((UnitKindWordAt(kind, UnitKindTable.LandGroup) == 2) == (terrain == 0xa) &&
-					(occupied == 0 || this.owner.UnitOps.MayOccupyTile(participantIdx, horizLoc, vertLoc) == 0))
+					(occupied == 0 || this.Owner.UnitOps.MayOccupyTile(participantIdx, horizLoc, vertLoc) == 0))
 				{
 					allowed = true;
 				}
@@ -545,12 +545,12 @@ namespace Civilization1Remaster.Game
 
 			if (!allowed)
 			{
-				if ((this.owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) == 0 ||
-					this.owner.MapOps.ObtainTileOwnerBits(horizLoc, vertLoc) != (ushort)participantIdx)
+				if ((this.Owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) == 0 ||
+					this.Owner.MapOps.ObtainTileOwnerBits(horizLoc, vertLoc) != (ushort)participantIdx)
 					return false;
 			}
 
-			if (terrain == 0xa && (short)this.owner.MapOps.ObtainLandMassSize(horizLoc, vertLoc) < 5)
+			if (terrain == 0xa && (short)this.Owner.MapOps.ObtainLandMassSize(horizLoc, vertLoc) < 5)
 				return false;
 
 			return true;
@@ -565,7 +565,7 @@ namespace Civilization1Remaster.Game
 		/// <summary>The links of the block (the bits of directions 1 - 8): sea or land blocks</summary>
 		private short RouteBlockLinks(bool sea, short column, short row)
 		{
-			return (sbyte)this.processor.PullGlobalByte((ushort)((ushort)(0xd * column) + row + (sea ? SeaBlockLinksAddress : LandBlockLinksAddress)));
+			return (sbyte)this.Processor.PullGlobalByte((ushort)((ushort)(0xd * column) + row + (sea ? SeaBlockLinksAddress : LandBlockLinksAddress)));
 		}
 
 		/// <summary>The column of the block in the direction, wrapping at 20</summary>
@@ -585,15 +585,15 @@ namespace Civilization1Remaster.Game
 		/// <summary>Puts the place at the end of the queue (the column, then the row)</summary>
 		private void Enqueue(byte tail, int horizLoc, int vertLoc)
 		{
-			this.processor.EmitGlobalByte((ushort)(tail + QueueHorizAddress), (byte)horizLoc);
-			this.processor.EmitGlobalByte((ushort)(tail + QueueVertAddress), (byte)vertLoc);
+			this.Processor.EmitGlobalByte((ushort)(tail + QueueHorizAddress), (byte)horizLoc);
+			this.Processor.EmitGlobalByte((ushort)(tail + QueueVertAddress), (byte)vertLoc);
 		}
 
 		/// <summary>The column of the place of the queue</summary>
-		private short QueuedHoriz(byte head) => (sbyte)this.processor.PullGlobalByte((ushort)(head + QueueHorizAddress));
+		private short QueuedHoriz(byte head) => (sbyte)this.Processor.PullGlobalByte((ushort)(head + QueueHorizAddress));
 
 		/// <summary>The row of the place of the queue</summary>
-		private short QueuedVert(byte head) => (sbyte)this.processor.PullGlobalByte((ushort)(head + QueueVertAddress));
+		private short QueuedVert(byte head) => (sbyte)this.Processor.PullGlobalByte((ushort)(head + QueueVertAddress));
 
 		/// <summary>
 		/// The search in width from the goal's block (0x6590 / 0x6592) to the unit's block and the step there (see ChartRoute);
@@ -601,13 +601,13 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private bool SearchRouteBlocks(ushort troop, short unitColumn, short unitRow)
 		{
-			this.owner.Libc.FillBytes(BlockStepsAddress, 0, 0x104);
+			this.Owner.Libc.FillBytes(BlockStepsAddress, 0, 0x104);
 
 			byte tail = 0, head = 0;
 
 			Enqueue(tail, GoalHoriz, GoalVert);
 			tail++;
-			this.processor.EmitGlobalByte(BlockStepsCell(GoalHoriz, GoalVert), 1);
+			this.Processor.EmitGlobalByte(BlockStepsCell(GoalHoriz, GoalVert), 1);
 
 			bool sea = UnitMovesBySea(troop);
 			bool found = false;
@@ -628,7 +628,7 @@ namespace Civilization1Remaster.Game
 					break;
 				}
 
-				steps = (sbyte)this.processor.PullGlobalByte(BlockStepsCell(column, row));
+				steps = (sbyte)this.Processor.PullGlobalByte(BlockStepsCell(column, row));
 				stepsSet = true;
 				head++;
 				links = RouteBlockLinks(sea, column, row);
@@ -645,10 +645,10 @@ namespace Civilization1Remaster.Game
 
 					ushort block = BlockStepsCell(nextColumn, nextRow);
 
-					if (this.processor.PullGlobalByte(block) != 0)
+					if (this.Processor.PullGlobalByte(block) != 0)
 						continue;
 
-					this.processor.EmitGlobalByte(block, (byte)(steps + 1));
+					this.Processor.EmitGlobalByte(block, (byte)(steps + 1));
 					Enqueue(tail, nextColumn, nextRow);
 					tail++;
 				}
@@ -675,12 +675,12 @@ namespace Civilization1Remaster.Game
 					nextRow = (short)(DirectionVert(direction) + unitRow);
 					neighbourSet = true;
 
-					short blockSteps = (sbyte)this.processor.PullGlobalByte(BlockStepsCell(nextColumn, nextRow));
+					short blockSteps = (sbyte)this.Processor.PullGlobalByte(BlockStepsCell(nextColumn, nextRow));
 
 					if (blockSteps == 0 || blockSteps > fewest)
 						continue;
 
-					short distance = (short)(ushort)this.owner.Helpers.ObtainDistance((sbyte)this.Troops.PullAt(troop, UnitMemory.TravelHoriz), (nextColumn * 4) + 1,
+					short distance = (short)(ushort)this.Owner.Helpers.ObtainDistance((sbyte)this.Troops.PullAt(troop, UnitMemory.TravelHoriz), (nextColumn * 4) + 1,
 						(sbyte)this.Troops.PullAt(troop, UnitMemory.TravelVert), (nextRow * 4) + 1);
 
 					if (blockSteps < fewest)
@@ -734,12 +734,12 @@ namespace Civilization1Remaster.Game
 			GoalHoriz = (ushort)TunePosition((short)GoalHoriz);
 			GoalVert = (ushort)((((short)DirectionVert(direction) + unitRow) << 2) + 1);
 
-			if ((this.owner.MapOps.ObtainTerrainType((short)GoalHoriz, (short)GoalVert) == 0xa) == sea)
+			if ((this.Owner.MapOps.ObtainTerrainType((short)GoalHoriz, (short)GoalVert) == 0xa) == sea)
 				return;
 
 			GoalHoriz = (ushort)(GoalHoriz + 1);
 
-			if ((this.owner.MapOps.ObtainTerrainType((short)GoalHoriz, (short)GoalVert) == 0xa) == sea)
+			if ((this.Owner.MapOps.ObtainTerrainType((short)GoalHoriz, (short)GoalVert) == 0xa) == sea)
 				return;
 
 			GoalVert = (ushort)(GoalVert + 1);
@@ -748,13 +748,13 @@ namespace Civilization1Remaster.Game
 		/// <summary>The block is marked in the table of blocks (13 bytes a column)</summary>
 		private bool BlockMarked(ushort blocks, short blockHoriz, short blockVert)
 		{
-			return this.processor.PullGlobalByte((ushort)(blockVert + (0xd * blockHoriz) + blocks)) != 0;
+			return this.Processor.PullGlobalByte((ushort)(blockVert + (0xd * blockHoriz) + blocks)) != 0;
 		}
 
 		/// <summary>The tile is ocean for the marker 1, land for the marker 0</summary>
 		private bool CornerMatches(short horizLoc, short vertLoc, ushort marker)
 		{
-			return (this.owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) == 0xa ? 1 : 0) == marker;
+			return (this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) == 0xa ? 1 : 0) == marker;
 		}
 
 		/// <summary>The move costs of the window from the place outwards, until the unit's tile (see ShiftToward)</summary>
@@ -763,13 +763,13 @@ namespace Civilization1Remaster.Game
 			RoutePlaceHoriz = GoalHoriz;
 			RoutePlaceVert = GoalVert;
 
-			this.owner.Libc.FillBytes(CostWindowAddress, 0, 0x100);
+			this.Owner.Libc.FillBytes(CostWindowAddress, 0, 0x100);
 
 			byte tail = 0, head = 0;
 
 			Enqueue(tail, GoalHoriz, GoalVert);
 			tail++;
-			this.processor.EmitGlobalByte(WindowCell(windowHoriz, windowVert, (short)GoalHoriz, (short)GoalVert), 1);
+			this.Processor.EmitGlobalByte(WindowCell(windowHoriz, windowVert, (short)GoalHoriz, (short)GoalVert), 1);
 
 			GotoCost = costLimit;
 
@@ -786,7 +786,7 @@ namespace Civilization1Remaster.Game
 				head++;
 
 
-				short cost = (sbyte)this.processor.PullGlobalByte(WindowCell(windowHoriz, windowVert, horizLoc, vertLoc));
+				short cost = (sbyte)this.Processor.PullGlobalByte(WindowCell(windowHoriz, windowVert, horizLoc, vertLoc));
 
 				if (cost > (short)GotoCost)
 					continue;
@@ -806,7 +806,7 @@ namespace Civilization1Remaster.Game
 		/// <summary>The neighbours of a tile of the window get its cost plus the move cost (see ShiftToward); the new tail</summary>
 		private byte ExpandWindowCell(short horizLoc, short vertLoc, short cost, byte tail, bool sea, bool air, short windowHoriz, short windowVert)
 		{
-			ushort road = this.owner.MapOps.ContainsRoad((short)(ushort)TunePosition(horizLoc), vertLoc);
+			ushort road = this.Owner.MapOps.ContainsRoad((short)(ushort)TunePosition(horizLoc), vertLoc);
 
 			short direction;
 
@@ -814,27 +814,27 @@ namespace Civilization1Remaster.Game
 			{
 				short nextHoriz = (short)(DirectionHoriz(direction) + horizLoc);
 
-				if (this.owner.Libc.AbsoluteValue((short)(nextHoriz - GoalHoriz)) >= 8)
+				if (this.Owner.Libc.AbsoluteValue((short)(nextHoriz - GoalHoriz)) >= 8)
 					continue;
 
 				short tileHoriz = (short)TunePosition(nextHoriz);
 
 				short nextVert = (short)(DirectionVert(direction) + vertLoc);
 
-				if (this.owner.Libc.AbsoluteValue((short)(nextVert - GoalVert)) >= 8)
+				if (this.Owner.Libc.AbsoluteValue((short)(nextVert - GoalVert)) >= 8)
 					continue;
 
-				if (this.owner.MapOps.VerifyMapLimits(tileHoriz, nextVert) == 0)
+				if (this.Owner.MapOps.VerifyMapLimits(tileHoriz, nextVert) == 0)
 					continue;
 
-				ushort terrain = this.owner.MapOps.ObtainTerrainType(tileHoriz, nextVert);
+				ushort terrain = this.Owner.MapOps.ObtainTerrainType(tileHoriz, nextVert);
 
-				if ((terrain == 0xa) != sea && (this.owner.MapOps.ObtainTileImprovements(tileHoriz, nextVert) & 1) == 0)
+				if ((terrain == 0xa) != sea && (this.Owner.MapOps.ObtainTileImprovements(tileHoriz, nextVert) & 1) == 0)
 					continue;
 
 				short nextCost;
 
-				if (road != 0 && this.owner.MapOps.ContainsRoad(tileHoriz, nextVert) != 0)
+				if (road != 0 && this.Owner.MapOps.ContainsRoad(tileHoriz, nextVert) != 0)
 				{
 					nextCost = (short)(cost + 1);
 				}
@@ -849,12 +849,12 @@ namespace Civilization1Remaster.Game
 
 
 				ushort cell = WindowCell(windowHoriz, windowVert, nextHoriz, nextVert);
-				short known = (sbyte)this.processor.PullGlobalByte(cell);
+				short known = (sbyte)this.Processor.PullGlobalByte(cell);
 
 				if (known != 0 && known <= nextCost)
 					continue;
 
-				this.processor.EmitGlobalByte(cell, (byte)nextCost);
+				this.Processor.EmitGlobalByte(cell, (byte)nextCost);
 				Enqueue(tail, nextHoriz, nextVert);
 				tail++;
 			}
@@ -879,29 +879,29 @@ namespace Civilization1Remaster.Game
 				short nextHoriz = (short)(DirectionHoriz(direction) + unitHoriz);
 				short place = (short)GoalHoriz;
 
-				if (this.owner.Libc.AbsoluteValue((short)(nextHoriz - place)) >= 0x48)
+				if (this.Owner.Libc.AbsoluteValue((short)(nextHoriz - place)) >= 0x48)
 					nextHoriz = (short)(nextHoriz <= place ? nextHoriz + 0x50 : nextHoriz - 0x50);
 
 
-				if (this.owner.Libc.AbsoluteValue((short)(nextHoriz - GoalHoriz)) >= 8)
+				if (this.Owner.Libc.AbsoluteValue((short)(nextHoriz - GoalHoriz)) >= 8)
 					continue;
 
 				short tileHoriz = (short)TunePosition(nextHoriz);
 
 				short nextVert = (short)(DirectionVert(direction) + unitVert);
 
-				if (this.owner.Libc.AbsoluteValue((short)(nextVert - GoalVert)) >= 8)
+				if (this.Owner.Libc.AbsoluteValue((short)(nextVert - GoalVert)) >= 8)
 					continue;
 
-				bool seaTile = this.owner.MapOps.ObtainTerrainType(tileHoriz, nextVert) == 0xa;
+				bool seaTile = this.Owner.MapOps.ObtainTerrainType(tileHoriz, nextVert) == 0xa;
 
 				ushort kind = (ushort)(0x22 * (sbyte)this.Troops.PullAt(((ushort)(0xc * troopIdx) + (ushort)(0x600 * participantIdx)), UnitMemory.Kind));
 
 				if ((UnitKindWordAt(kind, UnitKindTable.LandGroup) == 2) != seaTile &&
-					(this.owner.MapOps.ObtainTileImprovements(tileHoriz, nextVert) & 1) == 0)
+					(this.Owner.MapOps.ObtainTileImprovements(tileHoriz, nextVert) & 1) == 0)
 					continue;
 
-				short cost = (sbyte)this.processor.PullGlobalByte(WindowCell(windowHoriz, windowVert, nextHoriz, nextVert));
+				short cost = (sbyte)this.Processor.PullGlobalByte(WindowCell(windowHoriz, windowVert, nextHoriz, nextVert));
 
 				if (cost == 0)
 					continue;
@@ -934,13 +934,13 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private short CrowdAndDistance(short participantIdx, short horizLoc, short vertLoc)
 		{
-			ushort troopIdx = this.owner.MapOps.ObtainUnitAtTile(horizLoc, vertLoc);
+			ushort troopIdx = this.Owner.MapOps.ObtainUnitAtTile(horizLoc, vertLoc);
 
 			short crowd = troopIdx != 0xffff
-				? (short)(this.owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, (short)troopIdx, 2) << 2)
+				? (short)(this.Owner.UnitOps.TallyUnitsByDomainInStack(participantIdx, (short)troopIdx, 2) << 2)
 				: (short)0;
 
-			return (short)(crowd + this.owner.Helpers.ObtainDistance((short)GoalHoriz, horizLoc, (short)GoalVert, vertLoc));
+			return (short)(crowd + this.Owner.Helpers.ObtainDistance((short)GoalHoriz, horizLoc, (short)GoalVert, vertLoc));
 		}
 	}
 }

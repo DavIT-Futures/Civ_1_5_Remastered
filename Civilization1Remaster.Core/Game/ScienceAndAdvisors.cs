@@ -71,7 +71,7 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public void HandleAllCities(short participantIdx)
 		{
-			this.processor.Journal.OpenScope($"HandleAllCities({participantIdx})");
+			this.Processor.Journal.OpenScope($"HandleAllCities({participantIdx})");
 
 
 			DemocracyPressure = 0;
@@ -82,17 +82,17 @@ namespace Civilization1Remaster.Game
 
 			for (short townIdx = 0; townIdx < 0x80; townIdx++)
 			{
-				if (this.owner.World.Towns[townIdx].ConditionMarker == 0xff || this.owner.World.Towns[townIdx].ParticipantIdx != participantIdx)
+				if (this.Owner.World.Towns[townIdx].ConditionMarker == 0xff || this.Owner.World.Towns[townIdx].ParticipantIdx != participantIdx)
 					continue;
 
 				while (true)
 				{
-					if (this.owner.CityOps.HandleCity(townIdx, 0) == 0 && this.owner.World.Towns[townIdx].TrueExtent > 5)
+					if (this.Owner.CityOps.HandleCity(townIdx, 0) == 0 && this.Owner.World.Towns[townIdx].TrueExtent > 5)
 					{
 						unrest |= 1;
 					}
 
-					if ((this.owner.World.Towns[townIdx].ConditionMarker & 1) != 0)
+					if ((this.Owner.World.Towns[townIdx].ConditionMarker & 1) != 0)
 					{
 						unrest |= 2;
 					}
@@ -100,9 +100,9 @@ namespace Civilization1Remaster.Game
 					if (CityAgain == 0)
 						break;
 
-					this.owner.CityOps.HandleCity(townIdx, 1);
+					this.Owner.CityOps.HandleCity(townIdx, 1);
 
-					this.owner.TurnHooks.RepaintMainScreen();
+					this.Owner.TurnHooks.RepaintMainScreen();
 
 					bool again = CityAgain == 2;
 
@@ -113,13 +113,13 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			if (participantIdx == this.owner.World.PersonParticipantIdx || (this.owner.World.DiagMarkers & 4) == 0)
+			if (participantIdx == this.Owner.World.PersonParticipantIdx || (this.Owner.World.DiagMarkers & 4) == 0)
 			{
-				this.processor.Journal.CloseScope("HandleAllCities");
+				this.Processor.Journal.CloseScope("HandleAllCities");
 				return;
 			}
 
-			Player participant = this.owner.World.Participants[participantIdx];
+			Player participant = this.Owner.World.Participants[participantIdx];
 			short rates = (short)(participant.ResearchLevyRatio + participant.LevyRatio);
 			short luxuries = (short)(10 - rates);
 
@@ -128,17 +128,17 @@ namespace Civilization1Remaster.Game
 				luxuries++;
 			}
 
-			if ((this.owner.World.RoundTally & 3) == 0 && unrest == 0 && (short)(participant.LevyRatio + participant.ResearchLevyRatio) < 8)
+			if ((this.Owner.World.RoundTally & 3) == 0 && unrest == 0 && (short)(participant.LevyRatio + participant.ResearchLevyRatio) < 8)
 			{
 				luxuries--;
 			}
 
-			luxuries = (short)this.owner.Helpers.VerifyValueSpan(luxuries, 0, 4);
+			luxuries = (short)this.Owner.Helpers.VerifyValueSpan(luxuries, 0, 4);
 
 			participant.ResearchLevyRatio = (short)(LeaderWord(participant.ChiefVisuals, LeaderTable.Leaning) +
 				((10 - luxuries) / 2));
 
-			if (participant.Gold > (short)(this.owner.World.RoundTally + 0x64))
+			if (participant.Gold > (short)(this.Owner.World.RoundTally + 0x64))
 			{
 				participant.ResearchLevyRatio++;
 			}
@@ -150,7 +150,7 @@ namespace Civilization1Remaster.Game
 
 			participant.LevyRatio = (short)(10 - participant.ResearchLevyRatio - luxuries);
 
-			this.processor.Journal.CloseScope("HandleAllCities");
+			this.Processor.Journal.CloseScope("HandleAllCities");
 		}
 
 		/// <summary>
@@ -162,45 +162,45 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public void FinalizeProduction(short townIdx, ushort horizLoc, ushort vertLoc)
 		{
-			this.processor.Journal.OpenScope($"FinalizeProduction({townIdx}, {horizLoc}, {vertLoc})");
+			this.Processor.Journal.OpenScope($"FinalizeProduction({townIdx}, {horizLoc}, {vertLoc})");
 
 
-			City town = this.owner.World.Towns[townIdx];
+			City town = this.Owner.World.Towns[townIdx];
 
-			this.owner.UnitOps.AttachReplayContent(1, 0xff, town.LabelIdx, (byte)horizLoc, (byte)vertLoc);
+			this.Owner.UnitOps.AttachReplayContent(1, 0xff, town.LabelIdx, (byte)horizLoc, (byte)vertLoc);
 
-			this.owner.World.Participants[town.ParticipantIdx].StopMaking(town.PresentMakingIdx);
+			this.Owner.World.Participants[town.ParticipantIdx].StopMaking(town.PresentMakingIdx);
 
-			this.owner.World.Participants[town.ParticipantIdx].TownTally--;
+			this.Owner.World.Participants[town.ParticipantIdx].TownTally--;
 			town.ConditionMarker = 0xff;
 
-			this.owner.MapOps.AssignTileImprovements(0, horizLoc, vertLoc);
+			this.Owner.MapOps.AssignTileImprovements(0, horizLoc, vertLoc);
 
-			if ((this.owner.World.ChartSight[horizLoc, vertLoc] & (1 << this.owner.World.PersonParticipantIdx)) != 0)
+			if ((this.Owner.World.ChartSight[horizLoc, vertLoc] & (1 << this.Owner.World.PersonParticipantIdx)) != 0)
 			{
-				this.owner.MapOps.KeepKnownTileImprovements(horizLoc, vertLoc);
+				this.Owner.MapOps.KeepKnownTileImprovements(horizLoc, vertLoc);
 			}
 
 			for (int otherIdx = 0; otherIdx < 0x80; otherIdx++)
 			{
 				for (int routeIdx = 0; routeIdx < 3; routeIdx++)
 				{
-					if (this.owner.World.Towns[otherIdx].CommerceTownIndices[routeIdx] == townIdx)
+					if (this.Owner.World.Towns[otherIdx].CommerceTownIndices[routeIdx] == townIdx)
 					{
-						this.owner.World.Towns[otherIdx].CommerceTownIndices[routeIdx] = -1;
+						this.Owner.World.Towns[otherIdx].CommerceTownIndices[routeIdx] = -1;
 					}
 				}
 			}
 
 			for (int wonderIdx = 1; wonderIdx <= 0x15; wonderIdx++)
 			{
-				if (this.owner.World.MarvelTownIdx[wonderIdx] == townIdx)
+				if (this.Owner.World.MarvelTownIdx[wonderIdx] == townIdx)
 				{
-					this.owner.World.MarvelTownIdx[wonderIdx] = 128;
+					this.Owner.World.MarvelTownIdx[wonderIdx] = 128;
 				}
 			}
 
-			UnitMemory troops = new UnitMemory(this.processor);
+			UnitMemory troops = new UnitMemory(this.Processor);
 
 			for (short troopIdx = 0; troopIdx < UnitMemory.TroopTally; troopIdx++)
 			{
@@ -208,69 +208,69 @@ namespace Civilization1Remaster.Game
 
 				if (troops.Exists(ownerIdx, troopIdx) && troops.PullSigned(ownerIdx, troopIdx, UnitMemory.BaseTown) == townIdx)
 				{
-					this.owner.UnitOps.EliminateUnit(ownerIdx, troopIdx);
+					this.Owner.UnitOps.EliminateUnit(ownerIdx, troopIdx);
 				}
 			}
 
-			ushort stack = this.owner.MapOps.ObtainUnitAtTile(horizLoc, vertLoc);
+			ushort stack = this.Owner.MapOps.ObtainUnitAtTile(horizLoc, vertLoc);
 
 			if (stack != 0xffff)
 			{
-				this.owner.UnitOps.VisitEachUnitInStack(town.ParticipantIdx, (short)stack, 0x1643);
+				this.Owner.UnitOps.VisitEachUnitInStack(town.ParticipantIdx, (short)stack, 0x1643);
 			}
 
 			for (int spotIdx = 0; spotIdx < 0x2d; spotIdx++)
 			{
-				int spotHoriz = this.owner.Routing.TunePosition((short)DirectionHoriz(spotIdx) + horizLoc);
+				int spotHoriz = this.Owner.Routing.TunePosition((short)DirectionHoriz(spotIdx) + horizLoc);
 				short spotVert = (short)(DirectionVert(spotIdx) + vertLoc);
 
-				this.owner.Helpers.LocateNearestCity(spotHoriz, spotVert);
+				this.Owner.Helpers.LocateNearestCity(spotHoriz, spotVert);
 
 				if (spotIdx <= 0x14 || (short)FoundDistance > 3)
 				{
-					ushort holder = this.owner.VideoCard.ObtainDot(2, spotHoriz + 0x50, spotVert + 0x32);
-					this.owner.Services.AssignDot(2, spotHoriz + 0x50, spotVert, holder);
+					ushort holder = this.Owner.VideoCard.ObtainDot(2, spotHoriz + 0x50, spotVert + 0x32);
+					this.Owner.Services.AssignDot(2, spotHoriz + 0x50, spotVert, holder);
 				}
 			}
 
 
-			this.processor.Journal.CloseScope("FinalizeProduction");
+			this.Processor.Journal.CloseScope("FinalizeProduction");
 		}
 
 		/// <summary>Keeps the screen in the back screen before the screen of an advisor</summary>
 		public void RenderAdvisorScenery()
 		{
-			this.processor.Journal.OpenScope("RenderAdvisorScenery()");
+			this.Processor.Journal.OpenScope("RenderAdvisorScenery()");
 
-			this.owner.Startup.ConcealMouseCursor();
+			this.Owner.Startup.ConcealMouseCursor();
 
-			this.owner.VideoCard.RenderImage(
+			this.Owner.VideoCard.RenderImage(
 				ScreenBox,
 				0, 0, 0x140, 0xc8,
 				BackScreenBox,
 				0, 0);
 
-			this.owner.Startup.DisplayMouseCursor();
+			this.Owner.Startup.DisplayMouseCursor();
 
-			this.processor.Journal.CloseScope("RenderAdvisorScenery");
+			this.Processor.Journal.CloseScope("RenderAdvisorScenery");
 		}
 
 		/// <summary>Puts the screen back from the back screen after the screen of an advisor</summary>
 		public void RecoverAdvisorScenery()
 		{
-			this.processor.Journal.OpenScope("RecoverAdvisorScenery()");
+			this.Processor.Journal.OpenScope("RecoverAdvisorScenery()");
 
-			this.owner.Startup.ConcealMouseCursor();
+			this.Owner.Startup.ConcealMouseCursor();
 
-			this.owner.VideoCard.RenderImage(
+			this.Owner.VideoCard.RenderImage(
 				BackScreenBox,
 				0, 0, 0x140, 0xc8,
 				ScreenBox,
 				0, 0);
 
-			this.owner.Startup.DisplayMouseCursor();
+			this.Owner.Startup.DisplayMouseCursor();
 
-			this.processor.Journal.CloseScope("RecoverAdvisorScenery");
+			this.Processor.Journal.CloseScope("RecoverAdvisorScenery");
 		}
 
 		/// <summary>
@@ -279,24 +279,24 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public void RenewCityScreen(short townIdx)
 		{
-			this.processor.Journal.OpenScope($"RenewCityScreen({townIdx})");
+			this.Processor.Journal.OpenScope($"RenewCityScreen({townIdx})");
 
 			RenderAdvisorScenery();
 
 			MapRedrawRequest = 0x0;
 
-			this.owner.CityOps.HandleCity(townIdx, 1);
+			this.Owner.CityOps.HandleCity(townIdx, 1);
 
 			if (MapRedrawRequest != 0)
 			{
-				this.owner.TurnHooks.RepaintMainScreen();
+				this.Owner.TurnHooks.RepaintMainScreen();
 			}
 			else
 			{
 				RecoverAdvisorScenery();
 			}
 
-			this.processor.Journal.CloseScope("RenewCityScreen");
+			this.Processor.Journal.CloseScope("RenewCityScreen");
 		}
 
 		/// <summary>
@@ -308,15 +308,15 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public ushort PickCityProduction(short participantIdx, short townIdx)
 		{
-			this.processor.Journal.OpenScope($"PickCityProduction({participantIdx}, {townIdx})");
+			this.Processor.Journal.OpenScope($"PickCityProduction({participantIdx}, {townIdx})");
 
 			// The words of the frame are in C# (B3, properties below; some are read before they are written: 0)
 			FrameWords outerFrame = this.pickFrame;
-			this.pickFrame = new FrameWords(this.processor, 0x14a);
+			this.pickFrame = new FrameWords(this.Processor, 0x14a);
 			PageState = 0;
 			AdvisorsShown = 0;
 
-			this.owner.CityOps.HandleCity(townIdx, -1);
+			this.Owner.CityOps.HandleCity(townIdx, -1);
 
 			ushort choice;
 
@@ -344,7 +344,7 @@ namespace Civilization1Remaster.Game
 			}
 
 			this.pickFrame = outerFrame;
-			this.processor.Journal.CloseScope("PickCityProduction");
+			this.Processor.Journal.CloseScope("PickCityProduction");
 
 			return choice;
 		}
@@ -355,21 +355,21 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public void ComposeProductionOption(short townIdx, ushort price)
 		{
-			this.processor.Journal.OpenScope($"ComposeProductionOption({townIdx}, {price})");
+			this.Processor.Journal.OpenScope($"ComposeProductionOption({townIdx}, {price})");
 
-			int perTurn = this.owner.Helpers.VerifyValueSpan(
+			int perTurn = this.Owner.Helpers.VerifyValueSpan(
 				(short)CityShields - (short)CityUnitUpkeep, 1, 99);
 
-			ushort turns = (ushort)this.owner.Helpers.VerifyValueSpan(
-				(((10 * price) - this.owner.World.Towns[townIdx].MaterialsTally - 1) / (short)perTurn) + 1, 1, 999);
+			ushort turns = (ushort)this.Owner.Helpers.VerifyValueSpan(
+				(((10 * price) - this.Owner.World.Towns[townIdx].MaterialsTally - 1) / (short)perTurn) + 1, 1, 999);
 
-			this.owner.Words.Append(" (");
+			this.Owner.Words.Append(" (");
 
-			this.owner.Words.Append(this.owner.Libc.IntegerToText((short)turns, 10));
+			this.Owner.Words.Append(this.Owner.Libc.IntegerToText((short)turns, 10));
 
-			this.owner.Words.Append((ushort)(turns != 1 ? 0x22b2 : 0x22b9));
+			this.Owner.Words.Append((ushort)(turns != 1 ? 0x22b2 : 0x22b9));
 
-			this.processor.Journal.CloseScope("ComposeProductionOption");
+			this.Processor.Journal.CloseScope("ComposeProductionOption");
 		}
 
 		/// <summary>
@@ -385,13 +385,13 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public ushort UncoverTechnology(short participantIdx, short participantIdx1)
 		{
-			this.processor.Journal.OpenScope($"UncoverTechnology({participantIdx}, {participantIdx1})");
+			this.Processor.Journal.OpenScope($"UncoverTechnology({participantIdx}, {participantIdx1})");
 
 
 			ushort result = participantIdx == 0 ? (ushort)0xffff : UncoverTechnologyOf(participantIdx, participantIdx1);
 
 
-			this.processor.Journal.CloseScope("UncoverTechnology");
+			this.Processor.Journal.CloseScope("UncoverTechnology");
 
 			return result;
 		}
@@ -407,20 +407,20 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public void EarnTechnology(short participantIdx, short scienceIdx, short participantIdx1)
 		{
-			this.processor.Journal.OpenScope($"EarnTechnology({participantIdx}, {scienceIdx}, {participantIdx1})");
+			this.Processor.Journal.OpenScope($"EarnTechnology({participantIdx}, {scienceIdx}, {participantIdx1})");
 
 
 			if (PlayerKnowsTechnology(participantIdx, scienceIdx) == 0)
 			{
 				if (scienceIdx != 0x47)
 				{
-					this.owner.World.Participants[participantIdx].FoundScienceMarkers[scienceIdx >> 4] |= (ushort)(1 << (scienceIdx & 0xf));
-					this.owner.World.Participants[participantIdx].ScienceObtainedSince[scienceIdx] = participantIdx1;
+					this.Owner.World.Participants[participantIdx].FoundScienceMarkers[scienceIdx >> 4] |= (ushort)(1 << (scienceIdx & 0xf));
+					this.Owner.World.Participants[participantIdx].ScienceObtainedSince[scienceIdx] = participantIdx1;
 				}
 
-				if (this.owner.World.RoundTally != 0)
+				if (this.Owner.World.RoundTally != 0)
 				{
-					this.owner.World.Participants[participantIdx].FoundScienceTally++;
+					this.Owner.World.Participants[participantIdx].FoundScienceTally++;
 
 					AnnounceTechnology(participantIdx, scienceIdx, participantIdx1);
 
@@ -428,14 +428,14 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			this.processor.Journal.CloseScope("EarnTechnology");
+			this.Processor.Journal.CloseScope("EarnTechnology");
 		}
 
 		/// <summary>1 when the player knows the technology, else 0</summary>
 		public ushort PlayerKnowsTechnology(short participantIdx, short scienceIdx)
 		{
 			return (ushort)(ScienceRules.PlayerKnowsTechnology(
-				this.owner.World.Participants[participantIdx].FoundScienceMarkers,
+				this.Owner.World.Participants[participantIdx].FoundScienceMarkers,
 				participantIdx,
 				scienceIdx) ? 1 : 0);
 		}
@@ -447,15 +447,15 @@ namespace Civilization1Remaster.Game
 		/// <param name="scienceIdx"></param>
 		public ushort ObtainTechnologyInfo(short participantIdx, ushort scienceIdx)
 		{
-			this.processor.Journal.OpenScope($"ObtainTechnologyInfo({participantIdx}, {scienceIdx})");
+			this.Processor.Journal.OpenScope($"ObtainTechnologyInfo({participantIdx}, {scienceIdx})");
 
-			sbyte b0 = (sbyte)this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(scienceIdx * 2 + 0xb0a));
-			sbyte b1 = (sbyte)this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(scienceIdx * 2 + 0xb0b));
-			int leaderVisuals = this.owner.World.Participants[participantIdx].ChiefVisuals;
+			sbyte b0 = (sbyte)this.Processor.PullUInt8(this.Processor.SegData.Value16, (ushort)(scienceIdx * 2 + 0xb0a));
+			sbyte b1 = (sbyte)this.Processor.PullUInt8(this.Processor.SegData.Value16, (ushort)(scienceIdx * 2 + 0xb0b));
+			int leaderVisuals = this.Owner.World.Participants[participantIdx].ChiefVisuals;
 			short leaderFactor = (short)LeaderWord(leaderVisuals, LeaderTable.Leaning);
 			ushort result = ScienceRules.CalculateTechnologyInfo(b0, b1, leaderFactor);
 
-			this.processor.Journal.CloseScope("ObtainTechnologyInfo");
+			this.Processor.Journal.CloseScope("ObtainTechnologyInfo");
 			return result;
 		}
 
@@ -493,7 +493,7 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private bool ListProductionChoices(short participantIdx, short townIdx)
 		{
-			City town = this.owner.World.Towns[townIdx];
+			City town = this.Owner.World.Towns[townIdx];
 
 			ChoiceCount = 1;
 			FrameWord(ChoiceTable, (ushort)(short)town.PresentMakingIdx);
@@ -506,26 +506,26 @@ namespace Civilization1Remaster.Game
 				ListUnitChoices(participantIdx, townIdx);
 
 			FrameWord(PageCutCountLocal, (ushort)ChoiceCount);
-			FrameWord(PageCutLengthLocal, this.owner.Words.Length);
+			FrameWord(PageCutLengthLocal, this.Owner.Words.Length);
 
 			// The Great Wall on the continent of the city (no walls and the like then)
 			FrameWord(SharedWallLocal, 0);
 
-			if (this.owner.CityOps.PlayerEnjoysWonderEffect(participantIdx, 15) != 0)
+			if (this.Owner.CityOps.PlayerEnjoysWonderEffect(participantIdx, 15) != 0)
 			{
-				City wallTown = this.owner.World.Towns[this.owner.World.MarvelTownIdx[15]];
-				FrameWord(WallContinentLocal, this.owner.MapOps.ObtainContinentID(wallTown.Place.X, wallTown.Place.Y));
+				City wallTown = this.Owner.World.Towns[this.Owner.World.MarvelTownIdx[15]];
+				FrameWord(WallContinentLocal, this.Owner.MapOps.ObtainContinentID(wallTown.Place.X, wallTown.Place.Y));
 
-				if (this.owner.MapOps.ObtainContinentID(town.Place.X, town.Place.Y) == FrameWord(WallContinentLocal))
+				if (this.Owner.MapOps.ObtainContinentID(town.Place.X, town.Place.Y) == FrameWord(WallContinentLocal))
 					FrameWord(SharedWallLocal, 1);
 			}
 
-			if ((this.owner.World.DiagMarkers & 4) != 0)
+			if ((this.Owner.World.DiagMarkers & 4) != 0)
 				ListImprovementChoices(participantIdx, townIdx);
 
 			ListWonderChoices(participantIdx, townIdx);
 
-			if (participantIdx == this.owner.World.PersonParticipantIdx && (town.ConditionMarker & 0x10) == 0 && ChoiceCount > 0x1e)
+			if (participantIdx == this.Owner.World.PersonParticipantIdx && (town.ConditionMarker & 0x10) == 0 && ChoiceCount > 0x1e)
 			{
 				if (PageState == 0)
 				{
@@ -533,13 +533,13 @@ namespace Civilization1Remaster.Game
 					return true;
 				}
 
-				this.owner.Libc.CopyText((ushort)(FrameWord(PageCutLengthLocal) + TextBuffer.Address), "more...\n");
+				this.Owner.Libc.CopyText((ushort)(FrameWord(PageCutLengthLocal) + TextBuffer.Address), "more...\n");
 				ChoiceEntry(FrameWord(PageCutCountLocal), 0x63);
 			}
 
 			if (PageState == 2)
 			{
-				this.owner.Words.Append("more...\n");
+				this.Owner.Words.Append("more...\n");
 				AddChoice(0x62);
 			}
 
@@ -552,13 +552,13 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private void ListUnitChoices(short participantIdx, short townIdx)
 		{
-			City town = this.owner.World.Towns[townIdx];
+			City town = this.Owner.World.Towns[townIdx];
 
 			for (FrameWord(ChoiceLoopLocal, 0); (short)FrameWord(ChoiceLoopLocal) < 0x1c; FrameWord(ChoiceLoopLocal, (ushort)(FrameWord(ChoiceLoopLocal) + 1)))
 			{
 				sbyte kind = (sbyte)FrameWord(ChoiceLoopLocal);
 
-				if (kind == 0x19 && (this.owner.World.MarvelTownIdx[17] == -1 || PlayerKnowsTechnology(participantIdx, 0x1b) == 0))
+				if (kind == 0x19 && (this.Owner.World.MarvelTownIdx[17] == -1 || PlayerKnowsTechnology(participantIdx, 0x1b) == 0))
 					continue;
 
 				if (PlayerKnowsTechnology(participantIdx, (short)UnitKindWord(kind, 0x20)) == 0 ||
@@ -570,15 +570,15 @@ namespace Civilization1Remaster.Game
 				if ((town.ConditionMarker & 2) == 0 && UnitKindWord(kind, UnitKindTable.LandGroup) == UnitKindTable.SeaUnits)
 					continue;
 
-				this.owner.Words.Append((ushort)(UnitKindTable.Origin + kind * UnitKindTable.Stride));
+				this.Owner.Words.Append((ushort)(UnitKindTable.Origin + kind * UnitKindTable.Stride));
 				ComposeProductionOption(townIdx, UnitKindWord(kind, UnitKindTable.Price));
-				this.owner.Words.Append(", ADM:");
-				this.owner.Words.Append(this.owner.Libc.IntegerToText((short)UnitKindWord(kind, UnitKindTable.AssaultPower), 10));
-				this.owner.Words.Append("/");
-				this.owner.Words.Append(this.owner.Libc.IntegerToText((short)UnitKindWord(kind, UnitKindTable.GuardPower), 10));
-				this.owner.Words.Append("/");
-				this.owner.Words.Append(this.owner.Libc.IntegerToText((short)UnitKindWord(kind, UnitKindTable.ShiftTally), 10));
-				this.owner.Words.Append(")\n ");
+				this.Owner.Words.Append(", ADM:");
+				this.Owner.Words.Append(this.Owner.Libc.IntegerToText((short)UnitKindWord(kind, UnitKindTable.AssaultPower), 10));
+				this.Owner.Words.Append("/");
+				this.Owner.Words.Append(this.Owner.Libc.IntegerToText((short)UnitKindWord(kind, UnitKindTable.GuardPower), 10));
+				this.Owner.Words.Append("/");
+				this.Owner.Words.Append(this.Owner.Libc.IntegerToText((short)UnitKindWord(kind, UnitKindTable.ShiftTally), 10));
+				this.Owner.Words.Append(")\n ");
 
 				AddChoice((ushort)kind);
 			}
@@ -592,13 +592,13 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private void ListImprovementChoices(short participantIdx, short townIdx)
 		{
-			City town = this.owner.World.Towns[townIdx];
+			City town = this.Owner.World.Towns[townIdx];
 
 			for (FrameWord(ChoiceLoopLocal, 1); (short)FrameWord(ChoiceLoopLocal) <= 0x18; FrameWord(ChoiceLoopLocal, (ushort)(FrameWord(ChoiceLoopLocal) + 1)))
 			{
 				short improvementIdx = (short)FrameWord(ChoiceLoopLocal);
 
-				if (PlayerKnowsTechnology(participantIdx, this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(ImprovementRecord(improvementIdx) + 0x1c))) == 0)
+				if (PlayerKnowsTechnology(participantIdx, this.Processor.PullInt16(this.Processor.SegData.Value16, (ushort)(ImprovementRecord(improvementIdx) + 0x1c))) == 0)
 					continue;
 
 				FrameWord(BuiltLowLocal, town.StructureMarkers0);
@@ -636,14 +636,14 @@ namespace Civilization1Remaster.Game
 					continue;
 
 				if (improvementIdx > 0x15 &&
-					(this.owner.World.MarvelTownIdx[19] == -1 || (this.owner.World.StarshipMarkers & (1 << participantIdx)) != 0))
+					(this.Owner.World.MarvelTownIdx[19] == -1 || (this.Owner.World.StarshipMarkers & (1 << participantIdx)) != 0))
 				{
 					continue;
 				}
 
-				this.owner.Words.Append(ImprovementRecord(improvementIdx));
-				ComposeProductionOption(townIdx, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(ImprovementRecord(improvementIdx) + 0x18)));
-				this.owner.Words.Append(")\n ");
+				this.Owner.Words.Append(ImprovementRecord(improvementIdx));
+				ComposeProductionOption(townIdx, this.Processor.PullUInt16(this.Processor.SegData.Value16, (ushort)(ImprovementRecord(improvementIdx) + 0x18)));
+				this.Owner.Words.Append(")\n ");
 
 				AddChoice((ushort)-improvementIdx);
 			}
@@ -658,17 +658,17 @@ namespace Civilization1Remaster.Game
 			{
 				short improvementIdx = (short)FrameWord(ChoiceLoopLocal);
 
-				if (PlayerKnowsTechnology(participantIdx, this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(ImprovementRecord(improvementIdx) + 0x1c))) != 0 &&
-					this.owner.World.MarvelTownIdx[improvementIdx - 0x18] == -1)
+				if (PlayerKnowsTechnology(participantIdx, this.Processor.PullInt16(this.Processor.SegData.Value16, (ushort)(ImprovementRecord(improvementIdx) + 0x1c))) != 0 &&
+					this.Owner.World.MarvelTownIdx[improvementIdx - 0x18] == -1)
 				{
-					ushort obsolete = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((improvementIdx << 1) + 0x10ce));
+					ushort obsolete = this.Processor.PullUInt16(this.Processor.SegData.Value16, (ushort)((improvementIdx << 1) + 0x10ce));
 
-					if (obsolete != 0x7f && ((byte)this.owner.World.ScienceLeadingFoundVia[this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((improvementIdx << 1) + 0x10ce))] & 7) != 0)
-						this.owner.Words.Append("*");
+					if (obsolete != 0x7f && ((byte)this.Owner.World.ScienceLeadingFoundVia[this.Processor.PullUInt16(this.Processor.SegData.Value16, (ushort)((improvementIdx << 1) + 0x10ce))] & 7) != 0)
+						this.Owner.Words.Append("*");
 
-					this.owner.Words.Append(ImprovementRecord(improvementIdx));
-					ComposeProductionOption(townIdx, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(ImprovementRecord(improvementIdx) + 0x18)));
-					this.owner.Words.Append(")\n ");
+					this.Owner.Words.Append(ImprovementRecord(improvementIdx));
+					ComposeProductionOption(townIdx, this.Processor.PullUInt16(this.Processor.SegData.Value16, (ushort)(ImprovementRecord(improvementIdx) + 0x18)));
+					this.Owner.Words.Append(")\n ");
 
 					AddChoice((ushort)-improvementIdx);
 				}
@@ -687,10 +687,10 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private ushort? AssessCityNeeds(short participantIdx, short townIdx)
 		{
-			Player player = this.owner.World.Participants[participantIdx];
-			City town = this.owner.World.Towns[townIdx];
+			Player player = this.Owner.World.Participants[participantIdx];
+			City town = this.Owner.World.Towns[townIdx];
 
-			FrameWord(ContinentLocal, this.owner.MapOps.ObtainContinentID(town.Place.X, town.Place.Y));
+			FrameWord(ContinentLocal, this.Owner.MapOps.ObtainContinentID(town.Place.X, town.Place.Y));
 			FrameWord(ApproachLocal, (ushort)player.Landmasses[FrameWord(ContinentLocal)].Approach);
 			FrameWord(DefensiveLocal, (ushort)((short)FrameWord(ApproachLocal) is 1 or 2 ? 1 : 0));
 
@@ -714,10 +714,10 @@ namespace Civilization1Remaster.Game
 
 			do
 			{
-				City other = this.owner.World.Towns[FrameWord(TownLoopLocal)];
+				City other = this.Owner.World.Towns[FrameWord(TownLoopLocal)];
 
 				if (other.ConditionMarker != 0xff && other.ParticipantIdx == participantIdx &&
-					this.owner.MapOps.ObtainContinentID(other.Place.X, other.Place.Y) == FrameWord(ContinentLocal))
+					this.Owner.MapOps.ObtainContinentID(other.Place.X, other.Place.Y) == FrameWord(ContinentLocal))
 				{
 					if (other.PresentMakingIdx >= 0 && (short)FrameWord(TownLoopLocal) != townIdx)
 					{
@@ -753,7 +753,7 @@ namespace Civilization1Remaster.Game
 				{
 					player.TroopTally++;
 
-					if (this.owner.MapOps.ObtainContinentID(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
+					if (this.Owner.MapOps.ObtainContinentID(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz),
 						this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert)) == FrameWord(ContinentLocal))
 					{
 						int units = TableWord(UnitsOnContinentTable, this.troops.TroopKind(participantIdx, troopIdx));
@@ -765,11 +765,11 @@ namespace Civilization1Remaster.Game
 			}
 			while ((short)FrameWord(ChoiceLoopLocal) < 0x80);
 
-			if (player.TroopTally == 0 && participantIdx != this.owner.World.PersonParticipantIdx && player.RegimeKind <= 1)
+			if (player.TroopTally == 0 && participantIdx != this.Owner.World.PersonParticipantIdx && player.RegimeKind <= 1)
 				return 1;
 
 			if (participantIdx == 0)
-				return (ushort)((this.processor.PullUInt8(0x3772, 0x520) & 7) != 0 ? 7 : 3);
+				return (ushort)((this.Processor.PullUInt8(0x3772, 0x520) & 7) != 0 ? 7 : 3);
 
 			return null;
 		}
@@ -780,10 +780,10 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private void AssessCityDefence(short participantIdx, short townIdx)
 		{
-			City town = this.owner.World.Towns[townIdx];
+			City town = this.Owner.World.Towns[townIdx];
 
 			FrameWord(DefenceNeedLocal, 0);
-			FrameWord(ChoiceLoopLocal, this.owner.MapOps.ObtainUnitAtTile(town.Place.X, town.Place.Y));
+			FrameWord(ChoiceLoopLocal, this.Owner.MapOps.ObtainUnitAtTile(town.Place.X, town.Place.Y));
 
 			if (FrameWord(ChoiceLoopLocal) == 0xffff)
 			{
@@ -791,7 +791,7 @@ namespace Civilization1Remaster.Game
 				return;
 			}
 
-			short defenders = (short)this.owner.UnitOps.TallyUnitsWithFlagInStack(participantIdx, (short)FrameWord(ChoiceLoopLocal), 2);
+			short defenders = (short)this.Owner.UnitOps.TallyUnitsWithFlagInStack(participantIdx, (short)FrameWord(ChoiceLoopLocal), 2);
 
 			if ((short)(town.TrueExtent / 4 + FrameWord(DefensiveLocal)) > defenders)
 				FrameWord(DefenceNeedLocal, 1);
@@ -853,7 +853,7 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private void ScoreImprovementChoice(short participantIdx, short townIdx, short choice)
 		{
-			City town = this.owner.World.Towns[townIdx];
+			City town = this.Owner.World.Towns[townIdx];
 			short food = (short)CityShields;
 			short trade = (short)CityTrade;
 
@@ -879,7 +879,7 @@ namespace Civilization1Remaster.Game
 							Score = 3;
 					}
 
-					if (participantIdx == this.owner.World.PersonParticipantIdx && (town.ConditionMarker & 0x10) != 0)
+					if (participantIdx == this.Owner.World.PersonParticipantIdx && (town.ConditionMarker & 0x10) != 0)
 						Score = 0x3e7;
 
 					break;
@@ -972,10 +972,10 @@ namespace Civilization1Remaster.Game
 				{
 					// A spaceship part: not when the player or the human player has launched; 2 when the human player has
 					// built a structure (bit 8 + human player), else 4
-					byte person = (byte)this.owner.World.PersonParticipantIdx;
+					byte person = (byte)this.Owner.World.PersonParticipantIdx;
 
-					if ((((1 << participantIdx) + (1 << person)) & this.owner.World.StarshipMarkers) == 0)
-						Score = (short)((this.owner.World.StarshipMarkers & (1 << (byte)(person + 8))) != 0 ? 2 : 4);
+					if ((((1 << participantIdx) + (1 << person)) & this.Owner.World.StarshipMarkers) == 0)
+						Score = (short)((this.Owner.World.StarshipMarkers & (1 << (byte)(person + 8))) != 0 ? 2 : 4);
 					break;
 				}
 			}
@@ -989,7 +989,7 @@ namespace Civilization1Remaster.Game
 				short weight = (short)(FrameWord(DefensiveLocal) == FrameWord(DefensiveImprovementLocal) ? 10 : 20);
 				Score = (short)(weight * Score);
 
-				short character = (short)(LeaderWord(this.owner.World.Participants[participantIdx].ChiefVisuals, LeaderTable.Leaning) + 3);
+				short character = (short)(LeaderWord(this.Owner.World.Participants[participantIdx].ChiefVisuals, LeaderTable.Leaning) + 3);
 				Score = CPU.SignedQuotient((short)(3 * Score), character);
 			}
 
@@ -999,26 +999,26 @@ namespace Civilization1Remaster.Game
 
 		private void ScoreDiplomatChoice(short participantIdx)
 		{
-			short person = this.owner.World.PersonParticipantIdx;
+			short person = this.Owner.World.PersonParticipantIdx;
 
-			if (person <= 0 || (this.owner.World.Participants[participantIdx].Relations[person] & 2) != 0 ||
-				this.owner.World.Participants[participantIdx].TroopsInsideMaking[27] > 0)
+			if (person <= 0 || (this.Owner.World.Participants[participantIdx].Relations[person] & 2) != 0 ||
+				this.Owner.World.Participants[participantIdx].TroopsInsideMaking[27] > 0)
 			{
 				return;
 			}
 
-			FrameWord(TownLoopLocal, (ushort)this.owner.Libc.Dice.DrawInt(5));
+			FrameWord(TownLoopLocal, (ushort)this.Owner.Libc.Dice.DrawInt(5));
 
 			if (((1 << participantIdx) & HumanContinentAttackers) == 0)
 				return;
 
-			ushort own = this.owner.World.Participants[participantIdx].FoundScienceMarkers[FrameWord(TownLoopLocal)];
+			ushort own = this.Owner.World.Participants[participantIdx].FoundScienceMarkers[FrameWord(TownLoopLocal)];
 
-			if ((ushort)(this.owner.World.Participants[person].FoundScienceMarkers[FrameWord(TownLoopLocal)] | own) == own)
+			if ((ushort)(this.Owner.World.Participants[person].FoundScienceMarkers[FrameWord(TownLoopLocal)] | own) == own)
 				return;
 
-			Score = (short)this.owner.Helpers.VerifyValueSpan(this.owner.World.Participants[participantIdx].FoundScienceTally -
-				this.owner.World.Participants[person].FoundScienceTally + 10, 5, 10);
+			Score = (short)this.Owner.Helpers.VerifyValueSpan(this.Owner.World.Participants[participantIdx].FoundScienceTally -
+				this.Owner.World.Participants[person].FoundScienceTally + 10, 5, 10);
 		}
 
 		/// <summary>
@@ -1029,8 +1029,8 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private bool ScoreUnitChoice(short participantIdx, short townIdx, short choice)
 		{
-			Player player = this.owner.World.Participants[participantIdx];
-			City town = this.owner.World.Towns[townIdx];
+			Player player = this.Owner.World.Participants[participantIdx];
+			City town = this.Owner.World.Towns[townIdx];
 			sbyte kind = (sbyte)choice;
 
 			if (choice == 0 && (player.RegimeKind <= 1 ? 1 : 2) >= (short)FrameWord(HappyRoomLocal) &&
@@ -1043,18 +1043,18 @@ namespace Civilization1Remaster.Game
 				return false;
 
 			if (choice == 0x19 && (player.LiveTroops[25] >= 4 ||
-				(short)this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(participantIdx * 0x38 + 0xd33a)) >= 2))
+				(short)this.Processor.PullUInt16(this.Processor.SegData.Value16, (ushort)(participantIdx * 0x38 + 0xd33a)) >= 2))
 			{
 				return false;
 			}
 
 			if (choice == 0xe)
 			{
-				short human = CPU.SignedQuotient((short)this.processor.PullUInt16(this.processor.SegData.Value16,
-					(ushort)(this.owner.World.PersonParticipantIdx * 0x38 + 0xb3dc)), 2);
+				short human = CPU.SignedQuotient((short)this.Processor.PullUInt16(this.Processor.SegData.Value16,
+					(ushort)(this.Owner.World.PersonParticipantIdx * 0x38 + 0xb3dc)), 2);
 
 				if ((short)(player.LiveTroops[choice] + player.TroopsInsideMaking[choice]) >= human ||
-					(player.Relations[this.owner.World.PersonParticipantIdx] & 2) != 0)
+					(player.Relations[this.Owner.World.PersonParticipantIdx] & 2) != 0)
 				{
 					return false;
 				}
@@ -1139,11 +1139,11 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private ushort? DecideProduction(short participantIdx, short townIdx)
 		{
-			City town = this.owner.World.Towns[townIdx];
+			City town = this.Owner.World.Towns[townIdx];
 
-			this.owner.World.Participants[participantIdx].TroopTally = (short)FrameWord(UnitTallyLocal);
+			this.Owner.World.Participants[participantIdx].TroopTally = (short)FrameWord(UnitTallyLocal);
 
-			if (!this.owner.World.IsHuman(participantIdx))
+			if (!this.Owner.World.IsHuman(participantIdx))
 			{
 				if ((byte)town.PresentMakingIdx == 0xff)
 					return 0xffff;
@@ -1159,10 +1159,10 @@ namespace Civilization1Remaster.Game
 				return 0x63;
 			}
 
-			if ((this.owner.World.SessionPrefMarkers & 1) != 0 && AdvisorsShown == 0)
+			if ((this.Owner.World.SessionPrefMarkers & 1) != 0 && AdvisorsShown == 0)
 			{
 				ushort screen = ScreenBox;
-				this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(screen + 0x10), 2);
+				this.Processor.EmitUInt16(this.Processor.SegData.Value16, (ushort)(screen + 0x10), 2);
 
 				if (FrameWord(BestUnitLocal) != 0xffff)
 					ShowProductionAdvice((short)FrameWord(BestUnitLocal), "Military Advisor:\n", 0x2284, 8);
@@ -1172,7 +1172,7 @@ namespace Civilization1Remaster.Game
 
 				AdvisorsShown = 1;
 				screen = ScreenBox;
-				this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(screen + 0x10), 1);
+				this.Processor.EmitUInt16(this.Processor.SegData.Value16, (ushort)(screen + 0x10), 1);
 
 				return null;
 			}
@@ -1180,11 +1180,11 @@ namespace Civilization1Remaster.Game
 			if (ChoiceCount > 0x14 || PageState != 0)
 			{
 				ushort screen = ScreenBox;
-				this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(screen + 0x10), 2);
+				this.Processor.EmitUInt16(this.Processor.SegData.Value16, (ushort)(screen + 0x10), 2);
 			}
 
 			MenuFooter = 1;
-			ushort picked = this.owner.Dialogs.DisplayMenu(TextBuffer.Address, 80, 8, 1);
+			ushort picked = this.Owner.Dialogs.DisplayMenu(TextBuffer.Address, 80, 8, 1);
 			Score = (short)ChoiceEntry(picked + 1);
 
 			if ((ushort)Score == 0x63)
@@ -1200,23 +1200,23 @@ namespace Civilization1Remaster.Game
 			}
 
 			ushort display = ScreenBox;
-			this.processor.EmitUInt16(this.processor.SegData.Value16, (ushort)(display + 0x10), 1);
+			this.Processor.EmitUInt16(this.Processor.SegData.Value16, (ushort)(display + 0x10), 1);
 
 			if (MenuHelpTopic == 0)
 				return (ushort)Score;
 
 			// The Civilopedia of the choice, then the menu again
-			this.owner.Startup.ConcealMouseCursor();
-			this.owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, BackScreenBox, 0, 0);
+			this.Owner.Startup.ConcealMouseCursor();
+			this.Owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, BackScreenBox, 0, 0);
 			CivilopediaWithoutPictures = 1;
 
 			if (Score >= 0)
-				this.owner.Encyclopedia.DisplayCivilopediaRecord((ushort)Score, 2);
+				this.Owner.Encyclopedia.DisplayCivilopediaRecord((ushort)Score, 2);
 			else
-				this.owner.Encyclopedia.DisplayCivilopediaRecord((ushort)(-Score), 1);
+				this.Owner.Encyclopedia.DisplayCivilopediaRecord((ushort)(-Score), 1);
 
-			this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
-			this.owner.Startup.DisplayMouseCursor();
+			this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
+			this.Owner.Startup.DisplayMouseCursor();
 			MapRedrawRequest = 1;
 
 			return null;
@@ -1228,21 +1228,21 @@ namespace Civilization1Remaster.Game
 			Score = (short)ChoiceEntry(entryIdx);
 			ushort name = Score >= 0 ? (ushort)(0x112a + 0x22 * Score) : ImprovementRecord(-Score);
 
-			string choiceName = this.processor.PullText(CPU.AsLinearAddress(this.processor.SegData.Value16, name));
-			this.owner.Words.Set(advisor);
-			this.owner.BlockText.ImportTextFromFile(documentAddr, "*" + choiceName);
-			this.owner.Codes.Set(3, choiceName);
-			this.owner.BlockText.ReflowText();
-			this.owner.BlockText.ArrangeTextRow(0x32);
+			string choiceName = this.Processor.PullText(CPU.AsLinearAddress(this.Processor.SegData.Value16, name));
+			this.Owner.Words.Set(advisor);
+			this.Owner.BlockText.ImportTextFromFile(documentAddr, "*" + choiceName);
+			this.Owner.Codes.Set(3, choiceName);
+			this.Owner.BlockText.ReflowText();
+			this.Owner.BlockText.ArrangeTextRow(0x32);
 			DialogNeedsRedraw = 1;
-			this.owner.Dialogs.DisplayMenu(TextBuffer.Address, horizLoc, 160, 1);
+			this.Owner.Dialogs.DisplayMenu(TextBuffer.Address, horizLoc, 160, 1);
 		}
 
 		/// <summary>The choice of an AI player, or the discovery and the next choice of the human player (see UncoverTechnology)</summary>
 		private ushort UncoverTechnologyOf(short participantIdx, short participantIdx1)
 		{
-			short person = this.owner.World.PersonParticipantIdx;
-			Player human = this.owner.World.Participants[person];
+			short person = this.Owner.World.PersonParticipantIdx;
+			Player human = this.Owner.World.Participants[person];
 
 			short pick = -1;
 			short highest = -1;
@@ -1252,7 +1252,7 @@ namespace Civilization1Remaster.Game
 				if (!MayResearch(participantIdx, scienceIdx))
 					continue;
 
-				short draw = (short)this.owner.Libc.Dice.DrawInt((ushort)(ObtainTechnologyInfo(participantIdx, (ushort)scienceIdx) << 2));
+				short draw = (short)this.Owner.Libc.Dice.DrawInt((ushort)(ObtainTechnologyInfo(participantIdx, (ushort)scienceIdx) << 2));
 
 				if (draw <= highest || (scienceIdx == human.PresentInquiryIdx && participantIdx == person))
 					continue;
@@ -1261,18 +1261,18 @@ namespace Civilization1Remaster.Game
 				pick = scienceIdx;
 			}
 
-			if (participantIdx == person && this.owner.World.RoundTally != 0)
+			if (participantIdx == person && this.Owner.World.RoundTally != 0)
 				return ChooseNextResearch(participantIdx, participantIdx1, pick);
 
-			if (this.owner.World.RoundTally != 0 && this.owner.World.HardnessTier == 0 &&
-				PlayerKnowsTechnology(person, pick) == 0 && this.owner.Libc.Dice.DrawInt(2) != 0)
+			if (this.Owner.World.RoundTally != 0 && this.Owner.World.HardnessTier == 0 &&
+				PlayerKnowsTechnology(person, pick) == 0 && this.Owner.Libc.Dice.DrawInt(2) != 0)
 				return 0xffff;
 
 			if (highest != -1)
 			{
 				EarnTechnology(participantIdx, pick, participantIdx1);
 
-				this.owner.Bot.RefreshCityProduction(participantIdx, 0xffff);
+				this.Owner.Bot.RefreshCityProduction(participantIdx, 0xffff);
 			}
 
 			return (ushort)pick;
@@ -1289,14 +1289,14 @@ namespace Civilization1Remaster.Game
 
 			ushort science = (ushort)(0x16 * scienceIdx);
 
-			return PlayerKnowsTechnology(participantIdx, (sbyte)this.processor.PullGlobalByte((ushort)(science + TechnologyTable.Prerequisite1Address))) != 0 &&
-				PlayerKnowsTechnology(participantIdx, (sbyte)this.processor.PullGlobalByte((ushort)(science + TechnologyTable.Prerequisite2Address))) != 0;
+			return PlayerKnowsTechnology(participantIdx, (sbyte)this.Processor.PullGlobalByte((ushort)(science + TechnologyTable.Prerequisite1Address))) != 0 &&
+				PlayerKnowsTechnology(participantIdx, (sbyte)this.Processor.PullGlobalByte((ushort)(science + TechnologyTable.Prerequisite2Address))) != 0;
 		}
 
 		/// <summary>The human player's discovery and his choice of the next research (see UncoverTechnology)</summary>
 		private ushort ChooseNextResearch(short participantIdx, short participantIdx1, short pick)
 		{
-			Player human = this.owner.World.Participants[this.owner.World.PersonParticipantIdx];
+			Player human = this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx];
 			ushort[] choiceList = new ushort[0x48];
 			bool again = false;
 
@@ -1307,18 +1307,18 @@ namespace Civilization1Remaster.Game
 					AnnounceDiscovery(participantIdx, participantIdx1);
 				}
 
-				if (this.owner.World.Participants[participantIdx].FoundScienceTally <= 1)
+				if (this.Owner.World.Participants[participantIdx].FoundScienceTally <= 1)
 				{
-					this.owner.HelpSystem.DisplayHelpPopup(GameTexts.TopicFirstciv);
+					this.Owner.HelpSystem.DisplayHelpPopup(GameTexts.TopicFirstciv);
 				}
 
-				this.owner.Startup.ConcealMouseCursor();
+				this.Owner.Startup.ConcealMouseCursor();
 
-				this.owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, BackScreenBox, 0, 0);
+				this.Owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, BackScreenBox, 0, 0);
 
-				this.owner.Startup.DisplayMouseCursor();
+				this.Owner.Startup.DisplayMouseCursor();
 
-				if ((this.owner.World.SessionPrefMarkers & 1) != 0 && pick != -1 && this.owner.World.HardnessTier == 0)
+				if ((this.Owner.World.SessionPrefMarkers & 1) != 0 && pick != -1 && this.Owner.World.HardnessTier == 0)
 				{
 					RecommendResearch(pick);
 				}
@@ -1329,13 +1329,13 @@ namespace Civilization1Remaster.Game
 
 				if (choices == 0)
 				{
-					this.owner.Words.Append(" Future Technology ");
+					this.Owner.Words.Append(" Future Technology ");
 
-					this.owner.Words.Append(this.owner.Libc.IntegerToText((short)(human.ComingScienceTally + 1), 10));
+					this.Owner.Words.Append(this.Owner.Libc.IntegerToText((short)(human.ComingScienceTally + 1), 10));
 
-					this.owner.Words.Append("\n");
+					this.Owner.Words.Append("\n");
 
-					this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 80);
+					this.Owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 80);
 
 					human.PresentInquiryIdx = 71;
 
@@ -1344,13 +1344,13 @@ namespace Civilization1Remaster.Game
 
 				MenuFooter = 0x1;
 
-				ushort choice = this.owner.Dialogs.DisplayMenu(TextBuffer.Address, 80, 64, 1);
+				ushort choice = this.Owner.Dialogs.DisplayMenu(TextBuffer.Address, 80, 64, 1);
 
-				this.owner.Startup.ConcealMouseCursor();
+				this.Owner.Startup.ConcealMouseCursor();
 
-				this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
+				this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
 
-				this.owner.Startup.DisplayMouseCursor();
+				this.Owner.Startup.DisplayMouseCursor();
 
 				if (choice == 0xffff)
 					choice = 0;
@@ -1364,9 +1364,9 @@ namespace Civilization1Remaster.Game
 					return scienceIdx;
 				}
 
-				this.owner.Encyclopedia.DisplayCivilopediaRecord(scienceIdx, 0);
+				this.Owner.Encyclopedia.DisplayCivilopediaRecord(scienceIdx, 0);
 
-				this.owner.TurnHooks.RepaintMainScreen();
+				this.Owner.TurnHooks.RepaintMainScreen();
 
 				// Asked again, with the same choices
 				again = true;
@@ -1380,29 +1380,29 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private void AnnounceDiscovery(short participantIdx, short participantIdx1)
 		{
-			short person = this.owner.World.PersonParticipantIdx;
-			Player human = this.owner.World.Participants[person];
+			short person = this.Owner.World.PersonParticipantIdx;
+			Player human = this.Owner.World.Participants[person];
 
-			short first = (short)this.owner.Encyclopedia.ObtainFirstPrerequisite((ushort)human.PresentInquiryIdx);
+			short first = (short)this.Owner.Encyclopedia.ObtainFirstPrerequisite((ushort)human.PresentInquiryIdx);
 			bool picture = human.PresentInquiryIdx != 71 && (short)FirstMissingDisk > 3 &&
-				this.owner.Startup.QueryForDisk(1, 0) != 0 && (this.owner.World.SessionPrefMarkers & 8) != 0;
+				this.Owner.Startup.QueryForDisk(1, 0) != 0 && (this.Owner.World.SessionPrefMarkers & 8) != 0;
 
 			bool advanced = PlayerKnowsTechnology(person, 0x36) != 0;
 			string pictureName = advanced ? "discovr2.pic" : "discovr1.pic";
 
 			if (picture)
 			{
-				this.owner.Startup.ConcealMouseCursor();
+				this.Owner.Startup.ConcealMouseCursor();
 
-				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, pictureName, 0);
+				this.Owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, pictureName, 0);
 
-				this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
+				this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
 
-				this.owner.Helpers.HaltHueCycling();
+				this.Owner.Helpers.HaltHueCycling();
 
-				this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, pictureName, 1);
+				this.Owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, pictureName, 1);
 
-				this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
+				this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
 			}
 
 			Message(CivilizationName((ushort)participantIdx))
@@ -1412,18 +1412,18 @@ namespace Civilization1Remaster.Game
 
 			if (human.PresentInquiryIdx == 71)
 			{
-				this.owner.Words.Append(" ");
+				this.Owner.Words.Append(" ");
 
 				human.ComingScienceTally++;
 
-				this.owner.Words.Append(this.owner.Libc.IntegerToText(human.ComingScienceTally, 10));
+				this.Owner.Words.Append(this.Owner.Libc.IntegerToText(human.ComingScienceTally, 10));
 			}
 
-			this.owner.Words.Append("!\n");
+			this.Owner.Words.Append("!\n");
 
 			// The original plays only a short fanfare (table at 0x1518, one to five seconds),
 			// the national anthem (table at 0x151a, as in the palace and the throne room) plays until the next research is chosen
-			this.owner.Services.PerformSound(LeaderWord(this.owner.World.Participants[participantIdx].ChiefVisuals, LeaderTable.Tune), 3);
+			this.Owner.Services.PerformSound(LeaderWord(this.Owner.World.Participants[participantIdx].ChiefVisuals, LeaderTable.Tune), 3);
 
 			if (picture)
 			{
@@ -1431,12 +1431,12 @@ namespace Civilization1Remaster.Game
 			}
 			else
 			{
-				this.owner.Paper.DisplayNewspaper(-1);
+				this.Owner.Paper.DisplayNewspaper(-1);
 			}
 
 			EarnTechnology(participantIdx, human.PresentInquiryIdx, participantIdx1);
 
-			this.owner.Services.PerformSound(1, 0);
+			this.Owner.Services.PerformSound(1, 0);
 
 			human.PresentInquiryIdx = -1;
 		}
@@ -1449,40 +1449,40 @@ namespace Civilization1Remaster.Game
 
 			DialogNeedsRedraw = 1;
 
-			this.owner.Dialogs.DisplayMenu(TextBuffer.Address, 96, advanced ? (short)25 : (short)1, 1);
+			this.Owner.Dialogs.DisplayMenu(TextBuffer.Address, 96, advanced ? (short)25 : (short)1, 1);
 
 			DrawingBox.TypefaceIdx = 0x1;
 
-			this.owner.Words.Set("iconpg1.pic");
+			this.Owner.Words.Set("iconpg1.pic");
 
-			this.owner.Words[6] = (byte)(this.owner.Words[6] + CPU.SignedQuotient(first, 9));
+			this.Owner.Words[6] = (byte)(this.Owner.Words[6] + CPU.SignedQuotient(first, 9));
 
-			this.owner.Startup.QueryForDisk(3, 1);
+			this.Owner.Startup.QueryForDisk(3, 1);
 
-			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, TextBuffer.Address, 0);
+			this.Owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, TextBuffer.Address, 0);
 
-			this.owner.Startup.QueryForDisk(0, 1);
+			this.Owner.Startup.QueryForDisk(0, 1);
 
-			this.owner.Encyclopedia.RenderIcon((ushort)(((first % 3) * 111) + 1), (ushort)((((first % 9) / 3) * 69) + 1), 110, 68, 174, advanced ? (ushort)87 : (ushort)96);
+			this.Owner.Encyclopedia.RenderIcon((ushort)(((first % 3) * 111) + 1), (ushort)((((first % 9) / 3) * 69) + 1), 110, 68, 174, advanced ? (ushort)87 : (ushort)96);
 
 			if (VgaMode != 0)
 			{
 				string palName = advanced ? "discovr2.pal" : "discovr1.pal";
 
-				this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, palName, 0xc1d6);
+				this.Owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, palName, 0xc1d6);
 
-				this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, GameTexts.FileIconpg1Pal, 0xc5be);
+				this.Owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, GameTexts.FileIconpg1Pal, 0xc5be);
 
-				this.owner.Libc.CopyBytes(0xc5c4, 0xc1dc, 0xff);
+				this.Owner.Libc.CopyBytes(0xc5c4, 0xc1dc, 0xff);
 
-				this.owner.Services.ImportColorsFromBuffer(30, 0xc5be);
+				this.Owner.Services.ImportColorsFromBuffer(30, 0xc5be);
 			}
 
-			this.owner.Conquest.AwaitForKeyPressOrMouseClick();
+			this.Owner.Conquest.AwaitForKeyPressOrMouseClick();
 
-			this.owner.Startup.DisplayMouseCursor();
+			this.Owner.Startup.DisplayMouseCursor();
 
-			this.owner.Helpers.LaunchHueCycling();
+			this.Owner.Helpers.LaunchHueCycling();
 		}
 
 		/// <summary>The science advisor recommends the technology with the units and wonders it allows</summary>
@@ -1492,11 +1492,11 @@ namespace Civilization1Remaster.Game
 				.Text(TechnologyText(pick))
 				.Text(".\n");
 
-			ushort length = this.owner.Words.Length;
+			ushort length = this.Owner.Words.Length;
 
 			ushort allowed = 0;
 
-			this.owner.Words.Append("So we can build:\n-");
+			this.Owner.Words.Append("So we can build:\n-");
 
 			for (ushort kindIdx = 0; kindIdx < 0x1c; kindIdx++)
 			{
@@ -1505,9 +1505,9 @@ namespace Civilization1Remaster.Game
 				if (UnitKindWordAt(kindRecord, UnitKindTable.Technology) != (ushort)pick)
 					continue;
 
-				this.owner.Words.Append(UnitTextAt(kindRecord));
+				this.Owner.Words.Append(UnitTextAt(kindRecord));
 
-				this.owner.Words.Append("\n-");
+				this.Owner.Words.Append("\n-");
 
 				allowed++;
 			}
@@ -1519,20 +1519,20 @@ namespace Civilization1Remaster.Game
 				if (BuildingWordAt(wonderRecord, BuildingTable.Technology) != (ushort)pick)
 					continue;
 
-				this.owner.Words.Append(BuildingRecordTextAt(wonderRecord));
+				this.Owner.Words.Append(BuildingRecordTextAt(wonderRecord));
 
-				this.owner.Words.Append("\n-");
+				this.Owner.Words.Append("\n-");
 
 				allowed++;
 			}
 
 			if (allowed == 0)
-				this.processor.EmitGlobalByte((ushort)(length + TextBuffer.Address), 0);
+				this.Processor.EmitGlobalByte((ushort)(length + TextBuffer.Address), 0);
 
 			DrawingBox.TypefaceIdx = 0x2;
 			DialogNeedsRedraw = 1;
 
-			this.owner.Dialogs.DisplayMenu(TextBuffer.Address, 8, (short)-((allowed << 3) - 0xa8), 1);
+			this.Owner.Dialogs.DisplayMenu(TextBuffer.Address, 8, (short)-((allowed << 3) - 0xa8), 1);
 
 			DrawingBox.TypefaceIdx = 0x1;
 		}
@@ -1545,7 +1545,7 @@ namespace Civilization1Remaster.Game
 		private ushort ListResearchChoices(short participantIdx, bool again, ushort[] choiceList)
 		{
 			Message("Which discovery should our\n")
-				.Text(PlayerKnowsTechnology(this.owner.World.PersonParticipantIdx, 0x14) != 0 ? (ushort)0x2388 : (ushort)0x2393)
+				.Text(PlayerKnowsTechnology(this.Owner.World.PersonParticipantIdx, 0x14) != 0 ? (ushort)0x2388 : (ushort)0x2393)
 				.Text(" be pursuing, sire?\nPick one...\n ");
 
 			ushort choices = 0;
@@ -1557,8 +1557,8 @@ namespace Civilization1Remaster.Game
 
 				if (!again)
 				{
-					if ((short)choices > 1 && (short)(scienceIdx - this.owner.World.Participants[participantIdx].FoundScienceTally) % 3 == 0 &&
-						this.owner.World.HardnessTier != 0)
+					if ((short)choices > 1 && (short)(scienceIdx - this.Owner.World.Participants[participantIdx].FoundScienceTally) % 3 == 0 &&
+						this.Owner.World.HardnessTier != 0)
 						continue;
 				}
 				else
@@ -1567,9 +1567,9 @@ namespace Civilization1Remaster.Game
 						continue;
 				}
 
-				this.owner.Words.Append(TechnologyText(scienceIdx));
+				this.Owner.Words.Append(TechnologyText(scienceIdx));
 
-				this.owner.Words.Append("\n ");
+				this.Owner.Words.Append("\n ");
 
 				choiceList[choices] = (ushort)scienceIdx;
 				choices++;
@@ -1581,11 +1581,11 @@ namespace Civilization1Remaster.Game
 		/// <summary>The message about a new technology, or the emissary of a player without contact (see EarnTechnology)</summary>
 		private void AnnounceTechnology(short participantIdx, short scienceIdx, short participantIdx1)
 		{
-			short person = this.owner.World.PersonParticipantIdx;
+			short person = this.Owner.World.PersonParticipantIdx;
 
 			if (participantIdx != person)
 			{
-				if ((this.owner.World.Participants[person].Relations[participantIdx] & 0x40) == 0)
+				if ((this.Owner.World.Participants[person].Relations[participantIdx] & 0x40) == 0)
 				{
 					SendTechnologyEmissary(participantIdx, scienceIdx);
 					return;
@@ -1597,21 +1597,21 @@ namespace Civilization1Remaster.Game
 				.Text(participantIdx == participantIdx1 || participantIdx1 == 0 ? (ushort)0x23d7 : (ushort)0x23e1)
 				.Text(TechnologyText(scienceIdx));
 
-			if (TechnologyNewsRules.NamesSource(participantIdx, participantIdx1, this.owner.TurnHooks.ClassicTechnologyNews))
+			if (TechnologyNewsRules.NamesSource(participantIdx, participantIdx1, this.Owner.TurnHooks.ClassicTechnologyNews))
 			{
-				this.owner.Words.Append(" from\nthe ");
+				this.Owner.Words.Append(" from\nthe ");
 
 				if (participantIdx1 == TechnologyNewsRules.GreatLibrary)
 				{
-					this.owner.Words.Append("Great Library");
+					this.Owner.Words.Append("Great Library");
 				}
 				else
 				{
-					this.owner.Words.Append(CivilizationPlural((ushort)participantIdx1));
+					this.Owner.Words.Append(CivilizationPlural((ushort)participantIdx1));
 				}
 			}
 
-			this.owner.Words.Append("!\n ");
+			this.Owner.Words.Append("!\n ");
 
 			if (participantIdx != person)
 			{
@@ -1622,9 +1622,9 @@ namespace Civilization1Remaster.Game
 
 					if (BuildingWordAt(wonderRecord, BuildingTable.Technology) == (ushort)scienceIdx)
 					{
-						this.owner.Words.Append(BuildingRecordTextAt(wonderRecord));
+						this.Owner.Words.Append(BuildingRecordTextAt(wonderRecord));
 
-						this.owner.Words.Append("\n ");
+						this.Owner.Words.Append("\n ");
 					}
 				}
 
@@ -1634,9 +1634,9 @@ namespace Civilization1Remaster.Game
 
 					if (UnitKindWordAt(kindRecord, UnitKindTable.Technology) == (ushort)scienceIdx)
 					{
-						this.owner.Words.Append(UnitTextAt(kindRecord));
+						this.Owner.Words.Append(UnitTextAt(kindRecord));
 
-						this.owner.Words.Append("\n ");
+						this.Owner.Words.Append("\n ");
 					}
 				}
 			}
@@ -1647,7 +1647,7 @@ namespace Civilization1Remaster.Game
 
 				DialogStyle = participantIdx == person ? (ushort)6 : (ushort)0;
 
-				this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 80);
+				this.Owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 80);
 			}
 		}
 
@@ -1657,63 +1657,63 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private void SendTechnologyEmissary(short participantIdx, short scienceIdx)
 		{
-			if (((byte)this.owner.World.ScienceLeadingFoundVia[scienceIdx] & 7) != 0 ||
+			if (((byte)this.Owner.World.ScienceLeadingFoundVia[scienceIdx] & 7) != 0 ||
 				PlayerKnowsTechnology(participantIdx, 8) == 0 ||
-				PlayerKnowsTechnology(this.owner.World.PersonParticipantIdx, scienceIdx) != 0 ||
-				this.owner.Libc.Dice.DrawInt(3) != 0)
+				PlayerKnowsTechnology(this.Owner.World.PersonParticipantIdx, scienceIdx) != 0 ||
+				this.Owner.Libc.Dice.DrawInt(3) != 0)
 				return;
 
-			if (this.owner.Audience.WelcomeEmissary(participantIdx, -1, 0) == 0xffff)
+			if (this.Owner.Audience.WelcomeEmissary(participantIdx, -1, 0) == 0xffff)
 				return;
 
 			KingAnswer = 0;
 			EmissaryAudience = 0;
-			this.owner.Words.Clear();
+			this.Owner.Words.Clear();
 
-			this.owner.Codes.Set(0, CivilizationPlural((ushort)participantIdx));
+			this.Owner.Codes.Set(0, CivilizationPlural((ushort)participantIdx));
 
-			this.owner.Codes.Set(3, TechnologyText(scienceIdx));
+			this.Owner.Codes.Set(3, TechnologyText(scienceIdx));
 
-			this.owner.BlockText.DisplayTextDialog(GameTexts.TopicGape);
+			this.Owner.BlockText.DisplayTextDialog(GameTexts.TopicGape);
 
 			KingMood = 0x2;
 			KingSpeaking = 0xc;
 
-			this.owner.Audience.DisplayKingDialog(TextBuffer.Address, 0x14, 0x8b);
+			this.Owner.Audience.DisplayKingDialog(TextBuffer.Address, 0x14, 0x8b);
 
-			this.owner.Audience.FinishAudience();
+			this.Owner.Audience.FinishAudience();
 		}
 
 		/// <summary>What a new technology does after its message (see EarnTechnology)</summary>
 		private void ApplyTechnology(short participantIdx, short scienceIdx)
 		{
-			short person = this.owner.World.PersonParticipantIdx;
+			short person = this.Owner.World.PersonParticipantIdx;
 
 			if (participantIdx == person)
 			{
 				if (scienceIdx != 0x47)
 				{
-					this.owner.Encyclopedia.DisplayCivilopediaRecord((ushort)scienceIdx, 0);
+					this.Owner.Encyclopedia.DisplayCivilopediaRecord((ushort)scienceIdx, 0);
 				}
 
 				if (scienceIdx == 0x14)
 				{
-					this.owner.NewGameWizard.ImportGovernmentGraphics();
+					this.Owner.NewGameWizard.ImportGovernmentGraphics();
 
-					this.owner.TurnHooks.RepaintMainScreen();
+					this.Owner.TurnHooks.RepaintMainScreen();
 				}
 
 				if (KingAnswer == 0xffff)
 				{
-					this.owner.TurnHooks.RepaintMainScreen();
+					this.Owner.TurnHooks.RepaintMainScreen();
 
 					if (scienceIdx == 0x5)
 					{
-						this.owner.HelpSystem.DisplayHelpPopup(GameTexts.TopicMonarchy);
+						this.Owner.HelpSystem.DisplayHelpPopup(GameTexts.TopicMonarchy);
 					}
 				}
 			}
-			else if (this.owner.World.HardnessTier == 0 && scienceIdx == 0x16)
+			else if (this.Owner.World.HardnessTier == 0 && scienceIdx == 0x16)
 			{
 				// The exchange of ambassadors that followed never happens: the test of the original, ((Relations == 0) & 0x40),
 				// is always false
@@ -1723,10 +1723,10 @@ namespace Civilization1Remaster.Game
 			{
 				for (int townIdx = 0; townIdx < 128; townIdx++)
 				{
-					if (this.owner.World.Towns[townIdx].ConditionMarker != 0xff &&
-						this.owner.World.Towns[townIdx].ParticipantIdx == participantIdx)
+					if (this.Owner.World.Towns[townIdx].ConditionMarker != 0xff &&
+						this.Owner.World.Towns[townIdx].ParticipantIdx == participantIdx)
 					{
-						this.owner.World.Towns[townIdx].StructureMarkers0 &= 0xfffd;
+						this.Owner.World.Towns[townIdx].StructureMarkers0 &= 0xfffd;
 					}
 				}
 
@@ -1740,18 +1740,18 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			if (((byte)this.owner.World.ScienceLeadingFoundVia[scienceIdx] & 7) == 0)
+			if (((byte)this.Owner.World.ScienceLeadingFoundVia[scienceIdx] & 7) == 0)
 			{
-				this.owner.World.ScienceLeadingFoundVia[scienceIdx] = participantIdx;
+				this.Owner.World.ScienceLeadingFoundVia[scienceIdx] = participantIdx;
 
-				this.owner.UnitOps.AttachReplayContent(5, (byte)participantIdx, (byte)scienceIdx);
+				this.Owner.UnitOps.AttachReplayContent(5, (byte)participantIdx, (byte)scienceIdx);
 
 				// The human player's wonders (0x10fe: the technology that makes each obsolete) lose their effect
 				for (ushort wonderIdx = 1; wonderIdx <= 0x15; wonderIdx++)
 				{
 					if (WonderObsoleteTechnology(wonderIdx) != (ushort)scienceIdx ||
-						!WonderCityRules.ReadsCity(this.owner.World.MarvelTownIdx[wonderIdx], this.owner.TurnHooks.ClassicWonderCities) ||
-						this.owner.World.Towns[this.owner.World.MarvelTownIdx[wonderIdx]].ParticipantIdx != person)
+						!WonderCityRules.ReadsCity(this.Owner.World.MarvelTownIdx[wonderIdx], this.Owner.TurnHooks.ClassicWonderCities) ||
+						this.Owner.World.Towns[this.Owner.World.MarvelTownIdx[wonderIdx]].ParticipantIdx != person)
 						continue;
 
 					Message(TechnologyText(scienceIdx))
@@ -1759,22 +1759,22 @@ namespace Civilization1Remaster.Game
 						.Text(WonderText(wonderIdx))
 						.Text(".\n");
 
-					this.owner.Paper.DisplayNewspaper(-1);
+					this.Owner.Paper.DisplayNewspaper(-1);
 				}
 			}
 
 			// The Great Library (wonder 5) gives a technology that two players know
-			ushort libraryOwner = (ushort)this.owner.World.MarvelTownIdx[5];
+			ushort libraryOwner = (ushort)this.Owner.World.MarvelTownIdx[5];
 
-			if (libraryOwner == 0xffff || !WonderCityRules.ReadsCity(libraryOwner, this.owner.TurnHooks.ClassicWonderCities))
+			if (libraryOwner == 0xffff || !WonderCityRules.ReadsCity(libraryOwner, this.Owner.TurnHooks.ClassicWonderCities))
 				return;
 
-			libraryOwner = (ushort)this.owner.World.Towns[libraryOwner].ParticipantIdx;
+			libraryOwner = (ushort)this.Owner.World.Towns[libraryOwner].ParticipantIdx;
 
 			if (PlayerKnowsTechnology((short)libraryOwner, scienceIdx) != 0)
 				return;
 
-			if (this.owner.CityOps.PlayerEnjoysWonderEffect((short)libraryOwner, 5) == 0)
+			if (this.Owner.CityOps.PlayerEnjoysWonderEffect((short)libraryOwner, 5) == 0)
 				return;
 
 			int knowing = 0;

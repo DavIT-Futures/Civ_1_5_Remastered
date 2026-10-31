@@ -17,21 +17,21 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		public ushort HandleCity(short townIdx, short marker)
 		{
-			this.processor.Journal.OpenScope($"HandleCity({townIdx}, {marker})");
+			this.Processor.Journal.OpenScope($"HandleCity({townIdx}, {marker})");
 
 			// HandleCity calls itself (the advisor counts the city), each call has its own locals as its own frame
 			CityRound outer = this.round;
-			this.round = new CityRound(this.processor);
+			this.round = new CityRound(this.Processor);
 
 			// (a city that is gone, also in its turn, is at most of size 1: HandleAllCities reads no result of it)
 			ushort result = 0;
 
-			if (this.owner.World.Towns[townIdx].ConditionMarker != 0xff)
+			if (this.Owner.World.Towns[townIdx].ConditionMarker != 0xff)
 				result = RunCity(townIdx, marker);
 
 			this.round = outer;
 
-			this.processor.Journal.CloseScope("HandleCity");
+			this.Processor.Journal.CloseScope("HandleCity");
 
 			return result;
 		}
@@ -49,23 +49,23 @@ namespace Civilization1Remaster.Game
 		/// <summary>The city stops making its unit (the owner's count of units in making)</summary>
 		private void StopMakingUnit(City town, short owner)
 		{
-			this.owner.World.Participants[owner].StopMaking(town.PresentMakingIdx);
+			this.Owner.World.Participants[owner].StopMaking(town.PresentMakingIdx);
 		}
 
 		/// <summary>The city starts making its unit (the owner's count of units in making)</summary>
 		private void StartMakingUnit(City town, short owner)
 		{
-			this.owner.World.Participants[owner].StartMaking(town.PresentMakingIdx);
+			this.Owner.World.Participants[owner].StartMaking(town.PresentMakingIdx);
 		}
 
 		/// <summary>The advisor picks the production of the city; the units in making of the owner counted over again</summary>
 		private void RepickCityProduction(short townIdx)
 		{
-			City town = this.owner.World.Towns[townIdx];
+			City town = this.Owner.World.Towns[townIdx];
 			short owner = (short)CityOwner;
 
 			StopMakingUnit(town, owner);
-			town.PresentMakingIdx = (sbyte)(byte)this.owner.Advisors.PickCityProduction(owner, townIdx);
+			town.PresentMakingIdx = (sbyte)(byte)this.Owner.Advisors.PickCityProduction(owner, townIdx);
 			StartMakingUnit(town, owner);
 		}
 
@@ -77,9 +77,9 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private void ApplyCivilOrder(short townIdx)
 		{
-			City town = this.owner.World.Towns[townIdx];
+			City town = this.Owner.World.Towns[townIdx];
 			short owner = (short)CityOwner;
-			bool human = this.owner.World.IsHuman(owner);
+			bool human = this.Owner.World.IsHuman(owner);
 
 			this.round.Value = (ushort)(CityHappy - CityUnhappy);
 
@@ -90,31 +90,31 @@ namespace Civilization1Remaster.Game
 					Message("Civil Disorder in\n")
 						.City(townIdx)
 						.Text("! Mayor\nflees in panic.\n");
-					this.owner.Services.PerformSound(0x24, 0);
+					this.Owner.Services.PerformSound(0x24, 0);
 
-					if ((this.owner.World.SessionPrefMarkers & 8) != 0 && (town.ConditionMarker & 1) == 0 && RiotShown == 0)
+					if ((this.Owner.World.SessionPrefMarkers & 8) != 0 && (town.ConditionMarker & 1) == 0 && RiotShown == 0)
 					{
 						// The riot in the view of the city, once
-						this.owner.CityScene.DisplayCityScreen(townIdx, -2);
-						this.owner.CityScene.RiotAnimation();
-						this.owner.Startup.QueryForDisk(0, 1);
-						this.owner.TurnHooks.RepaintMainScreen();
+						this.Owner.CityScene.DisplayCityScreen(townIdx, -2);
+						this.Owner.CityScene.RiotAnimation();
+						this.Owner.Startup.QueryForDisk(0, 1);
+						this.Owner.TurnHooks.RepaintMainScreen();
 						RiotShown = 1;
 					}
 					else
 					{
 						DialogStyle = 4;
-						this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 80);
+						this.Owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 80);
 					}
 
-					this.owner.Services.PerformSound(1, 0);
+					this.Owner.Services.PerformSound(1, 0);
 
 					if ((town.ConditionMarker & 1) == 0)
 					{
 						CityAgain = 1;
 
-						if ((this.owner.World.SessionPrefMarkers & 1) != 0)
-							this.owner.HelpSystem.DisplayHelpPopup(GameTexts.TopicDisorder);
+						if ((this.Owner.World.SessionPrefMarkers & 1) != 0)
+							this.Owner.HelpSystem.DisplayHelpPopup(GameTexts.TopicDisorder);
 					}
 				}
 
@@ -125,24 +125,24 @@ namespace Civilization1Remaster.Game
 					if (!human)
 						RepickCityProduction(townIdx);
 
-					this.owner.TurnLogic.RepaintTileIfVisible(this.round.Horiz, this.round.Vert);
+					this.Owner.TurnLogic.RepaintTileIfVisible(this.round.Horiz, this.round.Vert);
 				}
-				else if (this.owner.World.Participants[owner].RegimeKind == 5)
+				else if (this.Owner.World.Participants[owner].RegimeKind == 5)
 				{
 					// The disorder goes on under democracy
-					this.owner.Services.PerformSound(0x24, 0);
+					this.Owner.Services.PerformSound(0x24, 0);
 					Message("Discontented citizens of\n")
 						.City(townIdx)
 						.Text(" revolt:\nGovernment Collapses!\n");
 
-					if (owner == this.owner.World.PersonParticipantIdx)
+					if (owner == this.Owner.World.PersonParticipantIdx)
 					{
-						this.owner.Paper.DisplayNewspaper(townIdx);
-						this.owner.World.Participants[owner].Relations[0] |= 4;
+						this.Owner.Paper.DisplayNewspaper(townIdx);
+						this.Owner.World.Participants[owner].Relations[0] |= 4;
 					}
 
-					this.owner.Politics.SwitchGovernment(owner, 0);
-					this.owner.Services.PerformSound(1, 0);
+					this.Owner.Politics.SwitchGovernment(owner, 0);
+					this.Owner.Services.PerformSound(1, 0);
 				}
 
 				return;
@@ -165,12 +165,12 @@ namespace Civilization1Remaster.Game
 					RepickCityProduction(townIdx);
 				}
 
-				this.owner.TurnLogic.RepaintTileIfVisible(this.round.Horiz, this.round.Vert);
+				this.Owner.TurnLogic.RepaintTileIfVisible(this.round.Horiz, this.round.Vert);
 			}
 
 			// The taxes, but not in anarchy
-			if (this.owner.World.Participants[owner].RegimeKind != 0)
-				this.owner.World.Participants[owner].Gold += (short)CityTaxes;
+			if (this.Owner.World.Participants[owner].RegimeKind != 0)
+				this.Owner.World.Participants[owner].Gold += (short)CityTaxes;
 		}
 
 		/// <summary>
@@ -181,10 +181,10 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private void ApplyCelebration(short townIdx)
 		{
-			City town = this.owner.World.Towns[townIdx];
+			City town = this.Owner.World.Towns[townIdx];
 			short owner = (short)CityOwner;
-			Player player = this.owner.World.Participants[owner];
-			bool human = this.owner.World.IsHuman(owner);
+			Player player = this.Owner.World.Participants[owner];
+			bool human = this.Owner.World.IsHuman(owner);
 
 			bool celebrates = CityUnhappy == 0 && town.TrueExtent > 2 &&
 				(short)((town.TrueExtent + 1) / 2) <= (short)CityHappy && player.RegimeKind != 0;
@@ -201,21 +201,21 @@ namespace Civilization1Remaster.Game
 							.Text("'\nday celebrated in\n")
 							.City(townIdx)
 							.Text("!\n");
-						this.owner.Services.PerformSound(0x22, 0);
+						this.Owner.Services.PerformSound(0x22, 0);
 
-						if ((this.owner.World.SessionPrefMarkers & 8) != 0)
+						if ((this.Owner.World.SessionPrefMarkers & 8) != 0)
 						{
-							this.owner.CityScene.DisplayCityScreen(townIdx, -2);
-							this.owner.CityScene.RenderCitySceneryForHuman();
-							this.owner.Startup.QueryForDisk(0, 1);
-							this.owner.TurnHooks.RepaintMainScreen();
+							this.Owner.CityScene.DisplayCityScreen(townIdx, -2);
+							this.Owner.CityScene.RenderCitySceneryForHuman();
+							this.Owner.Startup.QueryForDisk(0, 1);
+							this.Owner.TurnHooks.RepaintMainScreen();
 						}
 						else
 						{
-							this.owner.Paper.DisplayNewspaper(townIdx);
+							this.Owner.Paper.DisplayNewspaper(townIdx);
 						}
 
-						this.owner.Services.PerformSound(1, 0);
+						this.Owner.Services.PerformSound(1, 0);
 					}
 
 					town.ConditionMarker |= 0x40;
@@ -238,14 +238,14 @@ namespace Civilization1Remaster.Game
 			// The celebration ends
 			if (human && player.RegimeKind != 0)
 			{
-				this.owner.Services.PerformSound(0x23, 0);
+				this.Owner.Services.PerformSound(0x23, 0);
 				Message("'We love the ")
 					.Text(GovernmentTitle(player.RegimeKind))
 					.Text("'\ncelebration canceled\nin ")
 					.City(townIdx)
 					.Text(".\n");
-				this.owner.Paper.DisplayNewspaper(townIdx);
-				this.owner.Services.PerformSound(1, 0);
+				this.Owner.Paper.DisplayNewspaper(townIdx);
+				this.Owner.Services.PerformSound(1, 0);
 			}
 
 			town.ConditionMarker &= 0xbf;
@@ -262,16 +262,16 @@ namespace Civilization1Remaster.Game
 		private void ApplyResearch()
 		{
 			short owner = (short)CityOwner;
-			short person = this.owner.World.PersonParticipantIdx;
-			Player player = this.owner.World.Participants[owner];
-			Player human = this.owner.World.Participants[person];
+			short person = this.Owner.World.PersonParticipantIdx;
+			Player player = this.Owner.World.Participants[owner];
+			Player human = this.Owner.World.Participants[person];
 
 			this.round.Value = CityScience;
 
 			if (owner == person)
 			{
 				bool finished = human.PresentInquiryIdx != -1 ?
-					this.owner.Advisors.PlayerKnowsTechnology(owner, human.PresentInquiryIdx) != 0 :
+					this.Owner.Advisors.PlayerKnowsTechnology(owner, human.PresentInquiryIdx) != 0 :
 					player.InquiryHeadway != 0;
 
 				if (finished)
@@ -288,8 +288,8 @@ namespace Civilization1Remaster.Game
 			player.InquiryHeadway += (short)this.round.Value;
 
 			// On the easiest level an advance others found costs half
-			if (owner == person && this.owner.World.HardnessTier == 0 && human.PresentInquiryIdx >= 0 &&
-				(this.owner.World.ScienceLeadingFoundVia[human.PresentInquiryIdx] & 7) != 0)
+			if (owner == person && this.Owner.World.HardnessTier == 0 && human.PresentInquiryIdx >= 0 &&
+				(this.Owner.World.ScienceLeadingFoundVia[human.PresentInquiryIdx] & 7) != 0)
 			{
 				player.InquiryHeadway += (short)this.round.Value;
 			}
@@ -298,7 +298,7 @@ namespace Civilization1Remaster.Game
 				player.InquiryHeadway += (short)((short)this.round.Value / 2);
 
 			// The cost of an advance
-			this.round.Measure = (ushort)(owner != person ? 14 - this.owner.World.HardnessTier : (this.owner.World.HardnessTier << 1) + 6);
+			this.round.Measure = (ushort)(owner != person ? 14 - this.Owner.World.HardnessTier : (this.Owner.World.HardnessTier << 1) + 6);
 			this.round.Measure = (ushort)(this.round.Measure + TechnologyLevel);
 
 			if (owner == person && (short)(11 - player.FoundScienceTally) > (short)this.round.Measure)
@@ -307,7 +307,7 @@ namespace Civilization1Remaster.Game
 			if (owner == person && CityAgain != 0)
 				return;
 
-			short progress = (short)(player.InquiryHeadway / (this.owner.World.Season < 0 ? 1 : 2));
+			short progress = (short)(player.InquiryHeadway / (this.Owner.World.Season < 0 ? 1 : 2));
 
 			if (progress > (short)(player.FoundScienceTally * (short)this.round.Measure))
 			{
@@ -319,12 +319,12 @@ namespace Civilization1Remaster.Game
 		/// <summary>With the flag 8 of DiagMarkers the player uncovers an advance (the mouse shown meanwhile)</summary>
 		private void UncoverTechnologyWhenFlagged(short participant)
 		{
-			if ((this.owner.World.DiagMarkers & 8) == 0)
+			if ((this.Owner.World.DiagMarkers & 8) == 0)
 				return;
 
-			this.owner.Startup.DisplayMouseCursorFully();
-			this.owner.Advisors.UncoverTechnology(participant, 0);
-			this.owner.Startup.ConcealMouseCursorToSavedLevel();
+			this.Owner.Startup.DisplayMouseCursorFully();
+			this.Owner.Advisors.UncoverTechnology(participant, 0);
+			this.Owner.Startup.ConcealMouseCursorToSavedLevel();
 		}
 
 		/// <summary>
@@ -359,10 +359,10 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private bool ApplyScoreAndPollution(short townIdx)
 		{
-			City town = this.owner.World.Towns[townIdx];
+			City town = this.Owner.World.Towns[townIdx];
 			short owner = (short)CityOwner;
-			Player player = this.owner.World.Participants[owner];
-			short person = this.owner.World.PersonParticipantIdx;
+			Player player = this.Owner.World.Participants[owner];
+			short person = this.Owner.World.PersonParticipantIdx;
 
 			player.Tally += (short)(town.TrueExtent + CityHappy - CityUnhappy);
 
@@ -371,23 +371,23 @@ namespace Civilization1Remaster.Game
 
 			// The pollution
 			short pollution = CountPollution(town);
-			ushort chance = (ushort)(0x100 - (short)((short)(player.FoundScienceTally * this.owner.World.HardnessTier) / 2));
+			ushort chance = (ushort)(0x100 - (short)((short)(player.FoundScienceTally * this.Owner.World.HardnessTier) / 2));
 
-			if ((short)(pollution << 1) > (short)(ushort)this.owner.Libc.Dice.DrawInt(chance))
+			if ((short)(pollution << 1) > (short)(ushort)this.Owner.Libc.Dice.DrawInt(chance))
 			{
-				this.round.Value = (ushort)this.owner.Libc.Dice.DrawInt(20);
-				var delta = this.owner.TownDeltas[this.round.Value];
+				this.round.Value = (ushort)this.Owner.Libc.Dice.DrawInt(20);
+				var delta = this.Owner.TownDeltas[this.round.Value];
 				this.round.TileHoriz = (ushort)(short)(delta.X + (short)this.round.Horiz);
 				this.round.TileVert = (ushort)(short)(delta.Y + (short)this.round.Vert);
 				short horiz = (short)this.round.TileHoriz;
 				short vert = (short)this.round.TileVert;
 
-				if ((this.owner.MapOps.ObtainTileImprovements(horiz, vert) & 0x40) == 0 && this.owner.MapOps.ObtainTerrainType(horiz, vert) != 0xa &&
-					(this.owner.MapOps.ObtainTileImprovements(horiz, vert) & 1) == 0)
+				if ((this.Owner.MapOps.ObtainTileImprovements(horiz, vert) & 0x40) == 0 && this.Owner.MapOps.ObtainTerrainType(horiz, vert) != 0xa &&
+					(this.Owner.MapOps.ObtainTileImprovements(horiz, vert) & 1) == 0)
 				{
 					AttachSmog(horiz, vert);
-					this.owner.MapOps.FocusMapView(person, horiz - 8, vert - 6);
-					this.owner.MapOps.RepaintMapTile(horiz, vert);
+					this.Owner.MapOps.FocusMapView(person, horiz - 8, vert - 6);
+					this.Owner.MapOps.RepaintMapTile(horiz, vert);
 					DialogStyle = 6;
 					Message("Pollution near ")
 						.City(townIdx)
@@ -397,22 +397,22 @@ namespace Civilization1Remaster.Game
 			}
 
 			// The nuclear plant melts down
-			if ((town.ConditionMarker & 1) != 0 && town.Has(CityStructure.NuclearPlant) && this.owner.Libc.Dice.DrawInt(3) == 0 &&
-				this.owner.Advisors.PlayerKnowsTechnology(owner, 0x42) == 0)
+			if ((town.ConditionMarker & 1) != 0 && town.Has(CityStructure.NuclearPlant) && this.Owner.Libc.Dice.DrawInt(3) == 0 &&
+				this.Owner.Advisors.PlayerKnowsTechnology(owner, 0x42) == 0)
 			{
 				short horiz = (short)this.round.Horiz;
 				short vert = (short)this.round.Vert;
 
-				this.owner.MapOps.FocusMapView(person, horiz - 8, vert - 6);
-				this.owner.Diplomats.RenderExplosion(horiz, vert);
-				this.owner.Combat.EnactNuclearFallout(horiz, vert);
+				this.Owner.MapOps.FocusMapView(person, horiz - 8, vert - 6);
+				this.Owner.Diplomats.RenderExplosion(horiz, vert);
+				this.Owner.Combat.EnactNuclearFallout(horiz, vert);
 				town.Remove(CityStructure.NuclearPlant);
-				this.owner.Services.PerformSound(0x24, 0);
+				this.Owner.Services.PerformSound(0x24, 0);
 				Message("Nuclear Catastrophe\nin ")
 					.City(townIdx)
 					.Text("!\nContamination feared!\n");
-				this.owner.Paper.DisplayNewspaper(townIdx);
-				this.owner.Services.PerformSound(1, 0);
+				this.Owner.Paper.DisplayNewspaper(townIdx);
+				this.Owner.Services.PerformSound(1, 0);
 			}
 
 			return true;
@@ -425,9 +425,9 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private void PayImprovementUpkeep(short townIdx)
 		{
-			City town = this.owner.World.Towns[townIdx];
+			City town = this.Owner.World.Towns[townIdx];
 			short owner = (short)CityOwner;
-			Player player = this.owner.World.Participants[owner];
+			Player player = this.Owner.World.Participants[owner];
 			ushort improvement = 1;
 
 			for (; (short)improvement < 0x18; improvement++)
@@ -442,16 +442,16 @@ namespace Civilization1Remaster.Game
 
 				if (improvement == 1)
 				{
-					if (this.owner.World.HardnessTier >= 2)
+					if (this.Owner.World.HardnessTier >= 2)
 						player.Gold--;
 
-					if (this.owner.World.HardnessTier >= 4)
+					if (this.Owner.World.HardnessTier >= 4)
 						player.Gold--;
 
-					if (this.owner.Advisors.PlayerKnowsTechnology(owner, 0x22) != 0)
+					if (this.Owner.Advisors.PlayerKnowsTechnology(owner, 0x22) != 0)
 						player.Gold--;
 
-					if (this.owner.Advisors.PlayerKnowsTechnology(owner, 0x25) != 0)
+					if (this.Owner.Advisors.PlayerKnowsTechnology(owner, 0x25) != 0)
 						player.Gold--;
 				}
 
@@ -480,16 +480,16 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private ushort FinishHandleCity(short townIdx)
 		{
-			City town = this.owner.World.Towns[townIdx];
+			City town = this.Owner.World.Towns[townIdx];
 
 			if ((town.ConditionMarker & 4) != 0)
 			{
-				if (this.owner.UnitOps.ContainsAdjacentForeignUnit(town.ParticipantIdx, town.Place.X, town.Place.Y) == 0)
-					this.owner.UnitOps.KeepUnitsInCityList(townIdx);
+				if (this.Owner.UnitOps.ContainsAdjacentForeignUnit(town.ParticipantIdx, town.Place.X, town.Place.Y) == 0)
+					this.Owner.UnitOps.KeepUnitsInCityList(townIdx);
 			}
 
 			DrawingBox.TypefaceIdx = 1;
-			this.owner.Startup.DisplayMouseCursor();
+			this.Owner.Startup.DisplayMouseCursor();
 
 			return (ushort)(CityHappy - CityUnhappy);
 		}
@@ -508,7 +508,7 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private void PrepareCity(short townIdx, short marker)
 		{
-			City town = this.owner.World.Towns[townIdx];
+			City town = this.Owner.World.Towns[townIdx];
 
 			CityScreenTab = 0;
 			this.round.CursorOn = 0;
@@ -516,7 +516,7 @@ namespace Civilization1Remaster.Game
 			this.round.ListEnd = 0;
 			this.round.ListFlags = 0;
 
-			this.owner.Startup.ConcealMouseCursor();
+			this.Owner.Startup.ConcealMouseCursor();
 
 			// The 5 x 5 array of the tiles around
 			for (ushort column = 0; column < 5; column++)
@@ -544,13 +544,13 @@ namespace Civilization1Remaster.Game
 			for (ushort otherIdx = 0; otherIdx < 0x80; otherIdx++)
 			{
 				this.round.OtherCity = otherIdx;
-				City other = this.owner.World.Towns[otherIdx];
+				City other = this.Owner.World.Towns[otherIdx];
 
 				if (other.ConditionMarker == 0xff || otherIdx == (ushort)townIdx)
 					continue;
 
 
-				short distance = (short)(ushort)this.owner.Helpers.ObtainDistance((short)this.round.Horiz, other.Place.X, (short)this.round.Vert, other.Place.Y);
+				short distance = (short)(ushort)this.Owner.Helpers.ObtainDistance((short)this.round.Horiz, other.Place.X, (short)this.round.Vert, other.Place.Y);
 				this.round.Target = (ushort)distance;
 
 				if (distance < (short)this.round.Distance && distance != 0)
@@ -573,15 +573,15 @@ namespace Civilization1Remaster.Game
 					if ((ushort)(((mask >> 16) & other.LaborerMarkers1) | (ushort)(mask & other.LaborerMarkers0)) == 0 && tile != 20)
 						continue;
 
-					short horizLoc = (short)(other.Place.X + this.owner.TownDeltas[tile].X);
-					short vertLoc = (short)(other.Place.Y + this.owner.TownDeltas[tile].Y);
+					short horizLoc = (short)(other.Place.X + this.Owner.TownDeltas[tile].X);
+					short vertLoc = (short)(other.Place.Y + this.Owner.TownDeltas[tile].Y);
 					this.round.TileHoriz = (ushort)horizLoc;
 					this.round.TileVert = (ushort)vertLoc;
 
-					if ((short)(ushort)this.owner.Libc.AbsoluteValue((short)((ushort)(horizLoc - (short)this.round.Horiz))) > 2)
+					if ((short)(ushort)this.Owner.Libc.AbsoluteValue((short)((ushort)(horizLoc - (short)this.round.Horiz))) > 2)
 						continue;
 
-					if ((short)(ushort)this.owner.Libc.AbsoluteValue((short)((ushort)(vertLoc - (short)this.round.Vert))) > 2)
+					if ((short)(ushort)this.Owner.Libc.AbsoluteValue((short)((ushort)(vertLoc - (short)this.round.Vert))) > 2)
 						continue;
 
 					int frameOffset = (horizLoc - (short)this.round.Horiz) * 0xa +
@@ -602,7 +602,7 @@ namespace Civilization1Remaster.Game
 			this.round.MapViewVert = MapViewVert;
 
 			short owner = (short)CityOwner;
-			this.round.SettlerFood = (ushort)(this.owner.World.Participants[owner].RegimeKind <= 1 ? 1 : 2);
+			this.round.SettlerFood = (ushort)(this.Owner.World.Participants[owner].RegimeKind <= 1 ? 1 : 2);
 
 			// The advances that make citizens content, unless the wonder 0x1000 is in the city
 			ContentAdvances = 0;
@@ -611,7 +611,7 @@ namespace Civilization1Remaster.Game
 			{
 				foreach (short advance in new short[] { 0x23, 0x3a, 0x29, 0x3c })
 				{
-					if (this.owner.Advisors.PlayerKnowsTechnology(owner, advance) != 0)
+					if (this.Owner.Advisors.PlayerKnowsTechnology(owner, advance) != 0)
 						ContentAdvances = (ushort)(ContentAdvances + 1);
 				}
 			}
@@ -619,15 +619,15 @@ namespace Civilization1Remaster.Game
 			this.round.CostFactor = 0xa;
 			CitySpecialists = (ushort)((((uint)town.LaborerMarkers1 << 16) | town.LaborerMarkers0) >> 0x1a);
 
-			if (owner == this.owner.World.PersonParticipantIdx)
+			if (owner == this.Owner.World.PersonParticipantIdx)
 				return;
 
 			// A computer player: the content citizens by the level
-			this.round.CostFactor = (ushort)-(this.owner.World.HardnessTier * 2 - 0x10);
+			this.round.CostFactor = (ushort)-(this.Owner.World.HardnessTier * 2 - 0x10);
 
-			if (this.owner.World.Season >= 0 &&
-				this.owner.World.Participants[this.owner.World.PersonParticipantIdx].Standing == 7 &&
-				this.owner.World.HardnessTier > 1)
+			if (this.Owner.World.Season >= 0 &&
+				this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx].Standing == 7 &&
+				this.Owner.World.HardnessTier > 1)
 			{
 				this.round.CostFactor = (ushort)(this.round.CostFactor - 2);
 			}
@@ -693,8 +693,8 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private bool StartCityRound(short townIdx, short marker)
 		{
-			this.round.Horiz = (ushort)(short)this.owner.World.Towns[townIdx].Place.X;
-			this.round.Vert = (ushort)(short)this.owner.World.Towns[townIdx].Place.Y;
+			this.round.Horiz = (ushort)(short)this.Owner.World.Towns[townIdx].Place.X;
+			this.round.Vert = (ushort)(short)this.Owner.World.Towns[townIdx].Place.Y;
 
 			// The city screen: the title and the map of the city
 			if (marker == 1)
@@ -818,7 +818,7 @@ namespace Civilization1Remaster.Game
 			}
 
 			// A computer city buys shields with gold
-			if (!this.owner.World.IsHuman(CityOwner))
+			if (!this.Owner.World.IsHuman(CityOwner))
 				BuyForComputerCity(townIdx);
 
 			return true;
@@ -848,9 +848,9 @@ namespace Civilization1Remaster.Game
 			RenderCitizensAndRoutes(townIdx);
 			RenderCityDotAndPollution(townIdx);
 
-			if (CityOwner != (ushort)this.owner.World.PersonParticipantIdx)
+			if (CityOwner != (ushort)this.Owner.World.PersonParticipantIdx)
 			{
-				this.owner.Conquest.AwaitForKeyPressOrMouseClick();
+				this.Owner.Conquest.AwaitForKeyPressOrMouseClick();
 				return CityScreenStep.Leave;
 			}
 
@@ -904,17 +904,17 @@ namespace Civilization1Remaster.Game
 		/// <summary>The clicks on the city screen: the citizens at the top, the units in the city, the map of the city</summary>
 		private CityScreenStep HandleCityScreenClicks(short townIdx, short marker)
 		{
-			if ((short)this.owner.GlobDb3c < 0xc8 && (short)this.owner.GlobDb3e < 0x14)
+			if ((short)this.Owner.GlobDb3c < 0xc8 && (short)this.Owner.GlobDb3e < 0x14)
 				return ClickCitizen(townIdx);
 
-			if ((short)this.owner.GlobDb3c >= 0x64 && (short)this.owner.GlobDb3c < 0x2580 && (short)this.owner.GlobDb3e >= 0x74 && ClickUnitOfCity())
+			if ((short)this.Owner.GlobDb3c >= 0x64 && (short)this.Owner.GlobDb3c < 0x2580 && (short)this.Owner.GlobDb3e >= 0x74 && ClickUnitOfCity())
 				return CityScreenStep.Redraw;
 
-			if ((short)this.owner.GlobDb3e < 0x18 || (short)this.owner.GlobDb3e >= 0x68)
+			if ((short)this.Owner.GlobDb3e < 0x18 || (short)this.Owner.GlobDb3e >= 0x68)
 				return CityScreenStep.Leave;
 
-			this.round.DrawHoriz = (ushort)((short)this.owner.GlobDb3c / 16 - 10);
-			this.round.DrawVert = (ushort)((short)(this.owner.GlobDb3e - 0x18) / 16 - 2);
+			this.round.DrawHoriz = (ushort)((short)this.Owner.GlobDb3c / 16 - 10);
+			this.round.DrawVert = (ushort)((short)(this.Owner.GlobDb3e - 0x18) / 16 - 2);
 
 			return ToggleCityTile(townIdx, marker);
 		}
