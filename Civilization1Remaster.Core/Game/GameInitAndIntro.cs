@@ -593,12 +593,19 @@ namespace Civilization1Remaster.Game
 		{
 			this.processor.Journal.OpenScope("ProduceTerrain()");
 
-			// The frame stays: the numbers of the labels read past their table, above BP (the frames of the callers) and
-			// under the frame, like in the original; the words of the frame start with what lay on the stack
-			this.processor.EnterFrame(0xd4);
+			// ClassicLabelNumbers: the frame of the original, as the numbers of the labels past the 63 ranked ones are read past
+			// their table, above BP (the frames of the callers) and under the frame (the saved SI / DI); without it they are 15
+			// and the words stay in C#
+			bool classicFrame = this.owner.TurnHooks.ClassicLabelNumbers;
+
+			if (classicFrame)
+				this.processor.EnterFrame(0xd4);
+
 			FrameWords outerFrame = this.terrainFrame;
 			this.terrainFrame = new FrameWords(this.processor, 0xd4);
-			this.processor.PreserveIndexRegisters();
+
+			if (classicFrame)
+				this.processor.PreserveIndexRegisters();
 
 			const int terrainCounts = 0x20;
 
@@ -647,9 +654,14 @@ namespace Civilization1Remaster.Game
 
 			this.terrainFrame.SetFrame(0x24, dotIdx);
 
-			this.processor.RestoreIndexRegisters();
+			if (classicFrame)
+				this.processor.RestoreIndexRegisters();
+
 			this.terrainFrame = outerFrame;
-			this.processor.LeaveFrame();
+
+			if (classicFrame)
+				this.processor.LeaveFrame();
+
 			// Far return
 			this.processor.Journal.CloseScope("ProduceTerrain");
 		}

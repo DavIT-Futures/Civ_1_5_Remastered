@@ -2846,8 +2846,15 @@ namespace Civilization1Remaster.Game
 			byte unitYByte = this.Troops.PullAt(unitAddr, UnitMemory.Vert);
 			if (unitYByte < 0x2 || unitYByte >= 0x30)
 			{
-				// The original returns what EliminateUnit leaves in AX: 0xffff when it repaints the tile and no unit is left
-				// there (ObtainUnitAtTile), else the value computed before it; ShiftAIUnit takes it as the order
+				// ShiftAIUnit takes the result as the order: no order (ClassicBarbarianOrder: what EliminateUnit leaves in AX,
+				// 0xffff when it repaints the tile and no unit is left there, else the value computed before it)
+				if (!this.owner.TurnHooks.ClassicBarbarianOrder)
+				{
+					this.owner.UnitOps.EliminateUnit(participantIdx, troopIdx);
+					this.processor.Journal.CloseScope("ManageBarbarianUnit");
+					return 0xffff;
+				}
+
 				this.processor.RegAcc.Value16 = (ushort)(((0x600 * (ushort)participantIdx) & 0xff00) | unitYByte);
 				this.owner.UnitOps.EliminateUnit(participantIdx, troopIdx);
 				this.processor.Journal.CloseScope("ManageBarbarianUnit");

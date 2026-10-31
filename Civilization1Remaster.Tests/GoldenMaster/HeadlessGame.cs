@@ -103,7 +103,7 @@ namespace Civilization1Remaster.Tests.GoldenMaster
 			turnHooks.ClassicPalaceStyleGlitch = true;
 			turnHooks.ClassicPillagePlayer = true;
 			turnHooks.ClassicHelpKey = true;
-			turnHooks.ClassicDiskPrompts = true;
+			turnHooks.ClassicBarbarianOrder = true;
 		}
 
 		public GameEngine Engine { get; }

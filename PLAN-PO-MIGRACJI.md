@@ -920,3 +920,19 @@ poza tekstami w segmencie danych. Użytkownik sprawdził grę ręcznie: działa,
     ekran „Obsolete Wonders”, statystyki doradców, lista „Błędy przetłumaczonego kodu zachowane celowo” w backlogu.
 
 Proponowana kolejność: 1 → 2 → 5 → 4 → 6 → 3 → 7 → 8 → 9 → 10 → 11; punkt 12 w dowolnym momencie na życzenie.
+
+**Kroki 1 – 5 z listy (2026-10-31, NIE TESTOWANE – użytkownik sprawdza ręcznie).**
+- 1: Alt+H to nie regresja: oryginał pokazuje pomoc tury tylko z opcją pomocy i przed rokiem 0. Remaster pokazuje
+  zawsze, oryginał za `ClassicHelpKey`.
+- 2: pytania o dyskietkę i napęd zapisu **zostają** (decyzja użytkownika: „ma to swój klimat”); przełącznik
+  `ClassicDiskPrompts` dodany i zaraz usunięty.
+- 3: teksty kodów ($US, $THEM, $BUCKS, $RPLC1, $RPLC2; 5 x 0x16 bajtów pod 0x3037) w tablicy C# (`CodeTexts`, nakładka
+  i rzut do migawki jak bufor komunikatu), 38 kopii przez `Codes.Set`. Tabele nazw (cywilizacje, przywódcy, ustroje)
+  zostają w segmencie danych: idą do zapisu gry i gra je zmienia – osobna praca z zapisem / wczytaniem.
+- 4: barbarzyńca usunięty na krawędzi mapy daje w remasterze rozkaz 0xffff (brak rozkazu – najczęstszy wynik
+  oryginału); AX z `EliminateUnit` za `ClassicBarbarianOrder` (zapisy AX w `MapManagement` zostają dla niego). Może
+  zmienić baseline golden master, jeśli w nagranych turach barbarzyńca ginie na krawędzi.
+- 5: ramka i para SI / DI `ProduceTerrain` tylko z `ClassicLabelNumbers` (tylko ta ścieżka czyta spoza ramki); remaster
+  tworzy świat bez ramki.
+- 6 (`FrameWords` → pola) i 7 (pamięć pod adresami, ok. 660 miejsc) – zostają: 6 bez zysku poza czytelnością, 7 to kilka
+  sesji porcjami po modułach, z testami.

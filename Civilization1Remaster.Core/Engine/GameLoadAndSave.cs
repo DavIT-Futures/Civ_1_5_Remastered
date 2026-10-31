@@ -591,10 +591,9 @@ namespace Civilization1Remaster.Engine
 				this.owner.UnitOps.RenderBusyIndicator();
 			}
 
-			ushort key = 0xd;
+			ushort key;
 
-			// (the remaster is on a hard disk: the current drive, as if Return was pressed; ClassicDiskPrompts asks for the drive)
-			while (this.owner.TurnHooks.ClassicDiskPrompts)
+			while (true)
 			{
 				this.owner.Words.Set(LoadingGame != 0 ?
 					"  Which drive contains your\n    saved game files?\n\n            " :

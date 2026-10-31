@@ -194,12 +194,12 @@ namespace Civilization1Remaster.Game
 		public bool ClassicHelpKey { get; set; }
 
 		/// <summary>
-		/// The floppy disks of the original: "Please insert Disk ..." while the file of a disk is missing
-		/// (GameStartup.QueryForDisk) and the question for the drive of the saved games (GameLoadAndSave.QueryForStoreDrive).
-		/// Off (the remaster is on a hard disk): no disk is asked for, the saved games are on the current drive. The tests turn it
-		/// on (HeadlessGame).
+		/// The barbarian unit taken off the map at its edge (ManageBarbarianUnit) gives ShiftAIUnit, as its order, what
+		/// EliminateUnit leaves in AX (as the original: 0xffff when the repainted tile is left without units, else the row
+		/// computed before; the AX writes of MapManagement stay for it). Off: 0xffff, no order. The tests turn it on
+		/// (HeadlessGame).
 		/// </summary>
-		public bool ClassicDiskPrompts { get; set; }
+		public bool ClassicBarbarianOrder { get; set; }
 
 		/// <summary>
 		/// Units heal lost hit points every turn (HealingRules): 2 in an own city; outside cities 1 for a fortified land unit
