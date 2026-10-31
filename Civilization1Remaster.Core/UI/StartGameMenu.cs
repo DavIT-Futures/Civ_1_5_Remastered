@@ -370,9 +370,9 @@ namespace Civilization1Remaster.UI
 
 			ushort names = (ushort)(this.owner.World.PersonParticipantIdx << 1);
 
-			this.owner.Libc.CopyText(CodeText4, LeaderNameAt(names));
+			this.owner.Codes.Set(3, LeaderNameAt(names));
 
-			this.owner.Libc.CopyText(CodeText1, CivilizationPluralAt(names));
+			this.owner.Codes.Set(0, CivilizationPluralAt(names));
 
 			this.owner.Words.Clear();
 

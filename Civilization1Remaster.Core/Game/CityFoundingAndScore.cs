@@ -380,7 +380,7 @@ namespace Civilization1Remaster.Game
 			EmptyMessage()
 				.City(townIdx);
 
-			this.owner.Libc.CopyText(CodeText4, this.owner.Words.ToString());
+			this.owner.Codes.Set(3, this.owner.Words.ToString());
 
 			this.owner.Words.Clear();
 
@@ -455,7 +455,7 @@ namespace Civilization1Remaster.Game
 					{
 						ushort buildingIdx = DestroyRandomBuilding(town);
 
-						this.owner.Libc.CopyText(CodeText1, BuildingText(buildingIdx));
+						this.owner.Codes.Set(0, BuildingText(buildingIdx));
 
 						this.owner.BlockText.DisplayTextDialog(0x4fc3);
 					}

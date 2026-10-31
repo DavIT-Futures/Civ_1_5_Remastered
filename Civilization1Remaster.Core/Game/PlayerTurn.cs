@@ -773,8 +773,7 @@ namespace Civilization1Remaster.Game
 
 			if (this.owner.World.RoundTally == 0 && this.turn.LaterPass == 0)
 			{
-				this.owner.Libc.CopyText(CodeText1,
-					CivilizationPlural(participantIdx));
+				this.owner.Codes.Set(0, CivilizationPlural(participantIdx));
 
 				this.owner.HelpSystem.DisplayHelpPopup(0x1e6e);
 
@@ -3233,9 +3232,9 @@ namespace Civilization1Remaster.Game
 						.Dialog(100, 80);
 					break;
 
-				case 0x2300: // Alt + H
-					this.owner.HelpSystem.DisplayHelpPopup(0x2029);
-					this.owner.HelpSystem.DisplayHelpPopup(0x2030);
+				case 0x2300: // Alt + H (the remaster shows the help always; ClassicHelpKey: only with the help option, before 0)
+					this.owner.HelpSystem.DisplayHelpPopup(0x2029, !this.owner.TurnHooks.ClassicHelpKey);
+					this.owner.HelpSystem.DisplayHelpPopup(0x2030, !this.owner.TurnHooks.ClassicHelpKey);
 					break;
 
 				case 0x1000: // Alt + Q

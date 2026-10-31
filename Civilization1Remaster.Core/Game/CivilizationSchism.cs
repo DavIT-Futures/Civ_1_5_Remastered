@@ -185,9 +185,9 @@ namespace Civilization1Remaster.Game
 
 			this.owner.Words.Clear();
 
-			this.owner.Libc.CopyText(CodeText1, CivilizationName((ushort)participantIdx));
+			this.owner.Codes.Set(0, CivilizationName((ushort)participantIdx));
 
-			this.owner.Libc.CopyText(CodeText2, CivilizationNameAt(names));
+			this.owner.Codes.Set(1, CivilizationNameAt(names));
 
 			this.owner.BlockText.DisplayTextDialog(participantIdx == this.owner.World.PersonParticipantIdx ? (ushort)0x4a18 : (ushort)0x4a20);
 

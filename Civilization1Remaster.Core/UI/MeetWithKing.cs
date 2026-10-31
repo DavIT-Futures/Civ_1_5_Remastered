@@ -403,7 +403,7 @@ namespace Civilization1Remaster.UI
 
 				KingMood = 1;
 				this.owner.Words.Clear();
-				this.owner.Libc.CopyText(CodeText4, TechnologyName(this.audienceWantedTechnology));
+				this.owner.Codes.Set(3, TechnologyName(this.audienceWantedTechnology));
 				this.owner.BlockText.DisplayTextDialog(0x3776);
 				KingSpeaking = 0xc;
 
@@ -450,9 +450,8 @@ namespace Civilization1Remaster.UI
 				return;
 
 			this.owner.Words.Clear();
-			this.owner.Libc.CopyText(CodeText2,
-				CivilizationPlural(this.audienceCommonEnemy));
-			this.owner.Libc.CopyText(CodeText4, (ushort)(HostileValue != 0 ? 0x3780 : 0x3787));
+			this.owner.Codes.Set(1, CivilizationPlural(this.audienceCommonEnemy));
+			this.owner.Codes.Set(3, (ushort)(HostileValue != 0 ? 0x3780 : 0x3787));
 			this.owner.BlockText.DisplayTextDialog(0x378f);
 
 			KingMood = (ushort)(HostileValue != 0 ? 2 : 1);
@@ -485,7 +484,7 @@ namespace Civilization1Remaster.UI
 
 			EmptyMessage()
 				.Number((short)this.audienceTribute);
-			this.owner.Libc.CopyText(CodeText3, this.owner.Words.ToString());
+			this.owner.Codes.Set(2, this.owner.Words.ToString());
 			this.owner.Words.Clear();
 			this.owner.BlockText.DisplayTextDialog(0x3797);
 
@@ -515,7 +514,7 @@ namespace Civilization1Remaster.UI
 			}
 
 			this.owner.Words.Clear();
-			this.owner.Libc.CopyText(CodeText4, TechnologyName(this.audienceOfferedTechnology));
+			this.owner.Codes.Set(3, TechnologyName(this.audienceOfferedTechnology));
 			this.owner.BlockText.DisplayTextDialog(0x37a0);
 
 			AudienceWelcomed = 0;
@@ -642,7 +641,7 @@ namespace Civilization1Remaster.UI
 
 		private void OfferTechnologyForPeace(short participantIdx)
 		{
-			this.owner.Libc.CopyText(CodeText4, TechnologyName(this.audienceWantedTechnology));
+			this.owner.Codes.Set(3, TechnologyName(this.audienceWantedTechnology));
 			this.owner.Words.Clear();
 			this.owner.BlockText.DisplayTextDialog(0x3805);
 			KingMood = 0;
@@ -682,7 +681,7 @@ namespace Civilization1Remaster.UI
 
 			EmptyMessage()
 				.Number((short)amount);
-			this.owner.Libc.CopyText(CodeText3, this.owner.Words.ToString());
+			this.owner.Codes.Set(2, this.owner.Words.ToString());
 			this.owner.Words.Clear();
 			this.owner.BlockText.DisplayTextDialog(0x380e);
 			KingMood = 0;
@@ -708,7 +707,7 @@ namespace Civilization1Remaster.UI
 
 			EmptyMessage()
 				.Number(Leader(participantIdx).Gold);
-			this.owner.Libc.CopyText(CodeText3, this.owner.Words.ToString());
+			this.owner.Codes.Set(2, this.owner.Words.ToString());
 			this.owner.Words.Clear();
 			this.owner.BlockText.DisplayTextDialog(0x3818);
 			KingMood = 0;
@@ -807,8 +806,7 @@ namespace Civilization1Remaster.UI
 
 			while (true)
 			{
-				this.owner.Libc.CopyText(CodeText4,
-					CivilizationPlural(participantIdx));
+				this.owner.Codes.Set(3, CivilizationPlural(participantIdx));
 				this.owner.Words.Clear();
 				this.owner.BlockText.DisplayTextDialog(0x388f);
 
@@ -839,7 +837,7 @@ namespace Civilization1Remaster.UI
 			{
 				EmptyMessage()
 					.Number(amount);
-				this.owner.Libc.CopyText(CodeText3, this.owner.Words.ToString());
+				this.owner.Codes.Set(2, this.owner.Words.ToString());
 				this.owner.Words.Clear();
 				this.owner.BlockText.DisplayTextDialog(0x3897);
 				KingMood = 0;
@@ -904,8 +902,7 @@ namespace Civilization1Remaster.UI
 
 			short enemyIdx = enemyTable[choice];
 
-			this.owner.Libc.CopyText(CodeText4,
-				CivilizationPlural(enemyIdx));
+			this.owner.Codes.Set(3, CivilizationPlural(enemyIdx));
 			KingSpeaking = 4;
 
 			if ((Leader(participantIdx).Relations[enemyIdx] & 1) == 0)
@@ -928,7 +925,7 @@ namespace Civilization1Remaster.UI
 
 			EmptyMessage()
 				.Number(amount);
-			this.owner.Libc.CopyText(CodeText3, this.owner.Words.ToString());
+			this.owner.Codes.Set(2, this.owner.Words.ToString());
 			this.owner.Words.Clear();
 			this.owner.BlockText.DisplayTextDialog(0x38fb);
 
@@ -965,8 +962,7 @@ namespace Civilization1Remaster.UI
 				return;
 			}
 
-			this.owner.Libc.CopyText(CodeText2,
-				CivilizationPlural(participantIdx));
+			this.owner.Codes.Set(1, CivilizationPlural(participantIdx));
 			this.owner.HelpSystem.DisplayHelpPopup(0x392b);
 		}
 
@@ -1153,9 +1149,9 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope($"DisplayKingMessage({participantIdx})");
 
-			this.owner.Libc.CopyText(CodeText4, CivilizationNameAddr(participantIdx));
+			this.owner.Codes.Set(3, CivilizationNameAddr(participantIdx));
 
-			this.owner.Libc.CopyText(CodeText1, CivilizationNameAddr(this.owner.World.PersonParticipantIdx));
+			this.owner.Codes.Set(0, CivilizationNameAddr(this.owner.World.PersonParticipantIdx));
 
 			KingSpeaking = 0xc;
 			this.owner.Words.Clear();

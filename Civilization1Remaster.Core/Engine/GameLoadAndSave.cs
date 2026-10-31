@@ -591,9 +591,10 @@ namespace Civilization1Remaster.Engine
 				this.owner.UnitOps.RenderBusyIndicator();
 			}
 
-			ushort key;
+			ushort key = 0xd;
 
-			do
+			// (the remaster is on a hard disk: the current drive, as if Return was pressed; ClassicDiskPrompts asks for the drive)
+			while (this.owner.TurnHooks.ClassicDiskPrompts)
 			{
 				this.owner.Words.Set(LoadingGame != 0 ?
 					"  Which drive contains your\n    saved game files?\n\n            " :
@@ -623,8 +624,10 @@ namespace Civilization1Remaster.Engine
 				}
 
 				this.owner.Services.FloodBox(ScreenBox, 80, 88, 160, 24, 15);
+
+				if (key == 0xd || key == 0x1b)
+					break;
 			}
-			while (key != 0xd && key != 0x1b);
 
 			this.owner.Services.FloodBox(ScreenBox, 8, 8, 304, 184, 15);
 

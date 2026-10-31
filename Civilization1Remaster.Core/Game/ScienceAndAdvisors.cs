@@ -1130,7 +1130,7 @@ namespace Civilization1Remaster.Game
 			string choiceName = this.processor.PullText(CPU.AsLinearAddress(this.processor.SegData.Value16, name));
 			this.owner.Words.Set(advisor);
 			this.owner.BlockText.ImportTextFromFile(documentAddr, "*" + choiceName);
-			this.owner.Libc.CopyText(CodeText4, choiceName);
+			this.owner.Codes.Set(3, choiceName);
 			this.owner.BlockText.ReflowText();
 			this.owner.BlockText.ArrangeTextRow(0x32);
 			DialogNeedsRedraw = 1;
@@ -1653,9 +1653,9 @@ namespace Civilization1Remaster.Game
 			EmissaryAudience = 0;
 			this.owner.Words.Clear();
 
-			this.owner.Libc.CopyText(CodeText1, CivilizationPlural((ushort)participantIdx));
+			this.owner.Codes.Set(0, CivilizationPlural((ushort)participantIdx));
 
-			this.owner.Libc.CopyText(CodeText4, TechnologyText(scienceIdx));
+			this.owner.Codes.Set(3, TechnologyText(scienceIdx));
 
 			this.owner.BlockText.DisplayTextDialog(0x240e);
 

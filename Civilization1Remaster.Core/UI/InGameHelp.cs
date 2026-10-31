@@ -129,7 +129,7 @@ namespace Civilization1Remaster.UI
 
 			EmptyMessage()
 				.City((short)townIdx);
-			this.owner.Libc.CopyText(CodeText1, this.owner.Words.ToString());
+			this.owner.Codes.Set(0, this.owner.Words.ToString());
 
 			if (terrain == 4 && (improvements & 6) == 0)
 			{
@@ -152,13 +152,14 @@ namespace Civilization1Remaster.UI
 		/// <summary>
 		/// With the help option on (SessionPrefMarkers bit 0) and only before year 0 (Season below 0): a help window with the
 		/// text from the help file (0x34de) for the topic, its codes replaced (ReflowText), 6 pixels per line, until a key or
-		/// click. The screen is kept in the back screen 0x19d4 meanwhile.
+		/// click. The screen is kept in the back screen 0x19d4 meanwhile. Always: whatever the option and the year (the help
+		/// key of the remaster).
 		/// </summary>
-		public void DisplayHelpPopup(ushort charsAddr)
+		public void DisplayHelpPopup(ushort charsAddr, bool always = false)
 		{
 			this.processor.Journal.OpenScope($"DisplayHelpPopup(0x{charsAddr:x4})");
 
-			if ((this.owner.World.SessionPrefMarkers & 0x1) != 0 && this.owner.World.Season < 0)
+			if (always || ((this.owner.World.SessionPrefMarkers & 0x1) != 0 && this.owner.World.Season < 0))
 			{
 				this.owner.Words.Clear();
 

@@ -188,6 +188,20 @@ namespace Civilization1Remaster.Game
 		public bool ClassicPillagePlayer { get; set; }
 
 		/// <summary>
+		/// Alt+H shows the help of the turn only with the help option on (SessionPrefMarkers bit 0) and before the year 0, as in
+		/// the original. Off: Alt+H always shows it (InGameHelp.DisplayHelpPopup). The tests turn it on (HeadlessGame).
+		/// </summary>
+		public bool ClassicHelpKey { get; set; }
+
+		/// <summary>
+		/// The floppy disks of the original: "Please insert Disk ..." while the file of a disk is missing
+		/// (GameStartup.QueryForDisk) and the question for the drive of the saved games (GameLoadAndSave.QueryForStoreDrive).
+		/// Off (the remaster is on a hard disk): no disk is asked for, the saved games are on the current drive. The tests turn it
+		/// on (HeadlessGame).
+		/// </summary>
+		public bool ClassicDiskPrompts { get; set; }
+
+		/// <summary>
 		/// Units heal lost hit points every turn (HealingRules): 2 in an own city; outside cities 1 for a fortified land unit
 		/// and for a resting ship (sentry or not moved this turn) next to land, at most 3 tiles from an own city.
 		/// Runs at the end of the game turn, so the moves left (reset at the start of each player's turn) show whether the

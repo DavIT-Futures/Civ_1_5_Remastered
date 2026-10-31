@@ -614,22 +614,21 @@ namespace Civilization1Remaster.UI
 
 			ushort person = (ushort)this.owner.World.PersonParticipantIdx;
 			this.owner.Words.Append(LeaderName(person));
-			this.owner.Libc.CopyText(CodeText1, this.owner.Words.ToString());
+			this.owner.Codes.Set(0, this.owner.Words.ToString());
 
-			this.owner.Libc.CopyText(CodeText2,
-				CivilizationName((ushort)participantIdx));
+			this.owner.Codes.Set(1, CivilizationName((ushort)participantIdx));
 
 			EmptyMessage()
 				.Number(this.owner.World.Participants[participantIdx].StarshipInhabitants);
-			this.owner.Libc.CopyText(CodeText3, this.owner.Words.ToString());
+			this.owner.Codes.Set(2, this.owner.Words.ToString());
 
 			EmptyMessage()
 				.Number(this.owner.World.Participants[participantIdx].StarshipLiftoffSeason);
-			this.owner.Libc.CopyText(CodeText4, this.owner.Words.ToString());
+			this.owner.Codes.Set(3, this.owner.Words.ToString());
 
 			EmptyMessage()
 				.Number(this.owner.World.Season);
-			this.owner.Libc.CopyText(CodeText5, this.owner.Words.ToString());
+			this.owner.Codes.Set(4, this.owner.Words.ToString());
 
 			this.owner.BlockText.ImportTextFromFile(0x3301,
 				(ushort)((participantIdx != this.owner.World.PersonParticipantIdx) ? 0x32f9 : 0x32f2));
@@ -981,7 +980,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Words.Set(LeaderName(humanIdx));
 			this.owner.Words.Uppercase();
-			this.owner.Libc.CopyText(CodeText1, this.owner.Words.ToString());
+			this.owner.Codes.Set(0, this.owner.Words.ToString());
 
 			this.owner.Words.Set("Irrigation");
 
@@ -993,7 +992,7 @@ namespace Civilization1Remaster.UI
 				}
 			}
 
-			this.owner.Libc.CopyText(CodeText4, this.owner.Words.ToString());
+			this.owner.Codes.Set(3, this.owner.Words.ToString());
 
 			this.owner.Words.Clear();
 

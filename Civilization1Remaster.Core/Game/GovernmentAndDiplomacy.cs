@@ -154,12 +154,12 @@ namespace Civilization1Remaster.Game
 				{
 					short tribute = (short)((ushort)this.owner.Helpers.VerifyValueSpan(player.Gold / 100, 1, 10) * 0x32);
 
-					this.owner.Libc.CopyText(CodeText2, CivilizationPlural(otherIdx));
+					this.owner.Codes.Set(1, CivilizationPlural(otherIdx));
 
 					EmptyMessage()
 						.Number(tribute);
 
-					this.owner.Libc.CopyText(CodeText3, this.owner.Words.ToString());
+					this.owner.Codes.Set(2, this.owner.Words.ToString());
 
 					this.owner.Words.Clear();
 
@@ -186,9 +186,9 @@ namespace Civilization1Remaster.Game
 			// $THEM of the threat: the enemy (the translated code read the offset from DI, player << 4 when nothing called
 			// changes it: TurnEndRules.EmissaryEnemyName)
 			ushort enemyName = TurnEndRules.EmissaryEnemyName(participantIdx, otherIdx, this.owner.TurnHooks.ClassicEmissaryThreat);
-			this.owner.Libc.CopyText(CodeText2, CivilizationPluralAt(enemyName));
+			this.owner.Codes.Set(1, CivilizationPluralAt(enemyName));
 
-			this.owner.Libc.CopyText(CodeText4, (player.Relations[person] & 2) == 0 ? (ushort)0x299b : (ushort)0x2990);
+			this.owner.Codes.Set(3, (player.Relations[person] & 2) == 0 ? (ushort)0x299b : (ushort)0x2990);
 
 			if (AskKing(0x29a6))
 			{

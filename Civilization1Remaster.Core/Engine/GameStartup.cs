@@ -59,7 +59,7 @@ namespace Civilization1Remaster.Engine
 
 				EmptyMessage()
 					.Number(freeStorage);
-				this.owner.Libc.CopyText(CodeText4, this.owner.Words.ToString());
+				this.owner.Codes.Set(3, this.owner.Words.ToString());
 				this.owner.Words.Clear();
 
 				this.owner.BlockText.DisplayTextDialog(0x270);
@@ -297,8 +297,10 @@ namespace Civilization1Remaster.Engine
 					diskIdx = 0;
 				}
 
-				while (this.owner.Services.PathPresent(this.processor.PullGlobalWord((ushort)((diskIdx << 1) + 0x1ace))) == 0xffff ||
-					marker == 0xffff)
+				// (the remaster is on a hard disk: it never asks for a floppy disk, ClassicDiskPrompts asks like the original)
+				while (this.owner.TurnHooks.ClassicDiskPrompts &&
+					(this.owner.Services.PathPresent(this.processor.PullGlobalWord((ushort)((diskIdx << 1) + 0x1ace))) == 0xffff ||
+					marker == 0xffff))
 				{
 					this.owner.Services.DisplayScreen(DrawingBox.DisplayIdx);
 
