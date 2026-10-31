@@ -120,7 +120,7 @@ namespace Civilization1Remaster.Core.Game
 
 		private void AssignDot(int horizLoc, int vertLoc, byte hue)
 		{
-			this.Owner.VideoCard.AssignDot(ChartDisplay, horizLoc, vertLoc, hue, 0);
+			this.Owner.VideoCard.AssignDot(ChartDisplay, horizLoc, vertLoc, hue);
 		}
 	}
 }

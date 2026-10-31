@@ -180,30 +180,22 @@ namespace Civilization1Remaster.Core.Video
 
 			if (this.glob15d2StagingMarker != 0)
 			{
-				if (this.displays.ContainsKey(displayIdx))
+				lock (this.VideoLatch)
 				{
-					lock (this.VideoLatch)
+					VGABitmap display = Display(displayIdx);
+					int cacheSpot = 0;
+
+					for (int idx = 0; idx < this.glob15d0StagingAltitude; idx++)
 					{
-						VGABitmap display = this.displays[displayIdx];
-
-						int cacheSpot = 0;
-
-						for (int idx = 0; idx < this.glob15d0StagingAltitude; idx++)
+						for (int jdx = 0; jdx < this.glob15ceStagingBreadth; jdx++)
 						{
-							for (int jdx = 0; jdx < this.glob15ceStagingBreadth; jdx++)
-							{
-								this.glob15d6Staging[cacheSpot] = display.ObtainDot(this.glob15caStagingHoriz + jdx, this.glob15ccStagingVert + idx);
-								cacheSpot++;
-							}
+							this.glob15d6Staging[cacheSpot] = display.ObtainDot(this.glob15caStagingHoriz + jdx, this.glob15ccStagingVert + idx);
+							cacheSpot++;
 						}
 					}
+				}
 
-					DrawPictureToDisplay(this.glob15d4DisplayIdx, this.glob15c2HorizLoc, this.glob15c4VertLoc, this.glob15c0);
-				}
-				else
-				{
-					throw new Exception($"The screen {displayIdx} is not allocated");
-				}
+				DrawPictureToDisplay(this.glob15d4DisplayIdx, this.glob15c2HorizLoc, this.glob15c4VertLoc, this.glob15c0);
 			}
 
 			this.processor.Journal = scratchJournal;
@@ -220,26 +212,12 @@ namespace Civilization1Remaster.Core.Video
 			{
 				FillBuffer(displayIdx);
 
-				if (this.displays.ContainsKey(0))
+				lock (this.VideoLatch)
 				{
-					if (this.displays.ContainsKey(displayIdx))
-					{
-						lock (this.VideoLatch)
-						{
-							VGABitmap primaryDisplay = this.displays[0];
-							VGABitmap display = this.displays[displayIdx];
+					VGABitmap primaryDisplay = Display(0);
+					VGABitmap display = Display(displayIdx);
 
-							primaryDisplay.RenderImage(Point.Empty, display, new Rectangle(0, 0, 320, 100), false);
-						}
-					}
-					else
-					{
-						throw new Exception($"The screen {displayIdx} is not allocated");
-					}
-				}
-				else
-				{
-					throw new Exception($"The screen 0 is not allocated");
+					primaryDisplay.RenderImage(Point.Empty, display, new Rectangle(0, 0, 320, 100), false);
 				}
 			}
 
@@ -346,78 +324,42 @@ namespace Civilization1Remaster.Core.Video
 			// this is either random fade in image, or a scrolling from right to left
 			if (displayIdx != 0)
 			{
-				if (this.displays.ContainsKey(displayIdx))
+				lock (this.VideoLatch)
 				{
-					lock (this.VideoLatch)
-					{
-						VGABitmap display0 = this.displays[0];
+					VGABitmap display = Display(displayIdx);
 
-						display0.RenderImage(this.displays[displayIdx]);
-					}
-				}
-				else
-				{
-					throw new Exception($"The screen {displayIdx} is not allocated");
+					this.displays[0].RenderImage(display);
 				}
 			}
 		}
 
 		public void RenderImage(ushort originBoxAddr, int horizSince, int vertSince, int breadth, int altitude, ushort targetBoxAddr, int horizToward, int vertToward)
 		{
-			CivRectangle boxSince = new CivRectangle(this.processor, CPU.AsLinearAddress(this.processor.SegData.Value16, originBoxAddr));
-			int horizDisplacementSince = boxSince.Horiz + horizSince;
-			int vertDisplacementSince = boxSince.Vert + vertSince;
+			CivRectangle boxSince = BoxAt(originBoxAddr);
+			CivRectangle boxToward = BoxAt(targetBoxAddr);
+			VGABitmap originPicture = Display(boxSince.DisplayIdx);
 
-			CivRectangle boxToward = new CivRectangle(this.processor, CPU.AsLinearAddress(this.processor.SegData.Value16, targetBoxAddr));
-			int horizDisplacementToward = boxToward.Horiz + horizToward;
-			int vertDisplacementToward = boxToward.Vert + vertToward;
-
-			if (this.displays.ContainsKey(boxSince.DisplayIdx))
+			lock (this.VideoLatch)
 			{
-				VGABitmap originPicture = this.displays[boxSince.DisplayIdx];
-
-				if (this.displays.ContainsKey(boxToward.DisplayIdx))
-				{
-					lock (this.VideoLatch)
-					{
-						VGABitmap targetPicture = this.displays[boxToward.DisplayIdx];
-
-						targetPicture.RenderImage(horizDisplacementToward, vertDisplacementToward, originPicture, new Rectangle(horizDisplacementSince, vertDisplacementSince, breadth, altitude), false);
-					}
-				}
-				else
-				{
-					throw new Exception($"The screen {boxToward.DisplayIdx} is not allocated");
-				}
-			}
-			else
-			{
-				throw new Exception($"The screen {boxSince.DisplayIdx} is not allocated");
+				Display(boxToward.DisplayIdx).RenderImage(boxToward.Horiz + horizToward, boxToward.Vert + vertToward, originPicture,
+					new Rectangle(boxSince.Horiz + horizSince, boxSince.Vert + vertSince, breadth, altitude), false);
 			}
 		}
 
 		public ushort ScreenToPicture(ushort displayIdx, ushort horizLoc, ushort vertLoc, ushort breadth, ushort altitude)
 		{
-			if (this.displays.ContainsKey(displayIdx))
+			lock (this.VideoLatch)
 			{
-				lock (this.VideoLatch)
-				{
-					VGABitmap display = this.displays[displayIdx];
-					VGABitmap picture = new VGABitmap(breadth, altitude);
-					Rectangle box = new Rectangle(horizLoc, vertLoc, breadth, altitude);
-					display.DuplicateColors(picture);
+				VGABitmap display = Display(displayIdx);
+				VGABitmap picture = new VGABitmap(breadth, altitude);
+				display.DuplicateColors(picture);
 
-					picture.RenderImage(Point.Empty, display, box, false);
+				picture.RenderImage(Point.Empty, display, new Rectangle(horizLoc, vertLoc, breadth, altitude), false);
 
-					this.pictures[this.pictureFollowingIdx] = picture;
+				this.pictures[this.pictureFollowingIdx] = picture;
 
-					this.processor.RegAcc.Value16 = (ushort)this.pictureFollowingIdx;
-					this.pictureFollowingIdx++;
-				}
-			}
-			else
-			{
-				throw new Exception($"The screen {displayIdx} is not allocated");
+				this.processor.RegAcc.Value16 = (ushort)this.pictureFollowingIdx;
+				this.pictureFollowingIdx++;
 			}
 
 			return this.processor.RegAcc.Value16;
@@ -425,32 +367,23 @@ namespace Civilization1Remaster.Core.Video
 
 		public void DrawPictureToDisplay(ushort displayIdx, int horizLoc, int vertLoc, ushort pictureAddr)
 		{
-			if (this.displays.ContainsKey(displayIdx))
-			{
-				if (this.pictures.ContainsKey(pictureAddr))
-				{
-					lock (this.VideoLatch)
-					{
-						VGABitmap display = this.displays[displayIdx];
-						VGABitmap picture = this.pictures[pictureAddr];
+			VGABitmap display = Display(displayIdx);
 
-						display.RenderImage(horizLoc, vertLoc, picture, true);
-					}
-				}
-				else
-				{
-					this.processor.Journal.EmitLine($"The bitmap 0x{pictureAddr:x4} is not allocated");
-				}
-			}
-			else
+			if (!this.pictures.TryGetValue(pictureAddr, out VGABitmap? picture))
 			{
-				throw new Exception($"The screen {displayIdx} is not allocated");
+				this.processor.Journal.EmitLine($"The bitmap 0x{pictureAddr:x4} is not allocated");
+				return;
+			}
+
+			lock (this.VideoLatch)
+			{
+				display.RenderImage(horizLoc, vertLoc, picture, true);
 			}
 		}
 
 		public void DrawPictureToScreen(ushort boxAddr, int horizLoc, int vertLoc, ushort pictureAddr)
 		{
-			CivRectangle box = new CivRectangle(this.processor, CPU.AsLinearAddress(this.processor.SegData.Value16, boxAddr));
+			CivRectangle box = BoxAt(boxAddr);
 			DrawPictureToDisplay(box.DisplayIdx, box.Horiz + horizLoc, box.Vert + vertLoc, pictureAddr);
 		}
 
@@ -481,74 +414,58 @@ namespace Civilization1Remaster.Core.Video
 
 		public ushort ObtainDot(ushort displayIdx, int horizLoc, int vertLoc)
 		{
-			if (this.displays.ContainsKey(displayIdx))
+			lock (this.VideoLatch)
 			{
-				lock (this.VideoLatch)
-				{
-					this.processor.RegAcc.Value16 = this.displays[displayIdx].ObtainDot(horizLoc, vertLoc);
-				}
-			}
-			else
-			{
-				throw new Exception($"The screen {displayIdx} is not allocated");
+				this.processor.RegAcc.Value16 = Display(displayIdx).ObtainDot(horizLoc, vertLoc);
 			}
 
 			return this.processor.RegAcc.Value16;
 		}
 
-		public void AssignDot(ushort displayIdx, int horizLoc, int vertLoc, byte foreHue, byte dotStyle)
+		/// <summary>Sets a pixel of the screen; the style is the colour (low byte) and the way of writing it (high byte)</summary>
+		public void AssignDot(ushort displayIdx, int horizLoc, int vertLoc, ushort style)
 		{
-			if (this.displays.ContainsKey(displayIdx))
+			lock (this.VideoLatch)
 			{
-				lock (this.VideoLatch)
-				{
-					VGABitmap display = this.displays[displayIdx];
-
-					display.AssignDot(horizLoc, vertLoc, foreHue, (PixelWriteModeEnum)dotStyle);
-				}
+				Display(displayIdx).AssignDot(horizLoc, vertLoc, Hue(style), WriteMode(style));
 			}
-			else
+		}
+
+		/// <summary>
+		/// Sets a pixel of the screen at a place inside the box (its edges included); the pixels outside the box are not drawn
+		/// </summary>
+		public void AssignDotInBox(ushort boxAddr, ushort displayIdx, int horizLoc, int vertLoc, ushort style)
+		{
+			CivRectangle box = BoxAt(boxAddr);
+
+			if (horizLoc >= 0 && horizLoc <= box.Breadth && vertLoc >= 0 && vertLoc <= box.Altitude)
 			{
-				throw new Exception($"The screen {displayIdx} is not allocated");
+				AssignDot(displayIdx, box.Horiz + horizLoc, box.Vert + vertLoc, style);
 			}
 		}
 
 		public void RenderLine(ushort boxAddr, int horiz1, int vert1, int horiz2, int vert2, ushort style)
 		{
-			CivRectangle box = new CivRectangle(this.processor, CPU.AsLinearAddress(this.processor.SegData.Value16, boxAddr));
+			CivRectangle box = BoxAt(boxAddr);
+			VGABitmap display = Display(box.DisplayIdx);
 
-			if (this.displays.ContainsKey(box.DisplayIdx))
+			lock (this.VideoLatch)
 			{
-				lock (this.VideoLatch)
-				{
-					VGABitmap display = this.displays[box.DisplayIdx];
-
-					horiz1 += box.Horiz;
-					vert1 += box.Vert;
-					horiz2 += box.Horiz;
-					vert2 += box.Vert;
-
-					display.RenderLine(horiz1, vert1, horiz2, vert2, (byte)(style & 0xff), (PixelWriteModeEnum)((style & 0xff00) >> 8));
-				}
-			}
-			else
-			{
-				throw new Exception($"The screen {box.DisplayIdx} is not allocated");
+				display.RenderLine(box.Horiz + horiz1, box.Vert + vert1, box.Horiz + horiz2, box.Vert + vert2, Hue(style), WriteMode(style));
 			}
 		}
 
-		public void FloodBox(int displayIdx, Rectangle box, byte foreHue, byte dotStyle)
+		/// <summary>Fills a rectangle at a place relative to the box; an empty rectangle draws nothing</summary>
+		public void FloodBox(ushort boxAddr, int horizLoc, int vertLoc, int breadth, int altitude, ushort style)
 		{
-			if (this.displays.ContainsKey(displayIdx))
+			CivRectangle box = BoxAt(boxAddr);
+
+			if (breadth > 0 && altitude > 0)
 			{
 				lock (this.VideoLatch)
 				{
-					this.displays[displayIdx].FloodBox(box, foreHue, (PixelWriteModeEnum)dotStyle);
+					Display(box.DisplayIdx).FloodBox(new Rectangle(box.Horiz + horizLoc, box.Vert + vertLoc, breadth, altitude), Hue(style), WriteMode(style));
 				}
-			}
-			else
-			{
-				throw new Exception($"The screen {displayIdx} is not allocated");
 			}
 		}
 
@@ -556,18 +473,9 @@ namespace Civilization1Remaster.Core.Video
 		{
 			lock (this.VideoLatch)
 			{
-				CivRectangle box = new CivRectangle(this.processor, CPU.AsLinearAddress(this.processor.SegData.Value16, boxAddr));
-				int headInt = box.Horiz + horizLoc;
-				int remainingInt = box.Vert + vertLoc;
+				CivRectangle box = BoxAt(boxAddr);
 
-				if (this.displays.ContainsKey(box.DisplayIdx))
-				{
-					this.displays[box.DisplayIdx].SubstituteHue(new Rectangle(headInt, remainingInt, breadth, altitude), priorHue, freshHue);
-				}
-				else
-				{
-					throw new Exception($"The screen {box.DisplayIdx} is not allocated");
-				}
+				Display(box.DisplayIdx).SubstituteHue(new Rectangle(box.Horiz + horizLoc, box.Vert + vertLoc, breadth, altitude), priorHue, freshHue);
 			}
 		}
 
@@ -627,7 +535,7 @@ namespace Civilization1Remaster.Core.Video
 		/// <summary>Draws the text in the box (screen, place, typeface, colours, the way of writing the pixels)</summary>
 		public void RenderText(ushort boxAddr, int horizLoc, int vertLoc, string words)
 		{
-			CivRectangle box = new CivRectangle(this.processor, CPU.AsLinearAddress(this.processor.SegData.Value16, boxAddr));
+			CivRectangle box = BoxAt(boxAddr);
 
 			if (!this.typefaces.ContainsKey(box.TypefaceIdx))
 			{
@@ -635,21 +543,28 @@ namespace Civilization1Remaster.Core.Video
 			}
 
 			CivFont typeface = this.typefaces[box.TypefaceIdx];
+			VGABitmap display = Display(box.DisplayIdx);
 
-			if (this.displays.ContainsKey(box.DisplayIdx))
+			lock (this.VideoLatch)
 			{
-				lock (this.VideoLatch)
-				{
-					VGABitmap display = this.displays[box.DisplayIdx];
-					Rectangle box1 = new Rectangle(box.Horiz + horizLoc, box.Vert + vertLoc, box.Breadth, box.Altitude);
+				Rectangle place = new Rectangle(box.Horiz + horizLoc, box.Vert + vertLoc, box.Breadth, box.Altitude);
 
-					display.RenderText(words, typeface, box1, box.ForeHue, box.RearHue, (PixelWriteModeEnum)box.DotStyle);
-				}
-			}
-			else
-			{
-				throw new Exception($"The screen {box.DisplayIdx} is not allocated");
+				display.RenderText(words, typeface, place, box.ForeHue, box.RearHue, (PixelWriteModeEnum)box.DotStyle);
 			}
 		}
+
+		/// <summary>The screen of the number; a screen the game did not reserve is an error</summary>
+		private VGABitmap Display(int displayIdx) =>
+			this.displays.TryGetValue(displayIdx, out VGABitmap? display) ? display : throw new Exception($"The screen {displayIdx} is not allocated");
+
+		/// <summary>The box (screen, place, size, colours, typeface) at the address in the data segment</summary>
+		private CivRectangle BoxAt(ushort boxAddr) =>
+			new CivRectangle(this.processor, CPU.AsLinearAddress(this.processor.SegData.Value16, boxAddr));
+
+		/// <summary>The colour of a drawing style (its low byte)</summary>
+		private static byte Hue(ushort style) => (byte)style;
+
+		/// <summary>The way of writing the pixels of a drawing style (its high byte)</summary>
+		private static PixelWriteModeEnum WriteMode(ushort style) => (PixelWriteModeEnum)(style >> 8);
 	}
 }

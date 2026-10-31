@@ -766,40 +766,23 @@ namespace Civilization1Remaster.Core.Engine
 		{
 			using var _ = this.Processor.Journal.Scope($"FloodBox(0x{boxAddr:x4}, {horizLoc}, {vertLoc}, {breadth}, {altitude}, 0x{style:x4})");
 
-			CivRectangle box = new CivRectangle(this.Processor, CPU.AsLinearAddress(this.Processor.SegData.Value16, boxAddr));
-
-			if (breadth > 0 && altitude > 0)
-			{
-				Rectangle box1 = new Rectangle(box.Horiz + horizLoc, box.Vert + vertLoc, breadth, altitude);
-				this.Owner.VideoCard.FloodBox(box.DisplayIdx, box1, (byte)(style & 0xff), (byte)((style & 0xff00) >> 8));
-			}
+			this.Owner.VideoCard.FloodBox(boxAddr, horizLoc, vertLoc, breadth, altitude, style);
 		}
 
 		/// <inheritdoc/>
-		public void AssignDot(int horizLoc, int vertLoc, ushort style)
-		{
-			CivRectangle box = new CivRectangle(this.Owner.Processor, CPU.AsLinearAddress(this.Owner.Processor.SegData.Value16, this.Owner.Processor.PullUInt16(this.Owner.Processor.SegData.Value16, ActiveRectanglePointerAddress)));
-
-			using var _ = this.Processor.Journal.Scope($"AssignDot({box.DisplayIdx}, {horizLoc}, {vertLoc}, 0x{style:x4})");
-
-			if (horizLoc >= 0 && horizLoc <= box.Breadth && vertLoc >= 0 && vertLoc <= box.Altitude)
-			{
-				this.Owner.VideoCard.AssignDot(box.DisplayIdx, box.Horiz + horizLoc, box.Vert + vertLoc, (byte)(style & 0xff), (byte)((style & 0xff00) >> 8));
-			}
-		}
+		public void AssignDot(int horizLoc, int vertLoc, ushort style) =>
+			AssignDot(new CivRectangle(this.Processor, CPU.AsLinearAddress(this.Processor.SegData.Value16, ActiveBox)).DisplayIdx, horizLoc, vertLoc, style);
 
 		/// <inheritdoc/>
 		public void AssignDot(ushort displayIdx, int horizLoc, int vertLoc, ushort style)
 		{
-			CivRectangle box = new CivRectangle(this.Owner.Processor, CPU.AsLinearAddress(this.Owner.Processor.SegData.Value16, this.Owner.Processor.PullUInt16(this.Owner.Processor.SegData.Value16, ActiveRectanglePointerAddress)));
-
 			using var _ = this.Processor.Journal.Scope($"AssignDot({displayIdx}, {horizLoc}, {vertLoc}, 0x{style:x4})");
 
-			if (horizLoc >= 0 && horizLoc <= box.Breadth && vertLoc >= 0 && vertLoc <= box.Altitude)
-			{
-				this.Owner.VideoCard.AssignDot(displayIdx, box.Horiz + horizLoc, box.Vert + vertLoc, (byte)(style & 0xff), (byte)((style & 0xff00) >> 8));
-			}
+			this.Owner.VideoCard.AssignDotInBox(ActiveBox, displayIdx, horizLoc, vertLoc, style);
 		}
+
+		/// <summary>The box the pixels of AssignDot are placed in (the pointer at 0xaa)</summary>
+		private ushort ActiveBox => this.Processor.PullUInt16(this.Processor.SegData.Value16, ActiveRectanglePointerAddress);
 
 		/// <inheritdoc/>
 		public ushort PrepareMouse()
