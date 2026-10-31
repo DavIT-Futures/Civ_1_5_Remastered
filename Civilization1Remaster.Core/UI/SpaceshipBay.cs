@@ -445,16 +445,15 @@ namespace Civilization1Remaster.Core.UI
 					break;
 				}
 
-				// A full kind (classic: never reached, a full kind ends at the end of the table, not at 0xffff): marked complete
+				// A full kind: marked complete
 				// (its line of the dialog disabled from now on) and told
-				bool classic = this.Owner.TurnHooks.ClassicSpaceshipSlots;
 				ushort completeAddress = (ushort)((partKind << 1) + SpaceshipCompleteMasksAddress);
 
 				this.Processor.EmitGlobalWord(completeAddress, (ushort)(this.Processor.PullGlobalWord(completeAddress) |
-					(1 << SpaceshipSlotRules.CompleteBit(kind, partKind, classic))));
+					(1 << SpaceshipSlotRules.CompleteBit(kind, partKind))));
 
 				Message("No further ")
-					.Text(SpaceshipSlotRules.PartName(kind, partKind, classic))
+					.Text(SpaceshipSlotRules.PartName(kind, partKind))
 					.Text(" required.\n")
 					.Dialog(120, 80);
 			}
@@ -637,7 +636,7 @@ namespace Civilization1Remaster.Core.UI
 					{
 						// The picture of the part (the translated code read it from part << 11, SpaceshipPictureRules)
 						this.Owner.Services.DrawPictureToScreen(Screen.Box, (column * 16) - 16, (row * 16) + 8,
-							this.Processor.PullGlobalWord(SpaceshipPictureRules.PictureAddress(part, this.Owner.TurnHooks.ClassicSpaceshipPictures)));
+							this.Processor.PullGlobalWord(SpaceshipPictureRules.PictureAddress(part)));
 					}
 
 					short breadth = (short)(part >= 6 || part == 3 ? 2 : 1);
@@ -750,7 +749,7 @@ namespace Civilization1Remaster.Core.UI
 			EmptyMessage()
 				.Number(TenthsRules.Whole((short)mass))
 				.Text(",")
-				.Number(TenthsRules.Tenth((short)mass, this.Owner.TurnHooks.ClassicTenths))
+				.Number(TenthsRules.Tenth((short)mass))
 				.Text("00 tons");
 
 			if (shown)
@@ -796,7 +795,7 @@ namespace Civilization1Remaster.Core.UI
 			EmptyMessage()
 				.Number(TenthsRules.Whole((short)flightTime))
 				.Text(".")
-				.Number(TenthsRules.Tenth((short)flightTime, this.Owner.TurnHooks.ClassicTenths))
+				.Number(TenthsRules.Tenth((short)flightTime))
 				.Text(" Years");
 
 			if (shown)
@@ -964,7 +963,7 @@ namespace Civilization1Remaster.Core.UI
 			return free;
 		}
 
-		/// <summary>The first free slot of the kind, else none (0xffff; classic: the end of table 0x375a)</summary>
+		/// <summary>The first free slot of the kind, else none (0xffff)</summary>
 		private ushort FindSpaceshipSlot(short participantIdx, short kind)
 		{
 			ushort slotIdx = 0;
@@ -978,14 +977,13 @@ namespace Civilization1Remaster.Core.UI
 			}
 			while (LayoutSlotMarker(slotIdx) != SpaceshipSlotEndMarker);
 
-			// No free place of the kind: the end of the table (classic), or none
-			return this.Owner.TurnHooks.ClassicSpaceshipSlots ? slotIdx : SpaceshipSlotRules.NoSlot;
+			// No free place of the kind
+			return SpaceshipSlotRules.NoSlot;
 		}
 
 		/// <summary>
 		/// The slot of a new structure (kinds 0 - 2): the first free one of the inner 0x21 slots or of the outer ones, on the side
 		/// where it is closer to the last built part (kinds 3 and more); a full side gives the other one, both full none
-		/// (classic: 0x63, past the table, SpaceshipSlotRules.StructureSlot)
 		/// </summary>
 		private ushort ChooseSpaceshipStructureSlot(short participantIdx)
 		{
@@ -1011,7 +1009,7 @@ namespace Civilization1Remaster.Core.UI
 
 			ushort chosen = (short)(outerBuilt - outerFree) < (short)(innerBuilt - innerFree) ? innerFree : outerFree;
 
-			return SpaceshipSlotRules.StructureSlot(chosen, chosen == innerFree ? outerFree : innerFree, this.Owner.TurnHooks.ClassicSpaceshipSlots);
+			return SpaceshipSlotRules.StructureSlot(chosen, chosen == innerFree ? outerFree : innerFree);
 		}
 
 		private void NoteSpaceshipStructureSlot(short participantIdx, ushort slotIdx, ref ushort firstFree, ref ushort lastBuilt)

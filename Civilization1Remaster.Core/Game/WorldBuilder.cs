@@ -260,19 +260,8 @@ namespace Civilization1Remaster.Core.Game
 		{
 			using var _ = this.Processor.Journal.Scope("ProduceTerrain()");
 
-			// ClassicLabelNumbers: the frame of the original, as the numbers of the labels past the 63 ranked ones are read past
-			// their table, above BP (the frames of the callers) and under the frame (the saved SI / DI); without it they are 15
-			// and the words stay in C#
-			bool classicFrame = this.Owner.TurnHooks.ClassicLabelNumbers;
-
-			if (classicFrame)
-				this.Processor.EnterFrame(0xd4);
-
 			FrameWords outerFrame = this.terrainFrame;
 			this.terrainFrame = new FrameWords(this.Processor, 0xd4);
-
-			if (classicFrame)
-				this.Processor.PreserveIndexRegisters();
 
 			const int terrainCounts = 0x20;
 
@@ -321,13 +310,7 @@ namespace Civilization1Remaster.Core.Game
 
 			this.terrainFrame.SetFrame(0x24, dotIdx);
 
-			if (classicFrame)
-				this.Processor.RestoreIndexRegisters();
-
 			this.terrainFrame = outerFrame;
-
-			if (classicFrame)
-				this.Processor.LeaveFrame();
 		}
 
 		/// <inheritdoc/>
@@ -1115,9 +1098,7 @@ namespace Civilization1Remaster.Core.Game
 
 			ushort horizLoc, vertLoc = 0;
 
-			// A label from 0x40 on (or negative) reads past the numbers with ClassicLabelNumbers: the locals of the frame (x at
-			// 0x24, y at 0xa8, ...), the frames of the callers above them or the stack under the frame; else it gets 15
-			bool classicNumbers = this.Owner.TurnHooks.ClassicLabelNumbers;
+			// A label from 0x40 on (or negative) gets 15
 
 			for (horizLoc = 0; horizLoc < 0x50; horizLoc++)
 			{
@@ -1129,7 +1110,7 @@ namespace Civilization1Remaster.Core.Game
 
 					short tileLabel = this.Owner.World.ChartSight[horizLoc, vertLoc];
 
-					ushort number = classicNumbers || (tileLabel >= 0 && tileLabel < 0x40) ?
+					ushort number = tileLabel >= 0 && tileLabel < 0x40 ?
 						this.terrainFrame.Frame(numbers - (tileLabel << 1)) : (ushort)0xf;
 					this.terrainFrame.SetFrame(0xa6, number);
 

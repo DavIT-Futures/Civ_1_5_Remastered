@@ -15,17 +15,9 @@ namespace Civilization1Remaster.Core.Game
 			byte unitYByte = this.Troops.PullAt(unitAddr, UnitMemory.Vert);
 			if (unitYByte < 0x2 || unitYByte >= 0x30)
 			{
-				// ShiftAIUnit takes the result as the order: no order (ClassicBarbarianOrder: what DestroyUnit leaves in AX,
-				// 0xffff when it repaints the tile and no unit is left there, else the value computed before it)
-				if (!this.Owner.TurnHooks.ClassicBarbarianOrder)
-				{
-					this.Owner.UnitOps.DestroyUnit(participantIdx, troopIdx);
-					return 0xffff;
-				}
-
-				this.Processor.RegAcc.Value16 = (ushort)(((0x600 * (ushort)participantIdx) & 0xff00) | unitYByte);
+				// ShiftAIUnit takes the result as the order: no order
 				this.Owner.UnitOps.DestroyUnit(participantIdx, troopIdx);
-				return this.Processor.RegAcc.Value16;
+				return 0xffff;
 			}
 
 			ushort mayOccupyCurrent = this.Owner.UnitOps.MayOccupyTile(

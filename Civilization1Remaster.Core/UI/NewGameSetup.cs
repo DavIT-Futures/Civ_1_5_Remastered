@@ -653,9 +653,8 @@ namespace Civilization1Remaster.Core.UI
 			{
 				CreateCivilization(participantIdx);
 
-				// The ruined units of the new civilization cleared (the translated code cleared player 6, the counter of an
-				// earlier loop: TurnEndRules.RuinedUnitsCleared)
-				int cleared = TurnEndRules.RuinedUnitsCleared(participantIdx, this.Owner.TurnHooks.ClassicFreshGameRuins);
+				// The ruined units of the new civilization cleared
+				int cleared = participantIdx;
 
 				for (int kind = 0; kind < 8; kind++)
 				{

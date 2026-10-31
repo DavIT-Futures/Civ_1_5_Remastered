@@ -493,11 +493,7 @@ namespace Civilization1Remaster.Core.UI
 		{
 			using var _ = this.Processor.Journal.Scope("DisplayMilitaryReport()");
 
-			// The list of the rows' players of the frame of the original (B3: in C#; the rows without contact keep 0, the
-			// classic rows read it)
-			ushort[] rowPlayers = new ushort[8];
-
-			// The same list in C#, with -1 for the rows without contact (ClassicMilitaryReportRows off)
+			// The same list in C#, with -1 for the rows without contact
 			short[] rowPlayerList = [-1, -1, -1, -1, -1, -1, -1, -1];
 
 			ShowReportPreamble(GameTexts.TextIntelligenceReport, 1);
@@ -529,7 +525,6 @@ namespace Civilization1Remaster.Core.UI
 
 				DrawMilitaryReportRow(participantIdx, vertLoc);
 
-				rowPlayers[rowCount] = participantIdx;
 				rowPlayerList[rowCount] = (short)participantIdx;
 				rowCount++;
 
@@ -580,12 +575,9 @@ namespace Civilization1Remaster.Core.UI
 
 				if (chosen && rowIdx >= 0 && rowIdx < (short)rowCount)
 				{
-					bool classicRows = this.Owner.TurnHooks.ClassicMilitaryReportRows;
-					ushort rowPlayerIdx = classicRows ?
-						rowPlayers[rowIdx] :
-						(ushort)rowPlayerList[rowIdx];
+					ushort rowPlayerIdx = (ushort)rowPlayerList[rowIdx];
 
-					if ((classicRows || (short)rowPlayerIdx != -1) &&
+					if ((short)rowPlayerIdx != -1 &&
 						(short)rowPlayerIdx != this.Owner.World.PersonParticipantIdx &&
 						(this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx].Relations[rowPlayerIdx] & 0x40) != 0)
 					{

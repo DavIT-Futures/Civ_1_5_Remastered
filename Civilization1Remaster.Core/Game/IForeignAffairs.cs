@@ -12,8 +12,7 @@ namespace Civilization1Remaster.Core.Game
 		/// every 16th turn the peace of a war (1 without 2) ends with a message when the human player knows one of them,
 		/// and the flags 1 and 0x10 are cleared both ways. Every 32nd turn (the player's turn, 4 * player) an AI player that
 		/// asked for help (0x20) against a player at war with the human player sends an emissary: a much weaker one pays
-		/// tribute for an alliance, a stronger one threatens (the name of the enemy; with ClassicEmissaryThreat read at
-		/// 0x1992 + 16 * player, past the table, like the translated code). SI and DI get the values of the original before
+		/// tribute for an alliance, a stronger one threatens (the name of the enemy). SI and DI get the values of the original before
 		/// the calls.
 		/// </summary>
 		void HandlePeaceTreaties(short participantIdx);

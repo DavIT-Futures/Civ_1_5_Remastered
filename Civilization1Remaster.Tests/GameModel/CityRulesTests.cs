@@ -14,13 +14,13 @@ namespace Civilization1Remaster.Tests.GameModel
 		public void CityPopulation(int size, int expected) => Assert.Equal(expected, PopulationRules.CityPopulation(size));
 
 		[Theory]
-		[InlineData(27, false, 2, 7)]
-		[InlineData(27, true, 2, 2)]
-		[InlineData(5, false, 0, 5)]
-		public void Tenths(short value, bool classic, short whole, short tenth)
+		[InlineData(27, 2, 7)]
+		[InlineData(5, 0, 5)]
+		[InlineData(40, 4, 0)]
+		public void Tenths(short value, short whole, short tenth)
 		{
 			Assert.Equal(whole, TenthsRules.Whole(value));
-			Assert.Equal(tenth, TenthsRules.Tenth(value, classic));
+			Assert.Equal(tenth, TenthsRules.Tenth(value));
 		}
 	}
 
@@ -104,38 +104,30 @@ namespace Civilization1Remaster.Tests.GameModel
 	public class CensusRulesTests
 	{
 		[Theory]
-		[InlineData(3, 6, false, 25)]
-		[InlineData(3, 6, true, 25)]
-		[InlineData(10, 2, false, 100)]
-		[InlineData(10, 2, true, 250)]
-		[InlineData(3, 0, false, 0)]
-		[InlineData(-4, 2, false, 0)]
-		public void ApprovalRating(short approval, short size, bool classic, short expected) => Assert.Equal(expected, CensusRules.ApprovalRating(approval, size, classic));
+		[InlineData(3, 6, 25)]
+		[InlineData(10, 2, 100)]
+		[InlineData(3, 0, 0)]
+		[InlineData(-4, 2, 0)]
+		[InlineData(1000, 10, 100)]
+		public void ApprovalRating(short approval, short size, short expected) => Assert.Equal(expected, CensusRules.ApprovalRating(approval, size));
 
 		[Theory]
-		[InlineData(5, 2, false, 25)]
-		[InlineData(5, 2, true, 25)]
-		[InlineData(5, 0, false, 0)]
-		[InlineData(-5, 2, false, 0)]
-		[InlineData(-5, 2, true, -25)]
-		public void Productivity(short output, short size, bool classic, short expected) => Assert.Equal(expected, CensusRules.Productivity(output, size, classic));
+		[InlineData(5, 2, 25)]
+		[InlineData(5, 0, 0)]
+		[InlineData(-5, 2, 0)]
+		[InlineData(4000, 100, 400)]
+		public void Productivity(short output, short size, short expected) => Assert.Equal(expected, CensusRules.Productivity(output, size));
 
 		[Theory]
-		[InlineData(2, 3, false, 20)]
-		[InlineData(2, 3, true, 20)]
-		[InlineData(0, 0, false, 0)]
-		public void DiseaseRate(short size, short health, bool classic, short expected) => Assert.Equal(expected, CensusRules.DiseaseRate(size, health, classic));
+		[InlineData(2, 3, 20)]
+		[InlineData(0, 0, 0)]
+		[InlineData(1000, 0, 50)]
+		public void DiseaseRate(short size, short health, short expected) => Assert.Equal(expected, CensusRules.DiseaseRate(size, health));
 
 		[Theory]
-		[InlineData(3, 6, false, 40)]
-		[InlineData(3, 6, true, 40)]
-		[InlineData(3, 0, false, 20)]
-		public void FamilySize(short unrest, short size, bool classic, short expected) => Assert.Equal(expected, CensusRules.FamilySize(unrest, size, classic));
-
-		[Fact]
-		public void ClassicDividesByZeroLikeTheOriginal()
-		{
-			Assert.Throws<DivideByZeroException>(() => CensusRules.ApprovalRating(3, 0, true));
-		}
+		[InlineData(3, 6, 40)]
+		[InlineData(3, 0, 20)]
+		[InlineData(1000, 100, 420)]
+		public void FamilySize(short unrest, short size, short expected) => Assert.Equal(expected, CensusRules.FamilySize(unrest, size));
 	}
 }

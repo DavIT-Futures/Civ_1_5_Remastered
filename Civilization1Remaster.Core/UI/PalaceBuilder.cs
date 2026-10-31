@@ -662,7 +662,6 @@ namespace Civilization1Remaster.Core.UI
 
 			DrawPalaceSection(selectedSection, 0);
 
-			ushort selWordOff = (ushort)(selectedSection << 1);
 			byte marker0 = PalaceSectionStyleMarker(selectedSection, 0);
 			byte marker1 = PalaceSectionStyleMarker(selectedSection, 1);
 			for (ushort styleIdx = 1; (short)styleIdx <= 3; styleIdx++)
@@ -727,22 +726,11 @@ namespace Civilization1Remaster.Core.UI
 							PalacePicture(optIdx, 0));
 
 						drawX = (short)(drawX + (short)Palace.PartWidth);
-						if (this.Owner.TurnHooks.ClassicPalaceStyleGlitch)
-						{
-							this.Owner.Services.DrawPictureToScreen(
-								Screen.Box,
-								drawX,
-								(short)(this.Processor.PullInt8(dataSeg, (ushort)(selWordOff + PalacePartHeightTable3Address)) + 1),
-								this.Processor.PullUInt16(dataSeg, (ushort)(6 + PalacePicturesTableAddress + 2)));
-						}
-						else
-						{
-							this.Owner.Services.DrawPictureToScreen(
-								Screen.Box,
-								drawX,
-								(short)(this.Processor.PullInt8(dataSeg, (ushort)(0xf * nextLevel + 5 * optIdx + PalacePartHeightTable3Address)) + 1),
-								PalacePicture(optIdx, 1));
-						}
+						this.Owner.Services.DrawPictureToScreen(
+							Screen.Box,
+							drawX,
+							(short)(this.Processor.PullInt8(dataSeg, (ushort)(0xf * nextLevel + 5 * optIdx + PalacePartHeightTable3Address)) + 1),
+							PalacePicture(optIdx, 1));
 						break;
 
 					case 2:

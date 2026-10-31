@@ -52,9 +52,6 @@ namespace Civilization1Remaster.Core.Game
 		}
 
 		/// <inheritdoc/>
-		public ushort ActiveTroop => this.turn.Troop;
-
-		/// <inheritdoc/>
 		public void HandlePlayerTurn(short participantIdx)
 		{
 			using var _ = this.Processor.Journal.Scope($"HandlePlayerTurn({participantIdx})");

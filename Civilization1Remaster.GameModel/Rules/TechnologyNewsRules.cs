@@ -11,11 +11,8 @@ namespace Civilization1Remaster.GameModel.Rules
 
 		/// <summary>
 		/// Whether the news names where the technology came from: not for the player's own research, whose source is the
-		/// player or 0 (UncoverTechnology, the scrolls of a hut). classic: as the translated code did it, which tested a stale
-		/// register instead of the source 0 and so named "the Barbarians" (player 0) for every research of a computer
-		/// player; kept for the tests (TurnEvents.ClassicTechnologyNews).
+		/// player or 0 (UncoverTechnology, the scrolls of a hut)
 		/// </summary>
-		public static bool NamesSource(int participantIdx, int sourceIdx, bool classic) =>
-			participantIdx != sourceIdx && (classic || sourceIdx != 0);
+		public static bool NamesSource(int participantIdx, int sourceIdx) => participantIdx != sourceIdx && sourceIdx != 0;
 	}
 }

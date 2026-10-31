@@ -211,9 +211,9 @@ namespace Civilization1Remaster.Core.Game
 						.Dialog(100, 80);
 					break;
 
-				case KeyCodes.AltH: // Alt + H (the remaster shows the help always; ClassicHelpKey: only with the help option, before 0)
-					this.Owner.HelpSystem.ShowHelpPopup(GameTexts.TopicHelp1B, !this.Owner.TurnHooks.ClassicHelpKey);
-					this.Owner.HelpSystem.ShowHelpPopup(GameTexts.TopicHelp2B, !this.Owner.TurnHooks.ClassicHelpKey);
+				case KeyCodes.AltH: // Alt + H (the help is shown always)
+					this.Owner.HelpSystem.ShowHelpPopup(GameTexts.TopicHelp1B, true);
+					this.Owner.HelpSystem.ShowHelpPopup(GameTexts.TopicHelp2B, true);
 					break;
 
 				case KeyCodes.AltQ:

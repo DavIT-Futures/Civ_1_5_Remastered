@@ -473,18 +473,6 @@ namespace Civilization1Remaster.Machine
 			return ret;
 		}
 
-		public ushort SubtractWord(ushort amount1, ushort amount2)
-		{
-			ushort ret = (ushort)(amount1 - amount2);
-			// Modifies flags: AF CF OF PF SF ZF
-			this.markers.IsCarry = (amount1 < amount2);
-			this.markers.IsOverflow = (((amount1 ^ amount2) & (amount1 ^ ret)) & 0x8000) != 0;
-			this.markers.IsSigned = (ret & 0x8000) != 0;
-			this.markers.IsZero = (ret == 0);
-
-			return ret;
-		}
-
 		public void WritePortByte(byte gate, byte amount)
 		{
 			this.WritePortByte((ushort)gate, amount);

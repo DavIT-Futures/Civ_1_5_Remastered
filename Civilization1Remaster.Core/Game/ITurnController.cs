@@ -4,9 +4,6 @@ namespace Civilization1Remaster.Core.Game
 	/// <summary>The operations of TurnController that the other parts of the game use</summary>
 	public interface ITurnController
 	{
-		/// <summary>The unit of the running HandlePlayerTurn (the local 0x32), for the tests that click next to it</summary>
-		ushort ActiveTroop { get; }
-
 		/// <summary>
 		/// The turn of a player: passes over his units (another pass while some unit waited or was off the view), each unit
 		/// gets its orders (from ShiftAIUnit, its standing orders or the keys and clicks of the human) and carries them out

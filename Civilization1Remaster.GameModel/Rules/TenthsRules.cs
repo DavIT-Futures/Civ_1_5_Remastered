@@ -9,10 +9,7 @@ namespace Civilization1Remaster.GameModel.Rules
 		/// <summary>The part before the decimal point</summary>
 		public static short Whole(short tenths) => (short)(tenths / 10);
 
-		/// <summary>
-		/// The digit after the decimal point. classic: as the translated code wrote it, the whole part again ("4.4" for 45,
-		/// value / 10 where the original had value % 10); kept for the tests (TurnEvents.ClassicTenths).
-		/// </summary>
-		public static short Tenth(short tenths, bool classic) => (short)(classic ? tenths / 10 : tenths % 10);
+		/// <summary>The digit after the decimal point</summary>
+		public static short Tenth(short tenths) => (short)(tenths % 10);
 	}
 }

@@ -9,8 +9,7 @@ namespace Civilization1Remaster.Core.Game
 		/// <summary>
 		/// The food of the city in its turn: the flag 0x80 cleared; with the food storage below zero a settler of the city
 		/// starves (the human is told), else the city loses a citizen and the storage, at size 1 the city is lost
-		/// (ClassicStarvation: the translated code tests the flags of the earlier comparison instead of the size, so it is
-		/// always lost); with the storage at (size + 1) x 0x4a the city grows (a granary keeps 5 x size + 5), above 10
+		/// with the storage at (size + 1) x 0x4a the city grows (a granary keeps 5 x size + 5), above 10
 		/// without an aqueduct it stays (with the bit 4 of DiagMarkers; the human is told). False when the city is lost.
 		/// The locals of HandleCity are used as in the original.
 		/// </summary>
@@ -57,11 +56,10 @@ namespace Civilization1Remaster.Core.Game
 				}
 				else
 				{
-					// The city loses a citizen, and itself at size 1 (ClassicStarvation: whatever its size, as the translated
-					// code does)
+					// The city loses a citizen, and itself at size 1
 					town.TrueExtent--;
 
-					if (this.Owner.TurnHooks.ClassicStarvation || town.TrueExtent == 0)
+					if (town.TrueExtent == 0)
 						return LoseStarvingCity(town, townIdx);
 				}
 

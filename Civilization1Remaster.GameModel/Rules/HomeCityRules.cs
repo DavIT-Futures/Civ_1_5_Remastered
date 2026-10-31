@@ -10,11 +10,8 @@ namespace Civilization1Remaster.GameModel.Rules
 
 		/// <summary>
 		/// Whether the owner of the home city may be read from the city table: not for a unit without a home city, which
-		/// then counts as homed with its own player (DivideCivilization: it stays with the old civilization). classic: as the
-		/// translated code did it, which read Towns[255] and threw IndexOutOfRangeException (DOS read the record before the
-		/// table). Kept for the tests (TurnEvents.ClassicSchismHomes).
+		/// then counts as homed with its own player (DivideCivilization: it stays with the old civilization)
 		/// </summary>
-		public static bool HasHome(int homeIdx, bool classic) =>
-			classic || homeIdx != NoHome;
+		public static bool HasHome(int homeIdx) => homeIdx != NoHome;
 	}
 }

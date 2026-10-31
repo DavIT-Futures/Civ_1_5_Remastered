@@ -34,83 +34,8 @@ namespace Civilization1Remaster.Core.Game
 		}
 
 		/// <inheritdoc/>
-		public bool ClassicHealing { get; set; }
-
-		/// <inheritdoc/>
-		public bool ClassicTechnologyNews { get; set; }
-
-		/// <inheritdoc/>
-		public bool ClassicRailroads { get; set; }
-
-		/// <inheritdoc/>
-		public bool ClassicWonderCities { get; set; }
-
-		/// <inheritdoc/>
-		public bool ClassicSchismHomes { get; set; }
-
-		/// <inheritdoc/>
-		public bool ClassicSchism { get; set; }
-
-		/// <inheritdoc/>
-		public bool ClassicStarvation { get; set; }
-
-		/// <inheritdoc/>
-		public bool ClassicStackStrength { get; set; }
-
-		/// <inheritdoc/>
-		public bool ClassicMilitaryReportRows { get; set; }
-
-		/// <inheritdoc/>
-		public bool ClassicTenths { get; set; }
-
-		/// <inheritdoc/>
-		public bool ClassicSpaceshipPictures { get; set; }
-
-		/// <inheritdoc/>
-		public bool ClassicDisasterDraws { get; set; }
-
-		/// <inheritdoc/>
-		public bool ClassicReplayPopulation { get; set; }
-
-		/// <inheritdoc/>
-		public bool ClassicEmissaryThreat { get; set; }
-
-		/// <inheritdoc/>
-		public bool ClassicFreshGameRuins { get; set; }
-
-		/// <inheritdoc/>
-		public bool ClassicSpaceshipSlots { get; set; }
-
-		/// <inheritdoc/>
-		public bool ClassicLabelNumbers { get; set; }
-
-		/// <inheritdoc/>
-		public bool ClassicCensus { get; set; }
-
-		/// <inheritdoc/>
-		public bool ClassicTributeDemand { get; set; }
-
-		/// <inheritdoc/>
-		public bool ClassicPalaceStyleGlitch { get; set; }
-
-		/// <inheritdoc/>
-		public bool ClassicPillagePlayer { get; set; }
-
-		/// <inheritdoc/>
-		public bool ClassicHelpKey { get; set; }
-
-		/// <inheritdoc/>
-		public bool ClassicBarbarianOrder { get; set; }
-
-		/// <inheritdoc/>
 		public void MendFortifiedUnits()
 		{
-			if (this.ClassicHealing)
-			{
-				MendOnlyFortifiedUnits();
-				return;
-			}
-
 			UnitMemory troops = new UnitMemory(this.Processor);
 
 			for (int participantIdx = 0; participantIdx < UnitHealth.ParticipantTally; participantIdx++)
@@ -738,26 +663,6 @@ namespace Civilization1Remaster.Core.Game
 		}
 
 		/// <summary>
-		/// The healing before HealingRules (the golden master baselines have it): fortified units heal one lost hit point every
-		/// turn, ships and planes never heal. Kept for the tests, see <see cref="ClassicHealing"/>.
-		/// </summary>
-		private void MendOnlyFortifiedUnits()
-		{
-			for (int participantIdx = 0; participantIdx < UnitHealth.ParticipantTally; participantIdx++)
-			{
-				for (int troopIdx = 0; troopIdx < UnitHealth.TroopTally; troopIdx++)
-				{
-					int troopKind = this.Troops.Pull(participantIdx, troopIdx, UnitMemory.Kind);
-
-					if (troopKind != 0xff && (this.Troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & (int)UnitStatusEnum.Fortified) != 0)
-					{
-						this.Owner.World.Vitals.MendOne(participantIdx, troopIdx, troopKind);
-					}
-				}
-			}
-		}
-
-		/// <summary>
 		/// The start of the turn and the turns of the players; false when the game ended in it (0xdc48). startGold: the gold
 		/// of the human player at the start of the turn.
 		/// </summary>
@@ -965,32 +870,15 @@ namespace Civilization1Remaster.Core.Game
 
 		/// <summary>
 		/// Disasters for random cities of size 5 or more (not the last city of their owner): two drawn cities
-		/// (TurnEndRules.DisasterDraws); with ClassicDisasterDraws the loop counter is the city number + 1, like in the
-		/// translated code, so it ends after the first city unless that is city 0
+		/// (TurnEndRules.DisasterDraws)
 		/// </summary>
 		private void StrikeRandomCities()
 		{
-			if (!this.ClassicDisasterDraws)
+			for (int draw = 0; draw < TurnEndRules.DisasterDraws; draw++)
 			{
-				for (int draw = 0; draw < TurnEndRules.DisasterDraws; draw++)
-				{
-					short townIdx = (short)this.Owner.Libc.Dice.DrawInt(128);
+				short townIdx = (short)this.Owner.Libc.Dice.DrawInt(128);
 
-					StrikeCity(townIdx);
-				}
-
-				return;
-			}
-
-			short counter = 0;
-
-			while (counter < 2)
-			{
-				counter = (short)this.Owner.Libc.Dice.DrawInt(128);
-
-				StrikeCity(counter);
-
-				counter++;
+				StrikeCity(townIdx);
 			}
 		}
 
@@ -1065,8 +953,7 @@ namespace Civilization1Remaster.Core.Game
 
 		/// <summary>
 		/// Every 50 turns: the most technologies, the technology level of the time (0xd2de, AD only), and into the replay the
-		/// status of the human player (11: cities, population; with ClassicReplayPopulation the high byte is always 0, see
-		/// TurnEndRules.ReplayPopulationHigh) and the ranking (12: the players by their standing, two places a byte; the bytes are made
+		/// status of the human player (11: cities, population) and the ranking (12: the players by their standing, two places a byte; the bytes are made
 		/// in the frame and given in the reverse order, like in the original)
 		/// </summary>
 		private void NoteStatusInReplay()
@@ -1094,7 +981,7 @@ namespace Civilization1Remaster.Core.Game
 			ushort population = this.Owner.Helpers.ComputePlayerPopulation(this.Owner.World.PersonParticipantIdx);
 
 			this.Owner.UnitOps.AttachReplayContent(11, (byte)this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx].TownTally,
-				TurnEndRules.ReplayPopulationHigh(population, this.ClassicReplayPopulation), (byte)population);
+				TurnEndRules.ReplayPopulationHigh(population), (byte)population);
 
 			byte[] ranking = new byte[4];
 

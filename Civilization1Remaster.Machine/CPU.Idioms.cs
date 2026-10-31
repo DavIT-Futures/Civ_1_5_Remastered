@@ -23,20 +23,5 @@ namespace Civilization1Remaster.Machine
 
 			return (short)quotient;
 		}
-
-		/// <summary>Saves the destination and source index registers on the stack (push di; push si).</summary>
-		public void PreserveIndexRegisters()
-		{
-			StackWord(this.regDest.Value16);
-			StackWord(this.regSource.Value16);
-		}
-
-		/// <summary>Takes the registers saved by PreserveIndexRegisters back from the stack, in the reverse order (pop si; pop di).</summary>
-		public void RestoreIndexRegisters()
-		{
-			this.regSource.Value16 = UnstackWord();
-			this.regDest.Value16 = UnstackWord();
-		}
-
 	}
 }

@@ -274,12 +274,12 @@ namespace Civilization1Remaster.Tests.GameModel
 			UnitHealth health = new UnitHealth();
 			health.Assign(1, 1, 1, 3, false);
 
-			Assert.True(health.MendOne(1, 1, 1));
+			Assert.Equal(1, health.MendAmount(1, 1, 1, 1));
 			Assert.Equal(2, health.ObtainLostHitPoints(1, 1, 1));
 			Assert.Equal(2, health.MendAmount(1, 1, 1, 5));
-			Assert.False(health.MendOne(1, 1, 1));
 			Assert.Equal(0, health.MendAmount(1, 1, 1, 1));
-			Assert.False(health.MendOne(1, 1, 2));
+			Assert.Equal(0, health.MendAmount(1, 1, 2, 1));
+			Assert.Equal(0, health.MendAmount(1, 1, 1, 0));
 		}
 
 		[Fact]

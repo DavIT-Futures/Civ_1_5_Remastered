@@ -39,7 +39,7 @@ namespace Civilization1Remaster.Core.Game
 		{
 			bool knowsRailroad = this.Owner.Advisors.PlayerKnowsTechnology(participantIdx, RailroadRules.RailroadTechnology) != 0;
 
-			if (!RailroadRules.HasRailroad(this.Owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc), knowsRailroad, classic: false))
+			if (!RailroadRules.HasRailroad(this.Owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc), knowsRailroad))
 				return false;
 
 			bool byHand = participantIdx == this.Owner.World.PersonParticipantIdx &&
@@ -50,7 +50,7 @@ namespace Civilization1Remaster.Core.Game
 
 			int ridden = this.freeRides.Steps.GetValueOrDefault((participantIdx, troopIdx));
 
-			if (!RailroadRules.IsFreeStep(byHand, ridden, classic: false))
+			if (!RailroadRules.IsFreeStep(byHand, ridden))
 				return false;
 
 			if (!byHand)
@@ -656,17 +656,7 @@ namespace Civilization1Remaster.Core.Game
 					// A road on both tiles: 1, a railroad where it stands nothing (for the human without GoTo)
 					byte cost = 1;
 
-					if (this.Owner.TurnHooks.ClassicRailroads)
-					{
-						if ((this.Owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 0x10) != 0 && participantIdx == this.Owner.World.PersonParticipantIdx)
-						{
-							this.indexDest = (ushort)(participantIdx * UnitMemory.ParticipantStride);
-
-							if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.TravelHoriz) == 0xff)
-								cost = 0;
-						}
-					}
-					else if (RideForFree(participantIdx, troopIdx, horizLoc, vertLoc))
+					if (RideForFree(participantIdx, troopIdx, horizLoc, vertLoc))
 					{
 						cost = 0;
 					}

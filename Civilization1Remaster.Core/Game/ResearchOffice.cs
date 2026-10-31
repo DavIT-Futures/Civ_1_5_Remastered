@@ -1529,7 +1529,7 @@ namespace Civilization1Remaster.Core.Game
 				.Text(participantIdx == participantIdx1 || participantIdx1 == 0 ? (ushort)0x23d7 : (ushort)0x23e1)
 				.Text(TechnologyText(scienceIdx));
 
-			if (TechnologyNewsRules.NamesSource(participantIdx, participantIdx1, this.Owner.TurnHooks.ClassicTechnologyNews))
+			if (TechnologyNewsRules.NamesSource(participantIdx, participantIdx1))
 			{
 				this.Owner.Words.Append(" from\nthe ");
 
@@ -1682,7 +1682,7 @@ namespace Civilization1Remaster.Core.Game
 				for (ushort wonderIdx = 1; wonderIdx <= 0x15; wonderIdx++)
 				{
 					if (WonderObsoleteTechnology(wonderIdx) != (ushort)scienceIdx ||
-						!WonderCityRules.ReadsCity(this.Owner.World.MarvelTownIdx[wonderIdx], this.Owner.TurnHooks.ClassicWonderCities) ||
+						!WonderCityRules.ReadsCity(this.Owner.World.MarvelTownIdx[wonderIdx]) ||
 						this.Owner.World.Towns[this.Owner.World.MarvelTownIdx[wonderIdx]].ParticipantIdx != person)
 						continue;
 
@@ -1698,7 +1698,7 @@ namespace Civilization1Remaster.Core.Game
 			// The Great Library (wonder 5) gives a technology that two players know
 			ushort libraryOwner = (ushort)this.Owner.World.MarvelTownIdx[5];
 
-			if (libraryOwner == 0xffff || !WonderCityRules.ReadsCity(libraryOwner, this.Owner.TurnHooks.ClassicWonderCities))
+			if (libraryOwner == 0xffff || !WonderCityRules.ReadsCity(libraryOwner))
 				return;
 
 			libraryOwner = (ushort)this.Owner.World.Towns[libraryOwner].ParticipantIdx;

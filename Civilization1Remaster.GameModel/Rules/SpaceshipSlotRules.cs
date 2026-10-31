@@ -18,24 +18,20 @@ namespace Civilization1Remaster.GameModel.Rules
 
 		/// <summary>
 		/// The bit of the full kind in its complete mask: its line in the dialog (kind - 3 for components, kind - 6 for
-		/// modules). classic: the translated code shifted by the kind itself (3 - 8), bits no dialog line has.
+		/// modules)
 		/// </summary>
-		public static int CompleteBit(int kind, int partGroup, bool classic) => classic ? kind : kind - (3 * partGroup);
+		public static int CompleteBit(int kind, int partGroup) => kind - (3 * partGroup);
 
-		/// <summary>
-		/// The address of the name of the part kind. classic: the translated code added 3 * group to the kind that already
-		/// had it, the name of another part (or past the table).
-		/// </summary>
-		public static ushort PartName(int kind, int partGroup, bool classic) =>
-			(ushort)((((classic ? 3 * partGroup : 0) + kind) * 0x1a) + PartRecords);
+		/// <summary>The address of the name of the part kind</summary>
+		public static ushort PartName(int kind, int partGroup) => (ushort)((kind * 0x1a) + PartRecords);
 
 		/// <summary>
 		/// The place of a new structure: the free place chosen (the side closer to the last built part), else the free place
-		/// of the other side, else none. classic: the chosen one even when that side is full (0x63, past the table).
+		/// of the other side, else none
 		/// </summary>
-		public static ushort StructureSlot(ushort chosen, ushort other, bool classic)
+		public static ushort StructureSlot(ushort chosen, ushort other)
 		{
-			if (classic || chosen != NoStructureSlot)
+			if (chosen != NoStructureSlot)
 				return chosen;
 
 			return other != NoStructureSlot ? other : NoSlot;

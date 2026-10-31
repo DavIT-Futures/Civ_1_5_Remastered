@@ -51,8 +51,7 @@ namespace Civilization1Remaster.Core.UI
 		/// players he has contact with (Relations bit 0x40) get their name and title, government, treasury, units (on the
 		/// easiest two levels), a colour and peace, alliance or war with each player, the others only "no contact" (0x485b).
 		/// The rows from the second player get a box "INFO" + row, and a key 1 - 7 or a click right of x 0x119 shows the
-		/// intelligence report of that row's player (the rows without contact read an entry of the list in the stack frame that
-		/// was never written, like in the original, unless ClassicMilitaryReportRows is off: then they show nothing). Ends with a key or click elsewhere.
+		/// intelligence report of that row's player (the rows without contact show nothing). Ends with a key or click elsewhere.
 		/// </summary>
 		void ShowMilitaryReport();
 

@@ -8,7 +8,7 @@ namespace Civilization1Remaster.Core.Game
 		/// words of the stack frame (BP - offset); the offset of each one is in its comment, the comments of the methods still
 		/// name the locals by these offsets. Every local is a word; byte reads take its low byte, byte writes keep its high byte.
 		/// B3 (2026-10-26): a C# object made for every turn, every value 0 at the start like the zeroed frame of the remaster
-		/// (the "stays on the stack" remarks below tell what the classic code left there for later functions).
+		/// (the "stays on the stack" remarks below tell what the original code left there for later functions).
 		/// </summary>
 		private sealed class TurnLocals
 		{

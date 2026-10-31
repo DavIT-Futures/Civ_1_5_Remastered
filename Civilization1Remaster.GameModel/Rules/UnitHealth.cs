@@ -94,19 +94,6 @@ namespace Civilization1Remaster.GameModel.Rules
 		}
 
 		/// <summary>
-		/// Heals one hit point. Returns true if the unit was wounded.
-		/// </summary>
-		public bool MendOne(int participantIdx, int troopIdx, int troopKind)
-		{
-			if (!IsEquivalentTo(participantIdx, troopIdx, troopKind) || this.missingStrikeMarks[participantIdx, troopIdx] == 0)
-				return false;
-
-			this.missingStrikeMarks[participantIdx, troopIdx]--;
-
-			return true;
-		}
-
-		/// <summary>
 		/// Heals up to <paramref name="amount"/> hit points. Returns the number of hit points actually healed.
 		/// </summary>
 		public int MendAmount(int participantIdx, int troopIdx, int troopKind, int amount)

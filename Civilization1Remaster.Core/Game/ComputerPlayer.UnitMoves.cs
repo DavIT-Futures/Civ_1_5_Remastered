@@ -234,8 +234,7 @@ namespace Civilization1Remaster.Core.Game
 		/// The first score 0x10 of the tile of the direction 0x40 (0x26 / 0x2e, terrain 0x38, unit 0x24 of the player 0x58):
 		/// settlers start from 0 (on a ship they skip a tile they may not occupy: false); other units unseen (byte 9) on land a
 		/// die of 3 less the defence (twice it for a defender) of the terrain, else a die of 5 and with an own stack there its
-		/// strength (StackStrengthRules: the tally + 1, or with ClassicStackStrength SI as the second tally leaves
-		/// it), or 4 times the defence of the terrain;
+		/// strength (the tally + 1), or 4 times the defence of the terrain;
 		/// planes a die of 3. The farther the direction from the heading of the unit (0x5e), the less. The locals of
 		/// ShiftAIUnit are used as in the original.
 		/// </summary>
@@ -273,8 +272,7 @@ namespace Civilization1Remaster.Core.Game
 						{
 							ushort tallyPlusOne = (ushort)(this.Owner.UnitOps.CountUnitsByDomainInStack(participantIdx, stack, 2) + 1);
 							ushort strength = (ushort)(this.Owner.UnitOps.CountUnitsByDomainInStack(participantIdx, stack, 1) << 2);
-							ushort share = DivideWords(strength,
-								StackStrengthRules.Divisor(tallyPlusOne, (ushort)(participantIdx * UnitMemory.ParticipantStride), this.Owner.TurnHooks.ClassicStackStrength));
+							ushort share = DivideWords(strength, tallyPlusOne);
 							this.look.Score = (ushort)(this.look.Score + share);
 						}
 
@@ -282,8 +280,7 @@ namespace Civilization1Remaster.Core.Game
 						{
 							ushort tallyPlusOne = (ushort)(this.Owner.UnitOps.CountUnitsByDomainInStack(participantIdx, stack, 1) + 1);
 							ushort strength = (ushort)(this.Owner.UnitOps.CountUnitsByDomainInStack(participantIdx, stack, 3) << 1);
-							ushort share = DivideWords(strength,
-								StackStrengthRules.Divisor(tallyPlusOne, (ushort)(participantIdx * UnitMemory.ParticipantStride), this.Owner.TurnHooks.ClassicStackStrength));
+							ushort share = DivideWords(strength, tallyPlusOne);
 							this.look.Score = (ushort)(this.look.Score + share);
 						}
 					}

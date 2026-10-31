@@ -266,7 +266,7 @@ namespace Civilization1Remaster.Core.UI
 					vertLoc = 0x20;
 				}
 
-				short participantIdx = WonderCityRules.ReadsCity(townIdx, this.Owner.TurnHooks.ClassicWonderCities) ?
+				short participantIdx = WonderCityRules.ReadsCity(townIdx) ?
 					this.Owner.World.Towns[townIdx].ParticipantIdx : (short)0;
 
 				this.Owner.Words.Clear();
@@ -708,7 +708,7 @@ namespace Civilization1Remaster.Core.UI
 			DrawCensusRow(GameTexts.TextApprovalRating, ref vertLoc, false, 0x4557, participantIdx =>
 			{
 				SetCensusValue(participantIdx, CensusRules.ApprovalRating(
-					tally.Approval[participantIdx], tally.Size[participantIdx], this.Owner.TurnHooks.ClassicCensus));
+					tally.Approval[participantIdx], tally.Size[participantIdx]));
 
 				if (participantIdx == shownIdx)
 				{
@@ -812,7 +812,7 @@ namespace Civilization1Remaster.Core.UI
 			DrawCensusRow(GameTexts.TextDisease, ref vertLoc, true, 0x45ce, participantIdx =>
 			{
 				SetCensusValue(participantIdx, CensusRules.DiseaseRate(
-					tally.Size[participantIdx], tally.Health[participantIdx], this.Owner.TurnHooks.ClassicCensus));
+					tally.Size[participantIdx], tally.Health[participantIdx]));
 
 				if (this.Owner.Advisors.PlayerKnowsTechnology(participantIdx, 10) != 0)
 				{
@@ -861,14 +861,14 @@ namespace Civilization1Remaster.Core.UI
 			DrawCensusRow(GameTexts.TextFamilySize, ref vertLoc, false, 0x4624, participantIdx =>
 			{
 				SetCensusValue(participantIdx, CensusRules.FamilySize(
-					tally.Unrest[participantIdx], tally.Size[participantIdx], this.Owner.TurnHooks.ClassicCensus));
+					tally.Unrest[participantIdx], tally.Size[participantIdx]));
 
 				if (participantIdx == shownIdx)
 				{
 					EmptyMessage()
 						.Number(TenthsRules.Whole(CensusValue(participantIdx)))
 						.Text(".")
-						.Number(TenthsRules.Tenth(CensusValue(participantIdx), this.Owner.TurnHooks.ClassicTenths))
+						.Number(TenthsRules.Tenth(CensusValue(participantIdx)))
 						.Text(" children");
 
 					this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 104, row, Hues.White);
@@ -915,7 +915,7 @@ namespace Civilization1Remaster.Core.UI
 			DrawCensusRow(GameTexts.TextProductivity, ref vertLoc, false, 0x466f, participantIdx =>
 			{
 				SetCensusValue(participantIdx, CensusRules.Productivity(
-					tally.Output[participantIdx], tally.Size[participantIdx], this.Owner.TurnHooks.ClassicCensus));
+					tally.Output[participantIdx], tally.Size[participantIdx]));
 
 				if (participantIdx == shownIdx)
 				{

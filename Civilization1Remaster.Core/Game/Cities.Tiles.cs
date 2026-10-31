@@ -202,7 +202,7 @@ namespace Civilization1Remaster.Core.Game
 			{
 				ushort townIdx = (ushort)this.Owner.World.MarvelTownIdx[miracleIdent];
 
-				enjoys = townIdx != 0xffff && WonderCityRules.ReadsCity((short)townIdx, this.Owner.TurnHooks.ClassicWonderCities) &&
+				enjoys = townIdx != 0xffff && WonderCityRules.ReadsCity((short)townIdx) &&
 					this.Owner.World.Towns[townIdx].ParticipantIdx == participantIdx;
 			}
 
