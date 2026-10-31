@@ -311,24 +311,20 @@ namespace Civilization1Remaster.Engine
 		{
 			this.processor.Journal.OpenScope($"OperateMenu(0x{charsAddr:x4}, {horizLoc}, {vertLoc}, {arg4})");
 
-			// The stack frame stays: the advisor title buffer is at bp - 0x50
-			this.processor.EnterFrame(0x5c);
-
 			MenuLineOffsets = 0;
 
 			if (MenuMeasuring == 1)
 			{
-				MeasureAndDrawMenuFrame(charsAddr, horizLoc, vertLoc);
+				MeasureAndDrawMenuFrame(new MenuText(this.owner, charsAddr), horizLoc, vertLoc);
 			}
 
-			RenderMenuLines(charsAddr, horizLoc, vertLoc, arg4);
+			RenderMenuLines(new MenuText(this.owner, charsAddr), horizLoc, vertLoc, arg4);
 
-			this.processor.LeaveFrame();
 			// Far return
 			this.processor.Journal.CloseScope("OperateMenu");
 		}
 
-		private void MeasureAndDrawMenuFrame(ushort charsAddr, int horizLoc, int vertLoc)
+		private void MeasureAndDrawMenuFrame(MenuText text, int horizLoc, int vertLoc)
 		{
 			ushort fontId = DrawingBox.TypefaceIdx;
 			ushort lineHeight = this.owner.VideoCard.ObtainTextHeight(fontId);
@@ -356,9 +352,9 @@ namespace Civilization1Remaster.Engine
 			MenuLineCount = 0;
 			MenuWidth = 0;
 
-			while (this.owner.Libc.TextLength(charsAddr) > charIdx)
+			while (text.Length > charIdx)
 			{
-				byte ch = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(charsAddr + charIdx));
+				byte ch = text[charIdx];
 
 				if (ch == 0xa)
 				{
@@ -382,7 +378,7 @@ namespace Civilization1Remaster.Engine
 						{
 							if ((short)choiceCount < 0x20)
 							{
-								byte nextCh = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(charsAddr + charIdx + 1));
+								byte nextCh = text[charIdx + 1];
 								this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(choiceCount + 0xdc4a), nextCh);
 							}
 
@@ -417,9 +413,9 @@ namespace Civilization1Remaster.Engine
 				bottomEdge += 2;
 			}
 
-			ushort totalLen = this.owner.Libc.TextLength(charsAddr);
+			ushort totalLen = text.Length;
 
-			if (this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(charsAddr + totalLen - 1)) != 0xa)
+			if (text[totalLen - 1] != 0xa)
 			{
 				choiceCount--;
 			}
@@ -437,15 +433,16 @@ namespace Civilization1Remaster.Engine
 				}
 				else
 				{
-					ushort titleAddr = (ushort)(this.processor.RegFrame.Value16 - 0x50);
-					this.owner.Libc.CopyText(titleAddr, this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((advisor << 1) + AdvisorTitlesTableAddress)));
+					// The title of the advisor (the original builds it in its frame)
+					string title = this.processor.PullText(CPU.AsLinearAddress(this.processor.SegData.Value16,
+						this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((advisor << 1) + AdvisorTitlesTableAddress))));
 
 					if ((short)advisor <= 2)
 					{
-						this.owner.Libc.AppendText(titleAddr, " report:");
+						title += " report:";
 					}
 
-					ushort titleWidth = (ushort)this.owner.TextPainter.ObtainTextWidth(titleAddr);
+					ushort titleWidth = (ushort)this.owner.TextPainter.ObtainTextWidth(title);
 
 					ushort minRight = (ushort)(horizLoc + titleWidth + 8);
 
@@ -486,8 +483,8 @@ namespace Civilization1Remaster.Engine
 							horizLoc - 40, vertLoc - 6);
 					}
 
-					this.owner.TextPainter.RenderTextToScreen0(titleAddr, horizLoc + 5, vertLoc - 4, 15);
-					this.owner.TextPainter.ObtainTextWidth(titleAddr);
+					this.owner.TextPainter.RenderTextToScreen0(title, horizLoc + 5, vertLoc - 4, 15);
+					this.owner.TextPainter.ObtainTextWidth(title);
 					this.owner.VideoCard.RenderLine(ScreenBox,
 						horizLoc + 5, vertLoc + 3, horizLoc + 5, vertLoc + 3, 11);
 				}
@@ -520,9 +517,48 @@ namespace Civilization1Remaster.Engine
 			}
 		}
 
-		private void RenderMenuLines(ushort charsAddr, int horizLoc, int vertLoc, ushort arg4)
+		/// <summary>
+		/// The text of a menu by the index of its bytes: in the message buffer its C# array (Words), elsewhere the data
+		/// segment; a byte outside the buffer is the one of the memory, like at the address of the original
+		/// </summary>
+		private sealed class MenuText
 		{
-			byte firstCh = this.processor.PullUInt8(this.processor.SegData.Value16, charsAddr);
+			private readonly GameEngine game;
+			private readonly ushort address;
+			private readonly int bufferIndex;
+
+			public MenuText(GameEngine game, ushort address)
+			{
+				this.game = game;
+				this.address = address;
+				int offset = address - TextBuffer.Address;
+				this.bufferIndex = offset >= 0 && offset < TextBuffer.Size ? offset : -1;
+			}
+
+			public byte this[int index]
+			{
+				get => this.bufferIndex >= 0 ? this.game.Words[this.bufferIndex + index] :
+					this.game.Processor.PullUInt8(this.game.Processor.SegData.Value16, (ushort)(this.address + index));
+				set
+				{
+					if (this.bufferIndex >= 0)
+						this.game.Words[this.bufferIndex + index] = value;
+					else
+						this.game.Processor.EmitUInt8(this.game.Processor.SegData.Value16, (ushort)(this.address + index), value);
+				}
+			}
+
+			/// <summary>The text from the byte at the index on (to its 0 byte)</summary>
+			public string From(int index) => this.bufferIndex >= 0 ? this.game.Words.TextFrom(this.bufferIndex + index) :
+				this.game.Processor.PullText(CPU.AsLinearAddress(this.game.Processor.SegData.Value16, (ushort)(this.address + index)));
+
+			/// <summary>The length of the text (strlen)</summary>
+			public ushort Length => (ushort)From(0).Length;
+		}
+
+		private void RenderMenuLines(MenuText text, int horizLoc, int vertLoc, ushort arg4)
+		{
+			byte firstCh = text[0];
 			short optionIdx = (firstCh == 0x20 || firstCh == 0x5f) ? (short)0 : (short)-1;
 
 			DrawingBox.ForeHues = MenuFlashHue;
@@ -547,32 +583,31 @@ namespace Civilization1Remaster.Engine
 				{
 					ushort lineSlot = (ushort)(lineIdx << 1);
 					ushort nextLineStart = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(lineSlot + MenuLineOffsetsTableAddress + 2));
-					this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(charsAddr + nextLineStart - 1), 0);
+					text[nextLineStart - 1] = 0;
 
 					bool checkedOption = optionIdx >= 0 &&
 						((1 << (optionIdx & 0x1f)) & MenuOptions) != 0;
 
 					if (checkedOption)
 					{
-						ushort lineAddr = (ushort)(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(lineSlot + MenuLineOffsetsTableAddress)) + charsAddr);
-						this.processor.EmitUInt8(this.processor.SegData.Value16, lineAddr, 0x5e);
+						ushort lineStart = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(lineSlot + MenuLineOffsetsTableAddress));
+						text[lineStart] = 0x5e;
 
 						ushort hue = (ushort)(((1 << (optionIdx & 0x1f)) & DisabledLines) != 0 ? 3 : 0);
 
-						this.owner.TextPainter.RenderTextToScreen0(lineAddr,
+						this.owner.TextPainter.RenderTextToScreen0(text.From(lineStart),
 							horizLoc + 5,
 							((short)lineIdx * (short)MenuLineHeight) + vertLoc + 5,
 							hue);
 
-						ushort restoreAddr = (ushort)(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(lineSlot + MenuLineOffsetsTableAddress)) + charsAddr);
-						this.processor.EmitUInt8(this.processor.SegData.Value16, restoreAddr, 0x20);
+						text[this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(lineSlot + MenuLineOffsetsTableAddress))] = 0x20;
 					}
 					else
 					{
 						if (optionIdx < 0 && (short)MenuLineHeight > 9)
 						{
 							this.owner.TextPainter.RenderTextToScreen0(
-								(ushort)(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(lineSlot + MenuLineOffsetsTableAddress)) + charsAddr),
+								text.From(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(lineSlot + MenuLineOffsetsTableAddress))),
 								horizLoc + 5,
 								((short)lineIdx * (short)MenuLineHeight) + vertLoc + 6,
 								0);
@@ -589,22 +624,19 @@ namespace Civilization1Remaster.Engine
 							hue = (ushort)(((1 << (optionIdx & 0x1f)) & DisabledLines) != 0 ? 3 : 0);
 						}
 
-						// The original pushes AX before calling RenderTextToScreen0 without popping it (leaves SP -= 2 per non-checked line)
-						this.processor.StackWord(hue);
-
 						this.owner.TextPainter.RenderTextToScreen0(
-							(ushort)(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(lineSlot + MenuLineOffsetsTableAddress)) + charsAddr),
+							text.From(this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(lineSlot + MenuLineOffsetsTableAddress))),
 							horizLoc + 5,
 							((short)lineIdx * (short)MenuLineHeight) + vertLoc + 5,
 							hue);
 					}
 
 					ushort endOffset = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(lineSlot + MenuLineOffsetsTableAddress + 2));
-					this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(charsAddr + endOffset - 1), 0xa);
+					text[endOffset - 1] = 0xa;
 				}
 
 				ushort nextOffset = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)((lineIdx << 1) + MenuLineOffsetsTableAddress + 2));
-				byte nextLineChar = this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(charsAddr + nextOffset));
+				byte nextLineChar = text[nextOffset];
 
 				if (nextLineChar == 0x20 || nextLineChar == 0x5f)
 				{

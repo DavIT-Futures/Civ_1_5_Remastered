@@ -860,3 +860,12 @@ mutacje 4/4 (cień i środek łapią testy ekranu miasta, nie golden master – 
 tabele przesunięć wierszy w pamięci), teksty kodów `CodeText1` – `5` i tabele nazw (napisy w segmencie danych, zmieniane
 przez grę, porównywane w `mem.`), edycja nazwy miasta (`NewCityScreen`, przesunięcia w buforze), bufory na stosie (krok 3),
 pliki (krok 4).
+
+**Menu i okna – zrobione 2026-10-31.** `DialogDrawing` czyta i pisze tekst menu przez `MenuText` (w buforze komunikatu
+wprost jego tablica C#, gdzie indziej segment danych; bajt poza buforem – pamięć, jak pod adresem), wiersze rysuje jako
+napisy. Zachowane, bo widać je w pamięci: 0 wpisywane na koniec wiersza i przywracane 0xa, zaznaczona opcja '^'
+przywracana jako spacja (także gdy była '_'), znak nowej linii na końcu, tabele 0x654e / 0xdc4a. `OperateMenu` bez
+ramki: tytuł doradcy to napis C# (był budowany pod BP-0x50), bez `StackWord(hue)` dla każdego wiersza (nikt nie czyta
+spod SP). Wejście menu zostaje adresem (prawie zawsze bufor 0xba06) – menu na prawdziwym `string` musiałoby zmieniać
+bajty bufora tak samo, więc nic by nie dało. Pełny zestaw 813/813, mutacje 4/4 (tytuł i '^' łapie tylko
+`OperateAndDisplayMenuMatchOriginalCode`).
