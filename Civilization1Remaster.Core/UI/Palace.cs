@@ -105,7 +105,7 @@ namespace Civilization1Remaster.UI
 			this.owner.Startup.ConcealMouseCursor();
 			this.owner.Words.Clear();
 			this.owner.BlockText.DisplayTextDialog(PalaceUpgradeAnnouncementDialogAddress);
-			this.owner.Libc.CopyText(textBuf, TextBuffer.Address);
+			this.owner.Libc.CopyText(textBuf, this.owner.Words.ToString());
 			this.owner.Startup.QueryForDisk(2, 1);
 
 			DrawingBox.DisplayIdx = 0x1;
@@ -155,7 +155,7 @@ namespace Civilization1Remaster.UI
 					short labelX = (short)(0x30 * (short)sec - 0x24);
 					EmptyMessage()
 						.Number((short)sec);
-					this.owner.TextPainter.RenderTextWithShadow(TextBuffer.Address, labelX, 144, 14);
+					this.owner.TextPainter.RenderTextWithShadow(this.owner.Words.ToString(), labelX, 144, 14);
 					hasOptions = 1;
 				}
 			}
@@ -166,7 +166,7 @@ namespace Civilization1Remaster.UI
 				{
 					this.owner.Words.Set("A");
 					this.processor.EmitGlobalByte(TextBuffer.Address, (byte)(this.owner.Words[0] + (byte)gardenIdx));
-					this.owner.TextPainter.RenderTextWithShadow(TextBuffer.Address, (short)gardenIdx * 120 + 40, 160, 14);
+					this.owner.TextPainter.RenderTextWithShadow(this.owner.Words.ToString(), (short)gardenIdx * 120 + 40, 160, 14);
 					hasOptions = 1;
 				}
 			}
@@ -415,7 +415,7 @@ namespace Civilization1Remaster.UI
 
 				EmptyMessage()
 					.Number((short)optIdx);
-				this.owner.TextPainter.RenderTextWithShadow(TextBuffer.Address, (short)optIdx * 100 - 44, 12, 15);
+				this.owner.TextPainter.RenderTextWithShadow(this.owner.Words.ToString(), (short)optIdx * 100 - 44, 12, 15);
 			}
 
 			this.owner.Helpers.ReleaseResource(PalaceFirstPicture, PalaceCastleResourceAddress);

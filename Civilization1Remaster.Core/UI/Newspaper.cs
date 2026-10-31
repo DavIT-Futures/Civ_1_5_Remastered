@@ -118,7 +118,7 @@ namespace Civilization1Remaster.UI
 					break;
 			}
 
-			short width = (short)(ushort)this.owner.TextPainter.ObtainTextWidth(TextBuffer.Address);
+			short width = (short)(ushort)this.owner.TextPainter.ObtainTextWidth(this.owner.Words.ToString());
 
 			if (width > 0x12c)
 			{
@@ -126,7 +126,7 @@ namespace Civilization1Remaster.UI
 					.City(townIdx)
 					.Text(" News");
 
-				width = (short)(ushort)this.owner.TextPainter.ObtainTextWidth(TextBuffer.Address);
+				width = (short)(ushort)this.owner.TextPainter.ObtainTextWidth(this.owner.Words.ToString());
 			}
 
 			if (width < 0xc8)
@@ -136,27 +136,27 @@ namespace Civilization1Remaster.UI
 				this.owner.TextPainter.RenderText(NewspaperRightPriceLabelAddress, 268, 11, 0);
 			}
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 160, 11, 0);
+			this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 160, 11, 0);
 
 			this.owner.Words.Set(this.owner.Libc.Dice.DrawInt(2) != 0 ? NewspaperMotto1Address : NewspaperMotto2Address);
 
 			DrawingBox.TypefaceIdx = 0x3;
 
-			this.owner.TextPainter.RenderText(TextBuffer.Address, 6, 3, 0);
+			this.owner.TextPainter.RenderText(this.owner.Words.ToString(), 6, 3, 0);
 
-			this.owner.TextPainter.RenderText(TextBuffer.Address, 272, 3, 0);
+			this.owner.TextPainter.RenderText(this.owner.Words.ToString(), 272, 3, 0);
 
 			DrawingBox.TypefaceIdx = 0x1;
 			EmptyMessage()
 				.Text("10 cents");
 
-			this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 272, 28, 0);
+			this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 272, 28, 0);
 
 			this.owner.Words.Set("January 1, ");
 
 			this.owner.TurnHooks.ObtainCurrentYearAsText();
 
-			this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 8, 28, 0);
+			this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 8, 28, 0);
 
 			DrawingBox.TypefaceIdx = 0x2;
 
@@ -168,7 +168,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.BlockText.ImportTextFromFile(NewspaperTextFileNameAddress, topic);
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 160, 3, 0);
+			this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 160, 3, 0);
 
 			DrawingBox.TypefaceIdx = 0x1;
 

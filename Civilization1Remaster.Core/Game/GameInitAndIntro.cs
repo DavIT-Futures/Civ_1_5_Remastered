@@ -1385,7 +1385,7 @@ namespace Civilization1Remaster.Game
 
 			if (StoryState != 2 && (short)StoryLinesTold < 0x28)
 			{
-				this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 160, 160, 3);
+				this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 160, 160, 3);
 
 				this.owner.TextPainter.AwaitTime(5);
 			}
@@ -1423,11 +1423,11 @@ namespace Civilization1Remaster.Game
 
 			this.owner.TextPainter.AwaitTime(10);
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 160, 160, 3);
+			this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 160, 160, 3);
 
 			this.owner.TextPainter.AwaitTime(5);
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 160, 160, 11);
+			this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 160, 160, 11);
 
 			StoryLineTime = 0x0;
 

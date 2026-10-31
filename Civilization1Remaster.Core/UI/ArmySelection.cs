@@ -113,7 +113,7 @@ namespace Civilization1Remaster.UI
 						break;
 				}
 
-				this.owner.TextPainter.RenderTextWithShadow(TextBuffer.Address, this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(place + StrategicLocationHorizTableAddress)) << 2,
+				this.owner.TextPainter.RenderTextWithShadow(this.owner.Words.ToString(), this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(place + StrategicLocationHorizTableAddress)) << 2,
 					this.processor.PullInt8(this.processor.SegData.Value16, (ushort)(place + StrategicLocationVertTableAddress)) << 2, 13);
 			}
 
@@ -140,7 +140,7 @@ namespace Civilization1Remaster.UI
 						break;
 				}
 
-				this.owner.TextPainter.RenderTextWithShadow(TextBuffer.Address, this.owner.World.Participants[participantIdx].TacticalSites[siteIdx].Place.X << 2,
+				this.owner.TextPainter.RenderTextWithShadow(this.owner.Words.ToString(), this.owner.World.Participants[participantIdx].TacticalSites[siteIdx].Place.X << 2,
 					this.owner.World.Participants[participantIdx].TacticalSites[siteIdx].Place.Y << 2, 14);
 			}
 
@@ -175,7 +175,7 @@ namespace Civilization1Remaster.UI
 
 				this.owner.Words.Append(this.owner.Libc.IntegerToText(continent.Assault, 10));
 
-				this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 2, row, 7);
+				this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 2, row, 7);
 
 				row += 6;
 			}

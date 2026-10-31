@@ -130,7 +130,7 @@ namespace Civilization1Remaster.UI
 
 			EmptyMessage()
 				.City((short)townIdx);
-			this.owner.Libc.CopyText(CodeText1, TextBuffer.Address);
+			this.owner.Libc.CopyText(CodeText1, this.owner.Words.ToString());
 
 			if (terrain == 4 && (improvements & 6) == 0)
 			{

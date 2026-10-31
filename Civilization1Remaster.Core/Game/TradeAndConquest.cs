@@ -427,8 +427,7 @@ namespace Civilization1Remaster.Game
 					{
 						if (participantIdx2 == this.owner.World.PersonParticipantIdx)
 						{
-							this.owner.Libc.CopyText(TextBuffer.Address,
-								CivilizationPlural(participantIdx1));
+							this.owner.Words.Set(CivilizationPlural(participantIdx1));
 							this.owner.Words.Append(" take\n");
 							this.owner.Words.Append(TechnologyText(bestTech));
 							this.owner.Words.Append(".\n");

@@ -41,6 +41,9 @@ namespace Civilization1Remaster.Engine
 		/// <summary>The text at the address goes to the end of the text of the buffer</summary>
 		public ushort Append(ushort textAddr) => Append(TextAt(textAddr));
 
+		/// <summary>The text of the buffer in upper case (strupr), in place; returns the address</summary>
+		public ushort Uppercase() => Set(ToString().ToUpper());
+
 		/// <summary>The buffer holds the empty text (its first byte 0)</summary>
 		public void Clear() => this[0] = 0;
 
@@ -110,6 +113,25 @@ namespace Civilization1Remaster.Engine
 		}
 
 		/// <summary>The text of the buffer</summary>
-		public override string ToString() => this.game.Processor.PullText(CPU.AsLinearAddress(this.game.Processor.SegData.Value16, Address));
+		public override string ToString() => TextFrom(0);
+
+		/// <summary>
+		/// The text of the buffer from the byte at the index on (to its 0 byte; a text running past the buffer or a buffer not
+		/// attached yet is read through the memory, like the code that got the address)
+		/// </summary>
+		public string TextFrom(int index)
+		{
+			int end = this.attached && index >= 0 && index < Size ? Array.IndexOf(this.store, (byte)0, index) : -1;
+
+			if (end < 0)
+				return this.game.Processor.PullText(CPU.AsLinearAddress(this.game.Processor.SegData.Value16, (ushort)(Address + index)));
+
+			char[] letters = new char[end - index];
+
+			for (int idx = index; idx < end; idx++)
+				letters[idx - index] = (char)this.store[idx];
+
+			return new string(letters);
+		}
 	}
 }

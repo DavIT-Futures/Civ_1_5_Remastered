@@ -189,7 +189,7 @@ namespace Civilization1Remaster.UI
 			{
 				this.owner.Words.Set(" ---");
 
-				this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, horizLoc, vertLoc, 0);
+				this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), horizLoc, vertLoc, 0);
 
 				return (short)(vertLoc + 0x1a);
 			}
@@ -221,12 +221,12 @@ namespace Civilization1Remaster.UI
 			this.owner.Words.Append(year < 0 ? HallOfFameBcEraStringAddress : HallOfFameAdEraStringAddress);
 
 			// Too wide: only up to the civilization
-			if ((short)((ushort)this.owner.TextPainter.ObtainTextWidth(TextBuffer.Address) + horizLoc) >= 0x140)
+			if ((short)((ushort)this.owner.TextPainter.ObtainTextWidth(this.owner.Words.ToString()) + horizLoc) >= 0x140)
 			{
 				this.processor.EmitGlobalByte((ushort)(length + TextBuffer.Address), 0x0);
 			}
 
-			this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, horizLoc, vertLoc, 0);
+			this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), horizLoc, vertLoc, 0);
 
 			vertLoc += 8;
 
@@ -248,7 +248,7 @@ namespace Civilization1Remaster.UI
 				this.owner.Words.Append(DifficultyNameAddresses[hardness]);
 			}
 
-			this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, horizLoc + 0xc, vertLoc, 7);
+			this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), horizLoc + 0xc, vertLoc, 7);
 
 			vertLoc += 8;
 
@@ -260,7 +260,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Words.Append("% ---");
 
-			this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, horizLoc + 0xc, vertLoc, 12);
+			this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), horizLoc + 0xc, vertLoc, 12);
 
 			vertLoc += 10;
 
@@ -390,34 +390,34 @@ namespace Civilization1Remaster.UI
 				if (arg2 == 0)
 				{
 					PullRankTitle(20 * RulerRankEntryStride);
-					this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 160, 6, 15);
+					this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 160, 6, 15);
 
 					PullRankTitle(21 * RulerRankEntryStride);
-					this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 160, 14, 15);
+					this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 160, 14, 15);
 
 					ending = HallOfFameRetiresEndingStringAddress;
 				}
 				else
 				{
 					PullRankTitle(22 * RulerRankEntryStride);
-					this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 160, 6, 15);
+					this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 160, 6, 15);
 
 					PullRankTitle(23 * RulerRankEntryStride);
 					this.owner.Words.Append(this.owner.Libc.IntegerToText(percentage, 10));
 					this.owner.Words.Append("% exceeds even");
-					this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 160, 14, 15);
+					this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 160, 14, 15);
 
 					ending = HallOfFameExceedsEvenEndingStringAddress;
 				}
 
 				PullRankTitle((ushort)((0x13 - rank) * RulerRankEntryStride));
 				this.owner.Words.Append(ending);
-				this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 160, 22, 15);
+				this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 160, 22, 15);
 
 				for (short level = 0; level <= rank; level++)
 				{
 					PullRankTitle((ushort)((0x13 - level) * 0x19));
-					this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 160, -((level * 8) - 184), (ushort)(level == rank ? 0 : 7));
+					this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 160, -((level * 8) - 184), (ushort)(level == rank ? 0 : 7));
 				}
 
 				this.owner.VideoCard.SubstituteHue(ScreenBox, 80, 183 - rank * 8, 160, 8, 15, 14);
@@ -520,7 +520,7 @@ namespace Civilization1Remaster.UI
 					.Text(CivilizationName(this.owner.World.Towns[townIdx].ParticipantIdx))
 					.Text(")");
 
-				this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 160, vertLoc + 3,
+				this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 160, vertLoc + 3,
 					PlayerColour(this.owner.World.Towns[townIdx].ParticipantIdx));
 
 				this.owner.CityOps.HandleCity(townIdx, -1);

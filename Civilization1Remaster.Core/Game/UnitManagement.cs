@@ -1849,12 +1849,12 @@ namespace Civilization1Remaster.Game
 					this.owner.Words.Append(" (V)");
 				}
 
-				this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 128, lineTop, 15);
+				this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 128, lineTop, 15);
 
 				EmptyMessage()
 					.City(this.troops.PullSigned(participantIdx, present, UnitMemory.BaseTown));
 
-				this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 128, lineTop + 8, 14);
+				this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 128, lineTop + 8, 14);
 
 				present = this.troops.Following(participantIdx, present);
 				lineTop += 0x10;

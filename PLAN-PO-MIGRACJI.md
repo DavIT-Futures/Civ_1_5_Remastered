@@ -849,3 +849,14 @@ warstwą emulacji, nakładkę bufora zostawić tylko jako rzut do migawki / zapi
 
 **Kolejność i rozmiar:** 1 i 2 to największe i najbardziej mechaniczne (po jednej sesji), 3 i 4 mniejsze, ale wymagają
 czytania każdego miejsca; 5 krótki. Każdy krok osobno zielony i osobny commit.
+
+**Kroki 1 i 2, część mechaniczna – zrobione 2026-10-31.** `TextDrawing` (`RenderText`, `RenderTextToScreen0`, cień,
+środek, `ObtainTextWidth`) i `VGADriver.RenderText` przyjmują `string`; wersje z adresem zostały jako adaptery
+(`PullText`) dla kodu, który trzyma tekst w pamięci, i dla kopii w testach. `TextBuffer.ToString` / `TextFrom(k)` /
+`Uppercase` czytają i piszą tablicę C#. 157 wywołań rysowania z adresem bufora dostaje jego tekst, 49 wywołań
+`Libc.CopyText` / `AppendText` / `UppercaseText` na buforze idzie przez `Words` (cel albo źródło). Pełny zestaw 813/813,
+mutacje 4/4 (cień i środek łapią testy ekranu miasta, nie golden master – ten nie porównuje obrazu).
+**Zostaje (nie mechaniczne):** menu i okna (`DisplayMenu` / `OperateMenu` piszą 0 w tekst źródłowy i przywracają 0xa,
+tabele przesunięć wierszy w pamięci), teksty kodów `CodeText1` – `5` i tabele nazw (napisy w segmencie danych, zmieniane
+przez grę, porównywane w `mem.`), edycja nazwy miasta (`NewCityScreen`, przesunięcia w buforze), bufory na stosie (krok 3),
+pliki (krok 4).

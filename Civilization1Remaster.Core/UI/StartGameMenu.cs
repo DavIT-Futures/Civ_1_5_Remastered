@@ -302,7 +302,7 @@ namespace Civilization1Remaster.UI
 						.Text("s");
 				}
 
-				this.owner.Libc.CopyText(CivilizationPluralAt(names), TextBuffer.Address);
+				this.owner.Libc.CopyText(CivilizationPluralAt(names), this.owner.Words.ToString());
 			}
 
 			this.owner.TextPainter.RenderCenteredTextToScreen0(CivilizationPluralAt(names), 46, 92, 15);
@@ -789,7 +789,7 @@ namespace Civilization1Remaster.UI
 					.Text("s");
 			}
 
-			this.owner.Libc.CopyText(CivilizationPluralAt(names), TextBuffer.Address);
+			this.owner.Libc.CopyText(CivilizationPluralAt(names), this.owner.Words.ToString());
 		}
 
 		/// <summary>
@@ -1363,8 +1363,7 @@ namespace Civilization1Remaster.UI
 
 				Message(CivilizationName(this.owner.World.PersonParticipantIdx))
 					.Text(" government\nchanged to ");
-				this.owner.Libc.AppendText(TextBuffer.Address,
-					GovernmentName(this.owner.World.Participants[this.owner.World.PersonParticipantIdx].RegimeKind));
+				this.owner.Words.Append(GovernmentName(this.owner.World.Participants[this.owner.World.PersonParticipantIdx].RegimeKind));
 				this.owner.Words.Append("!\n");
 
 				this.owner.Paper.DisplayNewspaper(-2);
@@ -1387,7 +1386,7 @@ namespace Civilization1Remaster.UI
 					this.owner.Words.Set(this.processor.PullGlobalWord((ushort)((advisorIdx << 1) + AdvisorTitleTextTableAddress)));
 					this.owner.Words[this.owner.Words.Length - 1] = 0x0;
 
-					this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, (80 * advisorIdx) + 40, (advisorIdx & 1) != 0 ? 186 : 180, 0);
+					this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), (80 * advisorIdx) + 40, (advisorIdx & 1) != 0 ? 186 : 180, 0);
 				}
 
 				DrawingBox.TypefaceIdx = 0x1;

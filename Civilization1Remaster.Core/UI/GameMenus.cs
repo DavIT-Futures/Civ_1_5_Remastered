@@ -359,8 +359,7 @@ namespace Civilization1Remaster.UI
 		{
 			this.owner.Words.Append(" Change to ");
 
-			this.owner.Libc.AppendText(TextBuffer.Address,
-				TerrainText(this.processor.PullGlobalWord((ushort)((this.processor.PullGlobalWord(work) << 1) + 0x2ba6))));
+			this.owner.Words.Append(TerrainText(this.processor.PullGlobalWord((ushort)((this.processor.PullGlobalWord(work) << 1) + 0x2ba6))));
 		}
 
 		/// <summary>

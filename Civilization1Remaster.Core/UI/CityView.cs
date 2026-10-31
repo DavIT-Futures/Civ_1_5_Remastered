@@ -69,7 +69,7 @@ namespace Civilization1Remaster.UI
 
 			if (this.owner.Words.Length < 120)
 			{
-				this.owner.Libc.CopyText(savedText, TextBuffer.Address);
+				this.owner.Libc.CopyText(savedText, this.owner.Words.ToString());
 			}
 
 			// RNG based on city name
@@ -485,13 +485,13 @@ namespace Civilization1Remaster.UI
 					EmptyMessage()
 						.City(townIdx);
 
-					this.owner.TextPainter.RenderCenteredTextWithShadowToScreen0(TextBuffer.Address, 160, 2, 15);
+					this.owner.TextPainter.RenderCenteredTextWithShadowToScreen0(this.owner.Words.ToString(), 160, 2, 15);
 
 					this.owner.Words.Clear();
 
 					this.owner.TurnHooks.ObtainCurrentYearAsText();
 
-					this.owner.TextPainter.RenderCenteredTextWithShadowToScreen0(TextBuffer.Address, 160, 15, 15);
+					this.owner.TextPainter.RenderCenteredTextWithShadowToScreen0(this.owner.Words.ToString(), 160, 15, 15);
 				}
 				else
 				{

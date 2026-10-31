@@ -431,12 +431,12 @@ namespace Civilization1Remaster.UI
 			{
 				if (ReplayActor == (ushort)this.owner.World.PersonParticipantIdx)
 				{
-					this.owner.Libc.UppercaseText(TextBuffer.Address);
+					this.owner.Words.Uppercase();
 				}
 
 				this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 8, 15);
 
-				this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 4, 1, 0);
+				this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 4, 1, 0);
 
 				if (ReplayMode == 3)
 				{
@@ -453,7 +453,7 @@ namespace Civilization1Remaster.UI
 
 				this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 8, 15);
 
-				this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 4, 1, 0);
+				this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 4, 1, 0);
 			}
 
 			this.processor.Journal.CloseScope("RenderReplayPreamble");
@@ -779,14 +779,14 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Words.Set("The entire world hails");
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 160, 152, 20);
-			this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 160, 151, (ushort)(VgaMode != 0 ? 23 : 15));
+			this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 160, 152, 20);
+			this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 160, 151, (ushort)(VgaMode != 0 ? 23 : 15));
 
 			Message(LeaderName(this.owner.World.PersonParticipantIdx))
 				.Text(" the CONQUEROR!");
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 160, 168, 20);
-			this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 160, 167, (ushort)(VgaMode != 0 ? 23 : 15));
+			this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 160, 168, 20);
+			this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 160, 167, (ushort)(VgaMode != 0 ? 23 : 15));
 
 			this.owner.TurnLogic.AwaitForKey();
 
@@ -979,9 +979,9 @@ namespace Civilization1Remaster.UI
 		/// <summary>The text TextBuffer.Address centred at x 160 in colour 20, with the text in colour 23 (VGA) or 15 one line higher</summary>
 		private void RenderShadowedCentredLine(int vertLoc)
 		{
-			this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 160, vertLoc, 20);
+			this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 160, vertLoc, 20);
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 160, vertLoc - 1, VgaMode != 0 ? (ushort)23 : (ushort)15);
+			this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 160, vertLoc - 1, VgaMode != 0 ? (ushort)23 : (ushort)15);
 		}
 	}
 }

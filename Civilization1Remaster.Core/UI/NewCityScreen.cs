@@ -89,7 +89,7 @@ namespace Civilization1Remaster.UI
 
 			PullTextInput(0xa6, 0x68, 0xd);
 
-			this.owner.Libc.CopyText(LeaderName(playerIdx), TextBuffer.Address);
+			this.owner.Libc.CopyText(LeaderName(playerIdx), this.owner.Words.ToString());
 
 			this.owner.Startup.DisplayMouseCursor();
 
@@ -119,7 +119,7 @@ namespace Civilization1Remaster.UI
 
 			PullTextInput(0xa6, 0x68, 0xb);
 
-			this.owner.Libc.CopyText(CivilizationPlural(playerIdx), TextBuffer.Address);
+			this.owner.Libc.CopyText(CivilizationPlural(playerIdx), this.owner.Words.ToString());
 
 			// The last character (the one before the text when it is empty)
 			int lastIndex = this.owner.Words.Length - 1;
@@ -129,7 +129,7 @@ namespace Civilization1Remaster.UI
 				this.owner.Words[lastIndex] = 0;
 			}
 
-			this.owner.Libc.CopyText(CivilizationName(playerIdx), TextBuffer.Address);
+			this.owner.Libc.CopyText(CivilizationName(playerIdx), this.owner.Words.ToString());
 			this.processor.EmitGlobalByte((ushort)(CivilizationName(playerIdx) + 0xa), 0);
 
 			this.owner.Startup.DisplayMouseCursor();

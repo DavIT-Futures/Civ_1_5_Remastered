@@ -181,7 +181,7 @@ namespace Civilization1Remaster.Game
 					.Text("s");
 			}
 
-			this.owner.Libc.CopyText(CivilizationPluralAt(names), TextBuffer.Address);
+			this.owner.Libc.CopyText(CivilizationPluralAt(names), this.owner.Words.ToString());
 
 			this.owner.Words.Clear();
 

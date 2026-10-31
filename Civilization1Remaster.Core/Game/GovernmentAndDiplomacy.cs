@@ -159,7 +159,7 @@ namespace Civilization1Remaster.Game
 					EmptyMessage()
 						.Number(tribute);
 
-					this.owner.Libc.CopyText(CodeText3, TextBuffer.Address);
+					this.owner.Libc.CopyText(CodeText3, this.owner.Words.ToString());
 
 					this.owner.Words.Clear();
 

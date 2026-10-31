@@ -334,9 +334,9 @@ namespace Civilization1Remaster.UI
 			this.introSavedFlag = this.processor.PullUInt16(this.processor.SegData.Value16, screen);
 			this.processor.EmitUInt16(this.processor.SegData.Value16, screen, 1);
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 160, 184, (ushort)(VgaMode != 0 ? 0xfc : 0x7));
-			this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 160, 182, (ushort)(VgaMode != 0 ? 0xf8 : 0xf));
-			this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 160, 183, (ushort)(VgaMode != 0 ? 0xfa : 0xf));
+			this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 160, 184, (ushort)(VgaMode != 0 ? 0xfc : 0x7));
+			this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 160, 182, (ushort)(VgaMode != 0 ? 0xf8 : 0xf));
+			this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 160, 183, (ushort)(VgaMode != 0 ? 0xfa : 0xf));
 
 			screen = ScreenBox;
 			this.processor.EmitUInt16(this.processor.SegData.Value16, screen, this.introSavedFlag);
@@ -593,27 +593,27 @@ namespace Civilization1Remaster.UI
 
 			ushort person = (ushort)this.owner.World.PersonParticipantIdx;
 			this.owner.Words.Append(LeaderName(person));
-			this.owner.Libc.CopyText(CodeText1, TextBuffer.Address);
+			this.owner.Libc.CopyText(CodeText1, this.owner.Words.ToString());
 
 			this.owner.Libc.CopyText(CodeText2,
 				CivilizationName((ushort)participantIdx));
 
 			EmptyMessage()
 				.Number(this.owner.World.Participants[participantIdx].StarshipInhabitants);
-			this.owner.Libc.CopyText(CodeText3, TextBuffer.Address);
+			this.owner.Libc.CopyText(CodeText3, this.owner.Words.ToString());
 
 			EmptyMessage()
 				.Number(this.owner.World.Participants[participantIdx].StarshipLiftoffSeason);
-			this.owner.Libc.CopyText(CodeText4, TextBuffer.Address);
+			this.owner.Libc.CopyText(CodeText4, this.owner.Words.ToString());
 
 			EmptyMessage()
 				.Number(this.owner.World.Season);
-			this.owner.Libc.CopyText(CodeText5, TextBuffer.Address);
+			this.owner.Libc.CopyText(CodeText5, this.owner.Words.ToString());
 
 			this.owner.BlockText.ImportTextFromFile(0x3301,
 				(ushort)((participantIdx != this.owner.World.PersonParticipantIdx) ? 0x32f9 : 0x32f2));
 			this.owner.BlockText.ReflowText();
-			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - ScreenText), TextBuffer.Address);
+			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - ScreenText), this.owner.Words.ToString());
 
 			DrawingBox.TypefaceIdx = 6;
 			this.screenFrame.SetFrame(ScreenStarHoriz, 0xfff6);
@@ -963,8 +963,8 @@ namespace Civilization1Remaster.UI
 			short humanIdx = this.owner.World.PersonParticipantIdx;
 
 			this.owner.Words.Set(LeaderName(humanIdx));
-			this.owner.Libc.UppercaseText(TextBuffer.Address);
-			this.owner.Libc.CopyText(CodeText1, TextBuffer.Address);
+			this.owner.Words.Uppercase();
+			this.owner.Libc.CopyText(CodeText1, this.owner.Words.ToString());
 
 			this.owner.Words.Set("Irrigation");
 
@@ -976,7 +976,7 @@ namespace Civilization1Remaster.UI
 				}
 			}
 
-			this.owner.Libc.CopyText(CodeText4, TextBuffer.Address);
+			this.owner.Libc.CopyText(CodeText4, this.owner.Words.ToString());
 
 			this.owner.Words.Clear();
 

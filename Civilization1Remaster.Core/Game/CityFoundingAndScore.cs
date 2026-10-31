@@ -380,7 +380,7 @@ namespace Civilization1Remaster.Game
 			EmptyMessage()
 				.City(townIdx);
 
-			this.owner.Libc.CopyText(CodeText4, TextBuffer.Address);
+			this.owner.Libc.CopyText(CodeText4, this.owner.Words.ToString());
 
 			this.owner.Words.Clear();
 
@@ -757,7 +757,7 @@ namespace Civilization1Remaster.Game
 
 			if (marker)
 			{
-				this.owner.TextPainter.RenderTextWithShadow(TextBuffer.Address, 16, (short)citizensY, 15);
+				this.owner.TextPainter.RenderTextWithShadow(this.owner.Words.ToString(), 16, (short)citizensY, 15);
 			}
 
 			wondersY = ScoreIconVert + 0x10;
@@ -798,7 +798,7 @@ namespace Civilization1Remaster.Game
 
 			if (marker)
 			{
-				this.owner.TextPainter.RenderTextWithShadow(TextBuffer.Address, 16, (short)wonderTitleY, 15);
+				this.owner.TextPainter.RenderTextWithShadow(this.owner.Words.ToString(), 16, (short)wonderTitleY, 15);
 			}
 
 			this.owner.World.Participants[0].Tally = (short)(totalWonderScore + totalCitizenScore);
@@ -828,7 +828,7 @@ namespace Civilization1Remaster.Game
 
 				if (marker && wondersY < 0xb8)
 				{
-					this.owner.TextPainter.RenderTextWithShadow(TextBuffer.Address, 16, (short)wondersY, 15);
+					this.owner.TextPainter.RenderTextWithShadow(this.owner.Words.ToString(), 16, (short)wondersY, 15);
 				}
 
 				wondersY += 10;
@@ -865,7 +865,7 @@ namespace Civilization1Remaster.Game
 
 			if (this.owner.Words[0] != 0 && marker && wondersY < 0xb8)
 			{
-				this.owner.TextPainter.RenderTextWithShadow(TextBuffer.Address, 16, (short)wondersY, 15);
+				this.owner.TextPainter.RenderTextWithShadow(this.owner.Words.ToString(), 16, (short)wondersY, 15);
 				wondersY += 10;
 			}
 
@@ -894,7 +894,7 @@ namespace Civilization1Remaster.Game
 
 			if (marker && wondersY < 0xba)
 			{
-				this.owner.TextPainter.RenderTextWithShadow(TextBuffer.Address, 16, (short)wondersY, 15);
+				this.owner.TextPainter.RenderTextWithShadow(this.owner.Words.ToString(), 16, (short)wondersY, 15);
 			}
 
 			HallOfFameScore = (ushort)this.owner.World.Participants[0].Tally;

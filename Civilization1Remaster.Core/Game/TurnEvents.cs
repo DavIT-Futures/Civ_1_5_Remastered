@@ -1293,7 +1293,7 @@ namespace Civilization1Remaster.Game
 
 					EmptyMessage()
 						.Number(storage);
-					this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 2, 59, 0);
+					this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 2, 59, 0);
 				}
 
 				this.owner.Words.Clear();
@@ -1302,12 +1302,12 @@ namespace Civilization1Remaster.Game
 
 				if (population != 0)
 				{
-					this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 2, 73, 0);
+					this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 2, 73, 0);
 				}
 
 				this.owner.Words.Clear();
 				ObtainCurrentYearAsText();
-				this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 2, 81, 0);
+				this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 2, 81, 0);
 
 				short cost = (short)(((this.owner.World.HardnessTier << 1) + TechnologyLevel + 6) *
 					human.FoundScienceTally * (this.owner.World.Season < 0 ? 1 : 2));
@@ -1334,7 +1334,7 @@ namespace Civilization1Remaster.Game
 					.Number(human.LevyRatio)
 					.Text(".")
 					.Number(human.ResearchLevyRatio);
-				this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 2, 89, 0);
+				this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 2, 89, 0);
 
 				if (RepaintingMainScreen == 0)
 				{

@@ -325,11 +325,11 @@ namespace Civilization1Remaster.Game
 
 			EmptyMessage()
 				.City(townIdx);
-			this.owner.Libc.UppercaseText(TextBuffer.Address);
+			this.owner.Words.Uppercase();
 			this.owner.Words.Append(" (Pop:");
 			this.owner.Helpers.PopulationToText((short)this.round.Value);
 			this.owner.Words.Append(")");
-			this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 104, 2, 15);
+			this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 104, 2, 15);
 
 			RenderFrame(127, 23, 208, 104);
 
@@ -2420,7 +2420,7 @@ namespace Civilization1Remaster.Game
 			this.owner.Conquest.ObtainCityLabel(this.troops.PullSigned(owner, troopIdx, UnitMemory.BaseTown));
 			this.owner.Words[3] = 0x2e;
 			this.owner.Words[4] = 0;
-			this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, (short)this.round.UnitHoriz, (short)this.round.UnitVert + 15, 0);
+			this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), (short)this.round.UnitHoriz, (short)this.round.UnitVert + 15, 0);
 
 			ushort drawn = this.round.UnitsDrawn;
 			this.round.UnitsDrawn = (ushort)(drawn + 1);
@@ -2524,16 +2524,16 @@ namespace Civilization1Remaster.Game
 
 			if (shrinkFirst)
 			{
-				this.owner.Libc.UppercaseText(TextBuffer.Address);
+				this.owner.Words.Uppercase();
 				this.owner.BlockText.ShrinkTextToWidth(TextBuffer.Address, width);
 			}
 			else
 			{
 				this.owner.BlockText.ShrinkTextToWidth(TextBuffer.Address, width);
-				this.owner.Libc.UppercaseText(TextBuffer.Address);
+				this.owner.Words.Uppercase();
 			}
 
-			this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 253, (short)this.round.Vert + 2, 15);
+			this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 253, (short)this.round.Vert + 2, 15);
 			RenderResourceIcon((short)(improvement + 1), (short)((((byte)this.round.Selected & 1) != 0) ? 213 : 233),
 				(short)((short)this.round.Vert - 2));
 
@@ -2608,7 +2608,7 @@ namespace Civilization1Remaster.Game
 			{
 				this.owner.Words.Set(BuildingRecordText(-town.PresentMakingIdx));
 				this.owner.BlockText.ShrinkTextToWidth(TextBuffer.Address, 0x56);
-				this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 274, 100, 15);
+				this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 274, 100, 15);
 			}
 		}
 
@@ -2876,15 +2876,14 @@ namespace Civilization1Remaster.Game
 					.Text(":+");
 				City other = this.owner.World.Towns[partner];
 				int shift = (ushort)other.ParticipantIdx != CityOwner ? 3 : 4;
-				this.owner.Libc.AppendText(TextBuffer.Address,
-					this.owner.Libc.IntegerToText((short)(((short)town.RootCommerce + (short)other.RootCommerce + 4) >> shift), 10));
+				this.owner.Words.Append(this.owner.Libc.IntegerToText((short)(((short)town.RootCommerce + (short)other.RootCommerce + 4) >> shift), 10));
 				this.owner.Words.Append("} ");
 
 				if (CityScreenTab == 2)
 					RenderMiniMapDot((ushort)((short)other.Place.X), (ushort)((short)other.Place.Y), 10);
 
 				if (CityScreenTab == 0)
-					this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 98, ((short)this.round.Item * 6) + 179, 10);
+					this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 98, ((short)this.round.Item * 6) + 179, 10);
 			}
 
 			this.round.Item = 3;

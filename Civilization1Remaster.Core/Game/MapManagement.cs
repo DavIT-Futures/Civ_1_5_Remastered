@@ -111,7 +111,7 @@ namespace Civilization1Remaster.Game
 
 				this.owner.BlockText.ShrinkTextToWidth(TextBuffer.Address, (ushort)(327 - this.processor.PullGlobalWord((ushort)(place + 0x6dac))));
 
-				this.owner.TextPainter.RenderTextWithShadow(TextBuffer.Address,
+				this.owner.TextPainter.RenderTextWithShadow(this.owner.Words.ToString(),
 					this.owner.Helpers.VerifyValueSpan(this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(place + 0x6dac)) - 8, 80, 999),
 					this.processor.PullInt16(this.processor.SegData.Value16, (ushort)(place + 0x6e3e)) + 16, 11);
 			}
@@ -639,7 +639,7 @@ namespace Civilization1Remaster.Game
 			else
 			{
 				this.owner.TextPainter.RenderTextToScreen0(
-					TextBuffer.Address,
+					this.owner.Words.ToString(),
 					(displayedSize < 10 ? 6 : 3) + screenX,
 					screenY + 5,
 					0);
@@ -821,7 +821,7 @@ namespace Civilization1Remaster.Game
 				this.owner.Words.Set(" ");
 				this.processor.EmitGlobalByte(TextBuffer.Address, letter);
 
-				this.owner.TextPainter.RenderTextWithShadow(TextBuffer.Address, horizLoc + 4, vertLoc + 7, markHue);
+				this.owner.TextPainter.RenderTextWithShadow(this.owner.Words.ToString(), horizLoc + 4, vertLoc + 7, markHue);
 
 				this.owner.Dialogs.RenderBox(horizLoc - 1, vertLoc - 1, 15, 15, 7);
 			}

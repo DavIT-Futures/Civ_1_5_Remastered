@@ -660,10 +660,13 @@ namespace Civilization1Remaster.Video
 			return this.processor.RegAcc.Value16;
 		}
 
-		public void RenderText(ushort boxAddr, int horizLoc, int vertLoc, ushort charsAddr)
+		public void RenderText(ushort boxAddr, int horizLoc, int vertLoc, ushort charsAddr) =>
+			RenderText(boxAddr, horizLoc, vertLoc, this.processor.PullText(CPU.AsLinearAddress(this.processor.SegData.Value16, charsAddr)));
+
+		/// <summary>Draws the text in the box (screen, place, typeface, colours, the way of writing the pixels)</summary>
+		public void RenderText(ushort boxAddr, int horizLoc, int vertLoc, string words)
 		{
 			CivRectangle box = new CivRectangle(this.processor, CPU.AsLinearAddress(this.processor.SegData.Value16, boxAddr));
-			string words = this.processor.PullText(CPU.AsLinearAddress(this.processor.SegData.Value16, charsAddr));
 
 			if (!this.typefaces.IncludesKey(box.TypefaceIdx))
 			{

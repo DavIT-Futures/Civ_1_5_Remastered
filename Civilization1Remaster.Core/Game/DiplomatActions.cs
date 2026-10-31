@@ -677,7 +677,7 @@ namespace Civilization1Remaster.Game
 
 				DrawingBox.TypefaceIdx = 0x6;
 
-				this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 160, 4, 0);
+				this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), 160, 4, 0);
 
 				DrawingBox.TypefaceIdx = 0x1;
 

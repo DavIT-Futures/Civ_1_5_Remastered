@@ -485,7 +485,7 @@ namespace Civilization1Remaster.UI
 
 			EmptyMessage()
 				.Number((short)this.audienceTribute);
-			this.owner.Libc.CopyText(CodeText3, TextBuffer.Address);
+			this.owner.Libc.CopyText(CodeText3, this.owner.Words.ToString());
 			this.owner.Words.Clear();
 			this.owner.BlockText.DisplayTextDialog(0x3797);
 
@@ -682,7 +682,7 @@ namespace Civilization1Remaster.UI
 
 			EmptyMessage()
 				.Number((short)amount);
-			this.owner.Libc.CopyText(CodeText3, TextBuffer.Address);
+			this.owner.Libc.CopyText(CodeText3, this.owner.Words.ToString());
 			this.owner.Words.Clear();
 			this.owner.BlockText.DisplayTextDialog(0x380e);
 			KingMood = 0;
@@ -708,7 +708,7 @@ namespace Civilization1Remaster.UI
 
 			EmptyMessage()
 				.Number(Leader(participantIdx).Gold);
-			this.owner.Libc.CopyText(CodeText3, TextBuffer.Address);
+			this.owner.Libc.CopyText(CodeText3, this.owner.Words.ToString());
 			this.owner.Words.Clear();
 			this.owner.BlockText.DisplayTextDialog(0x3818);
 			KingMood = 0;
@@ -839,7 +839,7 @@ namespace Civilization1Remaster.UI
 			{
 				EmptyMessage()
 					.Number(amount);
-				this.owner.Libc.CopyText(CodeText3, TextBuffer.Address);
+				this.owner.Libc.CopyText(CodeText3, this.owner.Words.ToString());
 				this.owner.Words.Clear();
 				this.owner.BlockText.DisplayTextDialog(0x3897);
 				KingMood = 0;
@@ -928,7 +928,7 @@ namespace Civilization1Remaster.UI
 
 			EmptyMessage()
 				.Number(amount);
-			this.owner.Libc.CopyText(CodeText3, TextBuffer.Address);
+			this.owner.Libc.CopyText(CodeText3, this.owner.Words.ToString());
 			this.owner.Words.Clear();
 			this.owner.BlockText.DisplayTextDialog(0x38fb);
 
@@ -1513,7 +1513,7 @@ namespace Civilization1Remaster.UI
 				.Text(CivilizationPlural((ushort)participantIdx))
 				.Text(".");
 
-			this.owner.TextPainter.RenderTextToScreen0(TextBuffer.Address, 8, 130, 15);
+			this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 8, 130, 15);
 
 			this.owner.Startup.DisplayMouseCursor();
 		}
