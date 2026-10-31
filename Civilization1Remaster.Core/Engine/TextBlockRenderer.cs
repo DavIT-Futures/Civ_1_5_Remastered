@@ -135,25 +135,24 @@ namespace Civilization1Remaster.Engine
 		/// The index is written at ((hash >> (5 + hash)) * 2, not at the place it is read from ((hash >> 5) + hash) * 2: an
 		/// operator precedence mistake of the translation, kept (see MIGRATION-BACKLOG.md).
 		/// </remarks>
-		public ushort ImportTextFromFile(ushort docnameAddr, ushort charsAddr)
-		{
-			this.processor.Journal.OpenScope($"ImportTextFromFile(0x{docnameAddr:x4}, 0x{charsAddr:x4})");
+		public ushort ImportTextFromFile(ushort docnameAddr, ushort charsAddr) =>
+			ImportTextFromFile(docnameAddr, this.processor.PullText(CPU.AsLinearAddress(this.processor.SegData.Value16, charsAddr)), charsAddr);
 
-			// The line and the index entry are buffers of the file functions
-			ushort line = (ushort)(this.processor.RegStack.Value16 - 0x100);
-			ushort entry = (ushort)(this.processor.RegStack.Value16 - 0x104);
+		/// <summary>ImportTextFromFile of the topic in a C# string</summary>
+		public ushort ImportTextFromFile(ushort docnameAddr, string topic) => ImportTextFromFile(docnameAddr, topic, TextBuffer.StackTextAddress);
+
+		private ushort ImportTextFromFile(ushort docnameAddr, string topic, ushort topicAddr)
+		{
+			this.processor.Journal.OpenScope($"ImportTextFromFile(0x{docnameAddr:x4}, 0x{topicAddr:x4})");
+
+			// The line and the index word (buffers of the file functions under SP in the original)
+			string line = "";
+			ushort entry = 0;
 
 			ushort hash = 0;
-			ushort charIdx = 0;
 
-			while (true)
-			{
-				if ((short)this.owner.Libc.TextLength(charsAddr) <= (short)charIdx)
-					break;
-
-				hash += (ushort)((sbyte)this.processor.PullGlobalByte((ushort)(charIdx + charsAddr)) * (short)charIdx);
-				charIdx++;
-			}
+			for (int charIdx = 0; charIdx < topic.Length; charIdx++)
+				hash += (ushort)((sbyte)(byte)topic[charIdx] * (short)charIdx);
 
 			// The high byte of the hash is cleared (it is written as a byte in the original)
 			hash &= 0xff;
@@ -167,22 +166,22 @@ namespace Civilization1Remaster.Engine
 
 				this.owner.Libc.SeekStream((short)handle, (((int)(short)hash >> 5) + hash) << 1, 0);
 
-				this.owner.Libc.ReadStream(entry, 2, 1, (short)handle);
+				entry = this.owner.Libc.ReadStreamWord((short)handle, entry);
 
 				this.owner.Libc.CloseStream((short)handle);
 
 				handle = (ushort)this.owner.Libc.OpenStream(docnameAddr, "rt");
 
-				ushort offset = this.processor.PullGlobalWord(entry);
+				ushort offset = entry;
 
 				if (offset <= 0x1ff || offset == 0x3030)
 					break;
 
 				this.owner.Libc.SeekStream((short)handle, offset, 0);
 
-				this.owner.Libc.ScanStream((short)handle, "%[^\n]\n", line);
+				this.owner.Libc.ScanStreamLine((short)handle, out line);
 
-				if ((ushort)this.owner.Libc.CompareTextNoCase(line, charsAddr) == 0)
+				if ((ushort)this.owner.Libc.CompareTextNoCase(line, topic) == 0)
 				{
 					indexed = true;
 					break;
@@ -204,12 +203,11 @@ namespace Civilization1Remaster.Engine
 				{
 					int streamPos = this.owner.Libc.TellStream((short)handle);
 
-					this.processor.EmitGlobalWord(entry, (ushort)streamPos);
+					entry = (ushort)streamPos;
 
-					scanned = (ushort)this.owner.Libc.ScanStream((short)handle, "%[^\n]\n", line);
-
+					scanned = (ushort)this.owner.Libc.ScanStreamLine((short)handle, out line);
 				}
-				while ((ushort)this.owner.Libc.CompareTextNoCase(line, charsAddr) != 0 && scanned != 0xffff);
+				while ((ushort)this.owner.Libc.CompareTextNoCase(line, topic) != 0 && scanned != 0xffff);
 			}
 
 			bool found = scanned != 0xffff;
@@ -218,9 +216,9 @@ namespace Civilization1Remaster.Engine
 			{
 				do
 				{
-					this.owner.Libc.ScanStream((short)handle, "%[^\n]\n", line);
+					this.owner.Libc.ScanStreamLine((short)handle, out line);
 				}
-				while (this.processor.PullGlobalByte(line) == '*');
+				while (line.StartsWith('*'));
 
 				do
 				{
@@ -228,16 +226,14 @@ namespace Civilization1Remaster.Engine
 
 					this.owner.Words.Append(" ");
 
-					this.owner.Libc.ScanStream((short)handle, "%[^\n]\n", line);
+					this.owner.Libc.ScanStreamLine((short)handle, out line);
 
 					lines++;
 				}
-				while (this.processor.PullGlobalByte(line) != '*');
+				while (!line.StartsWith('*'));
 
 				// Let's try to trim the dialog text, and fix the bug with unecessary lines in dialogs
-				string feed = this.processor.PullText(CPU.AsLinearAddress(this.owner.Processor.SegData.Value16, TextBuffer.Address));
-				feed = feed.TrimEnd(new char[] { ' ', '^' });
-				this.processor.EmitText(CPU.AsLinearAddress(this.owner.Processor.SegData.Value16, TextBuffer.Address), feed, feed.Length);
+				this.owner.Words.Set(this.owner.Words.ToString().TrimEnd(new char[] { ' ', '^' }));
 			}
 
 			this.owner.Libc.CloseStream((short)handle);
@@ -248,7 +244,7 @@ namespace Civilization1Remaster.Engine
 
 				this.owner.Libc.SeekStream((short)handle, ((int)(short)hash >> (5 + hash)) << 1, 0);
 
-				this.owner.Libc.WriteStream(entry, 2, 1, (short)handle);
+				this.owner.Libc.WriteStreamWord(entry, (short)handle);
 
 				this.owner.Libc.CloseStream((short)handle);
 			}
@@ -317,6 +313,30 @@ namespace Civilization1Remaster.Engine
 		/// Shortens the text until it fits the width: the last character goes, and the one before becomes a dot (unless the
 		/// character two before the end is a space)
 		/// </summary>
+		/// <summary>ShrinkTextToWidth of a text in a C# string (the original kept it on the stack): the shortened text</summary>
+		public string ShrinkTextToWidth(string text, ushort peakBreadth)
+		{
+			this.processor.Journal.OpenScope($"ShrinkTextToWidth(0x{TextBuffer.StackTextAddress:x4}, {peakBreadth})");
+
+			char[] letters = text.ToCharArray();
+			int len = letters.Length;
+
+			while ((short)this.owner.TextPainter.ObtainTextWidth(new string(letters, 0, len)) > (short)peakBreadth && len > 0)
+			{
+				if (len < 3 || letters[len - 3] != ' ')
+				{
+					if (len >= 2)
+						letters[len - 2] = '.';
+				}
+
+				len--;
+			}
+
+			this.processor.Journal.CloseScope("ShrinkTextToWidth");
+
+			return new string(letters, 0, len);
+		}
+
 		public void ShrinkTextToWidth(ushort charsAddr, ushort peakBreadth)
 		{
 			this.processor.Journal.OpenScope($"ShrinkTextToWidth(0x{charsAddr:x4}, {peakBreadth})");

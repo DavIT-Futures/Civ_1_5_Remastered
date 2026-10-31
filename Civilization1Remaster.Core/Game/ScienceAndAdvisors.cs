@@ -1127,12 +1127,10 @@ namespace Civilization1Remaster.Game
 			Score = (short)ChoiceEntry(entryIdx);
 			ushort name = Score >= 0 ? (ushort)(0x112a + 0x22 * Score) : ImprovementRecord(-Score);
 
-			ushort key = (ushort)(this.processor.RegStack.Value16 - 0x300);
-			this.processor.EmitUInt8(this.processor.SegStack.Value16, key, (byte)'*');
-			this.owner.Libc.CopyText((ushort)(key + 1), name);
+			string choiceName = this.processor.PullText(CPU.AsLinearAddress(this.processor.SegData.Value16, name));
 			this.owner.Words.Set(advisor);
-			this.owner.BlockText.ImportTextFromFile(documentAddr, key);
-			this.owner.Libc.CopyText(CodeText4, (ushort)(key + 1));
+			this.owner.BlockText.ImportTextFromFile(documentAddr, "*" + choiceName);
+			this.owner.Libc.CopyText(CodeText4, choiceName);
 			this.owner.BlockText.ReflowText();
 			this.owner.BlockText.ArrangeTextRow(0x32);
 			DialogNeedsRedraw = 1;

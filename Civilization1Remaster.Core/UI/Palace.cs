@@ -100,12 +100,11 @@ namespace Civilization1Remaster.UI
 
 
 			ushort dataSeg = this.processor.SegData.Value16;
-			ushort textBuf = (ushort)(this.processor.RegStack.Value16 - 0x300);
 
 			this.owner.Startup.ConcealMouseCursor();
 			this.owner.Words.Clear();
 			this.owner.BlockText.DisplayTextDialog(PalaceUpgradeAnnouncementDialogAddress);
-			this.owner.Libc.CopyText(textBuf, this.owner.Words.ToString());
+			string announcement = this.owner.Words.ToString();
 			this.owner.Startup.QueryForDisk(2, 1);
 
 			DrawingBox.DisplayIdx = 0x1;
@@ -126,7 +125,7 @@ namespace Civilization1Remaster.UI
 				ScreenBox,
 				0, 0);
 
-			this.owner.Dialogs.DisplayMenu(textBuf, 20, 16, 1);
+			this.owner.Dialogs.DisplayMenu(announcement, 20, 16, 1);
 
 			this.owner.VideoCard.RenderImage(
 				BackScreenBox,

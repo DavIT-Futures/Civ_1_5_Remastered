@@ -84,14 +84,7 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope($"DisplayCivilopediaIndex({arg1}, {arg2})");
 
-			ushort scratchBase = (ushort)(this.processor.RegStack.Value16 - 0x300);
-			ushort lastName = (ushort)(scratchBase + 0x10);
-			ushort nextName = (ushort)(scratchBase + 0x30);
-			ushort shortName = (ushort)(scratchBase + 0x50);
-
 			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 14);
-
-			this.owner.Libc.CopyText(lastName, "a");
 
 			this.owner.Services.FloodBox(ScreenBox, 60, 2, 200, 9, 15);
 
@@ -109,7 +102,7 @@ namespace Civilization1Remaster.UI
 			this.owner.Services.FloodBox(ScreenBox, 2, 14, 316, 184, 15);
 
 			short width = (short)((short)arg2 > 0 ? 0x96 : 0x64);
-			ushort entryTally = ListCivilopediaEntries(arg1, arg2, width, lastName, nextName, shortName);
+			ushort entryTally = ListCivilopediaEntries(arg1, arg2, width);
 
 			ushort answer = (ushort)(MousePresent != 0
 				? ChooseCivilopediaEntryWithMouse(arg1, width, entryTally)
@@ -125,34 +118,35 @@ namespace Civilization1Remaster.UI
 		/// from firstEntry on in columns of the width from (10, 16), 7 a line, until column 300; 0x6808 = 1 when the page is
 		/// full. The number of entries passed (including those before firstEntry).
 		/// </summary>
-		private ushort ListCivilopediaEntries(ushort firstEntry, ushort part, short width, ushort lastName, ushort nextName, ushort shortName)
+		private ushort ListCivilopediaEntries(ushort firstEntry, ushort part, short width)
 		{
 			short horizLoc = 0xa;
 			short vertLoc = 0x10;
 			ushort entryTally = 0;
 
+			// The last name listed and the next one (the original kept them under SP)
+			string lastName = "a";
+
 			while (true)
 			{
-				this.owner.Libc.CopyText(nextName, "zzz");
+				string nextName = "zzz";
 
 				ushort nextIdx = 0xffff;
 				ushort nextKind = 0xffff;
 
 				// Technologies, improvements and wonders (1 - 0x2d), units, terrains, concepts (names through 0x3c64)
-				FindNextCivilopediaEntry(part, 0, 0, 0x43, idx => TechnologyText(idx), lastName, nextName, ref nextIdx, ref nextKind);
-				FindNextCivilopediaEntry(part, 1, 1, 0x2e, idx => BuildingRecordText(idx), lastName, nextName, ref nextIdx, ref nextKind);
-				FindNextCivilopediaEntry(part, 2, 0, 0x1c, idx => UnitText(idx), lastName, nextName, ref nextIdx, ref nextKind);
-				FindNextCivilopediaEntry(part, 3, 0, 0xc, idx => TerrainText(idx), lastName, nextName, ref nextIdx, ref nextKind);
-				FindNextCivilopediaEntry(part, 4, 0, 0x15, idx => this.processor.PullGlobalWord((ushort)((idx << 1) + CivilopediaConceptTitlesTableAddress)), lastName, nextName, ref nextIdx, ref nextKind);
+				FindNextCivilopediaEntry(part, 0, 0, 0x43, idx => TechnologyText(idx), lastName, ref nextName, ref nextIdx, ref nextKind);
+				FindNextCivilopediaEntry(part, 1, 1, 0x2e, idx => BuildingRecordText(idx), lastName, ref nextName, ref nextIdx, ref nextKind);
+				FindNextCivilopediaEntry(part, 2, 0, 0x1c, idx => UnitText(idx), lastName, ref nextName, ref nextIdx, ref nextKind);
+				FindNextCivilopediaEntry(part, 3, 0, 0xc, idx => TerrainText(idx), lastName, ref nextName, ref nextIdx, ref nextKind);
+				FindNextCivilopediaEntry(part, 4, 0, 0x15, idx => this.processor.PullGlobalWord((ushort)((idx << 1) + CivilopediaConceptTitlesTableAddress)), lastName, ref nextName, ref nextIdx, ref nextKind);
 
 				if (nextKind == 0xffff)
 					break;
 
 				if ((short)entryTally >= (short)firstEntry)
 				{
-					this.owner.Libc.CopyText(shortName, nextName);
-
-					this.owner.BlockText.ShrinkTextToWidth(shortName, (ushort)width);
+					string shortName = this.owner.BlockText.ShrinkTextToWidth(nextName, (ushort)width);
 
 					this.owner.TextPainter.RenderTextToScreen0(shortName, horizLoc, vertLoc, 0);
 
@@ -172,7 +166,7 @@ namespace Civilization1Remaster.UI
 
 				entryTally++;
 
-				this.owner.Libc.CopyText(lastName, nextName);
+				lastName = nextName;
 
 				if (horizLoc >= 0x12c)
 					break;
@@ -188,23 +182,25 @@ namespace Civilization1Remaster.UI
 		/// next found so far becomes the next one
 		/// </summary>
 		private void FindNextCivilopediaEntry(ushort part, ushort kind, short first, short end, System.Func<short, ushort> nameOf,
-			ushort lastName, ushort nextName, ref ushort nextIdx, ref ushort nextKind)
+			string lastName, ref string nextName, ref ushort nextIdx, ref ushort nextKind)
 		{
 			if (part != kind && part != 0xffff)
 				return;
 
 			for (short idx = first; idx < end; idx++)
 			{
-				if (this.owner.Libc.CompareTextNoCase(nameOf(idx), lastName) <= 0)
+				string name = this.processor.PullText(CPU.AsLinearAddress(this.processor.SegData.Value16, nameOf(idx)));
+
+				if (this.owner.Libc.CompareTextNoCase(name, lastName) <= 0)
 					continue;
 
-				if (this.owner.Libc.CompareTextNoCase(nameOf(idx), nextName) >= 0)
+				if (this.owner.Libc.CompareTextNoCase(name, nextName) >= 0)
 					continue;
 
 				nextIdx = (ushort)idx;
 				nextKind = kind;
 
-				this.owner.Libc.CopyText(nextName, nameOf(idx));
+				nextName = name;
 			}
 		}
 
@@ -424,9 +420,7 @@ namespace Civilization1Remaster.UI
 			this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.ToString(), titleX, 20, 0);
 			DrawingBox.TypefaceIdx = 0x7;
 
-			ushort tagBuf = (ushort)(this.processor.RegStack.Value16 - 0x300);
-			this.owner.Libc.CopyText(tagBuf, "*");
-			this.owner.Libc.AppendText(tagBuf, this.owner.Words.ToString());
+			string tag = "*" + this.owner.Words.ToString();
 			this.owner.Words.Clear();
 
 			short cursorY = 0x4c;
@@ -434,7 +428,7 @@ namespace Civilization1Remaster.UI
 			{
 				if (((byte)(this.owner.World.SessionPrefMarkers & 0xff) & 0x40) != 0)
 				{
-					ushort imported = this.owner.BlockText.ImportTextFromFile(CivilopediaFileName, tagBuf);
+					ushort imported = this.owner.BlockText.ImportTextFromFile(CivilopediaFileName, tag);
 					if ((ushort)(imported + 1) != 0)
 					{
 						this.owner.BlockText.RenderTextChunk(37, 12, 76, 1);
@@ -443,11 +437,11 @@ namespace Civilization1Remaster.UI
 					}
 				}
 
-				this.owner.Libc.AppendText(tagBuf, "2");
+				tag += "2";
 				this.owner.Words.Clear();
 				if (arg2 != 0)
 				{
-					this.owner.BlockText.ImportTextFromFile(CivilopediaFileName, tagBuf);
+					this.owner.BlockText.ImportTextFromFile(CivilopediaFileName, tag);
 					cursorY = (short)((ushort)this.owner.BlockText.RenderTextChunk(36, 12, cursorY, 1) + 8);
 				}
 			}

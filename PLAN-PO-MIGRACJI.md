@@ -869,3 +869,19 @@ ramki: tytuł doradcy to napis C# (był budowany pod BP-0x50), bez `StackWord(hu
 spod SP). Wejście menu zostaje adresem (prawie zawsze bufor 0xba06) – menu na prawdziwym `string` musiałoby zmieniać
 bajty bufora tak samo, więc nic by nie dało. Pełny zestaw 813/813, mutacje 4/4 (tytuł i '^' łapie tylko
 `OperateAndDisplayMenuMatchOriginalCode`).
+
+**Kroki 3 – 5 – zrobione 2026-10-31, NIE TESTOWANE (na prośbę użytkownika: testy uruchomi sam).** Bez buforów pod SP i w
+ramkach: komunikat dysku (`GameStartup`), tekst zachowany na ekran miasta (`CityView`), ogłoszenie pałacu, temat gazety,
+temat pomocy (dalej w miejscu na wielkie litery, jak oryginał), klucz porady doradcy, nazwy indeksu Civilopedii i tag
+rekordu, wartości wiersza spisu ludności (`censusValues`, `RenderCensusLine(short[]…)` – wersja z adresem odpisuje
+zanegowane wartości do pamięci), tekst ekranu lądowania (`screenText`, ramka `DisplayCivilizationScreen` usunięta;
+słowo klatki statku czytane przed zapisem startuje od 0, jak w wyzerowanej ramce). Nowe wersje na `string`:
+`DisplayMenu(string)` (`MenuText` na własnej tablicy bajtów), `ImportTextFromFile(adres pliku, string)` – temat, wiersz
+pliku (`CRuntime.ScanStreamLine`) i słowo indeksu (`ReadStreamWord` / `WriteStreamWord`) w C#, bez buforów pod SP –
+`ShrinkTextToWidth(string)` (zwraca skrócony tekst), `CompareTextNoCase(string, string)`. Teksty ze stosu w dzienniku
+pod `TextBuffer.StackTextAddress` (0xe8c0; `DifferentialPair.WithoutStackAddresses` traktuje adresy stosu jako jeden).
+Krok 5: adapterów z adresem nie da się przenieść do testów – gra woła je jeszcze w 134 miejscach (`DisplayMenu` /
+okna z buforem 0xba06, teksty stałe i nazwy w segmencie danych). Znikną, gdy teksty kodów i tabele nazw przejdą do C#.
+**Do sprawdzenia przy testach:** wpis indeksu pliku tekstowego, gdy odczyt indeksu się nie uda (oryginał zostawiał
+śmieci spod SP, teraz 0 – w plikach gry nie występuje); nazwy Civilopedii dłuższe niż 31 znaków (w oryginale wchodziły na
+sąsiedni bufor); `ShrinkTextToWidth` tekstu krótszego niż 3 znaki.

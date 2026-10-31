@@ -20,6 +20,12 @@ namespace Civilization1Remaster.Engine
 		/// <summary>The size of the buffer in bytes</summary>
 		public const int Size = 0x300;
 
+		/// <summary>
+		/// The address logged for a text the original kept under SP or in a stack frame and the remaster keeps in a C# string:
+		/// the bottom of the stack (the comparisons of the tests take every stack address for one)
+		/// </summary>
+		public const ushort StackTextAddress = 0xe8c0;
+
 		private readonly GameEngine game;
 		private readonly byte[] store = new byte[Size];
 		private bool attached;

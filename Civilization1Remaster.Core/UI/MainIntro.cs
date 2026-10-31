@@ -485,9 +485,8 @@ namespace Civilization1Remaster.UI
 			this.owner.Helpers.ReleaseResource(this.introLogo, 0);
 		}
 
-		// Local variables of DisplayCivilizationScreen in its stack frame (they stay there: the screen waits for the timer, the
-		// timer of the tests ticks after a number of memory accesses, and the frame of the ship animation 0x208 is never set
-		// before it is first read, so it starts with what an earlier function left on the stack)
+		// The local variables of DisplayCivilizationScreen by their distance below BP in the original (the frame of the ship
+		// animation 0x208 is never set before it is first read: 0, like a zeroed frame); the text below them is screenText
 		private const int ScreenText = 0x200;
 		private const int ScreenPartEnd = 0x204;
 		private const int ScreenShipFrame = 0x208;
@@ -503,6 +502,27 @@ namespace Civilization1Remaster.UI
 		/// <summary>The words of the frame of DisplayCivilizationScreen above its text (B3: in C#, new for every call)</summary>
 		private FrameWords screenFrame = null!;
 
+		/// <summary>The copy of the text of DisplayCivilizationScreen (0x200 bytes at BP - 0x200 in the original)</summary>
+		private byte[] screenText = new byte[ScreenText];
+
+		/// <summary>The text into screenText (strcpy; what does not fit is lost, the frame words are in C#)</summary>
+		private void SetScreenText(string text)
+		{
+			for (int idx = 0; idx <= text.Length && idx < this.screenText.Length; idx++)
+				this.screenText[idx] = idx < text.Length ? (byte)text[idx] : (byte)0;
+		}
+
+		/// <summary>The text of screenText from the index on</summary>
+		private string ScreenTextFrom(int index)
+		{
+			int end = index;
+
+			while (end >= 0 && end < this.screenText.Length && this.screenText[end] != 0)
+				end++;
+
+			return index < 0 || index >= this.screenText.Length ? "" : System.Text.Encoding.Latin1.GetString(this.screenText, index, end - index);
+		}
+
 		/// <summary>
 		/// The end of the space race: the ship of the player (the human player or another one) lands on Alpha Centauri. The
 		/// pictures of the flying ship come from 0x32d8, the text (file 0x3301, part 0x32f2 for the human player, else 0x32f9)
@@ -513,9 +533,10 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope($"DisplayCivilizationScreen({participantIdx})");
 
-			this.processor.EnterFrame(0x246);
 			FrameWords outerFrame = this.screenFrame;
-			this.screenFrame = new FrameWords(this.processor, 0x246, 2, ScreenText);
+			byte[] outerText = this.screenText;
+			this.screenFrame = new FrameWords(this.processor, 0x246);
+			this.screenText = new byte[ScreenText];
 
 			ImportShipPictures();
 			PrepareLandingText(participantIdx);
@@ -525,7 +546,7 @@ namespace Civilization1Remaster.UI
 			CloseLanding(participantIdx);
 
 			this.screenFrame = outerFrame;
-			this.processor.LeaveFrame();
+			this.screenText = outerText;
 			this.processor.Journal.CloseScope("DisplayCivilizationScreen");
 		}
 
@@ -613,7 +634,7 @@ namespace Civilization1Remaster.UI
 			this.owner.BlockText.ImportTextFromFile(0x3301,
 				(ushort)((participantIdx != this.owner.World.PersonParticipantIdx) ? 0x32f9 : 0x32f2));
 			this.owner.BlockText.ReflowText();
-			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - ScreenText), this.owner.Words.ToString());
+			SetScreenText(this.owner.Words.ToString());
 
 			DrawingBox.TypefaceIdx = 6;
 			this.screenFrame.SetFrame(ScreenStarHoriz, 0xfff6);
@@ -651,7 +672,7 @@ namespace Civilization1Remaster.UI
 				}
 
 				if ((short)this.screenFrame.Frame(ScreenColumn) % 0x16 == 0)
-					CutNextTextPart(TextBuffer.Address);
+					CutNextTextPart(true);
 
 				short textLength = (short)this.screenFrame.Frame(ScreenTextLength);
 
@@ -664,10 +685,10 @@ namespace Civilization1Remaster.UI
 		}
 
 		/// <summary>
-		/// The next part of the text at the address (TextBuffer.Address, or the frame copy at bp - 0x200 through the stack segment):
-		/// from after the end of the last part up to "^" (made the end of the text) or the end of the whole text
+		/// The next part of the text (of the message buffer, or of its copy screenText): from after the end of the last part
+		/// up to "^" (made the end of the text) or the end of the whole text
 		/// </summary>
-		private void CutNextTextPart(ushort text)
+		private void CutNextTextPart(bool inBuffer)
 		{
 			this.screenFrame.SetFrame(ScreenPartBegin, (ushort)(this.screenFrame.Frame(ScreenPartEnd) + 1));
 
@@ -678,14 +699,14 @@ namespace Civilization1Remaster.UI
 				this.screenFrame.SetFrame(ScreenPartEnd, (ushort)(this.screenFrame.Frame(ScreenPartEnd) + 1));
 				end = this.screenFrame.Frame(ScreenPartEnd);
 
-				if (PullTextByte(text, end) == 0x5e || (short)end >= (short)this.screenFrame.Frame(ScreenTextLength))
+				if (PullTextByte(inBuffer, end) == 0x5e || (short)end >= (short)this.screenFrame.Frame(ScreenTextLength))
 					break;
 			}
 
-			if (text == TextBuffer.Address)
+			if (inBuffer)
 			{
 				if ((short)end < (short)this.screenFrame.Frame(ScreenTextLength))
-					EmitTextByte(text, end, 0);
+					EmitTextByte(inBuffer, end, 0);
 			}
 			else
 			{
@@ -693,24 +714,22 @@ namespace Civilization1Remaster.UI
 				short textLength = (short)this.screenFrame.Frame(ScreenTextLength);
 
 				if ((short)this.screenFrame.Frame(ScreenPartEnd) < textLength)
-					EmitTextByte(text, this.screenFrame.Frame(ScreenPartEnd), 0);
+					EmitTextByte(inBuffer, this.screenFrame.Frame(ScreenPartEnd), 0);
 			}
 		}
 
-		/// <summary>A letter of the text in the data segment (TextBuffer.Address) or of the copy in the frame</summary>
-		private byte PullTextByte(ushort text, ushort idx)
+		/// <summary>A letter of the text in the message buffer or of its copy screenText (0 past its end)</summary>
+		private byte PullTextByte(bool inBuffer, ushort idx)
 		{
-			return text == TextBuffer.Address
-				? this.processor.PullUInt8(this.processor.SegData.Value16, (ushort)(idx + TextBuffer.Address))
-				: this.processor.PullUInt8(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + idx - ScreenText));
+			return inBuffer ? this.owner.Words[idx] : idx < this.screenText.Length ? this.screenText[idx] : (byte)0;
 		}
 
-		private void EmitTextByte(ushort text, ushort idx, byte letter)
+		private void EmitTextByte(bool inBuffer, ushort idx, byte letter)
 		{
-			if (text == TextBuffer.Address)
-				this.processor.EmitUInt8(this.processor.SegData.Value16, (ushort)(idx + TextBuffer.Address), letter);
-			else
-				this.processor.EmitUInt8(this.processor.SegStack.Value16, (ushort)(this.processor.RegFrame.Value16 + idx - ScreenText), letter);
+			if (inBuffer)
+				this.owner.Words[idx] = letter;
+			else if (idx < this.screenText.Length)
+				this.screenText[idx] = letter;
 		}
 
 		/// <summary>The current part of the text in the band at the bottom, with its shadow, drawn into screen 0 too</summary>
@@ -721,10 +740,10 @@ namespace Civilization1Remaster.UI
 			this.processor.EmitUInt16(this.processor.SegData.Value16, screen, 1);
 
 			ushort hue = (ushort)(VgaMode != 0 ? 0x38 : 0x7);
-			this.owner.TextPainter.RenderCenteredTextToScreen0((ushort)(TextBuffer.Address + this.screenFrame.Frame(ScreenPartBegin)), 160, 184, hue);
+			this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.TextFrom(this.screenFrame.Frame(ScreenPartBegin)), 160, 184, hue);
 
 			hue = (ushort)(VgaMode != 0 ? 0x3c : 0xf);
-			this.owner.TextPainter.RenderCenteredTextToScreen0((ushort)(TextBuffer.Address + this.screenFrame.Frame(ScreenPartBegin)), 160, 183, hue);
+			this.owner.TextPainter.RenderCenteredTextToScreen0(this.owner.Words.TextFrom(this.screenFrame.Frame(ScreenPartBegin)), 160, 183, hue);
 
 			screen = ScreenBox;
 			this.processor.EmitUInt16(this.processor.SegData.Value16, screen, this.screenFrame.Frame(ScreenSavedFlag));
@@ -817,7 +836,7 @@ namespace Civilization1Remaster.UI
 			DrawingBox.DisplayIdx = 0;
 			this.owner.Services.DisplayScreen(0);
 
-			this.owner.Libc.CopyText((ushort)(this.processor.RegFrame.Value16 - ScreenText), (ushort)(this.screenFrame.Frame(ScreenPartEnd) + (ushort)(TextBuffer.Address + 1)));
+			SetScreenText(this.owner.Words.TextFrom((ushort)(this.screenFrame.Frame(ScreenPartEnd) + 1)));
 
 			ushort shown = (ushort)(this.screenFrame.Frame(ScreenPartEnd) + 1);
 			this.screenFrame.SetFrame(ScreenTextLength, (ushort)(this.screenFrame.Frame(ScreenTextLength) - shown));
@@ -872,7 +891,7 @@ namespace Civilization1Remaster.UI
 		{
 			do
 			{
-				CutNextTextPart((ushort)(this.processor.RegFrame.Value16 - ScreenText));
+				CutNextTextPart(false);
 
 				short textLength = (short)this.screenFrame.Frame(ScreenTextLength);
 
@@ -881,10 +900,8 @@ namespace Civilization1Remaster.UI
 					this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0x20,
 						ScreenBox, 0, 0);
 
-					this.owner.TextPainter.RenderCenteredTextToScreen0(
-						(ushort)(this.processor.RegFrame.Value16 + this.screenFrame.Frame(ScreenPartBegin) - ScreenText), 160, 5, 11);
-					this.owner.TextPainter.RenderCenteredTextToScreen0(
-						(ushort)(this.processor.RegFrame.Value16 + this.screenFrame.Frame(ScreenPartBegin) - ScreenText), 160, 4, 15);
+					this.owner.TextPainter.RenderCenteredTextToScreen0(ScreenTextFrom(this.screenFrame.Frame(ScreenPartBegin)), 160, 5, 11);
+					this.owner.TextPainter.RenderCenteredTextToScreen0(ScreenTextFrom(this.screenFrame.Frame(ScreenPartBegin)), 160, 4, 15);
 
 					this.owner.Services.AssignDot(280, 32, 15);
 					this.owner.TextPainter.AwaitTime(80);

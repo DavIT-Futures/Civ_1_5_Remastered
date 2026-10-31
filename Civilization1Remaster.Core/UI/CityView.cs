@@ -64,12 +64,12 @@ namespace Civilization1Remaster.UI
 				}
 			}
 
-			ushort savedText = (ushort)(this.processor.RegStack.Value16 - 0x300);
-			this.processor.EmitGlobalByte(savedText, 0x0);
+			// The text of the buffer, kept while the scene is drawn (the original kept it under SP)
+			string savedText = "";
 
 			if (this.owner.Words.Length < 120)
 			{
-				this.owner.Libc.CopyText(savedText, this.owner.Words.ToString());
+				savedText = this.owner.Words.ToString();
 			}
 
 			// RNG based on city name
@@ -480,7 +480,7 @@ namespace Civilization1Remaster.UI
 				this.processor.EmitUInt16(this.processor.SegData.Value16, ScreenBox, 0x1);
 				DrawingBox.TypefaceIdx = 0x6;
 
-				if (this.owner.Libc.TextLength(savedText) == 0)
+				if (savedText.Length == 0)
 				{
 					EmptyMessage()
 						.City(townIdx);

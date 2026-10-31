@@ -71,6 +71,10 @@ Testy zawsze w **Release** z `-parallelMode all` (ok. 7 razy szybciej niż Debug
      z pamięci tyle razy co oryginał albo wołać `Idle`. Dane wyjęte z pamięci do C#: wpis w `Tests/Dual/MovedData.cs`
      (bajty w starym układzie) – migawka wpisuje je z powrotem pod adres przed haszami.
    - Jednostki: `UnitMemory` (pamięć 0x81d4), typy: `UnitKindTable`, mapa: `MapOps.Chart` (`MapLayers`), stałe: `MapRules`.
+   - Teksty (B6.1): bufor komunikatu to `Words` (`Set` / `Append` / `ToString` / `TextFrom(k)`, tablica C#); rysowanie,
+     szerokość, `DisplayMenu`, `ImportTextFromFile`, `ShrinkTextToWidth`, `CompareTextNoCase` mają wersje na `string` (wersje z
+     adresem to adaptery dla tekstów w segmencie danych i kopii w testach). Tekstu pod SP / w ramce nie składać – `string`;
+     w dzienniku taki tekst ma adres `TextBuffer.StackTextAddress` (testy traktują adresy stosu jako jeden).
 4. `extract_reference.py` (z commita HEAD, **przed** podmianą), potem `replace_methods.py`, build Release (jak wyżej).
 5. Test różnicowy `BatchNNDifferentialTests.cs` (wzory: poprzednie Batch*): scenariusze z `new Random(bay)`, lista gałęzi, które muszą
    wystąpić. Pułapki: losować tylko w `make` (nigdy w `Prepare` – wykonuje się dwa razy), `make` nie woła funkcji gry na

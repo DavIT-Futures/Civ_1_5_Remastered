@@ -714,20 +714,17 @@ namespace Civilization1Remaster.UI
 			return tally;
 		}
 
-		/// <summary>The value of the player for the current line (in stack scratch area)</summary>
-		private ushort CensusValueAddress(int participantIdx)
-		{
-			return (ushort)(this.processor.RegStack.Value16 - 0x300 + (participantIdx << 1));
-		}
+		/// <summary>The values of the players for the current line of the census (the original kept them under SP)</summary>
+		private readonly short[] censusValues = new short[8];
 
 		private short CensusValue(int participantIdx)
 		{
-			return (short)this.processor.PullGlobalWord(CensusValueAddress(participantIdx));
+			return this.censusValues[participantIdx];
 		}
 
 		private void SetCensusValue(int participantIdx, short value)
 		{
-			this.processor.EmitGlobalWord(CensusValueAddress(participantIdx), (ushort)value);
+			this.censusValues[participantIdx] = value;
 		}
 
 		/// <summary>
@@ -743,7 +740,7 @@ namespace Civilization1Remaster.UI
 				valueOfPlayer(participantIdx);
 			}
 
-			RenderCensusLine((ushort)(this.processor.RegStack.Value16 - 0x300), (short)(lowerIsBetter ? -vertLoc : vertLoc), unit);
+			RenderCensusLine(this.censusValues, (short)(lowerIsBetter ? -vertLoc : vertLoc), unit);
 
 			vertLoc += 0xc;
 		}
@@ -996,6 +993,24 @@ namespace Civilization1Remaster.UI
 		/// </summary>
 		public void RenderCensusLine(ushort arg1, short vertLoc, ushort charsAddr)
 		{
+			short[] values = new short[8];
+
+			for (int participantIdx = 0; participantIdx < 8; participantIdx++)
+				values[participantIdx] = (short)this.processor.PullGlobalWord((ushort)(arg1 + (participantIdx << 1)));
+
+			RenderCensusLine(values, arg1, vertLoc, charsAddr);
+
+			// (the values made positive for a line where lower is better, back in the memory)
+			for (int participantIdx = 0; participantIdx < 8; participantIdx++)
+				this.processor.EmitGlobalWord((ushort)(arg1 + (participantIdx << 1)), (ushort)values[participantIdx]);
+		}
+
+		/// <summary>RenderCensusLine of the values of the players 1 - 7 in a C# array (made positive in it for a negative row)</summary>
+		public void RenderCensusLine(short[] values, short vertLoc, ushort charsAddr) =>
+			RenderCensusLine(values, TextBuffer.StackTextAddress, vertLoc, charsAddr);
+
+		private void RenderCensusLine(short[] values, ushort arg1, short vertLoc, ushort charsAddr)
+		{
 			this.processor.Journal.OpenScope($"RenderCensusLine({arg1}, {vertLoc}, 0x{charsAddr:x4})");
 
 			short humanIdx = this.owner.World.PersonParticipantIdx;
@@ -1003,7 +1018,7 @@ namespace Civilization1Remaster.UI
 			short best = -9999;
 			short bestIdx = humanIdx;
 
-			short Amount(int participantIdx) => (short)this.processor.PullGlobalWord((ushort)(arg1 + (participantIdx << 1)));
+			short Amount(int participantIdx) => values[participantIdx];
 
 			for (short participantIdx = 1; participantIdx < 8; participantIdx++)
 			{
@@ -1012,7 +1027,7 @@ namespace Civilization1Remaster.UI
 
 				if (vertLoc < 0)
 				{
-					this.processor.EmitGlobalWord((ushort)(arg1 + (participantIdx << 1)), (ushort)-Amount(participantIdx));
+					values[participantIdx] = (short)-Amount(participantIdx);
 				}
 
 				if (Amount(participantIdx) > Amount(humanIdx))

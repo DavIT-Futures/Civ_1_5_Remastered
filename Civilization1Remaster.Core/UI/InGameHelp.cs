@@ -29,14 +29,13 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope($"DisplayHelpTopic(0x{charsAddr:x4})");
 
-			ushort topicAddr = (ushort)(this.processor.RegStack.Value16 - 0x300);
-
-			this.owner.Libc.CopyText(topicAddr, "*");
-			this.owner.Libc.AppendText(topicAddr, this.owner.Libc.UppercaseText(charsAddr));
+			// "*" and the topic in upper case (also in place, like the original)
+			ushort upper = this.owner.Libc.UppercaseText(charsAddr);
+			string topic = "*" + this.processor.PullText(CPU.AsLinearAddress(this.processor.SegData.Value16, upper));
 
 			this.owner.Words.Clear();
 
-			if (this.owner.BlockText.ImportTextFromFile(HelpFileNameAddress, topicAddr) != 0)
+			if (this.owner.BlockText.ImportTextFromFile(HelpFileNameAddress, topic) != 0)
 			{
 				this.owner.Startup.ConcealMouseCursor();
 
@@ -47,7 +46,7 @@ namespace Civilization1Remaster.UI
 					0, 0);
 
 				this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, 2);
-				this.owner.TextPainter.RenderCenteredTextToScreen0(topicAddr, 160, 192, 0);
+				this.owner.TextPainter.RenderCenteredTextToScreen0(topic, 160, 192, 0);
 				this.owner.BlockText.RenderTextChunk(32, 32, 32, 15);
 				this.owner.Conquest.AwaitForKeyPressOrMouseClick();
 

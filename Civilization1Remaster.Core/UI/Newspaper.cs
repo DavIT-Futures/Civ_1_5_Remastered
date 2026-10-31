@@ -162,8 +162,7 @@ namespace Civilization1Remaster.UI
 
 			short storyIdx = (short)this.owner.Libc.Dice.DrawInt(14);
 			char letter = (char)('A' + storyIdx);
-			ushort topic = (ushort)(this.processor.RegStack.Value16 - 0x300);
-			this.owner.Libc.CopyText(topic, $"*NEWS{letter}");
+			string topic = $"*NEWS{letter}";
 			this.owner.Words.Clear();
 
 			this.owner.BlockText.ImportTextFromFile(NewspaperTextFileNameAddress, topic);

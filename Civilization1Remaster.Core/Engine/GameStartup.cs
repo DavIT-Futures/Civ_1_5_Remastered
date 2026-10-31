@@ -314,10 +314,7 @@ namespace Civilization1Remaster.Engine
 					this.processor.EmitGlobalByte(DiskNumberPromptAddress,
 						(byte)(CPU.SignedQuotient((short)diskIdx, (short)FirstMissingDisk) + 0x31));
 
-					ushort message = (ushort)(this.processor.RegStack.Value16 - 0x100);
-					this.owner.Libc.CopyText(message, "Please insert Disk ");
-					this.owner.Libc.AppendText(message, "A");
-					this.owner.Libc.AppendText(message, ".\n \n    Press Return\n    to continue.\n");
+					string message = "Please insert Disk " + "A" + ".\n \n    Press Return\n    to continue.\n";
 
 					ushort kept = KingMood;
 					KingMood = 0xffff;

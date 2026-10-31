@@ -325,6 +325,104 @@ namespace Civilization1Remaster.Emulation
 			return ScanStream(hnd, this.processor.PullText(CPU.AsLinearAddress(this.processor.SegData.Value16, layoutAddr)), globAddr);
 		}
 
+		/// <summary>
+		/// fscanf(hnd, "%[^\n]\n", line) into a C# string: the line without '\r' and its tally (1); -1 and the empty text at the
+		/// end of the file or for an empty line, like the emulated fscanf
+		/// </summary>
+		public short ScanStreamLine(short hnd, out string line)
+		{
+			short tallyShort = -1;
+			line = "";
+
+			if (this.files.IncludesKey(hnd))
+			{
+				FileStreamItem documentElement = this.files.ObtainValueByKey(hnd);
+				StringBuilder answer = new StringBuilder();
+				short chr;
+
+				while ((chr = documentElement.PullChar()) != -1 && chr != (short)'\n')
+				{
+					if (chr != (short)'\r')
+					{
+						answer.Append((char)chr);
+					}
+				}
+
+				if (chr != -1 && answer.Length > 0)
+				{
+					line = answer.ToString();
+					tallyShort = 1;
+				}
+			}
+			else
+			{
+				this.processor.Journal.EmitLine($"Can't find file handle {hnd}");
+			}
+
+			return tallyShort;
+		}
+
+		/// <summary>fread of one little-endian word: the word read, or the word given when the file ends before it</summary>
+		public ushort ReadStreamWord(short hnd, ushort word)
+		{
+			if (!this.files.IncludesKey(hnd))
+			{
+				this.processor.Journal.EmitLine($"Can't find file handle {hnd}");
+				return word;
+			}
+
+			FileStreamItem documentElement = this.files.ObtainValueByKey(hnd);
+			byte[] cache = new byte[2];
+
+			if (documentElement.Kind == FileStreamTypeEnum.Binary)
+			{
+				short putbackChar = documentElement.PutbackChar;
+
+				if (putbackChar != -1)
+				{
+					cache[0] = (byte)(putbackChar & 0xff);
+
+					if (documentElement.Flow.Read(cache, 1, 1) != 1)
+						return word;
+				}
+				else if (documentElement.Flow.Read(cache, 0, 2) != 2)
+				{
+					return word;
+				}
+			}
+			else
+			{
+				for (int jdx = 0; jdx < 2; jdx++)
+				{
+					short chr = documentElement.PullChar();
+
+					if (chr < 0)
+						return word;
+
+					cache[jdx] = (byte)chr;
+				}
+			}
+
+			return (ushort)(cache[0] | (cache[1] << 8));
+		}
+
+		/// <summary>fwrite of one little-endian word to a binary file (the text file translation of WriteStream is not needed)</summary>
+		public void WriteStreamWord(ushort word, short hnd)
+		{
+			if (!this.files.IncludesKey(hnd))
+			{
+				this.processor.Journal.EmitLine($"Can't find file handle {hnd}");
+				return;
+			}
+
+			FileStreamItem documentElement = this.files.ObtainValueByKey(hnd);
+
+			if (documentElement.Kind != FileStreamTypeEnum.Binary)
+				throw new InvalidOperationException("WriteStreamWord writes binary files only");
+
+			documentElement.Flow.Write([(byte)word, (byte)(word >> 8)], 0, 2);
+		}
+
 		public short ScanStream(short hnd, string layout, ushort globAddr)
 		{
 			short tallyShort = -1;
@@ -990,6 +1088,12 @@ namespace Civilization1Remaster.Emulation
 			string txt1 = this.processor.PullText(CPU.AsLinearAddress(this.processor.SegData.Value16, chars1Addr));
 			string txt2 = this.processor.PullText(CPU.AsLinearAddress(this.processor.SegData.Value16, chars2Addr));
 
+			return CompareTextNoCase(txt1, txt2);
+		}
+
+		/// <summary>stricmp of two texts</summary>
+		public short CompareTextNoCase(string txt1, string txt2)
+		{
 			short backAmount = (short)string.Compare(txt1, txt2, StringComparison.CurrentCultureIgnoreCase);
 
 			this.processor.RegAcc.Value16 = (ushort)backAmount; // preserve compatibility
