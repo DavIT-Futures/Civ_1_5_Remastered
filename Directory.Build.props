@@ -4,12 +4,8 @@
   <PropertyGroup>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <Version>1.475.6.7</Version>
     <Authors>Dawid Domagała</Authors>
-    <PackageProjectUrl>https://github.com/davit-futures/Civilization1xDejf_beta</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/davit-futures/Civilization1xDejf_beta</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <NeutralLanguage>en</NeutralLanguage>
     <ProduceReferenceAssembly>False</ProduceReferenceAssembly>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
   </PropertyGroup>
