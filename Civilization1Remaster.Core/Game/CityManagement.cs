@@ -290,7 +290,6 @@ namespace Civilization1Remaster.Game
 
 			int index = CitizenSpecialistRules.FindCityTileIndex(horizLoc, vertLoc);
 			ushort result = (index >= 0) ? (ushort)index : (ushort)0xffff;
-			this.processor.RegAcc.Value16 = result;
 
 			this.processor.Journal.CloseScope("ObtainCityTileIndex");
 			return result;
@@ -299,8 +298,8 @@ namespace Civilization1Remaster.Game
 		/// <summary>
 		/// The city screen, first part: the units of the city listed, the screen cleared, the title "NAME (Pop:...)" (0xe8
 		/// the population sum 1 + 2 + ... + size), the map of the city (the view 0xd4cc / 0xd75e on it): each of the 0x6540
-		/// tiles around that the owner has seen (all for a computer player) is drawn, a tile of another player only repainted,
-		/// a tile worked by a neighbouring city (the array at BP-0x8e) framed. The locals of HandleCity and BX, SI, DI are used
+		/// tiles around that the owner has seen (all for a computer player) is drawn, a tile of another player only
+		/// repainted, a tile worked by a neighbouring city (the array at BP-0x8e) framed. The locals of HandleCity are used
 		/// as in the original.
 		/// </summary>
 		private void RenderCityHeaderAndMap(short townIdx)
@@ -322,7 +321,6 @@ namespace Civilization1Remaster.Game
 			}
 
 			this.round.Index = citizen;
-			this.processor.RegBase.Value16 = ScreenBox;
 			DrawingBox.TypefaceIdx = 2;
 
 			EmptyMessage()
@@ -336,7 +334,6 @@ namespace Civilization1Remaster.Game
 			RenderFrame(127, 23, 208, 104);
 
 			// The map of the city
-			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 			MapViewHoriz = (ushort)((short)town.Place.X - 5);
 			MapViewVert = (ushort)((short)town.Place.Y - 3);
 
@@ -390,16 +387,15 @@ namespace Civilization1Remaster.Game
 		/// The food of the city in its turn: the flag 0x80 cleared; with the food storage below zero a settler of the city
 		/// starves (the human is told), else the city loses a citizen and the storage, at size 1 the city is lost
 		/// (ClassicStarvation: the translated code tests the flags of the earlier comparison instead of the size, so it is
-		/// always lost); with the storage at (size + 1) x 0x4a the city
-		/// grows (a granary keeps 5 x size + 5), above 10 without an aqueduct it stays (with the bit 4 of DiagMarkers; the human
-		/// is told). False when the city is lost. The locals of HandleCity and BX, SI are used as in the original.
+		/// always lost); with the storage at (size + 1) x 0x4a the city grows (a granary keeps 5 x size + 5), above 10
+		/// without an aqueduct it stays (with the bit 4 of DiagMarkers; the human is told). False when the city is lost.
+		/// The locals of HandleCity are used as in the original.
 		/// </summary>
 		private bool FeedCity(short townIdx)
 		{
 			City town = this.owner.World.Towns[townIdx];
 			short owner = (short)CityOwner;
 
-			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 			town.ConditionMarker &= 0x7f;
 
 			if (town.GrainTally < 0)
@@ -411,7 +407,6 @@ namespace Civilization1Remaster.Game
 				for (; troop < UnitMemory.TroopTally; troop++)
 				{
 					this.round.Index = troop;
-					this.processor.RegBase.Value16 = (ushort)(owner * UnitMemory.ParticipantStride);
 
 					if (this.troops.Pull(owner, troop, UnitMemory.Kind) == 0 && this.troops.PullSigned(owner, troop, UnitMemory.BaseTown) == townIdx)
 					{
@@ -441,14 +436,12 @@ namespace Civilization1Remaster.Game
 				{
 					// The city loses a citizen, and itself at size 1 (ClassicStarvation: whatever its size, as the translated
 					// code does)
-					this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 					town.TrueExtent--;
 
 					if (this.owner.TurnHooks.ClassicStarvation || town.TrueExtent == 0)
 						return LoseStarvingCity(town, townIdx);
 				}
 
-				this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 				town.GrainTally = 0;
 				this.owner.TurnLogic.RepaintTileIfVisible(this.round.Horiz, this.round.Vert);
 			}
@@ -473,12 +466,10 @@ namespace Civilization1Remaster.Game
 			if ((short)((town.TrueExtent + 1) * (short)this.round.CostFactor) > town.GrainTally)
 				return true;
 
-			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 			town.TrueExtent++;
 
 			// A granary keeps half of the food
 			town.GrainTally = (short)(town.Has(CityStructure.Granary) ? (short)(5 * town.TrueExtent) + 5 : 0);
-			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 
 			if (town.TrueExtent > 10 && !town.Has(CityStructure.Aqueduct) && (this.owner.World.DiagMarkers & 4) != 0)
 			{
@@ -503,16 +494,14 @@ namespace Civilization1Remaster.Game
 		/// The units of the city: 0x50 the size + 1; 0xdeb8 the special slots of the city in use (Unfamiliar) and the units
 		/// it supports (but diplomats and caravans), 0xd2f6 those above the size (and every one for a government above
 		/// monarchy with the bit 2 of DiagMarkers), 0x6546 the attackers away from the city (planes always), 0xe3c6 the
-		/// settlers. BX, SI are left as in the original.
+		/// settlers.
 		/// </summary>
 		private void CountCityUnits(short townIdx)
 		{
 			City town = this.owner.World.Towns[townIdx];
 			short owner = (short)CityOwner;
 
-			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 			this.round.Workers = (ushort)(town.TrueExtent + 1);
-			this.processor.RegAcc.Value16 = 0;
 			CityAttackersAway = 0;
 			CitySpecialSlots = 0;
 			CityUnitUpkeep = 0;
@@ -525,7 +514,6 @@ namespace Civilization1Remaster.Game
 			for (ushort troop = 0; troop < UnitMemory.TroopTally; troop++)
 			{
 				this.round.Index = troop;
-				this.processor.RegBase.Value16 = (ushort)(owner * UnitMemory.ParticipantStride);
 
 				if (this.troops.Pull(owner, troop, UnitMemory.Kind) == 0xff || this.troops.PullSigned(owner, troop, UnitMemory.BaseTown) != townIdx)
 					continue;
@@ -549,7 +537,6 @@ namespace Civilization1Remaster.Game
 						CityAttackersAway = (ushort)(CityAttackersAway + 1);
 					}
 
-					this.processor.RegBase.Value16 = (ushort)(owner * UnitMemory.ParticipantStride);
 				}
 
 				if (this.troops.Pull(owner, troop, UnitMemory.Kind) == 0)
@@ -560,10 +547,10 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// The tiles the city cannot work (the array at BP-0x3e, one word per tile around): those the owner has not seen (not
-		/// for the barbarians), those of another player (marked also in the array at BP-0x8e; 0x70e8 = 1 when that is the
-		/// human) and those worked by a neighbouring city; their workers are taken off. Then the 4 words at 0x70da cleared.
-		/// The locals of HandleCity and BX, CX, SI, DI are used as in the original.
+		/// The tiles the city cannot work (the array at BP-0x3e, one word per tile around): those the owner has not seen
+		/// (not for the barbarians), those of another player (marked also in the array at BP-0x8e; 0x70e8 = 1 when that is
+		/// the human) and those worked by a neighbouring city; their workers are taken off. Then the 4 words at 0x70da
+		/// cleared. The locals of HandleCity are used as in the original.
 		/// </summary>
 		private void MarkUnavailableTiles(short townIdx)
 		{
@@ -596,10 +583,8 @@ namespace Civilization1Remaster.Game
 				if (this.round.Value != 0xffff && this.round.Value != CityOwner)
 				{
 					// A tile of another player
-					this.processor.RegAcc.Value16 = 1;
 					this.round.SetFrame(0x8e - shared, 1);
 					this.round.SetFrame(unavailable, 1);
-					this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
 
 					if (this.round.Value == (ushort)this.owner.World.PersonParticipantIdx)
 						HumanTileNear = 1;
@@ -632,23 +617,21 @@ namespace Civilization1Remaster.Game
 
 		/// <summary>
 		/// The workers the city keeps: a computer city every fourth turn (without the flag 1 and with no tile of the human
-		/// around, 0x70e8) drops them all and picks anew (true). Else 0x50 = size + 1 less the workers: not too many, they are
-		/// kept (drawn, marked in the array at BP-0x3e and in 0xee / 0xec); too many, all go (the human is told in the turn).
-		/// True when workers are still to be picked (0x50 neither the specialists 0xe8b8 nor 0). The locals of HandleCity and
-		/// AX, BX, CX, DX, SI are used as in the original.
+		/// around, 0x70e8) drops them all and picks anew (true). Else 0x50 = size + 1 less the workers: not too many, they
+		/// are kept (drawn, marked in the array at BP-0x3e and in 0xee / 0xec); too many, all go (the human is told in the
+		/// turn). True when workers are still to be picked (0x50 neither the specialists 0xe8b8 nor 0). The locals of
+		/// HandleCity are used as in the original.
 		/// </summary>
 		private bool KeepWorkers(short townIdx, short marker)
 		{
 			City town = this.owner.World.Towns[townIdx];
 			short owner = (short)CityOwner;
 
-			this.processor.RegAcc.Value16 = 0;
 			this.round.WorkersHigh = 0;
 			this.round.WorkersLow = 0;
 
 			if (!this.owner.World.IsHuman(owner) && ((townIdx + this.owner.World.RoundTally) & 3) == 0)
 			{
-				this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 
 				if ((town.ConditionMarker & 1) == 0 && HumanTileNear == 0)
 					return true;
@@ -670,7 +653,6 @@ namespace Civilization1Remaster.Game
 			if ((short)this.round.Workers >= 0)
 			{
 				// Not too many: the workers are kept
-				this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 				this.round.Workers = (ushort)(town.TrueExtent + 1);
 
 				for (tile = 0; (short)tile < (short)CityTiles; tile++)
@@ -686,10 +668,8 @@ namespace Civilization1Remaster.Game
 
 					this.round.Workers = (ushort)(this.round.Workers - 1);
 					uint mask = 1u << (tile & 0xff);
-					this.processor.RegAcc.Value16 = (ushort)mask;
-					this.processor.RegData.Value16 = (ushort)(mask >> 16);
 					this.round.WorkersLow = (ushort)(this.round.WorkersLow | (ushort)mask);
-					this.round.WorkersHigh = (ushort)(this.round.WorkersHigh | this.processor.RegData.Value16);
+					this.round.WorkersHigh = (ushort)(this.round.WorkersHigh | (ushort)(mask >> 16));
 				}
 
 				this.round.Index = tile;
@@ -707,7 +687,6 @@ namespace Civilization1Remaster.Game
 					CityAgain = 1;
 				}
 
-				this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 				this.round.Workers = (ushort)(town.TrueExtent + 1);
 			}
 
@@ -725,14 +704,14 @@ namespace Civilization1Remaster.Game
 
 		/// <summary>
 		/// The new workers of the city (0x50 the workers still to place): the city tile first (once, 0x16); while the food
-		/// (0x70da + half the workers left) does not feed the citizens (2 per size) and the settlers (0x48 each), or the city
-		/// is below size 3, the tile with the most food (then the most shields x 2 + trade; none without shields for the last
-		/// worker of a city without shields, 0x70dc) is taken while more than the specialists 0xe8b8 are to place and the
-		/// last search found one (0x108). Then (a computer city with the flag 1 keeps one more specialist) the tiles with the
-		/// best weighted yield: food x 16 / the food left over, shields x (3 x size) / the shields left over (0x70dc less
-		/// 0xd2f6), trade x (2 x size) / the trade (0x70de), each divisor kept within 1 - 99. The workers 0xee / 0xec and the
-		/// specialists (0x50 in bits 26 - 31) are stored, 0xae = -0x50. The locals of HandleCity and AX, BX, CX, DX, SI are
-		/// used as in the original.
+		/// (0x70da + half the workers left) does not feed the citizens (2 per size) and the settlers (0x48 each), or the
+		/// city is below size 3, the tile with the most food (then the most shields x 2 + trade; none without shields for
+		/// the last worker of a city without shields, 0x70dc) is taken while more than the specialists 0xe8b8 are to place
+		/// and the last search found one (0x108). Then (a computer city with the flag 1 keeps one more specialist) the
+		/// tiles with the best weighted yield: food x 16 / the food left over, shields x (3 x size) / the shields left over
+		/// (0x70dc less 0xd2f6), trade x (2 x size) / the trade (0x70de), each divisor kept within 1 - 99. The workers 0xee
+		/// / 0xec and the specialists (0x50 in bits 26 - 31) are stored, 0xae = -0x50. The locals of HandleCity are used as
+		/// in the original.
 		/// </summary>
 		private void PickWorkers(short townIdx, short marker, bool pick)
 		{
@@ -763,7 +742,6 @@ namespace Civilization1Remaster.Game
 					}
 
 					this.round.Found = 0xffff;
-					this.processor.RegAcc.Value16 = 0;
 					this.round.BestValue = 0;
 					this.round.BestFood = 0;
 					ushort tile = 0;
@@ -780,7 +758,6 @@ namespace Civilization1Remaster.Game
 
 						this.round.Amount = MayCityWorkTile(horizLoc, vertLoc, 0);
 						this.round.TileValue = (ushort)(MayCityWorkTile(horizLoc, vertLoc, 1) << 1);
-						this.processor.RegAcc.Value16 = this.round.TileValue;
 
 						if (this.round.Workers == 1 && CityShields == 0 && this.round.TileValue == 0)
 							continue;
@@ -789,15 +766,12 @@ namespace Civilization1Remaster.Game
 
 						short food = (short)this.round.Amount;
 						short best = (short)this.round.BestFood;
-						this.processor.RegAcc.Value16 = (ushort)best;
 
 						if (food > best || (food == best && (short)this.round.TileValue > (short)this.round.BestValue))
 						{
 							this.round.BestFood = (ushort)food;
 							this.round.BestValue = this.round.TileValue;
-							this.processor.RegAcc.Value16 = this.round.BestValue;
 							this.round.Found = this.round.Index;
-							this.processor.RegAcc.Value16 = this.round.Found;
 						}
 					}
 
@@ -812,7 +786,6 @@ namespace Civilization1Remaster.Game
 				// A computer city with the flag 1 keeps one more specialist
 				if (CityOwner != (ushort)this.owner.World.PersonParticipantIdx)
 				{
-					this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 
 					if ((town.ConditionMarker & 1) != 0)
 						CitySpecialists = (ushort)(CitySpecialists + 1);
@@ -822,7 +795,6 @@ namespace Civilization1Remaster.Game
 				while ((short)this.round.Workers > (short)CitySpecialists)
 				{
 					this.round.Found = 0xffff;
-					this.processor.RegAcc.Value16 = 0;
 					this.round.BestWeighted = 0;
 					this.round.BestValue = 0;
 					this.round.BestFood = 0;
@@ -842,7 +814,6 @@ namespace Civilization1Remaster.Game
 						short divisor = (short)this.owner.Helpers.VerifyValueSpan(
 							(short)CityFood - (town.TrueExtent * 2) - ((short)this.round.SettlerFood * (short)CitySettlers), 1, 99);
 						short weight = (short)(16 / divisor);
-						this.processor.RegCount.Value16 = (ushort)weight;
 
 						short yield = (short)MayCityWorkTile(horizLoc, vertLoc, 0);
 						this.round.TileFood = (ushort)yield;
@@ -853,8 +824,6 @@ namespace Civilization1Remaster.Game
 						this.round.TileShields = (ushort)yield;
 
 						divisor = (short)this.owner.Helpers.VerifyValueSpan((short)CityShields - (short)CityUnitUpkeep, 1, 99);
-						this.processor.RegCount.Value16 = (ushort)divisor;
-						this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 						this.round.TileValue = (ushort)(this.round.TileValue + (short)(3 * town.TrueExtent) / divisor * yield);
 
 						// Trade
@@ -862,21 +831,14 @@ namespace Civilization1Remaster.Game
 						this.round.TileTrade = (ushort)yield;
 
 						divisor = (short)this.owner.Helpers.VerifyValueSpan((short)CityTrade, 1, 99);
-						this.processor.RegCount.Value16 = (ushort)divisor;
-						this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 						int product = (short)(town.TrueExtent * 2) / divisor * yield;
-						this.processor.RegAcc.Value16 = (ushort)product;
-						this.processor.RegData.Value16 = (ushort)(product >> 16);
 						this.round.TileValue = (ushort)(this.round.TileValue + (ushort)product);
-						this.processor.RegAcc.Value16 = this.round.BestValue;
 
 						if ((short)this.round.TileValue > (short)this.round.BestValue)
 						{
 							this.round.BestValue = this.round.TileValue;
 							this.round.Found = this.round.Index;
-							this.processor.RegAcc.Value16 = this.round.Found;
 							this.round.BestWeighted = (ushort)(((this.round.TileFood + this.round.TileShields) << 1) + this.round.TileTrade);
-							this.processor.RegAcc.Value16 = this.round.BestWeighted;
 						}
 					}
 
@@ -921,30 +883,26 @@ namespace Civilization1Remaster.Game
 			RenderCityTile(townIdx, tile, marker);
 
 			uint mask = 1u << (tile & 0xff);
-			this.processor.RegAcc.Value16 = (ushort)mask;
-			this.processor.RegData.Value16 = (ushort)(mask >> 16);
 			this.round.WorkersLow = (ushort)(this.round.WorkersLow | (ushort)mask);
-			this.round.WorkersHigh = (ushort)(this.round.WorkersHigh | this.processor.RegData.Value16);
+			this.round.WorkersHigh = (ushort)(this.round.WorkersHigh | (ushort)(mask >> 16));
 			this.round.Workers = (ushort)(this.round.Workers - 1);
 		}
 
 		/// <summary>
-		/// After the workers: 0x8 the specialists; the first 0x8 citizen icons without a type become type 3, the rest of the
-		/// 8 type 0. The factories: 0xf8 the factory bonus (2 the factory, 4 the manufacturing plant), 0xac the power (2 the
-		/// power plant, hydro plant, nuclear plant or the wonder 15 on the same continent), 0x6c98 the pollution factor (1;
-		/// 2 for the clean plants, 3 the recycling center); the shields 0x70dc (kept in 0x10a, the trade in 0xa) grow by a
-		/// quarter of the factory bonus and of the power within it. The locals of HandleCity and AX - DX, SI, DI are used
-		/// as in the original.
+		/// After the workers: 0x8 the specialists; the first 0x8 citizen icons without a type become type 3, the rest of
+		/// the 8 type 0. The factories: 0xf8 the factory bonus (2 the factory, 4 the manufacturing plant), 0xac the power
+		/// (2 the power plant, hydro plant, nuclear plant or the wonder 15 on the same continent), 0x6c98 the pollution
+		/// factor (1; 2 for the clean plants, 3 the recycling center); the shields 0x70dc (kept in 0x10a, the trade in 0xa)
+		/// grow by a quarter of the factory bonus and of the power within it. The locals of HandleCity are used as in the
+		/// original.
 		/// </summary>
 		private void PrepareCitizensAndFactories(short townIdx, short marker)
 		{
 			City town = this.owner.World.Towns[townIdx];
 
-			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 			this.round.Horiz = (ushort)(short)town.Place.X;
 			this.round.Vert = (ushort)(short)town.Place.Y;
 			this.round.Specialists = this.round.Workers;
-			this.processor.RegAcc.Value16 = this.round.Specialists;
 
 			// The citizen icons
 			ushort citizen = 0;
@@ -966,11 +924,9 @@ namespace Civilization1Remaster.Game
 			this.round.Index = citizen;
 
 			// The factories and the power
-			this.processor.RegAcc.Value16 = 0;
 			this.round.FactoryPower = 0;
 			this.round.FactoryBonus = 0;
 			PollutionFactor = 1;
-			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 
 			if (town.Has(CityStructure.Factory))
 				this.round.FactoryBonus = 2;
@@ -1007,8 +963,6 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
-
 			if (town.Has(CityStructure.RecyclingCenter))
 				PollutionFactor = 3;
 
@@ -1020,14 +974,8 @@ namespace Civilization1Remaster.Game
 			short shields = (short)CityShields;
 			short power = (short)((short)((short)this.round.FactoryPower * shields) / 4);
 			short factory = (short)((short)this.round.FactoryBonus * shields);
-			this.processor.RegBase.Value16 = (ushort)power;
-			this.processor.RegCount.Value16 = 2;
-			this.processor.RegData.Value16 = (ushort)(factory < 0 ? 0xffff : 0);
-			this.processor.RegAcc.Value16 = (ushort)(factory / 4 + power);
 			CityShields = (ushort)(CityShields + ((ushort)(factory / 4 + power)));
 
-			this.processor.RegAcc.Value16 = (ushort)marker;
-			this.processor.RegData.Value16 = (ushort)((marker < 0 ? 0xffff : 0) | (ushort)marker);
 		}
 
 		/// <summary>Where HandleCity goes on after the food and the shields of the turn (ProduceInCity)</summary>
@@ -1051,10 +999,11 @@ namespace Civilization1Remaster.Game
 
 		/// <summary>
 		/// The turn of the city, first part: the food stored grows by the surplus (the citizens eat 2, the settlers 0x48),
-		/// the shields by 0x70dc less the support of the units (0xd2f6; nothing with the flag 1). A unit (price x 0x4a) is built
-		/// when the shields suffice: the replay notes the first one of its kind, the barracks make it veteran; settlers
-		/// make the city smaller (a city of size 1 is lost, unless it is the last one of its owner). A computer player builds
-		/// no diplomats (the shields go). The locals of HandleCity (0xba the new unit) and BX, SI are used as in the original.
+		/// the shields by 0x70dc less the support of the units (0xd2f6; nothing with the flag 1). A unit (price x 0x4a) is
+		/// built when the shields suffice: the replay notes the first one of its kind, the barracks make it veteran;
+		/// settlers make the city smaller (a city of size 1 is lost, unless it is the last one of its owner). A computer
+		/// player builds no diplomats (the shields go). The locals of HandleCity (0xba the new unit) are used as in the
+		/// original.
 		/// </summary>
 		private ProductionStep ProduceInCity(short townIdx)
 		{
@@ -1062,19 +1011,14 @@ namespace Civilization1Remaster.Game
 			short owner = (short)CityOwner;
 
 			// The food and the shields of the turn
-			this.processor.RegCount.Value16 = (ushort)(town.TrueExtent * 2);
-			this.processor.RegAcc.Value16 = (ushort)((short)this.round.SettlerFood * (short)CitySettlers);
-			this.processor.RegData.Value16 = (ushort)(CityFood - ((ushort)((short)this.round.SettlerFood * (short)CitySettlers)) - this.processor.RegCount.Value16);
-			town.GrainTally += (short)this.processor.RegData.Value16;
+			ushort surplus = (ushort)(CityFood - ((ushort)((short)this.round.SettlerFood * (short)CitySettlers)) - (ushort)(town.TrueExtent * 2));
+			town.GrainTally += (short)surplus;
 
 			this.round.Value = (ushort)(CityShields - CityUnitUpkeep);
-			this.processor.RegAcc.Value16 = CityUnitUpkeep;
-			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 
 			if ((town.ConditionMarker & 1) != 0)
 				this.round.Value = 0;
 
-			this.processor.RegAcc.Value16 = this.round.Value;
 			town.MaterialsTally += (short)this.round.Value;
 
 			if (town.PresentMakingIdx < 0)
@@ -1087,12 +1031,9 @@ namespace Civilization1Remaster.Game
 			if (cost > town.MaterialsTally)
 				return ProductionStep.NotEnough;
 
-			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
-
 			if (town.PresentMakingIdx == 0 && town.TrueExtent == 1 && this.owner.World.HardnessTier == 0)
 				return ProductionStep.SettlersWait;
 
-			this.processor.RegBase.Value16 = (ushort)(town.PresentMakingIdx * UnitKindTable.Stride);
 			town.MaterialsTally -= cost;
 			this.round.NewUnit = 0xffff;
 
@@ -1109,20 +1050,15 @@ namespace Civilization1Remaster.Game
 				this.owner.World.ScienceLeadingFoundVia[town.PresentMakingIdx] |= 8;
 			}
 
-			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
-
 			if (town.Has(CityStructure.Barracks) && this.round.NewUnit != 0xffff)
 			{
 				// The barracks make it veteran
 				short troopIdx = (short)this.round.NewUnit;
-				this.processor.RegBase.Value16 = (ushort)(owner * UnitMemory.ParticipantStride);
 				this.troops.Assign(owner, troopIdx, UnitMemory.Status, (byte)(this.troops.Pull(owner, troopIdx, UnitMemory.Status) | 0x20));
 			}
 
 			if (this.round.NewUnit == 0xffff)
 				return ProductionStep.UnitBuilt;
-
-			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 
 			if (town.PresentMakingIdx != 0)
 				return ProductionStep.UnitBuilt;
@@ -1148,10 +1084,10 @@ namespace Civilization1Remaster.Game
 
 		/// <summary>
 		/// After the unit of the turn (0xba, -1 when none): a human city keeps no shields and tells of new settlers,
-		/// diplomats and caravans. A computer city sends a new caravan to the foreign city with the most trade (not of the human)
-		/// and a new diplomat (never built for a computer player: unreachable, kept as translated) to a city of the human;
-		/// the last nuclear unit of a computer player resets the human's timer of contact; then it picks a new production.
-		/// The locals of HandleCity and BX, CX, SI, DI are used as in the original.
+		/// diplomats and caravans. A computer city sends a new caravan to the foreign city with the most trade (not of the
+		/// human) and a new diplomat (never built for a computer player: unreachable, kept as translated) to a city of the
+		/// human; the last nuclear unit of a computer player resets the human's timer of contact; then it picks a new
+		/// production. The locals of HandleCity are used as in the original.
 		/// </summary>
 		private void FinishUnitOfCity(short townIdx)
 		{
@@ -1162,7 +1098,6 @@ namespace Civilization1Remaster.Game
 			if (owner == person || this.round.NewUnit == 0xffff)
 			{
 				// A human city (or no unit): no shields kept, the human is told of settlers, diplomats and caravans
-				this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 				town.MaterialsTally = 0;
 
 				if (this.round.NewUnit == 0xffff || (town.PresentMakingIdx != 0 && town.PresentMakingIdx < 0x1a))
@@ -1172,8 +1107,6 @@ namespace Civilization1Remaster.Game
 				EmptyMessage()
 					.City(townIdx)
 					.Text(" builds ");
-				this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
-				this.processor.RegAcc.Value16 = (ushort)(town.PresentMakingIdx * UnitKindTable.Stride + UnitKindTable.Origin);
 				this.owner.Words.Append(((ushort)(town.PresentMakingIdx * UnitKindTable.Stride + UnitKindTable.Origin)));
 				this.owner.Words.Append(".\n");
 				DialogStyle = 3;
@@ -1181,19 +1114,15 @@ namespace Civilization1Remaster.Game
 				return;
 			}
 
-			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
-
 			if (town.PresentMakingIdx == 0x1b)
 			{
 				// A caravan goes to the foreign city with the most trade (not of the human)
-				this.processor.RegAcc.Value16 = 0xffff;
 				this.round.Found = 0xffff;
 				this.round.Best = 0xffff;
 
 				for (ushort otherIdx = 0; otherIdx < 0x80; otherIdx++)
 				{
 					this.round.OtherCity = otherIdx;
-					this.processor.RegBase.Value16 = (ushort)(otherIdx * 0x1c);
 					City other = this.owner.World.Towns[otherIdx];
 
 					if (other.ParticipantIdx == owner || other.ConditionMarker == 0xff || other.ParticipantIdx == person ||
@@ -1204,24 +1133,18 @@ namespace Civilization1Remaster.Game
 
 					this.round.Best = (ushort)other.RootCommerce;
 					this.round.Found = this.round.OtherCity;
-					this.processor.RegAcc.Value16 = this.round.Found;
 				}
 
 				this.round.OtherCity = 0x80;
 				this.owner.Conquest.FoundTradeRoute(owner, (short)this.round.NewUnit, (short)this.round.Found);
 			}
 
-			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
-
 			if (town.PresentMakingIdx == 0x1a)
 				SendDiplomat(townIdx);
-
-			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 
 			if (town.PresentMakingIdx == 0x19)
 			{
 				// The last nuclear unit of a computer player
-				this.processor.RegBase.Value16 = (ushort)(owner * 0x38);
 
 				if (this.owner.World.Participants[owner].LiveTroops[25] == 1)
 					this.owner.World.Participants[person].TouchParticipantTimeleft = -1;
@@ -1247,7 +1170,6 @@ namespace Civilization1Remaster.Game
 			for (ushort otherIdx = 0; otherIdx < 0x80; otherIdx++)
 			{
 				this.round.OtherCity = otherIdx;
-				this.processor.RegBase.Value16 = (ushort)(otherIdx * 0x1c);
 				City other = this.owner.World.Towns[otherIdx];
 
 				if (other.ParticipantIdx != this.owner.World.PersonParticipantIdx || other.ConditionMarker == 0xff)
@@ -1255,9 +1177,7 @@ namespace Civilization1Remaster.Game
 
 				this.round.Value = this.owner.Helpers.LocateNearestUnit(owner, (short)this.round.NewUnit, other.Place.X, other.Place.Y);
 
-				this.processor.RegAcc.Value16 = (ushort)(FoundDistance - 3);
 				FoundDistance = (ushort)this.owner.Libc.AbsoluteValue((short)((ushort)(FoundDistance - 3)));
-				this.processor.RegBase.Value16 = (ushort)(otherIdx * 0x1c);
 
 				if ((other.ConditionMarker & 0x20) != 0)
 					FoundDistance = 3;
@@ -1294,15 +1214,12 @@ namespace Civilization1Remaster.Game
 
 				this.round.Found = this.round.Value;
 				this.round.Target = this.round.OtherCity;
-				this.processor.RegAcc.Value16 = this.round.Target;
 			}
 
 			this.round.OtherCity = 0x80;
 
 			if ((short)this.round.Best <= 3)
 			{
-				this.processor.RegCount.LowByte = 4;
-				this.processor.RegBase.Value16 = (ushort)(this.owner.World.PersonParticipantIdx << 1);
 
 				if ((this.owner.World.Participants[owner].Relations[this.owner.World.PersonParticipantIdx] & 2) == 0)
 				{
@@ -1315,7 +1232,6 @@ namespace Civilization1Remaster.Game
 					{
 						short troopIdx = (short)this.round.NewUnit;
 						City target = this.owner.World.Towns[this.round.Target];
-						this.processor.RegBase.Value16 = (ushort)(owner * UnitMemory.ParticipantStride);
 						this.troops.Assign(owner, troopIdx, UnitMemory.TravelHoriz, (byte)(sbyte)target.Place.X);
 						this.troops.Assign(owner, troopIdx, UnitMemory.TravelVert, (byte)(sbyte)target.Place.Y);
 					}
@@ -1325,41 +1241,36 @@ namespace Civilization1Remaster.Game
 			}
 
 			// The shields come back
-			this.processor.RegBase.Value16 = (ushort)(town.PresentMakingIdx * UnitKindTable.Stride);
-			town.MaterialsTally += (short)((short)this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + UnitKindTable.Origin + UnitKindTable.Price)) *
+			ushort unitRecord = (ushort)(town.PresentMakingIdx * UnitKindTable.Stride);
+			town.MaterialsTally += (short)((short)this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(unitRecord + UnitKindTable.Origin + UnitKindTable.Price)) *
 				(short)this.round.CostFactor);
 		}
 
 		/// <summary>
-		/// An improvement or wonder (0xe8 = -the production) completed when the shields reach its price x 0x4a: a wonder built
-		/// elsewhere or an improvement the city has already makes 0xe8 -1 (false: nothing happens). Else the nuclear test is
-		/// reported (0x29), an improvement (below 0x16) is added, the shields paid; a human city and every wonder are announced
-		/// (a wonder of a computer player shows its city to all; the human may see the city screen, with the option 8 and the
-		/// disk) and the shields cleared, a computer city picks its next production (after the palace -2 first) and counts a
-		/// unit in production. The locals of HandleCity and BX, CX, SI are used as in the original.
+		/// An improvement or wonder (0xe8 = -the production) completed when the shields reach its price x 0x4a: a wonder
+		/// built elsewhere or an improvement the city has already makes 0xe8 -1 (false: nothing happens). Else the nuclear
+		/// test is reported (0x29), an improvement (below 0x16) is added, the shields paid; a human city and every wonder
+		/// are announced (a wonder of a computer player shows its city to all; the human may see the city screen, with the
+		/// option 8 and the disk) and the shields cleared, a computer city picks its next production (after the palace -2
+		/// first) and counts a unit in production. The locals of HandleCity are used as in the original.
 		/// </summary>
 		private bool CompleteImprovement(short townIdx)
 		{
 			City town = this.owner.World.Towns[townIdx];
 			short owner = (short)CityOwner;
 
-			this.processor.RegCount.Value16 = 0x1e;
-			this.processor.RegBase.Value16 = (ushort)(-town.PresentMakingIdx * 0x1e);
-
-			if ((short)((short)BuildingWordAt(this.processor.RegBase.Value16, BuildingTable.Price) *
+			if ((short)((short)BuildingWordAt((ushort)(-town.PresentMakingIdx * 0x1e), BuildingTable.Price) *
 				(short)this.round.CostFactor) > town.MaterialsTally)
 			{
 				return false;
 			}
 
-			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 			this.round.Value = (ushort)-town.PresentMakingIdx;
 			short built = (short)this.round.Value;
 
 			if (built > 0x18)
 			{
 				// A wonder: only the first city builds it
-				this.processor.RegBase.Value16 = (ushort)(built << 1);
 
 				if (this.owner.World.MarvelTownIdx[built - 24] != -1)
 				{
@@ -1409,15 +1320,12 @@ namespace Civilization1Remaster.Game
 				// A computer city picks its next production (after the palace -2 first)
 				if (built == 1)
 				{
-					this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 					town.PresentMakingIdx = -2;
 				}
 
-				this.processor.RegCount.Value16 = this.owner.Advisors.PickCityProduction(owner, townIdx);
-				this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
-				town.PresentMakingIdx = (sbyte)this.processor.RegCount.LowByte;
+				town.PresentMakingIdx = (sbyte)(byte)this.owner.Advisors.PickCityProduction(owner, townIdx);
 
-				StartMakingUnit(town, owner, true);
+				StartMakingUnit(town, owner);
 
 				return true;
 			}
@@ -1435,16 +1343,13 @@ namespace Civilization1Remaster.Game
 			EmptyMessage()
 				.City(townIdx)
 				.Text(" builds\n");
-			this.processor.RegAcc.Value16 = BuildingRecordText(built);
-			this.owner.Words.Append(this.processor.RegAcc.Value16);
+			this.owner.Words.Append(BuildingRecordText(built));
 			this.owner.Words.Append(".\n");
-			this.processor.RegAcc.Value16 = (ushort)this.owner.World.PersonParticipantIdx;
 
 			bool screen = false;
 
 			if (owner == this.owner.World.PersonParticipantIdx && (this.owner.World.SessionPrefMarkers & 8) != 0 && (built <= 0x15 || built > 0x18))
 			{
-				this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 
 				if ((town.ConditionMarker & 0x10) == 0 && built != 1)
 				{
@@ -1457,7 +1362,6 @@ namespace Civilization1Remaster.Game
 			else
 				this.owner.Paper.DisplayNewspaper(townIdx);
 
-			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 			town.MaterialsTally = 0;
 			return true;
 		}
@@ -1473,11 +1377,11 @@ namespace Civilization1Remaster.Game
 
 		/// <summary>
 		/// A spaceship part (0xe8 0x16 - 0x18) of a player whose spaceship has not left: the human adds it on the spaceship
-		/// screen; a computer player (0xc8 = the success it computes) gets the shields back for the structures and modules it
-		/// can use and keeps building them, then launches when the success says so, or (with 40 percent of the computer
-		/// victories, 0x28 known by the human) when it is sure, the human is ahead, or arrives later, or a third player is rich
-		/// (the gold of the player 0x... LiveRealms, as translated). The locals of HandleCity and AX, BX, CX, SI are used as in
-		/// the original.
+		/// screen; a computer player (0xc8 = the success it computes) gets the shields back for the structures and modules
+		/// it can use and keeps building them, then launches when the success says so, or (with 40 percent of the computer
+		/// victories, 0x28 known by the human) when it is sure, the human is ahead, or arrives later, or a third player is
+		/// rich (the gold of the player 0x... LiveRealms, as translated). The locals of HandleCity are used as in the
+		/// original.
 		/// </summary>
 		private void BuildSpaceshipPart(short townIdx)
 		{
@@ -1495,23 +1399,17 @@ namespace Civilization1Remaster.Game
 				return;
 			}
 
-			this.processor.RegAcc.Value16 = (ushort)(part - 0x16);
 			this.round.Best = this.owner.RocketScreen.ComputeSpaceshipSuccess(owner, (short)((ushort)(part - 0x16)));
 
 			if (this.round.Best != 0 && part < 0x18)
 			{
 				// The shields come back, the city builds the part again
-				this.processor.RegBase.Value16 = (ushort)(part * 0x1e);
-				this.processor.RegCount.Value16 = (ushort)((short)BuildingWordAt(this.processor.RegBase.Value16, BuildingTable.Price) *
-					(short)this.round.CostFactor);
-				this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
-				town.MaterialsTally += (short)this.processor.RegCount.Value16;
+				ushort refund = (ushort)((short)BuildingWordAt((ushort)(part * 0x1e), BuildingTable.Price) * (short)this.round.CostFactor);
+				town.MaterialsTally += (short)refund;
 
 				if (town.PresentMakingIdx <= -0x16 && town.PresentMakingIdx >= -0x18)
 				{
-					this.processor.RegAcc.Value16 = (ushort)-part;
-					this.processor.RegAcc.LowByte = (byte)(this.processor.RegAcc.LowByte - 1);
-					town.PresentMakingIdx = (sbyte)this.processor.RegAcc.LowByte;
+					town.PresentMakingIdx = (sbyte)(byte)((byte)-part - 1);
 				}
 
 				this.round.Best = (ushort)(this.round.Best - 1);
@@ -1549,10 +1447,10 @@ namespace Civilization1Remaster.Game
 					if ((this.owner.World.StarshipMarkers & (1 << (person & 0xff))) != 0)
 					{
 						// Both spaceships fly: the computer launches when it arrives first
-						this.processor.RegAcc.Value16 = (ushort)(computer.StarshipArrivalSeason - this.owner.World.Season);
-						this.processor.RegCount.Value16 = (ushort)(ahead.StarshipArrivalSeason - this.owner.World.Season);
+						short computerArrives = (short)(ushort)(computer.StarshipArrivalSeason - this.owner.World.Season);
+						short humanArrives = (short)(ushort)(ahead.StarshipArrivalSeason - this.owner.World.Season);
 
-						if ((short)this.processor.RegAcc.Value16 <= (short)this.processor.RegCount.Value16)
+						if (computerArrives <= humanArrives)
 						{
 							launch = true;
 							decided = true;
@@ -1561,10 +1459,7 @@ namespace Civilization1Remaster.Game
 
 					if (!decided)
 					{
-						this.processor.RegAcc.Value16 = 1;
-						this.processor.RegCount.LowByte = (byte)(((person & 0xff) + 8) & 0xff);
-
-						launch = ((ushort)this.owner.World.StarshipMarkers & (ushort)(1 << this.processor.RegCount.LowByte)) != 0 &&
+						launch = ((ushort)this.owner.World.StarshipMarkers & (ushort)(1 << (byte)(((person & 0xff) + 8) & 0xff))) != 0 &&
 							this.owner.World.Participants[this.owner.World.LiveRealms].Gold > 1000;
 					}
 				}
@@ -1575,11 +1470,11 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// What some completed improvements do (0xe8): the palace (1) leaves every city of the owner; the human hears of the
-		/// move (of a computer player only with an embassy, 0x40): then the capital is this city (HorizBegin, the palace bit
-		/// set again; without the message it stays off, as translated); the wonder 0x26 gives two advances; the wonder 0x2b of
-		/// the human shows every foreign city (its size, the tile seen). The locals of HandleCity and BX, CX, SI are used as in
-		/// the original.
+		/// What some completed improvements do (0xe8): the palace (1) leaves every city of the owner; the human hears of
+		/// the move (of a computer player only with an embassy, 0x40): then the capital is this city (HorizBegin, the
+		/// palace bit set again; without the message it stays off, as translated); the wonder 0x26 gives two advances; the
+		/// wonder 0x2b of the human shows every foreign city (its size, the tile seen). The locals of HandleCity are used
+		/// as in the original.
 		/// </summary>
 		private void ApplyImprovement(short townIdx)
 		{
@@ -1594,7 +1489,6 @@ namespace Civilization1Remaster.Game
 				for (ushort otherIdx = 0; otherIdx < 0x80; otherIdx++)
 				{
 					this.round.OtherCity = otherIdx;
-					this.processor.RegBase.Value16 = (ushort)(otherIdx * 0x1c);
 					City other = this.owner.World.Towns[otherIdx];
 
 					if (other.ParticipantIdx == owner)
@@ -1610,8 +1504,6 @@ namespace Civilization1Remaster.Game
 
 				if (!told)
 				{
-					this.processor.RegCount.LowByte = 4;
-					this.processor.RegBase.Value16 = (ushort)(owner << 1);
 					told = (this.owner.World.Participants[person].Relations[owner] & 0x40) != 0;
 				}
 
@@ -1625,8 +1517,7 @@ namespace Civilization1Remaster.Game
 							.Style(1);
 					}
 
-					this.processor.RegBase.Value16 = (ushort)(owner << 1);
-					this.owner.Words.Append(CivilizationNameAt(this.processor.RegBase.Value16));
+					this.owner.Words.Append(CivilizationNameAt((ushort)(owner << 1)));
 					this.owner.Words.Append(" capital\nmoved to ");
 					this.owner.Conquest.ObtainCityLabel(townIdx);
 					this.owner.Words.Append(".\n");
@@ -1634,7 +1525,6 @@ namespace Civilization1Remaster.Game
 					this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 80, 80);
 
 					this.owner.World.Participants[owner].HorizBegin = (short)town.Place.X;
-					this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 					town.StructureMarkers0 |= 1;
 					town.StructureMarkers1 |= 0;
 				}
@@ -1656,7 +1546,6 @@ namespace Civilization1Remaster.Game
 			for (ushort otherIdx = 0; otherIdx < 0x80; otherIdx++)
 			{
 				this.round.OtherCity = otherIdx;
-				this.processor.RegBase.Value16 = (ushort)(otherIdx * 0x1c);
 				City other = this.owner.World.Towns[otherIdx];
 
 				if (other.ConditionMarker == 0xff || other.ParticipantIdx == owner)
@@ -1664,8 +1553,7 @@ namespace Civilization1Remaster.Game
 
 				other.ShownExtent = other.TrueExtent;
 
-				this.processor.RegCount.Value16 = (ushort)(byte)(1 << (owner & 0x1f));
-				this.owner.World.ChartSight[other.Place.X, other.Place.Y] |= (sbyte)this.processor.RegCount.LowByte;
+				this.owner.World.ChartSight[other.Place.X, other.Place.Y] |= (sbyte)(byte)(1 << (owner & 0x1f));
 				this.owner.MapOps.KeepKnownTileImprovements(other.Place.X, other.Place.Y);
 			}
 
@@ -1673,9 +1561,9 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// A human city with the flag 0x10 (production chosen by the advisor) picks its production again when it has no shields,
-		/// or builds an improvement and nothing was completed (0xe8 -1): 0x63 (none chosen) clears the flag, else the count of
-		/// units in production follows the change. The locals of HandleCity and BX, SI are used as in the original.
+		/// A human city with the flag 0x10 (production chosen by the advisor) picks its production again when it has no
+		/// shields, or builds an improvement and nothing was completed (0xe8 -1): 0x63 (none chosen) clears the flag, else
+		/// the count of units in production follows the change. The locals of HandleCity are used as in the original.
 		/// </summary>
 		private void AdviseHumanProduction(short townIdx)
 		{
@@ -1685,8 +1573,6 @@ namespace Civilization1Remaster.Game
 			if (owner != this.owner.World.PersonParticipantIdx)
 				return;
 
-			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
-
 			if ((town.ConditionMarker & 0x10) == 0)
 				return;
 
@@ -1694,34 +1580,30 @@ namespace Civilization1Remaster.Game
 				return;
 
 			this.round.Value = this.owner.Advisors.PickCityProduction(owner, townIdx);
-			this.processor.RegBase.Value16 = ScreenBox;
 			DrawingBox.TypefaceIdx = 2;
 
 			if (this.round.Value == 0x63)
 			{
 				// Nothing chosen: the advisor stops
-				this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 				town.ConditionMarker &= 0xef;
 				return;
 			}
 
 			CityAgain = 0;
-			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 
-			StopMakingUnit(town, owner, true);
-			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
+			StopMakingUnit(town, owner);
 			town.PresentMakingIdx = (sbyte)(byte)this.round.Value;
-			StartMakingUnit(town, owner, true);
+			StartMakingUnit(town, owner);
 		}
 
 		/// <summary>
-		/// A computer city (one played by a human goes on with the city screen) buys shields with gold (0xcc the purchase): a
-		/// city with the flag 0x10 picks a new production first; units of the role (the attitude of the continent 0x104: 1, 2
-		/// or 5) for a 64th of the gold, spaceship parts while the human's spaceship flies for a 128th, an improvement of a city
-		/// with the flag 1 up to an 8th, a unit where the city tile has no owner (or with the flag 0x10) up to a third, the
-		/// production -1 up to a third, nuclear units (the condition 0x19, as translated) up to a quarter; above 2000 gold a
-		/// 512th more. The shields grow by the purchase, the gold falls by twice it, the flag 0x10 is cleared. The locals of
-		/// HandleCity and AX, BX, SI are used as in the original.
+		/// A computer city (one played by a human goes on with the city screen) buys shields with gold (0xcc the purchase):
+		/// a city with the flag 0x10 picks a new production first; units of the role (the attitude of the continent 0x104:
+		/// 1, 2 or 5) for a 64th of the gold, spaceship parts while the human's spaceship flies for a 128th, an improvement
+		/// of a city with the flag 1 up to an 8th, a unit where the city tile has no owner (or with the flag 0x10) up to a
+		/// third, the production -1 up to a third, nuclear units (the condition 0x19, as translated) up to a quarter; above
+		/// 2000 gold a 512th more. The shields grow by the purchase, the gold falls by twice it, the flag 0x10 is cleared.
+		/// The locals of HandleCity are used as in the original.
 		/// </summary>
 		private void BuyForComputerCity(short townIdx)
 		{
@@ -1729,25 +1611,19 @@ namespace Civilization1Remaster.Game
 			short owner = (short)CityOwner;
 			Player player = this.owner.World.Participants[owner];
 
-			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
-
 			if ((town.ConditionMarker & 0x10) != 0)
 				this.owner.Bot.PickNewCityProduction(townIdx);
 
 			this.round.Amount = 0;
 
 			// The attitude of the continent (as translated: the landmass record of the player numbered by the continent)
-			if (this.owner.MapOps.ObtainContinentID((short)this.round.Horiz, (short)this.round.Vert) >= this.owner.World.Participants.Length)
-				this.processor.RegAcc.Value16 = 0;
-			else
-				this.processor.RegAcc.Value16 = (ushort)this.owner.World.Participants[this.processor.RegAcc.Value16].Landmasses[owner].Approach;
-
-			this.round.Approach = this.processor.RegAcc.Value16;
+			ushort continent = this.owner.MapOps.ObtainContinentID((short)this.round.Horiz, (short)this.round.Vert);
+			this.round.Approach = continent >= this.owner.World.Participants.Length ? (ushort)0 :
+				(ushort)this.owner.World.Participants[continent].Landmasses[owner].Approach;
 			ushort approach = this.round.Approach;
 
 			if ((approach == 1 || approach == 2 || approach == 5) && this.round.Value != 0)
 			{
-				this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 
 				if (town.PresentMakingIdx >= 0)
 				{
@@ -1758,17 +1634,12 @@ namespace Civilization1Remaster.Game
 			}
 
 			// A spaceship part while the human's spaceship flies
-			this.processor.RegCount.LowByte = (byte)(((this.owner.World.PersonParticipantIdx & 0xff) + 8) & 0xff);
-
-			if (((ushort)this.owner.World.StarshipMarkers & (ushort)(1 << this.processor.RegCount.LowByte)) != 0)
+			if (((ushort)this.owner.World.StarshipMarkers & (ushort)(1 << (byte)(((this.owner.World.PersonParticipantIdx & 0xff) + 8) & 0xff))) != 0)
 			{
-				this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 
 				if (-town.PresentMakingIdx >= 0x16 && -town.PresentMakingIdx <= 0x18)
 					this.round.Amount = (ushort)(player.Gold / 128);
 			}
-
-			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 
 			// An improvement of a city with the flag 1
 			if ((town.ConditionMarker & 1) != 0 && town.PresentMakingIdx < 0 && town.MaterialsTally != 0)
@@ -1781,28 +1652,22 @@ namespace Civilization1Remaster.Game
 
 			// A unit where the city tile has no owner (or with the flag 0x10)
 			bool unowned = (ushort)(this.owner.MapOps.ObtainTileOwner((short)this.round.Horiz, (short)this.round.Vert) + 1) == 0;
-			this.processor.RegAcc.Value16 = (ushort)(this.processor.RegAcc.Value16 + 1);
-			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 
 			if ((unowned || (town.ConditionMarker & 0x10) != 0) && town.PresentMakingIdx >= 0 && town.MaterialsTally != 0)
 				BuyShortfall(townIdx, player.Gold / 3);
 
 			// The production -1
-			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 
 			if (town.PresentMakingIdx == -1 && town.MaterialsTally != 0)
 				BuyShortfall(townIdx, player.Gold / 3);
 
 			// Nuclear units (the condition marker compared with 0x19, as translated)
-			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 
 			if (town.ConditionMarker == 0x19)
 			{
-				this.processor.RegBase.Value16 = (ushort)(owner * 0x38);
 
 				if (player.LiveTroops[25] == 0)
 				{
-					this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 
 					if (town.MaterialsTally != 0)
 						BuyShortfall(townIdx, player.Gold / 4);
@@ -1811,14 +1676,11 @@ namespace Civilization1Remaster.Game
 
 			if (player.Gold > 2000)
 			{
-				this.processor.RegAcc.Value16 = (ushort)(player.Gold / 512);
 				this.round.Amount = (ushort)(this.round.Amount + ((ushort)(player.Gold / 512)));
 			}
 
 			// The purchase
-			this.processor.RegAcc.Value16 = this.round.Amount;
 			town.MaterialsTally += (short)this.round.Amount;
-			this.processor.RegAcc.Value16 = (ushort)(this.round.Amount << 1);
 			player.Gold -= (short)((ushort)(this.round.Amount << 1));
 			town.ConditionMarker &= 0xef;
 		}
@@ -1849,17 +1711,15 @@ namespace Civilization1Remaster.Game
 
 			this.owner.VideoCard.SubstituteHue(ScreenBox, (33 * (short)CityScreenTab) + 96, 107, 32, 7, 9, 15);
 
-			this.processor.RegAcc.Value16 = CityScreenTab;
-
-			if (this.processor.RegAcc.Value16 == 2)
+			if (CityScreenTab == 2)
 				RenderMiniMap();
 		}
 
 		/// <summary>
-		/// The corruption and the trade routes: 0xd2e0 the corruption (trade x the distance to the palace 0x6b30 x 3 / (20 x
-		/// government + 80); communism counts the distance as 10; a courthouse or the palace halves it, democracy has none),
-		/// RootCommerce the trade less it; each trade route adds an eighth (a foreign city) or a sixteenth (an own city) of the
-		/// trade of both cities + 4. The locals of HandleCity and AX, BX, CX are used as in the original.
+		/// The corruption and the trade routes: 0xd2e0 the corruption (trade x the distance to the palace 0x6b30 x 3 / (20
+		/// x government + 80); communism counts the distance as 10; a courthouse or the palace halves it, democracy has
+		/// none), RootCommerce the trade less it; each trade route adds an eighth (a foreign city) or a sixteenth (an own
+		/// city) of the trade of both cities + 4. The locals of HandleCity are used as in the original.
 		/// </summary>
 		private void CountCorruptionAndTradeRoutes(short townIdx)
 		{
@@ -1867,7 +1727,6 @@ namespace Civilization1Remaster.Game
 			short owner = (short)CityOwner;
 			Player player = this.owner.World.Participants[owner];
 
-			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 			this.round.Horiz = (ushort)(short)town.Place.X;
 			this.round.Vert = (ushort)(short)town.Place.Y;
 			CityCorruption = 0;
@@ -1876,23 +1735,19 @@ namespace Civilization1Remaster.Game
 				PalaceDistance = 0xa;
 
 			// The corruption
-			this.processor.RegCount.Value16 = (ushort)(20 * player.RegimeKind + 0x50);
-			this.processor.RegBase.Value16 = 3;
 			short corruption = (short)((short)((short)CityTrade * (short)PalaceDistance) * 3);
-			CityCorruption = (ushort)(corruption / (short)this.processor.RegCount.Value16);
+			CityCorruption = (ushort)(corruption / (short)(ushort)(20 * player.RegimeKind + 0x50));
 
 			if (town.Has(CityStructure.Courthouse) || town.Has(CityStructure.Palace))
 			{
 				// A courthouse or the palace
-				this.processor.RegCount.Value16 = 2;
 				CityCorruption = (ushort)((short)CityCorruption / 2);
 			}
 
 			if (player.RegimeKind == 5)
 				CityCorruption = 0;
 
-			this.processor.RegAcc.LowByte = (byte)((byte)CityTrade - (byte)CityCorruption);
-			town.RootCommerce = (sbyte)this.processor.RegAcc.LowByte;
+			town.RootCommerce = (sbyte)(byte)((byte)CityTrade - (byte)CityCorruption);
 
 			// The trade routes
 			for (ushort route = 0; route < 3; route++)
@@ -1906,7 +1761,6 @@ namespace Civilization1Remaster.Game
 				City partner = this.owner.World.Towns[this.round.OtherCity];
 				short share = (short)(partner.RootCommerce + CityTrade + 4);
 				share = (short)(partner.ParticipantIdx != owner ? share / 8 : share / 16);
-				this.processor.RegAcc.Value16 = (ushort)share;
 				CityTrade = (ushort)(CityTrade + share);
 			}
 
@@ -1914,11 +1768,11 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// The trade of the city split: 0xd2e0 the corruption again (of the trade with the routes; democracy none, a courthouse
-		/// halves it), 0x70e0 the luxuries, 0xe17a the taxes, 0x70e6 the science by the rates of the owner; the specialists
-		/// add 2 each (taxmen, scientists, entertainers: TallySpecialists 1, 2, 3); a library (0x10) and a university (0x200)
-		/// each add half of the luxuries and taxes (as translated). The locals of HandleCity and AX, BX, CX are used as in the
-		/// original.
+		/// The trade of the city split: 0xd2e0 the corruption again (of the trade with the routes; democracy none, a
+		/// courthouse halves it), 0x70e0 the luxuries, 0xe17a the taxes, 0x70e6 the science by the rates of the owner; the
+		/// specialists add 2 each (taxmen, scientists, entertainers: TallySpecialists 1, 2, 3); a library (0x10) and a
+		/// university (0x200) each add half of the luxuries and taxes (as translated). The locals of HandleCity are used as
+		/// in the original.
 		/// </summary>
 		private void SplitTrade(short townIdx)
 		{
@@ -1926,16 +1780,14 @@ namespace Civilization1Remaster.Game
 			Player player = this.owner.World.Participants[(short)CityOwner];
 
 			// The corruption of the whole trade
-			this.processor.RegCount.Value16 = (ushort)(20 * player.RegimeKind + 0x50);
 			short corruption = (short)((short)((short)CityTrade * (short)PalaceDistance) * 3);
-			CityCorruption = (ushort)(corruption / (short)this.processor.RegCount.Value16);
+			CityCorruption = (ushort)(corruption / (short)(ushort)(20 * player.RegimeKind + 0x50));
 
 			if (player.RegimeKind == 5)
 				CityCorruption = 0;
 
 			if (town.Has(CityStructure.Courthouse))
 			{
-				this.processor.RegCount.Value16 = 2;
 				CityCorruption = (ushort)((short)CityCorruption / 2);
 			}
 
@@ -1948,46 +1800,32 @@ namespace Civilization1Remaster.Game
 			CityTaxes = (ushort)this.owner.Helpers.VerifyValueSpan(((player.LevyRatio * (trade - corrupt)) + 5) / 10, 0,
 				trade - (short)CityLuxuries - corrupt);
 
-			this.processor.RegAcc.Value16 = (ushort)(CityTrade - CityLuxuries -
-				CityTaxes - CityCorruption);
-			CityScience = this.processor.RegAcc.Value16;
+			CityScience = (ushort)(CityTrade - CityLuxuries - CityTaxes - CityCorruption);
 
 			// The specialists
-			TallySpecialists(1);
-			this.processor.RegAcc.Value16 = (ushort)(this.processor.RegAcc.Value16 << 1);
-			CityTaxes = (ushort)(CityTaxes + this.processor.RegAcc.Value16);
-
-			TallySpecialists(2);
-			this.processor.RegAcc.Value16 = (ushort)(this.processor.RegAcc.Value16 << 1);
-			CityScience = (ushort)(CityScience + this.processor.RegAcc.Value16);
-
-			TallySpecialists(3);
-			this.processor.RegAcc.Value16 = (ushort)(this.processor.RegAcc.Value16 << 1);
-			CityLuxuries = (ushort)(CityLuxuries + this.processor.RegAcc.Value16);
+			CityTaxes = (ushort)(CityTaxes + (ushort)(TallySpecialists(1) << 1));
+			CityScience = (ushort)(CityScience + (ushort)(TallySpecialists(2) << 1));
+			CityLuxuries = (ushort)(CityLuxuries + (ushort)(TallySpecialists(3) << 1));
 
 			// The library and the university
-			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 
 			foreach (ushort improvement in new ushort[] { 0x10, 0x200 })
 			{
-				this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 
 				if ((town.StructureMarkers0 & improvement) == 0)
 					continue;
 
-				this.processor.RegAcc.Value16 = (ushort)((short)CityLuxuries / 2);
 				CityLuxuries = (ushort)(CityLuxuries + ((ushort)((short)CityLuxuries / 2)));
-				this.processor.RegAcc.Value16 = (ushort)((short)CityTaxes / 2);
 				CityTaxes = (ushort)(CityTaxes + ((ushort)((short)CityTaxes / 2)));
 			}
 		}
 
 		/// <summary>
-		/// The science (0x70e6, as translated): a marketplace (0x20) and a bank (0x800) each add a half (and a third more with the
-		/// wonder 0xc), the city of the wonder 10 doubles it; 0x70e2 cleared. 0x70e4 / 0xa8 the content citizens: for the
-		/// human by the level, the government, the cities and the number of the city, for a computer player the size - 3;
-		/// 0x6542 the citizens above the size (then 0x70e4 the size); then the citizens are reshuffled. The locals of HandleCity
-		/// and AX, BX, CX, DX, SI are used as in the original.
+		/// The science (0x70e6, as translated): a marketplace (0x20) and a bank (0x800) each add a half (and a third more
+		/// with the wonder 0xc), the city of the wonder 10 doubles it; 0x70e2 cleared. 0x70e4 / 0xa8 the content citizens:
+		/// for the human by the level, the government, the cities and the number of the city, for a computer player the
+		/// size - 3; 0x6542 the citizens above the size (then 0x70e4 the size); then the citizens are reshuffled. The
+		/// locals of HandleCity are used as in the original.
 		/// </summary>
 		private void CountScienceAndContent(short townIdx)
 		{
@@ -1999,12 +1837,10 @@ namespace Civilization1Remaster.Game
 
 			foreach (ushort improvement in new ushort[] { 0x20, 0x800 })
 			{
-				this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 
 				if ((town.StructureMarkers0 & improvement) == 0)
 					continue;
 
-				this.processor.RegAcc.Value16 = (ushort)((short)CityScience / 2);
 				this.round.Value = (ushort)(this.round.Value + ((ushort)((short)CityScience / 2)));
 
 				if (PlayerEnjoysWonderEffect(owner, 0xc) != 0)
@@ -2098,7 +1934,6 @@ namespace Civilization1Remaster.Game
 			bool tab = marker == 1 && CityScreenTab == 1;
 
 			this.round.IconHoriz = 0xd0;
-			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 
 			// The colosseum
 			if (town.Has(CityStructure.Colosseum))
@@ -2112,7 +1947,6 @@ namespace Civilization1Remaster.Game
 			// The cathedral (the advance 0x1d; the wonder 9)
 			if (this.owner.Advisors.PlayerKnowsTechnology(owner, 0x1d) != 0)
 			{
-				this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 
 				if (town.Has(CityStructure.Cathedral))
 				{
@@ -2122,7 +1956,6 @@ namespace Civilization1Remaster.Game
 
 				if (tab)
 				{
-					this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 
 					if (town.Has(CityStructure.Cathedral))
 						DrawContentIcon(11);
@@ -2130,7 +1963,6 @@ namespace Civilization1Remaster.Game
 			}
 
 			// The temple (the advances 0x1a and 0x19; the wonder 6)
-			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 
 			if (town.Has(CityStructure.Temple))
 			{
@@ -2153,7 +1985,6 @@ namespace Civilization1Remaster.Game
 
 			if (marker == 1 && CityScreenTab == 1)
 			{
-				this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 
 				if ((town.StructureMarkers0 & 0x2408) != 0)
 				{
@@ -2174,11 +2005,11 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// The military and the citizens: below republic (government under 4) up to 3 attack units in the city (its stack, at
-		/// most 32 steps, and the units in the special slots while some are unhappy) make as many unhappy citizens content
-		/// (drawn on the city screen, 0xe6 the count); in a republic or democracy every attack unit away (0x6546) makes one
-		/// citizen unhappy (two in a democracy, none in a republic with the wonder 16; drawn on the screen). Then the citizens
-		/// are reshuffled and drawn again. The locals of HandleCity and BX, CX, SI are used as in the original.
+		/// The military and the citizens: below republic (government under 4) up to 3 attack units in the city (its stack,
+		/// at most 32 steps, and the units in the special slots while some are unhappy) make as many unhappy citizens
+		/// content (drawn on the city screen, 0xe6 the count); in a republic or democracy every attack unit away (0x6546)
+		/// makes one citizen unhappy (two in a democracy, none in a republic with the wonder 16; drawn on the screen). Then
+		/// the citizens are reshuffled and drawn again. The locals of HandleCity are used as in the original.
 		/// </summary>
 		private void ApplyMilitaryHappiness(short townIdx, short marker)
 		{
@@ -2234,8 +2065,6 @@ namespace Civilization1Remaster.Game
 					if (CityUnhappy == 0)
 						continue;
 
-					this.processor.RegBase.Value16 = slot;
-
 					if ((byte)town.Unfamiliar[slot] == 0xff)
 						continue;
 
@@ -2253,8 +2082,7 @@ namespace Civilization1Remaster.Game
 			else
 			{
 				// The units away make citizens unhappy (not with the wonder 16 in a republic; two in a democracy)
-				this.processor.RegCount.Value16 = (ushort)(PlayerEnjoysWonderEffect(owner, 16) < 1 ? 1 : 0);
-				this.round.Value = this.processor.RegCount.Value16;
+				this.round.Value = (ushort)(PlayerEnjoysWonderEffect(owner, 16) < 1 ? 1 : 0);
 
 				if (player.RegimeKind == 5)
 					this.round.Value = (ushort)(this.round.Value + 1);
@@ -2262,7 +2090,6 @@ namespace Civilization1Remaster.Game
 				if (this.round.Value != 0)
 				{
 					short unhappy = (short)((short)this.round.Value * (short)CityAttackersAway);
-					this.processor.RegAcc.Value16 = (ushort)unhappy;
 					CityUnhappy = (ushort)(CityUnhappy + unhappy);
 
 					if (tab)
@@ -2292,15 +2119,13 @@ namespace Civilization1Remaster.Game
 					100, (short)this.round.IconVert - 2, 222, (short)this.round.IconVert - 2, 1);
 			}
 
-			this.processor.RegAcc.Value16 = (ushort)marker;
-			this.processor.RegData.Value16 = (ushort)(marker < 0 ? 0xffff : 0);
 		}
 
 		/// <summary>
 		/// The wonders and the citizens: the wonders 2 and 0x15 each make one more citizen happy (0x70e2), the city of the
 		/// wonder 11 has no unhappy ones, the wonder 13 makes two content in the cities on its continent; the citizens are
-		/// reshuffled and drawn on the city screen (tab 1) when something changed (0xe8 the balance before). Without the bit 2
-		/// of DiagMarkers 0x70e4 and 0x70e2 are cleared. The locals of HandleCity and DI, SI are used as in the original.
+		/// reshuffled and drawn on the city screen (tab 1) when something changed (0xe8 the balance before). Without the
+		/// bit 2 of DiagMarkers 0x70e4 and 0x70e2 are cleared. The locals of HandleCity are used as in the original.
 		/// </summary>
 		private void ApplyWonderHappiness(short townIdx, short marker)
 		{
@@ -2348,14 +2173,13 @@ namespace Civilization1Remaster.Game
 		/// <summary>
 		/// The start of the units of the city (again after a unit was disbanded): 0x4e the units drawn in the city, 0xdeb8
 		/// the support (the special slots in use first), 0xdeb6, 0xd2f6 the support above the size; the places on the city
-		/// screen (0xf6 / 0xfc the supported units, 0xfa / 0x100 the units in the city). The locals of HandleCity and BX, CX,
-		/// SI are used as in the original.
+		/// screen (0xf6 / 0xfc the supported units, 0xfa / 0x100 the units in the city). The locals of HandleCity are used
+		/// as in the original.
 		/// </summary>
 		private void StartUnitSupport(short townIdx)
 		{
 			City town = this.owner.World.Towns[townIdx];
 
-			this.processor.RegAcc.Value16 = 0;
 			this.round.UnitsDrawn = 0;
 			CitySpecialSlots = 0;
 			UnitSupportCount = 0;
@@ -2380,8 +2204,6 @@ namespace Civilization1Remaster.Game
 			City town = this.owner.World.Towns[townIdx];
 			short owner = (short)CityOwner;
 			short troopIdx = (short)this.round.Index;
-
-			this.processor.RegBase.Value16 = (ushort)(owner * UnitMemory.ParticipantStride);
 
 			if (this.troops.Pull(owner, troopIdx, UnitMemory.Kind) != 0xff && this.troops.PullSigned(owner, troopIdx, UnitMemory.BaseTown) == townIdx)
 			{
@@ -2409,10 +2231,10 @@ namespace Civilization1Remaster.Game
 
 		/// <summary>
 		/// In the turn: without shields for the support (or for a computer player in a republic or democracy, its city with
-		/// the flag 1, every eighth turn), the unit of the city farthest away (but diplomats and caravans) goes: for lack of
-		/// shields it is disbanded (the human is told) and true is returned; else a land unit other than settlers is disbanded
-		/// and the flag 1 cleared, unless 0x8078 and the owner knows fewer advances than the human (then 0xdb42 = -999). The
-		/// locals of HandleCity (0x108 the unit, 0xc8 its distance) and DI, SI are used as in the original.
+		/// the flag 1, every eighth turn), the unit of the city farthest away (but diplomats and caravans) goes: for lack
+		/// of shields it is disbanded (the human is told) and true is returned; else a land unit other than settlers is
+		/// disbanded and the flag 1 cleared, unless 0x8078 and the owner knows fewer advances than the human (then 0xdb42 =
+		/// -999). The locals of HandleCity (0x108 the unit, 0xc8 its distance) are used as in the original.
 		/// </summary>
 		private bool DisbandUnsupportedUnit(short townIdx)
 		{
@@ -2423,7 +2245,6 @@ namespace Civilization1Remaster.Game
 
 			if (enoughShields)
 			{
-				this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 
 				if ((town.ConditionMarker & 1) == 0 || ((byte)((byte)this.round.Index + (byte)(this.owner.World.RoundTally & 0xff)) & 7) != 0 ||
 					owner == person || this.owner.World.Participants[owner].RegimeKind < 4)
@@ -2433,7 +2254,6 @@ namespace Civilization1Remaster.Game
 			}
 
 			// The unit of the city farthest away
-			this.processor.RegAcc.Value16 = 0xffff;
 			this.round.Found = 0xffff;
 			this.round.Best = 0xffff;
 
@@ -2441,7 +2261,6 @@ namespace Civilization1Remaster.Game
 			{
 				this.round.Selected = otherIdx;
 				short other = (short)otherIdx;
-				this.processor.RegBase.Value16 = (ushort)(owner * UnitMemory.ParticipantStride);
 
 				if (this.troops.Pull(owner, other, UnitMemory.Kind) == 0xff || this.troops.PullSigned(owner, other, UnitMemory.BaseTown) != townIdx ||
 					this.troops.PullSigned(owner, other, UnitMemory.Kind) >= 0x1a)
@@ -2452,13 +2271,11 @@ namespace Civilization1Remaster.Game
 
 				this.round.Distance = (ushort)this.owner.Helpers.ObtainDistance(town.Place.X, this.troops.PullSigned(owner, other, UnitMemory.Horiz),
 					town.Place.Y, this.troops.PullSigned(owner, other, UnitMemory.Vert));
-				this.processor.RegAcc.Value16 = this.round.Best;
 
 				if ((short)this.round.Distance > (short)this.round.Best)
 				{
 					this.round.Best = this.round.Distance;
 					this.round.Found = this.round.Selected;
-					this.processor.RegAcc.Value16 = this.round.Found;
 				}
 			}
 
@@ -2474,12 +2291,10 @@ namespace Civilization1Remaster.Game
 				}
 				else if ((short)this.round.Best > 0)
 				{
-					this.processor.RegBase.Value16 = (ushort)(owner * UnitMemory.ParticipantStride);
 
 					if (this.troops.KindField(owner, farthest, UnitKindTable.LandGroup) == UnitKindTable.LandUnits && this.troops.Pull(owner, farthest, UnitMemory.Kind) != 0)
 					{
 						this.owner.UnitOps.EliminateUnit(owner, farthest);
-						this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 						town.ConditionMarker &= 0xfe;
 					}
 				}
@@ -2493,9 +2308,7 @@ namespace Civilization1Remaster.Game
 				EmptyMessage()
 					.City(townIdx)
 					.Text(" can't support\n");
-				this.processor.RegBase.Value16 = (ushort)(owner * UnitMemory.ParticipantStride);
-				this.processor.RegAcc.Value16 = (ushort)(this.troops.TroopKind(owner, farthest) * UnitKindTable.Stride + UnitKindTable.Origin);
-				this.owner.Words.Append(this.processor.RegAcc.Value16);
+				this.owner.Words.Append((ushort)(this.troops.TroopKind(owner, farthest) * UnitKindTable.Stride + UnitKindTable.Origin));
 				this.owner.Words.Append(".\n Unit Disbanded.\n");
 				DialogStyle = 3;
 				this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 100, 80);
@@ -2517,8 +2330,6 @@ namespace Civilization1Remaster.Game
 			short owner = (short)CityOwner;
 			short troopIdx = (short)this.round.Index;
 			Player player = this.owner.World.Participants[owner];
-
-			this.processor.RegBase.Value16 = (ushort)(owner * UnitMemory.ParticipantStride);
 
 			if (this.troops.PullSigned(owner, troopIdx, UnitMemory.Kind) < 0x1a)
 			{
@@ -2543,8 +2354,7 @@ namespace Civilization1Remaster.Game
 				else
 				{
 					// The unhappy faces of an attack unit away
-					this.processor.RegCount.Value16 = (ushort)(PlayerEnjoysWonderEffect(owner, 16) < 1 ? 1 : 0);
-					this.round.Value = this.processor.RegCount.Value16;
+					this.round.Value = (ushort)(PlayerEnjoysWonderEffect(owner, 16) < 1 ? 1 : 0);
 
 					if (player.RegimeKind == 5)
 						this.round.Value = (ushort)(this.round.Value + 1);
@@ -2596,8 +2406,6 @@ namespace Civilization1Remaster.Game
 			if ((short)this.round.UnitsDrawn >= 0x12 || CityScreenTab != 0)
 				return;
 
-			this.processor.RegBase.Value16 = (ushort)(owner * UnitMemory.ParticipantStride);
-
 			if (this.troops.Pull(owner, troopIdx, UnitMemory.Kind) == 0xff || marker != 1 ||
 				this.troops.Pull(owner, troopIdx, UnitMemory.Horiz) != this.round.Horiz ||
 				this.troops.Pull(owner, troopIdx, UnitMemory.Vert) != this.round.Vert)
@@ -2609,7 +2417,6 @@ namespace Civilization1Remaster.Game
 
 			// The abbreviation of the home city (3 letters and a dot)
 			this.owner.Words.Clear();
-			this.processor.RegBase.Value16 = (ushort)(owner * UnitMemory.ParticipantStride);
 			this.owner.Conquest.ObtainCityLabel(this.troops.PullSigned(owner, troopIdx, UnitMemory.BaseTown));
 			this.owner.Words[3] = 0x2e;
 			this.owner.Words[4] = 0;
@@ -2617,11 +2424,8 @@ namespace Civilization1Remaster.Game
 
 			ushort drawn = this.round.UnitsDrawn;
 			this.round.UnitsDrawn = (ushort)(drawn + 1);
-			this.processor.RegAcc.Value16 = (ushort)troopIdx;
 			this.round.SetFrame(0x74 - ((ushort)(drawn << 1)), (ushort)troopIdx);
 			this.round.UnitHoriz = (ushort)(this.round.UnitHoriz + 0x12);
-
-			this.processor.RegCount.Value16 = 6;
 
 			if ((short)this.round.UnitsDrawn % 6 == 0)
 			{
@@ -2631,9 +2435,9 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// In the turn: the support the shields cannot pay adds 5 each to 0xe3c2, the supported units (at most the size) add
-		/// one each; 0xdb42 falls by the attack units away (0x6546) x (5 with a library, else 7, less the word 2 of the record
-		/// of the owner's leader at 0x1516). AX, BX, CX are used as in the original.
+		/// In the turn: the support the shields cannot pay adds 5 each to 0xe3c2, the supported units (at most the size)
+		/// add one each; 0xdb42 falls by the attack units away (0x6546) x (5 with a library, else 7, less the word 2 of the
+		/// record of the owner's leader at 0x1516).
 		/// </summary>
 		private void CountSupportCosts(short townIdx)
 		{
@@ -2642,8 +2446,6 @@ namespace Civilization1Remaster.Game
 
 			if ((short)CityShields < (short)CitySpecialSlots)
 			{
-				this.processor.RegCount.Value16 = 5;
-				this.processor.RegAcc.Value16 = (ushort)((short)(CitySpecialSlots - CityShields) * 5);
 				AnarchyPressure = (ushort)(AnarchyPressure + ((ushort)((short)(CitySpecialSlots - CityShields) * 5)));
 			}
 
@@ -2663,14 +2465,11 @@ namespace Civilization1Remaster.Game
 		{
 			City town = this.owner.World.Towns[townIdx];
 
-			this.processor.RegBase.Value16 = ScreenBox;
 			DrawingBox.TypefaceIdx = 2;
 			RenderFrame(211, 1, 317, 97);
 
-			this.processor.RegAcc.Value16 = 2;
 			this.round.Selected = 2;
 			this.round.Vert = 2;
-			this.processor.RegAcc.Value16 = 0;
 			this.round.WonderRows = 0;
 			this.round.ImprovementCount = 0;
 
@@ -2680,7 +2479,6 @@ namespace Civilization1Remaster.Game
 				for (ushort wonder = 0; wonder < 0x15; wonder++)
 				{
 					this.round.Item = wonder;
-					this.processor.RegAcc.Value16 = (ushort)townIdx;
 
 					if (this.owner.World.MarvelTownIdx[wonder + 1] != townIdx)
 						continue;
@@ -2696,16 +2494,12 @@ namespace Civilization1Remaster.Game
 			// The improvements from 0xda on
 			this.round.ListEnd = 0;
 			this.round.Item = this.round.ListStart;
-			this.processor.RegAcc.Value16 = this.round.Item;
 
 			for (; (short)this.round.Item < 0x18; this.round.Item = (ushort)(this.round.Item + 1))
 			{
 				ushort improvement = this.round.Item;
 				uint mask = 1u << (improvement & 0xff);
-				this.processor.RegCount.Value16 = (ushort)(mask & town.StructureMarkers0);
-				this.processor.RegBase.Value16 = (ushort)(((mask >> 16) & town.StructureMarkers1) | this.processor.RegCount.Value16);
-
-				if (this.processor.RegBase.Value16 == 0)
+				if ((ushort)(((mask >> 16) & town.StructureMarkers1) | (ushort)(mask & town.StructureMarkers0)) == 0)
 					continue;
 
 				if ((short)this.round.Selected >= 0x10)
@@ -2713,7 +2507,6 @@ namespace Civilization1Remaster.Game
 					// The list is full: the next page
 					this.round.ListFlags = (ushort)((this.round.ListFlags | 2) & 0xfffe);
 					this.round.ListEnd = this.round.Item;
-					this.processor.RegAcc.Value16 = this.round.ListEnd;
 					break;
 				}
 
@@ -2727,8 +2520,7 @@ namespace Civilization1Remaster.Game
 		/// <summary>A row of the improvement list: the name (upper case, within the width), the icon (left or right by the row)</summary>
 		private void RenderImprovementName(ushort improvement, ushort width, bool shrinkFirst)
 		{
-			this.processor.RegAcc.Value16 = BuildingText(improvement);
-			this.owner.Words.Set(this.processor.RegAcc.Value16);
+			this.owner.Words.Set(BuildingText(improvement));
 
 			if (shrinkFirst)
 			{
@@ -2764,27 +2556,22 @@ namespace Civilization1Remaster.Game
 				RenderLabelBox(287, 88, 315, 96, 0x262a, 9);
 
 			this.owner.VideoCard.SubstituteHue(ScreenBox, 309, 2, 8, 96, 14, 12);
-			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 
 			if (town.PresentMakingIdx >= 0)
 			{
-				this.processor.RegBase.Value16 = (ushort)(town.PresentMakingIdx * UnitKindTable.Stride);
-				this.processor.RegAcc.Value16 = this.processor.PullUInt16(this.processor.SegData.Value16, (ushort)(this.processor.RegBase.Value16 + UnitKindTable.Origin + UnitKindTable.Price));
+				this.round.ProductionPrice = this.processor.PullUInt16(this.processor.SegData.Value16,
+					(ushort)((ushort)(town.PresentMakingIdx * UnitKindTable.Stride) + UnitKindTable.Origin + UnitKindTable.Price));
 			}
 			else
 			{
-				this.processor.RegCount.Value16 = 0x1e;
-				this.processor.RegBase.Value16 = (ushort)(-town.PresentMakingIdx * 0x1e);
-				this.processor.RegAcc.Value16 = BuildingWordAt(this.processor.RegBase.Value16, BuildingTable.Price);
+				this.round.ProductionPrice = BuildingWordAt((ushort)(-town.PresentMakingIdx * 0x1e), BuildingTable.Price);
 			}
-
-			this.round.ProductionPrice = this.processor.RegAcc.Value16;
 		}
 
 		/// <summary>
-		/// The production box of the city screen: 0x44 the shields per row (by the price and the shields, 1 - 99), 0xe8 the step,
-		/// 0xf6 / 0xfc its width and height; the Change and Buy buttons of a human city (Change shows the advisor flag 0x10),
-		/// the unit or the name of the improvement in production. AX, BX, CX, DX are used as in the original.
+		/// The production box of the city screen: 0x44 the shields per row (by the price and the shields, 1 - 99), 0xe8 the
+		/// step, 0xf6 / 0xfc its width and height; the Change and Buy buttons of a human city (Change shows the advisor
+		/// flag 0x10), the unit or the name of the improvement in production.
 		/// </summary>
 		private void RenderProductionBox(short townIdx)
 		{
@@ -2801,12 +2588,8 @@ namespace Civilization1Remaster.Game
 			this.round.Value = (ushort)(80 / box);
 			short perRow = (short)this.round.ShieldsPerRow;
 			short width = (short)(box * (short)this.round.Value);
-			this.processor.RegCount.Value16 = (ushort)width;
-			this.processor.RegBase.Value16 = (ushort)perRow;
 			this.round.DrawHoriz = (ushort)((short)((perRow << 3) - 8) / perRow + width);
-			this.processor.RegCount.Value16 = (ushort)perRow;
 			this.round.DrawVert = (ushort)((((short)this.round.ProductionPrice - 1) / perRow << 3) + 8);
-			this.processor.RegAcc.Value16 = this.round.DrawVert;
 
 			this.owner.Services.FloodBox(ScreenBox, 230, 99, (short)this.round.DrawHoriz + 3, (short)this.round.DrawVert + 19, 1);
 
@@ -2816,8 +2599,6 @@ namespace Civilization1Remaster.Game
 				RenderLabelBox(294, 106, 311, 114, 0x263c, 9);
 			}
 
-			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
-
 			if (town.PresentMakingIdx >= 0)
 			{
 				this.owner.Services.RenderPictureToScreen(ScreenBox, 264, 100,
@@ -2825,9 +2606,7 @@ namespace Civilization1Remaster.Game
 			}
 			else
 			{
-				this.processor.RegCount.Value16 = 0x1e;
-				this.processor.RegAcc.Value16 = BuildingRecordText(-town.PresentMakingIdx);
-				this.owner.Words.Set(this.processor.RegAcc.Value16);
+				this.owner.Words.Set(BuildingRecordText(-town.PresentMakingIdx));
 				this.owner.BlockText.ShrinkTextToWidth(TextBuffer.Address, 0x56);
 				this.owner.TextPainter.RenderCenteredTextToScreen0(TextBuffer.Address, 274, 100, 15);
 			}
@@ -2845,7 +2624,6 @@ namespace Civilization1Remaster.Game
 			for (; town.MaterialsTally > (short)shield; shield++)
 			{
 				this.round.Index = shield;
-				this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 				this.owner.Services.RenderPictureToScreen(ScreenBox,
 					((((short)this.round.Index % ((short)this.round.CostFactor * (short)this.round.ShieldsPerRow)) *
 						(short)this.round.Value) / (short)this.round.ShieldsPerRow) + 232,
@@ -2854,12 +2632,11 @@ namespace Civilization1Remaster.Game
 			}
 
 			this.round.Index = shield;
-			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 		}
 
 		/// <summary>
-		/// The food box of the city screen: 0xe8 the step (80 / size, 1 - 8), 0xfc the row height (80 / 0x4a), the line of a
-		/// granary, the food stored (at most what the city needs to grow). SI is used as in the original.
+		/// The food box of the city screen: 0xe8 the step (80 / size, 1 - 8), 0xfc the row height (80 / 0x4a), the line of
+		/// a granary, the food stored (at most what the city needs to grow).
 		/// </summary>
 		private void RenderFoodBox(short townIdx)
 		{
@@ -2870,24 +2647,18 @@ namespace Civilization1Remaster.Game
 			else
 				this.round.Value = 1;
 
-			this.processor.RegAcc.Value16 = this.round.Value;
-
 			short box = (short)this.round.CostFactor;
 
 			if (box == 0)
 				throw new Exception("Division by zero");
 
-			this.processor.RegCount.Value16 = (ushort)box;
 			this.round.DrawVert = (ushort)(80 / box);
-			this.processor.RegAcc.Value16 = this.round.DrawVert;
 
 			this.owner.Services.FloodBox(ScreenBox, 2, 106, 91,
 				((short)this.round.CostFactor * (short)this.round.DrawVert) + 12, 1);
 			this.owner.TextPainter.RenderTextToScreen0(0x2640, 8, 108, 15);
 			FloodBoxWithMotif(3, 115, (town.TrueExtent * (short)this.round.Value) + 9,
 				((short)this.round.CostFactor * (short)this.round.DrawVert) + 2);
-
-			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 
 			// The granary
 			if (town.Has(CityStructure.Granary))
@@ -2943,7 +2714,6 @@ namespace Civilization1Remaster.Game
 				for (; (short)this.processor.PullUInt16(this.processor.SegData.Value16, amount) > (short)icon; icon++)
 				{
 					this.round.Index = icon;
-					this.processor.RegBase.Value16 = (ushort)(row << 1);
 
 					// The gaps: the food eaten, the support paid, the corruption
 					if (row == 0 && (ushort)(town.TrueExtent * 2 + (short)this.round.SettlerFood * (short)CitySettlers) == icon)
@@ -2959,7 +2729,6 @@ namespace Civilization1Remaster.Game
 						((short)this.round.Item * 8) + (short)this.round.DrawVert,
 						SpritePicture((row + 8)));
 
-					this.processor.RegAcc.Value16 = this.round.Value;
 					this.round.Horiz = (ushort)(this.round.Horiz + this.round.Value);
 				}
 
@@ -2985,7 +2754,6 @@ namespace Civilization1Remaster.Game
 				this.round.Horiz = (ushort)(this.round.Horiz + 8);
 
 			this.round.DrawHoriz = this.round.Horiz;
-			this.processor.RegAcc.Value16 = this.round.DrawHoriz;
 
 			RenderTradeIcons(0xe17a, 0xb);
 
@@ -3005,12 +2773,10 @@ namespace Civilization1Remaster.Game
 				this.round.Index = drawn;
 				this.owner.Services.RenderPictureToScreen(ScreenBox, (short)this.round.Horiz / 2,
 					(short)this.round.DrawVert + 24, SpritePicture(icon));
-				this.processor.RegAcc.Value16 = this.round.Value;
 				this.round.Horiz = (ushort)(this.round.Horiz + this.round.Value);
 			}
 
 			this.round.Index = drawn;
-			this.processor.RegAcc.Value16 = this.processor.PullGlobalWord(amount);
 		}
 
 		/// <summary>
@@ -3257,7 +3023,6 @@ namespace Civilization1Remaster.Game
 			if ((ushort)this.owner.Libc.KeyAvailable() != 0)
 			{
 				this.round.Key = this.owner.Dialogs.ObtainNavigationKey();
-				this.processor.RegAcc.Value16 = 0;
 				this.owner.GlobDb3e = 0;
 				this.owner.GlobDb3c = 0;
 			}
@@ -3281,7 +3046,6 @@ namespace Civilization1Remaster.Game
 				short owner = (short)CityOwner;
 
 				this.round.AdvisorPick = this.owner.Advisors.PickCityProduction(owner, townIdx);
-				this.processor.RegBase.Value16 = ScreenBox;
 				DrawingBox.TypefaceIdx = 2;
 
 				if (this.round.AdvisorPick == 0x63)
@@ -3289,9 +3053,9 @@ namespace Civilization1Remaster.Game
 
 				CityAgain = 0;
 
-				StopMakingUnit(town, owner, false);
+				StopMakingUnit(town, owner);
 				town.PresentMakingIdx = (sbyte)(byte)this.round.AdvisorPick;
-				StartMakingUnit(town, owner, false);
+				StartMakingUnit(town, owner);
 
 				this.owner.Services.FloodBox(ScreenBox, 230, 99, 90, 100, 0);
 			}
@@ -3349,7 +3113,6 @@ namespace Civilization1Remaster.Game
 				return CityScreenStep.Redraw;
 
 			// The view of the city
-			this.processor.RegBase.Value16 = ScreenBox;
 			DrawingBox.TypefaceIdx = 1;
 			this.owner.Words.Clear();
 			this.owner.CityScene.DisplayCityScreen(townIdx, -1);
@@ -3404,7 +3167,6 @@ namespace Civilization1Remaster.Game
 				this.owner.Words.Append(" Yes\n No\n");
 
 			this.owner.Startup.DisplayMouseCursor();
-			this.processor.RegBase.Value16 = ScreenBox;
 			DrawingBox.TypefaceIdx = 1;
 			if (this.owner.Dialogs.DisplayMenu(TextBuffer.Address, 100, 80, 1) == 0 && this.owner.World.Participants[owner].Gold >= (short)this.round.Value)
 			{
@@ -3567,7 +3329,6 @@ namespace Civilization1Remaster.Game
 
 			if (this.round.CursorOn == 0)
 			{
-				this.processor.RegAcc.Value16 = 0;
 				this.round.CursorVert = 0;
 				this.round.CursorHoriz = 0;
 				this.round.CursorOn = 1;
@@ -3591,7 +3352,6 @@ namespace Civilization1Remaster.Game
 
 				this.round.DrawHoriz = this.round.CursorHoriz;
 				this.round.DrawVert = this.round.CursorVert;
-				this.processor.RegAcc.Value16 = this.round.DrawVert;
 				ushort key = this.owner.Dialogs.ObtainNavigationKey();
 				this.round.Value = key;
 
@@ -3622,14 +3382,12 @@ namespace Civilization1Remaster.Game
 				{
 					this.round.CursorHoriz = this.round.DrawHoriz;
 					this.round.CursorVert = this.round.DrawVert;
-					this.processor.RegAcc.Value16 = this.round.CursorVert;
 				}
 
 				if (key == 0xd || key == 0x20)
 				{
 					this.round.DrawHoriz = this.round.CursorHoriz;
 					this.round.DrawVert = this.round.CursorVert;
-					this.processor.RegAcc.Value16 = this.round.DrawVert;
 					return true;
 				}
 
@@ -3661,7 +3419,6 @@ namespace Civilization1Remaster.Game
 			if (key == 0x72 || (click && horiz >= 0xe7 && vert > 0xbe && horiz < 0x10e))
 			{
 				this.owner.TurnLogic.AwaitForKey();
-				this.processor.RegBase.Value16 = ScreenBox;
 				DrawingBox.TypefaceIdx = 1;
 				this.owner.CityNaming.DisplayCityLabelPrompt(townIdx);
 				MapRedrawRequest = 1;
@@ -3690,7 +3447,6 @@ namespace Civilization1Remaster.Game
 		{
 			this.round.ListFlags = (ushort)(this.round.ListFlags ^ 1);
 			this.round.ListStart = this.round.ListEnd;
-			this.processor.RegAcc.Value16 = this.round.ListStart;
 			RestoreShieldsAndTrade();
 			return CityScreenStep.Redraw;
 		}
@@ -3725,7 +3481,6 @@ namespace Civilization1Remaster.Game
 					.Text(" for ")
 					.Number((short)(0xa * (short)price))
 					.Text("$?\n No.\n Yes.\n");
-				this.processor.RegBase.Value16 = ScreenBox;
 				DrawingBox.TypefaceIdx = 1;
 				this.owner.Startup.DisplayMouseCursor();
 				if (this.owner.Dialogs.DisplayMenu(TextBuffer.Address, 128, 80, 1) == 1)
@@ -3927,7 +3682,7 @@ namespace Civilization1Remaster.Game
 
 		/// <summary>
 		/// The two special slots of the city (Unfamiliar, 0xff empty) counted in 0xdeb8 (0xea the slot); 0xd2f6 how many
-		/// more of them there are than citizens. SI, BX and CX as the original leaves them.
+		/// more of them there are than citizens.
 		/// </summary>
 		private void CountSpecialSlots(short townIdx)
 		{
@@ -3936,59 +3691,38 @@ namespace Civilization1Remaster.Game
 			for (ushort slot = 0; slot < 2; slot++)
 			{
 				this.round.Index = slot;
-				this.processor.RegBase.Value16 = slot;
 
 				if ((byte)town.Unfamiliar[slot] != 0xff)
 					CitySpecialSlots = (ushort)(CitySpecialSlots + 1);
 			}
 
 			this.round.Index = 2;
-			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 
 			if (town.TrueExtent < (short)CitySpecialSlots)
 			{
-				this.processor.RegCount.Value16 = (ushort)(CitySpecialSlots - town.TrueExtent);
-				CityUnitUpkeep = this.processor.RegCount.Value16;
+				CityUnitUpkeep = (ushort)(CitySpecialSlots - town.TrueExtent);
 			}
 		}
 
 		/// <summary>
 		/// The shields and the trade of the city back as they were before the factories and the power (0x70dc / 0x70de from
-		/// the words 0x10a / 0xa of the frame) before the city screen counts them again; AX the trade
+		/// the words 0x10a / 0xa of the frame) before the city screen counts them again; the trade
 		/// </summary>
 		private void RestoreShieldsAndTrade()
 		{
 			CityShields = this.round.ShieldsKept;
 			CityTrade = this.round.TradeKept;
-			this.processor.RegAcc.Value16 = this.round.TradeKept;
 		}
 
-		/// <summary>
-		/// The city stops making its unit (the owner's count of units in making); SI (and with the base flag BX) as the
-		/// original leaves them, the menus keep them on the stack
-		/// </summary>
-		private void StopMakingUnit(City town, short owner, bool withBase)
+		/// <summary>The city stops making its unit (the owner's count of units in making)</summary>
+		private void StopMakingUnit(City town, short owner)
 		{
-			if (town.PresentMakingIdx >= 0)
-			{
-
-				if (withBase)
-					this.processor.RegBase.Value16 = (ushort)(owner * 0x38);
-			}
-
 			this.owner.World.Participants[owner].StopMaking(town.PresentMakingIdx);
 		}
 
-		/// <summary>The city starts making its unit (the owner's count of units in making); SI and BX as in StopMakingUnit</summary>
-		private void StartMakingUnit(City town, short owner, bool withBase)
+		/// <summary>The city starts making its unit (the owner's count of units in making)</summary>
+		private void StartMakingUnit(City town, short owner)
 		{
-			if (town.PresentMakingIdx >= 0)
-			{
-
-				if (withBase)
-					this.processor.RegBase.Value16 = (ushort)(owner * 0x38);
-			}
-
 			this.owner.World.Participants[owner].StartMaking(town.PresentMakingIdx);
 		}
 
@@ -3998,10 +3732,9 @@ namespace Civilization1Remaster.Game
 			City town = this.owner.World.Towns[townIdx];
 			short owner = (short)CityOwner;
 
-			StopMakingUnit(town, owner, false);
-			this.processor.RegCount.Value16 = this.owner.Advisors.PickCityProduction(owner, townIdx);
-			town.PresentMakingIdx = (sbyte)this.processor.RegCount.LowByte;
-			StartMakingUnit(town, owner, false);
+			StopMakingUnit(town, owner);
+			town.PresentMakingIdx = (sbyte)(byte)this.owner.Advisors.PickCityProduction(owner, townIdx);
+			StartMakingUnit(town, owner);
 		}
 
 		/// <summary>
@@ -4354,9 +4087,9 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// The upkeep of the improvements of the human's city (0xbc the improvement 1 - 23, its word at 0xbd2; not in anarchy;
-		/// the palace costs one more from the level 2 and from 4, and with each of the advances 0x22 and 0x25): when the money
-		/// runs out the improvement is sold ("can't maintain", ten times its word at 0xbd0). SI as in the original.
+		/// The upkeep of the improvements of the human's city (0xbc the improvement 1 - 23, its word at 0xbd2; not in
+		/// anarchy; the palace costs one more from the level 2 and from 4, and with each of the advances 0x22 and 0x25):
+		/// when the money runs out the improvement is sold ("can't maintain", ten times its word at 0xbd0).
 		/// </summary>
 		private void PayImprovementUpkeep(short townIdx)
 		{
@@ -4410,10 +4143,10 @@ namespace Civilization1Remaster.Game
 		}
 
 		/// <summary>
-		/// The very end of HandleCity: a city with the flag 4 and no foreign unit next to it keeps its list of units; the mouse
-		/// shown again; AX the happy less the unhappy. SI as in the original.
+		/// The very end of HandleCity: a city with the flag 4 and no foreign unit next to it keeps its list of units; the
+		/// mouse shown again; it gives back the happy less the unhappy.
 		/// </summary>
-		private void FinishHandleCity(short townIdx)
+		private ushort FinishHandleCity(short townIdx)
 		{
 			City town = this.owner.World.Towns[townIdx];
 
@@ -4423,23 +4156,23 @@ namespace Civilization1Remaster.Game
 					this.owner.UnitOps.KeepUnitsInCityList(townIdx);
 			}
 
-			this.processor.RegBase.Value16 = ScreenBox;
 			DrawingBox.TypefaceIdx = 1;
 			this.owner.Startup.DisplayMouseCursor();
-			this.processor.RegAcc.Value16 = (ushort)(CityHappy - CityUnhappy);
+
+			return (ushort)(CityHappy - CityUnhappy);
 		}
 
 		/// <summary>
 		/// The start of HandleCity: the locals 0xb8, 0xda, 0xfe, 0xca and 0x2496 cleared, the mouse hidden, the 5 x 5 array
 		/// of the tiles around (BP-0xa6) cleared; 0x653e the city; the materials outside 0 - 999 cleared. Over the other
 		/// cities: 0xb2 the distance to the nearest one (at most 7), 0x6b30 the distance to the nearest palace of the owner
-		/// (0 with an own palace, else at most 0x20), the tiles within two of the city worked by a city at most 5 away marked
-		/// in the array. Then 0x6548 the owner, 0x6540 0x15, 0xc2 / 0xd0 the map view, 0x48 the waste (1 for despotism and
-		/// anarchy, else 2), 0xb882 the advances that make citizens content (without the wonder 0x1000), 0x4a 10 the content
-		/// citizens (for a computer player 16 - 2 x the level, 2 less on the levels above 1 for the leader of a later game),
-		/// 0xe8b8 the specialists (bits 26 - 31 of the workers), for a computer player in the turn (marker 0) a city without
-		/// the flag 1 has none, else all workers are taken off. The locals of HandleCity and SI, BX, CX are used as in the
-		/// original.
+		/// (0 with an own palace, else at most 0x20), the tiles within two of the city worked by a city at most 5 away
+		/// marked in the array. Then 0x6548 the owner, 0x6540 0x15, 0xc2 / 0xd0 the map view, 0x48 the waste (1 for
+		/// despotism and anarchy, else 2), 0xb882 the advances that make citizens content (without the wonder 0x1000), 0x4a
+		/// 10 the content citizens (for a computer player 16 - 2 x the level, 2 less on the levels above 1 for the leader
+		/// of a later game), 0xe8b8 the specialists (bits 26 - 31 of the workers), for a computer player in the turn
+		/// (marker 0) a city without the flag 1 has none, else all workers are taken off. The locals of HandleCity are used
+		/// as in the original.
 		/// </summary>
 		private void PrepareCity(short townIdx, short marker)
 		{
@@ -4447,7 +4180,6 @@ namespace Civilization1Remaster.Game
 
 			CityScreenTab = 0;
 			this.round.CursorOn = 0;
-			this.processor.RegAcc.Value16 = 0;
 			this.round.ListStart = 0;
 			this.round.ListEnd = 0;
 			this.round.ListFlags = 0;
@@ -4472,7 +4204,6 @@ namespace Civilization1Remaster.Game
 			this.round.Vert = (ushort)(short)town.Place.Y;
 			ShownCity = (ushort)townIdx;
 			this.round.Distance = 7;
-			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 			PalaceDistance = (ushort)(town.Has(CityStructure.Palace) ? 0 : 0x20);
 
 			if (town.MaterialsTally > 999 || town.MaterialsTally < 0)
@@ -4481,7 +4212,6 @@ namespace Civilization1Remaster.Game
 			for (ushort otherIdx = 0; otherIdx < 0x80; otherIdx++)
 			{
 				this.round.OtherCity = otherIdx;
-				this.processor.RegBase.Value16 = (ushort)(otherIdx * 0x1c);
 				City other = this.owner.World.Towns[otherIdx];
 
 				if (other.ConditionMarker == 0xff || otherIdx == (ushort)townIdx)
@@ -4497,7 +4227,6 @@ namespace Civilization1Remaster.Game
 				if (other.ParticipantIdx == town.ParticipantIdx && other.Has(CityStructure.Palace) && distance < (short)PalaceDistance)
 				{
 					// The nearest palace of the owner
-					this.processor.RegBase.Value16 = (ushort)(otherIdx * 0x1c);
 					PalaceDistance = (ushort)distance;
 				}
 
@@ -4509,10 +4238,7 @@ namespace Civilization1Remaster.Game
 				{
 					this.round.Index = tile;
 					uint mask = 1u << tile;
-					this.processor.RegCount.Value16 = (ushort)(mask & other.LaborerMarkers0);
-					this.processor.RegBase.Value16 = (ushort)(((mask >> 16) & other.LaborerMarkers1) | this.processor.RegCount.Value16);
-
-					if (this.processor.RegBase.Value16 == 0 && tile != 20)
+					if ((ushort)(((mask >> 16) & other.LaborerMarkers1) | (ushort)(mask & other.LaborerMarkers0)) == 0 && tile != 20)
 						continue;
 
 					short horizLoc = (short)(other.Place.X + this.owner.TownDeltas[tile].X);
@@ -4520,15 +4246,12 @@ namespace Civilization1Remaster.Game
 					this.round.TileHoriz = (ushort)horizLoc;
 					this.round.TileVert = (ushort)vertLoc;
 
-					this.processor.RegAcc.Value16 = (ushort)(horizLoc - (short)this.round.Horiz);
 					if ((short)(ushort)this.owner.Libc.AbsoluteValue((short)((ushort)(horizLoc - (short)this.round.Horiz))) > 2)
 						continue;
 
-					this.processor.RegAcc.Value16 = (ushort)(vertLoc - (short)this.round.Vert);
 					if ((short)(ushort)this.owner.Libc.AbsoluteValue((short)((ushort)(vertLoc - (short)this.round.Vert))) > 2)
 						continue;
 
-					this.processor.RegCount.Value16 = 0xa;
 					int frameOffset = (horizLoc - (short)this.round.Horiz) * 0xa +
 						((vertLoc - (short)this.round.Vert) << 1);
 					this.round.SetFrame(0x8e - frameOffset, 1);
@@ -4541,7 +4264,6 @@ namespace Civilization1Remaster.Game
 
 			// The tile of the city itself
 			this.round.CityTileNeighbour = 0;
-			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 			CityOwner = (ushort)town.ParticipantIdx;
 			CityTiles = 0x15;
 			this.round.MapViewHoriz = MapViewHoriz;
@@ -4563,10 +4285,7 @@ namespace Civilization1Remaster.Game
 			}
 
 			this.round.CostFactor = 0xa;
-			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 			CitySpecialists = (ushort)((((uint)town.LaborerMarkers1 << 16) | town.LaborerMarkers0) >> 0x1a);
-			this.processor.RegData.Value16 = 0;
-			this.processor.RegCount.LowByte = 0x1a;
 
 			if (owner == this.owner.World.PersonParticipantIdx)
 				return;
@@ -4581,13 +4300,8 @@ namespace Civilization1Remaster.Game
 				this.round.CostFactor = (ushort)(this.round.CostFactor - 2);
 			}
 
-			this.processor.RegAcc.Value16 = (ushort)marker;
-			this.processor.RegData.Value16 = (ushort)((marker < 0 ? 0xffff : 0) | (ushort)marker);
-
 			if (marker != 0)
 				return;
-
-			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 
 			if ((town.ConditionMarker & 1) == 0)
 			{
@@ -4595,7 +4309,6 @@ namespace Civilization1Remaster.Game
 			}
 			else
 			{
-				this.processor.RegAcc.Value16 = 0;
 				town.LaborerMarkers0 = 0;
 				town.LaborerMarkers1 = 0;
 			}
@@ -4603,38 +4316,35 @@ namespace Civilization1Remaster.Game
 
 		/// <summary>
 		/// The work of a city: marker -1 only counts (food, shields, trade, the citizens), 0 is the city's turn (growth,
-		/// production, disorder, celebration, science, pollution, upkeep), 1 the city screen with its input. AX gives back
+		/// production, disorder, celebration, science, pollution, upkeep), 1 the city screen with its input. It gives back
 		/// the happy less the unhappy citizens. The frame of 0x10c bytes holds the locals of all the parts.
 		/// </summary>
 		public ushort HandleCity(short townIdx, short marker)
 		{
 			this.processor.Journal.OpenScope($"HandleCity({townIdx}, {marker})");
 
-			this.processor.PreserveIndexRegisters();
-
 			// HandleCity calls itself (the advisor counts the city), each call has its own locals as its own frame
 			CityRound outer = this.round;
 			this.round = new CityRound(this.processor);
 
-			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
+			// (a city that is gone, also in its turn, is at most of size 1: HandleAllCities reads no result of it)
+			ushort result = 0;
 
 			if (this.owner.World.Towns[townIdx].ConditionMarker != 0xff)
-				RunCity(townIdx, marker);
+				result = RunCity(townIdx, marker);
 
 			this.round = outer;
 
-			this.processor.RestoreSource();
-			this.processor.RestoreDest();
 			this.processor.Journal.CloseScope("HandleCity");
 
-			return this.processor.RegAcc.Value16;
+			return result;
 		}
 
 		/// <summary>
 		/// HandleCity on a city that exists: the round from the start (again after most buttons of the city screen), the
 		/// economy (again from the citizens after the others), the city screen while it is open, then the end of the turn.
 		/// </summary>
-		private void RunCity(short townIdx, short marker)
+		private ushort RunCity(short townIdx, short marker)
 		{
 			// The neighbouring cities, the palace, the governments, the content citizens
 			PrepareCity(townIdx, marker);
@@ -4644,10 +4354,10 @@ namespace Civilization1Remaster.Game
 			while (true)
 			{
 				if (fromStart && !StartCityRound(townIdx, marker))
-					return;
+					return 0;
 
 				if (!CountCityEconomy(townIdx, marker))
-					return;
+					return 0;
 
 				if (marker != 1)
 					break;
@@ -4665,13 +4375,10 @@ namespace Civilization1Remaster.Game
 				fromStart = step == CityScreenStep.Restart;
 			}
 
-			this.processor.RegAcc.Value16 = (ushort)marker;
-			this.processor.RegData.Value16 = (ushort)((marker < 0 ? 0xffff : 0) | (ushort)marker);
-
 			if (marker == 0)
 				EndCityTurn(townIdx);
 
-			FinishHandleCity(townIdx);
+			return FinishHandleCity(townIdx);
 		}
 
 		/// <summary>
@@ -4680,19 +4387,14 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private bool StartCityRound(short townIdx, short marker)
 		{
-			this.processor.RegBase.Value16 = (ushort)(townIdx * 0x1c);
 			this.round.Horiz = (ushort)(short)this.owner.World.Towns[townIdx].Place.X;
 			this.round.Vert = (ushort)(short)this.owner.World.Towns[townIdx].Place.Y;
-			this.processor.RegAcc.Value16 = (ushort)marker;
-			this.processor.RegData.Value16 = (ushort)(marker < 0 ? 0xffff : 0);
 
 			// The city screen: the title and the map of the city
 			if (marker == 1)
 				RenderCityHeaderAndMap(townIdx);
 
 			// In the turn of the city: starvation and growth
-			this.processor.RegAcc.Value16 = (ushort)marker;
-			this.processor.RegData.Value16 = (ushort)((marker < 0 ? 0xffff : 0) | (ushort)marker);
 
 			if (marker == 0 && !FeedCity(townIdx))
 				return false;
@@ -5116,7 +4818,6 @@ namespace Civilization1Remaster.Game
 				}
 			}
 
-			this.processor.RegAcc.Value16 = (ushort)yield;
 			this.processor.Journal.CloseScope("MayCityWorkTile");
 
 			return (ushort)yield;
@@ -5141,7 +4842,6 @@ namespace Civilization1Remaster.Game
 			}
 
 			ushort result = (ushort)(enjoys ? 1 : 0);
-			this.processor.RegAcc.Value16 = result;
 
 			this.processor.Journal.CloseScope("PlayerEnjoysWonderEffect");
 
@@ -5157,7 +4857,6 @@ namespace Civilization1Remaster.Game
 			this.processor.Journal.OpenScope($"ObtainWonderCityID({miracleIdent})");
 
 			ushort townIdx = IsWonderObsolete(miracleIdent) ? (ushort)0xffff : (ushort)this.owner.World.MarvelTownIdx[miracleIdent];
-			this.processor.RegAcc.Value16 = townIdx;
 
 			this.processor.Journal.CloseScope("ObtainWonderCityID");
 
@@ -5230,7 +4929,6 @@ namespace Civilization1Remaster.Game
 			ushort markers = this.owner.World.Towns[cityIdx].LaborerMarkers2;
 			var specType = CitizenSpecialistRules.GetSpecialistType(markers, arg1);
 			ushort result = (ushort)specType;
-			this.processor.RegAcc.Value16 = result;
 
 			this.processor.Journal.CloseScope("ObtainCitizenType");
 			return result;
@@ -5248,11 +4946,8 @@ namespace Civilization1Remaster.Game
 			short cityIdx = (short)ShownCity;
 			ushort markers = this.owner.World.Towns[cityIdx].LaborerMarkers2;
 			int tally = CitizenSpecialistRules.CountSpecialists(markers, (CitizenSpecialistRules.SpecialistType)arg1);
-			ushort result = (ushort)tally;
-			this.processor.RegAcc.Value16 = result;
-
 			this.processor.Journal.CloseScope("TallySpecialists");
-			return result;
+			return (ushort)tally;
 		}
 
 		/// <summary>
@@ -5311,7 +5006,7 @@ namespace Civilization1Remaster.Game
 		/// 0x6542 of them marked) and the arg4 specialists (ObtainCitizenType), 7 pixels apart or narrower to fit in arg5, with
 		/// gaps between the groups.
 		/// </summary>
-		/// <returns>The distance of the icons, also in AX</returns>
+		/// <returns>The distance of the icons</returns>
 		public ushort RenderCitizenIcons(short townIdx, short horizLoc, short vertLoc, ushort arg4, ushort arg5)
 		{
 			this.processor.Journal.OpenScope($"RenderCitizenIcons({townIdx}, {horizLoc}, {vertLoc}, {arg4}, {arg5})");
@@ -5360,7 +5055,6 @@ namespace Civilization1Remaster.Game
 				horizLoc = RenderCitizen(horizLoc, vertLoc, this.processor.PullGlobalWord((ushort)((ObtainCitizenType((ushort)citizenIdx) << 1) + 0x6ea0)), step);
 			}
 
-			this.processor.RegAcc.Value16 = step;
 			// Far return
 			this.processor.Journal.CloseScope("RenderCitizenIcons");
 

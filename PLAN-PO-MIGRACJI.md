@@ -772,3 +772,14 @@ lokalnych zapisów. DI czyta tylko `PillageTile`.
   nie ma). Opisane w `MIGRATION-BACKLOG.md` („Błędy przetłumaczonego kodu zachowane celowo”). **Naprawione na prośbę
   użytkownika:** właściciel miasta jako gracz, stare zachowanie za `ClassicPillagePlayer`; baseline golden master
   remastera nagrane od nowa (tura 0 bez zmian, pierwsze różnice w turach 1 – 5; AUTO10 tylko nagłówek).
+
+## Uderzenie 7: rejestry w CityManagement (2026-10-31)
+
+295 odwołań do rejestrów x86 w `CityManagement` – zero po zmianie. Najpierw mapa odczytów: każdy (ok. 40) ma zapis w tej
+samej metodzie, poza wynikiem `HandleCity` (AX z `FinishHandleCity`) i `BuyForComputerCity` (`Participants[AX]` – AX to
+numer kontynentu z `ObtainContinentID`). Odczyty zamienione na zmienne C#, 208 martwych zapisów usuniętych;
+`TallySpecialists`, `FinishHandleCity`, `RunCity` i `HandleCity` zwracają wynik (miasto, które zniknęło, daje 0:
+ma najwyżej rozmiar 1, a `HandleAllCities` czyta wynik tylko miast większych niż 5); `HandleCity` bez pary SI / DI;
+`StopMakingUnit` / `StartMakingUnit` bez BX dla menu (nikt go nie czytał). Odczyty pamięci przez procesor (zegar testów)
+zostały bez zmian. Testy podwójnej gry wkładają wynik `HandleCity` obecnej gry do AX (zamrożona zostawia go tam sama).
+Pełny zestaw 813/813, mutacje 5/5.

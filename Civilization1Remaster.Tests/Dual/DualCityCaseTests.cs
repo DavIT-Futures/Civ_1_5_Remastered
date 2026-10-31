@@ -127,7 +127,11 @@ public sealed class DualCityCaseTests(ITestOutputHelper output)
 			HumanTurnScript.Install((object)engine, [new HumanTurnScript.Input(0x1b), new HumanTurnScript.Input(0x1b)]);
 			current.Setup(engine, townIdx);
 			setDeadline(Environment.TickCount64 + RunSeconds * 1000L);
-			engine.CityOps.HandleCity(townIdx, current.Marker);
+			// (the current game gives the result back, the frozen one leaves it in AX too: compared through AX)
+			if (engine is GameEngine currentEngine)
+				currentEngine.Processor.RegAcc.Value16 = currentEngine.CityOps.HandleCity(townIdx, current.Marker);
+			else
+				engine.CityOps.HandleCity(townIdx, current.Marker);
 			return null;
 		}
 		catch (Exception failure)

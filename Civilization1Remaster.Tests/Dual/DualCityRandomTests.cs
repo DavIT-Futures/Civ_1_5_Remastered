@@ -533,7 +533,11 @@ produce = false;
 		{
 			setup(engine);
 			setDeadline(Environment.TickCount64 + DualCityCaseTests.RunSeconds * 1000L);
-			engine.CityOps.HandleCity(townIdx, marker);
+			// (the current game gives the result back, the frozen one leaves it in AX too: compared through AX)
+			if (engine is GameEngine currentEngine)
+				currentEngine.Processor.RegAcc.Value16 = currentEngine.CityOps.HandleCity(townIdx, marker);
+			else
+				engine.CityOps.HandleCity(townIdx, marker);
 			return null;
 		}
 		catch (Exception failure)
