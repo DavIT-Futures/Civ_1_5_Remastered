@@ -299,7 +299,7 @@ namespace Civilization1Remaster.UI
 
 			do
 			{
-				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x4e98, 0);
+				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, GameTexts.FileHillPic, 0);
 
 				for (int idx = 1; idx < 8; idx++)
 				{
@@ -511,7 +511,7 @@ namespace Civilization1Remaster.UI
 
 					if (improvement != -3)
 					{
-						this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, 0x4ea1, 1);
+						this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, GameTexts.FileHillPicB, 1);
 					}
 
 					this.owner.VideoCard.RenderImage(
@@ -522,7 +522,7 @@ namespace Civilization1Remaster.UI
 
 					if (improvement == -3 && VgaMode != 0)
 					{
-						this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, 0x4eaa, 0xbdee);
+						this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, GameTexts.FileHillPal, 0xbdee);
 
 						this.owner.Services.ImportColorsFromBuffer(15, 0xbdee);
 					}
@@ -674,7 +674,7 @@ namespace Civilization1Remaster.UI
 
 			ushort[] pictures = new ushort[9];
 
-			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x4ebc, 0);
+			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, GameTexts.FilePopPic, 0);
 
 			for (int pictureIdx = 0; pictureIdx < 9; pictureIdx++)
 			{
@@ -986,7 +986,7 @@ namespace Civilization1Remaster.UI
 
 			if (this.owner.Advisors.PlayerKnowsTechnology(this.owner.World.PersonParticipantIdx, 13) != 0)
 			{
-				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x4f2f, 0);
+				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, GameTexts.FileRiotPic, 0);
 
 				for (int idx = 0; idx < 10; idx++)
 				{
@@ -995,7 +995,7 @@ namespace Civilization1Remaster.UI
 			}
 			else
 			{
-				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x4f38, 0);
+				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, GameTexts.FileRiot2Pic, 0);
 
 				for (int idx = 0; idx < 10; idx++)
 				{

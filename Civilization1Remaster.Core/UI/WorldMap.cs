@@ -286,7 +286,7 @@ namespace Civilization1Remaster.UI
 				}
 			}
 
-			this.owner.TextPainter.RenderTextWithShadow(0x43d8, 100, 2, Hues.White);
+			this.owner.TextPainter.RenderTextWithShadow(GameTexts.TextCivilizationPOWERGraph, 100, 2, Hues.White);
 
 			for (int participantIdx = 1; participantIdx < 8; participantIdx++)
 			{
@@ -764,7 +764,7 @@ namespace Civilization1Remaster.UI
 			short row = vertLoc;
 
 			// Approval rating
-			RenderCensusRow(0x4544, ref vertLoc, false, 0x4557, participantIdx =>
+			RenderCensusRow(GameTexts.TextApprovalRating, ref vertLoc, false, 0x4557, participantIdx =>
 			{
 				SetCensusValue(participantIdx, CensusRules.ApprovalRating(
 					tally.Approval[participantIdx], tally.Size[participantIdx], this.owner.TurnHooks.ClassicCensus));
@@ -778,7 +778,7 @@ namespace Civilization1Remaster.UI
 			// Population (the text of ObtainPlayerPopulation)
 			row = vertLoc;
 
-			RenderCensusRow(0x4559, ref vertLoc, false, 0x4565, participantIdx =>
+			RenderCensusRow(GameTexts.TextPopulation, ref vertLoc, false, 0x4565, participantIdx =>
 			{
 				this.owner.Words.Clear();
 
@@ -793,7 +793,7 @@ namespace Civilization1Remaster.UI
 			// GNP (the text is made for every player)
 			row = vertLoc;
 
-			RenderCensusRow(0x456a, ref vertLoc, false, 0x457a, participantIdx =>
+			RenderCensusRow(GameTexts.TextGnp, ref vertLoc, false, 0x457a, participantIdx =>
 			{
 				this.owner.Words.Clear();
 
@@ -812,7 +812,7 @@ namespace Civilization1Remaster.UI
 			// Manufacturing goods
 			row = vertLoc;
 
-			RenderCensusRow(0x457d, ref vertLoc, false, 0x4590, participantIdx =>
+			RenderCensusRow(GameTexts.TextMfgGoods, ref vertLoc, false, 0x4590, participantIdx =>
 			{
 				SetCensusValue(participantIdx, tally.Shields[participantIdx]);
 
@@ -825,7 +825,7 @@ namespace Civilization1Remaster.UI
 			// Land area (the text is made for every player)
 			row = vertLoc;
 
-			RenderCensusRow(0x4597, ref vertLoc, false, 0x45b0, participantIdx =>
+			RenderCensusRow(GameTexts.TextLandArea, ref vertLoc, false, 0x45b0, participantIdx =>
 			{
 				this.owner.Words.Clear();
 
@@ -844,7 +844,7 @@ namespace Civilization1Remaster.UI
 			// Literacy: (2 * size + learning) * 2 / size, doubled for each of the technologies 0, 0x16, 0x1e, 0xd, at most 100
 			row = vertLoc;
 
-			RenderCensusRow(0x45b5, ref vertLoc, false, 0x45c1, participantIdx =>
+			RenderCensusRow(GameTexts.TextLiteracy, ref vertLoc, false, 0x45c1, participantIdx =>
 			{
 				SetCensusValue(participantIdx, CPU.SignedQuotient(
 					(short)(((tally.Size[participantIdx] << 1) + tally.Learning[participantIdx]) << 1), tally.Size[participantIdx]));
@@ -868,7 +868,7 @@ namespace Civilization1Remaster.UI
 			// Disease: 50 * size / (size + health), halved with technology 10; the life expectancy from it (1500 / (disease + 20))
 			row = vertLoc;
 
-			RenderCensusRow(0x45c3, ref vertLoc, true, 0x45ce, participantIdx =>
+			RenderCensusRow(GameTexts.TextDisease, ref vertLoc, true, 0x45ce, participantIdx =>
 			{
 				SetCensusValue(participantIdx, CensusRules.DiseaseRate(
 					tally.Size[participantIdx], tally.Health[participantIdx], this.owner.TurnHooks.ClassicCensus));
@@ -889,7 +889,7 @@ namespace Civilization1Remaster.UI
 			// Pollution, which shortens the life expectancy
 			row = vertLoc;
 
-			RenderCensusRow(0x45d0, ref vertLoc, true, 0x45e7, participantIdx =>
+			RenderCensusRow(GameTexts.TextPollution, ref vertLoc, true, 0x45e7, participantIdx =>
 			{
 				SetCensusValue(participantIdx, tally.Pollution[participantIdx]);
 
@@ -904,7 +904,7 @@ namespace Civilization1Remaster.UI
 			// Life expectancy (20 - 99)
 			row = vertLoc;
 
-			RenderCensusRow(0x45ee, ref vertLoc, false, 0x4606, participantIdx =>
+			RenderCensusRow(GameTexts.TextLifeExpectancy, ref vertLoc, false, 0x4606, participantIdx =>
 			{
 				SetCensusValue(participantIdx, (short)this.owner.Helpers.VerifyValueSpan(tally.Health[participantIdx], 20, 99));
 
@@ -917,7 +917,7 @@ namespace Civilization1Remaster.UI
 			// Family size: 40 * unrest / size + 20 tenths (the translated code writes the tenths as value / 10 twice, TenthsRules)
 			row = vertLoc;
 
-			RenderCensusRow(0x460b, ref vertLoc, false, 0x4624, participantIdx =>
+			RenderCensusRow(GameTexts.TextFamilySize, ref vertLoc, false, 0x4624, participantIdx =>
 			{
 				SetCensusValue(participantIdx, CensusRules.FamilySize(
 					tally.Unrest[participantIdx], tally.Size[participantIdx], this.owner.TurnHooks.ClassicCensus));
@@ -939,7 +939,7 @@ namespace Civilization1Remaster.UI
 			// Military service: 10 * units / size
 			row = vertLoc;
 
-			RenderCensusRow(0x4625, ref vertLoc, false, 0x463e, participantIdx =>
+			RenderCensusRow(GameTexts.TextMilitaryService, ref vertLoc, false, 0x463e, participantIdx =>
 			{
 				SetCensusValue(participantIdx, CPU.SignedQuotient((short)(0xa * this.owner.World.Participants[participantIdx].TroopTally),
 					tally.Size[participantIdx]));
@@ -953,7 +953,7 @@ namespace Civilization1Remaster.UI
 			// Annual income: money * technologies / size (divided first when the product would overflow)
 			row = vertLoc;
 
-			RenderCensusRow(0x4643, ref vertLoc, false, 0x465f, participantIdx =>
+			RenderCensusRow(GameTexts.TextAnnualIncome, ref vertLoc, false, 0x465f, participantIdx =>
 			{
 				short sciences = this.owner.World.Participants[participantIdx].FoundScienceTally;
 				short money = tally.Money[participantIdx];
@@ -971,7 +971,7 @@ namespace Civilization1Remaster.UI
 			// Productivity: 10 * output / size
 			row = vertLoc;
 
-			RenderCensusRow(0x4661, ref vertLoc, false, 0x466f, participantIdx =>
+			RenderCensusRow(GameTexts.TextProductivity, ref vertLoc, false, 0x466f, participantIdx =>
 			{
 				SetCensusValue(participantIdx, CensusRules.Productivity(
 					tally.Output[participantIdx], tally.Size[participantIdx], this.owner.TurnHooks.ClassicCensus));

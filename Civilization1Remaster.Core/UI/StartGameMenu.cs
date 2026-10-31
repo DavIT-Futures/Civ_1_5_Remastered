@@ -376,7 +376,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Words.Clear();
 
-			this.owner.BlockText.DisplayTextDialog(0x35c3);
+			this.owner.BlockText.DisplayTextDialog(GameTexts.TopicInit);
 
 			_ = this.owner.Words.Length;
 
@@ -1110,7 +1110,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Startup.QueryForDisk(7, 1);
 
-			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x36ff, 0);
+			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, GameTexts.FileSp299Pic, 0);
 
 			this.owner.VideoCard.RenderImage(BackScreenBox, 0xa0, 0x32, 0xa0, 0x96,
 				PictureScreenBox, 0xa0, 0x32);
@@ -1131,9 +1131,9 @@ namespace Civilization1Remaster.UI
 
 			if (VgaMode != 0)
 			{
-				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x3720, 0);
+				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, GameTexts.FileSp257PicB, 0);
 
-				this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, 0x372a, 0xbdee);
+				this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, GameTexts.FileSp256Pal, 0xbdee);
 
 				for (int idx = 0; idx < 0x30; idx++)
 				{
@@ -1223,7 +1223,7 @@ namespace Civilization1Remaster.UI
 		/// </summary>
 		private void CutVgaUnitSprites()
 		{
-			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x3709, 0);
+			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, GameTexts.FileTer257Pic, 0);
 
 			for (int row = 0; row < 0xa; row++)
 			{
@@ -1270,7 +1270,7 @@ namespace Civilization1Remaster.UI
 		/// </summary>
 		private void CutEgaUnitSprites()
 		{
-			this.owner.ImageToolkit.ImportPictureOrColors(3, 0, 0, 0x3714, 1);
+			this.owner.ImageToolkit.ImportPictureOrColors(3, 0, 0, GameTexts.FileSpritesPicB, 1);
 
 			this.owner.VideoCard.RenderImage(SpriteScreenBox, 0, 0, 0x140, 0xc8,
 				BackScreenBox, 0, 0);
@@ -1372,7 +1372,7 @@ namespace Civilization1Remaster.UI
 
 				DrawingBox.TypefaceIdx = 0x6;
 
-				this.owner.TextPainter.RenderCenteredTextToScreen0(0x375a, 160, 102, Hues.Black);
+				this.owner.TextPainter.RenderCenteredTextToScreen0(GameTexts.TextNewCabinet, 160, 102, Hues.Black);
 
 				DrawingBox.TypefaceIdx = 0x2;
 

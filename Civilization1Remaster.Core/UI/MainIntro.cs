@@ -121,18 +121,18 @@ namespace Civilization1Remaster.UI
 
 			this.owner.VideoCard.AssignHuesByIndexArray(0x19fe);
 
-			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x328a, 1);
+			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, GameTexts.FileLogoPic, 1);
 			this.introLogo = this.owner.VideoCard.ScreenToPicture(1, 0, 64, 320, 80);
 
-			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x3293, 1);
+			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, GameTexts.FileBirth0Pic, 1);
 			this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0x4c, 0x140, 0x18,
 				BackScreenBox, 0, 0xb0);
 
-			this.owner.ImageToolkit.ImportPictureOrColors(2, 0, 0, 0x329e, 1);
+			this.owner.ImageToolkit.ImportPictureOrColors(2, 0, 0, GameTexts.FileBirth1Pic, 1);
 			this.owner.VideoCard.RenderImage(PictureScreenBox, 0, 0x4c, 0x140, 0x18,
 				PictureScreenBox, 0, 0xb0);
 
-			this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, 0x32a9, 1);
+			this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, GameTexts.FileLogoPicB, 1);
 			this.owner.Services.FloodBox(ScreenBox, 0, 12, 320, 176, Hues.Black);
 			this.owner.Services.AssignHueCycleSpan(1, 14, 146, 152);
 
@@ -554,7 +554,7 @@ namespace Civilization1Remaster.UI
 		private void ImportShipPictures()
 		{
 			this.owner.Startup.QueryForDisk(6, 1);
-			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x32d8, 0);
+			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, GameTexts.FilePlanet2Pic, 0);
 
 			this.screenFrame.SetFrame(ScreenColumn, 0);
 
@@ -585,7 +585,7 @@ namespace Civilization1Remaster.UI
 				this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
 			}
 
-			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x32e4, 1);
+			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, GameTexts.FilePlanet1Pic, 1);
 
 			this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0x18, 0x140, 0xb0,
 				BackScreenBox, 0, 0);
@@ -630,7 +630,7 @@ namespace Civilization1Remaster.UI
 				.Number(this.owner.World.Season);
 			this.owner.Codes.Set(4, this.owner.Words.ToString());
 
-			this.owner.BlockText.ImportTextFromFile(0x3301,
+			this.owner.BlockText.ImportTextFromFile(GameTexts.FileKingTxtB,
 				(ushort)((participantIdx != this.owner.World.PersonParticipantIdx) ? 0x32f9 : 0x32f2));
 			this.owner.BlockText.ReflowText();
 			SetScreenText(this.owner.Words.ToString());
@@ -851,14 +851,14 @@ namespace Civilization1Remaster.UI
 			}
 
 			this.owner.Startup.QueryForDisk(6, 1);
-			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x330a, 0);
+			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, GameTexts.FileSpacestPic, 0);
 			this.owner.Services.PerformSound(1, 0);
 
 			if (VgaMode != 0)
 				this.owner.Services.FloodColors(5, 0, 0, 0);
 
 			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
-			this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, 0x3316, 1);
+			this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, GameTexts.FileSpacestPicB, 1);
 			this.owner.Startup.QueryForDisk(0, 1);
 			this.owner.Services.PerformSound(0x22, 0);
 
@@ -942,7 +942,7 @@ namespace Civilization1Remaster.UI
 			if (VgaMode == 0)
 			{
 				this.owner.Startup.QueryForDisk(7, 1);
-				this.owner.ImageToolkit.ImportPictureOrColors(3, 0, 0, 0x3322, 0);
+				this.owner.ImageToolkit.ImportPictureOrColors(3, 0, 0, GameTexts.FileSpritesPic, 0);
 				this.owner.Startup.QueryForDisk(0, 1);
 			}
 
@@ -970,7 +970,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Services.PerformSound(0x23, 0);
 
-			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x332e, 1);
+			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, GameTexts.FileArchPic, 1);
 
 			this.owner.Startup.QueryForDisk(0, 1);
 
@@ -996,7 +996,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Words.Clear();
 
-			this.owner.BlockText.ImportTextFromFile(0x3348, 0x3342);
+			this.owner.BlockText.ImportTextFromFile(GameTexts.FileKingTxtC, GameTexts.TopicArch);
 
 			this.owner.BlockText.ReflowText();
 

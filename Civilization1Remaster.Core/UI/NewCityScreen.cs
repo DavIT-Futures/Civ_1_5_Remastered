@@ -35,7 +35,7 @@ namespace Civilization1Remaster.UI
 
 				this.owner.Dialogs.RenderBox(80, 80, 160, 32, Hues.LightCyan);
 
-				this.owner.TextPainter.RenderTextToScreen0(0x539e, 88, 82, Hues.Black);
+				this.owner.TextPainter.RenderTextToScreen0(GameTexts.TextCityName, 88, 82, Hues.Black);
 
 				EmptyMessage()
 					.City(townIdx);
@@ -83,7 +83,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Dialogs.RenderBox(158, 88, 160, 32, Hues.LightCyan);
 
-			this.owner.TextPainter.RenderTextToScreen0(0x53ab, 166, 90, Hues.Black);
+			this.owner.TextPainter.RenderTextToScreen0(GameTexts.TextYourName, 166, 90, Hues.Black);
 
 			this.owner.Words.Set(LeaderName(playerIdx));
 
@@ -113,7 +113,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Dialogs.RenderBox(158, 88, 160, 32, Hues.LightCyan);
 
-			this.owner.TextPainter.RenderTextToScreen0(0x53b8, 166, 90, Hues.Black);
+			this.owner.TextPainter.RenderTextToScreen0(GameTexts.TextNameOfYourTribe, 166, 90, Hues.Black);
 
 			this.owner.Words.Set(CivilizationPlural(playerIdx));
 
@@ -163,7 +163,7 @@ namespace Civilization1Remaster.UI
 			{
 				this.owner.Services.FloodBox(ScreenBox, 64, 78, 224, 10, Hues.White);
 
-				this.owner.TextPainter.RenderTextToScreen0(0x53f3, 82, 80, Hues.Black);
+				this.owner.TextPainter.RenderTextToScreen0(GameTexts.TextUnknownCity, 82, 80, Hues.Black);
 
 				this.owner.Conquest.AwaitForKeyPressOrMouseClick();
 

@@ -175,7 +175,7 @@ namespace Civilization1Remaster.Game
 			}
 			else if (participantIdx == person)
 			{
-				this.owner.TurnHooks.DisplayDialog(0x5231, 80, 80);
+				this.owner.TurnHooks.DisplayDialog(GameTexts.TextNoNewTechnologyFound, 80, 80);
 			}
 			else
 			{
@@ -431,7 +431,7 @@ namespace Civilization1Remaster.Game
 				// The pictures of the frame of the original (B3: in C#)
 				ushort[] pictures = new ushort[0x1c];
 
-				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x5318, 1);
+				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, GameTexts.FileNuke1Pic, 1);
 
 				for (int pictureIdx = 0; pictureIdx < 0x1c; pictureIdx++)
 				{
@@ -649,18 +649,18 @@ namespace Civilization1Remaster.Game
 
 				this.owner.Startup.ConcealMouseCursor();
 
-				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x536e, 0);
+				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, GameTexts.FileSettlersPic, 0);
 
 				for (int figureIdx = 0; figureIdx < 4; figureIdx++)
 				{
 					figures[figureIdx] = this.owner.VideoCard.ScreenToPicture(1, 1, (ushort)((figureIdx << 4) + 1), 0x2f, 0xf);
 				}
 
-				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x537b, 0);
+				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, GameTexts.FileHillPicC, 0);
 
 				this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
 
-				this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, 0x5384, 1);
+				this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, GameTexts.FileHillPicD, 1);
 
 				this.owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
 

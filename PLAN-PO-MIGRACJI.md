@@ -967,3 +967,9 @@ PgUp / PgDn, F1 – F10, Shift + strzałki klawiatury numerycznej, Alt + litery)
 porównaniach zmiennych klawisza (102 miejsca, litery jako `'n'`); `Hues` (16 kolorów EGA) w argumentach kolorów
 `FloodBox`, `RenderLine`, `RenderBox`, `RenderShadowBox`, `SubstituteHue` i rysowania tekstu (427 miejsc). Golden
 master i tury 27/27. Zostają: numery obrazków, tekstów i adresy tablic (osobne nazwy, gdy dane przejdą do C#).
+
+**Magiczne liczby, część 2 (2026-10-31):** `GameTexts` – 169 adresów tekstów CIV.EXE, które kod przekazuje funkcjom
+tekstowym (tematy plików tekstowych `Topic…`, np. `TopicSettlers`, `TopicZoc`; nazwy plików `File…`, np. `FileHillPic`;
+napisy ekranów `Text…`, np. `TextEndOfTurn`), nazwane po swojej treści odczytanej sondą z wczytanej gry (ten sam tekst
+pod kilkoma adresami: przyrostek B, C, …); 170 literałów w wywołaniach podmienionych. Golden master i tury 27/27.
+Zostają: adresy tablic (tabele obrazków, rekordy), numery obrazków w `SpritePicture`, adresy globalne `ForbidAccess`.

@@ -88,15 +88,15 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Services.FloodBox(ScreenBox, 60, 2, 200, 9, Hues.White);
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0(0x3c90, 161, 4, Hues.Black);
+			this.owner.TextPainter.RenderCenteredTextToScreen0(GameTexts.TextEncyclopaediaOfCivilization, 161, 4, Hues.Black);
 
-			this.owner.TextPainter.RenderCenteredTextToScreen0(0x3cae, 160, 3, Hues.LightGreen);
+			this.owner.TextPainter.RenderCenteredTextToScreen0(GameTexts.TextEncyclopaediaOfCivilizationB, 160, 3, Hues.LightGreen);
 
-			this.owner.TextPainter.RenderTextToScreen0(0x3ccc, 286, 4, Hues.LightRed);
+			this.owner.TextPainter.RenderTextToScreen0(GameTexts.TextExitB, 286, 4, Hues.LightRed);
 
 			if (part == 0xffff)
 			{
-				this.owner.TextPainter.RenderTextToScreen0(0x3cd1, 8, 4, Hues.LightRed);
+				this.owner.TextPainter.RenderTextToScreen0(GameTexts.TextMoreB, 8, 4, Hues.LightRed);
 			}
 
 			this.owner.Services.FloodBox(ScreenBox, 2, 14, 316, 184, Hues.White);
@@ -609,7 +609,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 32, cursorY, Hues.Blue);
 			cursorY = (short)(cursorY + 0x10);
-			this.owner.TextPainter.RenderTextToScreen0(0x3dad, 32, cursorY, Hues.Blue);
+			this.owner.TextPainter.RenderTextToScreen0(GameTexts.TextAllows, 32, cursorY, Hues.Blue);
 			cursorY = (short)(cursorY + 8);
 			short listStartY = cursorY;
 
@@ -685,7 +685,7 @@ namespace Civilization1Remaster.UI
 
 			if ((short)(listStartY + 4) == cursorY)
 			{
-				this.owner.TextPainter.RenderTextToScreen0(0x3de5, 32, cursorY - 12, bgColor);
+				this.owner.TextPainter.RenderTextToScreen0(GameTexts.TextAllowsB, 32, cursorY - 12, bgColor);
 			}
 
 			ushort obtainedFrom = (ushort)this.owner.World.Participants[this.owner.World.PersonParticipantIdx].ScienceObtainedSince[scienceIdx];
@@ -871,16 +871,16 @@ namespace Civilization1Remaster.UI
 
 				if (variantIdx == 0x7)
 				{
-					this.owner.TextPainter.RenderTextToScreen0(0x3f20, 16, cursorY, Hues.LightBlue);
+					this.owner.TextPainter.RenderTextToScreen0(GameTexts.TextNothing, 16, cursorY, Hues.LightBlue);
 					cursorY = (short)(cursorY + 8);
 				}
 
 				cursorY = (short)(cursorY + 4);
 			}
 
-			this.owner.TextPainter.RenderTextToScreen0(0x3f28, 16, cursorY, Hues.LightBlue);
+			this.owner.TextPainter.RenderTextToScreen0(GameTexts.Topic1IfGovernmentIsDespotismAnarchy, 16, cursorY, Hues.LightBlue);
 			cursorY = (short)(cursorY + 8);
-			this.owner.TextPainter.RenderTextToScreen0(0x3f52, 16, cursorY, Hues.LightBlue);
+			this.owner.TextPainter.RenderTextToScreen0(GameTexts.Text1IfGovernmentIsRepublicDemocracy, 16, cursorY, Hues.LightBlue);
 			cursorY = (short)(cursorY + 0xc);
 
 			ushort baseSpec = (ushort)(0x13 * scienceIdx);

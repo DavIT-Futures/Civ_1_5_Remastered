@@ -39,7 +39,7 @@ namespace Civilization1Remaster.Game
 
 			if (EarthGame != 0)
 			{
-				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x3b20, 1);
+				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, GameTexts.FileMapPic, 1);
 			}
 			else
 			{
@@ -1340,7 +1340,7 @@ namespace Civilization1Remaster.Game
 
 					ushort colour = (ushort)(((byte)StoryMusicTime & 1) != 0 ? 0xf : 0x3);
 
-					this.owner.TextPainter.RenderCenteredTextToScreen0(0x3b28, 160, 160, colour);
+					this.owner.TextPainter.RenderCenteredTextToScreen0(GameTexts.TextBuildingNewWorld, 160, 160, colour);
 				}
 
 				MarkScreenChanged();

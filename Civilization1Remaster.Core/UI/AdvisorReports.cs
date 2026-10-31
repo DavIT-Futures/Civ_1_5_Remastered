@@ -108,7 +108,7 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope($"DisplayScienceReport({participantIdx})");
 
-			DisplayReportPreamble(0x4762, 1);
+			DisplayReportPreamble(GameTexts.TextScienceReport, 1);
 
 			short knownTally = this.owner.World.Participants[participantIdx].FoundScienceTally;
 			short costFactor = (short)((this.owner.World.HardnessTier << 1) + TechnologyLevel + 6);
@@ -189,7 +189,7 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope($"RenderUnitCountsChart({participantIdx})");
 
-			DisplayReportPreamble(0x477e, 1);
+			DisplayReportPreamble(GameTexts.TextMilitaryStatus, 1);
 
 			int rowIdx = 0;
 			int vertLoc = 0x20;
@@ -259,7 +259,7 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope($"RenderPlayerComparisonChart({participantIdx})");
 
-			DisplayReportPreamble(0x47ad, 4);
+			DisplayReportPreamble(GameTexts.TextMilitaryLosses, 4);
 
 			int rowIdx = 0;
 			int vertLoc = 0x1c;
@@ -352,11 +352,11 @@ namespace Civilization1Remaster.UI
 				palaceCost++;
 			}
 
-			DisplayReportPreamble(0x47bd, 2);
+			DisplayReportPreamble(GameTexts.TextTradeReport, 2);
 
 			this.owner.VideoCard.RenderImage(PictureScreenBox, 0xc8, 0x8c, 0x28, 0x3c, ScreenBox, 0x116, 2);
 
-			this.owner.TextPainter.RenderTextToScreen0(0x47ca, 8, 32, Hues.White);
+			this.owner.TextPainter.RenderTextToScreen0(GameTexts.TextCityTrade, 8, 32, Hues.White);
 
 			short income = 0;
 			short science = 0;
@@ -379,7 +379,7 @@ namespace Civilization1Remaster.UI
 				{
 					this.owner.Conquest.AwaitForKeyPressOrMouseClick();
 
-					RenderReportPreamble(0x47d5, 2);
+					RenderReportPreamble(GameTexts.TextTradeReportB, 2);
 
 					vertLoc = 0x28;
 				}
@@ -471,7 +471,7 @@ namespace Civilization1Remaster.UI
 				this.owner.TextPainter.RenderTextToScreen0(this.owner.Words.ToString(), 8, vertLoc + 12, Hues.LightGreen);
 			}
 
-			this.owner.TextPainter.RenderTextToScreen0(0x481f, 160, 32, Hues.White);
+			this.owner.TextPainter.RenderTextToScreen0(GameTexts.TextMaintenanceCosts, 160, 32, Hues.White);
 
 			vertLoc = 0x28;
 			short total = 0;
@@ -544,7 +544,7 @@ namespace Civilization1Remaster.UI
 			// The same list in C#, with -1 for the rows without contact (ClassicMilitaryReportRows off)
 			short[] rowPlayerList = [-1, -1, -1, -1, -1, -1, -1, -1];
 
-			DisplayReportPreamble(0x4847, 1);
+			DisplayReportPreamble(GameTexts.TextIntelligenceReport, 1);
 
 			ushort rowCount = 0;
 			bool reportShown = false;
@@ -565,7 +565,7 @@ namespace Civilization1Remaster.UI
 				if ((short)participantIdx != this.owner.World.PersonParticipantIdx &&
 					(this.owner.World.Participants[this.owner.World.PersonParticipantIdx].Relations[participantIdx] & 0x40) == 0)
 				{
-					this.owner.TextPainter.RenderTextToScreen0(0x485b, 96, vertLoc, PlayerColour(participantIdx));
+					this.owner.TextPainter.RenderTextToScreen0(GameTexts.TextNoEmbassyEstablished, 96, vertLoc, PlayerColour(participantIdx));
 
 					rowCount++;
 					continue;
@@ -762,7 +762,7 @@ namespace Civilization1Remaster.UI
 
 			Player participant = this.owner.World.Participants[participantIdx];
 
-			DisplayReportPreamble(0x48a5, 1);
+			DisplayReportPreamble(GameTexts.TextIntelligenceReportB, 1);
 
 			short vertLoc = 0x20;
 
@@ -844,7 +844,7 @@ namespace Civilization1Remaster.UI
 				vertLoc += 0xc;
 			}
 
-			this.owner.TextPainter.RenderTextToScreen0(0x4956, 16, vertLoc, Hues.LightBlue);
+			this.owner.TextPainter.RenderTextToScreen0(GameTexts.TextForeignAffairs, 16, vertLoc, Hues.LightBlue);
 
 			vertLoc += 8;
 
@@ -877,7 +877,7 @@ namespace Civilization1Remaster.UI
 
 			vertLoc += 4;
 
-			this.owner.TextPainter.RenderTextToScreen0(0x4987, 16, vertLoc, Hues.LightBlue);
+			this.owner.TextPainter.RenderTextToScreen0(GameTexts.TextTechnologies, 16, vertLoc, Hues.LightBlue);
 
 			vertLoc += 8;
 
@@ -910,7 +910,7 @@ namespace Civilization1Remaster.UI
 			this.processor.Journal.OpenScope($"DisplayAttitudeReport({participantIdx})");
 
 
-			DisplayReportPreamble(0x4995, 9);
+			DisplayReportPreamble(GameTexts.TextAttitudeSurvey, 9);
 
 			short vertLoc = 0x20;
 			short unhappy = 0;
@@ -927,7 +927,7 @@ namespace Civilization1Remaster.UI
 				{
 					this.owner.Conquest.AwaitForKeyPressOrMouseClick();
 
-					RenderReportPreamble(0x49a5, 9);
+					RenderReportPreamble(GameTexts.TextAttitudeSurveyB, 9);
 
 					vertLoc = 0x20;
 				}
@@ -1016,7 +1016,7 @@ namespace Civilization1Remaster.UI
 		{
 			this.processor.Journal.OpenScope($"DisplayCityStatusReport({participantIdx})");
 
-			DisplayReportPreamble(0x49e4, 8);
+			DisplayReportPreamble(GameTexts.TextCityStatus, 8);
 
 			int vertLoc = 0x20;
 
@@ -1029,7 +1029,7 @@ namespace Civilization1Remaster.UI
 				{
 					this.owner.Conquest.AwaitForKeyPressOrMouseClick();
 
-					RenderReportPreamble(0x49f0, 8);
+					RenderReportPreamble(GameTexts.TextCityStatusB, 8);
 
 					vertLoc = 0x20;
 				}

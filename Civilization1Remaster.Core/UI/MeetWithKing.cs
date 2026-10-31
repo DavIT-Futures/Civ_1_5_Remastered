@@ -404,7 +404,7 @@ namespace Civilization1Remaster.UI
 				KingMood = 1;
 				this.owner.Words.Clear();
 				this.owner.Codes.Set(3, TechnologyName(this.audienceWantedTechnology));
-				this.owner.BlockText.DisplayTextDialog(0x3776);
+				this.owner.BlockText.DisplayTextDialog(GameTexts.TopicExchange);
 				KingSpeaking = 0xc;
 
 				if (DisplayKingDialog(TextBuffer.Address, 0x14, 0x8b) != 1)
@@ -452,7 +452,7 @@ namespace Civilization1Remaster.UI
 			this.owner.Words.Clear();
 			this.owner.Codes.Set(1, CivilizationPlural(this.audienceCommonEnemy));
 			this.owner.Codes.Set(3, (ushort)(HostileValue != 0 ? 0x3780 : 0x3787));
-			this.owner.BlockText.DisplayTextDialog(0x378f);
+			this.owner.BlockText.DisplayTextDialog(GameTexts.TopicCancel);
 
 			KingMood = (ushort)(HostileValue != 0 ? 2 : 1);
 			KingSpeaking = 0xc;
@@ -486,7 +486,7 @@ namespace Civilization1Remaster.UI
 				.Number((short)this.audienceTribute);
 			this.owner.Codes.Set(2, this.owner.Words.ToString());
 			this.owner.Words.Clear();
-			this.owner.BlockText.DisplayTextDialog(0x3797);
+			this.owner.BlockText.DisplayTextDialog(GameTexts.TopicTribute);
 
 			AudienceWelcomed = 0;
 			KingMood = 2;
@@ -515,7 +515,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Words.Clear();
 			this.owner.Codes.Set(3, TechnologyName(this.audienceOfferedTechnology));
-			this.owner.BlockText.DisplayTextDialog(0x37a0);
+			this.owner.BlockText.DisplayTextDialog(GameTexts.TopicTakeciv);
 
 			AudienceWelcomed = 0;
 			KingMood = 2;
@@ -597,7 +597,7 @@ namespace Civilization1Remaster.UI
 				return true;
 
 			this.owner.Words.Clear();
-			this.owner.BlockText.DisplayTextDialog(0x37cd);
+			this.owner.BlockText.DisplayTextDialog(GameTexts.TopicPeace);
 			AudienceWelcomed = 0;
 			KingMood = 0;
 			KingSpeaking = 0xc;
@@ -643,7 +643,7 @@ namespace Civilization1Remaster.UI
 		{
 			this.owner.Codes.Set(3, TechnologyName(this.audienceWantedTechnology));
 			this.owner.Words.Clear();
-			this.owner.BlockText.DisplayTextDialog(0x3805);
+			this.owner.BlockText.DisplayTextDialog(GameTexts.TopicGiveciv);
 			KingMood = 0;
 			KingSpeaking = 0xc;
 
@@ -683,7 +683,7 @@ namespace Civilization1Remaster.UI
 				.Number((short)amount);
 			this.owner.Codes.Set(2, this.owner.Words.ToString());
 			this.owner.Words.Clear();
-			this.owner.BlockText.DisplayTextDialog(0x380e);
+			this.owner.BlockText.DisplayTextDialog(GameTexts.TopicGivecash);
 			KingMood = 0;
 			KingSpeaking = 0xc;
 
@@ -709,7 +709,7 @@ namespace Civilization1Remaster.UI
 				.Number(Leader(participantIdx).Gold);
 			this.owner.Codes.Set(2, this.owner.Words.ToString());
 			this.owner.Words.Clear();
-			this.owner.BlockText.DisplayTextDialog(0x3818);
+			this.owner.BlockText.DisplayTextDialog(GameTexts.TopicGrovel);
 			KingMood = 0;
 			KingSpeaking = 0xc;
 
@@ -757,7 +757,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Services.PerformSound(0x21, 0);
 			this.owner.Words.Clear();
-			this.owner.BlockText.DisplayTextDialog(0x3820);
+			this.owner.BlockText.DisplayTextDialog(GameTexts.TopicMobilize);
 			AudienceWelcomed = 1;
 			KingMood = 2;
 			KingSpeaking = 4;
@@ -775,7 +775,7 @@ namespace Civilization1Remaster.UI
 				KingMood = 1;
 				KingSpeaking = 4;
 				this.owner.Words.Clear();
-				this.owner.BlockText.DisplayTextDialog(0x382a);
+				this.owner.BlockText.DisplayTextDialog(GameTexts.TopicAttitude);
 			}
 			else
 			{
@@ -807,7 +807,7 @@ namespace Civilization1Remaster.UI
 			{
 				this.owner.Codes.Set(3, CivilizationPlural(participantIdx));
 				this.owner.Words.Clear();
-				this.owner.BlockText.DisplayTextDialog(0x388f);
+				this.owner.BlockText.DisplayTextDialog(GameTexts.TopicThreat);
 
 				// Choices disabled: 2 (a demand) shortly after the last audience or under a democracy, 1 (an attack) with only two players left
 				if ((short)(this.owner.World.RoundTally - this.audienceLastAudience) < 0x10 || Person.RegimeKind >= 4)
@@ -838,7 +838,7 @@ namespace Civilization1Remaster.UI
 					.Number(amount);
 				this.owner.Codes.Set(2, this.owner.Words.ToString());
 				this.owner.Words.Clear();
-				this.owner.BlockText.DisplayTextDialog(0x3897);
+				this.owner.BlockText.DisplayTextDialog(GameTexts.TopicGivemore);
 				KingMood = 0;
 				KingSpeaking = 0xc;
 
@@ -855,7 +855,7 @@ namespace Civilization1Remaster.UI
 			{
 				this.owner.Services.PerformSound(0x21, 0);
 				this.owner.Words.Clear();
-				this.owner.BlockText.DisplayTextDialog(0x38a1);
+				this.owner.BlockText.DisplayTextDialog(GameTexts.TopicProvoke);
 				this.owner.Politics.WipeDiplomacyFlags(personIdx, participantIdx, 2);
 				KingMood = 2;
 				KingSpeaking = 0xc;
@@ -907,7 +907,7 @@ namespace Civilization1Remaster.UI
 			if ((Leader(participantIdx).Relations[enemyIdx] & 1) == 0)
 			{
 				this.owner.Words.Clear();
-				this.owner.BlockText.DisplayTextDialog(0x38e9);
+				this.owner.BlockText.DisplayTextDialog(GameTexts.TopicNocontact);
 				DisplayKingDialog(TextBuffer.Address, 0x14, 0x8b);
 				return false;
 			}
@@ -915,7 +915,7 @@ namespace Civilization1Remaster.UI
 			if ((Leader(participantIdx).Relations[enemyIdx] & 2) == 0)
 			{
 				this.owner.Words.Clear();
-				this.owner.BlockText.DisplayTextDialog(0x38f4);
+				this.owner.BlockText.DisplayTextDialog(GameTexts.TopicAtwar);
 				DisplayKingDialog(TextBuffer.Address, 0x14, 0x8b);
 				return true;
 			}
@@ -926,7 +926,7 @@ namespace Civilization1Remaster.UI
 				.Number(amount);
 			this.owner.Codes.Set(2, this.owner.Words.ToString());
 			this.owner.Words.Clear();
-			this.owner.BlockText.DisplayTextDialog(0x38fb);
+			this.owner.BlockText.DisplayTextDialog(GameTexts.TopicMercenary);
 
 			if (DisplayKingDialog(TextBuffer.Address, 0x14, 0x8b) != 1)
 				return false;
@@ -934,7 +934,7 @@ namespace Civilization1Remaster.UI
 			if (Person.Gold < amount)
 			{
 				this.owner.Words.Clear();
-				this.owner.BlockText.DisplayTextDialog(0x391e);
+				this.owner.BlockText.DisplayTextDialog(GameTexts.TopicUnfortunate);
 			}
 			else
 			{
@@ -962,7 +962,7 @@ namespace Civilization1Remaster.UI
 			}
 
 			this.owner.Codes.Set(1, CivilizationPlural(participantIdx));
-			this.owner.HelpSystem.DisplayHelpPopup(0x392b);
+			this.owner.HelpSystem.DisplayHelpPopup(GameTexts.TopicSchism);
 		}
 
 		/// <summary>
@@ -1153,7 +1153,7 @@ namespace Civilization1Remaster.UI
 			KingSpeaking = 0xc;
 			this.owner.Words.Clear();
 
-			this.owner.BlockText.DisplayTextDialog(0x3a8c);
+			this.owner.BlockText.DisplayTextDialog(GameTexts.TopicTreaty);
 
 			DisplayKingDialog(TextBuffer.Address, 0x14, 0x8b);
 

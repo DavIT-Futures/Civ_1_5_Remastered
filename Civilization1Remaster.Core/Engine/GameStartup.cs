@@ -62,7 +62,7 @@ namespace Civilization1Remaster.Engine
 				this.owner.Codes.Set(3, this.owner.Words.ToString());
 				this.owner.Words.Clear();
 
-				this.owner.BlockText.DisplayTextDialog(0x270);
+				this.owner.BlockText.DisplayTextDialog(GameTexts.TopicLomem);
 				this.owner.Dialogs.DisplayMenu(TextBuffer.Address, 64, 49, 1);
 			}
 
@@ -161,7 +161,7 @@ namespace Civilization1Remaster.Engine
 
 			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
 
-			this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, 0x1c0c, 1);
+			this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, GameTexts.FileSp257Pic, 1);
 
 			this.owner.Helpers.SetupHueCycling();
 
@@ -446,7 +446,7 @@ namespace Civilization1Remaster.Engine
 
 			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
 
-			this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, 0x1c0c, 1);
+			this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, GameTexts.FileSp257Pic, 1);
 
 			this.owner.Helpers.SetupHueCycling();
 
@@ -524,7 +524,7 @@ namespace Civilization1Remaster.Engine
 
 			this.owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
 
-			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x1b3d, 1);
+			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, GameTexts.FileCustomPic, 1);
 
 			QueryForDisk(0, 1);
 
@@ -583,7 +583,7 @@ namespace Civilization1Remaster.Engine
 
 			if (this.owner.World.RoundTally == 0)
 			{
-				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x1c16, 1);
+				this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, GameTexts.FileDiffsPic, 1);
 
 				QueryForDisk(0, 1);
 

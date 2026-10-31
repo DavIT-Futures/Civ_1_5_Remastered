@@ -589,7 +589,7 @@ namespace Civilization1Remaster.Game
 
 				if (troopIdx >= UnitMemory.TroopTally)
 				{
-					this.owner.TextPainter.RenderTextToScreen0(0x20f6, 4, 124, Hues.LightGray);
+					this.owner.TextPainter.RenderTextToScreen0(GameTexts.TextEndOfTurnB, 4, 124, Hues.LightGray);
 				}
 				else
 				{
@@ -615,7 +615,7 @@ namespace Civilization1Remaster.Game
 
 				if (troopIdx >= UnitMemory.TroopTally)
 				{
-					this.owner.TextPainter.RenderTextToScreen0(0x2102, 4, 124, Hues.Black);
+					this.owner.TextPainter.RenderTextToScreen0(GameTexts.TextEndOfTurnC, 4, 124, Hues.Black);
 				}
 				else
 				{
@@ -685,7 +685,7 @@ namespace Civilization1Remaster.Game
 					DialogStyle = 0x3;
 					this.owner.Words.Clear();
 
-					this.owner.BlockText.DisplayTextDialog(0x2126);
+					this.owner.BlockText.DisplayTextDialog(GameTexts.TopicUmax);
 
 					this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 80, 64);
 
@@ -774,12 +774,12 @@ namespace Civilization1Remaster.Game
 			{
 				if (this.owner.World.Participants[participantIdx].TroopTally == 0)
 				{
-					this.owner.HelpSystem.DisplayHelpPopup(0x210e);
+					this.owner.HelpSystem.DisplayHelpPopup(GameTexts.TopicFirstunit1);
 				}
 
 				if (this.owner.World.Participants[participantIdx].TroopTally == 1)
 				{
-					this.owner.HelpSystem.DisplayHelpPopup(0x211a);
+					this.owner.HelpSystem.DisplayHelpPopup(GameTexts.TopicFirstunit2);
 				}
 			}
 		}

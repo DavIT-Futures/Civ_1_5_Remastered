@@ -264,7 +264,7 @@ namespace Civilization1Remaster.Engine
 		{
 			this.processor.Journal.OpenScope($"DisplayTextDialog(0x{charsAddr:x4})");
 
-			ImportTextFromFile(0x30a5, charsAddr);
+			ImportTextFromFile(GameTexts.FileKingTxt, charsAddr);
 
 			ReflowText();
 

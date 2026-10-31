@@ -563,7 +563,7 @@ namespace Civilization1Remaster.Game
 				if (participantIdx1 == this.owner.World.PersonParticipantIdx)
 				{
 					this.owner.Words.Clear();
-					this.owner.BlockText.DisplayTextDialog(0x2ae7);
+					this.owner.BlockText.DisplayTextDialog(GameTexts.TopicLeader);
 					this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 80, 80);
 				}
 			}

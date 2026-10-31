@@ -31,7 +31,7 @@ namespace Civilization1Remaster.UI
 			{
 				if (ReplayAtGameEnd == 0)
 				{
-					ReplayMode = this.owner.TurnHooks.DisplayDialog(0x3fb0, 100, 80);
+					ReplayMode = this.owner.TurnHooks.DisplayDialog(GameTexts.TextSeeReplayNoReplayQuickReplayCompleteRepl, 100, 80);
 				}
 				else
 				{
@@ -832,7 +832,7 @@ namespace Civilization1Remaster.UI
 
 			ushort closedMouth = this.owner.VideoCard.ScreenToPicture(1, 1, 0x97, 0x3b, 0x31);
 
-			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x4112, 0);
+			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, GameTexts.FileSlam1Pic, 0);
 
 			if (VgaMode != 0)
 			{
@@ -868,7 +868,7 @@ namespace Civilization1Remaster.UI
 
 				this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, portraitPal, 0xc1d6);
 
-				this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, 0x412a, 0xbdee);
+				this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, GameTexts.FileSlam1Pal, 0xbdee);
 
 				for (ushort colourIdx = 0xc0; colourIdx < 0x1b0; colourIdx++)
 				{
@@ -892,7 +892,7 @@ namespace Civilization1Remaster.UI
 
 			this.owner.Services.RestoreTimer();
 
-			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, 0x4134, 0);
+			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0, GameTexts.FileSlam1PicB, 0);
 
 			this.owner.ImageToolkit.ImportPictureOrColors(1, 0, 0x85, wallName, 0);
 

@@ -500,7 +500,7 @@ namespace Civilization1Remaster.Engine
 				ushort savedFont = DrawingBox.TypefaceIdx;
 				DrawingBox.TypefaceIdx = 2;
 
-				this.owner.TextPainter.RenderTextToScreen0(0x2fbd,
+				this.owner.TextPainter.RenderTextToScreen0(GameTexts.TextHelpAvailable,
 					(short)MenuRightEdge - 74,
 					(short)bottomEdge - 4,
 					Hues.LightGreen);

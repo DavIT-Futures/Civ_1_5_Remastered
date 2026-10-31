@@ -1246,7 +1246,7 @@ namespace Civilization1Remaster.Game
 
 				if (this.owner.World.Participants[participantIdx].FoundScienceTally <= 1)
 				{
-					this.owner.HelpSystem.DisplayHelpPopup(0x231d);
+					this.owner.HelpSystem.DisplayHelpPopup(GameTexts.TopicFirstciv);
 				}
 
 				this.owner.Startup.ConcealMouseCursor();
@@ -1408,7 +1408,7 @@ namespace Civilization1Remaster.Game
 
 				this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, palName, 0xc1d6);
 
-				this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, 0x2311, 0xc5be);
+				this.owner.ImageToolkit.ImportPictureOrColors(-1, 0, 0, GameTexts.FileIconpg1Pal, 0xc5be);
 
 				this.owner.Libc.CopyBytes(0xc5c4, 0xc1dc, 0xff);
 
@@ -1646,7 +1646,7 @@ namespace Civilization1Remaster.Game
 
 			this.owner.Codes.Set(3, TechnologyText(scienceIdx));
 
-			this.owner.BlockText.DisplayTextDialog(0x240e);
+			this.owner.BlockText.DisplayTextDialog(GameTexts.TopicGape);
 
 			KingMood = 0x2;
 			KingSpeaking = 0xc;
@@ -1681,7 +1681,7 @@ namespace Civilization1Remaster.Game
 
 					if (scienceIdx == 0x5)
 					{
-						this.owner.HelpSystem.DisplayHelpPopup(0x2414);
+						this.owner.HelpSystem.DisplayHelpPopup(GameTexts.TopicMonarchy);
 					}
 				}
 			}

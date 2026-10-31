@@ -1691,10 +1691,10 @@ namespace Civilization1Remaster.Game
 		{
 			RenderFrame(2, 67, 124, 104);
 			RenderFrame(95, 106, 227, 197);
-			RenderLabelBox(95, 106, 128, 114, 0x25ea, 9);
-			RenderLabelBox(129, 106, 160, 114, 0x25ef, 9);
-			RenderLabelBox(161, 106, 193, 114, 0x25f5, 9);
-			RenderLabelBox(194, 106, 226, 114, 0x25f9, 9);
+			RenderLabelBox(95, 106, 128, 114, GameTexts.TextInfo, 9);
+			RenderLabelBox(129, 106, 160, 114, GameTexts.TextHappy, 9);
+			RenderLabelBox(161, 106, 193, 114, GameTexts.TextMap, 9);
+			RenderLabelBox(194, 106, 226, 114, GameTexts.TextView, 9);
 
 			this.owner.VideoCard.SubstituteHue(ScreenBox, (33 * (short)CityScreenTab) + 96, 107, 32, 7, Hues.LightBlue, Hues.White);
 
@@ -2139,7 +2139,7 @@ namespace Civilization1Remaster.Game
 				(ushort)(CityHappy - CityUnhappy) != this.round.Value)
 			{
 				RenderCitizenIcons(townIdx, 100, (short)this.round.IconVert, this.round.Specialists, 92);
-				this.owner.TextPainter.RenderTextToScreen0(0x25fe, 190, (short)this.round.IconVert + 5, Hues.White);
+				this.owner.TextPainter.RenderTextToScreen0(GameTexts.TextWonders, 190, (short)this.round.IconVert + 5, Hues.White);
 				this.round.IconVert = (ushort)(this.round.IconVert + 0x10);
 				this.owner.VideoCard.RenderLine(ScreenBox,
 					100, (short)this.round.IconVert - 2, 222, (short)this.round.IconVert - 2, Hues.Blue);
@@ -2533,7 +2533,7 @@ namespace Civilization1Remaster.Game
 			this.owner.VideoCard.RenderLine(ScreenBox, 231, 1, 250, 1, Hues.Blue);
 
 			if (((byte)this.round.ListFlags & 2) != 0)
-				RenderLabelBox(287, 88, 315, 96, 0x262a, 9);
+				RenderLabelBox(287, 88, 315, 96, GameTexts.TextMore, 9);
 
 			this.owner.VideoCard.SubstituteHue(ScreenBox, 309, 2, 8, 96, Hues.Yellow, Hues.LightRed);
 
@@ -2576,7 +2576,7 @@ namespace Civilization1Remaster.Game
 			if (owner == this.owner.World.PersonParticipantIdx)
 			{
 				RenderLabelBox(231, 106, 263, 114, (ushort)((town.ConditionMarker & 0x10) != 0 ? 0x262f : 0x2635), 9);
-				RenderLabelBox(294, 106, 311, 114, 0x263c, 9);
+				RenderLabelBox(294, 106, 311, 114, GameTexts.TextBuy, 9);
 			}
 
 			if (town.PresentMakingIdx >= 0)
@@ -2636,7 +2636,7 @@ namespace Civilization1Remaster.Game
 
 			this.owner.Services.FloodBox(ScreenBox, 2, 106, 91,
 				((short)this.round.CostFactor * (short)this.round.DrawVert) + 12, Hues.Blue);
-			this.owner.TextPainter.RenderTextToScreen0(0x2640, 8, 108, Hues.White);
+			this.owner.TextPainter.RenderTextToScreen0(GameTexts.TextFoodStorage, 8, 108, Hues.White);
 			FloodBoxWithMotif(3, 115, (town.TrueExtent * (short)this.round.Value) + 9,
 				((short)this.round.CostFactor * (short)this.round.DrawVert) + 2);
 
@@ -2674,7 +2674,7 @@ namespace Civilization1Remaster.Game
 			RenderFrame(2, 23, 124, 65);
 			this.round.DrawVert = 0x19;
 			this.owner.Services.FloodBox(ScreenBox, 2, 23, 122, 9, Hues.Blue);
-			this.owner.TextPainter.RenderTextToScreen0(0x264d, 8, (short)this.round.DrawVert, Hues.White);
+			this.owner.TextPainter.RenderTextToScreen0(GameTexts.TextCityResources, 8, (short)this.round.DrawVert, Hues.White);
 			this.round.DrawVert = (ushort)(this.round.DrawVert + 8);
 
 			for (ushort row = 0; row < 3; row++)
@@ -2914,8 +2914,8 @@ namespace Civilization1Remaster.Game
 			City town = this.owner.World.Towns[townIdx];
 			short owner = (short)CityOwner;
 
-			RenderLabelBox(284, 190, 316, 198, 0x2662, 12);
-			RenderLabelBox(231, 190, 272, 198, 0x2667, 9);
+			RenderLabelBox(284, 190, 316, 198, GameTexts.TextExit, 12);
+			RenderLabelBox(231, 190, 272, 198, GameTexts.TextRename, 9);
 			this.round.ChangeBlinks = 0;
 
 			sbyte making = town.PresentMakingIdx;
@@ -3761,7 +3761,7 @@ namespace Civilization1Remaster.Game
 						CityAgain = 1;
 
 						if ((this.owner.World.SessionPrefMarkers & 1) != 0)
-							this.owner.HelpSystem.DisplayHelpPopup(0x2708);
+							this.owner.HelpSystem.DisplayHelpPopup(GameTexts.TopicDisorder);
 					}
 				}
 

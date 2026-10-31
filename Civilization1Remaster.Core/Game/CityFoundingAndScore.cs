@@ -71,7 +71,7 @@ namespace Civilization1Remaster.Game
 					DialogStyle = 0x4;
 					this.owner.Words.Clear();
 
-					this.owner.BlockText.DisplayTextDialog(0x4f74);
+					this.owner.BlockText.DisplayTextDialog(GameTexts.TopicPmax);
 
 					this.owner.TurnHooks.DisplayDialog(TextBuffer.Address, 64, 80);
 				}
@@ -177,7 +177,7 @@ namespace Civilization1Remaster.Game
 
 			if (first && participantIdx == person)
 			{
-				this.owner.HelpSystem.DisplayHelpPopup(0x4f66);
+				this.owner.HelpSystem.DisplayHelpPopup(GameTexts.TopicFirstproduct);
 			}
 
 			MarkCityPowerArea(participantIdx, town, horizLoc, vertLoc);
@@ -400,7 +400,7 @@ namespace Civilization1Remaster.Game
 					if (this.owner.Advisors.PlayerKnowsTechnology(town.ParticipantIdx, 10) == 0 && !town.Has(CityStructure.Aqueduct) &&
 						this.owner.Advisors.PlayerKnowsTechnology(town.ParticipantIdx, (short)BuildingWord(9, BuildingTable.Technology)) != 0)
 					{
-						this.owner.BlockText.DisplayTextDialog(0x4f99);
+						this.owner.BlockText.DisplayTextDialog(GameTexts.TopicD1);
 
 						if (town.TrueExtent != 0)
 							town.TrueExtent -= (sbyte)CityDisasterRules.ComputePlaguePopulationLoss(town.TrueExtent);
@@ -412,7 +412,7 @@ namespace Civilization1Remaster.Game
 					{
 						if (!town.Has(CityStructure.CityWalls) && this.owner.Advisors.PlayerKnowsTechnology(town.ParticipantIdx, (short)BuildingWord(8, BuildingTable.Technology)) != 0)
 						{
-							this.owner.BlockText.DisplayTextDialog(0x4f9d);
+							this.owner.BlockText.DisplayTextDialog(GameTexts.TopicD2);
 
 							if (town.TrueExtent > 1)
 								town.TrueExtent -= (sbyte)CityDisasterRules.ComputePlaguePopulationLoss(town.TrueExtent);
@@ -425,7 +425,7 @@ namespace Civilization1Remaster.Game
 					{
 						if (!town.Has(CityStructure.Temple) && this.owner.Advisors.PlayerKnowsTechnology(town.ParticipantIdx, (short)BuildingWord(4, BuildingTable.Technology)) != 0)
 						{
-							this.owner.BlockText.DisplayTextDialog(0x4fa1);
+							this.owner.BlockText.DisplayTextDialog(GameTexts.TopicD3);
 
 							if (town.TrueExtent > 1)
 								town.TrueExtent -= (sbyte)CityDisasterRules.ComputeFaminePopulationLoss(town.TrueExtent);
@@ -437,7 +437,7 @@ namespace Civilization1Remaster.Game
 					if (town.TrueExtent != 0 && !town.Has(CityStructure.Granary) &&
 						this.owner.Advisors.PlayerKnowsTechnology(town.ParticipantIdx, (short)BuildingWord(3, BuildingTable.Technology)) != 0)
 					{
-						this.owner.BlockText.DisplayTextDialog(0x4fa5);
+						this.owner.BlockText.DisplayTextDialog(GameTexts.TopicD4);
 
 						town.GrainTally = 0;
 						town.TrueExtent -= (sbyte)CityDisasterRules.ComputeFaminePopulationLoss(town.TrueExtent);
@@ -454,7 +454,7 @@ namespace Civilization1Remaster.Game
 
 						this.owner.Codes.Set(0, BuildingText(buildingIdx));
 
-						this.owner.BlockText.DisplayTextDialog(0x4fc3);
+						this.owner.BlockText.DisplayTextDialog(GameTexts.TopicD5);
 					}
 					break;
 
@@ -463,7 +463,7 @@ namespace Civilization1Remaster.Game
 					{
 						if (!town.Has(CityStructure.Barracks))
 						{
-							this.owner.BlockText.DisplayTextDialog(0x4fc7);
+							this.owner.BlockText.DisplayTextDialog(GameTexts.TopicD6);
 
 							town.GrainTally = 0;
 							town.MaterialsTally = 0;
@@ -668,14 +668,14 @@ namespace Civilization1Remaster.Game
 			{
 				ushort screenBufferPtr = ScreenBox;
 				DrawingBox.DisplayIdx = 1;
-				this.owner.Briefings.DisplayReportPreamble(0x506b, 3);
+				this.owner.Briefings.DisplayReportPreamble(GameTexts.TextCivilizationScore, 3);
 			}
 
 			this.owner.World.Participants[0].Tally = 0;
 
 			if (marker && (this.owner.World.StarshipMarkers & 0x100) != 0)
 			{
-				this.owner.TextPainter.RenderCenteredTextToScreen0(0x507e, 160, 100, Hues.White);
+				this.owner.TextPainter.RenderCenteredTextToScreen0(GameTexts.TextScoringCompleted, 160, 100, Hues.White);
 				ushort screenBufferPtr = ScreenBox;
 				DrawingBox.DisplayIdx = 0;
 

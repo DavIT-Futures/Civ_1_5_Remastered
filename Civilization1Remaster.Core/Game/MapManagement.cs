@@ -780,12 +780,12 @@ namespace Civilization1Remaster.Game
 			}
 			else if ((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 4) != 0)
 			{
-				this.owner.TextPainter.RenderTextWithShadow(0x2ba0, horizLoc + 4, vertLoc + 7, markHue);
+				this.owner.TextPainter.RenderTextWithShadow(GameTexts.TextF, horizLoc + 4, vertLoc + 7, markHue);
 			}
 
 			if (participantIdx == this.owner.World.PersonParticipantIdx && this.troops.Pull(participantIdx, troopIdx, UnitMemory.TravelHoriz) != 0xff)
 			{
-				this.owner.TextPainter.RenderTextWithShadow(0x2ba2, horizLoc + 4, vertLoc + 7, markHue);
+				this.owner.TextPainter.RenderTextWithShadow(GameTexts.TextG, horizLoc + 4, vertLoc + 7, markHue);
 			}
 
 			if ((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 0xc2) != 0 &&
@@ -1176,7 +1176,7 @@ namespace Civilization1Remaster.Game
 
 			if (found == 0xffff)
 			{
-				this.owner.TurnHooks.DisplayDialog(0x2bc6, 100, 80);
+				this.owner.TurnHooks.DisplayDialog(GameTexts.TextCityAtError, 100, 80);
 			}
 
 			ReturnAcc(found);
