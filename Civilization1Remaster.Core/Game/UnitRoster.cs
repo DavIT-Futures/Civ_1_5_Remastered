@@ -34,10 +34,10 @@ namespace Civilization1Remaster.Core.Game
 		}
 
 		/// <summary>The player whose unit ObtainUnitAtTile found last (0xd7f0)</summary>
-		private short FoundUnitParticipant => (short)FoundPlayer;
+		private short FoundUnitParticipant => (short)Search.FoundPlayer;
 
 		/// <summary>The AI players see all units (0xd806, a debug option of the original)</summary>
-		private bool RevealAll => MapRevealed != 0;
+		private bool RevealAll => MapView.Revealed != 0;
 
 		/// <inheritdoc/>
 		public void CreateUnitsFromCityList(short townIdx)
@@ -48,7 +48,7 @@ namespace Civilization1Remaster.Core.Game
 
 			if (town.ParticipantIdx == this.Owner.World.PersonParticipantIdx)
 			{
-				QuietUnitSetup = 0x1;
+				Turn.QuietUnitSetup = 0x1;
 
 				for (int keptIdx = 0; keptIdx < 2; keptIdx++)
 				{
@@ -71,7 +71,7 @@ namespace Civilization1Remaster.Core.Game
 					town.Unfamiliar[keptIdx] = -1;
 				}
 
-				QuietUnitSetup = 0x0;
+				Turn.QuietUnitSetup = 0x0;
 				town.ConditionMarker |= KeptUnitsCondition;
 			}
 		}
@@ -86,9 +86,9 @@ namespace Civilization1Remaster.Core.Game
 
 			if (participantIdx == this.Owner.World.PersonParticipantIdx)
 			{
-				ushort countLosses = CountLosses;
-				CountLosses = 0;
-				QuietUnitSetup = 0x1;
+				ushort countLosses = Turn.CountLosses;
+				Turn.CountLosses = 0;
+				Turn.QuietUnitSetup = 0x1;
 
 				bool firstSeen = false;
 
@@ -116,8 +116,8 @@ namespace Civilization1Remaster.Core.Game
 					DestroyUnit(participantIdx, troopIdx);
 				}
 
-				QuietUnitSetup = 0x0;
-				CountLosses = countLosses;
+				Turn.QuietUnitSetup = 0x0;
+				Turn.CountLosses = countLosses;
 				town.ConditionMarker &= unchecked((byte)~KeptUnitsCondition);
 			}
 		}
@@ -178,17 +178,17 @@ namespace Civilization1Remaster.Core.Game
 
 			if (cursorHoriz != 0xffff)
 			{
-				frameHoriz = (short)((this.Owner.Routing.TunePosition((short)cursorHoriz - (short)MapViewHoriz) << 4) + 0x50);
-				frameVert = (short)(((cursorVert - MapViewVert) << 4) + 0x8);
+				frameHoriz = (short)((this.Owner.Routing.TunePosition((short)cursorHoriz - (short)MapView.Horiz) << 4) + 0x50);
+				frameVert = (short)(((cursorVert - MapView.Vert) << 4) + 0x8);
 
 				if (frameHoriz < 0x50 || frameHoriz >= 0x140 || frameVert < 0x8 || frameVert > 0xc0)
 					frameHoriz = -1;
 			}
 
 			// Position of the unit on the world map (top left corner of the screen)
-			short worldMapTop = (short)MapFocusTop;
+			short worldMapTop = (short)MapView.FocusTop;
 			short dotHoriz = (short)this.Owner.Routing.TunePosition(
-				this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz) - (short)MapFocusLeft);
+				this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz) - (short)MapView.FocusLeft);
 			int unitVert = troopIdx < 127 ? this.troops.Pull(participantIdx, troopIdx, UnitMemory.Vert) : 0xff;
 			short dotVert = (short)(unitVert - worldMapTop);
 			bool dotVisible = dotVert >= 0 && dotVert < 50;
@@ -274,16 +274,16 @@ namespace Civilization1Remaster.Core.Game
 
 			if (troopIdx == -1)
 			{
-				if (participantIdx == this.Owner.World.PersonParticipantIdx && UnitLimitTold == 0)
+				if (participantIdx == this.Owner.World.PersonParticipantIdx && Turn.UnitLimitTold == 0)
 				{
-					DialogStyle = 0x3;
+					Screen.DialogStyle = 0x3;
 					this.Owner.Words.Clear();
 
 					this.Owner.BlockText.ShowTextDialog(GameTexts.TopicUmax);
 
 					this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 80, 64);
 
-					UnitLimitTold = 0x1;
+					Turn.UnitLimitTold = 0x1;
 				}
 
 				result = 0xffff;
@@ -304,7 +304,7 @@ namespace Civilization1Remaster.Core.Game
 		{
 			using var _ = this.Processor.Journal.Scope($"EliminateUnit({participantIdx}, {troopIdx})");
 
-			if (CountLosses != 0)
+			if (Turn.CountLosses != 0)
 			{
 				// Losses are counted (the kind as an unsigned word: an empty record, -1, is not counted)
 				ushort lostKind = (ushort)this.troops.TroopKind(participantIdx, troopIdx);
@@ -342,8 +342,8 @@ namespace Civilization1Remaster.Core.Game
 
 			this.Owner.MapOps.RemoveUnitFromTile(participantIdx, troopIdx, horizLoc, vertLoc);
 
-			if (QuietUnitSetup == 0 && KingMood == 0xffff &&
-				(MapRevealed != 0 || participantIdx == this.Owner.World.PersonParticipantIdx ||
+			if (Turn.QuietUnitSetup == 0 && King.Mood == 0xffff &&
+				(MapView.Revealed != 0 || participantIdx == this.Owner.World.PersonParticipantIdx ||
 				(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.ShownToParticipants) & (ushort)(1 << this.Owner.World.PersonParticipantIdx)) != 0))
 			{
 				this.Owner.MapOps.RepaintMapTile(
@@ -361,8 +361,8 @@ namespace Civilization1Remaster.Core.Game
 
 			if (this.troops.Following(participantIdx, troopIdx) != -1)
 			{
-				StackLeader = (ushort)troopIdx;
-				StackLeaderScore = 0;
+				Stack.Leader = (ushort)troopIdx;
+				Stack.LeaderScore = 0;
 
 				for (short firstIdx = 0; firstIdx < UnitMemory.TroopTally; firstIdx++)
 				{
@@ -375,7 +375,7 @@ namespace Civilization1Remaster.Core.Game
 					}
 				}
 
-				leader = StackLeader;
+				leader = Stack.Leader;
 			}
 
 
@@ -391,12 +391,12 @@ namespace Civilization1Remaster.Core.Game
 
 			if (this.troops.Following(participantIdx, troopIdx) != -1)
 			{
-				StackLeader = (ushort)troopIdx;
-				StackLeaderScore = 0xffff;
+				Stack.Leader = (ushort)troopIdx;
+				Stack.LeaderScore = 0xffff;
 
 				VisitEachUnitInStack(participantIdx, troopIdx, 0x1169);
 
-				guardian = StackLeader;
+				guardian = Stack.Leader;
 			}
 
 
@@ -427,11 +427,11 @@ namespace Civilization1Remaster.Core.Game
 
 			if (score >= 0)
 			{
-				int bestScore = (short)StackLeaderScore;
+				int bestScore = (short)Stack.LeaderScore;
 				if (score > bestScore)
 				{
-					StackLeaderScore = (ushort)score;
-					StackLeader = (ushort)troopIdx;
+					Stack.LeaderScore = (ushort)score;
+					Stack.Leader = (ushort)troopIdx;
 				}
 			}
 		}
@@ -441,13 +441,13 @@ namespace Civilization1Remaster.Core.Game
 		{
 			using var _ = this.Processor.Journal.Scope($"TallyUnitsByDomainInStack({participantIdx}, {troopIdx}, {mode})");
 
-			StackDomainTally = 0x0;
-			StackDomainMode = mode;
-			StackIndexLimit = (ushort)troopIdx;
+			Stack.DomainTally = 0x0;
+			Stack.DomainMode = mode;
+			Stack.IndexLimit = (ushort)troopIdx;
 
 			VisitEachUnitInStack(participantIdx, troopIdx, 0x1280);
 
-			ushort result = StackDomainTally;
+			ushort result = Stack.DomainTally;
 
 			return result;
 		}
@@ -457,7 +457,7 @@ namespace Civilization1Remaster.Core.Game
 		{
 			using var _ = this.Processor.Journal.Scope($"TallyUnitsByDomainStep({participantIdx}, {troopIdx})");
 
-			switch (StackDomainMode)
+			switch (Stack.DomainMode)
 			{
 				case 0:
 					AddToGlobal(0x6532, this.troops.KindField(participantIdx, troopIdx, UnitKindTable.Price));
@@ -476,7 +476,7 @@ namespace Civilization1Remaster.Core.Game
 					break;
 
 				case 4:
-					if (troopIdx < (short)StackIndexLimit &&
+					if (troopIdx < (short)Stack.IndexLimit &&
 						this.troops.KindField(participantIdx, troopIdx, UnitKindTable.TroopGroup) == UnitKindTable.DefenceTroops)
 					{
 						AddToGlobal(0x6532, 1);
@@ -490,12 +490,12 @@ namespace Civilization1Remaster.Core.Game
 		{
 			using var _ = this.Processor.Journal.Scope($"TallyUnitsOfTypeInStack({participantIdx}, {troopIdx}, {kind})");
 
-			StackKind = kind;
-			StackTally = 0x0;
+			Stack.Kind = kind;
+			Stack.Tally = 0x0;
 
 			VisitEachUnitInStack(participantIdx, troopIdx, 0x135a);
 
-			ushort result = StackTally;
+			ushort result = Stack.Tally;
 
 			return result;
 		}
@@ -505,7 +505,7 @@ namespace Civilization1Remaster.Core.Game
 		{
 			using var _ = this.Processor.Journal.Scope($"TallyUnitsOfTypeStep({participantIdx}, {troopIdx})");
 
-			if ((ushort)this.troops.TroopKind(participantIdx, troopIdx) == StackKind)
+			if ((ushort)this.troops.TroopKind(participantIdx, troopIdx) == Stack.Kind)
 			{
 				AddToGlobal(0x653c, 1);
 			}
@@ -516,12 +516,12 @@ namespace Civilization1Remaster.Core.Game
 		{
 			using var _ = this.Processor.Journal.Scope($"TallyUnitsWithFlagInStack({participantIdx}, {troopIdx}, {group})");
 
-			StackKind = group;
-			StackTally = 0x0;
+			Stack.Kind = group;
+			Stack.Tally = 0x0;
 
 			VisitEachUnitInStack(participantIdx, troopIdx, 0x13a9);
 
-			ushort result = StackTally;
+			ushort result = Stack.Tally;
 
 			return result;
 		}
@@ -531,7 +531,7 @@ namespace Civilization1Remaster.Core.Game
 		{
 			using var _ = this.Processor.Journal.Scope($"TallyUnitsWithFlagStep({participantIdx}, {troopIdx})");
 
-			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.TroopGroup) == StackKind)
+			if (this.troops.KindField(participantIdx, troopIdx, UnitKindTable.TroopGroup) == Stack.Kind)
 			{
 				AddToGlobal(0x653c, 1);
 			}
@@ -542,11 +542,11 @@ namespace Civilization1Remaster.Core.Game
 		{
 			using var _ = this.Processor.Journal.Scope($"TallySpecialUnitsInStack({participantIdx}, {troopIdx})");
 
-			StackTally = 0x0;
+			Stack.Tally = 0x0;
 
 			VisitEachUnitInStack(participantIdx, troopIdx, 0x13f8);
 
-			ushort result = StackTally;
+			ushort result = Stack.Tally;
 
 			return result;
 		}
@@ -710,7 +710,7 @@ namespace Civilization1Remaster.Core.Game
 		{
 			using var _ = this.Processor.Journal.Scope($"PanMapToPosition({participantIdx}, {horizLoc}, {vertLoc})");
 
-			int viewLeft = (short)MapViewHoriz;
+			int viewLeft = (short)MapView.Horiz;
 
 			// The view may reach over the right edge of the world
 			if (horizLoc < 16 && viewLeft > 64)
@@ -718,7 +718,7 @@ namespace Civilization1Remaster.Core.Game
 				horizLoc += MapRules.Width;
 			}
 
-			int viewTop = (short)MapViewVert;
+			int viewTop = (short)MapView.Vert;
 			bool outside = horizLoc < viewLeft + 2 || horizLoc > viewLeft + 13 || vertLoc < viewTop + 2 || vertLoc > viewTop + 9;
 
 			if (outside)
@@ -865,7 +865,7 @@ namespace Civilization1Remaster.Core.Game
 			int horizLoc = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Horiz);
 			int vertLoc = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert);
 
-			if (WorldMapView == 1)
+			if (MapView.WorldMapView == 1)
 			{
 				this.Owner.MapOps.DrawMapTile(horizLoc, vertLoc);
 			}
@@ -890,8 +890,8 @@ namespace Civilization1Remaster.Core.Game
 		{
 			using var _ = this.Processor.Journal.Scope($"DisplayBattleScreen({participantIdx}, {troopIdx})");
 
-			ushort screen = ScreenBox;
-			ushort backScreen = BackScreenBox;
+			ushort screen = Screen.Box;
+			ushort backScreen = Screen.BackScreenBox;
 
 			this.Owner.Startup.HideMouseCursor();
 
@@ -1519,9 +1519,9 @@ namespace Civilization1Remaster.Core.Game
 
 			this.Owner.World.Participants[participantIdx].LiveTroops[kind]++;
 
-			if (QuietUnitSetup == 0)
+			if (Turn.QuietUnitSetup == 0)
 			{
-				if (MapRevealed != 0 || participantIdx == this.Owner.World.PersonParticipantIdx ||
+				if (MapView.Revealed != 0 || participantIdx == this.Owner.World.PersonParticipantIdx ||
 					(this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.ShownToParticipants) & (ushort)(1 << this.Owner.World.PersonParticipantIdx)) != 0)
 				{
 					this.Owner.MapOps.RepaintMapTile(
@@ -1533,7 +1533,7 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 			if (participantIdx == this.Owner.World.PersonParticipantIdx && this.Owner.World.RoundTally != 0 &&
-				QuietUnitSetup == 0)
+				Turn.QuietUnitSetup == 0)
 			{
 				if (this.Owner.World.Participants[participantIdx].TroopTally == 0)
 				{
@@ -1759,14 +1759,14 @@ namespace Civilization1Remaster.Core.Game
 				this.Owner.MapOps.DrawUnitOnWorldMap(participantIdx, followingIdx);
 			}
 
-			ushort screen = ScreenBox;
-			ushort backScreen = BackScreenBox;
+			ushort screen = Screen.Box;
+			ushort backScreen = Screen.BackScreenBox;
 
 			this.Owner.VideoCard.RenderImage(screen, 0x50, 0, 0xf0, 0xc8, backScreen, 0x50, 0);
 
 			// Top left pixel of the tile in the map view (16 x 16 pixels a tile, from 80, 8)
-			short tileLeft = (short)((this.Owner.Routing.TunePosition(horizLoc - (short)MapViewHoriz) << 4) + 0x50);
-			short tileTop = (short)(((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Vert) - MapViewVert) << 4) + 8);
+			short tileLeft = (short)((this.Owner.Routing.TunePosition(horizLoc - (short)MapView.Horiz) << 4) + 0x50);
+			short tileTop = (short)(((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Vert) - MapView.Vert) << 4) + 8);
 
 			int stepHoriz = this.Owner.MapOps.Chart.DirectionHoriz(heading);
 			int stepVert = this.Owner.MapOps.Chart.DirectionVert(heading);
@@ -1836,13 +1836,13 @@ namespace Civilization1Remaster.Core.Game
 		/// <returns>Line of the list, a negative number or a number past the list when none was chosen</returns>
 		private int ChooseFromStackList(short listTop, int stackTally, ref int selected)
 		{
-			ushort screen = ScreenBox;
+			ushort screen = Screen.Box;
 
 			this.Owner.Startup.ShowMouseCursor();
 
 			this.Owner.TurnLogic.WaitForKey();
 
-			if (MousePresent != 0)
+			if (Mouse.Present != 0)
 			{
 				do
 				{
@@ -1910,8 +1910,8 @@ namespace Civilization1Remaster.Core.Game
 
 		private void DrawBorderPiece(int pieceLeft, int pieceTop, int horizLoc, int vertLoc)
 		{
-			this.Owner.VideoCard.RenderImage(PictureScreenBox, pieceLeft, pieceTop, 8, 8,
-				ScreenBox, horizLoc, vertLoc);
+			this.Owner.VideoCard.RenderImage(Screen.PictureScreenBox, pieceLeft, pieceTop, 8, 8,
+				Screen.Box, horizLoc, vertLoc);
 		}
 	}
 }

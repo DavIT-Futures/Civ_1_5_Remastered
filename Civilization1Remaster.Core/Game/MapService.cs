@@ -47,22 +47,22 @@ namespace Civilization1Remaster.Core.Game
 
 			this.Owner.Startup.HideMouseCursor();
 
-			ScreenRepaintRequest = 0x0;
+			Screen.RepaintRequest = 0x0;
 
 			this.Owner.TurnHooks.ClearStatusLine();
 
 			this.Owner.TurnHooks.DrawStatusBar();
 
-			ushort kept = UnitAtTilePlayer;
+			ushort kept = MapView.UnitAtTilePlayer;
 
-			MapViewHoriz = (ushort)this.Owner.Routing.TunePosition(horizLoc);
-			MapViewVert = (ushort)this.Owner.Helpers.ClampValue(vertLoc, 0, 38);
+			MapView.Horiz = (ushort)this.Owner.Routing.TunePosition(horizLoc);
+			MapView.Vert = (ushort)this.Owner.Helpers.ClampValue(vertLoc, 0, 38);
 
 			// Another error, the code modified first parameter (playerID) to a
 			// Visibility Mask and that conflicts with other code which expects playerID.
 			ushort chartSightFilter = (ushort)(1 << (byte)participantIdx);
 
-			CityLabelCount = 0x0;
+			MapView.CityLabelCount = 0x0;
 
 			ushort order = (ushort)this.Owner.Libc.Dice.DrawInt(256);
 
@@ -73,31 +73,31 @@ namespace Civilization1Remaster.Core.Game
 
 				if (row < 0xc && column < 0xf)
 				{
-					bool shown = MapRevealed != 0;
+					bool shown = MapView.Revealed != 0;
 
 					if (!shown)
 					{
-						ushort tileHoriz = (ushort)this.Owner.Routing.TunePosition(column + (short)MapViewHoriz);
-						ushort tileVert = (ushort)(row + MapViewVert);
+						ushort tileHoriz = (ushort)this.Owner.Routing.TunePosition(column + (short)MapView.Horiz);
+						ushort tileVert = (ushort)(row + MapView.Vert);
 
 						shown = (this.Owner.World.ChartSight[tileHoriz, tileVert] & chartSightFilter) != 0;
 					}
 
 					if (shown)
 					{
-						RepaintMapTile((short)this.Owner.Routing.TunePosition(column + (short)MapViewHoriz),
-							row + (short)MapViewVert);
+						RepaintMapTile((short)this.Owner.Routing.TunePosition(column + (short)MapView.Horiz),
+							row + (short)MapView.Vert);
 					}
 					else
 					{
-						this.Owner.Services.FloodBox(ScreenBox, (column * 16) + 80, (row * 16) + 8, 16, 16, Hues.Black);
+						this.Owner.Services.FloodBox(Screen.Box, (column * 16) + 80, (row * 16) + 8, 16, 16, Hues.Black);
 					}
 				}
 
 				order = (byte)((order * 5) + 1);
 			}
 
-			for (int labelIdx = 0; labelIdx < (short)CityLabelCount; labelIdx++)
+			for (int labelIdx = 0; labelIdx < (short)MapView.CityLabelCount; labelIdx++)
 			{
 				ushort place = (ushort)(labelIdx << 1);
 
@@ -129,31 +129,31 @@ namespace Civilization1Remaster.Core.Game
 			ushort targetTop = (ushort)(sourceTop - top);
 			ushort altitude = (ushort)(0x32 - targetTop - (top > 0 ? top : 0));
 
-			MapFocusLeft = (ushort)left;
-			MapFocusTop = (ushort)top;
+			MapView.FocusLeft = (ushort)left;
+			MapView.FocusTop = (ushort)top;
 
-			this.Owner.Services.FloodBox(ScreenBox, 0, 8, 80, 50, Hues.Black);
+			this.Owner.Services.FloodBox(Screen.Box, 0, 8, 80, 50, Hues.Black);
 
-			if (MapRevealed != 0)
+			if (MapView.Revealed != 0)
 			{
 				left = (short)this.Owner.Helpers.ClampValue(left, 0, 16);
-				MapFocusLeft = (ushort)left;
+				MapView.FocusLeft = (ushort)left;
 
 				top = (short)this.Owner.Helpers.ClampValue(top, 0, 65530);
-				MapFocusTop = (ushort)top;
+				MapView.FocusTop = (ushort)top;
 
-				this.Owner.VideoCard.RenderImage(PictureScreenBox, (ushort)left, (ushort)top, 0x50, 0x32,
-					ScreenBox, 0, 8);
+				this.Owner.VideoCard.RenderImage(Screen.PictureScreenBox, (ushort)left, (ushort)top, 0x50, 0x32,
+					Screen.Box, 0, 8);
 			}
 			else
 			{
-				this.Owner.VideoCard.RenderImage(PictureScreenBox, (ushort)(wrappedLeft + 0xf0), sourceTop, breadth, altitude,
-					ScreenBox, 0, (ushort)(targetTop + 8));
+				this.Owner.VideoCard.RenderImage(Screen.PictureScreenBox, (ushort)(wrappedLeft + 0xf0), sourceTop, breadth, altitude,
+					Screen.Box, 0, (ushort)(targetTop + 8));
 
 				if (breadth < 0x50)
 				{
-					this.Owner.VideoCard.RenderImage(PictureScreenBox, 0xf0, sourceTop, (ushort)(0x50 - breadth), altitude,
-						ScreenBox, breadth, (ushort)(targetTop + 8));
+					this.Owner.VideoCard.RenderImage(Screen.PictureScreenBox, 0xf0, sourceTop, (ushort)(0x50 - breadth), altitude,
+						Screen.Box, breadth, (ushort)(targetTop + 8));
 				}
 			}
 
@@ -177,7 +177,7 @@ namespace Civilization1Remaster.Core.Game
 
 			this.Owner.Dialogs.DrawBox(horizLoc - left - 1, vertLoc - top + 7, 17, 10, Hues.White);
 
-			UnitAtTilePlayer = kept;
+			MapView.UnitAtTilePlayer = kept;
 
 			this.Owner.Startup.ShowMouseCursor();
 		}
@@ -188,15 +188,15 @@ namespace Civilization1Remaster.Core.Game
 			using var _ = this.Processor.Journal.Scope($"RenderMapTile({horizLoc}, {vertLoc})");
 
 
-			if (WorldMapView == 0x1)
+			if (MapView.WorldMapView == 0x1)
 			{
 				ushort outcome = DrawWorldMapTileBlock(horizLoc, vertLoc);
 				return FinishRenderMapTile(outcome);
 			}
 
-			short screenX = (short)((this.Owner.Routing.TunePosition(horizLoc - (short)MapViewHoriz) << 4) + 0x50);
+			short screenX = (short)((this.Owner.Routing.TunePosition(horizLoc - (short)MapView.Horiz) << 4) + 0x50);
 
-			short screenY = (short)(((vertLoc - (short)MapViewVert) << 4) + 0x8);
+			short screenY = (short)(((vertLoc - (short)MapView.Vert) << 4) + 0x8);
 
 			if (screenX < 0x50 || screenX >= 0x140 || screenY < 0x8 || screenY > 0xc0)
 			{
@@ -207,7 +207,7 @@ namespace Civilization1Remaster.Core.Game
 
 			ushort improvements = ObtainKnownTileImprovements(horizLoc, vertLoc);
 
-			if (MapRevealed != 0)
+			if (MapView.Revealed != 0)
 			{
 				improvements = ObtainTileImprovements(horizLoc, vertLoc);
 			}
@@ -221,31 +221,31 @@ namespace Civilization1Remaster.Core.Game
 
 			if (terrain != 0xa)
 			{
-				if (VgaMode == 0)
+				if (Screen.VgaMode == 0)
 				{
 					this.Owner.VideoCard.RenderImage(
-						SpriteScreenBox,
+						Screen.SpriteScreenBox,
 						0, 0x50, 16, 16,
-						ScreenBox,
+						Screen.Box,
 						(ushort)screenX, (ushort)screenY);
 				}
 				else
 				{
 					this.Owner.VideoCard.RenderImage(
-						PictureScreenBox,
+						Screen.PictureScreenBox,
 						0x100, 0x78, 16, 16,
-						ScreenBox,
+						Screen.Box,
 						(ushort)screenX, (ushort)screenY);
 				}
 			}
 
 			if ((improvements & 0x2) != 0 &&
 				terrain != 0xa &&
-				UnitsHidden == 0 &&
+				MapView.UnitsHidden == 0 &&
 				(improvements & 0x1) == 0)
 			{
 				this.Owner.Services.DrawPictureToScreen(
-					ScreenBox,
+					Screen.Box,
 					screenX, screenY,
 					SpritePicture(4));
 			}
@@ -263,7 +263,7 @@ namespace Civilization1Remaster.Core.Game
 
 			ushort ownerBits = ObtainTileOwnerBits(horizLoc, vertLoc);
 
-			if ((improvements & 0x1) != 0 && UnitsHidden == 0)
+			if ((improvements & 0x1) != 0 && MapView.UnitsHidden == 0)
 			{
 				DrawCityOnTile(horizLoc, vertLoc, screenX, screenY);
 			}
@@ -282,19 +282,19 @@ namespace Civilization1Remaster.Core.Game
 			sbyte vertLoc = this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.Vert);
 			sbyte kind = this.troops.TroopKind(participantIdx, troopIdx);
 
-			if (WorldMapView == 1)
+			if (MapView.WorldMapView == 1)
 			{
 				this.Processor.RegAcc.Value16 = (ushort)(troopIdx * UnitMemory.TroopStride);
 
-				this.Owner.Services.FloodBox(ScreenBox, (horizLoc * 4) + 1, (vertLoc * 4) + 1, 3, 3, (ushort)(kind == 0 ? 6 : 0));
-				this.Owner.Services.FloodBox(ScreenBox, horizLoc * 4, vertLoc * 4, 3, 3,
+				this.Owner.Services.FloodBox(Screen.Box, (horizLoc * 4) + 1, (vertLoc * 4) + 1, 3, 3, (ushort)(kind == 0 ? 6 : 0));
+				this.Owner.Services.FloodBox(Screen.Box, horizLoc * 4, vertLoc * 4, 3, 3,
 					PlayerColour(participantIdx));
 
 				return this.Processor.RegAcc.Value16;
 			}
 
-			short viewHoriz = (short)((this.Owner.Routing.TunePosition(horizLoc - (short)MapViewHoriz) << 4) + 0x50);
-			short viewVert = (short)((((byte)vertLoc - MapViewVert) << 4) + 8);
+			short viewHoriz = (short)((this.Owner.Routing.TunePosition(horizLoc - (short)MapView.Horiz) << 4) + 0x50);
+			short viewVert = (short)((((byte)vertLoc - MapView.Vert) << 4) + 8);
 			ushort drawn = 0;
 
 			if (viewHoriz >= 0x50 && viewHoriz < 0x140 && viewVert >= 8 && viewVert <= 0xc0 &&
@@ -306,7 +306,7 @@ namespace Civilization1Remaster.Core.Game
 
 				if (this.troops.Following(participantIdx, troopIdx) != -1)
 				{
-					this.Owner.Services.DrawPictureToScreen(ScreenBox, viewHoriz + 1, viewVert + 1,
+					this.Owner.Services.DrawPictureToScreen(Screen.Box, viewHoriz + 1, viewVert + 1,
 						SpritePicture(((participantIdx << 5) + kind + 0x40)));
 				}
 
@@ -325,7 +325,7 @@ namespace Civilization1Remaster.Core.Game
 		/// <inheritdoc/>
 		public void DrawHealthBar(int horizLoc, int vertLoc, int completeStrikeMarks, int strikeMarks)
 		{
-			ushort display = ScreenBox;
+			ushort display = Screen.Box;
 
 			// The unit image covers the map square without its left column and top row,
 			// the bar stays inside the unit image so it is erased together with the unit
@@ -350,12 +350,12 @@ namespace Civilization1Remaster.Core.Game
 			byte kind = this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind);
 			ushort markHue = (ushort)(participantIdx == 1 ? 9 : 15);
 
-			this.Owner.Services.DrawPictureToScreen(ScreenBox, horizLoc, vertLoc,
+			this.Owner.Services.DrawPictureToScreen(Screen.Box, horizLoc, vertLoc,
 				SpritePicture((kind + (participantIdx << 5) + 0x40)));
 
 			if ((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 8) != 0)
 			{
-				this.Owner.Services.DrawPictureToScreen(ScreenBox, horizLoc, vertLoc, SpritePicture(0x1d));
+				this.Owner.Services.DrawPictureToScreen(Screen.Box, horizLoc, vertLoc, SpritePicture(0x1d));
 			}
 			else if ((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 4) != 0)
 			{
@@ -398,9 +398,9 @@ namespace Civilization1Remaster.Core.Game
 
 			if ((this.troops.Pull(participantIdx, troopIdx, UnitMemory.Status) & 1) != 0)
 			{
-				this.Owner.VideoCard.SubstituteHue(ScreenBox, horizLoc, vertLoc, 16, 16, Hues.Magenta, Hues.LightGray);
+				this.Owner.VideoCard.SubstituteHue(Screen.Box, horizLoc, vertLoc, 16, 16, Hues.Magenta, Hues.LightGray);
 
-				this.Owner.VideoCard.SubstituteHue(ScreenBox, horizLoc, vertLoc, 16, 16, Hues.DarkGray, Hues.LightGray);
+				this.Owner.VideoCard.SubstituteHue(Screen.Box, horizLoc, vertLoc, 16, 16, Hues.DarkGray, Hues.LightGray);
 			}
 
 			{
@@ -425,21 +425,21 @@ namespace Civilization1Remaster.Core.Game
 
 			DrawMapTile(horizLoc, vertLoc);
 
-			if (UnitsHidden == 0)
+			if (MapView.UnitsHidden == 0)
 			{
 				ushort troopIdx = ObtainUnitAtTile(horizLoc, vertLoc);
 
 				if (troopIdx != 0xffff)
 				{
-					short ownerIdx = (short)UnitAtTilePlayer;
+					short ownerIdx = (short)MapView.UnitAtTilePlayer;
 					short personIdx = this.Owner.World.PersonParticipantIdx;
 
-					bool seen = MapRevealed != 0 || ownerIdx == personIdx ||
+					bool seen = MapView.Revealed != 0 || ownerIdx == personIdx ||
 						(this.troops.Pull(ownerIdx, troopIdx, UnitMemory.ShownToParticipants) & (1 << personIdx)) != 0;
 
 					if (seen && (ObtainTileImprovements(horizLoc, vertLoc) & 0x1) == 0)
 					{
-						RepaintUnitTile((short)UnitAtTilePlayer, (short)troopIdx);
+						RepaintUnitTile((short)MapView.UnitAtTilePlayer, (short)troopIdx);
 					}
 				}
 			}
@@ -566,8 +566,8 @@ namespace Civilization1Remaster.Core.Game
 
 				if (found != 0xffff)
 				{
-					FoundPlayer = participantIdx;
-					UnitAtTilePlayer = participantIdx;
+					Search.FoundPlayer = participantIdx;
+					MapView.UnitAtTilePlayer = participantIdx;
 				}
 				else
 				{
@@ -647,7 +647,7 @@ namespace Civilization1Remaster.Core.Game
 				AssignChartDot(horizLoc, vertLoc + 100, (ushort)(low | improvements));
 			}
 
-			if ((short)TurnPlayer == this.Owner.World.PersonParticipantIdx)
+			if ((short)Turn.Player == this.Owner.World.PersonParticipantIdx)
 			{
 				KeepKnownTileImprovements(horizLoc, vertLoc);
 			}
@@ -673,8 +673,8 @@ namespace Civilization1Remaster.Core.Game
 
 				if (town.ConditionMarker != 0xff && town.Place.X == horizLoc && town.Place.Y == vertLoc)
 				{
-					FoundPlayer = participantIdx;
-					UnitAtTilePlayer = participantIdx;
+					Search.FoundPlayer = participantIdx;
+					MapView.UnitAtTilePlayer = participantIdx;
 					found = (ushort)townIdx;
 					break;
 				}
@@ -757,7 +757,7 @@ namespace Civilization1Remaster.Core.Game
 			{
 				ushort ownerBits = ObtainTileOwnerBits(horizLoc, vertLoc);
 				this.Owner.Services.FloodBox(
-					ScreenBox,
+					Screen.Box,
 					horizLoc * 4, vertLoc * 4, 4, 4,
 					PlayerColour(ownerBits));
 				return ownerBits;
@@ -766,11 +766,11 @@ namespace Civilization1Remaster.Core.Game
 			ushort terrain = ObtainTerrainType(horizLoc, vertLoc);
 			if (terrain == 0xa)
 			{
-				this.Owner.Services.FloodBox(ScreenBox, horizLoc * 4, vertLoc * 4, 4, 4, Hues.Blue);
+				this.Owner.Services.FloodBox(Screen.Box, horizLoc * 4, vertLoc * 4, 4, 4, Hues.Blue);
 				return 0xa;
 			}
 
-			this.Owner.Services.FloodBox(ScreenBox, horizLoc * 4, vertLoc * 4, 4, 4, Hues.Green);
+			this.Owner.Services.FloodBox(Screen.Box, horizLoc * 4, vertLoc * 4, 4, 4, Hues.Green);
 			return 0x2;
 		}
 
@@ -801,14 +801,14 @@ namespace Civilization1Remaster.Core.Game
 		{
 			ushort mask = 0;
 
-			if (VgaMode == 0)
+			if (Screen.VgaMode == 0)
 			{
 				mask = MaskNeighbours(horizLoc, vertLoc, mask, 2, 0x8, terrainType => terrainType != 0xa);
 
 				this.Owner.VideoCard.RenderImage(
-					SpriteScreenBox,
+					Screen.SpriteScreenBox,
 					(ushort)(mask << 4), 0x40, 16, 16,
-					ScreenBox,
+					Screen.Box,
 					(ushort)screenX, (ushort)screenY);
 				return;
 			}
@@ -828,7 +828,7 @@ namespace Civilization1Remaster.Core.Game
 					: (short)(screenX + ((quad & 1) << 3));
 				short qy = quad >= 2 ? (short)(screenY + 8) : screenY;
 
-				this.Owner.Services.DrawPictureToScreen(ScreenBox, qx, qy, sprite);
+				this.Owner.Services.DrawPictureToScreen(Screen.Box, qx, qy, sprite);
 			}
 
 
@@ -846,9 +846,9 @@ namespace Civilization1Remaster.Core.Game
 			if (specialCoastX >= 0)
 			{
 				this.Owner.VideoCard.RenderImage(
-					PictureScreenBox,
+					Screen.PictureScreenBox,
 					(ushort)specialCoastX, 0x64, 16, 16,
-					ScreenBox,
+					Screen.Box,
 					(ushort)screenX, (ushort)screenY);
 			}
 
@@ -861,7 +861,7 @@ namespace Civilization1Remaster.Core.Game
 				if (ObtainTerrainType((short)adjX, adjY) == 0xb)
 				{
 					this.Owner.Services.DrawPictureToScreen(
-						ScreenBox,
+						Screen.Box,
 						screenX, screenY,
 						this.Processor.PullUInt16(this.Processor.SegData.Value16, (ushort)(((dir / 2) << 1) + 0xd2d4)));
 				}
@@ -887,38 +887,38 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 
-			if (VgaMode == 0 ||
+			if (Screen.VgaMode == 0 ||
 				(this.Owner.VideoCard.ObtainDot(2, horizLoc, vertLoc + 150) & 0x8) != 0)
 			{
 				mask = (ushort)(mask + 0x10);
 			}
 
 			this.Owner.Services.DrawPictureToScreen(
-				ScreenBox,
+				Screen.Box,
 				screenX, screenY,
 				this.Processor.PullUInt16(this.Processor.SegData.Value16, (ushort)((mask << 1) + 0x6dfe)));
 		}
 
 		private void DrawLandTerrainOverlay(int horizLoc, int vertLoc, short screenX, short screenY, ushort terrain)
 		{
-			if (VgaMode != 0)
+			if (Screen.VgaMode != 0)
 			{
 				ushort mask = 0;
 
 				mask = MaskNeighbours(horizLoc, vertLoc, mask, 2, 0x8, terrainType => terrainType == terrain);
 
 				this.Owner.Services.DrawPictureToScreen(
-					ScreenBox,
+					Screen.Box,
 					screenX, screenY,
 					this.Processor.PullUInt16(this.Processor.SegData.Value16, (ushort)((mask << 1) + (terrain << 5) + 0xb886)));
 
 				if (terrain == 0x2 && (((byte)(7 * horizLoc + 11 * vertLoc)) & 0x2) == 0)
 				{
 					this.Owner.Services.DrawPictureToScreen(
-						ScreenBox,
+						Screen.Box,
 						(short)(screenX + 4),
 						(short)(screenY + 4),
-						MiniSymbolPicture);
+						Icons.MiniSymbolPicture);
 				}
 			}
 			else
@@ -928,7 +928,7 @@ namespace Civilization1Remaster.Core.Game
 					: (ushort)((horizLoc + vertLoc) & 0x1);
 
 				this.Owner.Services.DrawPictureToScreen(
-					ScreenBox,
+					Screen.Box,
 					screenX, screenY,
 					this.Processor.PullUInt16(this.Processor.SegData.Value16, (ushort)((terrain << 5) + (variant << 1) + 0xb886)));
 			}
@@ -938,19 +938,19 @@ namespace Civilization1Remaster.Core.Game
 		{
 			if ((improvements & 0x40) != 0)
 			{
-				if (VgaMode != 0)
+				if (Screen.VgaMode != 0)
 				{
 					this.Owner.Services.DrawPictureToScreen(
-						ScreenBox,
+						Screen.Box,
 						screenX, screenY,
-						TileFortressPicture);
+						Icons.TileFortressPicture);
 				}
 				else
 				{
-					this.Owner.VideoCard.SubstituteHue(ScreenBox, screenX, screenY, 16, 16, Hues.Green, Hues.Black);
-					this.Owner.VideoCard.SubstituteHue(ScreenBox, screenX, screenY, 16, 16, Hues.LightGreen, Hues.White);
-					this.Owner.VideoCard.SubstituteHue(ScreenBox, screenX, screenY, 16, 16, Hues.LightBlue, Hues.DarkGray);
-					this.Owner.VideoCard.SubstituteHue(ScreenBox, screenX, screenY, 16, 16, Hues.LightCyan, Hues.Black);
+					this.Owner.VideoCard.SubstituteHue(Screen.Box, screenX, screenY, 16, 16, Hues.Green, Hues.Black);
+					this.Owner.VideoCard.SubstituteHue(Screen.Box, screenX, screenY, 16, 16, Hues.LightGreen, Hues.White);
+					this.Owner.VideoCard.SubstituteHue(Screen.Box, screenX, screenY, 16, 16, Hues.LightBlue, Hues.DarkGray);
+					this.Owner.VideoCard.SubstituteHue(Screen.Box, screenX, screenY, 16, 16, Hues.LightCyan, Hues.Black);
 				}
 			}
 
@@ -970,7 +970,7 @@ namespace Civilization1Remaster.Core.Game
 
 						ushort roadTable = ((improvements & 0x11) != 0 && (adjImp & 0x11) != 0) ? (ushort)0xb298 : (ushort)0xb278;
 						this.Owner.Services.DrawPictureToScreen(
-							ScreenBox,
+							Screen.Box,
 							screenX, screenY,
 							this.Processor.PullUInt16(this.Processor.SegData.Value16, (ushort)((dir << 1) + roadTable)));
 					}
@@ -980,16 +980,16 @@ namespace Civilization1Remaster.Core.Game
 				if (isolatedDotHue != 0xffff)
 				{
 					this.Owner.Services.FloodBox(
-						ScreenBox,
+						Screen.Box,
 						screenX + 7, screenY + 7, 2, 2,
 						isolatedDotHue);
 				}
 			}
 
-			if ((improvements & 0x4) != 0 && UnitsHidden == 0)
+			if ((improvements & 0x4) != 0 && MapView.UnitsHidden == 0)
 			{
 				this.Owner.Services.DrawPictureToScreen(
-					ScreenBox,
+					Screen.Box,
 					screenX, screenY,
 					SpritePicture(5));
 			}
@@ -997,7 +997,7 @@ namespace Civilization1Remaster.Core.Game
 			if (ContainsSpecialResource(horizLoc, vertLoc) != 0)
 			{
 				this.Owner.Services.DrawPictureToScreen(
-					ScreenBox,
+					Screen.Box,
 					screenX, screenY,
 					SpritePicture((terrain + 0x10)));
 			}
@@ -1005,7 +1005,7 @@ namespace Civilization1Remaster.Core.Game
 			if (ContainsHut(terrain, horizLoc, vertLoc) != 0)
 			{
 				this.Owner.Services.DrawPictureToScreen(
-					ScreenBox,
+					Screen.Box,
 					screenX, screenY,
 					SpritePicture(0x1f));
 			}
@@ -1013,12 +1013,12 @@ namespace Civilization1Remaster.Core.Game
 			if ((improvements & 0x20) != 0)
 			{
 				this.Owner.Services.DrawPictureToScreen(
-					ScreenBox,
+					Screen.Box,
 					screenX, screenY,
 					SpritePicture(0x1e));
 			}
 
-			if (MapRevealed == 0)
+			if (MapView.Revealed == 0)
 			{
 				ushort personBit = (ushort)(1 << (this.Owner.World.PersonParticipantIdx & 0xff));
 
@@ -1031,7 +1031,7 @@ namespace Civilization1Remaster.Core.Game
 					if (((ushort)(short)this.Owner.World.ChartSight[adjX, adjY] & personBit) == 0)
 					{
 						this.Owner.Services.DrawPictureToScreen(
-							ScreenBox,
+							Screen.Box,
 							screenX, screenY,
 							this.Processor.PullUInt16(this.Processor.SegData.Value16, (ushort)(((dir / 2) << 1) + 0x7eec)));
 					}
@@ -1046,7 +1046,7 @@ namespace Civilization1Remaster.Core.Game
 			City town = this.Owner.World.Towns[cityIdx];
 			if (town.ParticipantIdx != this.Owner.World.PersonParticipantIdx &&
 				town.ShownExtent == 0 &&
-				MapRevealed == 0)
+				MapView.Revealed == 0)
 			{
 				return;
 			}
@@ -1065,22 +1065,22 @@ namespace Civilization1Remaster.Core.Game
 			short innerY = (short)(screenY + 2);
 
 			this.Owner.Services.FloodBox(
-				ScreenBox,
+				Screen.Box,
 				innerX, innerY, 12, 12,
 				PlayerColourAt(ownerWordOffset));
 
 			this.Owner.Services.DrawPictureToScreen(
-				ScreenBox,
+				Screen.Box,
 				(short)(screenX + 1),
 				(short)(screenY + 1),
 				SpritePicture(0x1c));
 
 			this.Owner.VideoCard.SubstituteHue(
-				ScreenBox,
+				Screen.Box,
 				innerX, innerY, 12, 12, Hues.Magenta,
 				(byte)this.Processor.PullUInt16(this.Processor.SegData.Value16, (ushort)(ownerWordOffset + 0x1956)));
 
-			short displayedSize = (town.ParticipantIdx == this.Owner.World.PersonParticipantIdx || MapRevealed != 0)
+			short displayedSize = (town.ParticipantIdx == this.Owner.World.PersonParticipantIdx || MapView.Revealed != 0)
 				? (short)town.TrueExtent
 				: (short)town.ShownExtent;
 
@@ -1090,9 +1090,9 @@ namespace Civilization1Remaster.Core.Game
 			if ((town.ConditionMarker & 0x1) != 0)
 			{
 				this.Owner.Services.DrawPictureToScreen(
-					ScreenBox,
+					Screen.Box,
 					screenX + 5, innerY,
-					UnhappyCitizenPicture);
+					Icons.UnhappyCitizenPicture);
 			}
 			else
 			{
@@ -1111,18 +1111,18 @@ namespace Civilization1Remaster.Core.Game
 			if (town.Has(CityStructure.CityWalls))
 			{
 				this.Owner.Services.DrawPictureToScreen(
-					ScreenBox,
+					Screen.Box,
 					screenX + 1, screenY + 1,
 					SpritePicture(0x1d));
 			}
 
-			ushort labelIdx = CityLabelCount;
+			ushort labelIdx = MapView.CityLabelCount;
 			if ((short)labelIdx < 0x20)
 			{
 				ushort slot = (ushort)(labelIdx << 1);
 				this.Processor.EmitUInt16(this.Processor.SegData.Value16, (ushort)(slot + CityLabelHorizAddress), (ushort)screenX);
 				this.Processor.EmitUInt16(this.Processor.SegData.Value16, (ushort)(slot + CityLabelVertAddress), (ushort)screenY);
-				CityLabelCount = (ushort)(labelIdx + 1);
+				MapView.CityLabelCount = (ushort)(labelIdx + 1);
 				this.Processor.EmitUInt16(this.Processor.SegData.Value16, (ushort)(slot + CityLabelTownAddress), cityIdx);
 			}
 		}

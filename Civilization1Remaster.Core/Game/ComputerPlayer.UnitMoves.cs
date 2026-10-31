@@ -180,7 +180,7 @@ namespace Civilization1Remaster.Core.Game
 
 			if (this.look.TileUnit != 0xffff)
 			{
-				ushort owner = FoundPlayer;
+				ushort owner = Search.FoundPlayer;
 
 				if (this.troops.Pull(owner, this.look.TileUnit, UnitMemory.Kind) == UnitKindTable.Diplomat)
 				{

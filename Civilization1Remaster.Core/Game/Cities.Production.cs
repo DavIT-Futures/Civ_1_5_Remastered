@@ -36,13 +36,13 @@ namespace Civilization1Remaster.Core.Game
 		private ProductionStep ProduceInCity(short townIdx)
 		{
 			City town = this.Owner.World.Towns[townIdx];
-			short owner = (short)CityOwner;
+			short owner = (short)CityTurn.Owner;
 
 			// The food and the shields of the turn
-			ushort surplus = (ushort)(CityFood - ((ushort)((short)this.round.SettlerFood * (short)CitySettlers)) - (ushort)(town.TrueExtent * 2));
+			ushort surplus = (ushort)(CityTurn.Food - ((ushort)((short)this.round.SettlerFood * (short)CityTurn.Settlers)) - (ushort)(town.TrueExtent * 2));
 			town.GrainTally += (short)surplus;
 
-			this.round.Value = (ushort)(CityShields - CityUnitUpkeep);
+			this.round.Value = (ushort)(CityTurn.Shields - CityTurn.UnitUpkeep);
 
 			if ((town.ConditionMarker & 1) != 0)
 				this.round.Value = 0;
@@ -74,7 +74,7 @@ namespace Civilization1Remaster.Core.Game
 			// The first unit of its kind goes into the replay
 			if ((this.Owner.World.ScienceLeadingFoundVia[town.PresentMakingIdx] & 8) == 0)
 			{
-				this.Owner.UnitOps.AttachReplayContent(6, (byte)CityOwner, (byte)town.PresentMakingIdx);
+				this.Owner.UnitOps.AttachReplayContent(6, (byte)CityTurn.Owner, (byte)town.PresentMakingIdx);
 				this.Owner.World.ScienceLeadingFoundVia[town.PresentMakingIdx] |= 8;
 			}
 
@@ -104,7 +104,7 @@ namespace Civilization1Remaster.Core.Game
 
 			this.Owner.Advisors.FinalizeProduction(townIdx, (ushort)(short)town.Place.X, (ushort)(short)town.Place.Y);
 			this.round.NewUnit = this.Owner.UnitOps.CreateUnit(owner, town.PresentMakingIdx, town.Place.X, town.Place.Y);
-			this.Owner.NewGameWizard.DestroyCivilization((short)CityOwner, 0);
+			this.Owner.NewGameWizard.DestroyCivilization((short)CityTurn.Owner, 0);
 			this.Owner.Startup.ShowMouseCursor();
 
 			return ProductionStep.CityLost;
@@ -120,7 +120,7 @@ namespace Civilization1Remaster.Core.Game
 		private void FinishUnitOfCity(short townIdx)
 		{
 			City town = this.Owner.World.Towns[townIdx];
-			short owner = (short)CityOwner;
+			short owner = (short)CityTurn.Owner;
 			short person = this.Owner.World.PersonParticipantIdx;
 
 			if (owner == person || this.round.NewUnit == 0xffff)
@@ -131,13 +131,13 @@ namespace Civilization1Remaster.Core.Game
 				if (this.round.NewUnit == 0xffff || (town.PresentMakingIdx != 0 && town.PresentMakingIdx < 0x1a))
 					return;
 
-				CityAgain = 1;
+				CityTurn.Again = 1;
 				EmptyMessage()
 					.City(townIdx)
 					.Text(" builds ");
 				this.Owner.Words.Append(((ushort)(town.PresentMakingIdx * UnitKindTable.Stride + UnitKindTable.Origin)));
 				this.Owner.Words.Append(".\n");
-				DialogStyle = 3;
+				Screen.DialogStyle = 3;
 				this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 80, 80);
 				return;
 			}
@@ -189,7 +189,7 @@ namespace Civilization1Remaster.Core.Game
 		private void SendDiplomat(short townIdx)
 		{
 			City town = this.Owner.World.Towns[townIdx];
-			short owner = (short)CityOwner;
+			short owner = (short)CityTurn.Owner;
 
 			this.round.Found = 0xffff;
 			this.round.Best = 0x7fff;
@@ -205,13 +205,13 @@ namespace Civilization1Remaster.Core.Game
 
 				this.round.Value = this.Owner.Helpers.FindNearestUnit(owner, (short)this.round.NewUnit, other.Place.X, other.Place.Y);
 
-				FoundDistance = (ushort)this.Owner.Libc.AbsoluteValue((short)((ushort)(FoundDistance - 3)));
+				Search.FoundDistance = (ushort)this.Owner.Libc.AbsoluteValue((short)((ushort)(Search.FoundDistance - 3)));
 
 				if ((other.ConditionMarker & 0x20) != 0)
-					FoundDistance = 3;
+					Search.FoundDistance = 3;
 
 				short best = (short)this.round.Best;
-				short distance = (short)FoundDistance;
+				short distance = (short)Search.FoundDistance;
 
 				if (best < distance)
 					continue;
@@ -235,10 +235,10 @@ namespace Civilization1Remaster.Core.Game
 				if (this.Owner.MapOps.ObtainContinentID(other.Place.X, other.Place.Y) != this.round.Continent)
 					continue;
 
-				if (this.round.Best == FoundDistance)
+				if (this.round.Best == Search.FoundDistance)
 					this.round.Selected = 1;
 				else
-					this.round.Best = FoundDistance;
+					this.round.Best = Search.FoundDistance;
 
 				this.round.Found = this.round.Value;
 				this.round.Target = this.round.OtherCity;
@@ -284,7 +284,7 @@ namespace Civilization1Remaster.Core.Game
 		private bool CompleteImprovement(short townIdx)
 		{
 			City town = this.Owner.World.Towns[townIdx];
-			short owner = (short)CityOwner;
+			short owner = (short)CityTurn.Owner;
 
 			if ((short)((short)BuildingWordAt((ushort)(-town.PresentMakingIdx * 0x1e), BuildingTable.Price) *
 				(short)this.round.CostFactor) > town.MaterialsTally)
@@ -306,7 +306,7 @@ namespace Civilization1Remaster.Core.Game
 				else
 				{
 					this.Owner.World.MarvelTownIdx[built - 24] = townIdx;
-					this.Owner.UnitOps.AttachReplayContent(10, (byte)CityOwner, (byte)(built - 0x18));
+					this.Owner.UnitOps.AttachReplayContent(10, (byte)CityTurn.Owner, (byte)(built - 0x18));
 				}
 			}
 			else if (TestImprovement(townIdx, built))
@@ -360,7 +360,7 @@ namespace Civilization1Remaster.Core.Game
 			// The announcement (a wonder of a computer player shows its city to all)
 			if (humanPlayed)
 			{
-				CityAgain = 1;
+				CityTurn.Again = 1;
 			}
 			else
 			{
@@ -412,7 +412,7 @@ namespace Civilization1Remaster.Core.Game
 		private void BuildSpaceshipPart(short townIdx)
 		{
 			City town = this.Owner.World.Towns[townIdx];
-			short owner = (short)CityOwner;
+			short owner = (short)CityTurn.Owner;
 			short person = this.Owner.World.PersonParticipantIdx;
 			short part = (short)this.round.Value;
 
@@ -505,7 +505,7 @@ namespace Civilization1Remaster.Core.Game
 		private void ApplyImprovement(short townIdx)
 		{
 			City town = this.Owner.World.Towns[townIdx];
-			short owner = (short)CityOwner;
+			short owner = (short)CityTurn.Owner;
 			short person = this.Owner.World.PersonParticipantIdx;
 			short built = (short)this.round.Value;
 
@@ -547,7 +547,7 @@ namespace Civilization1Remaster.Core.Game
 					this.Owner.Words.Append(" capital\nmoved to ");
 					this.Owner.Conquest.ObtainCityLabel(townIdx);
 					this.Owner.Words.Append(".\n");
-					DialogStyle = 5;
+					Screen.DialogStyle = 5;
 					this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 80, 80);
 
 					this.Owner.World.Participants[owner].HorizBegin = (short)town.Place.X;
@@ -594,7 +594,7 @@ namespace Civilization1Remaster.Core.Game
 		private void AdviseHumanProduction(short townIdx)
 		{
 			City town = this.Owner.World.Towns[townIdx];
-			short owner = (short)CityOwner;
+			short owner = (short)CityTurn.Owner;
 
 			if (owner != this.Owner.World.PersonParticipantIdx)
 				return;
@@ -615,7 +615,7 @@ namespace Civilization1Remaster.Core.Game
 				return;
 			}
 
-			CityAgain = 0;
+			CityTurn.Again = 0;
 
 			StopMakingUnit(town, owner);
 			town.PresentMakingIdx = (sbyte)(byte)this.round.Value;
@@ -634,7 +634,7 @@ namespace Civilization1Remaster.Core.Game
 		private void BuyForComputerCity(short townIdx)
 		{
 			City town = this.Owner.World.Towns[townIdx];
-			short owner = (short)CityOwner;
+			short owner = (short)CityTurn.Owner;
 			Player player = this.Owner.World.Participants[owner];
 
 			if ((town.ConditionMarker & 0x10) != 0)

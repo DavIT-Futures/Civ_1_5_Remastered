@@ -188,7 +188,7 @@ namespace Civilization1Remaster.Core.Game
 
 				// Units of another player, or own settlers there
 				if (this.look.TileOwner != 0xffff &&
-					((ushort)participantIdx != FoundPlayer ||
+					((ushort)participantIdx != Search.FoundPlayer ||
 						this.Owner.UnitOps.CountUnitsOfTypeInStack(participantIdx, (short)this.look.TileOwner, 0) != 0))
 				{
 					continue;

@@ -51,7 +51,7 @@ namespace Civilization1Remaster.Core.UI
 			LoadPalaceGraphics(0);
 			DrawingBox.DisplayIdx = 0x0;
 
-			this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
+			this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 200, Hues.Black);
 			this.Owner.Helpers.HaltHueCycling();
 
 			ushort chiefVisuals = (ushort)this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx].ChiefVisuals;
@@ -60,26 +60,26 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.ImageToolkit.LoadPictureOrColors(-1, 0, 0, PalaceInitialScreenPictureAddress, 1);
 
 			this.Owner.VideoCard.RenderImage(
-				BackScreenBox,
+				Screen.BackScreenBox,
 				0, 0, 0x140, 0xc8,
-				ScreenBox,
+				Screen.Box,
 				0, 0);
 
 			this.Owner.Dialogs.ShowMenu(announcement, 20, 16, 1);
 
 			this.Owner.VideoCard.RenderImage(
-				BackScreenBox,
+				Screen.BackScreenBox,
 				0x14, 0x10, 0x118, 0x2c,
-				ScreenBox,
+				Screen.Box,
 				0x14, 0x10);
 
 			this.Owner.VideoCard.RenderImage(
-				ScreenBox,
+				Screen.Box,
 				0, 0, 0x140, 0xc8,
-				BackScreenBox,
+				Screen.BackScreenBox,
 				0, 0);
 
-			DialogNeedsRedraw = 1;
+			Screen.DialogNeedsRedraw = 1;
 			this.Owner.Dialogs.ShowMenu(PalaceUpgradeOptionsPromptAddress, 40, 16, 1);
 
 			ushort hasOptions = 0;
@@ -119,9 +119,9 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.Services.PerformSound(1, 0);
 			this.Owner.Startup.AskForDisk(0, 1);
 
-			if (VgaMode == 0)
+			if (Screen.VgaMode == 0)
 			{
-				this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
+				this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 200, Hues.Black);
 			}
 
 			this.Owner.TurnHooks.RepaintMainScreen();
@@ -140,7 +140,7 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.Startup.AskForDisk(2, 1);
 
 			DrawingBox.DisplayIdx = 1;
-			PalaceFirstPicture = 0xffff;
+			Palace.FirstPicture = 0xffff;
 
 			ushort built = 0;
 
@@ -164,18 +164,18 @@ namespace Civilization1Remaster.Core.UI
 
 			this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, marker != 0 ? PalaceScreenBackgroundPictureAddress : PalaceDefaultBackgroundPictureAddress, 0);
 
-			if ((short)PalaceGardenBackground > 0)
+			if ((short)Palace.GardenBackground > 0)
 			{
-				string gardenPicture = $"cbacks{(char)(PalaceGardenBackground + '0')}.pic";
+				string gardenPicture = $"cbacks{(char)(Palace.GardenBackground + '0')}.pic";
 				this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0x87, gardenPicture, 0);
 			}
 
 			ushort horizLoc = 0x10;
 
-			if (PalaceStyleShift == 0xffff)
+			if (Palace.StyleShift == 0xffff)
 				horizLoc -= 0x18;
 
-			if (PalaceLayout == 1)
+			if (Palace.Layout == 1)
 				horizLoc++;
 
 			const ushort vertLoc = 0x24;
@@ -214,15 +214,15 @@ namespace Civilization1Remaster.Core.UI
 					case 0:
 						// A left end with its wing
 						if (section == 3)
-							DrawPalacePart(part, section, (ushort)(horizLoc + PalaceWingShift), vertLoc, 1);
+							DrawPalacePart(part, section, (ushort)(horizLoc + Palace.WingShift), vertLoc, 1);
 
 						if (PalaceStyle(section) != 1 || section == 3)
 							DrawPalacePart(part, section, horizLoc, vertLoc, 0);
 
-						horizLoc += PalaceWingShift;
+						horizLoc += Palace.WingShift;
 
 						if (section == 3)
-							horizLoc += PalacePartWidth;
+							horizLoc += Palace.PartWidth;
 
 						lastLeftEnd = section;
 						break;
@@ -232,32 +232,32 @@ namespace Civilization1Remaster.Core.UI
 						ushort leftEnd = lastLeftEnd;
 
 						if ((ushort)(leftEnd + 1) == section && PalaceStyle(section) == PalaceStyle(leftEnd))
-							DrawPalacePart(part, leftEnd, (ushort)(horizLoc + PalacePartWidth - 17), vertLoc - 2, 0);
+							DrawPalacePart(part, leftEnd, (ushort)(horizLoc + Palace.PartWidth - 17), vertLoc - 2, 0);
 
 						ushort rightEnd = builtRightmost;
 
 						if ((ushort)(rightEnd - 1) == section && PalaceStyle(section) == PalaceStyle(rightEnd))
-							DrawPalacePart(part, rightEnd, (ushort)(horizLoc + PalacePartWidth - 17), vertLoc - 2, 1);
+							DrawPalacePart(part, rightEnd, (ushort)(horizLoc + Palace.PartWidth - 17), vertLoc - 2, 1);
 
 						DrawPalacePart(part, section, horizLoc, vertLoc, 0);
 
-						horizLoc += PalacePartWidth;
+						horizLoc += Palace.PartWidth;
 
 						DrawPalacePart(part, section, horizLoc, vertLoc, 1);
 
-						horizLoc += PalacePartWidth;
+						horizLoc += Palace.PartWidth;
 						break;
 
 					case 2:
 						// The middle
-						if (PalaceLayout == 1)
+						if (Palace.Layout == 1)
 							horizLoc--;
 
 						DrawPalacePart(part, section, (ushort)(horizLoc - 2), vertLoc, 0);
 
-						horizLoc += PalaceLeftWingWidth;
+						horizLoc += Palace.LeftWingWidth;
 
-						if (PalaceLayout == 1)
+						if (Palace.Layout == 1)
 							horizLoc--;
 						break;
 
@@ -267,7 +267,7 @@ namespace Civilization1Remaster.Core.UI
 						{
 							DrawPalacePart(part, section, horizLoc, vertLoc, 0);
 
-							horizLoc += PalacePartWidth;
+							horizLoc += Palace.PartWidth;
 						}
 
 						ushort level = PalacePart((ushort)(section - 1));
@@ -281,7 +281,7 @@ namespace Civilization1Remaster.Core.UI
 							DrawPalacePart(part, section, (ushort)(horizLoc - (PalaceStyle(section) == 1 ? 3 : 2)), vertLoc, 1);
 						}
 
-						horizLoc += PalaceRightWingWidth;
+						horizLoc += Palace.RightWingWidth;
 						break;
 				}
 			}
@@ -295,35 +295,35 @@ namespace Civilization1Remaster.Core.UI
 					(ushort)(PalacePart((ushort)(lastLeft + 1)) - PalacePart(lastLeft) + vertLoc), 0);
 			}
 
-			this.Owner.Helpers.ReleaseResource(PalaceFirstPicture, PalaceGraphicsResourceAddress);
+			this.Owner.Helpers.ReleaseResource(Palace.FirstPicture, PalaceGraphicsResourceAddress);
 
-			if (PalaceLeftBushes != 0 || PalaceRightBushes != 0)
+			if (Palace.LeftBushes != 0 || Palace.RightBushes != 0)
 			{
 				ushort leftBush = 0, rightBush = 0;
 
-				if (PalaceLeftBushes != 0)
+				if (Palace.LeftBushes != 0)
 				{
 					leftBush = DrawPalaceBush(PalaceLeftBushesAddress, 0x2e, 0);
 				}
 
-				if (PalaceRightBushes != 0)
+				if (Palace.RightBushes != 0)
 				{
 					rightBush = DrawPalaceBush(PalaceRightBushesAddress, 0x2f, 184);
 				}
 
-				this.Owner.Helpers.ReleaseResource(PalaceLeftBushes != 0 ? leftBush : rightBush, 0);
+				this.Owner.Helpers.ReleaseResource(Palace.LeftBushes != 0 ? leftBush : rightBush, 0);
 			}
 
 			if (marker != 0)
 			{
 				DrawingBox.DisplayIdx = 0;
 
-				if (VgaMode != 0 && (short)FirstMissingDisk > 7)
+				if (Screen.VgaMode != 0 && (short)Files.FirstMissingDisk > 7)
 				{
 					this.Owner.Services.FillColors(5, 0, 0, 0);
 				}
 
-				this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
+				this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 200, Hues.Black);
 
 				this.Owner.ImageToolkit.LoadPictureOrColors(-1, 0, 0, PalacePaletteAddress, 1);
 
@@ -405,7 +405,7 @@ namespace Civilization1Remaster.Core.UI
 			sbyte height = (sbyte)this.Processor.PullGlobalByte((ushort)((0xf * level) + heightIdx + PalacePartHeightTableAddress));
 			ushort vertLoc = (ushort)(height + vertShift + level);
 
-			this.Owner.Services.DrawPictureToScreen(ScreenBox,
+			this.Owner.Services.DrawPictureToScreen(Screen.Box,
 				(short)horizLoc,
 				(short)vertLoc,
 				PalacePicture(section, marker));
@@ -485,9 +485,9 @@ namespace Civilization1Remaster.Core.UI
 							SetPalacePicture(section, partIdx, picHandle);
 						}
 
-						if (style != -1 && PalaceFirstPicture == 0xffff)
+						if (style != -1 && Palace.FirstPicture == 0xffff)
 						{
-							PalaceFirstPicture = PalacePicture(section, partIdx);
+							Palace.FirstPicture = PalacePicture(section, partIdx);
 						}
 					}
 				}
@@ -626,9 +626,9 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.Startup.HideMouseCursor();
 
 			this.Owner.VideoCard.RenderImage(
-				BackScreenBox,
+				Screen.BackScreenBox,
 				0, 0, 0x140, 0xc8,
-				ScreenBox,
+				Screen.Box,
 				0, 0);
 
 			ushort nextLevel = (ushort)this.Owner.Helpers.ClampValue(
@@ -670,19 +670,19 @@ namespace Civilization1Remaster.Core.UI
 				SetPalaceSectionStyleMarkers(styleIdx, marker0, marker1);
 			}
 
-			PalaceFirstPicture = 0xffff;
+			Palace.FirstPicture = 0xffff;
 
 			LoadPalaceCastle((ushort)(1 << (byte)nextLevel), 0);
 
 			short boxHeight = 0x5c;
-			this.Owner.Services.FloodBox(ScreenBox, 16, 2, 288, 102, Hues.LightBlue);
+			this.Owner.Services.FloodBox(Screen.Box, 16, 2, 288, 102, Hues.LightBlue);
 			this.Owner.TextPainter.DrawCenteredTextToScreen0(PalaceStyleChoiceHeaderAddress, 160, 3, Hues.White);
 
 			for (ushort optIdx = 1; (short)optIdx <= 3; optIdx++)
 			{
 				short drawX = (short)(0x64 * (short)optIdx - 0x50);
-				ushort boxColor = VgaMode == 0 ? (ushort)3 : (ushort)1;
-				this.Owner.Services.FloodBox(ScreenBox, drawX, 10, 80, boxHeight, boxColor);
+				ushort boxColor = Screen.VgaMode == 0 ? (ushort)3 : (ushort)1;
+				this.Owner.Services.FloodBox(Screen.Box, drawX, 10, 80, boxHeight, boxColor);
 
 				drawX = (short)(drawX + 0x10);
 				ushort look = 2;
@@ -706,14 +706,14 @@ namespace Civilization1Remaster.Core.UI
 						if (selectedSection != 1)
 						{
 							this.Owner.Services.DrawPictureToScreen(
-								ScreenBox,
-								drawX + (short)PalaceWingShift,
+								Screen.Box,
+								drawX + (short)Palace.WingShift,
 								this.Processor.PullInt8(dataSeg, (ushort)(0xf * nextLevel + 5 * optIdx + PalacePartHeightTable2Address)) + 1,
 								PalacePicture(optIdx, 1));
 						}
 
 						this.Owner.Services.DrawPictureToScreen(
-							ScreenBox,
+							Screen.Box,
 							drawX,
 							this.Processor.PullInt8(dataSeg, (ushort)(0xf * nextLevel + 5 * optIdx + PalacePartHeightTable4Address)) + 1,
 							PalacePicture(optIdx, 0));
@@ -721,16 +721,16 @@ namespace Civilization1Remaster.Core.UI
 
 					case 1:
 						this.Owner.Services.DrawPictureToScreen(
-							ScreenBox,
+							Screen.Box,
 							drawX,
 							this.Processor.PullInt8(dataSeg, (ushort)(5 * optIdx + 0xf * nextLevel + PalacePartHeightTable2Address)) + 1,
 							PalacePicture(optIdx, 0));
 
-						drawX = (short)(drawX + (short)PalacePartWidth);
+						drawX = (short)(drawX + (short)Palace.PartWidth);
 						if (this.Owner.TurnHooks.ClassicPalaceStyleGlitch)
 						{
 							this.Owner.Services.DrawPictureToScreen(
-								ScreenBox,
+								Screen.Box,
 								drawX,
 								(short)(this.Processor.PullInt8(dataSeg, (ushort)(selWordOff + PalacePartHeightTable3Address)) + 1),
 								this.Processor.PullUInt16(dataSeg, (ushort)(6 + PalacePicturesTableAddress + 2)));
@@ -738,7 +738,7 @@ namespace Civilization1Remaster.Core.UI
 						else
 						{
 							this.Owner.Services.DrawPictureToScreen(
-								ScreenBox,
+								Screen.Box,
 								drawX,
 								(short)(this.Processor.PullInt8(dataSeg, (ushort)(0xf * nextLevel + 5 * optIdx + PalacePartHeightTable3Address)) + 1),
 								PalacePicture(optIdx, 1));
@@ -747,7 +747,7 @@ namespace Civilization1Remaster.Core.UI
 
 					case 2:
 						this.Owner.Services.DrawPictureToScreen(
-							ScreenBox,
+							Screen.Box,
 							drawX,
 							(short)(this.Processor.PullInt8(dataSeg, (ushort)(0xf * nextLevel + 5 * optIdx + PalacePartHeightTable1Address)) + 1),
 							PalacePicture(optIdx, 0));
@@ -757,16 +757,16 @@ namespace Civilization1Remaster.Core.UI
 						if (selectedSection != 7)
 						{
 							this.Owner.Services.DrawPictureToScreen(
-								ScreenBox,
+								Screen.Box,
 								drawX,
 								this.Processor.PullInt8(dataSeg, (ushort)(0xf * nextLevel + 5 * optIdx + PalacePartHeightTable2Address)) + 1,
 								PalacePicture(optIdx, 0));
-							drawX = (short)(drawX + (short)PalacePartWidth);
+							drawX = (short)(drawX + (short)Palace.PartWidth);
 						}
 
 						short towerShift = optIdx == 2 ? (short)3 : (short)2;
 						this.Owner.Services.DrawPictureToScreen(
-							ScreenBox,
+							Screen.Box,
 							(short)(drawX - towerShift),
 							(short)(this.Processor.PullInt8(dataSeg, (ushort)(0xf * nextLevel + 5 * optIdx + PalacePartHeightTable5Address)) + 1),
 							PalacePicture(optIdx, 1));
@@ -778,7 +778,7 @@ namespace Civilization1Remaster.Core.UI
 				this.Owner.TextPainter.DrawTextWithShadow(this.Owner.Words.ToString(), (short)optIdx * 100 - 44, 12, Hues.White);
 			}
 
-			this.Owner.Helpers.ReleaseResource(PalaceFirstPicture, PalaceCastleResourceAddress);
+			this.Owner.Helpers.ReleaseResource(Palace.FirstPicture, PalaceCastleResourceAddress);
 			this.Owner.TurnLogic.WaitForKey();
 			this.Owner.Startup.ShowMouseCursor();
 
@@ -808,10 +808,10 @@ namespace Civilization1Remaster.Core.UI
 			DrawingBox.DisplayIdx = 0x1;
 			LoadPalaceGraphics(0);
 
-			ushort screen0Ptr = ScreenBox;
+			ushort screen0Ptr = Screen.Box;
 			this.Processor.EmitUInt16(dataSeg, screen0Ptr, 0x0);
 			this.Owner.VideoCard.RenderImage(
-				BackScreenBox,
+				Screen.BackScreenBox,
 				0, 0, 0x140, 0xc8,
 				screen0Ptr,
 				0, 0);
@@ -839,7 +839,7 @@ namespace Civilization1Remaster.Core.UI
 
 			ushort picture = this.Owner.ImageToolkit.LoadIcon(pictureName);
 
-			this.Owner.Services.DrawPictureToScreen(ScreenBox, horizLoc,
+			this.Owner.Services.DrawPictureToScreen(Screen.Box, horizLoc,
 				(short)this.Processor.PullGlobalWord(sizeAddr) <= 1 ? 105 : 94, picture);
 
 			return picture;

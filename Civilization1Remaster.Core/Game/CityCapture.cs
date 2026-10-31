@@ -241,7 +241,7 @@ namespace Civilization1Remaster.Core.Game
 
 						do
 						{
-							if (KingAnswer == 0xffff)
+							if (King.Answer == 0xffff)
 							{
 								choice = this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 80, 32);
 							}
@@ -265,7 +265,7 @@ namespace Civilization1Remaster.Core.Game
 							this.Owner.Words.Append(TechnologyText(bestTech));
 							this.Owner.Words.Append(".\n");
 
-							if (KingAnswer == 0xffff)
+							if (King.Answer == 0xffff)
 							{
 								this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 80, 80);
 							}
@@ -451,7 +451,7 @@ namespace Civilization1Remaster.Core.Game
 
 			sbyte kind = (sbyte)this.Troops.PullAt(((ushort)(0x600 * participantIdx) + troop), UnitMemory.Kind);
 
-			if ((short)UnitKindWord(kind, UnitKindTable.AssaultPower) > 2 || NoConquestAnimation != 0)
+			if ((short)UnitKindWord(kind, UnitKindTable.AssaultPower) > 2 || Turn.NoConquestAnimation != 0)
 				return false;
 
 			this.Owner.Advisors.FinalizeProduction(townIdx, horizLoc, vertLoc);
@@ -543,7 +543,7 @@ namespace Civilization1Remaster.Core.Game
 			if ((known[participantIdx] & 0x40) == 0 && (known[formerIdx] & 0x40) == 0)
 				return;
 
-			DialogStyle = 0x0;
+			Screen.DialogStyle = 0x0;
 
 			Message("Spies report:\n")
 				.Text(CivilizationPlural((ushort)participantIdx))

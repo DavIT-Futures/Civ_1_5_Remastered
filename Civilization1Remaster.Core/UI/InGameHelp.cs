@@ -34,26 +34,26 @@ namespace Civilization1Remaster.Core.UI
 				this.Owner.Startup.HideMouseCursor();
 
 				this.Owner.VideoCard.RenderImage(
-					ScreenBox,
+					Screen.Box,
 					0, 0, 0x140, 0xc8,
-					BackScreenBox,
+					Screen.BackScreenBox,
 					0, 0);
 
-				this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Green);
+				this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 200, Hues.Green);
 				this.Owner.TextPainter.DrawCenteredTextToScreen0(topic, 160, 192, Hues.Black);
 				this.Owner.BlockText.DrawTextChunk(32, 32, 32, 15);
 				this.Owner.Conquest.WaitForKeyPressOrMouseClick();
 
 				this.Owner.VideoCard.RenderImage(
-					BackScreenBox,
+					Screen.BackScreenBox,
 					0, 0, 0x140, 0xc8,
-					ScreenBox,
+					Screen.Box,
 					0, 0);
 
 				this.Owner.Startup.ShowMouseCursor();
 			}
 
-			MenuHelpTopic = 0x0;
+			Menu.HelpTopic = 0x0;
 		}
 
 		/// <inheritdoc/>
@@ -116,12 +116,12 @@ namespace Civilization1Remaster.Core.UI
 
 				this.Owner.Startup.HideMouseCursor();
 
-				this.Owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8,
-					BackScreenBox, 0, 0);
+				this.Owner.VideoCard.RenderImage(Screen.Box, 0, 0, 0x140, 0xc8,
+					Screen.BackScreenBox, 0, 0);
 
 				short height = (short)((6 * lineTally) + 10);
 
-				this.Owner.Services.FloodBox(ScreenBox, 56, 16, 208, height, Hues.Green);
+				this.Owner.Services.FloodBox(Screen.Box, 56, 16, 208, height, Hues.Green);
 
 				this.Owner.Dialogs.DrawBox(56, 16, 208, height, Hues.LightGreen);
 
@@ -135,8 +135,8 @@ namespace Civilization1Remaster.Core.UI
 
 				this.Owner.Conquest.WaitForKeyPressOrMouseClick();
 
-				this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8,
-					ScreenBox, 0, 0);
+				this.Owner.VideoCard.RenderImage(Screen.BackScreenBox, 0, 0, 0x140, 0xc8,
+					Screen.Box, 0, 0);
 
 				this.Owner.Startup.ShowMouseCursor();
 			}
@@ -147,7 +147,7 @@ namespace Civilization1Remaster.Core.UI
 		{
 			using var _ = this.Processor.Journal.Scope($"DisplayHelpPopupForHuman(0x{topic.Address:x4})");
 
-			if (TurnPlayer == (ushort)this.Owner.World.PersonParticipantIdx)
+			if (Turn.Player == (ushort)this.Owner.World.PersonParticipantIdx)
 			{
 				this.Owner.Words.Clear();
 
@@ -157,12 +157,12 @@ namespace Civilization1Remaster.Core.UI
 
 				this.Owner.Startup.HideMouseCursor();
 
-				this.Owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8,
-					BackScreenBox, 0, 0);
+				this.Owner.VideoCard.RenderImage(Screen.Box, 0, 0, 0x140, 0xc8,
+					Screen.BackScreenBox, 0, 0);
 
 				short height = (short)((6 * lineTally) + 10);
 
-				this.Owner.Services.FloodBox(ScreenBox, 56, 16, 208, height, Hues.Red);
+				this.Owner.Services.FloodBox(Screen.Box, 56, 16, 208, height, Hues.Red);
 
 				this.Owner.Dialogs.DrawBox(56, 16, 208, height, Hues.LightRed);
 
@@ -176,8 +176,8 @@ namespace Civilization1Remaster.Core.UI
 
 				this.Owner.Conquest.WaitForKeyPressOrMouseClick();
 
-				this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8,
-					ScreenBox, 0, 0);
+				this.Owner.VideoCard.RenderImage(Screen.BackScreenBox, 0, 0, 0x140, 0xc8,
+					Screen.Box, 0, 0);
 
 				this.Owner.Startup.ShowMouseCursor();
 			}
@@ -189,7 +189,7 @@ namespace Civilization1Remaster.Core.UI
 			ushort townIdx = this.Owner.Helpers.FindNearestCity(horizLoc, vertLoc);
 
 			if (townIdx == 0xffff || (ushort)this.Owner.World.Towns[townIdx].ParticipantIdx != (ushort)participantIdx ||
-				FoundDistance != 1)
+				Search.FoundDistance != 1)
 				return;
 
 			byte improvements = (byte)this.Owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc);

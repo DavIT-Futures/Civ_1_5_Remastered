@@ -19,9 +19,9 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.Startup.HideMouseCursor();
 
 			this.Owner.VideoCard.RenderImage(
-				ScreenBox,
+				Screen.Box,
 				0, 0, 0x140, 0xc8,
-				BackScreenBox,
+				Screen.BackScreenBox,
 				0, 0);
 
 			DrawReportPreamble(title, style);
@@ -35,7 +35,7 @@ namespace Civilization1Remaster.Core.UI
 			Player person = this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx];
 			ushort personSlot = (ushort)(this.Owner.World.PersonParticipantIdx << 1);
 
-			this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, style);
+			this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 200, style);
 
 			this.Owner.TextPainter.DrawCenteredTextToScreen0(title, 160, 2, Hues.White);
 
@@ -77,9 +77,9 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.Conquest.WaitForKeyPressOrMouseClick();
 
 			this.Owner.VideoCard.RenderImage(
-				BackScreenBox,
+				Screen.BackScreenBox,
 				0, 0, 0x140, 0xc8,
-				ScreenBox,
+				Screen.Box,
 				0, 0);
 
 			this.Owner.Startup.ShowMouseCursor();
@@ -93,7 +93,7 @@ namespace Civilization1Remaster.Core.UI
 			ShowReportPreamble(GameTexts.TextScienceReport, 1);
 
 			short knownTally = this.Owner.World.Participants[participantIdx].FoundScienceTally;
-			short costFactor = (short)((this.Owner.World.HardnessTier << 1) + TechnologyLevel + 6);
+			short costFactor = (short)((this.Owner.World.HardnessTier << 1) + Turn.TechnologyLevel + 6);
 
 			if (costFactor < (short)(0xb - knownTally))
 			{
@@ -107,16 +107,16 @@ namespace Civilization1Remaster.Core.UI
 
 			if (barLeft > 0x28)
 			{
-				this.Owner.VideoCard.RenderImage(PictureScreenBox, 0x118, 0x8c, 0x28, 0x3c, ScreenBox, 0x116, 0x2);
+				this.Owner.VideoCard.RenderImage(Screen.PictureScreenBox, 0x118, 0x8c, 0x28, 0x3c, Screen.Box, 0x116, 0x2);
 			}
 
-			this.Owner.Services.FloodBox(ScreenBox, barLeft, 25, barBreadth, 16, Hues.LightBlue);
+			this.Owner.Services.FloodBox(Screen.Box, barLeft, 25, barBreadth, 16, Hues.LightBlue);
 
 			short progress = 0;
 
 			for (short bulbIdx = 0; (short)this.Owner.Helpers.ClampValue(this.Owner.World.Participants[participantIdx].InquiryHeadway, 0, cost) > bulbIdx; bulbIdx++)
 			{
-				this.Owner.Services.DrawPictureToScreen(ScreenBox, (progress / 8) + barLeft, 33,
+				this.Owner.Services.DrawPictureToScreen(Screen.Box, (progress / 8) + barLeft, 33,
 					SpritePicture(0xc));
 
 				progress += (short)step;
@@ -179,9 +179,9 @@ namespace Civilization1Remaster.Core.UI
 				if (active <= 0 && making <= 0)
 					continue;
 
-				this.Owner.VideoCard.RenderLine(ScreenBox, 36, vertLoc - 2, 319, vertLoc - 2, Hues.LightBlue);
+				this.Owner.VideoCard.RenderLine(Screen.Box, 36, vertLoc - 2, 319, vertLoc - 2, Hues.LightBlue);
 
-				this.Owner.Services.DrawPictureToScreen(ScreenBox, ((rowIdx & 1) << 4) + 2, vertLoc - 4,
+				this.Owner.Services.DrawPictureToScreen(Screen.Box, ((rowIdx & 1) << 4) + 2, vertLoc - 4,
 					SpritePicture(((participantIdx << 5) + kind + 0x40)));
 
 				rowIdx++;
@@ -219,7 +219,7 @@ namespace Civilization1Remaster.Core.UI
 				vertLoc += 9;
 			}
 
-			this.Owner.VideoCard.RenderImage(PictureScreenBox, 0xa0, 0x8c, 0x28, 0x3c, ScreenBox, 0x116, 0x2);
+			this.Owner.VideoCard.RenderImage(Screen.PictureScreenBox, 0xa0, 0x8c, 0x28, 0x3c, Screen.Box, 0x116, 0x2);
 
 			FinishReportScreen();
 
@@ -251,9 +251,9 @@ namespace Civilization1Remaster.Core.UI
 				if (!lost)
 					continue;
 
-				this.Owner.VideoCard.RenderLine(ScreenBox, 36, vertLoc - 1, 319, vertLoc - 1, Hues.DarkGray);
+				this.Owner.VideoCard.RenderLine(Screen.Box, 36, vertLoc - 1, 319, vertLoc - 1, Hues.DarkGray);
 
-				this.Owner.Services.DrawPictureToScreen(ScreenBox, ((rowIdx & 1) << 4) + 2, vertLoc - 4,
+				this.Owner.Services.DrawPictureToScreen(Screen.Box, ((rowIdx & 1) << 4) + 2, vertLoc - 4,
 					SpritePicture(((participantIdx << 5) + kind + 0x40)));
 
 				rowIdx++;
@@ -319,7 +319,7 @@ namespace Civilization1Remaster.Core.UI
 
 			ShowReportPreamble(GameTexts.TextTradeReport, 2);
 
-			this.Owner.VideoCard.RenderImage(PictureScreenBox, 0xc8, 0x8c, 0x28, 0x3c, ScreenBox, 0x116, 2);
+			this.Owner.VideoCard.RenderImage(Screen.PictureScreenBox, 0xc8, 0x8c, 0x28, 0x3c, Screen.Box, 0x116, 2);
 
 			this.Owner.TextPainter.DrawTextToScreen0(GameTexts.TextCityTrade, 8, 32, Hues.White);
 
@@ -371,20 +371,20 @@ namespace Civilization1Remaster.Core.UI
 				{
 					this.Owner.Words.Append(" ");
 
-					this.Owner.Words.Append(this.Owner.Libc.IntegerToText((short)CityLuxuries, 10));
+					this.Owner.Words.Append(this.Owner.Libc.IntegerToText((short)CityTurn.Luxuries, 10));
 
 					this.Owner.Words.Append("\\/");
 
-					this.Owner.Words.Append(this.Owner.Libc.IntegerToText((short)CityTaxes, 10));
+					this.Owner.Words.Append(this.Owner.Libc.IntegerToText((short)CityTurn.Taxes, 10));
 
 					this.Owner.Words.Append("$/");
 
-					this.Owner.Words.Append(this.Owner.Libc.IntegerToText((short)CityScience, 10));
+					this.Owner.Words.Append(this.Owner.Libc.IntegerToText((short)CityTurn.Science, 10));
 
 					this.Owner.Words.Append("~");
 
-					income += (short)CityTaxes;
-					science += (short)CityScience;
+					income += (short)CityTurn.Taxes;
+					science += (short)CityTurn.Science;
 				}
 
 				if (vertLoc < 0xb4)
@@ -514,7 +514,7 @@ namespace Civilization1Remaster.Core.UI
 
 				short vertLoc = (short)((0x18 * rowCount) + 0x20);
 
-				this.Owner.VideoCard.RenderLine(ScreenBox, 4, (short)(vertLoc - 2), 316, (short)(vertLoc - 2), Hues.LightBlue);
+				this.Owner.VideoCard.RenderLine(Screen.Box, 4, (short)(vertLoc - 2), 316, (short)(vertLoc - 2), Hues.LightBlue);
 
 				this.Owner.Words.Set(CivilizationPlural(participantIdx));
 
@@ -617,7 +617,7 @@ namespace Civilization1Remaster.Core.UI
 			}
 			else
 			{
-				this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
+				this.Owner.VideoCard.RenderImage(Screen.BackScreenBox, 0, 0, 0x140, 0xc8, Screen.Box, 0, 0);
 			}
 
 			this.Owner.Startup.ShowMouseCursor();
@@ -804,11 +804,11 @@ namespace Civilization1Remaster.Core.UI
 					.Text(":");
 				this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 16, vertLoc, Hues.White);
 
-				this.Owner.CityOps.DrawCitizenIcons(townIdx, (short)((shift & 7) + 0x50), (short)(vertLoc - 3), CitySpecialists, 124);
+				this.Owner.CityOps.DrawCitizenIcons(townIdx, (short)((shift & 7) + 0x50), (short)(vertLoc - 3), CityTurn.Specialists, 124);
 
 				short iconHoriz = 0xd4;
 
-				this.Owner.Services.FloodBox(ScreenBox, 212, vertLoc - 1, 90, 10, Hues.LightCyan);
+				this.Owner.Services.FloodBox(Screen.Box, 212, vertLoc - 1, 90, 10, Hues.LightCyan);
 
 				for (int structureIdx = 0; structureIdx < 0x18; structureIdx++)
 				{
@@ -821,8 +821,8 @@ namespace Civilization1Remaster.Core.UI
 				}
 
 				citizens += this.Owner.World.Towns[townIdx].TrueExtent;
-				happy += (short)CityHappy;
-				unhappy += (short)CityUnhappy;
+				happy += (short)CityTurn.Happy;
+				unhappy += (short)CityTurn.Unhappy;
 				shift += 4;
 				vertLoc += 0xa;
 			}
@@ -896,11 +896,11 @@ namespace Civilization1Remaster.Core.UI
 				EmptyMessage()
 					.Number(this.Owner.World.Towns[townIdx].TrueExtent)
 					.Text("-")
-					.Number((short)CityFood)
+					.Number((short)CityTurn.Food)
 					.Text("{ ")
-					.Number((short)CityShields)
+					.Number((short)CityTurn.Shields)
 					.Text("| ")
-					.Number((short)CityTrade)
+					.Number((short)CityTurn.Trade)
 					.Text("}");
 				this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 80, vertLoc, Hues.White);
 

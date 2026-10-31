@@ -844,9 +844,9 @@ namespace Civilization1Remaster.Core.Engine
 		{
 			using var _ = this.Processor.Journal.Scope($"AssignMouseCursorImage({hotHoriz}, {hotVert}, {picture})");
 
-			PointerHotHoriz = hotHoriz;
-			PointerHotVert = hotVert;
-			PointerImage = picture;
+			Mouse.HotHoriz = hotHoriz;
+			Mouse.HotVert = hotVert;
+			Mouse.Image = picture;
 		}
 
 		/// <inheritdoc/>
@@ -875,11 +875,11 @@ namespace Civilization1Remaster.Core.Engine
 		{
 			using var _ = this.Processor.Journal.Scope("RenderMouseCursor()");
 
-			if (PointerImage != 0 && this.Owner.Pointer.PointerShown == 0)
+			if (Mouse.Image != 0 && this.Owner.Pointer.PointerShown == 0)
 			{
-				DrawCursorToScreen((short)((short)this.Owner.Pointer.Horiz - (short)PointerHotHoriz),
-					(short)((short)this.Owner.Pointer.Vert - (short)PointerHotVert),
-					PointerImage);
+				DrawCursorToScreen((short)((short)this.Owner.Pointer.Horiz - (short)Mouse.HotHoriz),
+					(short)((short)this.Owner.Pointer.Vert - (short)Mouse.HotVert),
+					Mouse.Image);
 
 				this.Owner.Pointer.PointerShown = 0x1;
 			}
@@ -890,7 +890,7 @@ namespace Civilization1Remaster.Core.Engine
 		{
 			using var _ = this.Processor.Journal.Scope("BlankMouseCursor()");
 
-			if (PointerImage != 0 && this.Owner.Pointer.PointerShown != 0)
+			if (Mouse.Image != 0 && this.Owner.Pointer.PointerShown != 0)
 			{
 				this.Owner.Pointer.PointerShown = 0x0;
 

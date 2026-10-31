@@ -28,23 +28,23 @@ namespace Civilization1Remaster.Core.UI
 
 			while (true)
 			{
-				if (ReplayAtGameEnd == 0)
+				if (Replay.AtGameEnd == 0)
 				{
-					ReplayMode = this.Owner.TurnHooks.ShowDialog(GameTexts.TextSeeReplayNoReplayQuickReplayCompleteRepl, 100, 80);
+					Replay.Mode = this.Owner.TurnHooks.ShowDialog(GameTexts.TextSeeReplayNoReplayQuickReplayCompleteRepl, 100, 80);
 				}
 				else
 				{
-					ReplayMode = 0x4;
+					Replay.Mode = 0x4;
 				}
 
-				if ((short)ReplayMode <= 0)
+				if ((short)Replay.Mode <= 0)
 					break;
 
-				if (ReplayMode == 3)
+				if (Replay.Mode == 3)
 				{
 					ushort handle = (ushort)this.Owner.Libc.OpenHandle("replay.txt", 0x8301, 0x80);
 
-					ReplayFile = handle;
+					Replay.File = handle;
 
 					if (handle == 0xffff)
 					{
@@ -59,12 +59,12 @@ namespace Civilization1Remaster.Core.UI
 
 				ReplayGame();
 
-				if (ReplayMode == 3)
+				if (Replay.Mode == 3)
 				{
-					this.Owner.Libc.CloseHandle((short)ReplayFile);
+					this.Owner.Libc.CloseHandle((short)Replay.File);
 				}
 
-				if ((short)ReplayMode >= 3)
+				if ((short)Replay.Mode >= 3)
 					break;
 			}
 		}
@@ -74,18 +74,18 @@ namespace Civilization1Remaster.Core.UI
 		{
 			using var _ = this.Processor.Journal.Scope("RenderReplayPreamble()");
 
-			if (ReplayMode != 4)
+			if (Replay.Mode != 4)
 			{
-				if (ReplayActor == (ushort)this.Owner.World.PersonParticipantIdx)
+				if (Replay.Actor == (ushort)this.Owner.World.PersonParticipantIdx)
 				{
 					this.Owner.Words.Uppercase();
 				}
 
-				this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 8, Hues.White);
+				this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 8, Hues.White);
 
 				this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 4, 1, Hues.Black);
 
-				if (ReplayMode == 3)
+				if (Replay.Mode == 3)
 				{
 					ushort length = this.Owner.Words.Length;
 
@@ -93,12 +93,12 @@ namespace Civilization1Remaster.Core.UI
 					this.Owner.Words[length + 1] = 0xa;
 					this.Owner.Words[length + 2] = 0x0;
 
-					this.Owner.Libc.WriteHandle((short)ReplayFile, TextBuffer.Address, (ushort)(length + 2));
+					this.Owner.Libc.WriteHandle((short)Replay.File, TextBuffer.Address, (ushort)(length + 2));
 				}
 
 				this.Owner.BlockText.ShrinkTextToWidth(TextBuffer.Address, 312);
 
-				this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 8, Hues.White);
+				this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 8, Hues.White);
 
 				this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 4, 1, Hues.Black);
 			}
@@ -195,7 +195,7 @@ namespace Civilization1Remaster.Core.UI
 
 			ushort nearest = 0;
 
-			ReplayCityDistance = 999;
+			Replay.CityDistance = 999;
 			this.Processor.SegExtra.Value16 = ReplayCitySegment;
 
 			for (int idx = 0; idx < 0x80; idx++)
@@ -206,9 +206,9 @@ namespace Civilization1Remaster.Core.UI
 				short distance = (short)this.Owner.Helpers.ObtainDistance(horizLoc, (short)PullReplayCity(idx, ReplayCityXColumnOffset),
 					vertLoc, (short)PullReplayCity(idx, ReplayCityYColumnOffset));
 
-				if (distance < (short)ReplayCityDistance)
+				if (distance < (short)Replay.CityDistance)
 				{
-					ReplayCityDistance = (ushort)distance;
+					Replay.CityDistance = (ushort)distance;
 					nearest = (ushort)idx;
 				}
 			}
@@ -223,7 +223,7 @@ namespace Civilization1Remaster.Core.UI
 			using var _ = this.Processor.Journal.Scope($"RenderReplayMapTile({horizLoc}, {vertLoc})");
 
 
-			if (ReplayMode != 4)
+			if (Replay.Mode != 4)
 			{
 				int left = this.Owner.Helpers.ClampValue(horizLoc - 5, 0, 80);
 				int right = this.Owner.Helpers.ClampValue(horizLoc + 5, 0, 80);
@@ -240,17 +240,17 @@ namespace Civilization1Remaster.Core.UI
 						ushort cityIdx = ComputeDistanceToReplayCity(tileHoriz, tileVert);
 						ushort hue = 8;
 
-						if ((short)ReplayCityDistance < 6 &&
+						if ((short)Replay.CityDistance < 6 &&
 							this.Owner.MapOps.ObtainContinentID((short)PullReplayCity(cityIdx, ReplayCityXColumnOffset), (short)PullReplayCity(cityIdx, ReplayCityYColumnOffset)) ==
 							this.Owner.MapOps.ObtainContinentID(tileHoriz, tileVert))
 						{
 							ushort cityOwner = PullReplayCity(cityIdx, ReplayCityActiveColumnOffset);
 
-							hue = ReplayCityDistance == 0 ? (ushort)(cityOwner == 1 ? 7 : 15) :
+							hue = Replay.CityDistance == 0 ? (ushort)(cityOwner == 1 ? 7 : 15) :
 								PlayerColour(cityOwner);
 						}
 
-						this.Owner.Services.FloodBox(ScreenBox, tileHoriz * 4, (tileVert * 4) + 4, 4, 4, hue);
+						this.Owner.Services.FloodBox(Screen.Box, tileHoriz * 4, (tileVert * 4) + 4, 4, 4, hue);
 					}
 				}
 			}
@@ -299,7 +299,7 @@ namespace Civilization1Remaster.Core.UI
 					}
 				}
 
-				this.Owner.Libc.WriteHandle((short)ReplayFile, TextBuffer.Address, 0x52);
+				this.Owner.Libc.WriteHandle((short)Replay.File, TextBuffer.Address, 0x52);
 			}
 		}
 
@@ -330,20 +330,20 @@ namespace Civilization1Remaster.Core.UI
 		{
 			using var _ = this.Processor.Journal.Scope("DisplayConquerorScreen()");
 
-			ReplayAtGameEnd = 0x1;
+			Replay.AtGameEnd = 0x1;
 
 			this.Owner.Helpers.HaltHueCycling();
 
 			this.Owner.Startup.HideMouseCursor();
 
-			FallenLeadersCount = 0;
+			Scoring.FallenLeadersCount = 0;
 
 			for (int idx = 0; idx < 0xe; idx++)
 			{
 				this.Processor.EmitUInt8(ReplayFallenLeadersSegment, (ushort)(idx + ReplayFallenLeadersTableAddress), 0xff);
 			}
 
-			this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
+			this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 200, Hues.Black);
 
 			DrawingBox.TypefaceIdx = 0x6;
 
@@ -352,19 +352,19 @@ namespace Civilization1Remaster.Core.UI
 			ushort leader = (ushort)(0x3a * this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx].ChiefVisuals);
 			this.Owner.Services.PerformSound(LeaderWordAt(leader, LeaderTable.Tune), 3);
 
-			this.Owner.Services.FloodBox(ScreenBox, 18, 150, 284, 32,
-				(ushort)(VgaMode != 0 ? 34 : 7));
+			this.Owner.Services.FloodBox(Screen.Box, 18, 150, 284, 32,
+				(ushort)(Screen.VgaMode != 0 ? 34 : 7));
 
 			this.Owner.Words.Set("The entire world hails");
 
 			this.Owner.TextPainter.DrawCenteredTextToScreen0(this.Owner.Words.ToString(), 160, 152, 20);
-			this.Owner.TextPainter.DrawCenteredTextToScreen0(this.Owner.Words.ToString(), 160, 151, (ushort)(VgaMode != 0 ? 23 : 15));
+			this.Owner.TextPainter.DrawCenteredTextToScreen0(this.Owner.Words.ToString(), 160, 151, (ushort)(Screen.VgaMode != 0 ? 23 : 15));
 
 			Message(LeaderName(this.Owner.World.PersonParticipantIdx))
 				.Text(" the CONQUEROR!");
 
 			this.Owner.TextPainter.DrawCenteredTextToScreen0(this.Owner.Words.ToString(), 160, 168, 20);
-			this.Owner.TextPainter.DrawCenteredTextToScreen0(this.Owner.Words.ToString(), 160, 167, (ushort)(VgaMode != 0 ? 23 : 15));
+			this.Owner.TextPainter.DrawCenteredTextToScreen0(this.Owner.Words.ToString(), 160, 167, (ushort)(Screen.VgaMode != 0 ? 23 : 15));
 
 			this.Owner.TurnLogic.WaitForKey();
 
@@ -380,7 +380,7 @@ namespace Civilization1Remaster.Core.UI
 
 			this.Owner.TurnHooks.RepaintMainScreen();
 
-			ReplayAtGameEnd = 0x0;
+			Replay.AtGameEnd = 0x0;
 		}
 
 		/// <inheritdoc/>
@@ -391,7 +391,7 @@ namespace Civilization1Remaster.Core.UI
 			short leaderIdx = (sbyte)this.Processor.PullGlobalByte((ushort)((ushort)this.Owner.World.Participants[participantIdx].ChiefVisuals + 0x3938));
 			char tens = (char)('0' + (leaderIdx / 10));
 			char ones = (char)('0' + (leaderIdx % 10));
-			string portraitPic = (VgaMode == 0 && (leaderIdx == 0 || leaderIdx == 3))
+			string portraitPic = (Screen.VgaMode == 0 && (leaderIdx == 0 || leaderIdx == 3))
 				? $"kink{tens}{ones}.pic"
 				: $"king{tens}{ones}.pic";
 
@@ -407,18 +407,18 @@ namespace Civilization1Remaster.Core.UI
 
 			this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, GameTexts.FileSlam1Pic, 0);
 
-			if (VgaMode != 0)
+			if (Screen.VgaMode != 0)
 			{
 				this.Owner.Services.FillColors(5, 0, 0, 0);
 			}
 
-			this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
+			this.Owner.VideoCard.RenderImage(Screen.BackScreenBox, 0, 0, 0x140, 0xc8, Screen.Box, 0, 0);
 
-			string wallName = VgaMode == 0 ? "slag2.pic" : "slam2.pic";
+			string wallName = Screen.VgaMode == 0 ? "slag2.pic" : "slam2.pic";
 
 			this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0x85, wallName, 0);
 
-			DrawWallOfLeaders(ScreenBox);
+			DrawWallOfLeaders(Screen.Box);
 
 			short mouthHoriz = 0x5a;
 			short mouthVert = 0;
@@ -429,13 +429,13 @@ namespace Civilization1Remaster.Core.UI
 			mouthVert += (short)(this.Processor.PullUInt16(ReplayLeaderFaceSegment, (ushort)(mouths + 0x48)) - 0x40);
 			mouthVert -= (short)this.Processor.PullUInt16(ReplayLeaderFaceSegment, (ushort)(mouths + 0x4a));
 
-			this.Owner.Services.DrawPictureToScreen(ScreenBox, 90, 0, portrait);
+			this.Owner.Services.DrawPictureToScreen(Screen.Box, 90, 0, portrait);
 
-			this.Owner.Services.DrawPictureToScreen(ScreenBox, mouthHoriz, mouthVert - 2, speakingMouth);
+			this.Owner.Services.DrawPictureToScreen(Screen.Box, mouthHoriz, mouthVert - 2, speakingMouth);
 
 			this.Owner.Services.PerformSound(LeaderWord(this.Owner.World.Participants[participantIdx].ChiefVisuals, LeaderTable.Tune), 3);
 
-			if (VgaMode != 0)
+			if (Screen.VgaMode != 0)
 			{
 				string portraitPal = $"king{tens}{ones}.pal";
 
@@ -451,12 +451,12 @@ namespace Civilization1Remaster.Core.UI
 				this.Owner.Services.LoadColorsFromBuffer(8, 0xbdee);
 			}
 
-			sbyte fallen = (sbyte)FallenLeadersCount;
+			sbyte fallen = (sbyte)Scoring.FallenLeadersCount;
 			short place = (short)(fallen % 7);
 
 			place = (place & 1) != 0 ? (short)-((place / 2) - 6) : (short)(place / 2);
 
-			FallenLeadersCount = (ushort)(fallen + 1);
+			Scoring.FallenLeadersCount = (ushort)(fallen + 1);
 
 			if (fallen >= 7)
 				place += 7;
@@ -469,7 +469,7 @@ namespace Civilization1Remaster.Core.UI
 
 			this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0x85, wallName, 0);
 
-			DrawWallOfLeaders(BackScreenBox);
+			DrawWallOfLeaders(Screen.BackScreenBox);
 
 			while ((short)this.Owner.Timer.Beats < 0xf0)
 			{
@@ -495,9 +495,9 @@ namespace Civilization1Remaster.Core.UI
 
 			DrawShadowedCentredLine(168);
 
-			this.Owner.VideoCard.RenderImage(ScreenBox, 0, 0x85, 0x140, 0x43, BackScreenBox, 0, 0x85);
+			this.Owner.VideoCard.RenderImage(Screen.Box, 0, 0x85, 0x140, 0x43, Screen.BackScreenBox, 0, 0x85);
 
-			this.Owner.Services.DrawPictureToScreen(ScreenBox, mouthHoriz, mouthVert - 2, closedMouth);
+			this.Owner.Services.DrawPictureToScreen(Screen.Box, mouthHoriz, mouthVert - 2, closedMouth);
 
 			this.Owner.Helpers.ReleaseResource(portrait, 0);
 
@@ -509,7 +509,7 @@ namespace Civilization1Remaster.Core.UI
 
 			this.Owner.VideoCard.DrawScreenToMainScreen(1, 0x1e);
 
-			this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
+			this.Owner.VideoCard.RenderImage(Screen.BackScreenBox, 0, 0, 0x140, 0xc8, Screen.Box, 0, 0);
 
 			this.Owner.Services.ShowScreen(0);
 
@@ -524,7 +524,7 @@ namespace Civilization1Remaster.Core.UI
 		{
 			this.Owner.Startup.HideMouseCursor();
 
-			this.Owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, BackScreenBox, 0, 0);
+			this.Owner.VideoCard.RenderImage(Screen.Box, 0, 0, 0x140, 0xc8, Screen.BackScreenBox, 0, 0);
 
 			// No city shown on the replay map yet (segment 0x3725, 128 cities)
 			for (int townIdx = 0; townIdx < 0x80; townIdx++)
@@ -551,9 +551,9 @@ namespace Civilization1Remaster.Core.UI
 				ObtainReplayPlayerLabel(participantIdx);
 			}
 
-			if (ReplayMode != 4)
+			if (Replay.Mode != 4)
 			{
-				this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
+				this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 200, Hues.Black);
 
 				for (short vertLoc = 1; vertLoc < 0x31; vertLoc++)
 				{
@@ -561,7 +561,7 @@ namespace Civilization1Remaster.Core.UI
 					{
 						bool ocean = this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) == MapRules.OceanTerrain;
 
-						this.Owner.Services.FloodBox(ScreenBox, horizLoc * 4, (vertLoc * 4) + 4, 4, 4, (ushort)(ocean ? 1 : 8));
+						this.Owner.Services.FloodBox(Screen.Box, horizLoc * 4, (vertLoc * 4) + 4, 4, 4, (ushort)(ocean ? 1 : 8));
 					}
 				}
 			}
@@ -572,7 +572,7 @@ namespace Civilization1Remaster.Core.UI
 			{
 				spot = ReplayEvent(spot);
 
-				if (ReplayMode == 2 && this.Owner.Libc.ReadKey() == 0x1b)
+				if (Replay.Mode == 2 && this.Owner.Libc.ReadKey() == 0x1b)
 					break;
 			}
 
@@ -589,7 +589,7 @@ namespace Civilization1Remaster.Core.UI
 				}
 			}
 
-			this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
+			this.Owner.VideoCard.RenderImage(Screen.BackScreenBox, 0, 0, 0x140, 0xc8, Screen.Box, 0, 0);
 
 			this.Owner.Startup.ShowMouseCursor();
 		}
@@ -619,7 +619,7 @@ namespace Civilization1Remaster.Core.UI
 
 			short year = (short)ObtainReplayYear(turn);
 
-			ReplayActor = 0xffff;
+			Replay.Actor = 0xffff;
 			EmptyMessage()
 				.Number(Math.Abs(year))
 				.Text(year < 0 ? " BC" : " AD")
@@ -654,11 +654,11 @@ namespace Civilization1Remaster.Core.UI
 				{
 					ushort actor = ReplayByte(ref spot);
 
-					ReplayActor = actor;
+					Replay.Actor = actor;
 
 					ushort thing = ReplayByte(ref spot);
 
-					this.Owner.Words.Append(ReplayPlural(ReplayActor));
+					this.Owner.Words.Append(ReplayPlural(Replay.Actor));
 
 					switch (kind)
 					{
@@ -696,7 +696,7 @@ namespace Civilization1Remaster.Core.UI
 				case 11:
 				{
 					// The status of the human player: cities, population (two parts)
-					ReplayActor = (ushort)this.Owner.World.PersonParticipantIdx;
+					Replay.Actor = (ushort)this.Owner.World.PersonParticipantIdx;
 
 					short towns = ReplayByte(ref spot);
 					sbyte populationHigh = (sbyte)ReplayByte(ref spot);
@@ -726,24 +726,24 @@ namespace Civilization1Remaster.Core.UI
 				{
 					ushort fallen = ReplayByte(ref spot);
 
-					ReplayActor = fallen;
+					Replay.Actor = fallen;
 
 					short destroyer = ReplayByte(ref spot);
 
-					this.Owner.Words.Append(CivilizationName(ReplayActor));
+					this.Owner.Words.Append(CivilizationName(Replay.Actor));
 
 					this.Owner.Words.Append(" civilization destroyed by ");
 
 					this.Owner.Words.Append(ReplayPlural(destroyer));
 
-					if (ReplayMode == 4 && destroyer == this.Owner.World.PersonParticipantIdx)
+					if (Replay.Mode == 4 && destroyer == this.Owner.World.PersonParticipantIdx)
 					{
-						ShowCivilizationDestroyedScreen((short)ReplayActor, (ushort)year);
+						ShowCivilizationDestroyedScreen((short)Replay.Actor, (ushort)year);
 					}
 
-					this.Owner.World.Participants[ReplayActor].ChiefVisuals ^= 8;
+					this.Owner.World.Participants[Replay.Actor].ChiefVisuals ^= 8;
 
-					ObtainReplayPlayerLabel((short)ReplayActor);
+					ObtainReplayPlayerLabel((short)Replay.Actor);
 
 					DrawReplayPreamble();
 					break;
@@ -761,27 +761,27 @@ namespace Civilization1Remaster.Core.UI
 		{
 			ushort actor = ReplayByte(ref spot);
 
-			ReplayActor = actor;
+			Replay.Actor = actor;
 
 			ushort labelIdx = ReplayByte(ref spot);
 			ushort horizLoc = ReplayByte(ref spot);
 			ushort vertLoc = ReplayByte(ref spot);
 
-			if (ReplayActor != 0xff)
+			if (Replay.Actor != 0xff)
 			{
-				this.Owner.Words.Append(ReplayPlural(ReplayActor));
+				this.Owner.Words.Append(ReplayPlural(Replay.Actor));
 
 				if (kind == 1)
 				{
 					this.Owner.Words.Append(" found the city of ");
 
-					AssignReplayCityContent(ReplayActor, horizLoc, vertLoc);
+					AssignReplayCityContent(Replay.Actor, horizLoc, vertLoc);
 				}
 				else
 				{
 					this.Owner.Words.Append(" capture ");
 
-					AssignReplayCityContentAlt(ReplayActor, horizLoc, vertLoc);
+					AssignReplayCityContentAlt(Replay.Actor, horizLoc, vertLoc);
 				}
 
 				AppendReplayCityName(labelIdx);
@@ -801,7 +801,7 @@ namespace Civilization1Remaster.Core.UI
 
 			DrawReplayMapTile(horizLoc, vertLoc);
 
-			if (ReplayMode == 1)
+			if (Replay.Mode == 1)
 			{
 				this.Owner.TextPainter.WaitForTime(30);
 			}
@@ -855,7 +855,7 @@ namespace Civilization1Remaster.Core.UI
 				spot++;
 			}
 
-			if (ReplayMode == 3)
+			if (Replay.Mode == 3)
 			{
 				DrawReplayPreamble();
 			}
@@ -887,7 +887,7 @@ namespace Civilization1Remaster.Core.UI
 					continue;
 
 				this.Owner.VideoCard.RenderImage(
-					BackScreenBox,
+					Screen.BackScreenBox,
 					(ushort)(((ushort)leaderIdx % 7 * 0x1c) + 1),
 					(ushort)(((ushort)leaderIdx / 7 * 0x22) + 0x85),
 					0x1b, 0x21,
@@ -902,7 +902,7 @@ namespace Civilization1Remaster.Core.UI
 		{
 			this.Owner.TextPainter.DrawCenteredTextToScreen0(this.Owner.Words.ToString(), 160, vertLoc, 20);
 
-			this.Owner.TextPainter.DrawCenteredTextToScreen0(this.Owner.Words.ToString(), 160, vertLoc - 1, VgaMode != 0 ? (ushort)23 : (ushort)15);
+			this.Owner.TextPainter.DrawCenteredTextToScreen0(this.Owner.Words.ToString(), 160, vertLoc - 1, Screen.VgaMode != 0 ? (ushort)23 : (ushort)15);
 		}
 	}
 }

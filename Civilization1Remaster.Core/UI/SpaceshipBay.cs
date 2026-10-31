@@ -60,7 +60,7 @@ namespace Civilization1Remaster.Core.UI
 
 			this.Owner.Startup.AskForDisk(1, 1);
 
-			this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
+			this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 200, Hues.Black);
 
 			this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, SpaceshipBackgroundPictureAddress, 1);
 
@@ -92,7 +92,7 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.Services.AssignHueCycleSpan(4, 8, 144, 159);
 			this.Owner.Services.AssignHueCycleSpan(5, 150, 128, 129);
 
-			if (VgaMode != 0)
+			if (Screen.VgaMode != 0)
 			{
 				for (ushort cycleIdx = 1; cycleIdx <= 5; cycleIdx++)
 				{
@@ -106,9 +106,9 @@ namespace Civilization1Remaster.Core.UI
 		{
 			using var _ = this.Processor.Journal.Scope("ImportSpaceScenery()");
 
-			this.Owner.Helpers.ReleaseResource(SpaceshipPicture, SpaceshipResourceBlockAddress);
+			this.Owner.Helpers.ReleaseResource(Spaceship.Picture, SpaceshipResourceBlockAddress);
 
-			if (VgaMode != 0)
+			if (Screen.VgaMode != 0)
 			{
 				for (ushort cycleIdx = 1; cycleIdx <= 5; cycleIdx++)
 				{
@@ -129,7 +129,7 @@ namespace Civilization1Remaster.Core.UI
 
 			this.Owner.Libc.CopyBytes(PaletteCopySourceAddress, PaletteCopyTargetAddress, 0x180);
 
-			this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
+			this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 200, Hues.Black);
 
 			this.Owner.VideoCard.AssignHuesFromHueStruct(PaletteBufferAddress2);
 
@@ -166,23 +166,23 @@ namespace Civilization1Remaster.Core.UI
 
 			if ((short)mass >= 0x50 && shown)
 			{
-				this.Owner.Services.DrawPictureToScreen(ScreenBox, 152, 88, SpaceshipHabitatPicture);
+				this.Owner.Services.DrawPictureToScreen(Screen.Box, 152, 88, Spaceship.HabitatPicture);
 			}
 
 			if (shown)
 			{
 				ushort colour = PlayerColour(participantIdx);
 
-				this.Owner.Services.FloodBox(ScreenBox, 240, 8, 80, 192, colour);
+				this.Owner.Services.FloodBox(Screen.Box, 240, 8, 80, 192, colour);
 
-				this.Owner.VideoCard.RenderLine(ScreenBox, 0, 8, 0, 199, colour);
+				this.Owner.VideoCard.RenderLine(Screen.Box, 0, 8, 0, 199, colour);
 
-				this.Owner.VideoCard.RenderLine(ScreenBox, 0, 199, 240, 199, colour);
+				this.Owner.VideoCard.RenderLine(Screen.Box, 0, 199, 240, 199, colour);
 			}
 
 			(short success, short flightTime, short vertLoc) = RenderSpaceshipFigures(shown, mass);
 
-			if (SpaceshipColonists == 0)
+			if (Spaceship.Colonists == 0)
 			{
 				launchable = 0;
 			}
@@ -222,7 +222,7 @@ namespace Civilization1Remaster.Core.UI
 				MoveSpaceshipStars(participantIdx, frames, launchable, success);
 			}
 
-			this.Owner.World.Participants[participantIdx].StarshipInhabitants = (short)SpaceshipColonists;
+			this.Owner.World.Participants[participantIdx].StarshipInhabitants = (short)Spaceship.Colonists;
 
 			ushort result = (ushort)success;
 
@@ -271,7 +271,7 @@ namespace Civilization1Remaster.Core.UI
 						break;
 
 					default:
-						if ((SpaceshipStarFieldFrame & 0x1) != 0)
+						if ((Spaceship.StarFieldFrame & 0x1) != 0)
 						{
 							AssignStarColumn(starIdx, (byte)(StarColumn(starIdx) + 1));
 						}
@@ -299,7 +299,7 @@ namespace Civilization1Remaster.Core.UI
 				}
 			}
 
-			SpaceshipStarFieldFrame++;
+			Spaceship.StarFieldFrame++;
 		}
 
 		/// <inheritdoc/>
@@ -377,7 +377,7 @@ namespace Civilization1Remaster.Core.UI
 			using var _ = this.Processor.Journal.Scope($"AttachSpaceshipPart({participantIdx}, {partKind})");
 
 
-			this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
+			this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 200, Hues.Black);
 
 			DrawSpaceScenery();
 
@@ -395,8 +395,8 @@ namespace Civilization1Remaster.Core.UI
 
 				if (partKind == 1)
 				{
-					ushort complete = SpaceshipComponentsComplete;
-					DisabledLines = complete;
+					ushort complete = Spaceship.ComponentsComplete;
+					Menu.DisabledLines = complete;
 
 					if (complete == 3)
 						break;
@@ -412,8 +412,8 @@ namespace Civilization1Remaster.Core.UI
 
 				if (partKind == 2)
 				{
-					ushort complete = SpaceshipModulesComplete;
-					DisabledLines = complete;
+					ushort complete = Spaceship.ModulesComplete;
+					Menu.DisabledLines = complete;
 
 					if (complete == 7)
 						break;
@@ -497,7 +497,7 @@ namespace Civilization1Remaster.Core.UI
 					this.Owner.Words.Append("\n ");
 				}
 
-				DisabledLines = (ushort)((ushort)(this.Owner.World.StarshipMarkers >> 9) ^ 0xff);
+				Menu.DisabledLines = (ushort)((ushort)(this.Owner.World.StarshipMarkers >> 9) ^ 0xff);
 
 				short chosenIdx = (short)(this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 100, 80) + 1);
 
@@ -521,7 +521,7 @@ namespace Civilization1Remaster.Core.UI
 
 			this.Owner.Startup.HideMouseCursor();
 
-			this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
+			this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 200, Hues.Black);
 
 			this.Owner.TurnLogic.WaitForKey();
 
@@ -594,9 +594,9 @@ namespace Civilization1Remaster.Core.UI
 		{
 			ushort names = (ushort)(participantIdx << 1);
 
-			this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
+			this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 200, Hues.Black);
 
-			this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 8, PlayerColourAt(names));
+			this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 8, PlayerColourAt(names));
 
 			Message(CivilizationNameAt(names))
 				.Text(" SpaceShip: X.S.S. ");
@@ -636,7 +636,7 @@ namespace Civilization1Remaster.Core.UI
 					if (shown)
 					{
 						// The picture of the part (the translated code read it from part << 11, SpaceshipPictureRules)
-						this.Owner.Services.DrawPictureToScreen(ScreenBox, (column * 16) - 16, (row * 16) + 8,
+						this.Owner.Services.DrawPictureToScreen(Screen.Box, (column * 16) - 16, (row * 16) + 8,
 							this.Processor.PullGlobalWord(SpaceshipPictureRules.PictureAddress(part, this.Owner.TurnHooks.ClassicSpaceshipPictures)));
 					}
 
@@ -694,7 +694,7 @@ namespace Civilization1Remaster.Core.UI
 			vertLoc += 8;
 
 			EmptyMessage()
-				.Number((short)SpaceshipColonists)
+				.Number((short)Spaceship.Colonists)
 				.Text("0,000");
 
 			if (shown)
@@ -705,8 +705,8 @@ namespace Civilization1Remaster.Core.UI
 			vertLoc += 8;
 
 			// Support: life support per colonist module
-			short colonists = (short)this.Owner.Helpers.ClampValue((short)SpaceshipColonists, 1, 99);
-			short support = CPU.SignedQuotient((short)(0x64 * SpaceshipSupport), colonists);
+			short colonists = (short)this.Owner.Helpers.ClampValue((short)Spaceship.Colonists, 1, 99);
+			short support = CPU.SignedQuotient((short)(0x64 * Spaceship.Support), colonists);
 
 			Message("Support: ")
 				.Number(support)
@@ -723,8 +723,8 @@ namespace Civilization1Remaster.Core.UI
 
 			// Energy: power per support and colonist module
 			short modules = (short)this.Owner.Helpers.ClampValue(
-				(short)SpaceshipColonists + (short)SpaceshipSupport, 1, 99);
-			short energy = CPU.SignedQuotient((short)(0xc8 * SpaceshipEnergy), modules);
+				(short)Spaceship.Colonists + (short)Spaceship.Support, 1, 99);
+			short energy = CPU.SignedQuotient((short)(0xc8 * Spaceship.Energy), modules);
 
 			Message("Energy: ")
 				.Number(energy)
@@ -761,8 +761,8 @@ namespace Civilization1Remaster.Core.UI
 			vertLoc += 8;
 
 			// Fuel: fuel per propulsion
-			short propulsion = (short)this.Owner.Helpers.ClampValue((short)SpaceshipPropulsion, 1, 99);
-			short fuel = CPU.SignedQuotient((short)(0x64 * SpaceshipFuel), propulsion);
+			short propulsion = (short)this.Owner.Helpers.ClampValue((short)Spaceship.Propulsion, 1, 99);
+			short fuel = CPU.SignedQuotient((short)(0x64 * Spaceship.Fuel), propulsion);
 
 			Message("Fuel: ")
 				.Number(fuel)
@@ -783,8 +783,8 @@ namespace Civilization1Remaster.Core.UI
 			vertLoc += 8;
 
 			// Flight time (tenths of years): 50 * mass / (thrust + 1), over 15 years less success
-			short thrust = (short)this.Owner.Helpers.ClampValue(10 * (short)SpaceshipPropulsion, 0,
-				10 * (short)SpaceshipFuel);
+			short thrust = (short)this.Owner.Helpers.ClampValue(10 * (short)Spaceship.Propulsion, 0,
+				10 * (short)Spaceship.Fuel);
 			short flightTime = CPU.SignedQuotient((short)(0x32 * mass), (short)(thrust + 1));
 
 			if (flightTime > 0x96)
@@ -915,7 +915,7 @@ namespace Civilization1Remaster.Core.UI
 		/// </summary>
 		private void BuildSpaceshipPart(short participantIdx, ushort placeIdx)
 		{
-			this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
+			this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 200, Hues.Black);
 
 			Message(CivilizationPlural(participantIdx))
 				.Text(" build space ship.\n");

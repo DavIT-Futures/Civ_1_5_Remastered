@@ -44,7 +44,7 @@ namespace Civilization1Remaster.Core.Game
 		{
 			ushort key = this.turn.Order;
 			short person = this.Owner.World.PersonParticipantIdx;
-			bool everythingShown = MapRevealed != 0;
+			bool everythingShown = MapView.Revealed != 0;
 
 
 			switch (key)
@@ -140,7 +140,7 @@ namespace Civilization1Remaster.Core.Game
 					break;
 
 				case KeyCodes.AltD:
-					MapRevealed = (ushort)~MapRevealed;
+					MapView.Revealed = (ushort)~MapView.Revealed;
 					this.turn.Direction = 0;
 					PanViewByDirection();
 					break;
@@ -180,11 +180,11 @@ namespace Civilization1Remaster.Core.Game
 					break;
 
 				case 't':
-					UnitsHidden = 1;
-					this.Owner.MapOps.FocusMapView(participantIdx, (short)MapViewHoriz, (short)MapViewVert);
+					MapView.UnitsHidden = 1;
+					this.Owner.MapOps.FocusMapView(participantIdx, (short)MapView.Horiz, (short)MapView.Vert);
 					this.Owner.Conquest.WaitForKeyPressOrMouseClick();
-					UnitsHidden = 0;
-					this.Owner.MapOps.FocusMapView(participantIdx, (short)MapViewHoriz, (short)MapViewVert);
+					MapView.UnitsHidden = 0;
+					this.Owner.MapOps.FocusMapView(participantIdx, (short)MapView.Horiz, (short)MapView.Vert);
 					break;
 
 				case KeyCodes.AltR:
@@ -221,7 +221,7 @@ namespace Civilization1Remaster.Core.Game
 					break;
 
 				case KeyCodes.Escape:
-					if (MousePresent == 0 && this.turn.MarkedTileMode != 0)
+					if (Mouse.Present == 0 && this.turn.MarkedTileMode != 0)
 					{
 						this.turn.MarkedTileMode = 0;
 						ForgetMarkedTileOnScreen(participantIdx);
@@ -229,7 +229,7 @@ namespace Civilization1Remaster.Core.Game
 					break;
 
 				case KeyCodes.Tab:
-					if (MousePresent == 0)
+					if (Mouse.Present == 0)
 						ToggleMarkedTile(participantIdx);
 					break;
 
@@ -256,14 +256,14 @@ namespace Civilization1Remaster.Core.Game
 		private void PanViewByDirection()
 		{
 			ushort horiz = (ushort)(DirectionHorizAt((ushort)(this.turn.Direction << 1)) << 2);
-			MapViewHoriz = (ushort)(MapViewHoriz + horiz);
+			MapView.Horiz = (ushort)(MapView.Horiz + horiz);
 
 			ushort vert = (ushort)(DirectionVertAt((ushort)(this.turn.Direction << 1)) << 2);
-			MapViewVert = (ushort)(MapViewVert + vert);
+			MapView.Vert = (ushort)(MapView.Vert + vert);
 
 			this.Owner.MapOps.FocusMapView(this.Owner.World.PersonParticipantIdx,
-				(short)MapViewHoriz,
-				(short)MapViewVert);
+				(short)MapView.Horiz,
+				(short)MapView.Vert);
 		}
 
 		/// <summary>
@@ -307,7 +307,7 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 			this.turn.Result = (ushort)rate;
-			DefaultLine = (ushort)participant.LevyRatio;
+			Menu.DefaultLine = (ushort)participant.LevyRatio;
 
 			this.turn.Result = this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 100, 80);
 
@@ -341,7 +341,7 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 			this.turn.Result = (ushort)rate;
-			DefaultLine = (ushort)-(participant.LevyRatio + participant.ResearchLevyRatio - 10);
+			Menu.DefaultLine = (ushort)-(participant.LevyRatio + participant.ResearchLevyRatio - 10);
 
 			this.turn.Result = this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 100, 80);
 
@@ -359,19 +359,19 @@ namespace Civilization1Remaster.Core.Game
 		/// </summary>
 		private void ConfirmQuit()
 		{
-			if (GameEndRequest != SaveGameStore.FetchSessionAsk)
+			if (Turn.GameEndRequest != SaveGameStore.FetchSessionAsk)
 			{
 				ushort quitChoice = Message("Are you sure you\nwant to Quit?\n Keep Playing\n Yes, Quit\n")
 					.Dialog(100, 80);
 
 				if (quitChoice != 1)
 				{
-					GameEndRequest = 0;
+					Turn.GameEndRequest = 0;
 					return;
 				}
 
-				if (GameEndRequest == 0)
-					GameEndRequest = 1;
+				if (Turn.GameEndRequest == 0)
+					Turn.GameEndRequest = 1;
 			}
 
 			this.turn.Troop = 0x80;
@@ -416,8 +416,8 @@ namespace Civilization1Remaster.Core.Game
 
 				if (!onUnit)
 				{
-					this.turn.CursorHoriz = (ushort)(MapViewHoriz + 7);
-					this.turn.CursorVert = (ushort)(MapViewVert + 6);
+					this.turn.CursorHoriz = (ushort)(MapView.Horiz + 7);
+					this.turn.CursorVert = (ushort)(MapView.Vert + 6);
 				}
 
 				if ((this.Owner.World.ChartSight[this.turn.CursorHoriz, this.turn.CursorVert] & (1 << (participantIdx & 0xff))) != 0)
@@ -432,10 +432,10 @@ namespace Civilization1Remaster.Core.Game
 		{
 			this.Owner.MenuSystem.ManageMenuBar(participantIdx, (short)this.turn.Troop, menu);
 
-			if (ChosenOrder == 0xffff)
+			if (Turn.ChosenOrder == 0xffff)
 				return KeyStep.NextLook;
 
-			this.turn.Order = ChosenOrder;
+			this.turn.Order = Turn.ChosenOrder;
 			return KeyStep.MenuOrder;
 		}
 	}

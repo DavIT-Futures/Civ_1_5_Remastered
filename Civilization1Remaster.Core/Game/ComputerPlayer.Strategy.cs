@@ -48,7 +48,7 @@ namespace Civilization1Remaster.Core.Game
 				}
 			}
 
-			if (participantIdx == (short)TurnPlayer && participantIdx != this.Owner.World.PersonParticipantIdx &&
+			if (participantIdx == (short)Turn.Player && participantIdx != this.Owner.World.PersonParticipantIdx &&
 				(live == 3 || live == 4))
 			{
 				SendUnitOfRole(participantIdx, horizLoc, vertLoc, live);

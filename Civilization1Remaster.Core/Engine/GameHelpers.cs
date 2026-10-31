@@ -77,7 +77,7 @@ namespace Civilization1Remaster.Core.Engine
 				}
 			}
 
-			FoundDistance = (ushort)nearestDistance;
+			Search.FoundDistance = (ushort)nearestDistance;
 
 			return nearest;
 		}
@@ -106,7 +106,7 @@ namespace Civilization1Remaster.Core.Engine
 				}
 			}
 
-			FoundDistance = (ushort)nearestDistance;
+			Search.FoundDistance = (ushort)nearestDistance;
 
 			return nearest;
 		}
@@ -176,7 +176,7 @@ namespace Civilization1Remaster.Core.Engine
 		/// <inheritdoc/>
 		public void FillBoxWithMotif(int horizLoc, int vertLoc, int breadth, int altitude)
 		{
-			if ((short)VgaMode != 0)
+			if ((short)Screen.VgaMode != 0)
 			{
 				int vertLocScratch = vertLoc;
 				int altitudeScratch = altitude;
@@ -192,9 +192,9 @@ namespace Civilization1Remaster.Core.Engine
 						int tileBreadth = Math.Min(breadthScratch, 32);
 
 						this.Owner.VideoCard.RenderImage(
-							PictureScreenBox,
+							Screen.PictureScreenBox,
 							288, 120, tileBreadth, tileAltitude,
-							ScreenBox,
+							Screen.Box,
 							horizLocScratch, vertLocScratch);
 
 						horizLocScratch += tileBreadth;
@@ -207,7 +207,7 @@ namespace Civilization1Remaster.Core.Engine
 			}
 			else
 			{
-				this.Owner.Services.FloodBox(ScreenBox,
+				this.Owner.Services.FloodBox(Screen.Box,
 					horizLoc, vertLoc, breadth, altitude, Hues.LightGray);
 			}		
 		}
@@ -217,7 +217,7 @@ namespace Civilization1Remaster.Core.Engine
 		{
 			using var _ = this.Processor.Journal.Scope($"PullAndAssignColors(0x{docnameAddr:x4})");
 
-			if (VgaMode != 0)
+			if (Screen.VgaMode != 0)
 			{
 				this.Owner.ImageToolkit.LoadPictureOrColors(-1, 0, 0, docnameAddr, 0xbdee);
 
@@ -266,7 +266,7 @@ namespace Civilization1Remaster.Core.Engine
 		/// <inheritdoc/>
 		public void LaunchHueCycling()
 		{
-			if (HueCyclingOn == 0 && VgaMode != 0)
+			if (Screen.HueCyclingOn == 0 && Screen.VgaMode != 0)
 			{
 				this.Owner.Services.ActivateHueCycle(1);
 
@@ -275,7 +275,7 @@ namespace Civilization1Remaster.Core.Engine
 				this.Owner.Services.ActivateHueCycle(3);
 			}
 		
-			HueCyclingOn = 0x1;
+			Screen.HueCyclingOn = 0x1;
 		}
 
 		/// <inheritdoc/>
@@ -283,8 +283,8 @@ namespace Civilization1Remaster.Core.Engine
 		{
 			using var _ = this.Processor.Journal.Scope("HaltHueCycling()");
 
-			if (HueCyclingOn != 0 &&
-				VgaMode != 0)
+			if (Screen.HueCyclingOn != 0 &&
+				Screen.VgaMode != 0)
 			{
 				this.Owner.Services.DeactivateHueCycle(1);
 
@@ -293,7 +293,7 @@ namespace Civilization1Remaster.Core.Engine
 				this.Owner.Services.DeactivateHueCycle(3);
 			}
 
-			HueCyclingOn = 0x0;
+			Screen.HueCyclingOn = 0x0;
 		}
 	}
 }

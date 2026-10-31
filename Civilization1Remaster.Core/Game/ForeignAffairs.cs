@@ -151,7 +151,7 @@ namespace Civilization1Remaster.Core.Game
 						participant.Relations[0] |= 4;
 					}
 
-					DialogStyle = 0x1;
+					Screen.DialogStyle = 0x1;
 
 					this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 80, 64);
 				}
@@ -409,8 +409,8 @@ namespace Civilization1Remaster.Core.Game
 		{
 			this.Owner.BlockText.ShowTextDialog(charsAddr);
 
-			KingMood = 0x1;
-			KingSpeaking = 0xc;
+			King.Mood = 0x1;
+			King.Speaking = 0xc;
 
 			return this.Owner.Audience.ShowKingDialog(TextBuffer.Address, 0x14, 0x8b) == 1;
 		}
@@ -482,7 +482,7 @@ namespace Civilization1Remaster.Core.Game
 
 					this.Owner.Words.Append(" sign\na peace treaty.\n");
 
-					DialogStyle = 0x1;
+					Screen.DialogStyle = 0x1;
 
 					this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 100, 80);
 				}
@@ -501,7 +501,7 @@ namespace Civilization1Remaster.Core.Game
 
 					this.Owner.Words.Append((participant1.Relations[participantIdx2] & 2) != 0 ? (ushort)0x2a36 : (ushort)0x2a4d);
 
-					DialogStyle = 0x1;
+					Screen.DialogStyle = 0x1;
 
 					this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 100, 80);
 				}

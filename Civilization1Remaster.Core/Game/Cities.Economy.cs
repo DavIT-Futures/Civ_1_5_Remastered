@@ -15,30 +15,30 @@ namespace Civilization1Remaster.Core.Game
 		private void CountCorruptionAndTradeRoutes(short townIdx)
 		{
 			City town = this.Owner.World.Towns[townIdx];
-			short owner = (short)CityOwner;
+			short owner = (short)CityTurn.Owner;
 			Player player = this.Owner.World.Participants[owner];
 
 			this.round.Horiz = (ushort)(short)town.Place.X;
 			this.round.Vert = (ushort)(short)town.Place.Y;
-			CityCorruption = 0;
+			CityTurn.Corruption = 0;
 
 			if (player.RegimeKind == 3)
-				PalaceDistance = 0xa;
+				CityTurn.PalaceDistance = 0xa;
 
 			// The corruption
-			short corruption = (short)((short)((short)CityTrade * (short)PalaceDistance) * 3);
-			CityCorruption = (ushort)(corruption / (short)(ushort)(20 * player.RegimeKind + 0x50));
+			short corruption = (short)((short)((short)CityTurn.Trade * (short)CityTurn.PalaceDistance) * 3);
+			CityTurn.Corruption = (ushort)(corruption / (short)(ushort)(20 * player.RegimeKind + 0x50));
 
 			if (town.Has(CityStructure.Courthouse) || town.Has(CityStructure.Palace))
 			{
 				// A courthouse or the palace
-				CityCorruption = (ushort)((short)CityCorruption / 2);
+				CityTurn.Corruption = (ushort)((short)CityTurn.Corruption / 2);
 			}
 
 			if (player.RegimeKind == 5)
-				CityCorruption = 0;
+				CityTurn.Corruption = 0;
 
-			town.RootCommerce = (sbyte)(byte)((byte)CityTrade - (byte)CityCorruption);
+			town.RootCommerce = (sbyte)(byte)((byte)CityTurn.Trade - (byte)CityTurn.Corruption);
 
 			// The trade routes
 			for (ushort route = 0; route < 3; route++)
@@ -50,9 +50,9 @@ namespace Civilization1Remaster.Core.Game
 					continue;
 
 				City partner = this.Owner.World.Towns[this.round.OtherCity];
-				short share = (short)(partner.RootCommerce + CityTrade + 4);
+				short share = (short)(partner.RootCommerce + CityTurn.Trade + 4);
 				share = (short)(partner.ParticipantIdx != owner ? share / 8 : share / 16);
-				CityTrade = (ushort)(CityTrade + share);
+				CityTurn.Trade = (ushort)(CityTurn.Trade + share);
 			}
 
 			this.round.Item = 3;
@@ -68,35 +68,35 @@ namespace Civilization1Remaster.Core.Game
 		private void SplitTrade(short townIdx)
 		{
 			City town = this.Owner.World.Towns[townIdx];
-			Player player = this.Owner.World.Participants[(short)CityOwner];
+			Player player = this.Owner.World.Participants[(short)CityTurn.Owner];
 
 			// The corruption of the whole trade
-			short corruption = (short)((short)((short)CityTrade * (short)PalaceDistance) * 3);
-			CityCorruption = (ushort)(corruption / (short)(ushort)(20 * player.RegimeKind + 0x50));
+			short corruption = (short)((short)((short)CityTurn.Trade * (short)CityTurn.PalaceDistance) * 3);
+			CityTurn.Corruption = (ushort)(corruption / (short)(ushort)(20 * player.RegimeKind + 0x50));
 
 			if (player.RegimeKind == 5)
-				CityCorruption = 0;
+				CityTurn.Corruption = 0;
 
 			if (town.Has(CityStructure.Courthouse))
 			{
-				CityCorruption = (ushort)((short)CityCorruption / 2);
+				CityTurn.Corruption = (ushort)((short)CityTurn.Corruption / 2);
 			}
 
 			// The luxuries, the taxes and the science
-			short trade = (short)CityTrade;
-			short corrupt = (short)CityCorruption;
+			short trade = (short)CityTurn.Trade;
+			short corrupt = (short)CityTurn.Corruption;
 
-			CityLuxuries = (ushort)this.Owner.Helpers.ClampValue(((-(player.ResearchLevyRatio + player.LevyRatio - 10) * (trade - corrupt)) + 5) / 10, 0, trade);
+			CityTurn.Luxuries = (ushort)this.Owner.Helpers.ClampValue(((-(player.ResearchLevyRatio + player.LevyRatio - 10) * (trade - corrupt)) + 5) / 10, 0, trade);
 
-			CityTaxes = (ushort)this.Owner.Helpers.ClampValue(((player.LevyRatio * (trade - corrupt)) + 5) / 10, 0,
-				trade - (short)CityLuxuries - corrupt);
+			CityTurn.Taxes = (ushort)this.Owner.Helpers.ClampValue(((player.LevyRatio * (trade - corrupt)) + 5) / 10, 0,
+				trade - (short)CityTurn.Luxuries - corrupt);
 
-			CityScience = (ushort)(CityTrade - CityLuxuries - CityTaxes - CityCorruption);
+			CityTurn.Science = (ushort)(CityTurn.Trade - CityTurn.Luxuries - CityTurn.Taxes - CityTurn.Corruption);
 
 			// The specialists
-			CityTaxes = (ushort)(CityTaxes + (ushort)(TallySpecialists(1) << 1));
-			CityScience = (ushort)(CityScience + (ushort)(TallySpecialists(2) << 1));
-			CityLuxuries = (ushort)(CityLuxuries + (ushort)(TallySpecialists(3) << 1));
+			CityTurn.Taxes = (ushort)(CityTurn.Taxes + (ushort)(TallySpecialists(1) << 1));
+			CityTurn.Science = (ushort)(CityTurn.Science + (ushort)(TallySpecialists(2) << 1));
+			CityTurn.Luxuries = (ushort)(CityTurn.Luxuries + (ushort)(TallySpecialists(3) << 1));
 
 			// The library and the university
 
@@ -105,8 +105,8 @@ namespace Civilization1Remaster.Core.Game
 				if ((town.StructureMarkers0 & improvement) == 0)
 					continue;
 
-				CityLuxuries = (ushort)(CityLuxuries + ((ushort)((short)CityLuxuries / 2)));
-				CityTaxes = (ushort)(CityTaxes + ((ushort)((short)CityTaxes / 2)));
+				CityTurn.Luxuries = (ushort)(CityTurn.Luxuries + ((ushort)((short)CityTurn.Luxuries / 2)));
+				CityTurn.Taxes = (ushort)(CityTurn.Taxes + ((ushort)((short)CityTurn.Taxes / 2)));
 			}
 		}
 
@@ -120,21 +120,21 @@ namespace Civilization1Remaster.Core.Game
 		private void CountScienceAndContent(short townIdx)
 		{
 			City town = this.Owner.World.Towns[townIdx];
-			short owner = (short)CityOwner;
+			short owner = (short)CityTurn.Owner;
 			Player player = this.Owner.World.Participants[owner];
 
-			this.round.Value = CityScience;
+			this.round.Value = CityTurn.Science;
 
 			foreach (ushort improvement in new ushort[] { 0x20, 0x800 })
 			{
 				if ((town.StructureMarkers0 & improvement) == 0)
 					continue;
 
-				this.round.Value = (ushort)(this.round.Value + ((ushort)((short)CityScience / 2)));
+				this.round.Value = (ushort)(this.round.Value + ((ushort)((short)CityTurn.Science / 2)));
 
 				if (PlayerEnjoysWonderEffect(owner, 0xc) != 0)
 				{
-					this.round.Value = (ushort)(this.round.Value + (CityScience / 3));
+					this.round.Value = (ushort)(this.round.Value + (CityTurn.Science / 3));
 				}
 			}
 
@@ -144,8 +144,8 @@ namespace Civilization1Remaster.Core.Game
 				this.round.Value = (ushort)(this.round.Value * 2);
 			}
 
-			CityScience = this.round.Value;
-			CityHappy = 0;
+			CityTurn.Science = this.round.Value;
+			CityTurn.Happy = 0;
 
 			// The content citizens
 			if (owner == this.Owner.World.PersonParticipantIdx)
@@ -163,15 +163,15 @@ namespace Civilization1Remaster.Core.Game
 				this.round.Content = (ushort)(town.TrueExtent - 3);
 			}
 
-			CityUnhappy = this.round.Content;
+			CityTurn.Unhappy = this.round.Content;
 
 			// The citizens above the size
-			CityExcessUnhappy = 0;
+			CityTurn.ExcessUnhappy = 0;
 
-			if (town.TrueExtent < (short)CityUnhappy)
+			if (town.TrueExtent < (short)CityTurn.Unhappy)
 			{
-				CityExcessUnhappy = (ushort)(CityUnhappy - town.TrueExtent);
-				CityUnhappy = (ushort)town.TrueExtent;
+				CityTurn.ExcessUnhappy = (ushort)(CityTurn.Unhappy - town.TrueExtent);
+				CityTurn.Unhappy = (ushort)town.TrueExtent;
 			}
 
 			ReshuffleCitizens(townIdx, this.round.Specialists);
@@ -184,26 +184,26 @@ namespace Civilization1Remaster.Core.Game
 		/// </summary>
 		private void ApplyLuxuries(short townIdx, short marker)
 		{
-			if (marker == 1 && CityScreenTab == 1)
+			if (marker == 1 && CityTurn.ScreenTab == 1)
 			{
 				this.round.IconVert = 0x74;
 				DrawCitizenIcons(townIdx, 100, (short)this.round.IconVert, this.round.Specialists, 92);
 				this.round.IconVert = (ushort)(this.round.IconVert + 0x10);
-				this.Owner.VideoCard.RenderLine(ScreenBox,
+				this.Owner.VideoCard.RenderLine(Screen.Box,
 					100, (short)this.round.IconVert - 2, 222, (short)this.round.IconVert - 2, Hues.Blue);
 			}
 
-			CityHappy = (ushort)((short)CityLuxuries / 2);
+			CityTurn.Happy = (ushort)((short)CityTurn.Luxuries / 2);
 
 			ReshuffleCitizens(townIdx, this.round.Specialists);
 
-			if (marker == 1 && CityScreenTab == 1 && CityHappy != 0)
+			if (marker == 1 && CityTurn.ScreenTab == 1 && CityTurn.Happy != 0)
 			{
 				DrawCitizenIcons(townIdx, 100, (short)this.round.IconVert, this.round.Specialists, 92);
-				this.Owner.Services.DrawPictureToScreen(ScreenBox, 208, (short)this.round.IconVert + 4,
+				this.Owner.Services.DrawPictureToScreen(Screen.Box, 208, (short)this.round.IconVert + 4,
 					SpritePicture(0xe));
 				this.round.IconVert = (ushort)(this.round.IconVert + 0x10);
-				this.Owner.VideoCard.RenderLine(ScreenBox,
+				this.Owner.VideoCard.RenderLine(Screen.Box,
 					100, (short)this.round.IconVert - 2, 222, (short)this.round.IconVert - 2, Hues.Blue);
 			}
 
@@ -219,15 +219,15 @@ namespace Civilization1Remaster.Core.Game
 		private void ApplyContentImprovements(short townIdx, short marker)
 		{
 			City town = this.Owner.World.Towns[townIdx];
-			short owner = (short)CityOwner;
-			bool tab = marker == 1 && CityScreenTab == 1;
+			short owner = (short)CityTurn.Owner;
+			bool tab = marker == 1 && CityTurn.ScreenTab == 1;
 
 			this.round.IconHoriz = 0xd0;
 
 			// The colosseum
 			if (town.Has(CityStructure.Colosseum))
 			{
-				CityUnhappy = (ushort)(CityUnhappy - 3);
+				CityTurn.Unhappy = (ushort)(CityTurn.Unhappy - 3);
 
 				if (tab)
 					DrawContentIcon(14);
@@ -239,7 +239,7 @@ namespace Civilization1Remaster.Core.Game
 				if (town.Has(CityStructure.Cathedral))
 				{
 					ushort relief = (ushort)(PlayerEnjoysWonderEffect(owner, 9) != 0 ? 6 : 4);
-					CityUnhappy = (ushort)(CityUnhappy - relief);
+					CityTurn.Unhappy = (ushort)(CityTurn.Unhappy - relief);
 				}
 
 				if (tab)
@@ -254,14 +254,14 @@ namespace Civilization1Remaster.Core.Game
 			if (town.Has(CityStructure.Temple))
 			{
 				if (this.Owner.Advisors.PlayerKnowsTechnology(owner, 0x1a) != 0)
-					CityUnhappy = (ushort)(CityUnhappy - 2);
+					CityTurn.Unhappy = (ushort)(CityTurn.Unhappy - 2);
 				else if (this.Owner.Advisors.PlayerKnowsTechnology(owner, 0x19) != 0)
-					CityUnhappy = (ushort)(CityUnhappy - 1);
+					CityTurn.Unhappy = (ushort)(CityTurn.Unhappy - 1);
 
 				if (PlayerEnjoysWonderEffect(owner, 6) != 0)
 				{
 					ushort relief = (ushort)(this.Owner.Advisors.PlayerKnowsTechnology(owner, 0x1a) != 0 ? 2 : 1);
-					CityUnhappy = (ushort)(CityUnhappy - relief);
+					CityTurn.Unhappy = (ushort)(CityTurn.Unhappy - relief);
 				}
 
 				if (tab)
@@ -270,13 +270,13 @@ namespace Civilization1Remaster.Core.Game
 
 			ReshuffleCitizens(townIdx, this.round.Specialists);
 
-			if (marker == 1 && CityScreenTab == 1)
+			if (marker == 1 && CityTurn.ScreenTab == 1)
 			{
 				if ((town.StructureMarkers0 & 0x2408) != 0)
 				{
 					DrawCitizenIcons(townIdx, 100, (short)this.round.IconVert, this.round.Specialists, 92);
 					this.round.IconVert = (ushort)(this.round.IconVert + 0x10);
-					this.Owner.VideoCard.RenderLine(ScreenBox,
+					this.Owner.VideoCard.RenderLine(Screen.Box,
 						100, (short)this.round.IconVert - 2, 222, (short)this.round.IconVert - 2, Hues.Blue);
 				}
 			}
@@ -300,9 +300,9 @@ namespace Civilization1Remaster.Core.Game
 		private void ApplyMilitaryHappiness(short townIdx, short marker)
 		{
 			City town = this.Owner.World.Towns[townIdx];
-			short owner = (short)CityOwner;
+			short owner = (short)CityTurn.Owner;
 			Player player = this.Owner.World.Participants[owner];
-			bool tab = marker == 1 && CityScreenTab == 1;
+			bool tab = marker == 1 && CityTurn.ScreenTab == 1;
 
 			this.round.IconHoriz = 0xd0;
 
@@ -330,7 +330,7 @@ namespace Civilization1Remaster.Core.Game
 
 						if (tab && (short)this.round.UnitsAway <= 3)
 						{
-							this.Owner.Services.DrawPictureToScreen(ScreenBox, (short)this.round.IconHoriz,
+							this.Owner.Services.DrawPictureToScreen(Screen.Box, (short)this.round.IconHoriz,
 								(short)this.round.IconVert - 1,
 								SpritePicture((this.troops.Pull(owner, troopIdx, UnitMemory.Kind) + (owner << 5) + 0x40)));
 							this.round.IconHoriz = (ushort)(this.round.IconHoriz - 2);
@@ -348,7 +348,7 @@ namespace Civilization1Remaster.Core.Game
 				{
 					this.round.NewUnit = slot;
 
-					if (CityUnhappy == 0)
+					if (CityTurn.Unhappy == 0)
 						continue;
 
 					if ((byte)town.Unfamiliar[slot] == 0xff)
@@ -363,7 +363,7 @@ namespace Civilization1Remaster.Core.Game
 				if ((short)this.round.UnitsAway > 3)
 					this.round.UnitsAway = 3;
 
-				CityUnhappy = (ushort)(CityUnhappy - (ushort)this.Owner.Helpers.ClampValue((short)this.round.UnitsAway, 0, (short)CityUnhappy));
+				CityTurn.Unhappy = (ushort)(CityTurn.Unhappy - (ushort)this.Owner.Helpers.ClampValue((short)this.round.UnitsAway, 0, (short)CityTurn.Unhappy));
 			}
 			else
 			{
@@ -375,8 +375,8 @@ namespace Civilization1Remaster.Core.Game
 
 				if (this.round.Value != 0)
 				{
-					short unhappy = (short)((short)this.round.Value * (short)CityAttackersAway);
-					CityUnhappy = (ushort)(CityUnhappy + unhappy);
+					short unhappy = (short)((short)this.round.Value * (short)CityTurn.AttackersAway);
+					CityTurn.Unhappy = (ushort)(CityTurn.Unhappy + unhappy);
 
 					if (tab)
 					{
@@ -385,7 +385,7 @@ namespace Civilization1Remaster.Core.Game
 						for (; unhappy > (short)drawn; drawn++)
 						{
 							this.round.NewUnit = drawn;
-							this.Owner.Services.DrawPictureToScreen(ScreenBox, (short)this.round.IconHoriz,
+							this.Owner.Services.DrawPictureToScreen(Screen.Box, (short)this.round.IconHoriz,
 								(short)this.round.IconVert + 4, SpritePicture(0xd));
 							this.round.IconHoriz = (ushort)(this.round.IconHoriz - 2);
 						}
@@ -397,11 +397,11 @@ namespace Civilization1Remaster.Core.Game
 
 			ReshuffleCitizens(townIdx, this.round.Specialists);
 
-			if (marker == 1 && CityScreenTab == 1)
+			if (marker == 1 && CityTurn.ScreenTab == 1)
 			{
 				DrawCitizenIcons(townIdx, 100, (short)this.round.IconVert, this.round.Specialists, 92);
 				this.round.IconVert = (ushort)(this.round.IconVert + 0x10);
-				this.Owner.VideoCard.RenderLine(ScreenBox,
+				this.Owner.VideoCard.RenderLine(Screen.Box,
 					100, (short)this.round.IconVert - 2, 222, (short)this.round.IconVert - 2, Hues.Blue);
 			}
 
@@ -415,18 +415,18 @@ namespace Civilization1Remaster.Core.Game
 		/// </summary>
 		private void ApplyWonderHappiness(short townIdx, short marker)
 		{
-			short owner = (short)CityOwner;
+			short owner = (short)CityTurn.Owner;
 
-			this.round.Value = (ushort)(CityHappy - CityUnhappy);
+			this.round.Value = (ushort)(CityTurn.Happy - CityTurn.Unhappy);
 
 			if (PlayerEnjoysWonderEffect(owner, 2) != 0)
-				CityHappy = (ushort)(CityHappy + 1);
+				CityTurn.Happy = (ushort)(CityTurn.Happy + 1);
 
 			if (PlayerEnjoysWonderEffect(owner, 0x15) != 0)
-				CityHappy = (ushort)(CityHappy + 1);
+				CityTurn.Happy = (ushort)(CityTurn.Happy + 1);
 
 			if (ObtainWonderCityID(11) == (ushort)townIdx)
-				CityUnhappy = 0;
+				CityTurn.Unhappy = 0;
 
 			if (PlayerEnjoysWonderEffect(owner, 0xd) != 0)
 			{
@@ -434,25 +434,25 @@ namespace Civilization1Remaster.Core.Game
 				short marvelIdx = this.Owner.World.MarvelTownIdx[13];
 				ushort marvelContinent = this.Owner.MapOps.ObtainContinentID(this.Owner.World.Towns[marvelIdx].Place.X, this.Owner.World.Towns[marvelIdx].Place.Y);
 				if (this.Owner.MapOps.ObtainContinentID((short)this.round.Horiz, (short)this.round.Vert) == marvelContinent)
-					CityUnhappy = (ushort)(CityUnhappy - 2);
+					CityTurn.Unhappy = (ushort)(CityTurn.Unhappy - 2);
 			}
 
 			ReshuffleCitizens(townIdx, this.round.Specialists);
 
-			if (marker == 1 && CityScreenTab == 1 &&
-				(ushort)(CityHappy - CityUnhappy) != this.round.Value)
+			if (marker == 1 && CityTurn.ScreenTab == 1 &&
+				(ushort)(CityTurn.Happy - CityTurn.Unhappy) != this.round.Value)
 			{
 				DrawCitizenIcons(townIdx, 100, (short)this.round.IconVert, this.round.Specialists, 92);
 				this.Owner.TextPainter.DrawTextToScreen0(GameTexts.TextWonders, 190, (short)this.round.IconVert + 5, Hues.White);
 				this.round.IconVert = (ushort)(this.round.IconVert + 0x10);
-				this.Owner.VideoCard.RenderLine(ScreenBox,
+				this.Owner.VideoCard.RenderLine(Screen.Box,
 					100, (short)this.round.IconVert - 2, 222, (short)this.round.IconVert - 2, Hues.Blue);
 			}
 
 			if ((this.Owner.World.DiagMarkers & 2) == 0)
 			{
-				CityUnhappy = 0;
-				CityHappy = 0;
+				CityTurn.Unhappy = 0;
+				CityTurn.Happy = 0;
 			}
 		}
 
@@ -467,9 +467,9 @@ namespace Civilization1Remaster.Core.Game
 			City town = this.Owner.World.Towns[townIdx];
 
 			this.round.UnitsDrawn = 0;
-			CitySpecialSlots = 0;
-			UnitSupportCount = 0;
-			CityUnitUpkeep = 0;
+			CityTurn.SpecialSlots = 0;
+			Turn.UnitSupportCount = 0;
+			CityTurn.UnitUpkeep = 0;
 
 			CountSpecialSlots(townIdx);
 
@@ -488,19 +488,19 @@ namespace Civilization1Remaster.Core.Game
 		private bool SupportUnit(short townIdx, short marker)
 		{
 			City town = this.Owner.World.Towns[townIdx];
-			short owner = (short)CityOwner;
+			short owner = (short)CityTurn.Owner;
 			short troopIdx = (short)this.round.Index;
 
 			if (this.troops.Pull(owner, troopIdx, UnitMemory.Kind) != 0xff && this.troops.PullSigned(owner, troopIdx, UnitMemory.BaseTown) == townIdx)
 			{
 				if (this.troops.PullSigned(owner, troopIdx, UnitMemory.Kind) < 0x1a)
 				{
-					CitySpecialSlots = (ushort)(CitySpecialSlots + 1);
+					CityTurn.SpecialSlots = (ushort)(CityTurn.SpecialSlots + 1);
 
-					if (town.TrueExtent < (short)CitySpecialSlots ||
+					if (town.TrueExtent < (short)CityTurn.SpecialSlots ||
 						(this.Owner.World.Participants[owner].RegimeKind > 1 && (this.Owner.World.DiagMarkers & 2) != 0))
 					{
-						CityUnitUpkeep = (ushort)(CityUnitUpkeep + 1);
+						CityTurn.UnitUpkeep = (ushort)(CityTurn.UnitUpkeep + 1);
 					}
 				}
 
@@ -525,9 +525,9 @@ namespace Civilization1Remaster.Core.Game
 		private bool DisbandUnsupportedUnit(short townIdx)
 		{
 			City town = this.Owner.World.Towns[townIdx];
-			short owner = (short)CityOwner;
+			short owner = (short)CityTurn.Owner;
 			short person = this.Owner.World.PersonParticipantIdx;
-			bool enoughShields = (short)CityShields >= (short)CityUnitUpkeep;
+			bool enoughShields = (short)CityTurn.Shields >= (short)CityTurn.UnitUpkeep;
 
 			if (enoughShields)
 			{
@@ -569,10 +569,10 @@ namespace Civilization1Remaster.Core.Game
 
 			if (enoughShields)
 			{
-				if (LateGameNudge != 0 &&
+				if (Turn.LateGameNudge != 0 &&
 					this.Owner.World.Participants[owner].FoundScienceTally < this.Owner.World.Participants[person].FoundScienceTally)
 				{
-					DemocracyPressure = 0xfc19;
+					Turn.DemocracyPressure = 0xfc19;
 				}
 				else if ((short)this.round.Best > 0)
 				{
@@ -594,7 +594,7 @@ namespace Civilization1Remaster.Core.Game
 					.Text(" can't support\n");
 				this.Owner.Words.Append((ushort)(this.troops.TroopKind(owner, farthest) * UnitKindTable.Stride + UnitKindTable.Origin));
 				this.Owner.Words.Append(".\n Unit Disbanded.\n");
-				DialogStyle = 3;
+				Screen.DialogStyle = 3;
 				this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 100, 80);
 			}
 
@@ -611,27 +611,27 @@ namespace Civilization1Remaster.Core.Game
 		private void DrawSupportedUnit(short townIdx)
 		{
 			City town = this.Owner.World.Towns[townIdx];
-			short owner = (short)CityOwner;
+			short owner = (short)CityTurn.Owner;
 			short troopIdx = (short)this.round.Index;
 			Player player = this.Owner.World.Participants[owner];
 
 			if (this.troops.PullSigned(owner, troopIdx, UnitMemory.Kind) < 0x1a)
 			{
-				if (CityUnitUpkeep != 0)
+				if (CityTurn.UnitUpkeep != 0)
 				{
-					this.Owner.Services.DrawPictureToScreen(ScreenBox, (short)this.round.DrawHoriz + 8,
+					this.Owner.Services.DrawPictureToScreen(Screen.Box, (short)this.round.DrawHoriz + 8,
 						(short)this.round.DrawVert + 12, SpritePicture(0x9));
 				}
 
 				if (this.troops.Pull(owner, troopIdx, UnitMemory.Kind) == 0)
 				{
 					// The food of settlers
-					this.Owner.Services.DrawPictureToScreen(ScreenBox, (short)this.round.DrawHoriz,
+					this.Owner.Services.DrawPictureToScreen(Screen.Box, (short)this.round.DrawHoriz,
 						(short)this.round.DrawVert + 12, SpritePicture(0x8));
 
 					if (player.RegimeKind >= 2)
 					{
-						this.Owner.Services.DrawPictureToScreen(ScreenBox, (short)this.round.DrawHoriz + 2,
+						this.Owner.Services.DrawPictureToScreen(Screen.Box, (short)this.round.DrawHoriz + 2,
 							(short)this.round.DrawVert + 12, SpritePicture(0x8));
 					}
 				}
@@ -648,12 +648,12 @@ namespace Civilization1Remaster.Core.Game
 							this.troops.Pull(owner, troopIdx, UnitMemory.Horiz) != (byte)(sbyte)town.Place.X ||
 							this.troops.Pull(owner, troopIdx, UnitMemory.Vert) != (byte)(sbyte)town.Place.Y))
 					{
-						this.Owner.Services.DrawPictureToScreen(ScreenBox, (short)this.round.DrawHoriz,
+						this.Owner.Services.DrawPictureToScreen(Screen.Box, (short)this.round.DrawHoriz,
 							(short)this.round.DrawVert + 12, SpritePicture(0xd));
 
 						if ((short)this.round.Value > 1)
 						{
-							this.Owner.Services.DrawPictureToScreen(ScreenBox, (short)this.round.DrawHoriz + 2,
+							this.Owner.Services.DrawPictureToScreen(Screen.Box, (short)this.round.DrawHoriz + 2,
 								(short)this.round.DrawVert + 12, SpritePicture(0xd));
 						}
 					}
@@ -661,7 +661,7 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 			// The unit and its dot on the mini map
-			this.Owner.Services.DrawPictureToScreen(ScreenBox, (short)this.round.DrawHoriz, (short)this.round.DrawVert,
+			this.Owner.Services.DrawPictureToScreen(Screen.Box, (short)this.round.DrawHoriz, (short)this.round.DrawVert,
 				SpritePicture((this.troops.Pull(owner, troopIdx, UnitMemory.Kind) + (owner << 5) + 0x40)));
 
 			DrawMiniMapDot(this.troops.Pull(owner, troopIdx, UnitMemory.Horiz), this.troops.Pull(owner, troopIdx, UnitMemory.Vert), 7);
@@ -684,10 +684,10 @@ namespace Civilization1Remaster.Core.Game
 		/// </summary>
 		private void DrawUnitInCity(short marker)
 		{
-			short owner = (short)CityOwner;
+			short owner = (short)CityTurn.Owner;
 			short troopIdx = (short)this.round.Index;
 
-			if ((short)this.round.UnitsDrawn >= 0x12 || CityScreenTab != 0)
+			if ((short)this.round.UnitsDrawn >= 0x12 || CityTurn.ScreenTab != 0)
 				return;
 
 			if (this.troops.Pull(owner, troopIdx, UnitMemory.Kind) == 0xff || marker != 1 ||
@@ -726,18 +726,18 @@ namespace Civilization1Remaster.Core.Game
 		private void CountSupportCosts(short townIdx)
 		{
 			City town = this.Owner.World.Towns[townIdx];
-			Player player = this.Owner.World.Participants[(short)CityOwner];
+			Player player = this.Owner.World.Participants[(short)CityTurn.Owner];
 
-			if ((short)CityShields < (short)CitySpecialSlots)
+			if ((short)CityTurn.Shields < (short)CityTurn.SpecialSlots)
 			{
-				AnarchyPressure = (ushort)(AnarchyPressure + ((ushort)((short)(CitySpecialSlots - CityShields) * 5)));
+				Turn.AnarchyPressure = (ushort)(Turn.AnarchyPressure + ((ushort)((short)(CityTurn.SpecialSlots - CityTurn.Shields) * 5)));
 			}
 
-			AnarchyPressure = (ushort)(AnarchyPressure + (ushort)this.Owner.Helpers.ClampValue((short)CitySpecialSlots, 0, town.TrueExtent));
+			Turn.AnarchyPressure = (ushort)(Turn.AnarchyPressure + (ushort)this.Owner.Helpers.ClampValue((short)CityTurn.SpecialSlots, 0, town.TrueExtent));
 
 			short basePressure = (short)(town.Has(CityStructure.Marketplace) ? 5 : 7);
 			short factor = (short)(basePressure - LeaderWord(player.ChiefVisuals, LeaderTable.Leaning));
-			DemocracyPressure = (ushort)(DemocracyPressure - ((ushort)(factor * (short)CityAttackersAway)));
+			Turn.DemocracyPressure = (ushort)(Turn.DemocracyPressure - ((ushort)(factor * (short)CityTurn.AttackersAway)));
 		}
 	}
 }

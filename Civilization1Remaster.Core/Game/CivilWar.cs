@@ -142,7 +142,7 @@ namespace Civilization1Remaster.Core.Game
 
 			if (participantIdx == this.Owner.World.PersonParticipantIdx)
 			{
-				this.Owner.MapOps.FocusMapView(this.Owner.World.PersonParticipantIdx, (short)MapViewHoriz, (short)MapViewVert);
+				this.Owner.MapOps.FocusMapView(this.Owner.World.PersonParticipantIdx, (short)MapView.Horiz, (short)MapView.Vert);
 			}
 			else
 			{
@@ -227,7 +227,7 @@ namespace Civilization1Remaster.Core.Game
 
 			this.Owner.BlockText.ShowTextDialog(participantIdx == this.Owner.World.PersonParticipantIdx ? (ushort)0x4a18 : (ushort)0x4a20);
 
-			DialogStyle = 0x5;
+			Screen.DialogStyle = 0x5;
 
 			this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 80, 80);
 
@@ -314,7 +314,7 @@ namespace Civilization1Remaster.Core.Game
 			given = 0;
 			ushort farthestIdx = 0;
 
-			while (CPU.SignedQuotient((short)(9 * given), (short)(SchismShareDc6a + 3)) < this.Owner.World.Participants[participantIdx].GrandTownExtent)
+			while (CPU.SignedQuotient((short)(9 * given), (short)(Scoring.SchismShareDc6a + 3)) < this.Owner.World.Participants[participantIdx].GrandTownExtent)
 			{
 				short farthest = 1;
 

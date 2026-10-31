@@ -305,7 +305,7 @@ namespace Civilization1Remaster.Core.Game
 
 			if (participantIdx != this.Owner.World.PersonParticipantIdx)
 			{
-				DialogStyle = 0x3;
+				Screen.DialogStyle = 0x3;
 
 				Message(CivilizationPlural(participantIdx))
 					.Text(" use\nnuclear weapons!\n")
@@ -339,13 +339,13 @@ namespace Civilization1Remaster.Core.Game
 				if (troopIdx == 0xffff)
 					continue;
 
-				ushort ruined = this.Owner.UnitOps.CountUnitsByDomainInStack((short)FoundPlayer, (short)troopIdx, 2);
+				ushort ruined = this.Owner.UnitOps.CountUnitsByDomainInStack((short)Search.FoundPlayer, (short)troopIdx, 2);
 
-				this.Owner.World.Participants[participantIdx].TroopsRuined[FoundPlayer] += (short)ruined;
+				this.Owner.World.Participants[participantIdx].TroopsRuined[Search.FoundPlayer] += (short)ruined;
 
-				this.Owner.UnitOps.VisitEachUnitInStack((short)FoundPlayer, (short)troopIdx, 0xf10);
+				this.Owner.UnitOps.VisitEachUnitInStack((short)Search.FoundPlayer, (short)troopIdx, 0xf10);
 
-				ushort victimIdx = FoundPlayer;
+				ushort victimIdx = Search.FoundPlayer;
 
 				if ((ushort)participantIdx != victimIdx)
 				{
@@ -508,9 +508,9 @@ namespace Civilization1Remaster.Core.Game
 				participantIdx2 == personIdx ||
 				((ushort)PullUnitByte(participantIdx1, troopIdx1, 9) & personBit) != 0 ||
 				((ushort)PullUnitByte(participantIdx2, troopIdx2, 9) & personBit) != 0 ||
-				MapRevealed != 0;
+				MapView.Revealed != 0;
 
-			return visibleToPerson && WorldMapView != 1;
+			return visibleToPerson && MapView.WorldMapView != 1;
 		}
 
 		private void AnimateBattle(
@@ -561,17 +561,17 @@ namespace Civilization1Remaster.Core.Game
 				}
 
 				this.Owner.VideoCard.RenderImage(
-					ScreenBox,
+					Screen.Box,
 					0x50, 0, 0xf0, 0xc8,
-					BackScreenBox,
+					Screen.BackScreenBox,
 					0x50, 0);
 
 				short assailantScreenX = (short)((this.Owner.Routing.TunePosition(
 					PullUnitByte(participantIdx1, troopIdx1, TroopHorizDisplacement) -
-					(short)MapViewHoriz) << 4) + 0x50);
+					(short)MapView.Horiz) << 4) + 0x50);
 
 				short assailantScreenY = (short)((((byte)PullUnitByte(participantIdx1, troopIdx1, TroopVertDisplacement) -
-					MapViewVert) << 4) + 0x8);
+					MapView.Vert) << 4) + 0x8);
 
 				byte defX = (byte)PullUnitByte(participantIdx2, troopIdx2, TroopHorizDisplacement);
 				byte attX = (byte)PullUnitByte(participantIdx1, troopIdx1, TroopHorizDisplacement);
@@ -603,7 +603,7 @@ namespace Civilization1Remaster.Core.Game
 							(participantIdx1 << 5) + 0x40) << 1) + 0xd4ce));
 
 					this.Owner.Services.DrawPictureToScreen(
-						ScreenBox,
+						Screen.Box,
 						drawX + 1,
 						drawY + 1,
 						unitSprite);
@@ -611,9 +611,9 @@ namespace Civilization1Remaster.Core.Game
 					this.Owner.TextPainter.WaitForTime(2);
 
 					this.Owner.VideoCard.RenderImage(
-						BackScreenBox,
+						Screen.BackScreenBox,
 						(ushort)drawX, (ushort)drawY, 16, 16,
-						ScreenBox,
+						Screen.Box,
 						(ushort)drawX, (ushort)drawY);
 				}
 
@@ -627,9 +627,9 @@ namespace Civilization1Remaster.Core.Game
 					PullUnitByte(participantIdx2, troopIdx2, TroopVertDisplacement));
 
 				this.Owner.VideoCard.RenderImage(
-					ScreenBox,
+					Screen.Box,
 					0, 0, 0x100, 0xc8,
-					BackScreenBox,
+					Screen.BackScreenBox,
 					0, 0);
 
 				int guardianDisplayHoriz = assailantScreenX + 16 * stepX;
@@ -643,7 +643,7 @@ namespace Civilization1Remaster.Core.Game
 					short loserY = (short)(assailantScreenY + loserStep * stepY);
 
 					this.Owner.Services.DrawPictureToScreen(
-						ScreenBox,
+						Screen.Box,
 						loserX + 1,
 						loserY + 1,
 						SpritePicture((frame + 0x20)));
@@ -651,9 +651,9 @@ namespace Civilization1Remaster.Core.Game
 					this.Owner.TextPainter.WaitForTime(4);
 
 					this.Owner.VideoCard.RenderImage(
-						BackScreenBox,
+						Screen.BackScreenBox,
 						(ushort)loserX, (ushort)loserY, 16, 16,
-						ScreenBox,
+						Screen.Box,
 						(ushort)loserX, (ushort)loserY);
 				}
 
@@ -662,9 +662,9 @@ namespace Civilization1Remaster.Core.Game
 				int victorVert = assailantScreenY + (assailantWins ? 0 : 16 * stepY);
 
 				this.Owner.VideoCard.RenderImage(
-					BackScreenBox,
+					Screen.BackScreenBox,
 					victorHoriz, victorVert, 16, 16,
-					ScreenBox,
+					Screen.Box,
 					victorHoriz, victorVert);
 			}
 
@@ -685,7 +685,7 @@ namespace Civilization1Remaster.Core.Game
 			if ((participantIdx2 == personIdx && (this.Owner.World.Participants[participantIdx2].Relations[participantIdx1] & 2) != 0) ||
 				(this.Owner.World.Participants[participantIdx1].Relations[participantIdx2] & 0x200) != 0)
 			{
-				DialogStyle = 0x3;
+				Screen.DialogStyle = 0x3;
 
 				Message("Sneak attack by\n")
 					.Text(CivilizationName(participantIdx1))
@@ -700,7 +700,7 @@ namespace Civilization1Remaster.Core.Game
 			{
 				if (participantIdx1 == personIdx || participantIdx2 == personIdx)
 				{
-					DialogStyle = 0x5;
+					Screen.DialogStyle = 0x5;
 
 					Message(CivilizationPlural(participantIdx2))
 						.Text(" cancel\npeace treaty\nwith ")
@@ -771,9 +771,9 @@ namespace Civilization1Remaster.Core.Game
 
 						ushort unitAtTile = this.Owner.MapOps.ObtainUnitAtTile(checkX, checkY);
 
-						if (unitAtTile != 0xffff && (short)FoundPlayer != this.Owner.World.PersonParticipantIdx)
+						if (unitAtTile != 0xffff && (short)Search.FoundPlayer != this.Owner.World.PersonParticipantIdx)
 						{
-							this.Owner.UnitOps.VisitEachUnitInStack((short)FoundPlayer, (short)unitAtTile, 0x1593);
+							this.Owner.UnitOps.VisitEachUnitInStack((short)Search.FoundPlayer, (short)unitAtTile, 0x1593);
 						}
 					}
 

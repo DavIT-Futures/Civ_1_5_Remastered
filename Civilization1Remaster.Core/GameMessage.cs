@@ -68,7 +68,7 @@ namespace Civilization1Remaster.Core
 		/// <summary>The style of the dialog that will show it (the word 0x2f9e)</summary>
 		public GameMessage Style(ushort style)
 		{
-			this.game.Globals.DialogStyle.Value = style;
+			this.game.Globals.Screen.DialogStyle = style;
 			return this;
 		}
 

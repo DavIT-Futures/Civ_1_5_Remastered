@@ -52,33 +52,33 @@ namespace Civilization1Remaster.Core.UI
 
 			if (shown)
 			{
-				this.Owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, BackScreenBox, 0, 0);
+				this.Owner.VideoCard.RenderImage(Screen.Box, 0, 0, 0x140, 0xc8, Screen.BackScreenBox, 0, 0);
 			}
 
-			this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 100, Hues.White);
+			this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 100, Hues.White);
 
 			DrawingBox.TypefaceIdx = 0x4;
 
-			this.Owner.VideoCard.RenderLine(ScreenBox, 1, 1, 318, 1, Hues.Black);
+			this.Owner.VideoCard.RenderLine(Screen.Box, 1, 1, 318, 1, Hues.Black);
 
-			this.Owner.Services.FloodBox(ScreenBox, 8, 3, 304, 20, Hues.White);
+			this.Owner.Services.FloodBox(Screen.Box, 8, 3, 304, 20, Hues.White);
 
 			DrawingBox.RearHues = 0xf;
 
-			this.Owner.VideoCard.RenderLine(ScreenBox, 0, 35, 319, 35, Hues.Black);
+			this.Owner.VideoCard.RenderLine(Screen.Box, 0, 35, 319, 35, Hues.Black);
 
-			this.Owner.VideoCard.RenderLine(ScreenBox, 1, 1, 1, 35, Hues.Black);
+			this.Owner.VideoCard.RenderLine(Screen.Box, 1, 1, 1, 35, Hues.Black);
 
-			this.Owner.VideoCard.RenderLine(ScreenBox, 318, 1, 318, 35, Hues.Black);
+			this.Owner.VideoCard.RenderLine(Screen.Box, 318, 1, 318, 35, Hues.Black);
 
-			this.Owner.VideoCard.RenderLine(ScreenBox, 0, 97, 319, 97, Hues.Black);
+			this.Owner.VideoCard.RenderLine(Screen.Box, 0, 97, 319, 97, Hues.Black);
 
 			if (shown)
 			{
 				for (short personIdx = 0; personIdx < 0x10; personIdx++)
 				{
-					this.Owner.Services.DrawPictureToScreenAlternate(ScreenBox, 20 * personIdx,
-						100 - this.Owner.Libc.Dice.DrawInt(2), NewspaperCrowdPicture);
+					this.Owner.Services.DrawPictureToScreenAlternate(Screen.Box, 20 * personIdx,
+						100 - this.Owner.Libc.Dice.DrawInt(2), Icons.NewspaperCrowdPicture);
 				}
 			}
 
@@ -169,7 +169,7 @@ namespace Civilization1Remaster.Core.UI
 			{
 				this.Owner.Dialogs.ShowMenu(NewspaperMenuPromptAddress, 80, 128, 1);
 
-				this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
+				this.Owner.VideoCard.RenderImage(Screen.BackScreenBox, 0, 0, 0x140, 0xc8, Screen.Box, 0, 0);
 			}
 
 			this.Owner.Startup.ShowMouseCursor();

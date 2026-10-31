@@ -39,13 +39,13 @@ namespace Civilization1Remaster.Core.UI
 
 			short chosenIdx = (short)(this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 100, 80) + 1);
 
-			this.Owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8,
-				BackScreenBox, 0, 0);
+			this.Owner.VideoCard.RenderImage(Screen.Box, 0, 0, 0x140, 0xc8,
+				Screen.BackScreenBox, 0, 0);
 
 			ShowArmyList(chosenIdx);
 
-			this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8,
-				ScreenBox, 0, 0);
+			this.Owner.VideoCard.RenderImage(Screen.BackScreenBox, 0, 0, 0x140, 0xc8,
+				Screen.Box, 0, 0);
 		}
 
 		/// <inheritdoc/>
@@ -55,7 +55,7 @@ namespace Civilization1Remaster.Core.UI
 
 			this.Owner.Startup.HideMouseCursor();
 
-			this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
+			this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 200, Hues.Black);
 
 			ushort sight = (ushort)(1 << (byte)participantIdx);
 
@@ -63,7 +63,7 @@ namespace Civilization1Remaster.Core.UI
 			{
 				for (short horizLoc = 0; horizLoc < 0x50; horizLoc++)
 				{
-					if ((this.Owner.World.ChartSight[(ushort)horizLoc, (ushort)vertLoc] & sight) == 0 && MapRevealed == 0)
+					if ((this.Owner.World.ChartSight[(ushort)horizLoc, (ushort)vertLoc] & sight) == 0 && MapView.Revealed == 0)
 						continue;
 
 					DrawStrategicTile(horizLoc, vertLoc);
@@ -222,12 +222,12 @@ namespace Civilization1Remaster.Core.UI
 			short boxHoriz = (short)(horizLoc << 2);
 			short boxVert = (short)(vertLoc << 2);
 
-			this.Owner.Services.FloodBox(ScreenBox, boxHoriz, boxVert, 4, 4,
+			this.Owner.Services.FloodBox(Screen.Box, boxHoriz, boxVert, 4, 4,
 				(ushort)(this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc) == 0xa ? 1 : 2));
 
 			if ((this.Owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) != 0)
 			{
-				this.Owner.Services.FloodBox(ScreenBox, boxHoriz, boxVert, 4, 4,
+				this.Owner.Services.FloodBox(Screen.Box, boxHoriz, boxVert, 4, 4,
 					PlayerColour(this.Owner.MapOps.ObtainTileOwnerBits(horizLoc, vertLoc)));
 			}
 			else
@@ -236,9 +236,9 @@ namespace Civilization1Remaster.Core.UI
 				{
 					ushort hue = PlayerColour(this.Owner.MapOps.ObtainTileOwner(horizLoc, vertLoc));
 
-					this.Owner.Services.FloodBox(ScreenBox, boxHoriz + 1, boxVert + 1, 3, 3, Hues.Black);
+					this.Owner.Services.FloodBox(Screen.Box, boxHoriz + 1, boxVert + 1, 3, 3, Hues.Black);
 
-					this.Owner.Services.FloodBox(ScreenBox, boxHoriz, boxVert, 3, 3, hue);
+					this.Owner.Services.FloodBox(Screen.Box, boxHoriz, boxVert, 3, 3, hue);
 				}
 			}
 		}

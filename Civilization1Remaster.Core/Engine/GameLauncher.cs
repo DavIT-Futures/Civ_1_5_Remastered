@@ -29,7 +29,7 @@ namespace Civilization1Remaster.Core.Engine
 			// '1' - No sound 0x4e, '4' - Sound blaster 0x41, '5' - Roland MIDI board 0x52; first letter of driver
 			this.Processor.EmitGlobalByte(SoundDriverOptionAddress, 0x4e);
 			// '1' - Mouse and Keyboard 0x1, '2' - Keyboard only 0x0
-			MousePresent = 0x1;
+			Mouse.Present = 0x1;
 
 			this.Owner.Prologue.ShowMainIntro();
 
@@ -38,18 +38,18 @@ namespace Civilization1Remaster.Core.Engine
 			// The free memory (the local 4 of the original, B3: in C#)
 			short freeStorage = (short)this.Owner.VideoCard.ObtainFreeStorage();
 
-			if (ScreenReserveFailed != 0)
+			if (Screen.ReserveFailed != 0)
 			{
 				// A screen could not be reserved
 				freeStorage = 0;
 			}
 
-			short requiredStorage = (short)(VgaMode != 0 ? 0x1f40 : 0xfa0);
+			short requiredStorage = (short)(Screen.VgaMode != 0 ? 0x1f40 : 0xfa0);
 
 			if (requiredStorage > freeStorage)
 			{
 				// Not enough memory: the amount in the text 0x270, then a menu with it
-				this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.LightRed);
+				this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 200, Hues.LightRed);
 
 				EmptyMessage()
 					.Number(freeStorage);
@@ -60,19 +60,19 @@ namespace Civilization1Remaster.Core.Engine
 				this.Owner.Dialogs.ShowMenu(TextBuffer.Address, 64, 49, 1);
 			}
 
-			if (VgaMode != 0 && freeStorage < 0x23be)
-				LowMemoryVga = 1;
+			if (Screen.VgaMode != 0 && freeStorage < 0x23be)
+				Screen.LowMemoryVga = 1;
 
-			PointerIcon = (ushort)(this.Owner.ImageToolkit.LoadIcon(0x277));
+			Mouse.Icon = (ushort)(this.Owner.ImageToolkit.LoadIcon(0x277));
 
-			if (MousePresent != 0)
+			if (Mouse.Present != 0)
 			{
-				MousePresent = this.Owner.Services.PrepareMouse();
+				Mouse.Present = this.Owner.Services.PrepareMouse();
 			}
 
-			if (MousePresent != 0)
+			if (Mouse.Present != 0)
 			{
-				this.Owner.Services.AssignMouseCursorImage(0, 0, PointerIcon);
+				this.Owner.Services.AssignMouseCursorImage(0, 0, Mouse.Icon);
 				ShowMouseCursor();
 			}
 
@@ -83,35 +83,35 @@ namespace Civilization1Remaster.Core.Engine
 			// Start Game menu, level, tribe, name
 			ChooseNewWorldOptions();
 
-			if (MainMenuChoice == 1)
+			if (Menu.MainMenuChoice == 1)
 			{
 				// A loaded game: the map view around the first city of the human player
-				MapViewHoriz = (ushort)(this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx].HorizBegin - 7);
-				MapViewVert = 0x13;
+				MapView.Horiz = (ushort)(this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx].HorizBegin - 7);
+				MapView.Vert = 0x13;
 
 				this.Owner.TurnHooks.RepaintMainScreen();
 			}
 
 			// Mouse pointer show/hide level at the start of the game, a game loaded during play starts with the same level
-			ushort arrowTier = PointerShowLevel;
+			ushort arrowTier = Mouse.ShowLevel;
 
 			while (true)
 			{
-				GameEndRequest = 0;
+				Turn.GameEndRequest = 0;
 
 				do
 				{
 					this.Owner.TurnHooks.HandleGameEnd();
 				}
-				while (GameEndRequest == 0);
+				while (Turn.GameEndRequest == 0);
 
-				if (GameEndRequest != SaveGameStore.FetchSessionAsk)
+				if (Turn.GameEndRequest != SaveGameStore.FetchSessionAsk)
 					break;
 
 				LoadGameDuringPlay(arrowTier);
 			}
 
-			if (MousePresent != 0)
+			if (Mouse.Present != 0)
 				this.Owner.Services.DeactivateMouse();
 
 			this.Owner.Services.PerformSound(0, 0);
@@ -124,14 +124,14 @@ namespace Civilization1Remaster.Core.Engine
 		{
 			using var _ = this.Processor.Journal.Scope($"ImportGameDuringPlay({arrowTier})");
 
-			GameEndRequest = 0x0;
-			ChosenOrder = 0x0;
+			Turn.GameEndRequest = 0x0;
+			Turn.ChosenOrder = 0x0;
 
 			// The turn was left in the middle, restore the pointer level
-			while ((short)PointerShowLevel > (short)arrowTier)
+			while ((short)Mouse.ShowLevel > (short)arrowTier)
 				HideMouseCursor();
 
-			while ((short)PointerShowLevel < (short)arrowTier)
+			while ((short)Mouse.ShowLevel < (short)arrowTier)
 				ShowMouseCursor();
 
 			ushort bay = this.Owner.SaveLoad.FetchBay;
@@ -141,13 +141,13 @@ namespace Civilization1Remaster.Core.Engine
 			// From here the same as after Load a Saved Game in LogoAndMainGameMenu
 			HideMouseCursor();
 
-			this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.LightGray);
+			this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 200, Hues.LightGray);
 
 			this.Owner.NewGameWizard.ShowTribeSelection();
 
-			BoxMotif = 0x1;
+			Screen.BoxMotif = 0x1;
 
-			this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
+			this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 200, Hues.Black);
 
 			this.Owner.ImageToolkit.LoadPictureOrColors(-1, 0, 0, GameTexts.FileSp257Pic, 1);
 
@@ -157,9 +157,9 @@ namespace Civilization1Remaster.Core.Engine
 
 			ChooseNewWorldOptions();
 
-			MainMenuChoice = 0x1;
-			MapViewHoriz = (ushort)(this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx].HorizBegin - 7);
-			MapViewVert = 0x13;
+			Menu.MainMenuChoice = 0x1;
+			MapView.Horiz = (ushort)(this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx].HorizBegin - 7);
+			MapView.Vert = 0x13;
 
 			this.Owner.TurnHooks.RepaintMainScreen();
 		}
@@ -171,7 +171,7 @@ namespace Civilization1Remaster.Core.Engine
 			// come here, as they came with the reads of 0x586e through the CPU before the state moved to C#
 			this.Processor.PumpMessages();
 
-			if (MousePresent != 0)
+			if (Mouse.Present != 0)
 			{
 				ushort clicks = this.Owner.Services.TakeMouseClick();
 
@@ -192,9 +192,9 @@ namespace Civilization1Remaster.Core.Engine
 		{
 			using var _ = this.Processor.Journal.Scope("DisplayMouseCursor()");
 
-			PointerShowLevel = (ushort)(PointerShowLevel + 1);
+			Mouse.ShowLevel = (ushort)(Mouse.ShowLevel + 1);
 
-			if (MousePresent != 0 && PointerShowLevel == 1)
+			if (Mouse.Present != 0 && Mouse.ShowLevel == 1)
 			{
 				this.Owner.Services.DrawMouseCursor();
 			}
@@ -205,12 +205,12 @@ namespace Civilization1Remaster.Core.Engine
 		{
 			using var _ = this.Processor.Journal.Scope("ConcealMouseCursor()");
 
-			if (MousePresent != 0 && PointerShowLevel == 1)
+			if (Mouse.Present != 0 && Mouse.ShowLevel == 1)
 			{
 				this.Owner.Services.BlankMouseCursor();
 			}
 		
-			PointerShowLevel = (ushort)(PointerShowLevel - 1);
+			Mouse.ShowLevel = (ushort)(Mouse.ShowLevel - 1);
 		}
 
 		/// <inheritdoc/>
@@ -218,9 +218,9 @@ namespace Civilization1Remaster.Core.Engine
 		{
 			using var _ = this.Processor.Journal.Scope("DisplayMouseCursorFully()");
 
-			SavedPointerShowLevel = PointerShowLevel;
+			Mouse.SavedShowLevel = Mouse.ShowLevel;
 
-			while ((short)PointerShowLevel < 1)
+			while ((short)Mouse.ShowLevel < 1)
 			{
 				ShowMouseCursor();
 			}
@@ -231,7 +231,7 @@ namespace Civilization1Remaster.Core.Engine
 		{
 			using var _ = this.Processor.Journal.Scope("ConcealMouseCursorToSavedLevel()");
 
-			while ((short)PointerShowLevel > (short)SavedPointerShowLevel)
+			while ((short)Mouse.ShowLevel > (short)Mouse.SavedShowLevel)
 			{
 				HideMouseCursor();
 			}
@@ -268,24 +268,24 @@ namespace Civilization1Remaster.Core.Engine
 
 					HideMouseCursor();
 
-					this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.White);
+					this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 200, Hues.White);
 
 					this.Processor.EmitGlobalByte(DiskNumberPromptAddress,
-						(byte)(CPU.SignedQuotient((short)diskIdx, (short)FirstMissingDisk) + 0x31));
+						(byte)(CPU.SignedQuotient((short)diskIdx, (short)Files.FirstMissingDisk) + 0x31));
 
 					string message = "Please insert Disk " + "A" + ".\n \n    Press Return\n    to continue.\n";
 
-					ushort kept = KingMood;
-					KingMood = 0xffff;
-					MenuAnyKey = 0x1;
+					ushort kept = King.Mood;
+					King.Mood = 0xffff;
+					Menu.AnyKey = 0x1;
 
 					this.Owner.Dialogs.ShowMenu(message, 100, 81, 1);
 
-					KingMood = kept;
+					King.Mood = kept;
 
-					this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.White);
+					this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 200, Hues.White);
 
-					ScreenRepaintRequest = 0x1;
+					Screen.RepaintRequest = 0x1;
 
 					ShowMouseCursor();
 				}
@@ -293,7 +293,7 @@ namespace Civilization1Remaster.Core.Engine
 				result = marker;
 			}
 
-			DiskInUse = diskIdx;
+			Files.DiskInUse = diskIdx;
 
 
 
@@ -305,24 +305,24 @@ namespace Civilization1Remaster.Core.Engine
 		{
 			using var _ = this.Processor.Journal.Scope("TitleLogoAndMainChoices()");
 
-			EarthGame = 0x0;
+			NewWorld.EarthGame = 0x0;
 
 			bool chosen = false;
 
 			while (!chosen)
 			{
-				while (MainMenuChoice == 0xffff)
+				while (Menu.MainMenuChoice == 0xffff)
 				{
 					this.Owner.Words.Set(" Start a New Game\n Load a Saved Game\n EARTH\n Customize World\n View Hall of Fame\n");
 
-					MainMenuChoice = this.Owner.Dialogs.ShowMenu(TextBuffer.Address, 100, 140, 1);
+					Menu.MainMenuChoice = this.Owner.Dialogs.ShowMenu(TextBuffer.Address, 100, 140, 1);
 				}
 
 				WaitForTitleSongMeasure();
 
 				this.Owner.Services.PerformSound(1, 0);
 
-				switch (MainMenuChoice)
+				switch (Menu.MainMenuChoice)
 				{
 					case 0:
 						HideMouseCursor();
@@ -341,20 +341,20 @@ namespace Civilization1Remaster.Core.Engine
 						if (this.Owner.SaveLoad.LoadGameFromMenu(0xffff) == 0xffff)
 						{
 							// No game loaded: the menu again
-							MainMenuChoice = 0xffff;
+							Menu.MainMenuChoice = 0xffff;
 							break;
 						}
 
 						HideMouseCursor();
 
-						this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.LightGray);
+						this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 200, Hues.LightGray);
 						chosen = true;
 						break;
 
 					case 2:
 						HideMouseCursor();
 
-						EarthGame = 0x1;
+						NewWorld.EarthGame = 0x1;
 
 						this.Owner.WorldSetup.OpeningSequence();
 
@@ -378,7 +378,7 @@ namespace Civilization1Remaster.Core.Engine
 
 						ShowMouseCursor();
 
-						MainMenuChoice = 0xffff;
+						Menu.MainMenuChoice = 0xffff;
 						break;
 
 					default:
@@ -389,15 +389,15 @@ namespace Civilization1Remaster.Core.Engine
 
 			this.Owner.NewGameWizard.ShowTribeSelection();
 
-			BoxMotif = 0x1;
+			Screen.BoxMotif = 0x1;
 
-			if (VgaMode != 0 && (MainMenuChoice == 0 ||
-				MainMenuChoice == 2 || MainMenuChoice == 3))
+			if (Screen.VgaMode != 0 && (Menu.MainMenuChoice == 0 ||
+				Menu.MainMenuChoice == 2 || Menu.MainMenuChoice == 3))
 			{
 				this.Owner.Services.FillColors(5, 0, 0, 0);
 			}
 
-			this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
+			this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 200, Hues.Black);
 
 			this.Owner.ImageToolkit.LoadPictureOrColors(-1, 0, 0, GameTexts.FileSp257Pic, 1);
 
@@ -411,9 +411,9 @@ namespace Civilization1Remaster.Core.Engine
 		{
 			using var _ = this.Processor.Journal.Scope("FreshWorldChoices()");
 
-			if (MousePresent != 0)
+			if (Mouse.Present != 0)
 			{
-				this.Owner.Services.AssignMouseCursorImage(0, 0, PointerPicture);
+				this.Owner.Services.AssignMouseCursorImage(0, 0, Mouse.Picture);
 			}
 
 			if (this.Owner.World.RoundTally == 0)
@@ -474,8 +474,8 @@ namespace Civilization1Remaster.Core.Engine
 
 			this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, pictureName, 0);
 
-			this.Owner.VideoCard.RenderImage(BackScreenBox, 0xa0, 0x32, 0xa0, 0x96,
-				PictureScreenBox, 0xa0, 0x32);
+			this.Owner.VideoCard.RenderImage(Screen.BackScreenBox, 0xa0, 0x32, 0xa0, 0x96,
+				Screen.PictureScreenBox, 0xa0, 0x32);
 
 			AskForDisk(0, 1);
 		}
@@ -489,19 +489,19 @@ namespace Civilization1Remaster.Core.Engine
 
 			AskForDisk(7, 1);
 
-			if (VgaMode != 0)
+			if (Screen.VgaMode != 0)
 			{
 				this.Owner.Services.FillColors(5, 0, 0, 0);
 			}
 
-			this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
+			this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 200, Hues.Black);
 
 			this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, GameTexts.FileCustomPic, 1);
 
 			AskForDisk(0, 1);
 
-			this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8,
-				ScreenBox, 0, 0);
+			this.Owner.VideoCard.RenderImage(Screen.BackScreenBox, 0, 0, 0x140, 0xc8,
+				Screen.Box, 0, 0);
 
 			ShowMouseCursor();
 
@@ -519,7 +519,7 @@ namespace Civilization1Remaster.Core.Engine
 		/// </summary>
 		private void ChooseWorldOption(ushort optionAddr, short menuVert, string choices, ushort helpTopic)
 		{
-			DefaultLine = 0x1;
+			Menu.DefaultLine = 0x1;
 
 			while (true)
 			{
@@ -532,12 +532,12 @@ namespace Civilization1Remaster.Core.Engine
 				if (this.Processor.PullGlobalWord(optionAddr) == 0xffff)
 					continue;
 
-				if (MenuHelpTopic == 0)
+				if (Menu.HelpTopic == 0)
 					break;
 
 				this.Owner.HelpSystem.ShowHelpTopic(helpTopic);
 
-				DefaultLine = this.Processor.PullGlobalWord(optionAddr);
+				Menu.DefaultLine = this.Processor.PullGlobalWord(optionAddr);
 			}
 		}
 	}

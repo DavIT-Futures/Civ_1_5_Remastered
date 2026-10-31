@@ -50,7 +50,7 @@ namespace Civilization1Remaster.Core.Game
 			{
 				if (participantIdx == this.Owner.World.PersonParticipantIdx)
 				{
-					DialogStyle = 0x4;
+					Screen.DialogStyle = 0x4;
 					this.Owner.Words.Clear();
 
 					this.Owner.BlockText.ShowTextDialog(GameTexts.TopicPmax);
@@ -203,7 +203,7 @@ namespace Civilization1Remaster.Core.Game
 
 			if (marker)
 			{
-				ushort screenBufferPtr = ScreenBox;
+				ushort screenBufferPtr = Screen.Box;
 				DrawingBox.DisplayIdx = 1;
 				this.Owner.Briefings.ShowReportPreamble(GameTexts.TextCivilizationScore, 3);
 			}
@@ -213,11 +213,11 @@ namespace Civilization1Remaster.Core.Game
 			if (marker && (this.Owner.World.StarshipMarkers & 0x100) != 0)
 			{
 				this.Owner.TextPainter.DrawCenteredTextToScreen0(GameTexts.TextScoringCompleted, 160, 100, Hues.White);
-				ushort screenBufferPtr = ScreenBox;
+				ushort screenBufferPtr = Screen.Box;
 				DrawingBox.DisplayIdx = 0;
 
 				this.Owner.VideoCard.RenderImage(
-					BackScreenBox,
+					Screen.BackScreenBox,
 					0, 0, 0x140, 0xc8,
 					screenBufferPtr,
 					0, 0);
@@ -231,8 +231,8 @@ namespace Civilization1Remaster.Core.Game
 
 			int citizensY = 0x1a;
 			int wondersY = 0x1a;
-			ScoreIconHoriz = 0x3e7;
-			ScoreIconVert = 0x1a;
+			Scoring.IconHoriz = 0x3e7;
+			Scoring.IconVert = 0x1a;
 
 			short savedLevyRatio = this.Owner.World.Participants[participantIdx].LevyRatio;
 			this.Owner.World.Participants[participantIdx].LevyRatio = (short)(6 - this.Owner.World.Participants[participantIdx].ResearchLevyRatio);
@@ -248,9 +248,9 @@ namespace Civilization1Remaster.Core.Game
 
 				this.Owner.CityOps.HandleCity(townIdx, -1);
 
-				int happyCount = CityHappy;
-				int unhappyCount = CityUnhappy;
-				int specialistCount = CitySpecialists;
+				int happyCount = CityTurn.Happy;
+				int unhappyCount = CityTurn.Unhappy;
+				int specialistCount = CityTurn.Specialists;
 				int contentCount = this.Owner.World.Towns[townIdx].TrueExtent - happyCount - unhappyCount - specialistCount;
 
 				if (marker)
@@ -277,7 +277,7 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 			this.Owner.World.Participants[participantIdx].LevyRatio = savedLevyRatio;
-			CitizenScore = (ushort)totalCitizenScore;
+			Scoring.CitizenScore = (ushort)totalCitizenScore;
 
 			ushort civNamePtr = CivilizationName(participantIdx);
 			Message(civNamePtr)
@@ -290,7 +290,7 @@ namespace Civilization1Remaster.Core.Game
 				this.Owner.TextPainter.DrawTextWithShadow(this.Owner.Words.ToString(), 16, (short)citizensY, Hues.White);
 			}
 
-			wondersY = ScoreIconVert + 0x10;
+			wondersY = Scoring.IconVert + 0x10;
 			int wonderTitleY = wondersY;
 			int wonderColX = 0x3e7;
 			int totalWonderScore = 0;
@@ -305,7 +305,7 @@ namespace Civilization1Remaster.Core.Game
 						wonderColX += 0x98;
 						if (wonderColX > 0x12c)
 						{
-							wondersY += (ushort)this.Owner.Helpers.ClampValue(ScoreVerticalShift + 2, 8, 99);
+							wondersY += (ushort)this.Owner.Helpers.ClampValue(Scoring.VerticalShift + 2, 8, 99);
 							wonderColX = 0x10;
 						}
 
@@ -320,7 +320,7 @@ namespace Civilization1Remaster.Core.Game
 				}
 			}
 
-			WonderScore = (ushort)totalWonderScore;
+			Scoring.WonderScore = (ushort)totalWonderScore;
 			Message(civNamePtr)
 				.Text(" Achievements (")
 				.Number((short)totalWonderScore)
@@ -400,7 +400,7 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 			int conquestBonus = -1;
-			if (ConquestEnd != 0)
+			if (Turn.ConquestEnd != 0)
 			{
 				conquestBonus = ScoreRules.ComputeConquestBonus(this.Owner.World.BotRivalTally, this.Owner.World.RoundTally);
 			}
@@ -427,11 +427,11 @@ namespace Civilization1Remaster.Core.Game
 				this.Owner.TextPainter.DrawTextWithShadow(this.Owner.Words.ToString(), 16, (short)wondersY, Hues.White);
 			}
 
-			HallOfFameScore = (ushort)this.Owner.World.Participants[0].Tally;
+			Scoring.HallOfFameScore = (ushort)this.Owner.World.Participants[0].Tally;
 
 			if (marker)
 			{
-				ushort screenBufferPtr = ScreenBox;
+				ushort screenBufferPtr = Screen.Box;
 				this.Owner.Services.FloodBox(screenBufferPtr, 35, 192, 250, 7, Hues.DarkGray);
 
 				if (this.Owner.World.Participants[0].Tally > 0)
@@ -442,7 +442,7 @@ namespace Civilization1Remaster.Core.Game
 				DrawingBox.DisplayIdx = 0;
 
 				this.Owner.VideoCard.RenderImage(
-					BackScreenBox,
+					Screen.BackScreenBox,
 					0, 0, 0x140, 0xc8,
 					screenBufferPtr,
 					0, 0);
@@ -460,21 +460,21 @@ namespace Civilization1Remaster.Core.Game
 		{
 			using var _ = this.Processor.Journal.Scope($"RenderScoreIcon({icon})");
 
-			short iconLeft = (short)(ScoreIconHoriz + 8);
-			ScoreIconHoriz = (ushort)iconLeft;
+			short iconLeft = (short)(Scoring.IconHoriz + 8);
+			Scoring.IconHoriz = (ushort)iconLeft;
 
 			if (iconLeft > 0x124)
 			{
-				short iconTop = (short)(ScoreIconVert + (ushort)ScoreVerticalShift);
-				ScoreIconVert = (ushort)iconTop;
-				ScoreIconHoriz = (ushort)(((iconTop >> 1) & 0x4) + 0x10);
+				short iconTop = (short)(Scoring.IconVert + (ushort)Scoring.VerticalShift);
+				Scoring.IconVert = (ushort)iconTop;
+				Scoring.IconHoriz = (ushort)(((iconTop >> 1) & 0x4) + 0x10);
 			}
 
-			if ((short)ScoreIconVert <= 0xa0)
+			if ((short)Scoring.IconVert <= 0xa0)
 			{
-				this.Owner.Services.DrawPictureToScreen(ScreenBox,
-					(short)ScoreIconHoriz,
-					(short)ScoreIconVert,
+				this.Owner.Services.DrawPictureToScreen(Screen.Box,
+					(short)Scoring.IconHoriz,
+					(short)Scoring.IconVert,
 					CitizenPicture(icon));
 			}
 		}
@@ -767,7 +767,7 @@ namespace Civilization1Remaster.Core.Game
 
 			this.Owner.Words.Clear();
 
-			if ((short)CityHappy >= (short)CityUnhappy)
+			if ((short)CityTurn.Happy >= (short)CityTurn.Unhappy)
 				return;
 
 			switch (this.Owner.Libc.Dice.DrawInt(3))
@@ -823,7 +823,7 @@ namespace Civilization1Remaster.Core.Game
 			short rivalIdx = -1;
 
 
-			if ((short)CityHappy > (short)CityUnhappy ||
+			if ((short)CityTurn.Happy > (short)CityTurn.Unhappy ||
 				town.Has(CityStructure.Palace) || this.Owner.World.Participants[town.ParticipantIdx].TownTally <= 3)
 				return;
 
@@ -835,7 +835,7 @@ namespace Civilization1Remaster.Core.Game
 
 				this.Owner.CityOps.HandleCity((short)otherIdx, -1);
 
-				short prosperity = CPU.SignedQuotient((short)((ushort)(CityHappy - CityUnhappy) << 5), distance);
+				short prosperity = CPU.SignedQuotient((short)((ushort)(CityTurn.Happy - CityTurn.Unhappy) << 5), distance);
 
 				if (prosperity > highest)
 				{
@@ -879,7 +879,7 @@ namespace Civilization1Remaster.Core.Game
 
 			if (this.Owner.World.IsHuman(town.ParticipantIdx))
 			{
-				DialogStyle = 0x4;
+				Screen.DialogStyle = 0x4;
 
 				this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 100, 80);
 
@@ -898,7 +898,7 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 			this.Processor.EmitGlobalByte((ushort)(lineEnd + TextBuffer.Address), 0);
-			DialogStyle = 0x2;
+			Screen.DialogStyle = 0x2;
 
 			this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 100, 64);
 

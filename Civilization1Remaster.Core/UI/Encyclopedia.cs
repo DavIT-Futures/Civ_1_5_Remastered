@@ -49,7 +49,7 @@ namespace Civilization1Remaster.Core.UI
 
 				if (answer == 0xffff)
 				{
-					firstEntry = CivilopediaNextPage != 0 ? (ushort)(firstEntry + 0x4e) : (ushort)0;
+					firstEntry = Turn.CivilopediaNextPage != 0 ? (ushort)(firstEntry + 0x4e) : (ushort)0;
 				}
 			}
 			while (answer != 0xfffe);
@@ -68,9 +68,9 @@ namespace Civilization1Remaster.Core.UI
 		{
 			using var _ = this.Processor.Journal.Scope($"DisplayCivilopediaIndex({firstEntry}, {part})");
 
-			this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Yellow);
+			this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 200, Hues.Yellow);
 
-			this.Owner.Services.FloodBox(ScreenBox, 60, 2, 200, 9, Hues.White);
+			this.Owner.Services.FloodBox(Screen.Box, 60, 2, 200, 9, Hues.White);
 
 			this.Owner.TextPainter.DrawCenteredTextToScreen0(GameTexts.TextEncyclopaediaOfCivilization, 161, 4, Hues.Black);
 
@@ -83,12 +83,12 @@ namespace Civilization1Remaster.Core.UI
 				this.Owner.TextPainter.DrawTextToScreen0(GameTexts.TextMoreB, 8, 4, Hues.LightRed);
 			}
 
-			this.Owner.Services.FloodBox(ScreenBox, 2, 14, 316, 184, Hues.White);
+			this.Owner.Services.FloodBox(Screen.Box, 2, 14, 316, 184, Hues.White);
 
 			short width = (short)((short)part > 0 ? 0x96 : 0x64);
 			ushort entryTally = ListCivilopediaEntries(firstEntry, part, width);
 
-			ushort answer = (ushort)(MousePresent != 0
+			ushort answer = (ushort)(Mouse.Present != 0
 				? ChooseCivilopediaEntryWithMouse(firstEntry, width, entryTally)
 				: ChooseCivilopediaEntryWithKeys(firstEntry, width, entryTally));
 
@@ -110,19 +110,19 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.Startup.HideMouseCursor();
 
 			ushort diskStatus = 0xffff;
-			if (DiskInUse != 0x3)
+			if (Files.DiskInUse != 0x3)
 			{
 				diskStatus = this.Owner.Startup.AskForDisk(3, 0);
 				if (diskStatus == 0)
 				{
-					CivilopediaWithoutPictures = 0x1;
+					Turn.CivilopediaWithoutPictures = 0x1;
 				}
 			}
 
 			ushort bgColor = 0xf;
-			if (VgaMode != 0)
+			if (Screen.VgaMode != 0)
 			{
-				if (CivilopediaWithoutPictures == 0)
+				if (Turn.CivilopediaWithoutPictures == 0)
 				{
 					bgColor = 0xfd;
 					this.Owner.VideoCard.AssignHue(0xfd, VGABitmap.Hue18ToHue(0x3d, 0x3d, 0x3d));
@@ -133,7 +133,7 @@ namespace Civilization1Remaster.Core.UI
 				}
 			}
 
-			this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, bgColor);
+			this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 200, bgColor);
 			this.Owner.UnitOps.DrawBusyIndicator();
 
 			DrawingBox.TypefaceIdx = 0x7;
@@ -142,7 +142,7 @@ namespace Civilization1Remaster.Core.UI
 			short titleX = part == 0x2 ? (short)0xe0 : (short)0xcc;
 			if (part == 0x4 ||
 				(part == 0x1 && (short)scienceIdx > 0x18) ||
-				CivilopediaWithoutPictures != 0)
+				Turn.CivilopediaWithoutPictures != 0)
 			{
 				titleX = 0xa0;
 			}
@@ -167,7 +167,7 @@ namespace Civilization1Remaster.Core.UI
 					{
 						this.Owner.BlockText.DrawTextChunk(37, 12, 76, 1);
 						this.Owner.Conquest.WaitForKeyPressOrMouseClick();
-						this.Owner.Services.FloodBox(ScreenBox, 8, 76, 304, 116, bgColor);
+						this.Owner.Services.FloodBox(Screen.Box, 8, 76, 304, 116, bgColor);
 					}
 				}
 
@@ -206,10 +206,10 @@ namespace Civilization1Remaster.Core.UI
 				this.Owner.Startup.AskForDisk(0, 1);
 			}
 
-			CivilopediaWithoutPictures = 0x0;
-			if (KingAnswer == 0xffff)
+			Turn.CivilopediaWithoutPictures = 0x0;
+			if (King.Answer == 0xffff)
 			{
-				this.Owner.Services.FloodBox(ScreenBox, 8, 8, 304, 184, bgColor);
+				this.Owner.Services.FloodBox(Screen.Box, 8, 8, 304, 184, bgColor);
 				this.Owner.Helpers.LaunchHueCycling();
 			}
 
@@ -249,8 +249,8 @@ namespace Civilization1Remaster.Core.UI
 				breadth = (ushort)(centreHoriz << 1);
 			}
 
-			this.Owner.VideoCard.RenderImage(BackScreenBox, left, top, breadth, height,
-				ScreenBox, (ushort)(centreHoriz - (breadth >> 1)), (ushort)(centreVert - (height >> 1)));
+			this.Owner.VideoCard.RenderImage(Screen.BackScreenBox, left, top, breadth, height,
+				Screen.Box, (ushort)(centreHoriz - (breadth >> 1)), (ushort)(centreVert - (height >> 1)));
 		}
 
 		/// <inheritdoc/>
@@ -332,7 +332,7 @@ namespace Civilization1Remaster.Core.UI
 					break;
 			}
 
-			CivilopediaNextPage = (ushort)(horizLoc >= 0x12c ? 1 : 0);
+			Turn.CivilopediaNextPage = (ushort)(horizLoc >= 0x12c ? 1 : 0);
 
 			return entryTally;
 		}
@@ -420,11 +420,11 @@ namespace Civilization1Remaster.Core.UI
 				short horizLoc = (short)((column * width) + 8);
 				short vertLoc = (short)((7 * row) + 0xf);
 
-				this.Owner.VideoCard.SubstituteHue(ScreenBox, horizLoc, vertLoc, width - 2, 8, Hues.White, Hues.LightGreen);
+				this.Owner.VideoCard.SubstituteHue(Screen.Box, horizLoc, vertLoc, width - 2, 8, Hues.White, Hues.LightGreen);
 
 				ushort key = this.Owner.Dialogs.ReadNavigationKey();
 
-				this.Owner.VideoCard.SubstituteHue(ScreenBox, horizLoc, vertLoc, width - 2, 8, Hues.LightGreen, Hues.White);
+				this.Owner.VideoCard.SubstituteHue(Screen.Box, horizLoc, vertLoc, width - 2, 8, Hues.LightGreen, Hues.White);
 
 				switch (key)
 				{
@@ -500,7 +500,7 @@ namespace Civilization1Remaster.Core.UI
 
 			if (row >= 0)
 			{
-				if (DiskInUse != 3)
+				if (Files.DiskInUse != 3)
 				{
 					this.Owner.Startup.AskForDisk(3, 1);
 				}
@@ -525,7 +525,7 @@ namespace Civilization1Remaster.Core.UI
 			switch (part)
 			{
 				case 0:
-					if (CivilopediaWithoutPictures == 0)
+					if (Turn.CivilopediaWithoutPictures == 0)
 					{
 						ushort iconIdx = ObtainFirstPrerequisite(scienceIdx);
 						this.Owner.Words.Set("iconpg1.pic");
@@ -546,10 +546,10 @@ namespace Civilization1Remaster.Core.UI
 				case 1:
 					if (this.Owner.Startup.AskForDisk(1, 0) == 0)
 					{
-						CivilopediaWithoutPictures = 0x1;
+						Turn.CivilopediaWithoutPictures = 0x1;
 					}
 
-					if ((short)scienceIdx > 1 && (short)scienceIdx <= 0x15 && CivilopediaWithoutPictures == 0)
+					if ((short)scienceIdx > 1 && (short)scienceIdx <= 0x15 && Turn.CivilopediaWithoutPictures == 0)
 					{
 						this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, CivilopediaBuildingsPictureAddress, 0);
 						this.Owner.Helpers.PullAndAssignColors(CivilopediaBuildingPaletteAddress);
@@ -559,7 +559,7 @@ namespace Civilization1Remaster.Core.UI
 							(ushort)(((iconSlot >> 2) * 0x32) + 1),
 							(ushort)(((iconSlot & 3) * 0x32) + 1),
 							0x31, 0x31);
-						this.Owner.Services.DrawPictureToScreen(ScreenBox, 37, 17, picHandle);
+						this.Owner.Services.DrawPictureToScreen(Screen.Box, 37, 17, picHandle);
 						this.Owner.Helpers.ReleaseResource(picHandle, 0);
 					}
 
@@ -570,7 +570,7 @@ namespace Civilization1Remaster.Core.UI
 					break;
 
 				case 2:
-					if (CivilopediaWithoutPictures == 0)
+					if (Turn.CivilopediaWithoutPictures == 0)
 					{
 						ushort iconIdx = ObtainSecondPrerequisite(scienceIdx);
 						this.Owner.Words.Set("iconpga.pic");
@@ -587,20 +587,20 @@ namespace Civilization1Remaster.Core.UI
 					this.Owner.Words.Set(UnitText((short)scienceIdx));
 					this.Owner.TextPainter.DrawCenteredTextToScreen0(CivilopediaUnitsCategoryHeaderAddress, titleX, 36, Hues.LightGray);
 					this.Owner.Services.DrawPictureToScreen(
-						ScreenBox,
+						Screen.Box,
 						216, 48,
 						this.Processor.PullUInt16(dataSeg, (ushort)((scienceIdx << 1) + CivilopediaUnitIconsTableAddress)));
 					break;
 
 				case 3:
-					if (CivilopediaWithoutPictures == 0)
+					if (Turn.CivilopediaWithoutPictures == 0)
 					{
 						ushort iconIdx = ObtainTechnologyCategory(scienceIdx);
 						this.Owner.Words.Set("iconpgt1.pic");
 						byte pageDigit = (byte)CPU.SignedQuotient((short)iconIdx, 6);
 						this.Owner.Words[7] = (byte)(this.Owner.Words[7] + pageDigit);
 						this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, TextBuffer.Address, 0);
-						if (VgaMode != 0)
+						if (Screen.VgaMode != 0)
 						{
 							this.Owner.ImageToolkit.LoadPictureOrColors(-1, 0, 0, CivilopediaTerrainPaletteAddress, TerrainPaletteBufferAddress);
 							this.Owner.VideoCard.AssignHuesFromHueStruct(TerrainPaletteBufferAddress);
@@ -694,7 +694,7 @@ namespace Civilization1Remaster.Core.UI
 				if (UnitKindWordAt(unitSpec, UnitKindTable.Technology) == scienceIdx)
 				{
 					this.Owner.Services.DrawPictureToScreen(
-						ScreenBox,
+						Screen.Box,
 						40,
 						cursorY - 4,
 						this.Processor.PullUInt16(

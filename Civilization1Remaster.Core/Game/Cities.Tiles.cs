@@ -41,7 +41,7 @@ namespace Civilization1Remaster.Core.Game
 			}
 			else
 			{
-				CityTileDotted = 1;
+				CityTurn.TileDotted = 1;
 
 				this.Owner.Services.AssignDot(2, horizLoc + 0x50, vertLoc, (ushort)this.Owner.World.Towns[townIdx].ParticipantIdx);
 			}
@@ -60,7 +60,7 @@ namespace Civilization1Remaster.Core.Game
 					if (!shown)
 						continue;
 
-					this.Owner.Services.DrawPictureToScreen(ScreenBox,
+					this.Owner.Services.DrawPictureToScreen(Screen.Box,
 						161 + (this.Owner.TownDeltas[townTile].X * 16) + iconHoriz, 57 + (this.Owner.TownDeltas[townTile].Y * 16) + iconVert,
 						SpritePicture((resource + 8)));
 
@@ -78,12 +78,12 @@ namespace Civilization1Remaster.Core.Game
 
 			if (shown && total == 0)
 			{
-				this.Owner.Services.DrawPictureToScreen(ScreenBox,
+				this.Owner.Services.DrawPictureToScreen(Screen.Box,
 					165 + (this.Owner.TownDeltas[townTile].X * 16), 61 + (this.Owner.TownDeltas[townTile].Y * 16),
 					SpritePicture(0xd));
 			}
 
-			CityTileDotted = 0;
+			CityTurn.TileDotted = 0;
 		}
 
 		/// <inheritdoc/>
@@ -137,7 +137,7 @@ namespace Civilization1Remaster.Core.Game
 					yield = 0;
 				}
 
-				ushort townIdx = ShownCity;
+				ushort townIdx = CityTurn.ShownCity;
 
 				if (yield != 0 && resource == 2 && ObtainWonderCityID(3) == townIdx)
 				{
@@ -151,27 +151,27 @@ namespace Civilization1Remaster.Core.Game
 
 				if (yield > 2 && (this.Owner.World.Towns[townIdx].ConditionMarker & 0x40) == 0)
 				{
-					if (this.Owner.World.Participants[CityOwner].RegimeKind <= 1)
+					if (this.Owner.World.Participants[CityTurn.Owner].RegimeKind <= 1)
 					{
 						yield--;
 					}
 
-					if (CityTileDotted != 0)
+					if (CityTurn.TileDotted != 0)
 					{
-						AnarchyPressure = (ushort)(AnarchyPressure - 2);
+						Turn.AnarchyPressure = (ushort)(Turn.AnarchyPressure - 2);
 					}
 				}
 
 				if (yield != 0 && resource == 2)
 				{
-					if (CityTileDotted != 0)
+					if (CityTurn.TileDotted != 0)
 					{
-						DemocracyPressure = (ushort)(DemocracyPressure + 1);
+						Turn.DemocracyPressure = (ushort)(Turn.DemocracyPressure + 1);
 					}
 
 					short needed = (short)((this.Owner.World.Towns[townIdx].ConditionMarker & 0x40) != 0 ? 2 : 4);
 
-					if (needed <= this.Owner.World.Participants[CityOwner].RegimeKind)
+					if (needed <= this.Owner.World.Participants[CityTurn.Owner].RegimeKind)
 					{
 						yield++;
 					}
@@ -241,7 +241,7 @@ namespace Civilization1Remaster.Core.Game
 		{
 			using var _ = this.Processor.Journal.Scope($"AssignCitizenType({citizen}, {specialist})");
 
-			short cityIdx = (short)ShownCity;
+			short cityIdx = (short)CityTurn.ShownCity;
 			ushort currentMarkers = this.Owner.World.Towns[cityIdx].LaborerMarkers2;
 			ushort updated = CitizenSpecialistRules.SetSpecialistType(currentMarkers, citizen, (CitizenSpecialistRules.SpecialistType)specialist);
 			this.Owner.World.Towns[cityIdx].LaborerMarkers2 = updated;
@@ -252,7 +252,7 @@ namespace Civilization1Remaster.Core.Game
 		{
 			using var _ = this.Processor.Journal.Scope($"ObtainCitizenType({citizen})");
 
-			short cityIdx = (short)ShownCity;
+			short cityIdx = (short)CityTurn.ShownCity;
 			ushort markers = this.Owner.World.Towns[cityIdx].LaborerMarkers2;
 			var specType = CitizenSpecialistRules.GetSpecialistType(markers, citizen);
 			ushort result = (ushort)specType;
@@ -265,7 +265,7 @@ namespace Civilization1Remaster.Core.Game
 		{
 			using var _ = this.Processor.Journal.Scope($"TallySpecialists({specialist})");
 
-			short cityIdx = (short)ShownCity;
+			short cityIdx = (short)CityTurn.ShownCity;
 			ushort markers = this.Owner.World.Towns[cityIdx].LaborerMarkers2;
 			int tally = CitizenSpecialistRules.CountSpecialists(markers, (CitizenSpecialistRules.SpecialistType)specialist);
 			return (ushort)tally;
@@ -278,40 +278,40 @@ namespace Civilization1Remaster.Core.Game
 
 			City town = this.Owner.World.Towns[townIdx];
 
-			CityHappy =
-				(ushort)this.Owner.Helpers.ClampValue((short)CityHappy, 0, town.TrueExtent);
+			CityTurn.Happy =
+				(ushort)this.Owner.Helpers.ClampValue((short)CityTurn.Happy, 0, town.TrueExtent);
 
-			while (CityExcessUnhappy != 0 &&
-				(short)CityUnhappy < (short)CityExcessUnhappy)
+			while (CityTurn.ExcessUnhappy != 0 &&
+				(short)CityTurn.Unhappy < (short)CityTurn.ExcessUnhappy)
 			{
-				CityExcessUnhappy = (ushort)(CityExcessUnhappy - 1);
-				CityUnhappy = (ushort)(CityUnhappy + 1);
+				CityTurn.ExcessUnhappy = (ushort)(CityTurn.ExcessUnhappy - 1);
+				CityTurn.Unhappy = (ushort)(CityTurn.Unhappy + 1);
 			}
 
-			ushort taxmen = (ushort)this.Owner.Helpers.ClampValue((short)CityUnhappy, 0, town.TrueExtent);
+			ushort taxmen = (ushort)this.Owner.Helpers.ClampValue((short)CityTurn.Unhappy, 0, town.TrueExtent);
 
 			while (true)
 			{
-				CityUnhappy = taxmen;
+				CityTurn.Unhappy = taxmen;
 
 				short room = (short)this.Owner.Helpers.ClampValue(town.TrueExtent - (short)workerTally, 0, 99);
 
-				if ((short)(CityHappy + CityUnhappy) <= room)
+				if ((short)(CityTurn.Happy + CityTurn.Unhappy) <= room)
 					break;
 
-				if (CityExcessUnhappy != 0)
+				if (CityTurn.ExcessUnhappy != 0)
 				{
-					CityExcessUnhappy = (ushort)(CityExcessUnhappy - 1);
+					CityTurn.ExcessUnhappy = (ushort)(CityTurn.ExcessUnhappy - 1);
 				}
 				else
 				{
-					CityHappy = (ushort)(CityHappy - 1);
-					CityHappy =
-						(ushort)this.Owner.Helpers.ClampValue((short)CityHappy, 0, town.TrueExtent);
+					CityTurn.Happy = (ushort)(CityTurn.Happy - 1);
+					CityTurn.Happy =
+						(ushort)this.Owner.Helpers.ClampValue((short)CityTurn.Happy, 0, town.TrueExtent);
 				}
 
-				CityUnhappy = (ushort)(CityUnhappy - 1);
-				taxmen = (ushort)this.Owner.Helpers.ClampValue((short)CityUnhappy, 0, town.TrueExtent);
+				CityTurn.Unhappy = (ushort)(CityTurn.Unhappy - 1);
+				taxmen = (ushort)this.Owner.Helpers.ClampValue((short)CityTurn.Unhappy, 0, town.TrueExtent);
 			}
 		}
 
@@ -327,14 +327,14 @@ namespace Civilization1Remaster.Core.Game
 			ushort step = (short)(7 * size) > (short)breadth ? (ushort)CPU.SignedQuotient((short)breadth, size) : (ushort)7;
 			short citizenIdx;
 
-			for (citizenIdx = 0; citizenIdx < (short)CityHappy; citizenIdx++)
+			for (citizenIdx = 0; citizenIdx < (short)CityTurn.Happy; citizenIdx++)
 			{
 				horizLoc = DrawCitizen(horizLoc, vertLoc, CitizenPicture(citizenIdx & 1), step);
 			}
 
 
-			for (citizenIdx = 0; (short)(this.Owner.World.Towns[townIdx].TrueExtent - specialists - CityHappy -
-				CityUnhappy) > citizenIdx; citizenIdx++)
+			for (citizenIdx = 0; (short)(this.Owner.World.Towns[townIdx].TrueExtent - specialists - CityTurn.Happy -
+				CityTurn.Unhappy) > citizenIdx; citizenIdx++)
 			{
 				horizLoc = DrawCitizen(horizLoc, vertLoc, CitizenPicture(2 + (citizenIdx & 1)), step);
 			}
@@ -344,14 +344,14 @@ namespace Civilization1Remaster.Core.Game
 				horizLoc += 2;
 			}
 
-			for (citizenIdx = 0; citizenIdx < (short)CityUnhappy; citizenIdx++)
+			for (citizenIdx = 0; citizenIdx < (short)CityTurn.Unhappy; citizenIdx++)
 			{
-				this.Owner.Services.DrawPictureToScreen(ScreenBox, horizLoc, vertLoc,
+				this.Owner.Services.DrawPictureToScreen(Screen.Box, horizLoc, vertLoc,
 					CitizenPicture(4 + (citizenIdx & 1)));
 
-				if (citizenIdx < (short)CityExcessUnhappy)
+				if (citizenIdx < (short)CityTurn.ExcessUnhappy)
 				{
-					this.Owner.VideoCard.SubstituteHue(ScreenBox, horizLoc, vertLoc, 12, 14, Hues.Magenta, Hues.LightRed);
+					this.Owner.VideoCard.SubstituteHue(Screen.Box, horizLoc, vertLoc, 12, 14, Hues.Magenta, Hues.LightRed);
 				}
 
 				horizLoc += (short)step;
@@ -384,19 +384,19 @@ namespace Civilization1Remaster.Core.Game
 				if (horizLocOrigin >= 40)
 				{
 					this.Owner.VideoCard.RenderImage(
-						PictureScreenBox,
+						Screen.PictureScreenBox,
 						((horizLocOrigin & 1) * 19) + 161, 100, 18, 10,
-						ScreenBox,
+						Screen.Box,
 						horizLocTo, vertLocTo);
 				}
 				else
 				{
 					this.Owner.VideoCard.RenderImage(
-						PictureScreenBox,
+						Screen.PictureScreenBox,
 						((horizLocOrigin / 5) * 19) + 161,
 						((horizLocOrigin % 5) * 10) + 50,
 						18, 10,
-						ScreenBox,
+						Screen.Box,
 						horizLocTo, vertLocTo);
 				}
 			}
@@ -420,9 +420,9 @@ namespace Civilization1Remaster.Core.Game
 		{
 			using var _ = this.Processor.Journal.Scope($"FloodBoxWithMotif({horizLoc}, {vertLoc}, {breadth}, {altitude})");
 
-			if (VgaMode == 0)
+			if (Screen.VgaMode == 0)
 			{
-				this.Owner.Services.FloodBox(ScreenBox, horizLoc, vertLoc, breadth, altitude, Hues.LightBlue);
+				this.Owner.Services.FloodBox(Screen.Box, horizLoc, vertLoc, breadth, altitude, Hues.LightBlue);
 			}
 			else
 			{
@@ -439,9 +439,9 @@ namespace Civilization1Remaster.Core.Game
 					{
 						int tileBreadth = Math.Min(boxBreadth, 16);
 
-						this.Owner.VideoCard.RenderImage(PictureScreenBox,
+						this.Owner.VideoCard.RenderImage(Screen.PictureScreenBox,
 							208, 100, tileBreadth, tileAltitude,
-							ScreenBox,
+							Screen.Box,
 							boxHorizLoc, boxVertLoc);
 
 						boxHorizLoc += tileBreadth;
@@ -459,19 +459,19 @@ namespace Civilization1Remaster.Core.Game
 		{
 			using var _ = this.Processor.Journal.Scope($"RenderLabelBox({horizLoc}, {vertLoc}, {horizSpot1}, {vertSpot1}, 0x{label.Address:x4}, {style})");
 
-			this.Owner.Services.FloodBox(ScreenBox,
+			this.Owner.Services.FloodBox(Screen.Box,
 				horizLoc, vertLoc, horizSpot1 - horizLoc, vertSpot1 - vertLoc, style);
 		
-			this.Owner.VideoCard.RenderLine(ScreenBox,
+			this.Owner.VideoCard.RenderLine(Screen.Box,
 				horizLoc, vertLoc, horizSpot1, vertLoc, (ushort)((style < 8) ? (style + 8) : 7));
 		
-			this.Owner.VideoCard.RenderLine(ScreenBox,
+			this.Owner.VideoCard.RenderLine(Screen.Box,
 				horizLoc, vertLoc, horizLoc, vertSpot1, (ushort)((style < 8) ? (style + 8) : 7));
 		
-			this.Owner.VideoCard.RenderLine(ScreenBox,
+			this.Owner.VideoCard.RenderLine(Screen.Box,
 				horizLoc + 1, vertSpot1, horizSpot1, vertSpot1, (ushort)((style < 8) ? 8 : (style - 8)));
 
-			this.Owner.VideoCard.RenderLine(ScreenBox,
+			this.Owner.VideoCard.RenderLine(Screen.Box,
 				horizSpot1, vertLoc, horizSpot1, vertSpot1, (ushort)((style < 0x8) ? 8 : (style - 8)));
 
 			this.Owner.TextPainter.DrawCenteredTextToScreen0(label,
@@ -482,7 +482,7 @@ namespace Civilization1Remaster.Core.Game
 		{
 			using var _ = this.Processor.Journal.Scope("RenderMiniMap()");
 
-			this.Owner.Services.FloodBox(ScreenBox, 101, 117, 120, 75, Hues.Black);
+			this.Owner.Services.FloodBox(Screen.Box, 101, 117, 120, 75, Hues.Black);
 
 			short humanIdx = this.Owner.World.PersonParticipantIdx;
 
@@ -500,7 +500,7 @@ namespace Civilization1Remaster.Core.Game
 					int dotVert = (vertLoc / 2) * 3 + (sbyte)this.Processor.PullGlobalByte((ushort)(MiniMapRowShifts + quarter)) + 0x76;
 					ushort hue = (ushort)(this.Owner.MapOps.ObtainTerrainType((short)horizLoc, vertLoc) == MapRules.OceanTerrain ? 1 : 2);
 
-					this.Owner.Services.FloodBox(ScreenBox, dotHoriz, dotVert, 2, 2, hue);
+					this.Owner.Services.FloodBox(Screen.Box, dotHoriz, dotVert, 2, 2, hue);
 				}
 			}
 
@@ -512,12 +512,12 @@ namespace Civilization1Remaster.Core.Game
 		{
 			using var _ = this.Processor.Journal.Scope($"RenderMiniMapDot({horizLoc}, {vertLoc}, {style})");
 
-			if (CityScreenTab == 2)
+			if (CityTurn.ScreenTab == 2)
 			{
 				horizLoc = this.Owner.Routing.TunePosition(
 					horizLoc - this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx].HorizBegin + 40);
 
-				this.Owner.Services.FloodBox(ScreenBox,
+				this.Owner.Services.FloodBox(Screen.Box,
 					((horizLoc * 3) / 2) + 101, ((vertLoc * 3) / 2) + 118, 2, 2, style);
 			}
 		}
@@ -543,7 +543,7 @@ namespace Civilization1Remaster.Core.Game
 		/// <returns>The place of the next one</returns>
 		private short DrawCitizen(short horizLoc, short vertLoc, ushort picture, ushort step)
 		{
-			this.Owner.Services.DrawPictureToScreen(ScreenBox, horizLoc, vertLoc, picture);
+			this.Owner.Services.DrawPictureToScreen(Screen.Box, horizLoc, vertLoc, picture);
 
 			return (short)(horizLoc + step);
 		}

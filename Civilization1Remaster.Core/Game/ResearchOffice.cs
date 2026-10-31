@@ -66,8 +66,8 @@ namespace Civilization1Remaster.Core.Game
 			using var _ = this.Processor.Journal.Scope($"HandleAllCities({participantIdx})");
 
 
-			DemocracyPressure = 0;
-			AnarchyPressure = 0;
+			Turn.DemocracyPressure = 0;
+			Turn.AnarchyPressure = 0;
 
 			// 1: a city of size above 5 whose turn returned 0, 2: a city in disorder
 			int unrest = 0;
@@ -89,16 +89,16 @@ namespace Civilization1Remaster.Core.Game
 						unrest |= 2;
 					}
 
-					if (CityAgain == 0)
+					if (CityTurn.Again == 0)
 						break;
 
 					this.Owner.CityOps.HandleCity(townIdx, 1);
 
 					this.Owner.TurnHooks.RepaintMainScreen();
 
-					bool again = CityAgain == 2;
+					bool again = CityTurn.Again == 2;
 
-					CityAgain = 0;
+					CityTurn.Again = 0;
 
 					if (!again)
 						break;
@@ -209,7 +209,7 @@ namespace Civilization1Remaster.Core.Game
 
 				this.Owner.Helpers.FindNearestCity(spotHoriz, spotVert);
 
-				if (spotIdx <= 0x14 || (short)FoundDistance > 3)
+				if (spotIdx <= 0x14 || (short)Search.FoundDistance > 3)
 				{
 					ushort holder = this.Owner.VideoCard.ObtainDot(2, spotHoriz + 0x50, spotVert + 0x32);
 					this.Owner.Services.AssignDot(2, spotHoriz + 0x50, spotVert, holder);
@@ -225,9 +225,9 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.Startup.HideMouseCursor();
 
 			this.Owner.VideoCard.RenderImage(
-				ScreenBox,
+				Screen.Box,
 				0, 0, 0x140, 0xc8,
-				BackScreenBox,
+				Screen.BackScreenBox,
 				0, 0);
 
 			this.Owner.Startup.ShowMouseCursor();
@@ -241,9 +241,9 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.Startup.HideMouseCursor();
 
 			this.Owner.VideoCard.RenderImage(
-				BackScreenBox,
+				Screen.BackScreenBox,
 				0, 0, 0x140, 0xc8,
-				ScreenBox,
+				Screen.Box,
 				0, 0);
 
 			this.Owner.Startup.ShowMouseCursor();
@@ -256,11 +256,11 @@ namespace Civilization1Remaster.Core.Game
 
 			DrawAdvisorScenery();
 
-			MapRedrawRequest = 0x0;
+			MapView.RedrawRequest = 0x0;
 
 			this.Owner.CityOps.HandleCity(townIdx, 1);
 
-			if (MapRedrawRequest != 0)
+			if (MapView.RedrawRequest != 0)
 			{
 				this.Owner.TurnHooks.RepaintMainScreen();
 			}
@@ -319,7 +319,7 @@ namespace Civilization1Remaster.Core.Game
 			using var _ = this.Processor.Journal.Scope($"ComposeProductionOption({townIdx}, {price})");
 
 			int perTurn = this.Owner.Helpers.ClampValue(
-				(short)CityShields - (short)CityUnitUpkeep, 1, 99);
+				(short)CityTurn.Shields - (short)CityTurn.UnitUpkeep, 1, 99);
 
 			ushort turns = (ushort)this.Owner.Helpers.ClampValue(
 				(((10 * price) - this.Owner.World.Towns[townIdx].MaterialsTally - 1) / (short)perTurn) + 1, 1, 999);
@@ -626,11 +626,11 @@ namespace Civilization1Remaster.Core.Game
 			FrameWord(ApproachLocal, (ushort)player.Landmasses[FrameWord(ContinentLocal)].Approach);
 			FrameWord(DefensiveLocal, (ushort)((short)FrameWord(ApproachLocal) is 1 or 2 ? 1 : 0));
 
-			if (LateGameNudge != 0 && (short)FrameWord(ApproachLocal) == 5)
+			if (Turn.LateGameNudge != 0 && (short)FrameWord(ApproachLocal) == 5)
 				FrameWord(DefensiveLocal, 1);
 
-			short unhappy = (short)((player.RegimeKind <= 1 ? 1 : 2) * (short)CitySettlers);
-			FrameWord(HappyRoomLocal, (ushort)((short)CityFood - unhappy - (town.TrueExtent << 1)));
+			short unhappy = (short)((player.RegimeKind <= 1 ? 1 : 2) * (short)CityTurn.Settlers);
+			FrameWord(HappyRoomLocal, (ushort)((short)CityTurn.Food - unhappy - (town.TrueExtent << 1)));
 
 			for (FrameWord(ChoiceLoopLocal, 0); (short)FrameWord(ChoiceLoopLocal) < 0x1c; FrameWord(ChoiceLoopLocal, (ushort)(FrameWord(ChoiceLoopLocal) + 1)))
 			{
@@ -786,8 +786,8 @@ namespace Civilization1Remaster.Core.Game
 		private void ScoreImprovementChoice(short participantIdx, short townIdx, short choice)
 		{
 			City town = this.Owner.World.Towns[townIdx];
-			short food = (short)CityShields;
-			short trade = (short)CityTrade;
+			short food = (short)CityTurn.Shields;
+			short trade = (short)CityTurn.Trade;
 
 			Score = 0x3e7;
 			FrameWord(DefensiveImprovementLocal, 0);
@@ -849,7 +849,7 @@ namespace Civilization1Remaster.Core.Game
 					break;
 
 				case 34:
-					Score = (short)-(((short)CityCorruption << 1) - 0xc);
+					Score = (short)-(((short)CityTurn.Corruption << 1) - 0xc);
 					break;
 
 				case 35:
@@ -941,7 +941,7 @@ namespace Civilization1Remaster.Core.Game
 
 			FrameWord(TownLoopLocal, (ushort)this.Owner.Libc.Dice.DrawInt(5));
 
-			if (((1 << participantIdx) & HumanContinentAttackers) == 0)
+			if (((1 << participantIdx) & Turn.HumanContinentAttackers) == 0)
 				return;
 
 			ushort own = this.Owner.World.Participants[participantIdx].FoundScienceMarkers[FrameWord(TownLoopLocal)];
@@ -1055,8 +1055,8 @@ namespace Civilization1Remaster.Core.Game
 				Score <<= 2;
 
 			// Doubled unless the player is at war (0x6ed4) and the approach is defensive or there is more food than 0xdeb8
-			if ((FrameWord(DefensiveLocal) == 0 && (short)CityShields <= (short)CitySpecialSlots) ||
-				PlayerAtWar == 0)
+			if ((FrameWord(DefensiveLocal) == 0 && (short)CityTurn.Shields <= (short)CityTurn.SpecialSlots) ||
+				Turn.PlayerAtWar == 0)
 			{
 				Score <<= 1;
 			}
@@ -1093,7 +1093,7 @@ namespace Civilization1Remaster.Core.Game
 
 			if ((this.Owner.World.SessionPrefMarkers & 1) != 0 && AdvisorsShown == 0)
 			{
-				ushort screen = ScreenBox;
+				ushort screen = Screen.Box;
 				this.Processor.EmitUInt16(this.Processor.SegData.Value16, (ushort)(screen + 0x10), 2);
 
 				if (FrameWord(BestUnitLocal) != 0xffff)
@@ -1103,7 +1103,7 @@ namespace Civilization1Remaster.Core.Game
 					ShowProductionAdvice((short)FrameWord(BestImprovementLocal), "Domestic Advisor:\n", 0x22a3, 164);
 
 				AdvisorsShown = 1;
-				screen = ScreenBox;
+				screen = Screen.Box;
 				this.Processor.EmitUInt16(this.Processor.SegData.Value16, (ushort)(screen + 0x10), 1);
 
 				return null;
@@ -1111,11 +1111,11 @@ namespace Civilization1Remaster.Core.Game
 
 			if (ChoiceCount > 0x14 || PageState != 0)
 			{
-				ushort screen = ScreenBox;
+				ushort screen = Screen.Box;
 				this.Processor.EmitUInt16(this.Processor.SegData.Value16, (ushort)(screen + 0x10), 2);
 			}
 
-			MenuFooter = 1;
+			Menu.Footer = 1;
 			ushort picked = this.Owner.Dialogs.ShowMenu(TextBuffer.Address, 80, 8, 1);
 			Score = (short)ChoiceEntry(picked + 1);
 
@@ -1131,25 +1131,25 @@ namespace Civilization1Remaster.Core.Game
 				return null;
 			}
 
-			ushort display = ScreenBox;
+			ushort display = Screen.Box;
 			this.Processor.EmitUInt16(this.Processor.SegData.Value16, (ushort)(display + 0x10), 1);
 
-			if (MenuHelpTopic == 0)
+			if (Menu.HelpTopic == 0)
 				return (ushort)Score;
 
 			// The Civilopedia of the choice, then the menu again
 			this.Owner.Startup.HideMouseCursor();
-			this.Owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, BackScreenBox, 0, 0);
-			CivilopediaWithoutPictures = 1;
+			this.Owner.VideoCard.RenderImage(Screen.Box, 0, 0, 0x140, 0xc8, Screen.BackScreenBox, 0, 0);
+			Turn.CivilopediaWithoutPictures = 1;
 
 			if (Score >= 0)
 				this.Owner.Encyclopedia.ShowCivilopediaRecord((ushort)Score, 2);
 			else
 				this.Owner.Encyclopedia.ShowCivilopediaRecord((ushort)(-Score), 1);
 
-			this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
+			this.Owner.VideoCard.RenderImage(Screen.BackScreenBox, 0, 0, 0x140, 0xc8, Screen.Box, 0, 0);
 			this.Owner.Startup.ShowMouseCursor();
-			MapRedrawRequest = 1;
+			MapView.RedrawRequest = 1;
 
 			return null;
 		}
@@ -1166,7 +1166,7 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.Codes.Set(3, choiceName);
 			this.Owner.BlockText.ReflowText();
 			this.Owner.BlockText.ArrangeTextRow(0x32);
-			DialogNeedsRedraw = 1;
+			Screen.DialogNeedsRedraw = 1;
 			this.Owner.Dialogs.ShowMenu(TextBuffer.Address, horizLoc, 160, 1);
 		}
 
@@ -1246,7 +1246,7 @@ namespace Civilization1Remaster.Core.Game
 
 				this.Owner.Startup.HideMouseCursor();
 
-				this.Owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, BackScreenBox, 0, 0);
+				this.Owner.VideoCard.RenderImage(Screen.Box, 0, 0, 0x140, 0xc8, Screen.BackScreenBox, 0, 0);
 
 				this.Owner.Startup.ShowMouseCursor();
 
@@ -1257,7 +1257,7 @@ namespace Civilization1Remaster.Core.Game
 
 				ushort choices = ListResearchChoices(participantIdx, again, choiceList);
 
-				DialogStyle = 0x6;
+				Screen.DialogStyle = 0x6;
 
 				if (choices == 0)
 				{
@@ -1274,13 +1274,13 @@ namespace Civilization1Remaster.Core.Game
 					return 0x48;
 				}
 
-				MenuFooter = 0x1;
+				Menu.Footer = 0x1;
 
 				ushort choice = this.Owner.Dialogs.ShowMenu(TextBuffer.Address, 80, 64, 1);
 
 				this.Owner.Startup.HideMouseCursor();
 
-				this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
+				this.Owner.VideoCard.RenderImage(Screen.BackScreenBox, 0, 0, 0x140, 0xc8, Screen.Box, 0, 0);
 
 				this.Owner.Startup.ShowMouseCursor();
 
@@ -1289,7 +1289,7 @@ namespace Civilization1Remaster.Core.Game
 
 				ushort scienceIdx = choiceList[choice];
 
-				if (MenuHelpTopic == 0)
+				if (Menu.HelpTopic == 0)
 				{
 					human.PresentInquiryIdx = (short)scienceIdx;
 
@@ -1316,7 +1316,7 @@ namespace Civilization1Remaster.Core.Game
 			Player human = this.Owner.World.Participants[person];
 
 			short first = (short)this.Owner.Encyclopedia.ObtainFirstPrerequisite((ushort)human.PresentInquiryIdx);
-			bool picture = human.PresentInquiryIdx != 71 && (short)FirstMissingDisk > 3 &&
+			bool picture = human.PresentInquiryIdx != 71 && (short)Files.FirstMissingDisk > 3 &&
 				this.Owner.Startup.AskForDisk(1, 0) != 0 && (this.Owner.World.SessionPrefMarkers & 8) != 0;
 
 			bool advanced = PlayerKnowsTechnology(person, 0x36) != 0;
@@ -1328,13 +1328,13 @@ namespace Civilization1Remaster.Core.Game
 
 				this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, pictureName, 0);
 
-				this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
+				this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 200, Hues.Black);
 
 				this.Owner.Helpers.HaltHueCycling();
 
 				this.Owner.ImageToolkit.LoadPictureOrColors(-1, 0, 0, pictureName, 1);
 
-				this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
+				this.Owner.VideoCard.RenderImage(Screen.BackScreenBox, 0, 0, 0x140, 0xc8, Screen.Box, 0, 0);
 			}
 
 			Message(CivilizationName((ushort)participantIdx))
@@ -1379,7 +1379,7 @@ namespace Civilization1Remaster.Core.Game
 			if (!advanced)
 				DrawingBox.TypefaceIdx = 0x6;
 
-			DialogNeedsRedraw = 1;
+			Screen.DialogNeedsRedraw = 1;
 
 			this.Owner.Dialogs.ShowMenu(TextBuffer.Address, 96, advanced ? (short)25 : (short)1, 1);
 
@@ -1397,7 +1397,7 @@ namespace Civilization1Remaster.Core.Game
 
 			this.Owner.Encyclopedia.DrawIcon((ushort)(((first % 3) * 111) + 1), (ushort)((((first % 9) / 3) * 69) + 1), 110, 68, 174, advanced ? (ushort)87 : (ushort)96);
 
-			if (VgaMode != 0)
+			if (Screen.VgaMode != 0)
 			{
 				string palName = advanced ? "discovr2.pal" : "discovr1.pal";
 
@@ -1462,7 +1462,7 @@ namespace Civilization1Remaster.Core.Game
 				this.Processor.EmitGlobalByte((ushort)(length + TextBuffer.Address), 0);
 
 			DrawingBox.TypefaceIdx = 0x2;
-			DialogNeedsRedraw = 1;
+			Screen.DialogNeedsRedraw = 1;
 
 			this.Owner.Dialogs.ShowMenu(TextBuffer.Address, 8, (short)-((allowed << 3) - 0xa8), 1);
 
@@ -1573,11 +1573,11 @@ namespace Civilization1Remaster.Core.Game
 				}
 			}
 
-			if ((participantIdx != person || participantIdx1 == -2) && KingAnswer == 0xffff)
+			if ((participantIdx != person || participantIdx1 == -2) && King.Answer == 0xffff)
 			{
-				MenuAnyKey = 1;
+				Menu.AnyKey = 1;
 
-				DialogStyle = participantIdx == person ? (ushort)6 : (ushort)0;
+				Screen.DialogStyle = participantIdx == person ? (ushort)6 : (ushort)0;
 
 				this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 100, 80);
 			}
@@ -1598,8 +1598,8 @@ namespace Civilization1Remaster.Core.Game
 			if (this.Owner.Audience.WelcomeEmissary(participantIdx, -1, 0) == 0xffff)
 				return;
 
-			KingAnswer = 0;
-			EmissaryAudience = 0;
+			King.Answer = 0;
+			King.EmissaryAudience = 0;
 			this.Owner.Words.Clear();
 
 			this.Owner.Codes.Set(0, CivilizationPlural((ushort)participantIdx));
@@ -1608,8 +1608,8 @@ namespace Civilization1Remaster.Core.Game
 
 			this.Owner.BlockText.ShowTextDialog(GameTexts.TopicGape);
 
-			KingMood = 0x2;
-			KingSpeaking = 0xc;
+			King.Mood = 0x2;
+			King.Speaking = 0xc;
 
 			this.Owner.Audience.ShowKingDialog(TextBuffer.Address, 0x14, 0x8b);
 
@@ -1635,7 +1635,7 @@ namespace Civilization1Remaster.Core.Game
 					this.Owner.TurnHooks.RepaintMainScreen();
 				}
 
-				if (KingAnswer == 0xffff)
+				if (King.Answer == 0xffff)
 				{
 					this.Owner.TurnHooks.RepaintMainScreen();
 
@@ -1662,7 +1662,7 @@ namespace Civilization1Remaster.Core.Game
 					}
 				}
 
-				if (participantIdx == person && KingAnswer == 0xffff)
+				if (participantIdx == person && King.Answer == 0xffff)
 				{
 					Message("Development of ")
 						.Text(TechnologyText(scienceIdx))

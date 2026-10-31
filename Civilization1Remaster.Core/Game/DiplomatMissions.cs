@@ -34,16 +34,16 @@ namespace Civilization1Remaster.Core.Game
 			if (participantIdx == person)
 			{
 				if ((this.Owner.World.Participants[person].Relations[ownerIdx] & 0x40) != 0 || ownerIdx == 0)
-					DisabledLines = 0x1;
+					Menu.DisabledLines = 0x1;
 
 				if ((town.ConditionMarker & 0x20) != 0)
-					DisabledLinesLow = (byte)((byte)DisabledLines | 4);
+					Menu.DisabledLinesLow = (byte)((byte)Menu.DisabledLines | 4);
 
 				if (town.Has(CityStructure.Palace))
-					DisabledLinesLow = (byte)((byte)DisabledLines | 0x10);
+					Menu.DisabledLinesLow = (byte)((byte)Menu.DisabledLines | 0x10);
 
 				if (ownerIdx == 0)
-					DisabledLinesLow = (byte)((byte)DisabledLines | 0x20);
+					Menu.DisabledLinesLow = (byte)((byte)Menu.DisabledLines | 0x20);
 
 				choice = this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 80, 80);
 			}
@@ -147,28 +147,28 @@ namespace Civilization1Remaster.Core.Game
 					pictures[pictureIdx] = this.Owner.VideoCard.ScreenToPicture(1, (ushort)(((pictureIdx % 7) * 0x2d) + 1), (ushort)(((pictureIdx / 7) * 0x2d) + 1), 0x2c, 0x2c);
 				}
 
-				horizLoc = (short)((this.Owner.Routing.TunePosition(horizLoc - (short)MapViewHoriz) << 4) + 0x42);
-				vertLoc = (short)(((vertLoc - MapViewVert) << 4) - 6);
+				horizLoc = (short)((this.Owner.Routing.TunePosition(horizLoc - (short)MapView.Horiz) << 4) + 0x42);
+				vertLoc = (short)(((vertLoc - MapView.Vert) << 4) - 6);
 
 				horizLoc = (short)this.Owner.Helpers.ClampValue(horizLoc, 80, 276);
 				vertLoc = (short)this.Owner.Helpers.ClampValue(vertLoc, 8, 0x9c);
 
 				this.Owner.Services.PerformSound(0x2a, 0);
 
-				this.Owner.VideoCard.RenderImage(ScreenBox, horizLoc, vertLoc, 0x2c, 0x2c,
-					BackScreenBox, horizLoc, vertLoc);
+				this.Owner.VideoCard.RenderImage(Screen.Box, horizLoc, vertLoc, 0x2c, 0x2c,
+					Screen.BackScreenBox, horizLoc, vertLoc);
 
 				for (int stepIdx = 0; stepIdx < 0x23; stepIdx++)
 				{
 					int pictureIdx = stepIdx < 0x1c ? stepIdx : stepIdx - 7;
 
-					this.Owner.Services.DrawPictureToScreenAlternate(ScreenBox, horizLoc, vertLoc,
+					this.Owner.Services.DrawPictureToScreenAlternate(Screen.Box, horizLoc, vertLoc,
 						pictures[pictureIdx]);
 
 					this.Owner.TextPainter.WaitForTime(5);
 
-					this.Owner.VideoCard.RenderImage(BackScreenBox, horizLoc, vertLoc, 0x2c, 0x2c,
-						ScreenBox, horizLoc, vertLoc);
+					this.Owner.VideoCard.RenderImage(Screen.BackScreenBox, horizLoc, vertLoc, 0x2c, 0x2c,
+						Screen.Box, horizLoc, vertLoc);
 				}
 
 				this.Owner.Helpers.ReleaseResource(pictures[0], 0);
@@ -207,7 +207,7 @@ namespace Civilization1Remaster.Core.Game
 
 					this.Owner.CityOps.HandleCity((short)otherIdx, -1);
 
-					short surplus = CPU.SignedQuotient((short)((CityHappy - CityUnhappy) << 5), (short)distance);
+					short surplus = CPU.SignedQuotient((short)((CityTurn.Happy - CityTurn.Unhappy) << 5), (short)distance);
 
 					if (surplus > bestSurplus)
 					{
@@ -251,11 +251,11 @@ namespace Civilization1Remaster.Core.Game
 
 				this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, GameTexts.FileHillPicC, 0);
 
-				this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
+				this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 200, Hues.Black);
 
 				this.Owner.ImageToolkit.LoadPictureOrColors(-1, 0, 0, GameTexts.FileHillPicD, 1);
 
-				this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
+				this.Owner.VideoCard.RenderImage(Screen.BackScreenBox, 0, 0, 0x140, 0xc8, Screen.Box, 0, 0);
 
 				EmptyMessage()
 					.City(townIdx)
@@ -271,7 +271,7 @@ namespace Civilization1Remaster.Core.Game
 
 				DrawingBox.TypefaceIdx = 0x1;
 
-				this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0x78, 0x140, 0x28, BackScreenBox, 0, 0);
+				this.Owner.VideoCard.RenderImage(Screen.BackScreenBox, 0, 0x78, 0x140, 0x28, Screen.BackScreenBox, 0, 0);
 
 				this.Owner.TurnLogic.WaitForKey();
 
@@ -281,15 +281,15 @@ namespace Civilization1Remaster.Core.Game
 				{
 					this.Owner.Services.RestoreTimer();
 
-					this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0x28, BackScreenBox, 0, 0x78);
+					this.Owner.VideoCard.RenderImage(Screen.BackScreenBox, 0, 0, 0x140, 0x28, Screen.BackScreenBox, 0, 0x78);
 
 					for (short figureIdx = 0; figureIdx < 4; figureIdx++)
 					{
-						this.Owner.Services.DrawPictureToScreen(BackScreenBox, (13 * figureIdx) + horizLoc,
+						this.Owner.Services.DrawPictureToScreen(Screen.BackScreenBox, (13 * figureIdx) + horizLoc,
 							((10 * figureIdx) & 0xf) + 120, figures[(figureIdx + horizLoc) & 3]);
 					}
 
-					this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0x78, 0x140, 0x28, ScreenBox, 0, 0x78);
+					this.Owner.VideoCard.RenderImage(Screen.BackScreenBox, 0, 0x78, 0x140, 0x28, Screen.Box, 0, 0x78);
 
 					while ((short)this.Owner.Timer.Beats < 0xa)
 					{
@@ -305,7 +305,7 @@ namespace Civilization1Remaster.Core.Game
 
 				this.Owner.Startup.AskForDisk(0, 1);
 
-				if (VgaMode != 0)
+				if (Screen.VgaMode != 0)
 				{
 					this.Owner.Services.FillColors(10, 0, 0, 0);
 				}
@@ -318,7 +318,7 @@ namespace Civilization1Remaster.Core.Game
 				}
 				else
 				{
-					this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
+					this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 200, Hues.Black);
 
 					this.Owner.TurnHooks.ShowCivilizationScenery();
 				}
@@ -446,7 +446,7 @@ namespace Civilization1Remaster.Core.Game
 
 			this.Owner.Words.Append(".\n");
 
-			DialogStyle = 0x0;
+			Screen.DialogStyle = 0x0;
 
 			this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 80, 80);
 
@@ -490,7 +490,7 @@ namespace Civilization1Remaster.Core.Game
 				}
 			}
 
-			DialogStyle = 0x0;
+			Screen.DialogStyle = 0x0;
 
 			short choice = (short)this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 100, 80);
 
@@ -678,16 +678,16 @@ namespace Civilization1Remaster.Core.Game
 
 			short preferences = this.Owner.World.SessionPrefMarkers;
 
-			NoConquestAnimation = 0x1;
+			Turn.NoConquestAnimation = 0x1;
 
-			if ((short)FirstMissingDisk <= 1)
+			if ((short)Files.FirstMissingDisk <= 1)
 			{
 				this.Owner.World.SessionPrefMarkers &= 0x7ff7;
 			}
 
 			this.Owner.Conquest.SeizeCity(participantIdx, townIdx, 1);
 
-			NoConquestAnimation = 0x0;
+			Turn.NoConquestAnimation = 0x0;
 			this.Owner.World.SessionPrefMarkers = preferences;
 
 			this.Owner.MapOps.MapAssignCityOwner(participantIdx, town.Place.X, town.Place.Y);

@@ -64,7 +64,7 @@ namespace Civilization1Remaster.Core.Game
 					(short)DirectionHorizAt(dirOffset) + (short)unitX);
 				ushort adjY = (ushort)(DirectionVertAt(dirOffset) + unitY);
 
-				if ((short)FoundDistance <= 8 &&
+				if ((short)Search.FoundDistance <= 8 &&
 					this.Owner.MapOps.ObtainTerrainType((short)adjX, (short)adjY) != 0xa &&
 					((byte)this.Owner.MapOps.ObtainTileImprovements((short)adjX, (short)adjY) & 0x1) == 0 &&
 					(ushort)(this.Owner.MapOps.ObtainTileOwner((short)adjX, (short)adjY) + 1) == 0 &&
@@ -86,7 +86,7 @@ namespace Civilization1Remaster.Core.Game
 							this.Troops.AssignAt(unitAddr, UnitMemory.ShownToParticipants, (byte)(this.Troops.PullAt(unitAddr, UnitMemory.ShownToParticipants) | humanBitByte));
 
 							this.Owner.UnitOps.PanMapToPosition(this.Owner.World.PersonParticipantIdx, (short)adjX, (short)adjY);
-							DialogStyle = 0x3;
+							Screen.DialogStyle = 0x3;
 							this.Owner.Words.Set("Barbarian raiding party\nlands near ");
 							nearestCity = this.Owner.Helpers.FindNearestCity((short)adjX, (short)adjY);
 							this.Owner.Conquest.ObtainCityLabel((short)nearestCity);
@@ -155,7 +155,7 @@ namespace Civilization1Remaster.Core.Game
 		{
 			ushort dataSeg = this.Processor.SegData.Value16;
 			ushort nearestCity = this.Owner.Helpers.FindNearestCity((short)unitX, (short)unitY);
-			if (FoundDistance == 0)
+			if (Search.FoundDistance == 0)
 			{
 				if (this.Troops.PullAt(unitAddr, UnitMemory.FollowingInStack) == 0xff)
 				{
@@ -178,7 +178,7 @@ namespace Civilization1Remaster.Core.Game
 					this.Owner.World.Towns[nearestCity].Place.X,
 					this.Owner.World.Towns[nearestCity].Place.Y);
 				ushort unitContinent = this.Owner.MapOps.ObtainContinentID((short)unitX, (short)unitY);
-				if (unitContinent != cityContinent || (short)FoundDistance > 8)
+				if (unitContinent != cityContinent || (short)Search.FoundDistance > 8)
 				{
 					this.Owner.UnitOps.DestroyUnit(participantIdx, troopIdx);
 					return 0x20;
@@ -235,7 +235,7 @@ namespace Civilization1Remaster.Core.Game
 					}
 				}
 
-				short cityDist = (short)FoundDistance;
+				short cityDist = (short)Search.FoundDistance;
 				if (currentTerrain == 0xa)
 				{
 					if (cityDist < 3)
@@ -251,7 +251,7 @@ namespace Civilization1Remaster.Core.Game
 						troopIdx,
 						(sbyte)this.Troops.PullAt(unitAddr, UnitMemory.Horiz),
 						(sbyte)this.Troops.PullAt(unitAddr, UnitMemory.Vert));
-					if ((short)FoundDistance <= 3)
+					if ((short)Search.FoundDistance <= 3)
 					{
 						ushort nearestUnitAddr = (ushort)((ushort)participantIdx * 0x600 + nearestUnit * 0xc);
 						if (this.Troops.PullAt(nearestUnitAddr, UnitMemory.Kind) != 0x1a)
@@ -305,14 +305,14 @@ namespace Civilization1Remaster.Core.Game
 				{
 					if (unitAtAdj != 0xffff)
 					{
-						ushort unitOwnerAtAdj = FoundPlayer;
+						ushort unitOwnerAtAdj = Search.FoundPlayer;
 						dirScore = (short)(dirScore + ((ushort)participantIdx == unitOwnerAtAdj ? (short)0x63 : unchecked((short)0xff9d)));
 					}
 
 					this.Owner.Helpers.FindNearestCity((short)adjX, (short)adjY);
 					short randBonus = (short)this.Owner.Libc.Dice.DrawInt(4);
 					short defenseBonus = (short)(sbyte)TerrainField(adjTerrain, TerrainTable.MoveCost);
-					short distPenalty = (short)(FoundDistance << 2);
+					short distPenalty = (short)(Search.FoundDistance << 2);
 					dirScore = (short)(dirScore + defenseBonus + randBonus + distPenalty);
 				}
 				else
@@ -341,7 +341,7 @@ namespace Civilization1Remaster.Core.Game
 
 					if (unitAtAdj != 0xffff)
 					{
-						ushort adjUnitOwner = FoundPlayer;
+						ushort adjUnitOwner = Search.FoundPlayer;
 						if ((ushort)participantIdx == adjUnitOwner)
 						{
 							if (this.Owner.MapOps.ObtainTerrainType((short)unitX, (short)unitY) != 0xa)

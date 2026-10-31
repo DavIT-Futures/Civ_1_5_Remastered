@@ -42,7 +42,7 @@ namespace Civilization1Remaster.Core.Game
 			City town = this.Owner.World.Towns[townIdx];
 
 			this.Owner.UnitOps.CreateUnitsFromCityList(townIdx);
-			this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
+			this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 200, Hues.Black);
 			DrawFrame(2, 1, 208, 21);
 
 			// The population: 1 + 2 + ... + the size
@@ -69,14 +69,14 @@ namespace Civilization1Remaster.Core.Game
 			DrawFrame(127, 23, 208, 104);
 
 			// The map of the city
-			MapViewHoriz = (ushort)((short)town.Place.X - 5);
-			MapViewVert = (ushort)((short)town.Place.Y - 3);
+			MapView.Horiz = (ushort)((short)town.Place.X - 5);
+			MapView.Vert = (ushort)((short)town.Place.Y - 3);
 
 			this.Owner.MapOps.DrawMapTile(town.Place.X, town.Place.Y);
 
 			ushort tile = 0;
 
-			for (; (short)tile < (short)CityTiles; tile++)
+			for (; (short)tile < (short)CityTurn.Tiles; tile++)
 			{
 				this.round.Index = tile;
 				short horizLoc = (short)(town.Place.X + this.Owner.TownDeltas[tile].X);
@@ -84,7 +84,7 @@ namespace Civilization1Remaster.Core.Game
 				this.round.TileHoriz = (ushort)horizLoc;
 				this.round.TileVert = (ushort)vertLoc;
 
-				short owner = (short)CityOwner;
+				short owner = (short)CityTurn.Owner;
 
 				if (owner == this.Owner.World.PersonParticipantIdx &&
 					(this.Owner.World.ChartSight[(ushort)horizLoc, (ushort)vertLoc] & (1 << (owner & 0xff))) == 0)
@@ -109,8 +109,8 @@ namespace Civilization1Remaster.Core.Game
 				{
 					// A tile worked by a neighbouring city
 					this.Owner.Dialogs.DrawBox(
-						(horizLoc - (short)MapViewHoriz) * 16 + 80,
-						(vertLoc - (short)MapViewVert) * 16 + 8,
+						(horizLoc - (short)MapView.Horiz) * 16 + 80,
+						(vertLoc - (short)MapView.Vert) * 16 + 8,
 						15, 15, Hues.LightRed);
 				}
 			}
@@ -131,9 +131,9 @@ namespace Civilization1Remaster.Core.Game
 			DrawLabelBox(161, 106, 193, 114, GameTexts.TextMap, 9);
 			DrawLabelBox(194, 106, 226, 114, GameTexts.TextView, 9);
 
-			this.Owner.VideoCard.SubstituteHue(ScreenBox, (33 * (short)CityScreenTab) + 96, 107, 32, 7, Hues.LightBlue, Hues.White);
+			this.Owner.VideoCard.SubstituteHue(Screen.Box, (33 * (short)CityTurn.ScreenTab) + 96, 107, 32, 7, Hues.LightBlue, Hues.White);
 
-			if (CityScreenTab == 2)
+			if (CityTurn.ScreenTab == 2)
 				DrawMiniMap();
 		}
 	}

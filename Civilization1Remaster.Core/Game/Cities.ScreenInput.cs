@@ -46,9 +46,9 @@ namespace Civilization1Remaster.Core.Game
 				this.round.ChangeBlinks = (ushort)(this.round.ChangeBlinks + 1);
 
 				if (((byte)this.round.ChangeBlinks & 1) != 0)
-					this.Owner.VideoCard.SubstituteHue(ScreenBox, 231, 106, 32, 8, Hues.Yellow, Hues.LightBlue);
+					this.Owner.VideoCard.SubstituteHue(Screen.Box, 231, 106, 32, 8, Hues.Yellow, Hues.LightBlue);
 				else
-					this.Owner.VideoCard.SubstituteHue(ScreenBox, 231, 106, 32, 8, Hues.LightBlue, Hues.Yellow);
+					this.Owner.VideoCard.SubstituteHue(Screen.Box, 231, 106, 32, 8, Hues.LightBlue, Hues.Yellow);
 
 				this.Owner.Startup.ShowMouseCursor();
 				this.Owner.TextPainter.WaitForTime(10);
@@ -88,7 +88,7 @@ namespace Civilization1Remaster.Core.Game
 
 			if ((town.ConditionMarker & 0x10) != 0)
 			{
-				short owner = (short)CityOwner;
+				short owner = (short)CityTurn.Owner;
 
 				this.round.AdvisorPick = this.Owner.Advisors.PickCityProduction(owner, townIdx);
 				DrawingBox.TypefaceIdx = 2;
@@ -96,13 +96,13 @@ namespace Civilization1Remaster.Core.Game
 				if (this.round.AdvisorPick == 0x63)
 					return CityScreenStep.Restart;
 
-				CityAgain = 0;
+				CityTurn.Again = 0;
 
 				StopMakingUnit(town, owner);
 				town.PresentMakingIdx = (sbyte)(byte)this.round.AdvisorPick;
 				StartMakingUnit(town, owner);
 
-				this.Owner.Services.FloodBox(ScreenBox, 230, 99, 90, 100, Hues.Black);
+				this.Owner.Services.FloodBox(Screen.Box, 230, 99, 90, 100, Hues.Black);
 			}
 
 			RestoreShieldsAndTrade();
@@ -151,18 +151,18 @@ namespace Civilization1Remaster.Core.Game
 			else
 				return CityScreenStep.Others;
 
-			CityScreenTab = tab;
+			CityTurn.ScreenTab = tab;
 			RestoreShieldsAndTrade();
 
-			if (CityScreenTab != 3)
+			if (CityTurn.ScreenTab != 3)
 				return CityScreenStep.Redraw;
 
 			// The view of the city
 			DrawingBox.TypefaceIdx = 1;
 			this.Owner.Words.Clear();
 			this.Owner.CityScene.ShowCityScreen(townIdx, -1);
-			MapRedrawRequest = 1;
-			CityScreenTab = 0;
+			MapView.RedrawRequest = 1;
+			CityTurn.ScreenTab = 0;
 
 			return CityScreenStep.Restart;
 		}
@@ -175,7 +175,7 @@ namespace Civilization1Remaster.Core.Game
 		private void BuyCityProduction(short townIdx)
 		{
 			City town = this.Owner.World.Towns[townIdx];
-			short owner = (short)CityOwner;
+			short owner = (short)CityTurn.Owner;
 			sbyte making = town.PresentMakingIdx;
 
 			if (making >= 0)
@@ -244,7 +244,7 @@ namespace Civilization1Remaster.Core.Game
 		/// </summary>
 		private void ActivateUnitsInCity()
 		{
-			short owner = (short)CityOwner;
+			short owner = (short)CityTurn.Owner;
 			ushort Unit(ushort place) => UnitMemory.Address(owner, UnitOfCityList(place));
 
 			this.round.Selected = 0;
@@ -315,9 +315,9 @@ namespace Civilization1Remaster.Core.Game
 				do
 				{
 					short line = (short)((((short)this.round.Selected + (short)this.round.WonderRows) * 6) + 3);
-					this.Owner.VideoCard.SubstituteHue(ScreenBox, 252, line, 56, 7, Hues.LightBlue, Hues.Blue);
+					this.Owner.VideoCard.SubstituteHue(Screen.Box, 252, line, 56, 7, Hues.LightBlue, Hues.Blue);
 					this.Owner.TextPainter.WaitForTime(10);
-					this.Owner.VideoCard.SubstituteHue(ScreenBox, 252, line, 56, 7, Hues.Blue, Hues.LightBlue);
+					this.Owner.VideoCard.SubstituteHue(Screen.Box, 252, line, 56, 7, Hues.Blue, Hues.LightBlue);
 					this.Owner.TextPainter.WaitForTime(10);
 				}
 				while ((ushort)this.Owner.Libc.KeyAvailable() == 0);
@@ -386,12 +386,12 @@ namespace Civilization1Remaster.Core.Game
 					ushort horiz = (ushort)((this.round.CursorHoriz << 4) + 0xa0);
 					ushort vert = (ushort)((this.round.CursorVert << 4) + 0x38);
 
-					this.Owner.VideoCard.RenderImage(ScreenBox, horiz, vert, 16, 16, BackScreenBox, 0, 0);
+					this.Owner.VideoCard.RenderImage(Screen.Box, horiz, vert, 16, 16, Screen.BackScreenBox, 0, 0);
 					this.Owner.Dialogs.DrawBox((short)this.round.CursorHoriz * 16 + 160, (short)this.round.CursorVert * 16 + 56, 15, 15, Hues.White);
 					this.Owner.TextPainter.WaitForTime(10);
-					this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 16, 16, ScreenBox, horiz, vert);
+					this.Owner.VideoCard.RenderImage(Screen.BackScreenBox, 0, 0, 16, 16, Screen.Box, horiz, vert);
 					this.Owner.TextPainter.WaitForTime(10);
-					MapRedrawRequest = 1;
+					MapView.RedrawRequest = 1;
 				}
 				while ((ushort)this.Owner.Libc.KeyAvailable() == 0);
 
@@ -466,7 +466,7 @@ namespace Civilization1Remaster.Core.Game
 				this.Owner.TurnLogic.WaitForKey();
 				DrawingBox.TypefaceIdx = 1;
 				this.Owner.CityNaming.ShowCityLabelPrompt(townIdx);
-				MapRedrawRequest = 1;
+				MapView.RedrawRequest = 1;
 				return CityScreenStep.Restart;
 			}
 
@@ -530,12 +530,12 @@ namespace Civilization1Remaster.Core.Game
 				this.Owner.Startup.ShowMouseCursor();
 				if (this.Owner.Dialogs.ShowMenu(TextBuffer.Address, 128, 80, 1) == 1)
 				{
-					this.Owner.World.Participants[CityOwner].Gold += (short)(0xa * price);
+					this.Owner.World.Participants[CityTurn.Owner].Gold += (short)(0xa * price);
 					town.Structures -= bit;
 					town.ConditionMarker |= 0x80;
 
 					if (improvement + 1 == 8)
-						MapRedrawRequest = 1;
+						MapView.RedrawRequest = 1;
 				}
 
 				this.Owner.Startup.HideMouseCursor();
@@ -622,7 +622,7 @@ namespace Civilization1Remaster.Core.Game
 			if ((short)this.round.Selected >= (short)this.round.UnitsDrawn)
 				return false;
 
-			short owner = (short)CityOwner;
+			short owner = (short)CityTurn.Owner;
 			WakeUnitOfCity(UnitMemory.Address(owner, UnitOfCityList(this.round.Selected)));
 
 			RestoreShieldsAndTrade();
@@ -653,7 +653,7 @@ namespace Civilization1Remaster.Core.Game
 				// first enough food so the city doesn't starve, then the best mix of food, shields and trade.
 				town.LaborerMarkers0 = 0;
 				town.LaborerMarkers1 = 0;
-				CitySpecialists = 0;
+				CityTurn.Specialists = 0;
 				return CityScreenStep.Restart;
 			}
 
@@ -664,7 +664,7 @@ namespace Civilization1Remaster.Core.Game
 			int vert = town.Place.Y + this.Owner.TownDeltas[tile].Y;
 
 
-			if ((this.Owner.World.ChartSight[(ushort)(short)horiz, (ushort)(short)vert] & (short)(1 << (byte)CityOwner)) == 0)
+			if ((this.Owner.World.ChartSight[(ushort)(short)horiz, (ushort)(short)vert] & (short)(1 << (byte)CityTurn.Owner)) == 0)
 				return CityScreenStep.Restart;
 
 			RestoreShieldsAndTrade();
@@ -691,9 +691,9 @@ namespace Civilization1Remaster.Core.Game
 				this.round.WorkersGained = (ushort)(this.round.WorkersGained + 1);
 				DrawCityTile(townIdx, tile, marker);
 
-				if (CitySpecialists != 0)
+				if (CityTurn.Specialists != 0)
 				{
-					CitySpecialists = (ushort)(CitySpecialists - 1);
+					CityTurn.Specialists = (ushort)(CityTurn.Specialists - 1);
 					this.round.Workers = (ushort)(this.round.Workers - 1);
 				}
 			}
@@ -713,7 +713,7 @@ namespace Civilization1Remaster.Core.Game
 
 				this.round.Item = 3;
 				this.Owner.MapOps.DrawMapTile(town.Place.X + this.Owner.TownDeltas[tile].X, town.Place.Y + this.Owner.TownDeltas[tile].Y);
-				CitySpecialists = (ushort)(CitySpecialists + 1);
+				CityTurn.Specialists = (ushort)(CityTurn.Specialists + 1);
 				this.round.Workers = (ushort)(this.round.Workers + 1);
 			}
 
@@ -738,14 +738,14 @@ namespace Civilization1Remaster.Core.Game
 				this.round.Index = slot;
 
 				if ((byte)town.Unfamiliar[slot] != 0xff)
-					CitySpecialSlots = (ushort)(CitySpecialSlots + 1);
+					CityTurn.SpecialSlots = (ushort)(CityTurn.SpecialSlots + 1);
 			}
 
 			this.round.Index = 2;
 
-			if (town.TrueExtent < (short)CitySpecialSlots)
+			if (town.TrueExtent < (short)CityTurn.SpecialSlots)
 			{
-				CityUnitUpkeep = (ushort)(CitySpecialSlots - town.TrueExtent);
+				CityTurn.UnitUpkeep = (ushort)(CityTurn.SpecialSlots - town.TrueExtent);
 			}
 		}
 	}

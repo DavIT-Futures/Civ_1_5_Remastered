@@ -19,12 +19,12 @@ namespace Civilization1Remaster.Core.Engine
 		{
 			DrawingBox.ForeHues = style;
 
-			if (DoubleWidthText != 0)
+			if (Writing.DoubleWidthText != 0)
 			{
 				horizLoc <<= 1;
 			}
 
-			this.Owner.VideoCard.RenderText(ScreenBox, horizLoc, vertLoc, text);
+			this.Owner.VideoCard.RenderText(Screen.Box, horizLoc, vertLoc, text);
 		}
 
 		/// <inheritdoc/>

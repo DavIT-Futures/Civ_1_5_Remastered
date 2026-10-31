@@ -77,14 +77,14 @@ namespace Civilization1Remaster.Core.Engine
 			using var _ = this.Processor.Journal.Scope("ChooseGameToImport()");
 
 			ushort bay = 0xffff;
-			LoadingGame = 0x1;
+			Files.LoadingGame = 0x1;
 
 			this.Owner.Startup.HideMouseCursor();
 
 			this.Owner.VideoCard.RenderImage(
-				ScreenBox,
+				Screen.Box,
 				0, 0, 0x140, 0xc8,
-				BackScreenBox,
+				Screen.BackScreenBox,
 				0, 0);
 
 			if (AskForSaveDrive() != 0xffff)
@@ -95,9 +95,9 @@ namespace Civilization1Remaster.Core.Engine
 			this.Owner.Startup.AskForDisk(0, 1);
 
 			this.Owner.VideoCard.RenderImage(
-				BackScreenBox,
+				Screen.BackScreenBox,
 				0, 0, 0x140, 0xc8,
-				ScreenBox,
+				Screen.Box,
 				0, 0);
 
 			this.Owner.Startup.ShowMouseCursor();
@@ -118,11 +118,11 @@ namespace Civilization1Remaster.Core.Engine
 				outcome = LoadGame(SaveFileNameAddress, 0);
 
 				this.FetchingBackup = false;
-				AssignManualFileLabel(Math.Clamp((int)LastSaveSlot, 0, HandBayTally - 1));
+				AssignManualFileLabel(Math.Clamp((int)Files.LastSaveSlot, 0, HandBayTally - 1));
 			}
 			else
 			{
-				LastSaveSlot = bay;
+				Files.LastSaveSlot = bay;
 				this.Processor.EmitGlobalByte(SaveSlotDigitAddress, (byte)(0x30 + bay));
 
 				outcome = LoadGame(SaveFileNameAddress, 0);
@@ -137,7 +137,7 @@ namespace Civilization1Remaster.Core.Engine
 			using var _ = this.Processor.Journal.Scope($"ImportGameFromMenu({marker})");
 
 			ushort bay = 0xffff;
-			LoadingGame = 0x1;
+			Files.LoadingGame = 0x1;
 
 			this.Owner.Startup.HideMouseCursor();
 
@@ -174,9 +174,9 @@ namespace Civilization1Remaster.Core.Engine
 
 			if (marker != 0)
 			{
-				LoadFile = (ushort)this.Owner.Libc.OpenHandle(docnameAddr, 0x8000);
+				Files.LoadFile = (ushort)this.Owner.Libc.OpenHandle(docnameAddr, 0x8000);
 
-				short handle = (short)LoadFile;
+				short handle = (short)Files.LoadFile;
 
 				if (handle == -1)
 				{
@@ -184,28 +184,28 @@ namespace Civilization1Remaster.Core.Engine
 				}
 				else
 				{
-					// The human player (SavedHumanPlayer), the year (SavedYear) and the difficulty (SavedDifficulty)
+					// The human player (Files.SavedHumanPlayer), the year (Files.SavedYear) and the difficulty (Files.SavedDifficulty)
 					this.Owner.Libc.SeekHandle(handle, 2, 0);
-					this.Owner.Libc.ReadHandle(handle, this.Owner.Globals.SavedHumanPlayer.Address, 2);
+					this.Owner.Libc.ReadHandle(handle, this.Owner.Globals.Files.SavedHumanPlayerAddress, 2);
 
 					this.Owner.Libc.SeekHandle(handle, 8, 0);
-					this.Owner.Libc.ReadHandle(handle, this.Owner.Globals.SavedYear.Address, 2);
+					this.Owner.Libc.ReadHandle(handle, this.Owner.Globals.Files.SavedYearAddress, 2);
 
 					this.Owner.Words.Append(" ");
 
 					this.Owner.Libc.SeekHandle(handle, 10, 0);
-					this.Owner.Libc.ReadHandle(handle, this.Owner.Globals.SavedDifficulty.Address, 2);
+					this.Owner.Libc.ReadHandle(handle, this.Owner.Globals.Files.SavedDifficultyAddress, 2);
 
-					this.Owner.Words.Append(this.Processor.PullGlobalWord((ushort)((SavedDifficulty << 1) + DifficultyNamesTableAddress)));
+					this.Owner.Words.Append(this.Processor.PullGlobalWord((ushort)((Files.SavedDifficulty << 1) + DifficultyNamesTableAddress)));
 
 					this.Owner.Words.Append(" ");
 
-					this.Owner.Libc.SeekHandle(handle, (14 * (int)(short)SavedHumanPlayer) + 16, 0);
+					this.Owner.Libc.SeekHandle(handle, (14 * (int)(short)Files.SavedHumanPlayer) + 16, 0);
 					string leaderName = this.Owner.Libc.ReadText(handle, 14);
 
 					this.Owner.Words.Append(leaderName);
 
-					this.Owner.Libc.SeekHandle(handle, (12 * (int)(short)SavedHumanPlayer) + 0x80, 0);
+					this.Owner.Libc.SeekHandle(handle, (12 * (int)(short)Files.SavedHumanPlayer) + 0x80, 0);
 					string civName = this.Owner.Libc.ReadText(handle, 0xc);
 
 					this.Owner.Words.Append(", ");
@@ -214,7 +214,7 @@ namespace Civilization1Remaster.Core.Engine
 
 					this.Owner.Words.Append("/");
 
-					short year = (short)SavedYear;
+					short year = (short)Files.SavedYear;
 
 					this.Owner.Words.Append(this.Owner.Libc.IntegerToText(Math.Abs(year), 10));
 
@@ -239,12 +239,12 @@ namespace Civilization1Remaster.Core.Engine
 				this.Owner.WorldSetup.ReckonContinentSizes(0);
 
 				DrawingBox.DisplayIdx = 0x0;
-				ImportPlayerIndex = 8;
+				Files.ImportPlayerIndex = 8;
 
 				// The original game had 4 manual saves and saved slots 4 - 9 automatically, at the start of a turn.
 				// Autosaves now have their own files, all manual saves continue in the middle of the turn.
-				MidTurnSave = (ushort)(this.FetchingBackup ? 0x2 : 0x1);
-				LoadedGameMark = 0xfffd;
+				Files.MidTurnSave = (ushort)(this.FetchingBackup ? 0x2 : 0x1);
+				Files.LoadedGameMark = 0xfffd;
 				this.Owner.World.StarshipMarkers &= 0x7ffe;
 			}
 
@@ -257,12 +257,12 @@ namespace Civilization1Remaster.Core.Engine
 		{
 			using var _ = this.Processor.Journal.Scope($"DisplayStoreGameDialog({slot})");
 
-			FileError = 0;
-			LoadingGame = 0;
+			Files.FileError = 0;
+			Files.LoadingGame = 0;
 
 			this.Owner.Startup.HideMouseCursor();
 
-			this.Owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, BackScreenBox, 0, 0);
+			this.Owner.VideoCard.RenderImage(Screen.Box, 0, 0, 0x140, 0xc8, Screen.BackScreenBox, 0, 0);
 
 			if (AskForSaveDrive() != 0xffff)
 			{
@@ -275,7 +275,7 @@ namespace Civilization1Remaster.Core.Engine
 					LoadGame(SaveFileNameAddress, 1);
 				}
 
-				DefaultLine = (ushort)this.Owner.Helpers.ClampValue((short)LastSaveSlot, 0, HandBayTally - 1);
+				Menu.DefaultLine = (ushort)this.Owner.Helpers.ClampValue((short)Files.LastSaveSlot, 0, HandBayTally - 1);
 
 				if (slot == 0xffff)
 				{
@@ -288,12 +288,12 @@ namespace Civilization1Remaster.Core.Engine
 
 				if (slot != 0xffff)
 				{
-					LastSaveSlot = slot;
+					Files.LastSaveSlot = slot;
 					this.Processor.EmitGlobalByte(SaveSlotDigitAddress, (byte)(slot + 0x30));
 
 					if (SaveGame(SaveFileNameAddress) != 0)
 					{
-						if (FileError == 0)
+						if (Files.FileError == 0)
 						{
 							this.Owner.Words.Set(" Game has been saved.\n");
 						}
@@ -301,22 +301,22 @@ namespace Civilization1Remaster.Core.Engine
 						{
 							this.Owner.Words.Set(" Game NOT saved.\n");
 
-							this.Owner.Services.FloodBox(ScreenBox, 64, 127, 192, 34, Hues.LightRed);
+							this.Owner.Services.FloodBox(Screen.Box, 64, 127, 192, 34, Hues.LightRed);
 						}
 
-						if (FileError == 0xd)
+						if (Files.FileError == 0xd)
 						{
 							this.Owner.Words.Append(" Write access denied.\n");
 						}
 
-						if (FileError == 0x1c)
+						if (Files.FileError == 0x1c)
 						{
 							this.Owner.Words.Append(" Disk Full.\n");
 						}
 
 						this.Owner.Words.Append(" Press key to continue.\n");
 
-						MenuAnyKey = 0x1;
+						Menu.AnyKey = 0x1;
 
 						this.Owner.Dialogs.ShowMenu(TextBuffer.Address, 64, 127, 1);
 					}
@@ -325,7 +325,7 @@ namespace Civilization1Remaster.Core.Engine
 
 			this.Owner.Startup.AskForDisk(0, 1);
 
-			this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8, ScreenBox, 0, 0);
+			this.Owner.VideoCard.RenderImage(Screen.BackScreenBox, 0, 0, 0x140, 0xc8, Screen.Box, 0, 0);
 
 			this.Owner.Startup.ShowMouseCursor();
 		}
@@ -337,7 +337,7 @@ namespace Civilization1Remaster.Core.Engine
 
 			ushort personSlot = (ushort)(this.Owner.World.PersonParticipantIdx << 1);
 
-			DialogNeedsRedraw = 1;
+			Screen.DialogNeedsRedraw = 1;
 
 			Message(" ")
 				.Text(docnameAddr)
@@ -353,7 +353,7 @@ namespace Civilization1Remaster.Core.Engine
 
 			this.Owner.Words.Append("\n ... save in progress.\n");
 
-			MenuAnyKey = 0x1;
+			Menu.AnyKey = 0x1;
 
 			this.Owner.Dialogs.ShowMenu(TextBuffer.Address, 64, 86, 1);
 
@@ -368,16 +368,16 @@ namespace Civilization1Remaster.Core.Engine
 		{
 			using var _ = this.Processor.Journal.Scope("QueryForStoreDrive()");
 
-			if (SaveDrive == 0xffff)
+			if (Files.SaveDrive == 0xffff)
 			{
 				this.Owner.Libc.DosQueryDrive(SavedGameDriveLetterAddress);
 
-				SaveDrive = (ushort)(SaveDrive - 1);
+				Files.SaveDrive = (ushort)(Files.SaveDrive - 1);
 			}
 
-			this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.White);
+			this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 200, Hues.White);
 
-			if (LoadingGame == 0)
+			if (Files.LoadingGame == 0)
 			{
 				this.Owner.UnitOps.DrawBusyIndicator();
 			}
@@ -386,7 +386,7 @@ namespace Civilization1Remaster.Core.Engine
 
 			while (true)
 			{
-				this.Owner.Words.Set(LoadingGame != 0 ?
+				this.Owner.Words.Set(Files.LoadingGame != 0 ?
 					"  Which drive contains your\n    saved game files?\n\n            " :
 					"  Which drive contains your\n     Save Game disk?\n\n            ");
 
@@ -404,24 +404,24 @@ namespace Civilization1Remaster.Core.Engine
 				{
 					if (key == 'A' + driveIdx || key == 'a' + driveIdx)
 					{
-						SaveDrive = driveIdx;
+						Files.SaveDrive = driveIdx;
 					}
 				}
 
 				if (key == KeyCodes.Escape)
 				{
-					SaveDrive = 0xffff;
+					Files.SaveDrive = 0xffff;
 				}
 
-				this.Owner.Services.FloodBox(ScreenBox, 80, 88, 160, 24, Hues.White);
+				this.Owner.Services.FloodBox(Screen.Box, 80, 88, 160, 24, Hues.White);
 
 				if (key == KeyCodes.Enter || key == KeyCodes.Escape)
 					break;
 			}
 
-			this.Owner.Services.FloodBox(ScreenBox, 8, 8, 304, 184, Hues.White);
+			this.Owner.Services.FloodBox(Screen.Box, 8, 8, 304, 184, Hues.White);
 
-			ushort drive = SaveDrive;
+			ushort drive = Files.SaveDrive;
 
 			if (drive != 0xffff)
 			{
@@ -437,9 +437,9 @@ namespace Civilization1Remaster.Core.Engine
 				}
 			}
 
-			this.Processor.EmitGlobalByte(SaveFileNameAddress, (byte)((byte)SaveDrive + 0x61));
+			this.Processor.EmitGlobalByte(SaveFileNameAddress, (byte)((byte)Files.SaveDrive + 0x61));
 
-			drive = SaveDrive;
+			drive = Files.SaveDrive;
 
 			return drive;
 		}
@@ -1341,7 +1341,7 @@ namespace Civilization1Remaster.Core.Engine
 						bays.Add(0xffff);
 					}
 
-					AssignManualFileLabel(Math.Clamp((int)LastSaveSlot, 0, HandBayTally - 1));
+					AssignManualFileLabel(Math.Clamp((int)Files.LastSaveSlot, 0, HandBayTally - 1));
 				}
 				else
 				{
@@ -1362,7 +1362,7 @@ namespace Civilization1Remaster.Core.Engine
 				this.Owner.Startup.ShowMouseCursor();
 
 				// Start on the first saved game, not on the tab line
-				DefaultLine = 0x1;
+				Menu.DefaultLine = 0x1;
 				this.Owner.Dialogs.ChoicesIndentTokens = true;
 				this.Owner.Dialogs.ChoicesIndentTokenDown = false;
 
@@ -1376,7 +1376,7 @@ namespace Civilization1Remaster.Core.Engine
 				{
 					// Switch the tab
 					this.displayBackups = !this.displayBackups;
-					this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.White);
+					this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 200, Hues.White);
 					continue;
 				}
 
@@ -1393,7 +1393,7 @@ namespace Civilization1Remaster.Core.Engine
 		/// <summary>The letter of the drive (0x4384) is written at the end of the text at TextBuffer.Address, place: (ushort)(TextBuffer.Address - 1) the last character</summary>
 		private void AppendDriveLetter(ushort place)
 		{
-			this.Processor.EmitGlobalByte((ushort)(this.Owner.Words.Length + place), (byte)((byte)SaveDrive + 0x41));
+			this.Processor.EmitGlobalByte((ushort)(this.Owner.Words.Length + place), (byte)((byte)Files.SaveDrive + 0x41));
 		}
 
 		/// <summary>Reads span bytes of the file into the data segment at the address</summary>

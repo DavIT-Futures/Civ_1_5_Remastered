@@ -10,7 +10,7 @@ namespace Civilization1Remaster.Core.Game
 			using var _ = this.Processor.Journal.Scope($"RepaintTileIfVisible({horizLoc}, {vertLoc})");
 
 			if ((this.Owner.World.ChartSight[horizLoc, vertLoc] & (ushort)(1 << this.Owner.World.PersonParticipantIdx)) != 0 ||
-				MapRevealed != 0)
+				MapView.Revealed != 0)
 			{
 				this.Owner.MapOps.RepaintMapTile(horizLoc, vertLoc);
 			}
@@ -120,15 +120,15 @@ namespace Civilization1Remaster.Core.Game
 		{
 			using var _ = this.Owner.Journal.Scope($"VerifyPositionOnScreen({horizLoc}, {vertLoc})");
 			ushort onScreen;
-			if (horizLoc < 16 && (short)MapViewHoriz >= 65)
+			if (horizLoc < 16 && (short)MapView.Horiz >= 65)
 			{
 				horizLoc += 80;
 			}
 
-			if (horizLoc < (short)MapViewHoriz ||
-				horizLoc >= (short)MapViewHoriz + 15 ||
-				vertLoc < (short)MapViewVert ||
-				vertLoc >= (short)MapViewVert + 12)
+			if (horizLoc < (short)MapView.Horiz ||
+				horizLoc >= (short)MapView.Horiz + 15 ||
+				vertLoc < (short)MapView.Vert ||
+				vertLoc >= (short)MapView.Vert + 12)
 			{
 				onScreen = 0;
 			}
@@ -198,7 +198,7 @@ namespace Civilization1Remaster.Core.Game
 		{
 			using var _ = this.Processor.Journal.Scope($"DisplayHelpForHuman(0x{topic.Address:x4})");
 
-			if ((short)TurnPlayer == this.Owner.World.PersonParticipantIdx)
+			if ((short)Turn.Player == this.Owner.World.PersonParticipantIdx)
 			{
 				this.Owner.HelpSystem.ShowHelpPopupForHuman(topic);
 			}
@@ -218,7 +218,7 @@ namespace Civilization1Remaster.Core.Game
 			if (troopIdx < UnitMemory.TroopTally)
 			{
 				if (this.troops.PullSigned(participantIdx, troopIdx, UnitMemory.LeftoverSteps) > 0 && this.turn.Ordered == 0 &&
-					GameEndRequest == 0)
+					Turn.GameEndRequest == 0)
 				{
 					return true;
 				}

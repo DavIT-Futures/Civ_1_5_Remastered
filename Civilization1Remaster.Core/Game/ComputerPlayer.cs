@@ -277,14 +277,14 @@ namespace Civilization1Remaster.Core.Game
 
 			player.Landmasses[0].Approach = 0;
 			this.Processor.EmitUInt16(this.Processor.SegData.Value16, (ushort)((participantIdx << 5) + 0xe6b6), 0);
-			HumanContinentAttackers = (ushort)(HumanContinentAttackers & ~(1 << participantIdx));
+			Turn.HumanContinentAttackers = (ushort)(Turn.HumanContinentAttackers & ~(1 << participantIdx));
 
-			PlayerAtWar = 0;
+			Turn.PlayerAtWar = 0;
 
 			for (ushort otherIdx = 1; otherIdx < 8; otherIdx++)
 			{
 				if ((player.Relations[otherIdx] & 3) == 1)
-					PlayerAtWar = 1;
+					Turn.PlayerAtWar = 1;
 			}
 
 			for (ushort continentIdx = 1; continentIdx < 0xf; continentIdx++)
@@ -368,17 +368,17 @@ namespace Civilization1Remaster.Core.Game
 				RefreshCityProduction(participantIdx, continentIdx);
 
 			if (own.Assault != 0 && this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx].Landmasses[continentIdx].TownTally > 1)
-				HumanContinentAttackers = (ushort)(HumanContinentAttackers | (1 << participantIdx));
+				Turn.HumanContinentAttackers = (ushort)(Turn.HumanContinentAttackers | (1 << participantIdx));
 		}
 
 		/// <summary>Communism (4), Democracy (3, more than 10 cities), Monarchy (2), or Anarchy (1) when 0xe3c2 is set</summary>
 		private void ChooseGovernment(short participantIdx)
 		{
-			if ((short)AnarchyPressure > 0)
+			if ((short)Turn.AnarchyPressure > 0)
 			{
 				this.Owner.Politics.SwitchGovernment(participantIdx, 1);
 			}
-			else if (this.Owner.Advisors.PlayerKnowsTechnology(participantIdx, 0x2c) != 0 && (short)DemocracyPressure >= 0)
+			else if (this.Owner.Advisors.PlayerKnowsTechnology(participantIdx, 0x2c) != 0 && (short)Turn.DemocracyPressure >= 0)
 			{
 				this.Owner.Politics.SwitchGovernment(participantIdx, 4);
 			}

@@ -27,8 +27,8 @@ namespace Civilization1Remaster.Core.UI
 
 			this.Owner.Startup.HideMouseCursor();
 
-			this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8,
-				ScreenBox, 0, 0);
+			this.Owner.VideoCard.RenderImage(Screen.BackScreenBox, 0, 0, 0x140, 0xc8,
+				Screen.Box, 0, 0);
 
 			this.Owner.Startup.ShowMouseCursor();
 
@@ -76,11 +76,11 @@ namespace Civilization1Remaster.Core.UI
 					.Text("!\n");
 
 				short humanIdx = this.Owner.World.PersonParticipantIdx;
-				DialogStyle = (ushort)((this.Owner.World.Participants[humanIdx].Relations[participantIdx] & 0x40) != 0 ? 5 : 2);
+				Screen.DialogStyle = (ushort)((this.Owner.World.Participants[humanIdx].Relations[participantIdx] & 0x40) != 0 ? 5 : 2);
 
 				if (participantIdx1 == humanIdx)
 				{
-					DialogStyle = 3;
+					Screen.DialogStyle = 3;
 				}
 
 				this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 100, 80);
@@ -212,15 +212,15 @@ namespace Civilization1Remaster.Core.UI
 
 			this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, GameTexts.FileSp299Pic, 0);
 
-			this.Owner.VideoCard.RenderImage(BackScreenBox, 0xa0, 0x32, 0xa0, 0x96,
-				PictureScreenBox, 0xa0, 0x32);
+			this.Owner.VideoCard.RenderImage(Screen.BackScreenBox, 0xa0, 0x32, 0xa0, 0x96,
+				Screen.PictureScreenBox, 0xa0, 0x32);
 
 			for (int idx = 0; idx < 3; idx++)
 			{
 				SavePicture(0xdf62, idx, 1, (ushort)((0x2a * idx) + 0xa0), 0x8e, 0x29, 0x3a);
 			}
 
-			if (VgaMode != 0)
+			if (Screen.VgaMode != 0)
 			{
 				CutVgaUnitSprites();
 			}
@@ -229,7 +229,7 @@ namespace Civilization1Remaster.Core.UI
 				CutEgaUnitSprites();
 			}
 
-			if (VgaMode != 0)
+			if (Screen.VgaMode != 0)
 			{
 				this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, GameTexts.FileSp257PicB, 0);
 
@@ -274,7 +274,7 @@ namespace Civilization1Remaster.Core.UI
 				SavePicture(0xd4ce, idx, 1, (ushort)(idx << 4), 0x20, 0x10, 0x10);
 			}
 
-			PointerPicture = PointerIcon;
+			Mouse.Picture = Mouse.Icon;
 
 			for (int idx = 0; idx < 8; idx++)
 			{
@@ -319,8 +319,8 @@ namespace Civilization1Remaster.Core.UI
 
 			this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, docname, 0);
 
-			this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0xa0, 0x3c,
-				PictureScreenBox, 0xa0, 0x8c);
+			this.Owner.VideoCard.RenderImage(Screen.BackScreenBox, 0, 0, 0xa0, 0x3c,
+				Screen.PictureScreenBox, 0xa0, 0x8c);
 
 			this.Owner.Startup.AskForDisk(0, 1);
 		}
@@ -345,7 +345,7 @@ namespace Civilization1Remaster.Core.UI
 
 				this.Owner.Startup.HideMouseCursor();
 
-				this.Owner.Services.FloodBox(ScreenBox, 0, 100, 320, 100, Hues.White);
+				this.Owner.Services.FloodBox(Screen.Box, 0, 100, 320, 100, Hues.White);
 
 				DrawingBox.TypefaceIdx = 0x6;
 
@@ -355,8 +355,8 @@ namespace Civilization1Remaster.Core.UI
 
 				for (int advisorIdx = 0; advisorIdx < 4; advisorIdx++)
 				{
-					this.Owner.VideoCard.RenderImage(PictureScreenBox, (ushort)((0x28 * advisorIdx) + 0xa0), 0x8c, 0x28, 0x3c,
-						ScreenBox, (ushort)((0x50 * advisorIdx) + 0x14), 0x76);
+					this.Owner.VideoCard.RenderImage(Screen.PictureScreenBox, (ushort)((0x28 * advisorIdx) + 0xa0), 0x8c, 0x28, 0x3c,
+						Screen.Box, (ushort)((0x50 * advisorIdx) + 0x14), 0x76);
 
 					this.Owner.Words.Set(this.Processor.PullGlobalWord((ushort)((advisorIdx << 1) + AdvisorTitleTextTableAddress)));
 					this.Owner.Words[this.Owner.Words.Length - 1] = 0x0;
@@ -403,7 +403,7 @@ namespace Civilization1Remaster.Core.UI
 
 			this.Owner.World.HardnessTier = (short)this.Owner.Dialogs.ShowMenu(TextBuffer.Address, 160, 35, 1);
 
-			if (MousePresent != 0 && MenuMouseUsed != 0)
+			if (Mouse.Present != 0 && Menu.MouseUsed != 0)
 			{
 				this.Owner.Startup.ReadMouseState();
 
@@ -420,12 +420,12 @@ namespace Civilization1Remaster.Core.UI
 
 			this.Owner.Startup.HideMouseCursor();
 
-			this.Owner.Services.FloodBox(ScreenBox, 0, 0, 150, 200, Hues.Black);
+			this.Owner.Services.FloodBox(Screen.Box, 0, 0, 150, 200, Hues.Black);
 
 			DrawDifficultyPortrait(0x14, 0x64);
 
-			this.Owner.VideoCard.RenderImage(BackScreenBox, 0x96, 0, 0xa0, 0xc8,
-				ScreenBox, 0x96, 0);
+			this.Owner.VideoCard.RenderImage(Screen.BackScreenBox, 0x96, 0, 0xa0, 0xc8,
+				Screen.Box, 0x96, 0);
 
 			this.Owner.Startup.ShowMouseCursor();
 		}
@@ -437,8 +437,8 @@ namespace Civilization1Remaster.Core.UI
 		{
 			ushort column = (ushort)((this.Owner.World.HardnessTier & 1) != 0 ? 0x50 : 0x15);
 
-			this.Owner.VideoCard.RenderImage(BackScreenBox, column,
-				(ushort)((0x23 * this.Owner.World.HardnessTier) + 6), 0x35, 0x2f, ScreenBox, horizLoc, vertLoc);
+			this.Owner.VideoCard.RenderImage(Screen.BackScreenBox, column,
+				(ushort)((0x23 * this.Owner.World.HardnessTier) + 6), 0x35, 0x2f, Screen.Box, horizLoc, vertLoc);
 		}
 
 		/// <summary>
@@ -552,8 +552,8 @@ namespace Civilization1Remaster.Core.UI
 				this.Owner.Words.Append("\n ");
 			}
 
-			this.Owner.VideoCard.RenderImage(BackScreenBox, 0x96, 0, 0xa0, 0xc8,
-				ScreenBox, 0x96, 0);
+			this.Owner.VideoCard.RenderImage(Screen.BackScreenBox, 0x96, 0, 0xa0, 0xc8,
+				Screen.Box, 0x96, 0);
 
 			this.Owner.Startup.ShowMouseCursor();
 
@@ -695,7 +695,7 @@ namespace Civilization1Remaster.Core.UI
 		{
 			this.Owner.Startup.HideMouseCursor();
 
-			this.Owner.Services.FloodBox(ScreenBox, 150, 0, 170, 200, Hues.Black);
+			this.Owner.Services.FloodBox(Screen.Box, 150, 0, 170, 200, Hues.Black);
 
 			this.Owner.CityNaming.ShowFoundCityMessage();
 
@@ -742,7 +742,7 @@ namespace Civilization1Remaster.Core.UI
 
 			this.Owner.Startup.HideMouseCursor();
 
-			this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.White);
+			this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 200, Hues.White);
 
 			this.Owner.UnitOps.DrawBusyIndicator();
 
@@ -806,7 +806,7 @@ namespace Civilization1Remaster.Core.UI
 
 			if (participantIdx == this.Owner.World.PersonParticipantIdx)
 			{
-				this.Owner.Services.FloodBox(PictureScreenBox, 240, 0, 80, 50, Hues.Black);
+				this.Owner.Services.FloodBox(Screen.PictureScreenBox, 240, 0, 80, 50, Hues.Black);
 			}
 
 			this.Owner.Bot.ClearStrategicLocations(participantIdx);
@@ -892,7 +892,7 @@ namespace Civilization1Remaster.Core.UI
 
 			(short horizLoc, short vertLoc, ushort attemptTally) = ChooseStartPlace(participantIdx, foreignTowns);
 
-			if (this.Owner.World.RoundTally == 0 && EarthGame != 0)
+			if (this.Owner.World.RoundTally == 0 && NewWorld.EarthGame != 0)
 			{
 				// EARTH: the start place of the leader
 				ushort place = (ushort)(player.ChiefVisuals << 1);
@@ -935,8 +935,8 @@ namespace Civilization1Remaster.Core.UI
 
 				if ((ushort)((1 << this.Owner.World.PersonParticipantIdx) | 1) == (ushort)this.Owner.World.LiveRealms)
 				{
-					GameEndRequest = 1;
-					ConquestEnd = 1;
+					Turn.GameEndRequest = 1;
+					Turn.ConquestEnd = 1;
 				}
 
 				return false;
@@ -1267,7 +1267,7 @@ namespace Civilization1Remaster.Core.UI
 					ushort entry = (ushort)(VgaUnitSpritesTableAddress + (row << 5) + (column << 1));
 
 					// Rows 6 - 9 (and all rows with 0x1a3e) have one sprite, repeated in every column
-					if ((row >= 6 || LowMemoryVga != 0) && column != 0)
+					if ((row >= 6 || Screen.LowMemoryVga != 0) && column != 0)
 					{
 						this.Processor.EmitGlobalWord(entry, this.Processor.PullGlobalWord((ushort)(entry - 2)));
 					}
@@ -1307,8 +1307,8 @@ namespace Civilization1Remaster.Core.UI
 		{
 			this.Owner.ImageToolkit.LoadPictureOrColors(3, 0, 0, GameTexts.FileSpritesPicB, 1);
 
-			this.Owner.VideoCard.RenderImage(SpriteScreenBox, 0, 0, 0x140, 0xc8,
-				BackScreenBox, 0, 0);
+			this.Owner.VideoCard.RenderImage(Screen.SpriteScreenBox, 0, 0, 0x140, 0xc8,
+				Screen.BackScreenBox, 0, 0);
 
 			for (int idx = 0; idx < 0xc; idx++)
 			{
@@ -1324,8 +1324,8 @@ namespace Civilization1Remaster.Core.UI
 		/// </summary>
 		private void CutPlayerCitySprites(int playerIdx)
 		{
-			this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0xa0, 0x140, 0x20,
-				BackScreenBox, 0, 0x80);
+			this.Owner.VideoCard.RenderImage(Screen.BackScreenBox, 0, 0xa0, 0x140, 0x20,
+				Screen.BackScreenBox, 0, 0x80);
 
 			ushort colours = (ushort)(playerIdx << 1);
 			ushort primaryColour = PlayerColourAt(colours);
@@ -1333,18 +1333,18 @@ namespace Civilization1Remaster.Core.UI
 
 			if (primaryColour == 0xf)
 			{
-				this.Owner.VideoCard.SubstituteHue(BackScreenBox, 0, 128, 320, 32, Hues.White, Hues.LightCyan);
+				this.Owner.VideoCard.SubstituteHue(Screen.BackScreenBox, 0, 128, 320, 32, Hues.White, Hues.LightCyan);
 			}
 
 			if (primaryColour == 0x7)
 			{
-				this.Owner.VideoCard.SubstituteHue(BackScreenBox, 0, 128, 320, 32, Hues.LightGray, Hues.Cyan);
+				this.Owner.VideoCard.SubstituteHue(Screen.BackScreenBox, 0, 128, 320, 32, Hues.LightGray, Hues.Cyan);
 			}
 
-			this.Owner.VideoCard.SubstituteHue(BackScreenBox, 0, 128, 320, 32, Hues.LightGreen,
+			this.Owner.VideoCard.SubstituteHue(Screen.BackScreenBox, 0, 128, 320, 32, Hues.LightGreen,
 				(byte)primaryColour);
 
-			this.Owner.VideoCard.SubstituteHue(BackScreenBox, 0, 128, 320, 32, Hues.Green,
+			this.Owner.VideoCard.SubstituteHue(Screen.BackScreenBox, 0, 128, 320, 32, Hues.Green,
 				(byte)secondaryColour);
 
 			for (int idx = 0; idx < 0x1c; idx++)

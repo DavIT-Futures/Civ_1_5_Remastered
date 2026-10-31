@@ -92,10 +92,10 @@ namespace Civilization1Remaster.Core.Game
 
 				WaitForKey();
 
-				if (ChosenOrder == 0xffff)
+				if (Turn.ChosenOrder == 0xffff)
 					return HumanOrder.NextLook;
 
-				this.turn.Order = ChosenOrder;
+				this.turn.Order = Turn.ChosenOrder;
 
 				return (short)this.turn.Troop < 0x80 ? HumanOrder.MenuOrder : HumanOrder.MenuWithoutUnit;
 			}
@@ -107,8 +107,8 @@ namespace Civilization1Remaster.Core.Game
 					// The world map: the view moves there
 					this.Owner.MapOps.FocusMapView(participantIdx,
 						(short)(ushort)this.Owner.Routing.TunePosition(
-						(short)this.Owner.GlobDb3c + (short)MapFocusLeft - 7),
-						this.Owner.Helpers.ClampValue((short)this.Owner.GlobDb3e + (short)MapFocusTop - 14, 0, 49));
+						(short)this.Owner.GlobDb3c + (short)MapView.FocusLeft - 7),
+						this.Owner.Helpers.ClampValue((short)this.Owner.GlobDb3e + (short)MapView.FocusTop - 14, 0, 49));
 				}
 				else if ((short)this.Owner.GlobDb3e < 0x48)
 				{
@@ -127,7 +127,7 @@ namespace Civilization1Remaster.Core.Game
 
 			if (this.Owner.GlobDb3a == 2 &&
 				(((sbyte)this.Owner.World.ChartSight[this.turn.TargetHoriz, this.turn.TargetVert] & (1 << (person & 0xff))) != 0 ||
-					MapRevealed != 0))
+					MapView.Revealed != 0))
 			{
 				// The Civilopedia of the terrain of a seen tile
 				this.Owner.Startup.HideMouseCursor();
@@ -148,8 +148,8 @@ namespace Civilization1Remaster.Core.Game
 		private void FindClickedTile()
 		{
 			this.turn.TargetHoriz = (ushort)this.Owner.Routing.TunePosition(
-				(((short)this.Owner.GlobDb3c - 80) / 16) + (short)MapViewHoriz);
-			this.turn.TargetVert = (ushort)(((short)(ushort)(this.Owner.GlobDb3e - 8) / 16) + MapViewVert);
+				(((short)this.Owner.GlobDb3c - 80) / 16) + (short)MapView.Horiz);
+			this.turn.TargetVert = (ushort)(((short)(ushort)(this.Owner.GlobDb3e - 8) / 16) + MapView.Vert);
 		}
 
 		/// <summary>The palace of the human player, until a key or a click</summary>
@@ -159,18 +159,18 @@ namespace Civilization1Remaster.Core.Game
 
 			this.Owner.Throne.LoadPalaceGraphics(0);
 
-			this.Processor.EmitUInt16(this.Processor.SegData.Value16, ScreenBox, 0x0);
+			this.Processor.EmitUInt16(this.Processor.SegData.Value16, Screen.Box, 0x0);
 
 			this.Owner.Helpers.HaltHueCycling();
 
-			this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
+			this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 200, Hues.Black);
 
 			this.Owner.ImageToolkit.LoadPictureOrColors(-1, 0, 0, GameTexts.FileCbackPic, 1);
 
 			this.Owner.VideoCard.RenderImage(
-				BackScreenBox,
+				Screen.BackScreenBox,
 				0, 0, 0x140, 0xc8,
-				ScreenBox,
+				Screen.Box,
 				0, 0);
 
 			this.Owner.Startup.ShowMouseCursor();
@@ -223,7 +223,7 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.GlobDb3a = 0;
 			this.turn.MouseCursorSet = 0;
 
-			this.Owner.Services.AssignMouseCursorImage(0, 0, PointerPicture);
+			this.Owner.Services.AssignMouseCursorImage(0, 0, Mouse.Picture);
 		}
 
 		/// <summary>
@@ -269,12 +269,12 @@ namespace Civilization1Remaster.Core.Game
 
 					this.turn.MouseCursorSet = 0;
 
-					this.Owner.Services.AssignMouseCursorImage(0, 0, PointerPicture);
+					this.Owner.Services.AssignMouseCursorImage(0, 0, Mouse.Picture);
 
 					ForgetMarkedTile(participantIdx);
 				}
 				else if ((this.Owner.MapOps.ObtainTileImprovements(horizLoc, vertLoc) & 1) != 0 &&
-					(this.Owner.MapOps.ObtainTileOwnerBits(horizLoc, vertLoc) == (ushort)person || MapRevealed != 0))
+					(this.Owner.MapOps.ObtainTileOwnerBits(horizLoc, vertLoc) == (ushort)person || MapView.Revealed != 0))
 				{
 					// A city of the human (any with everything shown): the city screen
 					this.turn.TileOwner = this.Owner.MapOps.ObtainTileOwnerBits(horizLoc, vertLoc);
@@ -291,17 +291,17 @@ namespace Civilization1Remaster.Core.Game
 				{
 					this.turn.Order = this.Owner.MapOps.ObtainUnitAtTile(horizLoc, vertLoc);
 
-					if (MapRevealed != 0 && this.turn.Order != 0xffff)
+					if (MapView.Revealed != 0 && this.turn.Order != 0xffff)
 					{
 						this.Owner.ArmyPicker.ShowUnitInfo(
-							(short)FoundPlayer,
+							(short)Search.FoundPlayer,
 							(short)this.turn.Order);
 					}
 
-					if (this.turn.Order != 0xffff && participantIdx == (short)FoundPlayer)
+					if (this.turn.Order != 0xffff && participantIdx == (short)Search.FoundPlayer)
 					{
 						// An own unit (from its stack): it is the unit now, unless sentried or fortified
-						this.turn.Result = this.Owner.UnitOps.ShowBattleScreen((short)FoundPlayer,
+						this.turn.Result = this.Owner.UnitOps.ShowBattleScreen((short)Search.FoundPlayer,
 							(short)this.turn.Order);
 
 						short chosen = (short)this.turn.Result;
@@ -534,7 +534,7 @@ namespace Civilization1Remaster.Core.Game
 				this.turn.CursorHoriz = 0xffff;
 			}
 
-			if (MousePresent != 0)
+			if (Mouse.Present != 0)
 			{
 				// GoTo mouse pointer, or the normal one when GoTo is cancelled
 				this.Owner.Services.AssignMouseCursorImage(0, 0, SpritePictureAt((ushort)((this.turn.MouseCursorSet != 0 ? 7 : 2) << 1)));
@@ -556,7 +556,7 @@ namespace Civilization1Remaster.Core.Game
 				(short)this.turn.UnitHoriz,
 				(short)this.turn.UnitVert);
 
-			if (FoundDistance == 0)
+			if (Search.FoundDistance == 0)
 			{
 					this.troops.Assign(participantIdx, troopIdx, UnitMemory.BaseTown, (byte)this.turn.City);
 

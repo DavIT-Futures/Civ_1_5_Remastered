@@ -176,8 +176,8 @@ namespace Civilization1Remaster.Core.Game
 
 			this.Owner.Startup.HideMouseCursor();
 
-			this.Owner.VideoCard.RenderImage(ScreenBox, 0, 0, 320, 200,
-				BackScreenBox, 0, 0);
+			this.Owner.VideoCard.RenderImage(Screen.Box, 0, 0, 320, 200,
+				Screen.BackScreenBox, 0, 0);
 
 			this.Owner.Startup.ShowMouseCursor();
 
@@ -185,8 +185,8 @@ namespace Civilization1Remaster.Core.Game
 
 			this.Owner.Startup.HideMouseCursor();
 
-			this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 320, 200,
-				ScreenBox, 0, 0);
+			this.Owner.VideoCard.RenderImage(Screen.BackScreenBox, 0, 0, 320, 200,
+				Screen.Box, 0, 0);
 
 			this.Owner.Startup.ShowMouseCursor();
 
@@ -211,7 +211,7 @@ namespace Civilization1Remaster.Core.Game
 
 			this.Owner.Atlas.ShowCivilizationGraph();
 
-			if (GameEndRequest != 2)
+			if (Turn.GameEndRequest != 2)
 			{
 				this.Owner.Replayer.ShowReplay();
 			}
@@ -246,14 +246,14 @@ namespace Civilization1Remaster.Core.Game
 
 			this.Owner.Startup.HideMouseCursor();
 
-			this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
+			this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 200, Hues.Black);
 
 			this.Owner.ImageToolkit.LoadPictureOrColors(-1, 0, 0, EndGameTitlePaletteAddress, 1);
 
 			this.Owner.VideoCard.RenderImage(
-				BackScreenBox,
+				Screen.BackScreenBox,
 				0, 0, 0x140, 0xc8,
-				ScreenBox,
+				Screen.Box,
 				0, 0);
 
 			this.Owner.Conquest.WaitForKeyPressOrMouseClick();
@@ -353,13 +353,13 @@ namespace Civilization1Remaster.Core.Game
 				powers[best] = 0xffff;
 			}
 
-			LateGameNudge = 0x0;
+			Turn.LateGameNudge = 0x0;
 
 			Player human = this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx];
 
 			if (human.Standing == 7 && human.TownTally > 4 && human.LiveTroops[25] == 0 && this.Owner.World.RoundTally > 200)
 			{
-				LateGameNudge = 0x1;
+				Turn.LateGameNudge = 0x1;
 
 				for (short participantIdx = 1; participantIdx < 8; participantIdx++)
 				{
@@ -383,7 +383,7 @@ namespace Civilization1Remaster.Core.Game
 		{
 			using var _ = this.Processor.Journal.Scope("WipeStatusLine()");
 
-			this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 8, Hues.Black);
+			this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 8, Hues.Black);
 
 			this.Owner.TextPainter.DrawTextToScreen0(MenuBarGameLabelAddress, 8, 1, Hues.White);
 
@@ -401,24 +401,24 @@ namespace Civilization1Remaster.Core.Game
 		{
 			using var _ = this.Processor.Journal.Scope("RenderStatusBar()");
 
-			if (WorldMapView != 1)
+			if (MapView.WorldMapView != 1)
 			{
 				Player human = this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx];
 
 				FillBoxWithShadow(0, 58, 80, 39);
 
-				this.Owner.Services.FloodBox(ScreenBox, 3, 60, 74, 11, Hues.LightCyan);
+				this.Owner.Services.FloodBox(Screen.Box, 3, 60, 74, 11, Hues.LightCyan);
 
 				if (this.Owner.World.TruceRoundTally > 1)
 				{
 					int peace = this.Owner.Helpers.ClampValue(this.Owner.World.TruceRoundTally * 2, 0, 60);
 
-					this.Owner.Services.FloodBox(ScreenBox, 3, 60, (short)peace, 2, Hues.White);
+					this.Owner.Services.FloodBox(Screen.Box, 3, 60, (short)peace, 2, Hues.White);
 				}
 
 				DrawPalace(this.Owner.World.PersonParticipantIdx, this.Owner.World.CastleTier, 8, 58);
 
-				if (MapRevealed != 0)
+				if (MapView.Revealed != 0)
 				{
 					short storage = (short)this.Owner.VideoCard.ObtainFreeStorage();
 
@@ -440,20 +440,20 @@ namespace Civilization1Remaster.Core.Game
 				FormatCurrentYear();
 				this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 2, 81, Hues.Black);
 
-				short cost = (short)(((this.Owner.World.HardnessTier << 1) + TechnologyLevel + 6) *
+				short cost = (short)(((this.Owner.World.HardnessTier << 1) + Turn.TechnologyLevel + 6) *
 					human.FoundScienceTally * (this.Owner.World.Season < 0 ? 1 : 2));
 				short progress = CPU.SignedQuotient((short)(human.InquiryHeadway << 2), (short)(cost + 1));
 				int bulb = this.Owner.Helpers.ClampValue(progress, 0, 3);
 
-				this.Owner.VideoCard.RenderImage(PictureScreenBox, (ushort)((bulb << 3) + 0xa0), 0x78, 8, 8,
-					ScreenBox, 0x30, 0x50);
+				this.Owner.VideoCard.RenderImage(Screen.PictureScreenBox, (ushort)((bulb << 3) + 0xa0), 0x78, 8, 8,
+					Screen.Box, 0x30, 0x50);
 
 				if (this.Owner.World.SmogImpactTier != 0)
 				{
 					int smog = this.Owner.Helpers.ClampValue(this.Owner.World.SmogImpactTier / 4, 0, 3);
 
-					this.Owner.VideoCard.RenderImage(PictureScreenBox, (ushort)((smog << 3) + 0xa0), 0x80, 8, 8,
-						ScreenBox, 0x38, 0x50);
+					this.Owner.VideoCard.RenderImage(Screen.PictureScreenBox, (ushort)((smog << 3) + 0xa0), 0x80, 8, 8,
+						Screen.Box, 0x38, 0x50);
 				}
 
 				EmptyMessage()
@@ -467,7 +467,7 @@ namespace Civilization1Remaster.Core.Game
 					.Number(human.ResearchLevyRatio);
 				this.Owner.TextPainter.DrawTextToScreen0(this.Owner.Words.ToString(), 2, 89, Hues.Black);
 
-				if (RepaintingMainScreen == 0)
+				if (Screen.RepaintingMainScreen == 0)
 				{
 					AnnouncePopulationMark(population);
 				}
@@ -483,7 +483,7 @@ namespace Civilization1Remaster.Core.Game
 			// neighbour of section 0 is the frame word 0x34 (never written, 0), the right neighbour of section 8 the style of
 			// section 0 (0 for an AI player without it)
 
-			this.Owner.VideoCard.RenderLine(ScreenBox, horizLoc - 5, vertLoc + 13, horizLoc + 68, vertLoc + 13, Hues.Green);
+			this.Owner.VideoCard.RenderLine(Screen.Box, horizLoc - 5, vertLoc + 13, horizLoc + 68, vertLoc + 13, Hues.Green);
 
 			if (this.Owner.World.Participants[participantIdx].TownTally != 0)
 			{
@@ -574,7 +574,7 @@ namespace Civilization1Remaster.Core.Game
 
 					int height = this.Owner.Helpers.ClampValue(sectionLevel - 1, 0, 3);
 
-					this.Owner.Services.DrawPictureToScreen(ScreenBox, (7 * sectionIdx) + horizLoc, vertLoc - 1,
+					this.Owner.Services.DrawPictureToScreen(Screen.Box, (7 * sectionIdx) + horizLoc, vertLoc - 1,
 						this.Processor.PullGlobalWord((ushort)((0x28 * SectionWord(styles, sectionIdx)) + ((((short)height * 5) + shape) << 1) + PalaceSectionSpritesTableAddress)));
 				}
 			}
@@ -643,9 +643,9 @@ namespace Civilization1Remaster.Core.Game
 
 			this.Owner.Helpers.HaltHueCycling();
 
-			RepaintingMainScreen = 0x1;
+			Screen.RepaintingMainScreen = 0x1;
 
-			if (VgaMode != 0)
+			if (Screen.VgaMode != 0)
 			{
 				this.Owner.Services.FillColors(5, 0, 0, 0);
 			}
@@ -653,8 +653,8 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.Startup.HideMouseCursor();
 
 			this.Owner.MapOps.FocusMapView(this.Owner.World.PersonParticipantIdx,
-				(short)MapViewHoriz,
-				(short)MapViewVert);
+				(short)MapView.Horiz,
+				(short)MapView.Vert);
 
 			FillBoxWithShadow(0, 97, 80, 103);
 
@@ -662,7 +662,7 @@ namespace Civilization1Remaster.Core.Game
 
 			ShowCivilizationScenery();
 
-			RepaintingMainScreen = 0x0;
+			Screen.RepaintingMainScreen = 0x0;
 
 			this.Owner.Helpers.LaunchHueCycling();
 		}
@@ -680,7 +680,7 @@ namespace Civilization1Remaster.Core.Game
 		{
 			using var _ = this.Processor.Journal.Scope("DisplayCivilizationScenery()");
 
-			if (VgaMode != 0)
+			if (Screen.VgaMode != 0)
 			{
 				this.Owner.Helpers.HaltHueCycling();
 
@@ -771,10 +771,10 @@ namespace Civilization1Remaster.Core.Game
 
 			startGold = this.Owner.World.Participants[personIdx].Gold;
 
-			UnitLimitTold = 0;
-			RiotShown = 0;
+			Turn.UnitLimitTold = 0;
+			Turn.RiotShown = 0;
 			this.Owner.World.HighestScienceTally = 0;
-			LiveRealmCount = 0;
+			Turn.LiveRealmCount = 0;
 
 			// The living players and the most technologies
 			for (int participantIdx = 0; participantIdx < 8; participantIdx++)
@@ -782,7 +782,7 @@ namespace Civilization1Remaster.Core.Game
 				if ((this.Owner.World.LiveRealms & (1 << participantIdx)) == 0)
 					continue;
 
-				LiveRealmCount = (ushort)(LiveRealmCount + 1);
+				Turn.LiveRealmCount = (ushort)(Turn.LiveRealmCount + 1);
 
 				short sciences = this.Owner.World.Participants[participantIdx].FoundScienceTally;
 
@@ -797,8 +797,8 @@ namespace Civilization1Remaster.Core.Game
 				// The first turn: the view on the settler of the human player, the tutorial on the easiest level
 				ushort troop = (ushort)(0x600 * personIdx);
 
-				MapViewHoriz = (ushort)(this.Troops.PullAt(troop, UnitMemory.Horiz) - 7);
-				MapViewVert = (ushort)(this.Troops.PullAt(troop, UnitMemory.Vert) - 6);
+				MapView.Horiz = (ushort)(this.Troops.PullAt(troop, UnitMemory.Horiz) - 7);
+				MapView.Vert = (ushort)(this.Troops.PullAt(troop, UnitMemory.Vert) - 6);
 
 				RepaintMainScreen();
 
@@ -822,14 +822,14 @@ namespace Civilization1Remaster.Core.Game
 					continue;
 
 				// After a loaded game the turn goes on at the human player
-				if (participantIdx < this.Owner.World.PersonParticipantIdx && MidTurnSave != 0)
+				if (participantIdx < this.Owner.World.PersonParticipantIdx && Files.MidTurnSave != 0)
 					continue;
 
 				PlayTurnOfPlayer(participantIdx);
 
-				if (GameEndRequest != 0 && ConquestEnd == 0)
+				if (Turn.GameEndRequest != 0 && Turn.ConquestEnd == 0)
 				{
-					if (GameEndRequest == 2)
+					if (Turn.GameEndRequest == 2)
 					{
 						ShowEndGameSequence();
 
@@ -853,14 +853,14 @@ namespace Civilization1Remaster.Core.Game
 			Player player = this.Owner.World.Participants[participantIdx];
 			bool person = participantIdx == this.Owner.World.PersonParticipantIdx;
 
-			this.Owner.Services.FloodBox(ScreenBox, 2, 192, 6, 6, Hues.DarkGray);
+			this.Owner.Services.FloodBox(Screen.Box, 2, 192, 6, 6, Hues.DarkGray);
 
 			if (person)
 			{
 				this.Owner.Startup.ShowMouseCursor();
 			}
 
-			if (MidTurnSave == 0)
+			if (Files.MidTurnSave == 0)
 			{
 				this.Owner.Advisors.HandleAllCities(participantIdx);
 			}
@@ -876,7 +876,7 @@ namespace Civilization1Remaster.Core.Game
 
 			this.Owner.Bot.ReimposeStrategicLocations(participantIdx);
 
-			this.Owner.Services.FloodBox(ScreenBox, 2, 192, 6, 6, Hues.White);
+			this.Owner.Services.FloodBox(Screen.Box, 2, 192, 6, 6, Hues.White);
 
 			if (participantIdx == this.Owner.World.PersonParticipantIdx)
 			{
@@ -888,7 +888,7 @@ namespace Civilization1Remaster.Core.Game
 
 					this.Owner.Prologue.ShowTerrainTutorial();
 
-					GameEndRequest = 0xffff;
+					Turn.GameEndRequest = 0xffff;
 
 					this.Owner.Startup.ShowMouseCursor();
 				}
@@ -899,12 +899,12 @@ namespace Civilization1Remaster.Core.Game
 				}
 			}
 
-			if (GameEndRequest == 0)
+			if (Turn.GameEndRequest == 0)
 			{
 				this.Owner.TurnLogic.HandlePlayerTurn(participantIdx);
 			}
 
-			MidTurnSave = 0x0;
+			Files.MidTurnSave = 0x0;
 
 			if (person)
 			{
@@ -1011,7 +1011,7 @@ namespace Civilization1Remaster.Core.Game
 		/// </summary>
 		private void WarnOfBankruptcy(short startGold)
 		{
-			if (GameEndRequest != 0)
+			if (Turn.GameEndRequest != 0)
 				return;
 
 			Player person = this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx];
@@ -1029,7 +1029,7 @@ namespace Civilization1Remaster.Core.Game
 
 			this.Owner.BlockText.ShowTextDialog(BankruptcyWarningDialogAddress);
 
-			DialogStyle = 0x4;
+			Screen.DialogStyle = 0x4;
 
 			ShowDialog(TextBuffer.Address, 80, 80);
 		}
@@ -1083,11 +1083,11 @@ namespace Civilization1Remaster.Core.Game
 				}
 			}
 
-			TechnologyLevel = 0x0;
+			Turn.TechnologyLevel = 0x0;
 
 			if (this.Owner.World.Season >= 0)
 			{
-				TechnologyLevel = (ushort)this.Owner.Helpers.ClampValue(
+				Turn.TechnologyLevel = (ushort)this.Owner.Helpers.ClampValue(
 					this.Owner.World.HighestScienceTally - (this.Owner.World.RoundTally / 9), 0, 6);
 			}
 
@@ -1131,17 +1131,17 @@ namespace Civilization1Remaster.Core.Game
 				this.Owner.World.Participants[this.Owner.World.Towns[townIdx].ParticipantIdx].Tally += 25;
 			}
 
-			if (LoadedGameMark == 0xfffd)
+			if (Files.LoadedGameMark == 0xfffd)
 			{
-				LoadedGameMark = 0xfffe;
+				Files.LoadedGameMark = 0xfffe;
 				return;
 			}
 
 			this.Owner.World.Participants[this.Owner.World.PersonParticipantIdx].Tally -= (short)(10 * this.Owner.World.DirtyCellTally);
 
-			if (LoadedGameMark == 0xfffe)
+			if (Files.LoadedGameMark == 0xfffe)
 			{
-				LoadedGameMark = 0x0;
+				Files.LoadedGameMark = 0x0;
 			}
 		}
 
@@ -1186,7 +1186,7 @@ namespace Civilization1Remaster.Core.Game
 		/// </summary>
 		private bool ChooseGameEnd()
 		{
-			ArrivedSpaceship = 0xffff;
+			Spaceship.ArrivedSpaceship = 0xffff;
 
 			for (int participantIdx = 1; participantIdx < 8; participantIdx++)
 			{
@@ -1195,7 +1195,7 @@ namespace Civilization1Remaster.Core.Game
 
 				if (this.Owner.World.Participants[participantIdx].StarshipArrivalSeason == this.Owner.World.Season)
 				{
-					ArrivedSpaceship = (ushort)participantIdx;
+					Spaceship.ArrivedSpaceship = (ushort)participantIdx;
 				}
 			}
 
@@ -1211,7 +1211,7 @@ namespace Civilization1Remaster.Core.Game
 				this.Owner.Paper.ShowNewspaper(-1);
 			}
 
-			return ArrivedSpaceship != 0xffff || ConquestEnd != 0 ||
+			return Spaceship.ArrivedSpaceship != 0xffff || Turn.ConquestEnd != 0 ||
 				(short)(0x834 - (0x14 * this.Owner.World.HardnessTier)) == this.Owner.World.Season;
 		}
 
@@ -1225,24 +1225,24 @@ namespace Civilization1Remaster.Core.Game
 
 			this.Owner.Words.Set("*** GAME OVER ***\n");
 
-			if (ConquestEnd != 0)
+			if (Turn.ConquestEnd != 0)
 			{
 				this.Owner.Words.Set("Your civilization\nhas conquered\nthe entire planet!\n");
 
-				ArrivedSpaceship = 0xffff;
+				Spaceship.ArrivedSpaceship = 0xffff;
 
 				this.Owner.Paper.ShowNewspaper(-1);
 
 				this.Owner.Replayer.ShowConquerorScreen();
 			}
 
-			if (ArrivedSpaceship != 0xffff)
+			if (Spaceship.ArrivedSpaceship != 0xffff)
 			{
-				this.Owner.Prologue.ShowCivilizationScreen((short)ArrivedSpaceship);
+				this.Owner.Prologue.ShowCivilizationScreen((short)Spaceship.ArrivedSpaceship);
 
 				RepaintMainScreen();
 
-				Message(CivilizationName(ArrivedSpaceship))
+				Message(CivilizationName(Spaceship.ArrivedSpaceship))
 					.Text(" spaceship\narrives at Alpha Centauri.\n");
 
 				this.Owner.Paper.ShowNewspaper(-1);
@@ -1274,21 +1274,21 @@ namespace Civilization1Remaster.Core.Game
 			// (the original sets bit 0 of the byte 0x4cd9 here: the emulated memory does not let the game touch 0x4cd8 - 0x4cd9,
 			// so the write never happened, and nothing reads it)
 
-			if (ConquestEnd == 0)
+			if (Turn.ConquestEnd == 0)
 			{
 				this.Owner.Words.Clear();
 
 				this.Owner.BlockText.ShowTextDialog(RetirementContinuePromptAddress);
 
 				// The first line goes on with the game, the second one ends it
-				GameEndRequest = (ushort)(1 - ShowDialog(TextBuffer.Address, 80, 80));
+				Turn.GameEndRequest = (ushort)(1 - ShowDialog(TextBuffer.Address, 80, 80));
 			}
 			else
 			{
-				GameEndRequest = 0x1;
+				Turn.GameEndRequest = 0x1;
 			}
 
-			if (GameEndRequest != 0)
+			if (Turn.GameEndRequest != 0)
 			{
 				ShowTitleScreen();
 			}
@@ -1408,7 +1408,7 @@ namespace Civilization1Remaster.Core.Game
 
 				this.Owner.Words.Append("!\n");
 
-				DialogStyle = 0x2;
+				Screen.DialogStyle = 0x2;
 
 				ShowDialog(TextBuffer.Address, 100, 32);
 			}
@@ -1447,7 +1447,7 @@ namespace Civilization1Remaster.Core.Game
 		/// </summary>
 		private void AnnouncePopulationMark(short population)
 		{
-			short previousMark = (short)PopulationMark;
+			short previousMark = (short)Turn.PopulationMark;
 
 			Message("The population of the\nfertile ")
 				.Text(CivilizationName(this.Owner.World.PersonParticipantIdx))
@@ -1455,30 +1455,30 @@ namespace Civilization1Remaster.Core.Game
 
 			if (population < 100)
 			{
-				if ((short)(PopulationMark * 10) < population)
+				if ((short)(Turn.PopulationMark * 10) < population)
 				{
 					short mark = (short)(population / 10);
 
 					this.Owner.Words.Append(this.Owner.Libc.IntegerToText(mark, 10));
 
-					PopulationMark = (ushort)mark;
+					Turn.PopulationMark = (ushort)mark;
 				}
 			}
-			else if ((short)((PopulationMark - 9) * 100) < population)
+			else if ((short)((Turn.PopulationMark - 9) * 100) < population)
 			{
 				short hundreds = (short)(population / 100);
 
 				this.Owner.Words.Append(this.Owner.Libc.IntegerToText(hundreds, 10));
 				this.Owner.Words.Append(",0");
 
-				PopulationMark = (ushort)(hundreds + 9);
+				Turn.PopulationMark = (ushort)(hundreds + 9);
 			}
 
-			if (previousMark < (short)PopulationMark && (short)LoadedGameMark >= -1)
+			if (previousMark < (short)Turn.PopulationMark && (short)Files.LoadedGameMark >= -1)
 			{
 				this.Owner.Words.Append("00,000 citizens.\n");
 
-				DialogStyle = 4;
+				Screen.DialogStyle = 4;
 
 				ShowDialog(TextBuffer.Address, 100, 80);
 			}
@@ -1554,11 +1554,11 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.World.Participants[rivalIdx].Gold -= (short)this.Owner.Helpers.ClampValue(this.Owner.World.Participants[rivalIdx].Gold / 3, 0,
 				(10 * (short)BuildingWord(24 + wonderIdx, BuildingTable.Price)) - this.Owner.World.Towns[cityIdx].MaterialsTally);
 
-			if (WorldMapView != 1)
+			if (MapView.WorldMapView != 1)
 			{
 				this.Owner.Services.PerformSound(LeaderWord(this.Owner.World.Participants[rivalIdx].ChiefVisuals, LeaderTable.ShortTune), 0);
 
-				DialogStyle = (this.Owner.World.Participants[person].Relations[rivalIdx] & 0x40) == 0 ? (ushort)2 : (ushort)5;
+				Screen.DialogStyle = (this.Owner.World.Participants[person].Relations[rivalIdx] & 0x40) == 0 ? (ushort)2 : (ushort)5;
 
 				ShowDialog(TextBuffer.Address, 100, 80);
 

@@ -17,8 +17,8 @@ namespace Civilization1Remaster.Core.UI
 		{
 			using var _ = this.Processor.Journal.Scope($"ManageMenuBar({participantIdx}, {troopIdx}, {marker})");
 
-			ChosenOrder = 0xffff;
-			MenuResult = 0x0;
+			Turn.ChosenOrder = 0xffff;
+			Menu.Result = 0x0;
 
 			if (marker == -1)
 			{
@@ -27,8 +27,8 @@ namespace Civilization1Remaster.Core.UI
 
 			this.Owner.Startup.HideMouseCursor();
 
-			this.Owner.VideoCard.RenderImage(ScreenBox, 0, 0, 320, 200,
-				BackScreenBox, 0, 0);
+			this.Owner.VideoCard.RenderImage(Screen.Box, 0, 0, 320, 200,
+				Screen.BackScreenBox, 0, 0);
 
 			this.Owner.Startup.ShowMouseCursor();
 
@@ -57,15 +57,15 @@ namespace Civilization1Remaster.Core.UI
 
 			this.Owner.Startup.HideMouseCursor();
 
-			if (MenuResult == 1)
+			if (Menu.Result == 1)
 			{
 				this.Owner.TurnHooks.RepaintMainScreen();
 			}
 
-			if (MenuResult == 0)
+			if (Menu.Result == 0)
 			{
-				this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8,
-					ScreenBox, 0, 0);
+				this.Owner.VideoCard.RenderImage(Screen.BackScreenBox, 0, 0, 0x140, 0xc8,
+					Screen.Box, 0, 0);
 			}
 
 			this.Owner.Startup.ShowMouseCursor();
@@ -78,7 +78,7 @@ namespace Civilization1Remaster.Core.UI
 
 			if (this.Owner.World.RoundTally == 0)
 			{
-				DisabledLines = 0x10;
+				Menu.DisabledLines = 0x10;
 			}
 
 			this.Owner.Words.Set(" Tax Rate\n Luxuries Rate\n FindCity\n Options\n Save Game\n Load Game\n REVOLUTION!\n \n Retire\n QUIT to DOS\n");
@@ -96,15 +96,15 @@ namespace Civilization1Remaster.Core.UI
 			switch (choice)
 			{
 				case 0:
-					ChosenOrder = 0x3d;
+					Turn.ChosenOrder = 0x3d;
 					break;
 
 				case 1:
-					ChosenOrder = 0x2d;
+					Turn.ChosenOrder = 0x2d;
 					break;
 
 				case 2:
-					ChosenOrder = 0x3f;
+					Turn.ChosenOrder = 0x3f;
 					break;
 
 				case 3:
@@ -112,7 +112,7 @@ namespace Civilization1Remaster.Core.UI
 					break;
 
 				case 4:
-					ChosenOrder = 0x53;
+					Turn.ChosenOrder = 0x53;
 					break;
 
 				case 5:
@@ -122,23 +122,23 @@ namespace Civilization1Remaster.Core.UI
 
 					if (this.Owner.SaveLoad.FetchBay != 0xffff)
 					{
-						GameEndRequest = SaveGameStore.FetchSessionAsk;
-						ChosenOrder = 0x1000;
+						Turn.GameEndRequest = SaveGameStore.FetchSessionAsk;
+						Turn.ChosenOrder = 0x1000;
 					}
 					break;
 
 				case 6:
-					ChosenOrder = 0xfffe;
+					Turn.ChosenOrder = 0xfffe;
 					break;
 
 				case 8:
-					GameEndRequest = 0x2;
-					ChosenOrder = 0x1000;
+					Turn.GameEndRequest = 0x2;
+					Turn.ChosenOrder = 0x1000;
 					break;
 
 				case 9:
-					GameEndRequest = 0x1;
-					ChosenOrder = 0x1000;
+					Turn.GameEndRequest = 0x1;
+					Turn.ChosenOrder = 0x1000;
 					break;
 
 				case 10:
@@ -179,7 +179,7 @@ namespace Civilization1Remaster.Core.UI
 					break;
 
 				case 1:
-					if (MapRevealed != 0)
+					if (MapView.Revealed != 0)
 					{
 						this.Owner.RealmInfo.ShowCivilizationScoreList();
 					}
@@ -215,7 +215,7 @@ namespace Civilization1Remaster.Core.UI
 
 			if ((this.Owner.World.StarshipMarkers & 0xfe00) == 0)
 			{
-				DisabledLines = 0x20;
+				Menu.DisabledLines = 0x20;
 			}
 
 			Message(" Wonders of the World (F7)\n Top 5 Cities (F8)\n Civilization Score (F9)\n")
@@ -267,11 +267,11 @@ namespace Civilization1Remaster.Core.UI
 			{
 				this.Owner.Encyclopedia.ShowCivilopedia((ushort)(choice - 1));
 
-				MenuResult = 0xffff;
+				Menu.Result = 0xffff;
 			}
 			else
 			{
-				MenuResult = 0x1;
+				Menu.Result = 0x1;
 			}
 		}
 
@@ -287,21 +287,21 @@ namespace Civilization1Remaster.Core.UI
 
 			do
 			{
-				MenuOptions = (ushort)this.Owner.World.SessionPrefMarkers;
+				Menu.Options = (ushort)this.Owner.World.SessionPrefMarkers;
 
 				choice = this.Owner.Dialogs.ShowMenu(TextBuffer.Address, 24, 16, 0);
 
 				if (choice != 0xffff)
 				{
-					if (MenuHelpTopic == 0)
+					if (Menu.HelpTopic == 0)
 					{
 						this.Owner.World.SessionPrefMarkers ^= (short)(1 << (byte)choice);
 					}
 
-					DefaultLine = choice;
+					Menu.DefaultLine = choice;
 				}
 			}
-			while (choice != 0xffff || MenuHelpTopic != 0);
+			while (choice != 0xffff || Menu.HelpTopic != 0);
 		}
 
 		private void ChooseOrder(short participantIdx, short troopIdx)
@@ -321,7 +321,7 @@ namespace Civilization1Remaster.Core.UI
 			this.Owner.Words.Append(" No Orders \x008fspace\n");
 			keys.Add(0x20);
 
-			DisabledLines = 0x0;
+			Menu.DisabledLines = 0x0;
 
 			if (troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) == 0)
 			{
@@ -350,7 +350,7 @@ namespace Civilization1Remaster.Core.UI
 
 						if (this.Owner.TurnLogic.CheckCoastalTile(horizLoc, vertLoc) == 0)
 						{
-							DisabledLines = (ushort)(DisabledLines | (1 << (byte)keys.Count));
+							Menu.DisabledLines = (ushort)(Menu.DisabledLines | (1 << (byte)keys.Count));
 						}
 					}
 					else if ((short)this.Processor.PullGlobalWord(irrigation) >= 0)
@@ -398,7 +398,7 @@ namespace Civilization1Remaster.Core.UI
 
 				if (this.Owner.Advisors.PlayerKnowsTechnology(participantIdx, 0x2d) == 0)
 				{
-					DisabledLines = (ushort)(DisabledLines | (1 << (byte)keys.Count));
+					Menu.DisabledLines = (ushort)(Menu.DisabledLines | (1 << (byte)keys.Count));
 				}
 			}
 			else if (troops.KindField(participantIdx, troopIdx, UnitKindTable.LandGroup) == 0)
@@ -446,7 +446,7 @@ namespace Civilization1Remaster.Core.UI
 
 			short choice = (short)this.Owner.Dialogs.ShowMenu(TextBuffer.Address, 72, 8, 0);
 
-			ChosenOrder = choice >= 0 && choice < keys.Count ? (ushort)(short)(sbyte)keys[choice] : (ushort)0xffff;
+			Turn.ChosenOrder = choice >= 0 && choice < keys.Count ? (ushort)(short)(sbyte)keys[choice] : (ushort)0xffff;
 		}
 
 		/// <summary>" Change to " and the name of the terrain the work makes (the word at the address)</summary>
@@ -462,12 +462,12 @@ namespace Civilization1Remaster.Core.UI
 		{
 			this.Owner.Startup.HideMouseCursor();
 
-			this.Owner.VideoCard.RenderImage(BackScreenBox, 0, 0, 0x140, 0xc8,
-				ScreenBox, 0, 0);
+			this.Owner.VideoCard.RenderImage(Screen.BackScreenBox, 0, 0, 0x140, 0xc8,
+				Screen.Box, 0, 0);
 
 			this.Owner.Startup.ShowMouseCursor();
 
-			MenuResult = 0xffff;
+			Menu.Result = 0xffff;
 		}
 	}
 }

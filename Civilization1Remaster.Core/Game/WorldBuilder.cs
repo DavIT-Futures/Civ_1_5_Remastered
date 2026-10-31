@@ -26,11 +26,11 @@ namespace Civilization1Remaster.Core.Game
 
 			this.Owner.Startup.AskForDisk(7, 1);
 
-			ushort screenZero = ScreenBox;
+			ushort screenZero = Screen.Box;
 			this.Processor.EmitUInt16(this.Processor.SegData.Value16, screenZero, 0x1);
-			StoryKeyAllowed = 0x0;
+			Story.KeyAllowed = 0x0;
 
-			if (EarthGame != 0)
+			if (NewWorld.EarthGame != 0)
 			{
 				this.Owner.ImageToolkit.LoadPictureOrColors(1, 0, 0, GameTexts.FileMapPic, 1);
 			}
@@ -38,14 +38,14 @@ namespace Civilization1Remaster.Core.Game
 			{
 				this.ShowStoryIntro();
 
-				this.Owner.Services.FloodBox(ScreenBox, 0, 0, 320, 200, Hues.Black);
+				this.Owner.Services.FloodBox(Screen.Box, 0, 0, 320, 200, Hues.Black);
 
 				do
 				{
 					this.ProduceCloudLayer();
 					this.ShowStoryIntro();
 				}
-				while ((short)(((LandMass << 3) * 0x28) + 0x280) > (short)LightenedPixels);
+				while ((short)(((NewWorld.LandMass << 3) * 0x28) + 0x280) > (short)Story.LightenedPixels);
 
 				this.Owner.Dialogs.DrawBox(0, 0, 79, 49, Hues.Black);
 				this.Owner.Dialogs.DrawBox(1, 1, 77, 47, Hues.Black);
@@ -58,11 +58,11 @@ namespace Civilization1Remaster.Core.Game
 				this.ProduceElevation();
 			}
 
-			this.Owner.Services.FloodBox(ScreenBox, 160, 0, 160, 200, Hues.Black);
+			this.Owner.Services.FloodBox(Screen.Box, 160, 0, 160, 200, Hues.Black);
 
 			this.ProduceTerrain();
 
-			StoryKeyAllowed = 0x1;
+			Story.KeyAllowed = 0x1;
 
 			// The story again while it waits (ShowStoryIntro gives back 1)
 			while (this.ShowStoryIntro() != 0)
@@ -72,9 +72,9 @@ namespace Civilization1Remaster.Core.Game
 			DrawingBox.TypefaceIdx = 0x1;
 
 			this.Owner.VideoCard.RenderImage(
-				ScreenBox,
+				Screen.Box,
 				0, 0, 0x140, 0xc8,
-				PictureScreenBox,
+				Screen.PictureScreenBox,
 				0, 0);
 		}
 
@@ -103,7 +103,7 @@ namespace Civilization1Remaster.Core.Game
 
 			while (true)
 			{
-				this.Owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0xa0, 0x64, ScreenBox, 0xa0, 0);
+				this.Owner.VideoCard.RenderImage(Screen.Box, 0, 0, 0xa0, 0x64, Screen.Box, 0xa0, 0);
 
 				short horizLoc;
 				short vertLoc;
@@ -169,7 +169,7 @@ namespace Civilization1Remaster.Core.Game
 				}
 				else
 				{
-					this.Owner.VideoCard.RenderImage(ScreenBox, 0xa0, 0, 0xa0, 0x64, ScreenBox, 0, 0);
+					this.Owner.VideoCard.RenderImage(Screen.Box, 0xa0, 0, 0xa0, 0x64, Screen.Box, 0, 0);
 				}
 
 				ShowStoryIntro();
@@ -177,13 +177,13 @@ namespace Civilization1Remaster.Core.Game
 				attemptTally++;
 
 				if (attemptTally >= 0x100 ||
-					(short)(((LandMass + Climate) << 1) + 6) <= riverTally)
+					(short)(((NewWorld.LandMass + NewWorld.Climate) << 1) + 6) <= riverTally)
 					break;
 			}
 
-			this.Owner.VideoCard.RenderImage(ScreenBox, 0, 0x32, 0x50, 0x32, ScreenBox, 0, 0x96);
+			this.Owner.VideoCard.RenderImage(Screen.Box, 0, 0x32, 0x50, 0x32, Screen.Box, 0, 0x96);
 
-			this.Owner.Services.FloodBox(ScreenBox, 0, 50, 80, 50, Hues.Black);
+			this.Owner.Services.FloodBox(Screen.Box, 0, 50, 80, 50, Hues.Black);
 		}
 
 		/// <inheritdoc/>
@@ -191,7 +191,7 @@ namespace Civilization1Remaster.Core.Game
 		{
 			using var _ = this.Processor.Journal.Scope("ProduceCloudLayer()");
 
-			this.Owner.Services.FloodBox(ScreenBox, 160, 0, 80, 50, Hues.Black);
+			this.Owner.Services.FloodBox(Screen.Box, 160, 0, 80, 50, Hues.Black);
 
 			short cloudHoriz = (short)(this.Owner.Libc.Dice.DrawInt(72) + 4);
 			short cloudVert = (short)(this.Owner.Libc.Dice.DrawInt(34) + 8);
@@ -208,7 +208,7 @@ namespace Civilization1Remaster.Core.Game
 
 						this.Owner.Services.AssignDot(1, horizLoc, vertLoc, (ushort)(hue + 1));
 
-						LightenedPixels = (ushort)(LightenedPixels + 1);
+						Story.LightenedPixels = (ushort)(Story.LightenedPixels + 1);
 					}
 				}
 			}
@@ -296,7 +296,7 @@ namespace Civilization1Remaster.Core.Game
 
 			ShowStoryIntro();
 
-			this.Owner.VideoCard.RenderImage(ScreenBox, 0, 0, 0x140, 0xc8, PictureScreenBox, 0, 0);
+			this.Owner.VideoCard.RenderImage(Screen.Box, 0, 0, 0x140, 0xc8, Screen.PictureScreenBox, 0, 0);
 
 			LabelLandmasses();
 
@@ -306,8 +306,8 @@ namespace Civilization1Remaster.Core.Game
 
 			PlaceSpecialTerrain();
 
-			this.Owner.VideoCard.RenderLine(ScreenBox, 0, 0, 79, 0, Hues.White);
-			this.Owner.VideoCard.RenderLine(ScreenBox, 0, 49, 79, 49, Hues.White);
+			this.Owner.VideoCard.RenderLine(Screen.Box, 0, 0, 79, 0, Hues.White);
+			this.Owner.VideoCard.RenderLine(Screen.Box, 0, 49, 79, 49, Hues.White);
 
 			ushort dotIdx;
 
@@ -704,7 +704,7 @@ namespace Civilization1Remaster.Core.Game
 					{
 						short rawLat = (short)-((short)(this.Owner.Libc.Dice.DrawInt(8) + vertLoc - 0x1d));
 						ushort absLat = (ushort)this.Owner.Libc.AbsoluteValue(rawLat);
-						short band = (short)(absLat + (1 - (short)Temperature));
+						short band = (short)(absLat + (1 - (short)NewWorld.Temperature));
 
 						ushort tier = (ushort)(CPU.SignedQuotient(band, 6) + 1);
 						if (tier <= 7)
@@ -756,7 +756,7 @@ namespace Civilization1Remaster.Core.Game
 
 					if (dot == 1)
 					{
-						short cap = (short)(this.Owner.Libc.AbsoluteValue((short)(0xc - latitudeDist)) + (Climate << 2));
+						short cap = (short)(this.Owner.Libc.AbsoluteValue((short)(0xc - latitudeDist)) + (NewWorld.Climate << 2));
 						if (cap > moisture)
 						{
 							moisture++;
@@ -764,7 +764,7 @@ namespace Civilization1Remaster.Core.Game
 					}
 					else if (moisture > 0)
 					{
-						ushort drop = (ushort)this.Owner.Libc.Dice.DrawInt((ushort)(7 - (Climate << 1)));
+						ushort drop = (ushort)this.Owner.Libc.Dice.DrawInt((ushort)(7 - (NewWorld.Climate << 1)));
 						moisture = (short)(moisture - drop);
 
 						switch (dot)
@@ -797,7 +797,7 @@ namespace Civilization1Remaster.Core.Game
 
 					if (dot == 1)
 					{
-						short cap = (short)((latitudeDist / 2) + (short)Climate);
+						short cap = (short)((latitudeDist / 2) + (short)NewWorld.Climate);
 						if (cap > moisture)
 						{
 							moisture++;
@@ -805,7 +805,7 @@ namespace Civilization1Remaster.Core.Game
 					}
 					else if (moisture > 0)
 					{
-						ushort drop = (ushort)this.Owner.Libc.Dice.DrawInt((ushort)(7 - (Climate << 1)));
+						ushort drop = (ushort)this.Owner.Libc.Dice.DrawInt((ushort)(7 - (NewWorld.Climate << 1)));
 						moisture = (short)(moisture - drop);
 
 						switch (dot)
@@ -846,7 +846,7 @@ namespace Civilization1Remaster.Core.Game
 			short vertLoc = 0x32;
 			short step = 0;
 
-			while ((short)(((short)WorldAge * 0x320) + 0x320) > step)
+			while ((short)(((short)NewWorld.WorldAge * 0x320) + 0x320) > step)
 			{
 				if ((step & 1) == 0)
 				{
@@ -1288,23 +1288,23 @@ namespace Civilization1Remaster.Core.Game
 		/// </summary>
 		private bool StoryStep()
 		{
-			if ((short)StoryState >= 2 && this.Owner.Libc.KeyAvailable() == 0)
+			if ((short)Story.State >= 2 && this.Owner.Libc.KeyAvailable() == 0)
 			{
 				// The story is told: the "press a key" line
-				if ((short)StoryState < 5)
+				if ((short)Story.State < 5)
 				{
-					StoryState = (ushort)(StoryState + 1);
+					Story.State = (ushort)(Story.State + 1);
 
-					if (StoryState == 5)
+					if (Story.State == 5)
 					{
-						this.Owner.Services.FloodBox(ScreenBox, 40, 160, 240, 8, Hues.Black);
+						this.Owner.Services.FloodBox(Screen.Box, 40, 160, 240, 8, Hues.Black);
 					}
 				}
 				else
 				{
-					StoryMusicTime = (ushort)CPU.SignedQuotient((short)this.Owner.Timer.Beats, 0x3c);
+					Story.MusicTime = (ushort)CPU.SignedQuotient((short)this.Owner.Timer.Beats, 0x3c);
 
-					ushort colour = (ushort)(((byte)StoryMusicTime & 1) != 0 ? 0xf : 0x3);
+					ushort colour = (ushort)(((byte)Story.MusicTime & 1) != 0 ? 0xf : 0x3);
 
 					this.Owner.TextPainter.DrawCenteredTextToScreen0(GameTexts.TextBuildingNewWorld, 160, 160, colour);
 				}
@@ -1314,41 +1314,41 @@ namespace Civilization1Remaster.Core.Game
 				return false;
 			}
 
-			if (StoryState == 0)
+			if (Story.State == 0)
 			{
-				StoryFile = (ushort)this.Owner.Libc.OpenStream("story.txt", "rt");
-				StoryState = 0x1;
-				StoryLineTime = 0;
-				StoryMusicTime = 0;
+				Story.File = (ushort)this.Owner.Libc.OpenStream("story.txt", "rt");
+				Story.State = 0x1;
+				Story.LineTime = 0;
+				Story.MusicTime = 0;
 
 				this.Owner.Words.Set("");
 
 				DrawingBox.TypefaceIdx = 0x7;
-				StoryLinesTold = 0x0;
+				Story.LinesTold = 0x0;
 			}
 
-			if (StoryLinesTold != 0)
+			if (Story.LinesTold != 0)
 			{
-				StoryMusicTime = this.Owner.Services.ReadSongPosition();
+				Story.MusicTime = this.Owner.Services.ReadSongPosition();
 			}
 
-			if ((short)StoryMusicTime < (short)StoryLineTime)
+			if ((short)Story.MusicTime < (short)Story.LineTime)
 			{
 				MarkScreenChanged();
 
 				return true;
 			}
 
-			if (StoryState != 2 && (short)StoryLinesTold < 0x28)
+			if (Story.State != 2 && (short)Story.LinesTold < 0x28)
 			{
 				this.Owner.TextPainter.DrawCenteredTextToScreen0(this.Owner.Words.ToString(), 160, 160, Hues.Cyan);
 
 				this.Owner.TextPainter.WaitForTime(5);
 			}
 
-			short lineRead = this.Owner.Libc.ScanStream((short)StoryFile, "%[^\n]\n", TextBuffer.Address);
+			short lineRead = this.Owner.Libc.ScanStream((short)Story.File, "%[^\n]\n", TextBuffer.Address);
 
-			if (lineRead == -1 || (this.Owner.Libc.KeyAvailable() != 0 && StoryKeyAllowed != 0))
+			if (lineRead == -1 || (this.Owner.Libc.KeyAvailable() != 0 && Story.KeyAllowed != 0))
 			{
 				EndStory(lineRead == -1);
 			}
@@ -1361,7 +1361,7 @@ namespace Civilization1Remaster.Core.Game
 
 			MarkScreenChanged();
 
-			return StoryState != 2;
+			return Story.State != 2;
 		}
 
 		/// <summary>
@@ -1370,11 +1370,11 @@ namespace Civilization1Remaster.Core.Game
 		/// </summary>
 		private void TellStoryLine()
 		{
-			if ((short)BirthPicture > 1)
+			if ((short)Icons.BirthPicture > 1)
 			{
 				// The line under the picture is wiped with the picture
-				this.Owner.VideoCard.RenderImage(PictureScreenBox, 0, 0xa0, 0x140, 8,
-					ScreenBox, 0, 0xa0);
+				this.Owner.VideoCard.RenderImage(Screen.PictureScreenBox, 0, 0xa0, 0x140, 8,
+					Screen.Box, 0, 0xa0);
 			}
 
 			this.Owner.TextPainter.WaitForTime(10);
@@ -1385,11 +1385,11 @@ namespace Civilization1Remaster.Core.Game
 
 			this.Owner.TextPainter.DrawCenteredTextToScreen0(this.Owner.Words.ToString(), 160, 160, Hues.LightCyan);
 
-			StoryLineTime = 0x0;
+			Story.LineTime = 0x0;
 
 			if ((short)this.Owner.Words.Length > 3)
 			{
-				if (StoryLinesTold == 0)
+				if (Story.LinesTold == 0)
 				{
 					// The first line starts the music
 					this.Owner.Services.RestoreTimer();
@@ -1399,8 +1399,8 @@ namespace Civilization1Remaster.Core.Game
 					this.Owner.Services.PerformSound(4, 0);
 				}
 
-				StoryLineTime = (ushort)(StoryLineTime + 2);
-				StoryLinesTold = (ushort)(StoryLinesTold + 1);
+				Story.LineTime = (ushort)(Story.LineTime + 2);
+				Story.LinesTold = (ushort)(Story.LinesTold + 1);
 			}
 			else
 			{
@@ -1409,12 +1409,12 @@ namespace Civilization1Remaster.Core.Game
 
 			if ((short)this.Owner.Words.Length > 0x13)
 			{
-				StoryLineTime = (ushort)(StoryLineTime + 1);
+				Story.LineTime = (ushort)(Story.LineTime + 1);
 			}
 
-			StoryLineTime = (ushort)this.Owner.Helpers.ClampValue(
-				this.Processor.PullInt16(StorySegment, (ushort)((StoryLinesTold << 1) + StoryTimingTableOffset)),
-				(45 * (short)StoryLineTime) + (short)StoryMusicTime,
+			Story.LineTime = (ushort)this.Owner.Helpers.ClampValue(
+				this.Processor.PullInt16(StorySegment, (ushort)((Story.LinesTold << 1) + StoryTimingTableOffset)),
+				(45 * (short)Story.LineTime) + (short)Story.MusicTime,
 				32767);
 		}
 
@@ -1423,11 +1423,11 @@ namespace Civilization1Remaster.Core.Game
 		/// </summary>
 		private void ShowStoryPicture()
 		{
-			byte pictureIdx = (byte)BirthPicture;
-			BirthPicture = (ushort)(BirthPicture + 1);
+			byte pictureIdx = (byte)Icons.BirthPicture;
+			Icons.BirthPicture = (ushort)(Icons.BirthPicture + 1);
 			string pictureName = $"birth{pictureIdx}.pic";
 
-			bool colours = VgaMode != 0;
+			bool colours = Screen.VgaMode != 0;
 
 			if (colours)
 			{
@@ -1436,15 +1436,15 @@ namespace Civilization1Remaster.Core.Game
 
 			this.Owner.ImageToolkit.LoadPictureOrColors(2, 0, 0, pictureName, 0);
 
-			if (VgaMode != 0)
+			if (Screen.VgaMode != 0)
 			{
 				this.Owner.Services.FillColors(8, 0, 0, 0);
 			}
 
-			this.Owner.VideoCard.RenderImage(PictureScreenBox, 0, 0, 0x140, 0xc8,
-				ScreenBox, 0, 0);
+			this.Owner.VideoCard.RenderImage(Screen.PictureScreenBox, 0, 0, 0x140, 0xc8,
+				Screen.Box, 0, 0);
 
-			if (VgaMode == 0)
+			if (Screen.VgaMode == 0)
 				return;
 
 			string palName = $"birth{pictureIdx}.pal";
@@ -1454,9 +1454,9 @@ namespace Civilization1Remaster.Core.Game
 			this.Owner.Services.LoadColorsFromBuffer(8, 0xc5be);
 
 			// The colour cycles of the picture: first colour, last colour, speed (300 / speed beats a step), 0 at the end
-			StoryCycleCount = 0x0;
+			Story.CycleCount = 0x0;
 
-			while (this.Processor.PullUInt8(StorySegment, StoryCycleRecord) != 0)
+			while (this.Processor.PullUInt8(StorySegment, Story.CycleRecord) != 0)
 			{
 				ushort first = NextStoryCycleByte();
 				ushort last = NextStoryCycleByte();
@@ -1467,14 +1467,14 @@ namespace Civilization1Remaster.Core.Game
 
 				ushort delay = (ushort)(0x12c / speed);
 
-				StoryCycleCount = (ushort)(StoryCycleCount + 1);
+				Story.CycleCount = (ushort)(Story.CycleCount + 1);
 
-				this.Owner.Services.AssignHueCycleSpan(StoryCycleCount, delay, first, last);
+				this.Owner.Services.AssignHueCycleSpan(Story.CycleCount, delay, first, last);
 			}
 
-			StoryCycleRecord = (ushort)(StoryCycleRecord + 1);
+			Story.CycleRecord = (ushort)(Story.CycleRecord + 1);
 
-			for (short cycleIdx = 1; cycleIdx <= (short)StoryCycleCount; cycleIdx++)
+			for (short cycleIdx = 1; cycleIdx <= (short)Story.CycleCount; cycleIdx++)
 			{
 				this.Owner.Services.ActivateHueCycle((ushort)cycleIdx);
 			}
@@ -1483,8 +1483,8 @@ namespace Civilization1Remaster.Core.Game
 		/// <summary>The next byte of the colour cycle records of the story pictures (0x3710:0x3b66)</summary>
 		private ushort NextStoryCycleByte()
 		{
-			ushort spot = StoryCycleRecord;
-			StoryCycleRecord = (ushort)(StoryCycleRecord + 1);
+			ushort spot = Story.CycleRecord;
+			Story.CycleRecord = (ushort)(Story.CycleRecord + 1);
 
 			return this.Processor.PullUInt8(StorySegment, spot);
 		}
@@ -1500,22 +1500,22 @@ namespace Civilization1Remaster.Core.Game
 				this.Owner.TextPainter.WaitForTime(180);
 			}
 
-			this.Owner.Libc.CloseStream((short)StoryFile);
+			this.Owner.Libc.CloseStream((short)Story.File);
 
 			this.Owner.Services.PerformSound(1, 0);
 
-			if (VgaMode != 0)
+			if (Screen.VgaMode != 0)
 			{
 				StopStoryColourCycles();
 			}
 
-			StoryState = 0x2;
+			Story.State = 0x2;
 		}
 
 		/// <summary>Stops the colour cycles 1 - 0x3b68 of the story picture</summary>
 		private void StopStoryColourCycles()
 		{
-			for (short cycleIdx = 1; cycleIdx <= (short)StoryCycleCount; cycleIdx++)
+			for (short cycleIdx = 1; cycleIdx <= (short)Story.CycleCount; cycleIdx++)
 			{
 				this.Owner.Services.DeactivateHueCycle((ushort)cycleIdx);
 			}

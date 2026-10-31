@@ -178,7 +178,7 @@ namespace Civilization1Remaster.Core.Game
 						return this.look.Direction;
 				}
 
-				if (this.Owner.World.RoundTally == 0 && EarthGame != 0)
+				if (this.Owner.World.RoundTally == 0 && NewWorld.EarthGame != 0)
 				{
 					this.look.BestScore = 0xf;
 					this.look.BestDirection = 0;
@@ -502,11 +502,11 @@ namespace Civilization1Remaster.Core.Game
 			short vertLoc = (short)this.look.Vert;
 
 			this.look.NearestCity = this.Owner.Helpers.FindNearestCity(horizLoc, vertLoc);
-			this.look.CityDistance = FoundDistance;
+			this.look.CityDistance = Search.FoundDistance;
 
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Kind, 0xff);
 			this.look.NearestUnit = this.Owner.Helpers.FindNearestUnit(participantIdx, troopIdx, horizLoc, vertLoc);
-			this.look.UnitDistance = FoundDistance;
+			this.look.UnitDistance = Search.FoundDistance;
 			this.troops.Assign(participantIdx, troopIdx, UnitMemory.Kind, (byte)this.look.Kind);
 
 			this.look.Terrain = this.Owner.MapOps.ObtainTerrainType(horizLoc, vertLoc);

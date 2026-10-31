@@ -97,10 +97,10 @@ namespace Civilization1Remaster.Core.Game
 				// (no unit of his took a key, or the option 4), else the end
 				newPass = true;
 
-				if (this.turn.AllMoved == 0 && GameEndRequest == 0)
+				if (this.turn.AllMoved == 0 && Turn.GameEndRequest == 0)
 					continue;
 
-				if (GameEndRequest != 0 || !this.Owner.World.IsHuman(participantIdx) ||
+				if (Turn.GameEndRequest != 0 || !this.Owner.World.IsHuman(participantIdx) ||
 					(this.turn.HumanTookKey != 0 && (this.Owner.World.SessionPrefMarkers & 4) == 0))
 				{
 					break;
@@ -136,10 +136,10 @@ namespace Civilization1Remaster.Core.Game
 		/// </summary>
 		private bool VisitUnit(short participantIdx)
 		{
-			if (ScreenRepaintRequest != 0)
+			if (Screen.RepaintRequest != 0)
 				this.Owner.TurnHooks.RepaintMainScreen();
 
-			if (GameEndRequest != 0)
+			if (Turn.GameEndRequest != 0)
 			{
 				// The quit leaves the units
 				this.turn.Troop = UnitMemory.TroopTally;
@@ -173,7 +173,7 @@ namespace Civilization1Remaster.Core.Game
 			this.turn.AITries = 0;
 
 			if (this.turn.MouseCursorSet != 0)
-				this.Owner.Services.AssignMouseCursorImage(0, 0, PointerPicture);
+				this.Owner.Services.AssignMouseCursorImage(0, 0, Mouse.Picture);
 
 			this.turn.Clicked = 0;
 			this.turn.MouseCursorSet = 0;
@@ -341,7 +341,7 @@ namespace Civilization1Remaster.Core.Game
 		/// </summary>
 		private void PrepareTurn(short participantIdx)
 		{
-			TurnPlayer = (ushort)participantIdx;
+			Turn.Player = (ushort)participantIdx;
 			this.turn.HumanMarkers = (ushort)this.Owner.World.ParticipantMarkers;
 			this.turn.CursorHoriz = 0xffff;
 			this.turn.MarkedTileMode = 0;
@@ -364,7 +364,7 @@ namespace Civilization1Remaster.Core.Game
 			{
 				short troopIdx = (short)this.turn.Troop;
 
-				if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) == 0xff || MidTurnSave == 1)
+				if (this.troops.Pull(participantIdx, troopIdx, UnitMemory.Kind) == 0xff || Files.MidTurnSave == 1)
 					continue;
 
 				this.troops.Assign(participantIdx, troopIdx, UnitMemory.LeftoverSteps,
@@ -470,12 +470,12 @@ namespace Civilization1Remaster.Core.Game
 			// On the map view (the unsigned comparisons of the original)
 			ushort horizLoc = this.troops.Pull(participantIdx, troopIdx, UnitMemory.Horiz);
 			this.indexDest = horizLoc;
-			ushort viewHoriz = MapViewHoriz;
+			ushort viewHoriz = MapView.Horiz;
 
 			if (viewHoriz < horizLoc)
 			{
 				this.turn.UnitDetail = this.troops.Pull(participantIdx, troopIdx, UnitMemory.Vert);
-				ushort viewVert = MapViewVert;
+				ushort viewVert = MapView.Vert;
 
 				if (this.turn.UnitDetail > viewVert && (ushort)(viewHoriz + 0xe) >= horizLoc &&
 					(ushort)(viewVert + 0xa) > this.turn.UnitDetail)
@@ -490,7 +490,7 @@ namespace Civilization1Remaster.Core.Game
 				return false;
 			}
 
-			if (WorldMapView != 1)
+			if (MapView.WorldMapView != 1)
 				this.Owner.TextPainter.WaitForTime(30);
 
 			this.Owner.MapOps.FocusMapView(participantIdx,

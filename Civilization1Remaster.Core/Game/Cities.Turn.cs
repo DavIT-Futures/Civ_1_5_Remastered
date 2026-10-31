@@ -32,8 +32,8 @@ namespace Civilization1Remaster.Core.Game
 		/// </summary>
 		private void RestoreShieldsAndTrade()
 		{
-			CityShields = this.round.ShieldsKept;
-			CityTrade = this.round.TradeKept;
+			CityTurn.Shields = this.round.ShieldsKept;
+			CityTurn.Trade = this.round.TradeKept;
 		}
 
 		/// <summary>The city stops making its unit (the owner's count of units in making)</summary>
@@ -52,7 +52,7 @@ namespace Civilization1Remaster.Core.Game
 		private void RepickCityProduction(short townIdx)
 		{
 			City town = this.Owner.World.Towns[townIdx];
-			short owner = (short)CityOwner;
+			short owner = (short)CityTurn.Owner;
 
 			StopMakingUnit(town, owner);
 			town.PresentMakingIdx = (sbyte)(byte)this.Owner.Advisors.PickCityProduction(owner, townIdx);
@@ -68,10 +68,10 @@ namespace Civilization1Remaster.Core.Game
 		private void ApplyCivilOrder(short townIdx)
 		{
 			City town = this.Owner.World.Towns[townIdx];
-			short owner = (short)CityOwner;
+			short owner = (short)CityTurn.Owner;
 			bool human = this.Owner.World.IsHuman(owner);
 
-			this.round.Value = (ushort)(CityHappy - CityUnhappy);
+			this.round.Value = (ushort)(CityTurn.Happy - CityTurn.Unhappy);
 
 			if ((short)this.round.Value < 0)
 			{
@@ -82,18 +82,18 @@ namespace Civilization1Remaster.Core.Game
 						.Text("! Mayor\nflees in panic.\n");
 					this.Owner.Services.PerformSound(0x24, 0);
 
-					if ((this.Owner.World.SessionPrefMarkers & 8) != 0 && (town.ConditionMarker & 1) == 0 && RiotShown == 0)
+					if ((this.Owner.World.SessionPrefMarkers & 8) != 0 && (town.ConditionMarker & 1) == 0 && Turn.RiotShown == 0)
 					{
 						// The riot in the view of the city, once
 						this.Owner.CityScene.ShowCityScreen(townIdx, -2);
 						this.Owner.CityScene.RiotAnimation();
 						this.Owner.Startup.AskForDisk(0, 1);
 						this.Owner.TurnHooks.RepaintMainScreen();
-						RiotShown = 1;
+						Turn.RiotShown = 1;
 					}
 					else
 					{
-						DialogStyle = 4;
+						Screen.DialogStyle = 4;
 						this.Owner.TurnHooks.ShowDialog(TextBuffer.Address, 100, 80);
 					}
 
@@ -101,7 +101,7 @@ namespace Civilization1Remaster.Core.Game
 
 					if ((town.ConditionMarker & 1) == 0)
 					{
-						CityAgain = 1;
+						CityTurn.Again = 1;
 
 						if ((this.Owner.World.SessionPrefMarkers & 1) != 0)
 							this.Owner.HelpSystem.ShowHelpPopup(GameTexts.TopicDisorder);
@@ -144,7 +144,7 @@ namespace Civilization1Remaster.Core.Game
 
 				if (human)
 				{
-					DialogStyle = 4;
+					Screen.DialogStyle = 4;
 					Message("Order restored\nin ")
 						.City(townIdx)
 						.Text(".\n")
@@ -160,7 +160,7 @@ namespace Civilization1Remaster.Core.Game
 
 			// The taxes, but not in anarchy
 			if (this.Owner.World.Participants[owner].RegimeKind != 0)
-				this.Owner.World.Participants[owner].Gold += (short)CityTaxes;
+				this.Owner.World.Participants[owner].Gold += (short)CityTurn.Taxes;
 		}
 
 		/// <summary>
@@ -172,12 +172,12 @@ namespace Civilization1Remaster.Core.Game
 		private void ApplyCelebration(short townIdx)
 		{
 			City town = this.Owner.World.Towns[townIdx];
-			short owner = (short)CityOwner;
+			short owner = (short)CityTurn.Owner;
 			Player player = this.Owner.World.Participants[owner];
 			bool human = this.Owner.World.IsHuman(owner);
 
-			bool celebrates = CityUnhappy == 0 && town.TrueExtent > 2 &&
-				(short)((town.TrueExtent + 1) / 2) <= (short)CityHappy && player.RegimeKind != 0;
+			bool celebrates = CityTurn.Unhappy == 0 && town.TrueExtent > 2 &&
+				(short)((town.TrueExtent + 1) / 2) <= (short)CityTurn.Happy && player.RegimeKind != 0;
 
 			if (celebrates)
 			{
@@ -213,9 +213,9 @@ namespace Civilization1Remaster.Core.Game
 				else if (player.RegimeKind >= 4)
 				{
 					// Growth while it goes on under republic or democracy, with food to spare
-					short eaten = (short)((town.TrueExtent * 2) + ((short)this.round.SettlerFood * (short)CitySettlers));
+					short eaten = (short)((town.TrueExtent * 2) + ((short)this.round.SettlerFood * (short)CityTurn.Settlers));
 
-					if (eaten < (short)CityFood && (town.TrueExtent < 10 || town.Has(CityStructure.Aqueduct)))
+					if (eaten < (short)CityTurn.Food && (town.TrueExtent < 10 || town.Has(CityStructure.Aqueduct)))
 						town.TrueExtent++;
 				}
 
@@ -251,12 +251,12 @@ namespace Civilization1Remaster.Core.Game
 		/// </summary>
 		private void ApplyResearch()
 		{
-			short owner = (short)CityOwner;
+			short owner = (short)CityTurn.Owner;
 			short person = this.Owner.World.PersonParticipantIdx;
 			Player player = this.Owner.World.Participants[owner];
 			Player human = this.Owner.World.Participants[person];
 
-			this.round.Value = CityScience;
+			this.round.Value = CityTurn.Science;
 
 			if (owner == person)
 			{
@@ -289,12 +289,12 @@ namespace Civilization1Remaster.Core.Game
 
 			// The cost of an advance
 			this.round.Measure = (ushort)(owner != person ? 14 - this.Owner.World.HardnessTier : (this.Owner.World.HardnessTier << 1) + 6);
-			this.round.Measure = (ushort)(this.round.Measure + TechnologyLevel);
+			this.round.Measure = (ushort)(this.round.Measure + Turn.TechnologyLevel);
 
 			if (owner == person && (short)(11 - player.FoundScienceTally) > (short)this.round.Measure)
 				this.round.Measure = (ushort)(11 - player.FoundScienceTally);
 
-			if (owner == person && CityAgain != 0)
+			if (owner == person && CityTurn.Again != 0)
 				return;
 
 			short progress = (short)(player.InquiryHeadway / (this.Owner.World.Season < 0 ? 1 : 2));
@@ -324,17 +324,17 @@ namespace Civilization1Remaster.Core.Game
 		/// </summary>
 		private short CountPollution(City town)
 		{
-			short divisor = (short)PollutionFactor;
+			short divisor = (short)Turn.PollutionFactor;
 
 			if (divisor == 0)
 				throw new Exception("Division by zero");
 
-			int quotient = (short)CityShields / divisor;
+			int quotient = (short)CityTurn.Shields / divisor;
 
 			if (quotient != (short)quotient)
 				throw new Exception("Division error");
 
-			short pollution = (short)((short)(quotient - 20) + ((short)(town.TrueExtent * (short)ContentAdvances) / 4));
+			short pollution = (short)((short)(quotient - 20) + ((short)(town.TrueExtent * (short)Turn.ContentAdvances) / 4));
 			this.round.Pollution = (ushort)pollution;
 
 			return pollution;
@@ -350,11 +350,11 @@ namespace Civilization1Remaster.Core.Game
 		private bool ApplyScoreAndPollution(short townIdx)
 		{
 			City town = this.Owner.World.Towns[townIdx];
-			short owner = (short)CityOwner;
+			short owner = (short)CityTurn.Owner;
 			Player player = this.Owner.World.Participants[owner];
 			short person = this.Owner.World.PersonParticipantIdx;
 
-			player.Tally += (short)(town.TrueExtent + CityHappy - CityUnhappy);
+			player.Tally += (short)(town.TrueExtent + CityTurn.Happy - CityTurn.Unhappy);
 
 			if (owner != person)
 				return false;
@@ -378,7 +378,7 @@ namespace Civilization1Remaster.Core.Game
 					AttachSmog(horiz, vert);
 					this.Owner.MapOps.FocusMapView(person, horiz - 8, vert - 6);
 					this.Owner.MapOps.RepaintMapTile(horiz, vert);
-					DialogStyle = 6;
+					Screen.DialogStyle = 6;
 					Message("Pollution near ")
 						.City(townIdx)
 						.Text(".\n")
@@ -416,7 +416,7 @@ namespace Civilization1Remaster.Core.Game
 		private void PayImprovementUpkeep(short townIdx)
 		{
 			City town = this.Owner.World.Towns[townIdx];
-			short owner = (short)CityOwner;
+			short owner = (short)CityTurn.Owner;
 			Player player = this.Owner.World.Participants[owner];
 			ushort improvement = 1;
 
@@ -481,7 +481,7 @@ namespace Civilization1Remaster.Core.Game
 			DrawingBox.TypefaceIdx = 1;
 			this.Owner.Startup.ShowMouseCursor();
 
-			return (ushort)(CityHappy - CityUnhappy);
+			return (ushort)(CityTurn.Happy - CityTurn.Unhappy);
 		}
 
 		/// <summary>
@@ -500,7 +500,7 @@ namespace Civilization1Remaster.Core.Game
 		{
 			City town = this.Owner.World.Towns[townIdx];
 
-			CityScreenTab = 0;
+			CityTurn.ScreenTab = 0;
 			this.round.CursorOn = 0;
 			this.round.ListStart = 0;
 			this.round.ListEnd = 0;
@@ -524,9 +524,9 @@ namespace Civilization1Remaster.Core.Game
 
 			this.round.Horiz = (ushort)(short)town.Place.X;
 			this.round.Vert = (ushort)(short)town.Place.Y;
-			ShownCity = (ushort)townIdx;
+			CityTurn.ShownCity = (ushort)townIdx;
 			this.round.Distance = 7;
-			PalaceDistance = (ushort)(town.Has(CityStructure.Palace) ? 0 : 0x20);
+			CityTurn.PalaceDistance = (ushort)(town.Has(CityStructure.Palace) ? 0 : 0x20);
 
 			if (town.MaterialsTally > 999 || town.MaterialsTally < 0)
 				town.MaterialsTally = 0;
@@ -546,10 +546,10 @@ namespace Civilization1Remaster.Core.Game
 				if (distance < (short)this.round.Distance && distance != 0)
 					this.round.Distance = (ushort)distance;
 
-				if (other.ParticipantIdx == town.ParticipantIdx && other.Has(CityStructure.Palace) && distance < (short)PalaceDistance)
+				if (other.ParticipantIdx == town.ParticipantIdx && other.Has(CityStructure.Palace) && distance < (short)CityTurn.PalaceDistance)
 				{
 					// The nearest palace of the owner
-					PalaceDistance = (ushort)distance;
+					CityTurn.PalaceDistance = (ushort)distance;
 				}
 
 				if (distance > 5)
@@ -586,28 +586,28 @@ namespace Civilization1Remaster.Core.Game
 
 			// The tile of the city itself
 			this.round.CityTileNeighbour = 0;
-			CityOwner = (ushort)town.ParticipantIdx;
-			CityTiles = 0x15;
-			this.round.MapViewHoriz = MapViewHoriz;
-			this.round.MapViewVert = MapViewVert;
+			CityTurn.Owner = (ushort)town.ParticipantIdx;
+			CityTurn.Tiles = 0x15;
+			this.round.MapViewHoriz = MapView.Horiz;
+			this.round.MapViewVert = MapView.Vert;
 
-			short owner = (short)CityOwner;
+			short owner = (short)CityTurn.Owner;
 			this.round.SettlerFood = (ushort)(this.Owner.World.Participants[owner].RegimeKind <= 1 ? 1 : 2);
 
 			// The advances that make citizens content, unless the wonder 0x1000 is in the city
-			ContentAdvances = 0;
+			Turn.ContentAdvances = 0;
 
 			if (!town.Has(CityStructure.MassTransit))
 			{
 				foreach (short advance in new short[] { 0x23, 0x3a, 0x29, 0x3c })
 				{
 					if (this.Owner.Advisors.PlayerKnowsTechnology(owner, advance) != 0)
-						ContentAdvances = (ushort)(ContentAdvances + 1);
+						Turn.ContentAdvances = (ushort)(Turn.ContentAdvances + 1);
 				}
 			}
 
 			this.round.CostFactor = 0xa;
-			CitySpecialists = (ushort)((((uint)town.LaborerMarkers1 << 16) | town.LaborerMarkers0) >> 0x1a);
+			CityTurn.Specialists = (ushort)((((uint)town.LaborerMarkers1 << 16) | town.LaborerMarkers0) >> 0x1a);
 
 			if (owner == this.Owner.World.PersonParticipantIdx)
 				return;
@@ -627,7 +627,7 @@ namespace Civilization1Remaster.Core.Game
 
 			if ((town.ConditionMarker & 1) == 0)
 			{
-				CitySpecialists = 0;
+				CityTurn.Specialists = 0;
 			}
 			else
 			{
@@ -663,8 +663,8 @@ namespace Civilization1Remaster.Core.Game
 				if (step == CityScreenStep.Leave)
 				{
 					// The end of the city screen
-					MapViewHoriz = this.round.MapViewHoriz;
-					MapViewVert = this.round.MapViewVert;
+					MapView.Horiz = this.round.MapViewHoriz;
+					MapView.Vert = this.round.MapViewVert;
 					break;
 				}
 
@@ -808,7 +808,7 @@ namespace Civilization1Remaster.Core.Game
 			}
 
 			// A computer city buys shields with gold
-			if (!this.Owner.World.IsHuman(CityOwner))
+			if (!this.Owner.World.IsHuman(CityTurn.Owner))
 				BuyForComputerCity(townIdx);
 
 			return true;
@@ -838,7 +838,7 @@ namespace Civilization1Remaster.Core.Game
 			DrawCitizensAndRoutes(townIdx);
 			DrawCityDotAndPollution(townIdx);
 
-			if (CityOwner != (ushort)this.Owner.World.PersonParticipantIdx)
+			if (CityTurn.Owner != (ushort)this.Owner.World.PersonParticipantIdx)
 			{
 				this.Owner.Conquest.WaitForKeyPressOrMouseClick();
 				return CityScreenStep.Leave;
@@ -915,7 +915,7 @@ namespace Civilization1Remaster.Core.Game
 		/// </summary>
 		private void EndCityTurn(short townIdx)
 		{
-			if (CityOwner != 0)
+			if (CityTurn.Owner != 0)
 			{
 				// Civil disorder, order restored, the taxes; the celebration
 				ApplyCivilOrder(townIdx);
