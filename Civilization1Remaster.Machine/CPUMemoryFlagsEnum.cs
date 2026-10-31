@@ -1,3 +1,5 @@
+using System;
+
 namespace Civilization1Remaster.Emulation
 {
 	[Flags]

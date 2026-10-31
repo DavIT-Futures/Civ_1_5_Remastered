@@ -58,7 +58,7 @@ namespace Civilization1Remaster.Emulation
 		private readonly Thread clockWorker;
 
 		// DOS file stuff
-		private readonly FileStream?[] documentGrips = new FileStream?[256];
+		private readonly FileStream[] documentGrips = new FileStream[256];
 
 		private readonly IMachineHost host;
 
@@ -124,7 +124,7 @@ namespace Civilization1Remaster.Emulation
 
 			// If the original game is in a "CIVILIZATION" folder next to the executable
 			// or in any parent folder (for example in the repository root), use it
-			string? matchFolder = DosPaths.LocateGameDirectory("CIVILIZATION");
+			string matchFolder = DosPaths.LocateGameDirectory("CIVILIZATION");
 			if (matchFolder != null)
 			{
 				this.standardFolder = matchFolder;
@@ -175,10 +175,10 @@ namespace Civilization1Remaster.Emulation
 		/// Test seam: called when the game looks for a key and none is waiting. The argument is true when the game waits for the key.
 		/// A scripted host puts the next key into the input queue here.
 		/// </summary>
-		public Action<bool>? InputStarved { get; set; }
+		public Action<bool> InputStarved { get; set; }
 
 		/// <summary>Test seam: sees the frames and the accesses of the stack segment (see IStackWatcher)</summary>
-		public IStackWatcher? StackWatcher { get; set; }
+		public IStackWatcher StackWatcher { get; set; }
 
 		public bool Hold
 		{
@@ -190,7 +190,7 @@ namespace Civilization1Remaster.Emulation
 		/// When set, called every 0x40000 memory reads (the tests check the time of a scenario in it: endless loops that call
 		/// no game function fail then too). It must not change the state of the game.
 		/// </summary>
-		public Action? Heartbeat { get; set; }
+		public Action Heartbeat { get; set; }
 
 		public CPUFlags FlagSet
 		{

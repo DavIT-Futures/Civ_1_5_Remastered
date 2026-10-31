@@ -16,7 +16,7 @@ namespace Civilization1Remaster.Video
 	{
 		private readonly GameEngine owner;
 		private readonly CPU processor;
-		private readonly IGameHost? primaryHost = null;
+		private readonly IGameHost primaryHost = null;
 		private readonly BDictionary<int, VGABitmap> displays = new BDictionary<int, VGABitmap>();
 		private readonly BDictionary<int, VGABitmap> pictures = new BDictionary<int, VGABitmap>();
 		private readonly Queue<int> tokens = new Queue<int>();
@@ -34,7 +34,7 @@ namespace Civilization1Remaster.Video
 		private ushort glob15d2StagingMarker = 0;
 		private ushort glob15d4DisplayIdx = 0;
 
-		public VGADriver(GameEngine owner, IGameHost? host)
+		public VGADriver(GameEngine owner, IGameHost host)
 		{
 			this.owner = owner;
 			this.processor = owner.Processor;
@@ -42,7 +42,7 @@ namespace Civilization1Remaster.Video
 
 			this.displays.Add(0, new VGABitmap()); // our Main screen
 
-			byte[]? typefaces = (byte[]?)Resources.ResourceManager.GetObject("Fonts_xml");
+			byte[] typefaces = (byte[])Resources.ResourceManager.GetObject("Fonts_xml");
 
 			if (typefaces == null)
 			{
@@ -469,7 +469,7 @@ namespace Civilization1Remaster.Video
 		public ushort LoadIcon(string docname)
 		{
 			byte[] scratchList;
-			VGABitmap? picture = VGABitmap.ViaFile(this.processor.StandardFolder + docname.ToUpper(), out scratchList);
+			VGABitmap picture = VGABitmap.ViaFile(this.processor.StandardFolder + docname.ToUpper(), out scratchList);
 
 			if (picture != null)
 			{

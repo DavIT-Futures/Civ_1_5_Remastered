@@ -1,4 +1,6 @@
-﻿namespace Civilization1Remaster.Game.State
+﻿using System.IO;
+
+namespace Civilization1Remaster.Game.State
 {
 	/// <summary>
 	/// Reads and writes the little-endian numbers of the saved game format.

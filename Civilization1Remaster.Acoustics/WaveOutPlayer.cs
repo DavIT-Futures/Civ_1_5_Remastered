@@ -33,7 +33,7 @@ namespace Civilization1Remaster.Acoustics
 		/// <summary>
 		/// Starts playing, returns null when there is no audio output (or when not running on Windows)
 		/// </summary>
-		public static WaveOutPlayer? Launch(SoundDriverHost handler)
+		public static WaveOutPlayer Launch(SoundDriverHost handler)
 		{
 			if (!OperatingSystem.IsWindows())
 				return null;

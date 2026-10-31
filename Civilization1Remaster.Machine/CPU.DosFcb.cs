@@ -186,7 +186,7 @@ namespace Civilization1Remaster.Emulation
 				if (this.disk == 0)
 				{
 					byte drive = 2;
-					string? top = Path.GetPathRoot(Assembly.GetExecutingAssembly().Location);
+					string top = Path.GetPathRoot(Assembly.GetExecutingAssembly().Location);
 
 					if (top != null && top.Length == 3 && top[1] == ':' && top[2] == Path.PathSeparator)
 					{

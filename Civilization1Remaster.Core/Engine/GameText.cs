@@ -9,7 +9,7 @@ namespace Civilization1Remaster.Engine
 	/// in the memory) has no string: Read takes it from the memory at the moment of use, as the original did. Formats like its
 	/// address ("0x{text:x4}") and converts to it, so the code that still works with addresses takes it unchanged.
 	/// </summary>
-	public readonly record struct GameText(ushort Address, string? Text) : IFormattable
+	public readonly record struct GameText(ushort Address, string Text) : IFormattable
 	{
 		public static implicit operator ushort(GameText text) => text.Address;
 
@@ -19,7 +19,7 @@ namespace Civilization1Remaster.Engine
 		public string Read(CPU processor) =>
 			this.Text ?? processor.PullText(CPU.AsLinearAddress(processor.SegData.Value16, this.Address));
 
-		public string ToString(string? format, IFormatProvider? formatProvider) => this.Address.ToString(format, formatProvider);
+		public string ToString(string format, IFormatProvider formatProvider) => this.Address.ToString(format, formatProvider);
 
 		public override string ToString() => this.Address.ToString();
 	}

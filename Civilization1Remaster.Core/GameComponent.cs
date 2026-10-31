@@ -13,7 +13,7 @@ namespace Civilization1Remaster
 		protected GameEngine Owner { get; }
 		protected CPU Processor { get; }
 
-		private UnitMemory? unitTable;
+		private UnitMemory unitTable;
 
 		protected GameComponent(GameEngine owner)
 		{

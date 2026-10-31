@@ -76,9 +76,9 @@ namespace Civilization1Remaster
 		private readonly LogWrapper prologueJournal;
 		private readonly ushort beginSection = 0x1000;
 		private readonly GameState sessionCondition;
-		private readonly IGameHost? host;
+		private readonly IGameHost host;
 
-		public GameEngine(IGameHost? host)
+		public GameEngine(IGameHost host)
 		{
 			this.host = host;
 			this.journal = new LogWrapper("Log.txt");
@@ -478,7 +478,7 @@ namespace Civilization1Remaster
 			uint programBegin = CPU.AsLinearAddress(beginSection, 0);
 			uint programSpan = 0x3a0e0;
 
-			byte[]? assets = (byte[]?)Properties.Resources.ResourceManager.GetObject("BinaryResources");
+			byte[] assets = (byte[])Properties.Resources.ResourceManager.GetObject("BinaryResources");
 
 			if (assets == null)
 			{

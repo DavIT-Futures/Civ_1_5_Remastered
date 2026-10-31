@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Civilization1Remaster.Emulation;
 using Civilization1Remaster.Game.Rules;
 using Civilization1Remaster.Game.State;

@@ -42,7 +42,7 @@ namespace Civilization1Remaster.Game
 		private readonly UnitMemory troops;
 
 		// The last battle, for the battle animation
-		private CombatResolver.Battle? finalFight = null;
+		private CombatResolver.Battle finalFight = null;
 
 		private int finalAssailantCompleteStrikeMarks = CombatResolver.RegularStrikeMarks;
 		private int finalGuardianCompleteStrikeMarks = CombatResolver.RegularStrikeMarks;
@@ -402,7 +402,7 @@ namespace Civilization1Remaster.Game
 		/// </summary>
 		private void ShowBattleRounds(int assailantHoriz, int assailantVert, int guardianHoriz, int guardianVert)
 		{
-			CombatResolver.Battle? fight = this.finalFight;
+			CombatResolver.Battle fight = this.finalFight;
 
 			if (fight == null)
 				return;

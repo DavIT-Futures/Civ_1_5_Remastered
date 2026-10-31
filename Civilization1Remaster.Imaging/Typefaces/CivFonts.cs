@@ -139,7 +139,7 @@ namespace Civilization1Remaster.Video
 		public static CivFonts Unpack(Stream source)
 		{
 			XmlSerializer xml = new XmlSerializer(typeof(CivFonts));
-			object? thing = xml.Deserialize(source);
+			object thing = xml.Deserialize(source);
 			if (thing == null)
 				throw new Exception("Can't deserialize object");
 

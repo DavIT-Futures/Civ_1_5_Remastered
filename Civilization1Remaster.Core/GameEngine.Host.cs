@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using System.Collections.Generic;
+using System.Drawing;
 using Civilization1Remaster.Emulation;
 
 namespace Civilization1Remaster

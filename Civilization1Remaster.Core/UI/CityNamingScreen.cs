@@ -1,4 +1,5 @@
 using Civilization1Remaster.Emulation;
+using System;
 
 namespace Civilization1Remaster.UI
 {

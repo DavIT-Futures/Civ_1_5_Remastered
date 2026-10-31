@@ -12,15 +12,15 @@ namespace Civilization1Remaster.Acoustics
 
 		private ushort stagingPlace = 0;
 		private bool handlerFetched = false;
-		private SoundDriverHost? handler = null;
-		private IDisposable? participant = null;
+		private SoundDriverHost handler = null;
+		private IDisposable participant = null;
 
 		public AudioOutput(GameEngine owner)
 			: base(owner)
 		{
 		}
 
-		private SoundDriverHost? Handler
+		private SoundDriverHost Handler
 		{
 			get
 			{
@@ -85,7 +85,7 @@ namespace Civilization1Remaster.Acoustics
 		/// <inheritdoc/>
 		public ushort ReadSongPosition()
 		{
-			SoundDriverHost? handler = this.Handler;
+			SoundDriverHost handler = this.Handler;
 			return handler != null ? handler.CurrentOffset() : stagingPlace;
 		}
 

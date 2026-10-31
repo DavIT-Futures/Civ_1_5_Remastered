@@ -1,3 +1,5 @@
+using System;
+
 namespace Civilization1Remaster.Game.State
 {
 	[Flags]

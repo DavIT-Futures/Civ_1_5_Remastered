@@ -189,7 +189,7 @@ namespace Civilization1Remaster.Emulation
 			return scratchBytes;
 		}
 
-		public static string? PullText(Stream flow)
+		public static string PullText(Stream flow)
 		{
 			int spanInt = PullByte(flow);
 			byte[] scratchBytes = new byte[spanInt];

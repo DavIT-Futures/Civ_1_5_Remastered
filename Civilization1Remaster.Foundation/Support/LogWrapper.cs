@@ -10,11 +10,11 @@ namespace Civilization1Remaster
 	/// </summary>
 	public class LogWrapper
 	{
-		private readonly StreamWriter? journal;
+		private readonly StreamWriter journal;
 		private readonly Stack<ushort> pile = new Stack<ushort>();
 
 		private int journalIndentTier = 0;
-		private IStackProbe? probe = null;
+		private IStackProbe probe = null;
 
 		public LogWrapper(string route)
 		{
@@ -29,18 +29,20 @@ namespace Civilization1Remaster
 		/// <summary>
 		/// Test seam: receives the text of every opened scope (the called game function), also when the log file is off
 		/// </summary>
-		public Action<string>? ScopeListener { get; set; }
+		public Action<string> ScopeListener { get; set; }
 
 		/// <summary>Test seam: called at the start of every scope, before ScopeListener (the fixed test clock counts them)</summary>
-		public Action? ScopeOpened { get; set; }
+		public Action ScopeOpened { get; set; }
 
-		public IStackProbe? Probe
+		public IStackProbe Probe
 		{
 			get { return this.probe; }
 			set { this.probe = value; }
 		}
 
-		public void OpenScope(string words)
+        public StreamWriter Journal => journal;
+
+        public void OpenScope(string words)
 		{
 			OpenScope(words, false);
 		}

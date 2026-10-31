@@ -251,9 +251,9 @@ namespace Civilization1Remaster.Video
 			return Color.FromArgb((63 * hue.R) / 255, (63 * hue.G) / 255, (63 * hue.B) / 255);
 		}
 
-		public static VGABitmap? ViaFile(string route, out byte[] swatch)
+		public static VGABitmap ViaFile(string route, out byte[] swatch)
 		{
-			VGABitmap? picture = null;
+			VGABitmap picture = null;
 			FileStream flow = new FileStream(route, FileMode.Open, FileAccess.Read);
 			List<BKeyValuePair<int, Color>> colors = new List<BKeyValuePair<int, Color>>();
 			swatch = new byte[0];
@@ -988,7 +988,7 @@ namespace Civilization1Remaster.Video
 		public void ImportPicture(string docname, ushort horizLoc, ushort vertLoc, out byte[] swatch)
 		{
 			// function body
-			VGABitmap? picture = VGABitmap.ViaFile(docname, out swatch);
+			VGABitmap picture = VGABitmap.ViaFile(docname, out swatch);
 
 			if (picture != null)
 			{

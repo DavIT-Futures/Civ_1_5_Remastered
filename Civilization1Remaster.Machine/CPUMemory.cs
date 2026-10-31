@@ -19,7 +19,7 @@ namespace Civilization1Remaster.Emulation
 		private readonly List<(uint Begin, IMemoryOverlay Overlay)> overlays = new List<(uint Begin, IMemoryOverlay Overlay)>();
 
 		// For every byte of the memory the overlay that keeps it (its index + 1), 0 for the memory itself
-		private short[]? overlayMap;
+		private short[] overlayMap;
 
 		public CPUMemory(CPU processor)
 		{
@@ -81,10 +81,10 @@ namespace Civilization1Remaster.Emulation
 		public void AttachOverlay(uint begin, byte[] content) => AttachOverlay(begin, new ArrayOverlay(content));
 
 		/// <summary>The overlay of the range that starts at the linear address, null when the range is still in the memory</summary>
-		public IMemoryOverlay? OverlayOf(uint begin) => this.overlayStarts.TryGetValue(begin, out IMemoryOverlay? overlay) ? overlay : null;
+		public IMemoryOverlay OverlayOf(uint begin) => this.overlayStarts.TryGetValue(begin, out IMemoryOverlay overlay) ? overlay : null;
 
 		/// <summary>The array of the range that starts at the linear address, null when the range is not kept in an array</summary>
-		public byte[]? OverlayAt(uint begin) => (OverlayOf(begin) as ArrayOverlay)?.Content;
+		public byte[] OverlayAt(uint begin) => (OverlayOf(begin) as ArrayOverlay)?.Content;
 
 		/// <summary>Copies bytes of the memory, also of the ranges kept in C# (a file of the game is written from them)</summary>
 		public void ReadChunk(uint location, byte[] target, int loc, int span)
