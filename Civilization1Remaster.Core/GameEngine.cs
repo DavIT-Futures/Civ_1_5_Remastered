@@ -63,6 +63,7 @@ namespace Civilization1Remaster
 		private readonly CRuntime chrLibc;
 		private readonly TextBuffer words;
 		private readonly CodeTexts codes;
+		private readonly NameTexts names;
 		private readonly GameTables tables;
 		private readonly GameGlobals globals = new GameGlobals();
 		private readonly ScreenBoxes boxes = new ScreenBoxes();
@@ -104,6 +105,7 @@ namespace Civilization1Remaster
 			this.chrLibc = new CRuntime(this);
 			this.words = new TextBuffer(this);
 			this.codes = new CodeTexts(this);
+			this.names = new NameTexts(this);
 			this.tables = new GameTables(this);
 			this.hueCycles = new HueCycles(this.processor);
 			this.timer = new TimerState(this.processor);
@@ -390,6 +392,7 @@ namespace Civilization1Remaster
 			// B6.1: the message buffer lives in C# from now on
 			this.words.Attach();
 			this.codes.Attach();
+			this.names.Attach();
 
 			// B6.2: the units too (UnitMemory reads and writes the array, the rest of the code through the memory)
 			this.processor.Storage.AttachOverlay(CPU.AsLinearAddress(this.processor.SegData.Value16, UnitMemory.Origin),
@@ -703,6 +706,12 @@ namespace Civilization1Remaster
 		public CodeTexts Codes
 		{
 			get { return this.codes; }
+		}
+
+		/// <summary>The names of the players at 0x0111 (B6.1)</summary>
+		public NameTexts Names
+		{
+			get { return this.names; }
 		}
 
 		public VGADriver VideoCard

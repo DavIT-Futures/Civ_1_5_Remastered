@@ -131,8 +131,8 @@ namespace Civilization1Remaster.UI
 		{
 			if (Leader(participantIdx).ChiefVisuals == 14)
 			{
-				this.owner.Libc.CopyText(GovernmentTitleAt(2), "Empress");
-				this.owner.Libc.CopyText(GovernmentTitleAt(4), "Empress");
+				this.owner.Names.Set(GovernmentTitleAt(2), "Empress");
+				this.owner.Names.Set(GovernmentTitleAt(4), "Empress");
 			}
 		}
 
@@ -140,8 +140,8 @@ namespace Civilization1Remaster.UI
 		{
 			if (Leader(participantIdx).ChiefVisuals == 14)
 			{
-				this.owner.Libc.CopyText(GovernmentTitleAt(2), SavedGovernmentTitleMonarchy);
-				this.owner.Libc.CopyText(GovernmentTitleAt(4), SavedGovernmentTitleCommunism);
+				this.owner.Names.Set(GovernmentTitleAt(2), SavedGovernmentTitleMonarchy);
+				this.owner.Names.Set(GovernmentTitleAt(4), SavedGovernmentTitleCommunism);
 			}
 		}
 

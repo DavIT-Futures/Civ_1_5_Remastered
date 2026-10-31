@@ -280,7 +280,7 @@ namespace Civilization1Remaster.UI
 
 				this.owner.World.Participants[personIdx].ChiefVisuals = personIdx;
 
-				this.owner.Libc.CopyText(LeaderNameAt(names), LeaderText(personIdx, LeaderTable.Name));
+				this.owner.Names.Set(LeaderNameAt(names), LeaderText(personIdx, LeaderTable.Name));
 			}
 			else
 			{
@@ -290,9 +290,9 @@ namespace Civilization1Remaster.UI
 
 				ushort leader = (ushort)(0x3a * person.ChiefVisuals);
 
-				this.owner.Libc.CopyText(LeaderNameAt(names), LeaderTextAt(leader, LeaderTable.Name));
+				this.owner.Names.Set(LeaderNameAt(names), LeaderTextAt(leader, LeaderTable.Name));
 
-				this.owner.Libc.CopyText(CivilizationNameAt(names), LeaderTextAt(leader, LeaderTable.Civilization));
+				this.owner.Names.Set(CivilizationNameAt(names), LeaderTextAt(leader, LeaderTable.Civilization));
 
 				this.owner.Words.Set(LeaderTextAt(leader, LeaderTable.CivilizationPlural));
 
@@ -302,7 +302,7 @@ namespace Civilization1Remaster.UI
 						.Text("s");
 				}
 
-				this.owner.Libc.CopyText(CivilizationPluralAt(names), this.owner.Words.ToString());
+				this.owner.Names.Set(CivilizationPluralAt(names), this.owner.Words.ToString());
 			}
 
 			this.owner.TextPainter.RenderCenteredTextToScreen0(CivilizationPluralAt(names), 46, 92, 15);
@@ -773,13 +773,13 @@ namespace Civilization1Remaster.UI
 			ushort leader = (ushort)(0x3a * this.owner.World.Participants[participantIdx].ChiefVisuals);
 			ushort names = (ushort)(participantIdx << 1);
 
-			this.owner.Libc.CopyText(LeaderNameAt(names), LeaderTextAt(leader, LeaderTable.Name));
+			this.owner.Names.Set(LeaderNameAt(names), LeaderTextAt(leader, LeaderTable.Name));
 
 			if (participantIdx == this.owner.World.PersonParticipantIdx &&
 				this.processor.PullGlobalByte(CivilizationNameAt(names)) != 0)
 				return;
 
-			this.owner.Libc.CopyText(CivilizationNameAt(names), LeaderTextAt(leader, LeaderTable.Civilization));
+			this.owner.Names.Set(CivilizationNameAt(names), LeaderTextAt(leader, LeaderTable.Civilization));
 
 			this.owner.Words.Set(LeaderTextAt(leader, LeaderTable.CivilizationPlural));
 
@@ -789,7 +789,7 @@ namespace Civilization1Remaster.UI
 					.Text("s");
 			}
 
-			this.owner.Libc.CopyText(CivilizationPluralAt(names), this.owner.Words.ToString());
+			this.owner.Names.Set(CivilizationPluralAt(names), this.owner.Words.ToString());
 		}
 
 		/// <summary>

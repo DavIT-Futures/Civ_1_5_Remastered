@@ -727,16 +727,16 @@ namespace Civilization1Remaster.UI
 			ushort civName = LeaderTextAt(leader, LeaderTable.Civilization);
 			ushort pluralName = LeaderTextAt(leader, LeaderTable.CivilizationPlural);
 
-			this.owner.Libc.CopyText(CivilizationName(participantIdx), civName);
+			this.owner.Names.Set(CivilizationName(participantIdx), civName);
 
 			if (this.processor.PullGlobalByte(pluralName) == 0)
 			{
 				string plural = this.processor.PullText(CPU.AsLinearAddress(this.processor.SegData.Value16, civName)) + "s";
-				this.owner.Libc.CopyText(CivilizationPlural(participantIdx), plural);
+				this.owner.Names.Set(CivilizationPlural(participantIdx), plural);
 			}
 			else
 			{
-				this.owner.Libc.CopyText(CivilizationPlural(participantIdx), pluralName);
+				this.owner.Names.Set(CivilizationPlural(participantIdx), pluralName);
 			}
 
 			this.processor.Journal.CloseScope("ObtainReplayPlayerLabel");

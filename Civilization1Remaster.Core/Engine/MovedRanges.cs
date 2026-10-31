@@ -17,6 +17,7 @@ namespace Civilization1Remaster.Engine
 		[
 			new Range("TextBuffer", TextBuffer.Address, TextBuffer.Size),
 			new Range("CodeTexts", CodeTexts.Address, CodeTexts.Size),
+			new Range("NameTexts", NameTexts.Address, NameTexts.Size),
 			new Range("Units", UnitMemory.Origin, UnitMemory.ParticipantStride * 8),
 			new Range("Tables", GameTables.Begin, GameTables.End - GameTables.Begin),
 			new Range("Timer", TimerState.Begin, TimerState.Size),

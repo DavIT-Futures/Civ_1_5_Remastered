@@ -169,9 +169,9 @@ namespace Civilization1Remaster.Game
 
 			ushort leaderNames = (ushort)(0x3a * rebel.ChiefVisuals);
 
-			this.owner.Libc.CopyText(LeaderNameAt(names), LeaderTextAt(leaderNames, LeaderTable.Name));
+			this.owner.Names.Set(LeaderNameAt(names), LeaderTextAt(leaderNames, LeaderTable.Name));
 
-			this.owner.Libc.CopyText(CivilizationNameAt(names), LeaderText(rebel.ChiefVisuals, LeaderTable.Civilization));
+			this.owner.Names.Set(CivilizationNameAt(names), LeaderText(rebel.ChiefVisuals, LeaderTable.Civilization));
 
 			this.owner.Words.Set(LeaderText(rebel.ChiefVisuals, LeaderTable.CivilizationPlural));
 
@@ -181,7 +181,7 @@ namespace Civilization1Remaster.Game
 					.Text("s");
 			}
 
-			this.owner.Libc.CopyText(CivilizationPluralAt(names), this.owner.Words.ToString());
+			this.owner.Names.Set(CivilizationPluralAt(names), this.owner.Words.ToString());
 
 			this.owner.Words.Clear();
 

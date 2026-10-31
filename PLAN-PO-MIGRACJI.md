@@ -936,3 +936,15 @@ Proponowana kolejność: 1 → 2 → 5 → 4 → 6 → 3 → 7 → 8 → 9 → 1
   tworzy świat bez ramki.
 - 6 (`FrameWords` → pola) i 7 (pamięć pod adresami, ok. 660 miejsc) – zostają: 6 bez zysku poza czytelnością, 7 to kilka
   sesji porcjami po modułach, z testami.
+
+**Reszta listy (2026-10-31, NIE TESTOWANE).**
+- Tabele nazw: napisy graczy pod 0x0111 – 0x0266 (cywilizacje, liczby mnogie, przywódcy, tytuły ustrojów – adresy
+  z tabel wskaźników 0x1982 / 0x1992 / 0x19a2 / 0x19b2, sprawdzone sondą) w tablicy C# (`NameTexts`, nakładka i rzut do
+  migawki); 20 zapisów nazw przez `Names.Set`. Zapis / wczytanie gry idzie przez pamięć, więc przez nakładkę.
+- Krok 7 – co zostało i dlaczego nie teraz: zmienne zegara (`Timer…`, 0x40 – 0x6f) są już w C# (`TimerState`), ale ich
+  odczyty przez pamięć napędzają zegar testów (tyknięcie co 16 odczytów) – przepisanie ich na pola zmieni golden master,
+  tylko z testami i nowym zegarem; paleta (`HueMixer…`), zmienne DOS i tablice pod wyliczanym adresem (174 dostępy) –
+  każda tablica to nowa nakładka i rzut, porcjami z testami.
+- Krok 6 (`FrameWords` → pola) – bez zmian: słowa ramek nie dotykają już pamięci (poza `ProduceTerrain` z
+  `ClassicLabelNumbers`), zamiana dałaby tylko czytelność, a układ słów (tablice z indeksem -1 czytające sąsiednią
+  zmienną) trzeba by odtworzyć ręcznie.
