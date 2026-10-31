@@ -885,3 +885,38 @@ okna z buforem 0xba06, teksty stałe i nazwy w segmencie danych). Znikną, gdy t
 **Do sprawdzenia przy testach:** wpis indeksu pliku tekstowego, gdy odczyt indeksu się nie uda (oryginał zostawiał
 śmieci spod SP, teraz 0 – w plikach gry nie występuje); nazwy Civilopedii dłuższe niż 31 znaków (w oryginale wchodziły na
 sąsiedni bufor); `ShrinkTextToWidth` tekstu krótszego niż 3 znaki.
+
+## Co zostało – lista następnych kroków (2026-10-31)
+
+Stan: kodu w stylu asm brak; rejestry tylko w warstwie emulacji i w dwóch świadomych miejscach; B6.1 (teksty) zrobione
+poza tekstami w segmencie danych. Użytkownik sprawdził grę ręcznie: działa, poza Alt+H.
+
+1. **Alt+H nic nie pokazuje** (zgłoszone 2026-10-31). `PlayerTurn` (0x2300) woła `HelpSystem.DisplayHelpPopup(0x2029 /
+   0x2030)`, okno mapuje Alt+H na 0x2300 (`MainWindow`). Sprawdzić, czy to regresja (B6.1: okna / teksty) czy starszy
+   problem (Avalonia i klawisz Alt, focus menu). Mały krok, najpierw.
+2. **Dyskietki.** Gra jest na dysku: `QueryForDisk`, `VerifyDrive`, `QueryForStoreDrive`, numery dysków (0xdeba,
+   `FirstMissingDisk`), komunikat „Please insert Disk”. Pliki zawsze są, więc prośba się nie pokazuje – kod do uproszczenia
+   (bez zmiany zachowania: zostawić tylko to, co wpływa na stan / ślad, resztę usunąć). Średni.
+3. **B6.1 – reszta tekstów:** teksty kodów `CodeText1` – `5` i tabele nazw (cywilizacje, przywódcy, ustroje, tytuły)
+   z segmentu danych do C# (z rzutem do migawki / zapisu gry, jak bufor), edycja nazwy miasta (`NewCityScreen`), wejście
+   menu jako `string`; potem usunięcie 134 adapterów z adresem. Duży.
+4. **AX barbarzyńców i `Participants[AX]`:** jawny wynik `EliminateUnit` / `RepaintMapTile` (zamiast AX z
+   `ObtainUnitAtTile` / `RenderMapTile` / `RenderUnitOnWorldMap`) i jawny numer kontynentu w `BuyForComputerCity`; potem
+   `ReturnAcc` z `MapManagement` znika. Średni.
+5. **`ProduceTerrain`:** słowa, które `ClassicLabelNumbers` czyta spod ramki, odtworzyć jawnie; ramka i para SI / DI
+   znikają. Mały.
+6. **`FrameWords` → zwykłe pola C#:** `CityRound` (0x10c), `pickFrame` (`ScienceAndAdvisors`), `TurnEvents` (0x36),
+   ekran lądowania – nie dotykają już stosu, wystarczą nazwane pola. Średni, mechaniczny.
+7. **B6 – pamięć pod adresami:** ok. 360 `PullGlobal…` / `EmitGlobal…` i 300 surowych `Pull…` / `Emit…` → nazwane pola
+   i tabele (`GameGlobals`, `GameTables`, rzut `MovedData`). Duży, w porcjach po modułach.
+8. **Warstwa emulacji:** `CRuntime` (pliki, teksty, losowanie) → .NET; `SystemServices` (zegar, przerwania, mysz);
+   `VGADriver` (ekrany, pudełka w pamięci, B6.5-reszta). Duży.
+9. **Dziennik wywołań (B6.9):** zostaje dla testów czy znika – decyzja; od niego zależy zegar testów.
+10. **Koniec procesora:** gdy nic nie czyta rejestrów, stosu i bloku pamięci – usunięcie `Civilization1Remaster.Machine`
+    z gry (zostaje tylko dla zamrożonej gry w testach). Decyzja o grafice / dźwięku (warstwa zgodności czy bezpośrednio).
+11. **Testy po migracji:** kopie oryginału (`Differential/Reference`, ok. 2 400 wywołań) i zamrożona gra – co zostawić
+    (golden master + podwójna gra?), co usunąć.
+12. **Usprawnienia i błędy oryginału** (po decyzji użytkownika, za `Classic…`): konwersja produkcji na złoto / naukę,
+    ekran „Obsolete Wonders”, statystyki doradców, lista „Błędy przetłumaczonego kodu zachowane celowo” w backlogu.
+
+Proponowana kolejność: 1 → 2 → 5 → 4 → 6 → 3 → 7 → 8 → 9 → 10 → 11; punkt 12 w dowolnym momencie na życzenie.
