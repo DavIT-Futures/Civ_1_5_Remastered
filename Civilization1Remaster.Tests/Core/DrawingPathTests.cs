@@ -1,6 +1,5 @@
 using System.Drawing;
 using Civilization1Remaster.Core;
-using Civilization1Remaster.Core.Video;
 using Civilization1Remaster.Foundation.Squeeze;
 using Civilization1Remaster.Foundation.Support;
 using Civilization1Remaster.Imaging;

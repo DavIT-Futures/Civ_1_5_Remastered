@@ -3,7 +3,7 @@ using System.IO;
 using System.Text;
 using System.Threading;
 
-namespace Civilization1Remaster.Core.Emulation
+namespace Civilization1Remaster.Machine
 {
 	/// <summary>The operations of RuntimeLibrary that the other parts of the game use</summary>
 	public interface IRuntimeLibrary

@@ -1,21 +1,25 @@
 using System;
 
-namespace Civilization1Remaster.Core.Acoustics
+namespace Civilization1Remaster.Acoustics
 {
-	public class AudioOutput : GameComponent, IAudioOutput
+	/// <summary>The music and the sound effects of the game, played by its original sound driver</summary>
+	public class AudioOutput : IAudioOutput
 	{
 		// The original sound driver from the game folder (RSOUND.CVL, ASOUND.CVL or ISOUND.CVL) and the audio or MIDI output.
 		// When the driver or the audio output is missing, the functions below keep the old silent behaviour.
 		private const int SliceRatio = 44100;
+
+		private readonly Func<string> gameFolder;
 
 		private ushort stagingPlace = 0;
 		private bool handlerFetched = false;
 		private SoundDriverHost? handler;
 		private IDisposable? participant;
 
-		public AudioOutput(GameEngine owner)
-			: base(owner)
+		/// <summary>The sound player of the game in the folder (read when the first sound plays)</summary>
+		public AudioOutput(Func<string> gameFolder)
 		{
+			this.gameFolder = gameFolder;
 		}
 
 		private SoundDriverHost? Handler
@@ -27,7 +31,7 @@ namespace Civilization1Remaster.Core.Acoustics
 					this.handlerFetched = true;
 
 					// The best driver that has an output is used: Roland MT-32 music needs a MIDI output
-					foreach (SoundDriverHost handler in SoundDriverHost.ConstructAll(this.Processor.StandardFolder, SliceRatio))
+					foreach (SoundDriverHost handler in SoundDriverHost.ConstructAll(this.gameFolder(), SliceRatio))
 					{
 						try
 						{

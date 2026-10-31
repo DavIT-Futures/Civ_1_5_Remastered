@@ -1,6 +1,6 @@
 using System;
 
-namespace Civilization1Remaster.Core.Acoustics
+namespace Civilization1Remaster.Acoustics
 {
 	/// <summary>The operations of AudioOutput that the other parts of the game use</summary>
 	public interface IAudioOutput

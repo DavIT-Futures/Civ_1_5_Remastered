@@ -1,5 +1,5 @@
 ﻿
-namespace Civilization1Remaster.Core.Video
+namespace Civilization1Remaster.Imaging
 {
 	public class CivRectangle
 	{

@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 
 namespace Civilization1Remaster.Core
 {
@@ -94,15 +96,15 @@ namespace Civilization1Remaster.Core
 
 			this.sessionCondition = new GameState();
 
-			this.chrLibc = new RuntimeLibrary(this);
+			this.chrLibc = new RuntimeLibrary(this.processor, this);
 			this.words = new TextBuffer(this);
 			this.codes = new CodeTexts(this);
 			this.names = new NameTexts(this);
 			this.tables = new GameTables(this);
 			this.hueCycles = new HueCycles(this.processor);
 			this.timer = new TimerState(this.processor);
-			this.videoHandler = new VGADriver(this, host);
-			this.audioHandler = new AudioOutput(this);
+			this.videoHandler = new VGADriver(this.processor, this.videoHandlerJournal, host, LoadFonts());
+			this.audioHandler = new AudioOutput(() => this.processor.StandardFolder);
 
 			this.sessionBoot = new GameLauncher(this);
 			this.machineDuties = new PlatformServices(this);
@@ -447,6 +449,24 @@ namespace Civilization1Remaster.Core
 			this.Startup.RunGame();
 
 			this.Libc.TerminateProgram(0);
+		}
+
+		/// <summary>The built-in fonts (the resource Fonts.xml.gz); without them the game quits</summary>
+		private Dictionary<int, CivFont> LoadFonts()
+		{
+			byte[]? typefaces = (byte[]?)Properties.Resources.ResourceManager.GetObject("Fonts_xml");
+
+			if (typefaces == null)
+			{
+				this.host?.ShowMessage("Civilization1Remaster resource Fonts is missing.", "Resource missing");
+				this.processor.Quit(-1);
+
+				throw new Exception("Embedded resource missing"); // Fool compiler as Exit already throws an exception
+			}
+
+			using Stream source = new GZipStream(new MemoryStream(typefaces), CompressionMode.Decompress);
+
+			return CivFonts.Unpack(source);
 		}
 
 		/// <summary>

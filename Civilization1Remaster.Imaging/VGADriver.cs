@@ -1,17 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.IO;
-using System.Threading;
-using System.IO.Compression;
-using System.Runtime.InteropServices;
-using Civilization1Remaster.Core.Properties;
 
-namespace Civilization1Remaster.Core.Video
+namespace Civilization1Remaster.Imaging
 {
+	/// <summary>
+	/// The VGA driver of the emulated game: its screens and pictures, the boxes it draws in (in the memory of the game) and
+	/// the keys waiting for the game
+	/// </summary>
 	public class VGADriver
 	{
-		private readonly GameEngine owner;
+		private readonly LogWrapper videoJournal;
 		private readonly CPU processor;
 		private readonly IGameHost primaryHost;
 		private readonly Dictionary<int, VGABitmap> displays = new Dictionary<int, VGABitmap>();
@@ -31,27 +30,14 @@ namespace Civilization1Remaster.Core.Video
 		private ushort glob15d2StagingMarker = 0;
 		private ushort glob15d4DisplayIdx = 0;
 
-		public VGADriver(GameEngine owner, IGameHost host)
+		public VGADriver(CPU processor, LogWrapper videoJournal, IGameHost host, Dictionary<int, CivFont> typefaces)
 		{
-			this.owner = owner;
-			this.processor = owner.Processor;
+			this.processor = processor;
+			this.videoJournal = videoJournal;
 			this.primaryHost = host;
+			this.typefaces = typefaces;
 
 			this.displays.Add(0, new VGABitmap()); // our Main screen
-
-			byte[]? typefaces = (byte[]?)Resources.ResourceManager.GetObject("Fonts_xml");
-
-			if (typefaces == null)
-			{
-				this.primaryHost?.ShowMessage("Civilization1Remaster resource Fonts is missing.", "Resource missing");
-				this.processor.Quit(-1);
-
-				throw new Exception("Embedded resource missing"); // Fool compiler as Exit already throws an exception
-			}
-
-			Stream typefaces1 = new GZipStream(new MemoryStream(typefaces), CompressionMode.Decompress);
-			this.typefaces = CivFonts.Unpack(typefaces1);
-			typefaces1.Close();
 		}
 
 		public object VideoLatch { get; set; } = new object();
@@ -133,7 +119,7 @@ namespace Civilization1Remaster.Core.Video
 		{
 			LogWrapper scratchJournal = this.processor.Journal;
 			this.processor.Journal.EmitLine($"// Calling: DrawBufferToScreen()");
-			this.processor.Journal = this.owner.VideoJournal;
+			this.processor.Journal = this.videoJournal;
 			using var _ = this.processor.Journal.Scope("RenderBufferToScreen()");
 
 			if (this.glob15d2StagingMarker != 0)
@@ -162,7 +148,7 @@ namespace Civilization1Remaster.Core.Video
 		{
 			LogWrapper scratchJournal = this.processor.Journal;
 			this.processor.Journal.EmitLine($"// Calling: DrawBufferAt({horizLoc}, {vertLoc}, 0x{stagingAddr:x4})");
-			this.processor.Journal = this.owner.VideoJournal;
+			this.processor.Journal = this.videoJournal;
 			using var _ = this.processor.Journal.Scope($"RenderBufferAt({horizLoc}, {vertLoc}, 0x{stagingAddr:x4})");
 
 			this.processor.Journal = scratchJournal;
@@ -173,7 +159,7 @@ namespace Civilization1Remaster.Core.Video
 		{
 			LogWrapper scratchJournal = this.processor.Journal;
 			this.processor.Journal.EmitLine($"// Calling: FillBuffer({displayIdx})");
-			this.processor.Journal = this.owner.VideoJournal;
+			this.processor.Journal = this.videoJournal;
 			using var _ = this.processor.Journal.Scope($"FloodBuffer({displayIdx})");
 
 			this.glob15d4DisplayIdx = displayIdx;
@@ -205,7 +191,7 @@ namespace Civilization1Remaster.Core.Video
 		{
 			LogWrapper scratchJournal = this.processor.Journal;
 			this.processor.Journal.EmitLine($"// Calling: CopyScreenToMainScreen(0x{displayIdx:x4})");
-			this.processor.Journal = this.owner.VideoJournal;
+			this.processor.Journal = this.videoJournal;
 			using var _ = this.processor.Journal.Scope($"DuplicateScreenToMainScreen(0x{displayIdx:x4})");
 
 			if (displayIdx != 0)

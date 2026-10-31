@@ -19,5 +19,7 @@ namespace Civilization1Remaster.Core
 		void IMachineHost.OnClockInterrupt() { this.Services.ClockInterrupt(); }
 
 		void IMachineHost.ReadKeyBlocking() { this.Libc.ReadKey(); }
+
+		bool IMachineHost.ReleasePicture(ushort section) { return this.VideoCard.Pictures.Remove(section); }
 	}
 }

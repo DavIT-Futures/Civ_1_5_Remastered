@@ -1,8 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <!-- Bitmaps with their palettes and the bitmap fonts -->
+  <!-- Bitmaps with their palettes, the bitmap fonts and the VGA driver of the emulated game (its screens and boxes) -->
   <ItemGroup>
     <ProjectReference Include="..\Civilization1Remaster.Foundation\Civilization1Remaster.Foundation.csproj" />
+    <ProjectReference Include="..\Civilization1Remaster.Machine\Civilization1Remaster.Machine.csproj" />
   </ItemGroup>
 
 </Project>

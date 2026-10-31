@@ -4,20 +4,26 @@ using System.IO;
 using System.Text;
 using System.Threading;
 
-namespace Civilization1Remaster.Core.Emulation
+namespace Civilization1Remaster.Machine
 {
-	public class RuntimeLibrary : GameComponent, IRuntimeLibrary
+	/// <summary>The C runtime library (and the DOS calls) of the game: files, texts, numbers, keys, random numbers</summary>
+	public class RuntimeLibrary : IRuntimeLibrary
 	{
+		private readonly IMachineHost host;
+
 		/// <summary>The open files by handle (B6.6: kept here, no longer in the CPU); the first handle is 0x20, like DOS gave</summary>
 		private readonly Dictionary<short, FileStreamItem> files = new Dictionary<short, FileStreamItem>();
 
 		private RandomMT19937 dice = new RandomMT19937();
 		private short nextHandle = 0x20;
 
-		public RuntimeLibrary(GameEngine owner)
-			: base(owner)
+		public RuntimeLibrary(CPU processor, IMachineHost host)
 		{
+			this.Processor = processor;
+			this.host = host;
 		}
+
+		private CPU Processor { get; }
 
 		/// <inheritdoc/>
 		public Func<DateTime> Clock { get; set; } = () => DateTime.Now;
@@ -43,29 +49,29 @@ namespace Civilization1Remaster.Core.Emulation
 			// Loops that wait for a key alone still get the interrupts (the timer, the mouse of the window)
 			this.Processor.PumpMessages();
 
-			if (this.Owner.VideoCard.Tokens.Count == 0)
+			if (this.host.InputTokens.Count == 0)
 				this.Processor.InputStarved?.Invoke(false);
 
-			this.Processor.RegAcc.Value16 = (ushort)((this.Owner.VideoCard.Tokens.Count > 0) ? 0xffff : 0);
+			this.Processor.RegAcc.Value16 = (ushort)((this.host.InputTokens.Count > 0) ? 0xffff : 0);
 
 			return (short)this.Processor.RegAcc.Value16;
 		}
 
 		public short ReadKey()
 		{
-			while (this.Owner.VideoCard.Tokens.Count == 0)
+			while (this.host.InputTokens.Count == 0)
 			{
 				this.Processor.InputStarved?.Invoke(true);
-				if (this.Owner.VideoCard.Tokens.Count > 0)
+				if (this.host.InputTokens.Count > 0)
 					break;
 
 				Thread.Sleep(10);
 				this.Processor.PumpMessages();
 			}
 
-			lock (this.Owner.VideoCard.VideoLatch)
+			lock (this.host.InputLatch)
 			{
-				this.Processor.RegAcc.Value16 = (ushort)this.Owner.VideoCard.Tokens.Dequeue();
+				this.Processor.RegAcc.Value16 = (ushort)this.host.InputTokens.Dequeue();
 			}
 
 			return (short)this.Processor.RegAcc.Value16;
@@ -152,10 +158,9 @@ namespace Civilization1Remaster.Core.Emulation
 			if (section >= 0xb000)
 			{
 				// this is a graphics bitmap
-				if (!this.Owner.VideoCard.Pictures.ContainsKey(section))
+				if (!this.host.ReleasePicture(section))
 					throw new Exception($"The bitmap 0x{section:x4} is not allocated");
 
-				this.Owner.VideoCard.Pictures.Remove(section);
 				released = true;
 			}
 			else

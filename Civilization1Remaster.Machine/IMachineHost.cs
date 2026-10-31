@@ -17,5 +17,8 @@ namespace Civilization1Remaster.Machine
 		void OnPointerEvent();
 		void OnClockInterrupt();
 		void ReadKeyBlocking();
+
+		/// <summary>Frees the picture of the driver at the segment (0xb000 and above); false when there is none</summary>
+		bool ReleasePicture(ushort section);
 	}
 }
